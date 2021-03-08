@@ -10,34 +10,35 @@ package object types {
   // @Igor 05.01.2019: What is the problem? The full package name is at.forsyte.apalache.tla.bmcmt.types.
 
   /**
-    * A simple type system for the symbolic memory cells.
-    */
+   * A simple type system for the symbolic memory cells.
+   */
   sealed abstract class CellT extends Serializable {
+
     /**
-      * Test whether two types may produce objects that are comparable.
-      *
-      * @param other other type
-      * @return true, if objects of the given types may be comparable
-      */
+     * Test whether two types may produce objects that are comparable.
+     *
+     * @param other other type
+     * @return true, if objects of the given types may be comparable
+     */
     def comparableWith(other: CellT): Boolean = {
       this.unify(other).nonEmpty
     }
 
     /**
-      * Produce a short signature that uniquely describes the type (up to unification),
-      * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., records, they have the same signature.
-      *
-      * @return a short signature that uniquely characterizes this type up to unification
-      */
+     * Produce a short signature that uniquely describes the type (up to unification),
+     * similar to Java's signature mangling. If one type can be unified to another,
+     * e.g., records, they have the same signature.
+     *
+     * @return a short signature that uniquely characterizes this type up to unification
+     */
     val signature: String
 
     /**
-      * Compute a unifier of two types.
-      *
-      * @param other another type
-      * @return Some(unifier), if there is one, or None otherwise
-      */
+     * Compute a unifier of two types.
+     *
+     * @param other another type
+     * @return Some(unifier), if there is one, or None otherwise
+     */
     def unify(other: CellT): Option[CellT] = {
       (this, other) match {
         case (UnknownT(), _) =>
@@ -50,10 +51,10 @@ package object types {
           Some(this)
 
         case (FinSetT(left), FinSetT(right)) =>
-            left.unify(right) map FinSetT
+          left.unify(right) map FinSetT
 
         case (InfSetT(left), InfSetT(right)) =>
-            left.unify(right) map InfSetT
+          left.unify(right) map InfSetT
 
         case (FunT(leftDom, leftCodom), FunT(rightDom, rightCodom)) =>
           for {
@@ -74,23 +75,23 @@ package object types {
           left.unify(right) map SeqT
 
         case (SeqT(seqType), TupleT(tupleTypes)) =>
-          types.unify(seqType +: tupleTypes :_*) match {
+          types.unify(seqType +: tupleTypes: _*) match {
             case Some(et) => Some(SeqT(et))
-            case None => None
+            case None     => None
           }
 
         case (TupleT(tupleTypes), SeqT(seqType)) =>
-          types.unify(seqType +: tupleTypes :_*) match {
+          types.unify(seqType +: tupleTypes: _*) match {
             case Some(et) => Some(SeqT(et))
-            case None => None
+            case None     => None
           }
 
-          /**
-            * Jure, 13.9.18: Suggestion: Change TupleT( _ : Seq[...]) to TupleT(_ : Array[...]) or
-            * TupleT( _ : IndextSeq[...]) so
-            * a) length checks are const time
-            * b) you can do index-based arg comparison
-            * */
+        /**
+         * Jure, 13.9.18: Suggestion: Change TupleT( _ : Seq[...]) to TupleT(_ : Array[...]) or
+         * TupleT( _ : IndextSeq[...]) so
+         * a) length checks are const time
+         * b) you can do index-based arg comparison
+         */
         case (TupleT(leftArgs), TupleT(rightArgs)) =>
           // in contrast to sequences, tuples of different lengths cannot be unified
           if (leftArgs.lengthCompare(rightArgs.length) == 0) {
@@ -127,7 +128,7 @@ package object types {
           if (pairs.exists(_._2.isEmpty)) {
             None
           } else {
-            val somes = pairs.map { case (k, v) => (k,v.get) } // (p => (p._1, p._2.get))
+            val somes = pairs.map { case (k, v) => (k, v.get) } // (p => (p._1, p._2.get))
             Some(RecordT(SortedMap(somes.toSeq: _*)))
           }
 
@@ -136,7 +137,6 @@ package object types {
       }
     }
   }
-
 
   // Jure @ 13.09.18: Suggestion: Replace all case class X( [no args] ) with object X ?
   //
@@ -147,25 +147,26 @@ package object types {
   // only if it becomes a bottleneck. At this stage, clarity is more important.
 
   /**
-    * A type variable.
-    */
+   * A type variable.
+   */
   sealed case class UnknownT() extends CellT with Serializable {
+
     /**
-      * Produce a short signature that uniquely describes the type (up to unification),
-      * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., records, they have the same signature.
-      *
-      * @return a short signature that uniquely characterizes this type up to unification
-      */
+     * Produce a short signature that uniquely describes the type (up to unification),
+     * similar to Java's signature mangling. If one type can be unified to another,
+     * e.g., records, they have the same signature.
+     *
+     * @return a short signature that uniquely characterizes this type up to unification
+     */
     override val signature: String = "u"
 
     override val toString: String = "Unknown"
   }
 
   /**
-    * A failure cell that represents a Boolean variable indicating whether
-    * a certain operation failed.
-    */
+   * A failure cell that represents a Boolean variable indicating whether
+   * a certain operation failed.
+   */
   @deprecated("failure predicates were abandoned")
   sealed case class FailPredT() extends CellT with Serializable {
     override val signature: String = "E"
@@ -174,293 +175,305 @@ package object types {
   }
 
   /**
-    * A cell constant, that is, just a name that expresses string constants in TLA+.
-    */
+   * A cell constant, that is, just a name that expresses string constants in TLA+.
+   */
   sealed case class ConstT() extends CellT with Serializable {
+
     /**
-      * Produce a short signature that uniquely describes the type (up to unification),
-      * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., records, they have the same signature.
-      *
-      * @return a short signature that uniquely characterizes this type up to unification
-      */
+     * Produce a short signature that uniquely describes the type (up to unification),
+     * similar to Java's signature mangling. If one type can be unified to another,
+     * e.g., records, they have the same signature.
+     *
+     * @return a short signature that uniquely characterizes this type up to unification
+     */
     override val signature: String = "str"
 
     override val toString: String = "Const"
   }
 
   /**
-    * A Boolean cell type.
-    */
+   * A Boolean cell type.
+   */
   sealed case class BoolT() extends CellT with Serializable {
+
     /**
-      * Produce a short signature that uniquely describes the type (up to unification),
-      * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., records, they have the same signature.
-      *
-      * @return a short signature that uniquely characterizes this type up to unification
-      */
+     * Produce a short signature that uniquely describes the type (up to unification),
+     * similar to Java's signature mangling. If one type can be unified to another,
+     * e.g., records, they have the same signature.
+     *
+     * @return a short signature that uniquely characterizes this type up to unification
+     */
     override val signature: String = "b"
 
     override val toString: String = "Bool"
   }
 
   /**
-    * An integer cell type.
-    */
+   * An integer cell type.
+   */
   sealed case class IntT() extends CellT with Serializable {
+
     /**
-      * Produce a short signature that uniquely describes the type (up to unification),
-      * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., records, they have the same signature.
-      *
-      * @return a short signature that uniquely characterizes this type up to unification
-      */
+     * Produce a short signature that uniquely describes the type (up to unification),
+     * similar to Java's signature mangling. If one type can be unified to another,
+     * e.g., records, they have the same signature.
+     *
+     * @return a short signature that uniquely characterizes this type up to unification
+     */
     override val signature: String = "i"
 
     override val toString: String = "Int"
   }
 
   /**
-    * A finite set.
-    *
-    * @param elemType the elements type
-    */
+   * A finite set.
+   *
+   * @param elemType the elements type
+   */
   sealed case class FinSetT(elemType: CellT) extends CellT with Serializable {
+
     /**
-      * Produce a short signature that uniquely describes the type (up to unification),
-      * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., records, they have the same signature.
-      *
-      * @return a short signature that uniquely characterizes this type up to unification
-      */
+     * Produce a short signature that uniquely describes the type (up to unification),
+     * similar to Java's signature mangling. If one type can be unified to another,
+     * e.g., records, they have the same signature.
+     *
+     * @return a short signature that uniquely characterizes this type up to unification
+     */
     override val signature: String = s"S${elemType.signature}"
 
     override val toString: String = s"FinSet[$elemType]"
   }
 
   /**
-    * An infinite set such as Nat or Int. Although the rewriting system expands only finite sets,
-    * in some cases, we can pick a value from an infinite set, e.g., \E x \in Int: P.
-    *
-    * @param elemType the elements type
-    */
+   * An infinite set such as Nat or Int. Although the rewriting system expands only finite sets,
+   * in some cases, we can pick a value from an infinite set, e.g., \E x \in Int: P.
+   *
+   * @param elemType the elements type
+   */
   sealed case class InfSetT(elemType: CellT) extends CellT with Serializable {
+
     /**
-      * Produce a short signature that uniquely describes the type (up to unification),
-      * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., records, they have the same signature.
-      *
-      * @return a short signature that uniquely characterizes this type up to unification
-      */
+     * Produce a short signature that uniquely describes the type (up to unification),
+     * similar to Java's signature mangling. If one type can be unified to another,
+     * e.g., records, they have the same signature.
+     *
+     * @return a short signature that uniquely characterizes this type up to unification
+     */
     override val signature: String = s"Z${elemType.signature}"
 
     override val toString: String = s"InfSet[$elemType]"
   }
 
   /**
-    * The type of a powerset of a finite set, which is constructed as 'SUBSET S' in TLA+.
-    * @param domType the type of the argument is a finite set, i.e., typeof(S) in SUBSET S.
-    *                Currently, only FinSetT(_) is supported.
-    */
+   * The type of a powerset of a finite set, which is constructed as 'SUBSET S' in TLA+.
+   * @param domType the type of the argument is a finite set, i.e., typeof(S) in SUBSET S.
+   *                Currently, only FinSetT(_) is supported.
+   */
   sealed case class PowSetT(domType: CellT) extends CellT with Serializable {
     require(domType.isInstanceOf[FinSetT]) // currently, we support only PowSetT(FinSetT(_))
     /**
-      * Produce a short signature that uniquely describes the type (up to unification),
-      * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., records, they have the same signature.
-      *
-      * @return a short signature that uniquely characterizes this type up to unification
-      */
+     * Produce a short signature that uniquely describes the type (up to unification),
+     * similar to Java's signature mangling. If one type can be unified to another,
+     * e.g., records, they have the same signature.
+     *
+     * @return a short signature that uniquely characterizes this type up to unification
+     */
     override val signature: String = s"P${domType.signature}"
 
     override val toString: String = s"PowSet[$domType]"
   }
 
   /**
-    * A function type.
-    *
-    * TODO: in the future, we will replace domType with argType, as we are moving towards
-    * a minimalistic type system
-    *
-    * @param domType    the type of the domain (a finite set, a powerset, or a cross product).
-    * @param resultType result type (not the co-domain!)
-    */
+   * A function type.
+   *
+   * TODO: in the future, we will replace domType with argType, as we are moving towards
+   * a minimalistic type system
+   *
+   * @param domType    the type of the domain (a finite set, a powerset, or a cross product).
+   * @param resultType result type (not the co-domain!)
+   */
   sealed case class FunT(domType: CellT, resultType: CellT) extends CellT with Serializable {
+
     /**
-      * Produce a short signature that uniquely describes the type (up to unification),
-      * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., records, they have the same signature.
-      *
-      * @return a short signature that uniquely characterizes this type up to unification
-      */
+     * Produce a short signature that uniquely describes the type (up to unification),
+     * similar to Java's signature mangling. If one type can be unified to another,
+     * e.g., records, they have the same signature.
+     *
+     * @return a short signature that uniquely characterizes this type up to unification
+     */
     override val signature: String = s"f${domType.signature}_${resultType.signature}"
 
     val argType: CellT = domType match {
-      case FinSetT(et) => et
-      case PowSetT(dt) => dt
-      case CrossProdT(args) => TupleT( args map {_.elemType} )
-      case _ => throw new TypeException(s"Unexpected domain type $domType", NullEx)
+      case FinSetT(et)      => et
+      case PowSetT(dt)      => dt
+      case CrossProdT(args) => TupleT(args map { _.elemType })
+      case _                => throw new TypeException(s"Unexpected domain type $domType", NullEx)
     }
 
     override val toString: String = s"Fun[$domType, $resultType]"
   }
 
   /**
-    * A finite set of functions.
-    *
-    * @param domType the type of the domain (must be either a finite set or a powerset).
-    * @param cdmType the type of the co-domain (must be either a finite set or a powerset).
-    */
+   * A finite set of functions.
+   *
+   * @param domType the type of the domain (must be either a finite set or a powerset).
+   * @param cdmType the type of the co-domain (must be either a finite set or a powerset).
+   */
   sealed case class FinFunSetT(domType: CellT, cdmType: CellT) extends CellT with Serializable {
-    require((domType.isInstanceOf[FinSetT] || domType.isInstanceOf[PowSetT])
-            && (cdmType.isInstanceOf[FinSetT] || cdmType.isInstanceOf[PowSetT]
-                  || cdmType.isInstanceOf[FinFunSetT] || cdmType.isInstanceOf[InfSetT]))
+    require(
+        (domType.isInstanceOf[FinSetT] || domType.isInstanceOf[PowSetT])
+          && (cdmType.isInstanceOf[FinSetT] || cdmType.isInstanceOf[PowSetT]
+            || cdmType.isInstanceOf[FinFunSetT] || cdmType.isInstanceOf[InfSetT]))
+
     /**
-      * Produce a short signature that uniquely describes the type (up to unification),
-      * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., records, they have the same signature.
-      *
-      * @return a short signature that uniquely characterizes this type up to unification
-      */
+     * Produce a short signature that uniquely describes the type (up to unification),
+     * similar to Java's signature mangling. If one type can be unified to another,
+     * e.g., records, they have the same signature.
+     *
+     * @return a short signature that uniquely characterizes this type up to unification
+     */
     override val signature: String = s"F%${domType.signature}_%${cdmType.signature}"
 
     def argType(): CellT = domType match {
       case FinSetT(et) => et
       case PowSetT(dt) => dt
-      case _ => throw new TypeException(s"Unexpected domain type $domType", NullEx)
+      case _           => throw new TypeException(s"Unexpected domain type $domType", NullEx)
     }
 
     def resultType(): CellT = cdmType match {
       case FinSetT(et) => et
       case PowSetT(dt) => dt
-      case _ => throw new TypeException(s"Unexpected co-domain type $cdmType", NullEx)
+      case _           => throw new TypeException(s"Unexpected co-domain type $cdmType", NullEx)
     }
 
     override val toString: String = s"FinFunSet[$domType, $cdmType]"
   }
 
   /**
-    * A tuple type
-    *
-    * @param args the types of the tuple elements
-    */
+   * A tuple type
+   *
+   * @param args the types of the tuple elements
+   */
   sealed case class TupleT(args: Seq[CellT]) extends CellT with Serializable {
+
     /**
-      * Produce a short signature that uniquely describes the type (up to unification),
-      * similar to Java's signature mangling.
-      *
-      * @return a short signature that uniquely characterizes this type up to unification
-      */
+     * Produce a short signature that uniquely describes the type (up to unification),
+     * similar to Java's signature mangling.
+     *
+     * @return a short signature that uniquely characterizes this type up to unification
+     */
     override val signature: String = s"T_${args.map(_.signature).mkString("_")}"
 
     override val toString: String = s"Tuple[${args.map(_.toString).mkString(", ")}]"
   }
 
   /**
-    * A sequence type. Note that in contrast to the standard TLA+ semantics,
-    * we distinguish tuples and sequences. The difference is that a tuple can have
-    * elements of different types, while a sequence has only elements of the same type.
-    *
-    * @param res the type of the elements in the co-domain
-    */
+   * A sequence type. Note that in contrast to the standard TLA+ semantics,
+   * we distinguish tuples and sequences. The difference is that a tuple can have
+   * elements of different types, while a sequence has only elements of the same type.
+   *
+   * @param res the type of the elements in the co-domain
+   */
   sealed case class SeqT(res: CellT) extends CellT with Serializable {
+
     /**
-      * Produce a short signature that uniquely describes the type (up to unification),
-      * similar to Java's signature mangling.
-      *
-      * @return a short signature that uniquely characterizes this type up to unification
-      */
+     * Produce a short signature that uniquely describes the type (up to unification),
+     * similar to Java's signature mangling.
+     *
+     * @return a short signature that uniquely characterizes this type up to unification
+     */
     override val signature: String = s"Q_${res.signature}"
 
     override val toString: String = s"Seq[$res]"
   }
 
   /**
-    * The type for a cross product, e.g., FinSetT(A) |X FinSetT(B).
-    *
-    * FIXME: this type should disappear in the future,
-    * as CrossProdT(FinSetT(A), FinSetT(B)) = FinSetT(TupleT(A, B))
-    *
-    * @param args
-    */
+   * The type for a cross product, e.g., FinSetT(A) |X FinSetT(B).
+   *
+   * FIXME: this type should disappear in the future,
+   * as CrossProdT(FinSetT(A), FinSetT(B)) = FinSetT(TupleT(A, B))
+   *
+   * @param args
+   */
   @deprecated("Never been used")
-  sealed case class CrossProdT( args: Seq[FinSetT] ) extends CellT with Serializable {
+  sealed case class CrossProdT(args: Seq[FinSetT]) extends CellT with Serializable {
+
     /**
-      * Produce a short signature that uniquely describes the type (up to unification),
-      * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., records, they have the same signature.
-      *
-      * @return a short signature that uniquely characterizes this type up to unification
-      */
-    override val signature : String = args map {_.signature} mkString UTFPrinter.m_times
+     * Produce a short signature that uniquely describes the type (up to unification),
+     * similar to Java's signature mangling. If one type can be unified to another,
+     * e.g., records, they have the same signature.
+     *
+     * @return a short signature that uniquely characterizes this type up to unification
+     */
+    override val signature: String = args map { _.signature } mkString UTFPrinter.m_times
   }
 
   /**
-    * A record type
-    *
-    * @param fields a map of fields and their types
-    */
+   * A record type
+   *
+   * @param fields a map of fields and their types
+   */
   sealed case class RecordT(fields: SortedMap[String, CellT]) extends CellT with Serializable {
+
     /**
-      * Produce a short signature that uniquely describes the type (up to unification),
-      * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., records, they have the same signature.
-      *
-      * As records having different domains can be unified, we do not include the records arguments in the signature.
-      *
-      * @return a short signature that uniquely characterizes this type up to unification
-      */
+     * Produce a short signature that uniquely describes the type (up to unification),
+     * similar to Java's signature mangling. If one type can be unified to another,
+     * e.g., records, they have the same signature.
+     *
+     * As records having different domains can be unified, we do not include the records arguments in the signature.
+     *
+     * @return a short signature that uniquely characterizes this type up to unification
+     */
     override val signature: String = "R"
 
     override val toString: String =
-      s"Record[${fields.map {case (k,v) => "\"" + k + "\" -> " + v } mkString ", " }]"
+      s"Record[${fields.map { case (k, v) => "\"" + k + "\" -> " + v } mkString ", "}]"
   }
-
 
   // FIXME: Igor @ 20.12.2018: Do we still need this type?
   sealed case class TypeParam(s: String) extends CellT {
+
     /**
-      * Produce a short signature that uniquely describes the type (up to unification),
-      * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., records, they have the same signature.
-      *
-      * @return a short signature that uniquely characterizes this type up to unification
-      */
+     * Produce a short signature that uniquely describes the type (up to unification),
+     * similar to Java's signature mangling. If one type can be unified to another,
+     * e.g., records, they have the same signature.
+     *
+     * @return a short signature that uniquely characterizes this type up to unification
+     */
     override val signature = s"P${s}"
   }
 
   // FIXME: Igor @ 20.12.2018: Do we still need this type?
-  sealed case class OptT( elementType: CellT ) extends CellT {
+  sealed case class OptT(elementType: CellT) extends CellT {
+
     /**
-      * Produce a short signature that uniquely describes the type (up to unification),
-      * similar to Java's signature mangling. If one type can be unified to another,
-      * e.g., records, they have the same signature.
-      *
-      * @return a short signature that uniquely characterizes this type up to unification
-      */
-    override val signature : String = s"O${elementType.signature}"
+     * Produce a short signature that uniquely describes the type (up to unification),
+     * similar to Java's signature mangling. If one type can be unified to another,
+     * e.g., records, they have the same signature.
+     *
+     * @return a short signature that uniquely characterizes this type up to unification
+     */
+    override val signature: String = s"O${elementType.signature}"
   }
 
-
   /**
-    * Unify two types decorated with Option.
-    *
-    * @param left a left type (may be None)
-    * @param right a right type (may be None)
-    * @return Some(unifier), if there is one, otherwise None
-    */
+   * Unify two types decorated with Option.
+   *
+   * @param left a left type (may be None)
+   * @param right a right type (may be None)
+   * @return Some(unifier), if there is one, otherwise None
+   */
   def unifyOption(left: Option[CellT], right: Option[CellT]): Option[CellT] = for {
-      l <- left
-      r <- right
-      u <- l.unify(r)
-    } yield u
+    l <- left
+    r <- right
+    u <- l.unify(r)
+  } yield u
 
   /**
-    * Unify a sequence of types
-    * @param ts a sequence of types
-    * @return Some(unifier), if exists, or None
-    */
+   * Unify a sequence of types
+   * @param ts a sequence of types
+   * @return Some(unifier), if exists, or None
+   */
   def unify(ts: CellT*): Option[CellT] =
     ts.map(Some(_)).reduce[Option[CellT]]((x, y) => unifyOption(x, y))
 

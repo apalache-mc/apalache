@@ -11,10 +11,10 @@ import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 
 /**
-  * Implements f[x] for: functions, records, and tuples.
-  *
-  * @author Igor Konnov
-  */
+ * Implements f[x] for: functions, records, and tuples.
+ *
+ * @author Igor Konnov
+ */
 class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val picker = new CherryPick(rewriter)
   private val simplifier = new ConstSimplifierForSmt()
@@ -23,7 +23,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaFunOper.app, _*) => true
-      case _ => false
+      case _                          => false
     }
   }
 
@@ -56,11 +56,11 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private def applyRecord(state: SymbState, recordCell: ArenaCell, recEx: TlaEx, argEx: TlaEx): SymbState = {
     val key = argEx match {
       case ValEx(TlaStr(k)) => k
-      case _ => throw new RewriterException(s"Accessing a record $recEx with a non-constant key $argEx", argEx)
+      case _                => throw new RewriterException(s"Accessing a record $recEx with a non-constant key $argEx", argEx)
     }
     val fields = recordCell.cellType match {
       case RecordT(f) => f
-      case t @ _ => throw new RewriterException(s"Corrupted record $recEx of a non-record type $t", recEx)
+      case t @ _      => throw new RewriterException(s"Corrupted record $recEx of a non-record type $t", recEx)
     }
     val index = fields.keySet.toList.indexOf(key)
     val elems = state.arena.getHas(recordCell)
@@ -68,7 +68,8 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       state.setRex(elems(index))
     } else {
       // This case should have been caught by type inference. Throw an exception immediately.
-      val msg = s"Accessing record $recEx of type ${recordCell.cellType} with the field $argEx. Type inference should have caught this."
+      val msg =
+        s"Accessing record $recEx of type ${recordCell.cellType} with the field $argEx. Type inference should have caught this."
       throw new IllegalArgumentException(msg)
     }
   }
@@ -115,8 +116,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // now it is getting interesting:
       // If 1 <= arg <= end - start, just require oracle = arg - 1 + start,
       // Otherwise, set oracle to N
-      val inRange = tla.and(tla.le(tla.int(1), argCell),
-        tla.le(argCell, tla.minus(end, start)))
+      val inRange = tla.and(tla.le(tla.int(1), argCell), tla.le(argCell, tla.minus(end, start)))
       nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.plus(tla.minus(argCell, tla.int(1)), start)))
       val indexCell = nextState.asCell
       val oracleEqArg = tla.eql(indexCell, oracle.intCell)

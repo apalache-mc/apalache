@@ -6,16 +6,16 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 
 /**
-  * Implements the rules: SE-SET-NOTIN1.
-  *
-  * @author Igor Konnov
-  */
+ * Implements the rules: SE-SET-NOTIN1.
+ *
+ * @author Igor Konnov
+ */
 @deprecated("Rewritten by Keramelizer")
 class SetNotInRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaSetOper.notin, _, _) => true
-      case _ => false
+      case _                              => false
     }
   }
 

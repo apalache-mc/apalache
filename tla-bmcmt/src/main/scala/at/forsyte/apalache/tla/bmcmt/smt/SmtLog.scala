@@ -5,9 +5,10 @@ import at.forsyte.apalache.tla.bmcmt.smt.SmtLog.{AssertGroundExprRecord, Declare
 import at.forsyte.apalache.tla.lir.TlaEx
 
 object SmtLog {
+
   /**
-    * A record in the solver log
-    */
+   * A record in the solver log
+   */
   sealed abstract class Record extends Serializable
 
   case class DeclareCellRecord(cell: ArenaCell) extends Record with Serializable
@@ -16,17 +17,17 @@ object SmtLog {
 }
 
 /**
-  * A differential log of declarations and assertions that were submitted to the SMT solver.
-  *
-  * @author Igor Konnov
-  */
+ * A differential log of declarations and assertions that were submitted to the SMT solver.
+ *
+ * @author Igor Konnov
+ */
 class SmtLog(val parentLog: Option[SmtLog], val records: List[SmtLog.Record]) {
 
   def replay(solver: SolverContext): Unit = {
     def applyRecord: Record => Unit = {
-      case DeclareCellRecord(cell) => solver.declareCell(cell)
+      case DeclareCellRecord(cell)        => solver.declareCell(cell)
       case DeclareInPredRecord(set, elem) => solver.declareInPredIfNeeded(set, elem)
-      case AssertGroundExprRecord(ex) => solver.assertGroundExpr(ex)
+      case AssertGroundExprRecord(ex)     => solver.assertGroundExpr(ex)
     }
 
     // replay the parent's log first
@@ -36,12 +37,12 @@ class SmtLog(val parentLog: Option[SmtLog], val records: List[SmtLog.Record]) {
   }
 
   /**
-    * Compute the number of records, including the records in the parent.
-    * @return the total number of records, all way up to the root.
-    */
+   * Compute the number of records, including the records in the parent.
+   * @return the total number of records, all way up to the root.
+   */
   def lengthRec: Int = {
     parentLog match {
-      case None => records.length
+      case None         => records.length
       case Some(parent) => records.length + parent.lengthRec
     }
   }

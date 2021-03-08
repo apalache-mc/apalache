@@ -7,15 +7,14 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
-
 /**
-  * <p>Rewriting rule for CHOOSE. Similar to TLC, we implement a non-deterministic choice.
-  * It is not hard to add the requirement of determinism, but that will most likely affect efficiency.</p>
-  *
-  * <p>TODO: add determinism as an option.</p>
-  *
-  * @author Igor Konnov
-  */
+ * <p>Rewriting rule for CHOOSE. Similar to TLC, we implement a non-deterministic choice.
+ * It is not hard to add the requirement of determinism, but that will most likely affect efficiency.</p>
+ *
+ * <p>TODO: add determinism as an option.</p>
+ *
+ * @author Igor Konnov
+ */
 class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val pickRule = new CherryPick(rewriter)
   private val defaultValueFactory = new DefaultValueFactory(rewriter)

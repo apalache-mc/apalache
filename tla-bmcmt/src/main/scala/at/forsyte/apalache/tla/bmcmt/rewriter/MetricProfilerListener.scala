@@ -9,13 +9,13 @@ import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import com.typesafe.scalalogging.LazyLogging
 
 /**
-  * This listener registers the SMT metrics that are created when an expression is being translated in SMT.
-  * These metrics are collected only for those expressions that have source information, which can be
-  * displayed to the user.
-  *
-  * @param sourceStore the storage of source locations
-  * @param changeListener the tracer of expression updates
-  */
+ * This listener registers the SMT metrics that are created when an expression is being translated in SMT.
+ * These metrics are collected only for those expressions that have source information, which can be
+ * displayed to the user.
+ *
+ * @param sourceStore the storage of source locations
+ * @param changeListener the tracer of expression updates
+ */
 class MetricProfilerListener(sourceStore: SourceStore, changeListener: ChangeListener, outFile: File)
     extends SymbStateRewriterListener with LazyLogging {
   private var _metricsPerId: Map[UID, SolverContextMetrics] = Map()
@@ -23,10 +23,10 @@ class MetricProfilerListener(sourceStore: SourceStore, changeListener: ChangeLis
   private var syncTimestampSecMillis: Long = System.currentTimeMillis()
 
   /**
-    * This method is called by the symbolic state rewriter.
-    * @param translatedEx an expression to report
-    * @param metricsDelta the SMT metrics that were reported during the translation to SMT
-    */
+   * This method is called by the symbolic state rewriter.
+   * @param translatedEx an expression to report
+   * @param metricsDelta the SMT metrics that were reported during the translation to SMT
+   */
   override def onRewrite(translatedEx: TlaEx, metricsDelta: SolverContextMetrics): Unit = {
     val id = translatedEx.ID
     if (changeListener.isDefinedAt(id) || sourceStore.contains(id)) {
@@ -84,14 +84,15 @@ class MetricProfilerListener(sourceStore: SourceStore, changeListener: ChangeLis
 }
 
 object MetricProfilerListener {
+
   /**
-    * The minimal weight that is required to print a profile entry
-    */
+   * The minimal weight that is required to print a profile entry
+   */
   val MIN_WEIGHT = 0
 
   /**
-    * How often (in milliseconds) an update triggers a sync to file.
-    */
+   * How often (in milliseconds) an update triggers a sync to file.
+   */
   val FILE_SYNC_MS = 60000
 
   protected object EntryOrdering extends Ordering[(UID, SolverContextMetrics)] {

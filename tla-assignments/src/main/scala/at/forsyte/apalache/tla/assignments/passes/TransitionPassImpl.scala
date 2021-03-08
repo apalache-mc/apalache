@@ -1,14 +1,11 @@
 package at.forsyte.apalache.tla.assignments.passes
 
-import java.io.File
-import java.nio.file.Path
-
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.assignments._
 import at.forsyte.apalache.tla.imp.findBodyOf
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.io.PrettyWriter
+import at.forsyte.apalache.tla.lir.io.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
@@ -17,28 +14,29 @@ import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
+import java.io.File
+import java.nio.file.Path
+
 /**
-  * This pass finds symbolic transitions in Init and Next.
-  */
-class TransitionPassImpl @Inject()(options: PassOptions,
-                                   sourceStore: SourceStore,
-                                   tracker: TransformationTracker,
-                                   changeListener: ChangeListener,
-                                   incrementalRenaming: IncrementalRenaming,
-                                   @Named("AfterTransitionFinder") nextPass: Pass with TlaModuleMixin)
-  extends TransitionPass with LazyLogging {
+ * This pass finds symbolic transitions in Init and Next.
+ */
+class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceStore, tracker: TransformationTracker,
+    changeListener: ChangeListener, incrementalRenaming: IncrementalRenaming, writerFactory: TlaWriterFactory,
+    @Named("AfterTransitionFinder") nextPass: Pass with TlaModuleMixin)
+    extends TransitionPass with LazyLogging {
+
   /**
-    * The name of the pass
-    *
-    * @return the name associated with the pass
-    */
+   * The name of the pass
+   *
+   * @return the name associated with the pass
+   */
   override def name: String = "TransitionFinderPass"
 
   /**
-    * Run the pass
-    *
-    * @return true, if the pass was successful
-    */
+   * Run the pass
+   *
+   * @return true, if the pass was successful
+   */
   override def execute(): Boolean = {
     val inModule = tlaModule.get
 
@@ -62,10 +60,10 @@ class TransitionPassImpl @Inject()(options: PassOptions,
 
         case Some(cinitName) =>
           logger.info(s"  > Found constant initializer $cinitName")
-          val cinitEx = findBodyOf(cinitName + "Primed", inModule.operDeclarations :_*)
+          val cinitEx = findBodyOf(cinitName + "Primed", inModule.operDeclarations: _*)
           // We don't perform the standard assignment-search on cinit,
           // we just replace EVERY x' = e with x' <- e
-          val tr = AssignmentOperatorIntroduction( { _ => true }, tracker )
+          val tr = AssignmentOperatorIntroduction({ _ => true }, tracker)
           val newEx = tr(cinitEx)
           Seq(ModuleAdapter.exprToOperDef(NormalizedNames.CONST_INIT, newEx))
       }
@@ -80,7 +78,7 @@ class TransitionPassImpl @Inject()(options: PassOptions,
 
     // print the resulting module
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    PrettyWriter.write(outModule, new File(outdir.toFile, "out-transition.tla"))
+    writerFactory.writeModuleToFile(outModule, new File(outdir.toFile, "out-transition.tla"))
 
     setModule(outModule)
     true
@@ -94,7 +92,7 @@ class TransitionPassImpl @Inject()(options: PassOptions,
 
     val transitionPairs = SmtFreeSymbolicTransitionExtractor(tracker, sourceLoc)(vars.toSet, primedName)
     // sort the transitions by their occurrence in the source code
-    val sorter = new TransitionOrder( sourceLoc )
+    val sorter = new TransitionOrder(sourceLoc)
     val sortedPairs = sorter.sortBySource(transitionPairs)
     if (sortedPairs.isEmpty) {
       throw new AssignmentException("Failed to find assignments and symbolic transitions in " + inOperName)
@@ -104,11 +102,11 @@ class TransitionPassImpl @Inject()(options: PassOptions,
   }
 
   /**
-    * Get the next pass in the chain. What is the next pass is up
-    * to the module configuration and the pass outcome.
-    *
-    * @return the next pass, if exists, or None otherwise
-    */
+   * Get the next pass in the chain. What is the next pass is up
+   * to the module configuration and the pass outcome.
+   *
+   * @return the next pass, if exists, or None otherwise
+   */
   override def next(): Option[Pass] = {
     tlaModule map { m =>
       nextPass.setModule(m)

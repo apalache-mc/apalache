@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaTempOper}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic._
 
@@ -33,6 +34,9 @@ class SubstTranslator(
               val copy = d.copy(body = subRec(d.body))
               sourceStore.find(d.body.ID).foreach { id =>
                 sourceStore.add(copy.body.ID, id)
+              }
+              annotationStore.get(d.ID).foreach { annotations =>
+                annotationStore += copy.ID -> annotations
               }
               copy
             }

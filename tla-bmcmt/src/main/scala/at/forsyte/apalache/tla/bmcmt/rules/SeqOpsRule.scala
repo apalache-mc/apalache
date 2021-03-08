@@ -9,22 +9,22 @@ import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.lir.oper.TlaSeqOper
 
 /**
-  * Sequence operations: Head, Tail, Len, SubSeq, and Append.
-  *
-  * @author Igor Konnov
-  */
+ * Sequence operations: Head, Tail, Len, SubSeq, and Append.
+ *
+ * @author Igor Konnov
+ */
 class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val picker = new CherryPick(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
-      case OperEx(TlaSeqOper.head, _) => true
-      case OperEx(TlaSeqOper.tail, _) => true
+      case OperEx(TlaSeqOper.head, _)         => true
+      case OperEx(TlaSeqOper.tail, _)         => true
       case OperEx(TlaSeqOper.subseq, _, _, _) => true
-      case OperEx(TlaSeqOper.len, _) => true
-      case OperEx(TlaSeqOper.append, _, _) => true
-      case OperEx(TlaSeqOper.concat, _, _) => true
-        // TlaSeqOper.selectseq => ???
+      case OperEx(TlaSeqOper.len, _)          => true
+      case OperEx(TlaSeqOper.append, _, _)    => true
+      case OperEx(TlaSeqOper.concat, _, _)    => true
+      // TlaSeqOper.selectseq => ???
       case _ => false
     }
   }
@@ -89,11 +89,12 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val expectedEnd = rewriteToCell(tla.plus(start, newEndEx))
     // use the computed values, as soon as they do not violate the invariant:
     //   start <= end, start >= oldStart, end <= oldEnd
-    val seqInvariant = rewriteToCell(tla.and(
-        tla.le(expectedStart, expectedEnd),
-        tla.le(start, expectedStart),
-        tla.le(expectedEnd, end)
-      ))
+    val seqInvariant = rewriteToCell(
+        tla.and(
+            tla.le(expectedStart, expectedEnd),
+            tla.le(start, expectedStart),
+            tla.le(expectedEnd, end)
+        ))
 
     val newStart = rewriteToCell(tla.ite(seqInvariant, expectedStart, tla.int(0)))
     val newEnd = rewriteToCell(tla.ite(seqInvariant, expectedEnd, tla.int(0)))
@@ -126,7 +127,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
       nextState = picker.pickByOracle(nextState, oracle, Seq(oldElemCell, newElemCell), nextState.arena.cellTrue())
       // pick the element from the old sequence: start <= no /\ no < end => oracle = 0
       solverAssert(tla.impl(tla.and(tla.le(start, tla.int(no)), tla.lt(tla.int(no), end)),
-        oracle.whenEqualTo(nextState, 0)))
+              oracle.whenEqualTo(nextState, 0)))
       // pick the element from the new sequence: no = end => oracle = 1
       solverAssert(tla.impl(tla.eql(tla.int(no), end), oracle.whenEqualTo(nextState, 1)))
       // the other elements are unrestricted, give some freedom to the solver
@@ -205,18 +206,14 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // Otherwise, set oracle to N
       val inRange1 = tla.lt(tla.int(i), len1)
       val inRange2 =
-        tla.and(
-          tla.le(len1, tla.int(i)),
-          tla.lt(tla.int(i), len1plus2))
+        tla.and(tla.le(len1, tla.int(i)), tla.lt(tla.int(i), len1plus2))
 
       val whenInRange1 =
         tla.or(tla.not(inRange1), tla.eql(oracle.intCell, tla.plus(tla.int(i), start1)))
       val whenInRange2 =
-        tla.or(tla.not(inRange2),
-               tla.eql(oracle.intCell, tla.plus(tla.int(i), offset2)))
+        tla.or(tla.not(inRange2), tla.eql(oracle.intCell, tla.plus(tla.int(i), offset2)))
       val whenOutOfRange =
-        tla.or(tla.lt(tla.int(i), len1plus2),
-          tla.eql(oracle.intCell, tla.int(ntotal)))
+        tla.or(tla.lt(tla.int(i), len1plus2), tla.eql(oracle.intCell, tla.int(ntotal)))
 
       solverAssert(whenInRange1)
       solverAssert(whenInRange2)
@@ -228,7 +225,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val newCells: Seq[ArenaCell] = 0.until(ntotal) map pickElem
 
     // finally, add start, end, and the elements to the sequence
-    nextState = nextState.updateArena(_.appendHasNoSmt(seq3, start3 +: end3 +: newCells :_*))
+    nextState = nextState.updateArena(_.appendHasNoSmt(seq3, start3 +: end3 +: newCells: _*))
 
     nextState.setRex(seq3)
   }

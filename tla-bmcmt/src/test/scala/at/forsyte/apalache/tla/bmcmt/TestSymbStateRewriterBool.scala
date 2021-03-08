@@ -1,19 +1,16 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.NoRule
-import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.bmcmt.types.{AnnotationParser, BoolT, FinSetT, IntT}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaBoolOper, TlaOper}
-import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaNatSet}
-import at.forsyte.apalache.tla.lir.values.TlaBool
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaBoolSet, TlaNatSet}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.junit.JUnitRunner
-
-import scala.collection.immutable.HashMap
 
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with BeforeAndAfterEach {
@@ -98,9 +95,8 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     // this tricky test comes from Bakery, where an assignment is made in one branch of a conjunction
     val exists =
       OperEx(BmcOper.skolem,
-        tla.exists(tla.name("i"),
-          tla.withType(tla.enumSet(), AnnotationParser.toTla(FinSetT(IntT()))),
-          tla.in(tla.prime(tla.name("x")), tla.enumSet(tla.name("i")))))
+          tla.exists(tla.name("i"), tla.withType(tla.enumSet(), AnnotationParser.toTla(FinSetT(IntT()))),
+              tla.in(tla.prime(tla.name("x")), tla.enumSet(tla.name("i")))))
     val ite = tla.ite(exists, tla.prime(tla.name("x")), tla.int(0))
 
     val state = new SymbState(ite, arena, Binding())
@@ -298,7 +294,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case predEx@NameEx(name) =>
+      case predEx @ NameEx(name) =>
         solverContext.assertGroundExpr(predEx)
         rewriter.push()
         // both false
@@ -335,9 +331,8 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
   }
 
   test("""SE-EX3: \E x \in {1, 2, 3}: x = 2 ~~> $B$k""") {
-    val ex = tla.exists(tla.name("x"),
-      tla.enumSet(tla.int(1), tla.int(2), tla.int(3)),
-      tla.eql(tla.int(2), tla.name("x")))
+    val ex =
+      tla.exists(tla.name("x"), tla.enumSet(tla.int(1), tla.int(2), tla.int(3)), tla.eql(tla.int(2), tla.name("x")))
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -354,9 +349,9 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
   test("""SE-EX: \E x \in {1, 2}: y' = x ~~> 2 assignments, regression""") {
     // an assignment inside an existential quantifier is tricky, as we can multiple values to variables
     val ex = tla.exists(
-      tla.name("x"),
-      tla.enumSet(tla.int(1), tla.int(2)),
-      tla.assignPrime(tla.name("y"), tla.name("x"))
+        tla.name("x"),
+        tla.enumSet(tla.int(1), tla.int(2)),
+        tla.assignPrime(tla.name("y"), tla.name("x"))
     )
     ////
     val state = new SymbState(ex, arena, Binding())
@@ -387,9 +382,8 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
   }
 
   test("""SE-EX3: \E x \in {1, 2, 3}: x > 4 ~~> $B$k""") {
-    val ex = tla.exists(tla.name("x"),
-      tla.enumSet(tla.int(1), tla.int(2), tla.int(3)),
-      tla.gt(tla.name("x"), tla.int(4)))
+    val ex =
+      tla.exists(tla.name("x"), tla.enumSet(tla.int(1), tla.int(2), tla.int(3)), tla.gt(tla.name("x"), tla.int(4)))
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -409,9 +403,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
 
     val ex =
       OperEx(BmcOper.skolem,
-        tla.exists(tla.name("x"),
-          dynEmpty(tla.enumSet(tla.int(1))),
-          tla.gt(tla.name("x"), tla.int(4))))
+          tla.exists(tla.name("x"), dynEmpty(tla.enumSet(tla.int(1))), tla.gt(tla.name("x"), tla.int(4))))
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create()
 
@@ -424,13 +416,11 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     // this works for skolem constants only
     val ex =
       OperEx(BmcOper.skolem,
-        tla.exists(tla.name("i"),
-          ValEx(TlaNatSet),
-          tla.and(
-            tla.eql(tla.name("i"), tla.int(10)),
-            tla.assignPrime(tla.name("x"), tla.name("i"))
-          )
-        ))
+          tla.exists(tla.name("i"), ValEx(TlaNatSet),
+              tla.and(
+                  tla.eql(tla.name("i"), tla.int(10)),
+                  tla.assignPrime(tla.name("x"), tla.name("i"))
+              )))
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create()
 
@@ -445,14 +435,14 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     // this works for skolem constants only
     val ex =
       OperEx(BmcOper.skolem,
-        tla.exists(
-          tla.name("i"),
-          tla.dotdot(tla.name("a"), tla.name("b")),
-          tla.and(
-            tla.eql(tla.mod(tla.name("i"), tla.int(3)), tla.int(1)),
-            tla.assignPrime(tla.name("x"), tla.name("i"))
-          )
-        )) ///
+          tla.exists(
+              tla.name("i"),
+              tla.dotdot(tla.name("a"), tla.name("b")),
+              tla.and(
+                  tla.eql(tla.mod(tla.name("i"), tla.int(3)), tla.int(1)),
+                  tla.assignPrime(tla.name("x"), tla.name("i"))
+              )
+          )) ///
 
     val rewriter = create()
 
@@ -472,9 +462,8 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
   }
 
   test("""SE-ALL3: \A x \in {1, 2, 3}: x < 10 ~~> $B$k""") {
-    val ex = tla.forall(tla.name("x"),
-      tla.enumSet(tla.int(1), tla.int(2), tla.int(3)),
-      tla.lt(tla.name("x"), tla.int(10)))
+    val ex =
+      tla.forall(tla.name("x"), tla.enumSet(tla.int(1), tla.int(2), tla.int(3)), tla.lt(tla.name("x"), tla.int(10)))
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -488,9 +477,8 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
   }
 
   test("""SE-ALL3: \A x \in {1, 2, 3}: x > 2 ~~> $B$k""") {
-    val ex = tla.forall(tla.name("x"),
-      tla.enumSet(tla.int(1), tla.int(2), tla.int(3)),
-      tla.gt(tla.name("x"), tla.int(2)))
+    val ex =
+      tla.forall(tla.name("x"), tla.enumSet(tla.int(1), tla.int(2), tla.int(3)), tla.gt(tla.name("x"), tla.int(2)))
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)

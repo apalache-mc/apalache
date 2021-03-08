@@ -1,14 +1,14 @@
 package at.forsyte.apalache.tla.lir.src
 
 /**
-  * This class captures a region in a text file. Instead of the standard representation of a position
-  * as a (line, column), we keep it as line * MAX_WIDTH + column, where MAX_WIDTH is the length of the longest possible
-  * line. Whenever a longer column value is given, it is truncated.
-  *
-  * @param start the starting position
-  * @param end the ending position, inclusive
-  * @author Igor Konnov
-  */
+ * This class captures a region in a text file. Instead of the standard representation of a position
+ * as a (line, column), we keep it as line * MAX_WIDTH + column, where MAX_WIDTH is the length of the longest possible
+ * line. Whenever a longer column value is given, it is truncated.
+ *
+ * @param start the starting position
+ * @param end the ending position, inclusive
+ * @author Igor Konnov
+ */
 class SourceRegion(val start: SourcePosition, val end: SourcePosition) {
   def isInside(larger: SourceRegion): Boolean = {
     start.offset >= larger.start.offset && end.offset <= larger.end.offset
@@ -27,7 +27,6 @@ class SourceRegion(val start: SourcePosition, val end: SourcePosition) {
   override def toString: String = {
     start + "-" + end
   }
-
 
   def canEqual(other: Any): Boolean = other.isInstanceOf[SourceRegion]
 

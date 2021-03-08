@@ -8,11 +8,12 @@ abstract class TlaSetOper extends TlaOper {
 }
 
 object TlaSetOper {
+
   /**
-  Define a set by enumerating its elements, i.e., {e_1, ..., e_k}
-    Note that we explicitly forbid to construct an empty set using this operator.
-    To construct an empty set, use emptySet.
-    */
+   *  Define a set by enumerating its elements, i.e., {e_1, ..., e_k}
+   *    Note that we explicitly forbid to construct an empty set using this operator.
+   *    To construct an empty set, use emptySet.
+   */
   object enumSet extends TlaSetOper {
     override val arity = AnyArity() // FIX: we allow zero arguments as well
     override val name = "{...}"
@@ -20,8 +21,8 @@ object TlaSetOper {
   }
 
   /**
-    * Construct a set of functions from a set S to a set T, i.e., [S -> T].
-    */
+   * Construct a set of functions from a set S to a set T, i.e., [S -> T].
+   */
   object funSet extends TlaSetOper {
     override def arity: OperArity = FixedArity(2)
     override val name: String = "[S -> T]"
@@ -29,11 +30,11 @@ object TlaSetOper {
   }
 
   /**
-    * Construct a set of records, e.g., [ f_1: S_1, ..., f_k: S_k ].
-    * The order of the arguments is as follows: (f_1, S_1, ..., f_k, S_k).
-    * The field names f_1, ..., f_k are string constants,
-    * that is, ValEx(TlaStr("...")) and not NameEx("...")
-    */
+   * Construct a set of records, e.g., [ f_1: S_1, ..., f_k: S_k ].
+   * The order of the arguments is as follows: (f_1, S_1, ..., f_k, S_k).
+   * The field names f_1, ..., f_k are string constants,
+   * that is, ValEx(TlaStr("...")) and not NameEx("...")
+   */
   object recSet extends TlaSetOper {
     override def arity: OperArity = AnyEvenArity()
     override val name: String = "$SetOfRcds"
@@ -41,8 +42,8 @@ object TlaSetOper {
   }
 
   /**
-    * Construct a set of sequences from a set S i.e., Seq(S).
-    */
+   * Construct a set of sequences from a set S i.e., Seq(S).
+   */
   object seqSet extends TlaSetOper {
     override def arity: OperArity = FixedArity(1)
     override val name: String = "Seq"
@@ -81,10 +82,10 @@ object TlaSetOper {
   }
 
   /**
-    * The standard \subset operator.
-    *
-    * WARNING: Do not confuse with SUBSET that is implemented by TlaSetOper.powerset.
-    */
+   * The standard \subset operator.
+   *
+   * WARNING: Do not confuse with SUBSET that is implemented by TlaSetOper.powerset.
+   */
   object subsetProper extends TlaSetOper {
     override val arity = FixedArity(2)
     override val name = "\\subset"
@@ -112,9 +113,9 @@ object TlaSetOper {
   }
 
   /**
-    * A restricted set comprehension: { x \in S : p }.
-    * The argument order is: (x, S, p). Note that x may be a tuple.
-    */
+   * A restricted set comprehension: { x \in S : p }.
+   * The argument order is: (x, S, p). Note that x may be a tuple.
+   */
   object filter extends TlaSetOper {
     // Jure, 24.11.2017:
     // Should we unify notation with TlaFunOper.funDef? funDef has args (e, (x, S)+ )
@@ -128,18 +129,19 @@ object TlaSetOper {
   }
 
   /**
-    * A set mapping: { e: x_1 \in S_1, ..., x_k \in S_k }.
-    * The argument order is: (e, x_1, S_1, ..., x_k, S_k)
-    */
+   * A set mapping: { e: x_1 \in S_1, ..., x_k \in S_k }.
+   * The argument order is: (e, x_1, S_1, ..., x_k, S_k)
+   */
   object map extends TlaSetOper {
-    override val arity = new OperArity( k => k >= 3 && k % 2 == 1 )
+    override val arity = new OperArity(k => k >= 3 && k % 2 == 1)
     override val name = "map"
     override val precedence: (Int, Int) = (16, 16)
   }
 
-  /** TLA SUBSET, i.e., the set of all subsets (of a given set).
-    We use the name 'powerset' to avoid confusion with \subset and \subseteq.
-    */
+  /**
+   * TLA SUBSET, i.e., the set of all subsets (of a given set).
+   *    We use the name 'powerset' to avoid confusion with \subset and \subseteq.
+   */
   object powerset extends TlaSetOper {
     override val arity = FixedArity(1)
     override val name = "SUBSET"
@@ -147,16 +149,17 @@ object TlaSetOper {
   }
 
   /**
-    * An alias for powerset, as TLA+ has this (rather confusing) keyword for the powerset.
-    *
-    * WARNING: Do not confuse with subsetProper, that is, a proper subset relation.
-    */
+   * An alias for powerset, as TLA+ has this (rather confusing) keyword for the powerset.
+   *
+   * WARNING: Do not confuse with subsetProper, that is, a proper subset relation.
+   */
   val SUBSET: TlaSetOper = powerset
 
-  /** TLA UNION, i.e., the union of all elements (of a given set).
-
-    WARNING: use it when you really need it. In all other cases, use \cup.
-    */
+  /**
+   * TLA UNION, i.e., the union of all elements (of a given set).
+   *
+   *    WARNING: use it when you really need it. In all other cases, use \cup.
+   */
   object union extends TlaSetOper {
     override val arity = FixedArity(1)
     override val name = "UNION"
@@ -164,10 +167,10 @@ object TlaSetOper {
   }
 
   /**
-    Define a cartesian product of one or more sets.
-    Note that we explicitly forbid to construct an empty set using this operator.
-    To construct an empty set, use enumSet with no arguments.
-    */
+   *    Define a cartesian product of one or more sets.
+   *    Note that we explicitly forbid to construct an empty set using this operator.
+   *    To construct an empty set, use enumSet with no arguments.
+   */
   object times extends TlaSetOper {
     override val arity = AnyArity()
     override val name = "\\times"

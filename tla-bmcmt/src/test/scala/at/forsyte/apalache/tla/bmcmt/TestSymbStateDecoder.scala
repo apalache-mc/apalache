@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.types.{AnnotationParser, FinSetT, IntT, Seq
 import at.forsyte.apalache.tla.lir.{TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -177,8 +178,7 @@ class TestSymbStateDecoder extends RewriterBase {
 
   test("decode sequence") {
     val seqEx =
-      tla.withType(tla.tuple(tla.int(1), tla.int(2), tla.int(3), tla.int(4)),
-        AnnotationParser.toTla(SeqT(IntT())))
+      tla.withType(tla.tuple(tla.int(1), tla.int(2), tla.int(3), tla.int(4)), AnnotationParser.toTla(SeqT(IntT())))
     val subseqEx = tla.subseq(seqEx, tla.int(2), tla.int(3))
     val state = new SymbState(subseqEx, arena, Binding())
     val rewriter = create()

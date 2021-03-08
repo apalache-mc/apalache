@@ -11,30 +11,30 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 import scala.collection.immutable.SortedSet
 
 /**
-  * Rewrites a record constructor [f_1 |-> e_1, ..., f_k |-> e_k].
-  *
-  * Internally, a record is stored as a tuple,
-  * where an index i corresponds to the ith key in the sorted set of record keys.
-  *
-  * Note that one can extend a record with a type annotation, e.g.,
-  * the expression [a |-> 1] <: [a |-> Int, b |-> BOOLEAN] introduces a record r of two fields (a: Int and b: BOOLEAN).
-  * The value r.a is defined as 1, whereas r.b is arbitrary.
-  *
-  * @author Igor Konnov
-  */
+ * Rewrites a record constructor [f_1 |-> e_1, ..., f_k |-> e_k].
+ *
+ * Internally, a record is stored as a tuple,
+ * where an index i corresponds to the ith key in the sorted set of record keys.
+ *
+ * Note that one can extend a record with a type annotation, e.g.,
+ * the expression [a |-> 1] <: [a |-> Int, b |-> BOOLEAN] introduces a record r of two fields (a: Int and b: BOOLEAN).
+ * The value r.a is defined as 1, whereas r.b is arbitrary.
+ *
+ * @author Igor Konnov
+ */
 class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val defaultValueFactory = new DefaultValueFactory(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaFunOper.enum, _*) => true
-      case _ => false
+      case _                           => false
     }
   }
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      case OperEx(TlaFunOper.enum, elems@_*) =>
+      case OperEx(TlaFunOper.enum, elems @ _*) =>
         val keyEs = elems.zipWithIndex.filter(_._2 % 2 == 0).map(_._1) // pick the even indices (starting with 0)
         val ctorKeys = keysToStr(state.ex, keyEs.toList)
         val valueEs = elems.zipWithIndex.filter(_._2 % 2 == 1).map(_._1) // pick the odd indices (starting with 0)
@@ -82,12 +82,12 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         // Create the domain cell. Note that the actual domain may have fewer keys than recordT.fields.keys
         val (newArena, domain) =
-          rewriter.recordDomainCache.getOrCreate(nextState.arena, (SortedSet(ctorKeys :_*), extraKeys))
+          rewriter.recordDomainCache.getOrCreate(nextState.arena, (SortedSet(ctorKeys: _*), extraKeys))
         nextState = nextState.setArena(newArena.setDom(recordCell, domain))
         // importantly, the record keys that are outside of ctorKeys should not belong to the domain!
         if (extraKeyMap.nonEmpty) {
           val extraOutsideOfDomain = extraKeyMap.values.map(f => tla.notin(f.toNameEx, domain.toNameEx))
-          rewriter.solverContext.assertGroundExpr(tla.and(extraOutsideOfDomain.toSeq :_*))
+          rewriter.solverContext.assertGroundExpr(tla.and(extraOutsideOfDomain.toSeq: _*))
         }
 
         nextState.setRex(recordCell.toNameEx)
