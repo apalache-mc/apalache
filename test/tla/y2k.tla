@@ -16,13 +16,20 @@
 
 EXTENDS Integers
  
-CONSTANT BIRTH_YEAR,    \* the year to start with, between 0 and 99
-         LICENSE_AGE    \* the minimum age to obtain a license
+CONSTANT
+    \* @type: Int;
+    BIRTH_YEAR, \* the year to start with, between 0 and 99
+    \* @type: Int;
+    LICENSE_AGE    \* the minimum age to obtain a license
          
 ASSUME(BIRTH_YEAR \in 0..99)              
 ASSUME(LICENSE_AGE \in 1..99)              
  
-VARIABLE year, hasLicense
+VARIABLE
+    \* @type: Int;
+    year,
+    \* @type: Bool;
+    hasLicense
 
 Age == year - BIRTH_YEAR 
 
