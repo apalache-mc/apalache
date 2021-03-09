@@ -43,5 +43,5 @@ class CheckCmd extends Command(name = "check", description = "Check a TLA+ speci
   var noDeadlocks: Boolean =
     opt[Boolean](name = "no-deadlock", default = true, description = "do not check for deadlocks, default: true")
   var withSnowcat: Boolean =
-    opt[Boolean](name = "with-snowcat", default = true, description = "use the new type checker Snowcat")
+    opt[Boolean](name = "with-snowcat", default = false, description = "use the new type checker Snowcat")
 }
