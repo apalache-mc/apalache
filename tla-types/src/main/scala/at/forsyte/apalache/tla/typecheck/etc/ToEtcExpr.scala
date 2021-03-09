@@ -782,6 +782,34 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         val opsig = OperT1(Seq(FunT1(IntT1(), a), IntT1()), SeqT1(a))
         mkExRefApp(opsig, Seq(fun, len))
 
+      case OperEx(BmcOper.assign, lhs, rhs) =>
+        val a = varPool.fresh
+        // (a, a) => Bool
+        val opsig = OperT1(Seq(a, a), BoolT1())
+        mkExRefApp(opsig, Seq(lhs, rhs))
+
+      case OperEx(BmcOper.expand, set) =>
+        val a = varPool.fresh
+        // a => Bool
+        val opsig = OperT1(Seq(a), a)
+        mkExRefApp(opsig, Seq(set))
+
+      case OperEx(BmcOper.skolem, predicate) =>
+        // Bool => Bool
+        val opsig = OperT1(Seq(BoolT1()), BoolT1())
+        mkExRefApp(opsig, Seq(predicate))
+
+      case OperEx(BmcOper.constCard, predicate) =>
+        // Bool => Bool
+        val opsig = OperT1(Seq(BoolT1()), BoolT1())
+        mkExRefApp(opsig, Seq(predicate))
+
+      case OperEx(BmcOper.distinct, args @ _*) =>
+        val a = varPool.fresh
+        // (a, ..., a) => Bool
+        val opsig = OperT1(args.map(_ => a), BoolT1())
+        mkExRefApp(opsig, args)
+
       //******************************************** MISC **************************************************
       case OperEx(BmcOper.withType, lhs, _) =>
         // Met an old type annotation. Warn the user and ignore the annotation.
