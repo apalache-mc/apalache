@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.passes
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.typecheck.passes.EtcTypeCheckerPassImpl
 import com.google.inject.Inject
@@ -20,9 +21,11 @@ import com.typesafe.scalalogging.LazyLogging
  * @param annotationStore annotations store
  * @param nextPass        next pass to be used
  */
-class PostTypeCheckerPassImpl @Inject() (options: PassOptions, sourceStore: SourceStore, tracker: TransformationTracker,
-    annotationStore: AnnotationStore, @Named("AfterPostTypeChecker") nextPass: Pass with TlaModuleMixin)
-    extends EtcTypeCheckerPassImpl(options, sourceStore, tracker, annotationStore, nextPass) with LazyLogging {
+class PostTypeCheckerPassImpl @Inject() (options: PassOptions, sourceStore: SourceStore, changeListener: ChangeListener,
+    tracker: TransformationTracker, annotationStore: AnnotationStore,
+    @Named("AfterPostTypeChecker") nextPass: Pass with TlaModuleMixin)
+    extends EtcTypeCheckerPassImpl(options, sourceStore, changeListener, tracker, annotationStore, nextPass)
+    with LazyLogging {
 
   override def name: String = "PostTypeCheckerSnowcat"
 }
