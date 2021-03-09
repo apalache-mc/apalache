@@ -94,4 +94,33 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
       }
     }
   }
+
+  test("the tools runs consumes its output") {
+    val (rootName, modules) =
+      sanyImporter.loadFromSource("MegaSpec1", getMegaSpec1)
+
+    val mod = modules(rootName)
+
+    val listener = mock[TypeCheckerListener]
+
+    expecting {
+      // lots of types found
+      listener
+        .onTypeFound(EasyMock.anyObject[ExactRef], EasyMock.anyObject[TlaType1])
+        .anyTimes()
+      // but no type errors
+    }
+    whenExecuting(listener) {
+      val typechecker = new TypeCheckerTool(annotationStore, false)
+
+      def defaultTag(uid: UID): Nothing = {
+        throw new TypingException("No type for UID: " + uid)
+      }
+
+      val output = typechecker.checkAndTag(new IdleTracker(), listener, defaultTag, mod)
+      assert(output.isDefined)
+      val output2 = typechecker.checkAndTag(new IdleTracker(), listener, defaultTag, output.get)
+      assert(output2.isDefined)
+    }
+  }
 }
