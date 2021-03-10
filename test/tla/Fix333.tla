@@ -1,5 +1,7 @@
 ------------------------- MODULE Fix333 -----------------------------------
-VARIABLES error
+VARIABLES
+    \* @type: Bool;
+    error
 
 Init ==
     error = FALSE

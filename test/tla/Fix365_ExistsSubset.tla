@@ -1,7 +1,9 @@
 --------------------- MODULE Fix365_ExistsSubset ------------------------------
 EXTENDS Integers, FiniteSets
 
-VARIABLE S
+VARIABLE
+    \* @type: Set(Str);
+    S
 
 Init ==
     S = {"a", "b", "c"}

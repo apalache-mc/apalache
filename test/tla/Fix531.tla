@@ -1,7 +1,9 @@
 -------------------------------- MODULE Fix531 --------------------------------
 EXTENDS Integers
 
-VARIABLE f
+VARIABLE
+    \* @type: <<Int, Int>> -> Int;
+    f
 
 Init ==
     f = [<<a, b>> \in { <<1, 3>>, <<2, 4>> } |-> a + b]

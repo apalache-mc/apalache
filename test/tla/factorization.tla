@@ -6,7 +6,13 @@
 
 EXTENDS Integers
 
-VARIABLE m, n, answer
+VARIABLE
+    \* @type: Int;
+    m,
+    \* @type: Int;
+    n,
+    \* @type: Bool;
+    answer
 
 Init ==
     m = 0 /\ n = 0 /\ answer = FALSE
