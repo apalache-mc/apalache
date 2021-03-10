@@ -102,6 +102,6 @@ class TestPrimePropagation extends FunSuite with BeforeAndAfter with Checkers {
       }
     }
 
-    check(prop, minSuccessful(10000), sizeRange(10))
+    check(prop, minSuccessful(1000), sizeRange(10))
   }
 }
