@@ -54,7 +54,7 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
         Untyped()
       }
 
-      val listener = new LoggingTypeCheckerListener(sourceStore)
+      val listener = new LoggingTypeCheckerListener(sourceStore, changeListener)
       val taggedModule = tool.checkAndTag(tracker, listener, defaultTag, tlaModule.get)
 
       taggedModule match {
