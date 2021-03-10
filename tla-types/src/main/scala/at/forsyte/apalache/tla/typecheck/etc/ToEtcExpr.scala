@@ -100,10 +100,10 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         findAnnotation(annotationStore, decl.ID, StandardAnnotations.TYPE) map {
           case Annotation(StandardAnnotations.TYPE, AnnotationStr(annotationText)) =>
             parseType(decl.name, annotationText)
-        }
 
-      case a =>
-        throw new TypingInputException(s"Unexpected annotation of ${decl.name}: $a")
+          case a =>
+            throw new TypingInputException(s"Unexpected annotation of ${decl.name}: $a")
+        }
     }
   }
 
