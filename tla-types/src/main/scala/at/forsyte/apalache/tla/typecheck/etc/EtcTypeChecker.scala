@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
+import at.forsyte.apalache.tla.lir.UID
 import at.forsyte.apalache.tla.typecheck._
 import at.forsyte.apalache.tla.typecheck.etc.EtcTypeChecker.UnwindException
 
@@ -12,6 +13,8 @@ import at.forsyte.apalache.tla.typecheck.etc.EtcTypeChecker.UnwindException
  */
 class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) extends TypeChecker with EtcBuilder {
   private var listener: TypeCheckerListener = new DefaultTypeCheckerListener()
+  // we store the computed types for better error reporting, though it may slow down the type checker
+  private var foundTypes: Map[UID, TlaType1] = Map.empty
 
   /**
    * Compute the expression type in a type context. If the expression is not well-typed, return None.
@@ -80,8 +83,15 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
       // a variable name, either an operator name, or a variable introduced by lambda (EtcAbs)
       case EtcName(name) =>
         if (ctx.types.contains(name)) {
-          // process as a constant, as we might want to force the expected result
-          computeRec(ctx, solver, mkConst(ex.sourceRef, ctx.types(name)))
+          val knownType = ctx.types(name)
+          if (knownType.usedNames.isEmpty) {
+            // This is a monotype. Report it right away.
+            onTypeFound(ex.sourceRef, knownType)
+            knownType
+          } else {
+            // introduce a constant, as the type may get refined later
+            computeRec(ctx, solver, mkConst(ex.sourceRef, knownType))
+          }
         } else {
           onTypeError(ex.sourceRef, s"Undefined name $name. Introduce a type annotation.")
           throw new UnwindException
@@ -103,14 +113,16 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
             throw new TypingException("Expected an operator type, found: " + tt)
         }
         def onError(types: Seq[TlaType1]): Unit = {
-          val sepSigs = String.join(" and ", types.map(_.toString()): _*)
+          val sepSigs = String.join(" or ", types.map(_.toString()): _*)
           if (types.isEmpty) {
             onTypeError(appEx.sourceRef, s"No matching signature for ${argTypes.length} argument(s)")
           } else if (types.length > 1) {
             onTypeError(appEx.sourceRef,
                 s"Need annotation. Arguments match ${types.length} operator signatures: $sepSigs")
           } else {
-            onTypeError(appEx.sourceRef, s"Mismatch in argument types. Expected: $sepSigs")
+            val foundArgTypes = args.map(a => getFoundTypeAsString(a.sourceRef))
+            val argTypesStr = foundArgTypes.mkString(" and ")
+            onTypeError(appEx.sourceRef, s"Mismatch in argument types: $argTypesStr. Expected signature: $sepSigs")
           }
         }
 
@@ -269,9 +281,14 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
     new TypeContext(ctx.types ++ binders.map(_._1.name).zip(elemVars))
   }
 
+  private def getFoundTypeAsString(ref: EtcRef): String = {
+    foundTypes.get(ref.tlaId).map(_.toString).getOrElse("?")
+  }
+
   private def onTypeFound(sourceRef: EtcRef, tt: TlaType1): Unit = {
     sourceRef match {
       case ref: ExactRef =>
+        foundTypes += ref.tlaId -> tt
         listener.onTypeFound(ref, tt)
 
       case _ =>
