@@ -7,7 +7,21 @@ Nodes == 1..N
 
 a <: b == a \* type annotations
 
-VARIABLES Nb, round, val, awake, rem_nbrs, status, msgs
+VARIABLES
+    \* @type: Set(<<Int, Int>>);
+    Nb,
+    \* @type: Int;
+    round,
+    \* @type: Int -> Int;
+    val,
+    \* @type: Int -> Bool;
+    awake,
+    \* @type: Int -> Set(Int);
+    rem_nbrs,
+    \* @type: Int -> Str;
+    status,
+    \* @type: Int -> Set([type: Str, src: Int, val: Int]);
+    msgs
 
 Init ==
         /\ Nb \in SUBSET(Nodes \X Nodes)
@@ -69,7 +83,7 @@ Round3 ==
     /\ UNCHANGED <<status, val>>
 
 Next ==
-    round' = 1 + (round % 3) /\ (Round1 \/ Round2 \/ Round3) /\ UNCHANGED <<Nb>>
+    round' = 1 + (round % 3) /\ (Round1 \/ Round2 \/ Round3) /\ UNCHANGED Nb
     
 IsIndependent ==
     \A edge \in Nb:

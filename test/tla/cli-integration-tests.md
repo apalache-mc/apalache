@@ -266,7 +266,7 @@ The outcome is: NoError
 ### check mis_bug.tla errors
 
 ```sh
-$ apalache-mc check --length=5 --inv=IsIndependent mis_bug.tla | sed 's/I@.*//'
+$ apalache-mc check --length=5 --inv=IsIndependent --with-snowcat mis_bug.tla | sed 's/I@.*//'
 ...
 The outcome is: Error
 Checker has found an error
