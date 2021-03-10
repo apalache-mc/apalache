@@ -36,7 +36,7 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker) ext
       // a OperEx( TlaOper.apply, NameEx( name ), args@_* ) wrapper? Currently, we consider that invalid
       defBodyMap.get(name) match {
         case Some(decl) if decl.formalParams.size == args.size =>
-          instantiateWithArgs(stepLimitOpt)(decl, args)
+          instantiateWithArgs(stepLimitOpt)(decl, args).withType(ex.typeTag)
 
         case Some(decl) if decl.formalParams.size != args.size =>
           val msg = s"Operator $name with arity ${decl.formalParams.size} called with ${args.size} argument(s)."
