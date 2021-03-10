@@ -79,12 +79,12 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
 
   private def dumpToJson(module: TlaModule): Unit = {
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    val outFile = new File(outdir.toFile, "out-typechecker.json")
+    val outFile = new File(outdir.toFile, s"out-${name}.json")
     val writer = new PrintWriter(new FileWriter(outFile, false))
     try {
       val jsonText = new TlaToUJson().apply(module).toString
       writer.write(jsonText)
-      logger.info(" > Wrote json output in: " + outFile)
+      logger.info(" > JSON output: " + outFile)
     } finally {
       writer.close()
     }

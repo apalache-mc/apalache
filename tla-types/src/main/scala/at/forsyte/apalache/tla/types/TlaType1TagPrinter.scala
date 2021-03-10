@@ -9,8 +9,8 @@ class TlaType1TagPrinter extends TypeTagPrinter {
     tag match {
       case Untyped()           => "Untyped"
       case Typed(tt: TlaType1) => tt.toString
-      // treat an unknown type as untyped
-      case Typed(other) => "Untyped"
+      // unexpected type, output as much as we can
+      case Typed(_) => "Typed[%s](%s)".format(tag.getClass.getSimpleName, tag)
     }
   }
 }
