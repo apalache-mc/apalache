@@ -173,7 +173,8 @@ class TlaToJson[T <: JsonRepresentation](factory: JsonFactory[T])(implicit typTa
           kindFieldName -> "TlaOperDecl",
           "name" -> name,
           "formalParams" -> factory.fromTraversable(paramsJsons),
-          "isRecursive" -> decl.isRecursive
+          "isRecursive" -> decl.isRecursive,
+          "body" -> bodyJson
       )
 
     case TlaAssumeDecl(body) =>
