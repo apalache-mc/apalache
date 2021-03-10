@@ -45,6 +45,8 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
       true
     } else {
       logger.info(" > Running Snowcat .::.")
+      dumpToJson(tlaModule.get, "pre")
+
       val inferPoly = options.getOrElse("typecheck", "inferPoly", true)
       val tool = new TypeCheckerTool(annotationStore, inferPoly)
 
@@ -66,7 +68,7 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
         case Some(newModule) =>
           logger.info(" > Your types are great!")
           logger.info(if (isTypeCoverageComplete) " > All expressions are typed" else " > Some expressions are untyped")
-          dumpToJson(newModule)
+          dumpToJson(newModule, "post")
           outputTlaModule = Some(newModule)
           true
 
@@ -77,9 +79,9 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
     }
   }
 
-  private def dumpToJson(module: TlaModule): Unit = {
+  private def dumpToJson(module: TlaModule, prefix: String): Unit = {
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    val outFile = new File(outdir.toFile, s"out-${name}.json")
+    val outFile = new File(outdir.toFile, s"out-$prefix-$name.json")
     val writer = new PrintWriter(new FileWriter(outFile, false))
     try {
       val jsonText = new TlaToUJson().apply(module).toString
