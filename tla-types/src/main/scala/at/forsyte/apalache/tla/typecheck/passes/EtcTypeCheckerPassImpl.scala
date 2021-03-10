@@ -2,14 +2,19 @@ package at.forsyte.apalache.tla.typecheck.passes
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
+import at.forsyte.apalache.io.json.impl.TlaToUJson
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.{TlaModule, TypeTag, UID, Untyped}
 import at.forsyte.apalache.tla.typecheck.TypeCheckerTool
+import at.forsyte.apalache.tla.types.TlaType1PrinterPredefs.printer
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
+
+import java.io.{File, FileWriter, PrintWriter}
+import java.nio.file.Path
 
 class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStore: SourceStore,
     changeListener: ChangeListener, tracker: TransformationTracker, val annotationStore: AnnotationStore,
@@ -61,7 +66,7 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
         case Some(newModule) =>
           logger.info(" > Your types are great!")
           logger.info(if (isTypeCoverageComplete) " > All expressions are typed" else " > Some expressions are untyped")
-          // TODO: output the module in the json format, once the PR #599 has been merged
+          dumpToJson(newModule)
           outputTlaModule = Some(newModule)
           true
 
@@ -69,6 +74,19 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
           logger.info(" > Snowcat asks you to fix the types. Meow.")
           false
       }
+    }
+  }
+
+  private def dumpToJson(module: TlaModule): Unit = {
+    val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
+    val outFile = new File(outdir.toFile, "out-typechecker.json")
+    val writer = new PrintWriter(new FileWriter(outFile, false))
+    try {
+      val jsonText = new TlaToUJson().apply(module).toString
+      writer.write(jsonText)
+      logger.info(" > Wrote json output in: " + outFile)
+    } finally {
+      writer.close()
     }
   }
 
