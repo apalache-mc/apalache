@@ -93,9 +93,8 @@ class TypeRewriter(tracker: TransformationTracker, defaultTag: UID => TypeTag)(t
     transform(decl)
   }
 
-  private def applyToOperDecl(decl: TlaOperDecl): TlaOperDecl = {
-    TlaOperDecl(decl.name, decl.formalParams, this(decl.body))(getOrDefault(decl.ID))
-  }
+  private def applyToOperDecl(decl: TlaOperDecl): TlaOperDecl =
+    decl.copy(body = this(decl.body))(getOrDefault(decl.ID))
 
   private def getOrDefault(uid: UID): TypeTag = {
     types.get(uid) match {

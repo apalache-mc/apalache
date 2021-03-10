@@ -84,9 +84,7 @@ class ExpansionMarker @Inject() (tracker: TransformationTracker) extends TlaExTr
 
     case LetInEx(body, defs @ _*) =>
       // at this point, we only have nullary let-in definitions
-      def mapDef(df: TlaOperDecl) = {
-        TlaOperDecl(df.name, df.formalParams, transform(shallExpand)(df.body))
-      }
+      def mapDef(df: TlaOperDecl) = df.copy(body = transform(shallExpand)(df.body))
 
       LetInEx(transform(shallExpand)(body), defs map mapDef: _*)
 
