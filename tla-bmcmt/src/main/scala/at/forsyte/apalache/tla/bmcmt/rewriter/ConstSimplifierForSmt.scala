@@ -4,7 +4,6 @@ import at.forsyte.apalache.tla.bmcmt.Arena
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.TlaBool
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.pp.ConstSimplifierBase
 
 /**
@@ -42,9 +41,9 @@ class ConstSimplifierForSmt extends ConstSimplifierBase {
 
     case ex @ (NameEx(_) | ValEx(_)) =>
       if (isFalseConst(ex)) {
-        ValEx(TlaBool(false))
+        ValEx(TlaBool(false))(ex.typeTag)
       } else if (isTrueConst(ex)) {
-        ValEx(TlaBool(true))
+        ValEx(TlaBool(true))(ex.typeTag)
       } else {
         ex
       }
