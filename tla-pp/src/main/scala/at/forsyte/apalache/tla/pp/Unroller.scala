@@ -81,9 +81,10 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
    * with the default value.
    */
   private def replaceWithDefaults(defaultsMap: Map[String, TlaEx]): TlaExTransformation = tracker.trackEx {
-    case ex @ OperEx(TlaOper.apply, NameEx(name), _*) if defaultsMap.contains(name) =>
+    // We need to check the base name, because the names of recursive operators defined with LET get changed
+    case ex @ OperEx(TlaOper.apply, NameEx(name), _*) if defaultsMap.contains(IncrementalRenaming.getBase(name)) =>
       // Get the default body, ignore the args
-      defaultsMap(name)
+      defaultsMap(IncrementalRenaming.getBase(name))
     // recursive processing of composite operators and let-in definitions
     case ex @ LetInEx(body, defs @ _*) =>
       // transform bodies of all op.defs
@@ -157,8 +158,11 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
       decl: TlaDecl, bodyMap: BodyMap, inliner: InlinerOfUserOper, replaceWithDefaultsTr: TlaExTransformation
   ): TlaDecl = decl match {
     case d @ TlaOperDecl(name, fparams, body) if d.isRecursive =>
+      // In the case of recursively defined operators inside LET-IN, renaming has mangled their names.
+      // The unroll limit will be defined on the base name, if at all.
+      val baseName = IncrementalRenaming.getBase(name)
       // Read the unroll limit
-      val unrollLimit = getUnrollLimit(name, bodyMap).getOrThrow
+      val unrollLimit = getUnrollLimit(baseName, bodyMap).getOrThrow
       // Defines inlining k-times
       val kStepInline = inliner.kStepInline(unrollLimit, renaming)
       // Unroll all LET-IN definitions afterward
@@ -166,22 +170,52 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
       val inlined = kStepInline(unrolledLetIn)
       // Any remaining applications are default-replaced
       val defaultReplaced = replaceWithDefaultsTr(inlined)
+      // must specifically set .isRecursive to false, so no .copy
       TlaOperDecl(name, fparams, defaultReplaced)
-    case d @ TlaOperDecl(name, fparams, body) => // d.isRecursive = false
-      // Even though `name` is not recursive, it still may define recursive LET-IN operators inside
+    case d @ TlaOperDecl(_, _, body) => // d.isRecursive = false
+      // Even though the operator is not recursive, it still may define recursive LET-IN operators inside
       val unrolledLetIn = unrollLetIn(bodyMap)(body)
       if (body == unrolledLetIn) d
-      else TlaOperDecl(name, fparams, unrolledLetIn)
+      else d.copy(body = unrolledLetIn) // explicit construction is fine here, but .copy for consistency
     case _ => decl
+  }
+
+  /**
+   * Finds the names of all recursive operators defined in LET-IN subexpressions of `ex`
+   */
+  private def allRecursiveLetInOperatorNames(ex: TlaEx): Set[String] = ex match {
+    case OperEx(_, args @ _*) =>
+      args.map(allRecursiveLetInOperatorNames).foldLeft(Set.empty[String]) { _ ++ _ }
+    case LetInEx(body, defs @ _*) =>
+      val allInDefs = defs.map(allRecursiveOperatorsInDecl).foldLeft(Set.empty[String]) { _ ++ _ }
+      val allInBody = allRecursiveLetInOperatorNames(body)
+      allInBody ++ allInDefs
+    case _ => Set.empty[String]
+  }
+
+  /**
+   * Finds the names of all recursive operators defined under decl.
+   * This includes recursiveoperators defined in LET-IN subexpressions,
+   * as well as the name of `decl` itself, if it is recursive.
+   */
+  private def allRecursiveOperatorsInDecl(decl: TlaOperDecl): Set[String] = {
+    // If this declaration is recursive, we take its base name (for LET-IN defined)
+    val selfOpt = if (decl.isRecursive) Some(IncrementalRenaming.getBase(decl.name)) else None
+    allRecursiveLetInOperatorNames(decl.body) ++ selfOpt
   }
 
   /** Prepares a map of default values, obtained from getDefaultBody */
   private def getDefaults(bodyMap: BodyMap): ExceptionOrValue[Map[String, TlaEx]] = {
-    val defMap = bodyMap.values withFilter {
-      _.isRecursive
-    } map { decl =>
-      decl.name -> getDefaultBody(decl.name, bodyMap)
-    }
+    val defMap =
+      bodyMap.values
+        .map(
+            allRecursiveOperatorsInDecl
+        )
+        .foldLeft(Set.empty[String]) {
+          _ ++ _
+        } map { name =>
+        name -> getDefaultBody(name, bodyMap)
+      }
     // We need to prepare a single ExceptionOrValue
     // If multiple keys point to a `FailWith`, we take the 1st
     val init: ExceptionOrValue[Map[String, TlaEx]] = SucceedWith(Map.empty[String, TlaEx])

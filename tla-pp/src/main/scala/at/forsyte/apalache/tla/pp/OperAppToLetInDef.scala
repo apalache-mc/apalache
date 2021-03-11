@@ -69,9 +69,8 @@ class OperAppToLetInDef(
 
   def moduleTransform(wrappableNames: Set[String]): TlaModuleTransformation = { m =>
     val newDecls = m.declarations map {
-      case TlaOperDecl(name, params, body) =>
-        TlaOperDecl(name, params, wrap(wrappableNames)(body))
-      case d => d
+      case d @ TlaOperDecl(_, _, body) => d.copy(body = wrap(wrappableNames)(body))
+      case d                           => d
     }
     new TlaModule(m.name, newDecls)
   }

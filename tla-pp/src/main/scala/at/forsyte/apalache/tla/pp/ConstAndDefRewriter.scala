@@ -29,6 +29,7 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
           throw new OverridingError(msg, overridingDef.body)
         } else {
           logger.info(s"  > Replaced CONSTANT $name with ${overridingDef.body}")
+          // Safe constructor: cannot be recursive
           TlaOperDecl(name, List(), overridingDef.body)
         }
 
@@ -42,7 +43,8 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
           throw new OverridingError(msg, overridingDef.body)
         } else {
           logger.info(s"  > Replaced operator $name with OVERRIDE_$name")
-          TlaOperDecl(name, overridingDef.formalParams, overridingDef.body)
+          // Note: can be overridden with a recursive operator, so we need to preserve .isRecursive
+          overridingDef.copy(name = name)
         }
 
       case df @ TlaVarDecl(name) if overrides.contains(name) =>

@@ -98,13 +98,13 @@ case class TlaOperDecl(name: String, formalParams: List[FormalParam], var body: 
   // Temporary solution, until #345 is resolved
   def copy(
       name: String = this.name, formalParams: List[FormalParam] = this.formalParams, body: TlaEx = this.body
-  ): TlaOperDecl = {
-    val ret = TlaOperDecl(name, formalParams, body)(typeTag)
+  )(implicit copyTypeTag: TypeTag = typeTag): TlaOperDecl = {
+    val ret = TlaOperDecl(name, formalParams, body)(copyTypeTag)
     ret.isRecursive = this.isRecursive
     ret
   }
 
-  override def withType(newTypeTag: TypeTag): TlaOperDecl = TlaOperDecl(name, formalParams, body)(newTypeTag)
+  override def withType(newTypeTag: TypeTag): TlaOperDecl = copy()(newTypeTag)
 }
 
 /**

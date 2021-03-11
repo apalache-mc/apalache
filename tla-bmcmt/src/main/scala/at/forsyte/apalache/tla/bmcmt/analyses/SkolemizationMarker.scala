@@ -59,9 +59,7 @@ class SkolemizationMarker @Inject() (tracker: TransformationTracker) extends Tla
 
     case LetInEx(body, defs @ _*) =>
       // at this point, we only have nullary let-in definitions
-      def mapDef(df: TlaOperDecl) = {
-        TlaOperDecl(df.name, df.formalParams, transform(df.body))
-      }
+      def mapDef(df: TlaOperDecl) = df.copy(body = transform(df.body))
 
       LetInEx(transform(body), defs map mapDef: _*)
 
