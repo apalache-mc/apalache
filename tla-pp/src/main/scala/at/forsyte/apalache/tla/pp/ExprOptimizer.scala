@@ -75,7 +75,6 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
         if intVal == BigInt(0) =>
       // Cardinality(S) > 0, that is, Set /= {}.
       // We can find this pattern in real TLA+ benchmarks more often than one would think.
-      // Rewrite into \E t1 \in set: TRUE
       OperEx(TlaBoolOper.not, OperEx(TlaOper.eq, set, OperEx(TlaSetOper.enumSet)(set.typeTag))(boolTag))(boolTag)
 
     case OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, set), ValEx(TlaInt(intVal)))
