@@ -1,6 +1,11 @@
 ------------ MODULE Bug20201118 ---------------------------
 EXTENDS Integers
-VARIABLES p, error
+
+VARIABLES
+    \* @type: [sender: Str, data: [amount: Int]];
+    p,
+    \* @type: Bool;
+    error
 
 AccountIds == { "", "A", "B" }
 
@@ -13,10 +18,12 @@ Packets == [
   data: Data
 ]
 
+\* @type: [sender: Str, data: [amount: Int]] => Bool;
 WellFormed(packet) ==
   /\ packet.sender /= ""
   /\ packet.data.amount > 0
 
+\* @type: [sender: Str, data: [amount: Int]] => Bool;
 Pre(packet) ==
   LET data == packet.data IN
   WellFormed(packet)

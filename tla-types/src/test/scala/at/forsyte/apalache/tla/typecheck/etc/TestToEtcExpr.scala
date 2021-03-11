@@ -707,6 +707,41 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     assert(expected == gen(ex))
   }
 
+  test("Apalache!:=") {
+    val typ = parser("(a, a) => Bool")
+    val expected = mkAppByName(Seq(typ), "x", "y")
+    val ex = OperEx(BmcOper.assign, tla.name("x"), tla.name("y"))
+    assert(expected == gen(ex))
+  }
+
+  test("Apalache!Skolem") {
+    val typ = parser("Bool => Bool")
+    val expected = mkAppByName(Seq(typ), "P")
+    val ex = OperEx(BmcOper.skolem, tla.name("P"))
+    assert(expected == gen(ex))
+  }
+
+  test("Apalache!Expand") {
+    val typ = parser("a => a")
+    val expected = mkAppByName(Seq(typ), "S")
+    val ex = OperEx(BmcOper.expand, tla.name("S"))
+    assert(expected == gen(ex))
+  }
+
+  test("Apalache!ConstCard") {
+    val typ = parser("Bool => Bool")
+    val expected = mkAppByName(Seq(typ), "P")
+    val ex = OperEx(BmcOper.constCard, tla.name("P"))
+    assert(expected == gen(ex))
+  }
+
+  test("Apalache!Distinct") {
+    val typ = parser("(a, a) => Bool")
+    val expected = mkAppByName(Seq(typ), "x", "y")
+    val ex = OperEx(BmcOper.distinct, tla.name("x"), tla.name("y"))
+    assert(expected == gen(ex))
+  }
+
   test("unary temporal operators") {
     val unary = parser("Bool => Bool")
     val expectedUnary = mkAppByName(Seq(unary), "A")

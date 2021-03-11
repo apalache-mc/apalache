@@ -7,7 +7,21 @@ Nodes == 1..N
 
 a <: b == a \* type annotations
 
-VARIABLES Nb, round, val, awake, rem_nbrs, status, msgs
+VARIABLES
+    \* @type: Set(<<Int, Int>>);
+    Nb,
+    \* @type: Int;
+    round,
+    \* @type: Int -> Int;
+    val,
+    \* @type: Int -> Bool;
+    awake,
+    \* @type: Int -> Int;
+    rem_nbrs,
+    \* @type: Int -> Str;
+    status,
+    \* @type: [type: Str, src: Int, val: Int];
+    msgs
 
 Pred(n) == IF n > 1 THEN n - 1 ELSE N
 Succ(n) == IF n < N THEN n + 1 ELSE 1

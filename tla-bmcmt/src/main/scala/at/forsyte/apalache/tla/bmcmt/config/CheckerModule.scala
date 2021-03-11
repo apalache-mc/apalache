@@ -14,6 +14,7 @@ import at.forsyte.apalache.tla.lir.io.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, TransformationTracker}
 import at.forsyte.apalache.tla.pp.passes._
+import at.forsyte.apalache.tla.typecheck.passes.{EtcTypeCheckerPass, EtcTypeCheckerPassImpl}
 import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, TypeLiteral}
 
@@ -69,11 +70,18 @@ class CheckerModule extends AbstractModule {
     bind(classOf[Pass])
       .annotatedWith(Names.named("AfterParser"))
       .to(classOf[ConfigurationPass])
+
+    // The next pass is Snowcat that is called EtcTypeCheckerPassImpl for now.
+    // We provide guice with a concrete implementation here, as we also use PostTypeCheckerPassImpl later in the pipeline.
+    bind(classOf[Pass])
+      .annotatedWith(Names.named("AfterConfiguration"))
+      .to(classOf[EtcTypeCheckerPassImpl])
+
     // the next pass is DesugarerPass
     bind(classOf[DesugarerPass])
       .to(classOf[DesugarerPassImpl])
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterConfiguration"))
+      .annotatedWith(Names.named("AfterTypeChecker"))
       .to(classOf[DesugarerPass])
     // the next pass is UnrollPass
     bind(classOf[UnrollPass])
@@ -129,12 +137,19 @@ class CheckerModule extends AbstractModule {
     bind(classOf[Pass])
       .annotatedWith(Names.named("AfterOpt"))
       .to(classOf[AnalysisPass])
-    // the next pass after SimpleSkolemizationPass is BoundedCheckerPass
+
+    // do the final type checking again, as preprocessing may have introduced gaps in the expression types
+    bind(classOf[Pass])
+      .annotatedWith(Names.named("AfterAnalysis"))
+      .to(classOf[PostTypeCheckerPassImpl])
+
+    // BoundedCheckerPass is in the very end of the pipeline
     bind(classOf[BoundedCheckerPass])
       .to(classOf[BoundedCheckerPassImpl])
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterAnalysis"))
+      .annotatedWith(Names.named("AfterPostTypeChecker"))
       .to(classOf[BoundedCheckerPass])
+
     // the final pass is TerminalPass
     bind(classOf[Pass])
       .annotatedWith(Names.named("AfterChecker"))

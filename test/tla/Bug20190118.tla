@@ -12,10 +12,13 @@ MT == [type |-> STRING, rm |-> STRING]
 (* END OF BMCMT extensions *)
 
 VARIABLES
+  \* @type: Str;
   rmState,       \* $rmState[rm]$ is the state of resource manager RM.
+  \* @type: Set(Str);
   tmPrepared,    \* The set of RMs from which the TM has received $"Prepared"$
                  \* messages.
-  msgs           
+  \* @type: Set([type: Str, rm: Str]);
+  msgs
 
 Message ==
   {[type |-> t, rm |-> r]: t \in {"Prepared"}, r \in RM }
