@@ -137,7 +137,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
     case OperEx(TlaBoolOper.exists, xe @ NameEx(x), OperEx(TlaSetOper.filter, ye @ NameEx(y), s, e), g) =>
       // \E x \in {y \in S: e}: g becomes \E y \in S: e /\ g [x replaced with y]
       val newPred =
-        ReplaceFixed(tracker)(replacedEx = xe, newEx = DeepCopy(tracker).deepCopyEx(ye)).apply(tla.and(e, g))
+        ReplaceFixed(tracker)(replacedEx = xe, newEx = NameEx(y)(ye.typeTag)).apply(tla.and(e, g))
       val result = OperEx(TlaBoolOper.exists, NameEx(y)(ye.typeTag), s, newPred)(boolTag)
       transformExistsOverSets.applyOrElse(result, { _: TlaEx => result }) // apply recursively to the result
 
