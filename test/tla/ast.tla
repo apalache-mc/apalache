@@ -2,15 +2,25 @@
 EXTENDS Integers
 \*CONSTANTS Proc, NoPrnt, root, nbrs
 
+\* @type: (Int, Int) => <<Int, Int>>;
+pair(i, j) == <<i, j>>
+
 N == 5
 Proc == 1..N
 NoPrnt == 10
 root == 1
-nbrs == { <<1, 2>>, <<2, 3>>, <<2, 4>>, <<3, 4>>, <<4, 5>>, <<5, 1>> }
+nbrs == { pair(1, 2), pair(2, 3), pair(2, 4), pair(3, 4), pair(4, 5), pair(5, 1) }
 a <: b == b
 
 \*ASSUME NoPrnt \notin Proc /\ nbrs \subseteq Proc \times Proc
-VARIABLES prnt, rpt, msg
+VARIABLES
+    \* @type: Int -> Int;
+    prnt,
+    \* @type: Int -> Bool;
+    rpt,
+    \* @type: Set(<<Int, Int>>);
+    msg
+
 vars == <<prnt, rpt, msg>> 
              
 Init == /\ prnt = [i \in Proc |-> NoPrnt]
