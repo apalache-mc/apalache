@@ -86,7 +86,7 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
     try {
       val jsonText = new TlaToUJson().apply(module).toString
       writer.write(jsonText)
-      logger.info(" > JSON output: " + outFile)
+      logger.debug(" > JSON output: " + outFile)
     } finally {
       writer.close()
     }
