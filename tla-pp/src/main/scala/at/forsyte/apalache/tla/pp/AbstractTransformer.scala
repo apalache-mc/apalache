@@ -35,7 +35,7 @@ abstract class AbstractTransformer(tracker: TransformationTracker) extends TlaEx
         }
       transformOneLevel(newOper)
 
-    case LetInEx(body, defs @ _*) =>
+    case letInEx @ LetInEx(body, defs @ _*) =>
       def mapDecl(d: TlaOperDecl): TlaOperDecl = d.copy(body = transform(d.body))
 
       LetInEx(transform(body), defs.map(mapDecl): _*)(letInEx.typeTag)
