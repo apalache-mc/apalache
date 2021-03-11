@@ -33,9 +33,8 @@ class Reordering[T](ord: Ordering[T], rankingFn: TlaEx => T, tracker: Transforma
     case ex @ LetInEx(letInBody, defs @ _*) =>
       val newDefs = defs map {
         // Assignments can only appear in nullary operators
-        case TlaOperDecl(name, Nil, declBody) =>
-          TlaOperDecl(name, Nil, reorder(declBody))
-        case d => d
+        case d @ TlaOperDecl(_, Nil, declBody) => d.copy(body = reorder(declBody))
+        case d                                 => d
       }
       val newBody = reorder(letInBody)
       if (defs == newDefs && letInBody == newBody) ex

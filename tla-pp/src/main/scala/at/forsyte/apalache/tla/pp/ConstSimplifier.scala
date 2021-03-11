@@ -31,7 +31,7 @@ class ConstSimplifier(tracker: TransformationTracker) extends ConstSimplifierBas
 
     case LetInEx(body, defs @ _*) =>
       val newDefs = defs.map { d =>
-        TlaOperDecl(d.name, d.formalParams, simplify(d.body))
+        d.copy(body = simplify(d.body))
       }
       LetInEx(simplify(body), newDefs: _*)
 

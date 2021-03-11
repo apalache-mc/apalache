@@ -5,6 +5,8 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModuleTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
+// TODO: Remove?
+
 class Cacher(nameGenerator: UniqueNameGenerator, tracker: TransformationTracker) extends TlaModuleTransformation {
 
   def prepareAppMap(operNames: Set[String], init: Map[TlaEx, String] = Map.empty): TlaEx => Map[TlaEx, String] = {
