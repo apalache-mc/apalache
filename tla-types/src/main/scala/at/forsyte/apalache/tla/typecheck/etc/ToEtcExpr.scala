@@ -147,18 +147,18 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
    * Translate an expression.
    *
    * @param ex a TLA expression
-   * @return an expression in the simply typed lambda calculus varient Etc
+   * @return an expression in the simply typed lambda calculus variant Etc
    */
   def apply(ex: TlaEx): EtcExpr = {
     val tex = transform(ex)
 
     ex.typeTag match {
       case Typed(typeInTag: TlaType1) =>
-        // the expression has a type tag, so we use an identity operator
-        val a = varPool.fresh
-        val identity = OperT1(Seq(a, a), a)
+        // the expression has a type tag `tt`.
+        // To enforce this type, we introduce an intermediate operator application ((tt => tt) e).
+        val identity = OperT1(Seq(typeInTag), typeInTag)
         val blameRef = BlameRef(ex.ID)
-        mkApp(blameRef, Seq(identity), mkConst(blameRef, typeInTag), tex)
+        mkApp(blameRef, Seq(identity), tex)
 
       case _ =>
         tex
@@ -615,7 +615,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         val operType = OperT1(argTypes, resultType)
         val principal = OperT1(Seq(OperT1(Seq(funType), operType)), funType)
         // λ x ∈ S, y ∈ T. [[body]]
-        val innerLambda = mkAbs(ExactRef(body.ID), this(body), bindings: _*)
+        val innerLambda = mkAbs(BlameRef(body.ID), this(body), bindings: _*)
         // create another vector of type variables for the lambda over a function
         val recFunResTypeVar = varPool.fresh
         val resFunArgTypes = mkFunFrom(varPool.fresh(bindings.length))
