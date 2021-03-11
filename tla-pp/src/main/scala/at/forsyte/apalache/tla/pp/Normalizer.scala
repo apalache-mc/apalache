@@ -185,9 +185,8 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
         nnfLetIn(neg, body, defs)
       } else {
         // no negation, simply normalize the body and the bodies of the definitions
-        def transformDef(decl: TlaOperDecl): TlaOperDecl = {
-          TlaOperDecl(decl.name, decl.formalParams, transform(decl.body))
-        }
+        def transformDef(decl: TlaOperDecl): TlaOperDecl = decl.copy(body = transform(decl.body))
+
         LetInEx(transform(body), defs map transformDef: _*)
       }
 

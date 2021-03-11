@@ -62,6 +62,7 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
           val cinitPrimedName = name + "Primed"
           logger.info(s"  > Introducing $cinitPrimedName for $name'")
           val newBody = trSeq(baseTransformationSequence :+ primeTransformer)(deepCopy.deepCopyEx(operatorBody))
+          // Safe constructor: cannot be recursive
           Some(TlaOperDecl(cinitPrimedName, List(), newBody))
 
         case _ =>
@@ -76,6 +77,7 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
     val newBody = trSeq(baseTransformationSequence :+ primeTransformer)(
         deepCopy.deepCopyEx(bodyMap(initName).body)
     )
+    // Safe constructor: cannot be recursive
     val initPrimed = Some(TlaOperDecl(initPrimedName, List(), newBody))
 
     val newDeclarations: Seq[TlaDecl] = declarations ++ Seq(cinitPrimed, initPrimed).flatten
