@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.pp
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.transformations.standard.{FlatLanguagePred, ReplaceFixed}
+import at.forsyte.apalache.tla.lir.transformations.standard.{DeepCopy, FlatLanguagePred, ReplaceFixed}
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 import at.forsyte.apalache.tla.typecheck.{BoolT1, IntT1, OperT1, SetT1, TypingException}
@@ -136,14 +136,15 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
   private def transformExistsOverSets: PartialFunction[TlaEx, TlaEx] = {
     case OperEx(TlaBoolOper.exists, xe @ NameEx(x), OperEx(TlaSetOper.filter, ye @ NameEx(y), s, e), g) =>
       // \E x \in {y \in S: e}: g becomes \E y \in S: e /\ g [x replaced with y]
-      val newPred = ReplaceFixed(tracker)(xe, ye).apply(tla.and(e, g))
+      val newPred =
+        ReplaceFixed(tracker)(replacedEx = xe, newEx = DeepCopy(tracker).deepCopyEx(ye)).apply(tla.and(e, g))
       val result = OperEx(TlaBoolOper.exists, NameEx(y)(ye.typeTag), s, newPred)(boolTag)
       transformExistsOverSets.applyOrElse(result, { _: TlaEx => result }) // apply recursively to the result
 
-    case OperEx(TlaBoolOper.exists, xe @ NameEx(boundVar), OperEx(TlaSetOper.map, mapEx, varsAndSets @ _*), pred) =>
+    case OperEx(TlaBoolOper.exists, xe @ NameEx(_), OperEx(TlaSetOper.map, mapEx, varsAndSets @ _*), pred) =>
       // e.g., \E x \in {e: y \in S}: g becomes \E y \in S: g[x replaced with e]
       // g[x replaced with e] in the example above
-      val newPred = ReplaceFixed(tracker)(xe, mapEx).apply(pred)
+      val newPred = ReplaceFixed(tracker)(replacedEx = xe, newEx = DeepCopy(tracker).deepCopyEx(mapEx)).apply(pred)
 
       // \E y \in S: ... in the example above
       val pairs = varsAndSets.grouped(2).toSeq.collect { case Seq(NameEx(name), set) =>
