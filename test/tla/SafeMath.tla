@@ -21,7 +21,17 @@ BITWIDTH == 256
 POWER == 2^BITWIDTH
 MAX_UNSIGNED == (2^BITWIDTH) - 1
 
-VARIABLE opcode, arg1, arg2, res, is_error
+VARIABLE
+    \* @type: Str;
+    opcode,
+    \* @type: Int;
+    arg1,
+    \* @type: Int;
+    arg2,
+    \* @type: Int;
+    res,
+    \* @type: Bool;
+    is_error
 
 vars == <<opcode, arg1, arg2, res, is_error>>
 
@@ -62,7 +72,8 @@ TestTry(code, Op(_, _)) ==
     \E a, b \in Int:
         /\ InRange(a)
         /\ InRange(b)
-        /\ LET flag_and_c == Op(a, b) IN
+        /\ LET \* @type: <<Bool, Int>>;
+               flag_and_c == Op(a, b) IN
             /\ opcode' = code
             /\ arg1' = a
             /\ arg2' = b

@@ -24,11 +24,11 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
     decl match {
       case d: TlaConstDecl =>
         // CONSTANT N
-        varOrConstDeclToExpr(d.ID, d.name, inScopeEx)
+        findTypeFromTagOrAnnotation(d).map(tt => mkTypeDecl(ExactRef(d.ID), d.name, tt, inScopeEx)).getOrElse(inScopeEx)
 
       case d: TlaVarDecl =>
         // VARIABLE x
-        varOrConstDeclToExpr(d.ID, d.name, inScopeEx)
+        findTypeFromTagOrAnnotation(d).map(tt => mkTypeDecl(ExactRef(d.ID), d.name, tt, inScopeEx)).getOrElse(inScopeEx)
 
       case d: TlaAssumeDecl =>
         // ASSUME(...)
@@ -45,21 +45,6 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
 
       case _ =>
         throw new TypingInputException(s"Unexpected declaration: $decl")
-    }
-  }
-
-  // translate CONSTANT N or VARIABLE x
-  private def varOrConstDeclToExpr(uid: UID, name: String, inScopeEx: EtcExpr): EtcExpr = {
-    findAnnotation(annotationStore, uid, StandardAnnotations.TYPE) match {
-      case None =>
-        // no type annotation
-        inScopeEx
-
-      case Some(Annotation(StandardAnnotations.TYPE, AnnotationStr(annotationText))) =>
-        val parsedType = parseType(name, annotationText)
-        mkTypeDecl(ExactRef(uid), name, parsedType, inScopeEx)
-
-      case Some(a) => throw new TypingInputException(s"Unexpected annotation of $name: $a")
     }
   }
 
@@ -82,14 +67,11 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
       mkLet(BlameRef(id), decl.name, lambda, inScopeEx)
     }
 
-    findAnnotation(annotationStore, decl.ID, StandardAnnotations.TYPE) match {
-      case Some(Annotation(StandardAnnotations.TYPE, AnnotationStr(annotationText))) =>
-        // case 1: the definition is annotated with a java-like annotation in a comment
-        val parsedType = parseType(decl.name, annotationText)
+    findTypeFromTagOrAnnotation(decl) match {
+      case Some(tt) =>
+        // case 1: the definition is either annotated with a java-like annotation in a comment, or tagged with TlaType1
         val letAbs = mkLetAbs(decl.ID, this(decl.body), paramsAndDoms: _*)
-        mkTypeDecl(ExactRef(decl.ID), decl.name, parsedType, letAbs)
-
-      case Some(a) => throw new TypingInputException(s"Unexpected annotation of ${decl.name}: $a")
+        mkTypeDecl(ExactRef(decl.ID), decl.name, tt, letAbs)
 
       case None =>
         // case 2: no type annotation
@@ -106,6 +88,22 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         throw new TypingInputException(
             s"Parser error in type annotation of $where: ${e.msg}"
         )
+    }
+  }
+
+  private def findTypeFromTagOrAnnotation(decl: TlaDecl): Option[TlaType1] = {
+    decl.typeTag match {
+      case Typed(tt: TlaType1) =>
+        Some(tt)
+
+      case _ =>
+        findAnnotation(annotationStore, decl.ID, StandardAnnotations.TYPE) map {
+          case Annotation(StandardAnnotations.TYPE, AnnotationStr(annotationText)) =>
+            parseType(decl.name, annotationText)
+
+          case a =>
+            throw new TypingInputException(s"Unexpected annotation of ${decl.name}: $a")
+        }
     }
   }
 
@@ -152,6 +150,22 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
    * @return an expression in the simply typed lambda calculus varient Etc
    */
   def apply(ex: TlaEx): EtcExpr = {
+    val tex = transform(ex)
+
+    ex.typeTag match {
+      case Typed(typeInTag: TlaType1) =>
+        // the expression has a type tag, so we use an identity operator
+        val a = varPool.fresh
+        val identity = OperT1(Seq(a, a), a)
+        val blameRef = BlameRef(ex.ID)
+        mkApp(blameRef, Seq(identity), mkConst(blameRef, typeInTag), tex)
+
+      case _ =>
+        tex
+    }
+  }
+
+  private def transform(ex: TlaEx): EtcExpr = {
 
     val ref = ExactRef(ex.ID)
 
@@ -781,6 +795,34 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         // ((Int -> a), Int) => Seq(a)
         val opsig = OperT1(Seq(FunT1(IntT1(), a), IntT1()), SeqT1(a))
         mkExRefApp(opsig, Seq(fun, len))
+
+      case OperEx(BmcOper.assign, lhs, rhs) =>
+        val a = varPool.fresh
+        // (a, a) => Bool
+        val opsig = OperT1(Seq(a, a), BoolT1())
+        mkExRefApp(opsig, Seq(lhs, rhs))
+
+      case OperEx(BmcOper.expand, set) =>
+        val a = varPool.fresh
+        // a => Bool
+        val opsig = OperT1(Seq(a), a)
+        mkExRefApp(opsig, Seq(set))
+
+      case OperEx(BmcOper.skolem, predicate) =>
+        // Bool => Bool
+        val opsig = OperT1(Seq(BoolT1()), BoolT1())
+        mkExRefApp(opsig, Seq(predicate))
+
+      case OperEx(BmcOper.constCard, predicate) =>
+        // Bool => Bool
+        val opsig = OperT1(Seq(BoolT1()), BoolT1())
+        mkExRefApp(opsig, Seq(predicate))
+
+      case OperEx(BmcOper.distinct, args @ _*) =>
+        val a = varPool.fresh
+        // (a, ..., a) => Bool
+        val opsig = OperT1(args.map(_ => a), BoolT1())
+        mkExRefApp(opsig, args)
 
       //******************************************** MISC **************************************************
       case OperEx(BmcOper.withType, lhs, _) =>

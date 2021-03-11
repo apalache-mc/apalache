@@ -8,7 +8,9 @@ a <: b == a
 Proc == {"p1", "p2"}
 Rounds == { 0, 1, 2 }
 
-VARIABLE msgs
+VARIABLE
+    \* @type: Set([src: Str, r: Int]);
+    msgs
 
 MT == [ src |-> STRING, r |-> Int]
 
@@ -22,7 +24,8 @@ Init ==
 
 Next ==
     \* the second ingredient of the bug
-    LET Y == { m.src: m \in msgs } IN
+    LET \* @type: Set(Str);
+        Y == { m.src: m \in msgs } IN
     \* the third ingredient of the bug
     /\ msgs /= {} <: {MT}
     /\ UNCHANGED msgs

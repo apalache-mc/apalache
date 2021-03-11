@@ -148,7 +148,7 @@ EXITCODE: OK
 #### check factorization find a counterexample
 
 ```sh
-$ apalache-mc check --length=2 --inv=Inv factorization.tla | sed 's/I@.*//'
+$ apalache-mc check --length=2 --inv=Inv --with-snowcat factorization.tla | sed 's/I@.*//'
 ...
 The outcome is: Error
 Checker has found an error
@@ -158,7 +158,7 @@ Checker has found an error
 ### check Fix531.tla reports no error: regression for issue 531
 
 ```sh
-$ apalache-mc check --length=1 Fix531.tla | sed 's/I@.*//'
+$ apalache-mc check --length=1 --with-snowcat Fix531.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -167,7 +167,7 @@ The outcome is: NoError
 ### check UnchangedExpr471.tla reports no error: regression for issue 471
 
 ```sh
-$ apalache-mc check --cinit=ConstInit --length=1 UnchangedExpr471.tla | sed 's/I@.*//'
+$ apalache-mc check --cinit=ConstInit --length=1 --with-snowcat UnchangedExpr471.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -185,7 +185,7 @@ The outcome is: NoError
 ### check InvSub for SafeMath reports no error: regression for issue 450
 
 ```sh
-$ apalache-mc check --length=1 --inv=InvSub SafeMath.tla | sed 's/I@.*//'
+$ apalache-mc check --length=1 --inv=InvSub --with-snowcat SafeMath.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -194,7 +194,7 @@ The outcome is: NoError
 ### check InvAdd for SafeMath reports no error: regression for issue 450
 
 ```sh
-$ apalache-mc check --length=1 --inv=InvAdd SafeMath.tla | sed 's/I@.*//'
+$ apalache-mc check --length=1 --inv=InvAdd --with-snowcat SafeMath.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -203,7 +203,7 @@ The outcome is: NoError
 ### check Fix365_ExistsSubset succeeds: regression for issue 365
 
 ```sh
-$ apalache-mc check --length=10 Fix365_ExistsSubset.tla | sed 's/I@.*//'
+$ apalache-mc check --length=10 --with-snowcat Fix365_ExistsSubset.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -212,7 +212,7 @@ The outcome is: NoError
 ### check Fix365_ExistsSubset2 succeeds: regression for issue 365
 
 ```sh
-$ apalache-mc check --length=10 Fix365_ExistsSubset2.tla | sed 's/I@.*//'
+$ apalache-mc check --length=10 --with-snowcat Fix365_ExistsSubset2.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -221,7 +221,7 @@ The outcome is: NoError
 ### check Fix365_ExistsSubset3 succeeds: regression for issue 365
 
 ```sh
-$ apalache-mc check --length=10 Fix365_ExistsSubset3.tla | sed 's/I@.*//'
+$ apalache-mc check --length=10 --with-snowcat Fix365_ExistsSubset3.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -230,7 +230,7 @@ The outcome is: NoError
 ### check Bug20201118 succeeds: regression for issue 333
 
 ```sh
-$ apalache-mc check --length=10 --init=Init --next=Next --inv=Inv Bug20201118.tla | sed 's/I@.*//'
+$ apalache-mc check --length=10 --init=Init --next=Next --inv=Inv --with-snowcat Bug20201118.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -239,7 +239,7 @@ The outcome is: NoError
 ### check Fix333 succeeds: another regression for issue 333
 
 ```sh
-$ apalache-mc check --length=2 --init=Init --next=Next --inv=Inv Fix333.tla | sed 's/I@.*//'
+$ apalache-mc check --length=2 --init=Init --next=Next --inv=Inv --with-snowcat Fix333.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -927,7 +927,7 @@ Type checker [OK]
 ```sh
 $ apalache-mc typecheck CarTalkPuzzleTyped.tla | sed 's/[IEW]@.*//'
 ...
-PASS #1: TypeChecker
+PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
  > Your types are great!
  > All expressions are typed
@@ -944,7 +944,7 @@ This test is broken until issue #617] is fixed.
 ```sh
 $ apalache-mc typecheck CigaretteSmokersTyped.tla | sed 's/[IEW]@.*//'
 ...
-PASS #1: TypeChecker
+PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
 Unhandled exception
 ...
@@ -955,7 +955,7 @@ Unhandled exception
 ```sh
 $ apalache-mc typecheck GameOfLifeTyped.tla | sed 's/[IEW]@.*//'
 ...
-PASS #1: TypeChecker
+PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
  > Your types are great!
  > All expressions are typed
@@ -970,7 +970,7 @@ EXITCODE: OK
 ```sh
 $ apalache-mc typecheck MissionariesAndCannibalsTyped.tla | sed 's/[IEW]@.*//'
 ...
-PASS #1: TypeChecker
+PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
  > Your types are great!
  > All expressions are typed
@@ -985,7 +985,7 @@ EXITCODE: OK
 ```sh
 $ apalache-mc typecheck PrisonersTyped.tla | sed 's/[IEW]@.*//'
 ...
-PASS #1: TypeChecker
+PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
  > Your types are great!
  > All expressions are typed
@@ -1003,7 +1003,7 @@ This test should now pass.
 ```sh
 $ apalache-mc typecheck QueensTyped.tla | sed 's/[IEW]@.*//'
 ...
-PASS #1: TypeChecker
+PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
  > Your types are great!
  > All expressions are typed
@@ -1018,7 +1018,7 @@ EXITCODE: OK
 ```sh
 $ apalache-mc typecheck SlidingPuzzlesTyped.tla | sed 's/[IEW]@.*//'
 ...
-PASS #1: TypeChecker
+PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
  > Your types are great!
  > All expressions are typed
@@ -1033,7 +1033,7 @@ EXITCODE: OK
 ```sh
 $ apalache-mc typecheck TwoPhaseTyped.tla | sed 's/[IEW]@.*//'
 ...
-PASS #1: TypeChecker
+PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
  > Your types are great!
  > All expressions are typed
@@ -1048,7 +1048,7 @@ EXITCODE: OK
 ```sh
 $ apalache-mc typecheck FunctionsTyped.tla | sed 's/[IEW]@.*//'
 ...
-PASS #1: TypeChecker
+PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
  > Your types are great!
  > All expressions are typed
@@ -1063,7 +1063,7 @@ EXITCODE: OK
 ```sh
 $ apalache-mc typecheck FiniteSetsExtTyped.tla | sed 's/[IEW]@.*//'
 ...
-PASS #1: TypeChecker
+PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
  > Your types are great!
  > All expressions are typed
@@ -1090,7 +1090,7 @@ EXITCODE: OK
 ```sh
 $ apalache-mc typecheck HourClockTyped.tla | sed 's/[IEW]@.*//'
 ...
-PASS #1: TypeChecker
+PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
  > Your types are great!
  > All expressions are typed
@@ -1117,7 +1117,7 @@ EXITCODE: OK
 ```sh
 $ apalache-mc typecheck ChannelTyped.tla | sed 's/[IEW]@.*//'
 ...
-PASS #1: TypeChecker
+PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
  > Your types are great!
  > All expressions are typed
@@ -1132,7 +1132,7 @@ EXITCODE: OK
 ```sh
 $ apalache-mc typecheck PascalTriangle.tla | sed 's/[IEW]@.*//'
 ...
-PASS #1: TypeChecker
+PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
  > Your types are great!
  > All expressions are typed
@@ -1147,7 +1147,7 @@ EXITCODE: OK
 ```sh
 $ apalache-mc typecheck AnnotationsAndInstances592.tla | sed 's/[IEW]@.*//'
 ...
-PASS #1: TypeChecker
+PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
  > Your types are great!
  > All expressions are typed
@@ -1162,7 +1162,7 @@ EXITCODE: OK
 ```sh
 $ apalache-mc typecheck AnnotationsAndSubstitutions596.tla | sed 's/[IEW]@.*//'
 ...
-PASS #1: TypeChecker
+PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
  > Your types are great!
  > All expressions are typed

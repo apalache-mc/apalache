@@ -4,9 +4,15 @@
  *)
 EXTENDS Integers
 
-CONSTANT N
+CONSTANT
+    \* @type: Int;
+    N
 
-VARIABLES f, i
+VARIABLES
+    \* @type: Int -> Int;
+    f,
+    \* @type: Int;
+    i
 
 ConstInit ==
     N' = 3

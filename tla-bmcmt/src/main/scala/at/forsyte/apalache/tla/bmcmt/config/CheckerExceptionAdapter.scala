@@ -9,7 +9,9 @@ import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.{LanguagePredError, MalformedTlaError, OperEx, UID}
 import at.forsyte.apalache.tla.pp.{ConfigurationError, IrrecoverablePreprocessingError, NotInKeraError, TlaInputError}
+import at.forsyte.apalache.tla.typecheck.{TypingException, TypingInputException}
 import com.typesafe.scalalogging.LazyLogging
+
 import javax.inject.{Inject, Singleton}
 
 /**
@@ -51,6 +53,12 @@ class CheckerExceptionAdapter @Inject() (sourceStore: SourceStore, changeListene
 
     case err: NotInKeraError =>
       NormalErrorMessage("%s: Input error (see the manual): %s".format(findLoc(err.causeExpr.ID), err.getMessage))
+
+    case err: TypingInputException =>
+      NormalErrorMessage("Typing input error: " + err.getMessage)
+
+    case err: TypingException =>
+      FailureMessage("Type checker error: " + err.getMessage)
 
     // tool failures
     case err: IrrecoverablePreprocessingError =>

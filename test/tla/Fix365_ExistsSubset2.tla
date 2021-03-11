@@ -3,7 +3,9 @@ EXTENDS Integers, FiniteSets
 
 Rounds == 0..2
 
-VARIABLE msgs
+VARIABLE
+    \* @type: Int -> Set(Str);
+    msgs
 
 Init ==
     msgs \in [Rounds -> SUBSET {"a", "b", "c"}]
