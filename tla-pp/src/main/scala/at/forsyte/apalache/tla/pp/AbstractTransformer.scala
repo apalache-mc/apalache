@@ -10,8 +10,7 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
  *
  * @author Igor Konnov
  */
-abstract class AbstractTransformer(tracker: TransformationTracker)(implicit typeTag: TypeTag)
-    extends TlaExTransformation {
+abstract class AbstractTransformer(tracker: TransformationTracker) extends TlaExTransformation {
 
   /**
    * The sequence of partial transformers
@@ -30,16 +29,16 @@ abstract class AbstractTransformer(tracker: TransformationTracker)(implicit type
         if (newArgs.map(_.ID) != args.map(_.ID)) {
           // Introduce a new operator only if the arguments have changed.
           // Otherwise, we would introduce lots of redundant chains in ChangeListener.
-          tracker.hold(oper, OperEx(op, newArgs: _*)) // fixes #41
+          tracker.hold(oper, OperEx(op, newArgs: _*)(oper.typeTag)) // fixes #41
         } else {
           oper
         }
       transformOneLevel(newOper)
 
-    case LetInEx(body, defs @ _*) =>
+    case letInEx @ LetInEx(body, defs @ _*) =>
       def mapDecl(d: TlaOperDecl): TlaOperDecl = d.copy(body = transform(d.body))
 
-      LetInEx(transform(body), defs.map(mapDecl): _*)
+      LetInEx(transform(body), defs.map(mapDecl): _*)(letInEx.typeTag)
 
     case ex =>
       transformOneLevel(ex)

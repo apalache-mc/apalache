@@ -1,11 +1,14 @@
 package at.forsyte.apalache.tla.typecheck.passes
 
 import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.UID
+import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.typecheck.{TlaType1, TypeCheckerListener}
 import at.forsyte.apalache.tla.typecheck.etc.{EtcRef, ExactRef}
 import com.typesafe.scalalogging.LazyLogging
 
-class LoggingTypeCheckerListener(sourceStore: SourceStore) extends TypeCheckerListener with LazyLogging {
+class LoggingTypeCheckerListener(sourceStore: SourceStore, changeListener: ChangeListener)
+    extends TypeCheckerListener with LazyLogging {
 
   /**
    * This method is called when the type checker finds the type of an expression.
@@ -22,7 +25,15 @@ class LoggingTypeCheckerListener(sourceStore: SourceStore) extends TypeCheckerLi
    * @param message   the error description
    */
   override def onTypeError(sourceRef: EtcRef, message: String): Unit = {
-    val locStr = sourceStore.find(sourceRef.tlaId).map(_.toString).getOrElse("Unknown location")
-    logger.error("[%s]: %s".format(locStr, message))
+    logger.error("[%s]: %s".format(findLoc(sourceRef.tlaId), message))
+  }
+
+  private def findLoc(id: UID): String = {
+    val sourceLocator: SourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)
+
+    sourceLocator.sourceOf(id) match {
+      case Some(loc) => loc.toString
+      case None      => "unknown location"
+    }
   }
 }

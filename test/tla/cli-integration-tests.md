@@ -248,7 +248,7 @@ The outcome is: NoError
 ### check Bug20190118 succeeds
 
 ```sh
-$ apalache-mc check --length=1 --init=Init --next=Next --inv=Inv Bug20190118.tla | sed 's/I@.*//'
+$ apalache-mc check --length=1 --init=Init --next=Next --inv=Inv --with-snowcat Bug20190118.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -257,7 +257,7 @@ The outcome is: NoError
 ### check mis.tla succeeds
 
 ```sh
-$ apalache-mc check --length=5 --inv=IsIndependent mis.tla | sed 's/I@.*//'
+$ apalache-mc check --length=5 --inv=IsIndependent --with-snowcat mis.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -266,7 +266,7 @@ The outcome is: NoError
 ### check mis_bug.tla errors
 
 ```sh
-$ apalache-mc check --length=5 --inv=IsIndependent mis_bug.tla | sed 's/I@.*//'
+$ apalache-mc check --length=5 --inv=IsIndependent --with-snowcat mis_bug.tla | sed 's/I@.*//'
 ...
 The outcome is: Error
 Checker has found an error

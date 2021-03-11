@@ -36,7 +36,9 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) {
     // a hack: we wrap topExpr with LET-IN, so the type of topExpr is not overwritten
     def uniqueRef() = BlameRef(UID.unique)
 
-    val rootExpr = EtcLet("root", EtcAbs(EtcConst(BoolT1())(uniqueRef()))(uniqueRef()), topExpr)(uniqueRef())
+    // generate a unique name for the root definition, to avoid clashes
+    val rootName = "MODULE_%s_%d_APALACHE".format(module.name, System.currentTimeMillis())
+    val rootExpr = EtcLet(rootName, EtcAbs(EtcConst(BoolT1())(uniqueRef()))(uniqueRef()), topExpr)(uniqueRef())
 
     val typeChecker = new EtcTypeChecker(varPool, inferPolytypes = inferPoly)
     // run the type checker

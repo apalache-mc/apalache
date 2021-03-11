@@ -16,11 +16,11 @@ VARIABLES
     val,
     \* @type: Int -> Bool;
     awake,
-    \* @type: Int -> Int;
+    \* @type: Int -> Set(Int);
     rem_nbrs,
     \* @type: Int -> Str;
     status,
-    \* @type: [type: Str, src: Int, val: Int];
+    \* @type: Int -> Set([type: Str, src: Int, val: Int]);
     msgs
 
 Pred(n) == IF n > 1 THEN n - 1 ELSE N
@@ -86,7 +86,7 @@ Round3 ==
     /\ UNCHANGED <<status, val>>
 
 Next ==
-    round' = 1 + (round % 3) /\ (Round1 \/ Round2 \/ Round3) /\ UNCHANGED <<Nb>>
+    round' = 1 + (round % 3) /\ (Round1 \/ Round2 \/ Round3) /\ UNCHANGED Nb
     
 IsIndependent ==
     \A edge \in Nb:

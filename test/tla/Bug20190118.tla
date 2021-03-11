@@ -12,7 +12,7 @@ MT == [type |-> STRING, rm |-> STRING]
 (* END OF BMCMT extensions *)
 
 VARIABLES
-  \* @type: Str;
+  \* @type: Str -> Str;
   rmState,       \* $rmState[rm]$ is the state of resource manager RM.
   \* @type: Set(Str);
   tmPrepared,    \* The set of RMs from which the TM has received $"Prepared"$
@@ -42,7 +42,7 @@ RMPrepare(rm) ==
   /\ rmState[rm] = "working"
   /\ rmState' = [rmState EXCEPT ![rm] = "prepared"]
   /\ msgs' = msgs \cup {[type |-> "Prepared", rm |-> rm]}
-  /\ UNCHANGED <<tmPrepared>>
+  /\ UNCHANGED tmPrepared
 
 Next == TMCommit \/ RMPrepare("r1")
 -----------------------------------------------------------------------------

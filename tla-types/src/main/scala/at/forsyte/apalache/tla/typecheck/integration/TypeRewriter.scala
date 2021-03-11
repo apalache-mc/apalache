@@ -63,7 +63,7 @@ class TypeRewriter(tracker: TransformationTracker, defaultTag: UID => TypeTag)(t
 
       case ex @ OperEx(oper, args @ _*) =>
         val newArgs = args.map(this(_))
-        OperEx(oper, newArgs: _*)(Typed(getOrDefault(ex.ID)))
+        OperEx(oper, newArgs: _*)(getOrDefault(ex.ID))
 
       case ex @ LetInEx(body, defs @ _*) =>
         LetInEx(this(body), defs.map(applyToOperDecl): _*)(getOrDefault(ex.ID))

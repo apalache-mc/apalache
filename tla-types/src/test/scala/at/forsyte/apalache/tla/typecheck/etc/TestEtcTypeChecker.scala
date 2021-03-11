@@ -108,7 +108,8 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     val listener = mock[TypeCheckerListener]
     val wrapper = wrapWithLet(app)
     expecting {
-      listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef], "Mismatch in argument types. Expected: ((Int) => Int)")
+      listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef],
+          "No match between operator signature ((Int) => Int) and argument Bool")
       // consume any types for the wrapper and lambda
       consumeWrapperTypes(listener, wrapper)
     }
@@ -177,7 +178,7 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     val wrapper = wrapWithLet(app)
     expecting {
       listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef],
-          "Need annotation. Arguments match 2 operator signatures: ((Int) => a) and ((Int) => Bool)")
+          "Need annotation. Found 2 matching operator signatures ((Int) => a) or ((Int) => Bool) for argument Int")
 
       // consume any types for the wrapper and lambda
       consumeWrapperTypes(listener, wrapper)
@@ -215,7 +216,7 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     val wrapper = wrapWithLet(app)
     expecting {
       listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef],
-          "Need annotation. Arguments match 2 operator signatures: ((a) => Int) and ((a) => Bool)")
+          "Need annotation. Found 2 matching operator signatures ((a) => Int) or ((a) => Bool) for argument Int")
       // consume any types for the wrapper and lambda
       consumeWrapperTypes(listener, wrapper)
     }
@@ -254,7 +255,7 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     val wrapper = wrapWithLet(outerApp)
     expecting {
       listener.onTypeError(innerApp.sourceRef.asInstanceOf[ExactRef],
-          "Mismatch in argument types. Expected: ((Int) => Int)")
+          "No match between operator signature ((Int) => Int) and argument Bool")
       // There is no error about outerApp. Otherwise, we would introduce a long string of errors.
       // consume any types for the wrapper and lambda
       consumeWrapperTypes(listener, wrapper)
@@ -499,7 +500,7 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     val wrapper = wrapWithLet(app)
     expecting {
       listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef],
-          "Mismatch in argument types. Expected: ((Seq(a)) => Set(a))")
+          "No match between operator signature ((Seq(a)) => Set(a)) and argument a")
       // consume any types for the wrapper and lambda
       consumeWrapperTypes(listener, wrapper)
     }
@@ -698,7 +699,7 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     val listener = mock[TypeCheckerListener]
     expecting {
       listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef],
-          "Need annotation. Arguments match 2 operator signatures: ((Int, Int) => Seq(Int)) and ((Int, Int) => <<Int, Int>>)")
+          "Need annotation. Found 2 matching operator signatures ((Int, Int) => Seq(Int)) or ((Int, Int) => <<Int, Int>>) for arguments Int and Int")
       // consume any types for the wrapper and lambda
       consumeWrapperTypes(listener, wrapper)
     }

@@ -95,7 +95,7 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
     }
   }
 
-  test("the tools consumes its output") {
+  test("the tool consumes its output") {
     val (rootName, modules) =
       sanyImporter.loadFromSource("MegaSpec1", getMegaSpec1)
 

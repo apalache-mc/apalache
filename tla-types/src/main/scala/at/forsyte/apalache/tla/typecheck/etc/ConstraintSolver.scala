@@ -38,7 +38,7 @@ class ConstraintSolver(approximateSolution: Substitution = Substitution.empty) {
               case EqClause(_, term) =>
                 // no solution for a unit constraint:
                 // flag an error immediately
-                cons.onTypeError(Seq(solution(term)))
+                cons.onTypeError(solution, Seq(solution(term)))
                 // reset the constraints, so they are not reported later
                 constraints = List.empty
                 return None
@@ -68,10 +68,10 @@ class ConstraintSolver(approximateSolution: Substitution = Substitution.empty) {
       constraints.foreach {
         case c @ OrClause(clauses @ _*) =>
           val partialSignatures = clauses.map { c => solution(c.term) }
-          c.onTypeError(partialSignatures)
+          c.onTypeError(solution, partialSignatures)
 
         case c @ EqClause(_, term) =>
-          c.onTypeError(Seq(solution(term)))
+          c.onTypeError(solution, Seq(solution(term)))
       }
       None
     }

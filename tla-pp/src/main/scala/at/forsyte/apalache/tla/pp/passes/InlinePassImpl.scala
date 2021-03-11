@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.{TlaModule, TlaOperDecl}
-import at.forsyte.apalache.tla.pp.{NormalizedNames, OperAppToLetInDef, UniqueNameGenerator}
+import at.forsyte.apalache.tla.pp.{NormalizedNames, UniqueNameGenerator}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -45,11 +45,17 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
   override def execute(): Boolean = {
     val baseModule = tlaModule.get
 
+    /*
+    Disable the preprocessing pass that introduces nullary operators for call results.
+    We have to integrate it properly with the type checker.
+
     val appWrap = OperAppToLetInDef(gen, tracker)
     val operNames = (baseModule.operDeclarations map {
       _.name
     }).toSet
     val module = appWrap.moduleTransform(operNames)(baseModule)
+     */
+    val module = baseModule
 
     val defBodyMap = BodyMapFactory.makeFromDecls(module.operDeclarations)
 

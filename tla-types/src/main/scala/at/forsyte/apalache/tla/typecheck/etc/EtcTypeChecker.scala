@@ -62,7 +62,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
         val fresh = varPool.fresh
         val clause = EqClause(fresh, polytype)
           .setOnTypeFound(tt => onTypeFound(ex.sourceRef, tt))
-          .setOnTypeError(_ => onTypeError(ex.sourceRef, "Unresolved type"))
+          .setOnTypeError((_, _) => onTypeError(ex.sourceRef, "Unresolved type"))
         solver.addConstraint(clause)
         fresh
 
@@ -80,8 +80,15 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
       // a variable name, either an operator name, or a variable introduced by lambda (EtcAbs)
       case EtcName(name) =>
         if (ctx.types.contains(name)) {
-          // process as a constant, as we might want to force the expected result
-          computeRec(ctx, solver, mkConst(ex.sourceRef, ctx.types(name)))
+          val knownType = ctx.types(name)
+          if (knownType.usedNames.isEmpty) {
+            // This is a monotype. Report it right away.
+            onTypeFound(ex.sourceRef, knownType)
+            knownType
+          } else {
+            // introduce a constant, as the type may get refined later
+            computeRec(ctx, solver, mkConst(ex.sourceRef, knownType))
+          }
         } else {
           onTypeError(ex.sourceRef, s"Undefined name $name. Introduce a type annotation.")
           throw new UnwindException
@@ -102,26 +109,54 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
           case tt =>
             throw new TypingException("Expected an operator type, found: " + tt)
         }
-        def onError(types: Seq[TlaType1]): Unit = {
-          val sepSigs = String.join(" and ", types.map(_.toString()): _*)
-          if (types.isEmpty) {
-            onTypeError(appEx.sourceRef, s"No matching signature for ${argTypes.length} argument(s)")
-          } else if (types.length > 1) {
-            onTypeError(appEx.sourceRef,
-                s"Need annotation. Arguments match ${types.length} operator signatures: $sepSigs")
+
+        def onOverloadingError(sub: Substitution, signatures: Seq[TlaType1]): Unit = {
+          // The constraint solver has failed to solve the disjunctive clause:
+          // operVar = operType_1 \/ ... \/ operVar = operType_n
+          val evalArgTypes = argTypes.map(sub(_)).mkString(" and ")
+          val argOrArgs = pluralArgs(argTypes.length)
+          if (signatures.isEmpty) {
+            onTypeError(appEx.sourceRef, s"No matching signature for $argOrArgs $evalArgTypes")
           } else {
-            onTypeError(appEx.sourceRef, s"Mismatch in argument types. Expected: $sepSigs")
+            // it should be the case that manySigs has at least two elements, but we also include the case of one
+            val sepSigs = String.join(" or ", signatures.map(_.toString()): _*)
+            onTypeError(appEx.sourceRef,
+                s"Need annotation. Found ${signatures.length} matching operator signatures $sepSigs for $argOrArgs $evalArgTypes")
           }
+        }
+
+        def onArgsMatchError(sub: Substitution, types: Seq[TlaType1]): Unit = {
+          // no solution for: operVar = (arg_1, ..., arg_k) => resVar
+          val evalArgTypes = argTypes.map(sub(_)).mkString(" and ")
+          val argOrArgs = pluralArgs(argTypes.length)
+          val evalSig = sub(operVar)
+          onTypeError(appEx.sourceRef, s"No match between operator signature $evalSig and $argOrArgs $evalArgTypes")
         }
 
         // operVar = (arg_1, ..., arg_k) => resVar
         solver.addConstraint(EqClause(operVar, OperT1(argTypes, resVar))
               .setOnTypeFound(onFound)
-              .setOnTypeError(onError))
-        // operVar = operType_1 \/ ... \/ operVar = operType_n
-        solver.addConstraint(OrClause(operTypes.map(EqClause(operVar, _)): _*)
-              .setOnTypeError(onError)
-              .asInstanceOf[OrClause])
+              .setOnTypeError(onArgsMatchError))
+
+        def onSigMatchError(sub: Substitution, sigs: Seq[TlaType1]): Unit = {
+          // no solution for: operVar = operType_1
+          val evalArgTypes = argTypes.map(sub(_)).mkString(" and ")
+          val argOrArgs = pluralArgs(argTypes.length)
+          val evalSig = sigs.head
+          onTypeError(appEx.sourceRef, s"No match between operator signature $evalSig and $argOrArgs $evalArgTypes")
+        }
+
+        if (operTypes.length == 1) {
+          // the common case, which should be solved without using OrClause (which can be postponed):
+          // operVar = operType_1
+          solver.addConstraint(EqClause(operVar, operTypes.head).setOnTypeError(onSigMatchError))
+        } else {
+          // the case of overloaded operators:
+          // operVar = operType_1 \/ ... \/ operVar = operType_n
+          solver.addConstraint(OrClause(operTypes.map(EqClause(operVar, _)): _*)
+                .setOnTypeError(onOverloadingError)
+                .asInstanceOf[OrClause])
+        }
 
         // the expected result is stored in resVar
         resVar
@@ -149,7 +184,9 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
         // lambdaTypeVar = (a_1, ..., a_k) => resType
         val lambdaClause = EqClause(lambdaTypeVar, operType)
           .setOnTypeFound(tt => onTypeFound(ex.sourceRef, tt))
-          .setOnTypeError(ts => onTypeError(ex.sourceRef.asInstanceOf[ExactRef], "Type error in lambda: " + ts.head))
+          .setOnTypeError((_, ts) =>
+            onTypeError(ex.sourceRef.asInstanceOf[ExactRef], "Type error in lambda: " + ts.head)
+          )
         solver.addConstraint(lambdaClause)
         operType
 
@@ -183,12 +220,12 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
         annotationParams.zip(binders.map { case (pname, _) => (pname, extCtx(pname.name)) }).foreach {
           case (annotParam, (pname, paramVar @ VarT1(_))) =>
             val clause = EqClause(paramVar, annotParam)
-              .setOnTypeError(ts => s"Mismatch in parameter $pname. Found: " + ts.head)
+              .setOnTypeError((_, ts) => s"Mismatch in parameter $pname. Found: " + ts.head)
             letInSolver.addConstraint(clause)
         }
 
         // produce constraints for the operator signature
-        def onError(ts: Seq[TlaType1]): Unit = {
+        def onError(sub: Substitution, ts: Seq[TlaType1]): Unit = {
           val sepSigs = String.join(" and ", ts.map(_.toString()): _*)
           onTypeError(defEx.sourceRef, s"Expected $operSig in $name. Found: $sepSigs")
         }
@@ -251,13 +288,13 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
     binders.zip(setVars.zip(elemVars)).foreach { case ((_, setEx), (setVar, elemVar)) =>
       val clause = EqClause(setVar, SetT1(elemVar))
         .setOnTypeFound(onTypeFound(setEx.sourceRef, _))
-        .setOnTypeError(ts => onTypeError(setEx.sourceRef, "Expected a set. Found: " + ts.head))
+        .setOnTypeError((_, ts) => onTypeError(setEx.sourceRef, "Expected a set. Found: " + ts.head))
       solver.addConstraint(clause)
     }
     // require that these type variables are equal to the computed set types
     binders.zip(setVars.zip(setTypes)).foreach { case ((_, setEx), (setVar, setType)) =>
       val clause = EqClause(setVar, setType)
-        .setOnTypeError(ts => onTypeError(setEx.sourceRef, "Expected a set. Found: " + ts.head))
+        .setOnTypeError((_, ts) => onTypeError(setEx.sourceRef, "Expected a set. Found: " + ts.head))
       solver.addConstraint(clause)
     }
     // introduce identity constraints to retrieve the types of the names
@@ -280,6 +317,11 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
 
   private def onTypeError(sourceRef: EtcRef, message: String): Unit = {
     listener.onTypeError(sourceRef, message)
+  }
+
+  // tired of reading "arguments(s)", it's easy to fix
+  private def pluralArgs(count: Int): String = {
+    if (count != 1) "arguments" else "argument"
   }
 }
 
