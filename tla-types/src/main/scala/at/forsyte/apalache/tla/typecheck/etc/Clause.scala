@@ -17,14 +17,14 @@ sealed abstract class Clause {
   /**
    * A callback for registering a type error when it occurs
    */
-  var onTypeError: Seq[TlaType1] => Unit = (_ => ())
+  var onTypeError: (Substitution, Seq[TlaType1]) => Unit = ((_, _) => ())
 
   def setOnTypeFound(callback: TlaType1 => Unit): Clause = {
     onTypeFound = callback
     this
   }
 
-  def setOnTypeError(callback: Seq[TlaType1] => Unit): Clause = {
+  def setOnTypeError(callback: (Substitution, Seq[TlaType1]) => Unit): Clause = {
     onTypeError = callback
     this
   }
