@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
-import at.forsyte.apalache.tla.lir.UID
 import at.forsyte.apalache.tla.typecheck._
 import at.forsyte.apalache.tla.typecheck.etc.EtcTypeChecker.UnwindException
 
@@ -13,8 +12,6 @@ import at.forsyte.apalache.tla.typecheck.etc.EtcTypeChecker.UnwindException
  */
 class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) extends TypeChecker with EtcBuilder {
   private var listener: TypeCheckerListener = new DefaultTypeCheckerListener()
-  // we store the computed types for better error reporting, though it may slow down the type checker
-  private var foundTypes: Map[UID, TlaType1] = Map.empty
 
   /**
    * Compute the expression type in a type context. If the expression is not well-typed, return None.
@@ -309,14 +306,9 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
     new TypeContext(ctx.types ++ binders.map(_._1.name).zip(elemVars))
   }
 
-  private def getFoundTypeAsString(ref: EtcRef): String = {
-    foundTypes.get(ref.tlaId).map(_.toString).getOrElse("?")
-  }
-
   private def onTypeFound(sourceRef: EtcRef, tt: TlaType1): Unit = {
     sourceRef match {
       case ref: ExactRef =>
-        foundTypes += ref.tlaId -> tt
         listener.onTypeFound(ref, tt)
 
       case _ =>
