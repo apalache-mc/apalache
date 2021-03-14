@@ -18,10 +18,10 @@ class TestLetInExpander extends FunSuite with TestingPredefs {
   test("Test LetInExpander, skip0Arity = false") {
     val transformation = LetInExpander(new IdleTracker(), keepNullary = false)
 
-    val ex1 = n_x
-    val ex2 = letIn(appOp(n_A), declOp("A", n_x).untypedOperDecl()).untyped()
-    val ex3 = letIn(appOp(n_A, n_x), declOp("A", n_y, SimpleFormalParam("y")).untypedOperDecl()).untyped()
-    val ex4 =
+    val ex1: TlaEx = n_x
+    val ex2: TlaEx = letIn(appOp(n_A), declOp("A", n_x).untypedOperDecl())
+    val ex3: TlaEx = letIn(appOp(n_A, n_x), declOp("A", n_y, SimpleFormalParam("y")).untypedOperDecl())
+    val ex4: TlaEx =
       letIn(
           ite(
               ge(n_c, int(0)),
@@ -32,12 +32,12 @@ class TestLetInExpander extends FunSuite with TestingPredefs {
               appOp(NameEx("X"), n_p, int(3))
           ),
           declOp("X", ge(plus(n_a, n_b), int(0)), "a", "b").untypedOperDecl()
-      ).untyped()
+      )
 
-    val expected1 = n_x
-    val expected2 = n_x
-    val expected3 = n_x
-    val expected4 =
+    val expected1: TlaEx = n_x
+    val expected2: TlaEx = n_x
+    val expected3: TlaEx = n_x
+    val expected4: TlaEx =
       ite(
           ge(n_c, int(0)),
           ge(plus(n_c, n_c), int(0)),
@@ -55,10 +55,10 @@ class TestLetInExpander extends FunSuite with TestingPredefs {
   test("Test LetInExpander, skip0Arity = true") {
     val transformation = LetInExpander(new IdleTracker(), keepNullary = true)
 
-    val ex1 = n_x
-    val ex2 = letIn(appOp(n_A), declOp("A", n_x).untypedOperDecl()).untyped()
-    val ex3 = letIn(appOp(n_A, n_x), declOp("A", n_y, SimpleFormalParam("y")).untypedOperDecl()).untyped()
-    val ex4 =
+    val ex1: TlaEx = n_x
+    val ex2: TlaEx = letIn(appOp(n_A), declOp("A", n_x).untypedOperDecl())
+    val ex3: TlaEx = letIn(appOp(n_A, n_x), declOp("A", n_y, SimpleFormalParam("y")).untypedOperDecl())
+    val ex4: TlaEx =
       letIn(
           ite(
               ge(n_c, int(0)),
@@ -69,12 +69,12 @@ class TestLetInExpander extends FunSuite with TestingPredefs {
               appOp(NameEx("X"), n_p, int(3))
           ),
           declOp("X", ge(plus(n_a, n_b), int(0)), "a", "b").untypedOperDecl()
-      ).untyped()
+      )
 
-    val expected1 = n_x
-    val expected2 = letIn(appOp(n_A), declOp("A", n_x).untypedOperDecl())
-    val expected3 = n_x
-    val expected4 =
+    val expected1: TlaEx = n_x
+    val expected2: TlaEx = letIn(appOp(n_A), declOp("A", n_x).untypedOperDecl())
+    val expected3: TlaEx = n_x
+    val expected4: TlaEx =
       ite(
           ge(n_c, int(0)),
           letIn(
