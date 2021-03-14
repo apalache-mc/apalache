@@ -1863,7 +1863,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     root.declarations.find { _.name == "J!G" } match {
       case Some(TlaOperDecl(_, params, body)) =>
         assert(params.isEmpty)
-        val expected = appDecl(fDecl.asInstanceOf[TlaOperDecl], int(3))
+        val expected: TlaEx = appDecl(fDecl.asInstanceOf[TlaOperDecl], int(3))
         assert(body == expected)
 
       case _ =>
