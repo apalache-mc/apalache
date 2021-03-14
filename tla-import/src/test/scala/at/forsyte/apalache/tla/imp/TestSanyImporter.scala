@@ -3,7 +3,6 @@ package at.forsyte.apalache.tla.imp
 import java.io.{File, PrintWriter}
 import java.nio.file.Files
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.Builder.name
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.src.{SourcePosition, SourceRegion}
@@ -715,7 +714,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         OperEx(
             TlaFunOper.except,
             NameEx("x"),
-            TlaFunOper.mkTuple(ValEx(TlaInt(0))),
+            OperEx(TlaFunOper.tuple, ValEx(TlaInt(0))),
             ValEx(TlaInt(1))
         )
     )
@@ -724,7 +723,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         OperEx(
             TlaFunOper.except,
             NameEx("x"),
-            TlaFunOper.mkTuple(ValEx(TlaInt(0))),
+            OperEx(TlaFunOper.tuple, ValEx(TlaInt(0))),
             OperEx(
                 TlaBoolOper.and,
                 OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(0))),
@@ -1039,7 +1038,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         OperEx(
             TlaFunOper.except,
             NameEx("x"),
-            TlaFunOper.mkTuple(ValEx(TlaInt(0))),
+            OperEx(TlaFunOper.tuple, ValEx(TlaInt(0))),
             ValEx(TlaInt(1))
         )
     )(mod.declarations(1))
@@ -1050,7 +1049,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         OperEx(
             TlaFunOper.except,
             NameEx("x"),
-            TlaFunOper.mkTuple(ValEx(TlaInt(0))),
+            OperEx(TlaFunOper.tuple, ValEx(TlaInt(0))),
             OperEx(
                 TlaBoolOper.and,
                 OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(0))),
@@ -1065,7 +1064,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         OperEx(
             TlaFunOper.except,
             NameEx("x"),
-            TlaFunOper.mkTuple(TlaFunOper.mkTuple(ValEx(TlaInt(0)))),
+            OperEx(TlaFunOper.tuple, OperEx(TlaFunOper.tuple, ValEx(TlaInt(0)))),
             ValEx(TlaInt(1))
         )
     )(mod.declarations(3))
@@ -1216,9 +1215,9 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         OperEx(
             TlaFunOper.except,
             NameEx("f"),
-            TlaFunOper.mkTuple(ValEx(TlaInt(0))),
+            OperEx(TlaFunOper.tuple, ValEx(TlaInt(0))),
             ValEx(TlaInt(1)),
-            TlaFunOper.mkTuple(ValEx(TlaInt(2))),
+            OperEx(TlaFunOper.tuple, ValEx(TlaInt(2))),
             ValEx(TlaInt(3))
         )
     )(mod.declarations(1))
@@ -1239,10 +1238,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         OperEx(
             TlaFunOper.except,
             NameEx("f"),
-            TlaFunOper.mkTuple(
-                TlaFunOper
-                  .mkTuple(ValEx(TlaInt(0)), ValEx(TlaInt(1)), ValEx(TlaInt(2)))
-            ),
+            OperEx(TlaFunOper.tuple, OperEx(TlaFunOper.tuple, ValEx(TlaInt(0)), ValEx(TlaInt(1)), ValEx(TlaInt(2)))),
             ValEx(TlaInt(3))
         )
     )(mod.declarations(3))
@@ -1253,11 +1249,11 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         OperEx(
             TlaFunOper.except,
             NameEx("f"),
-            TlaFunOper.mkTuple(ValEx(TlaInt(0))),
+            OperEx(TlaFunOper.tuple, ValEx(TlaInt(0))),
             OperEx(
                 TlaFunOper.except,
                 OperEx(TlaFunOper.app, NameEx("f"), ValEx(TlaInt(0))), // this is the equivalent of @
-                TlaFunOper.mkTuple(ValEx(TlaStr("state"))),
+                OperEx(TlaFunOper.tuple, ValEx(TlaStr("state"))),
                 ValEx(TlaInt(4))
             )
         )
@@ -1546,9 +1542,9 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         }
         assert(sourceStore.contains(zDecl.body.ID)) // and source file information has been saved
         assert(0 == xDecl.formalParams.length)
-        assert(int(1) == xDecl.body)
+        assert(int(1).untyped() == xDecl.body)
         // although "X" might seem to be a variable, it is actually an operator without any arguments
-        assert(appDecl(xDecl) == body)
+        assert(appDecl(xDecl).untyped() == body)
         assert(sourceStore.contains(xDecl.body.ID)) // and source file information has been saved
       }
   }
@@ -1635,8 +1631,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
 
       val xDecl = defs(1)
       assert("X" == xDecl.name)
-      assert(appOp(name("X")) == xDecl.body)
-      assert(appDecl(xDecl) == body)
+      assert(appOp(name("X")).untyped() == xDecl.body)
+      assert(appDecl(xDecl).untyped() == body)
       assert(sourceStore.contains(xDecl.body.ID)) // and source file information has been saved
     }
   }
@@ -1709,7 +1705,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
           }
           .get
           .asInstanceOf[TlaOperDecl]
-        assert(appDecl(A, name("n")) == d.body)
+        assert(appDecl(A, name("n")).untyped() == d.body)
         assert(sourceStore.contains(d.body.ID)) // and source file information has been saved
 
       case _ =>
@@ -2802,13 +2798,13 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     expectSourceInfoInDefs(root)
 
     modules(rootName).declarations(1) match {
-      case TlaAssumeDecl(e) => assert(eql("N", 4) == e)
+      case TlaAssumeDecl(e) => assert(eql(name("N"), int(4)).untyped() == e)
 
       case e @ _ => fail("expected an assumption, found: " + e)
     }
 
     modules(rootName).declarations(2) match {
-      case TlaAssumeDecl(e) => assert(neql("N", 10) == e)
+      case TlaAssumeDecl(e) => assert(neql(name("N"), int(10)).untyped() == e)
 
       case e @ _ => fail("expected an assumption, found: " + e)
     }
@@ -2836,7 +2832,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     assert(1 == root.declarations.size)
     root.declarations(0) match {
       case TlaOperDecl("A", _, body) =>
-        assert(append(tuple(), enumSet()) == body)
+        assert(append(tuple(), enumSet()).untyped() == body)
 
       case d => fail("unexpected declaration: " + d)
     }
@@ -2863,7 +2859,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     assert(1 == root.declarations.size)
     root.declarations(0) match {
       case TlaOperDecl("A", _, body) =>
-        assert(append(tuple(), enumSet()) == body)
+        assert(append(tuple(), enumSet()).untyped() == body)
 
       case d => fail("unexpected declaration: " + d)
     }

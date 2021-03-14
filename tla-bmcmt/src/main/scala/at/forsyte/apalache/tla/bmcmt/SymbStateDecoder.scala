@@ -30,7 +30,8 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     // compute the equivalence classes for the cells, totally suboptimally
     // TODO: rewrite, I did not think too much at all
     def iseq(c: ArenaCell, d: ArenaCell): Boolean = {
-      c.cellType == d.cellType && solverContext.evalGroundExpr(tla.eql(c, d)) == tla.bool(true)
+      c.cellType == d.cellType && solverContext
+        .evalGroundExpr(tla.eql(c.toNameEx, d.toNameEx)) == tla.bool(true).untyped()
     }
 
     def merge(cls: List[HashSet[ArenaCell]], c: ArenaCell, d: ArenaCell): List[HashSet[ArenaCell]] = {
@@ -87,10 +88,11 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       }
 
     case UnknownT() =>
-      tla.appFun(NameEx("Unknown"), cell)
+      tla.appFun(NameEx("Unknown"), cell.toNameEx)
 
     case FinSetT(_) =>
-      def inSet(e: ArenaCell) = solverContext.evalGroundExpr(tla.in(e, cell)) == tla.bool(true)
+      def inSet(e: ArenaCell) =
+        solverContext.evalGroundExpr(tla.in(e.toNameEx, cell.toNameEx)) == tla.bool(true).untyped()
 
       val elems = arena.getHas(cell).filter(inSet)
       val decodedElems = elems.map(decodeCellToTlaEx(arena, _))
@@ -197,7 +199,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
 
   private def findCellInSet(arena: Arena, cells: Seq[ArenaCell], ex: TlaEx): Option[ArenaCell] = {
     def isEq(c: ArenaCell): Boolean = {
-      ValEx(TlaBool(true)) == solverContext.evalGroundExpr(tla.and(tla.eql(c, ex)))
+      ValEx(TlaBool(true)) == solverContext.evalGroundExpr(tla.and(tla.eql(c.toNameEx, ex)))
     }
 
     cells.find(isEq)
@@ -206,7 +208,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
   def reverseMapVar(expr: TlaEx, varName: String, cell: ArenaCell): TlaEx = {
     def rec(ex: TlaEx): TlaEx = ex match {
       case NameEx(name) =>
-        if (name != cell.name) ex else NameEx(varName)
+        if (name != cell.toNameEx.name) ex else NameEx(varName)
 
       case OperEx(oper, args @ _*) =>
         OperEx(oper, args map rec: _*)

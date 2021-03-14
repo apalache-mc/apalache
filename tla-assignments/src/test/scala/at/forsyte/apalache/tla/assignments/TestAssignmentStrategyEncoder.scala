@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir.{TestingPredefs, TlaEx}
-import at.forsyte.apalache.tla.lir.Builder._
+import at.forsyte.apalache.tla.lir.convenience.tla._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -253,7 +254,7 @@ class TestAssignmentStrategyEncoder extends FunSuite with TestingPredefs {
     val asgnX = primeEq(n_x, int(1))
     val asgnY1 = primeEq(n_y, int(1))
     val asgnY2 = primeEq(n_y, int(2))
-    val xDecl = declOp("X", asgnX)
+    val xDecl = declOp("X", asgnX).untypedOperDecl()
     val bodySingle = appDecl(xDecl)
     val bodyOr =
       or(

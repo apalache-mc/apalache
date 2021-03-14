@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir.TestingPredefs
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -15,7 +16,7 @@ class TestManualAssignments extends FunSuite with TestingPredefs {
   test("Single var - correct") {
 
     val vars = Seq("x")
-    val ex = tla.or(tla.assignPrime(n_x, 1), tla.assignPrime(n_x, 2))
+    val ex = tla.or(tla.assignPrime(n_x, tla.int(1)), tla.assignPrime(n_x, tla.int(2)))
 
     val transitions = extr.apply(vars, ex)
     assert(transitions.nonEmpty)
@@ -25,7 +26,7 @@ class TestManualAssignments extends FunSuite with TestingPredefs {
 
     val vars = Seq("x")
     //
-    val ex = tla.or(tla.assignPrime(n_x, 1), tla.primeEq(n_x, 2))
+    val ex = tla.or(tla.assignPrime(n_x, tla.int(1)), tla.primeEq(n_x, tla.int(2)))
 
     val transitions = extr.apply(vars, ex)
     assert(transitions.isEmpty)
@@ -35,8 +36,8 @@ class TestManualAssignments extends FunSuite with TestingPredefs {
     val vars = Seq("x", "y")
     val ex =
       tla.or(
-          tla.and(tla.assignPrime(n_x, 1), tla.assignPrime(n_y, 2)),
-          tla.and(tla.assignPrime(n_x, 3), tla.assignPrime(n_y, 4))
+          tla.and(tla.assignPrime(n_x, tla.int(1)), tla.assignPrime(n_y, tla.int(2))),
+          tla.and(tla.assignPrime(n_x, tla.int(3)), tla.assignPrime(n_y, tla.int(4)))
       )
     val transitions = extr.apply(vars, ex)
     assert(transitions.nonEmpty)
@@ -46,8 +47,8 @@ class TestManualAssignments extends FunSuite with TestingPredefs {
     val vars = Seq("x", "y")
     val ex =
       tla.or(
-          tla.and(tla.assignPrime(n_x, 1), tla.assignPrime(n_y, 2)),
-          tla.and(tla.assignPrime(n_x, 3), tla.primeEq(n_y, 4))
+          tla.and(tla.assignPrime(n_x, tla.int(1)), tla.assignPrime(n_y, tla.int(2))),
+          tla.and(tla.assignPrime(n_x, tla.int(3)), tla.primeEq(n_y, tla.int(4)))
       )
     val transitions = extr.apply(vars, ex)
     assert(transitions.isEmpty)
@@ -57,8 +58,8 @@ class TestManualAssignments extends FunSuite with TestingPredefs {
     val vars = Seq("x", "y")
     val ex =
       tla.or(
-          tla.and(tla.assignPrime(n_x, 1), tla.primeEq(n_y, 2)),
-          tla.and(tla.assignPrime(n_x, 3), tla.primeEq(n_y, 4))
+          tla.and(tla.assignPrime(n_x, tla.int(1)), tla.primeEq(n_y, tla.int(2))),
+          tla.and(tla.assignPrime(n_x, tla.int(3)), tla.primeEq(n_y, tla.int(4)))
       )
     val transitions = extr.apply(vars, ex)
     assert(transitions.nonEmpty)
@@ -68,8 +69,8 @@ class TestManualAssignments extends FunSuite with TestingPredefs {
     val vars = Seq("x", "y")
     val ex =
       tla.or(
-          tla.and(tla.primeEq(n_x, 1), tla.primeEq(n_y, 2)),
-          tla.and(tla.assignPrime(n_x, 3), tla.primeEq(n_y, 4))
+          tla.and(tla.primeEq(n_x, tla.int(1)), tla.primeEq(n_y, tla.int(2))),
+          tla.and(tla.assignPrime(n_x, tla.int(3)), tla.primeEq(n_y, tla.int(4)))
       )
     val transitions = extr.apply(vars, ex)
     assert(transitions.isEmpty)

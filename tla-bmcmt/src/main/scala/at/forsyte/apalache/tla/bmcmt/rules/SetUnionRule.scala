@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.types.FinSetT
 import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -44,7 +43,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
         if (unionOfSets.isEmpty) {
           // just return an empty set
           // TODO: cache empty sets!
-          nextState.setRex(newSetCell)
+          nextState.setRex(newSetCell.toNameEx)
         } else {
           // add all the elements to the arena
           nextState = nextState.updateArena(_.appendHas(newSetCell, unionOfSets.toSeq: _*))
@@ -62,11 +61,11 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
             def inPointingSet(set: ArenaCell) = {
               // this is sound, because we have generated element equalities
               // and thus can use congruence of in(...) for free
-              tla.and(tla.in(set, topSetCell), tla.in(elemCell, set))
+              tla.and(tla.in(set.toNameEx, topSetCell.toNameEx), tla.in(elemCell.toNameEx, set.toNameEx))
             }
 
             val existsIncludingSet = tla.or(pointingSets map inPointingSet: _*)
-            val inUnionSet = tla.in(elemCell, newSetCell)
+            val inUnionSet = tla.in(elemCell.toNameEx, newSetCell.toNameEx)
             val iff = OperEx(TlaOper.eq, inUnionSet, existsIncludingSet)
             rewriter.solverContext.assertGroundExpr(iff)
           }

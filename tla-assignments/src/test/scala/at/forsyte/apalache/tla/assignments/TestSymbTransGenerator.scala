@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.assignments
 import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.transformations.impl.{IdleTracker, TrackerWithListeners}
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -13,7 +14,7 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
   val stg = new SymbTransGenerator(TrackerWithListeners())
 
   import stg.helperFunctions._
-  import at.forsyte.apalache.tla.lir.Builder._
+  import at.forsyte.apalache.tla.lir.convenience.tla._
 
   test("Test allCombinations") {
 
@@ -136,7 +137,7 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
     val yasgn22 = primeEq(n_y, n_t)
 
     val ex4 = and(eql(int(0), int(1)), xasgn21)
-    val xDecl = declOp("X", ex4)
+    val xDecl = declOp("X", ex4).untypedOperDecl()
     val ex5 = and(yasgn21, appDecl(xDecl))
     val ex6 = and(yasgn22, appDecl(xDecl))
     val ex7 = or(ex5, ex6)
@@ -200,7 +201,7 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
 
   test("Test LET-IN") {
     val asgn = primeEq(n_x, int(1))
-    val xDecl = declOp("X", asgn)
+    val xDecl = declOp("X", asgn).untypedOperDecl()
     val disj = or(
         and(n_A, appDecl(xDecl)),
         and(n_B, appDecl(xDecl))
@@ -216,13 +217,13 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
     val ret = stg(next, strat) map { _._2 }
     assert(
         ret == Seq(
-            letIn(disj, declOp("X", assignPrime(n_x, int(1))))
+            letIn(disj, declOp("X", assignPrime(n_x, int(1))).untypedOperDecl())
         ))
   }
 
   test("Test sliceWith") {
     val asgn = primeEq(n_x, int(1))
-    val xDecl = declOp("X", asgn)
+    val xDecl = declOp("X", asgn).untypedOperDecl()
     val disj = or(
         and(n_A, appDecl(xDecl)),
         and(n_B, appDecl(xDecl))
@@ -231,7 +232,7 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
     val next = letIn(
         disj,
         xDecl
-    )
+    ).untyped()
 
     val selection = Set(asgn.ID)
     val tr = AssignmentOperatorIntroduction(selection, new IdleTracker)

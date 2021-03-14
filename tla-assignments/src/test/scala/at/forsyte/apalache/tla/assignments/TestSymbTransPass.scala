@@ -1,10 +1,11 @@
 package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.imp.declarationsFromFile
+import at.forsyte.apalache.tla.lir.{NullEx, TestingPredefs, TlaDecl, TlaEx, TlaModule, TlaOperDecl, TlaVarDecl, UID}
 import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.standard._
-import at.forsyte.apalache.tla.lir.{Builder => bd, _}
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.pp.Desugarer
 import org.junit.runner.RunWith
@@ -63,7 +64,7 @@ class TestSymbTransPass extends FunSuite with TestingPredefs {
   }
 
   test("Test Complete Spec return + unsat spec") {
-    val phi = bd.bool(false)
+    val phi = tla.bool(false)
     val encoder = new AssignmentStrategyEncoder()
     val fullSpec = encoder(Set("x"), phi, complete = true)
 
@@ -75,7 +76,7 @@ class TestSymbTransPass extends FunSuite with TestingPredefs {
   }
 
   test("Test Next = single asgn, no connectives") {
-    val next = bd.primeInSingleton(n_x, n_S)
+    val next = tla.primeInSingleton(n_x, n_S)
 
     val decls = Seq(TlaOperDecl("Next", List(), next), TlaVarDecl("x"))
 
@@ -94,7 +95,7 @@ class TestSymbTransPass extends FunSuite with TestingPredefs {
   }
 
   test("Test no strat") {
-    val next = bd.eql(bd.prime(n_x), n_y)
+    val next = tla.eql(tla.prime(n_x), n_y)
     val decls = Seq(TlaOperDecl("Next", List(), next), TlaVarDecl("x"), TlaVarDecl("z"))
     val trans = testFromDecls(decls)
     assert(trans.isEmpty)

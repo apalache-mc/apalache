@@ -2,9 +2,11 @@ package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaOper}
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModuleTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.typecheck.{OperT1, TlaType1}
+import at.forsyte.apalache.tla.typecheck.TypedPredefs._
 
 /**
  * Replaces instances of user-defined operator applications with a LET-IN wrapper.
@@ -28,29 +30,44 @@ class OperAppToLetInDef(
   }
 
   def wrap(wrappableNames: Set[String]): TlaExTransformation = tracker.trackEx {
-    case ex @ OperEx(TlaOper.apply, NameEx(opName), args @ _*) if wrappableNames.contains(opName) && args.nonEmpty =>
+    case ex @ OperEx(TlaOper.apply, ne @ NameEx(opName), args @ _*)
+        if wrappableNames.contains(opName) && args.nonEmpty =>
+      val resType = ex.typeTag match {
+        case Typed(tt: TlaType1) => tt
+      }
       val newArgs = args map wrap(wrappableNames)
       val newEx =
-        if (args == newArgs) ex
-        else setTracking(ex, Builder.appOp(NameEx(opName), newArgs: _*))
+        if (args == newArgs) {
+          ex
+        } else {
+          val app = tla.appOp(ne, newArgs: _*).typed(resType)
+          setTracking(ex, app)
+        }
 
       val baseName = IncrementalRenaming.getBase(opName)
       val newName = s"${NAME_PREFIX}_${baseName}_${nameGenerator.newName()}"
-      val newDecl = TlaOperDecl(newName, List.empty, newEx)
-      LetInEx(Builder.appDecl(newDecl), newDecl)
+      val newDecl = tla
+        .declOp(newName, newEx)
+        .typedOperDecl(OperT1(Seq(), resType))
+      val applyNewDecl = tla.appOp(NameEx(opName)(ne.typeTag)).typed(resType)
+      LetInEx(applyNewDecl, newDecl)(ex.typeTag)
+
     // On type annot. ignore the RHS
     case ex @ OperEx(BmcOper.withType, argEx, typeEx) =>
       val newArg = wrap(wrappableNames)(argEx)
       if (argEx == newArg)
         ex
       else
-        OperEx(BmcOper.withType, newArg, typeEx)
+        OperEx(BmcOper.withType, newArg, typeEx)(argEx.typeTag)
+
     case ex @ OperEx(oper, args @ _*) =>
       val newArgs = args map wrap(wrappableNames)
-      if (args == newArgs)
+      if (args == newArgs) {
         ex
-      else
-        OperEx(oper, newArgs: _*)
+      } else {
+        OperEx(oper, newArgs: _*)(ex.typeTag)
+      }
+
     case ex @ LetInEx(body, defs @ _*) =>
       // Assumption: let-in defined operators are defined in dependency order
       val (newWrappable, newDefs) = defs.foldLeft((wrappableNames, Seq.empty[TlaOperDecl])) {
@@ -60,10 +77,12 @@ class OperAppToLetInDef(
           (partialSet + decl.name, partialDecls :+ newDecl)
       }
       val newBody = wrap(newWrappable)(body)
-      if (body == newBody && defs == newDefs)
+      if (body == newBody && defs == newDefs) {
         ex
-      else
-        LetInEx(newBody, newDefs: _*)
+      } else {
+        LetInEx(newBody, newDefs: _*)(ex.typeTag)
+      }
+
     case ex => ex
   }
 

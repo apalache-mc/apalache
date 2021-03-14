@@ -36,12 +36,5 @@ trait TypeTagged[T] {
    * @param newTypeTag a new type
    * @return a shallow copy of TLA+ expression with the type tag set to newTypeTag
    */
-  def withType(newTypeTag: TypeTag): T
-}
-
-/**
- * Default settings for the untyped language layer. To use the `Untyped()` tag, import the definitions from `UntypedPredefs`.
- */
-object UntypedPredefs {
-  implicit val untyped: TypeTag = Untyped()
+  def withTag(newTypeTag: TypeTag): T
 }

@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.deprecated
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.lir.convenience._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaControlOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
@@ -22,7 +23,7 @@ class CaseRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   override def apply(state: SymbState): SymbState = {
-    def decorateWithIf(elseEx: TlaEx, guardAction: Tuple2[TlaEx, TlaEx]): OperEx = {
+    def decorateWithIf(elseEx: TlaEx, guardAction: Tuple2[TlaEx, TlaEx]): TlaEx = {
       tla.ite(guardAction._1, guardAction._2, elseEx)
     }
 

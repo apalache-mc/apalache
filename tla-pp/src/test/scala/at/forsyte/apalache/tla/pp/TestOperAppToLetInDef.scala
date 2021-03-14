@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.pp
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaOper}
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import org.junit.runner.RunWith
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
@@ -19,9 +20,9 @@ class TestOperAppToLetInDef extends FunSuite with BeforeAndAfterEach with Testin
 
   test("No app") {
     val exs = List(
-        tla.plus(1, 2),
-        tla.tuple(n_x, n_y, n_z),
-        tla.exists(n_x, n_S, tla.gt(n_x, n_f))
+        tla.plus(tla.int(1), tla.int(2)).untyped(),
+        tla.tuple(n_x, n_y, n_z).untyped(),
+        tla.exists(n_x, n_S, tla.gt(n_x, n_f)).untyped()
     )
 
     val tr = wrapper.wrap(Set.empty)
@@ -30,7 +31,7 @@ class TestOperAppToLetInDef extends FunSuite with BeforeAndAfterEach with Testin
   }
 
   test("Single App") {
-    val ex = tla.appOp(n_A, n_x, n_y)
+    val ex = tla.appOp(n_A, n_x, n_y).untyped()
 
     val tr1 = wrapper.wrap(Set.empty)
     val tr2 = wrapper.wrap(Set("A"))
@@ -52,9 +53,9 @@ class TestOperAppToLetInDef extends FunSuite with BeforeAndAfterEach with Testin
   }
 
   test("Mixed") {
-    val ex1 = tla.appOp(n_A, n_x, n_y)
-    val ex2 = tla.appOp(n_B, n_x, n_y)
-    val ex = tla.plus(ex1, ex2)
+    val ex1 = tla.appOp(n_A, n_x, n_y).untyped()
+    val ex2 = tla.appOp(n_B, n_x, n_y).untyped()
+    val ex = tla.plus(ex1, ex2).untyped()
 
     val tr = wrapper.wrap(Set("A"))
     val newEx = tr(ex)

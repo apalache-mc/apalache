@@ -30,7 +30,7 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
         ("A", "1"),
         ("B", 0),
         ("C", tla.and(n_x, n_P)),
-        ("D", tla.letIn(n_T, tla.declOp("T", "p", "p")))
+        ("D", tla.letIn(n_T, tla.declOp("T", tla.name("p"), "p").untypedOperDecl()))
     ) map exAsDecl
 
     val module = new TlaModule("M", decls)
@@ -44,7 +44,7 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
     val name = "A"
 
     // A(p) == A(p)
-    val recDecl = tla.declOp(name, tla.appOp(n_A, n_p), "p")
+    val recDecl = tla.declOp(name, tla.appOp(n_A, n_p), "p").untypedOperDecl()
     recDecl.isRecursive = true
 
     val defaultVal: BigInt = 42
@@ -76,7 +76,7 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
     val name = "A"
 
     // A(p) == A(p)
-    val recDecl = tla.declOp(name, tla.appOp(n_A, n_p), "p")
+    val recDecl = tla.declOp(name, tla.appOp(n_A, n_p), "p").untypedOperDecl()
     recDecl.isRecursive = true
 
     val defaultVal: BigInt = 42
@@ -114,12 +114,12 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
     val letInOpName = "A"
 
     // A(p) == A(p)
-    val recDecl = tla.declOp(letInOpName, tla.appOp(n_A, n_p), "p")
+    val recDecl = tla.declOp(letInOpName, tla.appOp(n_A, n_p), "p").untypedOperDecl()
     recDecl.isRecursive = true
 
-    val appEx = tla.appDecl(recDecl, 99)
+    val appEx = tla.appDecl(recDecl, tla.int(99))
     // X == LET A(p) == A(p) IN A(99)
-    val nonRecDecl = tla.declOp("X", tla.letIn(appEx, recDecl))
+    val nonRecDecl = tla.declOp("X", tla.letIn(appEx, recDecl)).untypedOperDecl()
 
     val defaultVal: BigInt = 42
 

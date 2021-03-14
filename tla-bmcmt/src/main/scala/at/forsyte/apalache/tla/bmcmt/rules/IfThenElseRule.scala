@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaControlOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
@@ -33,9 +33,9 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // Some rules immediately return TRUE or FALSE. In combination with assignments, this may lead to rewriting errors.
         // See: TestSymbStateRewriterBool.test("""IF-THEN-ELSE with \E...""")
         // In such cases, we should prune the branches
-        if (simplifier.isTrueConst(predCell)) {
+        if (simplifier.isTrueConst(predCell.toNameEx)) {
           rewriter.rewriteUntilDone(nextState.setRex(thenEx))
-        } else if (simplifier.isFalseConst(predCell)) {
+        } else if (simplifier.isFalseConst(predCell.toNameEx)) {
           rewriter.rewriteUntilDone(nextState.setRex(elseEx))
         } else {
           nextState = rewriter.rewriteUntilDone(nextState.setRex(thenEx))
@@ -46,10 +46,10 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
           val resultType = rewriter.typeFinder.compute(state.ex, BoolT(), thenCell.cellType, elseCell.cellType)
           resultType match {
             // basic types, we can use SMT equality
-            case BoolT() | IntT() | ConstT() => iteBasic(nextState, resultType, predCell, thenCell, elseCell)
+            case BoolT() | IntT() | ConstT() => iteBasic(nextState, resultType, predCell.toNameEx, thenCell, elseCell)
 
             // sets, functions, records, tuples, sequence: use pick
-            case _ => iteGeneral(nextState, resultType, predCell, thenCell, elseCell)
+            case _ => iteGeneral(nextState, resultType, predCell.toNameEx, thenCell, elseCell)
           }
         }
 
@@ -62,7 +62,7 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val newArena = state.arena.appendCell(commonType)
     val newCell = newArena.topCell
     // it's OK to use the SMT equality and ite, as we are dealing with the basic types here
-    val iffIte = tla.eql(newCell, tla.ite(pred, thenCell, elseCell))
+    val iffIte = tla.eql(newCell.toNameEx, tla.ite(pred, thenCell.toNameEx, elseCell.toNameEx))
     rewriter.solverContext.assertGroundExpr(iffIte)
     state.setArena(newArena).setRex(newCell.toNameEx)
   }
@@ -77,6 +77,6 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // require the oracle value to match the predicate: oracle = 1 iff pred = true
     solverAssert(tla.equiv(pred, oracle.whenEqualTo(nextState, 1)))
     // Pick a cell. Mind the order, oracle = 1 is the then branch, whereas oracle = 0 is the else branch.
-    pickFrom.pickByOracle(nextState, oracle, Seq(elseCell, thenCell), nextState.arena.cellFalse())
+    pickFrom.pickByOracle(nextState, oracle, Seq(elseCell, thenCell), nextState.arena.cellFalse().toNameEx)
   }
 }

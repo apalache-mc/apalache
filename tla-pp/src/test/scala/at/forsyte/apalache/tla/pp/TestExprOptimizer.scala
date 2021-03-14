@@ -96,7 +96,7 @@ class TestExprOptimizer extends FunSuite with BeforeAndAfterEach {
   }
 
   test("""Cardinality(S) >= 2 becomes LET t_3 == S IN \E t_1 \in t_3: \E t_1 \in t_3: t_1 /= t_2""") {
-    val set = tla.name("S").withType(Typed(SetT1(IntT1())))
+    val set = tla.name("S").withTag(Typed(SetT1(IntT1())))
     val input = tla.ge(tla.card(set), tla.int(2))
     val output = optimizer.apply(input)
     val letApp = tla.appOp(tla.name("t_3"))
@@ -108,7 +108,7 @@ class TestExprOptimizer extends FunSuite with BeforeAndAfterEach {
   }
 
   test("""Cardinality(S) > 1 becomes LET t_3 == S IN \E t_1 \in t_3: \E t_1 \in t_3: t_1 /= t_2""") {
-    val set = tla.name("S").withType(Typed(SetT1(IntT1())))
+    val set = tla.name("S").withTag(Typed(SetT1(IntT1())))
     val input = tla.gt(tla.card(set), tla.int(1))
     val output = optimizer.apply(input)
     val letApp = tla.appOp(tla.name("t_3"))

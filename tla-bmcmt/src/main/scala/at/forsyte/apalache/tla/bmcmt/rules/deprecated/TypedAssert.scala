@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.types.{CellT, FailPredT}
 import at.forsyte.apalache.tla.bmcmt.{SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * In many cases we like to introduce an assertion that fails in case of error and returns a dummy value otherwise.

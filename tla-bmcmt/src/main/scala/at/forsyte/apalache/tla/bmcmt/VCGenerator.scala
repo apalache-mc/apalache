@@ -46,9 +46,11 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
   private def introConditions(inputInv: TlaEx): Seq[TlaOperDecl] = {
     def mapToDecls(smallInv: TlaEx, index: Int): Seq[TlaOperDecl] = {
       val deepCopy = DeepCopy(tracker)
-      val positive = TlaOperDecl(NormalizedNames.VC_INV_PREFIX + index, List(), deepCopy.deepCopyEx(smallInv))
+      val smallInvCopy = deepCopy.deepCopyEx(smallInv)
+      val positive =
+        TlaOperDecl(NormalizedNames.VC_INV_PREFIX + index, List(), smallInvCopy)(Untyped())
       val negative =
-        TlaOperDecl(NormalizedNames.VC_NOT_INV_PREFIX + index, List(), tla.not(deepCopy.deepCopyEx(smallInv)))
+        TlaOperDecl(NormalizedNames.VC_NOT_INV_PREFIX + index, List(), tla.not(smallInvCopy))(Untyped())
       Seq(positive, negative)
     }
 

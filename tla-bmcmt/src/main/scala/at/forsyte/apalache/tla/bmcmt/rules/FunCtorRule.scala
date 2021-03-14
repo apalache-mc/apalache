@@ -1,9 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
@@ -71,8 +71,8 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     // associate a value of the uninterpreted function with a cell
     def addCellCons(domElem: ArenaCell, relElem: ArenaCell): Unit = {
-      val inDomain = tla.in(domElem, domainCell)
-      val inRelation = tla.in(relElem, relation)
+      val inDomain = tla.in(domElem.toNameEx, domainCell.toNameEx)
+      val inRelation = tla.in(relElem.toNameEx, relation.toNameEx)
       val iff = tla.equiv(inDomain, inRelation)
       rewriter.solverContext.assertGroundExpr(iff)
     }

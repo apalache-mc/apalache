@@ -8,6 +8,8 @@ import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir._
 import org.bitbucket.inkytonik.kiama.output.PrettyPrinter
 
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
+
 import scala.collection.immutable.HashMap
 
 /**

@@ -1,13 +1,13 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
+import at.forsyte.apalache.tla.lir.{BuilderEx, LetInEx, NameEx, OperEx, TlaEx, TlaOperDecl, Typed, ValEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.{Untyped, _}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.standard.{FlatLanguagePred, ReplaceFixed}
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.typecheck.{BoolT1, OperT1}
+import at.forsyte.apalache.tla.typecheck.TypedPredefs._
 
 import javax.inject.Singleton
 
@@ -28,13 +28,17 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
 
   private def nnf(neg: Boolean): TlaExTransformation = tracker.trackEx {
     case ValEx(TlaBool(b)) =>
-      tla.bool(b ^ neg)
+      tla.bool(b ^ neg).typed()
 
     case vex @ ValEx(_) =>
       vex // this may be called when processing a non-Boolean expression
 
     case ex @ NameEx(_) =>
-      if (neg) tla.not(ex) else ex
+      if (neg) {
+        tla.not(ex).typed()
+      } else {
+        ex
+      }
 
     case OperEx(TlaBoolOper.not, arg) =>
       nnf(!neg)(arg)
@@ -230,32 +234,35 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
 
     val newBody = nnf(neg)(body)
 
-    val boolT = Typed(BoolT1())
-    val toBoolT = Typed(OperT1(Seq(), BoolT1()))
+    val toBoolT = OperT1(Seq(), BoolT1())
 
     // We can't just implement ~X for all operators ( e.g. what if X == 1..10 ), just for
     // those that actually appear under negation in the body (and thus must be of type Bool)
     def negAppearingOpers(tlaEx: TlaEx): Set[String] = tlaEx match {
-      case OperEx(TlaBoolOper.not, OperEx(TlaOper.apply, NameEx(name))) if tlaEx.typeTag == toBoolT =>
+      case OperEx(TlaBoolOper.not, OperEx(TlaOper.apply, NameEx(name))) if tlaEx.typeTag == Typed(toBoolT) =>
         Set(name)
+
       case OperEx(op, args @ _*) =>
         args.map(negAppearingOpers).foldLeft(Set.empty[String]) {
           _ ++ _
         }
+
       case LetInEx(b, ds @ _*) =>
         ds.map(d => negAppearingOpers(d.body)).foldLeft(negAppearingOpers(b)) {
           _ ++ _
         }
+
       case _ => Set.empty[String]
     }
 
     val negOpers = negAppearingOpers(newBody)
 
     val replacements = negOpers map { opName =>
-      ReplaceFixed(tracker)(
-          OperEx(TlaBoolOper.not, OperEx(TlaOper.apply, NameEx(opName)(toBoolT))(boolT))(boolT),
-          OperEx(TlaOper.apply, NameEx(negName(opName))(toBoolT))(boolT)
-      )
+      val toReplace = tla.not(tla.appOp(tla.name(opName) ? "b") ? "b").typed(Map("b" -> BoolT1()), "b")
+      lazy val replacement = tla
+        .appOp(tla.name(negName(opName)) ? "op")
+        .typed(Map("b" -> BoolT1(), "op" -> toBoolT), "b")
+      ReplaceFixed(tracker)(toReplace, replacement)
     }
 
     val negReplacedBody = replacements.foldLeft(newBody) { case (b, tr) =>
@@ -268,7 +275,7 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
 
     val newDefs = defs ++ negDefs
 
-    LetInEx(negReplacedBody, newDefs: _*)
+    LetInEx(negReplacedBody, newDefs: _*)(body.typeTag)
   }
 }
 

@@ -11,7 +11,7 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateDecoder extends RewriterBase {
   test("decode bool") {
-    val originalEx = tla.bool(true)
+    val originalEx: TlaEx = tla.bool(true)
     val state = new SymbState(originalEx, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -25,7 +25,7 @@ class TestSymbStateDecoder extends RewriterBase {
   }
 
   test("decode int") {
-    val originalEx = tla.int(3)
+    val originalEx: TlaEx = tla.int(3)
     val state = new SymbState(originalEx, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -39,7 +39,7 @@ class TestSymbStateDecoder extends RewriterBase {
   }
 
   test("decode str") {
-    val originalEx = tla.str("hello")
+    val originalEx: TlaEx = tla.str("hello")
     val state = new SymbState(originalEx, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -78,7 +78,7 @@ class TestSymbStateDecoder extends RewriterBase {
 
   test("decode set") {
     val originalEx = tla.enumSet(tla.int(2), tla.int(1), tla.int(2))
-    val simpleOriginalEx = tla.enumSet(tla.int(1), tla.int(2))
+    val simpleOriginalEx: TlaEx = tla.enumSet(tla.int(1), tla.int(2))
     val state = new SymbState(originalEx, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -94,7 +94,7 @@ class TestSymbStateDecoder extends RewriterBase {
   test("decode fun set") {
     val domEx = tla.enumSet(tla.int(1), tla.int(2))
     val cdmEx = tla.enumSet(tla.int(3), tla.int(4))
-    val originalEx = tla.funSet(domEx, cdmEx)
+    val originalEx: TlaEx = tla.funSet(domEx, cdmEx)
     val state = new SymbState(originalEx, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -109,7 +109,7 @@ class TestSymbStateDecoder extends RewriterBase {
 
   test("decode SUBSET S") {
     val set = tla.enumSet(tla.int(1), tla.int(2))
-    val powset = tla.powSet(set)
+    val powset: TlaEx = tla.powSet(set)
     val state = new SymbState(powset, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
@@ -130,7 +130,7 @@ class TestSymbStateDecoder extends RewriterBase {
     val cell = nextState.asCell
     val decoder = new SymbStateDecoder(solverContext, rewriter)
     val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
-    val expectedOutcome =
+    val expectedOutcome: TlaEx =
       tla.atat(tla.int(1), tla.int(2), tla.int(2), tla.int(3))
     assert(expectedOutcome == decodedEx)
     // we cannot directly compare the outcome, as it comes in the same form as a record
@@ -148,7 +148,7 @@ class TestSymbStateDecoder extends RewriterBase {
     val decoder = new SymbStateDecoder(solverContext, rewriter)
     val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
     // this is the standard outcome for an empty-domain function: {x \in {} |-> {}}
-    val expectedOutcome = tla.atat()
+    val expectedOutcome: TlaEx = tla.atat()
     assert(expectedOutcome == decodedEx)
     // we cannot directly compare the outcome, as it comes in the same form as a record
     //    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(decodedEx, funEx)))
@@ -170,7 +170,7 @@ class TestSymbStateDecoder extends RewriterBase {
     val decoder = new SymbStateDecoder(solverContext, rewriter)
     val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
     // this is the standard outcome for an empty-domain function: {x \in {} |-> {}}
-    val expectedOutcome = tla.atat()
+    val expectedOutcome: TlaEx = tla.atat()
     assert(expectedOutcome == decodedEx)
     // we cannot directly compare the outcome, as it comes in the same form as a record
     //    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(decodedEx, funEx)))
@@ -187,11 +187,12 @@ class TestSymbStateDecoder extends RewriterBase {
     val cell = nextState.asCell
     val decoder = new SymbStateDecoder(solverContext, rewriter)
     val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
-    assert(tla.tuple(tla.int(2), tla.int(3)) == decodedEx)
+    val expected: TlaEx = tla.tuple(tla.int(2), tla.int(3))
+    assert(expected == decodedEx)
   }
 
   test("decode tuple") {
-    val tupleEx =
+    val tupleEx: TlaEx =
       tla.tuple(tla.int(1), tla.int(2), tla.int(3))
     val state = new SymbState(tupleEx, arena, Binding())
     val rewriter = create()
@@ -204,7 +205,7 @@ class TestSymbStateDecoder extends RewriterBase {
   }
 
   test("decode record") {
-    val recEx =
+    val recEx: TlaEx =
       tla.enumFun(tla.str("a"), tla.int(1), tla.str("b"), tla.bool(true))
     val state = new SymbState(recEx, arena, Binding())
     val rewriter = create()

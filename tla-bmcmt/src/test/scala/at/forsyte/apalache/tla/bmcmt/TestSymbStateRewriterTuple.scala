@@ -11,7 +11,7 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterTuple extends RewriterBase {
   test("""SE-TUPLE-CTOR[1-2]: <<1, FALSE, {2}>> ~~> $C$k""") {
-    val tuple = TlaFunOper.mkTuple(tla.int(1), tla.bool(false), tla.enumSet(tla.int(2)))
+    val tuple = tla.tuple(tla.int(1), tla.bool(false), tla.enumSet(tla.int(2)))
 
     val state = new SymbState(tuple, arena, Binding())
     val nextState = create().rewriteUntilDone(state)
@@ -57,8 +57,8 @@ class TestSymbStateRewriterTuple extends RewriterBase {
   }
 
   test("""SE-TUPLE-CTOR[1-2] in a set: {<<1, FALSE>>, <<2, TRUE>>} ~~> $C$k""") {
-    val tuple1 = TlaFunOper.mkTuple(tla.int(1), tla.bool(false))
-    val tuple2 = TlaFunOper.mkTuple(tla.int(2), tla.bool(true))
+    val tuple1 = tla.tuple(tla.int(1), tla.bool(false))
+    val tuple2 = tla.tuple(tla.int(2), tla.bool(true))
 
     val state = new SymbState(tla.enumSet(tuple1, tuple2), arena, Binding())
     val nextState = create().rewriteUntilDone(state)
@@ -74,8 +74,8 @@ class TestSymbStateRewriterTuple extends RewriterBase {
   }
 
   test("""type inference error: {<<1, FALSE>>, <<2>>}""") {
-    val tuple1 = TlaFunOper.mkTuple(tla.int(1), tla.bool(false))
-    val tuple2 = TlaFunOper.mkTuple(tla.int(2))
+    val tuple1 = tla.tuple(tla.int(1), tla.bool(false))
+    val tuple2 = tla.tuple(tla.int(2))
 
     val state = new SymbState(tla.enumSet(tuple1, tuple2), arena, Binding())
     assertThrows[TypeInferenceException] {
@@ -85,8 +85,8 @@ class TestSymbStateRewriterTuple extends RewriterBase {
   }
 
   test("""type inference error: {<<1, FALSE>>, <<TRUE, 2>>} ~~> $C$k""") {
-    val tuple1 = TlaFunOper.mkTuple(tla.int(1), tla.bool(false))
-    val tuple2 = TlaFunOper.mkTuple(tla.bool(true), tla.int(2))
+    val tuple1 = tla.tuple(tla.int(1), tla.bool(false))
+    val tuple2 = tla.tuple(tla.bool(true), tla.int(2))
 
     val state = new SymbState(tla.enumSet(tuple1, tuple2), arena, Binding())
     assertThrows[TypeInferenceException] {
@@ -95,8 +95,8 @@ class TestSymbStateRewriterTuple extends RewriterBase {
   }
 
   test("""SE-TUPLE-EQ: ~(<<2, FALSE>> = <<2, TRUE>>) ~~> $C$k""") {
-    val tuple1 = TlaFunOper.mkTuple(tla.int(2), tla.bool(false))
-    val tuple2 = TlaFunOper.mkTuple(tla.int(2), tla.bool(true))
+    val tuple1 = tla.tuple(tla.int(2), tla.bool(false))
+    val tuple2 = tla.tuple(tla.int(2), tla.bool(true))
     val eq = tla.not(tla.eql(tuple1, tuple2))
 
     val rewriter = create()
@@ -105,8 +105,8 @@ class TestSymbStateRewriterTuple extends RewriterBase {
   }
 
   test("""SE-TUPLE-EQ: <<2, FALSE>> = <<2, FALSE>> ~~> $C$k""") {
-    val tuple1 = TlaFunOper.mkTuple(tla.int(2), tla.bool(false))
-    val tuple2 = TlaFunOper.mkTuple(tla.int(2), tla.bool(false))
+    val tuple1 = tla.tuple(tla.int(2), tla.bool(false))
+    val tuple2 = tla.tuple(tla.int(2), tla.bool(false))
     val eq = tla.eql(tuple1, tuple2)
 
     val rewriter = create()
@@ -134,7 +134,7 @@ class TestSymbStateRewriterTuple extends RewriterBase {
   }
 
   test("""SE-TUPLE-DOM: DOMAIN <<2, FALSE>> = {1, 2}""") {
-    val tuple = TlaFunOper.mkTuple(tla.int(2), tla.bool(false), tla.str("c"))
+    val tuple = tla.tuple(tla.int(2), tla.bool(false), tla.str("c"))
     val set123 = tla.enumSet(1.to(3) map tla.int: _*)
     val eq = tla.eql(tla.dom(tuple), set123)
     val state = new SymbState(eq, arena, Binding())

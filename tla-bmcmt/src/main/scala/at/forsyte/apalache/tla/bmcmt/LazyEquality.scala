@@ -5,7 +5,9 @@ import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rewriter.{ConstSimplifierForSmt, Recoverable}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.{NameEx, NullEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{NullEx, TlaEx}
+
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * Generate equality constraints between cells and cache them to avoid redundant constraints.
@@ -35,7 +37,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
       // If you still think that this is okay to compare variables of different types, insert a check before safeEq.
       throw new RewriterException(
           "Trivial inequality, as the types are different (check your code): type(%s) = %s, while type(%s) = %s"
-            .format(left.name, left.cellType, right.name, right.cellType), NullEx)
+            .format(left.toNameEx.name, left.cellType, right.toNameEx.name, right.cellType), NullEx)
     } else if (left == right) {
       tla.bool(true) // this is just true
     } else {
@@ -189,7 +191,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
     def onEntry(pair: (ArenaCell, ArenaCell), entryAndLevel: (EqCache.CacheEntry, Int)): Int = {
       entryAndLevel._1 match {
         case EqCache.EqEntry() =>
-          if (isConstant(tla.eql(pair._1, pair._2))) 1 else 0
+          if (isConstant(tla.eql(pair._1.toNameEx, pair._2.toNameEx))) 1 else 0
 
         case EqCache.ExprEntry(pred) =>
           if (isConstant(pred)) 1 else 0
@@ -227,7 +229,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
       assert(left.cellType.signature == right.cellType.signature)
       // These two sets have the same signature and thus belong to the same sort.
       // Hence, we can use SMT equality. This equality is needed by uninterpreted functions.
-      val eq = tla.equiv(tla.eql(left, right), tla.and(leftToRight.ex, rightToLeft.ex))
+      val eq = tla.equiv(tla.eql(left.toNameEx, right.toNameEx), tla.and(leftToRight.ex, rightToLeft.ex))
       rewriter.solverContext.assertGroundExpr(eq)
       eqCache.put(left, right, EqCache.EqEntry())
 
@@ -247,10 +249,10 @@ class LazyEquality(rewriter: SymbStateRewriter)
       // The other set might be empty in some models. Add a predicate.
       val newState = state.updateArena(_.appendCell(BoolT()))
       val pred = newState.arena.topCell
-      val emptyEx = tla.and(otherElems.map(e => tla.not(tla.in(e, otherSet))): _*)
-      rewriter.solverContext.assertGroundExpr(tla.eql(pred, emptyEx))
+      val emptyEx = tla.and(otherElems.map(e => tla.not(tla.in(e.toNameEx, otherSet.toNameEx))): _*)
+      rewriter.solverContext.assertGroundExpr(tla.eql(pred.toNameEx, emptyEx))
       // this predicate will be later used as an equality test
-      eqCache.put(emptySet, otherSet, EqCache.ExprEntry(pred))
+      eqCache.put(emptySet, otherSet, EqCache.ExprEntry(pred.toNameEx))
       newState
     }
   }
@@ -271,23 +273,23 @@ class LazyEquality(rewriter: SymbStateRewriter)
     val rightElems = state.arena.getHas(right)
     if (leftElems.isEmpty) {
       // SE-SUBSETEQ1
-      state.setRex(state.arena.cellTrue())
+      state.setRex(state.arena.cellTrue().toNameEx)
     } else if (rightElems.isEmpty) {
       // SE-SUBSETEQ2
       def notIn(le: ArenaCell) = {
-        tla.not(tla.in(le, left))
+        tla.not(tla.in(le.toNameEx, left.toNameEx))
       }
 
       val newState = state.updateArena(_.appendCell(BoolT()))
       val pred = newState.arena.topCell
-      rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.and(leftElems.map(notIn): _*)))
-      newState.setRex(pred)
+      rewriter.solverContext.assertGroundExpr(tla.eql(pred.toNameEx, tla.and(leftElems.map(notIn): _*)))
+      newState.setRex(pred.toNameEx)
     } else {
       // SE-SUBSETEQ3
       var newState = cacheEqConstraints(state, leftElems cross rightElems) // cache all the equalities
       def exists(lelem: ArenaCell) = {
         def inAndEq(relem: ArenaCell) = {
-          simplifier.simplifyShallow(tla.and(tla.in(relem, right), cachedEq(lelem, relem)))
+          simplifier.simplifyShallow(tla.and(tla.in(relem.toNameEx, right.toNameEx), cachedEq(lelem, relem)))
         }
 
         // There are plenty of valid subformulas. Simplify!
@@ -295,7 +297,8 @@ class LazyEquality(rewriter: SymbStateRewriter)
       }
 
       def notInOrExists(lelem: ArenaCell) = {
-        val notInOrExists = simplifier.simplifyShallow(tla.or(tla.not(tla.in(lelem, left)), exists(lelem)))
+        val notInOrExists =
+          simplifier.simplifyShallow(tla.or(tla.not(tla.in(lelem.toNameEx, left.toNameEx)), exists(lelem)))
         if (simplifier.isBoolConst(notInOrExists)) {
           notInOrExists // just return the constant
         } else {
@@ -303,7 +306,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
           // BUGFIX: push this query to the solver, in order to avoid constructing enormous assertions
           newState = newState.updateArena(_.appendCell(BoolT()))
           val pred = newState.arena.topCell
-          rewriter.solverContext.assertGroundExpr(simplifier.simplifyShallow(tla.equiv(pred, notInOrExists)))
+          rewriter.solverContext.assertGroundExpr(simplifier.simplifyShallow(tla.equiv(pred.toNameEx, notInOrExists)))
           pred.toNameEx
         }
       }
@@ -311,8 +314,8 @@ class LazyEquality(rewriter: SymbStateRewriter)
       val forEachNotInOrExists = simplifier.simplifyShallow(tla.and(leftElems.map(notInOrExists): _*))
       newState = newState.updateArena(_.appendCell(BoolT()))
       val pred = newState.arena.topCell
-      rewriter.solverContext.assertGroundExpr(tla.eql(pred, forEachNotInOrExists))
-      newState.setRex(pred)
+      rewriter.solverContext.assertGroundExpr(tla.eql(pred.toNameEx, forEachNotInOrExists))
+      newState.setRex(pred.toNameEx)
     }
   }
 
@@ -385,7 +388,8 @@ class LazyEquality(rewriter: SymbStateRewriter)
     val leftRel = state.arena.getCdm(leftFun)
     val rightRel = state.arena.getCdm(rightFun)
     val relEq = mkSetEq(state, leftRel, rightRel)
-    rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(leftFun, rightFun), tla.eql(leftRel, rightRel)))
+    rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(leftFun.toNameEx, rightFun.toNameEx),
+            tla.eql(leftRel.toNameEx, rightRel.toNameEx)))
     eqCache.put(leftFun, rightFun, EqCache.EqEntry())
 
     // restore the original expression and theory
@@ -414,7 +418,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
       // (1) the record types coincide,
       // (2) record constructors use RecordDomainCache,
       // (3) and CherryPick uses pickRecordDomain
-      val membershipTest = tla.in(keyCell, leftDom)
+      val membershipTest = tla.in(keyCell.toNameEx, leftDom.toNameEx)
       //      newState = rewriter.rewriteUntilDone(newState.setRex(tla.in(keyCell, leftDom))) // the old way
       tla.or(tla.not(membershipTest), safeEq(leftElem, rightElem))
     }
@@ -426,9 +430,9 @@ class LazyEquality(rewriter: SymbStateRewriter)
       if (eqs.isEmpty)
         safeEq(leftDom, rightDom)
       else
-        tla.and(safeEq(leftDom, rightDom) +: eqs: _*)
+        tla.and(safeEq(leftDom, rightDom) +: eqs: _*).untyped()
 
-    rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(leftRec, rightRec), cons))
+    rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(leftRec.toNameEx, rightRec.toNameEx), cons))
     eqCache.put(leftRec, rightRec, EqCache.EqEntry())
 
     // restore the original expression and theory
@@ -452,7 +456,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
       val rightElems = state.arena.getHas(right)
 
       val tupleEq = tla.and(leftElems.zip(rightElems).map(p => elemEq(p._1, p._2)): _*)
-      rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(left, right), tupleEq))
+      rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(left.toNameEx, right.toNameEx), tupleEq))
       eqCache.put(left, right, EqCache.EqEntry())
 
       // restore the original expression and theory
@@ -470,9 +474,9 @@ class LazyEquality(rewriter: SymbStateRewriter)
     var nextState = state
     def eqPairwise(no: Int): TlaEx = {
       // Use function application here. This may look expensive, but is there any better way?
-      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.appFun(left, tla.int(no))))
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.appFun(left.toNameEx, tla.int(no))))
       val le = nextState.asCell
-      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.appFun(right, tla.int(no))))
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.appFun(right.toNameEx, tla.int(no))))
       val re = nextState.asCell
       nextState = cacheEqConstraints(nextState, (le, re) :: Nil)
       safeEq(le, re)
@@ -480,8 +484,10 @@ class LazyEquality(rewriter: SymbStateRewriter)
 
     val minLen = Math.min(leftElems.size, rightElems.size)
     val elemsEq = tla.and(1 to minLen map eqPairwise: _*)
-    val sizesEq = tla.eql(tla.minus(leftEnd, leftStart), tla.minus(rightEnd, rightStart))
-    rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(left, right), tla.and(sizesEq, elemsEq)))
+    val sizesEq =
+      tla.eql(tla.minus(leftEnd.toNameEx, leftStart.toNameEx), tla.minus(rightEnd.toNameEx, rightStart.toNameEx))
+    rewriter.solverContext
+      .assertGroundExpr(tla.equiv(tla.eql(left.toNameEx, right.toNameEx), tla.and(sizesEq, elemsEq)))
     eqCache.put(left, right, EqCache.EqEntry())
 
     // restore the original expression and theory

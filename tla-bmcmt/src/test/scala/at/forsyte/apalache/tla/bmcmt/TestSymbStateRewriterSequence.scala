@@ -13,7 +13,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
   // As sequences are not distinguishable from tuples, we need a type annotation.
   // In the not so far away future, a type inference engine would tell us, whether to construct a sequence or a tuple
   test("""SE-SEQ-CTOR: <<>> <: Seq(Int)""") {
-    val tuple = TlaFunOper.mkTuple()
+    val tuple = tla.tuple()
     val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
 
     val state = new SymbState(annotatedTuple, arena, Binding())
@@ -31,7 +31,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
   }
 
   test("""SE-SEQ-CTOR: <<1, 2, 3>> <: Seq(Int)""") {
-    val tuple = TlaFunOper.mkTuple(1.to(3) map tla.int: _*)
+    val tuple = tla.tuple(1.to(3).map(i => tla.int(i)): _*)
     val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
 
     val state = new SymbState(annotatedTuple, arena, Binding())
@@ -49,7 +49,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
   }
 
   test("""SE-SEQ-APP: (<<3, 4, 5>> <: Seq(Int))[2]""") {
-    val tuple = TlaFunOper.mkTuple(3.to(5) map tla.int: _*)
+    val tuple = tla.tuple(3.to(5).map(i => tla.int(i)): _*)
     val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
 
     val state = new SymbState(annotatedTuple, arena, Binding())
@@ -64,7 +64,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
 
   test("""SE-SEQ-APP: (<<>> <: Seq(Int))[1]""") {
     // regression: <<>>[1] should produce no contradiction, nor throw an exception
-    val tuple = TlaFunOper.mkTuple()
+    val tuple = tla.tuple()
     val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
 
     val state = new SymbState(annotatedTuple, arena, Binding())
@@ -74,7 +74,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
   }
 
   test("""SE-SEQ-HEAD: Head(<<3, 4, 5>> <: Seq(Int))""") {
-    val tuple = TlaFunOper.mkTuple(3.to(5) map tla.int: _*)
+    val tuple = tla.tuple(3.to(5).map(i => tla.int(i)): _*)
     val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
     val seqApp = tla.head(annotatedTuple)
 
@@ -88,7 +88,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
   }
 
   test("""SE-SEQ-LEN: Len(<<3, 4, 5>> <: Seq(Int))""") {
-    val tuple = TlaFunOper.mkTuple(3.to(5) map tla.int: _*)
+    val tuple = tla.tuple(3.to(5).map(i => tla.int(i)): _*)
     val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
     val seqApp = tla.len(annotatedTuple)
 
@@ -102,7 +102,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
   }
 
   test("""SE-SEQ-TAIL: Tail(<<3, 4, 5>> <: Seq(Int))""") {
-    val tuple = TlaFunOper.mkTuple(3.to(5) map tla.int: _*)
+    val tuple = tla.tuple(3.to(5).map(i => tla.int(i)): _*)
     val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
     val seqTail = tla.tail(annotatedTuple)
 
@@ -117,7 +117,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
   }
 
   test("""regression: Tail(<<>> <: Seq(Int)) does not unsat and its length is zero""") {
-    val emptyTuple = TlaFunOper.mkTuple()
+    val emptyTuple = tla.tuple()
     val annotatedTuple = tla.withType(emptyTuple, AnnotationParser.toTla(SeqT(IntT())))
     val seqTail = tla.tail(annotatedTuple)
 
@@ -131,7 +131,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
   }
 
   test("""SE-SEQ-SUBSEQ: SubSeq(S, 2, 4)""") {
-    val tuple = TlaFunOper.mkTuple(3.to(6) map tla.int: _*)
+    val tuple = tla.tuple(3.to(6).map(i => tla.int(i)): _*)
     val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
     val subseqEx = tla.subseq(annotatedTuple, tla.int(2), tla.int(3))
 
@@ -147,7 +147,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
   }
 
   test("""regression: SE-SEQ-SUBSEQ: SubSeq(S, 3, 1) does not unsat and has length 0""") {
-    val tuple = TlaFunOper.mkTuple(3.to(6) map tla.int: _*)
+    val tuple = tla.tuple(3.to(6).map(i => tla.int(i)): _*)
     val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
     val subseqEx = tla.subseq(annotatedTuple, tla.int(3), tla.int(1))
 
@@ -161,7 +161,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
   }
 
   test("""SE-SEQ-APPEND: Append(S, 10)""") {
-    val tuple = TlaFunOper.mkTuple(4.to(5) map tla.int: _*)
+    val tuple = tla.tuple(4.to(5).map(i => tla.int(i)): _*)
     val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
     val append = tla.append(annotatedTuple, tla.int(10))
 
@@ -178,7 +178,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
   }
 
   test("""SE-SEQ-APPEND: Append(SubSeq(S, 2, 3), 10)""") {
-    val tuple = TlaFunOper.mkTuple(3.to(6) map tla.int: _*)
+    val tuple = tla.tuple(3.to(6).map(i => tla.int(i)): _*)
     val annotatedTuple = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
     val subseqEx = tla.subseq(annotatedTuple, tla.int(2), tla.int(3))
     val append = tla.append(subseqEx, tla.int(10))
@@ -196,10 +196,10 @@ class TestSymbStateRewriterSequence extends RewriterBase {
   }
 
   test("""SE-SEQ-EQ: <<4, 5>> = SubSeq(<<3, 4, 5, 6>>, 2, 3)""") {
-    val tuple3456 = TlaFunOper.mkTuple(3.to(6) map tla.int: _*)
+    val tuple3456 = tla.tuple(3.to(6).map(i => tla.int(i)): _*)
     val annot3456 = tla.withType(tuple3456, AnnotationParser.toTla(SeqT(IntT())))
     val subseqEx = tla.subseq(annot3456, tla.int(2), tla.int(3))
-    val tuple45 = TlaFunOper.mkTuple(4.to(5) map tla.int: _*)
+    val tuple45 = tla.tuple(4.to(5).map(i => tla.int(i)): _*)
     val annot45 = tla.withType(tuple45, AnnotationParser.toTla(SeqT(IntT())))
     val eq = tla.eql(annot45, subseqEx)
 
@@ -213,7 +213,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
   }
 
   test("""SE-SEQ-DOMAIN: DOMAIN SubSeq(<<3, 4, 5, 6>>, 2, 3) = {2, 3}""") {
-    val tuple3456 = TlaFunOper.mkTuple(3.to(6) map tla.int: _*)
+    val tuple3456 = tla.tuple(3.to(6).map(i => tla.int(i)): _*)
     val annot3456 = tla.withType(tuple3456, AnnotationParser.toTla(SeqT(IntT())))
     val subseqEx = tla.subseq(annot3456, tla.int(2), tla.int(3))
     val domEx = tla.dom(subseqEx)
@@ -226,11 +226,11 @@ class TestSymbStateRewriterSequence extends RewriterBase {
   }
 
   test("""SEQ-CONCAT: <<9, 10>> \o SubSeq(S, 2, 3)""") {
-    val tuple3_6 = TlaFunOper.mkTuple(3.to(6) map tla.int: _*)
+    val tuple3_6 = tla.tuple(3.to(6).map(i => tla.int(i)): _*)
     val seqT = AnnotationParser.toTla(SeqT(IntT()))
     val annotatedTuple = tla.withType(tuple3_6, seqT)
     val subseq = tla.subseq(annotatedTuple, tla.int(2), tla.int(3)) // <<4, 5>>
-    val tuple9_10 = tla.withType(TlaFunOper.mkTuple(tla.int(9), tla.int(10)), seqT)
+    val tuple9_10 = tla.tuple(9.to(10).map(i => tla.int(i)): _*)
     val concat = tla.concat(tuple9_10, subseq)
 
     val state = new SymbState(concat, arena, Binding())
@@ -240,15 +240,18 @@ class TestSymbStateRewriterSequence extends RewriterBase {
     val result = nextState.asCell
     assert(SeqT(IntT()) == result.cellType)
 
-    val expected = tla.withType(TlaFunOper.mkTuple(tla.int(9), tla.int(10), tla.int(4), tla.int(5)), seqT)
+    val tupleExpected = tla.tuple(tla.int(9), tla.int(10), tla.int(4), tla.int(5))
+
+    val expected = tla.withType(tupleExpected, seqT)
 
     assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(expected, nextState.ex)))
   }
 
   test("""regression: SEQ-CONCAT: <<9, 10>> \o Tail(<<>>) does not unsat""") {
     val seqT = AnnotationParser.toTla(SeqT(IntT()))
-    val empty = tla.withType(TlaFunOper.mkTuple(), seqT)
-    val tuple9_10 = tla.withType(TlaFunOper.mkTuple(tla.int(9), tla.int(10)), seqT)
+    val empty = tla.withType(tla.tuple(), seqT)
+    val t9_10 = tla.tuple(9.to(10).map(i => tla.int(i)): _*)
+    val tuple9_10 = tla.withType(t9_10, seqT)
     // Tail(<<>>) produces some undefined value. In this case, \o should also produce an undefined value.
     val concat = tla.concat(tuple9_10, tla.tail(empty))
 

@@ -25,6 +25,13 @@ class LanguagePredError(message: String, val failedIds: Seq[(UID, String)]) exte
 class MalformedTlaError(message: String, val causeExpr: TlaEx) extends LirError(message)
 
 /**
+ * An exception that originated in an expression builder
+ *
+ * @param message the error message
+ */
+class BuilderError(message: String) extends LirError(message)
+
+/**
  * An exception that should be thrown when a user-defined operator calls itself via a chain of calls to other
  * operators (in a non-recursive case).
  *

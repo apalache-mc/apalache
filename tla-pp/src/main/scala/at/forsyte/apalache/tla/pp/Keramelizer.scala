@@ -1,11 +1,13 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.convenience._
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.standard.FlatLanguagePred
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.typecheck.TypedPredefs._
+import at.forsyte.apalache.tla.typecheck.{BoolT1, SetT1, TlaType1, TupT1}
+
 import javax.inject.Singleton
 
 /**
@@ -28,37 +30,39 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
     transform(expr)
   }
 
+  // extract the type of a set element
+  private def getElemType(e: TlaEx): TlaType1 = {
+    e.typeTag match {
+      case Typed(SetT1(elemType)) => elemType
+      case t =>
+        throw new MalformedTlaError(s"Expected a set, found: $t", e)
+    }
+  }
+
   /**
    * Set transformations.
    *
    * @return a transformed set expression
    */
   private def transformSets: PartialFunction[TlaEx, TlaEx] = {
-    case OperEx(TlaSetOper.cap, setX, setY) =>
-      val tempName = NameEx(gen.newName())
-      tla.filter(tempName, setX, tla.in(tempName, setY))
+    case ex @ OperEx(TlaSetOper.cap, setX, setY) =>
+      val elemType = getElemType(setX)
+      val tempName = gen.newName()
+      tla
+        .filter(tla.name(gen.newName()) ? "e", setX, tla.in(tla.name(tempName) ? "e", setY) ? "b")
+        .typed(Map("b" -> BoolT1(), "e" -> elemType, "s" -> SetT1(elemType)), "s")
 
-    case OperEx(TlaSetOper.setminus, setX, setY) =>
-      val tempName = NameEx(gen.newName())
-      tla.filter(tempName, setX, tla.not(tla.in(tempName, setY)))
+    case ex @ OperEx(TlaSetOper.setminus, setX, setY) =>
+      val elemType = getElemType(setX)
+      val tempName = gen.newName()
+      tla
+        .filter(tla.name(tempName) ? "e", setX, tla.not(tla.in(tla.name(tempName) ? "e", setY) ? "b") ? "b")
+        .typed(Map("b" -> BoolT1(), "e" -> elemType, "s" -> SetT1(elemType)), "s")
 
     case OperEx(TlaSetOper.notin, x, setX) =>
-      tla.not(tla.in(x, setX))
-
-    case OperEx(TlaSetOper.supseteq, setX, setY) =>
-      tla.subseteq(setY, setX)
-
-    case OperEx(TlaSetOper.subsetProper, setX, setY) =>
-      tla.and(
-          tla.not(tla.eql(setX, setY)),
-          tla.subseteq(setX, setY)
-      ) ///
-
-    case OperEx(TlaSetOper.supsetProper, setX, setY) =>
-      tla.and(
-          tla.not(tla.eql(setX, setY)),
-          tla.subseteq(setY, setX)
-      ) ///
+      tla
+        .not(tla.in(x, setX) ? "b")
+        .typed(Map("b" -> BoolT1()), "b")
   }
 
   /**
@@ -67,19 +71,29 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
    * @return a transformed expression
    */
   private def transformRecords: PartialFunction[TlaEx, TlaEx] = {
-    case OperEx(TlaSetOper.recSet, varsAndSets @ _*) =>
-      val vars = varsAndSets.zipWithIndex.filter(_._2 % 2 == 0).map(_._1)
-      val sets = varsAndSets.zipWithIndex.filter(_._2 % 2 == 1).map(_._1)
-      val boundVars: Seq[TlaEx] = vars.map(_ => NameEx(gen.newName()))
-      val mapEx = OperEx(TlaFunOper.enum, vars.zip(boundVars).flatMap(x => List(x._1, x._2)): _*)
-      OperEx(TlaSetOper.map, mapEx +: boundVars.zip(sets).flatMap(x => List(x._1, x._2)): _*)
+    case ex @ OperEx(TlaSetOper.recSet, keysAndSets @ _*) =>
+      // rewrite [ k_1: S_1, ..., k_n: S_n ]
+      // into { y_1 \in S_1, ..., y_n \in S_n: [ k_1 |-> y_1, ..., k_n |-> y_n ] }
+      val (keys, sets) = TlaOper.deinterleave(keysAndSets)
+      val elemTypes = sets map getElemType
+      // produce a sequence of fresh names wrapped with NameEx for n in names
+      val names: Seq[TlaEx] = elemTypes map { t => NameEx(gen.newName())(Typed(t)) }
+      val keysAndNamesInterleaved = TlaOper.interleave(keys, names)
+      val recordType = getElemType(ex)
+      // [ x_1 |-> v_1, ..., x_n |-> v_n ]
+      val mapEx = OperEx(TlaFunOper.enum, keysAndNamesInterleaved: _*)(Typed(recordType))
+      // { y_1 \in S_1, ..., y_n \in S_n: [ k_1 |-> y_1, ..., k_n |-> y_n ] }
+      val namesAndSetsInterleaved = TlaOper.interleave(names, sets)
+      OperEx(TlaSetOper.map, mapEx +: namesAndSetsInterleaved: _*)(ex.typeTag)
 
-    case OperEx(BmcOper.withType, OperEx(TlaSetOper.map, mapEx, varsAndSets @ _*), OperEx(TlaSetOper.enumSet,
+    case ex @ OperEx(BmcOper.withType, OperEx(TlaSetOper.map, mapEx, varsAndSets @ _*), OperEx(TlaSetOper.enumSet,
                 recordAnnotation)) =>
-      // It is quite common to add a type annotation, e.g., [a: A, b: B] <: {[a |-> Int, b |-> STRING]}.
+      // TODO: remove this case when we get rid of BmcOper.withType
+      // It is quite common to add a type annotation, e.g.,
+      // { a \in S_1, b \in S_2: e } <: {[a |-> Int, b |-> STRING]}.
       // Propagate the annotation in the map expression
-      val annotMapEx = tla.withType(mapEx, recordAnnotation)
-      OperEx(TlaSetOper.map, annotMapEx +: varsAndSets: _*)
+      val annotMapEx = OperEx(BmcOper.withType, mapEx, recordAnnotation)(mapEx.typeTag)
+      OperEx(TlaSetOper.map, annotMapEx +: varsAndSets: _*)(ex.typeTag)
   }
 
   /**
@@ -87,10 +101,14 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
    *
    * @return a transformed expression
    */
-  private def transformTuples: PartialFunction[TlaEx, TlaEx] = { case OperEx(TlaSetOper.times, sets @ _*) =>
-    val boundVars: Seq[TlaEx] = sets.map(_ => NameEx(gen.newName()))
-    val mapEx = OperEx(TlaFunOper.tuple, boundVars: _*)
-    OperEx(TlaSetOper.map, mapEx +: boundVars.zip(sets).flatMap(x => List(x._1, x._2)): _*)
+  private def transformTuples: PartialFunction[TlaEx, TlaEx] = { case ex @ OperEx(TlaSetOper.times, sets @ _*) =>
+    // transform S_1 \X ... \X S_n
+    // into { y_1 \in S_1, ..., y_n \in S_n: <<y_1, ..., y_n>> }
+    val elemTypes = sets map getElemType
+    val names: Seq[TlaEx] = elemTypes.map(t => NameEx(gen.newName())(Typed(t)))
+    val mapEx = OperEx(TlaFunOper.tuple, names: _*)(Typed(TupT1(elemTypes: _*)))
+    val namesAndSets = TlaOper.interleave(names, sets)
+    OperEx(TlaSetOper.map, mapEx +: namesAndSets: _*)(ex.typeTag)
   }
 
   /**
@@ -100,13 +118,17 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
    */
   private def transformLogic: PartialFunction[TlaEx, TlaEx] = {
     case OperEx(TlaBoolOper.equiv, left, right) =>
-      tla.eql(left, right)
+      tla.eql(left, right) typed BoolT1()
 
     case OperEx(TlaBoolOper.implies, left, right) =>
-      tla.or(tla.not(left), right)
+      tla
+        .or(tla.not(left) ? "b", right)
+        .typed(Map("b" -> BoolT1()), "b")
 
     case OperEx(TlaOper.ne, left, right) =>
-      tla.not(tla.eql(left, right))
+      tla
+        .not(tla.eql(left, right) ? "b")
+        .typed(Map("b" -> BoolT1()), "b")
   }
 
   /**
@@ -116,8 +138,13 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
    */
   private def transformAssignments: PartialFunction[TlaEx, TlaEx] = {
     case OperEx(TlaSetOper.in, prime @ OperEx(TlaActionOper.prime, NameEx(x)), set) =>
+      // rewrite x' \in S
+      // into \E y \in S: x' = y
+      val elemType = getElemType(set)
       val temp = gen.newName()
-      tla.exists(tla.name(temp), set, tla.eql(prime, tla.name(temp)))
+      tla
+        .exists(tla.name(temp) ? "e", set, tla.eql(prime, tla.name(temp) ? "e") ? "b")
+        .typed(Map("b" -> BoolT1(), "e" -> elemType), "b")
   }
 
   /**
@@ -127,9 +154,10 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
    */
   private def transformControl: PartialFunction[TlaEx, TlaEx] = {
     case expr @ OperEx(TlaControlOper.caseWithOther, otherEx, args @ _*) =>
-      def decorateWithIf(elseEx: TlaEx, guardAction: (TlaEx, TlaEx)): OperEx = {
-        tla.ite(guardAction._1, guardAction._2, elseEx)
+      def decorateWithIf(elseEx: TlaEx, guardAction: (TlaEx, TlaEx)): TlaEx = {
+        tla.ite(guardAction._1, guardAction._2, elseEx).typed(BoolT1())
       }
+
       // produce a chain of if-then-else expressions
       val revGuardsAndActions = mkGuardsAndActions(args)
       revGuardsAndActions.foldLeft(otherEx)(decorateWithIf)

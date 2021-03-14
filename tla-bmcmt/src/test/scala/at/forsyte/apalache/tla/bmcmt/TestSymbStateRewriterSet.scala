@@ -548,11 +548,13 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
   // until the real type inference is implemented
   ignore("""SE-SET-FILTER[1-2]: LET X = {1, 2} \cap {2} IN {} = {x \in X : [y \in X |-> TRUE][x]} ~~> $B$k""") {
     // regression
-    val filter = tla.appFun(tla.funDef(tla.bool(true), "y", "Oper:X"), "x")
-    val filteredSet = tla.filter("x", "Oper:X", filter)
+    val filter = tla.appFun(tla.funDef(tla.bool(true), tla.name("y"), tla.name("Oper:X")), tla.name("x"))
+    val filteredSet = tla.filter(tla.name("x"), tla.name("Oper:X"), filter)
+    val set12 = tla.enumSet(tla.int(1), tla.int(2))
+    val set2 = tla.enumSet(tla.int(2))
     val ex =
       OperEx(BmcOper.skolem,
-          tla.letIn(tla.eql(tla.enumSet(), filteredSet), tla.declOp("X", tla.cap(tla.enumSet(1, 2), tla.enumSet(2)))))
+          tla.letIn(tla.eql(tla.enumSet(), filteredSet), tla.declOp("X", tla.cap(set12, set2)).untypedOperDecl()))
 
     val state = new SymbState(ex, arena, Binding())
     val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
@@ -587,11 +589,11 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
 
   test("""SE-SET-FILTER[1-2]: \E SUBSET X {1} IN {} = {x \in X : [y \in X |-> TRUE][x]} ~~> $B$k""") {
     // regression
-    val baseSet = tla.enumSet(1)
-    val filter = tla.appFun(tla.funDef(tla.bool(true), "y", "X"), "x")
-    val filteredSet = tla.filter("x", "X", filter)
+    val baseSet = tla.enumSet(tla.int(1))
+    val filter = tla.appFun(tla.funDef(tla.bool(true), tla.name("y"), tla.name("X")), tla.name("x"))
+    val filteredSet = tla.filter(tla.name("x"), tla.name("X"), filter)
     val ex =
-      OperEx(BmcOper.skolem, tla.exists("X", tla.powSet(baseSet), tla.eql(tla.enumSet(), filteredSet)))
+      OperEx(BmcOper.skolem, tla.exists(tla.name("X"), tla.powSet(baseSet), tla.eql(tla.enumSet(), filteredSet)))
 
     val state = new SymbState(ex, arena, Binding())
     val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
@@ -612,11 +614,13 @@ class TestSymbStateRewriterSet extends RewriterBase with TestingPredefs {
 
   test("""SE-SET-FILTER[1-2]: \E X \in SUBSET {1, 2}: {} = {x \in X : [y \in {1} |-> TRUE][x]} ~~> $B$k""") {
     // regression
-    val baseSet = tla.enumSet(1)
-    val filter = tla.appFun(tla.funDef(tla.bool(true), "y", tla.enumSet(1)), "x")
-    val filteredSet = tla.filter("x", "X", filter)
+    val baseSet = tla.enumSet(tla.int(1))
+    val set1 = tla.enumSet(tla.int(1))
+    val filter = tla.appFun(tla.funDef(tla.bool(true), tla.name("y"), set1), tla.name("x"))
+    val filteredSet = tla.filter(tla.name("x"), tla.name("X"), filter)
+    val set12 = tla.enumSet(tla.int(1), tla.int(2))
     val ex =
-      OperEx(BmcOper.skolem, tla.exists("X", tla.powSet(tla.enumSet(1, 2)), tla.eql(tla.enumSet(), filteredSet)))
+      OperEx(BmcOper.skolem, tla.exists(tla.name("X"), tla.powSet(set12), tla.eql(tla.enumSet(), filteredSet)))
 
     val state = new SymbState(ex, arena, Binding())
     val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())

@@ -1,14 +1,13 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
 import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.TlaIntSet
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * This rule translates the definition of a recursive function. It is similar to CHOOSE.
@@ -37,7 +36,7 @@ class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case OperEx(TlaFunOper.recFunRef) =>
         val name = TlaFunOper.recFunRef.uniqueName
         if (state.binding.contains(name)) {
-          state.setRex(state.binding(name))
+          state.setRex(state.binding(name).toNameEx)
         } else {
           throw new RewriterException("Referencing a recursive function that is undefined", state.ex)
         }
@@ -62,7 +61,7 @@ class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val codomain =
       resultT match {
         case IntT()  => ValEx(TlaIntSet)
-        case BoolT() => tla.booleanSet()
+        case BoolT() => tla.booleanSet().untyped()
         case _ =>
           val msg = "A result of a recursive function must belong to Int or BOOLEAN. Found: " + resultT
           throw new RewriterException(msg, state.ex)
@@ -74,7 +73,7 @@ class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
         .asInstanceOf[FunT]
 
     // produce a cell for the function set (no expansion happens there)
-    nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.funSet(domainCell, codomain)))
+    nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.funSet(domainCell.toNameEx, codomain)))
     val funSetCell = nextState.asCell
     // pick a function from the function set
     nextState = pick.pickFunFromFunSet(funT, funSetCell, nextState)
@@ -93,10 +92,10 @@ class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val rhs = nextState.asCell
       // Compute the left-hand side of the constraint, that is, f[elem].
       nextState = nextState.setBinding(oldBinding)
-      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.appFun(funCell, elem)))
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.appFun(funCell.toNameEx, elem.toNameEx)))
       val lhs = nextState.asCell
       // either elem is outside of DOMAIN, or lhs equals rhs
-      val pred = tla.or(tla.not(tla.in(elem, domainCell)), tla.eql(lhs, rhs))
+      val pred = tla.or(tla.not(tla.in(elem.toNameEx, domainCell.toNameEx)), tla.eql(lhs.toNameEx, rhs.toNameEx))
       rewriter.solverContext.assertGroundExpr(pred)
     }
 

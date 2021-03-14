@@ -446,9 +446,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
   }
 
   test("""SE-INT-RNG: 2..(6 - 1)  = {2, 3, 4, 5}""") {
-    def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
-
-    val expected = mkSet(Range(2, 6).map(i => tla.int(i)): _*)
+    val expected = tla.enumSet(2.to(6).map(i => tla.int(i)): _*)
     val range = tla.dotdot(tla.int(2), tla.minus(tla.int(6), tla.int(1)))
     val eqExpected = tla.eql(range, expected)
 

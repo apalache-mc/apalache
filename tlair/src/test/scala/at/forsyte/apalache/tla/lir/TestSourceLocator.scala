@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.lir
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
-import at.forsyte.apalache.tla.lir.Builder._
+import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.aux._
 import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaStrSet}
 import at.forsyte.apalache.tla.lir.src.{SourceLocation, SourcePosition, SourceRegion}
@@ -14,13 +14,15 @@ import at.forsyte.apalache.tla.lir.transformations.standard._
 
 import scala.collection.mutable
 
-import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 @RunWith(classOf[JUnitRunner])
 class TestSourceLocator extends FunSuite with TestingPredefs {
 
-  val decl1 = declOp("plus", plus(n_a, n_b), "a", "b")
-  val decl2 = declOp("App", appOp("X", n_p), ("X", 1), "p")
+  import tla._
+
+  val decl1: TlaOperDecl = declOp("plus", plus(n_a, n_b), "a", "b").untypedOperDecl()
+  val decl2: TlaOperDecl = declOp("App", appOp(name("X"), n_p), ("X", 1), "p").untypedOperDecl()
 
   val decls = List(
       decl1,
@@ -29,30 +31,30 @@ class TestSourceLocator extends FunSuite with TestingPredefs {
 
   val bodyMap = BodyMapFactory.makeFromDecls(decls)
 
-  val ex1 = and(prime(n_x), n_y)
+  val ex1 = and(prime(n_x), n_y).untyped()
   val ex2 = letIn(
       ge(appOp(n_A, int(1)), int(0)),
-      declOp("A", plus(n_p, int(1)), "p")
-  )
-  val ex3 = appDecl(decl1, n_x, int(1))
+      declOp("A", plus(n_p, int(1)), "p").untypedOperDecl()
+  ).untyped()
+  val ex3 = appDecl(decl1, n_x, int(1)).untyped()
   val ex4 = letIn(
-      ite(n_y, appDecl(decl2, "I", int(0)), falseEx),
-      declOp("I", n_p, "p")
-  )
+      ite(n_y, appDecl(decl2, name("I"), int(0)), falseEx),
+      declOp("I", n_p, "p").untypedOperDecl()
+  ).untyped()
   val ex5 =
     letIn(
         letIn(
             letIn(
-                appOp("C", appOp("D")),
-                declOp("D", n_x)
+                appOp(name("C"), appOp(name("D"))),
+                declOp("D", n_x).untypedOperDecl()
             ),
-            declOp("B", n_b),
-            declOp("C", appOp(n_A, n_p, appOp("B")), "p")
+            declOp("B", n_b).untypedOperDecl(),
+            declOp("C", appOp(n_A, n_p, appOp(name("B"))), "p").untypedOperDecl()
         ),
-        declOp("A", appOp("IntentionallyUndefinedOper", n_p, n_q), "p", "q")
-    )
-  val ex6 = unchanged(n_x)
-  val ex7 = unchangedTup(n_x, n_y)
+        declOp("A", appOp(name("IntentionallyUndefinedOper"), n_p, n_q), "p", "q").untypedOperDecl()
+    ).untyped()
+  val ex6 = unchanged(n_x).untyped()
+  val ex7 = unchangedTup(n_x, n_y).untyped()
   val ex8 =
     withType(
         enumFun(str("x"), int(1)),
@@ -62,8 +64,8 @@ class TestSourceLocator extends FunSuite with TestingPredefs {
             str("y"),
             enumSet(ValEx(TlaStrSet))
         )
-    )
-  val ex9 = appFun(enumFun(str("x"), int(1)), str("x"))
+    ).untyped()
+  val ex9 = appFun(enumFun(str("x"), int(1)), str("x")).untyped()
 
   val exs = List(
       ex1,

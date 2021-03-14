@@ -504,10 +504,9 @@ class OpApplTranslator(
               list
 
           case BTuple(params, bound) =>
+            val paramsAsNameEx = params.map { p => NameEx(p.getName.toString) }
             exTran.translate(bound) ::
-              TlaFunOper.mkTuple(params.map { p =>
-                NameEx(p.getName.toString)
-              }: _*) ::
+              OperEx(TlaFunOper.tuple, paramsAsNameEx: _*) ::
               list
         }
       }

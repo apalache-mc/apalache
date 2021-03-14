@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir.SimpleFormalParam
 import at.forsyte.apalache.tla.lir.convenience._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -312,7 +313,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
 
   test("accept n-ary let-in definitions") {
     // Foo(1)
-    val fooDef = tla.declOp("Foo", tla.name("x"), SimpleFormalParam("x"))
+    val fooDef = tla.declOp("Foo", tla.name("x"), SimpleFormalParam("x")).untypedOperDecl()
     val letIn = tla.letIn(tla.appOp(tla.name("Foo"), tla.int(1)), fooDef)
     val sugarFree = desugarer(letIn)
     // do nothing and do not complain

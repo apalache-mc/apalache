@@ -42,7 +42,7 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
 
     val ex1 = trueEx
     val ex2: TlaEx = 5
-    val ex3: TlaEx = x_in_S
+    val ex3: TlaEx = tla.in(n_x, n_S)
     val ex4: TlaEx = tla.choose(n_x, n_S, n_p)
     val ex5: TlaEx = tla.caseOther(n_c, n_p, n_a, n_q, n_b)
     val ex6: TlaEx = tla.card(n_S)
@@ -58,7 +58,7 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
   test("No abstraction") {
 
     val ex1 = falseEx
-    val ex2: TlaEx = tla.primeInSingleton(n_x, 1)
+    val ex2: TlaEx = tla.primeInSingleton(n_x, tla.int(1))
     val ex3: TlaEx = tla.ite(n_p, n_a, n_b)
     val ex4: TlaEx = tla.or(ex1, ex2, ex3)
     val ex5: TlaEx = tla.and(ex1, ex2, ex3)
@@ -107,8 +107,8 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
   }
 
   test("QuantAlt") {
-    val ex1 = tla.forall(n_x, n_S, tla.exists(n_y, n_T, tla.eql(1, 2)))
-    val ex2 = tla.exists(n_x, n_S, tla.forall(n_y, n_T, tla.eql(1, 2)))
+    val ex1 = tla.forall(n_x, n_S, tla.exists(n_y, n_T, tla.eql(tla.int(1), tla.int(2))))
+    val ex2 = tla.exists(n_x, n_S, tla.forall(n_y, n_T, tla.eql(tla.int(1), tla.int(2))))
 
     assert(correctRecursiveApplication(Seq(ex1, ex2)))
   }
@@ -122,8 +122,8 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
   }
 
   test("Assignments") {
-    val ex1 = tla.primeInSingleton(n_x, 1)
-    val ex2 = tla.primeInSingleton(n_x, tla.primeInSingleton(n_x, 2))
+    val ex1 = tla.primeInSingleton(n_x, tla.int(1))
+    val ex2 = tla.primeInSingleton(n_x, tla.primeInSingleton(n_x, tla.int(2)))
 
     assert(correctRecursiveApplication(Seq(ex1, ex2)))
   }

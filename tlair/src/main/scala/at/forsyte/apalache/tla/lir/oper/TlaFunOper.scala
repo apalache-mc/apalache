@@ -33,17 +33,6 @@ object TlaFunOper {
   }
 
   /**
-   * A short-hand constructor for tuples.
-   *
-   * TODO: remove, as we have the TLA builder
-   *
-   * @param elems tuple elements
-   * @return a new OperEx(tuple, elems: _*)
-   */
-  def mkTuple(elems: TlaEx*)(implicit typeTag: TypeTag): OperEx =
-    OperEx(tuple, elems: _*)
-
-  /**
    * A function application, e.g., f[e].
    * The order of the arguments is: (f, e).
    */

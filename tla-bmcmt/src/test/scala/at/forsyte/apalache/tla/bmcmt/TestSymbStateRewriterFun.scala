@@ -94,10 +94,10 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
   test("""SE-FUN-CTOR[1-2]: [x \in {1,2} |-> IF x = 1 THEN {2} ELSE {1} ][1] ~~> $C$k""") {
     def mkSet(elems: TlaEx*) = OperEx(TlaSetOper.enumSet, elems: _*)
 
-    val set = tla.enumSet(1, 2)
-    val mapping = tla.ite(tla.eql("x", 1), tla.enumSet(2), tla.enumSet(1))
-    val fun = tla.funDef(mapping, "x", set)
-    val eq = tla.eql(tla.enumSet(2), tla.appFun(fun, 1))
+    val set = tla.enumSet(tla.int(1), tla.int(2))
+    val mapping = tla.ite(tla.eql(tla.name("x"), tla.int(1)), tla.enumSet(tla.int(2)), tla.enumSet(tla.int(1)))
+    val fun = tla.funDef(mapping, tla.name("x"), set)
+    val eq = tla.eql(tla.enumSet(tla.int(2)), tla.appFun(fun, tla.int(1)))
 
     val state = new SymbState(eq, arena, Binding())
     val rewriter = create()
@@ -124,10 +124,10 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
 
   // regression: this test did not work with EWD840
   test("""SE-FUN-CTOR[1-2]: [x \in {1,2} |-> ["a" |-> x] ][1] ~~> $C$k""") {
-    val set = tla.enumSet(1, 2)
+    val set = tla.enumSet(tla.int(1), tla.int(2))
     val mapping = tla.enumFun(tla.str("a"), tla.name("x"))
-    val fun = tla.funDef(mapping, "x", set)
-    val eq = tla.eql(tla.enumFun(tla.str("a"), 1), tla.appFun(fun, 1))
+    val fun = tla.funDef(mapping, tla.name("x"), set)
+    val eq = tla.eql(tla.enumFun(tla.str("a"), tla.int(1)), tla.appFun(fun, tla.int(1)))
 
     val state = new SymbState(eq, arena, Binding())
     val rewriter = create()
@@ -670,9 +670,10 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
   // TrivialTypeFinder does not support let-in and operator declarations
   ignore("""SE-SET-APP[1-2]: LET X = {1, 2} \cap {2} IN [y \in X |-> TRUE][2] ~~> $B$k""") {
     // regression
-    val fun = tla.funDef(tla.bool(true), "y", "Oper:X")
-    val app = tla.appFun(fun, 2)
-    val ex = tla.letIn(app, tla.declOp("X", tla.cap(tla.enumSet(1, 2), tla.enumSet(2))))
+    val fun = tla.funDef(tla.bool(true), tla.name("y"), tla.name("Oper:X"))
+    val app = tla.appFun(fun, tla.int(2))
+    val ex = tla.letIn(app,
+        tla.declOp("X", tla.cap(tla.enumSet(tla.int(1), tla.int(2)), tla.enumSet(tla.int(2)))).untypedOperDecl())
 
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create()

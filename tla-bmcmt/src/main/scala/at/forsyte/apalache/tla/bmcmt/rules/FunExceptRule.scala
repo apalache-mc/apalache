@@ -86,7 +86,8 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // add the new cell to the arena immediately, as we are going to use the IN predicates
       nextState = nextState.updateArena(_.appendHas(resultRelation, updatedCell))
       // the new cell belongs to the new relation iff the old cell belongs to the old relation
-      solverAssert(tla.equiv(tla.in(p, relation), tla.in(updatedCell, resultRelation)))
+      solverAssert(tla.equiv(tla.in(p.toNameEx, relation.toNameEx),
+              tla.in(updatedCell.toNameEx, resultRelation.toNameEx)))
       updatedCell
     }
 
@@ -110,7 +111,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // and attach the relation to it
     nextState
       .updateArena(_.setCdm(newFunCell, resultRelation))
-      .setRex(newFunCell)
+      .setRex(newFunCell.toNameEx)
   }
 
   def rewriteRec(state: SymbState, recCell: ArenaCell, recType: RecordT, indexEs: Seq[TlaEx],
@@ -152,9 +153,9 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     def updateOrKeep(i: Int): TlaEx = {
       if (updateMap.contains(i)) {
-        updateMap(i)
+        updateMap(i).toNameEx
       } else {
-        tla.appFun(tupleCell, tla.int(i))
+        tla.appFun(tupleCell.toNameEx, tla.int(i))
       }
     }
 
@@ -166,10 +167,11 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
   def toIte(arena: Arena, pair: ArenaCell, indexCells: Seq[ArenaCell], updatePairs: Seq[ArenaCell]): TlaEx = {
     val pairIndex = arena.getHas(pair).head // the first element of the pair is the index
     updatePairs match {
-      case Seq() => pair // ... ELSE p
+      case Seq() => pair.toNameEx // ... ELSE p
       case newPair +: _ =>
         val updateIndex = indexCells.head // IF p[1] = i_j
-        tla.ite(tla.eql(pairIndex, updateIndex), newPair, toIte(arena, pair, indexCells.tail, updatePairs.tail))
+        tla.ite(tla.eql(pairIndex.toNameEx, updateIndex.toNameEx), newPair.toNameEx,
+            toIte(arena, pair, indexCells.tail, updatePairs.tail))
     }
   }
 

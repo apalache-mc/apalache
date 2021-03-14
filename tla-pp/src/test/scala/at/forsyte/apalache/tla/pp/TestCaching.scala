@@ -21,9 +21,9 @@ class TestCaching extends FunSuite with BeforeAndAfterEach with TestingPredefs {
     val operName = "A"
     val decl = TlaOperDecl(operName, List("p"),
         tla.plus(
-            tla.appOp(n_A, tla.minus("p", 1)),
-            tla.appOp(n_A, tla.minus("p", 1))
-        ))
+            tla.appOp(n_A, tla.minus(name("p"), tla.int(1))),
+            tla.appOp(n_A, tla.minus(name("p"), tla.int(1)))
+        ))(Untyped())
 
     decl.isRecursive = true
 
@@ -35,8 +35,8 @@ class TestCaching extends FunSuite with BeforeAndAfterEach with TestingPredefs {
     val letInEx = asOper.body.asInstanceOf[LetInEx]
 
     assert(letInEx.decls.exists { decl =>
-      (decl.body == tla.appOp(n_A, tla.minus("p", 1))) &&
-      (letInEx.body == tla.plus(tla.appDecl(decl), tla.appDecl(decl)))
+      (decl.body == tla.appOp(n_A, tla.minus(tla.name("p"), tla.int(1))).untyped()) &&
+      (letInEx.body == tla.plus(tla.appDecl(decl), tla.appDecl(decl)).untyped())
     })
   }
 
@@ -44,9 +44,9 @@ class TestCaching extends FunSuite with BeforeAndAfterEach with TestingPredefs {
     val operName = "A"
     val decl = TlaOperDecl(operName, List("p"),
         tla.plus(
-            tla.appOp(n_A, tla.minus("p", 1)),
-            tla.appOp(n_A, tla.minus("p", 2))
-        ))
+            tla.appOp(n_A, tla.minus(tla.name("p"), tla.int(1))),
+            tla.appOp(n_A, tla.minus(tla.name("p"), tla.int(2)))
+        ))(Untyped())
 
     decl.isRecursive = true
 
@@ -58,17 +58,19 @@ class TestCaching extends FunSuite with BeforeAndAfterEach with TestingPredefs {
     val letInEx = asOper.body.asInstanceOf[LetInEx]
 
     assert(letInEx.decls.exists { decl1 =>
-      (decl1.body == tla.appOp(n_A, tla.minus("p", 1))) &&
+      (decl1.body == tla.appOp(n_A, tla.minus(tla.name("p"), tla.int(1))).untyped()) &&
       letInEx.decls.exists { decl2 =>
-        (decl2.body == tla.appOp(n_A, tla.minus("p", 2))) &&
-        (letInEx.body == tla.plus(tla.appDecl(decl1), tla.appDecl(decl2)))
+        (decl2.body == tla.appOp(n_A, tla.minus(tla.name("p"), tla.int(2))).untyped()) &&
+        (letInEx.body == tla.plus(tla.appDecl(decl1), tla.appDecl(decl2)).untyped())
       }
     })
   }
 
   test("Nested") {
     val operName = "A"
-    val decl = TlaOperDecl(operName, List("p", "q"), tla.appOp(n_A, tla.appOp(n_A, 0, "p"), "q"))
+    val decl =
+      TlaOperDecl(operName, List("p", "q"), tla.appOp(n_A, tla.appOp(n_A, tla.int(0), tla.name("p")), tla.name("q")))(
+          Untyped())
 
     decl.isRecursive = true
 
@@ -80,10 +82,10 @@ class TestCaching extends FunSuite with BeforeAndAfterEach with TestingPredefs {
     val letInEx = asOper.body.asInstanceOf[LetInEx]
 
     assert(letInEx.decls.exists { decl1 =>
-      (decl1.body == tla.appOp(n_A, 0, "p")) &&
+      (decl1.body == tla.appOp(n_A, tla.int(0), tla.name("p")).untyped()) &&
       letInEx.decls.exists { decl2 =>
-        (decl2.body == tla.appOp(n_A, tla.appDecl(decl1), "q")) &&
-        (letInEx.body == tla.appDecl(decl2))
+        (decl2.body == tla.appOp(n_A, tla.appDecl(decl1), tla.name("q")).untyped()) &&
+        (letInEx.body == tla.appDecl(decl2).untyped())
       }
     })
   }
@@ -93,15 +95,15 @@ class TestCaching extends FunSuite with BeforeAndAfterEach with TestingPredefs {
 
     val operNames = Set("B") // does not contain A
 
-    val declT = tla.declOp("T", tla.appOp(n_T, n_x), "x")
+    val declT = tla.declOp("T", tla.appOp(n_T, n_x), "x").untypedOperDecl()
     declT.isRecursive = true
 
     val decl = TlaOperDecl(operName, List.empty,
-        tla.plus(1,
+        tla.plus(tla.int(1),
             tla.letIn(
                 tla.plus(
-                    tla.appOp(n_T, 0),
-                    tla.appOp(n_B, 1)
+                    tla.appOp(n_T, tla.int(0)),
+                    tla.appOp(n_B, tla.int(1))
                 ),
                 declT
             )))
@@ -118,19 +120,19 @@ class TestCaching extends FunSuite with BeforeAndAfterEach with TestingPredefs {
     assert(
         asOper.body match {
           case LetInEx(body, declB1) =>
-            declB1.body == tla.appOp(n_B, 1) && (
+            declB1.body == tla.appOp(n_B, tla.int(1)).untyped() && (
                 body match {
                   case OperEx(TlaArithOper.plus, `one`, LetInEx(letInBody, defs @ _*)) =>
                     (defs exists { declT0 =>
-                      (declT0.body == tla.appOp(n_T, 0)) &&
-                      letInBody == tla.plus(tla.appDecl(declT0), tla.appDecl(declB1))
+                      (declT0.body == tla.appOp(n_T, tla.int(0)).untyped()) &&
+                      letInBody == tla.plus(tla.appDecl(declT0), tla.appDecl(declB1)).untyped()
                     }) &&
                       (
                           defs exists { declT =>
                             declT.body match {
                               case LetInEx(tbody, declTx) =>
-                                declTx.body == tla.appOp(n_T, n_x) &&
-                                  tbody == tla.appDecl(declTx)
+                                declTx.body == tla.appOp(n_T, n_x).untyped() &&
+                                  tbody == tla.appDecl(declTx).untyped()
                               case _ => false
                             }
                           }

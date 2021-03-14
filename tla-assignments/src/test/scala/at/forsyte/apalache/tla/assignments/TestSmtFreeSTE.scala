@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.TestingPredefs
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
@@ -16,7 +17,7 @@ class TestSmtFreeSTE extends FunSuite with TestingPredefs {
   val ste = new SmtFreeSymbolicTransitionExtractor(TrackerWithListeners(), sourceLoc)
 
   test("Single ex: candidate") {
-    val ex = tla.primeEq(n_x, 1)
+    val ex = tla.primeEq(n_x, tla.int(1))
     val vars = Set("x")
     val strat = ste.getStrategy(vars, ex)
 
@@ -24,7 +25,7 @@ class TestSmtFreeSTE extends FunSuite with TestingPredefs {
   }
 
   test("Single ex: manual asgn") {
-    val ex = tla.assignPrime(n_x, 1)
+    val ex = tla.assignPrime(n_x, tla.int(1))
     val vars = Set("x")
     val strat = ste.getStrategy(vars, ex)
 
@@ -32,8 +33,8 @@ class TestSmtFreeSTE extends FunSuite with TestingPredefs {
   }
 
   test("2 candidates: Manual / natural") {
-    val manual = tla.assignPrime(n_x, 1)
-    val natural = tla.primeEq(n_x, 1)
+    val manual = tla.assignPrime(n_x, tla.int(1))
+    val natural = tla.primeEq(n_x, tla.int(1))
     val vars = Set("x")
 
     val ex1 = tla.and(manual, natural)
@@ -49,7 +50,7 @@ class TestSmtFreeSTE extends FunSuite with TestingPredefs {
   }
 
   test("Missing var") {
-    val ex = tla.primeEq(n_x, 1)
+    val ex = tla.primeEq(n_x, tla.int(1))
     val vars = Set("x", "y")
 
     assertThrows[AssignmentException] {
@@ -58,8 +59,8 @@ class TestSmtFreeSTE extends FunSuite with TestingPredefs {
   }
 
   test("Assignment in LET-IN") {
-    val asgn = tla.primeEq(n_x, 1)
-    val declA = tla.declOp("A", asgn)
+    val asgn = tla.primeEq(n_x, tla.int(1))
+    val declA = tla.declOp("A", asgn).untypedOperDecl()
     val ex = tla.letIn(tla.appDecl(declA), declA)
 
     val vars = Set("x")
@@ -71,8 +72,8 @@ class TestSmtFreeSTE extends FunSuite with TestingPredefs {
   }
 
   test("Disjunction") {
-    val asgn1 = tla.primeEq(n_x, 1)
-    val asgn2 = tla.primeEq(n_x, 2)
+    val asgn1 = tla.primeEq(n_x, tla.int(1))
+    val asgn2 = tla.primeEq(n_x, tla.int(2))
     val ex = tla.or(asgn1, asgn2)
     val vars = Set("x")
     val strat = ste.getStrategy(vars, ex)
@@ -81,8 +82,8 @@ class TestSmtFreeSTE extends FunSuite with TestingPredefs {
   }
 
   test("Use before assignment") {
-    val asgn = tla.primeEq(n_x, 1)
-    val cmp = tla.gt(tla.prime(n_x), 0)
+    val asgn = tla.primeEq(n_x, tla.int(1))
+    val cmp = tla.gt(tla.prime(n_x), tla.int(0))
     val ex = tla.and(cmp, asgn)
     val vars = Set("x")
 

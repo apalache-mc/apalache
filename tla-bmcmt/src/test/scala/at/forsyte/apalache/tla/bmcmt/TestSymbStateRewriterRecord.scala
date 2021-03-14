@@ -1,9 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.NameEx
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -16,7 +16,7 @@ class TestSymbStateRewriterRecord extends RewriterBase {
     val (newArena1, set1) = rewriter.recordDomainCache.create(arena, (SortedSet("a", "b"), SortedSet[String]()))
     val (newArena2, set2) =
       rewriter.recordDomainCache.create(newArena1, (SortedSet("a", "b", "c"), SortedSet[String]()))
-    val neq = tla.not(tla.eql(set1, set2))
+    val neq = tla.not(tla.eql(set1.toNameEx, set2.toNameEx))
     val state = new SymbState(neq, newArena2, Binding())
     assertTlaExAndRestore(rewriter, state)
   }

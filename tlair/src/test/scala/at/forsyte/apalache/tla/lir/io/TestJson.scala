@@ -7,7 +7,7 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
 import at.forsyte.apalache.tla.lir.values._
-import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * <p>Geeneric set of tests for conversion between TLA and JSON.</p>
@@ -76,7 +76,7 @@ abstract class TestJson extends FunSuite {
   test("prime name") {
     // awesome'
     compare(
-        prime("awesome"),
+        prime(name("awesome")),
         """{"prime":"awesome"}"""
     )
   }
@@ -92,7 +92,7 @@ abstract class TestJson extends FunSuite {
   test("singleton set") {
     // { 42 }
     compare(
-        enumSet(42),
+        enumSet(int(42)),
         """{"enumSet":[42]}"""
     )
   }
@@ -100,7 +100,7 @@ abstract class TestJson extends FunSuite {
   test("singleton set multi-line") {
     // { 42 }
     compareMultiLine(
-        enumSet(42),
+        enumSet(int(42)),
         """{
         |  "enumSet": [
         |    42
@@ -158,7 +158,7 @@ abstract class TestJson extends FunSuite {
   test("function constructor") {
     // [ x \in S, y \in T |-> x + y ]
     compareMultiLine(
-        funDef(plus("x", "y"), "x", "S", "y", "T"),
+        funDef(plus(name("x"), name("y")), name("x"), name("S"), name("y"), name("T")),
         """{
         |  "funDef": {
         |    "plus": "x",
@@ -181,7 +181,7 @@ abstract class TestJson extends FunSuite {
   test("recursive function constructor") {
     // [x \in S] == 1 + recFunRef
     compare(
-        recFunDef(plus(int(1), recFunRef()), "x", "S"),
+        recFunDef(plus(int(1), recFunRef()), name("x"), name("S")),
         """{"recFunDef":{"plus":1,"arg":{"applyOp":"recFunRef","args":[]}},"where":[{"key":"x","value":"S"}]}""".stripMargin
     )
   }
@@ -189,7 +189,7 @@ abstract class TestJson extends FunSuite {
   test("function application") {
     // f[e]
     compare(
-        appFun("f", "e"),
+        appFun(name("f"), name("e")),
         """{"applyFun":"f","arg":"e"}"""
     )
   }
@@ -197,7 +197,7 @@ abstract class TestJson extends FunSuite {
   test("operator application") {
     // A(1,2)
     compare(
-        OperEx(TlaOper.apply, "A", 1, 2),
+        OperEx(TlaOper.apply, name("A"), int(1), int(2)),
         """{"applyOp":"A","args":[1,2]}"""
     )
   }
@@ -205,7 +205,7 @@ abstract class TestJson extends FunSuite {
   test("double function application") {
     // f[e][g]
     compare(
-        appFun(appFun("f", "e"), "g"),
+        appFun(appFun(name("f"), name("e")), name("g")),
         """{"applyFun":{"applyFun":"f","arg":"e"},"arg":"g"}"""
     )
   }
@@ -213,7 +213,7 @@ abstract class TestJson extends FunSuite {
   test("function except") {
     // [f EXCEPT ![k] = v]
     compare(
-        except("f", "k", "v"),
+        except(name("f"), name("k"), name("v")),
         """{"except":"f","where":[{"key":"k","value":"v"}]}"""
     )
   }
@@ -223,11 +223,11 @@ abstract class TestJson extends FunSuite {
     compare(
         enumFun(
             str("x1"),
-            "y1",
+            name("y1"),
             str("x2"),
-            "y2",
+            name("y2"),
             str("x3"),
-            "y3"
+            name("y3")
         ),
         """{"record":[{"key":{"str":"x1"},"value":"y1"},{"key":{"str":"x2"},"value":"y2"},{"key":{"str":"x3"},"value":"y3"}]}"""
     )
@@ -246,11 +246,11 @@ abstract class TestJson extends FunSuite {
     compare(
         recSet(
             str("x"),
-            "S",
+            name("S"),
             str("y"),
-            "T",
+            name("T"),
             str("z"),
-            "U"
+            name("U")
         ),
         """{"recSet":[{"key":{"str":"x"},"value":"S"},{"key":{"str":"y"},"value":"T"},{"key":{"str":"z"},"value":"U"}]}"""
     )
@@ -259,7 +259,7 @@ abstract class TestJson extends FunSuite {
   test("filter") {
     // {x \in S: P}
     compare(
-        filter("x", "S", "P"),
+        filter(name("x"), name("S"), name("P")),
         """{"filter":{"key":"x","value":"S"},"that":"P"}"""
     )
   }
@@ -267,7 +267,7 @@ abstract class TestJson extends FunSuite {
   test("filter with predicate") {
     // {x \in S: P}
     compareMultiLine(
-        filter("x", "S", lt("x", 5)),
+        filter(name("x"), name("S"), lt(name("x"), int(5))),
         """{
         |  "filter": {
         |    "key": "x",
@@ -284,7 +284,7 @@ abstract class TestJson extends FunSuite {
   test("map") {
     // {x+y: x \in S, y \in T}
     compare(
-        map(plus("x", "y"), "x", "S", "y", "T"),
+        map(plus(name("x"), name("y")), name("x"), name("S"), name("y"), name("T")),
         """{"map":{"plus":"x","arg":"y"},"where":[{"key":"x","value":"S"},{"key":"y","value":"T"}]}"""
     )
   }
@@ -292,7 +292,7 @@ abstract class TestJson extends FunSuite {
   test("exists bounded") {
     // \E x \in S : P
     compare(
-        exists("x", "S", "P"),
+        exists(name("x"), name("S"), name("P")),
         """{"existsBounded":{"key":"x","value":"S"},"that":"P"}"""
     )
   }
@@ -300,7 +300,7 @@ abstract class TestJson extends FunSuite {
   test("exists unbounded") {
     // \E x : P
     compare(
-        exists("x", "P"),
+        exists(name("x"), name("P")),
         """{"exists":"x","that":"P"}"""
     )
   }
@@ -308,7 +308,7 @@ abstract class TestJson extends FunSuite {
   test("choose bounded") {
     // CHOOSE x \in S : x > 3
     compare(
-        choose("x", "S", gt("x", 3)),
+        choose(name("x"), name("S"), gt(name("x"), int(3))),
         """{"chooseBounded":{"key":"x","value":"S"},"that":{"gt":"x","arg":3}}"""
     )
   }
@@ -316,7 +316,7 @@ abstract class TestJson extends FunSuite {
   test("choose unbounded") {
     // CHOOSE <<x, y>> : x + y <= 5
     compareMultiLine(
-        choose(tuple("x", "y"), le(plus("x", "y"), 5)),
+        choose(tuple(name("x"), name("y")), le(plus(name("x"), name("y")), int(5))),
         """{
         |  "choose": {
         |    "tuple": [
@@ -338,7 +338,7 @@ abstract class TestJson extends FunSuite {
   test("if then else") {
     // \E x \in S : P
     compare(
-        ite("p", "x", "y"),
+        ite(name("p"), name("x"), name("y")),
         """{"if":"p","then":"x","else":"y"}"""
     )
   }
@@ -347,7 +347,7 @@ abstract class TestJson extends FunSuite {
     // CASE guard1 -> action1
     //   [] guard2 -> action2
     compare(
-        caseSplit("guard1", "action1", "guard2", "action2"),
+        caseSplit(name("guard1"), name("action1"), name("guard2"), name("action2")),
         """{"case":[{"key":"guard1","value":"action1"},{"key":"guard2","value":"action2"}]}"""
     )
   }
@@ -357,35 +357,35 @@ abstract class TestJson extends FunSuite {
     //   [] guard2 -> action2
     //   [] OTHER -> otherAction
     compare(
-        caseOther("otherAction", "guard1", "action1", "guard2", "action2"),
+        caseOther(name("otherAction"), name("guard1"), name("action1"), name("guard2"), name("action2")),
         """{"case":[{"key":"guard1","value":"action1"},{"key":"guard2","value":"action2"}],"other":"otherAction"}"""
     )
   }
 
   test("[A]_x") {
     compare(
-        stutt("A", "x"),
+        stutt(name("A"), name("x")),
         """{"stutter":"A","vars":"x"}"""
     )
   }
 
   test("<A>_<<x,y>>") {
     compare(
-        nostutt("A", tuple("x", "y")),
+        nostutt(name("A"), tuple(name("x"), name("y"))),
         """{"nostutter":"A","vars":{"tuple":["x","y"]}}"""
     )
   }
 
   test("WF_x(A)") {
     compare(
-        WF("x", "A"),
+        WF(name("x"), name("A")),
         """{"weakFairness":"A","vars":"x"}"""
     )
   }
 
   test("SF_<<x,y>>(A)") {
     compare(
-        SF(tuple("x", "y"), "A"),
+        SF(tuple(name("x"), name("y")), name("A")),
         """{"strongFairness":"A","vars":{"tuple":["x","y"]}}"""
     )
   }
@@ -406,13 +406,13 @@ abstract class TestJson extends FunSuite {
 
   test("L2(a, b) :: f(x+y)>2") {
     compare(
-        label(appFun("f", gt(plus("x", "y"), 2)), "L2", "a", "b"),
+        label(appFun(name("f"), gt(plus(name("x"), name("y")), int(2))), "L2", "a", "b"),
         """{"applyFun":"f","arg":{"gt":{"plus":"x","arg":"y"},"arg":2},"label":{"name":"L2","args":["a","b"]}}"""
     )
   }
 
   test("LET A == 1 IN A") {
-    val aDecl = TlaOperDecl("A", List(), 1)
+    val aDecl = TlaOperDecl("A", List(), int(1))
     compare(
         letIn(appDecl(aDecl), aDecl),
         """{"let":[{"operator":"A","body":1,"params":[]}],"body":{"applyOp":"A","args":[]}}"""
@@ -421,7 +421,7 @@ abstract class TestJson extends FunSuite {
 
   test("LET A(x, y) == x + y IN A(1,2)") {
     // <A>_vars
-    val decl = TlaOperDecl("A", List(SimpleFormalParam("x"), SimpleFormalParam("y")), plus("x", "y"))
+    val decl = TlaOperDecl("A", List(SimpleFormalParam("x"), SimpleFormalParam("y")), plus(name("x"), name("y")))
     compare(
         letIn(appDecl(decl, int(1), int(2)), decl),
         """{"let":[{"operator":"A","body":{"plus":"x","arg":"y"},"params":[{"name":"x","arity":0},{"name":"y","arity":0}]}],"body":{"applyOp":"A","args":[1,2]}}"""
@@ -430,8 +430,8 @@ abstract class TestJson extends FunSuite {
 
   test("LET A(x, y) == x + 1 IN B(x, y) == x - y IN A(1, 2) * B(3, 4)") {
     // <A>_vars
-    val decl1 = TlaOperDecl("A", List(SimpleFormalParam("x"), SimpleFormalParam("y")), plus("x", "y"))
-    val decl2 = TlaOperDecl("B", List(SimpleFormalParam("x"), SimpleFormalParam("y")), minus("x", "y"))
+    val decl1 = TlaOperDecl("A", List(SimpleFormalParam("x"), SimpleFormalParam("y")), plus(name("x"), name("y")))
+    val decl2 = TlaOperDecl("B", List(SimpleFormalParam("x"), SimpleFormalParam("y")), minus(name("x"), name("y")))
     compareMultiLine(
         letIn(mult(appDecl(decl1, int(1), int(2)), appDecl(decl2, int(3), int(4))), decl1, decl2),
         """{

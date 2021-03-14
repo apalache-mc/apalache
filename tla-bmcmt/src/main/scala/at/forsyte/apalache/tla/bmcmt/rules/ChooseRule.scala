@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory, OracleHelper}
 import at.forsyte.apalache.tla.bmcmt.types.FinSetT
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
@@ -93,7 +94,7 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val trueEx = nextState.arena.cellTrue().toNameEx
 
       // pick only the elements that belong to the set
-      val elemsIn = elems map { e => tla.in(e.toNameEx, setCell.toNameEx) }
+      val elemsIn = elems map { e => tla.in(e.toNameEx, setCell.toNameEx).untyped() }
       solverAssert(oracle.caseAssertions(nextState, elemsIn))
       nextState = pickRule.pickByOracle(nextState, oracle, elems, trueEx)
       val witness = nextState.asCell

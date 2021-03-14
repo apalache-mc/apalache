@@ -75,7 +75,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
 
   test("SE-BOOL-IMPL: x => y ~~> ~x \\/ y") {
     // outside of KerA+, should be handled by Keramelizer and Normalizer
-    val ex = tla.impl("x", "y")
+    val ex = tla.impl(tla.name("x"), tla.name("y"))
     val state = new SymbState(ex, arena, xyBinding)
     assert(NoRule() == create().rewriteOnce(state))
   }

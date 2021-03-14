@@ -1,14 +1,13 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.lir.{
-  LetInEx, NameEx, OperEx, OperFormalParam, SimpleFormalParam, TestingPredefs, TlaOperDecl, Builder => tla
-}
-import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.oper.TlaOper
+import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
+import at.forsyte.apalache.tla.lir._
 import org.junit.runner.RunWith
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.junit.JUnitRunner
+import org.scalatest.{BeforeAndAfterEach, FunSuite}
 
 @RunWith(classOf[JUnitRunner])
 class TestParameterNormalizer extends FunSuite with BeforeAndAfterEach with TestingPredefs {
@@ -24,7 +23,7 @@ class TestParameterNormalizer extends FunSuite with BeforeAndAfterEach with Test
   test("Nullary: No-op") {
 
     // A == 1
-    val decl = tla.declOp("A", 1)
+    val decl = tla.declOp("A", tla.int(1)).untypedOperDecl()
 
     val pnf = parNorm.normalizeDeclaration(decl)
 
@@ -35,7 +34,7 @@ class TestParameterNormalizer extends FunSuite with BeforeAndAfterEach with Test
   test("Simple parameter") {
 
     // A(p) == p
-    val decl = tla.declOp("A", n_p, "p")
+    val decl = tla.declOp("A", n_p, "p").untypedOperDecl()
 
     val pnf = parNorm.normalizeDeclaration(decl)
 
@@ -56,7 +55,7 @@ class TestParameterNormalizer extends FunSuite with BeforeAndAfterEach with Test
   test("HO parameter") {
 
     // A(T(_)) == T(0)
-    val decl = tla.declOp("A", tla.appOp(n_T, 0), ("T", 1))
+    val decl = tla.declOp("A", tla.appOp(n_T, tla.int(0)), ("T", 1)).untypedOperDecl()
 
     val pnf = parNorm.normalizeDeclaration(decl)
 

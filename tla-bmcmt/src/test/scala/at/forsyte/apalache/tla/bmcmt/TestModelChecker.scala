@@ -58,7 +58,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
 
   test("Init, deadlock") {
     // x' \in {2} /\ x' \in {1}
-    val initTrans = List(tla.and(mkAssign("x", 2), mkNotAssign("x", 1)))
+    val initTrans = List(tla.and(mkAssign("x", 2), mkNotAssign("x", 1)).untyped())
     val nextTrans = List(mkAssign("x", 2))
     val dummyModule = new TlaModule("root", List())
     val checkerInput =
@@ -138,10 +138,12 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     // x < 10 /\ x' \in {x + 1}
     val nextTrans =
       List(
-          tla.and(
-              tla.lt(tla.name("x"), tla.int(10)),
-              mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
-          )
+          tla
+            .and(
+                tla.lt(tla.name("x"), tla.int(10)),
+                mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
+            )
+            .untyped()
       )
     ///
     val dummyModule = new TlaModule("root", List())
@@ -171,13 +173,15 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
 
   test("determinstic Init + 2 steps (regression)") {
     // y' \in {1} /\ x' \in {1}
-    val initTrans = List(tla.and(mkAssign("y", 1), mkAssign("x", 1)))
+    val initTrans = List(tla.and(mkAssign("y", 1), mkAssign("x", 1)).untyped())
     // y' \in {y + 1} /\ x' \in {x + 1}
     val nextTrans = List(
-        tla.and(
-            mkAssign("y", tla.plus(tla.name("y"), tla.int(1))),
-            mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
-        )
+        tla
+          .and(
+              mkAssign("y", tla.plus(tla.name("y"), tla.int(1))),
+              mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
+          )
+          .untyped()
     )
     ///
     val dummyModule = new TlaModule("root", List())
@@ -254,10 +258,12 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
     // x > 3 /\ x' \in {x + 1}
     val nextTrans = List(
-        tla.and(
-            tla.gt(tla.name("x"), tla.int(3)),
-            mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
-        )
+        tla
+          .and(
+              tla.gt(tla.name("x"), tla.int(3)),
+              mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
+          )
+          .untyped()
     )
     val dummyModule = new TlaModule("root", List())
     val checkerInput =
@@ -311,10 +317,12 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
     // x < 10 /\ x' \in {x + 1}
     val nextTrans = List(
-        tla.and(
-            tla.lt(tla.name("x"), tla.int(10)),
-            mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
-        )
+        tla
+          .and(
+              tla.lt(tla.name("x"), tla.int(10)),
+              mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
+          )
+          .untyped()
     )
     val dummyModule = new TlaModule("root", List())
     val checkerInput =
@@ -582,7 +590,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     // x' \in {x + 1} \/ x > 100 /\ x' \in {x}
     val trans1 = mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
     val trans2 =
-      tla.and(tla.gt(tla.name("x"), tla.int(100)), mkAssign("x", tla.name("x")))
+      tla.and(tla.gt(tla.name("x"), tla.int(100)), mkAssign("x", tla.name("x"))).untyped()
     val nextTrans = List(trans1, trans2)
     val dummyModule = new TlaModule("root", List())
     val checkerInput =
@@ -680,7 +688,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     // x' \in {x + 1} \/ x > 10 /\ x' \in {x}
     val trans1 = mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
     val trans2 =
-      tla.and(tla.gt(tla.name("x"), tla.int(10)), mkAssign("x", tla.name("x")))
+      tla.and(tla.gt(tla.name("x"), tla.int(10)), mkAssign("x", tla.name("x"))).untyped()
     val nextTrans = List(trans1, trans2)
     val notInv = tla.gt(tla.prime(tla.name("x")), tla.int(10)) // ~(x <= 10)
     val dummyModule = new TlaModule("root", List())
@@ -715,7 +723,7 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     // x' \in {x + 1} \/ x > 10 /\ x' \in {x}
     val trans1 = mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
     val trans2 =
-      tla.and(tla.gt(tla.name("x"), tla.int(10)), mkAssign("x", tla.name("x")))
+      tla.and(tla.gt(tla.name("x"), tla.int(10)), mkAssign("x", tla.name("x"))).untyped()
     val nextTrans = List(trans1, trans2)
     // a constant initializer: \E t \in { 20, 10 }: N' \in {t}
     val cInit =
@@ -792,15 +800,15 @@ class TestModelChecker extends FunSuite with BeforeAndAfter {
     assert(Checker.Outcome.NoError == outcome)
   }
 
-  private def mkAssign(name: String, value: Int) =
+  private def mkAssign(name: String, value: Int): TlaEx =
     tla.assignPrime(tla.name(name), tla.int(value))
 
-  private def mkAssign(name: String, rhs: TlaEx) =
+  private def mkAssign(name: String, rhs: TlaEx): TlaEx =
     tla.assignPrime(tla.name(name), rhs)
 
-  private def mkNotAssign(name: String, value: Int) =
+  private def mkNotAssign(name: String, value: Int): TlaEx =
     tla.primeEq(tla.name(name), tla.int(value))
 
-  private def mkNotAssign(name: String, rhs: TlaEx) =
+  private def mkNotAssign(name: String, rhs: TlaEx): TlaEx =
     tla.primeEq(tla.name(name), rhs)
 }

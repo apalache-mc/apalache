@@ -25,13 +25,13 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
     case ex @ ValEx(_)  => ex
     case ex @ NullEx    => ex
 
-    case OperEx(TlaFunOper.except, fun, args @ _*) =>
+    case ex @ OperEx(TlaFunOper.except, fun, args @ _*) =>
       val trArgs = args map transform
       val (accessors, newValues) = TlaOper.deinterleave(trArgs)
       val nonSingletons = accessors.collect { case OperEx(TlaFunOper.tuple, lst @ _*) => lst.size > 1 }
       if (nonSingletons.isEmpty) {
         // only singleton tuples, construct the same EXCEPT, but with transformed fun and args
-        OperEx(TlaFunOper.except, transform(fun) +: trArgs: _*)
+        OperEx(TlaFunOper.except, transform(fun) +: trArgs: _*)(ex.typeTag)
       } else {
         // multiple accesses, e.g., ![i][j] = ...
         expandExcept(transform(fun), accessors, newValues)
@@ -39,85 +39,94 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
 
     case OperEx(TlaActionOper.unchanged, args @ _*) =>
       // flatten all tuples, e.g., convert <<x, <<y, z>> >> to [x, y, z]
-      val flatArgs = flattenTuplesInUnchanged(tla.tuple(args.map(transform): _*))
+      // construct a tuple for flattenTuplesInUnchanged, the type is bogus, as the tuple will be unpacked
+      val asTuple = tla.tuple(args.map(transform(_)): _*).untyped()
+      val flatArgs = flattenTuplesInUnchanged(asTuple)
       // map every x to x' = x
       val eqs = flatArgs map { x => tla.eql(tla.prime(x), x) }
       // x' = x /\ y' = y /\ z' = z
       eqs match {
         case Seq() =>
           // results from UNCHANGED <<>>, UNCHANGED << << >> >>, etc.
-          tla.bool(true)
+          tla.bool(true).untyped()
 
         case Seq(one) =>
-          one
+          one.untyped()
 
         case _ =>
-          tla.and(eqs: _*)
+          tla.and(eqs: _*).untyped()
       }
 
     case OperEx(TlaOper.eq, OperEx(TlaFunOper.tuple, largs @ _*), OperEx(TlaFunOper.tuple, rargs @ _*)) =>
       // <<e_1, ..., e_k>> = <<f_1, ..., f_n>>
       // produce pairwise comparison
       if (largs.length != rargs.length) {
-        tla.bool(false)
+        tla.bool(false).untyped()
       } else {
         val eqs = largs.zip(rargs) map { case (l, r) => tla.eql(this(l), this(r)) }
-        tla.and(eqs: _*)
+        tla.and(eqs: _*).untyped()
       }
 
     case OperEx(TlaOper.ne, OperEx(TlaFunOper.tuple, largs @ _*), OperEx(TlaFunOper.tuple, rargs @ _*)) =>
       // <<e_1, ..., e_k>> /= <<f_1, ..., f_n>>
       // produce pairwise comparison
       if (largs.length != rargs.length) {
-        tla.bool(true)
+        tla.bool(true).untyped()
       } else {
         val neqs = largs.zip(rargs) map { case (l, r) => tla.neql(this(l), this(r)) }
-        tla.or(neqs: _*)
+        tla.or(neqs: _*).untyped()
       }
 
-    case OperEx(TlaSetOper.filter, boundEx, setEx, predEx) =>
+    case ex @ OperEx(TlaSetOper.filter, boundEx, setEx, predEx) =>
       // rewrite { <<x, <<y, z>> >> \in XYZ: P(x, y, z) }
       // to { x_y_z \in XYZ: P(x_y_z[1], x_y_z[1][1], x_y_z[1][2]) }
-      OperEx(TlaSetOper.filter, collapseTuplesInFilter(transform(boundEx), transform(setEx), transform(predEx)): _*)
+      OperEx(TlaSetOper.filter, collapseTuplesInFilter(transform(boundEx), transform(setEx), transform(predEx)): _*)(
+          ex.typeTag)
 
-    case OperEx(TlaBoolOper.exists, boundEx, setEx, predEx) =>
+    case ex @ OperEx(TlaBoolOper.exists, boundEx, setEx, predEx) =>
       // rewrite \E <<x, <<y, z>> >> \in XYZ: P(x, y, z)
       // to \E x_y_z \in XYZ: P(x_y_z[1], x_y_z[1][1], x_y_z[1][2])
-      OperEx(TlaBoolOper.exists, collapseTuplesInFilter(transform(boundEx), transform(setEx), transform(predEx)): _*)
+      OperEx(TlaBoolOper.exists, collapseTuplesInFilter(transform(boundEx), transform(setEx), transform(predEx)): _*)(
+          ex.typeTag)
 
-    case OperEx(TlaBoolOper.forall, boundEx, setEx, predEx) =>
+    case ex @ OperEx(TlaBoolOper.forall, boundEx, setEx, predEx) =>
       // rewrite \A <<x, <<y, z>> >> \in XYZ: P(x, y, z)
       // to \A x_y_z \in XYZ: P(x_y_z[1], x_y_z[1][1], x_y_z[1][2])
-      OperEx(TlaBoolOper.forall, collapseTuplesInFilter(transform(boundEx), transform(setEx), transform(predEx)): _*)
+      OperEx(TlaBoolOper.forall, collapseTuplesInFilter(transform(boundEx), transform(setEx), transform(predEx)): _*)(
+          ex.typeTag)
 
-    case OperEx(TlaSetOper.map, args @ _*) =>
+    case ex @ OperEx(TlaSetOper.map, args @ _*) =>
       // rewrite { <<x, <<y, z>> >> \in XYZ |-> e(x, y, z) }
       // to { x_y_z \in XYZ |-> e(x_y_z[1], x_y_z[1][1], x_y_z[1][2])
       val trArgs = args map transform
-      OperEx(TlaSetOper.map, collapseTuplesInMap(trArgs.head, trArgs.tail): _*)
+      OperEx(TlaSetOper.map, collapseTuplesInMap(trArgs.head, trArgs.tail): _*)(ex.typeTag)
 
-    case OperEx(funDefOp, args @ _*) if (funDefOp == TlaFunOper.funDef || funDefOp == TlaFunOper.recFunDef) =>
+    case ex @ OperEx(funDefOp, args @ _*) if (funDefOp == TlaFunOper.funDef || funDefOp == TlaFunOper.recFunDef) =>
       val trArgs = args map transform
       val fun = trArgs.head
       val (vars, sets) = TlaOper.deinterleave(trArgs.tail)
       val (onlyVar, onlySet) =
         if (vars.length > 1) {
-          val pair = (tla.tuple(vars: _*), tla.times(sets: _*))
+          // a function of multiple arguments: Introduce a tuple to contain all these arguments
+          // we will need types in the future, commented out for now
+          //  val pointType = TupT1(vars.map(_.typeTag.asTlaType1()): _*)
+          val point = tla.tuple(vars: _*).untyped() // future: typed(pointType)
+          val plane = tla.times(sets: _*).untyped() // future: typed(SetT1(pointType))
           // track the modification to point to the first variable and set
-          tracker.hold(vars.head, pair._1)
-          tracker.hold(sets.head, pair._2)
-          pair
+          tracker.hold(vars.head, point)
+          tracker.hold(sets.head, plane)
+          (point, plane)
         } else {
           (vars.head, sets.head)
         }
       // transform the function into a single-argument function and collapse tuples
-      OperEx(funDefOp, collapseTuplesInMap(fun, Seq(onlyVar, onlySet)): _*)
+      OperEx(funDefOp, collapseTuplesInMap(fun, Seq(onlyVar, onlySet)): _*)(ex.typeTag)
 
-    case OperEx(op, args @ _*) =>
-      OperEx(op, args map transform: _*)
+    case ex @ OperEx(op, args @ _*) =>
+      OperEx(op, args map transform: _*)(ex.typeTag)
 
-    case LetInEx(body, defs @ _*) =>
-      LetInEx(transform(body), defs map { d => d.copy(body = transform(d.body)) }: _*)
+    case ex @ LetInEx(body, defs @ _*) =>
+      LetInEx(transform(body), defs map { d => d.copy(body = transform(d.body)) }: _*)(ex.typeTag)
   }
 
   private def flattenTuplesInUnchanged(ex: TlaEx): Seq[TlaEx] = ex match {
@@ -138,7 +147,14 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
   }
 
   private def expandExcept(topFun: TlaEx, accessors: Seq[TlaEx], newValues: Seq[TlaEx]): TlaEx = {
-    def untuple: PartialFunction[TlaEx, Seq[TlaEx]] = { case OperEx(TlaFunOper.tuple, args @ _*) => args }
+    // The general case of [f EXCEPT !a_1 = e_1, ..., !a_n = e_n]
+    // See p. 304 in Specifying Systems. The definition of EXCEPT for multiple accessors is doubly inductive.
+    // The implementation below does not match the inductive definition from the book when n > 1.
+    // The fix is planned in issue: https://github.com/informalsystems/apalache/issues/647
+    def untuple: PartialFunction[TlaEx, Seq[TlaEx]] = { case OperEx(TlaFunOper.tuple, args @ _*) =>
+      args
+    }
+
     def unfoldKey(indicesInPrefix: Seq[TlaEx], indicesInSuffix: Seq[TlaEx], newValue: TlaEx): TlaEx = {
       // produce [f[i_1]...[i_m] EXCEPT ![i_m+1] = unfoldKey(...) ]
       indicesInSuffix match {
@@ -227,7 +243,6 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
       case NameEx(name) => name
 
       case OperEx(TlaFunOper.tuple, args @ _*) =>
-        // L and J indicate the beginning and the end of the tuple
         (args map mkTupleName) mkString "_"
 
       case _ =>
@@ -257,10 +272,10 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
 
       case LetInEx(body, defs @ _*) =>
         val newDefs = defs.map(d => d.copy(body = rename(d.body)))
-        LetInEx(rename(body), newDefs: _*)
+        LetInEx(rename(body), newDefs: _*)(e.typeTag)
 
       case OperEx(op, args @ _*) =>
-        OperEx(op, args map rename: _*)
+        OperEx(op, args map rename: _*)(e.typeTag)
 
       case _ => e
     }

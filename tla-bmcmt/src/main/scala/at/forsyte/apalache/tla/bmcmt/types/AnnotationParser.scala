@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaFunOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet, TlaStrSet}
 import at.forsyte.apalache.tla.lir.values.TlaStr
-import at.forsyte.apalache.tla.lir.{NullEx, OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{NullEx, OperEx, TlaEx, Untyped, ValEx}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 import scala.collection.immutable.SortedMap
@@ -105,7 +105,7 @@ object AnnotationParser {
       case RecordT(fields) =>
         val keys = fields.keys.toSeq
 
-        def fieldOrVal(i: Int) = {
+        def fieldOrVal(i: Int): TlaEx = {
           val k = keys(i / 2)
           if (i % 2 == 0) tla.str(k) else toTla(fields(k))
         }

@@ -75,10 +75,10 @@ class TypeRewriter(tracker: TransformationTracker, defaultTag: UID => TypeTag)(t
   def apply(decl: TlaDecl): TlaDecl = {
     def transform: TlaDecl => TlaDecl = tracker.trackDecl {
       case d @ TlaConstDecl(_) =>
-        decl.withType(getOrDefault(d.ID))
+        decl.withTag(getOrDefault(d.ID))
 
       case d @ TlaVarDecl(_) =>
-        decl.withType(getOrDefault(d.ID))
+        decl.withTag(getOrDefault(d.ID))
 
       case d @ TlaAssumeDecl(body) =>
         TlaAssumeDecl(this(body))(getOrDefault(d.ID))

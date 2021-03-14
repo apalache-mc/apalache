@@ -105,7 +105,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
 
   test("Init, deadlock") {
     // x' <- 2 /\ x' <- 1
-    val initTrans = List(tla.and(mkAssign("x", 2), mkNotAssign("x", 1)))
+    val initTrans = List(tla.and(mkAssign("x", 2), mkNotAssign("x", 1)).untyped())
     val nextTrans = List(mkAssign("x", 2))
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List.empty)
     val params = new ModelCheckerParams(checkerInput, stepsBound = 0, new File("."), Map(), false)
@@ -230,7 +230,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val nextTrans = List(assign)
     // x < 3
     val lt = tla.lt(tla.name("x"), tla.int(3))
-    val letIn = tla.letIn(tla.appOp(tla.name("Foo")), tla.declOp("Foo", lt))
+    val letIn = tla.letIn(tla.appOp(tla.name("Foo")), tla.declOp("Foo", lt).untypedOperDecl())
     val inv = letIn
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, tla.not(inv))))
     val params = new ModelCheckerParams(checkerInput, stepsBound = 2, new File("."), Map(), false)
@@ -244,13 +244,15 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
 
   test("determinstic Init + 2 steps (regression)") {
     // y' <- 1 /\ x' <- 1
-    val initTrans = List(tla.and(mkAssign("y", 1), mkAssign("x", 1)))
+    val initTrans = List(tla.and(mkAssign("y", 1), mkAssign("x", 1)).untyped())
     // y' <- y + 1 /\ x' <- x + 1
     val nextTrans = List(
-        tla.and(
-            mkAssign("y", tla.plus(tla.name("y"), tla.int(1))),
-            mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
-        )) ///
+        tla
+          .and(
+              mkAssign("y", tla.plus(tla.name("y"), tla.int(1))),
+              mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
+          )
+          .untyped()) ///
     val inv = tla.eql(
         tla.eql(tla.int(3), tla.name("x")),
         tla.eql(tla.int(3), tla.name("y"))
@@ -270,7 +272,8 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     // x' <- 2 \/ x' <- 1
     val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
     // x > 3 /\ x' <- x + 1
-    val nextTrans = List(tla.and(tla.gt(tla.name("x"), tla.int(3)), mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))))
+    val nextTrans =
+      List(tla.and(tla.gt(tla.name("x"), tla.int(3)), mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))).untyped())
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List())
     val params = new ModelCheckerParams(checkerInput, stepsBound = 1, new File("."), Map(), false)
     // initialize the model checker
@@ -301,7 +304,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
     // x < 10 /\ x' <- x + 1
     val nextTrans =
-      List(tla.and(tla.lt(tla.name("x"), tla.int(10)), mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))))
+      List(tla.and(tla.lt(tla.name("x"), tla.int(10)), mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))).untyped())
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List())
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
     // initialize the model checker
@@ -391,7 +394,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val initTrans = List(mkAssign("x", 1))
     // x' <- x + 1 \/ x > 100 /\ x' <- x
     val trans1 = mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
-    val trans2 = tla.and(tla.gt(tla.name("x"), tla.int(100)), mkAssign("x", tla.name("x")))
+    val trans2 = tla.and(tla.gt(tla.name("x"), tla.int(100)), mkAssign("x", tla.name("x"))).untyped()
     val nextTrans = List(trans1, trans2)
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List())
     val params = new ModelCheckerParams(checkerInput, stepsBound = 3, new File("."), Map(), false)
@@ -408,7 +411,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val initTrans = List(mkAssign("x", 0), mkAssign("x", 1))
     // x' <- x + 1 \/ x > 10 /\ x' <- x
     val trans1 = mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
-    val trans2 = tla.and(tla.gt(tla.name("x"), tla.int(10)), mkAssign("x", tla.name("x")))
+    val trans2 = tla.and(tla.gt(tla.name("x"), tla.int(10)), mkAssign("x", tla.name("x"))).untyped()
     val nextTrans = List(trans1, trans2)
     val notInv = tla.gt(tla.name("x"), tla.int(10)) // ~(x <= 10)
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((tla.not(notInv), notInv)))
@@ -426,7 +429,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val initTrans = List(mkAssign("x", 0), mkAssign("x", 1))
     // x' <- x + 1 \/ x > 10 /\ x' <- x
     val trans1 = mkAssign("x", tla.plus(tla.name("x"), tla.int(1)))
-    val trans2 = tla.and(tla.gt(tla.name("x"), tla.int(10)), mkAssign("x", tla.name("x")))
+    val trans2 = tla.and(tla.gt(tla.name("x"), tla.int(10)), mkAssign("x", tla.name("x"))).untyped()
     val nextTrans = List(trans1, trans2)
     // a constant initializer: \E t \in { 20, 10 }: N' \in {t}
     val cInit =
@@ -470,15 +473,15 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     assert(Checker.Outcome.NoError == outcome)
   }
 
-  private def mkAssign(name: String, value: Int) =
+  private def mkAssign(name: String, value: Int): TlaEx =
     tla.assignPrime(tla.name(name), tla.int(value))
 
-  private def mkAssign(name: String, rhs: TlaEx) =
+  private def mkAssign(name: String, rhs: TlaEx): TlaEx =
     tla.assignPrime(tla.name(name), rhs)
 
-  private def mkNotAssign(name: String, value: Int) =
+  private def mkNotAssign(name: String, value: Int): TlaEx =
     tla.primeEq(tla.name(name), tla.int(value))
 
-  private def mkNotAssign(name: String, rhs: TlaEx) =
+  private def mkNotAssign(name: String, rhs: TlaEx): TlaEx =
     tla.primeEq(tla.name(name), rhs)
 }
