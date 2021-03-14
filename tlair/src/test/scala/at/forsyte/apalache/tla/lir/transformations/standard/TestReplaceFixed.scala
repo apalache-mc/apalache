@@ -26,7 +26,7 @@ class TestReplaceFixed extends FunSuite with TestingPredefs {
   test("Nested replacement") {
     val ex = tla.plus(n_x, n_z)
     val tr = mkTr(n_x, n_y)
-    assert(tr(ex) == tla.plus(n_y, n_z))
+    assert(tr(ex) == tla.plus(n_y, n_z).untyped())
   }
 
   test("UID uniqueness") {
@@ -47,7 +47,7 @@ class TestReplaceFixed extends FunSuite with TestingPredefs {
     val tr = mkTr(n_x, n_y)
     val expectedDecl = TlaOperDecl("A", List.empty[FormalParam], n_y)
     val expectedEx = tla.letIn(tla.appDecl(expectedDecl), expectedDecl)
-    assert(tr(ex) == expectedEx)
+    assert(tr(ex) == expectedEx.untyped())
   }
 
   test("Old test batch") {
