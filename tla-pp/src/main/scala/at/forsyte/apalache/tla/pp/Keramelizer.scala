@@ -49,7 +49,7 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
       val elemType = getElemType(setX)
       val tempName = gen.newName()
       tla
-        .filter(tla.name(gen.newName()) ? "e", setX, tla.in(tla.name(tempName) ? "e", setY) ? "b")
+        .filter(tla.name(tempName) ? "e", setX, tla.in(tla.name(tempName) ? "e", setY) ? "b")
         .typed(Map("b" -> BoolT1(), "e" -> elemType, "s" -> SetT1(elemType)), "s")
 
     case ex @ OperEx(TlaSetOper.setminus, setX, setY) =>

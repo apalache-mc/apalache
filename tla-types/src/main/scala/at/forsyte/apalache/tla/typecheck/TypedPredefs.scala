@@ -73,12 +73,14 @@ object TypedPredefs {
   }
 
   implicit class BuilderExAsTyped(block: BuilderEx) {
+    private val undefinedAlias = "?"
+
     def typed(): TlaEx = {
-      typed(Map.empty, "?")
+      typed(Map.empty, undefinedAlias)
     }
 
     def typed(topType: TlaType1): TlaEx = {
-      typed(Map("t" -> topType), "t")
+      typed(Map("top" -> topType), "top")
     }
 
     def typed(types: Map[String, TlaType1], alias: String): TlaEx = {
@@ -87,27 +89,21 @@ object TypedPredefs {
           ex
 
         case BuilderName(name) =>
-          types.get(alias) match {
-            case Some(tt) => NameEx(name)(Typed(tt))
-            case None     => throw new BuilderError(s"No type for alias $alias")
-          }
+          val typeTag = Typed(findTypeOrThrow(types, alias))
+          NameEx(name)(typeTag)
 
         case BuilderAlias(target, newAlias) =>
           target.typed(types, newAlias)
 
         case BuilderOper(oper, args @ _*) =>
           val builtArgs = args map (a => a.typed(types, "?"))
-          types.get(alias) match {
-            case Some(tt) => OperEx(oper, builtArgs: _*)(Typed(tt))
-            case None     => throw new BuilderError(s"No type for alias $alias")
-          }
+          val typeTag = Typed(findTypeOrThrow(types, alias))
+          OperEx(oper, builtArgs: _*)(typeTag)
 
         case BuilderLet(body, defs @ _*) =>
           val builtBody = body.typed(types, "?")
-          types.get(alias) match {
-            case Some(tt) => LetInEx(builtBody, defs: _*)(Typed(tt))
-            case None     => throw new BuilderError(s"No type for alias $alias")
-          }
+          val typeTag = Typed(findTypeOrThrow(types, alias))
+          LetInEx(builtBody, defs: _*)(typeTag)
 
         case BuilderVal(TlaInt(value)) =>
           ValEx(TlaInt(value))(Typed(IntT1()))
@@ -134,6 +130,16 @@ object TypedPredefs {
           throw new BuilderError("Unexpected value: " + v)
       }
     }
-  }
 
+    private def findTypeOrThrow(types: Map[String, TlaType1], alias: String): TlaType1 = {
+      if (alias == "?") {
+        throw new BuilderError(s"""An expression is missing a type alias, use tla.foo(...) ? "alias" """)
+      } else {
+        types.get(alias) match {
+          case Some(tt) => tt
+          case None     => throw new BuilderError(s"No type given for the type alias $alias")
+        }
+      }
+    }
+  }
 }
