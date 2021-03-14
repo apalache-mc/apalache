@@ -402,19 +402,19 @@ class TestIncrementalRenaming extends FunSuite with TestingPredefs with BeforeAn
   }
 
   test("Test syncAndNormalizeDs") {
-    val syncEx = exists(name(makeName("x", 99)), n_S, n_p)
+    val syncEx: TlaEx = exists(name(makeName("x", 99)), n_S, n_p)
     renaming.syncFrom(syncEx) // Set x -> 99 in the map
 
-    val ex1 = exists(name(makeName("x", 3)), n_S, n_p)
-    val ex2 = exists(name(makeName("x", 105)), n_S, n_p)
+    val ex1: TlaEx = exists(name(makeName("x", 3)), n_S, n_p)
+    val ex2: TlaEx = exists(name(makeName("x", 105)), n_S, n_p)
 
     val xDecl = declOp("X", ex1).untypedOperDecl()
     val yDecl = declOp("Y", ex2).untypedOperDecl()
 
     val decls = Seq(xDecl, yDecl)
     val expected = Seq(
-        declOp("X", exists(name(makeName("x", 1)), n_S, n_p)),
-        declOp("Y", exists(name(makeName("x", 2)), n_S, n_p))
+        declOp("X", exists(name(makeName("x", 1)), n_S, n_p)).untypedOperDecl(),
+        declOp("Y", exists(name(makeName("x", 2)), n_S, n_p)).untypedOperDecl()
     )
 
     val actual = renaming.syncAndNormalizeDs(decls)
