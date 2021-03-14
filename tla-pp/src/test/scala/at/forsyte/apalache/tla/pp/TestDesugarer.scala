@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.SimpleFormalParam
+import at.forsyte.apalache.tla.lir.{SimpleFormalParam, TlaEx}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
@@ -22,7 +22,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
       tla.except(tla.name("f"), tla.tuple(tla.name("i"), tla.name("j")), tla.name("e"))
     val sugarFree = desugarer.transform(highCalories)
     // output [ f EXCEPT ![i] = [f[i] EXCEPT ![j] = e] ]
-    val expected =
+    val expected: TlaEx =
       tla.except(tla.name("f"), tla.tuple(tla.name("i")),
           tla.except(tla.appFun(tla.name("f"), tla.name("i")), tla.tuple(tla.name("j")), tla.name("e")))
 
@@ -35,7 +35,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
       tla.except(tla.name("f"), tla.tuple(tla.name("i"), tla.name("j"), tla.name("k")), tla.name("e"))
     val sugarFree = desugarer.transform(highCalories)
     // output: [ f EXCEPT ![i] = [f[i] EXCEPT ![j] = [f[i][j] EXCEPT ![k] = e] ] ]
-    val expected = tla.except(tla.name("f"), tla.tuple(tla.name("i")),
+    val expected: TlaEx = tla.except(tla.name("f"), tla.tuple(tla.name("i")),
         tla.except(tla.appFun(tla.name("f"), tla.name("i")), tla.tuple(tla.name("j")),
             tla.except(tla.appFun(tla.appFun(tla.name("f"), tla.name("i")), tla.name("j")), tla.tuple(tla.name("k")),
                 tla.name("e"))))
@@ -48,7 +48,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     val unchanged = tla.unchanged(tla.name("x"))
     val sugarFree = desugarer.transform(unchanged)
     // output: x' = x
-    val expected = tla.eql(tla.prime(tla.name("x")), tla.name("x"))
+    val expected: TlaEx = tla.eql(tla.prime(tla.name("x")), tla.name("x"))
     assert(expected == sugarFree)
   }
 
@@ -57,7 +57,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     val unchanged = tla.unchangedTup(tla.name("x"), tla.tuple(tla.name("y")))
     val sugarFree = desugarer.transform(unchanged)
     // output: x' = x /\ y' = y
-    val expected =
+    val expected: TlaEx =
       tla.and(
           tla.eql(tla.prime(tla.name("x")), tla.name("x")),
           tla.eql(tla.prime(tla.name("y")), tla.name("y"))
@@ -73,7 +73,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
 
     val sugarFree = desugarer.transform(parallel)
     // output: x = a /\ y = b
-    val expected =
+    val expected: TlaEx =
       tla.and(
           tla.eql(tla.name("x"), tla.name("a")),
           tla.eql(tla.name("y"), tla.name("b"))
@@ -89,7 +89,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
 
     val sugarFree = desugarer.transform(parallel)
     // output: x /= a \/ y /= b
-    val expected =
+    val expected: TlaEx =
       tla.or(
           tla.neql(tla.name("x"), tla.name("a")),
           tla.neql(tla.name("y"), tla.name("b"))
@@ -105,7 +105,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
 
     val sugarFree = desugarer.transform(parallel)
     // output: FALSE
-    val expected = tla.bool(false)
+    val expected: TlaEx = tla.bool(false)
     assert(expected == sugarFree)
   }
 
@@ -117,7 +117,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
 
     val sugarFree = desugarer.transform(parallel)
     // output: TRUE
-    val expected = tla.bool(true)
+    val expected: TlaEx = tla.bool(true)
     assert(expected == sugarFree)
   }
 
@@ -127,7 +127,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     // We do the transformation right here.
     val unchanged = tla.unchangedTup(tla.name("x"), tla.tuple(tla.name("y"), tla.name("z")))
     val sugarFree = desugarer.transform(unchanged)
-    val expected =
+    val expected: TlaEx =
       tla.and(
           tla.eql(tla.prime(tla.name("x")), tla.name("x")),
           tla.eql(tla.prime(tla.name("y")), tla.name("y")),
@@ -142,7 +142,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     val unchanged = tla.unchangedTup()
     val sugarFree = desugarer.transform(unchanged)
     // output: TRUE
-    val expected = tla.bool(true)
+    val expected: TlaEx = tla.bool(true)
     assert(expected == sugarFree)
   }
 
@@ -152,7 +152,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     val unchanged = tla.unchangedTup(tla.unchangedTup(), tla.unchangedTup())
     val sugarFree = desugarer.transform(unchanged)
     // output: TRUE
-    val expected = tla.bool(true)
+    val expected: TlaEx = tla.bool(true)
     assert(expected == sugarFree)
   }
 
@@ -162,7 +162,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     val app = tla.appFun(tla.name("f"), tla.name("i"))
     val sugarFree = desugarer.transform(tla.unchangedTup(app))
     // output: (f[i])' = f[i]
-    val expected = tla.eql(tla.prime(app), app)
+    val expected: TlaEx = tla.eql(tla.prime(app), app)
     assert(expected == sugarFree)
   }
 
@@ -174,7 +174,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
           tla.and(tla.eql(tla.name("x"), tla.int(3)), tla.eql(tla.name("y"), tla.int(4))))
     val sugarFree = desugarer.transform(filter)
     // output: { x_y_z \in XYZ: x_y_z[1] = 3 /\ x_y_z[2][1] = 4 }
-    val expected =
+    val expected: TlaEx =
       tla.filter(tla.name("x_y_z"), tla.name("XYZ"),
           tla.and(
               tla.eql(tla.appFun(tla.name("x_y_z"), tla.int(1)), tla.int(3)),
@@ -191,7 +191,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
           tla.name("XYZ"))
     val sugarFree = desugarer.transform(map)
     // output: { x_y_z \in XYZ: x_y_z[1] + x_y_z[2][1] }
-    val expected =
+    val expected: TlaEx =
       tla.map(
           tla.plus(tla.appFun(tla.name("x_y_z"), tla.int(1)),
               tla.appFun(tla.appFun(tla.name("x_y_z"), tla.int(2)), tla.int(1))),
@@ -209,7 +209,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
           tla.and(tla.eql(tla.name("x"), tla.int(3)), tla.eql(tla.name("y"), tla.int(4))))
     val sugarFree = desugarer.transform(filter)
     // output: \E x_y_z \in XYZ: x_y_z[1] = 3 /\ x_y_z[2][1] = 4 }
-    val expected =
+    val expected: TlaEx =
       tla.exists(tla.name("x_y_z"), tla.name("XYZ"),
           tla.and(
               tla.eql(tla.appFun(tla.name("x_y_z"), tla.int(1)), tla.int(3)),
@@ -226,7 +226,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
           tla.and(tla.eql(tla.name("x"), tla.int(3)), tla.eql(tla.name("y"), tla.int(4))))
     val sugarFree = desugarer.transform(filter)
     // output: \A x_y_z \in XYZ: x_y_z[1] = 3 /\ x_y_z[2][1] = 4 }
-    val expected =
+    val expected: TlaEx =
       tla.forall(tla.name("x_y_z"), tla.name("XYZ"),
           tla.and(
               tla.eql(tla.appFun(tla.name("x_y_z"), tla.int(1)), tla.int(3)),
@@ -243,7 +243,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
           tla.tuple(tla.name("x"), tla.tuple(tla.name("y"), tla.name("z"))), tla.name("XYZ"))
     val sugarFree = desugarer.transform(map)
     // output: [ x_y_z \in XYZ |-> x_y_z[1] + x_y_z[2][1] ]
-    val expected =
+    val expected: TlaEx =
       tla.funDef(
           tla.plus(tla.appFun(tla.name("x_y_z"), tla.int(1)),
               tla.appFun(tla.appFun(tla.name("x_y_z"), tla.int(2)), tla.int(1))),
@@ -256,7 +256,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
   test("keep one argument functions") {
     // make sure that a function of a single argument does not get modified, e.g., no tuples added
     // input: [x \in X |-> {x}]
-    val fundef =
+    val fundef: TlaEx =
       tla.funDef(tla.enumSet(tla.name("x")), tla.name("x"), tla.name("X"))
     val sugarFree = desugarer.transform(fundef)
     assert(fundef == sugarFree)
@@ -269,7 +269,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
       tla.funDef(tla.plus(tla.name("x"), tla.name("y")), tla.name("x"), tla.name("X"), tla.name("y"), tla.name("Y"))
     val sugarFree = desugarer.transform(map)
     // output: [ x_y \in X \X Y |-> x_y[1] + x_y[2] ]
-    val expected =
+    val expected: TlaEx =
       tla.funDef(
           tla.plus(tla.appFun(tla.name("x_y"), tla.int(1)), tla.appFun(tla.name("x_y"), tla.int(2))),
           tla.name("x_y"),
@@ -285,7 +285,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
       tla.recFunDef(tla.plus(tla.name("x"), tla.name("y")), tla.name("x"), tla.name("S"), tla.name("y"), tla.name("T"))
     val sugarFree = desugarer.transform(map)
     // output: f[x_y \in S \X T] == x_y[1] + x_y[2]
-    val expected =
+    val expected: TlaEx =
       tla.recFunDef(
           tla.plus(tla.appFun(tla.name("x_y"), tla.int(1)), tla.appFun(tla.name("x_y"), tla.int(2))),
           tla.name("x_y"),
@@ -297,7 +297,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
   test("keep one argument recursive functions") {
     // make sure that a function of a single argument does not get modified, e.g., no tuples added
     // input: [x \in X |-> {x}]
-    val recFun =
+    val recFun: TlaEx =
       tla.recFunDef(tla.enumSet(tla.name("x")), tla.name("x"), tla.name("X"))
     val sugarFree = desugarer.transform(recFun)
     assert(recFun == sugarFree)
@@ -305,7 +305,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
 
   test("accept calls to user-defined operators") {
     // Foo(1)
-    val app = tla.appOp(tla.name("Foo"), tla.int(1))
+    val app: TlaEx = tla.appOp(tla.name("Foo"), tla.int(1))
     val sugarFree = desugarer(app)
     // do nothing and do not complain
     assert(sugarFree == app)
@@ -314,7 +314,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
   test("accept n-ary let-in definitions") {
     // Foo(1)
     val fooDef = tla.declOp("Foo", tla.name("x"), SimpleFormalParam("x")).untypedOperDecl()
-    val letIn = tla.letIn(tla.appOp(tla.name("Foo"), tla.int(1)), fooDef)
+    val letIn: TlaEx = tla.letIn(tla.appOp(tla.name("Foo"), tla.int(1)), fooDef)
     val sugarFree = desugarer(letIn)
     // do nothing and do not complain
     assert(sugarFree == letIn)
