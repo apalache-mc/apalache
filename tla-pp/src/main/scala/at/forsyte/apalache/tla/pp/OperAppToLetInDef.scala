@@ -49,7 +49,7 @@ class OperAppToLetInDef(
       val newDecl = tla
         .declOp(newName, newEx)
         .typedOperDecl(OperT1(Seq(), resType))
-      val applyNewDecl = tla.appOp(NameEx(opName)(ne.typeTag)).typed(resType)
+      val applyNewDecl = tla.appOp(NameEx(newName)(ne.typeTag)).typed(resType)
       LetInEx(applyNewDecl, newDecl)(ex.typeTag)
 
     // On type annot. ignore the RHS
