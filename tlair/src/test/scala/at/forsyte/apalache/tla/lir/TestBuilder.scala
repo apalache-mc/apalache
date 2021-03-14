@@ -77,7 +77,7 @@ class TestBuilder extends FunSuite with TestingPredefs {
   test("Test byName: bad calls") {
     assertThrows[NoSuchElementException](bd.byName("not an operator name", NullEx, n_b))
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.plus.name, NullEx))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.plus.name, NullEx).untyped())
   }
 
   test("Test byNameOrNull: bad calls") {
@@ -123,27 +123,27 @@ class TestBuilder extends FunSuite with TestingPredefs {
   test("Test byName: TlaOper") {
     val eqBuild = bd.byName(TlaOper.eq.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaOper.eq.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaOper.eq.name, n_a).untyped())
     assert(eqBuild == OperEx(TlaOper.eq, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaOper.eq.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaOper.eq.name, n_a, n_b, n_c).untyped())
 
     val neBuild = bd.byName(TlaOper.ne.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaOper.ne.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaOper.ne.name, n_a).untyped())
     assert(neBuild == OperEx(TlaOper.ne, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaOper.ne.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaOper.ne.name, n_a, n_b, n_c).untyped())
 
     val cbBuild = bd.byName(TlaOper.chooseBounded.name, n_a, n_b, n_c).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaOper.chooseBounded.name, n_a, n_b))
+    assertThrows[IllegalArgumentException](bd.byName(TlaOper.chooseBounded.name, n_a, n_b).untyped())
     assert(cbBuild == OperEx(TlaOper.chooseBounded, n_a, n_b, n_c))
-    assertThrows[IllegalArgumentException](bd.byName(TlaOper.chooseBounded.name, n_a, n_b, n_c, n_d))
+    assertThrows[IllegalArgumentException](bd.byName(TlaOper.chooseBounded.name, n_a, n_b, n_c, n_d).untyped())
 
     val cubBuild = bd.byName(TlaOper.chooseUnbounded.name, n_a, n_b).untyped()
 
     assert(cubBuild == OperEx(TlaOper.chooseUnbounded, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaOper.chooseUnbounded.name, n_a, n_b, n_c))
-    assertThrows[IllegalArgumentException](bd.byName(TlaOper.chooseUnbounded.name, n_a, n_b, n_c, n_d))
+    assertThrows[IllegalArgumentException](bd.byName(TlaOper.chooseUnbounded.name, n_a, n_b, n_c).untyped())
+    assertThrows[IllegalArgumentException](bd.byName(TlaOper.chooseUnbounded.name, n_a, n_b, n_c, n_d).untyped())
   }
 
   test("Test byNameOrNull: TlaOper") {
@@ -245,15 +245,15 @@ class TestBuilder extends FunSuite with TestingPredefs {
 
     val notBuild = bd.byName(TlaBoolOper.not.name, n_a).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaBoolOper.not.name))
+    assertThrows[IllegalArgumentException](bd.byName(TlaBoolOper.not.name).untyped())
     assert(notBuild == OperEx(TlaBoolOper.not, n_a))
-    assertThrows[IllegalArgumentException](bd.byName(TlaBoolOper.not.name, n_a, n_b))
+    assertThrows[IllegalArgumentException](bd.byName(TlaBoolOper.not.name, n_a, n_b).untyped())
 
     val impliesBuild = bd.byName(TlaBoolOper.implies.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaBoolOper.implies.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaBoolOper.implies.name, n_a).untyped())
     assert(impliesBuild == OperEx(TlaBoolOper.implies, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaBoolOper.implies.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaBoolOper.implies.name, n_a, n_b, n_c).untyped())
 
   }
 
@@ -335,39 +335,39 @@ class TestBuilder extends FunSuite with TestingPredefs {
   test("Test byName: TlaActionOper") {
     val primeBuild = bd.byNameOrNull(TlaActionOper.prime.name, n_a).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaActionOper.prime.name))
+    assertThrows[IllegalArgumentException](bd.byName(TlaActionOper.prime.name).untyped())
     assert(primeBuild == OperEx(TlaActionOper.prime, n_a))
-    assertThrows[IllegalArgumentException](bd.byName(TlaActionOper.prime.name, n_a, n_b))
+    assertThrows[IllegalArgumentException](bd.byName(TlaActionOper.prime.name, n_a, n_b).untyped())
 
     val stutterBuild = bd.byName(TlaActionOper.stutter.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaActionOper.stutter.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaActionOper.stutter.name, n_a).untyped())
     assert(stutterBuild == OperEx(TlaActionOper.stutter, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaActionOper.stutter.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaActionOper.stutter.name, n_a, n_b, n_c).untyped())
 
     val nostutterBuild = bd.byName(TlaActionOper.nostutter.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaActionOper.nostutter.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaActionOper.nostutter.name, n_a).untyped())
     assert(nostutterBuild == OperEx(TlaActionOper.nostutter, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaActionOper.nostutter.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaActionOper.nostutter.name, n_a, n_b, n_c).untyped())
 
     val enabledBuild = bd.byName(TlaActionOper.enabled.name, n_a).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaActionOper.enabled.name))
+    assertThrows[IllegalArgumentException](bd.byName(TlaActionOper.enabled.name).untyped())
     assert(enabledBuild == OperEx(TlaActionOper.enabled, n_a))
-    assertThrows[IllegalArgumentException](bd.byName(TlaActionOper.enabled.name, n_a, n_b))
+    assertThrows[IllegalArgumentException](bd.byName(TlaActionOper.enabled.name, n_a, n_b).untyped())
 
     val unchangedBuild = bd.byName(TlaActionOper.unchanged.name, n_a).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaActionOper.unchanged.name))
+    assertThrows[IllegalArgumentException](bd.byName(TlaActionOper.unchanged.name).untyped())
     assert(unchangedBuild == OperEx(TlaActionOper.unchanged, n_a))
-    assertThrows[IllegalArgumentException](bd.byName(TlaActionOper.unchanged.name, n_a, n_b))
+    assertThrows[IllegalArgumentException](bd.byName(TlaActionOper.unchanged.name, n_a, n_b).untyped())
 
     val compositionBuild = bd.byName(TlaActionOper.composition.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaActionOper.composition.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaActionOper.composition.name, n_a).untyped())
     assert(compositionBuild == OperEx(TlaActionOper.composition, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaActionOper.composition.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaActionOper.composition.name, n_a, n_b, n_c).untyped())
   }
 
   test("Test byNameOrNull: TlaActionOper") {
@@ -441,9 +441,9 @@ class TestBuilder extends FunSuite with TestingPredefs {
     val caseSplitBuild3 = bd.caseSplit(n_a, n_b, n_c, n_d, n_e, n_f).untyped()
 
     assert(caseSplitBuild1 == OperEx(TlaControlOper.caseNoOther, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.caseSplit(n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.caseSplit(n_a, n_b, n_c).untyped())
     assert(caseSplitBuild2 == OperEx(TlaControlOper.caseNoOther, n_a, n_b, n_c, n_d))
-    assertThrows[IllegalArgumentException](bd.caseSplit(n_a, n_b, n_c, n_d, n_e))
+    assertThrows[IllegalArgumentException](bd.caseSplit(n_a, n_b, n_c, n_d, n_e).untyped())
     assert(caseSplitBuild3 == OperEx(TlaControlOper.caseNoOther, n_a, n_b, n_c, n_d, n_e, n_f))
 
     val caseOtherBuild1 = bd.caseOther(n_a, n_b, n_c).untyped()
@@ -451,9 +451,9 @@ class TestBuilder extends FunSuite with TestingPredefs {
     val caseOtherBuild3 = bd.caseOther(n_a, n_b, n_c, n_d, n_e, n_f, n_g).untyped()
 
     assert(caseOtherBuild1 == OperEx(TlaControlOper.caseWithOther, n_a, n_b, n_c))
-    assertThrows[IllegalArgumentException](bd.caseOther(n_a, n_b, n_c, n_d))
+    assertThrows[IllegalArgumentException](bd.caseOther(n_a, n_b, n_c, n_d).untyped())
     assert(caseOtherBuild2 == OperEx(TlaControlOper.caseWithOther, n_a, n_b, n_c, n_d, n_e))
-    assertThrows[IllegalArgumentException](bd.caseOther(n_a, n_b, n_c, n_d, n_e, n_f))
+    assertThrows[IllegalArgumentException](bd.caseOther(n_a, n_b, n_c, n_d, n_e, n_f).untyped())
     assert(caseOtherBuild3 == OperEx(TlaControlOper.caseWithOther, n_a, n_b, n_c, n_d, n_e, n_f, n_g))
 
     val iteBuild1 = bd.ite(n_a, n_b, n_c).untyped()
@@ -495,22 +495,22 @@ class TestBuilder extends FunSuite with TestingPredefs {
 
     val caseNoOtherBuild = bd.byName(TlaControlOper.caseNoOther.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaControlOper.caseNoOther.name))
+    assertThrows[IllegalArgumentException](bd.byName(TlaControlOper.caseNoOther.name).untyped())
     assert(caseNoOtherBuild == OperEx(TlaControlOper.caseNoOther, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaControlOper.caseNoOther.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaControlOper.caseNoOther.name, n_a, n_b, n_c).untyped())
 
     val caseWithOtherBuild = bd.byName(TlaControlOper.caseWithOther.name, n_a, n_b, n_c).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaControlOper.caseWithOther.name))
-    assertThrows[IllegalArgumentException](bd.byName(TlaControlOper.caseWithOther.name, n_a))
-    assertThrows[IllegalArgumentException](bd.byName(TlaControlOper.caseWithOther.name, n_a, n_b))
+    assertThrows[IllegalArgumentException](bd.byName(TlaControlOper.caseWithOther.name).untyped())
+    assertThrows[IllegalArgumentException](bd.byName(TlaControlOper.caseWithOther.name, n_a).untyped())
+    assertThrows[IllegalArgumentException](bd.byName(TlaControlOper.caseWithOther.name, n_a, n_b).untyped())
     assert(caseWithOtherBuild == OperEx(TlaControlOper.caseWithOther, n_a, n_b, n_c))
 
     val iteBuild = bd.byName(TlaControlOper.ifThenElse.name, n_a, n_b, n_c).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaControlOper.ifThenElse.name, n_a, n_b))
+    assertThrows[IllegalArgumentException](bd.byName(TlaControlOper.ifThenElse.name, n_a, n_b).untyped())
     assert(iteBuild == OperEx(TlaControlOper.ifThenElse, n_a, n_b, n_c))
-    assertThrows[IllegalArgumentException](bd.byName(TlaControlOper.ifThenElse.name, n_a, n_b, n_c, n_d))
+    assertThrows[IllegalArgumentException](bd.byName(TlaControlOper.ifThenElse.name, n_a, n_b, n_c, n_d).untyped())
   }
 
   test("Test byNameOrNull: TlaControlOper") {
@@ -592,51 +592,51 @@ class TestBuilder extends FunSuite with TestingPredefs {
   test("Test byName: TlaTempOper") {
     val AABuild = bd.byName(TlaTempOper.AA.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.AA.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.AA.name, n_a).untyped())
     assert(AABuild == OperEx(TlaTempOper.AA, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.AA.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.AA.name, n_a, n_b, n_c).untyped())
 
     val EEBuild = bd.byName(TlaTempOper.EE.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.EE.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.EE.name, n_a).untyped())
     assert(EEBuild == OperEx(TlaTempOper.EE, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.EE.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.EE.name, n_a, n_b, n_c).untyped())
 
     val boxBuild = bd.byName(TlaTempOper.box.name, n_a).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.box.name))
+    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.box.name).untyped())
     assert(boxBuild == OperEx(TlaTempOper.box, n_a))
-    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.box.name, n_a, n_b))
+    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.box.name, n_a, n_b).untyped())
 
     val diamondBuild = bd.byName(TlaTempOper.diamond.name, n_a).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.diamond.name))
+    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.diamond.name).untyped())
     assert(diamondBuild == OperEx(TlaTempOper.diamond, n_a))
-    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.diamond.name, n_a, n_b))
+    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.diamond.name, n_a, n_b).untyped())
 
     val leadsToBuild = bd.byName(TlaTempOper.leadsTo.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.leadsTo.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.leadsTo.name, n_a).untyped())
     assert(leadsToBuild == OperEx(TlaTempOper.leadsTo, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.leadsTo.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.leadsTo.name, n_a, n_b, n_c).untyped())
 
     val guaranteesBuild = bd.byName(TlaTempOper.guarantees.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.guarantees.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.guarantees.name, n_a).untyped())
     assert(guaranteesBuild == OperEx(TlaTempOper.guarantees, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.guarantees.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.guarantees.name, n_a, n_b, n_c).untyped())
 
     val strongFairnessBuild = bd.byName(TlaTempOper.strongFairness.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.strongFairness.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.strongFairness.name, n_a).untyped())
     assert(strongFairnessBuild == OperEx(TlaTempOper.strongFairness, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.strongFairness.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.strongFairness.name, n_a, n_b, n_c).untyped())
 
     val weakFairnessBuild = bd.byName(TlaTempOper.weakFairness.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.weakFairness.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.weakFairness.name, n_a).untyped())
     assert(weakFairnessBuild == OperEx(TlaTempOper.weakFairness, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.weakFairness.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaTempOper.weakFairness.name, n_a, n_b, n_c).untyped())
 
   }
 
@@ -853,21 +853,21 @@ class TestBuilder extends FunSuite with TestingPredefs {
 
     val plusBuild = bd.byName(TlaArithOper.plus.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.plus.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.plus.name, n_a).untyped())
     assert(plusBuild == OperEx(TlaArithOper.plus, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.plus.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.plus.name, n_a, n_b, n_c).untyped())
 
     val minusBuild = bd.byName(TlaArithOper.minus.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.minus.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.minus.name, n_a).untyped())
     assert(minusBuild == OperEx(TlaArithOper.minus, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.minus.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.minus.name, n_a, n_b, n_c).untyped())
 
     val uminusBuild = bd.byName(TlaArithOper.uminus.name, n_a).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.uminus.name))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.uminus.name).untyped())
     assert(uminusBuild == OperEx(TlaArithOper.uminus, n_a))
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.uminus.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.uminus.name, n_a, n_b, n_c).untyped())
 
     val prodBuild1 = bd.byName(TlaArithOper.prod.name).untyped()
     val prodBuild2 = bd.byName(TlaArithOper.prod.name, n_a, n_b).untyped()
@@ -877,63 +877,63 @@ class TestBuilder extends FunSuite with TestingPredefs {
 
     val multBuild = bd.byName(TlaArithOper.mult.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.mult.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.mult.name, n_a).untyped())
     assert(multBuild == OperEx(TlaArithOper.mult, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.mult.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.mult.name, n_a, n_b, n_c).untyped())
 
     val divBuild = bd.byName(TlaArithOper.div.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.div.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.div.name, n_a).untyped())
     assert(divBuild == OperEx(TlaArithOper.div, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.div.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.div.name, n_a, n_b, n_c).untyped())
 
     val modBuild = bd.byName(TlaArithOper.mod.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.mod.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.mod.name, n_a).untyped())
     assert(modBuild == OperEx(TlaArithOper.mod, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.mod.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.mod.name, n_a, n_b, n_c).untyped())
 
     val realDivBuild = bd.byName(TlaArithOper.realDiv.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.realDiv.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.realDiv.name, n_a).untyped())
     assert(realDivBuild == OperEx(TlaArithOper.realDiv, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.realDiv.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.realDiv.name, n_a, n_b, n_c).untyped())
 
     val expBuild = bd.byName(TlaArithOper.exp.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.exp.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.exp.name, n_a).untyped())
     assert(expBuild == OperEx(TlaArithOper.exp, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.exp.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.exp.name, n_a, n_b, n_c).untyped())
 
     val dotdotBuild = bd.byName(TlaArithOper.dotdot.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.dotdot.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.dotdot.name, n_a).untyped())
     assert(dotdotBuild == OperEx(TlaArithOper.dotdot, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.dotdot.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.dotdot.name, n_a, n_b, n_c).untyped())
 
     val ltBuild = bd.byName(TlaArithOper.lt.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.lt.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.lt.name, n_a).untyped())
     assert(ltBuild == OperEx(TlaArithOper.lt, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.lt.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.lt.name, n_a, n_b, n_c).untyped())
 
     val gtBuild = bd.byName(TlaArithOper.gt.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.gt.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.gt.name, n_a).untyped())
     assert(gtBuild == OperEx(TlaArithOper.gt, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.gt.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.gt.name, n_a, n_b, n_c).untyped())
 
     val leBuild = bd.byName(TlaArithOper.le.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.le.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.le.name, n_a).untyped())
     assert(leBuild == OperEx(TlaArithOper.le, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.le.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.le.name, n_a, n_b, n_c).untyped())
 
     val geBuild = bd.byName(TlaArithOper.ge.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.ge.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.ge.name, n_a).untyped())
     assert(geBuild == OperEx(TlaArithOper.ge, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.ge.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.ge.name, n_a, n_b, n_c).untyped())
   }
 
   test("Test byNameOrNull: TlaArithOper") {
@@ -1067,15 +1067,15 @@ class TestBuilder extends FunSuite with TestingPredefs {
   test("Test byName: TlaFiniteSetOper") {
     val cardinalityBuild = bd.byName(TlaFiniteSetOper.cardinality.name, n_a).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaFiniteSetOper.cardinality.name))
+    assertThrows[IllegalArgumentException](bd.byName(TlaFiniteSetOper.cardinality.name).untyped())
     assert(cardinalityBuild == OperEx(TlaFiniteSetOper.cardinality, n_a))
-    assertThrows[IllegalArgumentException](bd.byName(TlaFiniteSetOper.cardinality.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaFiniteSetOper.cardinality.name, n_a, n_b, n_c).untyped())
 
     val isFiniteSetBuild = bd.byName(TlaFiniteSetOper.isFiniteSet.name, n_a).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaFiniteSetOper.isFiniteSet.name))
+    assertThrows[IllegalArgumentException](bd.byName(TlaFiniteSetOper.isFiniteSet.name).untyped())
     assert(isFiniteSetBuild == OperEx(TlaFiniteSetOper.isFiniteSet, n_a))
-    assertThrows[IllegalArgumentException](bd.byName(TlaFiniteSetOper.isFiniteSet.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaFiniteSetOper.isFiniteSet.name, n_a, n_b, n_c).untyped())
   }
 
   test("Test byNameOrNull: TlaFiniteSetOper") {
@@ -1110,25 +1110,25 @@ class TestBuilder extends FunSuite with TestingPredefs {
     val enumBuild2 = bd.enumFun(n_a, n_b, n_c, n_d).untyped()
 
     assert(enumBuild1 == OperEx(TlaFunOper.enum, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.enumFun(n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.enumFun(n_a, n_b, n_c).untyped())
     assert(enumBuild2 == OperEx(TlaFunOper.enum, n_a, n_b, n_c, n_d))
-    assertThrows[IllegalArgumentException](bd.enumFun(n_a, n_b, n_c, n_d, n_e))
+    assertThrows[IllegalArgumentException](bd.enumFun(n_a, n_b, n_c, n_d, n_e).untyped())
 
     val exceptBuild1 = bd.except(n_a, n_b, n_c).untyped()
     val exceptBuild2 = bd.except(n_a, n_b, n_c, n_d, n_e).untyped()
 
     assert(exceptBuild1 == OperEx(TlaFunOper.except, n_a, n_b, n_c))
-    assertThrows[IllegalArgumentException](bd.except(n_a, n_b, n_c, n_d))
+    assertThrows[IllegalArgumentException](bd.except(n_a, n_b, n_c, n_d).untyped())
     assert(exceptBuild2 == OperEx(TlaFunOper.except, n_a, n_b, n_c, n_d, n_e))
-    assertThrows[IllegalArgumentException](bd.except(n_a, n_b, n_c, n_d, n_e, n_f))
+    assertThrows[IllegalArgumentException](bd.except(n_a, n_b, n_c, n_d, n_e, n_f).untyped())
 
     val funDefBuild1 = bd.funDef(n_a, n_b, n_c).untyped()
     val funDefBuild2 = bd.funDef(n_a, n_b, n_c, n_d, n_e).untyped()
 
     assert(funDefBuild1 == OperEx(TlaFunOper.funDef, n_a, n_b, n_c))
-    assertThrows[IllegalArgumentException](bd.funDef(n_a, n_b, n_c, n_d))
+    assertThrows[IllegalArgumentException](bd.funDef(n_a, n_b, n_c, n_d).untyped())
     assert(funDefBuild2 == OperEx(TlaFunOper.funDef, n_a, n_b, n_c, n_d, n_e))
-    assertThrows[IllegalArgumentException](bd.funDef(n_a, n_b, n_c, n_d, n_e, n_f))
+    assertThrows[IllegalArgumentException](bd.funDef(n_a, n_b, n_c, n_d, n_e, n_f).untyped())
 
     val tupleBuild1 = bd.tuple().untyped()
     val tupleBuild2 = bd.tuple(n_a, n_b).untyped()
@@ -1140,47 +1140,47 @@ class TestBuilder extends FunSuite with TestingPredefs {
   test("Test byName: TlaFunOper") {
     val appBuild = bd.byName(TlaFunOper.app.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.app.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.app.name, n_a).untyped())
     assert(appBuild == OperEx(TlaFunOper.app, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.app.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.app.name, n_a, n_b, n_c).untyped())
 
     val domainBuild = bd.byName(TlaFunOper.domain.name, n_a).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.domain.name))
+    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.domain.name).untyped())
     assert(domainBuild == OperEx(TlaFunOper.domain, n_a))
-    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.domain.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.domain.name, n_a, n_b, n_c).untyped())
 
     val enumBuild1 = bd.byName(TlaFunOper.enum.name, n_a, n_b).untyped()
     val enumBuild2 = bd.byName(TlaFunOper.enum.name, n_a, n_b, n_c, n_d).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.enum.name))
-    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.enum.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.enum.name).untyped())
+    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.enum.name, n_a).untyped())
     assert(enumBuild1 == OperEx(TlaFunOper.enum, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.enum.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.enum.name, n_a, n_b, n_c).untyped())
     assert(enumBuild2 == OperEx(TlaFunOper.enum, n_a, n_b, n_c, n_d))
-    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.enum.name, n_a, n_b, n_c, n_d, n_e))
+    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.enum.name, n_a, n_b, n_c, n_d, n_e).untyped())
 
     val exceptBuild1 = bd.byName(TlaFunOper.except.name, n_a, n_b, n_c).untyped()
     val exceptBuild2 = bd.byName(TlaFunOper.except.name, n_a, n_b, n_c, n_d, n_e).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.except.name))
-    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.except.name, n_a))
-    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.except.name, n_a, n_b))
+    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.except.name).untyped())
+    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.except.name, n_a).untyped())
+    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.except.name, n_a, n_b).untyped())
     assert(exceptBuild1 == OperEx(TlaFunOper.except, n_a, n_b, n_c))
-    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.except.name, n_a, n_b, n_c, n_d))
+    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.except.name, n_a, n_b, n_c, n_d).untyped())
     assert(exceptBuild2 == OperEx(TlaFunOper.except, n_a, n_b, n_c, n_d, n_e))
-    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.except.name, n_a, n_b, n_c, n_d, n_e, n_f))
+    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.except.name, n_a, n_b, n_c, n_d, n_e, n_f).untyped())
 
     val funDefBuild1 = bd.byName(TlaFunOper.funDef.name, n_a, n_b, n_c).untyped()
     val funDefBuild2 = bd.byName(TlaFunOper.funDef.name, n_a, n_b, n_c, n_d, n_e).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.funDef.name))
-    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.funDef.name, n_a))
-    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.funDef.name, n_a, n_b))
+    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.funDef.name).untyped())
+    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.funDef.name, n_a).untyped())
+    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.funDef.name, n_a, n_b).untyped())
     assert(funDefBuild1 == OperEx(TlaFunOper.funDef, n_a, n_b, n_c))
-    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.funDef.name, n_a, n_b, n_c, n_d))
+    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.funDef.name, n_a, n_b, n_c, n_d).untyped())
     assert(funDefBuild2 == OperEx(TlaFunOper.funDef, n_a, n_b, n_c, n_d, n_e))
-    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.funDef.name, n_a, n_b, n_c, n_d, n_e, n_f))
+    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.funDef.name, n_a, n_b, n_c, n_d, n_e, n_f).untyped())
 
     val tupleBuild1 = bd.byName(TlaFunOper.tuple.name).untyped()
     val tupleBuild2 = bd.byName(TlaFunOper.tuple.name, n_a, n_b).untyped()
@@ -1279,33 +1279,33 @@ class TestBuilder extends FunSuite with TestingPredefs {
   test("Test byName: TlaSeqOper") {
     val appendBuild = bd.byName(TlaSeqOper.append.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaSeqOper.append.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSeqOper.append.name, n_a).untyped())
     assert(appendBuild == OperEx(TlaSeqOper.append, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSeqOper.append.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSeqOper.append.name, n_a, n_b, n_c).untyped())
 
     val concatBuild = bd.byName(TlaSeqOper.concat.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaSeqOper.concat.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSeqOper.concat.name, n_a).untyped())
     assert(concatBuild == OperEx(TlaSeqOper.concat, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSeqOper.concat.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSeqOper.concat.name, n_a, n_b, n_c).untyped())
 
     val headBuild = bd.byName(TlaSeqOper.head.name, n_a).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaSeqOper.head.name))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSeqOper.head.name).untyped())
     assert(headBuild == OperEx(TlaSeqOper.head, n_a))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSeqOper.head.name, n_a, n_b))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSeqOper.head.name, n_a, n_b).untyped())
 
     val tailBuild = bd.byName(TlaSeqOper.tail.name, n_a).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaSeqOper.tail.name))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSeqOper.tail.name).untyped())
     assert(tailBuild == OperEx(TlaSeqOper.tail, n_a))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSeqOper.tail.name, n_a, n_b))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSeqOper.tail.name, n_a, n_b).untyped())
 
     val lenBuild = bd.byName(TlaSeqOper.len.name, n_a).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaSeqOper.len.name))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSeqOper.len.name).untyped())
     assert(lenBuild == OperEx(TlaSeqOper.len, n_a))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSeqOper.len.name, n_a, n_b))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSeqOper.len.name, n_a, n_b).untyped())
   }
 
   test("Test byNameOrNull: TlaSeqOper") {
@@ -1385,9 +1385,9 @@ class TestBuilder extends FunSuite with TestingPredefs {
     val mapBuild2 = bd.map(n_a, n_b, n_c, n_d, n_e).untyped()
 
     assert(mapBuild1 == OperEx(TlaSetOper.map, n_a, n_b, n_c))
-    assertThrows[IllegalArgumentException](bd.map(n_a, n_b, n_c, n_d))
+    assertThrows[IllegalArgumentException](bd.map(n_a, n_b, n_c, n_d).untyped())
     assert(mapBuild2 == OperEx(TlaSetOper.map, n_a, n_b, n_c, n_d, n_e))
-    assertThrows[IllegalArgumentException](bd.map(n_a, n_b, n_c, n_d, n_e, n_f))
+    assertThrows[IllegalArgumentException](bd.map(n_a, n_b, n_c, n_d, n_e, n_f).untyped())
 
     val funSetBuild = bd.funSet(n_a, n_b).untyped()
 
@@ -1397,9 +1397,9 @@ class TestBuilder extends FunSuite with TestingPredefs {
     val recSetBuild2 = bd.recSet(n_a, n_b).untyped()
 
     assert(recSetBuild1 == OperEx(TlaSetOper.recSet))
-    assertThrows[IllegalArgumentException](bd.recSet(n_a))
+    assertThrows[IllegalArgumentException](bd.recSet(n_a).untyped())
     assert(recSetBuild2 == OperEx(TlaSetOper.recSet, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.recSet(n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.recSet(n_a, n_b, n_c).untyped())
 
     val seqSetBuild = bd.seqSet(n_a).untyped()
 
@@ -1445,97 +1445,97 @@ class TestBuilder extends FunSuite with TestingPredefs {
 
     val inBuild = bd.byName(TlaSetOper.in.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.in.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.in.name, n_a).untyped())
     assert(inBuild == OperEx(TlaSetOper.in, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.in.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.in.name, n_a, n_b, n_c).untyped())
 
     val notinBuild = bd.byName(TlaSetOper.notin.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.notin.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.notin.name, n_a).untyped())
     assert(notinBuild == OperEx(TlaSetOper.notin, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.notin.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.notin.name, n_a, n_b, n_c).untyped())
 
     val capBuild = bd.byName(TlaSetOper.cap.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.cap.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.cap.name, n_a).untyped())
     assert(capBuild == OperEx(TlaSetOper.cap, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.cap.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.cap.name, n_a, n_b, n_c).untyped())
 
     val cupBuild = bd.byName(TlaSetOper.cup.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.cup.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.cup.name, n_a).untyped())
     assert(cupBuild == OperEx(TlaSetOper.cup, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.cup.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.cup.name, n_a, n_b, n_c).untyped())
 
     val unionBuild = bd.byName(TlaSetOper.union.name, n_a).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.union.name))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.union.name).untyped())
     assert(unionBuild == OperEx(TlaSetOper.union, n_a))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.union.name, n_a, n_b))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.union.name, n_a, n_b).untyped())
 
     val filterBuild = bd.byName(TlaSetOper.filter.name, n_a, n_b, n_c).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.filter.name, n_a, n_b))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.filter.name, n_a, n_b).untyped())
     assert(filterBuild == OperEx(TlaSetOper.filter, n_a, n_b, n_c))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.filter.name, n_a, n_b, n_c, n_d))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.filter.name, n_a, n_b, n_c, n_d).untyped())
 
     val mapBuild1 = bd.byNameOrNull(TlaSetOper.map.name, n_a, n_b, n_c).untyped()
     val mapBuild2 = bd.byNameOrNull(TlaSetOper.map.name, n_a, n_b, n_c, n_d, n_e).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.map.name, n_a, n_b))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.map.name, n_a, n_b).untyped())
     assert(mapBuild1 == OperEx(TlaSetOper.map, n_a, n_b, n_c))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.map.name, n_a, n_b, n_c, n_d))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.map.name, n_a, n_b, n_c, n_d).untyped())
     assert(mapBuild2 == OperEx(TlaSetOper.map, n_a, n_b, n_c, n_d, n_e))
 
     val funSetBuild = bd.byName(TlaSetOper.funSet.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.funSet.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.funSet.name, n_a).untyped())
     assert(funSetBuild == OperEx(TlaSetOper.funSet, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.funSet.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.funSet.name, n_a, n_b, n_c).untyped())
 
     val recSetBuild1 = bd.byNameOrNull(TlaSetOper.recSet.name).untyped()
     val recSetBuild2 = bd.byNameOrNull(TlaSetOper.recSet.name, n_a, n_b).untyped()
 
     assert(recSetBuild1 == OperEx(TlaSetOper.recSet))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.recSet.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.recSet.name, n_a).untyped())
     assert(recSetBuild2 == OperEx(TlaSetOper.recSet, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.recSet.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.recSet.name, n_a, n_b, n_c).untyped())
 
     val seqSetBuild = bd.byName(TlaSetOper.seqSet.name, n_a).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.seqSet.name))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.seqSet.name).untyped())
     assert(seqSetBuild == OperEx(TlaSetOper.seqSet, n_a))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.seqSet.name, n_a, n_b))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.seqSet.name, n_a, n_b).untyped())
 
     val subsetBuild = bd.byName(TlaSetOper.subsetProper.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.subsetProper.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.subsetProper.name, n_a).untyped())
     assert(subsetBuild == OperEx(TlaSetOper.subsetProper, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.subsetProper.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.subsetProper.name, n_a, n_b, n_c).untyped())
 
     val subseteqBuild = bd.byName(TlaSetOper.subseteq.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.subseteq.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.subseteq.name, n_a).untyped())
     assert(subseteqBuild == OperEx(TlaSetOper.subseteq, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.subseteq.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.subseteq.name, n_a, n_b, n_c).untyped())
 
     val supsetBuild = bd.byName(TlaSetOper.supsetProper.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.supsetProper.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.supsetProper.name, n_a).untyped())
     assert(supsetBuild == OperEx(TlaSetOper.supsetProper, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.supsetProper.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.supsetProper.name, n_a, n_b, n_c).untyped())
 
     val supseteqBuild = bd.byName(TlaSetOper.supseteq.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.supseteq.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.supseteq.name, n_a).untyped())
     assert(supseteqBuild == OperEx(TlaSetOper.supseteq, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.supseteq.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.supseteq.name, n_a, n_b, n_c).untyped())
 
     val setminusBuild = bd.byName(TlaSetOper.setminus.name, n_a, n_b).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.setminus.name, n_a))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.setminus.name, n_a).untyped())
     assert(setminusBuild == OperEx(TlaSetOper.setminus, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.setminus.name, n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.setminus.name, n_a, n_b, n_c).untyped())
 
     val timesBuild1 = bd.byName(TlaSetOper.times.name).untyped()
     val timesBuild2 = bd.byName(TlaSetOper.times.name, n_a, n_b).untyped()
@@ -1545,9 +1545,9 @@ class TestBuilder extends FunSuite with TestingPredefs {
 
     val powSetBuild = bd.byName(TlaSetOper.powerset.name, n_a).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.powerset.name))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.powerset.name).untyped())
     assert(powSetBuild == OperEx(TlaSetOper.powerset, n_a))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.powerset.name, n_a, n_b))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.powerset.name, n_a, n_b).untyped())
 
   }
 
