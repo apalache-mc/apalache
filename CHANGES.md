@@ -2,6 +2,13 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.11.1
+
+### Features
+
+* Type checker: tagging all expressions with the reconstructed types, see #608
+* Type checker: experimental option `check --with-snowcat`, see #632
+
 ## 0.11.0
 
 ### Features

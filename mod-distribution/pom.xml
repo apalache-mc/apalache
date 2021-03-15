@@ -8,11 +8,11 @@
     <parent>
         <groupId>at.forsyte.apalache</groupId>
         <artifactId>apalache</artifactId>
-        <version>0.11.1</version>
+        <version>0.11.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>apalache-pkg</artifactId>
-        <version>0.11.1</version>
+        <version>0.11.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>apalache-pkg</name>
