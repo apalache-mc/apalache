@@ -53,12 +53,12 @@ class TestNormalizer extends FunSuite with BeforeAndAfterEach {
   test("""~(x \/ y) ~~> ~x /\ ~y""") {
     val input =
       tla
-        .not(tla.and(tla.name("x") ? "b", tla.name("y") ? "b") ? "b")
+        .not(tla.or(tla.name("x") ? "b", tla.name("y") ? "b") ? "b")
         .typed(types, "b")
     val output = normalizer.apply(input)
     val expected =
       tla
-        .or(tla.not(tla.name("x") ? "b") ? "b", tla.not(tla.name("y") ? "b") ? "b")
+        .and(tla.not(tla.name("x") ? "b") ? "b", tla.not(tla.name("y") ? "b") ? "b")
         .typed(types, "b")
     assert(expected == output)
   }
