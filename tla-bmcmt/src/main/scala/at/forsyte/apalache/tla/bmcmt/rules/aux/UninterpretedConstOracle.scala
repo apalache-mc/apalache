@@ -50,7 +50,8 @@ class UninterpretedConstOracle(valueCells: Seq[ArenaCell], oracleCell: ArenaCell
    */
   override def evalPosition(solverContext: SolverContext, state: SymbState): Int = {
     def isEqual(valueCell: ArenaCell): Boolean = {
-      solverContext.evalGroundExpr(tla.eql(valueCell.toNameEx, oracleCell.toNameEx)) == tla.bool(true)
+      val eq = tla.eql(valueCell.toNameEx, oracleCell.toNameEx).untyped()
+      solverContext.evalGroundExpr(eq) == tla.bool(true).untyped()
     }
 
     valueCells indexWhere isEqual // the oracle must be equal to one of the cached values

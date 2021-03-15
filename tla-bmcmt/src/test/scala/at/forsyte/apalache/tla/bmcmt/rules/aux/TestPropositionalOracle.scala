@@ -56,13 +56,15 @@ class TestPropositionalOracle extends RewriterBase with TestingPredefs {
     rewriter.push()
     rewriter.solverContext.assertGroundExpr(oracle.whenEqualTo(nextState, 1))
     assert(solverContext.sat())
-    assert(solverContext.evalGroundExpr(flag.toNameEx) == tla.bool(false))
+    val expected1 = tla.bool(false).untyped()
+    assert(expected1 == solverContext.evalGroundExpr(flag.toNameEx))
     rewriter.pop()
     // assert oracle = 0
     rewriter.push()
     rewriter.solverContext.assertGroundExpr(oracle.whenEqualTo(nextState, 0))
     assert(solverContext.sat())
-    assert(solverContext.evalGroundExpr(flag.toNameEx) == tla.bool(true))
+    val expected2 = tla.bool(true).untyped()
+    assert(expected2 == solverContext.evalGroundExpr(flag.toNameEx))
     rewriter.pop()
   }
 }
