@@ -117,7 +117,7 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
     val recDecl = tla.declOp(letInOpName, tla.appOp(n_A, n_p), "p").untypedOperDecl()
     recDecl.isRecursive = true
 
-    val appEx = tla.appDecl(recDecl, tla.int(99))
+    val appEx = tla.appDecl(recDecl, tla.int(99)).untyped()
     // X == LET A(p) == A(p) IN A(99)
     val nonRecDecl = tla.declOp("X", tla.letIn(appEx, recDecl)).untypedOperDecl()
 
@@ -153,16 +153,23 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
 
     val aUnrolledBody = aUnrolledOpt.get.body
 
-    val assertCond = newXOpt.exists { case d @ TlaOperDecl(_, _, body) =>
-      body match {
-        case LetInEx(`appEx`, TlaOperDecl(`letInOpName`, List(SimpleFormalParam("p")), `aUnrolledBody`)) =>
-          true
-        case _ => false
-      }
+    // explicit matching and assertions instead of smart and error-prone computations
+    newXOpt match {
+      case Some(TlaOperDecl(_, _, body)) =>
+        body match {
+          case LetInEx(letBody, TlaOperDecl(declName, params, unrolled)) =>
+            assert(appEx == letBody)
+            assert(letInOpName == declName)
+            assert(List(SimpleFormalParam("p")) == params)
+            assert(aUnrolledBody == unrolled)
+
+          case _ =>
+            fail("The unrolled body does not match the pattern")
+        }
+
+      case None =>
+        fail("Expected TlaOperDecl")
     }
-
-    assert(assertCond)
-
   }
 
 }
