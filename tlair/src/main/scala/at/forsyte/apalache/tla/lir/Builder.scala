@@ -597,6 +597,10 @@ class Builder {
     BuilderOper(BmcOper.skolem, ex)
   }
 
+  def apalacheConstCard(ex: BuilderEx): BuilderEx = {
+    BuilderOper(BmcOper.constCard, ex)
+  }
+
   private val m_nameMap: Map[String, TlaOper] =
     scala.collection.immutable.Map(
         TlaOper.eq.name -> TlaOper.eq,
