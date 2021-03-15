@@ -446,7 +446,7 @@ class TestSymbStateRewriterInt extends RewriterBase {
   }
 
   test("""SE-INT-RNG: 2..(6 - 1)  = {2, 3, 4, 5}""") {
-    val expected = tla.enumSet(2.to(6).map(i => tla.int(i)): _*).untyped()
+    val expected = tla.enumSet(2.to(5).map(i => tla.int(i)): _*).untyped()
     val range = tla.dotdot(tla.int(2), tla.minus(tla.int(6), tla.int(1))).untyped()
     val eqExpected = tla.eql(range, expected).untyped()
 
