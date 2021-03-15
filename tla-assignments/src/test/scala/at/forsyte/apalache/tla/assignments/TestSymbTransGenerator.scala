@@ -59,7 +59,7 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
   test("Test labelsAt") {
     val ex11 = n_x
     val ex12 = n_y
-    val ex13 = or(ex11, ex12)
+    val ex13 = or(ex11, ex12).untyped()
 
     val sel1: SelMapType = Map(
         ex13.ID -> Set(Set(ex11.ID), Set(ex12.ID))
@@ -78,24 +78,24 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
   }
 
   test("Test allSelections") {
-    val xasgn11 = primeEq(n_x, n_s)
-    val xasgn12 = primeEq(n_x, int(1))
-    val yasgn11 = primeEq(n_x, n_T)
-    val yasgn12 = primeEq(n_x, n_t)
+    val xasgn11 = primeEq(n_x, n_s).untyped()
+    val xasgn12 = primeEq(n_x, int(1)).untyped()
+    val yasgn11 = primeEq(n_x, n_T).untyped()
+    val yasgn12 = primeEq(n_x, n_t).untyped()
 
     val ex1 =
       ite(
           ge(int(0), int(1)),
           xasgn11,
           xasgn12
-      )
+      ).untyped()
 
-    val ex2 = or(yasgn11, yasgn12)
+    val ex2 = or(yasgn11, yasgn12).untyped()
 
     val ex3 = and(
         ex1,
         ex2
-    )
+    ).untyped()
 
     val possibleAssgnsX = Seq(
         Set(xasgn11.ID),
@@ -132,16 +132,16 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
       assert(s(newEx.ID) == Set(e))
     }
 
-    val xasgn21 = primeEq(n_x, n_s)
-    val yasgn21 = primeEq(n_x, n_T)
-    val yasgn22 = primeEq(n_y, n_t)
+    val xasgn21 = primeEq(n_x, n_s).untyped()
+    val yasgn21 = primeEq(n_x, n_T).untyped()
+    val yasgn22 = primeEq(n_y, n_t).untyped()
 
-    val ex4 = and(eql(int(0), int(1)), xasgn21)
+    val ex4 = and(eql(int(0), int(1)), xasgn21).untyped()
     val xDecl = declOp("X", ex4).untypedOperDecl()
-    val ex5 = and(yasgn21, appDecl(xDecl))
-    val ex6 = and(yasgn22, appDecl(xDecl))
-    val ex7 = or(ex5, ex6)
-    val ex8 = letIn(ex7, xDecl)
+    val ex5 = and(yasgn21, appDecl(xDecl)).untyped()
+    val ex6 = and(yasgn22, appDecl(xDecl)).untyped()
+    val ex7 = or(ex5, ex6).untyped()
+    val ex8 = letIn(ex7, xDecl).untyped()
 
     val possibleAssgnsX2 = Seq(Set(xasgn21.ID))
 
@@ -150,7 +150,9 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
         Set(xasgn21.ID, yasgn22.ID)
     )
 
-    val selections4 = possibleAssgnsX2 map { fromPossiblity(ex4, _) }
+    val selections4 = possibleAssgnsX2 map {
+      fromPossiblity(ex4, _)
+    }
 
     selections4 foreach { case (newEx, s, e) =>
       assert(s(newEx.ID) == Set(e))
@@ -167,9 +169,9 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
   }
 
   test("Test ITE with multibranching") {
-    val asgn1 = primeEq(n_x, int(1))
-    val asgn2 = primeEq(n_x, int(2))
-    val asgn3 = primeEq(n_x, int(3))
+    val asgn1 = primeEq(n_x, int(1)).untyped()
+    val asgn2 = primeEq(n_x, int(2)).untyped()
+    val asgn3 = primeEq(n_x, int(3)).untyped()
 
     val next = ite(
         trueEx,
@@ -179,7 +181,7 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
             asgn2,
             asgn3
         )
-    )
+    ).untyped()
 
     val sel = Seq(asgn1.ID, asgn2.ID, asgn3.ID)
 
@@ -200,34 +202,35 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
   }
 
   test("Test LET-IN") {
-    val asgn = primeEq(n_x, int(1))
+    val asgn = primeEq(n_x, int(1)).untyped()
     val xDecl = declOp("X", asgn).untypedOperDecl()
     val disj = or(
         and(n_A, appDecl(xDecl)),
         and(n_B, appDecl(xDecl))
-    )
+    ).untyped()
 
     val next = letIn(
         disj,
         xDecl
-    )
+    ).untyped()
 
     val strat = Seq(asgn.ID)
 
-    val ret = stg(next, strat) map { _._2 }
-    assert(
-        ret == Seq(
-            letIn(disj, declOp("X", assignPrime(n_x, int(1))).untypedOperDecl())
-        ))
+    val ret = stg(next, strat) map {
+      _._2
+    }
+    assert(ret.size == 1)
+    val expected = letIn(disj, declOp("X", assignPrime(n_x, int(1)).untyped()).untypedOperDecl()).untyped()
+    assert(expected == ret.head)
   }
 
   test("Test sliceWith") {
-    val asgn = primeEq(n_x, int(1))
+    val asgn = primeEq(n_x, int(1)).untyped()
     val xDecl = declOp("X", asgn).untypedOperDecl()
     val disj = or(
         and(n_A, appDecl(xDecl)),
         and(n_B, appDecl(xDecl))
-    )
+    ).untyped()
 
     val next = letIn(
         disj,
