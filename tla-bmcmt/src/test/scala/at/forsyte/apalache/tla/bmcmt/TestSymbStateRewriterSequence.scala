@@ -231,7 +231,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
     val annotatedTuple = tla.withType(tuple3_6, seqT)
     val subseq = tla.subseq(annotatedTuple, tla.int(2), tla.int(3)) // <<4, 5>>
     val tuple9_10 = tla.tuple(9.to(10).map(i => tla.int(i)): _*)
-    val concat = tla.concat(tuple9_10, subseq)
+    val concat = tla.concat(tuple9_10, subseq).untyped()
 
     val state = new SymbState(concat, arena, Binding())
     val rewriter = create()
@@ -242,7 +242,7 @@ class TestSymbStateRewriterSequence extends RewriterBase {
 
     val tupleExpected = tla.tuple(tla.int(9), tla.int(10), tla.int(4), tla.int(5))
 
-    val expected = tla.withType(tupleExpected, seqT)
+    val expected = tla.withType(tupleExpected, seqT).untyped()
 
     assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(expected, nextState.ex)))
   }

@@ -745,12 +745,12 @@ class TestTrivialTypeFinder extends RewriterBase {
 
   test("inferAndSave type annotation") {
     val typeFinder = new TrivialTypeFinder()
-    val ex = tla.enumSet()
+    val emptySet = tla.enumSet().untyped()
 
-    val annotatedEx = tla.withType(ex, tla.enumSet(ValEx(TlaIntSet)))
+    val annotatedEx = tla.withType(emptySet, tla.enumSet(ValEx(TlaIntSet))).untyped()
     assert(typeFinder.inferAndSave(annotatedEx).contains(FinSetT(IntT())))
     // check that the type of the underlying expression has been changed as well
-    assert(FinSetT(IntT()) == typeFinder.compute(ex))
+    assert(FinSetT(IntT()) == typeFinder.compute(emptySet))
   }
 
   // regression, see issue #292

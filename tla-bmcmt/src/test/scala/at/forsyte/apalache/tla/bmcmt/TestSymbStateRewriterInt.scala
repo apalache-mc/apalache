@@ -446,22 +446,23 @@ class TestSymbStateRewriterInt extends RewriterBase {
   }
 
   test("""SE-INT-RNG: 2..(6 - 1)  = {2, 3, 4, 5}""") {
-    val expected = tla.enumSet(2.to(6).map(i => tla.int(i)): _*)
-    val range = tla.dotdot(tla.int(2), tla.minus(tla.int(6), tla.int(1)))
-    val eqExpected = tla.eql(range, expected)
+    val expected = tla.enumSet(2.to(6).map(i => tla.int(i)): _*).untyped()
+    val range = tla.dotdot(tla.int(2), tla.minus(tla.int(6), tla.int(1))).untyped()
+    val eqExpected = tla.eql(range, expected).untyped()
 
     val state = new SymbState(eqExpected, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case predEx @ NameEx(name) =>
+      case predEx @ NameEx(_) =>
         assert(solverContext.sat())
         // check equality
         rewriter.push()
         solverContext.assertGroundExpr(predEx)
         assert(solverContext.sat())
         rewriter.pop()
-        solverContext.assertGroundExpr(OperEx(TlaBoolOper.not, predEx))
+        val notPred = tla.not(predEx).untyped()
+        solverContext.assertGroundExpr(notPred)
         assert(!solverContext.sat())
 
       case _ =>
