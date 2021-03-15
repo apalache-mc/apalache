@@ -226,12 +226,13 @@ class TestSymbStateRewriterSequence extends RewriterBase {
   }
 
   test("""SEQ-CONCAT: <<9, 10>> \o SubSeq(S, 2, 3)""") {
-    val tuple3_6 = tla.tuple(3.to(6).map(i => tla.int(i)): _*)
+    val tuple3_6 = tla.tuple(3.to(6).map(i => tla.int(i)): _*).untyped()
     val seqT = AnnotationParser.toTla(SeqT(IntT()))
-    val annotatedTuple = tla.withType(tuple3_6, seqT)
-    val subseq = tla.subseq(annotatedTuple, tla.int(2), tla.int(3)) // <<4, 5>>
-    val tuple9_10 = tla.tuple(9.to(10).map(i => tla.int(i)): _*)
-    val concat = tla.concat(tuple9_10, subseq).untyped()
+    val annotatedTuple = tla.withType(tuple3_6, seqT).untyped()
+    val subseq = tla.subseq(annotatedTuple, tla.int(2), tla.int(3)).untyped() // <<4, 5>>
+    val tuple9_10 = tla.tuple(9.to(10).map(i => tla.int(i)): _*).untyped()
+    val annotatedTuple9_10 = tla.withType(tuple9_10, seqT).untyped()
+    val concat = tla.concat(annotatedTuple9_10, subseq).untyped()
 
     val state = new SymbState(concat, arena, Binding())
     val rewriter = create()
