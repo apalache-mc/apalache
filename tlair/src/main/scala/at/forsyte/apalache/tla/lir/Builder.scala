@@ -576,7 +576,7 @@ class Builder {
     }
   }
 
-  // bmc
+  // apalache operators
   def withType(expr: BuilderEx, typeAnnot: BuilderEx): BuilderEx = {
     BuilderOper(BmcOper.withType, expr, typeAnnot)
   }
@@ -587,6 +587,14 @@ class Builder {
 
   def assignPrime(leftName: BuilderEx, rightExpr: BuilderEx): BuilderEx = {
     BuilderOper(BmcOper.assign, prime(leftName), rightExpr)
+  }
+
+  def apalacheExpand(ex: BuilderEx): BuilderEx = {
+    BuilderOper(BmcOper.expand, ex)
+  }
+
+  def apalacheSkolem(ex: BuilderEx): BuilderEx = {
+    BuilderOper(BmcOper.skolem, ex)
   }
 
   private val m_nameMap: Map[String, TlaOper] =
