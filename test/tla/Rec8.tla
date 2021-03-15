@@ -1,7 +1,13 @@
 ------------------------------ MODULE Rec8 ------------------------------------
 EXTENDS Integers
 
-VARIABLES n, factSpec, factComp
+VARIABLES
+    \* @type: Int;
+    n,
+    \* @type: Int;
+    factSpec,
+    \* @type: Int;
+    factComp
 
 \* the syntax for type annotations
 a <: b == a

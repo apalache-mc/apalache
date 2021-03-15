@@ -22,7 +22,13 @@ Nodes == 1..N
 a <: b == a
 EmptyIntSet == {} <: {Int}
 
-VARIABLES out, in, to_rev
+VARIABLES
+    \* @type: Int -> Set(Int);
+    out,
+    \* @type: Int -> Set(Int);
+    in,
+    \* @type: Int -> Set(Int);
+    to_rev
 
 IsDag ==
   \E po \in [Nodes -> [Nodes -> BOOLEAN]]:  \* there is a partial order, that is,
@@ -55,6 +61,7 @@ Reversed(Active) ==
         THEN EmptyIntSet
         ELSE IF in[u] /= to_rev[u] THEN in[u] \ to_rev[u] ELSE in[u] ]
 
+\* @type: (Set(Int), Int -> Set(Int)) => Bool;
 UpdateOut(Active, rev) ==
     out' = [ u \in Nodes |->
         IF u \in Active
@@ -63,6 +70,7 @@ UpdateOut(Active, rev) ==
             \* another node => remove the nodes that active sinks reversed 
     ]
 
+\* @type: (Set(Int), Int -> Set(Int)) => Bool;
 UpdateIn(Active, rev) ==
     in' = [ u \in Nodes |->
         IF u \in Active
@@ -71,6 +79,7 @@ UpdateIn(Active, rev) ==
             \* another node => add the nodes from the sinks that reversed this edge
     ]
     
+\* @type: (Set(Int), Int -> Set(Int)) => Bool;
 UpdateToRev(Active, rev) ==
     to_rev' = [ u \in Nodes |->
         IF u \in Active

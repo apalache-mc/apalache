@@ -6,7 +6,11 @@
  *)
 EXTENDS Integers
 
-VARIABLES size, set
+VARIABLES
+    \* @type: Int;
+    size,
+    \* @type: Set(Int);
+    set
 
 a <: b == a
 IntSet(S) == S <: {Int}

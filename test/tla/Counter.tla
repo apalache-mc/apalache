@@ -1,7 +1,9 @@
 ------ MODULE Counter ------
 EXTENDS Naturals
 
-VARIABLES x
+VARIABLES
+    \* @type: Int;
+    x
 
 Init == x \in 1..1000
 

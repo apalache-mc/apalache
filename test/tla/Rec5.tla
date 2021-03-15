@@ -9,7 +9,9 @@ EXTENDS Integers, FiniteSets
 MAX_POWER == 3              \* the maximal voting power
 Procs == {"a", "b", "c"}     \* the set of processes
 
-VARIABLES votingPower
+VARIABLES
+    \* @type: Str -> Int;
+    votingPower
 
 a <: b == a
 

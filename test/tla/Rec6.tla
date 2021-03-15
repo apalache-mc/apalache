@@ -3,7 +3,11 @@ EXTENDS Integers
 
 N == 5
 
-VARIABLES set, count
+VARIABLES
+    \* @type: Set(Int);
+    set,
+    \* @type: Int;
+    count
 
 a <: b == a
 

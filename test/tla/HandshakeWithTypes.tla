@@ -7,11 +7,17 @@
  *)
 EXTENDS Integers
 
-VARIABLES msgs,     \* the set of all messages
-          iseqno,   \* Initiator's sequence number
-          rseqno,   \* Receiver's sequence number
-          istate,   \* Initiator's state
-          rstate    \* Receiver's state
+VARIABLES
+    \* @type: Set([syn: Bool, ack: Bool, seqno: Int, ackno: Int]);
+    msgs,     \* the set of all messages
+    \* @type: Int;
+    iseqno,   \* Initiator's sequence number
+    \* @type: Int;
+    rseqno,   \* Receiver's sequence number
+    \* @type: Str;
+    istate,   \* Initiator's state
+    \* @type: Str;
+    rstate    \* Receiver's state
 
 a <: b == a
 

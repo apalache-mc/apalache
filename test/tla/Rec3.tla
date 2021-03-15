@@ -8,7 +8,15 @@
  *)
 EXTENDS Integers
 
-VARIABLES n, fibComp, fibCompPrev, fibSpec
+VARIABLES
+    \* @type: Int;
+    n,
+    \* @type: Int;
+    fibComp,
+    \* @type: Int;
+    fibCompPrev,
+    \* @type: Int;
+    fibSpec
 
 \* the syntax for type annotations
 a <: b == a

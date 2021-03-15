@@ -1,5 +1,7 @@
 ----- MODULE Bug20200306 -----
-VARIABLE a
+VARIABLE
+    \* @type: Int;
+    a
 Init == a = 1
 Next == a' = a
 Inv == FALSE

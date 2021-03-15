@@ -10,7 +10,15 @@ EXTENDS Naturals
 N == 4
 (*ASSUME NAssumption == N \in Nat \ {0}*)
 
-VARIABLES active, color, tpos, tcolor
+VARIABLES
+    \* @type: Int -> Bool;
+    active,
+    \* @type: Int -> Str;
+    color,
+    \* @type: Int;
+    tpos,
+    \* @type: Str;
+    tcolor
 
 Nodes == 0 .. N-1
 Color == {"white", "black"}

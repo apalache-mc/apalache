@@ -4,7 +4,11 @@
  * use INSTANCE.
  *)
  
-VARIABLE year, hasLicense
+VARIABLE
+    \* @type: Int;
+    year,
+    \* @type: Bool;
+    hasLicense
 
 INSTANCE y2k WITH BIRTH_YEAR <- 80, LICENSE_AGE <- 18
 

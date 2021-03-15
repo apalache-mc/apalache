@@ -4,9 +4,15 @@
  *)
 EXTENDS Integers, Sequences, FiniteSets
 
-CONSTANTS InSet     \* an input set
-VARIABLES Left,     \* a storage for the yet untransformed elements
-          OutSeq    \* the output sequence
+CONSTANTS
+    \* @type: Set(Int);
+    InSet     \* an input set
+
+VARIABLES
+    \* @type: Set(Int);
+    Left,     \* a storage for the yet untransformed elements
+    \* @type: Seq(Int);
+    OutSeq    \* the output sequence
 
 a <: b == a          
 
