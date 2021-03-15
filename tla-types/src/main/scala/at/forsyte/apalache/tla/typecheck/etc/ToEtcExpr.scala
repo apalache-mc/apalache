@@ -825,6 +825,10 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         mkExRefApp(opsig, args)
 
       //******************************************** MISC **************************************************
+      case OperEx(TlaOper.label, labelledEx, nameAndArgs @ _*) =>
+        val typeVar = varPool.fresh
+        mkExRefApp(OperT1(nameAndArgs.map(_ => StrT1()) :+ typeVar, typeVar), nameAndArgs :+ labelledEx)
+
       case OperEx(BmcOper.withType, lhs, _) =>
         // Met an old type annotation. Warn the user and ignore the annotation.
         logger.warn("Met an old type annotation. Ignored: " + ex)
