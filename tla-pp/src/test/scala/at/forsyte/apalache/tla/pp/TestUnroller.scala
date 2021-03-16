@@ -92,21 +92,28 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
 
     val newAOpt = unrolled.operDeclarations.find(_.name == name)
 
-    val assertCond = newAOpt.exists { case d @ TlaOperDecl(_, _, body) =>
-      !d.isRecursive &&
-        (body match {
+    newAOpt match {
+      case Some(d @ TlaOperDecl(_, _, body)) =>
+        assert(!d.isRecursive)
+
+        body match {
           case LetInEx(paramNormalBody, TlaOperDecl(uniqueName, Nil, NameEx("p"))) =>
             paramNormalBody match {
-              case LetInEx(ValEx(TlaInt(`defaultVal`)), TlaOperDecl(_, Nil, OperEx(TlaOper.apply, NameEx(
-                                  `uniqueName`)))) =>
-                true
-              case _ => false
-            }
-          case _ => false
-        })
-    }
+              case LetInEx(defaultBody, TlaOperDecl(_, Nil, OperEx(TlaOper.apply, NameEx(defaultName)))) =>
+                assert(ValEx(TlaInt(defaultVal)) == defaultBody)
+                assert(uniqueName == defaultName)
 
-    assert(assertCond)
+              case _ =>
+                fail("Expected second LetInEx")
+            }
+
+          case _ =>
+            fail("Expected first LetInEx")
+        }
+
+      case None =>
+        fail("Expected Some(TlaOperDecl(...))")
+    }
 
   }
 
