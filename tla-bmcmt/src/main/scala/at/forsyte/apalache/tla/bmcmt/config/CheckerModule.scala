@@ -64,24 +64,25 @@ class CheckerModule extends AbstractModule {
     bind(classOf[Pass])
       .annotatedWith(Names.named("InitialPass"))
       .to(classOf[SanyParserPass])
-    // the next pass is ConfigurationPass
-    bind(classOf[ConfigurationPass])
-      .to(classOf[ConfigurationPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterParser"))
-      .to(classOf[ConfigurationPass])
 
     // The next pass is Snowcat that is called EtcTypeCheckerPassImpl for now.
     // We provide guice with a concrete implementation here, as we also use PostTypeCheckerPassImpl later in the pipeline.
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterConfiguration"))
+      .annotatedWith(Names.named("AfterParser"))
       .to(classOf[EtcTypeCheckerPassImpl])
+
+    // the next pass is ConfigurationPass
+    bind(classOf[ConfigurationPass])
+      .to(classOf[ConfigurationPassImpl])
+    bind(classOf[Pass])
+      .annotatedWith(Names.named("AfterTypeChecker"))
+      .to(classOf[ConfigurationPass])
 
     // the next pass is DesugarerPass
     bind(classOf[DesugarerPass])
       .to(classOf[DesugarerPassImpl])
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterTypeChecker"))
+      .annotatedWith(Names.named("AfterConfiguration"))
       .to(classOf[DesugarerPass])
     // the next pass is UnrollPass
     bind(classOf[UnrollPass])
