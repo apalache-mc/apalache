@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.pp.passes
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.lir.TlaModule
-import at.forsyte.apalache.tla.lir.io.{PrettyWriter, TlaWriterFactory}
+import at.forsyte.apalache.tla.lir.io.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.pp.Desugarer

@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
+import at.forsyte.apalache.tla.typecheck.integration.TypeWatchdogTransformationListener
 import com.google.inject.{Inject, Provider, Singleton}
 
 /**
@@ -26,7 +27,8 @@ import com.google.inject.{Inject, Provider, Singleton}
 class TransformationTrackerProvider @Inject() (changeListener: ChangeListener, trivialTypeFinder: TrivialTypeFinder)
     extends Provider[TransformationTracker] {
 
-  private val tracker = TrackerWithListeners(changeListener, trivialTypeFinder)
+  private val tracker =
+    TrackerWithListeners(new TypeWatchdogTransformationListener(), changeListener, trivialTypeFinder)
 
   override def get(): TransformationTracker = {
     tracker
