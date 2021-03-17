@@ -1,36 +1,49 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
+import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
-import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.typecheck.TypedPredefs._
+import at.forsyte.apalache.tla.typecheck.{BoolT1, IntT1, OperT1, StrT1}
 import org.junit.runner.RunWith
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.junit.JUnitRunner
+import org.scalatest.{BeforeAndAfterEach, FunSuite}
 
 import scala.math.BigInt
 
 @RunWith(classOf[JUnitRunner])
 class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs {
 
-  val noTracker = TrackerWithListeners()
+  private val noTracker = new IdleTracker()
   private var unroller = new Unroller(new UniqueNameGenerator, noTracker, new IncrementalRenaming(noTracker))
 
   override def beforeEach(): Unit = {
     unroller = new Unroller(new UniqueNameGenerator, noTracker, new IncrementalRenaming(noTracker))
   }
 
-  def exAsDecl(pa: (String, TlaEx)): TlaOperDecl = TlaOperDecl(pa._1, List.empty, pa._2)
+  def exAsDecl(pa: (String, TlaEx)): TlaOperDecl = tla
+    .declOp(pa._1, pa._2)
+    .typedOperDecl(OperT1(Seq(), IntT1()))
 
   test("No-op") {
+    val strToInt = OperT1(Seq(StrT1()), IntT1())
+    val types = Map("b" -> BoolT1(), "i" -> IntT1(), "T" -> strToInt)
+    val tDecl = tla
+      .declOp("T", tla.name("p").typed(StrT1()), "p")
+      .typedOperDecl(strToInt)
+    val dBody = tla
+      .letIn(tla.appOp(n_T ? "T", tla.str("abc")) ? "i", tDecl)
+      .typed(types, "i")
+    val cBody = tla
+      .and(n_x ? "i", n_P ? "b")
+      .typed(Map("b" -> BoolT1(), "i" -> IntT1()), "b")
     val decls = Seq[(String, TlaEx)](
-        ("A", "1"),
-        ("B", 0),
-        ("C", tla.and(n_x, n_P)),
-        ("D", tla.letIn(n_T, tla.declOp("T", tla.name("p"), "p").untypedOperDecl()))
+        ("A", tla.str("1").typed()),
+        ("B", tla.int(0).typed()),
+        ("C", cBody),
+        ("D", dBody)
     ) map exAsDecl
 
     val module = new TlaModule("M", decls)
@@ -41,49 +54,24 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
   }
 
   test("0 step: ParamNormalForm") {
+    val strToInt = OperT1(Seq(StrT1()), IntT1())
+    val types = Map("b" -> BoolT1(), "i" -> IntT1(), "s" -> StrT1(), "T" -> strToInt)
     val name = "A"
 
+    val aBody = tla
+      .appOp(n_A ? "T", n_p ? "s")
+      .typed(types, "i")
     // A(p) == A(p)
-    val recDecl = tla.declOp(name, tla.appOp(n_A, n_p), "p").untypedOperDecl()
+    val recDecl = tla
+      .declOp(name, aBody, "p")
+      .typedOperDecl(strToInt)
     recDecl.isRecursive = true
 
     val defaultVal: BigInt = 42
 
     val decls = recDecl +: (Seq[(String, TlaEx)](
-        (Unroller.UNROLL_TIMES_PREFIX + name, 0),
-        (Unroller.UNROLL_DEFAULT_PREFIX + name, defaultVal.intValue)
-    ) map exAsDecl)
-
-    val module = new TlaModule("M", decls)
-
-    val unrolled = unroller(module)
-
-    val newAOpt = unrolled.operDeclarations.find(_.name == name)
-
-    val assertCond = newAOpt.exists { case d @ TlaOperDecl(_, _, body) =>
-      !d.isRecursive &&
-        (body match {
-          case LetInEx(ValEx(TlaInt(`defaultVal`)), TlaOperDecl(_, Nil, NameEx("p"))) =>
-            true
-          case _ => false
-        })
-    }
-
-    assert(assertCond)
-  }
-
-  test("1 step: Nontrivial inlining") {
-    val name = "A"
-
-    // A(p) == A(p)
-    val recDecl = tla.declOp(name, tla.appOp(n_A, n_p), "p").untypedOperDecl()
-    recDecl.isRecursive = true
-
-    val defaultVal: BigInt = 42
-
-    val decls = recDecl +: (Seq[(String, TlaEx)](
-        (Unroller.UNROLL_TIMES_PREFIX + name, 1),
-        (Unroller.UNROLL_DEFAULT_PREFIX + name, defaultVal.intValue)
+        (Unroller.UNROLL_TIMES_PREFIX + name, tla.int(0).typed(IntT1())),
+        (Unroller.UNROLL_DEFAULT_PREFIX + name, tla.bigInt(defaultVal.intValue).typed(IntT1()))
     ) map exAsDecl)
 
     val module = new TlaModule("M", decls)
@@ -95,13 +83,58 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
     newAOpt match {
       case Some(d @ TlaOperDecl(_, _, body)) =>
         assert(!d.isRecursive)
+        body match {
+          case LetInEx(letBody, TlaOperDecl(_, Nil, declBody)) =>
+            assert(tla.bigInt(defaultVal).typed() == letBody)
+            assert(tla.name("p").typed(IntT1()) == declBody)
+            true
+
+          case _ => false
+        }
+    }
+  }
+
+  test("1 step: Nontrivial inlining") {
+    val intToInt = OperT1(Seq(IntT1()), IntT1())
+    val types = Map("b" -> BoolT1(), "i" -> IntT1(), "s" -> StrT1(), "T" -> intToInt)
+    val name = "A"
+
+    val aBody = tla
+      .appOp(n_A ? "T", n_p ? "i")
+      .typed(types, "i")
+    // A(p) == A(p)
+    val recDecl = tla
+      .declOp(name, aBody, "p")
+      .typedOperDecl(intToInt)
+    recDecl.isRecursive = true
+
+    val defaultVal: BigInt = 42
+
+    val decls = recDecl +: (Seq[(String, TlaEx)](
+        (Unroller.UNROLL_TIMES_PREFIX + name, tla.int(1).typed(IntT1())),
+        (Unroller.UNROLL_DEFAULT_PREFIX + name, tla.int(defaultVal.intValue).typed(IntT1()))
+    ) map exAsDecl)
+
+    val module = new TlaModule("M", decls)
+
+    val unrolled = unroller(module)
+
+    val newAOpt = unrolled.operDeclarations.find(_.name == name)
+
+    newAOpt match {
+      case Some(d @ TlaOperDecl(_, _, body)) =>
+        assert(!d.isRecursive)
+        assert(Typed(IntT1()) == d.body.typeTag)
 
         body match {
           case LetInEx(paramNormalBody, TlaOperDecl(uniqueName, Nil, NameEx("p"))) =>
+            assert(Typed(IntT1()) == paramNormalBody.typeTag)
+
             paramNormalBody match {
               case LetInEx(defaultBody, TlaOperDecl(_, Nil, OperEx(TlaOper.apply, NameEx(defaultName)))) =>
-                assert(ValEx(TlaInt(defaultVal)) == defaultBody)
+                assert(tla.bigInt(defaultVal).typed() == defaultBody)
                 assert(uniqueName == defaultName)
+                assert(Typed(IntT1()) == defaultBody.typeTag)
 
               case _ =>
                 fail("Expected second LetInEx")
@@ -118,21 +151,32 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
   }
 
   test("Recursive LET-IN inside non-recursive operator") {
+    val intToInt = OperT1(Seq(IntT1()), IntT1())
+    val types = Map("b" -> BoolT1(), "i" -> IntT1(), "s" -> StrT1(), "T" -> intToInt)
     val letInOpName = "A"
 
+    val aBody = tla
+      .appOp(n_A ? "T", n_p ? "i")
+      .typed(types, "i")
     // A(p) == A(p)
-    val recDecl = tla.declOp(letInOpName, tla.appOp(n_A, n_p), "p").untypedOperDecl()
+    val recDecl = tla
+      .declOp(letInOpName, aBody, "p")
+      .typedOperDecl(intToInt)
     recDecl.isRecursive = true
 
-    val appEx = tla.appDecl(recDecl, tla.int(99)).untyped()
+    val appEx = tla
+      .appOp(tla.name("A") ? "T", tla.int(99) ? "i")
+      .typed(types, "i")
     // X == LET A(p) == A(p) IN A(99)
-    val nonRecDecl = tla.declOp("X", tla.letIn(appEx, recDecl)).untypedOperDecl()
+    val nonRecDecl = tla
+      .declOp("X", tla.letIn(appEx, recDecl).typed(types, "i"))
+      .typedOperDecl(intToInt)
 
     val defaultVal: BigInt = 42
 
     val decls = nonRecDecl +: (Seq[(String, TlaEx)](
-        (Unroller.UNROLL_TIMES_PREFIX + letInOpName, 1),
-        (Unroller.UNROLL_DEFAULT_PREFIX + letInOpName, defaultVal.intValue)
+        (Unroller.UNROLL_TIMES_PREFIX + letInOpName, tla.int(1).typed(IntT1())),
+        (Unroller.UNROLL_DEFAULT_PREFIX + letInOpName, tla.int(defaultVal.intValue).typed(IntT1()))
     ) map exAsDecl)
 
     val module = new TlaModule("M", decls)
@@ -147,8 +191,8 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
     unroller = new Unroller(new UniqueNameGenerator, noTracker, new IncrementalRenaming(noTracker))
 
     val altDecls = recDecl +: (Seq[(String, TlaEx)](
-        (Unroller.UNROLL_TIMES_PREFIX + letInOpName, 1),
-        (Unroller.UNROLL_DEFAULT_PREFIX + letInOpName, defaultVal.intValue)
+        (Unroller.UNROLL_TIMES_PREFIX + letInOpName, tla.int(1).typed(IntT1())),
+        (Unroller.UNROLL_DEFAULT_PREFIX + letInOpName, tla.bigInt(defaultVal.intValue).typed(IntT1()))
     ) map exAsDecl)
 
     val altModule = new TlaModule("N", altDecls)

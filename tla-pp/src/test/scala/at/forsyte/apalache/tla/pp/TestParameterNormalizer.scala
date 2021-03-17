@@ -66,7 +66,7 @@ class TestParameterNormalizer extends FunSuite with BeforeAndAfterEach with Test
                               `opName`), NameEx(arg)))) =>
             arg == fakeArg &&
               name != newName &&
-              letInBody == OperEx(TlaOper.apply, NameEx(newName), 0)
+              letInBody == OperEx(TlaOper.apply, NameEx(newName), tla.int(0))
           case _ => false
         }
       case _ => false

@@ -41,7 +41,7 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
   test("Star abstraction") {
 
     val ex1 = trueEx
-    val ex2: TlaEx = 5
+    val ex2: TlaEx = tla.int(5)
     val ex3: TlaEx = tla.in(n_x, n_S)
     val ex4: TlaEx = tla.choose(n_x, n_S, n_p)
     val ex5: TlaEx = tla.caseOther(n_c, n_p, n_a, n_q, n_b)
