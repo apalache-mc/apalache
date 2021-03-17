@@ -70,6 +70,10 @@ object TypedPredefs {
     def typedOperDecl(topType: TlaType1): TlaOperDecl = {
       BuilderDeclAsTyped(block).typed(topType).asInstanceOf[TlaOperDecl]
     }
+
+    def typedOperDecl(types: Map[String, TlaType1], alias: String): TlaOperDecl = {
+      BuilderDeclAsTyped(block).typed(types, alias).asInstanceOf[TlaOperDecl]
+    }
   }
 
   implicit class BuilderExAsTyped(block: BuilderEx) {
