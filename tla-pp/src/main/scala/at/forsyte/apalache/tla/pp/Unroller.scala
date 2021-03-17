@@ -172,6 +172,7 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
       val defaultReplaced = replaceWithDefaultsTr(inlined)
       // must specifically set .isRecursive to false, so no .copy
       TlaOperDecl(name, fparams, defaultReplaced)(d.typeTag)
+
     case d @ TlaOperDecl(_, _, body) => // d.isRecursive = false
       // Even though the operator is not recursive, it still may define recursive LET-IN operators inside
       val unrolledLetIn = unrollLetIn(bodyMap)(body)
@@ -186,10 +187,12 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
   private def allRecursiveLetInOperatorNames(ex: TlaEx): Set[String] = ex match {
     case OperEx(_, args @ _*) =>
       args.map(allRecursiveLetInOperatorNames).foldLeft(Set.empty[String]) { _ ++ _ }
+
     case LetInEx(body, defs @ _*) =>
       val allInDefs = defs.map(allRecursiveOperatorsInDecl).foldLeft(Set.empty[String]) { _ ++ _ }
       val allInBody = allRecursiveLetInOperatorNames(body)
       allInBody ++ allInDefs
+
     case _ => Set.empty[String]
   }
 

@@ -95,31 +95,35 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
   }
 
   test("1 step: Nontrivial inlining") {
+    // prepare the inputs
     val intToInt = OperT1(Seq(IntT1()), IntT1())
     val types = Map("b" -> BoolT1(), "i" -> IntT1(), "s" -> StrT1(), "T" -> intToInt)
-    val name = "A"
+    val declarationName = "A"
 
+    // A(p)
     val aBody = tla
-      .appOp(n_A ? "T", n_p ? "i")
+      .appOp(tla.name(declarationName) ? "T", n_p ? "i")
       .typed(types, "i")
     // A(p) == A(p)
     val recDecl = tla
-      .declOp(name, aBody, "p")
+      .declOp(declarationName, aBody, "p")
       .typedOperDecl(intToInt)
     recDecl.isRecursive = true
 
     val defaultVal: BigInt = 42
 
     val decls = recDecl +: (Seq[(String, TlaEx)](
-        (Unroller.UNROLL_TIMES_PREFIX + name, tla.int(1).typed(IntT1())),
-        (Unroller.UNROLL_DEFAULT_PREFIX + name, tla.int(defaultVal.intValue).typed(IntT1()))
+        (Unroller.UNROLL_TIMES_PREFIX + declarationName, tla.int(1).typed(IntT1())),
+        (Unroller.UNROLL_DEFAULT_PREFIX + declarationName, tla.int(defaultVal.intValue).typed(IntT1()))
     ) map exAsDecl)
 
     val module = new TlaModule("M", decls)
 
+    // call the unroller that we are testing
     val unrolled = unroller(module)
 
-    val newAOpt = unrolled.operDeclarations.find(_.name == name)
+    // test the outputs
+    val newAOpt = unrolled.operDeclarations.find(_.name == declarationName)
 
     newAOpt match {
       case Some(d @ TlaOperDecl(_, _, body)) =>
@@ -152,7 +156,7 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
 
   test("Recursive LET-IN inside non-recursive operator") {
     val intToInt = OperT1(Seq(IntT1()), IntT1())
-    val types = Map("b" -> BoolT1(), "i" -> IntT1(), "s" -> StrT1(), "T" -> intToInt)
+    val types = Map("b" -> BoolT1(), "i" -> IntT1(), "s" -> StrT1(), "T" -> intToInt, "X" -> OperT1(Seq(), IntT1()))
     val letInOpName = "A"
 
     val aBody = tla
@@ -170,7 +174,7 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
     // X == LET A(p) == A(p) IN A(99)
     val nonRecDecl = tla
       .declOp("X", tla.letIn(appEx, recDecl).typed(types, "i"))
-      .typedOperDecl(intToInt)
+      .typedOperDecl(types, "X")
 
     val defaultVal: BigInt = 42
 
