@@ -1,6 +1,8 @@
 ------------------------ MODULE ExistsAsValue -------------------------
 \* a test for the issue #148
-VARIABLES x
+VARIABLES
+    \* @type: Bool;
+    x
 
 Init ==
     x = TRUE

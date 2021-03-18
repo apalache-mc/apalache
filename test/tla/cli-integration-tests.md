@@ -682,8 +682,8 @@ The outcome is: NoError
 ```sh
 $ apalache-mc check ITE_CASE.tla | sed 's/I@.*//'
 ...
-The outcome is: NoError
-...
+EXITCODE: ERROR (99)
+[99]
 ```
 
 ### check use of TLA_PATH for modules in child directory succeeds

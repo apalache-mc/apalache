@@ -1,6 +1,8 @@
 --------------- MODULE NonNullaryLet ----------------
 EXTENDS Integers
-VARIABLE n
+VARIABLE
+    \* @type: Int;
+    n
 
 Foo == LET r(x) == TRUE IN r(1)
 
