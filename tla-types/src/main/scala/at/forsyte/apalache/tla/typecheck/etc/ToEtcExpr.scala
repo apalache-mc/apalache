@@ -70,12 +70,22 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
     findTypeFromTagOrAnnotation(decl) match {
       case Some(tt) =>
         // case 1: the definition is either annotated with a java-like annotation in a comment, or tagged with TlaType1
+        val fixedType = fixLazyAnnotation(decl, tt)
         val letAbs = mkLetAbs(decl.ID, this(decl.body), paramsAndDoms: _*)
-        mkTypeDecl(ExactRef(decl.ID), decl.name, tt, letAbs)
+        mkTypeDecl(ExactRef(decl.ID), decl.name, fixedType, letAbs)
 
       case None =>
         // case 2: no type annotation
         mkLetAbs(decl.ID, this(decl.body), paramsAndDoms: _*)
+    }
+  }
+
+  // We let the user to write a instead of () => a for nullary operators. This method fixes such a lazy annotation.
+  private def fixLazyAnnotation(decl: TlaOperDecl, tt: TlaType1): TlaType1 = {
+    if (decl.formalParams.isEmpty && !tt.isInstanceOf[OperT1]) {
+      OperT1(Seq(), tt)
+    } else {
+      tt
     }
   }
 
