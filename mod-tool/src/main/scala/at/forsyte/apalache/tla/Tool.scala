@@ -170,7 +170,7 @@ object Tool extends App with LazyLogging {
     executor.options.set("checker.noDeadlocks", check.noDeadlocks)
     executor.options.set("checker.algo", check.algo)
     // this option enables the new type checker in the pipeline
-    executor.options.set("typechecker.snowcatOn", check.withSnowcat)
+    executor.options.set("typechecker.snowcatOn", true)
     // for now, enable polymorphic types. We probably want to disable this option for the type checker
     executor.options.set("typechecker.inferPoly", true)
 
