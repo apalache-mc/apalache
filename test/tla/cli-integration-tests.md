@@ -640,12 +640,47 @@ The outcome is: NoError
 
 ### check Callback.tla succeeds
 
-`Callback.tla` demonstrates that one can implement non-determinism with
-the existential operator and use a callback to do an assignment to a variable.
-As it requires tricky operator inlining, here is the test.
+`Callback.tla` demonstrates that one can implement non-determinism with the existential operator and use a callback to
+do an assignment to a variable. As it requires tricky operator inlining, here is the test.
 
 ```sh
 $ apalache-mc check Callback.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
+### check SimpT1 succeeds
+
+```sh
+$ apalache-mc check SimpT1.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
+### check Selections succeeds
+
+```sh
+$ apalache-mc check Selections.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
+### check test1 succeeds
+
+```sh
+$ apalache-mc check test1.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
+### check ITE_CASE succeeds
+
+```sh
+$ apalache-mc check ITE_CASE.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
