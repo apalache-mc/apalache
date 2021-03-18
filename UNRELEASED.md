@@ -16,6 +16,7 @@
 * Type checker: tagging all expressions with the reconstructed types, see #608
 * Type checker: experimental option `check --with-snowcat`, see #632
 * Type checker: handling TLA+ labels like `lab("a", "b") :: e`, see #653
+* Preprocessing: handling the general case of EXCEPT, see #647
 
 ### Changed
 
