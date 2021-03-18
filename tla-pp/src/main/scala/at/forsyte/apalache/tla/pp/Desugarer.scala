@@ -4,7 +4,11 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
+import at.forsyte.apalache.tla.typecheck.{
+  BoolT1, FunT1, IntT1, OperT1, RecT1, SetT1, StrT1, TlaType1, TupT1, TypingException
+}
+import at.forsyte.apalache.tla.typecheck.TypedPredefs._
 
 import javax.inject.Singleton
 
@@ -42,41 +46,50 @@ class Desugarer(gen: UniqueNameGenerator, tracker: TransformationTracker) extend
     case OperEx(TlaActionOper.unchanged, args @ _*) =>
       // flatten all tuples, e.g., convert <<x, <<y, z>> >> to [x, y, z]
       // construct a tuple for flattenTuplesInUnchanged, the type is bogus, as the tuple will be unpacked
-      val asTuple = tla.tuple(args.map(transform(_)): _*).untyped()
+      val transformedArgs = args.map(transform(_))
+      val asTuple = tla
+        .tuple(transformedArgs: _*)
+        .typed(TupT1(transformedArgs.map(_.typeTag.asTlaType1()): _*))
       val flatArgs = flattenTuplesInUnchanged(asTuple)
       // map every x to x' = x
-      val eqs = flatArgs map { x => tla.eql(tla.prime(x), x) }
+      val eqs = flatArgs map { x: TlaEx =>
+        val tt = x.typeTag.asTlaType1()
+        val xb = tla.fromTlaEx(x)
+        tla
+          .eql(tla.prime(xb) ? "x", xb)
+          .typed(Map("b" -> BoolT1(), "x" -> tt), "b")
+      }
       // x' = x /\ y' = y /\ z' = z
       eqs match {
         case Seq() =>
           // results from UNCHANGED <<>>, UNCHANGED << << >> >>, etc.
-          tla.bool(true).untyped()
+          tla.bool(true).typed()
 
         case Seq(one) =>
-          one.untyped()
+          one
 
         case _ =>
-          tla.and(eqs: _*).untyped()
+          tla.and(eqs: _*).typed(BoolT1())
       }
 
     case OperEx(TlaOper.eq, OperEx(TlaFunOper.tuple, largs @ _*), OperEx(TlaFunOper.tuple, rargs @ _*)) =>
       // <<e_1, ..., e_k>> = <<f_1, ..., f_n>>
       // produce pairwise comparison
       if (largs.length != rargs.length) {
-        tla.bool(false).untyped()
+        tla.bool(false).typed()
       } else {
-        val eqs = largs.zip(rargs) map { case (l, r) => tla.eql(this(l), this(r)) }
-        tla.and(eqs: _*).untyped()
+        val eqs = largs.zip(rargs) map { case (l, r) => tla.eql(this(l), this(r)).typed(BoolT1()) }
+        tla.and(eqs: _*).typed(BoolT1())
       }
 
     case OperEx(TlaOper.ne, OperEx(TlaFunOper.tuple, largs @ _*), OperEx(TlaFunOper.tuple, rargs @ _*)) =>
       // <<e_1, ..., e_k>> /= <<f_1, ..., f_n>>
       // produce pairwise comparison
       if (largs.length != rargs.length) {
-        tla.bool(true).untyped()
+        tla.bool(true).typed()
       } else {
-        val neqs = largs.zip(rargs) map { case (l, r) => tla.neql(this(l), this(r)) }
-        tla.or(neqs: _*).untyped()
+        val neqs = largs.zip(rargs) map { case (l, r) => tla.neql(this(l), this(r)).typed(BoolT1()) }
+        tla.or(neqs: _*).typed(BoolT1())
       }
 
     case ex @ OperEx(TlaSetOper.filter, boundEx, setEx, predEx) =>
@@ -111,9 +124,9 @@ class Desugarer(gen: UniqueNameGenerator, tracker: TransformationTracker) extend
         if (vars.length > 1) {
           // a function of multiple arguments: Introduce a tuple to contain all these arguments
           // we will need types in the future, commented out for now
-          //  val pointType = TupT1(vars.map(_.typeTag.asTlaType1()): _*)
-          val point = tla.tuple(vars: _*).untyped() // future: typed(pointType)
-          val plane = tla.times(sets: _*).untyped() // future: typed(SetT1(pointType))
+          val pointType = TupT1(vars.map(_.typeTag.asTlaType1()): _*)
+          val point = tla.tuple(vars: _*).typed(pointType)
+          val plane = tla.times(sets: _*).typed(SetT1(pointType))
           // track the modification to point to the first variable and set
           tracker.hold(vars.head, point)
           tracker.hold(sets.head, plane)
@@ -158,19 +171,30 @@ class Desugarer(gen: UniqueNameGenerator, tracker: TransformationTracker) extend
         case hd :: Nil =>
           val uniqueName = gen.newName()
           // LET tmp == [ fun EXCEPT ![i_n] = e ] IN
-          val decl = tla.declOp(uniqueName, tla.except(fun, hd, newValue)).untypedOperDecl()
+          val funT = fun.typeTag.asTlaType1()
+          val operT = OperT1(Seq(), funT)
+          val decl = tla
+            .declOp(uniqueName, tla.except(fun, hd, newValue) ? "f")
+            .typedOperDecl(Map("f" -> funT, "F" -> operT), "F")
           Seq(decl)
 
         case hd :: tl =>
           // fun[a_i]
-          val nested = tla.appFun(fun, hd).untyped()
+          val funT = fun.typeTag.asTlaType1()
+          val operT = OperT1(Seq(), funT)
+          val (_, resT) = eatFunType(funT, hd)
+          val nested = tla.appFun(fun, hd).typed(resT)
           // produce the expression for: [ fun[a_i] EXCEPT ![a_{i+1}]...[a_n] = e ]
           val defs = rewrite(nested, tl)
           // LET tmp == [ fun EXCEPT ![a_i] = output ] IN
           // tmp()
           val uniqueName = gen.newName()
-          val nestedFun = tla.appOp(tla.name(defs.last.name)).untyped()
-          val outDef = tla.declOp(uniqueName, tla.except(fun, hd, nestedFun)).untypedOperDecl()
+          val nestedFun = tla
+            .appOp(tla.name(defs.last.name) ? "F")
+            .typed(Map("F" -> operT, "r" -> resT), "r")
+          val outDef = tla
+            .declOp(uniqueName, tla.except(fun, hd, nestedFun) ? "f")
+            .typedOperDecl(Map("f" -> funT, "F" -> operT), "F")
           defs :+ outDef
       }
     }
@@ -189,16 +213,21 @@ class Desugarer(gen: UniqueNameGenerator, tracker: TransformationTracker) extend
     // See p. 304 in Specifying Systems. The definition of EXCEPT for multiple accessors is doubly inductive.
     assert(accessors.length == newValues.length)
     val uniqueName = gen.newName()
+    val funT = fun.typeTag.asTlaType1()
     // LET tmp == fun IN
-    val firstDef = tla.declOp(uniqueName, fun).untypedOperDecl()
+    val firstDef = tla.declOp(uniqueName, fun).typedOperDecl(OperT1(Seq(), funT))
 
     val defs =
       accessors.zip(newValues).foldLeft(Seq(firstDef)) { case (defs, (a, e)) =>
-        val latest = tla.appOp(tla.name(defs.last.name)).untyped()
+        val last = defs.last
+        val latest = tla.appOp(NameEx(last.name)(last.typeTag)).typed(funT)
         defs ++ expandExceptOne(latest, a, e)
       }
 
-    tla.letIn(tla.appOp(tla.name(defs.last.name)), defs: _*)
+    val operT = OperT1(Seq(), funT)
+    tla
+      .letIn(tla.appOp(tla.name(defs.last.name) ? "F") ? "f", defs: _*)
+      .typed(Map("F" -> operT, "f" -> funT), "f")
   }
 
   /**
@@ -214,7 +243,8 @@ class Desugarer(gen: UniqueNameGenerator, tracker: TransformationTracker) extend
     // variable substitutions for the variables inside the tuples
     val subs = collectSubstitutions(Map(), boundEx)
     val newPred = substituteNames(subs, predEx)
-    Seq(NameEx(boundName), setEx, newPred)
+    val xtype = boundEx.typeTag.asTlaType1()
+    Seq(tla.name(boundName).typed(xtype), setEx, newPred)
   }
 
   /**
@@ -226,12 +256,51 @@ class Desugarer(gen: UniqueNameGenerator, tracker: TransformationTracker) extend
    */
   def collapseTuplesInMap(mapEx: TlaEx, args: Seq[TlaEx]): Seq[TlaEx] = {
     val (boundEs, setEs) = TlaOper.deinterleave(args)
-    val boundNames = boundEs map mkTupleName // rename tuples into a names, if needed
+    val boundNames = boundEs map { e =>
+      val tupleName = mkTupleName(e)
+      NameEx(tupleName)(e.typeTag)
+    } // rename tuples into a names, if needed
     // variable substitutions for the variables inside the tuples
     val subs = boundEs.foldLeft(Map[String, TlaEx]())(collectSubstitutions)
     val newMapEx = substituteNames(subs, mapEx)
     // collect the arguments back
-    newMapEx +: TlaOper.interleave(boundNames.map(NameEx(_)), setEs)
+    newMapEx +: TlaOper.interleave(boundNames, setEs)
+  }
+
+  // this looks like a useful utility function. Move it somewhere else?
+  private def eatFunType(funT: TlaType1, arg: TlaEx): (TlaType1, TlaType1) = {
+    (funT, arg) match {
+      case (FunT1(argT, resT), _) =>
+        if (Typed(argT) != arg.typeTag) {
+          val actualArgType = arg.typeTag.asTlaType1()
+          throw new TypingException(s"Expected an argument of type $argT, found $actualArgType")
+        } else {
+          (argT, resT)
+        }
+
+      case (tt @ RecT1(fieldTypes), ValEx(TlaStr(key))) =>
+        if (fieldTypes.contains(key)) {
+          (StrT1(), fieldTypes(key))
+        } else {
+          throw new IllegalArgumentException(s"No key $key in $tt")
+        }
+
+      case (tt @ RecT1(_), _) =>
+        throw new TypingException(s"Expected a string argument for $tt, found: $arg")
+
+      case (tt @ TupT1(elems @ _*), ValEx(TlaInt(index))) =>
+        if (index > 0 && index <= elems.length) {
+          (IntT1(), elems(index.toInt - 1))
+        } else {
+          throw new IllegalArgumentException(s"No index $index in $tt")
+        }
+
+      case (tt @ TupT1(_), _) =>
+        throw new TypingException(s"Expected a string argument for $tt, found: $arg")
+
+      case _ =>
+        throw new TypingException(s"Unexpected type in function application: $arg")
+    }
   }
 
   private def collectSubstitutions(subs: Map[String, TlaEx], ex: TlaEx): Map[String, TlaEx] = {
@@ -242,9 +311,11 @@ class Desugarer(gen: UniqueNameGenerator, tracker: TransformationTracker) extend
         val tupleName = mkTupleName(ex) // introduce a name, e.g., x_y_z for <<x, <<y, z>> >>
         val indices = assignIndicesInTuple(Map(), ex, Seq())
 
-        def indexToTlaEx(index: Seq[Int]): TlaEx = {
-          index.foldLeft(tla.name(tupleName): TlaEx) { (e, i) =>
-            tla.appFun(e, tla.int(i))
+        def indexToTlaEx(indices: Seq[Int]): TlaEx = {
+          indices.foldLeft(NameEx(tupleName)(ex.typeTag): TlaEx) { case (e, i) =>
+            val index = tla.int(i).typed()
+            val (_, resT) = eatFunType(e.typeTag.asTlaType1(), index)
+            tla.appFun(e, index).typed(resT)
           }
         }
 

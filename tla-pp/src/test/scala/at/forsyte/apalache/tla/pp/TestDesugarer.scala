@@ -9,6 +9,8 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 
+import scala.collection.immutable.SortedMap
+
 @RunWith(classOf[JUnitRunner])
 class TestDesugarer extends FunSuite with BeforeAndAfterEach {
   private var gen: UniqueNameGenerator = _
@@ -17,13 +19,24 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
       "f1" -> FunT1(IntT1(), IntT1()),
       "f2" -> FunT1(IntT1(), FunT1(IntT1(), IntT1())),
       "f3" -> FunT1(IntT1(), FunT1(IntT1(), FunT1(IntT1(), IntT1()))),
+      "r" -> RecT1(SortedMap("foo" -> StrT1(), "bar" -> IntT1())),
+      "or" -> OperT1(Seq(), RecT1(SortedMap("foo" -> StrT1(), "bar" -> IntT1()))),
+      "fr" -> FunT1(IntT1(), RecT1(SortedMap("foo" -> StrT1(), "bar" -> IntT1()))),
+      "ofr" -> OperT1(Seq(), FunT1(IntT1(), RecT1(SortedMap("foo" -> StrT1(), "bar" -> IntT1())))),
+      "ii" -> TupT1(IntT1(), IntT1()),
+      "si" -> TupT1(StrT1(), IntT1()),
+      "is" -> TupT1(IntT1(), StrT1()),
+      "f_si" -> FunT1(IntT1(), TupT1(StrT1(), IntT1())),
+      "o_si" -> OperT1(Seq(), TupT1(IntT1(), StrT1())),
+      "o_f_si" -> OperT1(Seq(), FunT1(IntT1(), TupT1(StrT1(), IntT1()))),
       "O1" -> OperT1(Seq(), FunT1(IntT1(), IntT1())),
       "O2" -> OperT1(Seq(), FunT1(IntT1(), FunT1(IntT1(), IntT1()))),
       "O3" -> OperT1(Seq(), FunT1(IntT1(), FunT1(IntT1(), FunT1(IntT1(), IntT1())))),
-      "i" -> TupT1(IntT1()),
+      "i" -> IntT1(),
       "i1" -> TupT1(IntT1()),
       "i2" -> TupT1(IntT1(), IntT1()),
-      "i3" -> TupT1(IntT1(), IntT1(), IntT1())
+      "i3" -> TupT1(IntT1(), IntT1(), IntT1()),
+      "s" -> StrT1()
   )
   private val unchangedTypes = Map(
       "i" -> IntT1(),
@@ -125,6 +138,71 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
       tla
         .letIn(callAndAccess("t_3", "f2"), defs: _*)
         .typed(exceptTypes, "f2")
+
+    assert(expected eqTyped output)
+  }
+
+  test("EXCEPT two-dimensional, function + record") {
+    // input: [f EXCEPT ![i].foo = e]
+    val input =
+      tla
+        .except(tla.name("f") ? "fr", tla.tuple(tla.name("i") ? "i", tla.name("foo") ? "s") ? "is", tla.name("e") ? "s")
+        .typed(exceptTypes, "fr")
+    val output = desugarer.transform(input)
+    // output: series of LET-IN definitions
+    // LET t_1 == f
+    //     t_2 == [t_1()[i] EXCEPT ![j] = e]
+    //     t_3 == [t_1() EXCEPT ![i] = t_2()]
+    //     IN t_3()
+    val defs = Seq(
+        tla
+          .declOp("t_1", tla.name("f") ? "fr")
+          .typedOperDecl(exceptTypes, "ofr"),
+        tla
+          .declOp("t_2", tla.except(callAndAccess("t_1", "f2", "i"), tla.name("foo") ? "s", tla.name("e") ? "s") ? "r")
+          .typedOperDecl(exceptTypes, "or"),
+        tla
+          .declOp("t_3", tla.except(callAndAccess("t_1", "r"), tla.name("i") ? "i", callAndAccess("t_2", "f1")) ? "fr")
+          .typedOperDecl(exceptTypes, "ofr")
+    )
+
+    val expected: TlaEx =
+      tla
+        .letIn(callAndAccess("t_3", "fr"), defs: _*)
+        .typed(exceptTypes, "fr")
+
+    assert(expected eqTyped output)
+  }
+
+  test("EXCEPT two-dimensional, function + tuple") {
+    // input: [f EXCEPT ![i].foo = e]
+    val input =
+      tla
+        .except(tla.name("f") ? "f_si", tla.tuple(tla.name("i") ? "i", tla.int(1)) ? "ii", tla.name("e") ? "s")
+        .typed(exceptTypes, "f_si")
+    val output = desugarer.transform(input)
+    // output: series of LET-IN definitions
+    // LET t_1 == f
+    //     t_2 == [t_1()[i] EXCEPT ![j] = e]
+    //     t_3 == [t_1() EXCEPT ![i] = t_2()]
+    //     IN t_3()
+    val defs = Seq(
+        tla
+          .declOp("t_1", tla.name("f") ? "f_si")
+          .typedOperDecl(exceptTypes, "o_f_si"),
+        tla
+          .declOp("t_2", tla.except(callAndAccess("t_1", "f_si", "i"), tla.int(1), tla.name("e") ? "s") ? "si")
+          .typedOperDecl(exceptTypes, "o_si"),
+        tla
+          .declOp("t_3",
+              tla.except(callAndAccess("t_1", "si"), tla.name("i") ? "i", callAndAccess("t_2", "si")) ? "f_si")
+          .typedOperDecl(exceptTypes, "o_f_si")
+    )
+
+    val expected: TlaEx =
+      tla
+        .letIn(callAndAccess("t_3", "f_si"), defs: _*)
+        .typed(exceptTypes, "f_si")
 
     assert(expected eqTyped output)
   }
@@ -350,14 +428,17 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
   test("""rewrite UNCHANGED f[i] to (f[i])' = f[i]""") {
     // this is a regression for issue #471
     // input: UNCHANGED f[i]
+    val app = tla
+      .appFun(tla.name("f") ? "f1", tla.name("i") ? "i")
+      .typed(unchangedTypes, "i")
     val input = tla
-      .unchanged(tla.appFun(tla.name("f") ? "f1", tla.name("i") ? "i") ? "i")
-      .typed(unchangedTypes, "b")
+      .unchanged(app)
+      .typed(BoolT1())
     val output = desugarer.transform(input)
     // output: (f[i])' = f[i]
     val expected: TlaEx =
       tla
-        .eql(tla.prime(input) ? "b", input)
+        .eql(tla.prime(app) ? "b", app)
         .typed(unchangedTypes, "b")
     assert(expected eqTyped output)
   }
