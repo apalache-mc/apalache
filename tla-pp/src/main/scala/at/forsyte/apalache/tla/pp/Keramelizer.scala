@@ -155,7 +155,7 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
   private def transformControl: PartialFunction[TlaEx, TlaEx] = {
     case expr @ OperEx(TlaControlOper.caseWithOther, otherEx, args @ _*) =>
       def decorateWithIf(elseEx: TlaEx, guardAction: (TlaEx, TlaEx)): TlaEx = {
-        tla.ite(guardAction._1, guardAction._2, elseEx).typed(BoolT1())
+        tla.ite(guardAction._1, guardAction._2, elseEx).typed(elseEx.typeTag.asTlaType1())
       }
 
       // produce a chain of if-then-else expressions
