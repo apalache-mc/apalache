@@ -14,7 +14,7 @@ import javax.inject.Singleton
  * @author Igor Konnov
  */
 @Singleton
-class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
+class Desugarer(gen: UniqueNameGenerator, tracker: TransformationTracker) extends TlaExTransformation {
 
   override def apply(expr: TlaEx): TlaEx = {
     transform(expr)
@@ -28,12 +28,14 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
     case ex @ OperEx(TlaFunOper.except, fun, args @ _*) =>
       val trArgs = args map transform
       val (accessors, newValues) = TlaOper.deinterleave(trArgs)
-      val nonSingletons = accessors.collect { case OperEx(TlaFunOper.tuple, lst @ _*) => lst.size > 1 }
-      if (nonSingletons.isEmpty) {
-        // only singleton tuples, construct the same EXCEPT, but with transformed fun and args
+      val isMultidimensional = accessors.exists { case OperEx(TlaFunOper.tuple, lst @ _*) => lst.size > 1 }
+      if (accessors.length < 2 && !isMultidimensional) {
+        // the simplest update [ f EXCEPT ![i] = e ]
         OperEx(TlaFunOper.except, transform(fun) +: trArgs: _*)(ex.typeTag)
       } else {
-        // multiple accesses, e.g., ![i][j] = ...
+        // we have one of the following (or both):
+        //   1. a multi-dimension index: [f ![i_1]...[i_m] = e]
+        //   2. multiple indices: [f !a_1 = e_1, ..., !a_n = e_n]
         expandExcept(transform(fun), accessors, newValues)
       }
 
@@ -146,39 +148,57 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
       Seq(ex)
   }
 
-  private def expandExcept(topFun: TlaEx, accessors: Seq[TlaEx], newValues: Seq[TlaEx]): TlaEx = {
-    // The general case of [f EXCEPT !a_1 = e_1, ..., !a_n = e_n]
-    // See p. 304 in Specifying Systems. The definition of EXCEPT for multiple accessors is doubly inductive.
-    // The implementation below does not match the inductive definition from the book when n > 1.
-    // The fix is planned in issue: https://github.com/informalsystems/apalache/issues/647
-    def untuple: PartialFunction[TlaEx, Seq[TlaEx]] = { case OperEx(TlaFunOper.tuple, args @ _*) =>
-      args
-    }
+  private def expandExceptOne(topFun: TlaEx, accessor: TlaEx, newValue: TlaEx): Seq[TlaOperDecl] = {
+    // rewrite [ f EXCEPT ![i_1]...[i_n] = e ]
+    def rewrite(fun: TlaEx, keys: List[TlaEx]): Seq[TlaOperDecl] = {
+      keys match {
+        case Nil =>
+          throw new LirError("Expected at least one key in EXCEPT, found none")
 
-    def unfoldKey(indicesInPrefix: Seq[TlaEx], indicesInSuffix: Seq[TlaEx], newValue: TlaEx): TlaEx = {
-      // produce [f[i_1]...[i_m] EXCEPT ![i_m+1] = unfoldKey(...) ]
-      indicesInSuffix match {
-        case Nil                          => newValue // nothing to unfold, just return g
-        case oneMoreIndex +: otherIndices =>
-          // f[i_1]...[i_m]
-          val funApp = indicesInPrefix.foldLeft(topFun)((f, i) => tla.appFun(f, i))
-          // the recursive call defines another chain of EXCEPTS
-          val rhs = unfoldKey(indicesInPrefix :+ oneMoreIndex, otherIndices, newValue)
-          OperEx(TlaFunOper.except, funApp, tla.tuple(oneMoreIndex), rhs)
+        case hd :: Nil =>
+          val uniqueName = gen.newName()
+          // LET tmp == [ fun EXCEPT ![i_n] = e ] IN
+          val decl = tla.declOp(uniqueName, tla.except(fun, hd, newValue)).untypedOperDecl()
+          Seq(decl)
+
+        case hd :: tl =>
+          // fun[a_i]
+          val nested = tla.appFun(fun, hd).untyped()
+          // produce the expression for: [ fun[a_i] EXCEPT ![a_{i+1}]...[a_n] = e ]
+          val defs = rewrite(nested, tl)
+          // LET tmp == [ fun EXCEPT ![a_i] = output ] IN
+          // tmp()
+          val uniqueName = gen.newName()
+          val nestedFun = tla.appOp(tla.name(defs.last.name)).untyped()
+          val outDef = tla.declOp(uniqueName, tla.except(fun, hd, nestedFun)).untypedOperDecl()
+          defs :+ outDef
       }
     }
 
-    def eachPair(accessor: TlaEx, newValue: TlaEx): (TlaEx, TlaEx) = {
-      val indices = untuple(accessor)
-      // ![e_1][e_2]...[e_k] = g becomes ![e_1] = h
-      val lhs = tla.tuple(indices.head)
-      // h is computed by unfoldKey
-      val rhs = unfoldKey(Seq(indices.head), indices.tail, newValue)
-      (lhs, rhs)
+    accessor match {
+      case OperEx(TlaFunOper.tuple, keys @ _*) =>
+        rewrite(topFun, keys.toList)
+
+      case _ =>
+        throw new LirError("Expected a tuple of keys as an accessor in EXCEPT. Found: " + accessor)
     }
-    val expandedPairs = accessors.zip(newValues).map((eachPair _).tupled)
-    val expandedArgs = (TlaOper.interleave _).tupled(expandedPairs.unzip)
-    OperEx(TlaFunOper.except, topFun +: expandedArgs: _*)
+  }
+
+  private def expandExcept(fun: TlaEx, accessors: Seq[TlaEx], newValues: Seq[TlaEx]): TlaEx = {
+    // The general case of [f EXCEPT !a_1 = e_1, ..., !a_n = e_n]
+    // See p. 304 in Specifying Systems. The definition of EXCEPT for multiple accessors is doubly inductive.
+    assert(accessors.length == newValues.length)
+    val uniqueName = gen.newName()
+    // LET tmp == fun IN
+    val firstDef = tla.declOp(uniqueName, fun).untypedOperDecl()
+
+    val defs =
+      accessors.zip(newValues).foldLeft(Seq(firstDef)) { case (defs, (a, e)) =>
+        val latest = tla.appOp(tla.name(defs.last.name)).untyped()
+        defs ++ expandExceptOne(latest, a, e)
+      }
+
+    tla.letIn(tla.appOp(tla.name(defs.last.name)), defs: _*)
   }
 
   /**
@@ -285,5 +305,7 @@ class Desugarer(tracker: TransformationTracker) extends TlaExTransformation {
 }
 
 object Desugarer {
-  def apply(tracker: TransformationTracker): Desugarer = new Desugarer(tracker)
+  def apply(gen: UniqueNameGenerator, tracker: TransformationTracker): Desugarer = {
+    new Desugarer(gen, tracker)
+  }
 }

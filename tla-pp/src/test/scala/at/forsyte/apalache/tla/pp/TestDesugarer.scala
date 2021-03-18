@@ -1,46 +1,107 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.{SimpleFormalParam, TlaEx}
-import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
+import at.forsyte.apalache.tla.lir.convenience._
+import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
+import at.forsyte.apalache.tla.lir.{SimpleFormalParam, TlaEx}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 
 @RunWith(classOf[JUnitRunner])
 class TestDesugarer extends FunSuite with BeforeAndAfterEach {
-  private var desugarer = new Desugarer(TrackerWithListeners())
+  private var gen: UniqueNameGenerator = _
+  private var desugarer: Desugarer = _
+
+  private def callAndAccess(operName: String, index: String*): TlaEx = {
+    index.foldLeft(tla.appOp(tla.name(operName).untyped())) { case (a, n) => tla.appFun(a, tla.name(n)).untyped() }
+  }
 
   override def beforeEach(): Unit = {
-    desugarer = new Desugarer(TrackerWithListeners())
+    gen = new UniqueNameGenerator()
+    desugarer = new Desugarer(gen, new IdleTracker())
   }
 
-  test("chain 2 excepts") {
+  test("EXCEPT one-dimensional, one index") {
+    // input: [f EXCEPT ![i] = e]
+    val input =
+      tla.except(tla.name("f"), tla.tuple(tla.name("i")), tla.name("e")).untyped()
+    // output: the same as input
+    val output = desugarer.transform(input)
+    assert(output == input)
+  }
+
+  test("EXCEPT two-dimensional, one index") {
     // input: [f EXCEPT ![i][j] = e]
-    val highCalories =
+    val input =
       tla.except(tla.name("f"), tla.tuple(tla.name("i"), tla.name("j")), tla.name("e"))
-    val sugarFree = desugarer.transform(highCalories)
-    // output [ f EXCEPT ![i] = [f[i] EXCEPT ![j] = e] ]
-    val expected: TlaEx =
-      tla.except(tla.name("f"), tla.tuple(tla.name("i")),
-          tla.except(tla.appFun(tla.name("f"), tla.name("i")), tla.tuple(tla.name("j")), tla.name("e")))
+    val output = desugarer.transform(input)
+    // output: series of LET-IN definitions
+    // LET t_1 == f
+    //     t_2 == [t_1()[i] EXCEPT ![j] = e]
+    //     t_3 == [t_1() EXCEPT ![i] = t_2()]
+    //     IN t_3()
+    val defs = Seq(
+        tla.declOp("t_1", tla.name("f")).untypedOperDecl(),
+        tla.declOp("t_2", tla.except(callAndAccess("t_1", "i"), tla.name("j"), tla.name("e"))).untypedOperDecl(),
+        tla.declOp("t_3", tla.except(callAndAccess("t_1"), tla.name("i"), callAndAccess("t_2"))).untypedOperDecl()
+    )
 
-    assert(expected == sugarFree)
+    val expected: TlaEx =
+      tla.letIn(callAndAccess("t_3"), defs: _*)
+
+    assert(expected == output)
   }
 
-  test("chain 3 excepts") {
+  test("EXCEPT three-dimensional, one index") {
     // input: [f EXCEPT ![i][j][k] = e]
-    val highCalories =
+    val input =
       tla.except(tla.name("f"), tla.tuple(tla.name("i"), tla.name("j"), tla.name("k")), tla.name("e"))
-    val sugarFree = desugarer.transform(highCalories)
-    // output: [ f EXCEPT ![i] = [f[i] EXCEPT ![j] = [f[i][j] EXCEPT ![k] = e] ] ]
-    val expected: TlaEx = tla.except(tla.name("f"), tla.tuple(tla.name("i")),
-        tla.except(tla.appFun(tla.name("f"), tla.name("i")), tla.tuple(tla.name("j")),
-            tla.except(tla.appFun(tla.appFun(tla.name("f"), tla.name("i")), tla.name("j")), tla.tuple(tla.name("k")),
-                tla.name("e"))))
+    val output = desugarer.transform(input)
+    // output: series of LET-IN definitions
+    // LET t_1 == f
+    //     t_2 == [t_1()[i][j] EXCEPT ![k] = e]
+    //     t_3 == [t_1()[i] EXCEPT ![j] = t_2()]
+    //     t_4 == [t_1() EXCEPT ![i] = t_3()]
+    //     IN t_4()
+    val defs = Seq(
+        tla.declOp("t_1", tla.name("f")).untypedOperDecl(),
+        tla.declOp("t_2", tla.except(callAndAccess("t_1", "i", "j"), tla.name("k"), tla.name("e"))).untypedOperDecl(),
+        tla.declOp("t_3", tla.except(callAndAccess("t_1", "i"), tla.name("j"), callAndAccess("t_2"))).untypedOperDecl(),
+        tla.declOp("t_4", tla.except(callAndAccess("t_1"), tla.name("i"), callAndAccess("t_3"))).untypedOperDecl()
+    )
 
-    assert(expected == sugarFree)
+    val expected: TlaEx =
+      tla.letIn(callAndAccess("t_4"), defs: _*)
+
+    assert(expected == output)
+  }
+
+  test("EXCEPT with two updates") {
+    // input: [f EXCEPT ![i][j] = e1, ![k][l] = e2]
+    val input =
+      tla.except(tla.name("f"), tla.tuple(tla.name("i"), tla.name("j")), tla.name("e1"),
+          tla.tuple(tla.name("k"), tla.name("l")), tla.name("e2"))
+    val output = desugarer.transform(input)
+    // output: a series of definitions
+    // LET t_1 == f
+    //     t_2 == [t_1()[i] EXCEPT ![j] = e1]
+    //     t_3 == [t_1() EXCEPT ![i] = t_2()]
+    //     t_4 == [t_3()[k] EXCEPT ![l] = e2]
+    //     t_5 == [t_3() EXCEPT ![k] = t_4()]
+    //     IN t_5()
+    val defs = Seq(
+        tla.declOp("t_1", tla.name("f")).untypedOperDecl(),
+        tla.declOp("t_2", tla.except(callAndAccess("t_1", "i"), tla.name("j"), tla.name("e1"))).untypedOperDecl(),
+        tla.declOp("t_3", tla.except(callAndAccess("t_1"), tla.name("i"), callAndAccess("t_2"))).untypedOperDecl(),
+        tla.declOp("t_4", tla.except(callAndAccess("t_3", "k"), tla.name("l"), tla.name("e2"))).untypedOperDecl(),
+        tla.declOp("t_5", tla.except(callAndAccess("t_3"), tla.name("k"), callAndAccess("t_4"))).untypedOperDecl()
+    )
+
+    val expected: TlaEx =
+      tla.letIn(callAndAccess("t_5"), defs: _*)
+
+    assert(expected == output)
   }
 
   test("""rewrite UNCHANGED x to x' = x""") {

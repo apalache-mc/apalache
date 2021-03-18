@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.standard._
-import at.forsyte.apalache.tla.pp.Desugarer
+import at.forsyte.apalache.tla.pp.{Desugarer, UniqueNameGenerator}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -33,7 +33,8 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
     val bodyMap = BodyMapFactory.makeFromDecls(uniqueVarDecls.operDeclarations)
     val inlined = ModuleByExTransformer(InlinerOfUserOper(bodyMap, tracker))(uniqueVarDecls)
     val explLetIn = ModuleByExTransformer(LetInExpander(tracker, keepNullary = false))(inlined)
-    val preprocessed = ModuleByExTransformer(Desugarer(tracker))(explLetIn)
+    val gen = new UniqueNameGenerator
+    val preprocessed = ModuleByExTransformer(Desugarer(gen, tracker))(explLetIn)
 
     findBodyOf(p_next, preprocessed.declarations: _*)
   }

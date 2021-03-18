@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.pp.Desugarer
+import at.forsyte.apalache.tla.pp.{Desugarer, UniqueNameGenerator}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -35,7 +35,8 @@ class TestSymbTransPass extends FunSuite with TestingPredefs {
     val bodyMap = BodyMapFactory.makeFromDecls(uniqueVarDecls.operDeclarations)
     val inlined = ModuleByExTransformer(InlinerOfUserOper(bodyMap, tracker))(uniqueVarDecls)
     val explLetIn = ModuleByExTransformer(LetInExpander(tracker, keepNullary = false))(inlined)
-    val preprocessed = ModuleByExTransformer(Desugarer(tracker))(explLetIn)
+    val gen = new UniqueNameGenerator
+    val preprocessed = ModuleByExTransformer(Desugarer(gen, tracker))(explLetIn)
 
     val vars = preprocessed.varDeclarations.map(_.name)
 
