@@ -6,8 +6,11 @@ import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.DeepCopy
 import at.forsyte.apalache.tla.pp.NormalizedNames
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.typecheck.BoolT1
+import at.forsyte.apalache.tla.typecheck.TypedPredefs._
 import com.typesafe.scalalogging.LazyLogging
+
+import scala.annotation.tailrec
 
 /**
  * Generator of verification conditions. In the current implementation, VCGenerator takes an invariant candidate,
@@ -44,13 +47,15 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
   }
 
   private def introConditions(inputInv: TlaEx): Seq[TlaOperDecl] = {
-    def mapToDecls(smallInv: TlaEx, index: Int): Seq[TlaOperDecl] = {
+    def mapToDecls(invPiece: TlaEx, index: Int): Seq[TlaOperDecl] = {
       val deepCopy = DeepCopy(tracker)
-      val smallInvCopy = deepCopy.deepCopyEx(smallInv)
+      val invPieceCopy = deepCopy.deepCopyEx(invPiece)
+      val tag = inputInv.typeTag
       val positive =
-        TlaOperDecl(NormalizedNames.VC_INV_PREFIX + index, List(), smallInvCopy)(Untyped())
+        TlaOperDecl(NormalizedNames.VC_INV_PREFIX + index, List(), invPieceCopy)(tag)
+      val notInvPieceCopy = tla.not(invPieceCopy).typed(BoolT1())
       val negative =
-        TlaOperDecl(NormalizedNames.VC_NOT_INV_PREFIX + index, List(), tla.not(smallInvCopy))(Untyped())
+        TlaOperDecl(NormalizedNames.VC_NOT_INV_PREFIX + index, List(), notInvPieceCopy)(tag)
       Seq(positive, negative)
     }
 
@@ -59,11 +64,11 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
     fragments.zipWithIndex.flatMap { case (e, i) => mapToDecls(e, i) }
   }
 
-  private def splitInv(universalsRev: Seq[(String, TlaEx)], inv: TlaEx): Seq[TlaEx] = {
+  private def splitInv(universalsRev: Seq[(NameEx, TlaEx)], inv: TlaEx): Seq[TlaEx] = {
     inv match {
-      case OperEx(TlaBoolOper.forall, NameEx(varName), set, pred) =>
+      case OperEx(TlaBoolOper.forall, nameEx @ NameEx(_), set, pred) =>
         // \A x \in S: B /\ C is equivalent to (\A x \in S: B) /\ (\A x \in S: C)
-        splitInv((varName, set) +: universalsRev, pred)
+        splitInv((nameEx, set) +: universalsRev, pred)
 
       case OperEx(TlaBoolOper.and, args @ _*) =>
         // we split A /\ B into the set {A, B}
@@ -75,13 +80,14 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
     }
   }
 
-  private def decorateWithUniversals(universalsRev: Seq[(String, TlaEx)], expr: TlaEx): TlaEx = {
+  @tailrec
+  private def decorateWithUniversals(universalsRev: Seq[(NameEx, TlaEx)], expr: TlaEx): TlaEx = {
     universalsRev match {
       case Nil =>
         expr
 
-      case (name, set) :: tail =>
-        decorateWithUniversals(tail, tla.forall(NameEx(name), set, expr))
+      case (nameEx, set) :: tail =>
+        decorateWithUniversals(tail, tla.forall(nameEx, set, expr).typed(BoolT1()))
     }
   }
 }
