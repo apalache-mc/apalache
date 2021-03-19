@@ -664,8 +664,9 @@ The outcome is: NoError
 ```sh
 $ apalache-mc check Selections.tla | sed 's/I@.*//'
 ...
-The outcome is: NoError
+Selections.tla:16:18-16:27: Missing assignments to: z
 ...
+EXITCODE: ERROR (99)
 ```
 
 ### check test1 succeeds
@@ -683,7 +684,6 @@ The outcome is: NoError
 $ apalache-mc check ITE_CASE.tla | sed 's/I@.*//'
 ...
 EXITCODE: ERROR (99)
-[99]
 ```
 
 ### check use of TLA_PATH for modules in child directory succeeds
@@ -840,7 +840,7 @@ The outcome is: NoError
 ```sh
 $ apalache-mc check ConfigUnsorted.tla | sed 's/[IEW]@.*//'
 ...
-Configuration error (see the manual): Found a cyclic dependency among operators: A, B, C
+Configuration error (see the manual): Found a cyclic dependency among operators: B, A, C
 ...
 EXITCODE: ERROR (99)
 ```
@@ -1104,18 +1104,6 @@ PASS #1: TypeCheckerSnowcat
  > All expressions are typed
 ...
 Type checker [OK]
-...
-EXITCODE: OK
-```
-
-### typecheck HourClock.tla
-
-```sh
-$ apalache-mc typecheck HourClock.tla | sed 's/[IEW]@.*//'
-...
-[HourClock.tla:6:12-6:13]: Undefined name hr. Introduce a type annotation.
-...
-Type checker [FAILED]
 ...
 EXITCODE: OK
 ```

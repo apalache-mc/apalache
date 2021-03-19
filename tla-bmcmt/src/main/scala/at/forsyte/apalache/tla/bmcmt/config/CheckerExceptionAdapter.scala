@@ -8,7 +8,9 @@ import at.forsyte.apalache.tla.imp.SanyException
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.{LanguagePredError, MalformedTlaError, OperEx, UID}
-import at.forsyte.apalache.tla.pp.{ConfigurationError, IrrecoverablePreprocessingError, NotInKeraError, TlaInputError}
+import at.forsyte.apalache.tla.pp.{
+  ConfigurationError, IrrecoverablePreprocessingError, NotInKeraError, OverridingError, TlaInputError
+}
 import at.forsyte.apalache.tla.typecheck.{TypingException, TypingInputException}
 import com.typesafe.scalalogging.LazyLogging
 
@@ -30,6 +32,9 @@ class CheckerExceptionAdapter @Inject() (sourceStore: SourceStore, changeListene
       NormalErrorMessage("Error by TLA+ parser: " + err.getMessage)
 
     case err: ConfigurationError =>
+      NormalErrorMessage("Configuration error (see the manual): " + err.getMessage)
+
+    case err: OverridingError =>
       NormalErrorMessage("Configuration error (see the manual): " + err.getMessage)
 
     case err: TlaInputError =>
