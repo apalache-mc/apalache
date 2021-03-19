@@ -1,10 +1,10 @@
 package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.io.tlc.config._
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.TlaOper
+import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.typesafe.scalalogging.LazyLogging
 
 /**
@@ -17,42 +17,81 @@ import com.typesafe.scalalogging.LazyLogging
  */
 class TlcConfigImporter(config: TlcConfig, tracker: TransformationTracker)
     extends TlaModuleTransformation with LazyLogging {
+  private val boolOperT = OperT1(Seq(), BoolT1())
+
+  private def mkBoolName(name: String): TlaEx = {
+    tla.name(name).typed(BoolT1())
+  }
+
   override def apply(mod: TlaModule): TlaModule = {
 
     val assignments = config.constAssignments.map { case (param, value) =>
-      TlaOperDecl(ConstAndDefRewriter.OVERRIDE_PREFIX + param, List(), value.toTlaEx)
+      val valueEx = value.toTlaEx
+      val operT = OperT1(Seq(), valueEx.typeTag.asTlaType1())
+      tla.declOp(ConstAndDefRewriter.OVERRIDE_PREFIX + param, value.toTlaEx).typedOperDecl(operT)
     }
-    val operators = Set(mod.declarations.collect { case TlaOperDecl(name, _, _) =>
-      name
-    }: _*)
     val replacements = config.constReplacements.map { case (param, value) =>
-      if (operators.contains(value))
-        TlaOperDecl(ConstAndDefRewriter.OVERRIDE_PREFIX + param, List(), OperEx(TlaOper.apply, NameEx(value)))
-      else
-        TlaOperDecl(ConstAndDefRewriter.OVERRIDE_PREFIX + param, List(), NameEx(value))
+      mod.declarations.find(_.name == value) match {
+        case Some(d: TlaOperDecl) =>
+          if (d.formalParams.isEmpty) {
+            val tt = d.typeTag.asTlaType1()
+            assert(tt.isInstanceOf[OperT1])
+            val operT = tt.asInstanceOf[OperT1]
+            val application = tla.appOp(tla.name(value).typed(operT)).typed(operT.res)
+            tla.declOp(ConstAndDefRewriter.OVERRIDE_PREFIX + param, application).typedOperDecl(operT)
+          } else {
+            val nparams = d.formalParams.size
+            throw new TLCConfigurationError(
+                s"Met a replacement $param <- $value, where $value is an operator of $nparams parameters")
+          }
+
+        case Some(d) =>
+          // This is a branch from the old untyped encoding. Does it make sense in the type encoding?
+          val tt = d.typeTag.asTlaType1()
+          tla
+            .declOp(ConstAndDefRewriter.OVERRIDE_PREFIX + param, tla.name(value).typed(tt))
+            .typedOperDecl(OperT1(Seq(), tt))
+
+        case None =>
+          throw new TLCConfigurationError(s"Met a replacement $param <- $value, but $value is not found")
+      }
     }
     val stateConstraints = config.stateConstraints.zipWithIndex.map { case (value, index) =>
-      TlaOperDecl(TlcConfigImporter.STATE_PREFIX + index, List(), NameEx(value))
+      tla
+        .declOp(TlcConfigImporter.STATE_PREFIX + index, mkBoolName(value))
+        .typedOperDecl(boolOperT)
     }
     val actionConstraints = config.actionConstraints.zipWithIndex.map { case (value, index) =>
-      TlaOperDecl(TlcConfigImporter.ACTION_PREFIX + index, List(), NameEx(value))
+      tla
+        .declOp(TlcConfigImporter.ACTION_PREFIX + index, mkBoolName(value))
+        .typedOperDecl(boolOperT)
     }
     val invariants = config.invariants.zipWithIndex.map { case (value, index) =>
-      TlaOperDecl(TlcConfigImporter.INVARIANT_PREFIX + index, List(), NameEx(value))
+      tla
+        .declOp(TlcConfigImporter.INVARIANT_PREFIX + index, mkBoolName(value))
+        .typedOperDecl(boolOperT)
     }
     val temporalProps = config.temporalProps.zipWithIndex.map { case (value, index) =>
-      TlaOperDecl(TlcConfigImporter.TEMPORAL_PREFIX + index, List(), NameEx(value))
+      tla
+        .declOp(TlcConfigImporter.TEMPORAL_PREFIX + index, mkBoolName(value))
+        .typedOperDecl(boolOperT)
     }
     val behaviorSpec = config.behaviorSpec match {
       case InitNextSpec(init, next) =>
         List(
-            TlaOperDecl(TlcConfigImporter.INIT, List(), NameEx(init)),
-            TlaOperDecl(TlcConfigImporter.NEXT, List(), NameEx(next))
+            tla
+              .declOp(TlcConfigImporter.INIT, mkBoolName(init))
+              .typedOperDecl(boolOperT),
+            tla
+              .declOp(TlcConfigImporter.NEXT, mkBoolName(next))
+              .typedOperDecl(boolOperT)
         )
 
       case TemporalSpec(name) =>
         List(
-            TlaOperDecl(TlcConfigImporter.SPEC, List(), NameEx(name))
+            tla
+              .declOp(TlcConfigImporter.SPEC, mkBoolName(name))
+              .typedOperDecl(boolOperT)
         )
 
       case NullSpec() =>
