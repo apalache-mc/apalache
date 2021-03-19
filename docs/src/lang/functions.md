@@ -186,12 +186,13 @@ approach works. For instance, we can type the following in the python shell:
 py_price.keys()
 ```
 
-In the above example, we used `py_price.keys()`, which produces a mutable
-dictionary. In TLA+, `DOMAIN` returns a set. If we want to faithfully model the
-effect of `DOMAIN`, then we have to produce an immutable set. We use
-[`frozenset`](https://docs.python.org/3/library/stdtypes.html#frozenset), which
-is a less famous cousin of the python `set`. A frozen set can be inserted
-into another set, in contrast to the standard (mutable) set.
+In the above example, we used `py_price.keys()`, which produces a view of the
+mutable dictionary's keys. In TLA+, `DOMAIN` returns a set. If we want to
+faithfully model the effect of `DOMAIN`, then we have to produce an immutable
+set. We use
+[`frozenset`](https://docs.python.org/3/library/stdtypes.html#frozenset),
+which is a less famous cousin of the python `set`. A frozen set can be
+inserted into another set, in contrast to the standard (mutable) set.
 
 ```python
 >>> py_price = { "Schnitzel": 18, "Gulash": 11, "Cordon bleu": 12 }
@@ -633,7 +634,7 @@ dict_keys([1, 2, 3])
 
 ```
 
-In the above code, we write `f.keys()` to obtain an iterator over the
+In the above code, we write `f.keys()` to obtain an iterable over the
 dictionary keys, which can be used in a further python code. In a more
 principled approach that follows the semantics of TLA+, we would have to
 produce a set, that is to write:
