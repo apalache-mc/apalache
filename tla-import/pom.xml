@@ -22,11 +22,6 @@
         </dependency>
         <dependency>
             <groupId>at.forsyte.apalache</groupId>
-            <artifactId>tla-types</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>at.forsyte.apalache</groupId>
             <artifactId>infra</artifactId>
             <version>${project.version}</version>
         </dependency>

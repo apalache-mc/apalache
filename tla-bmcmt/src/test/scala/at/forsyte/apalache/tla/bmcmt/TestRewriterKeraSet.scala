@@ -3,9 +3,8 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
-import at.forsyte.apalache.tla.typecheck.TypedPredefs._
+import TypedPredefs._
 import at.forsyte.apalache.tla.pp.{Keramelizer, UniqueNameGenerator}
-import at.forsyte.apalache.tla.typecheck.{BoolT1, IntT1, SetT1}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 

@@ -5,10 +5,7 @@ import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
-import at.forsyte.apalache.tla.typecheck.{
-  BoolT1, FunT1, IntT1, OperT1, RecT1, SetT1, StrT1, TlaType1, TupT1, TypingException
-}
-import at.forsyte.apalache.tla.typecheck.TypedPredefs._
+import TypedPredefs._
 
 import javax.inject.Singleton
 

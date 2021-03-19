@@ -38,3 +38,10 @@ class BuilderError(message: String) extends LirError(message)
  * @param message the error message
  */
 class CyclicDependencyError(message: String) extends LirError(message)
+
+/**
+ * This exception is thrown, whenever the code finds an irrecoverable error in expression types.
+ *
+ * @author konnov
+ */
+class TypingException(message: String) extends Exception(message)

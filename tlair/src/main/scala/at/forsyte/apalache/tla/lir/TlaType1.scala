@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.typecheck
+package at.forsyte.apalache.tla.lir
 
 import scala.collection.immutable.SortedMap
 

@@ -1,7 +1,6 @@
-package at.forsyte.apalache.tla.typecheck
+package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.values._
-import at.forsyte.apalache.tla.lir._
 
 object TypedPredefs {
   type Tag = Typed[TlaType1]

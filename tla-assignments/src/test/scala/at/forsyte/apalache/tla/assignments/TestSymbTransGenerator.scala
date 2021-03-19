@@ -4,8 +4,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.transformations.impl.{IdleTracker, TrackerWithListeners}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.typecheck.{BoolT1, IntT1, OperT1}
-import at.forsyte.apalache.tla.typecheck.TypedPredefs._
+import TypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner

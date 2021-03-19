@@ -1,10 +1,9 @@
 package at.forsyte.apalache.tla.assignments
 
-import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.{BoolT1, _}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.TlaBool
-import at.forsyte.apalache.tla.typecheck.BoolT1
 
 /**
  * Constructs symbolic transitions from an assignment strategy.

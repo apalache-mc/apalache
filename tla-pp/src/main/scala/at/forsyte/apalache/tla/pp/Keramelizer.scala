@@ -5,8 +5,7 @@ import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.standard.FlatLanguagePred
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.typecheck.TypedPredefs._
-import at.forsyte.apalache.tla.typecheck.{BoolT1, SetT1, TlaType1, TupT1}
+import TypedPredefs._
 
 import javax.inject.Singleton
 

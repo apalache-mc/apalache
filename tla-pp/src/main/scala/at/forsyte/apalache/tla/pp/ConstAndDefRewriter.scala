@@ -1,11 +1,10 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.{OperT1, _}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.standard.{DeclarationSorter, ModuleByExTransformer, ReplaceFixed}
 import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.typecheck.OperT1
-import at.forsyte.apalache.tla.typecheck.TypedPredefs._
+import TypedPredefs._
 import com.typesafe.scalalogging.LazyLogging
 
 /**

@@ -1,10 +1,11 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.typecheck.TypedPredefs._
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import at.forsyte.apalache.tla.lir.{SimpleFormalParam, TlaEx}
-import at.forsyte.apalache.tla.typecheck.{BoolT1, FunT1, IntT1, OperT1, RecT1, SetT1, StrT1, TlaType1, TupT1}
+import at.forsyte.apalache.tla.lir.{
+  BoolT1, FunT1, IntT1, OperT1, RecT1, SetT1, SimpleFormalParam, StrT1, TlaEx, TlaType1, TupT1
+}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterEach, FunSuite}

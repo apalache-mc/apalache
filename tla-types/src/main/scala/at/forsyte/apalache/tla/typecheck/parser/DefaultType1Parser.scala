@@ -1,7 +1,10 @@
 package at.forsyte.apalache.tla.typecheck.parser
 
-import java.io.{Reader, StringReader}
+import at.forsyte.apalache.tla.lir.{
+  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1, TupT1, VarT1
+}
 
+import java.io.{Reader, StringReader}
 import at.forsyte.apalache.tla.typecheck._
 
 import scala.collection.immutable.SortedMap

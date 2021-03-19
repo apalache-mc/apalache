@@ -4,7 +4,6 @@ import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaFunOper}
 import at.forsyte.apalache.tla.lir.values.TlaStr
-import at.forsyte.apalache.tla.typecheck.{StrT1, TlaType1, TupT1, TypingException}
 
 /**
  * This class uses the map of types to set the types of TLA+ expressions and declarations.

@@ -2,7 +2,8 @@ package at.forsyte.apalache.tla.typecheck.passes
 
 import at.forsyte.apalache.infra.{ErrorMessage, ExceptionAdapter, FailureMessage, NormalErrorMessage}
 import at.forsyte.apalache.tla.imp.SanyException
-import at.forsyte.apalache.tla.typecheck.{TypingException, TypingInputException}
+import at.forsyte.apalache.tla.lir.TypingException
+import at.forsyte.apalache.tla.typecheck.TypingInputException
 import com.google.inject.{Inject, Singleton}
 
 /**

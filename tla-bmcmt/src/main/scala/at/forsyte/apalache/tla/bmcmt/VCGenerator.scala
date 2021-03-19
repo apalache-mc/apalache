@@ -1,13 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.{BoolT1, _}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.DeepCopy
 import at.forsyte.apalache.tla.pp.NormalizedNames
-import at.forsyte.apalache.tla.typecheck.BoolT1
-import at.forsyte.apalache.tla.typecheck.TypedPredefs._
+import TypedPredefs._
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.annotation.tailrec

@@ -6,8 +6,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.transformations.standard.{DeepCopy, FlatLanguagePred, ReplaceFixed}
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
-import at.forsyte.apalache.tla.typecheck.{BoolT1, IntT1, OperT1, SetT1, TlaType1, TypingException}
-import at.forsyte.apalache.tla.typecheck.TypedPredefs._
+import TypedPredefs._
 
 import javax.inject.Singleton
 import scala.math.BigInt

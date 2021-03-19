@@ -1,8 +1,7 @@
 package at.forsyte.apalache.tla.typecheck.integration
 
 import at.forsyte.apalache.tla.lir.transformations.TransformationListener
-import at.forsyte.apalache.tla.lir.{TlaDecl, TlaEx, Typed, Untyped}
-import at.forsyte.apalache.tla.typecheck.{TlaType1, TypingException}
+import at.forsyte.apalache.tla.lir.{TlaDecl, TlaEx, TlaType1, Typed, TypingException, Untyped}
 
 /**
  * A transformation tracker that throws an exception, if a typed expression has been transformed into an untyped one.

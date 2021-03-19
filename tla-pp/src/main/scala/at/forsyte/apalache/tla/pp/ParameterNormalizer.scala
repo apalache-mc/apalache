@@ -4,8 +4,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModuleTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.typecheck.TypedPredefs._
-import at.forsyte.apalache.tla.typecheck.{OperT1, TlaType1, TypingException}
+import TypedPredefs._
 
 /**
  * Transforms a declaration A(x,y(_,_)) == e

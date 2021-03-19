@@ -5,8 +5,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
-import at.forsyte.apalache.tla.typecheck.TypedPredefs._
-import at.forsyte.apalache.tla.typecheck.{BoolT1, IntT1, OperT1, StrT1}
+import TypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
