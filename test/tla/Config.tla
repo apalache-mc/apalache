@@ -2,7 +2,9 @@
 (* a specification to check whether the configuration files are parsed *)
 EXTENDS Integers
 
-VARIABLES x
+VARIABLES
+    \* @type: Int;
+    x
 
 \* the default init
 Init ==
