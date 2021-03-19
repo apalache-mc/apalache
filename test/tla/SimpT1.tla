@@ -10,6 +10,9 @@
  *)
  
 EXTENDS Integers 
+
+\* old apalache annotations. They will be removed very soon!
+a <: b == a
  
 N == 4 \* the total number of processes: correct and faulty
 F == 1 \* the number of Byzantine processes (symmetric faults)
@@ -48,7 +51,7 @@ Init == /\ h = [p \in Procs |-> 0]
         /\ vote = [p \in Procs |-> nil]
         \* book-keeping
         /\ round = "PRE-PROPOSE"
-        /\ faultyMessages = {}
+        /\ faultyMessages = {} <: {[type |-> STRING, src |-> Int, height |-> Int, epoch |-> Int, proposal |-> Int]}
 
 \* "a deterministic function which gives the proposer
 \*  for a given epoch at a given height in a round robin fashion"

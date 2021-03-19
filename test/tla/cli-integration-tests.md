@@ -652,8 +652,11 @@ The outcome is: NoError
 
 ### check SimpT1 succeeds
 
+This test was moved from a unit test of SymbTransGenerator. The goal of the test is to check that symbolic transitions
+are extracted from the spec. Hence, we run model checking only against the initial states.
+
 ```sh
-$ apalache-mc check SimpT1.tla | sed 's/I@.*//'
+$ apalache-mc check --length=0 SimpT1.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
