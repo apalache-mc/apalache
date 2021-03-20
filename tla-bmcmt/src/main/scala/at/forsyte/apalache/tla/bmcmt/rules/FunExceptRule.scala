@@ -8,9 +8,8 @@ import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
-import at.forsyte.apalache.tla.lir.UntypedPredefs
 import at.forsyte.apalache.tla.lir.TlaType1
-import at.forsyte.apalache.tla.lir.{FunT1, RecT1, TupT1}
+import at.forsyte.apalache.tla.lir.{FunT1, RecT1, TupT1, BoolT1, SetT1}
 
 /**
  * Rewriting EXCEPT for functions, tuples, and records.
@@ -77,18 +76,24 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // introduce a new function relation that is organized as follows:
     // [ p \in f_rel |-> IF p[1] = i THEN <<i, e>> ELSE p ]
     def eachRelationPair(pair: ArenaCell): ArenaCell = {
+      val tupT = TupT1(funT.arg, funT.res)
+      val types = Map("p" -> tupT, "i" -> funT.arg, "b" -> BoolT1(), "r" -> SetT1(tupT))
       // Since the expression goes to the solver, we don't care about types.
-      import UntypedPredefs._
-
-      val ite = tla.ite(tla.eql(pair.toNameEx, indexCell.toNameEx), newPairCell.toNameEx, pair.toNameEx)
+      val ite = tla
+        .ite(tla.eql(pair.toNameEx ? "p", indexCell.toNameEx ? "i") ? "b", newPairCell.toNameEx ? "p",
+            pair.toNameEx ? "p")
+        .typed(Map("p" -> tupT, "i" -> funT.arg, "b" -> BoolT1()), "p")
 
       nextState = rewriter.rewriteUntilDone(nextState.setRex(ite))
       val updatedCell = nextState.asCell
       // add the new cell to the arena immediately, as we are going to use the IN predicates
       nextState = nextState.updateArena(_.appendHas(resultRelation, updatedCell))
       // The new cell belongs to the new relation iff the old cell belongs to the old relation.
-      solverAssert(tla.equiv(tla.in(pair.toNameEx, relation.toNameEx),
-              tla.in(updatedCell.toNameEx, resultRelation.toNameEx)))
+      val assertion = tla
+        .equiv(tla.in(pair.toNameEx ? "p", relation.toNameEx ? "r") ? "b",
+            tla.in(updatedCell.toNameEx ? "p", resultRelation.toNameEx ? "r") ? "b")
+        .typed(types, "b")
+      solverAssert(assertion)
       updatedCell
     }
 
