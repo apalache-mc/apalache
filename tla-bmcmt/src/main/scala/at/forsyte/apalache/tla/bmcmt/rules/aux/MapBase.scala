@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.pp.TlaInputError
 
 import scala.collection.mutable
 
@@ -34,6 +35,9 @@ class MapBase(rewriter: SymbStateRewriter) {
       setCell.cellType match {
         case FinSetT(elemType) =>
           (setCell, elemType)
+
+        case InfSetT(elemType) =>
+          throw new TlaInputError(s"Found a set map over an infinite set of $elemType. Not supported.")
 
         case tp @ _ => throw new NotImplementedError("A set map over %s is not implemented".format(tp))
       }
