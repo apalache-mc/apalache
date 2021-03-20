@@ -36,6 +36,13 @@ package object types {
     val signature: String
 
     /**
+     * Convert the cell type into TlaType1. Note that
+     *
+     * @return
+     */
+    def toTlaType1: TlaType1
+
+    /**
      * Compute a unifier of two types.
      *
      * @param other another type
@@ -209,6 +216,10 @@ package object types {
     override val signature: String = "u"
 
     override val toString: String = "Unknown"
+
+    override def toTlaType1: TlaType1 = {
+      ConstT1("UNKNOWN")
+    }
   }
 
   /**
@@ -220,57 +231,46 @@ package object types {
     override val signature: String = "E"
 
     override val toString: String = "FailPred"
+
+    override def toTlaType1: TlaType1 = {
+      ConstT1("FAILPRED")
+    }
   }
 
   /**
    * A cell constant, that is, just a name that expresses string constants in TLA+.
    */
   sealed case class ConstT() extends CellT with Serializable {
-
-    /**
-     * Produce a short signature that uniquely describes the type (up to unification),
-     * similar to Java's signature mangling. If one type can be unified to another,
-     * e.g., records, they have the same signature.
-     *
-     * @return a short signature that uniquely characterizes this type up to unification
-     */
     override val signature: String = "str"
 
     override val toString: String = "Const"
+
+    override def toTlaType1: TlaType1 = {
+      // in the new type system, we have the string type for such constants
+      StrT1()
+    }
   }
 
   /**
    * A Boolean cell type.
    */
   sealed case class BoolT() extends CellT with Serializable {
-
-    /**
-     * Produce a short signature that uniquely describes the type (up to unification),
-     * similar to Java's signature mangling. If one type can be unified to another,
-     * e.g., records, they have the same signature.
-     *
-     * @return a short signature that uniquely characterizes this type up to unification
-     */
     override val signature: String = "b"
 
     override val toString: String = "Bool"
+
+    override def toTlaType1: TlaType1 = BoolT1()
   }
 
   /**
    * An integer cell type.
    */
   sealed case class IntT() extends CellT with Serializable {
-
-    /**
-     * Produce a short signature that uniquely describes the type (up to unification),
-     * similar to Java's signature mangling. If one type can be unified to another,
-     * e.g., records, they have the same signature.
-     *
-     * @return a short signature that uniquely characterizes this type up to unification
-     */
     override val signature: String = "i"
 
     override val toString: String = "Int"
+
+    override def toTlaType1: TlaType1 = IntT1()
   }
 
   /**
@@ -279,17 +279,11 @@ package object types {
    * @param elemType the elements type
    */
   sealed case class FinSetT(elemType: CellT) extends CellT with Serializable {
-
-    /**
-     * Produce a short signature that uniquely describes the type (up to unification),
-     * similar to Java's signature mangling. If one type can be unified to another,
-     * e.g., records, they have the same signature.
-     *
-     * @return a short signature that uniquely characterizes this type up to unification
-     */
     override val signature: String = s"S${elemType.signature}"
 
     override val toString: String = s"FinSet[$elemType]"
+
+    override def toTlaType1: TlaType1 = SetT1(elemType.toTlaType1)
   }
 
   /**
@@ -299,17 +293,11 @@ package object types {
    * @param elemType the elements type
    */
   sealed case class InfSetT(elemType: CellT) extends CellT with Serializable {
-
-    /**
-     * Produce a short signature that uniquely describes the type (up to unification),
-     * similar to Java's signature mangling. If one type can be unified to another,
-     * e.g., records, they have the same signature.
-     *
-     * @return a short signature that uniquely characterizes this type up to unification
-     */
     override val signature: String = s"Z${elemType.signature}"
 
     override val toString: String = s"InfSet[$elemType]"
+
+    override def toTlaType1: TlaType1 = SetT1(elemType.toTlaType1)
   }
 
   /**
@@ -319,16 +307,12 @@ package object types {
    */
   sealed case class PowSetT(domType: CellT) extends CellT with Serializable {
     require(domType.isInstanceOf[FinSetT]) // currently, we support only PowSetT(FinSetT(_))
-    /**
-     * Produce a short signature that uniquely describes the type (up to unification),
-     * similar to Java's signature mangling. If one type can be unified to another,
-     * e.g., records, they have the same signature.
-     *
-     * @return a short signature that uniquely characterizes this type up to unification
-     */
+
     override val signature: String = s"P${domType.signature}"
 
     override val toString: String = s"PowSet[$domType]"
+
+    override def toTlaType1: TlaType1 = SetT1(domType.toTlaType1)
   }
 
   /**
@@ -341,14 +325,6 @@ package object types {
    * @param resultType result type (not the co-domain!)
    */
   sealed case class FunT(domType: CellT, resultType: CellT) extends CellT with Serializable {
-
-    /**
-     * Produce a short signature that uniquely describes the type (up to unification),
-     * similar to Java's signature mangling. If one type can be unified to another,
-     * e.g., records, they have the same signature.
-     *
-     * @return a short signature that uniquely characterizes this type up to unification
-     */
     override val signature: String = s"f${domType.signature}_${resultType.signature}"
 
     val argType: CellT = domType match {
@@ -358,6 +334,13 @@ package object types {
     }
 
     override val toString: String = s"Fun[$domType, $resultType]"
+
+    override def toTlaType1: TlaType1 = {
+      domType.toTlaType1 match {
+        case SetT1(elemType) => FunT1(elemType, resultType.toTlaType1)
+        case tt              => throw new TypingException("Unexpected function domain type: " + tt)
+      }
+    }
   }
 
   /**
@@ -372,13 +355,6 @@ package object types {
           && (cdmType.isInstanceOf[FinSetT] || cdmType.isInstanceOf[PowSetT]
             || cdmType.isInstanceOf[FinFunSetT] || cdmType.isInstanceOf[InfSetT]))
 
-    /**
-     * Produce a short signature that uniquely describes the type (up to unification),
-     * similar to Java's signature mangling. If one type can be unified to another,
-     * e.g., records, they have the same signature.
-     *
-     * @return a short signature that uniquely characterizes this type up to unification
-     */
     override val signature: String = s"F%${domType.signature}_%${cdmType.signature}"
 
     def argType(): CellT = domType match {
@@ -394,6 +370,13 @@ package object types {
     }
 
     override val toString: String = s"FinFunSet[$domType, $cdmType]"
+
+    override def toTlaType1: TlaType1 = {
+      (domType.toTlaType1, cdmType.toTlaType1) match {
+        case (SetT1(arg), SetT1(res)) => SetT1(FunT1(arg, res))
+        case (dt, cdt)                => throw new TypingException(s"Unexpected domain type $dt and result type $cdt")
+      }
+    }
   }
 
   /**
@@ -403,15 +386,13 @@ package object types {
    */
   sealed case class TupleT(args: Seq[CellT]) extends CellT with Serializable {
 
-    /**
-     * Produce a short signature that uniquely describes the type (up to unification),
-     * similar to Java's signature mangling.
-     *
-     * @return a short signature that uniquely characterizes this type up to unification
-     */
     override val signature: String = s"T_${args.map(_.signature).mkString("_")}"
 
     override val toString: String = s"Tuple[${args.map(_.toString).mkString(", ")}]"
+
+    override def toTlaType1: TlaType1 = {
+      TupT1(args.map(_.toTlaType1): _*)
+    }
   }
 
   /**
@@ -423,15 +404,11 @@ package object types {
    */
   sealed case class SeqT(res: CellT) extends CellT with Serializable {
 
-    /**
-     * Produce a short signature that uniquely describes the type (up to unification),
-     * similar to Java's signature mangling.
-     *
-     * @return a short signature that uniquely characterizes this type up to unification
-     */
     override val signature: String = s"Q_${res.signature}"
 
     override val toString: String = s"Seq[$res]"
+
+    override def toTlaType1: TlaType1 = SeqT1(res.toTlaType1)
   }
 
   /**
@@ -440,20 +417,14 @@ package object types {
    * @param fields a map of fields and their types
    */
   sealed case class RecordT(fields: SortedMap[String, CellT]) extends CellT with Serializable {
-
-    /**
-     * Produce a short signature that uniquely describes the type (up to unification),
-     * similar to Java's signature mangling. If one type can be unified to another,
-     * e.g., records, they have the same signature.
-     *
-     * As records having different domains can be unified, we do not include the records arguments in the signature.
-     *
-     * @return a short signature that uniquely characterizes this type up to unification
-     */
     override val signature: String = "R"
 
     override val toString: String =
       s"Record[${fields.map { case (k, v) => "\"" + k + "\" -> " + v } mkString ", "}]"
+
+    override def toTlaType1: TlaType1 = {
+      RecT1(fields.mapValues(_.toTlaType1))
+    }
   }
 
   /**
