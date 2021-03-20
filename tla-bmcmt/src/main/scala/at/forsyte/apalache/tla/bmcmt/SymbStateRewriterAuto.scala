@@ -4,7 +4,6 @@ import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.caches.{ExprCache, IntValueCache, RecordDomainCache, StrValueCache}
 import at.forsyte.apalache.tla.bmcmt.rewriter.{RewriterConfig, SymbStateRewriterSnapshot}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir.TlaEx
 
 /**
@@ -30,8 +29,6 @@ class SymbStateRewriterAuto(private var _solverContext: SolverContext) extends S
 
   var config: RewriterConfig = new RewriterConfig
 
-  val typeFinder = new TrivialTypeFinder()
-
   /**
    * A solver context that is populated by the rewriter.
    */
@@ -49,7 +46,7 @@ class SymbStateRewriterAuto(private var _solverContext: SolverContext) extends S
 
   private val exprGradeStoreImpl = new ExprGradeStoreImpl()
   private val exprGradeAnalysis = new ExprGradeAnalysis(exprGradeStoreImpl)
-  private val impl = new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
+  private val impl = new SymbStateRewriterImpl(solverContext, exprGradeStore)
 
   override def contextLevel: Int = impl.contextLevel
 

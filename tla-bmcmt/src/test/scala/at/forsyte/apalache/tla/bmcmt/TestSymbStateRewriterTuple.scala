@@ -78,7 +78,7 @@ class TestSymbStateRewriterTuple extends RewriterBase {
     val tuple2 = tla.tuple(tla.int(2))
 
     val state = new SymbState(tla.enumSet(tuple1, tuple2), arena, Binding())
-    assertThrows[TypeInferenceException] {
+    assertThrows[NotImplementedError] {
       create().rewriteUntilDone(state)
       fail("Expected a type error")
     }
@@ -89,7 +89,7 @@ class TestSymbStateRewriterTuple extends RewriterBase {
     val tuple2 = tla.tuple(tla.bool(true), tla.int(2))
 
     val state = new SymbState(tla.enumSet(tuple1, tuple2), arena, Binding())
-    assertThrows[TypeInferenceException] {
+    assertThrows[NotImplementedError] {
       create().rewriteUntilDone(state)
     }
   }

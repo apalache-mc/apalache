@@ -90,7 +90,7 @@ class TestSymbStateRewriterRecord extends RewriterBase {
     val recordAcc = tla.appFun(record, tla.str("c"))
     val state = new SymbState(recordAcc, arena, Binding())
     val rewriter = create()
-    assertThrows[TypeInferenceException] {
+    assertThrows[NotImplementedError] {
       rewriter.rewriteUntilDone(state)
     }
   }
@@ -152,7 +152,7 @@ class TestSymbStateRewriterRecord extends RewriterBase {
 
     val state = new SymbState(tla.enumSet(record1, record2), arena, Binding())
     // this is a badly-typed expression
-    assertThrows[TypeInferenceException] {
+    assertThrows[NotImplementedError] {
       create().rewriteUntilDone(state)
     }
   }

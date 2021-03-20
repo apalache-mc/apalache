@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.smt.{PreproSolverContext, SolverConfig, Z3SolverContext}
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
@@ -618,7 +617,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
         .typed(types, "b")
 
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
+    val rewriter = new SymbStateRewriterImpl(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case NameEx(_) =>
@@ -645,7 +644,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
         .typed(types, "b")
 
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
+    val rewriter = new SymbStateRewriterImpl(solverContext)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case NameEx(_) =>

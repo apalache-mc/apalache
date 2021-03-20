@@ -8,7 +8,6 @@ import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig}
 import at.forsyte.apalache.tla.bmcmt.trex.{
   FilteredTransitionExecutor, IncrementalExecutionContext, TransitionExecutorImpl
 }
-import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.BmcOper
@@ -19,16 +18,14 @@ import org.scalatest.{BeforeAndAfter, FunSuite}
 
 @RunWith(classOf[JUnitRunner])
 class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
-  private var typeFinder: TrivialTypeFinder = new TrivialTypeFinder()
   private var solver: RecordingSolverContext =
     RecordingSolverContext.createZ3(None, SolverConfig(debug = false, profile = false, 0))
-  private var rewriter = new SymbStateRewriterImpl(solver, typeFinder, new ExprGradeStoreImpl)
+  private var rewriter = new SymbStateRewriterImpl(solver, new ExprGradeStoreImpl)
 
   before {
     // initialize the model checker
-    typeFinder = new TrivialTypeFinder()
     solver = RecordingSolverContext.createZ3(None, SolverConfig(debug = false, profile = false, 0))
-    rewriter = new SymbStateRewriterImpl(solver, typeFinder, new ExprGradeStoreImpl)
+    rewriter = new SymbStateRewriterImpl(solver, new ExprGradeStoreImpl)
   }
 
   private def mkModuleWithX(): TlaModule = {

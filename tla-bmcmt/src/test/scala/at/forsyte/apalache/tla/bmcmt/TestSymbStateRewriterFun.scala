@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper._
@@ -639,9 +638,7 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
       OperEx(BmcOper.skolem, tla.exists(tla.name("x"), tla.enumSet(fun1), tla.appFun(NameEx("x"), tla.bool(false))))
 
     // here, we have to overred FreeExistentialsStore, and thus cannot use SymbStateRewriterAuto
-    val typeFinder = new TrivialTypeFinder()
-    val rewriter = new SymbStateRewriterImpl(solverContext, typeFinder)
-    typeFinder.inferAndSave(exists)
+    val rewriter = new SymbStateRewriterImpl(solverContext)
 
     val state = new SymbState(exists, arena, Binding())
     val nextState = rewriter.rewriteUntilDone(state)

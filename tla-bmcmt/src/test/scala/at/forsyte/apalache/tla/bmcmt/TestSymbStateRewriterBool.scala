@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.NoRule
-import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, IntT}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
@@ -107,7 +106,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
       .typed(boolTypes, "b")
 
     val state = new SymbState(ite, arena, Binding())
-    val rewriter = new SymbStateRewriterImpl(solverContext, new TrivialTypeFinder())
+    val rewriter = new SymbStateRewriterImpl(solverContext)
     var nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     val eq = tla.eql(tla.int(0), nextState.ex).typed(BoolT1())
