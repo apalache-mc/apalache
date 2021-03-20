@@ -148,7 +148,7 @@ EXITCODE: OK
 #### check factorization find a counterexample
 
 ```sh
-$ apalache-mc check --length=2 --inv=Inv --with-snowcat factorization.tla | sed 's/I@.*//'
+$ apalache-mc check --length=2 --inv=Inv factorization.tla | sed 's/I@.*//'
 ...
 The outcome is: Error
 Checker has found an error
@@ -158,7 +158,7 @@ Checker has found an error
 ### check Fix531.tla reports no error: regression for issue 531
 
 ```sh
-$ apalache-mc check --length=1 --with-snowcat Fix531.tla | sed 's/I@.*//'
+$ apalache-mc check --length=1 Fix531.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -167,7 +167,7 @@ The outcome is: NoError
 ### check UnchangedExpr471.tla reports no error: regression for issue 471
 
 ```sh
-$ apalache-mc check --cinit=ConstInit --length=1 --with-snowcat UnchangedExpr471.tla | sed 's/I@.*//'
+$ apalache-mc check --cinit=ConstInit --length=1 UnchangedExpr471.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -176,7 +176,7 @@ The outcome is: NoError
 ### check ExistTuple476.tla reports no error: regression for issue 476
 
 ```sh
-$ apalache-mc check --length=1 --with-snowcat ExistTuple476.tla | sed 's/I@.*//'
+$ apalache-mc check --length=1 ExistTuple476.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -185,7 +185,7 @@ The outcome is: NoError
 ### check InvSub for SafeMath reports no error: regression for issue 450
 
 ```sh
-$ apalache-mc check --length=1 --inv=InvSub --with-snowcat SafeMath.tla | sed 's/I@.*//'
+$ apalache-mc check --length=1 --inv=InvSub SafeMath.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -194,7 +194,7 @@ The outcome is: NoError
 ### check InvAdd for SafeMath reports no error: regression for issue 450
 
 ```sh
-$ apalache-mc check --length=1 --inv=InvAdd --with-snowcat SafeMath.tla | sed 's/I@.*//'
+$ apalache-mc check --length=1 --inv=InvAdd SafeMath.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -203,7 +203,7 @@ The outcome is: NoError
 ### check Fix365_ExistsSubset succeeds: regression for issue 365
 
 ```sh
-$ apalache-mc check --length=10 --with-snowcat Fix365_ExistsSubset.tla | sed 's/I@.*//'
+$ apalache-mc check --length=10 Fix365_ExistsSubset.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -212,7 +212,7 @@ The outcome is: NoError
 ### check Fix365_ExistsSubset2 succeeds: regression for issue 365
 
 ```sh
-$ apalache-mc check --length=10 --with-snowcat Fix365_ExistsSubset2.tla | sed 's/I@.*//'
+$ apalache-mc check --length=10 Fix365_ExistsSubset2.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -221,7 +221,7 @@ The outcome is: NoError
 ### check Fix365_ExistsSubset3 succeeds: regression for issue 365
 
 ```sh
-$ apalache-mc check --length=10 --with-snowcat Fix365_ExistsSubset3.tla | sed 's/I@.*//'
+$ apalache-mc check --length=10 Fix365_ExistsSubset3.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -230,7 +230,7 @@ The outcome is: NoError
 ### check Bug20201118 succeeds: regression for issue 333
 
 ```sh
-$ apalache-mc check --length=10 --init=Init --next=Next --inv=Inv --with-snowcat Bug20201118.tla | sed 's/I@.*//'
+$ apalache-mc check --length=10 --init=Init --next=Next --inv=Inv Bug20201118.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -239,7 +239,7 @@ The outcome is: NoError
 ### check Fix333 succeeds: another regression for issue 333
 
 ```sh
-$ apalache-mc check --length=2 --init=Init --next=Next --inv=Inv --with-snowcat Fix333.tla | sed 's/I@.*//'
+$ apalache-mc check --length=2 --init=Init --next=Next --inv=Inv Fix333.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -248,7 +248,7 @@ The outcome is: NoError
 ### check Bug20190118 succeeds
 
 ```sh
-$ apalache-mc check --length=1 --init=Init --next=Next --inv=Inv --with-snowcat Bug20190118.tla | sed 's/I@.*//'
+$ apalache-mc check --length=1 --init=Init --next=Next --inv=Inv Bug20190118.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -257,7 +257,7 @@ The outcome is: NoError
 ### check mis.tla succeeds
 
 ```sh
-$ apalache-mc check --length=5 --inv=IsIndependent --with-snowcat mis.tla | sed 's/I@.*//'
+$ apalache-mc check --length=5 --inv=IsIndependent mis.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -266,7 +266,7 @@ The outcome is: NoError
 ### check mis_bug.tla errors
 
 ```sh
-$ apalache-mc check --length=5 --inv=IsIndependent --with-snowcat mis_bug.tla | sed 's/I@.*//'
+$ apalache-mc check --length=5 --inv=IsIndependent mis_bug.tla | sed 's/I@.*//'
 ...
 The outcome is: Error
 Checker has found an error
@@ -277,7 +277,7 @@ Checker has found an error
 ### check ast.tla succeeds
 
 ```sh
-$ apalache-mc check --length=5 --with-snowcat ast.tla | sed 's/I@.*//'
+$ apalache-mc check --length=5 ast.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -286,7 +286,7 @@ The outcome is: NoError
 ### check pr.tla suceeds
 
 ```sh
-$ apalache-mc check --length=2 --with-snowcat pr.tla | sed 's/I@.*//'
+$ apalache-mc check --length=2 pr.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -295,7 +295,7 @@ The outcome is: NoError
 ### check EWD840.tla succeeds
 
 ```sh
-$ apalache-mc check --length=5 --inv=Inv --with-snowcat EWD840.tla | sed 's/I@.*//'
+$ apalache-mc check --length=5 --inv=Inv EWD840.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -304,7 +304,7 @@ The outcome is: NoError
 ### check Paxos.tla succeeds
 
 ```sh
-$ apalache-mc check --length=5 --inv=Inv --with-snowcat Paxos.tla | sed 's/I@.*//'
+$ apalache-mc check --length=5 --inv=Inv Paxos.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -313,7 +313,7 @@ The outcome is: NoError
 ### check Bug20190118 succeeds
 
 ```sh
-$ apalache-mc check --length=1 --with-snowcat Bug20190118.tla | sed 's/I@.*//'
+$ apalache-mc check --length=1 Bug20190118.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -322,7 +322,7 @@ The outcome is: NoError
 ### check Bug20190921 succeeds
 
 ```sh
-$ apalache-mc check --length=5 --cinit=CInit --with-snowcat Bug20190921.tla | sed 's/I@.*//'
+$ apalache-mc check --length=5 --cinit=CInit Bug20190921.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -331,7 +331,7 @@ The outcome is: NoError
 ### check Counter.tla errors
 
 ```sh
-$ apalache-mc check --length=10 --inv=Inv --with-snowcat Counter.tla | sed 's/I@.*//'
+$ apalache-mc check --length=10 --inv=Inv Counter.tla | sed 's/I@.*//'
 ...
 The outcome is: Error
 Checker has found an error
@@ -343,7 +343,7 @@ Checker has found an error
 #### check y2k with length 20 and ConstInit errors
 
 ```sh
-$ apalache-mc check --length=20 --inv=Safety --cinit=ConstInit --with-snowcat y2k_cinit.tla  | sed 's/I@.*//'
+$ apalache-mc check --length=20 --inv=Safety --cinit=ConstInit y2k_cinit.tla  | sed 's/I@.*//'
 ...
 The outcome is: Error
 Checker has found an error
@@ -353,7 +353,7 @@ Checker has found an error
 #### check y2k with length 19 succeeds
 
 ```sh
-$ apalache-mc check --length=19 --inv=Safety --with-snowcat y2k_instance.tla | sed 's/I@.*//'
+$ apalache-mc check --length=19 --inv=Safety y2k_instance.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -362,7 +362,7 @@ The outcome is: NoError
 #### check y2k with length 30 errors
 
 ```sh
-$ apalache-mc check --length=30 --inv=Safety --with-snowcat y2k_instance.tla | sed 's/I@.*//'
+$ apalache-mc check --length=30 --inv=Safety y2k_instance.tla | sed 's/I@.*//'
 ...
 The outcome is: Error
 Checker has found an error
@@ -372,7 +372,7 @@ Checker has found an error
 ### check Counter.tla errors
 
 ```sh
-$ apalache-mc check --length=10 --inv=Inv --with-snowcat Counter.tla | sed 's/I@.*//'
+$ apalache-mc check --length=10 --inv=Inv Counter.tla | sed 's/I@.*//'
 ...
 The outcome is: Error
 Checker has found an error
@@ -382,7 +382,7 @@ Checker has found an error
 ### check NatCounter.tla errors
 
 ```sh
-$ apalache-mc check --length=10 --inv=Inv --with-snowcat NatCounter.tla  | sed 's/I@.*//'
+$ apalache-mc check --length=10 --inv=Inv NatCounter.tla  | sed 's/I@.*//'
 ...
 The outcome is: Error
 ...
@@ -391,7 +391,7 @@ The outcome is: Error
 ### check NeedForTypesWithTypes.tla succeeds
 
 ```sh
-$ apalache-mc check --length=10 --cinit=ConstInit --inv=Inv --with-snowcat NeedForTypesWithTypes.tla | sed 's/I@.*//'
+$ apalache-mc check --length=10 --cinit=ConstInit --inv=Inv NeedForTypesWithTypes.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -400,7 +400,7 @@ The outcome is: NoError
 ### check HandshakeWithTypes.tla with length 4 succeeds
 
 ```sh
-$ apalache-mc check --length=4 --inv=Inv --with-snowcat HandshakeWithTypes.tla | sed 's/I@.*//'
+$ apalache-mc check --length=4 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -409,7 +409,7 @@ The outcome is: NoError
 ### check HandshakeWithTypes.tla with lengh 5 deadlocks
 
 ```sh
-$ apalache-mc check --length=5 --inv=Inv --with-snowcat HandshakeWithTypes.tla | sed 's/I@.*//'
+$ apalache-mc check --length=5 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
 ...
 The outcome is: Deadlock
 ...
@@ -427,7 +427,7 @@ The outcome is: Error
 ### check Init without an assignment fails
 
 ```sh
-$ apalache-mc check --length=1 --inv=Inv --with-snowcat Assignments20200309.tla
+$ apalache-mc check --length=1 --inv=Inv Assignments20200309.tla
 ...
 EXITCODE: ERROR (99)
 [99]
@@ -436,7 +436,7 @@ EXITCODE: ERROR (99)
 ### check Inline.tla suceeds
 
 ```sh
-$ apalache-mc check --length=5 --with-snowcat Inline.tla | sed 's/I@.*//'
+$ apalache-mc check --length=5 Inline.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -445,7 +445,7 @@ The outcome is: NoError
 ### check Rec1.tla succeeds
 
 ```sh
-$ apalache-mc check --length=5 --inv=Inv --with-snowcat Rec1.tla | sed 's/I@.*//'
+$ apalache-mc check --length=5 --inv=Inv Rec1.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -454,7 +454,7 @@ The outcome is: NoError
 ### check Rec2.tla succeeds
 
 ```sh
-$ apalache-mc check --length=5 --inv=Inv --with-snowcat Rec2.tla | sed 's/I@.*//'
+$ apalache-mc check --length=5 --inv=Inv Rec2.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -462,7 +462,7 @@ The outcome is: NoError
 
 ### check Rec3.tla succeeds
 ```sh
-$ apalache-mc check --length=10 --inv=Inv --with-snowcat Rec3.tla | sed 's/I@.*//'
+$ apalache-mc check --length=10 --inv=Inv Rec3.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -473,7 +473,7 @@ The outcome is: NoError
 Unfolding Fibonacci numbers
 
 ```sh
-$ apalache-mc check --length=10 --inv=Inv --with-snowcat Rec4.tla | sed 's/I@.*//'
+$ apalache-mc check --length=10 --inv=Inv Rec4.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -482,7 +482,7 @@ The outcome is: NoError
 ### check Rec5.tla succeeds
 
 ```sh
-$ apalache-mc check --length=5 --inv=Inv --with-snowcat Rec5.tla | sed 's/I@.*//'
+$ apalache-mc check --length=5 --inv=Inv Rec5.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -491,7 +491,7 @@ The outcome is: NoError
 ### check Rec6.tla succeeds
 
 ```sh
-$ apalache-mc check --length=5 --inv=Inv --with-snowcat Rec6.tla | sed 's/I@.*//'
+$ apalache-mc check --length=5 --inv=Inv Rec6.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -500,7 +500,7 @@ The outcome is: NoError
 ### check Rec8.tla succeeds
 
 ```sh
-$ apalache-mc check --length=10 --inv=Inv --with-snowcat Rec8.tla | sed 's/I@.*//'
+$ apalache-mc check --length=10 --inv=Inv Rec8.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -509,7 +509,7 @@ The outcome is: NoError
 ### check Rec9.tla succeeds
 
 ```sh
-$ apalache-mc check --length=3 --inv=Inv --with-snowcat Rec9.tla | sed 's/I@.*//'
+$ apalache-mc check --length=3 --inv=Inv Rec9.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...

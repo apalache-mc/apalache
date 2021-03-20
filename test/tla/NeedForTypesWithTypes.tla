@@ -14,16 +14,14 @@ VARIABLES
     \* @type: Seq(Int);
     OutSeq    \* the output sequence
 
-a <: b == a          
-
 ConstInit == InSet = 1..4
 
 Init ==
-    /\ OutSeq = << >> <: Seq(Int)
+    /\ OutSeq = << >>
     /\ Left = InSet
 
 Next ==
-    IF Left = {} <: {Int}
+    IF Left = {}
     THEN UNCHANGED <<Left, OutSeq>>
     ELSE \E x \in Left:
           /\ OutSeq' = Append(OutSeq, x)

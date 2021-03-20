@@ -25,11 +25,6 @@ Value == {0, 1}
 Acceptor == {"a1", "a2"}
 Quorum == {{"a1", "a2"}}
 
-a <: b == a
-MT == [type |-> STRING, bal |-> Int,
-       mbal |-> Int, acc |-> STRING,
-       val |-> Int, mval |-> Int]
-
 (*
 Acceptor == {"a1", "a2", "a3"}
 Quorum == {{"a1", "a2"}, {"a2", "a3"}, {"a1", "a3"}}
@@ -145,13 +140,13 @@ votes == [a \in Acceptor |->
 Init == /\ maxBal = [a \in Acceptor |-> -1]
         /\ maxVBal = [a \in Acceptor |-> -1]
         /\ maxVal = [a \in Acceptor |-> None]
-        /\ msgs = {} <: {MT}
+        /\ msgs = {}
 
 (***************************************************************************)
 (* The actions.  We begin with the subaction (an action that will be used  *)
 (* to define the actions that make up the next-state action.               *)
 (***************************************************************************)
-Send(m) == /\ msgs' = msgs \cup {m <: MT}
+Send(m) == /\ msgs' = msgs \cup {m}
 
 
 (***************************************************************************)
@@ -205,7 +200,7 @@ Phase2a(b, v) ==
                                  /\ m.bal = b}
             Q1bv == {m \in Q1b : m.mbal \geq 0}
         IN  /\ \A a \in Q : \E m \in Q1b : m.acc = a 
-            /\ \/ Q1bv = ({} <: {MT})
+            /\ \/ Q1bv = {}
                \/ \E m \in Q1bv : 
                     /\ m.mval = v
                     /\ \A mm \in Q1bv : m.mbal \geq mm.mbal 
