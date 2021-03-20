@@ -7,7 +7,9 @@ import at.forsyte.apalache.tla.bmcmt.types.TypeInferenceError
 import at.forsyte.apalache.tla.imp.SanyException
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
-import at.forsyte.apalache.tla.lir.{LanguagePredError, MalformedTlaError, OperEx, TypingException, UID}
+import at.forsyte.apalache.tla.lir.{
+  LanguagePredError, MalformedTlaError, OperEx, OutdatedAnnotationsError, TypingException, UID
+}
 import at.forsyte.apalache.tla.pp.{
   ConfigurationError, IrrecoverablePreprocessingError, NotInKeraError, OverridingError, TlaInputError
 }
@@ -47,6 +49,10 @@ class CheckerExceptionAdapter @Inject() (sourceStore: SourceStore, changeListene
 
     case err: TypeInferenceException =>
       val msg = "%s\n%s".format(err.getMessage, err.errors.map(ofTypeInferenceError).mkString("\n"))
+      NormalErrorMessage(msg)
+
+    case err: OutdatedAnnotationsError =>
+      val msg = "%s: rewriter error: %s".format(findLoc(err.causeExpr.ID), err.getMessage)
       NormalErrorMessage(msg)
 
     case err: LanguagePredError =>

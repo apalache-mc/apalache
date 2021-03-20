@@ -842,9 +842,9 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
       case OperEx(BmcOper.withType, lhs, annotation) =>
         // Met an old type annotation. Warn the user and ignore the annotation.
         logger.error("Met an old type annotation: " + annotation)
-        logger.error("Old annotations are not supported")
         logger.error("See: https://apalache.informal.systems/docs/apalache/typechecker-snowcat.html")
-        throw new MalformedTlaError(s"Old type annotations are not supported", ex)
+        val msg = s"Old Apalache type annotations (predating 0.12.0) are no longer supported"
+        throw new OutdatedAnnotationsError(msg, ex)
 
       //********************************************* TLC **************************************************
       case OperEx(TlcOper.print, text, value) =>
