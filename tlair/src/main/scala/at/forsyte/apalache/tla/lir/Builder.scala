@@ -140,7 +140,7 @@ class Builder {
    *
    * @return the value expression that corresponds to Nat.
    */
-  def natSet(): BuilderVal = BuilderVal(TlaIntSet)
+  def natSet(): BuilderVal = BuilderVal(TlaNatSet)
 
   /** Declarations */
 
