@@ -43,7 +43,7 @@ class MapBase(rewriter: SymbStateRewriter) {
     val elemsOfSets = setsAsCells.map(nextState.arena.getHas)
     val setLimits = elemsOfSets.map(_.size - 1)
     // find the types of the target expression and of the target set
-    val targetMapT = rewriter.typeFinder.computeRec(mapEx)
+    val targetMapT = CellT.fromTypeTag(mapEx.typeTag)
     val targetSetT = FinSetT(targetMapT)
 
     nextState = nextState.updateArena(_.appendCell(targetSetT))
