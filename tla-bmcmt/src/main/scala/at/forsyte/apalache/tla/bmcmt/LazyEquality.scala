@@ -4,10 +4,9 @@ import at.forsyte.apalache.tla.bmcmt.caches.{EqCache, EqCacheSnapshot}
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rewriter.{ConstSimplifierForSmt, Recoverable}
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.{NullEx, TlaEx}
-
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.{MalformedTlaError, NullEx, TlaEx}
 
 /**
  * Generate equality constraints between cells and cache them to avoid redundant constraints.
@@ -123,9 +122,11 @@ class LazyEquality(rewriter: SymbStateRewriter)
     } else if (cacheEntry.isDefined) {
       state // do nothing
     } else if (!left.cellType.comparableWith(right.cellType)) {
-      // cells of incomparable types cannot be equal
-      eqCache.put(left, right, EqCache.FalseEntry())
-      state
+      // Cells of incomparable types cannot be equal.
+      // This is a dangerous state, as the type checker should have caught this. Throw an error.
+      // It is not really a typing error, but an internal error that should be treated as such.
+      val msg = "Checking values of incomparable types for equality: %s and %s".format(left.cellType, right.cellType)
+      throw new MalformedTlaError(msg, state.ex)
     } else {
       // generate constraints
       val newState =
