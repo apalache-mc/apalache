@@ -384,11 +384,14 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext, var typeF
 
     // use cache or compute a new expression
     exprCache.get(state.ex) match {
-      case Some(eg: (TlaEx, ExprGrade.Value)) =>
+      case Some(eg: (TlaEx, ExprGrade.Value)) if eg._1.typeTag == state.ex.typeTag =>
+        // In rare cases, the expression may be equal to a cache expression, but they may have different types.
+        // For instance, {}: Set(Int) and {}: Set(Set(Int)) are syntactically the same but having different types.
+        // Hence, we compare types as well. As this case is rare, we don't store the types directly in the cache.
         solverContext.log(s"; Using cached value ${eg._1} for expression ${state.ex}")
         state.setRex(eg._1)
 
-      case None =>
+      case _ =>
         // Get the SMT metrics before translating the expression.
         // Note that we are not doing that in the recursive function,
         // as the new expressions there will not have source information.
