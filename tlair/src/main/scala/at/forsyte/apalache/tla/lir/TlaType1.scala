@@ -16,6 +16,15 @@ sealed trait TlaType1 {
   def usedNames: Set[Int]
 }
 
+object TlaType1 {
+  def fromTypeTag(typeTag: TypeTag): TlaType1 = {
+    typeTag match {
+      case Typed(tt: TlaType1) => tt
+      case _                   => throw new TypingException("Expected Typed(_: TlaType1), found: " + typeTag)
+    }
+  }
+}
+
 /**
  * An integer type.
  */

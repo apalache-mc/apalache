@@ -1,9 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.FinSetT
+import at.forsyte.apalache.tla.bmcmt.types.{CellT, FinSetT}
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, TlaType1}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
@@ -21,13 +21,13 @@ class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      case OperEx(TlaSetOper.enumSet, elems @ _*) =>
-        // switch to cell theory
+      case ex @ OperEx(TlaSetOper.enumSet, elems @ _*) =>
         val (newState: SymbState, newEs: Seq[TlaEx]) =
           rewriter.rewriteSeqUntilDone(state, elems)
         val cells = newEs.map(newState.arena.findCellByNameEx)
         // compute the set type using the type finder
-        val elemType = rewriter.typeFinder.compute(state.ex, cells.map(_.cellType): _*) match {
+        val setT = CellT.fromTypeTag(ex.typeTag)
+        val elemType = setT match {
           case FinSetT(et) => et
           case setT @ _    => throw new TypeException("Expected a finite set, found: " + setT, state.ex)
         }

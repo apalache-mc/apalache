@@ -1,7 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.lir.NullEx
-import at.forsyte.apalache.tla.lir.io.UTFPrinter
+import at.forsyte.apalache.tla.lir.{
+  BoolT1, ConstT1, FunT1, IntT1, NullEx, OperT1, RealT1, RecT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1, TupT1,
+  TypeTag, TypingException, VarT1
+}
 
 import scala.collection.immutable.SortedMap
 
@@ -136,6 +138,52 @@ package object types {
           None
       }
     }
+  }
+
+  object CellT {
+
+    /**
+     * Convert a TlaType1 to a cell type.
+     */
+    def fromType1(tt: TlaType1): CellT = {
+      tt match {
+        case IntT1()    => IntT()
+        case StrT1()    => ConstT()
+        case BoolT1()   => BoolT()
+        case ConstT1(_) => ConstT() // this should change in https://github.com/informalsystems/apalache/issues/570
+        case RealT1() =>
+          throw new TypingException("Unsupported type RealT1")
+
+        case VarT1(_) =>
+          // type variables should have been resolved by operator inlining and type checking
+          throw new TypingException("Unexpected type VarT1")
+
+        case SetT1(elem)       => FinSetT(fromType1(elem))
+        case SeqT1(elem)       => SeqT(fromType1(elem))
+        case FunT1(arg, res)   => FunT(FinSetT(fromType1(arg)), fromType1(res))
+        case TupT1(elems @ _*) => TupleT(elems.map(fromType1))
+        case RecT1(fieldTypes) => RecordT(fieldTypes.mapValues(fromType1))
+
+        case SparseTupT1(_) =>
+          // sparse tuple can only appear in operator arguments, which must have been inlined
+          throw new TypingException("Unexpected type SparseTupT1")
+
+        case OperT1(_, _) =>
+          // all operators are inlined
+          throw new TypingException("Unexpected operator type OperT1")
+      }
+    }
+
+    /**
+     * Convert a type tag to a cell type
+     *
+     * @param typeTag a type tag
+     * @return the corresponding cell type, if the tag has type Typed(_: TlaType1); otherwise, throw an exception
+     */
+    def fromTypeTag(typeTag: TypeTag): CellT = {
+      fromType1(TlaType1.fromTypeTag(typeTag))
+    }
+
   }
 
   // Jure @ 13.09.18: Suggestion: Replace all case class X( [no args] ) with object X ?
@@ -304,10 +352,9 @@ package object types {
     override val signature: String = s"f${domType.signature}_${resultType.signature}"
 
     val argType: CellT = domType match {
-      case FinSetT(et)      => et
-      case PowSetT(dt)      => dt
-      case CrossProdT(args) => TupleT(args map { _.elemType })
-      case _                => throw new TypeException(s"Unexpected domain type $domType", NullEx)
+      case FinSetT(et) => et
+      case PowSetT(dt) => dt
+      case _           => throw new TypeException(s"Unexpected domain type $domType", NullEx)
     }
 
     override val toString: String = s"Fun[$domType, $resultType]"
@@ -388,27 +435,6 @@ package object types {
   }
 
   /**
-   * The type for a cross product, e.g., FinSetT(A) |X FinSetT(B).
-   *
-   * FIXME: this type should disappear in the future,
-   * as CrossProdT(FinSetT(A), FinSetT(B)) = FinSetT(TupleT(A, B))
-   *
-   * @param args
-   */
-  @deprecated("Never been used")
-  sealed case class CrossProdT(args: Seq[FinSetT]) extends CellT with Serializable {
-
-    /**
-     * Produce a short signature that uniquely describes the type (up to unification),
-     * similar to Java's signature mangling. If one type can be unified to another,
-     * e.g., records, they have the same signature.
-     *
-     * @return a short signature that uniquely characterizes this type up to unification
-     */
-    override val signature: String = args map { _.signature } mkString UTFPrinter.m_times
-  }
-
-  /**
    * A record type
    *
    * @param fields a map of fields and their types
@@ -428,32 +454,6 @@ package object types {
 
     override val toString: String =
       s"Record[${fields.map { case (k, v) => "\"" + k + "\" -> " + v } mkString ", "}]"
-  }
-
-  // FIXME: Igor @ 20.12.2018: Do we still need this type?
-  sealed case class TypeParam(s: String) extends CellT {
-
-    /**
-     * Produce a short signature that uniquely describes the type (up to unification),
-     * similar to Java's signature mangling. If one type can be unified to another,
-     * e.g., records, they have the same signature.
-     *
-     * @return a short signature that uniquely characterizes this type up to unification
-     */
-    override val signature = s"P${s}"
-  }
-
-  // FIXME: Igor @ 20.12.2018: Do we still need this type?
-  sealed case class OptT(elementType: CellT) extends CellT {
-
-    /**
-     * Produce a short signature that uniquely describes the type (up to unification),
-     * similar to Java's signature mangling. If one type can be unified to another,
-     * e.g., records, they have the same signature.
-     *
-     * @return a short signature that uniquely characterizes this type up to unification
-     */
-    override val signature: String = s"O${elementType.signature}"
   }
 
   /**

@@ -20,6 +20,7 @@ class TypeInferenceError(val origin: TlaEx, val explanation: String)
  * @see CellT
  * @author Igor Konnov
  */
+@deprecated("Use TlaType1")
 trait TypeFinder[T] {
 
   /**

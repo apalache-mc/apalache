@@ -366,11 +366,13 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
 
   // infer the types and throw an exception if type inference has failed
   private def inferTypes(expr: TlaEx): Unit = {
+    /*
 //    logger.debug("Inferring types...")
     ctx.typeFinder.inferAndSave(expr)
     if (ctx.typeFinder.typeErrors.nonEmpty) {
       throw new TypeInferenceException(ctx.typeFinder.typeErrors)
     }
+     */
   }
 
   /**
@@ -379,6 +381,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
    * After that, remove the type finder to contain the new types only.
    */
   private def shiftTypes(constants: Set[String]): Unit = {
+    /*
     val types = ctx.typeFinder.varTypes
     // keep the types of prime variables, cells, and constants
     def keep(name: String): Boolean = {
@@ -389,5 +392,6 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
         .filter(p => keep(p._1))
         .map(p => (p._1.stripSuffix("'"), p._2))
     ctx.typeFinder.reset(nextTypes)
+     */
   }
 }

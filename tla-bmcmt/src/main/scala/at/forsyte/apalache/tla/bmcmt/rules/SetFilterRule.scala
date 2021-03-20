@@ -21,7 +21,7 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      case OperEx(TlaSetOper.filter, NameEx(varName), setEx, predEx) =>
+      case ex @ OperEx(TlaSetOper.filter, NameEx(varName), setEx, predEx) =>
         // rewrite the set expression into a memory cell
         var newState = rewriter.rewriteUntilDone(state.setRex(setEx))
         newState = newState.asCell.cellType match {
@@ -48,8 +48,8 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val filteredCellsAndPreds = (potentialCells zip computedPreds) filter (_._2 != NullEx)
 
         // get the result type from the type finder
-        val resultType = rewriter.typeFinder.compute(state.ex, ConstT(), setCell.cellType, BoolT())
-        assert(PartialFunction.cond(resultType) { case FinSetT(_) => true })
+        val resultType = CellT.fromTypeTag(ex.typeTag)
+        assert(resultType.isInstanceOf[FinSetT])
 
         // introduce a new set
         val arena = newState.arena.appendCell(resultType)

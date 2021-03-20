@@ -217,14 +217,28 @@ class CherryPick(rewriter: SymbStateRewriter) {
     rewriter.solverContext.log("; CHERRY-PICK %s FROM [%s] {".format(cellType, records.map(_.toString).mkString(", ")))
     val recordType = cellType.asInstanceOf[RecordT]
 
-    def findKeyIndex(key: String): Int =
-      recordType.fields.keySet.toList.indexOf(key)
+    def findKeyIndex(recT: RecordT, key: String): Int =
+      recT.fields.keySet.toList.indexOf(key)
 
     var newState = state
 
+    def getKeyOrDefault(record: ArenaCell, key: String): ArenaCell = {
+      val thisRecT = record.cellType.asInstanceOf[RecordT]
+      if (thisRecT.fields.contains(key)) {
+        // this record has the key
+        val keyIndex = findKeyIndex(thisRecT, key)
+        newState.arena.getHas(record)(keyIndex)
+      } else {
+        // This record does not have the key, but it was mixed with other records and produced a more general type.
+        // Return a default value. As we are iterating over fields of recordType, we will always find a value.
+        val valueT = recordType.fields.get(key).get
+        newState = defaultValueFactory.makeUpValue(newState, valueT)
+        newState.asCell
+      }
+    }
+
     def pickAtPos(key: String): ArenaCell = {
-      val keyIndex = findKeyIndex(key)
-      val slice = records.map(c => newState.arena.getHas(c)(keyIndex))
+      val slice = records.map(c => getKeyOrDefault(c, key))
       newState = pickByOracle(newState, oracle, slice, elseAssert)
       newState.asCell
     }
