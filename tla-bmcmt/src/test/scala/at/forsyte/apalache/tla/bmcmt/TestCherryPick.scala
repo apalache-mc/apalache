@@ -18,7 +18,10 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
       "II" -> SetT1(SetT1(IntT1())),
       "Qi" -> SeqT1(IntT1()),
       "ii" -> TupT1(IntT1(), IntT1()),
+      "ri" -> RecT1("a" -> IntT1()),
       "rii" -> RecT1("a" -> IntT1(), "b" -> IntT1()),
+      "riis" -> RecT1("a" -> IntT1(), "b" -> IntT1(), "c" -> StrT1()),
+      "Riis" -> SetT1(RecT1("a" -> IntT1(), "b" -> IntT1(), "c" -> StrT1())),
       "i_ii" -> TupT1(IntT1(), TupT1(IntT1(), IntT1()))
   )
 
@@ -144,6 +147,64 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
 
     assertEqWhenChosen(rewriter, state, oracle, 0, records(0).toNameEx)
     assertEqWhenChosen(rewriter, state, oracle, 1, records(1).toNameEx)
+  }
+
+  test("""CHERRY-PICK [a |-> 1, b |-> 2] or [a |-> 3]""") {
+    // After switching to Snowcat, we allow sets to mix records of compatible types.
+    // The old encoding was always introducing spurious fields for all records, as it was extending the records.
+    val rec1 = enumFun(str("a"), int(1), str("b"), int(2))
+      .typed(types, "rii")
+    val rec2 = enumFun(str("a"), int(1))
+      .typed(types, "ri")
+
+    // introduce an oracle that tells us which element to pick
+    val rewriter = create()
+    var state = new SymbState(bool(true).typed(), arena, Binding())
+    val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
+    state = oracleState
+    state = rewriter.rewriteUntilDone(state.setRex(rec1))
+    val rec1Cell = state.asCell
+    state = rewriter.rewriteUntilDone(state.setRex(rec2))
+    val rec2Cell = state.asCell
+
+    val recordCellType = CellT.fromType1(types("riis"))
+    state = new CherryPick(rewriter).pickRecord(recordCellType, state, oracle, Seq(rec1Cell, rec2Cell),
+        state.arena.cellFalse().toNameEx)
+    assert(solverContext.sat())
+
+    assertEqWhenChosen(rewriter, state, oracle, 0, rec1Cell.toNameEx)
+    assertEqWhenChosen(rewriter, state, oracle, 1, rec2Cell.toNameEx)
+  }
+
+  test("""CHERRY-PICK {[a |-> 1, b |-> 2], [a |-> 3]}""") {
+    // After switching to Snowcat, we allow sets to mix records of compatible types.
+    // The old encoding was always introducing spurious fields for all records, as it was extending the records.
+    val rec1 = enumFun(str("a"), int(1), str("b"), int(2))
+      .typed(types, "ri")
+    val rec2 = enumFun(str("a"), int(1))
+      .typed(types, "rii")
+
+    // introduce an oracle that tells us which element to pick
+    val rewriter = create()
+    var state = new SymbState(bool(true).typed(), arena, Binding())
+    state = rewriter.rewriteUntilDone(state.setRex(rec1))
+    val rec1Cell = state.asCell
+    state = rewriter.rewriteUntilDone(state.setRex(rec2))
+    val rec2Cell = state.asCell
+    val set = enumSet(rec1Cell.toNameEx ? "riis", rec2Cell.toNameEx ? "riis")
+      .typed(types, "Riis")
+    state = rewriter.rewriteUntilDone(state.setRex(set))
+    val setCell = state.asCell
+
+    state = new CherryPick(rewriter).pick(setCell, state, bool(false).typed())
+    assert(solverContext.sat())
+    val result = state.asCell
+    // check that the result is equal to one of the records and nothing else
+    val eq1 = eql(result.toNameEx ? "riis", rec1Cell.toNameEx ? "riis") ? "b"
+    val eq2 = eql(result.toNameEx ? "riis", rec2Cell.toNameEx ? "riis") ? "b"
+    val eq1or2 = or(eq1, eq2)
+      .typed(types, "b")
+    assertTlaExAndRestore(rewriter, state.setRex(eq1or2))
   }
 
   test("""CHERRY-PICK { {1, 2}, {3, 4} }""") {

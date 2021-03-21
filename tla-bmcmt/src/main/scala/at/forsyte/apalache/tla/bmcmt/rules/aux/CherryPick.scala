@@ -7,6 +7,8 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.{NameEx, NullEx, TlaEx, ValEx}
 
+import scala.collection.immutable.SortedMap
+
 /**
  * An element picket that allows us:
  *
@@ -247,8 +249,9 @@ class CherryPick(rewriter: SymbStateRewriter) {
     newState = newState.setArena(newState.arena.appendCell(cellType))
     val newRecord = newState.arena.topCell
     // pick the domain using the oracle.
-//    newState = pickSet(FinSetT(ConstT()), newState, oracle, records map (r => newState.arena.getDom(r)))
-    newState = pickRecordDomain(FinSetT(ConstT()), newState, oracle, records map (r => newState.arena.getDom(r)))
+    //    newState = pickSet(FinSetT(ConstT()), newState, oracle, records map (r => newState.arena.getDom(r)))
+    newState = pickRecordDomain(FinSetT(ConstT()), newState, oracle, records,
+        records map (r => newState.arena.getDom(r)))
     val newDom = newState.asCell
     // pick the fields using the oracle
     val fieldCells = recordType.fields.keySet.toSeq map pickAtPos
@@ -272,42 +275,72 @@ class CherryPick(rewriter: SymbStateRewriter) {
    * This optimization prevents the model checker from blowing up in the number of record domains, e.g., in Raft.
    *
    * @param domType the goal type
-   * @param state a symbolic state
-   * @param oracle the oracle to use
+   * @param state   a symbolic state
+   * @param oracle  the oracle to use
    * @param domains the domains to pick from
    * @return a new cell that encodes a picked domain
    */
-  private def pickRecordDomain(domType: CellT, state: SymbState, oracle: Oracle, domains: Seq[ArenaCell]): SymbState = {
+  private def pickRecordDomain(domType: CellT, state: SymbState, oracle: Oracle, records: Seq[ArenaCell],
+      domains: Seq[ArenaCell]): SymbState = {
     // TODO: use elseAssert and Oracle.caseAssertions?
     // It often happens that all the domains are actually the same cell. Return this cell.
     val distinct = domains.distinct
     if (distinct.size == 1) {
       state.setRex(distinct.head.toNameEx)
     } else {
-      // consistency check: make sure that all the domains consist of exactly the same sets of keys
-      val keyCells = state.arena.getHas(domains.head)
-      for (dom <- domains.tail) {
-        val otherKeyCells = state.arena.getHas(dom)
-        assert(otherKeyCells.size == keyCells.size,
-            "inconsistent record domains of size %d and %d".format(keyCells.size, otherKeyCells.size))
-        for ((k, o) <- keyCells.zip(otherKeyCells)) {
-          assert(k == o, s"inconsistent record domains: $k != $o")
-        }
-      }
+      val (newState, keyToCell) = findCommonKeys(state, records)
       // introduce a new cell for the picked domain
-      var nextState = state.updateArena(_.appendCell(domType))
+      var nextState = newState.updateArena(_.appendCell(domType))
       val newDom = nextState.arena.topCell
+      // Add the cells for all potential keys.
+      // Importantly, they all come from strValueCache, so the same key produces the same cell.
+      val keyCells = keyToCell.values.toSeq
       nextState = nextState.updateArena(_.appendHas(newDom, keyCells: _*))
-      // once we know that all the keys coincide, constrain membership with SMT
+      // constrain membership with SMT
       for ((dom, no) <- domains.zipWithIndex) {
-        def iffKey(keyCell: ArenaCell) =
-          tla.equiv(tla.in(keyCell.toNameEx, newDom.toNameEx), tla.in(keyCell.toNameEx, dom.toNameEx))
+        val domainCells = nextState.arena.getHas(dom)
 
-        val keysMatch = tla.and(keyCells map iffKey: _*)
-        rewriter.solverContext.assertGroundExpr(tla.impl(oracle.whenEqualTo(nextState, no), keysMatch))
+        for (keyCell <- keyCells) {
+          // Although we search over a list, the list size is usually small, e.g., up to 10
+          if (domainCells.contains(keyCell)) {
+            // the key belongs to the new domain only if belongs to the domain that is pointed by the oracle
+            val iff = tla.equiv(tla.in(keyCell.toNameEx, newDom.toNameEx), tla.in(keyCell.toNameEx, dom.toNameEx))
+            rewriter.solverContext.assertGroundExpr(tla.impl(oracle.whenEqualTo(nextState, no), iff))
+          } else {
+            // The domain pointed by the oracle does not contain the key
+            val notInDom = tla.not(tla.in(keyCell.toNameEx, newDom.toNameEx))
+            rewriter.solverContext.assertGroundExpr(tla.impl(oracle.whenEqualTo(nextState, no), notInDom))
+          }
+        }
       }
       nextState.setRex(newDom.toNameEx)
     }
+  }
+
+  // find the union of the keys for all records, if it exists
+  private def findCommonKeys(state: SymbState, records: Seq[ArenaCell]): (SymbState, SortedMap[String, ArenaCell]) = {
+    var maxRecordType = records.head.cellType
+    for (rec <- records.tail) {
+      val recType = rec.cellType
+      recType.unify(maxRecordType) match {
+        case Some(commonType) =>
+          maxRecordType = commonType
+
+        case None =>
+          throw new IllegalStateException(s"Found inconsistent records in a set: $maxRecordType and $recType")
+      }
+    }
+
+    val commonKeys = maxRecordType.asInstanceOf[RecordT].fields.keySet
+    var keyToCell = SortedMap[String, ArenaCell]()
+    var nextState = state
+    for (key <- commonKeys) {
+      val (newArena, cell) = rewriter.strValueCache.getOrCreate(nextState.arena, key)
+      keyToCell = keyToCell + (key -> cell)
+      nextState = nextState.setArena(newArena)
+    }
+
+    (nextState, keyToCell)
   }
 
   /**
@@ -316,9 +349,9 @@ class CherryPick(rewriter: SymbStateRewriter) {
    * Note that some record fields may have bogus values, since not all the records in the set
    * are required to have all the keys assigned. That is an unavoidable loophole in the record types.
    *
-   * @param cellType   a cell type to assign to the picked cell.
-   * @param state      a symbolic state
-   * @param oracle     a variable that stores which element (by index) should be picked, can be unrestricted
+   * @param cellType  a cell type to assign to the picked cell.
+   * @param state     a symbolic state
+   * @param oracle    a variable that stores which element (by index) should be picked, can be unrestricted
    * @param memberSets a sequence of sets of cellType
    * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
    */
