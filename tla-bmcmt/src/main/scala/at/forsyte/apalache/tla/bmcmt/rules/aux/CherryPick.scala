@@ -207,17 +207,18 @@ class CherryPick(rewriter: SymbStateRewriter) {
    * Note that some record fields may have bogus values, since not all the records in the set
    * are required to have all the keys assigned. That is an unavoidable loophole in the record types.
    *
-   * @param cellType a cell type to assign to the picked cell.
-   * @param state    a symbolic state
-   * @param oracle   a variable that stores which element (by index) should be picked, can be unrestricted
-   * @param records  a sequence of records of cellType
+   * @param cellTypeToIgnore a cell type to assign to the picked cell, this is not always the right type for records
+   * @param state            a symbolic state
+   * @param oracle           a variable that stores which element (by index) should be picked, can be unrestricted
+   * @param records          a sequence of records of cellType
    * @return a new symbolic state with the expression holding a fresh cell that stores the picked element.
    */
-  def pickRecord(cellType: CellT, state: SymbState, oracle: Oracle, records: Seq[ArenaCell],
+  def pickRecord(cellTypeToIgnore: CellT, state: SymbState, oracle: Oracle, records: Seq[ArenaCell],
       elseAssert: TlaEx): SymbState = {
-    // since we require all records to have exactly the same type, the code became much simpler
-    rewriter.solverContext.log("; CHERRY-PICK %s FROM [%s] {".format(cellType, records.map(_.toString).mkString(", ")))
-    val recordType = cellType.asInstanceOf[RecordT]
+    // the records do not always have the same type, but they do have compatible types
+    val commonRecordT = findCommonRecordType(records)
+    rewriter.solverContext
+      .log("; CHERRY-PICK %s FROM [%s] {".format(commonRecordT, records.map(_.toString).mkString(", ")))
 
     def findKeyIndex(recT: RecordT, key: String): Int =
       recT.fields.keySet.toList.indexOf(key)
@@ -232,8 +233,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
         newState.arena.getHas(record)(keyIndex)
       } else {
         // This record does not have the key, but it was mixed with other records and produced a more general type.
-        // Return a default value. As we are iterating over fields of recordType, we will always find a value.
-        val valueT = recordType.fields.get(key).get
+        // Return a default value. As we are iterating over fields of commonRecordT, we will always find a value.
+        val valueT = commonRecordT.fields.get(key).get
         newState = defaultValueFactory.makeUpValue(newState, valueT)
         newState.asCell
       }
@@ -246,22 +247,21 @@ class CherryPick(rewriter: SymbStateRewriter) {
     }
 
     // introduce a new record
-    newState = newState.setArena(newState.arena.appendCell(cellType))
+    newState = newState.setArena(newState.arena.appendCell(commonRecordT))
     val newRecord = newState.arena.topCell
     // pick the domain using the oracle.
-    //    newState = pickSet(FinSetT(ConstT()), newState, oracle, records map (r => newState.arena.getDom(r)))
-    newState = pickRecordDomain(FinSetT(ConstT()), newState, oracle, records,
+    newState = pickRecordDomain(commonRecordT, FinSetT(ConstT()), newState, oracle, records,
         records map (r => newState.arena.getDom(r)))
     val newDom = newState.asCell
     // pick the fields using the oracle
-    val fieldCells = recordType.fields.keySet.toSeq map pickAtPos
+    val fieldCells = commonRecordT.fields.keySet.toSeq map pickAtPos
     // and connect them to the record
     var newArena = newState.arena.setDom(newRecord, newDom)
     newArena = newArena.appendHasNoSmt(newRecord, fieldCells: _*)
     // The awesome property: we do not have to enforce equality of the field values, as this will be enforced by
     // the rule for the respective element r.key, as it will use the same oracle!
 
-    rewriter.solverContext.log(s"; } CHERRY-PICK $newRecord:$cellType")
+    rewriter.solverContext.log(s"; } CHERRY-PICK $newRecord:$commonRecordT")
 
     newState
       .setArena(newArena)
@@ -280,15 +280,14 @@ class CherryPick(rewriter: SymbStateRewriter) {
    * @param domains the domains to pick from
    * @return a new cell that encodes a picked domain
    */
-  private def pickRecordDomain(domType: CellT, state: SymbState, oracle: Oracle, records: Seq[ArenaCell],
-      domains: Seq[ArenaCell]): SymbState = {
-    // TODO: use elseAssert and Oracle.caseAssertions?
+  private def pickRecordDomain(commonRecordType: RecordT, domType: CellT, state: SymbState, oracle: Oracle,
+      records: Seq[ArenaCell], domains: Seq[ArenaCell]): SymbState = {
     // It often happens that all the domains are actually the same cell. Return this cell.
     val distinct = domains.distinct
     if (distinct.size == 1) {
       state.setRex(distinct.head.toNameEx)
     } else {
-      val (newState, keyToCell) = findCommonKeys(state, records)
+      val (newState, keyToCell) = findRecordKeys(state, commonRecordType)
       // introduce a new cell for the picked domain
       var nextState = newState.updateArena(_.appendCell(domType))
       val newDom = nextState.arena.topCell
@@ -301,7 +300,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
         val domainCells = nextState.arena.getHas(dom)
 
         for (keyCell <- keyCells) {
-          // Although we search over a list, the list size is usually small, e.g., up to 10
+          // Although we search over a list, the list size is usually small, e.g., up to 10 elements
           if (domainCells.contains(keyCell)) {
             // the key belongs to the new domain only if belongs to the domain that is pointed by the oracle
             val iff = tla.equiv(tla.in(keyCell.toNameEx, newDom.toNameEx), tla.in(keyCell.toNameEx, dom.toNameEx))
@@ -317,8 +316,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     }
   }
 
-  // find the union of the keys for all records, if it exists
-  private def findCommonKeys(state: SymbState, records: Seq[ArenaCell]): (SymbState, SortedMap[String, ArenaCell]) = {
+  private def findCommonRecordType(records: Seq[ArenaCell]): RecordT = {
     var maxRecordType = records.head.cellType
     for (rec <- records.tail) {
       val recType = rec.cellType
@@ -330,8 +328,12 @@ class CherryPick(rewriter: SymbStateRewriter) {
           throw new IllegalStateException(s"Found inconsistent records in a set: $maxRecordType and $recType")
       }
     }
+    maxRecordType.asInstanceOf[RecordT]
+  }
 
-    val commonKeys = maxRecordType.asInstanceOf[RecordT].fields.keySet
+  // find the union of the keys for all records, if it exists
+  private def findRecordKeys(state: SymbState, recordType: RecordT): (SymbState, SortedMap[String, ArenaCell]) = {
+    val commonKeys = recordType.asInstanceOf[RecordT].fields.keySet
     var keyToCell = SortedMap[String, ArenaCell]()
     var nextState = state
     for (key <- commonKeys) {

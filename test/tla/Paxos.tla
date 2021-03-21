@@ -84,7 +84,7 @@ VARIABLE
     \* @type: Str -> Int;
     maxVal,    \* ballot number cast by a; it equals <<-1, None>> if
                     \* a has not cast any vote.
-    \* @type: Set([type: Str, bal: Int, acc: Str, mbal: Int, mval: Int]);
+    \* @type: Set([type: Str, bal: Int, acc: Str, mbal: Int, mval: Int, val: Int]);
     msgs     \* The set of all messages that have been sent.
 
 (***************************************************************************)
@@ -287,9 +287,10 @@ Inv == (*/\ TypeOK*)
                                    /\ (m.mbal \geq 0) =>
                                        <<m.mbal, m.mval>> \in votes[m.acc]
              /\ (m.type = "2a") => /\ \E Q \in Quorum :
-                                         (*V!*)ShowsSafeAt(Q, m.bal, m.val)
+                                         ShowsSafeAt(Q, m.bal, m.val)
                                    /\ \A mm \in msgs : /\ mm.type = "2a"
                                                        /\ mm.bal = m.bal
                                                        => mm.val = m.val
+
        (*/\ V!Inv*)
 ============================================================================
