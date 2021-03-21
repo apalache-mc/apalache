@@ -43,9 +43,9 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val funT = TlaType1.fromTypeTag(ex.typeTag)
         // delegate to the code that knows how to deal with the specific type
         funT match {
-          case ft @ FunT1(_, _) => rewriteFun(nextState, funCell, ft, indexCell, valueCell)
-          case rt @ RecT1(_)    => rewriteRec(nextState, funCell, rt, indexEx, valueCell)
-          case tt @ TupT1(_)    => rewriteTuple(nextState, funCell, tt, indexEx, valueCell)
+          case ft @ FunT1(_, _)  => rewriteFun(nextState, funCell, ft, indexCell, valueCell)
+          case rt @ RecT1(_)     => rewriteRec(nextState, funCell, rt, indexEx, valueCell)
+          case tt @ TupT1(_ @_*) => rewriteTuple(nextState, funCell, tt, indexEx, valueCell)
           case _ =>
             throw new NotImplementedError(s"EXCEPT is not implemented for $funT. Write a feature request.")
         }
