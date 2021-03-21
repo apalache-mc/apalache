@@ -38,7 +38,7 @@ VARIABLES
 VARIABLES
     \* @type: Str;
     round,
-    \* @type: Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int]);
+    \* @type: Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int, vote: Int]);
     faultyMessages
 
 Init == /\ h = [p \in Procs |-> 0]
@@ -86,7 +86,7 @@ IsSentByFaulty ==
         [] OTHER (*round = "VOTE"*) -> faultyMessages' \inVoteFaulty
            
 
-\* @type: (Int, Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int])) => Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int]);
+\* @type: (Int, Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int, vote: Int])) => Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int, vote: Int]);
 Deliver(p, sent) ==
     CASE    round = "PRE-PROPOSE" ->
             { m \in sent : m.type = "PRE-PROPOSE" /\ m.src = Proposer(p) /\ m.height = h[p] /\ m.epoch = e[p] }
@@ -113,7 +113,7 @@ PrePropose(delivered) ==
     /\ proposal' = [p \in Procs |-> Id(FindProposal(p, delivered))]
     /\ UNCHANGED <<vote, h, e, decision>>
 
-\* @type: (Int, Int -> Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int])) => Int;
+\* @type: (Int, Int -> Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int, vote: Int])) => Int;
 ChooseValue(p, delivered) ==
     LET vs == { m2.proposal: m2 \in { m \in delivered[p] : m.type = "PROPOSE" /\ m.height = h[p] /\ m.epoch = h[p] }} IN
     IF vs = {}
@@ -127,7 +127,7 @@ Propose(delivered) ==
     /\ vote' = [p \in Procs |-> Id(ChooseValue(p, delivered))]
     /\ UNCHANGED <<proposal, h, e, decision>>
 
-\* @type: (Int, Int -> Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int])) => Int;
+\* @type: (Int, Int -> Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int, vote: Int])) => Int;
 ChooseDecision(p, delivered) ==
     LET vs == { m2.vote: m2 \in { m \in delivered[p] : m.type = "VOTE" /\ m.height = h[p] /\ m.epoch = h[p] }} IN
     IF vs = {}
