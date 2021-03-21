@@ -28,6 +28,8 @@ object TypedPredefs {
   /**
    * An implicit wrapper around TypeTag that extract the type out of Typed(_: TlaType1).
    *
+   * TODO: shall we remove this implicit conversion in favor of TlaType1.fromTypeTag?
+   *
    * @param tag a type tag
    */
   implicit class TypeTagAsTlaType1(tag: TypeTag) {

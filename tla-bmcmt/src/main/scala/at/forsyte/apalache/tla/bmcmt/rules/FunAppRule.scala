@@ -4,11 +4,11 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory}
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, TlaType1, ValEx}
+import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 
 /**
  * Implements f[x] for: functions, records, and tuples.
@@ -34,6 +34,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val funState = rewriter.rewriteUntilDone(state.setRex(funEx))
         val funCell = funState.asCell
 
+        // we use funCell.cellType, not funEx.typeTag, because funEx can be the result of the rewriter
         funCell.cellType match {
           case TupleT(_) =>
             applyTuple(funState, funCell, funEx, argEx)

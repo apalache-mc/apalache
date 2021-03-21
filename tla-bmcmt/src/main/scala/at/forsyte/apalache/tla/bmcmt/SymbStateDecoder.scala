@@ -121,7 +121,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
           case _ => throw new RewriterException("Corrupted function: " + relation, NullEx)
         }
 
-      tla.atat(args: _*)
+      tla.atatInterleaved(args: _*)
 
     case SeqT(_) =>
       val startEndFun = arena.getHas(cell) map (decodeCellToTlaEx(arena, _))
