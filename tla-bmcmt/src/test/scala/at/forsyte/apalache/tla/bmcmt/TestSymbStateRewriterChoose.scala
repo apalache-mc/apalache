@@ -13,6 +13,7 @@ class TestSymbStateRewriterChoose extends RewriterBase with TestingPredefs {
       "i" -> IntT1(),
       "I" -> SetT1(IntT1())
   )
+
   test("""CHOOSE x \in {1, 2, 3}: x > 1""") {
     val ex =
       choose(name("x") ? "i", enumSet(int(1), int(2), int(3)) ? "I", gt(name("x") ? "i", int(1)) ? "b")
