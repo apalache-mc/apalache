@@ -601,6 +601,7 @@ class Builder {
   }
 
   // apalache operators
+  @deprecated("This operator introduces an old-style apalache annotation. It will be removed soon.")
   def withType(expr: BuilderEx, typeAnnot: BuilderEx): BuilderEx = {
     BuilderOper(BmcOper.withType, expr, typeAnnot)
   }
