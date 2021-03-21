@@ -130,6 +130,9 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // create a new record
     var nextState = state.updateArena(_.appendCell(oldRecord.cellType))
     val newRecord = nextState.arena.topCell
+    val domain = nextState.arena.getDom(oldRecord)
+    // copy over the domain, as it does not change
+    nextState = nextState.updateArena(_.setDom(newRecord, domain))
 
     // add the key-value pairs of the old record but update the key that was requested to be updated
     def updateOrKeep(key: String, oldValue: ArenaCell): ArenaCell = {
