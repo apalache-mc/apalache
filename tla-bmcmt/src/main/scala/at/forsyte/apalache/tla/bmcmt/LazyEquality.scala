@@ -150,8 +150,11 @@ class LazyEquality(rewriter: SymbStateRewriter)
           case (SeqT(_), SeqT(_)) =>
             mkSeqEq(state, left, right)
 
-          case _ =>
-            throw new CheckerException("Unexpected equality test", state.ex)
+          case (FinFunSetT(_, _), FinFunSetT(_, _)) =>
+            mkFunSetEq(state, left, right)
+
+          case (lt, rt) =>
+            throw new CheckerException(s"Unexpected equality test over types $lt and $rt", state.ex)
         }
 
       // return the new state
@@ -237,6 +240,22 @@ class LazyEquality(rewriter: SymbStateRewriter)
       // recover the original expression and theory
       rightToLeft.setRex(state.ex)
     }
+  }
+
+  private def mkFunSetEq(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {
+    val dom1 = state.arena.getDom(left)
+    val cdm1 = state.arena.getCdm(left)
+    val dom2 = state.arena.getDom(right)
+    val cdm2 = state.arena.getCdm(right)
+    var nextState = mkSetEq(state, dom1, dom2)
+    nextState = mkSetEq(nextState, cdm1, cdm2)
+    val eq = tla.equiv(tla.eql(left.toNameEx, right.toNameEx),
+        tla.and(tla.eql(dom1.toNameEx, dom2.toNameEx), tla.eql(cdm1.toNameEx, cdm2.toNameEx)))
+    rewriter.solverContext.assertGroundExpr(eq)
+    eqCache.put(left, right, EqCache.EqEntry())
+
+    // recover the original expression and theory
+    nextState.setRex(state.ex)
   }
 
   // statically empty sets should be handled with care

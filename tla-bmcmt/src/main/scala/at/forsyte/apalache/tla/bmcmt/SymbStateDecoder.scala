@@ -1,15 +1,15 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import java.io.PrintWriter
-
-import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.TypedPredefs._
+import at.forsyte.apalache.tla.lir.UntypedPredefs.BuilderExAsUntyped
+import at.forsyte.apalache.tla.lir.convenience.tla.fromTlaEx
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.immutable.{HashSet, SortedSet}
@@ -30,8 +30,9 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     // compute the equivalence classes for the cells, totally suboptimally
     // TODO: rewrite, I did not think too much at all
     def iseq(c: ArenaCell, d: ArenaCell): Boolean = {
+      val query = tla.eql(c.toNameEx, d.toNameEx).untyped()
       c.cellType == d.cellType && solverContext
-        .evalGroundExpr(tla.eql(c.toNameEx, d.toNameEx)) == tla.bool(true).untyped()
+        .evalGroundExpr(query) == tla.bool(true).untyped()
     }
 
     def merge(cls: List[HashSet[ArenaCell]], c: ArenaCell, d: ArenaCell): List[HashSet[ArenaCell]] = {
@@ -68,13 +69,20 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
   }
 
   def decodeCellToTlaEx(arena: Arena, cell: ArenaCell): TlaEx = cell.cellType match {
-    case BoolT() | IntT() | FailPredT() =>
-      solverContext.evalGroundExpr(cell.toNameEx)
+    case BoolT() =>
+      solverContext.evalGroundExpr(cell.toNameEx).withTag(Typed(BoolT1()))
+
+    case IntT() =>
+      solverContext.evalGroundExpr(cell.toNameEx).withTag(Typed(IntT1()))
+
+    case FailPredT() =>
+      // FailPred will be removed soon, see: https://github.com/informalsystems/apalache/issues/665
+      solverContext.evalGroundExpr(cell.toNameEx).withTag(Typed(BoolT1()))
 
     case ConstT() =>
       val found = rewriter.strValueCache.findKey(cell)
       if (found.isDefined) {
-        ValEx(TlaStr(found.get))
+        tla.str(found.get).typed()
       } else {
         findCellInSet(arena, rewriter.strValueCache.values().toSeq, cell.toNameEx) match {
           // found among the cached keys
@@ -83,47 +91,89 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
 
           case None =>
             // not found, just use the name
-            ValEx(TlaStr(cell.toString)) // a value that was assigned by the solver, and not created by us
+            // a value that was assigned by the solver, and not created by us
+            tla.str(cell.toString).typed()
         }
       }
 
     case UnknownT() =>
-      tla.appFun(NameEx("Unknown"), cell.toNameEx)
+      throw new IllegalStateException(s"Found cell $cell of cell type Unknown")
 
-    case FinSetT(_) =>
-      def inSet(e: ArenaCell) =
-        solverContext.evalGroundExpr(tla.in(e.toNameEx, cell.toNameEx)) == tla.bool(true).untyped()
+    case setT @ FinSetT(elemT) =>
+      val setT1 = setT.toTlaType1
+
+      def inSet(e: ArenaCell) = {
+        val mem = tla
+          .in(fromTlaEx(e.toNameEx).typed(elemT.toTlaType1), fromTlaEx(cell.toNameEx).typed(setT.toTlaType1))
+          .typed(BoolT1())
+        solverContext.evalGroundExpr(mem) == tla.bool(true).typed()
+      }
 
       val elems = arena.getHas(cell).filter(inSet)
       val decodedElems = elems.map(decodeCellToTlaEx(arena, _))
       // try to normalize the set for better user experience
       val niceElems = decodedElems.distinct.sortWith(SymbStateDecoder.compareTlaExByStr)
-      tla.enumSet(niceElems: _*)
+      tla
+        .enumSet(niceElems: _*)
+        .typed(setT1)
 
-    case FinFunSetT(_, _) =>
-      tla.funSet(decodeCellToTlaEx(arena, arena.getDom(cell)), decodeCellToTlaEx(arena, arena.getCdm(cell)))
+    case ffsT @ FinFunSetT(_, _) =>
+      val fromSet = decodeCellToTlaEx(arena, arena.getDom(cell))
+      val toSet = decodeCellToTlaEx(arena, arena.getCdm(cell))
+      tla
+        .funSet(fromSet, toSet)
+        .typed(ffsT.toTlaType1)
 
-    case FunT(_, _) =>
+    case funT @ FunT(_, _) =>
+      val funT1 = funT.toTlaType1.asInstanceOf[FunT1]
+
+      def appendPair(fun: TlaEx, key: ArenaCell, value: ArenaCell): TlaEx = {
+        val pair = tla
+          .colonGreater(decodeCellToTlaEx(arena, key), decodeCellToTlaEx(arena, value))
+          .typed(FunT1(funT1.arg, funT1.res))
+        tla
+          .atat(fun, pair)
+          .typed(funT1)
+      }
+
       // in the new implementation, every function is represented with the relation {(x, f[x]) : x \in S}
       val relation = arena.getCdm(cell)
-      val args =
-        decodeCellToTlaEx(arena, relation) match {
-          case OperEx(TlaSetOper.enumSet, elems @ _*) =>
-            def untuple(e: TlaEx) = e match {
-              case OperEx(TlaFunOper.tuple, pair @ _*) =>
-                pair
 
-              case _ => throw new RewriterException("Corrupted function: " + relation, NullEx)
+      def isInRelation(pair: ArenaCell): Boolean = {
+        val mem = tla
+          .in(fromTlaEx(pair.toNameEx).typed(funT1.arg),
+              fromTlaEx(relation.toNameEx).typed(TupT1(funT1.arg, funT1.res)))
+          .typed(BoolT1())
+        solverContext.evalGroundExpr(mem) == tla.bool(true).typed(BoolT1())
+      }
+
+      val pairs = arena.getHas(relation)
+      pairs find isInRelation match {
+        case None =>
+          // this is a pathological case, produce: [ x \in {} |-> x ]
+          tla
+            .funDef(tla.name("x").typed(funT1.arg), tla.name("x").typed(funT1.arg),
+                tla.enumSet().typed(SetT1(funT1.res)))
+            .typed(funT1)
+
+        case Some(first) =>
+          // this is the common case
+          val head = arena.getHas(first)
+          val firstPair = tla
+            .colonGreater(decodeCellToTlaEx(arena, head(0)), decodeCellToTlaEx(arena, head(1)))
+            .typed(FunT1(funT1.arg, funT1.res))
+          pairs.tail.foldLeft(firstPair) { case (f, p) =>
+            if (p == first) {
+              f
+            } else {
+              val pair = arena.getHas(p)
+              appendPair(f, pair(0), pair(1))
             }
+          }
+      }
 
-            elems flatMap untuple
-
-          case _ => throw new RewriterException("Corrupted function: " + relation, NullEx)
-        }
-
-      tla.atatInterleaved(args: _*)
-
-    case SeqT(_) =>
+    case SeqT(elemT) =>
+      val elemT1 = elemT.toTlaType1
       val startEndFun = arena.getHas(cell) map (decodeCellToTlaEx(arena, _))
       startEndFun match {
         case ValEx(TlaInt(start)) :: ValEx(TlaInt(end)) +: cells =>
@@ -131,7 +181,8 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
           def isIn(elem: TlaEx, no: Int): Boolean = no >= start && no < end
 
           val filtered = cells.zipWithIndex filter (isIn _).tupled map (_._1)
-          tla.tuple(filtered: _*) // return a tuple as it is the canonical representation of a sequence
+          // return a tuple as it is the canonical representation of a sequence
+          tla.tuple(filtered: _*).typed(SeqT1(elemT1))
 
         case _ => throw new RewriterException("Corrupted sequence: " + startEndFun, NullEx)
       }
@@ -155,33 +206,34 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         } else {
           val index = keyList.indexOf(key)
           val valueCell = fieldValues(index)
-          ValEx(TlaStr(key)) +: decodeCellToTlaEx(arena, valueCell) +: es
+          tla.str(key).typed() +: decodeCellToTlaEx(arena, valueCell) +: es
         }
       }
 
       val keysAndValues = keyList.reverse.foldLeft(List[TlaEx]())(eachField)
       if (keysAndValues.nonEmpty) {
-        OperEx(TlaFunOper.enum, keysAndValues: _*)
+        OperEx(TlaFunOper.enum, keysAndValues: _*)(Typed(r.toTlaType1))
       } else {
         logger.error(
             s"Decoder: Found an empty record $cell when decoding a counterexample, domain = $domCell. This is a bug.")
         // for debugging purposes, just return a string
-        ValEx(TlaStr(s"Empty record domain $domCell"))
+        tla.str(s"Empty record domain $domCell").typed()
       }
 
     case t @ TupleT(_) =>
       val tupleElems = arena.getHas(cell)
       val elemAsExprs = tupleElems.map(c => decodeCellToTlaEx(arena, c))
-      tla.tuple(elemAsExprs: _*)
+      tla.tuple(elemAsExprs: _*).typed(t.toTlaType1)
 
     case PowSetT(t @ FinSetT(_)) =>
-      tla.powSet(decodeCellToTlaEx(arena, arena.getDom(cell)))
+      val baseset = decodeCellToTlaEx(arena, arena.getDom(cell))
+      tla.powSet(baseset).typed(SetT1(TlaType1.fromTypeTag(baseset.typeTag)))
 
-    case InfSetT(elemT) if cell == arena.cellIntSet() =>
-      ValEx(TlaIntSet)
+    case InfSetT(_) if cell == arena.cellIntSet() =>
+      tla.intSet().typed(SetT1(IntT1()))
 
-    case InfSetT(elemT) if cell == arena.cellNatSet() =>
-      ValEx(TlaNatSet)
+    case InfSetT(_) if cell == arena.cellNatSet() =>
+      tla.natSet().typed(SetT1(IntT1()))
 
     case _ =>
       throw new RewriterException("Don't know how to decode the cell %s of type %s".format(cell, cell.cellType), NullEx)
@@ -199,7 +251,8 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
 
   private def findCellInSet(arena: Arena, cells: Seq[ArenaCell], ex: TlaEx): Option[ArenaCell] = {
     def isEq(c: ArenaCell): Boolean = {
-      ValEx(TlaBool(true)) == solverContext.evalGroundExpr(tla.and(tla.eql(c.toNameEx, ex)))
+      val query = tla.and(tla.eql(c.toNameEx, ex))
+      tla.bool(true).typed() == solverContext.evalGroundExpr(query.untyped())
     }
 
     cells.find(isEq)
@@ -208,10 +261,14 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
   def reverseMapVar(expr: TlaEx, varName: String, cell: ArenaCell): TlaEx = {
     def rec(ex: TlaEx): TlaEx = ex match {
       case NameEx(name) =>
-        if (name != cell.toNameEx.name) ex else NameEx(varName)
+        if (name != cell.toNameEx.name) {
+          ex
+        } else {
+          tla.name(varName).untyped()
+        }
 
       case OperEx(oper, args @ _*) =>
-        OperEx(oper, args map rec: _*)
+        OperEx(oper, args map rec: _*)(Untyped())
 
       case _ =>
         ex
