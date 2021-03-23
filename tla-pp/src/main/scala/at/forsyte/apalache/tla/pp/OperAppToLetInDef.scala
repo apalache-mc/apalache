@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModuleTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.typecheck.{OperT1, TlaType1}
+import at.forsyte.apalache.tla.typecheck.{OperT1, TlaType1, TypingException}
 import at.forsyte.apalache.tla.typecheck.TypedPredefs._
 
 /**
@@ -34,13 +34,14 @@ class OperAppToLetInDef(
         if wrappableNames.contains(opName) && args.nonEmpty =>
       val resType = ex.typeTag match {
         case Typed(tt: TlaType1) => tt
+        case t                   => throw new TypingException("Expected Typed(_: TlaType1), found: " + t)
       }
       val newArgs = args map wrap(wrappableNames)
       val newEx =
         if (args == newArgs) {
           ex
         } else {
-          val app = tla.appOp(ne, newArgs: _*).typed(resType)
+          val app = tla.appOp(ne.copy()(ne.typeTag), newArgs: _*).typed(resType)
           setTracking(ex, app)
         }
 
