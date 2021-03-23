@@ -33,13 +33,14 @@ class OperAppToLetInDef(
         if wrappableNames.contains(opName) && args.nonEmpty =>
       val resType = ex.typeTag match {
         case Typed(tt: TlaType1) => tt
+        case t                   => throw new TypingException("Expected Typed(_: TlaType1), found: " + t)
       }
       val newArgs = args map wrap(wrappableNames)
       val newEx =
         if (args == newArgs) {
           ex
         } else {
-          val app = tla.appOp(ne, newArgs: _*).typed(resType)
+          val app = tla.appOp(ne.copy()(ne.typeTag), newArgs: _*).typed(resType)
           setTracking(ex, app)
         }
 

@@ -26,15 +26,15 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
   def transform: TlaExTransformation = nnf(neg = false)
 
   private def nnf(neg: Boolean): TlaExTransformation = tracker.trackEx {
-    case ValEx(TlaBool(b)) =>
-      tla.bool(b ^ neg).typed(BoolT1())
+    case ex @ ValEx(TlaBool(b)) =>
+      OperEx(TlaBoolOper.not, ValEx(TlaBool(b ^ neg))(ex.typeTag))(ex.typeTag)
 
     case vex @ ValEx(_) =>
       vex // this may be called when processing a non-Boolean expression
 
     case ex @ NameEx(_) =>
       if (neg) {
-        tla.not(ex).typed(BoolT1())
+        OperEx(TlaBoolOper.not, ex)(ex.typeTag)
       } else {
         ex
       }

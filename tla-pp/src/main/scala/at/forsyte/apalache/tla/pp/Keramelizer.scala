@@ -75,7 +75,7 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
       // into { y_1 \in S_1, ..., y_n \in S_n: [ k_1 |-> y_1, ..., k_n |-> y_n ] }
       val (keys, sets) = TlaOper.deinterleave(keysAndSets)
       val elemTypes = sets map getElemType
-      // produce a sequence of fresh names wrapped with NameEx for n in names
+      // produce a sequence of fresh names wrapped with NameEx
       val names: Seq[TlaEx] = elemTypes map { t => NameEx(gen.newName())(Typed(t)) }
       val keysAndNamesInterleaved = TlaOper.interleave(keys, names)
       val recordType = getElemType(ex)
