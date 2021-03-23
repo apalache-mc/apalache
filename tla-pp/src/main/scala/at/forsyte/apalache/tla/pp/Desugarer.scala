@@ -168,16 +168,16 @@ class Desugarer(gen: UniqueNameGenerator, tracker: TransformationTracker) extend
         case hd :: Nil =>
           val uniqueName = gen.newName()
           // LET tmp == [ fun EXCEPT ![i_n] = e ] IN
-          val funT = fun.typeTag.asTlaType1()
+          val funT = fun.typeTag.asTlaType1() // either FunT1, RecT1, TupT1, or SeqT1
           val operT = OperT1(Seq(), funT)
           val decl = tla
-            .declOp(uniqueName, tla.except(fun, hd, newValue) ? "f")
-            .typedOperDecl(Map("f" -> funT, "F" -> operT), "F")
+            .declOp(uniqueName, tla.except(fun, tla.tuple(hd).typed(hd.typeTag.asTlaType1()), newValue).typed(funT))
+            .typedOperDecl(operT)
           Seq(decl)
 
         case hd :: tl =>
           // fun[a_i]
-          val funT = fun.typeTag.asTlaType1()
+          val funT = fun.typeTag.asTlaType1() // either FunT1, RecT1, TupT1, or SeqT1
           val operT = OperT1(Seq(), funT)
           val (_, resT) = eatFunType(funT, hd)
           val nested = tla.appFun(fun, hd).typed(resT)
@@ -190,8 +190,8 @@ class Desugarer(gen: UniqueNameGenerator, tracker: TransformationTracker) extend
             .appOp(tla.name(defs.last.name) ? "F")
             .typed(Map("F" -> operT, "r" -> resT), "r")
           val outDef = tla
-            .declOp(uniqueName, tla.except(fun, hd, nestedFun) ? "f")
-            .typedOperDecl(Map("f" -> funT, "F" -> operT), "F")
+            .declOp(uniqueName, tla.except(fun, tla.tuple(hd).typed(hd.typeTag.asTlaType1()), nestedFun).typed(funT))
+            .typedOperDecl(operT)
           defs :+ outDef
       }
     }
@@ -270,9 +270,17 @@ class Desugarer(gen: UniqueNameGenerator, tracker: TransformationTracker) extend
       case (FunT1(argT, resT), _) =>
         if (Typed(argT) != arg.typeTag) {
           val actualArgType = arg.typeTag.asTlaType1()
-          throw new TypingException(s"Expected an argument of type $argT, found $actualArgType")
+          throw new TypingException(s"Expected a function argument of type $argT, found $actualArgType")
         } else {
           (argT, resT)
+        }
+
+      case (SeqT1(elem), _) =>
+        if (Typed(IntT1()) != arg.typeTag) {
+          val actualArgType = arg.typeTag.asTlaType1()
+          throw new TypingException(s"Expected a sequence argument to be an integer, found $actualArgType")
+        } else {
+          (IntT1(), elem)
         }
 
       case (tt @ RecT1(fieldTypes), ValEx(TlaStr(key))) =>
