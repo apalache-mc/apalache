@@ -10,7 +10,6 @@ import at.forsyte.apalache.tla.bmcmt.rewriter.{MetricProfilerListener, RewriterC
 import at.forsyte.apalache.tla.bmcmt.search._
 import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig}
 import at.forsyte.apalache.tla.bmcmt.trex._
-import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.NullEx
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
@@ -96,7 +95,6 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
       solverConfig: SolverConfig): Boolean = {
     val solverContext: RecordingSolverContext = RecordingSolverContext.createZ3(None, solverConfig)
 
-    val typeFinder = new TrivialTypeFinder
     val metricProfilerListener =
       if (solverConfig.profile) {
         logger.info("Profiling data will be written to profile.csv")
@@ -106,7 +104,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
       }
 
     val rewriter: SymbStateRewriterImpl =
-      new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore, metricProfilerListener)
+      new SymbStateRewriterImpl(solverContext, exprGradeStore, metricProfilerListener)
 
     rewriter.formulaHintsStore = hintsStore
     rewriter.config = RewriterConfig(tuning)
@@ -132,8 +130,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
       logger.warn("SMT profiling is enabled, but offline SMT is used. No profiling data will be written.")
     }
 
-    val typeFinder = new TrivialTypeFinder
-    val rewriter: SymbStateRewriterImpl = new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
+    val rewriter: SymbStateRewriterImpl = new SymbStateRewriterImpl(solverContext, exprGradeStore)
     rewriter.formulaHintsStore = hintsStore
     rewriter.config = RewriterConfig(tuning)
 

@@ -50,11 +50,9 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
                 skolemExistsInSet(setState, boundVar, predEx, set)
 
               case PowSetT(FinSetT(_)) =>
-                ()
                 skolemExistsByPick(setState, boundVar, predEx, set)
 
               case FinFunSetT(_, _) =>
-                ()
                 skolemExistsByPick(setState, boundVar, predEx, set)
 
               case tp =>

@@ -774,7 +774,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
   test("old annotations: e <: tp") {
     val oldTypeAnnotation = tla.enumSet(tla.intSet())
     val input = tla.withType(tla.name("e"), oldTypeAnnotation)
-    assert(mkUniqName("e") == gen(input))
+    assertThrows[OutdatedAnnotationsError](gen(input))
   }
 
   test("TLC!Print") {

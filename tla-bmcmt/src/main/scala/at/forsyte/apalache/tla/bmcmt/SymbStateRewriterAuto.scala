@@ -4,8 +4,6 @@ import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.caches.{ExprCache, IntValueCache, RecordDomainCache, StrValueCache}
 import at.forsyte.apalache.tla.bmcmt.rewriter.{RewriterConfig, SymbStateRewriterSnapshot}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.bmcmt.types.CellT
-import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir.TlaEx
 
 /**
@@ -31,8 +29,6 @@ class SymbStateRewriterAuto(private var _solverContext: SolverContext) extends S
 
   var config: RewriterConfig = new RewriterConfig
 
-  val typeFinder = new TrivialTypeFinder()
-
   /**
    * A solver context that is populated by the rewriter.
    */
@@ -50,7 +46,7 @@ class SymbStateRewriterAuto(private var _solverContext: SolverContext) extends S
 
   private val exprGradeStoreImpl = new ExprGradeStoreImpl()
   private val exprGradeAnalysis = new ExprGradeAnalysis(exprGradeStoreImpl)
-  private val impl = new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
+  private val impl = new SymbStateRewriterImpl(solverContext, exprGradeStore)
 
   override def contextLevel: Int = impl.contextLevel
 
@@ -68,21 +64,10 @@ class SymbStateRewriterAuto(private var _solverContext: SolverContext) extends S
 
   override def exprGradeStore: ExprGradeStore = exprGradeStoreImpl
 
-  private def reset(arena: Arena, binding: Binding): Unit = {
-    def add(m: Map[String, CellT], c: ArenaCell) = m + (c.toString -> c.cellType)
-    val cellTypes = arena.cellMap.values.foldLeft(Map[String, CellT]())(add)
-    def addName(m: Map[String, CellT], p: (String, ArenaCell)) = m + (p._1 -> p._2.cellType)
-    val cellAndBindingTypes = binding.toMap.foldLeft(cellTypes)(addName)
-    // propagate cell types and bindings to the type inference engine
-    typeFinder.reset(cellAndBindingTypes)
-  }
+  private def reset(arena: Arena, binding: Binding): Unit = {}
 
   private def preprocess(ex: TlaEx): Unit = {
     exprGradeAnalysis.labelExpr(consts, vars, ex)
-    typeFinder.inferAndSave(ex)
-    if (typeFinder.typeErrors.nonEmpty) {
-      throw new TypeInferenceException(typeFinder.typeErrors)
-    }
   }
 
   override def rewriteOnce(state: SymbState): SymbStateRewriter.RewritingResult = {

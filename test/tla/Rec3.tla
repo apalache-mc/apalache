@@ -18,9 +18,6 @@ VARIABLES
     \* @type: Int;
     fibSpec
 
-\* the syntax for type annotations
-a <: b == a
-
 \* the type of the function Fib
 FibT == [Int -> Int]
 
@@ -30,7 +27,7 @@ Fib[k \in 0..15] ==
   THEN 0
   ELSE IF k <= 2
       THEN 1
-      ELSE (Fib <: FibT)[k - 2] + (Fib <: FibT)[k - 1]
+      ELSE Fib[k - 2] + Fib[k - 1]
 
 Init ==
     /\ n = 0

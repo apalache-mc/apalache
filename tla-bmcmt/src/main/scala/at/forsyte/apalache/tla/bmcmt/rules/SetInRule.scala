@@ -141,22 +141,16 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   private def basicIn(state: SymbState, setCell: ArenaCell, elemCell: ArenaCell, elemType: types.CellT) = {
     val potentialElems = state.arena.getHas(setCell)
-    assert(elemCell.cellType == elemType) // otherwise, type finder is incorrect
+    // The types of the element and the set may slightly differ, but they must be unifiable.
+    // For instance, [a |-> 1] \in { [a |-> 2], [a |-> 3, b -> "foo"] }
+    assert(elemCell.cellType.unify(elemType).nonEmpty)
     if (potentialElems.isEmpty) {
-      // SE-SET-IN1: the set cell points to no other cell => return false
+      // the set cell points to no other cell => return false
       state.setRex(state.arena.cellFalse().toNameEx)
     } else {
       var nextState = state.updateArena(_.appendCell(BoolT()))
       val pred = nextState.arena.topCell.toNameEx
 
-      // BUGFIX 06.05.2020: in rare combinations of \A and \in,
-      // the rule below is not sound
-      //if (state.arena.isLinkedViaHas(setCell, elemCell)) {
-      // SE-SET-IN2: the element cell is already in the arena, just check dynamic membership
-      //  rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.in(elemCell, state.ex)))
-      //  nextState.setTheory(CellTheory()).setRex(pred)
-      //} else {
-      // SE-SET-IN3: general case, generate equality constraints, if needed, and use them
       // cache equality constraints first
       val eqState = rewriter.lazyEq.cacheEqConstraints(nextState, potentialElems.map((_, elemCell)))
 

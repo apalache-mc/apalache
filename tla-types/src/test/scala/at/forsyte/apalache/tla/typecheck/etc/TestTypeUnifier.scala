@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
+import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, SetT1, StrT1, VarT1}
 import at.forsyte.apalache.tla.typecheck.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.typecheck._
 import org.junit.runner.RunWith

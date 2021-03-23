@@ -27,5 +27,8 @@ class PostTypeCheckerPassImpl @Inject() (options: PassOptions, sourceStore: Sour
     extends EtcTypeCheckerPassImpl(options, sourceStore, changeListener, tracker, annotationStore, nextPass)
     with LazyLogging {
 
+  // in the post-checking, polytypes are not allowed, as the model checker will not be able to handle them
+  override def inferPoly: Boolean = false
+
   override def name: String = "PostTypeCheckerSnowcat"
 }

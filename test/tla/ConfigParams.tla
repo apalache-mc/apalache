@@ -1,13 +1,27 @@
 --------------------------- MODULE ConfigParams -------------------------------
 CONSTANTS
+  \* @type: Int;
   MyInt,
+  \* @type: Str;
   MyStr,
+  \* TODO: use a model type here
+  \* when #570 is closed: https://github.com/informalsystems/apalache/issues/570
+  \* @type: Str;
   MyModelValue1,
+  \* @type: Str;
   MyModelValue2,
+  \* @type: Set(Int);
   MySet
 
 VARIABLES
-  x, y, z, w
+  \* @type: Int;
+  x,
+  \* @type: Str;
+  y,
+  \* @type: Str;
+  z,
+  \* @type: Set(Int);
+  w
 
 Init ==
     /\ x = MyInt

@@ -5,8 +5,6 @@
 (* BMCMT extensions *)
 RM == {"r1", "r2"}
 
-a <: b == a \* a type annotation
-
 \* new: a message type
 MT == [type |-> STRING, rm |-> STRING]
 (* END OF BMCMT extensions *)
@@ -23,7 +21,7 @@ VARIABLES
 Message ==
   {[type |-> t, rm |-> r]: t \in {"Prepared"}, r \in RM }
     \cup
-  {([type |-> t] <: MT) : t \in {"Commit", "Abort"} }
+  {[type |-> t] : t \in {"Commit", "Abort"} }
 
 Init ==  
   /\ rmState \in [RM -> {"working", "prepared"}]
@@ -31,11 +29,11 @@ Init ==
   /\ rmState["r1"] = "working"
   /\ rmState["r2"] = "prepared"
   /\ tmPrepared = {"r2"}
-  /\ msgs = {[type |-> "Prepared", rm |-> "r2"] <: MT}
+  /\ msgs = {[type |-> "Prepared", rm |-> "r2"]}
 
 TMCommit ==
   /\ tmPrepared = RM
-  /\ msgs' = msgs \cup {[type |-> "Commit"] <: MT}
+  /\ msgs' = msgs \cup {[type |-> "Commit"]}
   /\ UNCHANGED <<rmState, tmPrepared>>
 
 RMPrepare(rm) == 
@@ -47,6 +45,6 @@ RMPrepare(rm) ==
 Next == TMCommit \/ RMPrepare("r1")
 -----------------------------------------------------------------------------
 \* this invariant cannot be violated in one step
-Inv == ([type |-> "Commit"] <: MT) \notin msgs
+Inv == [type |-> "Commit"] \notin msgs
 
 =============================================================================
