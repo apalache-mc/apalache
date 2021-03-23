@@ -4,10 +4,10 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.FormulaHintsStore
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.types.BoolT
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, TlaEx, ValEx}
 
 /**
  * Implements the rule for conjunction. Similar to TLC, we short-circuit A /\ B as IF A THEN B ELSE FALSE.
@@ -19,6 +19,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
  */
 class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val simplifier = new ConstSimplifierForSmt()
+  private val boolTypes = Map("b" -> BoolT1())
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -38,8 +39,13 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
             // use short-circuiting on state-level expressions (like in TLC)
             def toIte(es: Seq[TlaEx]): TlaEx = {
               es match {
-                case Seq(last)  => last
-                case hd +: tail => tla.ite(hd, toIte(tail), state.arena.cellFalse().toNameEx)
+                case Seq(last) =>
+                  last
+
+                case hd +: tail =>
+                  tla
+                    .ite(hd, toIte(tail), state.arena.cellFalse().toNameEx ? "b")
+                    .typed(boolTypes, "b")
               }
             }
 
@@ -71,13 +77,15 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
                   // simply translate to a conjunction
                   var nextState = state.updateArena(_.appendCell(BoolT()))
                   val pred = nextState.arena.topCell.toNameEx
+
                   def mapArg(argEx: TlaEx): TlaEx = {
                     nextState = rewriter.rewriteUntilDone(nextState.setRex(argEx))
                     nextState.ex
                   }
 
                   val rewrittenArgs = args map mapArg
-                  rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.and(rewrittenArgs: _*)))
+                  val eq = tla.eql(pred ? "b", tla.and(rewrittenArgs: _*) ? "b").typed(boolTypes, "b")
+                  rewriter.solverContext.assertGroundExpr(eq)
                   nextState.setRex(pred)
                 }
               rewriter.rewriteUntilDone(newState)
@@ -119,7 +127,10 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
           // propagate
           var nextState = tailState.updateArena(_.appendCell(BoolT()))
           val pred = nextState.asCell.toNameEx
-          rewriter.solverContext.assertGroundExpr(tla.equiv(pred, tla.and(headCell.toNameEx, tailState.ex)))
+          val eq = tla
+            .equiv(pred ? "b", tla.and(headCell.toNameEx ? "b", tailState.ex) ? "b")
+            .typed(boolTypes, "b")
+          rewriter.solverContext.assertGroundExpr(eq)
           nextState.setRex(pred)
         }
       }

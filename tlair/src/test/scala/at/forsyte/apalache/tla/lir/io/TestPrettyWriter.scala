@@ -426,7 +426,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("TLC @@") {
     val writer = new PrettyWriter(printWriter, 40)
-    val expr = atat(str("a"), int(1), str("b"), int(2), str("c"), int(3))
+    val expr = atatInterleaved(str("a"), int(1), str("b"), int(2), str("c"), int(3))
     writer.write(expr)
     printWriter.flush()
     val expected = """"a" :> 1 @@ "b" :> 2 @@ "c" :> 3""".stripMargin

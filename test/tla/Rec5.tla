@@ -13,14 +13,10 @@ VARIABLES
     \* @type: Str -> Int;
     votingPower
 
-a <: b == a
-
-StrSet(S) == S <: {STRING}
-
 RECURSIVE Sum(_)
 
 Sum(S) ==
-  IF S = StrSet({})
+  IF S = {}
   THEN 0
   ELSE LET x == CHOOSE y \in S: TRUE IN
     votingPower[x] + Sum(S \ {x})

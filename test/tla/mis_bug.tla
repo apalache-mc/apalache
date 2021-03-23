@@ -5,8 +5,6 @@ N == 3
 N4 == 81
 Nodes == 1..N
 
-a <: b == a \* type annotations
-
 VARIABLES
     \* @type: Set(<<Int, Int>>);
     Nb,
@@ -31,8 +29,7 @@ Init ==
         /\ awake = [n \in Nodes |-> TRUE]
         /\ rem_nbrs = [ u \in Nodes |-> { v \in Nodes : <<u, v>> \in Nb}]
         /\ status = [n \in Nodes |-> "unknown"]
-        /\ msgs = [n \in Nodes |->
-            ({} <: {[type |-> STRING, src |-> Int, val |-> Int ]})]
+        /\ msgs = [n \in Nodes |-> {}]
     
 Senders(u) == {v \in Nodes: awake[v] /\ u \in rem_nbrs[v] }
 
@@ -52,10 +49,8 @@ Round1 ==
 
 SentWinners(u) ==
     IF \E w \in Senders(u): awake[w] /\ status[w] = "winner"
-    THEN {[type |-> "winner", src |-> u]
-            <: [type |-> STRING, src |-> Int, val |-> Int]}
-    ELSE ({}
-            <: {[type |-> STRING, src |-> Int, val |-> Int]})
+    THEN {[type |-> "winner", src |-> u]}
+    ELSE {}
 
 IsLoser(u) == \E m \in msgs'[u]: m.type = "winner"
     
@@ -67,8 +62,7 @@ Round2 ==
     /\ UNCHANGED <<rem_nbrs, awake, val>>
 
 SentLosers(u) ==
-    {([type |-> "loser", src |-> s]
-        <: [type |-> STRING, src |-> Int, val |-> Int])
+    {[type |-> "loser", src |-> s]
         : s \in {w \in Senders(u): awake[w] /\ status[w] = "loser"}}
 
 ReceivedLosers(u) ==

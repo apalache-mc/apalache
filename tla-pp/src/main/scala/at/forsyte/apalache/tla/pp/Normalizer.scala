@@ -1,13 +1,12 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.{BuilderEx, LetInEx, NameEx, OperEx, TlaEx, TlaOperDecl, Typed, ValEx}
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.standard.{FlatLanguagePred, ReplaceFixed}
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.TlaBool
-import at.forsyte.apalache.tla.typecheck.{BoolT1, OperT1}
-import at.forsyte.apalache.tla.typecheck.TypedPredefs._
+import at.forsyte.apalache.tla.lir._
 
 import javax.inject.Singleton
 

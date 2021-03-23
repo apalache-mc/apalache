@@ -34,14 +34,14 @@ class CaseRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val iteWaterfall = revGuardsAndActions.foldLeft(otherEx)(decorateWithIf)
         rewriter.rewriteUntilDone(state.setRex(iteWaterfall))
 
-      case OperEx(TlaControlOper.caseNoOther, args @ _*) =>
+      case ex @ OperEx(TlaControlOper.caseNoOther, args @ _*) =>
         // first, rewrite all the arguments
         val (newState: SymbState, newArgs: Seq[TlaEx]) =
           rewriter.rewriteSeqUntilDone(state, args)
         val revGuardsAndActions = mkGuardsAndActions(newArgs)
         val cells = newArgs.map(newState.arena.findCellByNameEx)
         // get the expression type from the type finder (use the original expression as it could have been annotated!)
-        val resultType = rewriter.typeFinder.compute(state.ex, cells.map(_.cellType): _*)
+        val resultType = CellT.fromTypeTag(ex.typeTag)
         // place ASSERT(FALSE) instead of other
         val assertState = new TypedAssert(rewriter)
           .typedAssert(newState, resultType, tla.bool(false), "It may happen that no guard in CASE is applicable")

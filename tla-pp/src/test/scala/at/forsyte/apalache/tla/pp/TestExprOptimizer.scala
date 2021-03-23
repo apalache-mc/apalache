@@ -1,8 +1,9 @@
 package at.forsyte.apalache.tla.pp
 
+import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, IntT1, OperT1, RecT1, SetT1}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
-import at.forsyte.apalache.tla.typecheck.TypedPredefs._
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.typecheck._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner

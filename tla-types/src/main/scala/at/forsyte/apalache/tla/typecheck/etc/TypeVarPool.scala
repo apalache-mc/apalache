@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
-import at.forsyte.apalache.tla.typecheck.VarT1
+import at.forsyte.apalache.tla.lir.VarT1
 
 class TypeVarPool(start: Int = 0) {
 

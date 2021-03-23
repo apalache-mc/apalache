@@ -4,12 +4,13 @@ import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.io.tlc.TlcConfigParserApalache
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.Untyped
 import at.forsyte.apalache.tla.lir.io.PrettyWriter
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.typecheck.{MultiTypeCheckerListener, TypeCheckerTool}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatest.{Assertion, BeforeAndAfterEach, FunSuite}
 
 import java.io.{PrintWriter, StringWriter}
 import scala.io.Source
@@ -19,19 +20,28 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
   private var sourceStore: SourceStore = _
   private var annotationStore: AnnotationStore = _
   private var sanyImporter: SanyImporter = _
+  private var typeChecker: TypeCheckerTool = _
 
   override def beforeEach() {
     sourceStore = new SourceStore()
     annotationStore = createAnnotationStore()
     sanyImporter = new SanyImporter(sourceStore, annotationStore)
+    typeChecker = new TypeCheckerTool(annotationStore, inferPoly = false)
   }
 
-  def configureAndCompare(tla: String, tlc: String, expected: String) = {
+  def configureAndCompare(tla: String, tlc: String, expected: String): Assertion = {
     val config = TlcConfigParserApalache(tlc)
     val (rootName, modules) =
       sanyImporter.loadFromSource("test", Source.fromString(tla))
+
     val mod = modules(rootName)
-    val mod2 = new TlcConfigImporter(config, new IdleTracker())(mod)
+    // run the type checker
+    val typedModule =
+      typeChecker
+        .checkAndTag(new IdleTracker(), new MultiTypeCheckerListener(), defaultTag = { _ => Untyped() }, mod)
+        .get
+
+    val mod2 = new TlcConfigImporter(config, new IdleTracker())(typedModule)
     val stringWriter = new StringWriter()
     val printWriter = new PrintWriter(stringWriter)
     val writer = new PrettyWriter(printWriter, 80)
@@ -136,6 +146,10 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
   test("CONSTANT replacements") {
     configureAndCompare(
         """---- MODULE test ----
+        |B == 1
+        |D == "hello"
+        |Init == TRUE
+        |Next == TRUE
         |================================
       """.stripMargin,
         """
@@ -146,6 +160,14 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |NEXT Next
       """.stripMargin,
         """--------------------------------- MODULE test ---------------------------------
+        |
+        |B == 1
+        |
+        |D == "hello"
+        |
+        |Init == TRUE
+        |
+        |Next == TRUE
         |
         |OVERRIDE_A == B
         |
@@ -163,6 +185,12 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
   test("CONSTANT assignments and replacements") {
     configureAndCompare(
         """---- MODULE test ----
+        |M == 1
+        |B == "foo"
+        |L == TRUE
+        |D == 3
+        |Init == TRUE
+        |Next == TRUE
         |================================
       """.stripMargin,
         """
@@ -175,6 +203,18 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |NEXT Next
       """.stripMargin,
         """--------------------------------- MODULE test ---------------------------------
+        |
+        |M == 1
+        |
+        |B == "foo"
+        |
+        |L == TRUE
+        |
+        |D == 3
+        |
+        |Init == TRUE
+        |
+        |Next == TRUE
         |
         |OVERRIDE_N == "ModelValue_M"
         |
@@ -300,6 +340,11 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
   test("all features") {
     configureAndCompare(
         """---- MODULE test ----
+        |M == 1
+        |B == "foo"
+        |Init == TRUE
+        |Next == TRUE
+        |Prop == TRUE
         |================================
       """.stripMargin,
         """
@@ -318,6 +363,16 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |Prop
       """.stripMargin,
         """--------------------------------- MODULE test ---------------------------------
+        |
+        |M == 1
+        |
+        |B == "foo"
+        |
+        |Init == TRUE
+        |
+        |Next == TRUE
+        |
+        |Prop == TRUE
         |
         |OVERRIDE_N == "ModelValue_M"
         |

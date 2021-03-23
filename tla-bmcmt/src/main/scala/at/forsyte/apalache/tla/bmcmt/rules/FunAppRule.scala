@@ -4,8 +4,8 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory}
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
@@ -29,17 +29,19 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      case OperEx(TlaFunOper.app, funEx, argEx) =>
+      case ex @ OperEx(TlaFunOper.app, funEx, argEx) =>
         // SE-FUN-APP1
         val funState = rewriter.rewriteUntilDone(state.setRex(funEx))
         val funCell = funState.asCell
 
+        // we use funCell.cellType, not funEx.typeTag, because funEx can be the result of the rewriter
         funCell.cellType match {
           case TupleT(_) =>
             applyTuple(funState, funCell, funEx, argEx)
 
           case RecordT(_) =>
-            applyRecord(funState, funCell, funEx, argEx)
+            val resultT = CellT.fromTypeTag(ex.typeTag)
+            applyRecord(funState, funCell, funEx, argEx, resultT)
 
           case SeqT(_) =>
             applySeq(funState, funCell, argEx)
@@ -53,7 +55,8 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def applyRecord(state: SymbState, recordCell: ArenaCell, recEx: TlaEx, argEx: TlaEx): SymbState = {
+  private def applyRecord(state: SymbState, recordCell: ArenaCell, recEx: TlaEx, argEx: TlaEx,
+      resultT: CellT): SymbState = {
     val key = argEx match {
       case ValEx(TlaStr(k)) => k
       case _                => throw new RewriterException(s"Accessing a record $recEx with a non-constant key $argEx", argEx)
@@ -67,10 +70,8 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     if (index >= 0 && index < elems.length) {
       state.setRex(elems(index).toNameEx)
     } else {
-      // This case should have been caught by type inference. Throw an exception immediately.
-      val msg =
-        s"Accessing record $recEx of type ${recordCell.cellType} with the field $argEx. Type inference should have caught this."
-      throw new IllegalArgumentException(msg)
+      // The key does not belong to the record. This can happen as records of different domains can be unified
+      defaultValueFactory.makeUpValue(state, resultT)
     }
   }
 

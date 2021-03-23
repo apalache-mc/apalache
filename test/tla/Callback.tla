@@ -1,7 +1,9 @@
 ----------------------------- MODULE Callback ----------------------------
 EXTENDS Integers
 
-VARIABLES x
+VARIABLES
+    \* @type: Int;
+    x
 
 Pick(Cb(_)) ==
     \E i \in 1..10:

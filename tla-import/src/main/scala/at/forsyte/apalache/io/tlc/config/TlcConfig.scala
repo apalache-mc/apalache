@@ -1,10 +1,9 @@
 package at.forsyte.apalache.io.tlc.config
 
 import at.forsyte.apalache.io.tlc.config.ConfigModelValue.STR_PREFIX
-import at.forsyte.apalache.tla.lir.oper.TlaSetOper
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, SetT1, StrT1, TlaEx, Typed, VarT1}
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 
 import scala.util.parsing.input.NoPosition
 
@@ -60,7 +59,12 @@ object ConfigModelValue {
  * @param name the name of a model value
  */
 case class ConfigModelValue(name: String) extends ConfigConstExpr {
-  override def toTlaEx: TlaEx = ValEx(TlaStr(STR_PREFIX + name))
+  override def toTlaEx: TlaEx = {
+    // currently, we use the type Str for all model values.
+    // In the future, we might want to distinguish between different uninterpreted types.
+    // See https://github.com/informalsystems/apalache/issues/570
+    tla.str(STR_PREFIX + name).typed(StrT1())
+  }
 }
 
 /**
@@ -69,7 +73,7 @@ case class ConfigModelValue(name: String) extends ConfigConstExpr {
  * @param num an integer as BigInt
  */
 case class ConfigIntValue(num: BigInt) extends ConfigConstExpr {
-  override def toTlaEx: TlaEx = ValEx(TlaInt(num))
+  override def toTlaEx: TlaEx = tla.bigInt(num).typed(IntT1())
 }
 
 /**
@@ -78,7 +82,7 @@ case class ConfigIntValue(num: BigInt) extends ConfigConstExpr {
  * @param b a boolean
  */
 case class ConfigBoolValue(b: Boolean) extends ConfigConstExpr {
-  override def toTlaEx: TlaEx = ValEx(TlaBool(b))
+  override def toTlaEx: TlaEx = tla.bool(b).typed(BoolT1())
 }
 
 /**
@@ -87,7 +91,7 @@ case class ConfigBoolValue(b: Boolean) extends ConfigConstExpr {
  * @param str a string
  */
 case class ConfigStrValue(str: String) extends ConfigConstExpr {
-  override def toTlaEx: TlaEx = ValEx(TlaStr(str))
+  override def toTlaEx: TlaEx = tla.str(str).typed(StrT1())
 }
 
 /**
@@ -96,7 +100,21 @@ case class ConfigStrValue(str: String) extends ConfigConstExpr {
  * @param elems the set elements, which are constant expression themselves.
  */
 case class ConfigSetValue(elems: ConfigConstExpr*) extends ConfigConstExpr {
-  override def toTlaEx: TlaEx = OperEx(TlaSetOper.enumSet, elems.map(_.toTlaEx): _*)
+  override def toTlaEx: TlaEx = {
+    val setElems = elems.map(_.toTlaEx)
+    if (setElems.isEmpty) {
+      // the element type is uknown, introduce a polymorphic type Set(a)
+      tla.enumSet().typed(SetT1(VarT1(0)))
+    } else {
+      // the element type should be unique
+      val headType = setElems.head.typeTag.asTlaType1()
+      if (setElems.tail.exists(_.typeTag != Typed(headType))) {
+        throw new TlcConfigParseError("Set elements have different types: " + setElems.mkString(", "), NoPosition)
+      } else {
+        tla.enumSet(setElems: _*).typed(SetT1(headType))
+      }
+    }
+  }
 }
 
 /**

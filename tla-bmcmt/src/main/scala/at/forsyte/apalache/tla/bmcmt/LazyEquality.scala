@@ -4,10 +4,9 @@ import at.forsyte.apalache.tla.bmcmt.caches.{EqCache, EqCacheSnapshot}
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rewriter.{ConstSimplifierForSmt, Recoverable}
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.{NullEx, TlaEx}
-
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.{MalformedTlaError, NullEx, TlaEx}
 
 /**
  * Generate equality constraints between cells and cache them to avoid redundant constraints.
@@ -123,9 +122,11 @@ class LazyEquality(rewriter: SymbStateRewriter)
     } else if (cacheEntry.isDefined) {
       state // do nothing
     } else if (!left.cellType.comparableWith(right.cellType)) {
-      // cells of incomparable types cannot be equal
-      eqCache.put(left, right, EqCache.FalseEntry())
-      state
+      // Cells of incomparable types cannot be equal.
+      // This is a dangerous state, as the type checker should have caught this. Throw an error.
+      // It is not really a typing error, but an internal error that should be treated as such.
+      val msg = "Checking values of incomparable types for equality: %s and %s".format(left.cellType, right.cellType)
+      throw new MalformedTlaError(msg, state.ex)
     } else {
       // generate constraints
       val newState =
@@ -149,8 +150,11 @@ class LazyEquality(rewriter: SymbStateRewriter)
           case (SeqT(_), SeqT(_)) =>
             mkSeqEq(state, left, right)
 
-          case _ =>
-            throw new CheckerException("Unexpected equality test", state.ex)
+          case (FinFunSetT(_, _), FinFunSetT(_, _)) =>
+            mkFunSetEq(state, left, right)
+
+          case (lt, rt) =>
+            throw new CheckerException(s"Unexpected equality test over types $lt and $rt", state.ex)
         }
 
       // return the new state
@@ -236,6 +240,22 @@ class LazyEquality(rewriter: SymbStateRewriter)
       // recover the original expression and theory
       rightToLeft.setRex(state.ex)
     }
+  }
+
+  private def mkFunSetEq(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {
+    val dom1 = state.arena.getDom(left)
+    val cdm1 = state.arena.getCdm(left)
+    val dom2 = state.arena.getDom(right)
+    val cdm2 = state.arena.getCdm(right)
+    var nextState = mkSetEq(state, dom1, dom2)
+    nextState = mkSetEq(nextState, cdm1, cdm2)
+    val eq = tla.equiv(tla.eql(left.toNameEx, right.toNameEx),
+        tla.and(tla.eql(dom1.toNameEx, dom2.toNameEx), tla.eql(cdm1.toNameEx, cdm2.toNameEx)))
+    rewriter.solverContext.assertGroundExpr(eq)
+    eqCache.put(left, right, EqCache.EqEntry())
+
+    // recover the original expression and theory
+    nextState.setRex(state.ex)
   }
 
   // statically empty sets should be handled with care

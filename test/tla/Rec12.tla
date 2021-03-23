@@ -10,7 +10,10 @@ RECURSIVE A(_)
 A(x) == IF x < 1 THEN x ELSE 1 + A(x - 1)
 ======================================================================
 
-VARIABLES f
+VARIABLES
+    \* @type: Int;
+    f
+
 I == INSTANCE inner
 
 UNROLL_DEFAULT_I_A == 0

@@ -24,14 +24,14 @@ class TupleOrSeqCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      case OperEx(TlaFunOper.tuple, elems @ _*) =>
+      case ex @ OperEx(TlaFunOper.tuple, elems @ _*) =>
         // switch to cell theory
         val (stateAfterElems: SymbState, groundElems: Seq[TlaEx]) =
           rewriter.rewriteSeqUntilDone(state, elems)
         val cells = groundElems.map(stateAfterElems.arena.findCellByNameEx)
 
-        // Get the resulting type from the type finder. It may happen to be a sequence!
-        val resultT = rewriter.typeFinder.compute(state.ex, cells.map(_.cellType): _*)
+        // Get the resulting type from the type tag. It may be either a sequence or a tuple.
+        val resultT = CellT.fromTypeTag(ex.typeTag)
         resultT match {
           case tt @ TupleT(_) => createTuple(stateAfterElems, tt, cells)
           case st @ SeqT(_)   => createSeq(stateAfterElems, st, cells)

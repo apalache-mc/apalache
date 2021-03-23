@@ -8,8 +8,6 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 trait TestingPredefs {
   implicit def name(p_s: String): NameEx = NameEx(p_s)
 
-  implicit def value(p_n: Int): ValEx = ValEx(TlaInt(p_n))
-
   implicit def sfp(p_s: String): SimpleFormalParam = SimpleFormalParam(p_s)
 
   implicit def ofp(p_pair: (String, Int)): OperFormalParam =

@@ -5,7 +5,6 @@ import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.storage.BodyMap
 import at.forsyte.apalache.tla.lir.transformations.standard.InlinerOfUserOper.kStepParameters
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * <p>Attempts to instantiate the body of the operator named `name` with the provided arguments.
@@ -75,7 +74,7 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker) ext
     val bodyCopy = postTr(DeepCopy(tracker).deepCopyEx(decl.body))
 
     val newBody = decl.formalParams.zip(args).foldLeft(bodyCopy) { case (b, (fParam, arg)) =>
-      ReplaceFixed(tracker)(NameEx(fParam.name), arg)(b)
+      ReplaceFixed(tracker)(NameEx(fParam.name)(arg.typeTag), arg)(b)
     }
 
     // the step limit, if it was defined, decreases by 1
