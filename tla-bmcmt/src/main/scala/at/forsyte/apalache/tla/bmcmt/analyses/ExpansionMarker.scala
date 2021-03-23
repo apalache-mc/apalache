@@ -4,7 +4,6 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.standard.KeraLanguagePred
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
@@ -32,69 +31,82 @@ class ExpansionMarker @Inject() (tracker: TransformationTracker) extends TlaExTr
   // that requires an expanded set, e.g., S \\union (SUBSET T), the parameter shallExpand changes to true.
   def transform(shallExpand: Boolean): TlaExTransformation = tracker.trackEx {
     case ex @ OperEx(op @ TlaSetOper.powerset, underlyingSet) =>
+      val tag = ex.typeTag
       if (shallExpand) {
         // Expand the set as well as the underlying set!
         logger.warn(s"The set $ex will be expanded. This will blow up the solver.")
-        OperEx(BmcOper.expand, OperEx(op, transform(true)(underlyingSet)))
+        OperEx(BmcOper.expand, OperEx(op, transform(true)(underlyingSet))(tag))(tag)
       } else {
         // Do not expand the set itself, but expand the underlying set!
-        OperEx(op, transform(true)(underlyingSet))
+        OperEx(op, transform(true)(underlyingSet))(tag)
       }
 
     case ex @ OperEx(op @ TlaSetOper.funSet, dom, cdm) =>
+      val tag = ex.typeTag
       if (shallExpand) {
         // Expand everything, including the function set.
         logger.warn(s"The set $ex will be expanded. This will blow up the solver.")
-        OperEx(BmcOper.expand, OperEx(op, transform(true)(dom), transform(true)(cdm)))
+        OperEx(BmcOper.expand, OperEx(op, transform(true)(dom), transform(true)(cdm))(tag))(tag)
       } else {
         // Only expand the domain, but keep the co-domain unexpanded,
         // e.g., in [SUBSET S -> SUBSET T], while SUBSET S is expanded, the co-domain SUBSET T can be left as is
-        OperEx(op, transform(true)(dom), transform(false)(cdm))
+        OperEx(op, transform(true)(dom), transform(false)(cdm))(tag)
       }
 
     // simple propagation analysis that tells us what to expand
-    case OperEx(op @ BmcOper.`skolem`, OperEx(TlaBoolOper.exists, name, set, pred)) =>
+    case ex @ OperEx(op @ BmcOper.`skolem`, OperEx(TlaBoolOper.exists, name, set, pred)) =>
       // a skolemizable existential is allowed to keep its set unexpanded
-      OperEx(op, OperEx(TlaBoolOper.exists, name, transform(false)(set), transform(false)(pred)))
+      val tag = ex.typeTag
+      OperEx(op, OperEx(TlaBoolOper.exists, name, transform(false)(set), transform(false)(pred))(tag))(tag)
 
-    case OperEx(op @ TlaOper.chooseBounded, name, set, pred) =>
+    case ex @ OperEx(op @ TlaOper.chooseBounded, name, set, pred) =>
       // CHOOSE is essentially a skolemizable existential with the constraint of uniqueness
-      OperEx(op, name, transform(false)(set), transform(false)(pred))
+      val tag = ex.typeTag
+      OperEx(op, name, transform(false)(set), transform(false)(pred))(tag)
 
-    case OperEx(op, name, set, pred) if op == TlaBoolOper.exists || op == TlaBoolOper.forall =>
+    case ex @ OperEx(op, name, set, pred) if op == TlaBoolOper.exists || op == TlaBoolOper.forall =>
       // non-skolemizable quantifiers require their sets to be expanded
-      OperEx(op, name, transform(true)(set), transform(false)(pred))
+      val tag = ex.typeTag
+      OperEx(op, name, transform(true)(set), transform(false)(pred))(tag)
 
-    case OperEx(op @ TlaSetOper.in, elem, set) =>
+    case ex @ OperEx(op @ TlaSetOper.in, elem, set) =>
       // when checking e \in S, we can keep S unexpanded, but e should be expanded
-      OperEx(op, transform(true)(elem), transform(false)(set))
+      val tag = ex.typeTag
+      OperEx(op, transform(true)(elem), transform(false)(set))(tag)
 
-    case OperEx(op, args @ _*) if op == TlaSetOper.cup || op == TlaSetOper.union =>
+    case ex @ OperEx(op, args @ _*) if op == TlaSetOper.cup || op == TlaSetOper.union =>
       // binary union and UNION require arena cells, hence, expand
-      OperEx(op, args map transform(true): _*)
+      val tag = ex.typeTag
+      OperEx(op, args map transform(true): _*)(tag)
 
-    case OperEx(op @ TlaSetOper.filter, name, set, pred) =>
+    case ex @ OperEx(op @ TlaSetOper.filter, name, set, pred) =>
       // For the moment, we require the set to be expanded. However, we could think of collecting constraints on the way.
-      OperEx(op, name, transform(true)(set), transform(false)(pred))
+      val tag = ex.typeTag
+      OperEx(op, name, transform(true)(set), transform(false)(pred))(tag)
 
-    case OperEx(op, body, args @ _*) if op == TlaSetOper.map || op == TlaFunOper.funDef || op == TlaFunOper.recFunDef =>
+    case ex @ OperEx(op, body, args @ _*)
+        if op == TlaSetOper.map || op == TlaFunOper.funDef || op == TlaFunOper.recFunDef =>
       val tbody: TlaEx = transform(false)(body)
       val targs = args map transform(true)
-      OperEx(op, tbody +: targs: _*)
+      val tag = ex.typeTag
+      OperEx(op, tbody +: targs: _*)(tag)
 
-    case LetInEx(body, defs @ _*) =>
+    case ex @ LetInEx(body, defs @ _*) =>
       // at this point, we only have nullary let-in definitions
       def mapDef(df: TlaOperDecl) = df.copy(body = transform(shallExpand)(df.body))
 
-      LetInEx(transform(shallExpand)(body), defs map mapDef: _*)
+      val tag = ex.typeTag
+      LetInEx(transform(shallExpand)(body), defs map mapDef: _*)(tag)
 
-    case OperEx(BmcOper.withType, expr, annot) =>
+    case ex @ OperEx(BmcOper.withType, expr, annot) =>
       // transform the expression, but not the annotation! See https://github.com/informalsystems/apalache/issues/292
-      OperEx(BmcOper.withType, transform(shallExpand)(expr), annot)
+      val tag = ex.typeTag
+      OperEx(BmcOper.withType, transform(shallExpand)(expr), annot)(tag)
 
-    case OperEx(oper, args @ _*) =>
+    case ex @ OperEx(oper, args @ _*) =>
       // try to descend in the children, which may contain Boolean operations, e.g., { \E x \in S: P }
-      OperEx(oper, args map transform(shallExpand): _*)
+      val tag = ex.typeTag
+      OperEx(oper, args map transform(shallExpand): _*)(tag)
 
     case terminal =>
       terminal // terminal expression, stop here

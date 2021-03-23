@@ -15,6 +15,7 @@ import scala.collection.immutable.SortedMap
  *
  * @author Igor Konnov
  */
+@deprecated("This is a parser for the old type annotations. Do not use it!")
 object AnnotationParser {
 
   /**

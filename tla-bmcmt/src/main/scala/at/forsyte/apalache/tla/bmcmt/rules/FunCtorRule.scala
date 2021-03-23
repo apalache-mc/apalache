@@ -2,10 +2,10 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir._
 
 /**
  * The new implementation of a function constructor that encodes a function f = [x \in S |-> e] the classical way:
@@ -23,9 +23,10 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      case OperEx(TlaFunOper.funDef, mapEx, NameEx(varName), setEx) =>
+      case ex @ OperEx(TlaFunOper.funDef, mapEx, NameEx(varName), setEx) =>
         // note that we only have a single-argument case here, as Desugarer collapses multiple arguments into a tuple
-        rewriteFunCtor(state, mapEx, varName, setEx)
+        val funT = TlaType1.fromTypeTag(ex.typeTag).asInstanceOf[FunT1]
+        rewriteFunCtor(state, funT, mapEx, varName, setEx)
 
       case _ =>
         throw new RewriterException(
@@ -34,24 +35,20 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def rewriteFunCtor(state: SymbState, mapEx: TlaEx, varName: String, setEx: TlaEx) = {
+  private def rewriteFunCtor(state: SymbState, funT1: FunT1, mapEx: TlaEx, varName: String, setEx: TlaEx) = {
     // rewrite the set expression into a memory cell
     var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
     val domainCell = nextState.asCell
-    val elemT = domainCell.cellType match {
-      case FinSetT(et) => et
-      case t @ _       => throw new RewriterException("Expected a finite set, found: " + t, state.ex)
-    }
+    val funT = CellT.fromType1(funT1)
+    val elemT = CellT.fromType1(funT1.arg)
+    val resultT = CellT.fromType1(funT1.res)
     val domainCells = nextState.arena.getHas(domainCell)
     // find the type of the target expression and of the target set
-    val resultT = rewriter.typeFinder.computeRec(mapEx)
-    val funT =
-      rewriter.typeFinder
-        .compute(state.ex, resultT, elemT, domainCell.cellType)
-        .asInstanceOf[FunT]
     // unfold the set and map every potential element to a cell
     // actually, instead of mapping every cell to e, we map it to <<x, e>> to construct the relation
-    val pairEx = tla.tuple(tla.name(varName), mapEx)
+    val pairEx = tla
+      .tuple(tla.name(varName).typed(funT1.arg), mapEx)
+      .typed(TupT1(funT1.arg, funT1.res))
 
     val (afterMapState: SymbState, relationCells: Seq[ArenaCell]) =
       mapCells(nextState, pairEx, varName, setEx, domainCells)
@@ -71,9 +68,9 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     // associate a value of the uninterpreted function with a cell
     def addCellCons(domElem: ArenaCell, relElem: ArenaCell): Unit = {
-      val inDomain = tla.in(domElem.toNameEx, domainCell.toNameEx)
-      val inRelation = tla.in(relElem.toNameEx, relation.toNameEx)
-      val iff = tla.equiv(inDomain, inRelation)
+      val inDomain = tla.in(domElem.toNameEx, domainCell.toNameEx).typed(BoolT1())
+      val inRelation = tla.in(relElem.toNameEx, relation.toNameEx).typed(BoolT1())
+      val iff = tla.equiv(inDomain, inRelation).typed(BoolT1())
       rewriter.solverContext.assertGroundExpr(iff)
     }
 

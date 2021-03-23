@@ -4,9 +4,8 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.InlinerOfUserOper
-import at.forsyte.apalache.tla.lir.{SimpleFormalParam, TestingPredefs}
-import at.forsyte.apalache.tla.typecheck.TypedPredefs._
-import at.forsyte.apalache.tla.typecheck.{BoolT1, IntT1, OperT1}
+import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, OperT1, SimpleFormalParam, TestingPredefs}
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner

@@ -19,7 +19,7 @@ class IncrementalExecutionContext(val rewriter: SymbStateRewriter)
   override def snapshot(): IncrementalExecutionContextSnapshot = {
     val level = rewriter.contextLevel
     rewriter.push()
-    IncrementalExecutionContextSnapshot(level, typeFinder.varTypes)
+    IncrementalExecutionContextSnapshot(level)
   }
 
   /**
@@ -44,7 +44,6 @@ class IncrementalExecutionContext(val rewriter: SymbStateRewriter)
     }
 
     rewriter.pop(nPops)
-    rewriter.typeFinder.reset(snapshot.varTypes)
   }
 
   /**
@@ -54,6 +53,5 @@ class IncrementalExecutionContext(val rewriter: SymbStateRewriter)
   override def dispose(): Unit = {
     // dispose the rewriter, which will, in turn, dispose the solver
     rewriter.dispose()
-    // nothing to dispose in the type finder
   }
 }

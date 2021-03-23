@@ -2,9 +2,9 @@ package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.typecheck.{TlaType1, Type1Parser, TypeCheckerListener, TypeCheckerTool, TypingException}
+import at.forsyte.apalache.tla.typecheck.{Type1Parser, TypeCheckerListener, TypeCheckerTool}
 import at.forsyte.apalache.io.annotations.store._
-import at.forsyte.apalache.tla.lir.{Typed, UID}
+import at.forsyte.apalache.tla.lir.{TlaType1, Typed, TypingException, UID}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.typecheck.parser.DefaultType1Parser
 import org.easymock.EasyMock

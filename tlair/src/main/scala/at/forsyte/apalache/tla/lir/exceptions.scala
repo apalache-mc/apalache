@@ -38,3 +38,18 @@ class BuilderError(message: String) extends LirError(message)
  * @param message the error message
  */
 class CyclicDependencyError(message: String) extends LirError(message)
+
+/**
+ * This exception is thrown, whenever the code finds an irrecoverable error in expression types.
+ *
+ * @author konnov
+ */
+class TypingException(message: String) extends Exception(message)
+
+/**
+ * This exception is thrown when an outdated type annotation (pre 0.12.0) is met.
+ *
+ * @param message   the error message
+ * @param causeExpr the expression that caused the error
+ */
+class OutdatedAnnotationsError(message: String, val causeExpr: TlaEx) extends LirError(message)

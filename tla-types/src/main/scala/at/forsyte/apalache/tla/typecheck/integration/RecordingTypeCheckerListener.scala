@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.typecheck.integration
 
-import at.forsyte.apalache.tla.lir.UID
+import at.forsyte.apalache.tla.lir.{TlaType1, UID}
 import at.forsyte.apalache.tla.typecheck.etc.{EtcRef, ExactRef}
-import at.forsyte.apalache.tla.typecheck.{TlaType1, TypeCheckerListener}
+import at.forsyte.apalache.tla.typecheck.TypeCheckerListener
 
 import scala.collection.mutable
 

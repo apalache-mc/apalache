@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.standard._
-import at.forsyte.apalache.tla.pp.Desugarer
+import at.forsyte.apalache.tla.pp.{Desugarer, UniqueNameGenerator}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -15,28 +15,6 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class TestAlphaTransform extends FunSuite with TestingPredefs {
   val testFolderPath = "src/test/resources/assignmentSolver/"
-
-  def specFromFile(p_file: String, p_next: String = "Next"): TlaEx = {
-    val declsRaw = declarationsFromFile(testFolderPath + p_file)
-
-    val fakeModule = new TlaModule("test", declsRaw)
-
-    val tracker = TrackerWithListeners(new ChangeListener)
-
-    val renaming = new IncrementalRenaming(tracker)
-    val uniqueVarDecls =
-      new TlaModule(
-          fakeModule.name,
-          renaming.syncAndNormalizeDs(fakeModule.declarations).toSeq
-      )
-
-    val bodyMap = BodyMapFactory.makeFromDecls(uniqueVarDecls.operDeclarations)
-    val inlined = ModuleByExTransformer(InlinerOfUserOper(bodyMap, tracker))(uniqueVarDecls)
-    val explLetIn = ModuleByExTransformer(LetInExpander(tracker, keepNullary = false))(inlined)
-    val preprocessed = ModuleByExTransformer(Desugarer(tracker))(explLetIn)
-
-    findBodyOf(p_next, preprocessed.declarations: _*)
-  }
 
   test("Star abstraction") {
 
@@ -126,11 +104,5 @@ class TestAlphaTransform extends FunSuite with TestingPredefs {
     val ex2 = tla.primeInSingleton(n_x, tla.primeInSingleton(n_x, tla.int(2)))
 
     assert(correctRecursiveApplication(Seq(ex1, ex2)))
-  }
-
-  test("Real spec") {
-    val spec = specFromFile("Paxos.tla")
-
-    assert(correctRecursiveApplication(Seq(spec)))
   }
 }

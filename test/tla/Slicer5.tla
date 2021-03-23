@@ -2,7 +2,13 @@
 (* Testing slicing of symbolic transitions *)
 EXTENDS Integers, FiniteSets
 
-VARIABLE state, n, k
+VARIABLE
+    \* @type: Str;
+    state,
+    \* @type: Int;
+    n,
+    \* @type: Int;
+    k
 
 Init ==
     /\ state = "Init"

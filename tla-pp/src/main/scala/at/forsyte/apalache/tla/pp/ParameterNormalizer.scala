@@ -1,12 +1,10 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModuleTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.typecheck.{OperT1, TlaType1, TypingException}
-import at.forsyte.apalache.tla.typecheck.TypedPredefs._
+import TypedPredefs._
 
 /**
  * Transforms a declaration A(x,y(_,_)) == e
@@ -52,7 +50,7 @@ class ParameterNormalizer(
         }
 
       case _ =>
-        throw new TypingException(s"Operator $decl.name has an invalid type tag: " + decl.typeTag)
+        throw new TypingException(s"Operator ${decl.name} has an invalid type tag: " + decl.typeTag)
     }
   }
 

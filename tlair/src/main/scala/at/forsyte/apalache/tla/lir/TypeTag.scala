@@ -37,4 +37,14 @@ trait TypeTagged[T] {
    * @return a shallow copy of TLA+ expression with the type tag set to newTypeTag
    */
   def withTag(newTypeTag: TypeTag): T
+
+  /**
+   * Object equality combined with type tag equality.
+   *
+   * @param other another object to compare with
+   * @return true, if `this == other && this.typeTag == other.typeTag`
+   */
+  def eqTyped(other: TypeTagged[T]): Boolean = {
+    this == other && typeTag == other.typeTag
+  }
 }

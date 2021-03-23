@@ -140,7 +140,7 @@ class Builder {
    *
    * @return the value expression that corresponds to Nat.
    */
-  def natSet(): BuilderVal = BuilderVal(TlaIntSet)
+  def natSet(): BuilderVal = BuilderVal(TlaNatSet)
 
   /** Declarations */
 
@@ -565,8 +565,32 @@ class Builder {
     in(prime(nameToPrime), enumSet(onlySetElem))
   }
 
-  // d_1 :> e_1 @@ ... @@ d_k :> e_k
-  def atat(args: BuilderEx*): BuilderEx = {
+  /**
+   * The TLC operator that creates a singleton function: key :> value.
+   */
+  def colonGreater(key: BuilderEx, value: BuilderEx): BuilderEx = {
+    BuilderOper(TlcOper.colonGreater, key, value)
+  }
+
+  /**
+   * The TLC operator that concatenates two functions: fun1 @@ fun2.
+   *
+   * @param lhs function on the left-hand side
+   * @param rhs function on the right-hand side
+   * @return a new function that operates on the joint domain of lhs and rhs
+   */
+  def atat(lhs: BuilderEx, rhs: BuilderEx): BuilderEx = {
+    BuilderOper(TlcOper.atat, lhs, rhs)
+  }
+
+  /**
+   * Produce a function out of a sequence of keys and values, that is, key_1 :> value_1 @@ ... @@ key_k :> value_k.
+   *
+   * TODO: this method introduces an intermediate builder expression, so it cannot be used to construct a typed expression.
+   *
+   * @param args an alternating list of keys and values
+   */
+  def atatInterleaved(args: BuilderEx*): BuilderEx = {
     if (args.isEmpty) {
       BuilderOper(TlcOper.atat)
     } else {
@@ -577,6 +601,7 @@ class Builder {
   }
 
   // apalache operators
+  @deprecated("This operator introduces an old-style apalache annotation. It will be removed soon.")
   def withType(expr: BuilderEx, typeAnnot: BuilderEx): BuilderEx = {
     BuilderOper(BmcOper.withType, expr, typeAnnot)
   }

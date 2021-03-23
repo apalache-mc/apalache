@@ -1,9 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt.analyses
 
+import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, IntT1, SetT1}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
-import at.forsyte.apalache.tla.typecheck.TypedPredefs._
-import at.forsyte.apalache.tla.typecheck.{BoolT1, FunT1, IntT1, SetT1}
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterEach, FunSuite}

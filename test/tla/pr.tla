@@ -19,8 +19,6 @@ N == 4
 dest == 1
 
 Nodes == 1..N
-a <: b == a
-EmptyIntSet == {} <: {Int}
 
 VARIABLES
     \* @type: Int -> Set(Int);
@@ -38,27 +36,27 @@ IsDag ==
     /\ \A u \in Nodes: \A v \in out[u]: po[u][v]                \* embeds neighborhood
 
 InitOut ==
-    \* [ u \in Nodes |-> IF u = 1 THEN {2} ELSE EmptyIntSet ]
+    \* [ u \in Nodes |-> IF u = 1 THEN {2} ELSE {} ]
     [ u \in Nodes |->
         IF u = 2 THEN {3, 5} ELSE IF u \in { 3, 7} THEN {4}
         ELSE IF u = 5 THEN {6} ELSE IF u = 6 THEN {3, 7}
-        ELSE EmptyIntSet \* u \in {1, 4}
+        ELSE {} \* u \in {1, 4}
     ]
 
 Init ==
     /\ out = InitOut
     /\ in = [u \in Nodes |-> {v \in Nodes: u \in out[v]}]
-    /\ to_rev = [n \in Nodes |-> EmptyIntSet (*{}*)]
+    /\ to_rev = [n \in Nodes |-> {}]
     \*/\ out \in [Nodes -> SUBSET(Nodes)]
     \*/\ IsDag
     
     
-Sinks == { n \in Nodes : out[n] = EmptyIntSet (*{}*) /\ n /= dest}
+Sinks == { n \in Nodes : out[n] = {} /\ n /= dest}
 
 Reversed(Active) ==
     [ u \in Nodes |-> \* TODO: figure out, why it does not work with Active
         IF u \notin Active
-        THEN EmptyIntSet
+        THEN {}
         ELSE IF in[u] /= to_rev[u] THEN in[u] \ to_rev[u] ELSE in[u] ]
 
 \* @type: (Set(Int), Int -> Set(Int)) => Bool;
@@ -83,7 +81,7 @@ UpdateIn(Active, rev) ==
 UpdateToRev(Active, rev) ==
     to_rev' = [ u \in Nodes |->
         IF u \in Active
-        THEN EmptyIntSet (*{}*) \* empty the list of the links to reverse
+        THEN {}
         ELSE to_rev[u] \cup { s \in Active : u \in rev[s] }
             \* when a neighbor s of u makes a reversal, u adds
             \* the link between u and s to the list

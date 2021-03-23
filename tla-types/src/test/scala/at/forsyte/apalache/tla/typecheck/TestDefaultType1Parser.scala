@@ -1,5 +1,8 @@
 package at.forsyte.apalache.tla.typecheck
 
+import at.forsyte.apalache.tla.lir.{
+  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecT1, SeqT1, SetT1, SparseTupT1, StrT1, TupT1, VarT1
+}
 import at.forsyte.apalache.tla.typecheck.parser.{DefaultType1Parser, Type1ParseError}
 import org.junit.runner.RunWith
 import org.scalacheck.Gen.alphaStr
