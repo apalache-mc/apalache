@@ -171,8 +171,8 @@ class Desugarer(gen: UniqueNameGenerator, tracker: TransformationTracker) extend
           val funT = fun.typeTag.asTlaType1() // either FunT1, RecT1, TupT1, or SeqT1
           val operT = OperT1(Seq(), funT)
           val decl = tla
-            .declOp(uniqueName, tla.except(fun, tla.tuple(hd) ? "t", newValue) ? "f")
-            .typedOperDecl(Map("f" -> funT, "t" -> TupT1(hd.typeTag.asTlaType1()), "F" -> operT), "F")
+            .declOp(uniqueName, tla.except(fun, tla.tuple(hd).typed(hd.typeTag.asTlaType1()), newValue).typed(funT))
+            .typedOperDecl(operT)
           Seq(decl)
 
         case hd :: tl =>
@@ -190,8 +190,8 @@ class Desugarer(gen: UniqueNameGenerator, tracker: TransformationTracker) extend
             .appOp(tla.name(defs.last.name) ? "F")
             .typed(Map("F" -> operT, "r" -> resT), "r")
           val outDef = tla
-            .declOp(uniqueName, tla.except(fun, tla.tuple(hd) ? "t", nestedFun) ? "f")
-            .typedOperDecl(Map("f" -> funT, "t" -> TupT1(hd.typeTag.asTlaType1()), "F" -> operT), "F")
+            .declOp(uniqueName, tla.except(fun, tla.tuple(hd).typed(hd.typeTag.asTlaType1()), nestedFun).typed(funT))
+            .typedOperDecl(operT)
           defs :+ outDef
       }
     }
