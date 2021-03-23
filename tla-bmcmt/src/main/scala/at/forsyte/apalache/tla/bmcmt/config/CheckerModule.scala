@@ -7,8 +7,6 @@ import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriter
 import at.forsyte.apalache.tla.assignments.passes._
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.passes._
-import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
-import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
 import at.forsyte.apalache.tla.lir.io.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
@@ -42,8 +40,6 @@ class CheckerModule extends AbstractModule {
       .to(classOf[FormulaHintsStoreImpl])
     bind(classOf[ExprGradeStore])
       .to(classOf[ExprGradeStoreImpl])
-    bind(new TypeLiteral[TypeFinder[CellT]] {})
-      .to(classOf[TrivialTypeFinder]) // using a trivial type finder
 
     // writers
     bind(classOf[TlaWriterFactory])

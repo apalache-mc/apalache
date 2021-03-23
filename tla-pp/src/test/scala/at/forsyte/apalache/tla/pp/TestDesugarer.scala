@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.{
-  BoolT1, FunT1, IntT1, OperT1, RecT1, SetT1, SimpleFormalParam, StrT1, TlaEx, TlaType1, TupT1
+  BoolT1, FunT1, IntT1, OperT1, RecT1, SeqT1, SetT1, SimpleFormalParam, StrT1, TlaEx, TlaType1, TupT1
 }
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -30,6 +30,10 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
       "f_si" -> FunT1(IntT1(), TupT1(StrT1(), IntT1())),
       "o_si" -> OperT1(Seq(), TupT1(IntT1(), StrT1())),
       "o_f_si" -> OperT1(Seq(), FunT1(IntT1(), TupT1(StrT1(), IntT1()))),
+      "i_to_Qs" -> FunT1(IntT1(), SeqT1(StrT1())),
+      "o_i_to_Qs" -> OperT1(Seq(), FunT1(IntT1(), SeqT1(StrT1()))),
+      "Qs" -> SeqT1(StrT1()),
+      "o_Qs" -> OperT1(Seq(), SeqT1(StrT1())),
       "O1" -> OperT1(Seq(), FunT1(IntT1(), IntT1())),
       "O2" -> OperT1(Seq(), FunT1(IntT1(), FunT1(IntT1(), IntT1()))),
       "O3" -> OperT1(Seq(), FunT1(IntT1(), FunT1(IntT1(), FunT1(IntT1(), IntT1())))),
@@ -37,7 +41,8 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
       "i1" -> TupT1(IntT1()),
       "i2" -> TupT1(IntT1(), IntT1()),
       "i3" -> TupT1(IntT1(), IntT1(), IntT1()),
-      "s" -> StrT1()
+      "s" -> StrT1(),
+      "s1" -> TupT1(StrT1())
   )
   private val unchangedTypes = Map(
       "i" -> IntT1(),
@@ -101,7 +106,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
   }
 
   test("EXCEPT one-dimensional, one index") {
-    // input: [f EXCEPT ![i] = e]
+    // input: [f EXCEPT ![<<i>>] = e]
     val input =
       tla
         .except(tla.name("f") ? "f1", tla.tuple(tla.name("i") ? "i") ? "i1", tla.name("e") ? "i")
@@ -120,18 +125,22 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     val output = desugarer.transform(input)
     // output: series of LET-IN definitions
     // LET t_1 == f
-    //     t_2 == [t_1()[i] EXCEPT ![j] = e]
-    //     t_3 == [t_1() EXCEPT ![i] = t_2()]
+    //     t_2 == [t_1()[i] EXCEPT ![<<j>>] = e]
+    //     t_3 == [t_1() EXCEPT ![<<i>>] = t_2()]
     //     IN t_3()
     val defs = Seq(
         tla
           .declOp("t_1", tla.name("f") ? "f2")
           .typedOperDecl(exceptTypes, "O2"),
         tla
-          .declOp("t_2", tla.except(callAndAccess("t_1", "f2", "i"), tla.name("j") ? "i", tla.name("e") ? "i") ? "f1")
+          .declOp("t_2",
+              tla.except(callAndAccess("t_1", "f2", "i"), tla.tuple(tla.name("j") ? "i") ? "i1",
+                  tla.name("e") ? "i") ? "f1")
           .typedOperDecl(exceptTypes, "O1"),
         tla
-          .declOp("t_3", tla.except(callAndAccess("t_1", "f1"), tla.name("i") ? "i", callAndAccess("t_2", "f1")) ? "f2")
+          .declOp("t_3",
+              tla.except(callAndAccess("t_1", "f1"), tla.tuple(tla.name("i") ? "i") ? "i1",
+                  callAndAccess("t_2", "f1")) ? "f2")
           .typedOperDecl(exceptTypes, "O2")
     )
 
@@ -152,18 +161,22 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     val output = desugarer.transform(input)
     // output: series of LET-IN definitions
     // LET t_1 == f
-    //     t_2 == [t_1()[i] EXCEPT ![j] = e]
-    //     t_3 == [t_1() EXCEPT ![i] = t_2()]
+    //     t_2 == [t_1()[i] EXCEPT ![<<"foo">>] = e]
+    //     t_3 == [t_1() EXCEPT ![<<i>>] = t_2()]
     //     IN t_3()
     val defs = Seq(
         tla
           .declOp("t_1", tla.name("f") ? "fr")
           .typedOperDecl(exceptTypes, "ofr"),
         tla
-          .declOp("t_2", tla.except(callAndAccess("t_1", "f2", "i"), tla.name("foo") ? "s", tla.name("e") ? "s") ? "r")
+          .declOp("t_2",
+              tla.except(callAndAccess("t_1", "f2", "i"), tla.tuple(tla.name("foo") ? "s") ? "s1",
+                  tla.name("e") ? "s") ? "r")
           .typedOperDecl(exceptTypes, "or"),
         tla
-          .declOp("t_3", tla.except(callAndAccess("t_1", "r"), tla.name("i") ? "i", callAndAccess("t_2", "f1")) ? "fr")
+          .declOp("t_3",
+              tla.except(callAndAccess("t_1", "r"), tla.tuple(tla.name("i") ? "i") ? "i1",
+                  callAndAccess("t_2", "f1")) ? "fr")
           .typedOperDecl(exceptTypes, "ofr")
     )
 
@@ -176,7 +189,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
   }
 
   test("EXCEPT two-dimensional, function + tuple") {
-    // input: [f EXCEPT ![i].foo = e]
+    // input: [f EXCEPT ![i][1] = e]
     val input =
       tla
         .except(tla.name("f") ? "f_si", tla.tuple(tla.name("i") ? "i", tla.int(1)) ? "ii", tla.name("e") ? "s")
@@ -184,19 +197,21 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     val output = desugarer.transform(input)
     // output: series of LET-IN definitions
     // LET t_1 == f
-    //     t_2 == [t_1()[i] EXCEPT ![j] = e]
-    //     t_3 == [t_1() EXCEPT ![i] = t_2()]
+    //     t_2 == [t_1()[i] EXCEPT ![<<1>>] = e]
+    //     t_3 == [t_1() EXCEPT ![<<i>>] = t_2()]
     //     IN t_3()
     val defs = Seq(
         tla
           .declOp("t_1", tla.name("f") ? "f_si")
           .typedOperDecl(exceptTypes, "o_f_si"),
         tla
-          .declOp("t_2", tla.except(callAndAccess("t_1", "f_si", "i"), tla.int(1), tla.name("e") ? "s") ? "si")
+          .declOp("t_2",
+              tla.except(callAndAccess("t_1", "f_si", "i"), tla.tuple(tla.int(1)) ? "i1", tla.name("e") ? "s") ? "si")
           .typedOperDecl(exceptTypes, "o_si"),
         tla
           .declOp("t_3",
-              tla.except(callAndAccess("t_1", "si"), tla.name("i") ? "i", callAndAccess("t_2", "si")) ? "f_si")
+              tla.except(callAndAccess("t_1", "si"), tla.tuple(tla.name("i") ? "i") ? "i1",
+                  callAndAccess("t_2", "si")) ? "f_si")
           .typedOperDecl(exceptTypes, "o_f_si")
     )
 
@@ -204,6 +219,43 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
       tla
         .letIn(callAndAccess("t_3", "f_si"), defs: _*)
         .typed(exceptTypes, "f_si")
+
+    assert(expected eqTyped output)
+  }
+
+  test("EXCEPT two-dimensional, function + sequence") {
+    // input: [f EXCEPT ![i][j] = e]
+    val input =
+      tla
+        .except(tla.name("f") ? "i_to_Qs", tla.tuple(tla.name("i") ? "i", tla.name("j") ? "i") ? "ii",
+            tla.name("e") ? "s")
+        .typed(exceptTypes, "i_to_Qs")
+    val output = desugarer.transform(input)
+    // output: series of LET-IN definitions
+    // LET t_1 == f
+    //     t_2 == [t_1()[i] EXCEPT ![<<j>>] = e]
+    //     t_3 == [t_1() EXCEPT ![<<i>>] = t_2()]
+    //     IN t_3()
+    val defs = Seq(
+        tla
+          .declOp("t_1", tla.name("f") ? "i_to_Qs")
+          .typedOperDecl(exceptTypes, "o_i_to_Qs"),
+        tla
+          .declOp("t_2",
+              tla.except(callAndAccess("t_1", "i_to_Qs", "i"), tla.tuple(tla.name("j") ? "s") ? "i1",
+                  tla.name("e") ? "s") ? "Qs")
+          .typedOperDecl(exceptTypes, "o_Qs"),
+        tla
+          .declOp("t_3",
+              tla.except(callAndAccess("t_1", "Qs"), tla.tuple(tla.name("i") ? "i") ? "i1",
+                  callAndAccess("t_2", "si")) ? "i_to_Qs")
+          .typedOperDecl(exceptTypes, "o_i_to_Qs")
+    )
+
+    val expected: TlaEx =
+      tla
+        .letIn(callAndAccess("t_3", "f_si"), defs: _*)
+        .typed(exceptTypes, "i_to_Qs")
 
     assert(expected eqTyped output)
   }
@@ -218,9 +270,9 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     val output = desugarer.transform(input)
     // output: series of LET-IN definitions
     // LET t_1 == f
-    //     t_2 == [t_1()[i][j] EXCEPT ![k] = e]
-    //     t_3 == [t_1()[i] EXCEPT ![j] = t_2()]
-    //     t_4 == [t_1() EXCEPT ![i] = t_3()]
+    //     t_2 == [t_1()[i][j] EXCEPT ![<<k>>] = e]
+    //     t_3 == [t_1()[i] EXCEPT ![<<j>>] = t_2()]
+    //     t_4 == [t_1() EXCEPT ![<<i>>] = t_3()]
     //     IN t_4()
     val defs = Seq(
         tla
@@ -228,14 +280,18 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
           .typedOperDecl(exceptTypes, "O3"),
         tla
           .declOp("t_2",
-              tla.except(callAndAccess("t_1", "f3", "i", "j"), tla.name("k") ? "i", tla.name("e") ? "i") ? "f1")
+              tla.except(callAndAccess("t_1", "f3", "i", "j"), tla.tuple(tla.name("k") ? "i") ? "i1",
+                  tla.name("e") ? "i") ? "f1")
           .typedOperDecl(exceptTypes, "O1"),
         tla
           .declOp("t_3",
-              tla.except(callAndAccess("t_1", "f3", "i"), tla.name("j") ? "i", callAndAccess("t_2", "f1")) ? "f2")
+              tla.except(callAndAccess("t_1", "f3", "i"), tla.tuple(tla.name("j") ? "i") ? "i1",
+                  callAndAccess("t_2", "f1")) ? "f2")
           .typedOperDecl(exceptTypes, "O2"),
         tla
-          .declOp("t_4", tla.except(callAndAccess("t_1", "f1"), tla.name("i") ? "i", callAndAccess("t_3", "f3")) ? "f3")
+          .declOp("t_4",
+              tla.except(callAndAccess("t_1", "f1"), tla.tuple(tla.name("i") ? "i") ? "i1",
+                  callAndAccess("t_3", "f3")) ? "f3")
           .typedOperDecl(exceptTypes, "O3")
     )
 
@@ -257,26 +313,33 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     val output = desugarer.transform(input)
     // output: a series of definitions
     // LET t_1 == f
-    //     t_2 == [t_1()[i] EXCEPT ![j] = e1]
-    //     t_3 == [t_1() EXCEPT ![i] = t_2()]
-    //     t_4 == [t_3()[k] EXCEPT ![l] = e2]
-    //     t_5 == [t_3() EXCEPT ![k] = t_4()]
+    //     t_2 == [t_1()[i] EXCEPT ![<<j>>] = e1]
+    //     t_3 == [t_1() EXCEPT ![<<i>>] = t_2()]
+    //     t_4 == [t_3()[k] EXCEPT ![<<l>>] = e2]
+    //     t_5 == [t_3() EXCEPT ![<<k>>] = t_4()]
     //     IN t_5()
     val defs = Seq(
         tla
           .declOp("t_1", tla.name("f") ? "f2")
           .typedOperDecl(exceptTypes, "O2"),
         tla
-          .declOp("t_2", tla.except(callAndAccess("t_1", "f2", "i"), tla.name("j") ? "i", tla.name("e1") ? "i") ? "f1")
+          .declOp("t_2",
+              tla.except(callAndAccess("t_1", "f2", "i"), tla.tuple(tla.name("j") ? "i") ? "i1",
+                  tla.name("e1") ? "i") ? "f1")
           .typedOperDecl(exceptTypes, "O1"),
         tla.declOp("t_3",
-            tla.except(callAndAccess("t_1", "f2"), tla.name("i") ? "i", callAndAccess("t_2", "f1")) ? "f2")
+            tla.except(callAndAccess("t_1", "f2"), tla.tuple(tla.name("i") ? "i") ? "i1",
+                callAndAccess("t_2", "f1")) ? "f2")
           typedOperDecl (exceptTypes, "O2"),
         tla
-          .declOp("t_4", tla.except(callAndAccess("t_3", "f2", "k"), tla.name("l") ? "i", tla.name("e2") ? "i") ? "f1")
+          .declOp("t_4",
+              tla.except(callAndAccess("t_3", "f2", "k"), tla.tuple(tla.name("l") ? "i") ? "i1",
+                  tla.name("e2") ? "i") ? "f1")
           .typedOperDecl(exceptTypes, "O1"),
         tla
-          .declOp("t_5", tla.except(callAndAccess("t_3", "f2"), tla.name("k") ? "i", callAndAccess("t_4", "f1")) ? "f2")
+          .declOp("t_5",
+              tla.except(callAndAccess("t_3", "f2"), tla.tuple(tla.name("k") ? "i") ? "i1",
+                  callAndAccess("t_4", "f1")) ? "f2")
           .typedOperDecl(exceptTypes, "O2")
     )
 

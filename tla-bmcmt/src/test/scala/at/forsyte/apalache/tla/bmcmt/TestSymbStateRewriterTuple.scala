@@ -1,154 +1,97 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.NameEx
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.TlaFunOper
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, NameEx, SetT1, StrT1, TupT1}
+import at.forsyte.apalache.tla.lir.convenience.tla._
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterTuple extends RewriterBase {
-  test("""SE-TUPLE-CTOR[1-2]: <<1, FALSE, {2}>> ~~> $C$k""") {
-    val tuple = tla.tuple(tla.int(1), tla.bool(false), tla.enumSet(tla.int(2)))
+  private val types = Map(
+      "b" -> BoolT1(),
+      "i" -> IntT1(),
+      "(i)" -> TupT1(IntT1()),
+      "I" -> SetT1(IntT1()),
+      "ib" -> TupT1(IntT1(), BoolT1()),
+      "ibs" -> TupT1(IntT1(), BoolT1(), StrT1()),
+      "IB" -> SetT1(TupT1(IntT1(), BoolT1())),
+      "ibI" -> TupT1(IntT1(), BoolT1(), SetT1(IntT1()))
+  )
 
-    val state = new SymbState(tuple, arena, Binding())
-    val nextState = create().rewriteUntilDone(state)
-    nextState.ex match {
-      case membershipEx @ NameEx(name) =>
-        assert(solverContext.sat())
-        val cell = nextState.arena.findCellByName(name)
-        assert(TupleT(List(IntT(), BoolT(), FinSetT(IntT()))) == cell.cellType)
+  test("""<<1, FALSE, {2}>>""") {
+    val tup = tuple(int(1), bool(false), enumSet(int(2)) ? "I")
+      .typed(types, "ibI")
 
-      case _ =>
-        fail("Unexpected rewriting result")
-    }
-  }
-
-  test("""SE-TPL-ACC[1-2]: <<1, FALSE, {2}>>[2] ~~> $C$k equals FALSE""") {
-    val tuple = tla.tuple(tla.int(1), tla.bool(false), tla.enumSet(tla.int(2)))
-    val tupleAcc = tla.appFun(tuple, tla.int(2))
-    val state = new SymbState(tupleAcc, arena, Binding())
-    val nextState = create().rewriteUntilDone(state)
-    nextState.ex match {
-      case membershipEx @ NameEx(name) =>
-        assert(solverContext.sat())
-        val cell = nextState.arena.findCellByName(name)
-        cell.cellType match {
-          case BoolT() =>
-            assert(solverContext.sat())
-            solverContext.push()
-            solverContext.assertGroundExpr(tla.eql(cell.toNameEx, tla.bool(false)))
-            assert(solverContext.sat())
-            solverContext.pop()
-            solverContext.assertGroundExpr(tla.eql(cell.toNameEx, tla.bool(true)))
-            assert(!solverContext.sat())
-
-          // we check the actual contents in the later tests that access elements
-
-          case _ =>
-            fail("Expected Boolean type")
-        }
-
-      case _ =>
-        fail("Unexpected rewriting result")
-    }
-  }
-
-  test("""SE-TUPLE-CTOR[1-2] in a set: {<<1, FALSE>>, <<2, TRUE>>} ~~> $C$k""") {
-    val tuple1 = tla.tuple(tla.int(1), tla.bool(false))
-    val tuple2 = tla.tuple(tla.int(2), tla.bool(true))
-
-    val state = new SymbState(tla.enumSet(tuple1, tuple2), arena, Binding())
-    val nextState = create().rewriteUntilDone(state)
-    nextState.ex match {
-      case membershipEx @ NameEx(name) =>
-        assert(solverContext.sat())
-        val cell = nextState.arena.findCellByName(name)
-        assert(FinSetT(TupleT(List(IntT(), BoolT()))) == cell.cellType)
-
-      case _ =>
-        fail("Unexpected rewriting result")
-    }
-  }
-
-  test("""type inference error: {<<1, FALSE>>, <<2>>}""") {
-    val tuple1 = tla.tuple(tla.int(1), tla.bool(false))
-    val tuple2 = tla.tuple(tla.int(2))
-
-    val state = new SymbState(tla.enumSet(tuple1, tuple2), arena, Binding())
-    assertThrows[TypeInferenceException] {
-      create().rewriteUntilDone(state)
-      fail("Expected a type error")
-    }
-  }
-
-  test("""type inference error: {<<1, FALSE>>, <<TRUE, 2>>} ~~> $C$k""") {
-    val tuple1 = tla.tuple(tla.int(1), tla.bool(false))
-    val tuple2 = tla.tuple(tla.bool(true), tla.int(2))
-
-    val state = new SymbState(tla.enumSet(tuple1, tuple2), arena, Binding())
-    assertThrows[TypeInferenceException] {
-      create().rewriteUntilDone(state)
-    }
-  }
-
-  test("""SE-TUPLE-EQ: ~(<<2, FALSE>> = <<2, TRUE>>) ~~> $C$k""") {
-    val tuple1 = tla.tuple(tla.int(2), tla.bool(false))
-    val tuple2 = tla.tuple(tla.int(2), tla.bool(true))
-    val eq = tla.not(tla.eql(tuple1, tuple2))
-
-    val rewriter = create()
-    val state = new SymbState(eq, arena, Binding())
-    assertTlaExAndRestore(rewriter, state)
-  }
-
-  test("""SE-TUPLE-EQ: <<2, FALSE>> = <<2, FALSE>> ~~> $C$k""") {
-    val tuple1 = tla.tuple(tla.int(2), tla.bool(false))
-    val tuple2 = tla.tuple(tla.int(2), tla.bool(false))
-    val eq = tla.eql(tuple1, tuple2)
-
-    val rewriter = create()
-    val state = new SymbState(eq, arena, Binding())
-    assertTlaExAndRestore(rewriter, state)
-  }
-
-  // Keramelizer rewrites \X
-  ignore("""SE-TUPLE-SET: {<<1, FALSE>>, <<2, FALSE>>, <<1, TRUE>>, <<2, TRUE>> = {1,2} \X  {FALSE, TRUE} ~~> $B$k""") {
-    val set12 = tla.enumSet(1 to 2 map tla.int: _*)
-    val setBool = tla.enumSet(tla.bool(false), tla.bool(true))
-    val prod = tla.times(set12, setBool)
-    def tup(i: Int, b: Boolean) = tla.tuple(tla.int(i), tla.bool(b))
-    val eq = tla.eql(prod, tla.enumSet(tup(1, false), tup(1, true), tup(2, false), tup(2, true)))
-
-    val state = new SymbState(eq, arena, Binding())
-    val rewriter = create()
-    val nextState = rewriter.rewriteUntilDone(state)
-    rewriter.push()
-    solverContext.assertGroundExpr(nextState.ex)
+    val state = new SymbState(tup, arena, Binding())
+    val _ = create().rewriteUntilDone(state)
     assert(solverContext.sat())
-    rewriter.pop()
-    solverContext.assertGroundExpr(tla.not(nextState.ex))
-    assert(!solverContext.sat())
   }
 
-  test("""SE-TUPLE-DOM: DOMAIN <<2, FALSE>> = {1, 2}""") {
-    val tuple = tla.tuple(tla.int(2), tla.bool(false), tla.str("c"))
-    val set123 = tla.enumSet(1.to(3) map tla.int: _*)
-    val eq = tla.eql(tla.dom(tuple), set123)
+  test(""" <<1, FALSE, {2}>>[2] returns FALSE""") {
+    val tup = tuple(int(1), bool(false), enumSet(int(2)) ? "I")
+    val tupleAcc = appFun(tup ? "ibI", int(2))
+      .typed(types, "b")
+    val resEqFalse = eql(tupleAcc, bool(false))
+      .typed(BoolT1())
+
+    val state = new SymbState(resEqFalse, arena, Binding())
+    assertTlaExAndRestore(create(), state)
+  }
+
+  test("""{<<1, FALSE>>, <<2, TRUE>>} works""") {
+    val tuple1 = tuple(int(1), bool(false))
+    val tuple2 = tuple(int(2), bool(true))
+    val tupleSet = enumSet(tuple1 ? "ib", tuple2 ? "ib")
+      .typed(types, "IB")
+
+    val state = new SymbState(tupleSet, arena, Binding())
+    val nextState = create().rewriteUntilDone(state)
+    assert(solverContext.sat())
+  }
+
+  test("""~(<<2, FALSE>> = <<2, TRUE>>)""") {
+    val tuple1 = tuple(int(2), bool(false))
+    val tuple2 = tuple(int(2), bool(true))
+    val eq = not(eql(tuple1 ? "ib", tuple2 ? "ib") ? "b")
+      .typed(types, "b")
+
+    val rewriter = create()
+    val state = new SymbState(eq, arena, Binding())
+    assertTlaExAndRestore(rewriter, state)
+  }
+
+  test("""<<2, FALSE>> = <<2, FALSE>>""") {
+    val tuple1 = tuple(int(2), bool(false))
+    val tuple2 = tuple(int(2), bool(false))
+    val eq = eql(tuple1 ? "ib", tuple2 ? "ib")
+      .typed(types, "b")
+
+    val rewriter = create()
+    val state = new SymbState(eq, arena, Binding())
+    assertTlaExAndRestore(rewriter, state)
+  }
+
+  test("""DOMAIN <<2, FALSE, "c">> = {1, 2, 3}""") {
+    val tup = tuple(int(2), bool(false), str("c"))
+    val set123 = enumSet(1.to(3) map int: _*)
+    val eq = eql(dom(tup ? "ibs") ? "I", set123 ? "I")
+      .typed(types, "b")
     val state = new SymbState(eq, arena, Binding())
     val rewriter = create()
     assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""SE-TUPLE-EXCEPT: [ <<1, FALSE>> EXCEPT ![1] = 3 ]""") {
-    val tuple = tla.tuple(tla.int(1), tla.bool(false))
-    val except = tla.except(tuple, tla.tuple(tla.int(1)), tla.int(3))
-    val state = new SymbState(except, arena, Binding())
+  test("""[ <<1, FALSE>> EXCEPT ![1] = 3 ]""") {
+    val tup = tuple(int(1), bool(false))
+    val newTuple = except(tup ? "ib", tuple(int(1)) ? "(i)", int(3))
+      .typed(types, "ib")
+    val eq = eql(newTuple, tuple(int(3), bool(false)) ? "ib")
+      .typed(types, "b")
+
+    val state = new SymbState(eq, arena, Binding())
     val rewriter = create()
-    val nextState = rewriter.rewriteUntilDone(state)
-    val expectedTuple = tla.tuple(tla.int(3), tla.bool(false))
-    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(expectedTuple, nextState.ex)))
+    assertTlaExAndRestore(rewriter, state.setRex(eq))
   }
 }

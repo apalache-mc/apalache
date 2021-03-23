@@ -5,7 +5,6 @@ import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore
 import at.forsyte.apalache.tla.bmcmt.caches.{ExprCache, IntValueCache, RecordDomainCache, StrValueCache}
 import at.forsyte.apalache.tla.bmcmt.rewriter.{Recoverable, RewriterConfig, SymbStateRewriterSnapshot}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.lir.TlaEx
 
 /**
@@ -49,13 +48,6 @@ trait SymbStateRewriter extends StackableContext with MessageStorage with Recove
    * @return the rewriter options
    */
   def config: RewriterConfig
-
-  /**
-   * A type finder.
-   *
-   * @return a type finder that can produce cell types
-   */
-  def typeFinder: TypeFinder[CellT]
 
   /**
    * The cache for lazy equalities, to avoid generating the same equality constraints many times.

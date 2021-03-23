@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaControlOper
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, TlaType1}
 
 /**
  * Rewriting rule for IF A THEN B ELSE C.
@@ -27,7 +27,7 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      case OperEx(TlaControlOper.ifThenElse, predEx, thenEx, elseEx) =>
+      case ex @ OperEx(TlaControlOper.ifThenElse, predEx, thenEx, elseEx) =>
         var nextState = rewriter.rewriteUntilDone(state.setRex(predEx))
         val predCell = nextState.asCell
         // Some rules immediately return TRUE or FALSE. In combination with assignments, this may lead to rewriting errors.
@@ -43,7 +43,7 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
           nextState = rewriter.rewriteUntilDone(nextState.setRex(elseEx))
           val elseCell = nextState.asCell
 
-          val resultType = rewriter.typeFinder.compute(state.ex, BoolT(), thenCell.cellType, elseCell.cellType)
+          val resultType = CellT.fromTypeTag(ex.typeTag)
           resultType match {
             // basic types, we can use SMT equality
             case BoolT() | IntT() | ConstT() => iteBasic(nextState, resultType, predCell.toNameEx, thenCell, elseCell)

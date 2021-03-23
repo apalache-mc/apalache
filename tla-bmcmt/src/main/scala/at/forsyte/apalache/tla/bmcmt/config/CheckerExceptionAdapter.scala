@@ -3,11 +3,12 @@ package at.forsyte.apalache.tla.bmcmt.config
 import at.forsyte.apalache.infra.{ErrorMessage, ExceptionAdapter, FailureMessage, NormalErrorMessage}
 import at.forsyte.apalache.tla.assignments.{AssignmentException, CoverData}
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.TypeInferenceError
 import at.forsyte.apalache.tla.imp.SanyException
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
-import at.forsyte.apalache.tla.lir.{LanguagePredError, MalformedTlaError, OperEx, TypingException, UID}
+import at.forsyte.apalache.tla.lir.{
+  LanguagePredError, MalformedTlaError, OperEx, OutdatedAnnotationsError, TypingException, UID
+}
 import at.forsyte.apalache.tla.pp.{
   ConfigurationError, IrrecoverablePreprocessingError, NotInKeraError, OverridingError, TlaInputError
 }
@@ -45,8 +46,8 @@ class CheckerExceptionAdapter @Inject() (sourceStore: SourceStore, changeListene
       logger.info("  [https://apalache.informal.systems/docs/apalache/principles.html#assignments]")
       NormalErrorMessage("Assignment error: " + err.getMessage)
 
-    case err: TypeInferenceException =>
-      val msg = "%s\n%s".format(err.getMessage, err.errors.map(ofTypeInferenceError).mkString("\n"))
+    case err: OutdatedAnnotationsError =>
+      val msg = "%s: rewriter error: %s".format(findLoc(err.causeExpr.ID), err.getMessage)
       NormalErrorMessage(msg)
 
     case err: LanguagePredError =>
@@ -116,14 +117,5 @@ class CheckerExceptionAdapter @Inject() (sourceStore: SourceStore, changeListene
       case Some(loc) => loc.toString
       case None      => "<unknown>"
     }
-  }
-
-  def ofTypeInferenceError(e: TypeInferenceError): String = {
-    val locInfo = findLoc(e.origin.ID)
-    val exStr = e.origin match {
-      case OperEx(op, _*) => op.name
-      case ex @ _         => ex.toString()
-    }
-    "%s, %s, type error: %s".format(locInfo, exStr, e.explanation)
   }
 }

@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.pp.TlaInputError
 
 import scala.collection.mutable
 
@@ -35,6 +36,9 @@ class MapBase(rewriter: SymbStateRewriter) {
         case FinSetT(elemType) =>
           (setCell, elemType)
 
+        case InfSetT(elemType) =>
+          throw new TlaInputError(s"Found a set map over an infinite set of $elemType. Not supported.")
+
         case tp @ _ => throw new NotImplementedError("A set map over %s is not implemented".format(tp))
       }
     }
@@ -43,7 +47,7 @@ class MapBase(rewriter: SymbStateRewriter) {
     val elemsOfSets = setsAsCells.map(nextState.arena.getHas)
     val setLimits = elemsOfSets.map(_.size - 1)
     // find the types of the target expression and of the target set
-    val targetMapT = rewriter.typeFinder.computeRec(mapEx)
+    val targetMapT = CellT.fromTypeTag(mapEx.typeTag)
     val targetSetT = FinSetT(targetMapT)
 
     nextState = nextState.updateArena(_.appendCell(targetSetT))

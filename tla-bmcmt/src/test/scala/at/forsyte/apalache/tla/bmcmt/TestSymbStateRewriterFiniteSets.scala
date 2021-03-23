@@ -1,116 +1,141 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.BmcOper
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.TypedPredefs._
+import at.forsyte.apalache.tla.lir.convenience.tla._
+import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, SetT1, TlaEx}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterFiniteSets extends RewriterBase {
+  private val types = Map(
+      "b" -> BoolT1(),
+      "i" -> IntT1(),
+      "I" -> SetT1(IntT1())
+  )
+
   test("""Cardinality({1, 2, 3}) = 3""") {
-    val set = tla.enumSet(1.to(3).map(tla.int): _*)
-    val card = tla.card(set)
-    val state = new SymbState(card, arena, Binding())
+    val set = enumSet(1.to(3).map(int): _*)
+    val cardinality = card(set ? "I")
+      .typed(types, "i")
+    val eq = eql(cardinality, int(3))
+      .typed(types, "b")
+
+    val state = new SymbState(eq, arena, Binding())
     val rewriter = create()
-    val nextState = rewriter.rewriteUntilDone(state)
-    assert(solverContext.sat())
-    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(tla.int(3), nextState.ex)))
+    assertTlaExAndRestore(create(), state)
   }
 
   test("""Cardinality({1, 2, 2, 2, 3, 3}) = 3""") {
-    val set = tla.enumSet(Seq(1, 2, 2, 2, 3, 3).map(tla.int): _*)
-    val card = tla.card(set)
-    val state = new SymbState(card, arena, Binding())
+    val set = enumSet(Seq(1, 2, 2, 2, 3, 3).map(int): _*)
+    val cardinality = card(set ? "I")
+      .typed(types, "i")
+    val eq = eql(cardinality, int(3))
+      .typed(types, "b")
+
+    val state = new SymbState(eq, arena, Binding())
     val rewriter = create()
-    val nextState = rewriter.rewriteUntilDone(state)
-    assert(solverContext.sat())
-    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(tla.int(3), nextState.ex)))
+    assertTlaExAndRestore(create(), state)
   }
 
-  test("""BMC!ConstCard(Cardinality({1, 2, 3}) >= 3)""") {
-    val set = tla.enumSet(1.to(3).map(tla.int): _*)
-    val cardCmp = OperEx(BmcOper.constCard, tla.ge(tla.card(set), tla.int(3)))
+  test("""Apalache!ConstCard(Cardinality({1, 2, 3}) >= 3)""") {
+    val set = enumSet(1.to(3).map(int): _*)
+    val cardCmp = apalacheConstCard(ge(card(set ? "I") ? "i", int(3)) ? "b")
+      .typed(types, "b")
     val state = new SymbState(cardCmp, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
+    // note that this optimization only works in the positive form. Its negation may be SAT.
     assert(solverContext.sat())
     solverContext.assertGroundExpr(nextState.ex)
     assert(solverContext.sat())
   }
 
-  test("""BMC!ConstCard(Cardinality({1, 2, 3}) >= 4)""") {
-    val set = tla.enumSet(1.to(3).map(tla.int): _*)
-    val cardCmp = OperEx(BmcOper.constCard, tla.ge(tla.card(set), tla.int(4)))
+  test("""Apalache!ConstCard(Cardinality({1, 2, 3}) >= 4)""") {
+    val set = enumSet(1.to(3).map(int): _*)
+    val cardCmp = apalacheConstCard(ge(card(set ? "I") ? "i", int(4)) ? "b")
+      .typed(types, "b")
     val state = new SymbState(cardCmp, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
-    assert(solverContext.sat())
-    solverContext.assertGroundExpr(nextState.ex)
-    assert(!solverContext.sat())
-  }
-
-  test("""BMC!ConstCard(Cardinality({1, 2, 2, 3}) >= 4)""") {
-    val set = tla.enumSet(List(1, 2, 2, 3).map(tla.int): _*)
-    val cardCmp = OperEx(BmcOper.constCard, tla.ge(tla.card(set), tla.int(4)))
-    val state = new SymbState(cardCmp, arena, Binding())
-    val rewriter = create()
-    val nextState = rewriter.rewriteUntilDone(state)
+    // note that this optimization only works in the positive form. Its negation may be SAT.
     assert(solverContext.sat())
     solverContext.assertGroundExpr(nextState.ex)
     assert(!solverContext.sat())
   }
 
-  test("""BMC!ConstCard(Cardinality({1, 2, 2, 3, 3}) >= 4)""") {
-    val set = tla.enumSet(List(1, 2, 2, 3).map(tla.int): _*)
-    val cardCmp = OperEx(BmcOper.constCard, tla.ge(tla.card(set), tla.int(4)))
+  test("""Apalache!ConstCard(Cardinality({1, 2, 2, 3}) >= 4)""") {
+    val set = enumSet(Seq(1, 2, 2, 3).map(int): _*)
+    val cardCmp = apalacheConstCard(ge(card(set ? "I") ? "i", int(4)) ? "b")
+      .typed(types, "b")
     val state = new SymbState(cardCmp, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
+    // note that this optimization only works in the positive form. Its negation may be SAT.
     assert(solverContext.sat())
     solverContext.assertGroundExpr(nextState.ex)
     assert(!solverContext.sat())
   }
 
-  test("""BMC!ConstCard(Cardinality({}) >= 0)""") {
-    val set = tla.enumSet()
-    val cardCmp = OperEx(BmcOper.constCard, tla.ge(tla.card(set), tla.int(0)))
+  test("""Apalache!ConstCard(Cardinality({1, 2, 2, 3, 3}) >= 4)""") {
+    val set = enumSet(Seq(1, 2, 2, 3, 3).map(int): _*)
+    val cardCmp = apalacheConstCard(ge(card(set ? "I") ? "i", int(4)) ? "b")
+      .typed(types, "b")
     val state = new SymbState(cardCmp, arena, Binding())
     val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
-    assert(solverContext.sat())
-    solverContext.assertGroundExpr(nextState.ex)
-    assert(solverContext.sat())
-  }
-
-  test("""BMC!ConstCard(Cardinality({x \in {}: FALSE}) >= 0)""") {
-    val set = tla.filter(tla.name("x"), tla.enumSet(), tla.bool(false))
-    val cardCmp = OperEx(BmcOper.constCard, tla.ge(tla.card(set), tla.int(0)))
-    val state = new SymbState(cardCmp, arena, Binding())
-    val rewriter = create()
-    val nextState = rewriter.rewriteUntilDone(state)
-    assert(solverContext.sat())
-    solverContext.assertGroundExpr(nextState.ex)
-    assert(solverContext.sat())
-  }
-
-  test("""BMC!ConstCard(Cardinality({x \in {}: FALSE}) >= 1)""") {
-    val set = tla.filter(tla.name("x"), tla.enumSet(), tla.bool(false))
-    val cardCmp = OperEx(BmcOper.constCard, tla.ge(tla.card(set), tla.int(1)))
-    val state = new SymbState(cardCmp, arena, Binding())
-    val rewriter = create()
-    val nextState = rewriter.rewriteUntilDone(state)
+    // note that this optimization only works in the positive form. Its negation may be SAT.
     assert(solverContext.sat())
     solverContext.assertGroundExpr(nextState.ex)
     assert(!solverContext.sat())
   }
 
-  test("""BMC!ConstCard(Cardinality({}) >= 1)""") {
-    val set = tla.enumSet()
-    val cardCmp = OperEx(BmcOper.constCard, tla.ge(tla.card(set), tla.int(1)))
+  test("""Apalache!ConstCard(Cardinality({}) >= 0)""") {
+    val set = enumSet()
+    val cardCmp = apalacheConstCard(ge(card(set ? "I") ? "i", int(0)) ? "b")
+      .typed(types, "b")
     val state = new SymbState(cardCmp, arena, Binding())
     val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    // note that this optimization only works in the positive form. Its negation may be SAT.
+    assert(solverContext.sat())
+    solverContext.assertGroundExpr(nextState.ex)
+    assert(solverContext.sat())
+  }
+
+  test("""Apalache!ConstCard(Cardinality({}) >= 1)""") {
+    val set = enumSet()
+    val cardCmp = apalacheConstCard(ge(card(set ? "I") ? "i", int(1)) ? "b")
+      .typed(types, "b")
+    val state = new SymbState(cardCmp, arena, Binding())
+    val rewriter = create()
+    val nextState = rewriter.rewriteUntilDone(state)
+    // note that this optimization only works in the positive form. Its negation may be SAT.
+    assert(solverContext.sat())
+    solverContext.assertGroundExpr(nextState.ex)
+    assert(!solverContext.sat())
+  }
+
+  test("""Apalache!ConstCard(Cardinality({x \in {}: FALSE}) >= 0)""") {
+    val set = filter(name("x") ? "i", enumSet() ? "I", bool(false))
+    val cardCmp = apalacheConstCard(ge(card(set ? "I") ? "i", int(0)) ? "b")
+      .typed(types, "b")
+    val state = new SymbState(cardCmp, arena, Binding())
+    val rewriter = create()
+    // note that this optimization only works in the positive form. Its negation may be SAT.
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    solverContext.assertGroundExpr(nextState.ex)
+    assert(solverContext.sat())
+  }
+
+  test("""Apalache!ConstCard(Cardinality({x \in {}: FALSE}) >= 1)""") {
+    val set = filter(name("x") ? "i", enumSet() ? "I", bool(false))
+    val cardCmp = apalacheConstCard(ge(card(set ? "I") ? "i", int(1)) ? "b")
+      .typed(types, "b")
+    val state = new SymbState(cardCmp, arena, Binding())
+    val rewriter = create()
+    // note that this optimization only works in the positive form. Its negation may be SAT.
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     solverContext.assertGroundExpr(nextState.ex)
@@ -119,26 +144,24 @@ class TestSymbStateRewriterFiniteSets extends RewriterBase {
 
   test("""Cardinality({1, 2, 3} \ {2}) = 2""") {
     def setminus(set: TlaEx, intVal: Int): TlaEx = {
-      tla.filter(tla.name("t"), set, tla.not(tla.eql(tla.name("t"), tla.int(intVal))))
+      filter(name("t") ? "i", set ? "I", not(eql(name("t") ? "i", int(intVal)) ? "b") ? "b")
+        .typed(types, "I")
     }
 
-    val set = setminus(tla.enumSet(1.to(3).map(tla.int): _*), 2)
-    val card = tla.card(set)
-    val state = new SymbState(card, arena, Binding())
-    val rewriter = create()
-    val nextState = rewriter.rewriteUntilDone(state)
-    assert(solverContext.sat())
-    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(tla.int(2), nextState.ex)))
+    val set = setminus(enumSet(1.to(3).map(int): _*).typed(types, "I"), 2)
+    val cardinality = card(set ? "I")
+    val eq = eql(cardinality ? "i", int(2))
+      .typed(types, "b")
+
+    val state = new SymbState(eq, arena, Binding())
+    assertTlaExAndRestore(create(), state)
   }
 
   test("""IsFiniteSet({1, 2, 3}) = TRUE""") {
-    val set = tla.enumSet(1.to(3).map(tla.int): _*)
-    val card = tla.isFin(set)
-    val state = new SymbState(card, arena, Binding())
-    val rewriter = create()
-    val nextState = rewriter.rewriteUntilDone(state)
-    assert(solverContext.sat())
-    assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(tla.bool(true), nextState.ex)))
+    val set = enumSet(1.to(3).map(int): _*)
+    val isFiniteSet = isFin(set ? "I")
+      .typed(types, "b")
+    val state = new SymbState(isFiniteSet, arena, Binding())
+    assertTlaExAndRestore(create(), state)
   }
-
 }

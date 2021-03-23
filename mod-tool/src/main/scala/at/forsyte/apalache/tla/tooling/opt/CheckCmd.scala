@@ -42,6 +42,4 @@ class CheckCmd extends Command(name = "check", description = "Check a TLA+ speci
         "pre-check, whether a transition is disabled, and discard it, to make SMT queries smaller, default: true")
   var noDeadlocks: Boolean =
     opt[Boolean](name = "no-deadlock", default = true, description = "do not check for deadlocks, default: true")
-  var withSnowcat: Boolean =
-    opt[Boolean](name = "with-snowcat", default = false, description = "use the new type checker Snowcat")
 }

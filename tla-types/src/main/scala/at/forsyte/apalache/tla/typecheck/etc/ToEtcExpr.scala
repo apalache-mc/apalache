@@ -839,11 +839,12 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         val typeVar = varPool.fresh
         mkExRefApp(OperT1(nameAndArgs.map(_ => StrT1()) :+ typeVar, typeVar), nameAndArgs :+ labelledEx)
 
-      case OperEx(BmcOper.withType, lhs, _) =>
+      case OperEx(BmcOper.withType, lhs, annotation) =>
         // Met an old type annotation. Warn the user and ignore the annotation.
-        logger.warn("Met an old type annotation. Ignored: " + ex)
-        logger.warn("See: https://apalache.informal.systems/docs/apalache/typechecker-snowcat.html")
-        this(lhs)
+        logger.error("Met an old type annotation: " + annotation)
+        logger.error("See: https://apalache.informal.systems/docs/apalache/typechecker-snowcat.html")
+        val msg = s"Old Apalache type annotations (predating 0.12.0) are no longer supported"
+        throw new OutdatedAnnotationsError(msg, ex)
 
       //********************************************* TLC **************************************************
       case OperEx(TlcOper.print, text, value) =>

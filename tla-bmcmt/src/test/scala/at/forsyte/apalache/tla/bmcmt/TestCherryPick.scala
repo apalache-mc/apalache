@@ -1,38 +1,44 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, Oracle, OracleFactory, OracleHelper}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, Oracle, OracleFactory}
 import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.convenience.tla._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestCherryPick extends RewriterBase with TestingPredefs {
-  private def emptySetWithType(elemT: CellT): TlaEx =
-    tla.withType(tla.enumSet(), AnnotationParser.toTla(FinSetT(elemT)))
+  private val types = Map(
+      "b" -> BoolT1(),
+      "i" -> IntT1(),
+      "i_to_i" -> FunT1(IntT1(), IntT1()),
+      "I" -> SetT1(IntT1()),
+      "II" -> SetT1(SetT1(IntT1())),
+      "Qi" -> SeqT1(IntT1()),
+      "ii" -> TupT1(IntT1(), IntT1()),
+      "ri" -> RecT1("a" -> IntT1()),
+      "rii" -> RecT1("a" -> IntT1(), "b" -> IntT1()),
+      "riis" -> RecT1("a" -> IntT1(), "b" -> IntT1(), "c" -> StrT1()),
+      "Riis" -> SetT1(RecT1("a" -> IntT1(), "b" -> IntT1(), "c" -> StrT1())),
+      "i_ii" -> TupT1(IntT1(), TupT1(IntT1(), IntT1()))
+  )
 
   private def assertEqWhenChosen(rewriter: SymbStateRewriter, state: SymbState, oracle: Oracle, position: Int,
       expected: TlaEx): SymbState = {
     rewriter.push()
     solverContext.assertGroundExpr(oracle.whenEqualTo(state, position))
-    val ns = rewriter.rewriteUntilDone(state.setRex(tla.eql(state.ex, expected)))
-    rewriter.push()
-    solverContext.assertGroundExpr(ns.ex)
-    assert(solverContext.sat())
-    rewriter.pop()
-    rewriter.push()
-    solverContext.assertGroundExpr(tla.not(ns.ex))
-    assertUnsatOrExplain(rewriter, ns)
-    rewriter.pop()
+    val eq = eql(state.ex, expected).typed(BoolT1())
+    assertTlaExAndRestore(rewriter, state.setRex(eq))
+
     rewriter.pop()
     state
   }
 
-  test("""CHERRY-PICK {1, 2, 2} ~~> $B$k""") {
+  test("""CHERRY-PICK {1, 2, 2}""") {
     val rewriter = create()
-    var state = new SymbState(tla.bool(true), arena, Binding())
+    var state = new SymbState(bool(true).typed(BoolT1()), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 3)
     state = oracleState
@@ -41,7 +47,7 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
       // introduce integer cells directly
       arena = state.arena.appendCell(IntT())
       val cell = arena.topCell
-      solverContext.assertGroundExpr(tla.eql(cell.toNameEx, tla.int(i)))
+      solverContext.assertGroundExpr(eql(cell.toNameEx ? "i", int(i)).typed(types, "b"))
       state = state.setArena(arena)
       cell
     }
@@ -51,20 +57,20 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
       .pickBasic(IntT(), state, oracle, intCells, state.arena.cellFalse().toNameEx)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, pickedState, oracle, 0, tla.int(1))
-    assertEqWhenChosen(rewriter, pickedState, oracle, 1, tla.int(2))
-    assertEqWhenChosen(rewriter, pickedState, oracle, 2, tla.int(2))
+    assertEqWhenChosen(rewriter, pickedState, oracle, 0, int(1).typed())
+    assertEqWhenChosen(rewriter, pickedState, oracle, 1, int(2).typed())
+    assertEqWhenChosen(rewriter, pickedState, oracle, 2, int(2).typed())
   }
 
-  test("""CHERRY-PICK {<<1, 2>>, <<3, 4>>} ~~> $B$k""") {
+  test("""CHERRY-PICK {<<1, 2>>, <<3, 4>>}""") {
     val rewriter = create()
-    var state = new SymbState(tla.bool(true), arena, Binding())
+    var state = new SymbState(bool(true).typed(), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
 
     def mkTuple(i: Int, j: Int): ArenaCell = {
-      state = rewriter.rewriteUntilDone(state.setRex(tla.tuple(tla.int(i), tla.int(j))))
+      state = rewriter.rewriteUntilDone(state.setRex(tuple(int(i), int(j)).typed(types, "ii")))
       state.asCell
     }
 
@@ -77,15 +83,15 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
     assertEqWhenChosen(rewriter, state, oracle, 1, tuples(1).toNameEx)
   }
 
-  test("""CHERRY-PICK {<<1, <<2, 3>> >>, <<3, <<4, 5>> >>} ~~> $B$k""") {
+  test("""CHERRY-PICK {<<1, <<2, 3>> >>, <<3, <<4, 5>> >>}""") {
     val rewriter = create()
-    var state = new SymbState(tla.bool(true), arena, Binding())
+    var state = new SymbState(bool(true).typed(), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
 
     def mkTuple(i: Int, j: Int, k: Int): ArenaCell = {
-      state = rewriter.rewriteUntilDone(state.setRex(tla.tuple(tla.int(i), tla.tuple(tla.int(j), tla.int(k)))))
+      state = rewriter.rewriteUntilDone(state.setRex(tuple(int(i), tuple(int(j), int(k)) ? "ii").typed(types, "i_ii")))
       state.asCell
     }
 
@@ -100,15 +106,15 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
 
   test("""CHERRY-PICK-SEQ {<<1, 2>>, <<3, 4>>}""") {
     val rewriter = create()
-    var state = new SymbState(tla.bool(true), arena, Binding())
+    var state = new SymbState(bool(true).typed(BoolT1()), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
 
     def mkSeq(args: Int*): ArenaCell = {
-      val tuple = tla.tuple(args map tla.int: _*)
-      val annot = tla.withType(tuple, AnnotationParser.toTla(SeqT(IntT())))
-      state = rewriter.rewriteUntilDone(state.setRex(annot))
+      val tup = tuple(args map int: _*)
+        .typed(types, "Qi")
+      state = rewriter.rewriteUntilDone(state.setRex(tup))
       state.asCell
     }
 
@@ -120,15 +126,17 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
     assertEqWhenChosen(rewriter, state, oracle, 1, seqs(1).toNameEx)
   }
 
-  test("""CHERRY-PICK {[a |-> 1, b |-> 2], [a |-> 3, b |-> 4]} ~~> $B$k""") {
+  test("""CHERRY-PICK {[a |-> 1, b |-> 2], [a |-> 3, b |-> 4]}""") {
     val rewriter = create()
-    var state = new SymbState(tla.bool(true), arena, Binding())
+    var state = new SymbState(bool(true).typed(), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
 
     def mkRecord(i: Int, j: Int): ArenaCell = {
-      state = rewriter.rewriteUntilDone(state.setRex(tla.enumFun(tla.str("a"), tla.int(i), tla.str("b"), tla.int(j))))
+      val rec = enumFun(str("a"), int(i), str("b"), int(j))
+        .typed(types, "rii")
+      state = rewriter.rewriteUntilDone(state.setRex(rec))
       state.asCell
     }
 
@@ -141,15 +149,75 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
     assertEqWhenChosen(rewriter, state, oracle, 1, records(1).toNameEx)
   }
 
-  test("""CHERRY-PICK { {1, 2}, {3, 4} } ~~> $B$k""") {
+  test("""CHERRY-PICK [a |-> 1, b |-> 2] or [a |-> 3]""") {
+    // After switching to Snowcat, we allow sets to mix records of compatible types.
+    // The old encoding was always introducing spurious fields for all records, as it was extending the records.
+    val rec1 = enumFun(str("a"), int(1), str("b"), int(2))
+      .typed(types, "rii")
+    val rec2 = enumFun(str("a"), int(1))
+      .typed(types, "ri")
+
+    // introduce an oracle that tells us which element to pick
     val rewriter = create()
-    var state = new SymbState(tla.bool(true), arena, Binding())
+    var state = new SymbState(bool(true).typed(), arena, Binding())
+    val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
+    state = oracleState
+    state = rewriter.rewriteUntilDone(state.setRex(rec1))
+    val rec1Cell = state.asCell
+    state = rewriter.rewriteUntilDone(state.setRex(rec2))
+    val rec2Cell = state.asCell
+
+    val recordCellType = CellT.fromType1(types("riis"))
+    state = new CherryPick(rewriter).pickRecord(recordCellType, state, oracle, Seq(rec1Cell, rec2Cell),
+        state.arena.cellFalse().toNameEx)
+    assert(solverContext.sat())
+
+    assertEqWhenChosen(rewriter, state, oracle, 0, rec1Cell.toNameEx)
+    assertEqWhenChosen(rewriter, state, oracle, 1, rec2Cell.toNameEx)
+  }
+
+  test("""CHERRY-PICK {[a |-> 1, b |-> 2], [a |-> 3]}""") {
+    // After switching to Snowcat, we allow sets to mix records of compatible types.
+    // The old encoding was always introducing spurious fields for all records, as it was extending the records.
+    val rec1 = enumFun(str("a"), int(1), str("b"), int(2))
+      .typed(types, "ri")
+    val rec2 = enumFun(str("a"), int(1))
+      .typed(types, "rii")
+
+    // introduce an oracle that tells us which element to pick
+    val rewriter = create()
+    var state = new SymbState(bool(true).typed(), arena, Binding())
+    state = rewriter.rewriteUntilDone(state.setRex(rec1))
+    val rec1Cell = state.asCell
+    state = rewriter.rewriteUntilDone(state.setRex(rec2))
+    val rec2Cell = state.asCell
+    val set = enumSet(rec1Cell.toNameEx ? "riis", rec2Cell.toNameEx ? "riis")
+      .typed(types, "Riis")
+    state = rewriter.rewriteUntilDone(state.setRex(set))
+    val setCell = state.asCell
+
+    state = new CherryPick(rewriter).pick(setCell, state, bool(false).typed())
+    assert(solverContext.sat())
+    val result = state.asCell
+    // check that the result is equal to one of the records and nothing else
+    val eq1 = eql(result.toNameEx ? "riis", rec1Cell.toNameEx ? "riis") ? "b"
+    val eq2 = eql(result.toNameEx ? "riis", rec2Cell.toNameEx ? "riis") ? "b"
+    val eq1or2 = or(eq1, eq2)
+      .typed(types, "b")
+    assertTlaExAndRestore(rewriter, state.setRex(eq1or2))
+  }
+
+  test("""CHERRY-PICK { {1, 2}, {3, 4} }""") {
+    val rewriter = create()
+    var state = new SymbState(bool(true).typed(), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
 
     def mkSet(i: Int, j: Int): ArenaCell = {
-      state = rewriter.rewriteUntilDone(state.setRex(tla.enumSet(tla.int(i), tla.int(j))))
+      val set = enumSet(int(i), int(j))
+        .typed(types, "I")
+      state = rewriter.rewriteUntilDone(state.setRex(set))
       state.asCell
     }
 
@@ -163,27 +231,7 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
 
   test("""CHERRY-PICK { {1, 2}, {} }""") {
     val rewriter = create()
-    var state = new SymbState(tla.bool(true), arena, Binding())
-    // introduce an oracle that tells us which element to pick
-    val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
-    state = oracleState
-
-    def mkSet(setEx: TlaEx): ArenaCell = {
-      state = rewriter.rewriteUntilDone(state.setRex(tla.withType(setEx, AnnotationParser.toTla(FinSetT(IntT())))))
-      state.asCell
-    }
-
-    val sets = Seq(mkSet(tla.enumSet(tla.int(1), tla.int(2))), mkSet(tla.enumSet()))
-    state = new CherryPick(rewriter).pickSet(FinSetT(IntT()), state, oracle, sets, state.arena.cellFalse().toNameEx)
-    assert(solverContext.sat())
-
-    assertEqWhenChosen(rewriter, state, oracle, 0, sets(0).toNameEx)
-    assertEqWhenChosen(rewriter, state, oracle, 1, sets(1).toNameEx)
-  }
-
-  test("""CHERRY-PICK { {} } ~~> $B$k""") {
-    val rewriter = create()
-    var state = new SymbState(tla.bool(true), arena, Binding())
+    var state = new SymbState(bool(true).typed(), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
@@ -193,7 +241,27 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
       state.asCell
     }
 
-    val sets = Seq(mkSet(tla.enumSet()))
+    val sets = Seq(mkSet(enumSet(int(1), int(2)).typed(types, "I")), mkSet(enumSet().typed(types, "I")))
+    state = new CherryPick(rewriter).pickSet(FinSetT(IntT()), state, oracle, sets, state.arena.cellFalse().toNameEx)
+    assert(solverContext.sat())
+
+    assertEqWhenChosen(rewriter, state, oracle, 0, sets(0).toNameEx)
+    assertEqWhenChosen(rewriter, state, oracle, 1, sets(1).toNameEx)
+  }
+
+  test("""CHERRY-PICK { {} }""") {
+    val rewriter = create()
+    var state = new SymbState(bool(true).typed(), arena, Binding())
+    // introduce an oracle that tells us which element to pick
+    val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
+    state = oracleState
+
+    def mkSet(setEx: TlaEx): ArenaCell = {
+      state = rewriter.rewriteUntilDone(state.setRex(setEx))
+      state.asCell
+    }
+
+    val sets = Seq(mkSet(enumSet().typed(types, "I")))
     state = new CherryPick(rewriter).pickSet(FinSetT(IntT()), state, oracle, sets, state.arena.cellFalse().toNameEx)
     assert(solverContext.sat())
 
@@ -202,7 +270,7 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
 
   test("""CHERRY-PICK { {{1, 2}, {3, 4}}, {{5, 6}} }""") {
     val rewriter = create()
-    var state = new SymbState(tla.bool(true), arena, Binding())
+    var state = new SymbState(bool(true).typed(), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
@@ -212,11 +280,11 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
       state.asCell
     }
 
-    val set12 = tla.enumSet(tla.int(1), tla.int(2))
-    val set34 = tla.enumSet(tla.int(3), tla.int(4))
-    val set56 = tla.enumSet(tla.int(5), tla.int(6))
+    val set12 = enumSet(int(1), int(2)) ? "I"
+    val set34 = enumSet(int(3), int(4)) ? "I"
+    val set56 = enumSet(int(5), int(6)) ? "I"
     val sets =
-      Seq(rewriteEx(tla.enumSet(set12, set34)), rewriteEx(tla.enumSet(set56)))
+      Seq(rewriteEx(enumSet(set12, set34).typed(types, "II")), rewriteEx(enumSet(set56).typed(types, "II")))
     state = new CherryPick(rewriter).pickSet(FinSetT(FinSetT(IntT())), state, oracle, sets,
         state.arena.cellFalse().toNameEx)
     assert(solverContext.sat())
@@ -225,22 +293,24 @@ class TestCherryPick extends RewriterBase with TestingPredefs {
     assertEqWhenChosen(rewriter, state, oracle, 1, sets(1).toNameEx)
   }
 
-  test("""CHERRY-PICK { [x \in {1, 2} |-> 2 + x], [x \in {2, 3} |-> 2 * x] } ~~> $B$k""") {
+  test("""CHERRY-PICK { [x \in {1, 2} |-> 2 + x], [x \in {2, 3} |-> 2 * x] }""") {
     val rewriter = create()
-    var state = new SymbState(tla.bool(true), arena, Binding())
+    var state = new SymbState(bool(true).typed(), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
 
-    def mkFun(dom: TlaEx, map: TlaEx): ArenaCell = {
-      state = rewriter.rewriteUntilDone(state.setRex(tla.funDef(map, NameEx("x"), dom)))
+    def mkFun(dom: BuilderEx, map: BuilderEx): ArenaCell = {
+      val fun = funDef(map, name("x") ? "i", dom)
+        .typed(types, "i_to_i")
+      state = rewriter.rewriteUntilDone(state.setRex(fun))
       state.asCell
     }
 
-    val set12 = tla.enumSet(tla.int(1), tla.int(2))
-    val set23 = tla.enumSet(tla.int(2), tla.int(3))
-    val fun1 = mkFun(set12, tla.plus(tla.int(2), tla.name("x")))
-    val fun2 = mkFun(set23, tla.mult(tla.int(2), tla.name("x")))
+    val set12 = enumSet(int(1), int(2)) ? "I"
+    val set23 = enumSet(int(2), int(3)) ? "I"
+    val fun1 = mkFun(set12, plus(int(2), name("x") ? "i") ? "i")
+    val fun2 = mkFun(set23, mult(int(2), name("x") ? "i") ? "i")
     val funs = Seq(fun1, fun2)
     val funT = FunT(FinSetT(IntT()), IntT())
     state = new CherryPick(rewriter).pickFun(funT, state, oracle, funs, state.arena.cellFalse().toNameEx)

@@ -10,9 +10,6 @@
  *)
  
 EXTENDS Integers 
-
-\* old apalache annotations. They will be removed very soon!
-a <: b == a
  
 N == 4 \* the total number of processes: correct and faulty
 F == 1 \* the number of Byzantine processes (symmetric faults)
@@ -41,7 +38,7 @@ VARIABLES
 VARIABLES
     \* @type: Str;
     round,
-    \* @type: Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int]);
+    \* @type: Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int, vote: Int]);
     faultyMessages
 
 Init == /\ h = [p \in Procs |-> 0]
@@ -51,7 +48,7 @@ Init == /\ h = [p \in Procs |-> 0]
         /\ vote = [p \in Procs |-> nil]
         \* book-keeping
         /\ round = "PRE-PROPOSE"
-        /\ faultyMessages = {} <: {[type |-> STRING, src |-> Int, height |-> Int, epoch |-> Int, proposal |-> Int]}
+        /\ faultyMessages = {}
 
 \* "a deterministic function which gives the proposer
 \*  for a given epoch at a given height in a round robin fashion"
@@ -89,7 +86,7 @@ IsSentByFaulty ==
         [] OTHER (*round = "VOTE"*) -> faultyMessages' \inVoteFaulty
            
 
-\* @type: (Int, Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int])) => Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int]);
+\* @type: (Int, Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int, vote: Int])) => Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int, vote: Int]);
 Deliver(p, sent) ==
     CASE    round = "PRE-PROPOSE" ->
             { m \in sent : m.type = "PRE-PROPOSE" /\ m.src = Proposer(p) /\ m.height = h[p] /\ m.epoch = e[p] }
@@ -116,7 +113,7 @@ PrePropose(delivered) ==
     /\ proposal' = [p \in Procs |-> Id(FindProposal(p, delivered))]
     /\ UNCHANGED <<vote, h, e, decision>>
 
-\* @type: (Int, Int -> Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int])) => Int;
+\* @type: (Int, Int -> Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int, vote: Int])) => Int;
 ChooseValue(p, delivered) ==
     LET vs == { m2.proposal: m2 \in { m \in delivered[p] : m.type = "PROPOSE" /\ m.height = h[p] /\ m.epoch = h[p] }} IN
     IF vs = {}
@@ -130,7 +127,7 @@ Propose(delivered) ==
     /\ vote' = [p \in Procs |-> Id(ChooseValue(p, delivered))]
     /\ UNCHANGED <<proposal, h, e, decision>>
 
-\* @type: (Int, Int -> Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int])) => Int;
+\* @type: (Int, Int -> Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int, vote: Int])) => Int;
 ChooseDecision(p, delivered) ==
     LET vs == { m2.vote: m2 \in { m \in delivered[p] : m.type = "VOTE" /\ m.height = h[p] /\ m.epoch = h[p] }} IN
     IF vs = {}
