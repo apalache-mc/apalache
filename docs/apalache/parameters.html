@@ -185,11 +185,11 @@ which instantiates <code>y2k.tla</code>:</p>
  * use INSTANCE.
  *)
  
-VARIABLE year, hasLicense
-
-INSTANCE y2k WITH BIRTH_YEAR &lt;- 80, LICENSE_AGE &lt;- 18
-
-=============================================================================
+VARIABLE
+    \* @type: Int;
+    year,
+    \* @type: Bool;
+    hasLicense
 </code></pre>
 <p>The downside of this approach is that you have to declare the variables of the
 extended specification. This is easy with only two variables, but can quickly

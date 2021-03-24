@@ -689,11 +689,11 @@ which instantiates <code>y2k.tla</code>:</p>
  * use INSTANCE.
  *)
  
-VARIABLE year, hasLicense
-
-INSTANCE y2k WITH BIRTH_YEAR &lt;- 80, LICENSE_AGE &lt;- 18
-
-=============================================================================
+VARIABLE
+    \* @type: Int;
+    year,
+    \* @type: Bool;
+    hasLicense
 </code></pre>
 <p>The downside of this approach is that you have to declare the variables of the
 extended specification. This is easy with only two variables, but can quickly
@@ -1252,20 +1252,20 @@ ugly really fast.</p>
 <p>Consider the example
 <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/Rec9.tla">Rec9</a>,
 which computes set cardinality. Here is a fragment of the spec:</p>
-<pre><code class="language-tla">a &lt;: b == a
-
-IntSet(S) == S &lt;: {Int}
-
-\* the type of the function Card
-CardT == [{Int} -&gt; Int]
-
-(*
- The set cardinality function. It needs an upper bound on the set size.
+<pre><code class="language-tla"> The set cardinality function. It needs an upper bound on the set size.
  Although this function looks nice, be warned that this definition requires us
  to construct the powerset SUBSET NUMS and then write down the constraints
  for the function Card. This encoding is (at least) double-exponential.
  *)
 Card[S \in SUBSET NUMS] ==
+    IF S = {}
+    THEN 0
+    ELSE LET i == CHOOSE j \in S: TRUE IN
+        1 + Card[S \ {i}]
+
+Init ==
+    /\ set = {}
+    /\ size = 0
 </code></pre>
 <p>Since we cannot fix the order, in which the set elements are evaluated, we
 define function <code>Card</code> over <code>SUBSET NUMS</code>, that is, all possible subsets of
@@ -2214,15 +2214,15 @@ automatically. </p>
 \* This is a local copy of the example from Specifying Systems:
 \* https://github.com/tlaplus/Examples/blob/master/specifications/SpecifyingSystems/RealTime/HourClock.tla
 EXTENDS Naturals
-VARIABLE hr
+VARIABLE
+    \* @type: Int;
+    hr
+
 HCini  ==  hr \in (1 .. 12)
 HCnxt  ==  hr' = IF hr # 12 THEN hr + 1 ELSE 1
 HC  ==  HCini /\ [][HCnxt]_hr
 
 TypeOK == hr \in (1 .. 12)
---------------------------------------------------------------
-THEOREM  HC =&gt; []HCini
-==============================================================
 </code></pre>
 <p>Without thinking much about the types, run the type checker:</p>
 <pre><code class="language-sh">$ apalache typecheck HourClock.tla

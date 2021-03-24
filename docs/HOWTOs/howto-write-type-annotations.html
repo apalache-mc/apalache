@@ -191,15 +191,15 @@ automatically. </p>
 \* This is a local copy of the example from Specifying Systems:
 \* https://github.com/tlaplus/Examples/blob/master/specifications/SpecifyingSystems/RealTime/HourClock.tla
 EXTENDS Naturals
-VARIABLE hr
+VARIABLE
+    \* @type: Int;
+    hr
+
 HCini  ==  hr \in (1 .. 12)
 HCnxt  ==  hr' = IF hr # 12 THEN hr + 1 ELSE 1
 HC  ==  HCini /\ [][HCnxt]_hr
 
 TypeOK == hr \in (1 .. 12)
---------------------------------------------------------------
-THEOREM  HC =&gt; []HCini
-==============================================================
 </code></pre>
 <p>Without thinking much about the types, run the type checker:</p>
 <pre><code class="language-sh">$ apalache typecheck HourClock.tla
