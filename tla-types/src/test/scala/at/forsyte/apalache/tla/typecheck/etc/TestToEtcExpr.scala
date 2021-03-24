@@ -700,6 +700,14 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     assert(expected == gen(ex))
   }
 
+  test("Labels") {
+    val typ = parser("(Str, Str, Str, a) => a")
+    val expected =
+      mkUniqApp(Seq(typ), mkUniqConst(StrT1()), mkUniqConst(StrT1()), mkUniqConst(StrT1()), mkUniqName("x"))
+    val ex = tla.label(tla.name("x"), "lab", "a", "b")
+    assert(expected == gen(ex))
+  }
+
   test("Apalache!FunAsSeq(fun, len)") {
     val typ = parser("(Int -> a, Int) => Seq(a)")
     val expected = mkAppByName(Seq(typ), "fun", "len")
@@ -766,7 +774,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
   test("old annotations: e <: tp") {
     val oldTypeAnnotation = tla.enumSet(tla.intSet())
     val input = tla.withType(tla.name("e"), oldTypeAnnotation)
-    assert(mkUniqName("e") == gen(input))
+    assertThrows[OutdatedAnnotationsError](gen(input))
   }
 
   test("TLC!Print") {

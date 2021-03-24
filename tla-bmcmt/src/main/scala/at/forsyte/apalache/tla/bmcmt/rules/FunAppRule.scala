@@ -1,10 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory}
 import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
@@ -29,17 +29,19 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      case OperEx(TlaFunOper.app, funEx, argEx) =>
+      case ex @ OperEx(TlaFunOper.app, funEx, argEx) =>
         // SE-FUN-APP1
         val funState = rewriter.rewriteUntilDone(state.setRex(funEx))
         val funCell = funState.asCell
 
+        // we use funCell.cellType, not funEx.typeTag, because funEx can be the result of the rewriter
         funCell.cellType match {
           case TupleT(_) =>
             applyTuple(funState, funCell, funEx, argEx)
 
           case RecordT(_) =>
-            applyRecord(funState, funCell, funEx, argEx)
+            val resultT = CellT.fromTypeTag(ex.typeTag)
+            applyRecord(funState, funCell, funEx, argEx, resultT)
 
           case SeqT(_) =>
             applySeq(funState, funCell, argEx)
@@ -53,7 +55,8 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def applyRecord(state: SymbState, recordCell: ArenaCell, recEx: TlaEx, argEx: TlaEx): SymbState = {
+  private def applyRecord(state: SymbState, recordCell: ArenaCell, recEx: TlaEx, argEx: TlaEx,
+      resultT: CellT): SymbState = {
     val key = argEx match {
       case ValEx(TlaStr(k)) => k
       case _                => throw new RewriterException(s"Accessing a record $recEx with a non-constant key $argEx", argEx)
@@ -65,12 +68,10 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val index = fields.keySet.toList.indexOf(key)
     val elems = state.arena.getHas(recordCell)
     if (index >= 0 && index < elems.length) {
-      state.setRex(elems(index))
+      state.setRex(elems(index).toNameEx)
     } else {
-      // This case should have been caught by type inference. Throw an exception immediately.
-      val msg =
-        s"Accessing record $recEx of type ${recordCell.cellType} with the field $argEx. Type inference should have caught this."
-      throw new IllegalArgumentException(msg)
+      // The key does not belong to the record. This can happen as records of different domains can be unified
+      defaultValueFactory.makeUpValue(state, resultT)
     }
   }
 
@@ -88,7 +89,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
 
     val tupleElem = elems(index)
-    state.setRex(tupleElem)
+    state.setRex(tupleElem.toNameEx)
   }
 
   private def applySeq(state: SymbState, seqCell: ArenaCell, argEx: TlaEx): SymbState = {
@@ -116,13 +117,15 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // now it is getting interesting:
       // If 1 <= arg <= end - start, just require oracle = arg - 1 + start,
       // Otherwise, set oracle to N
-      val inRange = tla.and(tla.le(tla.int(1), argCell), tla.le(argCell, tla.minus(end, start)))
-      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.plus(tla.minus(argCell, tla.int(1)), start)))
+      val inRange =
+        tla.and(tla.le(tla.int(1), argCell.toNameEx), tla.le(argCell.toNameEx, tla.minus(end.toNameEx, start.toNameEx)))
+      nextState = rewriter
+        .rewriteUntilDone(nextState.setRex(tla.plus(tla.minus(argCell.toNameEx, tla.int(1)), start.toNameEx)))
       val indexCell = nextState.asCell
-      val oracleEqArg = tla.eql(indexCell, oracle.intCell)
+      val oracleEqArg = tla.eql(indexCell.toNameEx, oracle.intCell.toNameEx)
       val oracleIsN = oracle.whenEqualTo(nextState, nelems)
       solverAssert(tla.or(tla.and(inRange, oracleEqArg), tla.and(tla.not(inRange), oracleIsN)))
-      nextState.setRex(pickedResult)
+      nextState.setRex(pickedResult.toNameEx)
     }
   }
 
@@ -148,14 +151,14 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // cache the equality between the picked argument and the supplied argument, O(1) constraints
       nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((pickedArg, argCell)))
       val argEqWhenNonEmpty =
-        tla.impl(tla.not(oracle.whenEqualTo(nextState, nelems)), tla.eql(pickedArg, argCell))
+        tla.impl(tla.not(oracle.whenEqualTo(nextState, nelems)), tla.eql(pickedArg.toNameEx, argCell.toNameEx))
       // if oracle < N, then pickedArg = argCell
       solverAssert(argEqWhenNonEmpty)
       // importantly, we require oracle = N iff there is no element equal to argCell, O(N) constraints
       for ((elem, no) <- relationElems.zipWithIndex) {
         val elemArg = nextState.arena.getHas(elem).head
         nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((argCell, elemArg)))
-        val inRel = tla.in(elem, relationCell)
+        val inRel = tla.in(elem.toNameEx, relationCell.toNameEx)
         val neqArg = tla.not(rewriter.lazyEq.safeEq(elemArg, argCell))
         val found = tla.not(oracle.whenEqualTo(nextState, nelems))
         // ~inRel \/ neqArg \/ found, or equivalently, (inRel /\ elemArg = argCell) => found

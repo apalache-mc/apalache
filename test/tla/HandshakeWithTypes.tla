@@ -7,18 +7,22 @@
  *)
 EXTENDS Integers
 
-VARIABLES msgs,     \* the set of all messages
-          iseqno,   \* Initiator's sequence number
-          rseqno,   \* Receiver's sequence number
-          istate,   \* Initiator's state
-          rstate    \* Receiver's state
-
-a <: b == a
+VARIABLES
+    \* @type: Set([syn: Bool, ack: Bool, seqno: Int, ackno: Int]);
+    msgs,     \* the set of all messages
+    \* @type: Int;
+    iseqno,   \* Initiator's sequence number
+    \* @type: Int;
+    rseqno,   \* Receiver's sequence number
+    \* @type: Str;
+    istate,   \* Initiator's state
+    \* @type: Str;
+    rstate    \* Receiver's state
 
 MT == [syn |-> BOOLEAN, ack |-> BOOLEAN, seqno |-> Int, ackno |-> Int]
 
 Init ==
-    /\ msgs = {} <: {MT}
+    /\ msgs = {}
     /\ iseqno = 0
     /\ rseqno = 0
     /\ istate = "INIT"
@@ -28,7 +32,7 @@ SendSyn ==
     /\ istate = "INIT"
     /\ \E no \in Nat:
         /\ msgs' = msgs \union {[syn |-> TRUE,
-                                 ack |-> FALSE, seqno |-> no] <: MT}
+                                 ack |-> FALSE, seqno |-> no]}
         /\ iseqno' = no + 1
         /\ istate' = "SYN-SENT"
         /\ UNCHANGED <<rseqno, rstate>>
@@ -36,7 +40,7 @@ SendSyn ==
 SendSynAck ==
     /\ rstate = "LISTEN"
     /\ \E seqno, ackno \in Nat:
-        /\ ([syn |-> TRUE, ack |-> FALSE, seqno |-> seqno] <: MT) \in msgs
+        /\ [syn |-> TRUE, ack |-> FALSE, seqno |-> seqno] \in msgs
         /\ msgs' = msgs \union {[syn |-> TRUE, ack |-> TRUE,
                                  seqno |-> seqno + 1,
                                  ackno |-> ackno]}

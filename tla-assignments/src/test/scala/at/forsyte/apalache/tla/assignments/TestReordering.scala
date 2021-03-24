@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaActionOper, TlaOper}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TestingPredefs, TlaEx}
@@ -21,7 +22,7 @@ class TestReordering extends FunSuite with TestingPredefs {
 
     val reordering = mkReordering(rankingFn)
 
-    val ex = tla.and(tla.eql(n_x, 1), tla.eql(n_y, 2), tla.eql(n_z, 3))
+    val ex = tla.and(tla.eql(n_x, tla.int(1)), tla.eql(n_y, tla.int(2)), tla.eql(n_z, tla.int(3))).untyped()
 
     val ret = reordering.reorder(ex)
 
@@ -34,7 +35,7 @@ class TestReordering extends FunSuite with TestingPredefs {
 
     val reordering = mkReordering(rankingFn)
 
-    val ex = tla.and(tla.eql(n_x, 1), tla.eql(n_y, 2), tla.eql(n_z, 3))
+    val ex = tla.and(tla.eql(n_x, tla.int(1)), tla.eql(n_y, tla.int(2)), tla.eql(n_z, tla.int(3))).untyped()
 
     val ret = reordering.reorder(ex)
 
@@ -47,8 +48,8 @@ class TestReordering extends FunSuite with TestingPredefs {
 
     val reordering = mkReordering(rankingFn)
 
-    val ex = tla.and(tla.eql(n_x, 1), tla.eql(n_y, 2), tla.eql(n_z, 3))
-    val expected = tla.and(tla.eql(n_z, 3), tla.eql(n_y, 2), tla.eql(n_x, 1))
+    val ex = tla.and(tla.eql(n_x, tla.int(1)), tla.eql(n_y, tla.int(2)), tla.eql(n_z, tla.int(3))).untyped()
+    val expected = tla.and(tla.eql(n_z, tla.int(3)), tla.eql(n_y, tla.int(2)), tla.eql(n_x, tla.int(1))).untyped()
 
     val ret = reordering.reorder(ex)
 
@@ -64,8 +65,12 @@ class TestReordering extends FunSuite with TestingPredefs {
 
     val reordering = mkReordering(rankingFn)
 
-    val ex = tla.and(tla.assignPrime(n_x, 1), tla.assignPrime(n_y, 2), tla.assignPrime(n_z, 3))
-    val expected = tla.and(tla.assignPrime(n_z, 3), tla.assignPrime(n_x, 1), tla.assignPrime(n_y, 2))
+    val ex = tla
+      .and(tla.assignPrime(n_x, tla.int(1)), tla.assignPrime(n_y, tla.int(2)), tla.assignPrime(n_z, tla.int(3)))
+      .untyped()
+    val expected = tla
+      .and(tla.assignPrime(n_z, tla.int(3)), tla.assignPrime(n_x, tla.int(1)), tla.assignPrime(n_y, tla.int(2)))
+      .untyped()
 
     val ret = reordering.reorder(ex)
 

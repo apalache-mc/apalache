@@ -27,7 +27,7 @@ class IsFiniteSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       case OperEx(TlaFiniteSetOper.isFiniteSet, setEx) =>
         // All our sets are finite. Non-sets should be rejected by the type checker. So, just return true.
-        state.setRex(state.arena.cellTrue())
+        state.setRex(state.arena.cellTrue().toNameEx)
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)

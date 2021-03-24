@@ -25,11 +25,6 @@ Value == {0, 1}
 Acceptor == {"a1", "a2"}
 Quorum == {{"a1", "a2"}}
 
-a <: b == a
-MT == [type |-> STRING, bal |-> Int,
-       mbal |-> Int, acc |-> STRING,
-       val |-> Int, mval |-> Int]
-
 (*
 Acceptor == {"a1", "a2", "a3"}
 Quorum == {{"a1", "a2"}, {"a2", "a3"}, {"a1", "a3"}}
@@ -81,11 +76,16 @@ Message ==      [type : {"1a"}, bal : Ballot]
            \cup [type : {"2a"}, bal : Ballot, val : Value]
            \cup [type : {"2b"}, acc : Acceptor, bal : Ballot, val : Value]
 -----------------------------------------------------------------------------
-VARIABLE maxBal,
-         maxVBal, \* <<maxVBal[a], maxVal[a]>> is the vote with the largest
-         maxVal,    \* ballot number cast by a; it equals <<-1, None>> if
+VARIABLE
+    \* @type: Str -> Int;
+    maxBal,
+    \* @type: Str -> Int;
+    maxVBal, \* <<maxVBal[a], maxVal[a]>> is the vote with the largest
+    \* @type: Str -> Int;
+    maxVal,    \* ballot number cast by a; it equals <<-1, None>> if
                     \* a has not cast any vote.
-         msgs     \* The set of all messages that have been sent.
+    \* @type: Set([type: Str, bal: Int, acc: Str, mbal: Int, mval: Int, val: Int]);
+    msgs     \* The set of all messages that have been sent.
 
 (***************************************************************************)
 (* NOTE:                                                                   *)
@@ -124,8 +124,13 @@ TypeOK == /\ maxBal \in [Acceptor -> Ballot \cup {-1}]
 (* the array `votes' describing the votes cast by the acceptors is defined *)
 (* as follows.                                                             *)
 (***************************************************************************)
+
+\* the original specification does not have this definition, we need it for types
+\* @type: (Int, Int) => <<Int, Int>>;
+pair(i, j) == <<i, j>>
+
 votes == [a \in Acceptor |->
-           {<<m.bal, m.val>> : m \in {mm \in msgs: /\ mm.type = "2b"
+           {pair(m.bal, m.val) : m \in {mm \in msgs: /\ mm.type = "2b"
                                                    /\ mm.acc = a
                 (* BMCMT check, let's add smth like HASFIELD(mm, "val") *)
                                                    /\ mm.val = mm.val
@@ -135,13 +140,13 @@ votes == [a \in Acceptor |->
 Init == /\ maxBal = [a \in Acceptor |-> -1]
         /\ maxVBal = [a \in Acceptor |-> -1]
         /\ maxVal = [a \in Acceptor |-> None]
-        /\ msgs = {} <: {MT}
+        /\ msgs = {}
 
 (***************************************************************************)
 (* The actions.  We begin with the subaction (an action that will be used  *)
 (* to define the actions that make up the next-state action.               *)
 (***************************************************************************)
-Send(m) == /\ msgs' = msgs \cup {m <: MT}
+Send(m) == /\ msgs' = msgs \cup {m}
 
 
 (***************************************************************************)
@@ -151,7 +156,7 @@ Send(m) == /\ msgs' = msgs \cup {m <: MT}
 (* m with m.type = "1a") that begins ballot b.                             *)
 (***************************************************************************)
 Phase1a(b) == /\ Send([type |-> "1a", bal |-> b])
-              /\ UNCHANGED <<maxBal, maxVBal, maxVal>>
+              /\ UNCHANGED <<maxBal, maxVBal, maxVal, 0>>
 
 (***************************************************************************)
 (* Upon receipt of a ballot b phase 1a message, acceptor a can perform a   *)
@@ -165,7 +170,7 @@ Phase1b(a) == /\ \E m \in msgs :
                   /\ maxBal' = [maxBal EXCEPT ![a] = m.bal]
                   /\ Send([type |-> "1b", acc |-> a, bal |-> m.bal,
                             mbal |-> maxVBal[a], mval |-> maxVal[a]])
-              /\ UNCHANGED <<maxVBal, maxVal>>
+              /\ UNCHANGED <<maxVBal, maxVal, 0>>
 
 (***************************************************************************)
 (* The Phase2a(b, v) action can be performed by the ballot b leader if two *)
@@ -195,12 +200,12 @@ Phase2a(b, v) ==
                                  /\ m.bal = b}
             Q1bv == {m \in Q1b : m.mbal \geq 0}
         IN  /\ \A a \in Q : \E m \in Q1b : m.acc = a 
-            /\ \/ Q1bv = ({} <: {MT})
+            /\ \/ Q1bv = {}
                \/ \E m \in Q1bv : 
                     /\ m.mval = v
                     /\ \A mm \in Q1bv : m.mbal \geq mm.mbal 
   /\ Send([type |-> "2a", bal |-> b, val |-> v])
-  /\ UNCHANGED <<maxBal, maxVBal, maxVal>>
+  /\ UNCHANGED <<maxBal, maxVBal, maxVal, 0>>
 
 (***************************************************************************)
 (* The Phase2b(a) action is performed by acceptor a upon receipt of a      *)
@@ -282,9 +287,10 @@ Inv == (*/\ TypeOK*)
                                    /\ (m.mbal \geq 0) =>
                                        <<m.mbal, m.mval>> \in votes[m.acc]
              /\ (m.type = "2a") => /\ \E Q \in Quorum :
-                                         (*V!*)ShowsSafeAt(Q, m.bal, m.val)
+                                         ShowsSafeAt(Q, m.bal, m.val)
                                    /\ \A mm \in msgs : /\ mm.type = "2a"
                                                        /\ mm.bal = m.bal
                                                        => mm.val = m.val
+
        (*/\ V!Inv*)
 ============================================================================

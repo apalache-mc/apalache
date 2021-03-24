@@ -22,13 +22,13 @@ class PowSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       case OperEx(TlaSetOper.powerset, setEx) =>
         // switch to cell theory
-        val nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
+        var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
 
         val dom = nextState.arena.findCellByNameEx(nextState.ex)
-        val arena = nextState.arena.appendCell(PowSetT(dom.cellType))
-        val powSetCell = arena.topCell
-        val newArena = arena.setDom(powSetCell, dom)
-        state.setArena(newArena).setRex(powSetCell.toNameEx)
+        nextState = nextState.updateArena(_.appendCell(PowSetT(dom.cellType)))
+        val powSetCell = nextState.arena.topCell
+        nextState = nextState.updateArena(_.setDom(powSetCell, dom))
+        nextState.setRex(powSetCell.toNameEx)
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)

@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.transformations.standard.{DeepCopy, FlatLanguagePred, ReplaceFixed}
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
-import at.forsyte.apalache.tla.typecheck.{BoolT1, IntT1, OperT1, SetT1, TypingException}
+import TypedPredefs._
 
 import javax.inject.Singleton
 import scala.math.BigInt
@@ -56,7 +56,9 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
     case OperEx(TlaSetOper.in, mem, OperEx(TlaArithOper.dotdot, left, right)) =>
       // Transform e \in a..b into a <= e /\ e <= b.
       // (The assignments are not affected by this transformation, as they are transformed to \E t \in S: x' = t.)
-      tla.and(tla.le(left, mem), tla.le(mem, right))
+      tla
+        .and(tla.le(left, mem) ? "b", tla.le(mem, right) ? "b")
+        .typed(Map("b" -> BoolT1()), "b")
   }
 
   /**
@@ -136,8 +138,9 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
   private def transformExistsOverSets: PartialFunction[TlaEx, TlaEx] = {
     case OperEx(TlaBoolOper.exists, xe @ NameEx(x), OperEx(TlaSetOper.filter, ye @ NameEx(y), s, e), g) =>
       // \E x \in {y \in S: e}: g becomes \E y \in S: e /\ g [x replaced with y]
+      val eAndG = tla.and(e, g).typed(BoolT1())
       val newPred =
-        ReplaceFixed(tracker)(replacedEx = xe, newEx = NameEx(y)(ye.typeTag)).apply(tla.and(e, g))
+        ReplaceFixed(tracker)(replacedEx = xe, newEx = NameEx(y)(ye.typeTag)).apply(eAndG)
       val result = OperEx(TlaBoolOper.exists, NameEx(y)(ye.typeTag), s, newPred)(boolTag)
       transformExistsOverSets.applyOrElse(result, { _: TlaEx => result }) // apply recursively to the result
 
@@ -153,13 +156,25 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
 
       // create an exists-expression and optimize it again
       def mkExistsRec(name: String, set: TlaEx, pred: TlaEx): TlaEx = {
-        val exists = tla.exists(tla.name(name), set, pred)
+        val elemType = getElemType(set)
+        val exists = tla
+          .exists(tla.name(name) ? "e", set, pred)
+          .typed(Map("e" -> elemType, "b" -> BoolT1()), "b")
         transformExistsOverSets.applyOrElse(exists, { _: TlaEx => exists }) // apply recursively, to optimize more
       }
 
       pairs.foldLeft(newPred) { case (exprBelow, (name, set)) => mkExistsRec(name, set, exprBelow) }
 
     // TODO: add other kinds of sets?
+  }
+
+  // extract the type of a set element
+  private def getElemType(e: TlaEx): TlaType1 = {
+    e.typeTag match {
+      case Typed(SetT1(elemType)) => elemType
+      case t =>
+        throw new MalformedTlaError(s"Expected a set, found: $t", e)
+    }
   }
 }
 

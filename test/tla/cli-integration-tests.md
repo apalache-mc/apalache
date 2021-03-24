@@ -148,7 +148,7 @@ EXITCODE: OK
 #### check factorization find a counterexample
 
 ```sh
-$ apalache-mc check --length=2 --inv=Inv --with-snowcat factorization.tla | sed 's/I@.*//'
+$ apalache-mc check --length=2 --inv=Inv factorization.tla | sed 's/I@.*//'
 ...
 The outcome is: Error
 Checker has found an error
@@ -158,7 +158,7 @@ Checker has found an error
 ### check Fix531.tla reports no error: regression for issue 531
 
 ```sh
-$ apalache-mc check --length=1 --with-snowcat Fix531.tla | sed 's/I@.*//'
+$ apalache-mc check --length=1 Fix531.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -167,7 +167,7 @@ The outcome is: NoError
 ### check UnchangedExpr471.tla reports no error: regression for issue 471
 
 ```sh
-$ apalache-mc check --cinit=ConstInit --length=1 --with-snowcat UnchangedExpr471.tla | sed 's/I@.*//'
+$ apalache-mc check --cinit=ConstInit --length=1 UnchangedExpr471.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -185,7 +185,7 @@ The outcome is: NoError
 ### check InvSub for SafeMath reports no error: regression for issue 450
 
 ```sh
-$ apalache-mc check --length=1 --inv=InvSub --with-snowcat SafeMath.tla | sed 's/I@.*//'
+$ apalache-mc check --length=1 --inv=InvSub SafeMath.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -194,7 +194,7 @@ The outcome is: NoError
 ### check InvAdd for SafeMath reports no error: regression for issue 450
 
 ```sh
-$ apalache-mc check --length=1 --inv=InvAdd --with-snowcat SafeMath.tla | sed 's/I@.*//'
+$ apalache-mc check --length=1 --inv=InvAdd SafeMath.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -203,7 +203,7 @@ The outcome is: NoError
 ### check Fix365_ExistsSubset succeeds: regression for issue 365
 
 ```sh
-$ apalache-mc check --length=10 --with-snowcat Fix365_ExistsSubset.tla | sed 's/I@.*//'
+$ apalache-mc check --length=10 Fix365_ExistsSubset.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -212,7 +212,7 @@ The outcome is: NoError
 ### check Fix365_ExistsSubset2 succeeds: regression for issue 365
 
 ```sh
-$ apalache-mc check --length=10 --with-snowcat Fix365_ExistsSubset2.tla | sed 's/I@.*//'
+$ apalache-mc check --length=10 Fix365_ExistsSubset2.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -221,7 +221,7 @@ The outcome is: NoError
 ### check Fix365_ExistsSubset3 succeeds: regression for issue 365
 
 ```sh
-$ apalache-mc check --length=10 --with-snowcat Fix365_ExistsSubset3.tla | sed 's/I@.*//'
+$ apalache-mc check --length=10 Fix365_ExistsSubset3.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -230,7 +230,7 @@ The outcome is: NoError
 ### check Bug20201118 succeeds: regression for issue 333
 
 ```sh
-$ apalache-mc check --length=10 --init=Init --next=Next --inv=Inv --with-snowcat Bug20201118.tla | sed 's/I@.*//'
+$ apalache-mc check --length=10 --init=Init --next=Next --inv=Inv Bug20201118.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -239,7 +239,7 @@ The outcome is: NoError
 ### check Fix333 succeeds: another regression for issue 333
 
 ```sh
-$ apalache-mc check --length=2 --init=Init --next=Next --inv=Inv --with-snowcat Fix333.tla | sed 's/I@.*//'
+$ apalache-mc check --length=2 --init=Init --next=Next --inv=Inv Fix333.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -248,7 +248,7 @@ The outcome is: NoError
 ### check Bug20190118 succeeds
 
 ```sh
-$ apalache-mc check --length=1 --init=Init --next=Next --inv=Inv --with-snowcat Bug20190118.tla | sed 's/I@.*//'
+$ apalache-mc check --length=1 --init=Init --next=Next --inv=Inv Bug20190118.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -257,7 +257,7 @@ The outcome is: NoError
 ### check mis.tla succeeds
 
 ```sh
-$ apalache-mc check --length=5 --inv=IsIndependent --with-snowcat mis.tla | sed 's/I@.*//'
+$ apalache-mc check --length=5 --inv=IsIndependent mis.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -266,7 +266,7 @@ The outcome is: NoError
 ### check mis_bug.tla errors
 
 ```sh
-$ apalache-mc check --length=5 --inv=IsIndependent --with-snowcat mis_bug.tla | sed 's/I@.*//'
+$ apalache-mc check --length=5 --inv=IsIndependent mis_bug.tla | sed 's/I@.*//'
 ...
 The outcome is: Error
 Checker has found an error
@@ -640,15 +640,53 @@ The outcome is: NoError
 
 ### check Callback.tla succeeds
 
-`Callback.tla` demonstrates that one can implement non-determinism with
-the existential operator and use a callback to do an assignment to a variable.
-As it requires tricky operator inlining, here is the test.
+`Callback.tla` demonstrates that one can implement non-determinism with the existential operator and use a callback to
+do an assignment to a variable. As it requires tricky operator inlining, here is the test.
 
 ```sh
 $ apalache-mc check Callback.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+```
+
+### check SimpT1 succeeds
+
+This test was moved from a unit test of SymbTransGenerator. The goal of the test is to check that symbolic transitions
+are extracted from the spec. Hence, we run model checking only against the initial states.
+
+```sh
+$ apalache-mc check --length=0 SimpT1.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
+### check Selections succeeds
+
+```sh
+$ apalache-mc check Selections.tla | sed 's/I@.*//'
+...
+Selections.tla:16:18-16:27: Missing assignments to: z
+...
+EXITCODE: ERROR (99)
+```
+
+### check test1 succeeds
+
+```sh
+$ apalache-mc check test1.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
+### check ITE_CASE succeeds
+
+```sh
+$ apalache-mc check ITE_CASE.tla | sed 's/I@.*//'
+...
+EXITCODE: ERROR (99)
 ```
 
 ### check use of TLA_PATH for modules in child directory succeeds
@@ -805,7 +843,7 @@ The outcome is: NoError
 ```sh
 $ apalache-mc check ConfigUnsorted.tla | sed 's/[IEW]@.*//'
 ...
-Configuration error (see the manual): Found a cyclic dependency among operators: A, B, C
+Configuration error (see the manual): Found a cyclic dependency among operators: B, A, C
 ...
 EXITCODE: ERROR (99)
 ```
@@ -1069,18 +1107,6 @@ PASS #1: TypeCheckerSnowcat
  > All expressions are typed
 ...
 Type checker [OK]
-...
-EXITCODE: OK
-```
-
-### typecheck HourClock.tla
-
-```sh
-$ apalache-mc typecheck HourClock.tla | sed 's/[IEW]@.*//'
-...
-[HourClock.tla:6:12-6:13]: Undefined name hr. Introduce a type annotation.
-...
-Type checker [FAILED]
 ...
 EXITCODE: OK
 ```

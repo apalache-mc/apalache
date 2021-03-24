@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.DefaultValueFactory
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, ConstT, RecordT}
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.TlaStr
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
@@ -15,10 +16,6 @@ import scala.collection.immutable.SortedSet
  *
  * Internally, a record is stored as a tuple,
  * where an index i corresponds to the ith key in the sorted set of record keys.
- *
- * Note that one can extend a record with a type annotation, e.g.,
- * the expression [a |-> 1] <: [a |-> Int, b |-> BOOLEAN] introduces a record r of two fields (a: Int and b: BOOLEAN).
- * The value r.a is defined as 1, whereas r.b is arbitrary.
  *
  * @author Igor Konnov
  */
@@ -34,7 +31,7 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      case OperEx(TlaFunOper.enum, elems @ _*) =>
+      case ex @ OperEx(TlaFunOper.enum, elems @ _*) =>
         val keyEs = elems.zipWithIndex.filter(_._2 % 2 == 0).map(_._1) // pick the even indices (starting with 0)
         val ctorKeys = keysToStr(state.ex, keyEs.toList)
         val valueEs = elems.zipWithIndex.filter(_._2 % 2 == 1).map(_._1) // pick the odd indices (starting with 0)
@@ -44,13 +41,14 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
           rewriter.rewriteSeqUntilDone(state, valueEs)
         // compute the types of the field values and then use the type finder
         val valueCells = newValues.map(newState.arena.findCellByNameEx)
-        val typeArgs = elems.zipWithIndex.map(p => if (p._2 % 2 == 0) ConstT() else valueCells(p._2 / 2).cellType)
-        val recordT = rewriter.typeFinder.compute(state.ex, typeArgs: _*).asInstanceOf[RecordT]
-        // the computed record type may contain additional keys, due to a type annotation
+
+        // the record type may contain more fields than passed in the arguments
+        val recordT = CellT.fromTypeTag(ex.typeTag).asInstanceOf[RecordT]
         var arena = newState.arena.appendCell(recordT)
         val recordCell = arena.topCell
         // importantly, the record keys that are outside of ctorKeys should not belong to the domain!
         val extraKeys = recordT.fields.keySet.filter(k => !ctorKeys.contains(k))
+
         def addExtra(map: Map[String, ArenaCell], key: String) = {
           // make sure that the key is cached, as it does not appear in the actual expression
           val (newArena, keyCell) = rewriter.strValueCache.getOrCreate(arena, key)

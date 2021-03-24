@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
-import at.forsyte.apalache.tla.bmcmt.caches.StrValueCache
-import at.forsyte.apalache.tla.bmcmt.types.ConstT
+
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.lir.{TlaEx, ValEx}
+import at.forsyte.apalache.tla.bmcmt.types.ConstT
+import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.values.TlaInt
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 class UninterpretedConstOracle(valueCells: Seq[ArenaCell], oracleCell: ArenaCell, nvalues: Int) extends Oracle {
 
@@ -13,7 +13,7 @@ class UninterpretedConstOracle(valueCells: Seq[ArenaCell], oracleCell: ArenaCell
    * Produce an expression that states that the oracle values equals to the given integer position.
    * The actual implementation may be different from an integer comparison.
    *
-   * @param state    a symbolic state
+   * @param state   a symbolic state
    * @param position a position the oracle should be equal to
    */
   override def whenEqualTo(state: SymbState, position: Int): TlaEx = {
@@ -50,7 +50,8 @@ class UninterpretedConstOracle(valueCells: Seq[ArenaCell], oracleCell: ArenaCell
    */
   override def evalPosition(solverContext: SolverContext, state: SymbState): Int = {
     def isEqual(valueCell: ArenaCell): Boolean = {
-      solverContext.evalGroundExpr(tla.eql(valueCell.toNameEx, oracleCell.toNameEx)) == tla.bool(true)
+      val eq = tla.eql(valueCell.toNameEx, oracleCell.toNameEx).untyped()
+      solverContext.evalGroundExpr(eq) == tla.bool(true).untyped()
     }
 
     valueCells indexWhere isEqual // the oracle must be equal to one of the cached values

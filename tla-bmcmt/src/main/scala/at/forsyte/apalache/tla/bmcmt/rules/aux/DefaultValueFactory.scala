@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, S
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.{NullEx, TlaEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 import scala.collection.immutable.SortedSet
 

@@ -2,7 +2,11 @@
 
 EXTENDS Integers 
 
-VARIABLE v1, v2
+VARIABLE
+    \* @type: Int;
+    v1,
+    \* @type: Int;
+    v2
 
 Init == v1 = 1 /\ v2 = 1
 

@@ -1,7 +1,9 @@
 --------------------------- MODULE Slicer1 ------------------------------------
 (* Testing slicing of symbolic transitions *)
 
-VARIABLE state
+VARIABLE
+    \* @type: Str;
+    state
 
 Init ==
     state = "Init"

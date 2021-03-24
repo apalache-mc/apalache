@@ -3,7 +3,6 @@ package at.forsyte.apalache.tla.bmcmt.trex
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter
 import at.forsyte.apalache.tla.bmcmt.rewriter.Recoverable
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 
 /**
  * A context that is used by TransitionExecutor. By default, a context is not thread-safe,
@@ -17,7 +16,6 @@ trait ExecutionContext[SnapshotT] extends Recoverable[SnapshotT] {
 
   def rewriter: SymbStateRewriter
 
-  def typeFinder: TypeFinder[CellT] = rewriter.typeFinder
   def solver: SolverContext = rewriter.solverContext
 
   /**

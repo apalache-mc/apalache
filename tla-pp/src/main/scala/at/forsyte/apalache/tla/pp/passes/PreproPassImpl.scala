@@ -51,7 +51,7 @@ class PreproPassImpl @Inject() (
     val transformationSequence: List[(String, TlaModuleTransformation)] =
       List(
           ("PrimePropagation", createModuleTransformerForPrimePropagation(varSet)),
-          ("Desugarer", ModuleByExTransformer(Desugarer(tracker))),
+          ("Desugarer", ModuleByExTransformer(Desugarer(gen, tracker))),
           ("UniqueRenamer", renaming.renameInModule),
           ("Normalizer", ModuleByExTransformer(Normalizer(tracker))),
           ("Keramelizer", ModuleByExTransformer(Keramelizer(gen, tracker)))

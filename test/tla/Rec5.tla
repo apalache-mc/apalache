@@ -9,16 +9,14 @@ EXTENDS Integers, FiniteSets
 MAX_POWER == 3              \* the maximal voting power
 Procs == {"a", "b", "c"}     \* the set of processes
 
-VARIABLES votingPower
-
-a <: b == a
-
-StrSet(S) == S <: {STRING}
+VARIABLES
+    \* @type: Str -> Int;
+    votingPower
 
 RECURSIVE Sum(_)
 
 Sum(S) ==
-  IF S = StrSet({})
+  IF S = {}
   THEN 0
   ELSE LET x == CHOOSE y \in S: TRUE IN
     votingPower[x] + Sum(S \ {x})

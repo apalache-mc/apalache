@@ -1,5 +1,8 @@
 --------------------------- MODULE SimpT1 ---------------------------
 (*
+ The below specification is written for testing purposes. It does not reflect
+ any real algorithm.
+
  A TLA+ specification of from the synchronous model with symmetric
  Byzantine faults (Algorithm 1).
  
@@ -19,10 +22,24 @@ InvalidValues == 2..2   \* e.g., sent by a Byzantine process
 nil == -1
 
 \* these variables are exactly as in the pseudo-code
-VARIABLES h, e, decision, proposal, vote
+VARIABLES
+    \* @type: Int -> Int;
+    h,
+    \* @type: Int -> Int;
+    e,
+    \* @type: Int -> (Int -> Int);
+    decision,
+    \* @type: Int -> Int;
+    proposal,
+    \* @type: Int -> Int;
+    vote
 
 \* book-keeping variables
-VARIABLES round, faultyMessages
+VARIABLES
+    \* @type: Str;
+    round,
+    \* @type: Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int, vote: Int]);
+    faultyMessages
 
 Init == /\ h = [p \in Procs |-> 0]
         /\ e = [p \in Procs |-> 0]
@@ -48,7 +65,7 @@ SentCorrect(p) ==
             ELSE {}
         [] round = "PROPOSE" ->
             { [type |-> "PROPOSE", height |-> h[p], epoch |-> e[p], proposal |-> proposal[p]] }
-        [] round = "VOTE" ->
+        [] OTHER (*round = "VOTE"*) ->
             { [type |-> "VOTE", height |-> h[p], epoch |-> e[p], vote |-> vote[p]] }
             
 PreProposeFaulty ==
@@ -64,12 +81,12 @@ VoteFaulty ==
              epoch: Epochs, vote: ValidValues \cup InvalidValues]
             
 IsSentByFaulty ==
-    faultyMessages' \in
-        CASE   round = "PRE-PROPOSE" -> PreProposeFaulty
-            [] round = "PROPOSE" -> ProposeFaulty
-            [] round = "VOTE" -> VoteFaulty
+    CASE   round = "PRE-PROPOSE" -> faultyMessages' \in PreProposeFaulty
+        [] round = "PROPOSE" -> faultyMessages' \in ProposeFaulty
+        [] OTHER (*round = "VOTE"*) -> faultyMessages' \inVoteFaulty
            
 
+\* @type: (Int, Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int, vote: Int])) => Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int, vote: Int]);
 Deliver(p, sent) ==
     CASE    round = "PRE-PROPOSE" ->
             { m \in sent : m.type = "PRE-PROPOSE" /\ m.src = Proposer(p) /\ m.height = h[p] /\ m.epoch = e[p] }
@@ -77,11 +94,16 @@ Deliver(p, sent) ==
         [] round = "PROPOSE" ->
             { m \in sent : m.type = "PROPOSE" /\ m.height = h[p] /\ m.epoch = e[p] }
             
-        [] round = "VOTE" ->
+        [] OTHER (*round = "VOTE"*) ->
             { m \in sent : m.type = "VOTE" /\ m.height = h[p] /\ m.epoch = e[p] }
 
+\* @type: (Int, Int -> Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int])) => Int;
 FindProposal(p, delivered) ==
-    LET vs == { m2.proposal: m2 \in { m \in delivered[p] : m.type = "PRE-PROPOSE" /\ m.height = h[p] /\ m.epoch = h[p] /\ IsValid(m.proposal) }} IN
+    LET
+        \* @type: Set(Int);
+        vs == { m2.proposal: m2 \in { m \in delivered[p] :
+                    m.type = "PRE-PROPOSE" /\ m.height = h[p] /\ m.epoch = h[p] /\ IsValid(m.proposal) }}
+    IN
     IF vs = {}
     THEN nil
     ELSE CHOOSE v \in vs: TRUE \* actually, vs is a singleton set, but we use choose to pick an element
@@ -91,6 +113,7 @@ PrePropose(delivered) ==
     /\ proposal' = [p \in Procs |-> Id(FindProposal(p, delivered))]
     /\ UNCHANGED <<vote, h, e, decision>>
 
+\* @type: (Int, Int -> Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int, vote: Int])) => Int;
 ChooseValue(p, delivered) ==
     LET vs == { m2.proposal: m2 \in { m \in delivered[p] : m.type = "PROPOSE" /\ m.height = h[p] /\ m.epoch = h[p] }} IN
     IF vs = {}
@@ -104,6 +127,7 @@ Propose(delivered) ==
     /\ vote' = [p \in Procs |-> Id(ChooseValue(p, delivered))]
     /\ UNCHANGED <<proposal, h, e, decision>>
 
+\* @type: (Int, Int -> Set([type: Str, src: Int, height: Int, epoch: Int, proposal: Int, vote: Int])) => Int;
 ChooseDecision(p, delivered) ==
     LET vs == { m2.vote: m2 \in { m \in delivered[p] : m.type = "VOTE" /\ m.height = h[p] /\ m.epoch = h[p] }} IN
     IF vs = {}
@@ -111,6 +135,7 @@ ChooseDecision(p, delivered) ==
     ELSE LET decided == CHOOSE v \in vs: TRUE IN
         IF IsValid(decided) THEN decided ELSE nil
         
+\* @type: (Int, Int -> Int) => Bool;
 IsDecidedNow(p, d) == d[p] /= nil /\ decision[p][h[p]] = nil
 
 Overflow(p) == h[p] \notin Heights \/ e[p] \notin Epochs
@@ -134,7 +159,7 @@ Vote(delivered) ==
             IF Overflow(p) \/ IsDecidedNow(p, d)
             THEN proposal'[p] = proposal[p]
             ELSE proposal'[p] \in ValidValues
-    /\ UNCHANGED <<vote>>
+    /\ UNCHANGED vote
 
 
 Compute(delivered) ==

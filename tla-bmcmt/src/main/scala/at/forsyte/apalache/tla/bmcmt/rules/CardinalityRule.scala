@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaFiniteSetOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
@@ -42,7 +43,7 @@ class CardinalityRule(rewriter: SymbStateRewriter) extends RewritingRule {
     def solverAssert = rewriter.solverContext.assertGroundExpr(_)
 
     def eqToOther(thisCell: ArenaCell, otherCell: ArenaCell): TlaEx = {
-      tla.and(tla.in(otherCell, set), rewriter.lazyEq.safeEq(thisCell, otherCell))
+      tla.and(tla.in(otherCell.toNameEx, set.toNameEx), rewriter.lazyEq.safeEq(thisCell, otherCell))
     }
 
     // Generate a series of equations for cardinalities. Again, there are O(N^2) constraints. Cardinalities are hard!
@@ -56,10 +57,11 @@ class CardinalityRule(rewriter: SymbStateRewriter) extends RewritingRule {
           // newCounter = counter if hd \notin set \/ \E c \in counted: hd = c /\ c \in set
           arena = arena.appendCell(BoolT())
           val beforePred = arena.topCell
-          val beforeEx = tla.or(tla.notin(hd, set), tla.or(counted.map(eqToOther(hd, _)): _*))
-          solverAssert(tla.eql(beforePred, beforeEx))
+          val beforeEx = tla.or(tla.notin(hd.toNameEx, set.toNameEx), tla.or(counted.map(eqToOther(hd, _)): _*))
+          solverAssert(tla.eql(beforePred.toNameEx, beforeEx))
           // newCounter = counter + 1 otherwise
-          solverAssert(tla.eql(newCounter, tla.ite(beforePred, counter, tla.plus(tla.int(1), counter))))
+          solverAssert(tla.eql(newCounter.toNameEx,
+                  tla.ite(beforePred.toNameEx, counter.toNameEx, tla.plus(tla.int(1), counter.toNameEx))))
           mkEq(hd +: counted, newCounter, tl)
       }
     }
@@ -78,9 +80,9 @@ class CardinalityRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // generate constraints
     arena = arena.appendCell(IntT())
     val initialCounter = arena.topCell
-    solverAssert(tla.eql(initialCounter, tla.int(0)))
+    solverAssert(tla.eql(initialCounter.toNameEx, tla.int(0)))
     val finalCounter = mkEq(Seq(), initialCounter, cells)
 
-    nextState.setArena(arena).setRex(finalCounter)
+    nextState.setArena(arena).setRex(finalCounter.toNameEx)
   }
 }

@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.typecheck.{OperT1, TlaType1}
 
 /**
  * Moving away from SpecWithTransitions ModuleManipulator allows us to re-insert special TlaEx

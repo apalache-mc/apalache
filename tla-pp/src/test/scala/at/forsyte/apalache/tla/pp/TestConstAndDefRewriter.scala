@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import at.forsyte.apalache.tla.lir.{SimpleFormalParam, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.{IntT1, OperT1, SimpleFormalParam, TlaModule, TlaOperDecl, Typed}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -37,7 +37,19 @@ class TestConstAndDefRewriter extends FunSuite with BeforeAndAfterEach {
     val (rootName, modules) =
       sanyImporter.loadFromSource("const", Source.fromString(text))
     val root = modules(rootName)
-    val rewritten = new ConstAndDefRewriter(new IdleTracker())(root)
+    // we don't want to run a type checker, so we just hack the type of the declaration n
+    val newDeclarations =
+      root.declarations match {
+        case Seq(n, overrideN: TlaOperDecl, rest @ _*) =>
+          val typedN = n.withTag(Typed(IntT1()))
+          val overrideTag = Typed(OperT1(Seq(), IntT1()))
+          val typedOverrideN = TlaOperDecl(overrideN.name, List(), overrideN.body.withTag(Typed(IntT1())))(overrideTag)
+          Seq(typedN, typedOverrideN) ++ rest
+      }
+
+    val input = new TlaModule(root.name, newDeclarations)
+
+    val rewritten = new ConstAndDefRewriter(new IdleTracker())(input)
     assert(rewritten.constDeclarations.isEmpty) // no constants anymore
     assert(rewritten.operDeclarations.size == 2)
     val expected_n = TlaOperDecl("n", List(), tla.int(10))

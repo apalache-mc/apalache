@@ -1,10 +1,10 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.{OperT1, _}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.standard.{DeclarationSorter, ModuleByExTransformer, ReplaceFixed}
 import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import TypedPredefs._
 import com.typesafe.scalalogging.LazyLogging
 
 /**
@@ -19,7 +19,7 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
     val overrides = findOverrides(mod.operDeclarations)
 
     def transformDef: TlaDecl => TlaDecl = {
-      case TlaConstDecl(name) if overrides.contains(name) =>
+      case d @ TlaConstDecl(name) if overrides.contains(name) =>
         val overridingDef = overrides(name)
         if (overridingDef.formalParams.nonEmpty) {
           val nargs = overridingDef.formalParams.size
@@ -27,10 +27,16 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
           logger.error(msg)
           logger.error("  > If you need support for n-ary CONSTANTS, write a feature request.")
           throw new OverridingError(msg, overridingDef.body)
+        } else if (d.typeTag != overridingDef.body.typeTag) {
+          val msg = s"The types of ${d.name} and ${overridingDef.name} do not match."
+          logger.error(msg)
+          throw new OverridingError(msg, overridingDef.body)
         } else {
           logger.info(s"  > Replaced CONSTANT $name with ${overridingDef.body}")
           // Safe constructor: cannot be recursive
-          TlaOperDecl(name, List(), overridingDef.body)
+          // Instead of a constant, we have an operator now. Use an operator type.
+          val typeTag = Typed(OperT1(Seq(), d.typeTag.asTlaType1()))
+          TlaOperDecl(name, List(), overridingDef.body)(typeTag)
         }
 
       case TlaOperDecl(name, dfParams, _) if overrides.contains(name) =>
@@ -69,13 +75,16 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
     // Importantly, for every constant c, replace NameEx(c) with OperEx(TlaOper.apply, replacement).
     // This is needed as we distinguish the operator calls from constant and variable use.
 
-    def replaceConstWithCall(mod: TlaModule, name: String): TlaModule = {
-      val xform = ReplaceFixed(tracker)(NameEx(name), OperEx(TlaOper.apply, NameEx(name)))
+    def replaceConstWithCall(mod: TlaModule, constDecl: TlaConstDecl): TlaModule = {
+      val tag = constDecl.typeTag
+      val operTag = Typed(OperT1(Seq(), constDecl.typeTag.asTlaType1()))
+      val name = constDecl.name
+      val xform = ReplaceFixed(tracker)(NameEx(name)(tag), OperEx(TlaOper.apply, NameEx(name)(operTag))(tag))
       val moduleXform = ModuleByExTransformer(xform)
       moduleXform(mod)
     }
 
-    val replacedConsts = mod.declarations.collect { case TlaConstDecl(name) if overrides.contains(name) => name }
+    val replacedConsts = mod.declarations.collect { case d @ TlaConstDecl(name) if overrides.contains(name) => d }
     val replaced = replacedConsts.foldLeft(sortedModule)(replaceConstWithCall)
     replaced
   }

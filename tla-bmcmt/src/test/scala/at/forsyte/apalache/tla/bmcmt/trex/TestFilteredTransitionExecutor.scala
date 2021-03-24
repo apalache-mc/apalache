@@ -3,9 +3,9 @@ package at.forsyte.apalache.tla.bmcmt.trex
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriterImpl
 import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStoreImpl
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
-import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.{Outcome, fixture}
 import org.scalatest.junit.JUnitRunner
@@ -22,9 +22,8 @@ class TestFilteredTransitionExecutor extends fixture.FunSuite {
   type FixtureParam = ExecutorContextT
 
   override protected def withFixture(test: OneArgTest): Outcome = {
-    val typeFinder = new TrivialTypeFinder()
     val solver = new Z3SolverContext(SolverConfig(debug = false, profile = false, randomSeed = 0))
-    val rewriter = new SymbStateRewriterImpl(solver, typeFinder, new ExprGradeStoreImpl())
+    val rewriter = new SymbStateRewriterImpl(solver, new ExprGradeStoreImpl())
     val exeCtx = new IncrementalExecutionContext(rewriter)
     try {
       test(exeCtx)

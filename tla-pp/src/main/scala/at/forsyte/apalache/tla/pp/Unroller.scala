@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaDecl, TlaEx, TlaModule, TlaOperDecl, ValEx}
 import at.forsyte.apalache.tla.lir.aux.{ExceptionOrValue, FailWith, SucceedWith}
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
@@ -47,7 +47,6 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
     extends TlaModuleTransformation {
 
   import Unroller._
-  import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
   // unrollLetIn performs unrolling on all recursive LET-IN defined operators in the expression
   private def unrollLetIn(
@@ -69,10 +68,11 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
       if (defs == newDefs && body == newBody)
         ex
       else
-        LetInEx(newBody, newDefs: _*)
+        LetInEx(newBody, newDefs: _*)(ex.typeTag)
+
     case ex @ OperEx(op, args @ _*) =>
       val newArgs = args map unrollLetIn(bodyMap)
-      if (args == newArgs) ex else OperEx(op, newArgs: _*)
+      if (args == newArgs) ex else OperEx(op, newArgs: _*)(ex.typeTag)
     case ex => ex
   }
 
@@ -94,11 +94,11 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
       }
       val newBody = transform(body)
       if (defs == newDefs && body == newBody) ex
-      else LetInEx(newBody, newDefs: _*)
+      else LetInEx(newBody, newDefs: _*)(ex.typeTag)
 
     case ex @ OperEx(op, args @ _*) =>
       val newArgs = args map replaceWithDefaults(defaultsMap)
-      if (args == newArgs) ex else OperEx(op, newArgs: _*)
+      if (args == newArgs) ex else OperEx(op, newArgs: _*)(ex.typeTag)
 
     case ex => ex
   }
@@ -171,7 +171,8 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
       // Any remaining applications are default-replaced
       val defaultReplaced = replaceWithDefaultsTr(inlined)
       // must specifically set .isRecursive to false, so no .copy
-      TlaOperDecl(name, fparams, defaultReplaced)
+      TlaOperDecl(name, fparams, defaultReplaced)(d.typeTag)
+
     case d @ TlaOperDecl(_, _, body) => // d.isRecursive = false
       // Even though the operator is not recursive, it still may define recursive LET-IN operators inside
       val unrolledLetIn = unrollLetIn(bodyMap)(body)
@@ -186,10 +187,12 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
   private def allRecursiveLetInOperatorNames(ex: TlaEx): Set[String] = ex match {
     case OperEx(_, args @ _*) =>
       args.map(allRecursiveLetInOperatorNames).foldLeft(Set.empty[String]) { _ ++ _ }
+
     case LetInEx(body, defs @ _*) =>
       val allInDefs = defs.map(allRecursiveOperatorsInDecl).foldLeft(Set.empty[String]) { _ ++ _ }
       val allInBody = allRecursiveLetInOperatorNames(body)
       allInBody ++ allInDefs
+
     case _ => Set.empty[String]
   }
 
