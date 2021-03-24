@@ -10,10 +10,9 @@ assignees: ''
 **Describe the bug**
 A clear and concise description of what the bug is. If you report an exception with a stack trace, no bug explanation is needed.
 
-**To Reproduce**
-Steps to reproduce the behavior:
+**Input specification**
+ - If it is OK to share your spec on github, please attach it (you can attach zip files on github). Of course, we would actually prefer seeing an [MWE](https://en.wikipedia.org/wiki/Minimal_working_example), rather than a full-featured spec.
  - The command-line parameters that you use to run the tool
- - The problematic specification (if this cannot be submitted, try to come up with a minimal working example)
 
 **Expected behavior**
 What did you expect to see?
