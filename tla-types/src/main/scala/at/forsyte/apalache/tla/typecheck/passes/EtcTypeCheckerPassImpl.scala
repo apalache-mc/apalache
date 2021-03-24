@@ -41,10 +41,6 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
     if (tlaModule.isEmpty) {
       logger.info(" > no input for type checker")
       false
-    } else if (!options.getOrElse("typechecker", "snowcatOn", false)) {
-      logger.info(" > Snowcat is disabled. Use --with-snowcat to enable it")
-      outputTlaModule = tlaModule
-      true
     } else {
       logger.info(" > Running Snowcat .::.")
       dumpToJson(tlaModule.get, "pre")
