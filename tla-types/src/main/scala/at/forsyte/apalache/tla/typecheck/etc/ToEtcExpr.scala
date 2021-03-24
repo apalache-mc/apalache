@@ -692,6 +692,18 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         val opsig = OperT1(Seq(BoolT1()), BoolT1()) // Bool => Bool
         mkExRefApp(opsig, Seq(inner))
 
+      // feature #660: special treatment for UNCHANGED <<...>>, as it is so common
+      case OperEx(TlaActionOper.unchanged, tex @ OperEx(TlaFunOper.tuple, args @ _*)) =>
+        val typeVars = varPool.fresh(args.length)
+        // the principal type is: (<<a_1, ..., a_n>> => Bool) ((a_1, ..., a_n) => <<a_1, ..., a_n>>)
+        val tupleType = TupT1(typeVars: _*)
+        val tupleOperType = OperT1(typeVars, tupleType)
+        // (a_1, ..., a_n) => <<a_1, ..., a_n>>
+        val tupleEx = mkApp(ExactRef(tex.ID), Seq(tupleOperType), args.map(this(_)): _*)
+        // <<a_1, ..., a_n>> => Bool
+        val opsig = OperT1(Seq(tupleType), BoolT1())
+        mkApp(ExactRef(ex.ID), Seq(opsig), tupleEx)
+
       case OperEx(TlaActionOper.unchanged, args @ _*) =>
         val opsig =
           OperT1(varPool.fresh(args.length), BoolT1()) // a, b, c => Bool
