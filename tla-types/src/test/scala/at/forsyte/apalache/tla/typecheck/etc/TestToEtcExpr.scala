@@ -637,10 +637,24 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     assert(expected == gen(ex))
   }
 
-  test("UNCHANGED") {
+  test("UNCHANGED x") {
     val typ = parser("a => Bool")
     val expected = mkAppByName(Seq(typ), "x")
     val ex = tla.unchanged(tla.name("x"))
+    assert(expected == gen(ex))
+  }
+
+  test("UNCHANGED <<x>>") {
+    val ex = tla.unchanged(tla.tuple(tla.name("x")))
+    val tupleType = mkAppByName(Seq(parser("a => <<a>>")), "x")
+    val expected = mkUniqApp(Seq(parser("<<a>> => Bool")), tupleType)
+    assert(expected == gen(ex))
+  }
+
+  test("UNCHANGED <<x, y>>") {
+    val ex = tla.unchanged(tla.tuple(tla.name("x"), tla.name("y")))
+    val tupleType = mkAppByName(Seq(parser("(a, b) => <<a, b>>")), "x", "y")
+    val expected = mkUniqApp(Seq(parser("<<a, b>> => Bool")), tupleType)
     assert(expected == gen(ex))
   }
 
