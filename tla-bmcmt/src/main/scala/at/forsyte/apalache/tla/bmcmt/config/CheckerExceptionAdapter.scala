@@ -43,7 +43,7 @@ class CheckerExceptionAdapter @Inject() (sourceStore: SourceStore, changeListene
 
     case err: AssignmentException =>
       logger.info("To understand the error, read the manual:")
-      logger.info("  [https://apalache.informal.systems/docs/idiomatic/001assignments.html]")
+      logger.info("  [https://apalache.informal.systems/docs/apalache/assignments.html]")
       NormalErrorMessage("Assignment error: " + err.getMessage)
 
     case err: OutdatedAnnotationsError =>
