@@ -14,9 +14,11 @@
 ### Features
 
 * Model checker: receiving the types from with the type checker Snowcat, see #668 and #350
+* Model checker and type checker: Snowcat is the only way to compute types now
 * Type checker: the old Apalache type annotations are no longer supported, see #668
 * Type checker: tagging all expressions with the reconstructed types, see #608
 * Type checker: handling TLA+ labels like `lab("a", "b") :: e`, see #653
+* Type checker: always treating `<<...>>` in `UNCHANGED <<...>>` as a tuple, see #660
 * Preprocessing: handling the general case of EXCEPT, see #647
 
 ### Changed
