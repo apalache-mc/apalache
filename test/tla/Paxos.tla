@@ -156,7 +156,7 @@ Send(m) == /\ msgs' = msgs \cup {m}
 (* m with m.type = "1a") that begins ballot b.                             *)
 (***************************************************************************)
 Phase1a(b) == /\ Send([type |-> "1a", bal |-> b])
-              /\ UNCHANGED <<maxBal, maxVBal, maxVal, 0>>
+              /\ UNCHANGED <<maxBal, maxVBal, maxVal>>
 
 (***************************************************************************)
 (* Upon receipt of a ballot b phase 1a message, acceptor a can perform a   *)
@@ -170,7 +170,7 @@ Phase1b(a) == /\ \E m \in msgs :
                   /\ maxBal' = [maxBal EXCEPT ![a] = m.bal]
                   /\ Send([type |-> "1b", acc |-> a, bal |-> m.bal,
                             mbal |-> maxVBal[a], mval |-> maxVal[a]])
-              /\ UNCHANGED <<maxVBal, maxVal, 0>>
+              /\ UNCHANGED <<maxVBal, maxVal>>
 
 (***************************************************************************)
 (* The Phase2a(b, v) action can be performed by the ballot b leader if two *)
@@ -205,7 +205,7 @@ Phase2a(b, v) ==
                     /\ m.mval = v
                     /\ \A mm \in Q1bv : m.mbal \geq mm.mbal 
   /\ Send([type |-> "2a", bal |-> b, val |-> v])
-  /\ UNCHANGED <<maxBal, maxVBal, maxVal, 0>>
+  /\ UNCHANGED <<maxBal, maxVBal, maxVal>>
 
 (***************************************************************************)
 (* The Phase2b(a) action is performed by acceptor a upon receipt of a      *)
