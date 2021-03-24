@@ -1,5 +1,7 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
+import at.forsyte.apalache.tla.lir
+import at.forsyte.apalache.tla.lir.{OperT1, SetT1, TlaType1, TypingException, VarT1}
 import at.forsyte.apalache.tla.typecheck._
 import at.forsyte.apalache.tla.typecheck.etc.EtcTypeChecker.UnwindException
 
@@ -134,7 +136,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
         }
 
         // operVar = (arg_1, ..., arg_k) => resVar
-        solver.addConstraint(EqClause(operVar, OperT1(argTypes, resVar))
+        solver.addConstraint(EqClause(operVar, lir.OperT1(argTypes, resVar))
               .setOnTypeFound(onFound)
               .setOnTypeError(onArgsMatchError))
 
@@ -210,7 +212,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
 
             case None =>
               // Let the solver compute the type. If it fails, the user has to annotate the definition
-              OperT1(1.to(binders.length).map(_ => varPool.fresh), varPool.fresh)
+              lir.OperT1(1.to(binders.length).map(_ => varPool.fresh), varPool.fresh)
           }
 
         // translate the binders in the lambda expression, so we can quickly propagate the types of the parameters

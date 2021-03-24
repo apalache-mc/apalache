@@ -3,9 +3,13 @@ EXTENDS Integers
 
 \* constants and variables should propagate
 \* in the transformations
-CONSTANT N
+CONSTANT
+    \* @type: Int;
+    N
 
-VARIABLE x
+VARIABLE
+    \* @type: Int;
+    x
 
 CInit == N \in 1..10
 

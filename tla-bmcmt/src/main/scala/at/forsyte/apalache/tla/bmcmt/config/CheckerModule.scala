@@ -7,8 +7,6 @@ import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriter
 import at.forsyte.apalache.tla.assignments.passes._
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.passes._
-import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
-import at.forsyte.apalache.tla.bmcmt.types.{CellT, TypeFinder}
 import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
 import at.forsyte.apalache.tla.lir.io.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
@@ -42,8 +40,6 @@ class CheckerModule extends AbstractModule {
       .to(classOf[FormulaHintsStoreImpl])
     bind(classOf[ExprGradeStore])
       .to(classOf[ExprGradeStoreImpl])
-    bind(new TypeLiteral[TypeFinder[CellT]] {})
-      .to(classOf[TrivialTypeFinder]) // using a trivial type finder
 
     // writers
     bind(classOf[TlaWriterFactory])
@@ -64,24 +60,25 @@ class CheckerModule extends AbstractModule {
     bind(classOf[Pass])
       .annotatedWith(Names.named("InitialPass"))
       .to(classOf[SanyParserPass])
-    // the next pass is ConfigurationPass
-    bind(classOf[ConfigurationPass])
-      .to(classOf[ConfigurationPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterParser"))
-      .to(classOf[ConfigurationPass])
 
     // The next pass is Snowcat that is called EtcTypeCheckerPassImpl for now.
     // We provide guice with a concrete implementation here, as we also use PostTypeCheckerPassImpl later in the pipeline.
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterConfiguration"))
+      .annotatedWith(Names.named("AfterParser"))
       .to(classOf[EtcTypeCheckerPassImpl])
+
+    // the next pass is ConfigurationPass
+    bind(classOf[ConfigurationPass])
+      .to(classOf[ConfigurationPassImpl])
+    bind(classOf[Pass])
+      .annotatedWith(Names.named("AfterTypeChecker"))
+      .to(classOf[ConfigurationPass])
 
     // the next pass is DesugarerPass
     bind(classOf[DesugarerPass])
       .to(classOf[DesugarerPassImpl])
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterTypeChecker"))
+      .annotatedWith(Names.named("AfterConfiguration"))
       .to(classOf[DesugarerPass])
     // the next pass is UnrollPass
     bind(classOf[UnrollPass])

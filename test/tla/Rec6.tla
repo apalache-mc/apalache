@@ -3,14 +3,16 @@ EXTENDS Integers
 
 N == 5
 
-VARIABLES set, count
-
-a <: b == a
+VARIABLES
+    \* @type: Set(Int);
+    set,
+    \* @type: Int;
+    count
 
 RECURSIVE Sum(_)
 
 Sum(S) ==
-  IF S = {} <: {Int}
+  IF S = {}
   THEN 0
   ELSE LET x == CHOOSE y \in S: TRUE IN
     x + Sum(S \ {x})
@@ -19,7 +21,7 @@ UNROLL_DEFAULT_Sum == 0
 UNROLL_TIMES_Sum == N
 
 Init ==
-  /\ set = {} <: {Int}
+  /\ set = {}
   /\ count = 0
 
 Next ==

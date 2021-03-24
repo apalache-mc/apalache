@@ -1,5 +1,7 @@
 ---------------------------- MODULE Inline -------------------------------
-VARIABLE x
+VARIABLE
+    \* @type: Int;
+    x
 
 A == 3
 

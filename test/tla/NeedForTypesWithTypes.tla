@@ -4,20 +4,24 @@
  *)
 EXTENDS Integers, Sequences, FiniteSets
 
-CONSTANTS InSet     \* an input set
-VARIABLES Left,     \* a storage for the yet untransformed elements
-          OutSeq    \* the output sequence
+CONSTANTS
+    \* @type: Set(Int);
+    InSet     \* an input set
 
-a <: b == a          
+VARIABLES
+    \* @type: Set(Int);
+    Left,     \* a storage for the yet untransformed elements
+    \* @type: Seq(Int);
+    OutSeq    \* the output sequence
 
 ConstInit == InSet = 1..4
 
 Init ==
-    /\ OutSeq = << >> <: Seq(Int)
+    /\ OutSeq = << >>
     /\ Left = InSet
 
 Next ==
-    IF Left = {} <: {Int}
+    IF Left = {}
     THEN UNCHANGED <<Left, OutSeq>>
     ELSE \E x \in Left:
           /\ OutSeq' = Append(OutSeq, x)

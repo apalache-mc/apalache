@@ -3,7 +3,8 @@ package at.forsyte.apalache.tla.assignments
 import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.transformations.impl.{IdleTracker, TrackerWithListeners}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.convenience.tla
+import TypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -15,6 +16,8 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
 
   import stg.helperFunctions._
   import at.forsyte.apalache.tla.lir.convenience.tla._
+
+  private val types = Map("i" -> IntT1(), "b" -> BoolT1(), "o_b" -> OperT1(Seq(), BoolT1()))
 
   test("Test allCombinations") {
 
@@ -57,9 +60,14 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
   }
 
   test("Test labelsAt") {
-    val ex11 = n_x
-    val ex12 = n_y
-    val ex13 = or(ex11, ex12).untyped()
+    val ex11 = tla
+      .name("x")
+      .typed(IntT1())
+    val ex12 = tla
+      .name("y")
+      .typed(IntT1())
+    val ex13 = or(ex11, ex12)
+      .typed(BoolT1())
 
     val sel1: SelMapType = Map(
         ex13.ID -> Set(Set(ex11.ID), Set(ex12.ID))
@@ -78,24 +86,33 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
   }
 
   test("Test allSelections") {
-    val xasgn11 = primeEq(n_x, n_s).untyped()
-    val xasgn12 = primeEq(n_x, int(1)).untyped()
-    val yasgn11 = primeEq(n_x, n_T).untyped()
-    val yasgn12 = primeEq(n_x, n_t).untyped()
+    val xasgn11 = tla
+      .eql(tla.prime(tla.name("x") ? "i") ? "i", tla.name("s") ? "i")
+      .typed(types, "b")
+    val xasgn12 = tla
+      .eql(tla.prime(tla.name("x") ? "i") ? "i", int(1))
+      .typed(types, "b")
+    val yasgn11 = tla
+      .eql(tla.prime(tla.name("x") ? "i") ? "i", tla.name("T") ? "i")
+      .typed(types, "b")
+    val yasgn12 = tla
+      .eql(tla.prime(tla.name("x") ? "i") ? "i", tla.name("t") ? "i")
+      .typed(types, "b")
 
     val ex1 =
       ite(
-          ge(int(0), int(1)),
+          ge(int(0), int(1)) ? "b",
           xasgn11,
           xasgn12
-      ).untyped()
+      ).typed(types, "b")
 
-    val ex2 = or(yasgn11, yasgn12).untyped()
+    val ex2 = or(yasgn11, yasgn12)
+      .typed(types, "b")
 
     val ex3 = and(
         ex1,
         ex2
-    ).untyped()
+    ).typed(types, "b")
 
     val possibleAssgnsX = Seq(
         Set(xasgn11.ID),
@@ -132,16 +149,28 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
       assert(s(newEx.ID) == Set(e))
     }
 
-    val xasgn21 = primeEq(n_x, n_s).untyped()
-    val yasgn21 = primeEq(n_x, n_T).untyped()
-    val yasgn22 = primeEq(n_y, n_t).untyped()
+    val xasgn21 = tla
+      .eql(tla.prime(tla.name("x") ? "i") ? "i", tla.name("x") ? "i")
+      .typed(types, "b")
+    val yasgn21 = tla
+      .eql(tla.prime(tla.name("x") ? "i") ? "i", tla.name("T") ? "i")
+      .typed(types, "b")
+    val yasgn22 = tla
+      .eql(tla.prime(tla.name("y") ? "i") ? "i", tla.name("t") ? "i")
+      .typed(types, "b")
 
-    val ex4 = and(eql(int(0), int(1)), xasgn21).untyped()
-    val xDecl = declOp("X", ex4).untypedOperDecl()
-    val ex5 = and(yasgn21, appDecl(xDecl)).untyped()
-    val ex6 = and(yasgn22, appDecl(xDecl)).untyped()
-    val ex7 = or(ex5, ex6).untyped()
-    val ex8 = letIn(ex7, xDecl).untyped()
+    val ex4 = and(eql(int(0), int(1)) ? "b", xasgn21 ? "b")
+      .typed(types, "b")
+    val xDecl = declOp("X", ex4)
+      .typedOperDecl(OperT1(Seq(), BoolT1()))
+    val ex5 = and(yasgn21, tla.appOp(tla.name("X") ? "o_b") ? "b")
+      .typed(types, "b")
+    val ex6 = and(yasgn22, tla.appOp(tla.name("X") ? "o_b") ? "b")
+      .typed(types, "b")
+    val ex7 = or(ex5, ex6)
+      .typed(types, "b")
+    val ex8 = letIn(ex7, xDecl)
+      .typed(types, "b")
 
     val possibleAssgnsX2 = Seq(Set(xasgn21.ID))
 
@@ -169,19 +198,25 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
   }
 
   test("Test ITE with multibranching") {
-    val asgn1 = primeEq(n_x, int(1)).untyped()
-    val asgn2 = primeEq(n_x, int(2)).untyped()
-    val asgn3 = primeEq(n_x, int(3)).untyped()
+    val asgn1 = tla
+      .eql(tla.prime(tla.name("x") ? "i") ? "i", int(1))
+      .typed(types, "b")
+    val asgn2 = tla
+      .eql(tla.prime(tla.name("x") ? "i") ? "i", int(2))
+      .typed(types, "b")
+    val asgn3 = tla
+      .eql(tla.prime(tla.name("x") ? "i") ? "i", int(3))
+      .typed(types, "b")
 
     val next = ite(
-        trueEx,
+        tla.bool(true).typed(),
         asgn1,
         ite(
-            trueEx,
+            tla.bool(true).typed(),
             asgn2,
             asgn3
-        )
-    ).untyped()
+        ) ? "b"
+    ).typed(types, "b")
 
     val sel = Seq(asgn1.ID, asgn2.ID, asgn3.ID)
 
@@ -202,17 +237,20 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
   }
 
   test("Test LET-IN") {
-    val asgn = primeEq(n_x, int(1)).untyped()
-    val xDecl = declOp("X", asgn).untypedOperDecl()
+    val asgn = tla
+      .eql(tla.prime(tla.name("x") ? "i") ? "i", int(1))
+      .typed(types, "b")
+    val xDecl = declOp("X", asgn)
+      .typedOperDecl(types, "o_b")
     val disj = or(
-        and(n_A, appDecl(xDecl)),
-        and(n_B, appDecl(xDecl))
-    ).untyped()
+        and(tla.name("A") ? "b", tla.appOp(tla.name("X") ? "o_b") ? "b") ? "b",
+        and(tla.name("B") ? "b", tla.appOp(tla.name("X") ? "o_b") ? "b") ? "b"
+    ).typed(types, "b")
 
     val next = letIn(
         disj,
         xDecl
-    ).untyped()
+    ).typed(types, "b")
 
     val strat = Seq(asgn.ID)
 
@@ -220,22 +258,27 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
       _._2
     }
     assert(ret.size == 1)
-    val expected = letIn(disj, declOp("X", assignPrime(n_x, int(1)).untyped()).untypedOperDecl()).untyped()
+    val expected = letIn(disj,
+        declOp("X", assign(prime(tla.name("x") ? "i") ? "i", int(1)) ? "b")
+          .typedOperDecl(types, "o_b"))
+      .typed(types, "b")
     assert(expected == ret.head)
   }
 
   test("Test sliceWith") {
-    val asgn = primeEq(n_x, int(1)).untyped()
-    val xDecl = declOp("X", asgn).untypedOperDecl()
+    val asgn = eql(prime(tla.name("x") ? "i") ? "i", int(1))
+      .typed(types, "b")
+    val xDecl = declOp("X", asgn)
+      .typedOperDecl(types, "o_b")
     val disj = or(
-        and(n_A, appDecl(xDecl)),
-        and(n_B, appDecl(xDecl))
-    ).untyped()
+        and(name("A"), appOp(name("X") ? "o_b") ? "b") ? "b",
+        and(name("B"), appOp(name("X") ? "o_b") ? "b") ? "b"
+    ).typed(types, "b")
 
     val next = letIn(
         disj,
         xDecl
-    ).untyped()
+    ).typed(types, "b")
 
     val selection = Set(asgn.ID)
     val tr = AssignmentOperatorIntroduction(selection, new IdleTracker)

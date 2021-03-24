@@ -1,13 +1,12 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.TlaEx
+import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, IntT1, RecT1, SetT1, StrT1, TlaEx, TupT1}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import org.junit.runner.RunWith
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.typecheck.{BoolT1, FunT1, IntT1, RecT1, SetT1, StrT1, TupT1}
-import at.forsyte.apalache.tla.typecheck.TypedPredefs._
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 
 @RunWith(classOf[JUnitRunner])
 class TestKeramelizer extends FunSuite with BeforeAndAfterEach {

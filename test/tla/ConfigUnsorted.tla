@@ -1,6 +1,8 @@
 -------------------------- MODULE ConfigUnsorted ----------------------------------------
 (* A specification that introduces preprocessing issues *)
-VARIABLES x
+VARIABLES
+    \* @type: Int;
+    x
 
 A == 1
 B == 2

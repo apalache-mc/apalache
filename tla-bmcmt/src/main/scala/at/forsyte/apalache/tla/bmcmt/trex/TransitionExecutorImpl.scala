@@ -57,7 +57,6 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
       throw new IllegalStateException(s"initializeConstants should be called only against the initial state")
     }
     logger.debug("Initializing CONSTANTS")
-    inferTypes(constInit)
     lastState = ctx.rewriter.rewriteUntilDone(lastState.setRex(constInit))
     // check, whether all constants have been assigned
     val shiftedBinding = lastState.binding.shiftBinding(Set.empty)
@@ -65,8 +64,6 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
       val diff = consts -- shiftedBinding.toMap.keySet
       throw new IllegalStateException("CONSTANTS are not initialized: " + diff.mkString(", "))
     }
-
-    shiftTypes(Set.empty) // treat constants as variables
 
     lastState = lastState.setBinding(shiftedBinding)
 
@@ -91,7 +88,6 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
       throw new IllegalStateException(s"prepareTransition is called for $transitionNo two times")
     }
     logger.debug(s"Step #${stepNo}, transition #${transitionNo}")
-    inferTypes(transitionEx)
     ctx.rewriter.solverContext.log(
         "; ------- STEP: %d, SMT LEVEL: %d TRANSITION: %d {"
           .format(stepNo, ctx.rewriter.contextLevel, transitionNo))
@@ -193,7 +189,6 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
    *                  though it may be an action expression.
    */
   override def assertState(assertion: TlaEx): Unit = {
-    inferTypes(assertion)
     val nextState = ctx.rewriter.rewriteUntilDone(lastState.setRex(assertion))
     ctx.rewriter.solverContext.assertGroundExpr(nextState.ex)
     lastState = nextState.setRex(lastState.ex) // propagate the arena and binding, but keep the old expression
@@ -278,13 +273,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
     lastState = lastState
       .setBinding(lastState.binding.shiftBinding(consts))
       .setRex(lastState.arena.cellTrue().toNameEx)
-    // save the types of the cells that are bound to the previous variables types,
-    // so the transition executor can process assertions over state variables of the whole execution
-    vars
-      .map(name => lastState.binding(name))
-      .foreach(cell => ctx.typeFinder.extendWithCellType(cell))
     // that is the result of this step
-    shiftTypes(consts)
     // importantly, clean the action-level caches, so the new variables are not mapped to the old variables
     ctx.rewriter.exprCache.disposeActionLevel()
     // clean the prepared transitions
@@ -362,32 +351,5 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
    */
   private def pushLastState(oracle: Oracle): Unit = {
     revStack = (lastState.binding.shiftBinding(consts), oracle) :: revStack
-  }
-
-  // infer the types and throw an exception if type inference has failed
-  private def inferTypes(expr: TlaEx): Unit = {
-//    logger.debug("Inferring types...")
-    ctx.typeFinder.inferAndSave(expr)
-    if (ctx.typeFinder.typeErrors.nonEmpty) {
-      throw new TypeInferenceException(ctx.typeFinder.typeErrors)
-    }
-  }
-
-  /**
-   * Remove the non-primed variables (except provided constants)
-   * and rename the primed variables to their non-primed versions.
-   * After that, remove the type finder to contain the new types only.
-   */
-  private def shiftTypes(constants: Set[String]): Unit = {
-    val types = ctx.typeFinder.varTypes
-    // keep the types of prime variables, cells, and constants
-    def keep(name: String): Boolean = {
-      name.endsWith("'") || ArenaCell.isValidName(name) || constants.contains(name)
-    }
-    val nextTypes =
-      types
-        .filter(p => keep(p._1))
-        .map(p => (p._1.stripSuffix("'"), p._2))
-    ctx.typeFinder.reset(nextTypes)
   }
 }

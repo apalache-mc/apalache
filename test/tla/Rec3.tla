@@ -8,10 +8,15 @@
  *)
 EXTENDS Integers
 
-VARIABLES n, fibComp, fibCompPrev, fibSpec
-
-\* the syntax for type annotations
-a <: b == a
+VARIABLES
+    \* @type: Int;
+    n,
+    \* @type: Int;
+    fibComp,
+    \* @type: Int;
+    fibCompPrev,
+    \* @type: Int;
+    fibSpec
 
 \* the type of the function Fib
 FibT == [Int -> Int]
@@ -22,7 +27,7 @@ Fib[k \in 0..15] ==
   THEN 0
   ELSE IF k <= 2
       THEN 1
-      ELSE (Fib <: FibT)[k - 2] + (Fib <: FibT)[k - 1]
+      ELSE Fib[k - 2] + Fib[k - 1]
 
 Init ==
     /\ n = 0

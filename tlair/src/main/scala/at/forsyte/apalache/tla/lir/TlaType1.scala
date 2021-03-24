@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.typecheck
+package at.forsyte.apalache.tla.lir
 
 import scala.collection.immutable.SortedMap
 
@@ -14,6 +14,15 @@ sealed trait TlaType1 {
    * @return the set of variable names (actually, integers) that are used in the type.
    */
   def usedNames: Set[Int]
+}
+
+object TlaType1 {
+  def fromTypeTag(typeTag: TypeTag): TlaType1 = {
+    typeTag match {
+      case Typed(tt: TlaType1) => tt
+      case _                   => throw new TypingException("Expected Typed(_: TlaType1), found: " + typeTag)
+    }
+  }
 }
 
 /**

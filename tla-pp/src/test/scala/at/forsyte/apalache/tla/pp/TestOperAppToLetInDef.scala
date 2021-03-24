@@ -3,9 +3,8 @@ package at.forsyte.apalache.tla.pp
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaOper}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.typecheck.TypedPredefs._
+import TypedPredefs._
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
-import at.forsyte.apalache.tla.typecheck.{BoolT1, IntT1, OperT1, SetT1, TupT1}
 import org.junit.runner.RunWith
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.junit.JUnitRunner

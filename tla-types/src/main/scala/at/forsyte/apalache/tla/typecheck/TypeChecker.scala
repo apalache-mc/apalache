@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.typecheck
 
+import at.forsyte.apalache.tla.lir.TlaType1
 import at.forsyte.apalache.tla.typecheck.etc.EtcExpr
 
 /**

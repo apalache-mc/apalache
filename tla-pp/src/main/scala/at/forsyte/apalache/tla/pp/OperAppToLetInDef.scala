@@ -5,8 +5,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModuleTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.typecheck.{OperT1, TlaType1, TypingException}
-import at.forsyte.apalache.tla.typecheck.TypedPredefs._
+import TypedPredefs._
 
 /**
  * Replaces instances of user-defined operator applications with a LET-IN wrapper.

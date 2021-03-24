@@ -9,10 +9,10 @@ import at.forsyte.apalache.tla.bmcmt.types.CellT
  *
  * @author Igor Konnov
  */
-class IncrementalExecutionContextSnapshot(var rewriterLevel: Int, val varTypes: Map[String, CellT]) {}
+class IncrementalExecutionContextSnapshot(var rewriterLevel: Int) {}
 
 object IncrementalExecutionContextSnapshot {
-  def apply(rewriterDepth: Int, varTypes: Map[String, CellT]): IncrementalExecutionContextSnapshot = {
-    new IncrementalExecutionContextSnapshot(rewriterDepth, varTypes)
+  def apply(rewriterDepth: Int): IncrementalExecutionContextSnapshot = {
+    new IncrementalExecutionContextSnapshot(rewriterDepth)
   }
 }

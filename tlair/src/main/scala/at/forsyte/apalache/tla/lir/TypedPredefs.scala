@@ -1,7 +1,6 @@
-package at.forsyte.apalache.tla.typecheck
+package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.values._
-import at.forsyte.apalache.tla.lir._
 
 object TypedPredefs {
   type Tag = Typed[TlaType1]
@@ -28,6 +27,8 @@ object TypedPredefs {
 
   /**
    * An implicit wrapper around TypeTag that extract the type out of Typed(_: TlaType1).
+   *
+   * TODO: shall we remove this implicit conversion in favor of TlaType1.fromTypeTag?
    *
    * @param tag a type tag
    */
@@ -69,6 +70,10 @@ object TypedPredefs {
   implicit class BuilderOperDeclAsTyped(block: BuilderOperDecl) {
     def typedOperDecl(topType: TlaType1): TlaOperDecl = {
       BuilderDeclAsTyped(block).typed(topType).asInstanceOf[TlaOperDecl]
+    }
+
+    def typedOperDecl(types: Map[String, TlaType1], alias: String): TlaOperDecl = {
+      BuilderDeclAsTyped(block).typed(types, alias).asInstanceOf[TlaOperDecl]
     }
   }
 

@@ -1,7 +1,9 @@
 ----------------------------- MODULE NatCounter ------------------------
 EXTENDS Naturals
 
-VARIABLE x
+VARIABLE
+    \* @type: Int;
+    x
 
 Init == x = 3
 

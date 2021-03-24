@@ -10,7 +10,7 @@ import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterAction extends RewriterBase {
-  test("""SE-PRIME: x' ~~> NameEx(x')""") {
+  test("""x' is rewritten to the binding of x'""") {
     val rewriter = create()
     arena.appendCell(IntT()) // the type finder is strict about unassigned types, so let's create a cell for x'
     val state = new SymbState(tla.prime(NameEx("x")), arena, Binding("x'" -> arena.topCell))

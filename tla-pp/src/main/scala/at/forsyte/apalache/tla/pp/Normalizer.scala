@@ -1,11 +1,12 @@
 package at.forsyte.apalache.tla.pp
 
+import at.forsyte.apalache.tla.lir.TypedPredefs._
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.standard.{FlatLanguagePred, ReplaceFixed}
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.typecheck.{BoolT1, OperT1}
 
 import javax.inject.Singleton
 
@@ -26,7 +27,7 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
 
   private def nnf(neg: Boolean): TlaExTransformation = tracker.trackEx {
     case ex @ ValEx(TlaBool(b)) =>
-      OperEx(TlaBoolOper.not, ValEx(TlaBool(b ^ neg))(ex.typeTag))(ex.typeTag)
+      ValEx(TlaBool(b ^ neg))(ex.typeTag)
 
     case vex @ ValEx(_) =>
       vex // this may be called when processing a non-Boolean expression
