@@ -30,6 +30,7 @@
 
 ### Removed
 
+* Unused rewriting rules and `FailPredT` in the model checker, see #665
 * Intermediate representation: removed non-standard operators subsetProper, supset, supseteq, see #615
 * Intermediate representation: removed TlaArithOper.{sum,prod}, as they are not standard, see #580
 * Intermediate representation: removed TlaOper.chooseIdiom
