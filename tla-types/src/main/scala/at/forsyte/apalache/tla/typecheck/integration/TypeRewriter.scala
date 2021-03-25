@@ -32,7 +32,7 @@ class TypeRewriter(tracker: TransformationTracker, defaultTag: UID => TypeTag)(t
         // However, the code in `ToEtcExpr` is hard for understanding already.
         val taggedFun = transform(fun)
 
-        def transformIndex: TlaEx => TlaEx = tracker.trackEx {
+        def wrapIndexWithTuple: TlaEx => TlaEx = tracker.trackEx {
           case OperEx(TlaFunOper.tuple, indices @ _*) =>
             val taggedIndices = indices map transform
             val typesOfIndices = taggedIndices.map(_.typeTag.asTlaType1())
@@ -44,7 +44,7 @@ class TypeRewriter(tracker: TransformationTracker, defaultTag: UID => TypeTag)(t
         }
 
         val (accessors, newValues) = TlaOper.deinterleave(args)
-        val transformedAccessors = accessors map transformIndex
+        val transformedAccessors = accessors map wrapIndexWithTuple
         val transformedValues = newValues map transform
         val transformedArgs = TlaOper.interleave(transformedAccessors, transformedValues)
 
