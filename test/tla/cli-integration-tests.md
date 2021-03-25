@@ -1213,3 +1213,18 @@ Type checker [OK]
 EXITCODE: OK
 ```
 
+### typecheck Unchanged660.tla
+
+```sh
+$ apalache-mc typecheck Unchanged660.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeCheckerSnowcat
+ > Running Snowcat .::.
+ > Your types are great!
+ > All expressions are typed
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
