@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaActionOper, TlaOper}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 
 /**
@@ -20,16 +19,18 @@ class AssignmentOperatorIntroduction(
 
   def transform: TlaExTransformation = tracker.trackEx {
     case ex @ OperEx(TlaOper.eq, prime @ OperEx(TlaActionOper.prime, _: NameEx), asgnVal) if isAssignment(ex.ID) =>
-      val ret = OperEx(BmcOper.assign, prime, asgnVal)
+      val ret = OperEx(BmcOper.assign, prime, asgnVal)(ex.typeTag)
       uidReplacementMap += ex.ID -> ret.ID
       ret
+
     case ex @ OperEx(op, args @ _*) =>
       val newArgs = args map transform
-      if (args == newArgs) ex else OperEx(op, newArgs: _*)
+      if (args == newArgs) ex else OperEx(op, newArgs: _*)(ex.typeTag)
+
     case ex @ LetInEx(body, defs @ _*) =>
       val newDefs = defs.map { x => x.copy(body = transform(x.body)) }
       val newBody = transform(body)
-      if (defs == newDefs && body == newBody) ex else LetInEx(newBody, newDefs: _*)
+      if (defs == newDefs && body == newBody) ex else LetInEx(newBody, newDefs: _*)(ex.typeTag)
     case ex => ex
   }
 

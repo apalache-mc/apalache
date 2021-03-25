@@ -10,7 +10,7 @@ import org.scalatest.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 @RunWith(classOf[JUnitRunner])
 class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
@@ -31,21 +31,21 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("apply A") {
     val writer = new PrettyWriter(printWriter, 80)
-    writer.write(OperEx(TlaOper.apply, "A"))
+    writer.write(OperEx(TlaOper.apply, name("A")))
     printWriter.flush()
     assert("A" == stringWriter.toString)
   }
 
   test("apply A to 1") {
     val writer = new PrettyWriter(printWriter, 80)
-    writer.write(OperEx(TlaOper.apply, "A", 1))
+    writer.write(OperEx(TlaOper.apply, name("A"), int(1)))
     printWriter.flush()
     assert("A(1)" == stringWriter.toString)
   }
 
   test("apply A to 1 and 2") {
     val writer = new PrettyWriter(printWriter, 80)
-    writer.write(OperEx(TlaOper.apply, "A", 1, 2))
+    writer.write(OperEx(TlaOper.apply, name("A"), int(1), int(2)))
     printWriter.flush()
     assert("A(1, 2)" == stringWriter.toString)
   }
@@ -59,77 +59,77 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("ENABLED and prime") {
     val writer = new PrettyWriter(printWriter, 80)
-    writer.write(enabled(prime("x")))
+    writer.write(enabled(prime(name("x"))))
     printWriter.flush()
     assert("ENABLED x'" == stringWriter.toString)
   }
 
   test("UNCHANGED") {
     val writer = new PrettyWriter(printWriter, 80)
-    writer.write(unchanged("x"))
+    writer.write(unchanged(name("x")))
     printWriter.flush()
     assert("UNCHANGED x" == stringWriter.toString)
   }
 
   test("[A]_vars") {
     val writer = new PrettyWriter(printWriter, 80)
-    writer.write(stutt("A", "vars"))
+    writer.write(stutt(name("A"), name("vars")))
     printWriter.flush()
     assert("[A]_vars" == stringWriter.toString)
   }
 
   test("<A>_vars") {
     val writer = new PrettyWriter(printWriter, 80)
-    writer.write(nostutt("A", "vars"))
+    writer.write(nostutt(name("A"), name("vars")))
     printWriter.flush()
     assert("<A>_vars" == stringWriter.toString)
   }
 
   test("A \\cdot B") {
     val writer = new PrettyWriter(printWriter, 80)
-    writer.write(comp("A", "B"))
+    writer.write(comp(name("A"), name("B")))
     printWriter.flush()
     assert("A \\cdot B" == stringWriter.toString)
   }
 
   test("WF_vars(A)") {
     val writer = new PrettyWriter(printWriter, 80)
-    writer.write(WF("vars", "A"))
+    writer.write(WF(name("vars"), name("A")))
     printWriter.flush()
     assert("WF_vars(A)" == stringWriter.toString)
   }
 
   test("SF_vars(A)") {
     val writer = new PrettyWriter(printWriter, 80)
-    writer.write(SF("vars", "A"))
+    writer.write(SF(name("vars"), name("A")))
     printWriter.flush()
     assert("SF_vars(A)" == stringWriter.toString)
   }
 
   test("[]A") {
     val writer = new PrettyWriter(printWriter, 80)
-    writer.write(box("A"))
+    writer.write(box(name("A")))
     printWriter.flush()
     assert("[]A" == stringWriter.toString)
   }
 
   test("<>A") {
     val writer = new PrettyWriter(printWriter, 80)
-    writer.write(diamond("A"))
+    writer.write(diamond(name("A")))
     printWriter.flush()
     assert("<>A" == stringWriter.toString)
   }
 
   test("A ~> B") {
     val writer = new PrettyWriter(printWriter, 80)
-    writer.write(leadsTo("A", "B"))
+    writer.write(leadsTo(name("A"), name("B")))
     printWriter.flush()
     assert("A ~> B" == stringWriter.toString)
   }
 
   test("A -+-> B") {
     val writer = new PrettyWriter(printWriter, 80)
-    writer.write(guarantees("A", "B"))
+    writer.write(guarantees(name("A"), name("B")))
     printWriter.flush()
     assert("A -+-> B" == stringWriter.toString)
   }
@@ -143,7 +143,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("singleton set") {
     val writer = new PrettyWriter(printWriter, 80)
-    writer.write(enumSet(42))
+    writer.write(enumSet(int(42)))
     printWriter.flush()
     assert("{42}" == stringWriter.toString)
   }
@@ -190,7 +190,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("one-line tuple") {
     val writer = new PrettyWriter(printWriter, 80)
-    writer.write(tuple(1, 2, 3))
+    writer.write(tuple(int(1), int(2), int(3)))
     printWriter.flush()
     assert("<<1, 2, 3>>" == stringWriter.toString)
   }
@@ -209,14 +209,14 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("one-line Cartesian product") {
     val writer = new PrettyWriter(printWriter, 80)
-    writer.write(times("X", "Y", "Z"))
+    writer.write(times(name("X"), name("Y"), name("Z")))
     printWriter.flush()
     assert("X \\X Y \\X Z" == stringWriter.toString)
   }
 
   test("multi-line Cartesian product") {
     val writer = new PrettyWriter(printWriter, 40)
-    writer.write(times("verylongname1", "verylongname2", "verylongname3"))
+    writer.write(times(name("verylongname1"), name("verylongname2"), name("verylongname3")))
     printWriter.flush()
     val expected =
       """verylongname1
@@ -237,7 +237,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("multi-line conjunction") {
     val writer = new PrettyWriter(printWriter, 40)
-    val expr = impl(true, and(1.to(5) map (_ => name("verylongname")): _*))
+    val expr = impl(bool(true), and(1.to(5) map (_ => name("verylongname")): _*))
     writer.write(expr)
     printWriter.flush()
     // a multi-line vertical box always breaks from the previous line, as otherwise it is incredibly hard to indent
@@ -313,7 +313,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("one-line exists") {
     val writer = new PrettyWriter(printWriter, 40)
-    val expr = exists("x", "y", "z")
+    val expr = exists(name("x"), name("y"), name("z"))
     writer.write(expr)
     printWriter.flush()
     // a multi-line vertical box always breaks from the previous line, as otherwise it is incredibly hard to indent
@@ -324,7 +324,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
   test("multi-line exists") {
     val writer = new PrettyWriter(printWriter, 40)
     val expr =
-      exists("verylongname1", "verylongname2", "verylongname3")
+      exists(name("verylongname1"), name("verylongname2"), name("verylongname3"))
     writer.write(expr)
     printWriter.flush()
     // a multi-line vertical box always breaks from the previous line, as otherwise it is incredibly hard to indent
@@ -337,9 +337,9 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
   test("nested quantifiers") {
     val writer = new PrettyWriter(printWriter, 40)
     val ex1 =
-      exists("verylongname1", "verylongname2", "verylongname3")
+      exists(name("verylongname1"), name("verylongname2"), name("verylongname3"))
     val ex2 =
-      forall("verylong4", "verylong5", ex1)
+      forall(name("verylong4"), name("verylong5"), ex1)
     writer.write(ex2)
     printWriter.flush()
     // a multi-line vertical box always breaks from the previous line, as otherwise it is incredibly hard to indent
@@ -353,9 +353,9 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
   test("nested \\EE and \\AA") {
     val writer = new PrettyWriter(printWriter, 10)
     val ex1 =
-      EE("verylongname1", "verylongname2")
+      EE(name("verylongname1"), name("verylongname2"))
     val ex2 =
-      AA("verylong3", ex1)
+      AA(name("verylong3"), ex1)
     writer.write(ex2)
     printWriter.flush()
     // a multi-line vertical box always breaks from the previous line, as otherwise it is incredibly hard to indent
@@ -370,11 +370,11 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     val writer = new PrettyWriter(printWriter, 40)
     val expr = enumFun(
         str("x1"),
-        "x2",
+        name("x2"),
         str("x3"),
-        "x4",
+        name("x4"),
         str("x5"),
-        "x6"
+        name("x6")
     ) ////
     writer.write(expr)
     printWriter.flush()
@@ -387,11 +387,11 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     val writer = new PrettyWriter(printWriter, 40)
     val expr = enumFun(
         str("verylong1"),
-        "verylong2",
+        name("verylong2"),
         str("verylong3"),
-        "verylong4",
+        name("verylong4"),
         str("verylong5"),
-        "verylong6"
+        name("verylong6")
     ) ////
     writer.write(expr)
     printWriter.flush()
@@ -406,11 +406,11 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     val writer = new PrettyWriter(printWriter, 20)
     val expr = enumFun(
         str("verylong1"),
-        "verylong2",
+        name("verylong2"),
         str("verylong3"),
-        "verylong4",
+        name("verylong4"),
         str("verylong5"),
-        "verylong6"
+        name("verylong6")
     ) ////
     writer.write(expr)
     printWriter.flush()
@@ -426,7 +426,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("TLC @@") {
     val writer = new PrettyWriter(printWriter, 40)
-    val expr = atat(str("a"), 1, str("b"), 2, str("c"), 3)
+    val expr = atatInterleaved(str("a"), int(1), str("b"), int(2), str("c"), int(3))
     writer.write(expr)
     printWriter.flush()
     val expected = """"a" :> 1 @@ "b" :> 2 @@ "c" :> 3""".stripMargin
@@ -437,11 +437,11 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     val writer = new PrettyWriter(printWriter, 40)
     val expr = recSet(
         str("x1"),
-        "x2",
+        name("x2"),
         str("x3"),
-        "x4",
+        name("x4"),
         str("x5"),
-        "x6"
+        name("x6")
     ) ////
     writer.write(expr)
     printWriter.flush()
@@ -454,11 +454,11 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     val writer = new PrettyWriter(printWriter, 40)
     val expr = recSet(
         str("verylong1"),
-        "verylong2",
+        name("verylong2"),
         str("verylong3"),
-        "verylong4",
+        name("verylong4"),
         str("verylong5"),
-        "verylong6"
+        name("verylong6")
     ) ////
     writer.write(expr)
     printWriter.flush()
@@ -471,7 +471,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("a one-line function") {
     val writer = new PrettyWriter(printWriter, 80)
-    val expr = funDef(plus("x", "y"), "x", "S", "y", "T")
+    val expr = funDef(plus(name("x"), name("y")), name("x"), name("S"), name("y"), name("T"))
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -481,7 +481,8 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("a multi-line function") {
     val writer = new PrettyWriter(printWriter, 30)
-    val expr = funDef(plus("verylong1", "verylong2"), "verylong1", "verylong3", "verylong2", "verylong4")
+    val expr = funDef(plus(name("verylong1"), name("verylong2")), name("verylong1"), name("verylong3"),
+        name("verylong2"), name("verylong4"))
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -495,7 +496,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("a one-line map") {
     val writer = new PrettyWriter(printWriter, 80)
-    val expr = map(plus("x", "y"), "x", "S", "y", "T")
+    val expr = map(plus(name("x"), name("y")), name("x"), name("S"), name("y"), name("T"))
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -505,7 +506,8 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("a multi-line map") {
     val writer = new PrettyWriter(printWriter, 30)
-    val expr = map(plus("verylong1", "verylong2"), "verylong1", "verylong3", "verylong2", "verylong4")
+    val expr = map(plus(name("verylong1"), name("verylong2")), name("verylong1"), name("verylong3"), name("verylong2"),
+        name("verylong4"))
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -519,7 +521,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("a one-line filter") {
     val writer = new PrettyWriter(printWriter, 80)
-    val expr = filter("x", "S", "P")
+    val expr = filter(name("x"), name("S"), name("P"))
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -529,7 +531,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("precedence in filter") {
     val writer = new PrettyWriter(printWriter, 80)
-    val expr = filter("x", "S", lt("x", 5))
+    val expr = filter(name("x"), name("S"), lt(name("x"), int(5)))
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -539,7 +541,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("a multi-line filter") {
     val writer = new PrettyWriter(printWriter, 40)
-    val expr = filter("verylongname1", "verylongname2", "verylongname3")
+    val expr = filter(name("verylongname1"), name("verylongname2"), name("verylongname3"))
 
     writer.write(expr)
     printWriter.flush()
@@ -553,7 +555,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("a one-line function application") {
     val writer = new PrettyWriter(printWriter, 80)
-    val expr = appFun("f", "e")
+    val expr = appFun(name("f"), name("e"))
     writer.write(expr)
     printWriter.flush()
     val expected = """f[e]""".stripMargin
@@ -562,7 +564,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("a multi-line function application") {
     val writer = new PrettyWriter(printWriter, 20)
-    val expr = appFun("verylongname1", "verylongname2")
+    val expr = appFun(name("verylongname1"), name("verylongname2"))
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -574,7 +576,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("a one-line IF-THEN-ELSE") {
     val writer = new PrettyWriter(printWriter, 80)
-    val expr = ite("a", "b", "c")
+    val expr = ite(name("a"), name("b"), name("c"))
     writer.write(expr)
     printWriter.flush()
     val expected = """IF a THEN b ELSE c""".stripMargin
@@ -583,7 +585,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("a multi-line IF-THEN-ELSE") {
     val writer = new PrettyWriter(printWriter, 20)
-    val expr = ite("verylongname1", "verylongname2", "verylongname3")
+    val expr = ite(name("verylongname1"), name("verylongname2"), name("verylongname3"))
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -595,7 +597,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("a one-line EXCEPT") {
     val writer = new PrettyWriter(printWriter, 80)
-    val expr = except("f", "k", "v")
+    val expr = except(name("f"), name("k"), name("v"))
     writer.write(expr)
     printWriter.flush()
     val expected = """[ f EXCEPT ![k] = v ]""".stripMargin
@@ -605,9 +607,9 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
   test("a multi-line EXCEPT") {
     val writer = new PrettyWriter(printWriter, 40)
     val expr = except(
-        "verylongname1",
-        "verylongname2",
-        "verylongname3"
+        name("verylongname1"),
+        name("verylongname2"),
+        name("verylongname3")
     ) ///
 
     writer.write(expr)
@@ -623,11 +625,11 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
   test("a monster EXCEPT") {
     val writer = new PrettyWriter(printWriter, 40)
     val expr = except(
-        "verylongname1",
-        "verylongname2",
-        "verylongname3",
-        "verylongname4",
-        "verylongname5"
+        name("verylongname1"),
+        name("verylongname2"),
+        name("verylongname3"),
+        name("verylongname4"),
+        name("verylongname5")
     ) ///
 
     writer.write(expr)
@@ -643,7 +645,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("Cardinality") {
     val writer = new PrettyWriter(printWriter, 80)
-    val expr = card("S")
+    val expr = card(name("S"))
     writer.write(expr)
     printWriter.flush()
     val expected = """Cardinality(S)""".stripMargin
@@ -652,7 +654,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("<<a>> \\o <<b>>") {
     val writer = new PrettyWriter(printWriter, 80)
-    val expr = concat(tuple("a"), tuple("b"))
+    val expr = concat(tuple(name("a")), tuple(name("b")))
     writer.write(expr)
     printWriter.flush()
     val expected = """<<a>> \o <<b>>""".stripMargin
@@ -661,7 +663,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("Append(<<a>>, b)") {
     val writer = new PrettyWriter(printWriter, 80)
-    val expr = append(tuple("a"), "b")
+    val expr = append(tuple(name("a")), name("b"))
     writer.write(expr)
     printWriter.flush()
     val expected = """Append(<<a>>, b)""".stripMargin
@@ -670,7 +672,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("a multi-line CASE") {
     val writer = new PrettyWriter(printWriter, 40)
-    val expr = caseSplit("guard1", "action1", "guard2", "action2")
+    val expr = caseSplit(name("guard1"), name("action1"), name("guard2"), name("action2"))
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -681,7 +683,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("a concise multi-line CASE") {
     val writer = new PrettyWriter(printWriter, 15)
-    val expr = caseSplit("guard1", "action1", "guard2", "action2")
+    val expr = caseSplit(name("guard1"), name("action1"), name("guard2"), name("action2"))
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -694,7 +696,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("a multi-line CASE with OTHER") {
     val writer = new PrettyWriter(printWriter, 40)
-    val expr = caseOther("otherAction", "guard1", "action1", "guard2", "action2")
+    val expr = caseOther(name("otherAction"), name("guard1"), name("action1"), name("guard2"), name("action2"))
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -706,7 +708,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("a one-line LET-IN") {
     val writer = new PrettyWriter(printWriter, 40)
-    val aDecl = TlaOperDecl("A", List(), 1)
+    val aDecl = TlaOperDecl("A", List(), int(1))
     val expr = letIn(appDecl(aDecl), aDecl)
     writer.write(expr)
     printWriter.flush()
@@ -719,7 +721,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     val writer = new PrettyWriter(printWriter, 40)
     val decl =
       TlaOperDecl("AVeryLongName", List(SimpleFormalParam("param1"), SimpleFormalParam("param2")),
-          plus("param1", "param2"))
+          plus(name("param1"), name("param2")))
     val expr = letIn(appDecl(decl, int(1), int(2)), decl)
     writer.write(expr)
     printWriter.flush()
@@ -735,10 +737,10 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     val writer = new PrettyWriter(printWriter, 40)
     val decl1 =
       TlaOperDecl("AVeryLongName", List(SimpleFormalParam("param1"), SimpleFormalParam("param2")),
-          plus("param1", "param2"))
+          plus(name("param1"), name("param2")))
     val decl2 =
       TlaOperDecl("BVeryLongName", List(SimpleFormalParam("param1"), SimpleFormalParam("param2")),
-          plus("param1", "param2"))
+          plus(name("param1"), name("param2")))
     val expr = letIn(mult(appDecl(decl1, int(1), int(2)), appDecl(decl2, int(3), int(4))), decl1, decl2)
     writer.write(expr)
     printWriter.flush()

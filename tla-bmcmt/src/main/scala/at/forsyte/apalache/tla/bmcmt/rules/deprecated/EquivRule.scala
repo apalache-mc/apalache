@@ -5,8 +5,9 @@ import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.rules.SubstRule
 import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
 /**
  * Implements an equivalence A <=> B by rewriting it to A = B.
@@ -32,7 +33,8 @@ class EquivRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val rightState = rewriter.rewriteUntilDone(leftState.setRex(right))
         var nextState = rightState.updateArena(_.appendCell(BoolT()))
         val pred = nextState.arena.topCell
-        rewriter.solverContext.assertGroundExpr(tla.eql(pred.toNameEx, tla.equiv(leftState.ex, rightState.ex)))
+        val eq: TlaEx = tla.eql(pred.toNameEx, tla.equiv(leftState.ex, rightState.ex))
+        rewriter.solverContext.assertGroundExpr(eq)
         nextState.setRex(pred.toNameEx)
 
       case _ =>

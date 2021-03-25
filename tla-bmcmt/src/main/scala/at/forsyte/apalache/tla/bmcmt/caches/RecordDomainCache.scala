@@ -1,10 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
-import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.{ConstT, FinSetT}
 import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 import scala.collection.immutable.SortedSet
 
@@ -44,9 +44,9 @@ class RecordDomainCache(solverContext: SolverContext, strValueCache: StrValueCac
     for ((cell, key) <- allCells.zip(allKeys)) {
       val cond =
         if (usedKeys.contains(key)) {
-          tla.in(cell, set)
+          tla.in(cell.toNameEx, set.toNameEx)
         } else {
-          tla.not(tla.in(cell, set))
+          tla.not(tla.in(cell.toNameEx, set.toNameEx))
         }
 
       solverContext.assertGroundExpr(cond)

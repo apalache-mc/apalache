@@ -22,7 +22,7 @@ class OfflineExecutionContext(var rewriter: SymbStateRewriter)
     val rs = rewriter.snapshot()
     val smtLog = rewriter.solverContext.asInstanceOf[RecordingSolverContext].extractLog()
     logger.debug("Offline snapshot has %d entries".format(smtLog.lengthRec))
-    new OfflineExecutionContextSnapshot(rewriter.solverContext.config, rs, smtLog, typeFinder.varTypes)
+    new OfflineExecutionContextSnapshot(rewriter.solverContext.config, rs, smtLog)
   }
 
   /**
@@ -41,12 +41,11 @@ class OfflineExecutionContext(var rewriter: SymbStateRewriter)
   override def recover(snapshot: OfflineExecutionContextSnapshot): Unit = {
     val solver = RecordingSolverContext.createZ3(Some(snapshot.smtLog), snapshot.solverConfig)
     // TODO: issue #105, remove references to SolverContext, so recovery becomes less of a hack
-    val newRewriter = new SymbStateRewriterImpl(solver, typeFinder, rewriter.exprGradeStore)
+    val newRewriter = new SymbStateRewriterImpl(solver, rewriter.exprGradeStore)
     newRewriter.formulaHintsStore = rewriter.formulaHintsStore
     newRewriter.config = rewriter.config
     newRewriter.recover(snapshot.rewriterSnapshot)
     newRewriter.solverContext = solver
-    newRewriter.typeFinder.reset(snapshot.varTypes)
     rewriter = newRewriter
   }
 

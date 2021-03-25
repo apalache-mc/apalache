@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlcOper
 import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
-import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -30,8 +30,8 @@ class TestKeraLanguagePred extends LanguagePredTestSuite {
     expectOk(pred.isExprOk(in(int(1), enumSet(int(2)))))
     expectOk(pred.isExprOk(enumSet(int(1))))
     expectOk(pred.isExprOk(subseteq(enumSet(int(1)), enumSet(int(2)))))
-    expectOk(pred.isExprOk(filter("x", enumSet(int(1)), bool(false))))
-    expectOk(pred.isExprOk(map(int(2), "x", enumSet(int(1)))))
+    expectOk(pred.isExprOk(filter(name("x"), enumSet(int(1)), bool(false))))
+    expectOk(pred.isExprOk(map(int(2), name("x"), enumSet(int(1)))))
 
     expectOk(pred.isExprOk(powSet(enumSet(int(1), int(2)))))
     expectOk(pred.isExprOk(union(enumSet(enumSet(int(1), int(2))))))
@@ -54,11 +54,11 @@ class TestKeraLanguagePred extends LanguagePredTestSuite {
   test("KerA tuples, records, sequences") {
     expectOk(pred.isExprOk(tuple(int(1), bool(true))))
     expectOk(pred.isExprOk(enumFun(str("a"), bool(true))))
-    expectOk(pred.isExprOk(head(tuple(1, 2))))
-    expectOk(pred.isExprOk(tail(tuple(1, 2))))
-    expectOk(pred.isExprOk(subseq(tuple(1, 2), 3, 4)))
-    expectOk(pred.isExprOk(len(tuple(1, 2))))
-    expectOk(pred.isExprOk(append(tuple(1, 2), tuple(2, 3))))
+    expectOk(pred.isExprOk(head(tuple(int(1), int(2)))))
+    expectOk(pred.isExprOk(tail(tuple(int(1), int(2)))))
+    expectOk(pred.isExprOk(subseq(tuple(int(1), int(2)), int(3), int(4))))
+    expectOk(pred.isExprOk(len(tuple(int(1), int(2)))))
+    expectOk(pred.isExprOk(append(tuple(int(1), int(2)), tuple(int(2), int(3)))))
   }
 
   test("KerA miscellania") {
@@ -138,21 +138,21 @@ class TestKeraLanguagePred extends LanguagePredTestSuite {
 
   test("a non-nullary let-in ") {
     val app = appOp(name("UserOp"), int(3))
-    val letInDef = letIn(app, declOp("UserOp", plus(int(1), name("x")), SimpleFormalParam("x")))
+    val letInDef = letIn(app, declOp("UserOp", plus(int(1), name("x")), SimpleFormalParam("x")).untypedOperDecl())
     expectFail(pred.isExprOk(letInDef))
   }
 
   test("a nullary let-in ") {
     val app = appOp(name("UserOp"))
-    val letInDef = letIn(app, declOp("UserOp", plus(int(1), int(2))))
+    val letInDef = letIn(app, declOp("UserOp", plus(int(1), int(2))).untypedOperDecl())
     expectOk(pred.isExprOk(letInDef))
   }
 
   test("nested nullary let-in ") {
     val app = plus(appOp(name("A")), appOp(name("B")))
-    val letInDef = letIn(app, declOp("A", plus(int(1), int(2))))
+    val letInDef = letIn(app, declOp("A", plus(int(1), int(2))).untypedOperDecl())
     val outerLetIn =
-      letIn(letInDef, declOp("B", int(3)))
+      letIn(letInDef, declOp("B", int(3)).untypedOperDecl())
     expectOk(pred.isExprOk(outerLetIn))
   }
 

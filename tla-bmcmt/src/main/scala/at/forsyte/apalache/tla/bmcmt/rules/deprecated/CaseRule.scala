@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.deprecated
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.lir.convenience._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaControlOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
@@ -22,7 +23,7 @@ class CaseRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   override def apply(state: SymbState): SymbState = {
-    def decorateWithIf(elseEx: TlaEx, guardAction: Tuple2[TlaEx, TlaEx]): OperEx = {
+    def decorateWithIf(elseEx: TlaEx, guardAction: Tuple2[TlaEx, TlaEx]): TlaEx = {
       tla.ite(guardAction._1, guardAction._2, elseEx)
     }
 
@@ -33,14 +34,14 @@ class CaseRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val iteWaterfall = revGuardsAndActions.foldLeft(otherEx)(decorateWithIf)
         rewriter.rewriteUntilDone(state.setRex(iteWaterfall))
 
-      case OperEx(TlaControlOper.caseNoOther, args @ _*) =>
+      case ex @ OperEx(TlaControlOper.caseNoOther, args @ _*) =>
         // first, rewrite all the arguments
         val (newState: SymbState, newArgs: Seq[TlaEx]) =
           rewriter.rewriteSeqUntilDone(state, args)
         val revGuardsAndActions = mkGuardsAndActions(newArgs)
         val cells = newArgs.map(newState.arena.findCellByNameEx)
         // get the expression type from the type finder (use the original expression as it could have been annotated!)
-        val resultType = rewriter.typeFinder.compute(state.ex, cells.map(_.cellType): _*)
+        val resultType = CellT.fromTypeTag(ex.typeTag)
         // place ASSERT(FALSE) instead of other
         val assertState = new TypedAssert(rewriter)
           .typedAssert(newState, resultType, tla.bool(false), "It may happen that no guard in CASE is applicable")

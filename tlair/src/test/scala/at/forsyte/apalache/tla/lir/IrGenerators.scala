@@ -90,7 +90,7 @@ trait IrGenerators {
   def genInt: Gen[ValEx] = for {
     i <- arbitrary[Int]
     tt <- genTypeTag
-  } yield ValEx(TlaInt(BigInt(i))).withType(tt)
+  } yield ValEx(TlaInt(BigInt(i))).withTag(tt)
 
   /**
    * Generate a Boolean literal.
@@ -100,7 +100,7 @@ trait IrGenerators {
   def genBool: Gen[ValEx] = for {
     b <- arbitrary[Boolean]
     tt <- genTypeTag
-  } yield ValEx(TlaBool(b)).withType(tt)
+  } yield ValEx(TlaBool(b)).withTag(tt)
 
   /**
    * Generate a string literal. We always generate identifiers.
@@ -110,7 +110,7 @@ trait IrGenerators {
   def genStr: Gen[ValEx] = for {
     s <- identifier
     tt <- genTypeTag
-  } yield ValEx(TlaStr(s)).withType(tt)
+  } yield ValEx(TlaStr(s)).withTag(tt)
 
   /**
    * Generate a value expression.
@@ -128,7 +128,7 @@ trait IrGenerators {
   def genNameEx: Gen[NameEx] = for {
     s <- identifier
     tt <- genTypeTag
-  } yield NameEx(s).withType(tt)
+  } yield NameEx(s).withTag(tt)
 
   /**
    * Generate an application of a user-defined operator.
@@ -143,7 +143,7 @@ trait IrGenerators {
       argGen = resize(size - 1, exGen(ctx))
       args <- argsByArity(argGen)(FixedArity(decl.nparams))
       tt <- genTypeTag
-    } yield OperEx(TlaOper.apply, NameEx(decl.name) +: args: _*).withType(tt)
+    } yield OperEx(TlaOper.apply, NameEx(decl.name) +: args: _*).withTag(tt)
   }
 
   /**
@@ -167,7 +167,7 @@ trait IrGenerators {
         }
         body <- resize(size - 1, exGen(ctx ++ defs.map(d => UserOperSig(d.name, d.formalParams.length))))
         tt <- genTypeTag
-      } yield LetInEx(body, defs: _*).withType(tt)
+      } yield LetInEx(body, defs: _*).withTag(tt)
     }
   }
 
@@ -195,11 +195,11 @@ trait IrGenerators {
               // a value, a name,
               // an application of a user-defined operator in the context, an application of a built-in operator
               oneOf(genValEx, genNameEx, genOperApply(genTlaEx(builtInOpers))(ctx),
-                  genLetInEx(genTlaEx(builtInOpers))(ctx), const(OperEx(oper, args: _*).withType(tt)))
+                  genLetInEx(genTlaEx(builtInOpers))(ctx), const(OperEx(oper, args: _*).withTag(tt)))
             } else {
               // as above but no user-defined operators
               oneOf(genValEx, genNameEx, genLetInEx(genTlaEx(builtInOpers))(ctx),
-                  const(OperEx(oper, args: _*).withType(tt)))
+                  const(OperEx(oper, args: _*).withTag(tt)))
             }
         } yield result
       }
@@ -220,7 +220,7 @@ trait IrGenerators {
       nparams <- choose(0, maxArgs)
       params <- listOfN(nparams, identifier)
       tt <- genTypeTag
-    } yield TlaOperDecl(name, params map (n => SimpleFormalParam(n)), body).withType(tt)
+    } yield TlaOperDecl(name, params map (n => SimpleFormalParam(n)), body).withTag(tt)
   }
 
   /**
@@ -233,7 +233,7 @@ trait IrGenerators {
     for {
       ex <- exGen
       tt <- genTypeTag
-    } yield TlaAssumeDecl(ex).withType(tt)
+    } yield TlaAssumeDecl(ex).withTag(tt)
   }
 
   /**
@@ -246,7 +246,7 @@ trait IrGenerators {
     for {
       name <- identifier suchThat (n => ctx.forall(d => d.name != n))
       tt <- genTypeTag
-    } yield TlaConstDecl(name).withType(tt)
+    } yield TlaConstDecl(name).withTag(tt)
   }
 
   /**
@@ -259,7 +259,7 @@ trait IrGenerators {
     for {
       name <- identifier suchThat (n => ctx.forall(d => d.name != n))
       tt <- genTypeTag
-    } yield TlaVarDecl(name).withType(tt)
+    } yield TlaVarDecl(name).withTag(tt)
   }
 
   /**

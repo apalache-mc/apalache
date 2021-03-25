@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
-import at.forsyte.apalache.tla.lir.UID
+import at.forsyte.apalache.tla.lir.{TlaType1, UID}
 import at.forsyte.apalache.tla.typecheck._
 
 /**

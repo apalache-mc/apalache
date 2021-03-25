@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.lir
 
-import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper._
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -145,11 +146,11 @@ class TestTlaExpr extends FunSuite {
     val odef = TlaOperDecl("A", List(), OperEx(TlaBoolOper.and, OperEx(TlaActionOper.prime, NameEx("x")), NameEx("y")))
 
     // this is the way to use a user-defined operator
-    Builder.appDecl(odef)
+    tla.appDecl(odef)
 
     // we should get an exception when the number of arguments is incorrect
     try {
-      Builder.appDecl(odef, NameEx("a"))
+      tla.appDecl(odef, NameEx("a"))
       fail("Expected an IllegalArgumentException")
     } catch {
       case _: IllegalArgumentException => () // OK
@@ -162,11 +163,11 @@ class TestTlaExpr extends FunSuite {
         OperEx(TlaBoolOper.and, OperEx(TlaActionOper.prime, NameEx("x")), NameEx("y")))
 
     // this is the way to use a user-defined operator
-    Builder.appDecl(odef, NameEx("a"), NameEx("b"))
+    tla.appDecl(odef, NameEx("a"), NameEx("b"))
 
     // we should get an exception when the number of arguments is incorrect
     try {
-      Builder.appDecl(odef, NameEx("a"))
+      tla.appDecl(odef, NameEx("a"))
       fail("Expected an IllegalArgumentException")
     } catch {
       case _: IllegalArgumentException => () // OK
@@ -182,11 +183,11 @@ class TestTlaExpr extends FunSuite {
         OperEx(TlaOper.apply, NameEx("f"), NameEx("x"), NameEx("y")))
 
     // this is the way to use a user-defined operator
-    Builder.appDecl(odef, NameEx(TlaSetOper.cup.name), NameEx("a"), NameEx("b"))
+    tla.appDecl(odef, NameEx(TlaSetOper.cup.name), NameEx("a"), NameEx("b"))
 
     // The following expression does not make a lot of sense, but it is legal to construct it.
     // Later, there will be a plugin to detect inconsistent expressions like this.
-    Builder.appDecl(odef, NameEx("a"), NameEx("b"), NameEx("b"))
+    tla.appDecl(odef, NameEx("a"), NameEx("b"), NameEx("b"))
   }
 
   test("existentials") {

@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir.convenience._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.{TestingPredefs, UID}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -75,8 +76,8 @@ class TestCover extends FunSuite with TestingPredefs {
 
   test("FromEx") {
     val ex = tla.or(
-        tla.primeEq(n_x, 1),
-        tla.primeEq(n_x, 2)
+        tla.primeEq(n_x, tla.int(1)),
+        tla.primeEq(n_x, tla.int(2))
     )
 
     val checker = new CoverChecker(Set("x"))
@@ -88,23 +89,23 @@ class TestCover extends FunSuite with TestingPredefs {
 
   test("FromEx : cplx") {
 
-    val problem = tla.eql(n_x, 3)
+    val problem = tla.eql(n_x, tla.int(3))
     val ex = tla.or(
         tla.and(
-            tla.primeEq(n_x, 1),
-            tla.primeEq(n_y, 1)
+            tla.primeEq(n_x, tla.int(1)),
+            tla.primeEq(n_y, tla.int(1))
         ),
         tla.and(
-            tla.primeEq(n_x, 2),
-            tla.primeEq(n_y, 2)
+            tla.primeEq(n_x, tla.int(2)),
+            tla.primeEq(n_y, tla.int(2))
         ),
         tla.and(
             problem, // not a candidate
-            tla.primeEq(n_y, 3)
+            tla.primeEq(n_y, tla.int(3))
         ),
         tla.and(
-            tla.primeEq(n_x, 4),
-            tla.primeEq(n_y, 4)
+            tla.primeEq(n_x, tla.int(4)),
+            tla.primeEq(n_y, tla.int(4))
         )
     )
 

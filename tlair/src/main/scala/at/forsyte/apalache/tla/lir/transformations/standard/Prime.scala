@@ -9,7 +9,7 @@ object Prime {
   private def primeLeaf(vars: Set[String], tracker: TransformationTracker): TlaExTransformation =
     tracker.trackEx {
       case ex @ NameEx(name) if vars.contains(name) =>
-        tla.prime(ex)
+        OperEx(TlaActionOper.prime, ex)(ex.typeTag)
 
       case ex => ex
     }

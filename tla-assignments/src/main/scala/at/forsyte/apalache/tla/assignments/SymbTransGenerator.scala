@@ -1,10 +1,9 @@
 package at.forsyte.apalache.tla.assignments
 
-import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.{BoolT1, _}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.TlaBool
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * Constructs symbolic transitions from an assignment strategy.
@@ -185,7 +184,7 @@ class SymbTransGenerator(tracker: TransformationTracker) {
         newArgs match {
           case Nil         => ex
           case head +: Nil => sliceWith(selection, allSelections)(head)
-          case _           => OperEx(TlaBoolOper.or, newArgs map sliceWith(selection, allSelections): _*)
+          case _           => OperEx(TlaBoolOper.or, newArgs map sliceWith(selection, allSelections): _*)(ex.typeTag)
         }
 
       /**
@@ -201,19 +200,19 @@ class SymbTransGenerator(tracker: TransformationTracker) {
               }
           )
             sliceWith(selection, allSelections)(x)
-          else ValEx(TlaBool(false))
+          else ValEx(TlaBool(false))(ex.typeTag)
         )
 
         newTail match {
           case ValEx(TlaBool(false)) +: ValEx(TlaBool(false)) +: Nil =>
             ex
-          case newThen +: ValEx(TlaBool(false)) +: Nil =>
-            OperEx(TlaBoolOper.and, ifEx, newThen)
-          case ValEx(TlaBool(false)) +: newElse +: Nil =>
-            OperEx(TlaBoolOper.and, OperEx(TlaBoolOper.not, ifEx), newElse)
+          case newThen +: (b @ ValEx(TlaBool(false))) +: Nil =>
+            OperEx(TlaBoolOper.and, ifEx, newThen)(b.typeTag)
+          case (b @ ValEx(TlaBool(false))) +: newElse +: Nil =>
+            OperEx(TlaBoolOper.and, OperEx(TlaBoolOper.not, ifEx)(b.typeTag), newElse)(b.typeTag)
           case _ =>
             // Possible, because of LET-IN
-            OperEx(TlaControlOper.ifThenElse, ifEx +: newTail: _*)
+            OperEx(TlaControlOper.ifThenElse, ifEx +: newTail: _*)(ex.typeTag)
         }
 
       case ex @ OperEx(op, args @ _*) =>
@@ -222,7 +221,7 @@ class SymbTransGenerator(tracker: TransformationTracker) {
         }
         // Make sure to avoid creating new UIDs if not absolutely needed, as filtering
         // is done on the basis of UIDs not syntax
-        if (childVals == args) ex else OperEx(op, childVals: _*)
+        if (childVals == args) ex else OperEx(op, childVals: _*)(ex.typeTag)
 
       case ex @ LetInEx(body, defs @ _*) =>
         val slice = sliceWith(selection, allSelections)
@@ -235,8 +234,8 @@ class SymbTransGenerator(tracker: TransformationTracker) {
         val same = newDefs == defs && newBody == body
 
         if (same) ex
-        else if (newBody == ValEx(TlaBool(false))) newBody
-        else LetInEx(newBody, newDefs: _*)
+        else if (newBody == ValEx(TlaBool(false))(Typed(BoolT1()))) newBody
+        else LetInEx(newBody, newDefs: _*)(ex.typeTag)
 
       case ex => ex
     }

@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 class PropositionalOracle(bitCells: Seq[ArenaCell], nvalues: Int) extends Oracle {
 
@@ -23,7 +24,7 @@ class PropositionalOracle(bitCells: Seq[ArenaCell], nvalues: Int) extends Oracle
         case hd +: tl =>
           // the least significant bit comes first
           val lit =
-            if ((n & 1) == 1) hd.toNameEx else tla.not(hd.toNameEx)
+            if ((n & 1) == 1) hd.toNameEx else tla.not(hd.toNameEx).untyped()
           lit +: mkLits(n >> 1, tl)
       }
     }
@@ -74,7 +75,7 @@ class PropositionalOracle(bitCells: Seq[ArenaCell], nvalues: Int) extends Oracle
 
         case lsbCell :: otherBitCells =>
           // find the value of the bit, which is the least significant
-          val isOn = solverContext.evalGroundExpr(lsbCell.toNameEx) == tla.bool(true)
+          val isOn = solverContext.evalGroundExpr(lsbCell.toNameEx) == tla.bool(true).untyped()
           val lsb = if (isOn) 1 else 0
           // find the unsigned integer value
           lsb + 2 * cellsToInt(otherBitCells) // the bits to the right are more significant

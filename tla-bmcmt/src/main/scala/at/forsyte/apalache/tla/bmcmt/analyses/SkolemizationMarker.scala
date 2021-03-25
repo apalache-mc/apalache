@@ -3,7 +3,6 @@ package at.forsyte.apalache.tla.bmcmt.analyses
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.tla.lir.convenience._
@@ -29,39 +28,40 @@ class SkolemizationMarker @Inject() (tracker: TransformationTracker) extends Tla
   }
 
   def transform: TlaExTransformation = tracker.trackEx {
-    case OperEx(TlaBoolOper.exists, name, set, pred) =>
-      OperEx(BmcOper.skolem, tla.exists(name, set, transform(pred)))
+    case ex @ OperEx(TlaBoolOper.exists, name, set, pred) =>
+      val tag = ex.typeTag
+      OperEx(BmcOper.skolem, OperEx(TlaBoolOper.exists, name, set, transform(pred))(tag))(tag)
 
-    case OperEx(TlaBoolOper.forall, name, set, pred) =>
+    case ex @ OperEx(TlaBoolOper.forall, name, set, pred) =>
       // it is fine to skolemize existentials under \A, as \A is translated into a conjunction
-      tla.forall(name, set, transform(pred))
+      OperEx(TlaBoolOper.forall, name, set, transform(pred))(ex.typeTag)
 
     case op @ OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, _), ValEx(TlaInt(intVal)))
         if intVal.isValidInt =>
       // this constraint can be solved more efficiently than the direct computation of Cardinality
-      OperEx(BmcOper.constCard, op)
+      OperEx(BmcOper.constCard, op)(op.typeTag)
 
     case ex @ OperEx(TlaBoolOper.not, _) =>
       ex // stop here. This should be a leaf (and rare) expression, as we are dealing with the NNF.
 
-    case OperEx(TlaBoolOper.and, args @ _*) =>
-      tla.and(args map transform: _*)
+    case ex @ OperEx(TlaBoolOper.and, args @ _*) =>
+      OperEx(TlaBoolOper.and, args map transform: _*)(ex.typeTag)
 
-    case OperEx(TlaBoolOper.or, args @ _*) =>
-      tla.or(args map transform: _*)
+    case ex @ OperEx(TlaBoolOper.or, args @ _*) =>
+      OperEx(TlaBoolOper.or, args map transform: _*)(ex.typeTag)
 
-    case OperEx(TlaControlOper.ifThenElse, cond, left, right) =>
+    case ex @ OperEx(TlaControlOper.ifThenElse, cond, left, right) =>
       // try to identify existentials in the both arms
-      tla.ite(cond, transform(left), transform(right))
+      OperEx(TlaControlOper.ifThenElse, cond, transform(left), transform(right))(ex.typeTag)
     // We omit skolemization of the existentials in the predicate,
     // as the predicate is used in both the negated and non-negated forms.
     // Effectively, IF-THEN-ELSE requires both \E and \A forms
 
-    case LetInEx(body, defs @ _*) =>
+    case ex @ LetInEx(body, defs @ _*) =>
       // at this point, we only have nullary let-in definitions
       def mapDef(df: TlaOperDecl) = df.copy(body = transform(df.body))
 
-      LetInEx(transform(body), defs map mapDef: _*)
+      LetInEx(transform(body), defs map mapDef: _*)(ex.typeTag)
 
     case ex @ OperEx(oper, args @ _*) =>
       // bugfix for #148: do not descend into value expressions, as Skolemization of non-formulas is unsound

@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.lir.io
 import java.io.{PrintWriter, StringWriter}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite

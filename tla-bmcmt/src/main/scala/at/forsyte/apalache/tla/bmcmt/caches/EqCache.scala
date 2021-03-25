@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.rewriter.Recoverable
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, StackableContext}
 import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 import scala.collection.mutable
 

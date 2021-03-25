@@ -1,14 +1,12 @@
 package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
-import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 // Igor@02.11.2019: why are TestingPredefs located in src/main?
 // TODO: move TestingPredefs into src/test
 trait TestingPredefs {
   implicit def name(p_s: String): NameEx = NameEx(p_s)
-
-  implicit def value(p_n: Int): ValEx = ValEx(TlaInt(p_n))
 
   implicit def sfp(p_s: String): SimpleFormalParam = SimpleFormalParam(p_s)
 
@@ -66,8 +64,6 @@ trait TestingPredefs {
   def arr_s: Seq[TlaEx] = arr.toSeq
 
   def seq(n: Int, nSkip: Int = 0): Seq[TlaEx] = arr.slice(nSkip, n + nSkip).toSeq ++ Seq.fill(n - arr.length)(n_x)
-
-  def x_in_S: OperEx = Builder.in("x", "S")
 
   def printlns(p_ss: String*)(implicit p_surround: Boolean = true): Unit =
     println((if (p_surround) p_ss.map("\"%s\"".format(_)) else p_ss).mkString("\n"))

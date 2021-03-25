@@ -169,8 +169,6 @@ object Tool extends App with LazyLogging {
     executor.options.set("checker.discardDisabled", check.discardDisabled)
     executor.options.set("checker.noDeadlocks", check.noDeadlocks)
     executor.options.set("checker.algo", check.algo)
-    // this option enables the new type checker in the pipeline
-    executor.options.set("typechecker.snowcatOn", check.withSnowcat)
     // for now, enable polymorphic types. We probably want to disable this option for the type checker
     executor.options.set("typechecker.inferPoly", true)
 
@@ -188,8 +186,6 @@ object Tool extends App with LazyLogging {
     executor.options.set("io.outdir", createOutputDir())
     executor.options.set("parser.filename", typecheck.file.getAbsolutePath)
     executor.options.set("typechecker.inferPoly", typecheck.inferPoly)
-    // always use Snowcat in the type checker
-    executor.options.set("typechecker.snowcatOn", true)
 
     executor.run() match {
       case None    => logger.info("Type checker [FAILED]")

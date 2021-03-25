@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.typecheck
 
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
-import at.forsyte.apalache.tla.lir.{TlaModule, TypeTag, UID}
+import at.forsyte.apalache.tla.lir.{BoolT1, TlaModule, TypeTag, UID}
 import at.forsyte.apalache.tla.typecheck.etc._
 import at.forsyte.apalache.tla.typecheck.integration.{RecordingTypeCheckerListener, TypeRewriter}
 

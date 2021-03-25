@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
 import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.lir.convenience._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaArithOper, TlaFiniteSetOper}
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.lir.{OperEx, ValEx}
@@ -56,7 +57,7 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
     var nextState = state
     nextState = nextState.updateArena(_.appendCell(BoolT()))
     val emptyPred = nextState.arena.topCell
-    solverAssert(tla.eql(emptyPred, tla.and(elems.map(e => tla.not(tla.in(e.toNameEx, set.toNameEx))): _*)))
+    solverAssert(tla.eql(emptyPred.toNameEx, tla.and(elems.map(e => tla.not(tla.in(e.toNameEx, set.toNameEx))): _*)))
 
     // pick `threshold` cells that will act as witnesses
     def pick(i: Int): ArenaCell = {
@@ -76,10 +77,10 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
     nextState = nextState.updateArena(_.appendCell(BoolT()))
     val pred = nextState.arena.topCell
     // either the set is empty and threshold <= 0, or all witnesses are not equal to each other
-    val nonEmptyOrBelow = tla.or(tla.not(emptyPred), tla.bool(threshold <= 0))
-    solverAssert(tla.eql(pred, tla.and(nonEmptyOrBelow, tla.or(emptyPred, witnessesNotEq))))
+    val nonEmptyOrBelow = tla.or(tla.not(emptyPred.toNameEx), tla.bool(threshold <= 0))
+    solverAssert(tla.eql(pred.toNameEx, tla.and(nonEmptyOrBelow, tla.or(emptyPred.toNameEx, witnessesNotEq))))
 
     // generate constraints
-    nextState.setRex(pred)
+    nextState.setRex(pred.toNameEx)
   }
 }

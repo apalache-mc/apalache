@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
-import at.forsyte.apalache.tla.typecheck.TlaType1
+import at.forsyte.apalache.tla.lir.TlaType1
 
 /**
  * An expression in a simple typed lambda calculus. Here we do not care about the concrete values,
