@@ -2,8 +2,9 @@ package at.forsyte.apalache.tla.typecheck.integration
 
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper}
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaStr
+import TypedPredefs._
 
 /**
  * This class uses the map of types to set the types of TLA+ expressions and declarations.
@@ -26,39 +27,28 @@ class TypeRewriter(tracker: TransformationTracker, defaultTag: UID => TypeTag)(t
 
       case ex @ OperEx(TlaFunOper.except, fun, args @ _*) =>
         // [f EXCEPT ![e1] = e2, ![e3] = e4, ...]
-        // We provide a special treatment for this expression, as a single-argument index is always wrapped in a tuple.
+        // We provide special treatment for this expression, as indices are always wrapped in a tuple.
         // Alternatively, we could add this complexity to the translator `ToEtcExpr`.
         // However, the code in `ToEtcExpr` is hard for understanding already.
         val taggedFun = transform(fun)
 
-        def transformIndex: TlaEx => TlaEx = tracker.trackEx {
-          case OperEx(TlaFunOper.tuple, singleIndex) =>
-            val taggedIndex = transformIndex(singleIndex)
-            taggedIndex.typeTag match {
-              case Typed(indexType: TlaType1) =>
-                // The crux of having the special treatment for except:
-                // Wrap the single index with a tuple and tag the accessor with the tuple type.
-                OperEx(TlaFunOper.tuple, taggedIndex)(Typed(TupT1(indexType)))
+        def wrapIndexWithTuple: TlaEx => TlaEx = tracker.trackEx {
+          case OperEx(TlaFunOper.tuple, indices @ _*) =>
+            val taggedIndices = indices map transform
+            val typesOfIndices = taggedIndices.map(_.typeTag.asTlaType1())
+            val tupleTag = Typed(TupT1(typesOfIndices: _*))
+            OperEx(TlaFunOper.tuple, taggedIndices: _*)(tupleTag)
 
-              case _ =>
-                // fall back to the default behavior, which most likely produces an error message
-                OperEx(TlaFunOper.tuple, taggedIndex)(defaultTag(ex.ID))
-            }
-
-          case multiIndexTuple =>
-            transform(multiIndexTuple)
+          case e =>
+            throw new IllegalArgumentException(s"Expected a tuple as an index in EXCEPT, found: $e")
         }
 
-        val accessorsWithTaggedValues =
-          args
-            .grouped(2)
-            .flatMap {
-              case Seq(a, b) => Seq(transformIndex(a), transform(b))
-              case orphan    => throw new TypingException(s"Orphan ${orphan} in except expression: ${ex}")
-            }
-            .toList
+        val (accessors, newValues) = TlaOper.deinterleave(args)
+        val transformedAccessors = accessors map wrapIndexWithTuple
+        val transformedValues = newValues map transform
+        val transformedArgs = TlaOper.interleave(transformedAccessors, transformedValues)
 
-        OperEx(TlaFunOper.except, taggedFun +: accessorsWithTaggedValues: _*)(getOrDefault(ex.ID))
+        OperEx(TlaFunOper.except, taggedFun +: transformedArgs: _*)(getOrDefault(ex.ID))
 
       case ex @ OperEx(oper, args @ _*) =>
         val newArgs = args.map(this(_))

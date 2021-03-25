@@ -10,7 +10,6 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
-
 ### Features
 
 * Model checker: receiving the types from with the type checker Snowcat, see #668 and #350
@@ -19,6 +18,7 @@
 * Type checker: tagging all expressions with the reconstructed types, see #608
 * Type checker: handling TLA+ labels like `lab("a", "b") :: e`, see #653
 * Type checker: always treating `<<...>>` in `UNCHANGED <<...>>` as a tuple, see #660
+* Type checker: handling the general case of EXCEPT, see #617
 * Preprocessing: handling the general case of EXCEPT, see #647
 
 ### Changed
@@ -30,16 +30,6 @@
 
 ### Removed
 
-* Intermediate representation: removed TlaOper.chooseIdiom
-
-### Changed
-
-* Intermediate representation: removed TlaArithOper.{sum,prod}, as they are not standard, see #580
-
-### Removed
-
 * Intermediate representation: removed non-standard operators subsetProper, supset, supseteq, see #615
-
-### Known issues
-
-* Multiple-update expressions `[f EXCEPT ![i1][i2] = e1, ![i1][i3] = e2]` may produce incorrect results, see #647
+* Intermediate representation: removed TlaArithOper.{sum,prod}, as they are not standard, see #580
+* Intermediate representation: removed TlaOper.chooseIdiom
