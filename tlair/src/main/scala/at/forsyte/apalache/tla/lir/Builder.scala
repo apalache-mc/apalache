@@ -529,21 +529,6 @@ class Builder {
     BuilderOper(TlaSetOper.subseteq, leftSet, rightSet)
   }
 
-  // FIXME: scheduled for removal in #615
-  def subset(leftSet: BuilderEx, rightSet: BuilderEx): BuilderEx = {
-    BuilderOper(TlaSetOper.subsetProper, leftSet, rightSet)
-  }
-
-  // FIXME: scheduled for removal in #615
-  def supset(leftSet: BuilderEx, rightSet: BuilderEx): BuilderEx = {
-    BuilderOper(TlaSetOper.supsetProper, leftSet, rightSet)
-  }
-
-  // FIXME: scheduled for removal in #615
-  def supseteq(leftSet: BuilderEx, rightSet: BuilderEx): BuilderEx = {
-    BuilderOper(TlaSetOper.supseteq, leftSet, rightSet)
-  }
-
   def setminus(leftSet: BuilderEx, rightSet: BuilderEx): BuilderEx = {
     BuilderOper(TlaSetOper.setminus, leftSet, rightSet)
   }
@@ -700,9 +685,6 @@ class Builder {
         TlaSetOper.seqSet.name -> TlaSetOper.seqSet,
         TlaSetOper.setminus.name -> TlaSetOper.setminus,
         TlaSetOper.subseteq.name -> TlaSetOper.subseteq,
-        TlaSetOper.subsetProper.name -> TlaSetOper.subsetProper,
-        TlaSetOper.supseteq.name -> TlaSetOper.supseteq,
-        TlaSetOper.supsetProper.name -> TlaSetOper.supsetProper,
         TlaSetOper.times.name -> TlaSetOper.times,
         TlaSetOper.union.name -> TlaSetOper.union
     )

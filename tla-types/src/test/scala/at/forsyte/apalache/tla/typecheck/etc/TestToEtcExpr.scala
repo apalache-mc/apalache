@@ -294,10 +294,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
   test("\\subseteq, \\subset, \\supseteq, \\supset") {
     def mkExpected(tt: TlaType1) = mkConstAppByType(tt, parser("Set(Int)"), parser("Set(Int)"))
 
-    assert(mkExpected(parser("(Set(a), Set(a)) => Bool")) == gen(tla.subset(tla.intSet(), tla.intSet())))
     assert(mkExpected(parser("(Set(b), Set(b)) => Bool")) == gen(tla.subseteq(tla.intSet(), tla.intSet())))
-    assert(mkExpected(parser("(Set(c), Set(c)) => Bool")) == gen(tla.supseteq(tla.intSet(), tla.intSet())))
-    assert(mkExpected(parser("(Set(d), Set(d)) => Bool")) == gen(tla.supset(tla.intSet(), tla.intSet())))
   }
 
   test("SUBSET") {

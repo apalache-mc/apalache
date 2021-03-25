@@ -327,11 +327,8 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         val opsig = OperT1(List(a, SetT1(a)), BoolT1())
         mkExRefApp(opsig, args)
 
-      // TODO: scheduled for removal, issue #615: \subset, \supset, \supseteq
-      case OperEx(op, args @ _*)
-          if op == TlaSetOper.subseteq || op == TlaSetOper.subsetProper
-            || op == TlaSetOper.supseteq || op == TlaSetOper.supsetProper =>
-        // S \subseteq T, S \subset T, S \supseteq T, S \supset T
+      case OperEx(op, args @ _*) if op == TlaSetOper.subseteq =>
+        // S \subseteq T
         val a = varPool.fresh
         val opsig = OperT1(List(SetT1(a), SetT1(a)), BoolT1())
         mkExRefApp(opsig, args)

@@ -1405,21 +1405,8 @@ class TestBuilder extends FunSuite with TestingPredefs {
 
     assert(seqSetBuild == OperEx(TlaSetOper.seqSet, n_a))
 
-    val subsetBuild = bd.subset(n_a, n_b).untyped()
-
-    assert(subsetBuild == OperEx(TlaSetOper.subsetProper, n_a, n_b))
-
     val subseteqBuild = bd.subseteq(n_a, n_b).untyped()
-
     assert(subseteqBuild == OperEx(TlaSetOper.subseteq, n_a, n_b))
-
-    val supsetBuild = bd.supset(n_a, n_b).untyped()
-
-    assert(supsetBuild == OperEx(TlaSetOper.supsetProper, n_a, n_b))
-
-    val supseteqBuild = bd.supseteq(n_a, n_b).untyped()
-
-    assert(supseteqBuild == OperEx(TlaSetOper.supseteq, n_a, n_b))
 
     val setminusBuild = bd.setminus(n_a, n_b).untyped()
 
@@ -1507,29 +1494,11 @@ class TestBuilder extends FunSuite with TestingPredefs {
     assert(seqSetBuild == OperEx(TlaSetOper.seqSet, n_a))
     assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.seqSet.name, n_a, n_b).untyped())
 
-    val subsetBuild = bd.byName(TlaSetOper.subsetProper.name, n_a, n_b).untyped()
-
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.subsetProper.name, n_a).untyped())
-    assert(subsetBuild == OperEx(TlaSetOper.subsetProper, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.subsetProper.name, n_a, n_b, n_c).untyped())
-
     val subseteqBuild = bd.byName(TlaSetOper.subseteq.name, n_a, n_b).untyped()
 
     assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.subseteq.name, n_a).untyped())
     assert(subseteqBuild == OperEx(TlaSetOper.subseteq, n_a, n_b))
     assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.subseteq.name, n_a, n_b, n_c).untyped())
-
-    val supsetBuild = bd.byName(TlaSetOper.supsetProper.name, n_a, n_b).untyped()
-
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.supsetProper.name, n_a).untyped())
-    assert(supsetBuild == OperEx(TlaSetOper.supsetProper, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.supsetProper.name, n_a, n_b, n_c).untyped())
-
-    val supseteqBuild = bd.byName(TlaSetOper.supseteq.name, n_a, n_b).untyped()
-
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.supseteq.name, n_a).untyped())
-    assert(supseteqBuild == OperEx(TlaSetOper.supseteq, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.supseteq.name, n_a, n_b, n_c).untyped())
 
     val setminusBuild = bd.byName(TlaSetOper.setminus.name, n_a, n_b).untyped()
 
@@ -1642,14 +1611,6 @@ class TestBuilder extends FunSuite with TestingPredefs {
     assert(seqSetBuild == OperEx(TlaSetOper.seqSet, n_a))
     assert(seqSetBuildBad2 == NullEx)
 
-    val subsetBuildBad1 = bd.byNameOrNull(TlaSetOper.subsetProper.name, n_a).untyped()
-    val subsetBuild = bd.byNameOrNull(TlaSetOper.subsetProper.name, n_a, n_b).untyped()
-    val subsetBuildBad2 = bd.byNameOrNull(TlaSetOper.subsetProper.name, n_a, n_b, n_c).untyped()
-
-    assert(subsetBuildBad1 == NullEx)
-    assert(subsetBuild == OperEx(TlaSetOper.subsetProper, n_a, n_b))
-    assert(subsetBuildBad2 == NullEx)
-
     val subseteqBuildBad1 = bd.byNameOrNull(TlaSetOper.subseteq.name, n_a).untyped()
     val subseteqBuild = bd.byNameOrNull(TlaSetOper.subseteq.name, n_a, n_b).untyped()
     val subseteqBuildBad2 = bd.byNameOrNull(TlaSetOper.subseteq.name, n_a, n_b, n_c).untyped()
@@ -1657,22 +1618,6 @@ class TestBuilder extends FunSuite with TestingPredefs {
     assert(subseteqBuildBad1 == NullEx)
     assert(subseteqBuild == OperEx(TlaSetOper.subseteq, n_a, n_b))
     assert(subseteqBuildBad2 == NullEx)
-
-    val supsetBuildBad1 = bd.byNameOrNull(TlaSetOper.supsetProper.name, n_a).untyped()
-    val supsetBuild = bd.byNameOrNull(TlaSetOper.supsetProper.name, n_a, n_b).untyped()
-    val supsetBuildBad2 = bd.byNameOrNull(TlaSetOper.supsetProper.name, n_a, n_b, n_c).untyped()
-
-    assert(supsetBuildBad1 == NullEx)
-    assert(supsetBuild == OperEx(TlaSetOper.supsetProper, n_a, n_b))
-    assert(supsetBuildBad2 == NullEx)
-
-    val supseteqBuildBad1 = bd.byNameOrNull(TlaSetOper.supseteq.name, n_a).untyped()
-    val supseteqBuild = bd.byNameOrNull(TlaSetOper.supseteq.name, n_a, n_b).untyped()
-    val supseteqBuildBad2 = bd.byNameOrNull(TlaSetOper.supseteq.name, n_a, n_b, n_c).untyped()
-
-    assert(supseteqBuildBad1 == NullEx)
-    assert(supseteqBuild == OperEx(TlaSetOper.supseteq, n_a, n_b))
-    assert(supseteqBuildBad2 == NullEx)
 
     val setminusBuildBad1 = bd.byNameOrNull(TlaSetOper.setminus.name, n_a).untyped()
     val setminusBuild = bd.byNameOrNull(TlaSetOper.setminus.name, n_a, n_b).untyped()
