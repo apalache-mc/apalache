@@ -172,8 +172,7 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
     case opex @ OperEx(op, nex @ NameEx(name), otherArgs @ _*)
         if op == TlaSetOper.filter
           || op == TlaBoolOper.exists || op == TlaBoolOper.forall
-          || op == TlaOper.chooseBounded || op == TlaOper.chooseUnbounded
-          || op == TlaOper.chooseIdiom =>
+          || op == TlaOper.chooseBounded || op == TlaOper.chooseUnbounded =>
       // We compute a unique name for the given base and store it in alreadyRenamed.
       // Recursive calls to subexpressions will take care of all the replacements,
       // where the bound variable appears
