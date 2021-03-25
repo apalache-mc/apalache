@@ -1,9 +1,9 @@
 package at.forsyte.apalache.tla.typecheck.passes
 
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.UID
+import at.forsyte.apalache.tla.lir.{TlaType1, UID}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
-import at.forsyte.apalache.tla.typecheck.{TlaType1, TypeCheckerListener}
+import at.forsyte.apalache.tla.typecheck.TypeCheckerListener
 import at.forsyte.apalache.tla.typecheck.etc.{EtcRef, ExactRef}
 import com.typesafe.scalalogging.LazyLogging
 

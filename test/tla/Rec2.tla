@@ -6,16 +6,17 @@
  *)
 EXTENDS Integers
 
-VARIABLES size, set
-
-a <: b == a
-IntSet(S) == S <: {Int}
+VARIABLES
+    \* @type: Int;
+    size,
+    \* @type: Set(Int);
+    set
 
 RECURSIVE Card(_)
 
 \* this is very close to how cardinality is computed in Apalache
 Card(S) ==
-  IF S = IntSet({})
+  IF S = {}
   THEN 0
   ELSE
     \* CHOOSE is introduced with a LET definition, to fix its value, whatever it may be
@@ -31,7 +32,7 @@ UNROLL_TIMES_Card == 10
 UNROLL_DEFAULT_Card == 0
 
 Init ==
-    /\ set = IntSet({})
+    /\ set = {}
     /\ size = 0
 
 Next ==

@@ -1,5 +1,9 @@
 ------------------------------ MODULE ITE_CASE ------------------------------
-VARIABLES x, y
+VARIABLES
+    \* @type: Int;
+    x,
+    \* @type: Int;
+    y
 
 S == {1,2,3}
 
@@ -11,6 +15,9 @@ ITE(p, et, ee) ==  /\ IF p THEN et ELSE ee
 
 Next == ITE( x = y', x' = 2, x' \in S )
 
-Spec == /\ Init /\ [][Next]_<<x,y>>
+\* @type: <<Int, Int>>;
+vars == <<x, y>>
+
+Spec == /\ Init /\ [][Next]_vars
 
 =============================================================================

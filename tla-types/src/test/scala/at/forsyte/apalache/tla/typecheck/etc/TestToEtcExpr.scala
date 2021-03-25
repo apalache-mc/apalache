@@ -637,10 +637,24 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     assert(expected == gen(ex))
   }
 
-  test("UNCHANGED") {
+  test("UNCHANGED x") {
     val typ = parser("a => Bool")
     val expected = mkAppByName(Seq(typ), "x")
     val ex = tla.unchanged(tla.name("x"))
+    assert(expected == gen(ex))
+  }
+
+  test("UNCHANGED <<x>>") {
+    val ex = tla.unchanged(tla.tuple(tla.name("x")))
+    val tupleType = mkAppByName(Seq(parser("a => <<a>>")), "x")
+    val expected = mkUniqApp(Seq(parser("<<a>> => Bool")), tupleType)
+    assert(expected == gen(ex))
+  }
+
+  test("UNCHANGED <<x, y>>") {
+    val ex = tla.unchanged(tla.tuple(tla.name("x"), tla.name("y")))
+    val tupleType = mkAppByName(Seq(parser("(a, b) => <<a, b>>")), "x", "y")
+    val expected = mkUniqApp(Seq(parser("<<a, b>> => Bool")), tupleType)
     assert(expected == gen(ex))
   }
 
@@ -697,6 +711,14 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     val typ = parser("(Seq(a), (a => Bool)) => Seq(a)")
     val expected = mkAppByName(Seq(typ), "s", "A")
     val ex = tla.selectseq(tla.name("s"), tla.name("A"))
+    assert(expected == gen(ex))
+  }
+
+  test("Labels") {
+    val typ = parser("(Str, Str, Str, a) => a")
+    val expected =
+      mkUniqApp(Seq(typ), mkUniqConst(StrT1()), mkUniqConst(StrT1()), mkUniqConst(StrT1()), mkUniqName("x"))
+    val ex = tla.label(tla.name("x"), "lab", "a", "b")
     assert(expected == gen(ex))
   }
 
@@ -766,7 +788,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
   test("old annotations: e <: tp") {
     val oldTypeAnnotation = tla.enumSet(tla.intSet())
     val input = tla.withType(tla.name("e"), oldTypeAnnotation)
-    assert(mkUniqName("e") == gen(input))
+    assertThrows[OutdatedAnnotationsError](gen(input))
   }
 
   test("TLC!Print") {

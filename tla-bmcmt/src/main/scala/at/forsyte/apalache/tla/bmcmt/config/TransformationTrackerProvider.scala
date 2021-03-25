@@ -1,9 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt.config
 
-import at.forsyte.apalache.tla.bmcmt.types.eager.TrivialTypeFinder
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
+import at.forsyte.apalache.tla.typecheck.integration.TypeWatchdogTransformationListener
 import com.google.inject.{Inject, Provider, Singleton}
 
 /**
@@ -19,14 +19,13 @@ import com.google.inject.{Inject, Provider, Singleton}
  * to pass a list of transformation listeners to the tracker, while the listeners are injected by Guice.
  *
  * @param changeListener a listener that records which expression was transformed into which expression
- *
  * @author Igor Konnov
  */
 @Singleton
-class TransformationTrackerProvider @Inject() (changeListener: ChangeListener, trivialTypeFinder: TrivialTypeFinder)
-    extends Provider[TransformationTracker] {
+class TransformationTrackerProvider @Inject() (changeListener: ChangeListener) extends Provider[TransformationTracker] {
 
-  private val tracker = TrackerWithListeners(changeListener, trivialTypeFinder)
+  private val tracker =
+    TrackerWithListeners(new TypeWatchdogTransformationListener(), changeListener)
 
   override def get(): TransformationTracker = {
     tracker

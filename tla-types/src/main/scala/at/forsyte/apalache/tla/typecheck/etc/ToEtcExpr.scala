@@ -70,12 +70,22 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
     findTypeFromTagOrAnnotation(decl) match {
       case Some(tt) =>
         // case 1: the definition is either annotated with a java-like annotation in a comment, or tagged with TlaType1
+        val fixedType = fixLazyAnnotation(decl, tt)
         val letAbs = mkLetAbs(decl.ID, this(decl.body), paramsAndDoms: _*)
-        mkTypeDecl(ExactRef(decl.ID), decl.name, tt, letAbs)
+        mkTypeDecl(ExactRef(decl.ID), decl.name, fixedType, letAbs)
 
       case None =>
         // case 2: no type annotation
         mkLetAbs(decl.ID, this(decl.body), paramsAndDoms: _*)
+    }
+  }
+
+  // We let the user to write a instead of () => a for nullary operators. This method fixes such a lazy annotation.
+  private def fixLazyAnnotation(decl: TlaOperDecl, tt: TlaType1): TlaType1 = {
+    if (decl.formalParams.isEmpty && !tt.isInstanceOf[OperT1]) {
+      OperT1(Seq(), tt)
+    } else {
+      tt
     }
   }
 
@@ -682,6 +692,18 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         val opsig = OperT1(Seq(BoolT1()), BoolT1()) // Bool => Bool
         mkExRefApp(opsig, Seq(inner))
 
+      // feature #660: special treatment for UNCHANGED <<...>>, as it is so common
+      case OperEx(TlaActionOper.unchanged, tex @ OperEx(TlaFunOper.tuple, args @ _*)) =>
+        val typeVars = varPool.fresh(args.length)
+        // the principal type is: (<<a_1, ..., a_n>> => Bool) ((a_1, ..., a_n) => <<a_1, ..., a_n>>)
+        val tupleType = TupT1(typeVars: _*)
+        val tupleOperType = OperT1(typeVars, tupleType)
+        // (a_1, ..., a_n) => <<a_1, ..., a_n>>
+        val tupleEx = mkApp(ExactRef(tex.ID), Seq(tupleOperType), args.map(this(_)): _*)
+        // <<a_1, ..., a_n>> => Bool
+        val opsig = OperT1(Seq(tupleType), BoolT1())
+        mkApp(ExactRef(ex.ID), Seq(opsig), tupleEx)
+
       case OperEx(TlaActionOper.unchanged, args @ _*) =>
         val opsig =
           OperT1(varPool.fresh(args.length), BoolT1()) // a, b, c => Bool
@@ -825,11 +847,16 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         mkExRefApp(opsig, args)
 
       //******************************************** MISC **************************************************
-      case OperEx(BmcOper.withType, lhs, _) =>
+      case OperEx(TlaOper.label, labelledEx, nameAndArgs @ _*) =>
+        val typeVar = varPool.fresh
+        mkExRefApp(OperT1(nameAndArgs.map(_ => StrT1()) :+ typeVar, typeVar), nameAndArgs :+ labelledEx)
+
+      case OperEx(BmcOper.withType, lhs, annotation) =>
         // Met an old type annotation. Warn the user and ignore the annotation.
-        logger.warn("Met an old type annotation. Ignored: " + ex)
-        logger.warn("See: https://apalache.informal.systems/docs/apalache/typechecker-snowcat.html")
-        this(lhs)
+        logger.error("Met an old type annotation: " + annotation)
+        logger.error("See: https://apalache.informal.systems/docs/apalache/typechecker-snowcat.html")
+        val msg = s"Old Apalache type annotations (predating 0.12.0) are no longer supported"
+        throw new OutdatedAnnotationsError(msg, ex)
 
       //********************************************* TLC **************************************************
       case OperEx(TlcOper.print, text, value) =>

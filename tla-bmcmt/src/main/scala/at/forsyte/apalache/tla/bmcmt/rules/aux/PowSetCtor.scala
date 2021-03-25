@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.bmcmt.implicitConversions._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.bmcmt.types.FinSetT
 
 /**
@@ -27,7 +27,8 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
       val subsetCell = arena.topCell
       arena = arena.appendHas(subsetCell, filtered: _*)
       for (e <- filtered) {
-        rewriter.solverContext.assertGroundExpr(tla.equiv(tla.in(e, subsetCell), tla.in(e, set)))
+        rewriter.solverContext
+          .assertGroundExpr(tla.equiv(tla.in(e.toNameEx, subsetCell.toNameEx), tla.in(e.toNameEx, set.toNameEx)))
       }
       subsetCell
     }
@@ -51,7 +52,7 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
     val powsetCell = arena.topCell
     arena = arena.appendHas(powsetCell, subsets: _*)
     for (subset <- subsets) {
-      rewriter.solverContext.assertGroundExpr(tla.in(subset, powsetCell))
+      rewriter.solverContext.assertGroundExpr(tla.in(subset.toNameEx, powsetCell.toNameEx))
     }
 
     // that's it!
@@ -59,6 +60,6 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
         "; } %s returns %s [%d arena cells])"
           .format(getClass.getSimpleName, state.ex, state.arena.cellCount))
 
-    state.setArena(arena).setRex(powsetCell)
+    state.setArena(arena).setRex(powsetCell.toNameEx)
   }
 }

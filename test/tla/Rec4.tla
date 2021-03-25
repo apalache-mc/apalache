@@ -6,7 +6,9 @@
  *)
 EXTENDS Integers
 
-VARIABLES f
+VARIABLES
+    \* @type: Int;
+    f
 
 RECURSIVE Fib(_)
 

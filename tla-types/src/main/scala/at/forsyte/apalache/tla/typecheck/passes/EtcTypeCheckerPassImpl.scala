@@ -23,6 +23,8 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
 
   private var outputTlaModule: Option[TlaModule] = None
 
+  protected def inferPoly: Boolean = options.getOrElse("typecheck", "inferPoly", true)
+
   /**
    * The name of the pass
    *
@@ -39,15 +41,10 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
     if (tlaModule.isEmpty) {
       logger.info(" > no input for type checker")
       false
-    } else if (!options.getOrElse("typechecker", "snowcatOn", false)) {
-      logger.info(" > Snowcat is disabled. Use --with-snowcat to enable it")
-      outputTlaModule = tlaModule
-      true
     } else {
       logger.info(" > Running Snowcat .::.")
       dumpToJson(tlaModule.get, "pre")
 
-      val inferPoly = options.getOrElse("typecheck", "inferPoly", true)
       val tool = new TypeCheckerTool(annotationStore, inferPoly)
 
       // when this flag is true by the end of type checking, we have recovered the types of all expressions

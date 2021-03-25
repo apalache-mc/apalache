@@ -3,9 +3,10 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.types.BoolT
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, TlaEx, ValEx}
 
 /**
  * For state-level expressions, we express A \/ B as IF A THEN TRUE ELSE B.
@@ -15,6 +16,8 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
  * @author Igor Konnov
  */
 class OrRule(rewriter: SymbStateRewriter) extends RewritingRule {
+  private val boolTypes = Map("b" -> BoolT1())
+
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaBoolOper.or, _*) => true
@@ -33,8 +36,13 @@ class OrRule(rewriter: SymbStateRewriter) extends RewritingRule {
           // use short-circuiting on state-level expressions (like in TLC)
           def toIte(es: Seq[TlaEx]): TlaEx = {
             es match {
-              case Seq(last)  => last
-              case hd +: tail => tla.ite(hd, state.arena.cellTrue().toNameEx, toIte(tail))
+              case Seq(last) =>
+                last
+
+              case hd +: tail =>
+                tla
+                  .ite(hd ? "b", state.arena.cellTrue().toNameEx ? "b", toIte(tail))
+                  .typed(boolTypes, "b")
             }
           }
 
@@ -53,7 +61,10 @@ class OrRule(rewriter: SymbStateRewriter) extends RewritingRule {
               }
 
               val rewrittenArgs = args map mapArg
-              rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.or(rewrittenArgs: _*)))
+              val eq = tla
+                .eql(pred ? "b", tla.or(rewrittenArgs: _*) ? "b")
+                .typed(boolTypes, "b")
+              rewriter.solverContext.assertGroundExpr(eq)
               nextState.setRex(pred)
             }
 

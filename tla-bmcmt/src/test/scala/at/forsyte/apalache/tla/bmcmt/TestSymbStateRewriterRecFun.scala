@@ -1,34 +1,42 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.values.TlaIntSet
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.convenience.tla._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterRecFun extends RewriterBase with TestingPredefs {
+  private val types =
+    Map(
+        "b" -> BoolT1(),
+        "i" -> IntT1(),
+        "I" -> SetT1(IntT1()),
+        "i_to_i" -> FunT1(IntT1(), IntT1())
+    )
+
   test("""recursive fun: f[n \in { 1, 2, 3 }] == IF n <= 1 THEN 2 ELSE 2 * f[n - 1]""") {
-    import tla._
-
-    val set = enumSet(tla.int(1), tla.int(2), tla.int(3))
-
-    val ref = tla.withType(tla.recFunRef(), tla.funSet(ValEx(TlaIntSet), ValEx(TlaIntSet)))
+    val set = enumSet(int(1), int(2), int(3)) ? "I"
+    val ref = recFunRef() ? "i_to_i"
 
     val map = ite(
-        le(tla.name("n"), int(1)),
+        le(name("n") ? "i", int(1)) ? "b",
         int(2),
-        mult(int(2), appFun(ref, minus(tla.name("n"), int(1))))
-    ) ///
+        mult(int(2), appFun(ref, minus(name("n") ? "i", int(1)) ? "i") ? "i") ? "i"
+    ).typed(types, "i")
 
-    val fun = recFunDef(map, tla.name("n"), set)
+    val fun = recFunDef(map, name("n") ? "i", set)
+      .typed(types, "i_to_i")
 
     val rewriter = create()
     var state = rewriter.rewriteUntilDone(new SymbState(fun, arena, Binding()))
     val funCell = state.ex
 
-    def resEq(i: Int, j: Int) = eql(int(j), appFun(funCell, int(i)))
+    def resEq(i: Int, j: Int) = {
+      eql(int(j), appFun(funCell ? "i_to_i", int(i)) ? "i")
+        .typed(types, "b")
+    }
 
     assertTlaExAndRestore(rewriter, state.setRex(resEq(1, 2)))
     assertTlaExAndRestore(rewriter, state.setRex(resEq(2, 4)))

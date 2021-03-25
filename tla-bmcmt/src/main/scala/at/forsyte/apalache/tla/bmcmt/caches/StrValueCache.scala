@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.ConstT
 import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * A cache for string constants that are translated as uninterpreted constants in SMT.

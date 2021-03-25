@@ -1,12 +1,13 @@
 package at.forsyte.apalache.tla.pp
 
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.standard.{FlatLanguagePred, ReplaceFixed}
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.TlaBool
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir._
+
 import javax.inject.Singleton
 
 /**
@@ -25,14 +26,18 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
   def transform: TlaExTransformation = nnf(neg = false)
 
   private def nnf(neg: Boolean): TlaExTransformation = tracker.trackEx {
-    case ValEx(TlaBool(b)) =>
-      tla.bool(b ^ neg)
+    case ex @ ValEx(TlaBool(b)) =>
+      ValEx(TlaBool(b ^ neg))(ex.typeTag)
 
     case vex @ ValEx(_) =>
       vex // this may be called when processing a non-Boolean expression
 
     case ex @ NameEx(_) =>
-      if (neg) tla.not(ex) else ex
+      if (neg) {
+        OperEx(TlaBoolOper.not, ex)(ex.typeTag)
+      } else {
+        ex
+      }
 
     case OperEx(TlaBoolOper.not, arg) =>
       nnf(!neg)(arg)
@@ -40,146 +45,154 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
     case ite @ OperEx(TlaControlOper.ifThenElse, predEx, thenEx, elseEx) =>
       // ~ITE(A, B, C) == ITE(A, ~B, ~C)
       val recNnf = nnf(neg)
-      OperEx(TlaControlOper.ifThenElse, predEx, recNnf(thenEx), recNnf(elseEx))
+      OperEx(TlaControlOper.ifThenElse, predEx, recNnf(thenEx), recNnf(elseEx))(ite.typeTag)
 
-    case OperEx(TlaBoolOper.and, args @ _*) =>
+    case ex @ OperEx(TlaBoolOper.and, args @ _*) =>
       val oper: TlaBoolOper = if (neg) TlaBoolOper.or else TlaBoolOper.and
-      OperEx(oper, args map nnf(neg): _*)
+      OperEx(oper, args map nnf(neg): _*)(ex.typeTag)
 
-    case OperEx(TlaBoolOper.or, args @ _*) =>
+    case ex @ OperEx(TlaBoolOper.or, args @ _*) =>
       val oper: TlaBoolOper = if (neg) TlaBoolOper.and else TlaBoolOper.or
-      OperEx(oper, args map nnf(neg): _*)
+      OperEx(oper, args map nnf(neg): _*)(ex.typeTag)
 
-    case OperEx(TlaBoolOper.implies, left, right) =>
+    case ex @ OperEx(TlaBoolOper.implies, left, right) =>
       val (nnfNonNegated, nnfNegated) = (nnf(neg = false), nnf(neg = true))
       if (neg) {
-        tla.and(nnfNonNegated(left), nnfNegated(right))
+        OperEx(TlaBoolOper.and, nnfNonNegated(left), nnfNegated(right))(ex.typeTag)
       } else {
-        tla.or(nnfNegated(left), nnfNonNegated(right))
+        OperEx(TlaBoolOper.or, nnfNegated(left), nnfNonNegated(right))(ex.typeTag)
       }
 
     case equiv @ OperEx(TlaBoolOper.equiv, left, right) =>
       val nnfNonNegated = nnf(neg = false)
       // we do not negate the arguments but recurse to deal with the negations below the tree
       if (!neg) {
-        tla.eql(nnfNonNegated(left), nnfNonNegated(right))
+        OperEx(TlaOper.eq, nnfNonNegated(left), nnfNonNegated(right))(equiv.typeTag)
       } else {
-        tla.neql(nnfNonNegated(left), nnfNonNegated(right))
+        OperEx(TlaOper.ne, nnfNonNegated(left), nnfNonNegated(right))(equiv.typeTag)
       }
 
-    case OperEx(TlaBoolOper.exists, x, set, pred) =>
+    case ex @ OperEx(TlaBoolOper.exists, x, set, pred) =>
       if (neg) {
-        OperEx(TlaBoolOper.forall, x, set, nnf(neg = true)(pred))
+        OperEx(TlaBoolOper.forall, x, transform(set), nnf(neg = true)(pred))(ex.typeTag)
       } else {
-        OperEx(TlaBoolOper.exists, x, set, nnf(neg = false)(pred))
+        OperEx(TlaBoolOper.exists, x, transform(set), nnf(neg = false)(pred))(ex.typeTag)
       }
 
-    case OperEx(TlaBoolOper.forall, x, set, pred) =>
+    case ex @ OperEx(TlaBoolOper.forall, x, set, pred) =>
       if (neg) {
-        OperEx(TlaBoolOper.exists, x, set, nnf(neg = true)(pred))
+        OperEx(TlaBoolOper.exists, x, transform(set), nnf(neg = true)(pred))(ex.typeTag)
       } else {
-        OperEx(TlaBoolOper.forall, x, set, nnf(neg = false)(pred))
+        OperEx(TlaBoolOper.forall, x, transform(set), nnf(neg = false)(pred))(ex.typeTag)
       }
 
-    case OperEx(TlaArithOper.lt, left, right) =>
-      OperEx(if (neg) TlaArithOper.ge else TlaArithOper.lt, left, right)
+    case ex @ OperEx(TlaArithOper.lt, left, right) =>
+      if (neg) {
+        OperEx(TlaArithOper.ge, left, right)(ex.typeTag)
+      } else {
+        ex
+      }
 
-    case OperEx(TlaArithOper.le, left, right) =>
-      OperEx(if (neg) TlaArithOper.gt else TlaArithOper.le, left, right)
+    case ex @ OperEx(TlaArithOper.le, left, right) =>
+      if (neg) {
+        OperEx(TlaArithOper.gt, left, right)(ex.typeTag)
+      } else {
+        ex
+      }
 
-    case OperEx(TlaArithOper.gt, left, right) =>
-      OperEx(if (neg) TlaArithOper.le else TlaArithOper.gt, left, right)
+    case ex @ OperEx(TlaArithOper.gt, left, right) =>
+      if (neg) {
+        OperEx(TlaArithOper.le, left, right)(ex.typeTag)
+      } else {
+        ex
+      }
 
-    case OperEx(TlaArithOper.ge, left, right) =>
-      OperEx(if (neg) TlaArithOper.lt else TlaArithOper.ge, left, right)
+    case ex @ OperEx(TlaArithOper.ge, left, right) =>
+      if (neg) {
+        OperEx(TlaArithOper.lt, left, right)(ex.typeTag)
+      } else {
+        ex
+      }
 
     case eq @ OperEx(TlaOper.eq, left, right) =>
+      val trEq = OperEx(TlaOper.eq, transform(left), transform(right))(eq.typeTag)
       if (neg) {
-        tla.not(tla.eql(transform(left), transform(right)))
+        OperEx(TlaBoolOper.not, trEq)(eq.typeTag)
       } else {
-        tla.eql(transform(left), transform(right))
+        trEq
       }
 
     case neq @ OperEx(TlaOper.ne, left, right) =>
+      val trEq = OperEx(TlaOper.eq, transform(left), transform(right))(neq.typeTag)
       if (neg) {
-        tla.eql(transform(left), transform(right))
+        trEq
       } else {
-        tla.not(tla.eql(transform(left), transform(right)))
+        OperEx(TlaBoolOper.not, trEq)(neq.typeTag)
       }
 
-    case OperEx(TlaSetOper.in, left, right) =>
+    case in @ OperEx(TlaSetOper.in, left, right) =>
       // use only \in, as \notin is not in KerA+
+      val trIn = OperEx(TlaSetOper.in, transform(left), transform(right))(in.typeTag)
       if (neg) {
-        tla.not(OperEx(TlaSetOper.in, transform(left), transform(right)))
+        OperEx(TlaBoolOper.not, trIn)(in.typeTag)
       } else {
-        OperEx(TlaSetOper.in, transform(left), transform(right))
+        trIn
       }
 
-    case OperEx(TlaSetOper.notin, left, right) =>
+    case notin @ OperEx(TlaSetOper.notin, left, right) =>
+      val trIn = OperEx(TlaSetOper.in, transform(left), transform(right))(notin.typeTag)
       if (neg) {
-        OperEx(TlaSetOper.in, transform(left), transform(right))
+        trIn
       } else {
-        tla.not(OperEx(TlaSetOper.in, transform(left), transform(right)))
+        OperEx(TlaBoolOper.not, trIn)(notin.typeTag)
       }
 
-    case OperEx(TlaSetOper.subseteq, left, right) =>
-      OperEx(if (neg) TlaSetOper.supsetProper else TlaSetOper.subseteq, transform(left), transform(right))
-
-    case OperEx(TlaSetOper.subsetProper, left, right) =>
-      OperEx(if (neg) TlaSetOper.supseteq else TlaSetOper.subsetProper, transform(left), transform(right))
-
-    case OperEx(TlaSetOper.supsetProper, left, right) =>
-      OperEx(if (neg) TlaSetOper.subseteq else TlaSetOper.supsetProper, transform(left), transform(right))
-
-    case OperEx(TlaSetOper.supseteq, left, right) =>
-      OperEx(if (neg) TlaSetOper.subsetProper else TlaSetOper.supseteq, transform(left), transform(right))
-
-    case OperEx(TlaOper.label, subex, args @ _*) =>
-      OperEx(TlaOper.label, nnf(neg)(subex) +: args: _*)
+    case lex @ OperEx(TlaOper.label, subex, args @ _*) =>
+      OperEx(TlaOper.label, nnf(neg)(subex) +: args: _*)(lex.typeTag)
 
     case ex @ OperEx(TlaTempOper.diamond, args @ _*) =>
       if (!neg) {
-        ex
+        OperEx(TlaTempOper.diamond, args map transform: _*)(ex.typeTag)
       } else {
-        OperEx(TlaTempOper.box, args map nnf(true): _*)
+        OperEx(TlaTempOper.box, args map nnf(true): _*)(ex.typeTag)
       }
 
     case ex @ OperEx(TlaTempOper.box, args @ _*) =>
       if (!neg) {
-        ex
+        OperEx(TlaTempOper.box, args map nnf(true): _*)(ex.typeTag)
       } else {
-        OperEx(TlaTempOper.box, args map nnf(true): _*)
+        OperEx(TlaTempOper.diamond, args map transform: _*)(ex.typeTag)
       }
 
-    case ex @ OperEx(TlaTempOper.leadsTo, _*) =>
+    case ex @ OperEx(TlaTempOper.leadsTo, args @ _*) =>
       if (!neg) {
-        ex
+        OperEx(TlaTempOper.leadsTo, args map transform: _*)(ex.typeTag)
       } else {
-        tla.not(ex) // keep ~(... ~> ...)
+        OperEx(TlaBoolOper.not, ex)(ex.typeTag) // keep ~(... ~> ...)
       }
 
-    case ex @ OperEx(TlaTempOper.guarantees, _*) =>
+    case ex @ OperEx(TlaTempOper.guarantees, args @ _*) =>
       if (!neg) {
-        ex
+        OperEx(TlaTempOper.guarantees, args map transform: _*)(ex.typeTag)
       } else {
-        tla.not(ex) // keep ~(... -+-> ...)
+        OperEx(TlaBoolOper.not, ex)(ex.typeTag) // keep ~(... -+-> ...)
       }
 
-    case ex @ OperEx(TlaTempOper.weakFairness, _*) =>
+    case ex @ OperEx(TlaTempOper.weakFairness, args @ _*) =>
       if (!neg) {
-        ex
+        OperEx(TlaTempOper.weakFairness, args map transform: _*)(ex.typeTag)
       } else {
-        tla.not(ex) // keep ~WF_vars(A) as ~WF_vars(A)
+        OperEx(TlaBoolOper.not, ex)(ex.typeTag) // keep ~WF_vars(A) as ~WF_vars(A)
       }
 
-    case ex @ OperEx(TlaTempOper.strongFairness, _*) =>
+    case ex @ OperEx(TlaTempOper.strongFairness, args @ _*) =>
       if (!neg) {
-        ex
+        OperEx(TlaTempOper.strongFairness, args map transform: _*)(ex.typeTag)
       } else {
-        tla.not(ex) // keep ~SF_vars(A) as ~SF_vars(A)
+        OperEx(TlaBoolOper.not, ex)(ex.typeTag) // keep ~SF_vars(A) as ~SF_vars(A)
       }
 
-    case LetInEx(body, defs @ _*) =>
+    case letIn @ LetInEx(body, defs @ _*) =>
       if (neg) {
         // a negation of the let body
         nnfLetIn(neg, body, defs)
@@ -187,22 +200,24 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
         // no negation, simply normalize the body and the bodies of the definitions
         def transformDef(decl: TlaOperDecl): TlaOperDecl = decl.copy(body = transform(decl.body))
 
-        LetInEx(transform(body), defs map transformDef: _*)
+        LetInEx(transform(body), defs map transformDef: _*)(letIn.typeTag)
       }
 
-    case OperEx(oper, args @ _*) =>
+    case ex @ OperEx(oper, args @ _*) =>
       // a non-Boolean operator: transform its arguments, which may be Boolean
       if (neg) {
-        tla.not(OperEx(oper, args map transform: _*))
+        // why do we add a Boolean negation on top?
+        OperEx(TlaBoolOper.not, OperEx(oper, args map transform: _*)(ex.typeTag))(ex.typeTag)
       } else {
-        OperEx(oper, args map transform: _*)
+        OperEx(oper, args map transform: _*)(ex.typeTag)
       }
 
     case expr =>
       if (!neg) {
         expr
       } else {
-        OperEx(TlaBoolOper.not, expr)
+        // why do we add a Boolean negation on top?
+        OperEx(TlaBoolOper.not, expr)(expr.typeTag)
       }
   }
 
@@ -218,29 +233,35 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
 
     val newBody = nnf(neg)(body)
 
+    val toBoolT = OperT1(Seq(), BoolT1())
+
     // We can't just implement ~X for all operators ( e.g. what if X == 1..10 ), just for
     // those that actually appear under negation in the body (and thus must be of type Bool)
     def negAppearingOpers(tlaEx: TlaEx): Set[String] = tlaEx match {
-      case OperEx(TlaBoolOper.not, OperEx(TlaOper.apply, NameEx(name))) =>
+      case OperEx(TlaBoolOper.not, OperEx(TlaOper.apply, NameEx(name))) if tlaEx.typeTag == Typed(toBoolT) =>
         Set(name)
+
       case OperEx(op, args @ _*) =>
         args.map(negAppearingOpers).foldLeft(Set.empty[String]) {
           _ ++ _
         }
+
       case LetInEx(b, ds @ _*) =>
         ds.map(d => negAppearingOpers(d.body)).foldLeft(negAppearingOpers(b)) {
           _ ++ _
         }
+
       case _ => Set.empty[String]
     }
 
     val negOpers = negAppearingOpers(newBody)
 
     val replacements = negOpers map { opName =>
-      ReplaceFixed(tracker)(
-          OperEx(TlaBoolOper.not, OperEx(TlaOper.apply, NameEx(opName))),
-          OperEx(TlaOper.apply, NameEx(negName(opName)))
-      )
+      val toReplace = tla.not(tla.appOp(tla.name(opName) ? "b") ? "b").typed(Map("b" -> BoolT1()), "b")
+      lazy val replacement = tla
+        .appOp(tla.name(negName(opName)) ? "op")
+        .typed(Map("b" -> BoolT1(), "op" -> toBoolT), "b")
+      ReplaceFixed(tracker)(toReplace, replacement)
     }
 
     val negReplacedBody = replacements.foldLeft(newBody) { case (b, tr) =>
@@ -253,7 +274,7 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
 
     val newDefs = defs ++ negDefs
 
-    LetInEx(negReplacedBody, newDefs: _*)
+    LetInEx(negReplacedBody, newDefs: _*)(body.typeTag)
   }
 }
 

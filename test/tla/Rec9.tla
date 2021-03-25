@@ -15,14 +15,6 @@ VARIABLES
     \* @type: Int;
     size
 
-\* the syntax for type annotations
-a <: b == a
-
-IntSet(S) == S <: {Int}
-
-\* the type of the function Card
-CardT == [{Int} -> Int]
-
 (*
  The set cardinality function. It needs an upper bound on the set size.
  Although this function looks nice, be warned that this definition requires us
@@ -30,13 +22,13 @@ CardT == [{Int} -> Int]
  for the function Card. This encoding is (at least) double-exponential.
  *)
 Card[S \in SUBSET NUMS] ==
-    IF S = IntSet({})
+    IF S = {}
     THEN 0
     ELSE LET i == CHOOSE j \in S: TRUE IN
-        1 + (Card <: CardT)[S \ {i}]
+        1 + Card[S \ {i}]
 
 Init ==
-    /\ set = IntSet({})
+    /\ set = {}
     /\ size = 0
 
 Next ==     

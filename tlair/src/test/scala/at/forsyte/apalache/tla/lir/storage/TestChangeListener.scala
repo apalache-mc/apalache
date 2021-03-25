@@ -1,9 +1,8 @@
 package at.forsyte.apalache.tla.lir.storage
 
-import at.forsyte.apalache.tla.lir.NameEx
+import at.forsyte.apalache.tla.lir.{NameEx, TlaEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-
 import org.junit.runner.RunWith
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.junit.JUnitRunner
@@ -27,8 +26,8 @@ class TestChangeListener extends FunSuite with BeforeAndAfterEach {
     val x = NameEx("x")
     val y = NameEx("y")
     listener.onTransformation(x, y)
-    val setOfX = tla.enumSet(x)
-    val setOfY = tla.enumSet(y)
+    val setOfX: TlaEx = tla.enumSet(x)
+    val setOfY: TlaEx = tla.enumSet(y)
     listener.onTransformation(setOfX, setOfY)
 
     assert(setOfX.ID == listener.traceBack(setOfY.ID))
@@ -39,8 +38,8 @@ class TestChangeListener extends FunSuite with BeforeAndAfterEach {
   test("track {'x'} to {'y'} without 'x' to 'y'") {
     val x = NameEx("x")
     val y = NameEx("y")
-    val setOfX = tla.enumSet(x)
-    val setOfY = tla.enumSet(y)
+    val setOfX: TlaEx = tla.enumSet(x)
+    val setOfY: TlaEx = tla.enumSet(y)
     // in this case, we only know that setOfX was transformed to setOfY,
     // but we do not know that x was transformed to y
     listener.onTransformation(setOfX, setOfY)
@@ -54,10 +53,10 @@ class TestChangeListener extends FunSuite with BeforeAndAfterEach {
   test("track {{'x'}} to {{'y'}} without {'x'} to {'y'} but 'x' to 'y'") {
     val x = NameEx("x")
     val y = NameEx("y")
-    val setOfX = tla.enumSet(x)
-    val setOfSetOfX = tla.enumSet(setOfX)
-    val setOfY = tla.enumSet(y)
-    val setOfSetOfY = tla.enumSet(setOfY)
+    val setOfX: TlaEx = tla.enumSet(x)
+    val setOfSetOfX: TlaEx = tla.enumSet(setOfX)
+    val setOfY: TlaEx = tla.enumSet(y)
+    val setOfSetOfY: TlaEx = tla.enumSet(setOfY)
     // we know that x was transformed to y
     listener.onTransformation(x, y)
     // we also know that setOfSetOfX was transformed to setOfSetOfY,

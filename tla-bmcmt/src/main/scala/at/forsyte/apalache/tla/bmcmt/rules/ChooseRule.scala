@@ -4,8 +4,9 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory, OracleHelper}
 import at.forsyte.apalache.tla.bmcmt.types.FinSetT
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, SetT1, TlaEx, TypingException}
 
 /**
  * <p>Rewriting rule for CHOOSE. Similar to TLC, we implement a non-deterministic choice.
@@ -35,8 +36,11 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // This is a general encoding, handling both happy and unhappy scenarios,
         // that is, when CHOOSE is defined on its arguments and not, respectively.
         def solverAssert = rewriter.solverContext.assertGroundExpr _
+
         // compute set comprehension and then pick an element from it
-        val filterEx = tla.filter(varName, set, pred)
+        val filterEx = tla
+          .filter(varName, set, pred)
+          .typed(set.typeTag.asTlaType1())
         var nextState = rewriter.rewriteUntilDone(state.setRex(filterEx))
         // pick an arbitrary witness
         val setCell = nextState.asCell
@@ -93,7 +97,15 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val trueEx = nextState.arena.cellTrue().toNameEx
 
       // pick only the elements that belong to the set
-      val elemsIn = elems map { e => tla.in(e.toNameEx, setCell.toNameEx) }
+      val elemType = setCell.cellType.toTlaType1 match {
+        case SetT1(tt) => tt
+        case tt        => throw new TypingException("Expected a set, found: " + tt)
+      }
+      val elemsIn = elems map { e =>
+        tla
+          .in(e.toNameEx ? "e", setCell.toNameEx ? "s")
+          .typed(Map("e" -> elemType, "s" -> SetT1(elemType), "b" -> BoolT1()), "b")
+      }
       solverAssert(oracle.caseAssertions(nextState, elemsIn))
       nextState = pickRule.pickByOracle(nextState, oracle, elems, trueEx)
       val witness = nextState.asCell

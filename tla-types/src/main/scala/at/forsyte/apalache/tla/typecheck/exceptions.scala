@@ -6,12 +6,7 @@
 
 package at.forsyte.apalache.tla.typecheck
 
-/**
- * This exception is thrown, whenever the type checker finds an irrecoverable error.
- *
- * @author konnov
- */
-class TypingException(message: String) extends Exception(message)
+import at.forsyte.apalache.tla.lir.TypingException
 
 /**
  * This exception is thrown, whenever the type checker finds an irrecoverable error in the user input.

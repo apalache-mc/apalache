@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.util.Prod2SeqIterator
 import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 
 /**

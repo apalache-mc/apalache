@@ -36,12 +36,15 @@ trait TypeTagged[T] {
    * @param newTypeTag a new type
    * @return a shallow copy of TLA+ expression with the type tag set to newTypeTag
    */
-  def withType(newTypeTag: TypeTag): T
-}
+  def withTag(newTypeTag: TypeTag): T
 
-/**
- * Default settings for the untyped language layer. To use the `Untyped()` tag, import the definitions from `UntypedPredefs`.
- */
-object UntypedPredefs {
-  implicit val untyped: TypeTag = Untyped()
+  /**
+   * Object equality combined with type tag equality.
+   *
+   * @param other another object to compare with
+   * @return true, if `this == other && this.typeTag == other.typeTag`
+   */
+  def eqTyped(other: TypeTagged[T]): Boolean = {
+    this == other && typeTag == other.typeTag
+  }
 }

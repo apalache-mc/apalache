@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
-import at.forsyte.apalache.tla.lir.Builder.{appOp, declOp, enumSet, ite, letIn, plus, prime}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaArithOper
 import at.forsyte.apalache.tla.lir.transformations.TlaExTransformation
@@ -13,6 +12,7 @@ import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestReplaceFixed extends FunSuite with TestingPredefs {
+  import tla._
 
   def mkTr(replacedEx: TlaEx, newEx: => TlaEx): TlaExTransformation =
     ReplaceFixed(new IdleTracker())(replacedEx, newEx)
@@ -26,7 +26,7 @@ class TestReplaceFixed extends FunSuite with TestingPredefs {
   test("Nested replacement") {
     val ex = tla.plus(n_x, n_z)
     val tr = mkTr(n_x, n_y)
-    assert(tr(ex) == tla.plus(n_y, n_z))
+    assert(tr(ex) == tla.plus(n_y, n_z).untyped())
   }
 
   test("UID uniqueness") {
@@ -47,31 +47,31 @@ class TestReplaceFixed extends FunSuite with TestingPredefs {
     val tr = mkTr(n_x, n_y)
     val expectedDecl = TlaOperDecl("A", List.empty[FormalParam], n_y)
     val expectedEx = tla.letIn(tla.appDecl(expectedDecl), expectedDecl)
-    assert(tr(ex) == expectedEx)
+    assert(tr(ex) == expectedEx.untyped())
   }
 
   test("Old test batch") {
     val transformation = mkTr(n_x, n_y)
     val pa1 = n_x -> n_y
     val pa2 = n_z -> n_z
-    val pa3 = prime(n_x) -> prime(n_y)
-    val pa4 = ite(n_p, n_x, n_y) -> ite(n_p, n_y, n_y)
+    val pa3 = prime(n_x).untyped() -> prime(n_y).untyped()
+    val pa4 = ite(n_p, n_x, n_y).untyped() -> ite(n_p, n_y, n_y).untyped()
     val pa5 = letIn(
         plus(n_z, appOp(n_A)),
-        declOp("A", n_q)
-    ) -> letIn(
+        declOp("A", n_q).untypedOperDecl()
+    ).untyped() -> letIn(
         plus(n_z, appOp(n_A)),
-        declOp("A", n_q)
-    )
+        declOp("A", n_q).untypedOperDecl()
+    ).untyped()
     val pa6 = letIn(
         enumSet(plus(n_x, appOp(n_A)), appOp(n_B, n_x)),
-        declOp("A", n_x),
-        declOp("B", n_p, "p")
-    ) -> letIn(
+        declOp("A", n_x).untypedOperDecl(),
+        declOp("B", n_p, "p").untypedOperDecl()
+    ).untyped() -> letIn(
         enumSet(plus(n_y, appOp(n_A)), appOp(n_B, n_y)),
-        declOp("A", n_y),
-        declOp("B", n_p, "p")
-    )
+        declOp("A", n_y).untypedOperDecl(),
+        declOp("B", n_p, "p").untypedOperDecl()
+    ).untyped()
 
     val expected = Seq(
         pa1,

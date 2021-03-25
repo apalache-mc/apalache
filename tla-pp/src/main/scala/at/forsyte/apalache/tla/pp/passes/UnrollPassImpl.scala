@@ -7,7 +7,6 @@ import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.lir.io.{PrettyWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.pp.{UniqueNameGenerator, Unroller}
 import com.google.inject.Inject
 import com.google.inject.name.Named

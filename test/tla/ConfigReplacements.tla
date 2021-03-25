@@ -1,5 +1,7 @@
 ----------------------- MODULE ConfigReplacements -----------------------------
-VARIABLES x
+VARIABLES
+    \* @type: Int;
+    x
 
 Value == 0
 

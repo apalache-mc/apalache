@@ -1,13 +1,13 @@
 ------------------------------ MODULE Rec8 ------------------------------------
 EXTENDS Integers
 
-VARIABLES n, factSpec, factComp
-
-\* the syntax for type annotations
-a <: b == a
-
-\* the type of the factorial function
-FactT == [Int -> Int]
+VARIABLES
+    \* @type: Int;
+    n,
+    \* @type: Int;
+    factSpec,
+    \* @type: Int;
+    factComp
 
 (*
  Defining a recursive function on a finite domain. Although it is rather
@@ -19,7 +19,7 @@ FactT == [Int -> Int]
 Fact[k \in 1..20] ==
     IF k <= 1
     THEN 1
-    ELSE k * (Fact <: FactT)[k - 1]
+    ELSE k * Fact[k - 1]
 
 Init ==
     /\ n = 1

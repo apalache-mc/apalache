@@ -28,7 +28,7 @@ class TestDeclarationSorter extends FunSuite with BeforeAndAfterEach {
 
   test("Foo calls Bar in LET-IN calls Baz in order") {
     val foo = tla.declOp("Foo", tla.appOp(tla.name("Bar")))
-    val letIn = tla.letIn(tla.bool(true), tla.declOp("local", tla.appOp(tla.name("Baz"))))
+    val letIn = tla.letIn(tla.bool(true), tla.declOp("local", tla.appOp(tla.name("Baz"))).untypedOperDecl())
     val bar = tla.declOp("Bar", letIn)
     val baz = tla.declOp("Baz", tla.bool(true))
     val input = new TlaModule("test", List(baz, bar, foo))

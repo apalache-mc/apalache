@@ -1,6 +1,14 @@
 --------------- MODULE test1 -------------
 EXTENDS Naturals (*, TLC , Sequences*)
-VARIABLE x, y, z, w
+VARIABLE
+    \* @type: Set(Int);
+    x,
+    \* @type: Set(Str);
+    y,
+    \* @type: Set([a: Int, b: Int, c: Int]);
+    z,
+    \* @type: Set(Int -> Int);
+    w
 
 Init ==
   (*/\ Print("Should find only one distinct state", TRUE)*)

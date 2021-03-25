@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
 
@@ -26,8 +27,6 @@ class EqRule(rewriter: SymbStateRewriter) extends RewritingRule {
       state.setRex(state.arena.cellTrue().toNameEx)
 
     case OperEx(TlaOper.eq, lhs, rhs) =>
-      // Rewrite the both arguments in Cell theory. Although by doing so,
-      // we may introduce redundant cells, we don't have to think about types.
       var newState = rewriter.rewriteUntilDone(state.setRex(lhs))
       val leftCell = newState.asCell
       newState = rewriter.rewriteUntilDone(newState.setRex(rhs))

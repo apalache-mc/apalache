@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.pp.TlaInputError
 
 import scala.collection.mutable
 
@@ -35,6 +36,9 @@ class MapBase(rewriter: SymbStateRewriter) {
         case FinSetT(elemType) =>
           (setCell, elemType)
 
+        case InfSetT(elemType) =>
+          throw new TlaInputError(s"Found a set map over an infinite set of $elemType. Not supported.")
+
         case tp @ _ => throw new NotImplementedError("A set map over %s is not implemented".format(tp))
       }
     }
@@ -43,7 +47,7 @@ class MapBase(rewriter: SymbStateRewriter) {
     val elemsOfSets = setsAsCells.map(nextState.arena.getHas)
     val setLimits = elemsOfSets.map(_.size - 1)
     // find the types of the target expression and of the target set
-    val targetMapT = rewriter.typeFinder.computeRec(mapEx)
+    val targetMapT = CellT.fromTypeTag(mapEx.typeTag)
     val targetSetT = FinSetT(targetMapT)
 
     nextState = nextState.updateArena(_.appendCell(targetSetT))
@@ -83,12 +87,12 @@ class MapBase(rewriter: SymbStateRewriter) {
 
     // add the membership constraints: one per target cell
     for ((targetCell, memExpressions) <- resultsToSource) {
-      val inNewSet = OperEx(TlaSetOper.in, targetCell.toNameEx, targetSetCell.toNameEx)
+      val inNewSet: TlaEx = tla.in(targetCell.toNameEx, targetSetCell.toNameEx)
       val inSourceSet = {
         if (memExpressions.size == 1) {
           memExpressions.head
         } else {
-          tla.or(memExpressions.toSeq: _*)
+          tla.or(memExpressions.toSeq: _*).untyped()
         }
       }
       // the target cell belongs to the resulting set if and only if one of its preimages belongs to the original sets
@@ -109,13 +113,16 @@ class MapBase(rewriter: SymbStateRewriter) {
     // bug 365: what can happen here is that several tuples are mapped to exactly the same cell, e.g., a record field.
     // We have to collect all source tuples for the same cell and say that the result belongs to the set,
     // if and only if one of the source tuples belong to the source set.
-    def inSourceSet(arg: ArenaCell, set: ArenaCell) = OperEx(TlaSetOper.in, arg.toNameEx, set.toNameEx)
+    def inSourceSet(arg: ArenaCell, set: ArenaCell): TlaEx =
+      tla.in(arg.toNameEx, set.toNameEx)
 
     val argsInSourceSets = {
       if (valuesAsCells.length == 1) {
         inSourceSet(valuesAsCells.head, setsAsCells.head) // in_value_set
       } else {
-        tla.and(valuesAsCells.zip(setsAsCells) map (inSourceSet _).tupled: _*) // (and in_val1_set1 ... in_valk_setk)
+        tla
+          .and(valuesAsCells.zip(setsAsCells) map (inSourceSet _).tupled: _*)
+          .untyped() // (and in_val1_set1 ... in_valk_setk)
       }
     }
     // add the edge to the resulting set

@@ -1,7 +1,9 @@
 ----------------- MODULE Rec13 ----------------------                           
 EXTENDS Integers
 
-VARIABLE y
+VARIABLE
+    \* @type: Int;
+    y
 
 LOCAL Send[x \in { 1, 2}] ==
     x \* at this point, we expect x = 2, not x = 1

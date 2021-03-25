@@ -1,10 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
 import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
-import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, IntT}
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * Cache tuple domains as well as ranges a..b.
@@ -35,7 +35,7 @@ class IntRangeCache(solverContext: SolverContext, intValueCache: IntValueCache)
     val set = arena.topCell
     arena = arena.appendHas(set, cells: _*)
     // force that every element is in the set
-    solverContext.assertGroundExpr(tla.and(cells.map(tla.in(_, set)): _*))
+    solverContext.assertGroundExpr(tla.and(cells.map(c => tla.in(c.toNameEx, set.toNameEx)): _*))
     (arena, set)
   }
 }

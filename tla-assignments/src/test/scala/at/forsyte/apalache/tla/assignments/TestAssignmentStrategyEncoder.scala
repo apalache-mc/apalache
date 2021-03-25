@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir.{TestingPredefs, TlaEx}
-import at.forsyte.apalache.tla.lir.Builder._
+import at.forsyte.apalache.tla.lir.convenience.tla._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -49,7 +50,7 @@ class TestAssignmentStrategyEncoder extends FunSuite with TestingPredefs {
   }
 
   test("Test staticAnalysis: assignment") {
-    val asgn = primeEq(n_x, int(1))
+    val asgn = primeEq(n_x, int(1)).untyped()
     val asgnSAD = analyze(asgn, vars)
 
     assertEqualSAD(asgnSAD,
@@ -65,10 +66,10 @@ class TestAssignmentStrategyEncoder extends FunSuite with TestingPredefs {
   }
   test("Test staticAnalysis: or") {
 
-    val asgnX1 = primeEq(n_x, int(1))
-    val asgnX2 = primeEq(n_x, int(2))
-    val cmpX1 = eql(n_x, int(1))
-    val cmpX2 = eql(n_x, int(2))
+    val asgnX1 = primeEq(n_x, int(1)).untyped()
+    val asgnX2 = primeEq(n_x, int(2)).untyped()
+    val cmpX1 = eql(n_x, int(1)).untyped()
+    val cmpX2 = eql(n_x, int(2)).untyped()
 
     val balancedOr = or(asgnX1, asgnX2)
     val imbalancedOr = or(asgnX1, cmpX1)
@@ -114,10 +115,10 @@ class TestAssignmentStrategyEncoder extends FunSuite with TestingPredefs {
 
   test("Test staticAnalysis: and") {
 
-    val asgnX = primeEq(n_x, int(1))
-    val asgnY = primeEq(n_y, int(1))
-    val cmpX = eql(n_x, int(1))
-    val cmpY = eql(n_y, int(1))
+    val asgnX = primeEq(n_x, int(1)).untyped()
+    val asgnY = primeEq(n_y, int(1)).untyped()
+    val cmpX = eql(n_x, int(1)).untyped()
+    val cmpY = eql(n_y, int(1)).untyped()
 
     val andAsgns = and(asgnX, asgnY)
     val andMixed1 = and(asgnX, cmpX)
@@ -166,12 +167,12 @@ class TestAssignmentStrategyEncoder extends FunSuite with TestingPredefs {
   }
 
   test("Test staticAnalysis: exists") {
-    val asgn = primeEq(n_x, n_z)
-    val cmp = eql(n_x, n_z)
-    val existsAsgn = exists(n_z, enumSet(prime(n_y)), asgn)
-    val existsDoubleAsgn = exists(n_z, enumSet(prime(n_y)), exists(n_t, emptySet(), asgn))
-    val existsCmp = exists(n_z, enumSet(prime(n_y)), cmp)
-    val existsDoubleCmp = exists(n_z, enumSet(prime(n_y)), exists(n_t, emptySet(), cmp))
+    val asgn = primeEq(n_x, n_z).untyped()
+    val cmp = eql(n_x, n_z).untyped()
+    val existsAsgn = exists(n_z, enumSet(prime(n_y)), asgn).untyped()
+    val existsDoubleAsgn = exists(n_z, enumSet(prime(n_y)), exists(n_t, emptySet(), asgn)).untyped()
+    val existsCmp = exists(n_z, enumSet(prime(n_y)), cmp).untyped()
+    val existsDoubleCmp = exists(n_z, enumSet(prime(n_y)), exists(n_t, emptySet(), cmp)).untyped()
 
     val existsAsgnSAD = analyze(existsAsgn, vars)
 
@@ -201,10 +202,10 @@ class TestAssignmentStrategyEncoder extends FunSuite with TestingPredefs {
   }
 
   test("Test staticAnalysis: ITE") {
-    val asgnX1 = primeEq(n_x, int(1))
-    val asgnX2 = primeEq(n_x, int(2))
-    val cmpX1 = eql(n_x, int(1))
-    val cmpX2 = eql(n_x, int(2))
+    val asgnX1 = primeEq(n_x, int(1)).untyped()
+    val asgnX2 = primeEq(n_x, int(2)).untyped()
+    val cmpX1 = eql(n_x, int(1)).untyped()
+    val cmpX2 = eql(n_x, int(2)).untyped()
 
     val balancedITE = ite(falseEx, asgnX1, asgnX2)
     val imbalancedITE = ite(falseEx, asgnX1, cmpX1)
@@ -250,19 +251,19 @@ class TestAssignmentStrategyEncoder extends FunSuite with TestingPredefs {
   }
 
   test("Test staticAnalysis: LET-IN") {
-    val asgnX = primeEq(n_x, int(1))
-    val asgnY1 = primeEq(n_y, int(1))
-    val asgnY2 = primeEq(n_y, int(2))
-    val xDecl = declOp("X", asgnX)
-    val bodySingle = appDecl(xDecl)
+    val asgnX = primeEq(n_x, int(1)).untyped()
+    val asgnY1 = primeEq(n_y, int(1)).untyped()
+    val asgnY2 = primeEq(n_y, int(2)).untyped()
+    val xDecl = declOp("X", asgnX).untypedOperDecl()
+    val bodySingle = appDecl(xDecl).untyped()
     val bodyOr =
       or(
           and(appDecl(xDecl), asgnY1),
           and(appDecl(xDecl), asgnY2)
-      )
+      ).untyped()
 
-    val letInSingle = letIn(bodySingle, xDecl)
-    val letInOr = letIn(bodyOr, xDecl)
+    val letInSingle = letIn(bodySingle, xDecl).untyped()
+    val letInOr = letIn(bodyOr, xDecl).untyped()
 
     val asgnSAD = analyze(asgnX, vars)
 

@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
-import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * A printer for counterexamples, in various formats: TLA+ , as TLC output, ...
@@ -59,7 +59,7 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
       ValEx(TlaBool(true))
     } else {
       val namesAndVals = state.toSeq.sortBy(_._1).map { case (name, value) =>
-        tla.eql(NameEx(name), value)
+        tla.eql(tla.name(name), value)
       }
       tla.and(namesAndVals: _*)
     }

@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.trex
 import at.forsyte.apalache.tla.bmcmt.Binding
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.scalatest.fixture
 
 /**
@@ -95,10 +96,10 @@ abstract class AbstractTestTransitionExecutorImpl[SnapshotT] extends fixture.Fun
 
   test("Init + 3x Next") { exeCtx: ExecutorContextT =>
     // x' <- 1 /\ y' <- 1
-    val init = tla.and(mkAssign("y", 1), mkAssign("x", 1))
+    val init: TlaEx = tla.and(mkAssign("y", 1), mkAssign("x", 1))
     // x' <- y /\ y' <- x + y
-    val trans1 = tla.and(mkAssign("x", tla.name("y")), mkAssign("y", tla.plus(tla.name("x"), tla.name("y"))))
-    val trans2 = tla.and(mkAssign("x", tla.name("x")), mkAssign("y", tla.name("y")))
+    val trans1: TlaEx = tla.and(mkAssign("x", tla.name("y")), mkAssign("y", tla.plus(tla.name("x"), tla.name("y"))))
+    val trans2: TlaEx = tla.and(mkAssign("x", tla.name("x")), mkAssign("y", tla.name("y")))
     val trex = new TransitionExecutorImpl(Set.empty, Set("x", "y"), exeCtx)
     trex.prepareTransition(1, init)
     trex.pickTransition()
@@ -124,17 +125,17 @@ abstract class AbstractTestTransitionExecutorImpl[SnapshotT] extends fixture.Fun
     assert(Binding().toMap == decPath(0)._1)
     // state 1 is produced by transition 1
     assert(1 == decPath(1)._2)
-    assert(Map("x" -> tla.int(1), "y" -> tla.int(1)) == decPath(1)._1)
+    assert(Map("x" -> tla.int(1).untyped(), "y" -> tla.int(1).untyped()) == decPath(1)._1)
     // state 2 is produced by transition 1
     assert(1 == decPath(2)._2)
-    assert(Map("x" -> tla.int(1), "y" -> tla.int(2)) == decPath(2)._1)
+    assert(Map("x" -> tla.int(1).untyped(), "y" -> tla.int(2).untyped()) == decPath(2)._1)
     // state 3 is produced by transition 1
     assert(1 == decPath(3)._2)
-    assert(Map("x" -> tla.int(2), "y" -> tla.int(3)) == decPath(3)._1)
+    assert(Map("x" -> tla.int(2).untyped(), "y" -> tla.int(3).untyped()) == decPath(3)._1)
     // state 4 is produced either by transition 1, or by transition 2
     assert(1 == decPath(4)._2 || 2 == decPath(4)._2)
-    assert(Map("x" -> tla.int(2), "y" -> tla.int(3)) == decPath(4)._1
-          || Map("x" -> tla.int(3), "y" -> tla.int(5)) == decPath(4)._1)
+    assert(Map("x" -> tla.int(2).untyped(), "y" -> tla.int(3).untyped()) == decPath(4)._1
+          || Map("x" -> tla.int(3).untyped(), "y" -> tla.int(5).untyped()) == decPath(4)._1)
 
     // test the symbolic execution
     val exe = trex.execution

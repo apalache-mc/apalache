@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.types.IntT
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * An oracle that uses an integer variable. Although using integers as an oracle is
