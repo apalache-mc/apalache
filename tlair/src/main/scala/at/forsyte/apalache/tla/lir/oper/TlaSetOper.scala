@@ -81,30 +81,6 @@ object TlaSetOper {
     override val precedence: (Int, Int) = (5, 5)
   }
 
-  /**
-   * The standard \subset operator.
-   *
-   * WARNING: Do not confuse with SUBSET that is implemented by TlaSetOper.powerset.
-   */
-  object subsetProper extends TlaSetOper {
-    override val arity = FixedArity(2)
-    override val name = "\\subset"
-    override val precedence: (Int, Int) = (5, 5)
-  }
-
-  object supsetProper extends TlaSetOper {
-    override val arity = FixedArity(2)
-    override val name = "\\supset"
-    override val precedence: (Int, Int) = (5, 5)
-  }
-
-  /** the standard \supseteq operator */
-  object supseteq extends TlaSetOper {
-    override val arity = FixedArity(2)
-    override val name = "\\supseteq"
-    override val precedence: (Int, Int) = (5, 5)
-  }
-
   /** the standard set difference */
   object setminus extends TlaSetOper {
     override val arity = FixedArity(2)

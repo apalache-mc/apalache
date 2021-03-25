@@ -1,7 +1,5 @@
 package at.forsyte.apalache.tla.lir.oper
 
-import at.forsyte.apalache.tla.lir.{LirError, OperEx, TlaEx, TypeTag}
-
 /**
  * Function operators.
  */
@@ -155,18 +153,5 @@ object TlaFunOper {
     override def arity: OperArity = new OperArity(k => k >= 3 && k % 2 == 1)
     override val name: String = "EXCEPT"
     override val precedence: (Int, Int) = (16, 16) // as the function application
-
-    /**
-     * SANY always packs an EXCEPT accessor in a tuple, even if the index is one-dimensional.
-     * Unpack the one-dimensional index.
-     *
-     * This method should not be used at all. See the issue #617.
-     */
-    def unpackIndex: TlaEx => TlaEx = {
-      case OperEx(TlaFunOper.tuple, one) => one
-      case e =>
-        throw new LirError(
-            "Multi-index EXCEPT is to be implemented. See: https://github.com/informalsystems/apalache/issues/617")
-    }
   }
 }

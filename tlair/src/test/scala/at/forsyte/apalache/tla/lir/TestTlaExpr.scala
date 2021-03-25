@@ -69,14 +69,8 @@ class TestTlaExpr extends FunSuite {
     OperEx(TlaSetOper.notin, x, y)
     // x \setminus y
     OperEx(TlaSetOper.setminus, x, y)
-    // x \subset y
-    OperEx(TlaSetOper.subsetProper, x, y)
     // x \subseteq y
     OperEx(TlaSetOper.subseteq, x, y)
-    // x \supset y
-    OperEx(TlaSetOper.supsetProper, x, y)
-    // x \supseteq y
-    OperEx(TlaSetOper.supseteq, x, y)
     // SUBSET y
     OperEx(TlaSetOper.powerset, y)
     // UNION x
@@ -112,14 +106,8 @@ class TestTlaExpr extends FunSuite {
     expectWrongArity(TlaSetOper.notin, y)
     // x \setminus y
     expectWrongArity(TlaSetOper.setminus, y)
-    // x \subset y
-    expectWrongArity(TlaSetOper.subsetProper, x)
     // x \subseteq y
     expectWrongArity(TlaSetOper.subseteq, x)
-    // x \supset y
-    expectWrongArity(TlaSetOper.supsetProper, x)
-    // x \supseteq y
-    expectWrongArity(TlaSetOper.supseteq, x)
     // SUBSET y
     expectWrongArity(TlaSetOper.powerset, y, x)
     // UNION x

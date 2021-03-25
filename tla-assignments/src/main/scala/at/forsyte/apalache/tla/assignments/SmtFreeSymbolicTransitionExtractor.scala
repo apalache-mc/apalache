@@ -21,7 +21,7 @@ class SmtFreeSymbolicTransitionExtractor(
   /** Checks whether expressions, which cannot contain assignments, use unassigned variables */
   private def throwOnUseBeforeAssignment(unassignedVars: Set[String]): TlaEx => Unit = {
     /** Manual assignments at such locations throw exceptions */
-    case ex @ OperEx(BmcOper.assign, OperEx(TlaActionOper.prime, NameEx(_)), _) =>
+    case ex @ OperEx(ApalacheOper.assign, OperEx(TlaActionOper.prime, NameEx(_)), _) =>
       val locString = getLocString(ex)
       // TODO: Update manual on assignments, see #368
       throw new AssignmentException(
@@ -86,7 +86,7 @@ class SmtFreeSymbolicTransitionExtractor(
       else currentState
 
     /** Base case, manual assignments */
-    case ex @ OperEx(BmcOper.assign, OperEx(TlaActionOper.prime, NameEx(name)), assignmentFreeRhs) =>
+    case ex @ OperEx(ApalacheOper.assign, OperEx(TlaActionOper.prime, NameEx(name)), assignmentFreeRhs) =>
       // Similar to above, except manual assignments throw if spurious
       throwOnUseBeforeAssignment(currentState.unassignedVars)(assignmentFreeRhs)
       if (currentState.unassignedVars.contains(name))
