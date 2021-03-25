@@ -74,8 +74,7 @@ trait IrGenerators {
    */
   val setOperators = List(TlaSetOper.cap, TlaSetOper.cup, TlaSetOper.enumSet, TlaSetOper.filter, TlaSetOper.funSet,
       TlaSetOper.in, TlaSetOper.notin, TlaSetOper.map, TlaSetOper.powerset, TlaSetOper.recSet, TlaSetOper.seqSet,
-      TlaSetOper.setminus, TlaSetOper.subseteq, TlaSetOper.subsetProper, TlaSetOper.supseteq, TlaSetOper.supsetProper,
-      TlaSetOper.times, TlaSetOper.union)
+      TlaSetOper.setminus, TlaSetOper.subseteq, TlaSetOper.times, TlaSetOper.union)
 
   def genTypeTag: Gen[TypeTag] = for {
     i <- arbitrary[Int]

@@ -96,9 +96,6 @@ class TestKeraLanguagePred extends LanguagePredTestSuite {
     expectFail(pred.isExprOk(cap(enumSet(int(1)), enumSet(int(2)))))
     expectFail(pred.isExprOk(setminus(enumSet(int(1)), enumSet(int(2)))))
     expectFail(pred.isExprOk(notin(int(1), enumSet(int(2)))))
-    expectFail(pred.isExprOk(supseteq(enumSet(int(1)), enumSet(int(2)))))
-    expectFail(pred.isExprOk(subset(enumSet(int(1)), enumSet(int(2)))))
-    expectFail(pred.isExprOk(supset(enumSet(int(1)), enumSet(int(2)))))
   }
 
   test("not a KerA record expression") {

@@ -36,6 +36,10 @@
 
 * Intermediate representation: removed TlaArithOper.{sum,prod}, as they are not standard, see #580
 
+### Removed
+
+* Intermediate representation: removed non-standard operators subsetProper, supset, supseteq, see #615
+
 ### Known issues
 
 * Multiple-update expressions `[f EXCEPT ![i1][i2] = e1, ![i1][i3] = e2]` may produce incorrect results, see #647
