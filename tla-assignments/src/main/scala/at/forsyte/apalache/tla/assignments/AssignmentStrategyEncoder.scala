@@ -148,7 +148,7 @@ class AssignmentStrategyEncoder(val m_varSym: String = "b", val m_fnSym: String 
         }
 
       /** Base case, manual assignments */
-      case OperEx(BmcOper.assign, OperEx(TlaActionOper.prime, NameEx(name)), star) =>
+      case OperEx(ApalacheOper.assign, OperEx(TlaActionOper.prime, NameEx(name)), star) =>
         val n: Long = phi.ID.id
 
         /** delta_v creates a fresh variable from the unique ID if name == v */

@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaOper}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
@@ -51,14 +51,6 @@ class OperAppToLetInDef(
         .typedOperDecl(OperT1(Seq(), resType))
       val applyNewDecl = tla.appOp(NameEx(newName)(ne.typeTag)).typed(resType)
       LetInEx(applyNewDecl, newDecl)(ex.typeTag)
-
-    // On type annot. ignore the RHS
-    case ex @ OperEx(BmcOper.withType, argEx, typeEx) =>
-      val newArg = wrap(wrappableNames)(argEx)
-      if (argEx == newArg)
-        ex
-      else
-        OperEx(BmcOper.withType, newArg, typeEx)(argEx.typeTag)
 
     case ex @ OperEx(oper, args @ _*) =>
       val newArgs = args map wrap(wrappableNames)

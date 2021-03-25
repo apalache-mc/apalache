@@ -150,7 +150,7 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
         key(tla.prime(NameEx("x")))
           -> List(new PrimeRule(this)),
         // assignment
-        key(OperEx(BmcOper.assign, tla.name("x"), tla.name("y")))
+        key(OperEx(ApalacheOper.assign, tla.name("x"), tla.name("y")))
           -> List(new AssignmentRule(this)),
         // constants
         key(ValEx(TlaBool(true)))
@@ -174,7 +174,7 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
           -> List(new AndRule(this)),
         key(tla.not(tla.name("x")))
           -> List(new NegRule(this)),
-        key(OperEx(BmcOper.skolem, tla.exists(tla.name("x"), tla.name("S"), tla.name("p"))))
+        key(OperEx(ApalacheOper.skolem, tla.exists(tla.name("x"), tla.name("S"), tla.name("p"))))
           -> List(new QuantRule(this)),
         key(tla.exists(tla.name("x"), tla.name("S"), tla.name("p")))
           -> List(new QuantRule(this)),
@@ -203,7 +203,7 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
           -> List(new SetFilterRule(this)),
         key(tla.map(tla.name("e"), tla.name("x"), tla.name("S")))
           -> List(new SetMapRule(this)),
-        key(OperEx(BmcOper.expand, tla.name("X")))
+        key(OperEx(ApalacheOper.expand, tla.name("X")))
           -> List(new SetExpandRule(this)),
         key(tla.powSet(tla.name("X")))
           -> List(new PowSetCtorRule(this)),
@@ -267,7 +267,7 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
         key(tla.concat(tla.name("Seq1"), tla.name("Seq2")))
           -> List(new SeqOpsRule(this)),
         // FiniteSets
-        key(OperEx(BmcOper.constCard, tla.ge(tla.card(tla.name("S")), tla.int(3))))
+        key(OperEx(ApalacheOper.constCard, tla.ge(tla.card(tla.name("S")), tla.int(3))))
           -> List(new CardinalityConstRule(this)),
         key(OperEx(TlaFiniteSetOper.cardinality, tla.name("S")))
           -> List(new CardinalityRule(this)),
@@ -276,8 +276,6 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
         // misc
         key(OperEx(TlaOper.label, tla.str("lab"), tla.str("x")))
           -> List(new LabelRule(this)),
-        key(OperEx(BmcOper.withType, tla.int(1), ValEx(TlaIntSet)))
-          -> List(new TypeAnnotationRule(this)),
         // TLC
         key(OperEx(TlcOper.print, tla.bool(true), tla.str("msg")))
           -> List(new TlcRule(this)),

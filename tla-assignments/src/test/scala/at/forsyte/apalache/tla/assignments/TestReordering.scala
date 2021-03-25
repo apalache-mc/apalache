@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.assignments
 
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaActionOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaActionOper, TlaOper}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TestingPredefs, TlaEx}
 import org.junit.runner.RunWith
@@ -59,8 +59,8 @@ class TestReordering extends FunSuite with TestingPredefs {
 
   test("Reordering z assignments to the front") {
     val rankingFn: TlaEx => T = {
-      case OperEx(BmcOper.assign, OperEx(TlaActionOper.prime, NameEx("z")), _) => Some(0)
-      case _                                                                   => None
+      case OperEx(ApalacheOper.assign, OperEx(TlaActionOper.prime, NameEx("z")), _) => Some(0)
+      case _                                                                        => None
     }
 
     val reordering = mkReordering(rankingFn)

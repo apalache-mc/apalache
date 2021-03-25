@@ -30,7 +30,7 @@ class SkolemizationMarker @Inject() (tracker: TransformationTracker) extends Tla
   def transform: TlaExTransformation = tracker.trackEx {
     case ex @ OperEx(TlaBoolOper.exists, name, set, pred) =>
       val tag = ex.typeTag
-      OperEx(BmcOper.skolem, OperEx(TlaBoolOper.exists, name, set, transform(pred))(tag))(tag)
+      OperEx(ApalacheOper.skolem, OperEx(TlaBoolOper.exists, name, set, transform(pred))(tag))(tag)
 
     case ex @ OperEx(TlaBoolOper.forall, name, set, pred) =>
       // it is fine to skolemize existentials under \A, as \A is translated into a conjunction
@@ -39,7 +39,7 @@ class SkolemizationMarker @Inject() (tracker: TransformationTracker) extends Tla
     case op @ OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, _), ValEx(TlaInt(intVal)))
         if intVal.isValidInt =>
       // this constraint can be solved more efficiently than the direct computation of Cardinality
-      OperEx(BmcOper.constCard, op)(op.typeTag)
+      OperEx(ApalacheOper.constCard, op)(op.typeTag)
 
     case ex @ OperEx(TlaBoolOper.not, _) =>
       ex // stop here. This should be a leaf (and rare) expression, as we are dealing with the NNF.
