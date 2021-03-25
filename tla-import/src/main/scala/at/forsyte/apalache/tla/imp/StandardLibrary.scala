@@ -69,16 +69,17 @@ object StandardLibrary {
         ("TLC", "ToString") -> TlcOper.tlcToString,
         ("TLC", "Print") -> TlcOper.print,
         ("TLC", "PrintT") -> TlcOper.printT,
-        ("Apalache", ":=") -> BmcOper.assign,
-        ("Apalache", "Skolem") -> BmcOper.skolem,
-        ("Apalache", "Expand") -> BmcOper.expand,
-        ("Apalache", "ConstCardinality") -> BmcOper.constCard,
-        ("Apalache", "FunAsSeq") -> BmcOper.funAsSeq
+        ("Apalache", ":=") -> ApalacheOper.assign,
+        ("Apalache", "Skolem") -> ApalacheOper.skolem,
+        ("Apalache", "Expand") -> ApalacheOper.expand,
+        ("Apalache", "ConstCardinality") -> ApalacheOper.constCard,
+        ("Apalache", "FunAsSeq") -> ApalacheOper.funAsSeq
     ) ////
 
   val globalOperators: Map[String, TlaOper] =
     Map[String, TlaOper](
-        // TODO: this operator is deprecated, the user should use Typing, add a warning when the type checker is in place
-        "<:" -> BmcOper.withType
+        // This operator is deprecated and should not be used.
+        // We still parse it, so the type checker can complain about it.
+        "<:" -> ApalacheOper.withType
     ) ////
 }

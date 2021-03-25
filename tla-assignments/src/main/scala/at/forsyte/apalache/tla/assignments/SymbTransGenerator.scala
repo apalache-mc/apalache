@@ -54,7 +54,7 @@ class SymbTransGenerator(tracker: TransformationTracker) {
      */
     def allSelections(ex: TlaEx, letInMap: letInMapType = Map.empty): SelMapType = ex match {
       /** Base case, assignments */
-      case e @ OperEx(BmcOper.assign, _, _) => Map(e.ID -> Set(Set(e.ID)))
+      case e @ OperEx(ApalacheOper.assign, _, _) => Map(e.ID -> Set(Set(e.ID)))
 
       /**
        * Branches( /\ \phi_i ) = { Br_1 U ... U Br_s | \forall i . Br_i \in Branches(\phi_i) }
@@ -146,7 +146,7 @@ class SymbTransGenerator(tracker: TransformationTracker) {
 
     def sliceWith(selection: Set[UID], allSelections: SelMapType): TlaExTransformation = tracker.trackEx {
       // Assignments are a base case, don't recurse on args
-      case ex @ OperEx(BmcOper.assign, _*)        => ex
+      case ex @ OperEx(ApalacheOper.assign, _*)   => ex
       case ex @ OperEx(TlaBoolOper.or, args @ _*) =>
         /**
          * Or-branches have the property that they either contain

@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.assignments
 
-import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaActionOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaActionOper, TlaOper}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 
@@ -19,7 +19,7 @@ class AssignmentOperatorIntroduction(
 
   def transform: TlaExTransformation = tracker.trackEx {
     case ex @ OperEx(TlaOper.eq, prime @ OperEx(TlaActionOper.prime, _: NameEx), asgnVal) if isAssignment(ex.ID) =>
-      val ret = OperEx(BmcOper.assign, prime, asgnVal)(ex.typeTag)
+      val ret = OperEx(ApalacheOper.assign, prime, asgnVal)(ex.typeTag)
       uidReplacementMap += ex.ID -> ret.ID
       ret
 
