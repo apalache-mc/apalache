@@ -64,7 +64,6 @@ class TestKeraLanguagePred extends LanguagePredTestSuite {
   test("KerA miscellania") {
     expectOk(pred.isExprOk(label(int(2), "a")))
     expectOk(pred.isExprOk(label(int(2), "a", "b")))
-    expectOk(pred.isExprOk(withType(name("x"), enumSet(booleanSet()))))
   }
 
   test("KerA TLC") {

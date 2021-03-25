@@ -49,7 +49,7 @@ class ConstSimplifierForSmt extends ConstSimplifierBase {
       }
 
     // do not go in tla.in and tla.notin, as it breaks down our SMT encoding
-    case ex @ (OperEx(TlaSetOper.in, _*) | OperEx(TlaSetOper.notin, _*) | OperEx(BmcOper.withType, _*)) =>
+    case ex @ (OperEx(TlaSetOper.in, _*) | OperEx(TlaSetOper.notin, _*)) =>
       ex
 
     // using isTrueConst and isFalseConst that are more precise than those of ConstSimplifierBase

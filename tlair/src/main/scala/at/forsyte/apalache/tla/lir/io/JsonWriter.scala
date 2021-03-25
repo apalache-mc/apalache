@@ -331,8 +331,7 @@ object JsonWriter {
       TlaTempOper.guarantees -> "guarantees",
       TlaSeqOper.concat -> "concat",
       TlcOper.colonGreater -> "colonGreater",
-      BmcOper.assign -> "assign",
-      BmcOper.withType -> "lessColon",
+      ApalacheOper.assign -> "assign",
       TlaSetOper.funSet -> "funSet"
   )
 
