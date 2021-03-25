@@ -26,6 +26,15 @@
 * Preprocessing: massive refactoring of the passes to support types. This may have introduced unexpected bugs.
 * Model checker: translation rules for records and functions have been modified, in order to support new types. Bugs to
   be expected.
+* Intermediate representation: renamed BmcOper to ApalacheOper. Its operators have the prefix `Apalache!` now.
+
+### Removed
+
+* Intermediate representation: removed TlaOper.chooseIdiom
+
+### Changed
+
+* Intermediate representation: removed TlaArithOper.{sum,prod}, as they are not standard, see #580
 
 ### Removed
 

@@ -118,11 +118,9 @@ object UTFPrinter extends Printer {
           case TlaBoolOper.forallUnbounded => mkOpApp("%s%%s: %%s".format(m_forall), args: _*)
           case TlaBoolOper.existsUnbounded => mkOpApp("%s%%s: %%s".format(m_exists), args: _*)
 
-          case TlaArithOper.sum     => opAppStr(args, " + ")
           case TlaArithOper.plus    => mkOpApp("%s + %s", args: _*)
           case TlaArithOper.uminus  => mkOpApp("-%s", args: _*)
           case TlaArithOper.minus   => mkOpApp("%s - %s", args: _*)
-          case TlaArithOper.prod    => opAppStr(args, " * ")
           case TlaArithOper.mult    => mkOpApp("%s * %s", args: _*)
           case TlaArithOper.div     => mkOpApp("%s // %s", args: _*)
           case TlaArithOper.mod     => mkOpApp("%s %% %s", args: _*)

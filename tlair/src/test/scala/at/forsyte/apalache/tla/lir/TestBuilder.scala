@@ -707,11 +707,6 @@ class TestBuilder extends FunSuite with TestingPredefs {
   }
 
   test("Test direct methods: TlaArithOper") {
-    val sumBuild1 = bd.sum().untyped()
-    val sumBuild2 = bd.sum(n_a, n_b).untyped()
-
-    assert(sumBuild1 == OperEx(TlaArithOper.sum))
-    assert(sumBuild2 == OperEx(TlaArithOper.sum, n_a, n_b))
 
     val plusBuild1 = bd.plus(n_a, n_b).untyped()
     val plusBuild2 = bd.plus(n_a, bd.int(2)).untyped()
@@ -736,12 +731,6 @@ class TestBuilder extends FunSuite with TestingPredefs {
     val uminusBuild = bd.uminus(n_a).untyped()
 
     assert(uminusBuild == OperEx(TlaArithOper.uminus, n_a))
-
-    val prodBuild1 = bd.prod().untyped()
-    val prodBuild2 = bd.prod(n_a, n_b).untyped()
-
-    assert(prodBuild1 == OperEx(TlaArithOper.prod))
-    assert(prodBuild2 == OperEx(TlaArithOper.prod, n_a, n_b))
 
     val multBuild1 = bd.mult(n_a, n_b).untyped()
     val multBuild2 = bd.mult(n_a, bd.int(2)).untyped()
@@ -845,11 +834,6 @@ class TestBuilder extends FunSuite with TestingPredefs {
   }
 
   test("Test byName: TlaArithOper") {
-    val sumBuild1 = bd.byName(TlaArithOper.sum.name).untyped()
-    val sumBuild2 = bd.byName(TlaArithOper.sum.name, n_a, n_b).untyped()
-
-    assert(sumBuild1 == OperEx(TlaArithOper.sum))
-    assert(sumBuild2 == OperEx(TlaArithOper.sum, n_a, n_b))
 
     val plusBuild = bd.byName(TlaArithOper.plus.name, n_a, n_b).untyped()
 
@@ -868,12 +852,6 @@ class TestBuilder extends FunSuite with TestingPredefs {
     assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.uminus.name).untyped())
     assert(uminusBuild == OperEx(TlaArithOper.uminus, n_a))
     assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.uminus.name, n_a, n_b, n_c).untyped())
-
-    val prodBuild1 = bd.byName(TlaArithOper.prod.name).untyped()
-    val prodBuild2 = bd.byName(TlaArithOper.prod.name, n_a, n_b).untyped()
-
-    assert(prodBuild1 == OperEx(TlaArithOper.prod))
-    assert(prodBuild2 == OperEx(TlaArithOper.prod, n_a, n_b))
 
     val multBuild = bd.byName(TlaArithOper.mult.name, n_a, n_b).untyped()
 
@@ -937,11 +915,6 @@ class TestBuilder extends FunSuite with TestingPredefs {
   }
 
   test("Test byNameOrNull: TlaArithOper") {
-    val sumBuild1 = bd.byNameOrNull(TlaArithOper.sum.name).untyped()
-    val sumBuild2 = bd.byNameOrNull(TlaArithOper.sum.name, n_a, n_b).untyped()
-
-    assert(sumBuild1 == OperEx(TlaArithOper.sum))
-    assert(sumBuild2 == OperEx(TlaArithOper.sum, n_a, n_b))
 
     val plusBuildBad1 = bd.byNameOrNull(TlaArithOper.plus.name, n_a).untyped()
     val plusBuild = bd.byNameOrNull(TlaArithOper.plus.name, n_a, n_b).untyped()
@@ -966,12 +939,6 @@ class TestBuilder extends FunSuite with TestingPredefs {
     assert(uminusBuildBad1 == NullEx)
     assert(uminusBuild == OperEx(TlaArithOper.uminus, n_a))
     assert(uminusBuildBad2 == NullEx)
-
-    val prodBuild1 = bd.byNameOrNull(TlaArithOper.prod.name).untyped()
-    val prodBuild2 = bd.byNameOrNull(TlaArithOper.prod.name, n_a, n_b).untyped()
-
-    assert(prodBuild1 == OperEx(TlaArithOper.prod))
-    assert(prodBuild2 == OperEx(TlaArithOper.prod, n_a, n_b))
 
     val multBuildBad1 = bd.byNameOrNull(TlaArithOper.mult.name, n_a).untyped()
     val multBuild = bd.byNameOrNull(TlaArithOper.mult.name, n_a, n_b).untyped()

@@ -776,13 +776,6 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         val opsig = OperT1(List(IntT1(), IntT1()), BoolT1())
         mkExRefApp(opsig, args)
 
-      // TODO: scheduled for removal, see issue #580
-      case OperEx(op, args @ _*) if op == TlaArithOper.sum || op == TlaArithOper.prod =>
-        // SUM(e_1, ..., e_n) or PROD(e_1, ..., e_n)
-        val nInts = List.fill(args.length)(IntT1())
-        val opsig = OperT1(nInts, IntT1())
-        mkExRefApp(opsig, args)
-
       case OperEx(TlaArithOper.dotdot, args @ _*) =>
         // a..b
         val opsig = OperT1(List(IntT1(), IntT1()), SetT1(IntT1()))
@@ -809,35 +802,35 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         mkExRefApp(opsig, Seq(sub, act))
 
       //******************************************** Apalache **************************************************
-      case OperEx(BmcOper.funAsSeq, fun, len) =>
+      case OperEx(ApalacheOper.funAsSeq, fun, len) =>
         val a = varPool.fresh
         // ((Int -> a), Int) => Seq(a)
         val opsig = OperT1(Seq(FunT1(IntT1(), a), IntT1()), SeqT1(a))
         mkExRefApp(opsig, Seq(fun, len))
 
-      case OperEx(BmcOper.assign, lhs, rhs) =>
+      case OperEx(ApalacheOper.assign, lhs, rhs) =>
         val a = varPool.fresh
         // (a, a) => Bool
         val opsig = OperT1(Seq(a, a), BoolT1())
         mkExRefApp(opsig, Seq(lhs, rhs))
 
-      case OperEx(BmcOper.expand, set) =>
+      case OperEx(ApalacheOper.expand, set) =>
         val a = varPool.fresh
         // a => Bool
         val opsig = OperT1(Seq(a), a)
         mkExRefApp(opsig, Seq(set))
 
-      case OperEx(BmcOper.skolem, predicate) =>
+      case OperEx(ApalacheOper.skolem, predicate) =>
         // Bool => Bool
         val opsig = OperT1(Seq(BoolT1()), BoolT1())
         mkExRefApp(opsig, Seq(predicate))
 
-      case OperEx(BmcOper.constCard, predicate) =>
+      case OperEx(ApalacheOper.constCard, predicate) =>
         // Bool => Bool
         val opsig = OperT1(Seq(BoolT1()), BoolT1())
         mkExRefApp(opsig, Seq(predicate))
 
-      case OperEx(BmcOper.distinct, args @ _*) =>
+      case OperEx(ApalacheOper.distinct, args @ _*) =>
         val a = varPool.fresh
         // (a, ..., a) => Bool
         val opsig = OperT1(args.map(_ => a), BoolT1())
@@ -848,7 +841,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         val typeVar = varPool.fresh
         mkExRefApp(OperT1(nameAndArgs.map(_ => StrT1()) :+ typeVar, typeVar), nameAndArgs :+ labelledEx)
 
-      case OperEx(BmcOper.withType, lhs, annotation) =>
+      case OperEx(ApalacheOper.withType, lhs, annotation) =>
         // Met an old type annotation. Warn the user and ignore the annotation.
         logger.error("Met an old type annotation: " + annotation)
         logger.error("See: https://apalache.informal.systems/docs/apalache/typechecker-snowcat.html")

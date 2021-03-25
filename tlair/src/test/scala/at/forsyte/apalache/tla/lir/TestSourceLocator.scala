@@ -13,8 +13,8 @@ import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.standard._
 
 import scala.collection.mutable
-
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 
 @RunWith(classOf[JUnitRunner])
 class TestSourceLocator extends FunSuite with TestingPredefs {
@@ -56,15 +56,13 @@ class TestSourceLocator extends FunSuite with TestingPredefs {
   val ex6 = unchanged(n_x).untyped()
   val ex7 = unchangedTup(n_x, n_y).untyped()
   val ex8 =
-    withType(
-        enumFun(str("x"), int(1)),
+    OperEx(ApalacheOper.withType, enumFun(str("x"), int(1)),
         enumFun(
             str("x"),
             ValEx(TlaIntSet),
             str("y"),
             enumSet(ValEx(TlaStrSet))
-        )
-    ).untyped()
+        ))(Untyped())
   val ex9 = appFun(enumFun(str("x"), int(1)), str("x")).untyped()
 
   val exs = List(
@@ -165,12 +163,6 @@ class TestSourceLocator extends FunSuite with TestingPredefs {
   test("Test Prime") {
     val vars = Set("x", "y")
     val transformation = Prime(vars, tracker)
-
-    testTransformation(transformation)
-  }
-
-  test("Test PruneApalacheAnnotations") {
-    val transformation = PruneApalacheAnnotations(tracker)
 
     testTransformation(transformation)
   }

@@ -2576,120 +2576,6 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     expectDecl("AToString", OperEx(TlcOper.tlcToString, int(42)))
   }
 
-  test("type annotations (our custom extension)") {
-    // This is a temporary solution until Jure write a proper type inference engine.
-    // The operator <: should be defined somehow. We will rewrite it during the import phase.
-    // It may look strange that we use sets (Int, BOOLEAN, Int, [A -> B]) to denote types,
-    // but this solution is quite convenient and natural for TLA+.
-    val text =
-      """---- MODULE types ----
-      |EXTENDS Integers
-      |VARIABLE x, f
-      |a <: b == a
-      |SetOfInts == {} <: {Int}
-      |SetOfBools == {} <: {BOOLEAN}
-      |SetOfStrings == {} <: {STRING}
-      |SetOfSetsOfInts == {} <: {{Int}}
-      |Integer == 1 <: Int
-      |Bool == FALSE <: BOOLEAN
-      |Str == "a" <: STRING
-      |Fun == f <: [Int -> Int]
-      |SetOfFuns == f <: {[Int -> Int]}
-      |Rec == f <: [a |-> Int, b |-> BOOLEAN]
-      |SetOfRecs == {} <: {[a |-> Int, b |-> BOOLEAN]}
-      |Tup == f <: <<Int, BOOLEAN>>
-      |SetOfTuples == {} <: {<<Int, BOOLEAN>>}
-      |================================
-    """.stripMargin
-
-    val (rootName, modules) = sanyImporter
-      .loadFromSource("types", Source.fromString(text))
-    assert(3 == modules.size) // our module + Integers & Naturals
-    val root = modules("types")
-    expectSourceInfoInDefs(root)
-
-    def expectDecl(name: String, body: TlaEx) =
-      findAndExpectOperDecl(root, name, List(), body)
-
-    expectDecl(
-        "SetOfInts",
-        OperEx(BmcOper.withType, enumSet(), enumSet(ValEx(TlaIntSet)))
-    )
-
-    expectDecl(
-        "SetOfBools",
-        OperEx(BmcOper.withType, enumSet(), enumSet(ValEx(TlaBoolSet)))
-    )
-
-    expectDecl(
-        "SetOfStrings",
-        OperEx(BmcOper.withType, enumSet(), enumSet(ValEx(TlaStrSet)))
-    )
-
-    expectDecl(
-        "SetOfInts",
-        OperEx(BmcOper.withType, enumSet(), enumSet(ValEx(TlaIntSet)))
-    )
-
-    expectDecl(
-        "SetOfSetsOfInts",
-        OperEx(BmcOper.withType, enumSet(), enumSet(enumSet(ValEx(TlaIntSet))))
-    )
-
-    expectDecl("Integer", OperEx(BmcOper.withType, int(1), ValEx(TlaIntSet)))
-
-    expectDecl("Bool", OperEx(BmcOper.withType, bool(false), ValEx(TlaBoolSet)))
-
-    expectDecl("Str", OperEx(BmcOper.withType, str("a"), ValEx(TlaStrSet)))
-
-    expectDecl(
-        "Fun",
-        OperEx(
-            BmcOper.withType,
-            NameEx("f"),
-            funSet(ValEx(TlaIntSet), ValEx(TlaIntSet))
-        )
-    )
-
-    expectDecl(
-        "Rec",
-        OperEx(
-            BmcOper.withType,
-            NameEx("f"),
-            enumFun(str("a"), ValEx(TlaIntSet), str("b"), ValEx(TlaBoolSet))
-        )
-    )
-
-    expectDecl(
-        "SetOfRecs",
-        OperEx(
-            BmcOper.withType,
-            enumSet(),
-            enumSet(
-                enumFun(str("a"), ValEx(TlaIntSet), str("b"), ValEx(TlaBoolSet))
-            )
-        )
-    )
-
-    expectDecl(
-        "Tup",
-        OperEx(
-            BmcOper.withType,
-            NameEx("f"),
-            tuple(ValEx(TlaIntSet), ValEx(TlaBoolSet))
-        )
-    )
-
-    expectDecl(
-        "SetOfTuples",
-        OperEx(
-            BmcOper.withType,
-            enumSet(),
-            enumSet(tuple(ValEx(TlaIntSet), ValEx(TlaBoolSet)))
-        )
-    )
-  }
-
   test("EXTENDS Bags") {
     // currently, Bags is imported as a user-defined module, no built-in operators are introduced
     val text =
@@ -2745,7 +2631,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     expectDecl(
         "Assn",
         OperEx(
-            BmcOper.assign,
+            ApalacheOper.assign,
             OperEx(TlaActionOper.prime, NameEx("x")),
             ValEx(TlaInt(1))
         )
@@ -2753,7 +2639,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     expectDecl(
         "Sklm",
         OperEx(
-            BmcOper.skolem,
+            ApalacheOper.skolem,
             OperEx(
                 TlaBoolOper.exists,
                 NameEx("y"),
@@ -2764,12 +2650,12 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     )
     expectDecl(
         "Expnd",
-        OperEx(BmcOper.expand, OperEx(TlaSetOper.powerset, NameEx("S")))
+        OperEx(ApalacheOper.expand, OperEx(TlaSetOper.powerset, NameEx("S")))
     )
     expectDecl(
         "CC",
         OperEx(
-            BmcOper.constCard,
+            ApalacheOper.constCard,
             OperEx(
                 TlaArithOper.ge,
                 OperEx(TlaFiniteSetOper.cardinality, NameEx("S")),
