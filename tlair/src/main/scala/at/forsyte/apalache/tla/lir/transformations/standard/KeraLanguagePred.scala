@@ -41,10 +41,6 @@ class KeraLanguagePred extends LanguagePred {
       case OperEx(oper, arg) if KeraLanguagePred.unaryOps.contains(oper) =>
         isOkInContext(letDefs, arg)
 
-      case OperEx(BmcOper.withType, lhs, _) =>
-        // do not recurse in the type annotation, as it is using special syntax
-        isOkInContext(letDefs, lhs)
-
       case OperEx(oper, lhs, rhs) if KeraLanguagePred.binaryOps.contains(oper) =>
         isOkInContext(letDefs, lhs)
           .and(isOkInContext(letDefs, rhs))
@@ -125,9 +121,9 @@ object KeraLanguagePred {
         TlaSeqOper.tail,
         TlaSeqOper.len,
         TlcOper.printT, // TODO: preprocess into NullEx in Keramelizer
-        BmcOper.skolem,
-        BmcOper.expand,
-        BmcOper.constCard
+        ApalacheOper.skolem,
+        ApalacheOper.expand,
+        ApalacheOper.constCard
         // for the future
         //    TlaActionOper.enabled,
         //    TlaActionOper.unchanged,
@@ -162,8 +158,7 @@ object KeraLanguagePred {
         TlcOper.assert,
         TlcOper.colonGreater,
         TlcOper.atat,
-        BmcOper.withType,
-        BmcOper.assign
+        ApalacheOper.assign
         // for the future
         //      TlaActionOper.composition,
         //      TlaTempOper.leadsTo,

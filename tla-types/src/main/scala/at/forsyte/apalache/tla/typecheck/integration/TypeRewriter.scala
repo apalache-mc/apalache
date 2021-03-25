@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.typecheck.integration
 
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaFunOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaStr
 import TypedPredefs._
 
@@ -49,10 +49,6 @@ class TypeRewriter(tracker: TransformationTracker, defaultTag: UID => TypeTag)(t
         val transformedArgs = TlaOper.interleave(transformedAccessors, transformedValues)
 
         OperEx(TlaFunOper.except, taggedFun +: transformedArgs: _*)(getOrDefault(ex.ID))
-
-      case ex @ OperEx(BmcOper.withType, lhs, annotation) =>
-        // an old type annotation: transform the left-hand side, as the type checker does not understand the old type annotations
-        OperEx(BmcOper.withType, transform(lhs), annotation)(getOrDefault(lhs.ID))
 
       case ex @ OperEx(oper, args @ _*) =>
         val newArgs = args.map(this(_))

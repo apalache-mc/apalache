@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.PowSetCtor
 import at.forsyte.apalache.tla.lir.OperEx
-import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaSetOper}
 
 /**
  * This rule expands a powerset, that is, SUBSET S for a set S. In the future, it might also expand a set of functions,
@@ -14,18 +14,18 @@ import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaSetOper}
 class SetExpandRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
-      case OperEx(BmcOper.expand, OperEx(TlaSetOper.SUBSET, _))    => true
-      case OperEx(BmcOper.expand, OperEx(TlaSetOper.funSet, _, _)) => true
-      case _                                                       => false
+      case OperEx(ApalacheOper.expand, OperEx(TlaSetOper.SUBSET, _))    => true
+      case OperEx(ApalacheOper.expand, OperEx(TlaSetOper.funSet, _, _)) => true
+      case _                                                            => false
     }
   }
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      case ex @ OperEx(BmcOper.expand, OperEx(TlaSetOper.funSet, _, _)) =>
+      case ex @ OperEx(ApalacheOper.expand, OperEx(TlaSetOper.funSet, _, _)) =>
         throw new RewriterException("Trying to expand a set of functions. This will blow up the solver.", ex)
 
-      case ex @ OperEx(BmcOper.expand, OperEx(TlaSetOper.SUBSET, basesetEx)) =>
+      case ex @ OperEx(ApalacheOper.expand, OperEx(TlaSetOper.SUBSET, basesetEx)) =>
         var nextState = rewriter.rewriteUntilDone(state.setRex(basesetEx))
         new PowSetCtor(rewriter).confringo(nextState, nextState.asCell)
 

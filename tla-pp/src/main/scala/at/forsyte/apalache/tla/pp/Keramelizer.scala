@@ -84,15 +84,6 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
       // { y_1 \in S_1, ..., y_n \in S_n: [ k_1 |-> y_1, ..., k_n |-> y_n ] }
       val namesAndSetsInterleaved = TlaOper.interleave(names, sets)
       OperEx(TlaSetOper.map, mapEx +: namesAndSetsInterleaved: _*)(ex.typeTag)
-
-    case ex @ OperEx(BmcOper.withType, OperEx(TlaSetOper.map, mapEx, varsAndSets @ _*), OperEx(TlaSetOper.enumSet,
-                recordAnnotation)) =>
-      // TODO: remove this case when we get rid of BmcOper.withType
-      // It is quite common to add a type annotation, e.g.,
-      // { a \in S_1, b \in S_2: e } <: {[a |-> Int, b |-> STRING]}.
-      // Propagate the annotation in the map expression
-      val annotMapEx = OperEx(BmcOper.withType, mapEx, recordAnnotation)(mapEx.typeTag)
-      OperEx(TlaSetOper.map, annotMapEx +: varsAndSets: _*)(ex.typeTag)
   }
 
   /**

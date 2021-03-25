@@ -123,22 +123,6 @@ class TestExpansionMarker extends FunSuite with BeforeAndAfterEach {
     assert(input == output)
   }
 
-  // there is no way to make it compatible with the old type annotations
-  ignore("""not marked: x \in {} <: {[Int -> Int]}""") {
-    val input =
-      tla
-        .exists(
-            tla.name("x") ? "i",
-            tla.withType(tla.enumSet() ? "S", tla.enumSet(tla.funSet(tla.intSet(), tla.intSet()))),
-            tla.bool(true)
-        )
-        .typed(types, "b")
-
-    val output = marker.apply(input)
-
-    assert(input == output)
-  }
-
   test("""not marked: CHOOSE x \in SUBSET S: P""") {
     val input =
       tla
