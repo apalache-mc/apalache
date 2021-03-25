@@ -584,8 +584,7 @@ object PrettyWriter {
         TlaTempOper.guarantees -> "-+->",
         TlaSeqOper.concat -> "\\o",
         TlcOper.colonGreater -> ":>",
-        BmcOper.assign -> ":=",
-        BmcOper.withType -> "<:"
+        ApalacheOper.assign -> ":="
     ) ////
 
   protected val naryOps: Map[TlaOper, String] = HashMap(

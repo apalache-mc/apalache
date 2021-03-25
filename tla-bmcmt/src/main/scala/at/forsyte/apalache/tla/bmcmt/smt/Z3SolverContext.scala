@@ -471,7 +471,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         val (eq, n) = toExpr(OperEx(TlaOper.eq, lhs, rhs))
         (z3context.mkNot(eq.asInstanceOf[BoolExpr]), 1 + n)
 
-      case OperEx(BmcOper.distinct, args @ _*) =>
+      case OperEx(ApalacheOper.distinct, args @ _*) =>
         val (es, ns) = (args map toExpr).unzip
         val distinct = z3context.mkDistinct(es: _*)
         (distinct,

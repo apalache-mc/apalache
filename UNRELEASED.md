@@ -26,6 +26,7 @@
 * Preprocessing: massive refactoring of the passes to support types. This may have introduced unexpected bugs.
 * Model checker: translation rules for records and functions have been modified, in order to support new types. Bugs to
   be expected.
+* Intermediate representation: renamed BmcOper to ApalacheOper. Its operators have the prefix `Apalache!` now.
 
 ### Known issues
 

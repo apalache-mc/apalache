@@ -21,16 +21,16 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
-      case OperEx(TlaBoolOper.exists, _, _, _)                           => true
-      case OperEx(BmcOper.`skolem`, OperEx(TlaBoolOper.exists, _, _, _)) => true
-      case OperEx(TlaBoolOper.forall, _, _, _)                           => true
-      case _                                                             => false
+      case OperEx(TlaBoolOper.exists, _, _, _)                                => true
+      case OperEx(ApalacheOper.`skolem`, OperEx(TlaBoolOper.exists, _, _, _)) => true
+      case OperEx(TlaBoolOper.forall, _, _, _)                                => true
+      case _                                                                  => false
     }
   }
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      case OperEx(BmcOper.`skolem`, OperEx(TlaBoolOper.exists, NameEx(boundVar), boundingSetEx, predEx)) =>
+      case OperEx(ApalacheOper.`skolem`, OperEx(TlaBoolOper.exists, NameEx(boundVar), boundingSetEx, predEx)) =>
         // This is where our encoding shines. An existential is simply replaced by a constant.
         boundingSetEx match {
           case ValEx(TlaNatSet) | ValEx(TlaIntSet) =>
@@ -74,9 +74,9 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
   }
 
   private def isAssignmentInside(ex: TlaEx): Boolean = ex match {
-    case OperEx(BmcOper.assign, OperEx(TlaActionOper.prime, NameEx(_)), _) => true
-    case OperEx(_, args @ _*)                                              => args.exists(isAssignmentInside)
-    case _                                                                 => false
+    case OperEx(ApalacheOper.assign, OperEx(TlaActionOper.prime, NameEx(_)), _) => true
+    case OperEx(_, args @ _*)                                                   => args.exists(isAssignmentInside)
+    case _                                                                      => false
   }
 
   private def expandExistsOrForall(isExists: Boolean, state: SymbState, boundVar: String, boundingSetEx: TlaEx,
