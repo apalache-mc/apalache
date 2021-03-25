@@ -589,8 +589,6 @@ object PrettyWriter {
 
   protected val naryOps: Map[TlaOper, String] = HashMap(
       TlaSetOper.times -> "\\X",
-      TlaArithOper.sum -> "+",
-      TlaArithOper.prod -> "*",
       TlcOper.atat -> "@@"
   ) ////
 

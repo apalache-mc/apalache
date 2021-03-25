@@ -779,13 +779,6 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         val opsig = OperT1(List(IntT1(), IntT1()), BoolT1())
         mkExRefApp(opsig, args)
 
-      // TODO: scheduled for removal, see issue #580
-      case OperEx(op, args @ _*) if op == TlaArithOper.sum || op == TlaArithOper.prod =>
-        // SUM(e_1, ..., e_n) or PROD(e_1, ..., e_n)
-        val nInts = List.fill(args.length)(IntT1())
-        val opsig = OperT1(nInts, IntT1())
-        mkExRefApp(opsig, args)
-
       case OperEx(TlaArithOper.dotdot, args @ _*) =>
         // a..b
         val opsig = OperT1(List(IntT1(), IntT1()), SetT1(IntT1()))
