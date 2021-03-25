@@ -76,11 +76,6 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     val expected2Set = mkConstAppByType(int2ToSetInt, parser("Int"), parser("Int"))
     assert(expected2Set == gen(tla.dotdot(tla.int(1), tla.int(3))))
 
-    val int3ToInt = parser("(Int, Int, Int) => Int")
-    val expected3 = mkConstAppByType(int3ToInt, parser("Int"), parser("Int"), parser("Int"))
-    assert(expected3 == gen(tla.sum(tla.int(1), tla.int(2), tla.int(3))))
-    assert(expected3 == gen(tla.prod(tla.int(1), tla.int(2), tla.int(3))))
-
     val int2ToBool = parser("(Int, Int) => Bool")
     val expected2Bool = mkConstAppByType(int2ToBool, parser("Int"), parser("Int"))
     assert(expected2Bool == gen(tla.lt(tla.int(1), tla.int(2))))

@@ -328,11 +328,6 @@ class Builder {
 
   /** TlaArithOper */
 
-  // FIXME: scheduled for removal in #580
-  def sum(args: BuilderEx*): BuilderEx = {
-    BuilderOper(TlaArithOper.sum, args: _*)
-  }
-
   def plus(lhs: BuilderEx, rhs: BuilderEx): BuilderEx = {
     BuilderOper(TlaArithOper.plus, lhs, rhs)
   }
@@ -343,10 +338,6 @@ class Builder {
 
   def uminus(arg: BuilderEx): BuilderEx = {
     BuilderOper(TlaArithOper.uminus, arg)
-  }
-
-  def prod(args: BuilderEx*): BuilderEx = {
-    BuilderOper(TlaArithOper.prod, args: _*)
   }
 
   def mult(lhs: BuilderEx, rhs: BuilderEx): BuilderEx = {
@@ -659,11 +650,9 @@ class Builder {
         TlaTempOper.leadsTo.name -> TlaTempOper.leadsTo,
         TlaTempOper.strongFairness.name -> TlaTempOper.strongFairness,
         TlaTempOper.weakFairness.name -> TlaTempOper.weakFairness,
-        TlaArithOper.sum.name -> TlaArithOper.sum,
         TlaArithOper.plus.name -> TlaArithOper.plus,
         TlaArithOper.uminus.name -> TlaArithOper.uminus,
         TlaArithOper.minus.name -> TlaArithOper.minus,
-        TlaArithOper.prod.name -> TlaArithOper.prod,
         TlaArithOper.mult.name -> TlaArithOper.mult,
         TlaArithOper.div.name -> TlaArithOper.div,
         TlaArithOper.mod.name -> TlaArithOper.mod,
