@@ -28,6 +28,10 @@
   be expected.
 * Intermediate representation: renamed BmcOper to ApalacheOper. Its operators have the prefix `Apalache!` now.
 
+### Removed
+
+* Intermediate representation: removed TlaOper.chooseIdiom
+
 ### Known issues
 
 * Multiple-update expressions `[f EXCEPT ![i1][i2] = e1, ![i1][i3] = e2]` may produce incorrect results, see #647
