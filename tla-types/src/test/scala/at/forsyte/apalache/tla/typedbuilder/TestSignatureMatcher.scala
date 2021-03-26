@@ -10,6 +10,9 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class TestSignatureMatcher extends FunSuite with TestingPredefs with BeforeAndAfter {
 
+  // Most methods are tested within TestTypedBuilderTT1,
+  // we additionally test the most complex matching methods individually
+
   implicit def liftTT1(tt1: TlaType1): TypeTag = Typed(tt1)
   def intV(i: Int) = ValEx(TlaInt(i))(IntT1())
   def strV(s: String) = ValEx(TlaStr(s))(StrT1())

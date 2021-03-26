@@ -33,6 +33,27 @@ class TestTypedBuilderTT1 extends FunSuite {
     assertThrows[TypingException] {
       bd.name("a", Untyped())
     }
+
+    assertThrows[TypingException] {
+      bd.emptySet(Untyped())
+    }
+
+    assertThrows[TypingException] {
+      bd.emptySequence(Untyped())
+    }
+
+    assertThrows[TypingException] {
+      bd.simpleParam("s", Untyped())
+    }
+
+    assertThrows[TypingException] {
+      bd.operParam("s", 1, Untyped())
+    }
+
+    assertThrows[TypingException] {
+      bd.recFunRef(Untyped())
+    }
+
   }
 
   test("Names and values") {
@@ -87,6 +108,11 @@ class TestTypedBuilderTT1 extends FunSuite {
     assertType(decl3, OperT1(Seq(bType0), resT))
     assertType(decl4.body, resT)
     assertType(decl4, OperT1(Seq(xType, bType1), resT))
+
+    val mistypedOperParam = bd.operParam("B", 1, IntT1())
+    assertThrows[TypingException] {
+      bd.declOp("A", bd.appOp(bName1, xName), xParam, mistypedOperParam)
+    }
 
     // A()
     val appEx1 = bd.appDecl(decl1)
@@ -175,6 +201,14 @@ class TestTypedBuilderTT1 extends FunSuite {
       // bad arg type
       bd.choose(x, s, p.withTag(IntT1()))
     }
+
+    val labelBuild1 = bd.label(x, "lab")
+    val labelBuild2 = bd.label(x, "lab", "a", "b")
+
+    assertEqualType(labelBuild1, x)
+    assertEqualType(labelBuild2, x)
+
+    // Can't pass invalid types, as label args are passed as strings, not TlaExs
   }
 
   test("TlaBoolOper ") {
@@ -705,159 +739,361 @@ class TestTypedBuilderTT1 extends FunSuite {
     }
   }
 
-//  test("TlaFunOper") {
-//    val appBuild = bd.appFun(n_a, n_b)
-//
-//    assert(appBuild == OperEx(TlaFunOper.app, n_a, n_b))
-//
-//    val domainBuild = bd.dom(n_a)
-//
-//    assert(domainBuild == OperEx(TlaFunOper.domain, n_a))
-//
-//    val enumBuild1 = bd.enumFun(n_a, n_b)
-//    val enumBuild2 = bd.enumFun(n_a, n_b, n_c, n_d)
-//
-//    assert(enumBuild1 == OperEx(TlaFunOper.enum, n_a, n_b))
-//    assertThrows[IllegalArgumentException](bd.enumFun(n_a, n_b, n_c))
-//    assert(enumBuild2 == OperEx(TlaFunOper.enum, n_a, n_b, n_c, n_d))
-//    assertThrows[IllegalArgumentException](bd.enumFun(n_a, n_b, n_c, n_d, n_e))
-//
-//    val exceptBuild1 = bd.except(n_a, n_b, n_c)
-//    val exceptBuild2 = bd.except(n_a, n_b, n_c, n_d, n_e)
-//
-//    assert(exceptBuild1 == OperEx(TlaFunOper.except, n_a, n_b, n_c))
-//    assertThrows[IllegalArgumentException](bd.except(n_a, n_b, n_c, n_d))
-//    assert(exceptBuild2 == OperEx(TlaFunOper.except, n_a, n_b, n_c, n_d, n_e))
-//    assertThrows[IllegalArgumentException](bd.except(n_a, n_b, n_c, n_d, n_e, n_f))
-//
-//    val funDefBuild1 = bd.funDef(n_a, n_b, n_c)
-//    val funDefBuild2 = bd.funDef(n_a, n_b, n_c, n_d, n_e)
-//
-//    assert(funDefBuild1 == OperEx(TlaFunOper.funDef, n_a, n_b, n_c))
-//    assertThrows[IllegalArgumentException](bd.funDef(n_a, n_b, n_c, n_d))
-//    assert(funDefBuild2 == OperEx(TlaFunOper.funDef, n_a, n_b, n_c, n_d, n_e))
-//    assertThrows[IllegalArgumentException](bd.funDef(n_a, n_b, n_c, n_d, n_e, n_f))
-//
-//    val tupleBuild1 = bd.tuple()
-//    val tupleBuild2 = bd.tuple(n_a, n_b)
-//
-//    assert(tupleBuild1 == OperEx(TlaFunOper.tuple))
-//    assert(tupleBuild2 == OperEx(TlaFunOper.tuple, n_a, n_b))
-//  }
-//
-//  test("TlaSeqOper") {
-//    val appendBuild = bd.append(n_a, n_b)
-//
-//    assert(appendBuild == OperEx(TlaSeqOper.append, n_a, n_b))
-//
-//    val concatBuild = bd.concat(n_a, n_b)
-//
-//    assert(concatBuild == OperEx(TlaSeqOper.concat, n_a, n_b))
-//
-//    val headBuild = bd.head(n_a)
-//
-//    assert(headBuild == OperEx(TlaSeqOper.head, n_a))
-//
-//    val tailBuild = bd.tail(n_a)
-//
-//    assert(tailBuild == OperEx(TlaSeqOper.tail, n_a))
-//
-//    val lenBuild = bd.len(n_a)
-//
-//    assert(lenBuild == OperEx(TlaSeqOper.len, n_a))
-//  }
-//
-//  test("TlaSetOper") {
-//    val enumSetBuild1 = bd.enumSet()
-//    val enumSetBuild2 = bd.enumSet(n_a, n_b)
-//
-//    assert(enumSetBuild1 == OperEx(TlaSetOper.enumSet))
-//    assert(enumSetBuild2 == OperEx(TlaSetOper.enumSet, n_a, n_b))
-//
-//    val inBuild = bd.in(n_a, n_b)
-//
-//    assert(inBuild == OperEx(TlaSetOper.in, n_a, n_b))
-//
-//    val notinBuild = bd.notin(n_a, n_b)
-//
-//    assert(notinBuild == OperEx(TlaSetOper.notin, n_a, n_b))
-//
-//    val capBuild = bd.cap(n_a, n_b)
-//
-//    assert(capBuild == OperEx(TlaSetOper.cap, n_a, n_b))
-//
-//    val cupBuild = bd.cup(n_a, n_b)
-//
-//    assert(cupBuild == OperEx(TlaSetOper.cup, n_a, n_b))
-//
-//    val unionBuild = bd.union(n_a)
-//
-//    assert(unionBuild == OperEx(TlaSetOper.union, n_a))
-//
-//    val filterBuild = bd.filter(n_a, n_b, n_c)
-//
-//    assert(filterBuild == OperEx(TlaSetOper.filter, n_a, n_b, n_c))
-//
-//    val mapBuild1 = bd.map(n_a, n_b, n_c)
-//    val mapBuild2 = bd.map(n_a, n_b, n_c, n_d, n_e)
-//
-//    assert(mapBuild1 == OperEx(TlaSetOper.map, n_a, n_b, n_c))
-//    assertThrows[IllegalArgumentException](bd.map(n_a, n_b, n_c, n_d))
-//    assert(mapBuild2 == OperEx(TlaSetOper.map, n_a, n_b, n_c, n_d, n_e))
-//    assertThrows[IllegalArgumentException](bd.map(n_a, n_b, n_c, n_d, n_e, n_f))
-//
-//    val funSetBuild = bd.funSet(n_a, n_b)
-//
-//    assert(funSetBuild == OperEx(TlaSetOper.funSet, n_a, n_b))
-//
-//    val recSetBuild1 = bd.recSet()
-//    val recSetBuild2 = bd.recSet(n_a, n_b)
-//
-//    assert(recSetBuild1 == OperEx(TlaSetOper.recSet))
-//    assertThrows[IllegalArgumentException](bd.recSet(n_a))
-//    assert(recSetBuild2 == OperEx(TlaSetOper.recSet, n_a, n_b))
-//    assertThrows[IllegalArgumentException](bd.recSet(n_a, n_b, n_c))
-//
-//    val seqSetBuild = bd.seqSet(n_a)
-//
-//    assert(seqSetBuild == OperEx(TlaSetOper.seqSet, n_a))
-//
-//    //    val subsetBuild = utBd.subset(n_a, n_b)
-//    //
-//    //    assert(subsetBuild == OperEx(TlaSetOper.subsetProper, n_a, n_b))
-//
-//    val subseteqBuild = bd.subseteq(n_a, n_b)
-//
-//    assert(subseteqBuild == OperEx(TlaSetOper.subseteq, n_a, n_b))
-//
-//    //    val supsetBuild = utBd.supset(n_a, n_b)
-//    //
-//    //    assert(supsetBuild == OperEx(TlaSetOper.supsetProper, n_a, n_b))
-//
-//    //    val supseteqBuild = utBd.supseteq(n_a, n_b)
-//    //
-//    //    assert(supseteqBuild == OperEx(TlaSetOper.supseteq, n_a, n_b))
-//
-//    val setminusBuild = bd.setminus(n_a, n_b)
-//
-//    assert(setminusBuild == OperEx(TlaSetOper.setminus, n_a, n_b))
-//
-//    val timesBuild1 = bd.times()
-//    val timesBuild2 = bd.times(n_a, n_b)
-//
-//    assert(timesBuild1 == OperEx(TlaSetOper.times))
-//    assert(timesBuild2 == OperEx(TlaSetOper.times, n_a, n_b))
-//
-//    val powSetBuild = bd.powSet(n_a)
-//
-//    assert(powSetBuild == OperEx(TlaSetOper.powerset, n_a))
-//  }
+  test("TlaFunOper") {
+    val aType = IntT1()
+    val fCdmType = StrT1()
+    def a = bd.name("a", aType)
+    def T = bd.name("T", SetT1(aType))
+    def R = bd.name("R", SetT1(BoolT1()))
+    def s = bd.name("s", StrT1())
+    def p = bd.name("p", BoolT1())
+    def f = bd.name("f", FunT1(aType, fCdmType))
+    def r1 = bd.name("r1", RecT1("x" -> IntT1()))
+    def r2 = bd.name("r2", RecT1("x" -> IntT1(), "y" -> BoolT1()))
+    def t = bd.name("t", TupT1(IntT1(), BoolT1()))
+    def g = bd.name("g",
+        FunT1(
+            IntT1(),
+            TupT1(
+                RecT1("a" -> BoolT1()),
+                SeqT1(StrT1())
+            )
+        ))
 
-  //  test("TlcOper") {
-  //    val assertMsg = "None"
-  //    val assertion = utBd.tlcAssert(NullEx, assertMsg)
-  //
-  //    assert(assertion == OperEx(TlcOper.assert, NullEx, utBd.str(assertMsg)))
-  //  }
+    val appBuild = bd.appFun(f, a)
+
+    assertType(appBuild, fCdmType)
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.appFun(f, p)
+    }
+
+    val domainBuild = bd.dom(f)
+
+    assertType(domainBuild, SetT1(aType))
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.dom(a)
+    }
+
+    val recBuild1 = bd.record(bd.str("x"), a)
+    val recBuild2 = bd.record(bd.str("x"), a, bd.str("y"), p)
+
+    assertEqualType(recBuild1, r1)
+    assertEqualType(recBuild2, r2)
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.record(p, a)
+    }
+
+    // Except arguments must be TUPLES!
+    val exceptBuild1 = bd.except(f, bd.tuple(a), bd.str("abc"))
+    val exceptBuild2 = bd.except(
+        f,
+        bd.tuple(a),
+        bd.str("abc"),
+        bd.tuple(bd.int(1)),
+        bd.str("def")
+    )
+    val exceptBuild3 = bd.except(r1, bd.tuple(bd.str("x")), a)
+    val exceptBuild4 = bd.except(r2, bd.tuple(bd.str("x")), a)
+    val exceptBuild5 = bd.except(t, bd.tuple(bd.int(1)), a)
+    val exceptBuild6 = bd.except(t, bd.tuple(bd.int(2)), p)
+    val exceptBuild7 = bd.except(
+        g,
+        bd.tuple(
+            bd.int(1),
+            bd.int(1),
+            bd.str("a")
+        ),
+        p,
+        bd.tuple(
+            bd.int(1),
+            bd.int(2),
+            bd.int(3)
+        ),
+        bd.str("a")
+    )
+
+    assertEqualType(exceptBuild1, f)
+    assertEqualType(exceptBuild2, f)
+    assertEqualType(exceptBuild3, r1)
+    assertEqualType(exceptBuild4, r2)
+    assertEqualType(exceptBuild5, t)
+    assertEqualType(exceptBuild6, t)
+    assertEqualType(exceptBuild7, g)
+
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.except(f, bd.tuple(a), a)
+    }
+
+    assertThrows[TypingException] {
+      // can't access tuple index by variable
+      bd.except(t, bd.tuple(a), a)
+    }
+
+    assertThrows[TypingException] {
+      // can't access record field by variable
+      bd.except(t, bd.tuple(s), a)
+    }
+
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.except(
+          g,
+          bd.tuple(
+              bd.int(1),
+              bd.int(1),
+              bd.str("a")
+          ),
+          a // not Bool
+      )
+    }
+
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.except(
+          g,
+          bd.tuple(
+              bd.int(1),
+              bd.str("a"), // swapped order
+              bd.int(1) // swapped order
+          ),
+          p
+      )
+    }
+
+    // [ a \in T |-> s]
+    val funDefBuild1 = bd.funDef(s, a, T)
+    // [ a \in T, p \in R |-> s]
+    val funDefBuild2 = bd.funDef(s, a, T, p, R)
+
+    assertType(funDefBuild1, FunT1(IntT1(), StrT1()))
+    assertType(funDefBuild2, FunT1(TupT1(IntT1(), BoolT1()), StrT1()))
+
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.funDef(s, a, R)
+    }
+
+    val tupleBuild1 = bd.tuple()
+    val tupleBuild2 = bd.tuple(a, p)
+
+    assertType(tupleBuild1, TupT1())
+    assertType(tupleBuild2, TupT1(IntT1(), BoolT1()))
+
+    // Can't pass invalid types to a (T1, ..., Tn) => (T1, ..., Tn) oper
+  }
+
+  test("TlaSeqOper") {
+    def a = bd.name("a", IntT1())
+    def s = bd.name("s", SeqT1(IntT1()))
+
+    val seqBuild1 = bd.emptySequence(SeqT1(IntT1()))
+    val seqBuild2 = bd.sequence(a, a)
+
+    assertEqualType(seqBuild1, s)
+    assertEqualType(seqBuild2, s)
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.sequence(a, s)
+    }
+
+    val appendBuild = bd.append(s, a)
+
+    assertEqualType(appendBuild, s)
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.append(s, s)
+    }
+
+    val concatBuild = bd.concat(s, s)
+
+    assertEqualType(concatBuild, s)
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.concat(s, a)
+    }
+
+    val headBuild = bd.head(s)
+
+    assertEqualType(headBuild, a)
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.head(a)
+    }
+
+    val tailBuild = bd.tail(s)
+
+    assertEqualType(tailBuild, s)
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.tail(a)
+    }
+
+    val lenBuild = bd.len(s)
+
+    assertType(lenBuild, IntT1())
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.len(a)
+    }
+  }
+
+  test("TlaSetOper") {
+    def a = bd.name("a", IntT1())
+    def S = bd.name("S", SetT1(IntT1()))
+    def p = bd.name("p", BoolT1())
+    def T = bd.name("T", SetT1(BoolT1()))
+
+    val enumSetBuild1 = bd.emptySet(S.typeTag)
+    val enumSetBuild2 = bd.enumSet(a, a)
+
+    assertEqualType(enumSetBuild1, S)
+    assertEqualType(enumSetBuild2, S)
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.emptySet(IntT1())
+    }
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.enumSet(a, p)
+    }
+
+    val inBuild = bd.in(a, S)
+
+    assertType(inBuild, BoolT1())
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.in(a, a)
+    }
+
+    val notinBuild = bd.notin(a, S)
+
+    assertType(notinBuild, BoolT1())
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.notin(a, a)
+    }
+
+    val capBuild = bd.cap(S, S)
+
+    assertEqualType(capBuild, S)
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.cap(a, a)
+    }
+
+    val cupBuild = bd.cup(S, S)
+
+    assertEqualType(cupBuild, S)
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.cup(a, a)
+    }
+
+    val unionBuild = bd.union(bd.enumSet(S, S))
+
+    assertEqualType(unionBuild, S)
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.union(S)
+    }
+
+    val filterBuild = bd.filter(a, S, p)
+
+    assertEqualType(filterBuild, S)
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.filter(a, S, a)
+    }
+
+    val mapBuild1 = bd.map(p, a, S)
+    val mapBuild2 = bd.map(p, a, S, p, T)
+
+    assertEqualType(mapBuild1, T)
+    assertEqualType(mapBuild2, T)
+
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.map(p, a, T)
+    }
+
+    val funSetBuild = bd.funSet(S, T)
+
+    assertType(funSetBuild, SetT1(FunT1(IntT1(), BoolT1())))
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.funSet(S, a)
+    }
+
+    val recSetBuild1 = bd.recSet()
+    val recSetBuild2 = bd.recSet(bd.str("x"), S)
+
+    assertType(recSetBuild1, SetT1(RecT1()))
+    assertType(recSetBuild2, SetT1(RecT1("x" -> IntT1())))
+
+    assertThrows[TypingException] {
+      // key arg has to be string literal
+      bd.recSet(bd.name("x", StrT1()), S)
+    }
+
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.recSet(bd.str("x"), a)
+    }
+
+    val seqSetBuild = bd.seqSet(S)
+
+    assertType(seqSetBuild, SetT1(SeqT1(IntT1())))
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.seqSet(a)
+    }
+
+    val subseteqBuild = bd.subseteq(S, S)
+
+    assertType(subseteqBuild, BoolT1())
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.subseteq(S, T)
+    }
+
+    val setminusBuild = bd.setminus(S, S)
+
+    assertEqualType(setminusBuild, S)
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.setminus(S, T)
+    }
+
+    val timesBuild1 = bd.times()
+    val timesBuild2 = bd.times(S)
+    val timesBuild3 = bd.times(S, T)
+
+    assertType(timesBuild1, SetT1(TupT1()))
+    assertType(timesBuild2, SetT1(TupT1(IntT1())))
+    assertType(timesBuild3, SetT1(TupT1(IntT1(), BoolT1())))
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.times(S, a)
+    }
+
+    val powSetBuild = bd.powSet(S)
+
+    assertType(powSetBuild, SetT1(SetT1(IntT1())))
+    assertThrows[TypingException] {
+      // bad arg type
+      bd.powSet(a)
+    }
+  }
+
+  test("TlcOper") {
+    // TODO
+  }
+  test("ApalacheOper") {
+    // TODO
+  }
 
 }

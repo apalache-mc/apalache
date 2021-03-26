@@ -109,6 +109,12 @@ class TestTypedBuilderUT extends FunSuite with TestingPredefs {
 
     assert(chooseBuild1 == OperEx(TlaOper.chooseUnbounded, n_a, n_b))
     assert(chooseBuild2 == OperEx(TlaOper.chooseBounded, n_a, n_b, n_c))
+
+    val labelBuild1 = bd.label(n_x, "lab")
+    val labelBuild2 = bd.label(n_x, "lab", "a", "b")
+
+    assert(labelBuild1 == OperEx(TlaOper.label, n_x, bd.str("lab")))
+    assert(labelBuild2 == OperEx(TlaOper.label, n_x, bd.str("lab"), bd.str("a"), bd.str("b")))
   }
 
   test("TlaBoolOper ") {
@@ -435,21 +441,23 @@ class TestTypedBuilderUT extends FunSuite with TestingPredefs {
 
     assert(domainBuild == OperEx(TlaFunOper.domain, n_a))
 
-    val enumBuild1 = bd.enumFun(n_a, n_b)
-    val enumBuild2 = bd.enumFun(n_a, n_b, n_c, n_d)
+    val enumBuild1 = bd.record(n_a, n_b)
+    val enumBuild2 = bd.record(n_a, n_b, n_c, n_d)
 
     assert(enumBuild1 == OperEx(TlaFunOper.enum, n_a, n_b))
-    assertThrows[IllegalArgumentException](bd.enumFun(n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.record(n_a, n_b, n_c))
     assert(enumBuild2 == OperEx(TlaFunOper.enum, n_a, n_b, n_c, n_d))
-    assertThrows[IllegalArgumentException](bd.enumFun(n_a, n_b, n_c, n_d, n_e))
+    assertThrows[IllegalArgumentException](bd.record(n_a, n_b, n_c, n_d, n_e))
 
-    val exceptBuild1 = bd.except(n_a, n_b, n_c)
-    val exceptBuild2 = bd.except(n_a, n_b, n_c, n_d, n_e)
+    val exceptBuild1 = bd.except(n_a, bd.tuple(n_b), n_c)
+    val exceptBuild2 = bd.except(n_a, bd.tuple(n_b), n_c, bd.tuple(n_d), n_e)
 
-    assert(exceptBuild1 == OperEx(TlaFunOper.except, n_a, n_b, n_c))
-    assertThrows[IllegalArgumentException](bd.except(n_a, n_b, n_c, n_d))
-    assert(exceptBuild2 == OperEx(TlaFunOper.except, n_a, n_b, n_c, n_d, n_e))
-    assertThrows[IllegalArgumentException](bd.except(n_a, n_b, n_c, n_d, n_e, n_f))
+    assert(exceptBuild1 == OperEx(TlaFunOper.except, n_a, bd.tuple(n_b), n_c))
+    assertThrows[IllegalArgumentException](bd.except(n_a, n_b, n_c))
+    assertThrows[IllegalArgumentException](bd.except(n_a, bd.tuple(n_b), n_c, bd.tuple(n_d)))
+    assert(exceptBuild2 == OperEx(TlaFunOper.except, n_a, bd.tuple(n_b), n_c, bd.tuple(n_d), n_e))
+    assertThrows[IllegalArgumentException](bd.except(n_a, n_b, n_c, n_d, n_e))
+    assertThrows[IllegalArgumentException](bd.except(n_a, bd.tuple(n_b), n_c, bd.tuple(n_d), n_e, bd.tuple(n_f)))
 
     val funDefBuild1 = bd.funDef(n_a, n_b, n_c)
     val funDefBuild2 = bd.funDef(n_a, n_b, n_c, n_d, n_e)
@@ -467,6 +475,12 @@ class TestTypedBuilderUT extends FunSuite with TestingPredefs {
   }
 
   test("TlaSeqOper") {
+    val seqBuild1 = bd.emptySequence(Untyped())
+    val seqBuild2 = bd.sequence(n_a, n_b)
+
+    assert(seqBuild1 == OperEx(TlaFunOper.tuple))
+    assert(seqBuild2 == OperEx(TlaFunOper.tuple, n_a, n_b))
+
     val appendBuild = bd.append(n_a, n_b)
 
     assert(appendBuild == OperEx(TlaSeqOper.append, n_a, n_b))
@@ -543,21 +557,9 @@ class TestTypedBuilderUT extends FunSuite with TestingPredefs {
 
     assert(seqSetBuild == OperEx(TlaSetOper.seqSet, n_a))
 
-//    val subsetBuild = utBd.subset(n_a, n_b)
-//
-//    assert(subsetBuild == OperEx(TlaSetOper.subsetProper, n_a, n_b))
-
     val subseteqBuild = bd.subseteq(n_a, n_b)
 
     assert(subseteqBuild == OperEx(TlaSetOper.subseteq, n_a, n_b))
-
-//    val supsetBuild = utBd.supset(n_a, n_b)
-//
-//    assert(supsetBuild == OperEx(TlaSetOper.supsetProper, n_a, n_b))
-
-//    val supseteqBuild = utBd.supseteq(n_a, n_b)
-//
-//    assert(supseteqBuild == OperEx(TlaSetOper.supseteq, n_a, n_b))
 
     val setminusBuild = bd.setminus(n_a, n_b)
 
@@ -574,11 +576,12 @@ class TestTypedBuilderUT extends FunSuite with TestingPredefs {
     assert(powSetBuild == OperEx(TlaSetOper.powerset, n_a))
   }
 
-//  test("TlcOper") {
-//    val assertMsg = "None"
-//    val assertion = utBd.tlcAssert(NullEx, assertMsg)
-//
-//    assert(assertion == OperEx(TlcOper.assert, NullEx, utBd.str(assertMsg)))
-//  }
+  test("TlcOper") {
+    // TODO
+  }
+
+  test("ApalacheOper") {
+    // TODO
+  }
 
 }

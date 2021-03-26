@@ -5,12 +5,15 @@ import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir._
 
 /**
- * <p>A builder for TLA expressions. A singleton instance of this class is defined in *.lir.convenience.</p>
+ * <p>A self-typing builder for TLA expressions. </p>
  *
  * <p>Contains methods for constructing various types of [[TlaEx]] expressions, guaranteeing
- * correct arity where the arity of the associated [[oper.TlaOper TlaOper]] is fixed.</p>
+ * correct arity where the arity of the associated [[oper.TlaOper TlaOper]] is fixed.
+ * If the arguments have correct types, w.r.t. the operator expression being constructed,
+ * the resulting expression will have a type consistent with the signature of the operator,
+ * for the given arguments. </p>
  *
- * @author jkukovec, konnov
+ * @author jkukovec
  */
 class TypedBuilder(tagSynthesizer: TagSynthesizer) {
 
@@ -65,9 +68,7 @@ class TypedBuilder(tagSynthesizer: TagSynthesizer) {
   }
 
   def declOp(name: String, body: TlaEx, params: TaggedParameter*): TlaOperDecl = {
-    tagSynthesizer.validateParameterTags(params)
-    val paramTags = params map { _.paramTag }
-    val declTag = tagSynthesizer.synthesizeDeclarationTag(paramTags, body.typeTag)
+    val declTag = tagSynthesizer.synthesizeDeclarationTag(params, body)
     TlaOperDecl(name, params.toList.map { _.param }, body)(declTag)
   }
 
@@ -98,23 +99,23 @@ class TypedBuilder(tagSynthesizer: TagSynthesizer) {
     buildOperEx(TlaOper.chooseUnbounded, variable, predicate)
   def choose(variable: TlaEx, set: TlaEx, predicate: TlaEx): OperEx =
     buildOperEx(TlaOper.chooseBounded, variable, set, predicate)
-//
-//  /**
-//   * Decorate a TLA+ expression with a label (a TLA+2 feature), e.g.,
-//   * lab(a, b) :: e decorates e with the label "lab" whose arguments are "a" and "b".
-//   * This method needs a type tag for `name` and `args`. The type of the expression itself is inherited from ex.
-//   *
-//   * @param ex   a TLA+ expression to decorate
-//   * @param name label identifier
-//   * @param args label arguments (also identifiers)
-//   * @return OperEx(TlaOper.label, ex, name as ValEx(TlaStr(_)), args as ValEx(TlaStr(_)))
-//   */
-//  def label(ex: TlaEx, name: String, args: String*): OperEx = {
-//    val nameAsVal = BuilderVal(TlaStr(name))
-//    val argsAsVals = args.map(s => BuilderVal(TlaStr(s)))
-//    buildOperEx(TlaOper.label, ex +: nameAsVal +: argsAsVals: _*)
-//  }
-//
+
+  /**
+   * Decorate a TLA+ expression with a label (a TLA+2 feature), e.g.,
+   * lab(a, b) :: e decorates e with the label "lab" whose arguments are "a" and "b".
+   * This method needs a type tag for `name` and `args`. The type of the expression itself is inherited from ex.
+   *
+   * @param ex   a TLA+ expression to decorate
+   * @param name label identifier
+   * @param args label arguments (also identifiers)
+   * @return OperEx(TlaOper.label, ex, name as ValEx(TlaStr(_)), args as ValEx(TlaStr(_)))
+   */
+  def label(ex: TlaEx, name: String, args: String*): OperEx = {
+    val nameAsVal = str(name)
+    val argsAsVals = args.map(s => str(s))
+    buildOperEx(TlaOper.label, ex +: nameAsVal +: argsAsVals: _*)
+  }
+
   /** TlaBoolOper */
   def and(args: TlaEx*): OperEx = buildOperEx(TlaBoolOper.and, args: _*)
 
@@ -157,7 +158,6 @@ class TypedBuilder(tagSynthesizer: TagSynthesizer) {
   def unchanged(expr: TlaEx): OperEx =
     buildOperEx(TlaActionOper.unchanged, expr)
 
-  /** UNTESTED */
   def unchangedTup(args: TlaEx*): OperEx =
     unchanged(tuple(args: _*))
 
@@ -208,11 +208,6 @@ class TypedBuilder(tagSynthesizer: TagSynthesizer) {
 
   /** TlaArithOper */
 
-  // FIXME: scheduled for removal in #580
-//  def sum(args: TlaEx*): OperEx = {
-//    buildOperEx(TlaArithOper.sum, args: _*)
-//  }
-
   def plus(lhs: TlaEx, rhs: TlaEx): OperEx =
     buildOperEx(TlaArithOper.plus, lhs, rhs)
 
@@ -221,10 +216,6 @@ class TypedBuilder(tagSynthesizer: TagSynthesizer) {
 
   def uminus(arg: TlaEx): OperEx =
     buildOperEx(TlaArithOper.uminus, arg)
-
-  // FIXME: scheduled for removal in #580
-//  def prod(args: TlaEx*): OperEx =
-//    buildOperEx(TlaArithOper.prod, args: _*)
 
   def mult(lhs: TlaEx, rhs: TlaEx): OperEx =
     buildOperEx(TlaArithOper.mult, lhs, rhs)
@@ -270,12 +261,24 @@ class TypedBuilder(tagSynthesizer: TagSynthesizer) {
   def dom(fun: TlaEx): OperEx =
     buildOperEx(TlaFunOper.domain, fun)
 
-  // TODO: rename to record, because it is used only for the records
-  def enumFun(key1: TlaEx, value1: TlaEx, keysAndValuesInterleaved: TlaEx*): OperEx =
+  def record(key1: TlaEx, value1: TlaEx, keysAndValuesInterleaved: TlaEx*): OperEx =
     buildOperEx(TlaFunOper.enum, key1 +: value1 +: keysAndValuesInterleaved: _*)
 
-  def except(fun: TlaEx, key1: TlaEx, value1: TlaEx, keysAndValuesInterleaved: TlaEx*): OperEx =
-    buildOperEx(TlaFunOper.except, fun +: key1 +: value1 +: keysAndValuesInterleaved: _*)
+  def except(fun: TlaEx, key1: TlaEx, value1: TlaEx, keysAndValuesInterleaved: TlaEx*): OperEx = {
+    val allArgs = fun +: key1 +: value1 +: keysAndValuesInterleaved
+    allArgs.zipWithIndex foreach {
+      case (ex, i) if i % 2 == 1 =>
+        ex match {
+          case OperEx(TlaFunOper.tuple, _ @_*) => // all good
+          case _ =>
+            throw new IllegalArgumentException(
+                s"Malformed domain arguments to EXCEPT - expecting a tuple at position $i, found $ex"
+            )
+        }
+      case _ => // all good
+    }
+    buildOperEx(TlaFunOper.except, allArgs: _*)
+  }
 
   def funDef(mapExpr: TlaEx, var1: TlaEx, set1: TlaEx, varsAndSetsInterleaved: TlaEx*): OperEx =
     buildOperEx(TlaFunOper.funDef, mapExpr +: var1 +: set1 +: varsAndSetsInterleaved: _*)
@@ -323,7 +326,7 @@ class TypedBuilder(tagSynthesizer: TagSynthesizer) {
               )
           }
         }
-        Typed(unifiedType)
+        Typed(SeqT1(unifiedType))
       case otherTag => otherTag
     }
     asTuple.withTag(sequenceTag)
@@ -418,21 +421,6 @@ class TypedBuilder(tagSynthesizer: TagSynthesizer) {
 
   def subseteq(leftSet: TlaEx, rightSet: TlaEx): OperEx =
     buildOperEx(TlaSetOper.subseteq, leftSet, rightSet)
-
-//  // FIXME: scheduled for removal in #615
-//  def subset(leftSet: TlaEx, rightSet: TlaEx): OperEx = {
-//    buildOperEx(TlaSetOper.subsetProper, leftSet, rightSet)
-//  }
-//
-//  // FIXME: scheduled for removal in #615
-//  def supset(leftSet: TlaEx, rightSet: TlaEx): OperEx = {
-//    buildOperEx(TlaSetOper.supsetProper, leftSet, rightSet)
-//  }
-//
-//  // FIXME: scheduled for removal in #615
-//  def supseteq(leftSet: TlaEx, rightSet: TlaEx): OperEx = {
-//    buildOperEx(TlaSetOper.supseteq, leftSet, rightSet)
-//  }
 
   def setminus(leftSet: TlaEx, rightSet: TlaEx): OperEx =
     buildOperEx(TlaSetOper.setminus, leftSet, rightSet)

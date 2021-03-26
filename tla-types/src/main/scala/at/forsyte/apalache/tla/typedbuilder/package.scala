@@ -3,6 +3,9 @@ package at.forsyte.apalache.tla
 import at.forsyte.apalache.tla.lir.{TlaType1, TypeTag, Typed, TypingException}
 import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier}
 
+/**
+ * Misc. helpful methods
+ */
 package object typedbuilder {
 
   /**

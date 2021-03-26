@@ -5,6 +5,10 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 import at.forsyte.apalache.tla.typecheck.etc.Substitution
 
+/**
+ * TT1OperatorSignatureMatcher provides methods for computing types of expressions, that
+ * are the result of applying built-in operators to typed arguments
+ */
 object TT1OperatorSignatureMatcher {
   // Generates fresh, unique VarT1 values on demand
   private class TypeVarGenerator {
@@ -24,6 +28,126 @@ object TT1OperatorSignatureMatcher {
   type SignatureMatch = Option[TlaType1]
 
   private val typeVarGenerator: TypeVarGenerator = new TypeVarGenerator
+
+  /**
+   * Computes the type of oper(args[1], ..., args[n]), if a valid type exists.
+   *
+   * More specifically, given a built in operator `oper` and a sequence of arguments `args`,
+   * performs the following: If there exists a primitive schema `s` of the shape (T1, ... , Tn) => T,
+   * such that `oper` is assigned the schema `s` or `oper` is assigned a complex schema containing s,
+   * args is a sequence of length `n` of expressions with types S1, ..., Sn , and there exists
+   * a substitution `sub`, for which Si and Ti unify (i.e. sub(Si) = sub(Ti)),
+   * returns Some(sub(T)), otherwise returns None.
+   */
+  def matchSignature(oper: TlaOper, args: Seq[TlaEx]): SignatureMatch = oper match {
+    /** Logic */
+    case TlaOper.eq | TlaOper.ne                                   => matchBinaryTestSig(args)
+    case TlaBoolOper.and | TlaBoolOper.or                          => matchVariadicBoolOpSig(args)
+    case TlaBoolOper.implies | TlaBoolOper.equiv                   => matchVariadicBoolOpSig(args)
+    case TlaBoolOper.not                                           => matchVariadicBoolOpSig(args)
+    case TlaBoolOper.forall | TlaBoolOper.exists                   => matchBoundedQuantifierSig(args)
+    case TlaBoolOper.forallUnbounded | TlaBoolOper.existsUnbounded => matchUnboundedQuantifierSig(args)
+
+    /** Choose */
+    case TlaOper.chooseBounded   => matchBoundedChoiceSig(args)
+    case TlaOper.chooseUnbounded => matchUnboundedChoiceSig(args)
+
+    /** Action */
+    case TlaActionOper.prime                             => matchEndomorphismSig(args)
+    case TlaActionOper.unchanged                         => matchEndomorphismSig(args)
+    case TlaActionOper.enabled                           => matchVariadicBoolOpSig(args)
+    case TlaActionOper.nostutter | TlaActionOper.stutter => matchStutterSig(args)
+    case TlaActionOper.composition                       => matchVariadicBoolOpSig(args)
+
+    /** Temporal */
+    case TlaTempOper.box | TlaTempOper.diamond                 => matchVariadicBoolOpSig(args)
+    case TlaTempOper.weakFairness | TlaTempOper.strongFairness => matchTemporalWithVarSig(args)
+    case TlaTempOper.leadsTo | TlaTempOper.guarantees          => matchVariadicBoolOpSig(args)
+    case TlaTempOper.AA | TlaTempOper.EE                       => matchTemporalWithVarSig(args)
+
+    /** Arithmetic */
+    case TlaArithOper.plus | TlaArithOper.minus | TlaArithOper.mult => matchVariadicArithOperSig(args)
+    case TlaArithOper.div | TlaArithOper.mod | TlaArithOper.exp     => matchVariadicArithOperSig(args)
+    case TlaArithOper.uminus                                        => matchVariadicArithOperSig(args)
+    case TlaArithOper.dotdot                                        => matchDotdotSig(args)
+    case TlaArithOper.le | TlaArithOper.lt                          => matchIntInequalitySig(args)
+    case TlaArithOper.ge | TlaArithOper.gt                          => matchIntInequalitySig(args)
+    //    case TlaArithOper.realDiv => TODO
+
+    /** Sets */
+    case TlaSetOper.in | TlaSetOper.notin                      => matchSetMembershipSig(args)
+    case TlaSetOper.supsetProper | TlaSetOper.subsetProper     => matchSetCmpSig(args)
+    case TlaSetOper.supseteq | TlaSetOper.subseteq             => matchSetCmpSig(args)
+    case TlaSetOper.cup | TlaSetOper.cap | TlaSetOper.setminus => matchBinarySetManipSig(args)
+    case TlaSetOper.enumSet                                    => matchSetEnumSig(args)
+    case TlaSetOper.filter                                     => matchSetFilterSig(args)
+    case TlaSetOper.map                                        => matchSetMapSig(args)
+    case TlaSetOper.powerset                                   => matchPowSetSig(args)
+    case TlaSetOper.union                                      => matchBigUnionSig(args)
+
+    /** Finite sets */
+    case TlaFiniteSetOper.isFiniteSet => matchSetPredicateSig(args)
+    case TlaFiniteSetOper.cardinality => matchCardinalitySig(args)
+
+    /** Functions */
+    case TlaSetOper.funSet => matchFunSetSig(args)
+    case TlaFunOper.funDef => matchFunDefSig(args)
+
+    /** Records */
+    case TlaFunOper.enum   => matchRecEnumSig(args)
+    case TlaSetOper.recSet => matchRecSetSig(args)
+
+    /** Tuples */
+    case TlaSetOper.times => matchCartesianProdSig(args)
+    // Tuple always makes a tuple, never a sequence. A special builder method exists to
+    // construct sequences and "cast" the tuple type to Seq
+    case TlaFunOper.tuple => matchTupleSig(args)
+
+    /** Control */
+    case TlaControlOper.ifThenElse    => matchIteSig(args)
+    case TlaControlOper.caseWithOther => matchCaseOtherSig(args)
+    case TlaControlOper.caseNoOther   => matchCaseNoOtherSig(args)
+
+    /** Oper */
+    case TlaOper.apply => matchOperAppSig(args)
+
+    /** Sequences */
+    case TlaSeqOper.concat    => matchConcatSig(args)
+    case TlaSeqOper.head      => matchHeadSig(args)
+    case TlaSeqOper.tail      => matchTailSig(args)
+    case TlaSeqOper.len       => matchLenSig(args)
+    case TlaSetOper.seqSet    => matchSeqSetSig(args)
+    case TlaSeqOper.append    => matchAppendSig(args)
+    case TlaSeqOper.subseq    => matchSubSeqSig(args)
+    case TlaSeqOper.selectseq => matchSelectSeqSig(args)
+
+    /** Overloaded */
+    case TlaFunOper.app    => matchApplicativeAppSig(args)
+    case TlaFunOper.except => matchExceptOverloadedSig(args)
+    case TlaFunOper.domain => matchApplicativeDomainSig(args)
+
+    /** Recursion */
+    case TlaFunOper.recFunDef => matchFunDefSig(args) // same signature as non-recursive function definitions
+    //    case TlaFunOper.recFunRef => resolved directly in builder via type-hint
+
+    // TODO
+    /** APALACHE */
+
+    // TODO
+    /** TLC */
+    //    case TlcOper.permutations => OperT(TupT(SetT(t)), SetT(FunT(t, t)))
+    //    case TlcOper.atat => OperT(TupT(FunT(t1, t2), FunT(t1, t2)), FunT(t1, t2))
+    //    case TlcOper.colonGreater => OperT(TupT(t1, t2), FunT(t1, t2))
+    //    case TlcOper.print => OperT(TupT(StrT, t), t)
+
+    /** LABEL */
+    case TlaOper.label => matchLabelSig(args)
+
+    case o =>
+      throw new NotImplementedError(
+          s"Signature matching for operator ${o.name} is not implemented yet."
+      )
+  }
 
   // A sequence of arguments a1: T1, ... , an: Tn
   // defines an operator type (T1, ... , Tn) => T, for some fresh T
@@ -55,6 +179,12 @@ object TT1OperatorSignatureMatcher {
       case _ => None
     }
   }
+
+  /**
+   * * * * * *
+   * METHODS *
+   * * * * * *
+   */
 
   // \A T . (T,T) => Bool
   def matchBinaryTestSig(args: Seq[TlaEx]): SignatureMatch = {
@@ -675,128 +805,16 @@ object TT1OperatorSignatureMatcher {
     }
   }
 
-  def matchSignature(oper: TlaOper, args: Seq[TlaEx]): SignatureMatch = oper match {
-    /** Logic */
-    case TlaOper.eq | TlaOper.ne                                   => matchBinaryTestSig(args)
-    case TlaBoolOper.and | TlaBoolOper.or                          => matchVariadicBoolOpSig(args)
-    case TlaBoolOper.implies | TlaBoolOper.equiv                   => matchVariadicBoolOpSig(args)
-    case TlaBoolOper.not                                           => matchVariadicBoolOpSig(args)
-    case TlaBoolOper.forall | TlaBoolOper.exists                   => matchBoundedQuantifierSig(args)
-    case TlaBoolOper.forallUnbounded | TlaBoolOper.existsUnbounded => matchUnboundedQuantifierSig(args)
-
-    /** Choose */
-    case TlaOper.chooseBounded   => matchBoundedChoiceSig(args)
-    case TlaOper.chooseUnbounded => matchUnboundedChoiceSig(args)
-
-    /** Action */
-    case TlaActionOper.prime                             => matchEndomorphismSig(args)
-    case TlaActionOper.unchanged                         => matchEndomorphismSig(args)
-    case TlaActionOper.enabled                           => matchVariadicBoolOpSig(args)
-    case TlaActionOper.nostutter | TlaActionOper.stutter => matchStutterSig(args)
-    case TlaActionOper.composition                       => matchVariadicBoolOpSig(args)
-
-    /** Temporal */
-    case TlaTempOper.box | TlaTempOper.diamond                 => matchVariadicBoolOpSig(args)
-    case TlaTempOper.weakFairness | TlaTempOper.strongFairness => matchTemporalWithVarSig(args)
-    case TlaTempOper.leadsTo | TlaTempOper.guarantees          => matchVariadicBoolOpSig(args)
-    case TlaTempOper.AA | TlaTempOper.EE                       => matchTemporalWithVarSig(args)
-
-    /** Arithmetic */
-    case TlaArithOper.plus | TlaArithOper.minus | TlaArithOper.mult => matchVariadicArithOperSig(args)
-    case TlaArithOper.div | TlaArithOper.mod | TlaArithOper.exp     => matchVariadicArithOperSig(args)
-    case TlaArithOper.uminus                                        => matchVariadicArithOperSig(args)
-    case TlaArithOper.dotdot                                        => matchDotdotSig(args)
-    case TlaArithOper.le | TlaArithOper.lt                          => matchIntInequalitySig(args)
-    case TlaArithOper.ge | TlaArithOper.gt                          => matchIntInequalitySig(args)
-//    case TlaArithOper.realDiv => TODO
-
-    /** Sets */
-    case TlaSetOper.in | TlaSetOper.notin                      => matchSetMembershipSig(args)
-    case TlaSetOper.supsetProper | TlaSetOper.subsetProper     => matchSetCmpSig(args)
-    case TlaSetOper.supseteq | TlaSetOper.subseteq             => matchSetCmpSig(args)
-    case TlaSetOper.cup | TlaSetOper.cap | TlaSetOper.setminus => matchBinarySetManipSig(args)
-    case TlaSetOper.enumSet                                    => matchSetEnumSig(args)
-    case TlaSetOper.filter                                     => matchSetFilterSig(args)
-    case TlaSetOper.map                                        => matchSetMapSig(args)
-    case TlaSetOper.powerset                                   => matchPowSetSig(args)
-    case TlaSetOper.union                                      => matchBigUnionSig(args)
-
-    /** Finite sets */
-    case TlaFiniteSetOper.isFiniteSet => matchSetPredicateSig(args)
-    case TlaFiniteSetOper.cardinality => matchCardinalitySig(args)
-
-    /** Functions */
-    case TlaSetOper.funSet => matchFunSetSig(args)
-    case TlaFunOper.funDef => matchFunDefSig(args)
-
-    /** Records */
-    case TlaFunOper.enum   => matchRecEnumSig(args)
-    case TlaSetOper.recSet => matchRecSetSig(args)
-
-    /** Tuples */
-    case TlaSetOper.times => matchCartesianProdSig(args)
-    // Tuple always makes a tuple, never a sequence. A special builder method exists to
-    // construct sequences and "cast" the tuple type to Seq
-    case TlaFunOper.tuple => matchTupleSig(args)
-
-    /** Control */
-    case TlaControlOper.ifThenElse    => matchIteSig(args)
-    case TlaControlOper.caseWithOther => matchCaseOtherSig(args)
-    case TlaControlOper.caseNoOther   => matchCaseNoOtherSig(args)
-
-    /** Oper */
-    case TlaOper.apply => matchOperAppSig(args)
-
-    /** Sequences */
-    case TlaSeqOper.concat    => matchConcatSig(args)
-    case TlaSeqOper.head      => matchHeadSig(args)
-    case TlaSeqOper.tail      => matchTailSig(args)
-    case TlaSeqOper.len       => matchLenSig(args)
-    case TlaSetOper.seqSet    => matchSeqSetSig(args)
-    case TlaSeqOper.append    => matchAppendSig(args)
-    case TlaSeqOper.subseq    => matchSubSeqSig(args)
-    case TlaSeqOper.selectseq => matchSelectSeqSig(args)
-
-    /** Overloaded */
-    case TlaFunOper.app    => matchApplicativeAppSig(args)
-    case TlaFunOper.except => matchExceptOverloadedSig(args)
-    case TlaFunOper.domain => matchApplicativeDomainSig(args)
-
-    /** Recursion */
-    case TlaFunOper.recFunDef => matchFunDefSig(args) // same signature as non-recursive function definitions
-//    case TlaFunOper.recFunRef => resolved directly in builder via type-hint
-
-    /** APALACHE */
-    // TODO
-
-    /** TLC */
-    // TODO
-//    case TlcOper.permutations =>
-//      val t = typeVarGenerator.getUnique
-//      List(PolyOperT(List(t), OperT(TupT(SetT(t)), SetT(FunT(t, t)))))
-//
-//    case TlcOper.atat =>
-//      val ts @ List(t1, t2) = typeVarGenerator.getNUnique(2)
-//      List(PolyOperT(ts, OperT(TupT(FunT(t1, t2), FunT(t1, t2)), FunT(t1, t2))))
-//
-//    case TlcOper.colonGreater =>
-//      val ts @ List(t1, t2) = typeVarGenerator.getNUnique(2)
-//      List(PolyOperT(ts, OperT(TupT(t1, t2), FunT(t1, t2))))
-//
-//    case TlcOper.print =>
-//      val t = typeVarGenerator.getUnique
-//      List(PolyOperT(List(t), OperT(TupT(StrT, t), t)))
-//
-//    /** LABEL */
-//    case TlaOper.label =>
-//      // 1st arg is anything, Label and label args are strings
-//      val nLabelArgs = operEx.args.length - 1
-//      val t = typeVarGenerator.getUnique
-//      List(PolyOperT(List(t), OperT(TupT(t +: List.fill(nLabelArgs)(StrT): _*), t)))
-
-    case o =>
-      throw new NotImplementedError(
-          s"Signature matching for operator ${o.name} is not implemented yet."
+  // \A T . (T, Str, ..., Str) => T
+  def matchLabelSig(args: Seq[TlaEx]): SignatureMatch = {
+    // 1st arg is anything, label and extra label args are strings
+    val nLabelArgs = args.length - 1
+    val t = typeVarGenerator.getUnique
+    val operT =
+      OperT1(
+          t +: Seq.fill(nLabelArgs)(StrT1()),
+          t
       )
+    matchArgImplied(operT, args)
   }
 }
