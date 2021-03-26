@@ -576,22 +576,16 @@ object PrettyWriter {
         TlaSetOper.cup -> "\\union",
         TlaSetOper.setminus -> "\\",
         TlaSetOper.subseteq -> "\\subseteq",
-        TlaSetOper.subsetProper -> "\\subset",
-        TlaSetOper.supseteq -> "\\supseteq",
-        TlaSetOper.supsetProper -> "\\supset",
         TlaActionOper.composition -> "\\cdot",
         TlaTempOper.leadsTo -> "~>",
         TlaTempOper.guarantees -> "-+->",
         TlaSeqOper.concat -> "\\o",
         TlcOper.colonGreater -> ":>",
-        BmcOper.assign -> ":=",
-        BmcOper.withType -> "<:"
+        ApalacheOper.assign -> ":="
     ) ////
 
   protected val naryOps: Map[TlaOper, String] = HashMap(
       TlaSetOper.times -> "\\X",
-      TlaArithOper.sum -> "+",
-      TlaArithOper.prod -> "*",
       TlcOper.atat -> "@@"
   ) ////
 

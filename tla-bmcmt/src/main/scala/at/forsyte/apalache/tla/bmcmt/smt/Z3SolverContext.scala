@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicLong
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.profiler.{IdleSmtListener, SmtListener}
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
-import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, FailPredT, IntT}
+import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, IntT}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.io.UTFPrinter
 import at.forsyte.apalache.tla.lir.oper._
@@ -400,9 +400,6 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
           case IntT() =>
             z3context.getIntSort
 
-          case FailPredT() =>
-            z3context.getBoolSort
-
           case _ =>
             log(s"(declare-sort $sig 0)")
             z3context.mkUninterpretedSort(sig)
@@ -471,7 +468,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         val (eq, n) = toExpr(OperEx(TlaOper.eq, lhs, rhs))
         (z3context.mkNot(eq.asInstanceOf[BoolExpr]), 1 + n)
 
-      case OperEx(BmcOper.distinct, args @ _*) =>
+      case OperEx(ApalacheOper.distinct, args @ _*) =>
         val (es, ns) = (args map toExpr).unzip
         val distinct = z3context.mkDistinct(es: _*)
         (distinct,

@@ -27,16 +27,6 @@ abstract class TlaArithOper extends TlaOper {
 object TlaArithOper {
 
   /**
-   * An n-ary sum, that is, Sum(x_1, ..., x_n) = x_1 + ... + x_n.
-   */
-  object sum extends TlaArithOper {
-    override val arity = AnyArity()
-    // Empty sum = 0
-    override val name = "SUM"
-    override val precedence: (Int, Int) = (10, 10)
-  }
-
-  /**
    * A binary addition.
    */
   object plus extends TlaArithOper {
@@ -61,16 +51,6 @@ object TlaArithOper {
     override val arity = FixedArity(2)
     override val name = "(-)"
     override val precedence: (Int, Int) = (11, 11)
-  }
-
-  /**
-   * An n-ary product of the arguments, that is, Prod(x_1, ..., x_n) = x_1 * ... * x_n.
-   */
-  object prod extends TlaArithOper {
-    override def arity = AnyArity()
-    // empty prod = 1
-    override val name = "PROD"
-    override val precedence: (Int, Int) = (13, 13)
   }
 
   /**

@@ -977,15 +977,15 @@ EXITCODE: OK
 
 ### typecheck CigaretteSmokersTyped.tla
 
-This test is broken until issue #617] is fixed.
-
 ```sh
 $ apalache-mc typecheck CigaretteSmokersTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
-Unhandled exception
 ...
+Type checker [OK]
+...
+EXITCODE: OK
 ```
 
 ### typecheck GameOfLifeTyped.tla
@@ -1187,6 +1187,21 @@ EXITCODE: OK
 
 ```sh
 $ apalache-mc typecheck AnnotationsAndSubstitutions596.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeCheckerSnowcat
+ > Running Snowcat .::.
+ > Your types are great!
+ > All expressions are typed
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck Except617.tla
+
+```sh
+$ apalache-mc typecheck Except617.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.

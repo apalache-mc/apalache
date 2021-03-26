@@ -39,7 +39,7 @@ class SignatureGenerator {
     case TlaSetOper.in | TlaSetOper.notin =>
       val t = typeVarGenerator.getUnique
       List(PolyOperT(List(t), OperT(TupT(t, SetT(t)), BoolT)))
-    case TlaSetOper.supsetProper | TlaSetOper.subsetProper | TlaSetOper.supseteq | TlaSetOper.subseteq =>
+    case TlaSetOper.subseteq =>
       val t = typeVarGenerator.getUnique
       List(PolyOperT(List(t), OperT(TupT(SetT(t), SetT(t)), BoolT)))
     case TlaSetOper.cup | TlaSetOper.cap | TlaSetOper.setminus =>

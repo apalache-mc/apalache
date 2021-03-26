@@ -328,11 +328,6 @@ class Builder {
 
   /** TlaArithOper */
 
-  // FIXME: scheduled for removal in #580
-  def sum(args: BuilderEx*): BuilderEx = {
-    BuilderOper(TlaArithOper.sum, args: _*)
-  }
-
   def plus(lhs: BuilderEx, rhs: BuilderEx): BuilderEx = {
     BuilderOper(TlaArithOper.plus, lhs, rhs)
   }
@@ -343,10 +338,6 @@ class Builder {
 
   def uminus(arg: BuilderEx): BuilderEx = {
     BuilderOper(TlaArithOper.uminus, arg)
-  }
-
-  def prod(args: BuilderEx*): BuilderEx = {
-    BuilderOper(TlaArithOper.prod, args: _*)
   }
 
   def mult(lhs: BuilderEx, rhs: BuilderEx): BuilderEx = {
@@ -529,21 +520,6 @@ class Builder {
     BuilderOper(TlaSetOper.subseteq, leftSet, rightSet)
   }
 
-  // FIXME: scheduled for removal in #615
-  def subset(leftSet: BuilderEx, rightSet: BuilderEx): BuilderEx = {
-    BuilderOper(TlaSetOper.subsetProper, leftSet, rightSet)
-  }
-
-  // FIXME: scheduled for removal in #615
-  def supset(leftSet: BuilderEx, rightSet: BuilderEx): BuilderEx = {
-    BuilderOper(TlaSetOper.supsetProper, leftSet, rightSet)
-  }
-
-  // FIXME: scheduled for removal in #615
-  def supseteq(leftSet: BuilderEx, rightSet: BuilderEx): BuilderEx = {
-    BuilderOper(TlaSetOper.supseteq, leftSet, rightSet)
-  }
-
   def setminus(leftSet: BuilderEx, rightSet: BuilderEx): BuilderEx = {
     BuilderOper(TlaSetOper.setminus, leftSet, rightSet)
   }
@@ -600,30 +576,24 @@ class Builder {
     }
   }
 
-  // apalache operators
-  @deprecated("This operator introduces an old-style apalache annotation. It will be removed soon.")
-  def withType(expr: BuilderEx, typeAnnot: BuilderEx): BuilderEx = {
-    BuilderOper(BmcOper.withType, expr, typeAnnot)
-  }
-
   def assign(lhs: BuilderEx, rhs: BuilderEx): BuilderEx = {
-    BuilderOper(BmcOper.assign, lhs, rhs)
+    BuilderOper(ApalacheOper.assign, lhs, rhs)
   }
 
   def assignPrime(leftName: BuilderEx, rightExpr: BuilderEx): BuilderEx = {
-    BuilderOper(BmcOper.assign, prime(leftName), rightExpr)
+    BuilderOper(ApalacheOper.assign, prime(leftName), rightExpr)
   }
 
   def apalacheExpand(ex: BuilderEx): BuilderEx = {
-    BuilderOper(BmcOper.expand, ex)
+    BuilderOper(ApalacheOper.expand, ex)
   }
 
   def apalacheSkolem(ex: BuilderEx): BuilderEx = {
-    BuilderOper(BmcOper.skolem, ex)
+    BuilderOper(ApalacheOper.skolem, ex)
   }
 
   def apalacheConstCard(ex: BuilderEx): BuilderEx = {
-    BuilderOper(BmcOper.constCard, ex)
+    BuilderOper(ApalacheOper.constCard, ex)
   }
 
   private val m_nameMap: Map[String, TlaOper] =
@@ -659,11 +629,9 @@ class Builder {
         TlaTempOper.leadsTo.name -> TlaTempOper.leadsTo,
         TlaTempOper.strongFairness.name -> TlaTempOper.strongFairness,
         TlaTempOper.weakFairness.name -> TlaTempOper.weakFairness,
-        TlaArithOper.sum.name -> TlaArithOper.sum,
         TlaArithOper.plus.name -> TlaArithOper.plus,
         TlaArithOper.uminus.name -> TlaArithOper.uminus,
         TlaArithOper.minus.name -> TlaArithOper.minus,
-        TlaArithOper.prod.name -> TlaArithOper.prod,
         TlaArithOper.mult.name -> TlaArithOper.mult,
         TlaArithOper.div.name -> TlaArithOper.div,
         TlaArithOper.mod.name -> TlaArithOper.mod,
@@ -700,9 +668,6 @@ class Builder {
         TlaSetOper.seqSet.name -> TlaSetOper.seqSet,
         TlaSetOper.setminus.name -> TlaSetOper.setminus,
         TlaSetOper.subseteq.name -> TlaSetOper.subseteq,
-        TlaSetOper.subsetProper.name -> TlaSetOper.subsetProper,
-        TlaSetOper.supseteq.name -> TlaSetOper.supseteq,
-        TlaSetOper.supsetProper.name -> TlaSetOper.supsetProper,
         TlaSetOper.times.name -> TlaSetOper.times,
         TlaSetOper.union.name -> TlaSetOper.union
     )

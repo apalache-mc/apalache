@@ -323,16 +323,12 @@ object JsonWriter {
       TlaSetOper.cup -> "cup",
       TlaSetOper.setminus -> "setminus",
       TlaSetOper.subseteq -> "subseteq",
-      TlaSetOper.subsetProper -> "subset",
-      TlaSetOper.supseteq -> "supseteq",
-      TlaSetOper.supsetProper -> "supset",
       TlaActionOper.composition -> "composition",
       TlaTempOper.leadsTo -> "leadsTo",
       TlaTempOper.guarantees -> "guarantees",
       TlaSeqOper.concat -> "concat",
       TlcOper.colonGreater -> "colonGreater",
-      BmcOper.assign -> "assign",
-      BmcOper.withType -> "lessColon",
+      ApalacheOper.assign -> "assign",
       TlaSetOper.funSet -> "funSet"
   )
 

@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.io.annotations.{Annotation, AnnotationStr, StandardAnnotations}
 import at.forsyte.apalache.io.annotations.store.{AnnotationStore, findAnnotation}
-import at.forsyte.apalache.tla.lir.{ValEx, _}
+import at.forsyte.apalache.tla.lir.{SparseTupT1, ValEx, _}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.typecheck._
@@ -327,11 +327,8 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         val opsig = OperT1(List(a, SetT1(a)), BoolT1())
         mkExRefApp(opsig, args)
 
-      // TODO: scheduled for removal, issue #615: \subset, \supset, \supseteq
-      case OperEx(op, args @ _*)
-          if op == TlaSetOper.subseteq || op == TlaSetOper.subsetProper
-            || op == TlaSetOper.supseteq || op == TlaSetOper.supsetProper =>
-        // S \subseteq T, S \subset T, S \supseteq T, S \supset T
+      case OperEx(op, args @ _*) if op == TlaSetOper.subseteq =>
+        // S \subseteq T
         val a = varPool.fresh
         val opsig = OperT1(List(SetT1(a), SetT1(a)), BoolT1())
         mkExRefApp(opsig, args)
@@ -419,48 +416,12 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         val seq = OperT1(as, SeqT1(a))
         mkApp(ref, Seq(tuple, seq), values: _*)
 
-      case OperEx(TlaFunOper.app, fun, arg @ ValEx(TlaInt(fieldNo))) =>
-        // f[i], where i is an integer literal
-        val a = varPool.fresh
-        val funType =
-          OperT1(Seq(FunT1(IntT1(), a), IntT1()), a) // ((Int -> a), Int) => a
-        val seqType = OperT1(Seq(SeqT1(a), IntT1()), a) // (Seq(a), Int) => a
-        val tupType =
-          OperT1(
-              Seq(SparseTupT1(fieldNo.toInt -> a), IntT1()),
-              a
-          ) // ({ 3: a }, Int) => a
-        mkApp(
-            ref,
-            Seq(funType, seqType, tupType),
-            this(fun),
-            mkConst(ExactRef(arg.ID), IntT1())
-        )
-
-      case OperEx(TlaFunOper.app, fun, arg @ ValEx(TlaStr(fieldName))) =>
-        // f[s], where s is a string literal
-        val a = varPool.fresh
-        val funType =
-          OperT1(Seq(FunT1(StrT1(), a), StrT1()), a) // ((Str -> a), Str) => a
-        val recType =
-          OperT1(
-              Seq(RecT1(fieldName -> a), StrT1()),
-              a
-          ) // ({ foo: a }, Str) => a
-        mkApp(
-            ref,
-            Seq(funType, recType),
-            this(fun),
-            mkConst(ExactRef(arg.ID), StrT1())
-        )
-
       case OperEx(TlaFunOper.app, fun, arg) =>
-        // the general case of f[e]
-        val a = varPool.fresh
-        val b = varPool.fresh
-        val funType = OperT1(Seq(FunT1(a, b), a), b) // ((a -> b), a) => b
-        val seqType = OperT1(Seq(SeqT1(a), IntT1()), a) // (Seq(a), Int) => a
-        mkApp(ref, Seq(funType, seqType), this(fun), this(arg))
+        // f[e], where f can be one of: a function, a record, a tuple, or a sequence
+        val signatures = mkFunLikeByArg(arg).map { case (funType, argType, resType) =>
+          OperT1(Seq(funType, argType), resType)
+        }
+        mkApp(ref, signatures, this(fun), this(arg))
 
       case OperEx(TlaFunOper.domain, fun) =>
         // DOMAIN f
@@ -512,84 +473,16 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
 
       case OperEx(TlaFunOper.except, fun, args @ _*) =>
         // The hardest expression: [f EXCEPT ![e1] = e2, ![e3] = e4, ...]
-        // FIXME: the EXCEPT chaining syntax is broken, see: https://github.com/informalsystems/apalache/issues/617
-        val accessorsWithNewValues =
-          args
-            .grouped(2)
-            .map {
-              case Seq(a, b) => (TlaFunOper.except.unpackIndex(a), b)
-              case orphan    => throw new TypingException(s"Orphan ${orphan} in except expression: ${ex}")
-            }
-            .toSeq
+        val (accessors, newValues) = TlaOper.deinterleave(args)
 
-        val accessors = accessorsWithNewValues.map(_._1)
+        // generate the expressions for (e_1, e_2), ..., (e_{n-1}, e_n)
+        val towersOfUnapply: Seq[EtcExpr] = accessors.zip(newValues).map(p => mkUnapplyForExcept(p._1, p._2))
 
-        // a function: ((a -> b), a, b) => (a -> b)
-        val a1 = varPool.fresh
-        val b1 = varPool.fresh
-        // introduce a sequence of a, b, a, b, ... (as many as there are accessors)
-        val aAndBs = List.fill(accessors.length)(List(a1, b1)).flatten
-        val funType = OperT1(FunT1(a1, b1) +: aAndBs, FunT1(a1, b1))
-
-        val typeVars = varPool.fresh(accessors.length) // introduce type variables a, b, c, ...
-        val accessorsWithTypeVars = accessors.zip(typeVars)
-
-        // The following values are related by mutual exclusion, so we make
-        // them lazy to avoid unnecessary computations
-
-        lazy val recType = {
-          // a record: ([foo: a, bar: b, ...], Str, a, Str, b, ...) => [foo: a, bar: b, ...]
-          val recFields = accessorsWithTypeVars.collect { case (ValEx(TlaStr(fieldName)), tv) =>
-            (fieldName, tv)
-          }
-          val rec = RecT1(recFields: _*)
-          val strAndVars = typeVars.flatMap(v => List(StrT1(), v))
-          OperT1(rec +: strAndVars, rec)
-        }
-
-        lazy val tupType = {
-          // a tuple: ({3: a, 5: b, ...}, Int, a, Int, b, ...) => {3: a, 5: b, ...}
-          val tupFields = accessorsWithTypeVars.collect { case (ValEx(TlaInt(fieldNo)), tv) =>
-            (fieldNo.toInt, tv)
-          }
-          val tup = SparseTupT1(tupFields: _*)
-          val intAndVars = typeVars.flatMap(v => List(IntT1(), v))
-          OperT1(tup +: intAndVars, tup)
-        }
-
-        lazy val seqType = {
-          // a sequence: (Seq(a), Int, a, Int, a, ...) => Seq(a)
-          val intAndAs = List.fill(accessors.length)(List(IntT1(), a1)).flatten
-          OperT1(SeqT1(a1) +: intAndAs, SeqT1(a1))
-        }
-
-        val isTlaStr: TlaEx => Boolean = {
-          case ValEx(TlaStr(_)) => true
-          case _                => false
-        }
-
-        val isTlaInt: TlaEx => Boolean = {
-          case ValEx(TlaInt(_)) => true
-          case _                => false
-        }
-
-        // construct the disjunctive type
-        val disjunctiveType =
-          if (accessors.forall(isTlaStr)) {
-            // we are dealing with a function or a record
-            Seq(funType, recType)
-          } else if (accessors.forall(isTlaInt)) {
-            // we are dealing with a tuple, a sequence, or a function
-            Seq(funType, seqType, tupType)
-          } else {
-            // we are dealing with a function or a sequence
-            Seq(funType, seqType)
-          }
-
-        // translate the arguments and interleave them
-        val xargs =
-          accessorsWithNewValues.flatMap(p => List(this(p._1), this(p._2)))
-        mkApp(ref, disjunctiveType, this(fun) +: xargs: _*)
+        // To guarantee that the function and the updates have the same types, produce (c, ..., c) => c
+        val a = varPool.fresh
+        val nargs = accessors.length + 1
+        val sig = OperT1(1.to(nargs) map { _ => a }, a)
+        mkApp(ref, Seq(sig), this(fun) +: towersOfUnapply: _*)
 
       case funDef @ OperEx(TlaFunOper.recFunDef, body, args @ _*) =>
         // fun[x \in S, y \in T |-> e] == ...
@@ -779,13 +672,6 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         val opsig = OperT1(List(IntT1(), IntT1()), BoolT1())
         mkExRefApp(opsig, args)
 
-      // TODO: scheduled for removal, see issue #580
-      case OperEx(op, args @ _*) if op == TlaArithOper.sum || op == TlaArithOper.prod =>
-        // SUM(e_1, ..., e_n) or PROD(e_1, ..., e_n)
-        val nInts = List.fill(args.length)(IntT1())
-        val opsig = OperT1(nInts, IntT1())
-        mkExRefApp(opsig, args)
-
       case OperEx(TlaArithOper.dotdot, args @ _*) =>
         // a..b
         val opsig = OperT1(List(IntT1(), IntT1()), SetT1(IntT1()))
@@ -812,35 +698,35 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         mkExRefApp(opsig, Seq(sub, act))
 
       //******************************************** Apalache **************************************************
-      case OperEx(BmcOper.funAsSeq, fun, len) =>
+      case OperEx(ApalacheOper.funAsSeq, fun, len) =>
         val a = varPool.fresh
         // ((Int -> a), Int) => Seq(a)
         val opsig = OperT1(Seq(FunT1(IntT1(), a), IntT1()), SeqT1(a))
         mkExRefApp(opsig, Seq(fun, len))
 
-      case OperEx(BmcOper.assign, lhs, rhs) =>
+      case OperEx(ApalacheOper.assign, lhs, rhs) =>
         val a = varPool.fresh
         // (a, a) => Bool
         val opsig = OperT1(Seq(a, a), BoolT1())
         mkExRefApp(opsig, Seq(lhs, rhs))
 
-      case OperEx(BmcOper.expand, set) =>
+      case OperEx(ApalacheOper.expand, set) =>
         val a = varPool.fresh
         // a => Bool
         val opsig = OperT1(Seq(a), a)
         mkExRefApp(opsig, Seq(set))
 
-      case OperEx(BmcOper.skolem, predicate) =>
+      case OperEx(ApalacheOper.skolem, predicate) =>
         // Bool => Bool
         val opsig = OperT1(Seq(BoolT1()), BoolT1())
         mkExRefApp(opsig, Seq(predicate))
 
-      case OperEx(BmcOper.constCard, predicate) =>
+      case OperEx(ApalacheOper.constCard, predicate) =>
         // Bool => Bool
         val opsig = OperT1(Seq(BoolT1()), BoolT1())
         mkExRefApp(opsig, Seq(predicate))
 
-      case OperEx(BmcOper.distinct, args @ _*) =>
+      case OperEx(ApalacheOper.distinct, args @ _*) =>
         val a = varPool.fresh
         // (a, ..., a) => Bool
         val opsig = OperT1(args.map(_ => a), BoolT1())
@@ -851,7 +737,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         val typeVar = varPool.fresh
         mkExRefApp(OperT1(nameAndArgs.map(_ => StrT1()) :+ typeVar, typeVar), nameAndArgs :+ labelledEx)
 
-      case OperEx(BmcOper.withType, lhs, annotation) =>
+      case OperEx(ApalacheOper.withType, lhs, annotation) =>
         // Met an old type annotation. Warn the user and ignore the annotation.
         logger.error("Met an old type annotation: " + annotation)
         logger.error("See: https://apalache.informal.systems/docs/apalache/typechecker-snowcat.html")
@@ -1006,6 +892,66 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         // a higher-order operator, introduce an operator type (b, c, ...) => z
         val paramType = OperT1(varPool.fresh(arity), varPool.fresh)
         (name, paramType) +: formalParamsToTypeVars(tail)
+    }
+  }
+
+  // translate [f EXCEPT ![i_1]...[i_n] = e], which can be used to translate the general case
+  private def mkUnapplyForExcept(accessorTuple: TlaEx, value: TlaEx): EtcExpr = {
+    val indices = accessorTuple match {
+      case OperEx(TlaFunOper.tuple, elems @ _*) =>
+        elems
+
+      case e =>
+        // this is an internal error of the intermediate representation
+        throw new IllegalArgumentException("Expected a tuple as an accessor in EXCEPT, found: " + e)
+    }
+
+    // The trick here is to eat the indices from the tail, as the choice of types depends on the indices.
+    // This is somewhat similar to unapply in Scala.
+    indices.foldRight(this(value)) { case (index, result) =>
+      val options = mkFunLikeByArg(index)
+      val signatures = options.map(t => OperT1(Seq(t._2, t._3), t._1))
+      // ((a, b) => a -> b) index result)
+      mkApp(BlameRef(index.ID), signatures, this(index), result)
+    }
+  }
+
+  // look at at the argument of a function-like expression (function, record, tuple, or sequence)
+  // and return the possible options of: (funType, argType, resType)
+  private def mkFunLikeByArg(arg: TlaEx): Seq[(TlaType1, TlaType1, TlaType1)] = {
+    arg match {
+      case ValEx(TlaInt(fieldNo)) =>
+        // f[i] or [f EXCEPT ![i] = ...], where i is an integer literal
+        val a = varPool.fresh
+        Seq(
+            // ((Int -> a), Int) => a
+            (FunT1(IntT1(), a), IntT1(), a),
+            // (Seq(a), Int) => a
+            (SeqT1(a), IntT1(), a),
+            // ({ 3: a }, Int) => a
+            (SparseTupT1(fieldNo.toInt -> a), IntT1(), a)
+        )
+
+      case ValEx(TlaStr(fieldName)) =>
+        // f[s] or [f EXCEPT ![s] = ...], where s is a string literal
+        val a = varPool.fresh
+        Seq(
+            // ((Str -> a), Str) => a
+            (FunT1(StrT1(), a), StrT1(), a),
+            // ([ foo: a ], Str) => a
+            (RecT1(fieldName -> a), StrT1(), a)
+        )
+
+      case _ =>
+        // the general case of f[e] or [f EXCEPT ![e] = ...]
+        val a = varPool.fresh
+        val b = varPool.fresh
+        Seq(
+            // ((a -> b), a) => b
+            (FunT1(a, b), a, b),
+            // (Seq(a), Int) => a
+            (SeqT1(a), IntT1(), a)
+        )
     }
   }
 

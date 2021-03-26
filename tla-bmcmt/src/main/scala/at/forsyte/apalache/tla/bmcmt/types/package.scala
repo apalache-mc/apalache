@@ -223,21 +223,6 @@ package object types {
   }
 
   /**
-   * A failure cell that represents a Boolean variable indicating whether
-   * a certain operation failed.
-   */
-  @deprecated("failure predicates were abandoned")
-  sealed case class FailPredT() extends CellT with Serializable {
-    override val signature: String = "E"
-
-    override val toString: String = "FailPred"
-
-    override def toTlaType1: TlaType1 = {
-      ConstT1("FAILPRED")
-    }
-  }
-
-  /**
    * A cell constant, that is, just a name that expresses string constants in TLA+.
    */
   sealed case class ConstT() extends CellT with Serializable {
