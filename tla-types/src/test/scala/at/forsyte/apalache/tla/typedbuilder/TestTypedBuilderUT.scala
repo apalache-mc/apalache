@@ -15,7 +15,7 @@ class TestTypedBuilderUT extends FunSuite with TestingPredefs {
 
   implicit val untyped: TypeTag = Untyped()
 
-  test("Test direct methods: Names and values") {
+  test("Names and values") {
     val nameBuild: TlaEx = bd.name("a", Untyped())
 
     assert(nameBuild == NameEx("a"))
@@ -36,7 +36,7 @@ class TestTypedBuilderUT extends FunSuite with TestingPredefs {
     assert(strBuild == ValEx(TlaStr(vString)))
   }
 
-  test("Test direct methods: Declarations") {
+  test("Declarations") {
     val xParam = bd.simpleParam("x", Untyped())
     val bParam0 = bd.operParam("B", 0, Untyped())
     val bParam1 = bd.operParam("B", 1, Untyped())
@@ -81,7 +81,7 @@ class TestTypedBuilderUT extends FunSuite with TestingPredefs {
     assertThrows[IllegalArgumentException](bd.appDecl(decl4, n_a, n_b, n_c))
   }
 
-  test("Test direct methods: TlaOper") {
+  test("TlaOper") {
     val eqBuild1 = bd.eql(n_a, n_b)
     val eqBuild2 = bd.eql(n_a, bd.int(2))
 
@@ -111,7 +111,7 @@ class TestTypedBuilderUT extends FunSuite with TestingPredefs {
     assert(chooseBuild2 == OperEx(TlaOper.chooseBounded, n_a, n_b, n_c))
   }
 
-  test("Test direct methods: TlaBoolOper ") {
+  test("TlaBoolOper ") {
     val andBuild1 = bd.and(n_a)
     val andBuild2 = bd.and(n_a, n_b)
     val andBuild3 = bd.and(n_a, n_b, n_c)
@@ -157,7 +157,7 @@ class TestTypedBuilderUT extends FunSuite with TestingPredefs {
     assert(existsBuild2 == OperEx(TlaBoolOper.exists, n_a, n_b, n_c))
   }
 
-  test("Test direct methods: TlaActionOper") {
+  test("TlaActionOper") {
     val primeBuild1 = bd.prime(n_a)
     val primeBuild2 = bd.prime(bd.name("name", Untyped()))
 
@@ -198,7 +198,7 @@ class TestTypedBuilderUT extends FunSuite with TestingPredefs {
 
   }
 
-  test("Test direct methods: TlaControlOper") {
+  test("TlaControlOper") {
 
     val caseBuild1 = bd.caseSplit(n_a, n_b)
     val caseBuild2 = bd.caseOther(n_a, n_b, n_c)
@@ -256,7 +256,7 @@ class TestTypedBuilderUT extends FunSuite with TestingPredefs {
 
   }
 
-  test("Test direct methods: TlaTempOper") {
+  test("TlaTempOper") {
     val AABuild = bd.AA(n_a, n_b)
 
     assert(AABuild == OperEx(TlaTempOper.AA, n_a, n_b))
@@ -290,7 +290,7 @@ class TestTypedBuilderUT extends FunSuite with TestingPredefs {
     assert(weakFairnessBuild == OperEx(TlaTempOper.weakFairness, n_a, n_b))
   }
 
-  test("Test direct methods: TlaArithOper") {
+  test("TlaArithOper") {
     val plusBuild1 = bd.plus(n_a, n_b)
     val plusBuild2 = bd.plus(n_a, bd.int(2))
     val plusBuild3 = bd.plus(bd.int(1), n_b)
@@ -314,12 +314,6 @@ class TestTypedBuilderUT extends FunSuite with TestingPredefs {
     val uminusBuild = bd.uminus(n_a)
 
     assert(uminusBuild == OperEx(TlaArithOper.uminus, n_a))
-
-    val prodBuild1 = bd.prod()
-    val prodBuild2 = bd.prod(n_a, n_b)
-
-    assert(prodBuild1 == OperEx(TlaArithOper.prod))
-    assert(prodBuild2 == OperEx(TlaArithOper.prod, n_a, n_b))
 
     val multBuild1 = bd.mult(n_a, n_b)
     val multBuild2 = bd.mult(n_a, bd.int(2))
@@ -422,7 +416,7 @@ class TestTypedBuilderUT extends FunSuite with TestingPredefs {
     assert(geBuild4 == OperEx(TlaArithOper.ge, ValEx(TlaInt(1)), ValEx(TlaInt(2))))
   }
 
-  test("Test direct methods: TlaFiniteSetOper") {
+  test("TlaFiniteSetOper") {
     val cardinalityBuild = bd.card(n_a)
 
     assert(cardinalityBuild == OperEx(TlaFiniteSetOper.cardinality, n_a))
@@ -432,7 +426,7 @@ class TestTypedBuilderUT extends FunSuite with TestingPredefs {
     assert(isFiniteSetBuild == OperEx(TlaFiniteSetOper.isFiniteSet, n_a))
   }
 
-  test("Test direct methods: TlaFunOper") {
+  test("TlaFunOper") {
     val appBuild = bd.appFun(n_a, n_b)
 
     assert(appBuild == OperEx(TlaFunOper.app, n_a, n_b))
@@ -472,7 +466,7 @@ class TestTypedBuilderUT extends FunSuite with TestingPredefs {
     assert(tupleBuild2 == OperEx(TlaFunOper.tuple, n_a, n_b))
   }
 
-  test("Test direct methods: TlaSeqOper") {
+  test("TlaSeqOper") {
     val appendBuild = bd.append(n_a, n_b)
 
     assert(appendBuild == OperEx(TlaSeqOper.append, n_a, n_b))
@@ -494,8 +488,8 @@ class TestTypedBuilderUT extends FunSuite with TestingPredefs {
     assert(lenBuild == OperEx(TlaSeqOper.len, n_a))
   }
 
-  test("Test direct methods: TlaSetOper") {
-    val enumSetBuild1 = bd.enumSet()
+  test("TlaSetOper") {
+    val enumSetBuild1 = bd.emptySet(Untyped())
     val enumSetBuild2 = bd.enumSet(n_a, n_b)
 
     assert(enumSetBuild1 == OperEx(TlaSetOper.enumSet))
@@ -580,7 +574,7 @@ class TestTypedBuilderUT extends FunSuite with TestingPredefs {
     assert(powSetBuild == OperEx(TlaSetOper.powerset, n_a))
   }
 
-//  test("Test direct methods: TlcOper") {
+//  test("TlcOper") {
 //    val assertMsg = "None"
 //    val assertion = utBd.tlcAssert(NullEx, assertMsg)
 //

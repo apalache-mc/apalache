@@ -175,8 +175,11 @@ class TypedBuilder(tagSynthesizer: TagSynthesizer) {
     buildOperEx(TlaControlOper.ifThenElse, condition, thenArm, elseArm)
 
   // [[LetIn]]
-  def letIn(body: TlaEx, defs: TlaOperDecl*): LetInEx =
+  def letIn(body: TlaEx, defs: TlaOperDecl*): LetInEx = {
+    // TODO: Enforce type equality between operators declared in defs
+    //  and their occurrences in body ?
     LetInEx(body, defs: _*)(body.typeTag)
+  }
 
   /** TlaTempOper */
   def AA(variable: TlaEx, formula: TlaEx): OperEx =
@@ -219,8 +222,9 @@ class TypedBuilder(tagSynthesizer: TagSynthesizer) {
   def uminus(arg: TlaEx): OperEx =
     buildOperEx(TlaArithOper.uminus, arg)
 
-  def prod(args: TlaEx*): OperEx =
-    buildOperEx(TlaArithOper.prod, args: _*)
+  // FIXME: scheduled for removal in #580
+//  def prod(args: TlaEx*): OperEx =
+//    buildOperEx(TlaArithOper.prod, args: _*)
 
   def mult(lhs: TlaEx, rhs: TlaEx): OperEx =
     buildOperEx(TlaArithOper.mult, lhs, rhs)
@@ -363,8 +367,8 @@ class TypedBuilder(tagSynthesizer: TagSynthesizer) {
     buildOperEx(TlaSeqOper.selectseq, seq, test)
 
   /** TlaSetOper */
-  def enumSet(args: TlaEx*): OperEx =
-    buildOperEx(TlaSetOper.enumSet, args: _*)
+  def enumSet(arg1: TlaEx, moreArgs: TlaEx*): OperEx =
+    buildOperEx(TlaSetOper.enumSet, arg1 +: moreArgs: _*)
 
   def emptySet(typeTag: TypeTag): OperEx = {
     tagSynthesizer.validateTagDomain(typeTag)

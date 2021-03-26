@@ -88,6 +88,17 @@ object TT1OperatorSignatureMatcher {
     matchArgImplied(operT, args)
   }
 
+  // \A T . (T,Bool) => Bool
+  def matchUnboundedQuantifierSig(args: Seq[TlaEx]): SignatureMatch = {
+    val t = typeVarGenerator.getUnique
+    val operT =
+      OperT1(
+          Seq(t, BoolT1()),
+          BoolT1()
+      )
+    matchArgImplied(operT, args)
+  }
+
   // \A T . (T,Set(T),Bool) => T
   def matchBoundedChoiceSig(args: Seq[TlaEx]): SignatureMatch = {
     val t = typeVarGenerator.getUnique
@@ -282,7 +293,7 @@ object TT1OperatorSignatureMatcher {
     val t = typeVarGenerator.getUnique
     val operT =
       OperT1(
-          Seq(BoolT1(), t),
+          Seq(t, BoolT1()),
           BoolT1()
       )
     matchArgImplied(operT, args)
@@ -666,11 +677,12 @@ object TT1OperatorSignatureMatcher {
 
   def matchSignature(oper: TlaOper, args: Seq[TlaEx]): SignatureMatch = oper match {
     /** Logic */
-    case TlaOper.eq | TlaOper.ne                 => matchBinaryTestSig(args)
-    case TlaBoolOper.and | TlaBoolOper.or        => matchVariadicBoolOpSig(args)
-    case TlaBoolOper.implies | TlaBoolOper.equiv => matchVariadicBoolOpSig(args)
-    case TlaBoolOper.not                         => matchVariadicBoolOpSig(args)
-    case TlaBoolOper.forall | TlaBoolOper.exists => matchBoundedQuantifierSig(args)
+    case TlaOper.eq | TlaOper.ne                                   => matchBinaryTestSig(args)
+    case TlaBoolOper.and | TlaBoolOper.or                          => matchVariadicBoolOpSig(args)
+    case TlaBoolOper.implies | TlaBoolOper.equiv                   => matchVariadicBoolOpSig(args)
+    case TlaBoolOper.not                                           => matchVariadicBoolOpSig(args)
+    case TlaBoolOper.forall | TlaBoolOper.exists                   => matchBoundedQuantifierSig(args)
+    case TlaBoolOper.forallUnbounded | TlaBoolOper.existsUnbounded => matchUnboundedQuantifierSig(args)
 
     /** Choose */
     case TlaOper.chooseBounded   => matchBoundedChoiceSig(args)
