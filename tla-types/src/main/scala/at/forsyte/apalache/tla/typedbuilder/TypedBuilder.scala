@@ -478,26 +478,26 @@ class TypedBuilder(tagSynthesizer: TagSynthesizer) {
 //  // apalache operators
 //  @deprecated("This operator introduces an old-style apalache annotation. It will be removed soon.")
 //  def withType(expr: TlaEx, typeAnnot: TlaEx): OperEx = {
-//    buildOperEx(BmcOper.withType, expr, typeAnnot)
+//    buildOperEx(ApalacheOper.withType, expr, typeAnnot)
 //  }
 //
 //  def assign(lhs: TlaEx, rhs: TlaEx): OperEx = {
-//    buildOperEx(BmcOper.assign, lhs, rhs)
+//    buildOperEx(ApalacheOper.assign, lhs, rhs)
 //  }
 //
 //  def assignPrime(leftName: TlaEx, rightExpr: TlaEx): OperEx = {
-//    buildOperEx(BmcOper.assign, prime(leftName), rightExpr)
+//    buildOperEx(ApalacheOper.assign, prime(leftName), rightExpr)
 //  }
 //
 //  def apalacheExpand(ex: TlaEx): OperEx = {
-//    buildOperEx(BmcOper.expand, ex)
+//    buildOperEx(ApalacheOper.expand, ex)
 //  }
 //
 //  def apalacheSkolem(ex: TlaEx): OperEx = {
-//    buildOperEx(BmcOper.skolem, ex)
+//    buildOperEx(ApalacheOper.skolem, ex)
 //  }
 //
 //  def apalacheConstCard(ex: TlaEx): OperEx = {
-//    buildOperEx(BmcOper.constCard, ex)
+//    buildOperEx(ApalacheOper.constCard, ex)
 //  }
 }

@@ -76,8 +76,7 @@ object TT1OperatorSignatureMatcher {
 
     /** Sets */
     case TlaSetOper.in | TlaSetOper.notin                      => matchSetMembershipSig(args)
-    case TlaSetOper.supsetProper | TlaSetOper.subsetProper     => matchSetCmpSig(args)
-    case TlaSetOper.supseteq | TlaSetOper.subseteq             => matchSetCmpSig(args)
+    case TlaSetOper.subseteq                                   => matchSetCmpSig(args)
     case TlaSetOper.cup | TlaSetOper.cap | TlaSetOper.setminus => matchBinarySetManipSig(args)
     case TlaSetOper.enumSet                                    => matchSetEnumSig(args)
     case TlaSetOper.filter                                     => matchSetFilterSig(args)
