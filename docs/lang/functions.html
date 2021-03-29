@@ -302,22 +302,26 @@ a Python dictionary like follows:</p>
 </code></pre>
 <p>As long as we are using the variable <code>py_price</code> to access the dictionary, our
 approach works. For instance, we can type the following in the python shell:</p>
-<pre><code class="language-python">&gt;&gt;&gt; # similar to DOMAIN price in TLA+
+<pre><code class="language-python"># similar to DOMAIN price in TLA+
 py_price.keys()
 </code></pre>
-<p>In the above example, we used <code>py_price.keys()</code>, which produces a mutable
-dictionary. In TLA+, <code>DOMAIN</code> returns a set. If we want to faithfully model the
-effect of <code>DOMAIN</code>, then we have to produce an immutable set. We use
-<a href="https://docs.python.org/3/library/stdtypes.html#frozenset"><code>frozenset</code></a>, which
-is a less famous cousin of the python <code>set</code>. A frozen set can be inserted
-into another set, in contrast to the standard (mutable) set.</p>
-<pre><code class="language-python">&gt;&gt;&gt; frozenset(py_price.keys())
-frozenset({'Schnitzel', 'Gulash', 'Cordon bleu'})
+<p>In the above example, we used <code>py_price.keys()</code>, which produces a view of the
+mutable dictionary's keys. In TLA+, <code>DOMAIN</code> returns a set. If we want to
+faithfully model the effect of <code>DOMAIN</code>, then we have to produce an immutable
+set. We use
+<a href="https://docs.python.org/3/library/stdtypes.html#frozenset"><code>frozenset</code></a>,
+which is a less famous cousin of the python <code>set</code>. A frozen set can be
+inserted into another set, in contrast to the standard (mutable) set.</p>
+<pre><code class="language-python">&gt;&gt;&gt; py_price = { &quot;Schnitzel&quot;: 18, &quot;Gulash&quot;: 11, &quot;Cordon bleu&quot;: 12 }
+&gt;&gt;&gt; frozenset(py_price.keys()) == frozenset({'Schnitzel', 'Gulash', 'Cordon bleu'})
+True
+
 </code></pre>
 <p>We can also apply our python dictionary similar to the TLA+ function <code>price</code>:</p>
 <pre><code class="language-tla">&gt;&gt;&gt; # similar to price[&quot;Schnitzel&quot;] in TLA+
 &gt;&gt;&gt; py_price[&quot;Schnitzel&quot;]
 18
+
 </code></pre>
 <p>However, there is a catch! What if you like to put the function <code>price</code> in a
 set? In TLA+, this is easy: Simply construct the singleton set that contains
@@ -326,11 +330,13 @@ the function <code>price</code>.</p>
 { price }
 </code></pre>
 <p>Unfortunately, this does not work as easy in Python:</p>
-<pre><code class="language-python">&gt;&gt;&gt; # python expects hashable and immutable data structures inside sets
+<pre><code class="language-python">&gt;&gt;&gt; py_price = { &quot;Schnitzel&quot;: 18, &quot;Gulash&quot;: 11, &quot;Cordon bleu&quot;: 12 }
+&gt;&gt;&gt; # python expects hashable and immutable data structures inside sets
 &gt;&gt;&gt; frozenset({py_price})
 Traceback (most recent call last):
   File &quot;&lt;stdin&gt;&quot;, line 1, in &lt;module&gt;
 TypeError: unhashable type: 'dict'
+
 </code></pre>
 <p>Of course, this is an implementation detail of Python and it has nothing to do
 with TLA+. This example probably demonstrates that the built-in primitives of
@@ -341,8 +347,10 @@ discussion</a>).</p>
 of pairs <code>(key, value)</code> and implement TLA+ function operators over such a
 set. Surely, this implementation would be inefficient, but this is not
 an issue for a <em>specification language</em> such as TLA+. For instance:</p>
-<pre><code class="language-python">&gt;&gt;&gt; { tuple(py_price.items()) }
-(('Schnitzel', 18), ('Gulash', 11), ('Cordon bleu', 12))
+<pre><code class="language-python">&gt;&gt;&gt; py_price = { &quot;Schnitzel&quot;: 18, &quot;Gulash&quot;: 11, &quot;Cordon bleu&quot;: 12 }
+&gt;&gt;&gt; { tuple(py_price.items()) }
+{(('Schnitzel', 18), ('Gulash', 11), ('Cordon bleu', 12))}
+
 </code></pre>
 <p>If we try to implement TLA+-like operators over this data structure, things
 will get complicated very quickly. For this reason, we are just using
@@ -487,12 +495,16 @@ variable.</p>
 <p>In the following code, we write <code>range(m, n)</code> instead of <code>frozenset(range(m, n))</code> to simplify the presentation and produce idiomatic Python code. In the
 general case, we have to iterate over a set, as the type and structure of the
 function domain is not known in advance.</p>
-<pre><code class="language-python"># TLA: [x \in 1..10 |-&gt; x * x]
-{x: x * x for x in range(1, 11)}[5]  # 25
-# TLA: [x, y \in 1..3 |-&gt; x * y]
-{(x, y): x * y for x in range(1, 4) for y in range(1, 4)}[(2, 2)]  # 4
-# TLA: [ n \in 1..3 |-&gt; [ i \in 1..n |-&gt; n + i ]]
-{n: {i: n + i for i in range(1, n + 1)} for n in range(1, 4)}[3][2]  # 5
+<pre><code class="language-python">&gt;&gt;&gt; # TLA: [x \in 1..10 |-&gt; x * x][5]
+&gt;&gt;&gt; {x: x * x for x in range(1, 11)}[5]
+25
+&gt;&gt;&gt; # TLA: [x, y \in 1..3 |-&gt; x * y][2, 2]
+&gt;&gt;&gt; {(x, y): x * y for x in range(1, 4) for y in range(1, 4)}[(2, 2)]
+4
+&gt;&gt;&gt; # TLA: [ n \in 1..3 |-&gt; [ i \in 1..n |-&gt; n + i ]][3][2]
+&gt;&gt;&gt; {n: {i: n + i for i in range(1, n + 1)} for n in range(1, 4)}[3][2]
+5
+
 </code></pre>
 <hr />
 <p><a name="except"></a></p>
@@ -570,34 +582,30 @@ and values. Had we wanted to follow the TLA+ semantics more precisely, we would
 have to enumerate over the keys in the function domain and apply the function to
 each key, in order to obtain the value that is associated with the key.  This
 code would be less efficient than the idiomatic Python code.</p>
-<pre><code class="language-python"># TLA: [ p \in 1..3 |-&gt; &quot;working&quot; ] IN
-f1 = {i: &quot;working&quot; for i in range(1, 4)}
-# TLA: [ f1 EXCEPT ![2] = &quot;aborted&quot; ]
-g1 = {i: status if i != 2 else &quot;aborted&quot; for i, status in f1.items()}
-# g1 is {1: 'working', 2: 'aborted', 3: 'working'}
+<pre><code class="language-python">&gt;&gt;&gt; # TLA: LET f1 == [ p \in 1..3 |-&gt; &quot;working&quot; ] IN
+&gt;&gt;&gt; f1 = {i: &quot;working&quot; for i in range(1, 4)}
+&gt;&gt;&gt; f1
+{1: 'working', 2: 'working', 3: 'working'}
+&gt;&gt;&gt; # TLA: [ f1 EXCEPT ![2] = &quot;aborted&quot; ]
+&gt;&gt;&gt; g1 = {i: status if i != 2 else &quot;aborted&quot; for i, status in f1.items()}
+&gt;&gt;&gt; g1
+{1: 'working', 2: 'aborted', 3: 'working'}
 
-# TLA: [x, y \in 1..3 |-&gt; x * y]
-f2 = {(x, y): x * y for x in range(1, 4) for y in range(1, 4)}
-# TLA: [ f2 EXCEPT ![1, 1] = 0
-g2 = {k: v if k != (1, 1) else 0 for k, v in f2.items()}
-# g2 is {
-#     (1, 1): 0,
-#     (1, 2): 2,
-#     (1, 3): 3,
-#     (2, 1): 2,
-#     (2, 2): 4,
-#     (2, 3): 6,
-#     (3, 1): 3,
-#     (3, 2): 6,
-#     (3, 3): 9,
-# }
+&gt;&gt;&gt; # TLA: LET f2 == [x, y \in 1..3 |-&gt; x * y] IN
+&gt;&gt;&gt; f2 = {(x, y): x * y for x in range(1, 4) for y in range(1, 4)}
+&gt;&gt;&gt; # TLA: [ f2 EXCEPT ![1, 1] = 0
+&gt;&gt;&gt; g2 = {k: v if k != (1, 1) else 0 for k, v in f2.items()}
+&gt;&gt;&gt; g2
+{(1, 1): 0, (1, 2): 2, (1, 3): 3, (2, 1): 2, (2, 2): 4, (2, 3): 6, (3, 1): 3, (3, 2): 6, (3, 3): 9}
 
-# TLA: [ n \in 1..3 |-&gt; [ i \in 1..n |-&gt; n + i ]]
-f3 = {n: {i: n + i for i in range(1, n + 1)} for n in range(4)}
-# TLA: [ f3 EXCEPT ![2][2] = 100 ]
-g3 = f3.copy()
-g3[2][2] = 100
-# g3 is {0: {}, 1: {1: 2}, 2: {1: 3, 2: 100}, 3: {1: 4, 2: 5, 3: 6}}
+&gt;&gt;&gt; # TLA: [ n \in 1..3 |-&gt; [ i \in 1..n |-&gt; n + i ]]
+&gt;&gt;&gt; f3 = {n: {i: n + i for i in range(1, n + 1)} for n in range(4)}
+&gt;&gt;&gt; # TLA: [ f3 EXCEPT ![2][2] = 100 ]
+&gt;&gt;&gt; g3 = f3.copy()
+&gt;&gt;&gt; g3[2][2] = 100
+&gt;&gt;&gt; g3
+{0: {}, 1: {1: 2}, 2: {1: 3, 2: 100}, 3: {1: 4, 2: 5, 3: 6}}
+
 </code></pre>
 <hr />
 <p><a name="domain"></a></p>
@@ -621,10 +629,12 @@ error.</p>
 <p>In the following code, we write <code>range(m, n)</code> instead of <code>frozenset(range(m, n))</code> to simplify the presentation and produce idiomatic Python code. In the
 general case, we have to iterate over a set, as the type and structure of the
 function domain is not known in advance.</p>
-<pre><code class="language-python">f = {x: 2 * x for x in range(1, 4)}
-f.keys()  # dict_keys([1, 2, 3])
+<pre><code class="language-python">&gt;&gt;&gt; f = {x: 2 * x for x in range(1, 4)}
+&gt;&gt;&gt; f.keys()
+dict_keys([1, 2, 3])
+
 </code></pre>
-<p>In the above code, we write <code>f.keys()</code> to obtain an iterator over the
+<p>In the above code, we write <code>f.keys()</code> to obtain an iterable over the
 dictionary keys, which can be used in a further python code. In a more
 principled approach that follows the semantics of TLA+, we would have to
 produce a set, that is to write:</p>
