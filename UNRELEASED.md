@@ -12,4 +12,4 @@
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
 ### Features
 
-* Language manual: types of the standard operators, see #547 
+* Language manual: types of the standard operators, see #547
