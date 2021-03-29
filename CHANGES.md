@@ -4,6 +4,9 @@
 
 ## 0.15.0
 
+
+## 0.15.0
+
 ### Features
 
 * Model checker: receiving the types from with the type checker Snowcat, see #668 and #350
