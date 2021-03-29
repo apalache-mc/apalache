@@ -25,7 +25,7 @@ a <: b == a
 
 If your specification contains such a declaration and it is used somewhere,
 then you are using the old type annotations. You have to remove them and write
-the new ones.  The old and new type annotations are conceptually, so there is
+the new ones.  The old and new type annotations are conceptually different, so there is
 no automatic upgrade process.
 
 ### Description of the old type annotations
