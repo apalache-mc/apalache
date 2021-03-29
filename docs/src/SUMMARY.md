@@ -21,7 +21,6 @@
     - [Profiling Your Specification](./apalache/profiling.md)
     - [Five minutes of theory](./apalache/theory.md)
 - [TLC Configuration Files](./apalache/tlc-config.md)
-- [Types and Annotations](./apalache/types-and-annotations.md)
 - [The Snowcat Type Checker](./apalache/typechecker-snowcat.md)
 - [Supported Features](./apalache/features.md)
 - [TLA+ Preprocessing](./apalache/preprocessing.md)

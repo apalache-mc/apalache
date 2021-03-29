@@ -1,20 +1,34 @@
-## Simple type inference and type annotations
+## Old type inference and type annotations (prior to version 0.15.0)
 
-**WARNING:** We have recently implemented a new type checker called Snowcat.
+**WARNING:** This page is describing old type annotations, which were used
+in Apalache prior to version 0.15.0.
+
+We have recently implemented a new type checker called Snowcat.
 See the [chapter in the manual](./typechecker-snowcat.md).
 Snowcat is user-friendly and much smarter than the current trivial type
 checker.  To get the idea about the new type checker, see [the talk at TLA+
 Community Meeting 2020](https://youtu.be/hnp25hmCMN8). We are preparing a
-tutorial on the new typechecker. The old type annotations will be replaced with
+tutorial on the new typechecker. The old type annotations are replaced with
 the new annotations as documented in [ADR002](../adr/002adr-types.md)
 and [ADR004](../adr/004adr-annotations.md).
 
-You can try Snowcat and the new type annotations in the [unstable
-branch](https://github.com/informalsystems/apalache).  Be warned though that
-the model checker is still expecting the old type annotations, which are
-explained below.
-
 ---------------------------------------------------------------------------------
+
+### Do I use the old type annotations?
+
+You can easily check, whether the old type annotations are used in your specification.
+Simply, search for the following declaration:
+
+```tla
+a <: b == a
+```
+
+If your specification contains such a declaration and it is used somewhere,
+then you are using the old type annotations. You have to remove them and write
+the new ones.  The old and new type annotations are conceptually, so there is
+no automatic upgrade process.
+
+### Description of the old type annotations
 
 Our model checker assigns types to variables, in order to encode TLA+ expressions
 in [Z3](https://github.com/Z3Prover/z3). Hence, the expressions that are ill-typed
@@ -28,7 +42,8 @@ expanded before the type inference is run.
 
 ### 1. Type inference
 
-Starting with the version ``0.4.0``, our model checker runs the naive type
+Starting with the version `0.4.0` (and ending with version `0.11.0`),
+our model checker runs the naive type
 inference algorithm for every computation step:
 
  1. It assumes that all operator definitions have been replaced with their

@@ -1,9 +1,7 @@
 # How to write type annotations
 
 **Warning:** *This HOWTO discusses how to write type annotations for the new
-type checker [Snowcat][], which has not been integrated with the model checker
-yet.  If you want to run the model checker, you have to write the [old type
-annotations][], until we release the integration (soon!)* :(
+type checker [Snowcat][], which is used in Apalache since version 0.15.0.*
 
 This HOWTO gives you concrete steps to extend TLA+ specifications with type
 annotations. You can find the detailed syntax of type annotations in
