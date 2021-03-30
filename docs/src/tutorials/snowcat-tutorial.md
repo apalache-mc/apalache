@@ -253,7 +253,7 @@ The type checker is happy. It has computed the types of all expressions:
  > All expressions are typed
 ```
 
-# Discussions
+# Discussion
 
 To see the complete code, check [TwoPhase.tla](./TwoPhase.tla). Note that we
 have not touched the file `TCommit.tla` at all! The type checker has figured
