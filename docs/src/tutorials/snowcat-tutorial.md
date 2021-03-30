@@ -18,9 +18,9 @@ We assume that you have Apalache installed. If not, check the manual page on
 ## Running example: Two-phase commit
 
 As a running example, we are using the well-understood specification of
-[Two-phase commit][] by [Leslie Lamport][]. We recommend to reproduce the steps
-in this tutorial. So, go ahead and download two specification files:
-[TwoPhase.tla][] and [TCommit.tla][].
+[Two-phase commit][] by [Leslie Lamport][] (written by [Stephan Merz][]). We
+recommend to reproduce the steps in this tutorial. So, go ahead and download
+two specification files: [TwoPhase.tla][] and [TCommit.tla][].
 
 ## Step 1: Running Snowcat
 
@@ -321,6 +321,7 @@ or drop us a message on [Zulip chat].
 [TwoPhase.tla]: https://github.com/tlaplus/Examples/blob/911dac1462344337940779a797a5f329a77be98c/specifications/transaction_commit/TwoPhase.tla
 [TCommit.tla]: https://github.com/tlaplus/Examples/blob/911dac1462344337940779a797a5f329a77be98c/specifications/transaction_commit/TCommit.tla
 [Leslie Lamport]: https://lamport.azurewebsites.net/
+[Stephan Merz]: https://members.loria.fr/Stephan.Merz/
 [GameOfLifeTyped.tla]: https://github.com/informalsystems/apalache/blob/d5138a33fce3d77abc07a39bfb4f448942e6f641/test/tla/GameOfLifeTyped.tla 
 [CigaretteSmokersTyped.tla]: https://github.com/informalsystems/apalache/blob/d5138a33fce3d77abc07a39bfb4f448942e6f641/test/tla/CigaretteSmokersTyped.tla
 [CarTalkPuzzleTyped.tla]: https://github.com/informalsystems/apalache/blob/d5138a33fce3d77abc07a39bfb4f448942e6f641/test/tla/CarTalkPuzzleTyped.tla
