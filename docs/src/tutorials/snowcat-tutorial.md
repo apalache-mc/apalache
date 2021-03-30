@@ -1,4 +1,4 @@
-# Tutorial on the Type Checker Snowcat
+# Tutorial on the Snowcat:snowflake::cat: Type Checker
 
 In this tutorial, we introduce the Snowcat:snowflake::cat: type checker
 :snowflake: :cat:.  We give concrete steps on running the type checker and
