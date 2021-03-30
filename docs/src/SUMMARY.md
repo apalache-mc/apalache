@@ -2,6 +2,10 @@
 
 [Overview](./index.md)
 
+# Tutorials
+
+- [Type Checker Tutorial][./tutorials/snowcat-tutorial.md]
+
 # Apalache User Manual
 
 - [Introduction](./apalache/index.md)
