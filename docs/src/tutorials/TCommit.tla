@@ -53,8 +53,9 @@ TCSpec == TCInit /\ [][TCNext]_rmState
 (***************************************************************************)
 TCConsistent ==  
   (*************************************************************************)
-  (* A state predicate asserting that two RMs have not arrived at          *)
-  (* conflicting decisions.                                                *)
+  (* A state predicate asserting that no two RMs have arrived at          *)
+  (* conflicting decisions.                                                         
+   *)
   (*************************************************************************)
   \A rm1, rm2 \in RM : ~ /\ rmState[rm1] = "aborted"
                          /\ rmState[rm2] = "committed"
