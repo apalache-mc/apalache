@@ -1,6 +1,6 @@
 # Tutorial on the Type Checker Snowcat
 
-In this tutorial, we introduce the new type checker that is called Snowcat
+In this tutorial, we introduce the Snowcat:snowflake::cat: type checker
 :snowflake: :cat:.  We give concrete steps on running the type checker and
 annotating a specification with types.
 
