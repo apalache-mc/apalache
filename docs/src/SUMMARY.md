@@ -4,7 +4,7 @@
 
 # Tutorials
 
-- [Type Checker Tutorial][./tutorials/snowcat-tutorial.md]
+- [Type Checker Tutorial](./tutorials/snowcat-tutorial.md)
 
 # Apalache User Manual
 
