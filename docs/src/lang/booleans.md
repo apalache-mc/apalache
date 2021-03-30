@@ -11,6 +11,9 @@ logic. These operators form _propositional logic_.
 TLA+ contains three special constants: `TRUE`, `FALSE`, and `BOOLEAN`.
 The constant `BOOLEAN` is defined as the set `{FALSE, TRUE}`.
 
+In Apalache, `TRUE`, `FALSE`, and `BOOLEAN` have the types `Bool`, `Bool`,
+and `Set(Bool)`, respectively.
+
 A note for set-theory purists: In theory, `TRUE` and `FALSE` are also sets, but
 in practice they are treated as indivisible values. For instance, Apalache and
 TLC will report an error, if you try to treat `FALSE` and `TRUE` as sets.
@@ -33,6 +36,8 @@ We discuss this effect [Control Flow and Non-determinism].
 **LaTeX notation:** ![land](./img/land.png)
 
 **Arguments:** Two or more arbitrary expressions.
+
+**Apalache type:** `(Bool, Bool) => Bool`
 
 **Effect:** The binary case `F /\ G` evaluates to:
 
@@ -106,6 +111,8 @@ is equivalent to:
 **LaTeX notation:** ![lor](./img/lor.png)
 
 **Arguments:** Two or more Boolean expressions.
+
+**Apalache type:** `(Bool, Bool) => Bool`
 
 **Effect:**
 
@@ -195,6 +202,8 @@ The above formula is equivalent to:
 
 **Arguments:** One argument that should evaluate to a Boolean value.
 
+**Apalache type:** `Bool => Bool`
+
 **Effect:**
 
   The value of `~F` is computed as follows:
@@ -234,6 +243,8 @@ not False   # True
 
 **Arguments:** Two arguments. Although they can be arbitrary expressions, the
 result is only defined when both arguments are evaluated to Boolean values.
+
+**Apalache type:** `(Bool, Bool) => Bool`. Note that the `=>` operator at the type level expresses the relation of inputs types to output types for operators, and as opposed to the `=>` expressing the implication relation at the value level.
 
 **Effect:** `F => G` evaluates to:
 
@@ -282,6 +293,8 @@ Recall that `A => B` is equivalent to `~A \/ B`.
 
 **Arguments:** Two arguments. Although they can be arbitrary expressions, the
 result is only defined when both arguments are evaluated to Boolean values.
+
+**Apalache type:** `(Bool, Bool) => Bool`
 
 **Effect:** `F <=> G` evaluates to:
 

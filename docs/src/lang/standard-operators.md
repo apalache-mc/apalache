@@ -92,8 +92,10 @@ _Unbounded integers like in Python._ [Learn more...](./integers.md)
 
 _String constants_. You learned it!
 
- - String literals, e.g., `"hello"` and `"TLA+ is awesome"`
- - Set of all finite strings: `STRING`
+ - String literals, e.g., `"hello"` and `"TLA+ is awesome"`.
+   - In Apalache, the literals have the type `Str`.
+ - Set of all finite strings: `STRING`.
+   - In Apalache, the set `STRING` has the type `Set(Str)`.
 
 ### Sets :sushi:
 
