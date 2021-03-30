@@ -60,7 +60,9 @@ As tuples are also sequences in TLA+, this poses a challenge for the Apalache
 type checker. For instance, it can immediately figure out that `<<1, "Foo">>`
 is a tuple, as Apalache does not allow sequences to carry elements of different
 types. However, there is no way to say, whether `<<1, 2, 3>>` should be treated
-as a tuple or a sequence. This needs a [type annotation][].
+as a tuple or a sequence. Usually, this problem is resolved by annotating the
+type of a variable or the type of a user operator. See [HOWTO write type
+annotations][].
 
 _Owing to the type information, tuples are translated into SMT much more efficiently
 by Apalache than the general functions and sequences!_
@@ -83,6 +85,15 @@ immutable dictionary.
 **LaTeX notation:** ![tuple](./img/tuple.png)
 
 **Arguments:** An arbitrary number of arguments.
+
+**Apalache type:** This operator is overloaded. There are two potential types:
+
+  1. A tuple constructor: `(a_1, ..., a_n) => <<a_1, ..., a_n>>`,
+    for some types `a_1, ..., a_n`.
+  1. A sequence constructor: `(a, ..., a) => Seq(a)`, for some type `a`.
+
+That is why the Apalache type checker is sometimes asking you to add annotations,
+in order to resolve this ambiguity.
 
 **Effect:** The tuple constructor returns a function `t` that is constructed
 as follows:
@@ -123,6 +134,9 @@ principle "tuples are functions", we have to use a dictionary.
 **LaTeX notation:** ![set-prod](./img/set-prod.png)
 
 **Arguments:** At least two arguments. All of them should be sets.
+
+**Apalache type:** `(Set(a_1), ..., Set(a_n)) => Set(<<a_1, ..., a_n>>)`,
+    for some types `a_1, ..., a_n`.
 
 **Effect:** The Cartesian product `S_1 \X ... \X S_n`
 is syntax sugar for the set comprehension:
@@ -166,8 +180,10 @@ is picked with `\E t \in S_1 \X S_2`.
 <a name="app"></a>
 ### Function application
 
-As tuples are functions, you can access tuple elements by
-[function application](./functions.md#funApp), e.g., `tup[2]`.
+As tuples are functions, you can access tuple elements by [function
+application](./functions.md#funApp), e.g., `tup[2]`. However, in the case of a
+tuple, the type of the function application will be: `(<<a_1, ..., a_i, ...,
+a_n>>, Int) => a_i`, for some types `a_1, ..., a_n`.
 
 
 [Control Flow and Non-determinism]: ./control-and-nondeterminism.md
@@ -176,4 +192,4 @@ As tuples are functions, you can access tuple elements by
 [Paxos]: https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla
 [Apalache ADR002]: ../adr/002adr-types.md
 [Cartesian product]: https://en.wikipedia.org/wiki/Cartesian_product
-[type annotation]: ../apalache/types-and-annotations.md
+[HOWTO write type annotations]: ../../HOWTOs/howto-write-type-annotations.md

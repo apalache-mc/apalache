@@ -73,7 +73,9 @@ As sequences are also tuples in TLA+, this poses a challenge for the Apalache
 type checker. For instance, it can immediately figure out that `<<1, "Foo">>`
 is a tuple, as Apalache does not allow sequences to carry elements of different
 types. However, there is no way to say, whether `<<1, 2, 3>>` should be treated
-as a tuple or a sequence. This needs a [type annotation].
+as a tuple or a sequence.  Usually, this problem is resolved by annotating the
+type of a variable or the type of a user operator. See [HOWTO write type
+annotations][].
 
 _The current SMT encoding of sequences in Apalache is not optimized,
 so operations on sequences are often significantly slower than operations
@@ -92,6 +94,15 @@ on sets._
 **LaTeX notation:** ![tuple](./img/tuple.png)
 
 **Arguments:** An arbitrary number of arguments.
+
+**Apalache type:** This operator is overloaded. There are two potential types:
+
+  1. A tuple constructor: `(a_1, ..., a_n) => <<a_1, ..., a_n>>`,
+    for some types `a_1, ..., a_n`.
+  1. A sequence constructor: `(a, ..., a) => Seq(a)`, for some type `a`.
+
+That is why the Apalache type checker is sometimes asking you to add annotations,
+in order to resolve this ambiguity.
 
 **Effect:** The tuple/sequence constructor returns a function `t` that is
 constructed as follows:
@@ -134,6 +145,8 @@ principle "sequences are functions", we have to use a dictionary.
 **Arguments:** Two arguments. The first argument should be a sequence, the
 second one is an arbitrary expression.
 
+**Apalache type:** `(Seq(a), a) => Seq(a)`, for some type `a`.
+
 **Effect:** The operator `Append(seq, e)`
 constructs a new sequence `newSeq` as follows:
 
@@ -174,8 +187,10 @@ the type of the sequence elements.
 <a name="app"></a>
 ### Function application
 
-As sequences are functions, you can access sequence elements with
-[function application](./functions.md#funApp), e.g., `seq[2]`.
+As sequences are functions, you can access sequence elements with [function
+application](./functions.md#funApp), e.g., `seq[2]`.  However, in the case of a
+sequence, the type of the function application is: `(Seq(a), Int) => a`, for
+some type `a`.
 
 ----------------------------------------------------------------------------
 
@@ -187,6 +202,8 @@ As sequences are functions, you can access sequence elements with
 **LaTeX notation:** `Head(seq)`
 
 **Arguments:** One argument. The argument should be a sequence (or a tuple).
+
+**Apalache type:** `Seq(a) => a`, for some type `a`.
 
 **Effect:** The operator `Head(seq)` evaluates to `seq[1]`.
 If `seq` is an empty sequence, the result is undefined.
@@ -226,6 +243,8 @@ error.
 **LaTeX notation:** `Tail(seq)`
 
 **Arguments:** One argument. The argument should be a sequence (or a tuple).
+
+**Apalache type:** `Seq(a) => Seq(a)`, for some type `a`.
 
 **Effect:** The operator `Tail(seq)` constructs a new sequence `newSeq` as
 follows:
@@ -275,6 +294,8 @@ error.
 
 **Arguments:** One argument. The argument should be a sequence (or a tuple).
 
+**Apalache type:** `Seq(a) => Int`, for some type `a`.
+
 **Effect:** The operator `Len(seq)` is semantically equivalent to
 `Cardinality(DOMAIN seq)`.
 
@@ -317,6 +338,8 @@ error.
 **LaTeX notation:** ![seq-concat](./img/seq-concat.png)
 
 **Arguments:** Two arguments: both should be sequences (or tuples).
+
+**Apalache type:** `(Seq(a), Seq(a)) => Seq(a)`, for some type `a`.
 
 **Effect:** The operator `s \o t`
 constructs a new sequence `newSeq` as follows:
@@ -367,6 +390,8 @@ incompatible.
 
 **Arguments:** Three arguments: a sequence (tuple), and two integers.
 
+**Apalache type:** `(Seq(a), Int, Int) => Seq(a)`, for some type `a`.
+
 **Effect:** The operator `SubSeq(seq, m, n)`
 constructs a new sequence `newSeq` as follows:
 
@@ -416,6 +441,8 @@ error. Apalache flags a static type error.
 **Arguments:** Two arguments: a sequence (a tuple) and a one-argument
 operator that evaluates to `TRUE` or `FALSE` when called with
 an element of `seq` as its argument.
+
+**Apalache type:** `(Seq(a), (a => Bool)) => Seq(a)`, for some type `a`.
 
 **Effect:** The operator `SelectSeq(seq, Test)` constructs a new sequence
 `newSeq` that contains every element `e` of `seq` on which `Test(e)` evaluates
@@ -473,6 +500,8 @@ result is undefined in pure TLA+. TLC raises a model checking error.
 
 **Arguments:** One argument that should be a set.
 
+**Apalache type:** `Set(a) => Set(Seq(a))`, for some type `a`.
+
 **Effect:** The operator `Seq(S)` constructs the set of all (finite) sequences
 that contain elements from `S`. This set is infinite.
 
@@ -529,5 +558,5 @@ till the end of the universe.
 [Paxos]: https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla
 [Apalache ADR002]: https://github.com/informalsystems/apalache/blob/unstable/docs/adr/002adr-types.md
 [Cartesian product]: https://en.wikipedia.org/wiki/Cartesian_product
-[type annotation]: ../apalache/types-and-annotations.md
 [Overriding Seq in TLC]: https://groups.google.com/g/tlaplus/c/sYx_6e3YyWk/m/4CnwPqIVAgAJ
+[HOWTO write type annotations]: ../../HOWTOs/howto-write-type-annotations.md
