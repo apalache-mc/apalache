@@ -538,9 +538,6 @@ syntax:
 
 **LaTeX notation:** `SUBSET S`
 
-**Warning:** Do not confuse `SUBSET S` with `S \subset T`. These are two
-different operators, which unfortunately have similar-looking names.
-
 **Arguments:** One argument. If it is not a set, the result
 is undefined.
 
@@ -571,8 +568,8 @@ To appreciate the power of TLA+, see [subset.py](./examples/subset.py).
 
 ----------------------------------------------------------------------------
 
-<a name="fold"></a>
-### Set folding
+<a name="flatten"></a>
+### Set flattening
 
 **Notation:** `UNION S`
 
@@ -593,7 +590,7 @@ is undefined.
  - If `y \in T`, then there is a set `Y \in S` that contains `y`,
     that is, `y \in Y`.
 
-In particular, `UNION` folds the explosion that is produced by `SUBSET`. That
+In particular, `UNION` flattens the powerset that is produced by `SUBSET`. That
 is, `(UNION (SUBSET S)) = S`.
 
 

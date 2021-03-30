@@ -105,7 +105,7 @@ _Like frozen sets in Python, but cooler_ [Learn more...](./sets.md)
    - Enumeration: [`{ e_1, ..., e_n }`](./sets.md#setEnum)
    - Filter: [`{ x \in S: p }`](./sets.md#filter)
    - Map: [`{ e: x \in S }`](./sets.md#map)
-   - Powers: [`SUBSET S`](./sets.md#powerset) and [`UNION S`](./sets.md#fold)
+   - Powers: [`SUBSET S`](./sets.md#powerset) and [`UNION S`](./sets.md#flatten)
  - Set algebra:
    - Union: [`S \union T`](./sets.md#union) (also `S \cup T`),
    - Intersection: [`S \intersect T`](./sets.md#intersect) (also `S \cap T`),
