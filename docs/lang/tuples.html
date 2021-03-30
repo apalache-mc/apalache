@@ -216,7 +216,9 @@ are not allowed to do that. See the <a href="../adr/002adr-types.html">Apalache 
 type checker. For instance, it can immediately figure out that <code>&lt;&lt;1, &quot;Foo&quot;&gt;&gt;</code>
 is a tuple, as Apalache does not allow sequences to carry elements of different
 types. However, there is no way to say, whether <code>&lt;&lt;1, 2, 3&gt;&gt;</code> should be treated
-as a tuple or a sequence. This needs a <a href="../apalache/types-and-annotations.html">type annotation</a>.</p>
+as a tuple or a sequence. Usually, this problem is resolved by annotating the
+type of a variable or the type of a user operator. See <a href="../../HOWTOs/howto-write-type-annotations.html">HOWTO write type
+annotations</a>.</p>
 <p><em>Owing to the type information, tuples are translated into SMT much more efficiently
 by Apalache than the general functions and sequences!</em></p>
 <hr />
@@ -229,6 +231,14 @@ immutable dictionary.</p>
 <p><strong>Notation:</strong> <code>&lt;&lt;e_1, ..., e_n&gt;&gt;</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/tuple.png" alt="tuple" /></p>
 <p><strong>Arguments:</strong> An arbitrary number of arguments.</p>
+<p><strong>Apalache type:</strong> This operator is overloaded. There are two potential types:</p>
+<ol>
+<li>A tuple constructor: <code>(a_1, ..., a_n) =&gt; &lt;&lt;a_1, ..., a_n&gt;&gt;</code>,
+for some types <code>a_1, ..., a_n</code>.</li>
+<li>A sequence constructor: <code>(a, ..., a) =&gt; Seq(a)</code>, for some type <code>a</code>.</li>
+</ol>
+<p>That is why the Apalache type checker is sometimes asking you to add annotations,
+in order to resolve this ambiguity.</p>
 <p><strong>Effect:</strong> The tuple constructor returns a function <code>t</code> that is constructed
 as follows:</p>
 <ul>
@@ -236,8 +246,8 @@ as follows:</p>
 <li>set <code>r[i]</code> to the value of <code>e_i</code> for <code>i \in 1..n</code>.</li>
 </ul>
 <p>In Apalache, this constructor may be used to construct either a tuple, or a
-sequence. To distinguish between them, you will sometimes need a <a href="../apalache/types-and-annotations.html">type
-annotation</a>.</p>
+sequence. To distinguish between them, you will sometimes need a [type
+annotation].</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No errors.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -255,6 +265,8 @@ principle &quot;tuples are functions&quot;, we have to use a dictionary.</p>
 <p><strong>Notation:</strong> <code>S_1 \X ... \X S_n</code> (or <code>S_1 \times ... \times S_n</code>)</p>
 <p><strong>LaTeX notation:</strong> <img src="./img/set-prod.png" alt="set-prod" /></p>
 <p><strong>Arguments:</strong> At least two arguments. All of them should be sets.</p>
+<p><strong>Apalache type:</strong> <code>(Set(a_1), ..., Set(a_n)) =&gt; Set(&lt;&lt;a_1, ..., a_n&gt;&gt;)</code>,
+for some types <code>a_1, ..., a_n</code>.</p>
 <p><strong>Effect:</strong> The Cartesian product <code>S_1 \X ... \X S_n</code>
 is syntax sugar for the set comprehension:</p>
 <pre><code class="language-tla">{ &lt;&lt; e_1, ..., e_n &gt;&gt; : e_1 \in S_1, ..., e_n \in S_n }
@@ -283,8 +295,9 @@ is picked with <code>\E t \in S_1 \X S_2</code>.</p>
 <hr />
 <p><a name="app"></a></p>
 <h3><a class="header" href="#function-application" id="function-application">Function application</a></h3>
-<p>As tuples are functions, you can access tuple elements by
-<a href="./functions.html#funApp">function application</a>, e.g., <code>tup[2]</code>.</p>
+<p>As tuples are functions, you can access tuple elements by <a href="./functions.html#funApp">function
+application</a>, e.g., <code>tup[2]</code>. However, in the case of a
+tuple, the type of the function application will be: <code>(&lt;&lt;a_1, ..., a_i, ..., a_n&gt;&gt;, Int) =&gt; a_i</code>, for some types <code>a_1, ..., a_n</code>.</p>
 
                     </main>
 

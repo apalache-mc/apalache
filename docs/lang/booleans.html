@@ -178,6 +178,8 @@ logic. These operators form <em>propositional logic</em>.</p>
 <h2><a class="header" href="#constants" id="constants">Constants</a></h2>
 <p>TLA+ contains three special constants: <code>TRUE</code>, <code>FALSE</code>, and <code>BOOLEAN</code>.
 The constant <code>BOOLEAN</code> is defined as the set <code>{FALSE, TRUE}</code>.</p>
+<p>In Apalache, <code>TRUE</code>, <code>FALSE</code>, and <code>BOOLEAN</code> have the types <code>Bool</code>, <code>Bool</code>,
+and <code>Set(Bool)</code>, respectively.</p>
 <p>A note for set-theory purists: In theory, <code>TRUE</code> and <code>FALSE</code> are also sets, but
 in practice they are treated as indivisible values. For instance, Apalache and
 TLC will report an error, if you try to treat <code>FALSE</code> and <code>TRUE</code> as sets.</p>
@@ -193,6 +195,7 @@ We discuss this effect <a href="./control-and-nondeterminism.html">Control Flow 
 <p><strong>Notation:</strong> <code>F /\ G</code> or <code>F \land G</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/land.png" alt="land" /></p>
 <p><strong>Arguments:</strong> Two or more arbitrary expressions.</p>
+<p><strong>Apalache type:</strong> <code>(Bool, Bool) =&gt; Bool</code></p>
 <p><strong>Effect:</strong> The binary case <code>F /\ G</code> evaluates to:</p>
 <ul>
 <li>
@@ -249,6 +252,7 @@ is equivalent to:</p>
 <p><strong>Notation:</strong> <code>F \/ G</code> or <code>F \lor G</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/lor.png" alt="lor" /></p>
 <p><strong>Arguments:</strong> Two or more Boolean expressions.</p>
+<p><strong>Apalache type:</strong> <code>(Bool, Bool) =&gt; Bool</code></p>
 <p><strong>Effect:</strong></p>
 <p>The binary case <code>F \/ G</code> evaluates to:</p>
 <ul>
@@ -313,6 +317,7 @@ is equivalent to:</p>
 <p><strong>Notation:</strong> <code>~F</code> or <code>\neg F</code> or <code>\lnot F</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/lnot.png" alt="lnot" /></p>
 <p><strong>Arguments:</strong> One argument that should evaluate to a Boolean value.</p>
+<p><strong>Apalache type:</strong> <code>Bool =&gt; Bool</code></p>
 <p><strong>Effect:</strong></p>
 <p>The value of <code>~F</code> is computed as follows:</p>
 <ul>
@@ -339,6 +344,7 @@ not False   # True
 <p><strong>LaTeX notation:</strong> <img src="./img/implies.png" alt="implies" /></p>
 <p><strong>Arguments:</strong> Two arguments. Although they can be arbitrary expressions, the
 result is only defined when both arguments are evaluated to Boolean values.</p>
+<p><strong>Apalache type:</strong> <code>(Bool, Bool) =&gt; Bool</code>. Note that the <code>=&gt;</code> operator at the type level expresses the relation of inputs types to output types for operators, and as opposed to the <code>=&gt;</code> expressing the implication relation at the value level.</p>
 <p><strong>Effect:</strong> <code>F =&gt; G</code> evaluates to:</p>
 <ul>
 <li>
@@ -376,6 +382,7 @@ TRUE  =&gt; 1       \* runtime error in TLC, type error in Apalache
 <p><strong>LaTeX notation:</strong> <img src="./img/equiv.png" alt="equiv" /> or <img src="./img/equiv2.png" alt="equiv2" /></p>
 <p><strong>Arguments:</strong> Two arguments. Although they can be arbitrary expressions, the
 result is only defined when both arguments are evaluated to Boolean values.</p>
+<p><strong>Apalache type:</strong> <code>(Bool, Bool) =&gt; Bool</code></p>
 <p><strong>Effect:</strong> <code>F &lt;=&gt; G</code> evaluates to:</p>
 <ul>
 <li>

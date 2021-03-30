@@ -262,8 +262,16 @@ of TLA</a>.</em></p>
 <h3><a class="header" href="#strings-" id="strings-">Strings 🔡</a></h3>
 <p><em>String constants</em>. You learned it!</p>
 <ul>
-<li>String literals, e.g., <code>&quot;hello&quot;</code> and <code>&quot;TLA+ is awesome&quot;</code></li>
-<li>Set of all finite strings: <code>STRING</code></li>
+<li>String literals, e.g., <code>&quot;hello&quot;</code> and <code>&quot;TLA+ is awesome&quot;</code>.
+<ul>
+<li>In Apalache, the literals have the type <code>Str</code>.</li>
+</ul>
+</li>
+<li>Set of all finite strings: <code>STRING</code>.
+<ul>
+<li>In Apalache, the set <code>STRING</code> has the type <code>Set(Str)</code>.</li>
+</ul>
+</li>
 </ul>
 <h3><a class="header" href="#sets-" id="sets-">Sets 🍣</a></h3>
 <p><em>Like frozen sets in Python, but cooler</em> <a href="./sets.html">Learn more...</a></p>

@@ -215,8 +215,9 @@ kinds of values in a single set, TLC would not complain about your sets:</p>
 <li>sets,</li>
 <li>functions, tuples, records, sequences.</li>
 </ol>
-<p>Apalache requires set elements to have the same type. This is enforced by the
-type checker.</p>
+<p>Apalache requires set elements to have the same type, that is, <code>Set(a)</code> for
+some type <code>a</code>. This is enforced by the type checker.  (Records are an exception
+to this rule, as some records can be unified to a common type.) </p>
 <hr />
 <h2><a class="header" href="#operators" id="operators">Operators</a></h2>
 <p><a name="setEnum"></a></p>
@@ -224,6 +225,7 @@ type checker.</p>
 <p><strong>Notation:</strong> <code>{e_1, ..., e_n}</code></p>
 <p><strong>LaTeX notation:</strong> <code>{e_1, ..., e_n}</code></p>
 <p><strong>Arguments:</strong> Any number of arguments, <code>n &gt;= 0</code>.</p>
+<p><strong>Apalache type:</strong> <code>(a, ..., a) =&gt; Set(a)</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> Produce the set that contains the values of the expressions <code>e_1, ..., e_n</code>, in no particular order, and only these values. If <code>n = 0</code>, the
 empty set is constructed.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
@@ -252,6 +254,7 @@ If this is not the case, the type checker flags an error.</p>
 <p><strong>LaTeX notation:</strong> <img src="./img/in-set.png" alt="in" /></p>
 <p><strong>Arguments:</strong> Two arguments.  If the second argument is not a set, the result
 is undefined.</p>
+<p><strong>Apalache type:</strong> <code>(a, Set(a)) =&gt; Bool</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> This operator evaluates to:</p>
 <ul>
 <li><code>TRUE</code>, if <code>S</code> is a set that contains an element that is equal to the value
@@ -285,6 +288,7 @@ incompatible with the type of elements of <code>S</code>, or if <code>S</code> i
 <p><strong>LaTeX notation:</strong> <img src="./img/notin-set.png" alt="notin" /></p>
 <p><strong>Arguments:</strong> Two arguments.  If the second argument is not a set, the result
 is undefined.</p>
+<p><strong>Apalache type:</strong> <code>(a, Set(a)) =&gt; Bool</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> This operator evaluates to:</p>
 <ul>
 <li><code>FALSE</code>, if <code>S</code> is a set that contains an element that is equal to the value
@@ -324,6 +328,7 @@ see <a href="./logic.html">Logic</a>.</p>
 <p><strong>LaTeX notation:</strong> <img src="./img/subseteq.png" alt="subseteq" /></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
 is undefined.</p>
+<p><strong>Apalache type:</strong> <code>(Set(a), Set(a)) =&gt; Bool</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> This operator evaluates to:</p>
 <ul>
 <li><code>TRUE</code>, if <code>S</code> and <code>T</code> are sets, and every element of <code>S</code> is a member of <code>T</code>;</li>
@@ -349,106 +354,13 @@ either not sets, or sets of incompatible types.</p>
   frozenset({frozenset({1})}) &lt;= frozenset({1, 2, 3})   # False
 </code></pre>
 <hr />
-<p><a name="subset"></a></p>
-<h3><a class="header" href="#proper-set-inclusion" id="proper-set-inclusion">Proper set inclusion</a></h3>
-<p><strong>Notation:</strong> <code>S \subset T</code></p>
-<p><strong>LaTeX notation:</strong> <img src="./img/subset.png" alt="subset" /></p>
-<p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
-is undefined.</p>
-<p><strong>Effect:</strong> This operator evaluates to:</p>
-<ul>
-<li><code>TRUE</code>, if <code>S \subseteq T /\ S /= T</code> evaluates to <code>TRUE</code>;</li>
-<li><code>FALSE</code>, if <code>S</code> and <code>T</code> are sets, and <code>~(S \subseteq T) \/ S = T</code> evaluates
-to <code>TRUE</code>.</li>
-</ul>
-<p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
-model checking error, when it discovers that elements of <code>S</code> cannot be compared
-to the elements of <code>T</code>. Apalache produces a static type error, <code>S</code> and <code>T</code> are
-either not sets, or sets of incompatible types.</p>
-<p><strong>Example in TLA+:</strong></p>
-<pre><code class="language-tla">     { 1, 2 } \subset { 1, 2, 3 }     \* TRUE
-  { 1, 2, 3 } \subset { 1, 2, 3 }     \* FALSE
-  { 1, 2, 3 } \subset { 1, 2 }        \* FALSE
-      { {1} } \subset { 1, 2, 3 }     \* FALSE, model checking error in TLC
-                                      \* static type error in Apalache
-</code></pre>
-<p><strong>Example in Python:</strong> Python conveniently offers us <code>&lt;</code>:</p>
-<pre><code class="language-python">  frozenset({1, 2}) &lt; frozenset({1, 2, 3})             # True
-  frozenset({1, 2, 3}) &lt; frozenset({1, 2, 3})          # False
-  frozenset({1, 2, 3}) &lt; frozenset({1, 2})             # False
-  frozenset({frozenset({1})}) &lt; frozenset({1, 2, 3})   # False
-</code></pre>
-<hr />
-<p><a name="supseteq"></a></p>
-<h3><a class="header" href="#set-containment" id="set-containment">Set containment</a></h3>
-<p><strong>Notation:</strong> <code>S \supseteq T</code></p>
-<p><strong>LaTeX notation:</strong> <img src="./img/supseteq.png" alt="supseteq" /></p>
-<p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
-is undefined.</p>
-<p><strong>Effect:</strong> This operator evaluates to:</p>
-<ul>
-<li><code>TRUE</code>, if <code>S</code> and <code>T</code> are sets, and every element of <code>T</code> is a member of <code>S</code>;</li>
-<li><code>FALSE</code>, if <code>S</code> and <code>T</code> are sets, and there is an element of <code>T</code> that
-is not a member of <code>S</code>.</li>
-</ul>
-<p>It is easy to see, that <code>S \supseteq T</code> if and only if <code>T \subseteq S</code>.</p>
-<p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
-model checking error, when it discovers that elements of <code>S</code> cannot be compared
-to the elements of <code>T</code>. Apalache produces a static type error, <code>S</code> and <code>T</code> are
-either not sets, or sets of incompatible types.</p>
-<p><strong>Example in TLA+:</strong></p>
-<pre><code class="language-tla">     { 1, 2 } \supseteq { 1, 2, 3 }     \* FALSE
-  { 1, 2, 3 } \supseteq { 1, 2, 3 }     \* TRUE
-  { 1, 2, 3 } \supseteq { 1, 2 }        \* TRUE
-      { {1} } \supseteq { 1, 2, 3 }     \* FALSE, model checking error in TLC
-                                        \* static type error in Apalache
-</code></pre>
-<p><strong>Example in Python:</strong> Python conveniently offers us <code>&gt;=</code>:</p>
-<pre><code class="language-python">  frozenset({1, 2}) &gt;= frozenset({1, 2, 3})             # False
-  frozenset({1, 2, 3}) &gt;= frozenset({1, 2, 3})          # True
-  frozenset({1, 2, 3}) &gt;= frozenset({1, 2})             # True
-  frozenset({frozenset({1})}) &gt;= frozenset({1, 2, 3})   # False
-</code></pre>
-<hr />
-<p><a name="supset"></a></p>
-<h3><a class="header" href="#proper-set-containment" id="proper-set-containment">Proper set containment</a></h3>
-<p><strong>Notation:</strong> <code>S \supset T</code></p>
-<p><strong>LaTeX notation:</strong> <img src="./img/supset.png" alt="supset" /></p>
-<p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
-is undefined.</p>
-<p><strong>Effect:</strong> This operator evaluates to:</p>
-<ul>
-<li><code>TRUE</code>, if <code>S \supseteq T /\ S /= T</code> evaluates to <code>TRUE</code>;</li>
-<li><code>FALSE</code>, if <code>S</code> and <code>T</code> are sets, and <code>~(S \supseteq T) \/ S = T</code> evaluates
-to <code>TRUE</code>.</li>
-</ul>
-<p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
-model checking error, when it discovers that elements of <code>S</code> cannot be compared
-to the elements of <code>T</code>. Apalache produces a static type error, <code>S</code> and <code>T</code> are
-either not sets, or sets of incompatible types.</p>
-<p><strong>Example in TLA+:</strong></p>
-<pre><code class="language-tla">     { 1, 2 } \supset { 1, 2, 3 }       \* FALSE
-  { 1, 2, 3 } \supset { 1, 2, 3 }       \* FALSE
-  { 1, 2, 3 } \supset { 1, 2 }          \* TRUE
-      { {1} } \supseteq { 1, 2, 3 }     \* FALSE, model checking error in TLC
-                                        \* static type error in Apalache
-</code></pre>
-<p><strong>Example in Python:</strong> Python conveniently offers us <code>&gt;</code>:</p>
-<pre><code class="language-python">  frozenset({1, 2}) &gt; frozenset({1, 2, 3})              # False
-  frozenset({1, 2, 3}) &gt; frozenset({1, 2, 3})           # False
-  frozenset({1, 2, 3}) &gt; frozenset({1, 2})              # True
-  frozenset({frozenset({1})}) &gt;= frozenset({1, 2, 3})   # False
-</code></pre>
-<hr />
 <p><a name="union"></a></p>
 <h3><a class="header" href="#binary-set-union" id="binary-set-union">Binary set union</a></h3>
 <p><strong>Notation:</strong> <code>S \union T</code> or <code>S \cup T</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/cup.png" alt="cup" /></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
 is undefined.</p>
+<p><strong>Apalache type:</strong> <code>(Set(a), Set(a)) =&gt; Set(a)</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> This operator evaluates to the set that contains the elements
 of <code>S</code> <strong>as well</strong> as the elements of <code>T</code>, and no other values.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
@@ -477,6 +389,7 @@ that can be written as <code>|</code>:</p>
 <p><strong>LaTeX notation:</strong> <img src="./img/cap.png" alt="cap" /></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
 is undefined.</p>
+<p><strong>Apalache type:</strong> <code>(Set(a), Set(a)) =&gt; Set(a)</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> This operator evaluates to the set that contains only those elements
 of <code>S</code> that <strong>also</strong> belong to <code>T</code>, and no other values.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
@@ -505,6 +418,7 @@ can be also written as <code>&amp;</code>:</p>
 <p><strong>LaTeX notation:</strong> <img src="./img/setminus.png" alt="setminus" /></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
 is undefined.</p>
+<p><strong>Apalache type:</strong> <code>(Set(a), Set(a)) =&gt; Set(a)</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> This operator evaluates to the set that contains only those elements
 of <code>S</code> that <strong>do not</strong> belong to <code>T</code>, and no other values.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
@@ -533,6 +447,14 @@ can be also written as <code>-</code>:</p>
 <p><strong>LaTeX notation:</strong> <img src="./img/filter.png" alt="filter" /></p>
 <p><strong>Arguments:</strong> Three arguments: a variable name (or a tuple of names, see
 <strong>Advanced syntax</strong>), a set, and an expression.</p>
+<p><strong>Apalache type:</strong> The formal type of this operator is a bit complex.
+Hence, we give an informal description:</p>
+<ul>
+<li><code>x</code> has the type <code>a</code>, for some type <code>a</code>,</li>
+<li><code>S</code> has the type <code>Set(a)</code>,</li>
+<li><code>P</code> has the type <code>Bool</code>,</li>
+<li>the expression <code>{ x \in S: P }</code> has the type <code>Set(a)</code>.</li>
+</ul>
 <p><strong>Effect:</strong> This operator constructs a new set <code>F</code> as follows.  For every
 element <code>e</code> of <code>S</code>, do the following (we give a sequence of steps to ease
 the understanding):</p>
@@ -576,6 +498,14 @@ syntax:</p>
 <p><strong>Arguments:</strong> At least three arguments: a mapping expression,
 a variable name (or a tuple of names, see <strong>Advanced syntax</strong>),
 a set. Additional arguments are variables names and sets, interleaved.</p>
+<p><strong>Apalache type:</strong> The formal type of this operator is a bit complex.
+Hence, we give an informal description for the one-argument case:</p>
+<ul>
+<li><code>x</code> has the type <code>a</code>, for some type <code>a</code>,</li>
+<li><code>S</code> has the type <code>Set(a)</code>,</li>
+<li><code>e</code> has the type <code>b</code>, for some type <code>b</code>,</li>
+<li>the expression <code>{ e: x \in S }</code> has the type <code>Set(b)</code>.</li>
+</ul>
 <p><strong>Effect:</strong> We give the semantics for two arguments.
 We write it as a sequence of steps to ease understanding.
 This operator constructs a new set <code>M</code> as follows.
@@ -621,6 +551,7 @@ syntax:</p>
 different operators, which unfortunately have similar-looking names.</p>
 <p><strong>Arguments:</strong> One argument. If it is not a set, the result
 is undefined.</p>
+<p><strong>Apalache type:</strong> <code>Set(a) =&gt; Set(Set(a))</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> This operator computes the set of all subsets of <code>S</code>.
 That is, the set <code>T</code> the has the following properties:</p>
 <ul>
@@ -646,6 +577,7 @@ To appreciate the power of TLA+, see <a href="./examples/subset.py">subset.py</a
 different operators, which unfortunately have similar-looking names.</p>
 <p><strong>Arguments:</strong> One argument. If it is not a set of sets, the result
 is undefined.</p>
+<p><strong>Apalache type:</strong> <code>Set(Set(a)) =&gt; Set(a)</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> Given that <code>S</code> is a set of sets, this operator computes the set
 <code>T</code> that contains all elements of elements of <code>S</code>:</p>
 <ul>
@@ -676,6 +608,7 @@ in Python is quite simple:</p>
 <p><strong>Warning:</strong> <code>Cardinality(S)</code> is defined in the module <code>FiniteSets</code>.</p>
 <p><strong>Arguments:</strong> One argument. If <code>S</code> is not a set, or <code>S</code> is an infinite set,
 the result is undefined.</p>
+<p><strong>Apalache type:</strong> <code>Set(a) =&gt; Int</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> <code>Cardinality(S)</code> evaluates to the number of (unique) elements in
 <code>S</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
@@ -700,6 +633,7 @@ different from a finite set.</p>
 <p><strong>LaTeX notation:</strong> <code>IsFinite(S)</code></p>
 <p><strong>Warning:</strong> <code>IsFinite(S)</code> is defined in the module <code>FiniteSets</code>.</p>
 <p><strong>Arguments:</strong> One argument. If <code>S</code> is not a set, the result is undefined.</p>
+<p><strong>Apalache type:</strong> <code>Set(a) =&gt; Bool</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> <code>IsFinite(S)</code> evaluates to:</p>
 <ul>
 <li><code>TRUE</code>, when <code>S</code> is a finite set,</li>

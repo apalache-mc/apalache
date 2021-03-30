@@ -228,6 +228,8 @@ immutable dictionary.</p>
 <p><strong>Arguments:</strong> An even number of arguments: field names and field values,
 interleaved. At least one field is expected. Note that field names are TLA+
 identifiers, not strings.</p>
+<p><strong>Apalache type:</strong> <code>(a_1, ..., a_n) =&gt; [field_1: a_1, ..., field_n: a_n]</code>, for
+some types <code>a_1, ..., a_n</code>.</p>
 <p><strong>Effect:</strong> The record constructor returns a function <code>r</code> that is constructed
 as follows:</p>
 <ul>
@@ -252,6 +254,7 @@ as follows:</p>
 <p><strong>Arguments:</strong> An even number of arguments: field names and field values,
 interleaved. At least one field is expected. Note that field names are TLA+
 identifiers, not strings.</p>
+<p><strong>Apalache type:</strong> <code>(Set(a_1), ..., Set(a_n)) =&gt; Set([field_1: a_1, ..., field_n: a_n])</code>, for some types <code>a_1, ..., a_n</code>.</p>
 <p><strong>Effect:</strong> The record set constructor <code>[ field_1: S_1, ..., field_n: S_n]</code>
 is syntax sugar for the set comprehension:</p>
 <pre><code class="language-tla">{ [ field_1 |-&gt; e_1, ..., field_n |-&gt; e_n]: e_1 \in S_1, ..., e_n \in S_n }
@@ -276,10 +279,15 @@ is picked with <code>\E r \in [ field_1: S_1, ..., field_n: S_n]</code>.</p>
 <hr />
 <p><a name="recApp"></a></p>
 <h3><a class="header" href="#access-by-field-name" id="access-by-field-name">Access by field name</a></h3>
-<p><strong>Notation:</strong> <code>r.field</code></p>
-<p><strong>LaTeX notation:</strong> <code>r.field</code></p>
+<p><strong>Notation:</strong> <code>r.field_i</code></p>
+<p><strong>LaTeX notation:</strong> <code>r.field_i</code></p>
 <p><strong>Arguments:</strong> Two arguments: a record and a field name (as an identifier).</p>
-<p><strong>Effect:</strong> As records are also functions, this operator works as <code>r[&quot;field&quot;]</code>.</p>
+<p><strong>Apalache type:</strong> <code>[field_1: a_1, ..., field_i: a_i, ..., field_n: a_n]) =&gt; a_i</code>, for some types <code>a_1, ..., a_n</code>. Due to the record unification rule, we
+usually write this type simply as: <code>[field_i: a_i] =&gt; a_i</code>.</p>
+<p>Note that <code>r.field_i</code> is just a syntax sugar for <code>r[&quot;field_i&quot;]</code> in TLA+.
+Hence, if the type of <code>r</code> cannot be inferred, you can see an error message
+about Apalache not knowing, whether <code>r</code> is a record, or a function.</p>
+<p><strong>Effect:</strong> As records are also functions, this operator works as <code>r[&quot;field_i&quot;]</code>.</p>
 <p>Apalache treats records as values of a record type. In comparison to the
 general function application <code>r[&quot;field&quot;]</code>, the operator <code>r.field</code> is handled
 much more efficiently in Apalache. Due to the use of types, Apalache can

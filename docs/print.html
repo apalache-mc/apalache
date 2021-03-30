@@ -2418,8 +2418,16 @@ of TLA</a>.</em></p>
 <h3><a class="header" href="#strings-" id="strings-">Strings 🔡</a></h3>
 <p><em>String constants</em>. You learned it!</p>
 <ul>
-<li>String literals, e.g., <code>&quot;hello&quot;</code> and <code>&quot;TLA+ is awesome&quot;</code></li>
-<li>Set of all finite strings: <code>STRING</code></li>
+<li>String literals, e.g., <code>&quot;hello&quot;</code> and <code>&quot;TLA+ is awesome&quot;</code>.
+<ul>
+<li>In Apalache, the literals have the type <code>Str</code>.</li>
+</ul>
+</li>
+<li>Set of all finite strings: <code>STRING</code>.
+<ul>
+<li>In Apalache, the set <code>STRING</code> has the type <code>Set(Str)</code>.</li>
+</ul>
+</li>
 </ul>
 <h3><a class="header" href="#sets-" id="sets-">Sets 🍣</a></h3>
 <p><em>Like frozen sets in Python, but cooler</em> <a href="lang/./sets.html">Learn more...</a></p>
@@ -2550,6 +2558,8 @@ logic. These operators form <em>propositional logic</em>.</p>
 <h2><a class="header" href="#constants" id="constants">Constants</a></h2>
 <p>TLA+ contains three special constants: <code>TRUE</code>, <code>FALSE</code>, and <code>BOOLEAN</code>.
 The constant <code>BOOLEAN</code> is defined as the set <code>{FALSE, TRUE}</code>.</p>
+<p>In Apalache, <code>TRUE</code>, <code>FALSE</code>, and <code>BOOLEAN</code> have the types <code>Bool</code>, <code>Bool</code>,
+and <code>Set(Bool)</code>, respectively.</p>
 <p>A note for set-theory purists: In theory, <code>TRUE</code> and <code>FALSE</code> are also sets, but
 in practice they are treated as indivisible values. For instance, Apalache and
 TLC will report an error, if you try to treat <code>FALSE</code> and <code>TRUE</code> as sets.</p>
@@ -2565,6 +2575,7 @@ We discuss this effect <a href="lang/./control-and-nondeterminism.html">Control 
 <p><strong>Notation:</strong> <code>F /\ G</code> or <code>F \land G</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/land.png" alt="land" /></p>
 <p><strong>Arguments:</strong> Two or more arbitrary expressions.</p>
+<p><strong>Apalache type:</strong> <code>(Bool, Bool) =&gt; Bool</code></p>
 <p><strong>Effect:</strong> The binary case <code>F /\ G</code> evaluates to:</p>
 <ul>
 <li>
@@ -2621,6 +2632,7 @@ is equivalent to:</p>
 <p><strong>Notation:</strong> <code>F \/ G</code> or <code>F \lor G</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/lor.png" alt="lor" /></p>
 <p><strong>Arguments:</strong> Two or more Boolean expressions.</p>
+<p><strong>Apalache type:</strong> <code>(Bool, Bool) =&gt; Bool</code></p>
 <p><strong>Effect:</strong></p>
 <p>The binary case <code>F \/ G</code> evaluates to:</p>
 <ul>
@@ -2685,6 +2697,7 @@ is equivalent to:</p>
 <p><strong>Notation:</strong> <code>~F</code> or <code>\neg F</code> or <code>\lnot F</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/lnot.png" alt="lnot" /></p>
 <p><strong>Arguments:</strong> One argument that should evaluate to a Boolean value.</p>
+<p><strong>Apalache type:</strong> <code>Bool =&gt; Bool</code></p>
 <p><strong>Effect:</strong></p>
 <p>The value of <code>~F</code> is computed as follows:</p>
 <ul>
@@ -2711,6 +2724,7 @@ not False   # True
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/implies.png" alt="implies" /></p>
 <p><strong>Arguments:</strong> Two arguments. Although they can be arbitrary expressions, the
 result is only defined when both arguments are evaluated to Boolean values.</p>
+<p><strong>Apalache type:</strong> <code>(Bool, Bool) =&gt; Bool</code>. Note that the <code>=&gt;</code> operator at the type level expresses the relation of inputs types to output types for operators, and as opposed to the <code>=&gt;</code> expressing the implication relation at the value level.</p>
 <p><strong>Effect:</strong> <code>F =&gt; G</code> evaluates to:</p>
 <ul>
 <li>
@@ -2748,6 +2762,7 @@ TRUE  =&gt; 1       \* runtime error in TLC, type error in Apalache
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/equiv.png" alt="equiv" /> or <img src="lang/./img/equiv2.png" alt="equiv2" /></p>
 <p><strong>Arguments:</strong> Two arguments. Although they can be arbitrary expressions, the
 result is only defined when both arguments are evaluated to Boolean values.</p>
+<p><strong>Apalache type:</strong> <code>(Bool, Bool) =&gt; Bool</code></p>
 <p><strong>Effect:</strong> <code>F &lt;=&gt; G</code> evaluates to:</p>
 <ul>
 <li>
@@ -3153,6 +3168,9 @@ conditionals</a>.</p>
 <p>Consider an <code>IF-THEN-ELSE</code> expression to be evaluated in a partial state <code>s</code>:</p>
 <pre><code class="language-tla">IF A THEN B ELSE C
 </code></pre>
+<p>In Apalache, this operator has the polymorphic type <code>(Bool, a, a) =&gt; a</code>,
+where <code>a</code> can be replaced with a concrete type. Here, we consider the case
+<code>(Bool, Bool, Bool) =&gt; Bool</code>.</p>
 <p>Here we assume that both <code>B</code> and <code>C</code> produce Boolean results and <code>B</code> and <code>C</code>
 refer to at least one primed variable <code>y'</code> that is undefined in <code>s</code>. Otherwise, the
 expression can be evaluated as a <a href="lang/./conditionals.html">deterministic
@@ -3179,8 +3197,8 @@ Consider a <code>CASE</code> expression:</p>
   ...
   [] P_n -&gt; e_n
 </code></pre>
-<p>We assume that <code>e_1, ..., e_n</code> produce Boolean results. Otherwise,
-see <a href="lang/./conditionals.html">Deterministic conditionals</a>.</p>
+<p>Here, we assume that <code>e_1, ..., e_n</code> produce Boolean results.  Or, in terms of
+Apalache types, this expression has the type: <code>(Bool, Bool, ..., Bool, Bool) =&gt; Bool</code>.  Otherwise, see <a href="lang/./conditionals.html">Deterministic conditionals</a>.</p>
 <p>This operator is equivalent to the following disjunction:</p>
 <pre><code class="language-tla">\/ P_1 /\ e_1
 \/ P_2 /\ e_2
@@ -3235,6 +3253,8 @@ we recommend using nested <code>IF-THEN-ELSE</code> instead.</p>
 <p><strong>Notation:</strong> <code>IF A THEN B ELSE C</code></p>
 <p><strong>LaTeX notation:</strong> the same</p>
 <p><strong>Arguments:</strong> a Boolean expression <code>A</code> and two expressions <code>B</code> and <code>C</code></p>
+<p><strong>Apalache type:</strong> <code>(Bool, a, a) =&gt; a</code>.  Note that <code>a</code> can be replaced with
+<code>Bool</code>. If <code>a</code> is <code>Bool</code>, and only in that case, the expression <code>IF A THEN B ELSE C</code> is equivalent to <code>(A =&gt; B) /\ (~A =&gt; C)</code>.</p>
 <p><strong>Effect:</strong> <code>IF A THEN B ELSE C</code> evaluates to:</p>
 <ul>
 <li>The value of <code>B</code>, if <code>A</code> evaluates to <code>TRUE</code>.</li>
@@ -3268,6 +3288,8 @@ values to variables!</p>
 </code></pre>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/case.png" alt="case" /></p>
 <p><strong>Arguments:</strong> Boolean expressions <code>p_1, ..., p_n</code> and expressions <code>e_1, ..., e_n</code>.</p>
+<p><strong>Apalache type:</strong> <code>(Bool, a, Bool, a, ..., Bool, a) =&gt; a</code>, for some type <code>a</code>.
+If <code>a</code> is <code>Bool</code>, then the case operator can be a part of a Boolean formula.</p>
 <p><strong>Effect:</strong> Given a state <code>s</code>, define the set <code>I \subseteq 1..n</code> as follows:
 The set <code>I</code> includes the index <code>j \in 1..n</code> if
 and only if <code>p_j</code> evaluates to <code>TRUE</code> in the state <code>s</code>.
@@ -3349,6 +3371,8 @@ give executable semantics for the fixed evaluation order of the predicates.</p>
 </code></pre>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/case-other.png" alt="case-other" /></p>
 <p><strong>Arguments:</strong> Boolean expressions <code>p_1, ..., p_n</code> and expressions <code>e_0, e_1, ..., e_n</code>.</p>
+<p><strong>Apalache type:</strong> <code>(Bool, a, Bool, a, ..., Bool, a, a) =&gt; a</code>, for some type <code>a</code>.
+If <code>a</code> is <code>Bool</code>, then the case operator can be a part of a Boolean formula.</p>
 <p><strong>Effect:</strong> This operator is equivalent to the following version of <code>CASE</code>:</p>
 <pre><code class="language-tla">CASE p_1 -&gt; e_1
   [] p_2 -&gt; e_2
@@ -3384,7 +3408,7 @@ raises a type error when preprocessing.  Additionally, if <code>e_0</code>, <cod
 <p>The integer literals belong to the core language. They are written by
 using the standard syntax: 0, 1, -1, 2, -2, 3, -3, ... Importantly, TLA+
 integers are unbounded. They do not have any fixed bit width, and they cannot
-overflow.</p>
+overflow. In Apalache, these literals have the type <code>Int</code>.</p>
 <p>The integer operators are defined in the standard module <code>Integers</code>. To use
 it, write the <code>EXTENDS</code> clause in the first lines of your module. Like this:</p>
 <pre><code class="language-tla">---- MODULE MyArithmetics ----
@@ -3413,10 +3437,13 @@ to use parallel algorithms.</p>
 <p>The module <code>Integers</code> defines two constant sets (technically, they are
 operators without arguments):</p>
 <ul>
-<li>The set <code>Int</code> that consists of all integers. <em>This set is infinite.</em></li>
+<li>The set <code>Int</code> that consists of all integers. <em>This set is infinite.</em>
+In Apalache, the set <code>Int</code> has the type <code>Set(Int)</code>.
+A bit confusing, right? 😎</li>
 <li>The set <code>Nat</code> that consists of all natural numbers, that is,
 <code>Nat</code> contains every integer <code>x</code> that has the property <code>x &gt;= 0</code>.
-<em>This set is infinite.</em></li>
+<em>This set is infinite.</em>
+In Apalache, the set <code>Nat</code> has the type... <code>Set(Int)</code>.</li>
 </ul>
 <hr />
 <h2><a class="header" href="#operators-1" id="operators-1">Operators</a></h2>
@@ -3426,6 +3453,7 @@ operators without arguments):</p>
 <p><strong>LaTeX notation:</strong> <code>a..b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
 are evaluated to integer values.</p>
+<p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Set(Int)</code>.</p>
 <p><strong>Effect:</strong> <code>a..b</code> evaluates to the finite set <code>{i \in Int: a &lt;= i /\ i &lt;= b}</code>,
 that is, the set of all integers in the range from <code>a</code> to <code>b</code>, including <code>a</code>
 and <code>b</code>.  If <code>a &gt; b</code>, then <code>a..b</code> is the empty set <code>{}</code>.</p>
@@ -3452,6 +3480,7 @@ python.</p>
 <p><strong>LaTeX notation:</strong> <code>-i</code></p>
 <p><strong>Arguments:</strong> One argument. The result is only defined when the argument
 evaluates to an integer.</p>
+<p><strong>Apalache type:</strong> <code>Int =&gt; Int</code>.</p>
 <p><strong>Effect:</strong> <code>-i</code> evaluates to the negation of <code>i</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> In pure TLA+, the result is undefined, if the argument
@@ -3473,6 +3502,7 @@ type error, whereas TLC reports a runtime error.</p>
 <p><strong>LaTeX notation:</strong> <code>a + b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
 are evaluated to integer values.</p>
+<p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Int</code>.</p>
 <p><strong>Effect:</strong> <code>a + b</code> evaluates to the sum of <code>a</code> and <code>b</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
@@ -3493,6 +3523,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>LaTeX notation:</strong> <code>a - b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
 are evaluated to integer values.</p>
+<p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Int</code>.</p>
 <p><strong>Effect:</strong> <code>a - b</code> evaluates to the difference of <code>a</code> and <code>b</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
@@ -3515,6 +3546,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>LaTeX notation:</strong> <code>a * b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
 are evaluated to integer values.</p>
+<p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Int</code>.</p>
 <p><strong>Effect:</strong> <code>a * b</code> evaluates to the product of <code>a</code> and <code>b</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
@@ -3535,6 +3567,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/div.png" alt="div" /></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
 are evaluated to integer values, and the second argument is different from 0.</p>
+<p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Int</code>.</p>
 <p><strong>Effect:</strong> <code>a \div b</code> is defined as follows:</p>
 <ol>
 <li>When <code>a &gt;= 0</code> and <code>b &gt; 0</code>, then the result of <code>a \div b</code> is
@@ -3588,6 +3621,7 @@ to produce the same results as in TLA+:</p>
 <p><strong>LaTeX notation:</strong> <code>a % b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
 are evaluated to integer values, and the second argument is different from 0.</p>
+<p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Int</code>.</p>
 <p><strong>Effect:</strong> <code>a % b</code> is the number <code>c</code> that has the property:
 <code>a = b * (a \div b) + c</code>.</p>
 <p><em>Note that when <code>a &lt; 0</code> or <code>b &lt; 0</code>, the result of the integer remainder <code>a % b</code>
@@ -3623,6 +3657,7 @@ cases:</p>
 <li><code>b &gt; 0</code>,</li>
 <li><code>b = 0</code> and <code>a /= 0</code>.</li>
 </ol>
+<p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Int</code>.</p>
 <p><strong>Effect:</strong> <code>a^b</code> evaluates to <code>a</code> raised to the <code>b</code>-th power:</p>
 <ul>
 <li>If <code>b = 1</code>, then <code>a^b</code> is defined as <code>a</code>.</li>
@@ -3662,6 +3697,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>LaTeX notation:</strong> <code>a &lt; b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
 are evaluated to integer values.</p>
+<p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Bool</code>.</p>
 <p><strong>Effect:</strong> <code>a &lt; b</code> evaluates to:</p>
 <ul>
 <li><code>TRUE</code>, if <code>a</code> is less than <code>b</code>,</li>
@@ -3688,6 +3724,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>LaTeX notation:</strong>  <img src="lang/./img/leq.png" alt="leq" /></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
 are evaluated to integer values.</p>
+<p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Bool</code>.</p>
 <p><strong>Effect:</strong> <code>a &lt;= b</code> evaluates to:</p>
 <ul>
 <li><code>TRUE</code>, if <code>a &lt; b</code> or <code>a = b</code>.</li>
@@ -3714,6 +3751,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>LaTeX notation:</strong> <code>a &gt; b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
 are evaluated to integer values.</p>
+<p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Bool</code>.</p>
 <p><strong>Effect:</strong> <code>a &gt; b</code> evaluates to:</p>
 <ul>
 <li><code>TRUE</code>, if <code>a</code> is greater than <code>b</code>,</li>
@@ -3740,6 +3778,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>LaTeX notation:</strong>  <img src="lang/./img/geq.png" alt="geq" /></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
 are evaluated to integer values.</p>
+<p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Bool</code>.</p>
 <p><strong>Effect:</strong> <code>a &gt;= b</code> evaluates to:</p>
 <ul>
 <li><code>TRUE</code>, if <code>a &gt; b</code> or <code>a = b</code>.</li>
@@ -3809,8 +3848,9 @@ kinds of values in a single set, TLC would not complain about your sets:</p>
 <li>sets,</li>
 <li>functions, tuples, records, sequences.</li>
 </ol>
-<p>Apalache requires set elements to have the same type. This is enforced by the
-type checker.</p>
+<p>Apalache requires set elements to have the same type, that is, <code>Set(a)</code> for
+some type <code>a</code>. This is enforced by the type checker.  (Records are an exception
+to this rule, as some records can be unified to a common type.) </p>
 <hr />
 <h2><a class="header" href="#operators-2" id="operators-2">Operators</a></h2>
 <p><a name="setEnum"></a></p>
@@ -3818,6 +3858,7 @@ type checker.</p>
 <p><strong>Notation:</strong> <code>{e_1, ..., e_n}</code></p>
 <p><strong>LaTeX notation:</strong> <code>{e_1, ..., e_n}</code></p>
 <p><strong>Arguments:</strong> Any number of arguments, <code>n &gt;= 0</code>.</p>
+<p><strong>Apalache type:</strong> <code>(a, ..., a) =&gt; Set(a)</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> Produce the set that contains the values of the expressions <code>e_1, ..., e_n</code>, in no particular order, and only these values. If <code>n = 0</code>, the
 empty set is constructed.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
@@ -3846,6 +3887,7 @@ If this is not the case, the type checker flags an error.</p>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/in-set.png" alt="in" /></p>
 <p><strong>Arguments:</strong> Two arguments.  If the second argument is not a set, the result
 is undefined.</p>
+<p><strong>Apalache type:</strong> <code>(a, Set(a)) =&gt; Bool</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> This operator evaluates to:</p>
 <ul>
 <li><code>TRUE</code>, if <code>S</code> is a set that contains an element that is equal to the value
@@ -3879,6 +3921,7 @@ incompatible with the type of elements of <code>S</code>, or if <code>S</code> i
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/notin-set.png" alt="notin" /></p>
 <p><strong>Arguments:</strong> Two arguments.  If the second argument is not a set, the result
 is undefined.</p>
+<p><strong>Apalache type:</strong> <code>(a, Set(a)) =&gt; Bool</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> This operator evaluates to:</p>
 <ul>
 <li><code>FALSE</code>, if <code>S</code> is a set that contains an element that is equal to the value
@@ -3918,6 +3961,7 @@ see <a href="lang/./logic.html">Logic</a>.</p>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/subseteq.png" alt="subseteq" /></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
 is undefined.</p>
+<p><strong>Apalache type:</strong> <code>(Set(a), Set(a)) =&gt; Bool</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> This operator evaluates to:</p>
 <ul>
 <li><code>TRUE</code>, if <code>S</code> and <code>T</code> are sets, and every element of <code>S</code> is a member of <code>T</code>;</li>
@@ -3943,106 +3987,13 @@ either not sets, or sets of incompatible types.</p>
   frozenset({frozenset({1})}) &lt;= frozenset({1, 2, 3})   # False
 </code></pre>
 <hr />
-<p><a name="subset"></a></p>
-<h3><a class="header" href="#proper-set-inclusion" id="proper-set-inclusion">Proper set inclusion</a></h3>
-<p><strong>Notation:</strong> <code>S \subset T</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/./img/subset.png" alt="subset" /></p>
-<p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
-is undefined.</p>
-<p><strong>Effect:</strong> This operator evaluates to:</p>
-<ul>
-<li><code>TRUE</code>, if <code>S \subseteq T /\ S /= T</code> evaluates to <code>TRUE</code>;</li>
-<li><code>FALSE</code>, if <code>S</code> and <code>T</code> are sets, and <code>~(S \subseteq T) \/ S = T</code> evaluates
-to <code>TRUE</code>.</li>
-</ul>
-<p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
-model checking error, when it discovers that elements of <code>S</code> cannot be compared
-to the elements of <code>T</code>. Apalache produces a static type error, <code>S</code> and <code>T</code> are
-either not sets, or sets of incompatible types.</p>
-<p><strong>Example in TLA+:</strong></p>
-<pre><code class="language-tla">     { 1, 2 } \subset { 1, 2, 3 }     \* TRUE
-  { 1, 2, 3 } \subset { 1, 2, 3 }     \* FALSE
-  { 1, 2, 3 } \subset { 1, 2 }        \* FALSE
-      { {1} } \subset { 1, 2, 3 }     \* FALSE, model checking error in TLC
-                                      \* static type error in Apalache
-</code></pre>
-<p><strong>Example in Python:</strong> Python conveniently offers us <code>&lt;</code>:</p>
-<pre><code class="language-python">  frozenset({1, 2}) &lt; frozenset({1, 2, 3})             # True
-  frozenset({1, 2, 3}) &lt; frozenset({1, 2, 3})          # False
-  frozenset({1, 2, 3}) &lt; frozenset({1, 2})             # False
-  frozenset({frozenset({1})}) &lt; frozenset({1, 2, 3})   # False
-</code></pre>
-<hr />
-<p><a name="supseteq"></a></p>
-<h3><a class="header" href="#set-containment" id="set-containment">Set containment</a></h3>
-<p><strong>Notation:</strong> <code>S \supseteq T</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/./img/supseteq.png" alt="supseteq" /></p>
-<p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
-is undefined.</p>
-<p><strong>Effect:</strong> This operator evaluates to:</p>
-<ul>
-<li><code>TRUE</code>, if <code>S</code> and <code>T</code> are sets, and every element of <code>T</code> is a member of <code>S</code>;</li>
-<li><code>FALSE</code>, if <code>S</code> and <code>T</code> are sets, and there is an element of <code>T</code> that
-is not a member of <code>S</code>.</li>
-</ul>
-<p>It is easy to see, that <code>S \supseteq T</code> if and only if <code>T \subseteq S</code>.</p>
-<p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
-model checking error, when it discovers that elements of <code>S</code> cannot be compared
-to the elements of <code>T</code>. Apalache produces a static type error, <code>S</code> and <code>T</code> are
-either not sets, or sets of incompatible types.</p>
-<p><strong>Example in TLA+:</strong></p>
-<pre><code class="language-tla">     { 1, 2 } \supseteq { 1, 2, 3 }     \* FALSE
-  { 1, 2, 3 } \supseteq { 1, 2, 3 }     \* TRUE
-  { 1, 2, 3 } \supseteq { 1, 2 }        \* TRUE
-      { {1} } \supseteq { 1, 2, 3 }     \* FALSE, model checking error in TLC
-                                        \* static type error in Apalache
-</code></pre>
-<p><strong>Example in Python:</strong> Python conveniently offers us <code>&gt;=</code>:</p>
-<pre><code class="language-python">  frozenset({1, 2}) &gt;= frozenset({1, 2, 3})             # False
-  frozenset({1, 2, 3}) &gt;= frozenset({1, 2, 3})          # True
-  frozenset({1, 2, 3}) &gt;= frozenset({1, 2})             # True
-  frozenset({frozenset({1})}) &gt;= frozenset({1, 2, 3})   # False
-</code></pre>
-<hr />
-<p><a name="supset"></a></p>
-<h3><a class="header" href="#proper-set-containment" id="proper-set-containment">Proper set containment</a></h3>
-<p><strong>Notation:</strong> <code>S \supset T</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/./img/supset.png" alt="supset" /></p>
-<p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
-is undefined.</p>
-<p><strong>Effect:</strong> This operator evaluates to:</p>
-<ul>
-<li><code>TRUE</code>, if <code>S \supseteq T /\ S /= T</code> evaluates to <code>TRUE</code>;</li>
-<li><code>FALSE</code>, if <code>S</code> and <code>T</code> are sets, and <code>~(S \supseteq T) \/ S = T</code> evaluates
-to <code>TRUE</code>.</li>
-</ul>
-<p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
-model checking error, when it discovers that elements of <code>S</code> cannot be compared
-to the elements of <code>T</code>. Apalache produces a static type error, <code>S</code> and <code>T</code> are
-either not sets, or sets of incompatible types.</p>
-<p><strong>Example in TLA+:</strong></p>
-<pre><code class="language-tla">     { 1, 2 } \supset { 1, 2, 3 }       \* FALSE
-  { 1, 2, 3 } \supset { 1, 2, 3 }       \* FALSE
-  { 1, 2, 3 } \supset { 1, 2 }          \* TRUE
-      { {1} } \supseteq { 1, 2, 3 }     \* FALSE, model checking error in TLC
-                                        \* static type error in Apalache
-</code></pre>
-<p><strong>Example in Python:</strong> Python conveniently offers us <code>&gt;</code>:</p>
-<pre><code class="language-python">  frozenset({1, 2}) &gt; frozenset({1, 2, 3})              # False
-  frozenset({1, 2, 3}) &gt; frozenset({1, 2, 3})           # False
-  frozenset({1, 2, 3}) &gt; frozenset({1, 2})              # True
-  frozenset({frozenset({1})}) &gt;= frozenset({1, 2, 3})   # False
-</code></pre>
-<hr />
 <p><a name="union"></a></p>
 <h3><a class="header" href="#binary-set-union" id="binary-set-union">Binary set union</a></h3>
 <p><strong>Notation:</strong> <code>S \union T</code> or <code>S \cup T</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/cup.png" alt="cup" /></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
 is undefined.</p>
+<p><strong>Apalache type:</strong> <code>(Set(a), Set(a)) =&gt; Set(a)</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> This operator evaluates to the set that contains the elements
 of <code>S</code> <strong>as well</strong> as the elements of <code>T</code>, and no other values.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
@@ -4071,6 +4022,7 @@ that can be written as <code>|</code>:</p>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/cap.png" alt="cap" /></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
 is undefined.</p>
+<p><strong>Apalache type:</strong> <code>(Set(a), Set(a)) =&gt; Set(a)</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> This operator evaluates to the set that contains only those elements
 of <code>S</code> that <strong>also</strong> belong to <code>T</code>, and no other values.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
@@ -4099,6 +4051,7 @@ can be also written as <code>&amp;</code>:</p>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/setminus.png" alt="setminus" /></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
 is undefined.</p>
+<p><strong>Apalache type:</strong> <code>(Set(a), Set(a)) =&gt; Set(a)</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> This operator evaluates to the set that contains only those elements
 of <code>S</code> that <strong>do not</strong> belong to <code>T</code>, and no other values.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
@@ -4127,6 +4080,14 @@ can be also written as <code>-</code>:</p>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/filter.png" alt="filter" /></p>
 <p><strong>Arguments:</strong> Three arguments: a variable name (or a tuple of names, see
 <strong>Advanced syntax</strong>), a set, and an expression.</p>
+<p><strong>Apalache type:</strong> The formal type of this operator is a bit complex.
+Hence, we give an informal description:</p>
+<ul>
+<li><code>x</code> has the type <code>a</code>, for some type <code>a</code>,</li>
+<li><code>S</code> has the type <code>Set(a)</code>,</li>
+<li><code>P</code> has the type <code>Bool</code>,</li>
+<li>the expression <code>{ x \in S: P }</code> has the type <code>Set(a)</code>.</li>
+</ul>
 <p><strong>Effect:</strong> This operator constructs a new set <code>F</code> as follows.  For every
 element <code>e</code> of <code>S</code>, do the following (we give a sequence of steps to ease
 the understanding):</p>
@@ -4170,6 +4131,14 @@ syntax:</p>
 <p><strong>Arguments:</strong> At least three arguments: a mapping expression,
 a variable name (or a tuple of names, see <strong>Advanced syntax</strong>),
 a set. Additional arguments are variables names and sets, interleaved.</p>
+<p><strong>Apalache type:</strong> The formal type of this operator is a bit complex.
+Hence, we give an informal description for the one-argument case:</p>
+<ul>
+<li><code>x</code> has the type <code>a</code>, for some type <code>a</code>,</li>
+<li><code>S</code> has the type <code>Set(a)</code>,</li>
+<li><code>e</code> has the type <code>b</code>, for some type <code>b</code>,</li>
+<li>the expression <code>{ e: x \in S }</code> has the type <code>Set(b)</code>.</li>
+</ul>
 <p><strong>Effect:</strong> We give the semantics for two arguments.
 We write it as a sequence of steps to ease understanding.
 This operator constructs a new set <code>M</code> as follows.
@@ -4215,6 +4184,7 @@ syntax:</p>
 different operators, which unfortunately have similar-looking names.</p>
 <p><strong>Arguments:</strong> One argument. If it is not a set, the result
 is undefined.</p>
+<p><strong>Apalache type:</strong> <code>Set(a) =&gt; Set(Set(a))</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> This operator computes the set of all subsets of <code>S</code>.
 That is, the set <code>T</code> the has the following properties:</p>
 <ul>
@@ -4240,6 +4210,7 @@ To appreciate the power of TLA+, see <a href="lang/./examples/subset.py">subset.
 different operators, which unfortunately have similar-looking names.</p>
 <p><strong>Arguments:</strong> One argument. If it is not a set of sets, the result
 is undefined.</p>
+<p><strong>Apalache type:</strong> <code>Set(Set(a)) =&gt; Set(a)</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> Given that <code>S</code> is a set of sets, this operator computes the set
 <code>T</code> that contains all elements of elements of <code>S</code>:</p>
 <ul>
@@ -4270,6 +4241,7 @@ in Python is quite simple:</p>
 <p><strong>Warning:</strong> <code>Cardinality(S)</code> is defined in the module <code>FiniteSets</code>.</p>
 <p><strong>Arguments:</strong> One argument. If <code>S</code> is not a set, or <code>S</code> is an infinite set,
 the result is undefined.</p>
+<p><strong>Apalache type:</strong> <code>Set(a) =&gt; Int</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> <code>Cardinality(S)</code> evaluates to the number of (unique) elements in
 <code>S</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
@@ -4294,6 +4266,7 @@ different from a finite set.</p>
 <p><strong>LaTeX notation:</strong> <code>IsFinite(S)</code></p>
 <p><strong>Warning:</strong> <code>IsFinite(S)</code> is defined in the module <code>FiniteSets</code>.</p>
 <p><strong>Arguments:</strong> One argument. If <code>S</code> is not a set, the result is undefined.</p>
+<p><strong>Apalache type:</strong> <code>Set(a) =&gt; Bool</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> <code>IsFinite(S)</code> evaluates to:</p>
 <ul>
 <li><code>TRUE</code>, when <code>S</code> is a finite set,</li>
@@ -4332,6 +4305,14 @@ section, we only consider the deterministic use of the existential quantifier.</
 expression. As usual in TLA+, if the second argument is not a set, the result is
 undefined. You can also use multiple variables and tuples, see <strong>Advanced
 syntax</strong>.</p>
+<p><strong>Apalache type:</strong> The formal type of this operator is a bit complex.
+Hence, we give an informal description:</p>
+<ul>
+<li><code>x</code> has the type <code>a</code>, for some type <code>a</code>,</li>
+<li><code>S</code> has the type <code>Set(a)</code>,</li>
+<li><code>P</code> has the type <code>Bool</code>,</li>
+<li>the expression <code>\A x \in S: P</code> has the type <code>Bool</code>.</li>
+</ul>
 <p><strong>Effect:</strong> This operator evaluates to a Boolean value. We explain
 semantics only for a single variable:</p>
 <ul>
@@ -4385,6 +4366,14 @@ simply syntax sugar for the form with nested quantifiers: <code>\A x \in S: \A y
 expression. As usual in TLA+, if the second argument is not a set, the result is
 undefined.You can also use multiple variables and tuples, see <strong>Advanced
 syntax</strong>.</p>
+<p><strong>Apalache type:</strong> The formal type of this operator is a bit complex.
+Hence, we give an informal description:</p>
+<ul>
+<li><code>x</code> has the type <code>a</code>, for some type <code>a</code>,</li>
+<li><code>S</code> has the type <code>Set(a)</code>,</li>
+<li><code>P</code> has the type <code>Bool</code>,</li>
+<li>the expression <code>\E x \in S: P</code> has the type <code>Bool</code>.</li>
+</ul>
 <p><strong>Effect:</strong> This operator evaluates to a Boolean value. We explain
 semantics only for a single variable:</p>
 <ul>
@@ -4442,6 +4431,7 @@ simply syntax sugar for the form with nested quantifiers: <code>\E x \in S: \E y
 <p><strong>Notation:</strong> <code>e_1 = e_2</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/eq.png" alt="eq" /></p>
 <p><strong>Arguments:</strong> Two arguments.</p>
+<p><strong>Apalache type:</strong> <code>(a, a) =&gt; Bool</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> This operator evaluates to a Boolean value. It tests the values
 of <code>e_1</code> and <code>e_2</code> for structural equality. The exact effect depends on the
 values of <code>e_1</code> and <code>e_2</code>. Let <code>e_1</code> and <code>e_2</code> evaluate to the values
@@ -4539,6 +4529,7 @@ use <code>==</code> instead of <code>=</code>:</p>
 <p><strong>Notation:</strong> <code>e_1 /= e_2</code> or <code>e_1 # e_2</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/ne.png" alt="ne" /></p>
 <p><strong>Arguments:</strong> Two arguments.</p>
+<p><strong>Apalache type:</strong> <code>(a, a) =&gt; Bool</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> This operator is syntax sugar for <code>~(e_1 = e_2)</code>. Full stop.</p>
 <hr />
 <p><a name="chooseBounded"></a></p>
@@ -4548,6 +4539,14 @@ use <code>==</code> instead of <code>=</code>:</p>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/choose-bounded.png" alt="choose-bounded" /></p>
 <p><strong>Arguments:</strong> Three arguments: a variable name, a set, and an
 expression.</p>
+<p><strong>Apalache type:</strong> The formal type of this operator is a bit complex.
+Hence, we give an informal description:</p>
+<ul>
+<li><code>x</code> has the type <code>a</code>, for some type <code>a</code>,</li>
+<li><code>S</code> has the type <code>Set(a)</code>,</li>
+<li><code>P</code> has the type <code>Bool</code>,</li>
+<li>the expression <code>CHOOSE x \in S: P</code> has the type <code>a</code>.</li>
+</ul>
 <p><strong>Effect:</strong> This operator implements a black-box algorithm that <em>somehow</em> picks
 one element from the set <code>{x \in S: P}</code>.  Is it an algorithm? Yes! <code>CHOOSE x \in S: P</code> is deterministic.  When you give it two equal sets and two equivalent
 predicates, <code>CHOOSE</code> produces the same value. Formally, the only known property
@@ -4775,7 +4774,8 @@ of integers).</p>
 <p>Apalache enforces stricter types. It has designated types for all four
 data structures: general functions, records, tuples, and sequences.
 Moreover, all elements of the function domain must have the same type.
-The same is true for the codomain. This is enforced
+The same is true for the codomain. That is, general functions have the
+type <code>a -&gt; b</code> for some types <code>a</code> and <code>b</code>. This is enforced
 by the type checker.</p>
 <p>In this sense, the type restrictions of Apalache are similar to those for the
 generic collections of Java and Scala.  As a result, the type checker in
@@ -4860,6 +4860,14 @@ arguments</p>
 <p><strong>Arguments:</strong> At least three arguments: a variable name (or a tuple of names,
 see <strong>Advanced syntax</strong>), a set, and a mapping expression. Instead of one
 variable and one set, you can use multiple variables and multiple sets.</p>
+<p><strong>Apalache type:</strong> The formal type of this operator is a bit complex.
+Hence, we give an informal description:</p>
+<ul>
+<li><code>x</code> has the type <code>a</code>, for some type <code>a</code>,</li>
+<li><code>S</code> has the type <code>Set(a)</code>,</li>
+<li><code>e</code> has the type <code>b</code>, for some type <code>b</code>,</li>
+<li>the expression <code>[ x \in S |-&gt; e ]</code> has the type <code>a -&gt; b</code>.</li>
+</ul>
 <p><strong>Effect:</strong> We give the semantics for one argument.  We write a sequence of
 steps to ease the understanding.  This operator constructs a function <code>f</code> over
 the domain <code>S</code> as follows.  For every element <code>elem</code> of <code>S</code>, do the following:</p>
@@ -4929,6 +4937,7 @@ xy = {(x, y) for x in range(1, 4) for y in range(4, 7)}
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/funset.png" alt="funset" /></p>
 <p><strong>Arguments:</strong> Two arguments. Both have to be sets. Otherwise, the result is
 undefined.</p>
+<p><strong>Apalache type:</strong> <code>(Set(a), Set(b)) =&gt; Set(a -&gt; b)</code>, for some types <code>a</code> and <code>b</code>.</p>
 <p><strong>Effect:</strong> This operator constructs the set of all possible functions that
 have <code>S</code> as their domain, and for each argument <code>x \in S</code> return a value <code>y \in T</code>.</p>
 <p>Note that if one of the sets is infinite, then the set <code>[S -&gt; T]</code> is infinite
@@ -4960,6 +4969,9 @@ values, rather than over the alphabet of 2 values.</p>
 the other arguments are the arguments to the function. Several arguments
 are treated as a tuple. For instance, <code>f[e_1, ..., e_n]</code> is shorthand for
 <code>f[&lt;&lt;e_1, ..., e_n&gt;&gt;]</code>.</p>
+<p><strong>Apalache type:</strong> In the single-index case, the type is
+<code>((a -&gt; b), a) =&gt; b</code>, for some types <code>a</code> and <code>b</code>. In the multi-index case,
+the type is <code>((&lt;&lt;a_1, ..., a_n&gt;&gt; -&gt; b), a_1, ..., a_n) =&gt; b</code>.</p>
 <p><strong>Effect:</strong> This operator is evaluated as follows:</p>
 <ul>
 <li>If <code>e \in DOMAIN f</code>, then <code>f[e]</code> evaluates to the value that function
@@ -5008,6 +5020,9 @@ function domain is not known in advance.</p>
 <p><strong>Arguments:</strong> At least three arguments. The first one should be a function,
 the other arguments are interleaved pairs of argument expressions and value
 expressions.</p>
+<p><strong>Apalache type:</strong> In the case of a single-point update, the type is simple:
+<code>(a -&gt; b, a, b) =&gt; (a -&gt; b)</code>, for some types <code>a</code> and <code>b</code>. In the general case,
+the type is: <code>(a -&gt; b, a, b, ..., a, b) =&gt; (a -&gt; b)</code>.</p>
 <p><strong>Effect:</strong> This operator evaluates to a new function <code>g</code> that is constructed
 as follows:</p>
 <ul>
@@ -5108,6 +5123,7 @@ code would be less efficient than the idiomatic Python code.</p>
 <p><strong>LaTeX notation:</strong> <code>DOMAIN f</code></p>
 <p><strong>Arguments:</strong> One argument, which should be a function
 (respectively, a record, tuple, sequence).</p>
+<p><strong>Apalache type:</strong> <code>(a -&gt; b) =&gt; Set(a)</code>.</p>
 <p><strong>Effect:</strong> <code>DOMAIN f</code> returns the set of values, on which the function
 has been defined, see: Function constructor and Function set constructor.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
@@ -5192,6 +5208,8 @@ immutable dictionary.</p>
 <p><strong>Arguments:</strong> An even number of arguments: field names and field values,
 interleaved. At least one field is expected. Note that field names are TLA+
 identifiers, not strings.</p>
+<p><strong>Apalache type:</strong> <code>(a_1, ..., a_n) =&gt; [field_1: a_1, ..., field_n: a_n]</code>, for
+some types <code>a_1, ..., a_n</code>.</p>
 <p><strong>Effect:</strong> The record constructor returns a function <code>r</code> that is constructed
 as follows:</p>
 <ul>
@@ -5216,6 +5234,7 @@ as follows:</p>
 <p><strong>Arguments:</strong> An even number of arguments: field names and field values,
 interleaved. At least one field is expected. Note that field names are TLA+
 identifiers, not strings.</p>
+<p><strong>Apalache type:</strong> <code>(Set(a_1), ..., Set(a_n)) =&gt; Set([field_1: a_1, ..., field_n: a_n])</code>, for some types <code>a_1, ..., a_n</code>.</p>
 <p><strong>Effect:</strong> The record set constructor <code>[ field_1: S_1, ..., field_n: S_n]</code>
 is syntax sugar for the set comprehension:</p>
 <pre><code class="language-tla">{ [ field_1 |-&gt; e_1, ..., field_n |-&gt; e_n]: e_1 \in S_1, ..., e_n \in S_n }
@@ -5240,10 +5259,15 @@ is picked with <code>\E r \in [ field_1: S_1, ..., field_n: S_n]</code>.</p>
 <hr />
 <p><a name="recApp"></a></p>
 <h3><a class="header" href="#access-by-field-name" id="access-by-field-name">Access by field name</a></h3>
-<p><strong>Notation:</strong> <code>r.field</code></p>
-<p><strong>LaTeX notation:</strong> <code>r.field</code></p>
+<p><strong>Notation:</strong> <code>r.field_i</code></p>
+<p><strong>LaTeX notation:</strong> <code>r.field_i</code></p>
 <p><strong>Arguments:</strong> Two arguments: a record and a field name (as an identifier).</p>
-<p><strong>Effect:</strong> As records are also functions, this operator works as <code>r[&quot;field&quot;]</code>.</p>
+<p><strong>Apalache type:</strong> <code>[field_1: a_1, ..., field_i: a_i, ..., field_n: a_n]) =&gt; a_i</code>, for some types <code>a_1, ..., a_n</code>. Due to the record unification rule, we
+usually write this type simply as: <code>[field_i: a_i] =&gt; a_i</code>.</p>
+<p>Note that <code>r.field_i</code> is just a syntax sugar for <code>r[&quot;field_i&quot;]</code> in TLA+.
+Hence, if the type of <code>r</code> cannot be inferred, you can see an error message
+about Apalache not knowing, whether <code>r</code> is a record, or a function.</p>
+<p><strong>Effect:</strong> As records are also functions, this operator works as <code>r[&quot;field_i&quot;]</code>.</p>
 <p>Apalache treats records as values of a record type. In comparison to the
 general function application <code>r[&quot;field&quot;]</code>, the operator <code>r.field</code> is handled
 much more efficiently in Apalache. Due to the use of types, Apalache can
@@ -5304,7 +5328,9 @@ are not allowed to do that. See the <a href="lang/../adr/002adr-types.html">Apal
 type checker. For instance, it can immediately figure out that <code>&lt;&lt;1, &quot;Foo&quot;&gt;&gt;</code>
 is a tuple, as Apalache does not allow sequences to carry elements of different
 types. However, there is no way to say, whether <code>&lt;&lt;1, 2, 3&gt;&gt;</code> should be treated
-as a tuple or a sequence. This needs a <a href="lang/../apalache/types-and-annotations.html">type annotation</a>.</p>
+as a tuple or a sequence. Usually, this problem is resolved by annotating the
+type of a variable or the type of a user operator. See <a href="lang/../../HOWTOs/howto-write-type-annotations.html">HOWTO write type
+annotations</a>.</p>
 <p><em>Owing to the type information, tuples are translated into SMT much more efficiently
 by Apalache than the general functions and sequences!</em></p>
 <hr />
@@ -5317,6 +5343,14 @@ immutable dictionary.</p>
 <p><strong>Notation:</strong> <code>&lt;&lt;e_1, ..., e_n&gt;&gt;</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/tuple.png" alt="tuple" /></p>
 <p><strong>Arguments:</strong> An arbitrary number of arguments.</p>
+<p><strong>Apalache type:</strong> This operator is overloaded. There are two potential types:</p>
+<ol>
+<li>A tuple constructor: <code>(a_1, ..., a_n) =&gt; &lt;&lt;a_1, ..., a_n&gt;&gt;</code>,
+for some types <code>a_1, ..., a_n</code>.</li>
+<li>A sequence constructor: <code>(a, ..., a) =&gt; Seq(a)</code>, for some type <code>a</code>.</li>
+</ol>
+<p>That is why the Apalache type checker is sometimes asking you to add annotations,
+in order to resolve this ambiguity.</p>
 <p><strong>Effect:</strong> The tuple constructor returns a function <code>t</code> that is constructed
 as follows:</p>
 <ul>
@@ -5324,8 +5358,8 @@ as follows:</p>
 <li>set <code>r[i]</code> to the value of <code>e_i</code> for <code>i \in 1..n</code>.</li>
 </ul>
 <p>In Apalache, this constructor may be used to construct either a tuple, or a
-sequence. To distinguish between them, you will sometimes need a <a href="lang/../apalache/types-and-annotations.html">type
-annotation</a>.</p>
+sequence. To distinguish between them, you will sometimes need a [type
+annotation].</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No errors.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -5343,6 +5377,8 @@ principle &quot;tuples are functions&quot;, we have to use a dictionary.</p>
 <p><strong>Notation:</strong> <code>S_1 \X ... \X S_n</code> (or <code>S_1 \times ... \times S_n</code>)</p>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/set-prod.png" alt="set-prod" /></p>
 <p><strong>Arguments:</strong> At least two arguments. All of them should be sets.</p>
+<p><strong>Apalache type:</strong> <code>(Set(a_1), ..., Set(a_n)) =&gt; Set(&lt;&lt;a_1, ..., a_n&gt;&gt;)</code>,
+for some types <code>a_1, ..., a_n</code>.</p>
 <p><strong>Effect:</strong> The Cartesian product <code>S_1 \X ... \X S_n</code>
 is syntax sugar for the set comprehension:</p>
 <pre><code class="language-tla">{ &lt;&lt; e_1, ..., e_n &gt;&gt; : e_1 \in S_1, ..., e_n \in S_n }
@@ -5371,8 +5407,9 @@ is picked with <code>\E t \in S_1 \X S_2</code>.</p>
 <hr />
 <p><a name="app"></a></p>
 <h3><a class="header" href="#function-application-1" id="function-application-1">Function application</a></h3>
-<p>As tuples are functions, you can access tuple elements by
-<a href="lang/./functions.html#funApp">function application</a>, e.g., <code>tup[2]</code>.</p>
+<p>As tuples are functions, you can access tuple elements by <a href="lang/./functions.html#funApp">function
+application</a>, e.g., <code>tup[2]</code>. However, in the case of a
+tuple, the type of the function application will be: <code>(&lt;&lt;a_1, ..., a_i, ..., a_n&gt;&gt;, Int) =&gt; a_i</code>, for some types <code>a_1, ..., a_n</code>.</p>
 <h1><a class="header" href="#sequences-1" id="sequences-1">Sequences</a></h1>
 <p><a href="lang/./standard-operators.html">[Back to all operators]</a></p>
 <p>On the surface, TLA+ sequences are very much like lists in your programming
@@ -5432,7 +5469,9 @@ which restricts the sequence elements to have the same type <code>T_3</code>.</p
 type checker. For instance, it can immediately figure out that <code>&lt;&lt;1, &quot;Foo&quot;&gt;&gt;</code>
 is a tuple, as Apalache does not allow sequences to carry elements of different
 types. However, there is no way to say, whether <code>&lt;&lt;1, 2, 3&gt;&gt;</code> should be treated
-as a tuple or a sequence. This needs a <a href="lang/../apalache/types-and-annotations.html">type annotation</a>.</p>
+as a tuple or a sequence.  Usually, this problem is resolved by annotating the
+type of a variable or the type of a user operator. See <a href="lang/../../HOWTOs/howto-write-type-annotations.html">HOWTO write type
+annotations</a>.</p>
 <p><em>The current SMT encoding of sequences in Apalache is not optimized,
 so operations on sequences are often significantly slower than operations
 on sets.</em></p>
@@ -5443,6 +5482,14 @@ on sets.</em></p>
 <p><strong>Notation:</strong> <code>&lt;&lt;e_1, ..., e_n&gt;&gt;</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/tuple.png" alt="tuple" /></p>
 <p><strong>Arguments:</strong> An arbitrary number of arguments.</p>
+<p><strong>Apalache type:</strong> This operator is overloaded. There are two potential types:</p>
+<ol>
+<li>A tuple constructor: <code>(a_1, ..., a_n) =&gt; &lt;&lt;a_1, ..., a_n&gt;&gt;</code>,
+for some types <code>a_1, ..., a_n</code>.</li>
+<li>A sequence constructor: <code>(a, ..., a) =&gt; Seq(a)</code>, for some type <code>a</code>.</li>
+</ol>
+<p>That is why the Apalache type checker is sometimes asking you to add annotations,
+in order to resolve this ambiguity.</p>
 <p><strong>Effect:</strong> The tuple/sequence constructor returns a function <code>t</code> that is
 constructed as follows:</p>
 <ul>
@@ -5450,8 +5497,8 @@ constructed as follows:</p>
 <li>set <code>r[i]</code> to the value of <code>e_i</code> for <code>i \in 1..n</code>.</li>
 </ul>
 <p>In Apalache, this constructor may be used to construct either a tuple, or a
-sequence. To distinguish between them, you will sometimes need a <a href="lang/../apalache/types-and-annotations.html">type
-annotation</a>.</p>
+sequence. To distinguish between them, you will sometimes need a [type
+annotation].</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No errors.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -5470,6 +5517,7 @@ principle &quot;sequences are functions&quot;, we have to use a dictionary.</p>
 <p><strong>LaTeX notation:</strong> <code>Append(seq, e)</code></p>
 <p><strong>Arguments:</strong> Two arguments. The first argument should be a sequence, the
 second one is an arbitrary expression.</p>
+<p><strong>Apalache type:</strong> <code>(Seq(a), a) =&gt; Seq(a)</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> The operator <code>Append(seq, e)</code>
 constructs a new sequence <code>newSeq</code> as follows:</p>
 <ul>
@@ -5499,14 +5547,17 @@ the type of the sequence elements.</p>
 <hr />
 <p><a name="app"></a></p>
 <h3><a class="header" href="#function-application-2" id="function-application-2">Function application</a></h3>
-<p>As sequences are functions, you can access sequence elements with
-<a href="lang/./functions.html#funApp">function application</a>, e.g., <code>seq[2]</code>.</p>
+<p>As sequences are functions, you can access sequence elements with <a href="lang/./functions.html#funApp">function
+application</a>, e.g., <code>seq[2]</code>.  However, in the case of a
+sequence, the type of the function application is: <code>(Seq(a), Int) =&gt; a</code>, for
+some type <code>a</code>.</p>
 <hr />
 <p><a name="head"></a></p>
 <h3><a class="header" href="#sequence-head" id="sequence-head">Sequence head</a></h3>
 <p><strong>Notation:</strong> <code>Head(seq)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Head(seq)</code></p>
 <p><strong>Arguments:</strong> One argument. The argument should be a sequence (or a tuple).</p>
+<p><strong>Apalache type:</strong> <code>Seq(a) =&gt; a</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> The operator <code>Head(seq)</code> evaluates to <code>seq[1]</code>.
 If <code>seq</code> is an empty sequence, the result is undefined.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
@@ -5532,6 +5583,7 @@ error.</p>
 <p><strong>Notation:</strong> <code>Tail(seq)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Tail(seq)</code></p>
 <p><strong>Arguments:</strong> One argument. The argument should be a sequence (or a tuple).</p>
+<p><strong>Apalache type:</strong> <code>Seq(a) =&gt; Seq(a)</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> The operator <code>Tail(seq)</code> constructs a new sequence <code>newSeq</code> as
 follows:</p>
 <ul>
@@ -5565,6 +5617,7 @@ error.</p>
 <p><strong>Notation:</strong> <code>Len(seq)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Len(seq)</code></p>
 <p><strong>Arguments:</strong> One argument. The argument should be a sequence (or a tuple).</p>
+<p><strong>Apalache type:</strong> <code>Seq(a) =&gt; Int</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> The operator <code>Len(seq)</code> is semantically equivalent to
 <code>Cardinality(DOMAIN seq)</code>.</p>
 <p>Apalache encodes a sequences as a triple <code>&lt;&lt;fun, start, end&gt;&gt;</code>, where
@@ -5593,6 +5646,7 @@ error.</p>
 <p><strong>Notation:</strong> <code>s \o t</code> (or <code>s \circ t</code>)</p>
 <p><strong>LaTeX notation:</strong> <img src="lang/./img/seq-concat.png" alt="seq-concat" /></p>
 <p><strong>Arguments:</strong> Two arguments: both should be sequences (or tuples).</p>
+<p><strong>Apalache type:</strong> <code>(Seq(a), Seq(a)) =&gt; Seq(a)</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> The operator <code>s \o t</code>
 constructs a new sequence <code>newSeq</code> as follows:</p>
 <ul>
@@ -5628,6 +5682,7 @@ incompatible.</p>
 <p><strong>Notation:</strong> <code>SubSeq(seq, m, n)</code></p>
 <p><strong>LaTeX notation:</strong> <code>SubSeq(seq, m, n)</code></p>
 <p><strong>Arguments:</strong> Three arguments: a sequence (tuple), and two integers.</p>
+<p><strong>Apalache type:</strong> <code>(Seq(a), Int, Int) =&gt; Seq(a)</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> The operator <code>SubSeq(seq, m, n)</code>
 constructs a new sequence <code>newSeq</code> as follows:</p>
 <ul>
@@ -5664,6 +5719,7 @@ error. Apalache flags a static type error.</p>
 <p><strong>Arguments:</strong> Two arguments: a sequence (a tuple) and a one-argument
 operator that evaluates to <code>TRUE</code> or <code>FALSE</code> when called with
 an element of <code>seq</code> as its argument.</p>
+<p><strong>Apalache type:</strong> <code>(Seq(a), (a =&gt; Bool)) =&gt; Seq(a)</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> The operator <code>SelectSeq(seq, Test)</code> constructs a new sequence
 <code>newSeq</code> that contains every element <code>e</code> of <code>seq</code> on which <code>Test(e)</code> evaluates
 to <code>TRUE</code>.</p>
@@ -5704,6 +5760,7 @@ result is undefined in pure TLA+. TLC raises a model checking error.</p>
 <p><strong>Notation:</strong> <code>Seq(S)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Seq(S)</code></p>
 <p><strong>Arguments:</strong> One argument that should be a set.</p>
+<p><strong>Apalache type:</strong> <code>Set(a) =&gt; Set(Seq(a))</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> The operator <code>Seq(S)</code> constructs the set of all (finite) sequences
 that contain elements from <code>S</code>. This set is infinite.</p>
 <p>It is easy to give a recursive definition of all sequences whose length

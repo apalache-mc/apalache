@@ -281,7 +281,8 @@ of integers).</p>
 <p>Apalache enforces stricter types. It has designated types for all four
 data structures: general functions, records, tuples, and sequences.
 Moreover, all elements of the function domain must have the same type.
-The same is true for the codomain. This is enforced
+The same is true for the codomain. That is, general functions have the
+type <code>a -&gt; b</code> for some types <code>a</code> and <code>b</code>. This is enforced
 by the type checker.</p>
 <p>In this sense, the type restrictions of Apalache are similar to those for the
 generic collections of Java and Scala.  As a result, the type checker in
@@ -366,6 +367,14 @@ arguments</p>
 <p><strong>Arguments:</strong> At least three arguments: a variable name (or a tuple of names,
 see <strong>Advanced syntax</strong>), a set, and a mapping expression. Instead of one
 variable and one set, you can use multiple variables and multiple sets.</p>
+<p><strong>Apalache type:</strong> The formal type of this operator is a bit complex.
+Hence, we give an informal description:</p>
+<ul>
+<li><code>x</code> has the type <code>a</code>, for some type <code>a</code>,</li>
+<li><code>S</code> has the type <code>Set(a)</code>,</li>
+<li><code>e</code> has the type <code>b</code>, for some type <code>b</code>,</li>
+<li>the expression <code>[ x \in S |-&gt; e ]</code> has the type <code>a -&gt; b</code>.</li>
+</ul>
 <p><strong>Effect:</strong> We give the semantics for one argument.  We write a sequence of
 steps to ease the understanding.  This operator constructs a function <code>f</code> over
 the domain <code>S</code> as follows.  For every element <code>elem</code> of <code>S</code>, do the following:</p>
@@ -435,6 +444,7 @@ xy = {(x, y) for x in range(1, 4) for y in range(4, 7)}
 <p><strong>LaTeX notation:</strong> <img src="./img/funset.png" alt="funset" /></p>
 <p><strong>Arguments:</strong> Two arguments. Both have to be sets. Otherwise, the result is
 undefined.</p>
+<p><strong>Apalache type:</strong> <code>(Set(a), Set(b)) =&gt; Set(a -&gt; b)</code>, for some types <code>a</code> and <code>b</code>.</p>
 <p><strong>Effect:</strong> This operator constructs the set of all possible functions that
 have <code>S</code> as their domain, and for each argument <code>x \in S</code> return a value <code>y \in T</code>.</p>
 <p>Note that if one of the sets is infinite, then the set <code>[S -&gt; T]</code> is infinite
@@ -466,6 +476,9 @@ values, rather than over the alphabet of 2 values.</p>
 the other arguments are the arguments to the function. Several arguments
 are treated as a tuple. For instance, <code>f[e_1, ..., e_n]</code> is shorthand for
 <code>f[&lt;&lt;e_1, ..., e_n&gt;&gt;]</code>.</p>
+<p><strong>Apalache type:</strong> In the single-index case, the type is
+<code>((a -&gt; b), a) =&gt; b</code>, for some types <code>a</code> and <code>b</code>. In the multi-index case,
+the type is <code>((&lt;&lt;a_1, ..., a_n&gt;&gt; -&gt; b), a_1, ..., a_n) =&gt; b</code>.</p>
 <p><strong>Effect:</strong> This operator is evaluated as follows:</p>
 <ul>
 <li>If <code>e \in DOMAIN f</code>, then <code>f[e]</code> evaluates to the value that function
@@ -514,6 +527,9 @@ function domain is not known in advance.</p>
 <p><strong>Arguments:</strong> At least three arguments. The first one should be a function,
 the other arguments are interleaved pairs of argument expressions and value
 expressions.</p>
+<p><strong>Apalache type:</strong> In the case of a single-point update, the type is simple:
+<code>(a -&gt; b, a, b) =&gt; (a -&gt; b)</code>, for some types <code>a</code> and <code>b</code>. In the general case,
+the type is: <code>(a -&gt; b, a, b, ..., a, b) =&gt; (a -&gt; b)</code>.</p>
 <p><strong>Effect:</strong> This operator evaluates to a new function <code>g</code> that is constructed
 as follows:</p>
 <ul>
@@ -614,6 +630,7 @@ code would be less efficient than the idiomatic Python code.</p>
 <p><strong>LaTeX notation:</strong> <code>DOMAIN f</code></p>
 <p><strong>Arguments:</strong> One argument, which should be a function
 (respectively, a record, tuple, sequence).</p>
+<p><strong>Apalache type:</strong> <code>(a -&gt; b) =&gt; Set(a)</code>.</p>
 <p><strong>Effect:</strong> <code>DOMAIN f</code> returns the set of values, on which the function
 has been defined, see: Function constructor and Function set constructor.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>

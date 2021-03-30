@@ -197,6 +197,8 @@ we recommend using nested <code>IF-THEN-ELSE</code> instead.</p>
 <p><strong>Notation:</strong> <code>IF A THEN B ELSE C</code></p>
 <p><strong>LaTeX notation:</strong> the same</p>
 <p><strong>Arguments:</strong> a Boolean expression <code>A</code> and two expressions <code>B</code> and <code>C</code></p>
+<p><strong>Apalache type:</strong> <code>(Bool, a, a) =&gt; a</code>.  Note that <code>a</code> can be replaced with
+<code>Bool</code>. If <code>a</code> is <code>Bool</code>, and only in that case, the expression <code>IF A THEN B ELSE C</code> is equivalent to <code>(A =&gt; B) /\ (~A =&gt; C)</code>.</p>
 <p><strong>Effect:</strong> <code>IF A THEN B ELSE C</code> evaluates to:</p>
 <ul>
 <li>The value of <code>B</code>, if <code>A</code> evaluates to <code>TRUE</code>.</li>
@@ -230,6 +232,8 @@ values to variables!</p>
 </code></pre>
 <p><strong>LaTeX notation:</strong> <img src="./img/case.png" alt="case" /></p>
 <p><strong>Arguments:</strong> Boolean expressions <code>p_1, ..., p_n</code> and expressions <code>e_1, ..., e_n</code>.</p>
+<p><strong>Apalache type:</strong> <code>(Bool, a, Bool, a, ..., Bool, a) =&gt; a</code>, for some type <code>a</code>.
+If <code>a</code> is <code>Bool</code>, then the case operator can be a part of a Boolean formula.</p>
 <p><strong>Effect:</strong> Given a state <code>s</code>, define the set <code>I \subseteq 1..n</code> as follows:
 The set <code>I</code> includes the index <code>j \in 1..n</code> if
 and only if <code>p_j</code> evaluates to <code>TRUE</code> in the state <code>s</code>.
@@ -311,6 +315,8 @@ give executable semantics for the fixed evaluation order of the predicates.</p>
 </code></pre>
 <p><strong>LaTeX notation:</strong> <img src="./img/case-other.png" alt="case-other" /></p>
 <p><strong>Arguments:</strong> Boolean expressions <code>p_1, ..., p_n</code> and expressions <code>e_0, e_1, ..., e_n</code>.</p>
+<p><strong>Apalache type:</strong> <code>(Bool, a, Bool, a, ..., Bool, a, a) =&gt; a</code>, for some type <code>a</code>.
+If <code>a</code> is <code>Bool</code>, then the case operator can be a part of a Boolean formula.</p>
 <p><strong>Effect:</strong> This operator is equivalent to the following version of <code>CASE</code>:</p>
 <pre><code class="language-tla">CASE p_1 -&gt; e_1
   [] p_2 -&gt; e_2

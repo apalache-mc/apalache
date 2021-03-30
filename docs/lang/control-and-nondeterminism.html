@@ -539,6 +539,9 @@ conditionals</a>.</p>
 <p>Consider an <code>IF-THEN-ELSE</code> expression to be evaluated in a partial state <code>s</code>:</p>
 <pre><code class="language-tla">IF A THEN B ELSE C
 </code></pre>
+<p>In Apalache, this operator has the polymorphic type <code>(Bool, a, a) =&gt; a</code>,
+where <code>a</code> can be replaced with a concrete type. Here, we consider the case
+<code>(Bool, Bool, Bool) =&gt; Bool</code>.</p>
 <p>Here we assume that both <code>B</code> and <code>C</code> produce Boolean results and <code>B</code> and <code>C</code>
 refer to at least one primed variable <code>y'</code> that is undefined in <code>s</code>. Otherwise, the
 expression can be evaluated as a <a href="./conditionals.html">deterministic
@@ -565,8 +568,8 @@ Consider a <code>CASE</code> expression:</p>
   ...
   [] P_n -&gt; e_n
 </code></pre>
-<p>We assume that <code>e_1, ..., e_n</code> produce Boolean results. Otherwise,
-see <a href="./conditionals.html">Deterministic conditionals</a>.</p>
+<p>Here, we assume that <code>e_1, ..., e_n</code> produce Boolean results.  Or, in terms of
+Apalache types, this expression has the type: <code>(Bool, Bool, ..., Bool, Bool) =&gt; Bool</code>.  Otherwise, see <a href="./conditionals.html">Deterministic conditionals</a>.</p>
 <p>This operator is equivalent to the following disjunction:</p>
 <pre><code class="language-tla">\/ P_1 /\ e_1
 \/ P_2 /\ e_2

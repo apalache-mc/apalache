@@ -229,7 +229,9 @@ which restricts the sequence elements to have the same type <code>T_3</code>.</p
 type checker. For instance, it can immediately figure out that <code>&lt;&lt;1, &quot;Foo&quot;&gt;&gt;</code>
 is a tuple, as Apalache does not allow sequences to carry elements of different
 types. However, there is no way to say, whether <code>&lt;&lt;1, 2, 3&gt;&gt;</code> should be treated
-as a tuple or a sequence. This needs a <a href="../apalache/types-and-annotations.html">type annotation</a>.</p>
+as a tuple or a sequence.  Usually, this problem is resolved by annotating the
+type of a variable or the type of a user operator. See <a href="../../HOWTOs/howto-write-type-annotations.html">HOWTO write type
+annotations</a>.</p>
 <p><em>The current SMT encoding of sequences in Apalache is not optimized,
 so operations on sequences are often significantly slower than operations
 on sets.</em></p>
@@ -240,6 +242,14 @@ on sets.</em></p>
 <p><strong>Notation:</strong> <code>&lt;&lt;e_1, ..., e_n&gt;&gt;</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/tuple.png" alt="tuple" /></p>
 <p><strong>Arguments:</strong> An arbitrary number of arguments.</p>
+<p><strong>Apalache type:</strong> This operator is overloaded. There are two potential types:</p>
+<ol>
+<li>A tuple constructor: <code>(a_1, ..., a_n) =&gt; &lt;&lt;a_1, ..., a_n&gt;&gt;</code>,
+for some types <code>a_1, ..., a_n</code>.</li>
+<li>A sequence constructor: <code>(a, ..., a) =&gt; Seq(a)</code>, for some type <code>a</code>.</li>
+</ol>
+<p>That is why the Apalache type checker is sometimes asking you to add annotations,
+in order to resolve this ambiguity.</p>
 <p><strong>Effect:</strong> The tuple/sequence constructor returns a function <code>t</code> that is
 constructed as follows:</p>
 <ul>
@@ -247,8 +257,8 @@ constructed as follows:</p>
 <li>set <code>r[i]</code> to the value of <code>e_i</code> for <code>i \in 1..n</code>.</li>
 </ul>
 <p>In Apalache, this constructor may be used to construct either a tuple, or a
-sequence. To distinguish between them, you will sometimes need a <a href="../apalache/types-and-annotations.html">type
-annotation</a>.</p>
+sequence. To distinguish between them, you will sometimes need a [type
+annotation].</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No errors.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -267,6 +277,7 @@ principle &quot;sequences are functions&quot;, we have to use a dictionary.</p>
 <p><strong>LaTeX notation:</strong> <code>Append(seq, e)</code></p>
 <p><strong>Arguments:</strong> Two arguments. The first argument should be a sequence, the
 second one is an arbitrary expression.</p>
+<p><strong>Apalache type:</strong> <code>(Seq(a), a) =&gt; Seq(a)</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> The operator <code>Append(seq, e)</code>
 constructs a new sequence <code>newSeq</code> as follows:</p>
 <ul>
@@ -296,14 +307,17 @@ the type of the sequence elements.</p>
 <hr />
 <p><a name="app"></a></p>
 <h3><a class="header" href="#function-application" id="function-application">Function application</a></h3>
-<p>As sequences are functions, you can access sequence elements with
-<a href="./functions.html#funApp">function application</a>, e.g., <code>seq[2]</code>.</p>
+<p>As sequences are functions, you can access sequence elements with <a href="./functions.html#funApp">function
+application</a>, e.g., <code>seq[2]</code>.  However, in the case of a
+sequence, the type of the function application is: <code>(Seq(a), Int) =&gt; a</code>, for
+some type <code>a</code>.</p>
 <hr />
 <p><a name="head"></a></p>
 <h3><a class="header" href="#sequence-head" id="sequence-head">Sequence head</a></h3>
 <p><strong>Notation:</strong> <code>Head(seq)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Head(seq)</code></p>
 <p><strong>Arguments:</strong> One argument. The argument should be a sequence (or a tuple).</p>
+<p><strong>Apalache type:</strong> <code>Seq(a) =&gt; a</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> The operator <code>Head(seq)</code> evaluates to <code>seq[1]</code>.
 If <code>seq</code> is an empty sequence, the result is undefined.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
@@ -329,6 +343,7 @@ error.</p>
 <p><strong>Notation:</strong> <code>Tail(seq)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Tail(seq)</code></p>
 <p><strong>Arguments:</strong> One argument. The argument should be a sequence (or a tuple).</p>
+<p><strong>Apalache type:</strong> <code>Seq(a) =&gt; Seq(a)</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> The operator <code>Tail(seq)</code> constructs a new sequence <code>newSeq</code> as
 follows:</p>
 <ul>
@@ -362,6 +377,7 @@ error.</p>
 <p><strong>Notation:</strong> <code>Len(seq)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Len(seq)</code></p>
 <p><strong>Arguments:</strong> One argument. The argument should be a sequence (or a tuple).</p>
+<p><strong>Apalache type:</strong> <code>Seq(a) =&gt; Int</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> The operator <code>Len(seq)</code> is semantically equivalent to
 <code>Cardinality(DOMAIN seq)</code>.</p>
 <p>Apalache encodes a sequences as a triple <code>&lt;&lt;fun, start, end&gt;&gt;</code>, where
@@ -390,6 +406,7 @@ error.</p>
 <p><strong>Notation:</strong> <code>s \o t</code> (or <code>s \circ t</code>)</p>
 <p><strong>LaTeX notation:</strong> <img src="./img/seq-concat.png" alt="seq-concat" /></p>
 <p><strong>Arguments:</strong> Two arguments: both should be sequences (or tuples).</p>
+<p><strong>Apalache type:</strong> <code>(Seq(a), Seq(a)) =&gt; Seq(a)</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> The operator <code>s \o t</code>
 constructs a new sequence <code>newSeq</code> as follows:</p>
 <ul>
@@ -425,6 +442,7 @@ incompatible.</p>
 <p><strong>Notation:</strong> <code>SubSeq(seq, m, n)</code></p>
 <p><strong>LaTeX notation:</strong> <code>SubSeq(seq, m, n)</code></p>
 <p><strong>Arguments:</strong> Three arguments: a sequence (tuple), and two integers.</p>
+<p><strong>Apalache type:</strong> <code>(Seq(a), Int, Int) =&gt; Seq(a)</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> The operator <code>SubSeq(seq, m, n)</code>
 constructs a new sequence <code>newSeq</code> as follows:</p>
 <ul>
@@ -461,6 +479,7 @@ error. Apalache flags a static type error.</p>
 <p><strong>Arguments:</strong> Two arguments: a sequence (a tuple) and a one-argument
 operator that evaluates to <code>TRUE</code> or <code>FALSE</code> when called with
 an element of <code>seq</code> as its argument.</p>
+<p><strong>Apalache type:</strong> <code>(Seq(a), (a =&gt; Bool)) =&gt; Seq(a)</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> The operator <code>SelectSeq(seq, Test)</code> constructs a new sequence
 <code>newSeq</code> that contains every element <code>e</code> of <code>seq</code> on which <code>Test(e)</code> evaluates
 to <code>TRUE</code>.</p>
@@ -501,6 +520,7 @@ result is undefined in pure TLA+. TLC raises a model checking error.</p>
 <p><strong>Notation:</strong> <code>Seq(S)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Seq(S)</code></p>
 <p><strong>Arguments:</strong> One argument that should be a set.</p>
+<p><strong>Apalache type:</strong> <code>Set(a) =&gt; Set(Seq(a))</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> The operator <code>Seq(S)</code> constructs the set of all (finite) sequences
 that contain elements from <code>S</code>. This set is infinite.</p>
 <p>It is easy to give a recursive definition of all sequences whose length

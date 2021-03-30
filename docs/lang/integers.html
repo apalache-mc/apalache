@@ -175,7 +175,7 @@
 <p>The integer literals belong to the core language. They are written by
 using the standard syntax: 0, 1, -1, 2, -2, 3, -3, ... Importantly, TLA+
 integers are unbounded. They do not have any fixed bit width, and they cannot
-overflow.</p>
+overflow. In Apalache, these literals have the type <code>Int</code>.</p>
 <p>The integer operators are defined in the standard module <code>Integers</code>. To use
 it, write the <code>EXTENDS</code> clause in the first lines of your module. Like this:</p>
 <pre><code class="language-tla">---- MODULE MyArithmetics ----
@@ -204,10 +204,13 @@ to use parallel algorithms.</p>
 <p>The module <code>Integers</code> defines two constant sets (technically, they are
 operators without arguments):</p>
 <ul>
-<li>The set <code>Int</code> that consists of all integers. <em>This set is infinite.</em></li>
+<li>The set <code>Int</code> that consists of all integers. <em>This set is infinite.</em>
+In Apalache, the set <code>Int</code> has the type <code>Set(Int)</code>.
+A bit confusing, right? 😎</li>
 <li>The set <code>Nat</code> that consists of all natural numbers, that is,
 <code>Nat</code> contains every integer <code>x</code> that has the property <code>x &gt;= 0</code>.
-<em>This set is infinite.</em></li>
+<em>This set is infinite.</em>
+In Apalache, the set <code>Nat</code> has the type... <code>Set(Int)</code>.</li>
 </ul>
 <hr />
 <h2><a class="header" href="#operators" id="operators">Operators</a></h2>
@@ -217,6 +220,7 @@ operators without arguments):</p>
 <p><strong>LaTeX notation:</strong> <code>a..b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
 are evaluated to integer values.</p>
+<p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Set(Int)</code>.</p>
 <p><strong>Effect:</strong> <code>a..b</code> evaluates to the finite set <code>{i \in Int: a &lt;= i /\ i &lt;= b}</code>,
 that is, the set of all integers in the range from <code>a</code> to <code>b</code>, including <code>a</code>
 and <code>b</code>.  If <code>a &gt; b</code>, then <code>a..b</code> is the empty set <code>{}</code>.</p>
@@ -243,6 +247,7 @@ python.</p>
 <p><strong>LaTeX notation:</strong> <code>-i</code></p>
 <p><strong>Arguments:</strong> One argument. The result is only defined when the argument
 evaluates to an integer.</p>
+<p><strong>Apalache type:</strong> <code>Int =&gt; Int</code>.</p>
 <p><strong>Effect:</strong> <code>-i</code> evaluates to the negation of <code>i</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> In pure TLA+, the result is undefined, if the argument
@@ -264,6 +269,7 @@ type error, whereas TLC reports a runtime error.</p>
 <p><strong>LaTeX notation:</strong> <code>a + b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
 are evaluated to integer values.</p>
+<p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Int</code>.</p>
 <p><strong>Effect:</strong> <code>a + b</code> evaluates to the sum of <code>a</code> and <code>b</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
@@ -284,6 +290,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>LaTeX notation:</strong> <code>a - b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
 are evaluated to integer values.</p>
+<p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Int</code>.</p>
 <p><strong>Effect:</strong> <code>a - b</code> evaluates to the difference of <code>a</code> and <code>b</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
@@ -306,6 +313,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>LaTeX notation:</strong> <code>a * b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
 are evaluated to integer values.</p>
+<p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Int</code>.</p>
 <p><strong>Effect:</strong> <code>a * b</code> evaluates to the product of <code>a</code> and <code>b</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
@@ -326,6 +334,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>LaTeX notation:</strong> <img src="./img/div.png" alt="div" /></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
 are evaluated to integer values, and the second argument is different from 0.</p>
+<p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Int</code>.</p>
 <p><strong>Effect:</strong> <code>a \div b</code> is defined as follows:</p>
 <ol>
 <li>When <code>a &gt;= 0</code> and <code>b &gt; 0</code>, then the result of <code>a \div b</code> is
@@ -379,6 +388,7 @@ to produce the same results as in TLA+:</p>
 <p><strong>LaTeX notation:</strong> <code>a % b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
 are evaluated to integer values, and the second argument is different from 0.</p>
+<p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Int</code>.</p>
 <p><strong>Effect:</strong> <code>a % b</code> is the number <code>c</code> that has the property:
 <code>a = b * (a \div b) + c</code>.</p>
 <p><em>Note that when <code>a &lt; 0</code> or <code>b &lt; 0</code>, the result of the integer remainder <code>a % b</code>
@@ -414,6 +424,7 @@ cases:</p>
 <li><code>b &gt; 0</code>,</li>
 <li><code>b = 0</code> and <code>a /= 0</code>.</li>
 </ol>
+<p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Int</code>.</p>
 <p><strong>Effect:</strong> <code>a^b</code> evaluates to <code>a</code> raised to the <code>b</code>-th power:</p>
 <ul>
 <li>If <code>b = 1</code>, then <code>a^b</code> is defined as <code>a</code>.</li>
@@ -453,6 +464,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>LaTeX notation:</strong> <code>a &lt; b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
 are evaluated to integer values.</p>
+<p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Bool</code>.</p>
 <p><strong>Effect:</strong> <code>a &lt; b</code> evaluates to:</p>
 <ul>
 <li><code>TRUE</code>, if <code>a</code> is less than <code>b</code>,</li>
@@ -479,6 +491,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>LaTeX notation:</strong>  <img src="./img/leq.png" alt="leq" /></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
 are evaluated to integer values.</p>
+<p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Bool</code>.</p>
 <p><strong>Effect:</strong> <code>a &lt;= b</code> evaluates to:</p>
 <ul>
 <li><code>TRUE</code>, if <code>a &lt; b</code> or <code>a = b</code>.</li>
@@ -505,6 +518,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>LaTeX notation:</strong> <code>a &gt; b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
 are evaluated to integer values.</p>
+<p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Bool</code>.</p>
 <p><strong>Effect:</strong> <code>a &gt; b</code> evaluates to:</p>
 <ul>
 <li><code>TRUE</code>, if <code>a</code> is greater than <code>b</code>,</li>
@@ -531,6 +545,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>LaTeX notation:</strong>  <img src="./img/geq.png" alt="geq" /></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
 are evaluated to integer values.</p>
+<p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Bool</code>.</p>
 <p><strong>Effect:</strong> <code>a &gt;= b</code> evaluates to:</p>
 <ul>
 <li><code>TRUE</code>, if <code>a &gt; b</code> or <code>a = b</code>.</li>
