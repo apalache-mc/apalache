@@ -2437,7 +2437,7 @@ of TLA</a>.</em></p>
 <li>Enumeration: <a href="lang/./sets.html#setEnum"><code>{ e_1, ..., e_n }</code></a></li>
 <li>Filter: <a href="lang/./sets.html#filter"><code>{ x \in S: p }</code></a></li>
 <li>Map: <a href="lang/./sets.html#map"><code>{ e: x \in S }</code></a></li>
-<li>Powers: <a href="lang/./sets.html#powerset"><code>SUBSET S</code></a> and <a href="lang/./sets.html#fold"><code>UNION S</code></a></li>
+<li>Powers: <a href="lang/./sets.html#powerset"><code>SUBSET S</code></a> and <a href="lang/./sets.html#flatten"><code>UNION S</code></a></li>
 </ul>
 </li>
 <li>Set algebra:
@@ -4180,8 +4180,6 @@ syntax:</p>
 <h3><a class="header" href="#powerset" id="powerset">Powerset</a></h3>
 <p><strong>Notation:</strong> <code>SUBSET S</code></p>
 <p><strong>LaTeX notation:</strong> <code>SUBSET S</code></p>
-<p><strong>Warning:</strong> Do not confuse <code>SUBSET S</code> with <code>S \subset T</code>. These are two
-different operators, which unfortunately have similar-looking names.</p>
 <p><strong>Arguments:</strong> One argument. If it is not a set, the result
 is undefined.</p>
 <p><strong>Apalache type:</strong> <code>Set(a) =&gt; Set(Set(a))</code>, for some type <code>a</code>.</p>
@@ -4202,8 +4200,8 @@ produces a static type error, if the type of <code>S</code> is not a set type.</
 <p><strong>Example in Python:</strong> An implementation of <code>SUBSET S</code> in Python is not trivial.
 To appreciate the power of TLA+, see <a href="lang/./examples/subset.py">subset.py</a>.</p>
 <hr />
-<p><a name="fold"></a></p>
-<h3><a class="header" href="#set-folding" id="set-folding">Set folding</a></h3>
+<p><a name="flatten"></a></p>
+<h3><a class="header" href="#set-flattening" id="set-flattening">Set flattening</a></h3>
 <p><strong>Notation:</strong> <code>UNION S</code></p>
 <p><strong>LaTeX notation:</strong> <code>UNION S</code></p>
 <p><strong>Warning:</strong> Do not confuse <code>UNION S</code> with <code>S \union T</code>. These are two
@@ -4218,7 +4216,7 @@ is undefined.</p>
 <li>If <code>y \in T</code>, then there is a set <code>Y \in S</code> that contains <code>y</code>,
 that is, <code>y \in Y</code>.</li>
 </ul>
-<p>In particular, <code>UNION</code> folds the explosion that is produced by <code>SUBSET</code>. That
+<p>In particular, <code>UNION</code> flattens the powerset that is produced by <code>SUBSET</code>. That
 is, <code>(UNION (SUBSET S)) = S</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> Pure TLA+ does not restrict the operator argument.  TLC flags a
