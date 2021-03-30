@@ -36,6 +36,10 @@ _Use it when choosing between two values, not to structure your code._
 
 **Arguments:** a Boolean expression `A` and two expressions `B` and `C`
 
+**Apalache type:** `(Bool, a, a) => a`.  Note that `a` can be replaced with
+`Bool`. If `a` is `Bool`, and only in that case, the expression `IF A THEN B
+ELSE C` is equivalent to `(A => B) /\ (~A => C)`.
+
 **Effect:** `IF A THEN B ELSE C` evaluates to:
 
  - The value of `B`, if `A` evaluates to `TRUE`.
@@ -86,6 +90,9 @@ CASE p_1 -> e_1
 
 **Arguments:** Boolean expressions `p_1, ..., p_n` and expressions `e_1, ...,
 e_n`.
+
+**Apalache type:** `(Bool, a, Bool, a, ..., Bool, a) => a`, for some type `a`.
+If `a` is `Bool`, then the case operator can be a part of a Boolean formula.
 
 **Effect:** Given a state `s`, define the set `I \subseteq 1..n` as follows:
     The set `I` includes the index `j \in 1..n` if
@@ -195,6 +202,9 @@ CASE p_1 -> e_1
 
 **Arguments:** Boolean expressions `p_1, ..., p_n` and expressions `e_0, e_1, ...,
 e_n`.
+
+**Apalache type:** `(Bool, a, Bool, a, ..., Bool, a, a) => a`, for some type `a`.
+If `a` is `Bool`, then the case operator can be a part of a Boolean formula.
 
 **Effect:** This operator is equivalent to the following version of `CASE`:
 

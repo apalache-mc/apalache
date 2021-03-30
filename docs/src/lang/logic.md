@@ -26,6 +26,13 @@ expression. As usual in TLA+, if the second argument is not a set, the result is
 undefined. You can also use multiple variables and tuples, see **Advanced
 syntax**.
 
+**Apalache type:** The formal type of this operator is a bit complex.
+Hence, we give an informal description:
+ - `x` has the type `a`, for some type `a`,
+ - `S` has the type `Set(a)`,
+ - `P` has the type `Bool`,
+ - the expression `\A x \in S: P` has the type `Bool`.
+
 **Effect:** This operator evaluates to a Boolean value. We explain
 semantics only for a single variable:
 
@@ -96,6 +103,13 @@ simply syntax sugar for the form with nested quantifiers: `\A x \in S: \A y
 expression. As usual in TLA+, if the second argument is not a set, the result is
 undefined.You can also use multiple variables and tuples, see **Advanced
 syntax**.
+
+**Apalache type:** The formal type of this operator is a bit complex.
+Hence, we give an informal description:
+ - `x` has the type `a`, for some type `a`,
+ - `S` has the type `Set(a)`,
+ - `P` has the type `Bool`,
+ - the expression `\E x \in S: P` has the type `Bool`.
 
 **Effect:** This operator evaluates to a Boolean value. We explain
 semantics only for a single variable:
@@ -175,6 +189,8 @@ _A foundational operator in TLA+_
 **LaTeX notation:** ![eq](./img/eq.png)
 
 **Arguments:** Two arguments.
+
+**Apalache type:** `(a, a) => Bool`, for some type `a`.
 
 **Effect:** This operator evaluates to a Boolean value. It tests the values
 of `e_1` and `e_2` for structural equality. The exact effect depends on the
@@ -282,6 +298,8 @@ match.
 
 **Arguments:** Two arguments.
 
+**Apalache type:** `(a, a) => Bool`, for some type `a`.
+
 **Effect:** This operator is syntax sugar for `~(e_1 = e_2)`. Full stop.
 
 ----------------------------------------------------------------------------
@@ -297,6 +315,13 @@ _This operator causes a lot of confusion. Read carefully!_
 
 **Arguments:** Three arguments: a variable name, a set, and an
 expression.
+
+**Apalache type:** The formal type of this operator is a bit complex.
+Hence, we give an informal description:
+ - `x` has the type `a`, for some type `a`,
+ - `S` has the type `Set(a)`,
+ - `P` has the type `Bool`,
+ - the expression `CHOOSE x \in S: P` has the type `a`.
 
 **Effect:** This operator implements a black-box algorithm that _somehow_ picks
 one element from the set `{x \in S: P}`.  Is it an algorithm? Yes! `CHOOSE x

@@ -151,7 +151,8 @@ of integers).
 Apalache enforces stricter types. It has designated types for all four
 data structures: general functions, records, tuples, and sequences.
 Moreover, all elements of the function domain must have the same type.
-The same is true for the codomain. This is enforced
+The same is true for the codomain. That is, general functions have the
+type `a -> b` for some types `a` and `b`. This is enforced
 by the type checker.
 
 In this sense, the type restrictions of Apalache are similar to those for the
@@ -272,6 +273,13 @@ arguments
 see **Advanced syntax**), a set, and a mapping expression. Instead of one
 variable and one set, you can use multiple variables and multiple sets.
 
+**Apalache type:** The formal type of this operator is a bit complex.
+Hence, we give an informal description:
+ - `x` has the type `a`, for some type `a`,
+ - `S` has the type `Set(a)`,
+ - `e` has the type `b`, for some type `b`,
+ - the expression `[ x \in S |-> e ]` has the type `a -> b`.
+
 **Effect:** We give the semantics for one argument.  We write a sequence of
 steps to ease the understanding.  This operator constructs a function `f` over
 the domain `S` as follows.  For every element `elem` of `S`, do the following:
@@ -361,6 +369,8 @@ xy = {(x, y) for x in range(1, 4) for y in range(4, 7)}
 **Arguments:** Two arguments. Both have to be sets. Otherwise, the result is
 undefined.
 
+**Apalache type:** `(Set(a), Set(b)) => Set(a -> b)`, for some types `a` and `b`.
+
 **Effect:** This operator constructs the set of all possible functions that
 have `S` as their domain, and for each argument `x \in S` return a value `y \in
 T`.
@@ -407,6 +417,10 @@ values, rather than over the alphabet of 2 values.
 the other arguments are the arguments to the function. Several arguments
 are treated as a tuple. For instance, `f[e_1, ..., e_n]` is shorthand for
 `f[<<e_1, ..., e_n>>]`.
+
+**Apalache type:** In the single-index case, the type is
+`((a -> b), a) => b`, for some types `a` and `b`. In the multi-index case,
+the type is `((<<a_1, ..., a_n>> -> b), a_1, ..., a_n) => b`.
 
 **Effect:** This operator is evaluated as follows:
 
@@ -471,6 +485,10 @@ function domain is not known in advance.
 **Arguments:** At least three arguments. The first one should be a function,
 the other arguments are interleaved pairs of argument expressions and value
 expressions.
+
+**Apalache type:** In the case of a single-point update, the type is simple:
+`(a -> b, a, b) => (a -> b)`, for some types `a` and `b`. In the general case,
+the type is: `(a -> b, a, b, ..., a, b) => (a -> b)`.
 
 **Effect:** This operator evaluates to a new function `g` that is constructed
     as follows:
@@ -601,6 +619,8 @@ code would be less efficient than the idiomatic Python code.
 
 **Arguments:** One argument, which should be a function
                (respectively, a record, tuple, sequence).
+
+**Apalache type:** `(a -> b) => Set(a)`.               
 
 **Effect:** `DOMAIN f` returns the set of values, on which the function
 has been defined, see: Function constructor and Function set constructor.
