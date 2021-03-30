@@ -76,7 +76,7 @@ CONSTANT
 ```
 
 Note that we had to put the annotation between the keyword `CONSTANT` and the
-identifier `RM`. We used the one-line TLA+ comment: `\* @type: ...`.
+identifier `RM`. We used the one-line TLA+ comment: `\* @type: ...;`.
 Alternatively, we could use the multi-line comment: `(* @type: Set(Str); *)`.
 Importantly, the type annotation should end with a semi-colon: `;`.
 
