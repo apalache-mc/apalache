@@ -20,7 +20,7 @@ canCommit == \A rm \in RM : rmState[rm] \in {"prepared", "committed"}
 
 notCommitted == \A rm \in RM : rmState[rm] # "committed" 
   (*************************************************************************)
-  (* True iff neither no resource manager has decided to commit.           *)
+  (* True iff no resource manager has decided to commit.           *)
   (*************************************************************************)
 -----------------------------------------------------------------------------
 (***************************************************************************)
