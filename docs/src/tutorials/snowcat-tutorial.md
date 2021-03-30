@@ -47,7 +47,7 @@ PASS #1: TypeCheckerSnowcat
 
 In Step 1, Snowcat complained about the name `RM`. The reason
 for that is very simple: Snowcat does type analysis for each declaration in
-isolation. Hence, it had failed, as soon as it met a reference to the constant
+isolation. Hence, it failed, as soon as it met a reference to the constant
 `RM` in the definition of `Message`:
 
 ```tla
