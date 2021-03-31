@@ -12,4 +12,5 @@
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
 ### Features
 
+* Manual: added a tutorial on the type checker Snowcat, see #689
 * Language manual: add types for the standard operators, see #547
