@@ -10,7 +10,7 @@ import scala.util.parsing.combinator.RegexParsers
 private[parser] object Type1Lexer extends RegexParsers {
   override def skipWhitespace: Boolean = true
 
-  override val whiteSpace: Regex = "[ \t\r\f]+".r // no linefeeds
+  override val whiteSpace: Regex = "[ \t\r\n\f]+".r
 
   /**
    * Parse the input stream and return the list of tokens. Although collecting the list of all tokens in memory is

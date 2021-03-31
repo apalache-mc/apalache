@@ -95,6 +95,16 @@ class TestDefaultType1Parser extends FunSuite with Checkers with TlaType1Gen {
     assert(RecT1(SortedMap("a" -> IntT1(), "b" -> BoolT1())) == result)
   }
 
+  test("multiline [a: Int, b: Bool]") {
+    val text =
+      """
+        |[a: Int,
+        | b: Bool]
+        |""".stripMargin
+    val result = DefaultType1Parser(text)
+    assert(RecT1(SortedMap("a" -> IntT1(), "b" -> BoolT1())) == result)
+  }
+
   test("[f1: Int, f2: Bool]") {
     val result = DefaultType1Parser("[f1: Int, f2: Bool]")
     assert(RecT1(SortedMap("f1" -> IntT1(), "f2" -> BoolT1())) == result)
