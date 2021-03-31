@@ -145,6 +145,32 @@ class TestDefaultType1Parser extends FunSuite with Checkers with TlaType1Gen {
     assertThrows[Type1ParseError](DefaultType1Parser("vc"))
   }
 
+  test("alias1 = Int") {
+    val (name, tt) = DefaultType1Parser.parseAlias(Map.empty, "alias1 = [a: Int, b: Bool]")
+    assert("alias1" == name)
+    assert(RecT1("a" -> IntT1(), "b" -> BoolT1()) == tt)
+  }
+
+  test("alias1 = Set(alias2)") {
+    val aliasMap = Map("alias1" -> IntT1())
+    val (name, tt) = DefaultType1Parser.parseAlias(aliasMap, "alias2 = Set(alias1)")
+    assert("alias2" == name)
+    assert(SetT1(IntT1()) == tt)
+  }
+
+  test("alias1 = Set(alias3) when alias3 is not defined") {
+    assertThrows[Type1ParseError](DefaultType1Parser.parseAlias(Map.empty, "alias2 = Set(alias3)"))
+  }
+
+  test("Set(entry) for entry = Int") {
+    val result = DefaultType1Parser.parseType(Map("entry" -> IntT1()), "Set(entry)")
+    assert(SetT1(IntT1()) == result)
+  }
+
+  test("Set(alias3) when alias3 is not defined") {
+    assertThrows[Type1ParseError](DefaultType1Parser.parseType(Map.empty, "Set(alias3)"))
+  }
+
   test("no crashes: either parse, or raise an error") {
     check({
       forAll(alphaStr) { str =>

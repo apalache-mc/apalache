@@ -32,7 +32,7 @@ private[parser] object Type1Lexer extends RegexParsers {
   def token: Parser[Type1Token] =
     positioned(
         int | real | bool | str | set | seq | identifier | fieldNumber |
-          rightArrow | doubleRightArrow | leftParen | rightParen | leftBracket | rightBracket |
+          rightArrow | doubleRightArrow | eq | leftParen | rightParen | leftBracket | rightBracket |
           leftCurly | rightCurly | doubleLeftAngle | doubleRightAngle | comma | colon
     ) ///
 
@@ -77,6 +77,10 @@ private[parser] object Type1Lexer extends RegexParsers {
 
   private def doubleRightArrow: Parser[DOUBLE_RIGHT_ARROW] = {
     "=>".r ^^ { _ => DOUBLE_RIGHT_ARROW() }
+  }
+
+  private def eq: Parser[EQ] = {
+    "=".r ^^ { _ => EQ() }
   }
 
   private def leftParen: Parser[LPAREN] = {
