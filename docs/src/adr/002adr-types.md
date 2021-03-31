@@ -309,14 +309,19 @@ The type checker uses the type annotation to refine the type of an empty set
 (or, of an empty sequence).
 
 <a id="typeAlias"></a>
+
 ### 2.4. Introducing and using type aliases
 
-Follow two simple rules:
+Follow the four simple rules:
 
-- You can define a type alias with `@typeAlias` in the same position, where
-you could define `@type`.
+1. Type aliases can be only introduced at top-level declarations. That is, type aliases next to nested LET-IN
+   definitions are ignored.
 
-- A type alias should be defined before it is used in the source code.
+1. Assuming Rule 1, you can define a type alias with `@typeAlias` in the same position, where you could define `@type`.
+
+1. A type alias should be defined before it is used in the source code.
+
+1. The names of type aliases must be unique in a module.
 
 The following example demonstrates these rules:
 

@@ -6,13 +6,14 @@
 
 EXTENDS Integers, Sequences, FiniteSets, Reals, Apalache, TLC
 CONSTANTS
- \* @type: Int;
+ \* @typeAlias: elem = Int;
+ \* @type: elem;
  N
 
 ASSUME(N > 42)
 
 VARIABLES
-   \* @type: Set([type: Str, val: Int]);
+   \* @type: Set([type: Str, val: elem]);
    msgs
 
 \* LITERALS

@@ -10,14 +10,15 @@ import at.forsyte.apalache.tla.typecheck.parser.{DefaultType1Parser, Type1ParseE
 import com.typesafe.scalalogging.LazyLogging
 
 /**
- * ToEtcExpr takes a TLA+ expression and produces an EtcExpr.
+ * <p>ToEtcExpr takes a TLA+ expression and produces an EtcExpr.
  * The most interesting part of this translation is dealing with the built-in operators.
- * This translator is an extension of the ideas that appear in SignatureGenerator by Jure Kukovec.
+ * This translator is an extension of the ideas that appear in SignatureGenerator by Jure Kukovec.</p>
  *
  * @see at.forsyte.apalache.tla.types.SignatureGenerator
  * @author Igor Konnov
  */
-class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends EtcBuilder with LazyLogging {
+class ToEtcExpr(annotationStore: AnnotationStore, typeAliases: Map[String, TlaType1], varPool: TypeVarPool)
+    extends EtcBuilder with LazyLogging {
   private val type1Parser = DefaultType1Parser
 
   def apply(decl: TlaDecl, inScopeEx: EtcExpr): EtcExpr = {
@@ -92,7 +93,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
   // parse type from its text representation
   private def parseType(where: String, text: String): TlaType1 = {
     try {
-      renameVars(type1Parser(text))
+      renameVars(type1Parser.parseType(typeAliases, text))
     } catch {
       case e: Type1ParseError =>
         throw new TypingInputException(
@@ -107,6 +108,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, varPool: TypeVarPool) extends 
         Some(tt)
 
       case _ =>
+        // use a type annotation, if there is any
         findAnnotation(annotationStore, decl.ID, StandardAnnotations.TYPE) map {
           case Annotation(StandardAnnotations.TYPE, AnnotationStr(annotationText)) =>
             parseType(decl.name, annotationText)
