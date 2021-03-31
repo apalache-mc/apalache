@@ -34,7 +34,6 @@
 
 # HOWTOs
 
-- [Contents](./HOWTOs/index.md)
 - [How to write type annotations](./HOWTOs/howto-write-type-annotations.md)
 
 # TLA+ Language Manual for Engineers

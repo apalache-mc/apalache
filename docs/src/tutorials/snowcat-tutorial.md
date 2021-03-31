@@ -1,6 +1,6 @@
 # Tutorial on the Snowcat:snowflake::cat: Type Checker
 
-In this tutorial, we introduce the Snowcat:snowflake::cat: type checker
+In this tutorial, we introduce the Snowcat :snowflake: :cat: type checker
 We give concrete steps on running the type checker and
 annotating a specification with types.
 
@@ -80,6 +80,8 @@ identifier `RM`. We used the one-line TLA+ comment: `\* @type: ...;`.
 Alternatively, we could use the multi-line comment: `(* @type: Set(Str); *)`.
 Importantly, the type annotation should end with a semi-colon: `;`.
 
+## Step 3: Running Snowcat again
+
 Having introduced the type annotation for `RM`, let's run the type checker again:
 
 ```sh
@@ -92,7 +94,7 @@ Snowcat does not complain about `RM` anymore. Now we get another message:
 [TwoPhase.tla:68:6-68:12]: Undefined name rmState. Introduce a type annotation.
 ```
 
-## Step 3: Annotating rmState
+## Step 4: Annotating rmState
 
 Similar to Step 2, we are missing a type annotation. This time the type checker
 complains about the variable `rmState`:
@@ -114,6 +116,8 @@ VARIABLES
   rmState,       \* $rmState[rm]$ is the state of resource manager RM.
 ```
 
+## Step 5: Getting one more type error by Snowcat
+
 Guess what? Run the type checker again:
 
 ```sh
@@ -126,7 +130,7 @@ Snowcat does not complain about `rmState` anymore. But we are not done yet:
 [TwoPhase.tla:70:6-70:12]: Undefined name tmState. Introduce a type annotation.
 ```
 
-## Step 4: Annotating tmState
+## Step 6: Annotating tmState
 
 This time we need a type annotation for the variable `tmState`. By inspecting
 `TPTypeOK`, we see that `tmState` is just a string. Add the following type
@@ -138,6 +142,8 @@ VARIABLES
   \* @type: Str;  
   tmState,       \* The state of the transaction manager.
 ```
+
+## Step 7: Running Snowcat to see another error
 
 Run the type checker again:
 
@@ -153,7 +159,7 @@ VARIABLES:
 [TwoPhase.tla:72:6-72:15]: Undefined name tmPrepared. Introduce a type annotation.
 ```
 
-## Step 5: Annotating tmPrepared
+## Step 8: Annotating tmPrepared
 
 At this step, we have to annotate `tmPrepared`. Let's have a look at the comment
 next to the declaration of `tmPrepared`:
@@ -176,6 +182,8 @@ VARIABLES
                  \* messages.
 ```
 
+## Step 9: Running Snowcat again
+
 You know that we have to run the type checker again:
 
 ```sh
@@ -188,7 +196,7 @@ It is no surprise that it complains about the variable `msgs` now:
 [TwoPhase.tla:74:6-74:9]: Undefined name msgs. Introduce a type annotation.
 ```
 
-## Step 6: Annotating msgs
+## Step 10: Annotating msgs
 
 In the previous steps, it was quite easy to annotate variables. We would just
 look at how the variable is used, or read the comments, and add a type annotation.
@@ -239,6 +247,8 @@ VARIABLES
   msgs
 ```
 
+## Step 11: Running Snowcat and seeing no errors
+
 Let's see whether Snowcat is happy about our types now:
 
 ```sh
@@ -282,25 +292,19 @@ a tuple `<<Int, Int>>`, or a sequence `Seq(Int)`. In this case, we have to
 help the type checker by annotating the operator definition:
 
 ```tla
-\* @type: Set(<<Int, Int>>);
-Pos ==
-    {<<x, y>>: x, y \in 1..N}
-```
-
-If you have carefully read [ADR002][], you are probably surprised now. Indeed,
-`Pos` is an operator, so it should have an operator type, like below:
-
-```tla
 \* @type: () => Set(<<Int, Int>>);
 Pos ==
     {<<x, y>>: x, y \in 1..N}
 ```
 
-The second type `() => Set(<<Int, Int>>)` is exactly the type that is required
-by the type checker. However, it is so common to define operators without
-arguments as a shortcut for a complex definition, that Snowcat also allows you
-to write the first type `Set(<<Int, Int>>)` instead of the second type `() =>
-Set(<<Int, Int>>)`.
+Since it is common to have operators that take no arguments, Snowcat supports
+the following syntax sugar:
+
+```tla
+\* @type: Set(<<Int, Int>>);
+Pos ==
+    {<<x, y>>: x, y \in 1..N}
+```
 
 For more advanced type annotations, check the following examples:
 
