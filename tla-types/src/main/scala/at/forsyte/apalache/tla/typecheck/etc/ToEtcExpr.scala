@@ -17,7 +17,7 @@ import com.typesafe.scalalogging.LazyLogging
  * @see at.forsyte.apalache.tla.types.SignatureGenerator
  * @author Igor Konnov
  */
-class ToEtcExpr(annotationStore: AnnotationStore, typeAliases: Map[String, TlaType1], varPool: TypeVarPool)
+class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubstitution, varPool: TypeVarPool)
     extends EtcBuilder with LazyLogging {
   private val type1Parser = DefaultType1Parser
 
@@ -93,7 +93,8 @@ class ToEtcExpr(annotationStore: AnnotationStore, typeAliases: Map[String, TlaTy
   // parse type from its text representation
   private def parseType(where: String, text: String): TlaType1 = {
     try {
-      renameVars(type1Parser.parseType(typeAliases, text))
+      val (tt, _) = aliasSubstitution(type1Parser.parseType(text))
+      renameVars(tt)
     } catch {
       case e: Type1ParseError =>
         logger.error("Parsing error in the type annotation: " + text)

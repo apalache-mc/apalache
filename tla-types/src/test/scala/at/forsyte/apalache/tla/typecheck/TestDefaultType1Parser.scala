@@ -155,30 +155,26 @@ class TestDefaultType1Parser extends FunSuite with Checkers with TlaType1Gen {
     assertThrows[Type1ParseError](DefaultType1Parser("vc"))
   }
 
-  test("alias1 = Int") {
-    val (name, tt) = DefaultType1Parser.parseAlias(Map.empty, "alias1 = [a: Int, b: Bool]")
-    assert("alias1" == name)
+  test("ALIAS1 = Int") {
+    val (name, tt) = DefaultType1Parser.parseAlias("ALIAS1 = [a: Int, b: Bool]")
+    assert("ALIAS1" == name)
     assert(RecT1("a" -> IntT1(), "b" -> BoolT1()) == tt)
   }
 
-  test("alias1 = Set(alias2)") {
-    val aliasMap = Map("alias1" -> IntT1())
-    val (name, tt) = DefaultType1Parser.parseAlias(aliasMap, "alias2 = Set(alias1)")
-    assert("alias2" == name)
-    assert(SetT1(IntT1()) == tt)
+  test("ALIAS2 = Set(ALIAS1)") {
+    val (name, tt) = DefaultType1Parser.parseAlias("ALIAS2 = Set(ALIAS1)")
+    assert("ALIAS2" == name)
+    // ALIAS1 is not replaced immediately, it has to be substituted when we have the map of all aliases
+    assert(SetT1(ConstT1("ALIAS1")) == tt)
   }
 
-  test("alias1 = Set(alias3) when alias3 is not defined") {
-    assertThrows[Type1ParseError](DefaultType1Parser.parseAlias(Map.empty, "alias2 = Set(alias3)"))
+  test("incorrect name: alias1 = Set(ALIAS3)") {
+    assertThrows[Type1ParseError](DefaultType1Parser.parseAlias("alias1 = Set(ALIAS3)"))
   }
 
-  test("Set(entry) for entry = Int") {
-    val result = DefaultType1Parser.parseType(Map("entry" -> IntT1()), "Set(entry)")
-    assert(SetT1(IntT1()) == result)
-  }
-
-  test("Set(alias3) when alias3 is not defined") {
-    assertThrows[Type1ParseError](DefaultType1Parser.parseType(Map.empty, "Set(alias3)"))
+  test("Set(ENTRY)") {
+    val result = DefaultType1Parser.parseType("Set(ENTRY)")
+    assert(SetT1(ConstT1("ENTRY")) == result)
   }
 
   test("no crashes: either parse, or raise an error") {

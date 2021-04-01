@@ -26,8 +26,8 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) exte
    */
   def check(listener: TypeCheckerListener, module: TlaModule): Boolean = {
     val varPool = new TypeVarPool()
-    val aliases = loadTypeAliases(module.declarations)
-    val toEtc = new ToEtcExpr(annotationStore, aliases, varPool)
+    val aliasSubstitution = loadTypeAliases(module.declarations)
+    val toEtc = new ToEtcExpr(annotationStore, aliasSubstitution, varPool)
 
     // Bool is the final expression in the chain of let-definitions
     val terminalExpr: EtcExpr = EtcConst(BoolT1())(BlameRef(UID.unique))
@@ -73,9 +73,10 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) exte
     }
   }
 
-  private def loadTypeAliases(declarations: Seq[TlaDecl]): Map[String, TlaType1] = {
+  private def loadTypeAliases(declarations: Seq[TlaDecl]): ConstSubstitution = {
     var aliases = Map[String, lir.TlaType1]()
 
+    // extract all aliases from the annotations
     for (decl <- declarations) {
       annotationStore.get(decl.ID).foreach { annotations =>
         annotations.filter(_.name == StandardAnnotations.TYPE_ALIAS).foreach { annot =>
@@ -91,13 +92,14 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) exte
       }
     }
 
-    aliases
+    // Aliases can refer to one another. Substitute the aliases until we arrive at a fixpoint.
+    ConstSubstitution(aliases).closure()
   }
 
   // parse type from its text representation
   private def parseTypeAlias(where: String, aliases: Map[String, TlaType1], text: String): (String, TlaType1) = {
     try {
-      DefaultType1Parser.parseAlias(aliases, text)
+      DefaultType1Parser.parseAlias(text)
     } catch {
       case e: Type1ParseError =>
         logger.error("Parsing error in the alias annotation: " + text)

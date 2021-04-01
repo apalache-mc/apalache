@@ -81,15 +81,15 @@ Message ==      [type : {"1a"}, bal : Ballot]
            \cup [type : {"2b"}, acc : Acceptor, bal : Ballot, val : Value]
 -----------------------------------------------------------------------------
 VARIABLE
-    \* @typeAlias: Proc = Str;
-    \* @type: Proc -> Int;
+    \* @typeAlias: PROC = Str;
+    \* @type: PROC -> Int;
     maxBal,
-    \* @type: Proc -> Int;
+    \* @type: PROC -> Int;
     maxVBal, \* <<maxVBal[a], maxVal[a]>> is the vote with the largest
-    \* @type: Proc -> Int;
+    \* @type: PROC -> Int;
     maxVal,    \* ballot number cast by a; it equals <<-1, None>> if
                     \* a has not cast any vote.
-    \* @type: Set([type: Str, bal: Int, acc: Proc, mbal: Int, mval: Int, val: Int]);
+    \* @type: Set([type: Str, bal: Int, acc: PROC, mbal: Int, mval: Int, val: Int]);
     msgs     \* The set of all messages that have been sent.
 
 (***************************************************************************)

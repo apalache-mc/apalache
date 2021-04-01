@@ -16,7 +16,6 @@ import at.forsyte.apalache.tla.lir.TlaType1
  * @author Igor Konnov, 2020
  */
 trait Type1Parser {
-  type AliasMap = Map[String, TlaType1]
 
   /**
    * Parse a type from a string.
@@ -25,24 +24,22 @@ trait Type1Parser {
    * @return a type on success; throws TlcConfigParseError on failure
    */
   def apply(text: String): TlaType1 = {
-    parseType(Map.empty, text)
+    parseType(text)
   }
 
   /**
    * Parse a type from a string, possibly substituting aliases with types.
    *
-   * @param aliases a map of aliases to types
-   * @param text    a string
+   * @param text a string
    * @return a type on success; throws TlcConfigParseError on failure
    */
-  def parseType(aliases: AliasMap, text: String): TlaType1
+  def parseType(text: String): TlaType1
 
   /**
    * Parse a type alias from a string
    *
-   * @param aliases a map of aliases to types
-   * @param text    a string
+   * @param text a string
    * @return an alias name and a type on success; throws Type1ParseError on failure
    */
-  def parseAlias(aliases: AliasMap, text: String): (String, TlaType1)
+  def parseAlias(text: String): (String, TlaType1)
 }

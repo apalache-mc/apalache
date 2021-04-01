@@ -25,7 +25,7 @@ class TestToEtcExprDecls extends FunSuite with BeforeAndAfterEach with EtcBuilde
   override protected def beforeEach(): Unit = {
     parser = DefaultType1Parser
     annotationStore = createAnnotationStore()
-    gen = new ToEtcExpr(annotationStore, Map.empty, new TypeVarPool())
+    gen = new ToEtcExpr(annotationStore, ConstSubstitution.empty, new TypeVarPool())
   }
 
   test("An operator declaration with a java-like annotation") {
@@ -84,24 +84,24 @@ class TestToEtcExprDecls extends FunSuite with BeforeAndAfterEach with EtcBuilde
   }
 
   test("variable declarations with java-like annotations and aliases") {
-    val aliases = Map("entry" -> IntT1())
+    val aliases = ConstSubstitution(Map("ENTRY" -> IntT1()))
     // redefine gen to use aliases
     gen = new ToEtcExpr(annotationStore, aliases, new TypeVarPool())
 
     /*
         VARIABLES
-           \* @typeAlias: entry = Int;
-           \* @type: entry;
+           \* @typeAlias: ENTRY = Int;
+           \* @type: ENTRY;
            entry,
-           \* @type: Set(entry);
+           \* @type: Set(ENTRY);
            set
      */
     val entryDecl = TlaVarDecl("entry")
     val setDecl = TlaVarDecl("set")
     // @type: entry;
-    annotationStore += entryDecl.ID -> List(StandardAnnotations.mkType("entry"))
+    annotationStore += entryDecl.ID -> List(StandardAnnotations.mkType("ENTRY"))
     // @type: Set(entry);
-    annotationStore += setDecl.ID -> List(StandardAnnotations.mkType("Set(entry)"))
+    annotationStore += setDecl.ID -> List(StandardAnnotations.mkType("Set(ENTRY)"))
 
     val terminal = mkUniqConst(BoolT1())
     // becomes:
