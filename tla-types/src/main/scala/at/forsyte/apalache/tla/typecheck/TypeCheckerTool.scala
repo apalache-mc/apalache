@@ -8,13 +8,14 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecheck.etc._
 import at.forsyte.apalache.tla.typecheck.integration.{RecordingTypeCheckerListener, TypeRewriter}
 import at.forsyte.apalache.tla.typecheck.parser.{DefaultType1Parser, Type1ParseError}
+import com.typesafe.scalalogging.LazyLogging
 
 /**
  * The API to the type checker. It first translates a TLA+ module into EtcExpr and then does the type checking.
  *
  * @author Igor Konnov
  */
-class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) {
+class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) extends LazyLogging {
 
   /**
    * Check the types in a module. All type checking events are sent to a listener.
@@ -74,6 +75,7 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) {
 
   private def loadTypeAliases(declarations: Seq[TlaDecl]): Map[String, TlaType1] = {
     var aliases = Map[String, lir.TlaType1]()
+
     for (decl <- declarations) {
       annotationStore.get(decl.ID).foreach { annotations =>
         annotations.filter(_.name == StandardAnnotations.TYPE_ALIAS).foreach { annot =>
@@ -98,9 +100,8 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) {
       DefaultType1Parser.parseAlias(aliases, text)
     } catch {
       case e: Type1ParseError =>
-        throw new TypingInputException(
-            s"Parser error in type alias of $where: ${e.msg}"
-        )
+        logger.error("Parsing error in the alias annotation: " + text)
+        throw new TypingInputException(s"Parser error in type alias of $where: ${e.msg}")
     }
   }
 }

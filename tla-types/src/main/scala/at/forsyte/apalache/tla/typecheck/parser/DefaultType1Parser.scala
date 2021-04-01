@@ -181,6 +181,6 @@ object DefaultType1Parser extends Parsers with Type1Parser {
 
   // an alias name, e.g., entry
   private def aliasName: Parser[String] = {
-    accept("aliasName", { case IDENT(name) if (name.length > 1 && name.toUpperCase != name) => name })
+    acceptMatch("aliasName", { case IDENT(name) if (name.length > 1 && name.toUpperCase != name) => name })
   }
 }

@@ -96,6 +96,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, typeAliases: Map[String, TlaTy
       renameVars(type1Parser.parseType(typeAliases, text))
     } catch {
       case e: Type1ParseError =>
+        logger.error("Parsing error in the type annotation: " + text)
         throw new TypingInputException(
             s"Parser error in type annotation of $where: ${e.msg}"
         )
