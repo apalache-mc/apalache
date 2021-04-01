@@ -53,20 +53,20 @@ object DefaultType1Parser extends Parsers with Type1Parser {
   }
 
   // the access point to the alias parser
-  private def closedAliasExpr: Parser[(String, TlaType1)] = phrase(aliasExpr())
+  private def closedAliasExpr: Parser[(String, TlaType1)] = phrase(aliasExpr)
 
   // the access point to the type parser
-  private def closedTypeExpr: Parser[TlaType1] = phrase(typeExpr()) ^^ (e => e)
+  private def closedTypeExpr: Parser[TlaType1] = phrase(typeExpr) ^^ (e => e)
 
-  private def aliasExpr(): Parser[(String, TlaType1)] = {
-    (typeConst ~ EQ() ~ typeExpr()) ^^ { case ConstT1(name) ~ _ ~ tt =>
+  private def aliasExpr: Parser[(String, TlaType1)] = {
+    (typeConst ~ EQ() ~ typeExpr) ^^ { case ConstT1(name) ~ _ ~ tt =>
       (name, tt)
     }
   }
 
-  private def typeExpr(): Parser[TlaType1] = {
+  private def typeExpr: Parser[TlaType1] = {
     // functions are tricky, as they start as other expressions, so we have to distinguish them by RIGHT_ARROW
-    (noFunExpr ~ opt((RIGHT_ARROW() | DOUBLE_RIGHT_ARROW()) ~ typeExpr())) ^^ {
+    (noFunExpr ~ opt((RIGHT_ARROW() | DOUBLE_RIGHT_ARROW()) ~ typeExpr)) ^^ {
       case (lhs :: Nil) ~ Some(RIGHT_ARROW() ~ rhs)   => FunT1(lhs, rhs)
       case (lhs :: Nil) ~ None                        => lhs
       case args ~ Some(DOUBLE_RIGHT_ARROW() ~ result) => OperT1(args, result)
@@ -74,7 +74,7 @@ object DefaultType1Parser extends Parsers with Type1Parser {
   }
 
   // A type expression. We wrap it with a list, as (type, ..., type) may start an operator type
-  private def noFunExpr(): Parser[List[TlaType1]] = {
+  private def noFunExpr: Parser[List[TlaType1]] = {
     (INT() | REAL() | BOOL() | STR() | typeVar | typeConst
       | set | seq | tuple | sparseTuple
       | record | parenExpr) ^^ {
@@ -92,43 +92,43 @@ object DefaultType1Parser extends Parsers with Type1Parser {
   // We can have: (), (type), or (type, ..., type). All of them work as a left-hand side of an operator type.
   // Additionally, (type) may just wrap a type such as in (A -> B) -> C.
   // Thus, return a list here, and resolve it in the rules above.
-  private def parenExpr(): Parser[List[TlaType1]] = {
-    (LPAREN() ~ repsep(typeExpr(), COMMA()) ~ RPAREN()) ^^ { case _ ~ list ~ _ =>
+  private def parenExpr: Parser[List[TlaType1]] = {
+    (LPAREN() ~ repsep(typeExpr, COMMA()) ~ RPAREN()) ^^ { case _ ~ list ~ _ =>
       list
     }
   }
 
   // a set type like Set(Int)
-  private def set(): Parser[TlaType1] = {
-    SET() ~ LPAREN() ~ typeExpr() ~ RPAREN() ^^ { case _ ~ _ ~ elemType ~ _ =>
+  private def set: Parser[TlaType1] = {
+    SET() ~ LPAREN() ~ typeExpr ~ RPAREN() ^^ { case _ ~ _ ~ elemType ~ _ =>
       SetT1(elemType)
     }
   }
 
   // a sequence type like Seq(Int)
-  private def seq(): Parser[TlaType1] = {
-    SEQ() ~ LPAREN() ~ typeExpr() ~ RPAREN() ^^ { case _ ~ _ ~ elemType ~ _ =>
+  private def seq: Parser[TlaType1] = {
+    SEQ() ~ LPAREN() ~ typeExpr ~ RPAREN() ^^ { case _ ~ _ ~ elemType ~ _ =>
       SeqT1(elemType)
     }
   }
 
   // a tuple type like <<Int, Bool>>
-  private def tuple(): Parser[TlaType1] = {
-    DOUBLE_LEFT_ANGLE() ~ rep1sep(typeExpr(), COMMA()) ~ DOUBLE_RIGHT_ANGLE() ^^ { case _ ~ list ~ _ =>
+  private def tuple: Parser[TlaType1] = {
+    DOUBLE_LEFT_ANGLE() ~ rep1sep(typeExpr, COMMA()) ~ DOUBLE_RIGHT_ANGLE() ^^ { case _ ~ list ~ _ =>
       TupT1(list: _*)
     }
   }
 
   // a sparse tuple type like {3: Int, 5: Bool}
-  private def sparseTuple(): Parser[TlaType1] = {
-    LCURLY() ~ repsep(typedFieldNo(), COMMA()) ~ RCURLY() ^^ { case _ ~ list ~ _ =>
+  private def sparseTuple: Parser[TlaType1] = {
+    LCURLY() ~ repsep(typedFieldNo, COMMA()) ~ RCURLY() ^^ { case _ ~ list ~ _ =>
       SparseTupT1(SortedMap(list: _*))
     }
   }
 
   // a single component of a sparse tuple, e.g., 3: Int
-  private def typedFieldNo(): Parser[(Int, TlaType1)] = {
-    fieldNo ~ COLON() ~ typeExpr() ^^ { case FIELD_NO(no) ~ _ ~ fieldType =>
+  private def typedFieldNo: Parser[(Int, TlaType1)] = {
+    fieldNo ~ COLON() ~ typeExpr ^^ { case FIELD_NO(no) ~ _ ~ fieldType =>
       (no, fieldType)
     }
   }
@@ -141,7 +141,7 @@ object DefaultType1Parser extends Parsers with Type1Parser {
   }
 
   // a record type like [a: Int, b: Bool]
-  private def record(): Parser[TlaType1] = {
+  private def record: Parser[TlaType1] = {
     LBRACKET() ~ repsep(typedField, COMMA()) ~ RBRACKET() ^^ { case _ ~ list ~ _ =>
       RecT1(SortedMap(list: _*))
     }
