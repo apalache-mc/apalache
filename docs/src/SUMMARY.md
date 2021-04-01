@@ -2,6 +2,10 @@
 
 [Overview](./index.md)
 
+# Tutorials
+
+- [Type Checker Tutorial](./tutorials/snowcat-tutorial.md)
+
 # Apalache User Manual
 
 - [Introduction](./apalache/index.md)
@@ -30,7 +34,6 @@
 
 # HOWTOs
 
-- [Contents](./HOWTOs/index.md)
 - [How to write type annotations](./HOWTOs/howto-write-type-annotations.md)
 
 # TLA+ Language Manual for Engineers

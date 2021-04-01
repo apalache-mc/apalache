@@ -100,8 +100,8 @@ be only checked for equality.
 
 Like in programming languages, a type may contain a reference to a type alias.
 This is purely a convenience feature to make type annotations more concise and
-easier to maintain. We expect only the user to write type aliases, whereas
-tools should always exchange with types in the alias-free form.
+easier to maintain. We expect that only users will write type aliases:
+tools should always exchange data with types in the alias-free form.
 
 **Examples.**
 
@@ -317,7 +317,7 @@ Follow the four simple rules:
 1. Type aliases can be only introduced at top-level declarations. That is, type aliases next to nested LET-IN
    definitions are ignored.
 
-1. Assuming Rule 1, you can define a type alias with `@typeAlias` in the same position, where you could define `@type`.
+1. Assuming Rule 1, you can define a type alias with `@typeAlias` anywhere you can define a `@type`.
 
 1. A type alias should be defined before it is used in the source code.
 
