@@ -317,7 +317,7 @@ Follow the four simple rules:
 1. Type aliases can be only introduced at top-level declarations. That is, type aliases next to nested LET-IN
    definitions are ignored.
 
-1. Assuming Rule 1, you can define a type alias with `@typeAlias` in the same position, where you could define `@type`.
+1. Assuming Rule 1, you can define a type alias with `@typeAlias` anywhere you can define a `@type`.
 
 1. A type alias should be defined before it is used in the source code.
 
