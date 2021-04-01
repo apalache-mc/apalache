@@ -6733,7 +6733,7 @@ Next ==
 </code></pre>
 <h1><a class="header" href="#adr-002-types-and-type-annotations" id="adr-002-types-and-type-annotations">ADR-002: types and type annotations</a></h1>
 <table><thead><tr><th>authors</th><th align="right">revision</th></tr></thead><tbody>
-<tr><td>Shon Feder, Igor Konnov, Jure Kukovec</td><td align="right">2</td></tr>
+<tr><td>Shon Feder, Igor Konnov, Jure Kukovec</td><td align="right">3</td></tr>
 </tbody></table>
 <p>This is a follow up of
 <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/internal/rfc/001rfc-types.md">RFC-001</a>, which discusses
@@ -6743,65 +6743,100 @@ interchange format for the type inference tools will be discussed in a separate 
 <li>How to write types in TLA+ (Type System 1).</li>
 <li>How to write type annotations (as a user).</li>
 </ol>
-<p>This document assumes that one can write a simple type checker that computes the types of all expressions based on the
-annotations provided by the user. Our work-in-progress type checker is using these type annotations. The new type
-checker can be called with <code>apalache typecheck</code> command. Note that the new type checker has not been integrated with the
-model checker yet.</p>
-<p>In contrast, the <a href="https://github.com/informalsystems/apalache/tree/types">type inference algorithm</a> by @Kukovec is fully
-automatic and thus it eliminates the need for type annotations.
-(Jure's algorithm is using Type System 1 too.) However, system engineers often want to write type annotations and
-quickly check types when writing TLA+ specifications. This document is filling this gap.</p>
+<p>This document assumes that one can write a simple type checker that computes
+the types of all expressions based on the annotations provided by the user.
+Such an implementation is provided by the type checker Snowcat.
+See the <a href="adr/../apalache/typechecker-snowcat.html">manual chapter</a> on Snowcat.</p>
+<p>In contrast, the <a href="https://github.com/informalsystems/apalache/tree/types">type inference
+algorithm</a> by @Kukovec
+is fully automatic and thus it eliminates the need for type annotations.
+Jure's algorithm is using Type System 1 too. The type inference algorithm
+is still in the prototype phase.</p>
+<p>System engineers often want to write type annotations and quickly check types
+when writing TLA+ specifications. This document is filling this gap.</p>
 <h2><a class="header" href="#1-how-to-write-types-in-tla" id="1-how-to-write-types-in-tla">1. How to write types in TLA+</a></h2>
 <h3><a class="header" href="#11-type-grammar-type-system-1-or-ts1" id="11-type-grammar-type-system-1-or-ts1">1.1. Type grammar (Type System 1, or TS1)</a></h3>
 <p>We simply write types as strings that follow the type grammar:</p>
-<pre><code>T ::= typeConst | typeVar | Bool | Int | Str | T -&gt; T | Set(T) | Seq(T) |
-      &lt;&lt;T, ..., T&gt;&gt; | [h_1: T, ..., h_k: T] | (T, ..., T) =&gt; T | (T)
+<pre><code>T ::=   Bool | Int | Str
+      | T -&gt; T
+      | Set(T)
+      | Seq(T)
+      | &lt;&lt;T, ..., T&gt;&gt;
+      | [field: T, ..., field: T]
+      | (T, ..., T) =&gt; T
+      | typeConst
+      | typeVar
+      | (T)
+
+field     ::= &lt;an identifier that matches [a-zA-Z_][a-zA-Z0-9_]*&gt;
+
 typeConst ::= &lt;an identifier that matches [A-Z_][A-Z0-9_]*&gt;
-typeVar ::= &lt;a single letter from [a-z]&gt;
+
+typeVar   ::= &lt;a single letter from [a-z]&gt;
 </code></pre>
-<p>In this grammar, <code>h_1</code>,...,<code>h_k</code> are field names. The rule <code>T -&gt; T</code> defines a
-function, while the rule <code>(T, ..., T) =&gt; T</code> defines an operator.  Importantly, a
-multi-argument function always receives a tuple, e.g., <code>&lt;&lt;Int, Bool&gt;&gt; -&gt; Int</code>,
-whereas a single-argument function receives the type of its argument, e.g., <code>Int -&gt; Int</code>.  An operator always has the types of its arguments inside <code>(...)</code>,
-e.g., <code>(Int, Bool) =&gt; Int</code> and <code>() =&gt; Bool</code>. The arrow <code>-&gt;</code> is right-associative,
-e.g., <code>A -&gt; B -&gt; C</code> is understood as <code>A -&gt; (B -&gt; C)</code>, which is consistent with
-programming languages. If you like to change the priority of <code>-&gt;</code>, use parentheses, as usual.
-For example, you may write <code>(A -&gt; B) -&gt; C</code>.</p>
-<p>If a type <code>T</code> contains a type variable, e.g., <code>a</code>, then <code>T</code> is a
-polymorphic type, in which <code>a</code> can be instantiated with a monotype (a
-variable-free term). Type variables are useful for describing the types of
-polymorphic operators. A type constant should be understood as a type we don't
-know and we don't want to know, that is, an uninterpreted type. Type constants
-are useful for fixing the types of CONSTANTS and using them later in a
-specification. Two different type constants correspond to two different -- yet
-uninterpreted -- types. If you know <a href="https://github.com/Z3Prover/z3">Microsoft
-Z3</a>, a type constant can be understood as an
-uninterpreted sort in SMT. Essentially, values of an uninterpreted type can
-be only checked for equality.</p>
-<p>Assume that notation <code>e &lt;: T</code> means that an expression <code>e</code> has type <code>T</code>.
-(More precisely, <code>T</code> is a supertype of the type of <code>e</code>.)
-The following examples demonstrate the use of the type grammar:</p>
+<p>The type rules have the following meaning:</p>
 <ul>
-<li><code>x</code> is an integer: <code>x &lt;: &quot;Int&quot;</code>.</li>
-<li><code>f</code> is a function from an integer to an integer: <code>f &lt;: &quot;Int -&gt; Int&quot;</code>.</li>
-<li><code>f</code> is a function from a set of integers to a set of integers:
-<code>f &lt;: &quot;Set(Int) -&gt; Set(Int)&quot;</code>.</li>
-<li><code>r</code> is a record that has the fields <code>a</code> and <code>b</code>, where <code>a</code> is an integer
-and <code>b</code> is a string: <code>r &lt;: &quot;[a: Int, b: Str]&quot;</code>.</li>
-<li><code>F</code> is a set of functions from a tuple of integers to an integer:
-<code>F &lt;: &quot;Set(&lt;&lt;Int, Int&gt;&gt; -&gt; Int)&quot;</code>.</li>
-<li><code>Foo</code> is an operator of an integer and of a string that returns an integer:
-<code>Foo &lt;: &quot;(Int, Str) =&gt; Int&quot;</code>.</li>
-<li><code>Bar</code> is a higher-order operator that takes an operator that takes
-an integer and a string and returns an integer, and returns a Boolean:
-<code>Bar &lt;: &quot;((Int, Str) =&gt; Int) =&gt; Bool&quot;</code>.</li>
-<li><code>Baz</code> is a polymorphic operator that takes two arguments of the same type
-and returns a value of the type equal to the types of its arguments:
-<code>Baz &lt;: &quot;(a, a) =&gt; a&quot;</code>.</li>
-<li><code>Proc</code> and <code>Faulty</code> are sets of the same type:
-<code>Proc &lt;: &quot;Set(PID)&quot;</code> and <code>Faulty &lt;: &quot;Set(PID)&quot;</code>.</li>
+<li>The rules <code>Bool</code>, <code>Int</code>, <code>Str</code> produce primitive types:
+the Boolean type, the integer type, and the string type, respectively.</li>
+<li>The rule <code>T -&gt; T</code> produces a function.</li>
+<li>The rule <code>Set(T)</code> produces a set type over elements of type <code>T</code>.</li>
+<li>The rule <code>Seq(T)</code> produces a sequence type over elements of type <code>T</code>.</li>
+<li>The rule <code>&lt;&lt;T, ..., T&gt;&gt;</code> produces a tuple type over types that
+are produced by <code>T</code>. <em>Types at different positions may differ</em>.</li>
+<li>The rule <code>[field: T, ..., field: T]</code> produces a record type over types that
+are produced by <code>T</code>. <em>Types at different positions may differ</em>.</li>
+<li>The rule <code>(T, ..., T) =&gt; T</code> defines an operator whose result type and parameter types are produced by <code>T</code>.</li>
+<li>The rule <code>typeConst</code> defines an uninterpreted type (or a reference to a type alias), look for an explanation below.</li>
+<li>The rule <code>typeVar</code> defines a type variable, look for an explanation below.</li>
 </ul>
-<h3><a class="header" href="#12-discussion" id="12-discussion">1.2. Discussion</a></h3>
+<p>Importantly, a multi-argument function always receives a tuple, e.g., <code>&lt;&lt;Int, Bool&gt;&gt; -&gt; Int</code>, whereas a single-argument function receives the type of its
+argument, e.g., <code>Int -&gt; Int</code>.  The arrow <code>-&gt;</code> is right-associative, e.g., <code>A -&gt; B -&gt; C</code> is understood as <code>A -&gt; (B -&gt; C)</code>, which is consistent with programming
+languages. If you like to change the priority of <code>-&gt;</code>, use parentheses, as
+usual.  For example, you may write <code>(A -&gt; B) -&gt; C</code>.</p>
+<p>An operator always has the types of its arguments inside <code>(...)</code>, e.g., <code>(Int, Bool) =&gt; Int</code> and <code>() =&gt; Bool</code>. If a
+type <code>T</code> contains a type variable, e.g.,
+<code>a</code>, then <code>T</code> is a polymorphic type, in which <code>a</code> can be instantiated with a monotype (a variable-free term). Type
+variables are useful for describing the types of polymorphic operators. Although the grammar accepts an operator type
+that returns an operator, e.g., <code>Int =&gt; (Int =&gt; Int)</code>, such a type does not have a meaningful interpretation in TLA+.
+Indeed, TLA+ does not allow operators to return other operators.</p>
+<p>A type constant should be understood as a type we don't know and we don't want to know, that is, an uninterpreted type.
+Type constants are useful for fixing the types of CONSTANTS and using them later in a specification. Two different type
+constants correspond to two different -- yet uninterpreted -- types. If you
+know <a href="https://github.com/Z3Prover/z3">Microsoft Z3</a>, a type constant can be understood as an uninterpreted sort in SMT.
+Essentially, values of an uninterpreted type can be only checked for equality.</p>
+<p>Another use for a type constant is referring to a type alias, see <a href="adr/002adr-types.html#defTypeAlias">Section 1.2</a>. This is purely a
+convenience feature to make type annotations more concise and easier to maintain. We expect that only users will write
+type aliases: tools should always exchange data with types in the alias-free form.</p>
+<p><strong>Examples.</strong></p>
+<ul>
+<li><code>x</code> is an integer. Its type is <code>Int</code>.</li>
+<li><code>f</code> is a function from an integer to an integer. Its type is <code>Int -&gt; Int</code>.</li>
+<li><code>f</code> is a function from a set of integers to a set of integers.
+Its type is <code>Set(Int) -&gt; Set(Int)</code>.</li>
+<li><code>r</code> is a record that has the fields <code>a</code> and <code>b</code>, where <code>a</code> is an integer
+and <code>b</code> is a string. Its type is <code>[a: Int, b: Str]</code>.</li>
+<li><code>F</code> is a set of functions from a pair of integers to an integer.
+Its type is <code>Set(&lt;&lt;Int, Int&gt;&gt; -&gt; Int)</code>.</li>
+<li><code>Foo</code> is an operator of an integer and of a string that returns an integer.
+Its type is  <code>(Int, Str) =&gt; Int</code>.</li>
+<li><code>Bar</code> is a higher-order operator that takes an operator that takes
+an integer and a string and returns an integer, and returns a Boolean.
+Its type is  <code>((Int, Str) =&gt; Int) =&gt; Bool</code>.</li>
+<li><code>Baz</code> is a polymorphic operator that takes two arguments of the same type
+and returns a value of the type equal to the types of its arguments.
+Its type is <code>(a, a) =&gt; a</code>.</li>
+<li><code>Proc</code> and <code>Faulty</code> are sets of the same type.
+Their type is <code>Set(PID)</code>.</li>
+</ul>
+<p><a id="defTypeAlias"></a></p>
+<h3><a class="header" href="#12-type-aliases" id="12-type-aliases">1.2. Type aliases</a></h3>
+<p>The grammar of <code>T</code> includes one more rule for defining a type alias:</p>
+<pre><code>A ::= typeConst &quot;=&quot; T
+</code></pre>
+<p>This rule binds a type (produced by <code>T</code>) to a name (produced by <code>typeConst</code>). As you can see from the definition
+of <code>typeConst</code>, the name should be an identifier in the upper case. The type checker should use the bound type instead
+of the constant type. For examples, see <a href="adr/002adr-types.html#useTypeAlias">Section 2.4</a>.</p>
+<h3><a class="header" href="#13-discussion" id="13-discussion">1.3. Discussion</a></h3>
 <p>Our type grammar presents a minimal type system that, in our understanding,
 captures all interesting cases that occur in practice. Obviously, this type
 system considers ill-typed some perfectly legal TLA+ values. For instance, we
@@ -6832,7 +6867,7 @@ you have suggestions on this line of thought, please let us know.</p>
 <h2><a class="header" href="#2-how-to-write-type-annotations-as-a-user" id="2-how-to-write-type-annotations-as-a-user">2. How to write type annotations (as a user)</a></h2>
 <p>In the following, we discuss how to annotate different TLA+ declarations.</p>
 <p><em>In the previous version of this document, we defined two operators:
-<code>AssumeType(_, _)</code> and <code>_ ## _</code>. They are no longer needed as we have introduced [Code annotations][].</em></p>
+<code>AssumeType(_, _)</code> and <code>_ ## _</code>. They are no longer needed as we have introduced <a href="adr/./004adr-annotations.html">Code annotations</a>.</em></p>
 <h3><a class="header" href="#21-annotating-constants-and-variables" id="21-annotating-constants-and-variables">2.1. Annotating CONSTANTS and VARIABLES</a></h3>
 <p>Simply write an annotation <code>@type: &lt;your type&gt;;</code> in a comment that precedes the declaration of a constant declaration or
 a variable. See the following example:</p>
@@ -6857,7 +6892,7 @@ to infer the type of <code>N</code> and thus state such a theorem. However, with
 assumptions, the user merely states the variable types and the <em>type checker</em>
 has a simple job of checking type consistency and finding the types of the
 expressions.</p>
-<h3><a class="header" href="#22-annotating-operators" id="22-annotating-operators">2.2. Annotating Operators</a></h3>
+<h1><a class="header" href="#usetuset-22-annotating-operators" id="usetuset-22-annotating-operators">useTuseT 2.2. Annotating Operators</a></h1>
 <p>Again, write a type annotation <code>@type: &lt;your type&gt;;</code> in a comment that precedes the operator declaration. For example:</p>
 <pre><code class="language-tla">\* @type: (a, Seq(a)) =&gt; Bool;
 Mem(e, es) ==
@@ -6926,14 +6961,37 @@ auxiliary LET-definition to specify the type of the empty collection:</p>
 </code></pre>
 <p>The type checker uses the type annotation to refine the type of an empty set
 (or, of an empty sequence).</p>
+<p><a id="useTypeAlias"></a></p>
+<h3><a class="header" href="#24-introducing-and-using-type-aliases" id="24-introducing-and-using-type-aliases">2.4. Introducing and using type aliases</a></h3>
+<p>A type alias is introduced with the annotation <code>@typeAlias: ...;</code>. See the example below:</p>
+<pre><code class="language-tla">VARIABLE
+    \* @typeAlias ENTRY = [a: Int, b: Bool];
+    \* @type Set(ENTRY);
+    msgs
+
+\* @type: (Set(ENTRY), ENTRY) =&gt; ENTRY;
+Foo(ms, m) ==
+    msgs' = ms \union {m}
+</code></pre>
+<p>You have to follow three rules:</p>
+<ol>
+<li>
+<p>You can define a type alias with <code>@typeAlias</code> anywhere you can define a <code>@type</code>.</p>
+</li>
+<li>
+<p>The names of type aliases must be unique in a module.</p>
+</li>
+<li>
+<p>There is no scoping for aliases within a module. Even if an alias is defined deep in a tree of LET-IN definitions, it
+can be references at any level in the module.</p>
+</li>
+</ol>
 <h2><a class="header" href="#3-example" id="3-example">3. Example</a></h2>
-<p>As an example that contains non-trivial type information, we chose the
-specification of <a href="https://github.com/tlaplus/Examples/blob/master/specifications/CigaretteSmokers/CigaretteSmokers.tla">Cigarette
-Smokers</a>
-by @mryndzionek from <a href="https://github.com/tlaplus/Examples/tree/master/specifications">TLA+
-Examples</a>.  In
-this document, we focus on the type information and give a shorter version of
-the specification. For detailed comments, check <a href="https://github.com/tlaplus/Examples/blob/master/specifications/CigaretteSmokers/CigaretteSmokers.tla">the original
+<p>As an example that contains non-trivial type information, we chose the specification
+of <a href="https://github.com/tlaplus/Examples/blob/master/specifications/CigaretteSmokers/CigaretteSmokers.tla">Cigarette Smokers</a>
+by @mryndzionek from <a href="https://github.com/tlaplus/Examples/tree/master/specifications">TLA+ Examples</a>. In this document,
+we focus on the type information and give a shorter version of the specification. For detailed comments,
+check <a href="https://github.com/tlaplus/Examples/blob/master/specifications/CigaretteSmokers/CigaretteSmokers.tla">the original
 specification</a>.</p>
 <pre><code class="language-tla">---------------------- MODULE CigaretteSmokersTyped --------------------------
 (***************************************************************************)
@@ -7012,8 +7070,6 @@ FairSpec ==
 AtMostOne ==
     Cardinality({r \in Ingredients : smokers[r].smoking}) &lt;= 1
 =============================================================================```
-
-[Code annotations]: https://apalache.informal.systems/docs/adr/004adr-annotations.html
 </code></pre>
 <h1><a class="header" href="#adr-004-syntax-for-java-like-annotations-in-tla-comments" id="adr-004-syntax-for-java-like-annotations-in-tla-comments">ADR-004: Syntax for Java-like annotations in TLA+ comments</a></h1>
 <table><thead><tr><th>author</th><th align="right">revision</th></tr></thead><tbody>
