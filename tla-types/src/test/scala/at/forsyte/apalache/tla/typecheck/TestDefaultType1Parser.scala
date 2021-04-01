@@ -95,6 +95,16 @@ class TestDefaultType1Parser extends FunSuite with Checkers with TlaType1Gen {
     assert(RecT1(SortedMap("a" -> IntT1(), "b" -> BoolT1())) == result)
   }
 
+  test("multiline [a: Int, b: Bool]") {
+    val text =
+      """
+        |[a: Int,
+        | b: Bool]
+        |""".stripMargin
+    val result = DefaultType1Parser(text)
+    assert(RecT1(SortedMap("a" -> IntT1(), "b" -> BoolT1())) == result)
+  }
+
   test("[f1: Int, f2: Bool]") {
     val result = DefaultType1Parser("[f1: Int, f2: Bool]")
     assert(RecT1(SortedMap("f1" -> IntT1(), "f2" -> BoolT1())) == result)
@@ -143,6 +153,28 @@ class TestDefaultType1Parser extends FunSuite with Checkers with TlaType1Gen {
   test("vc") {
     // found by scalacheck
     assertThrows[Type1ParseError](DefaultType1Parser("vc"))
+  }
+
+  test("ALIAS1 = Int") {
+    val (name, tt) = DefaultType1Parser.parseAlias("ALIAS1 = [a: Int, b: Bool]")
+    assert("ALIAS1" == name)
+    assert(RecT1("a" -> IntT1(), "b" -> BoolT1()) == tt)
+  }
+
+  test("ALIAS2 = Set(ALIAS1)") {
+    val (name, tt) = DefaultType1Parser.parseAlias("ALIAS2 = Set(ALIAS1)")
+    assert("ALIAS2" == name)
+    // ALIAS1 is not replaced immediately, it has to be substituted when we have the map of all aliases
+    assert(SetT1(ConstT1("ALIAS1")) == tt)
+  }
+
+  test("incorrect name: alias1 = Set(ALIAS3)") {
+    assertThrows[Type1ParseError](DefaultType1Parser.parseAlias("alias1 = Set(ALIAS3)"))
+  }
+
+  test("Set(ENTRY)") {
+    val result = DefaultType1Parser.parseType("Set(ENTRY)")
+    assert(SetT1(ConstT1("ENTRY")) == result)
   }
 
   test("no crashes: either parse, or raise an error") {

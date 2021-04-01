@@ -23,5 +23,23 @@ trait Type1Parser {
    * @param text a string
    * @return a type on success; throws TlcConfigParseError on failure
    */
-  def apply(text: String): TlaType1
+  def apply(text: String): TlaType1 = {
+    parseType(text)
+  }
+
+  /**
+   * Parse a type from a string, possibly substituting aliases with types.
+   *
+   * @param text a string
+   * @return a type on success; throws TlcConfigParseError on failure
+   */
+  def parseType(text: String): TlaType1
+
+  /**
+   * Parse a type alias from a string
+   *
+   * @param text a string
+   * @return an alias name and a type on success; throws Type1ParseError on failure
+   */
+  def parseAlias(text: String): (String, TlaType1)
 }

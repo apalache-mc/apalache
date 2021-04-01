@@ -1,12 +1,9 @@
 package at.forsyte.apalache.tla.typecheck.parser
 
-import at.forsyte.apalache.tla.lir.{
-  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1, TupT1, VarT1
-}
-
-import java.io.{Reader, StringReader}
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecheck._
 
+import java.io.StringReader
 import scala.collection.immutable.SortedMap
 import scala.util.parsing.combinator.Parsers
 import scala.util.parsing.input.NoPosition
@@ -26,23 +23,13 @@ object DefaultType1Parser extends Parsers with Type1Parser {
   override type Elem = Type1Token
 
   /**
-   * Parse a type from a string.
+   * Parse a type from a string, possibly substituting aliases with types.
    *
    * @param text a string
-   * @return a type on success; throws Type1ParseError on failure
+   * @return a type on success; throws TlcConfigParseError on failure
    */
-  def apply(text: String): TlaType1 = {
-    apply(new StringReader(text))
-  }
-
-  /**
-   * Parse a type file from a reader.
-   *
-   * @param reader a reader
-   * @return a typeExpr on success; throws Type1ParseError on failure
-   */
-  def apply(reader: Reader): TlaType1 = {
-    closedTypeExpr(new Type1TokenReader(Type1Lexer(reader))) match {
+  override def parseType(text: String): TlaType1 = {
+    closedTypeExpr(new Type1TokenReader(Type1Lexer(new StringReader(text)))) match {
       case Success(result: TlaType1, _) => result
       case Success(_, _)                => throw new Type1ParseError("Unexpected parse result", NoPosition)
       case Failure(msg, next)           => throw new Type1ParseError(msg, next.pos)
@@ -50,8 +37,32 @@ object DefaultType1Parser extends Parsers with Type1Parser {
     }
   }
 
-  // the access point
+  /**
+   * Parse a type alias from a string
+   *
+   * @param text a string
+   * @return an alias name and a type on success; throws Type1ParseError on failure
+   */
+  override def parseAlias(text: String): (String, TlaType1) = {
+    closedAliasExpr(new Type1TokenReader(Type1Lexer(new StringReader(text)))) match {
+      case Success((name, tt: TlaType1), _) => (name, tt)
+      case Success(_, _)                    => throw new Type1ParseError("Unexpected parse result", NoPosition)
+      case Failure(msg, next)               => throw new Type1ParseError(msg, next.pos)
+      case Error(msg, next)                 => throw new Type1ParseError(msg, next.pos)
+    }
+  }
+
+  // the access point to the alias parser
+  private def closedAliasExpr: Parser[(String, TlaType1)] = phrase(aliasExpr)
+
+  // the access point to the type parser
   private def closedTypeExpr: Parser[TlaType1] = phrase(typeExpr) ^^ (e => e)
+
+  private def aliasExpr: Parser[(String, TlaType1)] = {
+    (typeConst ~ EQ() ~ typeExpr) ^^ { case ConstT1(name) ~ _ ~ tt =>
+      (name, tt)
+    }
+  }
 
   private def typeExpr: Parser[TlaType1] = {
     // functions are tricky, as they start as other expressions, so we have to distinguish them by RIGHT_ARROW
@@ -64,20 +75,15 @@ object DefaultType1Parser extends Parsers with Type1Parser {
 
   // A type expression. We wrap it with a list, as (type, ..., type) may start an operator type
   private def noFunExpr: Parser[List[TlaType1]] = {
-    (INT() | REAL() | BOOL() | STR() | typeVar | typeConst | set | seq | tuple | sparseTuple | record | parenExpr) ^^ {
-      case INT()              => List(IntT1())
-      case REAL()             => List(RealT1())
-      case BOOL()             => List(BoolT1())
-      case STR()              => List(StrT1())
-      case v @ VarT1(_)       => List(v)
-      case c @ ConstT1(_)     => List(c)
-      case s @ SetT1(_)       => List(s)
-      case s @ SeqT1(_)       => List(s)
-      case f @ FunT1(_, _)    => List(f)
-      case t @ TupT1(_*)      => List(t)
-      case t @ SparseTupT1(_) => List(t)
-      case r @ RecT1(_)       => List(r)
-      case lst: List[TupT1] =>
+    (INT() | REAL() | BOOL() | STR() | typeVar | typeConst
+      | set | seq | tuple | sparseTuple
+      | record | parenExpr) ^^ {
+      case INT()        => List(IntT1())
+      case REAL()       => List(RealT1())
+      case BOOL()       => List(BoolT1())
+      case STR()        => List(StrT1())
+      case tt: TlaType1 => List(tt)
+      case lst: List[TlaType1] =>
         lst
     }
   }
@@ -161,9 +167,8 @@ object DefaultType1Parser extends Parsers with Type1Parser {
     accept("typeVar", { case IDENT(name) if VarT1.isValidName(name) => VarT1(name) })
   }
 
-  // a type constant, e.g., BAZ
+  // a type constant or an alias name, e.g., BAZ
   private def typeConst: Parser[ConstT1] = {
     acceptMatch("typeConst", { case IDENT(name) if (name.toUpperCase() == name) => ConstT1(name) })
   }
-
 }

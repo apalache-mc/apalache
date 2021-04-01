@@ -28,7 +28,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     parser = DefaultType1Parser
     annotationStore = createAnnotationStore()
     // a new instance of the translator, as it gives unique names to the variables
-    gen = new ToEtcExpr(annotationStore, new TypeVarPool())
+    gen = new ToEtcExpr(annotationStore, ConstSubstitution.empty, new TypeVarPool())
   }
 
   private def mkAppByType(operTypes: Seq[TlaType1], args: TlaType1*): EtcApp = {
