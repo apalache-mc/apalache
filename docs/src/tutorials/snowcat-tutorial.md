@@ -7,7 +7,7 @@ annotating a specification with types.
 ## Related documents
 
 - [ADR002][] that introduces Type System 1, which is used by Snowcat.
-- A technical [HOWTO on writing type annotations][].
+- A more technical [HOWTO on writing type annotations][].
 - [ADR004][] that introduces Java-like annotations in TLA+ comments.
 
 ## Setup
@@ -306,12 +306,18 @@ Pos ==
     {<<x, y>>: x, y \in 1..N}
 ```
 
+## Further reading
+
 For more advanced type annotations, check the following examples:
 
 - [CigaretteSmokersTyped.tla][],
 - [CarTalkPuzzleTyped.tla][],
 - [FunctionsTyped.tla][],
 - [QueensTyped.tla][].
+
+We have not discussed type aliases, which are a more advanced feature of the
+type checker. To learn about type aliases, see [HOWTO on writing type
+annotations][].
 
 If you are experiencing a problem with Snowcat, feel free to [open an issue]
 or drop us a message on [Zulip chat].
