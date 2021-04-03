@@ -295,6 +295,57 @@ This time the type checker can find the types of all expressions:
  > Your types are great!
 ```
 
+<a id="typeAliases"></a>
+## Recipe 6: type aliases
+
+Check the example [MissionariesAndCannibals.tla][] from the repository of TLA+
+examples. 
+
+We can annotate constants as follows:
+
+```tla
+CONSTANTS
+    \* @type: Set(PERSON);
+    Missionaries,
+    \* @type: Set(PERSON);
+    Cannibals 
+```
+
+If we continue annotating other declarations in the specification, we will see
+that the type `Set(PERSON)` is used quite a lot. Would not it be great to
+introduce a shortcut for this type?
+
+We can do that by declaring a type alias as follows:
+
+```tla
+CONSTANTS
+    \* @typeAlias PERSONS = Set(PERSON);
+    \* @type: PERSONS;
+    Missionaries,
+    \* @type: PERSONS;
+    Cannibals 
+```
+
+The basic rule is that we can introduce a type alias with `@typeAlias` in the
+same place, where we can write a `@type` annotation. For more precise rules,
+check [ADR002][].  Having defined the type alias, we can use it in the later
+definitions:
+
+```tla
+VARIABLES
+    \* @type: Str;
+    bank_of_boat,
+    \* @type: Str -> PERSONS;
+    who_is_on_bank 
+```
+
+Surely, we did not gain much by writing `PERSONS` instead of `Set(PERSON)`.  If
+your specification has complex types, e.g., records, aliases may help you in
+minimizing the burden of specification maintenance. When you add one more field
+to the record type, it suffices to change the definition of the type alias,
+instead of changing the record type everywhere.
+
+
 ## Known issues
 
 In contrast to all other cases, a local operator definition does require
@@ -320,3 +371,4 @@ This may change later, when the tlaplus [Issue 578][] is resolved.
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
 [Issue 401]: https://github.com/informalsystems/apalache/issues/401
 [Issue 578]: https://github.com/tlaplus/tlaplus/issues/578
+[MissionariesAndCannibals.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/MissionariesAndCannibals/MissionariesAndCannibals.tla

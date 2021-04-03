@@ -31,9 +31,10 @@ EXTENDS Integers, FiniteSets
 (* Next comes the declaration of the sets of missionaries and cannibals.   *)
 (***************************************************************************)
 CONSTANTS
-    \* @type: Set(PERSON);
+    \* @typeAlias: PERSONS = Set(PERSON);
+    \* @type: PERSONS;
     Missionaries,
-    \* @type: Set(PERSON);
+    \* @type: PERSONS;
     Cannibals 
 
 (***************************************************************************)
@@ -75,7 +76,7 @@ CONSTANTS
 VARIABLES
     \* @type: Str;
     bank_of_boat,
-    \* @type: Str -> Set(PERSON);
+    \* @type: Str -> PERSONS;
     who_is_on_bank 
 
 (***************************************************************************)
@@ -174,7 +175,7 @@ OtherBank(b) == IF b = "E" THEN "W" ELSE "E"
 (* of the two variables (their values in state t) in terms of their old    *)
 (* values (their values in state s).                                       *)
 (***************************************************************************)
-\* @type: (Set(PERSON), Str) => Bool;
+\* @type: (PERSONS, Str) => Bool;
 Move(S,b) ==
              /\ Cardinality(S) \in {1,2}
              /\ LET newThisBank  == who_is_on_bank[b] \ S
