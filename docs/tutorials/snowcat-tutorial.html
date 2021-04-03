@@ -177,7 +177,7 @@ annotating a specification with types.</p>
 <h2><a class="header" href="#related-documents" id="related-documents">Related documents</a></h2>
 <ul>
 <li><a href="../adr/002adr-types.html">ADR002</a> that introduces Type System 1, which is used by Snowcat.</li>
-<li>A technical <a href="../HOWTOs/howto-write-type-annotations.html">HOWTO on writing type annotations</a>.</li>
+<li>A more technical <a href="../HOWTOs/howto-write-type-annotations.html">HOWTO on writing type annotations</a>.</li>
 <li><a href="../adr/004adr-annotations.html">ADR004</a> that introduces Java-like annotations in TLA+ comments.</li>
 </ul>
 <h2><a class="header" href="#setup" id="setup">Setup</a></h2>
@@ -377,6 +377,7 @@ the following syntax sugar:</p>
 Pos ==
     {&lt;&lt;x, y&gt;&gt;: x, y \in 1..N}
 </code></pre>
+<h2><a class="header" href="#further-reading" id="further-reading">Further reading</a></h2>
 <p>For more advanced type annotations, check the following examples:</p>
 <ul>
 <li><a href="https://github.com/informalsystems/apalache/blob/d5138a33fce3d77abc07a39bfb4f448942e6f641/test/tla/CigaretteSmokersTyped.tla">CigaretteSmokersTyped.tla</a>,</li>
@@ -384,6 +385,9 @@ Pos ==
 <li><a href="https://github.com/informalsystems/apalache/blob/d5138a33fce3d77abc07a39bfb4f448942e6f641/test/tla/FunctionsTyped.tla">FunctionsTyped.tla</a>,</li>
 <li><a href="https://github.com/informalsystems/apalache/blob/d5138a33fce3d77abc07a39bfb4f448942e6f641/test/tla/QueensTyped.tla">QueensTyped.tla</a>.</li>
 </ul>
+<p>We have not discussed type aliases, which are a more advanced feature of the
+type checker. To learn about type aliases, see <a href="../HOWTOs/howto-write-type-annotations.html">HOWTO on writing type
+annotations</a>.</p>
 <p>If you are experiencing a problem with Snowcat, feel free to <a href="https://github.com/informalsystems/apalache/issues">open an issue</a>
 or drop us a message on <a href="https://informal-systems.zulipchat.com/login/#narrow/stream/265309-apalache">Zulip chat</a>.</p>
 
