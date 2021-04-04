@@ -17,3 +17,4 @@
 * Type checker: add support for type aliases,
   e.g., `@typeAlias FOO = [a: Int, b: Int]`, see #704
 * Manual: updated the HOWTO on type annotations with type aliases
+* Manual: the manual page on known issues
