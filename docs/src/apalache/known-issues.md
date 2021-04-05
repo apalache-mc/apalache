@@ -7,7 +7,7 @@ This page collects known issues that were reported by the users.
 Deadlock detection is imprecise. It may report false negatives, see [Issue
 711][].
 
-**Affected versions:** 0.11.x, 0.15.x
+**Affected versions:** <= 0.15.x
 
 **Planned fix:** [Issue 712][]
 
