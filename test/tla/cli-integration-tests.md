@@ -698,6 +698,7 @@ Once this is fixed, Apalache should find a deadlock.
 $ apalache-mc check Deadlock712.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
+...
 ```
 
 ### check use of TLA_PATH for modules in child directory succeeds
