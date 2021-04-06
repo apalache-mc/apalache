@@ -689,6 +689,18 @@ $ apalache-mc check ITE_CASE.tla | sed 's/I@.*//'
 EXITCODE: ERROR (99)
 ```
 
+### check Deadlock712 succeeds
+
+This test shows that Apalache may miss a deadlock, as discussed in issue 712.
+Once this is fixed, Apalache should find a deadlock.
+
+```sh
+$ apalache-mc check Deadlock712.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
 ### check use of TLA_PATH for modules in child directory succeeds
 
 ```sh
