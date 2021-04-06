@@ -36,6 +36,19 @@ object ApalacheOper {
   }
 
   /**
+   * A generator of a data structure. Given a positive integer `bound`, and assuming that the type of the operator
+   * application is known, we recursively generate a TLA+ data structure as a tree, whose width is bound by the
+   * number `bound`.
+   */
+  object gen extends ApalacheOper {
+    override def name: String = "Apalache!Gen"
+
+    override def arity: OperArity = FixedArity(1)
+
+    override def precedence: (Int, Int) = (100, 100)
+  }
+
+  /**
    * Skolemization hint. In an expression Skolem(\E x \in S: e), the existential may be skolemized, that is, translated
    * into a constant.
    */
