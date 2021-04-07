@@ -16,8 +16,8 @@ class TestCmd extends Command(name = "test", description = "Quickly test a TLA+ 
     arg[String](name = "before", description = "the name of an operator to prepare the test, similar to Init")
   var action: String =
     arg[String](name = "action", description = "the name of an action to execute, similar to Next")
-  var after: String =
-    arg[String](name = "after",
+  var assertion: String =
+    arg[String](name = "assertion",
         description = "the name of an operator that should evaluate to true after executing `action`")
   var cinit: String = opt[String](name = "cinit", default = "",
       description = "the name of an operator that initializes CONSTANTS,\n" +

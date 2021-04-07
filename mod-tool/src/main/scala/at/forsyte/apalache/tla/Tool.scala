@@ -97,7 +97,7 @@ object Tool extends App with LazyLogging {
           case Some(test: TestCmd) =>
             logger.info(
                 "Checker options: filename=%s, before=%s, action=%s, after=%s"
-                  .format(test.file, test.before, test.action, test.after))
+                  .format(test.file, test.before, test.action, test.assertion))
             submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> "test", "workers" -> "1"))
             val injector = injectorFactory(test)
             handleExceptions(injector, runTest(injector, test, _))
@@ -205,7 +205,7 @@ object Tool extends App with LazyLogging {
     executor.options.set("parser.filename", test.file.getAbsolutePath)
     executor.options.set("checker.init", test.before)
     executor.options.set("checker.next", test.action)
-    executor.options.set("checker.inv", List(test.after))
+    executor.options.set("checker.inv", List(test.assertion))
     if (test.cinit != "") {
       executor.options.set("checker.cinit", test.cinit)
     }
