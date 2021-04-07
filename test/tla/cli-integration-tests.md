@@ -148,7 +148,7 @@ EXITCODE: OK
 This simple test demonstrates how to test large specs by isolating the input with generators.
 
 ```sh
-$ apalache-mc test TestGen.tla Before Test After | sed 's/I@.*//'
+$ apalache-mc test TestGen.tla Prepare Test Assertion | sed 's/I@.*//'
 ...
 The outcome is: Error
 Checker has found an example. Check counterexample.tla.

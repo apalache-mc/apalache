@@ -12,7 +12,7 @@ VARIABLES
     seqno
 
 \* preparing a test, like you do it in unit tests
-Before ==
+Prepare ==
     /\ seqno = Gen(1)
     /\ msgs = Gen(5)
     /\ \A m \in msgs:
@@ -24,8 +24,8 @@ Test ==
         msgs' = { [seqno |-> seqno, ballot |-> b] } \union msgs
     /\ seqno' = seqno + 1    
 
-\* check the expectation after running the test
-After ==
+\* check the assertion after running the test
+Assertion ==
     \A m1, m2 \in msgs:
       m2.seqno > m1.seqno => m2.ballot >= m1.ballot
 
