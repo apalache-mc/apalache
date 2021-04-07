@@ -693,15 +693,6 @@ The outcome is: NoError
 ...
 ```
 
-### check TestGen succeeds
-
-```sh
-$ apalache-mc check TestGen.tla | sed 's/I@.*//'
-...
-The outcome is: NoError
-...
-```
-
 ### check ITE_CASE succeeds
 
 ```sh
