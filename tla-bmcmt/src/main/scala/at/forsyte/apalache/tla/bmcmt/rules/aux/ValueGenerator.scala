@@ -6,6 +6,8 @@ import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, FunT1, IntT1, RecT1, SeqT1,
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 
+import scala.collection.immutable.{SortedMap, SortedSet}
+
 /**
  * This class generates symbolic data structures whose width is bounded with `bound`
  *
@@ -61,8 +63,13 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
   }
 
   private def genRecord(state: SymbState, recordType: RecT1): SymbState = {
-    var nextState = state.updateArena(a => a.appendCell(CellT.fromType1(recordType)))
+    // create the record domain
+    val (domArena, domCell) =
+      rewriter.recordDomainCache.create(state.arena, (recordType.fieldTypes.keySet, SortedSet.empty))
+    // create the record cell
+    var nextState = state.setArena(domArena.appendCell(CellT.fromType1(recordType)))
     val recCell = nextState.arena.topCell
+    nextState = nextState.updateArena(_.setDom(recCell, domCell))
     // convert the values to a list, so we don't have a lazy stream
     val elemTypes = recordType.fieldTypes.values.toList
     val elemCells =
