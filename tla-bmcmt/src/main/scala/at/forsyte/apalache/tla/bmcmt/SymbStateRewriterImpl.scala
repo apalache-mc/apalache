@@ -276,6 +276,8 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
         // misc
         key(OperEx(TlaOper.label, tla.str("lab"), tla.str("x")))
           -> List(new LabelRule(this)),
+        key(OperEx(ApalacheOper.gen, tla.int(2)))
+          -> List(new GenRule(this)),
         // TLC
         key(OperEx(TlcOper.print, tla.bool(true), tla.str("msg")))
           -> List(new TlcRule(this)),
