@@ -143,6 +143,18 @@ EXITCODE: OK
 ...
 ```
 
+### test TestGen finds an example
+
+This simple test demonstrates how to test large specs by isolating the input with generators.
+
+```sh
+$ apalache-mc test TestGen.tla Before Test After | sed 's/I@.*//'
+...
+The outcome is: Error
+Checker has found an example. Check counterexample.tla.
+...
+```
+
 ## running the check command
 
 #### check factorization find a counterexample
@@ -676,6 +688,15 @@ EXITCODE: ERROR (99)
 
 ```sh
 $ apalache-mc check test1.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
+### check TestGen succeeds
+
+```sh
+$ apalache-mc check TestGen.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
