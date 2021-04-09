@@ -230,6 +230,10 @@ type annotation:</p>
 identifier <code>RM</code>. We used the one-line TLA+ comment: <code>\* @type: ...;</code>.
 Alternatively, we could use the multi-line comment: <code>(* @type: Set(Str); *)</code>.
 Importantly, the type annotation should end with a semi-colon: <code>;</code>.</p>
+<p><strong>Warning</strong>. If you want to write a type annotation on multiple lines, write it
+in a multi-line comment <code>(* ... *)</code> instead of starting multiple lines with a
+single-line comment <code>\* ...</code>. See <a href="https://github.com/informalsystems/apalache/issues/718">issue
+718</a>.</p>
 <h2><a class="header" href="#step-3-running-snowcat-again" id="step-3-running-snowcat-again">Step 3: Running Snowcat again</a></h2>
 <p>Having introduced the type annotation for <code>RM</code>, let's run the type checker again:</p>
 <pre><code class="language-sh">$ apalache typecheck TwoPhase.tla
