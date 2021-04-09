@@ -145,7 +145,8 @@ EXITCODE: OK
 
 ### test TestGen finds an example
 
-This simple test demonstrates how to test large specs by isolating the input with generators.
+This simple test demonstrates how to test a spec by isolating the input with
+generators.
 
 ```sh
 $ apalache-mc test TestGen.tla Prepare Test Assertion | sed 's/I@.*//'
