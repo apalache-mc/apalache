@@ -83,7 +83,7 @@ object Tool extends App with LazyLogging {
             logger.info("Parse " + parse.file)
             submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> "parse", "workers" -> "1"))
             val injector = injectorFactory(parse)
-            handleExceptions(injector, runParse(injector, parse, _))
+            handleExceptions(injector, runParse(injector, parse))
 
           case Some(check: CheckCmd) =>
             logger.info(
@@ -92,7 +92,7 @@ object Tool extends App with LazyLogging {
             // TODO: update workers when the multicore branch is integrated
             submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> "check", "workers" -> "1"))
             val injector = injectorFactory(check)
-            handleExceptions(injector, runCheck(injector, check, _))
+            handleExceptions(injector, runCheck(injector, check))
 
           case Some(test: TestCmd) =>
             logger.info(
@@ -100,13 +100,13 @@ object Tool extends App with LazyLogging {
                   .format(test.file, test.before, test.action, test.assertion))
             submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> "test", "workers" -> "1"))
             val injector = injectorFactory(test)
-            handleExceptions(injector, runTest(injector, test, _))
+            handleExceptions(injector, runTest(injector, test))
 
           case Some(typecheck: TypeCheckCmd) =>
             logger.info("Type checking " + typecheck.file)
             submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> "typecheck", "workers" -> "1"))
             val injector = injectorFactory(typecheck)
-            handleExceptions(injector, runTypeCheck(injector, typecheck, _))
+            handleExceptions(injector, runTypeCheck(injector, typecheck))
 
           case Some(config: ConfigCmd) =>
             logger.info("Configuring Apalache")
@@ -133,7 +133,7 @@ object Tool extends App with LazyLogging {
           .format(ChronoUnit.SECONDS.between(startTime, endTime), ChronoUnit.MILLIS.between(startTime, endTime) % 1000))
   }
 
-  private def runParse(injector: Injector, parse: ParseCmd, u: Unit): Unit = {
+  private def runParse(injector: => Injector, parse: ParseCmd): Unit = {
     // here, we implement a terminal pass to get the parse results
     val executor = injector.getInstance(classOf[PassChainExecutor])
     executor.options.set("io.outdir", createOutputDir())
@@ -150,7 +150,7 @@ object Tool extends App with LazyLogging {
     }
   }
 
-  private def runCheck(injector: Injector, check: CheckCmd, u: Unit): Unit = {
+  private def runCheck(injector: => Injector, check: CheckCmd): Unit = {
     val executor = injector.getInstance(classOf[PassChainExecutor])
     executor.options.set("io.outdir", createOutputDir())
     var tuning =
@@ -188,7 +188,7 @@ object Tool extends App with LazyLogging {
     }
   }
 
-  private def runTest(injector: Injector, test: TestCmd, u: Unit): Unit = {
+  private def runTest(injector: => Injector, test: TestCmd): Unit = {
     // This is a special version of the `check` command that is tuned towards testing scenarios
     val executor = injector.getInstance(classOf[PassChainExecutor])
     executor.options.set("io.outdir", createOutputDir())
@@ -228,7 +228,7 @@ object Tool extends App with LazyLogging {
     }
   }
 
-  private def runTypeCheck(injector: Injector, typecheck: TypeCheckCmd, u: Unit): Unit = {
+  private def runTypeCheck(injector: => Injector, typecheck: TypeCheckCmd): Unit = {
     // type checker
     val executor = injector.getInstance(classOf[PassChainExecutor])
     executor.options.set("io.outdir", createOutputDir())
@@ -302,11 +302,11 @@ object Tool extends App with LazyLogging {
     }
   }
 
-  private def handleExceptions(injector: Injector, fun: Unit => Unit): Int = {
+  private def handleExceptions(injector: Injector, fun: => Unit): Int = {
     val adapter = injector.getInstance(classOf[ExceptionAdapter])
 
     try {
-      fun(())
+      fun
       Tool.OK_EXIT_CODE
     } catch {
       case e: Exception if adapter.toMessage.isDefinedAt(e) =>
