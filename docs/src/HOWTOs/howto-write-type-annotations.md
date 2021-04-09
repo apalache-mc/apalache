@@ -319,7 +319,7 @@ We can do that by declaring a type alias as follows:
 
 ```tla
 CONSTANTS
-    \* @typeAlias PERSONS = Set(PERSON);
+    \* @typeAlias: PERSONS = Set(PERSON);
     \* @type: PERSONS;
     Missionaries,
     \* @type: PERSONS;
@@ -348,6 +348,8 @@ instead of changing the record type everywhere.
 
 ## Known issues
 
+### Annotations of LOCAL operators
+
 In contrast to all other cases, a local operator definition does require
 a type annotation before the keyword `LOCAL`, not after it. For example:
 
@@ -357,6 +359,19 @@ LOCAL LocalInc(x) == x + 1
 ```
 
 This may change later, when the tlaplus [Issue 578][] is resolved.
+
+### Multi-line annotations
+
+A type annotation may span over multiple lines. However, you should use
+the `(* ... *)` syntax in this case. An annotation in a series
+of single-line comments is not properly parsed. For example:
+
+```tla
+\* @type: Int
+\*          => Bool;
+```
+
+To see progress on this issue, check [Issue 718][].
 
 
 [old type annotations]: ../apalache/types-and-annotations.md
@@ -371,4 +386,5 @@ This may change later, when the tlaplus [Issue 578][] is resolved.
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
 [Issue 401]: https://github.com/informalsystems/apalache/issues/401
 [Issue 578]: https://github.com/tlaplus/tlaplus/issues/578
+[Issue 718]: https://github.com/informalsystems/apalache/issues/718
 [MissionariesAndCannibals.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/MissionariesAndCannibals/MissionariesAndCannibals.tla

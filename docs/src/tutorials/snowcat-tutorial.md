@@ -80,6 +80,11 @@ identifier `RM`. We used the one-line TLA+ comment: `\* @type: ...;`.
 Alternatively, we could use the multi-line comment: `(* @type: Set(Str); *)`.
 Importantly, the type annotation should end with a semi-colon: `;`.
 
+**Warning**. If you want to write a type annotation on multiple lines, write it
+in a multi-line comment `(* ... *)` instead of starting multiple lines with a
+single-line comment `\* ...`. See [issue
+718](https://github.com/informalsystems/apalache/issues/718).
+
 ## Step 3: Running Snowcat again
 
 Having introduced the type annotation for `RM`, let's run the type checker again:
