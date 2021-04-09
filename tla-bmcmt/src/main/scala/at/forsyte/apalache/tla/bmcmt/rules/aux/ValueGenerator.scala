@@ -1,12 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, ConstT, FinSetT, IntT, TupleT}
+import at.forsyte.apalache.tla.bmcmt.types.{CellT, FinSetT, IntT, TupleT}
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, SymbStateRewriter}
-import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, FunT1, IntT1, RecT1, SeqT1, SetT1, StrT1, TlaType1, TupT1, Typed}
-import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.TypedPredefs._
+import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir._
 
-import scala.collection.immutable.{SortedMap, SortedSet}
+import scala.collection.immutable.SortedSet
 
 /**
  * This class generates symbolic data structures whose width is bounded with `bound`
@@ -20,23 +20,10 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
     rewriter.solverContext.log(s"; GEN $resultType up to $bound {")
     val nextState =
       resultType match {
-        case IntT1() =>
-          val nextState = state.updateArena(a => a.appendCell(IntT()))
-          nextState.setRex(nextState.arena.topCell.toNameEx.withTag(Typed(resultType)))
-
-        case BoolT1() =>
-          val nextState = state.updateArena(a => a.appendCell(BoolT()))
-          nextState.setRex(nextState.arena.topCell.toNameEx.withTag(Typed(resultType)))
-
-        case StrT1() =>
-          val nextState = state.updateArena(a => a.appendCell(ConstT()))
-          nextState.setRex(nextState.arena.topCell.toNameEx.withTag(Typed(resultType)))
-
-        case ConstT1(_) =>
+        case IntT1() | BoolT1() | StrT1() | ConstT1(_) =>
           // For the moment, we do not distinguish between ConstT1 and StrT1.
           // When issue #570 is fixed, we should come back to it.
-          val nextState = state.updateArena(a => a.appendCell(ConstT()))
-          nextState.setRex(nextState.arena.topCell.toNameEx.withTag(Typed(resultType)))
+          genBasic(state, resultType)
 
         case SetT1(elemType) =>
           genSet(state, elemType)
@@ -60,6 +47,11 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
     rewriter.solverContext.log(s"; } GEN $resultType up to $bound")
 
     nextState
+  }
+
+  private def genBasic(state: SymbState, basicType: TlaType1): SymbState = {
+    val nextState = state.updateArena(a => a.appendCell(CellT.fromType1(basicType)))
+    nextState.setRex(nextState.arena.topCell.toNameEx.withTag(Typed(basicType)))
   }
 
   private def genRecord(state: SymbState, recordType: RecT1): SymbState = {
@@ -110,7 +102,8 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
 
   private def genSeq(state: SymbState, elemType: TlaType1): SymbState = {
     // The following code is following pretty much TupleOrSeqCtorRule.
-    // Sequences are much simpler than function because all the elements in its domain are unique
+    // Sequences are much simpler than functions because all the elements in its domain are unique.
+
     // Create a sequence cell.
     val seqType = CellT.fromType1(SeqT1(elemType))
     var nextState = state.updateArena(_.appendCell(seqType))
