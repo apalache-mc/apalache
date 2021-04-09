@@ -55,10 +55,17 @@ fi
 TAG_NAME="v${VERSION}"
 
 # Package the artifacts
+# The archives without version suffix support stable links to the latest version.
+# See https://github.com/informalsystems/apalache/issues/716
 ZIPF="target/apalache-${TAG_NAME}.zip"
-TGZF="target/apalache-${TAG_NAME}.tgz"
+ZIPF_NO_VER="target/apalache.zip"
 zip -r "$ZIPF" bin/apalache-mc "$RELEASE_JAR"
+zip -r "$ZIPF_NO_VER" bin/apalache-mc "$RELEASE_JAR"
+
+TGZF="target/apalache-${TAG_NAME}.tgz"
+TGZF_NO_VER="target/apalache.tgz"
 tar zpcf "$TGZF" bin/apalache-mc "$RELEASE_JAR"
+tar zpcf "$TGZF_NO_VER" bin/apalache-mc "$RELEASE_JAR"
 
 # Tag the commit and push the tag
 git tag -a "$TAG_NAME" -m "$msg"
@@ -67,6 +74,7 @@ git push --tags
 # Publish the release
 body=$(cat "$RELEASE_NOTES")
 hub release create \
-    --attach="$ZIPF" --attach="$TGZF" \
+    --attach="$ZIPF" --attach="$ZIPF_NO_VER" \
+    --attach="$TGZF" --attach="$TGZF_NO_VER" \
     --message="$TAG_NAME" --message="$body" \
     "$TAG_NAME"
