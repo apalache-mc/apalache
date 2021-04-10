@@ -83,7 +83,7 @@ sealed trait BuilderDecl {}
  * @param formalParams formal parameters
  * @param body         the definition body
  */
-case class BuilderOperDecl(name: String, formalParams: List[FormalParam], body: BuilderEx) extends BuilderDecl
+case class BuilderOperDecl(name: String, formalParams: List[OperParam], body: BuilderEx) extends BuilderDecl
 
 /**
  * <p>A builder for TLA expressions. A singleton instance of this class is defined in *.lir.convenience.</p>
@@ -144,7 +144,7 @@ class Builder {
 
   /** Declarations */
 
-  def declOp(name: String, body: BuilderEx, params: FormalParam*): BuilderOperDecl = {
+  def declOp(name: String, body: BuilderEx, params: OperParam*): BuilderOperDecl = {
     BuilderOperDecl(name, params.toList, body)
   }
 

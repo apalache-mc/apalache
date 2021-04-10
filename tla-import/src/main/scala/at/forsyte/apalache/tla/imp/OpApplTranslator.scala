@@ -229,8 +229,7 @@ class OpApplTranslator(
   private def translateFormalParam(node: OpApplNode): TlaEx = {
     val oper = node.getOperator.asInstanceOf[FormalParamNode]
     // FIXME: should we extract the parameter from the context???
-    val formalParam =
-      FormalParamTranslator().translate(oper).asInstanceOf[OperFormalParam]
+    val formalParam = FormalParamTranslator().translate(oper)
     val exTran = ExprOrOpArgNodeTranslator(
         sourceStore,
         annotationStore,

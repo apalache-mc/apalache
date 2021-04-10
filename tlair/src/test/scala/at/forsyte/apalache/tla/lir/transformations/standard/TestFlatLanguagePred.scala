@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
-import at.forsyte.apalache.tla.lir.{SimpleFormalParam, TlaModule}
+import at.forsyte.apalache.tla.lir.{OperParam, TlaModule}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
@@ -23,8 +23,8 @@ class TestFlatLanguagePred extends LanguagePredTestSuite {
 
   test("a non-nullary let-in ") {
     val app = tla.appOp(tla.name("UserOp"), tla.int(3))
-    val letIn = tla.letIn(app,
-        tla.declOp("UserOp", tla.plus(tla.int(1), tla.name("x")), SimpleFormalParam("x")).untypedOperDecl())
+    val letIn =
+      tla.letIn(app, tla.declOp("UserOp", tla.plus(tla.int(1), tla.name("x")), OperParam("x")).untypedOperDecl())
     expectFail(pred.isExprOk(app))
   }
 

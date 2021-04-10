@@ -233,9 +233,8 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
           // Copy preserves typeTag and .isRecursive
           d.copy(
               name = opersAndFParamsNameMap(n),
-              formalParams = ps map {
-                case SimpleFormalParam(p)  => SimpleFormalParam(opersAndFParamsNameMap(p))
-                case OperFormalParam(p, a) => OperFormalParam(opersAndFParamsNameMap(p), a)
+              formalParams = ps map { case OperParam(p, a) =>
+                OperParam(opersAndFParamsNameMap(p), a)
               },
               // We recurse over operator bodies, because newRenamed contains parameter
               // and operator renamings
@@ -281,9 +280,8 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
           // Copy preserves typeTag and .isRecursive
           d.copy(
               name = offsetFn(n),
-              formalParams = params map {
-                case SimpleFormalParam(p)  => SimpleFormalParam(offsetFn(p))
-                case OperFormalParam(p, a) => OperFormalParam(offsetFn(p), a)
+              formalParams = params map { case OperParam(p, a) =>
+                OperParam(offsetFn(p), a)
               },
               body = self(b)
           )

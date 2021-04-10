@@ -90,19 +90,19 @@ package object aux {
     case (NameEx(n1), NameEx(n2)) if n1 == n2 => ex1
     case (LetInEx(b1, decls1 @ _*), LetInEx(b2, decls2 @ _*)) =>
       val defaultDecl = TlaOperDecl("Null", List.empty, NullEx)
-      val defaultParam = SimpleFormalParam("diffParam")
+      val defaultParam = OperParam("diffParam")
       val declDiff = decls1.zipAll(decls2, defaultDecl, defaultDecl) map { case (d1, d2) =>
         if (d1.name == d2.name && d1.formalParams == d2.formalParams)
           d1.copy(body = diff(d1.body, d2.body))
         else {
           val name = s"DiffDecl_${d1.name}_${d2.name}"
           val params = d1.formalParams.zipAll(d2.formalParams, defaultParam, defaultParam) map {
-            case (par1 @ SimpleFormalParam(p1), SimpleFormalParam(p2)) if p1 == p2 =>
+            case (par1 @ OperParam(p1, 0), OperParam(p2, 0)) if p1 == p2 =>
               par1
-            case (par1 @ OperFormalParam(p1, n1), OperFormalParam(p2, n2)) if p1 == p2 && n1 == n2 =>
+            case (par1 @ OperParam(p1, n1), OperParam(p2, n2)) if p1 == p2 && n1 == n2 =>
               par1
             case (par1, par2) =>
-              SimpleFormalParam(s"DiffParam_${par1.name}_${par2.name}")
+              OperParam(s"DiffParam_${par1.name}_${par2.name}")
           }
           TlaOperDecl(name, params, diff(d1.body, d2.body))
         }

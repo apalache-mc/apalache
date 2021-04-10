@@ -35,7 +35,7 @@ class TestToEtcExprDecls extends FunSuite with BeforeAndAfterEach with EtcBuilde
     //   x > 0
     val cmp = tla.lt(tla.name("x"), tla.int(0))
     // "be like a proton, always positive"
-    val positive = TlaOperDecl("Positive", List(SimpleFormalParam("x")), cmp)
+    val positive = TlaOperDecl("Positive", List(OperParam("x")), cmp)
     annotationStore += positive.ID -> List(StandardAnnotations.mkType("Int => Bool"))
 
     // becomes:

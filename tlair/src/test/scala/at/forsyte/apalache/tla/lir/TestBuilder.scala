@@ -39,19 +39,19 @@ class TestBuilder extends FunSuite with TestingPredefs {
     val decl4 = bd.declOp("A", bd.appOp(n_B, n_x), "x", ("B", 1)).untypedOperDecl()
 
     assert(decl1 == TlaOperDecl("A", List(), n_c))
-    assert(decl2 == TlaOperDecl("A", List(SimpleFormalParam("x")), n_x))
+    assert(decl2 == TlaOperDecl("A", List(OperParam("x")), n_x))
     assert(
         decl3 ==
           TlaOperDecl(
               "A",
-              List(OperFormalParam("B", 0)),
+              List(OperParam("B", 0)),
               OperEx(TlaOper.apply, n_B)
           ))
     assert(
         decl4 ==
           TlaOperDecl(
               "A",
-              List(SimpleFormalParam("x"), OperFormalParam("B", 1)),
+              List(OperParam("x"), OperParam("B", 1)),
               OperEx(TlaOper.apply, n_B, n_x)
           ))
 

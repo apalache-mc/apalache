@@ -219,7 +219,7 @@ trait IrGenerators {
       nparams <- choose(0, maxArgs)
       params <- listOfN(nparams, identifier)
       tt <- genTypeTag
-    } yield TlaOperDecl(name, params map (n => SimpleFormalParam(n)), body).withTag(tt)
+    } yield TlaOperDecl(name, params map (n => OperParam(n)), body).withTag(tt)
   }
 
   /**

@@ -292,7 +292,7 @@ object JsonReader {
   }
 
   // expect ujson.Value to be an encoding of TLA+ params array
-  def parseParams(v: ujson.Value): Seq[FormalParam] = {
+  def parseParams(v: ujson.Value): Seq[OperParam] = {
     // it should be a JSON array
     val arr = v.arrOpt match {
       case Some(value) => value
@@ -302,7 +302,7 @@ object JsonReader {
   }
 
   // expect ujson.Value to be an encoding of a parameter
-  def parseParam(v: ujson.Value): FormalParam = {
+  def parseParam(v: ujson.Value): OperParam = {
     // it should be a JSON object
     val m = v.objOpt match {
       case Some(value) => value
@@ -314,9 +314,6 @@ object JsonReader {
     )
       throw new Exception("incorrect TLA+ JSON: malformed parameter")
     val arity = m("arity").num.toInt
-    if (arity == 0)
-      SimpleFormalParam(m("name").str)
-    else
-      OperFormalParam(m("name").str, arity)
+    OperParam(m("name").str, arity)
   }
 }
