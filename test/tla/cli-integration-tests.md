@@ -143,6 +143,19 @@ EXITCODE: OK
 ...
 ```
 
+### test TestGen finds an example
+
+This simple test demonstrates how to test a spec by isolating the input with
+generators.
+
+```sh
+$ apalache-mc test TestGen.tla Prepare Test Assertion | sed 's/I@.*//'
+...
+The outcome is: Error
+Checker has found an example. Check counterexample.tla.
+...
+```
+
 ## running the check command
 
 #### check factorization find a counterexample

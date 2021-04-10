@@ -122,6 +122,7 @@ object KeraLanguagePred {
         TlaSeqOper.len,
         TlcOper.printT, // TODO: preprocess into NullEx in Keramelizer
         ApalacheOper.skolem,
+        ApalacheOper.gen,
         ApalacheOper.expand,
         ApalacheOper.constCard
         // for the future

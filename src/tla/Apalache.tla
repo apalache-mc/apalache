@@ -29,6 +29,16 @@
 x := e == x = e
 
 (*****************************************************************************)
+(* A generator of a data structure. Given a positive integer `bound`, and    *)
+(* assuming that the type of the operator application is known, we           *)
+(* recursively generate a TLA+ data structure as a tree, whose width is      *)
+(* bound by the number `bound`.                                              *)
+(*                                                                           *)
+(* The body of this operator is redefined by Apalache.                       *)
+(*****************************************************************************)
+Gen(size) == {}
+
+(*****************************************************************************)
 (* As TLA+ is untyped, one can use function- and sequence-specific operators *)
 (* interchangeably. However, to maintain correctness w.r.t. our type-system, *)
 (* an explicit cast is needed when using functions as sequences.             *)
