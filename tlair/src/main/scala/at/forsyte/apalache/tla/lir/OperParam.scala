@@ -1,8 +1,9 @@
 package at.forsyte.apalache.tla.lir
 
 /**
- * A formal parameter of an operator. A parameter is either: non-operator (`arity = 0`), or operator (`arity > 0`).
- * Higher-order parameters are operators themselves. We declare it as a case class, in order to have `equals`
+ * A formal parameter of an operator. A parameter is either: a value (`arity = 0`), or an operator (`arity > 0`).
+ * Higher-order operators have at least one parameter that is an operator itself.
+ * We declare `OperParam` as a case class, in order to have `equals`
  * and pattern-matching.
  */
 case class OperParam(val name: String, val arity: Int) extends Serializable {
