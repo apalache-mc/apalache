@@ -162,7 +162,7 @@ The `value` field depends on the kind of `TlaValue`:
 1. For `TlaBool`: a JSON Boolean
 1. For `TlaInt(bigIntValue)`: 
   1. If `bigIntValue.isValidInt`: a JSON number
-  2. Otherwise: `{ "bigInt: bigIntValue.toString() }`
+  2. Otherwise: `{ "bigInt": bigIntValue.toString() }`
 1. For `TlaDecimal(decValue)`: a JSON string `decValue.toString`
 
 The reason for the non-uniform treatment of integers, is that Apalache encodes its TLA+ integers as `BigInt`, which means that it permits values, for which `.isValidInt` does not hold. 
