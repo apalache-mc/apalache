@@ -10,37 +10,43 @@ abstract class TlaFunOper extends TlaOper {
 object TlaFunOper {
 
   /**
-   * A function constructor like the one for the records: [ k_1 |-> v_1, ..., k_n |-> v_n ].
+   * <p>A function constructor like the one for the records: [ k_1 |-> v_1, ..., k_n |-> v_n ].
    * The order of the arguments is: (k_1, v_1, ..., k_n, v_n).
-   * Note that in case of records, k_1, ..., k_n are strings, that is, ValEx(TlaStr(...)), not NameEx.
+   * Note that in case of records, k_1, ..., k_n are strings, that is, ValEx(TlaStr(...)), not NameEx.</p>
+   *
+   * <p>Although this constructor could be used for functions in general, it is used only for the records in TLA+.
+   * That is why we call it "REC_CTOR".</p>
    */
   object enum extends TlaFunOper {
     override def arity: OperArity = new OperArity(k => k >= 2 && k % 2 == 0)
-    override val name: String = "fun-enum"
+
+    override val name: String = "RECORD"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
   /**
-   * Define a tuple by listing its elements, i.e., < e_1, ..., e_k >.
-   * One can use enum to achieve the same effect.
+   * Define a tuple by listing its elements: `<< e_1, ..., e_k >>`.
+   * Note that tuples are indistinguishable from sequences in pure TLA+, this can be also used to construct a sequence.
    */
   object tuple extends TlaFunOper {
     override val arity = AnyArity()
-    override val name = "<<...>>"
+    override val name = "TUPLE"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
   /**
-   * A function application, e.g., f[e].
+   * A function application: `f[e]`. Note that `f` can be: a function, a record, a tuple, or a sequence.
    * The order of the arguments is: (f, e).
    */
   object app extends TlaFunOper {
     override val arity: OperArity = FixedArity(2)
-    override val name: String = "fun-app"
+    override val name: String = "FUN_APP"
     override val precedence: (Int, Int) = (16, 16)
   }
 
-  /** DOMAIN f */
+  /**
+   * A function domain: `DOMAIN f`. Note that `f` can be: a function, a record, a tuple, or a sequence.
+   */
   object domain extends TlaFunOper {
     override val arity: OperArity = FixedArity(1)
     override val name: String = "DOMAIN"
@@ -48,18 +54,19 @@ object TlaFunOper {
   }
 
   /**
-   * A function constructor: [ x \in S |-> e ]. In fact, it is a lambda function (NOT the TLA+ LAMBDA!)
-   * Similar to \E and \A, one can use many combinations of variables and tuples, e.g.,
-   * [ x, y \in S, <<a, b>> \in S |-> e ]. We translate function constructors
+   * A function constructor: `[ x \in S |-> e ]`. In fact, it is a lambda function (NOT the TLA+ LAMBDA!)
+   * Similar to `\E` and `\A`, one can use many combinations of variables and tuples, e.g.,
+   * `[ x, y \in S, <<a, b>> \in S |-> e ]`. We translate function constructors
    * in a list of fixed structure, where the defining expression comes first and every variables (or a tuple)
-   * comes with its bounding set, e.g., (e, x, S, y, S, <<a, b>>, S).
+   * comes with its bounding set, e.g., `(e, x, S, y, S, <<a, b>>, S)`.
    *
-   * The arguments are always an odd-length list
-   * of the following structure: body, x_1, S_1, ..., x_k, S_k.
+   * <p>The arguments are always an odd-length list
+   * of the following structure: body, x_1, S_1, ..., x_k, S_k.</p>
    */
   object funDef extends TlaFunOper {
     override def arity: OperArity = new OperArity(k => k >= 3 && k % 2 == 1)
-    override val name: String = "fun-def"
+
+    override val name: String = "FUN_CTOR"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
@@ -114,7 +121,9 @@ object TlaFunOper {
    */
   object recFunDef extends TlaFunOper {
     override def arity: OperArity = new OperArity(_ >= 3)
-    override def name: String = "rec-fun-def"
+
+    override def name: String = "FUN_REC_CTOR"
+
     override def precedence: (Int, Int) = (100, 100) // as the operator declaration
   }
 
@@ -129,7 +138,9 @@ object TlaFunOper {
      * A unique name that can be used to refer to a recursive function inside its body.
      */
     val uniqueName = "$recFun"
-    override def name: String = "rec-fun-ref"
+
+    override def name: String = "FUN_REC_REF"
+
     override def arity: OperArity = FixedArity(0)
     override def precedence: (Int, Int) = (16, 16) // as function application
   }

@@ -612,7 +612,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         "Implies",
         OperEx(TlaBoolOper.implies, ValEx(TlaBool(false)), ValEx(TlaBool(true)))
     )
-    expectDecl("Subset", OperEx(TlaSetOper.SUBSET, NameEx("x")))
+    expectDecl("Subset", OperEx(TlaSetOper.powerset, NameEx("x")))
     expectDecl("Union", OperEx(TlaSetOper.union, NameEx("x")))
     expectDecl("Domain", OperEx(TlaFunOper.domain, NameEx("x")))
     expectDecl(
