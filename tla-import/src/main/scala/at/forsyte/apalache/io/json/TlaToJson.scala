@@ -220,14 +220,20 @@ class TlaToJson[T <: JsonRepresentation](
   }
 
   override def apply(module: TlaModule): T = {
-    val declJsons = module.declarations map { d =>
-      apply(d)
-    }
+    val declJsons = module.declarations map apply
     factory.mkObj(
-        versionFieldName -> JsonVersion.current,
         kindFieldName -> "TlaModule",
         "name" -> module.name,
         "declarations" -> factory.fromTraversable(declJsons)
+    )
+  }
+
+  override def makeRoot(modules: Traversable[TlaModule]): T = {
+    val moduleJsons = modules map apply
+    factory.mkObj(
+        "name" -> "ApalacheIR",
+        versionFieldName -> JsonVersion.current,
+        "modules" -> factory.fromTraversable(moduleJsons)
     )
   }
 }

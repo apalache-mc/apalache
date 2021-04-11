@@ -104,17 +104,25 @@ Example:
 }
 ```
 
-## 5. Version information
-JSON serializations of `TlaModule`s contain a filed named `version`, holding a string representation of the current JSON encoding version, shaped `{major}.{minor}`.
+## 5. Root wrapper
+JSON serializations of one or more `TlaModule`s are wrapped in a root object with two required fields:
+ -`version`, the value of which is a string representation of the current JSON encoding version, shaped `{major}.{minor}`, and
+ -`modules`, the value of which is an array containing the JSON encodings of zero or more `TlaModule`s
+It may optionally contain a field `"name" : "ApalacheIR"`.
 This document defines JSON Version 1.0. If and when a different JSON version is defined, this document will be updated accordingly.
 Apalache may refuse to import, or trigger warnings for, JSON objects with obsolete versions of the encoding in the future.
 Example:
 ```
 {
-  "kind": "TlaModule",
-  "name": "MyModule",
+  "name": "ApalacheIR",
   "version": "1.0"
-  ...
+  "modules" = [
+    {
+      "kind": "TlaModule",
+      "name": "MyModule",
+      ...
+    },
+    ...]
 }
 ```
 
