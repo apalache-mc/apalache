@@ -18,7 +18,7 @@ class TestTlaToUJson extends FunSuite with BeforeAndAfterEach with TestingPredef
   }
   val enc = new TlaToUJson
 
-  val kindField = enc.kindFieldName
+  val kindField = TlaToJson.kindFieldName
 
   def getEncVal(ex: TlaEx): ujson.Value = enc(ex).value
   def getEncVal(decl: TlaDecl): ujson.Value = enc(decl).value

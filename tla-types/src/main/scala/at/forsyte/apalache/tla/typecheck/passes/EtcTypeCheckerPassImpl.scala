@@ -81,7 +81,8 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
     val outFile = new File(outdir.toFile, s"out-$prefix-$name.json")
     val writer = new PrintWriter(new FileWriter(outFile, false))
     try {
-      val jsonText = new TlaToUJson().apply(module).toString
+      val sourceLocator: SourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)
+      val jsonText = new TlaToUJson(Some(sourceLocator)).apply(module).toString
       writer.write(jsonText)
       logger.debug(" > JSON output: " + outFile)
     } finally {
