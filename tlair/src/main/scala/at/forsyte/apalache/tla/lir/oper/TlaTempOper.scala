@@ -21,7 +21,7 @@ object TlaTempOper {
   }
 
   /**
-   * The LTL box operator: `<>P`.
+   * The LTL diamond operator: `<>P`.
    */
   object diamond extends TlaTempOper {
     override val name: String = "EVENTUALLY"
