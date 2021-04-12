@@ -235,11 +235,15 @@ simply syntax sugar for the form with nested quantifiers: <code>\A x \in S: \A y
   \* TRUE
 </code></pre>
 <p><strong>Example in Python:</strong> Python conveniently offers us a concise syntax:</p>
-<pre><code class="language-python">  S = frozenset({1, 2, 3, 4})
-  all(x &gt; 0 for x in S)         # True
-  all(x &gt; 2 for x in S)         # False
-  T2 = frozenset((x, y) for x in [1, 2] for y in [3, 4])
-  all(x &lt; y for (x, y) in T2)   # True
+<pre><code class="language-python">&gt;&gt;&gt; S = {1, 2, 3, 4}
+&gt;&gt;&gt; all(x &gt; 0 for x in S)
+True
+&gt;&gt;&gt; all(x &gt; 2 for x in S)
+False
+&gt;&gt;&gt; T2 = {(x, y) for x in [1, 2] for y in [3, 4]}
+&gt;&gt;&gt; all(x &lt; y for (x, y) in T2)
+True
+
 </code></pre>
 <hr />
 <p><a name="existsBounded"></a></p>
@@ -302,11 +306,15 @@ simply syntax sugar for the form with nested quantifiers: <code>\E x \in S: \E y
   \* TRUE
 </code></pre>
 <p><strong>Example in Python:</strong> Python conveniently offers us a concise syntax:</p>
-<pre><code class="language-python">  S = frozenset({1, 2, 3, 4})
-  some(x &gt; 0 for x in S)        # True
-  some(x &gt; 2 for x in S)        # False
-  T2 = frozenset((x, y) for x in [1, 2] for y in [3, 4])
-  some(x &lt; y for (x, y) in T2)  # True
+<pre><code class="language-python">&gt;&gt;&gt; S = {1, 2, 3, 4}
+&gt;&gt;&gt; any(x &gt; 0 for x in S)
+True
+&gt;&gt;&gt; any(x &gt; 2 for x in S)
+True
+&gt;&gt;&gt; T2 = {(x, y) for x in [1, 2] for y in [3, 4]}
+&gt;&gt;&gt; any(x &lt; y for (x, y) in T2)
+True
+
 </code></pre>
 <hr />
 <p><a name="eq"></a></p>
@@ -382,30 +390,50 @@ match.</p>
   [ a |-&gt; 1, b |-&gt; 3 ] = [ a |-&gt; 1, b |-&gt; 3 ]           \* TRUE
   [ a |-&gt; 1, b |-&gt; 3 ] = [ a |-&gt; 1 ]                    \* FALSE
   [ x \in 2..2 |-&gt; x + x ] = [ x \in {2} |-&gt; 2 * x ]    \* TRUE
-  [ x \in 2..3 |-&gt; x + x ] = [ x \in {2, 3} |-&gt; 2 * x ] \* FALSE
+  [ x \in 2..3 |-&gt; x + x ] = [ x \in {2, 3} |-&gt; 2 * x ] \* TRUE
 </code></pre>
 <p><strong>Example in Python:</strong> The standard data structures also implement
 structural equality in Python, though we have to be careful to
 use <code>==</code> instead of <code>=</code>:</p>
-<pre><code class="language-python">  False == False
-  False == True
-  10 == 20
-  15 == 15
-  &quot;Hello&quot; == &quot;world&quot;
-  &quot;Hello&quot; == &quot;hello&quot;
-  &quot;Bob&quot; == &quot;Bob&quot;
-  frozenset({ 1, 2 }) == frozenset({ 2, 3 })
-  frozenset({ 1, 2 }) == frozenset({ 2, 1 })
-  frozenset({ 1 }) - frozenset({ 1 }) == frozenset({ &quot;a&quot; }) - frozenset({ &quot;a&quot; })
-  frozenset({ frozenset({ 1, 2 }) }) == frozenset({ frozenset({ 1, 2, 2, 2 }) })
-  (1, &quot;a&quot;) == (1, &quot;a&quot;)
-  (1, &quot;a&quot;) == (1, &quot;b&quot;)
-  (1, False) == (2, )
-  (1, 2) == (1, 2, 3)
-  { &quot;a&quot;: 1, &quot;b&quot;: 3 } == { &quot;a&quot;: 1, &quot;b&quot;: 3 }
-  { &quot;a&quot;: 1, &quot;b&quot;: 3 } == { &quot;a&quot;: 1 }
-  { x: (x + x) for x in { 2 } } == { x: (x * x) for x in { 2 } }
-  { x: (x + x) for x in { 2, 3 } } == { x: 2 * x for x in { 2, 3 } }
+<pre><code class="language-python">&gt;&gt;&gt; False == False
+True
+&gt;&gt;&gt; False == True
+False
+&gt;&gt;&gt; 10 == 20
+False
+&gt;&gt;&gt; 15 == 15
+True
+&gt;&gt;&gt; &quot;Hello&quot; == &quot;world&quot;
+False
+&gt;&gt;&gt; &quot;Hello&quot; == &quot;hello&quot;
+False
+&gt;&gt;&gt; &quot;Bob&quot; == &quot;Bob&quot;
+True
+&gt;&gt;&gt; { 1, 2 } == { 2, 3 }
+False
+&gt;&gt;&gt; { 1, 2 } == { 2, 1 }
+True
+&gt;&gt;&gt; { 1 } - { 1 } == { &quot;a&quot; } - { &quot;a&quot; }
+True
+&gt;&gt;&gt; { frozenset({ 1, 2 }) } == { frozenset({ 1, 2, 2, 2 }) }
+True
+&gt;&gt;&gt; (1, &quot;a&quot;) == (1, &quot;a&quot;)
+True
+&gt;&gt;&gt; (1, &quot;a&quot;) == (1, &quot;b&quot;)
+False
+&gt;&gt;&gt; (1, False) == (2, )
+False
+&gt;&gt;&gt; (1, 2) == (1, 2, 3)
+False
+&gt;&gt;&gt; { &quot;a&quot;: 1, &quot;b&quot;: 3 } == { &quot;a&quot;: 1, &quot;b&quot;: 3 }
+True
+&gt;&gt;&gt; { &quot;a&quot;: 1, &quot;b&quot;: 3 } == { &quot;a&quot;: 1 }
+False
+&gt;&gt;&gt; { x: (x + x) for x in { 2 } } == { x: (x * x) for x in { 2 } }
+True
+&gt;&gt;&gt; { x: (x + x) for x in { 2, 3 } } == { x: 2 * x for x in { 2, 3 } }
+True
+
 </code></pre>
 <hr />
 <p><a name="neq"></a></p>
@@ -498,9 +526,9 @@ def choose(s):
 
 
 if __name__ == &quot;__main__&quot;:
-    s = frozenset({ 1, 2, 3})
+    s = { 1, 2, 3}
     print(&quot;CHOOSE {} = {}&quot;.format(s, choose(s)))
-    s2 = frozenset({ frozenset({1}), frozenset({2}), frozenset({3})})
+    s2 = { frozenset({1}), frozenset({2}), frozenset({3})}
     print(&quot;CHOOSE {} = {}&quot;.format(s2, choose(s2)))
 </code></pre>
 <hr />
