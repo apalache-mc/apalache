@@ -50,9 +50,6 @@ import at.forsyte.apalache.tla.lir.storage.SourceLocator
  *    }
  *  ]
  * }
- *
- * @param factory A json factory for the `T` variant of JsonRepresentation
- * @tparam T Any class extending JsonRepresentation
  */
 class TlaToJson[T <: JsonRepresentation](
     factory: JsonFactory[T], locatorOpt: Option[SourceLocator] = None
