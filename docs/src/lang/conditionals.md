@@ -64,7 +64,7 @@ evaluates to `TRUE`; and it evaluates to `0`, when `x` evaluates to `FALSE`.
 
 **Example in Python:**
 
-```tla
+```python
 100 if x else 0
 ```
 
