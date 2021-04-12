@@ -4,7 +4,7 @@
     <groupId>at.forsyte.apalache</groupId>
     <artifactId>apalache</artifactId>
     <packaging>pom</packaging>
-    <version>0.15.2-SNAPSHOT</version>
+    <version>0.15.3-SNAPSHOT</version>
 
     <name>APALACHE project</name>
     <url>https://github.com/informalsystems/apalache</url>
@@ -16,7 +16,7 @@
         <scoverage.plugin.version>1.4.1</scoverage.plugin.version>
         <scoverage.aggregate>true</scoverage.aggregate>
         <logback.version>1.2.3</logback.version>
-        <spotless.version>2.9.0</spotless.version>
+        <spotless.version>2.10.0</spotless.version>
     </properties>
 
     <repositories>
