@@ -83,11 +83,15 @@ simply syntax sugar for the form with nested quantifiers: `\A x \in S: \A y
 **Example in Python:** Python conveniently offers us a concise syntax:
 
 ```python
-  S = frozenset({1, 2, 3, 4})
-  all(x > 0 for x in S)         # True
-  all(x > 2 for x in S)         # False
-  T2 = frozenset((x, y) for x in [1, 2] for y in [3, 4])
-  all(x < y for (x, y) in T2)   # True
+>>> S = {1, 2, 3, 4}
+>>> all(x > 0 for x in S)
+True
+>>> all(x > 2 for x in S)
+False
+>>> T2 = {(x, y) for x in [1, 2] for y in [3, 4]}
+>>> all(x < y for (x, y) in T2)
+True
+
 ```
 
 ----------------------------------------------------------------------------
@@ -170,11 +174,15 @@ S: P`.
 **Example in Python:** Python conveniently offers us a concise syntax:
 
 ```python
-  S = frozenset({1, 2, 3, 4})
-  some(x > 0 for x in S)        # True
-  some(x > 2 for x in S)        # False
-  T2 = frozenset((x, y) for x in [1, 2] for y in [3, 4])
-  some(x < y for (x, y) in T2)  # True
+>>> S = {1, 2, 3, 4}
+>>> any(x > 0 for x in S)
+True
+>>> any(x > 2 for x in S)
+True
+>>> T2 = {(x, y) for x in [1, 2] for y in [3, 4]}
+>>> any(x < y for (x, y) in T2)
+True
+
 ```
 
 ----------------------------------------------------------------------------
@@ -258,7 +266,7 @@ match.
   [ a |-> 1, b |-> 3 ] = [ a |-> 1, b |-> 3 ]           \* TRUE
   [ a |-> 1, b |-> 3 ] = [ a |-> 1 ]                    \* FALSE
   [ x \in 2..2 |-> x + x ] = [ x \in {2} |-> 2 * x ]    \* TRUE
-  [ x \in 2..3 |-> x + x ] = [ x \in {2, 3} |-> 2 * x ] \* FALSE
+  [ x \in 2..3 |-> x + x ] = [ x \in {2, 3} |-> 2 * x ] \* TRUE
 ```
 
 **Example in Python:** The standard data structures also implement
@@ -266,25 +274,45 @@ match.
     use `==` instead of `=`:
 
 ```python
-  False == False
-  False == True
-  10 == 20
-  15 == 15
-  "Hello" == "world"
-  "Hello" == "hello"
-  "Bob" == "Bob"
-  frozenset({ 1, 2 }) == frozenset({ 2, 3 })
-  frozenset({ 1, 2 }) == frozenset({ 2, 1 })
-  frozenset({ 1 }) - frozenset({ 1 }) == frozenset({ "a" }) - frozenset({ "a" })
-  frozenset({ frozenset({ 1, 2 }) }) == frozenset({ frozenset({ 1, 2, 2, 2 }) })
-  (1, "a") == (1, "a")
-  (1, "a") == (1, "b")
-  (1, False) == (2, )
-  (1, 2) == (1, 2, 3)
-  { "a": 1, "b": 3 } == { "a": 1, "b": 3 }
-  { "a": 1, "b": 3 } == { "a": 1 }
-  { x: (x + x) for x in { 2 } } == { x: (x * x) for x in { 2 } }
-  { x: (x + x) for x in { 2, 3 } } == { x: 2 * x for x in { 2, 3 } }
+>>> False == False
+True
+>>> False == True
+False
+>>> 10 == 20
+False
+>>> 15 == 15
+True
+>>> "Hello" == "world"
+False
+>>> "Hello" == "hello"
+False
+>>> "Bob" == "Bob"
+True
+>>> { 1, 2 } == { 2, 3 }
+False
+>>> { 1, 2 } == { 2, 1 }
+True
+>>> { 1 } - { 1 } == { "a" } - { "a" }
+True
+>>> { frozenset({ 1, 2 }) } == { frozenset({ 1, 2, 2, 2 }) }
+True
+>>> (1, "a") == (1, "a")
+True
+>>> (1, "a") == (1, "b")
+False
+>>> (1, False) == (2, )
+False
+>>> (1, 2) == (1, 2, 3)
+False
+>>> { "a": 1, "b": 3 } == { "a": 1, "b": 3 }
+True
+>>> { "a": 1, "b": 3 } == { "a": 1 }
+False
+>>> { x: (x + x) for x in { 2 } } == { x: (x * x) for x in { 2 } }
+True
+>>> { x: (x + x) for x in { 2, 3 } } == { x: 2 * x for x in { 2, 3 } }
+True
+
 ```
 
 ----------------------------------------------------------------------------
@@ -403,9 +431,9 @@ def choose(s):
 
 
 if __name__ == "__main__":
-    s = frozenset({ 1, 2, 3})
+    s = { 1, 2, 3}
     print("CHOOSE {} = {}".format(s, choose(s)))
-    s2 = frozenset({ frozenset({1}), frozenset({2}), frozenset({3})})
+    s2 = { frozenset({1}), frozenset({2}), frozenset({3})}
     print("CHOOSE {} = {}".format(s2, choose(s2)))
 ```
 
