@@ -2,6 +2,15 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.15.2
+
+### Features
+
+* Manual: added manual page on known issues
+* IR: added `Apalache!Gen` to generate bounded data structures, see #622
+* Checker: added support for `Apalache!Gen`, see #622
+* Tool: added a new command `test` to quickly evaluate an action in isolation, see #622
+
 ## 0.15.1
 
 ### Features
