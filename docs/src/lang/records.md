@@ -85,6 +85,9 @@ immutable dictionary.
 interleaved. At least one field is expected. Note that field names are TLA+
 identifiers, not strings.
 
+**Apalache type:** `(a_1, ..., a_n) => [field_1: a_1, ..., field_n: a_n]`, for
+some types `a_1, ..., a_n`.
+
 **Effect:** The record constructor returns a function `r` that is constructed
 as follows:
 
@@ -121,6 +124,9 @@ as follows:
 **Arguments:** An even number of arguments: field names and field values,
 interleaved. At least one field is expected. Note that field names are TLA+
 identifiers, not strings.
+
+**Apalache type:** `(Set(a_1), ..., Set(a_n)) => Set([field_1: a_1, ...,
+field_n: a_n])`, for some types `a_1, ..., a_n`.
 
 **Effect:** The record set constructor `[ field_1: S_1, ..., field_n: S_n]`
 is syntax sugar for the set comprehension:
@@ -160,13 +166,21 @@ is picked with `\E r \in [ field_1: S_1, ..., field_n: S_n]`.
 <a name="recApp"></a>
 ### Access by field name
 
-**Notation:** `r.field`
+**Notation:** `r.field_i`
 
-**LaTeX notation:** `r.field`
+**LaTeX notation:** `r.field_i`
 
 **Arguments:** Two arguments: a record and a field name (as an identifier).
 
-**Effect:** As records are also functions, this operator works as `r["field"]`.
+**Apalache type:** `[field_1: a_1, ..., field_i: a_i, ..., field_n: a_n]) =>
+a_i`, for some types `a_1, ..., a_n`. Due to the record unification rule, we
+usually write this type simply as: `[field_i: a_i] => a_i`.
+
+Note that `r.field_i` is just a syntax sugar for `r["field_i"]` in TLA+.
+Hence, if the type of `r` cannot be inferred, you can see an error message
+about Apalache not knowing, whether `r` is a record, or a function.
+
+**Effect:** As records are also functions, this operator works as `r["field_i"]`.
 
 Apalache treats records as values of a record type. In comparison to the
 general function application `r["field"]`, the operator `r.field` is handled

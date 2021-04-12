@@ -161,22 +161,6 @@ object TlaOper {
   }
 
   /**
-   * The CHOOSE idiom: CHOOSE x : x \notin S.
-   *
-   * Igor (28.08.2020): having this operator in the IR is a hack. We should just remove it.
-   */
-  object chooseIdiom extends TlaOper {
-    // TODO: move this operator to TlaBoolOper? (Igor)
-    override val name: String = "CHOOSEI"
-
-    override def arity: OperArity = FixedArity(1)
-
-    override def interpretation: Interpretation.Value = Interpretation.Predefined
-
-    override val precedence: (Int, Int) = (0, 0) // Section 15.2.1
-  }
-
-  /**
    * <p>An operator that decorates an expression with a label, e.g., l3(a, b) :: ex.
    * The order of the arguments is as follows: (1) the decorated expression, e.g., ex,
    * (2) the label, e.g., ValEx(TlaStr("l3")), and (3 to k) the label arguments,

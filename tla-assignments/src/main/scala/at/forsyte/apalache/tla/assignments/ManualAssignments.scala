@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.assignments
 
-import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaActionOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaActionOper, TlaOper}
 import at.forsyte.apalache.tla.lir._
 
 /**
@@ -24,7 +24,7 @@ object ManualAssignments {
    * List all variables with at least one manual assignment site
    */
   def findAll(ex: TlaEx): Set[varnameT] = ex match {
-    case OperEx(BmcOper.assign, OperEx(TlaActionOper.prime, NameEx(n)), _) =>
+    case OperEx(ApalacheOper.assign, OperEx(TlaActionOper.prime, NameEx(n)), _) =>
       Set(n)
     case OperEx(_, args @ _*) =>
       args.map(findAll).foldLeft(Set.empty[varnameT]) {

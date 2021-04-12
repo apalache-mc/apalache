@@ -62,8 +62,9 @@ kinds of values in a single set, TLC would not complain about your sets:
 
 
 
-Apalache requires set elements to have the same type. This is enforced by the
-type checker.
+Apalache requires set elements to have the same type, that is, `Set(a)` for
+some type `a`. This is enforced by the type checker.  (Records are an exception
+to this rule, as some records can be unified to a common type.) 
 
 ----------------------------------------------------------------------------
 
@@ -77,6 +78,8 @@ type checker.
 **LaTeX notation:** `{e_1, ..., e_n}`
 
 **Arguments:** Any number of arguments, `n >= 0`.
+
+**Apalache type:** `(a, ..., a) => Set(a)`, for some type `a`.
 
 **Effect:** Produce the set that contains the values of the expressions `e_1,
 ..., e_n`, in no particular order, and only these values. If `n = 0`, the
@@ -122,6 +125,8 @@ If this is not the case, the type checker flags an error.
 
 **Arguments:** Two arguments.  If the second argument is not a set, the result
 is undefined.
+
+**Apalache type:** `(a, Set(a)) => Bool`, for some type `a`.
 
 **Effect:** This operator evaluates to:
 
@@ -170,6 +175,8 @@ incompatible with the type of elements of `S`, or if `S` is not a set.
 
 **Arguments:** Two arguments.  If the second argument is not a set, the result
 is undefined.
+
+**Apalache type:** `(a, Set(a)) => Bool`, for some type `a`.
 
 **Effect:** This operator evaluates to:
 
@@ -227,6 +234,8 @@ see [Logic](./logic.md).
 **Arguments:** Two arguments.  If both arguments are not sets, the result
 is undefined.
 
+**Apalache type:** `(Set(a), Set(a)) => Bool`, for some type `a`.
+
 **Effect:** This operator evaluates to:
 
   - `TRUE`, if `S` and `T` are sets, and every element of `S` is a member of `T`;
@@ -261,140 +270,6 @@ either not sets, or sets of incompatible types.
 
 ----------------------------------------------------------------------------
 
-<a name="subset"></a>
-### Proper set inclusion
-
-**Notation:** `S \subset T`
-
-**LaTeX notation:** ![subset](./img/subset.png)
-
-**Arguments:** Two arguments.  If both arguments are not sets, the result
-is undefined.
-
-**Effect:** This operator evaluates to:
-
-  - `TRUE`, if `S \subseteq T /\ S /= T` evaluates to `TRUE`;
-  - `FALSE`, if `S` and `T` are sets, and `~(S \subseteq T) \/ S = T` evaluates
-    to `TRUE`.
-
-**Determinism:** Deterministic.
-
-**Errors:** Pure TLA+ does not restrict the operator arguments.  TLC flags a
-model checking error, when it discovers that elements of `S` cannot be compared
-to the elements of `T`. Apalache produces a static type error, `S` and `T` are
-either not sets, or sets of incompatible types.
-
-**Example in TLA+:**
-
-```tla
-     { 1, 2 } \subset { 1, 2, 3 }     \* TRUE
-  { 1, 2, 3 } \subset { 1, 2, 3 }     \* FALSE
-  { 1, 2, 3 } \subset { 1, 2 }        \* FALSE
-      { {1} } \subset { 1, 2, 3 }     \* FALSE, model checking error in TLC
-                                      \* static type error in Apalache
-```
-
-**Example in Python:** Python conveniently offers us `<`:
-
-```python
-  frozenset({1, 2}) < frozenset({1, 2, 3})             # True
-  frozenset({1, 2, 3}) < frozenset({1, 2, 3})          # False
-  frozenset({1, 2, 3}) < frozenset({1, 2})             # False
-  frozenset({frozenset({1})}) < frozenset({1, 2, 3})   # False
-```
-
-----------------------------------------------------------------------------
-
-<a name="supseteq"></a>
-### Set containment
-
-**Notation:** `S \supseteq T`
-
-**LaTeX notation:** ![supseteq](./img/supseteq.png)
-
-**Arguments:** Two arguments.  If both arguments are not sets, the result
-is undefined.
-
-**Effect:** This operator evaluates to:
-
-  - `TRUE`, if `S` and `T` are sets, and every element of `T` is a member of `S`;
-  - `FALSE`, if `S` and `T` are sets, and there is an element of `T` that
-    is not a member of `S`.
-
-  It is easy to see, that `S \supseteq T` if and only if `T \subseteq S`.
-
-**Determinism:** Deterministic.
-
-**Errors:** Pure TLA+ does not restrict the operator arguments.  TLC flags a
-model checking error, when it discovers that elements of `S` cannot be compared
-to the elements of `T`. Apalache produces a static type error, `S` and `T` are
-either not sets, or sets of incompatible types.
-
-**Example in TLA+:**
-
-```tla
-     { 1, 2 } \supseteq { 1, 2, 3 }     \* FALSE
-  { 1, 2, 3 } \supseteq { 1, 2, 3 }     \* TRUE
-  { 1, 2, 3 } \supseteq { 1, 2 }        \* TRUE
-      { {1} } \supseteq { 1, 2, 3 }     \* FALSE, model checking error in TLC
-                                        \* static type error in Apalache
-```
-
-**Example in Python:** Python conveniently offers us `>=`:
-
-```python
-  frozenset({1, 2}) >= frozenset({1, 2, 3})             # False
-  frozenset({1, 2, 3}) >= frozenset({1, 2, 3})          # True
-  frozenset({1, 2, 3}) >= frozenset({1, 2})             # True
-  frozenset({frozenset({1})}) >= frozenset({1, 2, 3})   # False
-```
-
-----------------------------------------------------------------------------
-
-<a name="supset"></a>
-### Proper set containment
-
-**Notation:** `S \supset T`
-
-**LaTeX notation:** ![supset](./img/supset.png)
-
-**Arguments:** Two arguments.  If both arguments are not sets, the result
-is undefined.
-
-**Effect:** This operator evaluates to:
-
-  - `TRUE`, if `S \supseteq T /\ S /= T` evaluates to `TRUE`;
-  - `FALSE`, if `S` and `T` are sets, and `~(S \supseteq T) \/ S = T` evaluates
-    to `TRUE`.
-
-**Determinism:** Deterministic.
-
-**Errors:** Pure TLA+ does not restrict the operator arguments.  TLC flags a
-model checking error, when it discovers that elements of `S` cannot be compared
-to the elements of `T`. Apalache produces a static type error, `S` and `T` are
-either not sets, or sets of incompatible types.
-
-**Example in TLA+:**
-
-```tla
-     { 1, 2 } \supset { 1, 2, 3 }       \* FALSE
-  { 1, 2, 3 } \supset { 1, 2, 3 }       \* FALSE
-  { 1, 2, 3 } \supset { 1, 2 }          \* TRUE
-      { {1} } \supseteq { 1, 2, 3 }     \* FALSE, model checking error in TLC
-                                        \* static type error in Apalache
-```
-
-**Example in Python:** Python conveniently offers us `>`:
-
-```python
-  frozenset({1, 2}) > frozenset({1, 2, 3})              # False
-  frozenset({1, 2, 3}) > frozenset({1, 2, 3})           # False
-  frozenset({1, 2, 3}) > frozenset({1, 2})              # True
-  frozenset({frozenset({1})}) >= frozenset({1, 2, 3})   # False
-```
-
-----------------------------------------------------------------------------
-
 <a name="union"></a>
 ### Binary set union
 
@@ -404,6 +279,8 @@ either not sets, or sets of incompatible types.
 
 **Arguments:** Two arguments.  If both arguments are not sets, the result
 is undefined.
+
+**Apalache type:** `(Set(a), Set(a)) => Set(a)`, for some type `a`.
 
 **Effect:** This operator evaluates to the set that contains the elements
 of `S` **as well** as the elements of `T`, and no other values.
@@ -447,6 +324,8 @@ either not sets, or sets of incompatible types.
 **Arguments:** Two arguments.  If both arguments are not sets, the result
 is undefined.
 
+**Apalache type:** `(Set(a), Set(a)) => Set(a)`, for some type `a`.
+
 **Effect:** This operator evaluates to the set that contains only those elements
 of `S` that **also** belong to `T`, and no other values.
 
@@ -488,6 +367,8 @@ either not sets, or sets of incompatible types.
 
 **Arguments:** Two arguments.  If both arguments are not sets, the result
 is undefined.
+
+**Apalache type:** `(Set(a), Set(a)) => Set(a)`, for some type `a`.
 
 **Effect:** This operator evaluates to the set that contains only those elements
 of `S` that **do not** belong to `T`, and no other values.
@@ -531,6 +412,12 @@ either not sets, or sets of incompatible types.
 **Arguments:** Three arguments: a variable name (or a tuple of names, see
 **Advanced syntax**), a set, and an expression.
 
+**Apalache type:** The formal type of this operator is a bit complex.
+Hence, we give an informal description:
+ - `x` has the type `a`, for some type `a`,
+ - `S` has the type `Set(a)`,
+ - `P` has the type `Bool`,
+ - the expression `{ x \in S: P }` has the type `Set(a)`.
 
 **Effect:** This operator constructs a new set `F` as follows.  For every
 element `e` of `S`, do the following (we give a sequence of steps to ease
@@ -589,6 +476,13 @@ syntax:
     a variable name (or a tuple of names, see **Advanced syntax**),
     a set. Additional arguments are variables names and sets, interleaved.
 
+**Apalache type:** The formal type of this operator is a bit complex.
+Hence, we give an informal description for the one-argument case:
+ - `x` has the type `a`, for some type `a`,
+ - `S` has the type `Set(a)`,
+ - `e` has the type `b`, for some type `b`,
+ - the expression `{ e: x \in S }` has the type `Set(b)`.
+
 
 **Effect:** We give the semantics for two arguments.
 We write it as a sequence of steps to ease understanding.
@@ -644,11 +538,10 @@ syntax:
 
 **LaTeX notation:** `SUBSET S`
 
-**Warning:** Do not confuse `SUBSET S` with `S \subset T`. These are two
-different operators, which unfortunately have similar-looking names.
-
 **Arguments:** One argument. If it is not a set, the result
 is undefined.
+
+**Apalache type:** `Set(a) => Set(Set(a))`, for some type `a`.
 
 **Effect:** This operator computes the set of all subsets of `S`.
     That is, the set `T` the has the following properties:
@@ -675,8 +568,8 @@ To appreciate the power of TLA+, see [subset.py](./examples/subset.py).
 
 ----------------------------------------------------------------------------
 
-<a name="fold"></a>
-### Set folding
+<a name="flatten"></a>
+### Set flattening
 
 **Notation:** `UNION S`
 
@@ -688,6 +581,8 @@ different operators, which unfortunately have similar-looking names.
 **Arguments:** One argument. If it is not a set of sets, the result
 is undefined.
 
+**Apalache type:** `Set(Set(a)) => Set(a)`, for some type `a`.
+
 **Effect:** Given that `S` is a set of sets, this operator computes the set
 `T` that contains all elements of elements of `S`:
 
@@ -695,7 +590,7 @@ is undefined.
  - If `y \in T`, then there is a set `Y \in S` that contains `y`,
     that is, `y \in Y`.
 
-In particular, `UNION` folds the explosion that is produced by `SUBSET`. That
+In particular, `UNION` flattens the powerset that is produced by `SUBSET`. That
 is, `(UNION (SUBSET S)) = S`.
 
 
@@ -733,6 +628,8 @@ in Python is quite simple:
 
 **Arguments:** One argument. If `S` is not a set, or `S` is an infinite set,
 the result is undefined.
+
+**Apalache type:** `Set(a) => Int`, for some type `a`.
 
 **Effect:** `Cardinality(S)` evaluates to the number of (unique) elements in
 `S`.
@@ -772,6 +669,8 @@ different from a finite set.
 **Warning:** `IsFinite(S)` is defined in the module `FiniteSets`.
 
 **Arguments:** One argument. If `S` is not a set, the result is undefined.
+
+**Apalache type:** `Set(a) => Bool`, for some type `a`.
 
 **Effect:** `IsFinite(S)` evaluates to:
 

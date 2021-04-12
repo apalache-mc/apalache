@@ -11,7 +11,7 @@ import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorM
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.tooling.Version
-import at.forsyte.apalache.tla.tooling.opt.{CheckCmd, ConfigCmd, General, ParseCmd, TypeCheckCmd}
+import at.forsyte.apalache.tla.tooling.opt.{CheckCmd, ConfigCmd, General, ParseCmd, TestCmd, TypeCheckCmd}
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import com.google.inject.{Guice, Injector}
 import com.typesafe.scalalogging.LazyLogging
@@ -68,7 +68,7 @@ object Tool extends App with LazyLogging {
         .parse(args)
         .withProgramName("apalache-mc")
         .version("%s build %s".format(Version.version, Version.build), "version")
-        .withCommands(new ParseCmd, new CheckCmd, new TypeCheckCmd, new ConfigCmd)
+        .withCommands(new ParseCmd, new CheckCmd, new TypeCheckCmd, new TestCmd, new ConfigCmd)
 
     if (!command.isInstanceOf[Some[General]]) {
       // A standard option, e.g., --version or --help. No header, no timer.
@@ -83,7 +83,7 @@ object Tool extends App with LazyLogging {
             logger.info("Parse " + parse.file)
             submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> "parse", "workers" -> "1"))
             val injector = injectorFactory(parse)
-            handleExceptions(injector, runParse(injector, parse, _))
+            handleExceptions(injector, runParse(injector, parse))
 
           case Some(check: CheckCmd) =>
             logger.info(
@@ -92,13 +92,21 @@ object Tool extends App with LazyLogging {
             // TODO: update workers when the multicore branch is integrated
             submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> "check", "workers" -> "1"))
             val injector = injectorFactory(check)
-            handleExceptions(injector, runCheck(injector, check, _))
+            handleExceptions(injector, runCheck(injector, check))
+
+          case Some(test: TestCmd) =>
+            logger.info(
+                "Checker options: filename=%s, before=%s, action=%s, after=%s"
+                  .format(test.file, test.before, test.action, test.assertion))
+            submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> "test", "workers" -> "1"))
+            val injector = injectorFactory(test)
+            handleExceptions(injector, runTest(injector, test))
 
           case Some(typecheck: TypeCheckCmd) =>
             logger.info("Type checking " + typecheck.file)
             submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> "typecheck", "workers" -> "1"))
             val injector = injectorFactory(typecheck)
-            handleExceptions(injector, runTypeCheck(injector, typecheck, _))
+            handleExceptions(injector, runTypeCheck(injector, typecheck))
 
           case Some(config: ConfigCmd) =>
             logger.info("Configuring Apalache")
@@ -125,7 +133,7 @@ object Tool extends App with LazyLogging {
           .format(ChronoUnit.SECONDS.between(startTime, endTime), ChronoUnit.MILLIS.between(startTime, endTime) % 1000))
   }
 
-  private def runParse(injector: Injector, parse: ParseCmd, u: Unit): Unit = {
+  private def runParse(injector: => Injector, parse: ParseCmd): Unit = {
     // here, we implement a terminal pass to get the parse results
     val executor = injector.getInstance(classOf[PassChainExecutor])
     executor.options.set("io.outdir", createOutputDir())
@@ -142,7 +150,7 @@ object Tool extends App with LazyLogging {
     }
   }
 
-  private def runCheck(injector: Injector, check: CheckCmd, u: Unit): Unit = {
+  private def runCheck(injector: => Injector, check: CheckCmd): Unit = {
     val executor = injector.getInstance(classOf[PassChainExecutor])
     executor.options.set("io.outdir", createOutputDir())
     var tuning =
@@ -180,7 +188,47 @@ object Tool extends App with LazyLogging {
     }
   }
 
-  private def runTypeCheck(injector: Injector, typecheck: TypeCheckCmd, u: Unit): Unit = {
+  private def runTest(injector: => Injector, test: TestCmd): Unit = {
+    // This is a special version of the `check` command that is tuned towards testing scenarios
+    val executor = injector.getInstance(classOf[PassChainExecutor])
+    executor.options.set("io.outdir", createOutputDir())
+    // Tune for testing:
+    //   1. Check the invariant only after the action took place.
+    //   2. Randomize
+    val seed = Math.abs(System.currentTimeMillis().toInt)
+    val tuning = Map("search.invariantFilter" -> "1", "smt.randomSeed" -> seed.toString)
+    logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
+
+    executor.options.set("general.tuning", tuning)
+    executor.options.set("general.debug", test.debug)
+    executor.options.set("smt.prof", test.smtprof)
+    executor.options.set("parser.filename", test.file.getAbsolutePath)
+    executor.options.set("checker.init", test.before)
+    executor.options.set("checker.next", test.action)
+    executor.options.set("checker.inv", List(test.assertion))
+    if (test.cinit != "") {
+      executor.options.set("checker.cinit", test.cinit)
+    }
+    executor.options.set("checker.nworkers", 1)
+    // check only one instance of the action
+    executor.options.set("checker.length", 1)
+    // no preliminary pruning of disabled transitions
+    executor.options.set("checker.discardDisabled", false)
+    executor.options.set("checker.noDeadlocks", false)
+    // prefer the offline mode as we have a single query
+    executor.options.set("checker.algo", "offline")
+    // for now, enable polymorphic types. We probably want to disable this option for the type checker
+    executor.options.set("typechecker.inferPoly", true)
+
+    val result = executor.run()
+    if (result.isDefined) {
+      logger.info("No example found")
+    } else {
+      logger.info("Checker has found an example. Check counterexample.tla.")
+    }
+  }
+
+  private def runTypeCheck(injector: => Injector, typecheck: TypeCheckCmd): Unit = {
     // type checker
     val executor = injector.getInstance(classOf[PassChainExecutor])
     executor.options.set("io.outdir", createOutputDir())
@@ -248,16 +296,17 @@ object Tool extends App with LazyLogging {
     cmd match {
       case _: ParseCmd     => Guice.createInjector(new ParserModule)
       case _: CheckCmd     => Guice.createInjector(new CheckerModule)
+      case _: TestCmd      => Guice.createInjector(new CheckerModule)
       case _: TypeCheckCmd => Guice.createInjector(new TypeCheckerModule)
       case _               => throw new RuntimeException("Unexpected command: " + cmd)
     }
   }
 
-  private def handleExceptions(injector: Injector, fun: Unit => Unit): Int = {
+  private def handleExceptions(injector: Injector, fun: => Unit): Int = {
     val adapter = injector.getInstance(classOf[ExceptionAdapter])
 
     try {
-      fun(())
+      fun
       Tool.OK_EXIT_CODE
     } catch {
       case e: Exception if adapter.toMessage.isDefinedAt(e) =>

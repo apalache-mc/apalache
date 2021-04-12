@@ -35,7 +35,7 @@ class ExpansionMarker @Inject() (tracker: TransformationTracker) extends TlaExTr
       if (shallExpand) {
         // Expand the set as well as the underlying set!
         logger.warn(s"The set $ex will be expanded. This will blow up the solver.")
-        OperEx(BmcOper.expand, OperEx(op, transform(true)(underlyingSet))(tag))(tag)
+        OperEx(ApalacheOper.expand, OperEx(op, transform(true)(underlyingSet))(tag))(tag)
       } else {
         // Do not expand the set itself, but expand the underlying set!
         OperEx(op, transform(true)(underlyingSet))(tag)
@@ -46,7 +46,7 @@ class ExpansionMarker @Inject() (tracker: TransformationTracker) extends TlaExTr
       if (shallExpand) {
         // Expand everything, including the function set.
         logger.warn(s"The set $ex will be expanded. This will blow up the solver.")
-        OperEx(BmcOper.expand, OperEx(op, transform(true)(dom), transform(true)(cdm))(tag))(tag)
+        OperEx(ApalacheOper.expand, OperEx(op, transform(true)(dom), transform(true)(cdm))(tag))(tag)
       } else {
         // Only expand the domain, but keep the co-domain unexpanded,
         // e.g., in [SUBSET S -> SUBSET T], while SUBSET S is expanded, the co-domain SUBSET T can be left as is
@@ -54,7 +54,7 @@ class ExpansionMarker @Inject() (tracker: TransformationTracker) extends TlaExTr
       }
 
     // simple propagation analysis that tells us what to expand
-    case ex @ OperEx(op @ BmcOper.`skolem`, OperEx(TlaBoolOper.exists, name, set, pred)) =>
+    case ex @ OperEx(op @ ApalacheOper.`skolem`, OperEx(TlaBoolOper.exists, name, set, pred)) =>
       // a skolemizable existential is allowed to keep its set unexpanded
       val tag = ex.typeTag
       OperEx(op, OperEx(TlaBoolOper.exists, name, transform(false)(set), transform(false)(pred))(tag))(tag)
@@ -97,11 +97,6 @@ class ExpansionMarker @Inject() (tracker: TransformationTracker) extends TlaExTr
 
       val tag = ex.typeTag
       LetInEx(transform(shallExpand)(body), defs map mapDef: _*)(tag)
-
-    case ex @ OperEx(BmcOper.withType, expr, annot) =>
-      // transform the expression, but not the annotation! See https://github.com/informalsystems/apalache/issues/292
-      val tag = ex.typeTag
-      OperEx(BmcOper.withType, transform(shallExpand)(expr), annot)(tag)
 
     case ex @ OperEx(oper, args @ _*) =>
       // try to descend in the children, which may contain Boolean operations, e.g., { \E x \in S: P }

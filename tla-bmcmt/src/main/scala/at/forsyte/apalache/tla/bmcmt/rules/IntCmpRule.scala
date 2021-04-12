@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
- * Integer comparisons: <, <=, >, >=. For equality and inequality, check EqRule and NeqRule.
+ * Integer comparisons: <, <=, >, >=. For equality and inequality, check EqRule.
  *
  * @author Igor Konnov
  */

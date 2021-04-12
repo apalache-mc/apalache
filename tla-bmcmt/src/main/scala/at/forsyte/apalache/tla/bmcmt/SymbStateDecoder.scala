@@ -75,10 +75,6 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     case IntT() =>
       solverContext.evalGroundExpr(cell.toNameEx).withTag(Typed(IntT1()))
 
-    case FailPredT() =>
-      // FailPred will be removed soon, see: https://github.com/informalsystems/apalache/issues/665
-      solverContext.evalGroundExpr(cell.toNameEx).withTag(Typed(BoolT1()))
-
     case ConstT() =>
       val found = rewriter.strValueCache.findKey(cell)
       if (found.isDefined) {

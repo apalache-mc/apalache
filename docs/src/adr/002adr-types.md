@@ -2,7 +2,7 @@
 
 | authors                                | revision |
 | -------------------------------------- | --------:|
-| Shon Feder, Igor Konnov, Jure Kukovec  |        2 |
+| Shon Feder, Igor Konnov, Jure Kukovec  |        3 |
 
 This is a follow up of
 [RFC-001](https://github.com/informalsystems/apalache/blob/unstable/docs/internal/rfc/001rfc-types.md), which discusses
@@ -12,15 +12,19 @@ interchange format for the type inference tools will be discussed in a separate 
 1. How to write types in TLA+ (Type System 1).
 1. How to write type annotations (as a user).
 
-This document assumes that one can write a simple type checker that computes the types of all expressions based on the
-annotations provided by the user. Our work-in-progress type checker is using these type annotations. The new type
-checker can be called with `apalache typecheck` command. Note that the new type checker has not been integrated with the
-model checker yet.
+This document assumes that one can write a simple type checker that computes
+the types of all expressions based on the annotations provided by the user.
+Such an implementation is provided by the type checker Snowcat.
+See the [manual chapter](../apalache/typechecker-snowcat.md) on Snowcat.
 
-In contrast, the [type inference algorithm](https://github.com/informalsystems/apalache/tree/types) by @Kukovec is fully
-automatic and thus it eliminates the need for type annotations.
-(Jure's algorithm is using Type System 1 too.) However, system engineers often want to write type annotations and
-quickly check types when writing TLA+ specifications. This document is filling this gap.
+In contrast, the [type inference
+algorithm](https://github.com/informalsystems/apalache/tree/types) by @Kukovec
+is fully automatic and thus it eliminates the need for type annotations.
+Jure's algorithm is using Type System 1 too. The type inference algorithm
+is still in the prototype phase.
+
+System engineers often want to write type annotations and quickly check types
+when writing TLA+ specifications. This document is filling this gap.
 
 ## 1. How to write types in TLA+
 
@@ -29,58 +33,97 @@ quickly check types when writing TLA+ specifications. This document is filling t
 We simply write types as strings that follow the type grammar:
 
 ```
-T ::= typeConst | typeVar | Bool | Int | Str | T -> T | Set(T) | Seq(T) |
-      <<T, ..., T>> | [h_1: T, ..., h_k: T] | (T, ..., T) => T | (T)
+T ::=   Bool | Int | Str
+      | T -> T
+      | Set(T)
+      | Seq(T)
+      | <<T, ..., T>>
+      | [field: T, ..., field: T]
+      | (T, ..., T) => T
+      | typeConst
+      | typeVar
+      | (T)
+
+field     ::= <an identifier that matches [a-zA-Z_][a-zA-Z0-9_]*>
+
 typeConst ::= <an identifier that matches [A-Z_][A-Z0-9_]*>
-typeVar ::= <a single letter from [a-z]>
+
+typeVar   ::= <a single letter from [a-z]>
 ```
 
-In this grammar, `h_1`,...,`h_k` are field names. The rule `T -> T` defines a
-function, while the rule `(T, ..., T) => T` defines an operator.  Importantly, a
-multi-argument function always receives a tuple, e.g., `<<Int, Bool>> -> Int`,
-whereas a single-argument function receives the type of its argument, e.g., `Int
--> Int`.  An operator always has the types of its arguments inside `(...)`,
-e.g., `(Int, Bool) => Int` and `() => Bool`. The arrow `->` is right-associative,
-e.g., `A -> B -> C` is understood as `A -> (B -> C)`, which is consistent with
-programming languages. If you like to change the priority of `->`, use parentheses, as usual.
-For example, you may write `(A -> B) -> C`.
+The type rules have the following meaning:
+- The rules `Bool`, `Int`, `Str` produce primitive types:
+    the Boolean type, the integer type, and the string type, respectively.
+- The rule `T -> T` produces a function.
+- The rule `Set(T)` produces a set type over elements of type `T`.
+- The rule `Seq(T)` produces a sequence type over elements of type `T`.
+- The rule `<<T, ..., T>>` produces a tuple type over types that
+    are produced by `T`. *Types at different positions may differ*.
+- The rule `[field: T, ..., field: T]` produces a record type over types that
+    are produced by `T`. *Types at different positions may differ*.
+- The rule `(T, ..., T) => T` defines an operator whose result type and parameter types are produced by `T`.
+- The rule `typeConst` defines an uninterpreted type (or a reference to a type alias), look for an explanation below.
+- The rule `typeVar` defines a type variable, look for an explanation below.
 
-If a type `T` contains a type variable, e.g., `a`, then `T` is a
-polymorphic type, in which `a` can be instantiated with a monotype (a
-variable-free term). Type variables are useful for describing the types of
-polymorphic operators. A type constant should be understood as a type we don't
-know and we don't want to know, that is, an uninterpreted type. Type constants
-are useful for fixing the types of CONSTANTS and using them later in a
-specification. Two different type constants correspond to two different -- yet
-uninterpreted -- types. If you know [Microsoft
-Z3](https://github.com/Z3Prover/z3), a type constant can be understood as an
-uninterpreted sort in SMT. Essentially, values of an uninterpreted type can
-be only checked for equality.
+Importantly, a multi-argument function always receives a tuple, e.g., `<<Int,
+Bool>> -> Int`, whereas a single-argument function receives the type of its
+argument, e.g., `Int -> Int`.  The arrow `->` is right-associative, e.g., `A ->
+B -> C` is understood as `A -> (B -> C)`, which is consistent with programming
+languages. If you like to change the priority of `->`, use parentheses, as
+usual.  For example, you may write `(A -> B) -> C`.
 
-Assume that notation `e <: T` means that an expression `e` has type `T`.
-(More precisely, `T` is a supertype of the type of `e`.)
-The following examples demonstrate the use of the type grammar:
+An operator always has the types of its arguments inside `(...)`, e.g., `(Int, Bool) => Int` and `() => Bool`. If a
+type `T` contains a type variable, e.g.,
+`a`, then `T` is a polymorphic type, in which `a` can be instantiated with a monotype (a variable-free term). Type
+variables are useful for describing the types of polymorphic operators. Although the grammar accepts an operator type
+that returns an operator, e.g., `Int => (Int => Int)`, such a type does not have a meaningful interpretation in TLA+.
+Indeed, TLA+ does not allow operators to return other operators.
 
-* `x` is an integer: `x <: "Int"`.
-* `f` is a function from an integer to an integer: `f <: "Int -> Int"`.
-* `f` is a function from a set of integers to a set of integers:
-    `f <: "Set(Int) -> Set(Int)"`.
+A type constant should be understood as a type we don't know and we don't want to know, that is, an uninterpreted type.
+Type constants are useful for fixing the types of CONSTANTS and using them later in a specification. Two different type
+constants correspond to two different -- yet uninterpreted -- types. If you
+know [Microsoft Z3](https://github.com/Z3Prover/z3), a type constant can be understood as an uninterpreted sort in SMT.
+Essentially, values of an uninterpreted type can be only checked for equality.
+
+Another use for a type constant is referring to a type alias, see [Section 1.2](#defTypeAlias). This is purely a
+convenience feature to make type annotations more concise and easier to maintain. We expect that only users will write
+type aliases: tools should always exchange data with types in the alias-free form.
+
+**Examples.**
+
+* `x` is an integer. Its type is `Int`.
+* `f` is a function from an integer to an integer. Its type is `Int -> Int`.
+* `f` is a function from a set of integers to a set of integers.
+    Its type is `Set(Int) -> Set(Int)`.
 * `r` is a record that has the fields `a` and `b`, where `a` is an integer
-    and `b` is a string: `r <: "[a: Int, b: Str]"`.
-* `F` is a set of functions from a tuple of integers to an integer:
-    `F <: "Set(<<Int, Int>> -> Int)"`.
-* `Foo` is an operator of an integer and of a string that returns an integer:
-    `Foo <: "(Int, Str) => Int"`.
+    and `b` is a string. Its type is `[a: Int, b: Str]`.
+* `F` is a set of functions from a pair of integers to an integer.
+   Its type is `Set(<<Int, Int>> -> Int)`.
+* `Foo` is an operator of an integer and of a string that returns an integer.
+   Its type is  `(Int, Str) => Int`.
 * `Bar` is a higher-order operator that takes an operator that takes
-    an integer and a string and returns an integer, and returns a Boolean:
-    `Bar <: "((Int, Str) => Int) => Bool"`.
+    an integer and a string and returns an integer, and returns a Boolean.
+   Its type is  `((Int, Str) => Int) => Bool`.
 * `Baz` is a polymorphic operator that takes two arguments of the same type
-    and returns a value of the type equal to the types of its arguments:
-    `Baz <: "(a, a) => a"`.
-* `Proc` and `Faulty` are sets of the same type:
-    `Proc <: "Set(PID)"` and `Faulty <: "Set(PID)"`.
+    and returns a value of the type equal to the types of its arguments.
+   Its type is `(a, a) => a`.
+* `Proc` and `Faulty` are sets of the same type.
+   Their type is `Set(PID)`.
 
-### 1.2. Discussion
+<a id="defTypeAlias"></a>
+### 1.2. Type aliases
+
+The grammar of `T` includes one more rule for defining a type alias:
+
+```
+A ::= typeConst "=" T
+```
+
+This rule binds a type (produced by `T`) to a name (produced by `typeConst`). As you can see from the definition
+of `typeConst`, the name should be an identifier in the upper case. The type checker should use the bound type instead
+of the constant type. For examples, see [Section 2.4](#useTypeAlias).
+
+### 1.3. Discussion
 
 Our type grammar presents a minimal type system that, in our understanding,
 captures all interesting cases that occur in practice. Obviously, this type
@@ -125,7 +168,7 @@ you have suggestions on this line of thought, please let us know.
 In the following, we discuss how to annotate different TLA+ declarations.
 
 *In the previous version of this document, we defined two operators:
-`AssumeType(_, _)` and `_ ## _`. They are no longer needed as we have introduced [Code annotations][].*
+`AssumeType(_, _)` and `_ ## _`. They are no longer needed as we have introduced [Code annotations](./004adr-annotations.md).*
 
 ### 2.1. Annotating CONSTANTS and VARIABLES
 
@@ -159,7 +202,7 @@ assumptions, the user merely states the variable types and the *type checker*
 has a simple job of checking type consistency and finding the types of the
 expressions.
 
-### 2.2. Annotating Operators
+# useTuseT 2.2. Annotating Operators
 
 Again, write a type annotation `@type: <your type>;` in a comment that precedes the operator declaration. For example:
 
@@ -248,15 +291,39 @@ auxiliary LET-definition to specify the type of the empty collection:
 The type checker uses the type annotation to refine the type of an empty set
 (or, of an empty sequence).
 
+<a id="useTypeAlias"></a>
+
+### 2.4. Introducing and using type aliases
+
+A type alias is introduced with the annotation `@typeAlias: ...;`. See the example below:
+
+```tla
+VARIABLE
+    \* @typeAlias ENTRY = [a: Int, b: Bool];
+    \* @type Set(ENTRY);
+    msgs
+
+\* @type: (Set(ENTRY), ENTRY) => ENTRY;
+Foo(ms, m) ==
+    msgs' = ms \union {m}
+```
+
+You have to follow three rules:
+
+1. You can define a type alias with `@typeAlias` anywhere you can define a `@type`.
+
+1. The names of type aliases must be unique in a module.
+
+1. There is no scoping for aliases within a module. Even if an alias is defined deep in a tree of LET-IN definitions, it
+   can be references at any level in the module.
+
 ## 3. Example
 
-As an example that contains non-trivial type information, we chose the
-specification of [Cigarette
-Smokers](https://github.com/tlaplus/Examples/blob/master/specifications/CigaretteSmokers/CigaretteSmokers.tla)
-by @mryndzionek from [TLA+
-Examples](https://github.com/tlaplus/Examples/tree/master/specifications).  In
-this document, we focus on the type information and give a shorter version of
-the specification. For detailed comments, check [the original
+As an example that contains non-trivial type information, we chose the specification
+of [Cigarette Smokers](https://github.com/tlaplus/Examples/blob/master/specifications/CigaretteSmokers/CigaretteSmokers.tla)
+by @mryndzionek from [TLA+ Examples](https://github.com/tlaplus/Examples/tree/master/specifications). In this document,
+we focus on the type information and give a shorter version of the specification. For detailed comments,
+check [the original
 specification](https://github.com/tlaplus/Examples/blob/master/specifications/CigaretteSmokers/CigaretteSmokers.tla).
 
 ```tla
@@ -337,5 +404,3 @@ FairSpec ==
 AtMostOne ==
     Cardinality({r \in Ingredients : smokers[r].smoking}) <= 1
 =============================================================================```
-
-[Code annotations]: https://apalache.informal.systems/docs/adr/004adr-annotations.html

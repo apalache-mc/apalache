@@ -469,6 +469,10 @@ Consider an `IF-THEN-ELSE` expression to be evaluated in a partial state `s`:
 IF A THEN B ELSE C
 ```
 
+In Apalache, this operator has the polymorphic type `(Bool, a, a) => a`,
+where `a` can be replaced with a concrete type. Here, we consider the case
+`(Bool, Bool, Bool) => Bool`.
+
 Here we assume that both `B` and `C` produce Boolean results and `B` and `C`
 refer to at least one primed variable `y'` that is undefined in `s`. Otherwise, the
 expression can be evaluated as a [deterministic
@@ -506,8 +510,9 @@ CASE P_1 -> e_1
   [] P_n -> e_n
 ```
 
-We assume that `e_1, ..., e_n` produce Boolean results. Otherwise,
-see [Deterministic conditionals](./conditionals.md).
+Here, we assume that `e_1, ..., e_n` produce Boolean results.  Or, in terms of
+Apalache types, this expression has the type: `(Bool, Bool, ..., Bool, Bool) =>
+Bool`.  Otherwise, see [Deterministic conditionals](./conditionals.md).
 
 This operator is equivalent to the following disjunction:
 

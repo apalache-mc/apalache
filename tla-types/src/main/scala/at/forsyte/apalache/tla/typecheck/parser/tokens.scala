@@ -74,6 +74,13 @@ private[parser] case class DOUBLE_RIGHT_ARROW() extends Type1Token {
 }
 
 /**
+ * Equality sign "=" (used by the alias definition).
+ */
+private[parser] case class EQ() extends Type1Token {
+  override def toString: String = "="
+}
+
+/**
  * A comma.
  */
 private[parser] case class COMMA() extends Type1Token {

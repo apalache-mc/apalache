@@ -2,6 +2,10 @@
 
 [Overview](./index.md)
 
+# Tutorials
+
+- [Type Checker Tutorial](./tutorials/snowcat-tutorial.md)
+
 # Apalache User Manual
 
 - [Introduction](./apalache/index.md)
@@ -21,9 +25,9 @@
     - [Profiling Your Specification](./apalache/profiling.md)
     - [Five minutes of theory](./apalache/theory.md)
 - [TLC Configuration Files](./apalache/tlc-config.md)
-- [Types and Annotations](./apalache/types-and-annotations.md)
 - [The Snowcat Type Checker](./apalache/typechecker-snowcat.md)
 - [Supported Features](./apalache/features.md)
+- [Known Issues](./apalache/known-issues.md)
 - [TLA+ Preprocessing](./apalache/preprocessing.md)
 - [Fine Tuning](./apalache/tuning.md)
 - [KerA: kernel logic of actions](./apalache/kera.md)
@@ -31,7 +35,6 @@
 
 # HOWTOs
 
-- [Contents](./HOWTOs/index.md)
 - [How to write type annotations](./HOWTOs/howto-write-type-annotations.md)
 
 # TLA+ Language Manual for Engineers

@@ -5,7 +5,7 @@
 The integer literals belong to the core language. They are written by
 using the standard syntax: 0, 1, -1, 2, -2, 3, -3, ... Importantly, TLA+
 integers are unbounded. They do not have any fixed bit width, and they cannot
-overflow.
+overflow. In Apalache, these literals have the type `Int`.
 
 The integer operators are defined in the standard module `Integers`. To use
 it, write the `EXTENDS` clause in the first lines of your module. Like this:
@@ -43,9 +43,12 @@ The module `Integers` defines two constant sets (technically, they are
 operators without arguments):
 
  - The set `Int` that consists of all integers. _This set is infinite._
+    In Apalache, the set `Int` has the type `Set(Int)`.
+    A bit confusing, right? :sunglasses:
  - The set `Nat` that consists of all natural numbers, that is,
    `Nat` contains every integer `x` that has the property `x >= 0`.
    _This set is infinite._
+   In Apalache, the set `Nat` has the type... `Set(Int)`.
 
 ----------------------------------------------------------------------------
 
@@ -60,6 +63,8 @@ operators without arguments):
 
 **Arguments:** Two arguments. The result is only defined when both arguments
 are evaluated to integer values.
+
+**Apalache type:** `(Int, Int) => Set(Int)`.
 
 **Effect:** `a..b` evaluates to the finite set `{i \in Int: a <= i /\ i <= b}`,
 that is, the set of all integers in the range from `a` to `b`, including `a`
@@ -101,6 +106,8 @@ python.
 **Arguments:** One argument. The result is only defined when the argument
 evaluates to an integer.
 
+**Apalache type:** `Int => Int`.
+
 **Effect:** `-i` evaluates to the negation of `i`.
 
 **Determinism:** Deterministic.
@@ -136,6 +143,8 @@ type error, whereas TLC reports a runtime error.
 **Arguments:** Two arguments. The result is only defined when both arguments
 are evaluated to integer values.
 
+**Apalache type:** `(Int, Int) => Int`.
+
 **Effect:** `a + b` evaluates to the sum of `a` and `b`.
 
 **Determinism:** Deterministic.
@@ -169,6 +178,8 @@ statically reports a type error, whereas TLC reports a runtime error.
 
 **Arguments:** Two arguments. The result is only defined when both arguments
 are evaluated to integer values.
+
+**Apalache type:** `(Int, Int) => Int`.
 
 **Effect:** `a - b` evaluates to the difference of `a` and `b`.
 
@@ -206,6 +217,8 @@ statically reports a type error, whereas TLC reports a runtime error.
 **Arguments:** Two arguments. The result is only defined when both arguments
 are evaluated to integer values.
 
+**Apalache type:** `(Int, Int) => Int`.
+
 **Effect:** `a * b` evaluates to the product of `a` and `b`.
 
 **Determinism:** Deterministic.
@@ -239,6 +252,8 @@ statically reports a type error, whereas TLC reports a runtime error.
 
 **Arguments:** Two arguments. The result is only defined when both arguments
 are evaluated to integer values, and the second argument is different from 0.
+
+**Apalache type:** `(Int, Int) => Int`.
 
 **Effect:** `a \div b` is defined as follows:
 
@@ -311,6 +326,8 @@ to produce the same results as in TLA+:
 **Arguments:** Two arguments. The result is only defined when both arguments
 are evaluated to integer values, and the second argument is different from 0.
 
+**Apalache type:** `(Int, Int) => Int`.
+
 **Effect:** `a % b` is the number `c` that has the property:
 `a = b * (a \div b) + c`.
 
@@ -360,6 +377,8 @@ cases:
 
  1. `b > 0`,
  1. `b = 0` and `a /= 0`.
+
+**Apalache type:** `(Int, Int) => Int`.
 
 **Effect:** `a^b` evaluates to `a` raised to the `b`-th power:
 
@@ -414,6 +433,8 @@ statically reports a type error, whereas TLC reports a runtime error.
 **Arguments:** Two arguments. The result is only defined when both arguments
 are evaluated to integer values.
 
+**Apalache type:** `(Int, Int) => Bool`.
+
 **Effect:** `a < b` evaluates to:
 
   - `TRUE`, if `a` is less than `b`,
@@ -452,6 +473,8 @@ statically reports a type error, whereas TLC reports a runtime error.
 
 **Arguments:** Two arguments. The result is only defined when both arguments
 are evaluated to integer values.
+
+**Apalache type:** `(Int, Int) => Bool`.
 
 **Effect:** `a <= b` evaluates to:
 
@@ -492,6 +515,8 @@ statically reports a type error, whereas TLC reports a runtime error.
 **Arguments:** Two arguments. The result is only defined when both arguments
 are evaluated to integer values.
 
+**Apalache type:** `(Int, Int) => Bool`.
+
 **Effect:** `a > b` evaluates to:
 
   - `TRUE`, if `a` is greater than `b`,
@@ -530,6 +555,8 @@ statically reports a type error, whereas TLC reports a runtime error.
 
 **Arguments:** Two arguments. The result is only defined when both arguments
 are evaluated to integer values.
+
+**Apalache type:** `(Int, Int) => Bool`.
 
 **Effect:** `a >= b` evaluates to:
 

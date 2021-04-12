@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.analyses
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{BmcOper, TlaActionOper, TlaBoolOper, TlaTempOper}
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaActionOper, TlaBoolOper, TlaTempOper}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.google.inject.Inject
 
@@ -37,13 +37,6 @@ class ExprGradeAnalysis @Inject() (val store: ExprGradeStoreImpl) {
           update(e, ExprGrade.StateFree)
         else
           update(e, ExprGrade.StateBound)
-
-      case OperEx(BmcOper.withType, annotated, _) =>
-        // We forbid to cache type-annotated expressions.
-        // Otherwise, {} <: {Int} would be cached as a set of integers, and then {} <: {{Int}} would be retrieved from
-        // the cache as a set of integers, which is, obviously, not our intention
-        update(e, ExprGrade.NonCacheable)
-        update(annotated, ExprGrade.NonCacheable)
 
       case OperEx(TlaActionOper.prime, arg) =>
         // e.g., x'

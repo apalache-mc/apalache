@@ -33,7 +33,7 @@ class CoverChecker(allVariables: Set[String], manuallyAssigned: Set[String] = Se
     case OperEx(TlaOper.eq, OperEx(TlaActionOper.prime, NameEx(name)), star) =>
       /** it's a candidate for name iff name \notin manuallyAssigned */
       if (!manuallyAssigned.contains(name)) Candidate(name, ex.ID) else NonCandidate(ex.ID)
-    case OperEx(BmcOper.assign, OperEx(TlaActionOper.prime, NameEx(name)), star) =>
+    case OperEx(ApalacheOper.assign, OperEx(TlaActionOper.prime, NameEx(name)), star) =>
       /** it's a candidate for name iff name \in manuallyAssigned */
       if (manuallyAssigned.contains(name)) Candidate(name, ex.ID) else NonCandidate(ex.ID)
 

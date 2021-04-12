@@ -1,17 +1,21 @@
 package at.forsyte.apalache.tla.typecheck
 
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
+import at.forsyte.apalache.io.annotations.{AnnotationStr, StandardAnnotations}
+import at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
-import at.forsyte.apalache.tla.lir.{BoolT1, TlaModule, TypeTag, UID}
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecheck.etc._
 import at.forsyte.apalache.tla.typecheck.integration.{RecordingTypeCheckerListener, TypeRewriter}
+import at.forsyte.apalache.tla.typecheck.parser.{DefaultType1Parser, Type1ParseError}
+import com.typesafe.scalalogging.LazyLogging
 
 /**
  * The API to the type checker. It first translates a TLA+ module into EtcExpr and then does the type checking.
  *
  * @author Igor Konnov
  */
-class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) {
+class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) extends LazyLogging {
 
   /**
    * Check the types in a module. All type checking events are sent to a listener.
@@ -22,7 +26,8 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) {
    */
   def check(listener: TypeCheckerListener, module: TlaModule): Boolean = {
     val varPool = new TypeVarPool()
-    val toEtc = new ToEtcExpr(annotationStore, varPool)
+    val aliasSubstitution = loadTypeAliases(module.declarations)
+    val toEtc = new ToEtcExpr(annotationStore, aliasSubstitution, varPool)
 
     // Bool is the final expression in the chain of let-definitions
     val terminalExpr: EtcExpr = EtcConst(BoolT1())(BlameRef(UID.unique))
@@ -65,6 +70,40 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) {
       val transformer = new TypeRewriter(tracker, defaultTag)(recorder.toMap)
       val taggedDecls = module.declarations.map(transformer(_))
       Some(new TlaModule(module.name, taggedDecls))
+    }
+  }
+
+  private def loadTypeAliases(declarations: Seq[TlaDecl]): ConstSubstitution = {
+    var aliases = Map[String, lir.TlaType1]()
+
+    // extract all aliases from the annotations
+    for (decl <- declarations) {
+      annotationStore.get(decl.ID).foreach { annotations =>
+        annotations.filter(_.name == StandardAnnotations.TYPE_ALIAS).foreach { annot =>
+          annot.args match {
+            case Seq(AnnotationStr(text)) =>
+              aliases += parseTypeAlias(decl.name, aliases, text)
+
+            case args =>
+              throw new TypingInputException(
+                  s"Unexpected annotation alias in front of ${decl.name}: " + args.mkString(", "))
+          }
+        }
+      }
+    }
+
+    // Aliases can refer to one another. Substitute the aliases until we arrive at a fixpoint.
+    ConstSubstitution(aliases).closure()
+  }
+
+  // parse type from its text representation
+  private def parseTypeAlias(where: String, aliases: Map[String, TlaType1], text: String): (String, TlaType1) = {
+    try {
+      DefaultType1Parser.parseAlias(text)
+    } catch {
+      case e: Type1ParseError =>
+        logger.error("Parsing error in the alias annotation: " + text)
+        throw new TypingInputException(s"Parser error in type alias of $where: ${e.msg}")
     }
   }
 }

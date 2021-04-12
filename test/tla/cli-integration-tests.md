@@ -143,6 +143,19 @@ EXITCODE: OK
 ...
 ```
 
+### test TestGen finds an example
+
+This simple test demonstrates how to test a spec by isolating the input with
+generators.
+
+```sh
+$ apalache-mc test TestGen.tla Prepare Test Assertion | sed 's/I@.*//'
+...
+The outcome is: Error
+Checker has found an example. Check counterexample.tla.
+...
+```
+
 ## running the check command
 
 #### check factorization find a counterexample
@@ -689,6 +702,18 @@ $ apalache-mc check ITE_CASE.tla | sed 's/I@.*//'
 EXITCODE: ERROR (99)
 ```
 
+### check Deadlock712 succeeds
+
+This test shows that Apalache may miss a deadlock, as discussed in issue 712.
+Once this is fixed, Apalache should find a deadlock.
+
+```sh
+$ apalache-mc check Deadlock712.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
 ### check use of TLA_PATH for modules in child directory succeeds
 
 ```sh
@@ -977,15 +1002,15 @@ EXITCODE: OK
 
 ### typecheck CigaretteSmokersTyped.tla
 
-This test is broken until issue #617] is fixed.
-
 ```sh
 $ apalache-mc typecheck CigaretteSmokersTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
-Unhandled exception
 ...
+Type checker [OK]
+...
+EXITCODE: OK
 ```
 
 ### typecheck GameOfLifeTyped.tla
@@ -1187,6 +1212,21 @@ EXITCODE: OK
 
 ```sh
 $ apalache-mc typecheck AnnotationsAndSubstitutions596.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeCheckerSnowcat
+ > Running Snowcat .::.
+ > Your types are great!
+ > All expressions are typed
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck Except617.tla
+
+```sh
+$ apalache-mc typecheck Except617.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.

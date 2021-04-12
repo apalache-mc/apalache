@@ -10,7 +10,7 @@ import scala.util.parsing.combinator.RegexParsers
 private[parser] object Type1Lexer extends RegexParsers {
   override def skipWhitespace: Boolean = true
 
-  override val whiteSpace: Regex = "[ \t\r\f]+".r // no linefeeds
+  override val whiteSpace: Regex = "[ \t\r\n\f]+".r
 
   /**
    * Parse the input stream and return the list of tokens. Although collecting the list of all tokens in memory is
@@ -32,7 +32,7 @@ private[parser] object Type1Lexer extends RegexParsers {
   def token: Parser[Type1Token] =
     positioned(
         int | real | bool | str | set | seq | identifier | fieldNumber |
-          rightArrow | doubleRightArrow | leftParen | rightParen | leftBracket | rightBracket |
+          rightArrow | doubleRightArrow | eq | leftParen | rightParen | leftBracket | rightBracket |
           leftCurly | rightCurly | doubleLeftAngle | doubleRightAngle | comma | colon
     ) ///
 
@@ -77,6 +77,10 @@ private[parser] object Type1Lexer extends RegexParsers {
 
   private def doubleRightArrow: Parser[DOUBLE_RIGHT_ARROW] = {
     "=>".r ^^ { _ => DOUBLE_RIGHT_ARROW() }
+  }
+
+  private def eq: Parser[EQ] = {
+    "=".r ^^ { _ => EQ() }
   }
 
   private def leftParen: Parser[LPAREN] = {
