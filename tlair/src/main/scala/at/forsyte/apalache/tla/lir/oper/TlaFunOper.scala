@@ -26,7 +26,7 @@ object TlaFunOper {
 
   /**
    * Define a tuple by listing its elements: `<< e_1, ..., e_k >>`.
-   * Note that tuples are indistinguishable from sequences in pure TLA+, this can be also used to construct a sequence.
+   * Note that tuples are indistinguishable from sequences in pure TLA+, this can also be used to construct a sequence.
    */
   object tuple extends TlaFunOper {
     override val arity = AnyArity()
