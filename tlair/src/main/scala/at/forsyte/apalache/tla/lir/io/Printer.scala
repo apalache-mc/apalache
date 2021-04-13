@@ -220,7 +220,7 @@ object UTFPrinter extends Printer {
    * @return a string representation of TLA+ declaration
    */
   override def apply(p_decl: TlaDecl): String = {
-    def pr_param(p: FormalParam): String = {
+    def pr_param(p: OperParam): String = {
       val arity = p.arity
       val params =
         if (arity == 0) "" else "(%s)".format(1.to(arity).map(_ => "_").mkString(", "))

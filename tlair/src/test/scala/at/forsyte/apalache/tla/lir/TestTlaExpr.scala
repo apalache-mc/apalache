@@ -147,7 +147,7 @@ class TestTlaExpr extends FunSuite {
 
   test("declaring an order 1 operator") {
     // A(x, y) == x' /\ y
-    val odef = TlaOperDecl("A", List(SimpleFormalParam("x"), SimpleFormalParam("y")),
+    val odef = TlaOperDecl("A", List(OperParam("x"), OperParam("y")),
         OperEx(TlaBoolOper.and, OperEx(TlaActionOper.prime, NameEx("x")), NameEx("y")))
 
     // this is the way to use a user-defined operator
@@ -164,10 +164,10 @@ class TestTlaExpr extends FunSuite {
 
   test("declaring an order 2 operator") {
     // f(_, _)
-    val fOper = OperFormalParam("f", 2)
+    val fOper = OperParam("f", 2)
 
     // A(f(_, _), x, y) == f(x, y)
-    val odef = TlaOperDecl("A", List(fOper, SimpleFormalParam("x"), SimpleFormalParam("y")),
+    val odef = TlaOperDecl("A", List(fOper, OperParam("x"), OperParam("y")),
         OperEx(TlaOper.apply, NameEx("f"), NameEx("x"), NameEx("y")))
 
     // this is the way to use a user-defined operator

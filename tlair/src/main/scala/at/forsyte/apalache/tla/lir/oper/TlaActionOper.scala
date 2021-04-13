@@ -13,7 +13,7 @@ object TlaActionOper {
    * The prime operator. By the TLA+ restrictions, we cannot apply it twice, e.g., (x')' is illegal.
    */
   object prime extends TlaActionOper {
-    override val name: String = "'"
+    override val name: String = "PRIME"
 
     override def arity: OperArity = FixedArity(1)
 
@@ -21,10 +21,10 @@ object TlaActionOper {
   }
 
   /**
-   * The operator that executes an action or keeps the variable values.
+   * The operator that executes an action or keeps the variable values. It has the form `[A]_e`.
    */
   object stutter extends TlaActionOper {
-    override val name: String = "[A]_e"
+    override val name: String = "STUTTER"
 
     override def arity: OperArity = FixedArity(2)
 
@@ -32,10 +32,10 @@ object TlaActionOper {
   }
 
   /**
-   * The operator that executes an action and enforces the values to change.
+   * The operator that executes an action and enforces the values to change. It has the form `<A>_e`.
    */
   object nostutter extends TlaActionOper {
-    override val name: String = "<A>_e"
+    override val name: String = "NO_STUTTER"
 
     override def arity: OperArity = FixedArity(2)
 
@@ -65,13 +65,10 @@ object TlaActionOper {
   }
 
   /**
-   * The sequential composition of operators.
-   *
-   * Jure@17.11.16: Arity 2?
-   * Igor@12.03.17: Arity 2. Fixed.
+   * The sequential composition of operators, which usually has the name `\cdot`.
    */
   object composition extends TlaActionOper {
-    override val name: String = "\\cdot"
+    override val name: String = "COMPOSE"
     override def arity: OperArity = FixedArity(2)
     override def precedence: (Int, Int) = (13, 13)
   }

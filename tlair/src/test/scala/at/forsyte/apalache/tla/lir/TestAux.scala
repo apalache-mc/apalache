@@ -15,9 +15,9 @@ class TestAux extends FunSuite with TestingPredefs {
     val ar0Decl2 = TlaOperDecl("Y", List.empty, n_y)
     val ar0Decl3 = TlaOperDecl("Z", List.empty, n_z)
 
-    val arGe0Decl1 = TlaOperDecl("A", List(SimpleFormalParam("t")), n_a)
-    val arGe0Decl2 = TlaOperDecl("B", List(SimpleFormalParam("t")), n_b)
-    val arGe0Decl3 = TlaOperDecl("C", List(SimpleFormalParam("t")), n_c)
+    val arGe0Decl1 = TlaOperDecl("A", List(OperParam("t")), n_a)
+    val arGe0Decl2 = TlaOperDecl("B", List(OperParam("t")), n_b)
+    val arGe0Decl3 = TlaOperDecl("C", List(OperParam("t")), n_c)
 
     val pa1 =
       List(ar0Decl1) ->

@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaArithOper
 import at.forsyte.apalache.tla.lir.transformations.TlaExTransformation
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import at.forsyte.apalache.tla.lir.{FormalParam, NameEx, OperEx, TestingPredefs, TlaEx, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.{OperParam, NameEx, OperEx, TestingPredefs, TlaEx, TlaOperDecl}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -42,10 +42,10 @@ class TestReplaceFixed extends FunSuite with TestingPredefs {
   }
 
   test("Replace in Let-in") {
-    val decl = TlaOperDecl("A", List.empty[FormalParam], n_x)
+    val decl = TlaOperDecl("A", List.empty[OperParam], n_x)
     val ex = tla.letIn(tla.appDecl(decl), decl)
     val tr = mkTr(n_x, n_y)
-    val expectedDecl = TlaOperDecl("A", List.empty[FormalParam], n_y)
+    val expectedDecl = TlaOperDecl("A", List.empty[OperParam], n_y)
     val expectedEx = tla.letIn(tla.appDecl(expectedDecl), expectedDecl)
     assert(tr(ex) == expectedEx.untyped())
   }
