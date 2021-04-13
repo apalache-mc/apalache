@@ -651,7 +651,7 @@ in Python is quite simple:
 ```python
 >>> from functools import reduce
 >>> s = { frozenset({0, 1}), frozenset({1, 2}), frozenset({3}) }
->>> reduce(lambda x, y: x | y, s, set())
+>>> reduce((lambda x, y: x | y), s, set())
 {0, 1, 2, 3}
 
 ```
