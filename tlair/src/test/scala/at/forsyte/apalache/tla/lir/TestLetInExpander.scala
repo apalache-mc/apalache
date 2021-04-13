@@ -20,7 +20,7 @@ class TestLetInExpander extends FunSuite with TestingPredefs {
 
     val ex1: TlaEx = n_x
     val ex2: TlaEx = letIn(appOp(n_A), declOp("A", n_x).untypedOperDecl())
-    val ex3: TlaEx = letIn(appOp(n_A, n_x), declOp("A", n_y, SimpleFormalParam("y")).untypedOperDecl())
+    val ex3: TlaEx = letIn(appOp(n_A, n_x), declOp("A", n_y, OperParam("y")).untypedOperDecl())
     val ex4: TlaEx =
       letIn(
           ite(
@@ -57,7 +57,7 @@ class TestLetInExpander extends FunSuite with TestingPredefs {
 
     val ex1: TlaEx = n_x
     val ex2: TlaEx = letIn(appOp(n_A), declOp("A", n_x).untypedOperDecl())
-    val ex3: TlaEx = letIn(appOp(n_A, n_x), declOp("A", n_y, SimpleFormalParam("y")).untypedOperDecl())
+    val ex3: TlaEx = letIn(appOp(n_A, n_x), declOp("A", n_y, OperParam("y")).untypedOperDecl())
     val ex4: TlaEx =
       letIn(
           ite(
@@ -97,7 +97,7 @@ class TestLetInExpander extends FunSuite with TestingPredefs {
     // this is how we represent LAMBDA in IR
     val lambdaAsLetIn =
       tla.letIn(tla.name("LAMBDA"),
-          tla.declOp("LAMBDA", tla.eql(tla.name("x"), tla.name("e")), SimpleFormalParam("x")).untypedOperDecl())
+          tla.declOp("LAMBDA", tla.eql(tla.name("x"), tla.name("e")), OperParam("x")).untypedOperDecl())
     val input = OperEx(TlaSeqOper.selectseq, tla.name("s"), lambdaAsLetIn)
     val output = transformation(input)
     // there is nothing to expand here, as SelectSeq is the standard operator
@@ -109,7 +109,7 @@ class TestLetInExpander extends FunSuite with TestingPredefs {
     // this is how we represent LAMBDA in IR
     val lambdaAsLetIn =
       tla.letIn(tla.name("LAMBDA"),
-          tla.declOp("LAMBDA", tla.eql(tla.name("x"), tla.name("e")), SimpleFormalParam("x")).untypedOperDecl())
+          tla.declOp("LAMBDA", tla.eql(tla.name("x"), tla.name("e")), OperParam("x")).untypedOperDecl())
     // in this case, we cannot do anything, as the lambda operator is passed into the built-in operator
     val input = OperEx(TlaSeqOper.selectseq, tla.name("s"), lambdaAsLetIn)
     val output = transformation(input)
@@ -122,7 +122,7 @@ class TestLetInExpander extends FunSuite with TestingPredefs {
     // this is how we represent LAMBDA in IR
     val lambdaAsLetIn =
       tla.letIn(tla.name("LAMBDA"),
-          tla.declOp("LAMBDA", tla.eql(tla.name("x"), tla.name("e")), SimpleFormalParam("x")).untypedOperDecl())
+          tla.declOp("LAMBDA", tla.eql(tla.name("x"), tla.name("e")), OperParam("x")).untypedOperDecl())
     val input = OperEx(TlaOper.apply, lambdaAsLetIn, ValEx(TlaInt(3)))
     val output = transformation(input)
     // application of the lambda expression should be replaced with the body

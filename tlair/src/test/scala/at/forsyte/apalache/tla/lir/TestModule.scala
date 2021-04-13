@@ -78,7 +78,7 @@ class TestModule extends FunSuite {
      * /\ UNCHANGED   << ackQ, sAck, rBit, rcvd >>
      */
     val SndNewValue =
-      new TlaOperDecl("SndNewValue", List(SimpleFormalParam("d")),
+      new TlaOperDecl("SndNewValue", List(OperParam("d")),
           OperEx(
               TlaBoolOper.and,
               OperEx(TlaOper.eq, NameEx("sAck"), NameEx("sBit")),
@@ -163,7 +163,7 @@ class TestModule extends FunSuite {
      * /\ UNCHANGED << sBit, sAck, rBit, sent, rcvd >>
      */
     val Lose =
-      new TlaOperDecl("Lose", List(SimpleFormalParam("q")),
+      new TlaOperDecl("Lose", List(OperParam("q")),
           OperEx(TlaBoolOper.exists, NameEx("i"),
               OperEx(TlaArithOper.dotdot, ValEx(TlaInt(1)), OperEx(TlaSeqOper.len, NameEx("q"))),
               OperEx(TlaOper.eq, OperEx(TlaActionOper.prime, NameEx("q")),

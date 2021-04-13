@@ -29,7 +29,7 @@ object TlaControlOper {
    * The rationale is that by using args.tail, one obtains a list similar to the caseOper.
    */
   object caseWithOther extends TlaControlOper {
-    override val name: String = "CASE-OTHER"
+    override val name: String = "CASE_OTHER"
     override val arity: OperArity = MinimalArity(3) && AnyOddArity() //new OperArity( k => k >= 3 && k % 2 == 1 )
     override val interpretation: Interpretation.Value = Interpretation.Predefined
     override val precedence: (Int, Int) = (0, 0)
@@ -39,7 +39,7 @@ object TlaControlOper {
    * The "IF A THEN B ELSE C" operator. The arguments have the following structure: A, B, C.
    */
   object ifThenElse extends TlaControlOper {
-    override val name: String = "IF-THEN-ELSE"
+    override val name: String = "IF_THEN_ELSE"
     override val arity: OperArity = FixedArity(3)
     override val interpretation: Interpretation.Value = Interpretation.Predefined
     override val precedence: (Int, Int) = (0, 0)

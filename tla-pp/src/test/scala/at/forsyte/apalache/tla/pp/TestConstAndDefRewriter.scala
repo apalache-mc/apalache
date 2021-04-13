@@ -3,10 +3,10 @@ package at.forsyte.apalache.tla.pp
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import at.forsyte.apalache.tla.lir.{IntT1, OperT1, SimpleFormalParam, TlaModule, TlaOperDecl, Typed}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
@@ -105,7 +105,7 @@ class TestConstAndDefRewriter extends FunSuite with BeforeAndAfterEach {
     assert(rewritten.constDeclarations.isEmpty)
     assert(rewritten.operDeclarations.size == 1)
     val expected =
-      TlaOperDecl("BoolMin", List(SimpleFormalParam("S")), tla.choose(tla.name("x"), tla.name("S"), tla.bool(true)))
+      TlaOperDecl("BoolMin", List(OperParam("S")), tla.choose(tla.name("x"), tla.name("S"), tla.bool(true)))
     assert(expected == rewritten.operDeclarations.head)
   }
 

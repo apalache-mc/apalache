@@ -45,7 +45,7 @@ class TestParameterNormalizer extends FunSuite with BeforeAndAfterEach with Test
     val output = parNorm.normalizeDeclaration(input)
 
     output match {
-      case d @ TlaOperDecl(name, List(SimpleFormalParam(p)), body) =>
+      case d @ TlaOperDecl(name, List(OperParam(p, 0)), body) =>
         assert(input.typeTag == d.typeTag)
 
         body match {
@@ -88,12 +88,12 @@ class TestParameterNormalizer extends FunSuite with BeforeAndAfterEach with Test
     //  LET NewName(p) == T(p) IN
     //    NewName(0)
     output match {
-      case d @ TlaOperDecl(name, List(OperFormalParam(opName, 1)), body) =>
+      case d @ TlaOperDecl(_, List(OperParam(opName, 1)), body) =>
         assert(input.typeTag == d.typeTag)
 
         body match {
-          case letin @ LetInEx(letInBody, TlaOperDecl(newName, List(SimpleFormalParam(intermediateParam)),
-                      appex @ OperEx(TlaOper.apply, nex @ NameEx(appliedOperName), NameEx(arg)))) =>
+          case letin @ LetInEx(letInBody, TlaOperDecl(newName, List(OperParam(intermediateParam, 0)), appex @ OperEx(
+                          TlaOper.apply, nex @ NameEx(appliedOperName), NameEx(arg)))) =>
             assert(opName == appliedOperName)
             assert(arg == intermediateParam)
             assert(Typed(IntT1()) == letin.typeTag)

@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.lir.oper
 
 /**
- * Sequence operators
+ * Sequence operators.
  *
  * @author Jure Kukovec
  *
- * Created by jkukovec on 11/17/16.
+ *         Created by jkukovec on 11/17/16.
  */
 
 abstract class TlaSeqOper extends TlaOper {
@@ -20,43 +20,43 @@ object TlaSeqOper {
 
   object head extends TlaSeqOper {
     override val arity = FixedArity(1)
-    override val name = "Head"
+    override val name = "Sequences!Head"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
   object tail extends TlaSeqOper {
     override val arity = FixedArity(1)
-    override val name = "Tail"
+    override val name = "Sequences!Tail"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
   object append extends TlaSeqOper {
     override val arity = FixedArity(2)
-    override val name = "Append"
+    override val name = "Sequences!Append"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
   object concat extends TlaSeqOper {
     override val arity = FixedArity(2)
-    override val name = "\\o"
+    override val name = "Sequences!Concat"
     override val precedence: (Int, Int) = (13, 13)
   }
 
   object len extends TlaSeqOper {
     override val arity = FixedArity(1)
-    override val name = "Len"
+    override val name = "Sequences!Len"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
   object subseq extends TlaSeqOper {
     override val arity = FixedArity(3)
-    override val name = "SubSeq"
+    override val name = "Sequences!SubSeq"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
   object selectseq extends TlaSeqOper {
     override val arity = FixedArity(2)
-    override val name = "SelectSeq"
+    override val name = "Sequences!SelectSeq"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 }

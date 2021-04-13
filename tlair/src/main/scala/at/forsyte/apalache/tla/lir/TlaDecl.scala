@@ -87,7 +87,7 @@ case class TlaAssumeDecl(body: TlaEx)(implicit typeTag: TypeTag) extends TlaDecl
  * @param formalParams formal parameters
  * @param body         operator definition, that is a TLA+ expression that captures the operator definition
  */
-case class TlaOperDecl(name: String, formalParams: List[FormalParam], var body: TlaEx)(implicit typeTag: TypeTag)
+case class TlaOperDecl(name: String, formalParams: List[OperParam], var body: TlaEx)(implicit typeTag: TypeTag)
     extends TlaDecl with Serializable {
 
   /**
@@ -97,7 +97,7 @@ case class TlaOperDecl(name: String, formalParams: List[FormalParam], var body: 
 
   // Temporary solution, until #345 is resolved
   def copy(
-      name: String = this.name, formalParams: List[FormalParam] = this.formalParams, body: TlaEx = this.body
+      name: String = this.name, formalParams: List[OperParam] = this.formalParams, body: TlaEx = this.body
   )(implicit copyTypeTag: TypeTag = typeTag): TlaOperDecl = {
     val ret = TlaOperDecl(name, formalParams, body)(copyTypeTag)
     ret.isRecursive = this.isRecursive

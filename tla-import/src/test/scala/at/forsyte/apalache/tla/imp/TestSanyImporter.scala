@@ -69,7 +69,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
   }
 
   def expectOperDecl(
-      name: String, params: List[FormalParam], body: TlaEx
+      name: String, params: List[OperParam], body: TlaEx
   ): (TlaDecl => Unit) = {
     case d: TlaOperDecl =>
       assert(name == d.name)
@@ -91,7 +91,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
   }
 
   def findAndExpectOperDecl(
-      mod: TlaModule, name: String, params: List[FormalParam], body: TlaEx
+      mod: TlaModule, name: String, params: List[OperParam], body: TlaEx
   ): Unit = {
     mod.declarations.find {
       _.name == name
@@ -612,7 +612,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         "Implies",
         OperEx(TlaBoolOper.implies, ValEx(TlaBool(false)), ValEx(TlaBool(true)))
     )
-    expectDecl("Subset", OperEx(TlaSetOper.SUBSET, NameEx("x")))
+    expectDecl("Subset", OperEx(TlaSetOper.powerset, NameEx("x")))
     expectDecl("Union", OperEx(TlaSetOper.union, NameEx("x")))
     expectDecl("Domain", OperEx(TlaFunOper.domain, NameEx("x")))
     expectDecl(
@@ -1029,7 +1029,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     val mod = expectSingleModule("except", rootName, modules)
     expectSourceInfoInDefs(mod)
 
-    def expectDecl(name: String, params: List[FormalParam], body: TlaEx) =
+    def expectDecl(name: String, params: List[OperParam], body: TlaEx) =
       expectOperDecl(name, params, body)
 
     expectDecl(
@@ -1121,7 +1121,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     val mod = expectSingleModule("labels", rootName, modules)
     expectSourceInfoInDefs(mod)
 
-    def expectDecl(n: String, p: List[FormalParam], b: TlaEx) =
+    def expectDecl(n: String, p: List[OperParam], b: TlaEx) =
       expectOperDecl(n, p, b)
 
     //    A == {FALSE} \cup (l1 :: {TRUE})
@@ -1171,7 +1171,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     val mod = expectSingleModule("args", rootName, modules)
     expectSourceInfoInDefs(mod)
 
-    def expectDecl(n: String, p: List[FormalParam], b: TlaEx) =
+    def expectDecl(n: String, p: List[OperParam], b: TlaEx) =
       expectOperDecl(n, p, b)
 
     val expectedABody = OperEx(TlaFunOper.app, NameEx("f"), ValEx(TlaInt(2)))
@@ -1427,17 +1427,17 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
       .loadFromSource("level1Operators", Source.fromString(text))
     val mod = expectSingleModule("level1Operators", rootName, modules)
 
-    def expectDecl(n: String, p: List[FormalParam], b: TlaEx) =
+    def expectDecl(n: String, p: List[OperParam], b: TlaEx) =
       expectOperDecl(n, p, b)
 
     expectDecl(
         "A",
-        List(SimpleFormalParam("i"), SimpleFormalParam("j")),
+        List(OperParam("i"), OperParam("j")),
         OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j"))
     )(mod.declarations(2))
     expectDecl(
         "**",
-        List(SimpleFormalParam("i"), SimpleFormalParam("j")),
+        List(OperParam("i"), OperParam("j")),
         OperEx(TlaSetOper.cap, NameEx("i"), NameEx("j"))
     )(mod.declarations(3))
     val aDecl = mod.declarations(2).asInstanceOf[TlaOperDecl]
@@ -1473,15 +1473,15 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     val mod = expectSingleModule("level2Operators", rootName, modules)
     expectSourceInfoInDefs(mod)
 
-    def expectDecl(n: String, p: List[FormalParam], b: TlaEx) =
+    def expectDecl(n: String, p: List[OperParam], b: TlaEx) =
       expectOperDecl(n, p, b)
 
     expectDecl(
         "A",
         List(
-            SimpleFormalParam("i"),
-            SimpleFormalParam("j"),
-            OperFormalParam("f", 1)
+            OperParam("i"),
+            OperParam("j"),
+            OperParam("f", 1)
         ),
         OperEx(
             TlaOper.apply,
@@ -1525,7 +1525,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         assert("X" == xDecl.name)
         val yDecl = defs(1)
         assert(
-            TlaOperDecl("Y", List(SimpleFormalParam("a")), NameEx("a")) == yDecl
+            TlaOperDecl("Y", List(OperParam("a")), NameEx("a")) == yDecl
         )
         assert(sourceStore.contains(yDecl.body.ID)) // and source file information has been saved
 
@@ -1533,7 +1533,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         zDecl match {
           case TlaOperDecl(
                   "Z",
-                  List(OperFormalParam("f", 1), SimpleFormalParam("a")),
+                  List(OperParam("f", 1), OperParam("a", 0)),
                   _
               ) =>
             assert(
@@ -1578,7 +1578,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
                   NameEx("LAMBDA"),
                   TlaOperDecl(
                       "LAMBDA",
-                      List(SimpleFormalParam("x")),
+                      List(OperParam("x", 0)),
                       OperEx(TlaOper.eq, NameEx("x"), ValEx(TlaInt(_)))
                   )
               ) =>
@@ -1676,7 +1676,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
           // The caveat here is that the formal parameter R does not appear in the list of the R's formal parameters,
           // but it is accessible via the field recParam.
           assert(d.isRecursive)
-          val recParam = OperFormalParam(name, nparams)
+          val recParam = OperParam(name, nparams)
           assert(d.body == expectedBody)
           assert(sourceStore.contains(d.body.ID)) // and source file information has been saved
 
@@ -1721,7 +1721,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         // The caveat here is that the formal parameter F does not appear in the list of the F's formal parameters,
         // but it is accessible via the field recParam.
         assert(d.isRecursive)
-        val recParam = OperFormalParam("F", 1)
+        val recParam = OperParam("F", 1)
         val ite = OperEx(
             TlaControlOper.ifThenElse,
             OperEx(TlaOper.eq, NameEx("n"), ValEx(TlaInt(0))),
@@ -1853,8 +1853,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
               )
           ) =>
         assert(params.length == 1)
-        assert(params.head.isInstanceOf[SimpleFormalParam])
-        assert("x" == params.head.asInstanceOf[SimpleFormalParam].name)
+        assert(params.head.isInstanceOf[OperParam])
+        assert("x" == params.head.asInstanceOf[OperParam].name)
 
       case e =>
         fail("expected the body for J!F, found: " + e)
@@ -1875,9 +1875,9 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
       case Some(TlaOperDecl(_, params,
           OperEx(TlaArithOper.plus, NameEx("x"), NameEx("K")))) =>
         assert(params.length == 3)
-        assert(params.head == SimpleFormalParam("V"))
-        assert(params(1) == SimpleFormalParam("K"))
-        assert(params(2) == SimpleFormalParam("x"))
+        assert(params.head == FormalParam("V"))
+        assert(params(1) == FormalParam("K"))
+        assert(params(2) == FormalParam("x"))
 
       case _ =>
         fail("expected the body for I!F")
@@ -1887,7 +1887,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     root.declarations.find { _.name == "B2!C2!H" } match {
       case Some(TlaOperDecl(_, params, NameEx("x"))) =>
         assert(params.length == 1)
-        assert(params.head == SimpleFormalParam("x"))
+        assert(params.head == OperParam("x"))
 
       case _ =>
         fail("expected the body for B2!C2!H")
