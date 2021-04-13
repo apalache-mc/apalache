@@ -72,12 +72,19 @@ FALSE /\ 1       \* FALSE in TLC, type error in Apalache
 **Example in Python:**
 
 ```python
-True  and True # True
-False and True # False
-True  and False # False
-False and False # False
-False and 1 # False, because 1 is cast to True
-1 and False # False, because 1 is cast to True
+>>> True  and True
+True
+>>> False and True
+False
+>>> True  and False
+False
+>>> False and False
+False
+>>> False and 1 # 1 is cast to True
+False
+>>> 1 and False # 1 is cast to True
+False
+
 ```
 
 **Special syntax form:** To minimize the number of parentheses, conjunction can
@@ -149,10 +156,15 @@ TRUE  \/ 1       \* TRUE in TLC, type error in Apalache
 **Example in Python:**
 
 ```python
-True  or True   # True
-False or True   # True
-True  or False  # True
-False or False  # False
+>>> True  or True
+True
+>>> False or True
+True
+>>> True  or False
+True
+>>> False or False
+False
+
 ```
 
 **Special syntax form:** To minimize the number of parentheses, disjunction can
@@ -228,8 +240,11 @@ whereas TLC reports a runtime error.
 **Example in Python:**
 
 ```python
-not True    # False
-not False   # True
+>>> not True
+False
+>>> not False
+True
+
 ```
 
 ----------------------------------------------------------------------------
@@ -276,10 +291,15 @@ TRUE  => 1       \* runtime error in TLC, type error in Apalache
 Recall that `A => B` is equivalent to `~A \/ B`.
 
 ```python
-(not False) or True     # True
-(not True)  or True     # True
-(not False) or False    # True
-(not True)  or False    # False
+>>> (not False) or True
+True
+>>> (not True)  or True
+True
+>>> (not False) or False
+True
+>>> (not True)  or False
+False
+
 ```
 
 ----------------------------------------------------------------------------
@@ -333,10 +353,15 @@ FALSE <=> 1      \* runtime error in TLC, type error in Apalache
 Assuming that both expressions are Boolean, `F <=> G` is equivalent to `F = G`.
 
 ```python
-False == True   # False
-True  == True   # True
-False == False  # True
-True  == False  # False
+>>> False == True
+False
+>>> True  == True
+True
+>>> False == False
+True
+>>> True  == False
+False
+
 ```
 
 [Control Flow and Non-determinism]: ./control-and-nondeterminism.md
