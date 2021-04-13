@@ -1156,11 +1156,9 @@ EXITCODE: OK
 ```sh
 $ apalache-mc typecheck Channel.tla | sed 's/[IEW]@.*//'
 ...
-[Channel.tla:8:20-8:23]: Undefined name chan. Introduce a type annotation.
+Typing input error: Expected a type annotation for VARIABLE chan
 ...
-Type checker [FAILED]
-...
-EXITCODE: OK
+EXITCODE: ERROR (99)
 ```
 
 ### typecheck ChannelTyped.tla
@@ -1251,5 +1249,29 @@ PASS #1: TypeCheckerSnowcat
 Type checker [OK]
 ...
 EXITCODE: OK
+```
+
+### typecheck UntypedConst.tla
+
+```sh
+$ apalache-mc typecheck UntypedConst.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeCheckerSnowcat
+ > Running Snowcat .::.
+Typing input error: Expected a type annotation for CONSTANT N
+...
+EXITCODE: ERROR (99)
+```
+
+### typecheck UntypedVar.tla
+
+```sh
+$ apalache-mc typecheck UntypedVar.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeCheckerSnowcat
+ > Running Snowcat .::.
+Typing input error: Expected a type annotation for VARIABLE x
+...
+EXITCODE: ERROR (99)
 ```
 
