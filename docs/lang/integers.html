@@ -237,8 +237,11 @@ type error, whereas TLC reports a runtime error.</p>
 </code></pre>
 <p><strong>Example in Python:</strong> <code>a..b</code> can be written as <code>set(range(a, b + 1))</code> in
 python.</p>
-<pre><code class="language-python">  set(range(0, 10 + 1))     # {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
-  set(range(10, 2))         # set()
+<pre><code class="language-python">&gt;&gt;&gt; set(range(0, 10 + 1))
+{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+&gt;&gt;&gt; set(range(10, 2))
+set()
+
 </code></pre>
 <hr />
 <p><a name="uminus"></a></p>
@@ -259,8 +262,11 @@ type error, whereas TLC reports a runtime error.</p>
   -x      \* negated value of x
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">  -(5)
-  -(-5)
+<pre><code class="language-python">&gt;&gt;&gt; -(5)
+-5
+&gt;&gt;&gt; -(-5)
+5
+
 </code></pre>
 <hr />
 <p><a name="plus"></a></p>
@@ -280,8 +286,11 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   (-5) + 3  \* -2
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">  5 + 3
-  (-5) + 3
+<pre><code class="language-python">&gt;&gt;&gt; 5 + 3
+8
+&gt;&gt;&gt; (-5) + 3
+-2
+
 </code></pre>
 <hr />
 <p><a name="minus"></a></p>
@@ -302,9 +311,13 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   (-5) - (-3)   \* -2
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">  5 - 3
-  (-5) - 3
-  (-5) - (-3)
+<pre><code class="language-python">&gt;&gt;&gt; 5 - 3
+2
+&gt;&gt;&gt; (-5) - 3
+-8
+&gt;&gt;&gt; (-5) - (-3)
+-2
+
 </code></pre>
 <hr />
 <p><a name="mult"></a></p>
@@ -324,8 +337,11 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   (-5) * 3  \* -15
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">  5 * 3
-  (-5) * 3
+<pre><code class="language-python">&gt;&gt;&gt; 5 * 3
+15
+&gt;&gt;&gt; (-5) * 3
+-15
+
 </code></pre>
 <hr />
 <p><a name="div"></a></p>
@@ -376,10 +392,15 @@ of <code>a \div b</code> is undefined for <code>b = 0</code>.</p>
 </code></pre>
 <p><strong>Example in Python:</strong> Here are the examples for the four combinations of signs
 to produce the same results as in TLA+:</p>
-<pre><code class="language-python">  100    //   3     #  33
-  -100   //   3     # -34
-  100    // (-3)    # -34
-  (-100) // (-3)    #  33
+<pre><code class="language-python">&gt;&gt;&gt; 100    //   3
+33
+&gt;&gt;&gt; -100   //   3
+-34
+&gt;&gt;&gt; 100    // (-3)
+-34
+&gt;&gt;&gt; (-100) // (-3)
+33
+
 </code></pre>
 <hr />
 <p><a name="mod"></a></p>
@@ -407,10 +428,15 @@ of <code>a % b</code> is undefined for <code>b = 0</code>.</p>
 </code></pre>
 <p><strong>Example in Python:</strong> Here are the examples for the four combinations of signs
 to produce the same results as in TLA+:</p>
-<pre><code class="language-python">  100 % 3          # 1
-  -100 % (-3) + 3  # 2
-  100 % (-3) + 3   # 1
-  -100 % 3         # 2
+<pre><code class="language-python">&gt;&gt;&gt; 100 % 3
+1
+&gt;&gt;&gt; -100 % (-3) + 3
+2
+&gt;&gt;&gt; 100 % (-3) + 3
+1
+&gt;&gt;&gt; -100 % 3
+2
+
 </code></pre>
 <hr />
 <p><a name="pow"></a></p>
@@ -449,13 +475,21 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   5^(-3)    \* undefined on integers, TLC reports a runtime error
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">  5 ** 3
-  (-5) ** 3
-  0 ** 3
-  1 ** 5
-  (-1) ** 5
-  0 ** 0    # 0 in python %)
-  5 ** (-3) # floating point 0.008 in python
+<pre><code class="language-python">&gt;&gt;&gt; 5 ** 3
+125
+&gt;&gt;&gt; (-5) ** 3
+-125
+&gt;&gt;&gt; 0 ** 3
+0
+&gt;&gt;&gt; 1 ** 5
+1
+&gt;&gt;&gt; (-1) ** 5
+-1
+&gt;&gt;&gt; 0 ** 0
+1
+&gt;&gt;&gt; 5 ** (-3)
+0.008
+
 </code></pre>
 <hr />
 <p><a name="lt"></a></p>
@@ -480,9 +514,13 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   5 &lt; 1     \* FALSE
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">  1 &lt; 5
-  5 &lt; 5
-  5 &lt; 1
+<pre><code class="language-python">&gt;&gt;&gt; 1 &lt; 5
+True
+&gt;&gt;&gt; 5 &lt; 5
+False
+&gt;&gt;&gt; 5 &lt; 1
+False
+
 </code></pre>
 <hr />
 <p><a name="lte"></a></p>
@@ -507,9 +545,13 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   5 &lt;= 1     \* FALSE
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">  1 &lt;= 5
-  5 &lt;= 5
-  5 &lt;= 1
+<pre><code class="language-python">&gt;&gt;&gt; 1 &lt;= 5
+True
+&gt;&gt;&gt; 5 &lt;= 5
+True
+&gt;&gt;&gt; 5 &lt;= 1
+False
+
 </code></pre>
 <hr />
 <p><a name="gt"></a></p>
@@ -534,9 +576,13 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   5 &gt; 1     \* TRUE
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">  1 &gt; 5
-  5 &gt; 5
-  5 &gt; 1
+<pre><code class="language-python">&gt;&gt;&gt; 1 &gt; 5
+False
+&gt;&gt;&gt; 5 &gt; 5
+False
+&gt;&gt;&gt; 5 &gt; 1
+True
+
 </code></pre>
 <hr />
 <p><a name="gte"></a></p>
@@ -561,9 +607,13 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   5 &gt;= 1     \* TRUE
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">  1 &gt;= 5
-  5 &gt;= 5
-  5 &gt;= 1
+<pre><code class="language-python">&gt;&gt;&gt; 1 &gt;= 5
+False
+&gt;&gt;&gt; 5 &gt;= 5
+True
+&gt;&gt;&gt; 5 &gt;= 1
+True
+
 </code></pre>
 <hr />
 <p><a name="eq"></a></p>

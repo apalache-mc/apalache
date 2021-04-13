@@ -2878,12 +2878,19 @@ FALSE /\ 1       \* FALSE in TLC, type error in Apalache
     1 /\ FALSE   \* error in TLC, type error in Apalache
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">True  and True # True
-False and True # False
-True  and False # False
-False and False # False
-False and 1 # False, because 1 is cast to True
-1 and False # False, because 1 is cast to True
+<pre><code class="language-python">&gt;&gt;&gt; True  and True
+True
+&gt;&gt;&gt; False and True
+False
+&gt;&gt;&gt; True  and False
+False
+&gt;&gt;&gt; False and False
+False
+&gt;&gt;&gt; False and 1 # 1 is cast to True
+False
+&gt;&gt;&gt; 1 and False # 1 is cast to True
+False
+
 </code></pre>
 <p><strong>Special syntax form:</strong> To minimize the number of parentheses, conjunction can
 be written in the indented form:</p>
@@ -2936,10 +2943,15 @@ TRUE  \/ 1       \* TRUE in TLC, type error in Apalache
     1 \/ TRUE    \* error in TLC, type error in Apalache
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">True  or True   # True
-False or True   # True
-True  or False  # True
-False or False  # False
+<pre><code class="language-python">&gt;&gt;&gt; True  or True
+True
+&gt;&gt;&gt; False or True
+True
+&gt;&gt;&gt; True  or False
+True
+&gt;&gt;&gt; False or False
+False
+
 </code></pre>
 <p><strong>Special syntax form:</strong> To minimize the number of parentheses, disjunction can
 be written in the indented form:</p>
@@ -2988,8 +3000,11 @@ whereas TLC reports a runtime error.</p>
 ~(1)     \* error in TLC, type error in Apalache
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">not True    # False
-not False   # True
+<pre><code class="language-python">&gt;&gt;&gt; not True
+False
+&gt;&gt;&gt; not False
+True
+
 </code></pre>
 <hr />
 <p><a name="implies"></a></p>
@@ -3024,10 +3039,15 @@ TRUE  =&gt; 1       \* runtime error in TLC, type error in Apalache
 </code></pre>
 <p><strong>Example in Python:</strong></p>
 <p>Recall that <code>A =&gt; B</code> is equivalent to <code>~A \/ B</code>.</p>
-<pre><code class="language-python">(not False) or True     # True
-(not True)  or True     # True
-(not False) or False    # True
-(not True)  or False    # False
+<pre><code class="language-python">&gt;&gt;&gt; (not False) or True
+True
+&gt;&gt;&gt; (not True)  or True
+True
+&gt;&gt;&gt; (not False) or False
+True
+&gt;&gt;&gt; (not True)  or False
+False
+
 </code></pre>
 <hr />
 <p><a name="equiv"></a></p>
@@ -3068,10 +3088,15 @@ FALSE &lt;=&gt; 1      \* runtime error in TLC, type error in Apalache
 </code></pre>
 <p><strong>Example in Python:</strong></p>
 <p>Assuming that both expressions are Boolean, <code>F &lt;=&gt; G</code> is equivalent to <code>F = G</code>.</p>
-<pre><code class="language-python">False == True   # False
-True  == True   # True
-False == False  # True
-True  == False  # False
+<pre><code class="language-python">&gt;&gt;&gt; False == True
+False
+&gt;&gt;&gt; True  == True
+True
+&gt;&gt;&gt; False == False
+True
+&gt;&gt;&gt; True  == False
+False
+
 </code></pre>
 <h1><a class="header" href="#control-flow-and-non-determinism-in-tla" id="control-flow-and-non-determinism-in-tla">Control Flow and Non-determinism in TLA+</a></h1>
 <p><a href="lang/./standard-operators.html">Back to all operators</a></p>
@@ -3546,7 +3571,7 @@ types, Apalache raises a type error.</p>
 <p>As you most likely expected, this expression evaluates to <code>100</code>, when <code>x</code>
 evaluates to <code>TRUE</code>; and it evaluates to <code>0</code>, when <code>x</code> evaluates to <code>FALSE</code>.</p>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-tla">100 if x else 0
+<pre><code class="language-python">100 if x else 0
 </code></pre>
 <p>Note that we are using the expression syntax for <code>if-else</code> in python.
 This is because we write an expression, not a series of statements that assign
@@ -3744,8 +3769,11 @@ type error, whereas TLC reports a runtime error.</p>
 </code></pre>
 <p><strong>Example in Python:</strong> <code>a..b</code> can be written as <code>set(range(a, b + 1))</code> in
 python.</p>
-<pre><code class="language-python">  set(range(0, 10 + 1))     # {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
-  set(range(10, 2))         # set()
+<pre><code class="language-python">&gt;&gt;&gt; set(range(0, 10 + 1))
+{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+&gt;&gt;&gt; set(range(10, 2))
+set()
+
 </code></pre>
 <hr />
 <p><a name="uminus"></a></p>
@@ -3766,8 +3794,11 @@ type error, whereas TLC reports a runtime error.</p>
   -x      \* negated value of x
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">  -(5)
-  -(-5)
+<pre><code class="language-python">&gt;&gt;&gt; -(5)
+-5
+&gt;&gt;&gt; -(-5)
+5
+
 </code></pre>
 <hr />
 <p><a name="plus"></a></p>
@@ -3787,8 +3818,11 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   (-5) + 3  \* -2
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">  5 + 3
-  (-5) + 3
+<pre><code class="language-python">&gt;&gt;&gt; 5 + 3
+8
+&gt;&gt;&gt; (-5) + 3
+-2
+
 </code></pre>
 <hr />
 <p><a name="minus"></a></p>
@@ -3809,9 +3843,13 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   (-5) - (-3)   \* -2
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">  5 - 3
-  (-5) - 3
-  (-5) - (-3)
+<pre><code class="language-python">&gt;&gt;&gt; 5 - 3
+2
+&gt;&gt;&gt; (-5) - 3
+-8
+&gt;&gt;&gt; (-5) - (-3)
+-2
+
 </code></pre>
 <hr />
 <p><a name="mult"></a></p>
@@ -3831,8 +3869,11 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   (-5) * 3  \* -15
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">  5 * 3
-  (-5) * 3
+<pre><code class="language-python">&gt;&gt;&gt; 5 * 3
+15
+&gt;&gt;&gt; (-5) * 3
+-15
+
 </code></pre>
 <hr />
 <p><a name="div"></a></p>
@@ -3883,10 +3924,15 @@ of <code>a \div b</code> is undefined for <code>b = 0</code>.</p>
 </code></pre>
 <p><strong>Example in Python:</strong> Here are the examples for the four combinations of signs
 to produce the same results as in TLA+:</p>
-<pre><code class="language-python">  100    //   3     #  33
-  -100   //   3     # -34
-  100    // (-3)    # -34
-  (-100) // (-3)    #  33
+<pre><code class="language-python">&gt;&gt;&gt; 100    //   3
+33
+&gt;&gt;&gt; -100   //   3
+-34
+&gt;&gt;&gt; 100    // (-3)
+-34
+&gt;&gt;&gt; (-100) // (-3)
+33
+
 </code></pre>
 <hr />
 <p><a name="mod"></a></p>
@@ -3914,10 +3960,15 @@ of <code>a % b</code> is undefined for <code>b = 0</code>.</p>
 </code></pre>
 <p><strong>Example in Python:</strong> Here are the examples for the four combinations of signs
 to produce the same results as in TLA+:</p>
-<pre><code class="language-python">  100 % 3          # 1
-  -100 % (-3) + 3  # 2
-  100 % (-3) + 3   # 1
-  -100 % 3         # 2
+<pre><code class="language-python">&gt;&gt;&gt; 100 % 3
+1
+&gt;&gt;&gt; -100 % (-3) + 3
+2
+&gt;&gt;&gt; 100 % (-3) + 3
+1
+&gt;&gt;&gt; -100 % 3
+2
+
 </code></pre>
 <hr />
 <p><a name="pow"></a></p>
@@ -3956,13 +4007,21 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   5^(-3)    \* undefined on integers, TLC reports a runtime error
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">  5 ** 3
-  (-5) ** 3
-  0 ** 3
-  1 ** 5
-  (-1) ** 5
-  0 ** 0    # 0 in python %)
-  5 ** (-3) # floating point 0.008 in python
+<pre><code class="language-python">&gt;&gt;&gt; 5 ** 3
+125
+&gt;&gt;&gt; (-5) ** 3
+-125
+&gt;&gt;&gt; 0 ** 3
+0
+&gt;&gt;&gt; 1 ** 5
+1
+&gt;&gt;&gt; (-1) ** 5
+-1
+&gt;&gt;&gt; 0 ** 0
+1
+&gt;&gt;&gt; 5 ** (-3)
+0.008
+
 </code></pre>
 <hr />
 <p><a name="lt"></a></p>
@@ -3987,9 +4046,13 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   5 &lt; 1     \* FALSE
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">  1 &lt; 5
-  5 &lt; 5
-  5 &lt; 1
+<pre><code class="language-python">&gt;&gt;&gt; 1 &lt; 5
+True
+&gt;&gt;&gt; 5 &lt; 5
+False
+&gt;&gt;&gt; 5 &lt; 1
+False
+
 </code></pre>
 <hr />
 <p><a name="lte"></a></p>
@@ -4014,9 +4077,13 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   5 &lt;= 1     \* FALSE
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">  1 &lt;= 5
-  5 &lt;= 5
-  5 &lt;= 1
+<pre><code class="language-python">&gt;&gt;&gt; 1 &lt;= 5
+True
+&gt;&gt;&gt; 5 &lt;= 5
+True
+&gt;&gt;&gt; 5 &lt;= 1
+False
+
 </code></pre>
 <hr />
 <p><a name="gt"></a></p>
@@ -4041,9 +4108,13 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   5 &gt; 1     \* TRUE
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">  1 &gt; 5
-  5 &gt; 5
-  5 &gt; 1
+<pre><code class="language-python">&gt;&gt;&gt; 1 &gt; 5
+False
+&gt;&gt;&gt; 5 &gt; 5
+False
+&gt;&gt;&gt; 5 &gt; 1
+True
+
 </code></pre>
 <hr />
 <p><a name="gte"></a></p>
@@ -4068,9 +4139,13 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
   5 &gt;= 1     \* TRUE
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">  1 &gt;= 5
-  5 &gt;= 5
-  5 &gt;= 1
+<pre><code class="language-python">&gt;&gt;&gt; 1 &gt;= 5
+False
+&gt;&gt;&gt; 5 &gt;= 5
+True
+&gt;&gt;&gt; 5 &gt;= 1
+True
+
 </code></pre>
 <hr />
 <p><a name="eq"></a></p>
@@ -4124,7 +4199,7 @@ kinds of values in a single set, TLC would not complain about your sets:</p>
 </ol>
 <p>Apalache requires set elements to have the same type, that is, <code>Set(a)</code> for
 some type <code>a</code>. This is enforced by the type checker.  (Records are an exception
-to this rule, as some records can be unified to a common type.) </p>
+to this rule, as some records can be unified to a common type.)</p>
 <hr />
 <h2><a class="header" href="#operators-2" id="operators-2">Operators</a></h2>
 <p><a name="setEnum"></a></p>
@@ -4149,10 +4224,14 @@ If this is not the case, the type checker flags an error.</p>
   { FALSE, 1 }              \* a set of mixed elements.
                             \* Model checking error in TLC, type error in Apalache
 </code></pre>
-<p><strong>Example in Python:</strong> TLA+ sets are immutable, so we are using <code>frozenset</code>:</p>
-<pre><code class="language-python">  frozenset({1, 2, 3})
-  frozenset({frozenset({1, 2}), frozenset({2, 3})})
-  frozenset({False, 1})
+<p><strong>Example in Python:</strong></p>
+<pre><code class="language-python">&gt;&gt;&gt; {1, 2, 3}
+{1, 2, 3}
+&gt;&gt;&gt; {frozenset({2, 3}), frozenset({1, 2})}
+{frozenset({2, 3}), frozenset({1, 2})}
+&gt;&gt;&gt; {False, 1}
+{False, 1}
+
 </code></pre>
 <hr />
 <p><a name="in"></a></p>
@@ -4184,9 +4263,13 @@ incompatible with the type of elements of <code>S</code>, or if <code>S</code> i
                             \* static type error in Apalache
 </code></pre>
 <p><strong>Example in Python:</strong> Python conveniently offers us <code>in</code>:</p>
-<pre><code class="language-python">  1 in frozenset({1, 2, 3})     # True
-  10 in frozenset({1, 2, 3})    # False
-  1 in frozenset({&quot;a&quot;, &quot;b&quot;})    # False
+<pre><code class="language-python">&gt;&gt;&gt; 1 in {1, 2, 3}
+True
+&gt;&gt;&gt; 10 in {1, 2, 3}
+False
+&gt;&gt;&gt; 1 in {&quot;a&quot;, &quot;b&quot;}
+False
+
 </code></pre>
 <hr />
 <p><a name="notin"></a></p>
@@ -4219,9 +4302,13 @@ incompatible with the type of elements of <code>S</code>, or if <code>S</code> i
                             \* static type error in Apalache
 </code></pre>
 <p><strong>Example in Python:</strong> Python conveniently offers us <code>not in</code>:</p>
-<pre><code class="language-python">  1 not in frozenset({1, 2, 3})     # False
-  10 not in frozenset({1, 2, 3})    # True
-  1 not in frozenset({&quot;a&quot;, &quot;b&quot;})    # True
+<pre><code class="language-python">&gt;&gt;&gt; 1 not in {1, 2, 3}
+False
+&gt;&gt;&gt; 10 not in {1, 2, 3}
+True
+&gt;&gt;&gt; 1 not in {&quot;a&quot;, &quot;b&quot;}
+True
+
 </code></pre>
 <hr />
 <p><a name="eq"></a></p>
@@ -4255,10 +4342,15 @@ either not sets, or sets of incompatible types.</p>
                                         \* static type error in Apalache
 </code></pre>
 <p><strong>Example in Python:</strong> Python conveniently offers us <code>&lt;=</code>:</p>
-<pre><code class="language-python">  frozenset({1, 2}) &lt;= frozenset({1, 2, 3})             # True
-  frozenset({1, 2, 3}) &lt;= frozenset({1, 2, 3})          # True
-  frozenset({1, 2, 3}) &lt;= frozenset({1, 2})             # False
-  frozenset({frozenset({1})}) &lt;= frozenset({1, 2, 3})   # False
+<pre><code class="language-python">&gt;&gt;&gt; {1, 2} &lt;= {1, 2, 3}
+True
+&gt;&gt;&gt; {1, 2, 3} &lt;= {1, 2, 3}
+True
+&gt;&gt;&gt; {1, 2, 3} &lt;= {1, 2}
+False
+&gt;&gt;&gt; {frozenset({1})} &lt;= {1, 2, 3}
+False
+
 </code></pre>
 <hr />
 <p><a name="union"></a></p>
@@ -4284,10 +4376,15 @@ either not sets, or sets of incompatible types.</p>
 </code></pre>
 <p><strong>Example in Python:</strong> Python conveniently offers us <code>union</code>
 that can be written as <code>|</code>:</p>
-<pre><code class="language-python">  frozenset({0, 1, 2}) | frozenset({1, 2, 3})  # frozenset({0, 1, 2, 3})
-  frozenset({}) | frozenset({1, 2, 3})         # frozenset({ 1, 2, 3})
-  frozenset({1, 2, 3}) | frozenset({})         # frozenset({ 1, 2, 3})
-  frozenset({frozenset({1})}) | frozenset({1, 2}) # frozenset({1, 2, frozenset({1})})
+<pre><code class="language-python">&gt;&gt;&gt; {0, 1, 2} | {1, 2, 3}
+{0, 1, 2, 3}
+&gt;&gt;&gt; set() | {1, 2, 3}
+{1, 2, 3}
+&gt;&gt;&gt; {1, 2, 3} | set()
+{1, 2, 3}
+&gt;&gt;&gt; {frozenset({1})} | {1, 2}
+{1, frozenset({1}), 2}
+
 </code></pre>
 <hr />
 <p><a name="intersect"></a></p>
@@ -4313,10 +4410,15 @@ either not sets, or sets of incompatible types.</p>
 </code></pre>
 <p><strong>Example in Python:</strong> Python conveniently offers us <code>intersection</code>, which
 can be also written as <code>&amp;</code>:</p>
-<pre><code class="language-python">  frozenset({0, 1, 2}) &amp; frozenset({1, 2, 3})  # frozenset({ 1, 2 })
-  frozenset({}) &amp; frozenset({1, 2, 3})         # frozenset()
-  frozenset({1, 2, 3}) &amp; frozenset({})         # frozenset()
-  frozenset({frozenset({1})}) &amp; frozenset({1, 2}) # frozenset()
+<pre><code class="language-python">&gt;&gt;&gt; {0, 1, 2} &amp; {1, 2, 3}
+{1, 2}
+&gt;&gt;&gt; set() &amp; {1, 2, 3}
+set()
+&gt;&gt;&gt; {1, 2, 3} &amp; set()
+set()
+&gt;&gt;&gt; {frozenset({1})} &amp; {1, 2}
+set()
+
 </code></pre>
 <hr />
 <p><a name="setminus"></a></p>
@@ -4342,10 +4444,15 @@ either not sets, or sets of incompatible types.</p>
 </code></pre>
 <p><strong>Example in Python:</strong> Python conveniently offers us <code>difference</code>, which
 can be also written as <code>-</code>:</p>
-<pre><code class="language-python">  frozenset({0, 1, 2}) - frozenset({1, 2, 3})  # frozenset({ 0 })
-  frozenset({}) - frozenset({1, 2, 3})         # frozenset()
-  frozenset({1, 2, 3}) - frozenset({})         # frozenset({ 1, 2, 3 })
-  frozenset({frozenset({1})}) - frozenset({1, 2}) # frozenset({frozenset({1})})
+<pre><code class="language-python">&gt;&gt;&gt; {0, 1, 2} - {1, 2, 3}
+{0}
+&gt;&gt;&gt; set() - {1, 2, 3}
+set()
+&gt;&gt;&gt; {1, 2, 3} - set()
+{1, 2, 3}
+&gt;&gt;&gt; {frozenset({1})} - {1, 2}
+{frozenset({1})}
+
 </code></pre>
 <hr />
 <p><a name="filter"></a></p>
@@ -4390,12 +4497,15 @@ element <code>e</code> of <code>S</code>, the variable <code>x</code> is bound t
 </code></pre>
 <p><strong>Example in Python:</strong> Python conveniently offers us the set comprehension
 syntax:</p>
-<pre><code class="language-python">  S = frozenset({1, 2, 3, 4})
-  frozenset({ x for x in S if x &gt; 2 })      # frozenset({3, 4})
-  frozenset({ x for x in S if x &gt; 10 })     # frozenset()
-  S2 = frozenset({(x, y) for x in S for y in S})
-  frozenset({(x, y) for (x, y) in S2 if y == 3})
-    # frozenset({(1, 3), (2, 3), (3, 3), (4, 3)})
+<pre><code class="language-python">&gt;&gt;&gt; S = {1, 2, 3, 4}
+&gt;&gt;&gt; { x for x in S if x &gt; 2 }
+{3, 4}
+&gt;&gt;&gt; { x for x in S if x &gt; 10 }
+set()
+&gt;&gt;&gt; S2 = {(x, y) for x in S for y in S}
+&gt;&gt;&gt; {(x, y) for (x, y) in S2 if y == 3}
+{(2, 3), (3, 3), (1, 3), (4, 3)}
+
 </code></pre>
 <hr />
 <p><a name="map"></a></p>
@@ -4442,12 +4552,18 @@ under this binding.</p>
 </code></pre>
 <p><strong>Example in Python:</strong> Python conveniently offers us the set comprehension
 syntax:</p>
-<pre><code class="language-python">  S = frozenset({1, 2, 3, 4})
-  frozenset({ 2 * x for x in S })           # frozenset({2, 4, 6, 8})
-  T = frozenset({1, 2})
-  frozenset({ x + y for x in T for y in T}) # frozenset({2, 3, 4})
-  T2 = frozenset((x, y) for x in T for y in T) # {(1,1), (1, 2), (2, 1), (2, 2) }
-  frozenset({ x + y for (x, y) in T2})      # frozenset({2, 3, 4})
+<pre><code class="language-python">&gt;&gt;&gt; S = frozenset({1, 2, 3, 4})
+&gt;&gt;&gt; {2 * x for x in S}
+{8, 2, 4, 6}
+&gt;&gt;&gt; T = {1, 2}
+&gt;&gt;&gt; {x + y for x in T for y in T}
+{2, 3, 4}
+&gt;&gt;&gt; T2 = {(x, y) for x in T for y in T}
+&gt;&gt;&gt; T2
+{(1, 1), (1, 2), (2, 1), (2, 2)}
+&gt;&gt;&gt; {x + y for (x, y) in T2}
+{2, 3, 4}
+
 </code></pre>
 <hr />
 <p><a name="powerset"></a></p>
@@ -4503,7 +4619,11 @@ set of sets.</p>
 </code></pre>
 <p><strong>Example in Python:</strong> In contrast to <code>SUBSET S</code>, an implementation of <code>UNION S</code>
 in Python is quite simple:</p>
-<pre><code class="language-python">    functools.reduce(lambda x, y: x | y, s, frozenset())
+<pre><code class="language-python">&gt;&gt;&gt; from functools import reduce
+&gt;&gt;&gt; s = { frozenset({0, 1}), frozenset({1, 2}), frozenset({3}) }
+&gt;&gt;&gt; reduce((lambda x, y: x | y), s, set())
+{0, 1, 2, 3}
+
 </code></pre>
 <hr />
 <p><a name="card"></a></p>
@@ -4528,8 +4648,10 @@ different from a finite set.</p>
   \* 3
 </code></pre>
 <p><strong>Example in Python:</strong> In Python, we just use the set size:</p>
-<pre><code class="language-python">    S = frozenset({ 1, 2, 3 })
-    len(S)  # 3
+<pre><code class="language-python">&gt;&gt;&gt; S = { 1, 2, 3 }
+&gt;&gt;&gt; len(S)
+3
+
 </code></pre>
 <hr />
 <p><a name="finite"></a></p>

@@ -217,7 +217,7 @@ kinds of values in a single set, TLC would not complain about your sets:</p>
 </ol>
 <p>Apalache requires set elements to have the same type, that is, <code>Set(a)</code> for
 some type <code>a</code>. This is enforced by the type checker.  (Records are an exception
-to this rule, as some records can be unified to a common type.) </p>
+to this rule, as some records can be unified to a common type.)</p>
 <hr />
 <h2><a class="header" href="#operators" id="operators">Operators</a></h2>
 <p><a name="setEnum"></a></p>
@@ -242,10 +242,14 @@ If this is not the case, the type checker flags an error.</p>
   { FALSE, 1 }              \* a set of mixed elements.
                             \* Model checking error in TLC, type error in Apalache
 </code></pre>
-<p><strong>Example in Python:</strong> TLA+ sets are immutable, so we are using <code>frozenset</code>:</p>
-<pre><code class="language-python">  frozenset({1, 2, 3})
-  frozenset({frozenset({1, 2}), frozenset({2, 3})})
-  frozenset({False, 1})
+<p><strong>Example in Python:</strong></p>
+<pre><code class="language-python">&gt;&gt;&gt; {1, 2, 3}
+{1, 2, 3}
+&gt;&gt;&gt; {frozenset({2, 3}), frozenset({1, 2})}
+{frozenset({2, 3}), frozenset({1, 2})}
+&gt;&gt;&gt; {False, 1}
+{False, 1}
+
 </code></pre>
 <hr />
 <p><a name="in"></a></p>
@@ -277,9 +281,13 @@ incompatible with the type of elements of <code>S</code>, or if <code>S</code> i
                             \* static type error in Apalache
 </code></pre>
 <p><strong>Example in Python:</strong> Python conveniently offers us <code>in</code>:</p>
-<pre><code class="language-python">  1 in frozenset({1, 2, 3})     # True
-  10 in frozenset({1, 2, 3})    # False
-  1 in frozenset({&quot;a&quot;, &quot;b&quot;})    # False
+<pre><code class="language-python">&gt;&gt;&gt; 1 in {1, 2, 3}
+True
+&gt;&gt;&gt; 10 in {1, 2, 3}
+False
+&gt;&gt;&gt; 1 in {&quot;a&quot;, &quot;b&quot;}
+False
+
 </code></pre>
 <hr />
 <p><a name="notin"></a></p>
@@ -312,9 +320,13 @@ incompatible with the type of elements of <code>S</code>, or if <code>S</code> i
                             \* static type error in Apalache
 </code></pre>
 <p><strong>Example in Python:</strong> Python conveniently offers us <code>not in</code>:</p>
-<pre><code class="language-python">  1 not in frozenset({1, 2, 3})     # False
-  10 not in frozenset({1, 2, 3})    # True
-  1 not in frozenset({&quot;a&quot;, &quot;b&quot;})    # True
+<pre><code class="language-python">&gt;&gt;&gt; 1 not in {1, 2, 3}
+False
+&gt;&gt;&gt; 10 not in {1, 2, 3}
+True
+&gt;&gt;&gt; 1 not in {&quot;a&quot;, &quot;b&quot;}
+True
+
 </code></pre>
 <hr />
 <p><a name="eq"></a></p>
@@ -348,10 +360,15 @@ either not sets, or sets of incompatible types.</p>
                                         \* static type error in Apalache
 </code></pre>
 <p><strong>Example in Python:</strong> Python conveniently offers us <code>&lt;=</code>:</p>
-<pre><code class="language-python">  frozenset({1, 2}) &lt;= frozenset({1, 2, 3})             # True
-  frozenset({1, 2, 3}) &lt;= frozenset({1, 2, 3})          # True
-  frozenset({1, 2, 3}) &lt;= frozenset({1, 2})             # False
-  frozenset({frozenset({1})}) &lt;= frozenset({1, 2, 3})   # False
+<pre><code class="language-python">&gt;&gt;&gt; {1, 2} &lt;= {1, 2, 3}
+True
+&gt;&gt;&gt; {1, 2, 3} &lt;= {1, 2, 3}
+True
+&gt;&gt;&gt; {1, 2, 3} &lt;= {1, 2}
+False
+&gt;&gt;&gt; {frozenset({1})} &lt;= {1, 2, 3}
+False
+
 </code></pre>
 <hr />
 <p><a name="union"></a></p>
@@ -377,10 +394,15 @@ either not sets, or sets of incompatible types.</p>
 </code></pre>
 <p><strong>Example in Python:</strong> Python conveniently offers us <code>union</code>
 that can be written as <code>|</code>:</p>
-<pre><code class="language-python">  frozenset({0, 1, 2}) | frozenset({1, 2, 3})  # frozenset({0, 1, 2, 3})
-  frozenset({}) | frozenset({1, 2, 3})         # frozenset({ 1, 2, 3})
-  frozenset({1, 2, 3}) | frozenset({})         # frozenset({ 1, 2, 3})
-  frozenset({frozenset({1})}) | frozenset({1, 2}) # frozenset({1, 2, frozenset({1})})
+<pre><code class="language-python">&gt;&gt;&gt; {0, 1, 2} | {1, 2, 3}
+{0, 1, 2, 3}
+&gt;&gt;&gt; set() | {1, 2, 3}
+{1, 2, 3}
+&gt;&gt;&gt; {1, 2, 3} | set()
+{1, 2, 3}
+&gt;&gt;&gt; {frozenset({1})} | {1, 2}
+{1, frozenset({1}), 2}
+
 </code></pre>
 <hr />
 <p><a name="intersect"></a></p>
@@ -406,10 +428,15 @@ either not sets, or sets of incompatible types.</p>
 </code></pre>
 <p><strong>Example in Python:</strong> Python conveniently offers us <code>intersection</code>, which
 can be also written as <code>&amp;</code>:</p>
-<pre><code class="language-python">  frozenset({0, 1, 2}) &amp; frozenset({1, 2, 3})  # frozenset({ 1, 2 })
-  frozenset({}) &amp; frozenset({1, 2, 3})         # frozenset()
-  frozenset({1, 2, 3}) &amp; frozenset({})         # frozenset()
-  frozenset({frozenset({1})}) &amp; frozenset({1, 2}) # frozenset()
+<pre><code class="language-python">&gt;&gt;&gt; {0, 1, 2} &amp; {1, 2, 3}
+{1, 2}
+&gt;&gt;&gt; set() &amp; {1, 2, 3}
+set()
+&gt;&gt;&gt; {1, 2, 3} &amp; set()
+set()
+&gt;&gt;&gt; {frozenset({1})} &amp; {1, 2}
+set()
+
 </code></pre>
 <hr />
 <p><a name="setminus"></a></p>
@@ -435,10 +462,15 @@ either not sets, or sets of incompatible types.</p>
 </code></pre>
 <p><strong>Example in Python:</strong> Python conveniently offers us <code>difference</code>, which
 can be also written as <code>-</code>:</p>
-<pre><code class="language-python">  frozenset({0, 1, 2}) - frozenset({1, 2, 3})  # frozenset({ 0 })
-  frozenset({}) - frozenset({1, 2, 3})         # frozenset()
-  frozenset({1, 2, 3}) - frozenset({})         # frozenset({ 1, 2, 3 })
-  frozenset({frozenset({1})}) - frozenset({1, 2}) # frozenset({frozenset({1})})
+<pre><code class="language-python">&gt;&gt;&gt; {0, 1, 2} - {1, 2, 3}
+{0}
+&gt;&gt;&gt; set() - {1, 2, 3}
+set()
+&gt;&gt;&gt; {1, 2, 3} - set()
+{1, 2, 3}
+&gt;&gt;&gt; {frozenset({1})} - {1, 2}
+{frozenset({1})}
+
 </code></pre>
 <hr />
 <p><a name="filter"></a></p>
@@ -483,12 +515,15 @@ element <code>e</code> of <code>S</code>, the variable <code>x</code> is bound t
 </code></pre>
 <p><strong>Example in Python:</strong> Python conveniently offers us the set comprehension
 syntax:</p>
-<pre><code class="language-python">  S = frozenset({1, 2, 3, 4})
-  frozenset({ x for x in S if x &gt; 2 })      # frozenset({3, 4})
-  frozenset({ x for x in S if x &gt; 10 })     # frozenset()
-  S2 = frozenset({(x, y) for x in S for y in S})
-  frozenset({(x, y) for (x, y) in S2 if y == 3})
-    # frozenset({(1, 3), (2, 3), (3, 3), (4, 3)})
+<pre><code class="language-python">&gt;&gt;&gt; S = {1, 2, 3, 4}
+&gt;&gt;&gt; { x for x in S if x &gt; 2 }
+{3, 4}
+&gt;&gt;&gt; { x for x in S if x &gt; 10 }
+set()
+&gt;&gt;&gt; S2 = {(x, y) for x in S for y in S}
+&gt;&gt;&gt; {(x, y) for (x, y) in S2 if y == 3}
+{(2, 3), (3, 3), (1, 3), (4, 3)}
+
 </code></pre>
 <hr />
 <p><a name="map"></a></p>
@@ -535,12 +570,18 @@ under this binding.</p>
 </code></pre>
 <p><strong>Example in Python:</strong> Python conveniently offers us the set comprehension
 syntax:</p>
-<pre><code class="language-python">  S = frozenset({1, 2, 3, 4})
-  frozenset({ 2 * x for x in S })           # frozenset({2, 4, 6, 8})
-  T = frozenset({1, 2})
-  frozenset({ x + y for x in T for y in T}) # frozenset({2, 3, 4})
-  T2 = frozenset((x, y) for x in T for y in T) # {(1,1), (1, 2), (2, 1), (2, 2) }
-  frozenset({ x + y for (x, y) in T2})      # frozenset({2, 3, 4})
+<pre><code class="language-python">&gt;&gt;&gt; S = frozenset({1, 2, 3, 4})
+&gt;&gt;&gt; {2 * x for x in S}
+{8, 2, 4, 6}
+&gt;&gt;&gt; T = {1, 2}
+&gt;&gt;&gt; {x + y for x in T for y in T}
+{2, 3, 4}
+&gt;&gt;&gt; T2 = {(x, y) for x in T for y in T}
+&gt;&gt;&gt; T2
+{(1, 1), (1, 2), (2, 1), (2, 2)}
+&gt;&gt;&gt; {x + y for (x, y) in T2}
+{2, 3, 4}
+
 </code></pre>
 <hr />
 <p><a name="powerset"></a></p>
@@ -596,7 +637,11 @@ set of sets.</p>
 </code></pre>
 <p><strong>Example in Python:</strong> In contrast to <code>SUBSET S</code>, an implementation of <code>UNION S</code>
 in Python is quite simple:</p>
-<pre><code class="language-python">    functools.reduce(lambda x, y: x | y, s, frozenset())
+<pre><code class="language-python">&gt;&gt;&gt; from functools import reduce
+&gt;&gt;&gt; s = { frozenset({0, 1}), frozenset({1, 2}), frozenset({3}) }
+&gt;&gt;&gt; reduce((lambda x, y: x | y), s, set())
+{0, 1, 2, 3}
+
 </code></pre>
 <hr />
 <p><a name="card"></a></p>
@@ -621,8 +666,10 @@ different from a finite set.</p>
   \* 3
 </code></pre>
 <p><strong>Example in Python:</strong> In Python, we just use the set size:</p>
-<pre><code class="language-python">    S = frozenset({ 1, 2, 3 })
-    len(S)  # 3
+<pre><code class="language-python">&gt;&gt;&gt; S = { 1, 2, 3 }
+&gt;&gt;&gt; len(S)
+3
+
 </code></pre>
 <hr />
 <p><a name="finite"></a></p>

@@ -224,12 +224,19 @@ FALSE /\ 1       \* FALSE in TLC, type error in Apalache
     1 /\ FALSE   \* error in TLC, type error in Apalache
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">True  and True # True
-False and True # False
-True  and False # False
-False and False # False
-False and 1 # False, because 1 is cast to True
-1 and False # False, because 1 is cast to True
+<pre><code class="language-python">&gt;&gt;&gt; True  and True
+True
+&gt;&gt;&gt; False and True
+False
+&gt;&gt;&gt; True  and False
+False
+&gt;&gt;&gt; False and False
+False
+&gt;&gt;&gt; False and 1 # 1 is cast to True
+False
+&gt;&gt;&gt; 1 and False # 1 is cast to True
+False
+
 </code></pre>
 <p><strong>Special syntax form:</strong> To minimize the number of parentheses, conjunction can
 be written in the indented form:</p>
@@ -282,10 +289,15 @@ TRUE  \/ 1       \* TRUE in TLC, type error in Apalache
     1 \/ TRUE    \* error in TLC, type error in Apalache
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">True  or True   # True
-False or True   # True
-True  or False  # True
-False or False  # False
+<pre><code class="language-python">&gt;&gt;&gt; True  or True
+True
+&gt;&gt;&gt; False or True
+True
+&gt;&gt;&gt; True  or False
+True
+&gt;&gt;&gt; False or False
+False
+
 </code></pre>
 <p><strong>Special syntax form:</strong> To minimize the number of parentheses, disjunction can
 be written in the indented form:</p>
@@ -334,8 +346,11 @@ whereas TLC reports a runtime error.</p>
 ~(1)     \* error in TLC, type error in Apalache
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<pre><code class="language-python">not True    # False
-not False   # True
+<pre><code class="language-python">&gt;&gt;&gt; not True
+False
+&gt;&gt;&gt; not False
+True
+
 </code></pre>
 <hr />
 <p><a name="implies"></a></p>
@@ -370,10 +385,15 @@ TRUE  =&gt; 1       \* runtime error in TLC, type error in Apalache
 </code></pre>
 <p><strong>Example in Python:</strong></p>
 <p>Recall that <code>A =&gt; B</code> is equivalent to <code>~A \/ B</code>.</p>
-<pre><code class="language-python">(not False) or True     # True
-(not True)  or True     # True
-(not False) or False    # True
-(not True)  or False    # False
+<pre><code class="language-python">&gt;&gt;&gt; (not False) or True
+True
+&gt;&gt;&gt; (not True)  or True
+True
+&gt;&gt;&gt; (not False) or False
+True
+&gt;&gt;&gt; (not True)  or False
+False
+
 </code></pre>
 <hr />
 <p><a name="equiv"></a></p>
@@ -414,10 +434,15 @@ FALSE &lt;=&gt; 1      \* runtime error in TLC, type error in Apalache
 </code></pre>
 <p><strong>Example in Python:</strong></p>
 <p>Assuming that both expressions are Boolean, <code>F &lt;=&gt; G</code> is equivalent to <code>F = G</code>.</p>
-<pre><code class="language-python">False == True   # False
-True  == True   # True
-False == False  # True
-True  == False  # False
+<pre><code class="language-python">&gt;&gt;&gt; False == True
+False
+&gt;&gt;&gt; True  == True
+True
+&gt;&gt;&gt; False == False
+True
+&gt;&gt;&gt; True  == False
+False
+
 </code></pre>
 
                     </main>
