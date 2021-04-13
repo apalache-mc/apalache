@@ -421,7 +421,7 @@ abstract class TestJson extends FunSuite {
 
   test("LET A(x, y) == x + y IN A(1,2)") {
     // <A>_vars
-    val decl = TlaOperDecl("A", List(SimpleFormalParam("x"), SimpleFormalParam("y")), plus(name("x"), name("y")))
+    val decl = TlaOperDecl("A", List(OperParam("x"), OperParam("y")), plus(name("x"), name("y")))
     compare(
         letIn(appDecl(decl, int(1), int(2)), decl),
         """{"let":[{"operator":"A","body":{"plus":"x","arg":"y"},"params":[{"name":"x","arity":0},{"name":"y","arity":0}]}],"body":{"applyOp":"A","args":[1,2]}}"""
@@ -430,8 +430,8 @@ abstract class TestJson extends FunSuite {
 
   test("LET A(x, y) == x + 1 IN B(x, y) == x - y IN A(1, 2) * B(3, 4)") {
     // <A>_vars
-    val decl1 = TlaOperDecl("A", List(SimpleFormalParam("x"), SimpleFormalParam("y")), plus(name("x"), name("y")))
-    val decl2 = TlaOperDecl("B", List(SimpleFormalParam("x"), SimpleFormalParam("y")), minus(name("x"), name("y")))
+    val decl1 = TlaOperDecl("A", List(OperParam("x"), OperParam("y")), plus(name("x"), name("y")))
+    val decl2 = TlaOperDecl("B", List(OperParam("x"), OperParam("y")), minus(name("x"), name("y")))
     compareMultiLine(
         letIn(mult(appDecl(decl1, int(1), int(2)), appDecl(decl2, int(3), int(4))), decl1, decl2),
         """{
@@ -515,7 +515,7 @@ abstract class TestJson extends FunSuite {
     compareModuleMultiLine(
         new TlaModule("simpleOperator",
             List(
-                TlaOperDecl("A", List(SimpleFormalParam("age")), gt(name("age"), int(42)))
+                TlaOperDecl("A", List(OperParam("age")), gt(name("age"), int(42)))
             )),
         """{
         |  "module": "simpleOperator",
@@ -540,16 +540,15 @@ abstract class TestJson extends FunSuite {
 
   test("module level2Operators") {
     // awesome
-    val aDecl = TlaOperDecl("A", List(SimpleFormalParam("i"), SimpleFormalParam("j"), OperFormalParam("f", 1)),
+    val aDecl = TlaOperDecl("A", List(OperParam("i"), OperParam("j"), OperParam("f", 1)),
         OperEx(TlaOper.apply, NameEx("f"), OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j"))))
-    val bDecl = TlaOperDecl("B", List(SimpleFormalParam("y")), NameEx("y"))
+    val bDecl = TlaOperDecl("B", List(OperParam("y")), NameEx("y"))
     compareModuleMultiLine(
         new TlaModule("level2Operators",
             List(
                 aDecl,
                 bDecl,
-                TlaOperDecl("C", List(SimpleFormalParam("z")),
-                    appDecl(aDecl, int(0), NameEx("z"), appDecl(bDecl, int(1))))
+                TlaOperDecl("C", List(OperParam("z")), appDecl(aDecl, int(0), NameEx("z"), appDecl(bDecl, int(1))))
             )),
         """{
         |  "module": "level2Operators",

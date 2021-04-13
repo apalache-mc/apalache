@@ -134,7 +134,7 @@ class TestKeraLanguagePred extends LanguagePredTestSuite {
 
   test("a non-nullary let-in ") {
     val app = appOp(name("UserOp"), int(3))
-    val letInDef = letIn(app, declOp("UserOp", plus(int(1), name("x")), SimpleFormalParam("x")).untypedOperDecl())
+    val letInDef = letIn(app, declOp("UserOp", plus(int(1), name("x")), OperParam("x")).untypedOperDecl())
     expectFail(pred.isExprOk(letInDef))
   }
 

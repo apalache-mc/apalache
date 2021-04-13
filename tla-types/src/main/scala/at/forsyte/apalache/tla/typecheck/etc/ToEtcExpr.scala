@@ -888,17 +888,17 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
 
   // Translate a sequence of formal parameters into type variables
   private def formalParamsToTypeVars(
-      params: Seq[FormalParam]
+      params: Seq[OperParam]
   ): Seq[(String, TlaType1)] = {
     params match {
       case Seq() => Seq()
 
-      case SimpleFormalParam(name) +: tail =>
+      case OperParam(name, 0) +: tail =>
         // a simple parameter, just introduce a new variable, e.g., b
         val paramType = varPool.fresh
         (name, paramType) +: formalParamsToTypeVars(tail)
 
-      case OperFormalParam(name, arity) +: tail =>
+      case OperParam(name, arity) +: tail =>
         // a higher-order operator, introduce an operator type (b, c, ...) => z
         val paramType = OperT1(varPool.fresh(arity), varPool.fresh)
         (name, paramType) +: formalParamsToTypeVars(tail)

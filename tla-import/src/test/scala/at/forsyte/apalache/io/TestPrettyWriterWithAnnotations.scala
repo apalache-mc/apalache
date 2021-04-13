@@ -55,7 +55,7 @@ class TestPrettyWriterWithAnnotations extends FunSuite with BeforeAndAfterEach {
   }
 
   test("operator declaration") {
-    val decl = TlaOperDecl("MyOper", List(SimpleFormalParam("x"), SimpleFormalParam("y")), tla.bool(true))
+    val decl = TlaOperDecl("MyOper", List(OperParam("x"), OperParam("y")), tla.bool(true))
     val store = createAnnotationStore()
     store += decl.ID -> List(Annotation("type", AnnotationStr("(Int, Str) -> Bool")))
 

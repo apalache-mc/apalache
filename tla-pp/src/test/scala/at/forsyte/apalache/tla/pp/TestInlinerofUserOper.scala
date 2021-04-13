@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.pp
 
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.InlinerOfUserOper
-import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, OperT1, SimpleFormalParam, TestingPredefs}
-import at.forsyte.apalache.tla.lir.TypedPredefs._
+import at.forsyte.apalache.tla.lir.{BoolT1, OperParam, IntT1, OperT1, TestingPredefs}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -23,7 +23,7 @@ class TestInlinerofUserOper extends FunSuite with TestingPredefs {
     // C(x) == x + 1
     // B == k
     // A == B()
-    val cDecl = declOp("C", cBody, SimpleFormalParam("x"))
+    val cDecl = declOp("C", cBody, OperParam("x"))
       .typedOperDecl(types, "C")
     val aDecl = declOp("A", appOp(tla.name("B") ? "U") ? "i")
       .typedOperDecl(types, "U")

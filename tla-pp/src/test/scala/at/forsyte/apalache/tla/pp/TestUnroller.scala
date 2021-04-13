@@ -214,7 +214,7 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
           case LetInEx(letBody, TlaOperDecl(declName, params, unrolled)) =>
             assert(appEx == letBody)
             assert(letInOpName == declName)
-            assert(List(SimpleFormalParam("p")) == params)
+            assert(List(OperParam("p")) == params)
             assert(aUnrolledBody == unrolled)
 
           case _ =>

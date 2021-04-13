@@ -480,7 +480,7 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
           if (!tod.isRecursive)
             text("")
           else
-            "RECURSIVE" <> space <> toDoc(OperFormalParam(name, params.length)) <> line
+            "RECURSIVE" <> space <> toDoc(OperParam(name, params.length)) <> line
 
         val paramsDoc =
           if (params.isEmpty)
@@ -491,13 +491,11 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
     }
   }
 
-  private def toDoc(param: FormalParam): Doc = {
-    param match {
-      case SimpleFormalParam(name) =>
-        name
-
-      case OperFormalParam(name, arity) =>
-        group(name <> parens(ssep(List.fill(arity)("_"), "," <> softline)))
+  private def toDoc(param: OperParam): Doc = {
+    if (param.isOperator) {
+      group(param.name <> parens(ssep(List.fill(param.arity)("_"), "," <> softline)))
+    } else {
+      param.name
     }
   }
 
