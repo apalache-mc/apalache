@@ -643,12 +643,12 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     assert(expected == stringWriter.toString)
   }
 
-  test("Cardinality") {
+  test("FiniteSets!Cardinality") {
     val writer = new PrettyWriter(printWriter, 80)
     val expr = card(name("S"))
     writer.write(expr)
     printWriter.flush()
-    val expected = """Cardinality(S)""".stripMargin
+    val expected = """FiniteSets!Cardinality(S)""".stripMargin
     assert(expected == stringWriter.toString)
   }
 
@@ -661,12 +661,12 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     assert(expected == stringWriter.toString)
   }
 
-  test("Append(<<a>>, b)") {
+  test("Sequences!Append(<<a>>, b)") {
     val writer = new PrettyWriter(printWriter, 80)
     val expr = append(tuple(name("a")), name("b"))
     writer.write(expr)
     printWriter.flush()
-    val expected = """Append(<<a>>, b)""".stripMargin
+    val expected = """Sequences!Append(<<a>>, b)""".stripMargin
     assert(expected == stringWriter.toString)
   }
 
