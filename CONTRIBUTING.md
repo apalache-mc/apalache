@@ -217,6 +217,14 @@ make integration
 
 For more details on running the integration tests, see [./test/tla/cli-integration-tests.md](./test/tla/cli-integration-tests.md).
 
+### Python doctests
+
+To check the python snippets in the language manual, execute
+
+```sh
+python3 -m doctest -v docs/src/lang/*.md
+```
+
 ### Continuous Integration
 
 We run continuous integration tests using [GitHub actions](https://github.com/informalsystems/apalache/actions).
