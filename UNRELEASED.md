@@ -11,7 +11,7 @@
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
 ### Bug fixes
-* Type checker: Showing an error on an annotation for a CONSTANT or VARIABLE, see #705
+* Type checker: Showing an error on missing annotations CONSTANTs or VARIABLEs, see #705
 
 ### Changed
 
