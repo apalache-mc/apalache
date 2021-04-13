@@ -12,7 +12,7 @@ abstract class TlcOper extends TlaOper {
 object TlcOper {
 
   /**
-   * Print(out, val) from TLC.
+   * Operator `Print(out, val)` from TLC.
    */
   object print extends TlcOper {
     override def name: String = "TLC!Print"
@@ -21,7 +21,7 @@ object TlcOper {
   }
 
   /**
-   * PrintT(out) from TLC.
+   * Operator `PrintT(out)` from TLC.
    */
   object printT extends TlcOper {
     override def name: String = "TLC!PrintT"
@@ -30,7 +30,7 @@ object TlcOper {
   }
 
   /**
-   * Assert(out, val) from TLC.
+   * Operator `Assert(out, val)` from TLC.
    */
   object assert extends TlcOper {
     override def name: String = "TLC!Assert"
@@ -39,7 +39,7 @@ object TlcOper {
   }
 
   /**
-   * JavaTime from TLC.
+   * Operator `JavaTime` from TLC.
    */
   object javaTime extends TlcOper {
     override def name: String = "TLC!javaTime"
@@ -48,7 +48,7 @@ object TlcOper {
   }
 
   /**
-   * TLCGet(i) from TLC.
+   * Operator `TLCGet(i)` from TLC.
    */
   object tlcGet extends TlcOper {
     override def name: String = "TLC!TLCGet"
@@ -57,7 +57,7 @@ object TlcOper {
   }
 
   /**
-   * TLCSet(i, v) from TLC.
+   * Operator `TLCSet(i, v)` from TLC.
    */
   object tlcSet extends TlcOper {
     override def name: String = "TLC!TLCSet"
@@ -66,7 +66,7 @@ object TlcOper {
   }
 
   /**
-   * _ :> _ from TLC.
+   * Singleton function in TLC: `a :> b`.
    */
   object colonGreater extends TlcOper {
     override def name: String = "TLC!:>"
@@ -75,7 +75,7 @@ object TlcOper {
   }
 
   /**
-   * _ @@ _ from TLC.
+   * Function concatenation in TLC: `f @@ g`.
    */
   object atat extends TlcOper {
     override def name: String = "TLC!@@"
@@ -84,7 +84,7 @@ object TlcOper {
   }
 
   /**
-   * Permutations(S) from TLC.
+   * Operator `Permutations(S)` from TLC.
    */
   object permutations extends TlcOper {
     override def name: String = "TLC!Permutations"
@@ -93,7 +93,7 @@ object TlcOper {
   }
 
   /**
-   * SortSeq(s, Op(_, _)) from TLC.
+   * Operator `SortSeq(s, Op(_, _))` from TLC.
    */
   object sortSeq extends TlcOper {
     override def name: String = "TLC!SortSeq"
@@ -102,7 +102,7 @@ object TlcOper {
   }
 
   /**
-   * RandomElement(S) from TLC.
+   * Operator `RandomElement(S)` from TLC.
    */
   object randomElement extends TlcOper {
     override def name: String = "TLC!RandomElement"
@@ -111,7 +111,7 @@ object TlcOper {
   }
 
   /**
-   * any from TLC.
+   * Operator `Any` from TLC.
    */
   object any extends TlcOper {
     override def name: String = "TLC!Any"
@@ -120,7 +120,7 @@ object TlcOper {
   }
 
   /**
-   * ToString(S) from TLC.
+   * Operator `ToString(S)` from TLC.
    */
   object tlcToString extends TlcOper {
     override def name: String = "TLC!ToString"
@@ -129,7 +129,7 @@ object TlcOper {
   }
 
   /**
-   * TLCEval(v) from TLC.
+   * Operator `TLCEval(v)` from TLC.
    */
   object tlcEval extends TlcOper {
     override def name: String = "TLC!TLCEval"

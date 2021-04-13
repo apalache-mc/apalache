@@ -134,7 +134,7 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2)(implicit typeTag: TypeTag
     Obj("name" -> name, "arity" -> arity)
   }
 
-  private def operatorDef(name: String, params: Seq[FormalParam], body: TlaEx): ujson.Value = {
+  private def operatorDef(name: String, params: Seq[OperParam], body: TlaEx): ujson.Value = {
     Obj("operator" -> name, "body" -> toJson(body), "params" -> params.map(toJson))
   }
 
@@ -168,13 +168,8 @@ class JsonWriter(writer: PrintWriter, indent: Int = 2)(implicit typeTag: TypeTag
     }
   }
 
-  private def toJson(param: FormalParam): ujson.Value = {
-    param match {
-      case SimpleFormalParam(name) =>
-        operFormalParam(name, 0)
-      case OperFormalParam(name, arity) =>
-        operFormalParam(name, arity)
-    }
+  private def toJson(param: OperParam): ujson.Value = {
+    operFormalParam(param.name, param.arity)
   }
 
   // TODO: in LIR, do not see anything about function definitions, as allowed by TLA+ grammar (Andrey)

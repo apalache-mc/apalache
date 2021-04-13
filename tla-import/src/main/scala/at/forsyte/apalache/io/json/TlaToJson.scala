@@ -155,18 +155,12 @@ class TlaToJson[T <: JsonRepresentation](factory: JsonFactory[T])(implicit typTa
 
     case decl @ TlaOperDecl(name, formalParams, body) =>
       val bodyJson = apply(body)
-      val paramsJsons = formalParams map {
-        case SimpleFormalParam(paramName) =>
-          factory.mkObj(
-              kindFieldName -> "SimpleFormalParam",
-              "name" -> paramName
-          )
-        case OperFormalParam(paramName, arity) =>
-          factory.mkObj(
-              kindFieldName -> "OperFormalParam",
-              "name" -> paramName,
-              "arity" -> arity
-          )
+      val paramsJsons = formalParams map { case OperParam(paramName, arity) =>
+        factory.mkObj(
+            kindFieldName -> "OperParam",
+            "name" -> paramName,
+            "arity" -> arity
+        )
       }
       factory.mkObj(
           typeFieldName -> typTagPrinter(decl.typeTag),

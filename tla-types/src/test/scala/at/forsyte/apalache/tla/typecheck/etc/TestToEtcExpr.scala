@@ -111,7 +111,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
 
   test("LET-IN simple") {
     // LET Foo(x) == x IN TRUE
-    val foo = TlaOperDecl("Foo", List(SimpleFormalParam("x")), tla.name("x"))
+    val foo = TlaOperDecl("Foo", List(OperParam("x")), tla.name("x"))
     // becomes: let Foo = λ x ∈ Set(a). x in Bool
     val fooType = mkUniqAbs(mkUniqName("x"), (mkUniqName("x"), mkUniqConst(SetT1(VarT1("a")))))
     val ex = LetInEx(tla.bool(true), foo)
@@ -125,7 +125,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     // LET
     //   \* @type: Int => Int;
     //   Foo(x) == x IN TRUE
-    val foo = TlaOperDecl("Foo", List(SimpleFormalParam("x")), tla.name("x"))
+    val foo = TlaOperDecl("Foo", List(OperParam("x")), tla.name("x"))
     annotationStore += foo.ID -> List(StandardAnnotations.mkType("Int => Int"))
     // becomes:
     // Foo: (Int => Int) in
@@ -141,7 +141,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
 
   test("LET-IN higher order") {
     // LET Foo(Bar(_)) == 1 IN TRUE
-    val foo = TlaOperDecl("Foo", List(OperFormalParam("Bar", 1)), tla.int(1))
+    val foo = TlaOperDecl("Foo", List(OperParam("Bar", 1)), tla.int(1))
     // becomes: let Foo = λ Bar ∈ Set(a => b). Int in Bool
     val fooType = mkUniqAbs(mkUniqConst(IntT1()), (mkUniqName("Bar"), mkUniqConst(parser("Set(a => b)"))))
     val ex = LetInEx(tla.bool(true), foo)

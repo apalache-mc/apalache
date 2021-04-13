@@ -59,8 +59,9 @@ object TlaOper {
 
   /**
    * Group two lists of arguments into a single interleaved list, starting with the head of even.
+   *
    * @param even the list of even arguments
-   * @param odd the list of odd arguments
+   * @param odd  the list of odd arguments
    * @return the interleaved list
    */
   def interleave(even: Seq[TlaEx], odd: Seq[TlaEx]): Seq[TlaEx] = {
@@ -70,17 +71,21 @@ object TlaOper {
     }
   }
 
-  /** Equality of two TLA+ objects */
+  /**
+   * Equality of two TLA+ objects: `a = b`.
+   */
   object eq extends TlaOper {
-    val name = "="
+    val name = "EQ"
     val interpretation: Interpretation.Value = Interpretation.Predefined
     val arity = FixedArity(2)
     override val precedence: (Int, Int) = (5, 5)
   }
 
-  /** Inequality of two TLA+ objects */
+  /**
+   * Inequality of two TLA+ objects: `a /= b`.
+   */
   object ne extends TlaOper {
-    val name = "/="
+    val name = "NE"
     val interpretation: Interpretation.Value = Interpretation.Predefined
     val arity = FixedArity(2)
     override val precedence: (Int, Int) = (5, 5)
@@ -126,12 +131,13 @@ object TlaOper {
     override def arity: OperArity = AnyPositiveArity()
 
     override def interpretation: Interpretation.Value = Interpretation.Predefined
-    override val name: String = "_()"
+
+    override val name: String = "OPER_APP"
     override val precedence: (Int, Int) = (16, 16)
   }
 
   /**
-   * The CHOOSE operator: CHOOSE x \in S: p
+   * Choose from a set: `CHOOSE x \in S: p`
    */
   object chooseBounded extends TlaOper {
     // TODO: move this operator to TlaBoolOper? (Igor)
@@ -146,7 +152,7 @@ object TlaOper {
   }
 
   /**
-   * The CHOOSE operator: CHOOSE x : p
+   * Choose from the universe: `CHOOSE x : p`
    */
   object chooseUnbounded extends TlaOper {
     // TODO: move this operator to TlaBoolOper? (Igor)
