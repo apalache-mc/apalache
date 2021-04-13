@@ -337,7 +337,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val opsig = OperT1(List(SetT1(a), SetT1(a)), BoolT1())
         mkExRefApp(opsig, args)
 
-      case OperEx(TlaSetOper.SUBSET, args @ _*) =>
+      case OperEx(TlaSetOper.powerset, args @ _*) =>
         // SUBSET S
         val a = varPool.fresh
         val opsig = OperT1(List(SetT1(a)), SetT1(SetT1(a)))

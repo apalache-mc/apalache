@@ -18,7 +18,7 @@ object TlaBoolOper {
    */
   object and extends TlaBoolOper {
     override def arity = AnyArity()
-    override val name = "/\\"
+    override val name = "AND"
     override val precedence: (Int, Int) = (3, 3)
   }
 
@@ -30,7 +30,8 @@ object TlaBoolOper {
    */
   object or extends TlaBoolOper {
     override def arity: OperArity = AnyArity()
-    override val name: String = "\\/"
+
+    override val name: String = "OR"
     override val precedence: (Int, Int) = (3, 3)
   }
 
@@ -39,7 +40,8 @@ object TlaBoolOper {
    */
   object not extends TlaBoolOper {
     override def arity: OperArity = FixedArity(1)
-    override val name: String = "~"
+
+    override val name: String = "NOT"
     override val precedence: (Int, Int) = (4, 4)
   }
 
@@ -48,7 +50,8 @@ object TlaBoolOper {
    */
   object implies extends TlaBoolOper {
     override def arity: OperArity = FixedArity(2)
-    override val name: String = "=>"
+
+    override val name: String = "IMPLIES"
     override val precedence: (Int, Int) = (1, 1)
   }
 
@@ -57,35 +60,48 @@ object TlaBoolOper {
    */
   object equiv extends TlaBoolOper {
     override def arity: OperArity = FixedArity(2)
-    override val name: String = "<=>"
+
+    override val name: String = "EQUIV"
     override val precedence: (Int, Int) = (2, 2)
   }
 
-  /** \A x \in S : p */
+  /**
+   * A universal quantifier over a set: `\A x \in S : p`.
+   */
   object forall extends TlaBoolOper {
     override def arity: OperArity = FixedArity(3)
-    override val name: String = "\\A3"
+
+    override val name: String = "FORALL3"
     override val precedence: (Int, Int) = (0, 0) // Section 15.2.1
   }
 
-  /** \A x : p */
+  /**
+   * A universal quantifier over the whole universe: `\A x : p`.
+   */
   object forallUnbounded extends TlaBoolOper {
     override def arity: OperArity = FixedArity(2)
-    override val name: String = "\\A2"
+
+    override val name: String = "FORALL2"
     override val precedence: (Int, Int) = (0, 0) // Section 15.2.1
   }
 
-  /** \E x \in S : p */
+  /**
+   * An existential quantifier over a set: `\E x \in S : p`.
+   */
   object exists extends TlaBoolOper {
     override def arity: OperArity = FixedArity(3)
-    override val name: String = "\\E3"
+
+    override val name: String = "EXISTS3"
     override val precedence: (Int, Int) = (0, 0) // Section 15.2.1
   }
 
-  /** \E x : p */
+  /**
+   * An existential quantifier over the whole universe: `\E x : p`.
+   */
   object existsUnbounded extends TlaBoolOper {
     override def arity: OperArity = FixedArity(2)
-    override val name: String = "\\E2"
+
+    override val name: String = "EXISTS2"
     override val precedence: (Int, Int) = (0, 0) // Section 15.2.1
   }
 }

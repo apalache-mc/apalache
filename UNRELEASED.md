@@ -13,3 +13,4 @@
 ### Changed
 
 * IR: simplified `SimpleFormalParam` and `OperFormalParam` into `OperParam`, see #656
+* IR: made consistent the names of IR operators (may break JSON compatibility), see #634
