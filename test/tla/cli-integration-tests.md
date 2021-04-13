@@ -1156,11 +1156,9 @@ EXITCODE: OK
 ```sh
 $ apalache-mc typecheck Channel.tla | sed 's/[IEW]@.*//'
 ...
-[Channel.tla:8:20-8:23]: Undefined name chan. Introduce a type annotation.
+Typing input error: Expected a type annotation for VARIABLE chan
 ...
-Type checker [FAILED]
-...
-EXITCODE: OK
+EXITCODE: ERROR (99)
 ```
 
 ### typecheck ChannelTyped.tla
