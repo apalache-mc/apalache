@@ -206,14 +206,15 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach {
     /*
      \/ p_1 /\ e_1
      \/ p_2 /\ e_2
-     \/ e_def
+     \/ ~p_1 /\ ~p_2 /\ e_def
      */
     val expected: TlaEx =
       tla
         .or(
             tla.and(tla.name("p_1") ? "b", tla.name("e_1") ? "b") ? "b",
             tla.and(tla.name("p_2") ? "b", tla.name("e_2") ? "b") ? "b",
-            tla.name("e_def") ? "b"
+            tla.and(tla.not(tla.name("p_1") ? "b") ? "b", tla.not(tla.name("p_2") ? "b") ? "b",
+                tla.name("e_def") ? "b") ? "b"
         )
         .typed(types, "b")
     assert(expected == output)

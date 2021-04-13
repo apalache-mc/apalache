@@ -151,8 +151,9 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
         val (guards, actions) = TlaOper.deinterleave(args)
         // produce g_1 /\ a_1, ..., g_n /\ a_n
         val ands = guards.zip(actions) map { case (g, a) => tla.and(g, a).typed(BoolT1()) }
-        // (g_1 /\ a_1) \/ ... \/ (g_n /\ a_n) \/ otherEx
-        tla.or(ands :+ otherEx: _*).typed(BoolT1())
+        val otherForm = tla.and(guards.map(g => tla.not(g).typed(BoolT1())) :+ otherEx: _*).typed(BoolT1())
+        // (g_1 /\ a_1) \/ ... \/ (g_n /\ a_n) \/ ~g_1 /\ ... /\ ~g_n /\ otherEx
+        tla.or(ands :+ otherForm: _*).typed(BoolT1())
       } else {
         // produce a chain: IF g_1 THEN e_1 ELSE (IF g_2 THEN e_2 ELSE (..( ELSE otherEx)..)
         val revGuardsAndActions = mkGuardsAndActions(args)
