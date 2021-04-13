@@ -23,13 +23,16 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
 
   def apply(decl: TlaDecl, inScopeEx: EtcExpr): EtcExpr = {
     decl match {
-      case d: TlaConstDecl =>
-        // CONSTANT N
-        findTypeFromTagOrAnnotation(d).map(tt => mkTypeDecl(ExactRef(d.ID), d.name, tt, inScopeEx)).getOrElse(inScopeEx)
+      case TlaConstDecl(_) | TlaVarDecl(_) =>
+        // CONSTANT N or VARIABLE x
+        findTypeFromTagOrAnnotation(decl) match {
+          case Some(tt) =>
+            mkTypeDecl(ExactRef(decl.ID), decl.name, tt, inScopeEx)
 
-      case d: TlaVarDecl =>
-        // VARIABLE x
-        findTypeFromTagOrAnnotation(d).map(tt => mkTypeDecl(ExactRef(d.ID), d.name, tt, inScopeEx)).getOrElse(inScopeEx)
+          case None =>
+            val kind = if (decl.isInstanceOf[TlaConstDecl]) "CONSTANT" else "VARIABLE"
+            throw new TypingInputException(s"Expected a type annotation for $kind ${decl.name}")
+        }
 
       case d: TlaAssumeDecl =>
         // ASSUME(...)
