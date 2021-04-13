@@ -109,9 +109,13 @@ If this is not the case, the type checker flags an error.
 **Example in Python:**
 
 ```python
+>>> {1, 2, 3}
 {1, 2, 3}
-{frozenset({1, 2}), frozenset({2, 3})}
+>>> {frozenset({2, 3}), frozenset({1, 2})}
+{frozenset({2, 3}), frozenset({1, 2})}
+>>> {False, 1}
 {False, 1}
+
 ```
 
 ----------------------------------------------------------------------------
