@@ -64,7 +64,7 @@ kinds of values in a single set, TLC would not complain about your sets:
 
 Apalache requires set elements to have the same type, that is, `Set(a)` for
 some type `a`. This is enforced by the type checker.  (Records are an exception
-to this rule, as some records can be unified to a common type.) 
+to this rule, as some records can be unified to a common type.)
 
 ----------------------------------------------------------------------------
 
@@ -106,12 +106,16 @@ If this is not the case, the type checker flags an error.
                             \* Model checking error in TLC, type error in Apalache
 ```
 
-**Example in Python:** TLA+ sets are immutable, so we are using `frozenset`:
+**Example in Python:**
 
 ```python
-  frozenset({1, 2, 3})
-  frozenset({frozenset({1, 2}), frozenset({2, 3})})
-  frozenset({False, 1})
+>>> {1, 2, 3}
+{1, 2, 3}
+>>> {frozenset({2, 3}), frozenset({1, 2})}
+{frozenset({2, 3}), frozenset({1, 2})}
+>>> {False, 1}
+{False, 1}
+
 ```
 
 ----------------------------------------------------------------------------
@@ -159,9 +163,13 @@ incompatible with the type of elements of `S`, or if `S` is not a set.
 **Example in Python:** Python conveniently offers us `in`:
 
 ```python
-  1 in frozenset({1, 2, 3})     # True
-  10 in frozenset({1, 2, 3})    # False
-  1 in frozenset({"a", "b"})    # False
+>>> 1 in {1, 2, 3}
+True
+>>> 10 in {1, 2, 3}
+False
+>>> 1 in {"a", "b"}
+False
+
 ```
 
 ----------------------------------------------------------------------------
@@ -209,9 +217,13 @@ incompatible with the type of elements of `S`, or if `S` is not a set.
 **Example in Python:** Python conveniently offers us `not in`:
 
 ```python
-  1 not in frozenset({1, 2, 3})     # False
-  10 not in frozenset({1, 2, 3})    # True
-  1 not in frozenset({"a", "b"})    # True
+>>> 1 not in {1, 2, 3}
+False
+>>> 10 not in {1, 2, 3}
+True
+>>> 1 not in {"a", "b"}
+True
+
 ```
 
 ----------------------------------------------------------------------------
@@ -262,10 +274,15 @@ either not sets, or sets of incompatible types.
 **Example in Python:** Python conveniently offers us `<=`:
 
 ```python
-  frozenset({1, 2}) <= frozenset({1, 2, 3})             # True
-  frozenset({1, 2, 3}) <= frozenset({1, 2, 3})          # True
-  frozenset({1, 2, 3}) <= frozenset({1, 2})             # False
-  frozenset({frozenset({1})}) <= frozenset({1, 2, 3})   # False
+>>> {1, 2} <= {1, 2, 3}
+True
+>>> {1, 2, 3} <= {1, 2, 3}
+True
+>>> {1, 2, 3} <= {1, 2}
+False
+>>> {frozenset({1})} <= {1, 2, 3}
+False
+
 ```
 
 ----------------------------------------------------------------------------
@@ -306,10 +323,15 @@ either not sets, or sets of incompatible types.
                        that can be written as `|`:
 
 ```python
-  frozenset({0, 1, 2}) | frozenset({1, 2, 3})  # frozenset({0, 1, 2, 3})
-  frozenset({}) | frozenset({1, 2, 3})         # frozenset({ 1, 2, 3})
-  frozenset({1, 2, 3}) | frozenset({})         # frozenset({ 1, 2, 3})
-  frozenset({frozenset({1})}) | frozenset({1, 2}) # frozenset({1, 2, frozenset({1})})
+>>> {0, 1, 2} | {1, 2, 3}
+{0, 1, 2, 3}
+>>> set() | {1, 2, 3}
+{1, 2, 3}
+>>> {1, 2, 3} | set()
+{1, 2, 3}
+>>> {frozenset({1})} | {1, 2}
+{1, frozenset({1}), 2}
+
 ```
 
 ----------------------------------------------------------------------------
@@ -350,10 +372,15 @@ either not sets, or sets of incompatible types.
     can be also written as `&`:
 
 ```python
-  frozenset({0, 1, 2}) & frozenset({1, 2, 3})  # frozenset({ 1, 2 })
-  frozenset({}) & frozenset({1, 2, 3})         # frozenset()
-  frozenset({1, 2, 3}) & frozenset({})         # frozenset()
-  frozenset({frozenset({1})}) & frozenset({1, 2}) # frozenset()
+>>> {0, 1, 2} & {1, 2, 3}
+{1, 2}
+>>> set() & {1, 2, 3}
+set()
+>>> {1, 2, 3} & set()
+set()
+>>> {frozenset({1})} & {1, 2}
+set()
+
 ```
 
 ----------------------------------------------------------------------------
@@ -394,10 +421,15 @@ either not sets, or sets of incompatible types.
     can be also written as `-`:
 
 ```python
-  frozenset({0, 1, 2}) - frozenset({1, 2, 3})  # frozenset({ 0 })
-  frozenset({}) - frozenset({1, 2, 3})         # frozenset()
-  frozenset({1, 2, 3}) - frozenset({})         # frozenset({ 1, 2, 3 })
-  frozenset({frozenset({1})}) - frozenset({1, 2}) # frozenset({frozenset({1})})
+>>> {0, 1, 2} - {1, 2, 3}
+{0}
+>>> set() - {1, 2, 3}
+set()
+>>> {1, 2, 3} - set()
+{1, 2, 3}
+>>> {frozenset({1})} - {1, 2}
+{frozenset({1})}
+
 ```
 
 ----------------------------------------------------------------------------
@@ -455,12 +487,15 @@ element `e` of `S`, the variable `x` is bound to `e[1]` and `y` is bound to
 syntax:
 
 ```python
-  S = frozenset({1, 2, 3, 4})
-  frozenset({ x for x in S if x > 2 })      # frozenset({3, 4})
-  frozenset({ x for x in S if x > 10 })     # frozenset()
-  S2 = frozenset({(x, y) for x in S for y in S})
-  frozenset({(x, y) for (x, y) in S2 if y == 3})
-    # frozenset({(1, 3), (2, 3), (3, 3), (4, 3)})
+>>> S = {1, 2, 3, 4}
+>>> { x for x in S if x > 2 }
+{3, 4}
+>>> { x for x in S if x > 10 }
+set()
+>>> S2 = {(x, y) for x in S for y in S}
+>>> {(x, y) for (x, y) in S2 if y == 3}
+{(2, 3), (3, 3), (1, 3), (4, 3)}
+
 ```
 
 ----------------------------------------------------------------------------
@@ -521,12 +556,18 @@ under this binding.
 syntax:
 
 ```python
-  S = frozenset({1, 2, 3, 4})
-  frozenset({ 2 * x for x in S })           # frozenset({2, 4, 6, 8})
-  T = frozenset({1, 2})
-  frozenset({ x + y for x in T for y in T}) # frozenset({2, 3, 4})
-  T2 = frozenset((x, y) for x in T for y in T) # {(1,1), (1, 2), (2, 1), (2, 2) }
-  frozenset({ x + y for (x, y) in T2})      # frozenset({2, 3, 4})
+>>> S = frozenset({1, 2, 3, 4})
+>>> {2 * x for x in S}
+{8, 2, 4, 6}
+>>> T = {1, 2}
+>>> {x + y for x in T for y in T}
+{2, 3, 4}
+>>> T2 = {(x, y) for x in T for y in T}
+>>> T2
+{(1, 1), (1, 2), (2, 1), (2, 2)}
+>>> {x + y for (x, y) in T2}
+{2, 3, 4}
+
 ```
 
 ----------------------------------------------------------------------------
@@ -612,7 +653,11 @@ set of sets.
 in Python is quite simple:
 
 ```python
-    functools.reduce(lambda x, y: x | y, s, frozenset())
+>>> from functools import reduce
+>>> s = { frozenset({0, 1}), frozenset({1, 2}), frozenset({3}) }
+>>> reduce((lambda x, y: x | y), s, set())
+{0, 1, 2, 3}
+
 ```
 
 ----------------------------------------------------------------------------
@@ -653,8 +698,10 @@ different from a finite set.
 **Example in Python:** In Python, we just use the set size:
 
 ```python
-    S = frozenset({ 1, 2, 3 })
-    len(S)  # 3
+>>> S = { 1, 2, 3 }
+>>> len(S)
+3
+
 ```
 
 ----------------------------------------------------------------------------

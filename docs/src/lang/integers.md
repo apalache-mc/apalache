@@ -90,8 +90,11 @@ type error, whereas TLC reports a runtime error.
 python.
 
 ```python
-  set(range(0, 10 + 1))     # {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
-  set(range(10, 2))         # set()
+>>> set(range(0, 10 + 1))
+{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+>>> set(range(10, 2))
+set()
+
 ```
 
 ----------------------------------------------------------------------------
@@ -127,8 +130,11 @@ type error, whereas TLC reports a runtime error.
 **Example in Python:**
 
 ```python
-  -(5)
-  -(-5)
+>>> -(5)
+-5
+>>> -(-5)
+5
+
 ```
 
 ----------------------------------------------------------------------------
@@ -163,8 +169,11 @@ statically reports a type error, whereas TLC reports a runtime error.
 **Example in Python:**
 
 ```python
-  5 + 3
-  (-5) + 3
+>>> 5 + 3
+8
+>>> (-5) + 3
+-2
+
 ```
 
 ----------------------------------------------------------------------------
@@ -200,9 +209,13 @@ statically reports a type error, whereas TLC reports a runtime error.
 **Example in Python:**
 
 ```python
-  5 - 3
-  (-5) - 3
-  (-5) - (-3)
+>>> 5 - 3
+2
+>>> (-5) - 3
+-8
+>>> (-5) - (-3)
+-2
+
 ```
 
 ----------------------------------------------------------------------------
@@ -237,8 +250,11 @@ statically reports a type error, whereas TLC reports a runtime error.
 **Example in Python:**
 
 ```python
-  5 * 3
-  (-5) * 3
+>>> 5 * 3
+15
+>>> (-5) * 3
+-15
+
 ```
 
 ----------------------------------------------------------------------------
@@ -308,10 +324,15 @@ of `a \div b` is undefined for `b = 0`.
 to produce the same results as in TLA+:
 
 ```python
-  100    //   3     #  33
-  -100   //   3     # -34
-  100    // (-3)    # -34
-  (-100) // (-3)    #  33
+>>> 100    //   3
+33
+>>> -100   //   3
+-34
+>>> 100    // (-3)
+-34
+>>> (-100) // (-3)
+33
+
 ```
 
 ----------------------------------------------------------------------------
@@ -356,10 +377,15 @@ of `a % b` is undefined for `b = 0`.
 to produce the same results as in TLA+:
 
 ```python
-  100 % 3          # 1
-  -100 % (-3) + 3  # 2
-  100 % (-3) + 3   # 1
-  -100 % 3         # 2
+>>> 100 % 3
+1
+>>> -100 % (-3) + 3
+2
+>>> 100 % (-3) + 3
+1
+>>> -100 % 3
+2
+
 ```
 
 ----------------------------------------------------------------------------
@@ -412,13 +438,21 @@ statically reports a type error, whereas TLC reports a runtime error.
 **Example in Python:**
 
 ```python
-  5 ** 3
-  (-5) ** 3
-  0 ** 3
-  1 ** 5
-  (-1) ** 5
-  0 ** 0    # 0 in python %)
-  5 ** (-3) # floating point 0.008 in python
+>>> 5 ** 3
+125
+>>> (-5) ** 3
+-125
+>>> 0 ** 3
+0
+>>> 1 ** 5
+1
+>>> (-1) ** 5
+-1
+>>> 0 ** 0
+1
+>>> 5 ** (-3)
+0.008
+
 ```
 
 ----------------------------------------------------------------------------
@@ -457,9 +491,13 @@ statically reports a type error, whereas TLC reports a runtime error.
 **Example in Python:**
 
 ```python
-  1 < 5
-  5 < 5
-  5 < 1
+>>> 1 < 5
+True
+>>> 5 < 5
+False
+>>> 5 < 1
+False
+
 ```
 
 ----------------------------------------------------------------------------
@@ -498,9 +536,13 @@ statically reports a type error, whereas TLC reports a runtime error.
 **Example in Python:**
 
 ```python
-  1 <= 5
-  5 <= 5
-  5 <= 1
+>>> 1 <= 5
+True
+>>> 5 <= 5
+True
+>>> 5 <= 1
+False
+
 ```
 
 ----------------------------------------------------------------------------
@@ -539,9 +581,13 @@ statically reports a type error, whereas TLC reports a runtime error.
 **Example in Python:**
 
 ```python
-  1 > 5
-  5 > 5
-  5 > 1
+>>> 1 > 5
+False
+>>> 5 > 5
+False
+>>> 5 > 1
+True
+
 ```
 
 ----------------------------------------------------------------------------
@@ -580,9 +626,13 @@ statically reports a type error, whereas TLC reports a runtime error.
 **Example in Python:**
 
 ```python
-  1 >= 5
-  5 >= 5
-  5 >= 1
+>>> 1 >= 5
+False
+>>> 5 >= 5
+True
+>>> 5 >= 1
+True
+
 ```
 
 ----------------------------------------------------------------------------
