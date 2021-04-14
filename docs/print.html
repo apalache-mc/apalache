@@ -1963,65 +1963,6 @@ preprocessing steps:</p>
 <p>Keramelizer rewrites TLA+ expressions into <a href="apalache/./kera.html">KerA</a>. For many TLA+ expressions
 this translation is clear, however, some expressions cannot be easily translated. Below
 we discuss such expressions and the decisions that we have made.</p>
-<h3><a class="header" href="#case-a-namekera-casea" id="case-a-namekera-casea">CASE <a name="kera-case"></a></a></h3>
-<p>TLA+ supports two kinds of CASE expressions:</p>
-<ul>
-<li><code>CASE</code>. These are expressions without a default value:</li>
-</ul>
-<pre><code class="language-tla">    CASE
-         p_1 -&gt; e_1
-      [] p_2 -&gt; e_2
-         ...
-      [] p_n -&gt; e_n
-</code></pre>
-<ul>
-<li><code>CASE-OTHER</code>. These are expressions with a default value:</li>
-</ul>
-<pre><code class="language-tla">   CASE
-        p_1 -&gt; e_1
-     [] p_2 -&gt; e_2
-        ...
-     [] p_n -&gt; e_n
-     [] OTHER -&gt; e_def
-</code></pre>
-<p>Keramelizer supports only <code>CASE-OTHER</code> and asks the user to translate <code>CASE</code> expressions
-into <code>CASE-OTHER</code>. One could imagine that <code>CASE</code> could be expressed as
-<code>(p_1 /\ e_1) \/ ... \/ (p_n /\ e_n)</code>. However, this approach only works for Boolean
-expressions, which requires type inference. Moreover, the user expects a warning when
-neither of the conditions <code>p_1, ..., p_n</code> holds true.
-Hence, Leslie Lamport defines semantics of case in <a href="apalache/preprocessing.html#spec2004">Specifying Systems, p. 298</a> as:</p>
-<pre><code class="language-tla">  CHOOSE v: (p_1 /\ (v = e_1) \/ ... \/ (p_n /\ (v = e_n)))
-</code></pre>
-<p>Similarly, <code>CASE-OTHER</code> is defined  as:</p>
-<pre><code class="language-tla"> CHOOSE v: (p_1 /\ (v = e_1) \/ ... \/ (p_n /\ (v = e_n)) \/ (~p_1 /\ ... ~p_n /\ (v = e_ def)))
-</code></pre>
-<p>As a result, if there are several conditions among <code>p_1, ..., p_n</code> that hold true,
-then <code>CHOOSE</code> always selects the same condition <code>p_i</code> for equivalent formulas.
-<em>It is hard to enforce these general semantics in a model checker</em>. Thus, we have decided to select
-a fixed order of evaluating the conditions: the top-to-bottom order that is commonly used in
-programming languages. By using this approach, it is easy to translate <code>CASE-OTHER</code> as follows:</p>
-<pre><code class="language-tla">IF p_1
-THEN e_1
-ELSE
-  IF p_2
-  THEN e_2
-  ...
-    IF p_n
-    THEN e_n
-    ELSE e_def
-</code></pre>
-<p>With this approach it is not obvious how one would translate <code>CASE</code> in a sound way.
-We could drop the last condition <code>p_n</code> and unconditionally use the expression <code>e_n</code> in the bottom
-else arm. Hence, we ask the user to add the <code>OTHER</code> case to a <code>CASE</code> expression. Usually,
-the user has a better idea about the default case than an automatic tool. For instance,
-one can also rewrite the (presumably impossible) default case using the <code>CHOOSE</code> operator:</p>
-<pre><code class="language-tla">   CASE
-        p_1 -&gt; e_1
-     [] p_2 -&gt; e_2
-        ...
-     [] p_n -&gt; e_n
-     [] OTHER -&gt; CHOOSE x \in {}: FALSE
-</code></pre>
 <h1><a class="header" href="#references" id="references">References</a></h1>
 <ul>
 <li>Leslie Lamport. Specifying Systems: The TLA+ Language and Tools for Hardware and Software Engineers.
