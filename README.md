@@ -114,12 +114,6 @@ With additional funding from [<img alt="the Vienna Business Agency" src="./Wirts
 
 [tla+]: http://lamport.azurewebsites.net/tla/tla.html
 [microsoft z3]: https://github.com/Z3Prover/z3
-[supported features]: https://apalache.informal.systems/docs/apalache/features.html
-[tlc]: http://lamport.azurewebsites.net/tla/tools.html
-[leslie lamport's page on tla+]: http://lamport.azurewebsites.net/tla/tla.html
-[video course]: http://lamport.azurewebsites.net/video/videos.html
-[tla+]: http://lamport.azurewebsites.net/tla/tla.html
-[microsoft z3]: https://github.com/Z3Prover/z3
 [supported features]: ./docs/features.md
 [tlc]: http://lamport.azurewebsites.net/tla/tools.html
 [leslie lamport's page on tla+]: http://lamport.azurewebsites.net/tla/tla.html
@@ -127,6 +121,8 @@ With additional funding from [<img alt="the Vienna Business Agency" src="./Wirts
 [releases page]: https://github.com/informalsystems/apalache/releases
 [master]: https://github.com/informalsystems/apalache/tree/master
 [unstable branch]: https://github.com/informalsystems/apalache/tree/unstable
+[apalache user manual]: ./docs/manual.md
+[idioms for writing better tla+]: ./docs/idiomatic
 [apalache zulip stream]: https://informal-systems.zulipchat.com/#narrow/stream/265309-apalache
 [tendermint specs]: https://github.com/tendermint/spec/tree/master/rust-spec
 [tendermint blockchain]: https://github.com/tendermint
