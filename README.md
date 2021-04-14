@@ -110,7 +110,7 @@ Related reports and publications can be found at the
 
 Apalache is developed at [Informal Systems](https://informal.systems/).
 
-With additional funding from [![Vienna Business Agency Logo](TODO)](https://viennabusinessagency.at/).
+With additional funding from [<img alt="the Vienna Business Agency" src="./Wirtschaftsagentur_Wien_logo.jpg" width="100">](https://viennabusinessagency.at/).
 
 [tla+]: http://lamport.azurewebsites.net/tla/tla.html
 [microsoft z3]: https://github.com/Z3Prover/z3
