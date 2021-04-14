@@ -143,19 +143,48 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
    * @return a transformed expression
    */
   private def transformControl: PartialFunction[TlaEx, TlaEx] = {
+
     case expr @ OperEx(TlaControlOper.caseWithOther, otherEx, args @ _*) =>
-      def decorateWithIf(elseEx: TlaEx, guardAction: (TlaEx, TlaEx)): TlaEx = {
-        tla.ite(guardAction._1, guardAction._2, elseEx).typed(elseEx.typeTag.asTlaType1())
+      // CASE with a default arm
+      if (expr.typeTag == Typed(BoolT1())) {
+        // the Boolean case becomes a disjunction that has otherEx as an option
+        val (guards, actions) = TlaOper.deinterleave(args)
+        // produce g_1 /\ a_1, ..., g_n /\ a_n
+        val ands = guards.zip(actions) map { case (g, a) => tla.and(g, a).typed(BoolT1()) }
+        val otherForm = tla.and(guards.map(g => tla.not(g).typed(BoolT1())) :+ otherEx: _*).typed(BoolT1())
+        // (g_1 /\ a_1) \/ ... \/ (g_n /\ a_n) \/ ~g_1 /\ ... /\ ~g_n /\ otherEx
+        tla.or(ands :+ otherForm: _*).typed(BoolT1())
+      } else {
+        // produce a chain: IF g_1 THEN e_1 ELSE (IF g_2 THEN e_2 ELSE (..( ELSE otherEx)..)
+        val revGuardsAndActions = mkGuardsAndActions(args)
+        revGuardsAndActions.foldLeft(otherEx)(decorateWithIf)
       }
 
-      // produce a chain of if-then-else expressions
-      val revGuardsAndActions = mkGuardsAndActions(args)
-      revGuardsAndActions.foldLeft(otherEx)(decorateWithIf)
+    case expr @ OperEx(TlaControlOper.caseNoOther, args @ _*) =>
+      // CASE without a default arm
+      if (expr.typeTag == Typed(BoolT1())) {
+        // the Boolean case becomes a disjunction
+        val (guards, actions) = TlaOper.deinterleave(args)
+        // produce g_1 /\ a_1, ..., g_n /\ a_n
+        val ands = guards.zip(actions) map { case (g, a) => tla.and(g, a).typed(BoolT1()) }
+        // (g_1 /\ a_1) \/ ... \/ (g_n /\ a_n)
+        tla.or(ands: _*).typed(BoolT1())
+      } else {
+        // produce a chain: IF g_1 THEN e_1 ELSE (IF g_2 THEN e_2 ELSE (..( ELSE e_n)..)
+        if (args.length >= 2) {
+          // ignore the last guard and treat lastAction as the default arm
+          val prefix = args.dropRight(2)
+          val revGuardsAndActions = mkGuardsAndActions(prefix)
+          revGuardsAndActions.foldLeft(args.last)(decorateWithIf)
+        } else {
+          // in the unlikely case of CASE without any guards, just return FALSE
+          tla.bool(false).typed()
+        }
+      }
+  }
 
-    case expr @ OperEx(TlaControlOper.caseNoOther, _*) =>
-      throw new NotInKeraError(
-          "CASE without other, see: " +
-            "[docs/preprocessing.md]", expr)
+  private def decorateWithIf(elseEx: TlaEx, guardAction: (TlaEx, TlaEx)): TlaEx = {
+    tla.ite(guardAction._1, guardAction._2, elseEx).typed(elseEx.typeTag.asTlaType1())
   }
 
   private def mkGuardsAndActions(args: Seq[TlaEx]): Seq[(TlaEx, TlaEx)] = {

@@ -651,6 +651,24 @@ The outcome is: NoError
 ...
 ```
 
+### check CaseNoOther succeeds
+
+```sh
+$ apalache-mc check CaseNoOther.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
+### check CaseNoOtherBool succeeds
+
+```sh
+$ apalache-mc check CaseNoOtherBool.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
 ### check Callback.tla succeeds
 
 `Callback.tla` demonstrates that one can implement non-determinism with the existential operator and use a callback to

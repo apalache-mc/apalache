@@ -10,6 +10,10 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
+### Features
+
+* Checker: Support for CASE without OTHER, see #285
+
 ### Bug fixes
 * Type checker: Showing an error on missing annotations CONSTANTs or VARIABLEs, see #705
 
