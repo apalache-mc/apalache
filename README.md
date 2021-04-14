@@ -112,17 +112,17 @@ Apalache is developed at [Informal Systems](https://informal.systems/).
 
 With additional funding from<br />[<img alt="the Vienna Business Agency" src="./Wirtschaftsagentur_Wien_logo.jpg" width="200">](https://viennabusinessagency.at/).
 
+Past funding from [Der Wiener Wissenschafts-, Forschungs- und Technologiefonds](https://wwtf.at/about/).
+
 [tla+]: http://lamport.azurewebsites.net/tla/tla.html
 [microsoft z3]: https://github.com/Z3Prover/z3
-[supported features]: ./docs/features.md
+[supported features]: https://apalache.informal.systems/docs/apalache/features.html
 [tlc]: http://lamport.azurewebsites.net/tla/tools.html
 [leslie lamport's page on tla+]: http://lamport.azurewebsites.net/tla/tla.html
 [video course]: http://lamport.azurewebsites.net/video/videos.html
 [releases page]: https://github.com/informalsystems/apalache/releases
 [master]: https://github.com/informalsystems/apalache/tree/master
 [unstable branch]: https://github.com/informalsystems/apalache/tree/unstable
-[apalache user manual]: ./docs/manual.md
-[idioms for writing better tla+]: ./docs/idiomatic
 [apalache zulip stream]: https://informal-systems.zulipchat.com/#narrow/stream/265309-apalache
 [tendermint specs]: https://github.com/tendermint/spec/tree/master/rust-spec
 [tendermint blockchain]: https://github.com/tendermint
