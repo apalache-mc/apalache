@@ -1209,6 +1209,21 @@ Type checker [OK]
 EXITCODE: OK
 ```
 
+### typecheck ChangRoberts.tla
+
+```sh
+$ apalache-mc typecheck ChangRoberts.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeCheckerSnowcat
+ > Running Snowcat .::.
+ > Your types are great!
+ > All expressions are typed
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
 ### typecheck AnnotationsAndInstances592.tla
 
 ```sh
