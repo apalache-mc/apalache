@@ -14,6 +14,10 @@
 
 * Checker: Support for CASE without OTHER, see #285
 
+### Documentation
+
+* Testing: RFC006 on unit-testing and PBT, see #741
+
 ### Bug fixes
 * Type checker: Showing an error on missing annotations CONSTANTs or VARIABLEs, see #705
 
