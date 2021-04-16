@@ -89,8 +89,8 @@ Assert_n0 ==
         msgs'[n] = msgs[n] \union {m}
 
 \* Execute the action under test.
-\* Note that we decouple Assert_n0 from Action_n0.
-\* The reason is that we always assume that Action_n0 always holds,
+\* Note that we decouple Assert_n0 from TestAction_n0.
+\* The reason is that we always assume that TestAction_n0 always holds,
 \* whereas we may want to see Assert_n0 violated.
 \*
 \* @require("Prepare_n0")
