@@ -6,5 +6,5 @@ show_downloads: "true"
 # Fix the download links
 # TODO Automate generation of these to point to latest release
 github:
-  zip_url: https://github.com/informalsystems/apalache/releases/latest/download/apalache-v0.8.2.zip
-  tar_url: https://github.com/informalsystems/apalache/releases/latest/download/apalache-v0.8.2.tgz
+  zip_url: https://github.com/informalsystems/apalache/releases/latest/download/apalache.zip
+  tar_url: https://github.com/informalsystems/apalache/releases/latest/download/apalache.tgz
