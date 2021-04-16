@@ -194,7 +194,7 @@ The operator `Action_n0` carries several annotations:
 
  - The annotation `@testAction` indicates that `Action_n0` should be tested
     as an action that is an operator over unprimed and primed variable.
- - The annotation `@requre("Prepare_n0")` tells the framework that
+ - The annotation `@require("Prepare_n0")` tells the framework that
     `Prepare_n0` should act as an initialization predicate for testing
     `Action_n0`.
  - The annotation `@ensure("Assert_n0")` tells the framework that
