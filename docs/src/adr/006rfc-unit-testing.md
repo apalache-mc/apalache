@@ -224,7 +224,7 @@ to run a command like that:
 apalache example --cinit=ConstInit --include=TestAction_n0 ChangRobertsTyped_Test.tla
 ```
 
-The above call would produce `exampla.tla`, a TLA+ description of two states
+The above call would produce `example.tla`, a TLA+ description of two states
 that satisfy the test. This is similar to `counterexample.tla`, which is
 produced when an error is found.
 
