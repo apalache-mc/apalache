@@ -101,13 +101,17 @@ A complete specification can be found in [ChangRobertsTyped_Test.tla][].
 
 Our idea is to quickly check operators in isolation, without analyzing the
 whole specification and without analyzing temporal behavior of the
-specification. There are two principally different kinds of operators in TLA+:
+specification. There are three principally different kinds of operators in TLA+:
 
  - Stateless operators that take input parameters and return the result.
     These operators are similar to functions in functional languages.
 
  - Action operators that act on a specification state.
     These operators are similar to procedures in imperative languages.
+
+ - Temporal operators that act on executions, which are called behaviors
+    in TLA+. These operators are somewhat similar to regular expressions,
+    but they are more powerful, as they reason about infinite executions.
 
 ### 3.1. Testing stateless operators
 
@@ -122,7 +126,7 @@ well isolated from the rest of the specification: We only have to know the
 value of the constant `N` and the value of the operator parameter `n`.
 
 ```tla
-{{#include ../../../test/tla/ChangRobertsTyped_Test.tla:50:58}}
+{{#include ../../../test/tla/ChangRobertsTyped_Test.tla:50:59}}
 ```
 
 This test is very simple. It requires `succ(n)` to be in the set `Node`, for
@@ -133,18 +137,18 @@ be checked in a stateless context.
 We should be able to run this test via:
 
 ```sh
-apalache test --cinit=ConstInit --include=Test_succ ChangRobertsTyped_Test.tla
+apalache test --include=Test_succ ChangRobertsTyped_Test.tla
 ```
 
 We single out the test `Test_succ`, as we expect the `test` command to run all
-tests by default. Also, we have to pass `--cinit=ConstInit` to initialize the
-parameter `N`.
+tests by default. Also, we have to initialize the constants with `ConstInit`,
+which we specify with the annotation `@require("ConstInit")`.
 
 
 Alternatively, we could use the operator `Gen` from [Apalache.tla][] as follows:
 
 ```tla
-{{#include ../../../test/tla/ChangRobertsTyped_Test.tla:60:67}}
+{{#include ../../../test/tla/ChangRobertsTyped_Test.tla:61:69}}
 ```
 
 In case of integers, a generator does not bring any additional value, but it
@@ -166,18 +170,23 @@ the predicates `Init` and `n1`. First of all, we have to describe the states
 that could be passed to the action `n0`:
 
 ```tla
-{{#include ../../../test/tla/ChangRobertsTyped_Test.tla:71:84}}
+{{#include ../../../test/tla/ChangRobertsTyped_Test.tla:72:86}}
 ```
 
 In `Prepare_n0`, we let the solver to produce bounded data structures with
 `Gen`, by providing bounds on the size of every set, function, sequence, etc.
-Since we don't want to have completely arbitrary data structures, we further
-restrict them with `TypeOK`, which we conveniently have in the specification.
+Since we don't want to have completely arbitrary values data structures, we
+further restrict them with `TypeOK`, which we conveniently have in the
+specification.
+
+Note that `TypeOK` alone does not restrict the size of the data structures, so
+using `TypeOK` alone would produce a significantly larger set of inputs. Some
+specifications even have infinite sets in `TypeOK` such as `Seq(S)` and `Int`.
 
 Further, we specify what kind of outcome we expect:
 
 ```tla
-{{#include ../../../test/tla/ChangRobertsTyped_Test.tla:86:89}}
+{{#include ../../../test/tla/ChangRobertsTyped_Test.tla:87:91}}
 ```
 
 (Do you think this condition actually holds true after firing `n0`?)
@@ -187,32 +196,74 @@ at `Next`, this requires us to write a bit of code, instead of just calling
 `n0`:
 
 ```tla
-{{#include ../../../test/tla/ChangRobertsTyped_Test.tla:91:101}}
+{{#include ../../../test/tla/ChangRobertsTyped_Test.tla:92:104}}
 ```
 
-The operator `Action_n0` carries several annotations:
+The operator `TestAction_n0` carries several annotations:
 
- - The annotation `@testAction` indicates that `Action_n0` should be tested
+ - The annotation `@testAction` indicates that `TestAction_n0` should be tested
     as an action that is an operator over unprimed and primed variable.
  - The annotation `@require("Prepare_n0")` tells the framework that
     `Prepare_n0` should act as an initialization predicate for testing
-    `Action_n0`.
+    `TestAction_n0`.
  - The annotation `@ensure("Assert_n0")` tells the framework that
-    `Assert_n0` should hold after `Action_n0` has been fired.
+    `Assert_n0` should hold after `TestAction_n0` has been fired.
 
 We should be able to run this test via:
 
 ```sh
-apalache test --cinit=ConstInit --include=TestAction_n0 ChangRobertsTyped_Test.tla
+apalache test --include=TestAction_n0 ChangRobertsTyped_Test.tla
 ```
 
 As you can see, our test is written in the spirit of property-based testing.
-We were inspired by the design [Scalatest] and [Scalacheck]. In comparison
-to pure property-based testing, we have to decompose the test in three parts:
+We were inspired by the design [Scalatest], [Scalacheck], [JML], and [QUIC
+testing] with Ivy. In comparison to pure property-based testing, we have to
+decompose the test in three parts:
 
  - preparing the states (like in `Init`),
  - executing the action (like a single instance of `Next`),
  - testing the next states (like an invariant).
+
+### 3.3. Testing executions
+
+Engineers often like to test a particular set of executions to support their
+intuition, or to communicate an example to their peers. Sometimes, it is useful
+to isolate a set of executions to make continuous integration break, until the
+protocol is fixed. Needless to say, TLA+ tools have poor support for this,
+though they have all capabilities to produce such tests.
+
+Similar to testing an action in isolation, we propose an interface for testing
+a restricted set of executions as follows:
+
+```tla
+{{#include ../../../test/tla/ChangRobertsTyped_Test.tla:111:124}}
+```
+
+The test `TestExec_n0_n1` is similar to `TestAction_n0` in many aspects.  It
+starts by initializing the state with the predicate `Prepare_n0` and it expects
+a final state to satisfy the predicate `Assert_noWinner`. There is an important
+difference between the variables in `Assert_n0` and `Assert_noWinner`:
+
+ - Unprimed variables in `Assert_n0` refer to a state before firing an action,
+    whereas primed variables in `Assert_n0` refer to a state after firing
+    the action.
+
+ - Unprimed variables in `Assert_noWinner` refer to a state before firing
+   an *execution*, whereas primed variables in `Assert_noWinner` refer to
+   a final state of the execution.
+
+The annotation `@invariant("Correctness")` tell the tool to check the predicate
+`Correctness` in all the states of an execution.
+
+We should be able to run this test via:
+
+```sh
+apalache test --include=TestExec_n0_n1 ChangRobertsTyped_Test.tla
+```
+
+If the test is violated, a counterexample should be produced in the file
+`counterexample.tla`.
+
 
 ## 4. Using tests for producing quick examples
 
@@ -221,13 +272,18 @@ test. Apalache has all the ingredients to do that that. We should be able
 to run a command like that:
 
 ```sh
-apalache example --cinit=ConstInit --include=TestAction_n0 ChangRobertsTyped_Test.tla
+apalache example --include=TestAction_n0 ChangRobertsTyped_Test.tla
 ```
 
 The above call would produce `example.tla`, a TLA+ description of two states
 that satisfy the test. This is similar to `counterexample.tla`, which is
 produced when an error is found.
 
+In a similar way we should be able to produce an example of an execution:
+
+```sh
+apalache example --include=TestExec_n0_n1 ChangRobertsTyped_Test.tla
+```
 
 
 [Unit testing]: https://en.wikipedia.org/wiki/Unit_testing
@@ -240,3 +296,5 @@ produced when an error is found.
 [Apalache.tla]: https://github.com/informalsystems/apalache/blob/80cf914fe7272b14832a47b21193f5dfe8119348/src/tla/Apalache.tla
 [Scalacheck]: https://www.scalacheck.org/
 [Scalatest]: https://www.scalatest.org/
+[JML]: https://www.thestrangeloop.com/2018/contracts-for-getting-more-programs-less-wrong.html
+[QUIC testing]: http://mcmil.net/pubs/SIGCOMM19.pdf

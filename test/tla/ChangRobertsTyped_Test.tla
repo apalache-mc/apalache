@@ -50,6 +50,7 @@ InitAndAssumptions ==
 \* Note that succ(n) is not referring to state variables,
 \* so we can test it in isolation.
 \*
+\* @require("ConstInit")
 \* @testStateless
 Test_succ ==
     \* This is like a property-based test.
@@ -93,11 +94,32 @@ Assert_n0 ==
 \* The reason is that we always assume that TestAction_n0 always holds,
 \* whereas we may want to see Assert_n0 violated.
 \*
+\* @require("ConstInit")
 \* @require("Prepare_n0")
 \* @ensure("Assert_n0")
 \* @testAction
 TestAction_n0 ==
     \E self \in Node:
         n0(self)
+
+\* We expect no winner.
+Assert_noWinner ==
+    \A n \in Node:
+        state[n] /= "won"
+
+(*************************** EXECUTION TESTS **********************************)
+\* Execute a sequence of 5 actions, similar to TestAction_n0.
+\* We test a final state with Assert_n0.
+\* Additionally, every state in an execution is tested for Correctness.
+\*
+\* @require("ConstInit")
+\* @require("Prepare_n0")
+\* @invariant("Correctness")
+\* @ensure("Assert_noWinner")
+\* @testExecution(5)
+TestExec_n0_n1 ==
+    \* in this test, we only execute actions by processes 1 and 2
+    \E self \in { 1, 2 }:
+        n0(self) \/ n1(self)
     
 =============================================================================
