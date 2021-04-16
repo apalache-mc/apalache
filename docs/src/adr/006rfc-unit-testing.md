@@ -175,7 +175,7 @@ that could be passed to the action `n0`:
 
 In `Prepare_n0`, we let the solver to produce bounded data structures with
 `Gen`, by providing bounds on the size of every set, function, sequence, etc.
-Since we don't want to have completely arbitrary values data structures, we
+Since we don't want to have completely arbitrary values for the data structures, we
 further restrict them with `TypeOK`, which we conveniently have in the
 specification.
 
