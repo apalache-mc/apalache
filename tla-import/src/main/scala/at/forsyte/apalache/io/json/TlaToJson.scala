@@ -3,6 +3,7 @@ package at.forsyte.apalache.io.json
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaDecimal, TlaInt, TlaStr}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.io.TypeTagPrinter
+import at.forsyte.apalache.tla.lir.storage.SourceLocator
 
 /**
  * A semi-abstraction of a json encoder.
@@ -49,14 +50,12 @@ import at.forsyte.apalache.tla.lir.io.TypeTagPrinter
  *    }
  *  ]
  * }
- *
- * @param factory A json factory for the `T` variant of JsonRepresentation
- * @tparam T Any class extending JsonRepresentation
  */
-class TlaToJson[T <: JsonRepresentation](factory: JsonFactory[T])(implicit typTagPrinter: TypeTagPrinter)
+class TlaToJson[T <: JsonRepresentation](
+    factory: JsonFactory[T], locatorOpt: Option[SourceLocator] = None
+)(implicit typeTagPrinter: TypeTagPrinter)
     extends JsonEncoder[T] {
-  val kindFieldName: String = "kind"
-  val typeFieldName: String = "type"
+  import TlaToJson._
 
   implicit def liftString: String => T = factory.fromStr
 
@@ -64,129 +63,175 @@ class TlaToJson[T <: JsonRepresentation](factory: JsonFactory[T])(implicit typTa
 
   implicit def liftBool: Boolean => T = factory.fromBool
 
-  override def apply(ex: TlaEx): T = ex match {
-    case NameEx(name) =>
-      factory.mkObj(
-          typeFieldName -> typTagPrinter(ex.typeTag),
-          kindFieldName -> "NameEx",
-          "name" -> name
-      )
-
-    case ValEx(value) =>
-      val inner = value match {
-        case TlaStr(strValue) =>
-          factory.mkObj(
-              kindFieldName -> "TlaStr",
-              "value" -> strValue
-          )
-        case TlaDecimal(decValue) =>
-          factory.mkObj(
-              kindFieldName -> "TlaDecimal",
-              "value" -> decValue.toString() // let the parser care when reading
-          )
-        case TlaInt(bigIntValue) =>
-          val intVal: T =
-            if (bigIntValue.isValidInt) liftInt(bigIntValue.toInt)
-            else factory.mkObj("bigInt" -> bigIntValue.toString())
-          factory.mkObj(
-              kindFieldName -> "TlaInt",
-              "value" -> intVal
-          )
-        case TlaBool(boolValue) =>
-          factory.mkObj(
-              kindFieldName -> "TlaBool",
-              "value" -> boolValue
-          )
-        case _ =>
-          //unsupported (TlaReal, TlaPredefSet)
-          factory.mkObj()
+  /**
+   * If a SourceLocator is given, prepare a `sourceFieldName` field, holding a JSON
+   * with file & position info, in addition to the given fields.
+   */
+  private def withOptionalLoc(identifiable: Identifiable)(fields: (String, T)*): T = {
+    val locFieldOpt: Option[T] = locatorOpt map { locator =>
+      locator.sourceOf(identifiable.ID) map { sourceLoc =>
+        factory.mkObj(
+            "filename" -> sourceLoc.filename,
+            "from" -> factory.mkObj(
+                "line" -> sourceLoc.region.start.line,
+                "column" -> sourceLoc.region.start.column
+            ),
+            "to" -> factory.mkObj(
+                "line" -> sourceLoc.region.end.line,
+                "column" -> sourceLoc.region.end.column
+            )
+        )
+      } getOrElse {
+        "UNKNOWN" // Locator is given, but doesn't know the source
       }
-      factory.mkObj(
-          typeFieldName -> typTagPrinter(ex.typeTag),
-          kindFieldName -> "ValEx",
-          "value" -> inner
-      )
-
-    case OperEx(oper, args @ _*) =>
-      val argJsons = args map apply
-      factory.mkObj(
-          typeFieldName -> typTagPrinter(ex.typeTag),
-          kindFieldName -> "OperEx",
-          "oper" -> oper.name,
-          "args" -> factory.fromTraversable(argJsons)
-      )
-    case LetInEx(body, decls @ _*) =>
-      val bodyJson = apply(body)
-      val declJsons = decls map apply
-      factory.mkObj(
-          typeFieldName -> typTagPrinter(ex.typeTag),
-          kindFieldName -> "LetInEx",
-          "body" -> bodyJson,
-          "decls" -> factory.fromTraversable(declJsons)
-      )
-
-    case NullEx =>
-      factory.mkObj(kindFieldName -> "NullEx")
+    }
+    factory.mkObj((locFieldOpt map { sourceFieldName -> _ }) ++: fields: _*)
   }
 
-  override def apply(decl: TlaDecl): T = decl match {
-    case TlaTheoremDecl(name, body) =>
-      val bodyJson = apply(body)
-      factory.mkObj(
-          typeFieldName -> typTagPrinter(decl.typeTag),
-          kindFieldName -> "TlaTheoremDecl",
-          "name" -> name,
-          "body" -> bodyJson
-      )
-
-    case TlaVarDecl(name) =>
-      factory.mkObj(
-          typeFieldName -> typTagPrinter(decl.typeTag),
-          kindFieldName -> "TlaVarDecl",
-          "name" -> name
-      )
-
-    case TlaConstDecl(name) =>
-      factory.mkObj(
-          typeFieldName -> typTagPrinter(decl.typeTag),
-          kindFieldName -> "TlaConstDecl",
-          "name" -> name
-      )
-
-    case decl @ TlaOperDecl(name, formalParams, body) =>
-      val bodyJson = apply(body)
-      val paramsJsons = formalParams map { case OperParam(paramName, arity) =>
-        factory.mkObj(
-            kindFieldName -> "OperParam",
-            "name" -> paramName,
-            "arity" -> arity
+  override def apply(ex: TlaEx): T = {
+    def withLoc(fields: (String, T)*): T = withOptionalLoc(ex)(fields: _*)
+    ex match {
+      case NameEx(name) =>
+        withLoc(
+            typeFieldName -> typeTagPrinter(ex.typeTag),
+            kindFieldName -> "NameEx",
+            "name" -> name
         )
-      }
-      factory.mkObj(
-          typeFieldName -> typTagPrinter(decl.typeTag),
-          kindFieldName -> "TlaOperDecl",
-          "name" -> name,
-          "formalParams" -> factory.fromTraversable(paramsJsons),
-          "isRecursive" -> decl.isRecursive,
-          "body" -> bodyJson
-      )
 
-    case TlaAssumeDecl(body) =>
-      val bodyJson = apply(body)
-      factory.mkObj(
-          typeFieldName -> typTagPrinter(decl.typeTag),
-          kindFieldName -> "TlaAssumeDecl",
-          "body" -> bodyJson
-      )
+      case ValEx(value) =>
+        val inner = value match {
+          case TlaStr(strValue) =>
+            factory.mkObj(
+                kindFieldName -> "TlaStr",
+                "value" -> strValue
+            )
+          case TlaDecimal(decValue) =>
+            factory.mkObj(
+                kindFieldName -> "TlaDecimal",
+                "value" -> decValue.toString() // let the parser care when reading
+            )
+          case TlaInt(bigIntValue) =>
+            val intVal: T =
+              if (bigIntValue.isValidInt) liftInt(bigIntValue.toInt)
+              else factory.mkObj("bigInt" -> bigIntValue.toString())
+            factory.mkObj(
+                kindFieldName -> "TlaInt",
+                "value" -> intVal
+            )
+          case TlaBool(boolValue) =>
+            factory.mkObj(
+                kindFieldName -> "TlaBool",
+                "value" -> boolValue
+            )
+          case _ =>
+            //unsupported (TlaReal, TlaPredefSet)
+            factory.mkObj()
+        }
+        withLoc(
+            typeFieldName -> typeTagPrinter(ex.typeTag),
+            kindFieldName -> "ValEx",
+            "value" -> inner
+        )
+
+      case OperEx(oper, args @ _*) =>
+        val argJsons = args map apply
+        withLoc(
+            typeFieldName -> typeTagPrinter(ex.typeTag),
+            kindFieldName -> "OperEx",
+            "oper" -> oper.name,
+            "args" -> factory.fromTraversable(argJsons)
+        )
+      case LetInEx(body, decls @ _*) =>
+        val bodyJson = apply(body)
+        val declJsons = decls map apply
+        withLoc(
+            typeFieldName -> typeTagPrinter(ex.typeTag),
+            kindFieldName -> "LetInEx",
+            "body" -> bodyJson,
+            "decls" -> factory.fromTraversable(declJsons)
+        )
+
+      case NullEx =>
+        factory.mkObj(kindFieldName -> "NullEx")
+    }
+  }
+
+  override def apply(decl: TlaDecl): T = {
+    def withLoc(fields: (String, T)*): T = withOptionalLoc(decl)(fields: _*)
+    decl match {
+      case TlaTheoremDecl(name, body) =>
+        val bodyJson = apply(body)
+        withLoc(
+            typeFieldName -> typeTagPrinter(decl.typeTag),
+            kindFieldName -> "TlaTheoremDecl",
+            "name" -> name,
+            "body" -> bodyJson
+        )
+
+      case TlaVarDecl(name) =>
+        withLoc(
+            typeFieldName -> typeTagPrinter(decl.typeTag),
+            kindFieldName -> "TlaVarDecl",
+            "name" -> name
+        )
+
+      case TlaConstDecl(name) =>
+        withLoc(
+            typeFieldName -> typeTagPrinter(decl.typeTag),
+            kindFieldName -> "TlaConstDecl",
+            "name" -> name
+        )
+
+      case decl @ TlaOperDecl(name, formalParams, body) =>
+        val bodyJson = apply(body)
+        val paramsJsons = formalParams map { case OperParam(paramName, arity) =>
+          factory.mkObj(
+              kindFieldName -> "OperParam",
+              "name" -> paramName,
+              "arity" -> arity
+          )
+        }
+        withLoc(
+            typeFieldName -> typeTagPrinter(decl.typeTag),
+            kindFieldName -> "TlaOperDecl",
+            "name" -> name,
+            "formalParams" -> factory.fromTraversable(paramsJsons),
+            "isRecursive" -> decl.isRecursive,
+            "body" -> bodyJson
+        )
+
+      case TlaAssumeDecl(body) =>
+        val bodyJson = apply(body)
+        withLoc(
+            typeFieldName -> typeTagPrinter(decl.typeTag),
+            kindFieldName -> "TlaAssumeDecl",
+            "body" -> bodyJson
+        )
+    }
   }
 
   override def apply(module: TlaModule): T = {
-    val declJsons = module.declarations map { d =>
-      apply(d)
-    }
+    val declJsons = module.declarations map apply
     factory.mkObj(
         kindFieldName -> "TlaModule",
+        "name" -> module.name,
         "declarations" -> factory.fromTraversable(declJsons)
     )
   }
+
+  override def makeRoot(modules: Traversable[TlaModule]): T = {
+    val moduleJsons = modules map apply
+    factory.mkObj(
+        "name" -> "ApalacheIR",
+        versionFieldName -> JsonVersion.current,
+        "modules" -> factory.fromTraversable(moduleJsons)
+    )
+  }
+}
+
+object TlaToJson {
+  val kindFieldName: String = "kind"
+  val typeFieldName: String = "type"
+  val sourceFieldName: String = "source"
+  val versionFieldName: String = "version"
 }

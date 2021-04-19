@@ -6,4 +6,5 @@ package at.forsyte.apalache.io.json
  */
 trait JsonRepresentation {
   def toString: String
+  def getFieldOpt(fieldName: String): Option[this.type]
 }
