@@ -197,7 +197,7 @@ class TestPrinter extends FunSuite with TestingPredefs {
 
   // regression
   test("Test UTF8: OperFormalParam") {
-    val d = TlaOperDecl("Foo", List(OperFormalParam("Bar", 1)), ValEx(TlaInt(1)))
+    val d = TlaOperDecl("Foo", List(OperParam("Bar", 1)), ValEx(TlaInt(1)))
     assert("Foo(Bar(_)) ≜ 1" == UTFPrinter(d))
   }
 }

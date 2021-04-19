@@ -143,13 +143,22 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach {
     assert(expected == output)
   }
 
-  test("""CASE-OTHER""") {
+  test("""Integer CASE-OTHER becomes IF-THEN-ELSE""") {
     val types = Map("b" -> BoolT1(), "i" -> IntT1())
+    /*
+      CASE p_1 -> e_1
+        [] p_2 -> e_2
+        OTHER  -> e_def
+     */
     val input = tla
       .caseOther(tla.name("e_def") ? "i", tla.name("p_1") ? "b", tla.name("e_1") ? "i", tla.name("p_2") ? "b",
           tla.name("e_2") ? "i")
       .typed(types, "i")
     val output = keramelizer.apply(input)
+
+    /**
+     * IF p_1 THEN e_1 ELSE IF p_2 THEN e_2 ELSE e_def
+     */
     val expected: TlaEx =
       tla
         .ite(tla.name("p_1") ? "b", tla.name("e_1") ? "i",
@@ -158,15 +167,82 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach {
     assert(expected == output)
   }
 
-  test("""CASE without OTHER""") {
+  test("""Integer CASE becomes IF-THEN-ELSE""") {
     val types = Map("b" -> BoolT1(), "i" -> IntT1())
-    val input = tla.caseSplit(
-        tla.name("p_1") ? "b",
-        tla.name("e_1") ? "i",
-        tla.name("p_2") ? "b",
-        tla.name("e_2") ? "i"
-    ) ///
-    assertThrows[NotInKeraError](keramelizer.apply(input.typed(types, "i")))
+    /*
+      CASE p_1 -> e_1
+        [] p_2 -> e_2
+     */
+    val input = tla
+      .caseSplit(tla.name("p_1") ? "b", tla.name("e_1") ? "i", tla.name("p_2") ? "b", tla.name("e_2") ? "i")
+      .typed(types, "i")
+    val output = keramelizer.apply(input)
+
+    /**
+     * We ignore the second guard to extend a partial function to a total function. This is sound, as
+     * CASE returns some (unknown) value when no guard holds true.
+     *
+     * IF p_1 THEN e_1 ELSE e_2
+     */
+    val expected: TlaEx =
+      tla
+        .ite(tla.name("p_1") ? "b", tla.name("e_1") ? "i", tla.name("e_2") ? "i")
+        .typed(types, "i")
+    assert(expected == output)
+  }
+
+  test("""Boolean CASE-OTHER becomes a disjunction""") {
+    val types = Map("b" -> BoolT1())
+    /*
+      CASE p_1 -> e_1
+        [] p_2 -> e_2
+        OTHER  -> e_def
+     */
+    val input = tla
+      .caseOther(tla.name("e_def") ? "b", tla.name("p_1") ? "b", tla.name("e_1") ? "b", tla.name("p_2") ? "b",
+          tla.name("e_2") ? "b")
+      .typed(types, "b")
+    val output = keramelizer.apply(input)
+    /*
+     \/ p_1 /\ e_1
+     \/ p_2 /\ e_2
+     \/ ~p_1 /\ ~p_2 /\ e_def
+     */
+    val expected: TlaEx =
+      tla
+        .or(
+            tla.and(tla.name("p_1") ? "b", tla.name("e_1") ? "b") ? "b",
+            tla.and(tla.name("p_2") ? "b", tla.name("e_2") ? "b") ? "b",
+            tla.and(tla.not(tla.name("p_1") ? "b") ? "b", tla.not(tla.name("p_2") ? "b") ? "b",
+                tla.name("e_def") ? "b") ? "b"
+        )
+        .typed(types, "b")
+    assert(expected == output)
+  }
+
+  test("""Boolean CASE becomes a disjunction""") {
+    val types = Map("b" -> BoolT1())
+    /*
+      CASE p_1 -> e_1
+        [] p_2 -> e_2
+        OTHER  -> e_def
+     */
+    val input = tla
+      .caseSplit(tla.name("p_1") ? "b", tla.name("e_1") ? "b", tla.name("p_2") ? "b", tla.name("e_2") ? "b")
+      .typed(types, "b")
+    val output = keramelizer.apply(input)
+    /*
+     \/ p_1 /\ e_1
+     \/ p_2 /\ e_2
+     */
+    val expected: TlaEx =
+      tla
+        .or(
+            tla.and(tla.name("p_1") ? "b", tla.name("e_1") ? "b") ? "b",
+            tla.and(tla.name("p_2") ? "b", tla.name("e_2") ? "b") ? "b"
+        )
+        .typed(types, "b")
+    assert(expected == output)
   }
 
   // we simplify assignments into existential quantification

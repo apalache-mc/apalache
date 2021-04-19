@@ -651,6 +651,24 @@ The outcome is: NoError
 ...
 ```
 
+### check CaseNoOther succeeds
+
+```sh
+$ apalache-mc check CaseNoOther.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
+### check CaseNoOtherBool succeeds
+
+```sh
+$ apalache-mc check CaseNoOtherBool.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+```
+
 ### check Callback.tla succeeds
 
 `Callback.tla` demonstrates that one can implement non-determinism with the existential operator and use a callback to
@@ -1156,11 +1174,9 @@ EXITCODE: OK
 ```sh
 $ apalache-mc typecheck Channel.tla | sed 's/[IEW]@.*//'
 ...
-[Channel.tla:8:20-8:23]: Undefined name chan. Introduce a type annotation.
+Typing input error: Expected a type annotation for VARIABLE chan
 ...
-Type checker [FAILED]
-...
-EXITCODE: OK
+EXITCODE: ERROR (99)
 ```
 
 ### typecheck ChannelTyped.tla
@@ -1251,5 +1267,29 @@ PASS #1: TypeCheckerSnowcat
 Type checker [OK]
 ...
 EXITCODE: OK
+```
+
+### typecheck UntypedConst.tla
+
+```sh
+$ apalache-mc typecheck UntypedConst.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeCheckerSnowcat
+ > Running Snowcat .::.
+Typing input error: Expected a type annotation for CONSTANT N
+...
+EXITCODE: ERROR (99)
+```
+
+### typecheck UntypedVar.tla
+
+```sh
+$ apalache-mc typecheck UntypedVar.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeCheckerSnowcat
+ > Running Snowcat .::.
+Typing input error: Expected a type annotation for VARIABLE x
+...
+EXITCODE: ERROR (99)
 ```
 

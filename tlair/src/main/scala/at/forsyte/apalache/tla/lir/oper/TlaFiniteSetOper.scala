@@ -12,20 +12,20 @@ abstract class TlaFiniteSetOper extends TlaOper {
 object TlaFiniteSetOper {
 
   /**
-   * The operator that checks, whether a set is finite.
+   * The operator that checks, whether a set is finite: `IsFiniteSet(S)`.
    */
   object isFiniteSet extends TlaFiniteSetOper {
     override val arity = FixedArity(1)
-    override val name = "IsFiniteSet"
+    override val name = "FiniteSets!IsFiniteSet"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
   /**
-   * The operator that returns the cardinality of a finite set.
+   * The operator that returns the cardinality of a finite set: `Cardinality(S)`.
    */
   object cardinality extends TlaFiniteSetOper {
     override val arity = FixedArity(1)
-    override val name = "Cardinality"
+    override val name = "FiniteSets!Cardinality"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 

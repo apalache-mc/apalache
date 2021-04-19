@@ -23,13 +23,16 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
 
   def apply(decl: TlaDecl, inScopeEx: EtcExpr): EtcExpr = {
     decl match {
-      case d: TlaConstDecl =>
-        // CONSTANT N
-        findTypeFromTagOrAnnotation(d).map(tt => mkTypeDecl(ExactRef(d.ID), d.name, tt, inScopeEx)).getOrElse(inScopeEx)
+      case TlaConstDecl(_) | TlaVarDecl(_) =>
+        // CONSTANT N or VARIABLE x
+        findTypeFromTagOrAnnotation(decl) match {
+          case Some(tt) =>
+            mkTypeDecl(ExactRef(decl.ID), decl.name, tt, inScopeEx)
 
-      case d: TlaVarDecl =>
-        // VARIABLE x
-        findTypeFromTagOrAnnotation(d).map(tt => mkTypeDecl(ExactRef(d.ID), d.name, tt, inScopeEx)).getOrElse(inScopeEx)
+          case None =>
+            val kind = if (decl.isInstanceOf[TlaConstDecl]) "CONSTANT" else "VARIABLE"
+            throw new TypingInputException(s"Expected a type annotation for $kind ${decl.name}")
+        }
 
       case d: TlaAssumeDecl =>
         // ASSUME(...)
@@ -337,7 +340,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val opsig = OperT1(List(SetT1(a), SetT1(a)), BoolT1())
         mkExRefApp(opsig, args)
 
-      case OperEx(TlaSetOper.SUBSET, args @ _*) =>
+      case OperEx(TlaSetOper.powerset, args @ _*) =>
         // SUBSET S
         val a = varPool.fresh
         val opsig = OperT1(List(SetT1(a)), SetT1(SetT1(a)))
@@ -888,17 +891,17 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
 
   // Translate a sequence of formal parameters into type variables
   private def formalParamsToTypeVars(
-      params: Seq[FormalParam]
+      params: Seq[OperParam]
   ): Seq[(String, TlaType1)] = {
     params match {
       case Seq() => Seq()
 
-      case SimpleFormalParam(name) +: tail =>
+      case OperParam(name, 0) +: tail =>
         // a simple parameter, just introduce a new variable, e.g., b
         val paramType = varPool.fresh
         (name, paramType) +: formalParamsToTypeVars(tail)
 
-      case OperFormalParam(name, arity) +: tail =>
+      case OperParam(name, arity) +: tail =>
         // a higher-order operator, introduce an operator type (b, c, ...) => z
         val paramType = OperT1(varPool.fresh(arity), varPool.fresh)
         (name, paramType) +: formalParamsToTypeVars(tail)

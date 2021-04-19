@@ -72,12 +72,12 @@ class ParameterNormalizer(
   }
 
   /** Iteratively introduces a new operator for each formal parameter */
-  private def normalizeParametersInEx(paramNames: Seq[FormalParam], paramTypes: Seq[TlaType1]): TlaExTransformation =
+  private def normalizeParametersInEx(paramNames: Seq[OperParam], paramTypes: Seq[TlaType1]): TlaExTransformation =
     tracker.trackEx { ex =>
       paramNames.zip(paramTypes).foldLeft(ex) { case (partialEx, (fParam, fParamType)) =>
         val paramOperName = nameGenerator.newName()
         (fParam, fParamType) match {
-          case (SimpleFormalParam(name), paramType) =>
+          case (OperParam(name, 0), paramType) =>
             // case 1: a normal parameter, not a higher-order one.
             // We replace all instances of `fParam` with `paramOperName()`
             // however, since paramOperName is an operator, we have to replace with application
@@ -96,7 +96,7 @@ class ParameterNormalizer(
               .letIn(replaced, letInDef)
               .typed(types, "p")
 
-          case (OperFormalParam(name, arity), paramType) =>
+          case (OperParam(name, arity), paramType) =>
             // case 2: a higher-order parameter.
             // We again replace all instances of `fParam` with `paramOperName`
             // As both are operators, we don't need to introduce application
@@ -123,7 +123,7 @@ class ParameterNormalizer(
                     )
                     .typed(resType)
                 val letInDef = tla
-                  .declOp(paramOperName, newBody, freshParams map SimpleFormalParam: _*)
+                  .declOp(paramOperName, newBody, freshParams.map(n => OperParam(n)): _*)
                   .typedOperDecl(paramType)
                 tla.letIn(replaced, letInDef).typed(resType)
 

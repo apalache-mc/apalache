@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.{
-  BoolT1, FunT1, IntT1, OperT1, RecT1, SeqT1, SetT1, SimpleFormalParam, StrT1, TlaEx, TlaType1, TupT1
+  BoolT1, FunT1, IntT1, OperT1, RecT1, SeqT1, SetT1, OperParam, StrT1, TlaEx, TlaType1, TupT1
 }
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -711,7 +711,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     val types = Map("i" -> IntT1(), "F" -> OperT1(Seq(), IntT1()))
     // Foo(1)
     val fooDef = tla
-      .declOp("Foo", tla.name("x") ? "i", SimpleFormalParam("x"))
+      .declOp("Foo", tla.name("x") ? "i", OperParam("x"))
       .typedOperDecl(types, "F")
     val input = tla
       .letIn(tla.appOp(tla.name("Foo") ? "F", tla.int(1) ? "i") ? "i", fooDef)

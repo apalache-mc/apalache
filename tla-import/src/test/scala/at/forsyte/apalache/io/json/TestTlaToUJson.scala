@@ -121,16 +121,18 @@ class TestTlaToUJson extends FunSuite with BeforeAndAfterEach with TestingPredef
     assert(!jsonNullary("isRecursive").bool)
 
     assert(jsonUnary("formalParams").arr.size == 1)
-    assert(jsonUnary("formalParams")(0)(kindField).str == "SimpleFormalParam")
+    assert(jsonUnary("formalParams")(0)(kindField).str == "OperParam")
     assert(jsonUnary("formalParams")(0)("name").str == "p")
+    assert(jsonUnary("formalParams")(0)("arity").num == 0)
     assert(!jsonUnary("isRecursive").bool)
 
     assert(jsonHO("formalParams").arr.size == 2)
-    assert(jsonHO("formalParams")(0)(kindField).str == "OperFormalParam")
+    assert(jsonHO("formalParams")(0)(kindField).str == "OperParam")
     assert(jsonHO("formalParams")(0)("name").str == "A")
     assert(jsonHO("formalParams")(0)("arity").num == 1)
-    assert(jsonHO("formalParams")(1)(kindField).str == "SimpleFormalParam")
+    assert(jsonHO("formalParams")(1)(kindField).str == "OperParam")
     assert(jsonHO("formalParams")(1)("name").str == "b")
+    assert(jsonHO("formalParams")(1)("arity").num == 0)
     assert(!jsonHO("isRecursive").bool)
 
     assert(jsonRec("isRecursive").bool)
