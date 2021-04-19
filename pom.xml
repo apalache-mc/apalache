@@ -4,7 +4,7 @@
     <groupId>at.forsyte.apalache</groupId>
     <artifactId>apalache</artifactId>
     <packaging>pom</packaging>
-    <version>0.15.3-SNAPSHOT</version>
+    <version>0.15.4-SNAPSHOT</version>
 
     <name>APALACHE project</name>
     <url>https://github.com/informalsystems/apalache</url>
@@ -123,7 +123,7 @@
             <dependency>
                 <groupId>org.easymock</groupId>
                 <artifactId>easymock</artifactId>
-                <version>4.2</version>
+                <version>4.3</version>
                 <scope>test</scope>
             </dependency>
 
