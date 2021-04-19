@@ -67,6 +67,12 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
    * @return a transformed expression
    */
   private def transformCard: PartialFunction[TlaEx, TlaEx] = {
+    case OperEx(TlaFiniteSetOper.cardinality, OperEx(TlaArithOper.dotdot, left, right)) =>
+      // A pattern that emerged in issue #748
+      // Cardinality(a..b) is equivalent to (b - a) + 1.
+      val bMinusA = OperEx(TlaArithOper.minus, right, left)(intTag)
+      OperEx(TlaArithOper.plus, bMinusA, ValEx(TlaInt(1))(intTag))(intTag)
+
     case OperEx(TlaOper.eq, OperEx(TlaFiniteSetOper.cardinality, set), ValEx(TlaInt(intVal))) if intVal == BigInt(0) =>
       // Cardinality(Set) = 0, that is, Set = {}.
       // Rewrite it to Set = {}, as its complexity is lower.
@@ -122,12 +128,12 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
 
     // the more general case Cardinality(S) >= k, for a constant k, is implemented more efficiently in CardinalityConstRule.
 
-    case OperEx(TlaArithOper.gt, card @ OperEx(TlaFiniteSetOper.cardinality, _), ValEx(TlaInt(intVal)))
+    case ex @ OperEx(TlaArithOper.gt, card @ OperEx(TlaFiniteSetOper.cardinality, _), ValEx(TlaInt(intVal)))
         if (intVal + 1).isValidInt =>
       // Cardinality(S) > k becomes Cardinality(S) >= k + 1
       val kPlus1 = ValEx(TlaInt((intVal + 1).toInt))(intTag)
       val ge = OperEx(TlaArithOper.ge, card, kPlus1)(boolTag)
-      transformCard(ge)
+      transformCard.applyOrElse(ge, { _: TlaEx => ex })
   }
 
   /**

@@ -16,6 +16,7 @@
 
 ### Bug fixes
 * Type checker: Showing an error on missing annotations CONSTANTs or VARIABLEs, see #705
+* Model checker: Fix an exception on `Cardinality(a..b) > i`, see #748
 
 ### Changed
 
