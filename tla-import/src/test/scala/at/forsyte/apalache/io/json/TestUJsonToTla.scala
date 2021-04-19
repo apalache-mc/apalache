@@ -29,7 +29,7 @@ class TestUJsonToTla extends FunSuite with BeforeAndAfterEach with TestingPredef
               .declOp(
                   "A",
                   tla.plus(tla.name("p"), tla.int(1)),
-                  SimpleFormalParam("p")
+                  OperParam("p")
               )
               .withTag(Untyped())
               .asInstanceOf[TlaOperDecl]
@@ -41,7 +41,7 @@ class TestUJsonToTla extends FunSuite with BeforeAndAfterEach with TestingPredef
     }
 
     val decls: Seq[TlaDecl] = Seq(
-        tla.declOp("X", tla.eql(tla.name("a"), tla.int(1)), SimpleFormalParam("a")),
+        tla.declOp("X", tla.eql(tla.name("a"), tla.int(1)), OperParam("a")),
         TlaAssumeDecl(tla.eql(tla.int(1), tla.int(0))),
         TlaConstDecl("c"),
         TlaVarDecl("v")

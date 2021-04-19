@@ -160,8 +160,8 @@ Since both sub-expressions, the literals `1`, are identical, their serialization
 Observe that we choose to serialize `TlaValue` as a JSON object, which is more verbose, but trivial to deserialize. It has the following shape
 ```
 {
-  "kind": _ ,
-  "value": _
+  "kind": <KIND> ,
+  "value": <VALUE>
 }
 ```
 
@@ -184,7 +184,7 @@ Take `jsonOf1` to be the serialization of `ValEx( TlaInt( 1 ) )( typeTag = Typed
 {
   "kind": "OperEx",
   "type": "Int",
-  "oper": "(+)",
+  "oper": "PLUS",
   "args": [jsonOf1, jsonOf1]
 }
 ```

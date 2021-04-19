@@ -25,21 +25,18 @@ class JsonToTla[T <: JsonRepresentation](
   private def getOrThrow(json: T, fieldName: String): T =
     json.getFieldOpt(fieldName).getOrElse { throw missingField(fieldName) }
 
-  private def asFParam(json: T): FormalParam = {
-    val nameField = getOrThrow(json, "name")
-    val name = scalaFactory.asStr(nameField)
-
+  private def asFParam(json: T): OperParam = {
     val kindField = getOrThrow(json, TlaToJson.kindFieldName)
     val kind = scalaFactory.asStr(kindField)
 
     kind match {
-      case "SimpleFormalParam" =>
-        SimpleFormalParam(name)
-      case "OperFormalParam" =>
+      case "OperParam" =>
+        val nameField = getOrThrow(json, "name")
+        val name = scalaFactory.asStr(nameField)
         val arityField = getOrThrow(json, "arity")
         val arity = scalaFactory.asInt(arityField)
-        OperFormalParam(name, arity)
-      case _ => throw new JsonDeserializationError(s"$kind is not a valid FormalParam kind")
+        OperParam(name, arity)
+      case _ => throw new JsonDeserializationError(s"$kind is not a valid OperParam kind")
     }
   }
 
