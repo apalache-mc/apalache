@@ -1,8 +1,8 @@
 # RFC-006: Unit testing and property-based testing of TLA+ specifications
 
-| author      | revision |
-| ----------- | --------:|
-| Igor Konnov |        1 |
+| authors                              | revision |
+| ------------------------------------ | --------:|
+| Igor Konnov, Vitor Enes, Shon Feder  |        1 |
 
 ## 1. Long rationale
 
@@ -305,6 +305,8 @@ decompose the test in three parts:
  - executing the action (like a single instance of `Next`),
  - testing the next states (like an invariant).
 
+**THIS DISCUSSION IS NOT FINISHED.**
+
 ## 4. Using tests for producing quick examples
 
 It is often nice to see examples of test inputs that pass the
@@ -325,28 +327,43 @@ In a similar way we should be able to produce an example of an execution:
 apalache example --include=TestExec_n0_n1 ChangRobertsTyped_Test.tla
 ```
 
+## 5. Bounding the inputs
+
 <a id="generators"></a>
-## 5. Using generators to bound the inputs
+### 5.1. Using Apalache generators
 
 Let's go back to the example in [Section 3.2](#testAction).
 
-Assume we like to test it without looking at the rest of the system, namely,
-the predicates `Init` and `n1`. First of all, we have to describe the states
-that could be passed to the action `n0`:
+In `TestAction_n0` we used `TypeOK` to describe the states that can be used as
+the input to the test. While this conceptually works, it often happens that
+`TypeOK` describes a large set of states. Sometimes, this set is even infinite,
+e.g., when `TypeOK` refers to the infinite set of sequences `Seq(S)`.
+In Apalache, we can use the operator `Gen` that produces bounded data structures,
+similar to [Property-based testing][]. Here is how we could describe the set
+of input states, by bounding the size of the data structures:
 
 ```tla
-{{#include ../../../test/tla/ChangRobertsTyped_Test.tla:72:85}}
+{{#include ../../../test/tla/ChangRobertsTyped_Test.tla:90:103}}
 ```
 
 In `Prepare_n0`, we let the solver to produce bounded data structures with
 `Gen`, by providing bounds on the size of every set, function, sequence, etc.
-Since we don't want to have completely arbitrary values for the data structures, we
-further restrict them with `TypeOK`, which we conveniently have in the
-specification.
+Since we don't want to have completely arbitrary values for the data
+structures, we further restrict them with `TypeOK`, which we conveniently have
+in the specification.
 
-Note that `TypeOK` alone does not restrict the size of the data structures, so
-using `TypeOK` alone would produce a significantly larger set of inputs. Some
-specifications even have infinite sets in `TypeOK` such as `Seq(S)` and `Int`.
+The more scoped version of `TestAction_n0` looks like following:
+
+```tla
+{{#include ../../../test/tla/ChangRobertsTyped_Test.tla:105:114}}
+```
+
+### 5.2. Using TLC Random
+
+Leslie Lamport has recently introduced a solution that is allows one to use TLC
+in the spirit of [Property-based testing][]. This is done by initializing
+states with the operators that are defined in the module `Randomization`. For
+details, see Leslie's paper on [Inductive invariants with TLC][].
 
 
 [Unit testing]: https://en.wikipedia.org/wiki/Unit_testing
