@@ -69,7 +69,25 @@ Test_succ_gen ==
 
 (*************************** ACTION TESTS *************************************)
 
-\* Preparing the inputs for the test. Note that this is a step of its own.
+\* Assertion that we expect to hold true after firing Action_n0.
+Assert_n0 ==
+    \E n, m \in Node:
+        msgs'[n] = msgs[n] \union {m}
+
+\* Execute the action under test.
+\* Note that we decouple Assert_n0 from TestAction_n0.
+\* The reason is that we always assume that TestAction_n0 always holds,
+\* whereas we may want to see Assert_n0 violated.
+\*
+\* @require("ConstInit")
+\* @require("TypeOK")
+\* @ensure("Assert_n0")
+\* @testAction
+TestAction_n0 ==
+    \E self \in Node:
+        n0(self)
+
+\* Preparing the inputs for the second test. Note that this is a step of its own.
 \* This is similar to an initialization predicate.
 Prepare_n0 ==
     \* the following constraint should be added automatically in the future
@@ -84,42 +102,45 @@ Prepare_n0 ==
     \* so we don't generate useless data structures
     /\ TypeOK
 
-\* Assertion that we expect to hold true after firing Action_n0.
-Assert_n0 ==
-    \E n, m \in Node:
-        msgs'[n] = msgs[n] \union {m}
-
-\* Execute the action under test.
-\* Note that we decouple Assert_n0 from TestAction_n0.
-\* The reason is that we always assume that TestAction_n0 always holds,
-\* whereas we may want to see Assert_n0 violated.
-\*
+\* Another version of the test where we further restrict the inputs.
+\* 
 \* @require("ConstInit")
 \* @require("Prepare_n0")
 \* @ensure("Assert_n0")
 \* @testAction
-TestAction_n0 ==
+TestAction2_n0 ==
     \E self \in Node:
         n0(self)
-
-\* We expect no winner.
-Assert_noWinner ==
-    \A n \in Node:
-        state[n] /= "won"
 
 (*************************** EXECUTION TESTS **********************************)
 \* Execute a sequence of 5 actions, similar to TestAction_n0.
 \* We test a final state with Assert_n0.
-\* Additionally, every state in an execution is tested for Correctness.
 \*
 \* @require("ConstInit")
-\* @require("Prepare_n0")
-\* @invariant("Correctness")
+\* @require("TypeOK")
 \* @ensure("Assert_noWinner")
 \* @testExecution(5)
 TestExec_n0_n1 ==
     \* in this test, we only execute actions by processes 1 and 2
     \E self \in { 1, 2 }:
         n0(self) \/ n1(self)
+
+\* We expect no winner.
+Assert_noWinner ==
+    \A n \in Node:
+        state'[n] /= "won"
+
+\* Execute a sequence of 5 actions, while using temporal properties.
+\*
+\* @require("ConstInit")
+\* @require("TypeOK")
+\* @require("Liveness")
+\* @ensure("GlobalCorrectness")
+\* @testExecution(5)
+TestExec_correctness_under_liveness ==
+    \E self \in Node:
+        n0(self) \/ n1(self)
+
+GlobalCorrectness == []Correctness
     
 =============================================================================
