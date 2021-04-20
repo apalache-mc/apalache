@@ -120,8 +120,11 @@ tuples, which are indexed with 0!. If we want to stick to the
 principle "tuples are functions", we have to use a dictionary.
 
 ```python
-  ("Printer", 631)                      # the pythonic way, introducing fields 0 and 1
-  frozendict({ 1: "Printer", 2: 631 })  # the "tuples-are-functions" way
+>>> ("Printer", 631)          # the pythonic way, introducing fields 0 and 1
+('Printer', 631)
+>>> { 1: "Printer", 2: 631 }  # the "tuples-are-functions" way
+{1: 'Printer', 2: 631}
+
 ```
 
 ----------------------------------------------------------------------------

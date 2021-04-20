@@ -106,10 +106,10 @@ as follows:
     \* field "name" that is equal to "Printer", and field "port" that is equal to 631.
 ```
 
-**Example in Python:** TLA+ functions are immutable, so we are using [frozendict]:
-
 ```python
-  frozendict({ "name": "Printer", "port": 631 })
+>>> { "name": "Printer", "port": 631 }
+{'name': 'Printer', 'port': 631}
+
 ```
 
 ----------------------------------------------------------------------------
@@ -196,11 +196,13 @@ extract the respective field when translating the access expression into SMT.
   r.name    \* "Printer"
 ```
 
-**Example in Python:** TLA+ functions are immutable, so we are using [frozendict]:
+**Example in Python:**
 
 ```python
-  r = frozendict({ "name": "Printer", "port": 631 })
-  r["name"]    # "Printer"
+>>> r = { "name": "Printer", "port": 631 }
+>>> r["name"]
+'Printer'
+
 ```
 
 ----------------------------------------------------------------------------
