@@ -129,8 +129,11 @@ lists, which are indexed with 0!. If we want to stick to the
 principle "sequences are functions", we have to use a dictionary.
 
 ```python
-  ["Printer", 631]                      # the pythonic way, a two-element list
-  frozendict({ 1: "Printer", 2: 631 })  # the "sequences-are-functions" way
+>>> ["Printer", 631]          # the pythonic way, a two-element list
+['Printer', 631]
+>>> { 1: "Printer", 2: 631 }  # the "sequences-are-functions" way
+{1: 'Printer', 2: 631}
+
 ```
 
 ----------------------------------------------------------------------------
@@ -170,16 +173,20 @@ the type of the sequence elements.
     \* The sequence <<1, 2, 5>>
 ```
 
-**Example in Python:** TLA+ functions are immutable, so we are using [frozendict]:
+**Example in Python:**
 
 ```python
-  # the pythonic way: a list (indexed with 0, 1, ...)
-  l = [ 1, 2 ]
-  l.append(5)
-  # the TLA+ way
-  l = frozendict({ 1: 1, 2: 2 })
-  frozendict({ i: l[i] if i <= len(l) else 5
-    for i in range(1, len(l) + 2) })
+>>> # the pythonic way: a list (indexed with 0, 1, ...)
+>>> l = [ 1, 2 ]
+>>> l.append(5)
+>>> l
+[1, 2, 5]
+>>> # the TLA+ way
+>>> l = { 1: 1, 2: 2 }
+>>> { i: l[i] if i <= len(l) else 5
+...   for i in range(1, len(l) + 2) }
+{1: 1, 2: 2, 3: 5}
+
 ```
 
 ----------------------------------------------------------------------------
@@ -222,15 +229,18 @@ error.
     \* 3
 ```
 
-**Example in Python:** TLA+ functions are immutable, so we are using [frozendict]:
+**Example in Python:**
 
 ```python
-  # the pythonic way: using the list
-  l = [ 3, 4 ]
-  l[0]  # 3
-  # the TLA+ way
-  l = frozendict({ 1: 3, 2: 4 })
-  l[1]  # 3
+>>> # the pythonic way: using the list
+>>> l = [ 3, 4 ]
+>>> l[0]
+3
+>>> # the TLA+ way
+>>> l = { 1: 3, 2: 4 }
+>>> l[1]
+3
+
 ```
 
 ----------------------------------------------------------------------------
@@ -272,15 +282,18 @@ error.
     \* <<4, 5>>
 ```
 
-**Example in Python:** TLA+ functions are immutable, so we are using [frozendict]:
+**Example in Python:**
 
 ```python
-  # the pythonic way: using the list
-  l = [ 3, 4, 5 ]
-  l[1:]  # 4, 5
-  # the TLA+ way
-  l = frozendict({ 1: 3, 2: 4, 3: 5 })
-  frozendict({ i: l[i + 1] for i in range(1, len(l)) })
+>>> # the pythonic way: using the list
+>>> l = [ 3, 4, 5 ]
+>>> l[1:]
+[4, 5]
+>>> # the TLA+ way
+>>> l = { 1: 3, 2: 4, 3: 5 }
+>>> { i: l[i + 1] for i in range(1, len(l)) }
+{1: 4, 2: 5}
+
 ```
 
 ----------------------------------------------------------------------------
@@ -317,15 +330,18 @@ error.
     \* 3
 ```
 
-**Example in Python:** TLA+ functions are immutable, so we are using [frozendict]:
+**Example in Python:**
 
 ```python
-  # the pythonic way: using the list
-  l = [ 3, 4, 5 ]
-  len(l)    # 3
-  # the TLA+ way
-  l = frozendict({ 1: 3, 2: 4, 3: 5 })
-  len(l.keys())
+>>> # the pythonic way: using the list
+>>> l = [ 3, 4, 5 ]
+>>> len(l)
+3
+>>> # the TLA+ way
+>>> l = { 1: 3, 2: 4, 3: 5 }
+>>> len(l.keys())
+3
+
 ```
 
 ----------------------------------------------------------------------------
@@ -365,18 +381,21 @@ incompatible.
     \* The sequence <<3, 5, 7, 9>>
 ```
 
-**Example in Python:** TLA+ functions are immutable, so we are using [frozendict]:
+**Example in Python:**
 
 ```python
-  # the pythonic way: a list (indexed with 0, 1, ...)
-  l1 = [ 3, 5 ]
-  l2 = [ 7, 9 ]
-  l1 + l2
-  # the TLA+ way
-  l1 = frozendict({ 1: 3, 2: 5 })
-  l2 = frozendict({ 1: 7, 2: 9 })
-  frozendict({ i: l1[i] if i <= len(l1) else l2[i - len(l1)]
-    for i in range(1, len(l1) + len(l2) + 1) })
+>>> # the pythonic way: a list (indexed with 0, 1, ...)
+>>> l1 = [ 3, 5 ]
+>>> l2 = [ 7, 9 ]
+>>> l1 + l2
+[3, 5, 7, 9]
+>>> # the TLA+ way
+>>> l1 = { 1: 3, 2: 5 }
+>>> l2 = { 1: 7, 2: 9 }
+>>> { i: l1[i] if i <= len(l1) else l2[i - len(l1)]
+...    for i in range(1, len(l1) + len(l2) + 1) }
+{1: 3, 2: 5, 3: 7, 4: 9}
+
 ```
 
 ----------------------------------------------------------------------------
@@ -415,18 +434,21 @@ error. Apalache flags a static type error.
     \* The sequence <<5, 9>>
 ```
 
-**Example in Python:** TLA+ functions are immutable, so we are using [frozendict]:
+**Example in Python:**
 
 ```python
-  # the pythonic way: a list (indexed with 0, 1, ...)
-  l = [ 3, 5, 9, 10 ]
-  l[1:3]
-  # the TLA+ way
-  l = frozendict({ 1: 3, 2: 5, 3: 9, 4: 10 })
-  m = 2
-  n = 3
-  frozendict({ i: l[i + m - 1]
-    for i in range(1, n - m + 2) })
+>>> # the pythonic way: a list (indexed with 0, 1, ...)
+>>> l = [ 3, 5, 9, 10 ]
+>>> l[1:3]
+[5, 9]
+>>> # the TLA+ way
+>>> l = { 1: 3, 2: 5, 3: 9, 4: 10 }
+>>> m = 2
+>>> n = 3
+>>> { i: l[i + m - 1]
+...   for i in range(1, n - m + 2) }
+{1: 5, 2: 9}
+
 ```
 
 ----------------------------------------------------------------------------
@@ -471,22 +493,26 @@ result is undefined in pure TLA+. TLC raises a model checking error.
     \* The sequence <<4, 10>>
 ```
 
-**Example in Python:** TLA+ functions are immutable, so we are using [frozendict]:
+**Example in Python:**
 
 ```python
-  # the pythonic way: a list (indexed with 0, 1, ...)
-  def test(x):
-    return x % 2 == 0
+>>> # the pythonic way: a list (indexed with 0, 1, ...)
+>>> def test(x):
+...   return x % 2 == 0
+>>>
+>>> l = [ 3, 4, 9, 10, 11 ]
+>>> [ x for x in l if test(x) ]
+[4, 10]
 
-  l = [ 3, 4, 9, 10, 11 ]
-  [ x for x in l if test(x) ]
-  # the TLA+ way
-  l = frozendict({ 1: 3, 2: 4, 3: 9, 4: 10, 5: 11 })
-  as_list = sorted(list(l.items()))
-  filtered = [ x for (_, x) in as_list if test(x) ]
-  frozendict({ i: x
-    for (i, x) in zip(range(1, len(filtered) + 1), filtered)
-  })
+>>> # the TLA+ way
+>>> l = { 1: 3, 2: 4, 3: 9, 4: 10, 5: 11 }
+>>> as_list = sorted(list(l.items()))
+>>> filtered = [ x for (_, x) in as_list if test(x) ]
+>>> { i: x
+...   for (i, x) in zip(range(1, len(filtered) + 1), filtered)
+... }
+{1: 4, 2: 10}
+
 ```
 
 ----------------------------------------------------------------------------
@@ -554,7 +580,6 @@ till the end of the universe.
 
 [Control Flow and Non-determinism]: ./control-and-nondeterminism.md
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html
-[frozendict]: https://pypi.org/project/frozendict/
 [Paxos]: https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla
 [Apalache ADR002]: https://github.com/informalsystems/apalache/blob/unstable/docs/adr/002adr-types.md
 [Cartesian product]: https://en.wikipedia.org/wiki/Cartesian_product

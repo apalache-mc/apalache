@@ -342,19 +342,24 @@ general case, we have to iterate over a set, as the type and structure of the
 function domain is not known in advance.
 
 ```python
-# TLA: [ x \in 1..3 |-> 2 * x ]
-{x: 2 * x for x in range(1, 4)}
-# TLA: [ x, y \in 1..3 |-> x * y ]
-{(x, y): x * y for x in range(1, 4) for y in range(1, 4)}
-# TLA: [ <<x, y>> \in (1..3) \X (4..6) |-> x + y ]
-xy = {(x, y) for x in range(1, 4) for y in range(4, 7)}
-{(x, y): x + y for (x, y) in xy}
-# TLA: [ n \in 1..3 |->
-#        [ i \in 1..n |-> n + i ]]
-{
-    n: {i: n + i for i in range(1, n + 1)}
-    for n in range(1, 4)
-}
+>>> # TLA: [ x \in 1..3 |-> 2 * x ]
+>>> {x: 2 * x for x in range(1, 4)}
+{1: 2, 2: 4, 3: 6}
+>>> # TLA: [ x, y \in 1..3 |-> x * y ]
+>>> {(x, y): x * y for x in range(1, 4) for y in range(1, 4)}
+{(1, 1): 1, (1, 2): 2, (1, 3): 3, (2, 1): 2, (2, 2): 4, (2, 3): 6, (3, 1): 3, (3, 2): 6, (3, 3): 9}
+>>> # TLA: [ <<x, y>> \in (1..3) \X (4..6) |-> x + y ]
+>>> xy = {(x, y) for x in range(1, 4) for y in range(4, 7)}
+>>> {(x, y): x + y for (x, y) in xy}
+{(2, 4): 6, (3, 4): 7, (1, 5): 6, (1, 4): 5, (2, 6): 8, (3, 6): 9, (1, 6): 7, (2, 5): 7, (3, 5): 8}
+>>> # TLA: [ n \in 1..3 |->
+>>> #        [ i \in 1..n |-> n + i ]]
+>>> {
+...     n: {i: n + i for i in range(1, n + 1)}
+...     for n in range(1, 4)
+... }
+{1: {1: 2}, 2: {1: 3, 2: 4}, 3: {1: 4, 2: 5, 3: 6}}
+
 ```
 
 ----------------------------------------------------------------------------
@@ -620,7 +625,7 @@ code would be less efficient than the idiomatic Python code.
 **Arguments:** One argument, which should be a function
                (respectively, a record, tuple, sequence).
 
-**Apalache type:** `(a -> b) => Set(a)`.               
+**Apalache type:** `(a -> b) => Set(a)`.
 
 **Effect:** `DOMAIN f` returns the set of values, on which the function
 has been defined, see: Function constructor and Function set constructor.
