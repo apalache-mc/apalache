@@ -5279,19 +5279,24 @@ that are computed under such a binding.</p>
 <p>In the following code, we write <code>range(m, n)</code> instead of <code>frozenset(range(m, n))</code> to simplify the presentation and produce idiomatic Python code. In the
 general case, we have to iterate over a set, as the type and structure of the
 function domain is not known in advance.</p>
-<pre><code class="language-python"># TLA: [ x \in 1..3 |-&gt; 2 * x ]
-{x: 2 * x for x in range(1, 4)}
-# TLA: [ x, y \in 1..3 |-&gt; x * y ]
-{(x, y): x * y for x in range(1, 4) for y in range(1, 4)}
-# TLA: [ &lt;&lt;x, y&gt;&gt; \in (1..3) \X (4..6) |-&gt; x + y ]
-xy = {(x, y) for x in range(1, 4) for y in range(4, 7)}
-{(x, y): x + y for (x, y) in xy}
-# TLA: [ n \in 1..3 |-&gt;
-#        [ i \in 1..n |-&gt; n + i ]]
-{
-    n: {i: n + i for i in range(1, n + 1)}
-    for n in range(1, 4)
-}
+<pre><code class="language-python">&gt;&gt;&gt; # TLA: [ x \in 1..3 |-&gt; 2 * x ]
+&gt;&gt;&gt; {x: 2 * x for x in range(1, 4)}
+{1: 2, 2: 4, 3: 6}
+&gt;&gt;&gt; # TLA: [ x, y \in 1..3 |-&gt; x * y ]
+&gt;&gt;&gt; {(x, y): x * y for x in range(1, 4) for y in range(1, 4)}
+{(1, 1): 1, (1, 2): 2, (1, 3): 3, (2, 1): 2, (2, 2): 4, (2, 3): 6, (3, 1): 3, (3, 2): 6, (3, 3): 9}
+&gt;&gt;&gt; # TLA: [ &lt;&lt;x, y&gt;&gt; \in (1..3) \X (4..6) |-&gt; x + y ]
+&gt;&gt;&gt; xy = {(x, y) for x in range(1, 4) for y in range(4, 7)}
+&gt;&gt;&gt; {(x, y): x + y for (x, y) in xy}
+{(2, 4): 6, (3, 4): 7, (1, 5): 6, (1, 4): 5, (2, 6): 8, (3, 6): 9, (1, 6): 7, (2, 5): 7, (3, 5): 8}
+&gt;&gt;&gt; # TLA: [ n \in 1..3 |-&gt;
+&gt;&gt;&gt; #        [ i \in 1..n |-&gt; n + i ]]
+&gt;&gt;&gt; {
+...     n: {i: n + i for i in range(1, n + 1)}
+...     for n in range(1, 4)
+... }
+{1: {1: 2}, 2: {1: 3, 2: 4}, 3: {1: 4, 2: 5, 3: 6}}
+
 </code></pre>
 <hr />
 <p><a name="funSetCtor"></a></p>
@@ -5586,8 +5591,9 @@ as follows:</p>
     \* A record that has two fields:
     \* field &quot;name&quot; that is equal to &quot;Printer&quot;, and field &quot;port&quot; that is equal to 631.
 </code></pre>
-<p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
-<pre><code class="language-python">  frozendict({ &quot;name&quot;: &quot;Printer&quot;, &quot;port&quot;: 631 })
+<pre><code class="language-python">&gt;&gt;&gt; { &quot;name&quot;: &quot;Printer&quot;, &quot;port&quot;: 631 }
+{'name': 'Printer', 'port': 631}
+
 </code></pre>
 <hr />
 <p><a name="recSetCtor"></a></p>
@@ -5640,9 +5646,11 @@ extract the respective field when translating the access expression into SMT.</p
 <pre><code class="language-tla">  LET r == [ name |-&gt; &quot;Printer&quot;, port |-&gt; 631 ] IN
   r.name    \* &quot;Printer&quot;
 </code></pre>
-<p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
-<pre><code class="language-python">  r = frozendict({ &quot;name&quot;: &quot;Printer&quot;, &quot;port&quot;: 631 })
-  r[&quot;name&quot;]    # &quot;Printer&quot;
+<p><strong>Example in Python:</strong></p>
+<pre><code class="language-python">&gt;&gt;&gt; r = { &quot;name&quot;: &quot;Printer&quot;, &quot;port&quot;: 631 }
+&gt;&gt;&gt; r[&quot;name&quot;]
+'Printer'
+
 </code></pre>
 <hr />
 <h1><a class="header" href="#tuples-1" id="tuples-1">Tuples</a></h1>
@@ -5731,8 +5739,11 @@ annotation].</p>
 <p><strong>Example in Python:</strong> Python provides us with the syntax for constructing
 tuples, which are indexed with 0!. If we want to stick to the
 principle &quot;tuples are functions&quot;, we have to use a dictionary.</p>
-<pre><code class="language-python">  (&quot;Printer&quot;, 631)                      # the pythonic way, introducing fields 0 and 1
-  frozendict({ 1: &quot;Printer&quot;, 2: 631 })  # the &quot;tuples-are-functions&quot; way
+<pre><code class="language-python">&gt;&gt;&gt; (&quot;Printer&quot;, 631)          # the pythonic way, introducing fields 0 and 1
+('Printer', 631)
+&gt;&gt;&gt; { 1: &quot;Printer&quot;, 2: 631 }  # the &quot;tuples-are-functions&quot; way
+{1: 'Printer', 2: 631}
+
 </code></pre>
 <hr />
 <p><a name="times"></a></p>
@@ -5870,8 +5881,11 @@ annotation].</p>
 <p><strong>Example in Python:</strong> Python provides us with the syntax for constructing
 lists, which are indexed with 0!. If we want to stick to the
 principle &quot;sequences are functions&quot;, we have to use a dictionary.</p>
-<pre><code class="language-python">  [&quot;Printer&quot;, 631]                      # the pythonic way, a two-element list
-  frozendict({ 1: &quot;Printer&quot;, 2: 631 })  # the &quot;sequences-are-functions&quot; way
+<pre><code class="language-python">&gt;&gt;&gt; [&quot;Printer&quot;, 631]          # the pythonic way, a two-element list
+['Printer', 631]
+&gt;&gt;&gt; { 1: &quot;Printer&quot;, 2: 631 }  # the &quot;sequences-are-functions&quot; way
+{1: 'Printer', 2: 631}
+
 </code></pre>
 <hr />
 <p><a name="append"></a></p>
@@ -5898,14 +5912,18 @@ the type of the sequence elements.</p>
 <pre><code class="language-tla">  Append(&lt;&lt;1, 2&gt;&gt;, 5)
     \* The sequence &lt;&lt;1, 2, 5&gt;&gt;
 </code></pre>
-<p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
-<pre><code class="language-python">  # the pythonic way: a list (indexed with 0, 1, ...)
-  l = [ 1, 2 ]
-  l.append(5)
-  # the TLA+ way
-  l = frozendict({ 1: 1, 2: 2 })
-  frozendict({ i: l[i] if i &lt;= len(l) else 5
-    for i in range(1, len(l) + 2) })
+<p><strong>Example in Python:</strong></p>
+<pre><code class="language-python">&gt;&gt;&gt; # the pythonic way: a list (indexed with 0, 1, ...)
+&gt;&gt;&gt; l = [ 1, 2 ]
+&gt;&gt;&gt; l.append(5)
+&gt;&gt;&gt; l
+[1, 2, 5]
+&gt;&gt;&gt; # the TLA+ way
+&gt;&gt;&gt; l = { 1: 1, 2: 2 }
+&gt;&gt;&gt; { i: l[i] if i &lt;= len(l) else 5
+...   for i in range(1, len(l) + 2) }
+{1: 1, 2: 2, 3: 5}
+
 </code></pre>
 <hr />
 <p><a name="app"></a></p>
@@ -5932,13 +5950,16 @@ error.</p>
 <pre><code class="language-tla">  Head(&lt;&lt;3, 4&gt;&gt;)
     \* 3
 </code></pre>
-<p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
-<pre><code class="language-python">  # the pythonic way: using the list
-  l = [ 3, 4 ]
-  l[0]  # 3
-  # the TLA+ way
-  l = frozendict({ 1: 3, 2: 4 })
-  l[1]  # 3
+<p><strong>Example in Python:</strong></p>
+<pre><code class="language-python">&gt;&gt;&gt; # the pythonic way: using the list
+&gt;&gt;&gt; l = [ 3, 4 ]
+&gt;&gt;&gt; l[0]
+3
+&gt;&gt;&gt; # the TLA+ way
+&gt;&gt;&gt; l = { 1: 3, 2: 4 }
+&gt;&gt;&gt; l[1]
+3
+
 </code></pre>
 <hr />
 <p><a name="tail"></a></p>
@@ -5966,13 +5987,16 @@ error.</p>
 <pre><code class="language-tla">  Tail(&lt;&lt;3, 4, 5&gt;&gt;)
     \* &lt;&lt;4, 5&gt;&gt;
 </code></pre>
-<p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
-<pre><code class="language-python">  # the pythonic way: using the list
-  l = [ 3, 4, 5 ]
-  l[1:]  # 4, 5
-  # the TLA+ way
-  l = frozendict({ 1: 3, 2: 4, 3: 5 })
-  frozendict({ i: l[i + 1] for i in range(1, len(l)) })
+<p><strong>Example in Python:</strong></p>
+<pre><code class="language-python">&gt;&gt;&gt; # the pythonic way: using the list
+&gt;&gt;&gt; l = [ 3, 4, 5 ]
+&gt;&gt;&gt; l[1:]
+[4, 5]
+&gt;&gt;&gt; # the TLA+ way
+&gt;&gt;&gt; l = { 1: 3, 2: 4, 3: 5 }
+&gt;&gt;&gt; { i: l[i + 1] for i in range(1, len(l)) }
+{1: 4, 2: 5}
+
 </code></pre>
 <hr />
 <p><a name="len"></a></p>
@@ -5995,13 +6019,16 @@ error.</p>
 <pre><code class="language-tla">  Len(&lt;&lt;3, 4, 5&gt;&gt;)
     \* 3
 </code></pre>
-<p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
-<pre><code class="language-python">  # the pythonic way: using the list
-  l = [ 3, 4, 5 ]
-  len(l)    # 3
-  # the TLA+ way
-  l = frozendict({ 1: 3, 2: 4, 3: 5 })
-  len(l.keys())
+<p><strong>Example in Python:</strong></p>
+<pre><code class="language-python">&gt;&gt;&gt; # the pythonic way: using the list
+&gt;&gt;&gt; l = [ 3, 4, 5 ]
+&gt;&gt;&gt; len(l)
+3
+&gt;&gt;&gt; # the TLA+ way
+&gt;&gt;&gt; l = { 1: 3, 2: 4, 3: 5 }
+&gt;&gt;&gt; len(l.keys())
+3
+
 </code></pre>
 <hr />
 <p><a name="concat"></a></p>
@@ -6028,16 +6055,19 @@ incompatible.</p>
 <pre><code class="language-tla">  &lt;&lt;3, 5&gt;&gt; \o &lt;&lt;7, 9&gt;&gt;
     \* The sequence &lt;&lt;3, 5, 7, 9&gt;&gt;
 </code></pre>
-<p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
-<pre><code class="language-python">  # the pythonic way: a list (indexed with 0, 1, ...)
-  l1 = [ 3, 5 ]
-  l2 = [ 7, 9 ]
-  l1 + l2
-  # the TLA+ way
-  l1 = frozendict({ 1: 3, 2: 5 })
-  l2 = frozendict({ 1: 7, 2: 9 })
-  frozendict({ i: l1[i] if i &lt;= len(l1) else l2[i - len(l1)]
-    for i in range(1, len(l1) + len(l2) + 1) })
+<p><strong>Example in Python:</strong></p>
+<pre><code class="language-python">&gt;&gt;&gt; # the pythonic way: a list (indexed with 0, 1, ...)
+&gt;&gt;&gt; l1 = [ 3, 5 ]
+&gt;&gt;&gt; l2 = [ 7, 9 ]
+&gt;&gt;&gt; l1 + l2
+[3, 5, 7, 9]
+&gt;&gt;&gt; # the TLA+ way
+&gt;&gt;&gt; l1 = { 1: 3, 2: 5 }
+&gt;&gt;&gt; l2 = { 1: 7, 2: 9 }
+&gt;&gt;&gt; { i: l1[i] if i &lt;= len(l1) else l2[i - len(l1)]
+...    for i in range(1, len(l1) + len(l2) + 1) }
+{1: 3, 2: 5, 3: 7, 4: 9}
+
 </code></pre>
 <hr />
 <p><a name="subseq"></a></p>
@@ -6063,16 +6093,19 @@ error. Apalache flags a static type error.</p>
 <pre><code class="language-tla">  SubSeq(&lt;&lt;3, 5, 9, 10&gt;&gt;, 2, 3)
     \* The sequence &lt;&lt;5, 9&gt;&gt;
 </code></pre>
-<p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
-<pre><code class="language-python">  # the pythonic way: a list (indexed with 0, 1, ...)
-  l = [ 3, 5, 9, 10 ]
-  l[1:3]
-  # the TLA+ way
-  l = frozendict({ 1: 3, 2: 5, 3: 9, 4: 10 })
-  m = 2
-  n = 3
-  frozendict({ i: l[i + m - 1]
-    for i in range(1, n - m + 2) })
+<p><strong>Example in Python:</strong></p>
+<pre><code class="language-python">&gt;&gt;&gt; # the pythonic way: a list (indexed with 0, 1, ...)
+&gt;&gt;&gt; l = [ 3, 5, 9, 10 ]
+&gt;&gt;&gt; l[1:3]
+[5, 9]
+&gt;&gt;&gt; # the TLA+ way
+&gt;&gt;&gt; l = { 1: 3, 2: 5, 3: 9, 4: 10 }
+&gt;&gt;&gt; m = 2
+&gt;&gt;&gt; n = 3
+&gt;&gt;&gt; { i: l[i + m - 1]
+...   for i in range(1, n - m + 2) }
+{1: 5, 2: 9}
+
 </code></pre>
 <hr />
 <p><a name="filter"></a></p>
@@ -6102,20 +6135,24 @@ result is undefined in pure TLA+. TLC raises a model checking error.</p>
   SelectSeq(&lt;&lt;3, 4, 9, 10, 11&gt;&gt;, Test)
     \* The sequence &lt;&lt;4, 10&gt;&gt;
 </code></pre>
-<p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
-<pre><code class="language-python">  # the pythonic way: a list (indexed with 0, 1, ...)
-  def test(x):
-    return x % 2 == 0
+<p><strong>Example in Python:</strong></p>
+<pre><code class="language-python">&gt;&gt;&gt; # the pythonic way: a list (indexed with 0, 1, ...)
+&gt;&gt;&gt; def test(x):
+...   return x % 2 == 0
+&gt;&gt;&gt;
+&gt;&gt;&gt; l = [ 3, 4, 9, 10, 11 ]
+&gt;&gt;&gt; [ x for x in l if test(x) ]
+[4, 10]
 
-  l = [ 3, 4, 9, 10, 11 ]
-  [ x for x in l if test(x) ]
-  # the TLA+ way
-  l = frozendict({ 1: 3, 2: 4, 3: 9, 4: 10, 5: 11 })
-  as_list = sorted(list(l.items()))
-  filtered = [ x for (_, x) in as_list if test(x) ]
-  frozendict({ i: x
-    for (i, x) in zip(range(1, len(filtered) + 1), filtered)
-  })
+&gt;&gt;&gt; # the TLA+ way
+&gt;&gt;&gt; l = { 1: 3, 2: 4, 3: 9, 4: 10, 5: 11 }
+&gt;&gt;&gt; as_list = sorted(list(l.items()))
+&gt;&gt;&gt; filtered = [ x for (_, x) in as_list if test(x) ]
+&gt;&gt;&gt; { i: x
+...   for (i, x) in zip(range(1, len(filtered) + 1), filtered)
+... }
+{1: 4, 2: 10}
+
 </code></pre>
 <hr />
 <p><a name="seq"></a></p>

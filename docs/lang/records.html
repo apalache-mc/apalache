@@ -243,8 +243,9 @@ as follows:</p>
     \* A record that has two fields:
     \* field &quot;name&quot; that is equal to &quot;Printer&quot;, and field &quot;port&quot; that is equal to 631.
 </code></pre>
-<p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
-<pre><code class="language-python">  frozendict({ &quot;name&quot;: &quot;Printer&quot;, &quot;port&quot;: 631 })
+<pre><code class="language-python">&gt;&gt;&gt; { &quot;name&quot;: &quot;Printer&quot;, &quot;port&quot;: 631 }
+{'name': 'Printer', 'port': 631}
+
 </code></pre>
 <hr />
 <p><a name="recSetCtor"></a></p>
@@ -297,9 +298,11 @@ extract the respective field when translating the access expression into SMT.</p
 <pre><code class="language-tla">  LET r == [ name |-&gt; &quot;Printer&quot;, port |-&gt; 631 ] IN
   r.name    \* &quot;Printer&quot;
 </code></pre>
-<p><strong>Example in Python:</strong> TLA+ functions are immutable, so we are using <a href="https://pypi.org/project/frozendict/">frozendict</a>:</p>
-<pre><code class="language-python">  r = frozendict({ &quot;name&quot;: &quot;Printer&quot;, &quot;port&quot;: 631 })
-  r[&quot;name&quot;]    # &quot;Printer&quot;
+<p><strong>Example in Python:</strong></p>
+<pre><code class="language-python">&gt;&gt;&gt; r = { &quot;name&quot;: &quot;Printer&quot;, &quot;port&quot;: 631 }
+&gt;&gt;&gt; r[&quot;name&quot;]
+'Printer'
+
 </code></pre>
 <hr />
 

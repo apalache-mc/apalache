@@ -423,19 +423,24 @@ that are computed under such a binding.</p>
 <p>In the following code, we write <code>range(m, n)</code> instead of <code>frozenset(range(m, n))</code> to simplify the presentation and produce idiomatic Python code. In the
 general case, we have to iterate over a set, as the type and structure of the
 function domain is not known in advance.</p>
-<pre><code class="language-python"># TLA: [ x \in 1..3 |-&gt; 2 * x ]
-{x: 2 * x for x in range(1, 4)}
-# TLA: [ x, y \in 1..3 |-&gt; x * y ]
-{(x, y): x * y for x in range(1, 4) for y in range(1, 4)}
-# TLA: [ &lt;&lt;x, y&gt;&gt; \in (1..3) \X (4..6) |-&gt; x + y ]
-xy = {(x, y) for x in range(1, 4) for y in range(4, 7)}
-{(x, y): x + y for (x, y) in xy}
-# TLA: [ n \in 1..3 |-&gt;
-#        [ i \in 1..n |-&gt; n + i ]]
-{
-    n: {i: n + i for i in range(1, n + 1)}
-    for n in range(1, 4)
-}
+<pre><code class="language-python">&gt;&gt;&gt; # TLA: [ x \in 1..3 |-&gt; 2 * x ]
+&gt;&gt;&gt; {x: 2 * x for x in range(1, 4)}
+{1: 2, 2: 4, 3: 6}
+&gt;&gt;&gt; # TLA: [ x, y \in 1..3 |-&gt; x * y ]
+&gt;&gt;&gt; {(x, y): x * y for x in range(1, 4) for y in range(1, 4)}
+{(1, 1): 1, (1, 2): 2, (1, 3): 3, (2, 1): 2, (2, 2): 4, (2, 3): 6, (3, 1): 3, (3, 2): 6, (3, 3): 9}
+&gt;&gt;&gt; # TLA: [ &lt;&lt;x, y&gt;&gt; \in (1..3) \X (4..6) |-&gt; x + y ]
+&gt;&gt;&gt; xy = {(x, y) for x in range(1, 4) for y in range(4, 7)}
+&gt;&gt;&gt; {(x, y): x + y for (x, y) in xy}
+{(2, 4): 6, (3, 4): 7, (1, 5): 6, (1, 4): 5, (2, 6): 8, (3, 6): 9, (1, 6): 7, (2, 5): 7, (3, 5): 8}
+&gt;&gt;&gt; # TLA: [ n \in 1..3 |-&gt;
+&gt;&gt;&gt; #        [ i \in 1..n |-&gt; n + i ]]
+&gt;&gt;&gt; {
+...     n: {i: n + i for i in range(1, n + 1)}
+...     for n in range(1, 4)
+... }
+{1: {1: 2}, 2: {1: 3, 2: 4}, 3: {1: 4, 2: 5, 3: 6}}
+
 </code></pre>
 <hr />
 <p><a name="funSetCtor"></a></p>
