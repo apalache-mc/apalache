@@ -1,8 +1,20 @@
 # RFC-006: Unit testing and property-based testing of TLA+ specifications
 
-| authors                              | revision |
-| ------------------------------------ | --------:|
-| Igor Konnov, Vitor Enes, Shon Feder  |        1 |
+| authors                                   | revision |
+| ----------------------------------------- | --------:|
+| Igor Konnov, Vitor Enes, Shon Feder, ...  |        1 |
+
+<!-- toc -->
+
+**Abstract.** This document discusses a framework for testing TLA+
+specifications. Our first goal is to give the writers of TLA+ specifications an
+interactive approach to quickly testing their specifications in the design
+phase, similar to unit-testing in programming languages. Our second goal is to
+give the readers of TLA+ specifications a clear framework for dissecting TLA+
+specifications, in order to understand them in smaller pieces.  These ideas
+have not been implemented yet. We believe that the testing framework will
+enable the users of Apalache and TLC to write and read TLA+ specifications in a
+much more efficient manner than they do it today.
 
 ## 1. Long rationale
 
@@ -13,8 +25,8 @@ since then. We now have automatic tools that can run TLA+ in a computer (to
 some extent). Even more, these tools can prove or disprove certain properties
 of TLA+ specs.
 
-Nowadays, we have two tools when writing a TLA+ spec: our brain and a model
-checker. Both these tools have the same problem. They are slow. Software
+Nowadays, we have two tools that aid us in writing a TLA+ spec: our brain and a
+model checker. Both these tools have the same problem. They are slow. Software
 engineers are facing a similar problem when they are trying to test their
 system against different inputs. Interestingly, software engineers have found a
 way around this problem. They first test the individual parts of the system and
@@ -34,14 +46,15 @@ specs. This is hardly surprising, as we are interested in specifying complex
 systems, not the trivial ones.
 
 Surprisingly, when we are writing large TLA+ specs, our interaction with the
-model checker looks more like an interaction with a [Mainframe computer][] than
-a modern interactive development cycle. We feed the model checker our
-specification and wait for hours in the hope that it gives us a useful
-response. If it does not, we have to make the specification parameters small
-enough for the model checker to do anything useful. If our parameters are
-already ridiculously small, we have to throw more computing power at the
-problem and wait for days. In contrast, verification tools for programs are
-meant to be much more interactive, e.g., see [Dafny][] and [Ivy][].
+model checker looks more like an interaction with a [Mainframe computer][] from
+the early days of computing than a modern interactive development cycle. We
+feed the model checker our specification and wait for hours in the hope that it
+gives us a useful response. If it does not, we have to make the specification
+parameters small enough for the model checker to do anything useful. If our
+parameters are already ridiculously small, we have to throw more computing
+power at the problem and wait for days. In contrast, verification tools for
+programs are meant to be much more interactive, e.g., see [Dafny][] and
+[Ivy][].
 
 Why cannot we do something like [Unit testing][] in Apalache? We believe that
 we actually can do that. We can probably do it even better by implementing
@@ -53,9 +66,9 @@ inputs.
 
 Let's consider a relatively simple distributed algorithm as an example.  The
 repository of [TLA+ examples][] contains the well-known leader election
-algorithm called [LCR][]. The algorithm is over 40 years old, but it is tricky
-enough to be still interesting. To understand the algorithm, check [Distributed
-Algorithms][] by Nancy Lynch.
+algorithm called [LCR][] (specified in TLA+ by Stephan Merz). The algorithm is
+over 40 years old, but it is tricky enough to be still interesting. To
+understand the algorithm, check [Distributed Algorithms][] by Nancy Lynch.
 
 As the description suggests, when we fix `N` to `6` and `Id` to
 `<<27, 4, 42, 15, 63, 9>>`, TLC checks that the spec satisfies the invariant
@@ -105,7 +118,9 @@ engineers do!
 
 *What we describe below has not been implemented yet. Apalache has all the
 necessary ingredients for implementing this approach. We are asking for your
-input to find an ergonomic approach to testing TLA+ specifications.*
+input to find an ergonomic approach to testing TLA+ specifications.  Many of
+the following ideas apply to TLC as well. We are gradually introducing
+Apalache-specific features.*
 
 A complete specification can be found in [ChangRobertsTyped_Test.tla][].
 
@@ -252,7 +267,8 @@ difference between the variables in `Assert_n0` and `Assert_noWinner`:
    an *execution*, whereas primed variables in `Assert_noWinner` refer to
    a final state of the execution.
 
-(If you find this confusing, please let us know.)   
+*(If you find the above behavior of `Assert_noWinner` confusing, please let us
+know.)*
 
 We should be able to run this test via:
 
@@ -296,16 +312,215 @@ to check it against all states of an execution:
 
 ### 3.5. Discussion
 
-As you can see, our test is written in the spirit of property-based testing.
-We were inspired by the design [Scalatest], [Scalacheck], [JML], and [QUIC
-testing] with Ivy. In comparison to pure property-based testing, we have to
-decompose the test in three parts:
+As you can see, we clearly decompose a test in three parts:
 
- - preparing the states (like in `Init`),
- - executing the action (like a single instance of `Next`),
- - testing the next states (like an invariant).
+ - preparing the states (like a small version of `Init`),
+ - executing the action (like a small version of `Next`),
+ - testing the next states against the previous states (like an action invariant).
 
-**THIS DISCUSSION IS NOT FINISHED.**
+In the rest of this section, we comment on the alternative approaches.
+
+#### 3.5.1. But I can do all of that in TLA+ 
+
+True. TLA+ is an extremely expressive language.
+
+Let's go back to the test `TestAction_n0` that was explained in [Section
+3.2](#testAction):
+
+```tla
+{{#include ../../../test/tla/ChangRobertsTyped_Test.tla:77:89}}
+```
+
+Can we rewrite this test in pure TLA+? Yes, but it is an error-prone approach.
+Let's do it step-by-step.
+
+First of all, there is no simple way to initialize constants in TLA+, as we did
+with `ConstInit` (this is an Apalache-specific feature). Of course, one can
+restrict constants with `ASSUME(...)`.  However, assumptions about constants
+are global, so we cannot easily isolate constant initialization in one test.
+The canonical way of initializing constants is to define them in a TLC
+configuration file. If we forget about all these idiosyncrasies of TLC, we
+could just use implication (`=>`), as we normally do in logic. So our test
+`TestAction_n0_TLA` in pure TLA+ would look like follows:
+
+```tla
+TestAction_n0_TLA ==
+  ConstInit => (* ... *)
+```
+
+Second, we want to restrict the states with `TypeOK`. That should be easy:
+
+```tla
+TestAction_n0_TLA ==
+  ConstInit =>
+    TypeOK (* ... *)
+```
+
+Third, we want to execute the action `n0`, as we did in `TestAction_n0`.
+The intuitive way is to write it like follows:
+
+```tla
+TestAction_n0_TLA ==
+  ConstInit =>
+    /\ TypeOK
+    /\ \E self \in Node:
+         n0(self)
+    (* ... *)     
+```
+
+Although the above code looks reasonable, we cheated. It combines two steps in
+one: It initializes states with `TypeOK` and it simultaneously executes the
+action `n0`. If we tried that in TLC (forgetting about `ConstInit`), that would
+not work. Though there is nothing wrong about this constraint from the
+perspective of logic, it just restrict the unprimed variables and primed
+variables.  There is probably a way to split this code in two steps by applying
+the operator `\cdot`, which is implemented neither in TLC, nor in Apalache:
+
+```tla
+TestAction_n0_TLA ==
+  ConstInit =>
+    TypeOK
+      \cdot
+    (
+      \E self \in Node:
+         n0(self)
+      (* ... *)
+    )
+```
+
+In these circumstances, a more reasonable way would be to introduce a new file
+like `MCTestAction_n0.tla` and clearly specify `TypeOK` as the initial
+predicate and the action as the next predicate. But we do not want
+state-of-the-art dictates us our behavior.
+
+Finally, we have to place the assertion `Assert_n0`. Let's try it this way:
+
+```tla
+TestAction_n0_TLA ==
+  ConstInit =>
+    TypeOK
+      \cdot
+    (
+      /\ \E self \in Node:
+         n0(self)
+      /\ Assert_n0
+    )
+```
+
+Unfortunately, this is not the right solution. Instead of executing `n0`
+and checking that the result satisfies `Assert_n0`, we have restricted
+the next states to always satisfy `Assert_n0`!
+
+Again, we would like to write something like the implication `Action =>
+Assertion`, but we are not allowed do that with the model checkers for TLA+.
+We can use the operator `Assert` that is supported by TLC:
+
+```tla
+TestAction_n0_TLA ==
+  ConstInit =>
+    TypeOK
+      \cdot
+    (
+      /\ \E self \in Node:
+         n0(self)
+      /\ Assert(Assert_n0, "assertion violation")
+    )
+```
+
+This time it should conceptually work. Once `n0` has been executed, TLC could
+start evaluating `Assert(...)` and find a violation of `Assert_n0`.  There is
+another problem. The operator `Assert` is a purely imperative operator, which
+relies on the order in which the formula is evaluated. Hence, Apalache does not
+support this operator and, most likely, it never will. The imperative semantics
+of the operator `Assert` is simply incompatible with logical constraints.
+Period.
+
+Phew. It was not easy to write `TestAction_n0_TLA`. In principle, we could
+fix this pattern and extract the test in a dedicated file `MC.tla` to run
+it with TLC or Apalache.
+
+Let's compare it with `TestAction_n0`. Which one would you choose?
+
+```tla
+{{#include ../../../test/tla/ChangRobertsTyped_Test.tla:77:89}}
+```
+
+Another problem of `TestAction_n0_TLA` is that it has a very brittle structure.
+What happens if one writes `~ConstInit \/ TypeOK ...` instead of `ConstInit =>
+TypeOK ...`? In our experience, when one sees a logical formula, they expect
+that an equivalent logical formula should be also allowed.
+
+*In the defense of TLA+, the issues that we have seen above are not the issues
+of "TLA+, the language", but these are the problems of TLA+ tooling. There is a
+very simple and aesthetically pleasing way of writing `TestAction_n0` in the
+logic of TLA+:*
+
+```tla
+TestAction_n0_pure_TLA ==
+  (ConstInit /\ TypeOK) =>
+    (\E self \in Node: n0(self)) => Assert_n0
+```
+
+The operator `TestAction_n0_pure_TLA` could be probably reasoned about in [TLA+
+Proof System]().  From the automation perspective, it would require a
+completely automatic constraint-based solver for TLA+, which we do not have.
+In practice, this would mean either rewriting TLC and Apalache from scratch, or
+hacking them to enforce the right semantics of the above formula.
+
+
+We sum up this discussion by quoting [Dr. Malcolm from Jurassic
+Park](https://www.youtube.com/watch?v=g3j9muCo4o0):
+
+> Yeah, but your scientists were so preoccupied with whether or not they could,
+> that they didn't stop to think if they should.
+
+(Thanks Jure Kukovec for pointing to this quote!)
+
+
+#### 3.5.2. Why annotations instead of special operators 
+
+The annotations `@require` and `@ensure` are not our invention. You can find
+them in [Design-by-contract][] languages. In particular, they are used as pre-
+and post-conditions in code verification tools, e.g., [JML][], [Dafny][], [QUIC
+testing] with [Ivy]. 
+
+You could ask a reasonable question: Why cannot we introduce operators such
+as `Require` and `Ensure` instead of writing annotations? For instance,
+we could rewrite `TestAction_n0` as follows:
+
+```tla
+TestAction_n0_no_annotations ==
+  /\ Require(ConstInit)
+  /\ Require(TypeOK)
+  /\ \E self \in Node:
+        n0(self)
+  /\ Ensure(Assert_n0)
+```
+
+The above test looks self-contained, no annotations. Moreover, we have probably
+given more power to the users: They could pass expressions to `Require` and
+`Ensure`, or they could combine `Require` and `Ensure` in other ways and do
+something great... Well, we have actually introduced more problems to the users
+than solutions. Since logical formulas can be composed in a lot of ways, we
+could start writing interesting things:
+
+```tla
+Can_I_do_that ==
+  /\ ~Require(ConstInit)
+  /\ Require(TypeOK) => Ensure(ConstInit)
+  /\ \E self \in Node:
+        n0(self) /\ Require(self \in { 1, 2 })
+  /\ Ensure(Assert_n0) \/ Ensure(Assert_noWinner)
+```
+
+It is not clear to us how the test `Can_I_do_that` should be understood.
+But what is written is kind of legal, so it should work, right?
+
+*The annotations gives us a clear structure instead of obfuscating the
+requirements in logical formulas.*
+
+For the moment, we are using Apalache annotations in code comments.  However,
+TLA+ could be extended with ensure/require one day, if they prove to be useful.
 
 ## 4. Using tests for producing quick examples
 
@@ -328,6 +543,11 @@ apalache example --include=TestExec_n0_n1 ChangRobertsTyped_Test.tla
 ```
 
 ## 5. Bounding the inputs
+
+The following ideas clearly stem from [Property-based testing], e.g., we use
+generators similar to [Scalacheck]. In contrast to property-based testing, we
+want to run the test not only on some random inputs, but to run it exhaustively
+on all inputs within a predefined bounded scope.
 
 <a id="generators"></a>
 ### 5.1. Using Apalache generators
@@ -360,7 +580,7 @@ The more scoped version of `TestAction_n0` looks like following:
 
 ### 5.2. Using TLC Random
 
-Leslie Lamport has recently introduced a solution that is allows one to use TLC
+Leslie Lamport has recently introduced a solution that allows one to run TLC
 in the spirit of [Property-based testing][]. This is done by initializing
 states with the operators that are defined in the module `Randomization`. For
 details, see Leslie's paper on [Inductive invariants with TLC][].
@@ -382,3 +602,6 @@ details, see Leslie's paper on [Inductive invariants with TLC][].
 [Dafny]: https://www.microsoft.com/en-us/research/project/dafny-a-language-and-program-verifier-for-functional-correctness/
 [IVy]: https://github.com/kenmcmil/ivy
 [Inductive invariants with TLC]: http://lamport.azurewebsites.net/tla/inductive-invariant.pdf
+[Dr. Malcolm]: https://www.youtube.com/watch?v=g3j9muCo4o0
+[TLA+ Proof System]: https://tla.msr-inria.inria.fr/tlaps/content/Home.html
+[Design-by-contract]: https://en.wikipedia.org/wiki/Design_by_contract
