@@ -372,7 +372,7 @@ Although the above code looks reasonable, we cheated. It combines two steps in
 one: It initializes states with `TypeOK` and it simultaneously executes the
 action `n0`. If we tried that in TLC (forgetting about `ConstInit`), that would
 not work. Though there is nothing wrong about this constraint from the
-perspective of logic, it just restrict the unprimed variables and primed
+perspective of logic, it just restricts the unprimed variables and primed
 variables.  There is probably a way to split this code in two steps by applying
 the operator `\cdot`, which is implemented neither in TLC, nor in Apalache:
 
@@ -391,7 +391,7 @@ TestAction_n0_TLA ==
 In these circumstances, a more reasonable way would be to introduce a new file
 like `MCTestAction_n0.tla` and clearly specify `TypeOK` as the initial
 predicate and the action as the next predicate. But we do not want
-state-of-the-art dictates us our behavior.
+state-of-the-art dictate us our behavior.
 
 Finally, we have to place the assertion `Assert_n0`. Let's try it this way:
 
@@ -451,9 +451,9 @@ TypeOK ...`? In our experience, when one sees a logical formula, they expect
 that an equivalent logical formula should be also allowed.
 
 *In the defense of TLA+, the issues that we have seen above are not the issues
-of "TLA+, the language", but these are the problems of TLA+ tooling. There is a
-very simple and aesthetically pleasing way of writing `TestAction_n0` in the
-logic of TLA+:*
+of TLA+ as a language, but these are the problems of the TLA+ tooling. There
+is a very simple and aesthetically pleasing way of writing `TestAction_n0` in
+the logic of TLA+:*
 
 ```tla
 TestAction_n0_pure_TLA ==
