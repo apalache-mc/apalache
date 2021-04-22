@@ -167,7 +167,7 @@ apalache test --include=Test_succ ChangRobertsTyped_Test.tla
 
 We single out the test `Test_succ`, as we expect the `test` command to run all
 tests by default. Also, we have to initialize the constants with `ConstInit`,
-which we specify with the annotation `@require("ConstInit")`.
+which we specify with the annotation `@require(ConstInit)`.
 
 <a id="testAction"></a>
 ### 3.2. Testing actions
@@ -209,12 +209,12 @@ at `Next`, this requires us to write a bit of code, instead of just calling
 
 The operator `TestAction_n0` carries several annotations:
 
- - The annotation `@require("TypeOK")` tells the framework that
+ - The annotation `@require(TypeOK)` tells the framework that
     `TypeOK` should act as an initialization predicate for testing
     `TestAction_n0`.
  - The annotation `@testAction` indicates that `TestAction_n0` should be tested
     as an action that is an operator over unprimed and primed variable.
- - The annotation `@ensure("Assert_n0")` tells the framework that
+ - The annotation `@ensure(Assert_n0)` tells the framework that
     `Assert_n0` should hold after `TestAction_n0` has been fired.
 
 We should be able to run this test via:
