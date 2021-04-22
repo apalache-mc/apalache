@@ -4,7 +4,6 @@ import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, IntT1, OperT1, RecT1, SetT1}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.TypedPredefs._
-import at.forsyte.apalache.tla.typecheck._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
@@ -178,6 +177,29 @@ class TestExprOptimizer extends FunSuite with BeforeAndAfterEach {
       .typedOperDecl(OperT1(Seq(), IntT1()))
     val expected =
       tla.letIn(letBody ? "b", decl).typed(types, "b")
+    assert(expected == output)
+  }
+
+  test("""Cardinality(5..9) > 5""") {
+    // regression #748
+    val types = Map("i" -> IntT1(), "S" -> SetT1(IntT1()), "b" -> BoolT1())
+    val input = tla
+      .gt(tla.card(tla.dotdot(tla.int(5), tla.int(9)) ? "S") ? "i", tla.int(5))
+      .typed(types, "b")
+    // check that it does not throw an exception
+    optimizer.apply(input)
+  }
+
+  test("""Cardinality(a..b) becomes (b - a) + 1""") {
+    val types = Map("i" -> IntT1(), "S" -> SetT1(IntT1()), "b" -> BoolT1())
+    val input = tla
+      .card(tla.dotdot(tla.name("a") ? "i", tla.name("b") ? "i") ? "S")
+      .typed(types, "i")
+    val output = optimizer.apply(input)
+    val expected =
+      tla
+        .plus(tla.minus(tla.name("b") ? "i", tla.name("a") ? "i") ? "i", tla.int(1) ? "i")
+        .typed(types, "i")
     assert(expected == output)
   }
 }

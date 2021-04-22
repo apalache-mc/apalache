@@ -10,4 +10,5 @@ trait JsonEncoder[T <: JsonRepresentation] {
   def apply(ex: TlaEx): T
   def apply(decl: TlaDecl): T
   def apply(module: TlaModule): T
+  def makeRoot(modules: Traversable[TlaModule]): T
 }

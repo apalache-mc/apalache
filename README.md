@@ -106,6 +106,14 @@ check our [paper at OOPSLA19](https://dl.acm.org/doi/10.1145/3360549).
 Related reports and publications can be found at the
 [Apalache page at TU Wien](http://forsyte.at/research/apalache/).
 
+---
+
+Apalache is developed at [Informal Systems](https://informal.systems/).
+
+With additional funding from<br />[<img alt="the Vienna Business Agency" src="./Wirtschaftsagentur_Wien_logo.jpg" width="200">](https://viennabusinessagency.at/).
+
+Past funding from [Der Wiener Wissenschafts-, Forschungs- und Technologiefonds](https://wwtf.at/about/).
+
 [tla+]: http://lamport.azurewebsites.net/tla/tla.html
 [microsoft z3]: https://github.com/Z3Prover/z3
 [supported features]: https://apalache.informal.systems/docs/apalache/features.html
