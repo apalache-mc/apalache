@@ -8,10 +8,10 @@
 
 **Abstract.** This document discusses a framework for testing TLA+
 specifications. Our first goal is to give the writers of TLA+ specifications an
-interactive approach to quickly testing their specifications in the design
+interactive approach to quickly test their specifications in the design
 phase, similar to unit-testing in programming languages. Our second goal is to
 give the readers of TLA+ specifications a clear framework for dissecting TLA+
-specifications, in order to understand them in smaller pieces.  These ideas
+specifications, in order to understand them in smaller pieces. These ideas
 have not been implemented yet. We believe that the testing framework will
 enable the users of Apalache and TLC to write and read TLA+ specifications in a
 much more efficient manner than they do it today.
@@ -162,12 +162,13 @@ be checked in a stateless context.
 We should be able to run this test via:
 
 ```sh
-apalache test --include=Test_succ ChangRobertsTyped_Test.tla
+apalache test ChangRobertsTyped_Test.tla Test_succ
 ```
 
-We single out the test `Test_succ`, as we expect the `test` command to run all
-tests by default. Also, we have to initialize the constants with `ConstInit`,
-which we specify with the annotation `@require(ConstInit)`.
+We pass the test name `Test_succ`, as we expect the `test` command to run all
+tests by default, if no test name is specified. Also, we have to initialize the
+constants with `ConstInit`, which we specify with the annotation
+`@require(ConstInit)`.
 
 <a id="testAction"></a>
 ### 3.2. Testing actions
@@ -220,7 +221,7 @@ The operator `TestAction_n0` carries several annotations:
 We should be able to run this test via:
 
 ```sh
-apalache test --include=TestAction_n0 ChangRobertsTyped_Test.tla
+apalache test ChangRobertsTyped_Test.tla TestAction_n0
 ```
 
 Importantly, we decompose the test in three parts:
@@ -273,11 +274,11 @@ know.)*
 We should be able to run this test via:
 
 ```sh
-apalache test --include=TestExec_n0_n1 ChangRobertsTyped_Test.tla
+apalache test ChangRobertsTyped_Test.tla TestExec_n0_n1
 ```
 
 If the test is violated, a counterexample should be produced in the file
-`counterexample.tla`.
+`counterexample_TestExec_n0_n1.tla`.
 
 ### 3.4. Test executions with temporal properties
 
@@ -474,7 +475,7 @@ Park](https://www.youtube.com/watch?v=g3j9muCo4o0):
 > Yeah, but your scientists were so preoccupied with whether or not they could,
 > that they didn't stop to think if they should.
 
-(Thanks Jure Kukovec for pointing to this quote!)
+Thanks to Jure Kukovec for pointing to this quote!
 
 
 #### 3.5.2. Why annotations instead of special operators 
@@ -529,17 +530,17 @@ test. Apalache has all the ingredients to do that that. We should be able
 to run a command like that:
 
 ```sh
-apalache example --include=TestAction_n0 ChangRobertsTyped_Test.tla
+apalache example ChangRobertsTyped_Test.tla TestAction_n0
 ```
 
-The above call would produce `example.tla`, a TLA+ description of two states
-that satisfy the test. This is similar to `counterexample.tla`, which is
-produced when an error is found.
+The above call would produce `example_TestAction_n0.tla`, a TLA+ description of
+two states that satisfy the test. This is similar to `counterexample.tla`,
+which is produced when an error is found.
 
 In a similar way we should be able to produce an example of an execution:
 
 ```sh
-apalache example --include=TestExec_n0_n1 ChangRobertsTyped_Test.tla
+apalache example ChangRobertsTyped_Test.tla TestExec_n0_n1
 ```
 
 ## 5. Bounding the inputs
@@ -584,6 +585,48 @@ Leslie Lamport has recently introduced a solution that allows one to run TLC
 in the spirit of [Property-based testing][]. This is done by initializing
 states with the operators that are defined in the module `Randomization`. For
 details, see Leslie's paper on [Inductive invariants with TLC][].
+
+## 6. Test options
+
+To integrate unit tests in the standard TLA+ development cycle, the tools
+should remember how every individual test was run. To avoid additional
+scripting on top of the command-line interface, we can simply pass the tool
+options with the annotation `@testOption`. The following example demonstrates
+how it could be done:
+
+```tla
+{{#include ../../../test/tla/ChangRobertsTyped_Test.tla:146:158}}
+```
+
+The test options in the above example have the following meaning:
+
+ - The annotation `testOption("tool", "apalache")` runs the test only if it is
+   executed in Apalache. For example, if we run this test in TLC, it should be
+   ignored.
+
+ - The annotation `testOption("search.smt.timeout", 10)` sets the tool-specific
+   option `search.smt.timeout` to 10, meaning that the SMT solver should time
+   out if it cannot solve a problem in 10 seconds.
+
+ - The annotation `testOption("checker.algo", "offline")` sets the tool-specific
+   option `checker.algo` to `offline`, meaning that the model checker should
+   use the offline solver instead of the incremental one.
+
+ - The annotation `testOption("checker.nworkers", 2)` sets the tool-specific
+   option `checker.nworkers` to `2`, meaning that the model checker should
+   use two cores.
+
+By having all test options specified directly in tests, we reach two goals:
+
+ - We let the users to save their experimental setup, to enable reproducibility
+   of the experiments and later re-design of specifications.
+ - We let the engineers integrate TLA+ tests in continuous integration, to
+   make sure that updates in a specification do not break the tests.
+   This would allow us to integrate TLA+ model checkers in a CI/CD loop,
+   e.g., at GitHub.
+   
+
+
 
 
 [Unit testing]: https://en.wikipedia.org/wiki/Unit_testing

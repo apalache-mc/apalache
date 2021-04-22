@@ -142,5 +142,19 @@ TestExec_correctness_under_liveness ==
         n0(self) \/ n1(self)
 
 GlobalCorrectness == []Correctness
+
+\* A copy of TestExec_n0_n1 that passes additional flags to the model checker.
+\*
+\* @require(ConstInit)
+\* @require(TypeOK)
+\* @ensure(Assert_noWinner)
+\* @testExecution(5)
+\* @testOption("tool", "apalache")
+\* @testOption("search.smt.timeout", 10)
+\* @testOption("checker.algo", "offline")
+\* @testOption("checker.nworkers", 2)
+TestExec_n0_n1 ==
+    TestExec_n0_n1
+
     
 =============================================================================
