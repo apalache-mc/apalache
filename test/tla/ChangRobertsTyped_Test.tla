@@ -153,7 +153,7 @@ GlobalCorrectness == []Correctness
 \* @testOption("search.smt.timeout", 10)
 \* @testOption("checker.algo", "offline")
 \* @testOption("checker.nworkers", 2)
-TestExec_n0_n1 ==
+TestExec_n0_n1_with_options ==
     TestExec_n0_n1
 
     
