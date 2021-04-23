@@ -50,7 +50,7 @@ InitAndAssumptions ==
 \* Note that succ(n) is not referring to state variables,
 \* so we can test it in isolation.
 \*
-\* @require(ConstInit)
+\* @require("ConstInit")
 \* @testStateless
 Test_succ ==
     \* This is like a property-based test.
@@ -79,9 +79,9 @@ Assert_n0 ==
 \* The reason is that we always assume that TestAction_n0 always holds,
 \* whereas we may want to see Assert_n0 violated.
 \*
-\* @require(ConstInit)
-\* @require(TypeOK)
-\* @ensure(Assert_n0)
+\* @require("ConstInit")
+\* @require("TypeOK")
+\* @ensure("Assert_n0")
 \* @testAction
 TestAction_n0 ==
     \E self \in Node:
@@ -104,9 +104,9 @@ Prepare_n0 ==
 
 \* Another version of the test where we further restrict the inputs.
 \* 
-\* @require(ConstInit)
-\* @require(Prepare_n0)
-\* @ensure(Assert_n0)
+\* @require("ConstInit")
+\* @require("Prepare_n0")
+\* @ensure("Assert_n0")
 \* @testAction
 TestAction2_n0 ==
     \E self \in Node:
@@ -116,9 +116,9 @@ TestAction2_n0 ==
 \* Execute a sequence of 5 actions, similar to TestAction_n0.
 \* We test a final state with Assert_n0.
 \*
-\* @require(ConstInit)
-\* @require(TypeOK)
-\* @ensure(Assert_noWinner)
+\* @require("ConstInit") \* in  the future, we will allow the user to omit quotes
+\* @require("TypeOK")
+\* @ensure("Assert_noWinner")
 \* @testExecution(5)
 TestExec_n0_n1 ==
     \* in this test, we only execute actions by processes 1 and 2
@@ -132,10 +132,10 @@ Assert_noWinner ==
 
 \* Execute a sequence of 5 actions, while using temporal properties.
 \*
-\* @require(ConstInit)
-\* @require(TypeOK)
-\* @require(Liveness)
-\* @ensure(GlobalCorrectness)
+\* @require("ConstInit")
+\* @require("TypeOK")
+\* @require("Liveness")
+\* @ensure("GlobalCorrectness")
 \* @testExecution(5)
 TestExec_correctness_under_liveness ==
     \E self \in Node:
@@ -145,8 +145,8 @@ GlobalCorrectness == []Correctness
 
 \* A copy of TestExec_n0_n1 that passes additional flags to the model checker.
 \*
-\* @require(ConstInit)
-\* @require(TypeOK)
+\* @require("ConstInit")
+\* @require("TypeOK")
 \* @ensure(Assert_noWinner)
 \* @testExecution(5)
 \* @testOption("tool", "apalache")
