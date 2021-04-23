@@ -218,39 +218,39 @@ Stephen's goals are:
 
 TODO: add more goals? A few goals probably means that we do not understand Stephen. 
 
-# S. Sankar, undergraduate student
+# Sandrine Seigner, undergraduate student
 
-Sankar is studying at one of the top US universities. He is the best student in
-his class.  He is attending a class on distributed systems, where the professor
-gave Sankar an optional exercise to specify a challenging algorithm in TLA+.
+Sandrine is studying at one of the top US universities. She is the best student in
+her class. She is attending a class on distributed systems, where the professor
+gave Sandrine an optional exercise to specify a challenging algorithm in TLA+.
 
-Sankar's goals are:
+Sandrine's goals are:
 
  1. Learn TLA+ as fast as possible and with minimal effort.
 
  1. Specify the algorithm in TLA+.
 
- 1. Get the best score for his exercise.
+ 1. Get the best score for their exercise.
 
-# Dr. Valeria Velasquez, verification engineer
+# Dr. Victoria Velasquez, verification engineer
 
-Valeria has a PhD in computer science. She wrote her thesis on verification
+Victoria has a PhD in computer science. She wrote her thesis on verification
 techniques for the new gamma-theta-rho calculus. She has verified a simplified
 version of the famous Technosaurus protocol. This is an awesome scientific
 result, provided that the reader is able to read the Technosaurus protocol in
-the gamma-theta-rho calculus. Well, several reviewers of Valeria's papers
+the gamma-theta-rho calculus. Well, several reviewers of Victoria's papers
 managed to understand it!
 
-Valeria is working in a new aggressive startup that offers verification
-services and security audits to other companies. Valeria's job is to provide
+Victoria is working in a new aggressive startup that offers verification
+services and security audits to other companies. Victoria's job is to provide
 the customers with a formal certificate of that customer's systems work correctly.
 She is using Coq, Dafny, Ivy, CBMC, and Verifast to verify some parts of the
-customers' protocols and code. It takes Valeria lots of efforts to express
+customers' protocols and code. It takes Victoria lots of efforts to express
 customers' artifacts in the verification languages that are accepted by all
 these tools. Even worse, all these languages are so different from one another
 that it is not clear how the verification results match.
 
-Valeria's goals are:
+Victoria's goals are:
 
  1. Convince the customers that they need verification.
 
