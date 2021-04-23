@@ -77,23 +77,23 @@ Joseph's goals are:
 
  1. Explain new hypes to business people.
 
-# Chris Carbone, blockchain engineer
+# Charles Carbone, blockchain engineer
 
-Chris is working at a blockchain startup. He has recently graduated from
-college, but he has already learned a lot about software engineering. Chris
+Charles is working at a blockchain startup. He has recently graduated from
+college, but he has already learned a lot about software engineering. Charles
 knows how to code for Ethereum, Cosmos, Polkadot, and dozen of other
-blockchains.  He knows Rust, Golang, Wasm, and Solidity. Chris is enthusiastic
+blockchains.  He knows Rust, Golang, Wasm, and Solidity. Charles is enthusiastic
 about all trends that happen in the blockchain world.  Recently, he has heard
 about this verification thing that can help engineers to find bugs in smart
 contracts.
 
-Chris's job is to develop new features for the new cool blockchain technology
-that is called Ceratops. Chris is writing unit tests for his features, but he
+Charles's job is to develop new features for the new cool blockchain technology
+that is called Ceratops. Charles is writing unit tests for his features, but he
 understands that it is hard to test his code in the blockchain under all
 possible scenarios. From time to time, he runs his code in a simulator and
 finds bugs.
 
-Chris's goals are:
+Charles's goals are:
 
  1. Develop the best blockchain technology, which is of course Ceratops.
 
