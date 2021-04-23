@@ -11,7 +11,9 @@ have met. We probably run in stereotypes and exaggerations in these
 descriptions. No offence meant! To invent personas' names, we look at the last
 names of movie actors.  We also add academic titles to person names, as
 Apalache builds upon academic research, so we feel that it is important to
-distinguish the academic background from industrial background.
+distinguish the academic background from industrial background. If you feel
+that one of these descriptions and their name match to well to you, please let
+us know. We can always change the name of a persona.
 
 # Dr. Alina Apatow, specification engineer
 
@@ -290,9 +292,5 @@ Prof. Zambovski's goals are:
 
  1. Teach classes to undergraduate students by using something less cutting
  edge than MassivePulsar.
-
-# Dr. Leonard LaMarre, veteran of computer science
-
-TBD
 
 [Alan Cooper's Book]: https://www.goodreads.com/book/show/44098.The_Inmates_Are_Running_the_Asylum
