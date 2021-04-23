@@ -147,7 +147,7 @@ GlobalCorrectness == []Correctness
 \*
 \* @require("ConstInit")
 \* @require("TypeOK")
-\* @ensure(Assert_noWinner)
+\* @ensure("Assert_noWinner")
 \* @testExecution(5)
 \* @testOption("tool", "apalache")
 \* @testOption("search.smt.timeout", 10)
