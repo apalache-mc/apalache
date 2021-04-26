@@ -85,15 +85,31 @@ usually called `TypeOK`.
 
 To check an inductive invariant ``IndInv`` in Apalache, you run two commands that check the above two formulas:
 
-```bash
-$ apalache check --init=Init --inv=IndInv --length=0 <myspec>.tla
-```
+ - **IndInit**: Check that the initial states satisfy `IndInv`:
 
-and
+    ```bash
+    $ apalache check --init=Init --inv=IndInv --length=0 <myspec>.tla
+    ```
 
-```bash
-$ apalache check --init=IndInv --inv=IndInv --length=1 <myspec>.tla
-```
+ - **IndNext**: Check that `Next` does not drive us outside of `IndInv`:
+
+    ```bash
+    $ apalache check --init=IndInv --inv=IndInv --length=1 <myspec>.tla
+    ```
+
+Usually, you look for an inductive invariant to check a safety predicate. For
+example, if you have found an inductive invariant `IndInv` and want to check a
+safety predicate `Safety`, you have to run Apalache once again:
+
+ - **IndProp**: Check that all states captured with `IndInv` satisfy the predicate `Safety`:
+
+    ```bash
+    $ apalache check --init=IndInv --inv=Safety --length=0 <myspec>.tla
+    ```
+
+It may happen that your inductive invariant `IndInv` is too weak and it
+violates `Safety`. In this case, you would have to add additional constraints to `IndInv`.
+Then you would have to check the queries IndInit, IndNext, and IndProp again.
 
 ## Examples
 
