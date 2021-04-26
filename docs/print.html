@@ -676,11 +676,31 @@ ends up in a state that again satisfies <code>TypeOK /\ IndInv</code>.</p>
 the <code>y2k</code> example, our inductive invariant is actually constraing the variables. In fact, such an inductive invariant is
 usually called <code>TypeOK</code>.</p>
 <p>To check an inductive invariant <code>IndInv</code> in Apalache, you run two commands that check the above two formulas:</p>
+<ul>
+<li>
+<p><strong>IndInit</strong>: Check that the initial states satisfy <code>IndInv</code>:</p>
 <pre><code class="language-bash">$ apalache check --init=Init --inv=IndInv --length=0 &lt;myspec&gt;.tla
 </code></pre>
-<p>and</p>
+</li>
+<li>
+<p><strong>IndNext</strong>: Check that <code>Next</code> does not drive us outside of <code>IndInv</code>:</p>
 <pre><code class="language-bash">$ apalache check --init=IndInv --inv=IndInv --length=1 &lt;myspec&gt;.tla
 </code></pre>
+</li>
+</ul>
+<p>Usually, you look for an inductive invariant to check a safety predicate. For
+example, if you have found an inductive invariant <code>IndInv</code> and want to check a
+safety predicate <code>Safety</code>, you have to run Apalache once again:</p>
+<ul>
+<li>
+<p><strong>IndProp</strong>: Check that all states captured with <code>IndInv</code> satisfy the predicate <code>Safety</code>:</p>
+<pre><code class="language-bash">$ apalache check --init=IndInv --inv=Safety --length=0 &lt;myspec&gt;.tla
+</code></pre>
+</li>
+</ul>
+<p>It may happen that your inductive invariant <code>IndInv</code> is too weak and it
+violates <code>Safety</code>. In this case, you would have to add additional constraints to <code>IndInv</code>.
+Then you would have to check the queries IndInit, IndNext, and IndProp again.</p>
 <h2><a class="header" href="#examples" id="examples">Examples</a></h2>
 <h3><a class="header" href="#checking-safety-up-to-20-steps" id="checking-safety-up-to-20-steps">Checking safety up to 20 steps</a></h3>
 <pre><code class="language-bash">$ cd test/tla
