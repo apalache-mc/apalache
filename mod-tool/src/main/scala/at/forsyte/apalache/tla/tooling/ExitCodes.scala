@@ -18,7 +18,7 @@ object ExitCodes {
 
   /**
    * This exit code should be used when the model checker has found a counterexample.
-   * We do not go in distinction between different kinds of counterexamples and always report VIOLATION_SAFETY.
+   * We do not distinguish between different kinds of counterexamples and always report VIOLATION_SAFETY.
    */
   val ERROR_COUNTEREXAMPLE: Int = EC.ExitStatus.VIOLATION_SAFETY
 
