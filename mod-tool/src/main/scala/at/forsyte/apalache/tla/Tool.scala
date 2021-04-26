@@ -10,7 +10,7 @@ import at.forsyte.apalache.infra.passes.{PassChainExecutor, TlaModuleMixin}
 import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorMessage, PassOptionException}
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.imp.passes.ParserModule
-import at.forsyte.apalache.tla.tooling.Version
+import at.forsyte.apalache.tla.tooling.{ExitCodes, Version}
 import at.forsyte.apalache.tla.tooling.opt.{CheckCmd, ConfigCmd, General, ParseCmd, TestCmd, TypeCheckCmd}
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import com.google.inject.{Guice, Injector}
@@ -111,7 +111,6 @@ object Tool extends LazyLogging {
           case Some(config: ConfigCmd) =>
             logger.info("Configuring Apalache")
             configure(config)
-            OK_EXIT_CODE
 
           case _ =>
             OK_EXIT_CODE // nothing to do
@@ -133,7 +132,7 @@ object Tool extends LazyLogging {
           .format(ChronoUnit.SECONDS.between(startTime, endTime), ChronoUnit.MILLIS.between(startTime, endTime) % 1000))
   }
 
-  private def runParse(injector: => Injector, parse: ParseCmd): Unit = {
+  private def runParse(injector: => Injector, parse: ParseCmd): Int = {
     // here, we implement a terminal pass to get the parse results
     val executor = injector.getInstance(classOf[PassChainExecutor])
     executor.options.set("io.outdir", createOutputDir())
@@ -145,12 +144,14 @@ object Tool extends LazyLogging {
       logger.info("Parsed successfully")
       val tlaModule = result.get.asInstanceOf[TlaModuleMixin].unsafeGetModule
       logger.info("Root module: %s with %d declarations".format(tlaModule.name, tlaModule.declarations.length))
+      ExitCodes.NO_ERROR
     } else {
       logger.info("Parser has failed")
+      ExitCodes.ERROR
     }
   }
 
-  private def runCheck(injector: => Injector, check: CheckCmd): Unit = {
+  private def runCheck(injector: => Injector, check: CheckCmd): Int = {
     val executor = injector.getInstance(classOf[PassChainExecutor])
     executor.options.set("io.outdir", createOutputDir())
     var tuning =
@@ -183,12 +184,14 @@ object Tool extends LazyLogging {
     val result = executor.run()
     if (result.isDefined) {
       logger.info("Checker reports no error up to computation length " + check.length)
+      ExitCodes.NO_ERROR
     } else {
       logger.info("Checker has found an error")
+      ExitCodes.ERROR_COUNTEREXAMPLE
     }
   }
 
-  private def runTest(injector: => Injector, test: TestCmd): Unit = {
+  private def runTest(injector: => Injector, test: TestCmd): Int = {
     // This is a special version of the `check` command that is tuned towards testing scenarios
     val executor = injector.getInstance(classOf[PassChainExecutor])
     executor.options.set("io.outdir", createOutputDir())
@@ -223,12 +226,14 @@ object Tool extends LazyLogging {
     val result = executor.run()
     if (result.isDefined) {
       logger.info("No example found")
+      ExitCodes.NO_ERROR
     } else {
       logger.info("Checker has found an example. Check counterexample.tla.")
+      ExitCodes.ERROR_COUNTEREXAMPLE
     }
   }
 
-  private def runTypeCheck(injector: => Injector, typecheck: TypeCheckCmd): Unit = {
+  private def runTypeCheck(injector: => Injector, typecheck: TypeCheckCmd): Int = {
     // type checker
     val executor = injector.getInstance(classOf[PassChainExecutor])
     executor.options.set("io.outdir", createOutputDir())
@@ -236,8 +241,13 @@ object Tool extends LazyLogging {
     executor.options.set("typechecker.inferPoly", typecheck.inferPoly)
 
     executor.run() match {
-      case None    => logger.info("Type checker [FAILED]")
-      case Some(_) => logger.info("Type checker [OK]")
+      case None =>
+        logger.info("Type checker [FAILED]")
+        ExitCodes.ERROR
+
+      case Some(_) =>
+        logger.info("Type checker [OK]")
+        ExitCodes.NO_ERROR
     }
   }
 
@@ -302,12 +312,11 @@ object Tool extends LazyLogging {
     }
   }
 
-  private def handleExceptions(injector: Injector, fun: => Unit): Int = {
+  private def handleExceptions(injector: Injector, fun: => Int): Int = {
     val adapter = injector.getInstance(classOf[ExceptionAdapter])
 
     try {
       fun
-      Tool.OK_EXIT_CODE
     } catch {
       case e: Exception if adapter.toMessage.isDefinedAt(e) =>
         adapter.toMessage(e) match {
@@ -318,16 +327,16 @@ object Tool extends LazyLogging {
             Console.err.println("Please report an issue at: " + ISSUES_LINK, e)
             logger.error(text, e)
         }
-        Tool.ERROR_EXIT_CODE
+        ExitCodes.ERROR
 
       case e: PassOptionException =>
         logger.error(e.getMessage)
-        Tool.ERROR_EXIT_CODE
+        ExitCodes.ERROR
 
       case e: Throwable =>
         Console.err.println("Please report an issue at: " + ISSUES_LINK, e)
         logger.error("Unhandled exception", e)
-        Tool.ERROR_EXIT_CODE
+        ExitCodes.ERROR
     }
   }
 
@@ -351,7 +360,7 @@ object Tool extends LazyLogging {
     Console.println("")
   }
 
-  private def configure(config: ConfigCmd): Unit = {
+  private def configure(config: ConfigCmd): Int = {
     config.submitStats match {
       case Some(isEnabled) =>
         val statCollector = new ExecutionStatisticsCollector()
@@ -368,6 +377,8 @@ object Tool extends LazyLogging {
       case None =>
         ()
     }
+
+    ExitCodes.NO_ERROR
   }
 
   // If the user has opted-in, collect statistics with the code from tlatools:

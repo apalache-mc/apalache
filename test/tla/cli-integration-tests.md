@@ -131,7 +131,6 @@ EXITCODE: OK
 $ apalache-mc parse Rec12.tla | sed 's/I@.*//'
 ...
 EXITCODE: OK
-...
 ```
 
 ### parse Annotations succeeds
@@ -154,6 +153,7 @@ $ apalache-mc test TestGen.tla Prepare Test Assertion | sed 's/I@.*//'
 The outcome is: Error
 Checker has found an example. Check counterexample.tla.
 ...
+EXITCODE: ERROR (12)
 ```
 
 ## running the check command
@@ -166,6 +166,7 @@ $ apalache-mc check --length=2 --inv=Inv factorization.tla | sed 's/I@.*//'
 The outcome is: Error
 Checker has found an error
 ...
+EXITCODE: ERROR (12)
 ```
 
 ### check Fix531.tla reports no error: regression for issue 531
@@ -175,6 +176,7 @@ $ apalache-mc check --length=1 Fix531.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check UnchangedExpr471.tla reports no error: regression for issue 471
@@ -184,6 +186,7 @@ $ apalache-mc check --cinit=ConstInit --length=1 UnchangedExpr471.tla | sed 's/I
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check ExistTuple476.tla reports no error: regression for issue 476
@@ -193,6 +196,7 @@ $ apalache-mc check --length=1 ExistTuple476.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check InvSub for SafeMath reports no error: regression for issue 450
@@ -202,6 +206,7 @@ $ apalache-mc check --length=1 --inv=InvSub SafeMath.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check InvAdd for SafeMath reports no error: regression for issue 450
@@ -211,6 +216,7 @@ $ apalache-mc check --length=1 --inv=InvAdd SafeMath.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check Fix365_ExistsSubset succeeds: regression for issue 365
@@ -220,6 +226,7 @@ $ apalache-mc check --length=10 Fix365_ExistsSubset.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check Fix365_ExistsSubset2 succeeds: regression for issue 365
@@ -229,6 +236,7 @@ $ apalache-mc check --length=10 Fix365_ExistsSubset2.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check Fix365_ExistsSubset3 succeeds: regression for issue 365
@@ -238,6 +246,7 @@ $ apalache-mc check --length=10 Fix365_ExistsSubset3.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check Bug20201118 succeeds: regression for issue 333
@@ -247,6 +256,7 @@ $ apalache-mc check --length=10 --init=Init --next=Next --inv=Inv Bug20201118.tl
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check Fix333 succeeds: another regression for issue 333
@@ -256,6 +266,7 @@ $ apalache-mc check --length=2 --init=Init --next=Next --inv=Inv Fix333.tla | se
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check Bug20190118 succeeds
@@ -265,6 +276,7 @@ $ apalache-mc check --length=1 --init=Init --next=Next --inv=Inv Bug20190118.tla
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check mis.tla succeeds
@@ -274,6 +286,7 @@ $ apalache-mc check --length=5 --inv=IsIndependent mis.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check mis_bug.tla errors
@@ -284,6 +297,7 @@ $ apalache-mc check --length=5 --inv=IsIndependent mis_bug.tla | sed 's/I@.*//'
 The outcome is: Error
 Checker has found an error
 ...
+EXITCODE: ERROR (12)
 ```
 
 
@@ -294,6 +308,7 @@ $ apalache-mc check --length=5 ast.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check pr.tla suceeds
@@ -303,6 +318,7 @@ $ apalache-mc check --length=2 pr.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check EWD840.tla succeeds
@@ -312,6 +328,7 @@ $ apalache-mc check --length=5 --inv=Inv EWD840.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check Paxos.tla succeeds
@@ -321,6 +338,7 @@ $ apalache-mc check --length=5 --inv=Inv Paxos.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check Bug20190118 succeeds
@@ -330,6 +348,7 @@ $ apalache-mc check --length=1 Bug20190118.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check Bug20190921 succeeds
@@ -339,6 +358,7 @@ $ apalache-mc check --length=5 --cinit=CInit Bug20190921.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check Counter.tla errors
@@ -349,6 +369,7 @@ $ apalache-mc check --length=10 --inv=Inv Counter.tla | sed 's/I@.*//'
 The outcome is: Error
 Checker has found an error
 ...
+EXITCODE: ERROR (12)
 ```
 
 ### y2k.tla
@@ -361,6 +382,7 @@ $ apalache-mc check --length=20 --inv=Safety --cinit=ConstInit y2k_cinit.tla  | 
 The outcome is: Error
 Checker has found an error
 ...
+EXITCODE: ERROR (12)
 ```
 
 #### check y2k with length 19 succeeds
@@ -370,6 +392,7 @@ $ apalache-mc check --length=19 --inv=Safety y2k_instance.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 #### check y2k with length 30 errors
@@ -380,6 +403,7 @@ $ apalache-mc check --length=30 --inv=Safety y2k_instance.tla | sed 's/I@.*//'
 The outcome is: Error
 Checker has found an error
 ...
+EXITCODE: ERROR (12)
 ```
 
 ### check Counter.tla errors
@@ -390,6 +414,7 @@ $ apalache-mc check --length=10 --inv=Inv Counter.tla | sed 's/I@.*//'
 The outcome is: Error
 Checker has found an error
 ...
+EXITCODE: ERROR (12)
 ```
 
 ### check NatCounter.tla errors
@@ -399,6 +424,7 @@ $ apalache-mc check --length=10 --inv=Inv NatCounter.tla  | sed 's/I@.*//'
 ...
 The outcome is: Error
 ...
+EXITCODE: ERROR (12)
 ```
 
 ### check NeedForTypesWithTypes.tla succeeds
@@ -408,6 +434,7 @@ $ apalache-mc check --length=10 --cinit=ConstInit --inv=Inv NeedForTypesWithType
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check HandshakeWithTypes.tla with length 4 succeeds
@@ -417,6 +444,7 @@ $ apalache-mc check --length=4 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check HandshakeWithTypes.tla with lengh 5 deadlocks
@@ -426,6 +454,7 @@ $ apalache-mc check --length=5 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
 ...
 The outcome is: Deadlock
 ...
+EXITCODE: ERROR (12)
 ```
 
 ### check trivial violation of FALSE invariant
@@ -435,6 +464,7 @@ $ apalache-mc check --length=2 --inv=Inv Bug20200306.tla | sed 's/I@.*//'
 ...
 The outcome is: Error
 ...
+EXITCODE: ERROR (12)
 ```
 
 ### check Init without an assignment fails
@@ -442,8 +472,8 @@ The outcome is: Error
 ```sh
 $ apalache-mc check --length=1 --inv=Inv Assignments20200309.tla
 ...
-EXITCODE: ERROR (99)
-[99]
+EXITCODE: ERROR (255)
+[255]
 ```
 
 ### check Inline.tla suceeds
@@ -453,6 +483,7 @@ $ apalache-mc check --length=5 Inline.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check Rec1.tla succeeds
@@ -462,6 +493,7 @@ $ apalache-mc check --length=5 --inv=Inv Rec1.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check Rec2.tla succeeds
@@ -471,6 +503,7 @@ $ apalache-mc check --length=5 --inv=Inv Rec2.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check Rec3.tla succeeds
@@ -479,6 +512,7 @@ $ apalache-mc check --length=10 --inv=Inv Rec3.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check Rec4.tla succeeds
@@ -490,6 +524,7 @@ $ apalache-mc check --length=10 --inv=Inv Rec4.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check Rec5.tla succeeds
@@ -499,6 +534,7 @@ $ apalache-mc check --length=5 --inv=Inv Rec5.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check Rec6.tla succeeds
@@ -508,6 +544,7 @@ $ apalache-mc check --length=5 --inv=Inv Rec6.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check Rec8.tla succeeds
@@ -517,6 +554,7 @@ $ apalache-mc check --length=10 --inv=Inv Rec8.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check Rec9.tla succeeds
@@ -526,6 +564,7 @@ $ apalache-mc check --length=3 --inv=Inv Rec9.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check Rec10.tla fails without UNROLL_DEFAULT_Fact
@@ -535,7 +574,7 @@ $ apalache-mc check Rec10.tla | sed 's/[IEW]@.*//'
 ...
 Input error (see the manual): Recursive operator Fact requires an annotation UNROLL_DEFAULT_Fact. See: https://apalache.informal.systems/docs/apalache/principles.html#recursion
 ...
-EXITCODE: ERROR (99)
+EXITCODE: ERROR (255)
 ```
 
 ### check Rec11.tla fails without UNROLL_TIMES_Fact
@@ -545,7 +584,7 @@ $ apalache-mc check Rec11.tla | sed 's/[IEW]@.*//'
 ...
 Input error (see the manual): Recursive operator Fact requires an annotation UNROLL_TIMES_Fact. See: https://apalache.informal.systems/docs/apalache/principles.html#recursion
 ...
-EXITCODE: ERROR (99)
+EXITCODE: ERROR (255)
 ```
 
 ### check Rec12.tla works with Init
@@ -575,6 +614,7 @@ $ apalache-mc check --inv=Inv Rec13.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 
@@ -585,6 +625,7 @@ $ apalache-mc check --inv=Inv ExistsAsValue.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check reorderTest.tla MayFail succeeds: fixed SMT fails under SMT-based assignment finding
@@ -594,6 +635,7 @@ $ apalache-mc check --next=MayFail --tuning=reorderTest.properties reorderTest.t
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check reorderTest.tla MustFail fails
@@ -601,8 +643,8 @@ The outcome is: NoError
 ```sh
 $ apalache-mc check --next=MustFail reorderTest.tla
 ...
-EXITCODE: ERROR (99)
-[99]
+EXITCODE: ERROR (255)
+[255]
 ```
 
 
@@ -611,8 +653,8 @@ EXITCODE: ERROR (99)
 ```sh
 $ apalache-mc check Empty.tla
 ...
-EXITCODE: ERROR (99)
-[99]
+EXITCODE: ERROR (255)
+[255]
 ```
 
 ### check HourClock.tla without Init fails
@@ -620,8 +662,8 @@ EXITCODE: ERROR (99)
 ```sh
 $ apalache-mc check --init=NonExistantInit HourClock.tla
 ...
-EXITCODE: ERROR (99)
-[99]
+EXITCODE: ERROR (255)
+[255]
 ```
 
 ### check HourClock.tla without Next fails
@@ -629,8 +671,8 @@ EXITCODE: ERROR (99)
 ```sh
 $ apalache-mc check --next=NonExistantNext HourClock.tla
 ...
-EXITCODE: ERROR (99)
-[99]
+EXITCODE: ERROR (255)
+[255]
 ```
 
 ### check HourClock.tla without Inv fails
@@ -638,8 +680,8 @@ EXITCODE: ERROR (99)
 ```sh
 $ apalache-mc check --inv=NonExistantInv HourClock.tla
 ...
-EXITCODE: ERROR (99)
-[99]
+EXITCODE: ERROR (255)
+[255]
 ```
 
 ### check NonNullaryLet succeeds: regression for issue 429
@@ -649,6 +691,7 @@ $ apalache-mc check NonNullaryLet.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check CaseNoOther succeeds
@@ -658,6 +701,7 @@ $ apalache-mc check CaseNoOther.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check CaseNoOtherBool succeeds
@@ -667,6 +711,7 @@ $ apalache-mc check CaseNoOtherBool.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check Callback.tla succeeds
@@ -679,6 +724,7 @@ $ apalache-mc check Callback.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check SimpT1 succeeds
@@ -691,6 +737,7 @@ $ apalache-mc check --length=0 SimpT1.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check Selections succeeds
@@ -700,7 +747,7 @@ $ apalache-mc check Selections.tla | sed 's/I@.*//'
 ...
 Selections.tla:16:18-16:27: Missing assignments to: z
 ...
-EXITCODE: ERROR (99)
+EXITCODE: ERROR (255)
 ```
 
 ### check test1 succeeds
@@ -710,6 +757,7 @@ $ apalache-mc check test1.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check ITE_CASE succeeds
@@ -717,7 +765,7 @@ The outcome is: NoError
 ```sh
 $ apalache-mc check ITE_CASE.tla | sed 's/I@.*//'
 ...
-EXITCODE: ERROR (99)
+EXITCODE: ERROR (255)
 ```
 
 ### check Deadlock712 succeeds
@@ -730,6 +778,7 @@ $ apalache-mc check Deadlock712.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### check use of TLA_PATH for modules in child directory succeeds
@@ -739,6 +788,7 @@ $ TLA_PATH=./tla-path-tests apalache-mc check ./tla-path-tests/ImportingModule.t
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ## configure the check command
@@ -760,6 +810,7 @@ $ apalache-mc check Config.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### configure an invariant via CLI
@@ -771,6 +822,7 @@ $ apalache-mc check --inv=Inv Config.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### configure all params via CLI
@@ -784,6 +836,7 @@ $ apalache-mc check --init=Init1 --next=Next1 --inv=Inv Config.tla | sed 's/I@.*
 ...
 The outcome is: Error
 ...
+EXITCODE: ERROR (12)
 ```
 
 ### configure via TLC config
@@ -801,6 +854,7 @@ $ apalache-mc check --config=Config1.cfg Config.tla | sed 's/[IEW]@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### configure via TLC config and override it via CLI
@@ -816,6 +870,7 @@ $ apalache-mc check --config=Config1.cfg --init=Init2 --next=Next2 Config.tla | 
 ...
 The outcome is: Error
 ...
+EXITCODE: ERROR (12)
 ```
 
 ### configure missing property in TLC config
@@ -827,7 +882,7 @@ $ apalache-mc check --config=Config3.cfg Config.tla | sed 's/[IE]@.*//'
 ...
 Configuration error (see the manual): Operator NoLiveness not found (used as a temporal property)
 ...
-EXITCODE: ERROR (99)
+EXITCODE: ERROR (255)
 ```
 
 ### configure via TLC config with SPECIFICATION
@@ -845,6 +900,7 @@ $ apalache-mc check --config=Config2.cfg Config.tla | sed 's/[IEW]@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### configure via TLC config with SPECIFICATION and fairness
@@ -862,6 +918,7 @@ $ apalache-mc check --config=Config4.cfg Config.tla | sed 's/[IEW]@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### configure via TLC config with SPECIFICATION and fairness
@@ -879,6 +936,7 @@ $ apalache-mc check --config=Config5.cfg Config.tla | sed 's/[IEW]@.*//'
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### configure complains about circular dependencies
@@ -888,7 +946,7 @@ $ apalache-mc check ConfigUnsorted.tla | sed 's/[IEW]@.*//'
 ...
 Configuration error (see the manual): Found a cyclic dependency among operators: B, A, C
 ...
-EXITCODE: ERROR (99)
+EXITCODE: ERROR (255)
 ```
 
 ### configure via TLC config and assign constants
@@ -911,6 +969,7 @@ $ apalache-mc check --config=ConfigParams.cfg ConfigParams.tla | sed 's/[IEW]@.*
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### configure via TLC config and replace operators
@@ -929,6 +988,7 @@ $ apalache-mc check --config=ConfigReplacements2.cfg ConfigReplacements.tla | se
 ...
 The outcome is: NoError
 ...
+EXITCODE: OK
 ```
 
 ### configure via TLC config and replace operators helps us to keep the invariant
@@ -941,6 +1001,7 @@ $ apalache-mc check --inv=Inv ConfigReplacements.tla | sed 's/[IEW]@.*//'
 ...
 The outcome is: Error
 ...
+EXITCODE: ERROR (12)
 ```
 
 ## testing the slicer of symbolic transitions in TransitionFinderPass
@@ -952,6 +1013,7 @@ $ apalache-mc check --inv=Inv Slicer1.tla | sed 's/[IEW]@.*//'
 ...
 The outcome is: Error
 ...
+EXITCODE: ERROR (12)
 ```
 
 ### check Slicer2
@@ -961,6 +1023,7 @@ $ apalache-mc check --inv=Inv Slicer2.tla | sed 's/[IEW]@.*//'
 ...
 The outcome is: Error
 ...
+EXITCODE: ERROR (12)
 ```
 
 ### check Slicer3
@@ -970,6 +1033,7 @@ $ apalache-mc check --inv=Inv Slicer3.tla | sed 's/[IEW]@.*//'
 ...
 The outcome is: Error
 ...
+EXITCODE: ERROR (12)
 ```
 
 ### check Slicer4
@@ -979,6 +1043,7 @@ $ apalache-mc check --inv=Inv Slicer4.tla | sed 's/[IEW]@.*//'
 ...
 The outcome is: Error
 ...
+EXITCODE: ERROR (12)
 ```
 
 ### check Slicer5
@@ -988,6 +1053,7 @@ $ apalache-mc check --inv=Inv Slicer5.tla | sed 's/[IEW]@.*//'
 ...
 The outcome is: Error
 ...
+EXITCODE: ERROR (12)
 ```
 
 ## running the typecheck command
@@ -1001,6 +1067,7 @@ $ apalache-mc typecheck ExistTuple476.tla | sed 's/I@.*//'
 ...
 Type checker [OK]
 ...
+EXITCODE: OK
 ```
 
 ### typecheck CarTalkPuzzleTyped.tla
@@ -1176,7 +1243,7 @@ $ apalache-mc typecheck Channel.tla | sed 's/[IEW]@.*//'
 ...
 Typing input error: Expected a type annotation for VARIABLE chan
 ...
-EXITCODE: ERROR (99)
+EXITCODE: ERROR (255)
 ```
 
 ### typecheck ChannelTyped.tla
@@ -1278,7 +1345,7 @@ PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
 Typing input error: Expected a type annotation for CONSTANT N
 ...
-EXITCODE: ERROR (99)
+EXITCODE: ERROR (255)
 ```
 
 ### typecheck UntypedVar.tla
@@ -1290,6 +1357,6 @@ PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
 Typing input error: Expected a type annotation for VARIABLE x
 ...
-EXITCODE: ERROR (99)
+EXITCODE: ERROR (255)
 ```
 
