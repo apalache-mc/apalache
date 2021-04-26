@@ -354,7 +354,11 @@ object Tool extends App with LazyLogging {
   private def configure(config: ConfigCmd): Unit = {
     config.submitStats match {
       case Some(isEnabled) =>
-        if (configDirExistsOrCreated()) {
+        val warning = "Unable to update statistics configuration. The other features will keep working."
+
+        if (!configDirExistsOrCreated()) {
+          logger.warn(warning)
+        } else {
           val statCollector = new ExecutionStatisticsCollector()
           // protect against potential exceptions in the tla2tools code
           try {
@@ -370,9 +374,10 @@ object Tool extends App with LazyLogging {
           } catch {
             case e: Exception =>
               logger.warn(e.getMessage)
-              logger.warn(s"Unable to update statistics configuration. The other features will keep working.")
+              logger.warn(warning)
           }
         }
+
       case None =>
         ()
     }
