@@ -13,3 +13,7 @@
 ### Features
 
  * apalache quits with a non-zero exit code on counterexample or error, see #249
+
+### Bug fixes
+
+ * The command `config --enable-stats=true` creates `$HOME/.tlaplus` if needed, see #762
