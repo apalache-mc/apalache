@@ -29,7 +29,7 @@ import scala.util.Random
  *
  * @author Igor Konnov
  */
-object Tool extends App with LazyLogging {
+object Tool extends LazyLogging {
   lazy val ISSUES_LINK: String = "[https://github.com/informalsystems/apalache/issues]"
   lazy val ERROR_EXIT_CODE = 99
   lazy val OK_EXIT_CODE = 0
@@ -41,7 +41,7 @@ object Tool extends App with LazyLogging {
    *
    * @param args the command line arguments
    */
-  override def main(args: Array[String]): Unit = {
+  def main(args: Array[String]): Unit = {
     val exitcode = run(args)
     if (exitcode == OK_EXIT_CODE) {
       Console.out.println("EXITCODE: OK")
