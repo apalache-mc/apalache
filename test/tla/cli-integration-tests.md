@@ -1293,3 +1293,25 @@ Typing input error: Expected a type annotation for VARIABLE x
 EXITCODE: ERROR (99)
 ```
 
+## Running the config command
+
+### config --enable-stats=false
+
+```sh
+$ apalache-mc config --enable-stats=false | sed 's/[IEW]@.*//'
+...
+Statistics collection is OFF.
+...
+EXITCODE: OK
+```
+
+### config --enable-stats=true
+
+```sh
+$ apalache-mc config --enable-stats=true | sed 's/[IEW]@.*//'
+...
+Statistics collection is ON.
+...
+EXITCODE: OK
+```
+

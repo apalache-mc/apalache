@@ -10,3 +10,6 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
+### Bug fixes
+
+ * The command `config --enable-stats=true` creates `$HOME/.tlaplus` if needed, see #762

@@ -354,19 +354,50 @@ object Tool extends App with LazyLogging {
   private def configure(config: ConfigCmd): Unit = {
     config.submitStats match {
       case Some(isEnabled) =>
-        val statCollector = new ExecutionStatisticsCollector()
-        if (isEnabled) {
-          logger.info("Statistics collection is ON.")
-          logger.info("This also enabled TLC and TLA+ Toolbox statistics.")
-          statCollector.set(Selection.ON)
+        val warning = "Unable to update statistics configuration. The other features will keep working."
+
+        if (!configDirExistsOrCreated()) {
+          logger.warn(warning)
         } else {
-          logger.info("Statistics collection is OFF.")
-          logger.info("This also disabled TLC and TLA+ Toolbox statistics.")
-          statCollector.set(Selection.NO_ESC)
+          val statCollector = new ExecutionStatisticsCollector()
+          // protect against potential exceptions in the tla2tools code
+          try {
+            if (isEnabled) {
+              statCollector.set(Selection.ON)
+              logger.info("Statistics collection is ON.")
+              logger.info("This also enabled TLC and TLA+ Toolbox statistics.")
+            } else {
+              statCollector.set(Selection.NO_ESC)
+              logger.info("Statistics collection is OFF.")
+              logger.info("This also disabled TLC and TLA+ Toolbox statistics.")
+            }
+          } catch {
+            case e: Exception =>
+              logger.warn(e.getMessage)
+              logger.warn(warning)
+          }
         }
 
       case None =>
         ()
+    }
+  }
+
+  private def configDirExistsOrCreated(): Boolean = {
+    // A temporary fix for the issue #762: create ~/.tlaplus if it does not exist
+    val configDir = new File(System.getProperty("user.home", ""), ".tlaplus")
+    if (configDir.exists()) {
+      true
+    } else {
+      try {
+        configDir.mkdir()
+        true
+      } catch {
+        case e: Exception =>
+          logger.warn(e.getMessage)
+          logger.warn(s"Unable to create the directory $configDir.")
+          false
+      }
     }
   }
 
