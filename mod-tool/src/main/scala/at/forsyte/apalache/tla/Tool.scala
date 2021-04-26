@@ -390,7 +390,7 @@ object Tool extends App with LazyLogging {
       } catch {
         case e: Exception =>
           logger.warn(e.getMessage)
-          logger.warn(s"Unable to create the directory $configDir. The statistics will not be collected.")
+          logger.warn(s"Unable to create the directory $configDir.")
           false
       }
     }
