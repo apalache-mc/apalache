@@ -10,6 +10,10 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
+### Features
+
+ * apalache quits with a non-zero exit code on counterexample or error, see #249
+
 ### Bug fixes
 
 * Parser: supporting annotations in multiline comments, see #718
