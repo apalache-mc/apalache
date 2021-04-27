@@ -469,15 +469,6 @@ In practice, this would mean either rewriting TLC and Apalache from scratch, or
 hacking them to enforce the right semantics of the above formula.
 
 
-We sum up this discussion by quoting [Dr. Malcolm from Jurassic
-Park](https://www.youtube.com/watch?v=g3j9muCo4o0):
-
-> Yeah, but your scientists were so preoccupied with whether or not they could,
-> that they didn't stop to think if they should.
-
-Thanks to Jure Kukovec for pointing to this quote!
-
-
 #### 3.5.2. Why annotations instead of special operators 
 
 The annotations `@require` and `@ensure` are not our invention. You can find
