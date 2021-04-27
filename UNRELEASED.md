@@ -17,3 +17,7 @@
 ### Bug fixes
 
  * The command `config --enable-stats=true` creates `$HOME/.tlaplus` if needed, see #762
+
+### Changes
+
+ * Builds: removed scoverage from maven, to improve build times

@@ -13,8 +13,6 @@
         <scalaVersion>2.12.12</scalaVersion>
         <scalaBinaryVersion>2.12</scalaBinaryVersion>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <scoverage.plugin.version>1.4.1</scoverage.plugin.version>
-        <scoverage.aggregate>true</scoverage.aggregate>
         <logback.version>1.2.3</logback.version>
         <spotless.version>2.10.3</spotless.version>
     </properties>
@@ -241,24 +239,6 @@
                     </configuration>
                 </plugin>
 
-                <plugin>
-                    <groupId>org.scoverage</groupId>
-                    <artifactId>scoverage-maven-plugin</artifactId>
-                    <version>${scoverage.plugin.version}</version>
-                    <configuration>
-                        <scalaVersion>${scalaBinaryVersion}</scalaVersion>
-                        <!-- other parameters -->
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>report</goal> <!-- or integration-check -->
-                            </goals>
-                            <phase>prepare-package</phase> <!-- or any other phase -->
-                        </execution>
-                    </executions>
-                </plugin>
-
                 <!-- Code formatting plugin
                      See
                      https://github.com/diffplug/spotless/tree/main/plugin-maven
@@ -386,46 +366,7 @@
                     <rules><dependencyConvergence /></rules>
                 </configuration>
             </plugin>
-
-            <plugin>
-                <groupId>org.scoverage</groupId>
-                <artifactId>scoverage-maven-plugin</artifactId>
-                <version>${scoverage.plugin.version}</version>
-                <configuration>
-                    <scalaVersion>${scalaBinaryVersion}</scalaVersion>
-                    <!-- other parameters -->
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>report</goal> <!-- or integration-check -->
-                        </goals>
-                        <phase>prepare-package</phase> <!-- or any other phase -->
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
-
-    <reporting>
-        <plugins>
-            <plugin>
-                <groupId>org.scoverage</groupId>
-                <artifactId>scoverage-maven-plugin</artifactId>
-                <version>${scoverage.plugin.version}</version>
-                <configuration>
-                    <aggregate>true</aggregate>
-                    <highlighting>true</highlighting>
-                </configuration>
-                <reportSets>
-                    <reportSet>
-                        <reports>
-                            <report>report</report>  <!-- integration-report, report-only -->
-                        </reports>
-                    </reportSet>
-                </reportSets>
-            </plugin>
-        </plugins>
-    </reporting>
 
 </project>
