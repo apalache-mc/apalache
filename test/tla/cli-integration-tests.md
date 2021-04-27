@@ -1316,6 +1316,9 @@ PASS #1: TypeCheckerSnowcat
  > All expressions are typed
 ...
 Type checker [OK]
+...
+EXITCODE: OK
+```
 
 ## Running the config command
 

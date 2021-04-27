@@ -107,6 +107,22 @@ class TestAnnotationParser extends FunSuite with Checkers {
     }
   }
 
+  test("regression") {
+    val expected =
+      Annotation("type", AnnotationStr(" Str"))
+    val text =
+      """  \* TODO: use a model type here
+        |  \* when #570 is closed: https://github.com/informalsystems/apalache/issues/570
+        |  \* @type: Str;""".stripMargin
+    AnnotationParser.parse(text) match {
+      case AnnotationParser.Success(List(parsed)) =>
+        assert(expected == parsed)
+
+      case r =>
+        fail("Unexpected parser outcome: " + r)
+    }
+  }
+
   test("multiple annotations as in unit tests") {
     val expected =
       List(Annotation("require", AnnotationIdent("ConstInit")), Annotation("require", AnnotationIdent("Init")),

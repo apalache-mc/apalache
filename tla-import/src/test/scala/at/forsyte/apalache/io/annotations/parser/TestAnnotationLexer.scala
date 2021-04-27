@@ -83,13 +83,14 @@ class TestAnnotationLexer extends FunSuite {
     assert(expected == output)
   }
 
-  test("quoted string with comments inside") {
+  test("regression") {
     // It should be also possible to write multiline strings in quotes.
     val text =
-      """\* @type("Int
-        |\*          => Int")"""".stripMargin
+      """  \* TODO: use a model type here
+        |  \* when #570 is closed: https://github.com/informalsystems/apalache/issues/570
+        |  \* @type: Str;""".stripMargin
     val output = AnnotationLexer.apply(new StringReader(text)).toList
-    val expected = List(AT_IDENT("type"), LPAREN(), STRING("Int          => Int"), RPAREN())
+    val expected = List(IDENT("TODO"), AT_IDENT("type"), INLINE_STRING(" Str"))
     assert(expected == output)
   }
 

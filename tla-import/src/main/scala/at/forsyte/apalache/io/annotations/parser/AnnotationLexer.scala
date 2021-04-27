@@ -66,7 +66,7 @@ object AnnotationLexer extends RegexParsers {
   }
 
   private def inline_string: Parser[INLINE_STRING] = {
-    """:[a-zA-Z0-9_~!@#\\$%^&*\-+=|(){}\[\],:`'<>.?/ \t\r\f\n]*;""".r ^^ { name =>
+    """:[a-zA-Z0-9_~!#\\$%^&*\-+=|(){}\[\],:`'<>.?/ \t\r\f\n]*;""".r ^^ { name =>
       INLINE_STRING(removeLeadingCommentsAndControlChars(name.substring(1, name.length - 1)))
     }
   }

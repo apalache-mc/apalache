@@ -38,10 +38,10 @@ optional rules):
 Annotation  ::= '@' tlaIdentifier ( '(' ArgList? ')' | ':' inlineArg ';' )?
 ArgList     ::= (Arg) ( ',' Arg )*
 Arg         ::= (string | integer | boolean | tlaIdentifier)
-inlineArg   ::= <char sequence excluding ';'>
 string      ::= '"' <char sequence> '"'
 integer     ::= '-'? [0-9]+
 boolean     ::= ('false' | 'true')
+inlineArg   ::= <char sequence excluding ';' and '@'>
 ```
 
 The sequence `<char sequence>` is a sequence of characters admitted by the TLA+ parser:
