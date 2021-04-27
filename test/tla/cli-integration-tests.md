@@ -1304,9 +1304,6 @@ PASS #1: TypeCheckerSnowcat
  > All expressions are typed
 ...
 Type checker [OK]
-...
-EXITCODE: OK
-```
 
 ### typecheck schroedinger_cat.tla
 
@@ -1319,6 +1316,25 @@ PASS #1: TypeCheckerSnowcat
  > All expressions are typed
 ...
 Type checker [OK]
+
+## Running the config command
+
+### config --enable-stats=false
+
+```sh
+$ apalache-mc config --enable-stats=false | sed 's/[IEW]@.*//'
+...
+Statistics collection is OFF.
+...
+EXITCODE: OK
+```
+
+### config --enable-stats=true
+
+```sh
+$ apalache-mc config --enable-stats=true | sed 's/[IEW]@.*//'
+...
+Statistics collection is ON.
 ...
 EXITCODE: OK
 ```

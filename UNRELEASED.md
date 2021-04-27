@@ -10,9 +10,9 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
-
 ### Bug fixes
 
 * Parser: supporting annotations in multiline comments, see #718
 * Parser: supporting TLA+ identifiers in annotations, see #768
 * Parser: better parser for annotations, see #757
+* The command `config --enable-stats=true` creates `$HOME/.tlaplus` if needed, see #762
