@@ -604,7 +604,7 @@ $ apalache-mc check --init=Init2 --inv=Inv Rec12.tla | sed 's/[IEW]@.*//'
 ...
 The outcome is: Error
 ...
-EXITCODE: OK
+EXITCODE: ERROR (12)
 ```
 
 ### check Rec13.tla succeeds
