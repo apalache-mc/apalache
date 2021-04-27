@@ -627,7 +627,7 @@ Let us know:
  - email: igor at informal.systems.
 
 
-[Apalache Zulip stream]: https://informal-systems.zulipchat.com/#narrow/stream/265309-apalache)
+[Apalache Zulip stream]: https://informal-systems.zulipchat.com/#narrow/stream/265309-apalache
 [ApalacheTLA Twitter]: https://twitter.com/ApalacheTLA
 [Unit testing]: https://en.wikipedia.org/wiki/Unit_testing
 [Property-based testing]: https://en.wikipedia.org/wiki/QuickCheck
