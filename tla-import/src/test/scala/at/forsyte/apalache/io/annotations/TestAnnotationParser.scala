@@ -29,8 +29,11 @@ class TestAnnotationParser extends FunSuite with Checkers {
 
   test("test on empty input") {
     AnnotationParser.parse("") match {
-      case AnnotationParser.Failure(_) =>
+      case AnnotationParser.Success(List()) =>
         ()
+
+      case r =>
+        fail("Unexpected parser outcome: " + r)
     }
   }
 
@@ -43,8 +46,28 @@ class TestAnnotationParser extends FunSuite with Checkers {
           AnnotationBool(true)
       )
     AnnotationParser.parse("""  @greet("hello", 2021, true)   """) match {
-      case AnnotationParser.Success(parsed, _) =>
+      case AnnotationParser.Success(List(parsed)) =>
         assert(expected == parsed)
+
+      case r =>
+        fail("Unexpected parser outcome: " + r)
+    }
+  }
+
+  test("test on one-line input with arbitrary text around") {
+    val expected =
+      Annotation(
+          "greet",
+          AnnotationStr("hello"),
+          AnnotationInt(2021),
+          AnnotationBool(true)
+      )
+    AnnotationParser.parse("""\* zxfzx @ hjhsd99. @greet("hello", 2021, true)  zzz vvv!#@ """) match {
+      case AnnotationParser.Success(List(parsed)) =>
+        assert(expected == parsed)
+
+      case r =>
+        fail("Unexpected parser outcome: " + r)
     }
   }
 
@@ -52,11 +75,14 @@ class TestAnnotationParser extends FunSuite with Checkers {
     val expected =
       Annotation(
           "type",
-          AnnotationStr("(Int, Int) -> Set(Int) ")
+          AnnotationStr(" (Int, Int) -> Set(Int) ")
       )
     AnnotationParser.parse("""  @type: (Int, Int) -> Set(Int) ;""") match {
-      case AnnotationParser.Success(parsed, _) =>
+      case AnnotationParser.Success(List(parsed)) =>
         assert(expected.toPrettyString == parsed.toPrettyString)
+
+      case r =>
+        fail("Unexpected parser outcome: " + r)
     }
   }
 
@@ -73,14 +99,37 @@ class TestAnnotationParser extends FunSuite with Checkers {
         |         2021,
         |         true)     """.stripMargin
     AnnotationParser.parse(text) match {
-      case AnnotationParser.Success(parsed, _) =>
+      case AnnotationParser.Success(List(parsed)) =>
         assert(expected == parsed)
+
+      case r =>
+        fail("Unexpected parser outcome: " + r)
+    }
+  }
+
+  test("multiple annotations as in unit tests") {
+    val expected =
+      List(Annotation("require", AnnotationIdent("ConstInit")), Annotation("require", AnnotationIdent("Init")),
+          Annotation("ensure", AnnotationIdent("AssertWinner")), Annotation("testAction", AnnotationIdent("Next")))
+    val text =
+      """@require(ConstInit)
+        |@require(Init)
+        |@ensure(AssertWinner)
+        |@testAction(Next)
+        """.stripMargin
+    AnnotationParser.parse(text) match {
+      case AnnotationParser.Success(parsed) =>
+        assert(expected == parsed)
+
+      case r =>
+        fail("Unexpected parser outcome: " + r)
     }
   }
 
   // For some reason, if there is a bug in the parser, e.g., comment out boolArg in TlaAnnotationParser.arg),
   // then the shrinker produces a useless empty test.
   // Disable the shrinker.
+
   import org.scalacheck.Shrink.shrinkAny
 
   test("parse OK on random good inputs @foo(arg1, ..., argN)") {
@@ -90,7 +139,7 @@ class TestAnnotationParser extends FunSuite with Checkers {
             forAll(listOf(oneOf(genStr, genInt, genBool))) { args =>
               val annotation = Annotation(name, args: _*)
               AnnotationParser.parse(annotation.toString) match {
-                case AnnotationParser.Success(parsed, _) =>
+                case AnnotationParser.Success(List(parsed)) =>
                   annotation ?= parsed
 
                 case AnnotationParser.Failure(_) =>
@@ -111,7 +160,7 @@ class TestAnnotationParser extends FunSuite with Checkers {
               // Pass the test on successful parse.
               // To see how testing is different from verification,
               // replace 'passed' with 'falsified' and observe that no error will be found ;-)
-              case Success(_, _) => passed
+              case Success(_) => passed
 
               case Failure(_) => passed
             }

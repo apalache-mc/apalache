@@ -10,6 +10,10 @@ object AnnotationArg {
     AnnotationStr(text)
   }
 
+  def mkIdent(name: String): AnnotationArg = {
+    AnnotationIdent(name)
+  }
+
   def mkInt(i: Int): AnnotationInt = {
     AnnotationInt(i)
   }
@@ -26,6 +30,15 @@ object AnnotationArg {
  */
 case class AnnotationStr(text: String) extends AnnotationArg {
   override def toString: String = '"' + text + '"'
+}
+
+/**
+ * An identifier argument.
+ *
+ * @param name the name of an identifier.
+ */
+case class AnnotationIdent(name: String) extends AnnotationArg {
+  override def toString: String = name
 }
 
 /**
