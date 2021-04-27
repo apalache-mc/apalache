@@ -10,6 +10,10 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
+### Documentation
+
+ * RFC006 on unit testing: see #741
+
 ### Features
 
  * apalache quits with a non-zero exit code on counterexample or error, see #249
