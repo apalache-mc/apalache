@@ -362,16 +362,29 @@ This may change later, when the tlaplus [Issue 578][] is resolved.
 
 ### Multi-line annotations
 
-A type annotation may span over multiple lines. However, you should use
-the `(* ... *)` syntax in this case. An annotation in a series
-of single-line comments is not properly parsed. For example:
+A type annotation may span over multiple lines. You may use both the `(* ...
+*)` syntax as well as the single-line syntax `\* ...`. All three examples below
+are accepted by the parser:
 
 ```tla
-\* @type: Int
-\*          => Bool;
+VARIABLES
+   (*
+    @type: Int
+            => Bool;
+    *)           
+    f,
+    \* @type:
+    \*       Int
+    \*          => Bool;
+    g,
+    \* @type("Int
+    \*          => Bool
+    \*       ")
+    h
 ```
 
-To see progress on this issue, check [Issue 718][].
+Note that the parser removes the leading strings `"    \*"` from the annotations,
+similar to how multiline strings are treated in modern programming languages.
 
 
 [old type annotations]: ../apalache/types-and-annotations.md
