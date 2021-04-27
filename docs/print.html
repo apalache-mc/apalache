@@ -2538,13 +2538,25 @@ LOCAL LocalInc(x) == x + 1
 </code></pre>
 <p>This may change later, when the tlaplus <a href="https://github.com/tlaplus/tlaplus/issues/578">Issue 578</a> is resolved.</p>
 <h3><a class="header" href="#multi-line-annotations" id="multi-line-annotations">Multi-line annotations</a></h3>
-<p>A type annotation may span over multiple lines. However, you should use
-the <code>(* ... *)</code> syntax in this case. An annotation in a series
-of single-line comments is not properly parsed. For example:</p>
-<pre><code class="language-tla">\* @type: Int
-\*          =&gt; Bool;
+<p>A type annotation may span over multiple lines. You may use both the <code>(* ... *)</code> syntax as well as the single-line syntax <code>\* ...</code>. All three examples below
+are accepted by the parser:</p>
+<pre><code class="language-tla">VARIABLES
+   (*
+    @type: Int
+            =&gt; Bool;
+    *)           
+    f,
+    \* @type:
+    \*       Int
+    \*          =&gt; Bool;
+    g,
+    \* @type(&quot;Int
+    \*          =&gt; Bool
+    \*       &quot;)
+    h
 </code></pre>
-<p>To see progress on this issue, check <a href="https://github.com/informalsystems/apalache/issues/718">Issue 718</a>.</p>
+<p>Note that the parser removes the leading strings <code>&quot;    \*&quot;</code> from the annotations,
+similar to how multiline strings are treated in modern programming languages.</p>
 <h1><a class="header" href="#tla-language-reference-manual-" id="tla-language-reference-manual-">TLA+ Language Reference Manual 📗</a></h1>
 <p>In this manual, we summarize our knowledge about TLA+ and about its treatment
 with the <a href="https://github.com/informalsystems/apalache">Apalache model checker</a>. This is not the manual on Apalache, which
@@ -7308,27 +7320,26 @@ declaration. The following declarations are supported:</p>
 <h2><a class="header" href="#2-annotations-syntax" id="2-annotations-syntax">2. Annotations syntax</a></h2>
 <p>An annotation is a string that follows the grammar (question mark denotes
 optional rules):</p>
-<pre><code>Annotation  ::= '@' javaIdentifier ( '(' ArgList? ')' | ':' inlineArg ';' )?
+<pre><code>Annotation  ::= '@' tlaIdentifier ( '(' ArgList? ')' | ':' inlineArg ';' )?
 ArgList     ::= (Arg) ( ',' Arg )*
-Arg         ::= (string | integer | boolean)
-inlineArg   ::= &lt;char sequence excluding ';'&gt;
+Arg         ::= (string | integer | boolean | tlaIdentifier)
 string      ::= '&quot;' &lt;char sequence&gt; '&quot;'
 integer     ::= '-'? [0-9]+
 boolean     ::= ('false' | 'true')
+inlineArg   ::= &lt;char sequence excluding ';' and '@'&gt;
 </code></pre>
-<p>Java Language Specification defines how a <a href="https://docs.oracle.com/javase/specs/jls/se7/html/jls-3.html#jls-3.8">Java identifier</a> looks like.
-The sequence <code>&lt;char sequence&gt;</code> is a sequence admitted by <a href="https://www.scala-lang.org/api/2.12.2/scala-parser-combinators/scala/util/parsing/combinator/JavaTokenParsers.html">JavaTokenParsers</a>:</p>
+<p>The sequence <code>&lt;char sequence&gt;</code> is a sequence of characters admitted by the TLA+ parser:</p>
 <ul>
-<li>Any character except double quotes, control characters or backslash <code>\</code></li>
+<li>Any ASCII character except double quotes, control characters or backslash <code>\</code></li>
 <li>A backslash followed by another backslash, a single or double quote,
-or one of the letters <code>b</code>, <code>f</code>, <code>n</code>, <code>r</code> or <code>t</code></li>
-<li><code>\</code> followed by u followed by four hexadecimal digits</li>
+or one of the letters <code>f</code>, <code>n</code>, <code>r</code> or <code>t</code>.</li>
 </ul>
 <p><strong>Examples.</strong> The following strings are examples of syntactically correct
 annotations:</p>
 <ol>
 <li><code>@tailrec</code></li>
 <li><code>@type(&quot;(Int, Int) =&gt; Int&quot;)</code></li>
+<li><code>@require(Init)</code></li>
 <li><code>@type: (Int, Int) =&gt; Int ;</code></li>
 <li><code>@random(true)</code></li>
 <li><code>@deprecated(&quot;Use operator Foo instead&quot;)</code></li>
@@ -7340,6 +7351,25 @@ example 3 is not following the syntax of Java annotations. We have introduced
 this format for one-argument annotations, especially, for type annotations.
 Its purpose is to reduce the visual clutter in annotations that accept a string
 as their only argument.</p>
+<p>Currently, annotations are written in comments that precede a definition (see
+the explanation below). String arguments can span over multiple lines. For instance,
+the following examples demonstrate valid annotations inside TLA+ comments:</p>
+<pre><code class="language-tla">(*
+  @type: Int
+            =&gt; Int
+  ;
+ *)
+
+\* @type: Int
+\*           =&gt; Int
+\* ;
+
+\* @hal_msg(&quot;Sorry,
+\*           I
+\*           CAN
+\*           do that,
+\*           Dave&quot;)
+</code></pre>
 <h2><a class="header" href="#3-an-annotated-specification" id="3-an-annotated-specification">3. An annotated specification</a></h2>
 <p>The following specification shows how to write annotations, so they can be
 correctly parsed by the SANY parser and Apalache. Note the location of comments
