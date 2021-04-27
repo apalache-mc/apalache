@@ -616,15 +616,24 @@ By having all test options specified directly in tests, we reach two goals:
    This would allow us to integrate TLA+ model checkers in a CI/CD loop,
    e.g., at GitHub.
    
+## 7. What do you think?
+
+Let us know:
+
+ - At [Apalache Zulip stream][],
+
+ - On [ApalacheTLA Twitter][],
+
+ - email: igor at informal.systems.
 
 
-
-
+[Apalache Zulip stream]: https://informal-systems.zulipchat.com/#narrow/stream/265309-apalache)
+[ApalacheTLA Twitter]: https://twitter.com/ApalacheTLA
 [Unit testing]: https://en.wikipedia.org/wiki/Unit_testing
 [Property-based testing]: https://en.wikipedia.org/wiki/QuickCheck
 [TLA+ examples]: https://github.com/tlaplus/Examples/
 [LCR]: https://github.com/tlaplus/Examples/tree/master/specifications/chang_roberts
-[ChangRobertsTyped_Test.tla]: ../../../test/tla/ChangRobertsTyped_Test.tla
+[ChangRobertsTyped_Test.tla]: https://github.com/informalsystems/apalache/blob/unstable/test/tla/ChangRobertsTyped_Test.tla
 [Distributed Algorithms]: https://dl.acm.org/doi/book/10.5555/2821576
 [Raft]: https://github.com/tlaplus/Examples/tree/master/specifications/raft
 [Apalache.tla]: https://github.com/informalsystems/apalache/blob/80cf914fe7272b14832a47b21193f5dfe8119348/src/tla/Apalache.tla
