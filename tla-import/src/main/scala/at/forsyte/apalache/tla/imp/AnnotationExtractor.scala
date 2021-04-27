@@ -1,10 +1,10 @@
 package at.forsyte.apalache.tla.imp
 
+import at.forsyte.apalache.io.annotations.AnnotationParser
 import at.forsyte.apalache.io.annotations.AnnotationParser.{Failure, Success}
-import at.forsyte.apalache.io.annotations.{Annotation, AnnotationParser}
 import at.forsyte.apalache.io.annotations.store._
-import at.forsyte.apalache.tla.imp.src.SourceLocation
 import at.forsyte.apalache.tla.lir.UID
+import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic.{OpDefNode, OpDefOrDeclNode}
 
 /**
@@ -12,33 +12,18 @@ import tla2sany.semantic.{OpDefNode, OpDefOrDeclNode}
  *
  * @author Igor Konnov
  */
-class AnnotationExtractor(annotationStore: AnnotationStore) {
+class AnnotationExtractor(annotationStore: AnnotationStore) extends LazyLogging {
   def parseAndSave(uid: UID, node: OpDefOrDeclNode): Unit = {
-    var annotations = List[Annotation]()
-    var commentText = locateComments(node)
-    var index = 0
-    while (index != -1) {
-      index = commentText.indexOf('@', index)
-      if (index != -1) {
-        // we have found the starting position of an annotation
-        commentText = commentText.substring(index)
-        AnnotationParser.parse(commentText) match {
-          case Success(annotation, length) =>
-            annotations +:= annotation
-            assert(length > 0)
-            index = length
+    val commentText = locateComments(node)
+    AnnotationParser.parse(commentText) match {
+      case Success(annotations) =>
+        annotationStore += uid -> annotations
 
-          case Failure(message) =>
-            val loc = SourceLocation(node.getLocation)
-            throw new SanyImporterException(
-                "%s: Annotation error: %s".format(loc, message)
-            )
-        }
-      }
-    }
-
-    if (annotations.nonEmpty) {
-      annotationStore += uid -> annotations.reverse
+      case Failure(message) =>
+        // Warn the user and continue. It may be a piece of text that looks like an annotation, but it is not an annotation.
+        logger.warn("%s: Failed to parse annotations in the comments. This may lead to a type error later.",
+            node.getLocation.toString)
+        logger.warn(message)
     }
   }
 
