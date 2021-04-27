@@ -1304,6 +1304,7 @@ PASS #1: TypeCheckerSnowcat
  > All expressions are typed
 ...
 Type checker [OK]
+```
 
 ### typecheck schroedinger_cat.tla
 
