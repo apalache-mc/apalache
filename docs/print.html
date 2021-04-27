@@ -7468,26 +7468,26 @@ specification as a whole, we rarely get a quick response, except for very small
 specs. This is hardly surprising, as we are interested in specifying complex
 systems, not the trivial ones.</p>
 <p>Surprisingly, when we are writing large TLA+ specs, our interaction with the
-model checker looks more like an interaction with a <a href="https://en.wikipedia.org/wiki/Mainframe_computer">Mainframe computer</a> from
+model checker looks more like an interaction with a [Mainframe computer][] from
 the early days of computing than a modern interactive development cycle. We
 feed the model checker our specification and wait for hours in the hope that it
 gives us a useful response. If it does not, we have to make the specification
 parameters small enough for the model checker to do anything useful. If our
 parameters are already ridiculously small, we have to throw more computing
 power at the problem and wait for days. In contrast, verification tools for
-programs are meant to be much more interactive, e.g., see <a href="https://www.microsoft.com/en-us/research/project/dafny-a-language-and-program-verifier-for-functional-correctness/">Dafny</a> and
-<a href="https://github.com/kenmcmil/ivy">Ivy</a>.</p>
-<p>Why cannot we do something like <a href="https://en.wikipedia.org/wiki/Unit_testing">Unit testing</a> in Apalache? We believe that
+programs are meant to be much more interactive, e.g., see [Dafny][] and
+[Ivy][].</p>
+<p>Why cannot we do something like [Unit testing][] in Apalache? We believe that
 we actually can do that. We can probably do it even better by implementing
-<a href="https://en.wikipedia.org/wiki/QuickCheck">Property-based testing</a>, that is, test parts of our specifications against a
+[Property-based testing][], that is, test parts of our specifications against a
 large set of inputs instead of testing it against a few carefully crafted
 inputs.</p>
 <h2><a class="header" href="#2-a-motivating-example" id="2-a-motivating-example">2. A motivating example</a></h2>
 <p>Let's consider a relatively simple distributed algorithm as an example.  The
-repository of <a href="https://github.com/tlaplus/Examples/">TLA+ examples</a> contains the well-known leader election
-algorithm called <a href="https://github.com/tlaplus/Examples/tree/master/specifications/chang_roberts">LCR</a> (specified in TLA+ by Stephan Merz). The algorithm is
+repository of [TLA+ examples][] contains the well-known leader election
+algorithm called [LCR][] (specified in TLA+ by Stephan Merz). The algorithm is
 over 40 years old, but it is tricky enough to be still interesting. To
-understand the algorithm, check <a href="https://dl.acm.org/doi/book/10.5555/2821576">Distributed Algorithms</a> by Nancy Lynch.</p>
+understand the algorithm, check [Distributed Algorithms][] by Nancy Lynch.</p>
 <p>As the description suggests, when we fix <code>N</code> to <code>6</code> and <code>Id</code> to
 <code>&lt;&lt;27, 4, 42, 15, 63, 9&gt;&gt;</code>, TLC checks that the spec satisfies the invariant
 <code>Correctness</code> in just 11 seconds, after having explored 40K states.
@@ -7563,7 +7563,7 @@ verification, or we can check the algorithm for a few data points. In case
 of LCR, the choice of process identifiers is important, so it is not clear at
 all, whether a few data points are giving us a good confidence.</p>
 <p>This situation can be frustrating, especially when you are designing a large
-protocol. For instance, both Apalache and TLC can run for hours on <a href="https://github.com/tlaplus/Examples/tree/master/specifications/raft">Raft</a>
+protocol. For instance, both Apalache and TLC can run for hours on [Raft][]
 without finishing. We should be able to quickly debug our specs like software
 engineers do!</p>
 <h2><a class="header" href="#3-an-approach-to-writing-tests" id="3-an-approach-to-writing-tests">3. An approach to writing tests</a></h2>
@@ -7572,7 +7572,7 @@ necessary ingredients for implementing this approach. We are asking for your
 input to find an ergonomic approach to testing TLA+ specifications.  Many of
 the following ideas apply to TLC as well. We are gradually introducing
 Apalache-specific features.</em></p>
-<p>A complete specification can be found in <a href="adr/../../../test/tla/ChangRobertsTyped_Test.tla">ChangRobertsTyped_Test.tla</a>.</p>
+<p>A complete specification can be found in [ChangRobertsTyped_Test.tla][].</p>
 <p>Our idea is to quickly check operators in isolation, without analyzing the
 whole specification and without analyzing temporal behavior of the
 specification. There are three principally different kinds of operators in TLA+:</p>
@@ -7624,7 +7624,7 @@ constants with <code>ConstInit</code>, which we specify with the annotation
 <h3><a class="header" href="#32-testing-actions" id="32-testing-actions">3.2. Testing actions</a></h3>
 <p>Testing stateless operators is nice. However, TLA+ is built around the concept
 of a state machine. Hence, we believe that most of the testing activity will be
-centered around TLA+ actions. For instance, the <a href="https://github.com/tlaplus/Examples/tree/master/specifications/chang_roberts">LCR</a> specification has two
+centered around TLA+ actions. For instance, the [LCR][] specification has two
 actions: <code>n0</code> and <code>n1</code>. Let's have a look at <code>n0</code>:</p>
 <pre><code class="language-tla">n0(self) == /\ pc[self] = &quot;n0&quot;
             /\ IF initiator[self]
@@ -7925,9 +7925,9 @@ In practice, this would mean either rewriting TLC and Apalache from scratch, or
 hacking them to enforce the right semantics of the above formula.</p>
 <h4><a class="header" href="#352-why-annotations-instead-of-special-operators" id="352-why-annotations-instead-of-special-operators">3.5.2. Why annotations instead of special operators</a></h4>
 <p>The annotations <code>@require</code> and <code>@ensure</code> are not our invention. You can find
-them in <a href="https://en.wikipedia.org/wiki/Design_by_contract">Design-by-contract</a> languages. In particular, they are used as pre-
-and post-conditions in code verification tools, e.g., <a href="https://www.thestrangeloop.com/2018/contracts-for-getting-more-programs-less-wrong.html">JML</a>, <a href="https://www.microsoft.com/en-us/research/project/dafny-a-language-and-program-verifier-for-functional-correctness/">Dafny</a>, <a href="http://mcmil.net/pubs/SIGCOMM19.pdf">QUIC
-testing</a> with <a href="https://github.com/kenmcmil/ivy">Ivy</a>. </p>
+them in [Design-by-contract][] languages. In particular, they are used as pre-
+and post-conditions in code verification tools, e.g., [JML][], [Dafny][], [QUIC
+testing] with [Ivy]. </p>
 <p>You could ask a reasonable question: Why cannot we introduce operators such
 as <code>Require</code> and <code>Ensure</code> instead of writing annotations? For instance,
 we could rewrite <code>TestAction_n0</code> as follows:</p>
@@ -7970,8 +7970,8 @@ which is produced when an error is found.</p>
 <pre><code class="language-sh">apalache example ChangRobertsTyped_Test.tla TestExec_n0_n1
 </code></pre>
 <h2><a class="header" href="#5-bounding-the-inputs" id="5-bounding-the-inputs">5. Bounding the inputs</a></h2>
-<p>The following ideas clearly stem from <a href="https://en.wikipedia.org/wiki/QuickCheck">Property-based testing</a>, e.g., we use
-generators similar to <a href="https://www.scalacheck.org/">Scalacheck</a>. In contrast to property-based testing, we
+<p>The following ideas clearly stem from [Property-based testing], e.g., we use
+generators similar to [Scalacheck]. In contrast to property-based testing, we
 want to run the test not only on some random inputs, but to run it exhaustively
 on all inputs within a predefined bounded scope.</p>
 <p><a id="generators"></a></p>
@@ -7982,7 +7982,7 @@ the input to the test. While this conceptually works, it often happens that
 <code>TypeOK</code> describes a large set of states. Sometimes, this set is even infinite,
 e.g., when <code>TypeOK</code> refers to the infinite set of sequences <code>Seq(S)</code>.
 In Apalache, we can use the operator <code>Gen</code> that produces bounded data structures,
-similar to <a href="https://en.wikipedia.org/wiki/QuickCheck">Property-based testing</a>. Here is how we could describe the set
+similar to [Property-based testing][]. Here is how we could describe the set
 of input states, by bounding the size of the data structures:</p>
 <pre><code class="language-tla">\* Preparing the inputs for the second test. Note that this is a step of its own.
 \* This is similar to an initialization predicate.
@@ -8018,9 +8018,9 @@ TestAction2_n0 ==
 </code></pre>
 <h3><a class="header" href="#52-using-tlc-random" id="52-using-tlc-random">5.2. Using TLC Random</a></h3>
 <p>Leslie Lamport has recently introduced a solution that allows one to run TLC
-in the spirit of <a href="https://en.wikipedia.org/wiki/QuickCheck">Property-based testing</a>. This is done by initializing
+in the spirit of [Property-based testing][]. This is done by initializing
 states with the operators that are defined in the module <code>Randomization</code>. For
-details, see Leslie's paper on <a href="http://lamport.azurewebsites.net/tla/inductive-invariant.pdf">Inductive invariants with TLC</a>.</p>
+details, see Leslie's paper on [Inductive invariants with TLC][].</p>
 <h2><a class="header" href="#6-test-options" id="6-test-options">6. Test options</a></h2>
 <p>To integrate unit tests in the standard TLA+ development cycle, the tools
 should remember how every individual test was run. To avoid additional
@@ -8073,6 +8073,40 @@ make sure that updates in a specification do not break the tests.
 This would allow us to integrate TLA+ model checkers in a CI/CD loop,
 e.g., at GitHub.</li>
 </ul>
+<h2><a class="header" href="#7-what-do-you-think" id="7-what-do-you-think">7. What do you think?</a></h2>
+<p>Let us know:</p>
+<ul>
+<li>
+<p>At [Apalache Zulip stream][],</p>
+</li>
+<li>
+<p>On [ApalacheTLA Twitter][],</p>
+</li>
+<li>
+<p>email: igor at informal.systems.</p>
+</li>
+</ul>
+<p>[Apalache Zulip stream]: https://informal-systems.zulipchat.com/#narrow/stream/265309-apalache)
+[ApalacheTLA Twitter]: https://twitter.com/ApalacheTLA
+[Unit testing]: https://en.wikipedia.org/wiki/Unit_testing
+[Property-based testing]: https://en.wikipedia.org/wiki/QuickCheck
+[TLA+ examples]: https://github.com/tlaplus/Examples/
+[LCR]: https://github.com/tlaplus/Examples/tree/master/specifications/chang_roberts
+[ChangRobertsTyped_Test.tla]: https://github.com/informalsystems/apalache/blob/unstable/test/tla/ChangRobertsTyped_Test.tla
+[Distributed Algorithms]: https://dl.acm.org/doi/book/10.5555/2821576
+[Raft]: https://github.com/tlaplus/Examples/tree/master/specifications/raft
+[Apalache.tla]: https://github.com/informalsystems/apalache/blob/80cf914fe7272b14832a47b21193f5dfe8119348/src/tla/Apalache.tla
+[Scalacheck]: https://www.scalacheck.org/
+[Scalatest]: https://www.scalatest.org/
+[JML]: https://www.thestrangeloop.com/2018/contracts-for-getting-more-programs-less-wrong.html
+[QUIC testing]: http://mcmil.net/pubs/SIGCOMM19.pdf
+[Mainframe computer]: https://en.wikipedia.org/wiki/Mainframe_computer
+[Dafny]: https://www.microsoft.com/en-us/research/project/dafny-a-language-and-program-verifier-for-functional-correctness/
+[IVy]: https://github.com/kenmcmil/ivy
+[Inductive invariants with TLC]: http://lamport.azurewebsites.net/tla/inductive-invariant.pdf
+[Dr. Malcolm]: https://www.youtube.com/watch?v=g3j9muCo4o0
+[TLA+ Proof System]: https://tla.msr-inria.inria.fr/tlaps/content/Home.html
+[Design-by-contract]: https://en.wikipedia.org/wiki/Design_by_contract</p>
 
                     </main>
 
