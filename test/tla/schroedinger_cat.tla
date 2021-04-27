@@ -1,5 +1,8 @@
 ------------------------- MODULE schroedinger_cat ----------------------------
-VARIABLE state
+VARIABLE
+    \* @type: Str;
+    state
+
 Init == state = "ALIVE"
 Next == state' = state \/ state' = "DEAD"
 Inv == state = "ALIVE"

@@ -35,28 +35,27 @@ An annotation is a string that follows the grammar (question mark denotes
 optional rules):
 
 ```
-Annotation  ::= '@' javaIdentifier ( '(' ArgList? ')' | ':' inlineArg ';' )?
+Annotation  ::= '@' tlaIdentifier ( '(' ArgList? ')' | ':' inlineArg ';' )?
 ArgList     ::= (Arg) ( ',' Arg )*
-Arg         ::= (string | integer | boolean)
-inlineArg   ::= <char sequence excluding ';'>
+Arg         ::= (string | integer | boolean | tlaIdentifier)
 string      ::= '"' <char sequence> '"'
 integer     ::= '-'? [0-9]+
 boolean     ::= ('false' | 'true')
+inlineArg   ::= <char sequence excluding ';' and '@'>
 ```
 
-Java Language Specification defines how a [Java identifier] looks like.
-The sequence `<char sequence>` is a sequence admitted by [JavaTokenParsers]:
+The sequence `<char sequence>` is a sequence of characters admitted by the TLA+ parser:
 
-  - Any character except double quotes, control characters or backslash `\`
+  - Any ASCII character except double quotes, control characters or backslash `\`
   - A backslash followed by another backslash, a single or double quote,
-    or one of the letters `b`, `f`, `n`, `r` or `t`
-  - `\` followed by u followed by four hexadecimal digits
+    or one of the letters `f`, `n`, `r` or `t`.
 
 **Examples.** The following strings are examples of syntactically correct
 annotations:
 
  1. `@tailrec`
  1. `@type("(Int, Int) => Int")`
+ 1. `@require(Init)`
  1. `@type: (Int, Int) => Int ;`
  1. `@random(true)`
  1. `@deprecated("Use operator Foo instead")`
@@ -68,6 +67,28 @@ example 3 is not following the syntax of Java annotations. We have introduced
 this format for one-argument annotations, especially, for type annotations.
 Its purpose is to reduce the visual clutter in annotations that accept a string
 as their only argument.
+
+Currently, annotations are written in comments that precede a definition (see
+the explanation below). String arguments can span over multiple lines. For instance,
+the following examples demonstrate valid annotations inside TLA+ comments:
+
+```tla
+(*
+  @type: Int
+            => Int
+  ;
+ *)
+
+\* @type: Int
+\*           => Int
+\* ;
+
+\* @hal_msg("Sorry,
+\*           I
+\*           CAN
+\*           do that,
+\*           Dave")
+```
 
 ## 3. An annotated specification
 

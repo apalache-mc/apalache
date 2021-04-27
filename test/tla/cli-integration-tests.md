@@ -1390,6 +1390,36 @@ Typing input error: Expected a type annotation for VARIABLE x
 EXITCODE: ERROR (255)
 ```
 
+### typecheck TestAnnotations.tla
+
+```sh
+$ apalache-mc typecheck TestAnnotations.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeCheckerSnowcat
+ > Running Snowcat .::.
+ > Your types are great!
+ > All expressions are typed
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck schroedinger_cat.tla
+
+```sh
+$ apalache-mc typecheck schroedinger_cat.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeCheckerSnowcat
+ > Running Snowcat .::.
+ > Your types are great!
+ > All expressions are typed
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
 ## Running the config command
 
 ### config --enable-stats=false
