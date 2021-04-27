@@ -1371,6 +1371,8 @@ PASS #1: TypeCheckerSnowcat
  > All expressions are typed
 ...
 Type checker [OK]
+...
+EXITCODE: OK
 ```
 
 ### typecheck schroedinger_cat.tla
