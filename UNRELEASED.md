@@ -13,3 +13,15 @@
 ### Documentation
 
  * RFC006 on unit testing: see #741
+
+### Features
+
+ * apalache quits with a non-zero exit code on counterexample or error, see #249
+
+### Bug fixes
+
+ * The command `config --enable-stats=true` creates `$HOME/.tlaplus` if needed, see #762
+
+### Changes
+
+ * Builds: removed scoverage from maven, to improve build times
