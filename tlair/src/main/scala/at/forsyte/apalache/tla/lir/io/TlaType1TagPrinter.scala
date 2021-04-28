@@ -1,7 +1,6 @@
-package at.forsyte.apalache.tla.types
+package at.forsyte.apalache.tla.lir.io
 
 import at.forsyte.apalache.tla.lir.{TlaType1, TypeTag, Typed, Untyped}
-import at.forsyte.apalache.tla.lir.io.TypeTagPrinter
 
 class TlaType1TagPrinter extends TypeTagPrinter {
   def apply(tag: TypeTag): String = {
