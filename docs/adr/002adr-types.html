@@ -172,7 +172,7 @@
                     <main>
                         <h1><a class="header" href="#adr-002-types-and-type-annotations" id="adr-002-types-and-type-annotations">ADR-002: types and type annotations</a></h1>
 <table><thead><tr><th>authors</th><th align="right">revision</th></tr></thead><tbody>
-<tr><td>Shon Feder, Igor Konnov, Jure Kukovec</td><td align="right">3</td></tr>
+<tr><td>Shon Feder, Igor Konnov, Jure Kukovec</td><td align="right">4</td></tr>
 </tbody></table>
 <p>This is a follow up of
 <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/internal/rfc/001rfc-types.md">RFC-001</a>, which discusses
@@ -275,7 +275,24 @@ Their type is <code>Set(PID)</code>.</li>
 <p>This rule binds a type (produced by <code>T</code>) to a name (produced by <code>typeConst</code>). As you can see from the definition
 of <code>typeConst</code>, the name should be an identifier in the upper case. The type checker should use the bound type instead
 of the constant type. For examples, see <a href="#useTypeAlias">Section 2.4</a>.</p>
-<h3><a class="header" href="#13-discussion" id="13-discussion">1.3. Discussion</a></h3>
+<p><a id="comments"></a></p>
+<h3><a class="header" href="#13-comments-inside-types" id="13-comments-inside-types">1.3. Comments inside types</a></h3>
+<p>When you introduce records that have dozens of fields, it is useful to explain
+those fields right in the type annotations. For that reason, the type lexer
+supports one-line comments right in the type definitions. The following
+text presents a type definition that contains comments:</p>
+<pre><code>// packets are stored in a set
+Set([
+  // unique sequence number
+  seqno: Int,
+  // payload hash
+  payloadHash: Str
+])
+</code></pre>
+<p>The parser only supports one-line comments that starts with <code>//</code>. Since type
+annotations are currently written inside TLA+ comments, we feel that more
+complex comments would complicate the matters.</p>
+<h3><a class="header" href="#14-discussion" id="14-discussion">1.4. Discussion</a></h3>
 <p>Our type grammar presents a minimal type system that, in our understanding,
 captures all interesting cases that occur in practice. Obviously, this type
 system considers ill-typed some perfectly legal TLA+ values. For instance, we
@@ -331,7 +348,7 @@ to infer the type of <code>N</code> and thus state such a theorem. However, with
 assumptions, the user merely states the variable types and the <em>type checker</em>
 has a simple job of checking type consistency and finding the types of the
 expressions.</p>
-<h1><a class="header" href="#usetuset-22-annotating-operators" id="usetuset-22-annotating-operators">useTuseT 2.2. Annotating Operators</a></h1>
+<h2><a class="header" href="#22-annotating-operators" id="22-annotating-operators">2.2. Annotating operators</a></h2>
 <p>Again, write a type annotation <code>@type: &lt;your type&gt;;</code> in a comment that precedes the operator declaration. For example:</p>
 <pre><code class="language-tla">\* @type: (a, Seq(a)) =&gt; Bool;
 Mem(e, es) ==

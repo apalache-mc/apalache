@@ -2442,6 +2442,7 @@ contains the fields of all records that could be put in the set. That is:</p>
 <p>A downside of this approach is that <a href="HOWTOs/../apalache/typechecker-snowcat.html">Snowcat</a> will not help you in finding
 an incorrect field access. We probably will introduce more precise types for
 records later. See <a href="https://github.com/informalsystems/apalache/issues/401">Issue 401</a>.</p>
+<p><a id="funAsSeq"></a></p>
 <h2><a class="header" href="#recipe-5-functions-as-sequences" id="recipe-5-functions-as-sequences">Recipe 5: functions as sequences</a></h2>
 <p>Check the example <a href="https://github.com/tlaplus/Examples/blob/master/specifications/N-Queens/Queens.tla">Queens.tla</a> from the repository of TLA+ examples.  It has
 85 lines of code, so we do not include it here. Similar to the previous
@@ -2529,15 +2530,7 @@ your specification has complex types, e.g., records, aliases may help you in
 minimizing the burden of specification maintenance. When you add one more field
 to the record type, it suffices to change the definition of the type alias,
 instead of changing the record type everywhere.</p>
-<h2><a class="header" href="#known-issues-1" id="known-issues-1">Known issues</a></h2>
-<h3><a class="header" href="#annotations-of-local-operators" id="annotations-of-local-operators">Annotations of LOCAL operators</a></h3>
-<p>In contrast to all other cases, a local operator definition does require
-a type annotation before the keyword <code>LOCAL</code>, not after it. For example:</p>
-<pre><code class="language-tla">\* @type: Int =&gt; Int;
-LOCAL LocalInc(x) == x + 1
-</code></pre>
-<p>This may change later, when the tlaplus <a href="https://github.com/tlaplus/tlaplus/issues/578">Issue 578</a> is resolved.</p>
-<h3><a class="header" href="#multi-line-annotations" id="multi-line-annotations">Multi-line annotations</a></h3>
+<h2><a class="header" href="#recipe-7-multi-line-annotations" id="recipe-7-multi-line-annotations">Recipe 7: Multi-line annotations</a></h2>
 <p>A type annotation may span over multiple lines. You may use both the <code>(* ... *)</code> syntax as well as the single-line syntax <code>\* ...</code>. All three examples below
 are accepted by the parser:</p>
 <pre><code class="language-tla">VARIABLES
@@ -2556,7 +2549,37 @@ are accepted by the parser:</p>
     h
 </code></pre>
 <p>Note that the parser removes the leading strings <code>&quot;    \*&quot;</code> from the annotations,
-similar to how multiline strings are treated in modern programming languages.</p>
+similar to how multi-line strings are treated in modern programming languages.</p>
+<h2><a class="header" href="#recipe-8-comments-in-annotations" id="recipe-8-comments-in-annotations">Recipe 8: Comments in annotations</a></h2>
+<p>Sometimes, it helps to document the meaning of type components. Consider the following
+example from <a href="HOWTOs/howto-write-type-annotations.html#funAsSeq">Recipe 5</a>:</p>
+<pre><code class="language-tla">\* @type: (Seq(Int), Int, Int) =&gt; Bool;
+Attacks(queens,i,j)
+</code></pre>
+<p>If you think that an explanation of the arguments would help, you can do that as follows:</p>
+<pre><code class="language-tla">(*
+  @type:
+    (
+      // the column of an n-th queen, for n in the sequence domain
+      Seq(Int),
+      // the index (line number) of the first queen
+      Int,
+      // the index (line number) of the second queen
+      Int
+    ) =&gt; Bool;
+*)
+Attacks(queens,i,j)
+</code></pre>
+<p>You don't have to do that, but if you feel that types can also help you in documenting
+your specification, you have this option.</p>
+<h2><a class="header" href="#known-issues-1" id="known-issues-1">Known issues</a></h2>
+<h3><a class="header" href="#annotations-of-local-operators" id="annotations-of-local-operators">Annotations of LOCAL operators</a></h3>
+<p>In contrast to all other cases, a local operator definition does require
+a type annotation before the keyword <code>LOCAL</code>, not after it. For example:</p>
+<pre><code class="language-tla">\* @type: Int =&gt; Int;
+LOCAL LocalInc(x) == x + 1
+</code></pre>
+<p>This may change later, when the tlaplus <a href="https://github.com/tlaplus/tlaplus/issues/578">Issue 578</a> is resolved.</p>
 <h1><a class="header" href="#tla-language-reference-manual-" id="tla-language-reference-manual-">TLA+ Language Reference Manual 📗</a></h1>
 <p>In this manual, we summarize our knowledge about TLA+ and about its treatment
 with the <a href="https://github.com/informalsystems/apalache">Apalache model checker</a>. This is not the manual on Apalache, which
@@ -6954,7 +6977,7 @@ Next ==
 </code></pre>
 <h1><a class="header" href="#adr-002-types-and-type-annotations" id="adr-002-types-and-type-annotations">ADR-002: types and type annotations</a></h1>
 <table><thead><tr><th>authors</th><th align="right">revision</th></tr></thead><tbody>
-<tr><td>Shon Feder, Igor Konnov, Jure Kukovec</td><td align="right">3</td></tr>
+<tr><td>Shon Feder, Igor Konnov, Jure Kukovec</td><td align="right">4</td></tr>
 </tbody></table>
 <p>This is a follow up of
 <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/internal/rfc/001rfc-types.md">RFC-001</a>, which discusses
@@ -7057,7 +7080,24 @@ Their type is <code>Set(PID)</code>.</li>
 <p>This rule binds a type (produced by <code>T</code>) to a name (produced by <code>typeConst</code>). As you can see from the definition
 of <code>typeConst</code>, the name should be an identifier in the upper case. The type checker should use the bound type instead
 of the constant type. For examples, see <a href="adr/002adr-types.html#useTypeAlias">Section 2.4</a>.</p>
-<h3><a class="header" href="#13-discussion" id="13-discussion">1.3. Discussion</a></h3>
+<p><a id="comments"></a></p>
+<h3><a class="header" href="#13-comments-inside-types" id="13-comments-inside-types">1.3. Comments inside types</a></h3>
+<p>When you introduce records that have dozens of fields, it is useful to explain
+those fields right in the type annotations. For that reason, the type lexer
+supports one-line comments right in the type definitions. The following
+text presents a type definition that contains comments:</p>
+<pre><code>// packets are stored in a set
+Set([
+  // unique sequence number
+  seqno: Int,
+  // payload hash
+  payloadHash: Str
+])
+</code></pre>
+<p>The parser only supports one-line comments that starts with <code>//</code>. Since type
+annotations are currently written inside TLA+ comments, we feel that more
+complex comments would complicate the matters.</p>
+<h3><a class="header" href="#14-discussion" id="14-discussion">1.4. Discussion</a></h3>
 <p>Our type grammar presents a minimal type system that, in our understanding,
 captures all interesting cases that occur in practice. Obviously, this type
 system considers ill-typed some perfectly legal TLA+ values. For instance, we
@@ -7113,7 +7153,7 @@ to infer the type of <code>N</code> and thus state such a theorem. However, with
 assumptions, the user merely states the variable types and the <em>type checker</em>
 has a simple job of checking type consistency and finding the types of the
 expressions.</p>
-<h1><a class="header" href="#usetuset-22-annotating-operators" id="usetuset-22-annotating-operators">useTuseT 2.2. Annotating Operators</a></h1>
+<h2><a class="header" href="#22-annotating-operators" id="22-annotating-operators">2.2. Annotating operators</a></h2>
 <p>Again, write a type annotation <code>@type: &lt;your type&gt;;</code> in a comment that precedes the operator declaration. For example:</p>
 <pre><code class="language-tla">\* @type: (a, Seq(a)) =&gt; Bool;
 Mem(e, es) ==
