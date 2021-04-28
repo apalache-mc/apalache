@@ -177,6 +177,20 @@ class TestDefaultType1Parser extends FunSuite with Checkers with TlaType1Gen {
     assert(SetT1(ConstT1("ENTRY")) == result)
   }
 
+  test("one-line comments") {
+    val text =
+      """
+        |Set([
+        |  // this comment explains something about tags
+        |  tag: Str,
+        |  // this comment explains something about values
+        |  value: Int
+        |])
+        |""".stripMargin
+    val result = DefaultType1Parser.parseType(text)
+    assert(SetT1(RecT1("tag" -> StrT1(), "value" -> IntT1())) == result)
+  }
+
   test("no crashes: either parse, or raise an error") {
     check({
       forAll(alphaStr) { str =>

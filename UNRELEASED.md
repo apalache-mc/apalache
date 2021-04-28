@@ -17,6 +17,7 @@
 ### Features
 
  * apalache quits with a non-zero exit code on counterexample or error, see #249
+ * type checker: supporting one-line comments in types, see #773
 
 ### Bug fixes
 
@@ -29,3 +30,4 @@
 ### Changes
 
  * Builds: removed scoverage from maven, to improve build times
+ * Docs: updated ADR002 and HOWTO on type annotations to explain comments
