@@ -92,7 +92,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
             computeRec(ctx, solver, mkConst(ex.sourceRef, knownType))
           }
         } else {
-          onTypeError(ex.sourceRef, s"Undefined name $name. Introduce a type annotation.")
+          onTypeError(ex.sourceRef, s"Found no annotation for $name. Did you write one?")
           throw new UnwindException
         }
 
@@ -170,7 +170,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
           onTypeFound(name.sourceRef, nameType)
           computeRec(ctx, solver, mkApp(ex.sourceRef, Seq(nameType), args: _*))
         } else {
-          onTypeError(ex.sourceRef, s"Undefined operator name $name. Introduce a type annotation.")
+          onTypeError(ex.sourceRef, s"It looks like the operator $name is used before it is defined. Is it true?")
           throw new UnwindException
         }
 
