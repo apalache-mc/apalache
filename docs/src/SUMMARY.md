@@ -41,7 +41,7 @@
 # Tutorials
 
 - [Overview](./tutorials/index.md)
-- [The Snowcat:snowflate::cat: Type Checker](tutorials/snowcat-tutorial.md)
+- [The Snowcat:snowflake::cat: Type Checker](tutorials/snowcat-tutorial.md)
 
 # TLA+ Language Manual for Engineers
 
