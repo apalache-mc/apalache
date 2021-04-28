@@ -1,3 +1,4 @@
+
 <!-- NOTE:
      Release notes for unreleased changes go here, following this format:
 
@@ -26,6 +27,7 @@
 * Parser: better parser for annotations, see #757
 * Parser: fixed two bugs in the declaration sorter, see #645 and #758
 * The command `config --enable-stats=true` creates `$HOME/.tlaplus` if needed, see #762
+* IO: replaced calls to deprecated JsonReader/JsonWriter. out-parser.json is now compliant with the new format, see #778
 
 ### Changes
 
