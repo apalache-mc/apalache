@@ -225,6 +225,7 @@ an incorrect field access. We probably will introduce more precise types for
 records later. See [Issue 401][].
 
 
+<a id="funAsSeq"></a>
 ## Recipe 5: functions as sequences
 
 Check the example [Queens.tla][] from the repository of TLA+ examples.  It has
@@ -345,22 +346,7 @@ minimizing the burden of specification maintenance. When you add one more field
 to the record type, it suffices to change the definition of the type alias,
 instead of changing the record type everywhere.
 
-
-## Known issues
-
-### Annotations of LOCAL operators
-
-In contrast to all other cases, a local operator definition does require
-a type annotation before the keyword `LOCAL`, not after it. For example:
-
-```tla
-\* @type: Int => Int;
-LOCAL LocalInc(x) == x + 1
-```
-
-This may change later, when the tlaplus [Issue 578][] is resolved.
-
-### Multi-line annotations
+## Recipe 7: Multi-line annotations
 
 A type annotation may span over multiple lines. You may use both the `(* ...
 *)` syntax as well as the single-line syntax `\* ...`. All three examples below
@@ -384,7 +370,52 @@ VARIABLES
 ```
 
 Note that the parser removes the leading strings `"    \*"` from the annotations,
-similar to how multiline strings are treated in modern programming languages.
+similar to how multi-line strings are treated in modern programming languages.
+
+## Recipe 8: Comments in annotations
+
+Sometimes, it helps to document the meaning of type components. Consider the following
+example from [Recipe 5](#funAsSeq):
+
+```tla
+\* @type: (Seq(Int), Int, Int) => Bool;
+Attacks(queens,i,j)
+```
+
+If you think that an explanation of the arguments would help, you can do that as follows:
+
+```tla
+(*
+  @type:
+    (
+      // the column of an n-th queen, for n in the sequence domain
+      Seq(Int),
+      // the index (line number) of the first queen
+      Int,
+      // the index (line number) of the second queen
+      Int
+    ) => Bool;
+*)
+Attacks(queens,i,j)
+```
+
+You don't have to do that, but if you feel that types can also help you in documenting
+your specification, you have this option.
+
+
+## Known issues
+
+### Annotations of LOCAL operators
+
+In contrast to all other cases, a local operator definition does require
+a type annotation before the keyword `LOCAL`, not after it. For example:
+
+```tla
+\* @type: Int => Int;
+LOCAL LocalInc(x) == x + 1
+```
+
+This may change later, when the tlaplus [Issue 578][] is resolved.
 
 
 [old type annotations]: ../apalache/types-and-annotations.md
