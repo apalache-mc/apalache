@@ -170,7 +170,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
           onTypeFound(name.sourceRef, nameType)
           computeRec(ctx, solver, mkApp(ex.sourceRef, Seq(nameType), args: _*))
         } else {
-          onTypeError(ex.sourceRef, s"It looks like the operator $name is used before it is defined. Is it true?")
+          onTypeError(ex.sourceRef, s"The operator $name is used before it is defined.")
           throw new UnwindException
         }
 
