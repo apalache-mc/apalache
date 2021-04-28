@@ -2,7 +2,7 @@
 
 | authors                                | revision |
 | -------------------------------------- | --------:|
-| Shon Feder, Igor Konnov, Jure Kukovec  |        3 |
+| Shon Feder, Igor Konnov, Jure Kukovec  |        4 |
 
 This is a follow up of
 [RFC-001](https://github.com/informalsystems/apalache/blob/unstable/docs/internal/rfc/001rfc-types.md), which discusses
@@ -123,7 +123,29 @@ This rule binds a type (produced by `T`) to a name (produced by `typeConst`). As
 of `typeConst`, the name should be an identifier in the upper case. The type checker should use the bound type instead
 of the constant type. For examples, see [Section 2.4](#useTypeAlias).
 
-### 1.3. Discussion
+<a id="comments"></a>
+### 1.3. Comments inside types
+
+When you introduce records that have dozens of fields, it is useful to explain
+those fields right in the type annotations. For that reason, the type lexer
+supports one-line comments right in the type definitions. The following
+text presents a type definition that contains comments:
+
+```
+// packets are stored in a set
+Set([
+  // unique sequence number
+  seqno: Int,
+  // payload hash
+  payloadHash: Str
+])
+```
+
+The parser only supports one-line comments that starts with `//`. Since type
+annotations are currently written inside TLA+ comments, we feel that more
+complex comments would complicate the matters.
+
+### 1.4. Discussion
 
 Our type grammar presents a minimal type system that, in our understanding,
 captures all interesting cases that occur in practice. Obviously, this type
@@ -202,7 +224,7 @@ assumptions, the user merely states the variable types and the *type checker*
 has a simple job of checking type consistency and finding the types of the
 expressions.
 
-# useTuseT 2.2. Annotating Operators
+## 2.2. Annotating operators
 
 Again, write a type annotation `@type: <your type>;` in a comment that precedes the operator declaration. For example:
 
