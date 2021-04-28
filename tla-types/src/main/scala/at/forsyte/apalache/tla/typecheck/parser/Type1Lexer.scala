@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.typecheck.parser
 
 import java.io.Reader
-
 import at.forsyte.apalache.io.tlc.config.TlcConfigParseError
 
 import scala.util.matching.Regex
@@ -10,7 +9,8 @@ import scala.util.parsing.combinator.RegexParsers
 private[parser] object Type1Lexer extends RegexParsers {
   override def skipWhitespace: Boolean = true
 
-  override val whiteSpace: Regex = "[ \t\r\n\f]+".r
+  // We do not include '\n', as it would not work right with singleComment. Line feeds are skipped in skip.
+  override val whiteSpace: Regex = "[ \t\r\f]+".r
 
   /**
    * Parse the input stream and return the list of tokens. Although collecting the list of all tokens in memory is
@@ -36,8 +36,12 @@ private[parser] object Type1Lexer extends RegexParsers {
           leftCurly | rightCurly | doubleLeftAngle | doubleRightAngle | comma | colon
     ) ///
 
-  // a linefeed is not a white-space
-  def skip: Parser[Unit] = rep(whiteSpace) ^^^ Unit
+  // it is important that linefeed is not in whiteSpace, as otherwise singleComment consumes the whole input!
+  def skip: Parser[Unit] = rep(whiteSpace | singleComment | linefeed) ^^^ Unit
+
+  def linefeed: Parser[Unit] = "\n" ^^^ Unit
+
+  def singleComment: Parser[Unit] = "//" ~ rep(not("\n") ~ ".".r) ^^^ Unit
 
   private def identifier: Parser[IDENT] = {
     "[A-Za-z_][A-Za-z0-9_]*".r ^^ { name => IDENT(name) }
