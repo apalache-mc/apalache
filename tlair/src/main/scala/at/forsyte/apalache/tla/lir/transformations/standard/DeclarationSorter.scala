@@ -64,7 +64,9 @@ class DeclarationSorter extends TlaModuleTransformation with LazyLogging {
       for (fromId <- witnesses) {
         writer.println("""  n%s[label="%s"];""".format(fromId, getName(fromId)))
         for (toId <- depsGraph.getOrElse(fromId, Set.empty)) {
-          writer.println("""  n%s -> n%s;""".format(fromId, toId))
+          if (witnesses.contains(toId)) {
+            writer.println("""  n%s -> n%s;""".format(fromId, toId))
+          }
         }
       }
       writer.println("}")
@@ -90,7 +92,6 @@ class DeclarationSorter extends TlaModuleTransformation with LazyLogging {
       map + (defId -> (map(defId) ++ uses))
     }
 
-    val findUses = findExprUses(nameToId)
     // create a map that contains the list of used-by IDs for every declaration, excluding the declaration itself
     val initMap = Map(declarations.map { d => d.ID -> Set.empty[UID] }: _*)
     declarations.foldLeft(initMap) {
@@ -101,11 +102,13 @@ class DeclarationSorter extends TlaModuleTransformation with LazyLogging {
         map + (d.ID -> Set.empty[UID])
 
       case (map, d @ TlaAssumeDecl(body)) =>
-        val uses = (findUses(body) - d.ID)
+        val uses = findExprUses(nameToId)(body) - d.ID
         updateDependencies(map, d.ID, uses)
 
-      case (map, d @ TlaOperDecl(_, _, body)) =>
-        val uses = (findUses(body) - d.ID)
+      case (map, d @ TlaOperDecl(_, params, body)) =>
+        // the operator parameters may shadow the name of  top-level operator, so we have to exclude parameter names
+        val nameToIdWithoutParams = nameToId -- params.map(_.name)
+        val uses = findExprUses(nameToIdWithoutParams)(body) - d.ID
         updateDependencies(map, d.ID, uses)
 
       case (map, _) => map
@@ -139,7 +142,9 @@ class DeclarationSorter extends TlaModuleTransformation with LazyLogging {
         // Join the uses of the body and the declarations.
         // We do not track dependencies between the LET-IN operators, because they are scoped and ordered.
         decls.foldLeft(usesRec(body)) { (u, d) =>
-          u ++ usesRec(d.body)
+          // the operator parameters may shadow the name of  top-level operator, so we have to exclude parameter names
+          val nameToIdWithoutParams = nameToId -- d.formalParams.map(_.name)
+          u ++ findExprUses(nameToIdWithoutParams)(d.body)
         }
 
       case _ =>
