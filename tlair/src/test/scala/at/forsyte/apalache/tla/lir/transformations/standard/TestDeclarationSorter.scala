@@ -44,6 +44,28 @@ class TestDeclarationSorter extends FunSuite with BeforeAndAfterEach {
     assertThrows[CyclicDependencyError](DeclarationSorter.instance(input))
   }
 
+  test("regression: a cycle hidden via a call") {
+    // regression for #758
+    val foo = tla.declOp("Foo", tla.int(1))
+    val bar = tla.declOp("Bar", tla.appOp(tla.name("Foo"), tla.appOp(tla.name("Baz"))))
+    val baz = tla.declOp("Baz", tla.appOp(tla.name("Foo"), tla.appOp(tla.name("Bar"))))
+    val input = new TlaModule("test", List(foo, bar, baz))
+    assertThrows[CyclicDependencyError](DeclarationSorter.instance(input))
+  }
+
+  test("regression: a false cycle") {
+    // regression for #645
+
+    // The following two declarations do not form a cycle, as Foo uses it's parameter 'pid', not calling the operator 'pid'.
+    // Foo(pid) == 1
+    val foo = tla.declOp("Foo", tla.name("pid"), OperParam("pid"))
+    // pid == Foo(2)
+    val pid = tla.declOp("pid", tla.appOp(tla.name("Foo"), tla.int(2)))
+    val input = new TlaModule("test", List(foo, pid))
+    val expected = new TlaModule("test", List(foo, pid))
+    assert(expected == DeclarationSorter.instance(input))
+  }
+
   test("Foo uses VARIABLE x out of order") {
     val foo = tla.declOp("Foo", tla.name("x"))
     val x = TlaVarDecl("x")
