@@ -35,7 +35,13 @@
 
 # HOWTOs
 
+- [Overview](HOWTOs/index.md)
 - [How to write type annotations](./HOWTOs/howto-write-type-annotations.md)
+
+# Tutorials
+
+- [Overview](./tutorials/index.md)
+- [The Snowcat:snowflate::cat: Type Checker](tutorials/snowcat-tutorial.md)
 
 # TLA+ Language Manual for Engineers
 
