@@ -1,4 +1,3 @@
-
 <!-- NOTE:
      Release notes for unreleased changes go here, following this format:
 
