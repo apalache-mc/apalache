@@ -92,7 +92,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
             computeRec(ctx, solver, mkConst(ex.sourceRef, knownType))
           }
         } else {
-          onTypeError(ex.sourceRef, s"Found no annotation for $name. Did you write one?")
+          onTypeError(ex.sourceRef, s"No annotation found for $name.")
           throw new UnwindException
         }
 
