@@ -555,7 +555,7 @@ class PrettyWriter(writer: PrintWriter, layout: TextLayout = new TextLayout,
   }
 
   private def wrapWithComment(comment: Doc): Doc = {
-    text("(*") <> softbreak <> comment <> softbreak <> text("*)")
+    text("(*") <> space <> comment <> space <> text("*)")
   }
 
   private def wrapWithComment(strings: List[String]): Doc = {
