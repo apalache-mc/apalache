@@ -79,7 +79,7 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
   override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit = {
     val pretty = new PrettyWriter(writer)
 
-    pretty.writeHeader("counterexample", List(rootModule))
+    pretty.writeHeader("counterexample", List(rootModule.name))
 
     states.zipWithIndex.foreach {
       case (state, 0) =>

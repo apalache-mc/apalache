@@ -34,8 +34,8 @@ class PrettyWriterWithAnnotations(annotationStore: AnnotationStore, writer: Prin
    *
    * @param mod a module
    */
-  override def write(mod: TlaModule): Unit = {
-    prettyWriter.write(mod)
+  override def write(mod: TlaModule, extendedModuleNames: List[String]): Unit = {
+    prettyWriter.write(mod, extendedModuleNames)
   }
 
   /**

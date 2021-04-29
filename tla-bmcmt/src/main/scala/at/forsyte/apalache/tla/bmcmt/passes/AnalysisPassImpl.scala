@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.passes
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.bmcmt.CheckerException
 import at.forsyte.apalache.tla.bmcmt.analyses._
-import at.forsyte.apalache.tla.lir.io.TlaWriterFactory
+import at.forsyte.apalache.tla.lir.io.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.ModuleByExTransformer
 import at.forsyte.apalache.tla.lir.{NullEx, TlaAssumeDecl, TlaEx, TlaOperDecl}
@@ -77,7 +77,7 @@ class AnalysisPassImpl @Inject() (val options: PassOptions, hintsStoreImpl: Form
     nextPass.setModule(marked)
 
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    writerFactory.writeModuleToFile(marked, new File(outdir.toFile, "out-analysis.tla"))
+    writerFactory.writeModuleToFile(marked, TlaWriter.STANDARD_MODULES, new File(outdir.toFile, "out-analysis.tla"))
 
     logger.info("  > Introduced expression grades")
     logger.info("  > Introduced %d formula hints".format(hintsStoreImpl.store.size))

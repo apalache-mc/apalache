@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.pp.passes
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.io.TlaWriterFactory
+import at.forsyte.apalache.tla.lir.io.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
@@ -64,10 +64,8 @@ class PreproPassImpl @Inject() (
       logger.info(s"  > $name")
       val transfomed = xformer(m)
       // dump the result of preprocessing after every transformation, in case the next one fails
-      writerFactory.writeModuleToFile(
-          transfomed,
-          new File(outdir.toFile, s"out-prepro-$name.tla")
-      )
+      writerFactory.writeModuleToFile(transfomed, TlaWriter.STANDARD_MODULES,
+          new File(outdir.toFile, s"out-prepro-$name.tla"))
       transfomed
     }
 
@@ -76,7 +74,7 @@ class PreproPassImpl @Inject() (
     val afterModule = renaming.renameInModule(preprocessed)
 
     // dump the result of preprocessing
-    writerFactory.writeModuleToFile(afterModule, new File(outdir.toFile, "out-prepro.tla"))
+    writerFactory.writeModuleToFile(afterModule, TlaWriter.STANDARD_MODULES, new File(outdir.toFile, "out-prepro.tla"))
     outputTlaModule = Some(afterModule)
 
     if (options.getOrElse("general", "debug", false)) {

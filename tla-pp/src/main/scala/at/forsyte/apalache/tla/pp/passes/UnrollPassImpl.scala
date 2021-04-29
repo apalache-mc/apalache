@@ -4,7 +4,7 @@ import java.io.File
 import java.nio.file.Path
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.lir.TlaModule
-import at.forsyte.apalache.tla.lir.io.{PrettyWriter, TlaWriterFactory}
+import at.forsyte.apalache.tla.lir.io.{PrettyWriter, TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.tla.pp.{UniqueNameGenerator, Unroller}
@@ -61,7 +61,7 @@ class UnrollPassImpl @Inject() (val options: PassOptions, nameGenerator: UniqueN
 
     // dump the result of preprocessing
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    writerFactory.writeModuleToFile(newModule, new File(outdir.toFile, "out-unroll.tla"))
+    writerFactory.writeModuleToFile(newModule, TlaWriter.STANDARD_MODULES, new File(outdir.toFile, "out-unroll.tla"))
 
     outputTlaModule = Some(newModule)
     true

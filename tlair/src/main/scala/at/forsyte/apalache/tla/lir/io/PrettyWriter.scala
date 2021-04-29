@@ -38,7 +38,8 @@ class PrettyWriter(writer: PrintWriter, layout: TextLayout = new TextLayout,
 
   private def prettyWriteDoc(doc: Doc): Unit = writer.write(pretty(doc, layout.textWidth).layout)
 
-  def write(mod: TlaModule): Unit = prettyWriteDoc(toDoc(mod))
+  def write(mod: TlaModule, extendedModuleNames: List[String] = List.empty): Unit =
+    prettyWriteDoc(toDoc(mod, extendedModuleNames))
 
   // Declarations have a trailing empty line
   def write(decl: TlaDecl): Unit = prettyWriteDoc(toDoc(decl) <> line <> line)
@@ -49,7 +50,7 @@ class PrettyWriter(writer: PrintWriter, layout: TextLayout = new TextLayout,
     prettyWriteDoc(wrapWithComment(commentStr) <> line)
   }
 
-  def writeHeader(moduleName: String, extensionModuleNames: List[TlaModule] = List.empty): Unit =
+  def writeHeader(moduleName: String, extensionModuleNames: List[String] = List.empty): Unit =
     prettyWriteDoc(
         moduleNameDoc(moduleName) <> moduleExtendsDoc(extensionModuleNames) <> line
     )
@@ -62,14 +63,14 @@ class PrettyWriter(writer: PrintWriter, layout: TextLayout = new TextLayout,
     s"${List.fill(nDashes)("-").mkString}$middle${List.fill(nDashes)("-").mkString}" <> line
   }
 
-  private def moduleExtendsDoc(moduleNames: List[TlaModule]): Doc =
+  private def moduleExtendsDoc(moduleNames: List[String]): Doc =
     if (moduleNames.isEmpty) emptyDoc
-    else line <> text(s"EXTENDS ${moduleNames.map(_.name).mkString(", ")}") <> line
+    else line <> text("EXTENDS") <> space <> hsep(moduleNames.map(text), comma) <> line
 
   private def moduleTerminalDoc: Doc =
     s"${List.fill(layout.textWidth)("=").mkString}" <> line
 
-  def toDoc(mod: TlaModule, extensionModuleNames: List[TlaModule] = List.empty): Doc = {
+  def toDoc(mod: TlaModule, extensionModuleNames: List[String] = List.empty): Doc = {
     moduleNameDoc(mod.name) <>
       moduleExtendsDoc(extensionModuleNames) <>
       lsep((mod.declarations.toList map toDoc) :+ moduleTerminalDoc, line)

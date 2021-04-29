@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.pp.passes
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.io.TlaWriterFactory
+import at.forsyte.apalache.tla.lir.io.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
@@ -94,7 +94,7 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
 
     // dump the result of preprocessing
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    writerFactory.writeModuleToFile(filtered, new File(outdir.toFile, "out-inline.tla"))
+    writerFactory.writeModuleToFile(filtered, TlaWriter.STANDARD_MODULES, new File(outdir.toFile, "out-inline.tla"))
 
     outputTlaModule = Some(filtered)
     true
