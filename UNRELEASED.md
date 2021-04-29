@@ -27,6 +27,7 @@
 * Parser: fixed two bugs in the declaration sorter, see #645 and #758
 * Printer: fixed the output for EXCEPT, see #746
 * Printer: fixed pretty printing of annotations, see #633
+* Printer: extending the standard modules, see #137
 * The command `config --enable-stats=true` creates `$HOME/.tlaplus` if needed, see #762
 
 ### Changes
