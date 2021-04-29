@@ -292,16 +292,27 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
         toDoc(parentPrecedence, OperEx(TlaControlOper.caseWithOther, NullEx +: guardsAndUpdates: _*)(opex.typeTag))
 
       case OperEx(TlaFunOper.except, funEx, keysAndValues @ _*) =>
-        val (ks, vs) = keysAndValues.zipWithIndex partition (_._2 % 2 == 0)
-        val (keys, values) = (ks.map(_._1), vs.map(_._1))
+        val (ks, vs) = TlaOper.deinterleave(keysAndValues)
+
+        val indexDocs = ks.collect {
+          case OperEx(TlaFunOper.tuple, indices @ _*) =>
+            val docs = indices.map(toDoc((0, 0), _))
+            ssep(docs.toList, text(",") <> softline)
+
+          case _ =>
+            throw new MalformedTlaError("Malformed expression", expr)
+        }
+
+        val valueDocs = vs.map(v => toDoc((0, 0), v))
+
         // format each key-value pair (k, v) into ![k] = v
         val boxes =
-          keys
-            .zip(values)
-            .map(p =>
-              group(text("!") <> brackets(toDoc((0, 0), p._1)) <> space <> text("=") <>
-                    nest(line <> toDoc((0, 0), p._2)))
-            ) ///
+          indexDocs
+            .zip(valueDocs)
+            .map { case (index, value) =>
+              group(text("!") <> brackets(index) <> space <> text("=") <>
+                    nest(line <> value))
+            } ///
 
         val updates = ssep(boxes.toList, comma <> line)
 

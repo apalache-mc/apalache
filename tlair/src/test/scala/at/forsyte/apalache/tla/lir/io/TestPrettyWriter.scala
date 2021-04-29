@@ -597,10 +597,21 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("a one-line EXCEPT") {
     val writer = new PrettyWriter(printWriter, 80)
-    val expr = except(name("f"), name("k"), name("v"))
+    // recall that EXCEPT indices are always wrapped in a tuple
+    val expr = except(name("f"), tuple(name("k")), name("v"))
     writer.write(expr)
     printWriter.flush()
     val expected = """[ f EXCEPT ![k] = v ]""".stripMargin
+    assert(expected == stringWriter.toString)
+  }
+
+  test("a two-argument EXCEPT") {
+    val writer = new PrettyWriter(printWriter, 80)
+    // recall that EXCEPT indices are always wrapped in a tuple
+    val expr = except(name("f"), tuple(name("i"), name("k")), name("v"))
+    writer.write(expr)
+    printWriter.flush()
+    val expected = """[ f EXCEPT ![i, k] = v ]""".stripMargin
     assert(expected == stringWriter.toString)
   }
 
@@ -608,7 +619,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     val writer = new PrettyWriter(printWriter, 40)
     val expr = except(
         name("verylongname1"),
-        name("verylongname2"),
+        tuple(name("verylongname2")),
         name("verylongname3")
     ) ///
 
@@ -626,9 +637,9 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     val writer = new PrettyWriter(printWriter, 40)
     val expr = except(
         name("verylongname1"),
-        name("verylongname2"),
+        tuple(name("verylongname2")),
         name("verylongname3"),
-        name("verylongname4"),
+        tuple(name("verylongname4")),
         name("verylongname5")
     ) ///
 
