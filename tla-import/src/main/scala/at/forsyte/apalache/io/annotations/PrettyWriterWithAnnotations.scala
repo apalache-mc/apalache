@@ -1,8 +1,8 @@
 package at.forsyte.apalache.io.annotations
 
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
-import at.forsyte.apalache.tla.lir.TlaDecl
-import at.forsyte.apalache.tla.lir.io.{PrettyWriter, TlaWriter}
+import at.forsyte.apalache.tla.lir.{TlaDecl, TlaEx, TlaModule}
+import at.forsyte.apalache.tla.lir.io.{PrettyWriter, TextLayout, TlaDeclAnnotator, TlaWriter}
 
 import java.io.PrintWriter
 
@@ -11,23 +11,48 @@ import java.io.PrintWriter
  *
  * @author Igor Konnov
  */
-class PrettyWriterWithAnnotations(annotationStore: AnnotationStore, writer: PrintWriter, textWidth: Int = 80,
-    indent: Int = 2)
-    extends PrettyWriter(writer, textWidth, indent) with TlaWriter {
+class PrettyWriterWithAnnotations(annotationStore: AnnotationStore, writer: PrintWriter,
+    layout: TextLayout = TextLayout())
+    extends TlaWriter {
 
-  // override the translation of a declaration
-  override def toDoc(decl: TlaDecl): Doc = {
-    val underlyingDoc = super.toDoc(decl)
-    annotationStore
-      .get(decl.ID)
-      .flatMap { annotations =>
-        Some(annotations.foldRight(underlyingDoc) { (anno, doc) =>
-          // A simple implementation that is using Annotation.toPrettyString.
-          // In the future, we should implement a full pretty printer both for annotations and types.
-          "(*" <> space <> anno.toPrettyString <> space <> "*)" <>
-            linebreak <> doc
-        })
+  private object annotator extends TlaDeclAnnotator {
+    override def apply(layout: TextLayout)(decl: TlaDecl): Option[List[String]] = {
+      annotationStore.get(decl.ID) match {
+        case None | Some(List()) =>
+          None
+
+        case Some(annotations) =>
+          Some(annotations.map(_.toPrettyString))
       }
-      .getOrElse(underlyingDoc)
+    }
+  }
+
+  private val prettyWriter: PrettyWriter = new PrettyWriter(writer, layout, annotator)
+
+  /**
+   * Write a module, including all declarations
+   *
+   * @param mod a module
+   */
+  override def write(mod: TlaModule): Unit = {
+    prettyWriter.write(mod)
+  }
+
+  /**
+   * Write a declaration, including all expressions
+   *
+   * @param decl a declaration
+   */
+  override def write(decl: TlaDecl): Unit = {
+    prettyWriter.write(decl)
+  }
+
+  /**
+   * Write a TLA+ expression.
+   *
+   * @param expr an expression
+   */
+  override def write(expr: TlaEx): Unit = {
+    prettyWriter.write(expr)
   }
 }

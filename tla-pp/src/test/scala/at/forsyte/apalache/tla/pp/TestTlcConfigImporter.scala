@@ -5,7 +5,7 @@ import at.forsyte.apalache.io.tlc.TlcConfigParserApalache
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.Untyped
-import at.forsyte.apalache.tla.lir.io.PrettyWriter
+import at.forsyte.apalache.tla.lir.io.{PrettyWriter, TextLayout}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.typecheck.{MultiTypeCheckerListener, TypeCheckerTool}
 import org.junit.runner.RunWith
@@ -21,6 +21,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
   private var annotationStore: AnnotationStore = _
   private var sanyImporter: SanyImporter = _
   private var typeChecker: TypeCheckerTool = _
+  private val layout80 = TextLayout().copy(textWidth = 80)
 
   override def beforeEach() {
     sourceStore = new SourceStore()
@@ -44,7 +45,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
     val mod2 = new TlcConfigImporter(config, new IdleTracker())(typedModule)
     val stringWriter = new StringWriter()
     val printWriter = new PrintWriter(stringWriter)
-    val writer = new PrettyWriter(printWriter, 80)
+    val writer = new PrettyWriter(printWriter, layout80)
     writer.write(mod2)
     printWriter.flush()
     assert(stringWriter.toString == expected)
