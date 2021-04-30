@@ -5,7 +5,7 @@ import at.forsyte.apalache.io.tlc.TlcConfigParserApalache
 import at.forsyte.apalache.io.tlc.config._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.io.{PrettyWriter, TlaWriterFactory}
+import at.forsyte.apalache.tla.lir.io.{PrettyWriter, TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaOper, TlaTempOper}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
@@ -70,10 +70,8 @@ class ConfigurationPassImpl @Inject() (
 
     // dump the configuration result
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    writerFactory.writeModuleToFile(
-        configuredModule,
-        new File(outdir.toFile, "out-config.tla")
-    )
+    writerFactory.writeModuleToFile(configuredModule, TlaWriter.STANDARD_MODULES,
+        new File(outdir.toFile, "out-config.tla"))
 
     outputTlaModule = Some(configuredModule)
     true

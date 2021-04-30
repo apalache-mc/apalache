@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.pp.passes
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.lir.TlaModule
-import at.forsyte.apalache.tla.lir.io.TlaWriterFactory
+import at.forsyte.apalache.tla.lir.io.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.pp.{Desugarer, UniqueNameGenerator}
@@ -46,7 +46,7 @@ class DesugarerPassImpl @Inject() (
 
     // dump the result of preprocessing
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    writerFactory.writeModuleToFile(output, new File(outdir.toFile, "out-desugarer.tla"))
+    writerFactory.writeModuleToFile(output, TlaWriter.STANDARD_MODULES, new File(outdir.toFile, "out-desugarer.tla"))
     outputTlaModule = Some(output)
 
     true

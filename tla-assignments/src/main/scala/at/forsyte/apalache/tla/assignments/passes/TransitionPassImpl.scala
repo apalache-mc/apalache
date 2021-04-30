@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.assignments._
 import at.forsyte.apalache.tla.imp.findBodyOf
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.io.TlaWriterFactory
+import at.forsyte.apalache.tla.lir.io.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
@@ -78,7 +78,8 @@ class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceSto
 
     // print the resulting module
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    writerFactory.writeModuleToFile(outModule, new File(outdir.toFile, "out-transition.tla"))
+    writerFactory.writeModuleToFile(outModule, TlaWriter.STANDARD_MODULES,
+        new File(outdir.toFile, "out-transition.tla"))
 
     setModule(outModule)
     true

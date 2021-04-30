@@ -4,7 +4,7 @@ import java.io.File
 import java.nio.file.Path
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.lir.TlaModule
-import at.forsyte.apalache.tla.lir.io.{PrettyWriter, TlaWriterFactory}
+import at.forsyte.apalache.tla.lir.io.{PrettyWriter, TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -57,7 +57,7 @@ class OptPassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator,
 
     // dump the result of preprocessing
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    writerFactory.writeModuleToFile(optimized, new File(outdir.toFile, "out-opt.tla"))
+    writerFactory.writeModuleToFile(optimized, TlaWriter.STANDARD_MODULES, new File(outdir.toFile, "out-opt.tla"))
 
     outputTlaModule = Some(optimized)
     true
