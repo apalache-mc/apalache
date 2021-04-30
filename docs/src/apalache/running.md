@@ -61,6 +61,12 @@ environment variable to the docker container:
 $ JVM_ARGS="-Xmx1G" docker run -e JVM_ARGS --rm -v <your-spec-directory>:/var/apalache apalache/mc <args>
 ```
 
+To track memory usage with: `jcmd <pid> VM.native_memory summary`, you can set
+
+```
+JVM_ARGS="-XX:NativeMemoryTracking=summary"
+```
+
 ### Bounded model checking
 
 By default, Apalache performs *bounded model checking*, that is, it encodes a symbolic execution of length `k` and an
