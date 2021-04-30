@@ -43,6 +43,24 @@ The arguments are as follows:
 If an initialization predicate, transition predicate, or invariant is specified both in the configuration file, and on
 the command line, the command line parameters take precedence over those in the configuration file.
 
+### Supplying JVM arguments
+
+You can supply JVM argument to be used when running Apalache by setting the
+environment variable `JVM_ARGS`. For example, to change the JVM heap size from
+the default (`4096m`) to `1G` invoke Apalache as follows:
+
+```sh
+JVM_ARGS="-Xmx1G" apalache-mc <args>
+```
+
+If you are running Apalache via docker directly (instead of using the script in
+`$APALACHE_HOME/script/run-docker.sh`), you'll also need to expose the
+environment variable to the docker container:
+
+```sh
+$ JVM_ARGS="-Xmx1G" docker run -e JVM_ARGS --rm -v <your-spec-directory>:/var/apalache apalache/mc <args>
+```
+
 ### Bounded model checking
 
 By default, Apalache performs *bounded model checking*, that is, it encodes a symbolic execution of length `k` and an
