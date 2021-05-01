@@ -12,12 +12,12 @@
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
 ### Documentation
 
- * RFC006 on unit testing: see #741
+* RFC006 on unit testing: see #741
 
 ### Features
 
- * apalache quits with a non-zero exit code on counterexample or error, see #249
- * type checker: supporting one-line comments in types, see #773
+* apalache quits with a non-zero exit code on counterexample or error, see #249
+* type checker: supporting one-line comments in types, see #773
 
 ### Bug fixes
 
@@ -32,5 +32,6 @@
 
 ### Changes
 
- * Builds: removed scoverage from maven, to improve build times
- * Docs: updated ADR002 and HOWTO on type annotations to explain comments
+* Builds: removed scoverage from maven, to improve build times
+* Docs: updated ADR002 and HOWTO on type annotations to explain comments
+* CLI: Users can set JVM args via the JVM_ARGS env var, see #790

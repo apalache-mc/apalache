@@ -94,6 +94,28 @@ $ apalache-mc help
 EXITCODE: OK
 ```
 
+### executable responds to JVM_ARGS environment variable
+
+We can set some JVM args and still have the default max heap size supplied. (Note we also trim out the `TLA_Library` argument, since is environment sensitive and makes the tests unstable.)
+
+```sh
+$ JVM_ARGS="-Xms1m -XX:+UseSerialGC" apalache-mc version | sed 's/-DTLA-Library.*//'
+...
+# JVM args: -Xms1m -XX:+UseSerialGC -Xmx4096m
+...
+EXITCODE: OK
+```
+
+If we set the max heap size (with `-Xmx`) it will override the default max heap size:
+
+```sh
+$ JVM_ARGS="-Xmx16m" apalache-mc version | sed 's/-DTLA-Library.*//'
+...
+# JVM args: -Xmx16m
+...
+EXITCODE: OK
+```
+
 ## running the parse command
 
 This command parses a TLA+ specification with the SANY parser.

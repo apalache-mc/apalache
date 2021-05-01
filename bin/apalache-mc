@@ -44,11 +44,14 @@ else
     TLA_PATH="$TLA_LIB:$TLA_PATH"
 fi
 
-# 1. The maximum heap size, Z3 will use much more as a native library.
-JVM_ARGS="-Xmx4096m"
+JVM_ARGS=${JVM_ARGS:-""}
 
-# uncomment to track memory usage with: jcmd <pid> VM.native_memory summary
-#JVM_ARGS="${JVM_ARGS} -XX:NativeMemoryTracking=summary"
+# Check of the heap size is already set
+if ! [[ "$JVM_ARGS" =~ -Xmx ]]
+then
+    # If not, set our default heap size
+    JVM_ARGS="${JVM_ARGS} -Xmx4096m"
+fi
 
 JVM_ARGS="$JVM_ARGS -DTLA-Library=$TLA_PATH"
 
