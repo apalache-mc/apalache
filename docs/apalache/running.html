@@ -215,6 +215,20 @@ have priority over the options that are passed with the option <code>--tuning</c
 </ul>
 <p>If an initialization predicate, transition predicate, or invariant is specified both in the configuration file, and on
 the command line, the command line parameters take precedence over those in the configuration file.</p>
+<h3><a class="header" href="#supplying-jvm-arguments" id="supplying-jvm-arguments">Supplying JVM arguments</a></h3>
+<p>You can supply JVM argument to be used when running Apalache by setting the
+environment variable <code>JVM_ARGS</code>. For example, to change the JVM heap size from
+the default (<code>4096m</code>) to <code>1G</code> invoke Apalache as follows:</p>
+<pre><code class="language-sh">JVM_ARGS=&quot;-Xmx1G&quot; apalache-mc &lt;args&gt;
+</code></pre>
+<p>If you are running Apalache via docker directly (instead of using the script in
+<code>$APALACHE_HOME/script/run-docker.sh</code>), you'll also need to expose the
+environment variable to the docker container:</p>
+<pre><code class="language-sh">$ JVM_ARGS=&quot;-Xmx1G&quot; docker run -e JVM_ARGS --rm -v &lt;your-spec-directory&gt;:/var/apalache apalache/mc &lt;args&gt;
+</code></pre>
+<p>To track memory usage with: <code>jcmd &lt;pid&gt; VM.native_memory summary</code>, you can set</p>
+<pre><code>JVM_ARGS=&quot;-XX:NativeMemoryTracking=summary&quot;
+</code></pre>
 <h3><a class="header" href="#bounded-model-checking" id="bounded-model-checking">Bounded model checking</a></h3>
 <p>By default, Apalache performs <em>bounded model checking</em>, that is, it encodes a symbolic execution of length <code>k</code> and an
 invariant violation in SMT:</p>
