@@ -1,13 +1,11 @@
 package at.forsyte.apalache.tla.lir.io
 
 import java.io.{File, FileWriter, PrintWriter}
-
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlcOper, _}
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir._
 import org.bitbucket.inkytonik.kiama.output.PrettyPrinter
-
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 import scala.collection.immutable.HashMap
@@ -411,9 +409,9 @@ class PrettyWriter(writer: PrintWriter, layout: TextLayout = new TextLayout,
         val commaSeparated = ssep(argDocs, "," <> softline)
         val doc =
           if (args.isEmpty) {
-            text(name)
+            text(parseableName(name))
           } else {
-            group(name <> parens(commaSeparated))
+            group(parseableName(name) <> parens(commaSeparated))
           }
 
         wrapWithParen(parentPrecedence, op.precedence, doc)
@@ -426,15 +424,17 @@ class PrettyWriter(writer: PrintWriter, layout: TextLayout = new TextLayout,
 
         wrapWithParen(parentPrecedence, op.precedence, doc)
 
-      // TODO: fix funSet
       case OperEx(op, args @ _*) =>
         val argDocs = args.map(toDoc(op.precedence, _)).toList
         val commaSeparated = ssep(argDocs, "," <> softline)
+        // The standard operators may contain a '!' that refers to the standard module. Remove it.
+        val lastIndexOfBang = op.name.lastIndexOf("!")
+        val unqualifiedName = if (lastIndexOfBang < 0) op.name else (op.name.substring(lastIndexOfBang + 1))
         val doc =
           if (args.isEmpty) {
-            text(op.name)
+            text(unqualifiedName)
           } else {
-            group(op.name <> parens(commaSeparated))
+            group(unqualifiedName <> parens(commaSeparated))
           }
 
         wrapWithParen(parentPrecedence, op.precedence, doc)
@@ -462,16 +462,16 @@ class PrettyWriter(writer: PrintWriter, layout: TextLayout = new TextLayout,
     decl match {
       case TlaConstDecl(name) =>
         if (annotations.isEmpty) {
-          group("CONSTANT" <> space <> name)
+          group("CONSTANT" <> space <> parseableName(name))
         } else {
-          "CONSTANT" <> nest(line <> wrapWithComment(annotations.get) <> line <> name)
+          "CONSTANT" <> nest(line <> wrapWithComment(annotations.get) <> line <> parseableName(name))
         }
 
       case TlaVarDecl(name) =>
         if (annotations.isEmpty) {
-          group("VARIABLE" <> space <> name)
+          group("VARIABLE" <> space <> parseableName(name))
         } else {
-          "VARIABLE" <> nest(line <> wrapWithComment(annotations.get) <> line <> name)
+          "VARIABLE" <> nest(line <> wrapWithComment(annotations.get) <> line <> parseableName(name))
         }
 
       case TlaAssumeDecl(body) =>
@@ -500,7 +500,7 @@ class PrettyWriter(writer: PrintWriter, layout: TextLayout = new TextLayout,
         // [x \in S]
         val binding = brackets(binders)
         // f[x \in S] == e
-        val doc = name <> binding <> space <> "==" <> space <> toDoc((0, 0), body)
+        val doc = parseableName(name) <> binding <> space <> "==" <> space <> toDoc((0, 0), body)
         recFunName = REC_FUN_UNDEFINED
         if (annotations.isEmpty) {
           group(doc)
@@ -514,7 +514,7 @@ class PrettyWriter(writer: PrintWriter, layout: TextLayout = new TextLayout,
           if (!tod.isRecursive) {
             None
           } else {
-            Some("RECURSIVE" <> space <> toDoc(OperParam(name, params.length)))
+            Some("RECURSIVE" <> space <> toDoc(OperParam(parseableName(name), params.length)))
           }
 
         val paramsDoc =
@@ -524,7 +524,7 @@ class PrettyWriter(writer: PrintWriter, layout: TextLayout = new TextLayout,
             parens(ssep(params map toDoc, "," <> softline))
           }
 
-        val declDoc = group(name <> paramsDoc <> space <> "==" <> nest(line <> toDoc((0, 0), body)))
+        val declDoc = group(parseableName(name) <> paramsDoc <> space <> "==" <> nest(line <> toDoc((0, 0), body)))
         if (annotations.isEmpty) {
           recPreambule.map(_ <> line <> declDoc).getOrElse(declDoc)
         } else {
@@ -536,9 +536,9 @@ class PrettyWriter(writer: PrintWriter, layout: TextLayout = new TextLayout,
 
   private def toDoc(param: OperParam): Doc = {
     if (param.isOperator) {
-      group(param.name <> parens(ssep(List.fill(param.arity)("_"), "," <> softline)))
+      group(parseableName(param.name) <> parens(ssep(List.fill(param.arity)("_"), "," <> softline)))
     } else {
-      param.name
+      parseableName(param.name)
     }
   }
 
@@ -567,6 +567,12 @@ class PrettyWriter(writer: PrintWriter, layout: TextLayout = new TextLayout,
       case ValEx(TlaStr(s)) => s
       case _                => throw new IllegalStateException("Expected a string as a record key, found: " + ex)
     }
+  }
+
+  private def parseableName(name: String): String = {
+    // An operator name may contain '!', if it comes from an instance. Replace it '!' with "_I_".
+    // Additionally, the name may contain '$', which is produced during preprocessing. Replace it with "_SI_".
+    name.replaceAll("!", "_i_").replaceAll("\\$", "_si_")
   }
 
   def close(): Unit = writer.close()

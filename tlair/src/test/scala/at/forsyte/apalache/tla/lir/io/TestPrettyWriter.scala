@@ -42,6 +42,20 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     assert("A" == stringWriter.toString)
   }
 
+  test("apply A!B") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    writer.write(OperEx(TlaOper.apply, name("A!B")))
+    printWriter.flush()
+    assert("A_i_B" == stringWriter.toString)
+  }
+
+  test("apply A$B") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    writer.write(OperEx(TlaOper.apply, name("A$B")))
+    printWriter.flush()
+    assert("A_si_B" == stringWriter.toString)
+  }
+
   test("apply A to 1") {
     val writer = new PrettyWriter(printWriter, layout80)
     writer.write(OperEx(TlaOper.apply, name("A"), int(1)))
@@ -665,7 +679,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     val expr = card(name("S"))
     writer.write(expr)
     printWriter.flush()
-    val expected = """FiniteSets!Cardinality(S)""".stripMargin
+    val expected = """Cardinality(S)""".stripMargin
     assert(expected == stringWriter.toString)
   }
 
@@ -683,7 +697,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     val expr = append(tuple(name("a")), name("b"))
     writer.write(expr)
     printWriter.flush()
-    val expected = """Sequences!Append(<<a>>, b)""".stripMargin
+    val expected = """Append(<<a>>, b)""".stripMargin
     assert(expected == stringWriter.toString)
   }
 
