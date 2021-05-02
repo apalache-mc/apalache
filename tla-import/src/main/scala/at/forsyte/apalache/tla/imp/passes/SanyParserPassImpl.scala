@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.imp.passes
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
-import at.forsyte.apalache.tla.imp.{SanyImporter, SanyImporterException}
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.io.json.impl.{TlaToUJson, UJsonRep, UJsonToTla}
 import at.forsyte.apalache.tla.imp.src.SourceStore
@@ -10,6 +9,9 @@ import at.forsyte.apalache.tla.lir.io.{TlaWriterFactory, UntypedReader}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.standard.DeclarationSorter
 import at.forsyte.apalache.tla.lir.io.TlaType1PrinterPredefs.printer
+import at.forsyte.apalache.tla.imp.{SanyImporter, SanyImporterException}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.io.{JsonReader, JsonWriter, TlaWriter, TlaWriterFactory}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -81,17 +83,15 @@ class SanyParserPassImpl @Inject() (
           }
         // save the output
         val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-        writerFactory.writeModuleToFile(
-            rootModule.get,
-            new File(outdir.toFile, "out-parser.tla")
-        )
+        writerFactory.writeModuleToFile(rootModule.get, TlaWriter.STANDARD_MODULES,
+            new File(outdir.toFile, "out-parser.tla"))
         writeJson(rootModule.get, new File(outdir.toFile, "out-parser.json"))
 
         // write parser output to specified destination, if requested
         val output = options.getOrElse("parser", "output", "")
         if (output.nonEmpty) {
           if (output.contains(".tla"))
-            writerFactory.writeModuleToFile(rootModule.get, new File(output))
+            writerFactory.writeModuleToFile(rootModule.get, TlaWriter.STANDARD_MODULES, new File(output))
           else if (output.contains(".json"))
             writeJson(rootModule.get, new File(output))
           else

@@ -19,6 +19,6 @@ else
     img="apalache/mc:${APALACHE_TAG}"
 fi
 
-cmd="docker run -e TLA_PATH --rm -v $(pwd):/var/apalache ${img} ${@}"
+cmd="docker run -e TLA_PATH -e JVM_ARGS --rm -v $(pwd):/var/apalache ${img} ${@}"
 >&2 echo "# running command: ${cmd}"
 $cmd

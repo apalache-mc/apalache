@@ -25,8 +25,10 @@ import scala.collection.immutable.HashMap
  *
  * @author Igor Konnov
  */
-class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) extends PrettyPrinter with TlaWriter {
-  override val defaultIndent: Int = indent
+class PrettyWriter(writer: PrintWriter, layout: TextLayout = new TextLayout,
+    declAnnotator: TlaDeclAnnotator = new TlaDeclAnnotator)
+    extends PrettyPrinter with TlaWriter {
+  override val defaultIndent: Int = layout.indent
 
   val REC_FUN_UNDEFINED = "recFunNameUndefined"
   // when printing a recursive function, this variable contains its name
@@ -34,40 +36,41 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
   // the stack of lambda declarations
   private var lambdaStack: List[TlaOperDecl] = Nil
 
-  private def prettyWriteDoc(doc: Doc): Unit = writer.write(pretty(doc, textWidth).layout)
+  private def prettyWriteDoc(doc: Doc): Unit = writer.write(pretty(doc, layout.textWidth).layout)
 
-  def write(mod: TlaModule): Unit = prettyWriteDoc(toDoc(mod))
+  def write(mod: TlaModule, extendedModuleNames: List[String] = List.empty): Unit =
+    prettyWriteDoc(toDoc(mod, extendedModuleNames))
 
   // Declarations have a trailing empty line
   def write(decl: TlaDecl): Unit = prettyWriteDoc(toDoc(decl) <> line <> line)
 
   def write(expr: TlaEx): Unit = prettyWriteDoc(toDoc((0, 0), expr))
 
-  def writeComment(commentStr: String): Unit = prettyWriteDoc(toComment(commentStr))
+  def writeComment(commentStr: String): Unit = {
+    prettyWriteDoc(wrapWithComment(commentStr) <> line)
+  }
 
-  def writeHeader(moduleName: String, extensionModuleNames: List[TlaModule] = List.empty): Unit =
+  def writeHeader(moduleName: String, extensionModuleNames: List[String] = List.empty): Unit =
     prettyWriteDoc(
         moduleNameDoc(moduleName) <> moduleExtendsDoc(extensionModuleNames) <> line
     )
 
   def writeFooter(): Unit = prettyWriteDoc(moduleTerminalDoc)
 
-  private def toComment(commentStr: String): Doc = text(s"(* $commentStr *)") <> line
-
   private def moduleNameDoc(name: String): Doc = {
     val middle = s" MODULE $name "
-    val nDashes = math.max(5, (textWidth - middle.length) / 2) // int div rounds down
+    val nDashes = math.max(5, (layout.textWidth - middle.length) / 2) // int div rounds down
     s"${List.fill(nDashes)("-").mkString}$middle${List.fill(nDashes)("-").mkString}" <> line
   }
 
-  private def moduleExtendsDoc(moduleNames: List[TlaModule]): Doc =
+  private def moduleExtendsDoc(moduleNames: List[String]): Doc =
     if (moduleNames.isEmpty) emptyDoc
-    else line <> text(s"EXTENDS ${moduleNames.map(_.name).mkString(", ")}") <> line
+    else line <> text("EXTENDS") <> space <> hsep(moduleNames.map(text), comma) <> line
 
   private def moduleTerminalDoc: Doc =
-    s"${List.fill(textWidth)("=").mkString}" <> line
+    s"${List.fill(layout.textWidth)("=").mkString}" <> line
 
-  def toDoc(mod: TlaModule, extensionModuleNames: List[TlaModule] = List.empty): Doc = {
+  def toDoc(mod: TlaModule, extensionModuleNames: List[String] = List.empty): Doc = {
     moduleNameDoc(mod.name) <>
       moduleExtendsDoc(extensionModuleNames) <>
       lsep((mod.declarations.toList map toDoc) :+ moduleTerminalDoc, line)
@@ -122,13 +125,13 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
         // a set enumeration, e.g., { 1, 2, 3 }
         val argDocs = args.map(toDoc(op.precedence, _))
         val commaSeparated = folddoc(argDocs.toList, _ <> text(",") <@> _)
-        group(braces(group(softline <> nest(commaSeparated, indent)) <> softline))
+        group(braces(group(softline <> nest(commaSeparated, layout.indent)) <> softline))
 
       case OperEx(op @ TlaFunOper.tuple, args @ _*) =>
         // a tuple, e.g., <<1, 2, 3>>
         val argDocs = args.map(toDoc(op.precedence, _))
         val commaSeparated = ssep(argDocs.toList, text(",") <> softline)
-        group(text("<<") <> nest(linebreak <> commaSeparated, indent) <> linebreak <> ">>")
+        group(text("<<") <> nest(linebreak <> commaSeparated, layout.indent) <> linebreak <> ">>")
 
       case OperEx(op, args @ _*) if op == TlaBoolOper.and || op == TlaBoolOper.or =>
         // we are not using indented /\ and \/, as they are hard to get automatically
@@ -292,16 +295,27 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
         toDoc(parentPrecedence, OperEx(TlaControlOper.caseWithOther, NullEx +: guardsAndUpdates: _*)(opex.typeTag))
 
       case OperEx(TlaFunOper.except, funEx, keysAndValues @ _*) =>
-        val (ks, vs) = keysAndValues.zipWithIndex partition (_._2 % 2 == 0)
-        val (keys, values) = (ks.map(_._1), vs.map(_._1))
+        val (ks, vs) = TlaOper.deinterleave(keysAndValues)
+
+        val indexDocs = ks.collect {
+          case OperEx(TlaFunOper.tuple, indices @ _*) =>
+            val docs = indices.map(toDoc((0, 0), _))
+            ssep(docs.toList, text(",") <> softline)
+
+          case _ =>
+            throw new MalformedTlaError("Malformed expression", expr)
+        }
+
+        val valueDocs = vs.map(v => toDoc((0, 0), v))
+
         // format each key-value pair (k, v) into ![k] = v
         val boxes =
-          keys
-            .zip(values)
-            .map(p =>
-              group(text("!") <> brackets(toDoc((0, 0), p._1)) <> space <> text("=") <>
-                    nest(line <> toDoc((0, 0), p._2)))
-            ) ///
+          indexDocs
+            .zip(valueDocs)
+            .map { case (index, value) =>
+              group(text("!") <> brackets(index) <> space <> text("=") <>
+                    nest(line <> value))
+            } ///
 
         val updates = ssep(boxes.toList, comma <> line)
 
@@ -443,15 +457,31 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
   }
 
   def toDoc(decl: TlaDecl): Doc = {
+    val annotations = declAnnotator(layout)(decl)
+
     decl match {
       case TlaConstDecl(name) =>
-        group("CONSTANT" <> space <> name)
+        if (annotations.isEmpty) {
+          group("CONSTANT" <> space <> name)
+        } else {
+          "CONSTANT" <> nest(line <> wrapWithComment(annotations.get) <> line <> name)
+        }
 
       case TlaVarDecl(name) =>
-        group("VARIABLE" <> space <> name)
+        if (annotations.isEmpty) {
+          group("VARIABLE" <> space <> name)
+        } else {
+          "VARIABLE" <> nest(line <> wrapWithComment(annotations.get) <> line <> name)
+        }
 
       case TlaAssumeDecl(body) =>
-        group("ASSUME" <> parens(toDoc((0, 0), body)))
+        val doc = group("ASSUME" <> parens(toDoc((0, 0), body)))
+        if (annotations.isEmpty) {
+          doc
+        } else {
+          // there is no use case for annotations of assume, but we nevertheless implement it
+          wrapWithComment(annotations.get) <> line <> doc
+        }
 
       // a declaration of a recursive function
       case TlaOperDecl(name, List(), OperEx(TlaFunOper.recFunDef, body, keysAndValues @ _*)) =>
@@ -470,24 +500,37 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
         // [x \in S]
         val binding = brackets(binders)
         // f[x \in S] == e
-        val doc = group(name <> binding <> space <> "==" <> space <> toDoc((0, 0), body))
+        val doc = name <> binding <> space <> "==" <> space <> toDoc((0, 0), body)
         recFunName = REC_FUN_UNDEFINED
-        doc
+        if (annotations.isEmpty) {
+          group(doc)
+        } else {
+          wrapWithComment(annotations.get) <> line <> group(doc)
+        }
 
       // an operator declaration (may be recursive)
       case tod @ TlaOperDecl(name, params, body) =>
         val recPreambule =
-          if (!tod.isRecursive)
-            text("")
-          else
-            "RECURSIVE" <> space <> toDoc(OperParam(name, params.length)) <> line
+          if (!tod.isRecursive) {
+            None
+          } else {
+            Some("RECURSIVE" <> space <> toDoc(OperParam(name, params.length)))
+          }
 
         val paramsDoc =
-          if (params.isEmpty)
+          if (params.isEmpty) {
             text("")
-          else parens(ssep(params map toDoc, "," <> softline))
+          } else {
+            parens(ssep(params map toDoc, "," <> softline))
+          }
 
-        recPreambule <> group(name <> paramsDoc <> space <> "==" <> nest(line <> toDoc((0, 0), body)))
+        val declDoc = group(name <> paramsDoc <> space <> "==" <> nest(line <> toDoc((0, 0), body)))
+        if (annotations.isEmpty) {
+          recPreambule.map(_ <> line <> declDoc).getOrElse(declDoc)
+        } else {
+          val withComment = wrapWithComment(annotations.get) <> line <> declDoc
+          recPreambule.map(_ <> line <> withComment).getOrElse(withComment)
+        }
     }
   }
 
@@ -509,6 +552,14 @@ class PrettyWriter(writer: PrintWriter, textWidth: Int = 80, indent: Int = 2) ex
     } else {
       doc // expression's precedence is higher, no need for parentheses
     }
+  }
+
+  private def wrapWithComment(comment: Doc): Doc = {
+    text("(*") <> space <> comment <> space <> text("*)")
+  }
+
+  private def wrapWithComment(strings: List[String]): Doc = {
+    text("(*") <> nest(lsep(strings.map(text), ""), defaultIndent) <> line <> text("*)")
   }
 
   private def strNoQuotes(ex: TlaEx): String = {

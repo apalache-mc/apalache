@@ -5,7 +5,7 @@ import java.nio.file.Path
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.bmcmt.{CheckerException, VCGenerator}
 import at.forsyte.apalache.tla.lir.NullEx
-import at.forsyte.apalache.tla.lir.io.{PrettyWriter, TlaWriterFactory}
+import at.forsyte.apalache.tla.lir.io.{PrettyWriter, TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.google.inject.Inject
@@ -51,7 +51,7 @@ class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTrac
       }
 
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    writerFactory.writeModuleToFile(newModule, new File(outdir.toFile, "out-vcgen.tla"))
+    writerFactory.writeModuleToFile(newModule, TlaWriter.STANDARD_MODULES, new File(outdir.toFile, "out-vcgen.tla"))
 
     nextPass.setModule(newModule)
     true

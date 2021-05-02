@@ -10,6 +10,7 @@ import java.io.{File, FileWriter, PrintWriter}
  * @author Igor Konnov
  */
 trait TlaWriterFactory {
+
   def create(printWriter: PrintWriter): TlaWriter
 
   /**
@@ -18,10 +19,10 @@ trait TlaWriterFactory {
    * @param module     a TLA module
    * @param outputFile an output file that will be created or overwritten
    */
-  def writeModuleToFile(module: TlaModule, outputFile: File): Unit = {
+  def writeModuleToFile(module: TlaModule, extendedModuleNames: List[String], outputFile: File): Unit = {
     val writer = new PrintWriter(new FileWriter(outputFile, false))
     try {
-      create(writer).write(module)
+      create(writer).write(module, extendedModuleNames)
     } finally {
       writer.close()
     }
