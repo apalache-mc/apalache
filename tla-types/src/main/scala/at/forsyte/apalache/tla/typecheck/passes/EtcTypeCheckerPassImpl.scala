@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.{TlaModule, TypeTag, UID, Untyped}
 import at.forsyte.apalache.tla.typecheck.TypeCheckerTool
-import at.forsyte.apalache.tla.types.TlaType1PrinterPredefs.printer
+import at.forsyte.apalache.tla.lir.io.TlaType1PrinterPredefs.printer
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging

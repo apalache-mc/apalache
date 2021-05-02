@@ -193,7 +193,7 @@ class JsonToTla[T <: JsonRepresentation](
     ex
   }
 
-  override def fromRoot(rootJson: T): Traversable[TlaModule] = {
+  override def fromRoot(rootJson: T): Seq[TlaModule] = {
     val versionField = getOrThrow(rootJson, TlaToJson.versionFieldName)
     val version = scalaFactory.asStr(versionField)
     val current = JsonVersion.current
