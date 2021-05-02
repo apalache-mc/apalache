@@ -29,7 +29,7 @@ class PrettyWriterWithAnnotations(annotationStore: AnnotationStore, writer: Prin
 
         case Some(annotations) =>
           val annotationsAsStr = annotations.map(_.toPrettyString)
-          typeAnnotation.flatMap(typeList => Some(typeList ++ annotationsAsStr))
+          Some(typeAnnotation.getOrElse(List()) ++ annotationsAsStr)
       }
     }
   }
