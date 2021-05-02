@@ -47,7 +47,7 @@ class SanyParserPassImpl @Inject() (
     if (filename.endsWith(".json")) {
       try {
         val moduleJson = UJsonRep(ujson.read(new File(filename)))
-        // TODO: Implement a TagReader
+        // TODO: Implement a TagReader in issue #780
         val modules = new UJsonToTla(Some(sourceStore))(UntypedReader).fromRoot(moduleJson)
         rootModule = modules match {
           case rMod +: Nil => Some(rMod)
