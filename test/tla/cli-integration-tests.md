@@ -164,6 +164,24 @@ EXITCODE: OK
 ...
 ```
 
+### parse --output=annotations.tla Annotations succeeds
+
+```sh
+$ apalache-mc parse --output=output.tla Annotations.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+...
+```
+
+### parse --output=annotations.json Annotations succeeds
+
+```sh
+$ apalache-mc parse --output=output.json Annotations.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+...
+```
+
 ### test TestGen finds an example
 
 This simple test demonstrates how to test a spec by isolating the input with
