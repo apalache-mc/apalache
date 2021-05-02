@@ -29,6 +29,7 @@
 * Printer: fixed pretty printing of annotations, see #633
 * Printer: extending the standard modules, see #137
 * The command `config --enable-stats=true` creates `$HOME/.tlaplus` if needed, see #762
+* IO: replaced calls to deprecated JsonReader/JsonWriter. out-parser.json is now compliant with the new format, see #778
 
 ### Changes
 
