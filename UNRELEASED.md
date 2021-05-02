@@ -28,6 +28,8 @@
 * Printer: fixed the output for EXCEPT, see #746
 * Printer: fixed pretty printing of annotations, see #633
 * Printer: extending the standard modules, see #137
+* Printer: replacing '$' and '!' with supported characters, see #574
+* Printer: normalizing module names and writing TLA+ & JSON in all passes, see #785
 * The command `config --enable-stats=true` creates `$HOME/.tlaplus` if needed, see #762
 * IO: replaced calls to deprecated JsonReader/JsonWriter. out-parser.json is now compliant with the new format, see #778
 
