@@ -1,8 +1,8 @@
 package at.forsyte.apalache.io.annotations
 
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
-import at.forsyte.apalache.tla.lir.{TlaDecl, TlaEx, TlaModule}
 import at.forsyte.apalache.tla.lir.io.{PrettyWriter, TextLayout, TlaDeclAnnotator, TlaWriter}
+import at.forsyte.apalache.tla.lir._
 
 import java.io.PrintWriter
 
@@ -17,12 +17,19 @@ class PrettyWriterWithAnnotations(annotationStore: AnnotationStore, writer: Prin
 
   private object annotator extends TlaDeclAnnotator {
     override def apply(layout: TextLayout)(decl: TlaDecl): Option[List[String]] = {
+      val typeAnnotation: Option[List[String]] =
+        decl.typeTag match {
+          case Typed(tt: TlaType1) => Some(List(Annotation("type", AnnotationStr(tt.toString)).toPrettyString))
+          case _                   => None
+        }
+
       annotationStore.get(decl.ID) match {
         case None | Some(List()) =>
-          None
+          typeAnnotation
 
         case Some(annotations) =>
-          Some(annotations.map(_.toPrettyString))
+          val annotationsAsStr = annotations.map(_.toPrettyString)
+          typeAnnotation.flatMap(typeList => Some(typeList ++ annotationsAsStr))
       }
     }
   }

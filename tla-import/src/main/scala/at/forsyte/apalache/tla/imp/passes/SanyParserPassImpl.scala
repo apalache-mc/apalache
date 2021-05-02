@@ -73,8 +73,8 @@ class SanyParserPassImpl @Inject() (
           }
         // save the output
         val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-        writerFactory.writeModuleToFile(rootModule.get, TlaWriter.STANDARD_MODULES,
-            new File(outdir.toFile, "out-parser.tla"))
+        writerFactory.writeModuleAllFormats(rootModule.get.copy(name = "OutParser"), TlaWriter.STANDARD_MODULES,
+            outdir.toFile)
         JsonWriter.write(
             rootModule.get,
             new File(outdir.toFile, "out-parser.json")
@@ -84,7 +84,7 @@ class SanyParserPassImpl @Inject() (
         val output = options.getOrElse("parser", "output", "")
         if (output.nonEmpty) {
           if (output.contains(".tla"))
-            writerFactory.writeModuleToFile(rootModule.get, TlaWriter.STANDARD_MODULES, new File(output))
+            writerFactory.writeModuleAllFormats(rootModule.get, TlaWriter.STANDARD_MODULES, new File(output))
           else if (output.contains(".json"))
             JsonWriter.write(rootModule.get, new File(output))
           else

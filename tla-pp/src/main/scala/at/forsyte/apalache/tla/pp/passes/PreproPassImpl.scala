@@ -12,7 +12,6 @@ import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
-import java.io.File
 import java.nio.file.Path
 
 /**
@@ -64,8 +63,8 @@ class PreproPassImpl @Inject() (
       logger.info(s"  > $name")
       val transfomed = xformer(m)
       // dump the result of preprocessing after every transformation, in case the next one fails
-      writerFactory.writeModuleToFile(transfomed, TlaWriter.STANDARD_MODULES,
-          new File(outdir.toFile, s"out-prepro-$name.tla"))
+      writerFactory.writeModuleAllFormats(transfomed.copy(name = "OutPrepro"), TlaWriter.STANDARD_MODULES,
+          outdir.toFile)
       transfomed
     }
 
@@ -74,7 +73,7 @@ class PreproPassImpl @Inject() (
     val afterModule = renaming.renameInModule(preprocessed)
 
     // dump the result of preprocessing
-    writerFactory.writeModuleToFile(afterModule, TlaWriter.STANDARD_MODULES, new File(outdir.toFile, "out-prepro.tla"))
+    writerFactory.writeModuleAllFormats(afterModule.copy(name = "OutPrepro"), TlaWriter.STANDARD_MODULES, outdir.toFile)
     outputTlaModule = Some(afterModule)
 
     if (options.getOrElse("general", "debug", false)) {

@@ -4,11 +4,12 @@ import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.json.impl.TlaToUJson
 import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.io.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.{TlaModule, TypeTag, UID, Untyped}
 import at.forsyte.apalache.tla.typecheck.TypeCheckerTool
-import at.forsyte.apalache.tla.types.TlaType1PrinterPredefs.printer
+import at.forsyte.apalache.tla.lir.io.TlaType1PrinterPredefs.printer
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -18,7 +19,7 @@ import java.nio.file.Path
 
 class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStore: SourceStore,
     changeListener: ChangeListener, tracker: TransformationTracker, val annotationStore: AnnotationStore,
-    @Named("AfterTypeChecker") val nextPass: Pass with TlaModuleMixin)
+    val writerFactory: TlaWriterFactory, @Named("AfterTypeChecker") val nextPass: Pass with TlaModuleMixin)
     extends EtcTypeCheckerPass with LazyLogging {
 
   private var outputTlaModule: Option[TlaModule] = None
@@ -66,6 +67,9 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
           logger.info(" > Your types are great!")
           logger.info(if (isTypeCoverageComplete) " > All expressions are typed" else " > Some expressions are untyped")
           dumpToJson(newModule, "post")
+          val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
+          writerFactory.writeModuleAllFormats(newModule.copy(name = s"Out$name"), TlaWriter.STANDARD_MODULES,
+              outdir.toFile)
           outputTlaModule = Some(newModule)
           true
 

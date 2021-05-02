@@ -78,8 +78,8 @@ class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceSto
 
     // print the resulting module
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    writerFactory.writeModuleToFile(outModule, TlaWriter.STANDARD_MODULES,
-        new File(outdir.toFile, "out-transition.tla"))
+    writerFactory.writeModuleAllFormats(outModule.copy(name = "OutTransition"), TlaWriter.STANDARD_MODULES,
+        outdir.toFile)
 
     setModule(outModule)
     true

@@ -57,7 +57,7 @@ class OptPassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator,
 
     // dump the result of preprocessing
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    writerFactory.writeModuleToFile(optimized, TlaWriter.STANDARD_MODULES, new File(outdir.toFile, "out-opt.tla"))
+    writerFactory.writeModuleAllFormats(optimized.copy(name = "OutOpt"), TlaWriter.STANDARD_MODULES, outdir.toFile)
 
     outputTlaModule = Some(optimized)
     true
