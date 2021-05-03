@@ -248,41 +248,95 @@ class TestCounterexampleWriter extends FunSuite {
             ("", Map("x" -> int(2)))
         ),
         """{
-        |  "module": "counterexample",
-        |  "declarations": [
+        |  "name": "ApalacheIR",
+        |  "version": "1.0",
+        |  "modules": [
         |    {
-        |      "operator": "ConstInit",
-        |      "body": {
-        |        "and": [
-        |          
-        |        ]
-        |      },
-        |      "params": [
-        |        
-        |      ]
-        |    },
-        |    {
-        |      "operator": "State0",
-        |      "body": {
-        |        "and": [
-        |          {
-        |            "eq": "x",
-        |            "arg": 2
+        |      "kind": "TlaModule",
+        |      "name": "counterexample",
+        |      "declarations": [
+        |        {
+        |          "type": "Untyped",
+        |          "kind": "TlaOperDecl",
+        |          "name": "ConstInit",
+        |          "formalParams": [
+        |            
+        |          ],
+        |          "isRecursive": false,
+        |          "body": {
+        |            "type": "Untyped",
+        |            "kind": "ValEx",
+        |            "value": {
+        |              "kind": "TlaBool",
+        |              "value": true
+        |            }
         |          }
-        |        ]
-        |      },
-        |      "params": [
-        |        
-        |      ]
-        |    },
-        |    {
-        |      "operator": "InvariantViolation",
-        |      "body": {
-        |        "gt": "x",
-        |        "arg": 1
-        |      },
-        |      "params": [
-        |        
+        |        },
+        |        {
+        |          "type": "Untyped",
+        |          "kind": "TlaOperDecl",
+        |          "name": "State0",
+        |          "formalParams": [
+        |            
+        |          ],
+        |          "isRecursive": false,
+        |          "body": {
+        |            "type": "Untyped",
+        |            "kind": "OperEx",
+        |            "oper": "AND",
+        |            "args": [
+        |              {
+        |                "type": "Untyped",
+        |                "kind": "OperEx",
+        |                "oper": "EQ",
+        |                "args": [
+        |                  {
+        |                    "type": "Untyped",
+        |                    "kind": "NameEx",
+        |                    "name": "x"
+        |                  },
+        |                  {
+        |                    "type": "Untyped",
+        |                    "kind": "ValEx",
+        |                    "value": {
+        |                      "kind": "TlaInt",
+        |                      "value": 2
+        |                    }
+        |                  }
+        |                ]
+        |              }
+        |            ]
+        |          }
+        |        },
+        |        {
+        |          "type": "Untyped",
+        |          "kind": "TlaOperDecl",
+        |          "name": "InvariantViolation",
+        |          "formalParams": [
+        |            
+        |          ],
+        |          "isRecursive": false,
+        |          "body": {
+        |            "type": "Untyped",
+        |            "kind": "OperEx",
+        |            "oper": "GT",
+        |            "args": [
+        |              {
+        |                "type": "Untyped",
+        |                "kind": "NameEx",
+        |                "name": "x"
+        |              },
+        |              {
+        |                "type": "Untyped",
+        |                "kind": "ValEx",
+        |                "value": {
+        |                  "kind": "TlaInt",
+        |                  "value": 1
+        |                }
+        |              }
+        |            ]
+        |          }
+        |        }
         |      ]
         |    }
         |  ]
@@ -302,69 +356,167 @@ class TestCounterexampleWriter extends FunSuite {
             ("Trans2", Map("x" -> int(2)))
         ),
         """{
-        |  "module": "counterexample",
-        |  "declarations": [
+        |  "name": "ApalacheIR",
+        |  "version": "1.0",
+        |  "modules": [
         |    {
-        |      "operator": "ConstInit",
-        |      "body": {
-        |        "and": [
-        |          
-        |        ]
-        |      },
-        |      "params": [
-        |        
-        |      ]
-        |    },
-        |    {
-        |      "operator": "State0",
-        |      "body": {
-        |        "and": [
-        |          {
-        |            "eq": "x",
-        |            "arg": 0
+        |      "kind": "TlaModule",
+        |      "name": "counterexample",
+        |      "declarations": [
+        |        {
+        |          "type": "Untyped",
+        |          "kind": "TlaOperDecl",
+        |          "name": "ConstInit",
+        |          "formalParams": [
+        |            
+        |          ],
+        |          "isRecursive": false,
+        |          "body": {
+        |            "type": "Untyped",
+        |            "kind": "ValEx",
+        |            "value": {
+        |              "kind": "TlaBool",
+        |              "value": true
+        |            }
         |          }
-        |        ]
-        |      },
-        |      "params": [
-        |        
-        |      ]
-        |    },
-        |    {
-        |      "operator": "State1",
-        |      "body": {
-        |        "and": [
-        |          {
-        |            "eq": "x",
-        |            "arg": 1
+        |        },
+        |        {
+        |          "type": "Untyped",
+        |          "kind": "TlaOperDecl",
+        |          "name": "State0",
+        |          "formalParams": [
+        |            
+        |          ],
+        |          "isRecursive": false,
+        |          "body": {
+        |            "type": "Untyped",
+        |            "kind": "OperEx",
+        |            "oper": "AND",
+        |            "args": [
+        |              {
+        |                "type": "Untyped",
+        |                "kind": "OperEx",
+        |                "oper": "EQ",
+        |                "args": [
+        |                  {
+        |                    "type": "Untyped",
+        |                    "kind": "NameEx",
+        |                    "name": "x"
+        |                  },
+        |                  {
+        |                    "type": "Untyped",
+        |                    "kind": "ValEx",
+        |                    "value": {
+        |                      "kind": "TlaInt",
+        |                      "value": 0
+        |                    }
+        |                  }
+        |                ]
+        |              }
+        |            ]
         |          }
-        |        ]
-        |      },
-        |      "params": [
-        |        
-        |      ]
-        |    },
-        |    {
-        |      "operator": "State2",
-        |      "body": {
-        |        "and": [
-        |          {
-        |            "eq": "x",
-        |            "arg": 2
+        |        },
+        |        {
+        |          "type": "Untyped",
+        |          "kind": "TlaOperDecl",
+        |          "name": "State1",
+        |          "formalParams": [
+        |            
+        |          ],
+        |          "isRecursive": false,
+        |          "body": {
+        |            "type": "Untyped",
+        |            "kind": "OperEx",
+        |            "oper": "AND",
+        |            "args": [
+        |              {
+        |                "type": "Untyped",
+        |                "kind": "OperEx",
+        |                "oper": "EQ",
+        |                "args": [
+        |                  {
+        |                    "type": "Untyped",
+        |                    "kind": "NameEx",
+        |                    "name": "x"
+        |                  },
+        |                  {
+        |                    "type": "Untyped",
+        |                    "kind": "ValEx",
+        |                    "value": {
+        |                      "kind": "TlaInt",
+        |                      "value": 1
+        |                    }
+        |                  }
+        |                ]
+        |              }
+        |            ]
         |          }
-        |        ]
-        |      },
-        |      "params": [
-        |        
-        |      ]
-        |    },
-        |    {
-        |      "operator": "InvariantViolation",
-        |      "body": {
-        |        "gt": "x",
-        |        "arg": 1
-        |      },
-        |      "params": [
-        |        
+        |        },
+        |        {
+        |          "type": "Untyped",
+        |          "kind": "TlaOperDecl",
+        |          "name": "State2",
+        |          "formalParams": [
+        |            
+        |          ],
+        |          "isRecursive": false,
+        |          "body": {
+        |            "type": "Untyped",
+        |            "kind": "OperEx",
+        |            "oper": "AND",
+        |            "args": [
+        |              {
+        |                "type": "Untyped",
+        |                "kind": "OperEx",
+        |                "oper": "EQ",
+        |                "args": [
+        |                  {
+        |                    "type": "Untyped",
+        |                    "kind": "NameEx",
+        |                    "name": "x"
+        |                  },
+        |                  {
+        |                    "type": "Untyped",
+        |                    "kind": "ValEx",
+        |                    "value": {
+        |                      "kind": "TlaInt",
+        |                      "value": 2
+        |                    }
+        |                  }
+        |                ]
+        |              }
+        |            ]
+        |          }
+        |        },
+        |        {
+        |          "type": "Untyped",
+        |          "kind": "TlaOperDecl",
+        |          "name": "InvariantViolation",
+        |          "formalParams": [
+        |            
+        |          ],
+        |          "isRecursive": false,
+        |          "body": {
+        |            "type": "Untyped",
+        |            "kind": "OperEx",
+        |            "oper": "GT",
+        |            "args": [
+        |              {
+        |                "type": "Untyped",
+        |                "kind": "NameEx",
+        |                "name": "x"
+        |              },
+        |              {
+        |                "type": "Untyped",
+        |                "kind": "ValEx",
+        |                "value": {
+        |                  "kind": "TlaInt",
+        |                  "value": 1
+        |                }
+        |              }
+        |            ]
+        |          }
+        |        }
         |      ]
         |    }
         |  ]
@@ -384,89 +536,254 @@ class TestCounterexampleWriter extends FunSuite {
             ("Trans2", Map("x" -> int(2), "y" -> int(10)))
         ),
         """{
-        |  "module": "counterexample",
-        |  "declarations": [
+        |  "name": "ApalacheIR",
+        |  "version": "1.0",
+        |  "modules": [
         |    {
-        |      "operator": "ConstInit",
-        |      "body": {
-        |        "and": [
-        |          
-        |        ]
-        |      },
-        |      "params": [
-        |        
-        |      ]
-        |    },
-        |    {
-        |      "operator": "State0",
-        |      "body": {
-        |        "and": [
-        |          {
-        |            "eq": "x",
-        |            "arg": 0
-        |          },
-        |          {
-        |            "eq": "y",
-        |            "arg": 8
+        |      "kind": "TlaModule",
+        |      "name": "counterexample",
+        |      "declarations": [
+        |        {
+        |          "type": "Untyped",
+        |          "kind": "TlaOperDecl",
+        |          "name": "ConstInit",
+        |          "formalParams": [
+        |            
+        |          ],
+        |          "isRecursive": false,
+        |          "body": {
+        |            "type": "Untyped",
+        |            "kind": "ValEx",
+        |            "value": {
+        |              "kind": "TlaBool",
+        |              "value": true
+        |            }
         |          }
-        |        ]
-        |      },
-        |      "params": [
-        |        
-        |      ]
-        |    },
-        |    {
-        |      "operator": "State1",
-        |      "body": {
-        |        "and": [
-        |          {
-        |            "eq": "x",
-        |            "arg": 1
-        |          },
-        |          {
-        |            "eq": "y",
-        |            "arg": 9
+        |        },
+        |        {
+        |          "type": "Untyped",
+        |          "kind": "TlaOperDecl",
+        |          "name": "State0",
+        |          "formalParams": [
+        |            
+        |          ],
+        |          "isRecursive": false,
+        |          "body": {
+        |            "type": "Untyped",
+        |            "kind": "OperEx",
+        |            "oper": "AND",
+        |            "args": [
+        |              {
+        |                "type": "Untyped",
+        |                "kind": "OperEx",
+        |                "oper": "EQ",
+        |                "args": [
+        |                  {
+        |                    "type": "Untyped",
+        |                    "kind": "NameEx",
+        |                    "name": "x"
+        |                  },
+        |                  {
+        |                    "type": "Untyped",
+        |                    "kind": "ValEx",
+        |                    "value": {
+        |                      "kind": "TlaInt",
+        |                      "value": 0
+        |                    }
+        |                  }
+        |                ]
+        |              },
+        |              {
+        |                "type": "Untyped",
+        |                "kind": "OperEx",
+        |                "oper": "EQ",
+        |                "args": [
+        |                  {
+        |                    "type": "Untyped",
+        |                    "kind": "NameEx",
+        |                    "name": "y"
+        |                  },
+        |                  {
+        |                    "type": "Untyped",
+        |                    "kind": "ValEx",
+        |                    "value": {
+        |                      "kind": "TlaInt",
+        |                      "value": 8
+        |                    }
+        |                  }
+        |                ]
+        |              }
+        |            ]
         |          }
-        |        ]
-        |      },
-        |      "params": [
-        |        
-        |      ]
-        |    },
-        |    {
-        |      "operator": "State2",
-        |      "body": {
-        |        "and": [
-        |          {
-        |            "eq": "x",
-        |            "arg": 2
-        |          },
-        |          {
-        |            "eq": "y",
-        |            "arg": 10
+        |        },
+        |        {
+        |          "type": "Untyped",
+        |          "kind": "TlaOperDecl",
+        |          "name": "State1",
+        |          "formalParams": [
+        |            
+        |          ],
+        |          "isRecursive": false,
+        |          "body": {
+        |            "type": "Untyped",
+        |            "kind": "OperEx",
+        |            "oper": "AND",
+        |            "args": [
+        |              {
+        |                "type": "Untyped",
+        |                "kind": "OperEx",
+        |                "oper": "EQ",
+        |                "args": [
+        |                  {
+        |                    "type": "Untyped",
+        |                    "kind": "NameEx",
+        |                    "name": "x"
+        |                  },
+        |                  {
+        |                    "type": "Untyped",
+        |                    "kind": "ValEx",
+        |                    "value": {
+        |                      "kind": "TlaInt",
+        |                      "value": 1
+        |                    }
+        |                  }
+        |                ]
+        |              },
+        |              {
+        |                "type": "Untyped",
+        |                "kind": "OperEx",
+        |                "oper": "EQ",
+        |                "args": [
+        |                  {
+        |                    "type": "Untyped",
+        |                    "kind": "NameEx",
+        |                    "name": "y"
+        |                  },
+        |                  {
+        |                    "type": "Untyped",
+        |                    "kind": "ValEx",
+        |                    "value": {
+        |                      "kind": "TlaInt",
+        |                      "value": 9
+        |                    }
+        |                  }
+        |                ]
+        |              }
+        |            ]
         |          }
-        |        ]
-        |      },
-        |      "params": [
-        |        
-        |      ]
-        |    },
-        |    {
-        |      "operator": "InvariantViolation",
-        |      "body": {
-        |        "and": [
-        |          {
-        |            "gt": "x",
-        |            "arg": 1
-        |          },
-        |          {
-        |            "eq": "y",
-        |            "arg": 10
+        |        },
+        |        {
+        |          "type": "Untyped",
+        |          "kind": "TlaOperDecl",
+        |          "name": "State2",
+        |          "formalParams": [
+        |            
+        |          ],
+        |          "isRecursive": false,
+        |          "body": {
+        |            "type": "Untyped",
+        |            "kind": "OperEx",
+        |            "oper": "AND",
+        |            "args": [
+        |              {
+        |                "type": "Untyped",
+        |                "kind": "OperEx",
+        |                "oper": "EQ",
+        |                "args": [
+        |                  {
+        |                    "type": "Untyped",
+        |                    "kind": "NameEx",
+        |                    "name": "x"
+        |                  },
+        |                  {
+        |                    "type": "Untyped",
+        |                    "kind": "ValEx",
+        |                    "value": {
+        |                      "kind": "TlaInt",
+        |                      "value": 2
+        |                    }
+        |                  }
+        |                ]
+        |              },
+        |              {
+        |                "type": "Untyped",
+        |                "kind": "OperEx",
+        |                "oper": "EQ",
+        |                "args": [
+        |                  {
+        |                    "type": "Untyped",
+        |                    "kind": "NameEx",
+        |                    "name": "y"
+        |                  },
+        |                  {
+        |                    "type": "Untyped",
+        |                    "kind": "ValEx",
+        |                    "value": {
+        |                      "kind": "TlaInt",
+        |                      "value": 10
+        |                    }
+        |                  }
+        |                ]
+        |              }
+        |            ]
         |          }
-        |        ]
-        |      },
-        |      "params": [
-        |        
+        |        },
+        |        {
+        |          "type": "Untyped",
+        |          "kind": "TlaOperDecl",
+        |          "name": "InvariantViolation",
+        |          "formalParams": [
+        |            
+        |          ],
+        |          "isRecursive": false,
+        |          "body": {
+        |            "type": "Untyped",
+        |            "kind": "OperEx",
+        |            "oper": "AND",
+        |            "args": [
+        |              {
+        |                "type": "Untyped",
+        |                "kind": "OperEx",
+        |                "oper": "GT",
+        |                "args": [
+        |                  {
+        |                    "type": "Untyped",
+        |                    "kind": "NameEx",
+        |                    "name": "x"
+        |                  },
+        |                  {
+        |                    "type": "Untyped",
+        |                    "kind": "ValEx",
+        |                    "value": {
+        |                      "kind": "TlaInt",
+        |                      "value": 1
+        |                    }
+        |                  }
+        |                ]
+        |              },
+        |              {
+        |                "type": "Untyped",
+        |                "kind": "OperEx",
+        |                "oper": "EQ",
+        |                "args": [
+        |                  {
+        |                    "type": "Untyped",
+        |                    "kind": "NameEx",
+        |                    "name": "y"
+        |                  },
+        |                  {
+        |                    "type": "Untyped",
+        |                    "kind": "ValEx",
+        |                    "value": {
+        |                      "kind": "TlaInt",
+        |                      "value": 10
+        |                    }
+        |                  }
+        |                ]
+        |              }
+        |            ]
+        |          }
+        |        }
         |      ]
         |    }
         |  ]

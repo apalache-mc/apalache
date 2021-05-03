@@ -22,15 +22,7 @@ trait CounterexampleWriter {
 
 class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter {
 
-  def stateToEx(state: State): TlaEx =
-    if (state.isEmpty) {
-      ValEx(TlaBool(true))
-    } else {
-      val namesAndVals = state.toSeq.sortBy(_._1).map { case (name, value) =>
-        tla.eql(tla.name(name), value)
-      }
-      tla.and(namesAndVals: _*)
-    }
+  import CounterexampleWriter.stateToEx
 
   def printStateFormula(pretty: PrettyWriter, state: State): Unit =
     if (state.isEmpty) {
@@ -110,18 +102,17 @@ class TlcCounterexampleWriter(writer: PrintWriter) extends TlaCounterexampleWrit
 }
 
 class JsonCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter {
+
+  import CounterexampleWriter.stateToEx
+
   override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit = {
 
-    val tlaStates = states.zipWithIndex.collect { case ((_, vars), i) =>
-      val state = vars.collect { case (name, value) =>
-        OperEx(TlaOper.eq, NameEx(name), value)
-      }
+    val tlaStates = states.zipWithIndex.collect { case (state, i) =>
       val name = i match {
         case 0 => "ConstInit"
         case _ => s"State${i - 1}"
       }
-      TlaOperDecl(name, List(), OperEx(TlaBoolOper.and, state.toList: _*))
-
+      tla.declOp(name, stateToEx(state._2)).withTag(Untyped())
     }
 
     val mod =
@@ -135,6 +126,17 @@ class JsonCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter
 }
 
 object CounterexampleWriter {
+
+  def stateToEx(state: State): TlaEx =
+    if (state.isEmpty) {
+      ValEx(TlaBool(true))
+    } else {
+      val namesAndVals = state.toSeq.sortBy(_._1).map { case (name, value) =>
+        tla.eql(tla.name(name), value)
+      }
+      tla.and(namesAndVals: _*)
+    }
+
   // default implementation -- write in all formats, and return the list of files written
   def writeAllFormats(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): List[String] = {
     val fileNames = Map(
