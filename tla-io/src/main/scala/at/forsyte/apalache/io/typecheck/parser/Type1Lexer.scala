@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.typecheck.parser
+package at.forsyte.apalache.io.typecheck.parser
 
 import java.io.Reader
 import at.forsyte.apalache.io.tlc.config.TlcConfigParseError

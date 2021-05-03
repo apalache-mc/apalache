@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.typecheck.parser
+package at.forsyte.apalache.io.typecheck.parser
 
 import scala.util.parsing.input.{NoPosition, Position, Reader}
 

@@ -1,6 +1,4 @@
-package at.forsyte.apalache.tla.typecheck
-
-import at.forsyte.apalache.tla.typecheck.parser.DefaultType1Parser
+package at.forsyte.apalache.io.typecheck.parser
 
 /**
  * A factory of type parsers. For the moment being, it creates only the parser for Type System 1.

@@ -1,7 +1,6 @@
-package at.forsyte.apalache.tla.typecheck.parser
+package at.forsyte.apalache.io.typecheck.parser
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.typecheck._
 
 import java.io.StringReader
 import scala.collection.immutable.SortedMap
