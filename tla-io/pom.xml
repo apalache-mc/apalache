@@ -7,11 +7,11 @@
         <version>0.15.5-SNAPSHOT</version>
     </parent>
 
-    <artifactId>tla-import</artifactId>
+    <artifactId>tla-io</artifactId>
         <version>0.15.5-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>tla-import</name>
+    <name>tla-io</name>
     <url>https://github.com/informalsystems/apalache</url>
 
     <dependencies>

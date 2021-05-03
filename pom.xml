@@ -34,7 +34,7 @@
         <!-- defines the basic infrastructure: logging, passes, etc. -->
         <module>mod-infra</module>
         <!-- parsing with SANY and build an IR -->
-        <module>tla-import</module>
+        <module>tla-io</module>
         <!-- all kinds of preprocessing -->
         <module>tla-pp</module>
         <!-- finding types -->
@@ -283,8 +283,8 @@
                                 <include>tla-assignments/**/*.scala</include>
                                 <include>tla-bmcmt/**/*.sc</include>
                                 <include>tla-bmcmt/**/*.scala</include>
-                                <include>tla-import/**/*.sc</include>
-                                <include>tla-import/**/*.scala</include>
+                                <include>tla-io/**/*.sc</include>
+                                <include>tla-io/**/*.scala</include>
                                 <include>tla-pp/**/*.sc</include>
                                 <include>tla-pp/**/*.scala</include>
                                 <include>tla-types/**/*.sc</include>
