@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.lir.io
 
-import at.forsyte.apalache.tla.lir.{TypeTag, Untyped}
+import at.forsyte.apalache.tla.lir.{TypeTag, Typed, Untyped}
 
 /**
  * Recovers TypeTags from their string representations.
