@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.lir.io
+package at.forsyte.apalache.io.lir
 
 /**
  * Settings for text output.

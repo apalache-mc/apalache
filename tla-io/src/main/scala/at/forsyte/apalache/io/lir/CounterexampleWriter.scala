@@ -1,12 +1,14 @@
-package at.forsyte.apalache.tla.lir.io
+package at.forsyte.apalache.io.lir
+
+import at.forsyte.apalache.io.json.impl.TlaToUJson
+import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
+import at.forsyte.apalache.tla.lir.values.TlaBool
 
 import java.io.{FileWriter, PrintWriter}
 import java.util.Calendar
-import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.values._
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * A printer for counterexamples, in various formats: TLA+ , as TLC output, ...
@@ -16,40 +18,6 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 trait CounterexampleWriter {
   // Print out invariant violation
   def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit
-}
-
-object CounterexampleWriter {
-  // default implementation -- write in all formats, and return the list of files written
-  def writeAllFormats(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): List[String] = {
-    val fileNames = Map(
-        "tla" -> "counterexample.tla",
-        "tlc" -> "MC.out",
-        "json" -> "counterexample.json"
-    )
-    val files = fileNames.map { case (kind, name) =>
-      (kind, new PrintWriter(new FileWriter(name)))
-    }
-    try {
-      files.foreach { case (kind, writer) =>
-        apply(kind, writer).write(rootModule, notInvariant, states)
-      }
-      fileNames.values.toList
-    } finally {
-      files.foreach { case (_, writer) =>
-        writer.close()
-      }
-    }
-  }
-
-  // factory method to get the desired CE writer
-  def apply(kind: String, writer: PrintWriter): CounterexampleWriter = {
-    kind match {
-      case "tla"  => new TlaCounterexampleWriter(writer)
-      case "tlc"  => new TlcCounterexampleWriter(writer)
-      case "json" => new JsonCounterexampleWriter(writer)
-      case _      => throw new Exception("unknown couterexample writer requested")
-    }
-  }
 }
 
 class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter {
@@ -143,7 +111,6 @@ class TlcCounterexampleWriter(writer: PrintWriter) extends TlaCounterexampleWrit
 
 class JsonCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter {
   override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit = {
-    val json = new JsonWriter(writer)
 
     val tlaStates = states.zipWithIndex.collect { case ((_, vars), i) =>
       val state = vars.collect { case (name, value) =>
@@ -159,6 +126,44 @@ class JsonCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter
 
     val mod =
       new TlaModule("counterexample", tlaStates ++ List(TlaOperDecl(s"InvariantViolation", List(), notInvariant)))
-    json.write(mod)
+
+    // No SourceLocator, since CEs aren't part of the spec
+    val jsonText = new TlaToUJson(locatorOpt = None)(TlaType1PrinterPredefs.printer).makeRoot(Seq(mod)).toString
+    writer.write(jsonText)
+
+  }
+}
+
+object CounterexampleWriter {
+  // default implementation -- write in all formats, and return the list of files written
+  def writeAllFormats(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): List[String] = {
+    val fileNames = Map(
+        "tla" -> "counterexample.tla",
+        "tlc" -> "MC.out",
+        "json" -> "counterexample.json"
+    )
+    val files = fileNames.map { case (kind, name) =>
+      (kind, new PrintWriter(new FileWriter(name)))
+    }
+    try {
+      files.foreach { case (kind, writer) =>
+        apply(kind, writer).write(rootModule, notInvariant, states)
+      }
+      fileNames.values.toList
+    } finally {
+      files.foreach { case (_, writer) =>
+        writer.close()
+      }
+    }
+  }
+
+  // factory method to get the desired CE writer
+  def apply(kind: String, writer: PrintWriter): CounterexampleWriter = {
+    kind match {
+      case "tla"  => new TlaCounterexampleWriter(writer)
+      case "tlc"  => new TlcCounterexampleWriter(writer)
+      case "json" => new JsonCounterexampleWriter(writer)
+      case _      => throw new Exception("unknown couterexample writer requested")
+    }
   }
 }

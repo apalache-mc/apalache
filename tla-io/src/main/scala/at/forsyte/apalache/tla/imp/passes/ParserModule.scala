@@ -5,7 +5,7 @@ import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TerminalPassWithTlaM
 import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.ParserExceptionAdapter
-import at.forsyte.apalache.tla.lir.io.TlaWriterFactory
+import at.forsyte.apalache.io.lir.TlaWriterFactory
 import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, TypeLiteral}
 

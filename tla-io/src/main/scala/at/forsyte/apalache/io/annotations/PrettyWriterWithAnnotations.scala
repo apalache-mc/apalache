@@ -2,7 +2,7 @@ package at.forsyte.apalache.io.annotations
 
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.tla.lir.{TlaDecl, TlaEx, TlaModule}
-import at.forsyte.apalache.tla.lir.io.{PrettyWriter, TextLayout, TlaDeclAnnotator, TlaWriter}
+import at.forsyte.apalache.io.lir._
 
 import java.io.PrintWriter
 

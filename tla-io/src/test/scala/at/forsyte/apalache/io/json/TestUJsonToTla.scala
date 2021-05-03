@@ -7,7 +7,7 @@ import org.junit.runner.RunWith
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.io.{TypeTagPrinter, UntypedReader}
+import at.forsyte.apalache.io.lir.{TypeTagPrinter, UntypedReader}
 
 @RunWith(classOf[JUnitRunner])
 class TestUJsonToTla extends FunSuite with BeforeAndAfterEach with TestingPredefs {

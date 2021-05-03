@@ -5,7 +5,7 @@ import at.forsyte.apalache.io.annotations.store.createAnnotationStore
 import at.forsyte.apalache.tla.lir._
 import UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.io.TextLayout
+import at.forsyte.apalache.io.lir.TextLayout
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterEach, FunSuite}

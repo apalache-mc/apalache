@@ -7,9 +7,9 @@ import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{CyclicDependencyError, TlaModule}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.standard.DeclarationSorter
-import at.forsyte.apalache.tla.lir.io.TlaType1PrinterPredefs.printer
+import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer
+import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.imp.{SanyImporter, SanyImporterException}
-import at.forsyte.apalache.tla.lir.io.{TlaWriter, TlaWriterFactory}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging

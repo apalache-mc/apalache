@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.lir.io
+package at.forsyte.apalache.io.lir
 
 import java.io.{File, FileWriter, PrintWriter}
 

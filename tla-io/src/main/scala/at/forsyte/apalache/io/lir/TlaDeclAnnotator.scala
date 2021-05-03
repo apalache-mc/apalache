@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.lir.io
+package at.forsyte.apalache.io.lir
 
 import at.forsyte.apalache.tla.lir.TlaDecl
 

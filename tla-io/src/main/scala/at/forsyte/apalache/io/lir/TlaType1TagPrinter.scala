@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.lir.io
+package at.forsyte.apalache.io.lir
 
 import at.forsyte.apalache.tla.lir.{TlaType1, TypeTag, Typed, Untyped}
 
@@ -11,8 +11,4 @@ class TlaType1TagPrinter extends TypeTagPrinter {
       case Typed(_) => "Typed[%s](%s)".format(tag.getClass.getSimpleName, tag)
     }
   }
-}
-
-object TlaType1PrinterPredefs {
-  implicit val printer: TypeTagPrinter = new TlaType1TagPrinter
 }

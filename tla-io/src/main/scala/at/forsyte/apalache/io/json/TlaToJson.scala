@@ -2,7 +2,7 @@ package at.forsyte.apalache.io.json
 
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaDecimal, TlaInt, TlaStr}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.io.TypeTagPrinter
+import at.forsyte.apalache.io.lir.TypeTagPrinter
 import at.forsyte.apalache.tla.lir.storage.SourceLocator
 
 /**

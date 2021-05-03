@@ -1,6 +1,8 @@
-package at.forsyte.apalache.tla.lir
+package at.forsyte.apalache.io
 
-package object io {
+import at.forsyte.apalache.tla.lir.TlaEx
+
+package object lir {
   type NotInvariant = TlaEx
   type State = Map[String, TlaEx]
   type Transition = String

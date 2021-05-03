@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.lir.src.{SourceLocation, SourcePosition, SourceRe
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaDecimal, TlaInt, TlaStr}
 import convenience.tla
 import UntypedPredefs._
-import at.forsyte.apalache.tla.lir.io.TypeTagReader
+import at.forsyte.apalache.io.lir.TypeTagReader
 
 /**
  * A semi-abstraction of a json decoder.
