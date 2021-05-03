@@ -63,6 +63,12 @@ trait IrGenerators {
   val simpleOperators = List(TlaOper.eq, TlaOper.ne, TlaOper.chooseBounded, TlaOper.apply)
 
   /**
+   * The list of propositional operators and quantifiers, excluding unbounded quantifiers.
+   */
+  val logicOperators = List(TlaBoolOper.and, TlaBoolOper.or, TlaBoolOper.not, TlaBoolOper.equiv, TlaBoolOper.implies,
+      TlaBoolOper.exists, TlaBoolOper.forall)
+
+  /**
    * The list of arithmetic operators that are defined in TlaArithOper.
    */
   val arithOperators = List(TlaArithOper.div, TlaArithOper.dotdot, TlaArithOper.exp, TlaArithOper.ge, TlaArithOper.gt,
@@ -70,11 +76,23 @@ trait IrGenerators {
       TlaArithOper.uminus)
 
   /**
-   * The list of the most basic operators that are defined in TlaOper.
+   * The list of all set operators.
    */
   val setOperators = List(TlaSetOper.cap, TlaSetOper.cup, TlaSetOper.enumSet, TlaSetOper.filter, TlaSetOper.funSet,
       TlaSetOper.in, TlaSetOper.notin, TlaSetOper.map, TlaSetOper.powerset, TlaSetOper.recSet, TlaSetOper.seqSet,
       TlaSetOper.setminus, TlaSetOper.subseteq, TlaSetOper.times, TlaSetOper.union)
+
+  /**
+   * The list of action operators.
+   */
+  val actionOperators = List(TlaActionOper.prime, TlaActionOper.enabled, TlaActionOper.stutter, TlaActionOper.nostutter,
+      TlaActionOper.unchanged, TlaActionOper.composition)
+
+  /**
+   * The list of temporal operators, excluding \AA and \EE, as those are not useful to us.
+   */
+  val temporalOperators = List(TlaTempOper.box, TlaTempOper.diamond, TlaTempOper.leadsTo, TlaTempOper.guarantees,
+      TlaTempOper.strongFairness, TlaTempOper.weakFairness)
 
   def genTypeTag: Gen[TypeTag] = for {
     i <- arbitrary[Int]

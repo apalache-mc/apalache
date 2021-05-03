@@ -43,6 +43,8 @@
         <module>tla-assignments</module>
         <!-- bounded model checker modulo theory -->
         <module>tla-bmcmt</module>
+        <!-- the unit testing framework for TLA+ -->
+        <module>tla-script</module>
         <!-- command line tools -->
         <module>mod-tool</module>
         <!-- distribution packaging to bind them all -->
