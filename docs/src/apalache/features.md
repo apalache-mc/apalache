@@ -2,11 +2,11 @@ Here is the list of the TLA+ language features that are currently supported by A
 
 ## Safety vs. Liveness
 
-At the moment, Apalache is able to check invariants and inductive invariants.
-It means that you can only check safety with Apalache, unless you employ
-[liveness-to-safety] transformation in your spec. It does not support
-liveness properties.  If you really like to see liveness implemented, upvote
-the [liveness feature].
+At the moment, Apalache is only able to check invariants and inductive
+invariants.  Which means that you can only check safety properties with
+Apalache, unless you employ a [liveness-to-safety] transformation in your spec.
+In general, we doe not support checking liveness properties.  If you would like
+to see liveness implemented, upvote the [liveness feature].
 
 ## Language
 
@@ -14,12 +14,12 @@ the [liveness feature].
 
 Construct  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
-``EXTENDS module`` | ✔ | - | As soon as SANY imports the module. Some standard modules are not supported yet
-``CONSTANTS C1, C2`` | ✔ | -  | Either define a ``ConstInit`` operator to initialize the constants, or declare operators instead of constants, e.g., C1 == 111
+``EXTENDS module`` | ✔ | - | As soon as SANY imports the module. <!-- What does the prev sentence mean? --> Some standard modules are not supported yet
+``CONSTANTS C1, C2`` | ✔ | -  | Either define a ``ConstInit`` operator to initialize the constants, use a `.cfg` file, or declare operators instead of constants, e.g., C1 == 111
 ``VARIABLES x, y, z`` | ✔ | - |
 ``ASSUME P`` | ✔ / ✖ | - | Parsed, but not propagated to the solver
 ``F(x1, ..., x_n) == exp`` | ✔ / ✖ | - | Every application of `F` is replaced with its body. Recursive operators need [unrolling annotations](./principles.md#recursive-operators).
-``f[x ∈ S] == exp`` | ✔ / ✖ | - | Only recursive functions that return integers or Booleans are supported.
+``f[x ∈ S] == exp`` | ✔ / ✖ | - | Recursive functions are only supported if they return integers or Booleans.
 ``INSTANCE M WITH ...`` | ✔ / ✖ | - | No special treatment for ``~>``, ``\cdot``, ``ENABLED``
 ``N(x1, ..., x_n) == INSTANCE M WITH...`` | ✔ / ✖ | - | Parameterized instances are not supported
 ``THEOREM P`` | ✔ / ✖ | - | Parsed but not used
@@ -62,7 +62,7 @@ Operator  | Supported? | Milestone | Comment
 `f[e]` | ✔ | - |
 `DOMAIN f` | ✔ | - |
 `[ x \in S ↦ e]` | ✔ | - |
-`[ S -> T ]` | ✔ | - | Sometimes, the functions sets are expanded
+`[ S -> T ]` | ✔ | - | Sometimes, the functions sets are expanded <!-- What does this mean? -->
 `[ f EXCEPT ![e1] = e2 ]` | ✔ | - |
 
 #### Records
@@ -73,7 +73,7 @@ Note that our type system distinguishes records from general functions.
 Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 `e.h` | ✔ | - |
-`r[e]` | ✔/✖ | - | Provided that e is a constant expression.
+`r[e]` | ✔/✖ | - | Provided that `e` is a constant expression.
 `[ h1 ↦ e1, ..., h_n ↦ e_n]` | ✔ | - |
 `[ h1 : S1, ..., h_n : S_n]` | ✔ | - |
 `[ r EXCEPT !.h = e]` | ✔ | - |
@@ -85,10 +85,10 @@ Note that our type system distinguishes tuples from general functions.
 
 Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
-`e[i]` | ✔ / ✖ | - | Provided that ``i`` is a constant expression
-`<< e1, ..., e_n >>` | ✔ | - | By default, a tuple is constructed. Use a [type annotation](types-and-annotations.md) to construct a sequence of proper type.
+`e[i]` | ✔ / ✖ | - | Provided that `i` is a constant expression
+`<< e1, ..., e_n >>` | ✔ | - | By default, a tuple is constructed. Use a [type annotation](types-and-annotations.md) to construct a sequence.
 `S1 \X ... \X S_n` | ✔ | - |
-`[ t EXCEPT ![i] = e]` | ✔/✖ | - | Provided that ``i`` is a constant expression
+`[ t EXCEPT ![i] = e]` | ✔/✖ | - | Provided that `i` is a constant expression
 
 #### Strings and numbers
 
@@ -105,20 +105,20 @@ Construct  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 `IF p THEN e1 ELSE e2` | ✔ | - | Provided that both e1 and e2 have the same type
 `CASE p1 -> e1 [] ... [] p_n -> e_n [] OTHER -> e` | ✔ | - | See the comment above
-`CASE p1 -> e1 [] ... [] p_n -> e_n` | ✖ | - | Introduce the default arm with `OTHER`.
-``LET d1 == e1 ... d_n == e_n IN e`` | ✔ |  | All applications of `d1`, ..., `d_n` are replaced with the expressions `e1`, ... `e_n` respectively. LET-definitions without arguments are kept in place.
+`CASE p1 -> e1 [] ... [] p_n -> e_n` | ✖ | - | The default arm with `OTHER` is always required
+`LET d1 == e1 ... d_n == e_n IN e` | ✔ |  | All applications of `d1`, ..., `d_n` are replaced with the expressions `e1`, ... `e_n` respectively. LET-definitions without arguments are kept in place.
 multi-line `/\` and `\/` | ✔ | - |
 
 ### The Action Operators
 
 Construct  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
-``e'`` | ✔ | - |
-``[A]_e`` | ✖ | - | It does not matter for safety
-``< A >_e`` | ✖ | - |
-``ENABLED A`` | ✖ | - |
-``UNCHANGED <<e_1, ..., e_k>>`` | ✔ | - |	Always replaced with ``e_1' = e_1 /\ ... /\ e_k' = e_k``
-``A ∙ B`` | ✖ | - |
+`e'` | ✔ | - |
+`[A]_e` | ✖ | - | It does not matter for safety
+`< A >_e` | ✖ | - |
+`ENABLED A` | ✖ | - |
+`UNCHANGED <<e_1, ..., e_k>>` | ✔ | - |Always replaced with `e_1' = e_1 /\ ... /\ e_k' = e_k`
+`A ∙ B` | ✖ | - |
 
 ### The Temporal Operators
 
