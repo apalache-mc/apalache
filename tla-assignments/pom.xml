@@ -3,11 +3,11 @@
     <parent>
         <groupId>at.forsyte.apalache</groupId>
         <artifactId>apalache</artifactId>
-        <version>0.15.4-SNAPSHOT</version>
+        <version>0.15.4</version>
     </parent>
 
     <artifactId>tla-assignments</artifactId>
-        <version>0.15.4-SNAPSHOT</version>
+        <version>0.15.4</version>
     <packaging>jar</packaging>
 
     <name>tla-assignments</name>
