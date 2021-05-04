@@ -112,7 +112,7 @@
             <dependency>
                 <groupId>org.scalacheck</groupId>
                 <artifactId>scalacheck_${scalaBinaryVersion}</artifactId>
-                <version>1.15.3</version>
+                <version>1.15.4</version>
                 <scope>test</scope>
             </dependency>
             <!--
