@@ -10,6 +10,10 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
+### Changes
+
+* Docker: Use openjdk-16 for the runtime in the app image, see #807
+
 ### Bug fixes
 
 * Printer: replacing '$' and '!' with supported characters, see #574
