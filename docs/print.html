@@ -2518,9 +2518,12 @@ Solutions ==
 </code></pre>
 <p><a id="typeAliases"></a></p>
 <h2><a class="header" href="#recipe-6-type-aliases" id="recipe-6-type-aliases">Recipe 6: type aliases</a></h2>
-<p>Check the example <a href="https://github.com/tlaplus/Examples/blob/master/specifications/MissionariesAndCannibals/MissionariesAndCannibals.tla">MissionariesAndCannibals.tla</a> from the repository of TLA+
-examples. </p>
-<p>We can annotate constants as follows:</p>
+<p>Type aliases can be used to provide a concise label for complex types, or to
+clarify the intended meaning of a simple types in the given context. </p>
+<p>Type aliases are declared with the <code>@typeAlias</code> annotation, as follows:</p>
+<pre><code class="language-tla">\* @typeAlias: ALIAS = &lt;type&gt;;
+</code></pre>
+<p>For example, suppose we have annotated some constants as follows:</p>
 <pre><code class="language-tla">CONSTANTS
     \* @type: Set(PERSON);
     Missionaries,
@@ -2528,31 +2531,34 @@ examples. </p>
     Cannibals 
 </code></pre>
 <p>If we continue annotating other declarations in the specification, we will see
-that the type <code>Set(PERSON)</code> is used quite a lot. Would not it be great to
-introduce a shortcut for this type?</p>
-<p>We can do that by declaring a type alias as follows:</p>
+that the type <code>Set(PERSON)</code> is used frequently. Type aliases let us provide a 
+shortcut.</p>
+<p>By convention, we introduce all type aliases by annotating an operator called
+<code>&lt;PREFIX&gt;TypeAliases</code>, where the <code>&lt;PREFIX&gt;</code> is replaced with a unique prefix to 
+prevent name clashes. In the <a href="https://github.com/tlaplus/Examples/blob/master/specifications/MissionariesAndCannibals/MissionariesAndCannibals.tla">MissionariesAndCannibals.tla</a> example, we have</p>
+<pre><code class="language-tla">\* @typeAlias: PERSONS = Set(PERSON);
+MCTypeAliases = TRUE
+</code></pre>
+<p>Having defined the type alias, we can use it in other definitions anywhere else 
+in the file:</p>
 <pre><code class="language-tla">CONSTANTS
-    \* @typeAlias: PERSONS = Set(PERSON);
     \* @type: PERSONS;
     Missionaries,
     \* @type: PERSONS;
     Cannibals 
-</code></pre>
-<p>The basic rule is that we can introduce a type alias with <code>@typeAlias</code> in the
-same place, where we can write a <code>@type</code> annotation. For more precise rules,
-check <a href="HOWTOs/../adr/002adr-types.html">ADR002</a>.  Having defined the type alias, we can use it in the later
-definitions:</p>
-<pre><code class="language-tla">VARIABLES
+
+VARIABLES
     \* @type: Str;
     bank_of_boat,
     \* @type: Str -&gt; PERSONS;
     who_is_on_bank 
 </code></pre>
-<p>Surely, we did not gain much by writing <code>PERSONS</code> instead of <code>Set(PERSON)</code>.  If
-your specification has complex types, e.g., records, aliases may help you in
+<p>Surely, we did not gain much by writing <code>PERSONS</code> instead of <code>Set(PERSON)</code>.  But
+if your specification has complex types (e.g., records), aliases may help you in
 minimizing the burden of specification maintenance. When you add one more field
 to the record type, it suffices to change the definition of the type alias,
 instead of changing the record type everywhere.</p>
+<p>For more details on the design and usage, see <a href="HOWTOs/../adr/002adr-types.html">ADR002</a>.</p>
 <h2><a class="header" href="#recipe-7-multi-line-annotations" id="recipe-7-multi-line-annotations">Recipe 7: Multi-line annotations</a></h2>
 <p>A type annotation may span over multiple lines. You may use both the <code>(* ... *)</code> syntax as well as the single-line syntax <code>\* ...</code>. All three examples below
 are accepted by the parser:</p>
@@ -7475,9 +7481,12 @@ auxiliary LET-definition to specify the type of the empty collection:</p>
 (or, of an empty sequence).</p>
 <p><a id="useTypeAlias"></a></p>
 <h3><a class="header" href="#24-introducing-and-using-type-aliases" id="24-introducing-and-using-type-aliases">2.4. Introducing and using type aliases</a></h3>
-<p>A type alias is introduced with the annotation <code>@typeAlias: ...;</code>. See the example below:</p>
-<pre><code class="language-tla">VARIABLE
-    \* @typeAlias: ENTRY = [a: Int, b: Bool];
+<p>A type alias is introduced with the annotation <code>@typeAlias: &lt;ALIAS&gt; = &lt;Type&gt;;</code> 
+on a dummy operator called <code>&lt;PREFIX&gt;TypeAliases</code>. For example:</p>
+<pre><code class="language-tla">\* @typeAlias: ENTRY = [a: Int, b: Bool];
+EXTypeAliases = TRUE
+
+VARIABLE
     \* @type: Set(ENTRY);
     msgs
 
@@ -7485,7 +7494,12 @@ auxiliary LET-definition to specify the type of the empty collection:</p>
 Foo(ms, m) ==
     msgs' = ms \union {m}
 </code></pre>
-<p>You have to follow three rules:</p>
+<p>The use of the dummy operator is a convention followed to simplify reasoning
+about where type aliases belong, and to ensure all aliases are located in one
+place. The <code>&lt;PREFIX&gt;</code> convention protects against name clashes when the  module
+is extended or instantiated.</p>
+<p>The actual rules around the placement of the <code>@typeAlias</code> annotation allows more
+flexibility:</p>
 <ol>
 <li>
 <p>You can define a type alias with <code>@typeAlias</code> anywhere you can define a <code>@type</code>.</p>
@@ -7494,8 +7508,9 @@ Foo(ms, m) ==
 <p>The names of type aliases must be unique in a module.</p>
 </li>
 <li>
-<p>There is no scoping for aliases within a module. Even if an alias is defined deep in a tree of LET-IN definitions, it
-can be references at any level in the module.</p>
+<p>There is no scoping for aliases within a module. Even if an alias is defined
+deep in a tree of LET-IN definitions, it can be references at any level in
+the module.</p>
 </li>
 </ol>
 <h2><a class="header" href="#3-example" id="3-example">3. Example</a></h2>

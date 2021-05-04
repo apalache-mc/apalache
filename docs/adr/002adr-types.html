@@ -419,9 +419,12 @@ auxiliary LET-definition to specify the type of the empty collection:</p>
 (or, of an empty sequence).</p>
 <p><a id="useTypeAlias"></a></p>
 <h3><a class="header" href="#24-introducing-and-using-type-aliases" id="24-introducing-and-using-type-aliases">2.4. Introducing and using type aliases</a></h3>
-<p>A type alias is introduced with the annotation <code>@typeAlias: ...;</code>. See the example below:</p>
-<pre><code class="language-tla">VARIABLE
-    \* @typeAlias: ENTRY = [a: Int, b: Bool];
+<p>A type alias is introduced with the annotation <code>@typeAlias: &lt;ALIAS&gt; = &lt;Type&gt;;</code> 
+on a dummy operator called <code>&lt;PREFIX&gt;TypeAliases</code>. For example:</p>
+<pre><code class="language-tla">\* @typeAlias: ENTRY = [a: Int, b: Bool];
+EXTypeAliases = TRUE
+
+VARIABLE
     \* @type: Set(ENTRY);
     msgs
 
@@ -429,7 +432,12 @@ auxiliary LET-definition to specify the type of the empty collection:</p>
 Foo(ms, m) ==
     msgs' = ms \union {m}
 </code></pre>
-<p>You have to follow three rules:</p>
+<p>The use of the dummy operator is a convention followed to simplify reasoning
+about where type aliases belong, and to ensure all aliases are located in one
+place. The <code>&lt;PREFIX&gt;</code> convention protects against name clashes when the  module
+is extended or instantiated.</p>
+<p>The actual rules around the placement of the <code>@typeAlias</code> annotation allows more
+flexibility:</p>
 <ol>
 <li>
 <p>You can define a type alias with <code>@typeAlias</code> anywhere you can define a <code>@type</code>.</p>
@@ -438,8 +446,9 @@ Foo(ms, m) ==
 <p>The names of type aliases must be unique in a module.</p>
 </li>
 <li>
-<p>There is no scoping for aliases within a module. Even if an alias is defined deep in a tree of LET-IN definitions, it
-can be references at any level in the module.</p>
+<p>There is no scoping for aliases within a module. Even if an alias is defined
+deep in a tree of LET-IN definitions, it can be references at any level in
+the module.</p>
 </li>
 </ol>
 <h2><a class="header" href="#3-example" id="3-example">3. Example</a></h2>
