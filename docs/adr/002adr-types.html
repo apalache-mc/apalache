@@ -421,8 +421,8 @@ auxiliary LET-definition to specify the type of the empty collection:</p>
 <h3><a class="header" href="#24-introducing-and-using-type-aliases" id="24-introducing-and-using-type-aliases">2.4. Introducing and using type aliases</a></h3>
 <p>A type alias is introduced with the annotation <code>@typeAlias: ...;</code>. See the example below:</p>
 <pre><code class="language-tla">VARIABLE
-    \* @typeAlias ENTRY = [a: Int, b: Bool];
-    \* @type Set(ENTRY);
+    \* @typeAlias: ENTRY = [a: Int, b: Bool];
+    \* @type: Set(ENTRY);
     msgs
 
 \* @type: (Set(ENTRY), ENTRY) =&gt; ENTRY;
