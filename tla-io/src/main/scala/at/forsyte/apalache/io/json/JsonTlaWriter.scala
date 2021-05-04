@@ -2,8 +2,8 @@ package at.forsyte.apalache.io.json
 
 import at.forsyte.apalache.io.json.impl.TlaToUJson
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.io.TlaType1PrinterPredefs.printer
-import at.forsyte.apalache.tla.lir.io.TlaWriter
+import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer
+import at.forsyte.apalache.io.lir.TlaWriter
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.{TlaDecl, TlaEx, TlaModule}
 

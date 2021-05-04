@@ -2,13 +2,12 @@ package at.forsyte.apalache.tla.imp.passes
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.io.annotations.store._
-import at.forsyte.apalache.io.json.impl.{TlaToUJson, Type1TagReader, UJsonRep, UJsonToTla}
+import at.forsyte.apalache.io.json.impl.{Type1TagReader, UJsonRep, UJsonToTla}
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{CyclicDependencyError, TlaModule}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.standard.DeclarationSorter
-import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer
-import at.forsyte.apalache.tla.lir.io.{TlaWriter, TlaWriterFactory, UntypedReader}
+import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.imp.{SanyImporter, SanyImporterException}
 import com.google.inject.Inject
 import com.google.inject.name.Named
