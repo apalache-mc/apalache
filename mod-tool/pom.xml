@@ -95,7 +95,7 @@
         </dependency>
         <dependency>
             <groupId>at.forsyte.apalache</groupId>
-            <artifactId>tla-import</artifactId>
+            <artifactId>tla-io</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

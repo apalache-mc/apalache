@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.assignments.passes._
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.passes._
 import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
-import at.forsyte.apalache.tla.lir.io.TlaWriterFactory
+import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, TransformationTracker}
 import at.forsyte.apalache.tla.pp.passes._

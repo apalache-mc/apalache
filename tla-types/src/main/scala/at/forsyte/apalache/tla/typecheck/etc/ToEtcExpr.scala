@@ -2,11 +2,12 @@ package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.io.annotations.{Annotation, AnnotationStr, StandardAnnotations}
 import at.forsyte.apalache.io.annotations.store.{AnnotationStore, findAnnotation}
+import at.forsyte.apalache.io.typecheck.parser.Type1ParseError
 import at.forsyte.apalache.tla.lir.{SparseTupT1, ValEx, _}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.typecheck._
-import at.forsyte.apalache.tla.typecheck.parser.{DefaultType1Parser, Type1ParseError}
+import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import com.typesafe.scalalogging.LazyLogging
 
 /**
