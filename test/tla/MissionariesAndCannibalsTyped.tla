@@ -28,10 +28,19 @@
 EXTENDS Integers, FiniteSets
 
 (***************************************************************************)
+(* The MCTypeAliases operator lets us group all type aliases together.     *)
+(* This makes it easy to rever to the defined aliases and the unique MC    *)
+(* prefix protects against name clashes if this module is extended or      *)
+(* instantiated.                                                           *)
+(***************************************************************************)
+
+\* @typeAlias: PERSONS = Set(PERSON);
+MCTypeAliases == TRUE
+
+(***************************************************************************)
 (* Next comes the declaration of the sets of missionaries and cannibals.   *)
 (***************************************************************************)
 CONSTANTS
-    \* @typeAlias: PERSONS = Set(PERSON);
     \* @type: PERSONS;
     Missionaries,
     \* @type: PERSONS;
