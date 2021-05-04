@@ -35,7 +35,7 @@ EXTENDS Integers, FiniteSets
 (***************************************************************************)
 
 \* @typeAlias: PERSONS = Set(PERSON);
-MCTypeAliases = TRUE
+MCTypeAliases == TRUE
 
 (***************************************************************************)
 (* Next comes the declaration of the sets of missionaries and cannibals.   *)
