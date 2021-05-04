@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.Checker.Outcome
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode
 import at.forsyte.apalache.tla.bmcmt.trex.{ExecutionSnapshot, TransitionExecutor}
-import at.forsyte.apalache.tla.lir.io.CounterexampleWriter
+import at.forsyte.apalache.io.lir.CounterexampleWriter
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.lir.{TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
