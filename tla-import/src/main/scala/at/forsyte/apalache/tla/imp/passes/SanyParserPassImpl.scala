@@ -2,21 +2,18 @@ package at.forsyte.apalache.tla.imp.passes
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.io.annotations.store._
-import at.forsyte.apalache.io.json.impl.{TlaToUJson, UJsonRep, UJsonToTla}
+import at.forsyte.apalache.io.json.impl.{UJsonRep, UJsonToTla}
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.{CyclicDependencyError, TlaModule}
-import at.forsyte.apalache.tla.lir.io.{TlaWriterFactory, UntypedReader}
+import at.forsyte.apalache.tla.imp.{SanyImporter, SanyImporterException}
+import at.forsyte.apalache.tla.lir.io.{TlaWriter, TlaWriterFactory, UntypedReader}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.standard.DeclarationSorter
-import at.forsyte.apalache.tla.lir.io.TlaType1PrinterPredefs.printer
-import at.forsyte.apalache.tla.imp.{SanyImporter, SanyImporterException}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.io.{JsonReader, JsonWriter, TlaWriter, TlaWriterFactory}
+import at.forsyte.apalache.tla.lir.{CyclicDependencyError, TlaModule}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
-import java.io.{File, FileWriter, PrintWriter}
+import java.io.File
 import java.nio.file.Path
 
 /**
@@ -25,9 +22,8 @@ import java.nio.file.Path
  * @author Igor Konnov
  */
 class SanyParserPassImpl @Inject() (
-    val options: PassOptions, val sourceStore: SourceStore, val changeListener: ChangeListener,
-    val annotationStore: AnnotationStore, val writerFactory: TlaWriterFactory,
-    @Named("AfterParser") val nextPass: Pass with TlaModuleMixin
+    val options: PassOptions, val sourceStore: SourceStore, val annotationStore: AnnotationStore,
+    val writerFactory: TlaWriterFactory, @Named("AfterParser") val nextPass: Pass with TlaModuleMixin
 ) extends SanyParserPass with LazyLogging {
 
   private var rootModule: Option[TlaModule] = None
@@ -83,21 +79,27 @@ class SanyParserPassImpl @Inject() (
           }
         // save the output
         val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-        writerFactory.writeModuleToFile(rootModule.get, TlaWriter.STANDARD_MODULES,
-            new File(outdir.toFile, "out-parser.tla"))
-        writeJson(rootModule.get, new File(outdir.toFile, "out-parser.json"))
+        writerFactory.writeModuleAllFormats(rootModule.get.copy(name = "OutParser"), TlaWriter.STANDARD_MODULES,
+            outdir.toFile)
 
         // write parser output to specified destination, if requested
         val output = options.getOrElse("parser", "output", "")
         if (output.nonEmpty) {
-          if (output.contains(".tla"))
-            writerFactory.writeModuleToFile(rootModule.get, TlaWriter.STANDARD_MODULES, new File(output))
-          else if (output.contains(".json"))
-            writeJson(rootModule.get, new File(output))
-          else
-            logger.error(
-                "  > Error writing output: please give either .tla or .json filename"
-            )
+          val outputFile = new File(output)
+          val outputDir = outputFile.getParentFile
+          val filename = outputFile.getName
+
+          if (filename.toLowerCase.endsWith(".tla")) {
+            val moduleName = filename.substring(0, filename.length - ".tla".length)
+            writerFactory.writeModuleToTla(rootModule.get.copy(name = moduleName), TlaWriter.STANDARD_MODULES,
+                outputDir)
+          } else if (filename.toLowerCase.endsWith(".json")) {
+            val moduleName = filename.substring(0, filename.length - ".json".length)
+            writerFactory.writeModuleToJson(rootModule.get.copy(name = moduleName), TlaWriter.STANDARD_MODULES,
+                outputDir)
+          } else {
+            logger.error(s"  > Unrecognized file format: $filename. Supported formats: .tla and .json")
+          }
 
           if (options.getOrElse("general", "debug", false)) {
             val sourceLocator =
@@ -112,17 +114,6 @@ class SanyParserPassImpl @Inject() (
         }
 
         true
-    }
-  }
-
-  private def writeJson(module: TlaModule, file: File): Unit = {
-    val writer = new PrintWriter(new FileWriter(file, false))
-    try {
-      val sourceLocator: SourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)
-      val jsonText = new TlaToUJson(Some(sourceLocator)).makeRoot(Seq(module)).toString
-      writer.write(jsonText)
-    } finally {
-      writer.close()
     }
   }
 
