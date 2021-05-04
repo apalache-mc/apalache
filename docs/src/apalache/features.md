@@ -14,7 +14,7 @@ to see liveness implemented, upvote the [liveness feature].
 
 Construct  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
-``EXTENDS module`` | ✔ | - | As soon as SANY imports the module. <!-- What does the prev sentence mean? --> Some standard modules are not supported yet
+``EXTENDS module`` | ✔ | - |  A few standard modules are not supported yet (Bags and Reals)
 ``CONSTANTS C1, C2`` | ✔ | -  | Either define a ``ConstInit`` operator to initialize the constants, use a `.cfg` file, or declare operators instead of constants, e.g., C1 == 111
 ``VARIABLES x, y, z`` | ✔ | - |
 ``ASSUME P`` | ✔ / ✖ | - | Parsed, but not propagated to the solver
@@ -62,7 +62,7 @@ Operator  | Supported? | Milestone | Comment
 `f[e]` | ✔ | - |
 `DOMAIN f` | ✔ | - |
 `[ x \in S ↦ e]` | ✔ | - |
-`[ S -> T ]` | ✔ | - | Sometimes, the functions sets are expanded <!-- What does this mean? -->
+`[ S -> T ]` | ✔ | - | Supported, provided the function can be interpreted symbolically
 `[ f EXCEPT ![e1] = e2 ]` | ✔ | - |
 
 #### Records
@@ -86,7 +86,7 @@ Note that our type system distinguishes tuples from general functions.
 Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 `e[i]` | ✔ / ✖ | - | Provided that `i` is a constant expression
-`<< e1, ..., e_n >>` | ✔ | - | By default, a tuple is constructed. Use a [type annotation](types-and-annotations.md) to construct a sequence.
+`<< e1, ..., e_n >>` | ✔ | - | Use a [type annotation](https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html) to distinguish between a tuple and a sequence.
 `S1 \X ... \X S_n` | ✔ | - |
 `[ t EXCEPT ![i] = e]` | ✔/✖ | - | Provided that `i` is a constant expression
 
@@ -104,8 +104,13 @@ Construct  | Supported? | Milestone | Comment
 Construct  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 `IF p THEN e1 ELSE e2` | ✔ | - | Provided that both e1 and e2 have the same type
+<<<<<<< Updated upstream
 `CASE p1 -> e1 [] ... [] p_n -> e_n [] OTHER -> e` | ✔ | - | See the comment above
 `CASE p1 -> e1 [] ... [] p_n -> e_n` | ✔| - |
+=======
+`CASE p1 -> e1 [] ... [] p_n -> e_n [] OTHER -> e` | ✔ | - | Provided that `e1, ..., e_n` have the same type
+`CASE p1 -> e1 [] ... [] p_n -> e_n` | ✔ | - | Provided that `e1, ..., e_n` have the same type
+>>>>>>> Stashed changes
 `LET d1 == e1 ... d_n == e_n IN e` | ✔ |  | All applications of `d1`, ..., `d_n` are replaced with the expressions `e1`, ... `e_n` respectively. LET-definitions without arguments are kept in place.
 multi-line `/\` and `\/` | ✔ | - |
 
