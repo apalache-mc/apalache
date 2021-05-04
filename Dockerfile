@@ -22,7 +22,7 @@ RUN mvn --batch-mode -DskipTests package
 
 
 # 2. APP IMAGE
-FROM openjdk:9-slim
+FROM openjdk:16-slim
 
 # To prepare the app image, we do the following:
 #
@@ -56,7 +56,7 @@ COPY --from=builder \
 ENV _JAVA_OPTIONS="-Djdk.net.URLClassPath.disableClassPathURLCheck=true"
 
 # make apalache-mc available in PATH
-ENV PATH="/usr/local/openjdk-8/bin/:/opt/apalache/bin:${PATH}"
+ENV PATH="/usr/local/openjdk-16/bin/:/opt/apalache/bin:${PATH}"
 
 # TLA parser requires all specification files to be in the same directory
 # We assume the user bind-mounted the spec dir into /var/apalache
