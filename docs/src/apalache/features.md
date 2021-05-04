@@ -105,7 +105,7 @@ Construct  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 `IF p THEN e1 ELSE e2` | ✔ | - | Provided that both e1 and e2 have the same type
 `CASE p1 -> e1 [] ... [] p_n -> e_n [] OTHER -> e` | ✔ | - | See the comment above
-`CASE p1 -> e1 [] ... [] p_n -> e_n` | ✖ | - | The default arm with `OTHER` is always required
+`CASE p1 -> e1 [] ... [] p_n -> e_n` | ✔| - |
 `LET d1 == e1 ... d_n == e_n IN e` | ✔ |  | All applications of `d1`, ..., `d_n` are replaced with the expressions `e1`, ... `e_n` respectively. LET-definitions without arguments are kept in place.
 multi-line `/\` and `\/` | ✔ | - |
 
