@@ -5,7 +5,7 @@ Here is the list of the TLA+ language features that are currently supported by A
 At the moment, Apalache is only able to check invariants and inductive
 invariants.  Which means that you can only check safety properties with
 Apalache, unless you employ a [liveness-to-safety] transformation in your spec.
-In general, we doe not support checking liveness properties.  If you would like
+In general, we do not support checking liveness properties.  If you would like
 to see liveness implemented, upvote the [liveness feature].
 
 ## Language
@@ -176,4 +176,3 @@ Not supported, not a priority
 [cheat]: https://lamport.azurewebsites.net/tla/summary.pdf
 [liveness-to-safety]: https://www.sciencedirect.com/science/article/pii/S1571066104804109?via%3Dihub
 [liveness feature]: https://github.com/informalsystems/apalache/issues/488
-
