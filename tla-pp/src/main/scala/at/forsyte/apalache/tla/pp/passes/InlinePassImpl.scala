@@ -94,7 +94,7 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
 
     // dump the result of preprocessing
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    writerFactory.writeModuleToFile(filtered, TlaWriter.STANDARD_MODULES, new File(outdir.toFile, "out-inline.tla"))
+    writerFactory.writeModuleAllFormats(filtered.copy(name = "OutInline"), TlaWriter.STANDARD_MODULES, outdir.toFile)
 
     outputTlaModule = Some(filtered)
     true

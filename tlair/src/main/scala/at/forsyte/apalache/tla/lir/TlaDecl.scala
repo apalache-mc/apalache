@@ -16,7 +16,7 @@ abstract class TlaDecl(implicit val typeTag: TypeTag) extends Identifiable with 
  * @param name         the module name
  * @param declarations all kinds of declarations
  */
-class TlaModule(val name: String, val declarations: Seq[TlaDecl]) extends Serializable {
+case class TlaModule(name: String, declarations: Seq[TlaDecl]) extends Serializable {
   def constDeclarations: Seq[TlaConstDecl] = {
     declarations.collect { case d: TlaConstDecl => d }
   }
@@ -31,21 +31,6 @@ class TlaModule(val name: String, val declarations: Seq[TlaDecl]) extends Serial
 
   def assumeDeclarations: Seq[TlaAssumeDecl] = {
     declarations.collect { case d: TlaAssumeDecl => d }
-  }
-
-  def canEqual(other: Any): Boolean = other.isInstanceOf[TlaModule]
-
-  override def equals(other: Any): Boolean = other match {
-    case that: TlaModule =>
-      (that canEqual this) &&
-        name == that.name &&
-        declarations == that.declarations
-    case _ => false
-  }
-
-  override def hashCode(): Int = {
-    val state = Seq(name, declarations)
-    state.map(_.hashCode()).foldLeft(0)((a, b) => 31 * a + b)
   }
 
   override def toString: String = {

@@ -246,17 +246,17 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |INVARIANTS Inv2
       """.stripMargin,
         """--------------------------------- MODULE test ---------------------------------
-        |
-        |INVARIANT_$0 == Inv1
-        |
-        |INVARIANT_$1 == Inv2
-        |
-        |INIT == Init
-        |
-        |NEXT == Next
-        |
-        |================================================================================
-        |""".stripMargin
+          |
+          |INVARIANT__si_0 == Inv1
+          |
+          |INVARIANT__si_1 == Inv2
+          |
+          |INIT == Init
+          |
+          |NEXT == Next
+          |
+          |================================================================================
+          |""".stripMargin
     )
   }
 
@@ -273,9 +273,9 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
       """.stripMargin,
         """--------------------------------- MODULE test ---------------------------------
         |
-        |PROPERTY_$0 == Prop1
+        |PROPERTY__si_0 == Prop1
         |
-        |PROPERTY_$1 == Prop2
+        |PROPERTY__si_1 == Prop2
         |
         |INIT == Init
         |
@@ -299,9 +299,9 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
       """.stripMargin,
         """--------------------------------- MODULE test ---------------------------------
         |
-        |CONSTRAINT_$0 == Cons1
+        |CONSTRAINT__si_0 == Cons1
         |
-        |CONSTRAINT_$1 == Cons2
+        |CONSTRAINT__si_1 == Cons2
         |
         |INIT == Init
         |
@@ -325,9 +325,9 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
       """.stripMargin,
         """--------------------------------- MODULE test ---------------------------------
         |
-        |ACTION_CONSTRAINT_$0 == Cons1
+        |ACTION_CONSTRAINT__si_0 == Cons1
         |
-        |ACTION_CONSTRAINT_$1 == Cons2
+        |ACTION_CONSTRAINT__si_1 == Cons2
         |
         |INIT == Init
         |
@@ -364,35 +364,35 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |Prop
       """.stripMargin,
         """--------------------------------- MODULE test ---------------------------------
-        |
-        |M == 1
-        |
-        |B == "foo"
-        |
-        |Init == TRUE
-        |
-        |Next == TRUE
-        |
-        |Prop == TRUE
-        |
-        |OVERRIDE_N == "ModelValue_M"
-        |
-        |OVERRIDE_A == B
-        |
-        |CONSTRAINT_$0 == Cons1
-        |
-        |ACTION_CONSTRAINT_$0 == Cons2
-        |
-        |INVARIANT_$0 == Inv
-        |
-        |PROPERTY_$0 == Prop
-        |
-        |INIT == Init
-        |
-        |NEXT == Next
-        |
-        |================================================================================
-        |""".stripMargin
+          |
+          |M == 1
+          |
+          |B == "foo"
+          |
+          |Init == TRUE
+          |
+          |Next == TRUE
+          |
+          |Prop == TRUE
+          |
+          |OVERRIDE_N == "ModelValue_M"
+          |
+          |OVERRIDE_A == B
+          |
+          |CONSTRAINT__si_0 == Cons1
+          |
+          |ACTION_CONSTRAINT__si_0 == Cons2
+          |
+          |INVARIANT__si_0 == Inv
+          |
+          |PROPERTY__si_0 == Prop
+          |
+          |INIT == Init
+          |
+          |NEXT == Next
+          |
+          |================================================================================
+          |""".stripMargin
     )
   }
 }

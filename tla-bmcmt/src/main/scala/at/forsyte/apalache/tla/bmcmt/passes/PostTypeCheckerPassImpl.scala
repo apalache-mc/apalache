@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.passes
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.io.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.typecheck.passes.EtcTypeCheckerPassImpl
@@ -22,10 +23,10 @@ import com.typesafe.scalalogging.LazyLogging
  * @param nextPass        next pass to be used
  */
 class PostTypeCheckerPassImpl @Inject() (options: PassOptions, sourceStore: SourceStore, changeListener: ChangeListener,
-    tracker: TransformationTracker, annotationStore: AnnotationStore,
+    tracker: TransformationTracker, annotationStore: AnnotationStore, tlaWriterFactory: TlaWriterFactory,
     @Named("AfterPostTypeChecker") nextPass: Pass with TlaModuleMixin)
-    extends EtcTypeCheckerPassImpl(options, sourceStore, changeListener, tracker, annotationStore, nextPass)
-    with LazyLogging {
+    extends EtcTypeCheckerPassImpl(options, sourceStore, changeListener, tracker, annotationStore, tlaWriterFactory,
+        nextPass) with LazyLogging {
 
   // in the post-checking, polytypes are not allowed, as the model checker will not be able to handle them
   override def inferPoly: Boolean = false
