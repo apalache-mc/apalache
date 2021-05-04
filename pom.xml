@@ -14,7 +14,7 @@
         <scalaBinaryVersion>2.12</scalaBinaryVersion>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <logback.version>1.2.3</logback.version>
-        <spotless.version>2.10.3</spotless.version>
+        <spotless.version>2.11.0</spotless.version>
     </properties>
 
     <repositories>
@@ -154,7 +154,7 @@
                 <plugin>
                     <groupId>net.alchim31.maven</groupId>
                     <artifactId>scala-maven-plugin</artifactId>
-                    <version>4.4.1</version>
+                    <version>4.5.1</version>
 
                     <executions>
                         <execution>
