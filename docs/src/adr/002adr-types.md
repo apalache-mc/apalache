@@ -321,8 +321,8 @@ A type alias is introduced with the annotation `@typeAlias: ...;`. See the examp
 
 ```tla
 VARIABLE
-    \* @typeAlias ENTRY = [a: Int, b: Bool];
-    \* @type Set(ENTRY);
+    \* @typeAlias: ENTRY = [a: Int, b: Bool];
+    \* @type: Set(ENTRY);
     msgs
 
 \* @type: (Set(ENTRY), ENTRY) => ENTRY;
