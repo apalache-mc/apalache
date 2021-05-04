@@ -317,11 +317,14 @@ The type checker uses the type annotation to refine the type of an empty set
 
 ### 2.4. Introducing and using type aliases
 
-A type alias is introduced with the annotation `@typeAlias: ...;`. See the example below:
+A type alias is introduced with the annotation `@typeAlias: <ALIAS> = <Type>;` 
+on a dummy operator called `<PREFIX>TypeAliases`. For example:
 
 ```tla
+\* @typeAlias: ENTRY = [a: Int, b: Bool];
+EXTypeAliases = TRUE
+
 VARIABLE
-    \* @typeAlias: ENTRY = [a: Int, b: Bool];
     \* @type: Set(ENTRY);
     msgs
 
@@ -330,14 +333,21 @@ Foo(ms, m) ==
     msgs' = ms \union {m}
 ```
 
-You have to follow three rules:
+The use of the dummy operator is a convention followed to simplify reasoning
+about where type aliases belong, and to ensure all aliases are located in one
+place. The `<PREFIX>` convention protects against name clashes when the  module
+is extended or instantiated.
+
+The actual rules around the placement of the `@typeAlias` annotation allows more
+flexibility:
 
 1. You can define a type alias with `@typeAlias` anywhere you can define a `@type`.
 
 1. The names of type aliases must be unique in a module.
 
-1. There is no scoping for aliases within a module. Even if an alias is defined deep in a tree of LET-IN definitions, it
-   can be references at any level in the module.
+1. There is no scoping for aliases within a module. Even if an alias is defined
+   deep in a tree of LET-IN definitions, it can be references at any level in
+   the module.
 
 ## 3. Example
 

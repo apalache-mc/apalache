@@ -299,10 +299,16 @@ This time the type checker can find the types of all expressions:
 <a id="typeAliases"></a>
 ## Recipe 6: type aliases
 
-Check the example [MissionariesAndCannibals.tla][] from the repository of TLA+
-examples. 
+Type aliases can be used to provide a concise label for complex types, or to
+clarify the intended meaning of a simple types in the given context. 
 
-We can annotate constants as follows:
+Type aliases are declared with the `@typeAlias` annotation, as follows:
+
+```tla
+\* @typeAlias: ALIAS = <type>;
+```
+
+For example, suppose we have annotated some constants as follows:
 
 ```tla
 CONSTANTS
@@ -313,26 +319,28 @@ CONSTANTS
 ```
 
 If we continue annotating other declarations in the specification, we will see
-that the type `Set(PERSON)` is used quite a lot. Would not it be great to
-introduce a shortcut for this type?
+that the type `Set(PERSON)` is used frequently. Type aliases let us provide a 
+shortcut.
 
-We can do that by declaring a type alias as follows:
+By convention, we introduce all type aliases by annotating an operator called
+`<PREFIX>TypeAliases`, where the `<PREFIX>` is replaced with a unique prefix to 
+prevent name clashes. In the [MissionariesAndCannibals.tla][] example, we have
+
+```tla
+\* @typeAlias: PERSONS = Set(PERSON);
+MCTypeAliases = TRUE
+```
+
+Having defined the type alias, we can use it in other definitions anywhere else 
+in the file:
 
 ```tla
 CONSTANTS
-    \* @typeAlias: PERSONS = Set(PERSON);
     \* @type: PERSONS;
     Missionaries,
     \* @type: PERSONS;
     Cannibals 
-```
 
-The basic rule is that we can introduce a type alias with `@typeAlias` in the
-same place, where we can write a `@type` annotation. For more precise rules,
-check [ADR002][].  Having defined the type alias, we can use it in the later
-definitions:
-
-```tla
 VARIABLES
     \* @type: Str;
     bank_of_boat,
@@ -340,11 +348,13 @@ VARIABLES
     who_is_on_bank 
 ```
 
-Surely, we did not gain much by writing `PERSONS` instead of `Set(PERSON)`.  If
-your specification has complex types, e.g., records, aliases may help you in
+Surely, we did not gain much by writing `PERSONS` instead of `Set(PERSON)`.  But
+if your specification has complex types (e.g., records), aliases may help you in
 minimizing the burden of specification maintenance. When you add one more field
 to the record type, it suffices to change the definition of the type alias,
 instead of changing the record type everywhere.
+
+For more details on the design and usage, see [ADR002][].
 
 ## Recipe 7: Multi-line annotations
 
