@@ -79,7 +79,7 @@ class SeqModelChecker[ExecutorContextT](
     // advance to the next state
     trex.nextState()
 
-    // check the invariants
+    // check the state invariants
     if (params.invariantMode == InvariantMode.AfterJoin) {
       checkInvariants(trex.stepNo - 1, maybeInvariantNos)
     } else {
@@ -126,6 +126,7 @@ class SeqModelChecker[ExecutorContextT](
               // keep the transition and collect the invariants
               val transitionInvs = addMaybeInvariants(no)
               if (params.invariantMode == InvariantMode.BeforeJoin) {
+                // check the state invariants
                 trex.nextState() // advance to the next state
                 val outcome = checkInvariants(trex.stepNo - 1, transitionInvs)
                 if (outcome != Outcome.NoError) {
