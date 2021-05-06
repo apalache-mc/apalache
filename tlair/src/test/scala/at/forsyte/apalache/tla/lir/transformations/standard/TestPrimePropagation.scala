@@ -97,8 +97,9 @@ class TestPrimePropagation extends FunSuite with BeforeAndAfter with Checkers {
     }
 
     val prop = {
-      forAll(gens.genTlaEx(gens.simpleOperators ++ gens.arithOperators :+ TlaActionOper.prime)(Seq())) { ex =>
-        onlyNamesArePrimed(transformer(ex))
+      forAll(gens.genTlaEx(gens.simpleOperators ++ gens.arithOperators :+ TlaActionOper.prime)(gens.emptyContext)) {
+        ex =>
+          onlyNamesArePrimed(transformer(ex))
       }
     }
 

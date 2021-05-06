@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaTempOper}
  * @param nameLevel a function that returns the level of a name.
  * @author Igor Konnov
  */
-class TlaLevelFinder(nameLevel: String => TlaLevel) {
+class TlaExLevelFinder(nameLevel: String => TlaLevel) {
   def apply(ex: TlaEx): TlaLevel = find(ex)
 
   private def find: TlaEx => TlaLevel = {

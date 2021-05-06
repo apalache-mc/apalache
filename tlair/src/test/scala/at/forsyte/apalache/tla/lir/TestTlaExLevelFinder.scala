@@ -10,16 +10,16 @@ import org.scalatest.prop.Checkers
  * Tests of TlaLevelFinder.
  */
 @RunWith(classOf[JUnitRunner])
-class TestTlaLevelFinder extends FunSuite with Checkers {
+class TestTlaExLevelFinder extends FunSuite with Checkers {
 
   test("non-action operators + constants = constant level") {
     val gens = new IrGenerators {
       override val maxArgs: Int = 3
     }
     // all names are considered constants
-    val finder = new TlaLevelFinder({ _ => TlaLevelConst })
+    val finder = new TlaExLevelFinder({ _ => TlaLevelConst })
     val operators = gens.simpleOperators ++ gens.setOperators ++ gens.logicOperators ++ gens.arithOperators
-    val prop = forAll(gens.genTlaEx(operators)(Seq())) { ex =>
+    val prop = forAll(gens.genTlaEx(operators)(gens.emptyContext)) { ex =>
       finder(ex) =? TlaLevelConst
     }
     check(prop, minSuccessful(2500), sizeRange(8))
@@ -31,8 +31,8 @@ class TestTlaLevelFinder extends FunSuite with Checkers {
     }
     // all names are considered constants
     val operators = gens.simpleOperators ++ gens.setOperators ++ gens.logicOperators ++ gens.arithOperators
-    val prop = forAll(gens.genTlaEx(operators)(Seq())) { ex =>
-      val finder = new TlaLevelFinder(_ => TlaLevelState)
+    val prop = forAll(gens.genTlaEx(operators)(gens.emptyContext)) { ex =>
+      val finder = new TlaExLevelFinder(_ => TlaLevelState)
       val level = finder(ex)
       if (containsName(ex)) {
         level =? TlaLevelState
@@ -49,8 +49,8 @@ class TestTlaLevelFinder extends FunSuite with Checkers {
     }
     // all names are considered constants
     val operators = gens.actionOperators
-    val prop = forAll(gens.genTlaEx(operators)(Seq())) { ex =>
-      val finder = new TlaLevelFinder(_ => TlaLevelState)
+    val prop = forAll(gens.genTlaEx(operators)(gens.emptyContext)) { ex =>
+      val finder = new TlaExLevelFinder(_ => TlaLevelState)
       val level = finder(ex)
       ex match {
         case OperEx(_, _*) =>
@@ -69,8 +69,8 @@ class TestTlaLevelFinder extends FunSuite with Checkers {
     }
     // all names are considered constants
     val operators = gens.temporalOperators
-    val prop = forAll(gens.genTlaEx(operators)(Seq())) { ex =>
-      val finder = new TlaLevelFinder(_ => TlaLevelState)
+    val prop = forAll(gens.genTlaEx(operators)(gens.emptyContext)) { ex =>
+      val finder = new TlaExLevelFinder(_ => TlaLevelState)
       val level = finder(ex)
       ex match {
         case OperEx(_, _*) =>
