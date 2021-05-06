@@ -32,7 +32,7 @@ class TlaDeclLevelFinder(module: TlaModule) {
     }
   }
 
-  private def cacheLevel(callers: Set[String], name: String): Unit = {
+  private def cacheLevel(callers: Set[String], name: String): TlaLevel = {
     def levelOfName(name: String): TlaLevel = {
       if (consts.contains(name)) {
         TlaLevelConst
@@ -41,8 +41,11 @@ class TlaDeclLevelFinder(module: TlaModule) {
       } else {
         if (!callers.contains(name) && defs.contains(name)) {
           // as the module comes from the parser, we assume that defs contains a definition for the name `name`
-          cacheLevel(callers + name, name)
-          levelCacheMap(name)
+          levelCacheMap.get(name) match {
+            case Some(level) => level
+
+            case None => cacheLevel(callers + name, name)
+          }
         } else {
           TlaLevelConst
         }
@@ -51,5 +54,6 @@ class TlaDeclLevelFinder(module: TlaModule) {
 
     val level = new TlaExLevelFinder(levelOfName)(defs(name).body)
     levelCacheMap += name -> level
+    level
   }
 }
