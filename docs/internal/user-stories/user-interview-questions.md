@@ -2,6 +2,8 @@
 
 The goal of the interviews is to ... TODO
 
+- [ ] What is your background and how did you come to formal
+      specification/verification?
 - [ ] Why are you writing TLA+ specs?
 - [ ] Are you currently in the process of writing a TLA+ spec? Which spec? [(if
       not) What was the last spec you worked on?]
