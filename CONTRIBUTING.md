@@ -101,7 +101,7 @@ contributors and maintainers to make sure:
 
 ## Dependencies
 
-For setting up the local build, see the [instructions on building form
+For setting up the local build, see the [instructions on building from
 source](https://apalache.informal.systems/docs/apalache/installation/source.html).
 
 ### Environment
