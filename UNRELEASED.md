@@ -14,6 +14,7 @@
 
 * Docker: Use openjdk-16 for the runtime in the app image, see #807
 * Documentation: Introduce TypeAlises operator convention, see #808
+* tlair: TlaExLevelFinder and TlaDeclLevelFinder to compute TLA+ levels, see #811
 
 ### Bug fixes
 
