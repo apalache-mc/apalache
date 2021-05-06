@@ -27,7 +27,7 @@ sealed trait TlaLevel extends Ordered[TlaLevel] {
   }
 
   /**
-   * Join the levels by computing the smallest level that covers both of `this` and `that`.
+   * Join the levels by computing the maximum of the levels of `this` and `that`.
    *
    * @param that the level to join with
    * @return the minimal level j that satisfies: `j <= this` and `j <= that`.
@@ -37,7 +37,7 @@ sealed trait TlaLevel extends Ordered[TlaLevel] {
   }
 
   /**
-   * Join the level with a sequence of level
+   * Join the level with a sequence of level.
    *
    * @param otherLevels a sequence of levels
    * @return the join of `this` and otherLevels
@@ -50,11 +50,12 @@ sealed trait TlaLevel extends Ordered[TlaLevel] {
 object TlaLevel {
   private val INT_TO_LEVEL = Seq(TlaLevelConst, TlaLevelState, TlaLevelAction, TlaLevelTemporal)
 
-  def fromInt(level: Int): TlaLevel = {
-    if (level < 0 || level >= INT_TO_LEVEL.length) {
-      throw new IllegalArgumentException(s"Unexpected level of TlaValue: $level")
-    } else {
-      INT_TO_LEVEL(level)
+  def fromInt(levelNo: Int): TlaLevel = {
+    INT_TO_LEVEL.find(_.level == levelNo) match {
+      case Some(level) => level
+
+      case None =>
+        throw new IllegalArgumentException(s"Unexpected level: $levelNo")
     }
   }
 }
