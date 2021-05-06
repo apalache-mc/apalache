@@ -34,12 +34,12 @@ trait IrGenerators {
   case class UserOperSig(name: String, nparams: Int)
 
   // an internal context of the generated operator definitions
-  type UserContext = Seq[UserOperSig]
+  type UserContext = Map[String, UserOperSig]
 
   /**
    * An empty user context.
    */
-  val emptyContext: UserContext = Seq[UserOperSig]()
+  val emptyContext: UserContext = Map[String, UserOperSig]()
 
   /**
    * The maximal number of arguments in user-defined operators and built-in operators.
@@ -63,6 +63,12 @@ trait IrGenerators {
   val simpleOperators = List(TlaOper.eq, TlaOper.ne, TlaOper.chooseBounded, TlaOper.apply)
 
   /**
+   * The list of propositional operators and quantifiers, excluding unbounded quantifiers.
+   */
+  val logicOperators = List(TlaBoolOper.and, TlaBoolOper.or, TlaBoolOper.not, TlaBoolOper.equiv, TlaBoolOper.implies,
+      TlaBoolOper.exists, TlaBoolOper.forall)
+
+  /**
    * The list of arithmetic operators that are defined in TlaArithOper.
    */
   val arithOperators = List(TlaArithOper.div, TlaArithOper.dotdot, TlaArithOper.exp, TlaArithOper.ge, TlaArithOper.gt,
@@ -70,11 +76,23 @@ trait IrGenerators {
       TlaArithOper.uminus)
 
   /**
-   * The list of the most basic operators that are defined in TlaOper.
+   * The list of all set operators.
    */
   val setOperators = List(TlaSetOper.cap, TlaSetOper.cup, TlaSetOper.enumSet, TlaSetOper.filter, TlaSetOper.funSet,
       TlaSetOper.in, TlaSetOper.notin, TlaSetOper.map, TlaSetOper.powerset, TlaSetOper.recSet, TlaSetOper.seqSet,
       TlaSetOper.setminus, TlaSetOper.subseteq, TlaSetOper.times, TlaSetOper.union)
+
+  /**
+   * The list of action operators.
+   */
+  val actionOperators = List(TlaActionOper.prime, TlaActionOper.enabled, TlaActionOper.stutter, TlaActionOper.nostutter,
+      TlaActionOper.unchanged, TlaActionOper.composition)
+
+  /**
+   * The list of temporal operators, excluding \AA and \EE, as those are not useful to us.
+   */
+  val temporalOperators = List(TlaTempOper.box, TlaTempOper.diamond, TlaTempOper.leadsTo, TlaTempOper.guarantees,
+      TlaTempOper.strongFairness, TlaTempOper.weakFairness)
 
   def genTypeTag: Gen[TypeTag] = for {
     i <- arbitrary[Int]
@@ -124,8 +142,8 @@ trait IrGenerators {
    *
    * @return a generator of `NameEx(_)`.
    */
-  def genNameEx: Gen[NameEx] = for {
-    s <- identifier
+  def genNameEx(ctx: UserContext): Gen[NameEx] = for {
+    s <- oneOf(ctx.keys)
     tt <- genTypeTag
   } yield NameEx(s).withTag(tt)
 
@@ -137,8 +155,7 @@ trait IrGenerators {
    */
   def genOperApply(exGen: UserContext => Gen[TlaEx])(ctx: UserContext): Gen[TlaEx] = sized { size =>
     for {
-      declNo <- choose(0, ctx.size - 1)
-      decl = ctx(declNo)
+      decl <- oneOf(ctx.values)
       argGen = resize(size - 1, exGen(ctx))
       args <- argsByArity(argGen)(FixedArity(decl.nparams))
       tt <- genTypeTag
@@ -160,11 +177,11 @@ trait IrGenerators {
         ndefs <- choose(1, maxDefsPerLetIn)
         defs <- listOfN(ndefs, resize(size - 1, genTlaOperDecl(exGen)(ctx))) suchThat { ds =>
           // no new name is present in the context
-          ds.map(_.name).toSet.intersect(ctx.map(_.name).toSet).isEmpty &&
+          ds.map(_.name).toSet.intersect(ctx.keySet).isEmpty &&
           // and all new names are mutually unique
           ds.map(_.name).toSet.size == ds.size
         }
-        body <- resize(size - 1, exGen(ctx ++ defs.map(d => UserOperSig(d.name, d.formalParams.length))))
+        body <- resize(size - 1, exGen(ctx ++ defs.map(d => d.name -> UserOperSig(d.name, d.formalParams.length))))
         tt <- genTypeTag
       } yield LetInEx(body, defs: _*).withTag(tt)
     }
@@ -181,7 +198,11 @@ trait IrGenerators {
     sized { size =>
       if (size <= 1) {
         // no gas to generate one more operator expression
-        oneOf(genValEx, genNameEx)
+        if (ctx.nonEmpty) {
+          oneOf(genValEx, genNameEx(ctx))
+        } else {
+          genValEx
+        }
       } else {
         for {
           operNo <- choose(0, builtInOpers.length - 1)
@@ -193,12 +214,11 @@ trait IrGenerators {
             if (ctx.nonEmpty) {
               // a value, a name,
               // an application of a user-defined operator in the context, an application of a built-in operator
-              oneOf(genValEx, genNameEx, genOperApply(genTlaEx(builtInOpers))(ctx),
+              oneOf(genValEx, genNameEx(ctx), genOperApply(genTlaEx(builtInOpers))(ctx),
                   genLetInEx(genTlaEx(builtInOpers))(ctx), const(OperEx(oper, args: _*).withTag(tt)))
             } else {
               // as above but no user-defined operators
-              oneOf(genValEx, genNameEx, genLetInEx(genTlaEx(builtInOpers))(ctx),
-                  const(OperEx(oper, args: _*).withTag(tt)))
+              oneOf(genValEx, genLetInEx(genTlaEx(builtInOpers))(ctx), const(OperEx(oper, args: _*).withTag(tt)))
             }
         } yield result
       }
@@ -214,7 +234,7 @@ trait IrGenerators {
    */
   def genTlaOperDecl(exGen: UserContext => Gen[TlaEx])(ctx: UserContext): Gen[TlaOperDecl] = {
     for {
-      name <- identifier
+      name <- identifier suchThat (n => !ctx.contains(n))
       body <- exGen(ctx)
       nparams <- choose(0, maxArgs)
       params <- listOfN(nparams, identifier)
@@ -243,7 +263,7 @@ trait IrGenerators {
    */
   def genTlaConstDecl(ctx: UserContext): Gen[TlaConstDecl] = {
     for {
-      name <- identifier suchThat (n => ctx.forall(d => d.name != n))
+      name <- identifier suchThat (n => !ctx.contains(n))
       tt <- genTypeTag
     } yield TlaConstDecl(name).withTag(tt)
   }
@@ -256,7 +276,7 @@ trait IrGenerators {
    */
   def genTlaVarDecl(ctx: UserContext): Gen[TlaVarDecl] = {
     for {
-      name <- identifier suchThat (n => ctx.forall(d => d.name != n))
+      name <- identifier suchThat (n => !ctx.contains(n))
       tt <- genTypeTag
     } yield TlaVarDecl(name).withTag(tt)
   }
@@ -269,51 +289,64 @@ trait IrGenerators {
    */
   def genTlaDecl(exGen: UserContext => Gen[TlaEx])(ctx: UserContext): Gen[TlaDecl] = {
     for {
-      name <- identifier
-      decl <- oneOf(const(TlaConstDecl(name)), const(TlaVarDecl(name)), genTlaAssumeDecl(exGen(ctx)),
-          genTlaOperDecl(exGen)(ctx))
+      decl <- oneOf(genTlaConstDecl(ctx), genTlaVarDecl(ctx), genTlaAssumeDecl(exGen(ctx)), genTlaOperDecl(exGen)(ctx))
     } yield decl
   }
 
   /**
-   * Generate a module
+   * Generate a declaration of: a constant, an operator definition, an assumption.
+   *
+   * @param ctx a context of user declarations.
+   * @return a generator of constant declarations
+   */
+  def genTlaDeclButNotVar(exGen: UserContext => Gen[TlaEx])(ctx: UserContext): Gen[TlaDecl] = {
+    for {
+      decl <- oneOf(genTlaConstDecl(ctx), genTlaAssumeDecl(exGen(ctx)), genTlaOperDecl(exGen)(ctx))
+    } yield decl
+  }
+
+  /**
+   * Generate a module by providing an expression generator.
    *
    * @param exGen a generator of TLA expressions
    * @return a generator of modules
    */
   def genTlaModule(exGen: UserContext => Gen[TlaEx]): Gen[TlaModule] = {
-    for {
-      name <- identifier
-      ndecls <- choose(1, maxDeclsPerModule)
-      decls <- listOfN(ndecls, genTlaDecl(exGen)(Seq.empty)) suchThat { lst =>
-        val defs = lst.collect { case d: TlaOperDecl => d }
-        // find the names of the definitions inside the bodies of the global definitions
-        val internal = defs.foldLeft(Set.empty[String]) { (set, d) =>
-          set ++ internalDefs(d.body)
-        }
-        // and the name of the global definitions
-        val global = defs.foldLeft(Set.empty[String]) { (set, d) =>
-          set + d.name
-        }
-        global.intersect(internal).isEmpty
-      }
-    } yield new TlaModule(name, decls)
+    genTlaModuleWith(genTlaDecl(exGen))
   }
 
-  // compute the set of names that are declared in an expression
-  private def internalDefs: TlaEx => Set[String] = {
-    case LetInEx(body, defs @ _*) =>
-      defs.foldLeft(internalDefs(body)) { (names, d) =>
-        names + d.name
-      }
+  /**
+   * Generate a module by providing the declaration generator and expression generator.
+   *
+   * @param declGen generator of TLA declarations
+   * @return a generator of modules
+   */
+  def genTlaModuleWith(declGen: UserContext => Gen[TlaDecl]): Gen[TlaModule] = {
+    for {
+      name <- identifier
+      decls <- genTlaDeclList(declGen)(emptyContext)
+    } yield TlaModule(name, decls)
+  }
 
-    case OperEx(_, args @ _*) =>
-      args.foldLeft(Set.empty[String]) { (names, arg) =>
-        internalDefs(arg) ++ names
+  // generate a list of declarations and avoid duplicates in the operator names
+  private def genTlaDeclList(declGen: UserContext => Gen[TlaDecl])(ctx: UserContext): Gen[List[TlaDecl]] = {
+    sized { size =>
+      if (size <= 1) {
+        for {
+          decl <- declGen(ctx)
+        } yield List(decl)
+      } else {
+        for {
+          head <- declGen(ctx)
+          operSig = UserOperSig(head.name,
+              head match {
+            case TlaOperDecl(_, params, _) => params.length
+            case _                         => 0
+          })
+          tail <- resize(size - 1, genTlaDeclList(declGen)(ctx + (head.name -> operSig)))
+        } yield head :: tail
       }
-
-    case _ =>
-      Set.empty[String]
+    }
   }
 
   // Given operator arity and an element generator, produce a list of arguments
