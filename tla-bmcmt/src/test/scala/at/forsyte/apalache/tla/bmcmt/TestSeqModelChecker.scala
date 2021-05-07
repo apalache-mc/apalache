@@ -199,6 +199,48 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     assert(Checker.Outcome.Error == outcome)
   }
 
+  test("Init + Next x 10 + ActionInv (before + all-enabled) => ERR") {
+    // x' := 2 \/ x' := 1
+    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    // x' := x + 1
+    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1()))
+    // x' < x
+    val inv = lt(prime(name("x") ? "i") ? "i", name("x") ? "i")
+      .typed(types, "b")
+    val notInv = not(inv).typed(types, "b")
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List.empty, List((inv, notInv)))
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    params.discardDisabled = false
+    params.invariantMode = InvariantMode.BeforeJoin
+    // initialize the model checker
+    val ctx = new IncrementalExecutionContext(rewriter)
+    val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
+    val checker = new SeqModelChecker(params, checkerInput, trex)
+    val outcome = checker.run()
+    assert(Checker.Outcome.Error == outcome)
+  }
+
+  test("Init + Next x 10 + ActionInv (before + all-enabled) => OK") {
+    // x' := 2 \/ x' := 1
+    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    // x' := x + 1
+    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1()))
+    // x' > x
+    val inv = gt(prime(name("x") ? "i") ? "i", name("x") ? "i")
+      .typed(types, "b")
+    val notInv = not(inv).typed(types, "b")
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List.empty, List((inv, notInv)))
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    params.discardDisabled = false
+    params.invariantMode = InvariantMode.BeforeJoin
+    // initialize the model checker
+    val ctx = new IncrementalExecutionContext(rewriter)
+    val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
+    val checker = new SeqModelChecker(params, checkerInput, trex)
+    val outcome = checker.run()
+    assert(Checker.Outcome.NoError == outcome)
+  }
+
   test("Init + Next x 10 + Inv (after + all-enabled) => ERR") {
     // x' <- 2 \/ x' <- 1
     val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
@@ -239,6 +281,132 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
     assert(Checker.Outcome.Error == outcome)
+  }
+
+  test("Init + Next x 10 + ActionInv (after + all-enabled) => ERR") {
+    // x' := 2 \/ x' := 1
+    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    // x' := x + 1
+    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1()))
+    // x' < x
+    val inv = lt(prime(name("x") ? "i") ? "i", name("x") ? "i")
+      .typed(types, "b")
+    val notInv = not(inv).typed(types, "b")
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List.empty, List((inv, notInv)))
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    params.discardDisabled = false
+    params.invariantMode = InvariantMode.AfterJoin
+    // initialize the model checker
+    val ctx = new IncrementalExecutionContext(rewriter)
+    val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
+    val checker = new SeqModelChecker(params, checkerInput, trex)
+    val outcome = checker.run()
+    assert(Checker.Outcome.Error == outcome)
+  }
+
+  test("Init + Next x 10 + ActionInv (after + all-enabled) => OK") {
+    // x' := 2 \/ x' := 1
+    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    // x' := x + 1
+    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1()))
+    // x' > x
+    val inv = gt(prime(name("x") ? "i") ? "i", name("x") ? "i")
+      .typed(types, "b")
+    val notInv = not(inv).typed(types, "b")
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List.empty, List((inv, notInv)))
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    params.discardDisabled = false
+    params.invariantMode = InvariantMode.AfterJoin
+    // initialize the model checker
+    val ctx = new IncrementalExecutionContext(rewriter)
+    val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
+    val checker = new SeqModelChecker(params, checkerInput, trex)
+    val outcome = checker.run()
+    assert(Checker.Outcome.NoError == outcome)
+  }
+
+  test("Init + Next x 10 + ActionInv (before) => ERR") {
+    // x' := 2 \/ x' := 1
+    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    // x' := x + 1
+    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1()))
+    // x' < x
+    val inv = lt(prime(name("x") ? "i") ? "i", name("x") ? "i")
+      .typed(types, "b")
+    val notInv = not(inv).typed(types, "b")
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List.empty, List((inv, notInv)))
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    params.discardDisabled = true
+    params.invariantMode = InvariantMode.BeforeJoin
+    // initialize the model checker
+    val ctx = new IncrementalExecutionContext(rewriter)
+    val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
+    val checker = new SeqModelChecker(params, checkerInput, trex)
+    val outcome = checker.run()
+    assert(Checker.Outcome.Error == outcome)
+  }
+
+  test("Init + Next x 10 + ActionInv (before) => OK") {
+    // x' := 2 \/ x' := 1
+    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    // x' := x + 1
+    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1()))
+    // x' > x
+    val inv = gt(prime(name("x") ? "i") ? "i", name("x") ? "i")
+      .typed(types, "b")
+    val notInv = not(inv).typed(types, "b")
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List.empty, List((inv, notInv)))
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    params.discardDisabled = true
+    params.invariantMode = InvariantMode.BeforeJoin
+    // initialize the model checker
+    val ctx = new IncrementalExecutionContext(rewriter)
+    val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
+    val checker = new SeqModelChecker(params, checkerInput, trex)
+    val outcome = checker.run()
+    assert(Checker.Outcome.NoError == outcome)
+  }
+
+  test("Init + Next x 10 + ActionInv (after) => ERR") {
+    // x' := 2 \/ x' := 1
+    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    // x' := x + 1
+    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1()))
+    // x' < x
+    val inv = lt(prime(name("x") ? "i") ? "i", name("x") ? "i")
+      .typed(types, "b")
+    val notInv = not(inv).typed(types, "b")
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List.empty, List((inv, notInv)))
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    params.discardDisabled = true
+    params.invariantMode = InvariantMode.AfterJoin
+    // initialize the model checker
+    val ctx = new IncrementalExecutionContext(rewriter)
+    val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
+    val checker = new SeqModelChecker(params, checkerInput, trex)
+    val outcome = checker.run()
+    assert(Checker.Outcome.Error == outcome)
+  }
+
+  test("Init + Next x 10 + ActionInv (after) => OK") {
+    // x' := 2 \/ x' := 1
+    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    // x' := x + 1
+    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1()))
+    // x' > x
+    val inv = gt(prime(name("x") ? "i") ? "i", name("x") ? "i")
+      .typed(types, "b")
+    val notInv = not(inv).typed(types, "b")
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List.empty, List((inv, notInv)))
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    params.discardDisabled = true
+    params.invariantMode = InvariantMode.AfterJoin
+    // initialize the model checker
+    val ctx = new IncrementalExecutionContext(rewriter)
+    val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
+    val checker = new SeqModelChecker(params, checkerInput, trex)
+    val outcome = checker.run()
+    assert(Checker.Outcome.NoError == outcome)
   }
 
   test("Init + Next x 2 (LET-IN) + Inv => ERR") {
