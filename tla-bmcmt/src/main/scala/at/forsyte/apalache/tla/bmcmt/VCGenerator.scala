@@ -28,9 +28,19 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
    * @return a transformed module
    */
   def gen(module: TlaModule, invName: String): TlaModule = {
+    val levelFinder = new TlaDeclLevelFinder(module)
+
     module.declarations.find(_.name == invName) match {
       case Some(inv: TlaOperDecl) if inv.formalParams.isEmpty =>
-        new TlaModule(module.name, module.declarations ++ introConditions(inv.body))
+        val level = levelFinder(inv)
+        level match {
+          case TlaLevelConst | TlaLevelState | TlaLevelAction =>
+            TlaModule(module.name, module.declarations ++ introConditions(level, inv.body))
+
+          case TlaLevelTemporal =>
+            val message = s"Expected a state invariant or an action invariant in $invName, found a temporal property"
+            throw new MalformedTlaError(message, inv.body)
+        }
 
       case Some(decl: TlaOperDecl) =>
         val message = s"Expected a nullary operator $invName, found ${decl.formalParams.length} arguments"
@@ -45,16 +55,18 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
     }
   }
 
-  private def introConditions(inputInv: TlaEx): Seq[TlaOperDecl] = {
+  private def introConditions(level: TlaLevel, inputInv: TlaEx): Seq[TlaOperDecl] = {
     def mapToDecls(invPiece: TlaEx, index: Int): Seq[TlaOperDecl] = {
       val deepCopy = DeepCopy(tracker)
       val invPieceCopy = deepCopy.deepCopyEx(invPiece)
       val tag = inputInv.typeTag
-      val positive =
-        TlaOperDecl(NormalizedNames.VC_INV_PREFIX + index, List(), invPieceCopy)(tag)
+      val positivePrefix =
+        if (level == TlaLevelAction) NormalizedNames.VC_ACTION_INV_PREFIX else NormalizedNames.VC_INV_PREFIX
+      val positive = TlaOperDecl(positivePrefix + index, List(), invPieceCopy)(tag)
       val notInvPieceCopy = tla.not(invPieceCopy).typed(BoolT1())
-      val negative =
-        TlaOperDecl(NormalizedNames.VC_NOT_INV_PREFIX + index, List(), notInvPieceCopy)(tag)
+      val negativePrefix =
+        if (level == TlaLevelAction) NormalizedNames.VC_NOT_ACTION_INV_PREFIX else NormalizedNames.VC_NOT_INV_PREFIX
+      val negative = TlaOperDecl(negativePrefix + index, List(), notInvPieceCopy)(tag)
       Seq(positive, negative)
     }
 
