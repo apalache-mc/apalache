@@ -1096,6 +1096,26 @@ The outcome is: Error
 EXITCODE: ERROR (12)
 ```
 
+### check ActionInv
+
+```sh
+$ apalache-mc check --inv=IncreaseInv ActionInv.tla | sed 's/[IEW]@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check ActionInv with a false invariant
+
+```sh
+$ apalache-mc check --inv=KeepInv ActionInv.tla | sed 's/[IEW]@.*//'
+...
+The outcome is: Error
+...
+EXITCODE: ERROR (12)
+```
+
 ## running the typecheck command
 
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
