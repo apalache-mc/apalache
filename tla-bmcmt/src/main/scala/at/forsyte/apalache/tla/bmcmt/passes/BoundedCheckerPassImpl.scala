@@ -60,8 +60,12 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
     val vcInvs = ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.VC_INV_PREFIX)
     val vcNotInvs = ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.VC_NOT_INV_PREFIX)
     val invariantsAndNegations = vcInvs.zip(vcNotInvs)
+    val vcActionInvs = ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.VC_ACTION_INV_PREFIX)
+    val vcNotActionInvs = ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.VC_NOT_ACTION_INV_PREFIX)
+    val actionInvariantsAndNegations = vcActionInvs.zip(vcNotActionInvs)
 
-    val input = new CheckerInput(module, initTrans.toList, nextTrans.toList, cinitP, invariantsAndNegations.toList)
+    val input = new CheckerInput(module, initTrans.toList, nextTrans.toList, cinitP, invariantsAndNegations.toList,
+        actionInvariantsAndNegations.toList)
     /*
         TODO: uncomment when the parallel checker is transferred from ik/multicore
     val nworkers = options.getOrElse("checker", "nworkers", 1)

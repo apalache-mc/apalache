@@ -35,11 +35,11 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
   }
 
   private def mkModuleWithX(): TlaModule = {
-    new TlaModule("root", List(TlaVarDecl("x")(Typed(IntT1()))))
+    TlaModule("root", List(TlaVarDecl("x")(Typed(IntT1()))))
   }
 
   private def mkModuleWithXandY(): TlaModule = {
-    new TlaModule("root", List(TlaVarDecl("x")(intTag), TlaVarDecl("y")(intTag)))
+    TlaModule("root", List(TlaVarDecl("x")(intTag), TlaVarDecl("y")(intTag)))
   }
 
   test("Init + Inv => OK") {
@@ -49,7 +49,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val notInv = gt(name("x") ? "i", int(10))
       .typed(types, "b")
     val inv = not(notInv).typed(types, "b")
-    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)))
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)), List.empty)
     val params = new ModelCheckerParams(checkerInput, stepsBound = 0, new File("."), Map(), false)
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
@@ -65,7 +65,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val notInv = lt(name("x") ? "i", int(10))
       .typed(types, "b")
     val inv = not(notInv).typed(types, "b")
-    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)))
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)), List.empty)
     val params = new ModelCheckerParams(checkerInput, stepsBound = 0, new File("."), Map(), false)
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
@@ -85,7 +85,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
       .typed(types, "b")
     val inv = not(notInv).typed(types, "b")
 
-    val checkerInput = new CheckerInput(module, initTrans, nextTrans, Some(cinit), List((inv, notInv)))
+    val checkerInput = new CheckerInput(module, initTrans, nextTrans, Some(cinit), List((inv, notInv)), List.empty)
     val params = new ModelCheckerParams(checkerInput, stepsBound = 0, new File("."), Map(), false)
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
@@ -105,7 +105,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
       .typed(types, "b")
     val inv = not(notInv).typed(types, "b")
 
-    val checkerInput = new CheckerInput(module, initTrans, nextTrans, Some(cinit), List((inv, notInv)))
+    val checkerInput = new CheckerInput(module, initTrans, nextTrans, Some(cinit), List((inv, notInv)), List.empty)
     val params = new ModelCheckerParams(checkerInput, stepsBound = 0, new File("."), Map(), false)
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
@@ -118,7 +118,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     // x' <- 2 /\ x' <- 1
     val initTrans = List(and(mkAssign("x", 2), mkNotAssign("x", 1)).typed(BoolT1()))
     val nextTrans = List(mkAssign("x", 2))
-    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List.empty)
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List.empty, List.empty)
     val params = new ModelCheckerParams(checkerInput, stepsBound = 0, new File("."), Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
@@ -132,7 +132,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     // x' <- 2 \/ x' <- 1
     val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
     val nextTrans = List(mkAssign("x", 2))
-    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List.empty)
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List.empty, List.empty)
     val params = new ModelCheckerParams(checkerInput, stepsBound = 0, new File("."), Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
@@ -147,7 +147,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
     // x' <- x + 1
     val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1()))
-    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List.empty)
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List.empty, List.empty)
     val params = new ModelCheckerParams(checkerInput, stepsBound = 1, new File("."), Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
@@ -166,7 +166,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val inv = lt(name("x") ? "i", int(5))
       .typed(types, "b")
     val notInv = not(inv).typed(types, "b")
-    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)))
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)), List.empty)
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
     params.discardDisabled = true
     params.invariantMode = InvariantMode.BeforeJoin
@@ -187,7 +187,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val inv = lt(name("x") ? "i", int(5))
       .typed(types, "b")
     val notInv = not(inv).typed(types, "b")
-    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)))
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)), List.empty)
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
     params.discardDisabled = false
     params.invariantMode = InvariantMode.BeforeJoin
@@ -208,7 +208,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val inv = lt(name("x") ? "i", int(5))
       .typed(types, "b")
     val notInv = not(inv).typed(types, "b")
-    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)))
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)), List.empty)
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
     params.discardDisabled = false
     params.invariantMode = InvariantMode.AfterJoin
@@ -229,7 +229,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val inv = lt(name("x") ? "i", int(5))
       .typed(types, "b")
     val notInv = not(inv).typed(types, "b")
-    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)))
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)), List.empty)
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
     params.discardDisabled = true
     params.invariantMode = InvariantMode.AfterJoin
@@ -257,7 +257,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
       .typed(types, "b")
     val notInv = not(inv).typed(types, "b")
 
-    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)))
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)), List.empty)
     val params = new ModelCheckerParams(checkerInput, stepsBound = 2, new File("."), Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
@@ -282,7 +282,8 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     ).typed(types, "b")
     val notInv = not(inv).typed(types, "b")
 
-    val checkerInput = new CheckerInput(mkModuleWithXandY(), initTrans, nextTrans, None, List((inv, notInv)))
+    val checkerInput =
+      new CheckerInput(mkModuleWithXandY(), initTrans, nextTrans, None, List((inv, notInv)), List.empty)
     val params = new ModelCheckerParams(checkerInput, stepsBound = 2, new File("."), Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
@@ -299,7 +300,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val nextTrans =
       List(and(gt(name("x") ? "i", int(3)) ? "b", mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1())).typed(
               types, "b"))
-    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List())
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List.empty, List.empty)
     val params = new ModelCheckerParams(checkerInput, stepsBound = 1, new File("."), Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
@@ -314,7 +315,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
     // x' <- x + 1
     val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1()))
-    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List())
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List.empty, List.empty)
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
@@ -331,7 +332,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val nextTrans =
       List(and(lt(name("x") ? "i", int(10)) ? "b", mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1())).typed(
               types, "b"))
-    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List())
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List.empty, List.empty)
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
@@ -351,7 +352,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
       .typed(types, "b")
     val notInv = not(inv)
       .typed(types, "b")
-    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)))
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)), List.empty)
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
@@ -373,7 +374,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
       .typed(types, "b")
     val inv = not(notInv)
       .typed(BoolT1())
-    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)))
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)), List.empty)
     val params = new ModelCheckerParams(checkerInput, stepsBound = 3, new File("."), Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
@@ -394,7 +395,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
       .typed(types, "b")
     val inv = not(notInv)
       .typed(BoolT1())
-    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)))
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)), List.empty)
     val params = new ModelCheckerParams(checkerInput, stepsBound = 2, new File("."), Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
@@ -414,7 +415,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
       .typed(types, "b")
     val notInv = not(inv)
       .typed(types, "b")
-    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)))
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)), List.empty)
     // initialize the model checker
     // We require the invariant to be checked only after the second step. So we will miss invariant violation.
     val tuning = Map("search.invariantFilter" -> "2")
@@ -435,7 +436,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trans2 = and(gt(name("x") ? "i", int(100)) ? "b", mkAssign("x", name("x") ? "i", IntT1()))
       .typed(types, "b")
     val nextTrans = List(trans1, trans2)
-    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List())
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List.empty, List.empty)
     val params = new ModelCheckerParams(checkerInput, stepsBound = 3, new File("."), Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
@@ -458,7 +459,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
       .typed(types, "b")
     val inv = not(notInv)
       .typed(types, "b")
-    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)))
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)), List.empty)
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
@@ -492,7 +493,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val inv = not(notInv)
       .typed(types, "b")
     val dummyModule = new TlaModule("root", List(TlaConstDecl("N")(intTag), TlaVarDecl("x")(intTag)))
-    val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, Some(cInit), List((inv, notInv)))
+    val checkerInput = new CheckerInput(dummyModule, initTrans, nextTrans, Some(cInit), List((inv, notInv)), List.empty)
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
@@ -514,7 +515,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
       .typed(types, "b")
     val inv = not(notInv)
       .typed(types, "b")
-    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)))
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, List((inv, notInv)), List.empty)
     // initialize the model checker
     val filter = "0,0,0,0,0,0,0,0,0,0,0" // old syntax
     val tuning = Map.empty[String, String] // Map("search.transitionFilter" -> filter)
