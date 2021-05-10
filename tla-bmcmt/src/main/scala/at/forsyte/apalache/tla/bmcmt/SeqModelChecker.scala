@@ -22,8 +22,9 @@ class SeqModelChecker[ExecutorContextT](
 
   type SnapshotT = ExecutionSnapshot[ExecutorContextT]
 
-  private val notInvariants: Seq[TlaEx] = checkerInput.invariantsAndNegations.map(_._2)
-  private val notActionInvariants: Seq[TlaEx] = checkerInput.actionInvariantsAndNegations.map(_._2)
+  private val notInvariants: Seq[TlaEx] = checkerInput.verificationConditions.stateInvariantsAndNegations.map(_._2)
+  private val notActionInvariants: Seq[TlaEx] =
+    checkerInput.verificationConditions.actionInvariantsAndNegations.map(_._2)
 
   override def run(): Checker.Outcome.Value = {
     // initialize CONSTANTS
