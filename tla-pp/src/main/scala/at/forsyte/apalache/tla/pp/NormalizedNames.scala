@@ -14,6 +14,8 @@ object NormalizedNames {
   val VC_NOT_INV_PREFIX = "VCNotInv$"
   val VC_ACTION_INV_PREFIX = "VCActionInv$"
   val VC_NOT_ACTION_INV_PREFIX = "VCNotActionInv$"
+  val VC_TRACE_INV_PREFIX = "VCTraceInv$"
+  val VC_NOT_TRACE_INV_PREFIX = "VCNotTraceInv$"
   val VC_TEMPORAL_PROP_PREFIX = "VCTemporal$"
 
   // the names of the options that capture the critical specification pieces
@@ -41,9 +43,8 @@ object NormalizedNames {
   def isVC(decl: TlaDecl): Boolean = {
     decl.isInstanceOf[TlaOperDecl] &&
     decl.asInstanceOf[TlaOperDecl].formalParams.isEmpty &&
-    List(VC_INV_PREFIX, VC_NOT_INV_PREFIX, VC_ACTION_INV_PREFIX, VC_NOT_ACTION_INV_PREFIX).exists { prefix =>
-      decl.name.startsWith(prefix)
-    }
+    List(VC_INV_PREFIX, VC_NOT_INV_PREFIX, VC_ACTION_INV_PREFIX, VC_NOT_ACTION_INV_PREFIX, VC_TRACE_INV_PREFIX,
+        VC_NOT_TRACE_INV_PREFIX).exists(decl.name.startsWith)
   }
 
   /**

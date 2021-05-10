@@ -3,9 +3,12 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import at.forsyte.apalache.tla.lir.{TlaModule, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.{
+  BoolT1, IntT1, OperParam, OperT1, RecT1, SeqT1, TlaModule, TlaOperDecl, TlaVarDecl, Typed
+}
 import at.forsyte.apalache.io.annotations.store._
-
+import at.forsyte.apalache.tla.lir.TypedPredefs.{BuilderDeclAsTyped, BuilderExAsTyped}
+import at.forsyte.apalache.tla.lir.convenience.tla._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -46,6 +49,25 @@ class TestVCGenerator extends FunSuite {
     val newMod = mkVCGen().gen(mod, "Inv")
     assertDecl(newMod, "VCActionInv$0", "x' > x")
     assertDecl(newMod, "VCNotActionInv$0", "¬(x' > x)")
+  }
+
+  test("trace invariant") {
+    // as trace VCGenerator checks the type of a trace invariant, we construct the declaration manually
+    // hist[Len(hist)].x > hist[1].x
+    val types = Map("i" -> IntT1(), "b" -> BoolT1(), "r" -> RecT1("x" -> IntT1()), "s" -> SeqT1(RecT1("x" -> IntT1())),
+        "o" -> OperT1(Seq(SeqT1(RecT1("x" -> IntT1()))), BoolT1()))
+    val hist = name("hist") ? "s"
+    val invBody = gt(
+        appFun(appOp(hist, len(hist) ? "i") ? "r", str("x")) ? "i",
+        appFun(appOp(hist, int(1)) ? "r", str("x")) ? "i"
+    ) ? "b"
+    val traceInv = declOp("TraceInv", invBody, OperParam("hist", 0)).typed(types, "o")
+    val xDecl = TlaVarDecl("x")(Typed(IntT1()))
+    val module = TlaModule("mod", Seq(xDecl, traceInv))
+
+    val newMod = mkVCGen().gen(module, "TraceInv")
+    assertDecl(newMod, "VCTraceInv$0", """(hist(Len(hist)))["x"] > (hist(1))["x"]""")
+    assertDecl(newMod, "VCNotTraceInv$0", """¬((hist(Len(hist)))["x"] > (hist(1))["x"])""")
   }
 
   test("conjunctive invariant") {
