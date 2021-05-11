@@ -54,6 +54,9 @@ fi
 
 TAG_NAME="v${VERSION}"
 
+# Ensure target directory exists
+mkdir -p target
+
 # Package the artifacts
 # The archives without version suffix support stable links to the latest version.
 # See https://github.com/informalsystems/apalache/issues/716
