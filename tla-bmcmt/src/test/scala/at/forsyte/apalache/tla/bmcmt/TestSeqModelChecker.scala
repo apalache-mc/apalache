@@ -15,6 +15,8 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfter, FunSuite}
 
+import scala.collection.immutable.SortedMap
+
 @RunWith(classOf[JUnitRunner])
 class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
   private var solver: RecordingSolverContext =
@@ -24,6 +26,8 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
       "i" -> IntT1(),
       "I" -> SetT1(IntT1()),
       "b" -> BoolT1(),
+      "r" -> RecT1(SortedMap("x" -> IntT1())),
+      "s" -> SeqT1(RecT1(SortedMap("x" -> IntT1()))),
       "Ob" -> OperT1(Seq(), BoolT1())
   )
   private val intTag: Typed[TlaType1] = Typed(IntT1())
@@ -82,7 +86,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     // x' <- N
     val initTrans = List(mkAssign("x", name("N") ? "i", IntT1()))
     val nextTrans = List(mkAssign("x", name("N") ? "i", IntT1()))
-    val module = new TlaModule("root", List(TlaConstDecl("N")(intTag), TlaVarDecl("x")(intTag)))
+    val module = TlaModule("root", List(TlaConstDecl("N")(intTag), TlaVarDecl("x")(intTag)))
     val notInv = lt(name("x") ? "i", int(10))
       .typed(types, "b")
     val inv = not(notInv).typed(types, "b")
@@ -421,6 +425,58 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
     assert(Checker.Outcome.NoError == outcome)
+  }
+
+  test("Init + Next x 10 + TraceInv => OK") {
+    // x' := 1
+    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    // x' := x + 1
+    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1()))
+    // TraceInv(hist) == hist[Len(hist)].x <= 10 + hist[1].x
+    val hist = name("hist") ? "s"
+    val inv = le(
+        appFun(appFun(hist, len(hist) ? "i") ? "r", str("x")) ? "i",
+        plus(int(10), appFun(appFun(hist, int(1)) ? "r", str("x")) ? "i") ? "i"
+    ).typed(types, "b")
+    val invDecl = TlaOperDecl("TraceInv", List(OperParam("hist", 0)), inv)(Untyped())
+    val notInv = not(inv).typed(types, "b")
+    val notInvDecl = TlaOperDecl("TraceInv", List(OperParam("hist", 0)), notInv)(Untyped())
+    val checkerInput =
+      new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None,
+          CheckerInputVC(List(), List(), List((invDecl, notInvDecl))))
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    // initialize the model checker
+    val ctx = new IncrementalExecutionContext(rewriter)
+    val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
+    val checker = new SeqModelChecker(params, checkerInput, trex)
+    val outcome = checker.run()
+    assert(Checker.Outcome.NoError == outcome)
+  }
+
+  test("Init + Next x 10 + TraceInv => ERR") {
+    // x' := 1
+    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    // x' := x + 1
+    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1()))
+    // TraceInv(hist) == hist[Len(hist)].x <= hist[1].x + 9
+    val hist = name("hist") ? "s"
+    val inv = le(
+        appFun(appFun(hist, len(hist) ? "i") ? "r", str("x")) ? "i",
+        plus(int(9), appFun(appFun(hist, int(1)) ? "r", str("x")) ? "i") ? "i"
+    ).typed(types, "b")
+    val invDecl = TlaOperDecl("TraceInv", List(OperParam("hist", 0)), inv)(Untyped())
+    val notInv = not(inv).typed(types, "b")
+    val notInvDecl = TlaOperDecl("TraceInv", List(OperParam("hist", 0)), notInv)(Untyped())
+    val checkerInput =
+      new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None,
+          CheckerInputVC(List(), List(), List((invDecl, notInvDecl))))
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    // initialize the model checker
+    val ctx = new IncrementalExecutionContext(rewriter)
+    val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
+    val checker = new SeqModelChecker(params, checkerInput, trex)
+    val outcome = checker.run()
+    assert(Checker.Outcome.Error == outcome)
   }
 
   test("Init + Next x 2 (LET-IN) + Inv => ERR") {

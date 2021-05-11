@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.lir.TlaEx
+import at.forsyte.apalache.tla.lir.{TlaEx, TlaOperDecl}
 
 /**
  * Verification conditions that have to be checked by the model checker.
@@ -12,4 +12,4 @@ import at.forsyte.apalache.tla.lir.TlaEx
  */
 case class CheckerInputVC(stateInvariantsAndNegations: List[(TlaEx, TlaEx)] = List(),
     actionInvariantsAndNegations: List[(TlaEx, TlaEx)] = List(),
-    traceInvariantsAndNegations: List[(TlaEx, TlaEx)] = List()) {}
+    traceInvariantsAndNegations: List[(TlaOperDecl, TlaOperDecl)] = List()) {}

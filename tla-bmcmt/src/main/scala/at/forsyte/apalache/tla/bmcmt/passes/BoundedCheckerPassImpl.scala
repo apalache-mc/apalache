@@ -63,8 +63,8 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
     val vcActionInvs = ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.VC_ACTION_INV_PREFIX)
     val vcNotActionInvs = ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.VC_NOT_ACTION_INV_PREFIX)
     val actionInvariantsAndNegations = vcActionInvs.zip(vcNotActionInvs)
-    val vcTraceInvs = ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.VC_TRACE_INV_PREFIX)
-    val vcNotTraceInvs = ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.VC_NOT_TRACE_INV_PREFIX)
+    val vcTraceInvs = module.operDeclarations.filter(d => d.name.startsWith(NormalizedNames.VC_TRACE_INV_PREFIX))
+    val vcNotTraceInvs = module.operDeclarations.filter(d => d.name.startsWith(NormalizedNames.VC_NOT_TRACE_INV_PREFIX))
     val traceInvariantsAndNegations = vcTraceInvs.zip(vcNotTraceInvs)
 
     val verificationConditions =
