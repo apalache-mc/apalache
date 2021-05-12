@@ -12,6 +12,8 @@ object NormalizedNames {
   val CONST_INIT = "CInit$0"
   val VC_INV_PREFIX = "VCInv$"
   val VC_NOT_INV_PREFIX = "VCNotInv$"
+  val VC_ACTION_INV_PREFIX = "VCActionInv$"
+  val VC_NOT_ACTION_INV_PREFIX = "VCNotActionInv$"
   val VC_TEMPORAL_PROP_PREFIX = "VCTemporal$"
 
   // the names of the options that capture the critical specification pieces
@@ -19,6 +21,7 @@ object NormalizedNames {
 
   /**
    * Extract operator names from the standard option names.
+   *
    * @param options the options object
    * @return
    */
@@ -38,7 +41,9 @@ object NormalizedNames {
   def isVC(decl: TlaDecl): Boolean = {
     decl.isInstanceOf[TlaOperDecl] &&
     decl.asInstanceOf[TlaOperDecl].formalParams.isEmpty &&
-    (decl.name.startsWith(VC_INV_PREFIX) || decl.name.startsWith(VC_NOT_INV_PREFIX))
+    List(VC_INV_PREFIX, VC_NOT_INV_PREFIX, VC_ACTION_INV_PREFIX, VC_NOT_ACTION_INV_PREFIX).exists { prefix =>
+      decl.name.startsWith(prefix)
+    }
   }
 
   /**

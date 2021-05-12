@@ -22,13 +22,16 @@ class SeqModelChecker[ExecutorContextT](
 
   type SnapshotT = ExecutionSnapshot[ExecutorContextT]
 
+  private val notInvariants: Seq[TlaEx] = checkerInput.invariantsAndNegations.map(_._2)
+  private val notActionInvariants: Seq[TlaEx] = checkerInput.actionInvariantsAndNegations.map(_._2)
+
   override def run(): Checker.Outcome.Value = {
     // initialize CONSTANTS
     if (checkerInput.constInitPrimed.isDefined) {
       trex.initializeConstants(checkerInput.constInitPrimed.get)
     }
     // apply the Init predicate
-    var outcome = makeStep(checkerInput.initTransitions)
+    var outcome = makeStep(isNext = false, checkerInput.initTransitions)
     if (outcome != Outcome.NoError) {
       // report the error immediately
       outcome
@@ -36,7 +39,7 @@ class SeqModelChecker[ExecutorContextT](
       // unroll the transition relation
       while (trex.stepNo <= params.stepsBound) {
         // apply the Next predicate
-        outcome = makeStep(checkerInput.nextTransitions)
+        outcome = makeStep(isNext = true, checkerInput.nextTransitions)
         if (outcome != Outcome.NoError) {
           // report the error immediately
           return outcome
@@ -47,8 +50,9 @@ class SeqModelChecker[ExecutorContextT](
     }
   }
 
-  private def makeStep(transitions: Seq[TlaEx]): Outcome.Value = {
-    val (outcome, maybeInvariantNos) = prepareTransitionsAndCheckInvariants(transitions)
+  private def makeStep(isNext: Boolean, transitions: Seq[TlaEx]): Outcome.Value = {
+    val (outcome, maybeInvariantNos, maybeActionInvariantNos) =
+      prepareTransitionsAndCheckInvariants(isNext, transitions)
     if (outcome != Outcome.NoError) {
       return outcome
     }
@@ -76,12 +80,19 @@ class SeqModelChecker[ExecutorContextT](
       }
     }
 
+    if (params.invariantMode == InvariantMode.AfterJoin && isNext) {
+      val outcome = checkInvariants(trex.stepNo - 1, notActionInvariants, maybeActionInvariantNos, "action")
+      if (outcome != Outcome.NoError) {
+        return outcome
+      }
+    }
+
     // advance to the next state
     trex.nextState()
 
-    // check the invariants
+    // check the state invariants
     if (params.invariantMode == InvariantMode.AfterJoin) {
-      checkInvariants(trex.stepNo - 1, maybeInvariantNos)
+      checkInvariants(trex.stepNo - 1, notInvariants, maybeInvariantNos, "state")
     } else {
       Outcome.NoError
     }
@@ -89,17 +100,26 @@ class SeqModelChecker[ExecutorContextT](
 
   // prepare transitions, check whether they are enabled, and maybe check the invariant (if the user chose so)
   private def prepareTransitionsAndCheckInvariants(
-      transitions: Seq[TlaEx]
-  ): (Checker.Outcome.Value, Set[Int]) = {
+      isNext: Boolean, transitions: Seq[TlaEx]
+  ): (Checker.Outcome.Value, Set[Int], Set[Int]) = {
     var maybeInvariantNos: Set[Int] = Set()
+    var maybeActionInvariantNos: Set[Int] = Set()
 
     def addMaybeInvariants(trNo: Int): Set[Int] = {
-      val invs = checkerInput.invariantsAndNegations.map(_._1)
-      val indices = invs.zipWithIndex
+      val indices = notInvariants.zipWithIndex
         .filter(p => trex.mayChangeAssertion(trNo, p._1))
         .map(_._2)
       val newIndices = indices.toSet
       maybeInvariantNos ++= newIndices
+      newIndices
+    }
+
+    def addMaybeActionInvariants(trNo: Int): Set[Int] = {
+      val indices = notActionInvariants.zipWithIndex
+        .filter(p => trex.mayChangeAssertion(trNo, p._1))
+        .map(_._2)
+      val newIndices = indices.toSet
+      maybeActionInvariantNos ++= newIndices
       newIndices
     }
 
@@ -111,6 +131,9 @@ class SeqModelChecker[ExecutorContextT](
       }
       val translatedOk = trex.prepareTransition(no, tr)
       if (translatedOk) {
+        val transitionInvs = addMaybeInvariants(no)
+        val transitionActionInvs = addMaybeActionInvariants(no)
+
         if (params.discardDisabled) {
           // check, whether the transition is enabled in SMT
           val assumeSnapshot = trex.snapshot()
@@ -124,13 +147,22 @@ class SeqModelChecker[ExecutorContextT](
               snapshot = Some(assumeSnapshot)
 
               // keep the transition and collect the invariants
-              val transitionInvs = addMaybeInvariants(no)
               if (params.invariantMode == InvariantMode.BeforeJoin) {
+                // check the action invariants, unless we process Init
+                if (isNext) {
+                  val outcome = checkInvariants(trex.stepNo - 1, notActionInvariants, transitionActionInvs, "action")
+                  if (outcome != Outcome.NoError) {
+                    // an invariant is violated, return immediately
+                    return (outcome, maybeInvariantNos, maybeActionInvariantNos)
+                  }
+                }
+
+                // check the state invariants
                 trex.nextState() // advance to the next state
-                val outcome = checkInvariants(trex.stepNo - 1, transitionInvs)
+                val outcome = checkInvariants(trex.stepNo - 1, notInvariants, transitionInvs, "state")
                 if (outcome != Outcome.NoError) {
                   // an invariant is violated, return immediately
-                  return (outcome, maybeInvariantNos)
+                  return (outcome, maybeInvariantNos, maybeActionInvariantNos)
                 }
               }
 
@@ -139,17 +171,21 @@ class SeqModelChecker[ExecutorContextT](
               logger.info(s"Step ${trex.stepNo}: Transition #$no is disabled")
 
             case None =>
-              return (Outcome.RuntimeError, Set.empty) // UNKNOWN or timeout
+              return (Outcome.RuntimeError, Set.empty, Set.empty) // UNKNOWN or timeout
           }
           // recover from the snapshot
           trex.recover(snapshot.get)
         } else {
-          val transitionInvs = addMaybeInvariants(no)
+          // when --all-enabled is on, the transition has not been assumed
           if (params.invariantMode == InvariantMode.BeforeJoin) {
-            val outcome = checkInvariantsForPreparedTransition(no, transitionInvs)
+            val outcome = if (isNext) {
+              checkInvariantsForPreparedTransition(isNext, no, transitionInvs, transitionActionInvs)
+            } else {
+              Outcome.NoError
+            }
             if (outcome != Outcome.NoError) {
               // an invariant is violated, return right away
-              return (outcome, Set.empty)
+              return (outcome, Set.empty, Set.empty)
             }
           }
         }
@@ -165,41 +201,48 @@ class SeqModelChecker[ExecutorContextT](
       } else {
         logger.error(s"Found a deadlock. No SMT model.")
       }
-      (Outcome.Deadlock, Set.empty)
+      (Outcome.Deadlock, Set.empty, Set.empty)
     } else {
       // pick one transition
       trex.pickTransition()
-      (Outcome.NoError, maybeInvariantNos)
+      (Outcome.NoError, maybeInvariantNos, maybeActionInvariantNos)
     }
   }
 
   // This is a special case of --all-enabled and search.invariant.mode=before.
   // A transition has been prepared but not assumed.
   private def checkInvariantsForPreparedTransition(
-      transitionNo: Int, maybeInvariantNos: Set[Int]
+      isNext: Boolean, transitionNo: Int, maybeInvariantNos: Set[Int], maybeActionInvariantNos: Set[Int]
   ): Checker.Outcome.Value = {
     val snapshot = trex.snapshot()
     // fast track the transition to check the invariants
     trex.assumeTransition(transitionNo)
-    trex.nextState()
-    val outcome = checkInvariants(trex.stepNo - 1, maybeInvariantNos)
+    var outcome = Outcome.NoError
+    if (isNext) {
+      // check action invariants
+      outcome = checkInvariants(trex.stepNo - 1, notActionInvariants, maybeActionInvariantNos, "action")
+    }
+    if (outcome == Outcome.NoError) {
+      trex.nextState()
+      outcome = checkInvariants(trex.stepNo - 1, notInvariants, maybeInvariantNos, "state")
+    }
     // and recover
     trex.recover(snapshot)
     outcome
   }
 
-  // check the invariant from a given set
+  // check state invariants or action invariants as indicated by the set of numbers
   private def checkInvariants(
-      stateNo: Int, maybeInvariantNos: Set[Int]
+      stateNo: Int, notInvs: Seq[TlaEx], numbersToCheck: Set[Int], kind: String
   ): Checker.Outcome.Value = {
     // check the invariants
-    if (maybeInvariantNos.nonEmpty) {
-      logger.info(s"State $stateNo: Checking ${maybeInvariantNos.size} invariants")
+    if (numbersToCheck.nonEmpty) {
+      logger.info(s"State $stateNo: Checking ${numbersToCheck.size} $kind invariants")
     }
 
-    for (((_, notInv), invNo) <- checkerInput.invariantsAndNegations.zipWithIndex) {
-      if (maybeInvariantNos.contains(invNo)) {
-        logger.debug(s"State $stateNo: Checking invariant $invNo")
+    for ((notInv, invNo) <- notInvs.zipWithIndex) {
+      if (numbersToCheck.contains(invNo)) {
+        logger.debug(s"State $stateNo: Checking $kind invariant $invNo")
         // save the context
         val snapshot = trex.snapshot()
 
@@ -210,7 +253,7 @@ class SeqModelChecker[ExecutorContextT](
           case Some(true) =>
             val filenames = dumpCounterexample(notInv)
             logger.error(
-                s"State ${stateNo}: Invariant %s violated. Check the counterexample in: %s"
+                s"State ${stateNo}: $kind invariant %s violated. Check the counterexample in: %s"
                   .format(invNo, filenames.mkString(", "))
             )
             return Outcome.Error // the invariant violated

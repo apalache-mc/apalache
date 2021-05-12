@@ -176,7 +176,11 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
     }
 
     val changedPrimes = binding.toMap.keySet.foldLeft(Set[String]())(addOrSkipVar)
-    val used = TlaExUtil.findUsedNames(assertion).map(_ + "'")
+    val used = TlaExUtil.findUsedNames(assertion).map { name =>
+      // translate unprimed and primed variables as primed
+      if (name.endsWith("'")) name else name + "'"
+    }
+
     // Either the assertion is referring to changed variables,
     // or we are at the initial step, so it's satisfiability may have changed, see #108
     used.intersect(changedPrimes).nonEmpty || _stepNo == 0

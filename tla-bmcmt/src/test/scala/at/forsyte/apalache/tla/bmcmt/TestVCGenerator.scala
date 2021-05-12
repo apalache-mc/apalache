@@ -33,6 +33,21 @@ class TestVCGenerator extends FunSuite {
     assertDecl(newMod, "VCNotInv$0", "¬(x > 0)")
   }
 
+  test("action invariant") {
+    val text =
+      """---- MODULE inv ----
+        |EXTENDS Integers
+        |VARIABLE x
+        |Inv == x' > x
+        |====================
+      """.stripMargin
+
+    val mod = loadFromText("inv", text)
+    val newMod = mkVCGen().gen(mod, "Inv")
+    assertDecl(newMod, "VCActionInv$0", "x' > x")
+    assertDecl(newMod, "VCNotActionInv$0", "¬(x' > x)")
+  }
+
   test("conjunctive invariant") {
     val text =
       """---- MODULE inv ----
