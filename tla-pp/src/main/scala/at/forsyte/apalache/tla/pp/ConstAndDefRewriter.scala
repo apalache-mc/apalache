@@ -30,11 +30,11 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
         } else if (d.typeTag != overridingDef.body.typeTag) {
           val dTypeString = d.typeTag match {
             case Typed(tt) => tt.toString
-            case Untyped() => d.typeTag.toString
+            case Untyped() => "Untyped"
           };
           val overridingDefTypeString = overridingDef.body.typeTag match {
             case Typed(tt) => tt.toString
-            case Untyped() => d.typeTag.toString
+            case Untyped() => "Untyped"
           };
           val msg =
             s"The types of ${d.name} (${dTypeString}) and ${overridingDef.name} (${overridingDefTypeString}) do not match."
