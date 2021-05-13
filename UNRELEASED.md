@@ -13,3 +13,7 @@
 ### Features
 
 * Checker: support for action invariants, see #801
+
+### Improvements
+
+* Add type information to overriding error, see #823
