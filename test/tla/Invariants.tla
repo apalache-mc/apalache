@@ -36,7 +36,7 @@ StateInv ==
 BuggyStateInv ==
     Done \subseteq In
 
-\* action invariants that reason about transitions (pairs of states)
+\* action invariants that reason about transitions (consecutive pairs of states)
 
 ActionInv ==
     \/ In = {}
