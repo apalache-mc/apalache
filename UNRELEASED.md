@@ -13,6 +13,7 @@
 ### Features
 
 * Checker: support for action invariants, see #801
+* Checker: support for trace invariants, see #819
 
 ### Improvements
 

@@ -69,8 +69,8 @@ JVM_ARGS="-XX:NativeMemoryTracking=summary"
 
 ### Bounded model checking
 
-By default, Apalache performs *bounded model checking*, that is, it encodes a symbolic execution of length `k` and an
-invariant violation in SMT:
+By default, Apalache performs *bounded model checking*, that is, it encodes a
+symbolic execution of length `k` and a violation of a state invariant in SMT:
 
 ```tla
 /\ Init[v_0/v]

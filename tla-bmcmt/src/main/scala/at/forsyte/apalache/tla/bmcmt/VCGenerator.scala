@@ -10,6 +10,7 @@ import TypedPredefs._
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.annotation.tailrec
+import scala.collection.immutable.SortedMap
 
 /**
  * Generator of verification conditions. In the current implementation, VCGenerator takes an invariant candidate,
@@ -32,6 +33,7 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
 
     module.declarations.find(_.name == invName) match {
       case Some(inv: TlaOperDecl) if inv.formalParams.isEmpty =>
+        // either a state invariant, or an action invariant
         val level = levelFinder(inv)
         level match {
           case TlaLevelConst | TlaLevelState | TlaLevelAction =>
@@ -42,8 +44,26 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
             throw new MalformedTlaError(message, inv.body)
         }
 
+      case Some(traceInv @ TlaOperDecl(name, params @ List(OperParam(_, 0)), body)) =>
+        // a trace invariant
+        if (TlaLevelConst != levelFinder(traceInv)) {
+          throw new MalformedTlaError(
+              s"Trace invariant $invName should not refer to state variables or use action/temporal operators", body)
+        }
+        assertTraceInvType(module, traceInv)
+        val copy = DeepCopy(tracker)
+        // we do not decompose trace invariants, so a trace invariant always has index 0
+        val positive =
+          TlaOperDecl(NormalizedNames.VC_TRACE_INV_PREFIX + "0", params, copy.deepCopyEx(body))(traceInv.typeTag)
+        val notBody = tla.not(tla.fromTlaEx(copy.deepCopyEx(body))).typed(BoolT1())
+        val negative =
+          TlaOperDecl(NormalizedNames.VC_NOT_TRACE_INV_PREFIX + "0", params, notBody)(traceInv.typeTag)
+        TlaModule(module.name, module.declarations :+ positive :+ negative)
+
       case Some(decl: TlaOperDecl) =>
-        val message = s"Expected a nullary operator $invName, found ${decl.formalParams.length} arguments"
+        val nparams = decl.formalParams.length
+        val message =
+          s"Expected a state/action invariant $invName (0 parameters) or a trace invariant (1 parameter), found $nparams parameters"
         throw new MalformedTlaError(message, decl.body)
 
       case Some(decl) =>
@@ -52,6 +72,17 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
 
       case None =>
         throw new MalformedTlaError(s"Invariant candidate $invName not found", NullEx)
+    }
+  }
+
+  private def assertTraceInvType(module: TlaModule, traceInv: TlaOperDecl): Unit = {
+    val varTypes = SortedMap(module.varDeclarations.map(d => d.name -> d.typeTag.asTlaType1()): _*)
+    // the history variable is a sequence of records over variable names
+    val histType = SeqT1(RecT1(varTypes))
+    if (traceInv.typeTag.asTlaType1() != OperT1(Seq(histType), BoolT1())) {
+      val msg =
+        s"Expected the trace invariant ${traceInv.name} to be a predicate of a sequence of records over the names of state variables"
+      throw new MalformedTlaError(msg, traceInv.body)
     }
   }
 
