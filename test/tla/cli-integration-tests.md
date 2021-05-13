@@ -1116,6 +1116,66 @@ The outcome is: Error
 EXITCODE: ERROR (12)
 ```
 
+### check Invariants with StateInv
+
+```sh
+$ apalache-mc check --inv=StateInv Invariants.tla | sed 's/[IEW]@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check Invariants with BuggyStateInv
+
+```sh
+$ apalache-mc check --inv=BuggyStateInv Invariants.tla | sed 's/[IEW]@.*//'
+...
+The outcome is: Error
+...
+EXITCODE: ERROR (12)
+```
+
+### check Invariants with ActionInv
+
+```sh
+$ apalache-mc check --inv=ActionInv Invariants.tla | sed 's/[IEW]@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check Invariants with BuggyActionInv
+
+```sh
+$ apalache-mc check --inv=BuggyActionInv Invariants.tla | sed 's/[IEW]@.*//'
+...
+The outcome is: Error
+...
+EXITCODE: ERROR (12)
+```
+
+### check Invariants with TraceInv
+
+```sh
+$ apalache-mc check --inv=TraceInv Invariants.tla | sed 's/[IEW]@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check Invariants with BuggyTraceInv
+
+```sh
+$ apalache-mc check --inv=BuggyTraceInv Invariants.tla | sed 's/[IEW]@.*//'
+...
+The outcome is: Error
+...
+EXITCODE: ERROR (12)
+```
+
 ## running the typecheck command
 
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482

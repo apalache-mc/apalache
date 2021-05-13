@@ -1,13 +1,17 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.io.lir.CounterexampleWriter
 import at.forsyte.apalache.tla.bmcmt.Checker.Outcome
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode
 import at.forsyte.apalache.tla.bmcmt.trex.{ExecutionSnapshot, TransitionExecutor}
-import at.forsyte.apalache.io.lir.CounterexampleWriter
-import at.forsyte.apalache.tla.lir.values.TlaBool
-import at.forsyte.apalache.tla.lir.{TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper}
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaStr}
+import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
+import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
 import com.typesafe.scalalogging.LazyLogging
 
 /**
@@ -22,8 +26,11 @@ class SeqModelChecker[ExecutorContextT](
 
   type SnapshotT = ExecutionSnapshot[ExecutorContextT]
 
-  private val notInvariants: Seq[TlaEx] = checkerInput.invariantsAndNegations.map(_._2)
-  private val notActionInvariants: Seq[TlaEx] = checkerInput.actionInvariantsAndNegations.map(_._2)
+  private val notInvariants: Seq[TlaEx] = checkerInput.verificationConditions.stateInvariantsAndNegations.map(_._2)
+  private val notActionInvariants: Seq[TlaEx] =
+    checkerInput.verificationConditions.actionInvariantsAndNegations.map(_._2)
+  private val notTraceInvariants: Seq[TlaOperDecl] =
+    checkerInput.verificationConditions.traceInvariantsAndNegations.map(_._2)
 
   override def run(): Checker.Outcome.Value = {
     // initialize CONSTANTS
@@ -92,10 +99,14 @@ class SeqModelChecker[ExecutorContextT](
 
     // check the state invariants
     if (params.invariantMode == InvariantMode.AfterJoin) {
-      checkInvariants(trex.stepNo - 1, notInvariants, maybeInvariantNos, "state")
-    } else {
-      Outcome.NoError
+      val outcome = checkInvariants(trex.stepNo - 1, notInvariants, maybeInvariantNos, "state")
+      if (outcome != Outcome.NoError) {
+        return outcome
+      }
     }
+
+    // check the trace invariants
+    checkTraceInvariants(trex.stepNo - 1)
   }
 
   // prepare transitions, check whether they are enabled, and maybe check the invariant (if the user chose so)
@@ -271,6 +282,77 @@ class SeqModelChecker[ExecutorContextT](
     }
 
     Outcome.NoError
+  }
+
+  // check trace invariants
+  private def checkTraceInvariants(stateNo: Int): Checker.Outcome.Value = {
+    // check the invariants
+    if (notTraceInvariants.nonEmpty) {
+      logger.info(s"State $stateNo: Checking ${notTraceInvariants.size} trace invariant(s)")
+    }
+
+    for ((notInv, invNo) <- notTraceInvariants.zipWithIndex) {
+      logger.debug(s"State $stateNo: Checking trace invariant $invNo")
+      // save the context
+      val snapshot = trex.snapshot()
+
+      // check the invariant
+      val traceInvApp = applyTraceInv(notInv)
+      trex.assertState(traceInvApp)
+
+      trex.sat(params.smtTimeoutSec) match {
+        case Some(true) =>
+          val filenames = dumpCounterexample(traceInvApp)
+          logger.error(
+              s"State ${stateNo}: trace invariant %s violated. Check the counterexample in: %s"
+                .format(invNo, filenames.mkString(", "))
+          )
+          return Outcome.Error // the invariant violated
+
+        case Some(false) =>
+          () // the invariant holds true
+
+        case None =>
+          return Outcome.RuntimeError // UNKNOWN or timeout
+      }
+
+      // rollback the context
+      trex.recover(snapshot)
+    }
+
+    Outcome.NoError
+  }
+
+  private def applyTraceInv(notTraceInv: TlaOperDecl): TlaEx = {
+    // the path by transition executor includes the binding before Init, so we apply `tail` to exclude it
+    val path = trex.execution.path.map(_._1).tail
+    val stateType = RecT1(checkerInput.rootModule.varDeclarations.map(d => d.name -> d.typeTag.asTlaType1()): _*)
+
+    // convert a variable binding to a record
+    def mkRecord(b: Binding): TlaEx = {
+      val ctorArgs = b.toMap.flatMap { case (key, value) =>
+        List(ValEx(TlaStr(key)), value.toNameEx)
+      }
+      OperEx(TlaFunOper.`enum`, ctorArgs.toList: _*)(Typed(stateType))
+    }
+
+    // construct a history sequence
+    val seqType = SeqT1(stateType)
+    val hist = OperEx(TlaFunOper.tuple, path map mkRecord: _*)(Typed(seqType))
+    // assume that the trace invariant is applied to the history sequence
+    notTraceInv match {
+      case TlaOperDecl(_, List(OperParam(name, 0)), body) =>
+        // LET Call_$param == hist IN notTraceInv(param)
+        val operType = OperT1(Seq(seqType), BoolT1())
+        val callName = s"Call_$name"
+        // replace param with $callName() in the body
+        val app = OperEx(TlaOper.apply, NameEx(callName)(Typed(operType)))(Typed(seqType))
+        val replacedBody = ReplaceFixed(new IdleTracker())({ e => e == NameEx(name)(Typed(seqType)) }, app)(body)
+        LetInEx(replacedBody, TlaOperDecl(callName, List(), hist)(Typed(operType)))
+
+      case TlaOperDecl(name, _, _) =>
+        throw new MalformedTlaError(s"Expected a one-argument trace invariant, found: $name", notTraceInv.body)
+    }
   }
 
   private def dumpCounterexample(notInv: TlaEx): List[String] = {
