@@ -28,7 +28,16 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
           logger.error("  > If you need support for n-ary CONSTANTS, write a feature request.")
           throw new OverridingError(msg, overridingDef.body)
         } else if (d.typeTag != overridingDef.body.typeTag) {
-          val msg = s"The types of ${d.name} and ${overridingDef.name} do not match."
+          val dTypeString = d.typeTag match {
+            case Typed(tt) => tt.toString
+            case Untyped() => "Untyped"
+          };
+          val overridingDefTypeString = overridingDef.body.typeTag match {
+            case Typed(tt) => tt.toString
+            case Untyped() => "Untyped"
+          };
+          val msg =
+            s"The types of ${d.name} (${dTypeString}) and ${overridingDef.name} (${overridingDefTypeString}) do not match."
           logger.error(msg)
           throw new OverridingError(msg, overridingDef.body)
         } else {
