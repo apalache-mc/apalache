@@ -2,6 +2,17 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.15.6
+
+### Features
+
+* Checker: support for action invariants, see #801
+* Checker: support for trace invariants, see #819
+
+### Improvements
+
+* Add type information to overriding error, see #823
+
 ## 0.15.5
 
 ### Changes
