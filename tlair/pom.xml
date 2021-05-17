@@ -60,7 +60,7 @@
         <dependency>
             <groupId>com.lihaoyi</groupId>
             <artifactId>ujson_2.12</artifactId>
-            <version>1.3.12</version>
+            <version>1.3.14</version>
         </dependency>
 
     </dependencies>
