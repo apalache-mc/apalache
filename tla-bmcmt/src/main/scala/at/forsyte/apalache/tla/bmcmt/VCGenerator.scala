@@ -24,54 +24,79 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
   /**
    * Given a module and the name of an invariant candidate, add verification conditions in the module.
    *
-   * @param module  an input module
-   * @param invName the name of an invariant
+   * @param module      an input module
+   * @param invName     name of an invariant
+   * @param optViewName optional name of a state view
    * @return a transformed module
    */
-  def gen(module: TlaModule, invName: String): TlaModule = {
+  def gen(module: TlaModule, invName: String, optViewName: Option[String]): TlaModule = {
     val levelFinder = new TlaDeclLevelFinder(module)
 
-    module.declarations.find(_.name == invName) match {
-      case Some(inv: TlaOperDecl) if inv.formalParams.isEmpty =>
-        // either a state invariant, or an action invariant
-        val level = levelFinder(inv)
-        level match {
-          case TlaLevelConst | TlaLevelState | TlaLevelAction =>
-            TlaModule(module.name, module.declarations ++ introConditions(level, inv.body))
+    val newModule =
+      module.declarations.find(_.name == invName) match {
+        case Some(inv: TlaOperDecl) if inv.formalParams.isEmpty =>
+          // either a state invariant, or an action invariant
+          val level = levelFinder(inv)
+          level match {
+            case TlaLevelConst | TlaLevelState | TlaLevelAction =>
+              TlaModule(module.name, module.declarations ++ introConditions(level, inv.body))
 
-          case TlaLevelTemporal =>
-            val message = s"Expected a state invariant or an action invariant in $invName, found a temporal property"
-            throw new MalformedTlaError(message, inv.body)
-        }
+            case TlaLevelTemporal =>
+              val message = s"Expected a state invariant or an action invariant in $invName, found a temporal property"
+              throw new MalformedTlaError(message, inv.body)
+          }
 
-      case Some(traceInv @ TlaOperDecl(name, params @ List(OperParam(_, 0)), body)) =>
-        // a trace invariant
-        if (TlaLevelConst != levelFinder(traceInv)) {
-          throw new MalformedTlaError(
-              s"Trace invariant $invName should not refer to state variables or use action/temporal operators", body)
-        }
-        assertTraceInvType(module, traceInv)
-        val copy = DeepCopy(tracker)
-        // we do not decompose trace invariants, so a trace invariant always has index 0
-        val positive =
-          TlaOperDecl(NormalizedNames.VC_TRACE_INV_PREFIX + "0", params, copy.deepCopyEx(body))(traceInv.typeTag)
-        val notBody = tla.not(tla.fromTlaEx(copy.deepCopyEx(body))).typed(BoolT1())
-        val negative =
-          TlaOperDecl(NormalizedNames.VC_NOT_TRACE_INV_PREFIX + "0", params, notBody)(traceInv.typeTag)
-        TlaModule(module.name, module.declarations :+ positive :+ negative)
+        case Some(traceInv @ TlaOperDecl(name, params @ List(OperParam(_, 0)), body)) =>
+          // a trace invariant
+          if (TlaLevelConst != levelFinder(traceInv)) {
+            throw new MalformedTlaError(
+                s"Trace invariant $invName should not refer to state variables or use action/temporal operators", body)
+          }
+          assertTraceInvType(module, traceInv)
+          val copy = DeepCopy(tracker)
+          // we do not decompose trace invariants, so a trace invariant always has index 0
+          val positive =
+            TlaOperDecl(NormalizedNames.VC_TRACE_INV_PREFIX + "0", params, copy.deepCopyEx(body))(traceInv.typeTag)
+          val notBody = tla.not(tla.fromTlaEx(copy.deepCopyEx(body))).typed(BoolT1())
+          val negative =
+            TlaOperDecl(NormalizedNames.VC_NOT_TRACE_INV_PREFIX + "0", params, notBody)(traceInv.typeTag)
+          TlaModule(module.name, module.declarations :+ positive :+ negative)
 
-      case Some(decl: TlaOperDecl) =>
-        val nparams = decl.formalParams.length
-        val message =
-          s"Expected a state/action invariant $invName (0 parameters) or a trace invariant (1 parameter), found $nparams parameters"
-        throw new MalformedTlaError(message, decl.body)
+        case Some(decl: TlaOperDecl) =>
+          val nparams = decl.formalParams.length
+          val message =
+            s"Expected a state/action invariant $invName (0 parameters) or a trace invariant (1 parameter), found $nparams parameters"
+          throw new MalformedTlaError(message, decl.body)
 
-      case Some(decl) =>
-        val message = s"Expected a nullary operator $invName, found ${decl.getClass.getSimpleName}"
-        throw new MalformedTlaError(message, NullEx)
+        case Some(decl) =>
+          val message = s"Expected a nullary operator $invName, found ${decl.getClass.getSimpleName}"
+          throw new MalformedTlaError(message, NullEx)
 
-      case None =>
-        throw new MalformedTlaError(s"Invariant candidate $invName not found", NullEx)
+        case None =>
+          throw new MalformedTlaError(s"Invariant candidate $invName not found", NullEx)
+      }
+
+    if (optViewName.isEmpty) {
+      newModule
+    } else {
+      newModule.declarations.find(d => optViewName.contains(d.name)) match {
+        case Some(decl @ TlaOperDecl(name, params, body)) =>
+          if (params.nonEmpty) {
+            val msg = s"Expected state view $name to have no parameters, found: ${params.size} parameters"
+            throw new MalformedTlaError(msg, body)
+          }
+          val copy = DeepCopy(tracker)
+          val viewDecl =
+            TlaOperDecl(NormalizedNames.VC_VIEW, params, copy.deepCopyEx(body))(decl.typeTag)
+          TlaModule(newModule.name, newModule.declarations :+ viewDecl)
+
+        case Some(decl @ _) =>
+          val msg = s"Expected state view ${decl.name} to be an operator, found: " + decl
+          throw new MalformedTlaError(msg, NullEx)
+
+        case None =>
+          throw new MalformedTlaError(s"State view ${optViewName.get} not found", NullEx)
+      }
     }
   }
 

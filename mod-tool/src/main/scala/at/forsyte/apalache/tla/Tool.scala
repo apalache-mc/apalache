@@ -178,6 +178,9 @@ object Tool extends LazyLogging {
     executor.options.set("checker.discardDisabled", check.discardDisabled)
     executor.options.set("checker.noDeadlocks", check.noDeadlocks)
     executor.options.set("checker.algo", check.algo)
+    executor.options.set("checker.maxError", check.maxError)
+    if (check.view != "")
+      executor.options.set("checker.view", check.view)
     // for now, enable polymorphic types. We probably want to disable this option for the type checker
     executor.options.set("typechecker.inferPoly", true)
 
