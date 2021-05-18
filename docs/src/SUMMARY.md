@@ -18,6 +18,7 @@
         - [Source](./apalache/installation/source.md)
     - [Running the Tool](./apalache/running.md)
     - [Invariants: State, Action, Trace](./apalache/invariants.md)
+    - [Enumeration of counterexamples](./apalache/enumeration.md)
     - [TLA+ Execution Statistics](./apalache/statistics.md)
     - [An Example TLA+ Specification](./apalache/example.md)
     - [Specification Parameters](./apalache/parameters.md)

@@ -1,5 +1,5 @@
 ---- MODULE View2 ----
-EXTENDS Integers, Sequences
+EXTENDS Integers
 VARIABLES
     \* @type: Int;
     x
