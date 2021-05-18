@@ -22,14 +22,15 @@ class ConstrainedTransitionExecutor[ExecutorContext](trex: TransitionExecutor[Ex
 
   /**
    * Add a path constraint that is applied, whenever a symbolic execution is extended to the length of the path constraint.
+   * This constraint is translated into a disjunction of constraints over individual states.
    *
    * @param constraint path constraint
    */
-  def addPathConstraint(constraint: PathConstraint): Unit = {
+  def addPathOrConstraint(constraint: PathConstraint): Unit = {
     val len = constraint.length
     pathConstraints += len -> (constraint :: pathConstraints.getOrElse(constraint.length, Nil))
 
-    assertConstraint(trex.execution, constraint)
+    assertPathOrConstraint(trex.execution, constraint)
   }
 
   override def assumeTransition(transitionNo: Int): Unit = {
@@ -37,7 +38,7 @@ class ConstrainedTransitionExecutor[ExecutorContext](trex: TransitionExecutor[Ex
     val exec = trex.execution
     pathConstraints.get(exec.path.length).foreach {
       _.foreach { cons =>
-        assertConstraint(exec, cons)
+        assertPathOrConstraint(exec, cons)
       }
     }
   }
@@ -47,13 +48,13 @@ class ConstrainedTransitionExecutor[ExecutorContext](trex: TransitionExecutor[Ex
     val exec = trex.execution
     pathConstraints.get(exec.path.length).foreach {
       _.foreach { cons =>
-        assertConstraint(exec, cons)
+        assertPathOrConstraint(exec, cons)
       }
     }
     oracle
   }
 
-  private def assertConstraint(execution: EncodedExecution, pathConstraint: PathConstraint): Unit = {
+  private def assertPathOrConstraint(execution: EncodedExecution, pathConstraint: PathConstraint): Unit = {
     if (execution.path.length >= pathConstraint.length) {
       val constraints =
         execution.path.tail.zip(pathConstraint.tail).map { case ((binding, _), cons) =>

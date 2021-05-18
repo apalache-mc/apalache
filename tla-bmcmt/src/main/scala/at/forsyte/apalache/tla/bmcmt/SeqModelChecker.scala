@@ -1,17 +1,17 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.io.lir.CounterexampleWriter
-import at.forsyte.apalache.tla.bmcmt.Checker.{CheckerResult, Deadlock, Error, NoError, RuntimeError}
-import at.forsyte.apalache.tla.bmcmt.search.{ModelCheckerParams, SearchState}
+import at.forsyte.apalache.tla.bmcmt.Checker.{CheckerResult, Deadlock, Error, RuntimeError}
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode
+import at.forsyte.apalache.tla.bmcmt.search.{ModelCheckerParams, SearchState}
 import at.forsyte.apalache.tla.bmcmt.trex.{ConstrainedTransitionExecutor, ExecutionSnapshot, TransitionExecutor}
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaFunOper, TlaOper}
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaStr}
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaStr}
 import com.typesafe.scalalogging.LazyLogging
 
 /**
@@ -246,7 +246,7 @@ class SeqModelChecker[ExecutorContextT](
   // check state invariants or action invariants as indicated by the set of numbers
   private def checkInvariants(
       stateNo: Int, notInvs: Seq[TlaEx], numbersToCheck: Set[Int], kind: String
-  ): CheckerResult = {
+  ): Unit = {
     // check the invariants
     if (numbersToCheck.nonEmpty) {
       logger.info(s"State $stateNo: Checking ${numbersToCheck.size} $kind invariants")
@@ -270,26 +270,24 @@ class SeqModelChecker[ExecutorContextT](
                   .format(invNo, filenames.mkString(", "))
             )
             excludePathView()
-            return Error(1) // the invariant violated
+            return // the invariant is violated
 
           case Some(false) =>
             () // the invariant holds true
 
           case None =>
             searchState.onResult(RuntimeError())
-            return RuntimeError() // UNKNOWN or timeout
+            return // UNKNOWN or timeout
         }
 
         // rollback the context
         trex.recover(snapshot)
       }
     }
-
-    NoError()
   }
 
   // check trace invariants
-  private def checkTraceInvariants(stateNo: Int): CheckerResult = {
+  private def checkTraceInvariants(stateNo: Int): Unit = {
     // check the invariants
     if (notTraceInvariants.nonEmpty) {
       logger.info(s"State $stateNo: Checking ${notTraceInvariants.size} trace invariant(s)")
@@ -312,21 +310,19 @@ class SeqModelChecker[ExecutorContextT](
               s"State ${stateNo}: trace invariant %s violated. Check the counterexample in: %s"
                 .format(invNo, filenames.mkString(", "))
           )
-          return Error(1) // the invariant violated
+          return // the invariant violated
 
         case Some(false) =>
           () // the invariant holds true
 
         case None =>
           searchState.onResult(RuntimeError())
-          return RuntimeError() // UNKNOWN or timeout
+          return // UNKNOWN or timeout
       }
 
       // rollback the context
       trex.recover(snapshot)
     }
-
-    NoError()
   }
 
   private def applyTraceInv(notTraceInv: TlaOperDecl): TlaEx = {
@@ -386,7 +382,7 @@ class SeqModelChecker[ExecutorContextT](
       val exec = trex.decodedExecution()
       // omit the first assignment, as it contains only assignments to the state variables
       val pathConstraint = ValEx(TlaBool(true))(Typed(BoolT1())) :: (exec.path.tail.map(_._1) map computeViewNeq(view))
-      trex.addPathConstraint(pathConstraint)
+      trex.addPathOrConstraint(pathConstraint)
     }
   }
 
