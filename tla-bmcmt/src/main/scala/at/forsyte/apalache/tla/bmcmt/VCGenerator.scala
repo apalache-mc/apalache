@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.DeepCopy
-import at.forsyte.apalache.tla.pp.NormalizedNames
+import at.forsyte.apalache.tla.pp.{NormalizedNames, TlaInputError}
 import TypedPredefs._
 import com.typesafe.scalalogging.LazyLogging
 
@@ -43,14 +43,15 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
 
             case TlaLevelTemporal =>
               val message = s"Expected a state invariant or an action invariant in $invName, found a temporal property"
-              throw new MalformedTlaError(message, inv.body)
+              throw new TlaInputError(message, Some(inv.body.ID))
           }
 
         case Some(traceInv @ TlaOperDecl(name, params @ List(OperParam(_, 0)), body)) =>
           // a trace invariant
           if (TlaLevelConst != levelFinder(traceInv)) {
-            throw new MalformedTlaError(
-                s"Trace invariant $invName should not refer to state variables or use action/temporal operators", body)
+            throw new TlaInputError(
+                s"Trace invariant $invName should not refer to state variables or use action/temporal operators",
+                Some(body.ID))
           }
           assertTraceInvType(module, traceInv)
           val copy = DeepCopy(tracker)
@@ -66,14 +67,14 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
           val nparams = decl.formalParams.length
           val message =
             s"Expected a state/action invariant $invName (0 parameters) or a trace invariant (1 parameter), found $nparams parameters"
-          throw new MalformedTlaError(message, decl.body)
+          throw new TlaInputError(message, Some(decl.body.ID))
 
         case Some(decl) =>
           val message = s"Expected a nullary operator $invName, found ${decl.getClass.getSimpleName}"
-          throw new MalformedTlaError(message, NullEx)
+          throw new TlaInputError(message, None)
 
         case None =>
-          throw new MalformedTlaError(s"Invariant candidate $invName not found", NullEx)
+          throw new TlaInputError(s"Invariant candidate $invName not found", None)
       }
 
     if (optViewName.isEmpty) {
