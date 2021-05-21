@@ -67,7 +67,8 @@ class ConstrainedTransitionExecutor[ExecutorContext](trex: TransitionExecutor[Ex
               case _            => false
             }
 
-            repl(isToReplace, cell.toNameEx)(ex)
+            val tt = cell.cellType.toTlaType1
+            repl(isToReplace, cell.toNameEx.withTag(Typed(tt)))(ex)
           }
         }
 
