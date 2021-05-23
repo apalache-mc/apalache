@@ -248,18 +248,19 @@ class TestCounterexampleWriter extends FunSuite {
             ("", Map("x" -> int(2)))
         ),
         """{
-        |  "name": "ApalacheIR",
-        |  "version": "1.0",
-        |  "modules": [
-        |    {
-        |      "kind": "TlaModule",
-        |      "name": "counterexample",
-        |      "declarations": [
-        |        {
-        |          "type": "Untyped",
-        |          "kind": "TlaOperDecl",
-        |          "name": "ConstInit",
-        |          "formalParams": [
+          |  "name": "ApalacheIR",
+          |  "version": "1.0",
+          |  "description": "https://apalache.informal.systems/docs/adr/005adr-json.html",
+          |  "modules": [
+          |    {
+          |      "kind": "TlaModule",
+          |      "name": "counterexample",
+          |      "declarations": [
+          |        {
+          |          "type": "Untyped",
+          |          "kind": "TlaOperDecl",
+          |          "name": "ConstInit",
+          |          "formalParams": [
         |            
         |          ],
         |          "isRecursive": false,
@@ -358,6 +359,7 @@ class TestCounterexampleWriter extends FunSuite {
         """{
         |  "name": "ApalacheIR",
         |  "version": "1.0",
+        |  "description": "https://apalache.informal.systems/docs/adr/005adr-json.html",
         |  "modules": [
         |    {
         |      "kind": "TlaModule",
@@ -538,6 +540,7 @@ class TestCounterexampleWriter extends FunSuite {
         """{
         |  "name": "ApalacheIR",
         |  "version": "1.0",
+        |  "description": "https://apalache.informal.systems/docs/adr/005adr-json.html",
         |  "modules": [
         |    {
         |      "kind": "TlaModule",
