@@ -10,22 +10,25 @@ The purpose of introducing such a serialization is to expose the internal repres
 ## 1. Serializable classes
 
 The following classes are serializable:
-1. TLA+ expressions `TlaEx` and subclasses thereof:
-  1. Named expressions `NameEx`
-  1. Literal values `ValEx` for the following literals:
-    1. Integers `TlaInt`
-    1. Strings `TlaStr`
-    1. Booleans `TlaBool`
-    1. Decimals `TlaDecimal`
-  1. Operator expressions `OperEx`
-  1. LET-IN expressions `LetInEx`
-1. TLA+ declarations `TlaDecl` and subclasses thereof:
-  1. Variable declarations `TlaVarDecl`
-  1. Constant declarations `TlaConstDecl`
-  1. Operator declarations `TlaOperDecl`
-  1. Assumption declarations `TlaAssumeDecl`
-  1. Theorem declarations `TlaTheoremDecl`
-1. TLA+ modules `TlaModule`
+
+1. TLA+ expressions (see [TlaEx][]) and subclasses thereof:
+    * Named expressions `NameEx`
+    * Literal values `ValEx` for the following literals:
+      - Integers `TlaInt`
+      - Strings `TlaStr`
+      - Booleans `TlaBool`
+      - Decimals `TlaDecimal`
+    * Operator expressions `OperEx`
+    * LET-IN expressions `LetInEx`
+
+1. TLA+ declarations (see [TlaDecl][]) and subclasses thereof:
+    * Variable declarations `TlaVarDecl`
+    * Constant declarations `TlaConstDecl`
+    * Operator declarations `TlaOperDecl`
+    * Assumption declarations `TlaAssumeDecl`
+    * Theorem declarations `TlaTheoremDecl`
+
+1. TLA+ modules, see [TlaModule][]
 
 ## 2. Disambiguation field
 
@@ -200,3 +203,6 @@ The implementation of the serialization can be found in the class
 [ADR-004]: https://apalache.informal.systems/docs/adr/004adr-annotations.html
 
 [TlaToJson]: https://github.com/informalsystems/apalache/blob/unstable/tla-import/src/main/scala/at/forsyte/apalache/io/json/TlaToJson.scala
+[TlaEx]: https://github.com/informalsystems/apalache/blob/unstable/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaEx.scala
+[TlaDecl]: https://github.com/informalsystems/apalache/blob/unstable/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaDecl.scala
+[TlaModule]: https://github.com/informalsystems/apalache/blob/5d990cea9e280ca25276f1dd73590db9fb6464fc/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaDecl.scala#L19
