@@ -1,0 +1,420 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>ADR-005: JSON Serialization Format - Apalache Documentation</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Tutorials</li><li class="chapter-item expanded "><a href="../tutorials/snowcat-tutorial.html"><strong aria-hidden="true">1.</strong> Type Checker Tutorial</a></li><li class="chapter-item expanded affix "><li class="part-title">Apalache User Manual</li><li class="chapter-item expanded "><a href="../apalache/index.html"><strong aria-hidden="true">2.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../apalache/getting-started.html"><strong aria-hidden="true">3.</strong> Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/apalache-or-tlc.html"><strong aria-hidden="true">3.1.</strong> Shall I use Apalache or TLC?</a></li><li class="chapter-item expanded "><a href="../apalache/system-reqs.html"><strong aria-hidden="true">3.2.</strong> System Requirements</a></li><li class="chapter-item expanded "><a href="../apalache/installation/index.html"><strong aria-hidden="true">3.3.</strong> Installation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/installation/jvm.html"><strong aria-hidden="true">3.3.1.</strong> Prebuilt Packages</a></li><li class="chapter-item expanded "><a href="../apalache/installation/docker.html"><strong aria-hidden="true">3.3.2.</strong> Docker</a></li><li class="chapter-item expanded "><a href="../apalache/installation/source.html"><strong aria-hidden="true">3.3.3.</strong> Source</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/running.html"><strong aria-hidden="true">3.4.</strong> Running the Tool</a></li><li class="chapter-item expanded "><a href="../apalache/invariants.html"><strong aria-hidden="true">3.5.</strong> Invariants: State, Action, Trace</a></li><li class="chapter-item expanded "><a href="../apalache/statistics.html"><strong aria-hidden="true">3.6.</strong> TLA+ Execution Statistics</a></li><li class="chapter-item expanded "><a href="../apalache/example.html"><strong aria-hidden="true">3.7.</strong> An Example TLA+ Specification</a></li><li class="chapter-item expanded "><a href="../apalache/parameters.html"><strong aria-hidden="true">3.8.</strong> Specification Parameters</a></li><li class="chapter-item expanded "><a href="../apalache/principles.html"><strong aria-hidden="true">3.9.</strong> Principles of Symbolic Model Checking with Apalache</a></li><li class="chapter-item expanded "><a href="../apalache/apalache-mod.html"><strong aria-hidden="true">3.10.</strong> The Apalache Module</a></li><li class="chapter-item expanded "><a href="../apalache/profiling.html"><strong aria-hidden="true">3.11.</strong> Profiling Your Specification</a></li><li class="chapter-item expanded "><a href="../apalache/theory.html"><strong aria-hidden="true">3.12.</strong> Five minutes of theory</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/tlc-config.html"><strong aria-hidden="true">4.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../apalache/typechecker-snowcat.html"><strong aria-hidden="true">5.</strong> The Snowcat Type Checker</a></li><li class="chapter-item expanded "><a href="../apalache/features.html"><strong aria-hidden="true">6.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../apalache/known-issues.html"><strong aria-hidden="true">7.</strong> Known Issues</a></li><li class="chapter-item expanded "><a href="../apalache/preprocessing.html"><strong aria-hidden="true">8.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../apalache/tuning.html"><strong aria-hidden="true">9.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../apalache/kera.html"><strong aria-hidden="true">10.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded "><a href="../apalache/assignments.html"><strong aria-hidden="true">11.</strong> Assignments in Apalache</a></li><li class="chapter-item expanded affix "><li class="part-title">HOWTOs</li><li class="chapter-item expanded "><a href="../HOWTOs/index.html"><strong aria-hidden="true">12.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../HOWTOs/howto-write-type-annotations.html"><strong aria-hidden="true">13.</strong> How to write type annotations</a></li><li class="chapter-item expanded affix "><li class="part-title">Tutorials</li><li class="chapter-item expanded "><a href="../tutorials/index.html"><strong aria-hidden="true">14.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../tutorials/snowcat-tutorial.html"><strong aria-hidden="true">15.</strong> The Snowcat❄🐱 Type Checker</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ Language Manual for Engineers</li><li class="chapter-item expanded "><a href="../lang/index.html"><strong aria-hidden="true">16.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">17.</strong> The standard operators of TLA+</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/booleans.html"><strong aria-hidden="true">17.1.</strong> Booleans</a></li><li class="chapter-item expanded "><a href="../lang/control-and-nondeterminism.html"><strong aria-hidden="true">17.2.</strong> Control And Nondeterminism</a></li><li class="chapter-item expanded "><a href="../lang/conditionals.html"><strong aria-hidden="true">17.3.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="../lang/integers.html"><strong aria-hidden="true">17.4.</strong> Integers</a></li><li class="chapter-item expanded "><a href="../lang/sets.html"><strong aria-hidden="true">17.5.</strong> Sets</a></li><li class="chapter-item expanded "><a href="../lang/logic.html"><strong aria-hidden="true">17.6.</strong> Logic</a></li><li class="chapter-item expanded "><a href="../lang/functions.html"><strong aria-hidden="true">17.7.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../lang/records.html"><strong aria-hidden="true">17.8.</strong> Records</a></li><li class="chapter-item expanded "><a href="../lang/tuples.html"><strong aria-hidden="true">17.9.</strong> Tuples</a></li><li class="chapter-item expanded "><a href="../lang/sequences.html"><strong aria-hidden="true">17.10.</strong> Sequences</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">17.11.</strong> Bags</div></li></ol></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">18.</strong> User-defined operators</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/user/top-level-operators.html"><strong aria-hidden="true">18.1.</strong> Top-level operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/let-in.html"><strong aria-hidden="true">18.2.</strong> LET-IN definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/higher-order-operators.html"><strong aria-hidden="true">18.3.</strong> Higher-order operators definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/lambdas.html"><strong aria-hidden="true">18.4.</strong> Anonymous operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/recursive-operators.html"><strong aria-hidden="true">18.5.</strong> Recursive operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/local-operators.html"><strong aria-hidden="true">18.6.</strong> Local operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/recursive-functions.html"><strong aria-hidden="true">18.7.</strong> Recursive functions</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">19.</strong> Modules, Extends, and Instances</div></li><li class="chapter-item expanded affix "><li class="part-title">Idiomatic TLA+</li><li class="chapter-item expanded "><a href="../idiomatic/index.html"><strong aria-hidden="true">20.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../idiomatic/000keep-minimum-state-variables.html"><strong aria-hidden="true">21.</strong> Keep state variables to the minimum</a></li><li class="chapter-item expanded "><a href="../idiomatic/001assignments.html"><strong aria-hidden="true">22.</strong> Update state variables with assignments</a></li><li class="chapter-item expanded "><a href="../idiomatic/002primes.html"><strong aria-hidden="true">23.</strong> Apply primes only to state variables</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../adr/002adr-types.html"><strong aria-hidden="true">24.</strong> ADR-002: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/003adr-trex.html"><strong aria-hidden="true">25.</strong> ADR-003: transition executor (TRex)</a></li><li class="chapter-item expanded "><a href="../adr/004adr-annotations.html"><strong aria-hidden="true">26.</strong> ADR-004: code annotations</a></li><li class="chapter-item expanded "><a href="../adr/005adr-json.html" class="active"><strong aria-hidden="true">27.</strong> ADR-005: JSON Serialization Format</a></li><li class="chapter-item expanded "><a href="../adr/006rfc-unit-testing.html"><strong aria-hidden="true">28.</strong> RFC-006: unit tests and property-based tests</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache Documentation</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/informalsystems/apalache" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#adr-005-json-serialization-format" id="adr-005-json-serialization-format">ADR-005: JSON Serialization Format</a></h1>
+<table><thead><tr><th>author</th><th align="right">revision</th></tr></thead><tbody>
+<tr><td>Jure Kukovec</td><td align="right">1</td></tr>
+</tbody></table>
+<p>This ADR documents our decision on serializing the Apalache internal representation (IR) as JSON.
+The purpose of introducing such a serialization is to expose the internal representation in a standardized format, which can be used for persistent storage, or for analysis by third-party tools in the future.</p>
+<h2><a class="header" href="#1-serializable-classes" id="1-serializable-classes">1. Serializable classes</a></h2>
+<p>The following classes are serializable:</p>
+<ol>
+<li>
+<p>TLA+ expressions (see <a href="https://github.com/informalsystems/apalache/blob/unstable/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaEx.scala">TlaEx</a>) and subclasses thereof:</p>
+<ul>
+<li>Named expressions <code>NameEx</code></li>
+<li>Literal values <code>ValEx</code> for the following literals:
+<ul>
+<li>Integers <code>TlaInt</code></li>
+<li>Strings <code>TlaStr</code></li>
+<li>Booleans <code>TlaBool</code></li>
+<li>Decimals <code>TlaDecimal</code></li>
+</ul>
+</li>
+<li>Operator expressions <code>OperEx</code></li>
+<li>LET-IN expressions <code>LetInEx</code></li>
+</ul>
+</li>
+<li>
+<p>TLA+ declarations (see <a href="https://github.com/informalsystems/apalache/blob/unstable/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaDecl.scala">TlaDecl</a>) and subclasses thereof:</p>
+<ul>
+<li>Variable declarations <code>TlaVarDecl</code></li>
+<li>Constant declarations <code>TlaConstDecl</code></li>
+<li>Operator declarations <code>TlaOperDecl</code></li>
+<li>Assumption declarations <code>TlaAssumeDecl</code></li>
+<li>Theorem declarations <code>TlaTheoremDecl</code></li>
+</ul>
+</li>
+<li>
+<p>TLA+ modules, see <a href="https://github.com/informalsystems/apalache/blob/5d990cea9e280ca25276f1dd73590db9fb6464fc/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaDecl.scala#L19">TlaModule</a></p>
+</li>
+</ol>
+<h2><a class="header" href="#2-disambiguation-field" id="2-disambiguation-field">2. Disambiguation field</a></h2>
+<p>Every serialization will contain a disambiguation field, named <code>kind</code>. This field holds the name of the class being serialized. For example, the serialization of a <code>NameEx</code> will have the shape</p>
+<pre><code>{
+  &quot;kind&quot;: &quot;NameEx&quot;
+  ...
+}
+</code></pre>
+<h2><a class="header" href="#3-serializing-tagged-entities" id="3-serializing-tagged-entities">3. Serializing tagged entities</a></h2>
+<p>Serializations of entities annotated with a <code>TypeTag</code> will have an additional field named <code>type</code>, containing the type of the expression (see <a href="https://apalache.informal.systems/docs/adr/002adr-types.html">ADR-002</a>, <a href="https://apalache.informal.systems/docs/adr/004adr-annotations.html">ADR-004</a> for a description of our type system and the syntax for types-as-string-annotations respectively), if the tag is <code>Typed</code>, or <code>Untyped</code> otherwise. For example, the integer literal <code>1</code> is represented by a <code>ValEx</code>, which has type <code>Int</code> and is serialized as follows:</p>
+<pre><code>{
+  &quot;kind&quot;: &quot;ValEx&quot;,
+  &quot;type&quot;: &quot;Int&quot;
+  ...
+}
+</code></pre>
+<p>in the typed encoding, or </p>
+<pre><code>{
+  &quot;kind&quot;: &quot;ValEx&quot;,
+  &quot;type&quot;: &quot;Untyped&quot;
+  ...
+}
+</code></pre>
+<p>in the untyped encoding.</p>
+<h2><a class="header" href="#4-source-information" id="4-source-information">4. Source information</a></h2>
+<p>Entities in the internal representation are usually annotated with source information, of the form <code>{filename}:{startLine}:{startColumn}-{endLine}:{endColumn}</code>, relating them to a file range in the provided specification (from which they may have been transformed as part of preprocessing).
+JSON encodings may, but are not required to, contain a <code>source</code> providing this information, of the following shape:</p>
+<pre><code>{
+  &quot;source&quot;: {
+    &quot;filename&quot; : &lt;FILENAME&gt;,
+    &quot;from&quot; : {
+      &quot;line&quot; : &lt;STARTLINE&gt;,
+      &quot;column&quot; : &lt;STARTCOLUMN&gt;
+    },
+    &quot;to&quot; : {
+      &quot;line&quot; : &lt;ENDLINE&gt;,
+      &quot;column&quot; : &lt;ENDCOLUMN&gt;
+    }
+  }
+}
+</code></pre>
+<p>or</p>
+<pre><code>{
+  &quot;source&quot;: &quot;UNKNOWN&quot;
+}
+</code></pre>
+<p>if no source information is available (e.g. for expressions generated purely by Apalache).
+Serializations generated by Apalache are always guaranteed to contain a <code>source</code> field entry.</p>
+<p>Example:</p>
+<pre><code>{
+  &quot;kind&quot; : &quot;NameEx&quot;,
+  &quot;type&quot; : &quot;Int&quot;,
+  &quot;name&quot; : &quot;myName&quot;,
+  &quot;source&quot;: {
+    &quot;filename&quot; : &quot;MyModule.tla&quot;,
+    &quot;from&quot; : {
+      &quot;line&quot; : 3,
+      &quot;column&quot; : 5
+    },
+    &quot;to&quot; : {
+      &quot;line&quot; : 3,
+      &quot;column&quot; : 10
+    }
+  }
+}
+</code></pre>
+<h2><a class="header" href="#5-root-wrapper" id="5-root-wrapper">5. Root wrapper</a></h2>
+<p>JSON serializations of one or more <code>TlaModule</code>s are wrapped in a root object with two required fields:
+-<code>version</code>, the value of which is a string representation of the current JSON encoding version, shaped <code>{major}.{minor}</code>, and
+-<code>modules</code>, the value of which is an array containing the JSON encodings of zero or more <code>TlaModule</code>s
+It may optionally contain a field <code>&quot;name&quot; : &quot;ApalacheIR&quot;</code>.
+This document defines JSON Version 1.0. If and when a different JSON version is defined, this document will be updated accordingly.
+Apalache may refuse to import, or trigger warnings for, JSON objects with obsolete versions of the encoding in the future.
+Example:</p>
+<pre><code>{
+  &quot;name&quot;: &quot;ApalacheIR&quot;,
+  &quot;version&quot;: &quot;1.0&quot;
+  &quot;modules&quot; = [
+    {
+      &quot;kind&quot;: &quot;TlaModule&quot;,
+      &quot;name&quot;: &quot;MyModule&quot;,
+      ...
+    },
+    ...]
+}
+</code></pre>
+<h2><a class="header" href="#6-general-serialization-rules" id="6-general-serialization-rules">6. General serialization rules</a></h2>
+<p>The goal of the serialization is for the JSON structure to mimic the internal representation as closely as possible, for ease of deserialization. 
+Concretely, whenever a class declares a field <code>fld: T</code>, its serialization also contains a field named <code>fld</code>, containing the serialization of the field value.
+For example, if <code>TlaConstDecl</code> declares a <code>name: String</code> field, its JSON serialization will have a <code>name</code> field as well, containing the name string.</p>
+<p>If a class field has the type <code>Traversable[T]</code>, for some <code>T</code>, the corresponding JSON entry is a list containing serializations of the individual arguments. For example, <code>OperEx</code> is variadic and declares <code>args: TlaEx*</code>, so its serialization has an <code>args</code> field containing a (possibly empty) list.</p>
+<p>As a running example, take the expression <code>1 + 1</code>, represented with the correct type annotations as </p>
+<pre><code>OperEx( 
+  oper = TlaArithOper.plus, 
+  args = Seq( 
+    ValEx( TlaInt( 1 ) )( typeTag = Typed( IntT1() ) ), 
+    ValEx( TlaInt( 1 ) )( typeTag = Typed( IntT1() ) )
+    ) 
+  )( typeTag = Typed( IntT1() ) )
+</code></pre>
+<p>Since both sub-expressions, the literals <code>1</code>, are identical, their serializations are equal as well:</p>
+<pre><code>{
+  &quot;kind&quot;: &quot;ValEx&quot;,
+  &quot;type&quot;: &quot;Int&quot;,
+  &quot;value&quot;: {
+    &quot;kind&quot;: &quot;TlaInt&quot;,
+    &quot;value&quot;: 1
+  }
+}
+</code></pre>
+<p>Observe that we choose to serialize <code>TlaValue</code> as a JSON object, which is more verbose, but trivial to deserialize. It has the following shape</p>
+<pre><code>{
+  &quot;kind&quot;: &lt;KIND&gt; ,
+  &quot;value&quot;: &lt;VALUE&gt;
+}
+</code></pre>
+<p>The <code>value</code> field depends on the kind of <code>TlaValue</code>:</p>
+<ol>
+<li>For <code>TlaStr</code>: a JSON string</li>
+<li>For <code>TlaBool</code>: a JSON Boolean</li>
+<li>For <code>TlaInt(bigIntValue)</code>: </li>
+<li>If <code>bigIntValue.isValidInt</code>: a JSON number</li>
+<li>Otherwise: <code>{ &quot;bigInt&quot;: bigIntValue.toString() }</code></li>
+<li>For <code>TlaDecimal(decValue)</code>: a JSON string <code>decValue.toString</code></li>
+</ol>
+<p>The reason for the non-uniform treatment of integers, is that Apalache encodes its TLA+ integers as <code>BigInt</code>, which means that it permits values, for which <code>.isValidInt</code> does not hold. </p>
+<p>While it might seem more natural to encode the entire <code>TlaValue</code> as a JSON primitive, without the added object layer, we would have a much tougher time deserializing.
+We would need a) a sensible encoding of <code>BigInt</code> values, which are not valid integers, and b) a way to distinguish both variants of <code>BigInt</code>, as well as decimals, when deserializing (since JSON is not typed).
+We could encode all values as strings, but they would be similarly indistinguishable when deserializing. Importantly, the <code>type</code> field of the <code>ValEx</code> expression is not guaranteed to contain a hint, as it could be <code>Untyped</code></p>
+<p>Take <code>jsonOf1</code> to be the serialization of <code>ValEx( TlaInt( 1 ) )( typeTag = Typed( IntT1() ) )</code> shown above. The serialization of <code>1 + 1</code> is then equal to</p>
+<pre><code>{
+  &quot;kind&quot;: &quot;OperEx&quot;,
+  &quot;type&quot;: &quot;Int&quot;,
+  &quot;oper&quot;: &quot;PLUS&quot;,
+  &quot;args&quot;: [jsonOf1, jsonOf1]
+}
+</code></pre>
+<p>In general, for any given <code>oper: TlaOper</code> of <code>OperEx</code>, the value of the <code>oper</code> field in the serialization equals <code>oper.name</code>.</p>
+<h2><a class="header" href="#7-implementation" id="7-implementation">7. Implementation</a></h2>
+<p>The implementation of the serialization can be found in the class
+<code>at.forsyte.apalache.io.json.TlaToJson</code> of the module <code>tla-import</code>, see <a href="https://github.com/informalsystems/apalache/blob/unstable/tla-import/src/main/scala/at/forsyte/apalache/io/json/TlaToJson.scala">TlaToJson</a>.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../adr/004adr-annotations.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../adr/006rfc-unit-testing.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../adr/004adr-annotations.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../adr/006rfc-unit-testing.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
