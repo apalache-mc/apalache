@@ -224,6 +224,7 @@ class TlaToJson[T <: JsonRepresentation](
     factory.mkObj(
         "name" -> "ApalacheIR",
         versionFieldName -> JsonVersion.current,
+        "description" -> "https://apalache.informal.systems/docs/adr/005adr-json.html",
         "modules" -> factory.fromTraversable(moduleJsons)
     )
   }
