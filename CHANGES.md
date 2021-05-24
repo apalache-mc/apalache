@@ -2,6 +2,12 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.15.7
+
+### Documentation
+
+ * links to ADR005
+
 ## 0.15.6
 
 ### Features
