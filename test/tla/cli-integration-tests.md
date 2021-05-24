@@ -1181,7 +1181,7 @@ EXITCODE: ERROR (12)
 ```sh
 $ apalache-mc check --inv=Inv --max-error=50 --view=View1 View.tla | sed 's/[IEW]@.*//'
 ...
-Found 19 error(s)
+Found 37 error(s)
 The outcome is: Error
 ...
 EXITCODE: ERROR (12)

@@ -33,8 +33,10 @@ class ConstrainedTransitionExecutor[ExecutorContext](trex: TransitionExecutor[Ex
     assertPathOrConstraint(trex.execution, constraint)
   }
 
-  override def assumeTransition(transitionNo: Int): Unit = {
-    trex.assumeTransition(transitionNo)
+  /**
+   * Push path constraints immediately in the context.
+   */
+  def assertPathConstraints(): Unit = {
     val exec = trex.execution
     pathConstraints.get(exec.path.length).foreach {
       _.foreach { cons =>
@@ -43,14 +45,14 @@ class ConstrainedTransitionExecutor[ExecutorContext](trex: TransitionExecutor[Ex
     }
   }
 
+  override def assumeTransition(transitionNo: Int): Unit = {
+    trex.assumeTransition(transitionNo)
+    assertPathConstraints()
+  }
+
   override def pickTransition(): Oracle = {
     val oracle = trex.pickTransition()
-    val exec = trex.execution
-    pathConstraints.get(exec.path.length).foreach {
-      _.foreach { cons =>
-        assertPathOrConstraint(exec, cons)
-      }
-    }
+    assertPathConstraints()
     oracle
   }
 

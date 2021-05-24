@@ -255,33 +255,41 @@ class SeqModelChecker[ExecutorContextT](
     for ((notInv, invNo) <- notInvs.zipWithIndex) {
       if (numbersToCheck.contains(invNo)) {
         logger.debug(s"State $stateNo: Checking $kind invariant $invNo")
-        // save the context
-        val snapshot = trex.snapshot()
+        var invariantHolds = false
 
-        // check the invariant
-        trex.assertState(notInv)
+        while (!invariantHolds && searchState.canContinue) {
+          // save the context
+          val snapshot = trex.snapshot()
 
-        trex.sat(params.smtTimeoutSec) match {
-          case Some(true) =>
-            searchState.onResult(Error(1))
-            val filenames = dumpCounterexample(notInv)
-            logger.error(
-                s"State $stateNo: $kind invariant %s violated. Check the counterexample in: %s"
-                  .format(invNo, filenames.mkString(", "))
-            )
-            excludePathView()
-            return // the invariant is violated
+          // check the invariant
+          trex.assertState(notInv)
 
-          case Some(false) =>
-            () // the invariant holds true
+          trex.sat(params.smtTimeoutSec) match {
+            case Some(true) =>
+              searchState.onResult(Error(1))
+              val filenames = dumpCounterexample(notInv)
+              val msg = "State %d: %s invariant %s violated. Check the counterexample in: %s"
+                .format(stateNo, kind, invNo, filenames.mkString(", "))
+              logger.error(msg)
+              excludePathView()
 
-          case None =>
-            searchState.onResult(RuntimeError())
-            return // UNKNOWN or timeout
+            case Some(false) =>
+              // no counterexample found, so the invariant holds true
+              invariantHolds = true
+
+            case None =>
+              // UNKNOWN or timeout
+              searchState.onResult(RuntimeError())
+          }
+
+          // rollback the context
+          trex.recover(snapshot)
+
+          if (!invariantHolds && searchState.canContinue) {
+            // force the new path constraints for the next iteration
+            trex.assertPathConstraints()
+          }
         }
-
-        // rollback the context
-        trex.recover(snapshot)
       }
     }
   }
@@ -295,33 +303,41 @@ class SeqModelChecker[ExecutorContextT](
 
     for ((notInv, invNo) <- notTraceInvariants.zipWithIndex) {
       logger.debug(s"State $stateNo: Checking trace invariant $invNo")
-      // save the context
-      val snapshot = trex.snapshot()
+      var invariantHolds = false
 
-      // check the invariant
-      val traceInvApp = applyTraceInv(notInv)
-      trex.assertState(traceInvApp)
+      while (!invariantHolds && searchState.canContinue) {
+        // save the context
+        val snapshot = trex.snapshot()
 
-      trex.sat(params.smtTimeoutSec) match {
-        case Some(true) =>
-          searchState.onResult(Error(1))
-          val filenames = dumpCounterexample(traceInvApp)
-          logger.error(
-              s"State ${stateNo}: trace invariant %s violated. Check the counterexample in: %s"
-                .format(invNo, filenames.mkString(", "))
-          )
-          return // the invariant violated
+        // check the invariant
+        val traceInvApp = applyTraceInv(notInv)
+        trex.assertState(traceInvApp)
 
-        case Some(false) =>
-          () // the invariant holds true
+        trex.sat(params.smtTimeoutSec) match {
+          case Some(true) =>
+            searchState.onResult(Error(1))
+            val filenames = dumpCounterexample(traceInvApp)
+            val msg = "State %d: trace invariant %s violated. Check the counterexample in: %s"
+              .format(stateNo, invNo, filenames.mkString(", "))
+            logger.error(msg)
+            excludePathView()
 
-        case None =>
-          searchState.onResult(RuntimeError())
-          return // UNKNOWN or timeout
+          case Some(false) =>
+            // no counterexample found, so the invariant holds true
+            invariantHolds = true
+
+          case None =>
+            searchState.onResult(RuntimeError())
+        }
+
+        // rollback the context
+        trex.recover(snapshot)
+
+        if (!invariantHolds && searchState.canContinue) {
+          // force the new path constraints for the next iteration
+          trex.assertPathConstraints()
+        }
       }
-
-      // rollback the context
-      trex.recover(snapshot)
     }
   }
 
