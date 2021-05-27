@@ -260,6 +260,8 @@ class SeqModelChecker[ExecutorContextT](
         while (!invariantHolds && searchState.canContinue) {
           // save the context
           val snapshot = trex.snapshot()
+          // force the new path constraints for the next iteration
+          trex.assertPathConstraints()
 
           // check the invariant
           trex.assertState(notInv)
@@ -284,11 +286,6 @@ class SeqModelChecker[ExecutorContextT](
 
           // rollback the context
           trex.recover(snapshot)
-
-          if (!invariantHolds && searchState.canContinue) {
-            // force the new path constraints for the next iteration
-            trex.assertPathConstraints()
-          }
         }
       }
     }
@@ -308,6 +305,8 @@ class SeqModelChecker[ExecutorContextT](
       while (!invariantHolds && searchState.canContinue) {
         // save the context
         val snapshot = trex.snapshot()
+        // force the new path constraints for the next iteration
+        trex.assertPathConstraints()
 
         // check the invariant
         val traceInvApp = applyTraceInv(notInv)
@@ -332,11 +331,6 @@ class SeqModelChecker[ExecutorContextT](
 
         // rollback the context
         trex.recover(snapshot)
-
-        if (!invariantHolds && searchState.canContinue) {
-          // force the new path constraints for the next iteration
-          trex.assertPathConstraints()
-        }
       }
     }
   }
