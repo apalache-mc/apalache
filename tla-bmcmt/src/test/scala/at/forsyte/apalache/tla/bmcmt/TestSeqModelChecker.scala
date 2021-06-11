@@ -1,5 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.Checker.{Deadlock, Error, NoError}
+
 import java.io.File
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams
@@ -26,6 +28,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
       "i" -> IntT1(),
       "I" -> SetT1(IntT1()),
       "b" -> BoolT1(),
+      "bb" -> TupT1(BoolT1(), BoolT1()),
       "r" -> RecT1(SortedMap("x" -> IntT1())),
       "s" -> SeqT1(RecT1(SortedMap("x" -> IntT1()))),
       "Ob" -> OperT1(Seq(), BoolT1())
@@ -60,7 +63,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.NoError == outcome)
+    assert(NoError() == outcome)
   }
 
   test("Init + Inv => ERR") {
@@ -77,7 +80,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.Error == outcome)
+    assert(Error(1) == outcome)
   }
 
   test("ConstInit + Init => OK") {
@@ -97,7 +100,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.NoError == outcome)
+    assert(NoError() == outcome)
   }
 
   test("ConstInit + Init => ERR") {
@@ -117,7 +120,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.Error == outcome)
+    assert(Error(1) == outcome)
   }
 
   test("Init, deadlock") {
@@ -131,7 +134,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.Deadlock == outcome)
+    assert(Deadlock() == outcome)
   }
 
   test("Init, 2 options, OK") {
@@ -145,7 +148,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.NoError == outcome)
+    assert(NoError() == outcome)
   }
 
   test("Init + Next x 1 => OK") {
@@ -160,7 +163,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.NoError == outcome)
+    assert(NoError() == outcome)
   }
 
   test("Init + Next x 10 + Inv (before + no-all-enabled) => ERR") {
@@ -182,7 +185,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.Error == outcome)
+    assert(Error(1) == outcome)
   }
 
   test("Init + Next x 10 + Inv (before + all-enabled) => ERR") {
@@ -204,7 +207,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.Error == outcome)
+    assert(Error(1) == outcome)
   }
 
   test("Init + Next x 10 + ActionInv (before + all-enabled) => ERR") {
@@ -226,7 +229,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.Error == outcome)
+    assert(Error(1) == outcome)
   }
 
   test("Init + Next x 10 + ActionInv (before + all-enabled) => OK") {
@@ -248,7 +251,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.NoError == outcome)
+    assert(NoError() == outcome)
   }
 
   test("Init + Next x 10 + Inv (after + all-enabled) => ERR") {
@@ -270,7 +273,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.Error == outcome)
+    assert(Error(1) == outcome)
   }
 
   test("Init + Next x 10 + Inv (after + no-all-enabled) => ERR") {
@@ -292,7 +295,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.Error == outcome)
+    assert(Error(1) == outcome)
   }
 
   test("Init + Next x 10 + ActionInv (after + all-enabled) => ERR") {
@@ -314,7 +317,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.Error == outcome)
+    assert(Error(1) == outcome)
   }
 
   test("Init + Next x 10 + ActionInv (after + all-enabled) => OK") {
@@ -336,7 +339,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.NoError == outcome)
+    assert(NoError() == outcome)
   }
 
   test("Init + Next x 10 + ActionInv (before) => ERR") {
@@ -358,7 +361,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.Error == outcome)
+    assert(Error(1) == outcome)
   }
 
   test("Init + Next x 10 + ActionInv (before) => OK") {
@@ -380,7 +383,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.NoError == outcome)
+    assert(NoError() == outcome)
   }
 
   test("Init + Next x 10 + ActionInv (after) => ERR") {
@@ -402,7 +405,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.Error == outcome)
+    assert(Error(1) == outcome)
   }
 
   test("Init + Next x 10 + ActionInv (after) => OK") {
@@ -424,7 +427,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.NoError == outcome)
+    assert(NoError() == outcome)
   }
 
   test("Init + Next x 10 + TraceInv => OK") {
@@ -450,7 +453,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.NoError == outcome)
+    assert(NoError() == outcome)
   }
 
   test("Init + Next x 10 + TraceInv => ERR") {
@@ -476,7 +479,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.Error == outcome)
+    assert(Error(1) == outcome)
   }
 
   test("Init + Next x 2 (LET-IN) + Inv => ERR") {
@@ -503,7 +506,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.Error == outcome)
+    assert(Error(1) == outcome)
   }
 
   test("determinstic Init + 2 steps (regression)") {
@@ -529,7 +532,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.NoError == outcome)
+    assert(NoError() == outcome)
   }
 
   test("Init + Next x 1 => deadlock") {
@@ -546,7 +549,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.Deadlock == outcome)
+    assert(Deadlock() == outcome)
   }
 
   test("Init + Next, 10 steps, OK") {
@@ -561,7 +564,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.NoError == outcome)
+    assert(NoError() == outcome)
   }
 
   test("Init + Next x 10 => deadlock") {
@@ -578,7 +581,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.Deadlock == outcome)
+    assert(Deadlock() == outcome)
   }
 
   test("Init + Next + Inv x 10 => OK") {
@@ -599,7 +602,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.NoError == outcome)
+    assert(NoError() == outcome)
   }
 
   test("Init + Next + Inv x 3 => ERR, edge case") {
@@ -622,7 +625,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.Error == outcome)
+    assert(Error(1) == outcome)
   }
 
   test("Init + Next + Inv x 2 => OK, edge case") {
@@ -644,7 +647,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.NoError == outcome)
+    assert(NoError() == outcome)
   }
 
   test("Init + Next + Inv x 10 and invariantFilter => OK") {
@@ -668,7 +671,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
       new FilteredTransitionExecutor("", params.invFilter, new TransitionExecutorImpl(params.consts, params.vars, ctx))
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.NoError == outcome)
+    assert(NoError() == outcome)
   }
 
   test("Init + Next x 3 + non-determinism => no deadlock") {
@@ -686,7 +689,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.NoError == outcome)
+    assert(NoError() == outcome)
   }
 
   test("Init + Next, 10 steps, non-determinism in init and next") {
@@ -710,7 +713,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.Error == outcome)
+    assert(Error(1) == outcome)
   }
 
   test("cInit + Init + Next, 10 steps") {
@@ -736,7 +739,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
       .typed(types, "b")
     val inv = not(notInv)
       .typed(types, "b")
-    val dummyModule = new TlaModule("root", List(TlaConstDecl("N")(intTag), TlaVarDecl("x")(intTag)))
+    val dummyModule = TlaModule("root", List(TlaConstDecl("N")(intTag), TlaVarDecl("x")(intTag)))
     val checkerInput =
       new CheckerInput(dummyModule, initTrans, nextTrans, Some(cInit), CheckerInputVC(List((inv, notInv))))
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
@@ -745,7 +748,7 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.Error == outcome)
+    assert(Error(1) == outcome)
   }
 
   test("Init + Next, 10 steps and filter") {
@@ -771,7 +774,44 @@ class TestSeqModelChecker extends FunSuite with BeforeAndAfter {
     val trex = new FilteredTransitionExecutor("([0-9]|10)->0", "", impl)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Checker.Outcome.NoError == outcome)
+    assert(NoError() == outcome)
+  }
+
+  test("Init + Next x 2 + Inv + View => ERR x 4") {
+    // x' <- 0
+    val initTrans = List(mkAssign("x", 0))
+    // x' := x + 1 \/ x' := x - 1 \/ x' := x
+    val action1 = mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1())
+    val action2 = mkAssign("x", minus(name("x") ? "i", int(1)) ? "i", IntT1())
+    val action3 = mkAssign("x", name("x") ? "i", IntT1())
+    val nextTrans = List(action1, action2, action3)
+    // x = 0
+    val inv = eql(name("x") ? "i", int(0))
+      .typed(types, "b")
+    val notInv = not(inv).typed(types, "b")
+    // view: <<x < 0, x > 0>>
+    val view = tuple(le(name("x") ? "i", int(0)) ? "b", ge(name("x") ? "i", int(0)) ? "b")
+      .typed(types, "bb")
+    val checkerInput =
+      new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None,
+          CheckerInputVC(List((inv, notInv)), List.empty, List.empty, Some(view)))
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 2, new File("."), Map(), false)
+    // we expect 4 errors, but an upper bound may be larger
+    params.nMaxErrors = 10
+    params.discardDisabled = true
+    params.invariantMode = InvariantMode.BeforeJoin
+    // initialize the model checker
+    val ctx = new IncrementalExecutionContext(rewriter)
+    val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
+    val checker = new SeqModelChecker(params, checkerInput, trex)
+    val outcome = checker.run()
+    outcome match {
+      case Error(nerrors) =>
+        assert(4 == nerrors)
+
+      case _ =>
+        fail("Expected 4 errors")
+    }
   }
 
   private def mkAssign(varName: String, value: Int): TlaEx = {

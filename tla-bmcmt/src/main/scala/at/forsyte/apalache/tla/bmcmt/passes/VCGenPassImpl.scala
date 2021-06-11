@@ -42,7 +42,11 @@ class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTrac
         case Some(invariants) =>
           invariants.foldLeft(tlaModule.get) { (mod, invName) =>
             logger.info(s"  > Producing verification conditions from the invariant $invName")
-            new VCGenerator(tracker).gen(mod, invName)
+            val optViewName = options.get[String]("checker", "view")
+            if (optViewName.isDefined) {
+              logger.info(s"  > Using state view ${optViewName.get}")
+            }
+            new VCGenerator(tracker).gen(mod, invName, optViewName)
           }
         case None =>
           logger.info("  > No invariant given. Only deadlocks will be checked")

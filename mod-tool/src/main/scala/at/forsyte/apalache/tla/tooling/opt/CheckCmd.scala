@@ -42,4 +42,14 @@ class CheckCmd extends Command(name = "check", description = "Check a TLA+ speci
         "pre-check, whether a transition is disabled, and discard it, to make SMT queries smaller, default: true")
   var noDeadlocks: Boolean =
     opt[Boolean](name = "no-deadlock", default = true, description = "do not check for deadlocks, default: true")
+
+  var maxError: Int =
+    opt[Int](name = "max-error",
+        description =
+          "do not stop on first error, but produce up to a given number of counterexamples (fine tune with --view), default: 1",
+        default = 1)
+
+  var view: String =
+    opt[String](name = "view", description = "the state view to use with --max-error=n, default: transition index",
+        default = "")
 }
