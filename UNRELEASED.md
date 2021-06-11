@@ -14,6 +14,10 @@
 
 * Checker: enumerating multiple counterexamples, see #542 and #827
 
+### Bug fixes
+
+* Tool: no empty log on help message, see #830
+
 ### Documentation
 
 * links to ADR005
