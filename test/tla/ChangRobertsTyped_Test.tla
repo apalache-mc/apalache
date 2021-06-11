@@ -130,7 +130,7 @@ TestExec_n0_n1 ==
 \*
 \* @typeAlias: STATE = [ msgs: Int -> Set(Int), pc: Int -> Str,
 \*                       initiator: Int -> Bool, state: Int -> Str ];
-\* @type: Seq(STATE) -> Bool;
+\* @type: Seq(STATE) => Bool;
 Assert_noWinner(trace) ==
     LET last == trace[Len(trace)] IN
         \A n \in Node:
