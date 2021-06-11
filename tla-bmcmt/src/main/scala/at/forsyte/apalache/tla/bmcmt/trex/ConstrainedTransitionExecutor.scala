@@ -58,6 +58,8 @@ class ConstrainedTransitionExecutor[ExecutorContext](trex: TransitionExecutor[Ex
 
   private def assertPathOrConstraint(execution: EncodedExecution, pathConstraint: PathConstraint): Unit = {
     if (execution.path.length >= pathConstraint.length) {
+      // Note: execution.path.head and pathConstraint.head contain constraints over the specification parameters,
+      // not state variables. That is why we only iterate over the path tails.
       val constraints =
         execution.path.tail.zip(pathConstraint.tail).map { case ((binding, _), cons) =>
           // substitute variable names with the cells in the binding
