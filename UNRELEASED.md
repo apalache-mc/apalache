@@ -13,3 +13,5 @@
 ### Documentation
 
  * links to ADR005
+
+ * revision 2 of RFC006 on unit testing
