@@ -1,5 +1,9 @@
 # ADR-003: transition executor (TRex)
 
+| author       | revision |
+| ------------ | --------:|
+| Igor Konnov  |        1 |
+
 Transition executor is a new abstraction layer between the model checker and
 the translator of TLA+ expressions to SMT. The goal of this layer is to do the
 following:

@@ -1,8 +1,8 @@
 # RFC-006: Unit testing and property-based testing of TLA+ specifications
 
-| authors                                   | revision |
-| ----------------------------------------- | --------:|
-| Igor Konnov, Vitor Enes, Shon Feder, ...  |        1 |
+| authors                                                     | revision |
+| ----------------------------------------------------------- | --------:|
+| Igor Konnov, Vitor Enes, Shon Feder, Andrey Kuprianov, ...  |        1 |
 
 <!-- toc -->
 

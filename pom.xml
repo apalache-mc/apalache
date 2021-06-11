@@ -10,7 +10,7 @@
     <url>https://github.com/informalsystems/apalache</url>
 
     <properties>
-        <scalaVersion>2.12.12</scalaVersion>
+        <scalaVersion>2.12.14</scalaVersion>
         <scalaBinaryVersion>2.12</scalaBinaryVersion>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <logback.version>1.2.3</logback.version>
@@ -154,7 +154,7 @@
                 <plugin>
                     <groupId>net.alchim31.maven</groupId>
                     <artifactId>scala-maven-plugin</artifactId>
-                    <version>4.5.1</version>
+                    <version>4.5.2</version>
 
                     <executions>
                         <execution>

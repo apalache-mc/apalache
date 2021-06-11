@@ -80,5 +80,7 @@
 # Design Documents
 
 - [ADR-002: types and type annotations](./adr/002adr-types.md)
+- [ADR-003: transition executor (TRex)](./adr/003adr-trex.md)
 - [ADR-004: code annotations](./adr/004adr-annotations.md)
+- [ADR-005: JSON Serialization Format](./adr/005adr-json.md)
 - [RFC-006: unit tests and property-based tests](./adr/006rfc-unit-testing.md)

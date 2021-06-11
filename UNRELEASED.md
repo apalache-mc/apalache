@@ -17,3 +17,5 @@
 ### Documentation
 
 * Manual: manual page on enumerating counterexamples and view abstraction, see #542
+
+* links to ADR005
