@@ -4,7 +4,6 @@ import at.forsyte.apalache.io.json.impl.TlaToUJson
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaBool
 
 import java.io.{FileWriter, PrintWriter}
@@ -137,12 +136,20 @@ object CounterexampleWriter {
       tla.and(namesAndVals: _*)
     }
 
-  // default implementation -- write in all formats, and return the list of files written
-  def writeAllFormats(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): List[String] = {
+  /**
+   * Write a counterexample in all supported formats (TLA+, MC.out, JSON), and return the list of files written.
+   *
+   * @param suffix       suffix to be added in the end of a filename, may be empty
+   * @param rootModule   source module of the counterexample
+   * @param notInvariant negated invariant
+   * @param states       sequence of states that represent the counterexample
+   */
+  def writeAllFormats(suffix: String, rootModule: TlaModule, notInvariant: NotInvariant,
+      states: List[NextState]): List[String] = {
     val fileNames = Map(
-        "tla" -> "counterexample.tla",
-        "tlc" -> "MC.out",
-        "json" -> "counterexample.json"
+        "tla" -> s"counterexample$suffix.tla",
+        "tlc" -> s"MC$suffix.out",
+        "json" -> s"counterexample$suffix.json"
     )
     val files = fileNames.map { case (kind, name) =>
       (kind, new PrintWriter(new FileWriter(name)))
