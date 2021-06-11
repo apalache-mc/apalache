@@ -380,7 +380,7 @@ class SeqModelChecker[ExecutorContextT](
             case _            => false
           }
 
-          repl(isToReplace, assignedEx)(replacedView)
+          repl(isToReplace, assignedEx.copy())(replacedView)
         }
       // the view over state variables should not be equal to the view over the model values
       val boolTag = Typed(BoolT1())
