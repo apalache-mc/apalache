@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.{MalformedTlaError, TlaEx}
+import at.forsyte.apalache.tla.lir.{MalformedTlaError, TlaEx, UID}
 
 // All exceptions related to the intermediate language should go here
 
@@ -38,9 +38,10 @@ class ConfigurationError(message: String) extends Exception(message)
  * missing annotations for the recursive operators.
  * This exception should be treated as the input error: no stack trace, normal messages.
  *
- * @param message the error message
+ * @param message  error message
+ * @param sourceId optional id of the expression (or declaration) that caused the error
  */
-class TlaInputError(message: String) extends Exception(message)
+class TlaInputError(message: String, val sourceId: Option[UID] = None) extends Exception(message)
 
 /**
  * An exception that should be thrown when a TLC configuration is wrong/not-found

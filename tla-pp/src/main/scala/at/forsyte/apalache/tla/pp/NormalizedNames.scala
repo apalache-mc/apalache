@@ -18,6 +18,11 @@ object NormalizedNames {
   val VC_NOT_TRACE_INV_PREFIX = "VCNotTraceInv$"
   val VC_TEMPORAL_PROP_PREFIX = "VCTemporal$"
 
+  /**
+   * A state view to use when enumerating counterexamples.
+   */
+  val VC_VIEW = "VCView$0"
+
   // the names of the options that capture the critical specification pieces
   val STANDARD_OPTION_NAMES = Seq("init", "cinit", "next", "inv", "temporalProps")
 
@@ -29,7 +34,7 @@ object NormalizedNames {
    */
   def userOperatorNamesFromOptions(options: PassOptions): List[String] = {
     // first, get the operators whose names are passed as single strings
-    val single: List[String] = List("init", "cinit", "next").flatMap(options.get[String]("checker", _))
+    val single: List[String] = List("init", "cinit", "next", "view").flatMap(options.get[String]("checker", _))
     // second, get the operators whose names are passed as lists of strings
     val multiple: List[String] = List("inv", "temporalProps").flatMap(options.get[List[String]]("checker", _)).flatten
     single ++ multiple
@@ -43,7 +48,7 @@ object NormalizedNames {
   def isVC(decl: TlaDecl): Boolean = {
     decl.isInstanceOf[TlaOperDecl] &&
     List(VC_INV_PREFIX, VC_NOT_INV_PREFIX, VC_ACTION_INV_PREFIX, VC_NOT_ACTION_INV_PREFIX, VC_TRACE_INV_PREFIX,
-        VC_NOT_TRACE_INV_PREFIX).exists(decl.name.startsWith)
+        VC_NOT_TRACE_INV_PREFIX, VC_VIEW).exists(decl.name.startsWith)
   }
 
   /**

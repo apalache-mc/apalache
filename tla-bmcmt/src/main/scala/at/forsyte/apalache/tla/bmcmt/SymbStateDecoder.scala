@@ -260,11 +260,11 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         if (name != cell.toNameEx.name) {
           ex
         } else {
-          tla.name(varName).untyped()
+          NameEx(varName)(ex.typeTag)
         }
 
       case OperEx(oper, args @ _*) =>
-        OperEx(oper, args map rec: _*)(Untyped())
+        OperEx(oper, args map rec: _*)(ex.typeTag)
 
       case _ =>
         ex

@@ -13,8 +13,6 @@ object ModelCheckerParams {
     type InvariantMode = Value
     val BeforeJoin, AfterJoin = Value
   }
-
-  import InvariantMode._
 }
 
 /**
@@ -23,7 +21,7 @@ object ModelCheckerParams {
  * @author Igor Konnov
  */
 class ModelCheckerParams(checkerInput: CheckerInput, val stepsBound: Int, val saveDirectory: File,
-    tuningOptions: Map[String, String] = Map(), val debug: Boolean) {
+    tuningOptions: Map[String, String] = Map(), val debug: Boolean = true) {
 
   /**
    * If pruneDisabled is set to false, there will be no check of whether a transition is enabled.
@@ -57,6 +55,11 @@ class ModelCheckerParams(checkerInput: CheckerInput, val stepsBound: Int, val sa
 
   val invFilter: String =
     tuningOptions.getOrElse("search.invariantFilter", "")
+
+  /**
+   * The number of counterexamples to produce. The default value is 1.
+   */
+  var nMaxErrors: Int = 1
 
   /**
    * A timeout upon which a transition is split in its own group.

@@ -32,6 +32,8 @@ The arguments are as follows:
     - `--discard-disabled` does a pre-check on transitions and discard the disabled ones at every step. If you know that
       many transitions are always enabled, set it to false. Sometimes, this pre-check may be slower than checking the
       invariant. Default: true.
+    - `--max-error <n>` instructs the search to stop after `n` errors, see [Enumeration of counterexamples][]. Default: 1.  
+    - `--view <name>` sets the state view to `<name>`, see [Enumeration of counterexamples][].
     - `--no-deadlock` disables deadlock-checking, when `--discard-disabled=false` is on. When `--discard-disabled=true`,
       deadlocks are found in any case.
     - `--tuning` specifies the properties file that stores the options for
@@ -263,3 +265,5 @@ In this case, Apalache performs the following steps:
    .
 
 1. It pretty-prints the IR into `out-parser.tla`, see [Detailed output](#detailed).
+
+[Enumeration of counterexamples]: ./enumeration.md

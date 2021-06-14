@@ -39,7 +39,8 @@ class CheckerExceptionAdapter @Inject() (sourceStore: SourceStore, changeListene
       NormalErrorMessage("Configuration error (see the manual): " + err.getMessage)
 
     case err: TlaInputError =>
-      NormalErrorMessage("Input error (see the manual): " + err.getMessage)
+      val loc = err.sourceId.map(id => findLoc(id) + ": ").getOrElse("")
+      NormalErrorMessage(s"${loc}Input error (see the manual): ${err.getMessage}")
 
     case err: AssignmentException =>
       logger.info("To understand the error, read the manual:")

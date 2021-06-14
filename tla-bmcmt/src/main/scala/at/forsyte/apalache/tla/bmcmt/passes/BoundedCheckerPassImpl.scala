@@ -1,9 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
-import java.nio.file.Path
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
-import at.forsyte.apalache.tla.bmcmt.Checker.Outcome
+import at.forsyte.apalache.tla.bmcmt.Checker.NoError
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore}
 import at.forsyte.apalache.tla.bmcmt.rewriter.{MetricProfilerListener, RewriterConfig}
@@ -21,6 +20,7 @@ import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
 import java.io.File
+import java.nio.file.Path
 
 /**
  * The implementation of a bounded model checker with SMT.
@@ -66,10 +66,11 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
     val vcTraceInvs = module.operDeclarations.filter(d => d.name.startsWith(NormalizedNames.VC_TRACE_INV_PREFIX))
     val vcNotTraceInvs = module.operDeclarations.filter(d => d.name.startsWith(NormalizedNames.VC_NOT_TRACE_INV_PREFIX))
     val traceInvariantsAndNegations = vcTraceInvs.zip(vcNotTraceInvs)
+    val optView = module.operDeclarations.find(_.name == NormalizedNames.VC_VIEW).map(_.body)
 
     val verificationConditions =
       CheckerInputVC(invariantsAndNegations.toList, actionInvariantsAndNegations.toList,
-          traceInvariantsAndNegations.toList)
+          traceInvariantsAndNegations.toList, optView)
     val input = new CheckerInput(module, initTrans.toList, nextTrans.toList, cinitP, verificationConditions)
     /*
         TODO: uncomment when the parallel checker is transferred from ik/multicore
@@ -83,6 +84,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
     val params = new ModelCheckerParams(input, stepsBound, saveDir, tuning, debug)
     params.discardDisabled = options.getOrElse("checker", "discardDisabled", true)
     params.checkForDeadlocks = !options.getOrElse("checker", "noDeadlocks", false)
+    params.nMaxErrors = options.getOrElse("checker", "maxError", 1)
 
     val smtProfile = options.getOrElse("smt", "prof", false)
     val smtRandomSeed = tuning.getOrElse("smt.randomSeed", "0").toInt
@@ -128,7 +130,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
     val checker = new SeqModelChecker[SnapshotT](params, input, filteredTrex)
     val outcome = checker.run()
     logger.info(s"The outcome is: " + outcome)
-    outcome == Outcome.NoError
+    outcome == NoError()
   }
 
   private def runOfflineChecker(params: ModelCheckerParams, input: CheckerInput, tuning: Map[String, String],
@@ -151,7 +153,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
     val checker = new SeqModelChecker[SnapshotT](params, input, filteredTrex)
     val outcome = checker.run()
     logger.info(s"The outcome is: " + outcome)
-    outcome == Outcome.NoError
+    outcome == NoError()
   }
 
   /*

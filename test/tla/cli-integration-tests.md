@@ -1176,6 +1176,28 @@ The outcome is: Error
 EXITCODE: ERROR (12)
 ```
 
+### check View.tla
+
+```sh
+$ apalache-mc check --inv=Inv --max-error=50 --view=View1 View.tla | sed 's/[IEW]@.*//'
+...
+Found 37 error(s)
+The outcome is: Error
+...
+EXITCODE: ERROR (12)
+```
+
+### check View2.tla
+
+```sh
+$ apalache-mc check --inv=Inv --max-error=50 --view=View1 View2.tla | sed 's/[IEW]@.*//'
+...
+Found 20 error(s)
+The outcome is: Error
+...
+EXITCODE: ERROR (12)
+```
+
 ## running the typecheck command
 
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
