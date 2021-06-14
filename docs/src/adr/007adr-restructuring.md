@@ -109,6 +109,7 @@ In L9, we have implementations of the following concepts:
    - Logging
  - Classes and traits related to 3rd party technologies, such as:
    - SMT
+   - TLC config
 
 # L10: Pass implementations
 
