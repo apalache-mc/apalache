@@ -9,6 +9,8 @@ test/tla/testSpec\.smt2
 
 tla-assignments/src/test/resources/assignmentTest1.smt2
 tla-bmcmt/counterexample.txt
+tla-bmcmt/counterexample.json
+tla-bmcmt/counterexample.tla
 tla-bmcmt/profile-rules.txt
 
 *.err
@@ -27,3 +29,6 @@ x/
 # Ignore artifacts created when previewing the gh-pages site
 /Gemfile.lock
 /_site/
+
+# Ignore MacOS files
+.DS_Store
