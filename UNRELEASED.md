@@ -10,6 +10,10 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
+### Bug fixes
+
+* Tool: no empty log on help message, see #830
+
 ### Documentation
 
 * revision 2 of RFC006 on unit testing
