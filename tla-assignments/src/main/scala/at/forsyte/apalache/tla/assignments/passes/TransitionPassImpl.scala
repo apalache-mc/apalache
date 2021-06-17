@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.imp.findBodyOf
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
-import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
+import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.tla.pp.NormalizedNames
@@ -91,7 +91,8 @@ class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceSto
 
     val sourceLoc = SourceLocator(sourceStore.makeSourceMap, changeListener)
 
-    val transitionPairs = SmtFreeSymbolicTransitionExtractor(tracker, sourceLoc)(vars.toSet, primedName)
+    val operMap = BodyMapFactory.makeFromDecls(module.operDeclarations)
+    val transitionPairs = SmtFreeSymbolicTransitionExtractor(tracker, sourceLoc)(vars.toSet, primedName, operMap)
     // sort the transitions by their occurrence in the source code
     val sorter = new TransitionOrder(sourceLoc)
     val sortedPairs = sorter.sortBySource(transitionPairs)
