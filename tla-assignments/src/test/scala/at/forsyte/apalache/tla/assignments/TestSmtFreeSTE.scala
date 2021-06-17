@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.assignments
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.TestingPredefs
-import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
+import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -67,8 +67,48 @@ class TestSmtFreeSTE extends FunSuite with TestingPredefs {
 
     val strat = ste.getStrategy(vars, ex)
 
-    val x = 1
-    assert(x == 1 && strat == Seq(asgn.ID))
+    assert(strat == Seq(asgn.ID))
+
+    // A is non-nullary, B is external
+    val asgn2 = tla.primeEq(n_x, tla.int(1)).untyped()
+    val declA2 = tla.declOp("A", asgn2, "p").untypedOperDecl()
+    val asgn3 = tla.primeEq(n_y, tla.int(1)).untyped()
+    val declB = tla.declOp("B", asgn3).untypedOperDecl()
+    val ex2 = tla
+      .letIn(
+          tla.and(
+              tla.appDecl(declA2, tla.int(1)),
+              tla.appDecl(declB)
+          ), declA2)
+      .untyped()
+
+    val vars2 = Set("x", "y")
+
+    val strat2 = ste.getStrategy(vars2, ex2, BodyMapFactory.makeFromDecl(declB))
+
+    assert(strat2 == Seq(asgn2.ID, asgn3.ID))
+  }
+
+  test("Recursive operators") {
+    // Recursive operators cannot introduce assignments,
+    // but are still subject to assignment-before-use rules
+    val asgnInRec = tla.primeEq(n_x, tla.int(1)).untyped()
+    val asgn = tla.primeEq(n_x, tla.int(1)).untyped()
+    val declA = tla.declOp("A", asgnInRec).untypedOperDecl()
+    declA.isRecursive = true // just the flag matters
+    val ex1 = tla.and(asgn, tla.appDecl(declA))
+    val ex2 = tla.and(tla.appDecl(declA), asgn)
+
+    val vars = Set("x")
+
+    val operMap = BodyMapFactory.makeFromDecl(declA)
+    val strat1 = ste.getStrategy(vars, ex1, operMap)
+
+    assert(strat1 == Seq(asgn.ID))
+
+    assertThrows[AssignmentException] {
+      ste.getStrategy(vars, ex2, operMap)
+    }
   }
 
   test("Disjunction") {
