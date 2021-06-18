@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.pp
 import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx, TlaOperDecl}
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.lir.storage.BodyMap
+import at.forsyte.apalache.tla.lir.transformations.standard.DeepCopy
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 
 /**
@@ -21,6 +22,8 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
 class FoldOperLetinizer(tracker: TransformationTracker, operMap: BodyMap, nameGenerator: UniqueNameGenerator)
     extends TlaExTransformation {
   override def apply(ex: TlaEx): TlaEx = transform(ex)
+
+  private val deepCopy: TlaExTransformation = DeepCopy(tracker).deepCopyEx
 
   private def transform: TlaExTransformation = tracker.trackEx {
     case foldSetEx @ OperEx(ApalacheOper.foldSet, nameEx: NameEx, base, set) =>
@@ -44,9 +47,10 @@ class FoldOperLetinizer(tracker: TransformationTracker, operMap: BodyMap, nameGe
   // Swap out one call-by-name for a LET-IN
   private def replaceFromName(nameEx: NameEx): TlaEx =
     operMap.get(nameEx.name) match {
-      case Some(d: TlaOperDecl) =>
+      case Some(d @ TlaOperDecl(_, params, body)) =>
         val newName = nameGenerator.newName()
-        val declCopy = d.copy(name = newName) // same parameter names, same body
+        // same parameter names, same body (copy)
+        val declCopy = TlaOperDecl(newName, params, deepCopy(body))(d.typeTag)
         LetInEx(NameEx(newName)(nameEx.typeTag), declCopy)(nameEx.typeTag)
       case None =>
         throw new TlaInputError(s"Cannot fold with operator ${nameEx.name}: no definition found.", Some(nameEx.ID))

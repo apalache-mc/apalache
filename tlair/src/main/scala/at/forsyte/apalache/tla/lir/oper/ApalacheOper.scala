@@ -120,7 +120,7 @@ object ApalacheOper {
    * the previous partial computation, starting with `v`, and an arbitrary element of S.
    *
    * The type signature is:
-   * \forall T1,T2: FoldSet: ((T1,T2) => T1, T1, Set(T2)) => T
+   * \forall T1,T2: FoldSet: ((T1,T2) => T1, T1, Set(T2)) => T1
    *
    * The following equivalence should hold:
    * FoldSet( Op, v, S ) = IF S = {}
@@ -142,7 +142,7 @@ object ApalacheOper {
    * evaluation order is determined by the sequence.
    *
    * The type signature is:
-   * \forall T1,T2: FoldSeq: ((T1,T2) => T1, T1, Seq(T2)) => T
+   * \forall T1,T2: FoldSeq: ((T1,T2) => T1, T1, Seq(T2)) => T1
    *
    * The following equivalence should hold:
    * FoldSeq( Op, v, seq ) = IF seq = <<>>

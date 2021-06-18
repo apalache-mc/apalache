@@ -9,6 +9,12 @@ import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.InlinerOfUserOper
 import at.forsyte.apalache.tla.lir._
 
+/**
+ * <p>Rewriting rule for FoldSeq.
+ * Unline FoldSet, we don-t need to consider overapproximations or exclude duplicate elements.
+ *
+ * @author Jure Kukovec
+ */
 class FoldSeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def isApplicable(symbState: SymbState): Boolean = {
@@ -31,37 +37,31 @@ class FoldSeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val seqCell = seqState.asCell
 
       // Assume that seqCell is in fact a Seq-type cell
-      val seqCells = seqState.arena.getHas(seqCell).drop(2) // drop start, end
+      // getHas returns a sequence of start +: end +: cells
+      // We drop start +: end, and just read the cells
+      val seqCells = seqState.arena.getHas(seqCell).drop(2)
 
+      // We start with the base value
       val initialState = seqState.setRex(baseCell.toNameEx)
-      val foldResultType = baseCell.cellType
 
       // expressions are transient, we don't need tracking
       val inliner = InlinerOfUserOper(BodyMapFactory.makeFromDecl(opDecl), new IdleTracker)
 
-      val ret = seqCells.foldLeft(initialState) { case (partialState, seqElemCell) =>
-        val oldResultName = partialState.ex
-        val arenaWithNewPartial = partialState.arena.appendCell(foldResultType)
-        val newPartialResultCell = arenaWithNewPartial.topCell
+      // All that is left to do is folding, starting from initialState
+      seqCells.foldLeft(initialState) { case (partialState, seqElemCell) =>
+        // partialState currently holds the cell representing the previous application step
+        val oldResultCellName = partialState.ex
 
-        // newPartialResult = A(oldPartialResult, seqElemCell)
-        val appEx = tla.appDecl(opDecl, oldResultName, seqElemCell.toNameEx)
+        // newPartialResult = A(oldResultCellName, seqElemCell)
+        val appEx = tla.appDecl(opDecl, oldResultCellName, seqElemCell.toNameEx)
         val inlinedEx = inliner.apply(appEx)
-        // We now rewrite A(old, hd) to a cell
-        val preInlineRewriteState = partialState.setArena(arenaWithNewPartial).setRex(inlinedEx)
-        val postInlineRewriteState = rewriter.rewriteUntilDone(preInlineRewriteState)
-        val inlinedAppEx = postInlineRewriteState.ex
-
-        // We assert the condition implying the new value
-        solverAssert(tla.eql(newPartialResultCell.toNameEx, inlinedAppEx))
-        postInlineRewriteState.setRex(newPartialResultCell.toNameEx)
+        val preInlineRewriteState = partialState.setRex(inlinedEx)
+        // There is nothing left to do (no asserts), since the top value in the returned state will
+        // hold the fully rewritten application (single cell)
+        rewriter.rewriteUntilDone(preInlineRewriteState)
       }
-      ret
 
     case _ =>
       throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
   }
-
-  // convenience shorthand
-  def solverAssert: TlaEx => Unit = rewriter.solverContext.assertGroundExpr
 }

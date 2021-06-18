@@ -10,6 +10,12 @@ import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.InlinerOfUserOper
 
+/**
+ * <p>Rewriting rule for FoldSet.
+ * Similar to Cardinality, we need to consider element set presence and multiplicity.
+ *
+ * @author Jure Kukovec
+ */
 class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   // expressions are transient, we don't need tracking
@@ -36,6 +42,9 @@ class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val setCell = setState.asCell
 
       // Assume that setCell is in fact a Set-type cell
+      // getHas returns a sequence of cells the set cell points to
+      // Notably, setCell may overapproximate, and not all elements pointed to
+      // are set members, and some elements may be duplicated
       val setMembers = setState.arena.getHas(setCell)
 
       // Now, we cache the set element equalities
@@ -45,8 +54,7 @@ class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val initialState = postCacheState.setRex(baseCell.toNameEx)
       val foldResultType = baseCell.cellType
 
-      val finalState = mkEq(foldResultType, setCell.toNameEx, opDecl)(Seq(), initialState, setMembers)
-      finalState
+      mkEq(foldResultType, setCell.toNameEx, opDecl)(Seq(), initialState, setMembers)
 
     case _ =>
       throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
@@ -58,7 +66,7 @@ class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val pairs = for {
       c1 <- cells
       c2 <- cells
-      pa <- if (c1.id < c2.id) Some((c1, c2)) else None // skip ones where this is none
+      pa <- if (c1.id < c2.id) Some((c1, c2)) else None // skip ones where this is None
     } yield pa
 
     pairs.foldLeft(initialState) { case (state, (c1, c2)) =>
@@ -76,33 +84,50 @@ class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
   def solverAssert: TlaEx => Unit = rewriter.solverContext.assertGroundExpr
 
   // Generate a series of equations for fold. Similar to cardinality, we must track uniqueness.
-  // Todo: rewrite this to a fold
+  // TODO: rewrite this to a fold
   def mkEq(foldResultType: CellT, setNameEx: TlaEx, opDecl: TlaOperDecl)(counted: Seq[ArenaCell],
       partialState: SymbState, notCounted: Seq[ArenaCell]): SymbState = {
     notCounted match {
       case Nil => partialState // all counted!
 
       case hd +: tl =>
-        val oldResultName = partialState.ex
+        // partialState currently holds the cell representing the previous application step
+        val oldResultCellName = partialState.ex
+        // We prep a new cell, for the result of the application performed in this step
         val arenaWithNewPartial = partialState.arena.appendCell(foldResultType)
         val newPartialResultCell = arenaWithNewPartial.topCell
-        // newPartialResult = oldPartialResult if hd \notin set \/ \E c \in counted: hd = c /\ c \in set
+        // if hd \notin set (overapproximaiton) OR \E c \in counted: hd = c /\ c \in set (duplication)
+        // then newPartialResult = oldPartialResult
         val arenaWithCondition = arenaWithNewPartial.appendCell(BoolT())
         val condCell = arenaWithCondition.topCell
-        val condEx = tla.or(tla.notin(hd.toNameEx, setNameEx), tla.or(counted.map(eqToOther(setNameEx, hd, _)): _*))
+        val condEx = tla.or(
+            tla.notin(hd.toNameEx, setNameEx),
+            tla.or(counted.map(eqToOther(setNameEx, hd, _)): _*)
+        )
         solverAssert(tla.eql(condCell.toNameEx, condEx))
-        // newPartialResult = A(oldPartialResult, hd) otherwise
-        val appEx = tla.appDecl(opDecl, oldResultName, hd.toNameEx)
+        // otherwise newPartialResult = A(oldPartialResult, hd)
+        // First, we inline the operator application, with cell names as parameters
+        val appEx = tla.appDecl(opDecl, oldResultCellName, hd.toNameEx)
         val inliner = mkInliner(opDecl)
         val inlinedEx = inliner.apply(appEx)
-        // We now rewrite A(old, hd) to a cell
+        // We then rewrite A(old, hd) to a cell
         val preInlineRewriteState = partialState.setArena(arenaWithCondition).setRex(inlinedEx)
         val postInlineRewriteState = rewriter.rewriteUntilDone(preInlineRewriteState)
-        val inlinedAppEx = postInlineRewriteState.ex
+        val inlinedCellName = postInlineRewriteState.ex
 
         // We assert the condition implying the new value
-        solverAssert(tla.eql(newPartialResultCell.toNameEx, tla.ite(condCell.toNameEx, oldResultName, inlinedAppEx)))
+        solverAssert(
+            tla.eql(
+                newPartialResultCell.toNameEx,
+                tla.ite(
+                    condCell.toNameEx,
+                    oldResultCellName,
+                    inlinedCellName
+                )
+            )
+        )
 
+        // Finally, we recurse with a state containing the new cell expression
         val endState = postInlineRewriteState.setRex(newPartialResultCell.toNameEx)
         mkEq(foldResultType, setNameEx, opDecl)(hd +: counted, endState, tl)
     }
