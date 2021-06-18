@@ -8291,7 +8291,7 @@ We could encode all values as strings, but they would be similarly indistinguish
 <code>at.forsyte.apalache.io.json.TlaToJson</code> of the module <code>tla-import</code>, see <a href="https://github.com/informalsystems/apalache/blob/unstable/tla-import/src/main/scala/at/forsyte/apalache/io/json/TlaToJson.scala">TlaToJson</a>.</p>
 <h1><a class="header" href="#rfc-006-unit-testing-and-property-based-testing-of-tla-specifications" id="rfc-006-unit-testing-and-property-based-testing-of-tla-specifications">RFC-006: Unit testing and property-based testing of TLA+ specifications</a></h1>
 <table><thead><tr><th>authors</th><th align="right">revision</th></tr></thead><tbody>
-<tr><td>Igor Konnov, Vitor Enes, Shon Feder, Andrey Kuprianov, ...</td><td align="right">1</td></tr>
+<tr><td>Igor Konnov, Vitor Enes, Shon Feder, Andrey Kuprianov, ...</td><td align="right">2</td></tr>
 </tbody></table>
 <!-- toc -->
 <p><strong>Abstract.</strong> This document discusses a framework for testing TLA+
@@ -8565,7 +8565,7 @@ a restricted set of executions as follows:</p>
 <pre><code class="language-tla">\* Execute a sequence of 5 actions, similar to TestAction_n0.
 \* We test a final state with Assert_n0.
 \*
-\* @require(ConstInit) \* in  the future, we will allow the user to omit quotes
+\* @require(ConstInit)
 \* @require(TypeOK)
 \* @ensure(Assert_noWinner)
 \* @testExecution(5)
@@ -8576,35 +8576,41 @@ TestExec_n0_n1 ==
 
 </code></pre>
 <p>In this case, we are using a different assertion in the <code>@ensure</code> annotation:</p>
-<pre><code class="language-tla">Assert_noWinner ==
-    \A n \in Node:
-        state'[n] /= &quot;won&quot;
-
+<pre><code class="language-tla">\* We expect no winner in the final state.
+\* Note that Assert_noWinner is a predicate over a trace of states.
+\*
+\* @typeAlias: STATE = [ msgs: Int -&gt; Set(Int), pc: Int -&gt; Str,
+\*                       initiator: Int -&gt; Bool, state: Int -&gt; Str ];
+\* @type: Seq(STATE) =&gt; Bool;
+Assert_noWinner(trace) ==
+    LET last == trace[Len(trace)] IN
+        \A n \in Node:
+            last.state[n] /= &quot;won&quot;
 </code></pre>
-<p>The test <code>TestExec_n0_n1</code> is similar to <code>TestAction_n0</code> in many aspects.  It
-starts by initializing the state with the predicate <code>Prepare_n0</code> and it expects
-a final state to satisfy the predicate <code>Assert_noWinner</code>. There is an important
-difference between the variables in <code>Assert_n0</code> and <code>Assert_noWinner</code>:</p>
-<ul>
+<p>Similar to <code>TestAction_n0</code>, the test <code>TestExec_n0_n1</code> initialized the state
+with the predicate <code>Prepare_n0</code>. In contrast to <code>TestAction_n0</code>, the 
+test <code>TestExec_n0_n1</code> does two other steps differently:</p>
+<ol>
 <li>
-<p>Unprimed variables in <code>Assert_n0</code> refer to a state before firing an action,
-whereas primed variables in <code>Assert_n0</code> refer to a state after firing
-the action.</p>
+<p>Instead of firing just one action, it fires up to 5 actions in a sequence
+(the order and action are chosen non-deterministically).</p>
 </li>
 <li>
-<p>Unprimed variables in <code>Assert_noWinner</code> refer to a state before firing
-an <em>execution</em>, whereas primed variables in <code>Assert_noWinner</code> refer to
-a final state of the execution.</p>
+<p>Instead of testing a pair of states, the predicate <code>Assert_noWinner</code> tests
+the whole trace. In our example, we check the final state of the trace. In
+general, we could test every single state of the trace.</p>
 </li>
-</ul>
-<p><em>(If you find the above behavior of <code>Assert_noWinner</code> confusing, please let us
-know.)</em></p>
+</ol>
 <p>We should be able to run this test via:</p>
 <pre><code class="language-sh">apalache test ChangRobertsTyped_Test.tla TestExec_n0_n1
 </code></pre>
 <p>If the test is violated, a counterexample should be produced in the file
 <code>counterexample_TestExec_n0_n1.tla</code>.</p>
 <h3><a class="header" href="#34-test-executions-with-temporal-properties" id="34-test-executions-with-temporal-properties">3.4. Test executions with temporal properties</a></h3>
+<p><em>We see this feature to have the least priority, as you can do a lot by
+writing trace invariants. Actually, you can check bounded lassos as trace
+invariants. So for bounded model checking, you can always write a trace
+invariant instead of a temporal formula.</em></p>
 <p>When we wrote the test <code>TestExec_n0_n1</code>, we did not think about the
 intermediate states of an execution. This test was a functional test: It is
 matching the output against the input. When reasoning about state machines,
@@ -8612,17 +8618,17 @@ we often like to restrict the executions and check the properties of those
 executions.</p>
 <p>Fortunately, we have all necessary ingredients in TLA+ to do
 exactly this. Test <code>TestExec_correctness_under_liveness</code>.</p>
-<pre><code class="language-tla">\* Execute a sequence of 5 actions, while using temporal properties.
+<pre><code class="language-tla">\* @type: Seq(STATE) =&gt; Bool;
+Assert_noWinner(trace) ==
+    LET last == trace[Len(trace)] IN
+        \A n \in Node:
+            last.state[n] /= &quot;won&quot;
+
+\* Execute a sequence of 5 actions, while using temporal properties.
 \*
 \* @require(ConstInit)
 \* @require(TypeOK)
 \* @require(Liveness)
-\* @ensure(GlobalCorrectness)
-\* @testExecution(5)
-TestExec_correctness_under_liveness ==
-    \E self \in Node:
-        n0(self) \/ n1(self)
-
 </code></pre>
 <p>Predicates <code>Correctness</code> and <code>Liveness</code> are defined in the spec as follows:</p>
 <pre><code class="language-tla">(***************************************************************************)
@@ -8640,15 +8646,16 @@ Liveness == (\E n \in Node : state[n] = &quot;cand&quot;) =&gt; &lt;&gt;(\E n \i
 </code></pre>
 <p>Since <code>Correctness</code> is a state predicate, we wrap it with a temporal operator
 to check it against all states of an execution:</p>
-<pre><code class="language-tla">GlobalCorrectness == []Correctness
-
+<pre><code class="language-tla">\* @ensure(GlobalCorrectness)
+\* @testExecution(5)
 </code></pre>
 <h3><a class="header" href="#35-discussion" id="35-discussion">3.5. Discussion</a></h3>
 <p>As you can see, we clearly decompose a test in three parts:</p>
 <ul>
-<li>preparing the states (like a small version of <code>Init</code>),</li>
-<li>executing the action (like a small version of <code>Next</code>),</li>
-<li>testing the next states against the previous states (like an action invariant).</li>
+<li>Preparing the states (like a small version of <code>Init</code>),</li>
+<li>Executing the action (like a small version of <code>Next</code>),</li>
+<li>Testing the next states against the previous states (like an action invariant).
+Alternatively, you can write an assertion over a trace. </li>
 </ul>
 <p>In the rest of this section, we comment on the alternative approaches.</p>
 <h4><a class="header" href="#351-but-i-can-do-all-of-that-in-tla" id="351-but-i-can-do-all-of-that-in-tla">3.5.1. But I can do all of that in TLA+</a></h4>
@@ -8888,19 +8895,19 @@ should remember how every individual test was run. To avoid additional
 scripting on top of the command-line interface, we can simply pass the tool
 options with the annotation <code>@testOption</code>. The following example demonstrates
 how it could be done:</p>
-<pre><code class="language-tla">\* A copy of TestExec_n0_n1 that passes additional flags to the model checker.
+<pre><code class="language-tla">TestExec_correctness_under_liveness ==
+    \E self \in Node:
+        n0(self) \/ n1(self)
+
+GlobalCorrectness == []Correctness
+
+\* A copy of TestExec_n0_n1 that passes additional flags to the model checker.
 \*
 \* @require(ConstInit)
 \* @require(TypeOK)
 \* @ensure(Assert_noWinner)
 \* @testExecution(5)
 \* @testOption(&quot;tool&quot;, &quot;apalache&quot;)
-\* @testOption(&quot;search.smt.timeout&quot;, 10)
-\* @testOption(&quot;checker.algo&quot;, &quot;offline&quot;)
-\* @testOption(&quot;checker.nworkers&quot;, 2)
-TestExec_n0_n1_with_options ==
-    TestExec_n0_n1
-
 </code></pre>
 <p>The test options in the above example have the following meaning:</p>
 <ul>
