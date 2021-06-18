@@ -88,7 +88,7 @@
             <dependency>
                 <groupId>com.typesafe.scala-logging</groupId>
                 <artifactId>scala-logging_${scalaBinaryVersion}</artifactId>
-                <version>3.9.3</version>
+                <version>3.9.4</version>
             </dependency>
 
             <dependency>
