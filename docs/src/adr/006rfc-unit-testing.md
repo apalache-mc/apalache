@@ -2,7 +2,7 @@
 
 | authors                                                     | revision |
 | ----------------------------------------------------------- | --------:|
-| Igor Konnov, Vitor Enes, Shon Feder, Andrey Kuprianov, ...  |        1 |
+| Igor Konnov, Vitor Enes, Shon Feder, Andrey Kuprianov, ...  |        2 |
 
 <!-- toc -->
 
@@ -252,25 +252,20 @@ a restricted set of executions as follows:
 In this case, we are using a different assertion in the `@ensure` annotation:
 
 ```tla
-{{#include ../../../test/tla/ChangRobertsTyped_Test.tla:129:132}}
+{{#include ../../../test/tla/ChangRobertsTyped_Test.tla:128:137}}
 ```
+ 
+Similar to `TestAction_n0`, the test `TestExec_n0_n1` initialized the state
+with the predicate `Prepare_n0`. In contrast to `TestAction_n0`, the 
+test `TestExec_n0_n1` does two other steps differently:
 
-The test `TestExec_n0_n1` is similar to `TestAction_n0` in many aspects.  It
-starts by initializing the state with the predicate `Prepare_n0` and it expects
-a final state to satisfy the predicate `Assert_noWinner`. There is an important
-difference between the variables in `Assert_n0` and `Assert_noWinner`:
+ 1. Instead of firing just one action, it fires up to 5 actions in a sequence
+ (the order and action are chosen non-deterministically).
 
- - Unprimed variables in `Assert_n0` refer to a state before firing an action,
-    whereas primed variables in `Assert_n0` refer to a state after firing
-    the action.
-
- - Unprimed variables in `Assert_noWinner` refer to a state before firing
-   an *execution*, whereas primed variables in `Assert_noWinner` refer to
-   a final state of the execution.
-
-*(If you find the above behavior of `Assert_noWinner` confusing, please let us
-know.)*
-
+ 2. Instead of testing a pair of states, the predicate `Assert_noWinner` tests
+ the whole trace. In our example, we check the final state of the trace. In
+ general, we could test every single state of the trace.
+ 
 We should be able to run this test via:
 
 ```sh
@@ -281,6 +276,11 @@ If the test is violated, a counterexample should be produced in the file
 `counterexample_TestExec_n0_n1.tla`.
 
 ### 3.4. Test executions with temporal properties
+
+*We see this feature to have the least priority, as you can do a lot by
+ writing trace invariants. Actually, you can check bounded lassos as trace
+ invariants. So for bounded model checking, you can always write a trace
+ invariant instead of a temporal formula.*
 
 When we wrote the test `TestExec_n0_n1`, we did not think about the
 intermediate states of an execution. This test was a functional test: It is
@@ -315,9 +315,10 @@ to check it against all states of an execution:
 
 As you can see, we clearly decompose a test in three parts:
 
- - preparing the states (like a small version of `Init`),
- - executing the action (like a small version of `Next`),
- - testing the next states against the previous states (like an action invariant).
+ - Preparing the states (like a small version of `Init`),
+ - Executing the action (like a small version of `Next`),
+ - Testing the next states against the previous states (like an action invariant).
+   Alternatively, you can write an assertion over a trace. 
 
 In the rest of this section, we comment on the alternative approaches.
 
