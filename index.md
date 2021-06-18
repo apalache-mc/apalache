@@ -15,9 +15,14 @@ checking][]). To see the list of supported TLA+ constructs, check the supported
 features. In general, Apalache runs under the same assumptions as [TLC][].
 
 To learn more about TLA+, visit [Leslie Lamport's page on TLA+][] and see his
-[video course][].
+[video course][]. Also, check out [TLA+ language manual for
+engineers](https://apalache.informal.systems/docs/lang/index.html).
 
-## Talks and tutorials
+## Tutorials
+
+- [Type checking TLA+ with Snowcat](https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html)
+
+## Talks
 
 - [How TLA+ and Apalache Helped Us to Design the Tendermint Light Client](https://www.crowdcast.io/e/interchain-conversations-II/38).
     Interchain Conversations 2020 (December 2020).
