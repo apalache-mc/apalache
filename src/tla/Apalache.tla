@@ -69,6 +69,24 @@ Expand(S) == S
 (*****************************************************************************)
 ConstCardinality(cardExpr) == cardExpr
 
+(*****************************************************************************)
+(* The folding operator, used to implement computation over a set.           *)
+(*****************************************************************************)
+RECURSIVE FoldSet(_,_,_)
+FoldSet( Op(_,_), v, S ) == IF S = {}
+                            THEN v
+                            ELSE LET w == CHOOSE x \in S: TRUE
+                                  IN LET T == S \ {w}
+                                      IN FoldSet( Op, Op(v,w), T )
+
+(*****************************************************************************)
+(* The folding operator, used to implement computation over a sequence.      *)
+(*****************************************************************************)
+RECURSIVE FoldSeq(_,_,_)
+FoldSeq( Op(_,_), v, seq ) == IF seq = <<>>
+                              THEN v
+                              ELSE FoldSeq( Op, Op(v,Head(seq)), Tail(seq) )
+
 (****************************************************************************)
 (* Apalache internally defines the operator Distinct that requires all its  *)
 (* arguments to be distinct from each other. We do not know how to write    *)

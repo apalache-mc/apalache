@@ -401,6 +401,17 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
+### check Folds succeeds
+
+```sh
+$ apalache-mc check --length=1 Folds.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+
 ### check Counter.tla errors
 
 ```sh
