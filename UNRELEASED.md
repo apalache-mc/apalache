@@ -13,6 +13,7 @@
 ### Features
 
 * Checker: enumerating multiple counterexamples, see #542 and #827
+* Checker: support for Fold(Set/Seq), see #693
 
 ### Documentation
 
