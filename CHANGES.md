@@ -2,6 +2,18 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.15.7
+
+### Features
+
+* Checker: enumerating multiple counterexamples, see #542 and #827
+
+### Documentation
+
+* Manual: manual page on enumerating counterexamples and view abstraction, see #542
+
+* links to ADR005
+
 ## 0.15.6
 
 ### Features

@@ -4,7 +4,7 @@
     <groupId>at.forsyte.apalache</groupId>
     <artifactId>apalache</artifactId>
     <packaging>pom</packaging>
-    <version>0.15.7-SNAPSHOT</version>
+    <version>0.15.8-SNAPSHOT</version>
 
     <name>APALACHE project</name>
     <url>https://github.com/informalsystems/apalache</url>
@@ -14,7 +14,7 @@
         <scalaBinaryVersion>2.12</scalaBinaryVersion>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <logback.version>1.2.3</logback.version>
-        <spotless.version>2.12.0</spotless.version>
+        <spotless.version>2.12.1</spotless.version>
     </properties>
 
     <repositories>
@@ -88,7 +88,7 @@
             <dependency>
                 <groupId>com.typesafe.scala-logging</groupId>
                 <artifactId>scala-logging_${scalaBinaryVersion}</artifactId>
-                <version>3.9.3</version>
+                <version>3.9.4</version>
             </dependency>
 
             <dependency>

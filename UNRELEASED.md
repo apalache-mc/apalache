@@ -10,13 +10,12 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
-### Features
+### Bug fixes
 
 * Checker: enumerating multiple counterexamples, see #542 and #827
 * Checker: support for Fold(Set/Seq), see #693
+* Tool: no empty log on help message, see #830
 
 ### Documentation
 
-* Manual: manual page on enumerating counterexamples and view abstraction, see #542
-
-* links to ADR005
+* revision 2 of RFC006 on unit testing
