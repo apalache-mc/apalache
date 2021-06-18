@@ -116,7 +116,7 @@ TestAction2_n0 ==
 \* Execute a sequence of 5 actions, similar to TestAction_n0.
 \* We test a final state with Assert_n0.
 \*
-\* @require(ConstInit) \* in  the future, we will allow the user to omit quotes
+\* @require(ConstInit)
 \* @require(TypeOK)
 \* @ensure(Assert_noWinner)
 \* @testExecution(5)
@@ -125,10 +125,16 @@ TestExec_n0_n1 ==
     \E self \in { 1, 2 }:
         n0(self) \/ n1(self)
 
-\* We expect no winner.
-Assert_noWinner ==
-    \A n \in Node:
-        state'[n] /= "won"
+\* We expect no winner in the final state.
+\* Note that Assert_noWinner is a predicate over a trace of states.
+\*
+\* @typeAlias: STATE = [ msgs: Int -> Set(Int), pc: Int -> Str,
+\*                       initiator: Int -> Bool, state: Int -> Str ];
+\* @type: Seq(STATE) => Bool;
+Assert_noWinner(trace) ==
+    LET last == trace[Len(trace)] IN
+        \A n \in Node:
+            last.state[n] /= "won"
 
 \* Execute a sequence of 5 actions, while using temporal properties.
 \*

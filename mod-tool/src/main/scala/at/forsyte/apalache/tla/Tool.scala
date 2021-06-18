@@ -59,8 +59,6 @@ object Tool extends LazyLogging {
    */
   def run(args: Array[String]): Int = {
     printHeaderAndStatsConfig()
-    // force our programmatic logback configuration, as the autoconfiguration works unpredictably
-    new LogbackConfigurator().configureDefaultContext()
 
     // first, call the arguments parser, which can also handle the standard commands such as version
     val command =
@@ -76,6 +74,8 @@ object Tool extends LazyLogging {
     } else {
       // One of our commands. Print the header and measure time
       val startTime = LocalDateTime.now()
+      // force our programmatic logback configuration, as the autoconfiguration works unpredictably
+      new LogbackConfigurator().configureDefaultContext()
 
       try {
         command match {
