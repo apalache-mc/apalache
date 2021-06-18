@@ -4,6 +4,10 @@
 | -------------------------------------- | --------:|
 | Shon Feder, Igor Konnov, Jure Kukovec  |        4 |
 
+*This is a request for comments. For user documentation, check the [Snowcat tutorial][]
+and [Snowcat HOWTO][].*
+
+
 This is a follow up of
 [RFC-001](https://github.com/informalsystems/apalache/blob/unstable/docs/internal/rfc/001rfc-types.md), which discusses
 plenty of alternative solutions. In this __ADR-002__, we fix one solution that seems to be most suitable. The
@@ -314,7 +318,6 @@ The type checker uses the type annotation to refine the type of an empty set
 (or, of an empty sequence).
 
 <a id="useTypeAlias"></a>
-
 ### 2.4. Introducing and using type aliases
 
 A type alias is introduced with the annotation `@typeAlias: <ALIAS> = <Type>;` 
@@ -436,3 +439,6 @@ FairSpec ==
 AtMostOne ==
     Cardinality({r \in Ingredients : smokers[r].smoking}) <= 1
 =============================================================================```
+
+[Snowcat tutorial]: https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html
+[Snowcat HOWTO]: https://apalache.informal.systems/docs/HOWTOs/howto-write-type-annotations.html
