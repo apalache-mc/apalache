@@ -1,10 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
-import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT}
+import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, RewritingRule, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.TypedPredefs._
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
@@ -52,9 +52,15 @@ class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
       // Then, we start the folding with the value of baseCell
       val initialState = postCacheState.setRex(baseCell.toNameEx)
-      val foldResultType = baseCell.cellType
 
-      mkEq(foldResultType, setCell.toNameEx, opDecl)(Seq(), initialState, setMembers)
+      // we need the type signature
+      val a = baseEx.typeTag.asTlaType1()
+      val b = setEx.typeTag.asTlaType1() match {
+        case SetT1(bType) => bType
+        case nonSet =>
+          throw new TypingException(s"FoldSet argument $setEx should have the type Set[b], found $nonSet.")
+      }
+      mkEq(a, b, setCell.toNameEx, opDecl)(Seq(), initialState, setMembers)
 
     case _ =>
       throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
@@ -77,59 +83,65 @@ class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
   // Compares two cells belonging to the same set
   // a) they must belong to S (enough to check membership for one, if they are to be equal)
   // b) (lazy) equality must evaluate to true
-  def eqToOther(setNameEx: TlaEx, thisCell: ArenaCell, otherCell: ArenaCell): TlaEx =
-    tla.and(tla.in(otherCell.toNameEx, setNameEx), rewriter.lazyEq.safeEq(thisCell, otherCell))
+  def eqToOther(setNameEx: TlaEx, thisCell: ArenaCell, otherCell: ArenaCell): BuilderEx =
+    tla.and(tla.in(otherCell.toNameEx, setNameEx) ? "bool", rewriter.lazyEq.safeEq(thisCell, otherCell)) ? "bool"
 
   // convenience shorthand
   def solverAssert: TlaEx => Unit = rewriter.solverContext.assertGroundExpr
 
   // Generate a series of equations for fold. Similar to cardinality, we must track uniqueness.
   // TODO: rewrite this to a fold
-  def mkEq(foldResultType: CellT, setNameEx: TlaEx, opDecl: TlaOperDecl)(counted: Seq[ArenaCell],
+  def mkEq(a: TlaType1, b: TlaType1, setNameEx: TlaEx, opDecl: TlaOperDecl)(counted: Seq[ArenaCell],
       partialState: SymbState, notCounted: Seq[ArenaCell]): SymbState = {
     notCounted match {
       case Nil => partialState // all counted!
 
       case hd +: tl =>
+        // type aliases, because Builder
+        val types = Map(
+            "a" -> a,
+            "b" -> b,
+            "op" -> OperT1(Seq(a, b), a),
+            "bool" -> BoolT1()
+        )
+
         // partialState currently holds the cell representing the previous application step
         val oldResultCellName = partialState.ex
-        // We prep a new cell, for the result of the application performed in this step
-        val arenaWithNewPartial = partialState.arena.appendCell(foldResultType)
-        val newPartialResultCell = arenaWithNewPartial.topCell
         // if hd \notin set (overapproximaiton) OR \E c \in counted: hd = c /\ c \in set (duplication)
         // then newPartialResult = oldPartialResult
-        val arenaWithCondition = arenaWithNewPartial.appendCell(BoolT())
+        val arenaWithCondition = partialState.arena.appendCell(BoolT())
         val condCell = arenaWithCondition.topCell
-        val condEx = tla.or(
-            tla.notin(hd.toNameEx, setNameEx),
-            tla.or(counted.map(eqToOther(setNameEx, hd, _)): _*)
-        )
-        solverAssert(tla.eql(condCell.toNameEx, condEx))
+        val condEx = tla
+          .or(
+              tla.notin(hd.toNameEx, setNameEx) ? "bool",
+              tla.or(counted.map(eqToOther(setNameEx, hd, _)): _*) ? "bool"
+          ) ? "bool"
+        solverAssert(tla.eql(condCell.toNameEx, condEx).typed(types, "bool"))
+
         // otherwise newPartialResult = A(oldPartialResult, hd)
         // First, we inline the operator application, with cell names as parameters
-        val appEx = tla.appDecl(opDecl, oldResultCellName, hd.toNameEx)
+        val appEx = tla.appOp(tla.name(opDecl.name) ? "op", oldResultCellName ? "a", hd.toNameEx ? "b")
         val inliner = mkInliner(opDecl)
-        val inlinedEx = inliner.apply(appEx)
+        val inlinedEx = inliner.apply(appEx.typed(types, "a"))
         // We then rewrite A(old, hd) to a cell
         val preInlineRewriteState = partialState.setArena(arenaWithCondition).setRex(inlinedEx)
         val postInlineRewriteState = rewriter.rewriteUntilDone(preInlineRewriteState)
         val inlinedCellName = postInlineRewriteState.ex
 
-        // We assert the condition implying the new value
-        solverAssert(
-            tla.eql(
-                newPartialResultCell.toNameEx,
-                tla.ite(
-                    condCell.toNameEx,
-                    oldResultCellName,
-                    inlinedCellName
-                )
-            )
-        )
+        // The new cell value is an ITE, we let ITE rules handle the correct instantiation of
+        // arenas for complex values
+        val newParialResultEx = tla
+          .ite(
+              condCell.toNameEx ? "bool",
+              oldResultCellName ? "a",
+              inlinedCellName ? "a"
+          )
+          .typed(types, "a")
 
         // Finally, we recurse with a state containing the new cell expression
-        val endState = postInlineRewriteState.setRex(newPartialResultCell.toNameEx)
-        mkEq(foldResultType, setNameEx, opDecl)(hd +: counted, endState, tl)
+        val preITERewriteState = postInlineRewriteState.setRex(newParialResultEx)
+        val endState = rewriter.rewriteUntilDone(preITERewriteState)
+        mkEq(a, b, setNameEx, opDecl)(hd +: counted, endState, tl)
     }
   }
 }

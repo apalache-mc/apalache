@@ -8,7 +8,7 @@ log*.smt
 test/tla/testSpec\.smt2
 
 tla-assignments/src/test/resources/assignmentTest1.smt2
-tla-bmcmt/counterexample.txt
+tla-bmcmt/counterexample*
 tla-bmcmt/profile-rules.txt
 
 *.err

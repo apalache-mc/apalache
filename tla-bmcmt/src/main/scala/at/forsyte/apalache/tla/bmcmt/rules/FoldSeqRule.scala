@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
@@ -44,6 +44,19 @@ class FoldSeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // We start with the base value
       val initialState = seqState.setRex(baseCell.toNameEx)
 
+      // we need the type signature
+      val a = baseEx.typeTag.asTlaType1()
+      val b = seqEx.typeTag.asTlaType1() match {
+        case SeqT1(bType) => bType
+        case nonSeq =>
+          throw new TypingException(s"FoldSeq argument $seqEx should have the type Seq[b], found $nonSeq.")
+      }
+      val types = Map(
+          "a" -> a,
+          "b" -> b,
+          "op" -> OperT1(Seq(a, b), a)
+      )
+
       // expressions are transient, we don't need tracking
       val inliner = InlinerOfUserOper(BodyMapFactory.makeFromDecl(opDecl), new IdleTracker)
 
@@ -53,8 +66,8 @@ class FoldSeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val oldResultCellName = partialState.ex
 
         // newPartialResult = A(oldResultCellName, seqElemCell)
-        val appEx = tla.appDecl(opDecl, oldResultCellName, seqElemCell.toNameEx)
-        val inlinedEx = inliner.apply(appEx)
+        val appEx = tla.appOp(tla.name(opDecl.name) ? "op", oldResultCellName ? "a", seqElemCell.toNameEx ? "b")
+        val inlinedEx = inliner.apply(appEx.typed(types, "a"))
         val preInlineRewriteState = partialState.setRex(inlinedEx)
         // There is nothing left to do (no asserts), since the top value in the returned state will
         // hold the fully rewritten application (single cell)

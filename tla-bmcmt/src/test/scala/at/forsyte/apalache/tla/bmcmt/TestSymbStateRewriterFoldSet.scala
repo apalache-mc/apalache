@@ -85,7 +85,8 @@ class TestSymbStateRewriterFoldSet extends RewriterBase {
     val b = StrT1()
     val opT = OperT1(Seq(a, b), a)
 
-    val nonemptySet = enumSet(str("x"), str("y")).typed(SetT1(b))
+    // insert duplicate x
+    val nonemptySet = enumSet(str("x"), str("x"), str("y")).typed(SetT1(b))
     val plusOneOper = TlaOperDecl(
         "A",
         List(OperParam("p"), OperParam("q")),
