@@ -2,6 +2,16 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.15.8
+
+### Bug fixes
+
+* Tool: no empty log on help message, see #830
+
+### Documentation
+
+* revision 2 of RFC006 on unit testing
+
 ## 0.15.7
 
 ### Features
