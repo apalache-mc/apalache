@@ -10,8 +10,8 @@ import at.forsyte.apalache.tla.lir.transformations.standard.InlinerOfUserOper
 import at.forsyte.apalache.tla.lir._
 
 /**
- * <p>Rewriting rule for FoldSeq.
- * Unline FoldSet, we don-t need to consider overapproximations or exclude duplicate elements.
+ * Rewriting rule for FoldSeq.
+ * Unlike FoldSet, we do not need to consider overapproximations or exclude duplicate elements.
  *
  * @author Jure Kukovec
  */

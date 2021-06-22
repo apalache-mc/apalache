@@ -71,6 +71,8 @@ ConstCardinality(cardExpr) == cardExpr
 
 (*****************************************************************************)
 (* The folding operator, used to implement computation over a set.           *)
+(* Apalache implements a more efficient encoding than the one below.         *)
+(* (from the community modules).                                             *)
 (*****************************************************************************)
 RECURSIVE FoldSet(_,_,_)
 FoldSet( Op(_,_), v, S ) == IF S = {}
@@ -81,6 +83,8 @@ FoldSet( Op(_,_), v, S ) == IF S = {}
 
 (*****************************************************************************)
 (* The folding operator, used to implement computation over a sequence.      *)
+(* Apalache implements a more efficient encoding than the one below.         *)
+(* (from the community modules).                                             *)
 (*****************************************************************************)
 RECURSIVE FoldSeq(_,_,_)
 FoldSeq( Op(_,_), v, seq ) == IF seq = <<>>

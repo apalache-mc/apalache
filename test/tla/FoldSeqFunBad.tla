@@ -12,5 +12,7 @@ f == [v \in {"x","y","z"} |-> 0]
 
 Init == x = 0
 Next == UNCHANGED x
+\* Asserts the negation of the invariant that should actually hold, to 
+\* check if the SMT encoding is properly constrained and returns UNSAT.
 Inv == FoldSeq( A, f, <<"z","y","x">> ) # [v \in DOMAIN f |-> 1]
 ===============================================================================

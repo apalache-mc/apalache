@@ -6,7 +6,7 @@ VARIABLE
 x
 
 \* @type: (Set(Int), Int) => Set(Int);
-A(p,q) == p \cup {q}
+A(p,q) == p \union {q}
 
 Init == x = 0
 Next == UNCHANGED x
