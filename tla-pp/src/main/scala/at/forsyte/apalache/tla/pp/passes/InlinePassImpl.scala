@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.{TlaModule, TlaOperDecl}
-import at.forsyte.apalache.tla.pp.{NormalizedNames, UniqueNameGenerator}
+import at.forsyte.apalache.tla.pp.{FoldOperLetinizer, NormalizedNames, UniqueNameGenerator}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -63,6 +63,7 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
       List(
           InlinerOfUserOper(defBodyMap, tracker),
           LetInExpander(tracker, keepNullary = true),
+          FoldOperLetinizer(tracker, defBodyMap, gen),
           // the second pass of Inliner may be needed, when the higher-order operators were inlined by LetInExpander
           InlinerOfUserOper(defBodyMap, tracker)
       ) ///

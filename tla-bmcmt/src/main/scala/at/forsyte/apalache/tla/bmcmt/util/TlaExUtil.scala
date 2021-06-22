@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.util
 
 import at.forsyte.apalache.tla.bmcmt.InvalidTlaExException
-import at.forsyte.apalache.tla.lir.oper.TlaActionOper
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaActionOper}
 import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx, TlaOperDecl}
 
 object TlaExUtil {
@@ -20,6 +20,12 @@ object TlaExUtil {
 
       case OperEx(TlaActionOper.prime, NameEx(name)) =>
         used = used + (name + "'")
+
+      // Do not count the fold operator LET-IN itself
+      case OperEx(ApalacheOper.foldSet | ApalacheOper.foldSeq, LetInEx(_, TlaOperDecl(_, _, localBody)),
+              baseExAndCollectionEx @ _*) =>
+        findRec(localBody)
+        baseExAndCollectionEx foreach findRec
 
       case OperEx(_, args @ _*) =>
         args foreach findRec

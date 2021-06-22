@@ -278,6 +278,11 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
           -> List(new LabelRule(this)),
         key(OperEx(ApalacheOper.gen, tla.int(2)))
           -> List(new GenRule(this)),
+        // folds
+        key(OperEx(ApalacheOper.foldSet, tla.name("A"), tla.name("v"), tla.name("S")))
+          -> List(new FoldSetRule(this)),
+        key(OperEx(ApalacheOper.foldSeq, tla.name("A"), tla.name("v"), tla.name("s")))
+          -> List(new FoldSeqRule(this)),
         // TLC
         key(OperEx(TlcOper.print, tla.bool(true), tla.str("msg")))
           -> List(new TlcRule(this)),
