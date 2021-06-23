@@ -411,6 +411,26 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
+### check LocalFold succeeds
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 LocalFold.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check LocalFold2 succeeds
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 LocalFold2.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
 ### check FoldSetSeq succeeds
 
 ```sh

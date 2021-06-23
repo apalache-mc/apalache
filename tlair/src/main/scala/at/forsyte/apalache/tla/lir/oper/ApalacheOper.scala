@@ -156,4 +156,16 @@ object ApalacheOper {
 
     override val precedence: (Int, Int) = (100, 100)
   }
+
+  /**
+   * Wrapper for call-by-name expressions (values with operator types).
+   * Used to signify special treatment in preprocessing passes.
+   */
+  object callByName extends ApalacheOper {
+    override def name: String = "Apalache!CallByName"
+
+    override def arity: OperArity = FixedArity(1)
+
+    override def precedence: (Int, Int) = (100, 100)
+  }
 }
