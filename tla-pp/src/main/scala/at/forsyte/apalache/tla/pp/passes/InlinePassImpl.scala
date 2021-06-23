@@ -73,7 +73,7 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
     }
 
     val inlined = transformationSequence.foldLeft(module) { case (m, trBuilder) =>
-      val operMap = BodyMapFactory.makeFromDecls(module.operDeclarations)
+      val operMap = BodyMapFactory.makeFromDecls(m.operDeclarations)
       val tr = trBuilder(operMap)
       logger.info("  > %s".format(tr.getClass.getSimpleName))
       ModuleByExTransformer(tr)(m)
