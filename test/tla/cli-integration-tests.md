@@ -401,6 +401,16 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
+### check RangeWithConst succeeds
+
+```sh
+$ apalache-mc check --cinit=CInit --inv=Inv --length=1 RangeWithConst.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
 ### check Folds succeeds
 
 ```sh
