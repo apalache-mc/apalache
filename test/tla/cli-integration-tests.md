@@ -319,6 +319,13 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
+### check Bug593 fails correctly: regression for issue 593
+
+```sh
+$ apalache-mc check Bug593.tla | sed 's/I@.*//'
+...
+EXITCODE: ERROR (255)
+```
 
 ### check Bug20190118 succeeds
 
