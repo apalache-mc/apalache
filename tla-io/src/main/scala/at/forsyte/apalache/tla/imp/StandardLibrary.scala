@@ -74,7 +74,9 @@ object StandardLibrary {
         ("Apalache", "Skolem") -> ApalacheOper.skolem,
         ("Apalache", "Expand") -> ApalacheOper.expand,
         ("Apalache", "ConstCardinality") -> ApalacheOper.constCard,
-        ("Apalache", "FunAsSeq") -> ApalacheOper.funAsSeq
+        ("Apalache", "FunAsSeq") -> ApalacheOper.funAsSeq,
+        ("Apalache", "FoldSet") -> ApalacheOper.foldSet,
+        ("Apalache", "FoldSeq") -> ApalacheOper.foldSeq
     ) ////
 
   val globalOperators: Map[String, TlaOper] =

@@ -746,6 +746,20 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val opsig = OperT1(args.map(_ => a), BoolT1())
         mkExRefApp(opsig, args)
 
+      case OperEx(ApalacheOper.foldSet, oper, base, set) =>
+        val a = varPool.fresh
+        val b = varPool.fresh
+        // ((a,b) => a, a, Set(b)) => a
+        val opsig = OperT1(Seq(OperT1(Seq(a, b), a), a, SetT1(b)), a)
+        mkExRefApp(opsig, Seq(oper, base, set))
+
+      case OperEx(ApalacheOper.foldSeq, oper, base, seq) =>
+        val a = varPool.fresh
+        val b = varPool.fresh
+        // ((a,b) => a, a, Seq(b)) => a
+        val opsig = OperT1(Seq(OperT1(Seq(a, b), a), a, SeqT1(b)), a)
+        mkExRefApp(opsig, Seq(oper, base, seq))
+
       //******************************************** MISC **************************************************
       case OperEx(TlaOper.label, labelledEx, nameAndArgs @ _*) =>
         val typeVar = varPool.fresh

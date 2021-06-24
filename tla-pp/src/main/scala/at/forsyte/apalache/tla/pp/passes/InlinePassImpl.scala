@@ -3,11 +3,13 @@ package at.forsyte.apalache.tla.pp.passes
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
-import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
-import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.{TlaModule, TlaOperDecl}
-import at.forsyte.apalache.tla.pp.{NormalizedNames, UniqueNameGenerator}
+import at.forsyte.apalache.tla.pp.{
+  CallByNameWrapHandler, CallByNameOperatorEmbedder, NormalizedNames, UniqueNameGenerator
+}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -57,17 +59,22 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
      */
     val module = baseModule
 
-    val defBodyMap = BodyMapFactory.makeFromDecls(module.operDeclarations)
-
-    val transformationSequence =
+    val transformationSequence: List[BodyMap => TlaExTransformation] = {
+      val wrapHandler = CallByNameWrapHandler(tracker)
       List(
-          InlinerOfUserOper(defBodyMap, tracker),
-          LetInExpander(tracker, keepNullary = true),
+          InlinerOfUserOper(_, tracker),
+          _ => wrapHandler.wrap, // wrap to identify call-by name
+          CallByNameOperatorEmbedder(tracker, _, gen), // create local definitions at call sites
+          _ => LetInExpander(tracker, keepNullary = true), // expand LET-IN, but ignore call-by-name
+          _ => wrapHandler.unwrap, // unwrap, to remove ApalacheOper.callByName
           // the second pass of Inliner may be needed, when the higher-order operators were inlined by LetInExpander
-          InlinerOfUserOper(defBodyMap, tracker)
-      ) ///
+          InlinerOfUserOper(_, tracker)
+      )
+    }
 
-    val inlined = transformationSequence.foldLeft(module) { case (m, tr) =>
+    val inlined = transformationSequence.foldLeft(module) { case (m, trBuilder) =>
+      val operMap = BodyMapFactory.makeFromDecls(m.operDeclarations)
+      val tr = trBuilder(operMap)
       logger.info("  > %s".format(tr.getClass.getSimpleName))
       ModuleByExTransformer(tr)(m)
     }

@@ -112,4 +112,60 @@ object ApalacheOper {
 
     override val precedence: (Int, Int) = (100, 100)
   }
+
+  /**
+   * The FoldSet operator from the community modules. Given a binary
+   * operator `Op(_,_)`, an initial value `v` and a set `S`, fold performs the
+   * equivalent of S.foldLeft(v)(Op) in Scala, that is, iteratively applies Op to
+   * the previous partial computation, starting with `v`, and an arbitrary element of S.
+   *
+   * The type signature is:
+   * \forall T1,T2: FoldSet: ((T1,T2) => T1, T1, Set(T2)) => T1
+   *
+   * The following equivalence should hold:
+   * FoldSet( Op, v, S ) = IF S = {}
+   *                       THEN v
+   *                       ELSE LET w == CHOOSE x \in S: TRUE
+   *                             IN LET T == S \ {w}
+   *                                 IN FoldSet( Op, Op(v,w), T )
+   */
+  object foldSet extends ApalacheOper {
+    override def name: String = "Apalache!FoldSet"
+
+    override def arity: OperArity = FixedArity(3)
+
+    override val precedence: (Int, Int) = (100, 100)
+  }
+
+  /**
+   * The FoldSeq operator from the community modules. Similar to FoldSet, except the
+   * evaluation order is determined by the sequence.
+   *
+   * The type signature is:
+   * \forall T1,T2: FoldSeq: ((T1,T2) => T1, T1, Seq(T2)) => T1
+   *
+   * The following equivalence should hold:
+   * FoldSeq( Op, v, seq ) = IF seq = <<>>
+   *                         THEN v
+   *                         ELSE FoldSeq( Op, Op(v,Head(seq)), Tail(seq) )
+   */
+  object foldSeq extends ApalacheOper {
+    override def name: String = "Apalache!FoldSeq"
+
+    override def arity: OperArity = FixedArity(3)
+
+    override val precedence: (Int, Int) = (100, 100)
+  }
+
+  /**
+   * Wrapper for call-by-name expressions (values with operator types).
+   * Used to signify special treatment in preprocessing passes.
+   */
+  object callByName extends ApalacheOper {
+    override def name: String = "Apalache!CallByName"
+
+    override def arity: OperArity = FixedArity(1)
+
+    override def precedence: (Int, Int) = (100, 100)
+  }
 }

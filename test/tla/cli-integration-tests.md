@@ -401,6 +401,156 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
+### check Folds succeeds
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 Folds.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check LocalFold succeeds
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 LocalFold.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check LocalFold2 succeeds
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 LocalFold2.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check FoldSetSeq succeeds
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 FoldSetSeq.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check FoldSetSeqBad fails
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 FoldSetSeqBad.tla | sed 's/I@.*//'
+...
+The outcome is: Error
+...
+EXITCODE: ERROR (12)
+```
+
+### check FoldSetSet succeeds
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 FoldSetSet.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check FoldSetSetBad fails
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 FoldSetSetBad.tla | sed 's/I@.*//'
+...
+The outcome is: Error
+...
+EXITCODE: ERROR (12)
+```
+
+### check FoldSetFun succeeds
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 FoldSetFun.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check FoldSetFunBad fails
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 FoldSetFunBad.tla | sed 's/I@.*//'
+...
+The outcome is: Error
+...
+EXITCODE: ERROR (12)
+```
+
+### check FoldSeqSeq succeeds
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 FoldSeqSeq.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check FoldSeqSeqBad fails
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 FoldSeqSeqBad.tla | sed 's/I@.*//'
+...
+The outcome is: Error
+...
+EXITCODE: ERROR (12)
+```
+
+### check FoldSeqSet succeeds
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 FoldSeqSet.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check FoldSeqSetBad fails
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 FoldSeqSetBad.tla | sed 's/I@.*//'
+...
+The outcome is: Error
+...
+EXITCODE: ERROR (12)
+```
+
+### check FoldSeqFun succeeds
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 FoldSeqFun.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check FoldSeqFunBad fails
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 FoldSeqFunBad.tla | sed 's/I@.*//'
+...
+The outcome is: Error
+...
+EXITCODE: ERROR (12)
+```
+
 ### check Counter.tla errors
 
 ```sh
