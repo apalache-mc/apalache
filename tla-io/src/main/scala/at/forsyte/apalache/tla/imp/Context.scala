@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.lir.{TlaDecl, TlaModule, TlaValue}
+import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.io.UTFPrinter
 
 import scala.annotation.tailrec
 
@@ -163,8 +164,11 @@ object Context {
     def push(decl: ContextUnit): Context = {
       unitMap.get(decl.name).collect {
         case dup if dup != decl =>
-          throw new IllegalStateException(
-              s"Found two different declarations with the same name ${decl.name}: $dup and $decl")
+          val printer = UTFPrinter
+          val dupS = printer(dup.asInstanceOf[DeclUnit].decl)
+          val declS = printer(decl.asInstanceOf[DeclUnit].decl)
+          throw new MalformedSepecificationError(
+              s"Found two different declarations with the same name [${decl.name}]: [$dupS] and [$declS].")
       }
 
       val newList = decl :: revList
