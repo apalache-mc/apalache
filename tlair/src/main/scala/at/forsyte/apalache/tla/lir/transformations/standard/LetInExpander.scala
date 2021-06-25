@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.TlaOper
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaOper}
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 
 /**
@@ -48,6 +48,14 @@ class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean) extend
 
       // Inline the operators using the map of definitions
       InlinerOfUserOper(bodyMap, tracker)(expandedLetIn)
+
+    // Ignore the call-by-name site tagged with ApalacheOper.callByName, since it
+    // has a local LET-IN definition that should persist
+    case ex @ OperEx(ApalacheOper.callByName, LetInEx(body, decl)) =>
+      // but clean up inside the decl, potentially
+      val newDecl = tracker.trackOperDecl { d => d.copy(body = transform(d.body)) }(decl)
+      if (decl == newDecl) ex
+      else OperEx(ApalacheOper.callByName, LetInEx(body, newDecl)(ex.typeTag))(ex.typeTag)
 
     // this is the special form for LAMBDAs
     case OperEx(TlaOper.apply, LetInEx(NameEx("LAMBDA"), TlaOperDecl("LAMBDA", params, lambdaBody)), args @ _*) =>

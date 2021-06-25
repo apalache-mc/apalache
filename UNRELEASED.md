@@ -10,11 +10,7 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
-### Bug fixes
+### Features
 
-* Tool: no empty log on help message, see #830
 * Parser: parse error on TLAPS syntax such as `Inv!2`, see #876
-
-### Documentation
-
-* revision 2 of RFC006 on unit testing
+* Checker: support for Fold(Set/Seq), see #693
