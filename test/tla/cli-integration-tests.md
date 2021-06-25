@@ -182,10 +182,18 @@ EXITCODE: OK
 ...
 ```
 
+### parse FormulaRefs fails
+
+```sh
+$ apalache-mc parse FormulaRefs.tla | sed 's/I@.*//'
+...
+EXITCODE: ERROR (255)
+...
+```
+
 ### test TestGen finds an example
 
-This simple test demonstrates how to test a spec by isolating the input with
-generators.
+This simple test demonstrates how to test a spec by isolating the input with generators.
 
 ```sh
 $ apalache-mc test TestGen.tla Prepare Test Assertion | sed 's/I@.*//'

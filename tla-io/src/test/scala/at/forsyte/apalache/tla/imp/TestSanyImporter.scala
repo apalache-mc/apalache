@@ -1549,6 +1549,22 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
       }
   }
 
+  test("subformulas") {
+    // TLA+ allows the user to refer to subformulas. We should show an error on that syntax.
+    val text =
+      """---- MODULE subformulas ----
+        |A ==
+        |  /\ 1 = 2
+        |  /\ 2 = 2
+        |B == A!2
+        |================================
+        |""".stripMargin
+
+    assertThrows[SanyImporterException] {
+      sanyImporter.loadFromSource("subformulas", Source.fromString(text))
+    }
+  }
+
   test("LAMBDA") {
     val text =
       """---- MODULE lambda ----
