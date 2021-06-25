@@ -13,6 +13,7 @@
 ### Bug fixes
 
 * Tool: no empty log on help message, see #830
+* Parser: parse error on TLAPS syntax such as `Inv!2`, see #876
 
 ### Documentation
 
