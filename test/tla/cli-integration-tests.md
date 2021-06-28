@@ -182,10 +182,18 @@ EXITCODE: OK
 ...
 ```
 
+### parse FormulaRefs fails
+
+```sh
+$ apalache-mc parse FormulaRefs.tla | sed 's/I@.*//'
+...
+EXITCODE: ERROR (255)
+...
+```
+
 ### test TestGen finds an example
 
-This simple test demonstrates how to test a spec by isolating the input with
-generators.
+This simple test demonstrates how to test a spec by isolating the input with generators.
 
 ```sh
 $ apalache-mc test TestGen.tla Prepare Test Assertion | sed 's/I@.*//'
@@ -433,6 +441,26 @@ EXITCODE: OK
 
 ```sh
 $ apalache-mc check --inv=Inv --length=1 Folds.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check LocalFold succeeds
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 LocalFold.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check LocalFold2 succeeds
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 LocalFold2.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...

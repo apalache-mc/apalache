@@ -353,8 +353,12 @@ class OpApplTranslator(
             mkPairsCtorBuiltin(TlaSetOper.recSet, node)
 
           case "$Nop" =>
-            // typically, an expression related to TLAPS is marked with $Nop
-            NullEx // we cannot do much here, but hope that the expression will never reach the model checker
+            // Typically, this is an expression related to TLAPS, e.g., `A!2`.
+            // Throw an exception right away.
+            // Otherwise, a null expression may pop up later in the pipeline, e.g., see #876
+            val loc = node.getLocation
+            val msg = s"${loc}: Found TLAPS syntax. Comment it out or rewrite it."
+            throw new SanyImporterException(msg)
 
           case _ =>
             throw new SanyImporterException("Unsupported operator: " + opcode)
