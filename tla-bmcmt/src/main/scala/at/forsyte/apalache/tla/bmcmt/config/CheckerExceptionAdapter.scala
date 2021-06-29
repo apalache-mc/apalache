@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.imp.SanyException
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.{
-  LanguagePredError, MalformedTlaError, OperEx, OutdatedAnnotationsError, TypingException, UID
+  LanguagePredError, MalformedSepecificationError, MalformedTlaError, OutdatedAnnotationsError, TypingException, UID
 }
 import at.forsyte.apalache.tla.pp.{
   ConfigurationError, IrrecoverablePreprocessingError, NotInKeraError, OverridingError, TlaInputError
@@ -103,6 +103,10 @@ class CheckerExceptionAdapter @Inject() (sourceStore: SourceStore, changeListene
     case err: MalformedTlaError =>
       val msg = "%s: unexpected TLA+ expression: %s".format(findLoc(err.causeExpr.ID), err.getMessage)
       FailureMessage(msg)
+
+    case err: MalformedSepecificationError =>
+      val msg = "The specification is malformed: %s".format(err.getMessage)
+      NormalErrorMessage(msg)
 
     case err: CoverData.CoverException =>
       val msg =

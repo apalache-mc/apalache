@@ -18,11 +18,19 @@ class LirError(message: String) extends Exception(message)
 class LanguagePredError(message: String, val failedIds: Seq[(UID, String)]) extends LirError(message)
 
 /**
- * An exception that should be thrown when a TLA+ code is malformed.
+ * An exception that should be thrown when a TLA+ expression is malformed.
  *
  * @param message the error message
  */
 class MalformedTlaError(message: String, val causeExpr: TlaEx) extends LirError(message)
+
+/**
+ * This exception is thrown when an input specification is malformed at the declaration or module level.
+ * For malformed expressions, use MalformedTlaException
+ *
+ * @param message   the error message
+ */
+class MalformedSepecificationError(message: String) extends Exception(message)
 
 /**
  * An exception that originated in an expression builder
@@ -53,3 +61,10 @@ class TypingException(message: String) extends Exception(message)
  * @param causeExpr the expression that caused the error
  */
 class OutdatedAnnotationsError(message: String, val causeExpr: TlaEx) extends LirError(message)
+
+/**
+ * This exception is thrown when an unsupported TLA+ feature is encountered
+ *
+ * @param message   the error message
+ */
+class UnsupportedFeatureError(message: String) extends Exception(message)

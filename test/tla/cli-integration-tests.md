@@ -182,10 +182,18 @@ EXITCODE: OK
 ...
 ```
 
+### parse FormulaRefs fails
+
+```sh
+$ apalache-mc parse FormulaRefs.tla | sed 's/I@.*//'
+...
+EXITCODE: ERROR (255)
+...
+```
+
 ### test TestGen finds an example
 
-This simple test demonstrates how to test a spec by isolating the input with
-generators.
+This simple test demonstrates how to test a spec by isolating the input with generators.
 
 ```sh
 $ apalache-mc test TestGen.tla Prepare Test Assertion | sed 's/I@.*//'
@@ -309,6 +317,24 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
+### check Bug540 succeeds: regression for issue 540
+
+```sh
+$ apalache-mc check --cinit=CInit Bug540.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check Bug593 fails correctly: regression for issue 593
+
+```sh
+$ apalache-mc check Bug593.tla | sed 's/I@.*//'
+...
+EXITCODE: ERROR (255)
+```
+
 ### check Bug20190118 succeeds
 
 ```sh
@@ -395,6 +421,16 @@ EXITCODE: OK
 
 ```sh
 $ apalache-mc check --length=5 --cinit=CInit Bug20190921.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check RangeWithConst succeeds
+
+```sh
+$ apalache-mc check --cinit=CInit --inv=Inv --length=1 RangeWithConst.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
