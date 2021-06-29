@@ -15,6 +15,8 @@ Levels are split into two categories:
 
   1. Interface core: Classes within the interface core relate to general TLA+ concepts, and are intended to be usable by 3rd party developers.
   2. Apalalache core: Classes in the Apalache core relate to specific Apalache- or model-checking- functionality
+  
+Staking the "core" strata together gives us the complete stack implementing Apalache. 
 
 ## 2. Interface core
 
