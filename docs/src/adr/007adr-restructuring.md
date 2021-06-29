@@ -11,7 +11,7 @@ When introducing new classes, use the guidelines defined below to determine whic
 
 We define Apalache architecture in terms of enumerated levels (L0, L1, L2, etc.). Each level may only hold dependencies belonging to a lower level.
 
-Levels are split into two categories:
+Levels are split into two strata:
 
   1. Interface core: Classes within the interface core relate to general TLA+ concepts, and are intended to be usable by 3rd party developers.
   2. Apalalache core: Classes in the Apalache core relate to specific Apalache- or model-checking- functionality
