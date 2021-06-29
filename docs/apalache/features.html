@@ -172,20 +172,22 @@
                     <main>
                         <p>Here is the list of the TLA+ language features that are currently supported by Apalache, following the <a href="https://lamport.azurewebsites.net/tla/summary.pdf">Summary of TLA+</a>.</p>
 <h2><a class="header" href="#safety-vs-liveness" id="safety-vs-liveness">Safety vs. Liveness</a></h2>
-<p>At the moment, Apalache is only able to check invariants and inductive
-invariants.  Which means that you can only check safety properties with
+<p>At the moment, Apalache is able to check state invariants, action invariants,
+trace invariants as well as inductive invariants. (See the <a href="https://apalache.informal.systems/docs/apalache/invariants.html">page on
+invariants</a> in
+the manual.) Which means that you can only check safety properties with
 Apalache, unless you employ a <a href="https://www.sciencedirect.com/science/article/pii/S1571066104804109?via%3Dihub">liveness-to-safety</a> transformation in your spec.
 In general, we do not support checking liveness properties.  If you would like
 to see liveness implemented, upvote the <a href="https://github.com/informalsystems/apalache/issues/488">liveness feature</a>.</p>
 <h2><a class="header" href="#language" id="language">Language</a></h2>
 <h3><a class="header" href="#module-level-constructs" id="module-level-constructs">Module-Level constructs</a></h3>
 <table><thead><tr><th>Construct</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
-<tr><td><code>EXTENDS module</code></td><td align="center">✔</td><td align="center">-</td><td>A few standard modules are not supported yet (Bags and Reals)</td></tr>
+<tr><td><code>EXTENDS module</code></td><td align="center">✔</td><td align="center">-</td><td>A few standard modules are not supported yet (Bags)</td></tr>
 <tr><td><code>CONSTANTS C1, C2</code></td><td align="center">✔</td><td align="center">-</td><td>Either define a <code>ConstInit</code> operator to initialize the constants, use a <code>.cfg</code> file, or declare operators instead of constants, e.g., C1 == 111</td></tr>
 <tr><td><code>VARIABLES x, y, z</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>ASSUME P</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Parsed, but not propagated to the solver</td></tr>
-<tr><td><code>F(x1, ..., x_n) == exp</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Every application of <code>F</code> is replaced with its body. Recursive operators need <a href="./principles.html#recursive-operators">unrolling annotations</a>.</td></tr>
-<tr><td><code>f[x ∈ S] == exp</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Recursive functions are only supported if they return integers or Booleans.</td></tr>
+<tr><td><code>F(x1, ..., x_n) == exp</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Every application of <code>F</code> is replaced with its body. Recursive operators need <a href="./principles.html#recursive-operators">unrolling annotations</a>. From 0.16.1 and later, for better performance and UX, use <code>FoldSet</code> and <code>FoldSeq</code>.</td></tr>
+<tr><td><code>f[x ∈ S] == exp</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Recursive functions are only supported if they return integers or Booleans. From 0.16.1 and later, for better performance and UX, use <code>FoldSet</code> and <code>FoldSeq</code>.</td></tr>
 <tr><td><code>INSTANCE M WITH ...</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>No special treatment for <code>~&gt;</code>, <code>\cdot</code>, <code>ENABLED</code></td></tr>
 <tr><td><code>N(x1, ..., x_n) == INSTANCE M WITH...</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Parameterized instances are not supported</td></tr>
 <tr><td><code>THEOREM P</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Parsed but not used</td></tr>
@@ -197,10 +199,10 @@ to see liveness implemented, upvote the <a href="https://github.com/informalsyst
 <tr><td><code>/\</code>, <code>\/</code>, <code>~</code>, <code>=&gt;</code>, <code>&lt;=&gt;</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>TRUE</code>, <code>FALSE</code>, <code>BOOLEAN</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>\A x \in S: p</code>, <code>\E x \in S : p</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
-<tr><td><code>CHOOSE x \in S : p</code></td><td align="center">✔/✖</td><td align="center">-</td><td>Similar to TLC, we implement a non-deterministic choice. We will add a deterministic version in the future.</td></tr>
-<tr><td><code>CHOOSE x : x \notin S</code></td><td align="center">✖</td><td align="center">?</td><td>That is a commonly used idiom</td></tr>
-<tr><td><code>\A x : p, \E x : p</code></td><td align="center">✖</td><td align="center"><strong>NEVER</strong></td><td>Use the versions above</td></tr>
-<tr><td><code>CHOOSE x : p</code></td><td align="center">✖</td><td align="center"><strong>NEVER</strong></td><td>Use the version above</td></tr>
+<tr><td><code>CHOOSE x \in S : p</code></td><td align="center">✖</td><td align="center">-</td><td>Partial support prior to version 0.16.1. From 0.16.1 and later, use <code>Some</code>, <code>FoldSet</code>, or <code>FoldSeq</code>. See <a href="https://github.com/informalsystems/apalache/issues/841">#841</a>.</td></tr>
+<tr><td><code>CHOOSE x : x \notin S</code></td><td align="center">✖</td><td align="center">-</td><td>Not supported. You can use records or a default value such as -1.</td></tr>
+<tr><td><code>\A x : p, \E x : p</code></td><td align="center">✖</td><td align="center">-</td><td>Use bounded quantifiers</td></tr>
+<tr><td><code>CHOOSE x : p</code></td><td align="center">✖</td><td align="center">-</td><td></td></tr>
 </tbody></table>
 <h4><a class="header" href="#sets" id="sets">Sets</a></h4>
 <p><strong>Note:</strong> only finite sets are supported. Additionally, existential
@@ -208,7 +210,7 @@ quantification over <code>Int</code> and <code>Nat</code> is supported, as soon 
 replaced with a constant.</p>
 <table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
 <tr><td><code>=</code>, <code>/=</code>, <code>\in</code>, <code>\notin</code>, <code>\intersect</code>, <code>\union</code>, <code>\subseteq</code>, <code>\</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
-<tr><td><code>{e_1, ..., e_n}</code></td><td align="center">✔</td><td align="center">-</td><td>Empty sets <code>{}</code> require <a href="types-and-annotations.html">type annotations</a></td></tr>
+<tr><td><code>{e_1, ..., e_n}</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>{x \in S : p}</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>{e : x \in S}</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>SUBSET S</code></td><td align="center">✔</td><td align="center">-</td><td>Sometimes, the powersets are expanded</td></tr>
@@ -223,8 +225,10 @@ replaced with a constant.</p>
 <tr><td><code>[ f EXCEPT ![e1] = e2 ]</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 </tbody></table>
 <h4><a class="header" href="#records" id="records">Records</a></h4>
-<p><em>Use <a href="types-and-annotations.html">type annotations</a> to help the model checker in finding the right types.</em>
-Note that our type system distinguishes records from general functions.</p>
+<p><em>Use <a href="https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html">type
+annotations</a>
+to help the model checker in finding the right types.</em> Note that our type
+system distinguishes records from general functions.</p>
 <table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
 <tr><td><code>e.h</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>r[e]</code></td><td align="center">✔/✖</td><td align="center">-</td><td>Provided that <code>e</code> is a constant expression.</td></tr>
@@ -233,8 +237,10 @@ Note that our type system distinguishes records from general functions.</p>
 <tr><td><code>[ r EXCEPT !.h = e]</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 </tbody></table>
 <h4><a class="header" href="#tuples" id="tuples">Tuples</a></h4>
-<p><em>Use <a href="types-and-annotations.html">type annotations</a> to help the model checker in finding the right types.</em>
-Note that our type system distinguishes tuples from general functions.</p>
+<p><em>Use <a href="https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html">type
+annotations</a>
+to help the model checker in finding the right types.</em> Note that our type
+system distinguishes records from general functions.</p>
 <table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
 <tr><td><code>e[i]</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Provided that <code>i</code> is a constant expression</td></tr>
 <tr><td><code>&lt;&lt; e1, ..., e_n &gt;&gt;</code></td><td align="center">✔</td><td align="center">-</td><td>Use a <a href="https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html">type annotation</a> to distinguish between a tuple and a sequence.</td></tr>
@@ -251,13 +257,8 @@ Note that our type system distinguishes tuples from general functions.</p>
 <h4><a class="header" href="#miscellaneous-constructs" id="miscellaneous-constructs">Miscellaneous Constructs</a></h4>
 <table><thead><tr><th>Construct</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
 <tr><td><code>IF p THEN e1 ELSE e2</code></td><td align="center">✔</td><td align="center">-</td><td>Provided that both e1 and e2 have the same type</td></tr>
-<tr><td>&lt;&lt;&lt;&lt;&lt;&lt;&lt; Updated upstream</td><td align="center"></td><td align="center"></td><td></td></tr>
-<tr><td><code>CASE p1 -&gt; e1 [] ... [] p_n -&gt; e_n [] OTHER -&gt; e</code></td><td align="center">✔</td><td align="center">-</td><td>See the comment above</td></tr>
-<tr><td><code>CASE p1 -&gt; e1 [] ... [] p_n -&gt; e_n</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
-<tr><td>=======</td><td align="center"></td><td align="center"></td><td></td></tr>
-<tr><td><code>CASE p1 -&gt; e1 [] ... [] p_n -&gt; e_n [] OTHER -&gt; e</code></td><td align="center">✔</td><td align="center">-</td><td>Provided that <code>e1, ..., e_n</code> have the same type</td></tr>
+<tr><td><code>CASE p1 -&gt; e1 [] ... [] p_n -&gt; e_n [] OTHER -&gt; e</code></td><td align="center">✔</td><td align="center">-</td><td>Provided that <code>e1, ..., e_n, e</code> have the same type</td></tr>
 <tr><td><code>CASE p1 -&gt; e1 [] ... [] p_n -&gt; e_n</code></td><td align="center">✔</td><td align="center">-</td><td>Provided that <code>e1, ..., e_n</code> have the same type</td></tr>
-<tr><td>&gt;&gt;&gt;&gt;&gt;&gt;&gt; Stashed changes</td><td align="center"></td><td align="center"></td><td></td></tr>
 <tr><td><code>LET d1 == e1 ... d_n == e_n IN e</code></td><td align="center">✔</td><td align="center"></td><td>All applications of <code>d1</code>, ..., <code>d_n</code> are replaced with the expressions <code>e1</code>, ... <code>e_n</code> respectively. LET-definitions without arguments are kept in place.</td></tr>
 <tr><td>multi-line <code>/\</code> and <code>\/</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 </tbody></table>
@@ -288,19 +289,21 @@ argument.</p>
 </tbody></table>
 <h3><a class="header" href="#sequences" id="sequences">Sequences</a></h3>
 <table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
-<tr><td><code>&lt;&lt;...&gt;&gt;</code>, <code>Head</code>, <code>Tail</code>, <code>Len</code>, <code>SubSeq</code>, <code>Append</code>, <code>\o</code>, <code>f[e]</code></td><td align="center">✔</td><td align="center">-</td><td>The sequence constructor <code>&lt;&lt;...&gt;&gt;</code> needs a <a href="types-and-annotations.html">type annotation</a>.</td></tr>
+<tr><td><code>&lt;&lt;...&gt;&gt;</code>, <code>Head</code>, <code>Tail</code>, <code>Len</code>, <code>SubSeq</code>, <code>Append</code>, <code>\o</code>, <code>f[e]</code></td><td align="center">✔</td><td align="center">-</td><td>The sequence constructor <code>&lt;&lt;...&gt;&gt;</code> needs a <a href="https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html">type annotation</a>.</td></tr>
 <tr><td><code>EXCEPT</code></td><td align="center">✖</td><td align="center"></td><td>If you need it, let us know, issue #324</td></tr>
-<tr><td><code>Seq(S)</code></td><td align="center">✖</td><td align="center">-</td><td>If you need it, let us know, issue #314</td></tr>
-<tr><td><code>SelectSeq</code></td><td align="center">✖</td><td align="center">-</td><td>will not be supported in the near future</td></tr>
+<tr><td><code>Seq(S)</code></td><td align="center">✖</td><td align="center">-</td><td>Use <code>Gen</code> of Apalache to produce bounded sequences</td></tr>
+<tr><td><code>SelectSeq</code></td><td align="center">✖</td><td align="center">-</td><td>Planned in <a href="https://github.com/informalsystems/apalache/issues/873">#873</a>. Till then, use <code>FoldSeq</code>.</td></tr>
 </tbody></table>
 <h3><a class="header" href="#finitesets" id="finitesets">FiniteSets</a></h3>
 <table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
 <tr><td><code>IsFinite</code></td><td align="center">✔</td><td align="center">-</td><td>Always returns true, as all the supported sets are finite</td></tr>
-<tr><td><code>Cardinality</code></td><td align="center">✔</td><td align="center">-</td><td>Try to avoid it, as Cardinality(S) produces <code>O(n^2)</code> constraints in SMT for cardinality <code>n</code></td></tr>
+<tr><td><code>Cardinality</code></td><td align="center">✔</td><td align="center">-</td><td>Try to avoid it, as <code>Cardinality(S)</code> produces <code>O(n^2)</code> constraints in SMT for cardinality <code>n</code></td></tr>
 </tbody></table>
 <h3><a class="header" href="#tlc" id="tlc">TLC</a></h3>
 <table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
-<tr><td><code>f @@ a :&gt; b</code></td><td align="center">✔</td><td align="center">-</td><td>Extends the function relation with the pair <code>&lt;&lt;a, b&gt;&gt;</code></td></tr>
+<tr><td><code>a :&gt; b</code></td><td align="center">✔</td><td align="center">-</td><td>A singleton function <code>&lt;&lt;a, b&gt;&gt;</code></td></tr>
+<tr><td><code>f @@ g</code></td><td align="center">✔</td><td align="center">-</td><td>Extends function <code>f</code> with the domain and values of function <code>g</code></td></tr>
+<tr><td>Other operators</td><td align="center"></td><td align="center"></td><td>Dummy definitions for spec compatibility</td></tr>
 </tbody></table>
 <h3><a class="header" href="#reals" id="reals">Reals</a></h3>
 <p>Not supported, not a priority</p>
