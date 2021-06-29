@@ -2,8 +2,10 @@ Here is the list of the TLA+ language features that are currently supported by A
 
 ## Safety vs. Liveness
 
-At the moment, Apalache is only able to check invariants and inductive
-invariants.  Which means that you can only check safety properties with
+At the moment, Apalache is able to check state invariants, action invariants,
+trace invariants as well as inductive invariants. (See the [page on
+invariants](https://apalache.informal.systems/docs/apalache/invariants.html) in
+the manual.) Which means that you can only check safety properties with
 Apalache, unless you employ a [liveness-to-safety] transformation in your spec.
 In general, we do not support checking liveness properties.  If you would like
 to see liveness implemented, upvote the [liveness feature].
@@ -14,12 +16,12 @@ to see liveness implemented, upvote the [liveness feature].
 
 Construct  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
-``EXTENDS module`` | ✔ | - |  A few standard modules are not supported yet (Bags and Reals)
+``EXTENDS module`` | ✔ | - |  A few standard modules are not supported yet (Bags)
 ``CONSTANTS C1, C2`` | ✔ | -  | Either define a ``ConstInit`` operator to initialize the constants, use a `.cfg` file, or declare operators instead of constants, e.g., C1 == 111
 ``VARIABLES x, y, z`` | ✔ | - |
 ``ASSUME P`` | ✔ / ✖ | - | Parsed, but not propagated to the solver
-``F(x1, ..., x_n) == exp`` | ✔ / ✖ | - | Every application of `F` is replaced with its body. Recursive operators need [unrolling annotations](./principles.md#recursive-operators).
-``f[x ∈ S] == exp`` | ✔ / ✖ | - | Recursive functions are only supported if they return integers or Booleans.
+``F(x1, ..., x_n) == exp`` | ✔ / ✖ | - | Every application of `F` is replaced with its body. Recursive operators need [unrolling annotations](./principles.md#recursive-operators). From 0.16.1 and later, for better performance and UX, use `FoldSet` and `FoldSeq`.
+``f[x ∈ S] == exp`` | ✔ / ✖ | - | Recursive functions are only supported if they return integers or Booleans. From 0.16.1 and later, for better performance and UX, use `FoldSet` and `FoldSeq`.
 ``INSTANCE M WITH ...`` | ✔ / ✖ | - | No special treatment for ``~>``, ``\cdot``, ``ENABLED``
 ``N(x1, ..., x_n) == INSTANCE M WITH...`` | ✔ / ✖ | - | Parameterized instances are not supported
 ``THEOREM P`` | ✔ / ✖ | - | Parsed but not used
@@ -34,10 +36,10 @@ Operator  | Supported? | Milestone | Comment
 `/\`, `\/`, `~`, `=>`, `<=>` | ✔ | - |
 ``TRUE``, ``FALSE``, ``BOOLEAN`` | ✔ | - |
 ``\A x \in S: p``, ``\E x \in S : p`` |  ✔ | - |
-``CHOOSE x \in S : p`` |  ✔/✖ | - | Similar to TLC, we implement a non-deterministic choice. We will add a deterministic version in the future.
-``CHOOSE x : x \notin S`` |  ✖ | ? | That is a commonly used idiom
-``\A x : p, \E x : p`` |  ✖ | **NEVER** | Use the versions above
-``CHOOSE x : p`` |  ✖ | **NEVER** | Use the version above
+``CHOOSE x \in S : p`` |  ✖ | - | Partial support prior to version 0.16.1. From 0.16.1 and later, use `Some`, `FoldSet`, or `FoldSeq`. See [#841](https://github.com/informalsystems/apalache/issues/841).
+``CHOOSE x : x \notin S`` |  ✖ | - | Not supported. You can use records or a default value such as -1.
+``\A x : p, \E x : p`` |  ✖ | - | Use bounded quantifiers
+``CHOOSE x : p`` |  ✖ | - |
 
 
 #### Sets
@@ -49,7 +51,7 @@ replaced with a constant.
 Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 `=`, `/=`, `\in`, `\notin`, `\intersect`, `\union`, `\subseteq`, `\`  | ✔ | - |
-`{e_1, ..., e_n}` | ✔ | - | Empty sets ``{}`` require [type annotations](types-and-annotations.md)
+`{e_1, ..., e_n}` | ✔ | - |
 `{x \in S : p}` | ✔ | - |
 `{e : x \in S}` | ✔ | - |
 `SUBSET S` | ✔ | - | Sometimes, the powersets are expanded
@@ -67,8 +69,10 @@ Operator  | Supported? | Milestone | Comment
 
 #### Records
 
-*Use [type annotations](types-and-annotations.md) to help the model checker in finding the right types.*
-Note that our type system distinguishes records from general functions.
+*Use [type
+annotations](https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html)
+to help the model checker in finding the right types.* Note that our type
+system distinguishes records from general functions.
 
 Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
@@ -80,8 +84,10 @@ Operator  | Supported? | Milestone | Comment
 
 #### Tuples
 
-*Use [type annotations](types-and-annotations.md) to help the model checker in finding the right types.*
-Note that our type system distinguishes tuples from general functions.
+*Use [type
+annotations](https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html)
+to help the model checker in finding the right types.* Note that our type
+system distinguishes records from general functions.
 
 Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
@@ -104,13 +110,8 @@ Construct  | Supported? | Milestone | Comment
 Construct  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 `IF p THEN e1 ELSE e2` | ✔ | - | Provided that both e1 and e2 have the same type
-<<<<<<< Updated upstream
-`CASE p1 -> e1 [] ... [] p_n -> e_n [] OTHER -> e` | ✔ | - | See the comment above
-`CASE p1 -> e1 [] ... [] p_n -> e_n` | ✔| - |
-=======
-`CASE p1 -> e1 [] ... [] p_n -> e_n [] OTHER -> e` | ✔ | - | Provided that `e1, ..., e_n` have the same type
+`CASE p1 -> e1 [] ... [] p_n -> e_n [] OTHER -> e` | ✔ | - | Provided that `e1, ..., e_n, e` have the same type
 `CASE p1 -> e1 [] ... [] p_n -> e_n` | ✔ | - | Provided that `e1, ..., e_n` have the same type
->>>>>>> Stashed changes
 `LET d1 == e1 ... d_n == e_n IN e` | ✔ |  | All applications of `d1`, ..., `d_n` are replaced with the expressions `e1`, ... `e_n` respectively. LET-definitions without arguments are kept in place.
 multi-line `/\` and `\/` | ✔ | - |
 
@@ -153,23 +154,25 @@ Operator  | Supported? | Milestone | Comment
 
 Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
-``<<...>>``, ``Head``, ``Tail``, ``Len``, ``SubSeq``, `Append`, `\o`, `f[e]` | ✔ | - | The sequence constructor ``<<...>>`` needs a [type annotation](types-and-annotations.md).
-``EXCEPT`` | ✖ |   | If you need it, let us know, issue #324
-``Seq(S)`` | ✖ | - | If you need it, let us know, issue #314
-``SelectSeq`` | ✖ | - | will not be supported in the near future
+``<<...>>``, ``Head``, ``Tail``, ``Len``, ``SubSeq``, `Append`, `\o`, `f[e]` | ✔ | - | The sequence constructor ``<<...>>`` needs a [type annotation](https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html).
+`EXCEPT` | ✖ |   | If you need it, let us know, issue #324
+`Seq(S)` | ✖ | - | Use `Gen` of Apalache to produce bounded sequences
+`SelectSeq` | ✖ | - | Planned in [#873](https://github.com/informalsystems/apalache/issues/873). Till then, use `FoldSeq`.
 
 ### FiniteSets
 
 Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 ``IsFinite`` | ✔ | - | Always returns true, as all the supported sets are finite
-``Cardinality`` | ✔ | - | Try to avoid it, as Cardinality(S) produces ``O(n^2)`` constraints in SMT for cardinality `n`
+``Cardinality`` | ✔ | - | Try to avoid it, as `Cardinality(S)` produces `O(n^2)` constraints in SMT for cardinality `n`
 
 ### TLC
 
-Operator  | Supported? | Milestone | Comment
-------------------------|:------------------:|:---------------:|--------------
-``f @@ a :> b`` | ✔ | - | Extends the function relation with the pair ``<<a, b>>``
+Operator   | Supported?         | Milestone       | Comment
+-----------|:------------------:|:---------------:|--------------
+`a :> b`   | ✔                  | -               | A singleton function `<<a, b>>`
+`f @@ g`   | ✔                  | -               | Extends function `f` with the domain and values of function `g`
+Other operators |               |                 | Dummy definitions for spec compatibility
 
 ### Reals
 
