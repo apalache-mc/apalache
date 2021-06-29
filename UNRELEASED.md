@@ -10,7 +10,6 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
-
 ### Bug fixes
 
  * Fixed a bug which made Fold(Set/Seq) unusable in Init or CInit
