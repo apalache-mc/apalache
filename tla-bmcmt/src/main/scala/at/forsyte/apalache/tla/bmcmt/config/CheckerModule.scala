@@ -86,23 +86,11 @@ class CheckerModule extends AbstractModule {
     bind(classOf[Pass])
       .annotatedWith(Names.named("AfterDesugarer"))
       .to(classOf[UnrollPass])
-    // the next pass is PrimingPass
-    bind(classOf[PrimingPass])
-      .to(classOf[PrimingPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterUnroll"))
-      .to(classOf[PrimingPass])
-    // the next pass is CoverAnalysisPass
-    bind(classOf[CoverAnalysisPass])
-      .to(classOf[CoverAnalysisPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterPriming"))
-      .to(classOf[CoverAnalysisPass])
     // the next pass is InlinePass
     bind(classOf[InlinePass])
       .to(classOf[InlinePassImpl])
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterCoverAnalysis"))
+      .annotatedWith(Names.named("AfterUnroll"))
       .to(classOf[InlinePass])
     // the next pass is VCGenPass
     bind(classOf[VCGenPass])
@@ -116,11 +104,17 @@ class CheckerModule extends AbstractModule {
     bind(classOf[Pass])
       .annotatedWith(Names.named("AfterVCGen"))
       .to(classOf[PreproPass])
-    // the next pass after PreproPass is AssignmentPass
+    // the next pass is PrimingPass
+    bind(classOf[PrimingPass])
+      .to(classOf[PrimingPassImpl])
+    bind(classOf[Pass])
+      .annotatedWith(Names.named("AfterPrepro"))
+      .to(classOf[PrimingPass])
+    // the next pass is TransitionPass
     bind(classOf[TransitionPass])
       .to(classOf[TransitionPassImpl])
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterPrepro"))
+      .annotatedWith(Names.named("AfterPriming"))
       .to(classOf[TransitionPass])
     // the next pass after AssignmentPass is AnalysisPass
     bind(classOf[OptPass])

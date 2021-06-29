@@ -44,16 +44,6 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
 
     val bodyMap = BodyMapFactory.makeFromDecls(declarations)
 
-    // The solution to breaking the impossible dependency of Inlining > Priming > Cover Analysis > Inlining
-    // is for Priming to manually inline just the relevant Init/CInit operator
-    val baseTransformationSequence =
-      List(
-          InlinerOfUserOper(bodyMap, tracker),
-          LetInExpander(tracker, keepNullary = true),
-          // the second pass of Inliner may be needed, when the higher-order operators were inlined by LetInExpander
-          InlinerOfUserOper(bodyMap, tracker)
-      )
-
     val cinitPrimed =
       options.get[String]("checker", "cinit") match {
         case Some(name) =>
@@ -61,7 +51,7 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
           val primeTransformer = Prime(constSet, tracker) // add primes to constants
           val cinitPrimedName = name + "Primed"
           logger.info(s"  > Introducing $cinitPrimedName for $name'")
-          val newBody = trSeq(baseTransformationSequence :+ primeTransformer)(deepCopy.deepCopyEx(operatorBody))
+          val newBody = primeTransformer(deepCopy.deepCopyEx(operatorBody))
           // Safe constructor: cannot be recursive
           Some(TlaOperDecl(cinitPrimedName, List(), newBody))
 
@@ -74,7 +64,7 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
     val initPrimedName = initName + "Primed"
     logger.info(s"  > Introducing $initPrimedName for $initName'")
     // add primes to variables
-    val newBody = trSeq(baseTransformationSequence :+ primeTransformer)(
+    val newBody = primeTransformer(
         deepCopy.deepCopyEx(bodyMap(initName).body)
     )
     // Safe constructor: cannot be recursive
