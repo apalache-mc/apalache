@@ -7,7 +7,7 @@
 This ADR documents the various exception thrown in Apalache, and the circumstances that trigger them.
 
 ## 1. User input exceptions
-Exceptions in this family are caused by incorrect input from the user. All of these exceptions should exit cleanly and should NOT report a stack trace.
+Exceptions in this family are caused by incorrect input from the user. All of these exceptions should exit cleanly and should NOT report a stack trace. We should be able to statically enforce that none of these exceptions can be left unhandled.
 
 ### 1.1. Parser-level
 Since we depend on Sany for parsing, Apalache rejects any syntax which Sany cannot parse.
