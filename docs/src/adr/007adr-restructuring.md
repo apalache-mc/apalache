@@ -151,7 +151,7 @@ In L13, we have implementations of the following concepts:
 
 ## 4. Aliases, factories and exceptions
 
-Any alias or factory belongs to the lowest possible level required to define it. For example, `type uidToExMap = Map[UID, TlaEx]` belongs to L0, since `UID` and `TlaEx` are both L0 concepts, so it should be defined in an L0 alias package, even if it is only being used in a package of a higher level. 
+Any global alias (e.g `type TlaExTransformation = TlaEx => TlaEx`) or factory belongs to the lowest possible level required to define it. For example, `type uidToExMap = Map[UID, TlaEx]` belongs to L0, since `UID` and `TlaEx` are both L0 concepts, so it should be defined in an L0 alias package, even if it is only being used in a package of a higher level. Local aliases may be used wherever convenient.
 
 Any exception belongs to the lowest possible level, at which it can be thrown. For example, `AssignmentException` belongs to L10, as it is thrown in the `TransitionPass`.
 
