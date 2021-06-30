@@ -111,7 +111,7 @@ should be thrown. It should report the following details:
 Depending on the pass/transformation, specialized exceptions may be thrown, to indicate some problem in either the pipeline, malformed input, missing or incomplete metadata or any other issue that cannot be circumvented. The exceptions should include a reasonable (concise) explanation and, whenever possible, source information for relevant expressions. 
 
 ## 3. Exception explanations
-On their own, exceptions should include concise messages with all the relevant information components, outlined above. In addition to that, we should implement an advanced variant of `ExceptionAdapter`, called `ExceptionExplainer`, that is optionally enabled, if Apalache is invoked with the flag `--explain-exceptions` (alternatively, it could be on by default and disabled with a similar flag). 
+On their own, exceptions should include concise messages with all the relevant information components, outlined above. In addition to that, we should implement an advanced variant of `ExceptionAdapter`, called `ExceptionExplainer`, that is enabled by default, but can be quieted if Apalache is invoked with the flag `--quiet-exceptions` . 
 
 The purpose of this class is to offer users a comprehensive explanation of the exceptions defined in Section 1. Whenever an exception is thrown, `ExceptionExplainer` should offer:
 
@@ -119,4 +119,3 @@ The purpose of this class is to offer users a comprehensive explanation of the e
   * Examples of similar malformed inputs, if relevant
   * Suggestions on how to fix the exception
   * A link to the manual, explaining the cause of the exception
-
