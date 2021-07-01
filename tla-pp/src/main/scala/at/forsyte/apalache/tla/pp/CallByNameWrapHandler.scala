@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx}
+import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 
@@ -10,10 +10,17 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
  * or unwraps them when the operator is no longer necessary to guard against preprocessing.
  */
 class CallByNameWrapHandler(tracker: TransformationTracker) {
+//  We create class wrappers, so `tr.getClass.getSimpleName` works in the passes
+  sealed class Wrap(tr: TlaExTransformation) extends TlaExTransformation {
+    override def apply(arg: TlaEx): TlaEx = tr(arg)
+  }
+  sealed class Unwrap(tr: TlaExTransformation) extends TlaExTransformation {
+    override def apply(arg: TlaEx): TlaEx = tr(arg)
+  }
 
   private def wrapEx(nameEx: NameEx) = OperEx(ApalacheOper.callByName, nameEx)(nameEx.typeTag)
 
-  def wrap: TlaExTransformation = tracker.trackEx {
+  def wrap: Wrap = new Wrap(tracker.trackEx {
     // Currently, we only support call-by-name in folding
     case foldEx @ OperEx(op @ (ApalacheOper.foldSet | ApalacheOper.foldSeq), nameEx: NameEx, base, set) =>
       OperEx(op, wrapEx(nameEx), wrap(base), wrap(set))(foldEx.typeTag)
@@ -29,13 +36,13 @@ class CallByNameWrapHandler(tracker: TransformationTracker) {
       val newBody = wrap(body)
       if (defs == newDefs && body == newBody) ex else LetInEx(newBody, newDefs: _*)(ex.typeTag)
     case ex => ex
-  }
+  })
 
-  def unwrap: TlaExTransformation = tracker.trackEx {
+  def unwrap: Unwrap = new Unwrap(tracker.trackEx {
     // Currently, we only support call-by-name in folding
     case foldEx @ OperEx(op @ (ApalacheOper.foldSet | ApalacheOper.foldSeq), OperEx(ApalacheOper.callByName, letInEx),
             base, set) =>
-      OperEx(op, letInEx, unwrap(base), unwrap(set))(foldEx.typeTag)
+      OperEx(op, unwrap(letInEx), unwrap(base), unwrap(set))(foldEx.typeTag)
 
     // recursive processing of composite operators
     case ex @ OperEx(op, args @ _*) =>
@@ -48,7 +55,7 @@ class CallByNameWrapHandler(tracker: TransformationTracker) {
       val newBody = unwrap(body)
       if (defs == newDefs && body == newBody) ex else LetInEx(newBody, newDefs: _*)(ex.typeTag)
     case ex => ex
-  }
+  })
 }
 
 object CallByNameWrapHandler {

@@ -587,6 +587,16 @@ The outcome is: Error
 EXITCODE: ERROR (12)
 ```
 
+### check FoldSetInInit succeeds
+
+```sh
+$ apalache-mc check --inv=Inv FoldSetInInit.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
 ### check Counter.tla errors
 
 ```sh

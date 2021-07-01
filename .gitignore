@@ -28,3 +28,6 @@ x/
 # Ignore artifacts created when previewing the gh-pages site
 /Gemfile.lock
 /_site/
+
+# Ignore MacOS files
+.DS_Store
