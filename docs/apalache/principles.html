@@ -183,16 +183,20 @@ run <code>apalache</code> against <a href="https://github.com/informalsystems/ap
 <p>We can check the detailed output of the <code>TransitionFinderPass</code> in the file
 <code>x/&lt;timestamp&gt;/out-transition.tla</code>, where <code>&lt;timestamp&gt;</code> looks like
 <code>09.03-10.03.2020-508266549191958257</code>:</p>
-<pre><code class="language-tla">----- MODULE y2k_override -----
-VARIABLE year
-VARIABLE hasLicense
-ASSUME(80 \in 0 .. 99)
-ASSUME(18 \in 1 .. 99)
+<pre><code class="language-tla">---------------------------- MODULE y2k_override ----------------------------
+(*
+ * One way to instantiate constants for apalache is to use the OVERRIDE prefix. 
+ *)
+ 
+EXTENDS y2k
 
-Init$0 == year' := 80 /\ hasLicense' := FALSE
-Next$0 == year' := ((year + 1) % 100) /\ (hasLicense' := hasLicense)
-Next$1 == year - 80 &gt;= 18 /\ hasLicense' := TRUE /\ (year' := year)
-===============
+OVERRIDE_BIRTH_YEAR == 80
+OVERRIDE_LICENSE_AGE == 18
+
+=============================================================================
+\* Modification History
+\* Last modified Tue Jan 07 11:24:55 CET 2020 by igor
+\* Created Tue Jan 07 11:16:18 CET 2020 by igor
 </code></pre>
 <p>As you can see, the model checker did two things:</p>
 <ol>
@@ -225,7 +229,10 @@ assignment of the form <code>x' := e</code> in every symbolic transition <code>A
 Consider the example
 <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/Assignments20200309.tla"><code>test/tla/Assignments20200309.tla</code></a>:</p>
 <pre><code class="language-tla">----- MODULE Assignments20200309 -----
-VARIABLE a
+VARIABLE
+    \* @type: Int;
+    a
+
 \* this specification fails, as it has no expression
 \* that can be treated as an assignment
 Init == TRUE
@@ -238,271 +245,28 @@ Inv == FALSE
 </code></pre>
 <p>Apalache reports an error as follows:</p>
 <pre><code class="language-console">...
-PASS #6: TransitionFinderPass                                     I@09:39:33.527
+PASS #9: TransitionFinderPass
 To understand the error, check the manual:
 [https://apalache.informal.systems/docs/apalache/assignments.html]
-Assignment error: Failed to find assignments and symbolic transitions in InitPrimed E@09:39:33.676
-It took me 0 days  0 hours  0 min  1 sec                          I@09:39:33.678
-Total time: 1.88 sec                                              I@09:39:33.678
+Assignment error: No assignments found for: a
+It took me 0 days  0 hours  0 min  1 sec
+Total time: 1.88 sec
 EXITCODE: ERROR (99)
 </code></pre>
-<p>This error is cryptic. It does not indicate which parts of the specification
-have caused the problem. In the future, we will add better diagnostic in the
-assignment finder, see <a href="https://github.com/informalsystems/apalache/issues/111">the open
-issue</a>. Our current approach is
-to debug assignments by running TLC first. If running TLC takes too long, you
-may try to comment out parts of the specification to find the problematic
-action. Although this is tedious, it allows one to find missing assignments
-rather quickly.</p>
-<p>If you are interested in the technique for finding the assignments and symbolic
-transitions implemented in Apalache, check our <a href="http://forsyte.at/wp-content/uploads/abz2018_full.pdf">paper at
-ABZ'18</a>.  The <a href="http://dx.doi.org/https://doi.org/10.1016/j.scico.2019.102361">journal
-version</a> is
-unfortunately behind the Elsevier paywall, which will be lifted after the
-two-year embargo period.</p>
 <p><a name="types"></a></p>
 <h2><a class="header" href="#type-annotations" id="type-annotations">Type annotations</a></h2>
-<p><strong>NOTE 1</strong>: <a href="https://forsyte.at/people/kukovec/">Jure Kukovec</a> is developing
-a completely automatic type inference engine. As soon as it is ready, type
-annotations will no longer be required. Until that happy day, refer to <a href="types-and-annotations.html">type
+<p>Check the <a href="../tutorials/snowcat-tutorial.html">Snowcat tutorial</a> and <a href="../HOWTOs/howto-write-type-annotations.html">HOWTO on
 annotations</a>.</p>
-<p><strong>NOTE 2</strong>: We are currently working on a better syntax for type annotations
-and a better type checker. Hence, the syntax will change in the future.</p>
-<p>Apalache requires two kinds of type annotations:</p>
-<ul>
-<li>type annotations for empty sets and sequences, and</li>
-<li>type annotations for records and sets of records.</li>
-</ul>
-<h3><a class="header" href="#empty-sets-and-sequences" id="empty-sets-and-sequences">Empty sets and sequences</a></h3>
-<p>Consider the following example <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/NeedForTypes.tla"><code>NeedForTypes.tla</code></a>:</p>
-<pre><code class="language-tla">------------------------ MODULE NeedForTypes ------------------------------
-(**
- * This simple example transforms a set into a sequence.
- *)
-EXTENDS Integers, Sequences, FiniteSets
-
-CONSTANTS InSet     \* an input set
-VARIABLES Left,     \* a storage for the yet untransformed elements
-          OutSeq    \* the output sequence
-
-ConstInit == InSet = 1..4
-
-Init ==
-    /\ OutSeq = &lt;&lt; &gt;&gt;
-    /\ Left = InSet
-
-Next ==
-    IF Left = {}
-    THEN UNCHANGED &lt;&lt;Left, OutSeq&gt;&gt;
-    ELSE \E x \in Left:
-          /\ OutSeq' = Append(OutSeq, x)
-          /\ Left' = Left \ {x}
-
-Inv == InSet = Left \union { OutSeq[i]: i \in DOMAIN OutSeq }
-===========================================================================
-</code></pre>
-<p>While this example is perfectly fine for TLC, Apalache has to assign types to
-the variables, in order to construct SMT constraints. In some cases, Apalache
-can infer types completely automatically, e.g., as in the <code>y2k</code> example (see
-<a href="./example.html">the example</a>). However, if you run <code>apalache check --cinit=ConstInit NeedForTypes.tla</code>, the tool will complain:</p>
-<pre><code>Step 0, level 0: checking if 1 transition(s) are enabled and violate the invariant I@15:17:14.313
-Step 0, level 1: collecting 1 enabled transition(s)               I@15:17:14.360
-Step 1, level 1: checking if 2 transition(s) are enabled and violate the invariant I@15:17:14.374
-NeedForTypes.tla:18:8-18:16, =(...), type error: Expected equal types: FinSet[Int] and FinSet[Unknown] E@15:17:14.379
-The outcome is: Error                                             I@15:17:14.388
-</code></pre>
-<p>In a somewhat obfuscated way, Apalache tells us the following. It has inferred
-that <code>Left</code> is a set of integers, that is, <code>FinSet[Int]</code>. First, it found that
-<code>InSet</code> is a set of integers, by applying <code>ConstInit</code>. Second, as <code>Left = InSet</code>
-in <code>Init</code>, it inferred that <code>Left</code> is also a set of integers. Third, when
-applying <code>Next</code>, it processed <code>{}</code>, which is an empty set of any kind of
-objects. Hence, <code>{}</code> was assigned the type <code>FinSet[Unknown]</code>, that is, a set of
-some type. Finally, it found the expression <code>Left = {}</code>, and here the type
-checker has failed.</p>
-<p>To help the type checker, we have to introduce a few type annotations. But
-before doing that, we introduce the notation for type annotations in the
-specification.</p>
-<h4><a class="header" href="#syntax-for-type-annotations" id="syntax-for-type-annotations">Syntax for type annotations</a></h4>
-<p>Apalache reads any expression formed with the <code>&lt;:</code> operator as an annotation of
-the value of the left hand side with the type on the right. E.g.,</p>
-<pre><code class="language-tla">v &lt;: T
-</code></pre>
-<p>means &quot;value <code>v</code> has type <code>T</code>&quot;.</p>
-<p>However, other tools (such as TLC and TLAPS) have no support for these
-annotations. To tell them to ignore type annotations, we maintain the convention
-that any file using Apalache type annotations begins with the following definition:</p>
-<pre><code class="language-tla">v &lt;: T == v
-</code></pre>
-<p>With this in place, Apalache can parse out the type annotations in the rest of
-the file, but other tools are told to simply read any occurrence of <code>v &lt;: T</code> as
-<code>v</code>, effectively erasing the type ascription.</p>
-<p>Now we can help the type checker by rewriting the condition in <code>Next</code> as follows:</p>
-<h4><a class="header" href="#example-of-using-type-annotations" id="example-of-using-type-annotations">Example of using type annotations</a></h4>
-<pre><code class="language-tla">Next ==
-    IF Left = {} &lt;: {Int}
-    THEN ...
-    ELSE ...
-</code></pre>
-<p>Now the type checker treats the expression <code>{}</code> as a set of integers. However,
-it complains about another line:</p>
-<pre><code>Step 0, level 0: checking if 1 transition(s) are enabled and violate the invariant I@15:43:35.932
-Step 0, level 1: collecting 1 enabled transition(s)               I@15:43:35.977
-Step 1, level 1: checking if 2 transition(s) are enabled and violate the invariant I@15:43:35.992
-NeedForTypes.tla:23:24-23:40, x$1, type error: Expected type Unknown, found Int E@15:43:36.012
-NeedForTypes.tla:23:24-23:40, Append(...), type error: Expected a type, found: None E@15:43:36.018
-NeedForTypes.tla:23:11-24:31, /\(...), type error: Expected a Boolean, found: None E@15:43:36.020
-The outcome is: Error
-</code></pre>
-<p>Here the type checker stumbles upon the sequence operator <code>Append(OutSeq, x)</code>
-and complains about the type mismatch. Similar to <code>{}</code>, it has treated
-the expression <code>&lt;&lt; &gt;&gt;</code> as a sequence of an unknown type. (In case of <code>&lt;&lt;1, 2&gt;&gt;</code>
-it would be even worse, as the type checker would not know, whether <code>&lt;&lt;1, 2&gt;&gt;</code>
-should be treated as a sequence or a tuple). Again, we help the type checker
-by modifying <code>Init</code> as follows:</p>
-<pre><code class="language-tla">Init ==
-    /\ OutSeq = &lt;&lt; &gt;&gt; &lt;: Seq(Int)
-    ...
-</code></pre>
-<p>Having these two annotations, the type checker stops complaining. You can find
-the annotated specification in
-<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/NeedForTypesWithTypes.tla"><code>test/tla/NeedForTypesWithTypes.tla</code></a>.</p>
-<h3><a class="header" href="#records-and-sets-of-records" id="records-and-sets-of-records">Records and sets of records</a></h3>
-<p>Consider the following example in
-<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/Handshake.tla"><code>test/tla/Handshake.tla</code></a>:</p>
-<pre><code class="language-tla">------------------------ MODULE Handshake ------------------------
-(**
- * A TCP-like handshake protocol:
- * https://en.wikipedia.org/wiki/Transmission_Control_Protocol#Connection_establishment
- *
- * Igor Konnov, 2020
- *)
-EXTENDS Integers
-
-VARIABLES msgs,     \* the set of all messages
-          iseqno,   \* Initiator's sequence number
-          rseqno,   \* Receiver's sequence number
-          istate,   \* Initiator's state
-          rstate    \* Receiver's state
-
-a &lt;: b == a
-
-Init ==
-    /\ msgs = {}
-    /\ iseqno = 0
-    /\ rseqno = 0
-    /\ istate = &quot;INIT&quot;
-    /\ rstate = &quot;LISTEN&quot;
-
-SendSyn ==
-    /\ istate = &quot;INIT&quot;
-    /\ \E no \in Nat:
-        /\ msgs' = msgs \union {[syn |-&gt; TRUE,
-                                 ack |-&gt; FALSE, seqno |-&gt; no]}
-        /\ iseqno' = no + 1
-        /\ istate' = &quot;SYN-SENT&quot;
-        /\ UNCHANGED &lt;&lt;rseqno, rstate&gt;&gt;
-
-SendSynAck ==
-    /\ rstate = &quot;LISTEN&quot;
-    /\ \E seqno, ackno \in Nat:
-        /\ [syn |-&gt; TRUE, ack |-&gt; FALSE, seqno |-&gt; seqno] \in msgs
-        /\ msgs' = msgs \union {[syn |-&gt; TRUE, ack |-&gt; TRUE,
-                                 seqno |-&gt; seqno + 1,
-                                 ackno |-&gt; ackno]}
-        /\ rseqno' = ackno + 1
-        /\ rstate' = &quot;SYN-RECEIVED&quot;
-        /\ UNCHANGED &lt;&lt;iseqno, istate&gt;&gt;
-
-SendAck ==
-    /\ istate = &quot;SYN-SENT&quot;
-    /\ \E ackno \in Nat:
-        /\ [syn |-&gt; TRUE, ack |-&gt; TRUE,
-            seqno |-&gt; iseqno, ackno |-&gt; ackno] \in msgs
-        /\ istate' = &quot;ESTABLISHED&quot;
-        /\ msgs' = msgs \union {[syn |-&gt; FALSE, ack |-&gt; TRUE,
-                                 seqno |-&gt; iseqno,
-                                 ackno |-&gt; ackno + 1]}
-        /\ UNCHANGED &lt;&lt;iseqno, rseqno, rstate&gt;&gt;
-
-RcvAck ==
-    /\ rstate = &quot;SYN-RECEIVED&quot;
-    /\ \E seqno \in Nat:
-        /\ ([syn |-&gt; FALSE, ack |-&gt; TRUE,
-             seqno |-&gt; seqno, ackno |-&gt; rseqno]) \in msgs
-        /\ rstate' = &quot;ESTABLISHED&quot;
-        /\ UNCHANGED &lt;&lt;msgs, iseqno, rseqno, istate&gt;&gt;
-
-
-Next == SendSyn \/ SendSynAck \/ SendAck \/ RcvAck
-
-Inv == (rstate = &quot;ESTABLISHED&quot; =&gt; istate = &quot;ESTABLISHED&quot;)
-======================================================================
-</code></pre>
-<p>As we have seen before, the type checker complains about the set <code>msgs</code>,
-which is initialized as <code>{}</code>. So we have to specify the type of <code>{}</code>. But which
-type shall we use for the empty set?</p>
-<p>In our example, the set <code>msgs</code> may contain records of three kinds:</p>
-<ul>
-<li>a <strong>SYN</strong> request that is modeled as a record
-<code>[ack |-&gt; FALSE, syn |-&gt; TRUE, seqno |-&gt; i]</code> for some number <code>i</code>,</li>
-<li>a <strong>SYN-ACK</strong> reply that is modeled as a record
-<code>[ack |-&gt; TRUE, syn |-&gt; TRUE, seqno |-&gt; i, ackno |-&gt; j]</code>
-for some numbers <code>i</code> and <code>j</code>,</li>
-<li>an <strong>ACK</strong> reply that is modeled as a record
-<code>[ack |-&gt; TRUE, syn |-&gt; FALSE, seqno |-&gt; i, ackno |-&gt; j]</code>
-for some numbers <code>i</code> and <code>j</code>.</li>
-</ul>
-<p>From the perspective of the type checker, the three records shown above have
-three different types. Although we would love to reject this example as an
-ill-typed one, mixing records of different types is a widely-accepted idiom in
-TLA+, for instance, see <a href="https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla">Lamport's specification of
-Paxos</a>.
-Think of records as of C unions, rather than C structs!</p>
-<p>To help the type checker, we first introduce a handy operator for the type that
-contains the fields of the three records:</p>
-<pre><code class="language-tla">MT == [syn |-&gt; BOOLEAN, ack |-&gt; BOOLEAN, seqno |-&gt; Int, ackno |-&gt; Int]
-</code></pre>
-<p>Then we add annotations as follows:</p>
-<pre><code class="language-tla">Init ==
-  /\ msgs = {} &lt;: {MT}
-    ...
-
-SendSyn ==
-  ...
-  /\ \E no \in Nat:
-    /\ msgs' = msgs \union {[syn |-&gt; TRUE, ack |-&gt; FALSE, seqno |-&gt; no] &lt;: MT}
-  ...
-
-SendSynAck ==
-  ...
-  /\ \E seqno, ackno \in Nat:
-    /\ ([syn |-&gt; TRUE, ack |-&gt; FALSE, seqno |-&gt; seqno] &lt;: MT) \in msgs
-    ...
-
-SendAck ==
-  ...
-  /\ \E ackno \in Nat:
-    ...
-</code></pre>
-<p>As you can see, we have to annotate only those records that do not have all
-four fields of <code>MT</code>. As soon as we have added the annotations, the type checker
-stopped complaining and let the model checker to run. The annotated code can be
-found in
-<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/HandshakeWithTypes.tla"><code>test/tla/HandshakeWithTypes.tla</code></a>.</p>
-<p>Type annotations can be also applied to sets of records. For example:</p>
-<pre><code class="language-tla">[syn |-&gt; BOOLEAN, ack |-&gt; BOOLEAN, seqno |-&gt; Int] &lt;: {MT}
-</code></pre>
-<p>You can find more details on the simple type inference algorithm and the type
-annotations in <a href="types-and-annotations.html">type annotations</a>.</p>
 <h3><a class="header" href="#naturals" id="naturals">Naturals</a></h3>
-<p>If you look carefully at the <a href="types-and-annotations.html">type annotations</a>, you
-will find that there is no designated type for naturals. Indeed, one can just
-use the type <code>Int</code>, whenever a natural number is required. If we introduced a
-special type for naturals, that would cause a lot of confusion for the type
-checker. What would be the type of the literal <code>42</code>? That depends on, whether
-you extend <code>Naturals</code> or <code>Integers</code>. And if you extend <code>Naturals</code> and later
-somebody else extends your module and also <code>Integers</code>, should be the type
-of <code>42</code> be an integer?</p>
+<p>If you look carefully at the <a href="../HOWTOs/howto-write-type-annotations.html">HOWTO on
+annotations</a>, you will find that
+there is no designated type for naturals. Indeed, one can just use the type
+<code>Int</code>, whenever a natural number is required. If we introduced a special type
+for naturals, that would cause a lot of confusion for the type checker. What
+would be the type of the literal <code>42</code>? That depends on, whether you extend
+<code>Naturals</code> or <code>Integers</code>. And if you extend <code>Naturals</code> and later somebody else
+extends your module and also <code>Integers</code>, should be the type of <code>42</code> be an
+integer?</p>
 <p>Apalache still allows you to extend <code>Naturals</code>. However, it will treat all
 number-like literals as integers. This is consistent with the view that the naturals are
 a subset of the integers, and the integers are a subset of the reals.  Classically, one
@@ -512,7 +276,9 @@ instance, see the following example:</p>
 <pre><code class="language-tla">----------------------------- MODULE NatCounter ------------------------
 EXTENDS Naturals
 
-VARIABLE x
+VARIABLE
+    \* @type: Int;
+    x
 
 Init == x = 3
 
@@ -529,6 +295,41 @@ currently working on a different kind of type annotations, which would not
 require <code>Int</code>.</p>
 <p><a name="recursion"></a></p>
 <h2><a class="header" href="#recursive-operators-and-functions" id="recursive-operators-and-functions">Recursive operators and functions</a></h2>
+<p><strong>WARNING:</strong> In our experience, it is hard to check recursive operators and
+functions in Apalache:</p>
+<ul>
+<li>Recursive operators need additional annotations.</li>
+<li>Resursive operators and functions usually apply <code>CHOOSE</code>, which
+is hard to implement faithfully without blow up the SMT encoding.</li>
+</ul>
+<p>Hence, we recommend using the operators <code>FoldSet</code> and <code>FoldSeq</code>:</p>
+<pre><code class="language-tla">(*****************************************************************************)
+(* The folding operator, used to implement computation over a set.           *)
+(* Apalache implements a more efficient encoding than the one below.         *)
+(* (from the community modules).                                             *)
+(*****************************************************************************)
+RECURSIVE FoldSet(_,_,_)
+FoldSet( Op(_,_), v, S ) == IF S = {}
+                            THEN v
+                            ELSE LET w == CHOOSE x \in S: TRUE
+                                  IN LET T == S \ {w}
+                                      IN FoldSet( Op, Op(v,w), T )
+
+(*****************************************************************************)
+(* The folding operator, used to implement computation over a sequence.      *)
+(* Apalache implements a more efficient encoding than the one below.         *)
+(* (from the community modules).                                             *)
+(*****************************************************************************)
+RECURSIVE FoldSeq(_,_,_)
+FoldSeq( Op(_,_), v, seq ) == IF seq = &lt;&lt;&gt;&gt;
+                              THEN v
+                              ELSE FoldSeq( Op, Op(v,Head(seq)), Tail(seq) )
+
+</code></pre>
+<p>These operators are treated by Apalache in a more efficient manner than
+recursive operators. They are always terminating and thus do not require an
+annotation that specifies an upper bound on the number of operator iterations.
+We are preparing a tutorial on this topic.</p>
 <p><a name="rec-op"></a></p>
 <h3><a class="header" href="#recursive-operators" id="recursive-operators">Recursive operators</a></h3>
 <p>In the preprocessing phase, Apalache replaces every application of a user
@@ -547,16 +348,26 @@ operator is useless in TLA+);</p>
 <code>CONSTANTS</code>), it is usually easy to find a bound on the number of operator
 iterations. For instance, consider the following specification:</p>
 <pre><code class="language-tla">--------- MODULE Rec6 -----------------
-CONSTANTS N
-VARIABLES set, count
+EXTENDS Integers
+
+N == 5
+
+VARIABLES
+    \* @type: Set(Int);
+    set,
+    \* @type: Int;
+    count
 
 RECURSIVE Sum(_)
 
 Sum(S) ==
   IF S = {}
   THEN 0
-  ELSE LET x == CHOOSE x \in S: TRUE IN
+  ELSE LET x == CHOOSE y \in S: TRUE IN
     x + Sum(S \ {x})
+
+UNROLL_DEFAULT_Sum == 0
+UNROLL_TIMES_Sum == N
 
 Init ==
   /\ set = {}
@@ -568,7 +379,8 @@ Next ==
     /\ set' = set \union {x}
 
 Inv == count = Sum(set)
-=======================================
+=======================================    
+
 </code></pre>
 <p>It is clear that the expression <code>Sum(S)</code> requires the number of iterations that
 is equal to <code>Cardinality(S) + 1</code>. Moreover, the expression <code>set \subseteq 1..N</code> is an invariant, and thus every call <code>Sum(set)</code> requires up to <code>N+1</code>
@@ -576,14 +388,15 @@ iterations.</p>
 <p>When we can find an upper bound on the number of iterations, Apalache can
 unroll the recursive operator up to this bound. To this end, we define two
 additional operators. For instance:</p>
-<pre><code class="language-tla">--------- MC_Rec6 ----------
-VARIABLES set, count
+<pre><code class="language-tla">--------- MODULE MC_Rec6 --------------
+VARIABLE count, set
 
-INSTANCE Rec6 WITH N &lt;- 3
+INSTANCE Rec6 WITH N &lt;- 5
 
-UNROLL_TIMES_Sum == 4
-UNROLL_DEFAULT_Sum == 0
-============================
+UNFOLD_TIMES_Sum == 6
+UNFOLD_DEFAULT_Sum == 0
+
+=======================================
 </code></pre>
 <p>In this case, Apalache unrolls every call to <code>Sum</code> exactly <code>UNROLL_TIMES_Sum</code>
 times, that is, four times. On the default branch, Apalache places
@@ -612,13 +425,13 @@ annotation.</p>
 <pre><code class="language-tla">------------------------------ MODULE Rec8 ------------------------------------
 EXTENDS Integers
 
-VARIABLES n, factSpec, factComp
-
-\* the syntax for type annotations
-a &lt;: b == a
-
-\* the type of the factorial function
-FactT == [Int -&gt; Int]
+VARIABLES
+    \* @type: Int;
+    n,
+    \* @type: Int;
+    factSpec,
+    \* @type: Int;
+    factComp
 
 (*
  Defining a recursive function on a finite domain. Although it is rather
@@ -630,20 +443,21 @@ FactT == [Int -&gt; Int]
 Fact[k \in 1..20] ==
     IF k &lt;= 1
     THEN 1
-    ELSE k * (Fact &lt;: FactT)[k - 1]
+    ELSE k * Fact[k - 1]
 
 Init ==
     /\ n = 1
     /\ factSpec = Fact[n]
     /\ factComp = 1
 
-Next ==
+Next ==     
     /\ n' = n + 1
     /\ factSpec' = Fact[n']
     /\ factComp' = n' * factComp
 
 Inv ==
     factComp = factSpec
+
 ===============================================================================
 </code></pre>
 <p>Check other examples in
