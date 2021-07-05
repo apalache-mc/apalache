@@ -561,11 +561,12 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
   // Workaround for impedence bitween with Java Generics and Scala parametric types
   // See, e.g., https://stackoverflow.com/a/16430462/1187277
-  private def mkArithCmp(ctor: (Expr[ArithSort], Expr[ArithSort]) => BoolExpr)(a: ExprSort, b: ExprSort) : ExprSort = {
+  private def mkArithCmp(ctor: (Expr[ArithSort], Expr[ArithSort]) => BoolExpr)(a: ExprSort, b: ExprSort): ExprSort = {
     ctor(a.asInstanceOf[Expr[ArithSort]], b.asInstanceOf[Expr[ArithSort]]).asInstanceOf[ExprSort]
   }
 
-  private def mkArithOp(ctor: (Expr[ArithSort], Expr[ArithSort]) => ArithExpr[ArithSort])(a: ExprSort, b: ExprSort) : ExprSort = {
+  private def mkArithOp(ctor: (Expr[ArithSort], Expr[ArithSort]) => ArithExpr[ArithSort])(a: ExprSort,
+      b: ExprSort): ExprSort = {
     ctor(a.asInstanceOf[Expr[ArithSort]], b.asInstanceOf[Expr[ArithSort]]).asInstanceOf[ExprSort]
   }
 
