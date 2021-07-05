@@ -162,7 +162,7 @@ IsInjective(fn) ==
   IN FoldSet( SeenBefore, << {}, TRUE >>, DOMAIN fn )[2]
 ```
 
-For the sake of comparison, here are the same operators, using recursion, `CHOOSE` or quantification:
+For the sake of comparison, we rewrite the above operators using recursion, `CHOOSE` or quantification:
 
 ```
 RECURSIVE Sum(_)
@@ -207,7 +207,6 @@ IsInjective(fn) == \A a,b \in DOMAIN fn : fn[a] = fn[b] => a = b
 In most cases, recursive operators are much more verbose, and the operators using `CHOOSE` and/or quantification mask double iteration (and thus have quadratic complexity). 
 For instance, the evaluation of the fold-less `IsInjective` operator actually requires the traversal of all domain pairs, instead of the single domain traversal with fold.
 In particular, `Mode`, the most verbose among the fold-defined operators, is still very readable (most LET-IN operators are introduced to improve readability, at the cost of verbosity) and quite efficient, as its complexity is linear w.r.t. the length of the sequence (the mode could also be computed directly, without a sub-call to `Range`, but the example would be more difficult to read), unlike the variant with `CHOOSE` and `\forall`, which is quadratic.
-
 
 
 
