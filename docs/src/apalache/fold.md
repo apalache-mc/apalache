@@ -83,7 +83,7 @@ MaxFold(seq) == LET Max(p,q) == IF p > q THEN p ELSE q
 
 The first advantage of the fold implementation, we feel, is that it is much more clear and concise. It also does not require a termination condition, unlike the recursive case.
 One inherent problem of using recursive operators with a symbolic encoding, is the inability to estimate termination.
-While it may be immediately obvious to a human, that `MaxRec` terminates after no more than `Len(seq)` steps, automatic termination analysis is, in general, a rather complex form of static analysis.
+While it may be immediately obvious to a human, that `MaxRec` terminates after no more than `Len(seq)` steps, automatic termination analysis is, in general, a rather complex and incomplete form of static analysis.
 Apalache addresses this by finitely unrolling recursive operators and requires users to provide unroll limits (`UNROLL_LIMIT_MaxRec == ...`), which serve as a static upper bound to the number of recursive re-entries, because in general, recursive operators may take an unpredictable number of steps (e.g. computing the Collatz sequence) or never terminate at all.
 Consider a minor adaptation of the above example, where the author made a mistake in implementing the operator:
 
@@ -207,4 +207,3 @@ IsInjective(fn) == \A a,b \in DOMAIN fn : fn[a] = fn[b] => a = b
 In most cases, recursive operators are much more verbose, and the operators using `CHOOSE` and/or quantification mask double iteration (and thus have quadratic complexity). 
 For instance, the evaluation of the fold-less `IsInjective` operator actually requires the traversal of all domain pairs, instead of the single domain traversal with fold.
 In particular, `Mode`, the most verbose among the fold-defined operators, is still very readable (most LET-IN operators are introduced to improve readability, at the cost of verbosity) and quite efficient, as its complexity is linear w.r.t. the length of the sequence (the mode could also be computed directly, without a sub-call to `Range`, but the example would be more difficult to read), unlike the variant with `CHOOSE` and `\forall`, which is quadratic.
-
