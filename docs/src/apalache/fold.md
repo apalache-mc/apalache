@@ -151,7 +151,7 @@ Mode(seq, elIfEmpty) == LET ExtRange == Range(seq) \union {elIfEmpty}
                                 IN IF newCounters[e] > newCounters[currentMode]
                                    THEN << newCounters, e >>
                                    ELSE << newCounters, currentMode >>
-                           IN FoldSet( CountElem, <<[ x \in ExtRange |-> 0 ], elIfEmpty >>, ExtRange )[2]
+                           IN FoldSeq( CountElem, <<[ x \in ExtRange |-> 0 ], elIfEmpty >>, seq )[2]
 
 \* Returns TRUE iff fn is injective
 IsInjective(fn) == 
