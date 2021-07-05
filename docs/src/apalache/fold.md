@@ -123,7 +123,7 @@ For instance, one cannot define the Ackermann function, as a fold. We find that 
 
 Here we give some examples of common operators, implemented using folds:
 
-```
+```tla
 \*  Sum of all values of a set of integers
 Sum(set) == LET Plus(p,q) == p + q IN FoldSet( Plus, 0, set )
 
