@@ -112,7 +112,7 @@ CardinalityFold(set) == LET Count(p,q) == p + 1 \* the value of q, the set eleme
 ```
 
 Notice that, in the case of sets, picking an arbitrary element `x`, to remove from the set at each step, utilizes the `CHOOSE` operator. This is a common trait shared by many operators that implement recursion over sets. 
-Since the introduction of folds, the use of `CHOOSE` in Apalache is heavily discouraged as it is both inefficient, as well as nondeterministic (unlike how `CHOOSE` is defined in TLA+ literature). 
+Since the introduction of folds, the use of `CHOOSE` in Apalache is heavily discouraged as it is both inefficient, as well as nondeterministic (unlike how `CHOOSE` is defined in TLA+ literature). For details, see the discussion in [issue 841](https://github.com/informalsystems/apalache/issues/841).
 
 So the third advantage of using folds is the  ability to, almost always, avoid using the `CHOOSE` operator.
 
