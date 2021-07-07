@@ -19,7 +19,7 @@ class SMTInterface {
    * @param m_fun    Wrapped function interpretation
    * @param m_varSym Symbol used for variables
    */
-  private class FunWrapper(m_fun: FuncInterp, m_varSym: String) {
+  private class FunWrapper[R <: Sort](m_fun: FuncInterp[R], m_varSym: String) {
 
     /** Return value for arguments outside the relevant subdomain. */
     protected val m_default: Int = m_fun.getElse.asInstanceOf[IntNum].getInt
@@ -29,7 +29,7 @@ class SMTInterface {
      * to the relevant subdomain.
      */
     protected val m_map: Map[String, Int] =
-      (for { e: FuncInterp.Entry <- m_fun.getEntries } yield (
+      (for { e: FuncInterp.Entry[R] <- m_fun.getEntries } yield (
           "%s_%s".format(m_varSym, e.getArgs.head),
           e.getValue.asInstanceOf[IntNum].getInt
       )).toMap

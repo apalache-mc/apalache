@@ -63,22 +63,27 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
    * Since context operations may clear function declaration,
    * we carry the context level in the map and clean the function declarations on pop.
    */
-  private val funDecls: mutable.Map[String, (FuncDecl, Int)] =
-    new mutable.HashMap[String, (FuncDecl, Int)]()
+  private val funDecls: mutable.Map[String, (FuncDecl[Sort], Int)] =
+    new mutable.HashMap[String, (FuncDecl[Sort], Int)]()
+
+  // The type of expressions of sorted elements.
+  // The wildcard type helps scalac resolve specious type mismatches of the form
+  // `Java-defined class Expr is invariant in type R`.
+  type ExprSort = Expr[Sort]
 
   /**
    * The calls to z3context.mkConst consume 20% of the running time, according to VisualVM.
    * Let's cache the constants, if Z3 cannot do it well.
    * Again, the cache carries the context level, to support push and pop.
    */
-  private val cellCache: mutable.Map[Int, (Expr, CellT, Int)] =
-    new mutable.HashMap[Int, (Expr, CellT, Int)]
+  private val cellCache: mutable.Map[Int, (ExprSort, CellT, Int)] =
+    new mutable.HashMap[Int, (ExprSort, CellT, Int)]
 
   /**
    * A cache for the in-relation between a set and its potential element.
    */
-  private val inCache: mutable.Map[(Int, Int), (Expr, Int)] =
-    new mutable.HashMap[(Int, Int), (Expr, Int)]
+  private val inCache: mutable.Map[(Int, Int), (ExprSort, Int)] =
+    new mutable.HashMap[(Int, Int), (ExprSort, Int)]
 
   /**
    * Sometimes, we lose a fresh arena in the rewriting rules. As this situation is very hard to debug,
@@ -132,9 +137,9 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       // which renders this step useless.
       val z3expr =
         if (cell.id == 0) {
-          z3context.mkEq(const, z3context.mkFalse())
+          z3context.mkEq(const, z3context.mkFalse().asInstanceOf[ExprSort])
         } else {
-          z3context.mkEq(const, z3context.mkTrue())
+          z3context.mkEq(const, z3context.mkTrue().asInstanceOf[ExprSort])
         }
 
       log(s"(assert $z3expr)")
@@ -154,13 +159,13 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       log(s"(declare-const $name Bool)")
       nBoolConsts += 1
       val const = z3context.mkConst(name, z3context.getBoolSort)
-      inCache += ((set.id, elem.id) -> (const, level))
+      inCache += ((set.id, elem.id) -> ((const.asInstanceOf[ExprSort], level)))
 
       _metrics = _metrics.addNConsts(1)
     }
   }
 
-  private def getInPred(setId: Int, elemId: Int): Expr = {
+  private def getInPred(setId: Int, elemId: Int): ExprSort = {
     inCache.get((setId, elemId)) match {
       case None =>
         val setT = cellCache(setId)._2
@@ -216,20 +221,17 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   def evalGroundExpr(ex: TlaEx): TlaEx = {
     val (smtEx, _) = toExpr(ex)
     val z3expr = z3solver.getModel.eval(smtEx, true)
-    z3expr match {
-      case b: BoolExpr =>
-        val isTrue = b.getBoolValue.equals(Z3_lbool.Z3_L_TRUE)
-        ValEx(if (isTrue) TlaBool(true) else TlaBool(false)) // in undefined case, just return false
-
-      case i: IntNum =>
-        ValEx(TlaInt(i.getBigInteger))
-
-      case _ =>
-        if (z3expr.isConst && z3expr.getSort.getName.toString.startsWith("Cell_")) {
-          NameEx(z3expr.toString)
-        } else {
-          flushAndThrow(new SmtEncodingException(s"SMT $id: Expected an integer or Boolean, found: $z3expr", ex))
-        }
+    if (z3expr.isBool) {
+      val isTrue = z3expr.getBoolValue.equals(Z3_lbool.Z3_L_TRUE)
+      ValEx(if (isTrue) TlaBool(true) else TlaBool(false)) // in undefined case, just return false
+    } else if (z3expr.isIntNum) {
+      ValEx(TlaInt(z3expr.asInstanceOf[IntNum].getBigInteger))
+    } else {
+      if (z3expr.isConst && z3expr.getSort.getName.toString.startsWith("Cell_")) {
+        NameEx(z3expr.toString)
+      } else {
+        flushAndThrow(new SmtEncodingException(s"SMT $id: Expected an integer or Boolean, found: $z3expr", ex))
+      }
     }
   }
 
@@ -413,7 +415,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     }
   }
 
-  private def toExpr(ex: TlaEx): (Expr, Long) = {
+  private def toExpr(ex: TlaEx): (ExprSort, Long) = {
     simplifier.simplifyShallow(ex) match {
       case NameEx(name) =>
         val nm = cellCache(ArenaCell.idFromName(name))._1 // the cached cell
@@ -421,20 +423,20 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
       case ValEx(TlaBool(false)) =>
         val bool = z3context.mkFalse()
-        (bool, 1)
+        (bool.asInstanceOf[ExprSort], 1)
 
       case ValEx(TlaBool(true)) =>
         val bool = z3context.mkTrue()
-        (bool, 1)
+        (bool.asInstanceOf[ExprSort], 1)
 
       case ValEx(TlaInt(num)) =>
         if (num.isValidLong) {
           val int = z3context.mkInt(num.toLong)
-          (int, 1)
+          (int.asInstanceOf[ExprSort], 1)
         } else {
           // support big integers, issue #450
           val n = z3context.mkInt(num.toString())
-          (n, 1)
+          (n.asInstanceOf[ExprSort], 1)
         }
 
       case OperEx(oper: TlaArithOper, lex, rex) =>
@@ -449,29 +451,29 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         if (ArenaCell.isValidName(lname) && ArenaCell.isValidName(rname)) {
           // just comparing cells
           val eq = z3context.mkEq(cellCache(ArenaCell.idFromName(lname))._1, cellCache(ArenaCell.idFromName(rname))._1)
-          (eq, 1)
+          (eq.asInstanceOf[ExprSort], 1)
         } else {
           // comparing integers and Boolean to cells, Booleans to Booleans, and Integers to Integers
           val (le, ln) = toExpr(lhs)
           val (re, rn) = toExpr(rhs)
-          val eq = toEqExpr(le, re)
-          (eq, 1 + ln + rn)
+          val eq = toEqExpr(le.asInstanceOf[Expr[Sort]], re.asInstanceOf[Expr[Sort]])
+          (eq.asInstanceOf[ExprSort], 1 + ln + rn)
         }
 
       case OperEx(TlaOper.eq, lhs, rhs) =>
         val (le, ln) = toExpr(lhs)
         val (re, rn) = toExpr(rhs)
         val eq = toEqExpr(le, re)
-        (eq, 1 + ln + rn)
+        (eq.asInstanceOf[ExprSort], 1 + ln + rn)
 
       case OperEx(TlaOper.ne, lhs, rhs) =>
         val (eq, n) = toExpr(OperEx(TlaOper.eq, lhs, rhs))
-        (z3context.mkNot(eq.asInstanceOf[BoolExpr]), 1 + n)
+        (z3context.mkNot(eq.asInstanceOf[BoolExpr]).asInstanceOf[ExprSort], 1 + n)
 
       case OperEx(ApalacheOper.distinct, args @ _*) =>
         val (es, ns) = (args map toExpr).unzip
         val distinct = z3context.mkDistinct(es: _*)
-        (distinct,
+        (distinct.asInstanceOf[ExprSort],
             ns.foldLeft(1L) {
           _ + _
         })
@@ -479,7 +481,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       case OperEx(TlaBoolOper.and, args @ _*) =>
         val (es, ns) = (args map toExpr).unzip
         val and = z3context.mkAnd(es.map(_.asInstanceOf[BoolExpr]): _*)
-        (and,
+        (and.asInstanceOf[ExprSort],
             ns.foldLeft(1L) {
           _ + _
         })
@@ -487,7 +489,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       case OperEx(TlaBoolOper.or, args @ _*) =>
         val (es, ns) = (args map toExpr).unzip
         val or = z3context.mkOr(es.map(_.asInstanceOf[BoolExpr]): _*)
-        (or,
+        (or.asInstanceOf[ExprSort],
             ns.foldLeft(1L) {
           _ + _
         })
@@ -496,13 +498,13 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         val (lhsZ3, ln) = toExpr(lhs)
         val (rhsZ3, rn) = toExpr(rhs)
         val imp = z3context.mkImplies(lhsZ3.asInstanceOf[BoolExpr], rhsZ3.asInstanceOf[BoolExpr])
-        (imp, 1 + ln + rn)
+        (imp.asInstanceOf[ExprSort], 1 + ln + rn)
 
       case OperEx(TlaBoolOper.equiv, lhs, rhs) =>
         val (lhsZ3, ln) = toExpr(lhs)
         val (rhsZ3, rn) = toExpr(rhs)
         val equiv = z3context.mkEq(lhsZ3.asInstanceOf[BoolExpr], rhsZ3.asInstanceOf[BoolExpr])
-        (equiv, 1 + ln + rn)
+        (equiv.asInstanceOf[ExprSort], 1 + ln + rn)
 
       case OperEx(TlaControlOper.ifThenElse, cond, thenExpr, elseExpr) =>
         val (boolCond, cn) = toExpr(cond)
@@ -514,12 +516,12 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       case OperEx(TlaBoolOper.not, e) =>
         val (exZ3, n) = toExpr(e)
         val not = z3context.mkNot(exZ3.asInstanceOf[BoolExpr])
-        (not, 1 + n)
+        (not.asInstanceOf[ExprSort], 1 + n)
 
       case OperEx(TlaSetOper.notin, elem, set) =>
         val (e, n) = toExpr(OperEx(TlaSetOper.in, elem, set))
         val not = z3context.mkNot(e.asInstanceOf[BoolExpr])
-        (not, 1 + n)
+        (not.asInstanceOf[ExprSort], 1 + n)
 
       case OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName)) =>
         val setId = ArenaCell.idFromName(setName)
@@ -535,20 +537,20 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     }
   }
 
-  private def toEqExpr(le: Expr, re: Expr) = {
+  private def toEqExpr[R <: Sort](le: Expr[R], re: Expr[R]) = {
     (le, re) match {
       case (_: BoolExpr, _: BoolExpr) | (_: IntExpr, _: IntExpr) =>
         z3context.mkEq(le, re)
 
-      case (_: IntExpr, _: Expr) =>
+      case (_: IntExpr, _: Expr[R]) =>
         // comparing an integer constant and a cell of integer type, which is declared as integer
         z3context.mkEq(le, re)
 
-      case (_: Expr, _: IntExpr) =>
+      case (_: Expr[R], _: IntExpr) =>
         // comparing an integer constant and a cell of integer type, which is declared as integer
         z3context.mkEq(le, re)
 
-      case (_: Expr, _: Expr) =>
+      case (_: Expr[R], _: Expr[R]) =>
         // comparing a cell constant against a function application
         z3context.mkEq(le, re)
 
@@ -557,11 +559,23 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     }
   }
 
-  private def toArithExpr(ex: TlaEx): (Expr, Long) = {
-    def mkBinEx(ctor: (ArithExpr, ArithExpr) => Expr, left: TlaEx, right: TlaEx): (Expr, Long) = {
+  // Workaround for impedence bitween with Java Generics and Scala parametric types
+  // See, e.g., https://stackoverflow.com/a/16430462/1187277
+  private def mkArithCmp(ctor: (Expr[ArithSort], Expr[ArithSort]) => BoolExpr)(a: ExprSort, b: ExprSort): ExprSort = {
+    ctor(a.asInstanceOf[Expr[ArithSort]], b.asInstanceOf[Expr[ArithSort]]).asInstanceOf[ExprSort]
+  }
+
+  private def mkArithOp(ctor: (Expr[ArithSort], Expr[ArithSort]) => ArithExpr[ArithSort])(a: ExprSort,
+      b: ExprSort): ExprSort = {
+    ctor(a.asInstanceOf[Expr[ArithSort]], b.asInstanceOf[Expr[ArithSort]]).asInstanceOf[ExprSort]
+  }
+
+  private def toArithExpr(ex: TlaEx): (ExprSort, Long) = {
+
+    def mkBinEx(ctor: (ExprSort, ExprSort) => ExprSort, left: TlaEx, right: TlaEx): (ExprSort, Long) = {
       val (le, ln) = toArithExpr(left)
       val (re, rn) = toArithExpr(right)
-      val z3ex = ctor(le.asInstanceOf[ArithExpr], re.asInstanceOf[ArithExpr])
+      val z3ex = ctor(le, re)
       (z3ex, 1 + ln + rn)
     }
 
@@ -569,51 +583,51 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       case ValEx(TlaInt(num)) =>
         if (num.isValidLong) {
           val n = z3context.mkInt(num.toLong)
-          (n, 1)
+          (n.asInstanceOf[ExprSort], 1)
         } else {
           // support big integers, issue #450
           val n = z3context.mkInt(num.toString())
-          (n, 1)
+          (n.asInstanceOf[ExprSort], 1)
         }
 
       case NameEx(name) =>
         val n = z3context.mkIntConst(name) // TODO: incompatible sorts?
-        (n, 1)
+        (n.asInstanceOf[ExprSort], 1)
 
       case OperEx(TlaArithOper.lt, left, right) =>
-        mkBinEx(z3context.mkLt, left, right)
+        mkBinEx(mkArithCmp(z3context.mkLt), left, right)
 
       case OperEx(TlaArithOper.le, left, right) =>
-        mkBinEx(z3context.mkLe, left, right)
+        mkBinEx(mkArithCmp(z3context.mkLe), left, right)
 
       case OperEx(TlaArithOper.gt, left, right) =>
-        mkBinEx(z3context.mkGt, left, right)
+        mkBinEx(mkArithCmp(z3context.mkGt), left, right)
 
       case OperEx(TlaArithOper.ge, left, right) =>
-        mkBinEx(z3context.mkGe, left, right)
+        mkBinEx(mkArithCmp(z3context.mkGe), left, right)
 
       case OperEx(TlaArithOper.plus, left, right) =>
-        mkBinEx({ case (l, r) => z3context.mkAdd(l, r) }, left, right)
+        mkBinEx(mkArithOp((l, r) => z3context.mkAdd(l, r)), left, right)
 
       case OperEx(TlaArithOper.minus, left, right) =>
-        mkBinEx({ case (l, r) => z3context.mkSub(l, r) }, left, right)
+        mkBinEx(mkArithOp((l, r) => z3context.mkSub(l, r)), left, right)
 
       case OperEx(TlaArithOper.mult, left, right) =>
-        mkBinEx({ case (l, r) => z3context.mkMul(l, r) }, left, right)
+        mkBinEx(mkArithOp((l, r) => z3context.mkMul(l, r)), left, right)
 
       case OperEx(TlaArithOper.div, left, right) =>
-        mkBinEx(z3context.mkDiv, left, right)
+        mkBinEx(mkArithOp(z3context.mkDiv), left, right)
 
       case OperEx(TlaArithOper.mod, left, right) =>
         val (le, ln) = toArithExpr(left)
         val (re, rn) = toArithExpr(right)
         val mod = z3context.mkMod(le.asInstanceOf[IntExpr], re.asInstanceOf[IntExpr])
-        (mod, 1 + ln + rn)
+        (mod.asInstanceOf[ExprSort], 1 + ln + rn)
 
       case OperEx(TlaArithOper.uminus, subex) =>
         val (e, n) = toArithExpr(subex)
         val minus = z3context.mkUnaryMinus(e.asInstanceOf[IntExpr])
-        (minus, 1 + n)
+        (minus.asInstanceOf[ExprSort], 1 + n)
 
       case OperEx(TlaControlOper.ifThenElse, cond, thenExpr, elseExpr) =>
         val (boolCond, cn) = toExpr(cond)
