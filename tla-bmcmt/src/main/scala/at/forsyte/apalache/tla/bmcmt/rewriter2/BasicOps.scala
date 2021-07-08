@@ -43,5 +43,5 @@ object BasicOps {
 
   // Shorthand for EitherT.rightT[Exception, RewritingComputation, T] { cmp }
   def cmpIsRight[T](cmp: RewritingComputation[T]): StateCompWithExceptions[T] =
-    EitherT.rightT[Exception, RewritingComputation, T]{ cmp }
+    EitherT.rightT[Exception, RewritingComputation, T] { cmp }
 }
