@@ -2,7 +2,7 @@
 
 | author       | revision |
 | ------------ | --------:|
-| Jure Kukovec |        1 |
+| Jure Kukovec |        1.1 |
 
 This ADR documents our decision on serializing the Apalache internal representation (IR) as JSON.
 The purpose of introducing such a serialization is to expose the internal representation in a standardized format, which can be used for persistent storage, or for analysis by third-party tools in the future.
@@ -108,9 +108,11 @@ Example:
 ```
 
 ## 5. Root wrapper
-JSON serializations of one or more `TlaModule`s are wrapped in a root object with two required fields:
- -`version`, the value of which is a string representation of the current JSON encoding version, shaped `{major}.{minor}`, and
- -`modules`, the value of which is an array containing the JSON encodings of zero or more `TlaModule`s
+JSON serializations of one or more `TlaModule` objects are wrapped in a root object with two required fields:
+  
+- `version`, the value of which is a string representation of the current JSON encoding version, shaped `{major}.{minor}`, and
+- `modules`, the value of which is an array containing the JSON encodings of zero or more `TlaModule` objects
+
 It may optionally contain a field `"name" : "ApalacheIR"`.
 This document defines JSON Version 1.0. If and when a different JSON version is defined, this document will be updated accordingly.
 Apalache may refuse to import, or trigger warnings for, JSON objects with obsolete versions of the encoding in the future.
@@ -118,11 +120,11 @@ Example:
 ```
 {
   "name": "ApalacheIR",
-  "version": "1.0"
+  "version": "1.0",
   "modules" = [
     {
       "kind": "TlaModule",
-      "name": "MyModule",
+      "name": "MyModule"
       ...
     },
     ...]
@@ -169,16 +171,17 @@ Observe that we choose to serialize `TlaValue` as a JSON object, which is more v
 ```
 
 The `value` field depends on the kind of `TlaValue`:
+
 1. For `TlaStr`: a JSON string
 1. For `TlaBool`: a JSON Boolean
 1. For `TlaInt(bigIntValue)`: 
-  1. If `bigIntValue.isValidInt`: a JSON number
-  2. Otherwise: `{ "bigInt": bigIntValue.toString() }`
+    1. If `bigIntValue.isValidInt`: a JSON number
+    2. Otherwise: `{ "bigInt": bigIntValue.toString() }`
 1. For `TlaDecimal(decValue)`: a JSON string `decValue.toString`
 
-The reason for the non-uniform treatment of integers, is that Apalache encodes its TLA+ integers as `BigInt`, which means that it permits values, for which `.isValidInt` does not hold. 
+The reason for the non-uniform treatment of integers is that Apalache encodes its TLA+ integers as `BigInt`, which means that it permits values for which `.isValidInt` does not hold. 
 
-While it might seem more natural to encode the entire `TlaValue` as a JSON primitive, without the added object layer, we would have a much tougher time deserializing.
+While it might seem more natural to encode the entire `TlaValue` as a JSON primitive, without the added object layer we would have a much tougher time deserializing.
 We would need a) a sensible encoding of `BigInt` values, which are not valid integers, and b) a way to distinguish both variants of `BigInt`, as well as decimals, when deserializing (since JSON is not typed).
 We could encode all values as strings, but they would be similarly indistinguishable when deserializing. Importantly, the `type` field of the `ValEx` expression is not guaranteed to contain a hint, as it could be `Untyped`
 
