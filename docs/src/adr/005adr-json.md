@@ -205,7 +205,7 @@ The implementation of the serialization can be found in the class
 
 [ADR-004]: https://apalache.informal.systems/docs/adr/004adr-annotations.html
 
-[TlaToJson]: https://github.com/informalsystems/apalache/blob/unstable/tla-import/src/main/scala/at/forsyte/apalache/io/json/TlaToJson.scala
-[TlaEx]: https://github.com/informalsystems/apalache/blob/unstable/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaEx.scala
-[TlaDecl]: https://github.com/informalsystems/apalache/blob/unstable/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaDecl.scala
-[TlaModule]: https://github.com/informalsystems/apalache/blob/5d990cea9e280ca25276f1dd73590db9fb6464fc/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaDecl.scala#L19
+[TlaToJson]: https://github.com/informalsystems/apalache/blob/unstable/tla-io/src/main/scala/at/forsyte/apalache/io/json/TlaToJson.scala#L54
+[TlaEx]: https://github.com/informalsystems/apalache/blob/unstable/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaEx.scala#L10
+[TlaDecl]: https://github.com/informalsystems/apalache/blob/unstable/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaDecl.scala#L9
+[TlaModule]: https://github.com/informalsystems/apalache/blob/unstable/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaDecl.scala#L19
