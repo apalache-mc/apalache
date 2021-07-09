@@ -893,6 +893,16 @@ EXITCODE: ERROR (255)
 [255]
 ```
 
+### check NoVars.tla succeeds
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 NoVars.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
 ### check HourClock.tla without Init fails
 
 ```sh
