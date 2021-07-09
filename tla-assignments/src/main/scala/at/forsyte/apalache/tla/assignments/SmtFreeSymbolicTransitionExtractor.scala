@@ -177,11 +177,15 @@ class SmtFreeSymbolicTransitionExtractor(
    * @return A collection of symbolic transitions, if they can be extracted
    */
   def apply(vars: Set[String], actionExpr: TlaEx, operMap: BodyMap): Seq[SymbTrans] = {
+    if (vars.nonEmpty) {
 
-    /** Get strategy from the actionExpr */
-    val assignmentStrategy = getStrategy(vars, actionExpr, operMap)
-    val stg = new SymbTransGenerator(tracker)
-    stg(actionExpr, assignmentStrategy)
+      /** Get strategy from the actionExpr */
+      val assignmentStrategy = getStrategy(vars, actionExpr, operMap)
+      val stg = new SymbTransGenerator(tracker)
+      stg(actionExpr, assignmentStrategy)
+    } else {
+      Seq((Seq.empty, actionExpr)) // for specs with no variables
+    }
   }
 
 }
