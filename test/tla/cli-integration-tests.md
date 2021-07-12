@@ -437,6 +437,16 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
+### check SelectSeqTests succeeds
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 SelectSeqTests.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
 ### check Folds succeeds
 
 ```sh
