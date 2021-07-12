@@ -2,6 +2,12 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.15.11
+
+### Bug fixes
+
+   * Fixed crash on specs with no variables, see #871
+
 ## 0.15.10
 
 ### Bug fixes
