@@ -10,6 +10,3 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
-### Bug fixes
-
-   * Fixed crash on specs with no variables, see #871
