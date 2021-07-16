@@ -1,41 +1,64 @@
-# ADR-009: Server Mode
+# ADR-009: Interactive Mode
 
 TODO:
 
 - [x] Review the github discussion to gather requirements
-- [ ] Read adr-3
+- [x] Read adr-3
+- [ ] Read note on writing good RFC
 - [ ] Review source code, to see current state of TransitionExecutor
     - [ ] Find point at which executor gets called by the checker
-- [ ] Sketch a denotational model of the domain
-- [ ] Syntax for the language to manipulate domain
+- [ ] Sketch denotational design
+  - [ ] Maybe - Sketch a denotational model of the domain
+  - [ ] Maybe - Syntax for the language to manipulate domain
 - [ ] Write up design
+
+## Aim
+
+In the current architecture, there is a single mode of operation in which 
+
+- the user invokes Apalache with an initial configuration,
+- the model checker proper then drives the
+  [TransitionExecutor](../../src/adr/003adr-trex.md) through symbolic executions
+  that effect the verification of specified properties for the given model.
+
+Let's call this mode of operation *automatic mode*. 
+
+This RFC proposes the addition of an *interactive mode*. The interactive mode
+will allow a client to interact with the various steps of the verification
+process. The specific functionality that should be available for interaction is
+listed in the [Requirements](#requirements).
+
+As per [previous
+discussion](https://github.com/informalsystems/apalache/issues/730#issue-855835332),
+interaction will be supported by running daemon (or service) that serves
+requests supplied by a simple protocol.
 
 ## Requirements
 
-- allows exploring model checking of a spec without overhead of JVM startup
-  and apalache preprocessing (https://github.com/informalsystems/apalache/issues/730#issue-855835332)
-- serves model-checking queries 
-- extensible to support LSP
+The follow requirements have been gathered through conversation and discussion
+on our GitHub issues:
+
+- enable checking specs without repeated JVM startup costs
+  (https://github.com/informalsystems/apalache/issues/730#issue-855835332)
+- enable exploring model checking results for a spec without repeated
+  preprocessing costs
+  (https://github.com/informalsystems/apalache/issues/730#issue-855835332) 
 - can load and unload specs (https://github.com/informalsystems/apalache/issues/730#issuecomment-818201654)
 - extensible for cloud-based usage
+- extensible for LSP support
 - extensible for interactive terminal usage
 - exposes symbolic model checking (https://github.com/informalsystems/apalache/issues/730#issue-855835332)
   - can incrementally advance steps
   - can incrementally rollback steps
-  - can incrementally change choice points
+  - sends data on available transitions
+  - receives selection to execute specific transition
   - supports enumerating counterexamples
   - supports enumerating parameter values that lead to counterexample (https://github.com/informalsystems/apalache/issues/79#issuecomment-576449107)
 
-## Aim
+## General architecture
 
-```ocaml
-type tla_exp
-type smt
-type translater = tla_exp -> smt
-type transition_exec = translater -> checker 
-```
-
-Checker 
+Interactive mode will take advantage of the `TransitionExecutor`'s "nice
+abstraction to write different model checking strategies".
 
 ## Protocol
 
