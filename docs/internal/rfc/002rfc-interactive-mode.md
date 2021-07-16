@@ -1,4 +1,4 @@
-# ADR-009: Interactive Mode
+# RFC-002: Implementation of an Interactive Mode
 
 TODO:
 
@@ -12,7 +12,18 @@ TODO:
   - [ ] Maybe - Syntax for the language to manipulate domain
 - [ ] Write up design
 
-## Aim
+## Abstract
+
+## Problem
+
+Users of Apalache have voiced a need for the following behaviors:
+
+- incremental results (that can be iterated to exhaustively enumerate all counterexamples)
+- interactive selection of checking strategies
+- interactive selection of parameter values
+
+The discussion around these needs is summarized and linked from 
+https://github.com/informalsystems/apalache/issues/79 .
 
 In the current architecture, there is a single mode of operation in which 
 
@@ -53,7 +64,7 @@ on our GitHub issues:
   - sends data on available transitions
   - receives selection to execute specific transition
   - supports enumerating counterexamples
-  - supports enumerating parameter values that lead to counterexample (https://github.com/informalsystems/apalache/issues/79#issuecomment-576449107)
+  - supports enumerating parameter values (`CONSTANTS`) that lead to a counterexample (https://github.com/informalsystems/apalache/issues/79#issuecomment-576449107)
 
 ## General architecture
 
