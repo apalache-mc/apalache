@@ -1793,6 +1793,21 @@ Type checker [OK]
 EXITCODE: OK
 ```
 
+### typecheck bug #860
+
+Unhandled exception thrown when type-checking a spec that uses the wrong
+annotation syntax for operators.
+
+See https://github.com/informalsystems/apalache/issues/860
+
+```sh
+$ apalache-mc typecheck Bug860.tla | sed 's/[IEW]@.*//'
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
 ## Running the config command
 
 ### config --enable-stats=false
@@ -1814,4 +1829,3 @@ Statistics collection is ON.
 ...
 EXITCODE: OK
 ```
-
