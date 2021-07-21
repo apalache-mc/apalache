@@ -1820,7 +1820,7 @@ See https://github.com/informalsystems/apalache/issues/832
 $ apalache-mc typecheck Bug832.tla | sed 's/[IEW]@.*//'
 ...
 Parsing error in the type annotation:  () => (Bool, Bool)
-Typing input error: Parser error in type annotation of View1: '->' expected but ) found
+Typing input error: Parser error in type annotation of Example: '->' expected but ) found
 ...
 EXITCODE: ERROR (255)
 ```
