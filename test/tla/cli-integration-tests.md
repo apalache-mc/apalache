@@ -1414,6 +1414,22 @@ The outcome is: Error
 EXITCODE: ERROR (12)
 ```
 
+### check bug #874
+
+Unhandled `IllegalArgumentException` when accessing a non-existent field on a
+record.
+
+See https://github.com/informalsystems/apalache/issues/874
+
+```sh
+$ apalache-mc check Bug874.tla | sed 's/[IEW]@.*//'
+...
+Found 20 error(s)
+The outcome is: Error
+...
+EXITCODE: ERROR (12)
+```
+
 ## running the typecheck command
 
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
