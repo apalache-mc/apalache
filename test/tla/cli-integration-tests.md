@@ -1424,10 +1424,9 @@ See https://github.com/informalsystems/apalache/issues/874
 ```sh
 $ apalache-mc check Bug874.tla | sed 's/[IEW]@.*//'
 ...
-Found 20 error(s)
-The outcome is: Error
+Bug874.tla:4:17-4:27: Input error (see the manual): Access to non-existent record field b in (["a" ↦ 2])["b"]
 ...
-EXITCODE: ERROR (12)
+EXITCODE: ERROR (255)
 ```
 
 ## running the typecheck command

@@ -36,14 +36,17 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
    * @return a transformed fun expression
    */
   private def transformFuns: PartialFunction[TlaEx, TlaEx] = {
-    case OperEx(TlaFunOper.app, OperEx(TlaFunOper.enum, ctorArgs @ _*), ValEx(TlaStr(accessedKey))) =>
+    case expr @ OperEx(TlaFunOper.app, OperEx(TlaFunOper.enum, ctorArgs @ _*), ValEx(TlaStr(accessedKey))) =>
       val rewrittenArgs = ctorArgs map transform
       val found = rewrittenArgs.grouped(2).find { case Seq(ValEx(TlaStr(key)), _) =>
         key == accessedKey
       }
       found match {
         case Some(pair) => pair(1) // get the value
-        case _          => throw new IllegalArgumentException(s"Access to non-existent record field $accessedKey")
+        case _          => {
+          val msg = s"Access to non-existent record field $accessedKey in ${expr}"
+          throw new TlaInputError(msg, Some(expr.ID))
+        }
       }
   }
 
