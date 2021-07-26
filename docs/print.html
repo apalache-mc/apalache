@@ -5967,6 +5967,10 @@ type-compatible. For instance, the records <code>[type |-&gt; &quot;A&quot;, a |
 and <code>[type |-&gt; &quot;B&quot;, b |-&gt; TRUE]</code> have the joint type:</p>
 <pre><code>  [type: Str, a: Int, b: Bool]
 </code></pre>
+<p>If your spec tries to access a field on a record without that field, Apalache
+will fail with the following error:</p>
+<pre><code>Access to non-existent record field ...
+</code></pre>
 <hr />
 <h2><a class="header" href="#operators-4" id="operators-4">Operators</a></h2>
 <p>In the Python examples, we are using the package <a href="https://pypi.org/project/frozendict/">frozendict</a>, to produce an
