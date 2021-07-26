@@ -16,7 +16,7 @@ import scala.util.parsing.input.NoPosition
  * <p><b>Warning:</b> Avoid using this object directly. Rather use Type1ParserFactory.</p>
  *
  * @see at.forsyte.apalache.tla.typecheck.Type1ParserFactory
- * @author Igor Konnov
+ * @author Igor Konnov, Shon Feder
  */
 object DefaultType1Parser extends Parsers with Type1Parser {
   override type Elem = Type1Token
