@@ -13,3 +13,4 @@
 ### Bug fixes
 
 * Fix unhandled errors on non-existent record field access, see #874
+* Fix unhandled `MatchError` on invalid operator type annotations, see #919
