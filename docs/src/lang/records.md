@@ -65,6 +65,13 @@ and `[type |-> "B", b |-> TRUE]` have the joint type:
   [type: Str, a: Int, b: Bool]
 ```
 
+If your spec tries to access a field on a record without that field, Apalache
+will fail with the following error:
+
+```
+Access to non-existent record field ...
+```
+
 ----------------------------------------------------------------------------
 
 ## Operators
