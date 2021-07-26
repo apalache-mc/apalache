@@ -1,4 +1,4 @@
-# RFC-002: Implementation of an Interactive Mode
+# RFC-002: Implementation of Transition Exploration Server
 
 TODO:
 
@@ -22,6 +22,10 @@ Users of Apalache have voiced a need for the following behaviors:
 The discussion around these needs is summarized and linked from 
 https://github.com/informalsystems/apalache/issues/79 .
 
+The upshot is this: we can provide value by adding a utility that will allow
+users to interactively and incrementally explore the transition systems defined
+by a given TLA+ spec.
+
 ## Proposal
 
 ### Overview
@@ -29,13 +33,11 @@ https://github.com/informalsystems/apalache/issues/79 .
 In the current architecture, there is a single mode of operation in which 
 
 - the user invokes Apalache with an initial configuration,
-- the model checker proper then drives the
+- and the model checker proper then drives the
   [TransitionExecutor](../../src/adr/003adr-trex.md) through symbolic executions
   that effect the verification of specified properties for the given model.
 
-Let's call this mode of operation *automatic mode*. 
-
-This RFC proposes the addition of an *interactive mode*. The interactive mode
+This RFC proposes the addition of an *transition exploration server*. The server
 will allow a client to interact with the various steps of the verification
 process, effectively bypassing the checker, to drive the `TransitionExecutor`
 interactively. The specific functionality that should be available for
@@ -47,9 +49,12 @@ interaction will be supported by running a daemon (or "service") that serves
 requests. Clients will interact via a simple, well supported protocol providing
 an online RPC interface to client programs.
 
+As a followup, we can create our own front-end client to interact with this
+server, perhaps as a simple web application.
+
 ### Requirements
 
-The follow requirements have been gathered through conversation and discussion
+The following requirements have been gathered through conversation and discussion
 on our GitHub issues:
 
 1. enable checking specs without repeated JVM startup costs
@@ -76,11 +81,25 @@ on our GitHub issues:
 Interactive mode will take advantage of the `TransitionExecutor`'s "nice
 abstraction to write different model checking strategies".
 
+I propose the following high-level architecture:
+
+- Use an RPC protocol to allow client and server mutually transparent
+  interaction. (This allows us to abstract away the communication protocol and
+  only consider the functional API in what follows.)
+- Introduce a new module, `ServerModule`, into the `apa-tool` package, which
+  will provide an abstraction over the `TransitionExecutor` in `apa-base`
+
+*NOTE*: This sketch assumes the new code organization proposed in [ADR 7]( https://github.com/informalsystems/apalache/tree/unstable/docs/src/adr/007adr-restructuring.md).
+
+#### API
+
+~/Sync/informal-systems/apalache/apalache-core/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/trex/TransitionExecutorImpl.scala
+
+https://github.com/informalsystems/apalache/tree/9e64fd2f1cccc5584524b3f3e884a64355abd64d/docs/src/adr/007adr-restructuring.md
+
 #### Protocol
 
-## LSP 
-
-### Alternatives discussed
+We have briefly discussed the following options:
 
 - Custom protocol on top of HTTP
 - JSON-rpc
@@ -88,33 +107,25 @@ abstraction to write different model checking strategies".
 
 I propose use of gRPC for the following reasons:
 
-- It will automate most of the IO and protocol plumbing we'd have to do
-  ourselves.
+- It will automate most of the IO and protocol plumbing we'd otherwise have to
+  do ourselves.
 - It is battle tested by [industry](https://grpc.io/)
-- It is already used in Rust projects within Informal Systems.
-- The [Scala library](https://scalapb.github.io/docs/grpc/) appears to be well documented and actively maintained.
-- [Official support](https://grpc.io/docs/languages/) in many popular languages,
-  and we can expect well-maintained library support in most languages.
+- It is already used in Rust projects within Informal Systems. This should make
+  it easier to integrate into modelator.
+- The [Scala library](https://scalapb.github.io/docs/grpc/) appears to be well
+  documented and actively maintained.
+- [Official support](https://grpc.io/docs/languages/) is provided in many
+  popular languages, and we can expect well-maintained library support in most
+  languages.
+- The gRPC libraries include both the RPC protocol and plumbing for the
+  transport layer, and these are decomposable, in case we end up wanting to use
+  different transport (i.e., sockets) or a different protocol for some purpose
+  down the line.
 
 For a discussion of some comparison between JSON-rpc and gRPC, see
 
 - https://www.mertech.com/blog/know-your-api-protocols
 - https://stackoverflow.com/questions/58767467/what-the-difference-between-json-rpc-with-http2-vs-grpc
-
-### Design
-
-FRP?
-
-We will use the [functional reactive programming][frp] (FRP) paradigm to
-implement a [reactive program][]. This provides a clean and rigorously grounded
-conceptual framework for organizing the interactions with Apalache, which is
-friendly to Scala's functional bent, and appears to be well supported by existing libraries in
-the ecosystem: 
-
-https://medium.com/expedia-group-tech/fully-reactive-request-processing-with-project-reactor-grpc-and-mongodb-140991412360
-
-[reactive programming]: https://en.wikipedia.org/wiki/Reactive_programming
-[frp]: https://en.wikipedia.org/wiki/Functional_reactive_programming
 
 ### Phases
 
