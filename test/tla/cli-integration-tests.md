@@ -1825,6 +1825,21 @@ Typing input error: Parser error in type annotation of Example: '->' expected bu
 EXITCODE: ERROR (255)
 ```
 
+### typecheck bug #925
+
+Type unification should not recurse infinitely.
+
+See: https://github.com/informalsystems/apalache/issues/925
+
+```sh
+$ apalache-mc typecheck Bug925.tla | sed 's/[IEW]@.*//'
+...
+[Bug925.tla:7:1-7:24]: Expected ((b) => [f: Set(b)]) in Optional. Found: ((a) => [f: a])
+[Bug925.tla:7:1-7:24]: Error when computing the type of Optional
+...
+EXITCODE: ERROR (255)
+```
+
 ## Running the config command
 
 ### config --enable-stats=false

@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
-import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, SetT1, StrT1, VarT1}
+import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecT1, SetT1, StrT1, VarT1}
 import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
 import org.junit.runner.RunWith
 import org.scalatest.easymock.EasyMockSugar
@@ -176,5 +176,12 @@ class TestTypeUnifier extends FunSuite with EasyMockSugar with BeforeAndAfterEac
   test("cycle detection") {
     val expectedSubstitution = Substitution(0 -> VarT1("a"), 1 -> VarT1("a"))
     assert(unifier.unify(Substitution(0 -> VarT1("b"), 1 -> VarT1("a")), VarT1("a"), VarT1("b")).isEmpty)
+  }
+
+  // regression
+  test("no stack overflow #925") {
+    val oper1 = OperT1(Seq(VarT1("a")), RecT1("f" -> VarT1("a")))
+    val oper2 = OperT1(Seq(VarT1("a")), RecT1("f" -> SetT1(VarT1("a"))))
+    assert(unifier.unify(Substitution(), oper1, oper2).isEmpty)
   }
 }
