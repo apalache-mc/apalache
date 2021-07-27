@@ -16,18 +16,18 @@
 
 ## Problem
 
-Users of Apalache have voiced a need for the following general behaviors:
+Users of Apalache have voiced a need for the following kinds of behavior:
 
 - incremental results (that can be iterated to exhaustively enumerate all counterexamples)
 - interactive selection of checking strategies
 - interactive selection of parameter values
 
-The discussion around these needs is summarized and linked from
-https://github.com/informalsystems/apalache/issues/79 .
+The discussion around these needs is summarized and linked in
+[#79](https://github.com/informalsystems/apalache/issues/79) .
 
-The upshot is this: we can provide value by adding a utility that will allow
-users to interactively and incrementally explore the transition systems defined
-by a given TLA+ spec.
+The upshot: we can provide value by adding a utility that will allow users to
+interactively and incrementally explore the transition systems defined by a
+given TLA+ spec.
 
 ## Proposal
 
@@ -35,25 +35,30 @@ by a given TLA+ spec.
 
 In the current architecture, there is a single mode of operation in which
 
-- the user invokes Apalache with an initial configuration,
-- and the model checker proper then drives the
-  [TransitionExecutor](../../src/adr/003adr-trex.md) through symbolic executions
-  that effect the verification of specified properties for the given model.
+- the user invokes Apalache with an initial configuration, including an input
+  specification,
+- the specification and configurations are parsed and pre-processed,
+- and then the model checker proper drives the
+  [TransitionExecutor](../../src/adr/003adr-trex.md) to effect symbolic
+  executions verifying the specified properties for the specified model.
 
-This RFC proposes the addition of an *transition exploration server*. The server
+This RFC proposes the addition of a *transition exploration server*. The server
 will allow a client to interact with the various steps of the verification
-process, effectively bypassing the checker, to drive the `TransitionExecutor`
-interactively. The specific functionality that should be available for
-interaction is listed in the [Requirements](#requirements).
+process. The client is thus empowered  to call upon the parser and preprocessors
+at will, and to drive the `TransitionExecutor` interactively, via a simplified
+API.
+
+The specific functionality that should be available for interaction is
+enumerated in the [Requirements](#requirements).
 
 As per [previous
 discussions](https://github.com/informalsystems/apalache/issues/730#issue-855835332),
 interaction will be supported by running a daemon (or "service") that serves
-requests. Clients will interact via a simple, well supported protocol providing
-an online RPC interface to client programs.
+incoming requests. Clients will interact via a simple, well supported protocol,
+that provides an online RPC interface.
 
 As a followup, we can create our own front-end client to interact with this
-server, perhaps as a simple web application.
+server, as a CLI or perhaps as a simple web application.
 
 ### Requirements
 
@@ -62,16 +67,16 @@ on our GitHub issues:
 
 |TRANS-EX.1::QCHECK.1|
 : enable checking specs without repeated JVM startup costs
-  (https://github.com/informalsystems/apalache/issues/730#issue-855835332)
+  [730#issue-855835332](https://github.com/informalsystems/apalache/issues/730#issue-855835332)
 
 |TRANS-EX.1::EXPLORE.1|
 : enable exploring model checking results for a spec without repeated
   preprocessing costs
-  (https://github.com/informalsystems/apalache/issues/730#issue-855835332)
+  [730#issue-855835332](https://github.com/informalsystems/apalache/issues/730#issue-855835332)
 
 |TRANS-EX.1::LOAD.1|
 : can load and unload specs
-  (https://github.com/informalsystems/apalache/issues/730#issuecomment-818201654)
+  [730#issuecomment-818201654](https://github.com/informalsystems/apalache/issues/730#issue-855835332)
 
 |TRANS-EX.1::EXTENSIBLE.1|
 : The transition explorer should be extensible in the following ways:
@@ -79,14 +84,15 @@ on our GitHub issues:
 |TRANS-EX.1::EXTENSIBLE.1::CLOUD.1|
 : extensible for cloud-based usage
 
-|TRANS-EX.1::EXTENSIBLE.1::LSP.1|
-: extensible for LSP support
-
 |TRANS-EX.1::EXTENSIBLE.1::CLI.1|
 : extensible for interactive terminal usage |
 
+|TRANS-EX.1::EXTENSIBLE.1::LSP.1|
+: extensible for LSP support
+
 |TRANS-EX.1::SBMC.1|
-: exposes symbolic model checking (https://github.com/informalsystems/apalache/issues/730#issue-855835332)
+: expose symbolic model checking
+  [730#issue-855835332](https://github.com/informalsystems/apalache/issues/730#issue-855835332)
 
 |TRANS-EX.1::SBMC.1::ADVANCE.1|
 : can incrementally advance steps
@@ -95,35 +101,37 @@ on our GitHub issues:
 : can incrementally rollback steps
 
 |TRANS-EX.1::SBMC.1::TRANSITIONS.1|
-: sends data on available transitions
+: can send data on available transitions
 
 |TRANS-EX.1::SBMC.1::SELECT.1|
-: receives selection to execute specific transition
+: execute a specific transition given a selected action
 
 |TRANS-EX.1::SBMC.1::COUNTER.1|
-: supports enumerating counterexamples
-    (https://github.com/informalsystems/apalache/issues/79#issue-534407916)
+: allow enumerating counterexamples
+  [79#issue-534407916](https://github.com/informalsystems/apalache/issues/79#issue-534407916)
 
 |TRANS-EX.1::SBMC.1::PARAMS.1|
 : supports enumerating parameter values (`CONSTANTS`) that lead to a
-    counterexample
-    (https://github.com/informalsystems/apalache/issues/79#issuecomment-576449107)
+  counterexample
+  [79#issuecomment-576449107](https://github.com/informalsystems/apalache/issues/79#issuecomment-576449107)
 
 
 ### Architecture
 
-Interactive mode will take advantage of the `TransitionExecutor`'s "nice
-abstraction to write different model checking strategies".
+Interactive mode will take advantage of the `TransitionExecutor`'s nice
+abstraction to write different model checking strategies, to give the user an
+abstracted interface for dynamically specifying a checking strategies.
 
 I propose the following high-level architecture:
 
-- Use an RPC protocol to allow client and server mutually transparent
+- Use an RPC protocol to allow the client and server mutually transparent
   interaction. (This allows us to abstract away the communication protocol and
   only consider the functional API in what follows.)
 - Introduce a new module, `ServerModule`, into the `apa-tool` package, to bind
   the relevant passes, which lead up to, and terminate with, the
   `TransitionExplorer`, described below.
-- Introduce a new module, `TransitionExplorer` that abstracts over the
+- Introduce a new module, `TransitionExplorer` that enables the interactive
+  exploration of the transition system.
 
 *NOTE*: The high-level sketch above assumes the new code organization proposed
 in [ADR 7][].
@@ -139,23 +147,23 @@ implementation.
 
 ```scala
 
-/** A state is a map from variables to values  */
-type StateMap = Map[TlaEx, TlaEx]
+/** A State is a map from variables to values  */
+type State = Map[TlaEx, TlaEx]
 
-/** An execution is an alternating sequence of states and actions
- *  terminating with a state */
-type Execution = List[Either[StateMap, TlaEx]]
+/** An execution is an alternating sequence of states and actions,
+ *  terminating with a state 
+ */
+type Execution = List[Either[State, TlaEx]]
 
 trait TransitionExplorer {
 
   /** Reset the state of the explorer
    *
-   * Returns the explorer to a state as if the currently loaded model where
+   * Returns the explorer to the same state as if the currently loaded model where
    * freshly loaded. Used to restart exploration from a clean slate.
    *
    * [TRANS-EX.1::LOAD.1]
    */
-
   def reset(): Unit
 
   /** Load a model for exploration
@@ -166,11 +174,12 @@ trait TransitionExplorer {
    * [TRANS-EX.1::QCHECK.1]
    * [TRANS-EX.1::LOAD.1]
    *
-   * @param spec the TLA+ specification defining the
+   * @param spec the root TLA+ module 
+   * @param aux auxiliary modules that may be required by the root module
    * @return `Left(LoadErr)` if parsing or loading the model from `spec` goes
    *          wrong, or `Right(())` if the model is loaded successfully.
    */
-  def loadModel(spec: String): Either[LoadErr, Unit]
+  def loadModel(spec: String, aux: List[String] = List()): Either[LoadErr, Unit]
 
   /**  The root module currently loaded in memory  */
   def loadedModel: Option[TlaModule]
@@ -188,44 +197,42 @@ trait TransitionExplorer {
   def initialStates(max: Int = 100, start: Int = 0): Option[TlaEx]
 
   /**  The initial state predicates given in the spec  */
-  def initialStatePredicates: Option[TlaEx]
+  def initialStatePredicates: Option[List[TlaEx]]
 
-  /** The "next" state transitions given in the spec
+  /** The action predicates defining "next" transitions given in the spec
    *
-   * Since the number of computable transitions can be infinite, an upper
-   * limit must be set.
-   *
-   * @params max the maximum number of initial states to return (default to 100)
-   * @params start the nth state to begin fetching from (defaults to 0)
-   * @return `Some(exprs)` where `exprs` are `n` computed initial states, with
-   *         `n` <= `max`, or `None` if no model is loaded.
    */
-  def nextTransitionPredicates: Option[TlaEx]
+  def actions: Option[List[TlaEx]]
 
+  /** The invariants defined by the spec */
   def invariants: Option[CheckerInputVC]
 
-  /** Setting constants will also reset the explorer */
+  /** Setting constants will also reset the explorer, if an exploration is 
+   * underway
+   */
   def initializeConstants(Map[TlaExp, TlaExp]): Either[LoadErr, Unit]
 
-  /** Gives a map of constants to their current values   */
+  /** Gives a map of constants to their current values */
   def constants: Option[Map[TlaEx, Option[TlaEx]]]
 
   /** The current state, as a map from variables to values */
-  def currentState: Option[StateMap]
+  def currentState: Option[State]
 
-  /**  The next state achieved by applying a transition non-deterministically
+  /**  The next state, achieved by applying a transition non-deterministically
    *
    * [TRANS-EX.1::SBMC.1::ADVANCE.1]
    *
-   * @return `Left[err]` if the checker encounters an error, or Right[]  */
-  def nextState(): Either[CheckErr, StateMap]
+   * @return `Left[err]` if the checker encounters an error, or 
+   *         `Right[nextState]`.
+   */
+  def nextState(): Either[CheckErr, State]
 
   /**  Step the exploration back to the previous state
    *
    * [TRANS-EX.1::SBMC.1::ROLLBACK.1]
    *
    */
-  def previousState(): Either[CheckErr, StateMap]
+  def previousState(): Either[CheckErr, State]
 
   /** The actions that can be applied to the current state
    *
@@ -239,15 +246,18 @@ trait TransitionExplorer {
    * |TRANS-EX.1::SBMC.1::SELECT.1|
    *
    */
-  def applyAction(action: TlaEx): Either[CheckErr, StateMap]
+  def applyAction(action: TlaEx): Either[CheckErr, State]
 
   /** The execution from the selected initial state up to the [[currentState]]  */
   def executionFragment: Option[Execution]
 
   /** Enumerate counter examples based on an execution
    *
+   * Indepdent of the value of the particular variables.
+   *
    * [TRANS-EX.1::SBMC.1::COUNTER.1]
    *
+   * NOTE: The mechanics of this are currently unclear to me.
    */
   def enumerateCounterExamples(
     execution: Execution,
@@ -262,8 +272,8 @@ trait TransitionExplorer {
    * NOTE: The mechanics of this are currently unclear to me.
    */
   def enumerateCounterExamplesByState(
-    partialState: StateMap,
-    otherState: StateMap,
+    partialState: State,
+    otherState: State,
     max: Int = 100,
     start: Int = 0
   ): List[TlaEx]
