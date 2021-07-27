@@ -197,7 +197,7 @@ trait TransitionExplorer {
    * @return `Some(exprs)` where `exprs` are `n` computed initial states, with
    *         `n` <= `max`, or `None` if no model is loaded.
    */
-  def initialStates(max: Int = 100, start: Int = 0): Option[TlaEx]
+  def initialStates(max: Int = 100, start: Int = 0): Option[List[State]]
 
   /**  The initial state predicates given in the spec  */
   def initialStatePredicates: Option[List[TlaEx]]
