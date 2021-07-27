@@ -24,6 +24,7 @@
     - [Specification Parameters](./apalache/parameters.md)
     - [Principles of Symbolic Model Checking with Apalache](./apalache/principles.md)
     - [The Apalache Module](./apalache/apalache-mod.md)
+    - [Folding Operators](./apalache/fold.md)
     - [Profiling Your Specification](./apalache/profiling.md)
     - [Five minutes of theory](./apalache/theory.md)
 - [TLC Configuration Files](./apalache/tlc-config.md)
