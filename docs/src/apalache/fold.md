@@ -40,7 +40,7 @@ In the case of folding over sequences, `C` is a set `{a_1, ..., a_n}`. Then, `Fo
 
 Note that the above are definitions of a _left fold_ in the literature. Apalache does not implement a right fold.
 
-For example, if `C` is the sequence `<<x,y,z>>`, the result is equal to `Op( Op( Op(b, x), y), z)`. If `C = {x,y}`, the result is either `Op( Op(b, x), y)` or `Op( Op(b, y), x)`. Because the order of elements selected is nondeterministic in the case of sets, users should be careful, as the result is only uniquely defined in the case that the operator is both associative (`Op(Op(a,b),c) = Op(a,Op(b,c))`) and commutative (`Op(a,b) = Op(b,a)`). 
+For example, if `C` is the sequence `<<x,y,z>>`, the result is equal to `Op( Op( Op(b, x), y), z)`. If `C = {x,y}`, the result is either `Op( Op(b, x), y)` or `Op( Op(b, y), x)`. Because the order of elements selected from a set is not predefined, users should be careful, as the result is only uniquely defined in the case that the operator is both associative (`Op(Op(a,b),c) = Op(a,Op(b,c))`) and commutative (`Op(a,b) = Op(b,a)`). 
 
 For example, consider the operator `Op(p,q) == 2 * p + q`, which is noncommutative, and the set `S = {1,2,3}`. The value of `FoldSet(Op, 0, S)` depends on the order in which Apalache selects elements from S:
 
