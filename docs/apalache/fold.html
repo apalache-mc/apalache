@@ -1,0 +1,457 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Folding Operators - Apalache Documentation</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Tutorials</li><li class="chapter-item expanded "><a href="../tutorials/snowcat-tutorial.html"><strong aria-hidden="true">1.</strong> Type Checker Tutorial</a></li><li class="chapter-item expanded affix "><li class="part-title">Apalache User Manual</li><li class="chapter-item expanded "><a href="../apalache/index.html"><strong aria-hidden="true">2.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../apalache/getting-started.html"><strong aria-hidden="true">3.</strong> Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/apalache-or-tlc.html"><strong aria-hidden="true">3.1.</strong> Shall I use Apalache or TLC?</a></li><li class="chapter-item expanded "><a href="../apalache/system-reqs.html"><strong aria-hidden="true">3.2.</strong> System Requirements</a></li><li class="chapter-item expanded "><a href="../apalache/installation/index.html"><strong aria-hidden="true">3.3.</strong> Installation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/installation/jvm.html"><strong aria-hidden="true">3.3.1.</strong> Prebuilt Packages</a></li><li class="chapter-item expanded "><a href="../apalache/installation/docker.html"><strong aria-hidden="true">3.3.2.</strong> Docker</a></li><li class="chapter-item expanded "><a href="../apalache/installation/source.html"><strong aria-hidden="true">3.3.3.</strong> Source</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/running.html"><strong aria-hidden="true">3.4.</strong> Running the Tool</a></li><li class="chapter-item expanded "><a href="../apalache/invariants.html"><strong aria-hidden="true">3.5.</strong> Invariants: State, Action, Trace</a></li><li class="chapter-item expanded "><a href="../apalache/enumeration.html"><strong aria-hidden="true">3.6.</strong> Enumeration of counterexamples</a></li><li class="chapter-item expanded "><a href="../apalache/statistics.html"><strong aria-hidden="true">3.7.</strong> TLA+ Execution Statistics</a></li><li class="chapter-item expanded "><a href="../apalache/example.html"><strong aria-hidden="true">3.8.</strong> An Example TLA+ Specification</a></li><li class="chapter-item expanded "><a href="../apalache/parameters.html"><strong aria-hidden="true">3.9.</strong> Specification Parameters</a></li><li class="chapter-item expanded "><a href="../apalache/principles.html"><strong aria-hidden="true">3.10.</strong> Principles of Symbolic Model Checking with Apalache</a></li><li class="chapter-item expanded "><a href="../apalache/apalache-mod.html"><strong aria-hidden="true">3.11.</strong> The Apalache Module</a></li><li class="chapter-item expanded "><a href="../apalache/fold.html" class="active"><strong aria-hidden="true">3.12.</strong> Folding Operators</a></li><li class="chapter-item expanded "><a href="../apalache/profiling.html"><strong aria-hidden="true">3.13.</strong> Profiling Your Specification</a></li><li class="chapter-item expanded "><a href="../apalache/theory.html"><strong aria-hidden="true">3.14.</strong> Five minutes of theory</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/tlc-config.html"><strong aria-hidden="true">4.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../apalache/typechecker-snowcat.html"><strong aria-hidden="true">5.</strong> The Snowcat Type Checker</a></li><li class="chapter-item expanded "><a href="../apalache/features.html"><strong aria-hidden="true">6.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../apalache/known-issues.html"><strong aria-hidden="true">7.</strong> Known Issues</a></li><li class="chapter-item expanded "><a href="../apalache/preprocessing.html"><strong aria-hidden="true">8.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../apalache/tuning.html"><strong aria-hidden="true">9.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../apalache/kera.html"><strong aria-hidden="true">10.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded "><a href="../apalache/assignments.html"><strong aria-hidden="true">11.</strong> Assignments in Apalache</a></li><li class="chapter-item expanded affix "><li class="part-title">HOWTOs</li><li class="chapter-item expanded "><a href="../HOWTOs/index.html"><strong aria-hidden="true">12.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../HOWTOs/howto-write-type-annotations.html"><strong aria-hidden="true">13.</strong> How to write type annotations</a></li><li class="chapter-item expanded affix "><li class="part-title">Tutorials</li><li class="chapter-item expanded "><a href="../tutorials/index.html"><strong aria-hidden="true">14.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../tutorials/snowcat-tutorial.html"><strong aria-hidden="true">15.</strong> The Snowcat❄🐱 Type Checker</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ Language Manual for Engineers</li><li class="chapter-item expanded "><a href="../lang/index.html"><strong aria-hidden="true">16.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">17.</strong> The standard operators of TLA+</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/booleans.html"><strong aria-hidden="true">17.1.</strong> Booleans</a></li><li class="chapter-item expanded "><a href="../lang/control-and-nondeterminism.html"><strong aria-hidden="true">17.2.</strong> Control And Nondeterminism</a></li><li class="chapter-item expanded "><a href="../lang/conditionals.html"><strong aria-hidden="true">17.3.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="../lang/integers.html"><strong aria-hidden="true">17.4.</strong> Integers</a></li><li class="chapter-item expanded "><a href="../lang/sets.html"><strong aria-hidden="true">17.5.</strong> Sets</a></li><li class="chapter-item expanded "><a href="../lang/logic.html"><strong aria-hidden="true">17.6.</strong> Logic</a></li><li class="chapter-item expanded "><a href="../lang/functions.html"><strong aria-hidden="true">17.7.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../lang/records.html"><strong aria-hidden="true">17.8.</strong> Records</a></li><li class="chapter-item expanded "><a href="../lang/tuples.html"><strong aria-hidden="true">17.9.</strong> Tuples</a></li><li class="chapter-item expanded "><a href="../lang/sequences.html"><strong aria-hidden="true">17.10.</strong> Sequences</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">17.11.</strong> Bags</div></li></ol></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">18.</strong> User-defined operators</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/user/top-level-operators.html"><strong aria-hidden="true">18.1.</strong> Top-level operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/let-in.html"><strong aria-hidden="true">18.2.</strong> LET-IN definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/higher-order-operators.html"><strong aria-hidden="true">18.3.</strong> Higher-order operators definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/lambdas.html"><strong aria-hidden="true">18.4.</strong> Anonymous operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/recursive-operators.html"><strong aria-hidden="true">18.5.</strong> Recursive operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/local-operators.html"><strong aria-hidden="true">18.6.</strong> Local operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/recursive-functions.html"><strong aria-hidden="true">18.7.</strong> Recursive functions</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">19.</strong> Modules, Extends, and Instances</div></li><li class="chapter-item expanded affix "><li class="part-title">Idiomatic TLA+</li><li class="chapter-item expanded "><a href="../idiomatic/index.html"><strong aria-hidden="true">20.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../idiomatic/000keep-minimum-state-variables.html"><strong aria-hidden="true">21.</strong> Keep state variables to the minimum</a></li><li class="chapter-item expanded "><a href="../idiomatic/001assignments.html"><strong aria-hidden="true">22.</strong> Update state variables with assignments</a></li><li class="chapter-item expanded "><a href="../idiomatic/002primes.html"><strong aria-hidden="true">23.</strong> Apply primes only to state variables</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../adr/002adr-types.html"><strong aria-hidden="true">24.</strong> ADR-002: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/003adr-trex.html"><strong aria-hidden="true">25.</strong> ADR-003: transition executor (TRex)</a></li><li class="chapter-item expanded "><a href="../adr/004adr-annotations.html"><strong aria-hidden="true">26.</strong> ADR-004: code annotations</a></li><li class="chapter-item expanded "><a href="../adr/005adr-json.html"><strong aria-hidden="true">27.</strong> ADR-005: JSON Serialization Format</a></li><li class="chapter-item expanded "><a href="../adr/006rfc-unit-testing.html"><strong aria-hidden="true">28.</strong> RFC-006: unit tests and property-based tests</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache Documentation</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/informalsystems/apalache" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#folding-operators" id="folding-operators">Folding Operators</a></h1>
+<p>Apalache natively implements two operators users might be familiar with from the <a href="https://github.com/tlaplus/CommunityModules">community modules</a> or functional programming. Those operators are <code>FoldSet</code> and <code>FoldSeq</code>. This brief introduction to fold operators highlights the following:</p>
+<ol>
+<li>What are the semantics of fold operators?</li>
+<li>How do I use these operators in Apalache?</li>
+<li>Should I use folding or recursion?</li>
+<li>Examples of common operators defined with folds</li>
+</ol>
+<h3><a class="header" href="#syntax" id="syntax">Syntax</a></h3>
+<p>The syntax of the fold operators is as follows:</p>
+<pre><code class="language-tla">\* @type: ( (a, b) =&gt; a, a, Set(b) ) =&gt; a;
+FoldSet( operator, base, set )
+
+\* @type: ( (a, b) =&gt; a, a, Seq(b) ) =&gt; a;
+FoldSeq( operator, base, seq )
+</code></pre>
+<h3><a class="header" href="#semantics-of-fold-operators" id="semantics-of-fold-operators">Semantics of fold operators</a></h3>
+<p>Folding refers to iterative application of a binary operator over a collection. Given an operator <code>Op</code>, a base value <code>b</code> and a collection of values <code>C</code>, the definition of folding <code>Op</code> over <code>C</code> starting with <code>b</code> depends on the type of the collection <code>C</code>.</p>
+<h4><a class="header" href="#semantics-of-foldseq" id="semantics-of-foldseq">Semantics of <code>FoldSeq</code></a></h4>
+<p>In the case of folding over sequences, <code>C</code> is a sequence <code>&lt;&lt;a_1, ..., a_n&gt;&gt;</code>. Then, <code>FoldSeq( Op, b, C )</code> is defined as follows:</p>
+<ol>
+<li>If <code>C</code> is empty, then <code>FoldSeq( Op, b, &lt;&lt;&gt;&gt; ) = b</code>, regardless of <code>Op</code></li>
+<li>If <code>C</code> is nonempty, we establish a recursive relation between folding over <code>C</code> and folding over <code>Tail(C)</code> in the following way: <code>FoldSeq( Op, b, C ) = FoldSeq( Op, Op(b, Head(C)), Tail(C) )</code>.</li>
+</ol>
+<h4><a class="header" href="#semantics-of-foldset" id="semantics-of-foldset">Semantics of <code>FoldSet</code></a></h4>
+<p>In the case of folding over sets, <code>C</code> is a set <code>{a_1, ..., a_n}</code>. Then, <code>FoldSet( Op, b, C )</code> is defined as follows:</p>
+<ol>
+<li>If <code>C</code> is empty, then <code>FoldSet( Op, b, {} ) = b</code>, regardless of <code>Op</code></li>
+<li>If <code>C</code> is nonempty, we establish a recursive relation between folding over <code>C</code> and folding over some subset of <code>C</code> in the following way: <code>FoldSet( Op, b, C ) = FoldSet( Op, Op(b, x), C \ {x} )</code>, where <code>x</code> is some arbitrary member of <code>C</code> (e.g. <code>x = CHOOSE y \in C: TRUE</code>). Note that Apalache does not guarantee a deterministic choice of <code>x</code>, unlike what using  <code>CHOOSE</code> would imply.</li>
+</ol>
+<p>Note that the above are definitions of a <em>left fold</em> in the literature. Apalache does not implement a right fold.</p>
+<p>For example, if <code>C</code> is the sequence <code>&lt;&lt;x,y,z&gt;&gt;</code>, the result is equal to <code>Op( Op( Op(b, x), y), z)</code>. If <code>C = {x,y}</code>, the result is either <code>Op( Op(b, x), y)</code> or <code>Op( Op(b, y), x)</code>. Because the order of elements selected from a set is not predefined, users should be careful, as the result is only uniquely defined in the case that the operator is both associative (<code>Op(Op(a,b),c) = Op(a,Op(b,c))</code>) and commutative (<code>Op(a,b) = Op(b,a)</code>). </p>
+<p>For example, consider the operator <code>Op(p,q) == 2 * p + q</code>, which is noncommutative, and the set <code>S = {1,2,3}</code>. The value of <code>FoldSet(Op, 0, S)</code> depends on the order in which Apalache selects elements from S:</p>
+<table><thead><tr><th>Order</th><th>FoldSet value</th></tr></thead><tbody>
+<tr><td>1 -&gt; 2 -&gt; 3</td><td>11</td></tr>
+<tr><td>1 -&gt; 3 -&gt; 2</td><td>12</td></tr>
+<tr><td>2 -&gt; 1 -&gt; 3</td><td>13</td></tr>
+<tr><td>2 -&gt; 3 -&gt; 1</td><td>15</td></tr>
+<tr><td>3 -&gt; 1 -&gt; 2</td><td>16</td></tr>
+<tr><td>3 -&gt; 2 -&gt; 1</td><td>17</td></tr>
+</tbody></table>
+<p>Because Apalache does not guarantee deterministic choice in the order of iteration, users should treat all of the above results as possible outcomes.</p>
+<h3><a class="header" href="#using-fold-operators-in-apalache" id="using-fold-operators-in-apalache">Using fold operators in Apalache</a></h3>
+<p>As shown by the type signature, Apalache permits a very general form of folding, where the types of the collection elements and the type of the base element/return-type of the operator do not have to match. Again, we urge users to exercise caution when using <code>FoldSet</code> with an operator, for which the types <code>a</code> and <code>b</code> are different, as such operators cannot be commutative or associative, and therefore the result is not guaranteed to be unique and predictable. </p>
+<p>The other component of note is <code>operator</code>, the <em>name</em> (not definition) of some binary operator, which is available in this context. The following are examples of valid uses of folds:</p>
+<pre><code class="language-tla">PlusOne(p,q) == p + q + 1
+X == FoldSet( PlusOne, 0, {1,2,3} ) \* X = 9 
+
+X == LET Count(p,q) == p + 1 IN FoldSeq( Count, 0, &lt;&lt;1,2,3&gt;&gt; ) \* X = 3
+</code></pre>
+<p>while these next examples are considered invalid:</p>
+<pre><code class="language-tla">\* LAMBDAS in folds are not supported by Apalache
+\* Define a LET-IN operator Plus(p,q) == p + q instead
+X == FoldSet( LAMBDA p,q: p + q, 0, {1,2,3} ) 
+
+\* Built-in operators cannot be called by name in Apalache
+\* Define a LET-IN operator Plus(p,q) == p + q instead
+X == FoldSet( + , 0, {1,2,3} )
+</code></pre>
+<p>Local LET definitions can also be used as closures:</p>
+<pre><code>A(x) == LET PlusX(p,q) == p + q + x IN FoldSeq( PlusX, 0, &lt;&lt;1,2,3&gt;&gt; )
+
+X == A(1) \* X = 9
+</code></pre>
+<h3><a class="header" href="#folding-vs-recursion" id="folding-vs-recursion">Folding VS recursion</a></h3>
+<p>While TLA+ allows users to write arbitrary recursive operators, they are, in our experience, mostly used to implement collection traversals. Consider the following implementations of a <code>Max</code> operator, which returns the largest element of a sequence:</p>
+<pre><code class="language-tla">\* Max(&lt;&lt;&gt;&gt;) = -inf, but integers are unbounded in TLA+, 
+\* so there is no natural minimum like MIN_INT in programming languages
+CONSTANT negInf 
+
+RECURSIVE MaxRec(_)
+MaxRec(seq) == IF seq = &lt;&lt;&gt;&gt;
+               THEN negInf
+               ELSE LET tailMax == MaxRec(Tail(seq))
+                    IN IF tailMax &gt; Head(seq)
+                       THEN tailMax
+                       ELSE Head(seq)
+
+MaxFold(seq) == LET Max(p,q) == IF p &gt; q THEN p ELSE q
+                IN FoldSeq( Max, negInf, seq )
+</code></pre>
+<p>The first advantage of the fold implementation, we feel, is that it is much more clear and concise. It also does not require a termination condition, unlike the recursive case.
+One inherent problem of using recursive operators with a symbolic encoding, is the inability to estimate termination.
+While it may be immediately obvious to a human, that <code>MaxRec</code> terminates after no more than <code>Len(seq)</code> steps, automatic termination analysis is, in general, a rather complex and incomplete form of static analysis.
+Apalache addresses this by finitely unrolling recursive operators and requires users to provide unroll limits (<code>UNROLL_LIMIT_MaxRec == ...</code>), which serve as a static upper bound to the number of recursive re-entries, because in general, recursive operators may take an unpredictable number of steps (e.g. computing the <a href="https://en.wikipedia.org/wiki/Collatz_conjecture">Collatz sequence</a>) or never terminate at all.
+Consider a minor adaptation of the above example, where the author made a mistake in implementing the operator:</p>
+<pre><code class="language-tla">RECURSIVE MaxRec(_)
+MaxRec(seq) == IF seq = &lt;&lt;&gt;&gt;
+               THEN negInf
+               ELSE LET tailMax == MaxRec( seq ) \* forgot Tail!
+                    IN IF tailMax &gt; Head(seq)
+                       THEN tailMax
+                       ELSE Head(seq)
+</code></pre>
+<p>Now, <code>MaxRec</code> never terminates, but spotting this error might not be trivial at a glance. This is where we believe folds hold the second advantage: <code>FoldSet</code> and <code>FoldSeq</code> <em>always terminate</em> in <code>Cardinality(set)</code> or <code>Len(seq)</code> steps, and each step is simple to describe, as it consists of a single operator application.</p>
+<p>In fact, the vast majority of the traditionally recursive operators can be equivalently rewritten as folds, for example:</p>
+<pre><code class="language-tla">RECURSIVE Cardinality(_)
+Cardinality(set) == IF set = {}
+                    THEN 0
+                    ELSE LET x == CHOOSE y \in set: TRUE
+                         IN 1 + Cardinality( set \ {x} )
+
+CardinalityFold(set) == LET Count(p,q) == p + 1 \* the value of q, the set element, is irrelevant
+                        IN FoldSet( Count, 0, set )
+</code></pre>
+<p>Notice that, in the case of sets, picking an arbitrary element <code>x</code>, to remove from the set at each step, utilizes the <code>CHOOSE</code> operator. This is a common trait shared by many operators that implement recursion over sets. 
+Since the introduction of folds, the use of <code>CHOOSE</code> in Apalache is heavily discouraged as it is both inefficient, as well as nondeterministic (unlike how <code>CHOOSE</code> is defined in TLA+ literature). For details, see the discussion in <a href="https://github.com/informalsystems/apalache/issues/841">issue 841</a>.</p>
+<p>So the third advantage of using folds is the  ability to, almost always, avoid using the <code>CHOOSE</code> operator.</p>
+<p>The downside of folding, compared to general recursion, is the inability to express non-primitively recursive functions.
+For instance, one cannot define the <a href="https://en.wikipedia.org/wiki/Ackermann_function">Ackermann function</a>, as a fold. We find that in most specifications, this is not something the users would want to implement anyway, so in practice, we believe it is almost always better to use fold over recursive functions.</p>
+<h3><a class="header" href="#folding-vs-quantification-and-choose" id="folding-vs-quantification-and-choose">Folding VS quantification and <code>CHOOSE</code></a></h3>
+<p>Often, folding can be used to select a value from a collection, which could alternatively be described by a predicate and selected with <code>CHOOSE</code>. Let us revisit the <code>MaxFold</code> example:</p>
+<pre><code class="language-tla">MaxFold(seq) == LET Max(p,q) == IF p &gt; q THEN p ELSE q
+                IN FoldSeq( Max, negInf, seq )
+</code></pre>
+<p>The fold-less case could, instead of using recursion, compute the maximum as follows:</p>
+<pre><code class="language-tla">MaxChoose(seq) == 
+  LET Range == {seq[i] : i \in DOMAIN seq} 
+  IN CHOOSE m \in Range : \A n \in Range : m &gt;= n
+</code></pre>
+<p>The predicate-based approach might result in a more compact specification, but that is because specifications have no notion of execution or complexity. Automatic verification tools, such as Apalache, the job of which includes finding witnesses to predicates, can work much faster with the fold approach. The reason is that <em>evaluating</em> <code>CHOOSE x \in S : \A y \in S: P(x,y)</code> is quadratic in the size of <code>S</code> (in a symbolic approach this is w.r.t. the number of constraints). For each candidate <code>x</code>, the entire set <code>S</code> must be tested for <code>P(x,_)</code>. On the other hand, the fold approach is linear in the size of <code>S</code>, since each element is visited exactly once. </p>
+<p>In addition, the fold approach admits no undefined behavior. If, in the above example, <code>seq</code> was an empty sequence, the value of the computed maximum depends on the value of <code>CHOOSE x \in {}: TRUE</code>, which is undefined in TLA+, while the fold-based approach allows the user to determine behavior in that scenario (via the initial value).</p>
+<p>Our general advice is to use folds over <code>CHOOSE</code> with quantified predicates wherever possible, if you're willing accept a very minor increase in specification size in exchange for a decrease in Apalache execution time, or, if you wish to avoid <code>CHOOSE</code> over empty sets resulting in undefined behavior.</p>
+<h3><a class="header" href="#examples-the-versatility-of-folds" id="examples-the-versatility-of-folds">Examples: The versatility of folds</a></h3>
+<p>Here we give some examples of common operators, implemented using folds:</p>
+<pre><code class="language-tla">----- MODULE FoldDefined -----
+
+EXTENDS Apalache
+
+\*  Sum of all values of a set of integers
+Sum(set) == LET Plus(p,q) == p + q IN FoldSet( Plus, 0, set )
+
+\*  Re-implementation of UNION setOfSets
+BigUnion(setOfSets) == LET Union(p,q) == p \union q IN FoldSet( Union, {}, setOfSets )
+
+\*  Re-implementation of SelectSeq
+SelectSeq(seq, Test(_)) == LET CondAppend(s,e) == IF Test(e) THEN Append(s, e) ELSE s
+                           IN FoldSeq( CondAppend, &lt;&lt;&gt;&gt;, seq )
+
+\*  Quantify the elements in S matching the predicate P
+Quantify(S, P(_)) == LET CondCount(p,q) == p + IF P(q) THEN 1 ELSE 0
+                     IN FoldSet( CondCount, 0, S )
+
+\* The set of all values in seq
+Range(seq) == LET AddToSet(S, e) == S \union {e}
+              IN LET Range == FoldSeq( AddToSet, {}, seq )
+
+\* Finds the the value that appears most often in a sequence. Returns elIfEmpty for empty sequences
+Mode(seq, elIfEmpty) == LET ExtRange == Range(seq) \union {elIfEmpty}
+                        IN LET CountElem(countersAndCurrentMode, e) ==
+                             LET counters == countersAndCurrentMode[1]
+                                 currentMode == countersAndCurrentMode[2]
+                             IN LET newCounters == [ counters EXCEPT ![e] == counters[e] + 1 ]
+                                IN IF newCounters[e] &gt; newCounters[currentMode]
+                                   THEN &lt;&lt; newCounters, e &gt;&gt;
+                                   ELSE &lt;&lt; newCounters, currentMode &gt;&gt;
+                           IN FoldSeq( CountElem, &lt;&lt;[ x \in ExtRange |-&gt; 0 ], elIfEmpty &gt;&gt;, seq )[2]
+
+\* Returns TRUE iff fn is injective
+IsInjective(fn) == 
+  LET SeenBefore( seenAndResult, e ) == 
+    IF fn[e] \in seenAndResult[1]
+    THEN [ seenAndResult EXCEPT ![2] = FALSE ]
+    ELSE [ seenAndResult EXCEPT ![1] = seenAndResult[1] \union {fn[e]} ]
+  IN FoldSet( SeenBefore, &lt;&lt; {}, TRUE &gt;&gt;, DOMAIN fn )[2]
+
+================================
+</code></pre>
+<p>For the sake of comparison, we rewrite the above operators using recursion, <code>CHOOSE</code> or quantification:</p>
+<pre><code class="language-tla">----- MODULE NonFoldDefined -----
+
+EXTENDS Apalache
+
+RECURSIVE Sum(_)
+Sum(S) == IF S = {} 
+          THEN 0
+          ELSE LET x == CHOOSE y \in S : TRUE
+               IN  x + Sum(S \ {x})
+
+RECURSIVE BigUnion(_)
+BigUnion(setOfSets) == IF setOfSets = {} 
+                       THEN {}
+                       ELSE LET S == CHOOSE x \in setOfSets : TRUE
+                            IN  S \union BigUnion(setOfSets \ {x})
+
+RECURSIVE SelectSeq(_,_)
+SelectSeq(seq, Test(_)) == IF seq = &lt;&lt;&gt;&gt;
+                           THEN &lt;&lt;&gt;&gt;
+                           ELSE LET tail == SelectSeq(Tail(seq), Test)
+                                IN IF Test( Head(seq) )
+                                   THEN &lt;&lt;Head(seq)&gt;&gt; \o tail
+                                   ELSE tail
+
+RECURSIVE Quantify(_,_)
+Quantify(S, P(_)) == IF S = {} 
+                     THEN 0
+                     ELSE LET x == CHOOSE y \in S : TRUE
+                          IN (IF P(x) THEN 1 ELSE 0) + Quantify(S \ {x}, P) 
+
+RECURSIVE Range(_)
+Range(seq) == IF seq = &lt;&lt;&gt;&gt;
+              THEN {}
+              ELSE {Head(seq)} \union Range(Tail(seq))
+
+Mode(seq, elIfEmpty) == IF seq = &lt;&lt;&gt;&gt;
+                        THEN elIfEmpty 
+                        ELSE LET numOf(p) == Quantify( DOMAIN seq, LAMBDA q: q = p )
+                             IN CHOOSE x \in Range(seq): \A y \in Range(seq) : numOf(x) &gt;= numOf(y)
+
+IsInjective(fn) == \A a,b \in DOMAIN fn : fn[a] = fn[b] =&gt; a = b
+
+================================
+</code></pre>
+<p>In most cases, recursive operators are much more verbose, and the operators using <code>CHOOSE</code> and/or quantification mask double iteration (and thus have quadratic complexity). 
+For instance, the evaluation of the fold-less <code>IsInjective</code> operator actually requires the traversal of all domain pairs, instead of the single domain traversal with fold.
+In particular, <code>Mode</code>, the most verbose among the fold-defined operators, is still very readable (most LET-IN operators are introduced to improve readability, at the cost of verbosity) and quite efficient, as its complexity is linear w.r.t. the length of the sequence (the mode could also be computed directly, without a sub-call to <code>Range</code>, but the example would be more difficult to read), unlike the variant with <code>CHOOSE</code> and <code>\A</code>, which is quadratic.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../apalache/apalache-mod.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../apalache/profiling.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../apalache/apalache-mod.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../apalache/profiling.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
