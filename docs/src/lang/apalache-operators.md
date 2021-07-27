@@ -76,10 +76,21 @@ FunAsSeq( [ x \in {0,42} |-> x * x ], 3 )       \* UNDEFINED
 **Example in Python:**
 
 ```python
-def f(x):
-  return x * x
->>> [f(i) for i in Range(3)] 
+def funAsSeq(f,imax):
+  # f === { x:f(x) | x \in Dom(f) }
+  return[f.get(i) for i in range(1,imax+1)]
+def boundedFn(f, dom):
+  return { x:f(x) for x in dom } 
+f = boundedFn( lambda x: x*x, range(1,6) ) # [ x \in 1..5 |-> x * x ]
+g = boundedFn( lambda x: x*x, {0,42} )     # [ x \in {0,42} |-> x * x ]
+>>> f[1]                                   # Head( [ x \in 1..5 |-> x * x ] )  
+1
+>>> funAsSeq(f, 3)                         # FunAsSeq( [ x \in 1..5 |-> x * x ], 3 ) 
 [1,4,9]
+>>> funAsSeq(f, 3)[1]                      # Head( FunAsSeq( [ x \in 1..5 |-> x * x ], 3 ) )
+1
+>>> funAsSeq( g, 3 )                       # FunAsSeq( [ x \in {0,42} |-> x * x ], 3 )
+[None, None, None]
 ```
 
 <a name="Skolem"></a>
@@ -99,6 +110,9 @@ def f(x):
 
 **Errors:** 
 If `e` is not a Boolean expression, throws a type error. If it is Boolean, but not an existentially quantified expression, throws a `StaticAnalysisException`.
+
+**Note:**
+This is an operator produced internally by Apalache. You may see instances of this operator, when reading the `.tla` side-outputs of various passes. Manual use of this operator is discouraged and, in many cases, not supported.
 
 **Example in TLA+:**
 
@@ -126,6 +140,9 @@ Skolem( TRUE )                  \* TRUE in TLC, error in Apalache
 **Errors:** 
 If `e` is not a set, throws a type error. If the expression is a set, but is not of the form `SUBSET SS` or `[T1 -> T2]`, throws a `StaticAnalysisException`.
 
+**Note:**
+This is an operator produced internally by Apalache. You may see instances of this operator, when reading the `.tla` side-outputs of various passes. Manual use of this operator is discouraged and, in many cases, not supported.
+
 **Example in TLA+:**
 
 ```tla
@@ -152,6 +169,9 @@ Expand( 1 )            \* 1 in TLC, type error in Apalache
 **Errors:** 
 If `S` is not a Boolean expression, throws a type error. If it is Boolean, but not an existentially quantified expression, throws a `StaticAnalysisException`.
 
+**Note:**
+This is an operator produced internally by Apalache. You may see instances of this operator, when reading the `.tla` side-outputs of various passes. Manual use of this operator is discouraged and, in many cases, not supported.
+
 **Example in TLA+:**
 
 ```tla
@@ -162,4 +182,4 @@ Skolem( TRUE )                  \* TRUE in TLC, error in Apalache
 
 ## Folding
 
-The operators `FoldSet` and `FoldSeq` are explained in more detail in a dedicated section [here](...).
+The operators `FoldSet` and `FoldSeq` are explained in more detail in a dedicated section [here](../apalache/fold.md).

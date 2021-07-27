@@ -69,6 +69,7 @@
     - [Recursive operator definitions](./lang/user/recursive-operators.md)
     - [Local operator definitions](./lang/user/local-operators.md)
     - [Recursive functions](./lang/user/recursive-functions.md)
+- [Apalache-specific operators](./lang/apalache-operators.md)
 - [Modules, Extends, and Instances]()
 
 # Idiomatic TLA+
