@@ -1,4 +1,4 @@
-Folding in a nutshell
+Folding Operators
 ==========================
 
 Apalache natively implements two operators users might be familiar with from the [community modules](https://github.com/tlaplus/CommunityModules) or functional programming. Those operators are `FoldSet` and `FoldSeq`. This brief introduction to fold operators highlights the following:
@@ -13,10 +13,10 @@ Apalache natively implements two operators users might be familiar with from the
 The syntax of the fold operators is as follows:
 
 ```tla
-\* @type: ( (a, b) => a, a, Set(b) ) => a
+\* @type: ( (a, b) => a, a, Set(b) ) => a;
 FoldSet( operator, base, set )
 
-\* @type: ( (a, b) => a, a, Seq(b) ) => a
+\* @type: ( (a, b) => a, a, Seq(b) ) => a;
 FoldSeq( operator, base, seq )
 ```
 
@@ -33,10 +33,10 @@ In the case of folding over sequences, `C` is a sequence `<<a_1, ..., a_n>>`. Th
 
 #### Semantics of `FoldSet`
 
-In the case of folding over sequences, `C` is a set `{a_1, ..., a_n}`. Then, `FoldSet( Op, b, C )` is defined as follows:
+In the case of folding over sets, `C` is a set `{a_1, ..., a_n}`. Then, `FoldSet( Op, b, C )` is defined as follows:
 
-  1. If `C` is empty, then `FoldSeq( Op, b, {} ) = b`, regardless of `Op`
-  1. If `C` is nonempty, we establish a recursive relation between folding over `C` and folding over some subset of `C` in the following way: `FoldSeq( Op, b, C ) = FoldSeq( Op, Op(b, x), C \ {x} )`, where `x = CHOOSE y \in C: TRUE`. Note that Apalache selects `x` nondeterministically.
+  1. If `C` is empty, then `FoldSet( Op, b, {} ) = b`, regardless of `Op`
+  1. If `C` is nonempty, we establish a recursive relation between folding over `C` and folding over some subset of `C` in the following way: `FoldSet( Op, b, C ) = FoldSet( Op, Op(b, x), C \ {x} )`, where `x` is some arbitrary member of `C` (e.g. `x = CHOOSE y \in C: TRUE`). Note that Apalache does not guarantee a deterministic choice of `x`, unlike what using  `CHOOSE` would imply.
 
 Note that the above are definitions of a _left fold_ in the literature. Apalache does not implement a right fold.
 
@@ -54,7 +54,7 @@ For example, consider the operator `Op(p,q) == 2 * p + q`, which is noncommutati
 | 3 -> 1 -> 2 | 16 | 
 | 3 -> 2 -> 1 | 17 | 
 
-Because Apalache chooses nondeterministically, all of the above results are possible outcomes, unlike in the case of the fixed-but-unknown order that would arise from a deterministic choice.
+Because Apalache does not guarantee deterministic choice in the order of iteration, users should treat all of the above results as possible outcomes.
 
 ### Using fold operators in Apalache
 
@@ -73,7 +73,7 @@ while these next examples are considered invalid:
 
 ```tla
 \* LAMBDAS in folds are not supported by Apalache
-\* Use a local LET-IN operator instead 
+\* Define a LET-IN operator Plus(p,q) == p + q instead
 X == FoldSet( LAMBDA p,q: p + q, 0, {1,2,3} ) 
 
 \* Built-in operators cannot be called by name in Apalache
@@ -113,7 +113,7 @@ MaxFold(seq) == LET Max(p,q) == IF p > q THEN p ELSE q
 The first advantage of the fold implementation, we feel, is that it is much more clear and concise. It also does not require a termination condition, unlike the recursive case.
 One inherent problem of using recursive operators with a symbolic encoding, is the inability to estimate termination.
 While it may be immediately obvious to a human, that `MaxRec` terminates after no more than `Len(seq)` steps, automatic termination analysis is, in general, a rather complex and incomplete form of static analysis.
-Apalache addresses this by finitely unrolling recursive operators and requires users to provide unroll limits (`UNROLL_LIMIT_MaxRec == ...`), which serve as a static upper bound to the number of recursive re-entries, because in general, recursive operators may take an unpredictable number of steps (e.g. computing the Collatz sequence) or never terminate at all.
+Apalache addresses this by finitely unrolling recursive operators and requires users to provide unroll limits (`UNROLL_LIMIT_MaxRec == ...`), which serve as a static upper bound to the number of recursive re-entries, because in general, recursive operators may take an unpredictable number of steps (e.g. computing the [Collatz sequence](https://en.wikipedia.org/wiki/Collatz_conjecture)) or never terminate at all.
 Consider a minor adaptation of the above example, where the author made a mistake in implementing the operator:
 
 ```tla
@@ -146,7 +146,7 @@ Since the introduction of folds, the use of `CHOOSE` in Apalache is heavily disc
 So the third advantage of using folds is the  ability to, almost always, avoid using the `CHOOSE` operator.
 
 The downside of folding, compared to general recursion, is the inability to express non-primitively recursive functions.
-For instance, one cannot define the Ackermann function, as a fold. We find that in most specifications, this is not something the users would want to implement anyway, so in practice, we believe it is almost always better to use fold over recursive functions.
+For instance, one cannot define the [Ackermann function](https://en.wikipedia.org/wiki/Ackermann_function), as a fold. We find that in most specifications, this is not something the users would want to implement anyway, so in practice, we believe it is almost always better to use fold over recursive functions.
 
 ### Folding VS quantification and `CHOOSE`
 
@@ -160,7 +160,9 @@ MaxFold(seq) == LET Max(p,q) == IF p > q THEN p ELSE q
 The fold-less case could, instead of using recursion, compute the maximum as follows:
 
 ```tla
-MaxChoose(seq) == LET Range == {seq[i] : i \in DOMAIN seq} IN CHOOSE m \in Range : \A n \in Range : m >= n
+MaxChoose(seq) == 
+  LET Range == {seq[i] : i \in DOMAIN seq} 
+  IN CHOOSE m \in Range : \A n \in Range : m >= n
 ```
 
 The predicate-based approach might result in a more compact specification, but that is because specifications have no notion of execution or complexity. Automatic verification tools, such as Apalache, the job of which includes finding witnesses to predicates, can work much faster with the fold approach. The reason is that _evaluating_ `CHOOSE x \in S : \A y \in S: P(x,y)` is quadratic in the size of `S` (in a symbolic approach this is w.r.t. the number of constraints). For each candidate `x`, the entire set `S` must be tested for `P(x,_)`. On the other hand, the fold approach is linear in the size of `S`, since each element is visited exactly once. 
