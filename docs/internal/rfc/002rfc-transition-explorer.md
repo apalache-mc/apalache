@@ -128,10 +128,13 @@ I propose the following high-level architecture:
   interaction. (This allows us to abstract away the communication protocol and
   only consider the functional API in what follows.)
 - Introduce a new module, `ServerModule`, into the `apa-tool` package, to bind
-  the relevant passes, which lead up to, and terminate with, the
+  the relevant passes BMC passes, which lead up to, and provide input for, the
   `TransitionExplorer`, described below.
 - Introduce a new module, `TransitionExplorer` that enables the interactive
   exploration of the transition system.
+- Internally, the `TransitionExplorer` will make use of the `TransitionExecutor`
+  and relevant aspects of the `SeqModelChecker` (or slightly altered versions of
+  its methods).
 
 *NOTE*: The high-level sketch above assumes the new code organization proposed
 in [ADR 7][].
