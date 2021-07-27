@@ -4,7 +4,7 @@
     <groupId>at.forsyte.apalache</groupId>
     <artifactId>apalache</artifactId>
     <packaging>pom</packaging>
-    <version>0.15.11-SNAPSHOT</version>
+    <version>0.15.12-SNAPSHOT</version>
 
     <name>APALACHE project</name>
     <url>https://github.com/informalsystems/apalache</url>
@@ -13,8 +13,8 @@
         <scalaVersion>2.12.14</scalaVersion>
         <scalaBinaryVersion>2.12</scalaBinaryVersion>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <logback.version>1.2.3</logback.version>
-        <spotless.version>2.12.1</spotless.version>
+        <logback.version>1.2.5</logback.version>
+        <spotless.version>2.12.2</spotless.version>
     </properties>
 
     <repositories>
@@ -82,7 +82,7 @@
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
-                <version>1.7.30</version>
+                <version>1.7.32</version>
             </dependency>
 
             <dependency>

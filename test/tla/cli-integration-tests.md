@@ -437,6 +437,16 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
+### check SelectSeqTests succeeds
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 SelectSeqTests.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
 ### check Folds succeeds
 
 ```sh
@@ -1404,6 +1414,21 @@ The outcome is: Error
 EXITCODE: ERROR (12)
 ```
 
+### check bug #874
+
+Unhandled `IllegalArgumentException` when accessing a non-existent field on a
+record.
+
+See https://github.com/informalsystems/apalache/issues/874
+
+```sh
+$ apalache-mc check Bug874.tla | sed 's/[IEW]@.*//'
+...
+Bug874.tla:4:17-4:27: Input error (see the manual): Access to non-existent record field b in (["a" ↦ 2])["b"]
+...
+EXITCODE: ERROR (255)
+```
+
 ## running the typecheck command
 
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
@@ -1768,6 +1793,53 @@ Type checker [OK]
 EXITCODE: OK
 ```
 
+### typecheck bug #860
+
+Unhandled exception thrown when type-checking a spec that uses the wrong
+annotation syntax for operators.
+
+See https://github.com/informalsystems/apalache/issues/860
+
+```sh
+$ apalache-mc typecheck Bug860.tla | sed 's/[IEW]@.*//'
+...
+Parsing error in the type annotation:  (Int, Int) -> Bool
+Typing input error: Parser error in type annotation of Op: '=>' expected but -> found
+...
+EXITCODE: ERROR (255)
+```
+
+### typecheck bug #832
+
+Unhandled exception thrown due to incorrect annotation of a tuple return
+type.
+
+See https://github.com/informalsystems/apalache/issues/832
+
+```sh
+$ apalache-mc typecheck Bug832.tla | sed 's/[IEW]@.*//'
+...
+Parsing error in the type annotation:  () => (Bool, Bool)
+Typing input error: Parser error in type annotation of Example: '->' expected but ) found
+...
+EXITCODE: ERROR (255)
+```
+
+### typecheck bug #925
+
+Type unification should not recurse infinitely.
+
+See: https://github.com/informalsystems/apalache/issues/925
+
+```sh
+$ apalache-mc typecheck Bug925.tla | sed 's/[IEW]@.*//'
+...
+[Bug925.tla:7:1-7:24]: Expected ((b) => [f: Set(b)]) in Optional. Found: ((a) => [f: a])
+[Bug925.tla:7:1-7:24]: Error when computing the type of Optional
+...
+EXITCODE: ERROR (255)
+```
+
 ## Running the config command
 
 ### config --enable-stats=false
@@ -1789,4 +1861,3 @@ Statistics collection is ON.
 ...
 EXITCODE: OK
 ```
-

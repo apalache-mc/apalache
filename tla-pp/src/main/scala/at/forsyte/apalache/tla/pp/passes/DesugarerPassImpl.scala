@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
-import at.forsyte.apalache.tla.pp.{Desugarer, UniqueNameGenerator}
+import at.forsyte.apalache.tla.pp.{Desugarer, SelectSeqAsFold, UniqueNameGenerator}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -42,7 +42,8 @@ class DesugarerPassImpl @Inject() (
   override def execute(): Boolean = {
     logger.info("  > Desugaring...")
     val input = tlaModule.get
-    val output = ModuleByExTransformer(Desugarer(gen, tracker))(input)
+    val afterDesug = ModuleByExTransformer(Desugarer(gen, tracker))(input)
+    val output = ModuleByExTransformer(SelectSeqAsFold(gen, tracker))(afterDesug)
 
     // dump the result of preprocessing
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
