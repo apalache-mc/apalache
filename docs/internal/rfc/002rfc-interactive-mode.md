@@ -22,7 +22,7 @@ Users of Apalache have voiced a need for the following general behaviors:
 - interactive selection of checking strategies
 - interactive selection of parameter values
 
-The discussion around these needs is summarized and linked from 
+The discussion around these needs is summarized and linked from
 https://github.com/informalsystems/apalache/issues/79 .
 
 The upshot is this: we can provide value by adding a utility that will allow
@@ -33,7 +33,7 @@ by a given TLA+ spec.
 
 ### Overview
 
-In the current architecture, there is a single mode of operation in which 
+In the current architecture, there is a single mode of operation in which
 
 - the user invokes Apalache with an initial configuration,
 - and the model checker proper then drives the
@@ -67,47 +67,47 @@ on our GitHub issues:
 |TRANS-EX.1::EXPLORE.1|
 : enable exploring model checking results for a spec without repeated
   preprocessing costs
-  (https://github.com/informalsystems/apalache/issues/730#issue-855835332) 
+  (https://github.com/informalsystems/apalache/issues/730#issue-855835332)
 
-|TRANS-EX.1::LOAD.1| 
+|TRANS-EX.1::LOAD.1|
 : can load and unload specs
   (https://github.com/informalsystems/apalache/issues/730#issuecomment-818201654)
 
 |TRANS-EX.1::EXTENSIBLE.1|
 : The transition explorer should be extensible in the following ways:
 
-    |TRANS-EX.1::EXTENSIBLE.1::CLOUD.1| 
-    : extensible for cloud-based usage
+|TRANS-EX.1::EXTENSIBLE.1::CLOUD.1|
+: extensible for cloud-based usage
 
-    |TRANS-EX.1::EXTENSIBLE.1::LSP.1| 
-    : extensible for LSP support
+|TRANS-EX.1::EXTENSIBLE.1::LSP.1|
+: extensible for LSP support
 
-    |TRANS-EX.1::EXTENSIBLE.1::CLI.1| 
-    : extensible for interactive terminal usage |
+|TRANS-EX.1::EXTENSIBLE.1::CLI.1|
+: extensible for interactive terminal usage |
 
 |TRANS-EX.1::SBMC.1|
 : exposes symbolic model checking (https://github.com/informalsystems/apalache/issues/730#issue-855835332)
 
-    |TRANS-EX.1::SBMC.1::ADVANCE.1|
-    : can incrementally advance steps
+|TRANS-EX.1::SBMC.1::ADVANCE.1|
+: can incrementally advance steps
 
-    |TRANS-EX.1::SBMC.1::ROLLBACK.1|
-    : can incrementally rollback steps
+|TRANS-EX.1::SBMC.1::ROLLBACK.1|
+: can incrementally rollback steps
 
-    |TRANS-EX.1::SBMC.1::TRANSITIONS.1|
-    : sends data on available transitions
+|TRANS-EX.1::SBMC.1::TRANSITIONS.1|
+: sends data on available transitions
 
-    |TRANS-EX.1::SBMC.1::SELECT.1|
-    : receives selection to execute specific transition
+|TRANS-EX.1::SBMC.1::SELECT.1|
+: receives selection to execute specific transition
 
-    |TRANS-EX.1::SBMC.1::COUNTER.1|
-    : supports enumerating counterexamples
-      (https://github.com/informalsystems/apalache/issues/79#issue-534407916)
-    
-    |TRANS-EX.1::SBMC.1::PARAMS.1|
-    : supports enumerating parameter values (`CONSTANTS`) that lead to a
-      counterexample
-      (https://github.com/informalsystems/apalache/issues/79#issuecomment-576449107)
+|TRANS-EX.1::SBMC.1::COUNTER.1|
+: supports enumerating counterexamples
+    (https://github.com/informalsystems/apalache/issues/79#issue-534407916)
+
+|TRANS-EX.1::SBMC.1::PARAMS.1|
+: supports enumerating parameter values (`CONSTANTS`) that lead to a
+    counterexample
+    (https://github.com/informalsystems/apalache/issues/79#issuecomment-576449107)
 
 
 ### Architecture
@@ -121,9 +121,9 @@ I propose the following high-level architecture:
   interaction. (This allows us to abstract away the communication protocol and
   only consider the functional API in what follows.)
 - Introduce a new module, `ServerModule`, into the `apa-tool` package, to bind
-  the relevant passes, which lead up to, and terminate with, the 
+  the relevant passes, which lead up to, and terminate with, the
   `TransitionExplorer`, described below.
-- Introduce a new module, `TransitionExplorer` that abstracts over the 
+- Introduce a new module, `TransitionExplorer` that abstracts over the
 
 *NOTE*: The high-level sketch above assumes the new code organization proposed
 in [ADR 7][].
@@ -152,12 +152,12 @@ trait TransitionExplorer {
    *
    * Returns the explorer to a state as if the currently loaded model where
    * freshly loaded. Used to restart exploration from a clean slate.
-   * 
+   *
    * [TRANS-EX.1::LOAD.1]
    */
 
   def reset(): Unit
-  
+
   /** Load a model for exploration
    *
    * If a model is already loaded, it will be replaced and the state of the exploration
@@ -165,13 +165,13 @@ trait TransitionExplorer {
    *
    * [TRANS-EX.1::QCHECK.1]
    * [TRANS-EX.1::LOAD.1]
-   * 
+   *
    * @param spec the TLA+ specification defining the
    * @return `Left(LoadErr)` if parsing or loading the model from `spec` goes
    *          wrong, or `Right(())` if the model is loaded successfully.
    */
   def loadModel(spec: String): Either[LoadErr, Unit]
-  
+
   /**  The root module currently loaded in memory  */
   def loadedModel: Option[TlaModule]
 
@@ -179,7 +179,7 @@ trait TransitionExplorer {
    *
    * Since the number of computable initial states can be infinite, an upper
    * limit must be set.
-   * 
+   *
    * @params max the maximum number of initial states to return (default to 100)
    * @params start the nth state to begin fetching from (defaults to 0)
    * @return `Some(exprs)` where `exprs` are `n` computed initial states, with
@@ -194,7 +194,7 @@ trait TransitionExplorer {
    *
    * Since the number of computable transitions can be infinite, an upper
    * limit must be set.
-   * 
+   *
    * @params max the maximum number of initial states to return (default to 100)
    * @params start the nth state to begin fetching from (defaults to 0)
    * @return `Some(exprs)` where `exprs` are `n` computed initial states, with
@@ -216,28 +216,28 @@ trait TransitionExplorer {
   /**  The next state achieved by applying a transition non-deterministically
    *
    * [TRANS-EX.1::SBMC.1::ADVANCE.1]
-   * 
+   *
    * @return `Left[err]` if the checker encounters an error, or Right[]  */
   def nextState(): Either[CheckErr, StateMap]
 
   /**  Step the exploration back to the previous state
-   * 
+   *
    * [TRANS-EX.1::SBMC.1::ROLLBACK.1]
-   * 
+   *
    */
   def previousState(): Either[CheckErr, StateMap]
 
   /** The actions that can be applied to the current state
    *
    * [TRANS-EX.1::SBMC.1::TRANSITIONS.1]
-   * 
+   *
    */
   def enabledActions(): Option[List[TlaEx]]
 
   /** The next state, achieved by applying the given action
    *
    * |TRANS-EX.1::SBMC.1::SELECT.1|
-   * 
+   *
    */
   def applyAction(action: TlaEx): Either[CheckErr, StateMap]
 
@@ -245,9 +245,9 @@ trait TransitionExplorer {
   def executionFragment: Option[Execution]
 
   /** Enumerate counter examples based on an execution
-   * 
+   *
    * [TRANS-EX.1::SBMC.1::COUNTER.1]
-   * 
+   *
    */
   def enumerateCounterExamples(
     execution: Execution,
@@ -258,7 +258,7 @@ trait TransitionExplorer {
   /** Enumerate counter examples based on partitioning of state space
    *
    * [TRANS-EX.1::SBMC.1::COUNTER.1]
-   * 
+   *
    * NOTE: The mechanics of this are currently unclear to me.
    */
   def enumerateCounterExamplesByState(
@@ -310,4 +310,4 @@ Using gRPC can help satisfy [TRANS-EX.1::EXTENSIBLE.1] in the following ways:
 - [TRANS-EX.1::EXTENSIBLE.1::CLI.1] can be satisfied by implementing a CLI
   client that we can launch via an Apalache subcommand.
 - [TRANS-EX.1::EXTENSIBLE.1::LSP.1] is not directly enabled, but it should not
-  be blocked either. 
+  be blocked either.
