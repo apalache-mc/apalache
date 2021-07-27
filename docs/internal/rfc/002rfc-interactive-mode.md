@@ -1,5 +1,19 @@
 # RFC-002: Implementation of Transition Exploration Server
 
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+**Table of Contents**
+
+- [RFC-002: Implementation of Transition Exploration Server](#rfc-002-implementation-of-transition-exploration-server)
+    - [Problem](#problem)
+    - [Proposal](#proposal)
+        - [Overview](#overview)
+        - [Requirements](#requirements)
+        - [Architecture](#architecture)
+            - [API](#api)
+            - [Protocol](#protocol)
+
+<!-- markdown-toc end -->
+
 ## Problem
 
 Users of Apalache have voiced a need for the following general behaviors:
