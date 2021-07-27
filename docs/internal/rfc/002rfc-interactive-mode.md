@@ -1,19 +1,8 @@
 # RFC-002: Implementation of Transition Exploration Server
 
-TODO:
-
-- [x] Review the github discussion to gather requirements
-- [x] Read adr-3
-- [ ] Review source code, to see current state of TransitionExecutor
-    - [ ] Find point at which executor gets called by the checker
-- [ ] Sketch denotational design
-  - [ ] Maybe - Sketch a denotational model of the domain
-  - [ ] Maybe - Syntax for the language to manipulate domain
-- [ ] Write up design
-
 ## Problem
 
-Users of Apalache have voiced a need for the following behaviors:
+Users of Apalache have voiced a need for the following general behaviors:
 
 - incremental results (that can be iterated to exhaustively enumerate all counterexamples)
 - interactive selection of checking strategies
@@ -57,23 +46,54 @@ server, perhaps as a simple web application.
 The following requirements have been gathered through conversation and discussion
 on our GitHub issues:
 
-1. enable checking specs without repeated JVM startup costs
+|TRANS-EX.1::QCHECK.1|
+: enable checking specs without repeated JVM startup costs
   (https://github.com/informalsystems/apalache/issues/730#issue-855835332)
-2. enable exploring model checking results for a spec without repeated
+
+|TRANS-EX.1::EXPLORE.1|
+: enable exploring model checking results for a spec without repeated
   preprocessing costs
   (https://github.com/informalsystems/apalache/issues/730#issue-855835332) 
-3. can load and unload specs (https://github.com/informalsystems/apalache/issues/730#issuecomment-818201654)
-4. extensible for cloud-based usage
-5. extensible for LSP support
-6. extensible for interactive terminal usage
-7. exposes symbolic model checking (https://github.com/informalsystems/apalache/issues/730#issue-855835332)
 
-   (i) can incrementally advance steps
-   (ii) can incrementally rollback steps
-   (iii) sends data on available transitions
-   (iv) receives selection to execute specific transition
-   (v) supports enumerating counterexamples
-   (vi) supports enumerating parameter values (`CONSTANTS`) that lead to a counterexample (https://github.com/informalsystems/apalache/issues/79#issuecomment-576449107)
+|TRANS-EX.1::LOAD.1| 
+: can load and unload specs
+  (https://github.com/informalsystems/apalache/issues/730#issuecomment-818201654)
+
+|TRANS-EX.1::EXTENSIBLE.1|
+: The transition explorer should be extensible in the following ways:
+
+    |TRANS-EX.1::EXTENSIBLE.1::CLOUD.1| 
+    : extensible for cloud-based usage
+
+    |TRANS-EX.1::EXTENSIBLE.1::LSP.1| 
+    : extensible for LSP support
+
+    |TRANS-EX.1::EXTENSIBLE.1::CLI.1| 
+    : extensible for interactive terminal usage |
+
+|TRANS-EX.1::SBMC.1|
+: exposes symbolic model checking (https://github.com/informalsystems/apalache/issues/730#issue-855835332)
+
+    |TRANS-EX.1::SBMC.1::ADVANCE.1|
+    : can incrementally advance steps
+
+    |TRANS-EX.1::SBMC.1::ROLLBACK.1|
+    : can incrementally rollback steps
+
+    |TRANS-EX.1::SBMC.1::TRANSITIONS.1|
+    : sends data on available transitions
+
+    |TRANS-EX.1::SBMC.1::SELECT.1|
+    : receives selection to execute specific transition
+
+    |TRANS-EX.1::SBMC.1::COUNTER.1|
+    : supports enumerating counterexamples
+      (https://github.com/informalsystems/apalache/issues/79#issue-534407916)
+    
+    |TRANS-EX.1::SBMC.1::PARAMS.1|
+    : supports enumerating parameter values (`CONSTANTS`) that lead to a
+      counterexample
+      (https://github.com/informalsystems/apalache/issues/79#issuecomment-576449107)
 
 
 ### Architecture
@@ -86,16 +106,155 @@ I propose the following high-level architecture:
 - Use an RPC protocol to allow client and server mutually transparent
   interaction. (This allows us to abstract away the communication protocol and
   only consider the functional API in what follows.)
-- Introduce a new module, `ServerModule`, into the `apa-tool` package, which
-  will provide an abstraction over the `TransitionExecutor` in `apa-base`
+- Introduce a new module, `ServerModule`, into the `apa-tool` package, to bind
+  the relevant passes, which lead up to, and terminate with, the 
+  `TransitionExplorer`, described below.
+- Introduce a new module, `TransitionExplorer` that abstracts over the 
 
-*NOTE*: This sketch assumes the new code organization proposed in [ADR 7]( https://github.com/informalsystems/apalache/tree/unstable/docs/src/adr/007adr-restructuring.md).
+*NOTE*: The high-level sketch above assumes the new code organization proposed
+in [ADR 7][].
+
+[ADR 7]: https://github.com/informalsystems/apalache/tree/unstable/docs/src/adr/007adr-restructuring.md
 
 #### API
 
-~/Sync/informal-systems/apalache/apalache-core/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/trex/TransitionExecutorImpl.scala
+The following is a rough sketch of the proposed API for the transition explorer.
+It attempts to give a highly abstracted interface, but in terms of existing data
+structures. Naturally, refinements and alterations are to be expected during
+implementation.
 
-https://github.com/informalsystems/apalache/tree/9e64fd2f1cccc5584524b3f3e884a64355abd64d/docs/src/adr/007adr-restructuring.md
+```scala
+
+/** A state is a map from variables to values  */
+type StateMap = Map[TlaEx, TlaEx]
+
+/** An execution is an alternating sequence of states and actions
+ *  terminating with a state */
+type Execution = List[Either[StateMap, TlaEx]]
+
+trait TransitionExplorer {
+
+  /** Reset the state of the explorer
+   *
+   * Returns the explorer to a state as if the currently loaded model where
+   * freshly loaded. Used to restart exploration from a clean slate.
+   * 
+   * [TRANS-EX.1::LOAD.1]
+   */
+
+  def reset(): Unit
+  
+  /** Load a model for exploration
+   *
+   * If a model is already loaded, it will be replaced and the state of the exploration
+   * [[reset]].
+   *
+   * [TRANS-EX.1::QCHECK.1]
+   * [TRANS-EX.1::LOAD.1]
+   * 
+   * @param spec the TLA+ specification defining the
+   * @return `Left(LoadErr)` if parsing or loading the model from `spec` goes
+   *          wrong, or `Right(())` if the model is loaded successfully.
+   */
+  def loadModel(spec: String): Either[LoadErr, Unit]
+  
+  /**  The root module currently loaded in memory  */
+  def loadedModel: Option[TlaModule]
+
+  /** The initial states of the model
+   *
+   * Since the number of computable initial states can be infinite, an upper
+   * limit must be set.
+   * 
+   * @params max the maximum number of initial states to return (default to 100)
+   * @params start the nth state to begin fetching from (defaults to 0)
+   * @return `Some(exprs)` where `exprs` are `n` computed initial states, with
+   *         `n` <= `max`, or `None` if no model is loaded.
+   */
+  def initialStates(max: Int = 100, start: Int = 0): Option[TlaEx]
+
+  /**  The initial state predicates given in the spec  */
+  def initialStatePredicates: Option[TlaEx]
+
+  /** The "next" state transitions given in the spec
+   *
+   * Since the number of computable transitions can be infinite, an upper
+   * limit must be set.
+   * 
+   * @params max the maximum number of initial states to return (default to 100)
+   * @params start the nth state to begin fetching from (defaults to 0)
+   * @return `Some(exprs)` where `exprs` are `n` computed initial states, with
+   *         `n` <= `max`, or `None` if no model is loaded.
+   */
+  def nextTransitionPredicates: Option[TlaEx]
+
+  def invariants: Option[CheckerInputVC]
+
+  /** Setting constants will also reset the explorer */
+  def initializeConstants(Map[TlaExp, TlaExp]): Either[LoadErr, Unit]
+
+  /** Gives a map of constants to their current values   */
+  def constants: Option[Map[TlaEx, Option[TlaEx]]]
+
+  /** The current state, as a map from variables to values */
+  def currentState: Option[StateMap]
+
+  /**  The next state achieved by applying a transition non-deterministically
+   *
+   * [TRANS-EX.1::SBMC.1::ADVANCE.1]
+   * 
+   * @return `Left[err]` if the checker encounters an error, or Right[]  */
+  def nextState(): Either[CheckErr, StateMap]
+
+  /**  Step the exploration back to the previous state
+   * 
+   * [TRANS-EX.1::SBMC.1::ROLLBACK.1]
+   * 
+   */
+  def previousState(): Either[CheckErr, StateMap]
+
+  /** The actions that can be applied to the current state
+   *
+   * [TRANS-EX.1::SBMC.1::TRANSITIONS.1]
+   * 
+   */
+  def enabledActions(): Option[List[TlaEx]]
+
+  /** The next state, achieved by applying the given action
+   *
+   * |TRANS-EX.1::SBMC.1::SELECT.1|
+   * 
+   */
+  def applyAction(action: TlaEx): Either[CheckErr, StateMap]
+
+  /** The execution from the selected initial state up to the [[currentState]]  */
+  def executionFragment: Option[Execution]
+
+  /** Enumerate counter examples based on an execution
+   * 
+   * [TRANS-EX.1::SBMC.1::COUNTER.1]
+   * 
+   */
+  def enumerateCounterExamples(
+    execution: Execution,
+    max: Int = 100,
+    start: Int = 0
+  ): List[TlaEx]
+
+  /** Enumerate counter examples based on partitioning of state space
+   *
+   * [TRANS-EX.1::SBMC.1::COUNTER.1]
+   * 
+   * NOTE: The mechanics of this are currently unclear to me.
+   */
+  def enumerateCounterExamplesByState(
+    partialState: StateMap,
+    otherState: StateMap,
+    max: Int = 100,
+    start: Int = 0
+  ): List[TlaEx]
+}
+```
 
 #### Protocol
 
@@ -127,20 +286,14 @@ For a discussion of some comparison between JSON-rpc and gRPC, see
 - https://www.mertech.com/blog/know-your-api-protocols
 - https://stackoverflow.com/questions/58767467/what-the-difference-between-json-rpc-with-http2-vs-grpc
 
-### Phases
+I have asked internally, and engineers on both `tendermint-rs` and `hermes` have
+vouched for the ease of use and reliability of gRPC.
 
-- Take current checker module, but instead of running it, start a server, a process queries to the transition executor (specified in ADR3)
-- Let's also bake in support for LSP protocol support.
-- Should also feed into online use
-- Should feed into REPL usage?
-- RPC into the transition executor ADR
-  - Gives us more incrementality
-  - Will let us roll back and take different steps
-  - Let's us expose the "symbolic execution" functionality
-    - We're actually doing symbolic execution, but even more powerfully than many applications (because we explore branches)
-- Aim is to avoid adding too m
-- Let's aim for a deep API
-- Symbolic model checking is very easy, in a sense.
-  - Not so much to it.
-  - Once we have the translation into SMT, the model checking is simple.
-- Recalling the DFS mode we had before
+Using gRPC can help satisfy [TRANS-EX.1::EXTENSIBLE.1] in the following ways:
+
+- [TRANS-EX.1::EXTENSIBLE.1::CLOUD.1] should be satisfied out of the box, since
+  HTTP is the default transport for gRPC.
+- [TRANS-EX.1::EXTENSIBLE.1::CLI.1] can be satisfied by implementing a CLI
+  client that we can launch via an Apalache subcommand.
+- [TRANS-EX.1::EXTENSIBLE.1::LSP.1] is not directly enabled, but it should not
+  be blocked either. 
