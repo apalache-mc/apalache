@@ -199,8 +199,8 @@ trait TransitionExplorer {
    */
   def initialStates(max: Int = 100, start: Int = 0): Option[List[State]]
 
-  /**  The initial state predicates given in the spec  */
-  def initialStatePredicates: Option[List[TlaEx]]
+  /**  The initial state predicate given in the spec  */
+  def initialStatePredicate: Option[TlaEx]
 
   /** The action predicates defining "next" transitions given in the spec
    *
