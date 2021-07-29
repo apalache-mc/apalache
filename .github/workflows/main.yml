@@ -57,11 +57,6 @@ jobs:
         operating-system: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v2
-      - name: Cache local opam repository
-        uses: actions/cache@v2
-        with:
-          path: ~/.opam
-          key: ${{ runner.os }}-opam-4.11.0
       - name: Set up opam
         uses: ocaml/setup-ocaml@v2
         with:
@@ -89,11 +84,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Cache local opam repository
-        uses: actions/cache@v2
-        with:
-          path: ~/.opam
-          key: ${{ runner.os }}-opam-4.11.0
       - name: Set up opam
         uses: ocaml/setup-ocaml@v2
         with:
