@@ -63,9 +63,9 @@ jobs:
           path: ~/.opam
           key: ${{ runner.os }}-opam-4.11.0
       - name: Set up opam
-        uses: avsm/setup-ocaml@v1
+        uses: ocaml/setup-ocaml@v2
         with:
-          ocaml-version: 4.11.0
+          ocaml-compiler: 4.11.0
       - name: Install mdx
         run: |
           opam pin https://github.com/realworldocaml/mdx.git#e5a86b0b0588d07cabbb3b1bedde84d1ebb35d1b
@@ -95,9 +95,9 @@ jobs:
           path: ~/.opam
           key: ${{ runner.os }}-opam-4.11.0
       - name: Set up opam
-        uses: avsm/setup-ocaml@v1
+        uses: ocaml/setup-ocaml@v2
         with:
-          ocaml-version: 4.11.0
+          ocaml-compiler: 4.11.0
       - name: Install mdx
         run: |
           opam pin https://github.com/realworldocaml/mdx.git#e5a86b0b0588d07cabbb3b1bedde84d1ebb35d1b
