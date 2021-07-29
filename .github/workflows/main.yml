@@ -2,8 +2,6 @@ on: [pull_request]
 
 name: build
 
-# trigger build
-
 jobs:
   build-mdbook:
     runs-on: ubuntu-latest
