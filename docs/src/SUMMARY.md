@@ -40,6 +40,7 @@
 
 - [Overview](HOWTOs/index.md)
 - [How to write type annotations](./HOWTOs/howto-write-type-annotations.md)
+- [How to handle message sets](./HOWTOs/howto-handle-messages.md)
 
 # Tutorials
 
