@@ -24,22 +24,26 @@ Apalache:
 **Table of Contents**
 
 - [Contributing](#contributing)
+    - [Coordinating work](#coordinating-work)
     - [Decision Making](#decision-making)
     - [Making a pull request](#making-a-pull-request)
     - [Dependencies](#dependencies)
         - [Environment](#environment)
     - [Development Environment](#development-environment)
-        - [IntelliJ IDEA](#intellij-idea)
-        - [Emacs](#emacs)
-            - [Install `metals-emacs`](#install-metals-emacs)
-                - [Arch](#arch)
-            - [Doom Emacs](#doom-emacs)
-            - [Vanilla Emacs](#vanilla-emacs)
+        - [Formatting](#formatting)
+        - [Editors](#editors)
+            - [IntelliJ IDEA](#intellij-idea)
+            - [Emacs](#emacs)
+                - [Install `metals-emacs`](#install-metals-emacs)
+                    - [Arch](#arch)
+                - [Doom Emacs](#doom-emacs)
+                - [Vanilla Emacs](#vanilla-emacs)
     - [Testing](#testing)
         - [Unit tests](#unit-tests)
         - [Integration tests](#integration-tests)
             - [Installing Dependencies](#installing-dependencies)
             - [Running the tests](#running-the-tests)
+        - [Python doctests](#python-doctests)
         - [Continuous Integration](#continuous-integration)
     - [Changelog](#changelog)
         - [Structure](#structure)
@@ -52,6 +56,25 @@ Apalache:
             - [Cut the release](#cut-the-release)
 
 <!-- markdown-toc end -->
+
+## Coordinating work
+
+Development on Apalache is distributed. As with any distributed system,
+establishing effective synchronization and consensus on key properties requires
+careful attention.
+
+We synchronize and coordinate our work using GitHub issues. When an issue is
+assigned to someone (or to several people), it serves as a token indicating that
+substantive work on the item described on the issue is being done (or will be
+done) by the assigned party. To avoid race conditions, we don't work on
+substantive matters without first holding such a token. If you are eager to work
+on something to which another party is assigned, please coordinate with them, e.g., by commenting on the related issue. It
+is often possible to join the assigned party or transfer the assignment.
+
+A corollary is that untracked work, work for which no issue exists or no
+assignment has been claimed, cannot effectively be coordinated. To plan on, or
+engage in, substantive work that is untracked raises the risk of race conditions
+and disorganized effort.
 
 ## Decision Making
 
