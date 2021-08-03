@@ -53,6 +53,25 @@ Apalache:
 
 <!-- markdown-toc end -->
 
+## Coordinating work
+
+Development on Apalache is distributed. As with any distributed system,
+establishing effective synchronization and consensus on key properties requires
+careful attention.
+
+We synchronize and coordinate our work using GitHub issues. When an issue is
+assigned to someone (or to several people), it serves as a token indicating that
+substantive work on the item described on the issue is being done (or will be
+done) by the assigned party. To avoid race conditions, we don't work on
+substantive matters without first holding such a token. If you are eager to work
+on something to which another party is assigned, please coordinate with them. It
+is often possible to join the assigned party or transfer the assignment.
+
+A corollary is that untracked work, work for which no issue exists or no
+assignment has been claimed, cannot effectively be coordinated. To plan on, or
+engage in, substantive work that is untracked raises the risk of race conditions
+and disorganized effort.
+
 ## Decision Making
 
 <!-- TODO(QUESTION): Do we want this much overhead to contributions? -->
