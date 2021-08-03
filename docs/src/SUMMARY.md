@@ -40,7 +40,6 @@
 
 - [Overview](HOWTOs/index.md)
 - [How to write type annotations](./HOWTOs/howto-write-type-annotations.md)
-- [How to handle message sets](./HOWTOs/howto-handle-messages.md)
 
 # Tutorials
 
@@ -78,6 +77,8 @@
 - [Keep state variables to the minimum](idiomatic/000keep-minimum-state-variables.md)
 - [Update state variables with assignments](idiomatic/001assignments.md)
 - [Apply primes only to state variables](idiomatic/002primes.md)
+- [Avoid sets of mixed records](./idiomatic/003record-sets.md)
+
 
 # Design Documents
 

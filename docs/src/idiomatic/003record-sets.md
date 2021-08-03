@@ -1,23 +1,21 @@
-# How to Handle Message Sets
+# Idiom 2: Replace sets of mixed records with disjoint unions
 
-**Warning:** *This HOWTO discusses how to handle message sets, canonically modeled
-as sets of records with mixed types, with the record-strict type checker in Apalache*
+Message sets are canonically modeled as sets of records with mixed types. While the current type system supports this, in the future, Apalache is likely going to dop support for these kinds of sets and implement stricter type-checking. See [this](https://github.com/informalsystems/apalache/issues/401) issue for a discussion.
+This document aims to provide instructions for users to migrate their specs to maintain type compatibility in the future (and improve performance in the present).
 
-This HOWTO aims to provide instructions for users to migrate their specs to maintain type compatibility.
-
-## The Old
-Previously, Apalache allowed mixed sets of records, by defining the type of the set to be `Set(r)`, where `r` was the record type which contained all of the fields, which were held by at least one set member. For example:
+## The common approach
+Apalache allows mixed sets of records, by defining the type of the set to be `Set(r)`, where `r` is the record type which contains all of the fields, which are held by at least one set member. For example:
 
 ```tla
 { [x: Int], [y: Str] }
 ```
 
-would have the type `Set([x:Int,y:Str])`. The only constraints Apalache imposed were that, if two set elements declared the same field name, the types of the fields had to match. Consequently, given
+would have the type `Set([x:Int,y:Str])`. The only constraints Apalache imposes are that, if two set elements declared the same field name, the types of the fields have to match. Consequently, given
 ```tla
 A == { [x: Int, z: Bool], [y: Str, z: Bool] }
 B == { [x: Int, z: Bool], [y: Str, z: Int] }
 ```
-`A` was considered well typed, and was assigned the type `Set([x:Int, y:Str, z:Bool])`, whereas `B` was rejected by the type checker.
+`A` is considered well typed, and is assigned the type `Set([x:Int, y:Str, z:Bool])`, whereas `B` is rejected by the type checker.
 
 The treatment of record types was implemented in this fashion, to maintain backward-compatibility with specifications of message-based algorithms, which typically encoded different message types as records of the shape `[ type: Str, ... ]`, where all messages shared a disambiguation filed (commonly named `type`), the value of which described the category of the message. Additional fields depended on the value of `type`.
 The bellow snippet from [Paxos.tla][] demonstrates this convention:
@@ -37,8 +35,9 @@ Consider the following:
 ```
 As defined above, messages for which `m.type = "1a"` do not define a field named `mbal`, however, the type of `Message` is `Set([type: Str, ..., mbal: Int, ...])`, which means, that `m` is assumed to have an `mbal` field, typed `Int`. Thus, this access error can only be caught much later in the model-checking process, instead of at the level of static analysis provided by the type-checker. 
 
-## The New
-Going forward, Apalache will no longer support mixed-record sets. This section outlines a proposed migration strategy, to replace such sets in older specifications.
+## The proposed changes
+This section outlines a proposed migration strategy, to replace such sets in older specifications. The convention presented in this section works with both the current version of Apalache, as well as the next iteration of the type-checker, currently in development.
+
 Suppose we use messages with types `t1,...,tn` in the specification and a message set variable `msgs`, like in the snippet below:
 ```tla
 
@@ -68,7 +67,7 @@ Messages == [
               tn: [xn: Sn, ...] 
             ]
 ```
-This way, `Messages.t1` is the set of all messages, for which `type` would have been equal to "t1" in the original implementation, that is, `[type: {"t1"}, x1: S1, ...]`.
+This way, `Messages.t1` represents the set of all messages `m`, for which `m.type` would have been equal to "t1" in the original implementation, that is, `[type: {"t1"}, x1: S1, ...]`.
 For example, assume the original specification included
 ```tla
 Messages == [type: {"t1"}, x: {1,2,3}] \cup [type: {"t2"}, y:{"a","b","c"}]
