@@ -62,13 +62,13 @@ mkdir -p target
 # See https://github.com/informalsystems/apalache/issues/716
 ZIPF="target/apalache-${TAG_NAME}.zip"
 ZIPF_NO_VER="target/apalache.zip"
-zip -r "$ZIPF" bin/apalache-mc "$RELEASE_JAR"
-zip -r "$ZIPF_NO_VER" bin/apalache-mc "$RELEASE_JAR"
+zip -r "$ZIPF" LICENSE bin/apalache-mc "$RELEASE_JAR"
+zip -r "$ZIPF_NO_VER" LICENSE bin/apalache-mc "$RELEASE_JAR"
 
 TGZF="target/apalache-${TAG_NAME}.tgz"
 TGZF_NO_VER="target/apalache.tgz"
-tar zpcf "$TGZF" bin/apalache-mc "$RELEASE_JAR"
-tar zpcf "$TGZF_NO_VER" bin/apalache-mc "$RELEASE_JAR"
+tar zpcf "$TGZF" LICENSE bin/apalache-mc "$RELEASE_JAR"
+tar zpcf "$TGZF_NO_VER" LICENSE bin/apalache-mc "$RELEASE_JAR"
 
 # Tag the commit and push the tag
 git tag -a "$TAG_NAME" -m "$msg"

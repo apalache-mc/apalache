@@ -4,14 +4,14 @@
     <parent>
         <groupId>at.forsyte.apalache</groupId>
         <artifactId>apalache</artifactId>
-        <version>0.15.12-SNAPSHOT</version>
+        <version>0.15.13-SNAPSHOT</version>
     </parent>
 
     <!--
         All command line tooling and option parsing goes here... and nothing else!
     -->
     <artifactId>tool</artifactId>
-        <version>0.15.12-SNAPSHOT</version>
+        <version>0.15.13-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>tool</name>
@@ -23,7 +23,7 @@
             <plugin>
                 <groupId>pl.project13.maven</groupId>
                 <artifactId>git-commit-id-plugin</artifactId>
-                <version>4.0.5</version>
+                <version>4.9.10</version>
                 <executions>
                     <execution>
                         <id>get-the-git-infos</id>
