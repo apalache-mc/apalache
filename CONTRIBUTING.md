@@ -68,7 +68,7 @@ assigned to someone (or to several people), it serves as a token indicating that
 substantive work on the item described on the issue is being done (or will be
 done) by the assigned party. To avoid race conditions, we don't work on
 substantive matters without first holding such a token. If you are eager to work
-on something to which another party is assigned, please coordinate with them. It
+on something to which another party is assigned, please coordinate with them, e.g., by commenting on the related issue. It
 is often possible to join the assigned party or transfer the assignment.
 
 A corollary is that untracked work, work for which no issue exists or no
