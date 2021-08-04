@@ -77,7 +77,7 @@ The rewritten version would be:
 ```tla
 Messages == [ t1: [x:{1,2,3}], t2: [y:{"a","b", "c"}] ]
 ```
-If we took `m: [ int: Set([x: Int]), str: Set([y: Str]) ]`, m would be a record pointing to two sets of messages (of categories "t1" and "t2" respectively). Values in `m.t1` would be records with the type `[x: Int]` and values in `m.t2` would be records with the type `[y: Str]`. 
+If we took `m: [ int: Set([x: Int]), str: Set([y: Str]) ]`, `m` would be a record pointing to two disjoint sets of messages (of categories "t1" and "t2" respectively). Values in `m.t1` would be records with the type `[x: Int]` and values in `m.t2` would be records with the type `[y: Str]`. 
 
 Note, however, that this approach also requires a change in the way messages are added to, or read from, the "set" of all messages (`m` is a record representing a set, but not a set itself, in the new approach).
 Previously, a message `m` would be added by writing:
