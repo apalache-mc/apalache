@@ -112,10 +112,7 @@ _Like frozen sets in Python, but cooler_ [Learn more...](./sets.md)
    - Difference: [`S \ T`](./sets.md#setminus)
  - Set predicates:
     - Membership: [`x \in S`](./sets.md#in) and [`x \notin S`](./sets.md#notin),
-    - Subsets: [`S \subset T`](./sets.md#subset),
-        [`S \subseteq T`](./sets.md#subseteq),
-        [`S \supset T`](./sets.md#supset),
-        [`S \supseteq T`](./sets.md#supseteq)
+    - Subsets: [`S \subseteq T`](./sets.md#subseteq),
     - Finiteness: [`IsFinite`](./sets.md#finite)
  - Cardinality of a finite set: [`Cardinality`](./sets.md#card)
 
