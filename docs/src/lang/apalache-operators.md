@@ -2,7 +2,7 @@
 
 In addition to the standard TLA+ operators described in the previous section, Apalache defines a number of operators, which do not belong to the core language of TLA+, but which Apalache uses to provide clarity, efficiency, or special functionality. These operators belong to the module `Apalache`, and can be used in any specification by declaring `EXTENDS Apalache`.
 
-<a name="Assigmnent"></a>
+<a name="Assignment"></a>
 ## Assigmnent
 
 **Notation:** `v' := e`
