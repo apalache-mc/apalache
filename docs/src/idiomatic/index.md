@@ -79,6 +79,8 @@ __Idiom 13:__ Do you really need set cardinalities? :pizza:
 
 __Idiom 14:__ Do you really need integers? :1234:
 
+__Idiom 15:__ [Replace sets of mixed records with disjoint unions](003record-sets.md) :baggage_claim:
+
 
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html
 [Leslie Lamport]: https://lamport.azurewebsites.net/
