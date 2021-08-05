@@ -1,0 +1,328 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Avoid sets of mixed records - Apalache Documentation</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Tutorials</li><li class="chapter-item expanded "><a href="../tutorials/snowcat-tutorial.html"><strong aria-hidden="true">1.</strong> Type Checker Tutorial</a></li><li class="chapter-item expanded affix "><li class="part-title">Apalache User Manual</li><li class="chapter-item expanded "><a href="../apalache/index.html"><strong aria-hidden="true">2.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../apalache/getting-started.html"><strong aria-hidden="true">3.</strong> Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/apalache-or-tlc.html"><strong aria-hidden="true">3.1.</strong> Shall I use Apalache or TLC?</a></li><li class="chapter-item expanded "><a href="../apalache/system-reqs.html"><strong aria-hidden="true">3.2.</strong> System Requirements</a></li><li class="chapter-item expanded "><a href="../apalache/installation/index.html"><strong aria-hidden="true">3.3.</strong> Installation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/installation/jvm.html"><strong aria-hidden="true">3.3.1.</strong> Prebuilt Packages</a></li><li class="chapter-item expanded "><a href="../apalache/installation/docker.html"><strong aria-hidden="true">3.3.2.</strong> Docker</a></li><li class="chapter-item expanded "><a href="../apalache/installation/source.html"><strong aria-hidden="true">3.3.3.</strong> Source</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/running.html"><strong aria-hidden="true">3.4.</strong> Running the Tool</a></li><li class="chapter-item expanded "><a href="../apalache/invariants.html"><strong aria-hidden="true">3.5.</strong> Invariants: State, Action, Trace</a></li><li class="chapter-item expanded "><a href="../apalache/enumeration.html"><strong aria-hidden="true">3.6.</strong> Enumeration of counterexamples</a></li><li class="chapter-item expanded "><a href="../apalache/statistics.html"><strong aria-hidden="true">3.7.</strong> TLA+ Execution Statistics</a></li><li class="chapter-item expanded "><a href="../apalache/example.html"><strong aria-hidden="true">3.8.</strong> An Example TLA+ Specification</a></li><li class="chapter-item expanded "><a href="../apalache/parameters.html"><strong aria-hidden="true">3.9.</strong> Specification Parameters</a></li><li class="chapter-item expanded "><a href="../apalache/principles.html"><strong aria-hidden="true">3.10.</strong> Principles of Symbolic Model Checking with Apalache</a></li><li class="chapter-item expanded "><a href="../apalache/apalache-mod.html"><strong aria-hidden="true">3.11.</strong> The Apalache Module</a></li><li class="chapter-item expanded "><a href="../apalache/fold.html"><strong aria-hidden="true">3.12.</strong> Folding Operators</a></li><li class="chapter-item expanded "><a href="../apalache/profiling.html"><strong aria-hidden="true">3.13.</strong> Profiling Your Specification</a></li><li class="chapter-item expanded "><a href="../apalache/theory.html"><strong aria-hidden="true">3.14.</strong> Five minutes of theory</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/tlc-config.html"><strong aria-hidden="true">4.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../apalache/typechecker-snowcat.html"><strong aria-hidden="true">5.</strong> The Snowcat Type Checker</a></li><li class="chapter-item expanded "><a href="../apalache/features.html"><strong aria-hidden="true">6.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../apalache/known-issues.html"><strong aria-hidden="true">7.</strong> Known Issues</a></li><li class="chapter-item expanded "><a href="../apalache/preprocessing.html"><strong aria-hidden="true">8.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../apalache/tuning.html"><strong aria-hidden="true">9.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../apalache/kera.html"><strong aria-hidden="true">10.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded "><a href="../apalache/assignments.html"><strong aria-hidden="true">11.</strong> Assignments in Apalache</a></li><li class="chapter-item expanded affix "><li class="part-title">HOWTOs</li><li class="chapter-item expanded "><a href="../HOWTOs/index.html"><strong aria-hidden="true">12.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../HOWTOs/howto-write-type-annotations.html"><strong aria-hidden="true">13.</strong> How to write type annotations</a></li><li class="chapter-item expanded affix "><li class="part-title">Tutorials</li><li class="chapter-item expanded "><a href="../tutorials/index.html"><strong aria-hidden="true">14.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../tutorials/snowcat-tutorial.html"><strong aria-hidden="true">15.</strong> The Snowcat❄🐱 Type Checker</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ Language Manual for Engineers</li><li class="chapter-item expanded "><a href="../lang/index.html"><strong aria-hidden="true">16.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">17.</strong> The standard operators of TLA+</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/booleans.html"><strong aria-hidden="true">17.1.</strong> Booleans</a></li><li class="chapter-item expanded "><a href="../lang/control-and-nondeterminism.html"><strong aria-hidden="true">17.2.</strong> Control And Nondeterminism</a></li><li class="chapter-item expanded "><a href="../lang/conditionals.html"><strong aria-hidden="true">17.3.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="../lang/integers.html"><strong aria-hidden="true">17.4.</strong> Integers</a></li><li class="chapter-item expanded "><a href="../lang/sets.html"><strong aria-hidden="true">17.5.</strong> Sets</a></li><li class="chapter-item expanded "><a href="../lang/logic.html"><strong aria-hidden="true">17.6.</strong> Logic</a></li><li class="chapter-item expanded "><a href="../lang/functions.html"><strong aria-hidden="true">17.7.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../lang/records.html"><strong aria-hidden="true">17.8.</strong> Records</a></li><li class="chapter-item expanded "><a href="../lang/tuples.html"><strong aria-hidden="true">17.9.</strong> Tuples</a></li><li class="chapter-item expanded "><a href="../lang/sequences.html"><strong aria-hidden="true">17.10.</strong> Sequences</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">17.11.</strong> Bags</div></li></ol></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">18.</strong> User-defined operators</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/user/top-level-operators.html"><strong aria-hidden="true">18.1.</strong> Top-level operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/let-in.html"><strong aria-hidden="true">18.2.</strong> LET-IN definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/higher-order-operators.html"><strong aria-hidden="true">18.3.</strong> Higher-order operators definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/lambdas.html"><strong aria-hidden="true">18.4.</strong> Anonymous operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/recursive-operators.html"><strong aria-hidden="true">18.5.</strong> Recursive operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/local-operators.html"><strong aria-hidden="true">18.6.</strong> Local operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/recursive-functions.html"><strong aria-hidden="true">18.7.</strong> Recursive functions</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">19.</strong> Modules, Extends, and Instances</div></li><li class="chapter-item expanded affix "><li class="part-title">Idiomatic TLA+</li><li class="chapter-item expanded "><a href="../idiomatic/index.html"><strong aria-hidden="true">20.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../idiomatic/000keep-minimum-state-variables.html"><strong aria-hidden="true">21.</strong> Keep state variables to the minimum</a></li><li class="chapter-item expanded "><a href="../idiomatic/001assignments.html"><strong aria-hidden="true">22.</strong> Update state variables with assignments</a></li><li class="chapter-item expanded "><a href="../idiomatic/002primes.html"><strong aria-hidden="true">23.</strong> Apply primes only to state variables</a></li><li class="chapter-item expanded "><a href="../idiomatic/003record-sets.html" class="active"><strong aria-hidden="true">24.</strong> Avoid sets of mixed records</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../adr/002adr-types.html"><strong aria-hidden="true">25.</strong> ADR-002: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/003adr-trex.html"><strong aria-hidden="true">26.</strong> ADR-003: transition executor (TRex)</a></li><li class="chapter-item expanded "><a href="../adr/004adr-annotations.html"><strong aria-hidden="true">27.</strong> ADR-004: code annotations</a></li><li class="chapter-item expanded "><a href="../adr/005adr-json.html"><strong aria-hidden="true">28.</strong> ADR-005: JSON Serialization Format</a></li><li class="chapter-item expanded "><a href="../adr/006rfc-unit-testing.html"><strong aria-hidden="true">29.</strong> RFC-006: unit tests and property-based tests</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache Documentation</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/informalsystems/apalache" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#idiom-15-replace-sets-of-mixed-records-with-disjoint-unions" id="idiom-15-replace-sets-of-mixed-records-with-disjoint-unions">Idiom 15: Replace sets of mixed records with disjoint unions</a></h1>
+<p>Message sets are canonically modeled as sets of records with mixed types. While the current type system supports this, in the future, Apalache is likely going to change support for these kinds of sets and implement stricter type-checking. See <a href="https://github.com/informalsystems/apalache/issues/401">this</a> issue for a discussion.
+This document aims to provide instructions for users to migrate their specs to maintain type compatibility in the future (and improve the performance and robustness of current specs in the present).</p>
+<h2><a class="header" href="#the-common-approach" id="the-common-approach">The common approach</a></h2>
+<p>Apalache allows mixed sets of records, by defining the type of the set to be <code>Set(r)</code>, where <code>r</code> is the record type which contains all of the fields, which are held by at least one set member. For example:</p>
+<pre><code class="language-tla">{ [x: Int], [y: Str] }
+</code></pre>
+<p>would have the type <code>Set([x:Int,y:Str])</code>. The only constraints Apalache imposes are that, if two set elements declared the same field name, the types of the fields have to match. Consequently, given</p>
+<pre><code class="language-tla">A == { [x: Int, z: Bool], [y: Str, z: Bool] }
+B == { [x: Int, z: Bool], [y: Str, z: Int] }
+</code></pre>
+<p><code>A</code> is considered well typed, and is assigned the type <code>Set([x:Int, y:Str, z:Bool])</code>, whereas <code>B</code> is rejected by the type checker.</p>
+<p>The treatment of record types was implemented in this fashion, to maintain backward-compatibility with specifications of message-based algorithms, which typically encoded different message types as records of the shape <code>[ type: Str, ... ]</code>, where all messages shared a disambiguation filed (commonly named <code>type</code>), the value of which described the category of the message. Additional fields depended on the value of <code>type</code>.
+The bellow snippet from <a href="https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla">Paxos.tla</a> demonstrates this convention:</p>
+<pre><code class="language-tla">\* The set of all possible messages 
+Message ==      [type : {&quot;1a&quot;}, bal : Ballot]
+           \cup [type : {&quot;1b&quot;}, acc : Acceptor, bal : Ballot, 
+                 mbal : Ballot \cup {-1}, mval : Value \cup {None}]
+           \cup [type : {&quot;2a&quot;}, bal : Ballot, val : Value]
+           \cup [type : {&quot;2b&quot;}, acc : Acceptor, bal : Ballot, val : Value]
+</code></pre>
+<p>Ultimately, this approach both disagrees with our interpretation of the purpose of a type-system for TLA+, as well as introduces unsoundness, in the sense that it makes it impossible, at the type-checking level, to detect record-field access violations.
+Consider the following:</p>
+<pre><code>\E m \in Message: m.type = &quot;1a&quot; /\ m.mbal = -1
+</code></pre>
+<p>As defined above, messages for which <code>m.type = &quot;1a&quot;</code> do not define a field named <code>mbal</code>, however, the type of <code>Message</code> is <code>Set([type: Str, ..., mbal: Int, ...])</code>, which means, that <code>m</code> is assumed to have an <code>mbal</code> field, typed <code>Int</code>. Thus, this access error can only be caught much later in the model-checking process, instead of at the level of static analysis provided by the type-checker. </p>
+<h2><a class="header" href="#the-proposed-changes" id="the-proposed-changes">The proposed changes</a></h2>
+<p>This section outlines a proposed migration strategy, to replace such sets in older specifications. The convention presented in this section works with both the current version of Apalache, as well as the next iteration of the type-checker, currently in development.</p>
+<p>Suppose we use messages with types <code>t1,...,tn</code> in the specification and a message set variable <code>msgs</code>, like in the snippet below:</p>
+<pre><code class="language-tla">
+VARIABLE 
+  \* @type: Set( [ type: Str, x1: a1, ..., xn: an, ... ] );
+  msgs
+
+...
+
+\* Assuming S1: Set(a1), ..., Sn: Set(an) 
+\* @type: Set( [ type: Str, x1: a1, ..., xn: an, ... ] );
+Message ==      [type : {&quot;t1&quot;}, x1: S1, ...]
+           \cup  ...
+           \cup [type : {&quot;tn&quot;}, xn: Sn, ...]
+...
+
+TypeOk: msgs \subseteq Message
+</code></pre>
+<p>We propose the following substitution: Instead of modeling the union of all messages as a single set, we model their disjoint union explicitly, with a record, in the following way:</p>
+<pre><code class="language-tla">\* @type: [ int: Set([x: Int]), str: Set([y: Str]) ];
+Messages == [ 
+              t1: [x1: S1, ...],
+              ...,
+              tn: [xn: Sn, ...] 
+            ]
+</code></pre>
+<p>This way, <code>Messages.t1</code> represents the set of all messages <code>m</code>, for which <code>m.type</code> would have been equal to &quot;t1&quot; in the original implementation, that is, <code>[type: {&quot;t1&quot;}, x1: S1, ...]</code>.
+For example, assume the original specification included</p>
+<pre><code class="language-tla">Messages == [type: {&quot;t1&quot;}, x: {1,2,3}] \cup [type: {&quot;t2&quot;}, y:{&quot;a&quot;,&quot;b&quot;,&quot;c&quot;}]
+</code></pre>
+<p>that is, defined two types of messages: &quot;t1&quot;, with an integer-valued field &quot;x&quot; and &quot;t2&quot; with a string-valued field &quot;y&quot;. The type of any <code>m \in Messages</code> would have been <code>[type: Str, x: Int, y: Str]</code> in the old approach.
+The rewritten version would be:</p>
+<pre><code class="language-tla">Messages == [ t1: [x:{1,2,3}], t2: [y:{&quot;a&quot;,&quot;b&quot;, &quot;c&quot;}] ]
+</code></pre>
+<p>If we took <code>m: [ int: Set([x: Int]), str: Set([y: Str]) ]</code>, <code>m</code> would be a record pointing to two disjoint sets of messages (of categories &quot;t1&quot; and &quot;t2&quot; respectively). Values in <code>m.t1</code> would be records with the type <code>[x: Int]</code> and values in <code>m.t2</code> would be records with the type <code>[y: Str]</code>. </p>
+<p>Note, however, that this approach also requires a change in the way messages are added to, or read from, the &quot;set&quot; of all messages (<code>m</code> is a record representing a set, but not a set itself, in the new approach).
+Previously, a message <code>m</code> would be added by writing:</p>
+<pre><code>msgs' = msgs \union {m}
+</code></pre>
+<p>regardless of whether <code>m.type = &quot;t1&quot;</code> or <code>m.type = &quot;t2&quot;</code>. In the new approach, one must always specify which type of message is being added. However, the type no longer needs to be a property of the message itself, i.e. the <code>type</code> field is made redundant.</p>
+<p>To add a message <code>m</code> of the category <code>ti</code> one should write</p>
+<pre><code>msgs' = [ msgs EXCEPT !.ti = msgs.ti \union {m} ]
+</code></pre>
+<p>Similarly, reading/processing a message, which used to be done in the following way:</p>
+<pre><code class="language-tla">\E m \in msgs:
+  /\ m.type = &quot;ti&quot;
+  /\ A(m)
+</code></pre>
+<p>is replaced by</p>
+<pre><code>\E m \in msgs.ti: A(m)
+</code></pre>
+<h2><a class="header" href="#example" id="example">Example</a></h2>
+<p>Below, we demonstrate this process on a concrete specification:
+The old approach:</p>
+<pre><code class="language-tla">{{#include ./MsgSetOld.tla::}}
+</code></pre>
+<p>The new approach:</p>
+<pre><code class="language-tla">{{#include ./MsgSetNew.tla::}}
+</code></pre>
+<p>Note that the new approach, in addition to being sound w.r.t. record types, also typically results in a performance improvement, since type-unification for record sets is generally expensive for the solver.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../idiomatic/002primes.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../adr/002adr-types.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../idiomatic/002primes.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../adr/002adr-types.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
