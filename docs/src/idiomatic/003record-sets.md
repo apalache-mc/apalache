@@ -1,6 +1,6 @@
 # Idiom 2: Replace sets of mixed records with disjoint unions
 
-Message sets are canonically modeled as sets of records with mixed types. While the current type system supports this, in the future, Apalache is likely going to dop support for these kinds of sets and implement stricter type-checking. See [this](https://github.com/informalsystems/apalache/issues/401) issue for a discussion.
+Message sets are canonically modeled as sets of records with mixed types. While the current type system supports this, in the future, Apalache is likely going to change support for these kinds of sets and implement stricter type-checking. See [this](https://github.com/informalsystems/apalache/issues/401) issue for a discussion.
 This document aims to provide instructions for users to migrate their specs to maintain type compatibility in the future (and improve the performance and robustness of current specs in the present).
 
 ## The common approach
