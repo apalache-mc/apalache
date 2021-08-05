@@ -1,4 +1,4 @@
-# Apalache-specific operators
+# Apalache operators
 
 In addition to the standard TLA+ operators described in the previous section, Apalache defines a number of operators, which do not belong to the core language of TLA+, but which Apalache uses to provide clarity, efficiency, or special functionality. These operators belong to the module `Apalache`, and can be used in any specification by declaring `EXTENDS Apalache`.
 
@@ -33,13 +33,13 @@ x' := 1 \/ x' := "a"      \* Type error in Apalache
 IF x' := 1 THEN 1 ELSE 0  \* Assignment error in Apalache
 ```
 
-**Example in C:**
-
-```c
-a = 1        // a' := 1
-a == 1       // a' = 1
-a = (b = c)  // b' := c /\ a' := b'
-a = (b == c) // a' := (b = c)
+**Example in Python:**
+```python
+>> a = 1          # a' := 1
+>> a == 1         # a' = 1
+True
+>> a = b = "c"    # b' := "c" /\ a' := b'
+>> a = (b == "c") # a' := (b = "c")
 ```
 
 ----------------------------------------------------------------------------
