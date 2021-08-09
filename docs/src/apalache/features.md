@@ -171,7 +171,7 @@ Operator  | Supported? | Milestone | Comment
 Operator   | Supported?         | Milestone       | Comment
 -----------|:------------------:|:---------------:|--------------
 `a :> b`   | ✔                  | -               | A singleton function `<<a, b>>`
-`f @@ g`   | ✔                  | -               | Extends function `f` with the domain and values of function `g`
+`f @@ g`   | ✔                  | -               | Extends function `f` with the domain and values of function `g` but keeps the values of `f` where domains overlap
 Other operators |               |                 | Dummy definitions for spec compatibility
 
 ### Reals
