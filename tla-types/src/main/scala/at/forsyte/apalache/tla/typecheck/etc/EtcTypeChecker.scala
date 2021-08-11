@@ -67,7 +67,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
         // Just propagate the annotated name down the tree. It will be used in a let definition.
         // All free type variables in the type are considered to be universally quantified.
         val allVars = declaredType.usedNames
-        val extCtx = new TypeContext(ctx.namesInScope, ctx.poolSize, ctx.types + (name -> (declaredType, allVars)))
+        val extCtx = new TypeContext(ctx.poolSize, ctx.types + (name -> (declaredType, allVars)))
         // to propagate the type to the listener, add the trivial constraint: a = declaredType
         val fresh = varPool.fresh
         val clause = EqClause(fresh, declaredType)
@@ -166,7 +166,6 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
           var (nameType, allVars) = ctx.types(name.name)
           if (allVars.nonEmpty) {
             // The type is parametric: instantiate it with new type variables.
-            // We do not instantiate the type if the call is recursive.
             val varRenamingMap = allVars.toSeq.map(v => EqClass(v) -> varPool.fresh)
             nameType = Substitution(varRenamingMap: _*).subRec(nameType)
           }
@@ -231,7 +230,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
 
         // translate the binders in the lambda expression, so we can quickly propagate the types of the parameters
         val preCtx =
-          new TypeContext(ctx.namesInScope + name, ctx.poolSize,
+          new TypeContext(ctx.poolSize,
               (ctx.types + (name -> (operSig, operAllVars))).mapValues(p => (approxSolution.subRec(p._1), p._2)))
         val extCtx = translateBinders(preCtx, letInSolver, binders)
         val annotationParams = operSig.args
@@ -288,8 +287,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
         }
 
         // compute the type of the expression under the definition
-        val underCtx =
-          new TypeContext(ctx.namesInScope, varPool.size, ctx.types + (name -> (principalDefType, freeVars)))
+        val underCtx = new TypeContext(varPool.size, ctx.types + (name -> (principalDefType, freeVars)))
         computeRec(underCtx, solver, scopedEx)
 
       // an ill-formed let expression
@@ -328,7 +326,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
     // Compute the expression in the scope, by associating the variables names with the elements of elemVars.
     // Note that elemVars are not universally quantified.
     val varNames = binders.map(_._1.name).zip(elemVars.map((_, Set[Int]())))
-    new TypeContext(ctx.namesInScope, varPool.size, ctx.types ++ varNames)
+    new TypeContext(varPool.size, ctx.types ++ varNames)
   }
 
   private def onTypeFound(sourceRef: EtcRef, tt: TlaType1): Unit = {
