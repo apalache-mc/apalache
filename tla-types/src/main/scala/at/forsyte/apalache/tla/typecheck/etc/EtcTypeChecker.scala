@@ -12,7 +12,7 @@ import at.forsyte.apalache.tla.typecheck.etc.EtcTypeChecker.UnwindException
  * @param inferPolytypes whether the type checker is allowed to compute polymorphic types of user-defined operators.
  * @author Igor Konnov
  */
-class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) extends TypeChecker with EtcBuilder {
+class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) extends TypeChecker with EtcBuilder {
   private var listener: TypeCheckerListener = new DefaultTypeCheckerListener()
 
   /**
@@ -280,6 +280,12 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = false) exte
 
         // Find free variables of the principal type, to use them as quantified variables
         val freeVars = principalDefType.usedNames.filter(_ >= ctx.poolSize)
+        if (!inferPolytypes && freeVars.nonEmpty) {
+          // the user has disabled let-polymorphism
+          onTypeError(ex.sourceRef,
+              s"Operator $name has a parameterized type, while polymorphism is disabled: " + principalDefType)
+          throw new UnwindException
+        }
 
         // compute the type of the expression under the definition
         val underCtx =
