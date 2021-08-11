@@ -1200,8 +1200,6 @@ EXITCODE: OK
 ```sh
 $ apalache-mc check ConfigUnsorted.tla | sed 's/[IEW]@.*//'
 ...
-Configuration error (see the manual): Found a cyclic dependency among operators: B, A, C
-...
 EXITCODE: ERROR (255)
 ```
 
