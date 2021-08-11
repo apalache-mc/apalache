@@ -26,7 +26,7 @@ class TestConstraintSolver extends FunSuite with EasyMockSugar with EtcBuilder {
     // there is a solution
     val solution = solver.solve()
     assert(solution.nonEmpty)
-    assert(solution.get(VarT1("e")) == parser("<<Int, Str>>"))
+    assert(solution.map(_.subRec(VarT1("e"))).contains(parser("<<Int, Str>>")))
   }
 
   test("multiple solutions") {
@@ -62,6 +62,6 @@ class TestConstraintSolver extends FunSuite with EasyMockSugar with EtcBuilder {
     // there is a solution
     val solution = solver.solve()
     assert(solution.nonEmpty)
-    assert(solution.get(VarT1("a")) == parser("(Bool, Int) => Int"))
+    assert(solution.map(_.subRec(VarT1("a"))).contains(parser("(Bool, Int) => Int")))
   }
 }

@@ -988,7 +988,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
   }
 
   private def renameVars(tt: TlaType1): TlaType1 = {
-    val varRenamingMap = tt.usedNames.toSeq.map(i => i -> varPool.fresh)
-    Substitution(varRenamingMap: _*)(tt)
+    val varRenamingMap = tt.usedNames.toSeq.map(v => EqClass(v) -> varPool.fresh)
+    Substitution(varRenamingMap: _*).sub(tt)._1
   }
 }
