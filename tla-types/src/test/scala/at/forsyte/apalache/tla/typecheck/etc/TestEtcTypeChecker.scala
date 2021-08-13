@@ -445,12 +445,14 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     }
   }
 
-  test("polymorphic let-definitions") {
-    // let F == lambda x \in Set(a): x in F(Int)
+  test("polymorphic let-definition") {
+    // let F == lambda x \in Set(a): ((c, c) => c) x d in F(Int)
     val xDomain = mkUniqConst(parser("Set(a)"))
+    val xNameInApp = mkUniqName("x")
+    val d = mkUniqConst(parser("d"))
+    val setInF = mkUniqApp(Seq(parser("(c, c) => c")), xNameInApp, d)
     val xName = mkUniqName("x")
-    val xInF = mkUniqName("x")
-    val fBody = mkUniqAbs(xInF, (xName, xDomain))
+    val fBody = mkUniqAbs(setInF, (xName, xDomain))
     val fArg = mkUniqConst(IntT1())
     val fName = mkUniqName("F")
     val fApp = mkUniqAppByName(fName, fArg)
@@ -458,20 +460,121 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
 
     val listener = mock[TypeCheckerListener]
     expecting {
-      // variable x has the type Int
-      listener.onTypeFound(xName.sourceRef.asInstanceOf[ExactRef], parser("a1006")).atLeastOnce()
-      // xDomain is Set(b), the type b propagates
-      listener.onTypeFound(xDomain.sourceRef.asInstanceOf[ExactRef], parser("Set(a1006)")).atLeastOnce()
-      listener.onTypeFound(fBody.sourceRef.asInstanceOf[ExactRef], parser("a1006 => a1006")).atLeastOnce()
-      listener.onTypeFound(xInF.sourceRef.asInstanceOf[ExactRef], parser("a1006"))
+      // variable x has a parametric type
+      listener.onTypeFound(xName.sourceRef.asInstanceOf[ExactRef], parser("a1008")).atLeastOnce()
+      listener.onTypeFound(xNameInApp.sourceRef.asInstanceOf[ExactRef], parser("a1008")).atLeastOnce()
+      // d has the same type!
+      listener.onTypeFound(d.sourceRef.asInstanceOf[ExactRef], parser("a1008")).atLeastOnce()
+      // xDomain is Set(a), the type a propagates
+      listener.onTypeFound(xDomain.sourceRef.asInstanceOf[ExactRef], parser("Set(a1008)")).atLeastOnce()
+      listener.onTypeFound(fBody.sourceRef.asInstanceOf[ExactRef], parser("a1008 => a1008")).atLeastOnce()
+      listener.onTypeFound(setInF.sourceRef.asInstanceOf[ExactRef], parser("a1008"))
       listener.onTypeFound(fApp.sourceRef.asInstanceOf[ExactRef], parser("Int"))
       listener.onTypeFound(fArg.sourceRef.asInstanceOf[ExactRef], parser("Int"))
       listener.onTypeFound(letIn.sourceRef.asInstanceOf[ExactRef], parser("Int"))
+      // although the type of F is concrete here, the type of the let-in definition is parametric!
       listener.onTypeFound(fName.sourceRef.asInstanceOf[ExactRef], parser("Int => Int"))
     }
     whenExecuting(listener) {
       val computed = checker.compute(listener, TypeContext.empty, letIn)
       assert(computed.contains(parser("Int")))
+    }
+  }
+
+  test("annotated polymorphic let-definition") {
+    // The names of type variables may change during type inference
+    // @type: a => b;
+    // let F == lambda x \in Set(a): ((c, c) => c) x d in F(Int)
+    val xDomain = mkUniqConst(parser("Set(c)"))
+    val xNameInApp = mkUniqName("x")
+    val d = mkUniqConst(parser("d"))
+    val setInF = mkUniqApp(Seq(parser("(c, c) => c")), xNameInApp, d)
+    val xName = mkUniqName("x")
+    val fBody = mkUniqAbs(setInF, (xName, xDomain))
+    val fArg = mkUniqConst(IntT1())
+    val fName = mkUniqName("F")
+    val fApp = mkUniqAppByName(fName, fArg)
+    val letIn = mkUniqLet("F", fBody, fApp)
+
+    val listener = mock[TypeCheckerListener]
+    expecting {
+      // variable x has a parametric type
+      listener.onTypeFound(xName.sourceRef.asInstanceOf[ExactRef], parser("a1006")).atLeastOnce()
+      listener.onTypeFound(xNameInApp.sourceRef.asInstanceOf[ExactRef], parser("a1006")).atLeastOnce()
+      // d has the same type!
+      listener.onTypeFound(d.sourceRef.asInstanceOf[ExactRef], parser("a1006")).atLeastOnce()
+      // xDomain is Set(a), the type a propagates
+      listener.onTypeFound(xDomain.sourceRef.asInstanceOf[ExactRef], parser("Set(a1006)")).atLeastOnce()
+      listener.onTypeFound(fBody.sourceRef.asInstanceOf[ExactRef], parser("a1006 => a1006")).atLeastOnce()
+      listener.onTypeFound(setInF.sourceRef.asInstanceOf[ExactRef], parser("a1006"))
+      listener.onTypeFound(fApp.sourceRef.asInstanceOf[ExactRef], parser("Int"))
+      listener.onTypeFound(fArg.sourceRef.asInstanceOf[ExactRef], parser("Int"))
+      listener.onTypeFound(letIn.sourceRef.asInstanceOf[ExactRef], parser("Int"))
+      // although the type of F is concrete here, the type of the let-in definition is parametric!
+      listener.onTypeFound(fName.sourceRef.asInstanceOf[ExactRef], parser("Int => Int"))
+    }
+    whenExecuting(listener) {
+      // add the type annotation F: \A a: a => b
+      val context = TypeContext("F" -> (parser("a => b"), Set(0, 1)))
+      val computed = checker.compute(listener, context, letIn)
+      assert(computed.contains(parser("Int")))
+    }
+  }
+
+  test("annotation shall not override the inferred type") {
+    // The scenario that was causing a tricky behavior:
+    // The inferred type of F uses one set of variables, while the annotated type uses another set.
+    // The bug appeared only in the case when using two instances of the constraint solver, so it needed a complex setup.
+    //
+    // let G ==
+    //   @type: a => b;
+    //   let F == lambda x \in Set(a): ((c, c) => c) x d
+    //   in F(Int)
+    // in
+    // Bool
+    val xDomain = mkUniqConst(parser("Set(c)"))
+    val xNameInApp = mkUniqName("x")
+    val d = mkUniqConst(parser("d"))
+    val setInF = mkUniqApp(Seq(parser("(c, c) => c")), xNameInApp, d)
+    val xName = mkUniqName("x")
+    val fBody = mkUniqAbs(setInF, (xName, xDomain))
+    val fArg = mkUniqConst(IntT1())
+    val fName = mkUniqName("F")
+    val fApp = mkUniqAppByName(fName, fArg)
+    val letInF = mkUniqLet("F", fBody, fApp)
+    val annotatedLetInF = mkUniqTypeDecl("F", parser("a => b"), letInF)
+    val bool = mkUniqConst(BoolT1())
+    val gAbs = mkUniqAbs(annotatedLetInF) // we have to wrap the parameterless body of G with a lambda expression
+    val letInG = mkUniqLet("G", gAbs, bool)
+
+    val listener = mock[TypeCheckerListener]
+    expecting {
+      // variable x has a parametric type
+      listener.onTypeFound(xName.sourceRef.asInstanceOf[ExactRef], parser("a1009")).atLeastOnce()
+      listener.onTypeFound(xNameInApp.sourceRef.asInstanceOf[ExactRef], parser("a1009")).atLeastOnce()
+      // d has the same type!
+      listener.onTypeFound(d.sourceRef.asInstanceOf[ExactRef], parser("a1009")).atLeastOnce()
+      // xDomain is Set(a), the type a propagates
+      listener.onTypeFound(xDomain.sourceRef.asInstanceOf[ExactRef], parser("Set(a1009)")).atLeastOnce()
+      // This is the generic type of F
+      listener.onTypeFound(fBody.sourceRef.asInstanceOf[ExactRef], parser("a1009 => a1009")).atLeastOnce()
+      listener.onTypeFound(setInF.sourceRef.asInstanceOf[ExactRef], parser("a1009"))
+      listener.onTypeFound(fApp.sourceRef.asInstanceOf[ExactRef], parser("Int"))
+      listener.onTypeFound(fArg.sourceRef.asInstanceOf[ExactRef], parser("Int"))
+      // Igor: is it OK that the type below is not reported?
+      //      listener.onTypeFound(letInF.sourceRef.asInstanceOf[ExactRef], parser("Int"))
+      // although the type of F is concrete here, the type of the let-in definition is parametric!
+      listener.onTypeFound(fName.sourceRef.asInstanceOf[ExactRef], parser("Int => Int"))
+      // reported types of G
+      listener.onTypeFound(bool.sourceRef.asInstanceOf[ExactRef], parser("Bool"))
+      listener.onTypeFound(gAbs.sourceRef.asInstanceOf[ExactRef], parser("() => Int")).atLeastOnce()
+      listener.onTypeFound(letInG.sourceRef.asInstanceOf[ExactRef], parser("Bool"))
+    }
+    whenExecuting(listener) {
+      // add the type annotation F: \A a, b: a => b
+      val context = TypeContext.empty
+      val computed = checker.compute(listener, context, letInG)
+      assert(computed.contains(parser("Bool")))
     }
   }
 

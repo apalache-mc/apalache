@@ -70,6 +70,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
         val extCtx = new TypeContext(ctx.poolSize, ctx.types + (name -> (declaredType, allVars)))
         // to propagate the type to the listener, add the trivial constraint: a = declaredType
         val fresh = varPool.fresh
+        // TODO: this call reports the type that may be different from the inferred one
         val clause = EqClause(fresh, declaredType)
           .setOnTypeFound(tt => onTypeFound(ex.sourceRef, tt))
         solver.addConstraint(clause)
@@ -251,8 +252,9 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
         }
 
         val operVar = varPool.fresh
+        // Importantly, do not report the type of `defEx` as soon as it is found.
+        // The variables in the `defEx` may change when we apply the substitution later.
         val sigClause = EqClause(operVar, operSig)
-          .setOnTypeFound(onTypeFound(defEx.sourceRef, _))
           .setOnTypeError(onError)
         letInSolver.addConstraint(sigClause)
 
@@ -262,7 +264,6 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
         val defType = OperT1(paramTypes, defBodyType)
         // add the constraint from the annotation
         val defClause = EqClause(operVar, defType)
-          .setOnTypeFound(onTypeFound(defEx.sourceRef, _))
           .setOnTypeError(onError)
 
         letInSolver.addConstraint(defClause)
@@ -285,6 +286,9 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
               s"Operator $name has a parameterized type, while polymorphism is disabled: " + principalDefType)
           throw new UnwindException
         }
+
+        // report the type of the definition
+        onTypeFound(defEx.sourceRef, principalDefType)
 
         // compute the type of the expression under the definition
         val underCtx = new TypeContext(varPool.size, ctx.types + (name -> (principalDefType, freeVars)))
