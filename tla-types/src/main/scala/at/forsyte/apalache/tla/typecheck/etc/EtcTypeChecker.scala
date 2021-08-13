@@ -68,12 +68,20 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
         // All free type variables in the type are considered to be universally quantified.
         val allVars = declaredType.usedNames
         val extCtx = new TypeContext(ctx.poolSize, ctx.types + (name -> (declaredType, allVars)))
-        // to propagate the type to the listener, add the trivial constraint: a = declaredType
-        val fresh = varPool.fresh
-        // TODO: this call reports the type that may be different from the inferred one
-        val clause = EqClause(fresh, declaredType)
-          .setOnTypeFound(tt => onTypeFound(ex.sourceRef, tt))
-        solver.addConstraint(clause)
+        if (allVars.isEmpty) {
+          // A non-generic type.
+          // For example, it can be a type of a constant, a state variable, or of a concrete operator.
+          // To register the type with the type listener, add the trivial constraint: a = declaredType.
+          // Importantly, we do not add the callback for parametric types, as their quantified variables may change
+          // in the course of type inference.
+          // This is sound, because parametric types are reported in the case of `EtcLet`.
+          // Yet, we have to report the concrete types here, as they may never appear again down the tree.
+          val fresh = varPool.fresh
+          val clause = EqClause(fresh, declaredType)
+            .setOnTypeFound(tt => onTypeFound(ex.sourceRef, tt))
+          solver.addConstraint(clause)
+        }
+
         computeRec(extCtx, solver, scopedEx)
 
       case EtcName(name) =>
