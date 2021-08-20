@@ -294,7 +294,7 @@ Inv == x < 5
 ```
 
 The sets of reachable states defined by each `Next` have sizes proportional to the upper bounds of the ranges used. However, to find a violation of the invariant, one merely needs to identify a state in which, for example, `x = 7`, which belongs to both sets. 
-It is not necessary, or efficient, to loop over elements in the range and test each one against `Inv` to find a violation, because, depending on the logic fragment `Inv` belongs to, there usually exist external solvers, capable of finding such solutions much faster.
+It is not necessary, or efficient, to loop over elements in the range and test each one against `Inv` to find a violation. Depending on the logic fragment `Inv` belongs to, there usually exist strategies for finding such violations much faster.
 
 From this perspective, if, for some `k`, we succeeded in finding a predicate `P` over `S`, such that:
 
