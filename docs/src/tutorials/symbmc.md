@@ -12,7 +12,7 @@ We will be using the following definitions and conventions:
 
   - Isomorphisms: Sets `A` and `B` are called isomorphic, if there exists a bijective function
   `b \in [A -> B]`.
-  - Predicates: Given a set `T`, a _predicate_ over `T` is a function in `[T -> BOOLEAN]`, that is, a function `P`, such that `P(t) \in {TRUE, FALSE}` for each `t \in T`.
+  - Predicates: Given a set `T`, a _predicate_ over `T` is a function `P \in [T -> BOOLEAN]`, that is, a function `P`, such that `P(t) \in {TRUE, FALSE}` for each `t \in T`.
   - Relations: Predicates over `A \X B` are called _relations_. A relation `R` over `T \X T` is an _equivalence relation_, if the following holds:
     - For all `t \in T`, it is the case that `R(t,t)` (reflexivity).
     - For all `s,t \in T`, `R(s,t)` holds if and only if `R(t,s)` holds (symmetry).
