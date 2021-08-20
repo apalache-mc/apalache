@@ -1,4 +1,4 @@
-# RFC-002: Implementation of Transition Exploration Server
+# RFC-009: Implementation of Transition Exploration Server
 
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
