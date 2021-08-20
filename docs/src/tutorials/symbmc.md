@@ -278,7 +278,7 @@ will have `C^k` distinct states, despite its rather simplistic behavior.
 
 ## Symbolic bounded model checking
 Much like how the algorithm for explicit-state model checking does not terminate for systems without a finite diameter, we focus only on attempting to model-check systems with bounded diameters. Thus, for a given `k \in N`, we want to find a way to determine if `r(k) \ I` is empty, without testing every single state in `r(k)`.
-This method might still find an invariant violation in systems with infinite diameters, though it is not guaranteed to do so.
+This method might still find an invariant violation in systems with infinite diameters, if it can occur within the bound `k`, but it is not guaranteed to do so.
 
 The key insight behind symbolic model checking is the following: it is often the case, like in the above specification, that the size of the reachable state space is large, not because of the properties of the specification, but simply because of the constants or sets involved. Consider the example:
 ```tla
