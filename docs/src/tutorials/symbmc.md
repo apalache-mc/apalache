@@ -152,7 +152,7 @@ R    = [x: N           , y: {2}]`
 ### Finite diameters
 We say that a transition system has a _finite diameter_, if there exists a `k \in N`, such that `R = r(k)`.
 
-If such an integer exists then the smallest integer `k`, for which this holds true, is the _diameter_.
+If such an integer exists then the smallest integer `k`, for which this holds true, is the _diameter_ of the transition system.
 In other words, if the transition system `(S,S0,->)` has a finite diameter of `k`, any state that is reachable from a state in `S0`, is reachable in at most `k` transitions. The example above clearly does not have a finite diameter, since `R` is infinite, but `r(k)` is finite for each `k`.
 
 However, the spec
