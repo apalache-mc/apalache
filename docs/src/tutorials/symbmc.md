@@ -102,7 +102,7 @@ Init == x \in 3..5 /\ y = 2
 
 Next == x' \in { x, x + 1 } /\ UNCHANGED y
 ```
-One can deduce, for any state `[x: a, y: b] \in S`, that it has two successors: `[x: a, y: b]-> [x: a + 1, y: b]` and `[x: a, y: b] -> [x: a, y: b]`.
+One can deduce, for any state `[x |-> a, y |-> b] \in S`, that it has two successors: `[x |-> a + 1, y |-> b]` and `[x |-> a, y |-> b]` because the following relations hold `[x |-> a, y |-> b]-> [x |-> a + 1, y |-> b]` and `[x |-> a, y |-> b] -> [x |-> a, y |-> b]`.
 
 ### Reachable states
 Using the above definitions, we can define the set of states reachable in exactly `k`-steps, for `k \in N`, denoted by `R(k)`. We define `R(0) = S0` and for each `k \in N`,
