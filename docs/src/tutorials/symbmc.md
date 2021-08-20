@@ -172,7 +172,7 @@ has a finite diameter (more specifically, a diameter of 6), because:
   1. for any `k >= 6`, `r(k) = 0..6 = r(6) = R`
 
 ### Invariants
-Much like `Init`, an invariant operator `Inv` defines a predicate. However, it is not, in general, the case that `Inv` defines a predicate over `S`. There are different cases we can consider, discussed in more detail [here](...). For the purposes of this document, we focus on _state invariants_, i.e. operators which use only unprimed variables an no temporal- or trace- operators. A state invariant operator `Inv` defines a predicate `I` over `S`.
+Much like `Init`, an invariant operator `Inv` defines a predicate. However, it is not, in general, the case that `Inv` defines a predicate over `S`. There are different cases we can consider, discussed in more detail [here](...). For the purposes of this document, we focus on _state invariants_, i.e. operators which use only unprimed variables and no temporal- or trace- operators. A state invariant operator `Inv` defines a predicate `I` over `S`.
 We say that the `I` is an _invariant_ in the transition system, if `R \subseteq I`, that is, for every reachable state `r \in R`, `I(r)` holds true. If `R \ I` is nonempty (i.e., there exists a state `r \in R`, such that `~I(r)`), we refer to elements of `R \ I` as _witnesses_ to invariant violation.
 
 ### Goals of model checking
