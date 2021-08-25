@@ -1429,6 +1429,19 @@ Bug874.tla:4:17-4:27: Input error (see the manual): Access to non-existent recor
 EXITCODE: ERROR (255)
 ```
 
+### check profiling
+
+Check that the profiler output is produced as explained in
+[Profiling](https://apalache.informal.systems/docs/apalache/profiling.html).
+
+```sh
+$ echo >profile.csv
+$ apalache-mc check --smtprof schroedinger_cat.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+$ test -s profile.csv
+```
+
 ## running the typecheck command
 
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
