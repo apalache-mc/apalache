@@ -1,11 +1,12 @@
-package at.forsyte.apalache.tla.lir.transformations.standard
+package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.storage.BodyMap
-import at.forsyte.apalache.tla.lir.transformations.standard.InlinerOfUserOper.kStepParameters
+import at.forsyte.apalache.tla.lir.transformations.standard.{DeepCopy, ReplaceFixed}
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.pp.InlinerOfUserOper.kStepParameters
 
 /**
  * <p>Attempts to instantiate the body of the operator named `name` with the provided arguments.

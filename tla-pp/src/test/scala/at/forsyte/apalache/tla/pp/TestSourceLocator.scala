@@ -1,20 +1,21 @@
-package at.forsyte.apalache.tla.lir
+package at.forsyte.apalache.tla.pp
 
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.aux._
+import at.forsyte.apalache.tla.lir.convenience._
+import at.forsyte.apalache.tla.lir.oper.ApalacheOper
+import at.forsyte.apalache.tla.lir.src.{SourceLocation, SourcePosition, SourceRegion}
+import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener, SourceLocator, SourceMap}
+import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
+import at.forsyte.apalache.tla.lir.transformations.standard._
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationListener}
+import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaStrSet}
+import at.forsyte.apalache.tla.lir._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
-import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.aux._
-import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaStrSet}
-import at.forsyte.apalache.tla.lir.src.{SourceLocation, SourcePosition, SourceRegion}
-import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener, SourceLocator, SourceMap}
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationListener}
-import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
-import at.forsyte.apalache.tla.lir.transformations.standard._
 
 import scala.collection.mutable
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 
 @RunWith(classOf[JUnitRunner])
 class TestSourceLocator extends FunSuite with TestingPredefs {

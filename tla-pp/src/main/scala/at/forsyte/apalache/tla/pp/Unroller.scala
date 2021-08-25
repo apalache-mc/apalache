@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaDecl, TlaEx, Tla
 import at.forsyte.apalache.tla.lir.aux.{ExceptionOrValue, FailWith, SucceedWith}
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
-import at.forsyte.apalache.tla.lir.transformations.standard.{IncrementalRenaming, InlinerOfUserOper}
+import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModuleTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.TlaInt
 
