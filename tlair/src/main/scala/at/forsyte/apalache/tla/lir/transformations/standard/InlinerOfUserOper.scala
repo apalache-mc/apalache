@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
+import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.storage.BodyMap
@@ -76,6 +77,11 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker) ext
     val newBody = decl.formalParams.zip(args).foldLeft(bodyCopy) { case (b, (fParam, arg)) =>
       ReplaceFixed(tracker)(NameEx(fParam.name)(arg.typeTag), arg)(b)
     }
+
+    // If the operator has a parametric signature, we have to substitute type parameters with concrete parameters
+    // 1. Unify the operator type with the arguments.
+    // 2. Apply the resulting substitution to the types in all subexpressions.
+    val actualSignature = OperT1(args.map(_.typeTag.asTlaType1()), bodyCopy.typeTag.asTlaType1())
 
     // the step limit, if it was defined, decreases by 1
     val newStepLimit = stepLimitOpt map {

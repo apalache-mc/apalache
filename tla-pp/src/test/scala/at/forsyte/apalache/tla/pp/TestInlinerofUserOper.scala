@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.InlinerOfUserOper
-import at.forsyte.apalache.tla.lir.{BoolT1, OperParam, IntT1, OperT1, TestingPredefs}
+import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, OperParam, OperT1, SetT1, TestingPredefs, VarT1}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -96,5 +96,44 @@ class TestInlinerofUserOper extends FunSuite with TestingPredefs {
     assertThrows[IllegalArgumentException] {
       transformation(applyCwithTwoArgs)
     }
+  }
+
+  // disable this test for a moment
+  test("Instantiate and unify type variables when inlining") {
+    val types =
+      Map("i" -> IntT1(), "b" -> BoolT1(), "c" -> VarT1("c"), "Sc" -> SetT1(VarT1("c")),
+          "SSc" -> SetT1(SetT1(VarT1("c"))), "U" -> OperT1(Seq(), IntT1()), "Si" -> SetT1(IntT1()),
+          "SSi" -> SetT1(SetT1(IntT1())), "C" -> OperT1(Seq(VarT1("c")), SetT1(VarT1("c"))),
+          "B" -> OperT1(Seq(SetT1(VarT1("c"))), SetT1(SetT1(VarT1("c")))), "A" -> OperT1(Seq(), SetT1(SetT1(IntT1()))))
+    // @type: c => Set(c);
+    // C(x) == { x }
+    // @type: Set(c) => Set(Set(c));
+    // B(x) == C(x) \\union {}
+    // @type: () => Set(Set(Int));
+    // A == B({ 1 })
+    //
+    // A()
+    val bodyOfC = enumSet(name("x") ? "c")
+      .typed(types, "Sc")
+    val declOfC = declOp("C", bodyOfC, OperParam("x"))
+      .typedOperDecl(types, "C")
+    val bodyOfB = cup(appOp(name("C") ? "C", name("x") ? "Sc") ? "SSc", enumSet() ? "SSc")
+      .typed(types, "SSc")
+    val declOfB = declOp("B", bodyOfB, OperParam("x"))
+      .typedOperDecl(types, "B")
+    val bodyOfA = appOp(name("B") ? "B", enumSet(int(1)) ? "Si")
+      .typed(types, "SSi")
+    val declOfA = declOp("A", bodyOfA)
+      .typedOperDecl(types, "A")
+
+    val operDecls = Seq(declOfC, declOfB, declOfA)
+    val bodies = BodyMapFactory.makeFromDecls(operDecls)
+    val transformation = InlinerOfUserOper(bodies, new IdleTracker())
+    val ex1 = appOp(name("A") ? "A")
+      .typed(types, "SSi")
+    val expected1 = cup(enumSet(enumSet(tla.int(1)) ? "Si") ? "SSi", enumSet() ? "SSi").typed(types, "SSi")
+
+    val result1 = transformation(ex1)
+    assert(expected1.eqTyped(result1))
   }
 }
