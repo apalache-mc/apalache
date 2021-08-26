@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.lir.storage.BodyMap
 import at.forsyte.apalache.tla.lir.transformations.standard.{DeepCopy, ReplaceFixed}
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.pp.InlinerOfUserOper.kStepParameters
+import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier}
 
 /**
  * <p>Attempts to instantiate the body of the operator named `name` with the provided arguments.
@@ -82,7 +83,21 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker) ext
     // If the operator has a parametric signature, we have to substitute type parameters with concrete parameters
     // 1. Unify the operator type with the arguments.
     // 2. Apply the resulting substitution to the types in all subexpressions.
-    val actualSignature = OperT1(args.map(_.typeTag.asTlaType1()), bodyCopy.typeTag.asTlaType1())
+    val actualType = OperT1(args.map(_.typeTag.asTlaType1()), bodyCopy.typeTag.asTlaType1())
+    val genericType = decl.typeTag.asTlaType1()
+    val substitution = new TypeUnifier().unify(Substitution.empty, genericType, actualType) match {
+      case None =>
+        throw new TypingException(
+            s"Inliner: Unable to unify generic signature $genericType of ${decl.name} with the concrete type $actualType")
+
+      case Some((sub, _)) => sub
+    }
+
+    val newBodyWithReducedType = if (substitution.isEmpty) {
+      newBody
+    } else {
+      new TypeSubstitutor(tracker, substitution)(newBody)
+    }
 
     // the step limit, if it was defined, decreases by 1
     val newStepLimit = stepLimitOpt map {
@@ -95,9 +110,9 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker) ext
           _ > 0
         }
     ) {
-      transform(newStepLimit)(newBody)
+      transform(newStepLimit)(newBodyWithReducedType)
     } else
-      newBody
+      newBodyWithReducedType
   }
 }
 
