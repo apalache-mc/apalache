@@ -1054,9 +1054,7 @@ Regression test for https://github.com/informalsystems/apalache/issues/914
 ```sh
 $ apalache-mc check Bug914.tla | sed 's/I@.*//'
 ...
-The outcome is: NoError
-...
-EXITCODE: OK
+EXITCODE: ERROR (255)
 ```
 
 ## configure the check command
