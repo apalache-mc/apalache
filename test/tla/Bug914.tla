@@ -18,7 +18,7 @@ VARIABLE
 Init == m = [foo |-> TRUE]
 
 Next ==
-   \/ m' = [m EXCEPT !.foo = TRUE]
+   \/ m' = m
    \/ m' = [m EXCEPT !.foo = TRUE]
 
 ================================================================================
