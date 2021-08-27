@@ -435,13 +435,13 @@ class LazyEquality(rewriter: SymbStateRewriter)
       // Our typing rules on records allow records with a subset of the fields in a type
       // which means the function from fields in a record type to elements in an instance
       // of that type are partial.
-      val leftElemOpt : Option[ArenaCell] = leftElems.lift(leftIndex)
-      val rightElemOpt :  Option[ArenaCell] = rightElems.lift(rightIndex)
+      val leftElemOpt: Option[ArenaCell] = leftElems.lift(leftIndex)
+      val rightElemOpt: Option[ArenaCell] = rightElems.lift(rightIndex)
 
       (leftElemOpt, rightElemOpt) match {
         // Neither record has the key indicated by its type
         case (None, None) => tla.bool(true)
-        case (Some(leftElem), Some(rightElem)) =>  {
+        case (Some(leftElem), Some(rightElem)) => {
           newState = cacheOneEqConstraint(newState, leftElem, rightElem)
           val (newArena, keyCell) = rewriter.strValueCache.getOrCreate(newState.arena, key)
           newState = newState.setArena(newArena)

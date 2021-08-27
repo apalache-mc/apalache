@@ -236,11 +236,14 @@ class CherryPick(rewriter: SymbStateRewriter) {
         } catch {
           case _: IndexOutOfBoundsException =>
             // TODO Remove once sound record typing is implemented
-            val url = "https://apalache.informal.systems/docs/apalache/known-issues.html#updating-records-with-excess-fields"
+            val url =
+              "https://apalache.informal.systems/docs/apalache/known-issues.html#updating-records-with-excess-fields"
             val msg = s"""|An updated record has more fields than its declared type:
                           |A record with the inferred type `${thisRecT.toTlaType1}` has been updated with
                           |the key `${key}` in an `EXCEPT` expression and the updated record has more fields
-                          |than are specified in its type annotation. For details see $url""".stripMargin.linesIterator.mkString(" ").trim
+                          |than are specified in its type annotation. For details see $url""".stripMargin.linesIterator
+              .mkString(" ")
+              .trim
             throw new MalformedSepecificationError(msg)
         }
       } else {
