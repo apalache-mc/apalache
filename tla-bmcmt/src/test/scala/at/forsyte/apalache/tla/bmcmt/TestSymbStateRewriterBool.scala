@@ -234,7 +234,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
             assert(!solverContext.sat())
             rewriter.pop()
             val eq2 = tla
-              .eql(c1.toNameEx ? "b", arena.cellTrue().toNameEx ? "")
+              .eql(c1.toNameEx ? "b", arena.cellTrue().toNameEx ? "b")
               .typed(boolTypes, "b")
             solverContext.assertGroundExpr(eq2)
             assert(solverContext.sat())
