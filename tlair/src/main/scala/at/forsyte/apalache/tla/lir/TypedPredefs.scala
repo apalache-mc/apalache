@@ -91,7 +91,12 @@ object TypedPredefs {
     def typed(types: Map[String, TlaType1], alias: String): TlaEx = {
       block match {
         case BuilderTlaExWrapper(ex) =>
-          ex
+          if (alias == "?") {
+            ex
+          } else {
+            // the user has specified the type explicitly
+            ex.withTag(Typed(findTypeOrThrow(types, alias)))
+          }
 
         case BuilderName(name) =>
           val typeTag = Typed(findTypeOrThrow(types, alias))
