@@ -1427,6 +1427,26 @@ Bug874.tla:4:17-4:27: Input error (see the manual): Access to non-existent recor
 EXITCODE: ERROR (255)
 ```
 
+### check letpoly.tla
+
+Test that the model checker supports let-polymorphism.
+
+```sh
+$ apalache-mc check letpoly.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check letpoly_inst.tla
+
+Test that the model checker supports let-polymorphism.
+
+```sh
+$ apalache-mc check letpoly_inst.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
 
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
@@ -1844,6 +1864,23 @@ Test the Snowcat support let-polymorphism.
 
 ```sh
 $ apalache-mc typecheck letpoly.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeCheckerSnowcat
+ > Running Snowcat .::.
+ > Your types are great!
+ > All expressions are typed
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck letpoly_inst.tla
+
+Test the Snowcat support let-polymorphism.
+
+```sh
+$ apalache-mc typecheck letpoly_inst.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
