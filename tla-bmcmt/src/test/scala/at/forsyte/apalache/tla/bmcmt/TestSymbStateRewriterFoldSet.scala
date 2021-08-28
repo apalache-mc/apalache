@@ -32,7 +32,7 @@ class TestSymbStateRewriterFoldSet extends RewriterBase {
 
     def constVal = int(0)
 
-    val nullOperDecl = declOp("A", constVal, OperParam("p"), OperParam("q")).typed(opT).asInstanceOf[TlaOperDecl]
+    val nullOperDecl = declOp("A", constVal, OperParam("p"), OperParam("q")) as opT
     val letEx = LetInEx(name(nullOperDecl.name).typed(opT), nullOperDecl)(Typed(opT))
 
     val foldEx = OperEx(
@@ -60,7 +60,7 @@ class TestSymbStateRewriterFoldSet extends RewriterBase {
 
     val emptySet = enumSet().typed(SetT1(b))
 
-    val nullOperDecl = declOp("A", int(0), OperParam("p"), OperParam("q")).typed(opT).asInstanceOf[TlaOperDecl]
+    val nullOperDecl = declOp("A", int(0), OperParam("p"), OperParam("q")) as opT
     val letEx = LetInEx(name(nullOperDecl.name).typed(opT), nullOperDecl)(Typed(opT))
 
     def v = int(1).typed(IntT1())

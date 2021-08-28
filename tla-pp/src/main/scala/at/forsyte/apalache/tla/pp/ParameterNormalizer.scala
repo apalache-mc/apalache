@@ -124,7 +124,7 @@ class ParameterNormalizer(
                     .typed(resType)
                 val letInDef = tla
                   .declOp(paramOperName, newBody, freshParams.map(n => OperParam(n)): _*)
-                  .typedOperDecl(paramType)
+                  .as(paramType)
                 tla
                   .letIn(replaced, letInDef)
                   .typed(ex.typeTag.asTlaType1())

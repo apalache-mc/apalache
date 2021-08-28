@@ -63,25 +63,30 @@ object TypedPredefs {
   }
 
   implicit class BuilderDeclAsTyped(block: BuilderDecl) {
-    def typed(topType: TlaType1): TlaDecl = {
-      typed(Map("t" -> topType), "t")
+    def as(topType: TlaType1): TlaDecl = {
+      buildTyped(Map.empty, topType)
     }
 
+    // TODO: Remove it, as soon as we migrate to the version that does not use string aliases
     def typed(types: Map[String, TlaType1], alias: String): TlaDecl = {
+      types.get(alias) match {
+        case Some(tt) => buildTyped(types, tt)
+        case None     => throw new BuilderError(s"No type for alias $alias")
+      }
+    }
+
+    private def buildTyped(types: Map[String, TlaType1], topType: TlaType1): TlaDecl = {
       block match {
         case BuilderOperDecl(name, formalParams, body) =>
-          val typedBody = new BuilderExAsTyped(body).typed(types, "?")
-          types.get(alias) match {
-            case Some(tt) => TlaOperDecl(name, formalParams, typedBody)(Typed(tt))
-            case None     => throw new BuilderError(s"No type for alias $alias")
-          }
+          val typedBody = new BuilderExAsTyped(body).buildTyped(types, None)
+          TlaOperDecl(name, formalParams, typedBody)(Typed(topType))
       }
     }
   }
 
   implicit class BuilderOperDeclAsTyped(block: BuilderOperDecl) {
-    def typedOperDecl(topType: TlaType1): TlaOperDecl = {
-      BuilderDeclAsTyped(block).typed(topType).asInstanceOf[TlaOperDecl]
+    def as(topType: TlaType1): TlaOperDecl = {
+      BuilderDeclAsTyped(block).as(topType).asInstanceOf[TlaOperDecl]
     }
 
     def typedOperDecl(types: Map[String, TlaType1], alias: String): TlaOperDecl = {
@@ -114,7 +119,7 @@ object TypedPredefs {
       buildTyped(types, Some(typeFromAlias))
     }
 
-    private def buildTyped(types: Map[String, TlaType1], topType: Option[TlaType1]): TlaEx = {
+    def buildTyped(types: Map[String, TlaType1], topType: Option[TlaType1]): TlaEx = {
       block match {
         case BuilderTlaExWrapper(ex) =>
           topType.map(tt => ex.withTag(Typed(tt))).getOrElse(ex)

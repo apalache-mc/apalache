@@ -22,16 +22,12 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
     unroller = new Unroller(new UniqueNameGenerator, noTracker, new IncrementalRenaming(noTracker))
   }
 
-  def exAsDecl(pa: (String, TlaEx)): TlaOperDecl = tla
-    .declOp(pa._1, pa._2)
-    .typedOperDecl(OperT1(Seq(), IntT1()))
+  def exAsDecl(pa: (String, TlaEx)): TlaOperDecl = tla.declOp(pa._1, pa._2) as OperT1(Seq(), IntT1())
 
   test("No-op") {
     val strToInt = OperT1(Seq(StrT1()), IntT1())
     val types = Map("b" -> BoolT1(), "i" -> IntT1(), "T" -> strToInt)
-    val tDecl = tla
-      .declOp("T", tla.name("p").typed(StrT1()), "p")
-      .typedOperDecl(strToInt)
+    val tDecl = tla.declOp("T", tla.name("p").typed(StrT1()), "p") as strToInt
     val dBody = tla
       .letIn(tla.appOp(n_T ? "T", tla.str("abc")) ? "i", tDecl)
       .typed(types, "i")
@@ -61,9 +57,7 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
       .appOp(n_A ? "T", n_p ? "s")
       .typed(types, "i")
     // A(p) == A(p)
-    val recDecl = tla
-      .declOp(name, aBody, "p")
-      .typedOperDecl(strToInt)
+    val recDecl = tla.declOp(name, aBody, "p") as strToInt
     recDecl.isRecursive = true
 
     val defaultVal: BigInt = 42
@@ -104,9 +98,7 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
       .appOp(tla.name(declarationName) ? "T", n_p ? "i")
       .typed(types, "i")
     // A(p) == A(p)
-    val recDecl = tla
-      .declOp(declarationName, aBody, "p")
-      .typedOperDecl(intToInt)
+    val recDecl = tla.declOp(declarationName, aBody, "p") as intToInt
     recDecl.isRecursive = true
 
     val defaultVal: BigInt = 42
@@ -162,9 +154,7 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
       .appOp(n_A ? "T", n_p ? "i")
       .typed(types, "i")
     // A(p) == A(p)
-    val recDecl = tla
-      .declOp(letInOpName, aBody, "p")
-      .typedOperDecl(intToInt)
+    val recDecl = tla.declOp(letInOpName, aBody, "p") as intToInt
     recDecl.isRecursive = true
 
     val appEx = tla
