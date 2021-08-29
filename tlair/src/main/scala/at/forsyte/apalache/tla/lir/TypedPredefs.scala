@@ -119,6 +119,8 @@ object TypedPredefs {
       buildTyped(types, Some(typeFromAlias))
     }
 
+    // Build a typed expression. For the backward-compatibility, we accept the map of type aliases.
+    // This map will be removed in the future.
     def buildTyped(types: Map[String, TlaType1], topType: Option[TlaType1]): TlaEx = {
       block match {
         case BuilderTlaExWrapper(ex) =>
@@ -148,14 +150,8 @@ object TypedPredefs {
           }
 
         case BuilderLet(body, defs @ _*) =>
-          topType match {
-            case Some(tt) =>
-              LetInEx(BuilderExAsTyped(body).buildTyped(types, None), defs: _*)(Typed(tt))
-
-            case None =>
-              val names = defs.map(_.name).mkString(" == ... ")
-              throw new BuilderError(s"Missing type annotation in: LET $names in ...")
-          }
+          val builtBody = BuilderExAsTyped(body).buildTyped(types, None)
+          LetInEx(builtBody, defs: _*)(builtBody.typeTag)
 
         case BuilderVal(TlaInt(value)) =>
           ValEx(TlaInt(value))(Typed(IntT1()))
