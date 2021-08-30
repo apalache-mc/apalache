@@ -495,6 +495,48 @@ class TestBuilderInfer extends FunSuite {
     assert(Typed(boolT) == output.typeTag)
   }
 
+  test("""infer: \E x \in S: P""") {
+    val input = exists(name("x") as intT, name("S") as intSetT, name("P") as boolT)
+    val output = input.inferType()
+    assert(Typed(boolT) == output.typeTag)
+  }
+
+  test("""infer: \A x \in S: P""") {
+    val input = forall(name("x") as intT, name("S") as intSetT, name("P") as boolT)
+    val output = input.inferType()
+    assert(Typed(boolT) == output.typeTag)
+  }
+
+  test("""infer: CHOOSE x \in S: P""") {
+    val input = choose(name("x") as intT, name("S") as intSetT, name("P") as boolT)
+    val output = input.inferType()
+    assert(Typed(intT) == output.typeTag)
+  }
+
+  test("""infer: { x \in S: P }""") {
+    val input = filter(name("x") as intT, name("S") as intSetT, name("P") as boolT)
+    val output = input.inferType()
+    assert(Typed(intSetT) == output.typeTag)
+  }
+
+  test("""infer: { e: x \in S }""") {
+    val input = map(name("e") as intSetT, name("x") as intT, name("S") as intSetT)
+    val output = input.inferType()
+    assert(Typed(parser("Set(Set(Int))")) == output.typeTag)
+  }
+
+  test("""infer: { x \in S |-> e }""") {
+    val input = funDef(name("e") as intSetT, name("x") as intT, name("S") as intSetT)
+    val output = input.inferType()
+    assert(Typed(parser("Int -> Set(Int)")) == output.typeTag)
+  }
+
+  test("""infer: f[x \in S] == e }""") {
+    val input = recFunDef(name("e") as intSetT, name("x") as intT, name("S") as intSetT)
+    val output = input.inferType()
+    assert(Typed(parser("Int -> Set(Int)")) == output.typeTag)
+  }
+
   test("infer: Apalache!FunAsSeq(f, 10)") {
     val input = apalacheFunAsSeq(name("f") as parser("Int -> Bool"), int(10))
     val output = input.inferType()
@@ -572,8 +614,6 @@ class TestBuilderInfer extends FunSuite {
   }
 
   // we ignore the other operators in the module TLC, as we are not going to use them in tests
-
-  // TODO: CHOOSE, E, A, filter, map, fun ctor, rec fun ctor, rec fun ref
 
   private def assertEqWithType(output: TlaEx, expected: TlaEx): Unit = {
     assert(expected == output)

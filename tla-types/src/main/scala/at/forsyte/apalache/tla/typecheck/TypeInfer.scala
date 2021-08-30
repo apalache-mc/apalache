@@ -46,7 +46,14 @@ object TypeInfer {
           throw new BuilderError("Empty tuple/sequence needs a type, use: tuple(...) as typ")
 
         case BuilderOper(TlaFunOper.except, _*) =>
+          // Weird corner case in EXCEPT: the accessors are always wrapped with a tuple.
+          // Maybe we fix it in the future. But EXCEPT is so complex that we can do manual annotations.
           throw new BuilderError("EXCEPT needs a type, use: except(...) as typ")
+
+        case BuilderOper(op, _*) if op == TlaFunOper.recFunDef || op == TlaFunOper.recFunRef =>
+          // `ToEtcExpr` constructs quite complex constraints for recursive functions.
+          // For these rare operators, it is easier to use manual annotations.
+          throw new BuilderError("Recursive functions need a type, use: recFunDef(...) as type")
 
         case BuilderOper(ApalacheOper.gen, _*) =>
           throw new BuilderError("Apalache!Gen needs a type, use: apalacheGen(...) as typ")
@@ -65,12 +72,9 @@ object TypeInfer {
               // keep the value, as some operators expect ValEx(TlaStr(_))
               v
 
-            case (_, OperEx(TlaFunOper.tuple, _*)) if oper == TlaFunOper.except =>
-              // weird corner case in EXCEPT: the accessors are always wrapped with a tuple
-              throw new BuilderError("EXCEPT requires accessors to be wrapped in a tuple. Use a manual annotation.")
-
             case (n, _) =>
-              // use an untyped name, which is bound to the type from `inferredArgs` in bindings (below)
+              // Use an untyped name, which is bound to the type from `inferredArgs` in bindings (below).
+              // We could use a typed version of NameEx, but it would only add more constraints for the type solver.
               NameEx(n)(Untyped())
           }
           // 2. Construct the untyped expression over the operator and names.
@@ -189,6 +193,37 @@ object TypeInfer {
             case Some(tt) =>
               mkConstraints(ctx, EtcApp(Seq(tt), args: _*)(etcEx.sourceRef))
           }
+
+        case EtcAbs(scopedEx, binders @ _*) =>
+          // In contrast to `EtcTypeChecker`, we assume that all names are annotated with types.
+          // Hence, instead of inferring types of the names, we simply have to make sure that
+          // the types of sets in the binders match the types of the bound variables.
+          // At this point, the expressions in `binders` look like `EtcName(placeholder)`,
+          // where `placeholder` is the special name of the form `?_<num>`.
+          //
+          // Note that we do not do complete type checking here. For example, a name `x` in
+          // `scopedEx` can have a type that is completely different from the type assigned
+          // to `x` in the binding expression `x \in S`. Our goal is not produce a complete
+          // type checker, but to construct typed expressions without writing too much
+          // boilerplate code. Hence, we should use the same named expression in the Scala code,
+          // to avoid ill-typed expressions in tests.
+          val varTypes = binders map {
+            case (EtcName(varPlaceholder), EtcName(setPlaceholder)) =>
+              val varType = ctx.bindings(varPlaceholder)
+              val setType = ctx.bindings(setPlaceholder)
+              val expectedSetType = SetT1(varType)
+              if (expectedSetType != setType) {
+                throw new BuilderError(s"Mismatch in a binding expression: $setType != $expectedSetType")
+              }
+              varType
+
+            case _ =>
+              throw new BuilderError("unexpected shape of binders in EtcAbs")
+          }
+          // find the type of the expression in scope
+          val typeInScope = mkConstraints(ctx, scopedEx)
+          // the type of the lambda expression is an operator from bound types to the result
+          OperT1(varTypes, typeInScope)
 
         case _ =>
           throw new BuilderError(s"Unexpected expression $etcEx")
