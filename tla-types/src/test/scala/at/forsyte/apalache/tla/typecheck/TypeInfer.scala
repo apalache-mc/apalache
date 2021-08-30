@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.typecheck.etc._
 
 object TypeInfer {
