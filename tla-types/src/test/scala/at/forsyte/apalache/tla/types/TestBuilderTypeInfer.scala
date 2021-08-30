@@ -4,7 +4,7 @@ import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.typecheck.TypeInfer._
+import BuilderTypeInfer._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -13,7 +13,7 @@ import org.scalatest.junit.JUnitRunner
  * Tests the expression builder in conjunction with semi-automatic type inference.
  */
 @RunWith(classOf[JUnitRunner])
-class TestBuilderInfer extends FunSuite {
+class TestBuilderTypeInfer extends FunSuite {
   // import all names from the Builder object, so we can easily construct an expression
 
   import at.forsyte.apalache.tla.lir.convenience.tla._

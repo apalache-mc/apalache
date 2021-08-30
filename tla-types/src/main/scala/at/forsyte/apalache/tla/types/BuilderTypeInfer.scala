@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.typecheck
+package at.forsyte.apalache.tla.types
 
 import at.forsyte.apalache.io.annotations.store.createAnnotationStore
 import at.forsyte.apalache.tla.lir
@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.typecheck.etc._
 
-object TypeInfer {
+object BuilderTypeInfer {
   // a static empty annotation store that we pass to ToEtcExpr
   private val emptyAnnotationStore = createAnnotationStore()
 

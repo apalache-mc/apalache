@@ -1,16 +1,23 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.bmcmt.smt.{PreproSolverContext, SolverConfig, Z3SolverContext}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
+import at.forsyte.apalache.tla.types.BuilderTypeInfer._
 import at.forsyte.apalache.tla.pp.TlaInputError
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterSet extends RewriterBase {
+  private val parser = DefaultType1Parser
+  private val intT = parser("Int")
+  private val boolT = parser("Bool")
+  private val boolSetT = parser("Set(Bool)")
+
   private val types = Map(
       "i" -> IntT1(),
       "I" -> SetT1(IntT1()),
@@ -26,16 +33,14 @@ class TestSymbStateRewriterSet extends RewriterBase {
   )
 
   test("""{ x, y, z } ~~> c_set""") {
-    val ex = enumSet(name("x") ? "i", name("y") ? "b", name("z") ? "b")
-      .typed(types, "B")
+    val ex = enumSet(name("x") as intT, name("y") as intT, name("z") as intT).inferType()
     val binding = Binding("x" -> arena.cellFalse(), "y" -> arena.cellTrue(), "z" -> arena.cellFalse())
     val state = new SymbState(ex, arena, binding)
     create().rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
           case set @ NameEx(_) =>
-            val falseInSet = in(arena.cellFalse().toNameEx ? "b", set ? "B")
-              .typed(types, "b")
+            val falseInSet = in(arena.cellFalse().toNameEx as boolT, set as boolSetT).inferType()
             solverContext.assertGroundExpr(falseInSet)
             assert(solverContext.sat())
             val notTrueInSet = not(in(arena.cellTrue().toNameEx ? "b", set ? "B") ? "b")
