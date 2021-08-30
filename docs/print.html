@@ -2291,6 +2291,40 @@ argument.</p>
 711</a>.</p>
 <p><strong>Affected versions:</strong> &lt;= 0.15.x</p>
 <p><strong>Planned fix:</strong> <a href="https://github.com/informalsystems/apalache/issues/712">Issue 712</a></p>
+<h2><a class="header" href="#updating-records-with-excess-fields" id="updating-records-with-excess-fields">Updating records with excess fields</a></h2>
+<p>Given a record with a type declaration specifying <code>n</code> fields, if that record is
+given more than <code>n</code> fields and the specification includes an <code>EXCEPT</code> expression
+that updates the record, Apalache may be unable to check the specification.</p>
+<p>In the following example, the variable <code>m</code> is given the type of a record with
+<code>1</code> field (namely <code>a</code>), but it is then assigned to a record with <code>2</code> fields
+(namely <code>a</code> and <code>foo</code>).</p>
+<pre><code class="language-tla">VARIABLE
+  \* @type: [a: Int];
+  m
+
+Init == m = [a |-&gt; 0, foo |-&gt; TRUE]
+
+Next ==
+   \/ m' = m
+   \/ m' = [m EXCEPT !.a = 0]
+</code></pre>
+<p>Given the current (unsound) typing discipline Apalache uses for records, this
+specification is not considered incorrectly typed. However, due to the update
+using <code>EXCEPT</code> in the <code>Next</code> operator, the specification cannot be checked.</p>
+<p><strong>Affected versions:</strong> &lt;= 0.15.x</p>
+<p><strong>Planned fix:</strong> <a href="https://github.com/informalsystems/apalache/issues/401">Issue 401</a></p>
+<h3><a class="header" href="#workaround" id="workaround">Workaround</a></h3>
+<p>Add the <code>foo</code> field to the variable's type signature:</p>
+<pre><code class="language-tla">VARIABLE
+  \* @type: [a: Int, foo: Bool];
+  m
+
+Init == m = [a |-&gt; 0, foo |-&gt; TRUE]
+
+Next ==
+   \/ m' = m
+   \/ m' = [m EXCEPT !.a = 0]
+</code></pre>
 <h1><a class="header" href="#preprocessing-in-apalache" id="preprocessing-in-apalache">Preprocessing in APALACHE</a></h1>
 <p>Before translating a specification into SMT, <code>apalache</code> performs a number of
 preprocessing steps:</p>
