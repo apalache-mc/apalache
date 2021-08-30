@@ -2,10 +2,9 @@ package at.forsyte.apalache.tla.typecheck
 
 import at.forsyte.apalache.io.annotations.store.createAnnotationStore
 import at.forsyte.apalache.tla.lir
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.TypedPredefs._
-import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper, TlaSetOper}
 import at.forsyte.apalache.tla.typecheck.etc._
 
 object TypeInfer {
@@ -15,6 +14,10 @@ object TypeInfer {
   /**
    * Adapter of a builder expression into a TlaEx that infers types, whenever possible.
    * This class is marked as 'implicit', so we can apply `inferType` to a builder expression.
+   * This class is put under the 'tests' source path on purpose.
+   * It should be used in tests only, as this kind of inference is tricky and it can fail
+   * under unexpected conditions (e.g., when constructing an empty set).
+   * The production code should annotate expressions by calling the method `as`.
    *
    * @param bex a builder expression.
    * @author Igor Konnov (version 2), Jure Kukovec (version 1)
