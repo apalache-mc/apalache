@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.{NameEx, NullEx, TlaEx, ValEx}
 
 import scala.collection.immutable.SortedMap
+import at.forsyte.apalache.tla.lir.MalformedSepecificationError
 
 /**
  * An element picket that allows us:
@@ -228,9 +229,23 @@ class CherryPick(rewriter: SymbStateRewriter) {
     def getKeyOrDefault(record: ArenaCell, key: String): ArenaCell = {
       val thisRecT = record.cellType.asInstanceOf[RecordT]
       if (thisRecT.fields.contains(key)) {
-        // this record has the key
         val keyIndex = findKeyIndex(thisRecT, key)
-        newState.arena.getHas(record)(keyIndex)
+        val edges = newState.arena.getHas(record)
+        try {
+          edges(keyIndex)
+        } catch {
+          case _: IndexOutOfBoundsException =>
+            // TODO Remove once sound record typing is implemented
+            val url =
+              "https://apalache.informal.systems/docs/apalache/known-issues.html#updating-records-with-excess-fields"
+            val msg = s"""|An updated record has more fields than its declared type:
+                          |A record with the inferred type `${thisRecT.toTlaType1}` has been updated with
+                          |the key `${key}` in an `EXCEPT` expression and the updated record has more fields
+                          |than are specified in its type annotation. For details see $url""".stripMargin.linesIterator
+              .mkString(" ")
+              .trim
+            throw new MalformedSepecificationError(msg)
+        }
       } else {
         // This record does not have the key, but it was mixed with other records and produced a more general type.
         // Return a default value. As we are iterating over fields of commonRecordT, we will always find a value.

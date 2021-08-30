@@ -1047,6 +1047,16 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
+### check Bug914 succeeds
+
+Regression test for https://github.com/informalsystems/apalache/issues/914
+
+```sh
+$ apalache-mc check Bug914.tla | sed 's/I@.*//'
+...
+EXITCODE: ERROR (255)
+```
+
 ## configure the check command
 
 Testing various flags that are set via command-line options and the TLC
