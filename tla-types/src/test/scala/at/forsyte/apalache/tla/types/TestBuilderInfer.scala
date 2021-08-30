@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.types
 
 import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.lir.TypedPredefs._
-import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecheck.TypeInfer._
@@ -20,6 +19,11 @@ class TestBuilderInfer extends FunSuite {
   import at.forsyte.apalache.tla.lir.convenience.tla._
 
   private val parser = DefaultType1Parser
+  private val intT = parser("Int")
+  private val boolT = parser("Bool")
+  private val intSetT = parser("Set(Int)")
+  private val intSeq = parser("Seq(Int)")
+  private val boolSetT = parser("Set(Bool)")
 
   test("infer: int") {
     val output = int(42).inferType()
@@ -182,9 +186,7 @@ class TestBuilderInfer extends FunSuite {
   }
 
   test("infer: [S -> T]") {
-    val intSet = parser("Set(Int)")
-    val boolSet = parser("Set(Bool)")
-    val input = funSet(name("S") as intSet, name("T") as boolSet)
+    val input = funSet(name("S") as intSetT, name("T") as boolSetT)
     val output = input.inferType()
     assert(Typed(parser("Set(Int -> Bool)")) == output.typeTag)
   }
@@ -348,6 +350,228 @@ class TestBuilderInfer extends FunSuite {
     val input = except(name("f") as ftype, accessor, bool(true))
     assertThrows[BuilderError](input.inferType())
   }
+
+  test("infer: IF-THEN-ELSE") {
+    val input = ite(bool(true), name("x") as intT, name("y") as intT)
+    val output = input.inferType()
+    assert(Typed(intT) == output.typeTag)
+  }
+
+  test("infer: CASE") {
+    val input = caseSplit(bool(true), name("x") as intT, name("p") as parser("Bool"), name("y") as intT)
+    val output = input.inferType()
+    assert(Typed(intT) == output.typeTag)
+  }
+
+  test("infer: CASE with OTHER") {
+    val input = caseOther(int(3), bool(true), name("x") as intT, name("p") as parser("Bool"), name("y") as intT)
+    val output = input.inferType()
+    assert(Typed(intT) == output.typeTag)
+  }
+
+  test("infer: IsFiniteSet") {
+    val input = isFin(name("S") as parser("Set(Int)"))
+    val output = input.inferType()
+    assert(Typed(parser("Bool")) == output.typeTag)
+  }
+
+  test("infer: Cardinality") {
+    val input = card(name("S") as parser("Set(Int)"))
+    val output = input.inferType()
+    assert(Typed(parser("Int")) == output.typeTag)
+  }
+
+  test("infer: x'") {
+    val input = prime(name("x") as parser("Set(Int)"))
+    val output = input.inferType()
+    assert(Typed(parser("Set(Int)")) == output.typeTag)
+  }
+
+  test("infer: [A]_x") {
+    val input = stutt(name("A") as boolT, name("x") as intT)
+    val output = input.inferType()
+    assert(Typed(boolT) == output.typeTag)
+  }
+
+  test("infer: <A>_x") {
+    val input = nostutt(name("A") as boolT, name("x") as intT)
+    val output = input.inferType()
+    assert(Typed(boolT) == output.typeTag)
+  }
+
+  test("infer: ENABLED A") {
+    val input = enabled(name("A") as boolT)
+    val output = input.inferType()
+    assert(Typed(boolT) == output.typeTag)
+  }
+
+  test("infer: UNCHANGED x") {
+    val input = unchanged(name("x") as intT)
+    val output = input.inferType()
+    assert(Typed(boolT) == output.typeTag)
+  }
+
+  test("""infer: A cdot B""") {
+    val input = comp(name("A") as boolT, name("B") as boolT)
+    val output = input.inferType()
+    assert(Typed(boolT) == output.typeTag)
+  }
+
+  test("""infer: Head(seq)""") {
+    val input = head(name("seq") as intSeq)
+    val output = input.inferType()
+    assert(Typed(intT) == output.typeTag)
+  }
+
+  test("""infer: Tail(seq)""") {
+    val input = tail(name("seq") as intSeq)
+    val output = input.inferType()
+    assert(Typed(intSeq) == output.typeTag)
+  }
+
+  test("""infer: Append(seq, x)""") {
+    val input = append(name("seq") as intSeq, name("x") as intT)
+    val output = input.inferType()
+    assert(Typed(intSeq) == output.typeTag)
+  }
+
+  test("""infer: seq1 \o seq2""") {
+    val input = concat(name("seq1") as intSeq, name("seq2") as intSeq)
+    val output = input.inferType()
+    assert(Typed(intSeq) == output.typeTag)
+  }
+
+  test("""infer: Len(seq)""") {
+    val input = len(name("seq") as intSeq)
+    val output = input.inferType()
+    assert(Typed(intT) == output.typeTag)
+  }
+
+  test("""infer: SubSeq(seq, 2, 4)""") {
+    val input = subseq(name("seq1") as intSeq, int(2), int(4))
+    val output = input.inferType()
+    assert(Typed(intSeq) == output.typeTag)
+  }
+
+  test("""infer: SelectSeq(seq, P)""") {
+    val input = selectseq(name("seq1") as intSeq, name("P") as parser("Int => Bool"))
+    val output = input.inferType()
+    assert(Typed(intSeq) == output.typeTag)
+  }
+
+  test("infer: []A") {
+    val input = box(name("A") as boolT)
+    val output = input.inferType()
+    assert(Typed(boolT) == output.typeTag)
+  }
+
+  test("infer: <>A") {
+    val input = diamond(name("A") as boolT)
+    val output = input.inferType()
+    assert(Typed(boolT) == output.typeTag)
+  }
+
+  test("infer: A ~> B") {
+    val input = leadsTo(name("A") as boolT, name("B") as boolT)
+    val output = input.inferType()
+    assert(Typed(boolT) == output.typeTag)
+  }
+
+  test("infer: A -+-> B") {
+    val input = guarantees(name("A") as boolT, name("B") as boolT)
+    val output = input.inferType()
+    assert(Typed(boolT) == output.typeTag)
+  }
+
+  test("infer: WF_x(A)") {
+    val input = WF(name("x") as intT, name("A") as boolT)
+    val output = input.inferType()
+    assert(Typed(boolT) == output.typeTag)
+  }
+
+  test("infer: SF_x(A)") {
+    val input = SF(name("x") as intT, name("A") as boolT)
+    val output = input.inferType()
+    assert(Typed(boolT) == output.typeTag)
+  }
+
+  test("infer: Apalache!FunAsSeq(f, 10)") {
+    val input = apalacheFunAsSeq(name("f") as parser("Int -> Bool"), int(10))
+    val output = input.inferType()
+    assert(Typed(parser("Seq(Bool)")) == output.typeTag)
+  }
+
+  test("infer error: Apalache!Gen(10)") {
+    // Gen needs a manual type annotation,
+    // as the output type cannot be inferred from Gen's arguments
+    val input = apalacheGen(int(10))
+    assertThrows[BuilderError](input.inferType())
+  }
+
+  test("infer: Apalache!Assign(x, 3)") {
+    val input = assign(name("x") as intT, int(3))
+    val output = input.inferType()
+    assert(Typed(boolT) == output.typeTag)
+  }
+
+  test("infer: Apalache!Expand(S)") {
+    val input = apalacheExpand(name("S") as intSetT)
+    val output = input.inferType()
+    assert(Typed(intSetT) == output.typeTag)
+  }
+
+  test("infer: Apalache!Skolem(P)") {
+    val input = apalacheSkolem(name("P") as boolT)
+    val output = input.inferType()
+    assert(Typed(boolT) == output.typeTag)
+  }
+
+  test("infer: Apalache!ConstCard(P)") {
+    val input = apalacheConstCard(name("P") as boolT)
+    val output = input.inferType()
+    assert(Typed(boolT) == output.typeTag)
+  }
+
+  test("infer: Apalache!Distinct(x, y)") {
+    val input = apalacheDistinct(name("x") as intT, name("y") as intT)
+    val output = input.inferType()
+    assert(Typed(boolT) == output.typeTag)
+  }
+
+  test("infer: Apalache!FoldSet(F, v, S)") {
+    val opT = parser("(Int, Int) => Int")
+    val input = apalacheFoldSet(name("F") as opT, int(1), name("S") as intSetT)
+    val output = input.inferType()
+    assert(Typed(intT) == output.typeTag)
+  }
+
+  test("infer: Apalache!FoldSeq(F, v, seq)") {
+    val opT = parser("(Int, Int) => Int")
+    val input = apalacheFoldSeq(name("F") as opT, int(1), name("seq") as intSeq)
+    val output = input.inferType()
+    assert(Typed(intT) == output.typeTag)
+  }
+
+  test("infer: lab1(x, y) :: e") {
+    val input = label(name("e") as intT, "lab1", "x", "y")
+    val output = input.inferType()
+    assert(Typed(intT) == output.typeTag)
+  }
+
+  test("infer: 3 :> TRUE") {
+    val input = colonGreater(int(3), bool(true))
+    val output = input.inferType()
+    assert(Typed(parser("Int -> Bool")) == output.typeTag)
+  }
+
+  test("infer: f1 @@ f2") {
+    val intToInt = parser("Int -> Int")
+    val input = atat(name("f1") as intToInt, name("f2") as intToInt)
+    val output = input.inferType()
+    assert(Typed(intToInt) == output.typeTag)
+  }
+
+  // we ignore the other operators in the module TLC, as we are not going to use them in tests
 
   // TODO: CHOOSE, E, A, filter, map, fun ctor, rec fun ctor, rec fun ref
 

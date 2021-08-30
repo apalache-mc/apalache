@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
-import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper, TlaSetOper}
 import at.forsyte.apalache.tla.typecheck.etc._
 
 object TypeInfer {
@@ -43,7 +43,13 @@ object TypeInfer {
           throw new BuilderError("Empty set needs a type, use: enumSet() as typ")
 
         case BuilderOper(TlaFunOper.tuple) =>
-          throw new BuilderError("Empty tuple/sequence needs a type, use: tuple() as typ")
+          throw new BuilderError("Empty tuple/sequence needs a type, use: tuple(...) as typ")
+
+        case BuilderOper(TlaFunOper.except, _*) =>
+          throw new BuilderError("EXCEPT needs a type, use: except(...) as typ")
+
+        case BuilderOper(ApalacheOper.gen, _*) =>
+          throw new BuilderError("Apalache!Gen needs a type, use: apalacheGen(...) as typ")
 
         // the general case
         case BuilderOper(oper, args @ _*) =>

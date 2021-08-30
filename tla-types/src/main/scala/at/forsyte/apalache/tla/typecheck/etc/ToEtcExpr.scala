@@ -726,7 +726,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
 
       case OperEx(ApalacheOper.expand, set) =>
         val a = varPool.fresh
-        // a => Bool
+        // a => a
         val opsig = OperT1(Seq(a), a)
         mkExRefApp(opsig, Seq(set))
 
