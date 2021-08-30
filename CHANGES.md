@@ -2,6 +2,12 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.15.13
+
+### Bug fixes
+
+ * Fix the profiler, see #963
+
 ## 0.15.12
 
 ### Bug fixes
