@@ -596,6 +596,26 @@ class Builder {
     BuilderOper(ApalacheOper.constCard, ex)
   }
 
+  def apalacheFunAsSeq(funEx: BuilderEx, lenEx: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.funAsSeq, funEx, lenEx)
+  }
+
+  def apalacheGen(boundEx: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.gen, boundEx)
+  }
+
+  def apalacheDistinct(args: BuilderEx*): BuilderEx = {
+    BuilderOper(ApalacheOper.distinct, args: _*)
+  }
+
+  def apalacheFoldSet(pairOp: BuilderEx, base: BuilderEx, set: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.foldSet, pairOp, base, set)
+  }
+
+  def apalacheFoldSeq(pairOp: BuilderEx, base: BuilderEx, seq: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.foldSeq, pairOp, base, seq)
+  }
+
   private val m_nameMap: Map[String, TlaOper] =
     scala.collection.immutable.Map(
         TlaOper.eq.name -> TlaOper.eq,
