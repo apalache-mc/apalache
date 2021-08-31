@@ -72,9 +72,9 @@ object BuilderTypeInfer {
           // To avoid collisions with other names, use the cryptic prefix '?_'.
           val argNames = 1.to(inferredArgs.size).map(i => s"?_$i")
           val replacedArgs = argNames.zip(inferredArgs).map {
-            case (_, v @ ValEx(TlaStr(_))) =>
-              // keep the value, as some operators expect ValEx(TlaStr(_))
-              v
+            // keep the string and integer literals, as some operators expect them (records access and tuple access)
+            case (_, v @ ValEx(TlaStr(_))) => v
+            case (_, v @ ValEx(TlaInt(_))) => v
 
             case (n, _) =>
               // Use an untyped name, which is bound to the type from `inferredArgs` in bindings (below).
@@ -172,8 +172,21 @@ object BuilderTypeInfer {
           } else {
             // the case of overloaded operators:
             // operVar = operType_1 \/ ... \/ operVar = operType_n
+            def onOverloadingError(sub: Substitution, signatures: Seq[TlaType1]): Unit = {
+              // The constraint solver has failed to solve the disjunctive clause
+              val evalArgTypes = argTypes.map(sub.subRec).mkString(" and ")
+              if (signatures.isEmpty) {
+                throw new BuilderError(s"No matching signature for argument(s) $evalArgTypes")
+              } else {
+                // it should be the case that manySigs has at least two elements, but we also include the case of one
+                val sepSigs = signatures.map(_.toString()).mkString(" and ")
+                throw new BuilderError(
+                    s"Found ${signatures.length} matching operator signatures $sepSigs for argument(s) $evalArgTypes")
+              }
+            }
+
             ctx.solver.addConstraint(OrClause(operTypes.map(EqClause(operVar, _)): _*)
-                  .setOnTypeError(onTypeError)
+                  .setOnTypeError(onOverloadingError)
                   .asInstanceOf[OrClause])
           }
 

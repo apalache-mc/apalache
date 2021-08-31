@@ -531,10 +531,9 @@ class TestBuilderTypeInfer extends FunSuite {
     assert(Typed(parser("Int -> Set(Int)")) == output.typeTag)
   }
 
-  test("""infer: f[x \in S] == e }""") {
+  test("""infer error: f[x \in S] == e }""") {
     val input = recFunDef(name("e") as intSetT, name("x") as intT, name("S") as intSetT)
-    val output = input.inferType()
-    assert(Typed(parser("Int -> Set(Int)")) == output.typeTag)
+    assertThrows[BuilderError](input.inferType())
   }
 
   test("infer: Apalache!FunAsSeq(f, 10)") {
