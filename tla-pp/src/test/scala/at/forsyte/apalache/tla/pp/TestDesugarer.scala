@@ -254,10 +254,11 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
 
     val expected: TlaEx =
       tla
-        .letIn(callAndAccess("t_3", "f_si"), defs: _*)
+        .letIn(callAndAccess("t_3", "i_to_Qs"), defs: _*)
         .typed(exceptTypes, "i_to_Qs")
 
-    assert(expected eqTyped output)
+    assert(expected == output)
+    assert(expected.typeTag == output.typeTag)
   }
 
   test("EXCEPT three-dimensional, one index") {
