@@ -1047,6 +1047,16 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
+### check Bug914 succeeds
+
+Regression test for https://github.com/informalsystems/apalache/issues/914
+
+```sh
+$ apalache-mc check Bug914.tla | sed 's/I@.*//'
+...
+EXITCODE: ERROR (255)
+```
+
 ## configure the check command
 
 Testing various flags that are set via command-line options and the TLC
@@ -1425,6 +1435,19 @@ $ apalache-mc check Bug874.tla | sed 's/[IEW]@.*//'
 Bug874.tla:4:17-4:27: Input error (see the manual): Access to non-existent record field b in (["a" ↦ 2])["b"]
 ...
 EXITCODE: ERROR (255)
+```
+
+### check profiling
+
+Check that the profiler output is produced as explained in
+[Profiling](https://apalache.informal.systems/docs/apalache/profiling.html).
+
+```sh
+$ echo >profile.csv
+$ apalache-mc check --smtprof schroedinger_cat.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+$ test -s profile.csv
 ```
 
 ## running the typecheck command
