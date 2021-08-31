@@ -72,7 +72,7 @@ object BuilderTypeInfer {
           // To avoid collisions with other names, use the cryptic prefix '?_'.
           val argNames = 1.to(inferredArgs.size).map(i => s"?_$i")
           val replacedArgs = argNames.zip(inferredArgs).map {
-            case (_, v @ ValEx(_)) =>
+            case (_, v @ ValEx(TlaStr(_))) =>
               // keep the value, as some operators expect ValEx(TlaStr(_))
               v
 
