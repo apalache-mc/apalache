@@ -12,6 +12,13 @@ import scala.collection.immutable.SortedMap
  * @author Igor Konnov
  */
 class TypeContext(val largestVarIndex: Int, val types: Map[String, (TlaType1, Set[Int])]) {
+
+  /**
+   * Get the name and the set of universally quantified type variables (as integers) that are associated with the name.
+   *
+   * @param name a name in the type context
+   * @return the associated type and the set of type variables (as integers) that are associated with the name.
+   */
   def apply(name: String): (TlaType1, Set[Int]) = {
     types.getOrElse(name, new IllegalArgumentException(s"No type binding for $name in the type context"))
   }
