@@ -21,7 +21,7 @@ object BuilderTypeInfer {
    * The production code should annotate expressions by calling the method `as`.
    *
    * @param bex a builder expression.
-   * @author Igor Konnov (version 2), Jure Kukovec (version 1)
+   * @author Jure Kukovec (version 1), Igor Konnov (version 2)
    */
   implicit class BuilderExInfer(bex: BuilderEx) {
 
