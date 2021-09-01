@@ -20,7 +20,10 @@ class TypeContext(val largestVarIndex: Int, val types: Map[String, (TlaType1, Se
    * @return the associated type and the set of type variables (as integers) that are associated with the name.
    */
   def apply(name: String): (TlaType1, Set[Int]) = {
-    types.getOrElse(name, new IllegalArgumentException(s"No type binding for $name in the type context"))
+    types.get(name) match {
+      case Some(pair) => pair
+      case None       => throw new IllegalArgumentException(s"No type binding for $name in the type context")
+    }
   }
 }
 
