@@ -27,7 +27,7 @@ VARIABLES
 \* @type: Set([type: Str, rm: RM]);
 Message ==
   ({[type |-> t, rm |-> r]: t \in {"Prepared"}, r \in RM }
-   \cup
+   \union
    {[type |-> t] : t \in {"Commit", "Abort"}})
 
  
@@ -60,7 +60,7 @@ TMRcvPrepared(rm) ==
   (*************************************************************************)
   /\ tmState = "init"
   /\ [type |-> "Prepared", rm |-> rm] \in msgs
-  /\ tmPrepared' = tmPrepared \cup {rm}
+  /\ tmPrepared' = tmPrepared \union {rm}
   /\ UNCHANGED <<rmState, tmState, msgs>>
 
 TMCommit ==
@@ -71,7 +71,7 @@ TMCommit ==
   /\ tmState = "init"
   /\ tmPrepared = RM
   /\ tmState' = "committed"
-  /\ msgs' = msgs \cup {[type |-> "Commit"]}
+  /\ msgs' = msgs \union {[type |-> "Commit"]}
   /\ UNCHANGED <<rmState, tmPrepared>>
 
 TMAbort ==
@@ -80,7 +80,7 @@ TMAbort ==
   (*************************************************************************)
   /\ tmState = "init"
   /\ tmState' = "aborted"
-  /\ msgs' = msgs \cup {[type |-> "Abort"]}
+  /\ msgs' = msgs \union {[type |-> "Abort"]}
   /\ UNCHANGED <<rmState, tmPrepared>>
 
 \* @type: (RM) => Bool;
@@ -90,7 +90,7 @@ RMPrepare(rm) ==
   (*************************************************************************)
   /\ rmState[rm] = "working"
   /\ rmState' = [rmState EXCEPT ![rm] = "prepared"]
-  /\ msgs' = msgs \cup {[type |-> "Prepared", rm |-> rm]}
+  /\ msgs' = msgs \union {[type |-> "Prepared", rm |-> rm]}
   /\ UNCHANGED <<tmState, tmPrepared>>
   
 \* @type: (RM) => Bool;

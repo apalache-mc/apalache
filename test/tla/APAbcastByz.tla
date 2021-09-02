@@ -60,7 +60,7 @@ VARIABLE rcvd           (* the messages received by each process *)
 VARIABLE sent           (* the messages sent by all correct processes *)
 ASSUME NTF == N \in Nat /\ T \in Nat /\ F \in Nat /\ (N > 3 * T) /\ (T >= F) /\ (F >= 0)
 
-Proc == Corr \cup Faulty         (* all processess, including the faulty ones    *)
+Proc == Corr \union Faulty         (* all processess, including the faulty ones    *)
 M == { "ECHO" }
 (* ByzMsgs == { <<p, "ECHO">> : p \in Faulty }: quite complicated to write a TLAPS proof 
    for the cardinality of the expression { e : x \in S}
@@ -91,8 +91,8 @@ InitNoBcast == pc \in [ Corr -> {"V0"} ] /\ Init
    i.e., a subset of ByzMsgs.
  *)
 Receive(self) ==
-  \E newMessages \in SUBSET ( sent \cup ByzMsgs ) :
-    rcvd' = [ i \in Corr |-> IF i # self THEN rcvd[i] ELSE rcvd[self] \cup newMessages ]
+  \E newMessages \in SUBSET ( sent \union ByzMsgs ) :
+    rcvd' = [ i \in Corr |-> IF i # self THEN rcvd[i] ELSE rcvd[self] \union newMessages ]
                              
 (* The first if-then expression in Figure 7 [1]: If process p received an INIT message and
    did not send <ECHO> before, then process p sends ECHO to all.
@@ -100,7 +100,7 @@ Receive(self) ==
 UponV1(self) ==
   /\ pc[self] = "V1"
   /\ pc' = [pc EXCEPT ![self] = "SE"]
-  /\ sent' = sent \cup { <<self, "ECHO">> }
+  /\ sent' = sent \union { <<self, "ECHO">> }
 
 (* The 3rd if-then expression in Fig. 7 [1]: If correct process p received ECHO messages 
    from at least N - 2*T distinct processes and did not send ECHO before, then process p sends
@@ -118,7 +118,7 @@ UponNonFaulty(self) ==
   /\ Cardinality(rcvd'[self]) >= N - 2*T  
   /\ Cardinality(rcvd'[self]) < N - T
   /\ pc' = [ pc EXCEPT ![self] = "SE" ]
-  /\ sent' = sent \cup { <<self, "ECHO">> }
+  /\ sent' = sent \union { <<self, "ECHO">> }
         
 (* The 2nd and 3rd if-then expressions in Figure 7 [1]: If process p received <ECHO> from at 
    least N - T distinct processes and did not send ECHO message before, then process p accepts       
@@ -128,7 +128,7 @@ UponAcceptNotSentBefore(self) ==
   /\ pc[self] \in { "V0", "V1" }
   /\ Cardinality(rcvd'[self]) >= N - T
   /\ pc' = [ pc EXCEPT ![self] = "AC" ]
-  /\ sent' = sent \cup { <<self, "ECHO">> }
+  /\ sent' = sent \union { <<self, "ECHO">> }
         
 (* Only the 2nd if-then expression in Fig. 7 [1]:  if process p sent ECHO messages and received 
    ECHO messages from at least N - T distinct processes, it accepts.
@@ -180,7 +180,7 @@ TypeOK ==
   /\ Corr \in SUBSET Proc
   /\ Faulty \in SUBSET Proc
   /\ sent \in SUBSET (Proc \times M)     
-  /\ rcvd \in [ Corr -> SUBSET ( sent \cup ByzMsgs ) ]
+  /\ rcvd \in [ Corr -> SUBSET ( sent \union ByzMsgs ) ]
 
 (* Constraints about the cardinalities of Faulty and Corr, their elements, and the upper bound  
    of the set of possible Byzantine messages. The FCConstraints is an invariant. One can probably
@@ -192,7 +192,7 @@ FCConstraints ==
   /\ Faulty \subseteq Proc
   /\ IsFiniteSet(Corr)
   /\ IsFiniteSet(Faulty)
-  /\ Corr \cup Faulty = Proc 
+  /\ Corr \union Faulty = Proc
   /\ Faulty = Proc \ Corr
   /\ Cardinality(Corr) >= N - T
   /\ Cardinality(Faulty) <= T   
@@ -268,7 +268,7 @@ IndInv_Unforg_NoBcast_TLC ==
   /\ Faulty = Proc \ Corr
   /\ \A i \in Proc : pc[i] /= "AC"
   /\ sent = {} <: {MT} 
-  /\ rcvd \in [ Proc -> sent \cup SUBSET ByzMsgs ]   
+  /\ rcvd \in [ Proc -> sent \union SUBSET ByzMsgs ]
 
 (* NOT IMPORTANT FOR MODEL CHECKING
 
@@ -292,14 +292,14 @@ THEOREM UMFS_CardinalityType ==
         /\ IsFiniteSet(X) 
         /\ IsFiniteSet(Y) 
         /\ IsFiniteSet(Z) 
-        /\ X \cup Y = Z
+        /\ X \union Y = Z
         /\ X = Z \ Y
      => Cardinality(X) = Cardinality(Z) - Cardinality(Y)
   <1> SUFFICES ASSUME NEW X, NEW Y, NEW Z,    
                       IsFiniteSet(X), 
                       IsFiniteSet(Y), 
                       IsFiniteSet(Z), 
-                      X \cup Y = Z,
+                      X \union Y = Z,
                       X = Z \ Y
               PROVE Cardinality(X) = Cardinality(Z) - Cardinality(Y)
               OBVIOUS
@@ -357,7 +357,7 @@ THEOREM FCConstraints_TypeOK_InitNoBcast ==
     BY <1>1, ProcProp, FS_Subset     
   <1>4 IsFiniteSet(Faulty)
     BY <1>2, ProcProp, FS_Subset
-  <1>5 Corr \cup Faulty = Proc 
+  <1>5 Corr \union Faulty = Proc
     OBVIOUS  
   <1>6 Faulty = Proc \ Corr
     OBVIOUS  
@@ -409,7 +409,7 @@ THEOREM FCConstraints_TypeOK_InitNoBcast ==
     OBVIOUS 
   <1>15 sent \subseteq Proc \times M
       OBVIOUS          
-  <1>16 rcvd \in [ Proc -> SUBSET ( sent \cup ByzMsgs ) ]
+  <1>16 rcvd \in [ Proc -> SUBSET ( sent \union ByzMsgs ) ]
     OBVIOUS      
   <1> QED
     BY <1>1, <1>2, <1>3, <1>4, <1>5, <1>6, <1>7, <1>8, <1>9, 
@@ -429,7 +429,7 @@ THEOREM FCConstraints_TypeOK_Init ==
     BY <1>1, ProcProp, FS_Subset     
   <1>4 IsFiniteSet(Faulty)
     BY <1>2, ProcProp, FS_Subset
-  <1>5 Corr \cup Faulty = Proc 
+  <1>5 Corr \union Faulty = Proc
     OBVIOUS  
   <1>6 Faulty = Proc \ Corr
     OBVIOUS 
@@ -479,7 +479,7 @@ THEOREM FCConstraints_TypeOK_Init ==
     OBVIOUS 
   <1>15 sent \subseteq Proc \times M
       OBVIOUS
-  <1>16 rcvd \in [ Proc -> SUBSET ( sent \cup ByzMsgs ) ]
+  <1>16 rcvd \in [ Proc -> SUBSET ( sent \union ByzMsgs ) ]
     OBVIOUS      
   <1> QED
     BY <1>1, <1>2, <1>3, <1>4, <1>5, <1>6, <1>7, <1>8, <1>9, 
@@ -506,7 +506,7 @@ THEOREM FCConstraints_TypeOK_IndInv_Unforg_NoBcast_TLC ==
     BY <1>1, ProcProp, FS_Subset     
   <1>4 IsFiniteSet(Faulty)
     BY <1>2, ProcProp, FS_Subset
-  <1>5 Corr \cup Faulty = Proc 
+  <1>5 Corr \union Faulty = Proc
     OBVIOUS  
   <1>6 Faulty = Proc \ Corr
     OBVIOUS  
@@ -552,7 +552,7 @@ THEOREM FCConstraints_TypeOK_IndInv_Unforg_NoBcast_TLC ==
     OBVIOUS 
   <1>15 sent \subseteq Proc \times M
       OBVIOUS               
-  <1>16 rcvd \in [ Proc -> SUBSET ( sent \cup ByzMsgs ) ]
+  <1>16 rcvd \in [ Proc -> SUBSET ( sent \union ByzMsgs ) ]
     OBVIOUS      
   <1> QED
     BY <1>1, <1>2, <1>3, <1>4, <1>5, <1>6, <1>7, <1>8, <1>9, 
@@ -570,7 +570,7 @@ THEOREM FCConstraints_TypeOK_Next ==
               /\ Faulty' \subseteq Proc'
               /\ IsFiniteSet(Corr')
               /\ IsFiniteSet(Faulty')
-              /\ Corr' \cup Faulty' = Proc' 
+              /\ Corr' \union Faulty' = Proc'
               /\ Faulty' = Proc' \ Corr'
               /\ Cardinality(Corr') >= N - T
               /\ Cardinality(Faulty') <= T   
@@ -583,7 +583,7 @@ THEOREM FCConstraints_TypeOK_Next ==
           /\ pc' \in [ Proc' -> {"V0", "V1", "SE", "AC"} ]
           /\ Corr' \subseteq Proc'
           /\ Faulty' \subseteq Proc'           
-          /\ rcvd' \in [ Proc' -> SUBSET (sent' \cup ByzMsgs') ]                       
+          /\ rcvd' \in [ Proc' -> SUBSET (sent' \union ByzMsgs') ]
       BY  DEF TypeOK                              
   <1>3 Proc' = Proc   
     BY DEF Proc  
@@ -606,8 +606,8 @@ THEOREM FCConstraints_TypeOK_Next ==
       BY <1>5, <2>2 DEF ByzMsgs          
     <2>8 sent' \subseteq Proc' \times M'
       BY <1>5 DEFS vars, TypeOK, Proc, M        
-    <2>9 rcvd' \in [ Proc -> SUBSET (sent' \cup ByzMsgs') ]    
-      <3>1 (sent \cup ByzMsgs)  \subseteq (sent' \cup ByzMsgs')
+    <2>9 rcvd' \in [ Proc -> SUBSET (sent' \union ByzMsgs') ]
+      <3>1 (sent \union ByzMsgs)  \subseteq (sent' \union ByzMsgs')
         BY <2>5, <2>7
       <3> QED             
         BY <1>5, <3>1 DEFS vars, TypeOK, Receive
@@ -656,8 +656,8 @@ THEOREM FCConstraints_TypeOK_Next ==
               BY <3>2 DEFS TypeOK, M, Proc
             <6> QED
               BY <3>2, <6>3, <6>4 DEFS UponV1, TypeOK                       
-          <5>6 rcvd' \in [ Proc -> SUBSET (sent' \cup ByzMsgs') ]    
-            <6>1 (sent \cup ByzMsgs)  \subseteq (sent' \cup ByzMsgs')
+          <5>6 rcvd' \in [ Proc -> SUBSET (sent' \union ByzMsgs') ]
+            <6>1 (sent \union ByzMsgs)  \subseteq (sent' \union ByzMsgs')
               BY <5>2, <5>4
             <6> QED             
               BY <3>2, <6>1 DEFS UponV1, TypeOK, Receive
@@ -688,8 +688,8 @@ THEOREM FCConstraints_TypeOK_Next ==
               BY <3>3 DEFS TypeOK, M, Proc
             <6> QED
               BY <3>3, <6>3, <6>4 DEFS UponNonFaulty, TypeOK                       
-          <5>6 rcvd' \in [ Proc -> SUBSET (sent' \cup ByzMsgs') ]    
-            <6>1 (sent \cup ByzMsgs)  \subseteq (sent' \cup ByzMsgs')
+          <5>6 rcvd' \in [ Proc -> SUBSET (sent' \union ByzMsgs') ]
+            <6>1 (sent \union ByzMsgs)  \subseteq (sent' \union ByzMsgs')
               BY <5>2, <5>4
             <6> QED             
               BY <3>3, <6>1 DEFS UponNonFaulty, TypeOK, Receive
@@ -720,8 +720,8 @@ THEOREM FCConstraints_TypeOK_Next ==
               BY <3>4 DEFS TypeOK, M, Proc
             <6> QED
               BY <3>4, <6>3, <6>4 DEFS UponAcceptNotSentBefore, TypeOK                       
-          <5>6 rcvd' \in [ Proc -> SUBSET (sent' \cup ByzMsgs') ]    
-            <6>1 (sent \cup ByzMsgs)  \subseteq (sent' \cup ByzMsgs')
+          <5>6 rcvd' \in [ Proc -> SUBSET (sent' \union ByzMsgs') ]
+            <6>1 (sent \union ByzMsgs)  \subseteq (sent' \union ByzMsgs')
               BY <5>2, <5>4
             <6> QED             
               BY <3>4, <6>1 DEFS UponAcceptNotSentBefore, TypeOK, Receive
@@ -752,8 +752,8 @@ THEOREM FCConstraints_TypeOK_Next ==
               BY <3>5 DEFS TypeOK, M, Proc
             <6> QED
               BY <3>5, <6>3, <6>4 DEFS UponAcceptSentBefore, TypeOK                       
-          <5>6 rcvd' \in [ Proc -> SUBSET (sent' \cup ByzMsgs') ]    
-            <6>1 (sent \cup ByzMsgs)  \subseteq (sent' \cup ByzMsgs')
+          <5>6 rcvd' \in [ Proc -> SUBSET (sent' \union ByzMsgs') ]
+            <6>1 (sent \union ByzMsgs)  \subseteq (sent' \union ByzMsgs')
               BY <5>2, <5>4
             <6> QED             
               BY <3>5, <6>1 DEFS UponAcceptSentBefore, TypeOK, Receive
@@ -775,8 +775,8 @@ THEOREM FCConstraints_TypeOK_Next ==
             BY <3>6, <5>3 DEF ByzMsgs          
           <5>5 sent' \subseteq Proc' \times M'
             BY <3>6 DEFS vars, TypeOK, Proc, M                      
-          <5>6 rcvd' \in [ Proc -> SUBSET (sent' \cup ByzMsgs') ]    
-            <6>1 (sent \cup ByzMsgs)  \subseteq (sent' \cup ByzMsgs')
+          <5>6 rcvd' \in [ Proc -> SUBSET (sent' \union ByzMsgs') ]
+            <6>1 (sent \union ByzMsgs)  \subseteq (sent' \union ByzMsgs')
               BY <5>2, <5>4
             <6> QED             
               BY <3>6, <6>1 DEFS vars, TypeOK, Receive
@@ -891,9 +891,9 @@ THEOREM Unforg_Step2 == IndInv_Unforg_NoBcast /\ [Next]_vars => IndInv_Unforg_No
               BY DEF IndInv_Unforg_NoBcast
           <5>1 sent = {}
             OBVIOUS
-          <5>2 sent \cup ByzMsgs = ByzMsgs
+          <5>2 sent \union ByzMsgs = ByzMsgs
             OBVIOUS          
-          <5>6 rcvd[i] \subseteq sent \cup ByzMsgs
+          <5>6 rcvd[i] \subseteq sent \union ByzMsgs
             BY DEF TypeOK
           <5>7 rcvd[i] \subseteq ByzMsgs
             BY <5>6, <5>2      
@@ -936,7 +936,7 @@ THEOREM Unforg_Step2 == IndInv_Unforg_NoBcast /\ [Next]_vars => IndInv_Unforg_No
           <5>1 ~UponV1(i) =
                   \/ ~(pc[i] = "V1")                
                   \/ ~(pc' = [pc EXCEPT ![i] = "SE"])                
-                  \/ ~(sent' = sent \cup { <<i, "ECHO">> })
+                  \/ ~(sent' = sent \union { <<i, "ECHO">> })
                   \/ ~(UNCHANGED << Corr, Faulty >>)
             BY DEF UponV1
           <5>2 pc[i] = "V0"
@@ -958,7 +958,7 @@ THEOREM Unforg_Step2 == IndInv_Unforg_NoBcast /\ [Next]_vars => IndInv_Unforg_No
                   \/ ~(Cardinality(rcvd'[i]) >= N - 2 * T)
                   \/ ~(Cardinality(rcvd'[i]) < N - T)
                   \/ ~(pc' = [pc EXCEPT ![i] = "SE"])
-                  \/ ~(sent' = sent \cup { <<i, "ECHO">> })
+                  \/ ~(sent' = sent \union { <<i, "ECHO">> })
                   \/ ~(UNCHANGED << Corr, Faulty >>)
             BY DEF UponNonFaulty      
           <5>2 (Cardinality(rcvd'[i]) <= T) => ~UponNonFaulty(i)
@@ -981,7 +981,7 @@ THEOREM Unforg_Step2 == IndInv_Unforg_NoBcast /\ [Next]_vars => IndInv_Unforg_No
                   \/ ~(pc[i] \in { "V0", "V1" } )
                   \/ ~(Cardinality(rcvd'[i]) >= N - T)              
                   \/ ~(pc' = [pc EXCEPT ![i] = "AC"])
-                  \/ ~(sent' = sent \cup { <<i, "ECHO">> })
+                  \/ ~(sent' = sent \union { <<i, "ECHO">> })
                   \/ ~(UNCHANGED << Corr, Faulty >>)
             BY DEF UponAcceptNotSentBefore      
           <5>2 (Cardinality(rcvd'[i]) <= T) => ~UponAcceptNotSentBefore(i)
