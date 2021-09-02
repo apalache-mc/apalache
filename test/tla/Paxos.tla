@@ -74,11 +74,11 @@ None == 999
 (* Message of all possible messages.  The messages are explained below     *)
 (* with the actions that send them.                                        *)
 (***************************************************************************)
-Message ==      [type : {"1a"}, bal : Ballot]
-           \cup [type : {"1b"}, acc : Acceptor, bal : Ballot,
-                 mbal : Ballot \cup {-1}, mval : Value \cup {None}]
-           \cup [type : {"2a"}, bal : Ballot, val : Value]
-           \cup [type : {"2b"}, acc : Acceptor, bal : Ballot, val : Value]
+Message ==        [type : {"1a"}, bal : Ballot]
+           \union [type : {"1b"}, acc : Acceptor, bal : Ballot,
+                   mbal : Ballot \union {-1}, mval : Value \union {None}]
+           \union [type : {"2a"}, bal : Ballot, val : Value]
+           \union [type : {"2b"}, acc : Acceptor, bal : Ballot, val : Value]
 -----------------------------------------------------------------------------
 VARIABLE
     \* @typeAlias: PROC = Str;
@@ -119,9 +119,9 @@ vars == <<maxBal, maxVBal, maxVal, msgs>>
 (***************************************************************************)
 (* The type invariant and initial predicate.                               *)
 (***************************************************************************)
-TypeOK == /\ maxBal \in [Acceptor -> Ballot \cup {-1}]
-          /\ maxVBal \in [Acceptor -> Ballot \cup {-1}]
-          /\ maxVal \in [Acceptor -> Value \cup {None}]
+TypeOK == /\ maxBal \in [Acceptor -> Ballot \union {-1}]
+          /\ maxVBal \in [Acceptor -> Ballot \union {-1}]
+          /\ maxVal \in [Acceptor -> Value \union {None}]
           /\ msgs \subseteq Message
 
 (***************************************************************************)
@@ -151,7 +151,7 @@ Init == /\ maxBal = [a \in Acceptor |-> -1]
 (* The actions.  We begin with the subaction (an action that will be used  *)
 (* to define the actions that make up the next-state action.               *)
 (***************************************************************************)
-Send(m) == /\ msgs' = msgs \cup {m}
+Send(m) == /\ msgs' = msgs \union {m}
 
 
 (***************************************************************************)

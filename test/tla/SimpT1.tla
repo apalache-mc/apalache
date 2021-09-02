@@ -70,15 +70,15 @@ SentCorrect(p) ==
             
 PreProposeFaulty ==
     SUBSET [type: {"PRE-PROPOSE"}, src: Faulty, height: Heights,
-             epoch: Epochs, proposal: ValidValues \cup InvalidValues]
+             epoch: Epochs, proposal: ValidValues \union InvalidValues]
 
 ProposeFaulty ==
     SUBSET [type: {"PROPOSE"}, src: Faulty, height: Heights,
-             epoch: Epochs, proposal: ValidValues \cup InvalidValues]
+             epoch: Epochs, proposal: ValidValues \union InvalidValues]
 
 VoteFaulty ==
     SUBSET [type: {"VOTE"}, height: Heights,
-             epoch: Epochs, vote: ValidValues \cup InvalidValues]
+             epoch: Epochs, vote: ValidValues \union InvalidValues]
             
 IsSentByFaulty ==
     CASE   round = "PRE-PROPOSE" -> faultyMessages' \in PreProposeFaulty
@@ -153,7 +153,7 @@ Vote(delivered) ==
             IF ~Overflow(p) /\ IsDecidedNow(p, d) THEN h[p] + 1 ELSE h[p] ]
         /\ e' = [ p \in Procs |->
             IF Overflow(p) \/ IsDecidedNow(p, d) THEN e[p] ELSE e[p] + 1 ]
-        /\ proposal' \in [Procs -> ValidValues \cup InvalidValues \cup {nil}]
+        /\ proposal' \in [Procs -> ValidValues \union InvalidValues \union {nil}]
         (* since we have to non-deterministically chose a value, this seems to be the only way *)
         /\ \A p \in Procs:
             IF Overflow(p) \/ IsDecidedNow(p, d)
@@ -167,12 +167,12 @@ Compute(delivered) ==
         
 Next ==
     /\ IsSentByFaulty
-    /\ LET sent == faultyMessages' \cup (UNION { SentCorrect(p) : p \in Procs }) IN
+    /\ LET sent == faultyMessages' \union (UNION { SentCorrect(p) : p \in Procs }) IN
        LET delivered == [ p \in Procs |-> Deliver(p, sent) ] IN
        Compute(delivered)
        (*
     /\ IsSentByFaulty
-    /\ Compute([ p \in Procs |-> Deliver(p, faultyMessages' \cup (UNION { SentCorrect(q) : q \in Procs })) ])
+    /\ Compute([ p \in Procs |-> Deliver(p, faultyMessages' \union (UNION { SentCorrect(q) : q \in Procs })) ])
         *)
 
 NextNoFaults ==

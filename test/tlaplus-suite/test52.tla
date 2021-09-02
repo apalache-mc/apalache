@@ -32,8 +32,8 @@ ASSUME
 
 Init == /\ x = {"a"}
         /\ y = {"a"}
-Next == /\ x'= x \cup {"a"}
-        /\ y'= y \cup {"b"}
+Next == /\ x'= x \union {"a"}
+        /\ y'= y \union {"b"}
 Spec == Init /\ [][Next]_<<x, y>>
 
 EnabledTest(Foo(_)) == Foo(x'=x)

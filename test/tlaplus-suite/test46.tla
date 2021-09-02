@@ -14,7 +14,7 @@ reqId == UNION { [proc : {p}, idx : DOMAIN reqQ[p]] : p \in Proc }
 oi \prec oj == <<oi, oj>> \in reqOrder
 
 TypeInvariant == 
-  /\ reqQ \in [Proc -> Seq(Request \cup [reg : Reg])]
+  /\ reqQ \in [Proc -> Seq(Request \union [reg : Reg])]
   /\ reqOrder \in SUBSET (reqId \X reqId)
 
 Init == /\ reqQ = [p \in Proc |-> << >>]
