@@ -370,7 +370,7 @@ centered around TLA+ actions. For instance, the <a href="https://github.com/tlap
 actions: <code>n0</code> and <code>n1</code>. Let's have a look at <code>n0</code>:</p>
 <pre><code class="language-tla">n0(self) == /\ pc[self] = &quot;n0&quot;
             /\ IF initiator[self]
-                  THEN /\ msgs' = [msgs EXCEPT ![succ(self)] = @ \cup {Id[self]}]
+                  THEN /\ msgs' = [msgs EXCEPT ![succ(self)] = @ \union {Id[self]}]
                   ELSE /\ TRUE
                        /\ msgs' = msgs
             /\ pc' = [pc EXCEPT ![self] = &quot;n1&quot;]
