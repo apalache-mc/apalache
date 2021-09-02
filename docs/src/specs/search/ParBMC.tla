@@ -45,10 +45,10 @@ BadExes == { <<0, 1, 2, 1, 2>> }
 \* a worker's workerState
 WorkerStates ==
     [type: {"idle", "error", "noerror", "deadlock"}]
-        \cup
+        \union
         \* the process is checking, whether a transition tr is feasible
     [type: {"exploring"}, tr: Transitions]
-        \cup
+        \union
         \* the process is checking, whether the invariant holds true for a prefix
     [type: {"proving"}, prefix: Seq(SUBSET Transitions)]
 
@@ -119,7 +119,7 @@ CheckOneTransition(w) ==
         /\ runningTrans' = [runningTrans EXCEPT ![workerState[w].tr] = outcome]
         /\ workerState' = [workerState EXCEPT ![w] = [type |-> "idle"]]
         /\  IF outcome = "enabled"
-            THEN unsafePrefixes' = unsafePrefixes \cup { Append(runningPrefix, {workerState[w].tr}) } 
+            THEN unsafePrefixes' = unsafePrefixes \union { Append(runningPrefix, {workerState[w].tr}) }
             ELSE UNCHANGED unsafePrefixes
     /\ UNCHANGED <<depth, runningPrefix, slowPrefixes>>
     
@@ -147,7 +147,7 @@ FindSlowPrefixes ==
     LET timedOut == {tr \in Transitions: runningTrans[tr] = "timeout"} IN
         IF timedOut = {}
         THEN slowPrefixes
-        ELSE slowPrefixes \cup { Append(runningPrefix, {tr}): tr \in timedOut }
+        ELSE slowPrefixes \union { Append(runningPrefix, {tr}): tr \in timedOut }
 
 \* all transitions at the current depth have been explored, move on
 IncreaseDepth == 
