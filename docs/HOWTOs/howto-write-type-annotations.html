@@ -340,7 +340,7 @@ an uninterpreted type that we call <code>RM</code>. That is:</p>
 of <code>TPTypeOK</code> and <code>Message</code> to get the idea about the type of <code>msgs</code>:</p>
 <pre><code class="language-tla">Message ==
   ({[type |-&gt; t, rm |-&gt; r]: t \in {&quot;Prepared&quot;}, r \in RM }
-   \cup
+   \union
    {[type |-&gt; t] : t \in {&quot;Commit&quot;, &quot;Abort&quot;}})
 
 TPTypeOK ==

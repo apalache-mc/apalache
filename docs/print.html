@@ -223,7 +223,7 @@ isolation. Hence, it failed, as soon as it met a reference to the constant
 
 Message ==
   ...
-  [type : {&quot;Prepared&quot;}, rm : RM]  \cup  [type : {&quot;Commit&quot;, &quot;Abort&quot;}]
+  [type : {&quot;Prepared&quot;}, rm : RM]  \union  [type : {&quot;Commit&quot;, &quot;Abort&quot;}]
 </code></pre>
 <p>Indeed, we have not introduced a type annotation for the constant <code>RM</code>, so the
 type checker cannot use any meaningful type in the context of the above
@@ -322,7 +322,7 @@ Figuring out the type of <code>msgs</code> is a bit harder.</p>
 <p>Let's look at the definitions of <code>Messages</code> and <code>TPTypeOK</code>:</p>
 <pre><code class="language-tla">Message ==
   ...
-  [type : {&quot;Prepared&quot;}, rm : RM]  \cup  [type : {&quot;Commit&quot;, &quot;Abort&quot;}]
+  [type : {&quot;Prepared&quot;}, rm : RM]  \union  [type : {&quot;Commit&quot;, &quot;Abort&quot;}]
 
 TPTypeOK ==  
   ...  
@@ -2789,7 +2789,7 @@ an uninterpreted type that we call <code>RM</code>. That is:</p>
 of <code>TPTypeOK</code> and <code>Message</code> to get the idea about the type of <code>msgs</code>:</p>
 <pre><code class="language-tla">Message ==
   ({[type |-&gt; t, rm |-&gt; r]: t \in {&quot;Prepared&quot;}, r \in RM }
-   \cup
+   \union
    {[type |-&gt; t] : t \in {&quot;Commit&quot;, &quot;Abort&quot;}})
 
 TPTypeOK ==
@@ -2996,7 +2996,7 @@ isolation. Hence, it failed, as soon as it met a reference to the constant
 
 Message ==
   ...
-  [type : {&quot;Prepared&quot;}, rm : RM]  \cup  [type : {&quot;Commit&quot;, &quot;Abort&quot;}]
+  [type : {&quot;Prepared&quot;}, rm : RM]  \union  [type : {&quot;Commit&quot;, &quot;Abort&quot;}]
 </code></pre>
 <p>Indeed, we have not introduced a type annotation for the constant <code>RM</code>, so the
 type checker cannot use any meaningful type in the context of the above
@@ -3095,7 +3095,7 @@ Figuring out the type of <code>msgs</code> is a bit harder.</p>
 <p>Let's look at the definitions of <code>Messages</code> and <code>TPTypeOK</code>:</p>
 <pre><code class="language-tla">Message ==
   ...
-  [type : {&quot;Prepared&quot;}, rm : RM]  \cup  [type : {&quot;Commit&quot;, &quot;Abort&quot;}]
+  [type : {&quot;Prepared&quot;}, rm : RM]  \union  [type : {&quot;Commit&quot;, &quot;Abort&quot;}]
 
 TPTypeOK ==  
   ...  
@@ -7709,10 +7709,10 @@ B == { [x: Int, z: Bool], [y: Str, z: Int] }
 The bellow snippet from <a href="https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla">Paxos.tla</a> demonstrates this convention:</p>
 <pre><code class="language-tla">\* The set of all possible messages 
 Message ==      [type : {&quot;1a&quot;}, bal : Ballot]
-           \cup [type : {&quot;1b&quot;}, acc : Acceptor, bal : Ballot, 
-                 mbal : Ballot \cup {-1}, mval : Value \cup {None}]
-           \cup [type : {&quot;2a&quot;}, bal : Ballot, val : Value]
-           \cup [type : {&quot;2b&quot;}, acc : Acceptor, bal : Ballot, val : Value]
+           \union [type : {&quot;1b&quot;}, acc : Acceptor, bal : Ballot, 
+                 mbal : Ballot \union {-1}, mval : Value \union {None}]
+           \union [type : {&quot;2a&quot;}, bal : Ballot, val : Value]
+           \union [type : {&quot;2b&quot;}, acc : Acceptor, bal : Ballot, val : Value]
 </code></pre>
 <p>Ultimately, this approach both disagrees with our interpretation of the purpose of a type-system for TLA+, as well as introduces unsoundness, in the sense that it makes it impossible, at the type-checking level, to detect record-field access violations.
 Consider the following:</p>
@@ -7732,8 +7732,8 @@ VARIABLE
 \* Assuming S1: Set(a1), ..., Sn: Set(an) 
 \* @type: Set( [ type: Str, x1: a1, ..., xn: an, ... ] );
 Message ==      [type : {&quot;t1&quot;}, x1: S1, ...]
-           \cup  ...
-           \cup [type : {&quot;tn&quot;}, xn: Sn, ...]
+           \union  ...
+           \union [type : {&quot;tn&quot;}, xn: Sn, ...]
 ...
 
 TypeOk: msgs \subseteq Message
@@ -7748,7 +7748,7 @@ Messages == [
 </code></pre>
 <p>This way, <code>Messages.t1</code> represents the set of all messages <code>m</code>, for which <code>m.type</code> would have been equal to &quot;t1&quot; in the original implementation, that is, <code>[type: {&quot;t1&quot;}, x1: S1, ...]</code>.
 For example, assume the original specification included</p>
-<pre><code class="language-tla">Messages == [type: {&quot;t1&quot;}, x: {1,2,3}] \cup [type: {&quot;t2&quot;}, y:{&quot;a&quot;,&quot;b&quot;,&quot;c&quot;}]
+<pre><code class="language-tla">Messages == [type: {&quot;t1&quot;}, x: {1,2,3}] \union [type: {&quot;t2&quot;}, y:{&quot;a&quot;,&quot;b&quot;,&quot;c&quot;}]
 </code></pre>
 <p>that is, defined two types of messages: &quot;t1&quot;, with an integer-valued field &quot;x&quot; and &quot;t2&quot; with a string-valued field &quot;y&quot;. The type of any <code>m \in Messages</code> would have been <code>[type: Str, x: Int, y: Str]</code> in the old approach.
 The rewritten version would be:</p>
@@ -7789,14 +7789,14 @@ Ints == {1,2,3}
 Strs == {&quot;a&quot;,&quot;b&quot;,&quot;c&quot;}
 
 \* @type: () =&gt; Set([ type: Str, x: Int, y: Str ] );
-Messages == [ type: {&quot;int&quot;}, x: Ints ] \cup [ type: {&quot;str&quot;}, y: Strs ]
+Messages == [ type: {&quot;int&quot;}, x: Ints ] \union [ type: {&quot;str&quot;}, y: Strs ]
 
 Init == 
     /\ msgs = {}
     /\ found3 = FALSE
     /\ foundC = FALSE
 
-Send(m) == msgs' = msgs \cup {m}
+Send(m) == msgs' = msgs \union {m}
 Rm(m) == msgs' = msgs \ {m}
 
 AddIntMsg == 
@@ -7861,7 +7861,7 @@ Init ==
 
 \* @type: ([x: Int]) =&gt; Bool; 
 SendInt(m) == 
-    msgs' = [msgs EXCEPT !.int = msgs.int \cup {m}]
+    msgs' = [msgs EXCEPT !.int = msgs.int \union {m}]
 
 \* @type: ([x: Int]) =&gt; Bool; 
 RmInt(m) == 
@@ -7869,7 +7869,7 @@ RmInt(m) ==
 
 \* @type: ([y: Str]) =&gt; Bool;
 SendStr(m) == 
-    msgs' = [msgs EXCEPT !.str = msgs.str \cup {m}]
+    msgs' = [msgs EXCEPT !.str = msgs.str \union {m}]
 
 \* @type: ([x: Int]) =&gt; Bool; 
 RmStr(m) == 
@@ -8255,7 +8255,7 @@ Init ==
 startSmoking ==
     /\ dealer /= {}
     /\ smokers' = [r \in Ingredients |-&gt;
-                    [smoking |-&gt; {r} \cup dealer = Ingredients]]
+                    [smoking |-&gt; {r} \union dealer = Ingredients]]
     /\ dealer' = {}
 
 stopSmoking ==

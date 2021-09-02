@@ -212,7 +212,7 @@ isolation. Hence, it failed, as soon as it met a reference to the constant
 
 Message ==
   ...
-  [type : {&quot;Prepared&quot;}, rm : RM]  \cup  [type : {&quot;Commit&quot;, &quot;Abort&quot;}]
+  [type : {&quot;Prepared&quot;}, rm : RM]  \union  [type : {&quot;Commit&quot;, &quot;Abort&quot;}]
 </code></pre>
 <p>Indeed, we have not introduced a type annotation for the constant <code>RM</code>, so the
 type checker cannot use any meaningful type in the context of the above
@@ -311,7 +311,7 @@ Figuring out the type of <code>msgs</code> is a bit harder.</p>
 <p>Let's look at the definitions of <code>Messages</code> and <code>TPTypeOK</code>:</p>
 <pre><code class="language-tla">Message ==
   ...
-  [type : {&quot;Prepared&quot;}, rm : RM]  \cup  [type : {&quot;Commit&quot;, &quot;Abort&quot;}]
+  [type : {&quot;Prepared&quot;}, rm : RM]  \union  [type : {&quot;Commit&quot;, &quot;Abort&quot;}]
 
 TPTypeOK ==  
   ...  
