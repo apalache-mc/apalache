@@ -231,7 +231,7 @@ For example, assume the original specification included</p>
 The rewritten version would be:</p>
 <pre><code class="language-tla">Messages == [ t1: [x:{1,2,3}], t2: [y:{&quot;a&quot;,&quot;b&quot;, &quot;c&quot;}] ]
 </code></pre>
-<p>If we took <code>m: [ int: Set([x: Int]), str: Set([y: Str]) ]</code>, <code>m</code> would be a record pointing to two disjoint sets of messages (of categories &quot;t1&quot; and &quot;t2&quot; respectively). Values in <code>m.t1</code> would be records with the type <code>[x: Int]</code> and values in <code>m.t2</code> would be records with the type <code>[y: Str]</code>. </p>
+<p>If we took <code>m: [ t1: Set([x: Int]), t2: Set([y: Str]) ]</code>, <code>m</code> would be a record pointing to two disjoint sets of messages (of categories &quot;t1&quot; and &quot;t2&quot; respectively). Values in <code>m.t1</code> would be records with the type <code>[x: Int]</code> and values in <code>m.t2</code> would be records with the type <code>[y: Str]</code>. </p>
 <p>Note, however, that this approach also requires a change in the way messages are added to, or read from, the &quot;set&quot; of all messages (<code>m</code> is a record representing a set, but not a set itself, in the new approach).
 Previously, a message <code>m</code> would be added by writing:</p>
 <pre><code>msgs' = msgs \union {m}
@@ -251,10 +251,141 @@ Previously, a message <code>m</code> would be added by writing:</p>
 <h2><a class="header" href="#example" id="example">Example</a></h2>
 <p>Below, we demonstrate this process on a concrete specification:
 The old approach:</p>
-<pre><code class="language-tla">{{#include ./MsgSetOld.tla::}}
+<pre><code class="language-tla">------------------------------- MODULE MsgSetOld ------------------------------
+
+VARIABLE 
+    \* @type: Set( [ type: Str, x: Int, y: Str ] );
+    msgs, 
+    \* @type: Bool;
+    found3,
+    \* @type: Bool;
+    foundC
+
+
+Ints == {1,2,3}
+Strs == {&quot;a&quot;,&quot;b&quot;,&quot;c&quot;}
+
+\* @type: () =&gt; Set([ type: Str, x: Int, y: Str ] );
+Messages == [ type: {&quot;int&quot;}, x: Ints ] \cup [ type: {&quot;str&quot;}, y: Strs ]
+
+Init == 
+    /\ msgs = {}
+    /\ found3 = FALSE
+    /\ foundC = FALSE
+
+Send(m) == msgs' = msgs \cup {m}
+Rm(m) == msgs' = msgs \ {m}
+
+AddIntMsg == 
+    /\ \E v \in Ints: 
+        /\ Send( [type |-&gt; &quot;int&quot;, x |-&gt; v] )
+    /\ UNCHANGED &lt;&lt;found3, foundC&gt;&gt;
+
+CheckIntMsg == 
+    /\ \E m \in msgs:
+        /\ m.type = &quot;int&quot;
+        /\ found3' = ( m.x = 3 )
+        /\ Rm(m)
+    /\ UNCHANGED foundC
+
+AddStrMsg == 
+    /\ \E v \in Strs: 
+        /\ Send( [type |-&gt; &quot;str&quot;, y |-&gt; v] )
+    /\ UNCHANGED &lt;&lt;found3, foundC&gt;&gt;
+
+CheckStrMsg == 
+    /\ \E m \in msgs:
+        /\ m.type = &quot;str&quot;
+        /\ foundC' = ( m.y = &quot;c&quot; )
+        /\ Rm(m)
+    /\ UNCHANGED found3
+
+Next ==
+    \/ AddIntMsg
+    \/ CheckIntMsg
+    \/ AddStrMsg
+    \/ CheckStrMsg
+
+TypeOk == msgs \subseteq Messages
+
+===============================================================================
 </code></pre>
 <p>The new approach:</p>
-<pre><code class="language-tla">{{#include ./MsgSetNew.tla::}}
+<pre><code class="language-tla">------------------------------- MODULE MsgSetNew ------------------------------
+
+VARIABLE 
+    \* @type: [ int: Set([x: Int]), str: Set([y: Str]) ];
+    msgs, 
+    \* @type: Bool;
+    found3,
+    \* @type: Bool;
+    foundC
+
+
+Ints == {1,2,3}
+Strs == {&quot;a&quot;,&quot;b&quot;,&quot;c&quot;}
+
+\* no annotation required
+Messages == [ 
+              int |-&gt; [x: Ints],
+              str |-&gt; [y: Strs]
+            ]
+
+Init == 
+    /\ msgs = [ int |-&gt; {}, str |-&gt; {} ]
+    /\ found3 = FALSE
+    /\ foundC = FALSE
+
+\* @type: ([x: Int]) =&gt; Bool; 
+SendInt(m) == 
+    msgs' = [msgs EXCEPT !.int = msgs.int \cup {m}]
+
+\* @type: ([x: Int]) =&gt; Bool; 
+RmInt(m) == 
+    msgs' = [msgs EXCEPT !.int = msgs.int \ {m}]
+
+\* @type: ([y: Str]) =&gt; Bool;
+SendStr(m) == 
+    msgs' = [msgs EXCEPT !.str = msgs.str \cup {m}]
+
+\* @type: ([x: Int]) =&gt; Bool; 
+RmStr(m) == 
+    msgs' = [msgs EXCEPT !.str = msgs.str \ {m}]
+
+
+AddIntMsg == 
+    /\ \E v \in Ints: 
+        /\ SendInt( [x |-&gt; v] )
+    /\ UNCHANGED &lt;&lt;found3, foundC&gt;&gt;
+
+CheckIntMsg == 
+    /\ \E m \in msgs.int:
+        /\ found3' = ( m.x = 3 )
+        /\ RmInt(m)
+    /\ UNCHANGED foundC
+
+AddStrMsg == 
+    /\ \E v \in Strs: 
+        /\ SendStr( [y |-&gt; v] )
+    /\ UNCHANGED &lt;&lt;found3, foundC&gt;&gt;
+
+CheckStrMsg == 
+    /\ \E m \in msgs.str:
+        /\ foundC' = ( m.y = &quot;c&quot; )
+        /\ RmStr(m)
+    /\ UNCHANGED found3
+
+Next ==
+    \/ AddIntMsg
+    \/ CheckIntMsg
+    \/ AddStrMsg
+    \/ CheckStrMsg
+
+TypeOk == 
+    /\ msgs.int \subseteq Messages.int
+    /\ msgs.str \subseteq Messages.str
+
+===============================================================================
 </code></pre>
 <p>Note that the new approach, in addition to being sound w.r.t. record types, also typically results in a performance improvement, since type-unification for record sets is generally expensive for the solver.</p>
 
