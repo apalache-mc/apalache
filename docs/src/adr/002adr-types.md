@@ -416,7 +416,7 @@ Init ==
 startSmoking ==
     /\ dealer /= {}
     /\ smokers' = [r \in Ingredients |->
-                    [smoking |-> {r} \cup dealer = Ingredients]]
+                    [smoking |-> {r} \union dealer = Ingredients]]
     /\ dealer' = {}
 
 stopSmoking ==

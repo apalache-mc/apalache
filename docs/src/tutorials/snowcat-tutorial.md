@@ -56,7 +56,7 @@ CONSTANT RM \* The set of resource managers
 
 Message ==
   ...
-  [type : {"Prepared"}, rm : RM]  \cup  [type : {"Commit", "Abort"}]
+  [type : {"Prepared"}, rm : RM]  \union  [type : {"Commit", "Abort"}]
 ```
 
 Indeed, we have not introduced a type annotation for the constant `RM`, so the
@@ -212,7 +212,7 @@ Let's look at the definitions of `Messages` and `TPTypeOK`:
 ```tla
 Message ==
   ...
-  [type : {"Prepared"}, rm : RM]  \cup  [type : {"Commit", "Abort"}]
+  [type : {"Prepared"}, rm : RM]  \union  [type : {"Commit", "Abort"}]
 
 TPTypeOK ==  
   ...  
