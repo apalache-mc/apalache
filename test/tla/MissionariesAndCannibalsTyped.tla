@@ -104,11 +104,11 @@ VARIABLES
 (* languages permit only arrays with index-set/domain the set              *)
 (* {0, ...  , n} for some integer n.) For each b in {"E","W"}, the value   *)
 (* of who_is_on_bank[b] will be a set of cannibals and/or missionaries --  *)
-(* that is, an element of the set Cannibals \cup Missionaries, where \cup  *)
-(* is the set union operator.  The expression SUBSET S is the set of all   *)
-(* subsets of the set S, and [D -> T] is the set of all arrays/functions   *)
-(* with index-set/domain D such that f[d] is an element of T for all d     *)
-(* in D.                                                                   *)
+(* that is, an element of the set Cannibals \union Missionaries, where     *)
+(* \union is the set union operator.  The expression SUBSET S is the set   *)
+(* of all subsets of the set S, and [D -> T] is the set of all             *)
+(* arrays/functions with index-set/domain D such that f[d] is an element   *)
+(* of T for all d in D.                                                    *)
 (*                                                                         *)
 (* TLA+ allows you to write a conjunction of formulas as a list of those   *)
 (* formulas bulleted by /\.  A disjunction of formulas is similarly        *)
@@ -116,7 +116,7 @@ VARIABLES
 (***************************************************************************)
 TypeOK == /\ bank_of_boat \in {"E","W"}
           /\ who_is_on_bank \in 
-                [{"E","W"} -> SUBSET (Cannibals \cup Missionaries)]
+                [{"E","W"} -> SUBSET (Cannibals \union Missionaries)]
 
 (***************************************************************************)
 (* The possible executions of the system are specified by two formulas: an *)
@@ -136,7 +136,7 @@ TypeOK == /\ bank_of_boat \in {"E","W"}
 (***************************************************************************)                             
 Init == /\ bank_of_boat = "E"
         /\ who_is_on_bank = [i \in {"E","W"} |-> 
-                               IF i = "E" THEN Cannibals \cup Missionaries
+                               IF i = "E" THEN Cannibals \union Missionaries
                                           ELSE  {} ]
               
 (***************************************************************************)
@@ -188,7 +188,7 @@ OtherBank(b) == IF b = "E" THEN "W" ELSE "E"
 Move(S,b) ==
              /\ Cardinality(S) \in {1,2}
              /\ LET newThisBank  == who_is_on_bank[b] \ S
-                    newOtherBank == who_is_on_bank[OtherBank(b)] \cup S
+                    newOtherBank == who_is_on_bank[OtherBank(b)] \union S
                 IN  /\ IsSafe(newThisBank) 
                     /\ IsSafe(newOtherBank)
                     /\ bank_of_boat' = OtherBank(b)

@@ -22,10 +22,10 @@ The bellow snippet from [Paxos.tla][] demonstrates this convention:
 ```tla
 \* The set of all possible messages 
 Message ==      [type : {"1a"}, bal : Ballot]
-           \cup [type : {"1b"}, acc : Acceptor, bal : Ballot, 
-                 mbal : Ballot \cup {-1}, mval : Value \cup {None}]
-           \cup [type : {"2a"}, bal : Ballot, val : Value]
-           \cup [type : {"2b"}, acc : Acceptor, bal : Ballot, val : Value]
+           \union [type : {"1b"}, acc : Acceptor, bal : Ballot, 
+                 mbal : Ballot \union {-1}, mval : Value \union {None}]
+           \union [type : {"2a"}, bal : Ballot, val : Value]
+           \union [type : {"2b"}, acc : Acceptor, bal : Ballot, val : Value]
 ```
 
 Ultimately, this approach both disagrees with our interpretation of the purpose of a type-system for TLA+, as well as introduces unsoundness, in the sense that it makes it impossible, at the type-checking level, to detect record-field access violations.
@@ -50,8 +50,8 @@ VARIABLE
 \* Assuming S1: Set(a1), ..., Sn: Set(an) 
 \* @type: Set( [ type: Str, x1: a1, ..., xn: an, ... ] );
 Message ==      [type : {"t1"}, x1: S1, ...]
-           \cup  ...
-           \cup [type : {"tn"}, xn: Sn, ...]
+           \union  ...
+           \union [type : {"tn"}, xn: Sn, ...]
 ...
 
 TypeOk: msgs \subseteq Message
@@ -70,7 +70,7 @@ Messages == [
 This way, `Messages.t1` represents the set of all messages `m`, for which `m.type` would have been equal to "t1" in the original implementation, that is, `[type: {"t1"}, x1: S1, ...]`.
 For example, assume the original specification included
 ```tla
-Messages == [type: {"t1"}, x: {1,2,3}] \cup [type: {"t2"}, y:{"a","b","c"}]
+Messages == [type: {"t1"}, x: {1,2,3}] \union [type: {"t2"}, y:{"a","b","c"}]
 ```
 that is, defined two types of messages: "t1", with an integer-valued field "x" and "t2" with a string-valued field "y". The type of any `m \in Messages` would have been `[type: Str, x: Int, y: Str]` in the old approach.
 The rewritten version would be:

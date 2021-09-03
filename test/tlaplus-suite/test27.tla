@@ -38,14 +38,14 @@ CountSeq(S, len) ==
   IN  CS[len]
 
 
-Op  ==  (Data \X Addr) \cup {<<d, a, "*">> : d \in Data, a \in Addr}
+Op  ==  (Data \X Addr) \union {<<d, a, "*">> : d \in Data, a \in Addr}
                             (***********************************************)
                             (* Have to write Data \X Addr \X {"*"}         *)
                             (* in this way.                                *)
                             (***********************************************)
                             
 Restrict(f) == 
-    { g \in  [Addr -> Data \cup  { ND  }] :
+    { g \in  [Addr -> Data \union  { ND  }] :
                    \A  a \in  Addr: g[a] \in  { f[a] , ND  } } 
 
 Init == /\ Print(LET D == Cardinality(Data)
@@ -67,7 +67,7 @@ Inv ==
        THEN TRUE
        ELSE /\ Print("Conj 1 False", TRUE)
             /\ FALSE
-  /\ IF c   \in [Proc -> [Addr -> (Data \cup {ND})] ] 
+  /\ IF c   \in [Proc -> [Addr -> (Data \union {ND})] ]
        THEN TRUE
        ELSE /\ Print("Conj 2 False", TRUE)
             /\ FALSE
@@ -96,7 +96,7 @@ Next ==
 
   \/ \E p \in Proc : 
 
-        \/ /\ \E a \in Addr,  d \in Data \cup {ND} :
+        \/ /\ \E a \in Addr,  d \in Data \union {ND} :
                   c' = [c EXCEPT ![p][a] = d]
            /\ UNCHANGED <<mem,  in, out>>
 

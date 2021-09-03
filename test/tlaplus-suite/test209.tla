@@ -99,77 +99,77 @@ PROPOSITION TRUE
 ASSUMPTION TRUE
 
 Foo == 
-/\  bar.NEW \cup  [bar EXCEPT !.NEW = 0]
-/\  bar.SF_ \cup  [bar EXCEPT !.SF_ = 0]
-/\  bar.WF_ \cup  [bar EXCEPT !.WF_ = 0]
-/\  bar.THEN \cup  [bar EXCEPT !.THEN = 0]
-/\ bar.BY \cup [bar EXCEPT !.BY = 0]      \* 68 XXXXXX
-/\ bar.HAVE \cup [bar EXCEPT !.HAVE = 0]
-/\ bar.QED \cup [bar EXCEPT !.QED = 0]
-/\ bar.TAKE \cup [bar EXCEPT !.TAKE = 0]
+/\  bar.NEW \union  [bar EXCEPT !.NEW = 0]
+/\  bar.SF_ \union  [bar EXCEPT !.SF_ = 0]
+/\  bar.WF_ \union  [bar EXCEPT !.WF_ = 0]
+/\  bar.THEN \union  [bar EXCEPT !.THEN = 0]
+/\ bar.BY \union [bar EXCEPT !.BY = 0]      \* 68 XXXXXX
+/\ bar.HAVE \union [bar EXCEPT !.HAVE = 0]
+/\ bar.QED \union [bar EXCEPT !.QED = 0]
+/\ bar.TAKE \union [bar EXCEPT !.TAKE = 0]
 
-/\ bar.DEF \cup [bar EXCEPT !.DEF = 0]
-/\ bar.HIDE \cup [bar EXCEPT !.HIDE = 0]
-/\ bar.RECURSIVE \cup [bar EXCEPT !.RECURSIVE = 0] \* XXXXX 82
-/\ bar.USE \cup [bar EXCEPT !.USE = 0]
+/\ bar.DEF \union [bar EXCEPT !.DEF = 0]
+/\ bar.HIDE \union [bar EXCEPT !.HIDE = 0]
+/\ bar.RECURSIVE \union [bar EXCEPT !.RECURSIVE = 0] \* XXXXX 82
+/\ bar.USE \union [bar EXCEPT !.USE = 0]
 
-/\ bar.DEFINE \cup [bar EXCEPT !.DEFINE = 0]
-/\ bar.PROOF \cup [bar EXCEPT !.PROOF = 0]
-/\ bar.WITNESS \cup [bar EXCEPT !.WITNESS = 0]
-/\ bar.PICK \cup [bar EXCEPT !.PICK = 0]
+/\ bar.DEFINE \union [bar EXCEPT !.DEFINE = 0]
+/\ bar.PROOF \union [bar EXCEPT !.PROOF = 0]
+/\ bar.WITNESS \union [bar EXCEPT !.WITNESS = 0]
+/\ bar.PICK \union [bar EXCEPT !.PICK = 0]
 
-/\ bar.DEFS \cup [bar EXCEPT !.DEFS = 0]
-/\ bar.PROVE \cup [bar EXCEPT !.PROVE = 0]
-/\ bar.SUFFICES \cup [bar EXCEPT !.SUFFICES = 0]
-/\ bar.NEW \cup [bar EXCEPT !.NEW = 0]
+/\ bar.DEFS \union [bar EXCEPT !.DEFS = 0]
+/\ bar.PROVE \union [bar EXCEPT !.PROVE = 0]
+/\ bar.SUFFICES \union [bar EXCEPT !.SUFFICES = 0]
+/\ bar.NEW \union [bar EXCEPT !.NEW = 0]
 
-/\ bar.LAMBDA \cup [bar EXCEPT !.LAMBDA = 0]
-/\ bar.LEMMA \cup [bar EXCEPT !.LEMMA = 0]
-/\ bar.PROPOSITION \cup [bar EXCEPT !.PROPOSITION = 0]
-/\ bar.STATE \cup [bar EXCEPT !.STATE = 0]
-/\ bar.ACTION \cup [bar EXCEPT !.ACTION = 0]
-/\ bar.TEMPORAL \cup [bar EXCEPT !.TEMPORAL = 0]
-/\ bar.VARIABLE \cup [bar EXCEPT !.VARIABLE = 0]
+/\ bar.LAMBDA \union [bar EXCEPT !.LAMBDA = 0]
+/\ bar.LEMMA \union [bar EXCEPT !.LEMMA = 0]
+/\ bar.PROPOSITION \union [bar EXCEPT !.PROPOSITION = 0]
+/\ bar.STATE \union [bar EXCEPT !.STATE = 0]
+/\ bar.ACTION \union [bar EXCEPT !.ACTION = 0]
+/\ bar.TEMPORAL \union [bar EXCEPT !.TEMPORAL = 0]
+/\ bar.VARIABLE \union [bar EXCEPT !.VARIABLE = 0]
 
-/\ bar.OBVIOUS \cup [bar EXCEPT !.OBVIOUS = 0]
-/\ bar.OMITTED \cup [bar EXCEPT !.OMITTED = 0]
+/\ bar.OBVIOUS \union [bar EXCEPT !.OBVIOUS = 0]
+/\ bar.OMITTED \union [bar EXCEPT !.OMITTED = 0]
 
-/\ bar.ASSUME \cup [bar EXCEPT !.ASSUME = 0]
-/\ bar.ELSE \cup [bar EXCEPT !.ELSE = 0]
-/\ bar.LOCAL \cup [bar EXCEPT !.LOCAL = 0]
-/\ bar.UNION \cup [bar EXCEPT !.UNION = 0]
+/\ bar.ASSUME \union [bar EXCEPT !.ASSUME = 0]
+/\ bar.ELSE \union [bar EXCEPT !.ELSE = 0]
+/\ bar.LOCAL \union [bar EXCEPT !.LOCAL = 0]
+/\ bar.UNION \union [bar EXCEPT !.UNION = 0]
      
-/\ bar.ASSUMPTION \cup [bar EXCEPT !.ASSUMPTION = 0]
-/\ bar.ENABLED \cup [bar EXCEPT !.ENABLED = 0]
-/\ bar.MODULE \cup [bar EXCEPT !.MODULE = 0]
-/\ bar.VARIABLE \cup [bar EXCEPT !.VARIABLE = 0]
+/\ bar.ASSUMPTION \union [bar EXCEPT !.ASSUMPTION = 0]
+/\ bar.ENABLED \union [bar EXCEPT !.ENABLED = 0]
+/\ bar.MODULE \union [bar EXCEPT !.MODULE = 0]
+/\ bar.VARIABLE \union [bar EXCEPT !.VARIABLE = 0]
    
-/\ bar.AXIOM \cup [bar EXCEPT !.AXIOM = 0]
-/\ bar.EXCEPT \cup [bar EXCEPT !.EXCEPT = 0]
-/\ bar.OTHER \cup [bar EXCEPT !.OTHER = 0]
-/\ bar.VARIABLES \cup [bar EXCEPT !.VARIABLES = 0]
+/\ bar.AXIOM \union [bar EXCEPT !.AXIOM = 0]
+/\ bar.EXCEPT \union [bar EXCEPT !.EXCEPT = 0]
+/\ bar.OTHER \union [bar EXCEPT !.OTHER = 0]
+/\ bar.VARIABLES \union [bar EXCEPT !.VARIABLES = 0]
   
-/\ bar.CASE \cup [bar EXCEPT !.CASE = 0]
-/\ bar.EXTENDS \cup [bar EXCEPT !.EXTENDS = 0]
-/\ bar.SF_ \cup [bar EXCEPT !.SF_ = 0]
-/\ bar.WF_ \cup [bar EXCEPT !.WF_ = 0]
+/\ bar.CASE \union [bar EXCEPT !.CASE = 0]
+/\ bar.EXTENDS \union [bar EXCEPT !.EXTENDS = 0]
+/\ bar.SF_ \union [bar EXCEPT !.SF_ = 0]
+/\ bar.WF_ \union [bar EXCEPT !.WF_ = 0]
       
-/\ bar.CHOOSE \cup [bar EXCEPT !.CHOOSE = 0]
-/\ bar.IF \cup [bar EXCEPT !.IF = 0]        \* XXXXX
-/\ bar.SUBSET \cup [bar EXCEPT !.SUBSET = 0]
-/\ bar.WITH \cup [bar EXCEPT !.WITH = 0]
+/\ bar.CHOOSE \union [bar EXCEPT !.CHOOSE = 0]
+/\ bar.IF \union [bar EXCEPT !.IF = 0]        \* XXXXX
+/\ bar.SUBSET \union [bar EXCEPT !.SUBSET = 0]
+/\ bar.WITH \union [bar EXCEPT !.WITH = 0]
  
-/\ bar.CONSTANT \cup [bar EXCEPT !.CONSTANT = 0]
-/\ bar.IN \cup [bar EXCEPT !.IN = 0]
-/\ bar.THEN \cup [bar EXCEPT !.THEN = 0]    \* XXXXX
+/\ bar.CONSTANT \union [bar EXCEPT !.CONSTANT = 0]
+/\ bar.IN \union [bar EXCEPT !.IN = 0]
+/\ bar.THEN \union [bar EXCEPT !.THEN = 0]    \* XXXXX
                
-/\ bar.CONSTANTS \cup [bar EXCEPT !.CONSTANTS = 0]
-/\ bar.INSTANCE \cup [bar EXCEPT !.INSTANCE = 0]
-/\ bar.THEOREM \cup [bar EXCEPT !.THEOREM = 0] \* XXXXX
+/\ bar.CONSTANTS \union [bar EXCEPT !.CONSTANTS = 0]
+/\ bar.INSTANCE \union [bar EXCEPT !.INSTANCE = 0]
+/\ bar.THEOREM \union [bar EXCEPT !.THEOREM = 0] \* XXXXX
        
-/\ bar.DOMAIN \cup [bar EXCEPT !.DOMAIN = 0]
-/\ bar.LET \cup [bar EXCEPT !.LET = 0]
-/\ bar.UNCHANGED \cup [bar EXCEPT !.UNCHANGED = 0]
+/\ bar.DOMAIN \union [bar EXCEPT !.DOMAIN = 0]
+/\ bar.LET \union [bar EXCEPT !.LET = 0]
+/\ bar.UNCHANGED \union [bar EXCEPT !.UNCHANGED = 0]
 ================================
 
 

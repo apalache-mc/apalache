@@ -19,27 +19,27 @@ vars == << pc, rcvd, sent >>
 
 Receive(self) ==
         \E r \in SUBSET (P \times M):
-            /\ r \subseteq sent \cup { <<p, "ECHO">> : p \in Faulty }
+            /\ r \subseteq sent \union { <<p, "ECHO">> : p \in Faulty }
             /\ rcvd[self] \subseteq r
             /\ rcvd' = [rcvd EXCEPT ![self] = r ]
 
 UponV1(self) ==
         /\ pc[self] = "V1"
         /\ pc' = [pc EXCEPT ![self] = "SE"]
-        /\ sent' = sent \cup { <<self, "ECHO">> }
+        /\ sent' = sent \union { <<self, "ECHO">> }
         
 UponNonFaulty(self) ==
         /\ pc[self] /= "SE"
         /\ Cardinality(rcvd'[self]) >= T + 1
         /\ Cardinality(rcvd'[self]) < N - T
         /\ pc' = [pc EXCEPT ![self] = "SE"]
-        /\ sent' = sent \cup { <<self, "ECHO">> }
+        /\ sent' = sent \union { <<self, "ECHO">> }
         
 UponAcceptNotSent(self) ==
         /\ (pc[self] \in { "V0", "V1" })
         /\ Cardinality(rcvd'[self]) >= N - T
         /\ pc' = [pc EXCEPT ![self] = "AC"]
-        /\ sent' = sent \cup { <<self, "ECHO">> }
+        /\ sent' = sent \union { <<self, "ECHO">> }
         
 UponAccept(self) ==
         /\ pc[self] = "SE"

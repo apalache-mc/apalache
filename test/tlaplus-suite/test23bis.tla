@@ -28,7 +28,7 @@ Inv ==
   /\ Print(<<"B1", B1>>, TRUE)
   /\ Print(SetToBag({"a"}), TRUE)
 
-  /\ LET B7    == (DOMAIN B1) \cup (DOMAIN SetToBag({"a"})) 
+  /\ LET B7    == (DOMAIN B1) \union (DOMAIN SetToBag({"a"}))
          e1(e, BB) == (IF e \in DOMAIN BB THEN BB[e] ELSE 0)
      IN /\ IF B7 = {}
             THEN Assert(FALSE, "Failed Test 0a")
@@ -108,7 +108,7 @@ Inv ==
        THEN Assert(FALSE, "Failed Test 11")
        ELSE Print("Test 11 OK", TRUE)
 
-  /\ IF BagToSet(B2 ++ SetToBag({"d"})) # S \cup {"d"}
+  /\ IF BagToSet(B2 ++ SetToBag({"d"})) # S \union {"d"}
        THEN Assert(FALSE, "Failed Test 12")
        ELSE Print("Test 12 OK", TRUE)
 
