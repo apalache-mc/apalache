@@ -1050,11 +1050,14 @@ EXITCODE: OK
 ### check Bug914 succeeds
 
 Regression test for https://github.com/informalsystems/apalache/issues/914
+In the earlier version, we expected the model checker to complain about mismatching
+record types. In the latest version, this bug disappeared, due to the changes
+in the type checker.
 
 ```sh
 $ apalache-mc check Bug914.tla | sed 's/I@.*//'
 ...
-EXITCODE: ERROR (255)
+EXITCODE: OK
 ```
 
 ## configure the check command
