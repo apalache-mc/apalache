@@ -220,8 +220,9 @@ trait TransEx {
 
   /** The action predicates defining "next" transitions given in the spec
    *
+   *  Represneted as a map of operator names to expressions
    */
-  def actions: Option[List[TlaEx]]
+  def actions: Option[Map[String, TlaEx]]
 
   /** The invariants defined by the spec */
   def invariants: Option[CheckerInputVC]
@@ -236,7 +237,7 @@ trait TransEx {
   /** Gives a map of constants to their current values */
   def constants: Option[Map[TlaEx, TlaEx]]
 
-  /** Exmaples of the current symbolic state */
+  /** Examples of the current symbolic state */
   def currentStateExamples(max: Int = 100): Option[State]
 
   /**  The next symbolic state, achieved by applying a transition non-deterministically
@@ -259,8 +260,9 @@ trait TransEx {
    *
    * [TRANS-EX.1::SBMC.1::TRANSITIONS.1]
    *
+   * Represented as operator names to expressions.
    */
-  def enabledActions(): Option[List[TlaEx]]
+  def enabledActions(): Option[Map[String, TlaEx]]
 
   /** Advance to the next symbolic state reachable by applying the given action
    *
@@ -433,7 +435,7 @@ reply.result match {
 
 ### Usage example
 
-For illustrative purposes, we provide a short example of some usage (abstracting
+For illustrative purposes, we provide a short example of some use cases (abstracting
 away from GRPC details, which we can assume wrapped in a helper library):
 
 ```scala
