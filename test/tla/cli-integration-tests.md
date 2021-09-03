@@ -1050,11 +1050,14 @@ EXITCODE: OK
 ### check Bug914 succeeds
 
 Regression test for https://github.com/informalsystems/apalache/issues/914
+In the earlier version, we expected the model checker to complain about mismatching
+record types. In the latest version, this bug disappeared, due to the changes
+in the type checker.
 
 ```sh
 $ apalache-mc check Bug914.tla | sed 's/I@.*//'
 ...
-EXITCODE: ERROR (255)
+EXITCODE: OK
 ```
 
 ## configure the check command
@@ -1209,8 +1212,6 @@ EXITCODE: OK
 
 ```sh
 $ apalache-mc check ConfigUnsorted.tla | sed 's/[IEW]@.*//'
-...
-Configuration error (see the manual): Found a cyclic dependency among operators: B, A, C
 ...
 EXITCODE: ERROR (255)
 ```
@@ -1857,10 +1858,27 @@ See: https://github.com/informalsystems/apalache/issues/925
 ```sh
 $ apalache-mc typecheck Bug925.tla | sed 's/[IEW]@.*//'
 ...
-[Bug925.tla:7:1-7:24]: Expected ((b) => [f: Set(b)]) in Optional. Found: ((a) => [f: a])
+[Bug925.tla:7:1-7:24]: Expected ((b) => [f: Set(b)]) in Optional. Found: ((k) => [f: k])
 [Bug925.tla:7:1-7:24]: Error when computing the type of Optional
 ...
 EXITCODE: ERROR (255)
+```
+
+### typecheck letpoly.tla
+
+Test the Snowcat support let-polymorphism.
+
+```sh
+$ apalache-mc typecheck letpoly.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeCheckerSnowcat
+ > Running Snowcat .::.
+ > Your types are great!
+ > All expressions are typed
+...
+Type checker [OK]
+...
+EXITCODE: OK
 ```
 
 ## Running the config command

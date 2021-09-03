@@ -1,16 +1,19 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
-import at.forsyte.apalache.tla.lir.{
-  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1, TupT1, VarT1
-}
-import at.forsyte.apalache.tla.typecheck.etc.TypeUnifier.CycleDetected
+import at.forsyte.apalache.tla.lir._
 
 import scala.collection.immutable.SortedMap
 
 /**
  * <p>A unification solver for the TlaType1 system. Note that our subtyping relation unifies records
  * and sparse tuples with a different number of fields. It does so by extending the key set, not by shrinking it.
- * This unifier is a quick prototype. We should probably use a more efficient and more robust algorithm from a textbook.
+ * </p>
+ *
+ * <p>For an explanation of unification, see a textbook on logic, e.g.,
+ * Melvin Fitting. First-Order Logic and Automated Theorem Proving, Springer, 1996.
+ * We adapted the classical unification to reason about equivalence classes of type variables.
+ * We have focused on soundness of type unification. So this class may have poor performance when called by the
+ * constraint solver multiple times. Some profiling is needed.
  * </p>
  *
  * <p>This class is not designed for concurrency. Use different instances in different threads.</p>
@@ -18,8 +21,13 @@ import scala.collection.immutable.SortedMap
  * @author Igor Konnov
  */
 class TypeUnifier {
-  // a partial solution to the unification problem is stored here during unification
-  private var solution: Map[Int, TlaType1] = Map.empty
+  // A variable is mapped to its equivalence class. By default, a variable sits in the singleton equivalence class
+  // of its own. When two variables are unified, they are merged in the same equivalence class.
+  private var varToClass: Map[Int, EqClass] = Map.empty
+  // A partial solution to the unification problem is stored here during unification.
+  // Importantly, instead of mapping a variable to a type, we map an equivalence class to a type.
+  // By doing so, we make sure that equivalent variables are mapped to the same type.
+  private var solution: Map[EqClass, TlaType1] = Map.empty
 
   /**
    * Try to unify lhs and rhs by starting with the given substitution. If successful, it returns Some(mgu, t),
@@ -28,25 +36,40 @@ class TypeUnifier {
    * also involves merging record types. When there is no unifier, it returns None.
    */
   def unify(substitution: Substitution, lhs: TlaType1, rhs: TlaType1): Option[(Substitution, TlaType1)] = {
-    // start with the substitution
-    solution = substitution.context
+    // Copy the equivalence classes and the mapping from the substitution.
+    // It is important to introduce fresh copies of the classes, as they may be merged in the unification process.
+    solution = Map.empty
+    varToClass = Map.empty
+    var usedVars = lhs.usedNames ++ rhs.usedNames
+    for ((cls, tp) <- substitution.mapping) {
+      val copy = cls.copy()
+      solution += copy -> tp
+      varToClass ++= copy.typeVars.map(_ -> copy)
+      usedVars ++= tp.usedNames
+    }
+
+    // Introduce an equivalence class for every used variable that does not have a class assigned yet.
+    // This simplifies the algorithm, as we don't have to check, whether a variable has been assigned a class.
+    for (v <- usedVars) {
+      if (!varToClass.contains(v)) {
+        val cls = EqClass(v)
+        varToClass += v -> cls
+        // point to the variable itself
+        solution += cls -> VarT1(v)
+      }
+    }
+
     // try to unify
     val result =
-      try {
-        compute(lhs, rhs) flatMap { unifiedType =>
-          if (isCyclic) {
-            None
-          } else {
-            computeClosureWhenAcyclic()
-            val substitution = new Substitution(solution)
-            Some((substitution, substitution(unifiedType)))
-          }
-        }
-      } catch {
-        case _: CycleDetected =>
-          None
+      compute(lhs, rhs) flatMap { unifiedType =>
+        // use only the representative variables of every equivalence class
+        val canonical = mkCanonicalSub
+        val substitution = new Substitution(solution.mapValues { tt => canonical.sub(tt)._1 })
+        Some((substitution, substitution.sub(unifiedType)._1))
       }
-    solution = Map.empty // let GC collect the solution map later
+    // help GC to clean up later
+    solution = Map.empty
+    varToClass = Map.empty
     result
   }
 
@@ -65,6 +88,33 @@ class TypeUnifier {
   }
 
   private def compute(lhs: TlaType1, rhs: TlaType1): Option[TlaType1] = {
+    // Try to unify a variable with a non-variable term `typeTerm`.
+    // If `typeTerm` refers to a variable in the equivalence class of `typeVar`, then this is a cyclic reference,
+    // and there should be no unifier.
+    def unifyVarWithNonVarTerm(typeVar: Int, typeTerm: TlaType1): Option[TlaType1] = {
+      // Note that `typeTerm` is not a variable.
+      val varClass = varToClass(typeVar)
+      if (doesUseClass(typeTerm, varClass)) {
+        // No unifier: `typeTerm` refers to a variable in the equivalence class of `typeVar`.
+        None
+      } else {
+        // this variable is associated with an equivalence class, unify the class with `typeTerm`
+        solution(varClass) match {
+          case VarT1(_) =>
+            // an equivalence class of free variables, just assign `typeTerm` to this class
+            solution += varClass -> typeTerm
+            Some(typeTerm)
+
+          case _ =>
+            // unify `typeTerm` with the term assigned to the equivalence class, if possible
+            val unifier = compute(solution(varClass), typeTerm)
+            unifier.foreach { t => solution += varClass -> t }
+            unifier
+        }
+      }
+    }
+
+    // unify types as terms
     (lhs, rhs) match {
       // unifying constant types is trivial
       case (BoolT1(), BoolT1()) =>
@@ -83,32 +133,18 @@ class TypeUnifier {
         // uninterpreted constant types must have the same name
         if (lname != rname) None else Some(c)
 
-      case (lvar @ VarT1(lname), VarT1(rname)) if lname == rname =>
-        // if it is the same variable, do not recurse, but just return the result
-        Some(lvar)
-
-      // variables contribute to the solutions
-      case (VarT1(lname), rvar @ VarT1(rname)) =>
-        (solution.get(lname), solution.get(rname)) match {
-          case (Some(lvalue), Some(rvalue)) =>
-            for {
-              _ <- insert(lname, rvalue)
-              unification <- insert(rname, lvalue)
-            } yield unification
-
-          case (Some(lvalue), None) =>
-            insert(rname, lvalue) // None and lvalue for sure unify, associate lvalue with rname
-
-          case (None, Some(rvalue)) =>
-            insert(lname, rvalue) // None and rvalue for sure unify, associate rvalue with lname
-
-          case (None, None) =>
-            insert(lname, rvar)
+      case (VarT1(lname), VarT1(rname)) =>
+        if (lname != rname) {
+          mergeClasses(lname, rname)
+        } else {
+          Some(VarT1(lname))
         }
 
-      case (VarT1(name), other) => insert(name, other)
+      case (VarT1(name), other) =>
+        unifyVarWithNonVarTerm(name, other)
 
-      case (other, VarT1(name)) => insert(name, other)
+      case (other, VarT1(name)) =>
+        unifyVarWithNonVarTerm(name, other)
 
       // functions should unify component-wise
       case (FunT1(larg, lres), FunT1(rarg, rres)) =>
@@ -197,81 +233,61 @@ class TypeUnifier {
     }
   }
 
-  // insert a type into the substitution, by applying unification
-  private def insert(varNo: Int, tp: TlaType1): Option[TlaType1] = {
-    tp match {
-      case VarT1(otherVarNo) =>
-        // The optional value bound to varNo
-        val varNoValOpt = solution.get(varNo)
-        if (varNo != otherVarNo) {
-          val larger = varNo max otherVarNo
-          val smaller = varNo min otherVarNo
-          // If varNo was bound, assign its value to the smaller variable
-          varNoValOpt.map(insert(smaller, _))
-          // Assign the larger variable to the smaller
-          solution += larger -> VarT1(smaller)
-        } // Otherwise, vars are identical, so it's a no-op
-        varNoValOpt.orElse(Some(tp))
-
-      // When tp isn't a variable
-      case someTp =>
-        solution.get(varNo) match {
-          // varNo names a free variable, so bind it
-          case None =>
-            solution += varNo -> someTp
-            Some(someTp)
-
-          // when varNo is bound to a type
-          case Some(otherTp) =>
-            compute(someTp, otherTp).map(unifiedTp => {
-              solution += varNo -> unifiedTp
-              unifiedTp
-            })
-        }
+  // merge two equivalence classes of two variables, if possible
+  private def mergeClasses(lvar: Int, rvar: Int): Option[TlaType1] = {
+    // merge two equivalence classes, if possible
+    val lcls = varToClass(lvar)
+    val rcls = varToClass(rvar)
+    if (lcls == rcls) {
+      Some(VarT1(lvar))
+    } else {
+      // try to merge the classes
+      val lterm = solution(lcls)
+      val rterm = solution(rcls)
+      lcls.typeVars ++= rcls.typeVars
+      // Move the variables of the right class to the left class and remove the right class.
+      // This is safe, because terms never access the classes directly, but refer to them via variables.
+      rcls.typeVars foreach { v => varToClass += v -> lcls }
+      solution -= rcls
+      // if the assigned terms unify, add the unifier as a solution
+      val unified = compute(lterm, rterm)
+      unified.foreach { u => solution += lcls -> u }
+      unified
     }
   }
 
-  // Check, whether the solution is cyclic.
-  // This solution is computing the greatest fix-point, so it is probably not the most optimal.
-  // However, our substitutions in the type checker are quite small.
-  private def isCyclic: Boolean = {
-    // successors for every variable
-    val succ = solution.mapValues(_.usedNames)
-    var prev = Set[Int]()
-    var next = succ.keySet
-    // compute the greatest fixpoint under the successor function
-    while (prev != next) {
-      prev = next
-      next = next.foldLeft(Set[Int]()) { case (s, i) => s ++ succ.getOrElse(i, Set.empty) }
+  // Compute the transitive closure of the variables that are used by `tt` and their values that are known from the solution.
+  private def doesUseClass(tt: TlaType1, lookFor: EqClass): Boolean = {
+    def varsToClasses(vars: Set[Int]): Set[EqClass] = {
+      vars.map(varToClass)
     }
 
-    // if the fix-point is empty, there is no cycle
-    next.nonEmpty
-  }
-
-  // Compute the transitive closure of the solution, provided that the solution is acyclic.
-  // We separate the closure computation from the acyclicity checking, as acyclicity checking is a bit more efficient.
-  // (Though both methods are not optimized at all.)
-  //
-  // Shall we propagate the result in insert, as soon as they are available?
-  private def computeClosureWhenAcyclic(): Unit = {
-    var modified = true
-
-    def substituteOne(sub: Substitution, inType: TlaType1): TlaType1 = {
-      val outType = sub(inType)
-      if (outType != inType) {
-        modified = true
-        outType
-      } else {
-        inType
+    // look for equivalence classes by simple depth-first search
+    var visited: Set[EqClass] = Set.empty
+    var toVisit = varsToClasses(tt.usedNames)
+    while (toVisit.nonEmpty) {
+      val cls = toVisit.head
+      if (cls == lookFor) {
+        // found an occurrence of `lookFor`, return immediately
+        return true
       }
+      visited += cls
+      toVisit -= cls
+      val used = varsToClasses(solution(cls).usedNames)
+      toVisit ++= used -- visited
     }
 
-    while (modified) {
-      modified = false
-      val sub = Substitution(solution)
-      solution = solution.mapValues(substituteOne(sub, _))
+    false
+  }
+
+  // produce a canonical substitution
+  // that replaces every variable of an equivalence class with the largest variable in the class
+  private def mkCanonicalSub: Substitution = {
+    val mapping = solution.keys.toSeq.map { cls =>
+      // use the variable that has the maximal index as the representative of the equivalence class
+      (cls, VarT1(cls.typeVars.reduce(Math.max)))
     }
+    new Substitution(Map[EqClass, TlaType1](mapping: _*))
   }
 }
 
