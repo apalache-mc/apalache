@@ -67,7 +67,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
         // Just propagate the annotated name down the tree. It will be used in a let definition.
         // All free type variables in the type are considered to be universally quantified.
         val allVars = declaredType.usedNames
-        val extCtx = new TypeContext(ctx.poolSize, ctx.types + (name -> (declaredType, allVars)))
+        val extCtx = new TypeContext(ctx.largestVarIndex, ctx.types + (name -> (declaredType, allVars)))
         if (allVars.isEmpty) {
           // A non-generic type.
           // For example, it can be a type of a constant, a state variable, or of a concrete operator.
@@ -239,7 +239,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
 
         // translate the binders in the lambda expression, so we can quickly propagate the types of the parameters
         val preCtx =
-          new TypeContext(ctx.poolSize,
+          new TypeContext(ctx.largestVarIndex,
               (ctx.types + (name -> (operSig, operAllVars))).mapValues(p => (approxSolution.subRec(p._1), p._2)))
         val extCtx = translateBinders(preCtx, letInSolver, binders)
         val annotationParams = operSig.args
@@ -287,7 +287,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
           }
 
         // Find free variables of the principal type, to use them as quantified variables
-        val freeVars = principalDefType.usedNames.filter(_ >= ctx.poolSize)
+        val freeVars = principalDefType.usedNames.filter(_ >= ctx.largestVarIndex)
         if (!inferPolytypes && freeVars.nonEmpty) {
           // the user has disabled let-polymorphism
           onTypeError(ex.sourceRef,

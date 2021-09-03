@@ -73,7 +73,7 @@ UpdateIn(Active, rev) ==
     in' = [ u \in Nodes |->
         IF u \in Active
         THEN in[u] \ rev[u] \* active sink => leave those nodes that are not reversed
-        ELSE in[u] \cup { s \in Active : u \in rev[s] }
+        ELSE in[u] \union { s \in Active : u \in rev[s] }
             \* another node => add the nodes from the sinks that reversed this edge
     ]
     
@@ -82,7 +82,7 @@ UpdateToRev(Active, rev) ==
     to_rev' = [ u \in Nodes |->
         IF u \in Active
         THEN {}
-        ELSE to_rev[u] \cup { s \in Active : u \in rev[s] }
+        ELSE to_rev[u] \union { s \in Active : u \in rev[s] }
             \* when a neighbor s of u makes a reversal, u adds
             \* the link between u and s to the list
     ]

@@ -35,7 +35,7 @@ Inv  ==
       THEN Assert(FALSE, "Failed Test 6")
       ELSE Print("Test 6 OK", TRUE)
 
- /\ IF {1,2,3} # {1} \cup {3, 2} \cup {}
+ /\ IF {1,2,3} # {1} \union {3, 2} \union {}
       THEN Assert(FALSE, "Failed Test 7")
       ELSE Print("Test 7 OK", TRUE)
 

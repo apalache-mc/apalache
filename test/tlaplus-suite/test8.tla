@@ -1,6 +1,6 @@
 --------------- MODULE test8 -------------
 
-(* Test of set operators \cup, \cap, \subseteq, \ *)
+(* Test of set operators \union, \cap, \subseteq, \ *)
 
 EXTENDS Integers, TLC \*, Sequences
 
@@ -11,7 +11,7 @@ Next == UNCHANGED x
 
 Inv  ==  
 
-  /\ IF {1, 2, 3} \cup {3, 4, 5} # 1..5
+  /\ IF {1, 2, 3} \union {3, 4, 5} # 1..5
        THEN Assert(FALSE, "Test 1 Failed")
        ELSE Print("Test 1 OK", TRUE)
 
@@ -20,11 +20,11 @@ Inv  ==
        ELSE Print("Test 2 OK", TRUE)
 
 (*
-  /\ IF -5 \notin Int \cup Nat 
+  /\ IF -5 \notin Int \union Nat
        THEN Assert(FALSE, "Test 3 Failed")
        ELSE Print("Test 3 OK", TRUE)
 
-  /\ IF -5 \notin Nat \cup Int
+  /\ IF -5 \notin Nat \union Int
        THEN Assert(FALSE, "Test 4 Failed")
        ELSE Print("Test 4 OK", TRUE)
 
@@ -72,7 +72,7 @@ Inv  ==
        THEN Assert(FALSE, "Test 13 Failed")
        ELSE Print("Test 13 OK", TRUE)
 
-  /\ IF <<1, 2>> \notin Seq({0,1}) \cup  Seq({1,2,3}) 
+  /\ IF <<1, 2>> \notin Seq({0,1}) \union  Seq({1,2,3})
        THEN Assert(FALSE, "Test 14 Failed")
        ELSE Print("Test 14 OK", TRUE)
 
@@ -88,7 +88,7 @@ Inv  ==
        THEN Assert(FALSE, "Test 18 Failed")
        ELSE Print("Test 18 OK", TRUE)
 
-  /\ IF <<1, 2>> \notin [1..2 ->{0,1}] \cup [1..2 ->{1,2,3}] 
+  /\ IF <<1, 2>> \notin [1..2 ->{0,1}] \union [1..2 ->{1,2,3}]
        THEN Assert(FALSE, "Test 19 Failed")
        ELSE Print("Test 19 OK", TRUE)
 
@@ -100,7 +100,7 @@ Inv  ==
        THEN Assert(FALSE, "Test 21 Failed")
        ELSE Print("Test 21 OK", TRUE)
 
-  /\ IF <<1,2>> \in ({1,2} \X Nat) \cup {<<3,4>>, <<5,6>>}
+  /\ IF <<1,2>> \in ({1,2} \X Nat) \union {<<3,4>>, <<5,6>>}
        THEN Print("Test 22 OK", TRUE)
        ELSE Assert(FALSE, "Test 22 Failed")
     *)

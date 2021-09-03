@@ -32,10 +32,8 @@ class EqClass {
   def canEqual(other: Any): Boolean = other.isInstanceOf[EqClass]
 
   override def equals(other: Any): Boolean = other match {
-    case that: EqClass =>
-      (that canEqual this) &&
-        uid == that.uid
-    case _ => false
+    case that: EqClass => uid == that.uid
+    case _             => false
   }
 
   override def hashCode(): Int = {

@@ -1047,6 +1047,19 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
+### check Bug914 succeeds
+
+Regression test for https://github.com/informalsystems/apalache/issues/914
+In the earlier version, we expected the model checker to complain about mismatching
+record types. In the latest version, this bug disappeared, due to the changes
+in the type checker.
+
+```sh
+$ apalache-mc check Bug914.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
 ## configure the check command
 
 Testing various flags that are set via command-line options and the TLC
@@ -1445,6 +1458,19 @@ Test that the model checker supports let-polymorphism.
 $ apalache-mc check letpoly_inst.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
+```
+
+### check profiling
+
+Check that the profiler output is produced as explained in
+[Profiling](https://apalache.informal.systems/docs/apalache/profiling.html).
+
+```sh
+$ echo >profile.csv
+$ apalache-mc check --smtprof schroedinger_cat.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+$ test -s profile.csv
 ```
 
 ## running the typecheck command

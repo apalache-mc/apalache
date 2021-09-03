@@ -1,7 +1,9 @@
 ---------------------------- MODULE powerset ----------------------------
 EXTENDS Integers
 
-VARIABLE S
+VARIABLE
+    \* @type: Set(Int);
+    S
 
 Init ==
     /\ S \in SUBSET (1..50)
