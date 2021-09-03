@@ -3,17 +3,18 @@
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
 
-- [RFC-002: Implementation of Transition Exploration Server](#rfc-002-implementation-of-transition-exploration-server)
-    - [Problem](#problem)
-    - [Proposal](#proposal)
-        - [Overview](#overview)
-        - [Requirements](#requirements)
-        - [Architecture](#architecture)
-            - [API](#api)
-            - [Protocol](#protocol)
-                - [gRPC Example](#grpc-example)
+- [Problem](#problem)
+- [Proposal](#proposal)
+    - [Overview](#overview)
+    - [Requirements](#requirements)
+    - [Architecture](#architecture)
+        - [API](#api)
+        - [Protocol](#protocol)
+        - [gRPC Example](#grpc-example)
+    - [Usage example](#usage-example)
 
 <!-- markdown-toc end -->
+
 
 ## Problem
 
@@ -69,52 +70,52 @@ Example](#grpc-example) for details.
 The following requirements have been gathered through conversation and discussion
 on our GitHub issues:
 
-|TRANS-EX.1::QCHECK.1|
+| TRANS-EX.1::QCHECK.1 |
 : enable checking specs without repeated JVM startup costs
   [730#issue-855835332](https://github.com/informalsystems/apalache/issues/730#issue-855835332)
 
-|TRANS-EX.1::EXPLORE.1|
+| TRANS-EX.1::EXPLORE.1 |
 : enable exploring model checking results for a spec without repeated
   preprocessing costs
   [730#issue-855835332](https://github.com/informalsystems/apalache/issues/730#issue-855835332)
 
-|TRANS-EX.1::LOAD.1|
+| TRANS-EX.1::LOAD.1 |
 : enable loading and unloading specs
   [730#issuecomment-818201654](https://github.com/informalsystems/apalache/issues/730#issue-855835332)
 
-|TRANS-EX.1::EXTENSIBLE.1|
+| TRANS-EX.1::EXTENSIBLE.1 |
 : The transition explorer should be extensible in the following ways:
 
-|TRANS-EX.1::EXTENSIBLE.1::CLOUD.1|
+| TRANS-EX.1::EXTENSIBLE.1::CLOUD.1 |
 : extensible for cloud-based usage
 
-|TRANS-EX.1::EXTENSIBLE.1::CLI.1|
+| TRANS-EX.1::EXTENSIBLE.1::CLI.1 |
 : extensible for interactive terminal usage |
 
-|TRANS-EX.1::EXTENSIBLE.1::LSP.1|
+| TRANS-EX.1::EXTENSIBLE.1::LSP.1 |
 : extensible for LSP support
 
-|TRANS-EX.1::SBMC.1|
+| TRANS-EX.1::SBMC.1 |
 : expose symbolic model checking
   [730#issue-855835332](https://github.com/informalsystems/apalache/issues/730#issue-855835332)
 
-|TRANS-EX.1::SBMC.1::ADVANCE.1|
+| TRANS-EX.1::SBMC.1::ADVANCE.1 |
 : can incrementally advance symbolic states
 
-|TRANS-EX.1::SBMC.1::ROLLBACK.1|
+| TRANS-EX.1::SBMC.1::ROLLBACK.1 |
 : can incrementally rollback symbolic states
 
-|TRANS-EX.1::SBMC.1::TRANSITIONS.1|
+| TRANS-EX.1::SBMC.1::TRANSITIONS.1 |
 : can send data on available transitions
 
-|TRANS-EX.1::SBMC.1::SELECT.1|
+| TRANS-EX.1::SBMC.1::SELECT.1 |
 : can execute a specific transition given a selected action
 
-|TRANS-EX.1::SBMC.1::COUNTER.1|
+| TRANS-EX.1::SBMC.1::COUNTER.1 |
 : supports enumerating counterexamples
   [79#issue-534407916](https://github.com/informalsystems/apalache/issues/79#issue-534407916)
 
-|TRANS-EX.1::SBMC.1::PARAMS.1|
+| TRANS-EX.1::SBMC.1::PARAMS.1 |
 : supports enumerating parameter values (`CONSTANTS`) that lead to a
   counterexample
   [79#issuecomment-576449107](https://github.com/informalsystems/apalache/issues/79#issuecomment-576449107)
@@ -153,6 +154,11 @@ It attempts to give a highly abstracted interface, but in terms of existing data
 structures. Naturally, refinements and alterations are to be expected during
 implementation.
 
+We refer to symbolic states as `SymbStates`, and put this terminology in the API
+in order to help users understand when they should be thinking in terms of
+symbolic states.  Concrete states can be obtained by the calls suffixed with
+`Examples`.
+
 **NOTE:** This interface is intended as an abstract API, to communicate the
 mappings from request to reply. See the [gRPC Example](#grpc-example) for a
 sketch of what the actual implementation may look like.
@@ -187,27 +193,27 @@ trait TransEx {
    * [TRANS-EX.1::LOAD.1]
    *
    * @param spec the root TLA+ module 
-   * @param aux auxiliary modules that may be required by the root module
    * @param constants a map representing the intializationg of constant values
+   * @param aux auxiliary modules that may be required by the root module
    * @return `Left(LoadErr)` if parsing or loading the model from `spec` goes
    *          wrong, or `Right(())` if the model is loaded successfully.
    */
-  def loadModel(spec: String, constants: Map[TlaEx, TlaEx] aux: List[String] = List()): Either[LoadErr, Unit]
+  def loadModel(spec: String, constants: Map[TlaEx, TlaEx], aux: List[String] = List()): Either[LoadErr, Unit]
 
   /**  The root module currently loaded in memory  */
   def loadedModel: Option[TlaModule]
 
-  /** The initial states of the model
+  /** Concrete states exemplifying the initial symbolic states of the model
    *
    * Since the number of computable initial states can be infinite, an upper
-   * limit must be set.
+   * limit on the states to returned must be.
    *
    * @params max the maximum number of initial states to return (default to 100)
-   * @params start the nth state to begin fetching from (defaults to 0)
+   * @params start the nth state to begin fetching from, enables paging (defaults to 0)
    * @return `Some(exprs)` where `exprs` are `n` computed initial states, with
    *         `n` <= `max`, or `None` if no model is loaded.
    */
-  def initialStates(max: Int = 100, start: Int = 0): Option[List[State]]
+  def initialStateExamples(max: Int = 100, start: Int = 0): Option[List[State]]
 
   /**  The initial state predicate given in the spec  */
   def initialStatePredicate: Option[TlaEx]
@@ -230,24 +236,24 @@ trait TransEx {
   /** Gives a map of constants to their current values */
   def constants: Option[Map[TlaEx, TlaEx]]
 
-  /** The current state */
-  def currentState: Option[State]
+  /** Exmaples of the current symbolic state */
+  def currentStateExamples(max: Int = 100): Option[State]
 
-  /**  The next state, achieved by applying a transition non-deterministically
+  /**  The next symbolic state, achieved by applying a transition non-deterministically
    *
    * [TRANS-EX.1::SBMC.1::ADVANCE.1]
    *
    * @return `Left[err]` if the checker encounters an error, or 
    *         `Right[nextState]`.
    */
-  def nextState(): Either[CheckErr, State]
+  def nextSymbState(): Either[CheckErr, State]
 
-  /**  Step the exploration back to the previous state
+  /** Step the exploration back to the previous symbolic state
    *
    * [TRANS-EX.1::SBMC.1::ROLLBACK.1]
    *
    */
-  def previousState(): Either[CheckErr, State]
+  def previousSymbState(): Either[CheckErr, State]
 
   /** The actions that can be applied to the current state
    *
@@ -256,15 +262,15 @@ trait TransEx {
    */
   def enabledActions(): Option[List[TlaEx]]
 
-  /** The next state, achieved by applying the given action
+  /** Advance to the next symbolic state reachable by applying the given action
    *
    * |TRANS-EX.1::SBMC.1::SELECT.1|
    *
    */
-  def applyAction(action: TlaEx): Either[CheckErr, State]
+  def applyAction(action: TlaEx): Either[CheckErr, Unit]
 
-  /** The execution from the selected initial state up to the [[currentState]]  */
-  def executionFragment: Option[Execution]
+  /** The example of an execution from the an initial state up to the current symbolic state */
+  def executionFragmentExample: Option[Execution]
 
   /** Enumerate counter examples based on an execution
    *
@@ -279,7 +285,7 @@ trait TransEx {
     start: Int = 0
   ): List[TlaEx]
 
-  /** Enumerate counter examples based on partitioning of state space
+  /** Enumerate counter examples based on partitioning of the state space
    *
    * [TRANS-EX.1::SBMC.1::COUNTER.1]
    *
@@ -422,5 +428,30 @@ val reply: LoadReply = blockingStub.loadModel(request)
 reply.result match {
   Ok => // ...
   ParseError => // ...
+}
+```
+
+### Usage example
+
+For illustrative purposes, we provide a short example of some usage (abstracting
+away from GRPC details, which we can assume wrapped in a helper library):
+
+```scala
+val transEx = TransEx.connect()
+val spec = scala.io.Source.fromFile("MySpec.tla").mkString 
+val constants = Map("FOO" -> 1, "BAR" -> True)
+
+transEx.loadModel(spec, constants).toTry()
+
+val Some((enabledActions, invariantes)) = for {
+  actions <- transEx.enabledActions()
+  invariantes <- transeEx.invariants()
+} yield Some((actions, invariants))
+
+transEx.applyAction(enabledActions[0]) match {
+  case Right(()) => // continue exploring
+  case Left(err) =>
+    // We hit an error, so let's get a counter example
+    enumerateCounterExamples(executionFragmentExample.get())
 }
 ```
