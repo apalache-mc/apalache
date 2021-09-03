@@ -41,7 +41,7 @@ class TypeSubstitutor(tracker: TransformationTracker, sub: Substitution) extends
       if (reducedType != genericType) {
         newOper.withTag(Typed(reducedType))
       } else {
-        operEx
+        newOper
       }
 
     case letInEx @ LetInEx(body, defs @ _*) =>
@@ -49,11 +49,7 @@ class TypeSubstitutor(tracker: TransformationTracker, sub: Substitution) extends
 
       val genericType = letInEx.typeTag.asTlaType1()
       val reducedType = sub.subRec(genericType)
-      if (reducedType != genericType) {
-        LetInEx(transform(body), defs.map(mapDecl): _*)(Typed(reducedType))
-      } else {
-        letInEx
-      }
+      LetInEx(transform(body), defs.map(mapDecl): _*)(Typed(reducedType))
 
     case ex =>
       val genericType = ex.typeTag.asTlaType1()
