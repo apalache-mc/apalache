@@ -32,7 +32,7 @@ Update(i, j) == /\ prnt' = [prnt EXCEPT ![i] = j]
                 /\ UNCHANGED <<rpt, msg>>
     
 Send(i, k) == /\ CanSend(i, k) /\ (<<i, k>> \notin msg)
-              /\ msg' = msg \cup {<<i, k>>}
+              /\ msg' = msg \union {<<i, k>>}
               /\ UNCHANGED <<prnt, rpt>>
                                                                                     
 Parent(i) == /\ prnt[i] # NoPrnt /\ ~rpt[i]

@@ -159,7 +159,7 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
       .eql(tla.prime(tla.name("y") ? "i") ? "i", tla.name("t") ? "i")
       .typed(types, "b")
 
-    val ex4 = and(eql(int(0), int(1)) ? "b", xasgn21 ? "b")
+    val ex4 = and(eql(int(0), int(1)) ? "b", xasgn21)
       .typed(types, "b")
     val xDecl = declOp("X", ex4)
       .typedOperDecl(OperT1(Seq(), BoolT1()))

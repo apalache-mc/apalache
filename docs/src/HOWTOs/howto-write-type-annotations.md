@@ -202,7 +202,7 @@ of `TPTypeOK` and `Message` to get the idea about the type of `msgs`:
 ```tla
 Message ==
   ({[type |-> t, rm |-> r]: t \in {"Prepared"}, r \in RM }
-   \cup
+   \union
    {[type |-> t] : t \in {"Commit", "Abort"}})
 
 TPTypeOK ==

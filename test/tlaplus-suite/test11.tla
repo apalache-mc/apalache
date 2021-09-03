@@ -23,7 +23,7 @@ Inv  ==
        THEN Assert(FALSE, "Test 2 Failed")
        ELSE Print("Test 2 OK", TRUE)
 
-  /\ IF {1,2,3} \notin DOMAIN [T \in SUBSET Int |-> T \cup {1}]
+  /\ IF {1,2,3} \notin DOMAIN [T \in SUBSET Int |-> T \union {1}]
        THEN Assert(FALSE, "Test 3 Failed")
        ELSE Print("Test 3 OK", TRUE)
 

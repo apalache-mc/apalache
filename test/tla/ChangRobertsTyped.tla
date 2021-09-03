@@ -54,18 +54,18 @@ succ(n) == IF n=N THEN 1 ELSE n+1  \* successor along the ring
   {
        \* initiators send their own ID to their neighbor
    n0: if (initiator) {
-          msgs[succ(self)] := @ \cup {Id[self]}
+          msgs[succ(self)] := @ \union {Id[self]}
        };
    n1: while (TRUE) {
          \* handle some incoming message
          with (id \in msgs[self],
                _msgs = [msgs EXCEPT ![self] = @ \ {id}]) {
            if (state = "lost") {  \* nodes that have already lost forward the message
-              msgs := [_msgs EXCEPT ![succ(self)] = @ \cup {id}]
+              msgs := [_msgs EXCEPT ![succ(self)] = @ \union {id}]
            } else if (id < Id[self]) {
              \* received smalled ID: record loss and forward the message
               state := "lost";
-              msgs := [_msgs EXCEPT ![succ(self)] = @ \cup {id}]
+              msgs := [_msgs EXCEPT ![succ(self)] = @ \union {id}]
            } else {
              \* do not forward the message; if it's the own ID, declare win
               msgs := _msgs;
@@ -100,7 +100,7 @@ Init == (* Global variables *)
 
 n0(self) == /\ pc[self] = "n0"
             /\ IF initiator[self]
-                  THEN /\ msgs' = [msgs EXCEPT ![succ(self)] = @ \cup {Id[self]}]
+                  THEN /\ msgs' = [msgs EXCEPT ![succ(self)] = @ \union {Id[self]}]
                   ELSE /\ TRUE
                        /\ msgs' = msgs
             /\ pc' = [pc EXCEPT ![self] = "n1"]
@@ -110,11 +110,11 @@ n1(self) == /\ pc[self] = "n1"
             /\ \E id \in msgs[self]:
                  LET _msgs == [msgs EXCEPT ![self] = @ \ {id}] IN
                    IF state[self] = "lost"
-                      THEN /\ msgs' = [_msgs EXCEPT ![succ(self)] = @ \cup {id}]
+                      THEN /\ msgs' = [_msgs EXCEPT ![succ(self)] = @ \union {id}]
                            /\ state' = state
                       ELSE /\ IF id < Id[self]
                                  THEN /\ state' = [state EXCEPT ![self] = "lost"]
-                                      /\ msgs' = [_msgs EXCEPT ![succ(self)] = @ \cup {id}]
+                                      /\ msgs' = [_msgs EXCEPT ![succ(self)] = @ \union {id}]
                                  ELSE /\ msgs' = _msgs
                                       /\ IF id = Id[self]
                                             THEN /\ state' = [state EXCEPT ![self] = "won"]

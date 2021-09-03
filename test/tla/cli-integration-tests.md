@@ -1047,6 +1047,19 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
+### check Bug914 succeeds
+
+Regression test for https://github.com/informalsystems/apalache/issues/914
+In the earlier version, we expected the model checker to complain about mismatching
+record types. In the latest version, this bug disappeared, due to the changes
+in the type checker.
+
+```sh
+$ apalache-mc check Bug914.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
 ## configure the check command
 
 Testing various flags that are set via command-line options and the TLC
@@ -1199,8 +1212,6 @@ EXITCODE: OK
 
 ```sh
 $ apalache-mc check ConfigUnsorted.tla | sed 's/[IEW]@.*//'
-...
-Configuration error (see the manual): Found a cyclic dependency among operators: B, A, C
 ...
 EXITCODE: ERROR (255)
 ```
@@ -1427,6 +1438,26 @@ $ apalache-mc check Bug874.tla | sed 's/[IEW]@.*//'
 Bug874.tla:4:17-4:27: Input error (see the manual): Access to non-existent record field b in (["a" ↦ 2])["b"]
 ...
 EXITCODE: ERROR (255)
+```
+
+### check letpoly.tla
+
+Test that the model checker supports let-polymorphism.
+
+```sh
+$ apalache-mc check letpoly.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check letpoly_inst.tla
+
+Test that the model checker supports let-polymorphism.
+
+```sh
+$ apalache-mc check letpoly_inst.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
 ```
 
 ### check profiling
@@ -1847,10 +1878,44 @@ See: https://github.com/informalsystems/apalache/issues/925
 ```sh
 $ apalache-mc typecheck Bug925.tla | sed 's/[IEW]@.*//'
 ...
-[Bug925.tla:7:1-7:24]: Expected ((b) => [f: Set(b)]) in Optional. Found: ((a) => [f: a])
+[Bug925.tla:7:1-7:24]: Expected ((b) => [f: Set(b)]) in Optional. Found: ((k) => [f: k])
 [Bug925.tla:7:1-7:24]: Error when computing the type of Optional
 ...
 EXITCODE: ERROR (255)
+```
+
+### typecheck letpoly.tla
+
+Test the Snowcat support let-polymorphism.
+
+```sh
+$ apalache-mc typecheck letpoly.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeCheckerSnowcat
+ > Running Snowcat .::.
+ > Your types are great!
+ > All expressions are typed
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck letpoly_inst.tla
+
+Test the Snowcat support let-polymorphism.
+
+```sh
+$ apalache-mc typecheck letpoly_inst.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeCheckerSnowcat
+ > Running Snowcat .::.
+ > Your types are great!
+ > All expressions are typed
+...
+Type checker [OK]
+...
+EXITCODE: OK
 ```
 
 ## Running the config command

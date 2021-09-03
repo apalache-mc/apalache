@@ -22,10 +22,10 @@ The bellow snippet from [Paxos.tla][] demonstrates this convention:
 ```tla
 \* The set of all possible messages 
 Message ==      [type : {"1a"}, bal : Ballot]
-           \cup [type : {"1b"}, acc : Acceptor, bal : Ballot, 
-                 mbal : Ballot \cup {-1}, mval : Value \cup {None}]
-           \cup [type : {"2a"}, bal : Ballot, val : Value]
-           \cup [type : {"2b"}, acc : Acceptor, bal : Ballot, val : Value]
+           \union [type : {"1b"}, acc : Acceptor, bal : Ballot, 
+                 mbal : Ballot \union {-1}, mval : Value \union {None}]
+           \union [type : {"2a"}, bal : Ballot, val : Value]
+           \union [type : {"2b"}, acc : Acceptor, bal : Ballot, val : Value]
 ```
 
 Ultimately, this approach both disagrees with our interpretation of the purpose of a type-system for TLA+, as well as introduces unsoundness, in the sense that it makes it impossible, at the type-checking level, to detect record-field access violations.
@@ -50,8 +50,8 @@ VARIABLE
 \* Assuming S1: Set(a1), ..., Sn: Set(an) 
 \* @type: Set( [ type: Str, x1: a1, ..., xn: an, ... ] );
 Message ==      [type : {"t1"}, x1: S1, ...]
-           \cup  ...
-           \cup [type : {"tn"}, xn: Sn, ...]
+           \union  ...
+           \union [type : {"tn"}, xn: Sn, ...]
 ...
 
 TypeOk: msgs \subseteq Message
@@ -70,14 +70,14 @@ Messages == [
 This way, `Messages.t1` represents the set of all messages `m`, for which `m.type` would have been equal to "t1" in the original implementation, that is, `[type: {"t1"}, x1: S1, ...]`.
 For example, assume the original specification included
 ```tla
-Messages == [type: {"t1"}, x: {1,2,3}] \cup [type: {"t2"}, y:{"a","b","c"}]
+Messages == [type: {"t1"}, x: {1,2,3}] \union [type: {"t2"}, y:{"a","b","c"}]
 ```
 that is, defined two types of messages: "t1", with an integer-valued field "x" and "t2" with a string-valued field "y". The type of any `m \in Messages` would have been `[type: Str, x: Int, y: Str]` in the old approach.
 The rewritten version would be:
 ```tla
 Messages == [ t1: [x:{1,2,3}], t2: [y:{"a","b", "c"}] ]
 ```
-If we took `m: [ int: Set([x: Int]), str: Set([y: Str]) ]`, `m` would be a record pointing to two disjoint sets of messages (of categories "t1" and "t2" respectively). Values in `m.t1` would be records with the type `[x: Int]` and values in `m.t2` would be records with the type `[y: Str]`. 
+If we took `m: [ t1: Set([x: Int]), t2: Set([y: Str]) ]`, `m` would be a record pointing to two disjoint sets of messages (of categories "t1" and "t2" respectively). Values in `m.t1` would be records with the type `[x: Int]` and values in `m.t2` would be records with the type `[y: Str]`. 
 
 Note, however, that this approach also requires a change in the way messages are added to, or read from, the "set" of all messages (`m` is a record representing a set, but not a set itself, in the new approach).
 Previously, a message `m` would be added by writing:

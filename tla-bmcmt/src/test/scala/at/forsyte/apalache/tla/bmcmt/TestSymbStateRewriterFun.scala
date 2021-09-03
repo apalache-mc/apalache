@@ -182,7 +182,7 @@ class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
         val cell = nextState.arena.findCellByName(name)
         cell.cellType match {
           case IntT() =>
-            val eq1 = eql(cell.toNameEx ? "", int(12))
+            val eq1 = eql(cell.toNameEx ? "i", int(12))
               .typed(types, "b")
             solverContext.assertGroundExpr(eq1)
             rewriter.push()

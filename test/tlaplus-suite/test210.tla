@@ -192,7 +192,7 @@ THEOREM TRUE
   <33>2 TAKE Id, Id1
   <33>3 TAKE Id4 \in {1}, <<Id2, Id3>> \in {2}
   <33>123 FooBar == <<Id, Id1, Id4, Id2, Id3>>
-  <33>4 WITNESS {1} \cup <33>1!1!1!2
+  <33>4 WITNESS {1} \union <33>1!1!1!2
   <33>5 WITNESS {1} \in {2}, {3}
   <33>-... PICK x : ~ FALSE
           <+>*.   PICK y \in {1} : ~ FALSE

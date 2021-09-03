@@ -27,7 +27,7 @@ class ConstraintSolver(approximateSolution: Substitution = Substitution.empty) {
           case Some((uniqueSolution, typ)) =>
             progress = true
             solution = uniqueSolution
-            typesToReport :+= (cons, solution(typ))
+            typesToReport :+= (cons, solution.subRec(typ))
           case None =>
             cons match {
               case OrClause(_ @_*) =>
@@ -38,7 +38,7 @@ class ConstraintSolver(approximateSolution: Substitution = Substitution.empty) {
               case EqClause(_, term) =>
                 // no solution for a unit constraint:
                 // flag an error immediately
-                cons.onTypeError(solution, Seq(solution(term)))
+                cons.onTypeError(solution, Seq(solution.subRec(term)))
                 // reset the constraints, so they are not reported later
                 constraints = List.empty
                 return None
@@ -60,18 +60,18 @@ class ConstraintSolver(approximateSolution: Substitution = Substitution.empty) {
     if (isDefined && constraints.isEmpty) {
       // all constraints have been solved, report the types
       for ((c, t) <- typesToReport) {
-        c.onTypeFound(solution(t))
+        c.onTypeFound(solution.subRec(t))
       }
 
       Some(solution)
     } else {
       constraints.foreach {
         case c @ OrClause(clauses @ _*) =>
-          val partialSignatures = clauses.map { c => solution(c.term) }
+          val partialSignatures = clauses.map { c => solution.subRec(c.term) }
           c.onTypeError(solution, partialSignatures)
 
         case c @ EqClause(_, term) =>
-          c.onTypeError(solution, Seq(solution(term)))
+          c.onTypeError(solution, Seq(solution.subRec(term)))
       }
       None
     }

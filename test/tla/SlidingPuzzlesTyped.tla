@@ -62,7 +62,7 @@ update(e, es) == LET dirs  == dir(e, es)
                      free  == {<<pc, m>> \in moved :
                                  /\ m \cap (UNION (board \ {pc})) = {}
                                  /\ \A p \in m : p \in Pos}
-                 IN {(board \ {pc}) \cup {m} : <<pc, m>> \in free}
+                 IN {(board \ {pc}) \union {m} : <<pc, m>> \in free}
 
 Init == board = Klotski
         

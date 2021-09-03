@@ -2,6 +2,13 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.15.13
+
+### Bug fixes
+
+ * Fix the profiler, see #963
+ * Handle exceptions in record update edge case, see #917
+
 ## 0.15.12
 
 ### Bug fixes
