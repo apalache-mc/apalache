@@ -8,17 +8,19 @@ This brief introduction to symbolic model checking discusses the following:
   1. How do I interpret Apalache counterexamples?
 
 ## On state-spaces and transition systems
-A TLA+ specification defines a triple `(S,S0,->)`, called a _transition system_. `S` is the _state space_, `S0` is the set of initial states (`S0 \subseteq S`), and `->` is the transition relation, a subset of `S^2`.
+A TLA+ specification defines a triple \\((S,S_0,\to)\\), called a _transition system_. \\(S\\) is the _state space_, \\(S_0\\) is the set of initial states \\(\left(S_0 \subseteq S\right)\\), and \\(\to\\) is the transition relation, a subset of \\(S^2\\).
 
 ### State spaces
 The structure of a single state depends on the number of variables a specification declares. For example, if a specification declares 
 ```tla
 VARIABLE A1, A2, A3, ..., Ak
 ```
-then a _state_ is a `k`-field record `[A1 |-> a1, ..., Ak |-> ak]`, where `ai` represents the value of the variable `Ai`, for each `i = 1,...,k`. The state space `S` is then the set of all such `k`-records, i.e. the set of all possible combinations of values that variables may hold.
-For brevity, whenever the specification defines exactly one variable, we will treat a state as a single value `a1` instead of the record `[A1 |-> a1]`.
 
-In untyped TLA+, one can think of `S` as `[A1:U, ..., Ak: U]`, which is naturally isomorphic to `U^k`, where `U` is the universe of all TLA+ values. In typed TLA+, such as in Apalache, where variable declarations look like:
+then a _state_ is a mapping \\([A_1 \mapsto a_1, \dots, A_k \mapsto a_k]\\), where \\(ai\\) represents the value of the variable `Ai`, for each \\(i = 1,\dots,k\\). Here, we represent TLA+ variable names as unique formal symbols, where, for example the TLA+ variable `A1` is represented by the formal symbol \\(A_1\\). By convention, we will use markdown-syntax to refer to objects in TLA+ specifications, and latex notation otherwise.
+The state space \\(S\\) is then the set of all such mappings, i.e. the set of all possible combinations of values that variables may hold.
+For brevity, whenever the specification defines exactly one variable, we will treat a state as a single value \\(a_1\\) instead of the mapping \\([A_1 \mapsto a_1]\\).
+
+In untyped TLA+, one can think of \\(S\\) as \\(U^{\\{A_1,\dots, A_k\\}}\\), that is, the set of all mappings, which assign a value in \\(U\\), the universe of all TLA+ values, to each symbol. This set is naturally isomorphic to \\(U^k\\). In typed TLA+, such as in Apalache, where variable declarations look like:
 ```tla
 VARIABLE 
   \* @type: T1;
@@ -27,7 +29,8 @@ VARIABLE
   \* @type: Tk;
   Ak
 ```
- `S` is the set `[A1: V1, ..., Ak: Vk]`, where `Vi` is the set of all values, which hold the type `Ti`, for each `i = 1,...,k`.
+
+ \\(S\\) is additionally restricted, such that for all \\(s \in S\\) each symbol \\(A_i\\) maps to a value \\(s(A_i) \in V_i\\), where \\(Vi \subset U\\) is the set of all values, which hold the type \\(T_i\\), for each \\(i = 1,\dots,k\\).
 For example, in the specification with
 ```tla
 VARIABLE 
@@ -36,15 +39,8 @@ VARIABLE
   \* @type: Bool;
   b
 ```
-The state space is `[x: BOOLEAN,y: BOOLEAN]` when considering types, since each variable can hold one of two boolean values. In the untyped setting, the state space is infinite, and contains all pairs of TLA+ values, so, for example
-```
-{
-  [ x |-> 1, 
-    y |-> TRUE ], 
-  [ x |-> [z \in 1..5 |-> "a"], 
-    y |-> CHOOSE p \in {}: TRUE ]
-} \subset S
-```
+
+The state space is \\(\mathbb{B}^{\\{x,y\\}}\\) when considering types, since each variable can hold one of two boolean values. In the untyped setting, the state space is infinite, and contains states where, for example, \\(a\\) maps to `[z \in 1..5 |-> "a"]` and \\(b\\) maps to  `CHOOSE p \in {}: TRUE`.
 
 As Apalache enforces a type system,the remainder of this document will assume the typed setting.
 This assumption does not change any of the definitions. 
@@ -52,10 +48,10 @@ We will also assume that every specification declares an initial-state predicate
 For simplicity, we will also assume that the specification if free of constants, resp. that all of the constants have been initialized.
 
 ### Initial states
-The second component, `S0`, the set of all initial states, is derived from `S` and `Init`. 
+The second component, \\(S_0\\), the set of all initial states, is derived from \\(S\\) and `Init`. 
 The initial state predicate is a Boolean formula, in which specification-variables appear as free logic variables. 
-The operator `Init` characterizes a predicate `PS0 \in [S -> BOOLEAN]` in the following way: given a state `s \in S`, the formula obtained by replacing all occurrences of variable names `Ai` in `Init` with the values `s.Ai` (denoted `PS0(s)`) is a Boolean formula with no free variables (in a well-typed, parseable specification), which evaluates to either `TRUE` or `FALSE`. 
-By the subset-predicate equivalence, we identify the predicate `PS0` with a subset `S0` of `S` (`S0 = { s \in S: PS0(s) = TRUE }`). 
+The operator `Init` characterizes a predicate \\(P_{S_0} \in \mathbb{B}^S\\) in the following way: given a state \\(s \in S\\), the formula obtained by replacing all occurrences of variable names `Ai` in `Init` with the values \\(s(A_i)\\) is a Boolean formula with no free variables (in a well-typed, parseable specification), which evaluates to either `TRUE` or `FALSE`. We say \\(P_{S_0}(s)\\) is the evaluation of this formula.
+By the subset-predicate equivalence, we identify the predicate \\(P_{S_0}\\) with a subset \\(S_0\\) of \\(S\\): \\(S_0 = \\{ s \in S\mid P_{S_0}(s) = TRUE \\}\\). 
 
 For example, given
 ```tla
@@ -67,14 +63,15 @@ VARIABLE
 
 Init == x \in 3..5 /\ y = 2 
 ```
-we see that `S = [x: Z, y: Z]` and `S0 = { [x |-> 3, y |-> 2], [x |-> 4, y |-> 2], [x |-> 5, y |-> 2] }`.
+
+we see that \\(S = \mathbb{Z}^{\\{x,y\\}}\\) and \\(S_0 = \\{ [x \mapsto 3, y \mapsto 2], [x \mapsto 4, y \mapsto 2], [x \mapsto 5, y \mapsto 2] \\}\\).
 
 ### Transitions
-Similar to `S0`, `->` is derived from `S` and `Next`. If `S0` is a single-argument predicate `S0 \in [S -> BOOLEAN]`, then `->` is a relation `-> \in [S^2 -> BOOLEAN]`. 
-`->(s1,s2)` is the formula obtained by replacing all occurrences of variable names `Ai` in `Next` with the values `s1.Ai`, and all occurrences of `Ai'` with `s2.Ai`.
-By the same principle of subset-predicate equivalence, we can treat `->` as a subset of `S^2`.
+Similar to \\(S_0\\), \\(\to\\) is derived from \\(S\\) and `Next`. If \\(S_0\\) is a single-argument predicate \\(S_0 \in \mathbb{B}^S\\), then \\(\to\\) is a relation \\(\to \in \mathbb{B}^{S^2}\\). 
+\\(\to(s_1,s_2)\\) is the evaluation of the formula obtained by replacing all occurrences of variable names `Ai` in `Next` with the values \\(s_1(A_i)\\), and all occurrences of `Ai'` with \\(s_2(A_i)\\).
+By the same principle of subset-predicate equivalence, we can treat \\(\to\\) as a subset of \\(S^2\\).
 As mentioned in the notation section, it is generally more convenient to use the infix notation
-`s1 -> s2` over `->(s1, s2)`. We say that a state `s2` is a _successor_ of the state `s1` if `s1 -> s2`. 
+\\(s_1 \to s_2\\) over \\(\to(s_1, s_2)\\). We say that a state \\(s_2\\) is a _successor_ of the state \\(s_1\\) if \\(s_1 \to s_2\\). 
 
 For example, given
 ```tla
@@ -88,34 +85,39 @@ Init == x \in 3..5 /\ y = 2
 
 Next == x' \in { x, x + 1 } /\ UNCHANGED y
 ```
-One can deduce, for any state `[x |-> a, y |-> b] \in S`, that it has two successors: `[x |-> a + 1, y |-> b]` and `[x |-> a, y |-> b]` because the following relations hold `[x |-> a, y |-> b]-> [x |-> a + 1, y |-> b]` and `[x |-> a, y |-> b] -> [x |-> a, y |-> b]`.
+
+One can deduce, for any state \\([x \mapsto a, y \mapsto b] \in S\\), that it has two successors: \\([x \mapsto a + 1, y \mapsto b]\\) and \\([x \mapsto a, y \mapsto b]\\) because the following relations hold \\([x \mapsto a, y \mapsto b] \to [x \mapsto a + 1, y \mapsto b]\\) and \\( [x \mapsto a, y \mapsto b] \to [x \mapsto a, y \mapsto b] \\).
 
 Lastly, we define traces in the following way:
-A _trace_ of length `k` is simply a sequence of states `s0,..., sk \in S`, such that `s0 \in S0` and `si -> s{i+1}` for all `i=0,...,k-1`. 
+A _trace_ of length \\(k\\) is simply a sequence of states \\(s_0,\dots, s_k \in S\\), such that \\(s_0 \in S_0\\) and \\(s_i \to s_{i+1}\\) for all \\(i\in \\{0,\dots,k-1\\}\\). 
 This definition naturally extends to _inifinite traces_.
 
 For example, the above specification admits the following traces of length 2 (among others):
-```
-[x |-> 3, y |-> 2], [x |-> 3, y |-> 2], [x |-> 3, y |-> 2]  
-[x |-> 3, y |-> 2], [x |-> 4, y |-> 2], [x |-> 5, y |-> 2]  
-[x |-> 4, y |-> 2], [x |-> 5, y |-> 2], [x |-> 5, y |-> 2]  
-```
+\\[
+[x \mapsto 3, y \mapsto 2], [x \mapsto 3, y \mapsto 2], [x \mapsto 3, y \mapsto 2]
+\\]
+\\[
+[x \mapsto 3, y \mapsto 2], [x \mapsto 4, y \mapsto 2], [x \mapsto 5, y \mapsto 2]
+\\]
+\\[
+[x \mapsto 4, y \mapsto 2], [x \mapsto 5, y \mapsto 2], [x \mapsto 5, y \mapsto 2]
+\\]
 
 ### Reachable states
-Using the above definitions, we can define the set of states reachable in exactly `k`-steps, for `k \in N`, denoted by `R(k)`. We define `R(0) = S0` and for each `k \in N`,
-```tla
-R(k+1) := { t \in S: \E s \in R(k): s -> t }
-```
+Using the above definitions, we can define the set of states reachable in exactly \\(k\\)-steps, for \\(k \in \mathbb{N}\\), denoted by \\(R(k)\\). We define \\(R(0) = S_0\\) and for each \\(k \in \mathbb{N}\\),
+\\[
+R(k+1) := \\{ t \in S \mid \exists s \in R(k): s \to t \\}
+\\]
 
-Similarly, we can define the set of states reachable in _at most_ `k`-steps, denoted `r(k)`, for `k \in N` by
-```tla
-r(k) = R(0) \union R(1) \union ... \union R(k-1) \union R(k)
-```
+Similarly, we can define the set of states reachable in _at most_ \\(k\\)-steps, denoted \\(r(k)\\), for \\(k \in \mathbb{N}\\) by
+\\[
+r(k) := \bigcup_{i=0}^k R(i)
+\\]
 
-Finally, we define the set of all _reachable_ states, `R`, as the (infinite) union of all `r(k)`, over `k \in N`:
-```tla
-R = r(0) \union r(1) \union ...
-```
+Finally, we define the set of all _reachable_ states, \\(R\\), as the (infinite) union of all \\((k)\\), over \\(k \in \mathbb{N}\\):
+\\[
+R := \bigcup_{k \in \mathbb{N}} R(k)
+\\]
 
 For example, given
 ```tla
@@ -130,27 +132,29 @@ Init == x \in 1..3 /\ y = 2
 Next == x' = x + 1 /\ UNCHANGED y
 ```
 we can deduce: 
-```tla
-R(0) = r(0) = S0 = {[x|-> 1, y|-> 2],[x|-> 2, y|-> 2],[x|-> 3, y|-> 2]}
 
-R(1) = {[x|-> 2, y|-> 2], [x|-> 3, y|-> 2], [x|-> 4, y|-> 2]}
-r(1) = {[x|-> 1, y|-> 2], [x|-> 2, y|-> 2], [x|-> 3, y|-> 2], [x|-> 4, y|-> 2]}
+\begin{align}
+R(0) &= r(0) = S_0 = \\{[x\mapsto 1, y\mapsto 2],[x\mapsto 2, y\mapsto 2],[x\mapsto 3, y\mapsto 2]\\} \\\\
+\\\\
+R(1) &= \\{[x\mapsto 2, y\mapsto 2], [x\mapsto 3, y\mapsto 2], [x\mapsto 4, y\mapsto 2]\\} \\\\
+r(1) &= \\{[x\mapsto 1, y\mapsto 2], [x\mapsto 2, y\mapsto 2], [x\mapsto 3, y\mapsto 2], [x\mapsto 4, y\mapsto 2]\\} \\\\
+\\\\
+R(2) &= \\{[x\mapsto 3, y\mapsto 2], [x\mapsto 4, y\mapsto 2], [x\mapsto 5, y\mapsto 2]\\} \\\\
+r(2) &= \\{[x\mapsto 1, y\mapsto 2], [x\mapsto 2, y\mapsto 2], [x\mapsto 3, y\mapsto 2], [x\mapsto 4, y\mapsto 2], [x\mapsto 5, y\mapsto 2]\\}
+\end{align}
 
-R(2) = {[x|-> 3, y|-> 2], [x|-> 4, y|-> 2], [x|-> 5, y|-> 2]}
-r(2) = {[x|-> 1, y|-> 2], [x|-> 2, y|-> 2], [x|-> 3, y|-> 2], [x|-> 4, y|-> 2], [x|-> 5, y|-> 2]}
-```
 and so on. We can express this compactly as:
-```
-R(i) = [x: (i+1)..(i+3), y: {2}],
-r(i) = [x: 1..(i+3)    , y: {2}],
-R    = [x: N           , y: {2}]`
-```
+\begin{align}
+[x\mapsto a, y \mapsto b] \in R(i) &\iff i+1 \le a \le i + 3 \land b = 2 \\\\
+[x\mapsto a, y \mapsto b] \in r(i) &\iff 1 \le a \le i + 3 \land b = 2 \\\\
+[x\mapsto a, y \mapsto b] \in R &\iff 1 \le a \land b = 2
+\end{align}
 
 ### Finite diameters
 We say that a transition system has a _finite diameter_, if there exists a `k \in N`, such that `R = r(k)`.
 
 If such an integer exists then the smallest integer `k`, for which this holds true, is the _diameter_ of the transition system.
-In other words, if the transition system `(S,S0,->)` has a finite diameter of `k`, any state that is reachable from a state in `S0`, is reachable in at most `k` transitions. The example above clearly does not have a finite diameter, since `R` is infinite, but `r(k)` is finite for each `k`.
+In other words, if the transition system `(S,S_0,->)` has a finite diameter of `k`, any state that is reachable from a state in `S_0`, is reachable in at most `k` transitions. The example above clearly does not have a finite diameter, since `R` is infinite, but `r(k)` is finite for each `k`.
 
 However, the spec
 ```tla
@@ -181,7 +185,7 @@ In a transition system with a bounded diameter, one can use bounded model checki
 ## Explicit-state model checking
 The idea behind explicit-state model checking is to simply perform the following algorithm (in pseudocode, `<-` represents assignment):
   
-  Compute `S0` and set `Visited <- {}, ToVisit <- S0`
+  Compute `S_0` and set `Visited <- {}, ToVisit <- S_0`
 
   1. While `ToVisit # {}`, pick some `s \in ToVisit`: 
     1. If `~I(s)` then terminate, since a witness is found.
@@ -204,7 +208,7 @@ Init == x = 0
 Next == x' = x + 1
 ```
 defines a states space, for which `R = N`, so the above algorithm never terminates.
-Further, in the general case it is difficult or impossible to compute `S0` or the set `Successors(s)` defined in the algorithm. 
+Further, in the general case it is difficult or impossible to compute `S_0` or the set `Successors(s)` defined in the algorithm. 
 As an example, consider the following specification:
 ```tla
 VARIABLE x
@@ -218,10 +222,10 @@ ReachesOne(a) == \E n \in Nat: kIter(a,n) = 1
 
 Init == x \in { n \in Nat: ~ReachesOne(n) }
 ```
-The specification encodes the [Collatz conjecture](https://en.wikipedia.org/wiki/Collatz_conjecture), so computing `S0` is equivalent to proving or disproving the conjecture, which remains an open problem at present. It is therefore unreasonable to expect any model checker to be able to accept such input, despite the fact that the condition is easily describable in first-order logic.
+The specification encodes the [Collatz conjecture](https://en.wikipedia.org/wiki/Collatz_conjecture), so computing `S_0` is equivalent to proving or disproving the conjecture, which remains an open problem at present. It is therefore unreasonable to expect any model checker to be able to accept such input, despite the fact that the condition is easily describable in first-order logic.
 
 A similar problem can occur in computing `Successors(s)`; the relation between variables `Ai` (`s.Ai`) and `Ai'` (`s2.Ai`) may be given by means of an implicit function or uncomputable expression.
-Therefore, most solvers impose the following constraints, which make computing `S0` and `Successors(s)` possible without any sort of specialized solver:
+Therefore, most solvers impose the following constraints, which make computing `S_0` and `Successors(s)` possible without any sort of specialized solver:
 The specification must have the shape
 ```tla
 VARIABLE A1,...,Ak
@@ -253,7 +257,7 @@ Next == \/ /\ x > 5
            /\ x' = x + y'
 ```
 
-allows the solver to compute both `S0` as well as `Successors(s)`, for any `s`, by traversing the conjunctions in the syntax-imposed order. 
+allows the solver to compute both `S_0` as well as `Successors(s)`, for any `s`, by traversing the conjunctions in the syntax-imposed order. 
 
 However, even in a situation where states are computable, and `R` is finite, the size of `R` itself might be an issue in practice. We can create specifications of arbitrary size:
 ```tla
@@ -276,7 +280,7 @@ will have `C^k` distinct states, despite its rather simplistic behavior.
 ## Explicit-state bounded model checking
 Adapting the general explicit-state approach to bounded model checking is trivial, and therefore not particularly interesting. Assume a bound `k \in N` on the length of the traces considered. 
 
-  Compute `S0` and set `Visited <- {}, ToVisit <- { <<s,0>>: s \in S0 }`
+  Compute `S_0` and set `Visited <- {}, ToVisit <- { <<s,0>>: s \in S_0 }`
 
   1. While `ToVisit # {}`, pick some `<<s,j>> \in ToVisit`: 
       1. If `~I(s)` then terminate, since a witness is found.
@@ -296,7 +300,7 @@ Adapting the general explicit-state approach to bounded model checking is trivia
   1. If `ToVisit = {}` terminate. `r(k) = {v[1]: v \in Visited}` and `I` holds in all states reachable in at most `k` steps.
 
 A real implementation would, for efficiency reasons, avoid entering the same state via traces of different length, but the basic idea would remain unchanged.
-Bounding the execution length guarantees termination of the algorithm if `S0` is finite and each state has finitely many successors w.r.t. `->`, even if the state space is unbounded in general.
+Bounding the execution length guarantees termination of the algorithm if `S_0` is finite and each state has finitely many successors w.r.t. `->`, even if the state space is unbounded in general.
 However, this comes at a cost of guarantees: while bounded model checking might still find an invariant violation if it can occur within the bound `k`, it will fail if the shortest possible trace, on which the invariant is violated has a length greater than `k`.
 
 If the system has a finite diameter, bounded model checking is equivalent to model checking, as long as `k` exceeds the diameter.
@@ -339,9 +343,9 @@ s \in r(k) <=> \/ s \in R(0)
 
 How does one encode `P0`?
 ```
-s \in R(0) <=> s \in S0 <=> S0(s)
+s \in R(0) <=> s \in S_0 <=> S_0(s)
 ```
-so `P0(s) = S0(s)`. How about `P1`?
+so `P0(s) = S_0(s)`. How about `P1`?
 ```
 s \in R(1) <=> s \in { t \in S: \E s0 \in R(0): s0 -> t }
            <=> \E s0 \in R(0) : s0 -> s
@@ -355,15 +359,15 @@ Pk(s) := \E s{k-1} \in S: P{k-1}(s{k-1}) /\ s{k-1} -> s
 ```
 Which can be expanded to
 ```
-Pk(s) = \E s0,...,s{k-1} \in S: S0(s0) /\ s0 -> s1 /\ s1 -> s2 /\ ... /\ s{k-1} -> s
+Pk(s) = \E s0,...,s{k-1} \in S: S_0(s0) /\ s0 -> s1 /\ s1 -> s2 /\ ... /\ s{k-1} -> s
 ```
 
 Then, the formula describing invariant violation in exactly `k` steps, `\E sk \in R(k) \ I`, becomes
 ```
-\E s0,...,sk \in S: S0(s0) /\ s0 -> s1 /\ s1 -> s2 /\ ... /\ s{k-1} -> sk /\ ~I(sk)
+\E s0,...,sk \in S: S_0(s0) /\ s0 -> s1 /\ s1 -> s2 /\ ... /\ s{k-1} -> sk /\ ~I(sk)
 ```
 
-The challenge in designing a symbolic model checker is determining, given TLA+ operators `Init`, `Next` and `Inv`, the encodings of `S0, ->, I` as formulas in logcis supported by some external solvers (e.g. SMT).
+The challenge in designing a symbolic model checker is determining, given TLA+ operators `Init`, `Next` and `Inv`, the encodings of `S_0, ->, I` as formulas in logcis supported by some external solvers (e.g. SMT).
 
 ### Symbolic states
 In an explicit approach, the basic unit of computation is a single state `s \in S`. However, as demonstrated above, symbolic approaches deal with logical formulas. Recall that a state formula, such as `Init` is actually a predicate over `S`, and a predicate is equivalent to a subset of `S`.
@@ -459,7 +463,7 @@ Conversely, with respect to `{p1,p2}`, there are four symbolic states: one corre
 ### Symbolic traces
 Having defined symbolic states, what is then the meaning of a symbolic trace?
 Recall, a trace of length `k` is simply a sequence of reachable states 
-`s0,..., sk \in S`, such that `s0 \in S0` and `si -> s{i+1}`. 
+`s0,..., sk \in S`, such that `s0 \in S_0` and `si -> s{i+1}`. 
 In the symbolic setting, a _symbolic trace_ is a sequence of symbolic states `C0,...,Ck \in SUBSET S`, such that 
 ```
 C0 \in S // ®_P0 /\ ... /\ Ck \in S // ®_Pk
@@ -605,7 +609,7 @@ In fact, we can draw a table, representing partial traces corresponding to seque
 Clearly, the elements in every column (representing the various `Yi(tau)`), add up to `Xi = 1..10`. Also noticeable is the fact that some actions disable others, represented by the fact that some `Y2(tau)` sets are empty. For example, the action `A2` disables `A4`, because after `A2`, `x` cannot hold the value `1`, which is a precondition for `A4`.
 
 ### Counterexamples in Apalache
-Finally, we can interpret Apalache counterexamples in the context of the above definitions. Given an invariant `I`, a transition system `(S, S0, ->)` and an upper bound on executions `k`, Apalache first finds predicates `t1,...,tm` partitioning `->`. Then,
+Finally, we can interpret Apalache counterexamples in the context of the above definitions. Given an invariant `I`, a transition system `(S, S_0, ->)` and an upper bound on executions `k`, Apalache first finds predicates `t1,...,tm` partitioning `->`. Then,
 it encodes a symbolic trace `X0,...,Xk` and its decomposition `D`. A counterexample in Apalache defines an explicit trace `s0,s1,...,sl \in S` for `l <= k`, as well as a sequence `t{tau(1)}, ..., t{tau(l)}` (in the comments). The predicate sequence defines a (prefix of a) partial trace
 `Y0(tau),...,Yl(tau)` and `s0,...,sl` are chosen such that `si \in Yi(tau)`.
 
@@ -677,5 +681,3 @@ We use the following definitions and conventions:
   - Infix notation: Given a relation `R \in [A \X B -> BOOLEAN]`, we commonly write `a R b` instead of `R(a,b)` (e.g. `a > b` instead of `>(a,b)`).
   - Cartesian product: Given a set `T`, we use `T^2` to refer to `T \X T`. `T^k`, for `k > 2` is defined similarly.
   - Common sets: We use the shorthand `Z` to refer to the set of all integers, and `N` to refer to the set of all naturals, i.e. `N = {z \in Z: z >= 0}`.
-
-
