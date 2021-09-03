@@ -9,7 +9,7 @@ import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterApalacheGen extends RewriterBase {
-  private val types = Map("i" -> IntT1(), "I" -> SetT1(IntT1()), "b" -> BoolT1())
+  private val types = Map("i" -> IntT1(), "I" -> SetT1(IntT1()), "b" -> BoolT1(), "s" -> StrT1())
 
   test("""Gen(1) for Int""") {
     val gen = OperEx(ApalacheOper.gen, int(1).typed())(Typed(IntT1()))

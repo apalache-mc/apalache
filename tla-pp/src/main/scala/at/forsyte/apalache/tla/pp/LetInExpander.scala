@@ -1,9 +1,10 @@
-package at.forsyte.apalache.tla.lir.transformations.standard
+package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaOper}
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
+import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 
 /**
  * <p>A transformation which replaces all occurrences of LET-IN expressions with

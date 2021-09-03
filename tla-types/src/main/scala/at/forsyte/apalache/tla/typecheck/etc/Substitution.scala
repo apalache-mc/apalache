@@ -96,6 +96,15 @@ class Substitution(val mapping: Map[EqClass, TlaType1]) {
         s"Recursive substitution took more than $SUB_LIMIT iterations. Broken substitution?")
   }
 
+  /**
+   * Is the substitution defined over the empty domain?
+   *
+   * @return true if the substitution domain is empty
+   */
+  def isEmpty: Boolean = {
+    mapping.isEmpty
+  }
+
   override def toString: String = {
     def cls(c: EqClass): String = c.typeVars.map(VarT1(_).toString).mkString(", ")
 

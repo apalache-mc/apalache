@@ -94,7 +94,7 @@ class ParameterNormalizer(
                 .typedOperDecl(types, "t")
             tla
               .letIn(replaced, letInDef)
-              .typed(types, "p")
+              .typed(ex.typeTag.asTlaType1())
 
           case (OperParam(name, arity), paramType) =>
             // case 2: a higher-order parameter.
@@ -125,7 +125,9 @@ class ParameterNormalizer(
                 val letInDef = tla
                   .declOp(paramOperName, newBody, freshParams.map(n => OperParam(n)): _*)
                   .typedOperDecl(paramType)
-                tla.letIn(replaced, letInDef).typed(resType)
+                tla
+                  .letIn(replaced, letInDef)
+                  .typed(ex.typeTag.asTlaType1())
 
               case _ =>
                 throw new TypingException(s"Expected a higher-order parameter $name, found type: $paramType")

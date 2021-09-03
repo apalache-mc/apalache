@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.pp.{Desugarer, UniqueNameGenerator}
+import at.forsyte.apalache.tla.pp.{Desugarer, InlinerOfUserOper, LetInExpander, UniqueNameGenerator}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
