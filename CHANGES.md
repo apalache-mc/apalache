@@ -2,6 +2,13 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.15.14
+
+### Features
+
+* Support for let-polymorphism in `typecheck`, see #869
+* Support for let-polymorphism in `check`, see #953
+
 ## 0.15.13
 
 ### Bug fixes
