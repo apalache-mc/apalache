@@ -10,7 +10,3 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
-### Features
-
-* Support for let-polymorphism in `typecheck`, see #869
-* Support for let-polymorphism in `check`, see #953
