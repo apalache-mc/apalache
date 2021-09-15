@@ -13,14 +13,14 @@ Ints == {1,2,3}
 Strs == {"a","b","c"}
 
 \* @type: () => Set([ type: Str, x: Int, y: Str ] );
-Messages == [ type: {"int"}, x: Ints ] \cup [ type: {"str"}, y: Strs ]
+Messages == [ type: {"int"}, x: Ints ] \union [ type: {"str"}, y: Strs ]
 
 Init == 
     /\ msgs = {}
     /\ found3 = FALSE
     /\ foundC = FALSE
 
-Send(m) == msgs' = msgs \cup {m}
+Send(m) == msgs' = msgs \union {m}
 Rm(m) == msgs' = msgs \ {m}
 
 AddIntMsg == 

@@ -25,28 +25,39 @@ class TypeSubstitutor(tracker: TransformationTracker, sub: Substitution) extends
    * @return a transformed set expression
    */
   def transform: TlaExTransformation = tracker.trackEx {
-    case oper @ OperEx(op, args @ _*) =>
+    case operEx @ OperEx(op, args @ _*) =>
       val newArgs = args map transform
       val newOper =
         if (newArgs.map(_.ID) != args.map(_.ID)) {
           // Introduce a new operator only if the arguments have changed.
           // Otherwise, we would introduce lots of redundant chains in ChangeListener.
-          tracker.hold(oper, OperEx(op, newArgs: _*)(oper.typeTag)) // fixes #41
+          tracker.hold(operEx, OperEx(op, newArgs: _*)(operEx.typeTag)) // fixes #41
         } else {
-          oper
+          operEx
         }
 
-      val reducedType = sub.subRec(oper.typeTag.asTlaType1())
-      newOper.withTag(Typed(reducedType))
+      val genericType = operEx.typeTag.asTlaType1()
+      val reducedType = sub.subRec(genericType)
+      if (reducedType != genericType) {
+        newOper.withTag(Typed(reducedType))
+      } else {
+        newOper
+      }
 
     case letInEx @ LetInEx(body, defs @ _*) =>
       def mapDecl(d: TlaOperDecl): TlaOperDecl = d.copy(body = transform(d.body))
 
-      val reducedType = sub.subRec(letInEx.typeTag.asTlaType1())
+      val genericType = letInEx.typeTag.asTlaType1()
+      val reducedType = sub.subRec(genericType)
       LetInEx(transform(body), defs.map(mapDecl): _*)(Typed(reducedType))
 
     case ex =>
-      val reducedType = sub.subRec(ex.typeTag.asTlaType1())
-      ex.withTag(Typed(reducedType))
+      val genericType = ex.typeTag.asTlaType1()
+      val reducedType = sub.subRec(genericType)
+      if (reducedType != genericType) {
+        ex.withTag(Typed(reducedType))
+      } else {
+        ex
+      }
   }
 }

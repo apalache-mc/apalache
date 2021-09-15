@@ -20,7 +20,7 @@ VARIABLES
 
 Message ==
   {[type |-> t, rm |-> r]: t \in {"Prepared"}, r \in RM }
-    \cup
+    \union
   {[type |-> t] : t \in {"Commit", "Abort"} }
 
 Init ==  
@@ -33,13 +33,13 @@ Init ==
 
 TMCommit ==
   /\ tmPrepared = RM
-  /\ msgs' = msgs \cup {[type |-> "Commit"]}
+  /\ msgs' = msgs \union {[type |-> "Commit"]}
   /\ UNCHANGED <<rmState, tmPrepared>>
 
 RMPrepare(rm) == 
   /\ rmState[rm] = "working"
   /\ rmState' = [rmState EXCEPT ![rm] = "prepared"]
-  /\ msgs' = msgs \cup {[type |-> "Prepared", rm |-> rm]}
+  /\ msgs' = msgs \union {[type |-> "Prepared", rm |-> rm]}
   /\ UNCHANGED tmPrepared
 
 Next == TMCommit \/ RMPrepare("r1")

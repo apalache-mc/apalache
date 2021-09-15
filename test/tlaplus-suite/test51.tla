@@ -376,7 +376,7 @@ ASSUME
   /\ IF TestDefinedSetOp(\intersect) = ({"a", "b"} \intersect {"b", "c"})
        THEN Print("Test 93 OK", TRUE)
        ELSE Assert(FALSE, "Test 93 Failed")
-  /\ IF TestDefinedSetOp(\cup) = ({"a", "b"} \cup {"b", "c"})
+  /\ IF TestDefinedSetOp(\union) = ({"a", "b"} \union {"b", "c"})
        THEN Print("Test 94 OK", TRUE)
        ELSE Assert(FALSE, "Test 94 Failed")
   /\ IF TestDefinedSetOp(\union) = ({"a", "b"} \union {"b", "c"})

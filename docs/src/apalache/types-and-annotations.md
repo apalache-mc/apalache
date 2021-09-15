@@ -75,19 +75,19 @@ This approach manages to automatically compute types of many TLA+ expressions.
 However, there a few problematic cases that require type annotations:
 
  1. An empty set ``{}`` gets assigned the type ``Set[Unknown]``. When it is later
- combined with a more precise type, e.g., as in ``{} \cup {1}``, the type finder
+ combined with a more precise type, e.g., as in ``{} \union {1}``, the type finder
  reports a type error. In this case, the user has to write a type annotation.
  For instance, the above-mentioned problematic expression can be fixed as follows:
- ``({} <: {Int}) \cup {1}``.
+ ``({} <: {Int}) \union {1}``.
  1. Similar to an empty set, an empty sequence ``<<>>`` gets assigned the type
   ``Seq[Unknown]``. Hence ``<<>> \o <<1>>`` produces a type error. To resolve this,
   the user has to write a type annotation ``(<<>> <: Seq(Int)) \o <<1>>``.
  1. It is common to mix records that have different sets of fields, e.g.,
   see [Paxos](https://github.com/tlaplus/Examples/tree/master/specifications/Paxos).
   However, our type checker will report a type error on the following expression:
-  ``{[type |-> "1a", bal |-> 1]} \cup {[type |-> "2a", bal |-> 2, val |-> 3]}``.
+  ``{[type |-> "1a", bal |-> 1]} \union {[type |-> "2a", bal |-> 2, val |-> 3]}``.
   To resolve this, the user has to write a type annotation:
-   ``{[type |-> "1a", bal |-> 1] <: MT} \cup {[type |-> "2a", bal |-> 2, val |-> 3]}``,
+   ``{[type |-> "1a", bal |-> 1] <: MT} \union {[type |-> "2a", bal |-> 2, val |-> 3]}``,
    where ``MT`` is defined as ``[type |-> STRING, bal |-> Int, val |-> Int]``.
   The type checker requires that the fields with the same name are assigned
   the same type.

@@ -25,7 +25,7 @@ Init ==
 
 \* @type: ([x: Int]) => Bool; 
 SendInt(m) == 
-    msgs' = [msgs EXCEPT !.int = msgs.int \cup {m}]
+    msgs' = [msgs EXCEPT !.int = msgs.int \union {m}]
 
 \* @type: ([x: Int]) => Bool; 
 RmInt(m) == 
@@ -33,7 +33,7 @@ RmInt(m) ==
 
 \* @type: ([y: Str]) => Bool;
 SendStr(m) == 
-    msgs' = [msgs EXCEPT !.str = msgs.str \cup {m}]
+    msgs' = [msgs EXCEPT !.str = msgs.str \union {m}]
 
 \* @type: ([x: Int]) => Bool; 
 RmStr(m) == 

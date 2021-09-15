@@ -71,7 +71,7 @@ CCmd == {ConfigCmd(C) : C \in Config}
 (***************************************************************************)
 Vote == [cnum : CNum, cmd : Cmd]
 init == CHOOSE v : v \notin Vote 
-none == CHOOSE v : v \notin Vote \cup {init}
+none == CHOOSE v : v \notin Vote \union {init}
 -----------------------------------------------------------------------------
 (***************************************************************************)
 (*                                   VARIABLES                             *)
@@ -137,7 +137,7 @@ TypeOK ==
   /\ (**********************************************************************)
      (* avote is a function with the correct domain and range.             *)
      (**********************************************************************)
-     avote \in [Acc -> [INum -> [BNum -> Vote \cup {init, none}] ] ]
+     avote \in [Acc -> [INum -> [BNum -> Vote \union {init, none}] ] ]
      
   /\ (**********************************************************************)
      (* An acceptor votes only for a new configuration with a              *)
@@ -150,7 +150,7 @@ TypeOK ==
   /\ (**********************************************************************)
      (* `learned' is a set of elements of the proper type.                 *)
      (**********************************************************************)
-     learned \subseteq (INum \cup {-1}) \X Cmd
+     learned \subseteq (INum \union {-1}) \X Cmd
 
   /\ (**********************************************************************)
      (* There is exactly one element of the form <<-1, c>> \in learned,    *)
@@ -325,7 +325,7 @@ Abstain(a, S) ==
 Learn(i, b, cmd) ==
   /\ \E C \in Config : /\ ConfigOKAt(i, b, C)
                        /\ ChosenInBal(i, b, C, cmd)
-                       /\ learned' = learned \cup {<<i, cmd>>}
+                       /\ learned' = learned \union {<<i, cmd>>}
   /\ UNCHANGED avote
 
 
@@ -467,7 +467,7 @@ CfgOK ==
 (* implicitly.)                                                            *)
 (***************************************************************************)
 THEOREM TypeOK /\ CfgOK =>
-          /\ cfgi \in [0..maxcfg -> INum \cup {-1}] 
+          /\ cfgi \in [0..maxcfg -> INum \union {-1}]
           /\ cfgC \in [0..maxcfg -> Config]
           /\ cfgb \in [0..maxcfg -> BNum ]
           /\ \A j\in 0..maxcfg : cfgc[j] = ConfigCmd(cfgC[j])
@@ -790,7 +790,7 @@ THEOREM InductiveInvariance == Inv /\ Next => Inv'
     <3>2. PICK k \in 0..maxcfg :
             /\ ConfigOKAt(i, b, cfgC[k])
             /\ ChosenInBal(i, b, cfgC[k], c)
-            /\ learned' = learned \cup {<<i, c>>}
+            /\ learned' = learned \union {<<i, c>>}
       (*********************************************************************)
       (* Proof: By <3>1, the definition of Learn, and CfgOK (Inv!4), which *)
       (* implies that the configuration whose existence is implied by the  *)

@@ -129,6 +129,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
 
     val checker = new SeqModelChecker[SnapshotT](params, input, filteredTrex)
     val outcome = checker.run()
+    rewriter.dispose()
     logger.info(s"The outcome is: " + outcome)
     outcome == NoError()
   }
@@ -152,6 +153,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
 
     val checker = new SeqModelChecker[SnapshotT](params, input, filteredTrex)
     val outcome = checker.run()
+    rewriter.dispose()
     logger.info(s"The outcome is: " + outcome)
     outcome == NoError()
   }

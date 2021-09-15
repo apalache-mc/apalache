@@ -54,7 +54,7 @@ Message ==
   (* be received by all RMs.  The set $msgs$ contains just a single copy   *)
   (* of such a message.                                                    *)
   (*************************************************************************)
-  [type : {"Prepared"}, rm : RM]  \cup  [type : {"Commit", "Abort"}]
+  [type : {"Prepared"}, rm : RM]  \union  [type : {"Commit", "Abort"}]
    
 TPTypeOK ==  
   (*************************************************************************)
@@ -84,7 +84,7 @@ TMRcvPrepared(rm) ==
   (*************************************************************************)
   /\ tmState = "init"
   /\ [type |-> "Prepared", rm |-> rm] \in msgs
-  /\ tmPrepared' = tmPrepared \cup {rm}
+  /\ tmPrepared' = tmPrepared \union {rm}
   /\ UNCHANGED <<rmState, tmState, msgs>>
 
 TMCommit ==
@@ -95,7 +95,7 @@ TMCommit ==
   /\ tmState = "init"
   /\ tmPrepared = RM
   /\ tmState' = "committed"
-  /\ msgs' = msgs \cup {[type |-> "Commit"]}
+  /\ msgs' = msgs \union {[type |-> "Commit"]}
   /\ UNCHANGED <<rmState, tmPrepared>>
 
 TMAbort ==
@@ -104,7 +104,7 @@ TMAbort ==
   (*************************************************************************)
   /\ tmState = "init"
   /\ tmState' = "aborted"
-  /\ msgs' = msgs \cup {[type |-> "Abort"]}
+  /\ msgs' = msgs \union {[type |-> "Abort"]}
   /\ UNCHANGED <<rmState, tmPrepared>>
 
 RMPrepare(rm) == 
@@ -113,7 +113,7 @@ RMPrepare(rm) ==
   (*************************************************************************)
   /\ rmState[rm] = "working"
   /\ rmState' = [rmState EXCEPT ![rm] = "prepared"]
-  /\ msgs' = msgs \cup {[type |-> "Prepared", rm |-> rm]}
+  /\ msgs' = msgs \union {[type |-> "Prepared", rm |-> rm]}
   /\ UNCHANGED <<tmState, tmPrepared>>
   
 RMChooseToAbort(rm) ==
