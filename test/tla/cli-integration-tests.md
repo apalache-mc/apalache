@@ -1050,9 +1050,8 @@ EXITCODE: OK
 ### check Bug914 succeeds
 
 Regression test for https://github.com/informalsystems/apalache/issues/914
-In the earlier version, we expected the model checker to complain about mismatching
-record types. In the latest version, this bug disappeared, due to the changes
-in the type checker.
+In the earlier version, we expected the model checker to complain about mismatching record types. In the latest version,
+this bug disappeared, due to the changes in the type checker.
 
 ```sh
 $ apalache-mc check Bug914.tla | sed 's/I@.*//'
@@ -1060,11 +1059,21 @@ $ apalache-mc check Bug914.tla | sed 's/I@.*//'
 EXITCODE: OK
 ```
 
+### check RecordExcept987 succeeds
+
+Regression test for https://github.com/informalsystems/apalache/issues/987
+We should always use sorted keys on record types.
+
+```sh
+$ apalache-mc check Bug987.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
 ## configure the check command
 
-Testing various flags that are set via command-line options and the TLC
-configuration file. The CLI has priority over the TLC config. So we have to
-test that it all works together.
+Testing various flags that are set via command-line options and the TLC configuration file. The CLI has priority over
+the TLC config. So we have to test that it all works together.
 
 ### configure default Init and Next
 
