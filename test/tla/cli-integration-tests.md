@@ -1049,13 +1049,24 @@ EXITCODE: OK
 
 ### check Bug914 succeeds
 
-Regression test for https://github.com/informalsystems/apalache/issues/914
-In the earlier version, we expected the model checker to complain about mismatching
-record types. In the latest version, this bug disappeared, due to the changes
-in the type checker.
+Regression test for https://github.com/informalsystems/apalache/issues/914 In
+the earlier version, we expected the model checker to complain about
+mismatching record types. In the latest version, this bug disappeared, due to
+the changes in the type checker.
 
 ```sh
 $ apalache-mc check Bug914.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
+### check RecordExcept987 succeeds
+
+Regression test for https://github.com/informalsystems/apalache/issues/987
+We should always use sorted keys on record types.
+
+```sh
+$ apalache-mc check RecordExcept987.tla | sed 's/I@.*//'
 ...
 EXITCODE: OK
 ```
