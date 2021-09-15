@@ -13,4 +13,4 @@
 
 ### Bug fixes
 
-* Heisenbug caused by EXCEPT on records, which used unsorted keys, see #987
+* Fixed a heisenbug caused by EXCEPT on records, which used unsorted keys, see #987
