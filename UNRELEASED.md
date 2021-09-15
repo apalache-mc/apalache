@@ -10,7 +10,6 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
-
 ### Bug fixes
 
-* Heisenbug caused by EXCEPT on records, which used unsorted keys, see #987
+* Fixed a heisenbug caused by EXCEPT on records, which used unsorted keys, see #987
