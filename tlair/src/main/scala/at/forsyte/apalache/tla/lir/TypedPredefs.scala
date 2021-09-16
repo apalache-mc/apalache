@@ -6,7 +6,7 @@ object TypedPredefs {
   type Tag = Typed[TlaType1]
 
   /**
-   * An implicit conversion of an expression to a builder block
+   * An implicit conversion of an expression to a builder block.
    *
    * @param ex a TLA+ expression
    * @return a builder block
@@ -16,13 +16,25 @@ object TypedPredefs {
   }
 
   /**
+   * An implicit conversion of an expression to a typed builder expression.
+   * We need this implicit conversion in addition to tlaExToBlock, as Scala looks only for one implicit conversion,
+   * whereas we need two in this case.
+   *
+   * @param ex a TLA+ expression
+   * @return a typed builder block
+   */
+  implicit def tlaExToBuilderExAsTyped(ex: TlaEx): BuilderExAsTyped = {
+    BuilderExAsTyped(BuilderTlaExWrapper(ex))
+  }
+
+  /**
    * An implicit conversion of a sequence of expressions to a sequence of builder blocks.
    *
    * @param es a sequence of TLA+ expressions
    * @return the corresponding sequence of builder blocks
    */
   implicit def seqOfTlaExToSeqOfBlocks(es: Seq[TlaEx]): Seq[BuilderTlaExWrapper] = {
-    es.map(tlaExToBlock)
+    es.map(BuilderTlaExWrapper)
   }
 
   /**
@@ -51,25 +63,30 @@ object TypedPredefs {
   }
 
   implicit class BuilderDeclAsTyped(block: BuilderDecl) {
-    def typed(topType: TlaType1): TlaDecl = {
-      typed(Map("t" -> topType), "t")
+    def as(topType: TlaType1): TlaDecl = {
+      buildTyped(Map.empty, topType)
     }
 
+    // TODO: Remove it, as soon as we migrate to the version that does not use string aliases
     def typed(types: Map[String, TlaType1], alias: String): TlaDecl = {
+      types.get(alias) match {
+        case Some(tt) => buildTyped(types, tt)
+        case None     => throw new BuilderError(s"No type for alias $alias")
+      }
+    }
+
+    private def buildTyped(types: Map[String, TlaType1], topType: TlaType1): TlaDecl = {
       block match {
         case BuilderOperDecl(name, formalParams, body) =>
-          val typedBody = new BuilderExAsTyped(body).typed(types, "?")
-          types.get(alias) match {
-            case Some(tt) => TlaOperDecl(name, formalParams, typedBody)(Typed(tt))
-            case None     => throw new BuilderError(s"No type for alias $alias")
-          }
+          val typedBody = new BuilderExAsTyped(body).buildTyped(types, None)
+          TlaOperDecl(name, formalParams, typedBody)(Typed(topType))
       }
     }
   }
 
   implicit class BuilderOperDeclAsTyped(block: BuilderOperDecl) {
-    def typedOperDecl(topType: TlaType1): TlaOperDecl = {
-      BuilderDeclAsTyped(block).typed(topType).asInstanceOf[TlaOperDecl]
+    def as(topType: TlaType1): TlaOperDecl = {
+      BuilderDeclAsTyped(block).as(topType).asInstanceOf[TlaOperDecl]
     }
 
     def typedOperDecl(types: Map[String, TlaType1], alias: String): TlaOperDecl = {
@@ -78,42 +95,67 @@ object TypedPredefs {
   }
 
   implicit class BuilderExAsTyped(block: BuilderEx) {
-    private val undefinedAlias = "?"
-
     def typed(): TlaEx = {
-      typed(Map.empty, undefinedAlias)
+      buildTyped(Map.empty, None)
+    }
+
+    /**
+     * A shortcut for typed(topType)
+     *
+     * @param topType the type to use for the top expression
+     * @return an expression with the given type
+     */
+    def as(topType: TlaType1): TlaEx = {
+      typed(topType)
     }
 
     def typed(topType: TlaType1): TlaEx = {
-      typed(Map("top" -> topType), "top")
+      buildTyped(Map.empty, Some(topType))
     }
 
+    // TODO: Remove it, as soon as we migrate to the version that does not use string aliases
     def typed(types: Map[String, TlaType1], alias: String): TlaEx = {
+      val typeFromAlias = findTypeOrThrow(types, alias)
+      buildTyped(types, Some(typeFromAlias))
+    }
+
+    def buildTyped(types: Map[String, TlaType1], topType: Option[TlaType1]): TlaEx = {
       block match {
         case BuilderTlaExWrapper(ex) =>
-          if (alias == "?") {
-            ex
-          } else {
-            // the user has specified the type explicitly
-            ex.withTag(Typed(findTypeOrThrow(types, alias)))
-          }
+          topType.map(tt => ex.withTag(Typed(tt))).getOrElse(ex)
 
         case BuilderName(name) =>
-          val typeTag = Typed(findTypeOrThrow(types, alias))
-          NameEx(name)(typeTag)
+          topType match {
+            case Some(tt) =>
+              NameEx(name)(Typed(tt))
 
-        case BuilderAlias(target, newAlias) =>
-          target.typed(types, newAlias)
+            case None =>
+              throw new BuilderError(s"Missing type annotation in: name $name")
+          }
+
+        case BuilderAlias(target, alias) =>
+          val typeFromAlias = findTypeOrThrow(types, alias)
+          BuilderExAsTyped(target).buildTyped(types, Some(typeFromAlias))
 
         case BuilderOper(oper, args @ _*) =>
-          val builtArgs = args map (a => a.typed(types, "?"))
-          val typeTag = Typed(findTypeOrThrow(types, alias))
-          OperEx(oper, builtArgs: _*)(typeTag)
+          topType match {
+            case Some(tt) =>
+              val builtArgs = args map (a => BuilderExAsTyped(a).buildTyped(types, None))
+              OperEx(oper, builtArgs: _*)(Typed(tt))
+
+            case None =>
+              throw new BuilderError(s"Missing type annotation in: operator ${oper.name}")
+          }
 
         case BuilderLet(body, defs @ _*) =>
-          val builtBody = body.typed(types, "?")
-          val typeTag = Typed(findTypeOrThrow(types, alias))
-          LetInEx(builtBody, defs: _*)(typeTag)
+          topType match {
+            case Some(tt) =>
+              LetInEx(BuilderExAsTyped(body).buildTyped(types, None), defs: _*)(Typed(tt))
+
+            case None =>
+              val names = defs.map(_.name).mkString(" == ... ")
+              throw new BuilderError(s"Missing type annotation in: LET $names in ...")
+          }
 
         case BuilderVal(TlaInt(value)) =>
           ValEx(TlaInt(value))(Typed(IntT1()))

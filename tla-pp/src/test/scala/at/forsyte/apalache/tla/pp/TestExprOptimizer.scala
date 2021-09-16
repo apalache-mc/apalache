@@ -154,7 +154,7 @@ class TestExprOptimizer extends FunSuite with BeforeAndAfterEach {
               tla.not(tla.eql(tla.name("t_1") ? "i", tla.name("t_2") ? "i") ? "b") ? "b") ? "b")
     val decl = tla
       .declOp("t_3", tla.name("S").typed(types, "S"))
-      .typedOperDecl(OperT1(Seq(), IntT1()))
+      .as(OperT1(Seq(), IntT1()))
     val expected =
       tla.letIn(letBody ? "b", decl).typed(types, "b")
     assert(expected == output)
@@ -174,7 +174,7 @@ class TestExprOptimizer extends FunSuite with BeforeAndAfterEach {
               tla.not(tla.eql(tla.name("t_1") ? "i", tla.name("t_2") ? "i") ? "b") ? "b") ? "b")
     val decl = tla
       .declOp("t_3", tla.name("S").typed(types, "S"))
-      .typedOperDecl(OperT1(Seq(), IntT1()))
+      .as(OperT1(Seq(), IntT1()))
     val expected =
       tla.letIn(letBody ? "b", decl).typed(types, "b")
     assert(expected == output)
