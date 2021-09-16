@@ -79,9 +79,16 @@ class SkolemizationMarker @Inject() (tracker: TransformationTracker) extends Tla
       LetInEx(transform(body), defs ++ defs.flatMap(skolemizeDef): _*)(ex.typeTag)
 
     case ex @ OperEx(TlaOper.apply, nm @ NameEx(operName)) =>
-      // An application of a let-definition. As Skolemization is allowed in this context,
-      // we should use the Skolemizable version of the let-definition.
-      OperEx(TlaOper.apply, NameEx(mkSkolemName(operName))(nm.typeTag))(ex.typeTag)
+      ex.typeTag match {
+        case Typed(BoolT1()) =>
+          // An application of a let-definition that returns a Boolean value.
+          // As Skolemization is allowed in this context, we use the Skolemizable version of the definition.
+          OperEx(TlaOper.apply, NameEx(mkSkolemName(operName))(nm.typeTag))(ex.typeTag)
+
+        case _ =>
+          // non-Boolean values are kept as they are
+          ex
+      }
 
     case ex @ OperEx(_, _ @_*) =>
       // bugfix for #148: do not descend into value expressions, as Skolemization of non-formulas is unsound
