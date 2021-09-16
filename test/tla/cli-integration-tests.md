@@ -1071,11 +1071,21 @@ $ apalache-mc check RecordExcept987.tla | sed 's/I@.*//'
 EXITCODE: OK
 ```
 
+### check Bug985 succeeds
+
+Regression test for https://github.com/informalsystems/apalache/issues/985
+Skolemization should be sound.
+
+```sh
+$ apalache-mc check Bug985.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
 ## configure the check command
 
-Testing various flags that are set via command-line options and the TLC
-configuration file. The CLI has priority over the TLC config. So we have to
-test that it all works together.
+Testing various flags that are set via command-line options and the TLC configuration file. The CLI has priority over
+the TLC config. So we have to test that it all works together.
 
 ### configure default Init and Next
 

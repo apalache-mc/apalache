@@ -3,13 +3,12 @@ package at.forsyte.apalache.tla.bmcmt.analyses
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.values.TlaInt
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.values.TlaInt
 
 /**
- * <p>The skolemization analysis finds the existential quantifiers that can be safely replace by constants
+ * <p>The skolemization analysis finds the existential quantifiers that can be safely replaced by constants
  * (Skolemizable). This class is not a pure analysis but a transformer, that is, it modifies an argument expression.
  * Additionally, this analysis finds the cardinality comparisons like Cardinality(S) >= 4 that can be checked
  * more optimally than the direct computation of the cardinalities.</p>
@@ -22,7 +21,6 @@ import at.forsyte.apalache.tla.lir.values.TlaInt
  * @author Igor Konnov
  */
 class SkolemizationMarker @Inject() (tracker: TransformationTracker) extends TlaExTransformation with LazyLogging {
-
   override def apply(e: TlaEx): TlaEx = {
     transform(e)
   }
@@ -58,17 +56,50 @@ class SkolemizationMarker @Inject() (tracker: TransformationTracker) extends Tla
     // Effectively, IF-THEN-ELSE requires both \E and \A forms
 
     case ex @ LetInEx(body, defs @ _*) =>
-      // at this point, we only have nullary let-in definitions
-      def mapDef(df: TlaOperDecl) = df.copy(body = transform(df.body))
+      // At this point, we only have nullary let-in definitions of the form: `LET A == e1 in e2`
+      //
+      // There are two important cases to distinguish (bugfix for #985):
+      //   1. Expression e1 contains `\E x \in S: P` and `A` is used in a positive form in `e2` (as a non-value).
+      //   2. Expression e1 contains `\E x \in S: P` and `A` is used in a negative form or as a value in `e2`.
+      //
+      // Hence, we create copies of A for the both cases: one that could be skolemized and one that could not be.
+      def skolemizeDef(df: TlaOperDecl): Option[TlaOperDecl] = {
+        df.typeTag match {
+          case Typed(OperT1(Seq(), BoolT1())) =>
+            // Only if the let-definition returns a Boolean value, we have to worry about skolemization
+            Some(df.copy(body = transform(df.body), name = mkSkolemName(df.name)))
 
-      LetInEx(transform(body), defs map mapDef: _*)(ex.typeTag)
+          case _ =>
+            None
+        }
 
-    case ex @ OperEx(oper, args @ _*) =>
+      }
+
+      // introduce skolemized copies of the operators that return a Boolean, if needed
+      LetInEx(transform(body), defs ++ defs.flatMap(skolemizeDef): _*)(ex.typeTag)
+
+    case ex @ OperEx(TlaOper.apply, nm @ NameEx(operName)) =>
+      ex.typeTag match {
+        case Typed(BoolT1()) =>
+          // An application of a let-definition that returns a Boolean value.
+          // As Skolemization is allowed in this context, we use the Skolemizable version of the definition.
+          OperEx(TlaOper.apply, NameEx(mkSkolemName(operName))(nm.typeTag))(ex.typeTag)
+
+        case _ =>
+          // non-Boolean values are kept as they are
+          ex
+      }
+
+    case ex @ OperEx(_, _ @_*) =>
       // bugfix for #148: do not descend into value expressions, as Skolemization of non-formulas is unsound
       ex
 
     case terminal =>
       terminal // terminal expression, stop here
+  }
+
+  private def mkSkolemName(name: String): String = {
+    "%s$_skolem".format(name)
   }
 
 }
