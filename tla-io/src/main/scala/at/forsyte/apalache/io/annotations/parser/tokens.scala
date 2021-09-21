@@ -48,7 +48,7 @@ case class INLINE_STRING(text: String) extends AnnotationToken {}
  *
  * @param num the value of the number
  */
-case class NUMBER(num: Int) extends AnnotationToken {}
+case class NUMBER(num: BigInt) extends AnnotationToken {}
 
 /**
  * A Boolean value, FALSE or TRUE.
