@@ -1,7 +1,9 @@
 package at.forsyte.apalache.tla.lir.transformations.impl
 
 import at.forsyte.apalache.tla.lir.TlaOperDecl
-import at.forsyte.apalache.tla.lir.transformations.{TlaDeclTransformation, TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.{
+  TlaDeclTransformation, TlaExTouchTransformation, TlaExTransformation, TransformationTracker
+}
 
 /**
  * An implementation of TransformationTracker that does not do anything.
@@ -9,6 +11,10 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaDeclTransformation, TlaEx
  */
 class IdleTracker extends TransformationTracker {
   override def trackEx(transformation: TlaExTransformation): TlaExTransformation = {
+    transformation
+  }
+
+  override def trackTouchEx(transformation: TlaExTouchTransformation): TlaExTouchTransformation = {
     transformation
   }
 

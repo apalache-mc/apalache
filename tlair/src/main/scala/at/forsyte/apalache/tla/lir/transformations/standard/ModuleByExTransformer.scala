@@ -45,11 +45,13 @@ class ModuleByExTransformer(
 }
 
 object ModuleByExTransformer {
-  def apply(exTrans: TlaExTransformation): ModuleByExTransformer =
+  def apply(exTrans: TlaExTransformation): ModuleByExTransformer = {
     new ModuleByExTransformer(exTrans)
+  }
 
   def apply(
       exTrans: TlaExTransformation, include: TlaDecl => Boolean
-  ): ModuleByExTransformer =
+  ): ModuleByExTransformer = {
     new ModuleByExTransformer(exTrans, include)
+  }
 }

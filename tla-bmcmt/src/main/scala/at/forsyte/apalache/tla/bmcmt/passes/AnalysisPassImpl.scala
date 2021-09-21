@@ -4,9 +4,10 @@ import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.bmcmt.CheckerException
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
-import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.tla.lir.transformations.{TransformationTracker, fromTouchToExTransformation}
 import at.forsyte.apalache.tla.lir.transformations.standard.ModuleByExTransformer
 import at.forsyte.apalache.tla.lir.{NullEx, TlaAssumeDecl, TlaEx, TlaOperDecl}
+import at.forsyte.apalache.tla.pp.LetInOptimizer
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -45,13 +46,17 @@ class AnalysisPassImpl @Inject() (val options: PassOptions, hintsStoreImpl: Form
 
     val transformationSequence =
       List(
-          new SkolemizationMarker(tracker),
-          new ExpansionMarker(tracker)
+          // mark some expressions as to be Skolemized
+          "Skolemization" -> new SkolemizationMarker(tracker),
+          // mark some expressions to be expanded
+          "Expansion" -> new ExpansionMarker(tracker),
+          // SkolemizationMarker may introduce unused let-definitions. Remove them.
+          "Remove unused let-in defs" -> fromTouchToExTransformation(new LetInOptimizer(tracker))
       ) ///
 
     logger.info(" > Marking skolemizable existentials and sets to be expanded...")
-    val marked = transformationSequence.foldLeft(tlaModule.get) { case (m, tr) =>
-      logger.info("  > %s".format(tr.getClass.getSimpleName))
+    val marked = transformationSequence.foldLeft(tlaModule.get) { case (m, (name, tr)) =>
+      logger.info("  > %s".format(name))
       ModuleByExTransformer(tr).apply(m)
     }
 
