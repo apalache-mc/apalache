@@ -90,6 +90,31 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
     }
   }
 
+  test("operator with one big integer") {
+    val text =
+      """---- MODULE oper ----
+        |\* 100000000000000000000
+        |\* @type("Int");
+        |X == 100000000000000000000
+        |================================
+      """.stripMargin
+
+    val module = loadModule(text, "oper")
+
+    module.declarations.find(_.name == "X") match {
+      case Some(d @ TlaOperDecl(_, _, _)) =>
+        val annotations = annotationStore(d.ID)
+        val expected = Annotation(
+            "type",
+            mkStr("Int")
+        ) :: Nil
+        assert(expected == annotations)
+
+      case _ =>
+        fail("Expected an operator")
+    }
+  }
+
   test("annotated operator") {
     val text =
       """---- MODULE oper ----
