@@ -10,3 +10,6 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
+### FEATURES     
+ 
+ * improve SMT encoding by removing unused let-definitions, see #995
