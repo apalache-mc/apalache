@@ -11,7 +11,7 @@
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
 ### Features
- 
+
  * improve SMT encoding by removing unused let-definitions, see #995
 
 ### Bug fixes
