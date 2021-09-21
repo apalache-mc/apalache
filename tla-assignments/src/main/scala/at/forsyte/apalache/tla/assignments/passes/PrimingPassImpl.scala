@@ -74,7 +74,8 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
     val newModule = new TlaModule(tlaModule.get.name, newDeclarations)
 
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    writerFactory.writeModuleAllFormats(newModule.copy(name = "OutPriming"), TlaWriter.STANDARD_MODULES, outdir.toFile)
+    writerFactory.writeModuleAllFormats(newModule.copy(name = "06_OutPriming"), TlaWriter.STANDARD_MODULES,
+        outdir.toFile)
 
     setModule(newModule)
     true

@@ -63,7 +63,7 @@ class PreproPassImpl @Inject() (
       logger.info(s"  > $name")
       val transfomed = xformer(m)
       // dump the result of preprocessing after every transformation, in case the next one fails
-      writerFactory.writeModuleAllFormats(transfomed.copy(name = "OutPrepro"), TlaWriter.STANDARD_MODULES,
+      writerFactory.writeModuleAllFormats(transfomed.copy(name = "08_OutPrepro"), TlaWriter.STANDARD_MODULES,
           outdir.toFile)
       transfomed
     }
@@ -73,7 +73,8 @@ class PreproPassImpl @Inject() (
     val afterModule = renaming.renameInModule(preprocessed)
 
     // dump the result of preprocessing
-    writerFactory.writeModuleAllFormats(afterModule.copy(name = "OutPrepro"), TlaWriter.STANDARD_MODULES, outdir.toFile)
+    writerFactory.writeModuleAllFormats(afterModule.copy(name = "08_OutPrepro"), TlaWriter.STANDARD_MODULES,
+        outdir.toFile)
     outputTlaModule = Some(afterModule)
 
     if (options.getOrElse("general", "debug", false)) {

@@ -78,7 +78,7 @@ class SanyParserPassImpl @Inject() (
           }
         // save the output
         val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-        writerFactory.writeModuleAllFormats(rootModule.get.copy(name = "OutParser"), TlaWriter.STANDARD_MODULES,
+        writerFactory.writeModuleAllFormats(rootModule.get.copy(name = "00_OutParser"), TlaWriter.STANDARD_MODULES,
             outdir.toFile)
 
         // write parser output to specified destination, if requested
