@@ -227,6 +227,6 @@ class TestDefaultType1Parser extends FunSuite with Checkers with TlaType1Gen {
       }
     }
 
-    check(recursiveTypesParse, minSuccessful(10000), sizeRange(7))
+    check(recursiveTypesParse, minSuccessful(1000), sizeRange(7))
   }
 }

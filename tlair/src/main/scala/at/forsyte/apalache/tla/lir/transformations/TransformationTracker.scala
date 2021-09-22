@@ -19,6 +19,15 @@ trait TransformationTracker {
   def trackEx(tr: TlaExTransformation): TlaExTransformation
 
   /**
+   * Decorate a transformation with a tracker. By convention, the tracker is only tracking transformations
+   * that produce Right[TlaEx]
+   *
+   * @param tr an expression transformation
+   * @return a new transformation that applies tr and tracks the changes if the transformation is going via the constructor Right.
+   */
+  def trackTouchEx(tr: TlaExTouchTransformation): TlaExTouchTransformation
+
+  /**
    * Decorate a declaration transformation with a tracker.
    *
    * @param tr a declaration transformation
