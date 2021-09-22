@@ -95,7 +95,7 @@ object AnnotationLexer extends RegexParsers {
   }
 
   private def number: Parser[NUMBER] = {
-    "(|-)[0-9][0-9]*".r ^^ { value => NUMBER(value.toInt) }
+    "(|-)[0-9][0-9]*".r ^^ { value => NUMBER(BigInt(value)) }
   }
 
   private def boolean: Parser[BOOLEAN] = {
