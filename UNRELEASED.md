@@ -12,10 +12,9 @@
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
 ### Features
 
-* Enumerated files containing intermediate module states, see #993
+ * Enumerated files containing intermediate module states, see #993
+ * improve SMT encoding by removing unused let-definitions, see #995
 
 ### Bug fixes
 
- * Fixed a heisenbug caused by EXCEPT on records, which used unsorted keys, see #987
- * Fixed unsound skolemization that applied to let-definitions, see #985
  * Fixed a bug caused by big numbers on annotations, see #990

@@ -1,11 +1,12 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.tla.imp.src.{SaveToStoreTracker, SourceLocation, SourceStore}
+import at.forsyte.apalache.tla.imp.src.{SaveToStoreTransformationListener, SourceLocation, SourceStore}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.io.annotations.store._
+import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import tla2sany.semantic.{OpApplNode, OpDefNode}
 
 /**
@@ -16,6 +17,7 @@ import tla2sany.semantic.{OpApplNode, OpDefNode}
 class OpDefTranslator(
     sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context
 ) {
+  private val saveToStoreTracker = TrackerWithListeners(new SaveToStoreTransformationListener(sourceStore))
   private val annotationExtractor: AnnotationExtractor =
     new AnnotationExtractor(annotationStore)
 
@@ -43,7 +45,7 @@ class OpDefTranslator(
               SourceLocation(node.getBody.getLocation)
           )
           // the body still can refer to the function by its name, replace it with recFunRef
-          val replaced = ReplaceFixed(new SaveToStoreTracker(sourceStore))(
+          val replaced = ReplaceFixed(saveToStoreTracker)(
               NameEx(nodeName),
               recFunRef
           )(body)
