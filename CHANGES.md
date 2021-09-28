@@ -2,6 +2,16 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.16.2
+
+### Features
+
+ * improve SMT encoding by removing unused let-definitions, see #995
+
+### Bug fixes
+
+ * Fixed a bug caused by big numbers on annotations, see #990
+
 ## 0.16.1
 
 ### Bug fixes
