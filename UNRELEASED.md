@@ -10,3 +10,6 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
+### Features
+
+ * Enumerated files containing intermediate module states, see #993
