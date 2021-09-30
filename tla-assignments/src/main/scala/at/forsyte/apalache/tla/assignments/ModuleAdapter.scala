@@ -23,8 +23,9 @@ object ModuleAdapter {
   def exprsToOperDefs(operPrefix: String, transitions: Seq[TlaEx]): Seq[TlaOperDecl] =
     transitions.zipWithIndex map { case (transExpr, index) =>
       // Name + $ + index is guaranteed to not clash with existing names, as
-      // $ is not an allowed symbol in TLA
-      exprToOperDef(operPrefix + index, transExpr)
+      // $ is not an allowed symbol in TLA.
+      // We pad the number to 4 digits, so it is easy to sort them.
+      exprToOperDef("%s%04d".format(operPrefix, index), transExpr)
     }
 
   def declsFromTransitions(transitionOperName: String, transitions: Seq[SymbTrans]): Seq[TlaOperDecl] =
@@ -45,11 +46,14 @@ object ModuleAdapter {
    * string, that distinguishes them from normal operators.
    */
   def getTransitionsFromSpec(module: TlaModule, prefix: String): Seq[TlaEx] =
-    module.operDeclarations.withFilter {
-      _.name.startsWith(prefix) // transitions end in 0,1,...
-    } map {
-      _.body
-    }
+    module.operDeclarations
+      .filter {
+        _.name.startsWith(prefix) // transitions end in 0,1,...
+      }
+      .sortBy(_.name)
+      .map {
+        _.body
+      }
 
   def getOperatorOption(module: TlaModule, name: String): Option[TlaEx] =
     module.operDeclarations.find {
