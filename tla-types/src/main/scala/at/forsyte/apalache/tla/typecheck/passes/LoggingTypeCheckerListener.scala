@@ -1,22 +1,30 @@
 package at.forsyte.apalache.tla.typecheck.passes
 
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.{TlaType1, UID}
+import at.forsyte.apalache.tla.lir.{TlaType1, TypingException, UID}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
-import at.forsyte.apalache.tla.typecheck.TypeCheckerListener
+import at.forsyte.apalache.tla.typecheck.{TypeCheckerListener, TypingInputException}
 import at.forsyte.apalache.tla.typecheck.etc.{EtcRef, ExactRef}
 import com.typesafe.scalalogging.LazyLogging
 
-class LoggingTypeCheckerListener(sourceStore: SourceStore, changeListener: ChangeListener)
+class LoggingTypeCheckerListener(sourceStore: SourceStore, changeListener: ChangeListener,
+    isPolymorphismEnabled: Boolean)
     extends TypeCheckerListener with LazyLogging {
 
   /**
    * This method is called when the type checker finds the type of an expression.
    *
    * @param sourceRef a reference to the source expression; this reference must be exact
-   * @param monotype  its monotype
+   * @param tp        its type
    */
-  override def onTypeFound(sourceRef: ExactRef, monotype: TlaType1): Unit = {}
+  override def onTypeFound(sourceRef: ExactRef, tp: TlaType1): Unit = {
+    if (!isPolymorphismEnabled && tp.usedNames.nonEmpty) {
+      val msg = "[%s]: Found a polymorphic type: %s".format(findLoc(sourceRef.tlaId), tp)
+      logger.error(msg)
+      logger.error("Probable causes: an empty set { } needs a type annotation or an incorrect record field is used")
+      throw new TypingInputException(msg)
+    }
+  }
 
   /**
    * This method is called when the type checker finds a type error.
