@@ -10,3 +10,7 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
+
+### Bug fixes
+
+* Fix type checker to complain about polymorphism in the post phase, see #931

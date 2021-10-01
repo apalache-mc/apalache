@@ -1481,6 +1481,18 @@ $ apalache-mc check letpoly_inst.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check Bug931.tla
+
+Test that the model checker nicely complains about unresolved polymorphism.
+
+```sh
+$ apalache-mc check --inv=Inv Bug931.tla | sed 's/[IEW]@.*//'
+...
+Typing input error: [Bug931.tla:6:20-6:21]: Found a polymorphic type: Set(f)
+...
+EXITCODE: ERROR (255)
+```
+
 ### check profiling
 
 Check that the profiler output is produced as explained in
