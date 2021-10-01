@@ -78,7 +78,7 @@ class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceSto
 
     // print the resulting module
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    writerFactory.writeModuleAllFormats(outModule.copy(name = "OutTransition"), TlaWriter.STANDARD_MODULES,
+    writerFactory.writeModuleAllFormats(outModule.copy(name = "09_OutTransition"), TlaWriter.STANDARD_MODULES,
         outdir.toFile)
 
     setModule(outModule)
@@ -93,14 +93,9 @@ class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceSto
 
     val operMap = BodyMapFactory.makeFromDecls(module.operDeclarations)
     val transitionPairs = SmtFreeSymbolicTransitionExtractor(tracker, sourceLoc)(vars.toSet, primedName, operMap)
-    // sort the transitions by their occurrence in the source code
-    val sorter = new TransitionOrder(sourceLoc)
-    val sortedPairs = sorter.sortBySource(transitionPairs)
-    if (sortedPairs.isEmpty) {
-      throw new AssignmentException("Failed to find assignments and symbolic transitions in " + inOperName)
-    }
-    // transform the transitions into declarations
-    ModuleAdapter.exprsToOperDefs(outOperName, sortedPairs.map(_._2))
+    // sort the transitions by their identifiers, to make sure we have determinism
+    val sortedTransitions = transitionPairs.map(_._2).sortBy(_.ID.id)
+    ModuleAdapter.exprsToOperDefs(outOperName, sortedTransitions)
   }
 
   /**
