@@ -32,3 +32,9 @@
 - The workflow builds the release artifact(s), tags the release commit created
   in the `prepare-release` workflow, and publishes the release to GitHub's
   release artifact store.
+
+## [./container.yml](./container.yml)
+
+- Triggered by publishing releases or merging into the `unstable` branch
+- The workflow builds the docker container defined in the
+  [`/Dockerfile`](../../Dockerfile) and publishes it to GitHub Packages.
