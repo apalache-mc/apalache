@@ -496,11 +496,11 @@ request</a>.</p>
 <p><a href="https://www.docker.com/">Docker</a> lets you to run Apalache in an isolated container.
 All dependencies are already installed in docker. However, you have to install docker.</p>
 <p>To get the latest Apalache image, issue the command:</p>
-<pre><code class="language-bash">docker pull apalache/mc
+<pre><code class="language-bash">docker pull ghcr.io/informalsystems/apalache
 </code></pre>
 <h2><a class="header" href="#running-the-docker-image" id="running-the-docker-image">Running the docker image</a></h2>
 <p>To run an Apalache image, issue the command:</p>
-<pre><code class="language-bash">$ docker run --rm -v &lt;your-spec-directory&gt;:/var/apalache apalache/mc &lt;args&gt;
+<pre><code class="language-bash">$ docker run --rm -v &lt;your-spec-directory&gt;:/var/apalache informalsystems/apalache &lt;args&gt;
 </code></pre>
 <p>The following docker parameters are used:</p>
 <ul>
@@ -519,8 +519,8 @@ In particular the tool logs are written in that directory.</p>
 <code>-v &lt;your-spec-directory&gt;:/var/apalache:z</code></p>
 </li>
 <li>
-<p><code>apalache/mc</code> is the APALACHE docker image name. By default, the <code>latest</code> stable
-version is used; you can also refer to a specific tool version, e.g., <code>apalache/mc:0.6.0</code> or <code>apalache/mc:unstable</code></p>
+<p><code>informalsystems/apalache</code> is the APALACHE docker image name. By default, the <code>latest</code> stable
+version is used; you can also refer to a specific tool version, e.g., <code>informalsystems/apalache:0.6.0</code> or <code>informalsystems/apalache:unstable</code></p>
 </li>
 <li>
 <p><code>&lt;args&gt;</code> are the tool arguments as described in <a href="apalache/installation/../running.html">Running the Tool</a>.</p>
@@ -540,11 +540,11 @@ Apalache in docker while sharing the working directory:</p>
 <pre><code class="language-bash">
 ###### using the latest stable
 
-$ alias apalache='docker run --rm -v $(pwd):/var/apalache apalache/mc'
+$ alias apalache='docker run --rm -v $(pwd):/var/apalache informalsystems/apalache'
 
 ###### using the latest unstable
 
-$ alias apalache='docker run --rm -v $(pwd):/var/apalache apalache/mc:unstable'
+$ alias apalache='docker run --rm -v $(pwd):/var/apalache informalsystems/apalache:unstable'
 </code></pre>
 <h2><a class="header" href="#using-the-unstable-version-of-apalache" id="using-the-unstable-version-of-apalache">Using the unstable version of Apalache</a></h2>
 <p>The development of Apalache proceeds at a high pace, and we introduce a
@@ -555,16 +555,16 @@ log</a> and
 on the unstable branch for the description of the newest features. <strong>We
 recommend using the unstable version if you want to try all the exciting new
 features of Apalache. But be warned: It is called &quot;unstable&quot; for a reason</strong>. To
-use <code>unstable</code>, just type <code>apalache/mc:unstable</code> instead of <code>apalache/mc</code>
+use <code>unstable</code>, just type <code>informalsystems/apalache:unstable</code> instead of <code>informalsystems/apalache</code>
 everywhere.</p>
 <p>Do not forget to pull the docker image from time to time:</p>
-<pre><code class="language-bash">docker pull apalache/mc:unstable
+<pre><code class="language-bash">docker pull ghcr.io/informalsystems/apalache:unstable
 </code></pre>
 <p>Run it with the following command:</p>
-<pre><code class="language-bash">$ docker run --rm -v &lt;your-spec-directory&gt;:/var/apalache apalache/mc:unstable &lt;args&gt;
+<pre><code class="language-bash">$ docker run --rm -v &lt;your-spec-directory&gt;:/var/apalache informalsystems/apalache:unstable &lt;args&gt;
 </code></pre>
 <p>To create an alias pointing to the <code>unstable</code> version:</p>
-<pre><code class="language-bash">$ alias apalache='docker run --rm -v $(pwd):/var/apalache apalache/mc:unstable'
+<pre><code class="language-bash">$ alias apalache='docker run --rm -v $(pwd):/var/apalache informalsystems/apalache:unstable'
 </code></pre>
 <h2><a class="header" href="#building-an-image" id="building-an-image">Building an image</a></h2>
 <p>For an end user there is no need to build an Apalache image. If you like to
@@ -660,7 +660,7 @@ the default (<code>4096m</code>) to <code>1G</code> invoke Apalache as follows:<
 <p>If you are running Apalache via docker directly (instead of using the script in
 <code>$APALACHE_HOME/script/run-docker.sh</code>), you'll also need to expose the
 environment variable to the docker container:</p>
-<pre><code class="language-sh">$ JVM_ARGS=&quot;-Xmx1G&quot; docker run -e JVM_ARGS --rm -v &lt;your-spec-directory&gt;:/var/apalache apalache/mc &lt;args&gt;
+<pre><code class="language-sh">$ JVM_ARGS=&quot;-Xmx1G&quot; docker run -e JVM_ARGS --rm -v &lt;your-spec-directory&gt;:/var/apalache informalsystems/apalache &lt;args&gt;
 </code></pre>
 <p>To track memory usage with: <code>jcmd &lt;pid&gt; VM.native_memory summary</code>, you can set</p>
 <pre><code>JVM_ARGS=&quot;-XX:NativeMemoryTracking=summary&quot;
