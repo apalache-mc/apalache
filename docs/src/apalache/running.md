@@ -60,7 +60,7 @@ If you are running Apalache via docker directly (instead of using the script in
 environment variable to the docker container:
 
 ```sh
-$ JVM_ARGS="-Xmx1G" docker run -e JVM_ARGS --rm -v <your-spec-directory>:/var/apalache apalache/mc <args>
+$ JVM_ARGS="-Xmx1G" docker run -e JVM_ARGS --rm -v <your-spec-directory>:/var/apalache informalsystems/apalache <args>
 ```
 
 To track memory usage with: `jcmd <pid> VM.native_memory summary`, you can set
