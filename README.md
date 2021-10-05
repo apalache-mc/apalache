@@ -25,12 +25,14 @@ course].
 
 ## Releases
 
-Check the [releases page][].
+Check the [releases page][] for our latest release.
 
-For a stable release, we recommend that you run the latest docker image
-`apalache/mc:latest` or checkout the source code from our latest release tag.
+For a stable release, we recommend that you pull the latest docker image with
+`docker pull ghcr.io/informalsystems/apalache:unstable`, use the jar from the
+most recent release, or checkout the source code from the most recent release
+tag.
 
-To try the latest cool features, check out the [unstable branch][].
+To try the latest cool features, check out the head of the [unstable branch][].
 
 For more information on installation options, see [the
 manual][user-manual-installation].

@@ -92,7 +92,7 @@ jobs:
         run: |
           opam pin https://github.com/realworldocaml/mdx.git#e5a86b0b0588d07cabbb3b1bedde84d1ebb35d1b
       - name: Build the docker image
-        run: docker build -t apalache/mc:ci .
+        run: docker build -t informalsystems/apalache:ci .
       - name: Run integration tests in docker container
         run: ./test/run-integration
         env:

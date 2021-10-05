@@ -8,7 +8,7 @@ All dependencies are already installed in docker. However, you have to install d
 To get the latest Apalache image, issue the command:
 
 ```bash
-docker pull apalache/mc
+docker pull ghcr.io/informalsystems/apalache
 ```
 
 ## Running the docker image
@@ -16,7 +16,7 @@ docker pull apalache/mc
 To run an Apalache image, issue the command:
 
 ```bash
-$ docker run --rm -v <your-spec-directory>:/var/apalache apalache/mc <args>
+$ docker run --rm -v <your-spec-directory>:/var/apalache informalsystems/apalache <args>
 ```
 
 The following docker parameters are used:
@@ -31,8 +31,8 @@ The following docker parameters are used:
 
   When using SELinux, you might have to use the modified form of `-v` option:
     `-v <your-spec-directory>:/var/apalache:z`
-- `apalache/mc` is the APALACHE docker image name. By default, the `latest` stable
-  version is used; you can also refer to a specific tool version, e.g., `apalache/mc:0.6.0` or `apalache/mc:unstable`
+- `informalsystems/apalache` is the APALACHE docker image name. By default, the `latest` stable
+  version is used; you can also refer to a specific tool version, e.g., `informalsystems/apalache:0.6.0` or `informalsystems/apalache:unstable`
 - `<args>` are the tool arguments as described in [Running the Tool](../running.md).
 
 We provide a convenience wrapper for this docker command in
@@ -58,11 +58,11 @@ Apalache in docker while sharing the working directory:
 
 ###### using the latest stable
 
-$ alias apalache='docker run --rm -v $(pwd):/var/apalache apalache/mc'
+$ alias apalache='docker run --rm -v $(pwd):/var/apalache informalsystems/apalache'
 
 ###### using the latest unstable
 
-$ alias apalache='docker run --rm -v $(pwd):/var/apalache apalache/mc:unstable'
+$ alias apalache='docker run --rm -v $(pwd):/var/apalache informalsystems/apalache:unstable'
 ```
 
 ## Using the unstable version of Apalache
@@ -75,25 +75,25 @@ log](https://github.com/informalsystems/apalache/blob/unstable/CHANGES.md) and
 on the unstable branch for the description of the newest features. **We
 recommend using the unstable version if you want to try all the exciting new
 features of Apalache. But be warned: It is called "unstable" for a reason**. To
-use `unstable`, just type `apalache/mc:unstable` instead of `apalache/mc`
+use `unstable`, just type `informalsystems/apalache:unstable` instead of `informalsystems/apalache`
 everywhere.
 
 Do not forget to pull the docker image from time to time:
 
 ```bash
-docker pull apalache/mc:unstable
+docker pull ghcr.io/informalsystems/apalache:unstable
 ```
 
 Run it with the following command:
 
 ```bash
-$ docker run --rm -v <your-spec-directory>:/var/apalache apalache/mc:unstable <args>
+$ docker run --rm -v <your-spec-directory>:/var/apalache informalsystems/apalache:unstable <args>
 ```
 
 To create an alias pointing to the `unstable` version:
 
 ```bash
-$ alias apalache='docker run --rm -v $(pwd):/var/apalache apalache/mc:unstable'
+$ alias apalache='docker run --rm -v $(pwd):/var/apalache informalsystems/apalache:unstable'
 ```
 
 ## Building an image

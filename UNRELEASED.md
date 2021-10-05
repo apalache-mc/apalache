@@ -17,4 +17,8 @@
 
 ### Features
 
- * Enumerated files containing intermediate module states, see #993
+* Enumerated files containing intermediate module states, see #993
+
+### Delivery
+
+* Move docker containers to the GitHub container registry, see #1013
