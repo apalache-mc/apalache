@@ -4,7 +4,7 @@
     <groupId>at.forsyte.apalache</groupId>
     <artifactId>apalache</artifactId>
     <packaging>pom</packaging>
-    <version>0.16.3</version>
+    <version>0.16.4-SNAPSHOT</version>
 
     <name>APALACHE project</name>
     <url>https://github.com/informalsystems/apalache</url>
