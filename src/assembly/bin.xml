@@ -23,7 +23,6 @@
             <outputDirectory>tla2sany/StandardModules/</outputDirectory>
             <includes>
                 <include>Apalache.tla</include>
-                <include>Typing.tla</include>
             </includes>
         </fileSet>
     </fileSets>
