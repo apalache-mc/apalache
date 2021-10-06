@@ -49,6 +49,7 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
+
       - name: Cache local Maven repository
         uses: actions/cache@v2
         with:
@@ -57,6 +58,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
             ${{ runner.os }}-
+
+      - name: Cache Apalache Jar repository
+        uses: actions/cache@v2
+        with:
+          path: mod-distribution/target/
+          key: ${{ runner.os }}-apalache-${{ hashFiles('**/*.scala') }}
+          restore-keys: |
+            ${{ runner.os }}-apalache-
+            ${{ runner.os }}-
+
       - name: Build and Unit Test
         run: mvn --batch-mode --no-transfer-progress test
 
@@ -85,6 +96,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
             ${{ runner.os }}-
+
+      - name: Cache Apalache Jar repository
+        uses: actions/cache@v2
+        with:
+          path: mod-distribution/target/
+          key: ${{ runner.os }}-apalache-${{ hashFiles('**/*.scala') }}
+          restore-keys: |
+            ${{ runner.os }}-apalache-
+            ${{ runner.os }}-
+
       - name: Build apalache
         run: make build-quick
       - name: Run integration tests
