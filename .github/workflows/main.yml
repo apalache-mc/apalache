@@ -1,4 +1,13 @@
-on: [pull_request]
+on:
+  # Every pull request
+  pull_request:
+  #  Pushes into the trunk
+  #  This is important to ensure the trunk is not broken and
+  #  to populate the cache for future PRs.
+  #  See https://github.community/t/actions-cache-cache-not-being-hit-despite-of-being-present/17956/3
+  push:
+    branches:
+      - unstable
 
 name: build
 
