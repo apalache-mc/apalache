@@ -47,6 +47,7 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
+            ${{ runner.os }}-
       - name: Build and Unit Test
         run: mvn --batch-mode --no-transfer-progress test
 
@@ -74,6 +75,7 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
+            ${{ runner.os }}-
       - name: Build apalache
         run: make build-quick
       - name: Run integration tests
