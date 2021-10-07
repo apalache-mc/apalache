@@ -1481,6 +1481,16 @@ $ apalache-mc check letpoly_inst.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check Bug1023.tla
+
+Test that `--cinit` propagates constraints.
+
+```sh
+$ apalache-mc check --cinit=ConstInit --inv=Inv Bug1023.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check profiling
 
 Check that the profiler output is produced as explained in
