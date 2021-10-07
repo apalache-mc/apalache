@@ -1481,6 +1481,26 @@ $ apalache-mc check letpoly_inst.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check Bug1023.tla
+
+Test that `--cinit` propagates constraints.
+
+```sh
+$ apalache-mc check --cinit=ConstInit --inv=Inv Bug1023.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check Bug880.tla
+
+Test that `ASSUME` propagates constraints.
+
+```sh
+$ apalache-mc check --cinit=ConstInit --inv=Inv Bug880.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check Bug931.tla
 
 Test that the model checker nicely complains about unresolved polymorphism.
