@@ -39,10 +39,7 @@ for a run executed on May 2, 2021 at 9:31:59pm (local time).
 
 Each run directory, outlined in the previous section, should contain the following:
   
-  - A file `run.txt`, containing the command issued for this run, e.g.:
-  ```
-  check --inv=SomeInv Spec.tla
-  ```
+  - A file `run.txt`, containing the command issued for this run, e.g.: `check --inv=SomeInv Spec.tla`
     alternatively (DISCUSS), the file could contain the full command, with all implicit parameters filled in, so it can be replicated exactly
   - 0 or more counterexample files
   - if `--write-intermediate` is set, a subdirectory `intermediate`, containing outputs associated with each of the passes in Apalache
