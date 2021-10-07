@@ -22,6 +22,8 @@ engineers](https://apalache.informal.systems/docs/lang/index.html).
 
 - [Type checking TLA+ with Snowcat](https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html)
 
+- [Extended version of the Apalache tutorial](https://www.youtube.com/watch?v=Ml7d_3vlH88)
+
 ## Talks
 
 - [How TLA+ and Apalache Helped Us to Design the Tendermint Light Client](https://www.crowdcast.io/e/interchain-conversations-II/38).
