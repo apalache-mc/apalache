@@ -2,6 +2,24 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.16.4
+
+
+## 0.16.3
+
+
+### Bug fixes
+
+* Fix type checker to complain about polymorphism in the post phase, see #931
+
+### Features
+
+* Enumerated files containing intermediate module states, see #993
+
+### Delivery
+
+* Move docker containers to the GitHub container registry, see #1013
+
 ## 0.16.2
 
 ### Features

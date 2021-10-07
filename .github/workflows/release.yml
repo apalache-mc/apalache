@@ -22,7 +22,10 @@ jobs:
           java-version: 1.8
       - name: Cut Release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # NOTE: We must not use the default GITHUB_TOKEN for auth here,
+          # or else CI won't run to publish the docker image from the resulting PR.
+          # See https://github.com/peter-evans/create-pull-request/blob/master/docs/concepts-guidelines.md#workarounds-to-trigger-further-workflow-runs
+          GITHUB_TOKEN: ${{ secrets.APALACHE_BOT_TOKEN }}
           HEAD_REF: ${{ github.head_ref }}
         run: |
           git config --global user.name "$GITHUB_ACTOR"
