@@ -1491,6 +1491,16 @@ $ apalache-mc check --cinit=ConstInit --inv=Inv Bug1023.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check Bug880.tla
+
+Test that `ASSUME` propagates constraints.
+
+```sh
+$ apalache-mc check --cinit=ConstInit --inv=Inv Bug880.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check profiling
 
 Check that the profiler output is produced as explained in

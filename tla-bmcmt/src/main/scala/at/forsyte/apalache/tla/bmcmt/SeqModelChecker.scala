@@ -43,6 +43,10 @@ class SeqModelChecker[ExecutorContextT](
     if (checkerInput.constInitPrimed.isDefined) {
       trex.initializeConstants(checkerInput.constInitPrimed.get)
     }
+    // propagate constraints from ASSUME(...)
+    checkerInput.rootModule.assumeDeclarations.foreach { d =>
+      trex.assertState(d.body)
+    }
     // apply the Init predicate
     makeStep(isNext = false, checkerInput.initTransitions)
     // unroll the transition relation
