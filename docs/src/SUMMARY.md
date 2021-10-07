@@ -88,3 +88,6 @@
 - [ADR-004: code annotations](./adr/004adr-annotations.md)
 - [ADR-005: JSON Serialization Format](./adr/005adr-json.md)
 - [RFC-006: unit tests and property-based tests](./adr/006rfc-unit-testing.md)
+- [ADR-007: restructuring](./adr/007adr-restructuring.md)
+- [ADR-008: exceptions](./adr/008adr-exceptions.md)
+- [ADR-009: outputs](./adr/009adr-outputs.md)

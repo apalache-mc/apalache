@@ -2,7 +2,7 @@
 
 **Authors: Igor Konnov, Jure Kukovec, Andrey Kuprianov, Shon Feder**
 
-**Contact: {igor,andrey,shon} at informal.systems, jkukovec at forsyte.at**
+**Contact: {igor,jure,andrey,shon} at informal.systems**
 
 Apalache is a symbolic model checker for
 [TLA+](https://lamport.azurewebsites.net/tla/tla.html). (*Still looking for a
