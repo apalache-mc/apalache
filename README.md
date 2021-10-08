@@ -39,6 +39,7 @@ manual][user-manual-installation].
 
 ## Getting started
 
+- Check the material at [TLA-Apalache workshop][].
 - Read the [Apalache user manual][user-manual].
 - Consult the (WIP) [Idioms for writing better TLA+][idioms].
 - Consult the (WIP) [TLA+ language manual for engineers][language-manual].
@@ -72,6 +73,9 @@ Our old website is still available at https://forsyte.at/research/apalache/ .
 - To see more examples, check the [standard repository of TLA+ examples].
 
 ## Talks
+
+- [Extended version of the Apalache tutorial](https://www.youtube.com/watch?v=Ml7d_3vlH88).
+  TLA+ tutorial at DISC 2021 (October 2021).
 
 - [How TLA+ and Apalache Helped Us to Design the Tendermint Light Client](https://www.crowdcast.io/e/interchain-conversations-II/38).
   Interchain Conversations 2020 (December 2020).
@@ -140,3 +144,4 @@ Past funding from [Der Wiener Wissenschafts-, Forschungs- und Technologiefonds](
 [light client specs]: https://github.com/tendermint/spec/tree/master/rust-spec/lightclient/verification
 [model-based testing]: https://github.com/informalsystems/tendermint-rs/tree/master/light-client/tests/support/model_based#light-client-model-based-testing-guide
 [apalache.informal.systems]: https://apalache.informal.systems
+[TLA-Apalache workshop]: https://github.com/informalsystems/tla-apalache-workshop
