@@ -31,3 +31,6 @@ x/
 
 # Ignore MacOS files
 .DS_Store
+
+# Ignore generated commit hooks from nix shell
+.pre-commit-config.yaml
