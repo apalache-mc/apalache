@@ -51,7 +51,7 @@
         } // self.packages; # adding packages here ensures that every attr gets built on check
 
         # nix develop
-        devShell = builtins.trace (builtins.attrNames self.packages) self.packages.${system}.dev-shell;
+        devShell = self.packages.${system}.dev-shell;
       });
 }
 
