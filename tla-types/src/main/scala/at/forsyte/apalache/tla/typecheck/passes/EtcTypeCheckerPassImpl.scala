@@ -1,6 +1,8 @@
 package at.forsyte.apalache.tla.typecheck.passes
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
+import at.forsyte.apalache.io.OutputManager
+import at.forsyte.apalache.io.OutputManager.Names.INTERMEDIATE_FOLDERNAME
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.json.impl.TlaToUJson
 import at.forsyte.apalache.tla.imp.src.SourceStore
@@ -69,9 +71,8 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
           logger.info(" > Your types are great!")
           logger.info(if (isTypeCoverageComplete) " > All expressions are typed" else " > Some expressions are untyped")
           dumpToJson(newModule, "post")
-          val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
           writerFactory.writeModuleAllFormats(newModule.copy(name = s"${passNumber}_Out$name"),
-              TlaWriter.STANDARD_MODULES, outdir.toFile)
+              TlaWriter.STANDARD_MODULES)
           outputTlaModule = Some(newModule)
           true
 
@@ -83,16 +84,20 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
   }
 
   private def dumpToJson(module: TlaModule, prefix: String): Unit = {
-    val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    val outFile = new File(outdir.toFile, s"${passNumber}_out-$prefix-$name.json")
-    val writer = new PrintWriter(new FileWriter(outFile, false))
-    try {
-      val sourceLocator: SourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)
-      val jsonText = new TlaToUJson(Some(sourceLocator)).makeRoot(Seq(module)).toString
-      writer.write(jsonText)
-      logger.debug(" > JSON output: " + outFile)
-    } finally {
-      writer.close()
+    OutputManager.doIfFlag(OutputManager.Names.INTERMEDIATE_FLAG) {
+      OutputManager.inRunDir { runDir =>
+        val outdir = new File(runDir.toFile, INTERMEDIATE_FOLDERNAME)
+        val outFile = new File(outdir, s"${passNumber}_out-$prefix-$name.json")
+        val writer = new PrintWriter(new FileWriter(outFile, false))
+        try {
+          val sourceLocator: SourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)
+          val jsonText = new TlaToUJson(Some(sourceLocator)).makeRoot(Seq(module)).toString
+          writer.write(jsonText)
+          logger.debug(" > JSON output: " + outFile)
+        } finally {
+          writer.close()
+        }
+      }
     }
   }
 

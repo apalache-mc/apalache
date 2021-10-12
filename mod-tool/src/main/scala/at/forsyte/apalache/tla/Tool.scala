@@ -6,8 +6,9 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import at.forsyte.apalache.infra.log.LogbackConfigurator
-import at.forsyte.apalache.infra.passes.{PassChainExecutor, TlaModuleMixin}
+import at.forsyte.apalache.infra.passes.{PassChainExecutor, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorMessage, PassOptionException}
+import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.tooling.{ExitCodes, Version}
@@ -135,10 +136,10 @@ object Tool extends LazyLogging {
   private def runParse(injector: => Injector, parse: ParseCmd): Int = {
     // here, we implement a terminal pass to get the parse results
     val executor = injector.getInstance(classOf[PassChainExecutor])
-    executor.options.set("io.outdir", createOutputDir())
     executor.options.set("parser.filename", parse.file.getAbsolutePath)
     executor.options.set("parser.output", parse.output)
 
+    executor.options.set("io.outdir", createOutputDir(executor.options, parse.file.getName))
     val result = executor.run()
     if (result.isDefined) {
       logger.info("Parsed successfully")
@@ -153,7 +154,6 @@ object Tool extends LazyLogging {
 
   private def runCheck(injector: => Injector, check: CheckCmd): Int = {
     val executor = injector.getInstance(classOf[PassChainExecutor])
-    executor.options.set("io.outdir", createOutputDir())
     var tuning =
       if (check.tuning != "") loadProperties(check.tuning) else Map[String, String]()
     tuning = overrideProperties(tuning, check.tuningOptions)
@@ -183,6 +183,7 @@ object Tool extends LazyLogging {
       executor.options.set("checker.view", check.view)
     // for now, enable polymorphic types. We probably want to disable this option for the type checker
     executor.options.set("typechecker.inferPoly", true)
+    executor.options.set("io.outdir", createOutputDir(executor.options, check.file.getName))
 
     val result = executor.run()
     if (result.isDefined) {
@@ -197,7 +198,6 @@ object Tool extends LazyLogging {
   private def runTest(injector: => Injector, test: TestCmd): Int = {
     // This is a special version of the `check` command that is tuned towards testing scenarios
     val executor = injector.getInstance(classOf[PassChainExecutor])
-    executor.options.set("io.outdir", createOutputDir())
     // Tune for testing:
     //   1. Check the invariant only after the action took place.
     //   2. Randomize
@@ -225,6 +225,7 @@ object Tool extends LazyLogging {
     executor.options.set("checker.algo", "offline")
     // for now, enable polymorphic types. We probably want to disable this option for the type checker
     executor.options.set("typechecker.inferPoly", true)
+    executor.options.set("io.outdir", createOutputDir(executor.options, test.file.getName))
 
     val result = executor.run()
     if (result.isDefined) {
@@ -239,10 +240,10 @@ object Tool extends LazyLogging {
   private def runTypeCheck(injector: => Injector, typecheck: TypeCheckCmd): Int = {
     // type checker
     val executor = injector.getInstance(classOf[PassChainExecutor])
-    executor.options.set("io.outdir", createOutputDir())
     executor.options.set("parser.filename", typecheck.file.getAbsolutePath)
     executor.options.set("typechecker.inferPoly", typecheck.inferPoly)
 
+    executor.options.set("io.outdir", createOutputDir(executor.options, typecheck.file.getName))
     executor.run() match {
       case None =>
         logger.info("Type checker [FAILED]")
@@ -295,14 +296,14 @@ object Tool extends LazyLogging {
     props ++ hereProps
   }
 
-  private def createOutputDir(): Path = {
-    // here we use the order 'hours-minutes and then the date', as it is much easier to use with completion
-    val nicetime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH.mm-dd.MM.uuuu-"))
-    val xdir = new File(System.getProperty("user.dir"), "x")
-    if (!xdir.exists()) {
-      xdir.mkdir()
+  private def createOutputDir(options: PassOptions, filename: String): Path = {
+    OutputManager.syncFromCFG()
+    OutputManager.syncFromOptions(options)
+    OutputManager.createRunDirectory(filename)
+    if (!OutputManager.isConfigured) {
+      throw new Exception("Could not configure outputs. See apalache.cfg or pass options.")
     }
-    Files.createTempDirectory(Paths.get(xdir.getAbsolutePath), nicetime)
+    OutputManager.runDirPathUnsafe
   }
 
   private def injectorFactory(cmd: Command): Injector = {

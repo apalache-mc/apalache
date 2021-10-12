@@ -69,9 +69,7 @@ class ConfigurationPassImpl @Inject() (
     // However, that should be done very carefully. Maybe we should do that in the future.
 
     // dump the configuration result
-    val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    writerFactory.writeModuleAllFormats(configuredModule.copy(name = "02_OutConfig"), TlaWriter.STANDARD_MODULES,
-        outdir.toFile)
+    writerFactory.writeModuleAllFormats(configuredModule.copy(name = "02_OutConfig"), TlaWriter.STANDARD_MODULES)
 
     outputTlaModule = Some(configuredModule)
     true

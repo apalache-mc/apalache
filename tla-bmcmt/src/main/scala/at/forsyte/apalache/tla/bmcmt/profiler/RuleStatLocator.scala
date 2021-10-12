@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.profiler
 
-import java.io.{BufferedWriter, FileWriter, PrintWriter}
+import at.forsyte.apalache.io.OutputManager
 
+import java.io.{BufferedWriter, File, FileWriter, PrintWriter}
 import scala.collection.immutable.SortedMap
 
 /**
@@ -25,21 +26,26 @@ class RuleStatLocator {
 
   def getStats = SortedMap(ruleStats.toSeq: _*)
 
-  def writeStats(filename: String): Unit = {
-    val writer = new PrintWriter(new FileWriter(filename, false))
-    writer.println("Rule profiling statistics")
-    val hrule = List.fill(80)('-').mkString
-    writer.println(hrule)
-    writer.println(
-        "%20s %9s %9s %9s %9s %9s"
-          .format("name", "calls", "cells", "smt-consts", "smt-asserts", "smt-avg-size"))
-    writer.println(hrule)
-    val stats = ruleStats.values.toSeq.sortWith(_.nCalls > _.nCalls)
-    for (rs <- stats) {
-      writer.println(
-          "%-20s %9d %9d %9d %9d %9d"
-            .format(rs.ruleName, rs.nCalls, rs.nCellsSelf, rs.nSmtConstsSelf, rs.nSmtAssertsSelf, rs.smtAssertsSizeAvg))
+  def writeStats(filename: String): Unit =
+    OutputManager.doIfFlag(OutputManager.Names.PROFILING_FLAG) {
+      OutputManager.inRunDir { runDir =>
+        val file = new File(runDir.toFile, filename)
+        val writer = new PrintWriter(new FileWriter(file, false))
+        writer.println("Rule profiling statistics")
+        val hrule = List.fill(80)('-').mkString
+        writer.println(hrule)
+        writer.println(
+            "%20s %9s %9s %9s %9s %9s"
+              .format("name", "calls", "cells", "smt-consts", "smt-asserts", "smt-avg-size"))
+        writer.println(hrule)
+        val stats = ruleStats.values.toSeq.sortWith(_.nCalls > _.nCalls)
+        for (rs <- stats) {
+          writer.println(
+              "%-20s %9d %9d %9d %9d %9d"
+                .format(rs.ruleName, rs.nCalls, rs.nCellsSelf, rs.nSmtConstsSelf, rs.nSmtAssertsSelf,
+                    rs.smtAssertsSizeAvg))
+        }
+        writer.close()
+      }
     }
-    writer.close()
-  }
 }

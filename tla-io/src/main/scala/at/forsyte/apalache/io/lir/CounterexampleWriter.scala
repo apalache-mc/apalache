@@ -1,12 +1,13 @@
 package at.forsyte.apalache.io.lir
 
+import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.io.json.impl.TlaToUJson
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.values.TlaBool
 
-import java.io.{FileWriter, PrintWriter}
+import java.io.{File, FileWriter, PrintWriter}
 import java.util.Calendar
 
 /**
@@ -146,22 +147,24 @@ object CounterexampleWriter {
    */
   def writeAllFormats(suffix: String, rootModule: TlaModule, notInvariant: NotInvariant,
       states: List[NextState]): List[String] = {
-    val fileNames = Map(
-        "tla" -> s"counterexample$suffix.tla",
-        "tlc" -> s"MC$suffix.out",
-        "json" -> s"counterexample$suffix.json"
-    )
-    val files = fileNames.map { case (kind, name) =>
-      (kind, new PrintWriter(new FileWriter(name)))
-    }
-    try {
-      files.foreach { case (kind, writer) =>
-        apply(kind, writer).write(rootModule, notInvariant, states)
+    OutputManager.inRunDir { runDir =>
+      val fileNames = Map(
+          "tla" -> s"counterexample$suffix.tla",
+          "tlc" -> s"MC$suffix.out",
+          "json" -> s"counterexample$suffix.json"
+      )
+      val files = fileNames.map { case (kind, name) =>
+        (kind, new PrintWriter(new FileWriter(new File(runDir.toFile, name))))
       }
-      fileNames.values.toList
-    } finally {
-      files.foreach { case (_, writer) =>
-        writer.close()
+      try {
+        files.foreach { case (kind, writer) =>
+          apply(kind, writer).write(rootModule, notInvariant, states)
+        }
+        fileNames.values.toList
+      } finally {
+        files.foreach { case (_, writer) =>
+          writer.close()
+        }
       }
     }
   }
