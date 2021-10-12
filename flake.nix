@@ -4,7 +4,7 @@
   inputs = {
     # Nix Inputs
     nixpkgs.url = github:nixos/nixpkgs/nixpkgs-unstable;
-    pre-commit-hooks.url = github:cachix/pre-commit-hooks.nix;
+    pre-commit-hooks.url = github:JonathanLorimer/pre-commit-hooks.nix;
     flake-utils.url = github:numtide/flake-utils;
 
   };
@@ -50,7 +50,7 @@
               };
             };
           };
-        } // self.packages; # adding packages here ensures that every attr gets built on check
+        };
 
         # nix develop
         devShell = self.packages.${system}.dev-shell;
