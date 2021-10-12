@@ -33,13 +33,17 @@ object OutputManager {
         PROFILING_FLAG -> false
     )
 
+  /** If this is FALSE, outputs (of any sort) cannot happen, so the tool should exit */
   def isConfigured: Boolean = outDirAsFile.isDirectory && runDirOpt.nonEmpty
 
+  /** Accessors */
   def outDirAsFile: File = new File(OUTPUT_DIR)
-  def runDirPathUnsafe: Path = runDirOpt.get
+  def runDirPathUnsafe: Path = runDirOpt.get /* Should throw if called before `createRunDir` */
 
+  /** Executes a command in the run directory. To be used by classes attempting to write output files */
   def inRunDir[T](cmd: Path => T): T = cmd(runDirPathUnsafe)
 
+  /** Loads the Apalache configuration file from HOME/.tlaplus */
   def syncFromCFG(): Unit = {
     val flagRegex = raw"^([a-zA-Z\-]+)\s*=\s*(.+)\s*$$".r
     val home = System.getProperty("user.home")
@@ -48,13 +52,16 @@ object OutputManager {
       val src = Source.fromFile(configFile.getAbsolutePath)
       for (line <- src.getLines) {
         flagRegex.findAllMatchIn(line.strip()).foreach { m =>
+          // Flags have the shape FLAGNAME=FLAGVAL
           val flagname = m.group(1)
           val flagVal = m.group(2)
           if (flagname == OUTDIR_NAME_IN_CFG) {
+            // OUTDIR is a special flag that governs the output directory
             val replacedHome =
               if (flagVal.startsWith("~")) flagVal.replaceFirst("~", home)
               else flagVal
             val outdir = new File(replacedHome)
+            // Try to make the dir, if it fails we skip and go to the default
             if (!outdir.exists()) {
               outdir.mkdir()
             }
@@ -65,6 +72,7 @@ object OutputManager {
               OUTPUT_DIR = outdir.getCanonicalPath
             }
           } else if (flags.keySet.contains(flagname)) {
+            // if not OUTDIR, use bool-flag rules and check for T/F
             flagVal match {
               case "TRUE" | "true" =>
                 flags += flagname -> true
@@ -79,11 +87,13 @@ object OutputManager {
       }
       src.close()
     }
+    // If OUTDIR is not set or has an invalid value, default to making rundir = specdir/x/
     if (OUTPUT_DIR.isEmpty) {
       OUTPUT_DIR = Paths.get(System.getProperty("user.dir"), DEFAULT_OUTDIR).toString
     }
   }
 
+  // Flags can be passed from options too, e.g. --profile or --write-intermediate
   def syncFromOptions(opt: PassOptions): Unit = {
     opt.get[Boolean]("general", INTERMEDIATE_FLAG) foreach {
       flags += INTERMEDIATE_FLAG -> _
@@ -103,6 +113,7 @@ object OutputManager {
         }
       )
 
+  /** Inside OUTDIR, create a directory for an individual run */
   def createRunDirectory(specName: String): Unit =
     if (runDirOpt.isEmpty) {
       val nicetime = LocalDateTime.now().format(DateTimeFormatter.ofPattern(s"yyyy-MM-dd_HH-mm-ss_"))
@@ -110,18 +121,8 @@ object OutputManager {
       if (!outdir.exists()) {
         outdir.mkdir()
       }
-      // prefix for parallel runs
+      // prefix for disambiguation
       val rundir = Files.createTempDirectory(Paths.get(outdir.getAbsolutePath), s"${specName}_" + nicetime)
       runDirOpt = Some(rundir)
     }
-
-  def createIntermediateFolder(runDir: Path): Option[File] = {
-    if (flags("write-intermediate")) {
-      val ceDir = new File(runDir.toFile.getAbsolutePath, "intermediate")
-      if (!ceDir.exists()) {
-        ceDir.mkdir()
-      }
-      Some(ceDir)
-    } else None
-  }
 }
