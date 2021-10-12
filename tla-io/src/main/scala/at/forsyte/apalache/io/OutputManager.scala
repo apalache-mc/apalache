@@ -15,11 +15,12 @@ import scala.io.Source
 object OutputManager {
 
   object Names {
-    val OUTDIR = "OUTDIR"
+    val OUTDIR_NAME_IN_CFG = "OUTDIR"
     val INTERMEDIATE_FLAG = "write-intermediate"
     val INTERMEDIATE_FOLDERNAME = "intermediate"
     val PROFILING_FLAG = "profiling"
     val CFG_FILE = ".tlaplus/apalache.cfg"
+    val DEFAULT_OUTDIR = "x"
   }
 
   import Names._
@@ -45,12 +46,11 @@ object OutputManager {
     val configFile = new File(home, CFG_FILE)
     if (configFile.exists()) {
       val src = Source.fromFile(configFile.getAbsolutePath)
-      var updated = Set.empty[String]
       for (line <- src.getLines) {
         flagRegex.findAllMatchIn(line.strip()).foreach { m =>
           val flagname = m.group(1)
           val flagVal = m.group(2)
-          if (flagname == OUTDIR) {
+          if (flagname == OUTDIR_NAME_IN_CFG) {
             val replacedHome =
               if (flagVal.startsWith("~")) flagVal.replaceFirst("~", home)
               else flagVal
@@ -59,32 +59,29 @@ object OutputManager {
               outdir.mkdir()
             }
             if (!outdir.exists()) {
-              // Throw or log failure and ignore?
-              //              throw new InvalidPathException(outdir.getCanonicalPath, "Invalid directory name or parent doesn't exist")
+              // Ignore for now, can throw in the future
+              // throw new InvalidPathException(outdir.getCanonicalPath, "Invalid directory name or parent doesn't exist")
             } else {
               OUTPUT_DIR = outdir.getCanonicalPath
-              updated += OUTDIR
             }
           } else if (flags.keySet.contains(flagname)) {
             flagVal match {
               case "TRUE" | "true" =>
                 flags += flagname -> true
-                updated += flagname
               case "FALSE" | "false" =>
                 flags += flagname -> false
-                updated += flagname
               case _ =>
-              // Throw or log failure and ignore?
-              //                throw new Exception(s"Flag $flagname must be one of: TRUE/true/FALSE/false.")
+              // Ignore for now, can throw in the future
+              // throw new Exception(s"Flag $flagname must be one of: TRUE/true/FALSE/false.")
             }
           }
         }
       }
       src.close()
-//      println(s"loaded the following from config: ${updated.mkString(", ")}")
     }
-    if (OUTPUT_DIR.isEmpty)
-      OUTPUT_DIR = System.getProperty("user.dir")
+    if (OUTPUT_DIR.isEmpty) {
+      OUTPUT_DIR = Paths.get(System.getProperty("user.dir"), DEFAULT_OUTDIR).toString
+    }
   }
 
   def syncFromOptions(opt: PassOptions): Unit = {
@@ -113,7 +110,7 @@ object OutputManager {
       if (!outdir.exists()) {
         outdir.mkdir()
       }
-      // suffix for parallel runs
+      // prefix for parallel runs
       val rundir = Files.createTempDirectory(Paths.get(outdir.getAbsolutePath), s"${specName}_" + nicetime)
       runDirOpt = Some(rundir)
     }

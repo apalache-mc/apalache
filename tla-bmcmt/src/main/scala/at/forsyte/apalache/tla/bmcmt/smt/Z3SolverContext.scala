@@ -1,8 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
+import at.forsyte.apalache.io.OutputManager
+
 import java.io.{File, PrintWriter}
 import java.util.concurrent.atomic.AtomicLong
-
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.profiler.{IdleSmtListener, SmtListener}
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
@@ -236,12 +237,14 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   }
 
   private def initLog(): PrintWriter = {
-    val writer = new PrintWriter(new File(s"log$id.smt"))
-    if (!config.debug) {
-      writer.println("Logging is disabled (Z3SolverContext.debug = false). Activate with --debug.")
-      writer.flush()
+    OutputManager.inRunDir { runDir =>
+      val writer = new PrintWriter(new File(runDir.toFile, s"log$id.smt"))
+      if (!config.debug) {
+        writer.println("Logging is disabled (Z3SolverContext.debug = false). Activate with --debug.")
+        writer.flush()
+      }
+      writer
     }
-    writer
   }
 
   /**

@@ -60,6 +60,7 @@ object Tool extends LazyLogging {
    */
   def run(args: Array[String]): Int = {
     printHeaderAndStatsConfig()
+    OutputManager.syncFromCFG()
 
     // first, call the arguments parser, which can also handle the standard commands such as version
     val command =
@@ -75,8 +76,13 @@ object Tool extends LazyLogging {
     } else {
       // One of our commands. Print the header and measure time
       val startTime = LocalDateTime.now()
+
+      val filename = new File(args.last).getName
+      OutputManager.createRunDirectory(filename)
       // force our programmatic logback configuration, as the autoconfiguration works unpredictably
-      new LogbackConfigurator().configureDefaultContext()
+      OutputManager.inRunDir { runDir =>
+        new LogbackConfigurator(runDir).configureDefaultContext()
+      }
 
       try {
         command match {
@@ -297,9 +303,7 @@ object Tool extends LazyLogging {
   }
 
   private def createOutputDir(options: PassOptions, filename: String): Path = {
-    OutputManager.syncFromCFG()
     OutputManager.syncFromOptions(options)
-    OutputManager.createRunDirectory(filename)
     if (!OutputManager.isConfigured) {
       throw new Exception("Could not configure outputs. See apalache.cfg or pass options.")
     }
