@@ -27,6 +27,8 @@
                 metals
                 maven
                 scalafmt
+                ocamlPackages.mdx
+                python3
               ];
             };
         };
