@@ -8,7 +8,7 @@ You can create a file named `apalache.cfg` in `$HOME/.tlaplus/` and populate it 
   - `profiling`: This Boolean flag has to be one of `TRUE/true/FALSE/false` and governs the creation of `profile-rules.txt` used in [profiling](profiling.md). The file is only created if `profiling` is set to `TRUE/true`.  Setting `profiling=false` is incompatible with the `--smtprof` flag.
   The default is `false`.
   - `write-intermediate`: This Boolean flag has to be one of `TRUE/true/FALSE/false` and governs the creation of intermediate outputs. If set to `TRUE/true`, apalache will produce an `intermediate` subdirectory in the run directory and output the state of the module after each pass.
-  If this value is not defined in `apalache.cfg` it is treated as `false`.
+  The default is `false`.
 
 All flags must be defined on separate lines, and follow the pattern
 ```
