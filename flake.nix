@@ -57,7 +57,7 @@
               shellHook = ''
                 ${self.checks.${system}.pre-commit-check.shellHook}
                 if ${pkgs.opam}/bin/opam env >/dev/null 2>&1; then
-                  echo "🐪 opam has already been initialized 🐪"
+                  :
                 else
                   echo "⚠️ need to initialize opam ⚠️"
                   ${pkgs.opam}/bin/opam init
