@@ -5,7 +5,7 @@ You can create a file named `apalache.cfg` in `$HOME/.tlaplus/` and populate it 
   - `OUTDIR`: The value of `OUTDIR` defines a directory, in which all Apalache runs write their outputs. Each run will produce a unique subdirectory inside `OUTDIR` using the following convention: `<SPECNAME>_yyyy-MM-dd_HH-mm-ss_<UNIQUEID>`. 
   Example value: `~/apalache-out`.
   If this value is not defined in `apalache.cfg`, Apalache will, for each individual run, define it to be equal to `DIR/x/`, where `DIR` is the directory containing the specification.
-  - `profiling`: This Boolean flag has to be one of `TRUE/true/FALSE/false` and governs the creation of `profile-rules.txt` used in [profiling](profiling.md). The file is only created if `profiling` is set to `TRUE/true`. Avoid using the `--smtprof` flag when `profiling` is set to `FALSE/false`.
+  - `profiling`: This Boolean flag has to be one of `TRUE/true/FALSE/false` and governs the creation of `profile-rules.txt` used in [profiling](profiling.md). The file is only created if `profiling` is set to `TRUE/true`.  Setting `profiling=false` is incompatible with the `--smtprof` flag.
   If this value is not defined in `apalache.cfg` it is treated as `false`.
   - `write-intermediate`: This Boolean flag has to be one of `TRUE/true/FALSE/false` and governs the creation of intermediate outputs. If set to `TRUE/true`, apalache will produce an `intermediate` subdirectory in the run directory and output the state of the module after each pass.
   If this value is not defined in `apalache.cfg` it is treated as `false`.
