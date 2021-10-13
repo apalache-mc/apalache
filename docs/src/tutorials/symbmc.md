@@ -37,12 +37,12 @@ For example, in the specification with
 ```tla
 VARIABLE 
   \* @type: Bool;
-  a, 
+  A1, 
   \* @type: Bool;
-  b
+  A2
 ```
 
-The state space is \\(\mathbb{B}^{\\{x,y\\}}\\) when considering types, since each variable can hold one of two boolean values. In the untyped setting, the state space is infinite, and contains states where, for example, \\(a\\) maps to `[z \in 1..5 |-> "a"]` and \\(b\\) maps to  `CHOOSE p \in {}: TRUE`.
+The state space is \\(\mathbb{B}^{\\{x,y\\}}\\) when considering types, since each variable can hold one of two boolean values. In the untyped setting, the state space is infinite, and contains states where, for example, \\(A1\\) maps to `[z \in 1..5 |-> "a"]` and \\(A2\\) maps to  `CHOOSE p \in {}: TRUE`.
 
 As Apalache enforces a type system,the remainder of this document will assume the typed setting.
 This assumption does not change any of the definitions. 
