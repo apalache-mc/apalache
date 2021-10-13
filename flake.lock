@@ -46,6 +46,22 @@
         "type": "github"
       }
     },
+    "nixpkgs-scalafmt-275": {
+      "locked": {
+        "lastModified": 1627672344,
+        "narHash": "sha256-LUSP3qkGtQA4pb6GKm1skOj/aJ5/waDWs3rTdpvl+i8=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "14bcebe82882e4bc2c71c95da4fce1c9d1651575",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "14bcebe82882e4bc2c71c95da4fce1c9d1651575",
+        "type": "github"
+      }
+    },
     "nixpkgs_2": {
       "locked": {
         "lastModified": 1634074534,
@@ -83,6 +99,7 @@
       "inputs": {
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",
+        "nixpkgs-scalafmt-275": "nixpkgs-scalafmt-275",
         "pre-commit-hooks": "pre-commit-hooks"
       }
     }

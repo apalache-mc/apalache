@@ -4,16 +4,23 @@
   inputs = {
     # Nix Inputs
     nixpkgs.url = github:nixos/nixpkgs/nixpkgs-unstable;
+    nixpkgs-scalafmt-275.url = github:nixos/nixpkgs/14bcebe82882e4bc2c71c95da4fce1c9d1651575;
     pre-commit-hooks.url = github:JonathanLorimer/pre-commit-hooks.nix;
     flake-utils.url = github:numtide/flake-utils;
 
   };
 
-  outputs = { self, nixpkgs, pre-commit-hooks, flake-utils }:
+  outputs = { self, nixpkgs, nixpkgs-scalafmt-275, pre-commit-hooks, flake-utils }:
     with flake-utils.lib;
     eachDefaultSystem (system:
       let
-        pkgs = import nixpkgs { inherit system; };
+        pkgs-scalafmt-275 = import nixpkgs-scalafmt-275 { inherit system; };
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [
+            (_: _: { scalafmt = pkgs-scalafmt-275.scalafmt; })
+          ];
+        };
       in
       {
         # nix build
