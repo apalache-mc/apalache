@@ -260,9 +260,9 @@ trait TransEx {
    *
    * [TRANS-EX.1::SBMC.1::TRANSITIONS.1]
    *
-   * Represented as operator names to expressions.
+   * Represented as operator names.
    */
-  def enabledActions(): Option[Map[String, TlaEx]]
+  def enabledActions(): List[String]
 
   /** Advance to the next symbolic state reachable by applying the given action,
    *  supplied by name
