@@ -46,7 +46,7 @@ case class AnnotationIdent(name: String) extends AnnotationArg {
  *
  * @param num the value of the argument.
  */
-case class AnnotationInt(num: Int) extends AnnotationArg {
+case class AnnotationInt(num: BigInt) extends AnnotationArg {
   override def toString: String = num.toString
 }
 

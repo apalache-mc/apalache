@@ -75,7 +75,7 @@ class AnnotationParser extends Parsers {
     accept("@identifier", { case AT_IDENT(name) => name })
   }
 
-  private def number: Parser[Int] = {
+  private def number: Parser[BigInt] = {
     accept("number", { case NUMBER(i) => i })
   }
 

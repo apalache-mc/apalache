@@ -48,7 +48,7 @@ class OperAppToLetInDef(
       val newName = s"${NAME_PREFIX}_${baseName}_${nameGenerator.newName()}"
       val newDecl = tla
         .declOp(newName, newEx)
-        .typedOperDecl(OperT1(Seq(), resType))
+        .as(OperT1(Seq(), resType))
       val applyNewDecl = tla.appOp(NameEx(newName)(ne.typeTag)).typed(resType)
       LetInEx(applyNewDecl, newDecl)(ex.typeTag)
 

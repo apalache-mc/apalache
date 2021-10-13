@@ -2,6 +2,55 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.16.5
+
+### Bug fixes
+
+ * Propagate constraints passed in --cinit, see #1023
+ * Propagate constraints passed ASSUME, see #880
+
+## 0.16.4
+
+
+## 0.16.3
+
+
+### Bug fixes
+
+* Fix type checker to complain about polymorphism in the post phase, see #931
+
+### Features
+
+* Enumerated files containing intermediate module states, see #993
+
+### Delivery
+
+* Move docker containers to the GitHub container registry, see #1013
+
+## 0.16.2
+
+### Features
+
+ * improve SMT encoding by removing unused let-definitions, see #995
+
+### Bug fixes
+
+ * Fixed a bug caused by big numbers on annotations, see #990
+
+## 0.16.1
+
+### Bug fixes
+
+ * Fixed a heisenbug caused by EXCEPT on records, which used unsorted keys, see #987
+ * Fixed unsound skolemization that applied to let-definitions, see #985
+
+## 0.16.0
+
+### Features
+
+* Support for let-polymorphism in `typecheck`, see #869
+* Support for let-polymorphism in `check`, see #953
+
 ## 0.15.13
 
 ### Bug fixes

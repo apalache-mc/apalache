@@ -17,7 +17,9 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
   import stg.helperFunctions._
   import at.forsyte.apalache.tla.lir.convenience.tla._
 
-  private val types = Map("i" -> IntT1(), "b" -> BoolT1(), "o_b" -> OperT1(Seq(), BoolT1()))
+  private val Int = IntT1()
+  private val Bool = BoolT1()
+  private val ToBool = OperT1(Seq(), BoolT1())
 
   test("Test allCombinations") {
 
@@ -86,43 +88,25 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
   }
 
   test("Test allSelections") {
-    val xasgn11 = tla
-      .eql(tla.prime(tla.name("x") ? "i") ? "i", tla.name("s") ? "i")
-      .typed(types, "b")
-    val xasgn12 = tla
-      .eql(tla.prime(tla.name("x") ? "i") ? "i", int(1))
-      .typed(types, "b")
-    val yasgn11 = tla
-      .eql(tla.prime(tla.name("x") ? "i") ? "i", tla.name("T") ? "i")
-      .typed(types, "b")
-    val yasgn12 = tla
-      .eql(tla.prime(tla.name("x") ? "i") ? "i", tla.name("t") ? "i")
-      .typed(types, "b")
+    val xasgn11 = tla.eql(tla.prime(tla.name("x") as Int) as Int, tla.name("s") as Int) as Bool
+    val xasgn12 = tla.eql(tla.prime(tla.name("x") as Int) as Int, int(1)) as Bool
+    val yasgn11 = tla.eql(tla.prime(tla.name("x") as Int) as Int, tla.name("T") as Int) as Bool
+    val yasgn12 = tla.eql(tla.prime(tla.name("x") as Int) as Int, tla.name("t") as Int) as Bool
 
     val ex1 =
       ite(
-          ge(int(0), int(1)) ? "b",
+          ge(int(0), int(1)) as Bool,
           xasgn11,
           xasgn12
-      ).typed(types, "b")
+      ) as Bool
 
-    val ex2 = or(yasgn11, yasgn12)
-      .typed(types, "b")
+    val ex2 = or(yasgn11, yasgn12) as Bool
 
-    val ex3 = and(
-        ex1,
-        ex2
-    ).typed(types, "b")
+    val ex3 = and(ex1, ex2) as Bool
 
-    val possibleAssgnsX = Seq(
-        Set(xasgn11.ID),
-        Set(xasgn12.ID)
-    )
+    val possibleAssgnsX = Seq(Set(xasgn11.ID), Set(xasgn12.ID))
 
-    val possibleAssgnsY = Seq(
-        Set(yasgn11.ID),
-        Set(yasgn12.ID)
-    )
+    val possibleAssgnsY = Seq(Set(yasgn11.ID), Set(yasgn12.ID))
 
     val possibleAssgnsXY = Seq(
         Set(xasgn11.ID, yasgn11.ID),
@@ -149,28 +133,16 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
       assert(s(newEx.ID) == Set(e))
     }
 
-    val xasgn21 = tla
-      .eql(tla.prime(tla.name("x") ? "i") ? "i", tla.name("x") ? "i")
-      .typed(types, "b")
-    val yasgn21 = tla
-      .eql(tla.prime(tla.name("x") ? "i") ? "i", tla.name("T") ? "i")
-      .typed(types, "b")
-    val yasgn22 = tla
-      .eql(tla.prime(tla.name("y") ? "i") ? "i", tla.name("t") ? "i")
-      .typed(types, "b")
+    val xasgn21 = tla.eql(tla.prime(tla.name("x") as Int) as Int, tla.name("x") as Int) as Bool
+    val yasgn21 = tla.eql(tla.prime(tla.name("x") as Int) as Int, tla.name("T") as Int) as Bool
+    val yasgn22 = tla.eql(tla.prime(tla.name("y") as Int) as Int, tla.name("t") as Int) as Bool
 
-    val ex4 = and(eql(int(0), int(1)) ? "b", xasgn21)
-      .typed(types, "b")
-    val xDecl = declOp("X", ex4)
-      .typedOperDecl(OperT1(Seq(), BoolT1()))
-    val ex5 = and(yasgn21, tla.appOp(tla.name("X") ? "o_b") ? "b")
-      .typed(types, "b")
-    val ex6 = and(yasgn22, tla.appOp(tla.name("X") ? "o_b") ? "b")
-      .typed(types, "b")
-    val ex7 = or(ex5, ex6)
-      .typed(types, "b")
-    val ex8 = letIn(ex7, xDecl)
-      .typed(types, "b")
+    val ex4 = and(eql(int(0), int(1)) as Bool, xasgn21) as Bool
+    val xDecl = declOp("X", ex4) as OperT1(Seq(), BoolT1())
+    val ex5 = and(yasgn21, tla.appOp(tla.name("X") as ToBool) as Bool) as Bool
+    val ex6 = and(yasgn22, tla.appOp(tla.name("X") as ToBool) as Bool) as Bool
+    val ex7 = or(ex5, ex6) as Bool
+    val ex8 = letIn(ex7, xDecl) as Bool
 
     val possibleAssgnsX2 = Seq(Set(xasgn21.ID))
 
@@ -198,15 +170,9 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
   }
 
   test("Test ITE with multibranching") {
-    val asgn1 = tla
-      .eql(tla.prime(tla.name("x") ? "i") ? "i", int(1))
-      .typed(types, "b")
-    val asgn2 = tla
-      .eql(tla.prime(tla.name("x") ? "i") ? "i", int(2))
-      .typed(types, "b")
-    val asgn3 = tla
-      .eql(tla.prime(tla.name("x") ? "i") ? "i", int(3))
-      .typed(types, "b")
+    val asgn1 = tla.eql(tla.prime(tla.name("x") as Int) as Int, int(1)) as Bool
+    val asgn2 = tla.eql(tla.prime(tla.name("x") as Int) as Int, int(2)) as Bool
+    val asgn3 = tla.eql(tla.prime(tla.name("x") as Int) as Int, int(3)) as Bool
 
     val next = ite(
         tla.bool(true).typed(),
@@ -215,8 +181,8 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
             tla.bool(true).typed(),
             asgn2,
             asgn3
-        ) ? "b"
-    ).typed(types, "b")
+        ) as Bool
+    ) as Bool
 
     val sel = Seq(asgn1.ID, asgn2.ID, asgn3.ID)
 
@@ -237,20 +203,14 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
   }
 
   test("Test LET-IN") {
-    val asgn = tla
-      .eql(tla.prime(tla.name("x") ? "i") ? "i", int(1))
-      .typed(types, "b")
-    val xDecl = declOp("X", asgn)
-      .typedOperDecl(types, "o_b")
+    val asgn = tla.eql(tla.prime(tla.name("x") as Int) as Int, int(1)) as Bool
+    val xDecl = declOp("X", asgn) as ToBool
     val disj = or(
-        and(tla.name("A") ? "b", tla.appOp(tla.name("X") ? "o_b") ? "b") ? "b",
-        and(tla.name("B") ? "b", tla.appOp(tla.name("X") ? "o_b") ? "b") ? "b"
-    ).typed(types, "b")
+        and(tla.name("A") as Bool, tla.appOp(tla.name("X") as ToBool) as Bool) as Bool,
+        and(tla.name("B") as Bool, tla.appOp(tla.name("X") as ToBool) as Bool) as Bool
+    ) as Bool
 
-    val next = letIn(
-        disj,
-        xDecl
-    ).typed(types, "b")
+    val next = letIn(disj, xDecl) as Bool
 
     val strat = Seq(asgn.ID)
 
@@ -258,27 +218,22 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
       _._2
     }
     assert(ret.size == 1)
-    val expected = letIn(disj,
-        declOp("X", assign(prime(tla.name("x") ? "i") ? "i", int(1)) ? "b")
-          .typedOperDecl(types, "o_b"))
-      .typed(types, "b")
+    val declOfX =
+      declOp("X", assign(prime(tla.name("x") as Int) as Int, int(1)) as Bool) as ToBool
+    val expected = letIn(disj, declOfX)
+      .as(Bool)
     assert(expected == ret.head)
   }
 
   test("Test sliceWith") {
-    val asgn = eql(prime(tla.name("x") ? "i") ? "i", int(1))
-      .typed(types, "b")
-    val xDecl = declOp("X", asgn)
-      .typedOperDecl(types, "o_b")
+    val asgn = eql(prime(tla.name("x") as Int) as Int, int(1)) as Bool
+    val xDecl = declOp("X", asgn) as ToBool
     val disj = or(
-        and(name("A"), appOp(name("X") ? "o_b") ? "b") ? "b",
-        and(name("B"), appOp(name("X") ? "o_b") ? "b") ? "b"
-    ).typed(types, "b")
+        and(name("A"), appOp(name("X") as ToBool) as Bool) as Bool,
+        and(name("B"), appOp(name("X") as ToBool) as Bool) as Bool
+    ) as Bool
 
-    val next = letIn(
-        disj,
-        xDecl
-    ).typed(types, "b")
+    val next = letIn(disj, xDecl) as Bool
 
     val selection = Set(asgn.ID)
     val tr = AssignmentOperatorIntroduction(selection, new IdleTracker)

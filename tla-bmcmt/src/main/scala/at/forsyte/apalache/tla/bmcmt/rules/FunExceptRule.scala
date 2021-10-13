@@ -143,7 +143,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
       }
     }
 
-    for ((key, cell) <- recType.fieldTypes.keys.zip(nextState.arena.getHas(oldRecord))) {
+    for ((key, cell) <- recType.fieldTypes.keySet.zip(nextState.arena.getHas(oldRecord))) {
       nextState = nextState.updateArena(_.appendHasNoSmt(newRecord, updateOrKeep(key, cell)))
     }
 

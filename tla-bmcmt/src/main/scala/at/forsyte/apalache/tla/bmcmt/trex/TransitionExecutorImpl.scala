@@ -58,6 +58,8 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
     }
     logger.debug("Initializing CONSTANTS")
     lastState = ctx.rewriter.rewriteUntilDone(lastState.setRex(constInit))
+    // propagate whatever constraints are in ConstInit
+    ctx.rewriter.solverContext.assertGroundExpr(lastState.ex)
     // check, whether all constants have been assigned
     val shiftedBinding = lastState.binding.shiftBinding(Set.empty)
     if (shiftedBinding.toMap.keySet != consts) {

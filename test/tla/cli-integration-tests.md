@@ -1049,10 +1049,10 @@ EXITCODE: OK
 
 ### check Bug914 succeeds
 
-Regression test for https://github.com/informalsystems/apalache/issues/914
-In the earlier version, we expected the model checker to complain about mismatching
-record types. In the latest version, this bug disappeared, due to the changes
-in the type checker.
+Regression test for https://github.com/informalsystems/apalache/issues/914 In
+the earlier version, we expected the model checker to complain about
+mismatching record types. In the latest version, this bug disappeared, due to
+the changes in the type checker.
 
 ```sh
 $ apalache-mc check Bug914.tla | sed 's/I@.*//'
@@ -1060,11 +1060,32 @@ $ apalache-mc check Bug914.tla | sed 's/I@.*//'
 EXITCODE: OK
 ```
 
+### check RecordExcept987 succeeds
+
+Regression test for https://github.com/informalsystems/apalache/issues/987
+We should always use sorted keys on record types.
+
+```sh
+$ apalache-mc check RecordExcept987.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
+### check Bug985 succeeds
+
+Regression test for https://github.com/informalsystems/apalache/issues/985
+Skolemization should be sound.
+
+```sh
+$ apalache-mc check Bug985.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
 ## configure the check command
 
-Testing various flags that are set via command-line options and the TLC
-configuration file. The CLI has priority over the TLC config. So we have to
-test that it all works together.
+Testing various flags that are set via command-line options and the TLC configuration file. The CLI has priority over
+the TLC config. So we have to test that it all works together.
 
 ### configure default Init and Next
 
@@ -1458,6 +1479,38 @@ Test that the model checker supports let-polymorphism.
 $ apalache-mc check letpoly_inst.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
+```
+
+### check Bug1023.tla
+
+Test that `--cinit` propagates constraints.
+
+```sh
+$ apalache-mc check --cinit=ConstInit --inv=Inv Bug1023.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check Bug880.tla
+
+Test that `ASSUME` propagates constraints.
+
+```sh
+$ apalache-mc check --cinit=ConstInit --inv=Inv Bug880.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check Bug931.tla
+
+Test that the model checker nicely complains about unresolved polymorphism.
+
+```sh
+$ apalache-mc check --inv=Inv Bug931.tla | sed 's/[IEW]@.*//'
+...
+Typing input error: [Bug931.tla:6:20-6:21]: Found a polymorphic type: Set(f)
+...
+EXITCODE: ERROR (255)
 ```
 
 ### check profiling

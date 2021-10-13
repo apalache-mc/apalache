@@ -26,6 +26,8 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
 
   protected def inferPoly: Boolean = options.getOrElse("typecheck", "inferPoly", true)
 
+  protected def passNumber: String = "01"
+
   /**
    * The name of the pass
    *
@@ -59,7 +61,7 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
         Untyped()
       }
 
-      val listener = new LoggingTypeCheckerListener(sourceStore, changeListener)
+      val listener = new LoggingTypeCheckerListener(sourceStore, changeListener, inferPoly)
       val taggedModule = tool.checkAndTag(tracker, listener, defaultTag, tlaModule.get)
 
       taggedModule match {
@@ -68,8 +70,8 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
           logger.info(if (isTypeCoverageComplete) " > All expressions are typed" else " > Some expressions are untyped")
           dumpToJson(newModule, "post")
           val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-          writerFactory.writeModuleAllFormats(newModule.copy(name = s"Out$name"), TlaWriter.STANDARD_MODULES,
-              outdir.toFile)
+          writerFactory.writeModuleAllFormats(newModule.copy(name = s"${passNumber}_Out$name"),
+              TlaWriter.STANDARD_MODULES, outdir.toFile)
           outputTlaModule = Some(newModule)
           true
 
@@ -82,7 +84,7 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
 
   private def dumpToJson(module: TlaModule, prefix: String): Unit = {
     val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    val outFile = new File(outdir.toFile, s"out-$prefix-$name.json")
+    val outFile = new File(outdir.toFile, s"${passNumber}_out-$prefix-$name.json")
     val writer = new PrintWriter(new FileWriter(outFile, false))
     try {
       val sourceLocator: SourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)

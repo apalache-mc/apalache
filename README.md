@@ -25,18 +25,21 @@ course].
 
 ## Releases
 
-Check the [releases page][].
+Check the [releases page][] for our latest release.
 
-For a stable release, we recommend that you run the latest docker image
-`apalache/mc:latest` or checkout the source code from our latest release tag.
+For a stable release, we recommend that you pull the latest docker image with
+`docker pull ghcr.io/informalsystems/apalache:unstable`, use the jar from the
+most recent release, or checkout the source code from the most recent release
+tag.
 
-To try the latest cool features, check out the [unstable branch][].
+To try the latest cool features, check out the head of the [unstable branch][].
 
 For more information on installation options, see [the
 manual][user-manual-installation].
 
 ## Getting started
 
+- Check the material at [TLA-Apalache workshop][].
 - Read the [Apalache user manual][user-manual].
 - Consult the (WIP) [Idioms for writing better TLA+][idioms].
 - Consult the (WIP) [TLA+ language manual for engineers][language-manual].
@@ -70,6 +73,9 @@ Our old website is still available at https://forsyte.at/research/apalache/ .
 - To see more examples, check the [standard repository of TLA+ examples].
 
 ## Talks
+
+- [Extended version of the Apalache tutorial](https://www.youtube.com/watch?v=Ml7d_3vlH88).
+  TLA+ tutorial at DISC 2021 (October 2021).
 
 - [How TLA+ and Apalache Helped Us to Design the Tendermint Light Client](https://www.crowdcast.io/e/interchain-conversations-II/38).
   Interchain Conversations 2020 (December 2020).
@@ -138,3 +144,4 @@ Past funding from [Der Wiener Wissenschafts-, Forschungs- und Technologiefonds](
 [light client specs]: https://github.com/tendermint/spec/tree/master/rust-spec/lightclient/verification
 [model-based testing]: https://github.com/informalsystems/tendermint-rs/tree/master/light-client/tests/support/model_based#light-client-model-based-testing-guide
 [apalache.informal.systems]: https://apalache.informal.systems
+[TLA-Apalache workshop]: https://github.com/informalsystems/tla-apalache-workshop
