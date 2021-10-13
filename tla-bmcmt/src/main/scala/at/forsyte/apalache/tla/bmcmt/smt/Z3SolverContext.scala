@@ -15,6 +15,7 @@ import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.microsoft.z3._
 import com.microsoft.z3.enumerations.Z3_lbool
+import org.apache.commons.io.output.NullOutputStream
 
 import scala.collection.mutable
 
@@ -237,7 +238,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   }
 
   private def initLog(): PrintWriter = {
-    OutputManager.inRunDir { runDir =>
+    OutputManager.withRunDir(new PrintWriter(NullOutputStream.NULL_OUTPUT_STREAM)) { runDir =>
       val writer = new PrintWriter(new File(runDir.toFile, s"log$id.smt"))
       if (!config.debug) {
         writer.println("Logging is disabled (Z3SolverContext.debug = false). Activate with --debug.")

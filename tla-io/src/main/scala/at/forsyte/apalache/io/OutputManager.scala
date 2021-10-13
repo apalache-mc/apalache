@@ -41,7 +41,10 @@ object OutputManager {
   def runDirPathUnsafe: Path = runDirOpt.get /* Should throw if called before `createRunDir` */
 
   /** Executes a command in the run directory. To be used by classes attempting to write output files */
-  def inRunDir[T](cmd: Path => T): T = cmd(runDirPathUnsafe)
+  def inRunDir(cmd: Path => Unit): Unit = runDirOpt.foreach { cmd }
+
+  /** Executes a command in the run directory. To be used by classes attempting to write output files */
+  def withRunDir[T](default: T)(cmd: Path => T): T = runDirOpt.map(cmd).getOrElse(default)
 
   /** Loads the Apalache configuration file from HOME/.tlaplus */
   def syncFromCFG(): Unit = {

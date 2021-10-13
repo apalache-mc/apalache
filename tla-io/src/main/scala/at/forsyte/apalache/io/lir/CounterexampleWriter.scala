@@ -147,7 +147,7 @@ object CounterexampleWriter {
    */
   def writeAllFormats(suffix: String, rootModule: TlaModule, notInvariant: NotInvariant,
       states: List[NextState]): List[String] = {
-    OutputManager.inRunDir { runDir =>
+    OutputManager.withRunDir(List.empty[String]) { runDir =>
       val fileNames = Map(
           "tla" -> s"counterexample$suffix.tla",
           "tlc" -> s"MC$suffix.out",
