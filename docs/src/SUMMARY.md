@@ -88,3 +88,4 @@
 - [ADR-004: code annotations](./adr/004adr-annotations.md)
 - [ADR-005: JSON Serialization Format](./adr/005adr-json.md)
 - [RFC-006: unit tests and property-based tests](./adr/006rfc-unit-testing.md)
+- [ADR-011: alternative SMT encoding using arrays](./adr/011adr-smt-arrays.md)
