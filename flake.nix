@@ -29,13 +29,21 @@
             pkgs.mkShell {
               shellHook = self.checks.${system}.pre-commit-check.shellHook;
               buildInputs = with pkgs; [
+                # Java / Scala
                 jdk8
                 scala_2_12
-                metals
+
+                # Build
                 maven
+
+                # Development
+                metals
                 scalafmt
+
+                # Testing
+                opam
                 ocamlPackages.mdx
-                python3
+                python39Full
               ];
             };
         };
