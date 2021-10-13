@@ -153,7 +153,11 @@ environment dependencies.
 
 There is already nix setup documentation in informal systems' cosmos.nix repo.
 You can find that
-[here](https://github.com/informalsystems/cosmos.nix#setup)
+[here](https://github.com/informalsystems/cosmos.nix#setup). You will notice
+when setting up the cache the `cosmos.nix` suggest using the cosmos cache. You
+should replace that with the `apalache` cache.
+
+> TODO: ADD INFO ABOUT APALACHE CACHE ONCE IMPLEMENTED
 
 #### Running the nix shell
 

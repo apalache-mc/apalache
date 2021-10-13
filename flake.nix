@@ -98,14 +98,16 @@
             hooks = {
               nixpkgs-fmt.enable = true;
               nix-linter.enable = true;
-              scalafmt = {
-                enable = true;
-                name = "scalafmt";
-                entry = "${pkgs.scalafmt}/bin/scalafmt";
-                files = "\\.scala$";
-                language = "system";
-                pass_filenames = false;
-              };
+              # For now we are not going to run this, since we can't guarantee that the nix pin of scalafmt
+              # is the same version as the scalafmt provided by maven.
+              # scalafmt = {
+              #   enable = true;
+              #   name = "scalafmt";
+              #   entry = "${pkgs.scalafmt}/bin/scalafmt";
+              #   files = "\\.scala$";
+              #   language = "system";
+              #   pass_filenames = false;
+              # };
             };
           };
         };
