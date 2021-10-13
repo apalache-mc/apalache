@@ -264,12 +264,13 @@ trait TransEx {
    */
   def enabledActions(): Option[Map[String, TlaEx]]
 
-  /** Advance to the next symbolic state reachable by applying the given action
+  /** Advance to the next symbolic state reachable by applying the given action,
+   *  supplied by name
    *
    * |TRANS-EX.1::SBMC.1::SELECT.1|
    *
    */
-  def applyAction(action: TlaEx): Either[CheckErr, Unit]
+  def applyAction(action: String): Either[CheckErr, Unit]
 
   /** The example of an execution from the an initial state up to the current symbolic state */
   def executionFragmentExample: Option[Execution]
