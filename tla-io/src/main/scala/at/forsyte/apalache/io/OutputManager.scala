@@ -48,13 +48,13 @@ object OutputManager {
 
   /** Loads the Apalache configuration file from HOME/.tlaplus */
   def syncFromCFG(): Unit = {
-    val flagRegex = raw"^([a-zA-Z\-]+)\s*=\s*(.+)\s*$$".r
+    val flagRegex = raw"^\s*([a-zA-Z\-]+)\s*=\s*(.+)\s*$$".r
     val home = System.getProperty("user.home")
     val configFile = new File(home, CFG_FILE)
     if (configFile.exists()) {
       val src = Source.fromFile(configFile.getAbsolutePath)
       for (line <- src.getLines) {
-        flagRegex.findAllMatchIn(line.strip()).foreach { m =>
+        flagRegex.findAllMatchIn(line).foreach { m =>
           // Flags have the shape FLAGNAME=FLAGVAL
           val flagname = m.group(1)
           val flagVal = m.group(2)
