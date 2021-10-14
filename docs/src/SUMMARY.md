@@ -45,6 +45,7 @@
 
 - [Overview](./tutorials/index.md)
 - [The Snowcat:snowflake::cat: Type Checker](./tutorials/snowcat-tutorial.md)
+- [Symbolic Model Checking](./tutorials/symbmc.md)
 
 # TLA+ Language Manual for Engineers
 
