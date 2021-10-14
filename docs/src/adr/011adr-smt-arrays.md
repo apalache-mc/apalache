@@ -19,7 +19,7 @@ treatment of different TLA+ operators are described.
 
 The encoding using arrays is to be an alternative, not a replacement, to the already existing encoding.
 Given this, a new option is to be added to the `check` command of the CLI. The default encoding will be
-existing one. The option description is shown below.
+the existing one. The option description is shown below.
 
 ```
 --smt-encoding=STRING   : the SMT encoding: euf, arrays (experimental), default: euf
@@ -27,9 +27,29 @@ existing one. The option description is shown below.
 
 ### Code changes
 
-TODO
+The following changes will be made to implement the new CLI option:
 
-## 2. Encoding sets
+- Add new string variable to class `CheckCmd` to enable the new option.
+- Add new class `Z3SolverContextForArrays`, which extends class `Z3SolverContext`.
+- Add new class `SymbStateRewriterImplForArrays`, which extends class `SymbStateRewriterImpl`.
+- Use the new option to select between different `SolverContext` and `SymbStateRewriter`
+  implementations in classes `BoundedCheckerPassImpl`,  `RecordingSolverContext`,
+  `PreproSolverContext`, and `SymbStateRewriterAuto`.
+
+## 2. Testing the new encoding
+
+The new encoding should provide the same results as the existing one, the available test suit
+will thus be used to test the new encoding. To achieve this, the test suit will be made parametric
+w.r.t. the implementations of the `SolverContext` and `SymbStateRewriter`.
+
+### Code changes
+
+The following changes will be made to implement the parametric testing:
+
+- Refactor the classes in `tla-bmcmt/src/test` to enable testing with different
+  implementations of `SolverContext` and `SymbStateRewriter`.
+
+## 3. Encoding sets
 
 Sets are currently encoded in an indirect way. Consider a sort `some_sort` and distinct elements `elem1`,
 `elem2`, and `elem3` of type `someSort`, as defined below.
@@ -43,7 +63,7 @@ Sets are currently encoded in an indirect way. Consider a sort `some_sort` and d
 (assert (distinct elem1 elem2 elem3))
 ```
 
-A set `set1` containing `elem1`, `elem2`, and `elem3` is represented by a constant of type 
+A set `set1` containing `elem1`, `elem2`, and `elem3` is currently represented by a constant of type 
 `set_of_some_Sort` and three membership predicates, as shown below.
 
 ```
@@ -102,17 +122,21 @@ For consistency, the new encoding uses constant arrays to declare both finite an
 
 ### Code changes
 
+The following changes will be made to implement the new encoding of sets:
+
+- Add alternative rewriting rules for sets, via new classes extending `RewritingRule`.
+- In class `SymbStateRewriterImplForArrays`, overwrite rules pertaining to sets in `ruleLookupTable`.
+- In class `Z3SolverContextForArrays`, overwrite appropriate methods.
+
+## 4. Encoding tuples and records
+
 TODO
 
-## 3. Encoding tuples and records
+## 5. Encoding functions and sequences
 
 TODO
 
-## 4. Encoding functions and sequences
-
-TODO
-
-## 5. Encoding control operators and TLA+ quantifiers
+## 6. Encoding control operators and TLA+ quantifiers
 
 TODO
 
