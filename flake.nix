@@ -13,10 +13,7 @@
   inputs = {
     # Nix Inputs
     nixpkgs.url = github:nixos/nixpkgs/nixpkgs-unstable;
-    nixpkgs-scalafmt-275.url = github:nixos/nixpkgs/14bcebe82882e4bc2c71c95da4fce1c9d1651575;
-    pre-commit-hooks.url = github:JonathanLorimer/pre-commit-hooks.nix;
     flake-utils.url = github:numtide/flake-utils;
-
   };
 
   # Outputs define the result of a flake. I use the term result to be intentionally vague since flakes
@@ -25,17 +22,11 @@
   # we only really care about the `devShell` output, since that is what provides the nix shell. For a
   # more thorough treatment of the nix flakes output schema see this resource:
   # https://zimbatm.com/NixFlakes/#output-schema
-  outputs = { self, nixpkgs, nixpkgs-scalafmt-275, pre-commit-hooks, flake-utils }:
+  outputs = { self, nixpkgs, flake-utils }:
     with flake-utils.lib;
     eachDefaultSystem (system:
       let
-        pkgs-scalafmt-275 = import nixpkgs-scalafmt-275 { inherit system; };
-        pkgs = import nixpkgs {
-          inherit system;
-          overlays = [
-            (_: _: { scalafmt = pkgs-scalafmt-275.scalafmt; })
-          ];
-        };
+        pkgs = import nixpkgs { inherit system; };
       in
       {
 
@@ -51,19 +42,6 @@
         packages = {
           dev-shell =
             pkgs.mkShell {
-              # shellHook is invoked immediately upon entering the nix shell. Right now we do 2 things here:
-              #   1. write the pre-commit hook, so that git can pick it up.
-              #   2. check that opam has been initialized for integration tests.
-              shellHook = ''
-                ${self.checks.${system}.pre-commit-check.shellHook}
-                if ${pkgs.opam}/bin/opam env >/dev/null 2>&1; then
-                  :
-                else
-                  echo "⚠️ need to initialize opam ⚠️"
-                  ${pkgs.opam}/bin/opam init
-                fi
-
-              '';
 
               # Built inputs are the packages that we provide in the PATH in the nix shell
               buildInputs = with pkgs; [

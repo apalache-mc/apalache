@@ -15,21 +15,6 @@
         "type": "github"
       }
     },
-    "flake-utils_2": {
-      "locked": {
-        "lastModified": 1631561581,
-        "narHash": "sha256-3VQMV5zvxaVLvqqUrNz3iJelLw30mIVSfZmAaauM3dA=",
-        "owner": "numtide",
-        "repo": "flake-utils",
-        "rev": "7e5bf3925f6fbdfaf50a2a7ca0be2879c4261d19",
-        "type": "github"
-      },
-      "original": {
-        "owner": "numtide",
-        "repo": "flake-utils",
-        "type": "github"
-      }
-    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1633329294,
@@ -46,61 +31,10 @@
         "type": "github"
       }
     },
-    "nixpkgs-scalafmt-275": {
-      "locked": {
-        "lastModified": 1627672344,
-        "narHash": "sha256-LUSP3qkGtQA4pb6GKm1skOj/aJ5/waDWs3rTdpvl+i8=",
-        "owner": "nixos",
-        "repo": "nixpkgs",
-        "rev": "14bcebe82882e4bc2c71c95da4fce1c9d1651575",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nixos",
-        "repo": "nixpkgs",
-        "rev": "14bcebe82882e4bc2c71c95da4fce1c9d1651575",
-        "type": "github"
-      }
-    },
-    "nixpkgs_2": {
-      "locked": {
-        "lastModified": 1634074534,
-        "narHash": "sha256-nrTVbYtKEmnpplMevoMGH543W/+plfG21fynO+h5UWA=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "a7662ec778e3a1326bc7c0f167bdf27e7f9fe311",
-        "type": "github"
-      },
-      "original": {
-        "id": "nixpkgs",
-        "type": "indirect"
-      }
-    },
-    "pre-commit-hooks": {
-      "inputs": {
-        "flake-utils": "flake-utils_2",
-        "nixpkgs": "nixpkgs_2"
-      },
-      "locked": {
-        "lastModified": 1634075740,
-        "narHash": "sha256-er6rLRY/vyb7gyCvw4lCv0GLRheJxe4E59lE6GDzUUg=",
-        "owner": "JonathanLorimer",
-        "repo": "pre-commit-hooks.nix",
-        "rev": "22cb6fc111f7c7b2474433a5a5d9aadfd49ba523",
-        "type": "github"
-      },
-      "original": {
-        "owner": "JonathanLorimer",
-        "repo": "pre-commit-hooks.nix",
-        "type": "github"
-      }
-    },
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
-        "nixpkgs": "nixpkgs",
-        "nixpkgs-scalafmt-275": "nixpkgs-scalafmt-275",
-        "pre-commit-hooks": "pre-commit-hooks"
+        "nixpkgs": "nixpkgs"
       }
     }
   },
