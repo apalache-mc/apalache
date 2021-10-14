@@ -2,6 +2,13 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.16.5
+
+### Bug fixes
+
+ * Propagate constraints passed in --cinit, see #1023
+ * Propagate constraints passed ASSUME, see #880
+
 ## 0.16.4
 
 
