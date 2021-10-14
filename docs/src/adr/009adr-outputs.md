@@ -47,8 +47,8 @@ Each run directory, outlined in the previous section, should contain the followi
   - an SMT log file `log0.smt`
   - A file associated with enabled analyses, e.g. `profile-rules.txt`
 
-## 4. Master CONFIG
-Apalache should define a master configuration file `apalache.cfg`, e.g. in the installation directory, in which users can define the default values of all parameters, including all flags listed in section 1, as well as `OUTPUT_DIR`.
+## 4. Global Configuration File
+Apalache should define a global configuration file `apalache.cfg`, e.g. in the installation directory, in which users can define the default values of all parameters, including all flags listed in section 1, as well as `OUTPUT_DIR`.
 If a parameter is specified in the config file, it replaces the default value, but specifying a parameter manually always overrides config defaults.
 In other words, parameter values are determined in the following way, by order of priority:
   1. If `--<flag>=<value>` is given, use `<value>`, otherwise
