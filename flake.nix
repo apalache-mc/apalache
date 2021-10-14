@@ -45,6 +45,9 @@
 
               # Built inputs are the packages that we provide in the PATH in the nix shell
               buildInputs = with pkgs; [
+                coreutils
+                direnv
+
                 # Java / Scala
                 jdk8
                 scala_2_12
