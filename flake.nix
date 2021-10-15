@@ -13,10 +13,7 @@
   inputs = {
     # Nix Inputs
     nixpkgs.url = github:nixos/nixpkgs/nixpkgs-unstable;
-    nixpkgs-scalafmt-275.url = github:nixos/nixpkgs/14bcebe82882e4bc2c71c95da4fce1c9d1651575;
-    pre-commit-hooks.url = github:JonathanLorimer/pre-commit-hooks.nix;
     flake-utils.url = github:numtide/flake-utils;
-
   };
 
   # Outputs define the result of a flake. I use the term result to be intentionally vague since flakes
@@ -25,20 +22,13 @@
   # we only really care about the `devShell` output, since that is what provides the nix shell. For a
   # more thorough treatment of the nix flakes output schema see this resource:
   # https://zimbatm.com/NixFlakes/#output-schema
-  outputs = { self, nixpkgs, nixpkgs-scalafmt-275, pre-commit-hooks, flake-utils }:
+  outputs = { self, nixpkgs, flake-utils }:
     with flake-utils.lib;
     eachDefaultSystem (system:
       let
-        pkgs-scalafmt-275 = import nixpkgs-scalafmt-275 { inherit system; };
-        pkgs = import nixpkgs {
-          inherit system;
-          overlays = [
-            (_: _: { scalafmt = pkgs-scalafmt-275.scalafmt; })
-          ];
-        };
+        pkgs = import nixpkgs { inherit system; };
       in
       {
-
         # Nix Build
         # Command: `nix build .#<attr-name>`
         # Reference documentation: https://nixos.org/manual/nix/unstable/command-ref/new-cli/nix3-build.html
@@ -51,19 +41,13 @@
         packages = {
           dev-shell =
             pkgs.mkShell {
-              # shellHook is invoked immediately upon entering the nix shell. Right now we do 2 things here:
-              #   1. write the pre-commit hook, so that git can pick it up.
-              #   2. check that opam has been initialized for integration tests.
-              shellHook = ''
-                ${self.checks.${system}.pre-commit-check.shellHook}
-                if ${pkgs.opam}/bin/opam env >/dev/null 2>&1; then
-                  :
-                else
-                  echo "⚠️ need to initialize opam ⚠️"
-                  ${pkgs.opam}/bin/opam init
-                fi
 
+              # Commands that run when the shell starts
+              shellHook = ''
+                # Add common project environment variables
+                source ./.envrc
               '';
+
 
               # Built inputs are the packages that we provide in the PATH in the nix shell
               buildInputs = with pkgs; [
@@ -76,40 +60,12 @@
 
                 # Development
                 metals
-                scalafmt
 
                 # Testing
-                opam
                 ocamlPackages.mdx
                 python39Full
               ];
             };
-        };
-
-        # Nix Check
-        # Command: `nix flake check`
-        # Reference documentation: https://nixos.org/manual/nix/unstable/command-ref/new-cli/nix3-flake-check.html
-        # This is the command that is generally used to test your software. In our case the only check we are
-        # providing is the pre commit hook. This allows you to run the pre commit hook manually, which can be
-        # nice for debugging or a faster feedback cycle.
-        checks = {
-          pre-commit-check = pre-commit-hooks.lib.${system}.run {
-            src = ./.;
-            hooks = {
-              nixpkgs-fmt.enable = true;
-              nix-linter.enable = true;
-              # For now we are not going to run this, since we can't guarantee that the nix pin of scalafmt
-              # is the same version as the scalafmt provided by maven.
-              # scalafmt = {
-              #   enable = true;
-              #   name = "scalafmt";
-              #   entry = "${pkgs.scalafmt}/bin/scalafmt";
-              #   files = "\\.scala$";
-              #   language = "system";
-              #   pass_filenames = false;
-              # };
-            };
-          };
         };
 
         # Nix Develop

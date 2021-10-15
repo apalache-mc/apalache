@@ -151,18 +151,19 @@ environment dependencies.
 
 #### Getting Nix
 
-There is already nix setup documentation in informal systems' cosmos.nix repo.
-You can find that
-[here](https://github.com/informalsystems/cosmos.nix#setup). You will notice
-when setting up the cache the `cosmos.nix` suggest using the cosmos cache. You
-should replace that with the `apalache` cache.
+There is already nix setup documentation in [Informal Systems' cosmos.nix
+repo](https://github.com/informalsystems/cosmos.nix#setup). For the time being,
+ignore any direction about the cosmos cache.
 
-> TODO: ADD INFO ABOUT APALACHE CACHE ONCE IMPLEMENTED
+<!-- TODO: ADD INFO ABOUT APALACHE CACHE ONCE IMPLEMENTED -->
 
 #### Running the nix shell
 
-Once you have `nix` installed you should be able to run `nix develop` from the
-project root and enter a development shell.
+Once you have `nix` installed, build and enter the clean development shell with:
+
+```sh
+$ nix develop
+```
 
 #### Updating nix dependencies
 
