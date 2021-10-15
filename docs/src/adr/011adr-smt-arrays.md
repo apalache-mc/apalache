@@ -31,7 +31,7 @@ The following changes will be made to implement the new CLI option:
 
 - Add new string variable to class `CheckCmd` to enable the new option.
 - Add new class `Z3SolverContextForArrays`, which extends class `Z3SolverContext`.
-- Add new class `SymbStateRewriterImplForArrays`, which extends class `SymbStateRewriterImpl`.
+- Add new class `SymbStateRewriterImplWithArrays`, which extends class `SymbStateRewriterImpl`.
 - Use the new option to select between different `SolverContext` and `SymbStateRewriter`
   implementations in classes `BoundedCheckerPassImpl`,  `RecordingSolverContext`,
   `PreproSolverContext`, and `SymbStateRewriterAuto`.
