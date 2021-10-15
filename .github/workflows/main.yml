@@ -109,12 +109,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Set up opam
-        uses: ocaml/setup-ocaml@v2
+      - name: Cache nix store
+        # Workaround for cache action not playing well with permissions
+        # See https://github.com/actions/cache/issues/324
+        uses: john-shaffer/cache@59429c0461095f341a8cf7388e5d3aef37b95edd
         with:
-          ocaml-compiler: 4.11.0
-      - name: Install mdx
-        run: opam pin mdx 1.11.0
+          path: |
+            /nix/store
+            /nix/var/nix/profiles
+          key: ${{ runner.os }}-nix-${{ hashFiles('**.nix') }}
+          restore-keys: |
+            ${{ runner.os }}-nix-
+            ${{ runner.os }}-
+      - name: Install Nix
+        uses: cachix/install-nix-action@v14
+        with:
+          install_url: https://nixos-nix-install-tests.cachix.org/serve/vij683ly7sl95nnhb67bdjjfabclr85m/install
+          install_options: "--tarball-url-prefix https://nixos-nix-install-tests.cachix.org/serve"
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
       - name: Build the docker image
         run: docker build -t informalsystems/apalache:ci .
       - name: Run integration tests in docker container

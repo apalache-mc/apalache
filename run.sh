@@ -13,4 +13,6 @@ keep_env=$( (printenv | grep _DONE |cut -f1 -d= ; printf "%s\n" HOME USER LOGNAM
 nix develop \
     --ignore-environment \
     $keep_env \
+    --keep USE_DOCKER \
+    --keep APALACHE_TAG \
     --command $@

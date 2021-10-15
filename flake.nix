@@ -59,6 +59,7 @@
               buildInputs = with pkgs; [
                 # Utils
                 coreutils
+                docker
                 git
                 ncurses
                 starship
