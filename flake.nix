@@ -7,8 +7,6 @@
 {
   description = "A symbolic model checker for TLA+";
 
-  nixConfig.bash-prompt = "";
-
   # Inputs follow their own schema https://zimbatm.com/NixFlakes/#input-schema, but for the
   # user who just wants a high level understanding, these can be thought of as our explicit
   # dependencies.
