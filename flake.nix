@@ -7,7 +7,7 @@
 {
   description = "A symbolic model checker for TLA+";
 
-  nixConfig.bash-prompt = "\[apalache-dev\]$ ";
+  nixConfig.bash-prompt = "";
 
   # Inputs follow their own schema https://zimbatm.com/NixFlakes/#input-schema, but for the
   # user who just wants a high level understanding, these can be thought of as our explicit
@@ -45,8 +45,10 @@
             pkgs.mkShell {
 
               shellHook = ''
-                # Set prompt, or else nixConfig.bash-prompt won't take effect
-                export PS1='$ '
+                # Add commands here to run shell startup
+
+                # Set prompt
+                export PS1='\n\e[0;32mapalache-dev\e[m on \e[0;35m$(git rev-parse --abbrev-ref HEAD)\e[m @ \e[0;33m$(git describe --tags --abbrev=1)\e[m\n\e[0;32m$\e[m'
               '';
 
 
@@ -55,6 +57,7 @@
                 ncurses
                 coreutils
                 starship
+                git
 
                 # Java / Scala
                 jdk8
