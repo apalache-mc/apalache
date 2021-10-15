@@ -5,7 +5,7 @@
 | Rodrigo Otoni |        1 |
 
 This ADR describes an alternative encoding of the [KerA+] fragment of TLA+ into SMT.
-Compound data structures, e.g. sets, are currently encoded using [uninterpreted functions],
+Compound data structures, e.g. sets, are currently encoded using the [core theory] of SMT,
 with the goal being to encode them using [arrays with extensionality] instead.
 The hypothesis is that this will lead to increased solver performance and more compact SMT instances.
 We target the [Z3] solver and will use the [SMT-LIB Standard] ([Version 2.6]) in conjunction
@@ -30,24 +30,26 @@ the existing one. The option description is shown below.
 The following changes will be made to implement the new CLI option:
 
 - Add new string variable to class `CheckCmd` to enable the new option.
-- Add new class `Z3SolverContextForArrays`, which extends class `Z3SolverContext`.
 - Add new class `SymbStateRewriterImplWithArrays`, which extends class `SymbStateRewriterImpl`.
-- Use the new option to select between different `SolverContext` and `SymbStateRewriter`
-  implementations in classes `BoundedCheckerPassImpl`,  `RecordingSolverContext`,
-  `PreproSolverContext`, and `SymbStateRewriterAuto`.
+- Use the new option to select between different `SymbStateRewriter`
+  implementations in classes `BoundedCheckerPassImpl` and `SymbStateRewriterAuto`.
 
 ## 2. Testing the new encoding
 
 The new encoding should provide the same results as the existing one, the available test suit
-will thus be used to test the new encoding. To achieve this, the test suit will be made parametric
-w.r.t. the implementations of the `SolverContext` and `SymbStateRewriter`.
+will thus be used to test the new encoding. To achieve this, the test suit needs to be made parametric
+w.r.t. the implementations of `SymbStateRewriter`.
 
 ### Code changes
 
-The following changes will be made to implement the parametric testing:
+The following changes will be made to implement the tests for the new encoding:
 
-- Refactor the classes in `tla-bmcmt/src/test` to enable testing with different
-  implementations of `SolverContext` and `SymbStateRewriter`.
+- Refactor the classes in `tla-bmcmt/src/test` to enable unit testing with different
+  implementations of `SymbStateRewriter`.
+- Add unit tests for the new encoding, which should be similar to existing tests, but use
+  `SymbStateRewriterImplWithArrays` instead of `SymbStateRewriterImpl`.
+- Add integration tests for the new encoding, which should be similar to existing tests, but
+  have the `smt-encoding` flag set to `arrays`.
 
 ## 3. Encoding sets
 
@@ -125,8 +127,10 @@ For consistency, the new encoding uses constant arrays to declare both finite an
 The following changes will be made to implement the new encoding of sets:
 
 - Add alternative rewriting rules for sets, via new classes extending `RewritingRule`.
-- In class `SymbStateRewriterImplForArrays`, overwrite rules pertaining to sets in `ruleLookupTable`.
-- In class `Z3SolverContextForArrays`, overwrite appropriate methods.
+  - The new rules will use SMT equality directly, instead of relying on class `LazyEquality`.
+- In class `SymbStateRewriterImplWithArrays`, overwrite `ruleLookupTable` with the new rules.
+  - Existing rules will be reused when appropriate, e.g. rules for handling Boolean constants.
+- In class `Z3SolverContext`, add appropriate methods to handle SMT constraints over arrays.
 
 ## 4. Encoding tuples and records
 
@@ -141,7 +145,7 @@ TODO
 TODO
 
 [KerA+]: https://apalache.informal.systems/docs/apalache/kera.html
-[uninterpreted functions]: http://smtlib.cs.uiowa.edu/logics-all.shtml#QF_UF
+[core theory]: http://smtlib.cs.uiowa.edu/theories-Core.shtml
 [arrays with extensionality]: http://smtlib.cs.uiowa.edu/theories-ArraysEx.shtml
 [Z3]: https://github.com/Z3Prover/z3
 [SMT-LIB Standard]: http://smtlib.cs.uiowa.edu/index.shtml
