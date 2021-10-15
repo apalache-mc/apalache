@@ -48,7 +48,9 @@
                 # Add commands here to run shell startup
 
                 # Set prompt
-                export PS1='\n\e[0;32mapalache-dev\e[m on \e[0;35m$(git rev-parse --abbrev-ref HEAD)\e[m @ \e[0;33m$(git describe --tags --abbrev=1)\e[m\n\e[0;32m$\e[m'
+                export PS1='\n\e[0;32mapalache-dev\e[m on \e[0;35m$(git rev-parse --abbrev-ref HEAD)\e[m @ \e[0;33m$(git describe --tags --abbrev=1)\e[m\n\e[0;32m$\e[m '
+
+                source ./.envrc
               '';
 
 
