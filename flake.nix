@@ -44,9 +44,6 @@
 
               # Commands that run when the shell starts
               shellHook = ''
-                # Set prompt
-                export PS1='\n\e[0;32mapalache-dev\e[m on \e[0;35m$(git rev-parse --abbrev-ref HEAD)\e[m @ \e[0;33m$(git describe --tags --abbrev=1)\e[m\n\e[0;32m$\e[m '
-
                 # Add common project environment variables
                 source ./.envrc
               '';
@@ -54,13 +51,6 @@
 
               # Built inputs are the packages that we provide in the PATH in the nix shell
               buildInputs = with pkgs; [
-                # Utils
-                coreutils
-                docker
-                git
-                ncurses
-                starship
-
                 # Java / Scala
                 jdk8
                 scala_2_12
@@ -70,12 +60,10 @@
 
                 # Development
                 metals
-                scalafmt
 
                 # Testing
                 ocamlPackages.mdx
                 python39Full
-                python39Packages.mypy
               ];
             };
         };

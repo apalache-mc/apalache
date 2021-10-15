@@ -162,7 +162,7 @@ ignore any direction about the cosmos cache.
 Once you have `nix` installed, build and enter the clean development shell with:
 
 ```sh
-$ ./shell.sh
+$ nix develop
 ```
 
 #### Updating nix dependencies
