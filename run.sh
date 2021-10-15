@@ -15,4 +15,5 @@ nix develop \
     $keep_env \
     --keep USE_DOCKER \
     --keep APALACHE_TAG \
+    --keep SSH_AUTH_SOCK \
     --command $@
