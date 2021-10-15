@@ -22,7 +22,7 @@ Given this, a new option is to be added to the `check` command of the CLI. The d
 the existing one. The option description is shown below.
 
 ```
---smt-encoding=STRING   : the SMT encoding: euf, arrays (experimental), default: euf
+--smt-encoding=STRING   : the SMT encoding: oopsla19, arrays (experimental), default: oopsla19
 ```
 
 ### Code changes
