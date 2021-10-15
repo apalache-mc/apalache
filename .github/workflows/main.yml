@@ -41,6 +41,8 @@ jobs:
   unit-tests:
     runs-on: ${{ matrix.operating-system }}
     strategy:
+      # Allows other OS tests to proceed even if one fails
+      fail-fast: false
       matrix:
         operating-system: [ubuntu-latest, macos-latest]
     steps:
@@ -63,6 +65,7 @@ jobs:
   integration-tests:
     runs-on: ${{ matrix.operating-system }}
     strategy:
+      # Allows other OS tests to proceed even if one fails
       fail-fast: false
       matrix:
         operating-system: [ubuntu-latest, macos-latest]

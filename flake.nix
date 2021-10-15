@@ -57,6 +57,7 @@
 
               # Built inputs are the packages that we provide in the PATH in the nix shell
               buildInputs = with pkgs; [
+                # Utils
                 coreutils
                 git
                 ncurses
@@ -74,7 +75,6 @@
                 scalafmt
 
                 # Testing
-                opam
                 ocamlPackages.mdx
                 python39Full
                 python39Packages.mypy
