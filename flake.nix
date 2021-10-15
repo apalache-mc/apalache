@@ -81,32 +81,6 @@
             };
         };
 
-        # Nix Check
-        # Command: `nix flake check`
-        # Reference documentation: https://nixos.org/manual/nix/unstable/command-ref/new-cli/nix3-flake-check.html
-        # This is the command that is generally used to test your software. In our case the only check we are
-        # providing is the pre commit hook. This allows you to run the pre commit hook manually, which can be
-        # nice for debugging or a faster feedback cycle.
-        # checks = {
-        #   pre-commit-check = pre-commit-hooks.lib.${system}.run {
-        #     src = ./.;
-        #     hooks = {
-        #       nixpkgs-fmt.enable = true;
-        #       nix-linter.enable = true;
-        #       # For now we are not going to run this, since we can't guarantee that the nix pin of scalafmt
-        #       # is the same version as the scalafmt provided by maven.
-        #       # scalafmt = {
-        #       #   enable = true;
-        #       #   name = "scalafmt";
-        #       #   entry = "${pkgs.scalafmt}/bin/scalafmt";
-        #       #   files = "\\.scala$";
-        #       #   language = "system";
-        #       #   pass_filenames = false;
-        #       # };
-        #     };
-        #   };
-        # };
-
         # Nix Develop
         # Command: `nix develop`
         # Reference documentation: https://nixos.org/manual/nix/unstable/command-ref/new-cli/nix3-develop.html
