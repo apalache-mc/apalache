@@ -85,8 +85,10 @@ jobs:
         # See https://github.com/actions/cache/issues/324
         uses: john-shaffer/cache@59429c0461095f341a8cf7388e5d3aef37b95edd
         with:
-          path: /nix/store
-          key: ${{ runner.os }}-nix-${{ hashFiles('*.nix') }}
+          path: |
+            /nix/store
+            /nix/var/nix/profiles
+          key: ${{ runner.os }}-nix-${{ hashFiles('**.nix') }}
           restore-keys: |
             ${{ runner.os }}-nix-
             ${{ runner.os }}-
