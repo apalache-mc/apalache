@@ -100,6 +100,8 @@ jobs:
           extra_nix_config: |
             experimental-features = nix-command flakes
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+      - name: Build dev-shell
+        run: ./run.sh bash -c exit
       - name: Build apalache
         run: ./run.sh make build-quick
       - name: Run integration tests
@@ -129,6 +131,8 @@ jobs:
           extra_nix_config: |
             experimental-features = nix-command flakes
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+      - name: Build dev-shell
+        run: ./run.sh bash -c exit
       - name: Build the docker image
         run: docker build -t informalsystems/apalache:ci .
       - name: Run integration tests in docker container
