@@ -68,9 +68,18 @@ jobs:
       # Allows other OS tests to proceed even if one fails
       fail-fast: false
       matrix:
+        # Pinned to maxos-10 as temp workaround for https://github.com/cachix/install-nix-action/issues/96
         operating-system: [ubuntu-latest, macos-10.15]
     steps:
       - uses: actions/checkout@v2
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+            ${{ runner.os }}-
       - name: Cache nix store
         # Workaround for cache action not playing well with permissions
         # See https://github.com/actions/cache/issues/324
