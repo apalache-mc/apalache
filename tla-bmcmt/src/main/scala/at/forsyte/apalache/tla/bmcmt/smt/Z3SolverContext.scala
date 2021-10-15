@@ -237,16 +237,17 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     }
   }
 
-  private def initLog(): PrintWriter = {
-    OutputManager.withRunDir(new PrintWriter(NullOutputStream.NULL_OUTPUT_STREAM)) { runDir =>
-      val writer = new PrintWriter(new File(runDir.toFile, s"log$id.smt"))
-      if (!config.debug) {
-        writer.println("Logging is disabled (Z3SolverContext.debug = false). Activate with --debug.")
-        writer.flush()
+  private def initLog(): PrintWriter =
+    OutputManager.runDirPathOpt
+      .map { runDir =>
+        val writer = new PrintWriter(new File(runDir.toFile, s"log$id.smt"))
+        if (!config.debug) {
+          writer.println("Logging is disabled (Z3SolverContext.debug = false). Activate with --debug.")
+          writer.flush()
+        }
+        writer
       }
-      writer
-    }
-  }
+      .getOrElse(new PrintWriter(NullOutputStream.NULL_OUTPUT_STREAM))
 
   /**
    * Log message to the logging file. This is helpful to debug the SMT encoding.

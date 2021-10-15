@@ -27,8 +27,8 @@ class RuleStatLocator {
   def getStats = SortedMap(ruleStats.toSeq: _*)
 
   def writeStats(filename: String): Unit =
-    OutputManager.doIfFlag(OutputManager.Names.PROFILING_FLAG) {
-      OutputManager.inRunDir { runDir =>
+    OutputManager.doIfFlag(OutputManager.Names.ProfilingFlag) {
+      OutputManager.runDirPathOpt.foreach { runDir =>
         val file = new File(runDir.toFile, filename)
         val writer = new PrintWriter(new FileWriter(file, false))
         writer.println("Rule profiling statistics")

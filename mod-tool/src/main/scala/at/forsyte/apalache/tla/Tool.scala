@@ -1,9 +1,8 @@
 package at.forsyte.apalache.tla
 
 import java.io.{File, FileNotFoundException}
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.Path
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import at.forsyte.apalache.infra.log.LogbackConfigurator
 import at.forsyte.apalache.infra.passes.{PassChainExecutor, PassOptions, TlaModuleMixin}
@@ -52,6 +51,15 @@ object Tool extends LazyLogging {
     System.exit(exitcode)
   }
 
+  private def outputAndLogConfig(runDirNamePrefix: String, mode: String): Unit = {
+    OutputManager.syncFromGlobalConfig()
+    OutputManager.createRunDirectory(runDirNamePrefix)
+    // force our programmatic logback configuration, as the autoconfiguration works unpredictably
+    new LogbackConfigurator(OutputManager.runDirPathOpt).configureDefaultContext()
+    // TODO: update workers when the multicore branch is integrated
+    submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> mode, "workers" -> "1"))
+  }
+
   /**
    * Run the tool in a library mode, that is, with a call to System.exit.
    *
@@ -60,7 +68,6 @@ object Tool extends LazyLogging {
    */
   def run(args: Array[String]): Int = {
     printHeaderAndStatsConfig()
-    OutputManager.syncFromCFG()
 
     // first, call the arguments parser, which can also handle the standard commands such as version
     val command =
@@ -77,46 +84,25 @@ object Tool extends LazyLogging {
       // One of our commands. Print the header and measure time
       val startTime = LocalDateTime.now()
 
-      val filename = new File(args.last).getName
-      OutputManager.createRunDirectory(filename)
-      // force our programmatic logback configuration, as the autoconfiguration works unpredictably
-      OutputManager.inRunDir { runDir =>
-        new LogbackConfigurator(runDir).configureDefaultContext()
-      }
-
       try {
         command match {
           case Some(parse: ParseCmd) =>
-            logger.info("Parse " + parse.file)
-            submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> "parse", "workers" -> "1"))
             val injector = injectorFactory(parse)
             handleExceptions(injector, runParse(injector, parse))
 
           case Some(check: CheckCmd) =>
-            logger.info(
-                "Checker options: filename=%s, init=%s, next=%s, inv=%s"
-                  .format(check.file, check.init, check.next, check.inv))
-            // TODO: update workers when the multicore branch is integrated
-            submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> "check", "workers" -> "1"))
             val injector = injectorFactory(check)
             handleExceptions(injector, runCheck(injector, check))
 
           case Some(test: TestCmd) =>
-            logger.info(
-                "Checker options: filename=%s, before=%s, action=%s, after=%s"
-                  .format(test.file, test.before, test.action, test.assertion))
-            submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> "test", "workers" -> "1"))
             val injector = injectorFactory(test)
             handleExceptions(injector, runTest(injector, test))
 
           case Some(typecheck: TypeCheckCmd) =>
-            logger.info("Type checking " + typecheck.file)
-            submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> "typecheck", "workers" -> "1"))
             val injector = injectorFactory(typecheck)
             handleExceptions(injector, runTypeCheck(injector, typecheck))
 
           case Some(config: ConfigCmd) =>
-            logger.info("Configuring Apalache")
             configure(config)
 
           case _ =>
@@ -142,10 +128,15 @@ object Tool extends LazyLogging {
   private def runParse(injector: => Injector, parse: ParseCmd): Int = {
     // here, we implement a terminal pass to get the parse results
     val executor = injector.getInstance(classOf[PassChainExecutor])
+
+    // init
+    outputAndLogConfig(parse.file.getName, "check")
+    logger.info("Parse " + parse.file)
+
     executor.options.set("parser.filename", parse.file.getAbsolutePath)
     executor.options.set("parser.output", parse.output)
 
-    executor.options.set("io.outdir", createOutputDir(executor.options, parse.file.getName))
+    executor.options.set("io.outdir", createOutputDir(executor.options))
     val result = executor.run()
     if (result.isDefined) {
       logger.info("Parsed successfully")
@@ -160,6 +151,12 @@ object Tool extends LazyLogging {
 
   private def runCheck(injector: => Injector, check: CheckCmd): Int = {
     val executor = injector.getInstance(classOf[PassChainExecutor])
+
+    outputAndLogConfig(check.file.getName, "check")
+    logger.info(
+        "Checker options: filename=%s, init=%s, next=%s, inv=%s"
+          .format(check.file, check.init, check.next, check.inv)
+    )
     var tuning =
       if (check.tuning != "") loadProperties(check.tuning) else Map[String, String]()
     tuning = overrideProperties(tuning, check.tuningOptions)
@@ -189,7 +186,7 @@ object Tool extends LazyLogging {
       executor.options.set("checker.view", check.view)
     // for now, enable polymorphic types. We probably want to disable this option for the type checker
     executor.options.set("typechecker.inferPoly", true)
-    executor.options.set("io.outdir", createOutputDir(executor.options, check.file.getName))
+    executor.options.set("io.outdir", createOutputDir(executor.options))
 
     val result = executor.run()
     if (result.isDefined) {
@@ -204,6 +201,12 @@ object Tool extends LazyLogging {
   private def runTest(injector: => Injector, test: TestCmd): Int = {
     // This is a special version of the `check` command that is tuned towards testing scenarios
     val executor = injector.getInstance(classOf[PassChainExecutor])
+
+    outputAndLogConfig(test.file.getName, "test")
+    logger.info(
+        "Checker options: filename=%s, before=%s, action=%s, after=%s"
+          .format(test.file, test.before, test.action, test.assertion))
+
     // Tune for testing:
     //   1. Check the invariant only after the action took place.
     //   2. Randomize
@@ -231,7 +234,7 @@ object Tool extends LazyLogging {
     executor.options.set("checker.algo", "offline")
     // for now, enable polymorphic types. We probably want to disable this option for the type checker
     executor.options.set("typechecker.inferPoly", true)
-    executor.options.set("io.outdir", createOutputDir(executor.options, test.file.getName))
+    executor.options.set("io.outdir", createOutputDir(executor.options))
 
     val result = executor.run()
     if (result.isDefined) {
@@ -246,10 +249,14 @@ object Tool extends LazyLogging {
   private def runTypeCheck(injector: => Injector, typecheck: TypeCheckCmd): Int = {
     // type checker
     val executor = injector.getInstance(classOf[PassChainExecutor])
+
+    outputAndLogConfig(typecheck.file.getName, "typecheck")
+    logger.info("Type checking " + typecheck.file)
+
     executor.options.set("parser.filename", typecheck.file.getAbsolutePath)
     executor.options.set("typechecker.inferPoly", typecheck.inferPoly)
 
-    executor.options.set("io.outdir", createOutputDir(executor.options, typecheck.file.getName))
+    executor.options.set("io.outdir", createOutputDir(executor.options))
     executor.run() match {
       case None =>
         logger.info("Type checker [FAILED]")
@@ -302,12 +309,9 @@ object Tool extends LazyLogging {
     props ++ hereProps
   }
 
-  private def createOutputDir(options: PassOptions, filename: String): Path = {
+  private def createOutputDir(options: PassOptions): Path = {
     OutputManager.syncFromOptions(options)
-    if (!OutputManager.isConfigured) {
-      throw new Exception("Could not configure outputs. See apalache.cfg or pass options.")
-    }
-    OutputManager.runDirPathUnsafe
+    OutputManager.runDirPathOpt.get
   }
 
   private def injectorFactory(cmd: Command): Injector = {
@@ -369,6 +373,8 @@ object Tool extends LazyLogging {
   }
 
   private def configure(config: ConfigCmd): Int = {
+    outputAndLogConfig("config", "config")
+    logger.info("Configuring Apalache")
     config.submitStats match {
       case Some(isEnabled) =>
         val warning = "Unable to update statistics configuration. The other features will keep working."

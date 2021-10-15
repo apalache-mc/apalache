@@ -16,11 +16,18 @@ import java.nio.file.Path
  *
  * @author Igor Konnov
  */
-class LogbackConfigurator(runDir: Path) extends ContextAwareBase with Configurator {
+class LogbackConfigurator(runDirOpt: Option[Path]) extends ContextAwareBase with Configurator {
   def configureDefaultContext(): Unit = {
     val loggerContext = LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext]
     setContext(loggerContext)
-    configure(loggerContext)
+    if (runDirOpt.isEmpty) configureSilent(loggerContext)
+    else configure(loggerContext)
+  }
+
+  def configureSilent(loggerContext: LoggerContext): Unit = {
+    loggerContext.reset() // forget everything that was configured automagically
+    val rootLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)
+    rootLogger.setLevel(Level.OFF)
   }
 
   override def configure(loggerContext: LoggerContext): Unit = {
@@ -64,7 +71,7 @@ class LogbackConfigurator(runDir: Path) extends ContextAwareBase with Configurat
     val app = new FileAppender[ILoggingEvent]()
     app.setContext(loggerContext)
     app.setName("file")
-    app.setFile(new File(runDir.toFile, "detailed.log").getCanonicalPath)
+    app.setFile(new File(runDirOpt.get.toFile, "detailed.log").getCanonicalPath)
     val encoder = new LayoutWrappingEncoder[ILoggingEvent]()
     encoder.setContext(loggerContext)
     val layout = new PatternLayout()

@@ -2,11 +2,11 @@ package at.forsyte.apalache.io
 
 import at.forsyte.apalache.infra.passes.PassOptions
 
-import java.io.File
-import java.nio.file.{Files, InvalidPathException, Path, Paths}
+import java.io.{File, FileInputStream}
+import java.nio.file.{Files, Path, Paths}
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import scala.io.Source
+import org.yaml.snakeyaml.Yaml
 
 /**
  * The OutputManager is the central source of truth, for all IO related locations.
@@ -15,98 +15,94 @@ import scala.io.Source
 object OutputManager {
 
   object Names {
-    val OUTDIR_NAME_IN_CFG = "OUTDIR"
-    val INTERMEDIATE_FLAG = "write-intermediate"
-    val INTERMEDIATE_FOLDERNAME = "intermediate"
-    val PROFILING_FLAG = "profiling"
-    val CFG_FILE = ".tlaplus/apalache.cfg"
-    val DEFAULT_OUTDIR = "x"
+    val OutdirNameInCfg = "out-dir"
+    val IntermediateFlag = "write-intermediate"
+    val IntermediateFoldername = "intermediate"
+    val ProfilingFlag = "profiling"
+    val CfgFile = ".tlaplus/apalache-global-config.yml"
+    val DefaultOutdir = "_apalache-out"
   }
-
   import Names._
   // Absolute path
-  private var OUTPUT_DIR: String = ""
+  private var outputDirPath: String = ""
   private var runDirOpt: Option[Path] = None
   private var flags: Map[String, Boolean] =
     Map(
-        INTERMEDIATE_FLAG -> false,
-        PROFILING_FLAG -> false
+        IntermediateFlag -> false,
+        ProfilingFlag -> false
     )
 
   /** If this is FALSE, outputs (of any sort) cannot happen, so the tool should exit */
-  def isConfigured: Boolean = outDirAsFile.isDirectory && runDirOpt.nonEmpty
+  def isConfigured: Boolean = new File(outputDirPath).isDirectory
 
-  /** Accessors */
-  def outDirAsFile: File = new File(OUTPUT_DIR)
-  def runDirPathUnsafe: Path = runDirOpt.get /* Should throw if called before `createRunDir` */
-
-  /** Executes a command in the run directory. To be used by classes attempting to write output files */
-  def inRunDir(cmd: Path => Unit): Unit = runDirOpt.foreach { cmd }
-
-  /** Executes a command in the run directory. To be used by classes attempting to write output files */
-  def withRunDir[T](default: T)(cmd: Path => T): T = runDirOpt.map(cmd).getOrElse(default)
+  /** Accessor, read-only */
+  def runDirPathOpt: Option[Path] = runDirOpt
 
   /** Loads the Apalache configuration file from HOME/.tlaplus */
-  def syncFromCFG(): Unit = {
-    val flagRegex = raw"^\s*([a-zA-Z\-]+)\s*=\s*(.+)\s*$$".r
+  def syncFromGlobalConfig(): Unit = {
     val home = System.getProperty("user.home")
-    val configFile = new File(home, CFG_FILE)
+    val configFile = new File(home, CfgFile)
     if (configFile.exists()) {
-      val src = Source.fromFile(configFile.getAbsolutePath)
-      for (line <- src.getLines) {
-        flagRegex.findAllMatchIn(line).foreach { m =>
-          // Flags have the shape FLAGNAME=FLAGVAL
-          val flagname = m.group(1)
-          val flagVal = m.group(2)
-          if (flagname == OUTDIR_NAME_IN_CFG) {
-            // OUTDIR is a special flag that governs the output directory
-            val replacedHome =
-              if (flagVal.startsWith("~")) flagVal.replaceFirst("~", home)
-              else flagVal
-            val outdir = new File(replacedHome)
-            // Try to make the dir, if it fails we skip and go to the default
-            if (!outdir.exists()) {
-              outdir.mkdir()
-            }
-            if (!outdir.exists()) {
-              // Ignore for now, can throw in the future
-              // throw new InvalidPathException(outdir.getCanonicalPath, "Invalid directory name or parent doesn't exist")
-            } else {
-              OUTPUT_DIR = outdir.getCanonicalPath
-            }
-          } else if (flags.keySet.contains(flagname)) {
-            // if not OUTDIR, use bool-flag rules and check for T/F
-            flagVal match {
-              case "TRUE" | "true" =>
-                flags += flagname -> true
-              case "FALSE" | "false" =>
-                flags += flagname -> false
-              case _ =>
-              // Ignore for now, can throw in the future
-              // throw new Exception(s"Flag $flagname must be one of: TRUE/true/FALSE/false.")
-            }
+      val yaml = new Yaml
+      val configYaml: java.util.Map[String, Any] = yaml.load(new FileInputStream(configFile.getCanonicalPath))
+
+      configYaml.forEach { case (flagName, flagValue) =>
+        if (flagName == OutdirNameInCfg) {
+          flagValue match {
+            case flagValAsString: String =>
+              // `OutdirNameInCfg` is a special flag that governs the output directory
+              val replacedHome =
+                if (flagValAsString.startsWith("~")) flagValAsString.replaceFirst("~", home)
+                else flagValAsString
+              val outdir = new File(replacedHome)
+              // Try to make the dir, if it fails we skip and go to the default
+              if (!outdir.exists()) {
+                outdir.mkdir()
+              }
+              if (!outdir.exists()) {
+                throw new ConfigurationError(s"Could not find or create directory: ${outdir.getCanonicalPath}.")
+              } else {
+                outputDirPath = outdir.getCanonicalPath
+              }
+            case _ =>
+              throw new ConfigurationError(
+                  s"Flag [$flagName] in [${configFile.getAbsolutePath}] must be a directory path string.")
           }
+        } else if (flags.keySet.contains(flagName)) {
+          // if not `OutdirNameInCfg`, it must be bool, so check for T/F
+          flagValue match {
+            case boolVal: Boolean =>
+              flags += flagName -> boolVal
+            case _ =>
+              throw new ConfigurationError(
+                  s"Flag [$flagName] in [${configFile.getAbsolutePath}] must be a Boolean value.")
+          }
+        } else {
+          throw new ConfigurationError(
+              s"[$flagName] in [${configFile.getAbsolutePath}] is not a valid Apalache parameter.")
         }
+
       }
-      src.close()
     }
-    // If OUTDIR is not set or has an invalid value, default to making rundir = specdir/x/
-    if (OUTPUT_DIR.isEmpty) {
-      OUTPUT_DIR = Paths.get(System.getProperty("user.dir"), DEFAULT_OUTDIR).toString
+    // If `OutdirNameInCfg` is not specified, default to making rundir = <CWD>/_apalache-out/
+    if (outputDirPath.isEmpty) {
+      outputDirPath = Paths.get(System.getProperty("user.dir"), DefaultOutdir).toString
     }
   }
 
   // Flags can be passed from options too, e.g. --profile or --write-intermediate
+  // TODO: remove this once all flag operations are moved into PassOptions
   def syncFromOptions(opt: PassOptions): Unit = {
-    opt.get[Boolean]("general", INTERMEDIATE_FLAG) foreach {
-      flags += INTERMEDIATE_FLAG -> _
+    opt.get[Boolean]("general", IntermediateFlag) foreach {
+      flags += IntermediateFlag -> _
     }
-    opt.get[Boolean]("general", PROFILING_FLAG) foreach {
-      flags += PROFILING_FLAG -> _
+    opt.get[Boolean]("general", ProfilingFlag) foreach {
+      flags += ProfilingFlag -> _
     }
   }
 
   /** lends flags to execute `cmd` conditionally */
+  // TODO: remove this once all flag operations are moved into PassOptions
   def doIfFlag(flagName: String)(cmd: => Unit): Unit =
     flags
       .get(flagName)
@@ -116,11 +112,11 @@ object OutputManager {
         }
       )
 
-  /** Inside OUTDIR, create a directory for an individual run */
+  /** Inside `outputDirPath`, create a directory for an individual run */
   def createRunDirectory(specName: String): Unit =
     if (runDirOpt.isEmpty) {
       val nicetime = LocalDateTime.now().format(DateTimeFormatter.ofPattern(s"yyyy-MM-dd_HH-mm-ss_"))
-      val outdir = outDirAsFile
+      val outdir = new File(outputDirPath)
       if (!outdir.exists()) {
         outdir.mkdir()
       }

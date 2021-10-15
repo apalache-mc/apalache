@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.typecheck.passes
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.io.OutputManager
-import at.forsyte.apalache.io.OutputManager.Names.INTERMEDIATE_FOLDERNAME
+import at.forsyte.apalache.io.OutputManager.Names.IntermediateFoldername
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.json.impl.TlaToUJson
 import at.forsyte.apalache.tla.imp.src.SourceStore
@@ -84,9 +84,9 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
   }
 
   private def dumpToJson(module: TlaModule, prefix: String): Unit = {
-    OutputManager.doIfFlag(OutputManager.Names.INTERMEDIATE_FLAG) {
-      OutputManager.inRunDir { runDir =>
-        val outdir = new File(runDir.toFile, INTERMEDIATE_FOLDERNAME)
+    OutputManager.doIfFlag(OutputManager.Names.IntermediateFlag) {
+      OutputManager.runDirPathOpt.foreach { runDir =>
+        val outdir = new File(runDir.toFile, IntermediateFoldername)
         val outFile = new File(outdir, s"${passNumber}_out-$prefix-$name.json")
         val writer = new PrintWriter(new FileWriter(outFile, false))
         try {
