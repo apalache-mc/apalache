@@ -68,7 +68,7 @@ jobs:
       # Allows other OS tests to proceed even if one fails
       fail-fast: false
       matrix:
-        operating-system: [ubuntu-latest, macos-latest]
+        operating-system: [ubuntu-latest, macos-10.15]
     steps:
       - uses: actions/checkout@v2
       - name: Cache nix store
