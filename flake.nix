@@ -7,6 +7,8 @@
 {
   description = "A symbolic model checker for TLA+";
 
+  nixConfig.bash-prompt = "\[apalache-dev\]$ ";
+
   # Inputs follow their own schema https://zimbatm.com/NixFlakes/#input-schema, but for the
   # user who just wants a high level understanding, these can be thought of as our explicit
   # dependencies.
@@ -29,7 +31,6 @@
         pkgs = import nixpkgs { inherit system; };
       in
       {
-
         # Nix Build
         # Command: `nix build .#<attr-name>`
         # Reference documentation: https://nixos.org/manual/nix/unstable/command-ref/new-cli/nix3-build.html
@@ -43,12 +44,17 @@
           dev-shell =
             pkgs.mkShell {
 
+              shellHook = ''
+                # Set prompt, or else nixConfig.bash-prompt won't take effect
+                export PS1='$ '
+              '';
+
+
               # Built inputs are the packages that we provide in the PATH in the nix shell
               buildInputs = with pkgs; [
+                ncurses
                 coreutils
                 starship
-                direnv
-                # tput
 
                 # Java / Scala
                 jdk8
@@ -75,25 +81,25 @@
         # This is the command that is generally used to test your software. In our case the only check we are
         # providing is the pre commit hook. This allows you to run the pre commit hook manually, which can be
         # nice for debugging or a faster feedback cycle.
-        checks = {
-          pre-commit-check = pre-commit-hooks.lib.${system}.run {
-            src = ./.;
-            hooks = {
-              nixpkgs-fmt.enable = true;
-              nix-linter.enable = true;
-              # For now we are not going to run this, since we can't guarantee that the nix pin of scalafmt
-              # is the same version as the scalafmt provided by maven.
-              # scalafmt = {
-              #   enable = true;
-              #   name = "scalafmt";
-              #   entry = "${pkgs.scalafmt}/bin/scalafmt";
-              #   files = "\\.scala$";
-              #   language = "system";
-              #   pass_filenames = false;
-              # };
-            };
-          };
-        };
+        # checks = {
+        #   pre-commit-check = pre-commit-hooks.lib.${system}.run {
+        #     src = ./.;
+        #     hooks = {
+        #       nixpkgs-fmt.enable = true;
+        #       nix-linter.enable = true;
+        #       # For now we are not going to run this, since we can't guarantee that the nix pin of scalafmt
+        #       # is the same version as the scalafmt provided by maven.
+        #       # scalafmt = {
+        #       #   enable = true;
+        #       #   name = "scalafmt";
+        #       #   entry = "${pkgs.scalafmt}/bin/scalafmt";
+        #       #   files = "\\.scala$";
+        #       #   language = "system";
+        #       #   pass_filenames = false;
+        #       # };
+        #     };
+        #   };
+        # };
 
         # Nix Develop
         # Command: `nix develop`

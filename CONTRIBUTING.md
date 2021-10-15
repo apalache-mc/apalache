@@ -161,8 +161,9 @@ should replace that with the `apalache` cache.
 
 #### Running the nix shell
 
-Once you have `nix` installed you should be able to run `nix develop` from the
-project root and enter a development shell.
+Once you have `nix` installed you should be able to run `direnv allow` (or
+`source .envrc` if you refuse to use direnv) from the project root and you will
+enter a clean development shell.
 
 #### Updating nix dependencies
 
