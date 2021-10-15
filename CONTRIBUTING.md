@@ -142,6 +142,36 @@ The necessary shell environment is specified in [.envrc](./.envrc). You can:
 If you use a different development environment or editor set up, please document
 it here!
 
+### Nix for development dependencies
+
+We provide a nix shell in case you want to use nix to manage your development
+environment and dependencies. The primary benefits of using the nix shell is
+that it allows us to keep environments consistent, and distribute updates to
+environment dependencies.
+
+#### Getting Nix
+
+There is already nix setup documentation in [Informal Systems' cosmos.nix
+repo](https://github.com/informalsystems/cosmos.nix#setup). For the time being,
+ignore any direction about the cosmos cache.
+
+<!-- TODO: ADD INFO ABOUT APALACHE CACHE ONCE IMPLEMENTED -->
+
+#### Running the nix shell
+
+Once you have `nix` installed, build and enter the clean development shell with:
+
+```sh
+$ nix develop
+```
+
+#### Updating nix dependencies
+
+To update one of the flake inputs you can run: `nix flake lock --update-input <input-name>`
+
+To update all of the inputes you can run: `nix flake update`, it is recommended
+to update dependencies one by one though.
+
 ### Formatting
 
 We use [scalafmt](https://scalameta.org/scalafmt/) to standardize formatting
