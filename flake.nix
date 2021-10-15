@@ -76,6 +76,7 @@
                 opam
                 ocamlPackages.mdx
                 python39Full
+                python39Packages.mypy
               ];
             };
         };
