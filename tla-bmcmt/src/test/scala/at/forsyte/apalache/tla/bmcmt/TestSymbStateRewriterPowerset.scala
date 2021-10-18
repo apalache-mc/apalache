@@ -17,11 +17,10 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
       "b" -> BoolT1()
   )
 
-  test("""SUBSET {1, 2, 3}""") {
+  test("""SUBSET {1, 2, 3}""") { rewriter: SymbStateRewriter =>
     val ex = powSet(enumSet(int(1), int(2), int(3)) ? "I")
       .typed(types, "II")
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case NameEx(_) =>
@@ -38,16 +37,16 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
     }
   }
 
-  test("""SE-SUBSET1: {1, 2} \in SUBSET {1, 2, 3}""") {
+  test("""SE-SUBSET1: {1, 2} \in SUBSET {1, 2, 3}""") { rewriter: SymbStateRewriter =>
     val set12 = enumSet(int(1), int(2)) ? "I"
     val powset = powSet(enumSet(int(1), int(2), int(3)) ? "I") ? "II"
     val inEx = in(set12, powset)
       .typed(types, "b")
     val state = new SymbState(inEx, arena, Binding())
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""SE-SUBSET1: {} \in SUBSET {1, 2, 3}""") {
+  test("""SE-SUBSET1: {} \in SUBSET {1, 2, 3}""") { rewriter: SymbStateRewriter =>
     // an empty set requires a type annotation
     val emptySet = enumSet()
       .typed(types, "I")
@@ -55,19 +54,19 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
     val inEx = in(emptySet, powset)
       .typed(types, "b")
     val state = new SymbState(inEx, arena, Binding())
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""SE-SUBSET1: {1, 2, 3} \in SUBSET {1, 2, 3}""") {
+  test("""SE-SUBSET1: {1, 2, 3} \in SUBSET {1, 2, 3}""") { rewriter: SymbStateRewriter =>
     val set1to3 = enumSet(int(1), int(2), int(3)) ? "I"
     val powset = powSet(set1to3) ? "II"
     val inEx = in(set1to3, powset)
       .typed(types, "b")
     val state = new SymbState(inEx, arena, Binding())
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""SE-SUBSET1: {1, 2, 3, 4} \in SUBSET {1, 2, 3}""") {
+  test("""SE-SUBSET1: {1, 2, 3, 4} \in SUBSET {1, 2, 3}""") { rewriter: SymbStateRewriter =>
     def setTo(k: Int) = enumSet(1 to k map int: _*)
 
     val set1to4 = setTo(4) ? "I"
@@ -75,16 +74,15 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
     val inEx = not(in(set1to4, powset) ? "b")
       .typed(types, "b")
     val state = new SymbState(inEx, arena, Binding())
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""SE-SUBSET: \E X \in SUBSET {1, 2}: TRUE (sat)""") {
+  test("""SE-SUBSET: \E X \in SUBSET {1, 2}: TRUE (sat)""") { rewriter: SymbStateRewriter =>
     // a regression test that failed in the previous versions
     val set = enumSet(int(1), int(2)) ? "I"
     val ex = exists(name("X") ? "I", powSet(set) ? "II", bool(true))
       .typed(types, "b")
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
     try {
       val _ = rewriter.rewriteUntilDone(state)
       fail("expected an error message about unfolding a powerset")
@@ -93,14 +91,13 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
     }
   }
 
-  test("""SE-SUBSET: Skolem(\E X \in SUBSET {1, 2}: TRUE) (sat)""") {
+  test("""SE-SUBSET: Skolem(\E X \in SUBSET {1, 2}: TRUE) (sat)""") { rewriter: SymbStateRewriter =>
     // a regression test that failed in the previous versions
     val set = enumSet(int(1), int(2)) ? "I"
     val ex =
       apalacheSkolem(exists(name("X") ? "I", powSet(set) ? "II", bool(true)) ? "b")
         .typed(types, "b")
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(_) =>
@@ -113,7 +110,7 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
     }
   }
 
-  test("""SE-SUBSET: Skolem(\E X \in SUBSET {1, 2}: FALSE (unsat))""") {
+  test("""SE-SUBSET: Skolem(\E X \in SUBSET {1, 2}: FALSE (unsat))""") { rewriter: SymbStateRewriter =>
     // a regression test that failed in the previous versions
     val set = enumSet(int(1), int(2)) ? "I"
     val ex =
@@ -121,7 +118,6 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
         .typed(types, "b")
 
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(_) =>
@@ -134,11 +130,10 @@ class TestSymbStateRewriterPowerset extends RewriterBase {
     }
   }
 
-  test("""PowSetCtor {1, 2}""") {
+  test("""PowSetCtor {1, 2}""") { rewriter: SymbStateRewriter =>
     val baseset = enumSet(int(1), int(2))
       .typed(types, "I")
     val state = new SymbState(baseset, arena, Binding())
-    val rewriter = create()
     var nextState = rewriter.rewriteUntilDone(state)
     val baseCell = nextState.asCell
     nextState = new PowSetCtor(rewriter).confringo(nextState, baseCell)

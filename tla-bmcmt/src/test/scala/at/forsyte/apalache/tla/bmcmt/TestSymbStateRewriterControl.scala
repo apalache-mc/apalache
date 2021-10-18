@@ -16,7 +16,7 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
       "O" -> OperT1(Seq(), IntT1())
   )
 
-  test("""IF 3 > 2 THEN 2 < 4 ELSE 5 < 1""") {
+  test("""IF 3 > 2 THEN 2 < 4 ELSE 5 < 1""") { rewriter: SymbStateRewriter =>
     val pred = gt(int(3), int(2))
     val e1 = lt(int(2), int(4))
     val e2 = lt(int(5), int(1))
@@ -24,10 +24,10 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
       .typed(types, "b")
 
     val state = new SymbState(ifThenElse, arena, Binding())
-    assertTlaExAndRestore(create(), state.setRex(ifThenElse))
+    assertTlaExAndRestore(rewriter, state.setRex(ifThenElse))
   }
 
-  test("""IF 3 < 2 THEN 2 < 4 ELSE 5 < 1""") {
+  test("""IF 3 < 2 THEN 2 < 4 ELSE 5 < 1""") { rewriter: SymbStateRewriter =>
     val pred = lt(int(3), int(2))
     val e1 = lt(int(2), int(4))
     val e2 = lt(int(5), int(1))
@@ -35,11 +35,10 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
       .typed(types, "b")
 
     val state = new SymbState(ifThenElse, arena, Binding())
-    val rewriter = create()
-    assertTlaExAndRestore(create(), state.setRex(ifThenElse))
+    assertTlaExAndRestore(rewriter, state.setRex(ifThenElse))
   }
 
-  test("""IF 3 > 2 THEN 4 ELSE 1""") {
+  test("""IF 3 > 2 THEN 4 ELSE 1""") { rewriter: SymbStateRewriter =>
     val pred = gt(int(3), int(2))
     val e1 = int(4)
     val e2 = int(1)
@@ -48,10 +47,10 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
       .typed(types, "b")
 
     val state = new SymbState(eq4, arena, Binding())
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""IF 3 < 2 THEN 4 ELSE 1""") {
+  test("""IF 3 < 2 THEN 4 ELSE 1""") { rewriter: SymbStateRewriter =>
     val pred = lt(int(3), int(2))
     val e1 = int(4)
     val e2 = int(1)
@@ -60,10 +59,10 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
       .typed(types, "b")
 
     val state = new SymbState(eq4, arena, Binding())
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""IF 3 < 2 THEN {1, 2} ELSE {2, 3} equals {2, 3}""") {
+  test("""IF 3 < 2 THEN {1, 2} ELSE {2, 3} equals {2, 3}""") { rewriter: SymbStateRewriter =>
     val pred = lt(int(3), int(2))
     val e1 = enumSet(int(1), int(2))
     val e2 = enumSet(int(2), int(3))
@@ -73,19 +72,19 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
       .typed(types, "b")
 
     val state = new SymbState(eq23, arena, Binding())
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""IF 1 = 1 THEN {2} ELSE {1} ]""") {
+  test("""IF 1 = 1 THEN {2} ELSE {1} ]""") { rewriter: SymbStateRewriter =>
     val ifThenElse = ite(eql(int(1), int(1)) ? "b", enumSet(int(2)) ? "I", enumSet(int(1)) ? "I")
     val eq = eql(enumSet(int(2)) ? "I", ifThenElse ? "I")
       .typed(types, "b")
 
     val state = new SymbState(eq, arena, Binding())
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""SE-ITE[5]: IF 2 < 3 THEN {1, 2} ELSE {2, 3} ~~> {1, 2}""") {
+  test("""SE-ITE[5]: IF 2 < 3 THEN {1, 2} ELSE {2, 3} ~~> {1, 2}""") { rewriter: SymbStateRewriter =>
     val pred = lt(int(2), int(3))
     val e1 = enumSet(int(1), int(2))
     val e2 = enumSet(int(2), int(3))
@@ -95,10 +94,10 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
       .typed(types, "b")
 
     val state = new SymbState(eq, arena, Binding())
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""1 + (IF 3 < 2 THEN 4 ELSE 1)""") {
+  test("""1 + (IF 3 < 2 THEN 4 ELSE 1)""") { rewriter: SymbStateRewriter =>
     val pred = lt(int(3), int(2))
     val e1 = int(4)
     val e2 = int(1)
@@ -107,17 +106,16 @@ class TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
       .typed(types, "b")
 
     val state = new SymbState(eq, arena, Binding())
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(rewriter, state)
   }
 
   // LET-IN is often used to cache computation results
-  test("""LET A == 1 + 2 IN 1 + A equals 4""") {
+  test("""LET A == 1 + 2 IN 1 + A equals 4""") { rewriter: SymbStateRewriter =>
     val decl = declOp("A", plus(int(1), int(2)) ? "i")
       .typedOperDecl(types, "O")
     val let = letIn(plus(int(1), appOp(name("A") ? "O") ? "i") ? "i", decl)
       .typed(types, "i")
     val state = new SymbState(let, arena, Binding())
-    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     val eq = eql(nextState.ex ? "i", int(4))
       .typed(types, "b")

@@ -21,7 +21,7 @@ class TestSymbStateRewriterFoldSet extends RewriterBase {
       "ibI" -> TupT1(IntT1(), BoolT1(), SetT1(IntT1()))
   )
 
-  test("""FoldSet( LAMBDA x,y: C, v, S ) = C""") {
+  test("""FoldSet( LAMBDA x,y: C, v, S ) = C""") { rewriter: SymbStateRewriter =>
     // A : (a,b) => a
     // A(p,q) == 0
     val a = IntT1()
@@ -46,12 +46,12 @@ class TestSymbStateRewriterFoldSet extends RewriterBase {
 
     val state = new SymbState(eqn, arena, Binding())
 
-    assert(new FoldSetRule(this.create()).isApplicable(state.setRex(foldEx)))
+    assert(new FoldSetRule(this.create(rewriter)).isApplicable(state.setRex(foldEx)))
 
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(create(rewriter), state)
   }
 
-  test("""FoldSet( LAMBDA x,y: ..., v, {} ) = v""") {
+  test("""FoldSet( LAMBDA x,y: ..., v, {} ) = v""") { rewriter: SymbStateRewriter =>
     // A : (a,b) => a
     // A(p,q) == 0
     val a = IntT1()
@@ -75,10 +75,10 @@ class TestSymbStateRewriterFoldSet extends RewriterBase {
 
     val state = new SymbState(eqn, arena, Binding())
 
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""FoldSet( LAMBDA x,y: x + 1, 0, S ) = Card(S)""") {
+  test("""FoldSet( LAMBDA x,y: x + 1, 0, S ) = Card(S)""") { rewriter: SymbStateRewriter =>
     // A : (a,b) => a
     // A(p,q) == p + 1
     val a = IntT1()
@@ -106,10 +106,10 @@ class TestSymbStateRewriterFoldSet extends RewriterBase {
 
     val state = new SymbState(eqn, arena, Binding())
 
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""FoldSet( LAMBDA x,y: x + y, 0, S ) = Sum(S)""") {
+  test("""FoldSet( LAMBDA x,y: x + y, 0, S ) = Sum(S)""") { rewriter: SymbStateRewriter =>
     // A : (a,b) => a
     // A(p,q) == p + q
     val a = IntT1()
@@ -138,6 +138,6 @@ class TestSymbStateRewriterFoldSet extends RewriterBase {
 
     val state = new SymbState(eqn, arena, Binding())
 
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(rewriter, state)
   }
 }

@@ -11,7 +11,7 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriterFoldSeq extends RewriterBase {
 
-  test("""FoldSeq( LAMBDA x,y: C, v, S ) = C""") {
+  test("""FoldSeq( LAMBDA x,y: C, v, S ) = C""") { rewriter: SymbStateRewriter =>
     // A : (a,b) => a
     // A(p,q) == 0
     val a = IntT1()
@@ -36,12 +36,12 @@ class TestSymbStateRewriterFoldSeq extends RewriterBase {
 
     val state = new SymbState(eqn, arena, Binding())
 
-    assert(new FoldSeqRule(this.create()).isApplicable(state.setRex(foldEx)))
+    assert(new FoldSeqRule(this.create(rewriter)).isApplicable(state.setRex(foldEx)))
 
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(create(rewriter), state)
   }
 
-  test("""FoldSeq( LAMBDA x,y: ..., v, <<>> ) = v""") {
+  test("""FoldSeq( LAMBDA x,y: ..., v, <<>> ) = v""") { rewriter: SymbStateRewriter =>
     // A : (a,b) => a
     // A(p,q) == 0
     val a = IntT1()
@@ -66,10 +66,10 @@ class TestSymbStateRewriterFoldSeq extends RewriterBase {
 
     val state = new SymbState(eqn, arena, Binding())
 
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""FoldSeq( LAMBDA x,y: x + 1, 0, s ) = Card(Len(s))""") {
+  test("""FoldSeq( LAMBDA x,y: x + 1, 0, s ) = Card(Len(s))""") { rewriter: SymbStateRewriter =>
     // A : (a,b) => a
     // A(p,q) == p + 1
     val a = IntT1()
@@ -96,10 +96,10 @@ class TestSymbStateRewriterFoldSeq extends RewriterBase {
 
     val state = new SymbState(eqn, arena, Binding())
 
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""FoldSeq( LAMBDA x,y: x + y, 0, s ) = Sum(s)""") {
+  test("""FoldSeq( LAMBDA x,y: x + y, 0, s ) = Sum(s)""") { rewriter: SymbStateRewriter =>
     // A : (a,b) => a
     // A(p,q) == p + q
     val a = IntT1()
@@ -128,6 +128,6 @@ class TestSymbStateRewriterFoldSeq extends RewriterBase {
 
     val state = new SymbState(eqn, arena, Binding())
 
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(rewriter, state)
   }
 }

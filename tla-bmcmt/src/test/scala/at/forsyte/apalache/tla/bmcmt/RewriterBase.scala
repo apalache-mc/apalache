@@ -5,9 +5,11 @@ import java.io.{PrintWriter, StringWriter}
 import at.forsyte.apalache.tla.bmcmt.smt.{PreproSolverContext, SolverConfig, SolverContext, Z3SolverContext}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatest.{fixture, Outcome, BeforeAndAfterEach}
 
-class RewriterBase extends FunSuite with BeforeAndAfterEach {
+class RewriterBase extends fixture.FunSuite with BeforeAndAfterEach {
+  protected type FixtureParam = SymbStateRewriter
+
   protected var solverContext: SolverContext = _
   protected var arena: Arena = _
 
@@ -20,12 +22,35 @@ class RewriterBase extends FunSuite with BeforeAndAfterEach {
     solverContext.dispose()
   }
 
-  protected def create(): SymbStateRewriterAuto = {
-    new SymbStateRewriterAuto(solverContext)
+  override protected def withFixture(test: OneArgTest): Outcome = {
+    test(create("oopsla19"))
+    //test(create("arrays"))
   }
 
-  protected def createWithoutCache(): SymbStateRewriter = {
-    new SymbStateRewriterImpl(solverContext)
+  protected def create(rewriterType: String): SymbStateRewriterAuto = {
+    rewriterType match {
+      case "oopsla19" => new SymbStateRewriterAuto(solverContext)
+      //case "arrays" =>
+      case _ => throw new IllegalArgumentException("Unexpected SymbStateRewriter in unit testing")
+    }
+  }
+
+  protected def create(rewriter: SymbStateRewriter): SymbStateRewriter = {
+    if (rewriter.isInstanceOf[SymbStateRewriterAuto]) {
+      new SymbStateRewriterAuto(solverContext)
+      //else if (SymbStateRewriterAutoWithArrays) {
+      //
+    } else {
+      throw new IllegalArgumentException("Unexpected SymbStateRewriter in unit testing")
+    }
+  }
+
+  protected def createWithoutCache(rewriterType: String): SymbStateRewriter = {
+    rewriterType match {
+      case "oopsla19" => new SymbStateRewriterImpl(solverContext)
+      //case "arrays" =>
+      case _ => throw new IllegalArgumentException("Unexpected cacheless SymbStateRewriter in unit testing")
+    }
   }
 
   protected def assertUnsatOrExplain(rewriter: SymbStateRewriter, state: SymbState): Unit = {

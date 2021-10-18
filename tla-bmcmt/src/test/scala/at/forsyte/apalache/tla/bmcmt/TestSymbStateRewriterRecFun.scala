@@ -16,7 +16,7 @@ class TestSymbStateRewriterRecFun extends RewriterBase with TestingPredefs {
         "i_to_i" -> FunT1(IntT1(), IntT1())
     )
 
-  test("""recursive fun: f[n \in { 1, 2, 3 }] == IF n <= 1 THEN 2 ELSE 2 * f[n - 1]""") {
+  test("""recursive fun: f[n \in { 1, 2, 3 }] == IF n <= 1 THEN 2 ELSE 2 * f[n - 1]""") { rewriter: SymbStateRewriter =>
     val set = enumSet(int(1), int(2), int(3)) ? "I"
     val ref = recFunRef() ? "i_to_i"
 
@@ -29,7 +29,6 @@ class TestSymbStateRewriterRecFun extends RewriterBase with TestingPredefs {
     val fun = recFunDef(map, name("n") ? "i", set)
       .typed(types, "i_to_i")
 
-    val rewriter = create()
     var state = rewriter.rewriteUntilDone(new SymbState(fun, arena, Binding()))
     val funCell = state.ex
 

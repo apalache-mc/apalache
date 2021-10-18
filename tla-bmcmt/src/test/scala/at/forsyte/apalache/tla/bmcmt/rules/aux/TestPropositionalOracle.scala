@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.types.BoolT
-import at.forsyte.apalache.tla.bmcmt.{Binding, RewriterBase, SymbState}
+import at.forsyte.apalache.tla.bmcmt.{Binding, RewriterBase, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.TestingPredefs
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -10,16 +10,14 @@ import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestPropositionalOracle extends RewriterBase with TestingPredefs {
-  test("""Oracle.create""") {
-    val rewriter = create()
+  test("""Oracle.create""") { rewriter: SymbStateRewriter =>
     var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
     val (nextState, oracle) = PropositionalOracle.create(rewriter, state, 6)
     assert(solverContext.sat())
   }
 
-  test("""Oracle.whenEqualTo""") {
-    val rewriter = create()
+  test("""Oracle.whenEqualTo""") { rewriter: SymbStateRewriter =>
     var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
     val (nextState, oracle) = PropositionalOracle.create(rewriter, state, 6)
@@ -30,8 +28,7 @@ class TestPropositionalOracle extends RewriterBase with TestingPredefs {
     assert(!solverContext.sat())
   }
 
-  test("""Oracle.evalPosition""") {
-    val rewriter = create()
+  test("""Oracle.evalPosition""") { rewriter: SymbStateRewriter =>
     var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
     val (nextState, oracle) = PropositionalOracle.create(rewriter, state, 6)
@@ -42,8 +39,7 @@ class TestPropositionalOracle extends RewriterBase with TestingPredefs {
     assert(3 == position)
   }
 
-  test("""Oracle.caseAssertions""") {
-    val rewriter = create()
+  test("""Oracle.caseAssertions""") { rewriter: SymbStateRewriter =>
     var state = new SymbState(tla.bool(true), arena, Binding())
     state = state.updateArena(_.appendCell(BoolT()))
     val flag = state.arena.topCell

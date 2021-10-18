@@ -27,8 +27,7 @@ class TestSymbStateRewriterRecord extends RewriterBase {
       "RII" -> SetT1(RecT1("a" -> IntT1(), "c" -> IntT1()))
   )
 
-  test("""RecordDomainCache: ~(dom {"a", "b"} = dom {"a", "b", "c"})""") {
-    val rewriter = create()
+  test("""RecordDomainCache: ~(dom {"a", "b"} = dom {"a", "b", "c"})""") { rewriter: SymbStateRewriter =>
     val (newArena1, set1) = rewriter.recordDomainCache.create(arena, (SortedSet("a", "b"), SortedSet[String]()))
     val (newArena2, set2) =
       rewriter.recordDomainCache.create(newArena1, (SortedSet("a", "b", "c"), SortedSet[String]()))
@@ -39,12 +38,11 @@ class TestSymbStateRewriterRecord extends RewriterBase {
     assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""["a" |-> 1, "b" |-> FALSE, "c" |-> "d"]""") {
+  test("""["a" |-> 1, "b" |-> FALSE, "c" |-> "d"]""") { rewriter: SymbStateRewriter =>
     val record = enumFun(str("a"), int(1), str("b"), bool(false), str("c"), str("d"))
       .typed(types, "ribs")
 
     val state = new SymbState(record, arena, Binding())
-    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case _ @NameEx(name) =>
@@ -78,18 +76,17 @@ class TestSymbStateRewriterRecord extends RewriterBase {
     }
   }
 
-  test("""["a" |-> 1, "b" |-> FALSE, "c" |-> "d"]["c"] equals "d" """) {
+  test("""["a" |-> 1, "b" |-> FALSE, "c" |-> "d"]["c"] equals "d" """) { rewriter: SymbStateRewriter =>
     val record = enumFun(str("a"), int(1), str("b"), bool(false), str("c"), str("d"))
     val recordAcc = appFun(record ? "ribs", str("b") ? "s")
     val eqD = eql(recordAcc ? "b", bool(false))
       .typed(types, "b")
 
     val state = new SymbState(eqD, arena, Binding())
-    val rewriter = create()
     assertTlaExAndRestore(rewriter, state.setRex(eqD))
   }
 
-  test("""accessing a non-existing field: ["a" |-> 1, "b" |-> FALSE]["c"]""") {
+  test("""accessing a non-existing field: ["a" |-> 1, "b" |-> FALSE]["c"]""") { rewriter: SymbStateRewriter =>
     val record = enumFun(str("a"), int(1), str("b"), bool(false))
     // We assume that record has the type RecT1("a" -> IntT1(), "b" -> BoolT1(), "c" -> StrT1()).
     // This can happen due to type unification. The record access should still work,
@@ -98,18 +95,17 @@ class TestSymbStateRewriterRecord extends RewriterBase {
       .typed(types, "s")
 
     val state = new SymbState(recordAcc, arena, Binding())
-    val rewriter = create()
     rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
   }
 
-  test("""{["a" |-> 1, "b" |-> FALSE], ["a" |-> 2, "b" |-> TRUE]}""") {
+  test("""{["a" |-> 1, "b" |-> FALSE], ["a" |-> 2, "b" |-> TRUE]}""") { rewriter: SymbStateRewriter =>
     val record1 = enumFun(str("a"), int(1), str("b"), bool(false))
     val record2 = enumFun(str("a"), int(2), str("b"), bool(true))
     val set = enumSet(record1 ? "rib", record2 ? "rib")
       .typed(types, "RIB")
     val state = new SymbState(set, arena, Binding())
-    val nextState = create().rewriteUntilDone(state)
+    val nextState = rewriter.rewriteUntilDone(state)
 
     nextState.ex match {
       case NameEx(name) =>
@@ -129,7 +125,7 @@ class TestSymbStateRewriterRecord extends RewriterBase {
     }
   }
 
-  test("""{["a" |-> 1, "b" |-> FALSE], ["a" |-> 2, "b" |-> TRUE, "c" |-> "foo"]}""") {
+  test("""{["a" |-> 1, "b" |-> FALSE], ["a" |-> 2, "b" |-> TRUE, "c" |-> "foo"]}""") { rewriter: SymbStateRewriter =>
     // Although record1 has two fields we provide the type `ribs`. This is how the type checker does type unification.
     val record1 = enumFun(str("a"), int(1), str("b"), bool(false))
       .typed(types, "ribs")
@@ -138,7 +134,6 @@ class TestSymbStateRewriterRecord extends RewriterBase {
     val recSet = enumSet(record1, record2)
       .typed(types, "RIBS")
     val state = new SymbState(recSet, arena, Binding())
-    val rewriter = create()
     val nextState = rewriter.rewriteUntilDone(state)
 
     nextState.ex match {
@@ -159,76 +154,72 @@ class TestSymbStateRewriterRecord extends RewriterBase {
   }
 
   test("""filter-map a record (idiom): {r.c : r \in {r2 \in {["a" |-> 1], ["a" |-> 2, "c" |-> 3]}: r2.c = 3}}""") {
-    // It is a common idiom in TLA+ to first filter records by the type field
-    // and then -- when knowing the type of the filtered records -- map them somewhere.
-    // Although, it is not easy to do in a symbolic encoding, we support this idiom.
-    // We require though that all the records have type-compatible fields.
-    val record1 = enumFun(str("a"), int(1))
-      .typed(types, "rii")
-    val record2 = enumFun(str("a"), int(2), str("c"), int(3))
-      .typed(types, "rii")
-    // Records in a set can have different sets of keys. This requires a type annotation.
-    val setEx = enumSet(record1, record2)
-      .typed(types, "RII")
-    val predEx = eql(appFun(name("r2") ? "rii", str("c")) ? "i", int(3))
-      .typed(types, "b")
-    val filteredEx = filter(name("r2") ? "rii", setEx, predEx)
-      .typed(types, "RII")
-    val mapEx = map(appFun(name("r") ? "rii", str("c")) ? "i", name("r") ? "rii", filteredEx)
-      .typed(types, "I")
+    rewriter: SymbStateRewriter =>
+      // It is a common idiom in TLA+ to first filter records by the type field
+      // and then -- when knowing the type of the filtered records -- map them somewhere.
+      // Although, it is not easy to do in a symbolic encoding, we support this idiom.
+      // We require though that all the records have type-compatible fields.
+      val record1 = enumFun(str("a"), int(1))
+        .typed(types, "rii")
+      val record2 = enumFun(str("a"), int(2), str("c"), int(3))
+        .typed(types, "rii")
+      // Records in a set can have different sets of keys. This requires a type annotation.
+      val setEx = enumSet(record1, record2)
+        .typed(types, "RII")
+      val predEx = eql(appFun(name("r2") ? "rii", str("c")) ? "i", int(3))
+        .typed(types, "b")
+      val filteredEx = filter(name("r2") ? "rii", setEx, predEx)
+        .typed(types, "RII")
+      val mapEx = map(appFun(name("r") ? "rii", str("c")) ? "i", name("r") ? "rii", filteredEx)
+        .typed(types, "I")
 
-    val eq = eql(mapEx, enumSet(int(3)) ? "I")
-      .typed(types, "b")
+      val eq = eql(mapEx, enumSet(int(3)) ? "I")
+        .typed(types, "b")
 
-    val state = new SymbState(mapEx, arena, Binding())
-    val rewriter = create()
-    assertTlaExAndRestore(rewriter, state.setRex(eq))
+      val state = new SymbState(mapEx, arena, Binding())
+      assertTlaExAndRestore(rewriter, state.setRex(eq))
   }
 
-  test("""[a |-> 1, b |-> FALSE, c |-> "d"] = [c |-> "d", b |-> FALSE, a |-> 1]""") {
+  test("""[a |-> 1, b |-> FALSE, c |-> "d"] = [c |-> "d", b |-> FALSE, a |-> 1]""") { rewriter: SymbStateRewriter =>
     // order of the fields does not matter
     val record1 = enumFun(str("a"), int(1), str("b"), bool(false), str("c"), str("d"))
     val record2 = enumFun(str("c"), str("d"), str("b"), bool(false), str("a"), int(1))
     val eq = eql(record1 ? "ribs", record2 ? "ribs")
       .typed(types, "b")
     val state = new SymbState(eq, arena, Binding())
-    val rewriter = create()
     assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""~([a |-> 1, b |-> FALSE, c |-> "d"] = [a |-> 1]) equals TRUE""") {
+  test("""~([a |-> 1, b |-> FALSE, c |-> "d"] = [a |-> 1]) equals TRUE""") { rewriter: SymbStateRewriter =>
     val record1 = enumFun(str("a"), int(1), str("b"), bool(false), str("c"), str("d"))
     val record2 = enumFun(str("a"), int(1))
     val eq = not(eql(record1 ? "ribs", record2 ? "ribs") ? "b")
       .typed(types, "b")
     val state = new SymbState(eq, arena, Binding())
-    val rewriter = create()
     assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""DOMAIN [a |-> 1, b |-> FALSE, c |-> "d"] equals {"a", "b", "c"}""") {
+  test("""DOMAIN [a |-> 1, b |-> FALSE, c |-> "d"] equals {"a", "b", "c"}""") { rewriter: SymbStateRewriter =>
     // the domain of a record stays the same, even if it is lifted to a more general record type
     val record = enumFun(str("a"), int(1), str("b"), bool(false), str("c"), str("d"))
     val domain = dom(record ? "ribs")
     val eq = eql(domain ? "S", enumSet(str("a"), str("b"), str("c")) ? "S")
       .typed(types, "b")
     val state = new SymbState(eq, arena, Binding())
-    val rewriter = create()
     assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""DOMAIN [a |-> 1] = {"a"} under type annotations!""") {
+  test("""DOMAIN [a |-> 1] = {"a"} under type annotations!""") { rewriter: SymbStateRewriter =>
     val record = enumFun(str("a"), int(1))
       .typed(types, "ribs")
     val domain = dom(record)
     val eq = eql(domain ? "S", enumSet(str("a")) ? "S")
       .typed(types, "b")
     val state = new SymbState(eq, arena, Binding())
-    val rewriter = create()
     assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""[ ["a" |-> 1, "b" |-> FALSE] EXCEPT !["a"] = 3 ]""") {
+  test("""[ ["a" |-> 1, "b" |-> FALSE] EXCEPT !["a"] = 3 ]""") { rewriter: SymbStateRewriter =>
     val record = enumFun(str("a"), int(1), str("b"), bool(false))
     val updatedRec = except(record ? "rib", tuple(str("a")) ? "(s)", int(3))
       .typed(types, "rib")
@@ -238,7 +229,6 @@ class TestSymbStateRewriterRecord extends RewriterBase {
       .typed(types, "b")
 
     val state = new SymbState(eq, arena, Binding())
-    val rewriter = create()
     assertTlaExAndRestore(rewriter, state)
   }
 }

@@ -17,7 +17,7 @@ class TestSymbStateRewriterExpand extends RewriterBase {
       "i_TO_b" -> SetT1(FunT1(IntT1(), BoolT1()))
   )
 
-  test("""Expand(SUBSET {1, 2})""") {
+  test("""Expand(SUBSET {1, 2})""") { rewriter: SymbStateRewriter =>
     val baseset = enumSet(int(1), int(2))
     val expandPowset = apalacheExpand(powSet(baseset ? "I") ? "II")
       .typed(types, "II")
@@ -26,16 +26,15 @@ class TestSymbStateRewriterExpand extends RewriterBase {
       .typed(types, "b")
 
     val state = new SymbState(eq, arena, Binding())
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""Expand([{1, 2, 3} -> {FALSE, TRUE}]) fails as unsupported""") {
+  test("""Expand([{1, 2, 3} -> {FALSE, TRUE}]) fails as unsupported""") { rewriter: SymbStateRewriter =>
     val domain = enumSet(int(1), int(2), int(3))
     val codomain = enumSet(bool(false), bool(true))
     val set = apalacheExpand(funSet(domain ? "I", codomain ? "B") ? "i_TO_b")
       .typed(types, "i_TO_b")
     val state = new SymbState(set, arena, Binding())
-    val rewriter = create()
     assertThrows[RewriterException](rewriter.rewriteUntilDone(state))
   }
 }
