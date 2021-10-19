@@ -19,11 +19,11 @@ Each optional category is associated with a flag: `--debug` for extended log fil
 All such optional flags should default to `false`.
 
 ## 2. Output directory and run directories
-Apalache should define an `OUTPUT_DIR` value, which defines the location of all outputs produced by Apalache. If unspecified, this value should default to the directory, in which the primary specification is located during each run, but it should be possible to designate a fixed location, e.g. `<HOME>/apalache-out/`.
+Apalache should define an `output-dir` parameter, which defines the location of all outputs produced by Apalache. If unspecified, this value should default to the working directory, during each run, but it should be possible to designate a fixed location, e.g. `<HOME>/apalache-out/`.
 
-Each run should produce a subdirectory in `OUTPUT_DIR`, with the following name:
+Each run should produce a subdirectory in `output-dir`, with the following name:
 ```
-<DATE>_<TIME>
+<DATE>T<TIME>
 ```
 
 based on the [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) standard.
@@ -31,7 +31,7 @@ Here, `<DATE>` is the date in `YYYY-MM-DD` format, `<TIME>` is the local time in
 
 Example:
 ```
-2021-05-02_21-31-59
+2021-05-02T21-31-59
 ```
 for a run executed on May 2, 2021 at 9:31:59pm (local time).
 
@@ -39,8 +39,7 @@ for a run executed on May 2, 2021 at 9:31:59pm (local time).
 
 Each run directory, outlined in the previous section, should contain the following:
   
-  - A file `run.txt`, containing the command issued for this run, e.g.: `check --inv=SomeInv Spec.tla`
-    alternatively (DISCUSS), the file could contain the full command, with all implicit parameters filled in, so it can be replicated exactly
+  - A file `run.txt`, containing the command issued for this run, e.g.: `check --inv=SomeInv Spec.tla`, with all implicit parameters filled in, so it can be replicated exactly
   - 0 or more counterexample files
   - if `--write-intermediate` is set, a subdirectory `intermediate`, containing outputs associated with each of the passes in Apalache
   - an Apalache log file `detailed.log`. If `--debug` is set, the log file contains `DEBUG` level events, in addition to the regular ones
@@ -48,10 +47,10 @@ Each run directory, outlined in the previous section, should contain the followi
   - A file associated with enabled analyses, e.g. `profile-rules.txt`
 
 ## 4. Global Configuration File
-Apalache should define a global configuration file `apalache.cfg`, e.g. in the installation directory, in which users can define the default values of all parameters, including all flags listed in section 1, as well as `OUTPUT_DIR`.
-If a parameter is specified in the config file, it replaces the default value, but specifying a parameter manually always overrides config defaults.
+Apalache should define a global configuration file `apalache-global-config`, e.g. in the `<HOME>/.tlaplus` directory, in which users can define the default values of all parameters, including all flags listed in section 1, as well as `output-dir`. The format of the configuration file is an implementation detail and will not be specified here.
+If a parameter is specified in the configuration file, it replaces the default value, but specifying a parameter manually always overrides config defaults.
 In other words, parameter values are determined in the following way, by order of priority:
   1. If `--<flag>=<value>` is given, use `<value>`, otherwise
-  2. If `apalache.cfg` specifies `<flag>=<CFGvalue>` use `<CFGvalue>`, otherwise 
+  2. If `apalache-global-config` specifies `<flag>=<CFGvalue>` use `<CFGvalue>`, otherwise 
   3. Use Apalache defaults.
 
