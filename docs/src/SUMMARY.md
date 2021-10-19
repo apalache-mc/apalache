@@ -92,3 +92,4 @@
 - [ADR-007: restructuring](./adr/007adr-restructuring.md)
 - [ADR-008: exceptions](./adr/008adr-exceptions.md)
 - [ADR-009: outputs](./adr/009adr-outputs.md)
+- [ADR-011: alternative SMT encoding using arrays](./adr/011adr-smt-arrays.md)

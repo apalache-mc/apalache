@@ -142,9 +142,9 @@ if __name__ == "__main__":
             sys.exit(1)
 
     process = Popen(cmd, stdout=PIPE, stderr=PIPE)
-    logger.debug(f"running command: {process.args}")
+    logger.debug(f"running command: {' '.join(list(process.args))}")
     while process.poll() is None:
-        line = process.stdout.readline().rstrip()
+        line = process.stderr.readline().rstrip()
         logger.info(line)
 
     if process.returncode != 0:
