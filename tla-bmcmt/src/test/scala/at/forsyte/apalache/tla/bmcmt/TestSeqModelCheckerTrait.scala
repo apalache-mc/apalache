@@ -1,26 +1,19 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.Checker.{Deadlock, Error, NoError}
-
 import java.io.File
-import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode
-import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig}
 import at.forsyte.apalache.tla.bmcmt.trex.{
   FilteredTransitionExecutor, IncrementalExecutionContext, TransitionExecutorImpl
 }
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{fixture, Outcome}
-
+import org.scalatest.fixture
 import scala.collection.immutable.SortedMap
 
-@RunWith(classOf[JUnitRunner])
-class TestSeqModelChecker extends fixture.FunSuite {
+trait TestSeqModelCheckerTrait extends fixture.FunSuite {
   protected type FixtureParam = SymbStateRewriter
 
   private val types = Map(
@@ -33,19 +26,6 @@ class TestSeqModelChecker extends fixture.FunSuite {
       "Ob" -> OperT1(Seq(), BoolT1())
   )
   private val intTag: Typed[TlaType1] = Typed(IntT1())
-
-  override protected def withFixture(test: OneArgTest): Outcome = {
-    var solver: RecordingSolverContext =
-      RecordingSolverContext.createZ3(None, SolverConfig(debug = false, profile = false, 0))
-
-    val oopsla19Rewriter = new SymbStateRewriterImpl(solver, new ExprGradeStoreImpl)
-    test(oopsla19Rewriter)
-
-    //solver = RecordingSolverContext.createZ3(None, SolverConfig(debug = false, profile = false, 0))
-
-    //val arraysRewriter =
-    //test(arraysRewriter)
-  }
 
   private def mkModuleWithX(): TlaModule = {
     TlaModule("root", List(TlaVarDecl("x")(Typed(IntT1()))))
