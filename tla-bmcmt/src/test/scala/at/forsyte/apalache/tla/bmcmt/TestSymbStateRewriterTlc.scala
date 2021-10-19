@@ -4,11 +4,8 @@ import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.oper.TlcOper
 import at.forsyte.apalache.tla.lir._
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
-class TestSymbStateRewriterTlc extends RewriterBase {
+trait TestSymbStateRewriterTlc extends RewriterBase {
   test("SE-TLC-PRINT: PRINT(...) -> TRUE") { rewriterType: String =>
     // Builder does not have a standard method for TLC!Print, as we do not construct internally
     val print = OperEx(TlcOper.print, int(1).typed(), str("hello").typed())(Typed(StrT1()))

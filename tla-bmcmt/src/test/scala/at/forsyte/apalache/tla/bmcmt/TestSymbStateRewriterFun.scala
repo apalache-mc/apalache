@@ -3,15 +3,9 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
-import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.values.TlaBoolSet
-import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.lir.TypedPredefs._
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
-class TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
+trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
   private val types =
     Map("b" -> BoolT1(), "B" -> SetT1(BoolT1()), "i" -> IntT1(), "I" -> SetT1(IntT1()), "(i)" -> TupT1(IntT1()),
         "i_to_i" -> FunT1(IntT1(), IntT1()), "i_to_I" -> FunT1(IntT1(), SetT1(IntT1())), "r" -> RecT1("a" -> IntT1()),

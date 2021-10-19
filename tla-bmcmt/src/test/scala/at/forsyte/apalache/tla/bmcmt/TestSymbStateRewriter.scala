@@ -3,11 +3,8 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
-class TestSymbStateRewriter extends RewriterBase {
+trait TestSymbStateRewriter extends RewriterBase {
   test("SE-SUBST1: x[cell/x] ~~> cell") { rewriterType: String =>
     arena = arena.appendCell(UnknownT())
     val cell = arena.topCell

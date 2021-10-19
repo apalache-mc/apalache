@@ -5,11 +5,8 @@ import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
-class TestSymbStateRewriterFoldSeq extends RewriterBase {
+trait TestSymbStateRewriterFoldSeq extends RewriterBase {
 
   test("""FoldSeq( LAMBDA x,y: C, v, S ) = C""") { rewriterType: String =>
     // A : (a,b) => a

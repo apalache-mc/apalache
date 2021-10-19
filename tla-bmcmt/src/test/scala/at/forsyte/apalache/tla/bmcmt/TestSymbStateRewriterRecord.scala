@@ -4,13 +4,9 @@ import at.forsyte.apalache.tla.bmcmt.types.{BoolT, ConstT, FinSetT, IntT, Record
 import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, NameEx, RecT1, SetT1, StrT1, TupT1}
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-
 import scala.collection.immutable.{SortedMap, SortedSet, TreeMap}
 
-@RunWith(classOf[JUnitRunner])
-class TestSymbStateRewriterRecord extends RewriterBase {
+trait TestSymbStateRewriterRecord extends RewriterBase {
   private val types = Map(
       "b" -> BoolT1(),
       "i" -> IntT1(),

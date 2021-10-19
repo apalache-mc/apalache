@@ -5,11 +5,8 @@ import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, IntT, PowSetT}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, NameEx, SetT1}
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
-class TestSymbStateRewriterPowerset extends RewriterBase {
+trait TestSymbStateRewriterPowerset extends RewriterBase {
   private val types = Map(
       "i" -> IntT1(),
       "I" -> SetT1(IntT1()),

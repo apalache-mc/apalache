@@ -5,9 +5,9 @@ import java.io.{PrintWriter, StringWriter}
 import at.forsyte.apalache.tla.bmcmt.smt.{PreproSolverContext, SolverConfig, SolverContext, Z3SolverContext}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import org.scalatest.{fixture, Outcome, BeforeAndAfterEach}
+import org.scalatest.{fixture, BeforeAndAfterEach}
 
-class RewriterBase extends fixture.FunSuite with BeforeAndAfterEach {
+trait RewriterBase extends fixture.FunSuite with BeforeAndAfterEach {
   protected type FixtureParam = String
 
   protected var solverContext: SolverContext = _
@@ -22,24 +22,19 @@ class RewriterBase extends fixture.FunSuite with BeforeAndAfterEach {
     solverContext.dispose()
   }
 
-  override protected def withFixture(test: OneArgTest): Outcome = {
-    test("oopsla19")
-    //test("arrays")
-  }
-
   protected def create(rewriterType: String): SymbStateRewriter = {
     rewriterType match {
       case "oopsla19" => new SymbStateRewriterAuto(solverContext)
-      //case "arrays" =>
-      case _ => throw new IllegalArgumentException("Unexpected SymbStateRewriter in unit testing")
+      case "arrays"   => new SymbStateRewriterAuto(solverContext)
+      case _          => throw new IllegalArgumentException("Unexpected SymbStateRewriter in unit testing")
     }
   }
 
   protected def createWithoutCache(rewriterType: String): SymbStateRewriter = {
     rewriterType match {
       case "oopsla19" => new SymbStateRewriterImpl(solverContext)
-      //case "arrays" =>
-      case _ => throw new IllegalArgumentException("Unexpected cacheless SymbStateRewriter in unit testing")
+      case "arrays"   => new SymbStateRewriterImpl(solverContext)
+      case _          => throw new IllegalArgumentException("Unexpected cacheless SymbStateRewriter in unit testing")
     }
   }
 

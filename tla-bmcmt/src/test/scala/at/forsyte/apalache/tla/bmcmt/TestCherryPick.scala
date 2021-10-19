@@ -5,11 +5,8 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
-class TestCherryPick extends RewriterBase with TestingPredefs {
+trait TestCherryPick extends RewriterBase with TestingPredefs {
   private val types = Map(
       "b" -> BoolT1(),
       "i" -> IntT1(),

@@ -4,15 +4,12 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
 /**
  * Tests for assignments. The assignments were at the core of Apalache 0.5.x. In Apalache 0.6.x, they are preprocessed
  * into Skolemizable existential quantifiers. We keep the tests for regression.
  */
-@RunWith(classOf[JUnitRunner])
-class TestSymbStateRewriterAssignment extends RewriterBase {
+trait TestSymbStateRewriterAssignment extends RewriterBase {
   private val types =
     Map("b" -> BoolT1(), "B" -> SetT1(BoolT1()), "i" -> IntT1(), "I" -> SetT1(IntT1()), "II" -> SetT1(SetT1(IntT1())),
         "b_to_i" -> FunT1(BoolT1(), IntT1()), "b_TO_i" -> SetT1(FunT1(BoolT1(), IntT1())),

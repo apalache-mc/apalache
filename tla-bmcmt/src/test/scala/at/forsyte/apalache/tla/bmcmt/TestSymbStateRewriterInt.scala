@@ -4,11 +4,8 @@ import at.forsyte.apalache.tla.bmcmt.types.IntT
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, NameEx, SetT1}
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
-class TestSymbStateRewriterInt extends RewriterBase {
+trait TestSymbStateRewriterInt extends RewriterBase {
   private val Int = IntT1()
   private val Bool = BoolT1()
   private val IntSet = SetT1(IntT1())

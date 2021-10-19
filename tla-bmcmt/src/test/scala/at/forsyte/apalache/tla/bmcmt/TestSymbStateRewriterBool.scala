@@ -5,12 +5,9 @@ import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, IntT}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
-class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with BeforeAndAfterEach {
+trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with BeforeAndAfterEach {
   // these are handy variables that will be overwritten by before
   private var x: ArenaCell = new ArenaCell(100000, IntT())
   private var y: ArenaCell = new ArenaCell(100001, IntT())

@@ -7,11 +7,8 @@ import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.pp.TlaInputError
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
-class TestSymbStateRewriterSet extends RewriterBase {
+trait TestSymbStateRewriterSet extends RewriterBase {
   private val parser = DefaultType1Parser
   private val intT = parser("Int")
   private val intSetT = parser("Set(Int)")
