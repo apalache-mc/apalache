@@ -30,10 +30,10 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     xyBinding = Binding("x" -> x, "y" -> y, "S" -> set)
   }
 
-  test("FALSE ~~> $C$0") { rewriter: SymbStateRewriter =>
+  test("FALSE ~~> $C$0") { rewriterType: String =>
     val ex = tla.bool(false).typed()
     val state = new SymbState(ex, arena, Binding())
-    rewriter.rewriteOnce(state) match {
+    create(rewriterType).rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         val expected = NameEx("$C$0")(Untyped())
         assert(expected == nextState.ex)
@@ -44,10 +44,10 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     }
   }
 
-  test("TRUE ~~> $C$1") { rewriter: SymbStateRewriter =>
+  test("TRUE ~~> $C$1") { rewriterType: String =>
     val ex = tla.bool(true).typed()
     val state = new SymbState(ex, arena, Binding())
-    rewriter.rewriteOnce(state) match {
+    create(rewriterType).rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         val expected = NameEx("$C$1")(Untyped())
         assert(expected == nextState.ex)
@@ -58,10 +58,10 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     }
   }
 
-  test("BOOLEAN ~~> c_BOOLEAN") { rewriter: SymbStateRewriter =>
+  test("BOOLEAN ~~> c_BOOLEAN") { rewriterType: String =>
     val boolset = tla.booleanSet().typed(SetT1(BoolT1()))
     val state = new SymbState(boolset, arena, Binding())
-    rewriter.rewriteOnce(state) match {
+    create(rewriterType).rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         val expected = NameEx("$C$2")(Untyped())
         assert(expected == nextState.ex)
@@ -72,16 +72,16 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     }
   }
 
-  test("x => y ~~> ~x \\/ y") { rewriter: SymbStateRewriter =>
+  test("x => y ~~> ~x \\/ y") { rewriterType: String =>
     // outside of KerA+, should be handled by Keramelizer and Normalizer
     val ex = tla
       .impl(tla.name("x") ? "b", tla.name("y") ? "b")
       .typed(boolTypes, "b")
     val state = new SymbState(ex, arena, xyBinding)
-    assert(NoRule() == rewriter.rewriteOnce(state))
+    assert(NoRule() == create(rewriterType).rewriteOnce(state))
   }
 
-  test("x <=> y") { rewriter: SymbStateRewriter =>
+  test("x <=> y") { rewriterType: String =>
     // outside of KerA+, should be handled by Keramelizer and Normalizer
     arena = arena.appendCell(BoolT())
     val left = arena.topCell
@@ -91,10 +91,10 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
       .equiv(left.toNameEx ? "b", right.toNameEx ? "b")
       .typed(boolTypes, "b")
     val state = new SymbState(ex, arena, xyBinding)
-    assert(NoRule() == rewriter.rewriteOnce(state))
+    assert(NoRule() == create(rewriterType).rewriteOnce(state))
   }
 
-  test("""IF-THEN-ELSE with \E: IF \E i \in {}: x' \in {i} THEN x' ELSE 0""") { rewriter: SymbStateRewriter =>
+  test("""IF-THEN-ELSE with \E: IF \E i \in {}: x' \in {i} THEN x' ELSE 0""") { rewriterType: String =>
     // this tricky test comes from Bakery, where an assignment is made in one branch of a conjunction
     val exists =
       tla
@@ -106,19 +106,20 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
       .typed(boolTypes, "b")
 
     val state = new SymbState(ite, arena, Binding())
-    val rewriter = new SymbStateRewriterImpl(solverContext)
-    var nextState = rewriter.rewriteUntilDone(state)
+    val rewriter = createWithoutCache(rewriterType)
+    val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     val eq = tla.eql(tla.int(0), nextState.ex).typed(BoolT1())
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
-  test("""~c_i ~~> b_new""") { rewriter: SymbStateRewriter =>
+  test("""~c_i ~~> b_new""") { rewriterType: String =>
     arena = arena.appendCell(BoolT())
     val cell = arena.topCell
 
     val ex = tla.not(cell.toNameEx ? "b").typed(boolTypes, "b")
     val state = new SymbState(ex, arena, Binding())
+    val rewriter = create(rewriterType)
     rewriter.rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
@@ -143,21 +144,23 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     }
   }
 
-  test("""~x ~~> TRUE""") { rewriter: SymbStateRewriter =>
+  test("""~x ~~> TRUE""") { rewriterType: String =>
     val ex = tla
       .not(tla.name("x") ? "b")
       .typed(boolTypes, "b")
     val binding = Binding("x" -> arena.cellFalse())
     val state = new SymbState(ex, arena, binding)
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(nextState.ex, tla.bool(true)).typed(BoolT1())))
   }
 
-  test("""FALSE = TRUE ~~> FALSE""") { rewriter: SymbStateRewriter =>
+  test("""FALSE = TRUE ~~> FALSE""") { rewriterType: String =>
     val ex = tla
       .eql(arena.cellFalse().toNameEx ? "b", arena.cellTrue().toNameEx ? "b")
       .typed(boolTypes, "b")
     val state = new SymbState(ex, arena, Binding())
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     val eq = tla
       .eql(nextState.ex, arena.cellFalse().toNameEx ? "b")
@@ -165,23 +168,25 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
-  test("""x = TRUE ~~> FALSE when x = FALSE""") { rewriter: SymbStateRewriter =>
+  test("""x = TRUE ~~> FALSE when x = FALSE""") { rewriterType: String =>
     val ex = tla
       .eql(tla.name("x") ? "b", tla.bool(true) ? "b")
       .typed(boolTypes, "b")
     val binding = Binding("x" -> arena.cellFalse())
     val state = new SymbState(ex, arena, binding)
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     val eq = tla.eql(nextState.ex, tla.bool(false)).typed(BoolT1())
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
-  test("""~(x = TRUE) ~~> TRUE when x = FALSE""") { rewriter: SymbStateRewriter =>
+  test("""~(x = TRUE) ~~> TRUE when x = FALSE""") { rewriterType: String =>
     val ex = tla
       .not(tla.eql(tla.name("x") ? "b", tla.bool(true)) ? "b")
       .typed(boolTypes, "b")
     val binding = Binding("x" -> arena.cellFalse())
     val state = new SymbState(ex, arena, binding)
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     val eq = tla
       .eql(nextState.ex, tla.bool(true))
@@ -189,12 +194,12 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
-  test("""FALSE /\ TRUE ~~> $B$0""") { rewriter: SymbStateRewriter =>
+  test("""FALSE /\ TRUE ~~> $B$0""") { rewriterType: String =>
     val ex = tla
       .and(tla.bool(false), tla.bool(true))
       .typed(BoolT1())
     val state = new SymbState(ex, arena, Binding())
-    rewriter.rewriteOnce(state) match {
+    create(rewriterType).rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         assert(state.arena.cellFalse().toNameEx == nextState.ex)
         assert(state.arena == nextState.arena)
@@ -204,7 +209,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     }
   }
 
-  test("""c_1 /\ c_2 ~~> b_new""") { rewriter: SymbStateRewriter =>
+  test("""c_1 /\ c_2 ~~> b_new""") { rewriterType: String =>
     arena = arena.appendCell(BoolT())
     val c1 = arena.topCell
     arena = arena.appendCell(BoolT())
@@ -214,6 +219,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
       .and(c1.toNameEx ? "b", c2.toNameEx ? "b")
       .typed(boolTypes, "b")
     val state = new SymbState(ex, arena, Binding())
+    val rewriter = create(rewriterType)
     rewriter.rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
@@ -247,10 +253,10 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     }
   }
 
-  test("""empty \/ ~~> $B$0""") { rewriter: SymbStateRewriter =>
+  test("""empty \/ ~~> $B$0""") { rewriterType: String =>
     val ex = tla.or().typed(BoolT1())
     val state = new SymbState(ex, arena, Binding())
-    rewriter.rewriteOnce(state) match {
+    create(rewriterType).rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         assert(arena.cellFalse().toNameEx == nextState.ex)
         assert(state.arena == nextState.arena)
@@ -260,10 +266,10 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     }
   }
 
-  test("""empty /\ ~~> $B$1""") { rewriter: SymbStateRewriter =>
+  test("""empty /\ ~~> $B$1""") { rewriterType: String =>
     val ex = tla.and().typed(BoolT1())
     val state = new SymbState(ex, arena, Binding())
-    rewriter.rewriteOnce(state) match {
+    create(rewriterType).rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         assert(arena.cellTrue().toNameEx == nextState.ex)
         assert(state.arena == nextState.arena)
@@ -273,10 +279,10 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     }
   }
 
-  test("""FALSE \/ TRUE ~~> $B$1""") { rewriter: SymbStateRewriter =>
+  test("""FALSE \/ TRUE ~~> $B$1""") { rewriterType: String =>
     val ex = tla.or(tla.bool(false), tla.bool(true)).typed(BoolT1())
     val state = new SymbState(ex, arena, Binding())
-    rewriter.rewriteOnce(state) match {
+    create(rewriterType).rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         assert(arena.cellTrue().toNameEx == nextState.ex)
         assert(state.arena == nextState.arena)
@@ -286,7 +292,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     }
   }
 
-  test("""c_1 \/ c_2 ~~> b_new""") { rewriter: SymbStateRewriter =>
+  test("""c_1 \/ c_2 ~~> b_new""") { rewriterType: String =>
     arena = arena.appendCell(BoolT())
     val left = arena.topCell
     arena = arena.appendCell(BoolT())
@@ -296,6 +302,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
       .or(left.toNameEx ? "b", right.toNameEx ? "b")
       .typed(boolTypes, "b")
     val state = new SymbState(ex, arena, Binding())
+    val rewriter = create(rewriterType)
     rewriter.rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
@@ -322,7 +329,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     }
   }
 
-  test("""~($B$1 = $B$2) ~~> $B$3""") { rewriter: SymbStateRewriter =>
+  test("""~($B$1 = $B$2) ~~> $B$3""") { rewriterType: String =>
     arena = arena.appendCell(BoolT())
     val left = arena.topCell
     arena = arena.appendCell(BoolT())
@@ -332,6 +339,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
       .not(tla.eql(left.toNameEx ? "b", right.toNameEx ? "b") ? "b")
       .typed(boolTypes, "b")
     val state = new SymbState(ex, arena, Binding())
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(name) =>
@@ -381,22 +389,23 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     }
   }
 
-  test("""\E x \in {}: TRUE ~~> FALSE""") { rewriter: SymbStateRewriter =>
+  test("""\E x \in {}: TRUE ~~> FALSE""") { rewriterType: String =>
     val ex = tla
       .exists(tla.name("x") ? "i", tla.enumSet() ? "I", tla.bool(true))
       .typed(boolTypes, "b")
     val state = new SymbState(ex, arena, Binding())
-    val nextState = rewriter.rewriteUntilDone(state)
+    val nextState = create(rewriterType).rewriteUntilDone(state)
     assert(arena.cellFalse().toNameEx == nextState.ex)
   }
 
-  test("""\E x \in {1, 2, 3}: x = 2 ~~> $B$k""") { rewriter: SymbStateRewriter =>
+  test("""\E x \in {1, 2, 3}: x = 2 ~~> $B$k""") { rewriterType: String =>
     val set123 = tla.enumSet(tla.int(1), tla.int(2), tla.int(3)).typed(SetT1(IntT1()))
     val ex =
       tla
         .exists(tla.name("x") ? "i", set123, tla.eql(tla.int(2), tla.name("x") ? "i") ? "b")
         .typed(boolTypes, "b")
     val state = new SymbState(ex, arena, Binding())
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     rewriter.push()
@@ -408,7 +417,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
   }
 
   /** Jure, 9.12.19: Why should this throw? */
-  test("""\E x \in {1, 2}: y' := x ~~> 2 assignments, regression""") { rewriter: SymbStateRewriter =>
+  test("""\E x \in {1, 2}: y' := x ~~> 2 assignments, regression""") { rewriterType: String =>
     val set12 = tla
       .enumSet(tla.int(1), tla.int(2))
       .typed(SetT1(IntT1()))
@@ -422,6 +431,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
       .typed(boolTypes, "b")
     ////
     val state = new SymbState(ex, arena, Binding())
+    val rewriter = create(rewriterType)
     assertThrows[NotImplementedError] {
       // TODO: implement multiple assignments in expanded quantifiers
       val nextState = rewriter.rewriteUntilDone(state)
@@ -453,13 +463,14 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     }
   }
 
-  test("""\E x \in {1, 2, 3}: x > 4 ~~> $B$k""") { rewriter: SymbStateRewriter =>
+  test("""\E x \in {1, 2, 3}: x > 4 ~~> $B$k""") { rewriterType: String =>
     val set123 = tla.enumSet(tla.int(1), tla.int(2), tla.int(3)).typed(SetT1(IntT1()))
     val ex =
       tla
         .exists(tla.name("x") ? "i", set123, tla.gt(tla.name("x") ? "i", tla.int(4)) ? "b")
         .typed(boolTypes, "b")
     val state = new SymbState(ex, arena, Binding())
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     rewriter.push()
@@ -470,7 +481,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     assert(solverContext.sat())
   }
 
-  test("""\E x \in {t \in {1}: FALSE}: x > 4, regression""") { rewriter: SymbStateRewriter =>
+  test("""\E x \in {t \in {1}: FALSE}: x > 4, regression""") { rewriterType: String =>
     def dynEmpty(left: TlaEx): TlaEx = {
       tla
         .filter(tla.name("t") ? "i", left ? "I", tla.bool(false))
@@ -484,6 +495,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
         .apalacheSkolem(tla.exists(tla.name("x") ? "i", emptySet, pred) ? "b")
         .typed(boolTypes, "b")
     val state = new SymbState(ex, arena, Binding())
+    val rewriter = create(rewriterType)
 
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat()) // regression test, the buggy implementation failed here
@@ -491,7 +503,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     assertTlaExAndRestore(rewriter, nextState.setRex(tla.not(nextState.ex).typed(BoolT1())))
   }
 
-  test("""skolem: \E i \in Nat: i = 10 /\ x' \in {i}""") { rewriter: SymbStateRewriter =>
+  test("""skolem: \E i \in Nat: i = 10 /\ x' \in {i}""") { rewriterType: String =>
     // this works for skolem constants only
     val ex =
       tla
@@ -502,6 +514,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
                 ) ? "b") ? "b")
         .typed(boolTypes, "b")
     val state = new SymbState(ex, arena, Binding())
+    val rewriter = create(rewriterType)
 
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
@@ -513,7 +526,7 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     assertTlaExAndRestore(rewriter, nextState.setRex(eql))
   }
 
-  test("""skolemization over range: \E i \in a..b: i % 3 = 1 /\ x' \in {i}""") { rewriter: SymbStateRewriter =>
+  test("""skolemization over range: \E i \in a..b: i % 3 = 1 /\ x' \in {i}""") { rewriterType: String =>
     // this works for skolem constants only
     val ex =
       tla
@@ -527,6 +540,8 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
                 ) ? "b"
             ) ? "b")
         .typed(boolTypes, "b")
+
+    val rewriter = create(rewriterType)
 
     // rewrite 5 and 9 first, to produce a and b
     var state = new SymbState(tla.int(5).typed(), arena, Binding())
@@ -546,13 +561,14 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
-  test("""\A x \in {1, 2, 3}: x < 10 ~~> $B$k""") { rewriter: SymbStateRewriter =>
+  test("""\A x \in {1, 2, 3}: x < 10 ~~> $B$k""") { rewriterType: String =>
     val set123 = tla.enumSet(tla.int(1), tla.int(2), tla.int(3)).typed(SetT1(IntT1()))
     val ex =
       tla
         .forall(tla.name("x") ? "i", set123, tla.lt(tla.name("x") ? "i", tla.int(10)) ? "b")
         .typed(boolTypes, "b")
     val state = new SymbState(ex, arena, Binding())
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     rewriter.push()
@@ -563,13 +579,14 @@ class TestSymbStateRewriterBool extends RewriterBase with TestingPredefs with Be
     assertUnsatOrExplain(rewriter, nextState)
   }
 
-  test("""\A x \in {1, 2, 3}: x > 2 ~~> $B$k""") { rewriter: SymbStateRewriter =>
+  test("""\A x \in {1, 2, 3}: x > 2 ~~> $B$k""") { rewriterType: String =>
     val set123 = tla.enumSet(tla.int(1), tla.int(2), tla.int(3)).typed(SetT1(IntT1()))
     val ex =
       tla
         .forall(tla.name("x") ? "i", set123, tla.gt(tla.name("x") ? "i", tla.int(2)) ? "b")
         .typed(boolTypes, "b")
     val state = new SymbState(ex, arena, Binding())
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     rewriter.push()

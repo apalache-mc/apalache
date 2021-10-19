@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.scalatest.{fixture, Outcome, BeforeAndAfterEach}
 
 class RewriterBase extends fixture.FunSuite with BeforeAndAfterEach {
-  protected type FixtureParam = SymbStateRewriter
+  protected type FixtureParam = String
 
   protected var solverContext: SolverContext = _
   protected var arena: Arena = _
@@ -23,25 +23,15 @@ class RewriterBase extends fixture.FunSuite with BeforeAndAfterEach {
   }
 
   override protected def withFixture(test: OneArgTest): Outcome = {
-    test(create("oopsla19"))
-    //test(create("arrays"))
+    test("oopsla19")
+    //test("arrays")
   }
 
-  protected def create(rewriterType: String): SymbStateRewriterAuto = {
+  protected def create(rewriterType: String): SymbStateRewriter = {
     rewriterType match {
       case "oopsla19" => new SymbStateRewriterAuto(solverContext)
       //case "arrays" =>
       case _ => throw new IllegalArgumentException("Unexpected SymbStateRewriter in unit testing")
-    }
-  }
-
-  protected def create(rewriter: SymbStateRewriter): SymbStateRewriter = {
-    if (rewriter.isInstanceOf[SymbStateRewriterAuto]) {
-      new SymbStateRewriterAuto(solverContext)
-      //else if (SymbStateRewriterAutoWithArrays) {
-      //
-    } else {
-      throw new IllegalArgumentException("Unexpected SymbStateRewriter in unit testing")
     }
   }
 

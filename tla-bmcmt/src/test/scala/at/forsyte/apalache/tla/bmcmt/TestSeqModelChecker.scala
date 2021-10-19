@@ -35,13 +35,14 @@ class TestSeqModelChecker extends fixture.FunSuite {
   private val intTag: Typed[TlaType1] = Typed(IntT1())
 
   override protected def withFixture(test: OneArgTest): Outcome = {
-    val solver: RecordingSolverContext =
+    var solver: RecordingSolverContext =
       RecordingSolverContext.createZ3(None, SolverConfig(debug = false, profile = false, 0))
 
     val oopsla19Rewriter = new SymbStateRewriterImpl(solver, new ExprGradeStoreImpl)
     test(oopsla19Rewriter)
 
-    //solver.dispose()
+    //solver = RecordingSolverContext.createZ3(None, SolverConfig(debug = false, profile = false, 0))
+
     //val arraysRewriter =
     //test(arraysRewriter)
   }

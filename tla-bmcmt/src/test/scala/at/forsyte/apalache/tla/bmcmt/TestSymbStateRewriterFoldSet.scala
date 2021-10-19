@@ -21,7 +21,7 @@ class TestSymbStateRewriterFoldSet extends RewriterBase {
       "ibI" -> TupT1(IntT1(), BoolT1(), SetT1(IntT1()))
   )
 
-  test("""FoldSet( LAMBDA x,y: C, v, S ) = C""") { rewriter: SymbStateRewriter =>
+  test("""FoldSet( LAMBDA x,y: C, v, S ) = C""") { rewriterType: String =>
     // A : (a,b) => a
     // A(p,q) == 0
     val a = IntT1()
@@ -46,12 +46,12 @@ class TestSymbStateRewriterFoldSet extends RewriterBase {
 
     val state = new SymbState(eqn, arena, Binding())
 
-    assert(new FoldSetRule(this.create(rewriter)).isApplicable(state.setRex(foldEx)))
+    assert(new FoldSetRule(this.create(rewriterType)).isApplicable(state.setRex(foldEx)))
 
-    assertTlaExAndRestore(create(rewriter), state)
+    assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""FoldSet( LAMBDA x,y: ..., v, {} ) = v""") { rewriter: SymbStateRewriter =>
+  test("""FoldSet( LAMBDA x,y: ..., v, {} ) = v""") { rewriterType: String =>
     // A : (a,b) => a
     // A(p,q) == 0
     val a = IntT1()
@@ -75,10 +75,10 @@ class TestSymbStateRewriterFoldSet extends RewriterBase {
 
     val state = new SymbState(eqn, arena, Binding())
 
-    assertTlaExAndRestore(rewriter, state)
+    assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""FoldSet( LAMBDA x,y: x + 1, 0, S ) = Card(S)""") { rewriter: SymbStateRewriter =>
+  test("""FoldSet( LAMBDA x,y: x + 1, 0, S ) = Card(S)""") { rewriterType: String =>
     // A : (a,b) => a
     // A(p,q) == p + 1
     val a = IntT1()
@@ -106,10 +106,10 @@ class TestSymbStateRewriterFoldSet extends RewriterBase {
 
     val state = new SymbState(eqn, arena, Binding())
 
-    assertTlaExAndRestore(rewriter, state)
+    assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""FoldSet( LAMBDA x,y: x + y, 0, S ) = Sum(S)""") { rewriter: SymbStateRewriter =>
+  test("""FoldSet( LAMBDA x,y: x + y, 0, S ) = Sum(S)""") { rewriterType: String =>
     // A : (a,b) => a
     // A(p,q) == p + q
     val a = IntT1()
@@ -138,6 +138,6 @@ class TestSymbStateRewriterFoldSet extends RewriterBase {
 
     val state = new SymbState(eqn, arena, Binding())
 
-    assertTlaExAndRestore(rewriter, state)
+    assertTlaExAndRestore(create(rewriterType), state)
   }
 }

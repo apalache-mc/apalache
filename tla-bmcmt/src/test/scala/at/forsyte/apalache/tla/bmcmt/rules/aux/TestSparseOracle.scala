@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.types.BoolT
-import at.forsyte.apalache.tla.bmcmt.{Binding, RewriterBase, SymbState, SymbStateRewriter}
+import at.forsyte.apalache.tla.bmcmt.{Binding, RewriterBase, SymbState}
 import at.forsyte.apalache.tla.lir.TestingPredefs
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -10,7 +10,8 @@ import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestSparseOracle extends RewriterBase with TestingPredefs {
-  test("""Oracle.create""") { rewriter: SymbStateRewriter =>
+  test("""Oracle.create""") { rewriterType: String =>
+    val rewriter = create(rewriterType)
     var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
     val (nextState, oracle) = PropositionalOracle.create(rewriter, state, 2)
@@ -18,7 +19,8 @@ class TestSparseOracle extends RewriterBase with TestingPredefs {
     assert(solverContext.sat())
   }
 
-  test("""Oracle.whenEqualTo""") { rewriter: SymbStateRewriter =>
+  test("""Oracle.whenEqualTo""") { rewriterType: String =>
+    val rewriter = create(rewriterType)
     var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
     val (nextState, oracle) = PropositionalOracle.create(rewriter, state, 3)
@@ -28,7 +30,8 @@ class TestSparseOracle extends RewriterBase with TestingPredefs {
     assert(solverContext.sat())
   }
 
-  test("""Oracle.evalPosition""") { rewriter: SymbStateRewriter =>
+  test("""Oracle.evalPosition""") { rewriterType: String =>
+    val rewriter = create(rewriterType)
     var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
     val (nextState, oracle) = PropositionalOracle.create(rewriter, state, 3)
@@ -40,7 +43,8 @@ class TestSparseOracle extends RewriterBase with TestingPredefs {
     assert(5 == position)
   }
 
-  test("""Oracle.caseAssertions""") { rewriter: SymbStateRewriter =>
+  test("""Oracle.caseAssertions""") { rewriterType: String =>
+    val rewriter = create(rewriterType)
     var state = new SymbState(tla.bool(true), arena, Binding())
     state = state.updateArena(_.appendCell(BoolT()))
     val flag = state.arena.topCell

@@ -20,9 +20,10 @@ class TestSymbStateDecoder extends RewriterBase {
       "i_TO_i" -> SetT1(FunT1(IntT1(), IntT1()))
   )
 
-  test("decode bool") { rewriter: SymbStateRewriter =>
+  test("decode bool") { rewriterType: String =>
     val originalEx: TlaEx = bool(true).typed()
     val state = new SymbState(originalEx, arena, Binding())
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     val cell = nextState.asCell
@@ -35,9 +36,10 @@ class TestSymbStateDecoder extends RewriterBase {
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
-  test("decode int") { rewriter: SymbStateRewriter =>
+  test("decode int") { rewriterType: String =>
     val originalEx = int(3).typed()
     val state = new SymbState(originalEx, arena, Binding())
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     val cell = nextState.asCell
@@ -50,9 +52,10 @@ class TestSymbStateDecoder extends RewriterBase {
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
-  test("decode str") { rewriter: SymbStateRewriter =>
+  test("decode str") { rewriterType: String =>
     val originalEx: TlaEx = str("hello").typed()
     val state = new SymbState(originalEx, arena, Binding())
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     val cell = nextState.asCell
@@ -65,10 +68,11 @@ class TestSymbStateDecoder extends RewriterBase {
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
-  test("decode Int set") { rewriter: SymbStateRewriter =>
+  test("decode Int set") { rewriterType: String =>
     val originalEx = intSet()
       .typed(types, "I")
     val state = new SymbState(originalEx, arena, Binding())
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     val cell = nextState.asCell
@@ -77,10 +81,11 @@ class TestSymbStateDecoder extends RewriterBase {
     assert(originalEx == decodedEx)
   }
 
-  test("decode Nat set") { rewriter: SymbStateRewriter =>
+  test("decode Nat set") { rewriterType: String =>
     val originalEx = natSet()
       .typed(types, "I")
     val state = new SymbState(originalEx, arena, Binding())
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     val cell = nextState.asCell
@@ -89,12 +94,13 @@ class TestSymbStateDecoder extends RewriterBase {
     assert(originalEx == decodedEx)
   }
 
-  test("decode set") { rewriter: SymbStateRewriter =>
+  test("decode set") { rewriterType: String =>
     val originalEx = enumSet(int(2), int(1), int(2))
       .typed(types, "I")
     val simpleOriginalEx: TlaEx = enumSet(int(1), int(2))
       .typed(types, "I")
     val state = new SymbState(originalEx, arena, Binding())
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     val cell = nextState.asCell
@@ -107,7 +113,7 @@ class TestSymbStateDecoder extends RewriterBase {
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
-  test("decode fun set") { rewriter: SymbStateRewriter =>
+  test("decode fun set") { rewriterType: String =>
     val domEx = enumSet(int(1), int(2))
       .typed(types, "I")
     val cdmEx = enumSet(int(3), int(4))
@@ -115,6 +121,7 @@ class TestSymbStateDecoder extends RewriterBase {
     val originalEx = funSet(domEx, cdmEx)
       .typed(types, "i_TO_i")
     val state = new SymbState(originalEx, arena, Binding())
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     val cell = nextState.asCell
@@ -127,12 +134,13 @@ class TestSymbStateDecoder extends RewriterBase {
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
-  test("decode SUBSET S") { rewriter: SymbStateRewriter =>
+  test("decode SUBSET S") { rewriterType: String =>
     val set = enumSet(int(1), int(2))
       .typed(types, "I")
     val powset = powSet(set)
       .typed(types, "II")
     val state = new SymbState(powset, arena, Binding())
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     val cell = nextState.asCell
@@ -141,12 +149,13 @@ class TestSymbStateDecoder extends RewriterBase {
     assert(powset == decodedEx)
   }
 
-  test("decode fun") { rewriter: SymbStateRewriter =>
+  test("decode fun") { rewriterType: String =>
     val domEx = enumSet(int(1), int(2))
       .typed(types, "I")
     val funEx = funDef(plus(name("x") ? "i", int(1)) ? "i", name("x") ? "i", domEx)
       .typed(types, "i_to_i")
     val state = new SymbState(funEx, arena, Binding())
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     val cell = nextState.asCell
@@ -161,11 +170,12 @@ class TestSymbStateDecoder extends RewriterBase {
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
-  test("decode statically empty fun") { rewriter: SymbStateRewriter =>
+  test("decode statically empty fun") { rewriterType: String =>
     val domEx = enumSet() ? "I"
     val funEx = funDef(plus(name("x") ? "i", int(1)) ? "i", name("x") ? "i", domEx)
       .typed(types, "i_to_i")
     val state = new SymbState(funEx, arena, Binding())
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     val cell = nextState.asCell
@@ -178,7 +188,7 @@ class TestSymbStateDecoder extends RewriterBase {
     assertTlaExAndRestore(rewriter, nextState.setRex(eql(decodedEx, funEx).typed(BoolT1())))
   }
 
-  test("decode dynamically empty fun") { rewriter: SymbStateRewriter =>
+  test("decode dynamically empty fun") { rewriterType: String =>
     // this domain is not empty at the arena level, but it is in every SMT model
     def dynEmpty(left: BuilderEx): BuilderEx = {
       filter(name("t") ? "i", left, bool(false) ? "b")
@@ -190,6 +200,7 @@ class TestSymbStateDecoder extends RewriterBase {
     val funEx = funDef(plus(name("x") ? "i", int(1)) ? "i", name("x") ? "i", domEx)
       .typed(types, "i_to_i")
     val state = new SymbState(funEx, arena, Binding())
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     val cell = nextState.asCell
@@ -203,13 +214,14 @@ class TestSymbStateDecoder extends RewriterBase {
     assertTlaExAndRestore(rewriter, nextState.setRex(eql(decodedEx, funEx).typed(BoolT1())))
   }
 
-  test("decode sequence") { rewriter: SymbStateRewriter =>
+  test("decode sequence") { rewriterType: String =>
     val seqEx =
       tuple(int(1), int(2), int(3), int(4))
         .typed(types, "Qi")
     val subseqEx = subseq(seqEx, int(2), int(3))
       .typed(types, "Qi")
     val state = new SymbState(subseqEx, arena, Binding())
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     val cell = nextState.asCell
@@ -220,11 +232,12 @@ class TestSymbStateDecoder extends RewriterBase {
     assert(expected == decodedEx)
   }
 
-  test("decode tuple") { rewriter: SymbStateRewriter =>
+  test("decode tuple") { rewriterType: String =>
     val tupleEx: TlaEx =
       tuple(int(1), int(2), int(3))
         .typed(types, "iii")
     val state = new SymbState(tupleEx, arena, Binding())
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     val cell = nextState.asCell
@@ -233,11 +246,12 @@ class TestSymbStateDecoder extends RewriterBase {
     assert(tupleEx == decodedEx)
   }
 
-  test("decode record") { rewriter: SymbStateRewriter =>
+  test("decode record") { rewriterType: String =>
     val recEx =
       enumFun(str("a"), int(1), str("b"), bool(true))
         .typed(types, "rib")
     val state = new SymbState(recEx, arena, Binding())
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     val cell = nextState.asCell

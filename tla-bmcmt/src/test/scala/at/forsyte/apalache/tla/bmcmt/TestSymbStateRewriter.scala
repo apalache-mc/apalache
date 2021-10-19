@@ -8,12 +8,12 @@ import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestSymbStateRewriter extends RewriterBase {
-  test("SE-SUBST1: x[cell/x] ~~> cell") { rewriter: SymbStateRewriter =>
+  test("SE-SUBST1: x[cell/x] ~~> cell") { rewriterType: String =>
     arena = arena.appendCell(UnknownT())
     val cell = arena.topCell
     val binding = Binding("x" -> cell)
     val state = new SymbState(NameEx("x"), arena, binding)
-    rewriter.rewriteOnce(state) match {
+    create(rewriterType).rewriteOnce(state) match {
       case SymbStateRewriter.Done(nextState) =>
         val expected = NameEx("$C$%d".format(cell.id))
         assert(expected == nextState.ex)
