@@ -6,7 +6,7 @@ import org.scalatest.Outcome
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class RewriterBaseWithOOPSLA19
+class TestRewriterWithOOPSLA19
     extends TestCherryPick with TestSymbStateDecoder with TestSymbStateRewriter with TestSymbStateRewriterAction
     with TestSymbStateRewriterApalacheGen with TestSymbStateRewriterAssignment with TestSymbStateRewriterBool
     with TestSymbStateRewriterChoose with TestSymbStateRewriterControl with TestSymbStateRewriterExpand

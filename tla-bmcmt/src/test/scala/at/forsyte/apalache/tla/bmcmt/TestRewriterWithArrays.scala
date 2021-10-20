@@ -7,7 +7,7 @@ import org.scalatest.junit.JUnitRunner
 // TODO: Gradually substitute RewriterBase for concrete tests, as development in the "arrays" encoding progresses
 
 @RunWith(classOf[JUnitRunner])
-class RewriterBaseWithArrays extends RewriterBase {
+class TestRewriterWithArrays extends RewriterBase {
   override protected def withFixture(test: OneArgTest): Outcome = {
     test("arrays")
   }

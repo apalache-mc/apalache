@@ -7,15 +7,18 @@ import org.junit.runner.RunWith
 import org.scalatest.Outcome
 import org.scalatest.junit.JUnitRunner
 
-// TODO: Extend TestTransitionExecutorImpl and TestFilteredTransitionExecutor when development in the
-//  "arrays" encoding progresses
-
-//@RunWith(classOf[JUnitRunner])
-class TestTransitionExecutorImplWithIncrementalAndArrays {
-  /*
+/**
+ * The tests for TransitionExecutorImpl that are using IncrementalSnapshot.
+ *
+ * @author Igor Konnov
+ */
+@RunWith(classOf[JUnitRunner])
+class TestTransitionExecutorWithIncrementalAndOOPSLA19
+    extends TestTransitionExecutorImpl[IncrementalExecutionContextSnapshot]
+    with TestFilteredTransitionExecutor[IncrementalExecutionContextSnapshot] {
   override protected def withFixture(test: OneArgTest): Outcome = {
     val solver = new Z3SolverContext(SolverConfig(debug = false, profile = false, randomSeed = 0))
-    val rewriter =
+    val rewriter = new SymbStateRewriterImpl(solver, new ExprGradeStoreImpl())
     val exeCtx = new IncrementalExecutionContext(rewriter)
     try {
       test(exeCtx)
@@ -23,5 +26,4 @@ class TestTransitionExecutorImplWithIncrementalAndArrays {
       rewriter.dispose()
     }
   }
-   */
 }
