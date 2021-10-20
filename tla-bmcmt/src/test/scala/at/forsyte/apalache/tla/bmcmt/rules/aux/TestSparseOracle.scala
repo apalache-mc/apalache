@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 trait TestSparseOracle extends RewriterBase with TestingPredefs {
-  test("""Oracle.create""") { rewriterType: String =>
+  test("""Sparse Oracle.create""") { rewriterType: String =>
     val rewriter = create(rewriterType)
     var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
@@ -16,7 +16,7 @@ trait TestSparseOracle extends RewriterBase with TestingPredefs {
     assert(solverContext.sat())
   }
 
-  test("""Oracle.whenEqualTo""") { rewriterType: String =>
+  test("""Sparse Oracle.whenEqualTo""") { rewriterType: String =>
     val rewriter = create(rewriterType)
     var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
@@ -27,7 +27,7 @@ trait TestSparseOracle extends RewriterBase with TestingPredefs {
     assert(solverContext.sat())
   }
 
-  test("""Oracle.evalPosition""") { rewriterType: String =>
+  test("""Sparse Oracle.evalPosition""") { rewriterType: String =>
     val rewriter = create(rewriterType)
     var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
@@ -40,7 +40,7 @@ trait TestSparseOracle extends RewriterBase with TestingPredefs {
     assert(5 == position)
   }
 
-  test("""Oracle.caseAssertions""") { rewriterType: String =>
+  test("""Sparse Oracle.caseAssertions""") { rewriterType: String =>
     val rewriter = create(rewriterType)
     var state = new SymbState(tla.bool(true), arena, Binding())
     state = state.updateArena(_.appendCell(BoolT()))

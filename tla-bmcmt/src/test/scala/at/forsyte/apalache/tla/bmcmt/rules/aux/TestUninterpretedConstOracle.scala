@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 trait TestUninterpretedConstOracle extends RewriterBase with TestingPredefs {
-  test("""Oracle.create""") { rewriterType: String =>
+  test("""UninterpretedConst Oracle.create""") { rewriterType: String =>
     val rewriter = create(rewriterType)
     var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
@@ -15,7 +15,7 @@ trait TestUninterpretedConstOracle extends RewriterBase with TestingPredefs {
     assert(solverContext.sat())
   }
 
-  test("""Oracle.whenEqualTo""") { rewriterType: String =>
+  test("""UninterpretedConst Oracle.whenEqualTo""") { rewriterType: String =>
     val rewriter = create(rewriterType)
     var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
@@ -27,7 +27,7 @@ trait TestUninterpretedConstOracle extends RewriterBase with TestingPredefs {
     assert(!solverContext.sat())
   }
 
-  test("""Oracle.evalPosition""") { rewriterType: String =>
+  test("""UninterpretedConst Oracle.evalPosition""") { rewriterType: String =>
     val rewriter = create(rewriterType)
     var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
@@ -39,7 +39,7 @@ trait TestUninterpretedConstOracle extends RewriterBase with TestingPredefs {
     assert(3 == position)
   }
 
-  test("""Oracle.caseAssertions""") { rewriterType: String =>
+  test("""UninterpretedConst Oracle.caseAssertions""") { rewriterType: String =>
     val rewriter = create(rewriterType)
     var state = new SymbState(tla.bool(true), arena, Binding())
     state = state.updateArena(_.appendCell(BoolT()))
