@@ -25,16 +25,16 @@ trait RewriterBase extends fixture.FunSuite with BeforeAndAfterEach {
   protected def create(rewriterType: String): SymbStateRewriter = {
     rewriterType match {
       case "oopsla19" => new SymbStateRewriterAuto(solverContext)
-      case "arrays"   => new SymbStateRewriterAuto(solverContext)
-      case _          => throw new IllegalArgumentException("Unexpected SymbStateRewriter in unit testing")
+      //case "arrays"   =>
+      case _ => throw new IllegalArgumentException("Unexpected SymbStateRewriter in unit testing")
     }
   }
 
   protected def createWithoutCache(rewriterType: String): SymbStateRewriter = {
     rewriterType match {
       case "oopsla19" => new SymbStateRewriterImpl(solverContext)
-      case "arrays"   => new SymbStateRewriterImpl(solverContext)
-      case _          => throw new IllegalArgumentException("Unexpected cacheless SymbStateRewriter in unit testing")
+      //case "arrays"   =>
+      case _ => throw new IllegalArgumentException("Unexpected cacheless SymbStateRewriter in unit testing")
     }
   }
 
