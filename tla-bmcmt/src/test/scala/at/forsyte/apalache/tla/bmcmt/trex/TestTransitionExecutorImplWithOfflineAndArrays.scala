@@ -7,17 +7,14 @@ import org.junit.runner.RunWith
 import org.scalatest.Outcome
 import org.scalatest.junit.JUnitRunner
 
-/**
- * The tests for TransitionExecutorImpl that are using IncrementalSnapshot.
- *
- * @author Igor Konnov
- */
-@RunWith(classOf[JUnitRunner])
-class TestTransitionExecutorImplWithOffline
-    extends AbstractTestTransitionExecutorImpl[OfflineExecutionContextSnapshot] {
+// TODO: Extend TestTransitionExecutorImpl when development in the "arrays" encoding progresses
+
+//@RunWith(classOf[JUnitRunner])
+class TestTransitionExecutorImplWithOfflineAndArrays {
+  /*
   override protected def withFixture(test: OneArgTest): Outcome = {
     val solver = RecordingSolverContext.createZ3(None, SolverConfig(debug = false, profile = false, randomSeed = 0))
-    val rewriter = new SymbStateRewriterImpl(solver, new ExprGradeStoreImpl())
+    val rewriter =
     val exeCtx = new OfflineExecutionContext(rewriter)
     try {
       test(exeCtx)
@@ -25,4 +22,5 @@ class TestTransitionExecutorImplWithOffline
       rewriter.dispose()
     }
   }
+   */
 }

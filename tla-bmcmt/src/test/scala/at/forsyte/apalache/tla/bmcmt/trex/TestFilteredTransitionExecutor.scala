@@ -1,38 +1,16 @@
 package at.forsyte.apalache.tla.bmcmt.trex
 
-import at.forsyte.apalache.tla.bmcmt.SymbStateRewriterImpl
-import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStoreImpl
-import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import org.junit.runner.RunWith
-import org.scalatest.{Outcome, fixture}
-import org.scalatest.junit.JUnitRunner
 
 /**
  * An abstract test suite that is parameterized by the snapshot type.
  *
  * @author Igor Konnov
  */
-@RunWith(classOf[JUnitRunner])
-class TestFilteredTransitionExecutor extends fixture.FunSuite {
-  type SnapshotT = IncrementalExecutionContextSnapshot
-  type ExecutorContextT = ExecutionContext[SnapshotT]
-  type FixtureParam = ExecutorContextT
-
-  override protected def withFixture(test: OneArgTest): Outcome = {
-    val solver = new Z3SolverContext(SolverConfig(debug = false, profile = false, randomSeed = 0))
-    val rewriter = new SymbStateRewriterImpl(solver, new ExprGradeStoreImpl())
-    val exeCtx = new IncrementalExecutionContext(rewriter)
-    try {
-      test(exeCtx)
-    } finally {
-      rewriter.dispose()
-    }
-  }
-
-  test("check enabled and discard") { exeCtx: ExecutorContextT =>
+trait TestFilteredTransitionExecutor[SnapshotT] extends ExecutorBase[SnapshotT] {
+  test("filtered check enabled and discard") { exeCtx: ExecutorContextT =>
     // x' <- 1 /\ y' <- 1
     val init = tla.and(mkAssign("y", 1), mkAssign("x", 1))
     // x' <- x /\ y' <- x + y
@@ -66,7 +44,7 @@ class TestFilteredTransitionExecutor extends fixture.FunSuite {
     assert(!isTranslated22)
   }
 
-  test("mayChangeAssertion") { exeCtx: ExecutorContextT =>
+  test("filtered mayChangeAssertion") { exeCtx: ExecutorContextT =>
     // x' <- 1 /\ y' <- 1
     val init = tla.and(mkAssign("y", 1), mkAssign("x", 1))
     // x' <- x /\ y' <- x + y
@@ -100,7 +78,7 @@ class TestFilteredTransitionExecutor extends fixture.FunSuite {
     assert(mayChange22)
   }
 
-  test("regression on #108") { exeCtx: ExecutorContextT =>
+  test("filtered regression on #108") { exeCtx: ExecutorContextT =>
     // y' <- 1
     val init = tla.and(mkAssign("y", 1))
     // y' <- y + 1
@@ -135,16 +113,4 @@ class TestFilteredTransitionExecutor extends fixture.FunSuite {
 
   private def mkAssign(name: String, rhs: TlaEx) =
     tla.assignPrime(tla.name(name), rhs)
-
-  protected def assertValid(trex: TransitionExecutorImpl[SnapshotT], assertion: TlaEx): Unit = {
-    var snapshot = trex.snapshot()
-    trex.assertState(assertion)
-    assert(trex.sat(0).contains(true))
-    trex.recover(snapshot)
-
-    snapshot = trex.snapshot()
-    trex.assertState(tla.not(assertion))
-    assert(trex.sat(0).contains(false))
-    trex.recover(snapshot)
-  }
 }

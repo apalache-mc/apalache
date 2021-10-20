@@ -4,7 +4,6 @@ import at.forsyte.apalache.tla.bmcmt.Binding
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import org.scalatest.fixture
 
 /**
  * An abstract test suite that is parameterized by the snapshot type.
@@ -13,10 +12,7 @@ import org.scalatest.fixture
  *
  * @tparam SnapshotT the snapshot type
  */
-abstract class AbstractTestTransitionExecutorImpl[SnapshotT] extends fixture.FunSuite {
-  type ExecutorContextT = ExecutionContext[SnapshotT]
-  type FixtureParam = ExecutorContextT
-
+trait TestTransitionExecutorImpl[SnapshotT] extends ExecutorBase[SnapshotT] {
   test("constant initialization") { exeCtx: ExecutorContextT =>
     // N' <- 1
     val trex = new TransitionExecutorImpl(Set("N"), Set("x", "y"), exeCtx)
@@ -223,16 +219,4 @@ abstract class AbstractTestTransitionExecutorImpl[SnapshotT] extends fixture.Fun
 
   private def mkAssign(name: String, rhs: TlaEx) =
     tla.assignPrime(tla.name(name), rhs)
-
-  protected def assertValid(trex: TransitionExecutorImpl[SnapshotT], assertion: TlaEx): Unit = {
-    var snapshot = trex.snapshot()
-    trex.assertState(assertion)
-    assert(trex.sat(0).contains(true))
-    trex.recover(snapshot)
-
-    snapshot = trex.snapshot()
-    trex.assertState(tla.not(assertion))
-    assert(trex.sat(0).contains(false))
-    trex.recover(snapshot)
-  }
 }
