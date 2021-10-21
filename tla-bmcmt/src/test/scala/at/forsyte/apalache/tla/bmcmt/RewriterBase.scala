@@ -27,17 +27,18 @@ trait RewriterBase extends fixture.FunSuite with BeforeAndAfterEach {
 
   protected def create(rewriterType: String): SymbStateRewriter = {
     rewriterType match {
-      case oopsla19RewriterType => new SymbStateRewriterAuto(solverContext)
-      // TODO: add case arraysRewriterType
-      case _ => throw new IllegalArgumentException("Unexpected SymbStateRewriter in unit testing")
+      case `oopsla19RewriterType` => new SymbStateRewriterAuto(solverContext)
+      case `arraysRewriterType`   => new SymbStateRewriterAutoWithArrays(solverContext)
+      case oddRewriterType        => throw new IllegalArgumentException(s"Unexpected rewriter of type $oddRewriterType")
     }
   }
 
   protected def createWithoutCache(rewriterType: String): SymbStateRewriter = {
     rewriterType match {
-      case oopsla19RewriterType => new SymbStateRewriterImpl(solverContext)
-      // TODO: add case arraysRewriterType
-      case _ => throw new IllegalArgumentException("Unexpected cacheless SymbStateRewriter in unit testing")
+      case `oopsla19RewriterType` => new SymbStateRewriterImpl(solverContext)
+      case `arraysRewriterType`   => new SymbStateRewriterImplWithArrays(solverContext)
+      case oddRewriterType =>
+        throw new IllegalArgumentException(s"Unexpected cacheless rewriter of type $oddRewriterType")
     }
   }
 
