@@ -13,8 +13,9 @@ import org.scalatest.junit.JUnitRunner
  * @author Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
-class TestTransitionExecutorImplWithIncremental
-    extends AbstractTestTransitionExecutorImpl[IncrementalExecutionContextSnapshot] {
+class TestTransitionExecutorWithIncrementalAndOOPSLA19
+    extends TestTransitionExecutorImpl[IncrementalExecutionContextSnapshot]
+    with TestFilteredTransitionExecutor[IncrementalExecutionContextSnapshot] {
   override protected def withFixture(test: OneArgTest): Outcome = {
     val solver = new Z3SolverContext(SolverConfig(debug = false, profile = false, randomSeed = 0))
     val rewriter = new SymbStateRewriterImpl(solver, new ExprGradeStoreImpl())

@@ -1,7 +1,5 @@
-package at.forsyte.apalache.bmcmt.analyses
+package at.forsyte.apalache.tla.bmcmt.analyses
 
-import at.forsyte.apalache.tla.bmcmt.analyses.SkolemizationMarker
-import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, OperT1, SetT1}
 import at.forsyte.apalache.tla.lir.TypedPredefs.{BuilderExAsTyped, BuilderOperDeclAsTyped}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners

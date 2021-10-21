@@ -4,11 +4,8 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir._
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
-class TestSymbStateRewriterFunSet extends RewriterBase {
+trait TestSymbStateRewriterFunSet extends RewriterBase {
   val types =
     Map(
         "b" -> BoolT1(),
@@ -37,13 +34,13 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
         "i_to_b_to_b" -> FunT1(IntT1(), FunT1(BoolT1(), BoolT1()))
     )
 
-  test("""[{1, 2, 3} -> {FALSE, TRUE}]""") {
+  test("""[{1, 2, 3} -> {FALSE, TRUE}]""") { rewriterType: String =>
     val domain = enumSet(int(1), int(2), int(3))
     val codomain = enumSet(bool(false), bool(true))
     val fs = funSet(domain ? "I", codomain ? "B")
       .typed(types, "i_to_b")
     val state = new SymbState(fs, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case NameEx(name) =>
@@ -64,14 +61,14 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
     }
   }
 
-  test("""[{1, 2} -> Expand(SUBSET {FALSE, TRUE})]""") {
+  test("""[{1, 2} -> Expand(SUBSET {FALSE, TRUE})]""") { rewriterType: String =>
     val domain = enumSet(int(1), int(2))
     val codomain = apalacheExpand(powSet(enumSet(bool(false), bool(true)) ? "B") ? "BB")
     val fs = funSet(domain ? "I", codomain ? "BB")
       .typed(types, "i_to_B")
 
     val state = new SymbState(fs, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case NameEx(name) =>
@@ -90,7 +87,7 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
   }
 
   // the existential over a function set should work without expanding the powerset!
-  test("""Skolem(\E f \in [{1, 2} -> SUBSET {FALSE, TRUE}]: g' <- f)""") {
+  test("""Skolem(\E f \in [{1, 2} -> SUBSET {FALSE, TRUE}]: g' <- f)""") { rewriterType: String =>
     val domain = enumSet(int(1), int(2)) ? "I"
     val codomain = powSet(enumSet(bool(false), bool(true)) ? "B") ? "BB"
     val pred = assign(prime(name("g") ? "i_to_B") ? "i_to_B", name("f") ? "i_to_B")
@@ -101,7 +98,7 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
     val skolem = apalacheSkolem(existsForm)
       .typed(BoolT1())
     val state = new SymbState(skolem, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     val gprime = nextState.binding("g'")
     assert(FunT(FinSetT(IntT()), FinSetT(BoolT())) == gprime.cellType)
@@ -110,7 +107,7 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
   }
 
   // the existential over a function set should work without expanding the powerset!
-  test("""Skolem(\E f \in [{1, 2} -> SUBSET {FALSE}]: f[1] = {TRUE})""") {
+  test("""Skolem(\E f \in [{1, 2} -> SUBSET {FALSE}]: f[1] = {TRUE})""") { rewriterType: String =>
     val domain = enumSet(int(1), int(2)) ? "I"
     val codomain = powSet(enumSet(bool(false)) ? "B") ? "BB"
     val pred = eql(appFun(name("f") ? "i_to_B", int(1)) ? "B", enumSet(bool(true)) ? "B")
@@ -120,14 +117,14 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
     val skolem = apalacheSkolem(existsForm ? "b")
       .typed(types, "b")
     val state = new SymbState(skolem, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     solverContext.assertGroundExpr(nextState.ex)
     assert(!solverContext.sat())
   }
 
   // An existential over a function set that returns a function set to a powerset. Does it blow up your mind? :-)
-  test("""Skolem(\E f \in [{1, 2} -> [{3} -> SUBSET {FALSE, TRUE}]]: g' <- f)""") {
+  test("""Skolem(\E f \in [{1, 2} -> [{3} -> SUBSET {FALSE, TRUE}]]: g' <- f)""") { rewriterType: String =>
     val domain1 = enumSet(int(1), int(2))
     val domain2 = enumSet(int(3))
     val codomain2 = powSet(enumSet(bool(false), bool(true)) ? "B") ? "BB"
@@ -142,7 +139,7 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
     val skolem = apalacheSkolem(existsForm)
       .typed(types, "b")
     val state = new SymbState(skolem, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     val gprime = nextState.binding("g'")
     assert(FunT(FinSetT(IntT()), FunT(FinSetT(IntT()), FinSetT(BoolT()))) == gprime.cellType)
@@ -151,7 +148,7 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
   }
 
   // this should be fixed by implementing #91
-  test("""[x \in {1, 2} |-> {x = 1}] \in [{1, 2} -> SUBSET {FALSE, TRUE}]""") {
+  test("""[x \in {1, 2} |-> {x = 1}] \in [{1, 2} -> SUBSET {FALSE, TRUE}]""") { rewriterType: String =>
     val domain = enumSet(int(1), int(2)) ? "I"
     val codomain = powSet(enumSet(bool(false), bool(true)) ? "B") ? "BB"
     val funset = funSet(domain, codomain) ? "i_to_B"
@@ -160,10 +157,10 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
     val funInFunSet = in(fun, funset)
       .typed(types, "b")
     val state = new SymbState(funInFunSet, arena, Binding())
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""[x \in {1, 2} |-> 3] \in [{1, 2} -> {3, 4}]""") {
+  test("""[x \in {1, 2} |-> 3] \in [{1, 2} -> {3, 4}]""") { rewriterType: String =>
     val domain = enumSet(int(1), int(2)) ? "I"
     val codomain = enumSet(int(3), int(4)) ? "I"
     val funset = funSet(domain, codomain) ? "i_TO_i"
@@ -172,11 +169,11 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
     val funInFunSet = in(fun, funset)
       .typed(types, "b")
     val state = new SymbState(funInFunSet, arena, Binding())
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(create(rewriterType), state)
   }
 
   // this should be redundant in the presence of #91
-  test("""[x \in {0, 1, 2} \ {0} |-> 3] \in [{1, 2} -> {3, 4}]""") {
+  test("""[x \in {0, 1, 2} \ {0} |-> 3] \in [{1, 2} -> {3, 4}]""") { rewriterType: String =>
     // although 0 is in the function domain at the arena level, it does not belong to the set difference
     def setminus(set: TlaEx, intVal: Int): TlaEx = {
       filter(name("t") ? "i", set, not(eql(name("t") ? "i", int(intVal)) ? "b") ? "b")
@@ -198,11 +195,11 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
       .typed(types, "b")
 
     val state = new SymbState(funInFunSet, arena, Binding())
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(create(rewriterType), state)
   }
 
   // this should be fixed by implementing #91
-  test("""[x \in {1, 2} |-> {TRUE}] \in [{1, 2} -> SUBSET {FALSE}]""") {
+  test("""[x \in {1, 2} |-> {TRUE}] \in [{1, 2} -> SUBSET {FALSE}]""") { rewriterType: String =>
     val domain = enumSet(int(1), int(2)) ? "I"
     val codomain = powSet(enumSet(bool(false)) ? "B") ? "BB"
     val funset = funSet(domain, codomain)
@@ -213,14 +210,14 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
       .typed(types, "b")
 
     val state = new SymbState(funInFunSet, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     solverContext.assertGroundExpr(nextState.ex)
     assert(!solverContext.sat())
   }
 
   // this should be fixed by implementing #91
-  test("""[x \in {1, 2} |-> {TRUE}] \in [{1, 2} -> SUBSET {FALSE, TRUE}]""") {
+  test("""[x \in {1, 2} |-> {TRUE}] \in [{1, 2} -> SUBSET {FALSE, TRUE}]""") { rewriterType: String =>
     val domain = enumSet(int(1), int(2)) ? "I"
     val codomain = powSet(enumSet(bool(false), bool(true)) ? "B") ? "BB"
     val funset = funSet(domain, codomain)
@@ -230,20 +227,20 @@ class TestSymbStateRewriterFunSet extends RewriterBase {
     val funInFunSet = in(fun, funset)
       .typed(types, "b")
     val state = new SymbState(funInFunSet, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     assertTlaExAndRestore(rewriter, nextState)
   }
 
   // bugfix 27/12/2017
-  test("""SE-FUNSET1: [0..(5 - 1) -> {FALSE, TRUE}]""") {
+  test("""SE-FUNSET1: [0..(5 - 1) -> {FALSE, TRUE}]""") { rewriterType: String =>
     val domain = dotdot(int(0), minus(int(5), int(1)) ? "i") ? "I"
     val codomain = enumSet(bool(false), bool(true)) ? "B"
     val fs = funSet(domain, codomain)
       .typed(types, "i_to_b")
     val state = new SymbState(fs, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case NameEx(name) =>
