@@ -17,6 +17,6 @@ class TestRewriterWithOOPSLA19
     with TestSymbStateRewriterTlc with TestSymbStateRewriterTuple with TestPropositionalOracle with TestSparseOracle
     with TestUninterpretedConstOracle {
   override protected def withFixture(test: OneArgTest): Outcome = {
-    test("oopsla19")
+    test(oopsla19RewriterType)
   }
 }

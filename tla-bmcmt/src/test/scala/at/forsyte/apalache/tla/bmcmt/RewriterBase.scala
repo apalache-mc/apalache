@@ -10,6 +10,9 @@ import org.scalatest.{fixture, BeforeAndAfterEach}
 trait RewriterBase extends fixture.FunSuite with BeforeAndAfterEach {
   protected type FixtureParam = String
 
+  protected val oopsla19RewriterType = "oopsla19"
+  protected val arraysRewriterType = "arrays"
+
   protected var solverContext: SolverContext = _
   protected var arena: Arena = _
 
@@ -24,16 +27,16 @@ trait RewriterBase extends fixture.FunSuite with BeforeAndAfterEach {
 
   protected def create(rewriterType: String): SymbStateRewriter = {
     rewriterType match {
-      case "oopsla19" => new SymbStateRewriterAuto(solverContext)
-      //case "arrays"   =>
+      case oopsla19RewriterType => new SymbStateRewriterAuto(solverContext)
+      // TODO: add case arraysRewriterType
       case _ => throw new IllegalArgumentException("Unexpected SymbStateRewriter in unit testing")
     }
   }
 
   protected def createWithoutCache(rewriterType: String): SymbStateRewriter = {
     rewriterType match {
-      case "oopsla19" => new SymbStateRewriterImpl(solverContext)
-      //case "arrays"   =>
+      case oopsla19RewriterType => new SymbStateRewriterImpl(solverContext)
+      // TODO: add case arraysRewriterType
       case _ => throw new IllegalArgumentException("Unexpected cacheless SymbStateRewriter in unit testing")
     }
   }
