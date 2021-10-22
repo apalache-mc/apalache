@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla
 
-import java.io.{File, FileNotFoundException}
+import java.io.{File, FileNotFoundException, FileWriter, PrintWriter}
 import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -51,13 +51,84 @@ object Tool extends LazyLogging {
     System.exit(exitcode)
   }
 
-  private def outputAndLogConfig(runDirNamePrefix: String, mode: String): Unit = {
+  def mkRunFile(cmd: Command): Unit = OutputManager.runDirPathOpt.foreach { runDir =>
+    val outFile = new File(runDir.toFile, OutputManager.Names.RunFile)
+    val writer = new PrintWriter(new FileWriter(outFile, false))
+    def generalCmds(cmd: General): Unit = {
+      writer.println(s"--debug=${cmd.debug}")
+      writer.println(s"--smtprof=${cmd.smtprof}")
+    }
+    try {
+      cmd match {
+        case parse: ParseCmd =>
+          writer.println("parse")
+          if (parse.output.nonEmpty)
+            writer.println(s"--output=${parse.output}")
+          writer.println(parse.file.getCanonicalPath)
+
+        case check: CheckCmd =>
+          writer.println("check")
+          generalCmds(check)
+          writer.println(s"--nworkers=${check.nworkers}")
+          writer.println(s"--algo=${check.algo}")
+          if (check.config.nonEmpty)
+            writer.println(s"--config=${check.config}")
+          if (check.cinit.nonEmpty)
+            writer.println(s"--cinit=${check.cinit}")
+          if (check.init.nonEmpty)
+            writer.println(s"--init=${check.init}")
+          if (check.next.nonEmpty)
+            writer.println(s"--next=${check.next}")
+          if (check.inv.nonEmpty)
+            writer.println(s"--inv=${check.inv}")
+          writer.println(s"--length=${check.length}")
+          if (check.tuning.nonEmpty)
+            writer.println(s"--tuning=${check.tuning}")
+          if (check.tuningOptions.nonEmpty)
+            writer.println(s"--tuning-options=${check.tuningOptions}")
+          writer.println(s"--discard-disabled=${check.discardDisabled}")
+          writer.println(s"--no-deadlock=${check.noDeadlocks}")
+          writer.println(s"--max-error=${check.maxError}")
+          if (check.view.nonEmpty)
+            writer.println(s"--view=${check.view}")
+          writer.println(check.file.getCanonicalPath)
+
+        case test: TestCmd =>
+          writer.println("test")
+          generalCmds(test)
+          writer.println(s"--before=${test.before}")
+          writer.println(s"--action=${test.action}")
+          writer.println(s"--assertion=${test.assertion}")
+          if (test.cinit.nonEmpty)
+            writer.println(s"--cinit=${test.cinit}")
+          writer.println(test.file.getCanonicalPath)
+
+        case typecheck: TypeCheckCmd =>
+          writer.println("typecheck")
+          generalCmds(typecheck)
+          writer.println(s"--infer-poly=${typecheck.inferPoly}")
+          writer.println(typecheck.file.getCanonicalPath)
+
+        case config: ConfigCmd =>
+          writer.println("config")
+          generalCmds(config)
+          writer.println(s"--enable-stats=${config.submitStats}")
+        case _ =>
+          ()
+      }
+    } finally {
+      writer.close()
+    }
+  }
+
+  private def outputAndLogConfig(runDirNamePrefix: String, cmd: Command): Unit = {
     OutputManager.syncFromGlobalConfig()
     OutputManager.createRunDirectory(runDirNamePrefix)
+    mkRunFile(cmd)
     // force our programmatic logback configuration, as the autoconfiguration works unpredictably
     new LogbackConfigurator(OutputManager.runDirPathOpt).configureDefaultContext()
     // TODO: update workers when the multicore branch is integrated
-    submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> mode, "workers" -> "1"))
+    submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> cmd.label, "workers" -> "1"))
   }
 
   /**
@@ -130,7 +201,7 @@ object Tool extends LazyLogging {
     val executor = injector.getInstance(classOf[PassChainExecutor])
 
     // init
-    outputAndLogConfig(parse.file.getName, "check")
+    outputAndLogConfig(parse.file.getName, parse)
     logger.info("Parse " + parse.file)
 
     executor.options.set("parser.filename", parse.file.getAbsolutePath)
@@ -152,7 +223,7 @@ object Tool extends LazyLogging {
   private def runCheck(injector: => Injector, check: CheckCmd): Int = {
     val executor = injector.getInstance(classOf[PassChainExecutor])
 
-    outputAndLogConfig(check.file.getName, "check")
+    outputAndLogConfig(check.file.getName, check)
     logger.info(
         "Checker options: filename=%s, init=%s, next=%s, inv=%s"
           .format(check.file, check.init, check.next, check.inv)
@@ -202,7 +273,7 @@ object Tool extends LazyLogging {
     // This is a special version of the `check` command that is tuned towards testing scenarios
     val executor = injector.getInstance(classOf[PassChainExecutor])
 
-    outputAndLogConfig(test.file.getName, "test")
+    outputAndLogConfig(test.file.getName, test)
     logger.info(
         "Checker options: filename=%s, before=%s, action=%s, after=%s"
           .format(test.file, test.before, test.action, test.assertion))
@@ -250,7 +321,7 @@ object Tool extends LazyLogging {
     // type checker
     val executor = injector.getInstance(classOf[PassChainExecutor])
 
-    outputAndLogConfig(typecheck.file.getName, "typecheck")
+    outputAndLogConfig(typecheck.file.getName, typecheck)
     logger.info("Type checking " + typecheck.file)
 
     executor.options.set("parser.filename", typecheck.file.getAbsolutePath)
@@ -373,7 +444,7 @@ object Tool extends LazyLogging {
   }
 
   private def configure(config: ConfigCmd): Int = {
-    outputAndLogConfig("config", "config")
+    outputAndLogConfig("config", config)
     logger.info("Configuring Apalache")
     config.submitStats match {
       case Some(isEnabled) =>

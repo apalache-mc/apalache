@@ -21,6 +21,7 @@ object OutputManager {
     val ProfilingFlag = "profiling"
     val CfgFile = ".tlaplus/apalache-global-config.yml"
     val DefaultOutdir = "_apalache-out"
+    val RunFile = "run.txt"
   }
   import Names._
   // Absolute path
@@ -115,13 +116,14 @@ object OutputManager {
   /** Inside `outputDirPath`, create a directory for an individual run */
   def createRunDirectory(specName: String): Unit =
     if (runDirOpt.isEmpty) {
-      val nicetime = LocalDateTime.now().format(DateTimeFormatter.ofPattern(s"yyyy-MM-dd_HH-mm-ss_"))
+      val nicedate = LocalDateTime.now().format(DateTimeFormatter.ofPattern(s"yyyy-MM-dd"))
+      val nicetime = LocalDateTime.now().format(DateTimeFormatter.ofPattern(s"HH-mm-ss"))
       val outdir = new File(outputDirPath)
       if (!outdir.exists()) {
         outdir.mkdir()
       }
       // prefix for disambiguation
-      val rundir = Files.createTempDirectory(Paths.get(outdir.getAbsolutePath), s"${specName}_" + nicetime)
+      val rundir = Files.createTempDirectory(Paths.get(outdir.getAbsolutePath), s"${specName}_${nicedate}T${nicetime}_")
       runDirOpt = Some(rundir)
     }
 }
