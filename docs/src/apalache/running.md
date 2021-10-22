@@ -31,8 +31,8 @@ The arguments are as follows:
       using the non-incremental
       (offline) SMT solver
     - `smt-encoding` lets you choose how the SMT instances are encoded: `oopsla19` (default) uses QF_UFNIA, and
-      `arrays` (experimental) uses arrays with extensionality. See the [alternative SMT encoding using arrays] for
-      details.
+      `arrays` (experimental) uses arrays with extensionality. This parameter can also be set via the
+      `SMT_ENCODING` environment variable. See the [alternative SMT encoding using arrays] for details.
     - `--discard-disabled` does a pre-check on transitions and discard the disabled ones at every step. If you know that
       many transitions are always enabled, set it to false. Sometimes, this pre-check may be slower than checking the
       invariant. Default: true.
@@ -48,6 +48,12 @@ The arguments are as follows:
 
 If an initialization predicate, transition predicate, or invariant is specified both in the configuration file, and on
 the command line, the command line parameters take precedence over those in the configuration file.
+
+In case conflicting arguments are passed for the same parameter, the following precedence order is followed:
+
+1. Command-line value
+2. Configuration file value
+3. Environment variable value
 
 ### Supplying JVM arguments
 
