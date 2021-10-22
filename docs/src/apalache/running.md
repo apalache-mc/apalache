@@ -2,7 +2,7 @@
 
 **Opt-in statistics programme**: if you opt-in for statistics collection (off by default), then every run of Apalache
 will submit anonymized statistics to
-`tlapl.us`. See the details in [TLA+ Anonymized Execution Statistics](./statistics.html).
+`tlapl.us`. See the details in [TLA+ Anonymized Execution Statistics](./statistics.md).
 
 ## Model checker command-line parameters
 
