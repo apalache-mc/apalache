@@ -88,7 +88,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
     params.discardDisabled = options.getOrElse("checker", "discardDisabled", true)
     params.checkForDeadlocks = !options.getOrElse("checker", "noDeadlocks", false)
     params.nMaxErrors = options.getOrElse("checker", "maxError", 1)
-    params.smtEncoding = options.getOrElse("checker", "smt-encoding", "oopsla19")
+    params.smtEncoding = options.getOrElse("checker", "smt-encoding", oopsla19Encoding)
 
     val smtProfile = options.getOrElse("smt", "prof", false)
     val smtRandomSeed = tuning.getOrElse("smt.randomSeed", "0").toInt
