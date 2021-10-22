@@ -12,6 +12,7 @@ The model checker can be run as follows:
 $ apalache check [--config=filename] [--init=Init] [--cinit=ConstInit] \
     [--next=Next] [--inv=Inv] [--length=10] [--algo=(incremental|offline)] \
     [--discard-disabled] [--no-deadlock] [--tuning=filename] [--tune-here=options] \
+    [--smt-encoding=(oopsla19|arrays)] \
     <myspec>.tla
 ```
 
@@ -29,6 +30,9 @@ The arguments are as follows:
     - `--algo` lets you to choose the search algorithm: `incremental` is using the incremental SMT solver, `offline` is
       using the non-incremental
       (offline) SMT solver
+    - `smt-encoding` lets you choose how the SMT instances are encoded: `oopsla19` (default) uses QF_UFNIA, and
+      `arrays` (experimental) uses arrays with extensionality. See the [alternative SMT encoding using arrays] for
+      details.
     - `--discard-disabled` does a pre-check on transitions and discard the disabled ones at every step. If you know that
       many transitions are always enabled, set it to false. Sometimes, this pre-check may be slower than checking the
       invariant. Default: true.
@@ -266,4 +270,5 @@ In this case, Apalache performs the following steps:
 
 1. It pretty-prints the IR into `out-parser.tla`, see [Detailed output](#detailed).
 
+[alternative SMT encoding using arrays]: ../adr/011adr-smt-arrays.md
 [Enumeration of counterexamples]: ./enumeration.md
