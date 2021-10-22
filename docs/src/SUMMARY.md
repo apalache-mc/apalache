@@ -17,6 +17,7 @@
         - [Docker](./apalache/installation/docker.md)
         - [Source](./apalache/installation/source.md)
     - [Running the Tool](./apalache/running.md)
+    - [Apalache global configuration file](./apalache/config.md)
     - [Invariants: State, Action, Trace](./apalache/invariants.md)
     - [Enumeration of counterexamples](./apalache/enumeration.md)
     - [TLA+ Execution Statistics](./apalache/statistics.md)

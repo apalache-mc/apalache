@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.pp.passes
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin, WriteablePassOptions}
+import at.forsyte.apalache.io.ConfigurationError
 import at.forsyte.apalache.io.tlc.TlcConfigParserApalache
 import at.forsyte.apalache.io.tlc.config._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -69,9 +70,7 @@ class ConfigurationPassImpl @Inject() (
     // However, that should be done very carefully. Maybe we should do that in the future.
 
     // dump the configuration result
-    val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    writerFactory.writeModuleAllFormats(configuredModule.copy(name = "02_OutConfig"), TlaWriter.STANDARD_MODULES,
-        outdir.toFile)
+    writerFactory.writeModuleAllFormats(configuredModule.copy(name = "02_OutConfig"), TlaWriter.STANDARD_MODULES)
 
     outputTlaModule = Some(configuredModule)
     true

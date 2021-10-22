@@ -53,8 +53,7 @@ class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTrac
           tlaModule.get
       }
 
-    val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    writerFactory.writeModuleAllFormats(newModule.copy(name = "07_OutVCGen"), TlaWriter.STANDARD_MODULES, outdir.toFile)
+    writerFactory.writeModuleAllFormats(newModule.copy(name = "07_OutVCGen"), TlaWriter.STANDARD_MODULES)
 
     nextPass.setModule(newModule)
     true
