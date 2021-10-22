@@ -91,6 +91,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
 
     params.smtEncoding = options
       .get("checker", "smt-encoding")
+      .flatten
       .orElse(sys.env.get("SMT_ENCODING"))
       .getOrElse(oopsla19Encoding)
 
