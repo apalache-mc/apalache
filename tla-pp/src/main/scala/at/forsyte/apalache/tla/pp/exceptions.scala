@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.pp
 
+import at.forsyte.apalache.io.ConfigurationError
 import at.forsyte.apalache.tla.lir.{MalformedTlaError, TlaEx, UID}
 
 // All exceptions related to the intermediate language should go here
@@ -24,14 +25,6 @@ class OverridingError(message: String, cause: TlaEx) extends MalformedTlaError(m
  * @param message the error message
  */
 class IrrecoverablePreprocessingError(message: String) extends Exception(message)
-
-/**
- * An exception that should be thrown when something is wrong with the tool configuration, input parameters, etc.
- * This exception should be treated as the input error: no stack trace, normal messages.
- *
- * @param message the error message
- */
-class ConfigurationError(message: String) extends Exception(message)
 
 /**
  * An exception that should be thrown when the TLA+ code is not following the Apalache guidelines, e.g.,

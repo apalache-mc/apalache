@@ -60,9 +60,7 @@ class UnrollPassImpl @Inject() (val options: PassOptions, nameGenerator: UniqueN
     val newModule = unroller(renamedModule)
 
     // dump the result of preprocessing
-    val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    writerFactory.writeModuleAllFormats(newModule.copy(name = "04_OutUnroll"), TlaWriter.STANDARD_MODULES,
-        outdir.toFile)
+    writerFactory.writeModuleAllFormats(newModule.copy(name = "04_OutUnroll"), TlaWriter.STANDARD_MODULES)
 
     outputTlaModule = Some(newModule)
     true

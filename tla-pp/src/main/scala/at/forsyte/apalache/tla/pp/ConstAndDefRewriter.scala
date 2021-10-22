@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.standard.{DeclarationSorter, ModuleByExTransformer, ReplaceFixed}
 import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
 import TypedPredefs._
+import at.forsyte.apalache.io.ConfigurationError
 import com.typesafe.scalalogging.LazyLogging
 
 /**
