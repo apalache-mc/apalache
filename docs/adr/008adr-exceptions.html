@@ -1,0 +1,338 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>ADR-008: exceptions - Apalache Documentation</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Tutorials</li><li class="chapter-item expanded "><a href="../tutorials/snowcat-tutorial.html"><strong aria-hidden="true">1.</strong> Type Checker Tutorial</a></li><li class="chapter-item expanded affix "><li class="part-title">Apalache User Manual</li><li class="chapter-item expanded "><a href="../apalache/index.html"><strong aria-hidden="true">2.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../apalache/getting-started.html"><strong aria-hidden="true">3.</strong> Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/apalache-or-tlc.html"><strong aria-hidden="true">3.1.</strong> Shall I use Apalache or TLC?</a></li><li class="chapter-item expanded "><a href="../apalache/system-reqs.html"><strong aria-hidden="true">3.2.</strong> System Requirements</a></li><li class="chapter-item expanded "><a href="../apalache/installation/index.html"><strong aria-hidden="true">3.3.</strong> Installation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/installation/jvm.html"><strong aria-hidden="true">3.3.1.</strong> Prebuilt Packages</a></li><li class="chapter-item expanded "><a href="../apalache/installation/docker.html"><strong aria-hidden="true">3.3.2.</strong> Docker</a></li><li class="chapter-item expanded "><a href="../apalache/installation/source.html"><strong aria-hidden="true">3.3.3.</strong> Source</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/running.html"><strong aria-hidden="true">3.4.</strong> Running the Tool</a></li><li class="chapter-item expanded "><a href="../apalache/config.html"><strong aria-hidden="true">3.5.</strong> Apalache global configuration file</a></li><li class="chapter-item expanded "><a href="../apalache/invariants.html"><strong aria-hidden="true">3.6.</strong> Invariants: State, Action, Trace</a></li><li class="chapter-item expanded "><a href="../apalache/enumeration.html"><strong aria-hidden="true">3.7.</strong> Enumeration of counterexamples</a></li><li class="chapter-item expanded "><a href="../apalache/statistics.html"><strong aria-hidden="true">3.8.</strong> TLA+ Execution Statistics</a></li><li class="chapter-item expanded "><a href="../apalache/example.html"><strong aria-hidden="true">3.9.</strong> An Example TLA+ Specification</a></li><li class="chapter-item expanded "><a href="../apalache/parameters.html"><strong aria-hidden="true">3.10.</strong> Specification Parameters</a></li><li class="chapter-item expanded "><a href="../apalache/principles.html"><strong aria-hidden="true">3.11.</strong> Principles of Symbolic Model Checking with Apalache</a></li><li class="chapter-item expanded "><a href="../apalache/apalache-mod.html"><strong aria-hidden="true">3.12.</strong> The Apalache Module</a></li><li class="chapter-item expanded "><a href="../apalache/fold.html"><strong aria-hidden="true">3.13.</strong> Folding Operators</a></li><li class="chapter-item expanded "><a href="../apalache/profiling.html"><strong aria-hidden="true">3.14.</strong> Profiling Your Specification</a></li><li class="chapter-item expanded "><a href="../apalache/theory.html"><strong aria-hidden="true">3.15.</strong> Five minutes of theory</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/tlc-config.html"><strong aria-hidden="true">4.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../apalache/typechecker-snowcat.html"><strong aria-hidden="true">5.</strong> The Snowcat Type Checker</a></li><li class="chapter-item expanded "><a href="../apalache/features.html"><strong aria-hidden="true">6.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../apalache/known-issues.html"><strong aria-hidden="true">7.</strong> Known Issues</a></li><li class="chapter-item expanded "><a href="../apalache/preprocessing.html"><strong aria-hidden="true">8.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../apalache/tuning.html"><strong aria-hidden="true">9.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../apalache/kera.html"><strong aria-hidden="true">10.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded "><a href="../apalache/assignments.html"><strong aria-hidden="true">11.</strong> Assignments in Apalache</a></li><li class="chapter-item expanded affix "><li class="part-title">HOWTOs</li><li class="chapter-item expanded "><a href="../HOWTOs/index.html"><strong aria-hidden="true">12.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../HOWTOs/howto-write-type-annotations.html"><strong aria-hidden="true">13.</strong> How to write type annotations</a></li><li class="chapter-item expanded affix "><li class="part-title">Tutorials</li><li class="chapter-item expanded "><a href="../tutorials/index.html"><strong aria-hidden="true">14.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../tutorials/snowcat-tutorial.html"><strong aria-hidden="true">15.</strong> The Snowcat❄🐱 Type Checker</a></li><li class="chapter-item expanded "><a href="../tutorials/symbmc.html"><strong aria-hidden="true">16.</strong> Symbolic Model Checking</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ Language Manual for Engineers</li><li class="chapter-item expanded "><a href="../lang/index.html"><strong aria-hidden="true">17.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">18.</strong> The standard operators of TLA+</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/booleans.html"><strong aria-hidden="true">18.1.</strong> Booleans</a></li><li class="chapter-item expanded "><a href="../lang/control-and-nondeterminism.html"><strong aria-hidden="true">18.2.</strong> Control And Nondeterminism</a></li><li class="chapter-item expanded "><a href="../lang/conditionals.html"><strong aria-hidden="true">18.3.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="../lang/integers.html"><strong aria-hidden="true">18.4.</strong> Integers</a></li><li class="chapter-item expanded "><a href="../lang/sets.html"><strong aria-hidden="true">18.5.</strong> Sets</a></li><li class="chapter-item expanded "><a href="../lang/logic.html"><strong aria-hidden="true">18.6.</strong> Logic</a></li><li class="chapter-item expanded "><a href="../lang/functions.html"><strong aria-hidden="true">18.7.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../lang/records.html"><strong aria-hidden="true">18.8.</strong> Records</a></li><li class="chapter-item expanded "><a href="../lang/tuples.html"><strong aria-hidden="true">18.9.</strong> Tuples</a></li><li class="chapter-item expanded "><a href="../lang/sequences.html"><strong aria-hidden="true">18.10.</strong> Sequences</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">18.11.</strong> Bags</div></li></ol></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">19.</strong> User-defined operators</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/user/top-level-operators.html"><strong aria-hidden="true">19.1.</strong> Top-level operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/let-in.html"><strong aria-hidden="true">19.2.</strong> LET-IN definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/higher-order-operators.html"><strong aria-hidden="true">19.3.</strong> Higher-order operators definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/lambdas.html"><strong aria-hidden="true">19.4.</strong> Anonymous operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/recursive-operators.html"><strong aria-hidden="true">19.5.</strong> Recursive operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/local-operators.html"><strong aria-hidden="true">19.6.</strong> Local operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/recursive-functions.html"><strong aria-hidden="true">19.7.</strong> Recursive functions</a></li></ol></li><li class="chapter-item expanded "><a href="../lang/apalache-operators.html"><strong aria-hidden="true">20.</strong> Apalache operators</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">21.</strong> Modules, Extends, and Instances</div></li><li class="chapter-item expanded affix "><li class="part-title">Idiomatic TLA+</li><li class="chapter-item expanded "><a href="../idiomatic/index.html"><strong aria-hidden="true">22.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../idiomatic/000keep-minimum-state-variables.html"><strong aria-hidden="true">23.</strong> Keep state variables to the minimum</a></li><li class="chapter-item expanded "><a href="../idiomatic/001assignments.html"><strong aria-hidden="true">24.</strong> Update state variables with assignments</a></li><li class="chapter-item expanded "><a href="../idiomatic/002primes.html"><strong aria-hidden="true">25.</strong> Apply primes only to state variables</a></li><li class="chapter-item expanded "><a href="../idiomatic/003record-sets.html"><strong aria-hidden="true">26.</strong> Avoid sets of mixed records</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../adr/002adr-types.html"><strong aria-hidden="true">27.</strong> ADR-002: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/003adr-trex.html"><strong aria-hidden="true">28.</strong> ADR-003: transition executor (TRex)</a></li><li class="chapter-item expanded "><a href="../adr/004adr-annotations.html"><strong aria-hidden="true">29.</strong> ADR-004: code annotations</a></li><li class="chapter-item expanded "><a href="../adr/005adr-json.html"><strong aria-hidden="true">30.</strong> ADR-005: JSON Serialization Format</a></li><li class="chapter-item expanded "><a href="../adr/006rfc-unit-testing.html"><strong aria-hidden="true">31.</strong> RFC-006: unit tests and property-based tests</a></li><li class="chapter-item expanded "><a href="../adr/007adr-restructuring.html"><strong aria-hidden="true">32.</strong> ADR-007: restructuring</a></li><li class="chapter-item expanded "><a href="../adr/008adr-exceptions.html" class="active"><strong aria-hidden="true">33.</strong> ADR-008: exceptions</a></li><li class="chapter-item expanded "><a href="../adr/009adr-outputs.html"><strong aria-hidden="true">34.</strong> ADR-009: outputs</a></li><li class="chapter-item expanded "><a href="../adr/011adr-smt-arrays.html"><strong aria-hidden="true">35.</strong> ADR-011: alternative SMT encoding using arrays</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache Documentation</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/informalsystems/apalache" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#adr-008-apalache-exceptions" id="adr-008-apalache-exceptions">ADR-008: Apalache Exceptions</a></h1>
+<table><thead><tr><th>author</th><th align="right">revision</th></tr></thead><tbody>
+<tr><td>Jure Kukovec</td><td align="right">1</td></tr>
+</tbody></table>
+<p>This ADR documents the various exception thrown in Apalache, and the circumstances that trigger them.</p>
+<h2><a class="header" href="#1-user-input-exceptions" id="1-user-input-exceptions">1. User input exceptions</a></h2>
+<p>Exceptions in this family are caused by incorrect input from the user. All of these exceptions should exit cleanly and should NOT report a stack trace. We should be able to statically enforce that none of these exceptions can be left unhandled.</p>
+<h3><a class="header" href="#11-parser-level" id="11-parser-level">1.1. Parser-level</a></h3>
+<p>Since we depend on Sany for parsing, Apalache rejects any syntax which Sany cannot parse.
+If Sany produces an exception Apalache catches it and re-throws a class extending</p>
+<pre><code>ParserException
+</code></pre>
+<p>The exception should report the following details:</p>
+<ul>
+<li>Location of at least one parser issue</li>
+</ul>
+<h3><a class="header" href="#12-apalache-specific-input-exceptions" id="12-apalache-specific-input-exceptions">1.2. Apalache-specific input exceptions</a></h3>
+<p>This category of exceptions deals with problems triggered by incorrect or incomplete information regarding Apalache inputs. Examples include:</p>
+<ul>
+<li>Malformed config files</li>
+<li>Incorrect or missing <code>OVERRIDE_</code></li>
+<li>Incorrect or missing <code>UNROLL_</code></li>
+<li>Problems with <code>--init/next/cinit/...</code></li>
+</ul>
+<p>Exceptions thrown in response to these issues should extend </p>
+<pre><code>ApalacheInputException
+</code></pre>
+<p>The exceptions should report the following details:</p>
+<ul>
+<li>If an input is missing: the name of the expected input </li>
+<li>If an input is incorrect: the way in which it is incorrect</li>
+</ul>
+<h3><a class="header" href="#13-type-related-exceptions" id="13-type-related-exceptions">1.3. Type-related exceptions</a></h3>
+<p>This category of exceptions deals with problems arising from the type-system used by Apalache. Examples include:</p>
+<ul>
+<li>Missing or incorrect type annotations</li>
+<li>Incompatibility of argument types and operator types</li>
+</ul>
+<p>Exceptions thrown in response to these issues should extend </p>
+<pre><code>TypeingException
+</code></pre>
+<p>The exceptions should report the following details:</p>
+<ul>
+<li>If an annotation is missing: the declaration with the missing annotation and its location</li>
+<li>If the types of the arguments at a built-in operator application site are incompatible with the operator type: Both the computed and expected types, and the location of the application site </li>
+<li>If the types of the arguments at a user-defined operator application site are incompatible with the operator annotation: Both the computed and expected types, the operator declaration, and the location of the application site</li>
+</ul>
+<h3><a class="header" href="#14-static-analysis-exceptions" id="14-static-analysis-exceptions">1.4. Static-analysis exceptions</a></h3>
+<p>This category of exceptions deals with problems arising from the various static analysis passes performed by Apalache. Examples include:</p>
+<ul>
+<li>Missing or incorrect variable assignments</li>
+<li>Other analyses we might run in the future</li>
+</ul>
+<p>Exceptions thrown in response to these issues should extend </p>
+<pre><code>StaticAnalysisException
+</code></pre>
+<p>The exceptions should report the following details:</p>
+<ul>
+<li>The location in the specification where the analysis failed and the expected result</li>
+</ul>
+<h3><a class="header" href="#15-unsupported-language-exceptions" id="15-unsupported-language-exceptions">1.5. Unsupported language exceptions</a></h3>
+<p>This category of exceptions deals with user input, which falls outside of the TLA+ fragment supported by Apalache. Examples include:</p>
+<ul>
+<li>Unbounded quantification</li>
+<li>(Unbounded) <code>CHOOSE</code></li>
+<li><code>SelectSeq</code></li>
+<li>Fragments of community modules</li>
+</ul>
+<p>Exceptions thrown in response to these issues should extend </p>
+<pre><code>UnsupportedFeatureException
+</code></pre>
+<p>The exceptions should report the following details:</p>
+<ul>
+<li>The location of the unsupported expression(s)</li>
+</ul>
+<h2><a class="header" href="#2-tool-failures" id="2-tool-failures">2. Tool failures</a></h2>
+<p>These exceptions are caused by bugs in Apalache. They are fatal and should throw with a stack trace.</p>
+<h3><a class="header" href="#21-assumption-violations" id="21-assumption-violations">2.1. Assumption violations</a></h3>
+<p>Whenever possible, it's recommended to test against the assumptions of a given pass/transformation. If the assumptions are violated, an</p>
+<pre><code>AssumptionViolationException
+</code></pre>
+<p>should be thrown. It should report the following details:</p>
+<ul>
+<li>The assumption being violated</li>
+<li>The pass/class/method in which the assumption is made</li>
+</ul>
+<h3><a class="header" href="#22-passtransformation-specific-exceptions" id="22-passtransformation-specific-exceptions">2.2. Pass/Transformation-specific exceptions</a></h3>
+<p>Depending on the pass/transformation, specialized exceptions may be thrown, to indicate some problem in either the pipeline, malformed input, missing or incomplete metadata or any other issue that cannot be circumvented. The exceptions should include a reasonable (concise) explanation and, whenever possible, source information for relevant expressions. </p>
+<h2><a class="header" href="#3-exception-explanations" id="3-exception-explanations">3. Exception explanations</a></h2>
+<p>On their own, exceptions should include concise messages with all the relevant information components, outlined above. In addition to that, we should implement an advanced variant of <code>ExceptionAdapter</code>, called <code>ExceptionExplainer</code>, that is enabled by default, but can be quieted if Apalache is invoked with the flag <code>--quiet-exceptions</code> . </p>
+<p>The purpose of this class is to offer users a comprehensive explanation of the exceptions defined in Section 1. Whenever an exception is thrown, <code>ExceptionExplainer</code> should offer:</p>
+<ul>
+<li>Inlined TLA+ code, in place of source location references</li>
+<li>Examples of similar malformed inputs, if relevant</li>
+<li>Suggestions on how to fix the exception</li>
+<li>A link to the manual, explaining the cause of the exception</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../adr/007adr-restructuring.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../adr/009adr-outputs.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../adr/007adr-restructuring.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../adr/009adr-outputs.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
