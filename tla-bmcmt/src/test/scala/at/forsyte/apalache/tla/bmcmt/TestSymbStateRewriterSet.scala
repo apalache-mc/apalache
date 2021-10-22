@@ -7,11 +7,8 @@ import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.pp.TlaInputError
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
-class TestSymbStateRewriterSet extends RewriterBase {
+trait TestSymbStateRewriterSet extends RewriterBase {
   private val parser = DefaultType1Parser
   private val intT = parser("Int")
   private val intSetT = parser("Set(Int)")
@@ -25,11 +22,11 @@ class TestSymbStateRewriterSet extends RewriterBase {
   private val intBoolT = parser("<<Int, Bool>>")
   private val intBoolSetT = parser("Set(<<Int, Bool>>)")
 
-  test("""{ x, y, z } ~~> c_set""") {
+  test("""{ x, y, z } ~~> c_set""") { rewriterType: String =>
     val ex = enumSet(name("x") as intT, name("y") as boolT, name("z") as boolT) as boolSetT
     val binding = Binding("x" -> arena.cellFalse(), "y" -> arena.cellTrue(), "z" -> arena.cellFalse())
     val state = new SymbState(ex, arena, binding)
-    create().rewriteOnce(state) match {
+    create(rewriterType).rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
           case set @ NameEx(_) =>
@@ -49,10 +46,10 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""{1, 3, 5} ~~> c_set""") {
+  test("""{1, 3, 5} ~~> c_set""") { rewriterType: String =>
     val ex = enumSet(int(1), int(3), int(5)) as intSetT
     val state = new SymbState(ex, arena, Binding())
-    create().rewriteOnce(state) match {
+    create(rewriterType).rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
           case NameEx(_) =>
@@ -66,17 +63,17 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""{} \in {}""") {
+  test("""{} \in {}""") { rewriterType: String =>
     val ex = in(enumSet() as intSetT, enumSet() as int2SetT) as boolT
     val state = new SymbState(ex, arena, Binding())
-    val nextState = create().rewriteUntilDone(state)
+    val nextState = create(rewriterType).rewriteUntilDone(state)
     assert(nextState.arena.cellFalse().toNameEx == nextState.ex)
   }
 
-  test("""3 \in {1, 3, 5}""") {
+  test("""3 \in {1, 3, 5}""") { rewriterType: String =>
     val ex = in(int(3), enumSet(int(1), int(3), int(5)) as intSetT) as boolT
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(name) =>
@@ -92,13 +89,13 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""{3} \in {{1}, {3}, {5}}""") {
+  test("""{3} \in {{1}, {3}, {5}}""") { rewriterType: String =>
     val ex = in(enumSet(int(3)) as intSetT,
         enumSet(enumSet(int(1)) as intSetT, enumSet(int(3)) as intSetT,
             enumSet(int(5)) as intSetT) as int2SetT) as boolT
 
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(name) =>
@@ -114,10 +111,10 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""2 \in {1, 3, 5}""") {
+  test("""2 \in {1, 3, 5}""") { rewriterType: String =>
     val ex = in(int(2), enumSet(int(1), int(3), int(5)) as intSetT) as boolT
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(name) =>
@@ -133,37 +130,37 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""2 \in Int""") {
+  test("""2 \in Int""") { rewriterType: String =>
     val ex = in(int(2), intSet() as intSetT) as boolT
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     assertTlaExAndRestore(rewriter, nextState)
   }
 
-  test("""2 \in Nat""") {
+  test("""2 \in Nat""") { rewriterType: String =>
     val ex = in(int(2), natSet() as intSetT) as boolT
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     assertTlaExAndRestore(rewriter, nextState)
   }
 
-  test("""-1 \in Nat""") {
+  test("""-1 \in Nat""") { rewriterType: String =>
     val ex = in(int(-1), natSet() as intSetT) as boolT
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     assertTlaExAndRestore(rewriter, nextState.setRex(not(nextState.ex as boolT) as boolT))
   }
 
-  test("""~({} \in {})""") {
+  test("""~({} \in {})""") { rewriterType: String =>
     val ex = not(in(enumSet() as intSetT, enumSet() as int2SetT) as boolT) as boolT
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     solverContext.push()
     solverContext.assertGroundExpr(nextState.ex)
@@ -175,11 +172,11 @@ class TestSymbStateRewriterSet extends RewriterBase {
     solverContext.pop()
   }
 
-  test("""FALSE \in {FALSE, TRUE}""") {
+  test("""FALSE \in {FALSE, TRUE}""") { rewriterType: String =>
     val ex =
       in(bool(false), enumSet(bool(false), bool(true)) as boolSetT) as boolT
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     rewriter.rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
@@ -200,11 +197,11 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""~(FALSE \in {FALSE, TRUE})""") {
+  test("""~(FALSE \in {FALSE, TRUE})""") { rewriterType: String =>
     val ex =
       not(in(bool(false), enumSet(bool(false), bool(true)) as boolSetT) as boolT) as boolT
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     rewriter.rewriteUntilDone(state).ex match {
       case predEx @ NameEx(name) =>
         rewriter.push()
@@ -219,13 +216,13 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""c_i \in {TRUE, TRUE}""") {
+  test("""c_i \in {TRUE, TRUE}""") { rewriterType: String =>
     arena = arena.appendCell(BoolT())
     val cell = arena.topCell
     val ex =
       in(cell.toNameEx as boolT, enumSet(bool(true), bool(true)) as boolSetT) as boolT
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     rewriter.rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
@@ -254,12 +251,12 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""1 \in {1}""") {
+  test("""1 \in {1}""") { rewriterType: String =>
     // regression: there is a special shortcut rule for singleton sets, which had a bug
     val ex = in(int(1), enumSet(int(1)) as intSetT) as boolT
 
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(name) =>
@@ -278,13 +275,13 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""~(Bool \in {TRUE, TRUE})""") {
+  test("""~(Bool \in {TRUE, TRUE})""") { rewriterType: String =>
     arena = arena.appendCell(BoolT())
     val cell = arena.topCell
     val ex =
       not(in(cell.toNameEx as boolT, enumSet(bool(true), bool(true)) as boolSetT) as boolT) as boolT
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     rewriter.rewriteUntilDone(state).ex match {
       case predEx @ NameEx(name) =>
         rewriter.push()
@@ -307,7 +304,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""{{}, {{}, {}}} \in {{}, {{}, {{}, {}}}}""") {
+  test("""{{}, {{}, {}}} \in {{}, {{}, {{}, {}}}}""") { rewriterType: String =>
     def intSet() = enumSet() as intSetT
 
     def int2Set() = enumSet() as int2SetT
@@ -320,7 +317,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
           enumSet(int2Set() as int2SetT, enumSet(intSet(), intSet()) as int2SetT) as int3SetT) as int4SetT
     val ex = in(left, right).typed(BoolT1())
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(_) =>
@@ -339,7 +336,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""{{}, {{{}}}} \in {{}, {{}, {{}}}""") {
+  test("""{{}, {{{}}}} \in {{}, {{}, {{}}}""") { rewriterType: String =>
     def intSet() = enumSet() as intSetT
 
     def int2Set() = enumSet() as int2SetT
@@ -352,7 +349,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = enumSet(int4Set(), enumSet(int3Set(), enumSet(int2Set()) as int3SetT) as int4SetT) as int5SetT
     val ex = in(left, right).typed(BoolT1())
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(_) =>
@@ -370,14 +367,14 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""{{}} = {} ~~> (false)""") {
+  test("""{{}} = {} ~~> (false)""") { rewriterType: String =>
     def intSet() = enumSet() as intSetT
 
     def int2Set() = enumSet() as int2SetT
 
     val ex = eql(enumSet(intSet()) as int2SetT, int2Set()) as boolT
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(_) =>
@@ -391,7 +388,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""{{}, {{}}} = {{}, {{{}}} ~~> (false)""") {
+  test("""{{}, {{}}} = {{}, {{{}}} ~~> (false)""") { rewriterType: String =>
     def intSet() = enumSet() as intSetT
 
     def int2Set() = enumSet() as int2SetT
@@ -402,7 +399,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = enumSet(int3Set(), enumSet(enumSet(intSet()) as int2SetT) as int3SetT) as int4SetT
     val ex = eql(left, right).typed(BoolT1())
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(name) =>
@@ -416,7 +413,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""{{}, {{}}} = {{}, {{}} ~~> (true)""") {
+  test("""{{}, {{}}} = {{}, {{}} ~~> (true)""") { rewriterType: String =>
     def intSet() = enumSet() as intSetT
 
     def int2Set() = enumSet() as int2SetT
@@ -426,7 +423,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val ex = eql(left, right)
       .typed(BoolT1())
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(_) =>
@@ -440,7 +437,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""{} = {1} \ {1} ~~> (true)""") {
+  test("""{} = {1} \ {1} ~~> (true)""") { rewriterType: String =>
     def intSet() = enumSet() as intSetT
 
     val setOf1 = enumSet(int(1)) as intSetT
@@ -450,7 +447,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
 
     val ex = eql(intSet(), dynEmpty).typed(BoolT1())
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(name) =>
@@ -467,7 +464,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""type incorrect { i \in {1}: FALSE } = { b \in {FALSE}: FALSE }""") {
+  test("""type incorrect { i \in {1}: FALSE } = { b \in {FALSE}: FALSE }""") { rewriterType: String =>
     // This test worked in the previous versions.
     // Now we enforce type correctness, and reject this expression right after type checking.
     // Although we keep this test, it cannot originate from a well-typed TLA+ code.
@@ -475,13 +472,13 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val boolFilter = filter(name("b") as boolSetT, enumSet(bool(false)) as boolSetT, bool(false)) as boolSetT
     val ex = eql(intFilter as intSetT, boolFilter as boolSetT) as boolT
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     assertThrows[MalformedTlaError] {
       rewriter.rewriteUntilDone(state)
     }
   }
 
-  test("""~({{}, {{}}} = {{}, {{}}})""") {
+  test("""~({{}, {{}}} = {{}, {{}}})""") { rewriterType: String =>
     def intSet() = enumSet() as intSetT
 
     def int2Set() = enumSet() as int2SetT
@@ -490,7 +487,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val right = enumSet(int2Set(), enumSet(intSet()) as int2SetT) as int3SetT
     val ex = not(eql(left, right) as boolT) as boolT
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(_) =>
@@ -503,13 +500,13 @@ class TestSymbStateRewriterSet extends RewriterBase {
         fail("Unexpected rewriting result")
     }
   }
-  test("""{x \in {1,2,3,4} : x % 2 = 0} ~~> {2, 4}""") {
+  test("""{x \in {1,2,3,4} : x % 2 = 0} ~~> {2, 4}""") { rewriterType: String =>
     val set = enumSet(int(1), int(2), int(3), int(4)) as intSetT
     val xMod2 = mod(name("x") as intT, int(2)) as intT
     val pred = eql(xMod2, int(0)) as intT
     val ex = filter(name("x") as intT, set, pred) as intSetT
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case newSet @ NameEx(name) =>
@@ -522,14 +519,14 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""2 \in {x \in {1,2,3,4} : x < 3}""") {
+  test("""2 \in {x \in {1,2,3,4} : x < 3}""") { rewriterType: String =>
     val set = enumSet(int(1), int(2), int(3), int(4)) as intSetT
     val pred = lt(name("x") as intT, int(3)) as boolT
     val filteredSet = filter(name("x") as intT, set, pred) as intSetT
     val inFilteredSet = in(int(2), filteredSet) as boolT
 
     val state = new SymbState(inFilteredSet, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx @ NameEx(_) =>
@@ -545,14 +542,14 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""{Q \in Expand(SUBSET {1,2,3}) : ~(2 \in Q)}""") {
+  test("""{Q \in Expand(SUBSET {1,2,3}) : ~(2 \in Q)}""") { rewriterType: String =>
     val set = enumSet(1.to(3).map(int): _*) as intSetT
 
     val predEx = not(in(int(2), name("Q") as intSetT) as boolT) as boolT
     val expandedPowSet = apalacheExpand(powSet(set) as int2SetT)
     val ex = filter(name("Q") as intSetT, expandedPowSet as int2SetT, predEx as boolT) as int2SetT
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     val inPred = in(enumSet(int(1), int(3)) as intSetT, nextState.ex) as boolT
@@ -561,7 +558,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     assertTlaExAndRestore(rewriter, nextState.setRex(notInPred))
   }
 
-  test("""\E X \in SUBSET {1} IN {} = {x \in X : [y \in X |-> TRUE][x]}""") {
+  test("""\E X \in SUBSET {1} IN {} = {x \in X : [y \in X |-> TRUE][x]}""") { rewriterType: String =>
     // regression
     val baseSet = enumSet(int(1)) as intSetT
     val pred =
@@ -572,7 +569,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
               eql(enumSet() as intSetT, filteredSet) as boolT) as boolT) as boolT
 
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = new SymbStateRewriterImpl(solverContext)
+    val rewriter = createWithoutCache(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case NameEx(_) =>
@@ -584,7 +581,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""\E X \in SUBSET {1, 2}: {} = {x \in X : [y \in {1} |-> TRUE][x]}""") {
+  test("""\E X \in SUBSET {1, 2}: {} = {x \in X : [y \in {1} |-> TRUE][x]}""") { rewriterType: String =>
     // regression
     val set1 = enumSet(int(1)) as intSetT
     val pred = appFun(funDef(bool(true), name("y") as intT, set1) as intToBoolT, name("x") as intT) as boolT
@@ -595,7 +592,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
               eql(enumSet() as intSetT, filteredSet) as boolT) as boolT) as boolT
 
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = new SymbStateRewriterImpl(solverContext)
+    val rewriter = createWithoutCache(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case NameEx(_) =>
@@ -610,7 +607,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""3 \in {x \in {2, 3} : x % 2 = 0}""") {
+  test("""3 \in {x \in {2, 3} : x % 2 = 0}""") { rewriterType: String =>
     val set = enumSet(int(2), int(3)) as intSetT
     val xMod2 = mod(name("x") as intT, int(2)) as intT
     val pred = eql(xMod2, int(0)) as boolT
@@ -618,7 +615,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val inFilteredSet = in(int(3), filteredSet) as boolT
 
     val state = new SymbState(inFilteredSet, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx @ NameEx(name) =>
@@ -634,13 +631,13 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""{ x / 3: x \in {1,2,3,4} }""") {
+  test("""{ x / 3: x \in {1,2,3,4} }""") { rewriterType: String =>
     val set = enumSet(1 to 4 map int: _*) as intSetT
     val mapping = div(name("x") as intT, int(3)) as intT
     val mappedSet = map(mapping, name("x") as intT, set) as intSetT
 
     val state = new SymbState(mappedSet, arena, Binding())
-    val nextState = create().rewriteUntilDone(state)
+    val nextState = create(rewriterType).rewriteUntilDone(state)
     nextState.ex match {
       case NameEx(_) =>
         assert(solverContext.sat())
@@ -651,14 +648,14 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""0 \in {x / 3: x \in {1,2,3,4}}""") {
+  test("""0 \in {x / 3: x \in {1,2,3,4}}""") { rewriterType: String =>
     val set = enumSet(1 to 4 map int: _*) as intSetT
     val mapping = div(name("x") as intT, int(3)) as intT
     val mappedSet = map(mapping, name("x") as intT, set) as intSetT
     val inMappedSet = in(int(0), mappedSet) as boolT
 
     val state = new SymbState(inMappedSet, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx @ NameEx(name) =>
@@ -674,14 +671,14 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""2 \in {x / 3: x \in {1,2,3,4}}""") {
+  test("""2 \in {x / 3: x \in {1,2,3,4}}""") { rewriterType: String =>
     val set = enumSet(1 to 4 map int: _*) as intSetT
     val mapping = div(name("x") as intT, int(3)) as intT
     val mappedSet = map(mapping, name("x") as intT, set) as intSetT
     val inMappedSet = in(int(2), mappedSet) as boolT
 
     val state = new SymbState(inMappedSet, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx @ NameEx(name) =>
@@ -698,16 +695,16 @@ class TestSymbStateRewriterSet extends RewriterBase {
   }
 
   // type inference would reject this
-  test("""error: {x: x \in Int}""") {
+  test("""error: {x: x \in Int}""") { rewriterType: String =>
     val set = intSet() as intSetT
     val mapSet = map(name("x") as intT, name("x") as intT, set) as intSetT
 
     val state = new SymbState(mapSet, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     assertThrows[TlaInputError](rewriter.rewriteUntilDone(state))
   }
 
-  test("""<<2, true>> \in {<<x, y>>: x \in {1,2,3}, y \in {FALSE, TRUE}}""") {
+  test("""<<2, true>> \in {<<x, y>>: x \in {1,2,3}, y \in {FALSE, TRUE}}""") { rewriterType: String =>
     val set123 = enumSet(1 to 3 map int: _*) as intSetT
     val setBool = enumSet(bool(false), bool(true)) as boolSetT
     val mapping = tuple(name("x") as intT, name("y") as boolT) as intBoolT
@@ -715,7 +712,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val inMappedSet = in(tuple(int(2), bool(true)) as intBoolT, mappedSet) as boolT
 
     val state = new SymbState(inMappedSet, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx @ NameEx(name) =>
@@ -731,7 +728,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""<<TRUE>> \in {<<y>>: x \in {1,2} \ {2}, y \in {FALSE, TRUE}}""") {
+  test("""<<TRUE>> \in {<<y>>: x \in {1,2} \ {2}, y \in {FALSE, TRUE}}""") { rewriterType: String =>
     // this expression tests regressions in cached expressions
     // we express {1, 2} \ {2} as a filter, as set difference is not in KerA+
     val set12minus2 =
@@ -744,7 +741,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
       .typed(BoolT1())
 
     val state = new SymbState(inMappedSet, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case membershipEx @ NameEx(name) =>
@@ -762,48 +759,49 @@ class TestSymbStateRewriterSet extends RewriterBase {
 
   // Regression for the issue 365: https://github.com/informalsystems/apalache/issues/365
   test("""MAP: \E S \in SUBSET { [a: "a", b: 1], [a: "a", b: 2] }:  "a" \in { r.a: r \in S }""") {
-    // this test reveals a deep bug in the encoding: SUBSET {[a: 1, b: 1], [a: 1, b: 2]} produces a powerset,
-    // whose elements are sets that refer to the same cells,
-    // namely the cells for the records [a: 1, b: 1] and [a: 1, b: 2].
-    // If one record is included in a subset, but the other is not, then the map rule produced a contradicting constraint
-    // for the element "a": it must be in the resulting set, and at the same time it must not be in the resulting set.
-    val recT = parser("[a: Str, b: Int]")
-    val recSetT = parser("Set([a: Str, b: Int])")
-    val rec2SetT = parser("Set(Set([a: Str, b: Int]))")
-    val strT = parser("Str")
-    val strSetT = parser("Set(Str)")
-    val rec1 = enumFun(str("a"), str("a"), str("b"), int(1)) as recT
-    val rec2 = enumFun(str("a"), str("a"), str("b"), int(2)) as recT
-    val base = enumSet(rec1, rec2) as recSetT
-    val powerset = powSet(base) as rec2SetT
-    val mapped =
-      map(appFun(name("r") as recT, str("a")) as strT, name("r") as recT, name("S") as recSetT) as strSetT
-    val mem = in(str("a"), mapped) as boolT
-    val existsForm = apalacheSkolem(exists(name("S") as recSetT, powerset as rec2SetT, mem) as boolT) as boolT
+    rewriterType: String =>
+      // this test reveals a deep bug in the encoding: SUBSET {[a: 1, b: 1], [a: 1, b: 2]} produces a powerset,
+      // whose elements are sets that refer to the same cells,
+      // namely the cells for the records [a: 1, b: 1] and [a: 1, b: 2].
+      // If one record is included in a subset, but the other is not, then the map rule produced a contradicting constraint
+      // for the element "a": it must be in the resulting set, and at the same time it must not be in the resulting set.
+      val recT = parser("[a: Str, b: Int]")
+      val recSetT = parser("Set([a: Str, b: Int])")
+      val rec2SetT = parser("Set(Set([a: Str, b: Int]))")
+      val strT = parser("Str")
+      val strSetT = parser("Set(Str)")
+      val rec1 = enumFun(str("a"), str("a"), str("b"), int(1)) as recT
+      val rec2 = enumFun(str("a"), str("a"), str("b"), int(2)) as recT
+      val base = enumSet(rec1, rec2) as recSetT
+      val powerset = powSet(base) as rec2SetT
+      val mapped =
+        map(appFun(name("r") as recT, str("a")) as strT, name("r") as recT, name("S") as recSetT) as strSetT
+      val mem = in(str("a"), mapped) as boolT
+      val existsForm = apalacheSkolem(exists(name("S") as recSetT, powerset as rec2SetT, mem) as boolT) as boolT
 
-    // the following test goes through without a need for a fix
-    val rewriter = create()
-    val state = new SymbState(existsForm, arena, Binding())
-    assumeTlaEx(rewriter, state)
+      // the following test goes through without a need for a fix
+      val rewriter = create(rewriterType)
+      val state = new SymbState(existsForm, arena, Binding())
+      assumeTlaEx(rewriter, state)
 
-    // the following test captures the core of the functional test in `test/tla/Fix365_ExistsSubset3.tla`,
-    // which needed a fix
-    // \E S \in SUBSET { [a: "a", b: 1], [a: "a", b: 2] }:  "a" \in { r.a: r \in S } /\ \A x \in S: x.b = 2
-    val forallForm =
-      forall(name("x") as recT, name("S") as recSetT,
-          eql(appFun(name("x") as recT, str("b")) as boolT, int(2)) as boolT) as boolT
-    val existsForm2 =
-      apalacheSkolem(exists(name("S") as recSetT, powerset, and(mem, forallForm) as boolT) as boolT) as boolT
+      // the following test captures the core of the functional test in `test/tla/Fix365_ExistsSubset3.tla`,
+      // which needed a fix
+      // \E S \in SUBSET { [a: "a", b: 1], [a: "a", b: 2] }:  "a" \in { r.a: r \in S } /\ \A x \in S: x.b = 2
+      val forallForm =
+        forall(name("x") as recT, name("S") as recSetT,
+            eql(appFun(name("x") as recT, str("b")) as boolT, int(2)) as boolT) as boolT
+      val existsForm2 =
+        apalacheSkolem(exists(name("S") as recSetT, powerset, and(mem, forallForm) as boolT) as boolT) as boolT
 
-    // reset the solver and arena
-    solverContext = new PreproSolverContext(new Z3SolverContext(SolverConfig.default.copy(debug = true)))
-    arena = Arena.create(solverContext)
-    val rewriter2 = create()
-    val state2 = new SymbState(existsForm2, arena, Binding())
-    assumeTlaEx(rewriter2, state2)
+      // reset the solver and arena
+      solverContext = new PreproSolverContext(new Z3SolverContext(SolverConfig.default.copy(debug = true)))
+      arena = Arena.create(solverContext)
+      val rewriter2 = create(rewriterType)
+      val state2 = new SymbState(existsForm2, arena, Binding())
+      assumeTlaEx(rewriter2, state2)
   }
 
-  test("""{1, 3} \cup {3, 4} = {1, 3, 4}""") {
+  test("""{1, 3} \cup {3, 4} = {1, 3, 4}""") { rewriterType: String =>
     val left = enumSet(int(1), int(3)) as intSetT
     val right = enumSet(int(3), int(4)) as intSetT
     val expected = enumSet(int(1), int(3), int(4)) as intSetT
@@ -811,7 +809,7 @@ class TestSymbStateRewriterSet extends RewriterBase {
     val eqExpected = eql(cupSet, expected) as boolT
 
     val state = new SymbState(eqExpected, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(name) =>
@@ -829,12 +827,12 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""{1, 2} \subseteq {1, 2, 3} ~~> (true)""") {
+  test("""{1, 2} \subseteq {1, 2, 3} ~~> (true)""") { rewriterType: String =>
     val left = enumSet(int(1), int(2)) as intSetT
     val right = enumSet(int(1), int(2), int(3)) as intSetT
     val ex = subseteq(left, right) as boolT
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(_) =>
@@ -851,11 +849,11 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""{1, 2, 3} \subseteq {1, 2, 3} ~~> (true)""") {
+  test("""{1, 2, 3} \subseteq {1, 2, 3} ~~> (true)""") { rewriterType: String =>
     val right = enumSet(int(1), int(2), int(3)) as intSetT
     val ex = subseteq(right, right) as boolT
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(_) =>
@@ -872,12 +870,12 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""{} \subseteq {1, 2, 3} ~~> (true)""") {
+  test("""{} \subseteq {1, 2, 3} ~~> (true)""") { rewriterType: String =>
     val right = enumSet(int(1), int(2), int(3)) as intSetT
     // an empty set requires a type annotation
     val ex = subseteq(enumSet() as intSetT, right) as boolT
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(name) =>
@@ -894,12 +892,12 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""{1, 4} \subseteq {1, 2, 3} ~~> (false)""") {
+  test("""{1, 4} \subseteq {1, 2, 3} ~~> (false)""") { rewriterType: String =>
     val left = enumSet(int(1), int(4)) as intSetT
     val right = enumSet(int(1), int(2), int(3)) as intSetT
     val ex = subseteq(left, right) as boolT
     val state = new SymbState(ex, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(_) =>
@@ -916,14 +914,14 @@ class TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""UNION {{1, 2}, {2,3}} = {1, 2, 3}""") {
+  test("""UNION {{1, 2}, {2,3}} = {1, 2, 3}""") { rewriterType: String =>
     val setOf12 = enumSet(int(1), int(2)) as intSetT
     val setOf23 = enumSet(int(3), int(2)) as intSetT
     val setOf123 = enumSet(int(1), int(2), int(3)) as intSetT
     // This may seem weird, but since we don't know the type of {},
     // it should be equal to the empty set of ints.
     val eq = eql(union(enumSet(setOf12, setOf23) as int2SetT) as intSetT, setOf123) as boolT
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val state = new SymbState(eq, arena, Binding())
     assertTlaExAndRestore(rewriter, state)
   }

@@ -5,11 +5,8 @@ import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
-class TestSymbStateRewriterFoldSet extends RewriterBase {
+trait TestSymbStateRewriterFoldSet extends RewriterBase {
   private val types = Map(
       "b" -> BoolT1(),
       "i" -> IntT1(),
@@ -21,7 +18,7 @@ class TestSymbStateRewriterFoldSet extends RewriterBase {
       "ibI" -> TupT1(IntT1(), BoolT1(), SetT1(IntT1()))
   )
 
-  test("""FoldSet( LAMBDA x,y: C, v, S ) = C""") {
+  test("""FoldSet( LAMBDA x,y: C, v, S ) = C""") { rewriterType: String =>
     // A : (a,b) => a
     // A(p,q) == 0
     val a = IntT1()
@@ -46,12 +43,12 @@ class TestSymbStateRewriterFoldSet extends RewriterBase {
 
     val state = new SymbState(eqn, arena, Binding())
 
-    assert(new FoldSetRule(this.create()).isApplicable(state.setRex(foldEx)))
+    assert(new FoldSetRule(this.create(rewriterType)).isApplicable(state.setRex(foldEx)))
 
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""FoldSet( LAMBDA x,y: ..., v, {} ) = v""") {
+  test("""FoldSet( LAMBDA x,y: ..., v, {} ) = v""") { rewriterType: String =>
     // A : (a,b) => a
     // A(p,q) == 0
     val a = IntT1()
@@ -75,10 +72,10 @@ class TestSymbStateRewriterFoldSet extends RewriterBase {
 
     val state = new SymbState(eqn, arena, Binding())
 
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""FoldSet( LAMBDA x,y: x + 1, 0, S ) = Card(S)""") {
+  test("""FoldSet( LAMBDA x,y: x + 1, 0, S ) = Card(S)""") { rewriterType: String =>
     // A : (a,b) => a
     // A(p,q) == p + 1
     val a = IntT1()
@@ -106,10 +103,10 @@ class TestSymbStateRewriterFoldSet extends RewriterBase {
 
     val state = new SymbState(eqn, arena, Binding())
 
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""FoldSet( LAMBDA x,y: x + y, 0, S ) = Sum(S)""") {
+  test("""FoldSet( LAMBDA x,y: x + y, 0, S ) = Sum(S)""") { rewriterType: String =>
     // A : (a,b) => a
     // A(p,q) == p + q
     val a = IntT1()
@@ -138,6 +135,6 @@ class TestSymbStateRewriterFoldSet extends RewriterBase {
 
     val state = new SymbState(eqn, arena, Binding())
 
-    assertTlaExAndRestore(create(), state)
+    assertTlaExAndRestore(create(rewriterType), state)
   }
 }

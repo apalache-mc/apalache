@@ -4,15 +4,12 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
 /**
  * Tests for assignments. The assignments were at the core of Apalache 0.5.x. In Apalache 0.6.x, they are preprocessed
  * into Skolemizable existential quantifiers. We keep the tests for regression.
  */
-@RunWith(classOf[JUnitRunner])
-class TestSymbStateRewriterAssignment extends RewriterBase {
+trait TestSymbStateRewriterAssignment extends RewriterBase {
   private val types =
     Map("b" -> BoolT1(), "B" -> SetT1(BoolT1()), "i" -> IntT1(), "I" -> SetT1(IntT1()), "II" -> SetT1(SetT1(IntT1())),
         "b_to_i" -> FunT1(BoolT1(), IntT1()), "b_TO_i" -> SetT1(FunT1(BoolT1(), IntT1())),
@@ -24,12 +21,12 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
   private val boundName: TlaEx = name("t").typed(IntT1())
   private val boolset: TlaEx = enumSet(bool(false), bool(true)).typed(SetT1(BoolT1()))
 
-  test("""\E t \in {1, 2}: x' \in {t} ~~> TRUE and [x -> $C$k]""") {
+  test("""\E t \in {1, 2}: x' \in {t} ~~> TRUE and [x -> $C$k]""") { rewriterType: String =>
     val asgn = apalacheSkolem(exists(boundName, set12, assign(x_prime, boundName) ? "b") ? "b").typed(types, "b")
 
     val state = new SymbState(asgn, arena, Binding())
 
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat()) // no contradiction introduced
 
@@ -50,7 +47,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     assertUnsatOrExplain(rewriter, nextState) // should not be possible
   }
 
-  test("""assign in conjunction""") {
+  test("""assign in conjunction""") { rewriterType: String =>
     val and1 =
       and(
           assign(x_prime, int(1)) ? "b",
@@ -58,7 +55,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
       ).typed(types, "b")
 
     val state = new SymbState(and1, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     val x_cell = nextState.binding("x'").toNameEx
     val y_cell = nextState.binding("y'").toNameEx
@@ -78,12 +75,12 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     assertUnsatOrExplain(rewriter, nextState) // should not be possible
   }
 
-  test("""\E t \in {}: x' = t ~~> FALSE""") {
+  test("""\E t \in {}: x' = t ~~> FALSE""") { rewriterType: String =>
     val asgn =
       apalacheSkolem(exists(boundName, enumSet() ? "I", assign(x_prime, boundName) ? "b") ? "b").typed(types, "b")
 
     val state = new SymbState(asgn, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case NameEx(name) =>
@@ -95,7 +92,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     }
   }
 
-  test("""\E t \in \in {t_2 \in {1}: FALSE}: x' \in {t} ~~> FALSE""") {
+  test("""\E t \in \in {t_2 \in {1}: FALSE}: x' \in {t} ~~> FALSE""") { rewriterType: String =>
     // a regression test
     def empty(set: BuilderEx): TlaEx = {
       filter(name("t_2") ? "i", set ? "I", bool(false)).typed(types, "I")
@@ -106,7 +103,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
           "b")
 
     val state = new SymbState(asgn, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     // no contradiction should be introduced
     assert(solverContext.sat())
@@ -114,12 +111,12 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     assertTlaExAndRestore(rewriter, nextState.setRex(not(nextState.ex).typed(BoolT1())))
   }
 
-  test("""x' \in {1} /\ x' = 1 ~~> TRUE and [x -> $C$k]""") {
+  test("""x' \in {1} /\ x' = 1 ~~> TRUE and [x -> $C$k]""") { rewriterType: String =>
     val asgn = assign(x_prime, int(1))
     val and1 = and(asgn ? "b", eql(x_prime, int(1)) ? "b").typed(types, "b")
 
     val state = new SymbState(and1, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case NameEx(_) =>
@@ -141,12 +138,12 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     assert(!solverContext.sat())
   }
 
-  test("""\E t \in {{1, 2}, {2, 3}}: x' \in {t} ~~> TRUE and [x -> $C$k]""") {
+  test("""\E t \in {{1, 2}, {2, 3}}: x' \in {t} ~~> TRUE and [x -> $C$k]""") { rewriterType: String =>
     val set = enumSet(set12, enumSet(int(2), int(3)) ? "I").typed(types, "II")
     val asgn = apalacheSkolem(exists(boundName, set, assign(x_prime, boundName) ? "b") ? "b").typed(types, "b")
 
     val state = new SymbState(asgn, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     // no contradiction introduced
     assert(solverContext.sat())
@@ -179,7 +176,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     assertUnsatOrExplain(rewriter, eqState13) // should not be possible
   }
 
-  test("""\E t \in {{1, 2}, {1+1, 2, 3}} \ {{2, 3}}: x' \in {t} ~~> TRUE and [x -> $C$k]""") {
+  test("""\E t \in {{1, 2}, {1+1, 2, 3}} \ {{2, 3}}: x' \in {t} ~~> TRUE and [x -> $C$k]""") { rewriterType: String =>
     // equal elements in different sets mess up picking from a set
     def setminus(left: TlaEx, right: TlaEx): TlaEx = {
       // this is how Keramelizer translates setminus
@@ -197,7 +194,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
         .typed(types, "b")
 
     val state = new SymbState(asgn, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     // no contradiction introduced
     assert(solverContext.sat())
@@ -241,14 +238,14 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     rewriter.pop()
   }
 
-  test("""\E t \in SUBSET {1, 2}: x' \in {t} ~~> TRUE and [x -> $C$k]""") {
+  test("""\E t \in SUBSET {1, 2}: x' \in {t} ~~> TRUE and [x -> $C$k]""") { rewriterType: String =>
     val set = powSet(set12).typed(types, "II")
     val asgn =
       apalacheSkolem(exists(boundName, set, assign(x_prime, boundName) ? "b") ? "b")
         .typed(types, "b")
 
     val state = new SymbState(asgn, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     val boundCell =
       nextState.ex match {
@@ -305,7 +302,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     assertUnsatOrExplain(rewriter, eqState13) // should not be possible
   }
 
-  test("""\E t \in {[x \in BOOLEAN |-> 0], [x2 \in BOOLEAN |-> 1]}: x' \in {t} ~~> TRUE""") {
+  test("""\E t \in {[x \in BOOLEAN |-> 0], [x2 \in BOOLEAN |-> 1]}: x' \in {t} ~~> TRUE""") { rewriterType: String =>
     val fun0 = funDef(int(0), name("x2") ? "b", booleanSet() ? "B").typed(types, "b_to_i")
     val fun1 = funDef(int(1), name("x3") ? "b", booleanSet() ? "B").typed(types, "b_to_i")
     val fun2 = funDef(int(2), name("x4") ? "b", booleanSet() ? "B").typed(types, "b_to_i")
@@ -315,7 +312,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
         .typed(types, "b")
 
     val state = new SymbState(asgn, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     // no contradiction introduced
     assert(solverContext.sat())
@@ -346,7 +343,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     assertUnsatOrExplain(rewriter, eqStateFun2) // should not be possible
   }
 
-  test("""\E t \in [BOOLEAN -> {0, 1}]: x' \in {t} ~~> TRUE""") {
+  test("""\E t \in [BOOLEAN -> {0, 1}]: x' \in {t} ~~> TRUE""") { rewriterType: String =>
     val fun0 = funDef(int(0), name("x") ? "b", booleanSet() ? "B").typed(types, "b_to_i")
     val fun1 = funDef(int(1), name("x") ? "b", booleanSet() ? "B").typed(types, "b_to_i")
     val fun2 = funDef(int(2), name("x") ? "b", booleanSet() ? "B").typed(types, "b_to_i")
@@ -355,7 +352,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
       apalacheSkolem(exists(boundName, set, assign(x_prime, boundName) ? "b") ? "b").typed(types, "b")
 
     val state = new SymbState(asgn, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     val boundCell =
       nextState.ex match {
@@ -393,7 +390,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     assertUnsatOrExplain(rewriter, eqStateFun2) // should not be possible
   }
 
-  test("""\E t \in [{} -> {0, 1}]: x' \in {t} ~~> FALSE""") {
+  test("""\E t \in [{} -> {0, 1}]: x' \in {t} ~~> FALSE""") { rewriterType: String =>
     // regression
     val set = funSet(enumSet() ? "I", enumSet(int(0), int(1)) ? "I").typed(types, "i_TO_i")
     val asgn =
@@ -401,7 +398,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
         .typed(types, "b")
 
     val state = new SymbState(asgn, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     // no contradiction introduced
     assert(solverContext.sat())
@@ -410,7 +407,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     assertTlaExAndRestore(rewriter, nextState)
   }
 
-  test("""\E t \in [0..(5 - 1) -> BOOLEAN]: x' \in {t} ~~> TRUE""") {
+  test("""\E t \in [0..(5 - 1) -> BOOLEAN]: x' \in {t} ~~> TRUE""") { rewriterType: String =>
     val domain = dotdot(int(0), minus(int(5), int(1)) ? "i").typed(types, "I")
     val set = funSet(domain, boolset).typed(types, "i_to_b")
     val asgn =
@@ -418,7 +415,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
         .typed(types, "b")
 
     val state = new SymbState(asgn, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case NameEx(name) =>
@@ -432,7 +429,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     }
   }
 
-  test("""\E t \in [0..4 -> Nat]: x' <- t""") {
+  test("""\E t \in [0..4 -> Nat]: x' <- t""") { rewriterType: String =>
     val domain = dotdot(int(0), int(4)).typed(types, "I")
     val set = funSet(domain, natSet() ? "I").typed(types, "i_TO_i")
     val asgn =
@@ -440,7 +437,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
         .typed(types, "b")
 
     val state = new SymbState(asgn, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(rewriter.solverContext.sat())
     val x = nextState.binding("x'")
@@ -449,7 +446,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
     assertTlaExAndRestore(rewriter, nextState.setRex(pred))
   }
 
-  test("""\E t \in [0..4 -> Int]: x' <- t""") {
+  test("""\E t \in [0..4 -> Int]: x' <- t""") { rewriterType: String =>
     val domain = dotdot(int(0), int(4)).typed(types, "I")
     val set = funSet(domain, intSet() ? "I").typed(types, "i_TO_i")
     val asgn =
@@ -457,14 +454,14 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
         .typed(types, "b")
 
     val state = new SymbState(asgn, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(rewriter.solverContext.sat())
-    // there is not much to check here, since it is just a function that returns an integer
+  // there is not much to check here, since it is just a function that returns an integer
   }
 
   // the model checker will never meet such an expression, as it will be optimized into several existentials by ExprOptimizer
-  test("""\E t \in {<<1, FALSE, {1, 3}>>, <<2, TRUE, {4}>>}: x' = t""") {
+  test("""\E t \in {<<1, FALSE, {1, 3}>>, <<2, TRUE, {4}>>}: x' = t""") { rewriterType: String =>
     val set1 = enumSet(int(1), int(3)).typed(types, "I")
     val tuple1 = tuple(int(1), bool(false), set1).typed(types, "ibI")
     val set2 = enumSet(int(4)).typed(types, "I")
@@ -476,7 +473,7 @@ class TestSymbStateRewriterAssignment extends RewriterBase {
         .typed(types, "b")
 
     val state = new SymbState(asgn, arena, Binding())
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case NameEx(_) =>

@@ -5,9 +5,14 @@ import java.io.{PrintWriter, StringWriter}
 import at.forsyte.apalache.tla.bmcmt.smt.{PreproSolverContext, SolverConfig, SolverContext, Z3SolverContext}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatest.{fixture, BeforeAndAfterEach}
 
-class RewriterBase extends FunSuite with BeforeAndAfterEach {
+trait RewriterBase extends fixture.FunSuite with BeforeAndAfterEach {
+  protected type FixtureParam = String
+
+  protected val oopsla19RewriterType = "oopsla19"
+  protected val arraysRewriterType = "arrays"
+
   protected var solverContext: SolverContext = _
   protected var arena: Arena = _
 
@@ -20,12 +25,21 @@ class RewriterBase extends FunSuite with BeforeAndAfterEach {
     solverContext.dispose()
   }
 
-  protected def create(): SymbStateRewriterAuto = {
-    new SymbStateRewriterAuto(solverContext)
+  protected def create(rewriterType: String): SymbStateRewriter = {
+    rewriterType match {
+      case `oopsla19RewriterType` => new SymbStateRewriterAuto(solverContext)
+      case `arraysRewriterType`   => new SymbStateRewriterAutoWithArrays(solverContext)
+      case oddRewriterType        => throw new IllegalArgumentException(s"Unexpected rewriter of type $oddRewriterType")
+    }
   }
 
-  protected def createWithoutCache(): SymbStateRewriter = {
-    new SymbStateRewriterImpl(solverContext)
+  protected def createWithoutCache(rewriterType: String): SymbStateRewriter = {
+    rewriterType match {
+      case `oopsla19RewriterType` => new SymbStateRewriterImpl(solverContext)
+      case `arraysRewriterType`   => new SymbStateRewriterImplWithArrays(solverContext)
+      case oddRewriterType =>
+        throw new IllegalArgumentException(s"Unexpected cacheless rewriter of type $oddRewriterType")
+    }
   }
 
   protected def assertUnsatOrExplain(rewriter: SymbStateRewriter, state: SymbState): Unit = {

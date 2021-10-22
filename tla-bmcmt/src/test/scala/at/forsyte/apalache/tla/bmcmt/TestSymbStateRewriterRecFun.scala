@@ -3,11 +3,8 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
-class TestSymbStateRewriterRecFun extends RewriterBase with TestingPredefs {
+trait TestSymbStateRewriterRecFun extends RewriterBase with TestingPredefs {
   private val types =
     Map(
         "b" -> BoolT1(),
@@ -16,7 +13,7 @@ class TestSymbStateRewriterRecFun extends RewriterBase with TestingPredefs {
         "i_to_i" -> FunT1(IntT1(), IntT1())
     )
 
-  test("""recursive fun: f[n \in { 1, 2, 3 }] == IF n <= 1 THEN 2 ELSE 2 * f[n - 1]""") {
+  test("""recursive fun: f[n \in { 1, 2, 3 }] == IF n <= 1 THEN 2 ELSE 2 * f[n - 1]""") { rewriterType: String =>
     val set = enumSet(int(1), int(2), int(3)) ? "I"
     val ref = recFunRef() ? "i_to_i"
 
@@ -29,7 +26,7 @@ class TestSymbStateRewriterRecFun extends RewriterBase with TestingPredefs {
     val fun = recFunDef(map, name("n") ? "i", set)
       .typed(types, "i_to_i")
 
-    val rewriter = create()
+    val rewriter = create(rewriterType)
     var state = rewriter.rewriteUntilDone(new SymbState(fun, arena, Binding()))
     val funCell = state.ex
 
