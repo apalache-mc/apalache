@@ -70,6 +70,7 @@ jobs:
       matrix:
         # Pinned to maxos-10 as temp workaround for https://github.com/cachix/install-nix-action/issues/96
         operating-system: [ubuntu-latest, macos-latest]
+        smt-encoding: [oopsla19, arrays]
     steps:
       - uses: actions/checkout@v2
       - name: Cache local Maven repository
@@ -106,6 +107,8 @@ jobs:
         run: nix develop -c make build-quick
       - name: Run integration tests
         run: nix develop -c make integration
+        env:
+          SMT_ENCODING: ${{ matrix.smt-encoding }}
 
   docker-tests:
     runs-on: ubuntu-latest
