@@ -89,9 +89,11 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
     params.checkForDeadlocks = !options.getOrElse("checker", "noDeadlocks", false)
     params.nMaxErrors = options.getOrElse("checker", "maxError", 1)
 
-    var smtEncodingCLI: Option[String] = options.get("checker", "smt-encoding")
-    smtEncodingCLI = if (smtEncodingCLI.get.equals("")) None else smtEncodingCLI
-    params.smtEncoding = smtEncodingCLI.orElse(sys.env.get("SMT_ENCODING")).getOrElse(oopsla19Encoding)
+    params.smtEncoding = options
+      .get("checker", "smt-encoding")
+      .flatten
+      .orElse(sys.env.get("SMT_ENCODING"))
+      .getOrElse(oopsla19Encoding)
 
     val smtProfile = options.getOrElse("smt", "prof", false)
     val smtRandomSeed = tuning.getOrElse("smt.randomSeed", "0").toInt
