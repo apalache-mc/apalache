@@ -140,7 +140,7 @@ jobs:
       - name: Build the docker image
         run: docker build -t informalsystems/apalache:ci .
       - name: Run integration tests in docker container
-        run: nix develop -c make integration
+        run: nix develop -c bash -c "source ./test/.envrc && make integration"
         env:
           USE_DOCKER: true
           APALACHE_TAG: ci
