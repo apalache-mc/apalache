@@ -39,7 +39,7 @@ test:
 	mvn test
 
 integration:
-	test/mdx-test.py --debug
+	test/mdx-test.py --debug "$(TEST_FILTER)"
 
 # Invokes the md targets below
 promote: $(TEST_MD_FILES)
