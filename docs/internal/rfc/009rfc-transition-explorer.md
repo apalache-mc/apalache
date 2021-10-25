@@ -27,6 +27,16 @@ Users of Apalache have voiced a need for the following kinds of behavior:
 The discussion around these needs is summarized and linked in
 [#79](https://github.com/informalsystems/apalache/issues/79) .
 
+The proximal use cases motivating this feature are discovered in the needs of or
+collaborators working on implementing model based testing (MBT) via the
+[Modelator](https://github.com/informalsystems/modelator) project.
+[@konnov](https://github.com/konnov) has given the following articulation of the
+general concern:
+
+> For MBT we need some way to exhaustively enumerate all counterexamples
+> according to some strategy. There could be different strategies that vary in
+> terms of implementation complexity or the number of produced counterexamples
+
 The upshot: we can provide value by adding a utility that will allow users to
 interactively and incrementally explore the transition systems defined by a
 given TLA+ spec.
@@ -154,17 +164,28 @@ It attempts to give a highly abstracted interface, but in terms of existing data
 structures. Naturally, refinements and alterations are to be expected during
 implementation.
 
-We refer to symbolic states as `SymbStates`, and put this terminology in the API
-in order to help users understand when they should be thinking in terms of
-symbolic states.  Concrete states can be obtained by the calls suffixed with
-`Examples`.
+We refer to symbolic states as `Frames`, which are understood as a set of
+constraints, and we put this terminology in the API in order to help users
+understand when they should be thinking in terms of symbolic states vs. concrete
+states. Concrete states can be obtained by the calls suffixed with `Examples`.
+
+In essence, this proposed API is only a thin wrapper around the
+[TransitionExecutor
+class](https://github.com/informalsystems/apalache/tree/master/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/trex/TransitionExecutor.scala).
+During previous iterations of the proposed API we discussed exposing a
+higher-level API, targeted at meeting the specified requirements more directly.
+However, discussion revealed that the expensive computational costs of SAT
+solving in most cases made it infeasible to meet the requirements in this way.
+Instead, we must expose the methods of `TransitionExecutor`, and task the users
+to build their own exploration strategies with these primitives. It is likely,
+however, that we can provide higher-level functionality to users by way of the
+wrapper libraries we implement on top of the proposed API.
 
 **NOTE:** This interface is intended as an abstract API, to communicate the
 mappings from request to reply. See the [gRPC Example](#grpc-example) for a
 sketch of what the actual implementation may look like.
 
 ```scala
-
 /** A State is a map from variables to values  */
 type State = Map[TlaEx, TlaEx]
 
@@ -177,8 +198,8 @@ trait TransEx {
 
   /** Reset the state of the explorer
    *
-   * Returns the explorer to the same state as if the currently loaded model where
-   * freshly loaded. Used to restart exploration from a clean slate.
+   * Returns the explorer to the same state as when the currently loaded model
+   * was freshly loaded. Used to restart exploration from a clean slate.
    *
    * [TRANS-EX.1::LOAD.1]
    */
@@ -191,17 +212,14 @@ trait TransEx {
    *
    * [TRANS-EX.1::QCHECK.1]
    * [TRANS-EX.1::LOAD.1]
-   *
+   * [TRANS-EX.1::SBMC.1::TRANSITIONS.1]
+   * 
    * @param spec the root TLA+ module 
-   * @param constants a map representing the intializationg of constant values
    * @param aux auxiliary modules that may be required by the root module
    * @return `Left(LoadErr)` if parsing or loading the model from `spec` goes
-   *          wrong, or `Right(())` if the model is loaded successfully.
+   *          wrong, or `Right(CheckerInput)` if the model is loaded successfully.
    */
-  def loadModel(spec: String, constants: Map[TlaEx, TlaEx], aux: List[String] = List()): Either[LoadErr, Unit]
-
-  /**  The root module currently loaded in memory  */
-  def loadedModel: Option[TlaModule]
+  def loadModel(spec: String, aux: List[String] = List()): Either[LoadErr, CheckerInput]
 
   /** Concrete states exemplifying the initial symbolic states of the model
    *
@@ -301,6 +319,13 @@ trait TransEx {
   ): List[TlaEx]
 }
 ```
+
+**NOTES:**
+
+- `LoadModel` returns a [`CheckerInput`][] provider the user parsed data
+  representing all of the model's static properties.
+
+[CheckerInput]: https://github.com/informalsystems/apalache/blob/25463681220c7fca9d57d29d8992c8c02abc117d/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/CheckerInput.scala#L20-L21
 
 #### Protocol
 
