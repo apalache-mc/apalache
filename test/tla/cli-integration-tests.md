@@ -116,6 +116,14 @@ $ JVM_ARGS="-Xmx16m" apalache-mc version | sed 's/-DTLA-Library.*//'
 EXITCODE: OK
 ```
 
+### executable records when CLI args are set via environment variables
+
+```sh
+$ cat $(SMT_ENCODING=arrays apalache-mc check --length=0 Fix531.tla | sed -n 's/^Output directory: \(.*\)$/\1/p')/run.txt
+SMT_ENCODING=arrays check --length=0 Fix531.tla
+```
+
+ 
 ## running the parse command
 
 This command parses a TLA+ specification with the SANY parser.
