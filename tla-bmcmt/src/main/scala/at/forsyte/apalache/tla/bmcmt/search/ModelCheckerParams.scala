@@ -92,6 +92,11 @@ class ModelCheckerParams(checkerInput: CheckerInput, val stepsBound: Int, val sa
   val smtTimeoutSec: Long =
     BigInt(tuningOptions.getOrElse("search.smt.timeout", "0")).toLong
 
+  /**
+   * The SMT encoding to be used.
+   */
+  var smtEncoding: String = ""
+
   // does the transition number satisfy the given filter at the given step?
   def stepMatchesFilter(stepNo: Int, transitionNo: Int): Boolean = {
     if (transitionFilter.length <= stepNo) {

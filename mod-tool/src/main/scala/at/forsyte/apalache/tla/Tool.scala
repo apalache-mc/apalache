@@ -252,6 +252,7 @@ object Tool extends LazyLogging {
     executor.options.set("checker.discardDisabled", check.discardDisabled)
     executor.options.set("checker.noDeadlocks", check.noDeadlocks)
     executor.options.set("checker.algo", check.algo)
+    executor.options.set("checker.smt-encoding", check.smtEncoding)
     executor.options.set("checker.maxError", check.maxError)
     if (check.view != "")
       executor.options.set("checker.view", check.view)

@@ -32,6 +32,9 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
     @Named("AfterChecker") nextPass: Pass)
     extends BoundedCheckerPass with LazyLogging {
 
+  private val oopsla19Encoding = "oopsla19"
+  private val arraysEncoding = "arrays"
+
   /**
    * The pass name.
    *
@@ -86,6 +89,12 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
     params.checkForDeadlocks = !options.getOrElse("checker", "noDeadlocks", false)
     params.nMaxErrors = options.getOrElse("checker", "maxError", 1)
 
+    params.smtEncoding = options
+      .get("checker", "smt-encoding")
+      .flatten
+      .orElse(sys.env.get("SMT_ENCODING"))
+      .getOrElse(oopsla19Encoding)
+
     val smtProfile = options.getOrElse("smt", "prof", false)
     val smtRandomSeed = tuning.getOrElse("smt.randomSeed", "0").toInt
     val solverConfig = SolverConfig(debug, smtProfile, smtRandomSeed)
@@ -114,8 +123,12 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
         None
       }
 
-    val rewriter: SymbStateRewriterImpl =
-      new SymbStateRewriterImpl(solverContext, exprGradeStore, metricProfilerListener)
+    val rewriter: SymbStateRewriterImpl = params.smtEncoding match {
+      case `oopsla19Encoding` => new SymbStateRewriterImpl(solverContext, exprGradeStore, metricProfilerListener)
+      case `arraysEncoding` =>
+        new SymbStateRewriterImplWithArrays(solverContext, exprGradeStore, metricProfilerListener)
+      case oddEncoding => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
+    }
 
     rewriter.formulaHintsStore = hintsStore
     rewriter.config = RewriterConfig(tuning)
@@ -142,7 +155,11 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
       logger.warn("SMT profiling is enabled, but offline SMT is used. No profiling data will be written.")
     }
 
-    val rewriter: SymbStateRewriterImpl = new SymbStateRewriterImpl(solverContext, exprGradeStore)
+    val rewriter: SymbStateRewriterImpl = params.smtEncoding match {
+      case `oopsla19Encoding` => new SymbStateRewriterImpl(solverContext, exprGradeStore)
+      case `arraysEncoding`   => new SymbStateRewriterImplWithArrays(solverContext, exprGradeStore)
+      case oddEncoding        => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
+    }
     rewriter.formulaHintsStore = hintsStore
     rewriter.config = RewriterConfig(tuning)
 
@@ -208,7 +225,11 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
     val solverContext: RecordingZ3SolverContext = RecordingZ3SolverContext(None, params.debug, profile)
 
     val typeFinder = new TrivialTypeFinder
-    val rewriter: SymbStateRewriterImpl = new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
+    val rewriter: SymbStateRewriterImpl = params.smtEncoding match {
+      case `oopsla19Encoding` => new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
+      case `arraysEncoding`   => new SymbStateRewriterImplWithArrays(solverContext, typeFinder, exprGradeStore)
+      case oddEncoding        => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
+    }
     rewriter.formulaHintsStore = hintsStore
     rewriter.config = RewriterConfig(tuning)
 
