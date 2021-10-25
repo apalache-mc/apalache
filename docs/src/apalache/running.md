@@ -2,7 +2,7 @@
 
 **Opt-in statistics programme**: if you opt-in for statistics collection (off by default), then every run of Apalache
 will submit anonymized statistics to
-`tlapl.us`. See the details in [TLA+ Anonymized Execution Statistics](./statistics.html).
+`tlapl.us`. See the details in [TLA+ Anonymized Execution Statistics](./statistics.md).
 
 ## Model checker command-line parameters
 
@@ -12,6 +12,7 @@ The model checker can be run as follows:
 $ apalache check [--config=filename] [--init=Init] [--cinit=ConstInit] \
     [--next=Next] [--inv=Inv] [--length=10] [--algo=(incremental|offline)] \
     [--discard-disabled] [--no-deadlock] [--tuning=filename] [--tune-here=options] \
+    [--smt-encoding=(oopsla19|arrays)] \
     <myspec>.tla
 ```
 
@@ -29,6 +30,9 @@ The arguments are as follows:
     - `--algo` lets you to choose the search algorithm: `incremental` is using the incremental SMT solver, `offline` is
       using the non-incremental
       (offline) SMT solver
+    - `smt-encoding` lets you choose how the SMT instances are encoded: `oopsla19` (default) uses QF_UFNIA, and
+      `arrays` (experimental) uses arrays with extensionality. This parameter can also be set via the
+      `SMT_ENCODING` environment variable. See the [alternative SMT encoding using arrays] for details.
     - `--discard-disabled` does a pre-check on transitions and discard the disabled ones at every step. If you know that
       many transitions are always enabled, set it to false. Sometimes, this pre-check may be slower than checking the
       invariant. Default: true.
@@ -44,6 +48,12 @@ The arguments are as follows:
 
 If an initialization predicate, transition predicate, or invariant is specified both in the configuration file, and on
 the command line, the command line parameters take precedence over those in the configuration file.
+
+In case conflicting arguments are passed for the same parameter, the following precedence order is followed:
+
+1. Command-line value
+2. Configuration file value
+3. Environment variable value
 
 ### Supplying JVM arguments
 
@@ -264,4 +274,5 @@ In this case, Apalache performs the following steps:
 
 1. It pretty-prints the IR into `out-parser.tla`, see [Detailed output](#detailed).
 
+[alternative SMT encoding using arrays]: ../adr/011adr-smt-arrays.md
 [Enumeration of counterexamples]: ./enumeration.md
