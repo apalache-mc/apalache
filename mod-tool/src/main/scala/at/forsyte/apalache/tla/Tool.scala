@@ -56,7 +56,7 @@ object Tool extends LazyLogging {
     val outFile = new File(runDir.toFile, OutputManager.Names.RunFile)
     val writer = new PrintWriter(new FileWriter(outFile, false))
     try {
-      writer.println(s"${cmd.label} ${cmd.invocation}")
+      writer.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
     } finally {
       writer.close()
     }
