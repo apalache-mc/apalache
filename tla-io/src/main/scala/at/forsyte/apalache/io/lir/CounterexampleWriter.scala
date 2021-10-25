@@ -1,12 +1,13 @@
 package at.forsyte.apalache.io.lir
 
+import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.io.json.impl.TlaToUJson
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.values.TlaBool
 
-import java.io.{FileWriter, PrintWriter}
+import java.io.{File, FileWriter, PrintWriter}
 import java.util.Calendar
 
 /**
@@ -145,26 +146,29 @@ object CounterexampleWriter {
    * @param states       sequence of states that represent the counterexample
    */
   def writeAllFormats(suffix: String, rootModule: TlaModule, notInvariant: NotInvariant,
-      states: List[NextState]): List[String] = {
-    val fileNames = Map(
-        "tla" -> s"counterexample$suffix.tla",
-        "tlc" -> s"MC$suffix.out",
-        "json" -> s"counterexample$suffix.json"
-    )
-    val files = fileNames.map { case (kind, name) =>
-      (kind, new PrintWriter(new FileWriter(name)))
-    }
-    try {
-      files.foreach { case (kind, writer) =>
-        apply(kind, writer).write(rootModule, notInvariant, states)
+      states: List[NextState]): List[String] =
+    OutputManager.runDirPathOpt
+      .map { runDir =>
+        val fileNames = Map(
+            "tla" -> s"counterexample$suffix.tla",
+            "tlc" -> s"MC$suffix.out",
+            "json" -> s"counterexample$suffix.json"
+        )
+        val files = fileNames.map { case (kind, name) =>
+          (kind, new PrintWriter(new FileWriter(new File(runDir.toFile, name))))
+        }
+        try {
+          files.foreach { case (kind, writer) =>
+            apply(kind, writer).write(rootModule, notInvariant, states)
+          }
+          fileNames.values.toList
+        } finally {
+          files.foreach { case (_, writer) =>
+            writer.close()
+          }
+        }
       }
-      fileNames.values.toList
-    } finally {
-      files.foreach { case (_, writer) =>
-        writer.close()
-      }
-    }
-  }
+      .getOrElse(List.empty[String])
 
   // factory method to get the desired CE writer
   def apply(kind: String, writer: PrintWriter): CounterexampleWriter = {

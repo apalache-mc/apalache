@@ -46,9 +46,7 @@ class DesugarerPassImpl @Inject() (
     val output = ModuleByExTransformer(SelectSeqAsFold(gen, tracker))(afterDesug)
 
     // dump the result of preprocessing
-    val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    writerFactory.writeModuleAllFormats(output.copy(name = "03_OutDesugarer"), TlaWriter.STANDARD_MODULES,
-        outdir.toFile)
+    writerFactory.writeModuleAllFormats(output.copy(name = "03_OutDesugarer"), TlaWriter.STANDARD_MODULES)
     outputTlaModule = Some(output)
 
     true

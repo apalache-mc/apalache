@@ -81,8 +81,7 @@ class AnalysisPassImpl @Inject() (val options: PassOptions, hintsStoreImpl: Form
 
     nextPass.setModule(marked)
 
-    val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-    writerFactory.writeModuleAllFormats(marked.copy(name = "11_OutAnalysis"), TlaWriter.STANDARD_MODULES, outdir.toFile)
+    writerFactory.writeModuleAllFormats(marked.copy(name = "11_OutAnalysis"), TlaWriter.STANDARD_MODULES)
 
     logger.info("  > Introduced expression grades")
     logger.info("  > Introduced %d formula hints".format(hintsStoreImpl.store.size))

@@ -236,13 +236,11 @@ the [TLA+ Community Modules](https://github.com/tlaplus/CommunityModules).
 
 The tool will display only important messages on stdout, but a detailed log can be found in `detailed.log`.
 
-Additionally, each pass of the model checker produces an intermediate TLA+ file in the run-specific
-directory `x/hh.mm-DD.MM.YYYY-<id>`:
+Additionally, if enabled in `apalache.cfg` (see [configuration instructions](config.md)) each pass of the model checker produces an intermediate TLA+ file in the run-specific
+directory:
 
 - File `out-parser.tla` is produced as a result of parsing and importing into the intermediate representation, Apalache
   TLA IR.
-- File `out-parser.json` is produced as a result of converting the Apalache TLA IR representation of the input into JSON
-  format.
 - File `out-config.tla` is produced as a result of substituting CONSTANTS, as described
   in [Setting up specification parameters](./parameters.md).
 - File `out-inline.tla` is produced as a result of inlining operator definitions and `LET-IN` definitions.

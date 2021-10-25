@@ -41,6 +41,13 @@
             <artifactId>scala-parser-combinators_${scalaBinaryVersion}</artifactId>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.yaml/snakeyaml -->
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>1.29</version>
+        </dependency>
+
         <!-- parent's dependencies -->
         <dependency>
             <groupId>org.lamport</groupId>

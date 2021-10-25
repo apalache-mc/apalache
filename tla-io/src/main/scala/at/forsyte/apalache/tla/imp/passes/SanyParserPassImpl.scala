@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.imp.passes
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
+import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.io.json.impl.{Type1TagReader, UJsonRep, UJsonToTla}
 import at.forsyte.apalache.tla.imp.src.SourceStore
@@ -76,26 +77,23 @@ class SanyParserPassImpl @Inject() (
               // re-throw the error for the nice error message
               throw new SanyImporterException(e.getMessage)
           }
-        // save the output
-        val outdir = options.getOrError("io", "outdir").asInstanceOf[Path]
-        writerFactory.writeModuleAllFormats(rootModule.get.copy(name = "00_OutParser"), TlaWriter.STANDARD_MODULES,
-            outdir.toFile)
 
+        // save the output
+        writerFactory.writeModuleAllFormats(rootModule.get.copy(name = "00_OutParser"), TlaWriter.STANDARD_MODULES)
+
+        // Jure: @Igor: Can we remove this below?
         // write parser output to specified destination, if requested
         val output = options.getOrElse("parser", "output", "")
         if (output.nonEmpty) {
           val outputFile = new File(output)
-          val outputDir = outputFile.getParentFile
           val filename = outputFile.getName
 
           if (filename.toLowerCase.endsWith(".tla")) {
             val moduleName = filename.substring(0, filename.length - ".tla".length)
-            writerFactory.writeModuleToTla(rootModule.get.copy(name = moduleName), TlaWriter.STANDARD_MODULES,
-                outputDir)
+            writerFactory.writeModuleToTla(rootModule.get.copy(name = moduleName), TlaWriter.STANDARD_MODULES)
           } else if (filename.toLowerCase.endsWith(".json")) {
             val moduleName = filename.substring(0, filename.length - ".json".length)
-            writerFactory.writeModuleToJson(rootModule.get.copy(name = moduleName), TlaWriter.STANDARD_MODULES,
-                outputDir)
+            writerFactory.writeModuleToJson(rootModule.get.copy(name = moduleName), TlaWriter.STANDARD_MODULES)
           } else {
             logger.error(s"  > Unrecognized file format: $filename. Supported formats: .tla and .json")
           }
