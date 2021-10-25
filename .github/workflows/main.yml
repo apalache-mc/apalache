@@ -71,6 +71,9 @@ jobs:
         # Pinned to maxos-10 as temp workaround for https://github.com/cachix/install-nix-action/issues/96
         operating-system: [ubuntu-latest, macos-latest]
         smt-encoding: [oopsla19, arrays]
+        exclude:
+          - operating-system: macos-latest
+            smt-encoding: arrays
     steps:
       - uses: actions/checkout@v2
       - name: Cache local Maven repository
