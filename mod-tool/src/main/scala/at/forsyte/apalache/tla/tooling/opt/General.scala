@@ -16,20 +16,19 @@ trait General extends Command {
   private var _invocation = ""
   private var _env = ""
 
-  private def getOptionEnvVar(option: CliOption[_]) : Option[String] = {
+  private def getOptionEnvVar(option: CliOption[_]): Option[String] = {
     var envVar = option.name.replace("-", "_").toUpperCase()
     sys.env.get(envVar).map(value => s"${envVar}=${value}")
   }
 
   /** A verbatim representation of the command line arguments given when invoking the command */
-  def invocation : String = _invocation
+  def invocation: String = _invocation
 
   /** CLI options that are set through environment variables */
-  def env : String = _env
+  def env: String = _env
 
-  override def read(args : List[String]) = {
-    _env = super
-      .options
+  override def read(args: List[String]) = {
+    _env = super.options
       .filter(_.useEnv.getOrElse(false))
       .flatMap(getOptionEnvVar)
       .mkString(" ")
