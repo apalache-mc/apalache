@@ -10,6 +10,3 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
-### Features
-
-   * Added outputs ADR and assoicated `OutputManager`, see #1025, #1036
