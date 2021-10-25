@@ -179,6 +179,7 @@ will submit anonymized statistics to
 <pre><code class="language-bash">$ apalache check [--config=filename] [--init=Init] [--cinit=ConstInit] \
     [--next=Next] [--inv=Inv] [--length=10] [--algo=(incremental|offline)] \
     [--discard-disabled] [--no-deadlock] [--tuning=filename] [--tune-here=options] \
+    [--smt-encoding=(oopsla19|arrays)] \
     &lt;myspec&gt;.tla
 </code></pre>
 <p>The arguments are as follows:</p>
@@ -200,6 +201,9 @@ will submit anonymized statistics to
 <li><code>--algo</code> lets you to choose the search algorithm: <code>incremental</code> is using the incremental SMT solver, <code>offline</code> is
 using the non-incremental
 (offline) SMT solver</li>
+<li><code>smt-encoding</code> lets you choose how the SMT instances are encoded: <code>oopsla19</code> (default) uses QF_UFNIA, and
+<code>arrays</code> (experimental) uses arrays with extensionality. This parameter can also be set via the
+<code>SMT_ENCODING</code> environment variable. See the <a href="../adr/011adr-smt-arrays.html">alternative SMT encoding using arrays</a> for details.</li>
 <li><code>--discard-disabled</code> does a pre-check on transitions and discard the disabled ones at every step. If you know that
 many transitions are always enabled, set it to false. Sometimes, this pre-check may be slower than checking the
 invariant. Default: true.</li>
@@ -217,6 +221,12 @@ have priority over the options that are passed with the option <code>--tuning</c
 </ul>
 <p>If an initialization predicate, transition predicate, or invariant is specified both in the configuration file, and on
 the command line, the command line parameters take precedence over those in the configuration file.</p>
+<p>In case conflicting arguments are passed for the same parameter, the following precedence order is followed:</p>
+<ol>
+<li>Command-line value</li>
+<li>Configuration file value</li>
+<li>Environment variable value</li>
+</ol>
 <h3><a class="header" href="#supplying-jvm-arguments" id="supplying-jvm-arguments">Supplying JVM arguments</a></h3>
 <p>You can supply JVM argument to be used when running Apalache by setting the
 environment variable <code>JVM_ARGS</code>. For example, to change the JVM heap size from
