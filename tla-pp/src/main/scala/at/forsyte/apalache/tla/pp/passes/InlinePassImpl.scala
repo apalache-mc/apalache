@@ -6,7 +6,7 @@ import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.imp.findBodyOf
 import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
 import at.forsyte.apalache.tla.lir.transformations._
-import at.forsyte.apalache.tla.lir.transformations.standard._
+import at.forsyte.apalache.tla.lir.transformations.standard.{ModuleByExTransformer, IncrementalRenaming}
 import at.forsyte.apalache.tla.lir.{TlaModule, TlaOperDecl}
 import at.forsyte.apalache.tla.pp._
 import com.google.inject.Inject
