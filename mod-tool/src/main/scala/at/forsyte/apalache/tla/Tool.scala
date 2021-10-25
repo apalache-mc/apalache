@@ -52,6 +52,7 @@ object Tool extends LazyLogging {
   }
 
   def mkRunFile(cmd: General): Unit = OutputManager.runDirPathOpt.foreach { runDir =>
+    println(s"Output directory: ${runDir.toFile}")
     val outFile = new File(runDir.toFile, OutputManager.Names.RunFile)
     val writer = new PrintWriter(new FileWriter(outFile, false))
     try {
