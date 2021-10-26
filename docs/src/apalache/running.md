@@ -236,7 +236,7 @@ the [TLA+ Community Modules](https://github.com/tlaplus/CommunityModules).
 
 The tool will display only important messages on stdout, but a detailed log can be found in `detailed.log`.
 
-Additionally, if enabled in `apalache.cfg` (see [configuration instructions](config.md)) each pass of the model checker produces an intermediate TLA+ file in the run-specific
+Additionally, if enabled in `apalache-global-config.yml` (see [configuration instructions](config.md)) each pass of the model checker produces an intermediate TLA+ file in the run-specific
 directory:
 
 - File `out-parser.tla` is produced as a result of parsing and importing into the intermediate representation, Apalache
