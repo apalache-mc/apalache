@@ -13,6 +13,8 @@ $ apalache check [--config=filename] [--init=Init] [--cinit=ConstInit] \
     [--next=Next] [--inv=Inv] [--length=10] [--algo=(incremental|offline)] \
     [--discard-disabled] [--no-deadlock] [--tuning=filename] [--tune-here=options] \
     [--smt-encoding=(oopsla19|arrays)] \
+    [--out-dir=./path/to/dir] \
+    [--write-intermediate=(true|false)] \
     <myspec>.tla
 ```
 
@@ -36,13 +38,17 @@ The arguments are as follows:
     - `--discard-disabled` does a pre-check on transitions and discard the disabled ones at every step. If you know that
       many transitions are always enabled, set it to false. Sometimes, this pre-check may be slower than checking the
       invariant. Default: true.
-    - `--max-error <n>` instructs the search to stop after `n` errors, see [Enumeration of counterexamples][]. Default: 1.  
+    - `--max-error <n>` instructs the search to stop after `n` errors, see [Enumeration of counterexamples][]. Default: 1.
     - `--view <name>` sets the state view to `<name>`, see [Enumeration of counterexamples][].
     - `--no-deadlock` disables deadlock-checking, when `--discard-disabled=false` is on. When `--discard-disabled=true`,
       deadlocks are found in any case.
     - `--tuning` specifies the properties file that stores the options for
       [fine tuning](tuning.md)
-    - `--tuning-options=key1=val1:key2=val2:...` pass the tuning options right in the command line as a single string.
+    - `--out-dir` set location for outputting any generated logs or artifacts,
+      *`./_apalache-out` by default*
+    - `--write-intermediate` if `true`, then additional output is generated. See
+      [Detailed output](#detailed-output). *`false` by default*
+
       The options that are passed with the option `--tuning-options`
       have priority over the options that are passed with the option `--tuning`.
 
@@ -52,8 +58,8 @@ the command line, the command line parameters take precedence over those in the 
 In case conflicting arguments are passed for the same parameter, the following precedence order is followed:
 
 1. Command-line value
-2. Configuration file value
-3. Environment variable value
+2. Environment variable value
+3. Configuration file value
 
 ### Supplying JVM arguments
 
@@ -236,8 +242,10 @@ the [TLA+ Community Modules](https://github.com/tlaplus/CommunityModules).
 
 The tool will display only important messages on stdout, but a detailed log can be found in `detailed.log`.
 
-Additionally, if enabled in `apalache-global-config.yml` (see [configuration instructions](config.md)) each pass of the model checker produces an intermediate TLA+ file in the run-specific
-directory:
+Additionally, if the flag `--write-intermediate=true` is set or this option is
+enabled in the `apalache-global-config.yml` (see [configuration
+instructions](config.md)) each pass of the model checker produces an
+intermediate TLA+ file in the run-specific directory:
 
 - File `out-parser.tla` is produced as a result of parsing and importing into the intermediate representation, Apalache
   TLA IR.
