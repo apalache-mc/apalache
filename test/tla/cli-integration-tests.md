@@ -1992,3 +1992,75 @@ Statistics collection is ON.
 ...
 EXITCODE: OK
 ```
+
+## configuring the output manager
+
+### set the output directory by CLI flag
+
+```sh
+$ apalache-mc check --out-dir=./test-out-dir Counter.tla > /dev/null && find ./test-out-dir -type f -exec basename {} \;
+detailed.log
+log0.smt
+run.txt
+$ rm -rf ./test-out-dir
+```
+
+### set the output directory by envvar
+
+```sh
+$ OUT_DIR=./test-out-dir apalache-mc check Counter.tla > /dev/null && find ./test-out-dir -type f -exec basename {} \;
+detailed.log
+log0.smt
+run.txt
+$ rm -rf ./test-out-dir
+```
+
+### the output directory CLI flag overrides the envvar
+
+```sh
+$ OUT_DIR=./not-here apalache-mc check --out-dir=./test-out-dir Counter.tla > /dev/null && find ./test-out-dir -type f -exec basename {} \;
+detailed.log
+log0.smt
+run.txt
+$ rm -rf ./test-out-dir
+```
+
+### write intermediate files
+
+```sh
+$ apalache-mc check --out-dir=./test-out-dir --write-intermediate=true Counter.tla > /dev/null && find ./test-out-dir -type f -exec basename {} \;
+detailed.log
+log0.smt
+11_OutAnalysis.json
+10_OutOpt.tla
+00_OutParser.tla
+03_OutDesugarer.json
+01_OutTypeCheckerSnowcat.json
+12_out-pre-PostTypeCheckerSnowcat.json
+03_OutDesugarer.tla
+12_OutPostTypeCheckerSnowcat.json
+04_OutUnroll.tla
+12_OutPostTypeCheckerSnowcat.tla
+07_OutVCGen.tla
+05_OutInline.tla
+07_OutVCGen.json
+09_OutTransition.tla
+12_out-post-PostTypeCheckerSnowcat.json
+02_OutConfig.json
+06_OutPriming.tla
+01_out-pre-TypeCheckerSnowcat.json
+08_OutPrepro.tla
+10_OutOpt.json
+11_OutAnalysis.tla
+04_OutUnroll.json
+09_OutTransition.json
+00_OutParser.json
+01_out-post-TypeCheckerSnowcat.json
+02_OutConfig.tla
+08_OutPrepro.json
+01_OutTypeCheckerSnowcat.tla
+05_OutInline.json
+06_OutPriming.json
+run.txt
+$ rm -rf ./test-out-dir
+```

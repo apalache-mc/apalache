@@ -1,12 +1,18 @@
 package at.forsyte.apalache.io
 
-import at.forsyte.apalache.infra.passes.PassOptions
+import at.forsyte.apalache.infra.passes.WriteablePassOptions
 
 import java.io.{File, FileInputStream}
 import java.nio.file.{Files, Path, Paths}
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import org.yaml.snakeyaml.Yaml
+
+trait OutputManagerConfig {
+  // TODO def debug : Boolean
+  def outDir: Option[File]
+  def writeIntermediate: Option[Boolean]
+}
 
 /**
  * The OutputManager is the central source of truth, for all IO related locations.
@@ -24,8 +30,9 @@ object OutputManager {
     val RunFile = "run.txt"
   }
   import Names._
-  // Absolute path
-  private var outputDirPath: String = ""
+
+  // outDirOpt is stored as an expanded and absolute path
+  private var outDirOpt: Option[Path] = None
   private var runDirOpt: Option[Path] = None
   private var flags: Map[String, Boolean] =
     Map(
@@ -34,10 +41,34 @@ object OutputManager {
     )
 
   /** If this is FALSE, outputs (of any sort) cannot happen, so the tool should exit */
-  def isConfigured: Boolean = new File(outputDirPath).isDirectory
+  def isConfigured: Boolean = outDirOpt.nonEmpty
 
   /** Accessor, read-only */
   def runDirPathOpt: Option[Path] = runDirOpt
+
+  /**
+   * Accessor for the configured run directory.
+   *
+   * @throws IllegalStateException if called before OutputManager is configured this is considered an implementator error
+   */
+  def outDir: Path = {
+    outDirOpt.getOrElse(throw new IllegalStateException("out-dir is not configured"))
+  }
+
+  private def setOutDir(f: File): Unit = {
+    if (!f.exists() && !f.mkdirs()) {
+      throw new ConfigurationError(s"Could not find or create directory: ${f.getCanonicalPath}.")
+    } else if (!f.isDirectory()) {
+      throw new ConfigurationError(s"Configured out-dir is not a directory: ${f.getCanonicalPath}.")
+    } else {
+      outDirOpt = Some(f.toPath().toAbsolutePath())
+    }
+  }
+
+  private def expandedFilePath(s: String): File = {
+    val home = System.getProperty("user.home")
+    new File(if (s.startsWith("~")) s.replaceFirst("~", home) else s)
+  }
 
   /** Loads the Apalache configuration file from HOME/.tlaplus */
   def syncFromGlobalConfig(): Unit = {
@@ -48,23 +79,10 @@ object OutputManager {
       val configYaml: java.util.Map[String, Any] = yaml.load(new FileInputStream(configFile.getCanonicalPath))
 
       configYaml.forEach { case (flagName, flagValue) =>
+        // `OutdirNameInCfg` is a special flag that governs the output directory
         if (flagName == OutdirNameInCfg) {
           flagValue match {
-            case flagValAsString: String =>
-              // `OutdirNameInCfg` is a special flag that governs the output directory
-              val replacedHome =
-                if (flagValAsString.startsWith("~")) flagValAsString.replaceFirst("~", home)
-                else flagValAsString
-              val outdir = new File(replacedHome)
-              // Try to make the dir, if it fails we skip and go to the default
-              if (!outdir.exists()) {
-                outdir.mkdir()
-              }
-              if (!outdir.exists()) {
-                throw new ConfigurationError(s"Could not find or create directory: ${outdir.getCanonicalPath}.")
-              } else {
-                outputDirPath = outdir.getCanonicalPath
-              }
+            case path: String => setOutDir(expandedFilePath(path))
             case _ =>
               throw new ConfigurationError(
                   s"Flag [$flagName] in [${configFile.getAbsolutePath}] must be a directory path string.")
@@ -86,20 +104,41 @@ object OutputManager {
       }
     }
     // If `OutdirNameInCfg` is not specified, default to making rundir = <CWD>/_apalache-out/
-    if (outputDirPath.isEmpty) {
-      outputDirPath = Paths.get(System.getProperty("user.dir"), DefaultOutdir).toString
+    if (outDirOpt.isEmpty) {
+      outDirOpt = Some(Paths.get(System.getProperty("user.dir"), DefaultOutdir))
     }
   }
 
+  /** Configure OutputManager based on supported CLI flags */
+  // TODO(shon): Perhaps we should reworking this object as a class that takes a configuration
+  // matching the specification of this trait?
+  def syncFromCli(cli: OutputManagerConfig): Unit = {
+    cli.outDir.foreach(setOutDir)
+    cli.writeIntermediate.foreach(flags += IntermediateFlag -> _)
+  }
+
+  /**
+   * Confgigure OutputManager, with cli congiruation taking precedence
+   * over the configuraiton file
+   */
+  def configure(cli: OutputManagerConfig): Unit = {
+    syncFromGlobalConfig()
+    syncFromCli(cli)
+  }
+
   // Flags can be passed from options too, e.g. --profile or --write-intermediate
+  // Strangly, we currently require data to flow both from the pass options
+  // to the output manager and from the manager to the pass options, this this "sync"
+  // is by directional.
   // TODO: remove this once all flag operations are moved into PassOptions
-  def syncFromOptions(opt: PassOptions): Unit = {
+  def syncWithOptions(opt: WriteablePassOptions): Unit = {
     opt.get[Boolean]("general", IntermediateFlag) foreach {
       flags += IntermediateFlag -> _
     }
     opt.get[Boolean]("general", ProfilingFlag) foreach {
       flags += ProfilingFlag -> _
     }
+    opt.set("io.outdir", outDir)
   }
 
   /** lends flags to execute `cmd` conditionally */
@@ -113,17 +152,13 @@ object OutputManager {
         }
       )
 
-  /** Inside `outputDirPath`, create a directory for an individual run */
+  /** Inside `outputDirOpt`, create a directory for an individual run */
   def createRunDirectory(specName: String): Unit =
     if (runDirOpt.isEmpty) {
       val nicedate = LocalDateTime.now().format(DateTimeFormatter.ofPattern(s"yyyy-MM-dd"))
       val nicetime = LocalDateTime.now().format(DateTimeFormatter.ofPattern(s"HH-mm-ss"))
-      val outdir = new File(outputDirPath)
-      if (!outdir.exists()) {
-        outdir.mkdir()
-      }
       // prefix for disambiguation
-      val rundir = Files.createTempDirectory(Paths.get(outdir.getAbsolutePath), s"${specName}_${nicedate}T${nicetime}_")
+      val rundir = Files.createTempDirectory(outDir, s"${specName}_${nicedate}T${nicetime}_")
       runDirOpt = Some(rundir)
     }
 }
