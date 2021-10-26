@@ -72,6 +72,8 @@ jobs:
         operating-system: [ubuntu-latest, macos-latest]
         smt-encoding: [oopsla19, arrays]
         exclude:
+          # We don't need an additional run of the arrays encoding just for macos
+          # since no OS-specific differences seem likely.
           - operating-system: macos-latest
             smt-encoding: arrays
     steps:
