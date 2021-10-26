@@ -367,7 +367,7 @@ EXITCODE: ERROR (12)
 ```
 
 
-### check ast.tla succeeds
+### check ast.tla succeeds [array-encoding]
 
 ```sh
 $ apalache-mc check --length=5 ast.tla | sed 's/I@.*//'

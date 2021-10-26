@@ -70,6 +70,12 @@ jobs:
       matrix:
         # Pinned to maxos-10 as temp workaround for https://github.com/cachix/install-nix-action/issues/96
         operating-system: [ubuntu-latest, macos-latest]
+        smt-encoding: [oopsla19, arrays]
+        exclude:
+          # We don't need an additional run of the arrays encoding just for macos
+          # since no OS-specific differences seem likely.
+          - operating-system: macos-latest
+            smt-encoding: arrays
     steps:
       - uses: actions/checkout@v2
       - name: Cache local Maven repository
@@ -105,7 +111,10 @@ jobs:
       - name: Build apalache
         run: nix develop -c make build-quick
       - name: Run integration tests
-        run: nix develop -c ./test/run-integration
+        run: nix develop -c make integration
+        env:
+          SMT_ENCODING: ${{ matrix.smt-encoding }}
+          TEST_FILTER: ${{ matrix.smt-encoding == 'arrays' && 'array-encoding' || '' }}
 
   docker-tests:
     runs-on: ubuntu-latest
@@ -136,7 +145,7 @@ jobs:
       - name: Build the docker image
         run: docker build -t informalsystems/apalache:ci .
       - name: Run integration tests in docker container
-        run: nix develop -c ./test/run-integration
+        run: nix develop -c bash -c "source ./test/.envrc && make integration"
         env:
           USE_DOCKER: true
           APALACHE_TAG: ci

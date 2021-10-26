@@ -38,8 +38,8 @@ build-quick:
 test:
 	mvn test
 
-integration: apalache-jar
-	test/run-integration
+integration:
+	test/mdx-test.py --debug "$(TEST_FILTER)"
 
 # Invokes the md targets below
 promote: $(TEST_MD_FILES)
