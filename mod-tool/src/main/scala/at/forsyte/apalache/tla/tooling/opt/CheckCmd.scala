@@ -15,10 +15,10 @@ class CheckCmd extends Command(name = "check", description = "Check a TLA+ speci
   var nworkers: Int = opt[Int](name = "nworkers", default = 1,
       description = "the number of workers for the parallel checker (soon), default: 1")
   var algo: String = opt[String](name = "algo", default = "incremental",
-      description =
-        "the search algorithm: offline, incremental, parallel (soon), default: incremental")
+      description = "the search algorithm: offline, incremental, parallel (soon), default: incremental")
   var smtEncoding: Option[String] = opt[Option[String]](name = "smt-encoding", useEnv = true,
-      description = "the SMT encoding: oopsla19, arrays (experimental), default: oopsla19 (overrides envvar SMT_ENCODING)")
+      description =
+        "the SMT encoding: oopsla19, arrays (experimental), default: oopsla19 (overrides envvar SMT_ENCODING)")
   var config: String = opt[String](name = "config", default = "",
       description = "configuration file in TLC format,\n" +
         "default: <file>.cfg, or none if <file>.cfg not present")
