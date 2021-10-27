@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicLong
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.profiler.{IdleSmtListener, SmtListener}
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
-import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, IntT}
+import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, FinSetT, IntT}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.io.UTFPrinter
 import at.forsyte.apalache.tla.lir.oper._
@@ -44,6 +44,10 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     logWriter.println(";; %s = %s".format(p, config.randomSeed))
   //    the following fails with an exception: java.lang.NoSuchFieldError: value
   //      logWriter.println(";; %s = %s".format(p, Global.getParameter(p)))
+  }
+
+  private def useArrays(): Boolean = {
+    config.smtEncoding == "arrays"
   }
 
   var level: Int = 0
@@ -133,6 +137,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val const = z3context.mkConst(cellName, cellSort)
     cellCache += (cell.id -> (const, cell.cellType, level))
 
+    // TODO: array declarations need to be initialized with false; use declareInPredIfNeeded for updates
+
     if (cell.id <= 1) {
       // Either FALSE or TRUE. Add an explicit assert at the SMT level.
       // Fix 333: avoid assertGroundExpr, as it simplifies our constants to false and true,
@@ -156,14 +162,45 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val setT = set.cellType
     val name = s"in_${elemT.signature}${elem.id}_${setT.signature}${set.id}"
     if (!inCache.contains((set.id, elem.id))) {
-      smtListener.onIntroSmtConst(name)
-      log(s";; declare edge predicate $name: Bool")
-      log(s"(declare-const $name Bool)")
-      nBoolConsts += 1
-      val const = z3context.mkConst(name, z3context.getBoolSort)
-      inCache += ((set.id, elem.id) -> ((const.asInstanceOf[ExprSort], level)))
+      if (useArrays) {
+        // TODO: new edges should lead to new SSA arrays, via the store command
 
-      _metrics = _metrics.addNConsts(1)
+        val (setConst, _, _) = cellCache(set.id)
+        val (elemConst, _, _) = cellCache(elem.id)
+
+        val select = getOrMkCellSort(elemT) match {
+          case _: BoolSort =>
+            z3context.mkSelect(
+                setConst.asInstanceOf[ArrayExpr[BoolSort, BoolSort]], elemConst.asInstanceOf[Expr[BoolSort]])
+          case _: IntSort =>
+            z3context.mkSelect(
+                setConst.asInstanceOf[ArrayExpr[IntSort, BoolSort]], elemConst.asInstanceOf[Expr[IntSort]])
+          case _: ArraySort[Sort, Sort] =>
+            z3context.mkSelect(
+                setConst.asInstanceOf[ArrayExpr[ArraySort[Sort, Sort], BoolSort]],
+                elemConst.asInstanceOf[Expr[ArraySort[Sort, Sort]]])
+          case _ =>
+            z3context.mkSelect(
+                setConst.asInstanceOf[ArrayExpr[UninterpretedSort, BoolSort]],
+                elemConst.asInstanceOf[Expr[UninterpretedSort]])
+        }
+
+        val eq = z3context.mkEq(z3context.mkTrue(), select)
+        // TODO: leave the assert to assertGroundExpr?
+        //log(s";; assert edge predicate $name")
+        //log(s"(assert $eq)")
+        //z3solver.add(eq)
+        inCache += ((set.id, elem.id) -> (eq.asInstanceOf[ExprSort], level))
+        //_metrics = _metrics.addNSmtExprs(1)
+      } else {
+        smtListener.onIntroSmtConst(name)
+        log(s";; declare edge predicate $name: Bool")
+        log(s"(declare-const $name Bool)")
+        nBoolConsts += 1
+        val const = z3context.mkConst(name, z3context.getBoolSort)
+        inCache += ((set.id, elem.id) -> ((const.asInstanceOf[ExprSort], level)))
+        _metrics = _metrics.addNConsts(1)
+      }
     }
   }
 
@@ -406,6 +443,9 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
           case IntT() =>
             z3context.getIntSort
+
+          case FinSetT(elemType) if useArrays =>
+            z3context.mkArraySort(getOrMkCellSort(elemType), z3context.getBoolSort)
 
           case _ =>
             log(s"(declare-sort $sig 0)")

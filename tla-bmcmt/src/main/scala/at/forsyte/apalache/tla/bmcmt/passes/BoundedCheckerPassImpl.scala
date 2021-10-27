@@ -83,17 +83,17 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
     val tuning = options.getOrElse("general", "tuning", Map[String, String]())
     val debug = options.getOrElse("general", "debug", false)
     val saveDir = options.getOrError("io", "outdir").asInstanceOf[Path].toFile
+    val smtEncoding = options.get("checker", "smt-encoding").flatten.getOrElse(oopsla19Encoding)
 
     val params = new ModelCheckerParams(input, stepsBound, saveDir, tuning, debug)
     params.discardDisabled = options.getOrElse("checker", "discardDisabled", true)
     params.checkForDeadlocks = !options.getOrElse("checker", "noDeadlocks", false)
     params.nMaxErrors = options.getOrElse("checker", "maxError", 1)
-
-    params.smtEncoding = options.get("checker", "smt-encoding").flatten.getOrElse(oopsla19Encoding)
+    params.smtEncoding = smtEncoding
 
     val smtProfile = options.getOrElse("smt", "prof", false)
     val smtRandomSeed = tuning.getOrElse("smt.randomSeed", "0").toInt
-    val solverConfig = SolverConfig(debug, smtProfile, smtRandomSeed)
+    val solverConfig = SolverConfig(debug, smtProfile, smtRandomSeed, smtEncoding)
 
     options.getOrElse("checker", "algo", "incremental") match {
       /*
