@@ -55,7 +55,8 @@ object OutputManager {
     outDirOpt.getOrElse(throw new IllegalStateException("out-dir is not configured"))
   }
 
-  private def setOutDir(f: File): Unit = {
+  private def createOutDir(): Unit = {
+    val f = outDir.toFile()
     if (!f.exists() && !f.mkdirs()) {
       throw new ConfigurationError(s"Could not find or create directory: ${f.getCanonicalPath}.")
     } else if (!f.isDirectory()) {
@@ -65,13 +66,13 @@ object OutputManager {
     }
   }
 
-  private def expandedFilePath(s: String): File = {
+  private def expandedFilePath(s: String): Path = {
     val home = System.getProperty("user.home")
-    new File(if (s.startsWith("~")) s.replaceFirst("~", home) else s)
+    Paths.get(if (s.startsWith("~")) s.replaceFirst("~", home) else s)
   }
 
   /** Loads the Apalache configuration file from HOME/.tlaplus */
-  def syncFromGlobalConfig(): Unit = {
+  private def syncFromGlobalConfig(): Unit = {
     val home = System.getProperty("user.home")
     val configFile = new File(home, CfgFile)
     if (configFile.exists()) {
@@ -82,7 +83,7 @@ object OutputManager {
         // `OutdirNameInCfg` is a special flag that governs the output directory
         if (flagName == OutdirNameInCfg) {
           flagValue match {
-            case path: String => setOutDir(expandedFilePath(path))
+            case path: String => outDirOpt = Some(expandedFilePath(path))
             case _ =>
               throw new ConfigurationError(
                   s"Flag [$flagName] in [${configFile.getAbsolutePath}] must be a directory path string.")
@@ -112,18 +113,19 @@ object OutputManager {
   /** Configure OutputManager based on supported CLI flags */
   // TODO(shon): Perhaps we should reworking this object as a class that takes a configuration
   // matching the specification of this trait?
-  def syncFromCli(cli: OutputManagerConfig): Unit = {
-    cli.outDir.foreach(setOutDir)
+  private def syncFromCli(cli: OutputManagerConfig): Unit = {
+    cli.outDir.foreach(d => outDirOpt = Some(d.toPath()))
     cli.writeIntermediate.foreach(flags += IntermediateFlag -> _)
   }
 
   /**
-   * Confgigure OutputManager, with cli congiruation taking precedence
-   * over the configuraiton file
+   * Configure OutputManager, with cli configuration taking precedence
+   * over the configuration file
    */
   def configure(cli: OutputManagerConfig): Unit = {
     syncFromGlobalConfig()
     syncFromCli(cli)
+    createOutDir()
   }
 
   // Flags can be passed from options too, e.g. --profile or --write-intermediate
