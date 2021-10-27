@@ -1995,72 +1995,72 @@ EXITCODE: OK
 
 ## configuring the output manager
 
-### set the output directory by CLI flag
+### set out-dir by CLI flag
 
 ```sh
-$ apalache-mc check --out-dir=./test-out-dir Counter.tla > /dev/null && find ./test-out-dir -type f -exec basename {} \;
+$ apalache-mc check --out-dir=./test-out-dir --length=0 Counter.tla &> /dev/null && find ./test-out-dir -type f -exec basename {} \; | ./sort.sh
 detailed.log
 log0.smt
 run.txt
 $ rm -rf ./test-out-dir
 ```
 
-### set the output directory by envvar
+### set out-dir by envvar
 
 ```sh
-$ OUT_DIR=./test-out-dir apalache-mc check Counter.tla > /dev/null && find ./test-out-dir -type f -exec basename {} \;
+$ OUT_DIR=./test-out-dir apalache-mc check --length=0 Counter.tla &> /dev/null && find ./test-out-dir -type f -exec basename {} \; | ./sort.sh
 detailed.log
 log0.smt
 run.txt
 $ rm -rf ./test-out-dir
 ```
 
-### the output directory CLI flag overrides the envvar
+### setting out-dir by CLI flag overrides the envvar
 
 ```sh
-$ OUT_DIR=./not-here apalache-mc check --out-dir=./test-out-dir Counter.tla > /dev/null && find ./test-out-dir -type f -exec basename {} \;
+$ OUT_DIR=./not-here apalache-mc check --out-dir=./test-out-dir --length=0 Counter.tla &> /dev/null && find ./test-out-dir -type f -exec basename {} \; | ./sort.sh
 detailed.log
 log0.smt
 run.txt
 $ rm -rf ./test-out-dir
 ```
 
-### write intermediate files
+### write-intermediate files
 
 ```sh
-$ apalache-mc check --out-dir=./test-out-dir --write-intermediate=true Counter.tla > /dev/null && find ./test-out-dir -type f -exec basename {} \;
-detailed.log
-log0.smt
-11_OutAnalysis.json
-10_OutOpt.tla
-00_OutParser.tla
-03_OutDesugarer.json
-01_OutTypeCheckerSnowcat.json
-12_out-pre-PostTypeCheckerSnowcat.json
-03_OutDesugarer.tla
-12_OutPostTypeCheckerSnowcat.json
-04_OutUnroll.tla
-12_OutPostTypeCheckerSnowcat.tla
-07_OutVCGen.tla
-05_OutInline.tla
-07_OutVCGen.json
-09_OutTransition.tla
-12_out-post-PostTypeCheckerSnowcat.json
-02_OutConfig.json
-06_OutPriming.tla
-01_out-pre-TypeCheckerSnowcat.json
-08_OutPrepro.tla
-10_OutOpt.json
-11_OutAnalysis.tla
-04_OutUnroll.json
-09_OutTransition.json
+$ apalache-mc check --out-dir=./test-out-dir --write-intermediate=true --length=0 Counter.tla &> /dev/null && find ./test-out-dir -type f -exec basename {} \; | ./sort.sh
 00_OutParser.json
+00_OutParser.tla
 01_out-post-TypeCheckerSnowcat.json
-02_OutConfig.tla
-08_OutPrepro.json
+01_out-pre-TypeCheckerSnowcat.json
+01_OutTypeCheckerSnowcat.json
 01_OutTypeCheckerSnowcat.tla
+02_OutConfig.json
+02_OutConfig.tla
+03_OutDesugarer.json
+03_OutDesugarer.tla
+04_OutUnroll.json
+04_OutUnroll.tla
 05_OutInline.json
+05_OutInline.tla
 06_OutPriming.json
+06_OutPriming.tla
+07_OutVCGen.json
+07_OutVCGen.tla
+08_OutPrepro.json
+08_OutPrepro.tla
+09_OutTransition.json
+09_OutTransition.tla
+10_OutOpt.json
+10_OutOpt.tla
+11_OutAnalysis.json
+11_OutAnalysis.tla
+12_out-post-PostTypeCheckerSnowcat.json
+12_OutPostTypeCheckerSnowcat.json
+12_OutPostTypeCheckerSnowcat.tla
+12_out-pre-PostTypeCheckerSnowcat.json
+detailed.log
+log0.smt
 run.txt
 $ rm -rf ./test-out-dir
 ```
