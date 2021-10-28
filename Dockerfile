@@ -63,5 +63,8 @@ ENV PATH="/usr/local/openjdk-16/bin/:/opt/apalache/bin:${PATH}"
 # In case the directory was not bind-mounted, we create one
 RUN mkdir /var/apalache 2>/dev/null
 
+# We need sudo to run apalache using the user (created in the entrypoint script)
+RUN apt update && apt install sudo
+
 # what to run
 ENTRYPOINT ["/opt/apalache/bin/run-in-docker-container"]
