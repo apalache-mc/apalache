@@ -2,41 +2,29 @@ package at.forsyte.apalache.tla.bmcmt
 
 import java.io.{PrintWriter, StringWriter}
 
-import at.forsyte.apalache.tla.bmcmt.smt.{PreproSolverContext, SolverConfig, SolverContext, Z3SolverContext}
+import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import org.scalatest.{fixture, BeforeAndAfterEach}
+import org.scalatest.fixture
 
-trait RewriterBase extends fixture.FunSuite with BeforeAndAfterEach {
+trait RewriterBase extends fixture.FunSuite with EncodingBase {
   protected type FixtureParam = String
-
-  protected val oopsla19RewriterType = "oopsla19"
-  protected val arraysRewriterType = "arrays"
 
   protected var solverContext: SolverContext = _
   protected var arena: Arena = _
 
-  override def beforeEach() {
-    solverContext = new PreproSolverContext(new Z3SolverContext(SolverConfig.default.copy(debug = true)))
-    arena = Arena.create(solverContext)
-  }
-
-  override def afterEach() {
-    solverContext.dispose()
-  }
-
   protected def create(rewriterType: String): SymbStateRewriter = {
     rewriterType match {
-      case `oopsla19RewriterType` => new SymbStateRewriterAuto(solverContext)
-      case `arraysRewriterType`   => new SymbStateRewriterAutoWithArrays(solverContext)
+      case `oopsla19EncodingType` => new SymbStateRewriterAuto(solverContext)
+      case `arraysEncodingType`   => new SymbStateRewriterAutoWithArrays(solverContext)
       case oddRewriterType        => throw new IllegalArgumentException(s"Unexpected rewriter of type $oddRewriterType")
     }
   }
 
   protected def createWithoutCache(rewriterType: String): SymbStateRewriter = {
     rewriterType match {
-      case `oopsla19RewriterType` => new SymbStateRewriterImpl(solverContext)
-      case `arraysRewriterType`   => new SymbStateRewriterImplWithArrays(solverContext)
+      case `oopsla19EncodingType` => new SymbStateRewriterImpl(solverContext)
+      case `arraysEncodingType`   => new SymbStateRewriterImplWithArrays(solverContext)
       case oddRewriterType =>
         throw new IllegalArgumentException(s"Unexpected cacheless rewriter of type $oddRewriterType")
     }
