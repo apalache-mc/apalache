@@ -174,7 +174,11 @@
 <p>Apalache allows you to specify certain parameters, governing outputs produced by it, as described in <a href="../adr/009adr-outputs.html">ADR-009</a>.</p>
 <p>You can create a global configuration file named <code>apalache-global-config.yml</code> in <code>$HOME/.tlaplus/</code> and populate it with values for the following flags, in YAML format:</p>
 <ul>
-<li><code>out-dir</code> (String): The value of <code>out-dir</code> defines a path to the directory, in which all Apalache runs write their outputs. Each run will produce a unique subdirectory inside <code>out-dir</code> using the following convention: <code>&lt;SPECNAME&gt;_yyyy-MM-dd_HH-mm-ss_&lt;UNIQUEID&gt;</code>. The use of <code>~</code> in the path specification is permitted. The directory need not already exist, however, its parent directory must.
+<li><code>out-dir</code> (String): The value of <code>out-dir</code> defines a path to the directory,
+in which all Apalache runs write their outputs. Each run will produce a unique
+subdirectory inside <code>out-dir</code> using the following convention:
+<code>&lt;SPECNAME&gt;_yyyy-MM-dd_HH-mm-ss_&lt;UNIQUEID&gt;</code>. The use of <code>~</code> in the path
+specification is permitted. The directory path need not already exist.
 Example value: <code>'~/apalache-out'</code>.
 If this value is not defined in <code>apalache-global-config.yml</code>, Apalache will, for each individual run, define it to be equal to <code>CWD/_apalache-out/</code>, where <code>CWD</code> is the current working directory.</li>
 <li><code>profiling</code> (Bool): This flag governs the creation of <code>profile-rules.txt</code> used in <a href="profiling.html">profiling</a>. The file is only created if <code>profiling</code> is set to <code>True</code>.  Setting <code>profiling</code> to <code>False</code> is incompatible with the <code>--smtprof</code> flag.

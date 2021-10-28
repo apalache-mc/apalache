@@ -614,6 +614,8 @@ will submit anonymized statistics to
     [--next=Next] [--inv=Inv] [--length=10] [--algo=(incremental|offline)] \
     [--discard-disabled] [--no-deadlock] [--tuning=filename] [--tune-here=options] \
     [--smt-encoding=(oopsla19|arrays)] \
+    [--out-dir=./path/to/dir] \
+    [--write-intermediate=(true|false)] \
     &lt;myspec&gt;.tla
 </code></pre>
 <p>The arguments are as follows:</p>
@@ -632,24 +634,45 @@ will submit anonymized statistics to
 <li>
 <p>Advanced parameters:</p>
 <ul>
-<li><code>--algo</code> lets you to choose the search algorithm: <code>incremental</code> is using the incremental SMT solver, <code>offline</code> is
+<li>
+<p><code>--algo</code> lets you to choose the search algorithm: <code>incremental</code> is using the incremental SMT solver, <code>offline</code> is
 using the non-incremental
-(offline) SMT solver</li>
-<li><code>smt-encoding</code> lets you choose how the SMT instances are encoded: <code>oopsla19</code> (default) uses QF_UFNIA, and
+(offline) SMT solver</p>
+</li>
+<li>
+<p><code>smt-encoding</code> lets you choose how the SMT instances are encoded: <code>oopsla19</code> (default) uses QF_UFNIA, and
 <code>arrays</code> (experimental) uses arrays with extensionality. This parameter can also be set via the
-<code>SMT_ENCODING</code> environment variable. See the <a href="apalache/../adr/011adr-smt-arrays.html">alternative SMT encoding using arrays</a> for details.</li>
-<li><code>--discard-disabled</code> does a pre-check on transitions and discard the disabled ones at every step. If you know that
+<code>SMT_ENCODING</code> environment variable. See the <a href="apalache/../adr/011adr-smt-arrays.html">alternative SMT encoding using arrays</a> for details.</p>
+</li>
+<li>
+<p><code>--discard-disabled</code> does a pre-check on transitions and discard the disabled ones at every step. If you know that
 many transitions are always enabled, set it to false. Sometimes, this pre-check may be slower than checking the
-invariant. Default: true.</li>
-<li><code>--max-error &lt;n&gt;</code> instructs the search to stop after <code>n</code> errors, see <a href="apalache/./enumeration.html">Enumeration of counterexamples</a>. Default: 1.</li>
-<li><code>--view &lt;name&gt;</code> sets the state view to <code>&lt;name&gt;</code>, see <a href="apalache/./enumeration.html">Enumeration of counterexamples</a>.</li>
-<li><code>--no-deadlock</code> disables deadlock-checking, when <code>--discard-disabled=false</code> is on. When <code>--discard-disabled=true</code>,
-deadlocks are found in any case.</li>
-<li><code>--tuning</code> specifies the properties file that stores the options for
-<a href="apalache/tuning.html">fine tuning</a></li>
-<li><code>--tuning-options=key1=val1:key2=val2:...</code> pass the tuning options right in the command line as a single string.
-The options that are passed with the option <code>--tuning-options</code>
-have priority over the options that are passed with the option <code>--tuning</code>.</li>
+invariant. Default: true.</p>
+</li>
+<li>
+<p><code>--max-error &lt;n&gt;</code> instructs the search to stop after <code>n</code> errors, see <a href="apalache/./enumeration.html">Enumeration of counterexamples</a>. Default: 1.</p>
+</li>
+<li>
+<p><code>--view &lt;name&gt;</code> sets the state view to <code>&lt;name&gt;</code>, see <a href="apalache/./enumeration.html">Enumeration of counterexamples</a>.</p>
+</li>
+<li>
+<p><code>--no-deadlock</code> disables deadlock-checking, when <code>--discard-disabled=false</code> is on. When <code>--discard-disabled=true</code>,
+deadlocks are found in any case.</p>
+</li>
+<li>
+<p><code>--tuning</code> specifies the properties file that stores the options for
+<a href="apalache/tuning.html">fine tuning</a></p>
+</li>
+<li>
+<p><code>--out-dir</code> set location for outputting any generated logs or artifacts,
+<em><code>./_apalache-out</code> by default</em></p>
+</li>
+<li>
+<p><code>--write-intermediate</code> if <code>true</code>, then additional output is generated. See
+<a href="apalache/running.html#detailed-output">Detailed output</a>. <em><code>false</code> by default</em></p>
+<p>The options that are passed with the option <code>--tuning-options</code>
+have priority over the options that are passed with the option <code>--tuning</code>.</p>
+</li>
 </ul>
 </li>
 </ul>
@@ -658,8 +681,8 @@ the command line, the command line parameters take precedence over those in the 
 <p>In case conflicting arguments are passed for the same parameter, the following precedence order is followed:</p>
 <ol>
 <li>Command-line value</li>
-<li>Configuration file value</li>
 <li>Environment variable value</li>
+<li>Configuration file value</li>
 </ol>
 <h3><a class="header" href="#supplying-jvm-arguments" id="supplying-jvm-arguments">Supplying JVM arguments</a></h3>
 <p>You can supply JVM argument to be used when running Apalache by setting the
@@ -789,8 +812,10 @@ the <a href="https://github.com/tlaplus/CommunityModules">TLA+ Community Modules
 <p><a name="detailed"></a></p>
 <h2><a class="header" href="#detailed-output" id="detailed-output">Detailed output</a></h2>
 <p>The tool will display only important messages on stdout, but a detailed log can be found in <code>detailed.log</code>.</p>
-<p>Additionally, if enabled in <code>apalache.cfg</code> (see <a href="apalache/config.html">configuration instructions</a>) each pass of the model checker produces an intermediate TLA+ file in the run-specific
-directory:</p>
+<p>Additionally, if the flag <code>--write-intermediate=true</code> is set or this option is
+enabled in the <code>apalache-global-config.yml</code> (see <a href="apalache/config.html">configuration
+instructions</a>) each pass of the model checker produces an
+intermediate TLA+ file in the run-specific directory:</p>
 <ul>
 <li>File <code>out-parser.tla</code> is produced as a result of parsing and importing into the intermediate representation, Apalache
 TLA IR.</li>
@@ -830,7 +855,11 @@ into <a href="https://github.com/informalsystems/apalache/blob/master/tlair/src/
 <p>Apalache allows you to specify certain parameters, governing outputs produced by it, as described in <a href="apalache/../adr/009adr-outputs.html">ADR-009</a>.</p>
 <p>You can create a global configuration file named <code>apalache-global-config.yml</code> in <code>$HOME/.tlaplus/</code> and populate it with values for the following flags, in YAML format:</p>
 <ul>
-<li><code>out-dir</code> (String): The value of <code>out-dir</code> defines a path to the directory, in which all Apalache runs write their outputs. Each run will produce a unique subdirectory inside <code>out-dir</code> using the following convention: <code>&lt;SPECNAME&gt;_yyyy-MM-dd_HH-mm-ss_&lt;UNIQUEID&gt;</code>. The use of <code>~</code> in the path specification is permitted. The directory need not already exist, however, its parent directory must.
+<li><code>out-dir</code> (String): The value of <code>out-dir</code> defines a path to the directory,
+in which all Apalache runs write their outputs. Each run will produce a unique
+subdirectory inside <code>out-dir</code> using the following convention:
+<code>&lt;SPECNAME&gt;_yyyy-MM-dd_HH-mm-ss_&lt;UNIQUEID&gt;</code>. The use of <code>~</code> in the path
+specification is permitted. The directory path need not already exist.
 Example value: <code>'~/apalache-out'</code>.
 If this value is not defined in <code>apalache-global-config.yml</code>, Apalache will, for each individual run, define it to be equal to <code>CWD/_apalache-out/</code>, where <code>CWD</code> is the current working directory.</li>
 <li><code>profiling</code> (Bool): This flag governs the creation of <code>profile-rules.txt</code> used in <a href="apalache/profiling.html">profiling</a>. The file is only created if <code>profiling</code> is set to <code>True</code>.  Setting <code>profiling</code> to <code>False</code> is incompatible with the <code>--smtprof</code> flag.
