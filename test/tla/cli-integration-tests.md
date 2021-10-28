@@ -2064,3 +2064,10 @@ log0.smt
 run.txt
 $ rm -rf ./test-out-dir
 ```
+
+### use the --profiling flag to write profile-rules.txt
+
+```sh
+$ apalache-mc check --out-dir=./test-out-dir --profiling=true --length=0 Counter.tla &> /dev/null && test -s ./test-out-dir/*/profile-rules.txt
+$ rm -rf ./test-out-dir
+```
