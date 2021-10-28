@@ -24,7 +24,7 @@ fi
 # NOTE:
 #  - Invoking sudo with `--preserve-env` works for all envvars **except** the PATH
 #  - Unless we explicitly give it `=PATH`
-#  - We need to `--set-home`, so it doesn't inherent to home of the root user
+#  - We need to `--set-home`, so it doesn't inherent the home of the root user
 #  - Finally, we need to invoke our command with `env` to get the environment propagated
 #    to the apalache invocation itself
 exec sudo \
