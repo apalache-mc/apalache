@@ -137,7 +137,14 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val const = z3context.mkConst(cellName, cellSort)
     cellCache += (cell.id -> (const, cell.cellType, level))
 
-    // TODO: array declarations need to be initialized with false; use declareInPredIfNeeded for updates
+    if (cellSort.isInstanceOf[ArraySort[Sort, Sort]]) {
+      val arrayDomain = cellSort.asInstanceOf[ArraySort[Sort, Sort]].getDomain()
+      val arrayInitializer = z3context.mkEq(const, z3context.mkConstArray(arrayDomain, z3context.mkFalse()))
+
+      log(s"(assert $arrayInitializer)")
+      z3solver.add(arrayInitializer)
+      _metrics = _metrics.addNSmtExprs(1)
+    }
 
     if (cell.id <= 1) {
       // Either FALSE or TRUE. Add an explicit assert at the SMT level.
