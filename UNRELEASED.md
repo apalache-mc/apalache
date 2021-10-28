@@ -13,4 +13,4 @@
 ### Features
 
  * Add smt-encoding option to CLI check command, see #1053
- * Added outputs ADR and assoicated `OutputManager`, see #1025, #1036
+ * Added outputs ADR and associated `OutputManager`, see #1025, #1036, #1062

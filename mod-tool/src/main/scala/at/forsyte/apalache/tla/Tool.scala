@@ -23,6 +23,7 @@ import util.ExecutionStatisticsCollector.Selection
 
 import scala.collection.JavaConverters._
 import scala.util.Random
+import at.forsyte.apalache.infra.passes.WriteablePassOptions
 
 /**
  * Command line access to the APALACHE tools.
@@ -51,21 +52,19 @@ object Tool extends LazyLogging {
     System.exit(exitcode)
   }
 
-  def mkRunFile(cmd: General): Unit = OutputManager.runDirPathOpt.foreach { runDir =>
-    println(s"Output directory: ${runDir.toFile}")
-    val outFile = new File(runDir.toFile, OutputManager.Names.RunFile)
-    val writer = new PrintWriter(new FileWriter(outFile, false))
-    try {
-      writer.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
-    } finally {
-      writer.close()
-    }
-  }
-
   private def outputAndLogConfig(runDirNamePrefix: String, cmd: General): Unit = {
-    OutputManager.syncFromGlobalConfig()
+    OutputManager.configure(cmd)
     OutputManager.createRunDirectory(runDirNamePrefix)
-    mkRunFile(cmd)
+    OutputManager.runDirPathOpt.foreach { runDir =>
+      println(s"Output directory: ${runDir.toFile}")
+      val outFile = new File(runDir.toFile, OutputManager.Names.RunFile)
+      val writer = new PrintWriter(new FileWriter(outFile, false))
+      try {
+        writer.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
+      } finally {
+        writer.close()
+      }
+    }
     // force our programmatic logback configuration, as the autoconfiguration works unpredictably
     new LogbackConfigurator(OutputManager.runDirPathOpt).configureDefaultContext()
     // TODO: update workers when the multicore branch is integrated
@@ -137,6 +136,13 @@ object Tool extends LazyLogging {
           .format(ChronoUnit.SECONDS.between(startTime, endTime), ChronoUnit.MILLIS.between(startTime, endTime) % 1000))
   }
 
+  // Set the pass options from the cli configs shared between all commands
+  private def setCommonOptions(cli: General, options: WriteablePassOptions): Unit = {
+    options.set("general.debug", cli.debug)
+    options.set("smt.prof", cli.smtprof)
+    OutputManager.syncWithOptions(options)
+  }
+
   private def runParse(injector: => Injector, parse: ParseCmd): Int = {
     // here, we implement a terminal pass to get the parse results
     val executor = injector.getInstance(classOf[PassChainExecutor])
@@ -148,7 +154,10 @@ object Tool extends LazyLogging {
     executor.options.set("parser.filename", parse.file.getAbsolutePath)
     executor.options.set("parser.output", parse.output)
 
-    executor.options.set("io.outdir", createOutputDir(executor.options))
+    // NOTE Must go after all other options are set due to side-effecting
+    // behavior of current OutmputManager configuration
+    setCommonOptions(parse, executor.options)
+
     val result = executor.run()
     if (result.isDefined) {
       logger.info("Parsed successfully")
@@ -175,8 +184,6 @@ object Tool extends LazyLogging {
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
     executor.options.set("general.tuning", tuning)
-    executor.options.set("general.debug", check.debug)
-    executor.options.set("smt.prof", check.smtprof)
     executor.options.set("parser.filename", check.file.getAbsolutePath)
     if (check.config != "")
       executor.options.set("checker.config", check.config)
@@ -199,7 +206,9 @@ object Tool extends LazyLogging {
       executor.options.set("checker.view", check.view)
     // for now, enable polymorphic types. We probably want to disable this option for the type checker
     executor.options.set("typechecker.inferPoly", true)
-    executor.options.set("io.outdir", createOutputDir(executor.options))
+    // NOTE Must go after all other options are set due to side-effecting
+    // behavior of current OutmputManager configuration
+    setCommonOptions(check, executor.options)
 
     val result = executor.run()
     if (result.isDefined) {
@@ -228,8 +237,6 @@ object Tool extends LazyLogging {
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
     executor.options.set("general.tuning", tuning)
-    executor.options.set("general.debug", test.debug)
-    executor.options.set("smt.prof", test.smtprof)
     executor.options.set("parser.filename", test.file.getAbsolutePath)
     executor.options.set("checker.init", test.before)
     executor.options.set("checker.next", test.action)
@@ -247,7 +254,9 @@ object Tool extends LazyLogging {
     executor.options.set("checker.algo", "offline")
     // for now, enable polymorphic types. We probably want to disable this option for the type checker
     executor.options.set("typechecker.inferPoly", true)
-    executor.options.set("io.outdir", createOutputDir(executor.options))
+    // NOTE Must go after all other options are set due to side-effecting
+    // behavior of current OutmputManager configuration
+    setCommonOptions(test, executor.options)
 
     val result = executor.run()
     if (result.isDefined) {
@@ -269,7 +278,10 @@ object Tool extends LazyLogging {
     executor.options.set("parser.filename", typecheck.file.getAbsolutePath)
     executor.options.set("typechecker.inferPoly", typecheck.inferPoly)
 
-    executor.options.set("io.outdir", createOutputDir(executor.options))
+    // NOTE Must go after all other options are set due to side-effecting
+    // behavior of current OutmputManager configuration
+    setCommonOptions(typecheck, executor.options)
+
     executor.run() match {
       case None =>
         logger.info("Type checker [FAILED]")
@@ -320,11 +332,6 @@ object Tool extends LazyLogging {
     }
     // hereProps may override the values in props
     props ++ hereProps
-  }
-
-  private def createOutputDir(options: PassOptions): Path = {
-    OutputManager.syncFromOptions(options)
-    OutputManager.runDirPathOpt.get
   }
 
   private def injectorFactory(cmd: Command): Injector = {
