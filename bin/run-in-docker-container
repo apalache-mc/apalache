@@ -16,4 +16,4 @@ if [ "$(ls -A *.tla 2>/dev/null)" == "" ]; then
       echo 'WARNING: no .tla files found in /var/apalache'
 fi
 # Run apalache as the set user
-exec sudo --preserve-env=PATH --set-home env -u apalache /opt/apalache/bin/apalache-mc $@
+exec sudo --preserve-env=PATH --set-home -u apalache env /opt/apalache/bin/apalache-mc $@
