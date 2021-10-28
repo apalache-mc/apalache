@@ -4,8 +4,8 @@
 # docker container defined in ../Dockerfile
 
 # Create a user and group matching the invoking user, this is a
-# doppelganger of the user running the container (if they have passed)
-# in the required environment variables.
+# doppelganger of the user running the container, if they have passed
+# in the required environment variables
 #
 # This is critical to avoid generating files with bad permissions
 USER_ID=${USER_ID:-1000}
