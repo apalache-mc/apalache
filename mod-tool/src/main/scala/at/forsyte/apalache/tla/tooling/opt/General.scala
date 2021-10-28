@@ -16,6 +16,9 @@ import at.forsyte.apalache.io.OutputManager
 trait General extends Command with OutputManagerConfig {
   var debug = opt[Boolean](description = "extensive logging in detailed.log and log.smt, default: false")
   var smtprof = opt[Boolean](description = "profile SMT constraints in log.smt, default: false")
+  var profiling = opt[Option[Boolean]](name = OutputManager.Names.ProfilingFlag,
+      description = s"write general profiling data to profile-rules.txt in the run directory, default: false (overrides envvar PROFILING)",
+      useEnv = true)
   var outDir = opt[Option[File]](name = OutputManager.Names.OutdirNameInCfg,
       description = "where output files will be written, default: ./_apalache-out (overrides envvar OUT_DIR)",
       useEnv = true)
