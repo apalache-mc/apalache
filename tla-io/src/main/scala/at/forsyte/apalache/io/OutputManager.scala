@@ -12,6 +12,7 @@ trait OutputManagerConfig {
   // TODO def debug : Boolean
   def outDir: Option[File]
   def writeIntermediate: Option[Boolean]
+  def profiling: Option[Boolean]
 }
 
 /**
@@ -116,6 +117,7 @@ object OutputManager {
   private def syncFromCli(cli: OutputManagerConfig): Unit = {
     cli.outDir.foreach(d => outDirOpt = Some(d.toPath()))
     cli.writeIntermediate.foreach(flags += IntermediateFlag -> _)
+    cli.profiling.foreach(flags += ProfilingFlag -> _)
   }
 
   /**
@@ -126,21 +128,6 @@ object OutputManager {
     syncFromGlobalConfig()
     syncFromCli(cli)
     createOutDir()
-  }
-
-  // Flags can be passed from options too, e.g. --profile or --write-intermediate
-  // Strangly, we currently require data to flow both from the pass options
-  // to the output manager and from the manager to the pass options, this this "sync"
-  // is by directional.
-  // TODO: remove this once all flag operations are moved into PassOptions
-  def syncWithOptions(opt: WriteablePassOptions): Unit = {
-    opt.get[Boolean]("general", IntermediateFlag) foreach {
-      flags += IntermediateFlag -> _
-    }
-    opt.get[Boolean]("general", ProfilingFlag) foreach {
-      flags += ProfilingFlag -> _
-    }
-    opt.set("io.outdir", outDir)
   }
 
   /** lends flags to execute `cmd` conditionally */
