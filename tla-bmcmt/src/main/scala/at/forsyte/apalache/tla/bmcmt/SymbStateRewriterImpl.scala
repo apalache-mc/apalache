@@ -107,7 +107,7 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
   val exprCache = new ExprCache(exprGradeStore)
 
   @transient
-  private lazy val substRule = new SubstRule(this)
+  protected lazy val substRule = new SubstRule(this)
 
   /**
    * The store that contains formula hints. By default, empty.
@@ -193,8 +193,8 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
         // sets
         key(tla.in(tla.name("x"), tla.name("S")))
           -> List(new SetInRule(this)),
-        key(tla.enumSet(tla.name("x"))) ->
-          List(new SetCtorRule(this)),
+        key(tla.enumSet(tla.name("x")))
+          -> List(new SetCtorRule(this)),
         key(tla.subseteq(tla.name("x"), tla.name("S")))
           -> List(new SetInclusionRule(this)),
         key(tla.cup(tla.name("X"), tla.name("Y")))
@@ -577,7 +577,7 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
    * @param ex a TLA+ expression
    * @return a string that gives us an equivalence class for similar operations (see the code)
    */
-  private def key(ex: TlaEx): String = {
+  protected def key(ex: TlaEx): String = {
     ex match {
       // TODO: Is this correct?
       case OperEx(TlaOper.apply, NameEx(_), _*) =>
