@@ -2,6 +2,13 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.17.0
+
+### Features
+
+ * Add smt-encoding option to CLI check command, see #1053
+ * Added CLI and configuration interface for managing generated outputs, see #1025, #1036, #1062, #1065
+
 ## 0.16.5
 
 ### Bug fixes
