@@ -46,7 +46,7 @@ class SymbStateRewriterAuto(private var _solverContext: SolverContext) extends S
 
   private val exprGradeStoreImpl = new ExprGradeStoreImpl()
   private val exprGradeAnalysis = new ExprGradeAnalysis(exprGradeStoreImpl)
-  private val impl = new SymbStateRewriterImpl(solverContext, exprGradeStore)
+  protected val impl = new SymbStateRewriterImpl(solverContext, exprGradeStore)
 
   override def contextLevel: Int = impl.contextLevel
 
