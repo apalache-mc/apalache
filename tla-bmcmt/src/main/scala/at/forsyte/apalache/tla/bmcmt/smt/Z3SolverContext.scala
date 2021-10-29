@@ -160,6 +160,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
       log(s"(assert $z3expr)")
       z3solver.add(z3expr)
+      _metrics = _metrics.addNSmtExprs(1)
     }
 
     _metrics = _metrics.addNCells(1)
