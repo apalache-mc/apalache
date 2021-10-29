@@ -137,7 +137,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val const = z3context.mkConst(cellName, cellSort)
     cellCache += (cell.id -> (const, cell.cellType, level))
 
-    if (cellSort.isInstanceOf[ArraySort[Sort, Sort]]) {
+    if (cellSort.isInstanceOf[ArraySort[Sort, BoolSort]]) {
+      // If arrays are used to encode sets, they are initialized here to represent empty sets
       val arrayDomain = cellSort.asInstanceOf[ArraySort[Sort, Sort]].getDomain()
       val arrayInitializer = z3context.mkEq(const, z3context.mkConstArray(arrayDomain, z3context.mkFalse()))
 
@@ -170,35 +171,41 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val name = s"in_${elemT.signature}${elem.id}_${setT.signature}${set.id}"
     if (!inCache.contains((set.id, elem.id))) {
       if (useArrays) {
-        // TODO: new edges should lead to new SSA arrays, via the store command
+        val (setExpr, _, _) = cellCache(set.id)
+        val (elemExpr, _, _) = cellCache(elem.id)
 
-        val (setConst, _, _) = cellCache(set.id)
-        val (elemConst, _, _) = cellCache(elem.id)
-
-        val select = getOrMkCellSort(elemT) match {
+        val store = getOrMkCellSort(elemT) match {
           case _: BoolSort =>
-            z3context.mkSelect(
-                setConst.asInstanceOf[ArrayExpr[BoolSort, BoolSort]], elemConst.asInstanceOf[Expr[BoolSort]])
+            z3context.mkStore(
+                setExpr.asInstanceOf[ArrayExpr[BoolSort, BoolSort]], elemExpr.asInstanceOf[Expr[BoolSort]],
+                z3context.mkTrue())
           case _: IntSort =>
-            z3context.mkSelect(
-                setConst.asInstanceOf[ArrayExpr[IntSort, BoolSort]], elemConst.asInstanceOf[Expr[IntSort]])
+            z3context.mkStore(
+                setExpr.asInstanceOf[ArrayExpr[IntSort, BoolSort]], elemExpr.asInstanceOf[Expr[IntSort]],
+                z3context.mkTrue())
           case _: ArraySort[Sort, Sort] =>
-            z3context.mkSelect(
-                setConst.asInstanceOf[ArrayExpr[ArraySort[Sort, Sort], BoolSort]],
-                elemConst.asInstanceOf[Expr[ArraySort[Sort, Sort]]])
+            z3context.mkStore(
+                setExpr.asInstanceOf[ArrayExpr[ArraySort[Sort, Sort], BoolSort]],
+                elemExpr.asInstanceOf[Expr[ArraySort[Sort, Sort]]], z3context.mkTrue())
           case _ =>
-            z3context.mkSelect(
-                setConst.asInstanceOf[ArrayExpr[UninterpretedSort, BoolSort]],
-                elemConst.asInstanceOf[Expr[UninterpretedSort]])
+            z3context.mkStore(
+                setExpr.asInstanceOf[ArrayExpr[UninterpretedSort, BoolSort]],
+                elemExpr.asInstanceOf[Expr[UninterpretedSort]], z3context.mkTrue())
         }
 
-        val eq = z3context.mkEq(z3context.mkTrue(), select)
-        // TODO: leave the assert to assertGroundExpr?
-        //log(s";; assert edge predicate $name")
-        //log(s"(assert $eq)")
-        //z3solver.add(eq)
+        // The updated set is cached here, since arrays are handled in a SSA form
+        val updatedSetName = set.toString + "_" + name
+        val setSort = getOrMkCellSort(set.cellType)
+        z3context.mkConstDecl(updatedSetName, setSort)
+        val updatedSet = z3context.mkConst(updatedSetName, setSort)
+        log(s";; declare edge inclusion $name")
+        log(s"(declare-const $updatedSet $setSort)")
+        cellCache += (set.id -> (updatedSet, set.cellType, level))
+
+        // The update predicate is cached here as an edge
+        val eq = z3context.mkEq(updatedSet, store)
         inCache += ((set.id, elem.id) -> (eq.asInstanceOf[ExprSort], level))
-        //_metrics = _metrics.addNSmtExprs(1)
+        _metrics = _metrics.addNSmtExprs(1)
       } else {
         smtListener.onIntroSmtConst(name)
         log(s";; declare edge predicate $name: Bool")
