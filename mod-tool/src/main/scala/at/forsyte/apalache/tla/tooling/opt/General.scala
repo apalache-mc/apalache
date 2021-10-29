@@ -1,6 +1,10 @@
 package at.forsyte.apalache.tla.tooling.opt
 
+import at.forsyte.apalache.io.{OutputManagerConfig, OutputManager}
+
+import java.io.File
 import org.backuity.clist._
+import at.forsyte.apalache.io.OutputManager
 
 /**
  * The general commands.
@@ -9,9 +13,16 @@ import org.backuity.clist._
  *
  * @author Igor Konnov
  */
-trait General extends Command {
+trait General extends Command with OutputManagerConfig {
   var debug = opt[Boolean](description = "extensive logging in detailed.log and log.smt, default: false")
   var smtprof = opt[Boolean](description = "profile SMT constraints in log.smt, default: false")
+  var outDir = opt[Option[File]](name = OutputManager.Names.OutdirNameInCfg,
+      description = "where output files will be written, default: ./_apalache-out (overrides envvar OUT_DIR)",
+      useEnv = true)
+  var writeIntermediate = opt[Option[Boolean]](name = OutputManager.Names.IntermediateFlag,
+      description =
+        "write intermediate output files to `out-dir`, default: false (overrides envvar WRITE_INTERMEDIATE)",
+      useEnv = true)
 
   private var _invocation = ""
   private var _env = ""

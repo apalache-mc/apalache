@@ -46,6 +46,10 @@
               shellHook = ''
                 # Add common project environment variables
                 source ./.envrc
+
+                # Required to avoid polluting the dev-shell's ocaml environment with
+                # dynamically liked libs from the host environment
+                unset CAML_LD_LIBRARY_PATH
               '';
 
 

@@ -3,10 +3,34 @@
 # This script is used as the entrypoint for running apalache inside of the
 # docker container defined in ../Dockerfile
 
+# Create a user and group matching the invoking user, this is a
+# doppelganger of the user running the container, if they have passed
+# in the required environment variables
+#
+# This is critical to avoid generating files with bad permissions
+USER_ID=${USER_ID:-1000}
+GROUP_ID=${GROUP_ID:-1000}
+groupadd --gid "$GROUP_ID" --non-unique apalache
+useradd --create-home --shell /bin/bash --uid "$USER_ID" --non-unique --gid "$GROUP_ID" apalache
+
 echo 'Assuming you bind-mounted your local directory into /var/apalache...'
 cd /var/apalache
 if [ "$(ls -A *.tla 2>/dev/null)" == "" ]; then
       echo 'WARNING: no .tla files found in /var/apalache'
 fi
-exec /opt/apalache/bin/apalache-mc $@
 
+# Run apalache as the invoking user doppelganger
+# We need to also thread the environment along to the doppelganger
+# NOTE:
+#  - Invoking sudo with `--preserve-env` works for all envvars **except** the PATH
+#  - Unless we explicitly give it `=PATH`
+#  - We need to `--set-home`, so it doesn't inherent the home of the root user
+#  - Finally, we need to invoke our command with `env` to get the environment propagated
+#    to the apalache invocation itself
+exec sudo \
+      --preserve-env \
+      --preserve-env=PATH \
+      --set-home \
+      --user=apalache \
+      env \
+      /opt/apalache/bin/apalache-mc $@
