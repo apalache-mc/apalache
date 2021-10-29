@@ -140,7 +140,16 @@ object Tool extends LazyLogging {
   private def setCommonOptions(cli: General, options: WriteablePassOptions): Unit = {
     options.set("general.debug", cli.debug)
     options.set("smt.prof", cli.smtprof)
-    OutputManager.syncWithOptions(options)
+    // TODO Do we actual need this in the "pass options"? It seems like it is only
+    // derived from the OutputManager?
+    OutputManager.doIfFlag(OutputManager.Names.IntermediateFlag) {
+      options.set(s"general.${OutputManager.Names.IntermediateFlag}", true)
+    }
+    OutputManager.doIfFlag(OutputManager.Names.ProfilingFlag) {
+      options.set(s"general.${OutputManager.Names.ProfilingFlag}", true)
+    }
+    options.set("io.outdir", OutputManager.outDir)
+    // OutputManager.syncWithOptions(options)
   }
 
   private def runParse(injector: => Injector, parse: ParseCmd): Int = {
