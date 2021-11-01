@@ -42,8 +42,8 @@ class SymbStateRewriterImplWithArrays(_solverContext: SolverContext,
         key(ValEx(TlaStr("red"))) // OK
           -> List(new StrConstRule(this)),
         // logic
-        key(tla.eql(tla.name("x"), tla.name("y"))) // TODO
-          -> List(new EqRule(this)),
+        key(tla.eql(tla.name("x"), tla.name("y"))) // OK
+          -> List(new EqRuleWithArrays(this)),
         key(tla.or(tla.name("x"), tla.name("y"))) // OK
           -> List(new OrRule(this)),
         key(tla.and(tla.name("x"), tla.name("y"))) // OK
