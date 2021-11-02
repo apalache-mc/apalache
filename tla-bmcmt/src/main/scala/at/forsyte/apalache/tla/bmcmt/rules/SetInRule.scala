@@ -68,7 +68,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def powSetIn(state: SymbState, powsetCell: ArenaCell, elemCell: ArenaCell): SymbState = {
+  protected def powSetIn(state: SymbState, powsetCell: ArenaCell, elemCell: ArenaCell): SymbState = {
     def checkType: PartialFunction[(CellT, CellT), Unit] = {
       case (PowSetT(FinSetT(expectedType)), FinSetT(actualType)) =>
         assert(expectedType == actualType)
@@ -80,7 +80,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   // TODO: pick a function from funsetCell and check for function equality
-  private def funSetIn(state: SymbState, funsetCell: ArenaCell, funCell: ArenaCell): SymbState = {
+  protected def funSetIn(state: SymbState, funsetCell: ArenaCell, funCell: ArenaCell): SymbState = {
     // checking whether f \in [S -> T]
     def flagTypeError(): Nothing = {
       val msg = s"Not implemented (open an issue): f \\in S for f: %s and S: %s."
@@ -123,7 +123,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     rewriter.rewriteUntilDone(nextState.setRex(pred.toNameEx))
   }
 
-  private def intOrNatSetIn(state: SymbState, setCell: ArenaCell, elemCell: ArenaCell,
+  protected def intOrNatSetIn(state: SymbState, setCell: ArenaCell, elemCell: ArenaCell,
       elemType: types.CellT): SymbState = {
     if (setCell == state.arena.cellIntSet()) {
       // Do nothing, it is just true. The type checker should have taken care of that.
@@ -139,7 +139,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def basicIn(state: SymbState, setCell: ArenaCell, elemCell: ArenaCell, elemType: types.CellT) = {
+  protected def basicIn(state: SymbState, setCell: ArenaCell, elemCell: ArenaCell, elemType: types.CellT): SymbState = {
     val potentialElems = state.arena.getHas(setCell)
     // The types of the element and the set may slightly differ, but they must be unifiable.
     // For instance, [a |-> 1] \in { [a |-> 2], [a |-> 3, b -> "foo"] }
@@ -161,7 +161,6 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val elemsInAndEq = potentialElems.map(inAndEq)
       rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.or(elemsInAndEq: _*)))
       eqState.setRex(pred)
-      //}
     }
   }
 }

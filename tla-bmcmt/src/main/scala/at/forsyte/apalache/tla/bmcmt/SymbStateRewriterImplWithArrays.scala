@@ -43,7 +43,7 @@ class SymbStateRewriterImplWithArrays(_solverContext: SolverContext,
           -> List(new StrConstRule(this)),
         // logic
         key(tla.eql(tla.name("x"), tla.name("y"))) // OK
-          -> List(new EqRuleWithArrays(this)),
+          -> List(new EqRuleWithArrays(this)), // TODO: update with additional elements later
         key(tla.or(tla.name("x"), tla.name("y"))) // OK
           -> List(new OrRule(this)),
         key(tla.and(tla.name("x"), tla.name("y"))) // OK
@@ -51,13 +51,14 @@ class SymbStateRewriterImplWithArrays(_solverContext: SolverContext,
         key(tla.not(tla.name("x"))) // OK
           -> List(new NegRule(this)),
         // sets
-        key(tla.in(tla.name("x"), tla.name("S"))) // TODO
-          -> List(new SetInRule(this)),
+        key(tla.in(tla.name("x"), tla.name("S"))) // OK
+          -> List(new SetInRuleWithArrays(this)), // TODO: add support for funSet later
+        // TODO: (SetCtorRule optimization) remove redundant "select" assertions
         key(tla.enumSet(tla.name("x"))) // OK
           -> List(new SetCtorRule(this)),
         key(tla.subseteq(tla.name("x"), tla.name("S"))) // TODO
           -> List(new SetInclusionRule(this)),
-        // TODO: Potential optimization of SetCupRule: copy the largest array and only store edges for the smaller one.
+        // TODO: (SetCupRule optimization) copy the largest array and only store edges for the smaller one
         key(tla.cup(tla.name("X"), tla.name("Y"))) // OK
           -> List(new SetCupRule(this)),
         // integers
