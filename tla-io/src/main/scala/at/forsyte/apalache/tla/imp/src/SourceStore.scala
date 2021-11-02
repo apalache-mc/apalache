@@ -1,8 +1,10 @@
 package at.forsyte.apalache.tla.imp.src
 
-import at.forsyte.apalache.tla.lir.src.{RegionTree,
+import at.forsyte.apalache.tla.lir.src.{
+  RegionTree,
   // Prevent name clash with the SourceLocation object defined in this dir
-  SourceLocation => SourceLocationClass}
+  SourceLocation => SourceLocationClass
+}
 import at.forsyte.apalache.tla.lir.storage.SourceMap
 import at.forsyte.apalache.tla.lir.transformations.TransformationListener
 import at.forsyte.apalache.tla.lir.{OperEx, TlaDecl, TlaEx, UID}

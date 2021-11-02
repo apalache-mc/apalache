@@ -22,6 +22,7 @@ import scala.collection.mutable
 @Singleton
 class WriteablePassOptions extends PassOptions {
   private val store: mutable.Map[String, Any] = mutable.HashMap[String, Any]()
+
   /**
    * Set a pass option
    * @param name an option name, where the pass name is separated from the option name with a dot (.)
@@ -39,7 +40,6 @@ class WriteablePassOptions extends PassOptions {
    * @param passName a pass name, or any other convenient name
    * @param optionName an option name
    * @return the option value, normally, an Integer or String
-   *
    */
   def get[T: ClassTag](passName: String, optionName: String): Option[T] = {
     // The ClassTag prevents the type of `T` from being erased at runtime
