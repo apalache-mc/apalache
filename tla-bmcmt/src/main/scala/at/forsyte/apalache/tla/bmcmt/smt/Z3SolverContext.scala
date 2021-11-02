@@ -197,15 +197,19 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         // The updated set is cached here, since arrays are handled in a SSA form
         val updatedSetName = set.toString + "_" + name
         val setSort = getOrMkCellSort(set.cellType)
+        log(s";; declare edge inclusion $name")
+        log(s"(declare-const $updatedSetName $setSort)")
         z3context.mkConstDecl(updatedSetName, setSort)
         val updatedSet = z3context.mkConst(updatedSetName, setSort)
-        log(s";; declare edge inclusion $name")
-        log(s"(declare-const $updatedSet $setSort)")
+        val eqStore = z3context.mkEq(updatedSet, store)
+        log(s"(assert $eqStore)")
+        z3solver.add(eqStore)
         cellCache += (set.id -> (updatedSet, set.cellType, level))
+        _metrics = _metrics.addNSmtExprs(1)
 
-        // The update predicate is cached here as an edge
-        val eq = z3context.mkEq(updatedSet, store)
-        inCache += ((set.id, elem.id) -> (eq.asInstanceOf[ExprSort], level))
+        // The edge is cached here (note that the queried array has a specific SSA index)
+        val eqSelect = z3context.mkEq(z3context.mkTrue(), makeSelectPred(set.id, elem.id))
+        inCache += ((set.id, elem.id) -> (eqSelect.asInstanceOf[ExprSort], level))
         _metrics = _metrics.addNSmtExprs(1)
       } else {
         smtListener.onIntroSmtConst(name)
@@ -230,7 +234,33 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             s"SMT $id: The Boolean constant $name (set membership) is missing from the SMT context")
 
       case Some((const, _)) =>
-        const
+        if (useArrays) {
+          // The cached value is not used because it may not refer to the current version of the set
+          _metrics = _metrics.addNSmtExprs(1)
+          z3context.mkEq(z3context.mkTrue(), makeSelectPred(setId, elemId)).asInstanceOf[ExprSort]
+        } else {
+          const
+        }
+    }
+  }
+
+  private def makeSelectPred(setId: Int, elemId: Int): Expr[BoolSort] = {
+    val (setExpr, _, _) = cellCache(setId)
+    val (elemExpr, elemT, _) = cellCache(elemId)
+
+    getOrMkCellSort(elemT) match {
+      case _: BoolSort =>
+        z3context.mkSelect(setExpr.asInstanceOf[ArrayExpr[BoolSort, BoolSort]], elemExpr.asInstanceOf[Expr[BoolSort]])
+      case _: IntSort =>
+        z3context.mkSelect(setExpr.asInstanceOf[ArrayExpr[IntSort, BoolSort]], elemExpr.asInstanceOf[Expr[IntSort]])
+      case _: ArraySort[Sort, Sort] =>
+        z3context.mkSelect(
+            setExpr.asInstanceOf[ArrayExpr[ArraySort[Sort, Sort], BoolSort]],
+            elemExpr.asInstanceOf[Expr[ArraySort[Sort, Sort]]])
+      case _ =>
+        z3context.mkSelect(
+            setExpr.asInstanceOf[ArrayExpr[UninterpretedSort, BoolSort]],
+            elemExpr.asInstanceOf[Expr[UninterpretedSort]])
     }
   }
 
