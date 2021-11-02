@@ -56,8 +56,8 @@ class SymbStateRewriterImplWithArrays(_solverContext: SolverContext,
         // TODO: (SetCtorRule optimization) remove redundant "select" assertions
         key(tla.enumSet(tla.name("x"))) // OK
           -> List(new SetCtorRule(this)),
-        key(tla.subseteq(tla.name("x"), tla.name("S"))) // TODO
-          -> List(new SetInclusionRule(this)),
+        key(tla.subseteq(tla.name("x"), tla.name("S"))) // OK
+          -> List(new SetInclusionRuleWithArrays(this)),
         // TODO: (SetCupRule optimization) copy the largest array and only store edges for the smaller one
         key(tla.cup(tla.name("X"), tla.name("Y"))) // OK
           -> List(new SetCupRule(this)),
