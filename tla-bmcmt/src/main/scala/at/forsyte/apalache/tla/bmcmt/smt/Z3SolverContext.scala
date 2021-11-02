@@ -208,8 +208,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         _metrics = _metrics.addNSmtExprs(1)
 
         // The edge is cached here (note that the queried array has a specific SSA index)
-        val eqSelect = z3context.mkEq(z3context.mkTrue(), makeSelectPred(set.id, elem.id))
-        inCache += ((set.id, elem.id) -> (eqSelect.asInstanceOf[ExprSort], level))
+        val select = makeSelectPred(set.id, elem.id)
+        inCache += ((set.id, elem.id) -> (select.asInstanceOf[ExprSort], level))
         _metrics = _metrics.addNSmtExprs(1)
       } else {
         smtListener.onIntroSmtConst(name)
@@ -237,7 +237,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         if (useArrays) {
           // The cached value is not used because it may not refer to the current version of the set
           _metrics = _metrics.addNSmtExprs(1)
-          z3context.mkEq(z3context.mkTrue(), makeSelectPred(setId, elemId)).asInstanceOf[ExprSort]
+          makeSelectPred(setId, elemId).asInstanceOf[ExprSort]
         } else {
           const
         }
