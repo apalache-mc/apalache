@@ -37,11 +37,16 @@ trait TlaWriterFactory {
   )(
       module: TlaModule, extendedModuleNames: List[String]
   ): Unit = {
-    val w = writer.getOrElse(OutputManager.writerRelativeToIntermediateDir(module.name + extension))
-    try {
-      createWriter(w).write(module, extendedModuleNames)
-    } finally {
-      w.close()
+    val writef: PrintWriter => Unit = w =>
+      try {
+        createWriter(w).write(module, extendedModuleNames)
+      } finally {
+        w.close()
+      }
+
+    writer match {
+      case Some(w) => writef(w)
+      case None    => OutputManager.withWriterRelativeToRunDir(module.name + extension)(writef)
     }
   }
 

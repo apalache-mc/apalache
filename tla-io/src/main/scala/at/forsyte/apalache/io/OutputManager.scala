@@ -174,13 +174,31 @@ object OutputManager {
     printWriter(Paths.get(base), fileParts: _*)
   }
 
-  /** Create a PrintWriter to the file formed by appending the `parts` to the `outDir` */
-  def writerRelativeToOutDir(parts: String*): PrintWriter = {
-    printWriter(outDir, parts: _*)
+  /** Applies `f` to a PrintWriter created by appending the `parts` to the `runDir` */
+  def withWriterRelativeToRunDir(parts: String*)(f: PrintWriter => Unit): Unit = {
+    f(printWriter(outDir, parts: _*))
   }
 
-  /** Create a PrintWriter to the file formed by appending the `parts` to the intermediate output dir */
-  def writerRelativeToIntermediateDir(parts: String*): PrintWriter = {
-    printWriter(outDir, (Names.IntermediateFoldername :: parts.toList): _*)
+  /**
+   * Conditionally applies a function to a PrintWriter constructed relative to the intermediate directory
+   *
+   * @param parts path parts describing a path relative to the intermediate directory (all parents must exist)
+   * @param f a function that will be applied to the the PrintWriter, if the `IntermediateFlag` is set.
+   * @returns `true` if the `IntermediateFlag` is set the output is written, otherwise `false`
+   * If the IntermediateFlag is true, then this applies `f` to the PrintWriter
+   * created by appending the `parts` to the intermediate output dir, and returns `true`. Otherwise, it is false
+   */
+  def withWriterRelativeToIntermediateDir(parts: String*)(f: PrintWriter => Unit): Boolean = {
+    if (flags(Names.IntermediateFlag)) {
+      val intermediateDir = new File(outDir.toFile(), Names.IntermediateFoldername)
+      if (!intermediateDir.exists()) {
+        intermediateDir.mkdir()
+      }
+      f(printWriter(intermediateDir))
+      true
+    } else {
+      false
+    }
+
   }
 }
