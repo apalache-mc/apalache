@@ -54,7 +54,7 @@ trait TlaWriterFactory {
    *        from the module name)
    */
   def writeModuleToTla(
-    module: TlaModule, extendedModuleNames: List[String], writer: Option[PrintWriter]
+      module: TlaModule, extendedModuleNames: List[String], writer: Option[PrintWriter]
   ): Unit =
     writeModuleWithFormatWriter(".tla", createTlaWriter, writer)(module, extendedModuleNames)
 

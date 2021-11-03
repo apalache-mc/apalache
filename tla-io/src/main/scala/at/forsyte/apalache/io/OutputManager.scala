@@ -152,32 +152,34 @@ object OutputManager {
       runDirOpt = Some(rundir)
     }
 
-  /**  Create a PrintWriter to the file formed by appending `fileParts` to the `base` file */
+  /** Create a PrintWriter to the file formed by appending `fileParts` to the `base` file */
   def printWriter(base: File, fileParts: String*): PrintWriter = {
     val file = fileParts.foldLeft(base)((file, part) => new File(file, part))
     new PrintWriter(new FileWriter(file))
   }
 
-  /**  Create a PrintWriter to the file formed by appending `fileParts` to the `base` file */
+  /** Create a PrintWriter to the file formed by appending `fileParts` to the `base` file */
   def printWriter(base: Path, fileParts: String*): PrintWriter = {
     printWriter(base.toFile(), fileParts: _*)
   }
 
-  /**  Create a PrintWriter to the file formed by appending `fileParts` to the `base` file
+  /**
+   *  Create a PrintWriter to the file formed by appending `fileParts` to the `base` file
    *
    * E.g., to create a writer to the file `foo/bar/bas.json`:
    *
-   *    val w = printWriter("foo", "bar", "baz.json") */
+   *    val w = printWriter("foo", "bar", "baz.json")
+   */
   def printWriter(base: String, fileParts: String*): PrintWriter = {
     printWriter(Paths.get(base), fileParts: _*)
   }
 
-  /**  Create a PrintWriter to the file formed by appending the `parts` to the `outDir` */
+  /** Create a PrintWriter to the file formed by appending the `parts` to the `outDir` */
   def writerRelativeToOutDir(parts: String*): PrintWriter = {
     printWriter(outDir, parts: _*)
   }
 
-  /**  Create a PrintWriter to the file formed by appending the `parts` to the intermediate output dir */
+  /** Create a PrintWriter to the file formed by appending the `parts` to the intermediate output dir */
   def writerRelativeToIntermediateDir(parts: String*): PrintWriter = {
     printWriter(outDir, (Names.IntermediateFoldername :: parts.toList): _*)
   }
