@@ -1,6 +1,10 @@
 package at.forsyte.apalache.tla.imp.src
 
-import at.forsyte.apalache.tla.lir.src.{RegionTree, SourceLocation}
+import at.forsyte.apalache.tla.lir.src.{
+  RegionTree,
+  // Prevent name clash with the SourceLocation object defined in this dir
+  SourceLocation => SourceLocationClass
+}
 import at.forsyte.apalache.tla.lir.storage.SourceMap
 import at.forsyte.apalache.tla.lir.transformations.TransformationListener
 import at.forsyte.apalache.tla.lir.{OperEx, TlaDecl, TlaEx, UID}
@@ -80,7 +84,7 @@ class SourceStore extends TransformationListener with LazyLogging {
    * @param id a valid expression identifier
    * @param location a source location
    */
-  def add(id: UID, location: SourceLocation): Unit = {
+  def add(id: UID, location: SourceLocationClass): Unit = {
     val (filenameIndex, regionIndex) = addRegion(location)
     idToRegion(filenameIndex).update(id, regionIndex)
   }
@@ -93,7 +97,7 @@ class SourceStore extends TransformationListener with LazyLogging {
    * @param rootEx an expressio
    * @param location a source location
    */
-  def addRec(rootEx: TlaEx, location: SourceLocation): TlaEx = {
+  def addRec(rootEx: TlaEx, location: SourceLocationClass): TlaEx = {
     val (filenameIndex, regionIndex) = addRegion(location)
     val map = idToRegion(filenameIndex)
     def add(ex: TlaEx): Unit = {
@@ -110,13 +114,13 @@ class SourceStore extends TransformationListener with LazyLogging {
     rootEx
   }
 
-  private def addRegion(loc: SourceLocation): Tuple2[Int, Int] = {
+  private def addRegion(loc: SourceLocationClass): Tuple2[Int, Int] = {
     val filenameIndex = getOrCreateFilenameIndex(loc.filename)
     val regionIndex = trees(filenameIndex).add(loc.region)
     (filenameIndex, regionIndex)
   }
 
-  def find(id: UID): Option[SourceLocation] = {
+  def find(id: UID): Option[SourceLocationClass] = {
     idToRegion.zipWithIndex.find(_._1.contains(id)) match {
       case Some((map, filenameIndex)) =>
         // we are using many sequence iterations, but the sequences are quite small
@@ -134,7 +138,7 @@ class SourceStore extends TransformationListener with LazyLogging {
    * @param id an expression identifier
    * @return Some(location), when the expression has source information, and None otherwise
    */
-  def findOrWarn(id: UID): Option[SourceLocation] = {
+  def findOrWarn(id: UID): Option[SourceLocationClass] = {
     find(id) match {
       case some @ Some(_) => some
       case None =>

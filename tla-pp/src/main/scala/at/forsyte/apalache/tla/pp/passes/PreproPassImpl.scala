@@ -73,7 +73,7 @@ class PreproPassImpl @Inject() (
     writerFactory.writeModuleAllFormats(afterModule.copy(name = "08_OutPrepro"), TlaWriter.STANDARD_MODULES)
     outputTlaModule = Some(afterModule)
 
-    if (options.getOrElse("general", "debug", false)) {
+    if (options.getOrElse[Boolean]("general", "debug", false)) {
       val sourceLocator =
         SourceLocator(sourceStore.makeSourceMap, changeListener)
       outputTlaModule.get.operDeclarations foreach sourceLocator.checkConsistency
@@ -83,7 +83,7 @@ class PreproPassImpl @Inject() (
   }
 
   private def createModuleTransformerForPrimePropagation(varSet: Set[String]): ModuleByExTransformer = {
-    val cinitName = options.getOrElse("checker", "cinit", "CInit") + "Primed"
+    val cinitName = options.getOrElse[String]("checker", "cinit", "CInit") + "Primed"
     val includeAllButConstInit: TlaDecl => Boolean = {
       case TlaOperDecl(name, _, _) => cinitName != name
       case _                       => true

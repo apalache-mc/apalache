@@ -42,7 +42,7 @@ class SanyParserPassImpl @Inject() (
    * @return true, if the pass was successful
    */
   override def execute(): Boolean = {
-    val filename = options.getOrError("parser", "filename").asInstanceOf[String]
+    val filename = options.getOrError[String]("parser", "filename")
     if (filename.endsWith(".json")) {
       try {
         val moduleJson = UJsonRep(ujson.read(new File(filename)))
@@ -83,7 +83,7 @@ class SanyParserPassImpl @Inject() (
 
         // Jure: @Igor: Can we remove this below?
         // write parser output to specified destination, if requested
-        val output = options.getOrElse("parser", "output", "")
+        val output = options.getOrElse[String]("parser", "output", "")
         if (output.nonEmpty) {
           val outputFile = new File(output)
           val filename = outputFile.getName
@@ -98,12 +98,12 @@ class SanyParserPassImpl @Inject() (
             logger.error(s"  > Unrecognized file format: $filename. Supported formats: .tla and .json")
           }
 
-          if (options.getOrElse("general", "debug", false)) {
+          if (options.getOrElse[Boolean]("general", "debug", false)) {
             val sourceLocator =
               SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
             rootModule.get.operDeclarations foreach sourceLocator.checkConsistency
           }
-          if (options.getOrElse("general", "debug", false)) {
+          if (options.getOrElse[Boolean]("general", "debug", false)) {
             val sourceLocator =
               SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
             rootModule.get.operDeclarations foreach sourceLocator.checkConsistency
