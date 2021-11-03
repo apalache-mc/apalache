@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicLong
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.profiler.{IdleSmtListener, SmtListener}
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
-import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, FinSetT, IntT}
+import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, FinSetT, IntT, PowSetT}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.io.UTFPrinter
 import at.forsyte.apalache.tla.lir.oper._
@@ -499,6 +499,9 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
           case FinSetT(elemType) if useArrays =>
             z3context.mkArraySort(getOrMkCellSort(elemType), z3context.getBoolSort)
+
+          case PowSetT(domType) if useArrays =>
+            z3context.mkArraySort(getOrMkCellSort(domType), z3context.getBoolSort)
 
           case _ =>
             log(s"(declare-sort $sig 0)")

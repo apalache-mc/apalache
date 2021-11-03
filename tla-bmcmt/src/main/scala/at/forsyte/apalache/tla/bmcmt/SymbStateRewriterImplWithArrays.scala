@@ -53,14 +53,19 @@ class SymbStateRewriterImplWithArrays(_solverContext: SolverContext,
         // sets
         key(tla.in(tla.name("x"), tla.name("S"))) // OK
           -> List(new SetInRuleWithArrays(this)), // TODO: add support for funSet later
-        // TODO: (SetCtorRule optimization) remove redundant "select" assertions
+        // (Potential SetCtorRule optimization) remove redundant "select" assertions
         key(tla.enumSet(tla.name("x"))) // OK
           -> List(new SetCtorRule(this)),
         key(tla.subseteq(tla.name("x"), tla.name("S"))) // OK
           -> List(new SetInclusionRuleWithArrays(this)),
-        // TODO: (SetCupRule optimization) copy the largest array and only store edges for the smaller one
+        // (Potential SetCupRule optimization) copy the largest array and only store edges for the smaller one
         key(tla.cup(tla.name("X"), tla.name("Y"))) // OK
           -> List(new SetCupRule(this)),
+        // (Potential SetExpandRule optimization) remove redundant "select" assertions in PowSetCtor.confringo
+        key(OperEx(ApalacheOper.expand, tla.name("X"))) // OK
+          -> List(new SetExpandRule(this)),
+        key(tla.powSet(tla.name("X"))) // OK
+          -> List(new PowSetCtorRule(this)),
         // integers
         key(tla.lt(tla.int(1), tla.int(2))) // OK
           -> List(new IntCmpRule(this)),
