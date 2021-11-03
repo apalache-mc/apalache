@@ -23,42 +23,51 @@ trait TlaWriterFactory {
    * @param module       TLA module to write
    */
   def writeModuleAllFormats(module: TlaModule, extendedModuleNames: List[String]): Unit = {
-    writeModuleToTla(module, extendedModuleNames)
-    writeModuleToJson(module, extendedModuleNames)
+    writeModuleToTla(module, extendedModuleNames, None)
+    writeModuleToJson(module, extendedModuleNames, None)
   }
 
   // Internal call, parameterized by output format writer
-  protected def writeModuleWithFormatWriter(extension: String, createWriter: PrintWriter => TlaWriter)(
-      module: TlaModule, extendedModuleNames: List[String]): Unit =
-    OutputManager.doIfFlag(IntermediateFlag) {
-      OutputManager.runDirPathOpt.foreach { runDir =>
-        val outDir = new File(runDir.toFile, IntermediateFoldername)
-        if (!outDir.exists()) {
-          outDir.mkdir()
-        }
-        val file = new File(outDir, module.name + extension)
-        val writer = new PrintWriter(new FileWriter(file, false))
-        try {
-          createWriter(writer).write(module, extendedModuleNames)
-        } finally {
-          writer.close()
-        }
-      }
+  //
+  // if `writer` supplied, write the module to the given writer, otherwise
+  // a default writer is constructed based on the file name, in the intermediate
+  // output directory
+  protected def writeModuleWithFormatWriter(
+      extension: String, createWriter: PrintWriter => TlaWriter, writer: Option[PrintWriter]
+  )(
+      module: TlaModule, extendedModuleNames: List[String]
+  ): Unit = {
+    val w = writer.getOrElse(OutputManager.writerRelativeToIntermediateDir(module.name + extension))
+    try {
+      createWriter(w).write(module, extendedModuleNames)
+    } finally {
+      w.close()
     }
+  }
 
   /**
    * Write a module to a file (without appending), in the TLA+ format.
    *
    * @param module TLA module to write
+   * @param writer The writer into which the module should be written (defaults
+   *        to a file in the intermdiate output directory, with the name derived
+   *        from the module name)
    */
-  def writeModuleToTla(module: TlaModule, extendedModuleNames: List[String]): Unit =
-    writeModuleWithFormatWriter(".tla", createTlaWriter)(module, extendedModuleNames)
+  def writeModuleToTla(
+    module: TlaModule, extendedModuleNames: List[String], writer: Option[PrintWriter]
+  ): Unit =
+    writeModuleWithFormatWriter(".tla", createTlaWriter, writer)(module, extendedModuleNames)
 
   /**
    * Write a module to a file (without appending), in the Apalache JSON format.
    *
    * @param module TLA module to write
+   * @param writer The writer into which the module should be written (defaults
+   *        to a file in the intermdiate output directory, with the name derived
+   *        from the module name)
    */
-  def writeModuleToJson(module: TlaModule, extendedModuleNames: List[String]): Unit =
-    writeModuleWithFormatWriter(".json", createJsonWriter)(module, extendedModuleNames)
+  def writeModuleToJson(
+      module: TlaModule, extendedModuleNames: List[String], writer: Option[PrintWriter]
+  ): Unit =
+    writeModuleWithFormatWriter(".json", createJsonWriter, writer)(module, extendedModuleNames)
 }
