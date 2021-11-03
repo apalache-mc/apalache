@@ -224,23 +224,31 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   }
 
   private def getInPred(setId: Int, elemId: Int): ExprSort = {
-    inCache.get((setId, elemId)) match {
-      case None =>
-        val setT = cellCache(setId)._2
-        val elemT = cellCache(elemId)._2
-        val name = s"in_${elemT.signature}${elemId}_${setT.signature}$setId"
-        logWriter.flush() // flush the SMT log
-        throw new IllegalStateException(
-            s"SMT $id: The Boolean constant $name (set membership) is missing from the SMT context")
+    if (useArrays) {
+      // With SMT arrays, we make a new "select" predicate for every query
+      // (Potential optimization) inCache is not used with SMT arrays, keep it empty in this encoding?
 
-      case Some((const, _)) =>
-        if (useArrays) {
-          // The cached value is not used because it may not refer to the current version of the set
-          _metrics = _metrics.addNSmtExprs(1)
-          makeSelectPred(setId, elemId).asInstanceOf[ExprSort]
-        } else {
+      if (cellCache.contains(setId) && cellCache.contains(elemId)) {
+        // The cached value is not used because it may not refer to the current version of the set
+        _metrics = _metrics.addNSmtExprs(1)
+        makeSelectPred(setId, elemId).asInstanceOf[ExprSort]
+      } else {
+        logWriter.flush() // flush the SMT log
+        throw new IllegalStateException(s"SMT $id: Either id $setId or id $elemId are missing from the SMT context")
+      }
+    } else {
+      inCache.get((setId, elemId)) match {
+        case None =>
+          val setT = cellCache(setId)._2
+          val elemT = cellCache(elemId)._2
+          val name = s"in_${elemT.signature}${elemId}_${setT.signature}$setId"
+          logWriter.flush() // flush the SMT log
+          throw new IllegalStateException(
+              s"SMT $id: The Boolean constant $name (set membership) is missing from the SMT context")
+
+        case Some((const, _)) =>
           const
-        }
+      }
     }
   }
 
