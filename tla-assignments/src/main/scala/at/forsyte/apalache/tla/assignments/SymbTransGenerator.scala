@@ -275,7 +275,6 @@ class SymbTransGenerator(tracker: TransformationTracker) {
    *
    * @param phi          TLA+ formula
    * @param asgnStrategy Assignment strategy A for `p_phi`.
-   * @see [[AssignmentStrategyEncoder]]
    * @return A collection of symbolic transitions, as defined by the equivalence classes of ~,,A,,
    */
   def apply(phi: TlaEx, asgnStrategy: StrategyType): Seq[SymbTrans] = {

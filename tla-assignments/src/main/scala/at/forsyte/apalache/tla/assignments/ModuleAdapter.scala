@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.assignments
 import at.forsyte.apalache.tla.lir._
 
 /**
- * Moving away from SpecWithTransitions ModuleManipulator allows us to re-insert special TlaEx
+ * Moving away from SpecWithTransitions ModuleAdapter allows us to re-insert special TlaEx
  * back into a TlaModule, as operators with special names. All such operators are suffixed with
  * `suffix`, which is a string disallowed by the TLA+ operator naming rules.
  *
@@ -35,9 +35,8 @@ object ModuleAdapter {
       _._2
     })
 
-  def insertTransitions(module: TlaModule, transitionOperName: String, transitions: Seq[SymbTrans]): TlaModule = {
-    new TlaModule(module.name, declsFromTransitions(transitionOperName, transitions) ++ module.declarations)
-  }
+  def insertTransitions(module: TlaModule, transitionOperName: String, transitions: Seq[SymbTrans]): TlaModule =
+    TlaModule(module.name, declsFromTransitions(transitionOperName, transitions) ++ module.declarations)
 
   /**
    * After re-inserting the transitions into the spec as operators with special names,
