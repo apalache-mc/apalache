@@ -78,8 +78,8 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
     }
 
     // Since PrimingPass now happens before inlining, we have to add InitPrime and CInitPrime as well
-    val initName = options.getOrElse("checker", "init", "Init")
-    val cinitName = options.getOrElse("checker", "cinit", "CInit")
+    val initName = options.getOrElse[String]("checker", "init", "Init")
+    val cinitName = options.getOrElse[String]("checker", "cinit", "CInit")
     val initPrimedName = initName + "Primed"
     val cinitPrimedName = cinitName + "Primed"
 

@@ -59,7 +59,7 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
           None
       }
 
-    val initName = options.getOrElse("checker", "init", "Init")
+    val initName = options.getOrElse[String]("checker", "init", "Init")
     val primeTransformer = Prime(varSet, tracker)
     val initPrimedName = initName + "Primed"
     logger.info(s"  > Introducing $initPrimedName for $initName'")

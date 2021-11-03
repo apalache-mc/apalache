@@ -32,7 +32,7 @@ trait PassOptions {
    * @param default    a default value
    * @return the option value, normally, an Integer or String
    */
-  def getOrElse[T](passName: String, optionName: String, default: T): T
+  def getOrElse[T: ClassTag](passName: String, optionName: String, default: T): T
 
   /**
    * Get a pass option. If there is no such option, throw an OptionException.
@@ -41,5 +41,5 @@ trait PassOptions {
    * @param optionName an option name
    * @return the option value, normally, an Integer or String
    */
-  def getOrError[T](passName: String, optionName: String): T
+  def getOrError[T: ClassTag](passName: String, optionName: String): T
 }
