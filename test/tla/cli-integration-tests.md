@@ -171,6 +171,8 @@ $ apalache-mc parse --output=output.tla Annotations.tla | sed 's/I@.*//'
 ...
 EXITCODE: OK
 ...
+$ test -s output.tla
+$ rm output.tla
 ```
 
 ### parse --output=annotations.json Annotations succeeds
@@ -179,6 +181,8 @@ EXITCODE: OK
 $ apalache-mc parse --output=output.json Annotations.tla | sed 's/I@.*//'
 ...
 EXITCODE: OK
+$ test -s output.tla
+$ rm output.tla
 ...
 ```
 
