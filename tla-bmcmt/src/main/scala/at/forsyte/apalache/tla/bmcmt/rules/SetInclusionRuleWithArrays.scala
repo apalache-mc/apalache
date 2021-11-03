@@ -20,7 +20,7 @@ class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends SetInclusi
         val rightCell = rightState.arena.findCellByNameEx(rightState.ex)
         (leftCell.cellType, rightCell.cellType) match {
           case (FinSetT(_), FinSetT(_)) =>
-            subset(rightState, leftCell, rightCell)
+            subset(rightState, leftCell, rightCell, false)
 
           case (FinSetT(FinSetT(t1)), PowSetT(FinSetT(t2))) =>
             if (t1 != t2) {
@@ -28,7 +28,7 @@ class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends SetInclusi
                   "Unexpected set types: %s and %s in %s"
                     .format(t1, t2, state.ex), state.ex)
             } else {
-              subset(rightState, leftCell, rightCell)
+              subset(rightState, leftCell, rightCell, true)
             }
 
           case _ =>
@@ -42,18 +42,23 @@ class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends SetInclusi
     }
   }
 
-  private def subset(state: SymbState, leftCell: ArenaCell, rightCell: ArenaCell): SymbState = {
+  private def subset(state: SymbState, leftCell: ArenaCell, rightCell: ArenaCell, rightIsPowSet: Boolean): SymbState = {
     var newState = state
+    // We check if the elements of leftCell are in rightCell, in order to establish the subset relation
+    // If rightCell is a power set, we check if the elements in the sets of leftCell are in the domain of rightCell
+    val leftElems =
+      if (rightIsPowSet) newState.arena.getHas(leftCell).flatMap(newState.arena.getHas)
+      else newState.arena.getHas(leftCell)
+    val rightElem = if (rightIsPowSet) newState.arena.getDom(rightCell) else rightCell
 
     def isInRight(leftElem: ArenaCell): TlaEx = {
       newState = newState.updateArena(_.appendCell(BoolT()))
       val pred = newState.arena.topCell
       rewriter.solverContext.assertGroundExpr(simplifier.simplifyShallow(tla.equiv(pred.toNameEx,
-                  tla.in(leftElem.toNameEx, rightCell.toNameEx))))
+                  tla.in(leftElem.toNameEx, rightElem.toNameEx))))
       pred.toNameEx
     }
 
-    val leftElems = newState.arena.getHas(leftCell)
     val isSubset = simplifier.simplifyShallow(tla.and(leftElems.map(isInRight): _*))
     newState = newState.updateArena(_.appendCell(BoolT()))
     val pred = newState.arena.topCell
