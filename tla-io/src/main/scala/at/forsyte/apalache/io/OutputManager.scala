@@ -190,11 +190,11 @@ object OutputManager {
    */
   def withWriterRelativeToIntermediateDir(parts: String*)(f: PrintWriter => Unit): Boolean = {
     if (flags(Names.IntermediateFlag)) {
-      val intermediateDir = new File(outDir.toFile(), Names.IntermediateFoldername)
+      val intermediateDir = new File(runDirOpt.get.toFile(), Names.IntermediateFoldername)
       if (!intermediateDir.exists()) {
         intermediateDir.mkdir()
       }
-      f(printWriter(intermediateDir))
+      f(printWriter(intermediateDir, parts: _*))
       true
     } else {
       false

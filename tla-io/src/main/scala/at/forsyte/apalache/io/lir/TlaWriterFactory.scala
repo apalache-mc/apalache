@@ -46,7 +46,7 @@ trait TlaWriterFactory {
 
     writer match {
       case Some(w) => writef(w)
-      case None    => OutputManager.withWriterRelativeToRunDir(module.name + extension)(writef)
+      case None    => OutputManager.withWriterRelativeToIntermediateDir(module.name + extension)(writef)
     }
   }
 
