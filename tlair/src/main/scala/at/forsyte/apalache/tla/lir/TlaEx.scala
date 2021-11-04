@@ -12,8 +12,6 @@ sealed abstract class TlaEx(implicit val typeTag: TypeTag)
 
   // TODO: introduce a type class to print expressions with a custom printer (see scala cats)
   override def toString: String = UTFPrinter(this)
-
-  def toSimpleString: String = ""
 }
 
 /**
@@ -71,20 +69,6 @@ case class OperEx(oper: TlaOper, args: TlaEx*)(implicit typeTag: TypeTag) extend
 
   require(oper.permitsArgs(args),
       "The invariant of %s is violated by the arguments: %s".format(oper.name, args.map(_.toString) mkString ", "))
-
-  override def toSimpleString: String = {
-    oper.arity match {
-      case FixedArity(n) => {
-        n match {
-          case 1 => args.head.toSimpleString + oper.name
-          case 2 => args.head.toSimpleString + " " + oper.name + " " + args.tail.head.toSimpleString
-          case _ => oper.name + "(" + args.map(_.toSimpleString).mkString(", ") + ")"
-        }
-      }
-      case _ => oper.name + "(" + args.map(_.toSimpleString).mkString(", ") + ")"
-
-    }
-  }
 
   override def withTag(newTypeTag: TypeTag): TlaEx = {
     OperEx(oper, args: _*)(newTypeTag)
