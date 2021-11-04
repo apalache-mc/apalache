@@ -848,9 +848,15 @@ into <a href="https://github.com/informalsystems/apalache/blob/master/tlair/src/
 .</p>
 </li>
 <li>
-<p>It pretty-prints the IR into <code>out-parser.tla</code>, see <a href="apalache/running.html#detailed">Detailed output</a>.</p>
+<p>If the <code>--write-intermediate</code> flag is given, it pretty-prints the IR into
+<code>00_OutParser.json</code> and <code>00_OutParser.tla</code> in the output directory (see <a href="apalache/running.html#detailed">Detailed output</a>).</p>
 </li>
 </ol>
+<p>You can also write output to a specified location by using the <code>--output</code> flag.
+E.g.,</p>
+<pre><code class="language-bash">$ apalache parse --output=result.json &lt;myspec&gt;.tla
+</code></pre>
+<p>will write the IR to the file <code>result.json</code>.</p>
 <h1><a class="header" href="#apalache-global-configuration-file" id="apalache-global-configuration-file">Apalache global configuration file</a></h1>
 <p>Apalache allows you to specify certain parameters, governing outputs produced by it, as described in <a href="apalache/../adr/009adr-outputs.html">ADR-009</a>.</p>
 <p>You can create a global configuration file named <code>apalache-global-config.yml</code> in <code>$HOME/.tlaplus/</code> and populate it with values for the following flags, in YAML format:</p>

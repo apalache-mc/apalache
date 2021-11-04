@@ -414,9 +414,15 @@ into <a href="https://github.com/informalsystems/apalache/blob/master/tlair/src/
 .</p>
 </li>
 <li>
-<p>It pretty-prints the IR into <code>out-parser.tla</code>, see <a href="#detailed">Detailed output</a>.</p>
+<p>If the <code>--write-intermediate</code> flag is given, it pretty-prints the IR into
+<code>00_OutParser.json</code> and <code>00_OutParser.tla</code> in the output directory (see <a href="#detailed">Detailed output</a>).</p>
 </li>
 </ol>
+<p>You can also write output to a specified location by using the <code>--output</code> flag.
+E.g.,</p>
+<pre><code class="language-bash">$ apalache parse --output=result.json &lt;myspec&gt;.tla
+</code></pre>
+<p>will write the IR to the file <code>result.json</code>.</p>
 
                     </main>
 
