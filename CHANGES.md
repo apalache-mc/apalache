@@ -2,6 +2,12 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.17.1
+
+### Bug fixes
+
+* Fix regression breaking behavior of `--output` flag, see #1072, #1073
+
 ## 0.17.0
 
 ### Features
