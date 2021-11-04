@@ -66,6 +66,9 @@ class SymbStateRewriterImplWithArrays(_solverContext: SolverContext,
           -> List(new SetExpandRule(this)),
         key(tla.powSet(tla.name("X"))) // OK
           -> List(new PowSetCtorRule(this)),
+        // (Potential IntDotDotRule optimization) remove redundant "select" assertions in intRangeCache.create
+        key(tla.dotdot(tla.int(1), tla.int(10))) // OK
+          -> List(new IntDotDotRule(this, intRangeCache)),
         // integers
         key(tla.lt(tla.int(1), tla.int(2))) // OK
           -> List(new IntCmpRule(this)),
