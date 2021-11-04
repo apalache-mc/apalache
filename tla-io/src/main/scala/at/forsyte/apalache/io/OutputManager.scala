@@ -48,10 +48,15 @@ object OutputManager extends LazyLogging {
   /** Accessor, read-only */
   def runDirPathOpt: Option[Path] = runDirOpt
 
+  /** Construct the path to the intermediate output directory */
   def intermediateDirPathOpt: Option[Path] = {
     runDirPathOpt.map(_.resolve(Names.IntermediateFoldername))
   }
 
+  /**  The intermediate output directory as a File, if it exists
+   *
+   * @return `Some(dir)` if `dir` is the intermediate output directory and it
+   * exists or can be created. Otherwise `false`*/
   def intermediateDirFile: Option[File] = {
     intermediateDirPathOpt
       .map(_.toFile)
@@ -207,7 +212,7 @@ object OutputManager extends LazyLogging {
    * Conditionally applies a function to a PrintWriter constructed relative to the intermediate directory
    *
    * @param parts path parts describing a path relative to the intermediate directory (all parents must exist)
-   * @param f a function that will be applied to the the PrintWriter, if the `IntermediateFlag` is set.
+   * @param f a function that will be applied to the `PrintWriter`, if the `IntermediateFlag` is set.
    * @return `true` if the `IntermediateFlag` is true, and `f` can be applied to the PrintWriter
    *        created by appending the `parts` to the intermediate output dir. Otherwise, `false`.
    */
@@ -216,15 +221,15 @@ object OutputManager extends LazyLogging {
       false
     } else {
       intermediateDirFile match {
-        case None => {
-          val dirName = intermediateDirPathOpt.getOrElse("")
-          logger.error(
-              s"Unable to find or create intermdediate output directory ${dirName}. Intermediate output will not be written.")
-          false
-        }
         case Some(dir) => {
           withWriter(f)(printWriter(dir, parts: _*))
           true
+        }
+        case None => {
+          val dirName = intermediateDirPathOpt.getOrElse("")
+          logger.error(
+              s"Unable to find or create intermediate output directory ${dirName}. Intermediate output will not be written.")
+          false
         }
       }
     }
