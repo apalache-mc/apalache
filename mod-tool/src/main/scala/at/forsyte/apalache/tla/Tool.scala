@@ -55,16 +55,10 @@ object Tool extends LazyLogging {
   private def outputAndLogConfig(runDirNamePrefix: String, cmd: General): Unit = {
     OutputManager.configure(cmd)
     OutputManager.createRunDirectory(runDirNamePrefix)
-    OutputManager.runDirPathOpt.foreach { runDir =>
-      println(s"Output directory: ${runDir.toFile}")
-      val outFile = new File(runDir.toFile, OutputManager.Names.RunFile)
-      val writer = new PrintWriter(new FileWriter(outFile, false))
-      try {
-        writer.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
-      } finally {
-        writer.close()
-      }
-    }
+    OutputManager.runDirPathOpt.foreach{d => println(s"Output directory: ${d.toAbsolutePath()}")}
+    OutputManager.withWriterRelativeToRunDir(OutputManager.Names.RunFile)(
+      _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
+    )
     // force our programmatic logback configuration, as the autoconfiguration works unpredictably
     new LogbackConfigurator(OutputManager.runDirPathOpt).configureDefaultContext()
     // TODO: update workers when the multicore branch is integrated

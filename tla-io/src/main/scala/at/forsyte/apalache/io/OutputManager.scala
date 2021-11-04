@@ -174,9 +174,23 @@ object OutputManager {
     printWriter(Paths.get(base), fileParts: _*)
   }
 
+  /**  Apply f to the writer w, being sure to close w */
+  private def withWriter(f: PrintWriter => Unit)(w: PrintWriter) = {
+    try {
+      f(w)
+    } finally {
+      w.close()
+    }
+  }
+
+  def withWriterToFile(file: File)(f: PrintWriter => Unit): Unit = {
+    withWriter(f)(printWriter(file))
+  }
+
   /** Applies `f` to a PrintWriter created by appending the `parts` to the `runDir` */
   def withWriterRelativeToRunDir(parts: String*)(f: PrintWriter => Unit): Unit = {
-    f(printWriter(outDir, parts: _*))
+    val w = printWriter(runDirOpt.get, parts: _*)
+    withWriter(f)(w)
   }
 
   /**
@@ -194,7 +208,7 @@ object OutputManager {
       if (!intermediateDir.exists()) {
         intermediateDir.mkdir()
       }
-      f(printWriter(intermediateDir, parts: _*))
+      withWriter(f)(printWriter(intermediateDir, parts: _*))
       true
     } else {
       false
