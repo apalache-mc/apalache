@@ -10,6 +10,3 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
-### Bug fixes
-
-* Fix regression breaking behavior of `--output` flag, see #1072, #1073
