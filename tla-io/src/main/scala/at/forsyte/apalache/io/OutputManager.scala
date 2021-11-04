@@ -198,7 +198,7 @@ object OutputManager {
    *
    * @param parts path parts describing a path relative to the intermediate directory (all parents must exist)
    * @param f a function that will be applied to the the PrintWriter, if the `IntermediateFlag` is set.
-   * @returns `true` if the `IntermediateFlag` is set the output is written, otherwise `false`
+   * @return `true` if the `IntermediateFlag` is set the output is written, otherwise `false`
    * If the IntermediateFlag is true, then this applies `f` to the PrintWriter
    * created by appending the `parts` to the intermediate output dir, and returns `true`. Otherwise, it is false
    */
