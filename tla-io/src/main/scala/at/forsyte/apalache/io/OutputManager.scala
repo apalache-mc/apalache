@@ -174,7 +174,7 @@ object OutputManager {
     printWriter(Paths.get(base), fileParts: _*)
   }
 
-  /**  Apply f to the writer w, being sure to close w */
+  /** Apply f to the writer w, being sure to close w */
   private def withWriter(f: PrintWriter => Unit)(w: PrintWriter) = {
     try {
       f(w)

@@ -2081,5 +2081,7 @@ $ rm -rf ./test-out-dir
 
 ```sh
 $ apalache-mc check --out-dir=./test-out-dir --profiling=true --length=0 Counter.tla | sed 's/[IEW]@.*//' && test -s ./test-out-dir/*/profile-rules.txt
+...
+EXITCODE: OK
 $ rm -rf ./test-out-dir
 ```
