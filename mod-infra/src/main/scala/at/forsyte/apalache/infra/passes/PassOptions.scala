@@ -1,4 +1,5 @@
 package at.forsyte.apalache.infra.passes
+import scala.reflect.ClassTag
 
 /**
  * The central store for various options given to the passes.
@@ -12,6 +13,8 @@ package at.forsyte.apalache.infra.passes
  */
 trait PassOptions {
 
+  // The `ClassTag` is needed to prevent the type of `T` being erased,
+  // because we expect implementations to make use of the type at runtime.
   /**
    * Get a pass option.
    *
@@ -19,7 +22,7 @@ trait PassOptions {
    * @param optionName an option name
    * @return the option value, normally, an Integer or String
    */
-  def get[T](passName: String, optionName: String): Option[T]
+  def get[T: ClassTag](passName: String, optionName: String): Option[T]
 
   /**
    * Get a pass option, or fallback to the default value
@@ -29,7 +32,7 @@ trait PassOptions {
    * @param default    a default value
    * @return the option value, normally, an Integer or String
    */
-  def getOrElse[T](passName: String, optionName: String, default: T): T
+  def getOrElse[T: ClassTag](passName: String, optionName: String, default: T): T
 
   /**
    * Get a pass option. If there is no such option, throw an OptionException.
@@ -38,5 +41,5 @@ trait PassOptions {
    * @param optionName an option name
    * @return the option value, normally, an Integer or String
    */
-  def getOrError[T](passName: String, optionName: String): T
+  def getOrError[T: ClassTag](passName: String, optionName: String): T
 }

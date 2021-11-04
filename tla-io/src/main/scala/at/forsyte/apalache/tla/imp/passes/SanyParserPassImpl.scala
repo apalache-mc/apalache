@@ -42,7 +42,7 @@ class SanyParserPassImpl @Inject() (
    * @return true, if the pass was successful
    */
   override def execute(): Boolean = {
-    val filename = options.getOrError("parser", "filename").asInstanceOf[String]
+    val filename = options.getOrError[String]("parser", "filename")
     if (filename.endsWith(".json")) {
       try {
         val moduleJson = UJsonRep(ujson.read(new File(filename)))
@@ -81,29 +81,28 @@ class SanyParserPassImpl @Inject() (
         // save the output
         writerFactory.writeModuleAllFormats(rootModule.get.copy(name = "00_OutParser"), TlaWriter.STANDARD_MODULES)
 
-        // Jure: @Igor: Can we remove this below?
         // write parser output to specified destination, if requested
-        val output = options.getOrElse("parser", "output", "")
-        if (output.nonEmpty) {
-          val outputFile = new File(output)
-          val filename = outputFile.getName
+        options.get[String]("parser", "output").foreach { output =>
+          val file = new File(output)
 
           if (filename.toLowerCase.endsWith(".tla")) {
             val moduleName = filename.substring(0, filename.length - ".tla".length)
-            writerFactory.writeModuleToTla(rootModule.get.copy(name = moduleName), TlaWriter.STANDARD_MODULES)
+            writerFactory.writeModuleToTla(rootModule.get.copy(name = moduleName), TlaWriter.STANDARD_MODULES,
+                Some(file))
           } else if (filename.toLowerCase.endsWith(".json")) {
             val moduleName = filename.substring(0, filename.length - ".json".length)
-            writerFactory.writeModuleToJson(rootModule.get.copy(name = moduleName), TlaWriter.STANDARD_MODULES)
+            writerFactory.writeModuleToJson(rootModule.get.copy(name = moduleName), TlaWriter.STANDARD_MODULES,
+                Some(file))
           } else {
             logger.error(s"  > Unrecognized file format: $filename. Supported formats: .tla and .json")
           }
 
-          if (options.getOrElse("general", "debug", false)) {
+          if (options.getOrElse[Boolean]("general", "debug", false)) {
             val sourceLocator =
               SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
             rootModule.get.operDeclarations foreach sourceLocator.checkConsistency
           }
-          if (options.getOrElse("general", "debug", false)) {
+          if (options.getOrElse[Boolean]("general", "debug", false)) {
             val sourceLocator =
               SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
             rootModule.get.operDeclarations foreach sourceLocator.checkConsistency

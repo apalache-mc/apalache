@@ -171,6 +171,8 @@ $ apalache-mc parse --output=output.tla Annotations.tla | sed 's/I@.*//'
 ...
 EXITCODE: OK
 ...
+$ test -s output.tla
+$ rm output.tla
 ```
 
 ### parse --output=annotations.json Annotations succeeds
@@ -179,6 +181,8 @@ EXITCODE: OK
 $ apalache-mc parse --output=output.json Annotations.tla | sed 's/I@.*//'
 ...
 EXITCODE: OK
+$ test -s output.json
+$ rm output.json
 ...
 ```
 
@@ -1998,7 +2002,9 @@ EXITCODE: OK
 ### set out-dir by CLI flag
 
 ```sh
-$ apalache-mc check --out-dir=./test-out-dir --length=0 Counter.tla &> /dev/null && find ./test-out-dir -type f -exec basename {} \; | ./sort.sh
+$ apalache-mc check --out-dir=./test-out-dir --length=0 Counter.tla | sed 's/[IEW]@.*//' && find ./test-out-dir -type f -exec basename {} \; | ./sort.sh
+...
+EXITCODE: OK
 detailed.log
 log0.smt
 run.txt
@@ -2008,7 +2014,9 @@ $ rm -rf ./test-out-dir
 ### set out-dir by envvar
 
 ```sh
-$ OUT_DIR=./test-out-dir apalache-mc check --length=0 Counter.tla &> /dev/null && find ./test-out-dir -type f -exec basename {} \; | ./sort.sh
+$ OUT_DIR=./test-out-dir apalache-mc check --length=0 Counter.tla | sed 's/[IEW]@.*//' && find ./test-out-dir -type f -exec basename {} \; | ./sort.sh
+...
+EXITCODE: OK
 detailed.log
 log0.smt
 run.txt
@@ -2018,7 +2026,9 @@ $ rm -rf ./test-out-dir
 ### setting out-dir by CLI flag overrides the envvar
 
 ```sh
-$ OUT_DIR=./not-here apalache-mc check --out-dir=./test-out-dir --length=0 Counter.tla &> /dev/null && find ./test-out-dir -type f -exec basename {} \; | ./sort.sh
+$ OUT_DIR=./not-here apalache-mc check --out-dir=./test-out-dir --length=0 Counter.tla | sed 's/[IEW]@.*//' && find ./test-out-dir -type f -exec basename {} \; | ./sort.sh
+...
+EXITCODE: OK
 detailed.log
 log0.smt
 run.txt
@@ -2028,7 +2038,9 @@ $ rm -rf ./test-out-dir
 ### write-intermediate files
 
 ```sh
-$ apalache-mc check --out-dir=./test-out-dir --write-intermediate=true --length=0 Counter.tla &> /dev/null && find ./test-out-dir -type f -exec basename {} \; | ./sort.sh
+$ apalache-mc check --out-dir=./test-out-dir --write-intermediate=true --length=0 Counter.tla | sed 's/[IEW]@.*//' && find ./test-out-dir -type f -exec basename {} \; | ./sort.sh
+...
+EXITCODE: OK
 00_OutParser.json
 00_OutParser.tla
 01_out-post-TypeCheckerSnowcat.json
@@ -2068,6 +2080,8 @@ $ rm -rf ./test-out-dir
 ### use the --profiling flag to write profile-rules.txt
 
 ```sh
-$ apalache-mc check --out-dir=./test-out-dir --profiling=true --length=0 Counter.tla &> /dev/null && test -s ./test-out-dir/*/profile-rules.txt
+$ apalache-mc check --out-dir=./test-out-dir --profiling=true --length=0 Counter.tla | sed 's/[IEW]@.*//' && test -s ./test-out-dir/*/profile-rules.txt
+...
+EXITCODE: OK
 $ rm -rf ./test-out-dir
 ```

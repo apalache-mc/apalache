@@ -80,11 +80,11 @@ class ConfigurationPassImpl @Inject() (
   private def setFallbackOptions(
       relevantOptions: WriteablePassOptions
   ): Unit = {
-    if (relevantOptions.get("checker", "init").isEmpty) {
+    if (relevantOptions.get[String]("checker", "init").isEmpty) {
       logger.info("  > Command line option --init is not set. Using Init")
       relevantOptions.set("checker.init", "Init")
     }
-    if (relevantOptions.get("checker", "next").isEmpty) {
+    if (relevantOptions.get[String]("checker", "next").isEmpty) {
       logger.info("  > Command line option --next is not set. Using Next")
       relevantOptions.set("checker.next", "Next")
     }
@@ -113,12 +113,11 @@ class ConfigurationPassImpl @Inject() (
   ): Seq[TlaDecl] = {
     var configuredModule = module
     // read TLC config if present
-    val configFilename = options.getOrElse("checker", "config", "")
+    val configFilename = options.getOrElse[String]("checker", "config", "")
     val filename =
       if (configFilename.isEmpty) {
         options
-          .getOrError("parser", "filename")
-          .asInstanceOf[String]
+          .getOrError[String]("parser", "filename")
           .replaceFirst("\\.(tla|json)$", "\\.cfg")
       } else {
         configFilename
