@@ -280,7 +280,17 @@ In this case, Apalache performs the following steps:
    into [Apalache IR](https://github.com/informalsystems/apalache/blob/master/tlair/src/main/scala/at/forsyte/apalache/tla/lir/package.scala)
    .
 
-1. It pretty-prints the IR into `out-parser.tla`, see [Detailed output](#detailed).
+1. If the `--write-intermediate` flag is given, it pretty-prints the IR into
+   `00_OutParser.json` and `00_OutParser.tla` in the output directory (see [Detailed output](#detailed)).
+
+You can also write output to a specified location by using the `--output` flag.
+E.g.,
+
+```bash
+$ apalache parse --output=result.json <myspec>.tla
+```
+
+will write the IR to the file `result.json`.
 
 [alternative SMT encoding using arrays]: ../adr/011adr-smt-arrays.md
 [Enumeration of counterexamples]: ./enumeration.md
