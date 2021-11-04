@@ -246,14 +246,6 @@ trait TransEx {
   /** Used internally */
   private def connection(): Connection
 
-  /**  Create a transition explorer
-   *
-   * Establishes the connection and a running session
-   *
-   * The channel is managed by the gRPC framework. */
-  def apply(channel: Channel): TransEx
-
-
   /** Reset the state of the explorer
    *
    * Returns the explorer to the same state as when the currently loaded model
@@ -324,6 +316,15 @@ trait TransEx {
 
   /** Terminate the session. */
   def terminate(): Unit
+}
+
+object TransEx {
+  /**  Create a transition explorer
+   *
+   * Establishes the connection and a running session
+   *
+   * The channel is managed by the gRPC framework. */
+  def apply(channel: Channel): TransEx = ...
 }
 ```
 
