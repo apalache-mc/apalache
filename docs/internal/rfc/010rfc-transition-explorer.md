@@ -211,7 +211,7 @@ type Execution = List[(State, Option[Transition])]
 
 trait UninitializedModel = {
   val spec: TlaModule
-  val transitions: Set(Transition)
+  val transitions: List(Transition)
 }
 
 trait InitializedModel extends UninitializedModel {
