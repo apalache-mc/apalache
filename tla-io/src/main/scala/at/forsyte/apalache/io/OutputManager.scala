@@ -53,10 +53,12 @@ object OutputManager extends LazyLogging {
     runDirPathOpt.map(_.resolve(Names.IntermediateFoldername))
   }
 
-  /**  The intermediate output directory as a File, if it exists
+  /**
+   *  The intermediate output directory as a File, if it exists
    *
    * @return `Some(dir)` if `dir` is the intermediate output directory and it
-   * exists or can be created. Otherwise `false`*/
+   * exists or can be created. Otherwise `false`
+   */
   def intermediateDirFile: Option[File] = {
     intermediateDirPathOpt
       .map(_.toFile)
