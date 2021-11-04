@@ -2,12 +2,12 @@ package at.forsyte.apalache.io
 
 import at.forsyte.apalache.infra.passes.WriteablePassOptions
 
-import java.io.{File, FileInputStream}
+import com.typesafe.scalalogging.LazyLogging
+import java.io.{File, FileInputStream, PrintWriter, FileWriter}
 import java.nio.file.{Files, Path, Paths}
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import org.yaml.snakeyaml.Yaml
-import java.io.{PrintWriter, FileWriter}
 
 trait OutputManagerConfig {
   // TODO def debug : Boolean
@@ -20,7 +20,7 @@ trait OutputManagerConfig {
  * The OutputManager is the central source of truth, for all IO related locations.
  * Any IO operation should request read/write target paths from this object.
  */
-object OutputManager {
+object OutputManager extends LazyLogging {
 
   object Names {
     val OutdirNameInCfg = "out-dir"
@@ -47,6 +47,16 @@ object OutputManager {
 
   /** Accessor, read-only */
   def runDirPathOpt: Option[Path] = runDirOpt
+
+  def intermediateDirPathOpt: Option[Path] = {
+    runDirPathOpt.map(_.resolve(Names.IntermediateFoldername))
+  }
+
+  def intermediateDirFile: Option[File] = {
+    intermediateDirPathOpt
+      .map(_.toFile)
+      .filter(dir => (dir.exists() && dir.isDirectory()) || dir.mkdir())
+  }
 
   /**
    * Accessor for the configured run directory.
@@ -198,21 +208,25 @@ object OutputManager {
    *
    * @param parts path parts describing a path relative to the intermediate directory (all parents must exist)
    * @param f a function that will be applied to the the PrintWriter, if the `IntermediateFlag` is set.
-   * @return `true` if the `IntermediateFlag` is set the output is written, otherwise `false`
-   * If the IntermediateFlag is true, then this applies `f` to the PrintWriter
-   * created by appending the `parts` to the intermediate output dir, and returns `true`. Otherwise, it is false
+   * @return `true` if the `IntermediateFlag` is true, and `f` can be applied to the PrintWriter
+   *        created by appending the `parts` to the intermediate output dir. Otherwise, `false`.
    */
   def withWriterRelativeToIntermediateDir(parts: String*)(f: PrintWriter => Unit): Boolean = {
-    if (flags(Names.IntermediateFlag)) {
-      val intermediateDir = new File(runDirOpt.get.toFile(), Names.IntermediateFoldername)
-      if (!intermediateDir.exists()) {
-        intermediateDir.mkdir()
-      }
-      withWriter(f)(printWriter(intermediateDir, parts: _*))
-      true
-    } else {
+    if (!flags(Names.IntermediateFlag)) {
       false
+    } else {
+      intermediateDirFile match {
+        case None => {
+          val dirName = intermediateDirPathOpt.getOrElse("")
+          logger.error(
+              s"Unable to find or create intermdediate output directory ${dirName}. Intermediate output will not be written.")
+          false
+        }
+        case Some(dir) => {
+          withWriter(f)(printWriter(dir, parts: _*))
+          true
+        }
+      }
     }
-
   }
 }
