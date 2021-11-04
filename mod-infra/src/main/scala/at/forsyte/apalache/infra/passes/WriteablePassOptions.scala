@@ -1,5 +1,6 @@
 package at.forsyte.apalache.infra.passes
 
+import scala.reflect.ClassTag
 import at.forsyte.apalache.infra.PassOptionException
 import com.google.inject.Singleton
 
@@ -40,8 +41,11 @@ class WriteablePassOptions extends PassOptions {
    * @param optionName an option name
    * @return the option value, normally, an Integer or String
    */
-  def get[T](passName: String, optionName: String): Option[T] = {
+  def get[T: ClassTag](passName: String, optionName: String): Option[T] = {
+    // The ClassTag prevents the type of `T` from being erased at runtime
+    // See https://stackoverflow.com/a/18136667/1187277
     store.get(passName + "." + optionName) match {
+      // Since we have added the ClassTag, we are able to match on its value here
       case Some(value: T) =>
         Some(value)
 
@@ -60,8 +64,8 @@ class WriteablePassOptions extends PassOptions {
    * @param default    a default value
    * @return the option value, normally, an Integer or String
    */
-  def getOrElse[T](passName: String, optionName: String, default: T): T = {
-    val value = get(passName, optionName)
+  def getOrElse[T: ClassTag](passName: String, optionName: String, default: T): T = {
+    val value = get[T](passName, optionName)
     if (value.isDefined) {
       value.get.asInstanceOf[T]
     } else {
@@ -76,8 +80,8 @@ class WriteablePassOptions extends PassOptions {
    * @param optionName an option name
    * @return the option value, normally, an Integer or String
    */
-  def getOrError[T](passName: String, optionName: String): T = {
-    val value = get(passName, optionName)
+  def getOrError[T: ClassTag](passName: String, optionName: String): T = {
+    val value = get[T](passName, optionName)
     if (value.isDefined) {
       value.get.asInstanceOf[T]
     } else {

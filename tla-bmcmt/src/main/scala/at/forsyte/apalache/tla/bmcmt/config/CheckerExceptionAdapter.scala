@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.config
 
 import at.forsyte.apalache.infra.{ErrorMessage, ExceptionAdapter, FailureMessage, NormalErrorMessage}
 import at.forsyte.apalache.io.ConfigurationError
-import at.forsyte.apalache.tla.assignments.{AssignmentException, CoverData}
+import at.forsyte.apalache.tla.assignments.AssignmentException
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.imp.SanyException
 import at.forsyte.apalache.tla.imp.src.SourceStore
@@ -105,12 +105,6 @@ class CheckerExceptionAdapter @Inject() (sourceStore: SourceStore, changeListene
 
     case err: MalformedSepecificationError =>
       val msg = "The specification is malformed: %s".format(err.getMessage)
-      NormalErrorMessage(msg)
-
-    case err: CoverData.CoverException =>
-      val msg =
-        "Unable to find assignments for all state variables: \n%s\n [see https://apalache.informal.systems/docs/apalache/principles.html#assignments]"
-          .format(err.getMessage)
       NormalErrorMessage(msg)
   }
 

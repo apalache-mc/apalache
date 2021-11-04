@@ -26,7 +26,7 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
 
   private var outputTlaModule: Option[TlaModule] = None
 
-  protected def inferPoly: Boolean = options.getOrElse("typecheck", "inferPoly", true)
+  protected def inferPoly: Boolean = options.getOrElse[Boolean]("typecheck", "inferPoly", true)
 
   protected def passNumber: String = "01"
 

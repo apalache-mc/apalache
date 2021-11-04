@@ -79,23 +79,23 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
         TODO: uncomment when the parallel checker is transferred from ik/multicore
     val nworkers = options.getOrElse("checker", "nworkers", 1)
      */
-    val stepsBound = options.getOrElse("checker", "length", 10)
-    val tuning = options.getOrElse("general", "tuning", Map[String, String]())
-    val debug = options.getOrElse("general", "debug", false)
-    val saveDir = options.getOrError("io", "outdir").asInstanceOf[Path].toFile
+    val stepsBound = options.getOrElse[Int]("checker", "length", 10)
+    val tuning = options.getOrElse[Map[String, String]]("general", "tuning", Map[String, String]())
+    val debug = options.getOrElse[Boolean]("general", "debug", false)
+    val saveDir = options.getOrError[Path]("io", "outdir").toFile
 
     val params = new ModelCheckerParams(input, stepsBound, saveDir, tuning, debug)
-    params.discardDisabled = options.getOrElse("checker", "discardDisabled", true)
-    params.checkForDeadlocks = !options.getOrElse("checker", "noDeadlocks", false)
-    params.nMaxErrors = options.getOrElse("checker", "maxError", 1)
+    params.discardDisabled = options.getOrElse[Boolean]("checker", "discardDisabled", true)
+    params.checkForDeadlocks = !options.getOrElse[Boolean]("checker", "noDeadlocks", false)
+    params.nMaxErrors = options.getOrElse[Int]("checker", "maxError", 1)
 
-    params.smtEncoding = options.get("checker", "smt-encoding").flatten.getOrElse(oopsla19Encoding)
+    params.smtEncoding = options.get[Option[String]]("checker", "smt-encoding").flatten.getOrElse(oopsla19Encoding)
 
-    val smtProfile = options.getOrElse("smt", "prof", false)
+    val smtProfile = options.getOrElse[Boolean]("smt", "prof", false)
     val smtRandomSeed = tuning.getOrElse("smt.randomSeed", "0").toInt
     val solverConfig = SolverConfig(debug, smtProfile, smtRandomSeed)
 
-    options.getOrElse("checker", "algo", "incremental") match {
+    options.getOrElse[String]("checker", "algo", "incremental") match {
       /*
         TODO: uncomment when the parallel checker is transferred from ik/multicore
       case "parallel" => runParallelChecker(params, input, tuning, nworkers)
