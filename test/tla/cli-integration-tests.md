@@ -173,7 +173,7 @@ $ apalache-mc parse --output=output.tla Annotations.tla | sed 's/I@.*//'
 ...
 EXITCODE: OK
 $ cat output.tla | head
------ MODULE /home/sf/Sync/informal-systems/apalache/apalache-core/test/tla/Annotations -----
+-------------------------------- MODULE output --------------------------------
 
 EXTENDS Integers, Sequences, FiniteSets, TLC, Apalache
 
@@ -202,7 +202,7 @@ $ cat output.json | head
   "modules": [
     {
       "kind": "TlaModule",
-      "name": "/home/sf/Sync/informal-systems/apalache/apalache-core/test/tla/Annotation",
+      "name": "output",
       "declarations": [
         {
 $ rm output.json
