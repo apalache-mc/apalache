@@ -2,7 +2,8 @@ package at.forsyte.apalache.io
 
 import at.forsyte.apalache.infra.passes.WriteablePassOptions
 
-import java.io.{File, FileInputStream}
+import com.typesafe.scalalogging.LazyLogging
+import java.io.{File, FileInputStream, PrintWriter, FileWriter}
 import java.nio.file.{Files, Path, Paths}
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -19,7 +20,7 @@ trait OutputManagerConfig {
  * The OutputManager is the central source of truth, for all IO related locations.
  * Any IO operation should request read/write target paths from this object.
  */
-object OutputManager {
+object OutputManager extends LazyLogging {
 
   object Names {
     val OutdirNameInCfg = "out-dir"
@@ -46,6 +47,23 @@ object OutputManager {
 
   /** Accessor, read-only */
   def runDirPathOpt: Option[Path] = runDirOpt
+
+  /** Construct the path to the intermediate output directory */
+  def intermediateDirPathOpt: Option[Path] = {
+    runDirPathOpt.map(_.resolve(Names.IntermediateFoldername))
+  }
+
+  /**
+   *  The intermediate output directory as a File, if it exists
+   *
+   * @return `Some(dir)` if `dir` is the intermediate output directory and it
+   * exists or can be created. Otherwise `false`
+   */
+  def intermediateDirFile: Option[File] = {
+    intermediateDirPathOpt
+      .map(_.toFile)
+      .filter(dir => (dir.exists() && dir.isDirectory()) || dir.mkdir())
+  }
 
   /**
    * Accessor for the configured run directory.
@@ -150,4 +168,72 @@ object OutputManager {
       val rundir = Files.createTempDirectory(outDir, s"${specName}_${nicedate}T${nicetime}_")
       runDirOpt = Some(rundir)
     }
+
+  /** Create a PrintWriter to the file formed by appending `fileParts` to the `base` file */
+  def printWriter(base: File, fileParts: String*): PrintWriter = {
+    val file = fileParts.foldLeft(base)((file, part) => new File(file, part))
+    new PrintWriter(new FileWriter(file))
+  }
+
+  /** Create a PrintWriter to the file formed by appending `fileParts` to the `base` file */
+  def printWriter(base: Path, fileParts: String*): PrintWriter = {
+    printWriter(base.toFile(), fileParts: _*)
+  }
+
+  /**
+   *  Create a PrintWriter to the file formed by appending `fileParts` to the `base` file
+   *
+   * E.g., to create a writer to the file `foo/bar/bas.json`:
+   *
+   *    val w = printWriter("foo", "bar", "baz.json")
+   */
+  def printWriter(base: String, fileParts: String*): PrintWriter = {
+    printWriter(Paths.get(base), fileParts: _*)
+  }
+
+  /** Apply f to the writer w, being sure to close w */
+  private def withWriter(f: PrintWriter => Unit)(w: PrintWriter) = {
+    try {
+      f(w)
+    } finally {
+      w.close()
+    }
+  }
+
+  def withWriterToFile(file: File)(f: PrintWriter => Unit): Unit = {
+    withWriter(f)(printWriter(file))
+  }
+
+  /** Applies `f` to a PrintWriter created by appending the `parts` to the `runDir` */
+  def withWriterRelativeToRunDir(parts: String*)(f: PrintWriter => Unit): Unit = {
+    val w = printWriter(runDirOpt.get, parts: _*)
+    withWriter(f)(w)
+  }
+
+  /**
+   * Conditionally applies a function to a PrintWriter constructed relative to the intermediate directory
+   *
+   * @param parts path parts describing a path relative to the intermediate directory (all parents must exist)
+   * @param f a function that will be applied to the `PrintWriter`, if the `IntermediateFlag` is set.
+   * @return `true` if the `IntermediateFlag` is true, and `f` can be applied to the PrintWriter
+   *        created by appending the `parts` to the intermediate output dir. Otherwise, `false`.
+   */
+  def withWriterRelativeToIntermediateDir(parts: String*)(f: PrintWriter => Unit): Boolean = {
+    if (!flags(Names.IntermediateFlag)) {
+      false
+    } else {
+      intermediateDirFile match {
+        case Some(dir) => {
+          withWriter(f)(printWriter(dir, parts: _*))
+          true
+        }
+        case None => {
+          val dirName = intermediateDirPathOpt.getOrElse("")
+          logger.error(
+              s"Unable to find or create intermediate output directory ${dirName}. Intermediate output will not be written.")
+          false
+        }
+      }
+    }
+  }
 }
