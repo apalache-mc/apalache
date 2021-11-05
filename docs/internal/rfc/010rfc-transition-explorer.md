@@ -3,16 +3,15 @@
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
 
-- [Problem](#problem)
-- [Proposal](#proposal)
-    - [Overview](#overview)
-    - [Requirements](#requirements)
-    - [Architecture](#architecture)
+- [RFC-010: Implementation of Transition Exploration Server](#rfc-010-implementation-of-transition-exploration-server)
+    - [Problem](#problem)
+    - [Proposal](#proposal)
+        - [Overview](#overview)
+        - [Requirements](#requirements)
+        - [Architecture](#architecture)
         - [API](#api)
         - [Protocol](#protocol)
-        - [gRPC Example](#grpc-example)
-    - [Usage example](#usage-example)
-
+            - [gRPC Example](#grpc-example)
 <!-- markdown-toc end -->
 
 
@@ -302,7 +301,8 @@ trait TransEx {
 
   /** The example of an execution from the an initial state up to the current symbolic state
    *
-   * TODO: I don't know how it is expected to obtain multile different executions. */
+   * Additional executions can be onbtained by asserting constraints that alter the
+   * search space. */
   def execution: Either[SatErr, Execution]
 
   /**
@@ -327,6 +327,18 @@ object TransEx {
   def apply(channel: Channel): TransEx = ...
 }
 ```
+
+#### Constructing the IR
+
+In order to form assertions (represented in the spec as values of `TlaEx`),
+users will need a way of constructing the Apalache IR. Similarly, they'll need a
+way of deconstructing and inspecting the IR in order to extract useful content
+from the transitions.
+
+To meet this need, the gRPC libraries we generate for client code will also
+include ASTs in the client language along with generated serialization and
+deserialization of JSON represents into and out of the AST. This will enable
+users to construct and inspect expressions as needed.
 
 #### Protocol
 
@@ -458,3 +470,6 @@ reply.result match {
     // ...
 }
 ```
+
+NOTE: To ensure that we are able to maintain a stable API, we should version the
+API from the start.
