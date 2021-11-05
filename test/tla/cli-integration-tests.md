@@ -1530,6 +1530,26 @@ EXITCODE: OK
 $ test -s profile.csv
 ```
 
+### check ModelVal.tla succeeds
+
+Test that model values are handled correctly.
+
+```sh
+$ apalache-mc check --cinit=CInit --inv=Inv ModelVal.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check ModelValFail.tla fails
+
+Test that model values of different sorts are incomparable
+
+```sh
+$ apalache-mc check --cinit=CInit --inv=Inv ModelValFail.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: ERROR (12)
+```
+
 ## running the typecheck command
 
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
