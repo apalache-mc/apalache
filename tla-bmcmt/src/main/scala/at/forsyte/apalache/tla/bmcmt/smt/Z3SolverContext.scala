@@ -237,17 +237,15 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     }
   }
 
-  private def initLog(): PrintWriter =
-    OutputManager.runDirPathOpt
-      .map { runDir =>
-        val writer = new PrintWriter(new File(runDir.toFile, s"log$id.smt"))
-        if (!config.debug) {
-          writer.println("Logging is disabled (Z3SolverContext.debug = false). Activate with --debug.")
-          writer.flush()
-        }
-        writer
-      }
-      .getOrElse(new PrintWriter(NullOutputStream.NULL_OUTPUT_STREAM))
+  private def initLog(): PrintWriter = {
+    // TODO Fix SMT logging to be able support logging to latest directory
+    val writer = OutputManager.printWriter(OutputManager.runDir, s"log$id.smt")
+    if (!config.debug) {
+      writer.println("Logging is disabled (Z3SolverContext.debug = false). Activate with --debug.")
+      writer.flush()
+    }
+    writer
+  }
 
   /**
    * Log message to the logging file. This is helpful to debug the SMT encoding.

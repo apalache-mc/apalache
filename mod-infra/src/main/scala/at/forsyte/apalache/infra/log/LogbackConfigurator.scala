@@ -16,12 +16,15 @@ import java.nio.file.Path
  *
  * @author Igor Konnov
  */
-class LogbackConfigurator(runDirOpt: Option[Path]) extends ContextAwareBase with Configurator {
+// TODO Configure to take OutputManager as parameter?
+class LogbackConfigurator(dirs: Option[(Path, Path)]) extends ContextAwareBase with Configurator {
   def configureDefaultContext(): Unit = {
     val loggerContext = LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext]
     setContext(loggerContext)
-    if (runDirOpt.isEmpty) configureSilent(loggerContext)
-    else configure(loggerContext)
+    dirs match {
+        case Some(_) => configure(loggerContext)
+        case None => configureSilent(loggerContext)
+    }
   }
 
   def configureSilent(loggerContext: LoggerContext): Unit = {
@@ -31,13 +34,16 @@ class LogbackConfigurator(runDirOpt: Option[Path]) extends ContextAwareBase with
   }
 
   override def configure(loggerContext: LoggerContext): Unit = {
+    val runDir = dirs.get._1
+    val latestDir = dirs.get._2
     addInfo("Setting up a logback configuration")
     loggerContext.reset() // forget everything that was configured automagically
     val rootLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)
     val consoleAppender = mkConsoleAppender(loggerContext)
     // only warnings at the root level
     rootLogger.setLevel(Level.WARN)
-    rootLogger.addAppender(mkFileAppender(loggerContext))
+    rootLogger.addAppender(mkFileAppender(loggerContext, runDir.resolve("detailed.log").toFile()))
+    rootLogger.addAppender(mkFileAppender(loggerContext, latestDir.resolve("detailed.log").toFile()))
     rootLogger.addAppender(consoleAppender)
     // debug messages at the apalache level
     val apalacheLogger = loggerContext.getLogger("at.forsyte.apalache")
@@ -66,12 +72,12 @@ class LogbackConfigurator(runDirOpt: Option[Path]) extends ContextAwareBase with
     app
   }
 
-  private def mkFileAppender(loggerContext: LoggerContext): FileAppender[ILoggingEvent] = {
+  private def mkFileAppender(loggerContext: LoggerContext, file: File): FileAppender[ILoggingEvent] = {
     // set up FileAppender
     val app = new FileAppender[ILoggingEvent]()
     app.setContext(loggerContext)
     app.setName("file")
-    app.setFile(new File(runDirOpt.get.toFile, "detailed.log").getCanonicalPath)
+    app.setFile(file.getCanonicalPath)
     val encoder = new LayoutWrappingEncoder[ILoggingEvent]()
     encoder.setContext(loggerContext)
     val layout = new PatternLayout()

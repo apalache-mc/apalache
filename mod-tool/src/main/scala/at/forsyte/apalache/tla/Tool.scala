@@ -54,12 +54,12 @@ object Tool extends LazyLogging {
 
   private def outputAndLogConfig(namePrefix: String, cmd: General): Unit = {
     OutputManager.configure(namePrefix, cmd)
-    OutputManager.runDirPathOpt.foreach { d => println(s"Output directory: ${d.toAbsolutePath()}") }
+    println(s"Output directory: ${OutputManager.runDir}")
     OutputManager.withWriterInRunDir(OutputManager.Names.RunFile)(
         _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
     )
     // force our programmatic logback configuration, as the autoconfiguration works unpredictably
-    new LogbackConfigurator(OutputManager.runDirPathOpt).configureDefaultContext()
+    new LogbackConfigurator(Some((OutputManager.runDir, OutputManager.latestDir))).configureDefaultContext()
     // TODO: update workers when the multicore branch is integrated
     submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> cmd.label, "workers" -> "1"))
   }

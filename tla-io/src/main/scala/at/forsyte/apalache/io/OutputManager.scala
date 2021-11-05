@@ -83,7 +83,7 @@ object OutputManager extends LazyLogging {
    *
    * @throws IllegalStateException if called before OutputManager is configured: this is considered an implementator error
    */
-  private def latestDir: Path = {
+  def latestDir: Path = {
     outDir.resolve("latest")
   }
 
@@ -168,7 +168,10 @@ object OutputManager extends LazyLogging {
     ensureDirExists(latestDir)
     if (flags(Names.IntermediateFlag)) {
       setIntermediateDir(namespace)
+      // `get` is safe because `setIntermediateDir` ensures the intermdiate
       ensureDirExists(intermediateDirOpt.get)
+      // `get` is safe because `ensureDirExists(latestDir)` has run
+      ensureDirExists(latestIntermediateDir.get)
     }
   }
 

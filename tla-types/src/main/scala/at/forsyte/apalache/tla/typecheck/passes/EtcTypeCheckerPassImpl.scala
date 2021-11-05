@@ -84,20 +84,13 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
   }
 
   private def dumpToJson(module: TlaModule, prefix: String): Unit = {
-    OutputManager.doIfFlag(OutputManager.Names.IntermediateFlag) {
-      OutputManager.runDirPathOpt.foreach { runDir =>
-        val outdir = new File(runDir.toFile, IntermediateFoldername)
-        val outFile = new File(outdir, s"${passNumber}_out-$prefix-$name.json")
-        val writer = new PrintWriter(new FileWriter(outFile, false))
-        try {
-          val sourceLocator: SourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)
-          val jsonText = new TlaToUJson(Some(sourceLocator)).makeRoot(Seq(module)).toString
-          writer.write(jsonText)
-          logger.debug(" > JSON output: " + outFile)
-        } finally {
-          writer.close()
-        }
-      }
+    val fname = s"${passNumber}_out-$prefix-$name.json"
+    OutputManager.withWriterInIntermediateDir(fname) {
+      writer =>
+      val sourceLocator: SourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)
+      val jsonText = new TlaToUJson(Some(sourceLocator)).makeRoot(Seq(module)).toString
+      writer.write(jsonText)
+      logger.debug(s" > JSON output: $fname")
     }
   }
 
