@@ -10,3 +10,7 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
+### Bug fixes
+
+* Fix regression breaking `--output` file format detection in parser command, see
+  #1079
