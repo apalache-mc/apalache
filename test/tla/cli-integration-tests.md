@@ -166,24 +166,46 @@ EXITCODE: OK
 
 ### parse --output=annotations.tla Annotations succeeds
 
+And also check that it actually parses into TLA (see #1079)
+
 ```sh
 $ apalache-mc parse --output=output.tla Annotations.tla | sed 's/I@.*//'
 ...
 EXITCODE: OK
-...
-$ test -s output.tla
+$ cat output.tla | head
+----- MODULE /home/sf/Sync/informal-systems/apalache/apalache-core/test/tla/Annotations -----
+
+EXTENDS Integers, Sequences, FiniteSets, TLC, Apalache
+
+CONSTANT
+  (*
+    @type: Int;
+  *)
+  N
+
 $ rm output.tla
 ```
 
 ### parse --output=annotations.json Annotations succeeds
 
+And also check that it actually parses into JSON (see #1079)
+
 ```sh
 $ apalache-mc parse --output=output.json Annotations.tla | sed 's/I@.*//'
 ...
 EXITCODE: OK
-$ test -s output.json
+$ cat output.json | head
+{
+  "name": "ApalacheIR",
+  "version": "1.0",
+  "description": "https://apalache.informal.systems/docs/adr/005adr-json.html",
+  "modules": [
+    {
+      "kind": "TlaModule",
+      "name": "/home/sf/Sync/informal-systems/apalache/apalache-core/test/tla/Annotation",
+      "declarations": [
+        {
 $ rm output.json
-...
 ```
 
 ### parse FormulaRefs fails
