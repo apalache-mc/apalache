@@ -22,8 +22,8 @@ class LogbackConfigurator(dirs: Option[(Path, Path)]) extends ContextAwareBase w
     val loggerContext = LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext]
     setContext(loggerContext)
     dirs match {
-        case Some(_) => configure(loggerContext)
-        case None => configureSilent(loggerContext)
+      case Some(_) => configure(loggerContext)
+      case None    => configureSilent(loggerContext)
     }
   }
 

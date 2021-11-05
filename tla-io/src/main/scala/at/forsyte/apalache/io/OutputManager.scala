@@ -188,12 +188,12 @@ object OutputManager extends LazyLogging {
 
   /* Inside `outputDirOpt`, create a directory for an individual run */
   private def createRunDirectory(): Unit = {
-      val nicedate = LocalDateTime.now().format(DateTimeFormatter.ofPattern(s"yyyy-MM-dd"))
-      val nicetime = LocalDateTime.now().format(DateTimeFormatter.ofPattern(s"HH-mm-ss"))
-      // prefix for disambiguation
-      val rundir = Files.createTempDirectory(outDir, s"${nicedate}T${nicetime}_")
-      runDirOpt = Some(rundir)
-    }
+    val nicedate = LocalDateTime.now().format(DateTimeFormatter.ofPattern(s"yyyy-MM-dd"))
+    val nicetime = LocalDateTime.now().format(DateTimeFormatter.ofPattern(s"HH-mm-ss"))
+    // prefix for disambiguation
+    val rundir = Files.createTempDirectory(outDir, s"${nicedate}T${nicetime}_")
+    runDirOpt = Some(rundir)
+  }
 
   /** Create a PrintWriter to the file formed by appending `fileParts` to the `base` file */
   def printWriter(base: File, fileParts: String*): PrintWriter = {

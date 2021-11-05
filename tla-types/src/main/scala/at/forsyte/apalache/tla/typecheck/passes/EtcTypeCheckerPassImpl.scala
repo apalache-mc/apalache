@@ -85,8 +85,7 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
 
   private def dumpToJson(module: TlaModule, prefix: String): Unit = {
     val fname = s"${passNumber}_out-$prefix-$name.json"
-    OutputManager.withWriterInIntermediateDir(fname) {
-      writer =>
+    OutputManager.withWriterInIntermediateDir(fname) { writer =>
       val sourceLocator: SourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)
       val jsonText = new TlaToUJson(Some(sourceLocator)).makeRoot(Seq(module)).toString
       writer.write(jsonText)
