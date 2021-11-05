@@ -155,6 +155,7 @@ object Tool extends LazyLogging {
     logger.info("Parse " + parse.file)
 
     executor.options.set("parser.filename", parse.file.getAbsolutePath)
+    // TODO Rename key to io.outfile
     parse.output.foreach(executor.options.set("parser.output", _))
 
     // NOTE Must go after all other options are set due to side-effecting

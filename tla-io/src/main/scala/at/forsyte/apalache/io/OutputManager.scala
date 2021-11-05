@@ -74,6 +74,7 @@ object OutputManager extends LazyLogging {
     outDirOpt.getOrElse(throw new IllegalStateException("out-dir is not configured"))
   }
 
+  // TODO derive runDir using the new namespacing approach
   private def createOutDir(): Unit = {
     val f = outDir.toFile()
     if (!f.exists() && !f.mkdirs()) {
@@ -159,6 +160,7 @@ object OutputManager extends LazyLogging {
         }
       )
 
+  // TODO ensure runDirectory is created when this class is initialized
   /** Inside `outputDirOpt`, create a directory for an individual run */
   def createRunDirectory(specName: String): Unit =
     if (runDirOpt.isEmpty) {

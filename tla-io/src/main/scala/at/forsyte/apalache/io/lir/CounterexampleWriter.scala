@@ -137,6 +137,7 @@ object CounterexampleWriter {
       tla.and(namesAndVals: _*)
     }
 
+  // TODO: Supporting writing to file specified by output.write
   /**
    * Write a counterexample in all supported formats (TLA+, MC.out, JSON), and return the list of files written.
    *
@@ -147,6 +148,9 @@ object CounterexampleWriter {
    */
   def writeAllFormats(suffix: String, rootModule: TlaModule, notInvariant: NotInvariant,
       states: List[NextState]): List[String] =
+    // TODO Refactor to use shared logic with the TlaWriterFactory
+    // ~/Sync/informal-systems/apalache/apalache-core/tla-io/src/main/scala/at/forsyte/apalache/io/lir/TlaWriterFactory.scala
+    // Namely: in order to enable writing both intermediate output and targetted output
     OutputManager.runDirPathOpt
       .map { runDir =>
         val fileNames = Map(
