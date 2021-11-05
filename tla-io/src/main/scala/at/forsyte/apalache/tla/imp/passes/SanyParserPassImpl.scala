@@ -84,13 +84,14 @@ class SanyParserPassImpl @Inject() (
         // write parser output to specified destination, if requested
         options.get[String]("parser", "output").foreach { output =>
           val outfile = new File(output)
+          val outfileName = outfile.toString()
 
-          if (outfile.toString.toLowerCase.endsWith(".tla")) {
-            val moduleName = filename.substring(0, filename.length - ".tla".length)
+          if (outfileName.toLowerCase.endsWith(".tla")) {
+            val moduleName = outfileName.substring(0, filename.length - ".tla".length)
             writerFactory.writeModuleToTla(rootModule.get.copy(name = moduleName), TlaWriter.STANDARD_MODULES,
                 Some(outfile))
-          } else if (outfile.toString.toLowerCase.endsWith(".json")) {
-            val moduleName = filename.substring(0, filename.length - ".json".length)
+          } else if (outfileName.toLowerCase.endsWith(".json")) {
+            val moduleName = outfileName.substring(0, filename.length - ".json".length)
             writerFactory.writeModuleToJson(rootModule.get.copy(name = moduleName), TlaWriter.STANDARD_MODULES,
                 Some(outfile))
           } else {
