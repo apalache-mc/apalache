@@ -10,7 +10,6 @@ import java.time.format.DateTimeFormatter
 import org.yaml.snakeyaml.Yaml
 
 trait OutputManagerConfig {
-  // TODO def debug : Boolean
   def outDir: Option[File]
   def writeIntermediate: Option[Boolean]
   def profiling: Option[Boolean]
@@ -35,12 +34,23 @@ object OutputManager extends LazyLogging {
 
   // outDirOpt is stored as an expanded and absolute path
   private var outDirOpt: Option[Path] = None
+  // This should only be set if the IntermediateFlag is true
+  private var intermediateDirOpt: Option[Path] = None
   private var runDirOpt: Option[Path] = None
   private var flags: Map[String, Boolean] =
     Map(
         IntermediateFlag -> false,
         ProfilingFlag -> false
     )
+
+  private def setOutDir(base: Path, namespace: String): Unit = {
+    outDirOpt = Some(base.resolve(namespace).toAbsolutePath())
+  }
+
+  /* This should only ever be set if the IntermediateFlag is true */
+  private def setIntermediateDir(namespace: String): Unit = {
+    intermediateDirOpt = Some(runDir.resolve(IntermediateFoldername))
+  }
 
   /** If this is FALSE, outputs (of any sort) cannot happen, so the tool should exit */
   def isConfigured: Boolean = outDirOpt.nonEmpty
@@ -54,35 +64,27 @@ object OutputManager extends LazyLogging {
   }
 
   /**
-   *  The intermediate output directory as a File, if it exists
+   * Accessor for the configured output directory.
    *
-   * @return `Some(dir)` if `dir` is the intermediate output directory and it
-   * exists or can be created. Otherwise `false`
-   */
-  def intermediateDirFile: Option[File] = {
-    intermediateDirPathOpt
-      .map(_.toFile)
-      .filter(dir => (dir.exists() && dir.isDirectory()) || dir.mkdir())
-  }
-
-  /**
-   * Accessor for the configured run directory.
-   *
-   * @throws IllegalStateException if called before OutputManager is configured this is considered an implementator error
+   * @throws IllegalStateException if called before OutputManager is configured: this is considered an implementator error
    */
   def outDir: Path = {
     outDirOpt.getOrElse(throw new IllegalStateException("out-dir is not configured"))
   }
 
-  // TODO derive runDir using the new namespacing approach
-  private def createOutDir(): Unit = {
-    val f = outDir.toFile()
-    if (!f.exists() && !f.mkdirs()) {
+  /**
+   * Accessor for the configured run directory.
+   *
+   * @throws IllegalStateException if called before OutputManager is configured: this is considered an implementator error
+   */
+  def runDir: Path = {
+    runDirOpt.getOrElse(throw new IllegalStateException("run directory does not exist"))
+  }
+
+  private def ensureDirExists(path: Path): Unit = {
+    val f = path.toFile
+    if (!((f.exists() && f.isDirectory()) || f.mkdir())) {
       throw new ConfigurationError(s"Could not find or create directory: ${f.getCanonicalPath}.")
-    } else if (!f.isDirectory()) {
-      throw new ConfigurationError(s"Configured out-dir is not a directory: ${f.getCanonicalPath}.")
-    } else {
-      outDirOpt = Some(f.toPath().toAbsolutePath())
     }
   }
 
@@ -92,7 +94,7 @@ object OutputManager extends LazyLogging {
   }
 
   /** Loads the Apalache configuration file from HOME/.tlaplus */
-  private def syncFromGlobalConfig(): Unit = {
+  private def syncFromGlobalConfig(namespace: String): Unit = {
     val home = System.getProperty("user.home")
     val configFile = new File(home, CfgFile)
     if (configFile.exists()) {
@@ -103,7 +105,7 @@ object OutputManager extends LazyLogging {
         // `OutdirNameInCfg` is a special flag that governs the output directory
         if (flagName == OutdirNameInCfg) {
           flagValue match {
-            case path: String => outDirOpt = Some(expandedFilePath(path))
+            case path: String => setOutDir(expandedFilePath(path), namespace)
             case _ =>
               throw new ConfigurationError(
                   s"Flag [$flagName] in [${configFile.getAbsolutePath}] must be a directory path string.")
@@ -126,15 +128,15 @@ object OutputManager extends LazyLogging {
     }
     // If `OutdirNameInCfg` is not specified, default to making rundir = <CWD>/_apalache-out/
     if (outDirOpt.isEmpty) {
-      outDirOpt = Some(Paths.get(System.getProperty("user.dir"), DefaultOutdir))
+      setOutDir(Paths.get(System.getProperty("user.dir"), DefaultOutdir), namespace)
     }
   }
 
   /** Configure OutputManager based on supported CLI flags */
   // TODO(shon): Perhaps we should reworking this object as a class that takes a configuration
   // matching the specification of this trait?
-  private def syncFromCli(cli: OutputManagerConfig): Unit = {
-    cli.outDir.foreach(d => outDirOpt = Some(d.toPath()))
+  private def syncFromCli(namespace: String, cli: OutputManagerConfig): Unit = {
+    cli.outDir.foreach(d => setOutDir(d.toPath(), namespace))
     cli.writeIntermediate.foreach(flags += IntermediateFlag -> _)
     cli.profiling.foreach(flags += ProfilingFlag -> _)
   }
@@ -143,10 +145,16 @@ object OutputManager extends LazyLogging {
    * Configure OutputManager, with cli configuration taking precedence
    * over the configuration file
    */
-  def configure(cli: OutputManagerConfig): Unit = {
-    syncFromGlobalConfig()
-    syncFromCli(cli)
-    createOutDir()
+  def configure(namespace: String, cli: OutputManagerConfig): Unit = {
+    syncFromGlobalConfig(namespace)
+    syncFromCli(namespace, cli)
+
+    ensureDirExists(outDir)
+    createRunDirectory()
+    if (flags(Names.IntermediateFlag)) {
+      setIntermediateDir(namespace)
+      ensureDirExists(intermediateDirOpt.get)
+    }
   }
 
   /** lends flags to execute `cmd` conditionally */
@@ -160,14 +168,12 @@ object OutputManager extends LazyLogging {
         }
       )
 
-  // TODO ensure runDirectory is created when this class is initialized
-  /** Inside `outputDirOpt`, create a directory for an individual run */
-  def createRunDirectory(specName: String): Unit =
-    if (runDirOpt.isEmpty) {
+  /* Inside `outputDirOpt`, create a directory for an individual run */
+  private def createRunDirectory(): Unit = {
       val nicedate = LocalDateTime.now().format(DateTimeFormatter.ofPattern(s"yyyy-MM-dd"))
       val nicetime = LocalDateTime.now().format(DateTimeFormatter.ofPattern(s"HH-mm-ss"))
       // prefix for disambiguation
-      val rundir = Files.createTempDirectory(outDir, s"${specName}_${nicedate}T${nicetime}_")
+      val rundir = Files.createTempDirectory(outDir, s"${nicedate}T${nicetime}_")
       runDirOpt = Some(rundir)
     }
 
@@ -221,21 +227,9 @@ object OutputManager extends LazyLogging {
    *        created by appending the `parts` to the intermediate output dir. Otherwise, `false`.
    */
   def withWriterRelativeToIntermediateDir(parts: String*)(f: PrintWriter => Unit): Boolean = {
-    if (!flags(Names.IntermediateFlag)) {
-      false
-    } else {
-      intermediateDirFile match {
-        case Some(dir) => {
-          withWriter(f)(printWriter(dir, parts: _*))
-          true
-        }
-        case None => {
-          val dirName = intermediateDirPathOpt.getOrElse("")
-          logger.error(
-              s"Unable to find or create intermediate output directory ${dirName}. Intermediate output will not be written.")
-          false
-        }
-      }
+    intermediateDirOpt match {
+      case Some(dir) => withWriter(f)(printWriter(dir, parts: _*)); true
+      case None => false
     }
   }
 }

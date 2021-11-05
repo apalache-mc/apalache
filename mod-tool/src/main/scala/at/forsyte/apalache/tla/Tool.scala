@@ -52,9 +52,8 @@ object Tool extends LazyLogging {
     System.exit(exitcode)
   }
 
-  private def outputAndLogConfig(runDirNamePrefix: String, cmd: General): Unit = {
-    OutputManager.configure(cmd)
-    OutputManager.createRunDirectory(runDirNamePrefix)
+  private def outputAndLogConfig(namePrefix: String, cmd: General): Unit = {
+    OutputManager.configure(namePrefix, cmd)
     OutputManager.runDirPathOpt.foreach { d => println(s"Output directory: ${d.toAbsolutePath()}") }
     OutputManager.withWriterRelativeToRunDir(OutputManager.Names.RunFile)(
         _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
@@ -134,16 +133,12 @@ object Tool extends LazyLogging {
   private def setCommonOptions(cli: General, options: WriteablePassOptions): Unit = {
     options.set("general.debug", cli.debug)
     options.set("smt.prof", cli.smtprof)
-    // TODO Do we actual need this in the "pass options"? It seems like it is only
-    // derived from the OutputManager?
-    OutputManager.doIfFlag(OutputManager.Names.IntermediateFlag) {
-      options.set(s"general.${OutputManager.Names.IntermediateFlag}", true)
-    }
+    // TODO: Remove pass option, and just rely on OutputManager config
     OutputManager.doIfFlag(OutputManager.Names.ProfilingFlag) {
       options.set(s"general.${OutputManager.Names.ProfilingFlag}", true)
     }
+    // TODO: Remove pass option, and just rely on OutputManager config
     options.set("io.outdir", OutputManager.outDir)
-    // OutputManager.syncWithOptions(options)
   }
 
   private def runParse(injector: => Injector, parse: ParseCmd): Int = {
