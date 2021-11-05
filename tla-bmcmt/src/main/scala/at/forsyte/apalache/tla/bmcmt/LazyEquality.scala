@@ -132,7 +132,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
       // generate constraints
       val newState =
         (left.cellType, right.cellType) match {
-          case (UnknownT(), UnknownT()) | (BoolT(), _) | (_, BoolT()) | (IntT(), IntT()) | (ConstT(), ConstT()) =>
+          case (UnknownT(), UnknownT()) | (BoolT(), _) | (_, BoolT()) | (IntT(), IntT()) | (ConstT(_), ConstT(_)) =>
             eqCache.put(left, right, EqCache.EqEntry())
             state // nothing to do, just use the built-in equality
 

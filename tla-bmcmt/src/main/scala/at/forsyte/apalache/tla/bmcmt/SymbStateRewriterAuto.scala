@@ -1,7 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.analyses._
-import at.forsyte.apalache.tla.bmcmt.caches.{ExprCache, IntValueCache, RecordDomainCache, StrValueCache}
+import at.forsyte.apalache.tla.bmcmt.caches.{
+  ExprCache, IntValueCache, ModelValueCache, RecordDomainCache, StrValueCache
+}
 import at.forsyte.apalache.tla.bmcmt.rewriter.{RewriterConfig, SymbStateRewriterSnapshot}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.lir.TlaEx
@@ -55,6 +57,8 @@ class SymbStateRewriterAuto(private var _solverContext: SolverContext) extends S
   override def intValueCache: IntValueCache = impl.intValueCache
 
   override def strValueCache: StrValueCache = impl.strValueCache
+
+  override def modelValueCache: ModelValueCache = impl.modelValueCache
 
   override def recordDomainCache: RecordDomainCache = impl.recordDomainCache
 

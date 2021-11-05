@@ -108,8 +108,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
     // the general case
     targetType match {
-      case ConstT() =>
-        pickBasic(ConstT(), state, oracle, elems, elseAssert)
+      case ConstT(x) =>
+        pickBasic(ConstT(x), state, oracle, elems, elseAssert)
 
       case IntT() =>
         pickBasic(IntT(), state, oracle, elems, elseAssert)

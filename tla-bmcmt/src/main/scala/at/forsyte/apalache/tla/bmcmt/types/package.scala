@@ -56,8 +56,11 @@ package object types {
         case (_, UnknownT()) =>
           Some(this)
 
-        case (BoolT(), BoolT()) | (ConstT(), ConstT()) | (IntT(), IntT()) =>
+        case (BoolT(), BoolT()) | (IntT(), IntT()) =>
           Some(this)
+
+        case (ConstT(a), ConstT(b)) =>
+          if (a == b) Some(this) else None
 
         case (FinSetT(left), FinSetT(right)) =>
           left.unify(right) map FinSetT
@@ -154,10 +157,10 @@ package object types {
      */
     def fromType1(tt: TlaType1): CellT = {
       tt match {
-        case IntT1()    => IntT()
-        case StrT1()    => ConstT()
-        case BoolT1()   => BoolT()
-        case ConstT1(_) => ConstT() // this should change in https://github.com/informalsystems/apalache/issues/570
+        case IntT1()        => IntT()
+        case StrT1()        => ConstT()
+        case BoolT1()       => BoolT()
+        case ConstT1(utype) => ConstT(utype)
         case RealT1() =>
           throw new TypingException("Unsupported type RealT1")
 
@@ -225,14 +228,15 @@ package object types {
   /**
    * A cell constant, that is, just a name that expresses string constants in TLA+.
    */
-  sealed case class ConstT() extends CellT with Serializable {
-    override val signature: String = "str"
+  sealed case class ConstT(utype: String = "") extends CellT with Serializable {
+    override val signature: String = if (utype.isEmpty) "str" else s"UT_$utype"
 
-    override val toString: String = "Const"
+    override val toString: String = if (utype.isEmpty) "Const" else utype
 
-    override def toTlaType1: TlaType1 = {
+    override def toTlaType1: TlaType1 = utype match {
       // in the new type system, we have the string type for such constants
-      StrT1()
+      case "" => StrT1()
+      case s  => ConstT1(s)
     }
   }
 

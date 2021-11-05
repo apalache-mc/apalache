@@ -33,7 +33,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
       case BoolT() =>
         rewriter.rewriteUntilDone(state.setRex(tla.bool(false)))
 
-      case ConstT() =>
+      case ConstT(_) =>
         rewriter.rewriteUntilDone(state.setRex(tla.str("None")))
 
       case tupT @ TupleT(argTypes) =>

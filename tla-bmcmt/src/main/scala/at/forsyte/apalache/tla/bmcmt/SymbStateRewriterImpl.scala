@@ -96,6 +96,11 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
   val strValueCache = new StrValueCache(solverContext)
 
   /**
+   * A cache for model values.
+   */
+  val modelValueCache = new ModelValueCache(solverContext)
+
+  /**
    * A cache of record domains.
    */
   val recordDomainCache = new RecordDomainCache(solverContext, strValueCache)
