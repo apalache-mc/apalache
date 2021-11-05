@@ -4,14 +4,16 @@
 **Table of Contents**
 
 - [RFC-010: Implementation of Transition Exploration Server](#rfc-010-implementation-of-transition-exploration-server)
-    - [Problem](#problem)
-    - [Proposal](#proposal)
-        - [Overview](#overview)
-        - [Requirements](#requirements)
-        - [Architecture](#architecture)
-        - [API](#api)
-        - [Protocol](#protocol)
-            - [gRPC Example](#grpc-example)
+- [Problem](#problem)
+- [Proposal](#proposal)
+    - [Overview](#overview)
+    - [Requirements](#requirements)
+    - [Architecture](#architecture)
+    - [API](#api)
+    - [Constructing the IR](#constructing-the-ir)
+    - [Protocol](#protocol)
+        - [gRPC Example](#grpc-example)
+
 <!-- markdown-toc end -->
 
 
