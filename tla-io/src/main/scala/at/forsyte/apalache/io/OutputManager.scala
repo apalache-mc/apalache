@@ -97,7 +97,7 @@ object OutputManager extends LazyLogging {
 
   private def ensureDirExists(path: Path): Unit = {
     val f = path.toFile
-    if (!((f.exists() && f.isDirectory()) || f.mkdir())) {
+    if (!((f.exists() && f.isDirectory()) || f.mkdirs())) {
       throw new ConfigurationError(s"Could not find or create directory: ${f.getCanonicalPath}.")
     }
   }
