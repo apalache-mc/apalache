@@ -12,5 +12,5 @@
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
 ### Bug fixes
 
-* Fix regression that broken requested output file format detection in parser
-  output, see #1079
+* Fix regression breaking `--output` file format detection in parser command, see
+  #1079
