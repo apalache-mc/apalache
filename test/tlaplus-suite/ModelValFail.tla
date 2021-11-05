@@ -1,4 +1,4 @@
----------- MODULE ModelVal ----------
+---------- MODULE ModelValFail ----------
 
 EXTENDS Integers
 
