@@ -55,7 +55,7 @@ object Tool extends LazyLogging {
   private def outputAndLogConfig(namePrefix: String, cmd: General): Unit = {
     OutputManager.configure(namePrefix, cmd)
     OutputManager.runDirPathOpt.foreach { d => println(s"Output directory: ${d.toAbsolutePath()}") }
-    OutputManager.withWriterRelativeToRunDir(OutputManager.Names.RunFile)(
+    OutputManager.withWriterInRunDir(OutputManager.Names.RunFile)(
         _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
     )
     // force our programmatic logback configuration, as the autoconfiguration works unpredictably

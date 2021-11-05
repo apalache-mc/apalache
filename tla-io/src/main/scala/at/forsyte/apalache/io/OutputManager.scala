@@ -81,6 +81,17 @@ object OutputManager extends LazyLogging {
     runDirOpt.getOrElse(throw new IllegalStateException("run directory does not exist"))
   }
 
+  /**
+   * Accessor for the configured latest directory
+   *
+   * The output results from the *latest* run are always written here.
+   *
+   * @throws IllegalStateException if called before OutputManager is configured: this is considered an implementator error
+   */
+  def latestDir: Path = {
+    outDir.resolve("latest")
+  }
+
   private def ensureDirExists(path: Path): Unit = {
     val f = path.toFile
     if (!((f.exists() && f.isDirectory()) || f.mkdir())) {
@@ -151,6 +162,7 @@ object OutputManager extends LazyLogging {
 
     ensureDirExists(outDir)
     createRunDirectory()
+    ensureDirExists(latestDir)
     if (flags(Names.IntermediateFlag)) {
       setIntermediateDir(namespace)
       ensureDirExists(intermediateDirOpt.get)
@@ -213,7 +225,7 @@ object OutputManager extends LazyLogging {
   }
 
   /** Applies `f` to a PrintWriter created by appending the `parts` to the `runDir` */
-  def withWriterRelativeToRunDir(parts: String*)(f: PrintWriter => Unit): Unit = {
+  def withWriterInRunDir(parts: String*)(f: PrintWriter => Unit): Unit = {
     val w = printWriter(runDirOpt.get, parts: _*)
     withWriter(f)(w)
   }
@@ -226,7 +238,7 @@ object OutputManager extends LazyLogging {
    * @return `true` if the `IntermediateFlag` is true, and `f` can be applied to the PrintWriter
    *        created by appending the `parts` to the intermediate output dir. Otherwise, `false`.
    */
-  def withWriterRelativeToIntermediateDir(parts: String*)(f: PrintWriter => Unit): Boolean = {
+  def withWriterInIntermediateDir(parts: String*)(f: PrintWriter => Unit): Boolean = {
     intermediateDirOpt match {
       case Some(dir) => withWriter(f)(printWriter(dir, parts: _*)); true
       case None => false
