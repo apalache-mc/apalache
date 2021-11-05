@@ -87,15 +87,15 @@ class SanyParserPassImpl @Inject() (
           val outfileName = outfile.toString()
 
           if (outfileName.toLowerCase.endsWith(".tla")) {
-            val moduleName = outfileName.substring(0, filename.length - ".tla".length)
+            val moduleName = outfileName.substring(0, outfileName.length - ".tla".length)
             writerFactory.writeModuleToTla(rootModule.get.copy(name = moduleName), TlaWriter.STANDARD_MODULES,
                 Some(outfile))
           } else if (outfileName.toLowerCase.endsWith(".json")) {
-            val moduleName = outfileName.substring(0, filename.length - ".json".length)
+            val moduleName = outfileName.substring(0, outfileName.length - ".json".length)
             writerFactory.writeModuleToJson(rootModule.get.copy(name = moduleName), TlaWriter.STANDARD_MODULES,
                 Some(outfile))
           } else {
-            logger.error(s"  > Unrecognized file format: $filename. Supported formats: .tla and .json")
+            logger.error(s"  > Unrecognized file format: $outfileName. Supported formats: .tla and .json")
           }
 
           if (options.getOrElse[Boolean]("general", "debug", false)) {
