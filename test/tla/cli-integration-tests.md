@@ -2193,13 +2193,74 @@ $ rm -rf ./test-out-dir
 ### counterexamples are written to the run directory
 
 ```sh
-$ apalache-mc check --out-dir=./test-out-dir --length=2 --inv=Inv factorization.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --out-dir=./test-out-dir --length=2 --inv=Inv factorization.tla | sed -e 's/[IEW]@.*//' -e "s:$(pwd)/::g"
 ...
-State 1: state invariant 0 violated. Check the counterexample in: counterexample1.tla, MC1.out, counterexample1.json
+State 1: state invariant 0 violated. Check the counterexample in: test-out-dir/factorization.tla/latest/counterexample1.tla, test-out-dir/factorization.tla/latest/MC1.out, test-out-dir/factorization.tla/latest/counterexample1.json
 ...
 EXITCODE: ERROR (12)
 $ ls ./test-out-dir/factorization.tla/latest
+counterexample1.json
+counterexample1.tla
+counterexample.json
+counterexample.tla
 detailed.log
+MC1.out
+MC.out
 run.txt
 $ rm -rf ./test-out-dir
+```
+
+### counterexamples can be written to specified directory
+
+We can write TLA counterexamples:
+
+```sh
+$ apalache-mc check --out-dir=./test-out-dir --length=2 --inv=Inv --output=counter.tla factorization.tla | sed -e 's/[IEW]@.*//' -e "s:$(pwd)/::g"
+...
+State 1: state invariant 0 violated. Check the counterexample in: counter.tla, test-out-dir/factorization.tla/latest/counterexample1.tla, test-out-dir/factorization.tla/latest/MC1.out, test-out-dir/factorization.tla/latest/counterexample1.json
+...
+$ cat counter.tla | head
+---------------------------- MODULE counterexample ----------------------------
+
+EXTENDS factorization
+
+(* Constant initialization state *)
+ConstInit == TRUE
+
+(* Initial state *)
+State0 == answer = FALSE /\ m = 0 /\ n = 0
+
+$ rm -rf ./test-out-dir counter.tla
+```
+
+We can write JSON counterexamples: 
+
+```sh
+$ apalache-mc check --out-dir=./test-out-dir --length=2 --inv=Inv --output=counter.json factorization.tla
+...
+[12]
+$ cat counter.json | head
+{
+  "name": "ApalacheIR",
+  "version": "1.0",
+  "description": "https://apalache.informal.systems/docs/adr/005adr-json.html",
+  "modules": [
+    {
+      "kind": "TlaModule",
+      "name": "counterexample",
+      "declarations": [
+        {
+$ rm -rf ./test-out-dir counter.json
+```
+
+We can write MC counterexamples:
+
+(We don't inspect the content, because timestamps are written into it.)
+
+```sh
+$ apalache-mc check --out-dir=./test-out-dir --length=2 --inv=Inv --output=counter.tlc factorization.tla
+...
+[12]
+$ test -s counter.tlc
+$ rm -rf ./test-out-dir counter.tlc
 ```
