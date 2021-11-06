@@ -48,6 +48,7 @@ The arguments are as follows:
       *`./_apalache-out` by default*
     - `--write-intermediate` if `true`, then additional output is generated. See
       [Detailed output](#detailed-output). *`false` by default*
+    - `--output=FILE` write the counterexample to `FILE`
 
       The options that are passed with the option `--tuning-options`
       have priority over the options that are passed with the option `--tuning`.
