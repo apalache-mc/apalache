@@ -2189,3 +2189,17 @@ EXITCODE: OK
 $ test -s ./test-out-dir/Counter.tla/latest/profile-rules.txt
 $ rm -rf ./test-out-dir
 ```
+
+### counterexamples are written to the run directory
+
+```sh
+$ apalache-mc check --out-dir=./test-out-dir --length=2 --inv=Inv factorization.tla | sed 's/[IEW]@.*//'
+...
+State 1: state invariant 0 violated. Check the counterexample in: counterexample1.tla, MC1.out, counterexample1.json
+...
+EXITCODE: ERROR (12)
+$ ls ./test-out-dir/factorization.tla/latest
+detailed.log
+run.txt
+$ rm -rf ./test-out-dir
+```
