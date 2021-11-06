@@ -20,8 +20,14 @@ object ModelCheckerParams {
  *
  * @author Igor Konnov
  */
-class ModelCheckerParams(checkerInput: CheckerInput, val stepsBound: Int, val saveDirectory: File,
-    tuningOptions: Map[String, String] = Map(), val debug: Boolean = true) {
+class ModelCheckerParams(
+  checkerInput: CheckerInput,
+  val stepsBound: Int,
+  val saveDirectory: File,
+  val outfile: Option[File],
+  tuningOptions: Map[String, String] = Map(),
+  val debug: Boolean = true
+) {
 
   /**
    * If pruneDisabled is set to false, there will be no check of whether a transition is enabled.

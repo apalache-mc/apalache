@@ -16,6 +16,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 import java.io.File
 import java.nio.file.Path
+import org.apache.commons.io.FilenameUtils
 
 /**
  * Parsing TLA+ code with SANY.
@@ -86,16 +87,24 @@ class SanyParserPassImpl @Inject() (
           val outfile = new File(output)
           val outfileName = outfile.toString()
 
-          if (outfileName.toLowerCase.endsWith(".tla")) {
-            val moduleName = outfileName.substring(0, outfileName.length - ".tla".length)
-            writerFactory.writeModuleToTla(rootModule.get.copy(name = moduleName), TlaWriter.STANDARD_MODULES,
-                Some(outfile))
-          } else if (outfileName.toLowerCase.endsWith(".json")) {
-            val moduleName = outfileName.substring(0, outfileName.length - ".json".length)
-            writerFactory.writeModuleToJson(rootModule.get.copy(name = moduleName), TlaWriter.STANDARD_MODULES,
-                Some(outfile))
-          } else {
-            logger.error(s"  > Unrecognized file format: $outfileName. Supported formats: .tla and .json")
+          val ext = FilenameUtils.getExtension(outfileName)
+          val name = FilenameUtils.getBaseName(outfileName)
+
+          ext match {
+            case "tla" =>
+              writerFactory.writeModuleToTla(
+                rootModule.get.copy(name),
+                TlaWriter.STANDARD_MODULES,
+                Some(outfile)
+              )
+            case "json" =>
+              writerFactory.writeModuleToJson(
+                rootModule.get.copy(name),
+                TlaWriter.STANDARD_MODULES,
+                Some(outfile)
+              )
+            case _ =>
+              logger.error(s"  > Unrecognized file format: ${outfile.toString}. Supported formats: .tla and .json")
           }
 
           if (options.getOrElse[Boolean]("general", "debug", false)) {

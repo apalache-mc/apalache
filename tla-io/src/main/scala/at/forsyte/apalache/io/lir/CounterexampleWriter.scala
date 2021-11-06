@@ -1,6 +1,6 @@
 package at.forsyte.apalache.io.lir
 
-import at.forsyte.apalache.io.OutputManager
+import at.forsyte.apalache.io.{OutputManager, ConfigurationError}
 import at.forsyte.apalache.io.json.impl.TlaToUJson
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -9,6 +9,8 @@ import at.forsyte.apalache.tla.lir.values.TlaBool
 
 import java.io.{File, FileWriter, PrintWriter}
 import java.util.Calendar
+import org.apache.commons.io.FilenameUtils
+import com.typesafe.scalalogging.LazyLogging
 
 /**
  * A printer for counterexamples, in various formats: TLA+ , as TLC output, ...
@@ -125,7 +127,7 @@ class JsonCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter
   }
 }
 
-object CounterexampleWriter {
+object CounterexampleWriter extends LazyLogging {
 
   def stateToEx(state: State): TlaEx =
     if (state.isEmpty) {
@@ -137,7 +139,6 @@ object CounterexampleWriter {
       tla.and(namesAndVals: _*)
     }
 
-  // TODO: Supporting writing to file specified by output.write
   /**
    * Write a counterexample in all supported formats (TLA+, MC.out, JSON), and return the list of files written.
    *
@@ -145,34 +146,48 @@ object CounterexampleWriter {
    * @param rootModule   source module of the counterexample
    * @param notInvariant negated invariant
    * @param states       sequence of states that represent the counterexample
+   * @param outfile      a specific file to write output to
    */
-  def writeAllFormats(suffix: String, rootModule: TlaModule, notInvariant: NotInvariant,
-      states: List[NextState]): List[String] =
-    // TODO Refactor to use shared logic with the TlaWriterFactory
-    // ~/Sync/informal-systems/apalache/apalache-core/tla-io/src/main/scala/at/forsyte/apalache/io/lir/TlaWriterFactory.scala
-    // Namely: in order to enable writing both intermediate output and targetted output
-    OutputManager.runDirPathOpt
-      .map { runDir =>
-        val fileNames = Map(
-            "tla" -> s"counterexample$suffix.tla",
-            "tlc" -> s"MC$suffix.out",
-            "json" -> s"counterexample$suffix.json"
-        )
-        val files = fileNames.map { case (kind, name) =>
-          (kind, new PrintWriter(new FileWriter(new File(runDir.toFile, name))))
-        }
+  def writeAllFormats(
+    suffix: String,
+    rootModule: TlaModule,
+    notInvariant: NotInvariant,
+    states: List[NextState],
+    outfile: Option[File]
+  ): List[String] = {
+    val writerHelper : String => PrintWriter => Unit =
+      kind => writer => apply(kind, writer).write(rootModule, notInvariant, states)
+
+    val fileNames = List(
+      ("tla", s"counterexample$suffix.tla"),
+      ("tlc", s"MC$suffix.out"),
+      ("json", s"counterexample$suffix.json")
+    )
+
+    val filePaths = fileNames.flatMap { case (kind, name) =>
+      if (OutputManager.withWriterInRunDir(name)(writerHelper(kind))) {
+        Some(OutputManager.latestDir.resolve(name).normalize.toString)
+      } else {
+        None
+      }
+    }
+
+    outfile match {
+      case None => filePaths
+      case Some(f) => {
+        val kind = FilenameUtils.getExtension(f.toString())
         try {
-          files.foreach { case (kind, writer) =>
-            apply(kind, writer).write(rootModule, notInvariant, states)
-          }
-          fileNames.values.toList
-        } finally {
-          files.foreach { case (_, writer) =>
-            writer.close()
-          }
+          OutputManager.withWriterToFile(f)(writerHelper(kind))
+          f.toPath().normalize().toString() :: filePaths
+        } catch {
+          case e: ConfigurationError =>
+            logger.error(e.getMessage())
+            filePaths
         }
       }
-      .getOrElse(List.empty[String])
+    }
+  }
+
 
   // factory method to get the desired CE writer
   def apply(kind: String, writer: PrintWriter): CounterexampleWriter = {
@@ -180,7 +195,7 @@ object CounterexampleWriter {
       case "tla"  => new TlaCounterexampleWriter(writer)
       case "tlc"  => new TlcCounterexampleWriter(writer)
       case "json" => new JsonCounterexampleWriter(writer)
-      case _      => throw new Exception("unknown couterexample writer requested")
+      case fmt => throw new ConfigurationError(s"unknown counterexample format requested: $fmt")
     }
   }
 }
