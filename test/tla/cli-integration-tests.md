@@ -2198,7 +2198,7 @@ $ apalache-mc check --out-dir=./test-out-dir --length=2 --inv=Inv factorization.
 State 1: state invariant 0 violated. Check the counterexample in: test-out-dir/factorization.tla/latest/counterexample1.tla, test-out-dir/factorization.tla/latest/MC1.out, test-out-dir/factorization.tla/latest/counterexample1.json
 ...
 EXITCODE: ERROR (12)
-$ ls ./test-out-dir/factorization.tla/latest
+$ ls ./test-out-dir/factorization.tla/latest | ./sort.sh
 counterexample1.json
 counterexample1.tla
 counterexample.json
