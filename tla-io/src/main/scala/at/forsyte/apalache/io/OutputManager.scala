@@ -8,6 +8,7 @@ import java.nio.file.{Files, Path, Paths}
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import org.yaml.snakeyaml.Yaml
+import org.apache.commons.io.FileUtils
 
 trait OutputManagerConfig {
   def outDir: Option[File]
@@ -102,6 +103,17 @@ object OutputManager extends LazyLogging {
     }
   }
 
+  // Create the latest dir, removing an already existing one, if found
+  // this ensures we start with a fresh latest dir, and don't end up mixing up
+  // artifcats from different runts
+  private def createLatestDir(): Unit = {
+    val f = latestDir.toFile
+    if (f.exists()) {
+      FileUtils.deleteDirectory(f)
+    }
+    ensureDirExists(latestDir)
+  }
+
   private def expandedFilePath(s: String): Path = {
     val home = System.getProperty("user.home")
     Paths.get(if (s.startsWith("~")) s.replaceFirst("~", home) else s)
@@ -165,12 +177,13 @@ object OutputManager extends LazyLogging {
 
     ensureDirExists(outDir)
     createRunDirectory()
-    ensureDirExists(latestDir)
+    createLatestDir()
+
     if (flags(Names.IntermediateFlag)) {
       setIntermediateDir(namespace)
       // `get` is safe because `setIntermediateDir` ensures the intermdiate
       ensureDirExists(intermediateDirOpt.get)
-      // `get` is safe because `ensureDirExists(latestDir)` has run
+      // `get` is safe because `createLatestDir()` has run
       ensureDirExists(latestIntermediateDir.get)
     }
   }
