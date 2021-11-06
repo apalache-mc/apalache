@@ -149,19 +149,15 @@ object CounterexampleWriter extends LazyLogging {
    * @param outfile      a specific file to write output to
    */
   def writeAllFormats(
-    suffix: String,
-    rootModule: TlaModule,
-    notInvariant: NotInvariant,
-    states: List[NextState],
-    outfile: Option[File]
+      suffix: String, rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState], outfile: Option[File]
   ): List[String] = {
-    val writerHelper : String => PrintWriter => Unit =
+    val writerHelper: String => PrintWriter => Unit =
       kind => writer => apply(kind, writer).write(rootModule, notInvariant, states)
 
     val fileNames = List(
-      ("tla", s"counterexample$suffix.tla"),
-      ("tlc", s"MC$suffix.out"),
-      ("json", s"counterexample$suffix.json")
+        ("tla", s"counterexample$suffix.tla"),
+        ("tlc", s"MC$suffix.out"),
+        ("json", s"counterexample$suffix.json")
     )
 
     val filePaths = fileNames.flatMap { case (kind, name) =>
@@ -188,14 +184,13 @@ object CounterexampleWriter extends LazyLogging {
     }
   }
 
-
   // factory method to get the desired CE writer
   def apply(kind: String, writer: PrintWriter): CounterexampleWriter = {
     kind match {
       case "tla"  => new TlaCounterexampleWriter(writer)
       case "tlc"  => new TlcCounterexampleWriter(writer)
       case "json" => new JsonCounterexampleWriter(writer)
-      case fmt => throw new ConfigurationError(s"unknown counterexample format requested: $fmt")
+      case fmt    => throw new ConfigurationError(s"unknown counterexample format requested: $fmt")
     }
   }
 }

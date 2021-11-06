@@ -93,15 +93,15 @@ class SanyParserPassImpl @Inject() (
           ext match {
             case "tla" =>
               writerFactory.writeModuleToTla(
-                rootModule.get.copy(name),
-                TlaWriter.STANDARD_MODULES,
-                Some(outfile)
+                  rootModule.get.copy(name),
+                  TlaWriter.STANDARD_MODULES,
+                  Some(outfile)
               )
             case "json" =>
               writerFactory.writeModuleToJson(
-                rootModule.get.copy(name),
-                TlaWriter.STANDARD_MODULES,
-                Some(outfile)
+                  rootModule.get.copy(name),
+                  TlaWriter.STANDARD_MODULES,
+                  Some(outfile)
               )
             case _ =>
               logger.error(s"  > Unrecognized file format: ${outfile.toString}. Supported formats: .tla and .json")

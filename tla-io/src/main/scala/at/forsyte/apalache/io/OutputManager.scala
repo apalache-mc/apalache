@@ -245,8 +245,7 @@ object OutputManager extends LazyLogging {
 
   /** Applies `f` to a PrintWriter created by appending the `parts` to the `runDir` */
   def withWriterInRunDir(parts: String*)(f: PrintWriter => Unit): Boolean = {
-    runDirOpt.map {
-      runDir =>
+    runDirOpt.map { runDir =>
       withWriter(f)(printWriter(runDir, parts: _*))
       withWriter(f)(printWriter(latestDir, parts: _*))
     }.isDefined

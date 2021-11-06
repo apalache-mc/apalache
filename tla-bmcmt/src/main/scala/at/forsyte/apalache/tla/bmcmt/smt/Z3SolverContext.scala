@@ -251,7 +251,6 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       }
     }
 
-
   /**
    * Log message to the logging file. This is helpful to debug the SMT encoding.
    *
