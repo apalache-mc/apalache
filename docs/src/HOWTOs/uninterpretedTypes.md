@@ -15,7 +15,7 @@ The type checker [Snowcat][] makes sure that a value belonging to an uninterpret
 
 ## When to use uninterpreted types?
 
-For efficiency reasons, you should use uninterpreted types whenever a `CONSTANT` or value represents (an element of) a collection of unique identifiers, the precise value of which does not influence the properties of the specification 
+For efficiency reasons, you should use uninterpreted types whenever a `CONSTANT` or value represents (an element of) a collection of unique identifiers, the precise value of which does not influence the properties of the specification.
 
 On the other hand, if, for example, the order of values matters, identifiers should likely be `1..N` and hold type `Int` instead of an uninterpreted type, since `Int` values can be passed to the non-polymorphic `<,>,>=,<=` operators.
 
@@ -30,10 +30,9 @@ where `UTNAME` matches the pattern `[A-Z_][A-Z0-9_]*`, and is not a type alias d
 ## How to introduce values belonging to an uninterpreted type
 Apalache uses the following convention-based naming scheme for values of uninterpreted types:
 ```tla
-"PREFIX_TYPENAME_IDENTIFIER"
+"uval_TYPENAME_IDENTIFIER"
 ```
 where:
-  - `PREFIX` is a prefix shared by all values holding uninterpreted types: `uval`
   - `TYPENAME` is the uninterpreted type, to which this value belongs, and
   - `IDENTIFIER` is a unique identifier within the uninterpreted type, and matches the pattern
   `[a-zA-Z0-9]+`.
