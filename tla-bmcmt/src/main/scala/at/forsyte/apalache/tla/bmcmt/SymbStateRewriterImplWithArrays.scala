@@ -61,7 +61,9 @@ class SymbStateRewriterImplWithArrays(_solverContext: SolverContext,
         // TODO: (potential SetCupRule optimization) copy the largest array and only store edges for the smaller one
         key(tla.cup(tla.name("X"), tla.name("Y"))) // OK
           -> List(new SetCupRule(this)),
-        key(tla.map(tla.name("e"), tla.name("x"), tla.name("S"))) // OK
+        key(tla.filter(tla.name("x"), tla.name("S"), tla.name("p"))) // TODO
+          -> List(new SetFilterRule(this)),
+        key(tla.map(tla.name("e"), tla.name("x"), tla.name("S"))) // TODO
           -> List(new SetMapRule(this)),
         // TODO: (potential SetExpandRule optimization) remove redundant "select" assertions in PowSetCtor.confringo
         key(OperEx(ApalacheOper.expand, tla.name("X"))) // OK

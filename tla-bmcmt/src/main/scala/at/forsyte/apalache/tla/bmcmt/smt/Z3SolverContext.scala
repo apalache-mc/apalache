@@ -82,14 +82,20 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
    * Let's cache the constants, if Z3 cannot do it well.
    * Again, the cache carries the context level, to support push and pop.
    */
-  private val cellCache: mutable.Map[Int, (ExprSort, CellT, Int)] =
-    new mutable.HashMap[Int, (ExprSort, CellT, Int)]
+  private val cellCache: mutable.Map[Int, List[(ExprSort, CellT, Int)]] =
+    new mutable.HashMap[Int, List[(ExprSort, CellT, Int)]]
 
   /**
    * A cache for the in-relation between a set and its potential element.
    */
   private val inCache: mutable.Map[(Int, Int), (ExprSort, Int)] =
     new mutable.HashMap[(Int, Int), (ExprSort, Int)]
+
+  /**
+   * A map flagging which in-relations were previously accessed. Used in the encoding with SMT arrays.
+   */
+  private val inStored: mutable.Map[(Int, Int), List[(Boolean, Int)]] =
+    new mutable.HashMap[(Int, Int), List[(Boolean, Int)]]
 
   /**
    * Sometimes, we lose a fresh arena in the rewriting rules. As this situation is very hard to debug,
@@ -107,6 +113,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     logWriter.close()
     cellCache.clear()
     inCache.clear()
+    inStored.clear()
     funDecls.clear()
     cellSorts.clear()
   }
@@ -135,7 +142,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val cellName = cell.toString
     z3context.mkConstDecl(cellName, cellSort)
     val const = z3context.mkConst(cellName, cellSort)
-    cellCache += (cell.id -> (const, cell.cellType, level))
+    cellCache += (cell.id -> List((const, cell.cellType, level)))
 
     if (cellSort.isInstanceOf[ArraySort[Sort, BoolSort]]) {
       // If arrays are used to encode sets, they are initialized here to represent empty sets
@@ -172,45 +179,15 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val name = s"in_${elemT.signature}${elem.id}_${setT.signature}${set.id}"
     if (!inCache.contains((set.id, elem.id))) {
       if (useArrays) {
-        val (setExpr, _, _) = cellCache(set.id)
-        val (elemExpr, _, _) = cellCache(elem.id)
-
-        val store = getOrMkCellSort(elemT) match {
-          case _: BoolSort =>
-            z3context.mkStore(
-                setExpr.asInstanceOf[ArrayExpr[BoolSort, BoolSort]], elemExpr.asInstanceOf[Expr[BoolSort]],
-                z3context.mkTrue())
-          case _: IntSort =>
-            z3context.mkStore(
-                setExpr.asInstanceOf[ArrayExpr[IntSort, BoolSort]], elemExpr.asInstanceOf[Expr[IntSort]],
-                z3context.mkTrue())
-          case _: ArraySort[Sort, Sort] =>
-            z3context.mkStore(
-                setExpr.asInstanceOf[ArrayExpr[ArraySort[Sort, Sort], BoolSort]],
-                elemExpr.asInstanceOf[Expr[ArraySort[Sort, Sort]]], z3context.mkTrue())
-          case _ =>
-            z3context.mkStore(
-                setExpr.asInstanceOf[ArrayExpr[UninterpretedSort, BoolSort]],
-                elemExpr.asInstanceOf[Expr[UninterpretedSort]], z3context.mkTrue())
-        }
-
-        // The updated set is cached here, since arrays are handled in a SSA form
+        // The updated set is cached here, it needs to be added to a predicate in "getInPred".
         val updatedSetName = set.toString + "_" + name
         val setSort = getOrMkCellSort(set.cellType)
         log(s";; declare edge inclusion $name")
         log(s"(declare-const $updatedSetName $setSort)")
-        z3context.mkConstDecl(updatedSetName, setSort)
         val updatedSet = z3context.mkConst(updatedSetName, setSort)
-        val eqStore = z3context.mkEq(updatedSet, store)
-        log(s"(assert $eqStore)")
-        z3solver.add(eqStore)
-        cellCache += (set.id -> (updatedSet, set.cellType, level))
-        _metrics = _metrics.addNSmtExprs(1)
-
-        // The edge is cached here (note that the queried array has a specific SSA index)
-        val select = makeSelectPred(set.id, elem.id)
-        inCache += ((set.id, elem.id) -> (select.asInstanceOf[ExprSort], level))
-        _metrics = _metrics.addNSmtExprs(1)
+        inCache += ((set.id, elem.id) -> (updatedSet, level))
+        inStored += ((set.id, elem.id) -> List((false, level)))
+        _metrics = _metrics.addNConsts(1)
       } else {
         smtListener.onIntroSmtConst(name)
         log(s";; declare edge predicate $name: Bool")
@@ -224,37 +201,47 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   }
 
   private def getInPred(setId: Int, elemId: Int): ExprSort = {
-    if (useArrays) {
-      // With SMT arrays, we make a new "select" predicate for every query
-      // (Potential optimization) inCache is not used with SMT arrays, keep it empty in this encoding?
-
-      if (cellCache.contains(setId) && cellCache.contains(elemId)) {
-        // The cached value is not used because it may not refer to the current version of the set
-        _metrics = _metrics.addNSmtExprs(1)
-        makeSelectPred(setId, elemId).asInstanceOf[ExprSort]
-      } else {
+    inCache.get((setId, elemId)) match {
+      case None =>
+        val setT = cellCache(setId).head._2
+        val elemT = cellCache(elemId).head._2
+        val name = s"in_${elemT.signature}${elemId}_${setT.signature}$setId"
         logWriter.flush() // flush the SMT log
-        throw new IllegalStateException(s"SMT $id: Either id $setId or id $elemId are missing from the SMT context")
-      }
-    } else {
-      inCache.get((setId, elemId)) match {
-        case None =>
-          val setT = cellCache(setId)._2
-          val elemT = cellCache(elemId)._2
-          val name = s"in_${elemT.signature}${elemId}_${setT.signature}$setId"
-          logWriter.flush() // flush the SMT log
-          throw new IllegalStateException(
-              s"SMT $id: The Boolean constant $name (set membership) is missing from the SMT context")
+        throw new IllegalStateException(
+            s"SMT $id: The Boolean constant $name (set membership) is missing from the SMT context")
 
-        case Some((const, _)) =>
+      case Some((const, _)) =>
+        if (useArrays) {
+          val (setExpr, setT, setLevel) = cellCache(setId).head
+          val (elemExpr, elemT, _) = cellCache(elemId).head
+
+          inStored.get(setId, elemId) match {
+            case None =>
+              val name = setExpr.toString + "_" + s"in_${elemT.signature}${elemId}_${setT.signature}$setId"
+              logWriter.flush() // flush the SMT log
+              throw new IllegalStateException(s"SMT $id: The Array constant $name is missing from the SMT context")
+            case Some(list) if list.head._1 == false =>
+              val store = z3context.mkStore(
+                  setExpr.asInstanceOf[Expr[ArraySort[Sort, BoolSort]]], elemExpr.asInstanceOf[Expr[Sort]],
+                  z3context.mkTrue())
+              val eqStore = z3context.mkEq(const, store)
+              inStored += ((setId, elemId) -> ((true, level) :: inStored(setId, elemId)))
+              cellCache += (setId -> ((const, setT, level) :: cellCache(setId)))
+              _metrics = _metrics.addNSmtExprs(1)
+              eqStore.asInstanceOf[ExprSort]
+            case Some(list) if list.head._1 == true =>
+              _metrics = _metrics.addNSmtExprs(1)
+              makeSelectPred(setId, elemId).asInstanceOf[ExprSort]
+          }
+        } else {
           const
-      }
+        }
     }
   }
 
   private def makeSelectPred(setId: Int, elemId: Int): Expr[BoolSort] = {
-    val (setExpr, _, _) = cellCache(setId)
-    val (elemExpr, elemT, _) = cellCache(elemId)
+    val (setExpr, _, _) = cellCache(setId).head
+    val (elemExpr, elemT, _) = cellCache(elemId).head
 
     getOrMkCellSort(elemT) match {
       case _: BoolSort =>
@@ -406,8 +393,11 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       // clean the caches
       cellSorts.retain((_, value) => value._2 <= level)
       funDecls.retain((_, value) => value._2 <= level)
-      cellCache.retain((_, value) => value._3 <= level)
+      cellCache.foreach(_._2.filter(_._3 <= level))
+      cellCache.retain((_, value) => value.nonEmpty)
       inCache.retain((_, value) => value._2 <= level)
+      inStored.foreach(_._2.filter(_._2 <= level))
+      inStored.retain((_, value) => value.nonEmpty)
     }
   }
 
@@ -421,8 +411,11 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       // clean the caches
       cellSorts.retain((_, value) => value._2 <= level)
       funDecls.retain((_, value) => value._2 <= level)
-      cellCache.retain((_, value) => value._3 <= level)
+      cellCache.foreach(_._2.filter(_._3 <= level))
+      cellCache.retain((_, value) => value.nonEmpty)
       inCache.retain((_, value) => value._2 <= level)
+      inStored.foreach(_._2.filter(_._2 <= level))
+      inStored.retain((_, value) => value.nonEmpty)
     }
   }
 
@@ -519,7 +512,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   private def toExpr(ex: TlaEx): (ExprSort, Long) = {
     simplifier.simplifyShallow(ex) match {
       case NameEx(name) =>
-        val nm = cellCache(ArenaCell.idFromName(name))._1 // the cached cell
+        val nm = cellCache(ArenaCell.idFromName(name)).head._1 // the cached cell
         (nm, 1)
 
       case ValEx(TlaBool(false)) =>
@@ -551,7 +544,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       case OperEx(TlaOper.eq, lhs @ NameEx(lname), rhs @ NameEx(rname)) =>
         if (ArenaCell.isValidName(lname) && ArenaCell.isValidName(rname)) {
           // just comparing cells
-          val eq = z3context.mkEq(cellCache(ArenaCell.idFromName(lname))._1, cellCache(ArenaCell.idFromName(rname))._1)
+          val eq = z3context.mkEq(cellCache(ArenaCell.idFromName(lname)).head._1,
+              cellCache(ArenaCell.idFromName(rname)).head._1)
           (eq.asInstanceOf[ExprSort], 1)
         } else {
           // comparing integers and Boolean to cells, Booleans to Booleans, and Integers to Integers
