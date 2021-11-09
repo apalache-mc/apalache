@@ -54,8 +54,13 @@ class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends SetInclusi
     def isInRight(leftElem: ArenaCell): TlaEx = {
       newState = newState.updateArena(_.appendCell(BoolT()))
       val pred = newState.arena.topCell
-      rewriter.solverContext.assertGroundExpr(simplifier.simplifyShallow(tla.equiv(pred.toNameEx,
-                  tla.in(leftElem.toNameEx, rightElem.toNameEx))))
+
+      def isIn2(rightElem2: ArenaCell) = {
+        tla.and(tla.in(rightElem2.toNameEx, rightElem.toNameEx), tla.eql(rightElem2.toNameEx, leftElem.toNameEx))
+      }
+      val elemsInAndEq = state.arena.getHas(rightElem).map(isIn2)
+      rewriter.solverContext
+        .assertGroundExpr(simplifier.simplifyShallow(tla.equiv(pred.toNameEx, tla.or(elemsInAndEq: _*))))
       pred.toNameEx
     }
 
