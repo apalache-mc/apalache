@@ -41,9 +41,12 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
       var nextState = state.updateArena(_.appendCell(BoolT()))
       val pred = nextState.arena.topCell.toNameEx
 
-      // direct SMT equality
-      val eq = tla.equiv(pred, tla.in(elemCell.toNameEx, setCell.toNameEx))
-      rewriter.solverContext.assertGroundExpr(eq)
+      def inAndEq(elem: ArenaCell) = {
+        tla.and(tla.in(elem.toNameEx, setCell.toNameEx), tla.eql(elem.toNameEx, elemCell.toNameEx))
+      }
+
+      val elemsInAndEq = potentialElems.map(inAndEq)
+      rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.or(elemsInAndEq: _*)))
       nextState.setRex(pred)
     }
   }
