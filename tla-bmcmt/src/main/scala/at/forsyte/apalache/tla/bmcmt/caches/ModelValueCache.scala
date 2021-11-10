@@ -3,8 +3,10 @@ package at.forsyte.apalache.tla.bmcmt.caches
 import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.ConstT
+import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 /**
@@ -27,7 +29,7 @@ class ModelValueCache(solverContext: SolverContext)
           v.cellType == ConstT(utype) //compare just with same sorted cells
         }
     ) {
-      solverContext.assertGroundExpr(tla.neql(newCell.toNameEx, other.toNameEx))
+      solverContext.assertGroundExpr(OperEx(ApalacheOper.distinct, newCell.toNameEx, other.toNameEx))
     }
     solverContext.log("; cached \"%s\" to %s".format(typeAndIndex, newCell))
     (newArena, newCell)

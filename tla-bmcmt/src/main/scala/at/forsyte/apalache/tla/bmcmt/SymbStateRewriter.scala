@@ -2,9 +2,7 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.RewritingResult
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore}
-import at.forsyte.apalache.tla.bmcmt.caches.{
-  ExprCache, IntValueCache, ModelValueCache, RecordDomainCache, StrValueCache
-}
+import at.forsyte.apalache.tla.bmcmt.caches.{ExprCache, IntValueCache, ModelValueCache, RecordDomainCache}
 import at.forsyte.apalache.tla.bmcmt.rewriter.{Recoverable, RewriterConfig, SymbStateRewriterSnapshot}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.lir.TlaEx
@@ -62,12 +60,7 @@ trait SymbStateRewriter extends StackableContext with MessageStorage with Recove
   def intValueCache: IntValueCache
 
   /**
-   * A cache for string literals.
-   */
-  def strValueCache: StrValueCache
-
-  /**
-   * A cache for model valuse.
+   * A cache for strings and model values.
    */
   def modelValueCache: ModelValueCache
 

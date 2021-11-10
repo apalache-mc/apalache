@@ -91,19 +91,14 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
   val intRangeCache = new IntRangeCache(solverContext, intValueCache)
 
   /**
-   * A cache for string literals.
-   */
-  val strValueCache = new StrValueCache(solverContext)
-
-  /**
-   * A cache for model values.
+   * A cache for strings and model values.
    */
   val modelValueCache = new ModelValueCache(solverContext)
 
   /**
    * A cache of record domains.
    */
-  val recordDomainCache = new RecordDomainCache(solverContext, strValueCache)
+  val recordDomainCache = new RecordDomainCache(solverContext, modelValueCache)
 
   /**
    * An expression cache that is initialized by grade storage, by default, empty.
@@ -462,7 +457,7 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
    * @return the snapshot
    */
   override def snapshot(): SymbStateRewriterSnapshot = {
-    new SymbStateRewriterSnapshot(intValueCache.snapshot(), intRangeCache.snapshot(), strValueCache.snapshot(),
+    new SymbStateRewriterSnapshot(intValueCache.snapshot(), intRangeCache.snapshot(), modelValueCache.snapshot(),
         recordDomainCache.snapshot(), exprCache.snapshot())
   }
 
@@ -475,7 +470,7 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
   override def recover(shot: SymbStateRewriterSnapshot): Unit = {
     intValueCache.recover(shot.intValueCacheSnapshot)
     intRangeCache.recover(shot.intRangeCacheSnapshot)
-    strValueCache.recover(shot.strValueCacheSnapshot)
+    modelValueCache.recover(shot.modelValueCacheSnapshot)
     recordDomainCache.recover(shot.recordDomainCache)
     exprCache.recover(shot.exprCacheSnapshot)
   }
@@ -487,7 +482,7 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
     level += 1
     intValueCache.push()
     intRangeCache.push()
-    strValueCache.push()
+    modelValueCache.push()
     recordDomainCache.push()
     lazyEq.push()
     exprCache.push()
@@ -502,7 +497,7 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
     assert(level > 0)
     intValueCache.pop()
     intRangeCache.pop()
-    strValueCache.pop()
+    modelValueCache.pop()
     recordDomainCache.pop()
     lazyEq.pop()
     exprCache.pop()
@@ -519,7 +514,7 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
     assert(level >= n)
     intValueCache.pop(n)
     intRangeCache.pop(n)
-    strValueCache.pop(n)
+    modelValueCache.pop(n)
     recordDomainCache.pop(n)
     lazyEq.pop(n)
     exprCache.pop(n)
@@ -539,7 +534,7 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
     exprCache.dispose()
     intValueCache.dispose()
     intRangeCache.dispose()
-    strValueCache.dispose()
+    modelValueCache.dispose()
     recordDomainCache.dispose()
     lazyEq.dispose()
     solverContext.dispose()

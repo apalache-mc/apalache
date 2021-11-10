@@ -19,6 +19,7 @@ import scala.util.matching.Regex
  */
 object ModelValueHandler {
   val PREFIX: String = "uval"
+  val STRING_TYPE: String = "str"
   private val matchRegex: Regex = (s"${PREFIX}_([A-Z_][A-Z0-9_]*)_([a-zA-Z0-9]+)").r
 
   /**

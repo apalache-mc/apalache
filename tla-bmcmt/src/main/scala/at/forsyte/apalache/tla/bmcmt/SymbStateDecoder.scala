@@ -1,5 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.caches.ModelValueCache
+
 import java.io.PrintWriter
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types._
@@ -76,40 +78,28 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     case IntT() =>
       solverContext.evalGroundExpr(cell.toNameEx).withTag(Typed(IntT1()))
 
-    case ConstT(utype) =>
-      utype match {
-        case "" =>
-          val found = rewriter.strValueCache.findKey(cell)
-          if (found.isDefined) {
-            tla.str(found.get).typed()
-          } else {
-            findCellInSet(arena, rewriter.strValueCache.values().toSeq, cell.toNameEx) match {
-              // found among the cached keys
-              case Some(c) =>
-                decodeCellToTlaEx(arena, c)
+    case ConstT(_) =>
+      // First, attempt to check the cache
+      val found = rewriter.modelValueCache.findKey(cell)
+      if (found.isDefined) {
+        val pa @ (utype, index) = found.get
+        if (utype == ModelValueHandler.STRING_TYPE)
+          tla.str(index).typed()
+        else
+          tla.str(ModelValueHandler.construct(pa)).typed()
+      } else {
+        // if not in the cache, it might be the case that another cell, which has asserted equivalence
+        // with the original cell can be found
+        findCellInSet(arena, rewriter.modelValueCache.values().toSeq, cell.toNameEx) match {
+          // found among the cached keys
+          case Some(c) =>
+            decodeCellToTlaEx(arena, c)
 
-              case None =>
-                // not found, just use the name
-                // a value that was assigned by the solver, and not created by us
-                tla.str(cell.toString).typed()
-            }
-          }
-        case s =>
-          val found = rewriter.modelValueCache.findKey(cell)
-          if (found.isDefined) {
-            tla.str(ModelValueHandler.construct(found.get)).typed()
-          } else {
-            findCellInSet(arena, rewriter.modelValueCache.values().toSeq, cell.toNameEx) match {
-              // found among the cached keys
-              case Some(c) =>
-                decodeCellToTlaEx(arena, c)
-
-              case None =>
-                // not found, just use the name
-                // a value that was assigned by the solver, and not created by us
-                tla.str(cell.toString).typed()
-            }
-          }
+          case None =>
+            // not found, just use the name
+            // a value that was assigned by the solver, and not created by us
+            tla.str(cell.toString).typed()
+        }
       }
 
     case UnknownT() =>

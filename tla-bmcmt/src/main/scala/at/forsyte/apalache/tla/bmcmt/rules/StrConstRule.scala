@@ -30,7 +30,8 @@ class StrConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
               .setArena(newArena)
               .setRex(newCell.toNameEx)
           case _ =>
-            val (newArena: Arena, newCell: ArenaCell) = rewriter.strValueCache.getOrCreate(state.arena, str)
+            val (newArena: Arena, newCell: ArenaCell) =
+              rewriter.modelValueCache.getOrCreate(state.arena, (ModelValueHandler.STRING_TYPE, str))
             state
               .setArena(newArena)
               .setRex(newCell.toNameEx)

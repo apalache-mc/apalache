@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.{MalformedTlaError, NullEx, TlaEx}
+import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 /**
  * Generate equality constraints between cells and cache them to avoid redundant constraints.
@@ -443,7 +444,8 @@ class LazyEquality(rewriter: SymbStateRewriter)
         case (None, None) => tla.bool(true)
         case (Some(leftElem), Some(rightElem)) => {
           newState = cacheOneEqConstraint(newState, leftElem, rightElem)
-          val (newArena, keyCell) = rewriter.strValueCache.getOrCreate(newState.arena, key)
+          val (newArena, keyCell) =
+            rewriter.modelValueCache.getOrCreate(newState.arena, (ModelValueHandler.STRING_TYPE, key))
           newState = newState.setArena(newArena)
           // it is safe to use in directly since:
           // (1) the record types coincide,

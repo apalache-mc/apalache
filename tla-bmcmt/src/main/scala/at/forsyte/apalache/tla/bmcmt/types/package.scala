@@ -1,9 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.caches.ModelValueCache
 import at.forsyte.apalache.tla.lir.{
   BoolT1, ConstT1, FunT1, IntT1, NullEx, OperT1, RealT1, RecT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1, TupT1,
   TypeTag, TypingException, VarT1
 }
+import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 import scala.collection.immutable.SortedMap
 
@@ -228,15 +230,15 @@ package object types {
   /**
    * A cell constant, that is, just a name that expresses string constants in TLA+.
    */
-  sealed case class ConstT(utype: String = "") extends CellT with Serializable {
-    override val signature: String = if (utype.isEmpty) "str" else s"UT_$utype"
+  sealed case class ConstT(utype: String = ModelValueHandler.STRING_TYPE) extends CellT with Serializable {
+    override val signature: String = if (utype.isEmpty) ModelValueHandler.STRING_TYPE else s"UT_$utype"
 
-    override val toString: String = if (utype.isEmpty) "Const" else utype
+    override val toString: String = utype
 
     override def toTlaType1: TlaType1 = utype match {
       // in the new type system, we have the string type for such constants
-      case "" => StrT1()
-      case s  => ConstT1(s)
+      case ModelValueHandler.STRING_TYPE => StrT1()
+      case s                             => ConstT1(s)
     }
   }
 
