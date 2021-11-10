@@ -2,6 +2,13 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.17.2
+
+### Bug fixes
+
+* Fix regression breaking `--output` file format detection in parser command, see
+  #1079
+
 ## 0.17.1
 
 ### Bug fixes
