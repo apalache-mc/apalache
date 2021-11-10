@@ -22,21 +22,15 @@ class StrConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case ValEx(TlaStr(str)) =>
-        ModelValueHandler.typeAndIndex(str) match {
-          case Some((ConstT1(utype), index)) =>
-            val (newArena: Arena, newCell: ArenaCell) =
-              rewriter.modelValueCache.getOrCreate(state.arena, (utype, index))
-            state
-              .setArena(newArena)
-              .setRex(newCell.toNameEx)
-          case _ =>
-            val (newArena: Arena, newCell: ArenaCell) =
-              rewriter.modelValueCache.getOrCreate(state.arena, (ModelValueHandler.STRING_TYPE, str))
-            state
-              .setArena(newArena)
-              .setRex(newCell.toNameEx)
-        }
-
+        val typeAndIndex = ModelValueHandler
+          .typeAndIndex(str)
+          .map(pa => (pa._1.name, pa._2))
+          .getOrElse((ModelValueHandler.STRING_TYPE, str))
+        val (newArena: Arena, newCell: ArenaCell) =
+          rewriter.modelValueCache.getOrCreate(state.arena, typeAndIndex)
+        state
+          .setArena(newArena)
+          .setRex(newCell.toNameEx)
       case _ =>
         throw new RewriterException(getClass.getSimpleName + " is not applicable", state.ex)
     }
