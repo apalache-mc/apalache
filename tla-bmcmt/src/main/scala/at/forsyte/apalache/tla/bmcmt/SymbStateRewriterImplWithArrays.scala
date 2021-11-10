@@ -21,83 +21,104 @@ class SymbStateRewriterImplWithArrays(_solverContext: SolverContext,
         // the order is only important to improve readability
 
         // substitution
-        key(NameEx("x")) // OK
+        key(NameEx("x"))
           -> List(substRule),
-        key(tla.prime(NameEx("x"))) // OK
+        key(tla.prime(NameEx("x")))
           -> List(new PrimeRule(this)),
         // assignment
-        key(OperEx(ApalacheOper.assign, tla.name("x"), tla.name("y"))) // OK
+        key(OperEx(ApalacheOper.assign, tla.name("x"), tla.name("y")))
           -> List(new AssignmentRule(this)),
         // constants
-        key(ValEx(TlaBool(true))) // OK
+        key(ValEx(TlaBool(true)))
           -> List(new BuiltinConstRule(this)),
-        key(ValEx(TlaBoolSet)) // OK
+        key(ValEx(TlaBoolSet))
           -> List(new BuiltinConstRule(this)),
-        key(ValEx(TlaIntSet)) // OK
+        key(ValEx(TlaIntSet))
           -> List(new BuiltinConstRule(this)),
-        key(ValEx(TlaNatSet)) // OK
+        key(ValEx(TlaNatSet))
           -> List(new BuiltinConstRule(this)),
-        key(ValEx(TlaInt(1))) // OK
+        key(ValEx(TlaInt(1)))
           -> List(new IntConstRule(this)),
-        key(ValEx(TlaStr("red"))) // OK
+        key(ValEx(TlaStr("red")))
           -> List(new StrConstRule(this)),
         // logic
-        key(tla.eql(tla.name("x"), tla.name("y"))) // OK
+        key(tla.eql(tla.name("x"), tla.name("y")))
           -> List(new EqRuleWithArrays(this)), // TODO: update with additional elements later
-        key(tla.or(tla.name("x"), tla.name("y"))) // OK
+        key(tla.or(tla.name("x"), tla.name("y")))
           -> List(new OrRule(this)),
-        key(tla.and(tla.name("x"), tla.name("y"))) // OK
+        key(tla.and(tla.name("x"), tla.name("y")))
           -> List(new AndRule(this)),
-        key(tla.not(tla.name("x"))) // OK
+        key(tla.not(tla.name("x")))
           -> List(new NegRule(this)),
         // sets
-        key(tla.in(tla.name("x"), tla.name("S"))) // OK
+        key(tla.in(tla.name("x"), tla.name("S")))
           -> List(new SetInRuleWithArrays(this)), // TODO: add support for funSet later
         // TODO: (potential SetCtorRule optimization) remove redundant "select" assertions
-        key(tla.enumSet(tla.name("x"))) // OK
+        key(tla.enumSet(tla.name("x")))
           -> List(new SetCtorRule(this)),
-        key(tla.subseteq(tla.name("x"), tla.name("S"))) // OK
+        key(tla.subseteq(tla.name("x"), tla.name("S")))
           -> List(new SetInclusionRuleWithArrays(this)),
         // TODO: (potential SetCupRule optimization) copy the largest array and only store edges for the smaller one
-        key(tla.cup(tla.name("X"), tla.name("Y"))) // OK
+        key(tla.cup(tla.name("X"), tla.name("Y")))
           -> List(new SetCupRule(this)),
-        key(tla.filter(tla.name("x"), tla.name("S"), tla.name("p"))) // OK
+        key(tla.filter(tla.name("x"), tla.name("S"), tla.name("p")))
           -> List(new SetFilterRule(this)),
-        key(tla.map(tla.name("e"), tla.name("x"), tla.name("S"))) // OK
+        key(tla.map(tla.name("e"), tla.name("x"), tla.name("S")))
           -> List(new SetMapRule(this)),
         // TODO: (potential SetExpandRule optimization) remove redundant "select" assertions in PowSetCtor.confringo
-        key(OperEx(ApalacheOper.expand, tla.name("X"))) // OK
+        key(OperEx(ApalacheOper.expand, tla.name("X")))
           -> List(new SetExpandRule(this)),
-        key(tla.powSet(tla.name("X"))) // OK
+        key(tla.powSet(tla.name("X")))
           -> List(new PowSetCtorRule(this)),
-        key(tla.union(tla.enumSet())) // OK
+        key(tla.union(tla.enumSet()))
           -> List(new SetUnionRule(this)),
         // TODO: (potential IntDotDotRule optimization) remove redundant "select" assertions in intRangeCache.create
-        key(tla.dotdot(tla.int(1), tla.int(10))) // OK
+        key(tla.dotdot(tla.int(1), tla.int(10)))
           -> List(new IntDotDotRule(this, intRangeCache)),
         // integers
-        key(tla.lt(tla.int(1), tla.int(2))) // OK
+        key(tla.lt(tla.int(1), tla.int(2)))
           -> List(new IntCmpRule(this)),
-        key(tla.le(tla.int(1), tla.int(2))) // OK
+        key(tla.le(tla.int(1), tla.int(2)))
           -> List(new IntCmpRule(this)),
-        key(tla.gt(tla.int(1), tla.int(2))) // OK
+        key(tla.gt(tla.int(1), tla.int(2)))
           -> List(new IntCmpRule(this)),
-        key(tla.ge(tla.int(1), tla.int(2))) // OK
+        key(tla.ge(tla.int(1), tla.int(2)))
           -> List(new IntCmpRule(this)),
-        key(tla.plus(tla.int(1), tla.int(2))) // OK
+        key(tla.plus(tla.int(1), tla.int(2)))
           -> List(new IntArithRule(this)),
-        key(tla.minus(tla.int(1), tla.int(2))) // OK
+        key(tla.minus(tla.int(1), tla.int(2)))
           -> List(new IntArithRule(this)),
-        key(tla.mult(tla.int(1), tla.int(2))) // OK
+        key(tla.mult(tla.int(1), tla.int(2)))
           -> List(new IntArithRule(this)),
-        key(tla.div(tla.int(1), tla.int(2))) // OK
+        key(tla.div(tla.int(1), tla.int(2)))
           -> List(new IntArithRule(this)),
-        key(tla.mod(tla.int(1), tla.int(2))) // OK
+        key(tla.mod(tla.int(1), tla.int(2)))
           -> List(new IntArithRule(this)),
-        key(tla.exp(tla.int(2), tla.int(3))) // OK
+        key(tla.exp(tla.int(2), tla.int(3)))
           -> List(new IntArithRule(this)),
-        key(tla.uminus(tla.int(1))) // OK
-          -> List(new IntArithRule(this))
+        key(tla.uminus(tla.int(1)))
+          -> List(new IntArithRule(this)),
+        // -----------------------------------------------------------------
+        // RULES BELOW WERE ADDED TO RUN UNIT TESTS, WILL BE LOOKED AT LATER
+        // -----------------------------------------------------------------
+        // logic
+        key(OperEx(ApalacheOper.skolem, tla.exists(tla.name("x"), tla.name("S"), tla.name("p"))))
+          -> List(new QuantRule(this)),
+        key(tla.forall(tla.name("x"), tla.name("S"), tla.name("p")))
+          -> List(new QuantRule(this)),
+        // control flow
+        key(tla.ite(tla.name("cond"), tla.name("then"), tla.name("else")))
+          -> List(new IfThenElseRule(this)),
+        // functions
+        key(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S")))
+          -> List(new FunCtorRule(this)),
+        key(tla.appFun(tla.name("f"), tla.name("x")))
+          -> List(new FunAppRule(this)),
+        // tuples, records, and sequences
+        key(tla.tuple(tla.name("x"), tla.int(2)))
+          -> List(new TupleOrSeqCtorRule(this)),
+        key(tla.enumFun(tla.str("a"), tla.int(2)))
+          -> List(new RecCtorRule(this))
     )
   }
 }
