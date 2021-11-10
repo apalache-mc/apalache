@@ -41,6 +41,7 @@
 
 - [Overview](HOWTOs/index.md)
 - [How to write type annotations](./HOWTOs/howto-write-type-annotations.md)
+- [How to use uninterpreted types](./HOWTOs/uninterpretedTypes.md)
 
 # Tutorials
 

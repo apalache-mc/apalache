@@ -9,6 +9,6 @@ import scala.collection.immutable.SortedSet
 
 class SymbStateRewriterSnapshot(val intValueCacheSnapshot: AbstractCacheSnapshot[Arena, BigInt, ArenaCell],
     val intRangeCacheSnapshot: AbstractCacheSnapshot[Arena, (Int, Int), ArenaCell],
-    val strValueCacheSnapshot: AbstractCacheSnapshot[Arena, String, ArenaCell],
+    val modelValueCacheSnapshot: AbstractCacheSnapshot[Arena, (String, String), ArenaCell],
     val recordDomainCache: AbstractCacheSnapshot[Arena, (SortedSet[String], SortedSet[String]), ArenaCell],
     val exprCacheSnapshot: SimpleCacheSnapshot[TlaEx, (TlaEx, ExprGrade.Value)]) {}

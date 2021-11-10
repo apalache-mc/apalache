@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.types.{ConstT, FinSetT}
 import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 import scala.collection.immutable.SortedSet
 
@@ -13,7 +14,7 @@ import scala.collection.immutable.SortedSet
  *
  * @author Igor Konnov
  */
-class RecordDomainCache(solverContext: SolverContext, strValueCache: StrValueCache)
+class RecordDomainCache(solverContext: SolverContext, strValueCache: ModelValueCache)
     extends AbstractCache[Arena, (SortedSet[String], SortedSet[String]), ArenaCell] with Serializable {
 
   /**
@@ -30,7 +31,7 @@ class RecordDomainCache(solverContext: SolverContext, strValueCache: StrValueCac
     var arena = context
 
     def strToCell(str: String): ArenaCell = {
-      val (newArena, cell) = strValueCache.getOrCreate(arena, str)
+      val (newArena, cell) = strValueCache.getOrCreate(arena, (ModelValueHandler.STRING_TYPE, str))
       arena = newArena
       cell
     }

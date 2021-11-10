@@ -6,6 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.types.ConstT
 import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 class UninterpretedConstOracle(valueCells: Seq[ArenaCell], oracleCell: ArenaCell, nvalues: Int) extends Oracle {
 
@@ -64,7 +65,8 @@ object UninterpretedConstOracle {
     var nextState = state
 
     def introConst(i: Int): ArenaCell = {
-      val (newArena, valueCell) = rewriter.strValueCache.getOrCreate(nextState.arena, i.toString)
+      val (newArena, valueCell) =
+        rewriter.modelValueCache.getOrCreate(nextState.arena, (ModelValueHandler.STRING_TYPE, i.toString))
       nextState = nextState.setArena(newArena)
       valueCell
     }

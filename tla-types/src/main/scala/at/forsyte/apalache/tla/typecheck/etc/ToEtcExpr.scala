@@ -128,7 +128,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
   private val typeOfLiteralExpr: TlaValue => TlaType1 = {
     case TlaInt(_)  => IntT1()
     case TlaBool(_) => BoolT1()
-    case TlaStr(_)  => StrT1()
+    case TlaStr(s)  => ModelValueHandler.modelValueOrString(s)
     case TlaReal()  => RealT1()
     case TlaIntSet  => SetT1(IntT1())
     case TlaNatSet  => SetT1(IntT1())

@@ -12,8 +12,6 @@ sealed abstract class TlaEx(implicit val typeTag: TypeTag)
 
   // TODO: introduce a type class to print expressions with a custom printer (see scala cats)
   override def toString: String = UTFPrinter(this)
-
-  def toSimpleString: String = ""
 }
 
 /**
@@ -24,8 +22,6 @@ sealed abstract class TlaEx(implicit val typeTag: TypeTag)
  * NullEx is always untyped.
  */
 object NullEx extends TlaEx()(typeTag = Untyped()) with Serializable {
-  override def toSimpleString: String = toString
-
   // null expressions always carry the Untyped tag
   override def withTag(newTypeTag: TypeTag): TlaEx = this
 }
@@ -35,8 +31,6 @@ object NullEx extends TlaEx()(typeTag = Untyped()) with Serializable {
  * Importantly, `ValEx` accepts an implicit type tag.
  */
 case class ValEx(value: TlaValue)(implicit typeTag: TypeTag) extends TlaEx with Serializable {
-  override def toSimpleString: String = value.toString
-
   override def withTag(newTypeTag: TypeTag): ValEx = ValEx(value)(newTypeTag)
 }
 
@@ -45,8 +39,6 @@ case class ValEx(value: TlaValue)(implicit typeTag: TypeTag) extends TlaEx with 
  * Importantly, `NameEx` accepts an implicit type tag.
  */
 case class NameEx(name: String)(implicit typeTag: TypeTag) extends TlaEx with Serializable {
-  override def toSimpleString: String = name
-
   override def withTag(newTypeTag: TypeTag): NameEx = NameEx(name)(newTypeTag)
 }
 
@@ -55,8 +47,6 @@ case class NameEx(name: String)(implicit typeTag: TypeTag) extends TlaEx with Se
  * Importantly, `LetInEx` accepts an implicit type tag.
  */
 case class LetInEx(body: TlaEx, decls: TlaOperDecl*)(implicit typeTag: TypeTag) extends TlaEx with Serializable {
-  override def toSimpleString: String = s"LET ${decls.mkString(" ")} IN $body"
-
   override def withTag(newTypeTag: TypeTag): LetInEx = LetInEx(body, decls: _*)(newTypeTag)
 }
 
@@ -71,20 +61,6 @@ case class OperEx(oper: TlaOper, args: TlaEx*)(implicit typeTag: TypeTag) extend
 
   require(oper.permitsArgs(args),
       "The invariant of %s is violated by the arguments: %s".format(oper.name, args.map(_.toString) mkString ", "))
-
-  override def toSimpleString: String = {
-    oper.arity match {
-      case FixedArity(n) => {
-        n match {
-          case 1 => args.head.toSimpleString + oper.name
-          case 2 => args.head.toSimpleString + " " + oper.name + " " + args.tail.head.toSimpleString
-          case _ => oper.name + "(" + args.map(_.toSimpleString).mkString(", ") + ")"
-        }
-      }
-      case _ => oper.name + "(" + args.map(_.toSimpleString).mkString(", ") + ")"
-
-    }
-  }
 
   override def withTag(newTypeTag: TypeTag): TlaEx = {
     OperEx(oper, args: _*)(newTypeTag)

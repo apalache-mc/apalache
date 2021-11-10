@@ -1,9 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.caches.ModelValueCache
 import at.forsyte.apalache.tla.lir.{
   BoolT1, ConstT1, FunT1, IntT1, NullEx, OperT1, RealT1, RecT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1, TupT1,
   TypeTag, TypingException, VarT1
 }
+import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 import scala.collection.immutable.SortedMap
 
@@ -56,8 +58,11 @@ package object types {
         case (_, UnknownT()) =>
           Some(this)
 
-        case (BoolT(), BoolT()) | (ConstT(), ConstT()) | (IntT(), IntT()) =>
+        case (BoolT(), BoolT()) | (IntT(), IntT()) =>
           Some(this)
+
+        case (ConstT(a), ConstT(b)) =>
+          if (a == b) Some(this) else None
 
         case (FinSetT(left), FinSetT(right)) =>
           left.unify(right) map FinSetT
@@ -154,10 +159,10 @@ package object types {
      */
     def fromType1(tt: TlaType1): CellT = {
       tt match {
-        case IntT1()    => IntT()
-        case StrT1()    => ConstT()
-        case BoolT1()   => BoolT()
-        case ConstT1(_) => ConstT() // this should change in https://github.com/informalsystems/apalache/issues/570
+        case IntT1()        => IntT()
+        case StrT1()        => ConstT()
+        case BoolT1()       => BoolT()
+        case ConstT1(utype) => ConstT(utype)
         case RealT1() =>
           throw new TypingException("Unsupported type RealT1")
 
@@ -225,14 +230,15 @@ package object types {
   /**
    * A cell constant, that is, just a name that expresses string constants in TLA+.
    */
-  sealed case class ConstT() extends CellT with Serializable {
-    override val signature: String = "str"
+  sealed case class ConstT(utype: String = ModelValueHandler.STRING_TYPE) extends CellT with Serializable {
+    override val signature: String = if (utype.isEmpty) ModelValueHandler.STRING_TYPE else s"UT_$utype"
 
-    override val toString: String = "Const"
+    override val toString: String = utype
 
-    override def toTlaType1: TlaType1 = {
+    override def toTlaType1: TlaType1 = utype match {
       // in the new type system, we have the string type for such constants
-      StrT1()
+      case ModelValueHandler.STRING_TYPE => StrT1()
+      case s                             => ConstT1(s)
     }
   }
 
