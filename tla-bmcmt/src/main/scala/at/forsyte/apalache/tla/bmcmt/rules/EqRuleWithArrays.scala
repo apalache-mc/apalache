@@ -21,20 +21,27 @@ class EqRuleWithArrays(rewriter: SymbStateRewriter) extends EqRule(rewriter) {
         // It is not really a typing error, but an internal error that should be treated as such.
         val msg =
           "Checking values of incomparable types for equality: %s and %s".format(leftCell.cellType, rightCell.cellType)
-        throw new MalformedTlaError(msg, state.ex)
+        throw new MalformedTlaError(msg, newState.ex)
       } else {
         // TODO: add additional elements as development in the "arrays" encoding progresses
+        newState = newState.setArena(newState.arena.appendCell(BoolT()))
+        val eqPred = newState.arena.topCell
+
         (leftCell.cellType, rightCell.cellType) match {
           case (FinSetT(_), FinSetT(_)) =>
-            newState = newState.setArena(newState.arena.appendCell(BoolT()))
-            val eqPred = newState.arena.topCell
-
             // direct SMT equality of arrays is used here
             val eqCons = tla.equiv(eqPred.toNameEx, tla.eql(leftCell.toNameEx, rightCell.toNameEx))
             rewriter.solverContext.assertGroundExpr(eqCons)
             newState.setRex(eqPred.toNameEx)
           case _ =>
-            super.apply(state)
+            // same as EqRule, using super.apply leads to problems
+
+            // produce equality constraints, so that we can use SMT equality
+            newState = rewriter.lazyEq.cacheOneEqConstraint(newState, leftCell, rightCell)
+            // and now we can use the SMT equality
+            val eqCons = tla.equiv(eqPred.toNameEx, rewriter.lazyEq.cachedEq(leftCell, rightCell))
+            rewriter.solverContext.assertGroundExpr(eqCons)
+            newState.setRex(eqPred.toNameEx)
         }
       }
     case _ =>
