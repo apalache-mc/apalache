@@ -41,13 +41,17 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
       var nextState = state.updateArena(_.appendCell(BoolT()))
       val pred = nextState.arena.topCell.toNameEx
 
+      // cache equality constraints first
+      // change for smt tuples later? Keeping lazyEq use for now.
+      val eqState = rewriter.lazyEq.cacheEqConstraints(nextState, potentialElems.map((_, elemCell)))
+
       def inAndEq(elem: ArenaCell) = {
         tla.and(tla.in(elem.toNameEx, setCell.toNameEx), tla.eql(elem.toNameEx, elemCell.toNameEx))
       }
 
       val elemsInAndEq = potentialElems.map(inAndEq)
       rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.or(elemsInAndEq: _*)))
-      nextState.setRex(pred)
+      eqState.setRex(pred)
     }
   }
 }
