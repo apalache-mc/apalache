@@ -9,6 +9,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, NullEx, TlaEx, ValEx}
 
 import scala.collection.immutable.SortedMap
 import at.forsyte.apalache.tla.lir.MalformedSepecificationError
+import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 /**
  * An element picket that allows us:
@@ -108,8 +109,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
     // the general case
     targetType match {
-      case ConstT() =>
-        pickBasic(ConstT(), state, oracle, elems, elseAssert)
+      case ConstT(x) =>
+        pickBasic(ConstT(x), state, oracle, elems, elseAssert)
 
       case IntT() =>
         pickBasic(IntT(), state, oracle, elems, elseAssert)
@@ -352,7 +353,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     var keyToCell = SortedMap[String, ArenaCell]()
     var nextState = state
     for (key <- commonKeys) {
-      val (newArena, cell) = rewriter.strValueCache.getOrCreate(nextState.arena, key)
+      val (newArena, cell) = rewriter.modelValueCache.getOrCreate(nextState.arena, (ModelValueHandler.STRING_TYPE, key))
       keyToCell = keyToCell + (key -> cell)
       nextState = nextState.setArena(newArena)
     }

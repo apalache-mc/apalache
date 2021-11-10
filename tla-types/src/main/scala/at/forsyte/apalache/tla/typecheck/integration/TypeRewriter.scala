@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaStr
 import TypedPredefs._
+import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 /**
  * This class uses the map of types to set the types of TLA+ expressions and declarations.
@@ -14,10 +15,10 @@ import TypedPredefs._
 class TypeRewriter(tracker: TransformationTracker, defaultTag: UID => TypeTag)(types: Map[UID, TlaType1]) {
   def apply(e: TlaEx): TlaEx = {
     def transform: TlaEx => TlaEx = tracker.trackEx {
-      case ValEx(value @ TlaStr(_)) =>
+      case ValEx(value @ TlaStr(s)) =>
         // A record constructor uses strings to represent the field names,
         // which are not propagated to the type checker. Hence, we bypass a query to the types map.
-        ValEx(value)(Typed(StrT1()))
+        ValEx(value)(Typed(ModelValueHandler.modelValueOrString(s)))
 
       case ex @ ValEx(value) =>
         ValEx(value)(getOrDefault(ex.ID))

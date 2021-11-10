@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.TlaStr
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 import scala.collection.immutable.SortedSet
 
@@ -51,7 +52,7 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         def addExtra(map: Map[String, ArenaCell], key: String) = {
           // make sure that the key is cached, as it does not appear in the actual expression
-          val (newArena, keyCell) = rewriter.strValueCache.getOrCreate(arena, key)
+          val (newArena, keyCell) = rewriter.modelValueCache.getOrCreate(arena, (ModelValueHandler.STRING_TYPE, key))
           arena = newArena
           map + (key -> keyCell)
         }
