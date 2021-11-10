@@ -97,6 +97,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   private val inStored: mutable.Map[(Int, Int), List[(Boolean, Int)]] =
     new mutable.HashMap[(Int, Int), List[(Boolean, Int)]]
 
+  private var selectCondition: (Boolean, ExprSort) = (false, z3context.mkFalse().asInstanceOf[ExprSort])
+
   /**
    * Sometimes, we lose a fresh arena in the rewriting rules. As this situation is very hard to debug,
    * we are tracking here the largest cell id per SMT context. If the user is trying to add a cell
@@ -221,9 +223,11 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
               logWriter.flush() // flush the SMT log
               throw new IllegalStateException(s"SMT $id: The Array constant $name is missing from the SMT context")
             case Some(list) if list.head._1 == false =>
+              val condition = if (selectCondition._1) selectCondition._2 else z3context.mkTrue()
+              selectCondition = selectCondition.copy(_1 = false)
               val store = z3context.mkStore(
                   setExpr.asInstanceOf[Expr[ArraySort[Sort, BoolSort]]], elemExpr.asInstanceOf[Expr[Sort]],
-                  z3context.mkTrue())
+                  condition.asInstanceOf[Expr[BoolSort]])
               val eqStore = z3context.mkEq(const, store)
               inStored += ((setId, elemId) -> ((true, level) :: inStored(setId, elemId)))
               cellCache += (setId -> ((const, setT, level) :: cellCache(setId)))
@@ -555,6 +559,13 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
           (eq.asInstanceOf[ExprSort], 1 + ln + rn)
         }
 
+      case OperEx(TlaOper.eq, lhs @ OperEx(TlaSetOper.in, _, _), rhs) if useArrays =>
+        // For set filters, when set inclusion depends on a condition, for arrays encoding
+        val (re, rn) = toExpr(rhs)
+        selectCondition = (true, re)
+        val (le, ln) = toExpr(lhs)
+        (le.asInstanceOf[ExprSort], ln + rn)
+
       case OperEx(TlaOper.eq, lhs, rhs) =>
         val (le, ln) = toExpr(lhs)
         val (re, rn) = toExpr(rhs)
@@ -594,6 +605,13 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         val (rhsZ3, rn) = toExpr(rhs)
         val imp = z3context.mkImplies(lhsZ3.asInstanceOf[BoolExpr], rhsZ3.asInstanceOf[BoolExpr])
         (imp.asInstanceOf[ExprSort], 1 + ln + rn)
+
+      case OperEx(TlaBoolOper.equiv, lhs @ OperEx(TlaSetOper.in, _, _), rhs) if useArrays =>
+        // For set filters, when set inclusion depends on a condition, for arrays encoding
+        val (rhsZ3, rn) = toExpr(rhs)
+        selectCondition = (true, rhsZ3)
+        val (lhsZ3, ln) = toExpr(lhs)
+        (lhsZ3.asInstanceOf[ExprSort], ln + rn)
 
       case OperEx(TlaBoolOper.equiv, lhs, rhs) =>
         val (lhsZ3, ln) = toExpr(lhs)
