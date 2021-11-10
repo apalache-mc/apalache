@@ -397,10 +397,10 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       // clean the caches
       cellSorts.retain((_, value) => value._2 <= level)
       funDecls.retain((_, value) => value._2 <= level)
-      cellCache.foreach(_._2.filter(_._3 <= level))
+      cellCache.foreach(entry => cellCache += entry.copy(_2 = entry._2.filter(_._3 <= level)))
       cellCache.retain((_, value) => value.nonEmpty)
       inCache.retain((_, value) => value._2 <= level)
-      inStored.foreach(_._2.filter(_._2 <= level))
+      inStored.foreach(entry => inStored += entry.copy(_2 = entry._2.filter(_._2 <= level)))
       inStored.retain((_, value) => value.nonEmpty)
     }
   }
@@ -415,10 +415,10 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       // clean the caches
       cellSorts.retain((_, value) => value._2 <= level)
       funDecls.retain((_, value) => value._2 <= level)
-      cellCache.foreach(_._2.filter(_._3 <= level))
+      cellCache.foreach(entry => cellCache += entry.copy(_2 = entry._2.filter(_._3 <= level)))
       cellCache.retain((_, value) => value.nonEmpty)
       inCache.retain((_, value) => value._2 <= level)
-      inStored.foreach(_._2.filter(_._2 <= level))
+      inStored.foreach(entry => inStored += entry.copy(_2 = entry._2.filter(_._2 <= level)))
       inStored.retain((_, value) => value.nonEmpty)
     }
   }
