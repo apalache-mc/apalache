@@ -9,8 +9,8 @@ import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestRewriterWithArrays
-    extends TestSymbStateRewriter with TestSymbStateRewriterInt with TestSymbStateRewriterSet
-    with TestSymbStateRewriterStr {
+    extends TestSymbStateRewriter with TestSymbStateRewriterInt with TestSymbStateRewriterPowerset
+    with TestSymbStateRewriterSet with TestSymbStateRewriterStr {
   override protected def withFixture(test: OneArgTest): Outcome = {
     solverContext = new PreproSolverContext(new Z3SolverContext(SolverConfig.default.copy(debug = true,
                 smtEncoding = arraysEncodingType)))

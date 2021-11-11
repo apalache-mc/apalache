@@ -104,6 +104,8 @@ class SymbStateRewriterImplWithArrays(_solverContext: SolverContext,
         // logic
         key(OperEx(ApalacheOper.skolem, tla.exists(tla.name("x"), tla.name("S"), tla.name("p"))))
           -> List(new QuantRule(this)),
+        key(tla.exists(tla.name("x"), tla.name("S"), tla.name("p")))
+          -> List(new QuantRule(this)),
         key(tla.forall(tla.name("x"), tla.name("S"), tla.name("p")))
           -> List(new QuantRule(this)),
         // control flow
