@@ -1,5 +1,13 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
-// TODO: Extend TestRecordingSolverContext as development in the "arrays" encoding progresses
+import org.junit.runner.RunWith
+import org.scalatest.Outcome
+import org.scalatest.junit.JUnitRunner
 
-class TestRecordingSolverContextWithArrays {}
+@RunWith(classOf[JUnitRunner])
+class TestRecordingSolverContextWithArrays extends TestRecordingSolverContext {
+  override protected def withFixture(test: OneArgTest): Outcome = {
+    solverConfig = SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = arraysEncodingType)
+    test()
+  }
+}

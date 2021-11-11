@@ -5,11 +5,8 @@ import at.forsyte.apalache.tla.bmcmt.types.IntT
 import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import org.junit.runner.RunWith
 import org.scalatest.fixture
-import org.scalatest.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
 trait TestRecordingSolverContext extends fixture.FunSuite with EncodingBase {
   protected type FixtureParam = Any
 
