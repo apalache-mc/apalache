@@ -1,11 +1,16 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
+import at.forsyte.apalache.tla.bmcmt.implicitConversions.Crossable
+import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, FinSetT, PowSetT}
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter, types}
+import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewriter) {
+  private val simplifier = new ConstSimplifierForSmt
+
   override protected def powSetIn(state: SymbState, powsetCell: ArenaCell, elemCell: ArenaCell): SymbState = {
     def checkType: PartialFunction[(CellT, CellT), Unit] = {
       case (PowSetT(FinSetT(expectedType)), FinSetT(actualType)) =>
@@ -14,13 +19,35 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
     // double check that the type finder did its job
     checkType(powsetCell.cellType, elemCell.cellType)
 
-    var nextState = state.updateArena(_.appendCell(BoolT()))
-    val pred = nextState.arena.topCell.toNameEx
+    val leftElems = state.arena.getHas(elemCell)
+    val rightElem = state.arena.getDom(powsetCell)
+    val rightElems = state.arena.getHas(rightElem)
+    var newState = rewriter.lazyEq.cacheEqConstraints(state, leftElems cross rightElems) // cache all the equalities
+
+    def isInRight(leftElem: ArenaCell): TlaEx = {
+      newState = newState.updateArena(_.appendCell(BoolT()))
+      val pred = newState.arena.topCell
+
+      def isIn2(rightElem2: ArenaCell) = {
+        (tla.and(tla.in(rightElem2.toNameEx, rightElem.toNameEx), tla.eql(rightElem2.toNameEx, leftElem.toNameEx)))
+      }
+      val elemsInAndEq = state.arena.getHas(rightElem).map(isIn2)
+      val opElemsInAndEq = tla.or(elemsInAndEq: _*)
+      rewriter.solverContext
+        .assertGroundExpr((tla.equiv(pred.toNameEx,
+                    tla.and(tla.in(leftElem.toNameEx, elemCell.toNameEx), opElemsInAndEq))))
+      pred.toNameEx
+    }
+
+    val isSubset = (tla.and(leftElems.map(isInRight): _*))
+
+    newState = newState.updateArena(_.appendCell(BoolT()))
+    val pred = newState.arena.topCell.toNameEx
 
     // direct SMT equality
-    val eq = tla.equiv(pred, tla.in(elemCell.toNameEx, powsetCell.toNameEx))
+    val eq = (tla.eql(pred, isSubset))
     rewriter.solverContext.assertGroundExpr(eq)
-    nextState.setRex(pred)
+    newState.setRex(pred)
   }
 
   // TODO: update when functions are supported by SMT arrays

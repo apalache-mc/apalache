@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
+import at.forsyte.apalache.tla.bmcmt.implicitConversions.Crossable
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, PowSetT}
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, SymbStateRewriter}
@@ -43,24 +44,28 @@ class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends SetInclusi
   }
 
   private def subset(state: SymbState, leftCell: ArenaCell, rightCell: ArenaCell, rightIsPowSet: Boolean): SymbState = {
-    var newState = state
     // We check if the elements of leftCell are in rightCell, in order to establish the subset relation
     // If rightCell is a power set, we check if the elements in the sets of leftCell are in the domain of rightCell
     val leftElems =
-      if (rightIsPowSet) newState.arena.getHas(leftCell).flatMap(newState.arena.getHas)
-      else newState.arena.getHas(leftCell)
-    val rightElem = if (rightIsPowSet) newState.arena.getDom(rightCell) else rightCell
+      if (rightIsPowSet) state.arena.getHas(leftCell).flatMap(state.arena.getHas)
+      else state.arena.getHas(leftCell)
+    val rightElem = if (rightIsPowSet) state.arena.getDom(rightCell) else rightCell
+    val rightElems = state.arena.getHas(rightElem)
+    var newState = rewriter.lazyEq.cacheEqConstraints(state, leftElems cross rightElems) // cache all the equalities
 
     def isInRight(leftElem: ArenaCell): TlaEx = {
       newState = newState.updateArena(_.appendCell(BoolT()))
       val pred = newState.arena.topCell
 
       def isIn2(rightElem2: ArenaCell) = {
-        tla.and(tla.in(rightElem2.toNameEx, rightElem.toNameEx), tla.eql(rightElem2.toNameEx, leftElem.toNameEx))
+        simplifier.simplifyShallow(tla.and(tla.in(rightElem2.toNameEx, rightElem.toNameEx),
+                tla.eql(rightElem2.toNameEx, leftElem.toNameEx)))
       }
       val elemsInAndEq = state.arena.getHas(rightElem).map(isIn2)
+      val opElemsInAndEq = tla.or(elemsInAndEq: _*)
       rewriter.solverContext
-        .assertGroundExpr(simplifier.simplifyShallow(tla.equiv(pred.toNameEx, tla.or(elemsInAndEq: _*))))
+        .assertGroundExpr(simplifier.simplifyShallow(tla.equiv(pred.toNameEx,
+                    tla.and(tla.in(leftElem.toNameEx, leftCell.toNameEx), opElemsInAndEq))))
       pred.toNameEx
     }
 
