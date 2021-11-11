@@ -12,9 +12,14 @@ import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier}
 class LetInTypeSynchronizer(tracker: TransformationTracker) extends TlaExTransformation {
   override def apply(ex: TlaEx): TlaEx = transform(ex)
 
+  private def isRelevantLetInEx(letInEx: LetInEx): Boolean = {
+    // currently, we only care about let-ins embedded in fold, which are nonnullary and single-def
+    letInEx.decls.length == 1 && letInEx.decls.forall(_.formalParams.nonEmpty)
+  }
+
   def transform: TlaExTransformation = tracker.trackEx {
     // interesting case
-    case letInEx @ LetInEx(letInBody, defs @ _*) if defs.length == 1 =>
+    case letInEx @ LetInEx(letInBody, defs @ _*) if isRelevantLetInEx(letInEx) =>
       // The problem with let-ins is that, while the body will have the correct monotype, the
       // type checking algorithm does not update the declaration and body tags.
 
