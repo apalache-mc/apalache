@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
-import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaEx, Typed, TypingException}
+import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaDecl, TlaEx, TlaOperDecl, Typed, TypingException}
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier}
 
@@ -37,6 +37,20 @@ class LetInTypeSynchronizer(tracker: TransformationTracker) extends TlaExTransfo
           val newDecl = letInDecl.copy(body = substitutor(letInDecl.body))(Typed(unifiedType))
           LetInEx(letInBody, newDecl)(Typed(unifiedType))
       }
+
+    case letInEx @ LetInEx(letInBody, defs @ _*) =>
+      // assume !isRelevant
+      val newBody = transform(letInBody)
+      val (newDefs, noop) = defs.foldLeft((Seq.empty[TlaOperDecl], true)) { case ((partialDefs, partialNoop), d) =>
+        val newBody = transform(d.body)
+        val withNew = partialDefs :+ d.copy(body = newBody)
+        (withNew, partialNoop && newBody.eqTyped(d.body))
+      }
+
+      if (letInBody.eqTyped(newBody) && noop)
+        letInEx
+      else
+        LetInEx(newBody, newDefs: _*)(newBody.typeTag)
 
     // recursive processing of composite operators
     case ex @ OperEx(op, args @ _*) =>
