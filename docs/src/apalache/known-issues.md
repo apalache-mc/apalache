@@ -57,7 +57,44 @@ Next ==
    \/ m' = [m EXCEPT !.a = 0]
 ```
 
+## Integer ranges with non-constant bounds
 
+When using an integer range `a..b`, where `a` or `b` aren't constant (or cannot be simplified to a constant), the current encoding fails (see [Issue 425][]):
+
+```tla
+---------- MODULE Example ----------
+
+EXTENDS Integers
+
+VARIABLE 
+  \* @type: Int;
+  x
+
+\* @type: (Int) => Set(Int);
+1to(n) == 1..n
+
+Init == x = 1
+
+Next == x' = x + 1
+
+Inv == 1 \in { m: a \in 1to(x) }
+====================
+```
+
+### Workaround
+Pick constant bounds `Nmin` and `Nmax`, such that `Nmin <= a <= b <= Nmax`, then use
+
+```tla
+range(a,b) == { x \in Nmin..Nmax: a <= x /\ x <= b }
+```
+
+instead of `a..b`.
+
+**Affected versions:** <= 0.17.x
+
+**Planned fix:** TBD
+
+[Issue 425]: https://github.com/informalsystems/apalache/issues/425
 [Issue 711]: https://github.com/informalsystems/apalache/issues/711
 [Issue 712]: https://github.com/informalsystems/apalache/issues/712
 [Issue 401]: https://github.com/informalsystems/apalache/issues/401
