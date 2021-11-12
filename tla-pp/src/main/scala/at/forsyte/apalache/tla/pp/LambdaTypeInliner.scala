@@ -51,11 +51,16 @@ class LambdaTypeInliner(tracker: TransformationTracker) extends TlaExTransformat
       // however, we have to define noop scenarios in terms of types, not just IR equivalence
       val newBody = transform(letInBody)
       // Since this transformation can modify types only the scala == is insufficient.
-      // Therefore, to check if the operation is a noop, we have to check eqTyped everywhere
+      // Therefore, to check if the operation is a noop, we have to check ID equivalence everywhere
       val (newDefs, noop) = defs.foldLeft((Seq.empty[TlaOperDecl], true)) { case ((partialDefs, partialNoop), d) =>
         val newBody = transform(d.body)
-        val withNew = partialDefs :+ d.copy(body = newBody)
-        (withNew, partialNoop && newBody.eqTyped(d.body))
+        val withNew = partialDefs :+
+          tracker
+            .trackDecl { case decl: TlaOperDecl =>
+              decl.copy(body = newBody)
+            }(d)
+            .asInstanceOf[TlaOperDecl]
+        (withNew, partialNoop && newBody.ID == d.body.ID)
       }
 
       if (letInBody.eqTyped(newBody) && noop)
@@ -76,7 +81,7 @@ class LambdaTypeInliner(tracker: TransformationTracker) extends TlaExTransformat
     if (args1.length != args2.length)
       false
     else
-      args1.zip(args2).forall(pa => pa._1.eqTyped(pa._2))
+      args1.zip(args2).forall(pa => pa._1.ID == pa._2.ID)
   }
 }
 
