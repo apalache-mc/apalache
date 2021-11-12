@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.io.UTFPrinter
 import at.forsyte.apalache.tla.lir.oper.TlaArithOper
 import at.forsyte.apalache.tla.lir.values.TlaInt
+import at.forsyte.apalache.tla.pp.NotInKeraError
 
 /**
  * Rewrites an integer range a..b.
@@ -47,7 +48,7 @@ class IntDotDotRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) e
         (left.toInt, right.toInt)
 
       case _ =>
-        throw new RewriterException(
+        throw new NotInKeraError(
             "Expected a constant integer range in .., found %s"
               .format(elems.map(UTFPrinter.apply).mkString("..")), ex)
     }
