@@ -13,7 +13,7 @@
         <scalaVersion>2.12.15</scalaVersion>
         <scalaBinaryVersion>2.12</scalaBinaryVersion>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <logback.version>1.2.6</logback.version>
+        <logback.version>1.2.7</logback.version>
         <spotless.version>2.17.4</spotless.version>
     </properties>
 
