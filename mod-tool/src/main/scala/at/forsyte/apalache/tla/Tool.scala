@@ -92,19 +92,19 @@ object Tool extends LazyLogging {
         command match {
           case Some(parse: ParseCmd) =>
             val injector = injectorFactory(parse)
-            handleExceptions[ParseCmd](injector, runParse(injector, _))(parse)
+            handleExceptions(injector, runParse(injector, parse))(parse.file)
 
           case Some(check: CheckCmd) =>
             val injector = injectorFactory(check)
-            handleExceptions[CheckCmd](injector, runCheck(injector, _))(check)
+            handleExceptions(injector, runCheck(injector, check))(check.file)
 
           case Some(test: TestCmd) =>
             val injector = injectorFactory(test)
-            handleExceptions[TestCmd](injector, runTest(injector, _))(test)
+            handleExceptions(injector, runTest(injector, test))(test.file)
 
           case Some(typecheck: TypeCheckCmd) =>
             val injector = injectorFactory(typecheck)
-            handleExceptions[TypeCheckCmd](injector, runTypeCheck(injector, _))(typecheck)
+            handleExceptions(injector, runTypeCheck(injector, typecheck))(typecheck.file)
 
           case Some(config: ConfigCmd) =>
             configure(config)
@@ -343,10 +343,10 @@ object Tool extends LazyLogging {
     }
   }
 
-  private def handleExceptions[C <: General](injector: Injector, fun: C => Int)(command: C): Int = {
+  private def handleExceptions[C <: General](injector: Injector, fun: => Int)(specFile: File): Int = {
     val adapter = injector.getInstance(classOf[ExceptionAdapter])
     try {
-      fun(command)
+      fun
     } catch {
       case e: Exception if adapter.toMessage.isDefinedAt(e) =>
         adapter.toMessage(e) match {
@@ -356,7 +356,7 @@ object Tool extends LazyLogging {
           case FailureMessage(text) =>
             logger.error(text, e)
             val absPath = ReportGenerator.prepareReportFile(
-                command.file,
+                specFile,
                 s"${Version.version} build ${Version.build}"
             )
             Console.err.println(

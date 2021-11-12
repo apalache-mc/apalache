@@ -15,7 +15,6 @@ import at.forsyte.apalache.io.OutputManager
  */
 trait General extends Command with OutputManagerConfig {
 
-  var file: File = arg[File](description = "a TLA+ specification (.tla or .json)")
   var debug = opt[Boolean](description = "extensive logging in detailed.log and log.smt, default: false")
   var smtprof = opt[Boolean](description = "profile SMT constraints in log.smt, default: false")
   var profiling = opt[Option[Boolean]](name = OutputManager.Names.ProfilingFlag,
