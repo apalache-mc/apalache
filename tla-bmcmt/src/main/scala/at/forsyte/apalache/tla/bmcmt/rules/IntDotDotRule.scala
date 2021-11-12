@@ -49,7 +49,7 @@ class IntDotDotRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) e
 
       case _ =>
         throw new NotInKeraError(
-            "Expected a constant integer range in .., found %s"
+            "Expected a constant integer range in [ .. ], found %s. This is a known issue: [https://apalache.informal.systems/docs/apalache/known-issues.html]"
               .format(elems.map(UTFPrinter.apply).mkString("..")), ex)
     }
   }
