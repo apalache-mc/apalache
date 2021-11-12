@@ -18,7 +18,7 @@ object ReportGenerator {
   }
 
   private def readSrcIntoString(src: Source): String =
-    try src.mkString.strip()
+    try src.mkString.trim
     finally src.close()
 
   private def readFileIntoString(file: File): String =
