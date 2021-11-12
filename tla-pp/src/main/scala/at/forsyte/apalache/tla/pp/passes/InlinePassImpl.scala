@@ -6,14 +6,12 @@ import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.imp.findBodyOf
 import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
 import at.forsyte.apalache.tla.lir.transformations._
-import at.forsyte.apalache.tla.lir.transformations.standard.{ModuleByExTransformer, IncrementalRenaming}
+import at.forsyte.apalache.tla.lir.transformations.standard.ModuleByExTransformer
 import at.forsyte.apalache.tla.lir.{TlaModule, TlaOperDecl}
 import at.forsyte.apalache.tla.pp._
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
-
-import java.nio.file.Path
 
 /**
  * A pass that expands operators and let-in definitions.
@@ -23,9 +21,8 @@ import java.nio.file.Path
  * @param tracker  transformation tracker
  * @param nextPass next pass to call
  */
-class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator, renaming: IncrementalRenaming,
-    tracker: TransformationTracker, writerFactory: TlaWriterFactory,
-    @Named("AfterInline") nextPass: Pass with TlaModuleMixin)
+class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator, tracker: TransformationTracker,
+    writerFactory: TlaWriterFactory, @Named("AfterInline") nextPass: Pass with TlaModuleMixin)
     extends InlinePass with LazyLogging {
 
   private var outputTlaModule: Option[TlaModule] = None
@@ -115,10 +112,14 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
         declarations = filteredDefs
     )
 
-    // dump the result of preprocessing
-    writerFactory.writeModuleAllFormats(filtered.copy(name = "05_OutInline"), TlaWriter.STANDARD_MODULES)
+    // In a specification that uses FOLD or some other guarded LET-IN, we must substitute polymorphic type annotations
+    // in the LET-IN defined operators after inlining, since they must have monotypes after inlining
+    val typesynced = ModuleByExTransformer(LambdaTypeInliner(tracker))(filtered)
 
-    outputTlaModule = Some(filtered)
+    // dump the result of preprocessing
+    writerFactory.writeModuleAllFormats(typesynced.copy(name = "05_OutInline"), TlaWriter.STANDARD_MODULES)
+
+    outputTlaModule = Some(typesynced)
     true
   }
 
