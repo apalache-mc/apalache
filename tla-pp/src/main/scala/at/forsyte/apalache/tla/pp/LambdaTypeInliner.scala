@@ -6,12 +6,17 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
 import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier}
 
 /**
- * LetInTypeSynchronizer re-computes the types of any residual LET-IN defined operators, that were defined
- * in the scope of a polymorphic operator (e.g. in FoldX). After inlining, any leftover LET-IN operators should have monotypes
+ * LambdaTypeInliner re-computes the types of any residual LET-IN defined operators (i.e. lambdas),
+ * that were defined in the scope of a polymorphic operator (e.g. in FoldX).
+ * After inlining, any leftover LET-IN operators should have monotypes
  */
-class LetInTypeSynchronizer(tracker: TransformationTracker) extends TlaExTransformation {
+class LambdaTypeInliner(tracker: TransformationTracker) extends TlaExTransformation {
   override def apply(ex: TlaEx): TlaEx = transform(ex)
 
+  /**
+   * Selects the class of let-ins we wish to apply the transformation to.
+   * At the moment, this includes lambdas, which have 1 declaration and are non-nullary
+   */
   private def isRelevantLetInEx(letInEx: LetInEx): Boolean = {
     // currently, we only care about let-ins embedded in fold, which are nonnullary and single-def
     letInEx.decls.length == 1 && letInEx.decls.forall(_.formalParams.nonEmpty)
@@ -31,7 +36,9 @@ class LetInTypeSynchronizer(tracker: TransformationTracker) extends TlaExTransfo
       val unifiedOpt = (new TypeUnifier).unify(Substitution.empty, bodyType, declType)
 
       unifiedOpt match {
-        case None => throw new TypingException("Could not synchronize type of fold operator.")
+        case None =>
+          // This should never happen, after #1088
+          throw new TypingException("Could not synchronize type of fold operator.")
         case Some((subst, unifiedType)) =>
           val substitutor = new TypeSubstitutor(tracker, subst)
           val newDecl = letInDecl.copy(body = substitutor(letInDecl.body))(Typed(unifiedType))
@@ -39,8 +46,12 @@ class LetInTypeSynchronizer(tracker: TransformationTracker) extends TlaExTransfo
       }
 
     case letInEx @ LetInEx(letInBody, defs @ _*) =>
-      // assume !isRelevant
+      // assume !isRelevant. This case covers nullary operators that were left after inlining
+      // if keepNullary = true. These let-ins are treated the same way as the generic operator case,
+      // however, we have to define noop scenarios in terms of types, not just IR equivalence
       val newBody = transform(letInBody)
+      // Since this transformation can modify types only the scala == is insufficient.
+      // Therefore, to check if the operation is a noop, we have to check eqTyped everywhere
       val (newDefs, noop) = defs.foldLeft((Seq.empty[TlaOperDecl], true)) { case ((partialDefs, partialNoop), d) =>
         val newBody = transform(d.body)
         val withNew = partialDefs :+ d.copy(body = newBody)
@@ -60,16 +71,17 @@ class LetInTypeSynchronizer(tracker: TransformationTracker) extends TlaExTransfo
     case ex => ex
   }
 
+  /** A transformation which only modifies type tags is noop iff eqTyped holds for all pairs */
   private def isNoOp(args1: Seq[TlaEx], args2: Seq[TlaEx]): Boolean = {
     if (args1.length != args2.length)
       false
     else
-      args1.map(_.ID).zip(args2.map(_.ID)).forall(pa => pa._1 == pa._2)
+      args1.zip(args2.).forall(pa => pa._1.eqTyped(pa._2))
   }
 }
 
-object LetInTypeSynchronizer {
-  def apply(tracker: TransformationTracker): LetInTypeSynchronizer = {
-    new LetInTypeSynchronizer(tracker)
+object LambdaTypeInliner {
+  def apply(tracker: TransformationTracker): LambdaTypeInliner = {
+    new LambdaTypeInliner(tracker)
   }
 }

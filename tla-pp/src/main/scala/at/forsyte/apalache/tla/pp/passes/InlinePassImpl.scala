@@ -114,7 +114,7 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
 
     // In a specification that uses FOLD or some other guarded LET-IN, we must substitute polymorphic type annotations
     // in the LET-IN defined operators after inlining, since they must have monotypes after inlining
-    val typesynced = ModuleByExTransformer(LetInTypeSynchronizer(tracker))(filtered)
+    val typesynced = ModuleByExTransformer(LambdaTypeInliner(tracker))(filtered)
 
     // dump the result of preprocessing
     writerFactory.writeModuleAllFormats(typesynced.copy(name = "05_OutInline"), TlaWriter.STANDARD_MODULES)
