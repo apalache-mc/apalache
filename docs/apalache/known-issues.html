@@ -211,6 +211,33 @@ Next ==
    \/ m' = m
    \/ m' = [m EXCEPT !.a = 0]
 </code></pre>
+<h2><a class="header" href="#integer-ranges-with-non-constant-bounds" id="integer-ranges-with-non-constant-bounds">Integer ranges with non-constant bounds</a></h2>
+<p>When using an integer range <code>a..b</code>, where <code>a</code> or <code>b</code> aren't constant (or cannot be simplified to a constant), the current encoding fails (see <a href="https://github.com/informalsystems/apalache/issues/425">Issue 425</a>):</p>
+<pre><code class="language-tla">---------- MODULE Example ----------
+
+EXTENDS Integers
+
+VARIABLE 
+  \* @type: Int;
+  x
+
+\* @type: (Int) =&gt; Set(Int);
+1to(n) == 1..n
+
+Init == x = 1
+
+Next == x' = x + 1
+
+Inv == 1 \in { m: a \in 1to(x) }
+====================
+</code></pre>
+<h3><a class="header" href="#workaround-1" id="workaround-1">Workaround</a></h3>
+<p>Pick constant bounds <code>Nmin</code> and <code>Nmax</code>, such that <code>Nmin &lt;= a &lt;= b &lt;= Nmax</code>, then use</p>
+<pre><code class="language-tla">range(a,b) == { x \in Nmin..Nmax: a &lt;= x /\ x &lt;= b }
+</code></pre>
+<p>instead of <code>a..b</code>.</p>
+<p><strong>Affected versions:</strong> &lt;= 0.17.x</p>
+<p><strong>Planned fix:</strong> TBD</p>
 
                     </main>
 
