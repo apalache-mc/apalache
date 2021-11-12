@@ -76,7 +76,7 @@ class LambdaTypeInliner(tracker: TransformationTracker) extends TlaExTransformat
     if (args1.length != args2.length)
       false
     else
-      args1.zip(args2.).forall(pa => pa._1.eqTyped(pa._2))
+      args1.zip(args2).forall(pa => pa._1.eqTyped(pa._2))
   }
 }
 
