@@ -13,3 +13,4 @@
 ### Features
 
    * Added sort-distinction for model values, see #570
+   * Added support for sets to the SMT encoding with arrays, see #1092
