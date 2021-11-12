@@ -14,7 +14,6 @@ import at.forsyte.apalache.io.OutputManager
  * @author Igor Konnov
  */
 trait General extends Command with OutputManagerConfig {
-
   var debug = opt[Boolean](description = "extensive logging in detailed.log and log.smt, default: false")
   var smtprof = opt[Boolean](description = "profile SMT constraints in log.smt, default: false")
   var profiling = opt[Option[Boolean]](name = OutputManager.Names.ProfilingFlag,

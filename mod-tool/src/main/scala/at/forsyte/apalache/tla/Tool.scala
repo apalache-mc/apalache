@@ -343,7 +343,7 @@ object Tool extends LazyLogging {
     }
   }
 
-  private def handleExceptions[C <: General](injector: Injector, fun: => Int)(specFile: File): Int = {
+  private def handleExceptions(injector: Injector, fun: => Int)(specFile: File): Int = {
     val adapter = injector.getInstance(classOf[ExceptionAdapter])
     try {
       fun

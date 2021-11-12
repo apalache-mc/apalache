@@ -11,7 +11,7 @@ import java.io.File
  */
 class TestCmd extends Command(name = "test", description = "Quickly test a TLA+ specification") with General {
 
-  var file: File = arg[File](description = "a TLA+ specification (.tla or .json)")
+  var file: File = arg[File](description = "a file containing a TLA+ specification (.tla or .json)")
   var before: String =
     arg[String](name = "before", description = "the name of an operator to prepare the test, similar to Init")
   var action: String =
