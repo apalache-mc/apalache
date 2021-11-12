@@ -20,33 +20,31 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
     checkType(powsetCell.cellType, elemCell.cellType)
 
     val leftElems = state.arena.getHas(elemCell)
-    val rightElem = state.arena.getDom(powsetCell)
-    val rightElems = state.arena.getHas(rightElem)
-    var newState = rewriter.lazyEq.cacheEqConstraints(state, leftElems cross rightElems) // cache all the equalities
+    val rightDomain = state.arena.getDom(powsetCell)
+    val rightDomainElems = state.arena.getHas(rightDomain)
+    // EqConstraints need to be generated, since missing in-relations, e.g. in sets of tuples, will lead to errors.
+    // TODO: Inlining this method is pointless. We should consider handling tuples and other structures natively in SMT.
+    var newState = rewriter.lazyEq.cacheEqConstraints(state, leftElems cross rightDomainElems)
 
-    def isInRight(leftElem: ArenaCell): TlaEx = {
+    def isInRightSet(leftElem: ArenaCell): TlaEx = {
       newState = newState.updateArena(_.appendCell(BoolT()))
       val pred = newState.arena.topCell
 
-      def isIn2(rightElem2: ArenaCell) = {
-        (tla.and(tla.in(rightElem2.toNameEx, rightElem.toNameEx), tla.eql(rightElem2.toNameEx, leftElem.toNameEx)))
+      def isInAndEqLeftElem(rightDomainElem: ArenaCell) = {
+        simplifier.simplifyShallow(tla.and(tla.in(rightDomainElem.toNameEx, rightDomain.toNameEx),
+                tla.eql(rightDomainElem.toNameEx, leftElem.toNameEx)))
       }
-      val elemsInAndEq = state.arena.getHas(rightElem).map(isIn2)
-      val opElemsInAndEq = tla.or(elemsInAndEq: _*)
-      rewriter.solverContext
-        .assertGroundExpr((tla.equiv(pred.toNameEx,
-                    tla.and(tla.in(leftElem.toNameEx, elemCell.toNameEx), opElemsInAndEq))))
+
+      val elemsInAndEqLeftElem = rightDomainElems.map(isInAndEqLeftElem)
+      rewriter.solverContext.assertGroundExpr(simplifier.simplifyShallow(tla.equiv(pred.toNameEx,
+                  tla.and(tla.in(leftElem.toNameEx, elemCell.toNameEx), tla.or(elemsInAndEqLeftElem: _*)))))
       pred.toNameEx
     }
 
-    val isSubset = (tla.and(leftElems.map(isInRight): _*))
-
+    val isSubset = simplifier.simplifyShallow(tla.and(leftElems.map(isInRightSet): _*))
     newState = newState.updateArena(_.appendCell(BoolT()))
     val pred = newState.arena.topCell.toNameEx
-
-    // direct SMT equality
-    val eq = (tla.eql(pred, isSubset))
-    rewriter.solverContext.assertGroundExpr(eq)
+    rewriter.solverContext.assertGroundExpr(tla.eql(pred, isSubset))
     newState.setRex(pred)
   }
 
@@ -68,16 +66,17 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
       var nextState = state.updateArena(_.appendCell(BoolT()))
       val pred = nextState.arena.topCell.toNameEx
 
-      // cache equality constraints first
-      // change for smt tuples later? Keeping lazyEq use for now.
+      // EqConstraints need to be generated, since missing in-relations, e.g. in sets of tuples, will lead to errors.
+      // TODO: Inlining this method is pointless. We should consider handling tuples and other structures natively in SMT.
       val eqState = rewriter.lazyEq.cacheEqConstraints(nextState, potentialElems.map((_, elemCell)))
 
       def inAndEq(elem: ArenaCell) = {
-        tla.and(tla.in(elem.toNameEx, setCell.toNameEx), tla.eql(elem.toNameEx, elemCell.toNameEx))
+        simplifier
+          .simplifyShallow(tla.and(tla.in(elem.toNameEx, setCell.toNameEx), tla.eql(elem.toNameEx, elemCell.toNameEx)))
       }
 
       val elemsInAndEq = potentialElems.map(inAndEq)
-      rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.or(elemsInAndEq: _*)))
+      rewriter.solverContext.assertGroundExpr(simplifier.simplifyShallow(tla.eql(pred, tla.or(elemsInAndEq: _*))))
       eqState.setRex(pred)
     }
   }

@@ -97,7 +97,11 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   private val inStored: mutable.Map[(Int, Int), List[(Boolean, Int)]] =
     new mutable.HashMap[(Int, Int), List[(Boolean, Int)]]
 
-  private var selectCondition: (Boolean, ExprSort) = (false, z3context.mkFalse().asInstanceOf[ExprSort])
+  /**
+   * A tuple storing an array select and the condition to use it.
+   * Used to propagate SSA arrays in set filters when the filter predicate evaluates for false.
+   */
+  private var propagatedArraySelect: (Boolean, ExprSort) = (false, z3context.mkFalse().asInstanceOf[ExprSort])
 
   /**
    * Sometimes, we lose a fresh arena in the rewriting rules. As this situation is very hard to debug,
@@ -142,12 +146,11 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val cellSort = getOrMkCellSort(cell.cellType)
     log(s"(declare-const $cell $cellSort)")
     val cellName = cell.toString
-    z3context.mkConstDecl(cellName, cellSort)
     val const = z3context.mkConst(cellName, cellSort)
     cellCache += (cell.id -> List((const, cell.cellType, level)))
 
+    // If arrays are used to encode sets, they are initialized here to represent empty sets.
     if (cellSort.isInstanceOf[ArraySort[Sort, BoolSort]]) {
-      // If arrays are used to encode sets, they are initialized here to represent empty sets
       val arrayDomain = cellSort.asInstanceOf[ArraySort[Sort, Sort]].getDomain()
       val arrayInitializer = z3context.mkEq(const, z3context.mkConstArray(arrayDomain, z3context.mkFalse()))
 
@@ -181,12 +184,14 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val name = s"in_${elemT.signature}${elem.id}_${setT.signature}${set.id}"
     if (!inCache.contains((set.id, elem.id))) {
       if (useArrays) {
-        // The updated set is cached here, it needs to be added to a predicate in "getInPred".
         val updatedSetName = set.toString + "_" + name
         val setSort = getOrMkCellSort(set.cellType)
         log(s";; declare edge inclusion $name")
         log(s"(declare-const $updatedSetName $setSort)")
         val updatedSet = z3context.mkConst(updatedSetName, setSort)
+        // The updated set is cached here, it needs to be added to a predicate later, via "getInPred".
+        // The inStored map is used to ensure that the first call to "getInPred" related to the declared inPred will
+        // return a "store", and the subsequent calls will return a "select".
         inCache += ((set.id, elem.id) -> (updatedSet, level))
         inStored += ((set.id, elem.id) -> List((false, level)))
         _metrics = _metrics.addNConsts(1)
@@ -214,52 +219,41 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
       case Some((const, _)) =>
         if (useArrays) {
-          val (setExpr, setT, setLevel) = cellCache(setId).head
+          val (setExpr, setT, _) = cellCache(setId).head
           val (elemExpr, elemT, _) = cellCache(elemId).head
 
+          // inPred can either represent an array update, i.e. a "store", or an array access, i.e. a "select", as the
+          // the current implementation is adhering to the interface made for the original encoding.
+          // TODO: Should we split this method and abandon the concept of an in-relation?
           inStored.get(setId, elemId) match {
             case None =>
               val name = setExpr.toString + "_" + s"in_${elemT.signature}${elemId}_${setT.signature}$setId"
               logWriter.flush() // flush the SMT log
               throw new IllegalStateException(s"SMT $id: The Array constant $name is missing from the SMT context")
+
+            // Array "store"
             case Some(list) if list.head._1 == false =>
-              val condition = if (selectCondition._1) selectCondition._2 else z3context.mkTrue()
-              selectCondition = selectCondition.copy(_1 = false)
+              val storedExpr = if (propagatedArraySelect._1) propagatedArraySelect._2 else z3context.mkTrue()
+              propagatedArraySelect = propagatedArraySelect.copy(_1 = false)
               val store = z3context.mkStore(
                   setExpr.asInstanceOf[Expr[ArraySort[Sort, BoolSort]]], elemExpr.asInstanceOf[Expr[Sort]],
-                  condition.asInstanceOf[Expr[BoolSort]])
+                  storedExpr.asInstanceOf[Expr[BoolSort]])
               val eqStore = z3context.mkEq(const, store)
+              // inStored records that the array was set in the current level
               inStored += ((setId, elemId) -> ((true, level) :: inStored(setId, elemId)))
+              // cellCache records the current SSA array representing the set being handled
               cellCache += (setId -> ((const, setT, level) :: cellCache(setId)))
-              _metrics = _metrics.addNSmtExprs(1)
               eqStore.asInstanceOf[ExprSort]
+
+            // Array "select"
             case Some(list) if list.head._1 == true =>
-              _metrics = _metrics.addNSmtExprs(1)
-              makeSelectPred(setId, elemId).asInstanceOf[ExprSort]
+              z3context
+                .mkSelect(setExpr.asInstanceOf[ArrayExpr[Sort, BoolSort]], elemExpr.asInstanceOf[Expr[Sort]])
+                .asInstanceOf[ExprSort]
           }
         } else {
           const
         }
-    }
-  }
-
-  private def makeSelectPred(setId: Int, elemId: Int): Expr[BoolSort] = {
-    val (setExpr, _, _) = cellCache(setId).head
-    val (elemExpr, elemT, _) = cellCache(elemId).head
-
-    getOrMkCellSort(elemT) match {
-      case _: BoolSort =>
-        z3context.mkSelect(setExpr.asInstanceOf[ArrayExpr[BoolSort, BoolSort]], elemExpr.asInstanceOf[Expr[BoolSort]])
-      case _: IntSort =>
-        z3context.mkSelect(setExpr.asInstanceOf[ArrayExpr[IntSort, BoolSort]], elemExpr.asInstanceOf[Expr[IntSort]])
-      case _: ArraySort[Sort, Sort] =>
-        z3context.mkSelect(
-            setExpr.asInstanceOf[ArrayExpr[ArraySort[Sort, Sort], BoolSort]],
-            elemExpr.asInstanceOf[Expr[ArraySort[Sort, Sort]]])
-      case _ =>
-        z3context.mkSelect(
-            setExpr.asInstanceOf[ArrayExpr[UninterpretedSort, BoolSort]],
-            elemExpr.asInstanceOf[Expr[UninterpretedSort]])
     }
   }
 
@@ -560,9 +554,10 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         }
 
       case OperEx(TlaOper.eq, lhs @ OperEx(TlaSetOper.in, _, _), rhs) if useArrays =>
-        // For set filters, when set inclusion depends on a condition, for arrays encoding
+        // Used for set filters in the arrays encoding, see addCellCons in SetFilterRule.
+        // Leads to constraints of the form "set_2 = (store set_1 index (and pred (select set_1 index)))"
         val (re, rn) = toExpr(rhs)
-        selectCondition = (true, re)
+        propagatedArraySelect = (true, re)
         val (le, ln) = toExpr(lhs)
         (le.asInstanceOf[ExprSort], ln + rn)
 
@@ -607,9 +602,10 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         (imp.asInstanceOf[ExprSort], 1 + ln + rn)
 
       case OperEx(TlaBoolOper.equiv, lhs @ OperEx(TlaSetOper.in, _, _), rhs) if useArrays =>
-        // For set filters, when set inclusion depends on a condition, for arrays encoding
+        // Used for set filters in the arrays encoding, see addCellCons in SetFilterRule.
+        // Leads to constraints of the form "set_2 = (store set_1 index (and pred (select set_1 index)))"
         val (rhsZ3, rn) = toExpr(rhs)
-        selectCondition = (true, rhsZ3)
+        propagatedArraySelect = (true, rhsZ3)
         val (lhsZ3, ln) = toExpr(lhs)
         (lhsZ3.asInstanceOf[ExprSort], ln + rn)
 

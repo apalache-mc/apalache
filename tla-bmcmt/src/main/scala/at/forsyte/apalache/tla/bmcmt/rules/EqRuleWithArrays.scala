@@ -23,19 +23,19 @@ class EqRuleWithArrays(rewriter: SymbStateRewriter) extends EqRule(rewriter) {
           "Checking values of incomparable types for equality: %s and %s".format(leftCell.cellType, rightCell.cellType)
         throw new MalformedTlaError(msg, newState.ex)
       } else {
-        // TODO: add additional elements as development in the "arrays" encoding progresses
         newState = newState.setArena(newState.arena.appendCell(BoolT()))
         val eqPred = newState.arena.topCell
 
+        // TODO: add additional elements as development in the "arrays" encoding progresses
         (leftCell.cellType, rightCell.cellType) match {
           case (FinSetT(_), FinSetT(_)) =>
             // direct SMT equality of arrays is used here
             val eqCons = tla.equiv(eqPred.toNameEx, tla.eql(leftCell.toNameEx, rightCell.toNameEx))
             rewriter.solverContext.assertGroundExpr(eqCons)
             newState.setRex(eqPred.toNameEx)
-          case _ =>
-            // same as EqRule, using super.apply leads to problems
 
+          // Copied from EqRule. Using super.apply leads to problems, probably due to rewriter updates.
+          case _ =>
             // produce equality constraints, so that we can use SMT equality
             newState = rewriter.lazyEq.cacheOneEqConstraint(newState, leftCell, rightCell)
             // and now we can use the SMT equality

@@ -53,26 +53,22 @@ class SymbStateRewriterImplWithArrays(_solverContext: SolverContext,
         // sets
         key(tla.in(tla.name("x"), tla.name("S")))
           -> List(new SetInRuleWithArrays(this)), // TODO: add support for funSet later
-        // TODO: (potential SetCtorRule optimization) remove redundant "select" assertions
         key(tla.enumSet(tla.name("x")))
           -> List(new SetCtorRule(this)),
         key(tla.subseteq(tla.name("x"), tla.name("S")))
           -> List(new SetInclusionRuleWithArrays(this)),
-        // TODO: (potential SetCupRule optimization) copy the largest array and only store edges for the smaller one
         key(tla.cup(tla.name("X"), tla.name("Y")))
-          -> List(new SetCupRule(this)),
+          -> List(new SetCupRule(this)), // TODO: consider copying one array and storing the edges of the other
         key(tla.filter(tla.name("x"), tla.name("S"), tla.name("p")))
           -> List(new SetFilterRule(this)),
         key(tla.map(tla.name("e"), tla.name("x"), tla.name("S")))
           -> List(new SetMapRule(this)),
-        // TODO: (potential SetExpandRule optimization) remove redundant "select" assertions in PowSetCtor.confringo
         key(OperEx(ApalacheOper.expand, tla.name("X")))
           -> List(new SetExpandRule(this)),
         key(tla.powSet(tla.name("X")))
           -> List(new PowSetCtorRule(this)),
         key(tla.union(tla.enumSet()))
           -> List(new SetUnionRule(this)),
-        // TODO: (potential IntDotDotRule optimization) remove redundant "select" assertions in intRangeCache.create
         key(tla.dotdot(tla.int(1), tla.int(10)))
           -> List(new IntDotDotRule(this, intRangeCache)),
         // integers
