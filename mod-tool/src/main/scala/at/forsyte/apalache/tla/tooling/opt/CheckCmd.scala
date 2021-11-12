@@ -11,7 +11,6 @@ import org.backuity.clist.{Command, _}
  */
 class CheckCmd extends Command(name = "check", description = "Check a TLA+ specification") with General {
 
-  var file: File = arg[File](description = "a file containing a TLA+ specification (.tla or .json)")
   var nworkers: Int = opt[Int](name = "nworkers", default = 1,
       description = "the number of workers for the parallel checker (soon), default: 1")
   var algo: String = opt[String](name = "algo", default = "incremental",
