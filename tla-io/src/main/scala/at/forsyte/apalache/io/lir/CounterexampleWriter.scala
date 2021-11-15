@@ -1,6 +1,6 @@
 package at.forsyte.apalache.io.lir
 
-import at.forsyte.apalache.io.{OutputManager, ConfigurationError}
+import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.io.json.impl.TlaToUJson
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -174,7 +174,7 @@ object CounterexampleWriter extends LazyLogging {
       case "tla"  => new TlaCounterexampleWriter(writer)
       case "tlc"  => new TlcCounterexampleWriter(writer)
       case "json" => new JsonCounterexampleWriter(writer)
-      case fmt    => throw new ConfigurationError(s"unknown counterexample format requested: $fmt")
+      case fmt    => throw new Exception(s"unknown counterexample format requested: $fmt")
     }
   }
 }
