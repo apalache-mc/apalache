@@ -2213,5 +2213,13 @@ $ apalache-mc check --out-dir=./test-out-dir --length=2 --inv=Inv --run-dir=./te
 ...
 EXITCODE: ERROR (12)
 $ ls ./test-run-dir | ./sort.sh
+counterexample1.json
+counterexample1.tla
+counterexample.json
+counterexample.tla
+detailed.log
+MC1.out
+MC.out
+run.txt
 $ rm -rf ./test-out-dir ./test-run-dir
 ```
