@@ -21,20 +21,14 @@ All such optional flags should default to `false`.
 ## 2. Output directory and run directories
 Apalache should define an `out-dir` parameter, which defines the location of all outputs produced by Apalache. If unspecified, this value should default to the working directory, during each run, but it should be possible to designate a fixed location, e.g. `<HOME>/apalache-out/`.
 
-Each run looks a subdirectory inside of the `out-dir` with the same name as the
-principle file provided as input or, for commands that do not input a file,
-named after the subcommand executed. This subdirectory is called the
-specification's (resp.  file's, command's) *namespace* within the `out-dir`. All
-outputs originating from that input file (resp. command) will be written in its
+Each run looks for a subdirectory inside of the `out-dir` with the same name as
+the principle file provided as input (or, for commands that do not read input
+from a file, named after the executed subcommand). This subdirectory is called
+the specification's (resp. command's) *namespace* within the `out-dir`.  All
+outputs originating from that input file (resp. command) will be written to this
 namespace.
 
-Within each namespace is a subdirectory `latests`. This directory is cleaned on
-each run, and holds the output of the most recent run. This provides a stable
-location from which users can, e.g., open the counterexample files in their
-editor and have them updated on each run (thanks to Andrey for this idea:
-[#1077](https://github.com/informalsystems/apalache/issues/1077)).
-
-Finally, Each run produces a subdirectory in its namespace, with the following name:
+Each run produces a subdirectory in its namespace, with the following name:
 
 ```
 <DATE>T<TIME>_<UNIQUEID>
@@ -49,13 +43,19 @@ Example file structure for a run executed on a file `test.tla`:
 _apalache-out/
 └── test.tla
     ├── 2021-11-05T22-54-55_810261790529975561
-    └── latest
 ```
+
+### Custom run directories
+
+The `--run-dir` flag can be used to specify an output directory into which
+outputs are written directly. When the `--run-dir` flag is specified, all
+content included in the run directory specified above will *also* be written
+into the directories specified by this argument.
 
 ## 3. Structure of a run directory
 
-Each run directory (and the latest directory), outlined in the previous section,
-should contain the following:
+Each run directory outlined in the previous section, should contain the
+following:
   
 - A file `run.txt`, containing the command issued for this run, with all implicit parameters filled in, so it can be replicated exactly
 - 0 or more counterexample files
