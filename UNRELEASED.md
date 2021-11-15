@@ -10,3 +10,12 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
+### Features
+
+   * Added sort-distinction for model values, see #570
+   * Added bug report templates, see #1094
+
+### Bug fixes
+
+   * Fixed handling of polymorphic operators in folds, see #1085
+
