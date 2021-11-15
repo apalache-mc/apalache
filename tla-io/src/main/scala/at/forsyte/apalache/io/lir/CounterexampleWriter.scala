@@ -146,10 +146,9 @@ object CounterexampleWriter extends LazyLogging {
    * @param rootModule   source module of the counterexample
    * @param notInvariant negated invariant
    * @param states       sequence of states that represent the counterexample
-   * @param outfile      a specific file to write output to
    */
   def writeAllFormats(
-      suffix: String, rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState], outfile: Option[File]
+      suffix: String, rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]
   ): List[String] = {
     val writerHelper: String => PrintWriter => Unit =
       kind => writer => apply(kind, writer).write(rootModule, notInvariant, states)
@@ -160,26 +159,11 @@ object CounterexampleWriter extends LazyLogging {
         ("json", s"counterexample$suffix.json")
     )
 
-    val filePaths = fileNames.flatMap { case (kind, name) =>
+    fileNames.flatMap { case (kind, name) =>
       if (OutputManager.withWriterInRunDir(name)(writerHelper(kind))) {
         Some(OutputManager.runDir.resolve(name).normalize.toString)
       } else {
         None
-      }
-    }
-
-    outfile match {
-      case None => filePaths
-      case Some(f) => {
-        val kind = FilenameUtils.getExtension(f.toString())
-        try {
-          OutputManager.withWriterToFile(f)(writerHelper(kind))
-          f.toPath().normalize().toString() :: filePaths
-        } catch {
-          case e: ConfigurationError =>
-            logger.error(e.getMessage())
-            filePaths
-        }
       }
     }
   }

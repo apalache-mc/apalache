@@ -83,9 +83,8 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
     val tuning = options.getOrElse[Map[String, String]]("general", "tuning", Map[String, String]())
     val debug = options.getOrElse[Boolean]("general", "debug", false)
     val saveDir = options.getOrError[Path]("io", "outdir").toFile
-    val outfile = options.get[String]("io", "output").map(new File(_))
 
-    val params = new ModelCheckerParams(input, stepsBound, saveDir, outfile, tuning, debug)
+    val params = new ModelCheckerParams(input, stepsBound, saveDir, tuning, debug)
     params.discardDisabled = options.getOrElse[Boolean]("checker", "discardDisabled", true)
     params.checkForDeadlocks = !options.getOrElse[Boolean]("checker", "noDeadlocks", false)
     params.nMaxErrors = options.getOrElse[Int]("checker", "maxError", 1)

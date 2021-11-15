@@ -409,8 +409,7 @@ class SeqModelChecker[ExecutorContextT](
           suffix,
           checkerInput.rootModule,
           notInv,
-          states,
-          params.outfile
+          states
       )
     }
 

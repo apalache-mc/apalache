@@ -237,7 +237,6 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     }
   }
 
-  // TODO Fix SMT logging to be able support logging to latest directory
   private def initLog(): PrintWriter =
     OutputManager.runDirPathOpt match {
       case None => new PrintWriter(NullOutputStream.NULL_OUTPUT_STREAM)

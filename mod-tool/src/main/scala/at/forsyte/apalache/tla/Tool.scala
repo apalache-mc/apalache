@@ -204,7 +204,6 @@ object Tool extends LazyLogging {
       executor.options.set("checker.view", check.view)
     // for now, enable polymorphic types. We probably want to disable this option for the type checker
     executor.options.set("typechecker.inferPoly", true)
-    check.output.foreach(executor.options.set("io.output", _))
 
     // NOTE Must go after all other options are set due to side-effecting
     // behavior of current OutmputManager configuration
