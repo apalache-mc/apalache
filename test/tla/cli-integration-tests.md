@@ -2049,7 +2049,7 @@ EXITCODE: OK
 
 ## configuring the output manager
 
-### set out-dir by CLI flag
+### output manager: set out-dir by CLI flag
 If we run with the `--out-dir` flag
 
 ```sh
@@ -2058,20 +2058,8 @@ $ apalache-mc check --out-dir=./test-out-dir --length=0 Counter.tla | sed 's/[IE
 EXITCODE: OK
 ```
 
-We'll get the expected files in the `latest` directory:
-
-**NOTE**: The `latest` dir is currently missing the `log0.smt`. See https://github.com/informalsystems/apalache/issues/1047#issuecomment-962276782
-
 ```sh
-$  ls ./test-out-dir/Counter.tla/latest | ./sort.sh
-detailed.log
-run.txt
-```
-
-And we get the expected files in the run directory:
-
-```sh
-$ find ./test-out-dir/Counter.tla -type f -not -path "./test-out-dir/Counter.tla/latest/*" -exec basename {} \; | ./sort.sh
+$ find ./test-out-dir/Counter.tla/* -type f -exec basename {} \; | ./sort.sh
 detailed.log
 log0.smt
 run.txt
@@ -2083,7 +2071,7 @@ Be sure to clean up
 $ rm -rf ./test-out-dir
 ```
 
-### set out-dir by envvar
+### output manager: set out-dir by envvar
 
 ```sh
 $ OUT_DIR=./test-out-dir apalache-mc check --length=0 Counter.tla | sed 's/[IEW]@.*//'
@@ -2093,7 +2081,7 @@ $ test -d test-out-dir
 $ rm -rf ./test-out-dir
 ```
 
-### setting out-dir by CLI flag overrides the envvar
+### output manager: setting out-dir by CLI flag overrides the envvar
 
 ```sh
 $ OUT_DIR=./not-here apalache-mc check --out-dir=./test-out-dir --length=0 Counter.tla
@@ -2104,46 +2092,13 @@ $ !(test -d not-here)
 $ rm -rf ./test-out-dir
 ```
 
-### write-intermediate files
+### output manager: write-intermediate files
 
 ```sh
 $ apalache-mc check --out-dir=./test-out-dir --write-intermediate=true --length=0 Counter.tla | sed 's/[IEW]@.*//' 
 ...
 EXITCODE: OK
-$ find ./test-out-dir/Counter.tla/latest -type f -exec basename {} \; | ./sort.sh
-00_OutParser.json
-00_OutParser.tla
-01_out-post-TypeCheckerSnowcat.json
-01_out-pre-TypeCheckerSnowcat.json
-01_OutTypeCheckerSnowcat.json
-01_OutTypeCheckerSnowcat.tla
-02_OutConfig.json
-02_OutConfig.tla
-03_OutDesugarer.json
-03_OutDesugarer.tla
-04_OutUnroll.json
-04_OutUnroll.tla
-05_OutInline.json
-05_OutInline.tla
-06_OutPriming.json
-06_OutPriming.tla
-07_OutVCGen.json
-07_OutVCGen.tla
-08_OutPrepro.json
-08_OutPrepro.tla
-09_OutTransition.json
-09_OutTransition.tla
-10_OutOpt.json
-10_OutOpt.tla
-11_OutAnalysis.json
-11_OutAnalysis.tla
-12_out-post-PostTypeCheckerSnowcat.json
-12_OutPostTypeCheckerSnowcat.json
-12_OutPostTypeCheckerSnowcat.tla
-12_out-pre-PostTypeCheckerSnowcat.json
-detailed.log
-run.txt
-$ find ./test-out-dir/Counter.tla -type f -not -path "./test-out-dir/Counter.tla/latest/*" -exec basename {} \; | ./sort.sh
+$ find ./test-out-dir/Counter.tla/* -type f -exec basename {} \; | ./sort.sh
 00_OutParser.json
 00_OutParser.tla
 01_out-post-TypeCheckerSnowcat.json
@@ -2180,87 +2135,83 @@ run.txt
 $ rm -rf ./test-out-dir
 ```
 
-### use the --profiling flag to write profile-rules.txt
+### output manager: use the --profiling flag to write profile-rules.txt
 
 ```sh
 $ apalache-mc check --out-dir=./test-out-dir --profiling=true --length=0 Counter.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
-$ test -s ./test-out-dir/Counter.tla/latest/profile-rules.txt
+$ test -s ./test-out-dir/Counter.tla/*/profile-rules.txt
 $ rm -rf ./test-out-dir
 ```
 
-### counterexamples are written to the run directory
+### output manager: counterexamples are written to the run directory
 
 ```sh
-$ apalache-mc check --out-dir=./test-out-dir --length=2 --inv=Inv factorization.tla | sed -e 's/[IEW]@.*//' -e "s:$(pwd)/::g"
-...
-State 1: state invariant 0 violated. Check the counterexample in: test-out-dir/factorization.tla/latest/counterexample1.tla, test-out-dir/factorization.tla/latest/MC1.out, test-out-dir/factorization.tla/latest/counterexample1.json
+$ apalache-mc check --out-dir=./test-out-dir --length=2 --inv=Inv factorization.tla | sed -e 's/[IEW]@.*//'
 ...
 EXITCODE: ERROR (12)
-$ ls ./test-out-dir/factorization.tla/latest | ./sort.sh
+$ ls ./test-out-dir/factorization.tla/* | ./sort.sh
 counterexample1.json
 counterexample1.tla
 counterexample.json
 counterexample.tla
 detailed.log
+log0.smt
 MC1.out
 MC.out
 run.txt
 $ rm -rf ./test-out-dir
 ```
 
-### counterexamples can be written to specified directory
-
-We can write TLA counterexamples:
+### output manager: intermediate output can be written to specified run directory
 
 ```sh
-$ apalache-mc check --out-dir=./test-out-dir --length=2 --inv=Inv --output=counter.tla factorization.tla | sed -e 's/[IEW]@.*//' -e "s:$(pwd)/::g"
+$ apalache-mc check --out-dir=./test-out-dir --run-dir=./test-run-dir --write-intermediate=true --length=0 Counter.tla | sed 's/[IEW]@.*//'
 ...
-State 1: state invariant 0 violated. Check the counterexample in: counter.tla, test-out-dir/factorization.tla/latest/counterexample1.tla, test-out-dir/factorization.tla/latest/MC1.out, test-out-dir/factorization.tla/latest/counterexample1.json
-...
-$ cat counter.tla | head
----------------------------- MODULE counterexample ----------------------------
-
-EXTENDS factorization
-
-(* Constant initialization state *)
-ConstInit == TRUE
-
-(* Initial state *)
-State0 == answer = FALSE /\ m = 0 /\ n = 0
-
-$ rm -rf ./test-out-dir counter.tla
+EXITCODE: OK
+$ find ./test-run-dir -type f -exec basename {} \; | ./sort.sh
+00_OutParser.json
+00_OutParser.tla
+01_out-post-TypeCheckerSnowcat.json
+01_out-pre-TypeCheckerSnowcat.json
+01_OutTypeCheckerSnowcat.json
+01_OutTypeCheckerSnowcat.tla
+02_OutConfig.json
+02_OutConfig.tla
+03_OutDesugarer.json
+03_OutDesugarer.tla
+04_OutUnroll.json
+04_OutUnroll.tla
+05_OutInline.json
+05_OutInline.tla
+06_OutPriming.json
+06_OutPriming.tla
+07_OutVCGen.json
+07_OutVCGen.tla
+08_OutPrepro.json
+08_OutPrepro.tla
+09_OutTransition.json
+09_OutTransition.tla
+10_OutOpt.json
+10_OutOpt.tla
+11_OutAnalysis.json
+11_OutAnalysis.tla
+12_out-post-PostTypeCheckerSnowcat.json
+12_OutPostTypeCheckerSnowcat.json
+12_OutPostTypeCheckerSnowcat.tla
+12_out-pre-PostTypeCheckerSnowcat.json
+detailed.log
+run.txt
+$ rm -rf ./test-out-dir ./test-run-dir
 ```
 
-We can write JSON counterexamples: 
+### output manager: counterexamples can be written to specified run directory
 
 ```sh
-$ apalache-mc check --out-dir=./test-out-dir --length=2 --inv=Inv --output=counter.json factorization.tla
+$ apalache-mc check --out-dir=./test-out-dir --length=2 --inv=Inv --run-dir=./test-run-dir factorization.tla | sed -e 's/[IEW]@.*//'
 ...
-[12]
-$ cat counter.json | head
-{
-  "name": "ApalacheIR",
-  "version": "1.0",
-  "description": "https://apalache.informal.systems/docs/adr/005adr-json.html",
-  "modules": [
-    {
-      "kind": "TlaModule",
-      "name": "counterexample",
-      "declarations": [
-        {
-$ rm -rf ./test-out-dir counter.json
-```
-
-We can write MC counterexamples:
-
-(We don't inspect the content, because timestamps are written into it.)
-
-```sh
-$ apalache-mc check --out-dir=./test-out-dir --length=2 --inv=Inv --output=counter.tlc factorization.tla
-...
-[12]
-$ test -s counter.tlc
-$ rm -rf ./test-out-dir counter.tlc
+EXITCODE: ERROR (12)
+$ ls ./test-run-dir | ./sort.sh
+$ rm -rf ./test-out-dir ./test-run-dir
 ```
