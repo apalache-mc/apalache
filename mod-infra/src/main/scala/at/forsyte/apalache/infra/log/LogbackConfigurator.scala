@@ -17,11 +17,11 @@ import java.nio.file.Path
  * @author Igor Konnov
  */
 // TODO Configure to take OutputManager as parameter?
-class LogbackConfigurator(dirs: Option[(Path, Path)]) extends ContextAwareBase with Configurator {
+class LogbackConfigurator(runDir: Option[Path], customRunDir: Option[Path]) extends ContextAwareBase with Configurator {
   def configureDefaultContext(): Unit = {
     val loggerContext = LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext]
     setContext(loggerContext)
-    dirs match {
+    runDir match {
       case Some(_) => configure(loggerContext)
       case None    => configureSilent(loggerContext)
     }
@@ -34,16 +34,14 @@ class LogbackConfigurator(dirs: Option[(Path, Path)]) extends ContextAwareBase w
   }
 
   override def configure(loggerContext: LoggerContext): Unit = {
-    val runDir = dirs.get._1
-    val latestDir = dirs.get._2
     addInfo("Setting up a logback configuration")
     loggerContext.reset() // forget everything that was configured automagically
     val rootLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)
     val consoleAppender = mkConsoleAppender(loggerContext)
     // only warnings at the root level
     rootLogger.setLevel(Level.WARN)
-    rootLogger.addAppender(mkFileAppender(loggerContext, runDir.resolve("detailed.log").toFile()))
-    rootLogger.addAppender(mkFileAppender(loggerContext, latestDir.resolve("detailed.log").toFile()))
+    runDir.foreach(d => rootLogger.addAppender(mkFileAppender(loggerContext, d.resolve("detailed.log").toFile())))
+    customRunDir.foreach(d => rootLogger.addAppender(mkFileAppender(loggerContext, d.resolve("detailed.log").toFile())))
     rootLogger.addAppender(consoleAppender)
     // debug messages at the apalache level
     val apalacheLogger = loggerContext.getLogger("at.forsyte.apalache")

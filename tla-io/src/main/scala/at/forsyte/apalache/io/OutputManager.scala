@@ -12,6 +12,7 @@ import org.apache.commons.io.{FileUtils, FilenameUtils}
 
 trait OutputManagerConfig {
   def outDir: Option[File]
+  def runDir: Option[File]
   def writeIntermediate: Option[Boolean]
   def profiling: Option[Boolean]
 }
@@ -37,7 +38,10 @@ object OutputManager extends LazyLogging {
   private var outDirOpt: Option[Path] = None
   // This should only be set if the IntermediateFlag is true
   private var intermediateDirOpt: Option[Path] = None
+  // The run directory generated automatically inside the outDir
   private var runDirOpt: Option[Path] = None
+  // The run directory that users can specify directly through CLI arguments
+  private var customRunDirOpt: Option[Path] = None
   private var flags: Map[String, Boolean] =
     Map(
         IntermediateFlag -> false,
@@ -59,6 +63,9 @@ object OutputManager extends LazyLogging {
   /** Accessor, read-only */
   def runDirPathOpt: Option[Path] = runDirOpt
 
+  /** Accessor, read-only */
+  def customRunDirPathOpt: Option[Path] = customRunDirOpt
+
   /**
    * Accessor for the configured output directory.
    *
@@ -77,22 +84,13 @@ object OutputManager extends LazyLogging {
     runDirOpt.getOrElse(throw new IllegalStateException("run directory does not exist"))
   }
 
-  /**
-   * Accessor for the configured latest directory
-   *
-   * The output results from the *latest* run are always written here.
-   *
-   * @throws IllegalStateException if called before OutputManager is configured: this is considered an implementator error
-   */
-  def latestDir: Path = {
-    outDir.resolve("latest")
-  }
-
-  private def latestIntermediateDir: Option[Path] = {
+  // The intermdiate output directory in the configured custom
+  // run directory
+  private def customIntermediateRunDir: Option[Path] = {
     if (intermediateDirOpt.isEmpty) {
       None
     } else {
-      Some(latestDir.resolve(IntermediateFoldername))
+      customRunDirOpt.map(_.resolve(IntermediateFoldername))
     }
   }
 
@@ -103,15 +101,10 @@ object OutputManager extends LazyLogging {
     }
   }
 
-  // Create the latest dir, removing an already existing one, if found
-  // this ensures we start with a fresh latest dir, and don't end up mixing up
-  // artifcats from different runts
-  private def createLatestDir(): Unit = {
-    val f = latestDir.toFile
-    if (f.exists()) {
-      FileUtils.deleteDirectory(f)
-    }
-    ensureDirExists(latestDir)
+  // Create the custom run directory, if one is specified, otherwise
+  // this is a no-op
+  private def createCustomRunDir(): Unit = {
+    customRunDirOpt.foreach(ensureDirExists)
   }
 
   private def expandedFilePath(s: String): Path = {
@@ -163,6 +156,7 @@ object OutputManager extends LazyLogging {
   // matching the specification of this trait?
   private def syncFromCli(namespace: String, cli: OutputManagerConfig): Unit = {
     cli.outDir.foreach(d => setOutDir(d.toPath(), namespace))
+    cli.runDir.foreach(d => customRunDirOpt = Some(d.toPath().toAbsolutePath()))
     cli.writeIntermediate.foreach(flags += IntermediateFlag -> _)
     cli.profiling.foreach(flags += ProfilingFlag -> _)
   }
@@ -177,14 +171,12 @@ object OutputManager extends LazyLogging {
 
     ensureDirExists(outDir)
     createRunDirectory()
-    createLatestDir()
+    customRunDirOpt.foreach(ensureDirExists)
 
     if (flags(Names.IntermediateFlag)) {
       setIntermediateDir(namespace)
-      // `get` is safe because `setIntermediateDir` ensures the intermdiate
-      ensureDirExists(intermediateDirOpt.get)
-      // `get` is safe because `createLatestDir()` has run
-      ensureDirExists(latestIntermediateDir.get)
+      intermediateDirOpt.foreach(ensureDirExists)
+      customIntermediateRunDir.foreach(ensureDirExists)
     }
   }
 
@@ -247,7 +239,7 @@ object OutputManager extends LazyLogging {
   def withWriterInRunDir(parts: String*)(f: PrintWriter => Unit): Boolean = {
     runDirOpt.map { runDir =>
       withWriter(f)(printWriter(runDir, parts: _*))
-      withWriter(f)(printWriter(latestDir, parts: _*))
+      customRunDirOpt.foreach(printWriter(_, parts: _*))
     }.isDefined
   }
 
@@ -260,13 +252,12 @@ object OutputManager extends LazyLogging {
    *        created by appending the `parts` to the intermediate output dir. Otherwise, `false`.
    */
   def withWriterInIntermediateDir(parts: String*)(f: PrintWriter => Unit): Boolean = {
-    intermediateDirOpt.flatMap(d => latestIntermediateDir.map((d, _))) match {
-      case Some((runDir, latestDir)) => {
-        withWriter(f)(printWriter(runDir, parts: _*))
-        withWriter(f)(printWriter(latestDir, parts: _*))
+    intermediateDirOpt
+      .map { dir =>
+        withWriter(f)(printWriter(dir, parts: _*))
+        customIntermediateRunDir.foreach(printWriter(_, parts: _*))
         true
       }
-      case None => false
-    }
+      .getOrElse(false)
   }
 }

@@ -162,7 +162,7 @@ object CounterexampleWriter extends LazyLogging {
 
     val filePaths = fileNames.flatMap { case (kind, name) =>
       if (OutputManager.withWriterInRunDir(name)(writerHelper(kind))) {
-        Some(OutputManager.latestDir.resolve(name).normalize.toString)
+        Some(OutputManager.runDir.resolve(name).normalize.toString)
       } else {
         None
       }

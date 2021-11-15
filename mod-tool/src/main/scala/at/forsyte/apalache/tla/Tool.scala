@@ -59,7 +59,7 @@ object Tool extends LazyLogging {
         _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
     )
     // force our programmatic logback configuration, as the autoconfiguration works unpredictably
-    new LogbackConfigurator(Some((OutputManager.runDir, OutputManager.latestDir))).configureDefaultContext()
+    new LogbackConfigurator(OutputManager.runDirPathOpt, OutputManager.customRunDirPathOpt).configureDefaultContext()
     // TODO: update workers when the multicore branch is integrated
     submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> cmd.label, "workers" -> "1"))
   }

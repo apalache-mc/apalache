@@ -21,7 +21,10 @@ trait General extends Command with OutputManagerConfig {
         s"write general profiling data to profile-rules.txt in the run directory, default: false (overrides envvar PROFILING)",
       useEnv = true)
   var outDir = opt[Option[File]](name = OutputManager.Names.OutdirNameInCfg,
-      description = "where output files will be written, default: ./_apalache-out (overrides envvar OUT_DIR)",
+      description = "where all output files will be written, default: ./_apalache-out (overrides envvar OUT_DIR)",
+      useEnv = true)
+  var runDir = opt[Option[File]](
+      description = "where the output files for this run will be written, default: none (only writes into the out-dir)",
       useEnv = true)
   var writeIntermediate = opt[Option[Boolean]](name = OutputManager.Names.IntermediateFlag,
       description =
