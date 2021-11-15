@@ -24,7 +24,7 @@ trait General extends Command with OutputManagerConfig {
       description = "where all output files will be written, default: ./_apalache-out (overrides envvar OUT_DIR)",
       useEnv = true)
   var runDir = opt[Option[File]](
-      description = "where the output files for this run will be written, default: none (only writes into the out-dir)",
+      description = "additional directory wherein output files for this run will be written directly, default: none (overrides envvar RUN_DIR)",
       useEnv = true)
   var writeIntermediate = opt[Option[Boolean]](name = OutputManager.Names.IntermediateFlag,
       description =
