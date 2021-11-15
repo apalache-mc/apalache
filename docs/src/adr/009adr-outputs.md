@@ -72,19 +72,3 @@ In other words, parameter values are determined in the following way, by order o
   1. If `--<flag>=<value>` is given, use `<value>`, otherwise
   2. If `apalache-global-config` specifies `<flag>=<CFGvalue>` use `<CFGvalue>`, otherwise 
   3. Use Apalache defaults.
-
-## 5. Output files
-
-Some commands write specific files that are used to communicate with other
-programs. E.g., 
-
-- `parse` writes files with the results of parsing the input spec
-- `check` writes counterexamples used by MBT
-
-To facilitate programmatic use of this data, such commands also take an
-`--output=<FILE>` flag, and then write the relevant output to the given file.
-These output files are usually not in the `out-dir`.
-
-The format for the output files is determined by the extension of the specified
-file. E.g., `--output=foo.json` should result in JSON being written to file
-`foo.json` (if supported for the command).
