@@ -54,7 +54,7 @@ object Tool extends LazyLogging {
 
   private def outputAndLogConfig(namePrefix: String, cmd: General): Unit = {
     OutputManager.configure(namePrefix, cmd)
-    println(s"Output directory: ${OutputManager.runDir}")
+    println(s"Output directory: ${OutputManager.runDir.normalize()}")
     OutputManager.withWriterInRunDir(OutputManager.Names.RunFile)(
         _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
     )
