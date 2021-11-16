@@ -2,6 +2,13 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.17.4
+
+### Features
+
+* Add `--run-dir` flag, enabling users to write outputs directly to a known and
+  stable location, see #1081
+
 ## 0.17.3
 
 ### Features
