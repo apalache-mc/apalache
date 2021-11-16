@@ -172,7 +172,7 @@
                     <main>
                         <h1><a class="header" href="#adr-008-apalache-outputs" id="adr-008-apalache-outputs">ADR-008: Apalache Outputs</a></h1>
 <table><thead><tr><th>author</th><th align="right">revision</th></tr></thead><tbody>
-<tr><td>Jure Kukovec</td><td align="right">1</td></tr>
+<tr><td>Jure Kukovec, Shon Feder</td><td align="right">2</td></tr>
 </tbody></table>
 <p>This ADR documents the various files produced by Apalache, and where they get written to.</p>
 <h2><a class="header" href="#1-categories-of-outputs" id="1-categories-of-outputs">1. Categories of outputs</a></h2>
@@ -187,18 +187,31 @@
 Each optional category is associated with a flag: <code>--write-intermediate</code> for intermediate state outputs and an individual flag for each kind of analysis. At the time of writing, the only analysis is governed by <code>--profiling</code>, for profiling results. 
 All such optional flags should default to <code>false</code>.</p>
 <h2><a class="header" href="#2-output-directory-and-run-directories" id="2-output-directory-and-run-directories">2. Output directory and run directories</a></h2>
-<p>Apalache should define an <code>output-dir</code> parameter, which defines the location of all outputs produced by Apalache. If unspecified, this value should default to the working directory, during each run, but it should be possible to designate a fixed location, e.g. <code>&lt;HOME&gt;/apalache-out/</code>.</p>
-<p>Each run should produce a subdirectory in <code>output-dir</code>, with the following name:</p>
-<pre><code>&lt;SPECNAME&gt;_&lt;DATE&gt;T&lt;TIME&gt;_&lt;UNIQUEID&gt;
+<p>Apalache should define an <code>out-dir</code> parameter, which defines the location of all outputs produced by Apalache. If unspecified, this value should default to the working directory, during each run, but it should be possible to designate a fixed location, e.g. <code>&lt;HOME&gt;/apalache-out/</code>.</p>
+<p>Each run looks for a subdirectory inside of the <code>out-dir</code> with the same name as
+the principle file provided as input (or, for commands that do not read input
+from a file, named after the executed subcommand). This subdirectory is called
+the specification's (resp. command's) <em>namespace</em> within the <code>out-dir</code>.  All
+outputs originating from that input file (resp. command) will be written to this
+namespace.</p>
+<p>Each run produces a subdirectory in its namespace, with the following name:</p>
+<pre><code>&lt;DATE&gt;T&lt;TIME&gt;_&lt;UNIQUEID&gt;
 </code></pre>
 <p>based on the <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO 8601</a> standard.
 Here, <code>&lt;DATE&gt;</code> is the date in <code>YYYY-MM-DD</code> format, <code>&lt;TIME&gt;</code> is the local time in <code>HH-MM-SS</code> format.</p>
-<p>Example:</p>
-<pre><code>test.tla_2021-05-02T21-31-59_6117100059876044377
+<p>Example file structure for a run executed on a file <code>test.tla</code>:</p>
+<pre><code>_apalache-out/
+└── test.tla
+    ├── 2021-11-05T22-54-55_810261790529975561
 </code></pre>
-<p>for a run executed with <code>test.tla</code> on May 2, 2021 at 9:31:59pm (local time).</p>
+<h3><a class="header" href="#custom-run-directories" id="custom-run-directories">Custom run directories</a></h3>
+<p>The <code>--run-dir</code> flag can be used to specify an output directory into which
+outputs are written directly. When the <code>--run-dir</code> flag is specified, all
+content included in the run directory specified above will <em>also</em> be written
+into the directories specified by this argument.</p>
 <h2><a class="header" href="#3-structure-of-a-run-directory" id="3-structure-of-a-run-directory">3. Structure of a run directory</a></h2>
-<p>Each run directory, outlined in the previous section, should contain the following:</p>
+<p>Each run directory outlined in the previous section, should contain the
+following:</p>
 <ul>
 <li>A file <code>run.txt</code>, containing the command issued for this run, with all implicit parameters filled in, so it can be replicated exactly</li>
 <li>0 or more counterexample files</li>
@@ -208,7 +221,7 @@ Here, <code>&lt;DATE&gt;</code> is the date in <code>YYYY-MM-DD</code> format, <
 <li>Files associated with enabled analyses, e.g. <code>profile-rules.txt</code></li>
 </ul>
 <h2><a class="header" href="#4-global-configuration-file" id="4-global-configuration-file">4. Global Configuration File</a></h2>
-<p>Apalache should define a global configuration file <code>apalache-global-config</code>, e.g. in the <code>&lt;HOME&gt;/.tlaplus</code> directory, in which users can define the default values of all parameters, including all flags listed in section 1, as well as <code>output-dir</code>. The format of the configuration file is an implementation detail and will not be specified here.
+<p>Apalache should define a global configuration file <code>apalache-global-config</code>, e.g. in the <code>&lt;HOME&gt;/.tlaplus</code> directory, in which users can define the default values of all parameters, including all flags listed in section 1, as well as <code>out-dir</code>. The format of the configuration file is an implementation detail and will not be specified here.
 If a parameter is specified in the configuration file, it replaces the default value, but specifying a parameter manually always overrides config defaults.
 In other words, parameter values are determined in the following way, by order of priority:</p>
 <ol>
