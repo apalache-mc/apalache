@@ -40,7 +40,9 @@ class LogbackConfigurator(runDir: Option[Path], customRunDir: Option[Path]) exte
     val consoleAppender = mkConsoleAppender(loggerContext)
     // only warnings at the root level
     rootLogger.setLevel(Level.WARN)
-    (runDir ++ customRunDir).foreach(d => rootLogger.addAppender(mkFileAppender(loggerContext, d.resolve("detailed.log").toFile())))
+    (runDir ++ customRunDir).foreach(d =>
+      rootLogger.addAppender(mkFileAppender(loggerContext, d.resolve("detailed.log").toFile()))
+    )
     rootLogger.addAppender(consoleAppender)
     // debug messages at the apalache level
     val apalacheLogger = loggerContext.getLogger("at.forsyte.apalache")
