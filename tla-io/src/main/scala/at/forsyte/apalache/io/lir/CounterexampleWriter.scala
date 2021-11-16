@@ -9,6 +9,8 @@ import at.forsyte.apalache.tla.lir.values.TlaBool
 
 import java.io.{File, FileWriter, PrintWriter}
 import java.util.Calendar
+import org.apache.commons.io.FilenameUtils
+import com.typesafe.scalalogging.LazyLogging
 
 /**
  * A printer for counterexamples, in various formats: TLA+ , as TLC output, ...
@@ -125,7 +127,7 @@ class JsonCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter
   }
 }
 
-object CounterexampleWriter {
+object CounterexampleWriter extends LazyLogging {
 
   def stateToEx(state: State): TlaEx =
     if (state.isEmpty) {
@@ -145,30 +147,26 @@ object CounterexampleWriter {
    * @param notInvariant negated invariant
    * @param states       sequence of states that represent the counterexample
    */
-  def writeAllFormats(suffix: String, rootModule: TlaModule, notInvariant: NotInvariant,
-      states: List[NextState]): List[String] =
-    OutputManager.runDirPathOpt
-      .map { runDir =>
-        val fileNames = Map(
-            "tla" -> s"counterexample$suffix.tla",
-            "tlc" -> s"MC$suffix.out",
-            "json" -> s"counterexample$suffix.json"
-        )
-        val files = fileNames.map { case (kind, name) =>
-          (kind, new PrintWriter(new FileWriter(new File(runDir.toFile, name))))
-        }
-        try {
-          files.foreach { case (kind, writer) =>
-            apply(kind, writer).write(rootModule, notInvariant, states)
-          }
-          fileNames.values.toList
-        } finally {
-          files.foreach { case (_, writer) =>
-            writer.close()
-          }
-        }
+  def writeAllFormats(
+      suffix: String, rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]
+  ): List[String] = {
+    val writerHelper: String => PrintWriter => Unit =
+      kind => writer => apply(kind, writer).write(rootModule, notInvariant, states)
+
+    val fileNames = List(
+        ("tla", s"counterexample$suffix.tla"),
+        ("tlc", s"MC$suffix.out"),
+        ("json", s"counterexample$suffix.json")
+    )
+
+    fileNames.flatMap { case (kind, name) =>
+      if (OutputManager.withWriterInRunDir(name)(writerHelper(kind))) {
+        Some(OutputManager.runDir.resolve(name).normalize.toString)
+      } else {
+        None
       }
-      .getOrElse(List.empty[String])
+    }
+  }
 
   // factory method to get the desired CE writer
   def apply(kind: String, writer: PrintWriter): CounterexampleWriter = {
@@ -176,7 +174,7 @@ object CounterexampleWriter {
       case "tla"  => new TlaCounterexampleWriter(writer)
       case "tlc"  => new TlcCounterexampleWriter(writer)
       case "json" => new JsonCounterexampleWriter(writer)
-      case _      => throw new Exception("unknown couterexample writer requested")
+      case fmt    => throw new Exception(s"unknown counterexample format requested: $fmt")
     }
   }
 }

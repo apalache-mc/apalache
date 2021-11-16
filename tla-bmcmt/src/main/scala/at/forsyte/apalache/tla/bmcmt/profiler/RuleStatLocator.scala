@@ -28,9 +28,7 @@ class RuleStatLocator {
 
   def writeStats(filename: String): Unit =
     OutputManager.doIfFlag(OutputManager.Names.ProfilingFlag) {
-      OutputManager.runDirPathOpt.foreach { runDir =>
-        val file = new File(runDir.toFile, filename)
-        val writer = new PrintWriter(new FileWriter(file, false))
+      OutputManager.withWriterInRunDir(filename) { writer =>
         writer.println("Rule profiling statistics")
         val hrule = List.fill(80)('-').mkString
         writer.println(hrule)
@@ -45,7 +43,6 @@ class RuleStatLocator {
                 .format(rs.ruleName, rs.nCalls, rs.nCellsSelf, rs.nSmtConstsSelf, rs.nSmtAssertsSelf,
                     rs.smtAssertsSizeAvg))
         }
-        writer.close()
       }
     }
 }
