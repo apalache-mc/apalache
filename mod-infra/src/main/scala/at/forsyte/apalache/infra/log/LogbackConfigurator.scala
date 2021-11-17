@@ -16,12 +16,15 @@ import java.nio.file.Path
  *
  * @author Igor Konnov
  */
-class LogbackConfigurator(runDirOpt: Option[Path]) extends ContextAwareBase with Configurator {
+// TODO Configure to take OutputManager as parameter?
+class LogbackConfigurator(runDir: Option[Path], customRunDir: Option[Path]) extends ContextAwareBase with Configurator {
   def configureDefaultContext(): Unit = {
     val loggerContext = LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext]
     setContext(loggerContext)
-    if (runDirOpt.isEmpty) configureSilent(loggerContext)
-    else configure(loggerContext)
+    runDir match {
+      case Some(_) => configure(loggerContext)
+      case None    => configureSilent(loggerContext)
+    }
   }
 
   def configureSilent(loggerContext: LoggerContext): Unit = {
@@ -37,7 +40,9 @@ class LogbackConfigurator(runDirOpt: Option[Path]) extends ContextAwareBase with
     val consoleAppender = mkConsoleAppender(loggerContext)
     // only warnings at the root level
     rootLogger.setLevel(Level.WARN)
-    rootLogger.addAppender(mkFileAppender(loggerContext))
+    (runDir ++ customRunDir).foreach(d =>
+      rootLogger.addAppender(mkFileAppender(loggerContext, d.resolve("detailed.log").toFile()))
+    )
     rootLogger.addAppender(consoleAppender)
     // debug messages at the apalache level
     val apalacheLogger = loggerContext.getLogger("at.forsyte.apalache")
@@ -66,12 +71,12 @@ class LogbackConfigurator(runDirOpt: Option[Path]) extends ContextAwareBase with
     app
   }
 
-  private def mkFileAppender(loggerContext: LoggerContext): FileAppender[ILoggingEvent] = {
+  private def mkFileAppender(loggerContext: LoggerContext, file: File): FileAppender[ILoggingEvent] = {
     // set up FileAppender
     val app = new FileAppender[ILoggingEvent]()
     app.setContext(loggerContext)
     app.setName("file")
-    app.setFile(new File(runDirOpt.get.toFile, "detailed.log").getCanonicalPath)
+    app.setFile(file.getCanonicalPath)
     val encoder = new LayoutWrappingEncoder[ILoggingEvent]()
     encoder.setContext(loggerContext)
     val layout = new PatternLayout()

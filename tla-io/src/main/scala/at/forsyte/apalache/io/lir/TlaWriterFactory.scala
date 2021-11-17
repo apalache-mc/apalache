@@ -39,7 +39,7 @@ trait TlaWriterFactory {
   ): Unit = {
     val writeHelper: (PrintWriter => Unit) => Unit = file match {
       case Some(f) => OutputManager.withWriterToFile(f)
-      case None    => OutputManager.withWriterRelativeToIntermediateDir(module.name + extension)
+      case None    => OutputManager.withWriterInIntermediateDir(module.name + extension)
     }
     writeHelper(createWriter(_).write(module, extendedModuleNames))
   }

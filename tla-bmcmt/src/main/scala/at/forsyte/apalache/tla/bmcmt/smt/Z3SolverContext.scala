@@ -313,16 +313,17 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   }
 
   private def initLog(): PrintWriter =
-    OutputManager.runDirPathOpt
-      .map { runDir =>
-        val writer = new PrintWriter(new File(runDir.toFile, s"log$id.smt"))
+    OutputManager.runDirPathOpt match {
+      case None => new PrintWriter(NullOutputStream.NULL_OUTPUT_STREAM)
+      case Some(runDir) => {
+        val writer = OutputManager.printWriter(OutputManager.runDir, s"log$id.smt")
         if (!config.debug) {
           writer.println("Logging is disabled (Z3SolverContext.debug = false). Activate with --debug.")
           writer.flush()
         }
         writer
       }
-      .getOrElse(new PrintWriter(NullOutputStream.NULL_OUTPUT_STREAM))
+    }
 
   /**
    * Log message to the logging file. This is helpful to debug the SMT encoding.

@@ -52,15 +52,14 @@ object Tool extends LazyLogging {
     System.exit(exitcode)
   }
 
-  private def outputAndLogConfig(runDirNamePrefix: String, cmd: General): Unit = {
-    OutputManager.configure(cmd)
-    OutputManager.createRunDirectory(runDirNamePrefix)
-    OutputManager.runDirPathOpt.foreach { d => println(s"Output directory: ${d.toAbsolutePath()}") }
-    OutputManager.withWriterRelativeToRunDir(OutputManager.Names.RunFile)(
+  private def outputAndLogConfig(namePrefix: String, cmd: General): Unit = {
+    OutputManager.configure(namePrefix, cmd)
+    println(s"Output directory: ${OutputManager.runDir.normalize()}")
+    OutputManager.withWriterInRunDir(OutputManager.Names.RunFile)(
         _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
     )
     // force our programmatic logback configuration, as the autoconfiguration works unpredictably
-    new LogbackConfigurator(OutputManager.runDirPathOpt).configureDefaultContext()
+    new LogbackConfigurator(OutputManager.runDirPathOpt, OutputManager.customRunDirPathOpt).configureDefaultContext()
     // TODO: update workers when the multicore branch is integrated
     submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> cmd.label, "workers" -> "1"))
   }
@@ -134,16 +133,12 @@ object Tool extends LazyLogging {
   private def setCommonOptions(cli: General, options: WriteablePassOptions): Unit = {
     options.set("general.debug", cli.debug)
     options.set("smt.prof", cli.smtprof)
-    // TODO Do we actual need this in the "pass options"? It seems like it is only
-    // derived from the OutputManager?
-    OutputManager.doIfFlag(OutputManager.Names.IntermediateFlag) {
-      options.set(s"general.${OutputManager.Names.IntermediateFlag}", true)
-    }
+    // TODO: Remove pass option, and just rely on OutputManager config
     OutputManager.doIfFlag(OutputManager.Names.ProfilingFlag) {
       options.set(s"general.${OutputManager.Names.ProfilingFlag}", true)
     }
+    // TODO: Remove pass option, and just rely on OutputManager config
     options.set("io.outdir", OutputManager.outDir)
-    // OutputManager.syncWithOptions(options)
   }
 
   private def runParse(injector: => Injector, parse: ParseCmd): Int = {
@@ -155,7 +150,7 @@ object Tool extends LazyLogging {
     logger.info("Parse " + parse.file)
 
     executor.options.set("parser.filename", parse.file.getAbsolutePath)
-    parse.output.foreach(executor.options.set("parser.output", _))
+    parse.output.foreach(executor.options.set("io.output", _))
 
     // NOTE Must go after all other options are set due to side-effecting
     // behavior of current OutmputManager configuration
@@ -209,6 +204,7 @@ object Tool extends LazyLogging {
       executor.options.set("checker.view", check.view)
     // for now, enable polymorphic types. We probably want to disable this option for the type checker
     executor.options.set("typechecker.inferPoly", true)
+
     // NOTE Must go after all other options are set due to side-effecting
     // behavior of current OutmputManager configuration
     setCommonOptions(check, executor.options)
