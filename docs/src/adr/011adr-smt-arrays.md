@@ -38,7 +38,7 @@ The following changes will be made to implement the new CLI option:
 
 ## 2. Testing the new encoding
 
-The new encoding should provide the same results as the existing one, the available test suit
+The new encoding should provide the same results as the existing one, the available test suite
 will thus be used to test the new encoding. To achieve this, the unit tests needs to be made parametric
 w.r.t. the `SolverConfig` encoding field and the implementations of `SymbStateRewriter`, and the
 integration tests need to be tagged to run with the new encoding.
