@@ -9,7 +9,7 @@ package at.forsyte.apalache.tla.bmcmt.smt
  * @param randomSeed The random seed to be passed to z3 as :random-seed.
  * @param smtEncoding The SMT encoding to be used.
  *
- * @author Igor Konnov
+ * @author Igor Konnov, Rodrigo Otoni
  */
 sealed case class SolverConfig(debug: Boolean, profile: Boolean, randomSeed: Int, smtEncoding: String) {}
 
