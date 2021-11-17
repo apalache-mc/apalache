@@ -19,29 +19,29 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
     // double check that the type finder did its job
     checkType(powsetCell.cellType, elemCell.cellType)
 
-    val leftElems = state.arena.getHas(elemCell)
-    val rightDomain = state.arena.getDom(powsetCell)
-    val rightDomainElems = state.arena.getHas(rightDomain)
+    val setElems = state.arena.getHas(elemCell)
+    val powsetDomain = state.arena.getDom(powsetCell)
+    val powsetDomainElems = state.arena.getHas(powsetDomain)
     // EqConstraints need to be generated, since missing in-relations, e.g. in sets of tuples, will lead to errors.
     // TODO: Inlining this method is pointless. We should consider handling tuples and other structures natively in SMT.
-    var newState = rewriter.lazyEq.cacheEqConstraints(state, leftElems cross rightDomainElems)
+    var newState = rewriter.lazyEq.cacheEqConstraints(state, setElems cross powsetDomainElems)
 
-    def isInRightSet(leftElem: ArenaCell): TlaEx = {
+    def isInPowset(setElem: ArenaCell): TlaEx = {
       newState = newState.updateArena(_.appendCell(BoolT()))
       val pred = newState.arena.topCell
 
-      def isInAndEqLeftElem(rightDomainElem: ArenaCell) = {
-        simplifier.simplifyShallow(tla.and(tla.in(rightDomainElem.toNameEx, rightDomain.toNameEx),
-                tla.eql(rightDomainElem.toNameEx, leftElem.toNameEx)))
+      def isInAndEqSetElem(powsetDomainElem: ArenaCell) = {
+        simplifier.simplifyShallow(tla.and(tla.in(powsetDomainElem.toNameEx, powsetDomain.toNameEx),
+                tla.eql(powsetDomainElem.toNameEx, setElem.toNameEx)))
       }
 
-      val elemsInAndEqLeftElem = rightDomainElems.map(isInAndEqLeftElem)
+      val elemsInAndEqLeftElem = powsetDomainElems.map(isInAndEqSetElem)
       rewriter.solverContext.assertGroundExpr(simplifier.simplifyShallow(tla.equiv(pred.toNameEx,
-                  tla.and(tla.in(leftElem.toNameEx, elemCell.toNameEx), tla.or(elemsInAndEqLeftElem: _*)))))
+                  tla.and(tla.in(setElem.toNameEx, elemCell.toNameEx), tla.or(elemsInAndEqLeftElem: _*)))))
       pred.toNameEx
     }
 
-    val isSubset = simplifier.simplifyShallow(tla.and(leftElems.map(isInRightSet): _*))
+    val isSubset = simplifier.simplifyShallow(tla.and(setElems.map(isInPowset): _*))
     newState = newState.updateArena(_.appendCell(BoolT()))
     val pred = newState.arena.topCell.toNameEx
     rewriter.solverContext.assertGroundExpr(tla.eql(pred, isSubset))

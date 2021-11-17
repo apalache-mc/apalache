@@ -23,7 +23,7 @@ class EqRuleWithArrays(rewriter: SymbStateRewriter) extends EqRule(rewriter) {
           "Checking values of incomparable types for equality: %s and %s".format(leftCell.cellType, rightCell.cellType)
         throw new MalformedTlaError(msg, newState.ex)
       } else {
-        newState = newState.setArena(newState.arena.appendCell(BoolT()))
+        newState = newState.updateArena(_.appendCell(BoolT()))
         val eqPred = newState.arena.topCell
 
         // TODO: add additional elements as development in the "arrays" encoding progresses
