@@ -6,16 +6,6 @@ import scala.io.Source
 
 object ReportGenerator {
   private val reportFile = "BugReport.md"
-  private val reportTemplate = "issueTemplate.md"
-
-  private object tags {
-    val spec = "__SPEC"
-    val cmd = "__CMD"
-    val log = "__LOG"
-    val version = "__VER"
-    val os = "__OS"
-    val jdk = "__JDK"
-  }
 
   private def readSrcIntoString(src: Source): String =
     try src.mkString.trim
@@ -37,35 +27,54 @@ object ReportGenerator {
   def getLog(): String =
     Matcher.quoteReplacement(readContentsOfFileInRunDir("detailed.log")) // handle $s in log
 
-  def getSpec(file: File): String = readFileIntoString(file)
-
   // Can't access Version in IO, have to pass at call site
   def prepareReportFile(specFile: File, versionStr: String): String = {
-    val template = readSrcIntoString(
-        Source.fromResource(reportTemplate)
-    )
     val specTxt = readFileIntoString(specFile)
     val cmd = getCMD()
     val log = getLog()
     val os = System.getProperty("os.name")
     val jdk = System.getProperty("java.version")
 
-    val filledTemplate = template
-      .replaceFirst(tags.spec, specTxt)
-      .replaceFirst(tags.cmd, cmd)
-      .replaceFirst(tags.log, log)
-      .replaceFirst(tags.version, versionStr)
-      .replaceFirst(tags.os, os)
-      .replaceFirst(tags.jdk, jdk)
+    val filledTemplate = template.format(specTxt, cmd, log, versionStr, os, jdk)
 
-    OutputManager.withWriterRelativeToRunDir(reportFile) {
+    OutputManager.withWriterInRunDir(reportFile) {
       _.println(filledTemplate)
     }
 
-    new File(
-        OutputManager.runDirPathOpt
-          .getOrElse(throw new IllegalStateException("run directory is not configured"))
-          .toFile, reportFile).getCanonicalPath
+    new File(OutputManager.runDir.toFile, reportFile).getCanonicalPath
   }
+
+  private val template = """
+      |<!-- Thank you for filing a report! Please ensure you have filled out all -->
+      |<!-- sections, as it help us to address the problem effectively. -->
+      |
+      |## Input specification
+      |
+      |```
+      |%s
+      |```
+      |
+      |## The command line parameters used to run the tool
+      |
+      |```
+      |%s
+      |```
+      |
+      |## Expected behavior
+      |
+      |<!-- What did you expect to see? -->
+      |
+      |## Log files
+      |
+      |```
+      |%s
+      |```
+      |
+      |## System information
+      |
+      |- Apalache version: `%s`:
+      |- OS: `%s`:
+      |- JDK version: `%s`:
+      |""".stripMargin
 
 }
