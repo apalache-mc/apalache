@@ -65,10 +65,10 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
       case EtcTypeDecl(name: String, declaredType: TlaType1, scopedEx: EtcExpr) =>
         // An inline type annotation.
         // Just propagate the annotated name down the tree. It will be used in a let definition.
-        // All free type variables in the type are considered to be universally quantified.
-        val allVars = declaredType.usedNames
-        val extCtx = new TypeContext(ctx.largestVarIndex, ctx.types + (name -> (declaredType, allVars)))
-        if (allVars.isEmpty) {
+        // All free type variables in the type are considered to be universally quantified,
+        val polyVars = declaredType.usedNames
+        val extCtx = new TypeContext(ctx.types + (name -> (declaredType, polyVars)))
+        if (polyVars.isEmpty) {
           // A non-generic type.
           // For example, it can be a type of a constant, a state variable, or of a concrete operator.
           // To register the type with the type listener, add the trivial constraint: a = declaredType.
@@ -87,7 +87,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
       case EtcName(name) =>
         // a variable name, either an operator name, or a variable introduced by lambda (EtcAbs)
         if (ctx.types.contains(name)) {
-          val (knownType, allVars) = ctx.types(name)
+          val (knownType, _) = ctx.types(name)
           if (knownType.usedNames.isEmpty) {
             // This is a monotype. Report it right away.
             onTypeFound(ex.sourceRef, knownType)
@@ -239,8 +239,8 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
 
         // translate the binders in the lambda expression, so we can quickly propagate the types of the parameters
         val preCtx =
-          new TypeContext(ctx.largestVarIndex,
-              (ctx.types + (name -> (operSig, operAllVars))).mapValues(p => (approxSolution.subRec(p._1), p._2)))
+          new TypeContext((ctx.types + (name -> (operSig, operAllVars)))
+                .mapValues(p => (approxSolution.subRec(p._1), p._2)))
         val extCtx = translateBinders(preCtx, letInSolver, binders)
         val annotationParams = operSig.args
         annotationParams.zip(binders.map { case (pname, _) => (pname, extCtx(pname.name)._1) }).foreach {
@@ -287,7 +287,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
           }
 
         // Find free variables of the principal type, to use them as quantified variables
-        val freeVars = principalDefType.usedNames.filter(_ >= ctx.largestVarIndex)
+        val freeVars = principalDefType.usedNames.filter(solver.isFreeVar)
         if (!inferPolytypes && freeVars.nonEmpty) {
           // the user has disabled let-polymorphism
           onTypeError(ex.sourceRef,
@@ -299,7 +299,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
         onTypeFound(defEx.sourceRef, principalDefType)
 
         // compute the type of the expression under the definition
-        val underCtx = new TypeContext(varPool.size, ctx.types + (name -> (principalDefType, freeVars)))
+        val underCtx = new TypeContext(ctx.types + (name -> (principalDefType, freeVars)))
         computeRec(underCtx, solver, scopedEx)
 
       // an ill-formed let expression
@@ -338,7 +338,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
     // Compute the expression in the scope, by associating the variables names with the elements of elemVars.
     // Note that elemVars are not universally quantified.
     val varNames = binders.map(_._1.name).zip(elemVars.map((_, Set[Int]())))
-    new TypeContext(varPool.size, ctx.types ++ varNames)
+    new TypeContext(ctx.types ++ varNames)
   }
 
   private def onTypeFound(sourceRef: EtcRef, tt: TlaType1): Unit = {

@@ -18,7 +18,35 @@ class EqClass {
   /**
    * Type variables that are associated with the equivalence class.
    */
-  var typeVars: Set[Int] = Set.empty
+  private var _typeVars: Set[Int] = Set.empty
+
+  /**
+   * The representative of an equivalence class.
+   */
+  private var _reprVar: Int = -1
+
+  /**
+   * Get the representative variable of a class.
+   *
+   * @return a fixed variable from the class that works as a class representative.
+   */
+  def reprVar: Int = _reprVar
+
+  /**
+   * Get the type variables that are associated with the equivalence class.
+   */
+  def typeVars: Set[Int] = _typeVars
+
+  /**
+   * Set the type variables that are associated with the equivalence class.
+   *
+   * @param newSet the new set
+   */
+  def typeVars_=(newSet: Set[Int]): Unit = {
+    assert(newSet.nonEmpty)
+    _typeVars = newSet
+    _reprVar = newSet.reduce(Math.min)
+  }
 
   /**
    * Introduce a fresh copy of the equivalence class that has a different identifier.
@@ -26,7 +54,7 @@ class EqClass {
    * @return a fresh copy of the class
    */
   def copy(): EqClass = {
-    EqClass(this.typeVars)
+    EqClass(this._typeVars)
   }
 
   def canEqual(other: Any): Boolean = other.isInstanceOf[EqClass]
@@ -47,7 +75,7 @@ class EqClass {
    * @return true, if both classes contain the same sets of variables
    */
   def deepEquals(other: EqClass): Boolean = {
-    typeVars == other.typeVars
+    _typeVars == other._typeVars
   }
 }
 
@@ -56,9 +84,9 @@ object EqClass {
     apply(Set(oneVar))
   }
 
-  def apply(typeVars: Set[Int]): EqClass = {
+  def apply(newVars: Set[Int]): EqClass = {
     val cls = new EqClass
-    cls.typeVars = typeVars
+    cls.typeVars = newVars
     cls
   }
 }
