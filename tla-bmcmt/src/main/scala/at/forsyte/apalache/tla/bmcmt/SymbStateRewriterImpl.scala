@@ -136,11 +136,14 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
   lazy val statListener: RuleStatListener = new RuleStatListener()
   solverContext.setSmtListener(statListener) // subscribe to the SMT solver
 
+  @transient
+  lazy val ruleLookupTable: Map[String, List[RewritingRule]] = defaultRuleLookupTable
+
   // A nice way to guess the candidate rules by looking at the expression key.
   // We use simple expressions to generate the keys.
   // For each key, there is a short list of rules that may be applicable.
   @transient
-  lazy val ruleLookupTable: Map[String, List[RewritingRule]] = {
+  lazy val defaultRuleLookupTable: Map[String, List[RewritingRule]] = {
     Map(
         // the order is only important to improve readability
 
