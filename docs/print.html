@@ -10430,7 +10430,7 @@ In other words, parameter values are determined in the following way, by order o
 </ol>
 <h1><a class="header" href="#adr-011-alternative-smt-encoding-using-arrays" id="adr-011-alternative-smt-encoding-using-arrays">ADR-011: alternative SMT encoding using arrays</a></h1>
 <table><thead><tr><th>author</th><th align="right">revision</th></tr></thead><tbody>
-<tr><td>Rodrigo Otoni</td><td align="right">1</td></tr>
+<tr><td>Rodrigo Otoni</td><td align="right">1.1</td></tr>
 </tbody></table>
 <p>This ADR describes an alternative encoding of the <a href="https://apalache.informal.systems/docs/apalache/kera.html">KerA+</a> fragment of TLA+ into SMT.
 Compound data structures, e.g. sets, are currently encoded using the <a href="http://smtlib.cs.uiowa.edu/theories-Core.shtml">core theory</a> of SMT,
@@ -10444,30 +10444,33 @@ treatment of different TLA+ operators are described.</p>
 <h2><a class="header" href="#1-cli-encoding-option" id="1-cli-encoding-option">1. CLI encoding option</a></h2>
 <p>The encoding using arrays is to be an alternative, not a replacement, to the already existing encoding.
 Given this, a new option is to be added to the <code>check</code> command of the CLI. The default encoding will be
-the existing one. The option description is shown below.</p>
-<pre><code>--smt-encoding=STRING   : the SMT encoding: oopsla19, arrays (experimental), default: oopsla19
+the existing one. The option description is shown below. The envvar <code>SMT_ENCODING</code> can also be used to
+set the encoding, see the <a href="https://apalache.informal.systems/docs/apalache/running.html#model-checker-command-line-parameters">model checking parameters</a> for details.</p>
+<pre><code>--smt-encoding : the SMT encoding: oopsla19, arrays (experimental), default: oopsla19 (overrides envvar SMT_ENCODING)
 </code></pre>
 <h3><a class="header" href="#code-changes" id="code-changes">Code changes</a></h3>
 <p>The following changes will be made to implement the new CLI option:</p>
 <ul>
 <li>Add new string variable to class <code>CheckCmd</code> to enable the new option.</li>
+<li>Add new <code>smtEncoding</code> field to <code>SolverConfig</code>.</li>
 <li>Add new class <code>SymbStateRewriterImplWithArrays</code>, which extends class <code>SymbStateRewriterImpl</code>.</li>
-<li>Use the new option to select between different <code>SymbStateRewriter</code>
+<li>Use the new option to set the <code>SolverConfig</code> encoding field and select between different <code>SymbStateRewriter</code>
 implementations in classes <code>BoundedCheckerPassImpl</code> and <code>SymbStateRewriterAuto</code>.</li>
 </ul>
 <h2><a class="header" href="#2-testing-the-new-encoding" id="2-testing-the-new-encoding">2. Testing the new encoding</a></h2>
-<p>The new encoding should provide the same results as the existing one, the available test suit
-will thus be used to test the new encoding. To achieve this, the test suit needs to be made parametric
-w.r.t. the implementations of <code>SymbStateRewriter</code>.</p>
+<p>The new encoding should provide the same results as the existing one, the available test suite
+will thus be used to test the new encoding. To achieve this, the unit tests needs to be made parametric
+w.r.t. the <code>SolverConfig</code> encoding field and the implementations of <code>SymbStateRewriter</code>, and the
+integration tests need to be tagged to run with the new encoding.</p>
 <h3><a class="header" href="#code-changes-1" id="code-changes-1">Code changes</a></h3>
 <p>The following changes will be made to implement the tests for the new encoding:</p>
 <ul>
-<li>Refactor the classes in <code>tla-bmcmt/src/test</code> to enable unit testing with different
-implementations of <code>SymbStateRewriter</code>.</li>
-<li>Add unit tests for the new encoding, which should be similar to existing tests, but use
-<code>SymbStateRewriterImplWithArrays</code> instead of <code>SymbStateRewriterImpl</code>.</li>
-<li>Add integration tests for the new encoding, which should be similar to existing tests, but
-have the <code>smt-encoding</code> flag set to <code>arrays</code>.</li>
+<li>Refactor the classes in <code>tla-bmcmt/src/test</code> to enable unit testing with different configurations
+of <code>SolverConfig</code> and implementations of <code>SymbStateRewriter</code>.</li>
+<li>Add unit tests for the new encoding, which should be similar to existing tests, but use a
+different solver configuration and <code>SymbStateRewriterImplWithArrays</code> instead of <code>SymbStateRewriterImpl</code>.</li>
+<li>Add integration tests for the new encoding by tagging existing tests with <code>array-encoding</code>, which
+will be run by the CI with envvar <code>SMT_ENCODING</code> set to <code>arrays</code>.</li>
 </ul>
 <h2><a class="header" href="#3-encoding-sets" id="3-encoding-sets">3. Encoding sets</a></h2>
 <p>Sets are currently encoded in an indirect way. Consider a sort <code>some_sort</code> and distinct elements <code>elem1</code>,
@@ -10528,17 +10531,31 @@ an array and an index and returns the value at the given index, as shown below.<
 <h3><a class="header" href="#code-changes-2" id="code-changes-2">Code changes</a></h3>
 <p>The following changes will be made to implement the new encoding of sets:</p>
 <ul>
-<li>Add alternative rewriting rules for sets, via new classes extending <code>RewritingRule</code>.
+<li>Add alternative rewriting rules for sets when appropriate, by extending the existing rules.
 <ul>
-<li>The new rules will use SMT equality directly, instead of relying on class <code>LazyEquality</code>.</li>
+<li>All alternative rules will be suffixed with <code>WithArrays</code>.</li>
+<li>The new rules will not rely on <code>LazyEquality</code> and will aim to use SMT equality directly.</li>
+<li>Only the generation of SMT constraints will be modified by the new rules, the other Arena
+elements will remain unchanged.</li>
 </ul>
 </li>
-<li>In class <code>SymbStateRewriterImplWithArrays</code>, overwrite <code>ruleLookupTable</code> with the new rules.
+<li>In class <code>SymbStateRewriterImplWithArrays</code>, add the new rules to <code>ruleLookupTable</code> by overriding
+the entries to their older versions.</li>
+<li>In class <code>Z3SolverContext</code>, add/change appropriate methods to handle SMT constraints over arrays.
 <ul>
-<li>Existing rules will be reused when appropriate, e.g. rules for handling Boolean constants.</li>
+<li>The main changes will de done in <code>declareCell</code>, <code>declareInPredIfNeeded</code>, and <code>getInPred</code>, as
+these methods are directly responsible for creating the SMT constraints representing sets and
+set membership.</li>
+<li>Cases for <code>FinSetT</code> and <code>PowSetT</code> will be added to <code>getOrMkCellSort</code>, as these types are no
+longer represented by uninterpreted constants.</li>
+<li><code>cellCache</code> will be changed to contain a list of cells, in order to handle the effects of
+<code>push</code> and <code>pop</code> in the SSA assignment of sets.</li>
+<li>A new cache, <code>inStored</code>, will provide the required information to <code>getInPred</code> to enable it to
+return either a <code>store</code> or a <code>select</code> constraint, when appropriate.</li>
+<li>Special cases for <code>TlaOper.eq</code> and <code>TlaBoolOper.equiv</code> will be added to <code>toExpr</code>, to allow the
+set filter rule to propagate SSA sets when the filter predicate evaluates for false.</li>
 </ul>
 </li>
-<li>In class <code>Z3SolverContext</code>, add appropriate methods to handle SMT constraints over arrays.</li>
 </ul>
 <h2><a class="header" href="#4-encoding-tuples-and-records" id="4-encoding-tuples-and-records">4. Encoding tuples and records</a></h2>
 <p>TODO</p>
