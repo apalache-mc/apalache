@@ -37,7 +37,7 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
 
       val elemsInAndEqSetElem = powsetDomainElems.map(isInAndEqSetElem)
       rewriter.solverContext.assertGroundExpr(simplifier.simplifyShallow(tla.equiv(pred.toNameEx,
-                  tla.and(tla.in(setElem.toNameEx, elemCell.toNameEx), tla.or(elemsInAndEqSetElem: _*)))))
+                  tla.or(tla.not(tla.in(setElem.toNameEx, elemCell.toNameEx)), tla.or(elemsInAndEqSetElem: _*)))))
       pred.toNameEx
     }
 

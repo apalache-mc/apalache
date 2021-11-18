@@ -66,7 +66,7 @@ class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends SetInclusi
       }
       val elemsInAndEqLeftElem = rightElemOrDomainElems.map(isInAndEqLeftElem)
       rewriter.solverContext.assertGroundExpr(simplifier.simplifyShallow(tla.equiv(pred.toNameEx,
-                  tla.and(tla.in(leftElem.toNameEx, leftCell.toNameEx), tla.or(elemsInAndEqLeftElem: _*)))))
+                  tla.or(tla.not(tla.in(leftElem.toNameEx, leftCell.toNameEx)), tla.or(elemsInAndEqLeftElem: _*)))))
       pred.toNameEx
     }
 
