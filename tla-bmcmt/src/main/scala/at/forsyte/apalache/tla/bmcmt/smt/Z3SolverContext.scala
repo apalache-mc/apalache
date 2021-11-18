@@ -46,7 +46,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   //      logWriter.println(";; %s = %s".format(p, Global.getParameter(p)))
   }
 
-  private def useArrays(): Boolean = {
+  private def arraysEnabled(): Boolean = {
     config.smtEncoding == "arrays"
   }
 
@@ -183,7 +183,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val setT = set.cellType
     val name = s"in_${elemT.signature}${elem.id}_${setT.signature}${set.id}"
     if (!inCache.contains((set.id, elem.id))) {
-      if (useArrays) {
+      if (arraysEnabled) {
         val updatedSetName = set.toString + "_" + name
         val setSort = getOrMkCellSort(set.cellType)
         log(s";; declare edge inclusion $name")
@@ -218,7 +218,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             s"SMT $id: The Boolean constant $name (set membership) is missing from the SMT context")
 
       case Some((const, _)) =>
-        if (useArrays) {
+        if (arraysEnabled) {
           val (setExpr, setT, _) = cellCache(setId).head
           val (elemExpr, elemT, _) = cellCache(elemId).head
 
@@ -489,10 +489,10 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
           case IntT() =>
             z3context.getIntSort
 
-          case FinSetT(elemType) if useArrays =>
+          case FinSetT(elemType) if arraysEnabled =>
             z3context.mkArraySort(getOrMkCellSort(elemType), z3context.getBoolSort)
 
-          case PowSetT(domType) if useArrays =>
+          case PowSetT(domType) if arraysEnabled =>
             z3context.mkArraySort(getOrMkCellSort(domType), z3context.getBoolSort)
 
           case _ =>
@@ -554,7 +554,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
           (eq.asInstanceOf[ExprSort], 1 + ln + rn)
         }
 
-      case OperEx(TlaOper.eq, lhs @ OperEx(TlaSetOper.in, _, _), rhs) if useArrays =>
+      case OperEx(TlaOper.eq, lhs @ OperEx(TlaSetOper.in, _, _), rhs) if arraysEnabled =>
         // Used for set filters in the arrays encoding, see addCellCons in SetFilterRule.
         // Leads to constraints of the form "set_2 = (store set_1 index (and pred (select set_1 index)))"
         val (re, rn) = toExpr(rhs)
@@ -602,7 +602,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         val imp = z3context.mkImplies(lhsZ3.asInstanceOf[BoolExpr], rhsZ3.asInstanceOf[BoolExpr])
         (imp.asInstanceOf[ExprSort], 1 + ln + rn)
 
-      case OperEx(TlaBoolOper.equiv, lhs @ OperEx(TlaSetOper.in, _, _), rhs) if useArrays =>
+      case OperEx(TlaBoolOper.equiv, lhs @ OperEx(TlaSetOper.in, _, _), rhs) if arraysEnabled =>
         // Used for set filters in the arrays encoding, see addCellCons in SetFilterRule.
         // Leads to constraints of the form "set_2 = (store set_1 index (and pred (select set_1 index)))"
         val (rhsZ3, rn) = toExpr(rhs)
