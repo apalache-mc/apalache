@@ -1,4 +1,4 @@
----------- MODULE Test1085 ----------
+---------- MODULE Poly1085 ----------
 
 EXTENDS Integers, Apalache
 
