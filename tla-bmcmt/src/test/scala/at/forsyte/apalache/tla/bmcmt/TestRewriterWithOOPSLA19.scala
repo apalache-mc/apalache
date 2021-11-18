@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.EncodingBase._
 import at.forsyte.apalache.tla.bmcmt.rules.aux._
 import at.forsyte.apalache.tla.bmcmt.smt.{PreproSolverContext, SolverConfig, Z3SolverContext}
 import org.junit.runner.RunWith

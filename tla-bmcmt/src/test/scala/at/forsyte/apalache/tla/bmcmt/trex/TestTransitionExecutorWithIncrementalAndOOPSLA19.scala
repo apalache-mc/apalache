@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.trex
 
+import at.forsyte.apalache.tla.bmcmt.EncodingBase._
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriterImpl
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}

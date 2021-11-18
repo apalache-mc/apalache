@@ -13,7 +13,7 @@ import at.forsyte.apalache.tla.lir.TypedPredefs._
 import org.scalatest.fixture
 import scala.collection.immutable.SortedMap
 
-trait TestSeqModelCheckerTrait extends fixture.FunSuite with EncodingBase {
+trait TestSeqModelCheckerTrait extends fixture.FunSuite {
   protected type FixtureParam = SymbStateRewriter
 
   private val types = Map(

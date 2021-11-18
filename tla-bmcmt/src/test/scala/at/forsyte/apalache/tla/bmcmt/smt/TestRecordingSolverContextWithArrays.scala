@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
+import at.forsyte.apalache.tla.bmcmt.EncodingBase._
 import org.junit.runner.RunWith
 import org.scalatest.Outcome
 import org.scalatest.junit.JUnitRunner

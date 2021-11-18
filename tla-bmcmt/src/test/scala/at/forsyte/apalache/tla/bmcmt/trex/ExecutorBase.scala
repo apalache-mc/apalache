@@ -1,12 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt.trex
 
-import at.forsyte.apalache.tla.bmcmt.EncodingBase
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.scalatest.fixture
 
-trait ExecutorBase[SnapshotT] extends fixture.FunSuite with EncodingBase {
+trait ExecutorBase[SnapshotT] extends fixture.FunSuite {
   type ExecutorContextT = ExecutionContext[SnapshotT]
   type FixtureParam = ExecutorContextT
 

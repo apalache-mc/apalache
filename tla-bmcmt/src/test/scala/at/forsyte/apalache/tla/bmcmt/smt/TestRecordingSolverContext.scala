@@ -1,13 +1,13 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
-import at.forsyte.apalache.tla.bmcmt.{Arena, EncodingBase}
+import at.forsyte.apalache.tla.bmcmt.Arena
 import at.forsyte.apalache.tla.bmcmt.types.IntT
 import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.scalatest.fixture
 
-trait TestRecordingSolverContext extends fixture.FunSuite with EncodingBase {
+trait TestRecordingSolverContext extends fixture.FunSuite {
   protected type FixtureParam = Any
 
   protected var solverConfig: SolverConfig = _

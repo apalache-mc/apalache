@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.smt.Z3SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, UnknownT}
 import org.scalatest.fixture
 
-trait TestArena extends fixture.FunSuite with EncodingBase {
+trait TestArena extends fixture.FunSuite {
   protected type FixtureParam = Any
 
   protected var solver: Z3SolverContext = _

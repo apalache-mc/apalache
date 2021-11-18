@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.EncodingBase._
 import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStoreImpl
 import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig}
 import org.junit.runner.RunWith
