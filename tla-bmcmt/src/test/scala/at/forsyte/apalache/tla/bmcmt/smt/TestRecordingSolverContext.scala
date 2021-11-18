@@ -2,21 +2,20 @@ package at.forsyte.apalache.tla.bmcmt.smt
 
 import at.forsyte.apalache.tla.bmcmt.Arena
 import at.forsyte.apalache.tla.bmcmt.types.IntT
-import at.forsyte.apalache.tla.lir.{BuilderVal, TlaEx}
+import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.fixture
 
-@RunWith(classOf[JUnitRunner])
-class TestRecordingSolverContext extends FunSuite {
-  private val defaultSolverConfig = SolverConfig(debug = false, profile = false, randomSeed = 0)
+trait TestRecordingSolverContext extends fixture.FunSuite {
+  protected type FixtureParam = Any
+
+  protected var solverConfig: SolverConfig = _
 
   private val int42: TlaEx = tla.int(42)
 
-  test("operations proxied") {
-    val solver = RecordingSolverContext.createZ3(None, defaultSolverConfig)
+  test("operations proxied") { _ =>
+    val solver = RecordingSolverContext.createZ3(None, solverConfig)
     var arena = Arena.create(solver).appendCell(IntT())
     val x = arena.topCell
     solver.assertGroundExpr(tla.eql(x.toNameEx, int42))
@@ -24,8 +23,8 @@ class TestRecordingSolverContext extends FunSuite {
     assert(solver.evalGroundExpr(x.toNameEx) == int42)
   }
 
-  test("write and read") {
-    val solver = RecordingSolverContext.createZ3(None, defaultSolverConfig)
+  test("write and read") { _ =>
+    val solver = RecordingSolverContext.createZ3(None, solverConfig)
     var arena = Arena.create(solver).appendCell(IntT())
     val x = arena.topCell
     solver.assertGroundExpr(tla.eql(x.toNameEx, int42))
@@ -37,14 +36,14 @@ class TestRecordingSolverContext extends FunSuite {
     solver.assertGroundExpr(tla.gt(x.toNameEx, tla.int(1000)))
     assert(!solver.sat())
     // restore the context
-    val restoredSolver = RecordingSolverContext.createZ3(Some(log), defaultSolverConfig)
+    val restoredSolver = RecordingSolverContext.createZ3(Some(log), solverConfig)
     // the restored context should be satisfiable
     assert(restoredSolver.sat())
     assert(restoredSolver.evalGroundExpr(x.toNameEx) == int42)
   }
 
-  test("pop on empty") {
-    val solver = RecordingSolverContext.createZ3(None, defaultSolverConfig)
+  test("pop on empty") { _ =>
+    val solver = RecordingSolverContext.createZ3(None, solverConfig)
     assertThrows[IllegalArgumentException](solver.pop(2))
   }
 }
