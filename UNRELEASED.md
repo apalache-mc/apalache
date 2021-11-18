@@ -18,4 +18,3 @@
 ### Bug fixes
 
    * Fixed handling of polymorphic operators in folds, see #1085
-
