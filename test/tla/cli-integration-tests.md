@@ -2025,6 +2025,23 @@ Type checker [OK]
 EXITCODE: OK
 ```
 
+### typecheck Poly1084.tla
+
+Regression test for principal types in let definitions.
+
+```sh
+$ apalache-mc typecheck Poly1084.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeCheckerSnowcat
+ > Running Snowcat .::.
+ > Your types are great!
+ > All expressions are typed
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
 ## Running the config command
 
 ### config --enable-stats=false
