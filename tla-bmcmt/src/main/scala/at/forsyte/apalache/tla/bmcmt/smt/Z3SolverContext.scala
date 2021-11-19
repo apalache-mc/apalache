@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicLong
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.profiler.{IdleSmtListener, SmtListener}
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
-import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, IntT}
+import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, FinSetT, IntT, PowSetT}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.io.UTFPrinter
 import at.forsyte.apalache.tla.lir.oper._
@@ -46,6 +46,10 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   //      logWriter.println(";; %s = %s".format(p, Global.getParameter(p)))
   }
 
+  private def arraysEnabled(): Boolean = {
+    config.smtEncoding == "arrays"
+  }
+
   var level: Int = 0
   var nBoolConsts: Int = 0 // the solver introduces Boolean constants internally
   private val z3context: Context = new Context()
@@ -78,14 +82,26 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
    * Let's cache the constants, if Z3 cannot do it well.
    * Again, the cache carries the context level, to support push and pop.
    */
-  private val cellCache: mutable.Map[Int, (ExprSort, CellT, Int)] =
-    new mutable.HashMap[Int, (ExprSort, CellT, Int)]
+  private val cellCache: mutable.Map[Int, List[(ExprSort, CellT, Int)]] =
+    new mutable.HashMap[Int, List[(ExprSort, CellT, Int)]]
 
   /**
    * A cache for the in-relation between a set and its potential element.
    */
   private val inCache: mutable.Map[(Int, Int), (ExprSort, Int)] =
     new mutable.HashMap[(Int, Int), (ExprSort, Int)]
+
+  /**
+   * A map flagging which in-relations were previously accessed. Used in the encoding with SMT arrays.
+   */
+  private val inStored: mutable.Map[(Int, Int), List[(Boolean, Int)]] =
+    new mutable.HashMap[(Int, Int), List[(Boolean, Int)]]
+
+  /**
+   * A tuple storing an array select and the condition to use it.
+   * Used to propagate SSA arrays in set filters when the filter predicate evaluates for false.
+   */
+  private var propagatedArraySelect: (Boolean, ExprSort) = (false, z3context.mkFalse().asInstanceOf[ExprSort])
 
   /**
    * Sometimes, we lose a fresh arena in the rewriting rules. As this situation is very hard to debug,
@@ -103,6 +119,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     logWriter.close()
     cellCache.clear()
     inCache.clear()
+    inStored.clear()
     funDecls.clear()
     cellSorts.clear()
   }
@@ -129,9 +146,18 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val cellSort = getOrMkCellSort(cell.cellType)
     log(s"(declare-const $cell $cellSort)")
     val cellName = cell.toString
-    z3context.mkConstDecl(cellName, cellSort)
     val const = z3context.mkConst(cellName, cellSort)
-    cellCache += (cell.id -> (const, cell.cellType, level))
+    cellCache += (cell.id -> List((const, cell.cellType, level)))
+
+    // If arrays are used to encode sets, they are initialized here to represent empty sets.
+    if (cellSort.isInstanceOf[ArraySort[Sort, BoolSort]]) {
+      val arrayDomain = cellSort.asInstanceOf[ArraySort[Sort, Sort]].getDomain()
+      val arrayInitializer = z3context.mkEq(const, z3context.mkConstArray(arrayDomain, z3context.mkFalse()))
+
+      log(s"(assert $arrayInitializer)")
+      z3solver.add(arrayInitializer)
+      _metrics = _metrics.addNSmtExprs(1)
+    }
 
     if (cell.id <= 1) {
       // Either FALSE or TRUE. Add an explicit assert at the SMT level.
@@ -146,6 +172,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
       log(s"(assert $z3expr)")
       z3solver.add(z3expr)
+      _metrics = _metrics.addNSmtExprs(1)
     }
 
     _metrics = _metrics.addNCells(1)
@@ -156,29 +183,77 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val setT = set.cellType
     val name = s"in_${elemT.signature}${elem.id}_${setT.signature}${set.id}"
     if (!inCache.contains((set.id, elem.id))) {
-      smtListener.onIntroSmtConst(name)
-      log(s";; declare edge predicate $name: Bool")
-      log(s"(declare-const $name Bool)")
-      nBoolConsts += 1
-      val const = z3context.mkConst(name, z3context.getBoolSort)
-      inCache += ((set.id, elem.id) -> ((const.asInstanceOf[ExprSort], level)))
-
-      _metrics = _metrics.addNConsts(1)
+      if (arraysEnabled) {
+        val updatedSetName = set.toString + "_" + name
+        val setSort = getOrMkCellSort(set.cellType)
+        log(s";; declare edge inclusion $name")
+        log(s"(declare-const $updatedSetName $setSort)")
+        val updatedSet = z3context.mkConst(updatedSetName, setSort)
+        // The updated set is cached here, it needs to be added to a predicate later, via "getInPred".
+        // The inStored map is used to ensure that the first call to "getInPred" related to the declared inPred will
+        // return a "store", and the subsequent calls will return a "select".
+        inCache += ((set.id, elem.id) -> (updatedSet, level))
+        inStored += ((set.id, elem.id) -> List((false, level)))
+        _metrics = _metrics.addNConsts(1)
+      } else {
+        smtListener.onIntroSmtConst(name)
+        log(s";; declare edge predicate $name: Bool")
+        log(s"(declare-const $name Bool)")
+        nBoolConsts += 1
+        val const = z3context.mkConst(name, z3context.getBoolSort)
+        inCache += ((set.id, elem.id) -> ((const.asInstanceOf[ExprSort], level)))
+        _metrics = _metrics.addNConsts(1)
+      }
     }
   }
 
   private def getInPred(setId: Int, elemId: Int): ExprSort = {
     inCache.get((setId, elemId)) match {
       case None =>
-        val setT = cellCache(setId)._2
-        val elemT = cellCache(elemId)._2
+        val setT = cellCache(setId).head._2
+        val elemT = cellCache(elemId).head._2
         val name = s"in_${elemT.signature}${elemId}_${setT.signature}$setId"
         logWriter.flush() // flush the SMT log
         throw new IllegalStateException(
             s"SMT $id: The Boolean constant $name (set membership) is missing from the SMT context")
 
       case Some((const, _)) =>
-        const
+        if (arraysEnabled) {
+          val (setExpr, setT, _) = cellCache(setId).head
+          val (elemExpr, elemT, _) = cellCache(elemId).head
+
+          // inPred can either represent an array update, i.e. a "store", or an array access, i.e. a "select", as the
+          // the current implementation is adhering to the interface made for the original encoding.
+          // TODO: Should we split this method and abandon the concept of an in-relation?
+          inStored.get(setId, elemId) match {
+            case None =>
+              val name = setExpr.toString + "_" + s"in_${elemT.signature}${elemId}_${setT.signature}$setId"
+              logWriter.flush() // flush the SMT log
+              throw new IllegalStateException(s"SMT $id: The Array constant $name is missing from the SMT context")
+
+            // Array "store"
+            case Some(list) if list.head._1 == false =>
+              val storedExpr = if (propagatedArraySelect._1) propagatedArraySelect._2 else z3context.mkTrue()
+              propagatedArraySelect = propagatedArraySelect.copy(_1 = false)
+              val store = z3context.mkStore(
+                  setExpr.asInstanceOf[Expr[ArraySort[Sort, BoolSort]]], elemExpr.asInstanceOf[Expr[Sort]],
+                  storedExpr.asInstanceOf[Expr[BoolSort]])
+              val eqStore = z3context.mkEq(const, store)
+              // inStored records that the array was set in the current level
+              inStored += ((setId, elemId) -> ((true, level) :: inStored(setId, elemId)))
+              // cellCache records the current SSA array representing the set being handled
+              cellCache += (setId -> ((const, setT, level) :: cellCache(setId)))
+              eqStore.asInstanceOf[ExprSort]
+
+            // Array "select"
+            case Some(list) if list.head._1 == true =>
+              z3context
+                .mkSelect(setExpr.asInstanceOf[ArrayExpr[Sort, BoolSort]], elemExpr.asInstanceOf[Expr[Sort]])
+                .asInstanceOf[ExprSort]
+          }
+        } else {
+          const
+        }
     }
   }
 
@@ -317,8 +392,11 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       // clean the caches
       cellSorts.retain((_, value) => value._2 <= level)
       funDecls.retain((_, value) => value._2 <= level)
-      cellCache.retain((_, value) => value._3 <= level)
+      cellCache.foreach(entry => cellCache += entry.copy(_2 = entry._2.filter(_._3 <= level)))
+      cellCache.retain((_, value) => value.nonEmpty)
       inCache.retain((_, value) => value._2 <= level)
+      inStored.foreach(entry => inStored += entry.copy(_2 = entry._2.filter(_._2 <= level)))
+      inStored.retain((_, value) => value.nonEmpty)
     }
   }
 
@@ -332,8 +410,11 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       // clean the caches
       cellSorts.retain((_, value) => value._2 <= level)
       funDecls.retain((_, value) => value._2 <= level)
-      cellCache.retain((_, value) => value._3 <= level)
+      cellCache.foreach(entry => cellCache += entry.copy(_2 = entry._2.filter(_._3 <= level)))
+      cellCache.retain((_, value) => value.nonEmpty)
       inCache.retain((_, value) => value._2 <= level)
+      inStored.foreach(entry => inStored += entry.copy(_2 = entry._2.filter(_._2 <= level)))
+      inStored.retain((_, value) => value.nonEmpty)
     }
   }
 
@@ -408,6 +489,12 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
           case IntT() =>
             z3context.getIntSort
 
+          case FinSetT(elemType) if arraysEnabled =>
+            z3context.mkArraySort(getOrMkCellSort(elemType), z3context.getBoolSort)
+
+          case PowSetT(domType) if arraysEnabled =>
+            z3context.mkArraySort(getOrMkCellSort(domType), z3context.getBoolSort)
+
           case _ =>
             log(s"(declare-sort $sig 0)")
             z3context.mkUninterpretedSort(sig)
@@ -424,7 +511,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   private def toExpr(ex: TlaEx): (ExprSort, Long) = {
     simplifier.simplifyShallow(ex) match {
       case NameEx(name) =>
-        val nm = cellCache(ArenaCell.idFromName(name))._1 // the cached cell
+        val nm = cellCache(ArenaCell.idFromName(name)).head._1 // the cached cell
         (nm, 1)
 
       case ValEx(TlaBool(false)) =>
@@ -456,7 +543,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       case OperEx(TlaOper.eq, lhs @ NameEx(lname), rhs @ NameEx(rname)) =>
         if (ArenaCell.isValidName(lname) && ArenaCell.isValidName(rname)) {
           // just comparing cells
-          val eq = z3context.mkEq(cellCache(ArenaCell.idFromName(lname))._1, cellCache(ArenaCell.idFromName(rname))._1)
+          val eq = z3context.mkEq(cellCache(ArenaCell.idFromName(lname)).head._1,
+              cellCache(ArenaCell.idFromName(rname)).head._1)
           (eq.asInstanceOf[ExprSort], 1)
         } else {
           // comparing integers and Boolean to cells, Booleans to Booleans, and Integers to Integers
@@ -465,6 +553,14 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
           val eq = toEqExpr(le.asInstanceOf[Expr[Sort]], re.asInstanceOf[Expr[Sort]])
           (eq.asInstanceOf[ExprSort], 1 + ln + rn)
         }
+
+      case OperEx(TlaOper.eq, lhs @ OperEx(TlaSetOper.in, _, _), rhs) if arraysEnabled =>
+        // Used for set filters in the arrays encoding, see addCellCons in SetFilterRule.
+        // Leads to constraints of the form "set_2 = (store set_1 index (and pred (select set_1 index)))"
+        val (re, rn) = toExpr(rhs)
+        propagatedArraySelect = (true, re)
+        val (le, ln) = toExpr(lhs)
+        (le.asInstanceOf[ExprSort], ln + rn)
 
       case OperEx(TlaOper.eq, lhs, rhs) =>
         val (le, ln) = toExpr(lhs)
@@ -505,6 +601,14 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         val (rhsZ3, rn) = toExpr(rhs)
         val imp = z3context.mkImplies(lhsZ3.asInstanceOf[BoolExpr], rhsZ3.asInstanceOf[BoolExpr])
         (imp.asInstanceOf[ExprSort], 1 + ln + rn)
+
+      case OperEx(TlaBoolOper.equiv, lhs @ OperEx(TlaSetOper.in, _, _), rhs) if arraysEnabled =>
+        // Used for set filters in the arrays encoding, see addCellCons in SetFilterRule.
+        // Leads to constraints of the form "set_2 = (store set_1 index (and pred (select set_1 index)))"
+        val (rhsZ3, rn) = toExpr(rhs)
+        propagatedArraySelect = (true, rhsZ3)
+        val (lhsZ3, ln) = toExpr(lhs)
+        (lhsZ3.asInstanceOf[ExprSort], ln + rn)
 
       case OperEx(TlaBoolOper.equiv, lhs, rhs) =>
         val (lhsZ3, ln) = toExpr(lhs)

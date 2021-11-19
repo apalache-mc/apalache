@@ -2,7 +2,7 @@
 
 | author        | revision |
 | ------------- | --------:|
-| Rodrigo Otoni |        1 |
+| Rodrigo Otoni |      1.1 |
 
 This ADR describes an alternative encoding of the [KerA+] fragment of TLA+ into SMT.
 Compound data structures, e.g. sets, are currently encoded using the [core theory] of SMT,
@@ -19,10 +19,11 @@ treatment of different TLA+ operators are described.
 
 The encoding using arrays is to be an alternative, not a replacement, to the already existing encoding.
 Given this, a new option is to be added to the `check` command of the CLI. The default encoding will be
-the existing one. The option description is shown below.
+the existing one. The option description is shown below. The envvar `SMT_ENCODING` can also be used to
+set the encoding, see the [model checking parameters] for details.
 
 ```
---smt-encoding=STRING   : the SMT encoding: oopsla19, arrays (experimental), default: oopsla19
+--smt-encoding : the SMT encoding: oopsla19, arrays (experimental), default: oopsla19 (overrides envvar SMT_ENCODING)
 ```
 
 ### Code changes
@@ -30,26 +31,28 @@ the existing one. The option description is shown below.
 The following changes will be made to implement the new CLI option:
 
 - Add new string variable to class `CheckCmd` to enable the new option.
+- Add new `smtEncoding` field to `SolverConfig`.
 - Add new class `SymbStateRewriterImplWithArrays`, which extends class `SymbStateRewriterImpl`.
-- Use the new option to select between different `SymbStateRewriter`
+- Use the new option to set the `SolverConfig` encoding field and select between different `SymbStateRewriter`
   implementations in classes `BoundedCheckerPassImpl` and `SymbStateRewriterAuto`.
 
 ## 2. Testing the new encoding
 
-The new encoding should provide the same results as the existing one, the available test suit
-will thus be used to test the new encoding. To achieve this, the test suit needs to be made parametric
-w.r.t. the implementations of `SymbStateRewriter`.
+The new encoding should provide the same results as the existing one, the available test suite
+will thus be used to test the new encoding. To achieve this, the unit tests needs to be made parametric
+w.r.t. the `SolverConfig` encoding field and the implementations of `SymbStateRewriter`, and the
+integration tests need to be tagged to run with the new encoding.
 
 ### Code changes
 
 The following changes will be made to implement the tests for the new encoding:
 
-- Refactor the classes in `tla-bmcmt/src/test` to enable unit testing with different
-  implementations of `SymbStateRewriter`.
-- Add unit tests for the new encoding, which should be similar to existing tests, but use
-  `SymbStateRewriterImplWithArrays` instead of `SymbStateRewriterImpl`.
-- Add integration tests for the new encoding, which should be similar to existing tests, but
-  have the `smt-encoding` flag set to `arrays`.
+- Refactor the classes in `tla-bmcmt/src/test` to enable unit testing with different configurations
+  of `SolverConfig` and implementations of `SymbStateRewriter`.
+- Add unit tests for the new encoding, which should be similar to existing tests, but use a
+  different solver configuration and `SymbStateRewriterImplWithArrays` instead of `SymbStateRewriterImpl`.
+- Add integration tests for the new encoding by tagging existing tests with `array-encoding`, which
+  will be run by the CI with envvar `SMT_ENCODING` set to `arrays`.
 
 ## 3. Encoding sets
 
@@ -126,11 +129,25 @@ For consistency, the new encoding uses constant arrays to declare both finite an
 
 The following changes will be made to implement the new encoding of sets:
 
-- Add alternative rewriting rules for sets, via new classes extending `RewritingRule`.
-  - The new rules will use SMT equality directly, instead of relying on class `LazyEquality`.
-- In class `SymbStateRewriterImplWithArrays`, overwrite `ruleLookupTable` with the new rules.
-  - Existing rules will be reused when appropriate, e.g. rules for handling Boolean constants.
-- In class `Z3SolverContext`, add appropriate methods to handle SMT constraints over arrays.
+- Add alternative rewriting rules for sets when appropriate, by extending the existing rules.
+  - All alternative rules will be suffixed with `WithArrays`.
+  - The new rules will not rely on `LazyEquality` and will aim to use SMT equality directly.
+  - Only the generation of SMT constraints will be modified by the new rules, the other Arena
+    elements will remain unchanged.
+- In class `SymbStateRewriterImplWithArrays`, add the new rules to `ruleLookupTable` by overriding
+  the entries to their older versions.
+- In class `Z3SolverContext`, add/change appropriate methods to handle SMT constraints over arrays.
+  - The main changes will de done in `declareCell`, `declareInPredIfNeeded`, and `getInPred`, as
+    these methods are directly responsible for creating the SMT constraints representing sets and
+    set membership.
+  - Cases for `FinSetT` and `PowSetT` will be added to `getOrMkCellSort`, as these types are no
+    longer represented by uninterpreted constants.
+  - `cellCache` will be changed to contain a list of cells, in order to handle the effects of
+    `push` and `pop` in the SSA assignment of sets.
+  - A new cache, `inStored`, will provide the required information to `getInPred` to enable it to
+    return either a `store` or a `select` constraint, when appropriate.
+  - Special cases for `TlaOper.eq` and `TlaBoolOper.equiv` will be added to `toExpr`, to allow the
+    set filter rule to propagate SSA sets when the filter predicate evaluates for false.
 
 ## 4. Encoding tuples and records
 
@@ -151,4 +168,5 @@ TODO
 [SMT-LIB Standard]: http://smtlib.cs.uiowa.edu/index.shtml
 [Version 2.6]: https://smtlib.cs.uiowa.edu/papers/smt-lib-reference-v2.6-r2017-07-18.pdf
 [TLA+ Model Checking Made Symbolic]: https://dl.acm.org/doi/10.1145/3360549
+[model checking parameters]: https://apalache.informal.systems/docs/apalache/running.html#model-checker-command-line-parameters
 [represented internally in Z3]: https://theory.stanford.edu/~nikolaj/programmingz3.html#sec-arrays

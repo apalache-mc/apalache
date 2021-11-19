@@ -1,6 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.EncodingBase._
 import at.forsyte.apalache.tla.bmcmt.rules.aux._
+import at.forsyte.apalache.tla.bmcmt.smt.{PreproSolverContext, SolverConfig, Z3SolverContext}
 import org.junit.runner.RunWith
 import org.scalatest.Outcome
 import org.scalatest.junit.JUnitRunner
@@ -17,6 +19,11 @@ class TestRewriterWithOOPSLA19
     with TestSymbStateRewriterTlc with TestSymbStateRewriterTuple with TestPropositionalOracle with TestSparseOracle
     with TestUninterpretedConstOracle {
   override protected def withFixture(test: OneArgTest): Outcome = {
-    test(oopsla19RewriterType)
+    solverContext = new PreproSolverContext(new Z3SolverContext(SolverConfig.default.copy(debug = true,
+                smtEncoding = oopsla19EncodingType)))
+    arena = Arena.create(solverContext)
+    val result = test(oopsla19EncodingType)
+    solverContext.dispose()
+    result
   }
 }
