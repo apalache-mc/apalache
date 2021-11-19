@@ -20,6 +20,15 @@ import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier}
  */
 class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker) extends TlaExTransformation {
 
+  // the substitutions computed in the various `instantiateWithArgs` steps need to be propagated to
+  // the LET-IN rewrite site, to maintain type variable name synchronization.
+  // The least invasive way is to define a var.
+  private var _storedSub: Substitution = Substitution.empty
+  private def adjustedTag(tag: TypeTag): TypeTag = tag match {
+    case Typed(tt1: TlaType1) => Typed(_storedSub.subRec(tt1))
+    case _                    => tag
+  }
+
   override def apply(expr: TlaEx): TlaEx = {
     transform(stepLimitOpt = None)(expr)
   }
@@ -50,12 +59,14 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker) ext
     // recursive processing of composite operators and let-in definitions
     case ex @ LetInEx(body, defs @ _*) =>
       // transform bodies of all op.defs
-      val newDefs = defs map tracker.trackOperDecl { d => d.copy(body = transform(stepLimitOpt)(d.body)) }
+      val newDefs = defs map tracker.trackOperDecl { d =>
+        d.copy(body = transform(stepLimitOpt)(d.body)).withTag(adjustedTag(d.typeTag))
+      }
       val newBody = transform(stepLimitOpt)(body)
       if (defs == newDefs && body == newBody) {
         ex
       } else {
-        LetInEx(newBody, newDefs: _*)(ex.typeTag)
+        LetInEx(newBody, newDefs: _*)(adjustedTag(ex.typeTag))
       }
 
     case ex @ OperEx(op, args @ _*) =>
@@ -85,12 +96,14 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker) ext
     // 2. Apply the resulting substitution to the types in all subexpressions.
     val actualType = OperT1(args.map(_.typeTag.asTlaType1()), bodyCopy.typeTag.asTlaType1())
     val genericType = decl.typeTag.asTlaType1()
-    val substitution = new TypeUnifier().unify(Substitution.empty, genericType, actualType) match {
+    val substitution = new TypeUnifier().unify(_storedSub, genericType, actualType) match {
       case None =>
         throw new TypingException(
             s"Inliner: Unable to unify generic signature $genericType of ${decl.name} with the concrete type $actualType")
 
-      case Some((sub, _)) => sub
+      case Some((sub, _)) =>
+        _storedSub = sub
+        _storedSub
     }
 
     val newBodyWithReducedType = if (substitution.isEmpty) {
