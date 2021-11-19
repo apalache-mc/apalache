@@ -30,6 +30,7 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker) ext
   }
 
   override def apply(expr: TlaEx): TlaEx = {
+    _storedSub = Substitution.empty
     transform(stepLimitOpt = None)(expr)
   }
 
@@ -96,15 +97,15 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker) ext
     // 2. Apply the resulting substitution to the types in all subexpressions.
     val actualType = OperT1(args.map(_.typeTag.asTlaType1()), bodyCopy.typeTag.asTlaType1())
     val genericType = decl.typeTag.asTlaType1()
-    val substitution = new TypeUnifier().unify(_storedSub, genericType, actualType) match {
+    val substitution = new TypeUnifier().unify(Substitution.empty, genericType, actualType) match {
       case None =>
         throw new TypingException(
             s"Inliner: Unable to unify generic signature $genericType of ${decl.name} with the concrete type $actualType")
 
-      case Some((sub, _)) =>
-        _storedSub = sub
-        _storedSub
+      case Some((sub, _)) => sub
     }
+
+    _storedSub = substitution
 
     val newBodyWithReducedType = if (substitution.isEmpty) {
       newBody
