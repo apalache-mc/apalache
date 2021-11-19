@@ -6,9 +6,11 @@ import at.forsyte.apalache.tla.lir.UID
  * An equivalence class that keeps track of type variables that are considered equal, e.g.,
  * by unification or constraint solving.
  *
+ * @param includedVars a non-empty set of variables
  * @author Igor Konnov
  */
-class EqClass {
+class EqClass(includedVars: Set[Int]) {
+  require(includedVars.nonEmpty)
 
   /**
    * A unique identifier of the equivalence class.
@@ -18,12 +20,12 @@ class EqClass {
   /**
    * Type variables that are associated with the equivalence class.
    */
-  private var _typeVars: Set[Int] = Set.empty
+  private var _typeVars: Set[Int] = includedVars
 
   /**
    * The representative of an equivalence class.
    */
-  private var _reprVar: Int = -1
+  private var _reprVar: Int = includedVars.reduce(Math.min)
 
   /**
    * Get the representative variable of a class.
@@ -43,7 +45,7 @@ class EqClass {
    * @param newSet the new set
    */
   def typeVars_=(newSet: Set[Int]): Unit = {
-    assert(newSet.nonEmpty)
+    require(newSet.nonEmpty)
     _typeVars = newSet
     _reprVar = newSet.reduce(Math.min)
   }
@@ -85,8 +87,6 @@ object EqClass {
   }
 
   def apply(newVars: Set[Int]): EqClass = {
-    val cls = new EqClass
-    cls.typeVars = newVars
-    cls
+    new EqClass(newVars)
   }
 }
