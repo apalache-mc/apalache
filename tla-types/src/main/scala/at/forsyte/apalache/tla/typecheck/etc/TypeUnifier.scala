@@ -239,7 +239,8 @@ class TypeUnifier {
     val lcls = varToClass(lvar)
     val rcls = varToClass(rvar)
     if (lcls == rcls) {
-      Some(VarT1(lvar))
+      // always pick the variable with the minimal index as the representative
+      Some(VarT1(lcls.reprVar))
     } else {
       // try to merge the classes
       val lterm = solution(lcls)
@@ -284,8 +285,7 @@ class TypeUnifier {
   // that replaces every variable of an equivalence class with the largest variable in the class
   private def mkCanonicalSub: Substitution = {
     val mapping = solution.keys.toSeq.map { cls =>
-      // use the variable that has the maximal index as the representative of the equivalence class
-      (cls, VarT1(cls.typeVars.reduce(Math.max)))
+      (cls, VarT1(cls.reprVar))
     }
     new Substitution(Map[EqClass, TlaType1](mapping: _*))
   }

@@ -77,6 +77,16 @@ class ConstraintSolver(approximateSolution: Substitution = Substitution.empty) {
     }
   }
 
+  /**
+   * Test whether a variable is free in the context that is induced by the solved constraints.
+   *
+   * @param varNo a variable number
+   * @return true if the variable occurs in the partial solution of the solver
+   */
+  def isFreeVar(varNo: Int): Boolean = {
+    approximateSolution.mapping.keySet.forall(cls => !cls.typeVars.contains(varNo))
+  }
+
   private def solveOne(solution: Substitution, constraint: Clause): Option[(Substitution, TlaType1)] = {
     constraint match {
       case EqClause(unknown, term) =>
