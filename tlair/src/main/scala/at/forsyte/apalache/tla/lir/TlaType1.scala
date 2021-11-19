@@ -16,6 +16,14 @@ sealed trait TlaType1 {
   def usedNames: Set[Int]
 }
 
+/**
+ * A type signature of a let definition after the definition by Damas and Milner.
+ *
+ * @param principalType  the parametric type of a definition, often called the principal type
+ * @param quantifiedVars a subset of the variables used in `signature` that must be instantiated upon use.
+ */
+case class TlaType1Scheme(principalType: TlaType1, quantifiedVars: Set[Int])
+
 object TlaType1 {
   def fromTypeTag(typeTag: TypeTag): TlaType1 = {
     typeTag match {

@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
-import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, OperT1, SeqT1, SetT1, StrT1, TlaType1, TupT1, VarT1}
+import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, OperT1, SeqT1, SetT1, StrT1, TlaType1, TlaType1Scheme, TupT1, VarT1}
 import at.forsyte.apalache.tla.typecheck._
 import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
 import org.easymock.EasyMock
@@ -60,7 +60,7 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
       consumeWrapperTypes(listener, wrapper)
     }
     whenExecuting(listener) {
-      val computed = checker.compute(listener, TypeContext("foo" -> (intSet, Set.empty)), wrapper)
+      val computed = checker.compute(listener, TypeContext("foo" -> TlaType1Scheme(intSet, Set.empty)), wrapper)
       assert(computed.contains(parser("() => Set(Int)")))
     }
   }
@@ -231,7 +231,7 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     }
     whenExecuting(listener) {
       val operType = parser("Int => Int")
-      val computed = checker.compute(listener, TypeContext("F" -> (operType, Set.empty)), wrapper)
+      val computed = checker.compute(listener, TypeContext("F" -> TlaType1Scheme(operType, Set.empty)), wrapper)
       assert(computed.contains(parser("() => Int")))
     }
   }
@@ -259,7 +259,8 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     }
     whenExecuting(listener) {
       val operType = parser("a1002 => a1002")
-      val computed = checker.compute(listener, TypeContext("F" -> (operType, operType.usedNames)), wrapper)
+      val computed =
+        checker.compute(listener, TypeContext("F" -> TlaType1Scheme(operType, operType.usedNames)), wrapper)
       assert(computed.contains(parser("() => Bool")))
     }
   }
@@ -401,7 +402,7 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     }
     whenExecuting(listener) {
       // we do not compute principal types here....
-      val annotations = TypeContext("F" -> (parser("Int => Int"), Set.empty))
+      val annotations = TypeContext("F" -> TlaType1Scheme(parser("Int => Int"), Set.empty))
       val computed = checker.compute(listener, annotations, letIn)
       assert(computed.contains(parser("Int")))
     }
@@ -515,7 +516,7 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     }
     whenExecuting(listener) {
       // add the type annotation F: \A a: a => b
-      val context = TypeContext("F" -> (parser("a => b"), Set(0, 1)))
+      val context = TypeContext("F" -> TlaType1Scheme(parser("a => b"), Set(0, 1)))
       val computed = checker.compute(listener, context, letIn)
       assert(computed.contains(parser("Int")))
     }
@@ -605,7 +606,7 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     }
     whenExecuting(listener) {
       // we do not compute principal types here....
-      val annotations = TypeContext("F" -> (fType, Set.empty))
+      val annotations = TypeContext("F" -> TlaType1Scheme(fType, Set.empty))
       val computed = checker.compute(listener, annotations, letIn)
       assert(computed.contains(recType))
     }
@@ -732,7 +733,7 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
       consumeWrapperTypes(listener, wrapper)
     }
     whenExecuting(listener) {
-      val computed = checker.compute(listener, TypeContext("y" -> (IntT1(), Set.empty)), wrapper)
+      val computed = checker.compute(listener, TypeContext("y" -> TlaType1Scheme(IntT1(), Set.empty)), wrapper)
       assert(computed.contains(parser("() => [x: Str, y: Int]")))
     }
   }
@@ -855,7 +856,7 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     }
     whenExecuting(listener) {
       // we do not compute principal types here....
-      val annotations = TypeContext("F" -> (parser("<<Int, Int>>"), Set.empty))
+      val annotations = TypeContext("F" -> TlaType1Scheme(parser("<<Int, Int>>"), Set.empty))
       val computed = checker.compute(listener, annotations, letIn)
       assert(computed.contains(parser("<<Int, Int>>")))
     }

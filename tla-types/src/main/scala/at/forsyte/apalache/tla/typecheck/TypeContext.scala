@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.typecheck
 
-import at.forsyte.apalache.tla.lir.TlaType1
-import at.forsyte.apalache.tla.typecheck.TypeContext.TypeScheme
+import at.forsyte.apalache.tla.lir.TlaType1Scheme
 
 import scala.collection.immutable.SortedMap
 
@@ -11,7 +10,7 @@ import scala.collection.immutable.SortedMap
  * @param types a map from a name to the assigned typed and universal type variables
  * @author Igor Konnov
  */
-class TypeContext(val types: Map[String, TypeScheme]) {
+class TypeContext(val types: Map[String, TlaType1Scheme]) {
 
   /**
    * Get the name and the set of universally quantified type variables (as integers) that are associated with the name.
@@ -19,7 +18,7 @@ class TypeContext(val types: Map[String, TypeScheme]) {
    * @param name a name in the type context
    * @return the associated type and the set of type variables (as integers) that are associated with the name.
    */
-  def apply(name: String): TypeScheme = {
+  def apply(name: String): TlaType1Scheme = {
     types.get(name) match {
       case Some(pair) => pair
       case None       => throw new IllegalArgumentException(s"No type binding for $name in the type context")
@@ -30,16 +29,11 @@ class TypeContext(val types: Map[String, TypeScheme]) {
 object TypeContext {
 
   /**
-   * A type scheme that carries a type and a set of variables that are universally quantified.
-   */
-  type TypeScheme = (TlaType1, Set[Int])
-
-  /**
    * An empty type context.
    */
   val empty: TypeContext = new TypeContext(Map.empty)
 
-  def apply(namedTypes: (String, TypeScheme)*): TypeContext = {
+  def apply(namedTypes: (String, TlaType1Scheme)*): TypeContext = {
     new TypeContext(SortedMap(namedTypes: _*))
   }
 }
