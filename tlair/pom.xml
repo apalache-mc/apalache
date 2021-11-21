@@ -63,5 +63,12 @@
             <version>1.4.2</version>
         </dependency>
 
+        <!-- https://github.com/milessabin/shapeless -->
+        <dependency>
+            <groupId>com.chuusai</groupId>
+            <artifactId>shapeless_2.12</artifactId>
+            <version>2.3.3</version>
+        </dependency>
+
     </dependencies>
 </project>
