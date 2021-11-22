@@ -2,6 +2,16 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.17.5
+
+### Bug fixes
+
+ * Fix computation of principal types, see #1084
+
+### Features
+
+   * Added support for sets to the SMT encoding with arrays, see #1092
+
 ## 0.17.4
 
 ### Features
