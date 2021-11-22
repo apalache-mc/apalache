@@ -238,11 +238,13 @@ object OutputManager extends LazyLogging {
   /** Applies `f` to a PrintWriter created by appending the `parts` to the `runDir` */
   def withWriterInRunDir(parts: String*)(f: PrintWriter => Unit): Boolean = {
     val writeToDir: Path => Unit = dir => withWriter(f)(printWriter(dir, parts: _*))
-    runDirOpt.map { runDir =>
-      writeToDir(runDir)
-      customRunDirOpt.foreach(writeToDir)
-      true
-    }.getOrElse(false)
+    runDirOpt
+      .map { runDir =>
+        writeToDir(runDir)
+        customRunDirOpt.foreach(writeToDir)
+        true
+      }
+      .getOrElse(false)
   }
 
   /**
@@ -260,6 +262,7 @@ object OutputManager extends LazyLogging {
         writeToDir(dir)
         customIntermediateRunDir.foreach(writeToDir)
         true
-      }.getOrElse(false)
+      }
+      .getOrElse(false)
   }
 }
