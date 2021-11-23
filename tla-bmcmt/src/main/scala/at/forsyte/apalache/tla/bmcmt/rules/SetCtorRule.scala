@@ -1,9 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.rules.aux.InOpFactory
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, FinSetT}
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, TlaType1}
+import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
@@ -12,6 +13,8 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
  * @author Igor Konnov
  */
 class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
+  private val inOpFactory = new InOpFactory(rewriter.solverContext.config.smtEncoding)
+
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaSetOper.enumSet, _*) => true
@@ -36,7 +39,7 @@ class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         nextState = nextState.updateArena(_.appendHas(newSetCell, cells: _*))
 
         for (c <- cells) {
-          val inExpr = OperEx(TlaSetOper.in, c.toNameEx, newSetCell.toNameEx)
+          val inExpr = inOpFactory.mkUpdateOp(c, newSetCell)
           rewriter.solverContext.assertGroundExpr(inExpr)
         }
 

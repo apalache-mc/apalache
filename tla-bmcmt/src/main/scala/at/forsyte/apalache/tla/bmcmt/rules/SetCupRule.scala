@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.util.Prod2SeqIterator
+import at.forsyte.apalache.tla.bmcmt.rules.aux.InOpFactory
 import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -15,6 +15,8 @@ import at.forsyte.apalache.tla.lir.oper.TlaSetOper
  * @author Igor Konnov
  */
 class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
+  private val inOpFactory = new InOpFactory(rewriter.solverContext.config.smtEncoding)
+
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaSetOper.cup, _*) => true
@@ -51,15 +53,15 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         // require each cell to be in in the union iff it is exactly in its origin set
         def addOnlyCellCons(thisSet: ArenaCell, thisElem: ArenaCell): Unit = {
-          val inThis = tla.in(thisElem.toNameEx, thisSet.toNameEx)
-          val inCup = tla.in(thisElem.toNameEx, newSetCell.toNameEx)
+          val inThis = inOpFactory.mkAccessOp(thisElem, thisSet)
+          val inCup = inOpFactory.mkUpdateOp(thisElem, newSetCell)
           rewriter.solverContext.assertGroundExpr(tla.equiv(inCup, inThis))
         }
 
         def addEitherCellCons(thisElem: ArenaCell): Unit = {
-          val inThis = tla.in(thisElem.toNameEx, leftSetCell.toNameEx)
-          val inOther = tla.in(thisElem.toNameEx, rightSetCell.toNameEx)
-          val inCup = tla.in(thisElem.toNameEx, newSetCell.toNameEx)
+          val inThis = inOpFactory.mkAccessOp(thisElem, leftSetCell)
+          val inOther = inOpFactory.mkAccessOp(thisElem, rightSetCell)
+          val inCup = inOpFactory.mkUpdateOp(thisElem, newSetCell)
           rewriter.solverContext.assertGroundExpr(tla.equiv(inCup, tla.or(inThis, inOther)))
         }
 

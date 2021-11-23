@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.rules.aux.InOpFactory
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -14,6 +15,8 @@ import at.forsyte.apalache.tla.lir._
  * @author Igor Konnov
  */
 class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
+  private val inOperFactory = new InOpFactory(rewriter.solverContext.config.smtEncoding)
+
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaFunOper.funDef, _*) => true
@@ -68,10 +71,15 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     // associate a value of the uninterpreted function with a cell
     def addCellCons(domElem: ArenaCell, relElem: ArenaCell): Unit = {
-      val inDomain = tla.in(domElem.toNameEx, domainCell.toNameEx).typed(BoolT1())
-      val inRelation = tla.in(relElem.toNameEx, relation.toNameEx).typed(BoolT1())
-      val iff = tla.equiv(inDomain, inRelation).typed(BoolT1())
-      rewriter.solverContext.assertGroundExpr(iff)
+      val inDomain = inOperFactory.mkAccessOp(domElem, domainCell).typed(BoolT1())
+      val inRelation = inOperFactory.mkUpdateOp(relElem, relation).typed(BoolT1())
+      val expr = if (rewriter.solverContext.config.smtEncoding == "arrays") {
+        val notInRelation = inOperFactory.mkUnchangedOp(relElem, relation).typed(BoolT1())
+        tla.ite(inDomain, inRelation, notInRelation).typed(BoolT1())
+      } else {
+        tla.equiv(inDomain, inRelation).typed(BoolT1())
+      }
+      rewriter.solverContext.assertGroundExpr(expr)
     }
 
     // add SMT constraints

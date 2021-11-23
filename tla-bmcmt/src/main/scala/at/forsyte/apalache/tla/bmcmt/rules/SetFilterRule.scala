@@ -1,9 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.rules.aux.InOpFactory
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{NameEx, NullEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
@@ -12,6 +14,8 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
  * @author Igor Konnov
  */
 class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
+  private val inOpFactory = new InOpFactory(rewriter.solverContext.config.smtEncoding)
+
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaSetOper.filter, _*) => true
@@ -58,11 +62,12 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         // require each cell to satisfy the predicate
         def addCellCons(cell: ArenaCell, pred: TlaEx): Unit = {
-          val inNewSet = OperEx(TlaSetOper.in, cell.toNameEx, newSetCell.toNameEx)
-          val inOldSet = OperEx(TlaSetOper.in, cell.toNameEx, setCell.toNameEx)
-          val inOldSetAndPred = OperEx(TlaBoolOper.and, pred, inOldSet)
-          val ifAndOnlyIf = OperEx(TlaOper.eq, inNewSet, inOldSetAndPred)
-          rewriter.solverContext.assertGroundExpr(ifAndOnlyIf)
+          val inNewSet = inOpFactory.mkUpdateOp(cell, newSetCell)
+          val notInNewSet = inOpFactory.mkUnchangedOp(cell, newSetCell)
+          val inOldSet = inOpFactory.mkAccessOp(cell, setCell)
+          val inOldSetAndPred = tla.and(pred, inOldSet)
+          val ite = tla.ite(inOldSetAndPred, inNewSet, notInNewSet)
+          rewriter.solverContext.assertGroundExpr(ite)
         }
 
         // add SMT constraints

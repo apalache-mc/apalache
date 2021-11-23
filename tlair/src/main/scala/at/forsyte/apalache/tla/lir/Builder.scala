@@ -596,6 +596,18 @@ class Builder {
     BuilderOper(ApalacheOper.constCard, ex)
   }
 
+  def apalacheSelectInSet(elem: BuilderEx, set: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.selectInSet, elem, set)
+  }
+
+  def apalacheStoreInSet(elem: BuilderEx, set: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.storeInSet, elem, set)
+  }
+
+  def apalacheUnchangedSet(set: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.unchangedSet, set)
+  }
+
   private val m_nameMap: Map[String, TlaOper] =
     scala.collection.immutable.Map(
         TlaOper.eq.name -> TlaOper.eq,

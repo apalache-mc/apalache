@@ -4,8 +4,7 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
-import at.forsyte.apalache.tla.lir.{NameEx, NullEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.TlaEx
 
 import scala.collection.immutable.SortedMap
 import at.forsyte.apalache.tla.lir.MalformedSepecificationError
@@ -23,6 +22,7 @@ import at.forsyte.apalache.tla.typecheck.ModelValueHandler
  * @author Igor Konnov
  */
 class CherryPick(rewriter: SymbStateRewriter) {
+  private val inOperFactory = new InOpFactory(rewriter.solverContext.config.smtEncoding)
   private val defaultValueFactory = new DefaultValueFactory(rewriter)
   val oracleFactory = new OracleFactory(rewriter)
 
@@ -79,7 +79,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
         var (nextState, oracle) = oracleFactory.newDefaultOracle(state, elems.size + 1)
 
         // pick only the elements that belong to the set
-        val elemsIn = elems map { c => tla.in(c.toNameEx, set.toNameEx).untyped() }
+        val elemsIn = elems map { c => inOperFactory.mkAccessOp(c, set).untyped() }
         rewriter.solverContext.assertGroundExpr(oracle.caseAssertions(nextState, elemsIn :+ elseAssert))
 
         pickByOracle(nextState, oracle, elems, elseAssert)
@@ -319,11 +319,12 @@ class CherryPick(rewriter: SymbStateRewriter) {
           // Although we search over a list, the list size is usually small, e.g., up to 10 elements
           if (domainCells.contains(keyCell)) {
             // the key belongs to the new domain only if belongs to the domain that is pointed by the oracle
-            val iff = tla.equiv(tla.in(keyCell.toNameEx, newDom.toNameEx), tla.in(keyCell.toNameEx, dom.toNameEx))
-            rewriter.solverContext.assertGroundExpr(tla.impl(oracle.whenEqualTo(nextState, no), iff))
+            val ite = tla.ite(inOperFactory.mkAccessOp(keyCell, dom), inOperFactory.mkUpdateOp(keyCell, newDom),
+                inOperFactory.mkUnchangedOp(keyCell, newDom))
+            rewriter.solverContext.assertGroundExpr(tla.impl(oracle.whenEqualTo(nextState, no), ite))
           } else {
             // The domain pointed by the oracle does not contain the key
-            val notInDom = tla.not(tla.in(keyCell.toNameEx, newDom.toNameEx))
+            val notInDom = inOperFactory.mkUnchangedOp(keyCell, newDom)
             rewriter.solverContext.assertGroundExpr(tla.impl(oracle.whenEqualTo(nextState, no), notInDom))
           }
         }
@@ -444,10 +445,10 @@ class CherryPick(rewriter: SymbStateRewriter) {
       //  (chosen = 1 /\ in(z_i, R) <=> in(c_i, S_1)) \/ (chosen = 2 /\ in(z_i, R) <=> in(d_i, S_2)) \/ (chosen = N <=> elseAssert)
       def nthIn(elemAndSet: (ArenaCell, ArenaCell), no: Int): TlaEx = {
         if (elemsOfMemberSets(no).nonEmpty) {
-          tla.equiv(tla.in(picked.toNameEx, resultCell.toNameEx),
-              tla.in(elemAndSet._1.toNameEx, elemAndSet._2.toNameEx))
+          tla.ite(inOperFactory.mkAccessOp(elemAndSet._1, elemAndSet._2), inOperFactory.mkUpdateOp(picked, resultCell),
+              inOperFactory.mkUnchangedOp(picked, resultCell))
         } else {
-          tla.not(tla.in(picked.toNameEx, resultCell.toNameEx)) // nothing belongs to the set
+          inOperFactory.mkUnchangedOp(picked, resultCell) // nothing belongs to the set
         }
       }
 
@@ -592,9 +593,14 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
     // if resultSet has an element, then it must be also in baseSet
     def inResultIfInBase(elem: ArenaCell): Unit = {
-      val inResult = tla.in(elem.toNameEx, resultSet.toNameEx)
-      val inBase = tla.in(elem.toNameEx, baseSet.toNameEx)
-      rewriter.solverContext.assertGroundExpr(tla.impl(inResult, inBase))
+      val inResult = inOperFactory.mkUpdateOp(elem, resultSet)
+      val inBase = inOperFactory.mkAccessOp(elem, baseSet)
+      if (rewriter.solverContext.config.smtEncoding == "arrays") {
+        val notInResult = inOperFactory.mkUnchangedOp(elem, resultSet)
+        rewriter.solverContext.assertGroundExpr(tla.ite(inResult, inBase, notInResult))
+      } else {
+        rewriter.solverContext.assertGroundExpr(tla.impl(inResult, inBase))
+      }
     }
 
     elems foreach inResultIfInBase
@@ -644,7 +650,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
       arena = arena.appendHasNoSmt(pair, arg, pickedResult)
       arena = arena.appendHas(relationCell, pair)
       nextState = nextState.setArena(arena)
-      val iff = tla.equiv(tla.in(arg.toNameEx, dom.toNameEx), tla.in(pair.toNameEx, relationCell.toNameEx))
+      val iff = tla.ite(inOperFactory.mkAccessOp(arg, dom), inOperFactory.mkUpdateOp(pair, relationCell),
+          inOperFactory.mkUnchangedOp(pair, relationCell))
       rewriter.solverContext.assertGroundExpr(iff)
     }
 

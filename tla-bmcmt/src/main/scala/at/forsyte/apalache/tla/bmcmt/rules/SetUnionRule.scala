@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.rules.aux.InOpFactory
 import at.forsyte.apalache.tla.bmcmt.types.FinSetT
 import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -13,6 +14,8 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
  * @author Igor Konnov
  */
 class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
+  private val inOpFactory = new InOpFactory(rewriter.solverContext.config.smtEncoding)
+
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaSetOper.union, set) => true
@@ -61,13 +64,14 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
             def inPointingSet(set: ArenaCell) = {
               // this is sound, because we have generated element equalities
               // and thus can use congruence of in(...) for free
-              tla.and(tla.in(set.toNameEx, topSetCell.toNameEx), tla.in(elemCell.toNameEx, set.toNameEx))
+              tla.and(inOpFactory.mkAccessOp(set, topSetCell), inOpFactory.mkAccessOp(elemCell, set))
             }
 
             val existsIncludingSet = tla.or(pointingSets map inPointingSet: _*)
-            val inUnionSet = tla.in(elemCell.toNameEx, newSetCell.toNameEx)
-            val iff = OperEx(TlaOper.eq, inUnionSet, existsIncludingSet)
-            rewriter.solverContext.assertGroundExpr(iff)
+            val inUnionSet = inOpFactory.mkUpdateOp(elemCell, newSetCell)
+            val notInUnionSet = inOpFactory.mkUnchangedOp(elemCell, newSetCell)
+            val ite = tla.ite(existsIncludingSet, inUnionSet, notInUnionSet)
+            rewriter.solverContext.assertGroundExpr(ite)
           }
 
           // add SMT constraints

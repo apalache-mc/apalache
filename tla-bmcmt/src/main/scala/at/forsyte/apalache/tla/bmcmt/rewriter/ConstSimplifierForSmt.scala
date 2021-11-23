@@ -52,6 +52,11 @@ class ConstSimplifierForSmt extends ConstSimplifierBase {
     case ex @ (OperEx(TlaSetOper.in, _*) | OperEx(TlaSetOper.notin, _*)) =>
       ex
 
+    // same as tla.in
+    case ex @ (OperEx(ApalacheOper.selectInSet, _*) | OperEx(ApalacheOper.storeInSet, _*) |
+        OperEx(ApalacheOper.unchangedSet, _*)) =>
+      ex
+
     // using isTrueConst and isFalseConst that are more precise than those of ConstSimplifierBase
 
     case OperEx(TlaControlOper.ifThenElse, pred, thenEx, _) if isTrueConst(pred) =>

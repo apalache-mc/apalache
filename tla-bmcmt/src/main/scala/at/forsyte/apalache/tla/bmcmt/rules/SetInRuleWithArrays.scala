@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt.implicitConversions.Crossable
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
+import at.forsyte.apalache.tla.bmcmt.rules.aux.InOpFactory
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, FinSetT, PowSetT}
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter, types}
 import at.forsyte.apalache.tla.lir.TlaEx
@@ -10,6 +11,7 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewriter) {
   private val simplifier = new ConstSimplifierForSmt
+  private val inOpFactory = new InOpFactory(rewriter.solverContext.config.smtEncoding)
 
   override protected def powSetIn(state: SymbState, powsetCell: ArenaCell, elemCell: ArenaCell): SymbState = {
     def checkType: PartialFunction[(CellT, CellT), Unit] = {
@@ -32,14 +34,14 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
 
       def isInAndEqSetElem(powsetDomainElem: ArenaCell) = {
         // powsetDomainElem \in powsetDomain /\ powsetDomainElem = setElem
-        simplifier.simplifyShallow(tla.and(tla.in(powsetDomainElem.toNameEx, powsetDomain.toNameEx),
+        simplifier.simplifyShallow(tla.and(inOpFactory.mkAccessOp(powsetDomainElem, powsetDomain),
                 tla.eql(powsetDomainElem.toNameEx, setElem.toNameEx)))
       }
 
       val elemsInAndEqSetElem = powsetDomainElems.map(isInAndEqSetElem)
       // pred <=> (setElem \in elemCell => elemsInAndEqSetElem.1 \/ ... \/ elemsInAndEqSetElem.n)
       rewriter.solverContext.assertGroundExpr(simplifier.simplifyShallow(tla.equiv(pred.toNameEx,
-                  tla.or(tla.not(tla.in(setElem.toNameEx, elemCell.toNameEx)), tla.or(elemsInAndEqSetElem: _*)))))
+                  tla.or(tla.not(inOpFactory.mkAccessOp(setElem, elemCell)), tla.or(elemsInAndEqSetElem: _*)))))
       pred.toNameEx
     }
 
@@ -74,7 +76,7 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
 
       def inAndEq(elem: ArenaCell) = {
         simplifier
-          .simplifyShallow(tla.and(tla.in(elem.toNameEx, setCell.toNameEx), tla.eql(elem.toNameEx, elemCell.toNameEx)))
+          .simplifyShallow(tla.and(inOpFactory.mkAccessOp(elem, setCell), tla.eql(elem.toNameEx, elemCell.toNameEx)))
       }
 
       val elemsInAndEq = potentialElems.map(inAndEq)
