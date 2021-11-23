@@ -57,7 +57,7 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
     var nextState = state
     nextState = nextState.updateArena(_.appendCell(BoolT()))
     val emptyPred = nextState.arena.topCell
-    solverAssert(tla.eql(emptyPred.toNameEx, tla.and(elems.map(e => inOpFactory.mkUnchangedOp(e, set)): _*)))
+    solverAssert(tla.eql(emptyPred.toNameEx, tla.and(elems.map(e => tla.not(inOpFactory.mkAccessOp(e, set))): _*)))
 
     // pick `threshold` cells that will act as witnesses
     def pick(i: Int): ArenaCell = {
