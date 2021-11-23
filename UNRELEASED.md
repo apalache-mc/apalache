@@ -10,7 +10,3 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
-
-### Features
-
-   * Added support for sets to the SMT encoding with arrays, see #1092

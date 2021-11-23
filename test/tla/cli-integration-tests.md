@@ -1533,7 +1533,7 @@ Test that the model checker nicely complains about unresolved polymorphism.
 ```sh
 $ apalache-mc check --inv=Inv Bug931.tla | sed 's/[IEW]@.*//'
 ...
-Typing input error: [Bug931.tla:6:20-6:21]: Found a polymorphic type: Set(f)
+Typing input error: [Bug931.tla:6:20-6:21]: Found a polymorphic type: Set(b)
 ...
 EXITCODE: ERROR (255)
 ```
@@ -1984,7 +1984,7 @@ See: https://github.com/informalsystems/apalache/issues/925
 ```sh
 $ apalache-mc typecheck Bug925.tla | sed 's/[IEW]@.*//'
 ...
-[Bug925.tla:7:1-7:24]: Expected ((b) => [f: Set(b)]) in Optional. Found: ((k) => [f: k])
+[Bug925.tla:7:1-7:24]: Expected ((b) => [f: Set(b)]) in Optional. Found: ((a) => [f: a])
 [Bug925.tla:7:1-7:24]: Error when computing the type of Optional
 ...
 EXITCODE: ERROR (255)
@@ -2013,6 +2013,74 @@ Test the Snowcat support let-polymorphism.
 
 ```sh
 $ apalache-mc typecheck letpoly_inst.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeCheckerSnowcat
+ > Running Snowcat .::.
+ > Your types are great!
+ > All expressions are typed
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck Poly1084.tla
+
+Regression test for principal types in let definitions.
+
+```sh
+$ apalache-mc typecheck Poly1084.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeCheckerSnowcat
+ > Running Snowcat .::.
+ > Your types are great!
+ > All expressions are typed
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck Poly1085.tla
+
+Regression test for principal types in let definitions.
+
+```sh
+$ apalache-mc typecheck Poly1085.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeCheckerSnowcat
+ > Running Snowcat .::.
+ > Your types are great!
+ > All expressions are typed
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck Poly1088.tla
+
+Regression test for principal types in let definitions.
+
+```sh
+$ apalache-mc typecheck Poly1085.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeCheckerSnowcat
+ > Running Snowcat .::.
+ > Your types are great!
+ > All expressions are typed
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck Poly1107.tla
+
+Regression test for principal types in let definitions.
+
+```sh
+$ apalache-mc typecheck Poly1107.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
