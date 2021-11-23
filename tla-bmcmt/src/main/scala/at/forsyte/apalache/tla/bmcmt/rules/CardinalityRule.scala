@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.implicitConversions._
+import at.forsyte.apalache.tla.bmcmt.rules.aux.InOpFactory
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -14,6 +14,8 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
  * @author Igor Konnov
  */
 class CardinalityRule(rewriter: SymbStateRewriter) extends RewritingRule {
+  private val inOpFactory = new InOpFactory(rewriter.solverContext.config.smtEncoding)
+
   override def isApplicable(state: SymbState): Boolean = {
     state.ex match {
       case OperEx(TlaFiniteSetOper.cardinality, _) =>
@@ -43,7 +45,7 @@ class CardinalityRule(rewriter: SymbStateRewriter) extends RewritingRule {
     def solverAssert = rewriter.solverContext.assertGroundExpr(_)
 
     def eqToOther(thisCell: ArenaCell, otherCell: ArenaCell): TlaEx = {
-      tla.and(tla.in(otherCell.toNameEx, set.toNameEx), rewriter.lazyEq.safeEq(thisCell, otherCell))
+      tla.and(inOpFactory.mkAccessOp(otherCell, set), rewriter.lazyEq.safeEq(thisCell, otherCell))
     }
 
     // Generate a series of equations for cardinalities. Again, there are O(N^2) constraints. Cardinalities are hard!
@@ -57,7 +59,8 @@ class CardinalityRule(rewriter: SymbStateRewriter) extends RewritingRule {
           // newCounter = counter if hd \notin set \/ \E c \in counted: hd = c /\ c \in set
           arena = arena.appendCell(BoolT())
           val beforePred = arena.topCell
-          val beforeEx = tla.or(tla.notin(hd.toNameEx, set.toNameEx), tla.or(counted.map(eqToOther(hd, _)): _*))
+          val beforeEx =
+            tla.or(inOpFactory.mkUnchangedOp(hd.toNameEx, set.toNameEx), tla.or(counted.map(eqToOther(hd, _)): _*))
           solverAssert(tla.eql(beforePred.toNameEx, beforeEx))
           // newCounter = counter + 1 otherwise
           solverAssert(tla.eql(newCounter.toNameEx,

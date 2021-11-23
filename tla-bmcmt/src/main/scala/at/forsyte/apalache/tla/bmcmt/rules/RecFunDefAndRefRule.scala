@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, InOpFactory}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -18,6 +18,7 @@ import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, IntT1, NameEx, OperEx, TlaEx,
  */
 class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val pick = new CherryPick(rewriter)
+  private val inOpFactory = new InOpFactory(rewriter.solverContext.config.smtEncoding)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -97,7 +98,7 @@ class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
       nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.appFun(funCell.toNameEx, elem.toNameEx)))
       val lhs = nextState.asCell
       // either elem is outside of DOMAIN, or lhs equals rhs
-      val pred = tla.or(tla.not(tla.in(elem.toNameEx, domainCell.toNameEx)), tla.eql(lhs.toNameEx, rhs.toNameEx))
+      val pred = tla.or(inOpFactory.mkUnchangedOp(elem, domainCell), tla.eql(lhs.toNameEx, rhs.toNameEx))
       rewriter.solverContext.assertGroundExpr(pred)
     }
 

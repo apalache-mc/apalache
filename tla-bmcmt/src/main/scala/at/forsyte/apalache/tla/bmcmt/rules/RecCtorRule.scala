@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.DefaultValueFactory
-import at.forsyte.apalache.tla.bmcmt.types.{CellT, ConstT, RecordT}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{DefaultValueFactory, InOpFactory}
+import at.forsyte.apalache.tla.bmcmt.types.{CellT, RecordT}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
@@ -22,6 +22,7 @@ import scala.collection.immutable.SortedSet
  */
 class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val defaultValueFactory = new DefaultValueFactory(rewriter)
+  private val inOpFactory = new InOpFactory(rewriter.solverContext.config.smtEncoding)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -85,7 +86,7 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         nextState = nextState.setArena(newArena.setDom(recordCell, domain))
         // importantly, the record keys that are outside of ctorKeys should not belong to the domain!
         if (extraKeyMap.nonEmpty) {
-          val extraOutsideOfDomain = extraKeyMap.values.map(f => tla.notin(f.toNameEx, domain.toNameEx))
+          val extraOutsideOfDomain = extraKeyMap.values.map(f => inOpFactory.mkUnchangedOp(f.toNameEx, domain.toNameEx))
           rewriter.solverContext.assertGroundExpr(tla.and(extraOutsideOfDomain.toSeq: _*))
         }
 
