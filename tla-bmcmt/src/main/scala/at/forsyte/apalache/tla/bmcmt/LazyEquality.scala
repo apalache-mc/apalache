@@ -454,7 +454,6 @@ class LazyEquality(rewriter: SymbStateRewriter)
           // (2) record constructors use RecordDomainCache,
           // (3) and CherryPick uses pickRecordDomain
           val membershipTest = setMemFactory.mkReadMem(keyCell, leftDom)
-//          newState = rewriter.rewriteUntilDone(newState.setRex(setMemFactory.mkReadMem(keyCell, leftDom))) // the old way
           tla.or(tla.not(membershipTest), safeEq(leftElem, rightElem))
         }
         case (Some(_), None) | (None, Some(_)) => tla.bool(false)
