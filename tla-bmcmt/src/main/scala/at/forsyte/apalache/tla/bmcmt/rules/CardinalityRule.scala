@@ -60,7 +60,7 @@ class CardinalityRule(rewriter: SymbStateRewriter) extends RewritingRule {
           arena = arena.appendCell(BoolT())
           val beforePred = arena.topCell
           val beforeEx =
-            tla.or(inOpFactory.mkUnchangedOp(hd.toNameEx, set.toNameEx), tla.or(counted.map(eqToOther(hd, _)): _*))
+            tla.or(tla.not(inOpFactory.mkAccessOp(hd, set)), tla.or(counted.map(eqToOther(hd, _)): _*))
           solverAssert(tla.eql(beforePred.toNameEx, beforeEx))
           // newCounter = counter + 1 otherwise
           solverAssert(tla.eql(newCounter.toNameEx,

@@ -74,6 +74,7 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val inDomain = inOperFactory.mkAccessOp(domElem, domainCell).typed(BoolT1())
       val inRelation = inOperFactory.mkUpdateOp(relElem, relation).typed(BoolT1())
       val expr = if (rewriter.solverContext.config.smtEncoding == "arrays") {
+        // In the arrays encoding all sets are empty by default, so if not(inDomain) the set should remain unchanged
         val notInRelation = inOperFactory.mkUnchangedOp(relElem, relation).typed(BoolT1())
         tla.ite(inDomain, inRelation, notInRelation).typed(BoolT1())
       } else {

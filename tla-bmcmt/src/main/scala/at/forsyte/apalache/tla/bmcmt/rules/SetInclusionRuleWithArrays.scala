@@ -59,7 +59,7 @@ class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends SetInclusi
     if (rightIsPowSet) {
       def eachElem(state: SymbState, elem: ArenaCell): SymbState = {
         val newState = subset(state, elem, rightElemOrDomain, false)
-        val outOrSubsetEq = tla.or(inOpFactory.mkUnchangedOp(elem, leftCell), newState.ex)
+        val outOrSubsetEq = tla.or(tla.not(inOpFactory.mkAccessOp(elem, leftCell)), newState.ex)
         newState.setRex(outOrSubsetEq)
       }
 

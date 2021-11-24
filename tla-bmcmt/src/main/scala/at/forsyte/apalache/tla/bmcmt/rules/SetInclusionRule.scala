@@ -63,7 +63,7 @@ class SetInclusionRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val powDom = startState.arena.getDom(rightCell)
     def eachElem(state: SymbState, elem: ArenaCell): SymbState = {
       val newState = rewriter.lazyEq.subsetEq(state, elem, powDom)
-      val outOrSubsetEq = tla.or(inOpFactory.mkUnchangedOp(elem, leftCell), newState.ex)
+      val outOrSubsetEq = tla.or(tla.not(inOpFactory.mkAccessOp(elem, leftCell)), newState.ex)
       newState.setRex(outOrSubsetEq)
     }
 

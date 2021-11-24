@@ -117,7 +117,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
       nextState = rewriter.rewriteUntilDone(nextState.setRex(inOpFactory.mkAccessOp(res, funsetCdm)))
       val inCdm = nextState.asCell
       // BUGFIX: check only those pairs that actually belong to the relation
-      tla.or(inOpFactory.mkUnchangedOp(pair.toNameEx, relation.toNameEx), tla.and(inDom.toNameEx, inCdm.toNameEx))
+      tla.or(tla.not(inOpFactory.mkAccessOp(pair, relation)), tla.and(inDom.toNameEx, inCdm.toNameEx))
     }
 
     val relElems = nextState.arena.getHas(relation)
