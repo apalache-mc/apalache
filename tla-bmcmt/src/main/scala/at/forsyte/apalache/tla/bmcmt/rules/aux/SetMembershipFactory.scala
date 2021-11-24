@@ -55,18 +55,26 @@ class SetMembershipFactory(smtEncoding: String) {
   }
 
   /**
+   * This method ensures that an element is not a member of a given set.
+   * In the arrays encoding this is assumed to be true, with only the SSA representation of the set being updated.
+   * To check absence of an element, use the "tla.in(setMemFactory.mkReadMem(...))" construct instead.
+   *
    * @param elemEx the element selected, which will not be a part of the set
    * @param setEx  the set selected
    * @return       a BuilderEx that can be used to update set membership
    */
   def mkNotMem(elemEx: TlaEx, setEx: TlaEx): BuilderEx = {
     smtEncoding match {
-      case "arrays" => tla.apalacheUnchangedSet(setEx) // Unless explicitly added, elemEx is not part of the set
+      case "arrays" => tla.apalacheUnchangedSet(setEx) // Unless explicitly added, elemEx is already not part of the set
       case _        => tla.not(tla.in(elemEx, setEx))
     }
   }
 
   /**
+   * This method ensures that an element is not a member of a given set.
+   * In the arrays encoding this is assumed to be true, with only the SSA representation of the set being updated.
+   * To check absence of an element, use the "tla.in(setMemFactory.mkReadMem(...))" construct instead.
+   *
    * @param elem the element selected, which will not be a part of the set
    * @param set  the set selected
    * @return     a BuilderEx that can be used to update set membership
