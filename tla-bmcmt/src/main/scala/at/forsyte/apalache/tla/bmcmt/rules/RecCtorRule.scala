@@ -86,7 +86,8 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         nextState = nextState.setArena(newArena.setDom(recordCell, domain))
         // importantly, the record keys that are outside of ctorKeys should not belong to the domain!
         if (extraKeyMap.nonEmpty) {
-          val extraOutsideOfDomain = extraKeyMap.values.map(f => inOpFactory.mkUnchangedOp(f.toNameEx, domain.toNameEx))
+          val extraOutsideOfDomain =
+            extraKeyMap.values.map(f => tla.not(inOpFactory.mkAccessOp(f.toNameEx, domain.toNameEx)))
           rewriter.solverContext.assertGroundExpr(tla.and(extraOutsideOfDomain.toSeq: _*))
         }
 

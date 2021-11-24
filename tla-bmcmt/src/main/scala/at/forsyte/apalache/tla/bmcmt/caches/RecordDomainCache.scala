@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.{ConstT, FinSetT}
 import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 import scala.collection.immutable.SortedSet
@@ -48,7 +49,7 @@ class RecordDomainCache(solverContext: SolverContext, strValueCache: ModelValueC
         if (usedKeys.contains(key)) {
           inOpFactory.mkUpdateOp(cell, set)
         } else {
-          inOpFactory.mkUnchangedOp(cell, set)
+          tla.not(inOpFactory.mkAccessOp(cell, set))
         }
 
       solverContext.assertGroundExpr(cond)
