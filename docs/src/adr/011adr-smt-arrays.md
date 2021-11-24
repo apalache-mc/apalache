@@ -141,19 +141,33 @@ The following changes will be made to implement the new encoding of sets:
   - The `selectInSet` IR operator represents the SMT `select`.
   - The `storeInSet` IR operator represents the SMT `store`.
   - The `unchangedSet` IR operator represents an equality between the current and new SSA array
-    representations. This is required to constraint the array representation as it evolves.
-- Add `InOpFactory` to enable the appropriate use of either `TlaSetOper.in` or the new IR operators,
-  depending on the SMT encoding selected.
+    representations. This is required to constraint the array representation as it evolves. It is
+    important to note that this operator assumes that all arrays are initially empty, so an element
+    not explicitly added is assumed to not be in the array. To check absence of an element,
+    `selectInSet` should be used with negation.
+- Add `SetMembershipFactory` to enable the appropriate use of either `TlaSetOper.in` and 
+  `TlaSetOper.notin` or the new IR operators, depending on the SMT encoding selected.
 - In class `Z3SolverContext`, add/change appropriate methods to handle SMT constraints over arrays.
   - The main changes will de done in `declareCell` and the new `mkSelect`, `mkStore`, and 
-    `mkUnchanged` methods, as these methods are directly responsible for creating the SMT 
+    `mkUnchangedSet` methods, as these methods are directly responsible for creating the SMT 
     constraints representing sets and set membership.
   - With the new IR operators, the "in-relation" concept, which underpins `declareInPredIfNeeded` 
     and `getInPred`, is not applied to the new encoding.
   - Cases for `FinSetT` and `PowSetT` will be added to `getOrMkCellSort`, as these types are no
     longer represented by uninterpreted constants.
   - `cellCache` will be changed to contain a list of cells, in order to handle the effects of
-    `push` and `pop` in the SSA assignment of sets.
+    `push` and `pop` in the SSA assignment of sets. The following examples illustrates this need.
+    ```
+    (assert (= set_0 ((as const (Array Int Bool)) false)))
+    (assert (= set_1 (store set_0 5 true)))
+    (push)
+    (assert (= set_2 (store set_1 6 true)))
+    (push)
+    (assert (= set_3 (store set_2 7 true)))
+    (assert (= (select set_3 7) true))
+    (pop 2)
+    (assert (= (select set_1 7) false)) ; Without the list we would query set_3 here 
+    ```
 
 ## 4. Encoding tuples and records
 
