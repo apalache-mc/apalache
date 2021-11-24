@@ -63,7 +63,7 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // require each cell to satisfy the predicate
         def addCellCons(cell: ArenaCell, pred: TlaEx): Unit = {
           val inNewSet = setMemFactory.mkWriteMem(cell, newSetCell)
-          val notInNewSet = setMemFactory.mkNotMem(cell, newSetCell)
+          val notInNewSet = setMemFactory.mkNotMem(cell, newSetCell) // This ensures that cell is not in newSetCell
           val inOldSet = setMemFactory.mkReadMem(cell, setCell)
           val inOldSetAndPred = tla.and(pred, inOldSet)
           val ite = tla.ite(inOldSetAndPred, inNewSet, notInNewSet)

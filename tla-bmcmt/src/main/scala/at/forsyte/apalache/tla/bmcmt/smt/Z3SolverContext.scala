@@ -82,6 +82,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
    * Let's cache the constants, if Z3 cannot do it well.
    * Again, the cache carries the context level, to support push and pop.
    * To support SSA arrays representing sets, the cache stores a list of constants.
+   * The list is required to support incremental solving, since different context levels can have different SSA arrays.
    */
   private val cellCache: mutable.Map[Int, List[(ExprSort, CellT, Int)]] =
     new mutable.HashMap[Int, List[(ExprSort, CellT, Int)]]

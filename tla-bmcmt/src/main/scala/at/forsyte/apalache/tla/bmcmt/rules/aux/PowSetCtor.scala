@@ -30,7 +30,7 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
       arena = arena.appendHas(subsetCell, filtered: _*)
       for (e <- filtered) {
         val inSubset = setMemFactory.mkWriteMem(e, subsetCell)
-        val notInSubset = setMemFactory.mkNotMem(e, subsetCell)
+        val notInSubset = setMemFactory.mkNotMem(e, subsetCell) // This ensures that e is not in subsetCell
         val inSet = setMemFactory.mkReadMem(e, set)
         rewriter.solverContext.assertGroundExpr(tla.ite(inSet, inSubset, notInSubset))
       }
