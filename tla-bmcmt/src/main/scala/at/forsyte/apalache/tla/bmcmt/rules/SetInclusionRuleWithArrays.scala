@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt.implicitConversions.Crossable
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
-import at.forsyte.apalache.tla.bmcmt.rules.aux.InOpFactory
+import at.forsyte.apalache.tla.bmcmt.rules.aux.SetMembershipFactory
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, PowSetT}
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
@@ -12,7 +12,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 
 class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends SetInclusionRule(rewriter) {
   private val simplifier = new ConstSimplifierForSmt
-  private val inOpFactory = new InOpFactory(rewriter.solverContext.config.smtEncoding)
+  private val setMemFactory = new SetMembershipFactory(rewriter.solverContext.config.smtEncoding)
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
@@ -59,7 +59,7 @@ class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends SetInclusi
     if (rightIsPowSet) {
       def eachElem(state: SymbState, elem: ArenaCell): SymbState = {
         val newState = subset(state, elem, rightElemOrDomain, false)
-        val outOrSubsetEq = tla.or(tla.not(inOpFactory.mkAccessOp(elem, leftCell)), newState.ex)
+        val outOrSubsetEq = tla.or(tla.not(setMemFactory.mkReadMem(elem, leftCell)), newState.ex)
         newState.setRex(outOrSubsetEq)
       }
 
@@ -72,7 +72,7 @@ class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends SetInclusi
       def isInRightSet(leftElem: ArenaCell): TlaEx = {
         def isInAndEqLeftElem(rightElemOrDomainElem: ArenaCell) = {
           // rightElemOrDomainElem \in rightElemOrDomain /\ rightElemOrDomainElem = leftElem
-          simplifier.simplifyShallow(tla.and(inOpFactory.mkAccessOp(rightElemOrDomainElem, rightElemOrDomain),
+          simplifier.simplifyShallow(tla.and(setMemFactory.mkReadMem(rightElemOrDomainElem, rightElemOrDomain),
                   tla.eql(rightElemOrDomainElem.toNameEx, leftElem.toNameEx)))
         }
 
@@ -82,7 +82,7 @@ class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends SetInclusi
 
         // pred <=> (leftElem \in leftCell => elemsInAndEqLeftElem.1 \/ ... \/ elemsInAndEqLeftElem.n)
         rewriter.solverContext.assertGroundExpr(simplifier.simplifyShallow(tla.equiv(pred.toNameEx,
-                    tla.or(tla.not(inOpFactory.mkAccessOp(leftElem, leftCell)), tla.or(elemsInAndEqLeftElem: _*)))))
+                    tla.or(tla.not(setMemFactory.mkReadMem(leftElem, leftCell)), tla.or(elemsInAndEqLeftElem: _*)))))
         pred.toNameEx
       }
 

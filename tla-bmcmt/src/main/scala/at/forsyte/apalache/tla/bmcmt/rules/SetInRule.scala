@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.InOpFactory
+import at.forsyte.apalache.tla.bmcmt.rules.aux.SetMembershipFactory
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -14,7 +14,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
  * @author Igor Konnov
  */
 class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val inOpFactory = new InOpFactory(rewriter.solverContext.config.smtEncoding)
+  private val setMemFactory = new SetMembershipFactory(rewriter.solverContext.config.smtEncoding)
 
   override def isApplicable(state: SymbState): Boolean = {
     state.ex match {
@@ -112,12 +112,12 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     def onPair(pair: ArenaCell): TlaEx = {
       val tupleElems = nextState.arena.getHas(pair)
       val (arg, res) = (tupleElems.head, tupleElems.tail.head)
-      nextState = rewriter.rewriteUntilDone(nextState.setRex(inOpFactory.mkAccessOp(arg, funsetDom)))
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(setMemFactory.mkReadMem(arg, funsetDom)))
       val inDom = nextState.asCell
-      nextState = rewriter.rewriteUntilDone(nextState.setRex(inOpFactory.mkAccessOp(res, funsetCdm)))
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(setMemFactory.mkReadMem(res, funsetCdm)))
       val inCdm = nextState.asCell
       // BUGFIX: check only those pairs that actually belong to the relation
-      tla.or(tla.not(inOpFactory.mkAccessOp(pair, relation)), tla.and(inDom.toNameEx, inCdm.toNameEx))
+      tla.or(tla.not(setMemFactory.mkReadMem(pair, relation)), tla.and(inDom.toNameEx, inCdm.toNameEx))
     }
 
     val relElems = nextState.arena.getHas(relation)
@@ -158,7 +158,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val eqState = rewriter.lazyEq.cacheEqConstraints(nextState, potentialElems.map((_, elemCell)))
 
       def inAndEq(elem: ArenaCell) = {
-        tla.and(inOpFactory.mkAccessOp(elem, setCell), rewriter.lazyEq.safeEq(elem, elemCell)) // use lazy equality
+        tla.and(setMemFactory.mkReadMem(elem, setCell), rewriter.lazyEq.safeEq(elem, elemCell)) // use lazy equality
       }
 
       val elemsInAndEq = potentialElems.map(inAndEq)

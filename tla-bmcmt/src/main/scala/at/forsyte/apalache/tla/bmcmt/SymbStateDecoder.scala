@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import java.io.PrintWriter
-import at.forsyte.apalache.tla.bmcmt.rules.aux.InOpFactory
+import at.forsyte.apalache.tla.bmcmt.rules.aux.SetMembershipFactory
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -22,7 +22,7 @@ import scala.collection.immutable.{HashSet, SortedSet}
  * @author Igor Konnov
  */
 class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter) extends LazyLogging {
-  private val inOpFactory = new InOpFactory(rewriter.solverContext.config.smtEncoding)
+  private val setMemFactory = new SetMembershipFactory(rewriter.solverContext.config.smtEncoding)
 
   // a simple decoder that dumps values into a text file, in the future we need better recovery code
   def dumpArena(state: SymbState, writer: PrintWriter): Unit = {
@@ -110,8 +110,8 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       val setT1 = setT.toTlaType1
 
       def inSet(e: ArenaCell) = {
-        val mem = inOpFactory
-          .mkAccessOp(fromTlaEx(e.toNameEx).typed(elemT.toTlaType1), fromTlaEx(cell.toNameEx).typed(setT.toTlaType1))
+        val mem = setMemFactory
+          .mkReadMem(fromTlaEx(e.toNameEx).typed(elemT.toTlaType1), fromTlaEx(cell.toNameEx).typed(setT.toTlaType1))
           .typed(BoolT1())
         solverContext.evalGroundExpr(mem) == tla.bool(true).typed()
       }
@@ -147,8 +147,8 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       val relation = arena.getCdm(cell)
 
       def isInRelation(pair: ArenaCell): Boolean = {
-        val mem = inOpFactory
-          .mkAccessOp(fromTlaEx(pair.toNameEx).typed(funT1.arg),
+        val mem = setMemFactory
+          .mkReadMem(fromTlaEx(pair.toNameEx).typed(funT1.arg),
               fromTlaEx(relation.toNameEx).typed(TupT1(funT1.arg, funT1.res)))
           .typed(BoolT1())
         solverContext.evalGroundExpr(mem) == tla.bool(true).typed(BoolT1())

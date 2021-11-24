@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.rules.aux.InOpFactory
+import at.forsyte.apalache.tla.bmcmt.rules.aux.SetMembershipFactory
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
@@ -23,7 +23,7 @@ object Arena {
   val intSetName: String = namePrefix + "4"
 
   def create(solverContext: SolverContext): Arena = {
-    val inOpFactory = new InOpFactory(solverContext.config.smtEncoding)
+    val setMemFactory = new SetMembershipFactory(solverContext.config.smtEncoding)
 
     var arena = new Arena(solverContext, 0, new ArenaCell(-1, UnknownT()), HashMap(), new HashMap(), new HashMap(),
         new HashMap()) /////
@@ -51,8 +51,8 @@ object Arena {
     // link c_BOOLEAN to c_FALSE and c_TRUE
     arena = arena.appendHas(cellBoolean, cellFalse).appendHas(cellBoolean, cellTrue)
     // assert in(c_FALSE, c_BOOLEAN) and in(c_TRUE, c_BOOLEAN)
-    solverContext.assertGroundExpr(inOpFactory.mkUpdateOp(cellFalse, cellBoolean))
-    solverContext.assertGroundExpr(inOpFactory.mkUpdateOp(cellTrue, cellBoolean))
+    solverContext.assertGroundExpr(setMemFactory.mkWriteMem(cellFalse, cellBoolean))
+    solverContext.assertGroundExpr(setMemFactory.mkWriteMem(cellTrue, cellBoolean))
     arena
   }
 }

@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.caches.SimpleCache
 import at.forsyte.apalache.tla.bmcmt.profiler.SmtListener
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
-import at.forsyte.apalache.tla.bmcmt.rules.aux.InOpFactory
+import at.forsyte.apalache.tla.bmcmt.rules.aux.SetMembershipFactory
 import at.forsyte.apalache.tla.bmcmt.smt.PreproSolverContext.{PreproCacheEntry, PreproEqEntry, PreproInEntry}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper, TlaOper, TlaSetOper}
@@ -40,7 +40,7 @@ object PreproSolverContext {
  * @author Igor Konnov
  */
 class PreproSolverContext(context: SolverContext) extends SolverContext {
-  private val inOperFactory = new InOpFactory(context.config.smtEncoding)
+  private val setMemFactory = new SetMembershipFactory(context.config.smtEncoding)
   private val simplifier = new ConstSimplifierForSmt()
   // FIXME: it would be much better to use cells here, but we do not have access to the arena
   private val cache: SimpleCache[(String, String), PreproCacheEntry] = new SimpleCache()
@@ -126,25 +126,25 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
       case OperEx(TlaSetOper.in, NameEx(left), NameEx(right)) =>
         cache.get((left, right)) match {
           case Some(cached) => cached.asTlaEx(negate = false)
-          case None         => inOperFactory.mkAccessOp(NameEx(left), NameEx(right))
+          case None         => setMemFactory.mkReadMem(NameEx(left), NameEx(right))
         }
 
       case OperEx(ApalacheOper.selectInSet, NameEx(left), NameEx(right)) =>
         cache.get((left, right)) match {
           case Some(cached) => cached.asTlaEx(negate = false)
-          case None         => inOperFactory.mkAccessOp(NameEx(left), NameEx(right))
+          case None         => setMemFactory.mkReadMem(NameEx(left), NameEx(right))
         }
 
       case OperEx(ApalacheOper.storeInSet, NameEx(left), NameEx(right)) =>
         cache.get((left, right)) match {
           case Some(cached) => cached.asTlaEx(negate = false)
-          case None         => inOperFactory.mkUpdateOp(NameEx(left), NameEx(right))
+          case None         => setMemFactory.mkWriteMem(NameEx(left), NameEx(right))
         }
 
       case OperEx(ApalacheOper.unchangedSet, NameEx(left), NameEx(right)) =>
         cache.get((left, right)) match {
           case Some(cached) => cached.asTlaEx(negate = false)
-          case None         => inOperFactory.mkUnchangedOp(NameEx(left), NameEx(right))
+          case None         => setMemFactory.mkNotMem(NameEx(left), NameEx(right))
         }
 
       case OperEx(TlaSetOper.notin, NameEx(left), NameEx(right)) =>

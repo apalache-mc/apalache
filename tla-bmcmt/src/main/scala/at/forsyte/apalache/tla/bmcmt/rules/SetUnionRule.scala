@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.InOpFactory
+import at.forsyte.apalache.tla.bmcmt.rules.aux.SetMembershipFactory
 import at.forsyte.apalache.tla.bmcmt.types.FinSetT
 import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -14,7 +14,7 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
  * @author Igor Konnov
  */
 class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val inOpFactory = new InOpFactory(rewriter.solverContext.config.smtEncoding)
+  private val setMemFactory = new SetMembershipFactory(rewriter.solverContext.config.smtEncoding)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -64,12 +64,12 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
             def inPointingSet(set: ArenaCell) = {
               // this is sound, because we have generated element equalities
               // and thus can use congruence of in(...) for free
-              tla.and(inOpFactory.mkAccessOp(set, topSetCell), inOpFactory.mkAccessOp(elemCell, set))
+              tla.and(setMemFactory.mkReadMem(set, topSetCell), setMemFactory.mkReadMem(elemCell, set))
             }
 
             val existsIncludingSet = tla.or(pointingSets map inPointingSet: _*)
-            val inUnionSet = inOpFactory.mkUpdateOp(elemCell, newSetCell)
-            val notInUnionSet = inOpFactory.mkUnchangedOp(elemCell, newSetCell)
+            val inUnionSet = setMemFactory.mkWriteMem(elemCell, newSetCell)
+            val notInUnionSet = setMemFactory.mkNotMem(elemCell, newSetCell)
             val ite = tla.ite(existsIncludingSet, inUnionSet, notInUnionSet)
             rewriter.solverContext.assertGroundExpr(ite)
           }

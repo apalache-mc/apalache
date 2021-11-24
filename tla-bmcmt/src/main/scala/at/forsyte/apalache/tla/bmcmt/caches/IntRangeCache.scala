@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
-import at.forsyte.apalache.tla.bmcmt.rules.aux.InOpFactory
+import at.forsyte.apalache.tla.bmcmt.rules.aux.SetMembershipFactory
 import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, IntT}
@@ -14,7 +14,7 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
  */
 class IntRangeCache(solverContext: SolverContext, intValueCache: IntValueCache)
     extends AbstractCache[Arena, (Int, Int), ArenaCell] with Serializable {
-  private val inOpFactory = new InOpFactory(solverContext.config.smtEncoding)
+  private val setMemFactory = new SetMembershipFactory(solverContext.config.smtEncoding)
 
   /**
    * Create a set a..b.
@@ -37,7 +37,7 @@ class IntRangeCache(solverContext: SolverContext, intValueCache: IntValueCache)
     val set = arena.topCell
     arena = arena.appendHas(set, cells: _*)
     // force that every element is in the set
-    solverContext.assertGroundExpr(tla.and(cells.map(c => inOpFactory.mkUpdateOp(c, set)): _*))
+    solverContext.assertGroundExpr(tla.and(cells.map(c => setMemFactory.mkWriteMem(c, set)): _*))
     (arena, set)
   }
 }

@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory, InOpFactory}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory, SetMembershipFactory}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
@@ -17,7 +17,7 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val picker = new CherryPick(rewriter)
   private val defaultValueFactory = new DefaultValueFactory(rewriter)
-  private val inOperFactory = new InOpFactory(rewriter.solverContext.config.smtEncoding)
+  private val setMemFactory = new SetMembershipFactory(rewriter.solverContext.config.smtEncoding)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -157,7 +157,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       for ((elem, no) <- relationElems.zipWithIndex) {
         val elemArg = nextState.arena.getHas(elem).head
         nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((argCell, elemArg)))
-        val inRel = inOperFactory.mkAccessOp(elem, relationCell)
+        val inRel = setMemFactory.mkReadMem(elem, relationCell)
         val neqArg = tla.not(rewriter.lazyEq.safeEq(elemArg, argCell))
         val found = tla.not(oracle.whenEqualTo(nextState, nelems))
         // ~inRel \/ neqArg \/ found, or equivalently, (inRel /\ elemArg = argCell) => found

@@ -22,7 +22,7 @@ import at.forsyte.apalache.tla.typecheck.ModelValueHandler
  * @author Igor Konnov
  */
 class CherryPick(rewriter: SymbStateRewriter) {
-  private val inOperFactory = new InOpFactory(rewriter.solverContext.config.smtEncoding)
+  private val setMemFactory = new SetMembershipFactory(rewriter.solverContext.config.smtEncoding)
   private val defaultValueFactory = new DefaultValueFactory(rewriter)
   val oracleFactory = new OracleFactory(rewriter)
 
@@ -79,7 +79,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
         var (nextState, oracle) = oracleFactory.newDefaultOracle(state, elems.size + 1)
 
         // pick only the elements that belong to the set
-        val elemsIn = elems map { c => inOperFactory.mkAccessOp(c, set).untyped() }
+        val elemsIn = elems map { c => setMemFactory.mkReadMem(c, set).untyped() }
         rewriter.solverContext.assertGroundExpr(oracle.caseAssertions(nextState, elemsIn :+ elseAssert))
 
         pickByOracle(nextState, oracle, elems, elseAssert)
@@ -319,12 +319,12 @@ class CherryPick(rewriter: SymbStateRewriter) {
           // Although we search over a list, the list size is usually small, e.g., up to 10 elements
           if (domainCells.contains(keyCell)) {
             // the key belongs to the new domain only if belongs to the domain that is pointed by the oracle
-            val ite = tla.ite(inOperFactory.mkAccessOp(keyCell, dom), inOperFactory.mkUpdateOp(keyCell, newDom),
-                inOperFactory.mkUnchangedOp(keyCell, newDom))
+            val ite = tla.ite(setMemFactory.mkReadMem(keyCell, dom), setMemFactory.mkWriteMem(keyCell, newDom),
+                setMemFactory.mkNotMem(keyCell, newDom))
             rewriter.solverContext.assertGroundExpr(tla.impl(oracle.whenEqualTo(nextState, no), ite))
           } else {
             // The domain pointed by the oracle does not contain the key
-            val notInDom = inOperFactory.mkUnchangedOp(keyCell, newDom)
+            val notInDom = setMemFactory.mkNotMem(keyCell, newDom)
             rewriter.solverContext.assertGroundExpr(tla.impl(oracle.whenEqualTo(nextState, no), notInDom))
           }
         }
@@ -445,10 +445,10 @@ class CherryPick(rewriter: SymbStateRewriter) {
       //  (chosen = 1 /\ in(z_i, R) <=> in(c_i, S_1)) \/ (chosen = 2 /\ in(z_i, R) <=> in(d_i, S_2)) \/ (chosen = N <=> elseAssert)
       def nthIn(elemAndSet: (ArenaCell, ArenaCell), no: Int): TlaEx = {
         if (elemsOfMemberSets(no).nonEmpty) {
-          tla.ite(inOperFactory.mkAccessOp(elemAndSet._1, elemAndSet._2), inOperFactory.mkUpdateOp(picked, resultCell),
-              inOperFactory.mkUnchangedOp(picked, resultCell))
+          tla.ite(setMemFactory.mkReadMem(elemAndSet._1, elemAndSet._2), setMemFactory.mkWriteMem(picked, resultCell),
+              setMemFactory.mkNotMem(picked, resultCell))
         } else {
-          inOperFactory.mkUnchangedOp(picked, resultCell) // nothing belongs to the set
+          setMemFactory.mkNotMem(picked, resultCell) // nothing belongs to the set
         }
       }
 
@@ -593,10 +593,11 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
     // if resultSet has an element, then it must be also in baseSet
     def inResultIfInBase(elem: ArenaCell): Unit = {
-      val inResult = inOperFactory.mkUpdateOp(elem, resultSet)
-      val inBase = inOperFactory.mkAccessOp(elem, baseSet)
+      val inResult = setMemFactory.mkWriteMem(elem, resultSet)
+      val inBase = setMemFactory.mkReadMem(elem, baseSet)
       if (rewriter.solverContext.config.smtEncoding == "arrays") {
-        val notInResult = inOperFactory.mkUnchangedOp(elem, resultSet)
+        // In the arrays encoding all sets are empty by default, so if not(inResult) the set should remain unchanged
+        val notInResult = setMemFactory.mkNotMem(elem, resultSet)
         rewriter.solverContext.assertGroundExpr(tla.ite(inResult, inBase, notInResult))
       } else {
         rewriter.solverContext.assertGroundExpr(tla.impl(inResult, inBase))
@@ -650,9 +651,9 @@ class CherryPick(rewriter: SymbStateRewriter) {
       arena = arena.appendHasNoSmt(pair, arg, pickedResult)
       arena = arena.appendHas(relationCell, pair)
       nextState = nextState.setArena(arena)
-      val iff = tla.ite(inOperFactory.mkAccessOp(arg, dom), inOperFactory.mkUpdateOp(pair, relationCell),
-          inOperFactory.mkUnchangedOp(pair, relationCell))
-      rewriter.solverContext.assertGroundExpr(iff)
+      val ite = tla.ite(setMemFactory.mkReadMem(arg, dom), setMemFactory.mkWriteMem(pair, relationCell),
+          setMemFactory.mkNotMem(pair, relationCell))
+      rewriter.solverContext.assertGroundExpr(ite)
     }
 
     // If S is empty, the relation is empty too.

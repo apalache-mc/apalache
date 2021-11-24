@@ -6,18 +6,18 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
- * Given a SMT encoding, this class produces set access and set update operators.
+ * Given a SMT encoding, this class produces set read and set write operators.
  *
  * @author Rodrigo Otoni
  */
-class InOpFactory(smtEncoding: String) {
+class SetMembershipFactory(smtEncoding: String) {
 
   /**
    * @param elemEx the element selected
    * @param setEx  the set being accessed
    * @return       a BuilderEx that can be used to check set membership
    */
-  def mkAccessOp(elemEx: TlaEx, setEx: TlaEx): BuilderEx = {
+  def mkReadMem(elemEx: TlaEx, setEx: TlaEx): BuilderEx = {
     smtEncoding match {
       case "arrays" => tla.apalacheSelectInSet(elemEx, setEx)
       case _        => tla.in(elemEx, setEx)
@@ -29,8 +29,8 @@ class InOpFactory(smtEncoding: String) {
    * @param set  the set being accessed
    * @return     a BuilderEx that can be used to check set membership
    */
-  def mkAccessOp(elem: ArenaCell, set: ArenaCell): BuilderEx = {
-    mkAccessOp(elem.toNameEx, set.toNameEx)
+  def mkReadMem(elem: ArenaCell, set: ArenaCell): BuilderEx = {
+    mkReadMem(elem.toNameEx, set.toNameEx)
   }
 
   /**
@@ -38,7 +38,7 @@ class InOpFactory(smtEncoding: String) {
    * @param setEx  the set being updated
    * @return       a BuilderEx that can be used to update set membership
    */
-  def mkUpdateOp(elemEx: TlaEx, setEx: TlaEx): BuilderEx = {
+  def mkWriteMem(elemEx: TlaEx, setEx: TlaEx): BuilderEx = {
     smtEncoding match {
       case "arrays" => tla.apalacheStoreInSet(elemEx, setEx)
       case _        => tla.in(elemEx, setEx)
@@ -50,16 +50,16 @@ class InOpFactory(smtEncoding: String) {
    * @param set  the set being updated
    * @return     a BuilderEx that can be used to update set membership
    */
-  def mkUpdateOp(elem: ArenaCell, set: ArenaCell): BuilderEx = {
-    mkUpdateOp(elem.toNameEx, set.toNameEx)
+  def mkWriteMem(elem: ArenaCell, set: ArenaCell): BuilderEx = {
+    mkWriteMem(elem.toNameEx, set.toNameEx)
   }
 
   /**
-   * @param elemEx the element selected, which will not be added to the set
+   * @param elemEx the element selected, which will not be a part of the set
    * @param setEx  the set selected
    * @return       a BuilderEx that can be used to update set membership
    */
-  def mkUnchangedOp(elemEx: TlaEx, setEx: TlaEx): BuilderEx = {
+  def mkNotMem(elemEx: TlaEx, setEx: TlaEx): BuilderEx = {
     smtEncoding match {
       case "arrays" => tla.apalacheUnchangedSet(setEx) // Unless explicitly added, elemEx is not part of the set
       case _        => tla.not(tla.in(elemEx, setEx))
@@ -67,11 +67,11 @@ class InOpFactory(smtEncoding: String) {
   }
 
   /**
-   * @param elem the element selected, which will not be added to the set
+   * @param elem the element selected, which will not be a part of the set
    * @param set  the set selected
    * @return     a BuilderEx that can be used to update set membership
    */
-  def mkUnchangedOp(elem: ArenaCell, set: ArenaCell): BuilderEx = {
-    mkUnchangedOp(elem.toNameEx, set.toNameEx)
+  def mkNotMem(elem: ArenaCell, set: ArenaCell): BuilderEx = {
+    mkNotMem(elem.toNameEx, set.toNameEx)
   }
 }

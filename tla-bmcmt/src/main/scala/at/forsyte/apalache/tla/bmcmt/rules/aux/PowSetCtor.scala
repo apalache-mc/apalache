@@ -12,7 +12,7 @@ import at.forsyte.apalache.tla.bmcmt.types.FinSetT
  * @author Igor Konnov
  */
 class PowSetCtor(rewriter: SymbStateRewriter) {
-  private val inOpFactory: InOpFactory = new InOpFactory(rewriter.solverContext.config.smtEncoding)
+  private val setMemFactory: SetMembershipFactory = new SetMembershipFactory(rewriter.solverContext.config.smtEncoding)
 
   // Confringo is the explosion curse from Harry Potter. To let you know that your SMT solver will probably explode.
   def confringo(state: SymbState, set: ArenaCell): SymbState = {
@@ -29,9 +29,9 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
       val subsetCell = arena.topCell
       arena = arena.appendHas(subsetCell, filtered: _*)
       for (e <- filtered) {
-        val inSubset = inOpFactory.mkUpdateOp(e, subsetCell)
-        val notInSubset = inOpFactory.mkUnchangedOp(e, subsetCell)
-        val inSet = inOpFactory.mkAccessOp(e, set)
+        val inSubset = setMemFactory.mkWriteMem(e, subsetCell)
+        val notInSubset = setMemFactory.mkNotMem(e, subsetCell)
+        val inSet = setMemFactory.mkReadMem(e, set)
         rewriter.solverContext.assertGroundExpr(tla.ite(inSet, inSubset, notInSubset))
       }
       subsetCell
@@ -56,7 +56,7 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
     val powsetCell = arena.topCell
     arena = arena.appendHas(powsetCell, subsets: _*)
     for (subset <- subsets) {
-      rewriter.solverContext.assertGroundExpr(inOpFactory.mkUpdateOp(subset, powsetCell))
+      rewriter.solverContext.assertGroundExpr(setMemFactory.mkWriteMem(subset, powsetCell))
     }
 
     // that's it!

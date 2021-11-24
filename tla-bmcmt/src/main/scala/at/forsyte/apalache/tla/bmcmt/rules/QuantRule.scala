@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, InOpFactory, OracleHelper}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, SetMembershipFactory, OracleHelper}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper._
@@ -17,7 +17,7 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
  */
 class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogging {
   private val pickRule = new CherryPick(rewriter)
-  private val inOpFactory = new InOpFactory(rewriter.solverContext.config.smtEncoding)
+  private val setMemFactory = new SetMembershipFactory(rewriter.solverContext.config.smtEncoding)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -126,15 +126,15 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
       val (predState: SymbState, predEs: Seq[TlaEx]) =
         rewriter.rewriteBoundSeqUntilDone(setState, setCells.map(mkPair))
 
-      val nonEmpty = tla.or(setCells.map(c => inOpFactory.mkAccessOp(c, set)): _*)
-      val empty = tla.and(setCells.map(c => tla.not(inOpFactory.mkAccessOp(c, set))): _*)
+      val nonEmpty = tla.or(setCells.map(c => setMemFactory.mkReadMem(c, set)): _*)
+      val empty = tla.and(setCells.map(c => tla.not(setMemFactory.mkReadMem(c, set))): _*)
 
       def elemWitnesses(elemAndPred: (ArenaCell, TlaEx)): TlaEx = {
-        tla.and(inOpFactory.mkAccessOp(elemAndPred._1, set), elemAndPred._2)
+        tla.and(setMemFactory.mkReadMem(elemAndPred._1, set), elemAndPred._2)
       }
 
       def elemSatisfies(elemAndPred: (ArenaCell, TlaEx)): TlaEx = {
-        tla.or(tla.not(inOpFactory.mkAccessOp(elemAndPred._1, set)), elemAndPred._2)
+        tla.or(tla.not(setMemFactory.mkReadMem(elemAndPred._1, set)), elemAndPred._2)
       }
 
       var finalState = predState.updateArena(_.appendCell(BoolT()))
