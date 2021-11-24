@@ -227,12 +227,20 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     eqStore.asInstanceOf[ExprSort]
   }
 
-  private def mkUnchanged(setId: Int): ExprSort = {
-    val currentset = cellCache(setId).head._1
-    val oldSet = if (cellCache(setId).size > 1) cellCache(setId).tail.head._1 else currentset
-
-    val eqUnchanged = z3context.mkEq(currentset, oldSet)
-    eqUnchanged.asInstanceOf[ExprSort]
+  private def mkUnchangedSet(setId: Int): ExprSort = {
+    if (cellCache(setId).size > 1) {
+      val currentSet = cellCache(setId).head._1
+      val oldSet = cellCache(setId).tail.head._1
+      val eqUnchanged = z3context.mkEq(currentSet, oldSet)
+      eqUnchanged.asInstanceOf[ExprSort]
+    } else if (cellCache(setId).size == 1) {
+      // If setId refers to a set with a single SSA representation there is nothing to be done
+      z3context.mkTrue().asInstanceOf[ExprSort]
+    } else {
+      logWriter.flush() // flush the SMT log
+      throw new IllegalStateException(
+          s"SMT $id: Corrupted cellCache, $setId key is present, but it does not refer to any array.")
+    }
   }
 
   /**
@@ -608,7 +616,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
       case OperEx(ApalacheOper.unchangedSet, NameEx(setName)) =>
         val setId = ArenaCell.idFromName(setName)
-        (mkUnchanged(setId), 1)
+        (mkUnchangedSet(setId), 1)
 
       // the old implementation allowed us to do that, but the new one is encoding edges directly
       case OperEx(TlaSetOper.in, ValEx(TlaInt(_)), NameEx(_)) | OperEx(TlaSetOper.in, ValEx(TlaBool(_)), NameEx(_)) =>
