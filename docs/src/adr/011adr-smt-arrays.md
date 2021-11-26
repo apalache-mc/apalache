@@ -145,14 +145,14 @@ The following changes will be made to implement the new encoding of sets:
     important to note that this operator assumes that all arrays are initially empty, so an element
     not explicitly added is assumed to not be in the array. To check absence of an element,
     `selectInSet` should be used with negation.
-- Add `SetMembershipFactory` to enable the appropriate use of either `TlaSetOper.in` and 
-  `TlaSetOper.notin` or the new IR operators, depending on the SMT encoding selected.
 - In class `Z3SolverContext`, add/change appropriate methods to handle SMT constraints over arrays.
   - The main changes will de done in `declareCell` and the new `mkSelect`, `mkStore`, and 
     `mkUnchangedSet` methods, as these methods are directly responsible for creating the SMT 
     constraints representing sets and set membership.
   - With the new IR operators, the "in-relation" concept, which underpins `declareInPredIfNeeded` 
-    and `getInPred`, is not applied to the new encoding.
+    and `getInPred`, will not be applied to the new encoding. Cases for the new IR operators will 
+    be added to `toExpr`, which will default to `TlaSetOper.in` and `TlaSetOper.notin` for the 
+    existing encoding.
   - Cases for `FinSetT` and `PowSetT` will be added to `getOrMkCellSort`, as these types are no
     longer represented by uninterpreted constants.
   - `cellCache` will be changed to contain a list of cells, in order to handle the effects of
