@@ -17,7 +17,6 @@ import at.forsyte.apalache.tla.pp.TlaInputError
  * @author Igor Konnov
  */
 class MapBase(rewriter: SymbStateRewriter) {
-  private val setMemFactory: SetMembershipFactory = new SetMembershipFactory(rewriter.solverContext.config.smtEncoding)
 
   /**
    * <p>Implement a mapping { e: x_1 ∈ S_1, ..., x_n ∈ S_n }.</p>
@@ -85,8 +84,8 @@ class MapBase(rewriter: SymbStateRewriter) {
 
     // add the membership constraints: one per target cell
     for ((targetCell, memExpressions) <- resultsToSource) {
-      val inNewSet: TlaEx = setMemFactory.mkWriteMem(targetCell, targetSetCell)
-      val notInNewSet = setMemFactory.mkNotMem(targetCell, targetSetCell)
+      val inNewSet: TlaEx = tla.apalacheStoreInSet(targetCell.toNameEx, targetSetCell.toNameEx)
+      val notInNewSet = tla.apalacheUnchangedSet(targetCell.toNameEx, targetSetCell.toNameEx)
       val inSourceSet = {
         if (memExpressions.size == 1) {
           memExpressions.head
@@ -113,7 +112,7 @@ class MapBase(rewriter: SymbStateRewriter) {
     // We have to collect all source tuples for the same cell and say that the result belongs to the set,
     // if and only if one of the source tuples belong to the source set.
     def inSourceSet(arg: ArenaCell, set: ArenaCell): TlaEx =
-      setMemFactory.mkReadMem(arg, set)
+      tla.apalacheSelectInSet(arg.toNameEx, set.toNameEx)
 
     val argsInSourceSets = {
       if (valuesAsCells.length == 1) {

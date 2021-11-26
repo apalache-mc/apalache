@@ -200,7 +200,7 @@ object ApalacheOper {
   object unchangedSet extends ApalacheOper {
     override def name: String = "Apalache!UnchangedSet"
 
-    override def arity: OperArity = FixedArity(1)
+    override def arity: OperArity = FixedArity(2)
 
     override def precedence: (Int, Int) = (5, 5)
   }

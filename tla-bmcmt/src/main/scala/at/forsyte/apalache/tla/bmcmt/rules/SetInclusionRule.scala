@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.SetMembershipFactory
 import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, PowSetT}
 import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.convenience._
@@ -14,7 +13,6 @@ import at.forsyte.apalache.tla.lir.oper.TlaSetOper
  * @author Igor Konnov
  */
 class SetInclusionRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val setMemFactory = new SetMembershipFactory(rewriter.solverContext.config.smtEncoding)
 
   override def isApplicable(state: SymbState): Boolean = {
     state.ex match {
@@ -63,7 +61,7 @@ class SetInclusionRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val powDom = startState.arena.getDom(rightCell)
     def eachElem(state: SymbState, elem: ArenaCell): SymbState = {
       val newState = rewriter.lazyEq.subsetEq(state, elem, powDom)
-      val outOrSubsetEq = tla.or(tla.not(setMemFactory.mkReadMem(elem, leftCell)), newState.ex)
+      val outOrSubsetEq = tla.or(tla.not(tla.apalacheSelectInSet(elem.toNameEx, leftCell.toNameEx)), newState.ex)
       newState.setRex(outOrSubsetEq)
     }
 

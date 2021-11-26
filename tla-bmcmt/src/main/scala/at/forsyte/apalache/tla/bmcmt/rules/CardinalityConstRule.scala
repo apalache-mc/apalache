@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, SetMembershipFactory}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
 import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -17,7 +17,6 @@ import at.forsyte.apalache.tla.lir.{OperEx, ValEx}
  */
 class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val pickRule = new CherryPick(rewriter)
-  private val setMemFactory = new SetMembershipFactory(rewriter.solverContext.config.smtEncoding)
 
   override def isApplicable(state: SymbState): Boolean = {
     state.ex match {
@@ -57,7 +56,8 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
     var nextState = state
     nextState = nextState.updateArena(_.appendCell(BoolT()))
     val emptyPred = nextState.arena.topCell
-    solverAssert(tla.eql(emptyPred.toNameEx, tla.and(elems.map(e => tla.not(setMemFactory.mkReadMem(e, set))): _*)))
+    solverAssert(tla.eql(emptyPred.toNameEx,
+            tla.and(elems.map(e => tla.not(tla.apalacheSelectInSet(e.toNameEx, set.toNameEx))): _*)))
 
     // pick `threshold` cells that will act as witnesses
     def pick(i: Int): ArenaCell = {

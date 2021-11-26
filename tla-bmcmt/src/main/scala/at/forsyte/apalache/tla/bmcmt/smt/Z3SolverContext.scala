@@ -606,18 +606,35 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         (getInPred(setId, elemId), 1)
 
       case OperEx(ApalacheOper.selectInSet, NameEx(elemName), NameEx(setName)) =>
-        val setId = ArenaCell.idFromName(setName)
-        val elemId = ArenaCell.idFromName(elemName)
-        (mkSelect(setId, elemId), 1)
+        arraysEnabled match {
+          case true =>
+            val setId = ArenaCell.idFromName(setName)
+            val elemId = ArenaCell.idFromName(elemName)
+            (mkSelect(setId, elemId), 1)
+          case false =>
+            toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla91 encoding
+        }
 
       case OperEx(ApalacheOper.storeInSet, NameEx(elemName), NameEx(setName)) =>
-        val setId = ArenaCell.idFromName(setName)
-        val elemId = ArenaCell.idFromName(elemName)
-        (mkStore(setId, elemId), 1)
+        arraysEnabled match {
+          case true =>
+            val setId = ArenaCell.idFromName(setName)
+            val elemId = ArenaCell.idFromName(elemName)
+            (mkStore(setId, elemId), 1)
+          case false =>
+            toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla91 encoding
+        }
 
-      case OperEx(ApalacheOper.unchangedSet, NameEx(setName)) =>
-        val setId = ArenaCell.idFromName(setName)
-        (mkUnchangedSet(setId), 1)
+      case OperEx(ApalacheOper.unchangedSet, NameEx(elemName), NameEx(setName)) =>
+        arraysEnabled match {
+          case true =>
+            // In the arrays encoding the sets are initially empty, so elem is not a member of set implicitly
+            val setId = ArenaCell.idFromName(setName)
+            (mkUnchangedSet(setId), 1)
+          case false =>
+            // In the oopsla19 encoding the sets are not initially empty, so membership has to negated explicitly
+            toExpr(OperEx(TlaBoolOper.not, OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))))
+        }
 
       // the old implementation allowed us to do that, but the new one is encoding edges directly
       case OperEx(TlaSetOper.in, ValEx(TlaInt(_)), NameEx(_)) | OperEx(TlaSetOper.in, ValEx(TlaBool(_)), NameEx(_)) =>

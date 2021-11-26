@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
-import at.forsyte.apalache.tla.bmcmt.rules.aux.SetMembershipFactory
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.{ConstT, FinSetT}
 import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
@@ -17,7 +16,6 @@ import scala.collection.immutable.SortedSet
  */
 class RecordDomainCache(solverContext: SolverContext, strValueCache: ModelValueCache)
     extends AbstractCache[Arena, (SortedSet[String], SortedSet[String]), ArenaCell] with Serializable {
-  private val setMemFactory = new SetMembershipFactory(solverContext.config.smtEncoding)
 
   /**
    * Create a set for a sorted set of record keys.
@@ -47,9 +45,9 @@ class RecordDomainCache(solverContext: SolverContext, strValueCache: ModelValueC
     for ((cell, key) <- allCells.zip(allKeys)) {
       val cond =
         if (usedKeys.contains(key)) {
-          setMemFactory.mkWriteMem(cell, set)
+          tla.apalacheStoreInSet(cell.toNameEx, set.toNameEx)
         } else {
-          tla.not(setMemFactory.mkReadMem(cell, set))
+          tla.not(tla.apalacheSelectInSet(cell.toNameEx, set.toNameEx))
         }
 
       solverContext.assertGroundExpr(cond)

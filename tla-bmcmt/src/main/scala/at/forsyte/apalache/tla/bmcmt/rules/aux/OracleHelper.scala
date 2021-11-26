@@ -30,10 +30,9 @@ object OracleHelper {
    */
   def assertOraclePicksSetMembers(rewriter: SymbStateRewriter, state: SymbState, oracle: Oracle, set: ArenaCell,
       setElems: Seq[ArenaCell]): Unit = {
-    val setMemFactory: SetMembershipFactory = new SetMembershipFactory(rewriter.solverContext.config.smtEncoding)
 
-    val elemsIn = setElems map { e => setMemFactory.mkReadMem(e, set).untyped() }
-    val allNotIn = tla.and(setElems map (e => tla.not(setMemFactory.mkReadMem(e, set))): _*).untyped()
+    val elemsIn = setElems map { e => tla.apalacheSelectInSet(e.toNameEx, set.toNameEx).untyped() }
+    val allNotIn = tla.and(setElems map (e => tla.not(tla.apalacheSelectInSet(e.toNameEx, set.toNameEx))): _*).untyped()
     rewriter.solverContext.assertGroundExpr(oracle.caseAssertions(state, elemsIn :+ allNotIn))
   }
 

@@ -3,7 +3,6 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt.caches.{EqCache, EqCacheSnapshot}
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rewriter.{ConstSimplifierForSmt, Recoverable}
-import at.forsyte.apalache.tla.bmcmt.rules.aux.SetMembershipFactory
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -22,8 +21,6 @@ class LazyEquality(rewriter: SymbStateRewriter)
   private lazy val simplifier = new ConstSimplifierForSmt
 
   private val eqCache = new EqCache()
-
-  private val setMemFactory = new SetMembershipFactory(rewriter.solverContext.config.smtEncoding)
 
   /**
    * This method ensure that a pair of its arguments can be safely compared by the SMT equality,
@@ -273,7 +270,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
       // The other set might be empty in some models. Add a predicate.
       val newState = state.updateArena(_.appendCell(BoolT()))
       val pred = newState.arena.topCell
-      val emptyEx = tla.and(otherElems.map(e => tla.not(setMemFactory.mkReadMem(e, otherSet))): _*)
+      val emptyEx = tla.and(otherElems.map(e => tla.not(tla.apalacheSelectInSet(e.toNameEx, otherSet.toNameEx))): _*)
       rewriter.solverContext.assertGroundExpr(tla.eql(pred.toNameEx, emptyEx))
       // this predicate will be later used as an equality test
       eqCache.put(emptySet, otherSet, EqCache.ExprEntry(pred.toNameEx))
@@ -301,7 +298,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
     } else if (rightElems.isEmpty) {
       // SE-SUBSETEQ2
       def notIn(le: ArenaCell) = {
-        tla.not(setMemFactory.mkReadMem(le, left))
+        tla.not(tla.apalacheSelectInSet(le.toNameEx, left.toNameEx))
       }
 
       val newState = state.updateArena(_.appendCell(BoolT()))
@@ -313,7 +310,8 @@ class LazyEquality(rewriter: SymbStateRewriter)
       var newState = cacheEqConstraints(state, leftElems cross rightElems) // cache all the equalities
       def exists(lelem: ArenaCell) = {
         def inAndEq(relem: ArenaCell) = {
-          simplifier.simplifyShallow(tla.and(setMemFactory.mkReadMem(relem, right), cachedEq(lelem, relem)))
+          simplifier
+            .simplifyShallow(tla.and(tla.apalacheSelectInSet(relem.toNameEx, right.toNameEx), cachedEq(lelem, relem)))
         }
 
         // There are plenty of valid subformulas. Simplify!
@@ -322,7 +320,8 @@ class LazyEquality(rewriter: SymbStateRewriter)
 
       def notInOrExists(lelem: ArenaCell) = {
         val notInOrExists =
-          simplifier.simplifyShallow(tla.or(tla.not(setMemFactory.mkReadMem(lelem, left)), exists(lelem)))
+          simplifier
+            .simplifyShallow(tla.or(tla.not(tla.apalacheSelectInSet(lelem.toNameEx, left.toNameEx)), exists(lelem)))
         if (simplifier.isBoolConst(notInOrExists)) {
           notInOrExists // just return the constant
         } else {
@@ -453,7 +452,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
           // (1) the record types coincide,
           // (2) record constructors use RecordDomainCache,
           // (3) and CherryPick uses pickRecordDomain
-          val membershipTest = setMemFactory.mkReadMem(keyCell, leftDom)
+          val membershipTest = tla.apalacheSelectInSet(keyCell.toNameEx, leftDom.toNameEx)
           tla.or(tla.not(membershipTest), safeEq(leftElem, rightElem))
         }
         case (Some(_), None) | (None, Some(_)) => tla.bool(false)

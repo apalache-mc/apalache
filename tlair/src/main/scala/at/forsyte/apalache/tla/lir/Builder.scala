@@ -604,8 +604,8 @@ class Builder {
     BuilderOper(ApalacheOper.storeInSet, elem, set)
   }
 
-  def apalacheUnchangedSet(set: BuilderEx): BuilderEx = {
-    BuilderOper(ApalacheOper.unchangedSet, set)
+  def apalacheUnchangedSet(elem: BuilderEx, set: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.unchangedSet, elem, set)
   }
 
   private val m_nameMap: Map[String, TlaOper] =

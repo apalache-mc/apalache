@@ -52,7 +52,7 @@ class ConstSimplifierForSmt extends ConstSimplifierBase {
     case ex @ (OperEx(TlaSetOper.in, _*) | OperEx(TlaSetOper.notin, _*)) =>
       ex
 
-    // same as tla.in
+    // same as tla.in and tla.notin
     case ex @ (OperEx(ApalacheOper.selectInSet, _*) | OperEx(ApalacheOper.storeInSet, _*) |
         OperEx(ApalacheOper.unchangedSet, _*)) =>
       ex

@@ -69,8 +69,9 @@ class ExpansionMarker @Inject() (tracker: TransformationTracker) extends TlaExTr
       val tag = ex.typeTag
       OperEx(op, name, transform(true)(set), transform(false)(pred))(tag)
 
-    case ex @ OperEx(op @ TlaSetOper.in, elem, set) =>
-      // when checking e \in S, we can keep S unexpanded, but e should be expanded
+    case ex @ OperEx(op, elem, set)
+        if op == TlaSetOper.in || op == ApalacheOper.selectInSet || op == ApalacheOper.storeInSet || op == TlaSetOper.notin || op == ApalacheOper.unchangedSet =>
+      // when checking e \in S or e \notin S, we can keep S unexpanded, but e should be expanded
       val tag = ex.typeTag
       OperEx(op, transform(true)(elem), transform(false)(set))(tag)
 

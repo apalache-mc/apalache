@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{DefaultValueFactory, SetMembershipFactory}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.DefaultValueFactory
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, RecordT}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -22,7 +22,6 @@ import scala.collection.immutable.SortedSet
  */
 class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val defaultValueFactory = new DefaultValueFactory(rewriter)
-  private val setMemFactory = new SetMembershipFactory(rewriter.solverContext.config.smtEncoding)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -87,7 +86,7 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // importantly, the record keys that are outside of ctorKeys should not belong to the domain!
         if (extraKeyMap.nonEmpty) {
           val extraOutsideOfDomain =
-            extraKeyMap.values.map(f => tla.not(setMemFactory.mkReadMem(f.toNameEx, domain.toNameEx)))
+            extraKeyMap.values.map(f => tla.not(tla.apalacheSelectInSet(f.toNameEx, domain.toNameEx)))
           rewriter.solverContext.assertGroundExpr(tla.and(extraOutsideOfDomain.toSeq: _*))
         }
 

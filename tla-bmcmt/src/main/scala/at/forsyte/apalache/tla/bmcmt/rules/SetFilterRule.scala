@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.SetMembershipFactory
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{NameEx, NullEx, OperEx, TlaEx}
@@ -14,7 +13,6 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
  * @author Igor Konnov
  */
 class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val setMemFactory = new SetMembershipFactory(rewriter.solverContext.config.smtEncoding)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -62,9 +60,10 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         // require each cell to satisfy the predicate
         def addCellCons(cell: ArenaCell, pred: TlaEx): Unit = {
-          val inNewSet = setMemFactory.mkWriteMem(cell, newSetCell)
-          val notInNewSet = setMemFactory.mkNotMem(cell, newSetCell) // This ensures that cell is not in newSetCell
-          val inOldSet = setMemFactory.mkReadMem(cell, setCell)
+          val inNewSet = tla.apalacheStoreInSet(cell.toNameEx, newSetCell.toNameEx)
+          val notInNewSet =
+            tla.apalacheUnchangedSet(cell.toNameEx, newSetCell.toNameEx) // This ensures that cell is not in newSetCell
+          val inOldSet = tla.apalacheSelectInSet(cell.toNameEx, setCell.toNameEx)
           val inOldSetAndPred = tla.and(pred, inOldSet)
           val ite = tla.ite(inOldSetAndPred, inNewSet, notInNewSet)
           rewriter.solverContext.assertGroundExpr(ite)
