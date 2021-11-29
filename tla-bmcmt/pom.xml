@@ -4,11 +4,11 @@
     <parent>
         <groupId>at.forsyte.apalache</groupId>
         <artifactId>apalache</artifactId>
-        <version>0.17.6-SNAPSHOT</version>
+        <version>0.17.6</version>
     </parent>
 
     <artifactId>tla-bmcmt</artifactId>
-        <version>0.17.6-SNAPSHOT</version>
+        <version>0.17.6</version>
     <packaging>jar</packaging>
 
     <name>tla-bmcmt</name>
