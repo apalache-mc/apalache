@@ -19,7 +19,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case OperEx(TlaSetOper.in | ApalacheOper.selectInSet, NameEx(name), _) =>
         ArenaCell.isValidName(name) || state.binding.contains(name)
 
-      case OperEx(op, _, _) if op == TlaSetOper.in || op == ApalacheOper.selectInSet =>
+      case OperEx(TlaSetOper.in | ApalacheOper.selectInSet, _, _) =>
         true
 
       case _ =>
@@ -41,7 +41,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // bugfix: safeEq may produce ValEx(TlaBool(false)) or ValEx(TlaBool(true)).
         rewriter.rewriteUntilDone(afterEqState.setRex(rewriter.lazyEq.safeEq(lhsCell, rhsCell)))
 
-      case OperEx(op, elem, set) if op == TlaSetOper.in || op == ApalacheOper.selectInSet =>
+      case OperEx(TlaSetOper.in | ApalacheOper.selectInSet, elem, set) =>
         val elemState = rewriter.rewriteUntilDone(state.setRex(elem))
         val elemCell = elemState.asCell
         val setState = rewriter.rewriteUntilDone(elemState.setRex(set))

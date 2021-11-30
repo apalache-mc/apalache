@@ -125,19 +125,19 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
       case OperEx(TlaSetOper.in, NameEx(left), NameEx(right)) =>
         cache.get((left, right)) match {
           case Some(cached) => cached.asTlaEx(negate = false)
-          case None         => tla.in(NameEx(left), NameEx(right))
+          case None         => ex
         }
 
       case OperEx(ApalacheOper.selectInSet, NameEx(left), NameEx(right)) =>
         cache.get((left, right)) match {
           case Some(cached) => cached.asTlaEx(negate = false)
-          case None         => tla.apalacheSelectInSet(NameEx(left), NameEx(right))
+          case None         => ex
         }
 
       case OperEx(ApalacheOper.storeInSet, NameEx(left), NameEx(right)) =>
         cache.get((left, right)) match {
           case Some(cached) => cached.asTlaEx(negate = false)
-          case None         => tla.apalacheStoreInSet(NameEx(left), NameEx(right))
+          case None         => ex
         }
 
       case OperEx(TlaSetOper.notin, NameEx(left), NameEx(right)) =>
@@ -149,7 +149,7 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
       case OperEx(ApalacheOper.unchangedSet, NameEx(left), NameEx(right)) =>
         cache.get((left, right)) match {
           case Some(cached) => cached.asTlaEx(negate = false)
-          case None         => tla.apalacheUnchangedSet(NameEx(left), NameEx(right))
+          case None         => ex
         }
 
       case OperEx(TlaSetOper.in, _*) | OperEx(ApalacheOper.selectInSet, _*) | OperEx(ApalacheOper.storeInSet, _*) |
