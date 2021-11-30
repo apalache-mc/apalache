@@ -625,14 +625,14 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla91 encoding
         }
 
-      case OperEx(ApalacheOper.unchangedSet, NameEx(elemName), NameEx(setName)) =>
+      case OperEx(ApalacheOper.storeNotInSet, NameEx(elemName), NameEx(setName)) =>
         arraysEnabled match {
           case true =>
             // In the arrays encoding the sets are initially empty, so elem is not a member of set implicitly
             val setId = ArenaCell.idFromName(setName)
             (mkUnchangedSet(setId), 1)
           case false =>
-            // In the oopsla19 encoding the sets are not initially empty, so membership has to negated explicitly
+            // In the oopsla19 encoding the sets are not initially empty, so membership has to be negated explicitly
             toExpr(OperEx(TlaBoolOper.not, OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))))
         }
 

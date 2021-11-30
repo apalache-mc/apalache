@@ -74,7 +74,7 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
         }
 
       case OperEx(op, NameEx(left), NameEx(right))
-          if op == TlaSetOper.in || op == ApalacheOper.selectInSet || op == ApalacheOper.storeInSet || op == ApalacheOper.unchangedSet =>
+          if op == TlaSetOper.in || op == ApalacheOper.selectInSet || op == ApalacheOper.storeInSet || op == ApalacheOper.storeNotInSet =>
         // in and not(notin), the latter is transformed by simplifier
         if (ArenaCell.isValidName(left) && ArenaCell.isValidName(right)) {
           cache.put((left, right), PreproInEntry(true))
@@ -146,14 +146,14 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
           case None         => ex
         }
 
-      case OperEx(ApalacheOper.unchangedSet, NameEx(left), NameEx(right)) =>
+      case OperEx(ApalacheOper.storeNotInSet, NameEx(left), NameEx(right)) =>
         cache.get((left, right)) match {
           case Some(cached) => cached.asTlaEx(negate = false)
           case None         => ex
         }
 
       case OperEx(TlaSetOper.in, _*) | OperEx(ApalacheOper.selectInSet, _*) | OperEx(ApalacheOper.storeInSet, _*) |
-          OperEx(TlaSetOper.notin, _*) | OperEx(ApalacheOper.unchangedSet, _*) =>
+          OperEx(TlaSetOper.notin, _*) | OperEx(ApalacheOper.storeNotInSet, _*) =>
         // do not preprocess these expressions, as we have to find sorts from the names
         ex
 

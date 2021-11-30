@@ -319,11 +319,11 @@ class CherryPick(rewriter: SymbStateRewriter) {
             // the key belongs to the new domain only if belongs to the domain that is pointed by the oracle
             val ite = tla.ite(tla.apalacheSelectInSet(keyCell.toNameEx, dom.toNameEx),
                 tla.apalacheStoreInSet(keyCell.toNameEx, newDom.toNameEx),
-                tla.apalacheUnchangedSet(keyCell.toNameEx, newDom.toNameEx))
+                tla.apalacheStoreNotInSet(keyCell.toNameEx, newDom.toNameEx))
             rewriter.solverContext.assertGroundExpr(tla.impl(oracle.whenEqualTo(nextState, no), ite))
           } else {
             // The domain pointed by the oracle does not contain the key
-            val notInDom = tla.apalacheUnchangedSet(keyCell.toNameEx, newDom.toNameEx)
+            val notInDom = tla.apalacheStoreNotInSet(keyCell.toNameEx, newDom.toNameEx)
             rewriter.solverContext.assertGroundExpr(tla.impl(oracle.whenEqualTo(nextState, no), notInDom))
           }
         }
@@ -446,9 +446,9 @@ class CherryPick(rewriter: SymbStateRewriter) {
         if (elemsOfMemberSets(no).nonEmpty) {
           tla.ite(tla.apalacheSelectInSet(elemAndSet._1.toNameEx, elemAndSet._2.toNameEx),
               tla.apalacheStoreInSet(picked.toNameEx, resultCell.toNameEx),
-              tla.apalacheUnchangedSet(picked.toNameEx, resultCell.toNameEx))
+              tla.apalacheStoreNotInSet(picked.toNameEx, resultCell.toNameEx))
         } else {
-          tla.apalacheUnchangedSet(picked.toNameEx, resultCell.toNameEx) // nothing belongs to the set
+          tla.apalacheStoreNotInSet(picked.toNameEx, resultCell.toNameEx) // nothing belongs to the set
         }
       }
 
@@ -601,7 +601,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
         nextState = nextState.updateArena(_.appendCell(BoolT()))
         val pred = nextState.arena.topCell.toNameEx
         val storeElem = tla.apalacheStoreInSet(elem.toNameEx, resultSet.toNameEx)
-        val notStoreElem = tla.apalacheUnchangedSet(elem.toNameEx, resultSet.toNameEx)
+        val notStoreElem = tla.apalacheStoreNotInSet(elem.toNameEx, resultSet.toNameEx)
         rewriter.solverContext.assertGroundExpr(tla.ite(pred, storeElem, notStoreElem))
       }
 
@@ -659,7 +659,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       nextState = nextState.setArena(arena)
       val ite = tla.ite(tla.apalacheSelectInSet(arg.toNameEx, dom.toNameEx),
           tla.apalacheStoreInSet(pair.toNameEx, relationCell.toNameEx),
-          tla.apalacheUnchangedSet(pair.toNameEx, relationCell.toNameEx))
+          tla.apalacheStoreNotInSet(pair.toNameEx, relationCell.toNameEx))
       rewriter.solverContext.assertGroundExpr(ite)
     }
 

@@ -30,7 +30,7 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
       for (e <- filtered) {
         val inSubset = tla.apalacheStoreInSet(e.toNameEx, subsetCell.toNameEx)
         val notInSubset =
-          tla.apalacheUnchangedSet(e.toNameEx, subsetCell.toNameEx) // This ensures that e is not in subsetCell
+          tla.apalacheStoreNotInSet(e.toNameEx, subsetCell.toNameEx) // This ensures that e is not in subsetCell
         val inSet = tla.apalacheSelectInSet(e.toNameEx, set.toNameEx)
         rewriter.solverContext.assertGroundExpr(tla.ite(inSet, inSubset, notInSubset))
       }

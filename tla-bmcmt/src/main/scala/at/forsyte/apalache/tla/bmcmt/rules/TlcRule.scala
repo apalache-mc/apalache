@@ -88,13 +88,13 @@ class TlcRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLoggin
     for (pair <- leftPairs) {
       val inOld = tla.apalacheSelectInSet(pair.toNameEx ? "p", leftRelation.toNameEx ? "r") ? "b"
       val inNew = tla.apalacheStoreInSet(pair.toNameEx ? "p", newRelation.toNameEx ? "r") ? "b"
-      val notInNew = tla.apalacheUnchangedSet(pair.toNameEx ? "p", newRelation.toNameEx ? "r") ? "b"
+      val notInNew = tla.apalacheStoreNotInSet(pair.toNameEx ? "p", newRelation.toNameEx ? "r") ? "b"
       solverAssert(tla.ite(inOld, inNew, notInNew).typed(types, "b"))
     }
     for (pair <- rightPairs) {
       val inOld = tla.apalacheSelectInSet(pair.toNameEx ? "p", rightRelation.toNameEx ? "r") ? "b"
       val inNew = tla.apalacheStoreInSet(pair.toNameEx ? "p", newRelation.toNameEx ? "r") ? "b"
-      val notInNew = tla.apalacheUnchangedSet(pair.toNameEx ? "p", newRelation.toNameEx ? "r") ? "b"
+      val notInNew = tla.apalacheStoreNotInSet(pair.toNameEx ? "p", newRelation.toNameEx ? "r") ? "b"
       solverAssert(tla.ite(inOld, inNew, notInNew).typed(types, "b"))
     }
 

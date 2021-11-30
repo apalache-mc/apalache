@@ -62,7 +62,7 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         def addCellCons(cell: ArenaCell, pred: TlaEx): Unit = {
           val inNewSet = tla.apalacheStoreInSet(cell.toNameEx, newSetCell.toNameEx)
           val notInNewSet =
-            tla.apalacheUnchangedSet(cell.toNameEx, newSetCell.toNameEx) // This ensures that cell is not in newSetCell
+            tla.apalacheStoreNotInSet(cell.toNameEx, newSetCell.toNameEx) // This ensures that cell is not in newSetCell
           val inOldSet = tla.apalacheSelectInSet(cell.toNameEx, setCell.toNameEx)
           val inOldSetAndPred = tla.and(pred, inOldSet)
           val ite = tla.ite(inOldSetAndPred, inNewSet, notInNewSet)

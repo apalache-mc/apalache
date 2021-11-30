@@ -89,7 +89,7 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
       val arg = getArg(pair)
       val ite = tla.ite(tla.apalacheSelectInSet(pair.toNameEx, relation.toNameEx),
           tla.apalacheStoreInSet(arg.toNameEx, domCell.toNameEx),
-          tla.apalacheUnchangedSet(arg.toNameEx, domCell.toNameEx))
+          tla.apalacheStoreNotInSet(arg.toNameEx, domCell.toNameEx))
       rewriter.solverContext.assertGroundExpr(ite)
     }
 

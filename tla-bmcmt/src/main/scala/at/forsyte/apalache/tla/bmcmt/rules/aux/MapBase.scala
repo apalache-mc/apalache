@@ -85,7 +85,7 @@ class MapBase(rewriter: SymbStateRewriter) {
     // add the membership constraints: one per target cell
     for ((targetCell, memExpressions) <- resultsToSource) {
       val inNewSet: TlaEx = tla.apalacheStoreInSet(targetCell.toNameEx, targetSetCell.toNameEx)
-      val notInNewSet = tla.apalacheUnchangedSet(targetCell.toNameEx, targetSetCell.toNameEx)
+      val notInNewSet: TlaEx = tla.apalacheStoreNotInSet(targetCell.toNameEx, targetSetCell.toNameEx)
       val inSourceSet = {
         if (memExpressions.size == 1) {
           memExpressions.head

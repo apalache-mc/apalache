@@ -171,7 +171,7 @@ object ApalacheOper {
 
   /**
    * The selectInSet operator is a variant of TlaSetOper.in.
-   * It signals that a "select" should be used in the SMT constraint.
+   * It signals that set membership should be checked.
    */
   object selectInSet extends ApalacheOper {
     override def name: String = "Apalache!SelectInSet"
@@ -183,7 +183,7 @@ object ApalacheOper {
 
   /**
    * The storeInSet operator is a variant of TlaSetOper.in.
-   * It signals that a "store" should be used in the SMT constraint.
+   * It signals that set membership should be enforced.
    */
   object storeInSet extends ApalacheOper {
     override def name: String = "Apalache!StoreInSet"
@@ -194,10 +194,10 @@ object ApalacheOper {
   }
 
   /**
-   * The unchangedSet operator is a variant of storeInSet.
-   * It signals that the SSA update should not change any values.
+   * The storeNotInSet operator is a variant of storeInSet.
+   * It signals that the negation of set membership should be enforced.
    */
-  object unchangedSet extends ApalacheOper {
+  object storeNotInSet extends ApalacheOper {
     override def name: String = "Apalache!UnchangedSet"
 
     override def arity: OperArity = FixedArity(2)

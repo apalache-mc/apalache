@@ -72,8 +72,8 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val inDomain = tla.apalacheSelectInSet(domElem.toNameEx, domainCell.toNameEx).typed(BoolT1())
       val inRelation = tla.apalacheStoreInSet(relElem.toNameEx, relation.toNameEx).typed(BoolT1())
       val expr = if (rewriter.solverContext.config.smtEncoding == "arrays") {
-        // In the arrays encoding all sets are empty by default, so if not(inDomain) the set should remain unchanged
-        val notInRelation = tla.apalacheUnchangedSet(relElem.toNameEx, relation.toNameEx).typed(BoolT1())
+        // In the arrays encoding we also need to update the array if inDomain does not hold
+        val notInRelation = tla.apalacheStoreNotInSet(relElem.toNameEx, relation.toNameEx).typed(BoolT1())
         tla.ite(inDomain, inRelation, notInRelation).typed(BoolT1())
       } else {
         tla.equiv(inDomain, inRelation).typed(BoolT1())

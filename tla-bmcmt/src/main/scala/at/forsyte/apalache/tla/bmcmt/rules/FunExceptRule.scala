@@ -93,7 +93,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val assertion = tla
         .ite(tla.apalacheSelectInSet(pair.toNameEx ? "p", relation.toNameEx ? "r") ? "b",
             tla.apalacheStoreInSet(updatedCell.toNameEx ? "p", resultRelation.toNameEx ? "r") ? "b",
-            tla.apalacheUnchangedSet(updatedCell.toNameEx ? "p", resultRelation.toNameEx ? "r") ? "b")
+            tla.apalacheStoreNotInSet(updatedCell.toNameEx ? "p", resultRelation.toNameEx ? "r") ? "b")
         .typed(types, "b")
       solverAssert(assertion)
       updatedCell

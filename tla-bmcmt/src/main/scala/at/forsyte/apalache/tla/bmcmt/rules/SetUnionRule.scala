@@ -68,7 +68,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
             val existsIncludingSet = tla.or(pointingSets map inPointingSet: _*)
             val inUnionSet = tla.apalacheStoreInSet(elemCell.toNameEx, newSetCell.toNameEx)
-            val notInUnionSet = tla.apalacheUnchangedSet(elemCell.toNameEx, newSetCell.toNameEx)
+            val notInUnionSet = tla.apalacheStoreNotInSet(elemCell.toNameEx, newSetCell.toNameEx)
             val ite = tla.ite(existsIncludingSet, inUnionSet, notInUnionSet)
             rewriter.solverContext.assertGroundExpr(ite)
           }
