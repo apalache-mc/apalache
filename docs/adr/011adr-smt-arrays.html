@@ -172,7 +172,7 @@
                     <main>
                         <h1><a class="header" href="#adr-011-alternative-smt-encoding-using-arrays" id="adr-011-alternative-smt-encoding-using-arrays">ADR-011: alternative SMT encoding using arrays</a></h1>
 <table><thead><tr><th>author</th><th align="right">revision</th></tr></thead><tbody>
-<tr><td>Rodrigo Otoni</td><td align="right">1.1</td></tr>
+<tr><td>Rodrigo Otoni</td><td align="right">1.2</td></tr>
 </tbody></table>
 <p>This ADR describes an alternative encoding of the <a href="https://apalache.informal.systems/docs/apalache/kera.html">KerA+</a> fragment of TLA+ into SMT.
 Compound data structures, e.g. sets, are currently encoded using the <a href="http://smtlib.cs.uiowa.edu/theories-Core.shtml">core theory</a> of SMT,
@@ -283,19 +283,42 @@ elements will remain unchanged.</li>
 </li>
 <li>In class <code>SymbStateRewriterImplWithArrays</code>, add the new rules to <code>ruleLookupTable</code> by overriding
 the entries to their older versions.</li>
+<li>Add three new Apalache IR operators in <code>ApalacheOper</code>, <code>Builder</code>, <code>ConstSimplifierForSmt</code>, and 
+<code>PreproSolverContext</code>, to represent the array operations.
+<ul>
+<li>The <code>selectInSet</code> IR operator represents the SMT <code>select</code>.</li>
+<li>The <code>storeInSet</code> IR operator represents the SMT <code>store</code>.</li>
+<li>The <code>unchangedSet</code> IR operator represents an equality between the current and new SSA array
+representations. This is required to constraint the array representation as it evolves. It is
+important to note that this operator assumes that all arrays are initially empty, so an element
+not explicitly added is assumed to not be in the array. To check absence of an element,
+<code>selectInSet</code> should be used with negation.</li>
+</ul>
+</li>
 <li>In class <code>Z3SolverContext</code>, add/change appropriate methods to handle SMT constraints over arrays.
 <ul>
-<li>The main changes will de done in <code>declareCell</code>, <code>declareInPredIfNeeded</code>, and <code>getInPred</code>, as
-these methods are directly responsible for creating the SMT constraints representing sets and
-set membership.</li>
+<li>The main changes will de done in <code>declareCell</code> and the new <code>mkSelect</code>, <code>mkStore</code>, and 
+<code>mkUnchangedSet</code> methods, as these methods are directly responsible for creating the SMT 
+constraints representing sets and set membership.</li>
+<li>With the new IR operators, the &quot;in-relation&quot; concept, which underpins <code>declareInPredIfNeeded</code> 
+and <code>getInPred</code>, will not be applied to the new encoding. Cases for the new IR operators will 
+be added to <code>toExpr</code>, which will default to <code>TlaSetOper.in</code> and <code>TlaSetOper.notin</code> for the 
+existing encoding.</li>
 <li>Cases for <code>FinSetT</code> and <code>PowSetT</code> will be added to <code>getOrMkCellSort</code>, as these types are no
 longer represented by uninterpreted constants.</li>
 <li><code>cellCache</code> will be changed to contain a list of cells, in order to handle the effects of
-<code>push</code> and <code>pop</code> in the SSA assignment of sets.</li>
-<li>A new cache, <code>inStored</code>, will provide the required information to <code>getInPred</code> to enable it to
-return either a <code>store</code> or a <code>select</code> constraint, when appropriate.</li>
-<li>Special cases for <code>TlaOper.eq</code> and <code>TlaBoolOper.equiv</code> will be added to <code>toExpr</code>, to allow the
-set filter rule to propagate SSA sets when the filter predicate evaluates for false.</li>
+<code>push</code> and <code>pop</code> in the SSA assignment of sets. The following examples illustrates this need.
+<pre><code>(assert (= set_0 ((as const (Array Int Bool)) false)))
+(assert (= set_1 (store set_0 5 true)))
+(push)
+(assert (= set_2 (store set_1 6 true)))
+(push)
+(assert (= set_3 (store set_2 7 true)))
+(assert (= (select set_3 7) true))
+(pop 2)
+(assert (= (select set_1 7) false)) ; Without the list we would query set_3 here 
+</code></pre>
+</li>
 </ul>
 </li>
 </ul>
