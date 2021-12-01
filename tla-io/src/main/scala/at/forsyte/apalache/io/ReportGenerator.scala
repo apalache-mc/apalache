@@ -12,9 +12,10 @@ object ReportGenerator {
   def getLog(): String =
     Matcher.quoteReplacement(getFileOrEmptyStr("detailed.log")) // handle $s in log
 
-  // Can't access Version in IO, have to pass at call site
+  // Can't access Version or Command in IO, have to pass at call site
   def prepareReportFile(cmdStr: String, versionStr: String): String = {
-    val specTxt = OutputManager.getAllSrc.getOrElse("")
+    val specTxt =
+      OutputManager.getAllSrc.map(spec => s"```\n$spec\n````").getOrElse("<!-- TLA+ specification not found. -->")
     val log = getLog()
     val os = System.getProperty("os.name")
     val jdk = System.getProperty("java.version")
@@ -34,9 +35,7 @@ object ReportGenerator {
       |
       |## Input specification
       |
-      |```
       |$specTxt
-      |```
       |
       |## The command line parameters used to run the tool
       |
