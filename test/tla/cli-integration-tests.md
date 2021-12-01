@@ -1107,6 +1107,19 @@ $ apalache-mc check Bug985.tla | sed 's/I@.*//'
 EXITCODE: OK
 ```
 
+### check Bug1126 succeeds
+
+Regression test for https://github.com/informalsystems/apalache/issues/1126
+An occurence of `Seq(S)` should point to an explanation.
+
+```sh
+$ apalache-mc check Bug1126.tla | sed 's/[IE]@.*//'
+...
+Bug1126.tla:15:14-15:27: unsupported expression: Seq(_) produces an infinite set of unbounded sequences. See: https://apalache.informal.systems/docs/apalache/known-issues.html#using-seqs
+...
+EXITCODE: ERROR (12)
+```
+
 ## configure the check command
 
 Testing various flags that are set via command-line options and the TLC configuration file. The CLI has priority over

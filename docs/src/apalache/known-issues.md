@@ -81,7 +81,12 @@ Inv == 1 \in { m: a \in 1to(x) }
 ====================
 ```
 
+**Affected versions:** All
+
+**Planned fix:** Not in the near future
+
 ### Workaround
+
 Pick constant bounds `Nmin` and `Nmax`, such that `Nmin <= a <= b <= Nmax`, then use
 
 ```tla
@@ -90,11 +95,45 @@ range(a,b) == { x \in Nmin..Nmax: a <= x /\ x <= b }
 
 instead of `a..b`.
 
-**Affected versions:** <= 0.17.x
+## Using Seq(S)
 
-**Planned fix:** TBD
+The operator `Seq(S)` produces an infinite set of unbounded sequences. Hence, Apalache is not able to do anything about
+this set. Consider the following snippet:
+
+```tla
+  \E s \in Seq({ 1, 2, 3 }):
+     seq' = s
+```
+
+**Affected versions:** All
+
+**Planned fix:** Not in the near future
+
+### Workaround
+
+If you know an upper bound on the length of sequences you need, which is often the case when checking one model, you can
+work around this issue by using
+[Apalache.Gen](https://github.com/informalsystems/apalache/blob/0bf827c521d3992f39e085cc98ff114bfa0b1721/src/tla/Apalache.tla#L31-L39):
+
+```tla
+EXTENDS Apalache
+...
+  LET s == Gen(10) IN
+  /\ \A i \in DOMAIN s:
+      s[i] \in { 1, 2, 3 }
+  /\ seq' = s
+```
+
+In the above example, we instruct Apalache to introduce an unrestricted sequence that contains up to 10 elements; this
+is done with `Gen`. We further restrict the sequence to contain the elements of `{ 1, 2, 3 }`.
+
+However, note that our workaround only works for bounded sequences, whereas
+`Seq({ 1, 2, 3 })` is the set of all sequences whose elements come from `{ 1, 2, 3 }`.
 
 [Issue 425]: https://github.com/informalsystems/apalache/issues/425
+
 [Issue 711]: https://github.com/informalsystems/apalache/issues/711
+
 [Issue 712]: https://github.com/informalsystems/apalache/issues/712
+
 [Issue 401]: https://github.com/informalsystems/apalache/issues/401
