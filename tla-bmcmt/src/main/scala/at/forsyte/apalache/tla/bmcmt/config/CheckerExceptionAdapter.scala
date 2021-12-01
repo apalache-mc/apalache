@@ -66,7 +66,7 @@ class CheckerExceptionAdapter @Inject() (sourceStore: SourceStore, changeListene
 
     case err: TypingException =>
       // this is a failure message, as we know that something type-related in apalache is broken
-      FailureMessage("%s: type error: %s".format(findLoc(err.causeExprId), err.getMessage))
+      FailureMessage("%s: internal error in type checking: %s".format(findLoc(err.causeExprId), err.getMessage))
 
     // tool failures
     case err: IrrecoverablePreprocessingError =>
