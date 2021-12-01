@@ -1180,9 +1180,9 @@ $ apalache-mc check --config=Config1.cfg Config.tla | sed 's/[IEW]@.*//'
   > Set the transition predicate to Next1
   > Set an invariant to Inv1
 ...
-The outcome is: NoError
+Config.tla:58:5-58:14: unsupported expression: ♢(x > 10)
 ...
-EXITCODE: OK
+EXITCODE: ERROR (12)
 ```
 
 ### configure via TLC config and override it via CLI
@@ -1196,7 +1196,7 @@ $ apalache-mc check --config=Config1.cfg --init=Init2 --next=Next2 Config.tla | 
   > Set the transition predicate to Next2
   > Set an invariant to Inv1
 ...
-The outcome is: Error
+Config.tla:58:5-58:14: unsupported expression: ♢(x > 10)
 ...
 EXITCODE: ERROR (12)
 ```
