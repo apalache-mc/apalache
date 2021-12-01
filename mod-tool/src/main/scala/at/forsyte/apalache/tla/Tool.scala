@@ -364,7 +364,7 @@ object Tool extends LazyLogging {
                 s"${Version.version} build ${Version.build}"
             )
             Console.err.println(
-                s"Please report an issue at $ISSUES_LINK: $e\nA bug report template has been generated at [$absPath]."
+                s"Please report an issue at $ISSUES_LINK: $e\nA bug report template has been generated at [$absPath].\nIf you choose to use it, please complete the template with a description of the expected behavior."
             )
 
         }
