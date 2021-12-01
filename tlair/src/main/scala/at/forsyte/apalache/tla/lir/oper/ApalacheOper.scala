@@ -4,7 +4,7 @@ package at.forsyte.apalache.tla.lir.oper
  * The operators defined in the module Apalache.tla. This module gives the users a facility to provide hints.
  * The "Apalache" module is automatically looked up when Apalache is running.
  *
- * @author konnov
+ * @author Igor Konnov, Rodrigo Otoni
  */
 abstract class ApalacheOper extends TlaOper {
   override def interpretation: Interpretation.Value = Interpretation.StandardLib
@@ -167,5 +167,41 @@ object ApalacheOper {
     override def arity: OperArity = FixedArity(1)
 
     override def precedence: (Int, Int) = (100, 100)
+  }
+
+  /**
+   * The selectInSet operator is a variant of TlaSetOper.in.
+   * It signals that set membership should be checked.
+   */
+  object selectInSet extends ApalacheOper {
+    override def name: String = "Apalache!SelectInSet"
+
+    override def arity: OperArity = FixedArity(2)
+
+    override def precedence: (Int, Int) = (5, 5)
+  }
+
+  /**
+   * The storeInSet operator is a variant of TlaSetOper.in.
+   * It signals that set membership should be enforced.
+   */
+  object storeInSet extends ApalacheOper {
+    override def name: String = "Apalache!StoreInSet"
+
+    override def arity: OperArity = FixedArity(2)
+
+    override def precedence: (Int, Int) = (5, 5)
+  }
+
+  /**
+   * The storeNotInSet operator is a variant of storeInSet.
+   * It signals that the negation of set membership should be enforced.
+   */
+  object storeNotInSet extends ApalacheOper {
+    override def name: String = "Apalache!UnchangedSet"
+
+    override def arity: OperArity = FixedArity(2)
+
+    override def precedence: (Int, Int) = (5, 5)
   }
 }

@@ -4,11 +4,9 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
-import at.forsyte.apalache.tla.lir.{NameEx, NullEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{MalformedSepecificationError, TlaEx}
 
 import scala.collection.immutable.SortedMap
-import at.forsyte.apalache.tla.lir.MalformedSepecificationError
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 /**
@@ -79,7 +77,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
         var (nextState, oracle) = oracleFactory.newDefaultOracle(state, elems.size + 1)
 
         // pick only the elements that belong to the set
-        val elemsIn = elems map { c => tla.in(c.toNameEx, set.toNameEx).untyped() }
+        val elemsIn = elems map { c => tla.apalacheSelectInSet(c.toNameEx, set.toNameEx).untyped() }
         rewriter.solverContext.assertGroundExpr(oracle.caseAssertions(nextState, elemsIn :+ elseAssert))
 
         pickByOracle(nextState, oracle, elems, elseAssert)
@@ -319,11 +317,13 @@ class CherryPick(rewriter: SymbStateRewriter) {
           // Although we search over a list, the list size is usually small, e.g., up to 10 elements
           if (domainCells.contains(keyCell)) {
             // the key belongs to the new domain only if belongs to the domain that is pointed by the oracle
-            val iff = tla.equiv(tla.in(keyCell.toNameEx, newDom.toNameEx), tla.in(keyCell.toNameEx, dom.toNameEx))
-            rewriter.solverContext.assertGroundExpr(tla.impl(oracle.whenEqualTo(nextState, no), iff))
+            val ite = tla.ite(tla.apalacheSelectInSet(keyCell.toNameEx, dom.toNameEx),
+                tla.apalacheStoreInSet(keyCell.toNameEx, newDom.toNameEx),
+                tla.apalacheStoreNotInSet(keyCell.toNameEx, newDom.toNameEx))
+            rewriter.solverContext.assertGroundExpr(tla.impl(oracle.whenEqualTo(nextState, no), ite))
           } else {
             // The domain pointed by the oracle does not contain the key
-            val notInDom = tla.not(tla.in(keyCell.toNameEx, newDom.toNameEx))
+            val notInDom = tla.apalacheStoreNotInSet(keyCell.toNameEx, newDom.toNameEx)
             rewriter.solverContext.assertGroundExpr(tla.impl(oracle.whenEqualTo(nextState, no), notInDom))
           }
         }
@@ -444,10 +444,11 @@ class CherryPick(rewriter: SymbStateRewriter) {
       //  (chosen = 1 /\ in(z_i, R) <=> in(c_i, S_1)) \/ (chosen = 2 /\ in(z_i, R) <=> in(d_i, S_2)) \/ (chosen = N <=> elseAssert)
       def nthIn(elemAndSet: (ArenaCell, ArenaCell), no: Int): TlaEx = {
         if (elemsOfMemberSets(no).nonEmpty) {
-          tla.equiv(tla.in(picked.toNameEx, resultCell.toNameEx),
-              tla.in(elemAndSet._1.toNameEx, elemAndSet._2.toNameEx))
+          tla.ite(tla.apalacheSelectInSet(elemAndSet._1.toNameEx, elemAndSet._2.toNameEx),
+              tla.apalacheStoreInSet(picked.toNameEx, resultCell.toNameEx),
+              tla.apalacheStoreNotInSet(picked.toNameEx, resultCell.toNameEx))
         } else {
-          tla.not(tla.in(picked.toNameEx, resultCell.toNameEx)) // nothing belongs to the set
+          tla.apalacheStoreNotInSet(picked.toNameEx, resultCell.toNameEx) // nothing belongs to the set
         }
       }
 
@@ -583,23 +584,35 @@ class CherryPick(rewriter: SymbStateRewriter) {
    */
   def pickFromPowset(resultType: CellT, set: ArenaCell, state: SymbState): SymbState = {
     rewriter.solverContext.log("; PICK %s FROM %s {".format(resultType, set))
-    var arena = state.arena.appendCell(resultType)
-    val resultSet = arena.topCell
-    val baseSet = arena.getDom(set)
-    val elems = arena.getHas(baseSet)
+    var nextState = state
+    nextState = nextState.updateArena(_.appendCell(resultType))
+    val resultSet = nextState.arena.topCell
+    val baseSet = nextState.arena.getDom(set)
+    val elems = nextState.arena.getHas(baseSet)
     // resultSet may contain all the elements from the baseSet of the powerset SUBSET(S)
-    arena = arena.appendHas(resultSet, elems: _*)
+    nextState = nextState.updateArena(_.appendHas(resultSet, elems: _*))
 
     // if resultSet has an element, then it must be also in baseSet
     def inResultIfInBase(elem: ArenaCell): Unit = {
-      val inResult = tla.in(elem.toNameEx, resultSet.toNameEx)
-      val inBase = tla.in(elem.toNameEx, baseSet.toNameEx)
+      // In the oopsla19 encoding resultSet is initially unconstrained, and thus can contain any combination of elems.
+      // To emulate this in the arrays encoding, in which the all sets are initially empty, unconstrained predicates
+      // are used to allow the SMT solver to consider all possible combinations of elems.
+      if (rewriter.solverContext.config.smtEncoding == "arrays") {
+        nextState = nextState.updateArena(_.appendCell(BoolT()))
+        val pred = nextState.arena.topCell.toNameEx
+        val storeElem = tla.apalacheStoreInSet(elem.toNameEx, resultSet.toNameEx)
+        val notStoreElem = tla.apalacheStoreNotInSet(elem.toNameEx, resultSet.toNameEx)
+        rewriter.solverContext.assertGroundExpr(tla.ite(pred, storeElem, notStoreElem))
+      }
+
+      val inResult = tla.apalacheSelectInSet(elem.toNameEx, resultSet.toNameEx)
+      val inBase = tla.apalacheSelectInSet(elem.toNameEx, baseSet.toNameEx)
       rewriter.solverContext.assertGroundExpr(tla.impl(inResult, inBase))
     }
 
     elems foreach inResultIfInBase
     rewriter.solverContext.log("; } PICK %s FROM %s".format(resultType, set))
-    state.setArena(arena).setRex(resultSet.toNameEx)
+    nextState.setRex(resultSet.toNameEx)
   }
 
   /**
@@ -644,8 +657,10 @@ class CherryPick(rewriter: SymbStateRewriter) {
       arena = arena.appendHasNoSmt(pair, arg, pickedResult)
       arena = arena.appendHas(relationCell, pair)
       nextState = nextState.setArena(arena)
-      val iff = tla.equiv(tla.in(arg.toNameEx, dom.toNameEx), tla.in(pair.toNameEx, relationCell.toNameEx))
-      rewriter.solverContext.assertGroundExpr(iff)
+      val ite = tla.ite(tla.apalacheSelectInSet(arg.toNameEx, dom.toNameEx),
+          tla.apalacheStoreInSet(pair.toNameEx, relationCell.toNameEx),
+          tla.apalacheStoreNotInSet(pair.toNameEx, relationCell.toNameEx))
+      rewriter.solverContext.assertGroundExpr(ite)
     }
 
     // If S is empty, the relation is empty too.

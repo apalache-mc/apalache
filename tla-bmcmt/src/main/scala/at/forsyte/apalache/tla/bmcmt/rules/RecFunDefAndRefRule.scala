@@ -97,7 +97,8 @@ class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
       nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.appFun(funCell.toNameEx, elem.toNameEx)))
       val lhs = nextState.asCell
       // either elem is outside of DOMAIN, or lhs equals rhs
-      val pred = tla.or(tla.not(tla.in(elem.toNameEx, domainCell.toNameEx)), tla.eql(lhs.toNameEx, rhs.toNameEx))
+      val pred = tla.or(tla.not(tla.apalacheSelectInSet(elem.toNameEx, domainCell.toNameEx)),
+          tla.eql(lhs.toNameEx, rhs.toNameEx))
       rewriter.solverContext.assertGroundExpr(pred)
     }
 

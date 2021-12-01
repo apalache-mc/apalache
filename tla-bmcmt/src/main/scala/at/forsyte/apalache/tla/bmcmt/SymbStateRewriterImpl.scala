@@ -196,6 +196,8 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
         // sets
         key(tla.in(tla.name("x"), tla.name("S")))
           -> List(new SetInRule(this)),
+        key(tla.apalacheSelectInSet(tla.name("x"), tla.name("S")))
+          -> List(new SetInRule(this)),
         key(tla.enumSet(tla.name("x")))
           -> List(new SetCtorRule(this)),
         key(tla.subseteq(tla.name("x"), tla.name("S")))

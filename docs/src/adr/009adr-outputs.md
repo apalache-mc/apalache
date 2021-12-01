@@ -2,7 +2,7 @@
 
 | author                   | revision |
 |--------------------------|---------:|
-| Jure Kukovec, Shon Feder |        2 |
+| Jure Kukovec, Shon Feder |        2.1 |
 
 This ADR documents the various files produced by Apalache, and where they get written to.
 
@@ -59,6 +59,7 @@ following:
   
 - A file `run.txt`, containing the command issued for this run, with all implicit parameters filled in, so it can be replicated exactly
 - 0 or more counterexample files
+- a pre-filled bug report file `BugReport.md`, if the tool exited with a `FailureMessage`
 - if `--write-intermediate` is set, a subdirectory `intermediate`, containing outputs associated with each of the passes in Apalache
 - an Apalache log file `detailed.log`.
 - an SMT log file `log0.smt`

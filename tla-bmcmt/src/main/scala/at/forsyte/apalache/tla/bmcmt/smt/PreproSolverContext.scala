@@ -4,9 +4,9 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.caches.SimpleCache
 import at.forsyte.apalache.tla.bmcmt.profiler.SmtListener
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
-import at.forsyte.apalache.tla.bmcmt.smt.PreproSolverContext.{PreproEqEntry, PreproInEntry, PreproCacheEntry}
+import at.forsyte.apalache.tla.bmcmt.smt.PreproSolverContext.{PreproCacheEntry, PreproEqEntry, PreproInEntry}
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
@@ -73,7 +73,8 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
           context.log(";;    -> pp eq cached as false ")
         }
 
-      case OperEx(TlaSetOper.in, NameEx(left), NameEx(right)) =>
+      case OperEx(op, NameEx(left), NameEx(right))
+          if op == TlaSetOper.in || op == ApalacheOper.selectInSet || op == ApalacheOper.storeInSet || op == ApalacheOper.storeNotInSet =>
         // in and not(notin), the latter is transformed by simplifier
         if (ArenaCell.isValidName(left) && ArenaCell.isValidName(right)) {
           cache.put((left, right), PreproInEntry(true))
@@ -127,13 +128,32 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
           case None         => ex
         }
 
+      case OperEx(ApalacheOper.selectInSet, NameEx(left), NameEx(right)) =>
+        cache.get((left, right)) match {
+          case Some(cached) => cached.asTlaEx(negate = false)
+          case None         => ex
+        }
+
+      case OperEx(ApalacheOper.storeInSet, NameEx(left), NameEx(right)) =>
+        cache.get((left, right)) match {
+          case Some(cached) => cached.asTlaEx(negate = false)
+          case None         => ex
+        }
+
       case OperEx(TlaSetOper.notin, NameEx(left), NameEx(right)) =>
         cache.get((left, right)) match {
           case Some(cached) => cached.asTlaEx(negate = true)
           case None         => ex
         }
 
-      case OperEx(TlaSetOper.in, _*) | OperEx(TlaSetOper.notin, _*) =>
+      case OperEx(ApalacheOper.storeNotInSet, NameEx(left), NameEx(right)) =>
+        cache.get((left, right)) match {
+          case Some(cached) => cached.asTlaEx(negate = false)
+          case None         => ex
+        }
+
+      case OperEx(TlaSetOper.in, _*) | OperEx(ApalacheOper.selectInSet, _*) | OperEx(ApalacheOper.storeInSet, _*) |
+          OperEx(TlaSetOper.notin, _*) | OperEx(ApalacheOper.storeNotInSet, _*) =>
         // do not preprocess these expressions, as we have to find sorts from the names
         ex
 

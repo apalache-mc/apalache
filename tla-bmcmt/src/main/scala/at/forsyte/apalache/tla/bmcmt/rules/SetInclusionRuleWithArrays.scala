@@ -45,37 +45,51 @@ class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends SetInclusi
 
   // TODO: similar to SetInRuleWithArrays.powSetIn, potential for refactoring.
   private def subset(state: SymbState, leftCell: ArenaCell, rightCell: ArenaCell, rightIsPowSet: Boolean): SymbState = {
-    // We check if the elements of leftCell are in rightCell, in order to establish the subset relation.
-    // If rightCell is a power set, we check if the elements in the sets of leftCell are in the domain of rightCell.
-    val leftElems =
-      if (rightIsPowSet) state.arena.getHas(leftCell).flatMap(state.arena.getHas)
-      else state.arena.getHas(leftCell)
+    val leftElems = state.arena.getHas(leftCell)
+    val leftElemsElems = leftElems.flatMap(state.arena.getHas)
     val rightElemOrDomain = if (rightIsPowSet) state.arena.getDom(rightCell) else rightCell
     val rightElemOrDomainElems = state.arena.getHas(rightElemOrDomain)
-    // EqConstraints need to be generated, since missing in-relations, e.g. in sets of tuples, will lead to errors.
-    // TODO: Inlining this method is pointless. We should consider handling tuples and other structures natively in SMT.
-    var newState = rewriter.lazyEq.cacheEqConstraints(state, leftElems cross rightElemOrDomainElems)
 
-    def isInRightSet(leftElem: ArenaCell): TlaEx = {
+    var newState = state
+
+    // If rightCell is a power set, we check if the elements in the sets of leftCell are in the domain of rightCell.
+    // Otherwise, we check if the elements of leftCell are in rightCell, in order to establish the subset relation.
+    if (rightIsPowSet) {
+      def eachElem(state: SymbState, elem: ArenaCell): SymbState = {
+        val newState = subset(state, elem, rightElemOrDomain, false)
+        val outOrSubsetEq = tla.or(tla.not(tla.apalacheSelectInSet(elem.toNameEx, leftCell.toNameEx)), newState.ex)
+        newState.setRex(outOrSubsetEq)
+      }
+
+      leftElems.foldLeft(newState)(eachElem)
+    } else {
+      // EqConstraints need to be generated, since missing in-relations, e.g. in sets of tuples, will lead to errors.
+      // TODO: Inlining this method is pointless. We should consider handling tuples and other structures natively in SMT.
+      newState = rewriter.lazyEq.cacheEqConstraints(state, leftElemsElems cross rightElemOrDomainElems)
+
+      def isInRightSet(leftElem: ArenaCell): TlaEx = {
+        def isInAndEqLeftElem(rightElemOrDomainElem: ArenaCell) = {
+          // rightElemOrDomainElem \in rightElemOrDomain /\ rightElemOrDomainElem = leftElem
+          simplifier.simplifyShallow(tla.and(tla.apalacheSelectInSet(rightElemOrDomainElem.toNameEx,
+                      rightElemOrDomain.toNameEx), tla.eql(rightElemOrDomainElem.toNameEx, leftElem.toNameEx)))
+        }
+
+        newState = newState.updateArena(_.appendCell(BoolT()))
+        val pred = newState.arena.topCell
+        val elemsInAndEqLeftElem = rightElemOrDomainElems.map(isInAndEqLeftElem)
+
+        // pred <=> (leftElem \in leftCell => elemsInAndEqLeftElem.1 \/ ... \/ elemsInAndEqLeftElem.n)
+        rewriter.solverContext.assertGroundExpr(simplifier.simplifyShallow(tla.equiv(pred.toNameEx,
+                    tla.or(tla.not(tla.apalacheSelectInSet(leftElem.toNameEx, leftCell.toNameEx)),
+                        tla.or(elemsInAndEqLeftElem: _*)))))
+        pred.toNameEx
+      }
+
+      val isSubset = tla.and(leftElems.map(isInRightSet): _*)
       newState = newState.updateArena(_.appendCell(BoolT()))
       val pred = newState.arena.topCell
-
-      def isInAndEqLeftElem(rightElemOrDomainElem: ArenaCell) = {
-        // rightElemOrDomainElem \in rightElemOrDomain /\ rightElemOrDomainElem = leftElem
-        simplifier.simplifyShallow(tla.and(tla.in(rightElemOrDomainElem.toNameEx, rightElemOrDomain.toNameEx),
-                tla.eql(rightElemOrDomainElem.toNameEx, leftElem.toNameEx)))
-      }
-      val elemsInAndEqLeftElem = rightElemOrDomainElems.map(isInAndEqLeftElem)
-      // pred <=> (leftElem \in leftCell => elemsInAndEqLeftElem.1 \/ ... \/ elemsInAndEqLeftElem.n)
-      rewriter.solverContext.assertGroundExpr(simplifier.simplifyShallow(tla.equiv(pred.toNameEx,
-                  tla.or(tla.not(tla.in(leftElem.toNameEx, leftCell.toNameEx)), tla.or(elemsInAndEqLeftElem: _*)))))
-      pred.toNameEx
+      rewriter.solverContext.assertGroundExpr(simplifier.simplifyShallow(tla.eql(pred.toNameEx, isSubset)))
+      newState.setRex(pred.toNameEx)
     }
-
-    val isSubset = simplifier.simplifyShallow(tla.and(leftElems.map(isInRightSet): _*))
-    newState = newState.updateArena(_.appendCell(BoolT()))
-    val pred = newState.arena.topCell
-    rewriter.solverContext.assertGroundExpr(tla.eql(pred.toNameEx, isSubset))
-    newState.setRex(pred.toNameEx)
   }
 }
