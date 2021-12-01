@@ -35,7 +35,7 @@ class IntRangeCache(solverContext: SolverContext, intValueCache: IntValueCache)
     val set = arena.topCell
     arena = arena.appendHas(set, cells: _*)
     // force that every element is in the set
-    solverContext.assertGroundExpr(tla.and(cells.map(c => tla.in(c.toNameEx, set.toNameEx)): _*))
+    solverContext.assertGroundExpr(tla.and(cells.map(c => tla.apalacheStoreInSet(c.toNameEx, set.toNameEx)): _*))
     (arena, set)
   }
 }

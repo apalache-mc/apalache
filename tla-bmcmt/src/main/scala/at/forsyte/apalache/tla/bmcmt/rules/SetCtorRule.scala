@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.types.{CellT, FinSetT}
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, TlaType1, TypingException}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.convenience.tla
 
 /**
  * Rewrites the set constructor {e_1, ..., e_k}.
@@ -12,6 +13,7 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
  * @author Igor Konnov
  */
 class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
+
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaSetOper.enumSet, _*) => true
@@ -36,7 +38,7 @@ class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         nextState = nextState.updateArena(_.appendHas(newSetCell, cells: _*))
 
         for (c <- cells) {
-          val inExpr = OperEx(TlaSetOper.in, c.toNameEx, newSetCell.toNameEx)
+          val inExpr = tla.apalacheStoreInSet(c.toNameEx, newSetCell.toNameEx)
           rewriter.solverContext.assertGroundExpr(inExpr)
         }
 

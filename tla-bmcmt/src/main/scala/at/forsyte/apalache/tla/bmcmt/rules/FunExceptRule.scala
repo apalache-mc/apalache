@@ -91,8 +91,9 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
       nextState = nextState.updateArena(_.appendHas(resultRelation, updatedCell))
       // The new cell belongs to the new relation iff the old cell belongs to the old relation.
       val assertion = tla
-        .equiv(tla.in(pair.toNameEx ? "p", relation.toNameEx ? "r") ? "b",
-            tla.in(updatedCell.toNameEx ? "p", resultRelation.toNameEx ? "r") ? "b")
+        .ite(tla.apalacheSelectInSet(pair.toNameEx ? "p", relation.toNameEx ? "r") ? "b",
+            tla.apalacheStoreInSet(updatedCell.toNameEx ? "p", resultRelation.toNameEx ? "r") ? "b",
+            tla.apalacheStoreNotInSet(updatedCell.toNameEx ? "p", resultRelation.toNameEx ? "r") ? "b")
         .typed(types, "b")
       solverAssert(assertion)
       updatedCell

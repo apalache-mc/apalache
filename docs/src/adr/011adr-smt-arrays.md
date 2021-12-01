@@ -2,7 +2,7 @@
 
 | author        | revision |
 | ------------- | --------:|
-| Rodrigo Otoni |      1.1 |
+| Rodrigo Otoni |      1.2 |
 
 This ADR describes an alternative encoding of the [KerA+] fragment of TLA+ into SMT.
 Compound data structures, e.g. sets, are currently encoded using the [core theory] of SMT,
@@ -136,18 +136,38 @@ The following changes will be made to implement the new encoding of sets:
     elements will remain unchanged.
 - In class `SymbStateRewriterImplWithArrays`, add the new rules to `ruleLookupTable` by overriding
   the entries to their older versions.
+- Add three new Apalache IR operators in `ApalacheOper`, `Builder`, `ConstSimplifierForSmt`, and 
+  `PreproSolverContext`, to represent the array operations.
+  - The `selectInSet` IR operator represents the SMT `select`.
+  - The `storeInSet` IR operator represents the SMT `store`.
+  - The `unchangedSet` IR operator represents an equality between the current and new SSA array
+    representations. This is required to constraint the array representation as it evolves. It is
+    important to note that this operator assumes that all arrays are initially empty, so an element
+    not explicitly added is assumed to not be in the array. To check absence of an element,
+    `selectInSet` should be used with negation.
 - In class `Z3SolverContext`, add/change appropriate methods to handle SMT constraints over arrays.
-  - The main changes will de done in `declareCell`, `declareInPredIfNeeded`, and `getInPred`, as
-    these methods are directly responsible for creating the SMT constraints representing sets and
-    set membership.
+  - The main changes will de done in `declareCell` and the new `mkSelect`, `mkStore`, and 
+    `mkUnchangedSet` methods, as these methods are directly responsible for creating the SMT 
+    constraints representing sets and set membership.
+  - With the new IR operators, the "in-relation" concept, which underpins `declareInPredIfNeeded` 
+    and `getInPred`, will not be applied to the new encoding. Cases for the new IR operators will 
+    be added to `toExpr`, which will default to `TlaSetOper.in` and `TlaSetOper.notin` for the 
+    existing encoding.
   - Cases for `FinSetT` and `PowSetT` will be added to `getOrMkCellSort`, as these types are no
     longer represented by uninterpreted constants.
   - `cellCache` will be changed to contain a list of cells, in order to handle the effects of
-    `push` and `pop` in the SSA assignment of sets.
-  - A new cache, `inStored`, will provide the required information to `getInPred` to enable it to
-    return either a `store` or a `select` constraint, when appropriate.
-  - Special cases for `TlaOper.eq` and `TlaBoolOper.equiv` will be added to `toExpr`, to allow the
-    set filter rule to propagate SSA sets when the filter predicate evaluates for false.
+    `push` and `pop` in the SSA assignment of sets. The following examples illustrates this need.
+    ```
+    (assert (= set_0 ((as const (Array Int Bool)) false)))
+    (assert (= set_1 (store set_0 5 true)))
+    (push)
+    (assert (= set_2 (store set_1 6 true)))
+    (push)
+    (assert (= set_3 (store set_2 7 true)))
+    (assert (= (select set_3 7) true))
+    (pop 2)
+    (assert (= (select set_1 7) false)) ; Without the list we would query set_3 here 
+    ```
 
 ## 4. Encoding tuples and records
 

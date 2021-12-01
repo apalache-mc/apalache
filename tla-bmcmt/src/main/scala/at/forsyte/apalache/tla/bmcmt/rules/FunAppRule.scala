@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -17,7 +16,6 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
  */
 class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val picker = new CherryPick(rewriter)
-  private val simplifier = new ConstSimplifierForSmt()
   private val defaultValueFactory = new DefaultValueFactory(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
@@ -158,7 +156,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       for ((elem, no) <- relationElems.zipWithIndex) {
         val elemArg = nextState.arena.getHas(elem).head
         nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((argCell, elemArg)))
-        val inRel = tla.in(elem.toNameEx, relationCell.toNameEx)
+        val inRel = tla.apalacheSelectInSet(elem.toNameEx, relationCell.toNameEx)
         val neqArg = tla.not(rewriter.lazyEq.safeEq(elemArg, argCell))
         val found = tla.not(oracle.whenEqualTo(nextState, nelems))
         // ~inRel \/ neqArg \/ found, or equivalently, (inRel /\ elemArg = argCell) => found

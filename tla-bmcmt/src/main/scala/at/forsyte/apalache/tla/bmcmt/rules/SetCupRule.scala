@@ -15,6 +15,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaSetOper
  * @author Igor Konnov
  */
 class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
+
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaSetOper.cup, _*) => true
@@ -53,15 +54,15 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         // require each cell to be in in the union iff it is exactly in its origin set
         def addOnlyCellCons(thisSet: ArenaCell, thisElem: ArenaCell): Unit = {
-          val inThis = tla.in(thisElem.toNameEx, thisSet.toNameEx)
-          val inCup = tla.in(thisElem.toNameEx, newSetCell.toNameEx)
+          val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, thisSet.toNameEx)
+          val inCup = tla.apalacheStoreInSet(thisElem.toNameEx, newSetCell.toNameEx)
           rewriter.solverContext.assertGroundExpr(tla.equiv(inCup, inThis))
         }
 
         def addEitherCellCons(thisElem: ArenaCell): Unit = {
-          val inThis = tla.in(thisElem.toNameEx, leftSetCell.toNameEx)
-          val inOther = tla.in(thisElem.toNameEx, rightSetCell.toNameEx)
-          val inCup = tla.in(thisElem.toNameEx, newSetCell.toNameEx)
+          val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, leftSetCell.toNameEx)
+          val inOther = tla.apalacheSelectInSet(thisElem.toNameEx, rightSetCell.toNameEx)
+          val inCup = tla.apalacheStoreInSet(thisElem.toNameEx, newSetCell.toNameEx)
           rewriter.solverContext.assertGroundExpr(tla.equiv(inCup, tla.or(inThis, inOther)))
         }
 

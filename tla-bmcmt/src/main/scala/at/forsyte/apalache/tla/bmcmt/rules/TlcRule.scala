@@ -86,14 +86,16 @@ class TlcRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLoggin
       Map("b" -> BoolT1(), "p" -> pairT, "r" -> SetT1(pairT))
     // the new pair unconditionally belongs to the new cell
     for (pair <- leftPairs) {
-      val inOld = tla.in(pair.toNameEx ? "p", leftRelation.toNameEx ? "r") ? "b"
-      val inNew = tla.in(pair.toNameEx ? "p", newRelation.toNameEx ? "r") ? "b"
-      solverAssert(tla.equiv(inNew, inOld).typed(types, "b"))
+      val inOld = tla.apalacheSelectInSet(pair.toNameEx ? "p", leftRelation.toNameEx ? "r") ? "b"
+      val inNew = tla.apalacheStoreInSet(pair.toNameEx ? "p", newRelation.toNameEx ? "r") ? "b"
+      val notInNew = tla.apalacheStoreNotInSet(pair.toNameEx ? "p", newRelation.toNameEx ? "r") ? "b"
+      solverAssert(tla.ite(inOld, inNew, notInNew).typed(types, "b"))
     }
     for (pair <- rightPairs) {
-      val inOld = tla.in(pair.toNameEx ? "p", rightRelation.toNameEx ? "r") ? "b"
-      val inNew = tla.in(pair.toNameEx ? "p", newRelation.toNameEx ? "r") ? "b"
-      solverAssert(tla.equiv(inNew, inOld).typed(types, "b"))
+      val inOld = tla.apalacheSelectInSet(pair.toNameEx ? "p", rightRelation.toNameEx ? "r") ? "b"
+      val inNew = tla.apalacheStoreInSet(pair.toNameEx ? "p", newRelation.toNameEx ? "r") ? "b"
+      val notInNew = tla.apalacheStoreNotInSet(pair.toNameEx ? "p", newRelation.toNameEx ? "r") ? "b"
+      solverAssert(tla.ite(inOld, inNew, notInNew).typed(types, "b"))
     }
 
     nextState.setRex(newFunCell.toNameEx)

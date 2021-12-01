@@ -102,7 +102,7 @@ class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val condCell = arenaWithCondition.topCell
         val condEx = tla
           .or(
-              tla.notin(currentCell.toNameEx, setNameEx) ? "bool",
+              tla.not(tla.apalacheSelectInSet(currentCell.toNameEx, setNameEx) ? "bool") ? "bool",
               tla.or(counted.map(eqToOther(setNameEx, currentCell, _)): _*) ? "bool"
           ) ? "bool"
         solverAssert(tla.eql(condCell.toNameEx, condEx).typed(types, "bool"))
@@ -154,7 +154,8 @@ class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
   // a) `otherCell` must also belong to `setNameEx`
   // b) (lazy) equality must evaluate to true
   def eqToOther(setNameEx: TlaEx, thisCell: ArenaCell, otherCell: ArenaCell): BuilderEx =
-    tla.and(tla.in(otherCell.toNameEx, setNameEx) ? "bool", rewriter.lazyEq.safeEq(thisCell, otherCell)) ? "bool"
+    tla.and(tla.apalacheSelectInSet(otherCell.toNameEx, setNameEx) ? "bool",
+        rewriter.lazyEq.safeEq(thisCell, otherCell)) ? "bool"
 
   // convenience shorthand
   def solverAssert: TlaEx => Unit = rewriter.solverContext.assertGroundExpr
