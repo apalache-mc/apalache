@@ -1107,6 +1107,19 @@ $ apalache-mc check Bug985.tla | sed 's/I@.*//'
 EXITCODE: OK
 ```
 
+### check Bug1126 succeeds
+
+Regression test for https://github.com/informalsystems/apalache/issues/1126
+An occurence of `Seq(S)` should point to an explanation.
+
+```sh
+$ apalache-mc check Bug1126.tla | sed 's/[IE]@.*//'
+...
+Bug1126.tla:15:14-15:27: unsupported expression: Seq(_) produces an infinite set of unbounded sequences. See: https://apalache.informal.systems/docs/apalache/known-issues.html#using-seqs
+...
+EXITCODE: ERROR (12)
+```
+
 ## configure the check command
 
 Testing various flags that are set via command-line options and the TLC configuration file. The CLI has priority over
@@ -1167,9 +1180,9 @@ $ apalache-mc check --config=Config1.cfg Config.tla | sed 's/[IEW]@.*//'
   > Set the transition predicate to Next1
   > Set an invariant to Inv1
 ...
-The outcome is: NoError
+Config.tla:58:5-58:14: unsupported expression: ♢(x > 10)
 ...
-EXITCODE: OK
+EXITCODE: ERROR (12)
 ```
 
 ### configure via TLC config and override it via CLI
@@ -1183,7 +1196,7 @@ $ apalache-mc check --config=Config1.cfg --init=Init2 --next=Next2 Config.tla | 
   > Set the transition predicate to Next2
   > Set an invariant to Inv1
 ...
-The outcome is: Error
+Config.tla:58:5-58:14: unsupported expression: ♢(x > 10)
 ...
 EXITCODE: ERROR (12)
 ```

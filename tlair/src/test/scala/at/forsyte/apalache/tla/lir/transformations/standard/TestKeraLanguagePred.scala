@@ -66,10 +66,10 @@ class TestKeraLanguagePred extends LanguagePredTestSuite {
     expectOk(pred.isExprOk(label(int(2), "a", "b")))
   }
 
-  test("KerA TLC") {
-    expectOk(pred.isExprOk(OperEx(TlcOper.print, tla.bool(true), tla.str("msg"))))
-    expectOk(pred.isExprOk(OperEx(TlcOper.printT, tla.str("msg"))))
-    expectOk(pred.isExprOk(OperEx(TlcOper.assert, tla.bool(true), tla.str("msg"))))
+  test("KerA partial support of TLC") {
+    expectFail(pred.isExprOk(OperEx(TlcOper.print, tla.bool(true), tla.str("msg"))))
+    expectFail(pred.isExprOk(OperEx(TlcOper.printT, tla.str("msg"))))
+    expectFail(pred.isExprOk(OperEx(TlcOper.assert, tla.bool(true), tla.str("msg"))))
     expectOk(pred.isExprOk(OperEx(TlcOper.colonGreater, tla.int(1), tla.int(2))))
     expectOk(pred.isExprOk(OperEx(TlcOper.atat, NameEx("fun"), NameEx("pair"))))
   }

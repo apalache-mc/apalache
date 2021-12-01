@@ -31,7 +31,7 @@ object UTFPrinter extends Printer {
   val m_exists = "\u2203"
   val m_cdot = "\u22C5"
   val m_box = "\u2610"
-  val m_diamond = "\u22C4"
+  val m_diamond = "\u2662"
   val m_rarrow = "\u2192"
   val m_ring = "\u2218"
   val m_guarantee = "\u2945"
