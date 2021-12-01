@@ -87,7 +87,7 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) exte
 
             case args =>
               throw new TypingInputException(
-                  s"Unexpected annotation alias in front of ${decl.name}: " + args.mkString(", "))
+                  s"Unexpected annotation alias in front of ${decl.name}: " + args.mkString(", "), decl.ID)
           }
         }
       }
@@ -104,7 +104,7 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) exte
     } catch {
       case e: Type1ParseError =>
         logger.error("Parsing error in the alias annotation: " + text)
-        throw new TypingInputException(s"Parser error in type alias of $where: ${e.msg}")
+        throw new TypingInputException(s"Parser error in type alias of $where: ${e.msg}", UID.nullId)
     }
   }
 }

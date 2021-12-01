@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types.FinSetT
-import at.forsyte.apalache.tla.lir.OperEx
+import at.forsyte.apalache.tla.lir.{OperEx, TypingException}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -28,8 +28,11 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val topSetCell = nextState.asCell
         val elemType =
           topSetCell.cellType match {
-            case FinSetT(FinSetT(et)) => et
-            case _                    => throw new TypeException(s"Applying UNION to $topSet of type ${topSetCell.cellType}", state.ex)
+            case FinSetT(FinSetT(et)) =>
+              et
+
+            case _ =>
+              throw new TypingException(s"Applying UNION to $topSet of type ${topSetCell.cellType}", state.ex.ID)
           }
 
         val sets = Set(nextState.arena.getHas(topSetCell): _*).toList // remove duplicates too

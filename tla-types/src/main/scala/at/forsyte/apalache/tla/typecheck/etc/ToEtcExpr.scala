@@ -32,7 +32,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
 
           case None =>
             val kind = if (decl.isInstanceOf[TlaConstDecl]) "CONSTANT" else "VARIABLE"
-            throw new TypingInputException(s"Expected a type annotation for $kind ${decl.name}")
+            throw new TypingInputException(s"Expected a type annotation for $kind ${decl.name}", decl.ID)
         }
 
       case d: TlaAssumeDecl =>
@@ -49,7 +49,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         operDefToDecl(d, inScopeEx)
 
       case _ =>
-        throw new TypingInputException(s"Unexpected declaration: $decl")
+        throw new TypingInputException(s"Unexpected declaration: $decl", decl.ID)
     }
   }
 
@@ -102,9 +102,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
     } catch {
       case e: Type1ParseError =>
         logger.error("Parsing error in the type annotation: " + text)
-        throw new TypingInputException(
-            s"Parser error in type annotation of $where: ${e.msg}"
-        )
+        throw new TypingInputException(s"Parser error in type annotation of $where: ${e.msg}", UID.nullId)
     }
   }
 
@@ -120,7 +118,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
             parseType(decl.name, annotationText)
 
           case a =>
-            throw new TypingInputException(s"Unexpected annotation of ${decl.name}: $a")
+            throw new TypingInputException(s"Unexpected annotation of ${decl.name}: $a", decl.ID)
         }
     }
   }
@@ -211,10 +209,8 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         // F(e_1, ..., e_n)
         mkAppByName(ref, mkName(nameEx), args.map(this(_)): _*)
 
-      case OperEx(TlaOper.apply, opName, args @ _*) =>
-        throw new TypingException(
-            "Bug in ToEtcExpr. Expected an operator name, found: " + opName
-        )
+      case ex @ OperEx(TlaOper.apply, opName, args @ _*) =>
+        throw new TypingException(s"Bug in ToEtcExpr. Expected an operator name, found: ${opName}", ex.ID)
 
       case OperEx(
               TlaOper.chooseBounded,
@@ -456,7 +452,8 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
                 .grouped(2)
                 .map {
                   case Seq(varEx, setEx) => (varEx, setEx)
-                  case orphan            => throw new TypingException(s"Invalid bound variables and sets ${orphan} in: ${ex}")
+                  case orphan =>
+                    throw new TypingException(s"Invalid bound variables and sets $orphan in: $ex", ex.ID)
                 }
                 .toSeq: _*
           )
@@ -504,7 +501,8 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
                 .grouped(2)
                 .map {
                   case Seq(varEx, setEx) => (varEx, setEx)
-                  case orphan            => throw new TypingException(s"Invalid bound variables and sets ${orphan} in: ${ex}")
+                  case orphan =>
+                    throw new TypingException(s"Invalid bound variables and sets ${orphan} in: $ex", ex.ID)
                 }
                 .toSeq: _*
           )
@@ -892,9 +890,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
           }
 
         case _ =>
-          throw new TypingInputException(
-              s"Unexpected binding $target \\in $set"
-          )
+          throw new TypingInputException(s"Unexpected binding $target \\in $set", id)
       }
     }
 

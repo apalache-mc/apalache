@@ -19,14 +19,6 @@ class CheckerException(message: String, val causeExpr: TlaEx) extends Exception(
 class RewriterException(message: String, causeExpr: TlaEx) extends CheckerException(message, causeExpr)
 
 /**
- * An exception related to a type error.
- *
- * @param message error message
- * @param causeExpr the problematic TLA+ expression, may be NullEx
- */
-class TypeException(message: String, causeExpr: TlaEx) extends CheckerException(message, causeExpr)
-
-/**
  * This exception is thrown when QStateRewrite cannot find an applicable rule.
  *
  * @param message error message

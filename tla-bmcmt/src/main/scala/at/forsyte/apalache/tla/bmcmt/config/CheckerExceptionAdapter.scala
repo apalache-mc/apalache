@@ -61,10 +61,12 @@ class CheckerExceptionAdapter @Inject() (sourceStore: SourceStore, changeListene
       NormalErrorMessage("%s: Input error (see the manual): %s".format(findLoc(err.causeExpr.ID), err.getMessage))
 
     case err: TypingInputException =>
-      NormalErrorMessage("Typing input error: " + err.getMessage)
+      // this is a normal message, as we know that the typing error is due to the user
+      NormalErrorMessage("%s: type input error: %s".format(findLoc(err.causeExprId), err.getMessage))
 
     case err: TypingException =>
-      FailureMessage("Type checker error: " + err.getMessage)
+      // this is a failure message, as we know that something type-related in apalache is broken
+      FailureMessage("%s: type error: %s".format(findLoc(err.causeExprId), err.getMessage))
 
     // tool failures
     case err: IrrecoverablePreprocessingError =>
@@ -83,9 +85,6 @@ class CheckerExceptionAdapter @Inject() (sourceStore: SourceStore, changeListene
     case err: SmtEncodingException =>
       val msg = "%s: error when rewriting to SMT: %s".format(findLoc(err.causeExpr.ID), err.getMessage)
       FailureMessage(msg)
-
-    case err: TypeException =>
-      FailureMessage("%s: type error: %s".format(findLoc(err.causeExpr.ID), err.getMessage))
 
     case err: InvalidTlaExException =>
       val msg = "%s: unexpected TLA+ expression: %s".format(findLoc(err.causeExpr.ID), err.getMessage)

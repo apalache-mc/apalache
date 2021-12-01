@@ -61,16 +61,15 @@ class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val b = setEx.typeTag.asTlaType1() match {
         case SetT1(bType) => bType
         case nonSet =>
-          throw new TypingException(s"FoldSet argument $setEx should have the type Set(_), found $nonSet.")
+          throw new TypingException(s"FoldSet argument $setEx should have the type Set(_), found $nonSet.", setEx.ID)
       }
       val opT = OperT1(Seq(a, b), a)
       //sanity check
       opDecl.typeTag.asTlaType1() match {
         case `opT` => // all good
         case badType =>
-          throw new TypingException(
-              s"FoldSet argument ${opDecl.name} should have the tag $opT, found $badType."
-          )
+          val msg = s"FoldSet argument ${opDecl.name} should have the tag $opT, found $badType."
+          throw new TypingException(msg, opDecl.ID)
       }
 
       // type aliases, because Builder

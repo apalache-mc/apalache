@@ -50,9 +50,10 @@ class CyclicDependencyError(message: String) extends LirError(message)
 /**
  * This exception is thrown, whenever the code finds an irrecoverable error in expression types.
  *
- * @author konnov
+ * @param message error message
+ * @param causeExprId the id of a problematic expression, may be UID.nullId
  */
-class TypingException(message: String) extends Exception(message)
+class TypingException(message: String, val causeExprId: UID) extends Exception(message)
 
 /**
  * This exception is thrown when an outdated type annotation (pre 0.12.0) is met.

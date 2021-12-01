@@ -22,7 +22,7 @@ class LoggingTypeCheckerListener(sourceStore: SourceStore, changeListener: Chang
       val msg = "[%s]: Found a polymorphic type: %s".format(findLoc(sourceRef.tlaId), tp)
       logger.error(msg)
       logger.error("Probable causes: an empty set { } needs a type annotation or an incorrect record field is used")
-      throw new TypingInputException(msg)
+      throw new TypingInputException(msg, sourceRef.tlaId)
     }
   }
 

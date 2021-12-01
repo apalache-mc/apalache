@@ -114,7 +114,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
             onTypeFound(ex.sourceRef, res)
 
           case tt =>
-            throw new TypingException("Expected an operator type, found: " + tt)
+            throw new TypingException("Expected an operator type, found: ", appEx.sourceRef.tlaId)
         }
 
         def onOverloadingError(sub: Substitution, signatures: Seq[TlaType1]): Unit = {

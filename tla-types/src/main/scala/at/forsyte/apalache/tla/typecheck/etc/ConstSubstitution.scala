@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.lir.{
-  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1, TupT1,
-  TypingException, VarT1
+  BoolT1, ConstT1, FunT1, IntT1, NullEx, OperT1, RealT1, RecT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1, TupT1,
+  TypingException, UID, VarT1
 }
 
 /**
@@ -45,7 +45,7 @@ class ConstSubstitution(val context: Map[String, TlaType1]) {
     for ((caller, tt) <- aliases) {
       def callback(callee: String) = {
         val msg = s"Cannot resolve a reference to type alias $callee in the type alias $caller. A cyclic dependency?"
-        throw new TypingException(msg)
+        throw new TypingException(msg, UID.nullId)
       }
 
       throwOnUndefined(aliases.keySet, callback, tt)

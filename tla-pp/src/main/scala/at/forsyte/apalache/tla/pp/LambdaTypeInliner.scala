@@ -38,7 +38,7 @@ class LambdaTypeInliner(tracker: TransformationTracker) extends TlaExTransformat
       unifiedOpt match {
         case None =>
           // This should never happen, after #1088
-          throw new TypingException("Could not synchronize type of fold operator.")
+          throw new TypingException("Could not synchronize type of fold operator.", letInEx.ID)
         case Some((subst, unifiedType)) =>
           val substitutor = new TypeSubstitutor(tracker, subst)
           val newDecl = letInDecl.copy(body = substitutor(letInDecl.body))(Typed(unifiedType))

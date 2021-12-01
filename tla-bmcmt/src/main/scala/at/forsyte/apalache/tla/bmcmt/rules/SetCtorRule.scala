@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, FinSetT}
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, TlaType1}
+import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, TlaType1, TypingException}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
@@ -29,7 +29,7 @@ class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val setT = CellT.fromTypeTag(ex.typeTag)
         val elemType = setT match {
           case FinSetT(et) => et
-          case setT @ _    => throw new TypeException("Expected a finite set, found: " + setT, state.ex)
+          case setT @ _    => throw new TypingException("Expected a finite set, found: " + setT, state.ex.ID)
         }
         nextState = nextState.updateArena(_.appendCell(FinSetT(elemType)))
         val newSetCell = nextState.arena.topCell

@@ -35,6 +35,11 @@ object UID {
   def apply(id: Long) = new UID(id)
 
   /**
+   * A unique id that is used as a null identifier.
+   */
+  val nullId: UID = new UID(0)
+
+  /**
    * Create a unique identifier, provided that all identifiers have been created only by calling this method.
    * This method is thread-safe.
    *

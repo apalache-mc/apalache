@@ -13,3 +13,7 @@
 ### Bug fixes
 
 * Remove duplicate function indices when decoding symbolic states, fixes #962
+
+### Refactoring
+
+* Merge TypeException and TypingException, see #1090

@@ -100,7 +100,8 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker) ext
     val substitution = new TypeUnifier().unify(Substitution.empty, genericType, actualType) match {
       case None =>
         throw new TypingException(
-            s"Inliner: Unable to unify generic signature $genericType of ${decl.name} with the concrete type $actualType")
+            s"Inliner: Unable to unify generic signature $genericType of ${decl.name} with the concrete type $actualType",
+            decl.ID)
 
       case Some((sub, _)) => sub
     }

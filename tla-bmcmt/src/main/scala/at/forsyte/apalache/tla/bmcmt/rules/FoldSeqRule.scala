@@ -49,7 +49,7 @@ class FoldSeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val b = seqEx.typeTag.asTlaType1() match {
         case SeqT1(bType) => bType
         case nonSeq =>
-          throw new TypingException(s"FoldSeq argument $seqEx should have the type Seq[b], found $nonSeq.")
+          throw new TypingException(s"FoldSeq argument $seqEx should have the type Seq[b], found $nonSeq.", ex.ID)
       }
       val types = Map(
           "a" -> a,

@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt.caches.ModelValueCache
 import at.forsyte.apalache.tla.lir.{
   BoolT1, ConstT1, FunT1, IntT1, NullEx, OperT1, RealT1, RecT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1, TupT1,
-  TypeTag, TypingException, VarT1
+  TypeTag, TypingException, UID, VarT1
 }
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
@@ -164,11 +164,11 @@ package object types {
         case BoolT1()       => BoolT()
         case ConstT1(utype) => ConstT(utype)
         case RealT1() =>
-          throw new TypingException("Unsupported type RealT1")
+          throw new TypingException("Unsupported type RealT1", UID.nullId)
 
         case VarT1(_) =>
           // type variables should have been resolved by operator inlining and type checking
-          throw new TypingException("Unexpected type VarT1")
+          throw new TypingException("Unexpected type VarT1", UID.nullId)
 
         case SetT1(elem)       => FinSetT(fromType1(elem))
         case SeqT1(elem)       => SeqT(fromType1(elem))
@@ -178,11 +178,11 @@ package object types {
 
         case SparseTupT1(_) =>
           // sparse tuple can only appear in operator arguments, which must have been inlined
-          throw new TypingException("Unexpected type SparseTupT1")
+          throw new TypingException("Unexpected type SparseTupT1", UID.nullId)
 
         case OperT1(_, _) =>
           // all operators are inlined
-          throw new TypingException("Unexpected operator type OperT1")
+          throw new TypingException("Unexpected operator type OperT1", UID.nullId)
       }
     }
 
@@ -321,7 +321,7 @@ package object types {
     val argType: CellT = domType match {
       case FinSetT(et) => et
       case PowSetT(dt) => dt
-      case _           => throw new TypeException(s"Unexpected domain type $domType", NullEx)
+      case _           => throw new TypingException(s"Unexpected domain type $domType", UID.nullId)
     }
 
     override val toString: String = s"Fun[$domType, $resultType]"
@@ -329,7 +329,7 @@ package object types {
     override def toTlaType1: TlaType1 = {
       domType.toTlaType1 match {
         case SetT1(elemType) => FunT1(elemType, resultType.toTlaType1)
-        case tt              => throw new TypingException("Unexpected function domain type: " + tt)
+        case tt              => throw new TypingException("Unexpected function domain type: " + tt, UID.nullId)
       }
     }
   }
@@ -351,21 +351,24 @@ package object types {
     def argType(): CellT = domType match {
       case FinSetT(et) => et
       case PowSetT(dt) => dt
-      case _           => throw new TypeException(s"Unexpected domain type $domType", NullEx)
+      case _           => throw new TypingException(s"Unexpected domain type $domType", UID.nullId)
     }
 
     def resultType(): CellT = cdmType match {
       case FinSetT(et) => et
       case PowSetT(dt) => dt
-      case _           => throw new TypeException(s"Unexpected co-domain type $cdmType", NullEx)
+      case _           => throw new TypingException(s"Unexpected co-domain type $cdmType", UID.nullId)
     }
 
     override val toString: String = s"FinFunSet[$domType, $cdmType]"
 
     override def toTlaType1: TlaType1 = {
       (domType.toTlaType1, cdmType.toTlaType1) match {
-        case (SetT1(arg), SetT1(res)) => SetT1(FunT1(arg, res))
-        case (dt, cdt)                => throw new TypingException(s"Unexpected domain type $dt and result type $cdt")
+        case (SetT1(arg), SetT1(res)) =>
+          SetT1(FunT1(arg, res))
+
+        case (dt, cdt) =>
+          throw new TypingException(s"Unexpected domain type $dt and result type $cdt", UID.nullId)
       }
     }
   }

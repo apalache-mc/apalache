@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.util.Prod2SeqIterator
-import at.forsyte.apalache.tla.lir.OperEx
+import at.forsyte.apalache.tla.lir.{OperEx, TypingException}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
@@ -40,9 +40,11 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // introduce a new set
         val newType = types.unify(leftSetCell.cellType, rightSetCell.cellType)
         if (newType.isEmpty) {
-          throw new TypeException(
+          val msg =
+            s"Failed to unify types ${leftSetCell.cellType} and ${rightSetCell.cellType} when rewriting ${state.ex}"
+          throw new TypingException(
               s"Failed to unify types ${leftSetCell.cellType}"
-                + " and ${rightSetCell.cellType} when rewriting ${state.ex}", state.ex)
+                + " and ${rightSetCell.cellType} when rewriting ${state.ex}", state.ex.ID)
         }
         nextState = nextState.updateArena(_.appendCell(newType.get))
         val newSetCell = nextState.arena.topCell

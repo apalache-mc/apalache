@@ -97,7 +97,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
       // Cardinality(S) /= 0, that is, Set /= {}.
       OperEx(TlaBoolOper.not, OperEx(TlaOper.eq, set, OperEx(TlaSetOper.enumSet)(set.typeTag))(boolTag))(boolTag)
 
-    case OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, set), ValEx(TlaInt(intVal)))
+    case ex @ OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, set), ValEx(TlaInt(intVal)))
         if intVal == BigInt(2) =>
       // Cardinality(Set) >= 2.
       // We can find this pattern in real TLA+ benchmarks more often than one would think.
@@ -107,7 +107,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
         case Typed(SetT1(et)) => et
         case _                =>
           // this should never happen as the type checker ensures that types are correct
-          throw new TypingException("Unexpected type %s in expression %s".format(set.typeTag, set))
+          throw new TypingException("Unexpected type %s in expression %s".format(set.typeTag, set), ex.ID)
       }
 
       def mkElemName(name: String): TlaEx = {
