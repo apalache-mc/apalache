@@ -5,12 +5,9 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.bmcmt.util.IntTupleIterator
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{TlaOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.pp.TlaInputError
-
-import scala.collection.mutable
 
 /**
  * The base rules for a set map {e : x ∈ S}. This class was extracted from SetMapRule, as it was used in other rules
@@ -87,7 +84,8 @@ class MapBase(rewriter: SymbStateRewriter) {
 
     // add the membership constraints: one per target cell
     for ((targetCell, memExpressions) <- resultsToSource) {
-      val inNewSet: TlaEx = tla.in(targetCell.toNameEx, targetSetCell.toNameEx)
+      val inNewSet: TlaEx = tla.apalacheStoreInSet(targetCell.toNameEx, targetSetCell.toNameEx)
+      val notInNewSet: TlaEx = tla.apalacheStoreNotInSet(targetCell.toNameEx, targetSetCell.toNameEx)
       val inSourceSet = {
         if (memExpressions.size == 1) {
           memExpressions.head
@@ -96,7 +94,7 @@ class MapBase(rewriter: SymbStateRewriter) {
         }
       }
       // the target cell belongs to the resulting set if and only if one of its preimages belongs to the original sets
-      rewriter.solverContext.assertGroundExpr(tla.eql(inNewSet, inSourceSet))
+      rewriter.solverContext.assertGroundExpr(tla.ite(inSourceSet, inNewSet, notInNewSet))
     }
 
     (newState, resultsToSource.keys)
@@ -114,7 +112,7 @@ class MapBase(rewriter: SymbStateRewriter) {
     // We have to collect all source tuples for the same cell and say that the result belongs to the set,
     // if and only if one of the source tuples belong to the source set.
     def inSourceSet(arg: ArenaCell, set: ArenaCell): TlaEx =
-      tla.in(arg.toNameEx, set.toNameEx)
+      tla.apalacheSelectInSet(arg.toNameEx, set.toNameEx)
 
     val argsInSourceSets = {
       if (valuesAsCells.length == 1) {

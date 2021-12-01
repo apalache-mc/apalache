@@ -213,7 +213,7 @@ class SeqModelChecker[ExecutorContextT](
       if (trex.sat(0).contains(true)) {
         val filenames = dumpCounterexample(ValEx(TlaBool(true)))
         logger.error(
-            s"Found a deadlock. Check the counterexample in: ${filenames.mkString(", ")}"
+            s"Found a deadlock. Check the counterexample in: \n  ${filenames.mkString("\n  ")}"
         )
       } else {
         logger.error(s"Found a deadlock. No SMT model.")
@@ -274,8 +274,8 @@ class SeqModelChecker[ExecutorContextT](
             case Some(true) =>
               searchState.onResult(Error(1))
               val filenames = dumpCounterexample(notInv)
-              val msg = "State %d: %s invariant %s violated. Check the counterexample in: %s"
-                .format(stateNo, kind, invNo, filenames.mkString(", "))
+              val msg = "State %d: %s invariant %s violated. Check the counterexample in: \n  %s"
+                .format(stateNo, kind, invNo, filenames.mkString("\n  "))
               logger.error(msg)
               excludePathView()
 
@@ -320,8 +320,8 @@ class SeqModelChecker[ExecutorContextT](
           case Some(true) =>
             searchState.onResult(Error(1))
             val filenames = dumpCounterexample(traceInvApp)
-            val msg = "State %d: trace invariant %s violated. Check the counterexample in: %s"
-              .format(stateNo, invNo, filenames.mkString(", "))
+            val msg = "State %d: trace invariant %s violated. Check the counterexample in: \n  %s"
+              .format(stateNo, invNo, filenames.mkString("\n  "))
             logger.error(msg)
             excludePathView()
 

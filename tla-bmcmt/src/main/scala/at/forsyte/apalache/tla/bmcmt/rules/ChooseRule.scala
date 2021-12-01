@@ -103,7 +103,7 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
       }
       val elemsIn = elems map { e =>
         tla
-          .in(e.toNameEx ? "e", setCell.toNameEx ? "s")
+          .apalacheSelectInSet(e.toNameEx ? "e", setCell.toNameEx ? "s")
           .typed(Map("e" -> elemType, "s" -> SetT1(elemType), "b" -> BoolT1()), "b")
       }
       solverAssert(oracle.caseAssertions(nextState, elemsIn))

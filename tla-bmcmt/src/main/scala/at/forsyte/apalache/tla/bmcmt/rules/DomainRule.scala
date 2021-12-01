@@ -68,7 +68,7 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
     val dom = arena.topCell
     arena = arena.appendHas(dom, arena.getHas(staticDom): _*)
     for (domElem <- arena.getHas(staticDom)) {
-      val inDom = tla.in(domElem.toNameEx, dom.toNameEx)
+      val inDom = tla.apalacheStoreInSet(domElem.toNameEx, dom.toNameEx)
       // note that start >=0 and end equals the last element, so use start < domElem and domElem <= end
       val inRange = tla.and(tla.lt(start.toNameEx, domElem.toNameEx), tla.le(domElem.toNameEx, end.toNameEx))
       rewriter.solverContext.assertGroundExpr(tla.eql(inDom, inRange))
@@ -87,8 +87,10 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
     nextState = nextState.setArena(nextState.arena.appendHas(domCell, domCells: _*))
     for (pair <- state.arena.getHas(relation)) {
       val arg = getArg(pair)
-      val iff = tla.equiv(tla.in(arg.toNameEx, domCell.toNameEx), tla.in(pair.toNameEx, relation.toNameEx))
-      rewriter.solverContext.assertGroundExpr(iff)
+      val ite = tla.ite(tla.apalacheSelectInSet(pair.toNameEx, relation.toNameEx),
+          tla.apalacheStoreInSet(arg.toNameEx, domCell.toNameEx),
+          tla.apalacheStoreNotInSet(arg.toNameEx, domCell.toNameEx))
+      rewriter.solverContext.assertGroundExpr(ite)
     }
 
     nextState.setRex(domCell.toNameEx)

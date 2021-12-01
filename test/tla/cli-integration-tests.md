@@ -232,7 +232,7 @@ EXITCODE: ERROR (12)
 
 ## running the check command
 
-#### check factorization find a counterexample
+#### check factorization find a counterexample (array-encoding)
 
 ```sh
 $ apalache-mc check --length=2 --inv=Inv factorization.tla | sed 's/I@.*//'
@@ -243,7 +243,7 @@ Checker has found an error
 EXITCODE: ERROR (12)
 ```
 
-### check Fix531.tla reports no error: regression for issue 531
+### check Fix531.tla reports no error: regression for issue 531 (array-encoding)
 
 ```sh
 $ apalache-mc check --length=1 Fix531.tla | sed 's/I@.*//'
@@ -253,7 +253,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check UnchangedExpr471.tla reports no error: regression for issue 471
+### check UnchangedExpr471.tla reports no error: regression for issue 471 (array-encoding)
 
 ```sh
 $ apalache-mc check --cinit=ConstInit --length=1 UnchangedExpr471.tla | sed 's/I@.*//'
@@ -263,7 +263,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check ExistTuple476.tla reports no error: regression for issue 476
+### check ExistTuple476.tla reports no error: regression for issue 476 (array-encoding)
 
 ```sh
 $ apalache-mc check --length=1 ExistTuple476.tla | sed 's/I@.*//'
@@ -323,7 +323,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check Bug20201118 succeeds: regression for issue 333
+### check Bug20201118 succeeds: regression for issue 333 (array-encoding)
 
 ```sh
 $ apalache-mc check --length=10 --init=Init --next=Next --inv=Inv Bug20201118.tla | sed 's/I@.*//'
@@ -333,7 +333,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check Fix333 succeeds: another regression for issue 333
+### check Fix333 succeeds: another regression for issue 333 (array-encoding)
 
 ```sh
 $ apalache-mc check --length=2 --init=Init --next=Next --inv=Inv Fix333.tla | sed 's/I@.*//'
@@ -353,7 +353,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check Bug593 fails correctly: regression for issue 593
+### check Bug593 fails correctly: regression for issue 593 (array-encoding)
 
 ```sh
 $ apalache-mc check Bug593.tla | sed 's/I@.*//'
@@ -393,7 +393,7 @@ EXITCODE: ERROR (12)
 ```
 
 
-### check ast.tla succeeds [array-encoding]
+### check ast.tla succeeds
 
 ```sh
 $ apalache-mc check --length=5 ast.tla | sed 's/I@.*//'
@@ -443,7 +443,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check Bug20190921 succeeds
+### check Bug20190921 succeeds (array-encoding)
 
 ```sh
 $ apalache-mc check --length=5 --cinit=CInit Bug20190921.tla | sed 's/I@.*//'
@@ -453,7 +453,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check RangeWithConst succeeds
+### check RangeWithConst succeeds (array-encoding)
 
 ```sh
 $ apalache-mc check --cinit=CInit --inv=Inv --length=1 RangeWithConst.tla | sed 's/I@.*//'
@@ -633,7 +633,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check Counter.tla errors
+### check Counter.tla errors (array-encoding)
 
 ```sh
 $ apalache-mc check --length=10 --inv=Inv Counter.tla | sed 's/I@.*//'
@@ -646,7 +646,7 @@ EXITCODE: ERROR (12)
 
 ### y2k.tla
 
-#### check y2k with length 20 and ConstInit errors
+#### check y2k with length 20 and ConstInit errors (array-encoding)
 
 ```sh
 $ apalache-mc check --length=20 --inv=Safety --cinit=ConstInit y2k_cinit.tla  | sed 's/I@.*//'
@@ -657,7 +657,7 @@ Checker has found an error
 EXITCODE: ERROR (12)
 ```
 
-#### check y2k with length 19 succeeds
+#### check y2k with length 19 succeeds (array-encoding)
 
 ```sh
 $ apalache-mc check --length=19 --inv=Safety y2k_instance.tla | sed 's/I@.*//'
@@ -667,7 +667,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-#### check y2k with length 30 errors
+#### check y2k with length 30 errors (array-encoding)
 
 ```sh
 $ apalache-mc check --length=30 --inv=Safety y2k_instance.tla | sed 's/I@.*//'
@@ -678,7 +678,7 @@ Checker has found an error
 EXITCODE: ERROR (12)
 ```
 
-### check Counter.tla errors
+### check Counter.tla errors (array-encoding)
 
 ```sh
 $ apalache-mc check --length=10 --inv=Inv Counter.tla | sed 's/I@.*//'
@@ -689,7 +689,7 @@ Checker has found an error
 EXITCODE: ERROR (12)
 ```
 
-### check NatCounter.tla errors
+### check NatCounter.tla errors (array-encoding)
 
 ```sh
 $ apalache-mc check --length=10 --inv=Inv NatCounter.tla  | sed 's/I@.*//'
@@ -709,7 +709,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check HandshakeWithTypes.tla with length 4 succeeds
+### check HandshakeWithTypes.tla with length 4 succeeds (array-encoding)
 
 ```sh
 $ apalache-mc check --length=4 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
@@ -719,7 +719,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check HandshakeWithTypes.tla with lengh 5 deadlocks
+### check HandshakeWithTypes.tla with lengh 5 deadlocks (array-encoding)
 
 ```sh
 $ apalache-mc check --length=5 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
@@ -729,7 +729,7 @@ The outcome is: Deadlock
 EXITCODE: ERROR (12)
 ```
 
-### check trivial violation of FALSE invariant
+### check trivial violation of FALSE invariant (array-encoding)
 
 ```sh
 $ apalache-mc check --length=2 --inv=Inv Bug20200306.tla | sed 's/I@.*//'
@@ -739,7 +739,7 @@ The outcome is: Error
 EXITCODE: ERROR (12)
 ```
 
-### check Init without an assignment fails
+### check Init without an assignment fails (array-encoding)
 
 ```sh
 $ apalache-mc check --length=1 --inv=Inv Assignments20200309.tla
@@ -748,7 +748,7 @@ EXITCODE: ERROR (255)
 [255]
 ```
 
-### check Inline.tla suceeds
+### check Inline.tla suceeds (array-encoding)
 
 ```sh
 $ apalache-mc check --length=5 Inline.tla | sed 's/I@.*//'
@@ -919,8 +919,7 @@ EXITCODE: ERROR (255)
 [255]
 ```
 
-
-### check Empty.tla fails
+### check Empty.tla fails (array-encoding)
 
 ```sh
 $ apalache-mc check Empty.tla
@@ -929,7 +928,7 @@ EXITCODE: ERROR (255)
 [255]
 ```
 
-### check NoVars.tla succeeds
+### check NoVars.tla succeeds (array-encoding)
 
 ```sh
 $ apalache-mc check --inv=Inv --length=1 NoVars.tla | sed 's/I@.*//'
@@ -939,7 +938,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check HourClock.tla without Init fails
+### check HourClock.tla without Init fails (array-encoding)
 
 ```sh
 $ apalache-mc check --init=NonExistantInit HourClock.tla
@@ -948,7 +947,7 @@ EXITCODE: ERROR (255)
 [255]
 ```
 
-### check HourClock.tla without Next fails
+### check HourClock.tla without Next fails (array-encoding)
 
 ```sh
 $ apalache-mc check --next=NonExistantNext HourClock.tla
@@ -957,7 +956,7 @@ EXITCODE: ERROR (255)
 [255]
 ```
 
-### check HourClock.tla without Inv fails
+### check HourClock.tla without Inv fails (array-encoding)
 
 ```sh
 $ apalache-mc check --inv=NonExistantInv HourClock.tla
@@ -966,7 +965,7 @@ EXITCODE: ERROR (255)
 [255]
 ```
 
-### check NonNullaryLet succeeds: regression for issue 429
+### check NonNullaryLet succeeds: regression for issue 429 (array-encoding)
 
 ```sh
 $ apalache-mc check NonNullaryLet.tla | sed 's/I@.*//'
@@ -976,7 +975,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check CaseNoOther succeeds
+### check CaseNoOther succeeds (array-encoding)
 
 ```sh
 $ apalache-mc check CaseNoOther.tla | sed 's/I@.*//'
@@ -986,7 +985,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check CaseNoOtherBool succeeds
+### check CaseNoOtherBool succeeds (array-encoding)
 
 ```sh
 $ apalache-mc check CaseNoOtherBool.tla | sed 's/I@.*//'
@@ -996,7 +995,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check Callback.tla succeeds
+### check Callback.tla succeeds (array-encoding)
 
 `Callback.tla` demonstrates that one can implement non-determinism with the existential operator and use a callback to
 do an assignment to a variable. As it requires tricky operator inlining, here is the test.
@@ -1022,7 +1021,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check Selections succeeds
+### check Selections succeeds (array-encoding)
 
 ```sh
 $ apalache-mc check Selections.tla | sed 's/I@.*//'
@@ -1050,7 +1049,7 @@ $ apalache-mc check ITE_CASE.tla | sed 's/I@.*//'
 EXITCODE: ERROR (255)
 ```
 
-### check Deadlock712 succeeds
+### check Deadlock712 succeeds (array-encoding)
 
 This test shows that Apalache may miss a deadlock, as discussed in issue 712.
 Once this is fixed, Apalache should find a deadlock.
@@ -1063,7 +1062,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check use of TLA_PATH for modules in child directory succeeds
+### check use of TLA_PATH for modules in child directory succeeds (array-encoding)
 
 ```sh
 $ TLA_PATH=./tla-path-tests apalache-mc check ./tla-path-tests/ImportingModule.tla | sed 's/I@.*//'
@@ -1534,7 +1533,7 @@ Test that the model checker nicely complains about unresolved polymorphism.
 ```sh
 $ apalache-mc check --inv=Inv Bug931.tla | sed 's/[IEW]@.*//'
 ...
-Typing input error: [Bug931.tla:6:20-6:21]: Found a polymorphic type: Set(f)
+Typing input error: [Bug931.tla:6:20-6:21]: Found a polymorphic type: Set(b)
 ...
 EXITCODE: ERROR (255)
 ```
@@ -1985,7 +1984,7 @@ See: https://github.com/informalsystems/apalache/issues/925
 ```sh
 $ apalache-mc typecheck Bug925.tla | sed 's/[IEW]@.*//'
 ...
-[Bug925.tla:7:1-7:24]: Expected ((b) => [f: Set(b)]) in Optional. Found: ((k) => [f: k])
+[Bug925.tla:7:1-7:24]: Expected ((b) => [f: Set(b)]) in Optional. Found: ((a) => [f: a])
 [Bug925.tla:7:1-7:24]: Error when computing the type of Optional
 ...
 EXITCODE: ERROR (255)
@@ -2014,6 +2013,74 @@ Test the Snowcat support let-polymorphism.
 
 ```sh
 $ apalache-mc typecheck letpoly_inst.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeCheckerSnowcat
+ > Running Snowcat .::.
+ > Your types are great!
+ > All expressions are typed
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck Poly1084.tla
+
+Regression test for principal types in let definitions.
+
+```sh
+$ apalache-mc typecheck Poly1084.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeCheckerSnowcat
+ > Running Snowcat .::.
+ > Your types are great!
+ > All expressions are typed
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck Poly1085.tla
+
+Regression test for principal types in let definitions.
+
+```sh
+$ apalache-mc typecheck Poly1085.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeCheckerSnowcat
+ > Running Snowcat .::.
+ > Your types are great!
+ > All expressions are typed
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck Poly1088.tla
+
+Regression test for principal types in let definitions.
+
+```sh
+$ apalache-mc typecheck Poly1085.tla | sed 's/[IEW]@.*//'
+...
+PASS #1: TypeCheckerSnowcat
+ > Running Snowcat .::.
+ > Your types are great!
+ > All expressions are typed
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### typecheck Poly1107.tla
+
+Regression test for principal types in let definitions.
+
+```sh
+$ apalache-mc typecheck Poly1107.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.

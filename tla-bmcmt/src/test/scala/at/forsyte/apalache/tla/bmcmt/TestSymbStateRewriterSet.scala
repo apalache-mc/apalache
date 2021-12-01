@@ -794,7 +794,8 @@ trait TestSymbStateRewriterSet extends RewriterBase {
         apalacheSkolem(exists(name("S") as recSetT, powerset, and(mem, forallForm) as boolT) as boolT) as boolT
 
       // reset the solver and arena
-      solverContext = new PreproSolverContext(new Z3SolverContext(SolverConfig.default.copy(debug = true)))
+      solverContext = new PreproSolverContext(new Z3SolverContext(SolverConfig.default.copy(debug = true,
+                  smtEncoding = rewriterType)))
       arena = Arena.create(solverContext)
       val rewriter2 = create(rewriterType)
       val state2 = new SymbState(existsForm2, arena, Binding())

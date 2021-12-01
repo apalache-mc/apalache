@@ -9,7 +9,6 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaArithOper, TlaFiniteSetOper}
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.lir.{OperEx, ValEx}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * Optimization for Cardinality(S) >= k, where k is constant. See [docs/smt/Cardinality.md].
@@ -57,7 +56,8 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
     var nextState = state
     nextState = nextState.updateArena(_.appendCell(BoolT()))
     val emptyPred = nextState.arena.topCell
-    solverAssert(tla.eql(emptyPred.toNameEx, tla.and(elems.map(e => tla.not(tla.in(e.toNameEx, set.toNameEx))): _*)))
+    solverAssert(tla.eql(emptyPred.toNameEx,
+            tla.and(elems.map(e => tla.not(tla.apalacheSelectInSet(e.toNameEx, set.toNameEx))): _*)))
 
     // pick `threshold` cells that will act as witnesses
     def pick(i: Int): ArenaCell = {

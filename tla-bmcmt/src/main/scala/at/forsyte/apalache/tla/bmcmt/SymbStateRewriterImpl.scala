@@ -107,7 +107,7 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
   val exprCache = new ExprCache(exprGradeStore)
 
   @transient
-  private lazy val substRule = new SubstRule(this)
+  protected lazy val substRule = new SubstRule(this)
 
   /**
    * The store that contains formula hints. By default, empty.
@@ -136,11 +136,14 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
   lazy val statListener: RuleStatListener = new RuleStatListener()
   solverContext.setSmtListener(statListener) // subscribe to the SMT solver
 
+  @transient
+  lazy val ruleLookupTable: Map[String, List[RewritingRule]] = defaultRuleLookupTable
+
   // A nice way to guess the candidate rules by looking at the expression key.
   // We use simple expressions to generate the keys.
   // For each key, there is a short list of rules that may be applicable.
   @transient
-  lazy val ruleLookupTable: Map[String, List[RewritingRule]] = {
+  lazy val defaultRuleLookupTable: Map[String, List[RewritingRule]] = {
     Map(
         // the order is only important to improve readability
 
@@ -193,8 +196,10 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
         // sets
         key(tla.in(tla.name("x"), tla.name("S")))
           -> List(new SetInRule(this)),
-        key(tla.enumSet(tla.name("x"))) ->
-          List(new SetCtorRule(this)),
+        key(tla.apalacheSelectInSet(tla.name("x"), tla.name("S")))
+          -> List(new SetInRule(this)),
+        key(tla.enumSet(tla.name("x")))
+          -> List(new SetCtorRule(this)),
         key(tla.subseteq(tla.name("x"), tla.name("S")))
           -> List(new SetInclusionRule(this)),
         key(tla.cup(tla.name("X"), tla.name("Y")))
@@ -577,7 +582,7 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
    * @param ex a TLA+ expression
    * @return a string that gives us an equivalence class for similar operations (see the code)
    */
-  private def key(ex: TlaEx): String = {
+  protected def key(ex: TlaEx): String = {
     ex match {
       // TODO: Is this correct?
       case OperEx(TlaOper.apply, NameEx(_), _*) =>

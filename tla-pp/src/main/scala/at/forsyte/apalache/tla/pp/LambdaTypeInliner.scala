@@ -63,7 +63,7 @@ class LambdaTypeInliner(tracker: TransformationTracker) extends TlaExTransformat
         (withNew, partialNoop && newBody.ID == d.body.ID)
       }
 
-      if (letInBody.eqTyped(newBody) && noop)
+      if (letInBody.ID == newBody.ID && noop)
         letInEx
       else
         LetInEx(newBody, newDefs: _*)(newBody.typeTag)

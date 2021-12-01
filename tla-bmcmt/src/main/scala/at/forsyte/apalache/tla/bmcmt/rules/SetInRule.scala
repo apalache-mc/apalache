@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.oper.TlaSetOper
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
 /**
@@ -13,12 +13,13 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
  * @author Igor Konnov
  */
 class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
+
   override def isApplicable(state: SymbState): Boolean = {
     state.ex match {
-      case OperEx(TlaSetOper.in, NameEx(name), _) =>
+      case OperEx(TlaSetOper.in | ApalacheOper.selectInSet, NameEx(name), _) =>
         ArenaCell.isValidName(name) || state.binding.contains(name)
 
-      case OperEx(TlaSetOper.in, _, _) =>
+      case OperEx(TlaSetOper.in | ApalacheOper.selectInSet, _, _) =>
         true
 
       case _ =>
@@ -31,7 +32,8 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       // a common pattern x \in {y} that is equivalent to x = y, e.g., the assignment solver creates it
-      case OperEx(TlaSetOper.in, NameEx(name), OperEx(TlaSetOper.enumSet, rhs)) =>
+      case OperEx(op, NameEx(name), OperEx(TlaSetOper.enumSet, rhs))
+          if op == TlaSetOper.in || op == ApalacheOper.selectInSet =>
         val nextState = rewriter.rewriteUntilDone(state.setRex(rhs))
         val rhsCell = nextState.arena.findCellByNameEx(nextState.ex)
         val lhsCell = state.binding(name)
@@ -39,7 +41,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // bugfix: safeEq may produce ValEx(TlaBool(false)) or ValEx(TlaBool(true)).
         rewriter.rewriteUntilDone(afterEqState.setRex(rewriter.lazyEq.safeEq(lhsCell, rhsCell)))
 
-      case OperEx(TlaSetOper.in, elem, set) =>
+      case OperEx(TlaSetOper.in | ApalacheOper.selectInSet, elem, set) =>
         val elemState = rewriter.rewriteUntilDone(state.setRex(elem))
         val elemCell = elemState.asCell
         val setState = rewriter.rewriteUntilDone(elemState.setRex(set))
@@ -68,7 +70,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def powSetIn(state: SymbState, powsetCell: ArenaCell, elemCell: ArenaCell): SymbState = {
+  protected def powSetIn(state: SymbState, powsetCell: ArenaCell, elemCell: ArenaCell): SymbState = {
     def checkType: PartialFunction[(CellT, CellT), Unit] = {
       case (PowSetT(FinSetT(expectedType)), FinSetT(actualType)) =>
         assert(expectedType == actualType)
@@ -80,7 +82,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   // TODO: pick a function from funsetCell and check for function equality
-  private def funSetIn(state: SymbState, funsetCell: ArenaCell, funCell: ArenaCell): SymbState = {
+  protected def funSetIn(state: SymbState, funsetCell: ArenaCell, funCell: ArenaCell): SymbState = {
     // checking whether f \in [S -> T]
     def flagTypeError(): Nothing = {
       val msg = s"Not implemented (open an issue): f \\in S for f: %s and S: %s."
@@ -109,12 +111,13 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     def onPair(pair: ArenaCell): TlaEx = {
       val tupleElems = nextState.arena.getHas(pair)
       val (arg, res) = (tupleElems.head, tupleElems.tail.head)
-      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.in(arg.toNameEx, funsetDom.toNameEx)))
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.apalacheSelectInSet(arg.toNameEx, funsetDom.toNameEx)))
       val inDom = nextState.asCell
-      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.in(res.toNameEx, funsetCdm.toNameEx)))
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.apalacheSelectInSet(res.toNameEx, funsetCdm.toNameEx)))
       val inCdm = nextState.asCell
       // BUGFIX: check only those pairs that actually belong to the relation
-      tla.or(tla.notin(pair.toNameEx, relation.toNameEx), tla.and(inDom.toNameEx, inCdm.toNameEx))
+      tla.or(tla.not(tla.apalacheSelectInSet(pair.toNameEx, relation.toNameEx)),
+          tla.and(inDom.toNameEx, inCdm.toNameEx))
     }
 
     val relElems = nextState.arena.getHas(relation)
@@ -123,7 +126,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     rewriter.rewriteUntilDone(nextState.setRex(pred.toNameEx))
   }
 
-  private def intOrNatSetIn(state: SymbState, setCell: ArenaCell, elemCell: ArenaCell,
+  protected def intOrNatSetIn(state: SymbState, setCell: ArenaCell, elemCell: ArenaCell,
       elemType: types.CellT): SymbState = {
     if (setCell == state.arena.cellIntSet()) {
       // Do nothing, it is just true. The type checker should have taken care of that.
@@ -139,7 +142,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def basicIn(state: SymbState, setCell: ArenaCell, elemCell: ArenaCell, elemType: types.CellT) = {
+  protected def basicIn(state: SymbState, setCell: ArenaCell, elemCell: ArenaCell, elemType: types.CellT): SymbState = {
     val potentialElems = state.arena.getHas(setCell)
     // The types of the element and the set may slightly differ, but they must be unifiable.
     // For instance, [a |-> 1] \in { [a |-> 2], [a |-> 3, b -> "foo"] }
@@ -155,13 +158,13 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val eqState = rewriter.lazyEq.cacheEqConstraints(nextState, potentialElems.map((_, elemCell)))
 
       def inAndEq(elem: ArenaCell) = {
-        tla.and(tla.in(elem.toNameEx, setCell.toNameEx), rewriter.lazyEq.safeEq(elem, elemCell)) // use lazy equality
+        tla.and(tla.apalacheSelectInSet(elem.toNameEx, setCell.toNameEx),
+            rewriter.lazyEq.safeEq(elem, elemCell)) // use lazy equality
       }
 
       val elemsInAndEq = potentialElems.map(inAndEq)
       rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.or(elemsInAndEq: _*)))
       eqState.setRex(pred)
-      //}
     }
   }
 }
