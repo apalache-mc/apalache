@@ -12,6 +12,7 @@ import at.forsyte.apalache.tla.bmcmt.types.FinSetT
  * @author Igor Konnov
  */
 class PowSetCtor(rewriter: SymbStateRewriter) {
+
   // Confringo is the explosion curse from Harry Potter. To let you know that your SMT solver will probably explode.
   def confringo(state: SymbState, set: ArenaCell): SymbState = {
     val elems = state.arena.getHas(set) // S has n elements
@@ -27,8 +28,11 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
       val subsetCell = arena.topCell
       arena = arena.appendHas(subsetCell, filtered: _*)
       for (e <- filtered) {
-        rewriter.solverContext
-          .assertGroundExpr(tla.equiv(tla.in(e.toNameEx, subsetCell.toNameEx), tla.in(e.toNameEx, set.toNameEx)))
+        val inSubset = tla.apalacheStoreInSet(e.toNameEx, subsetCell.toNameEx)
+        val notInSubset =
+          tla.apalacheStoreNotInSet(e.toNameEx, subsetCell.toNameEx) // This ensures that e is not in subsetCell
+        val inSet = tla.apalacheSelectInSet(e.toNameEx, set.toNameEx)
+        rewriter.solverContext.assertGroundExpr(tla.ite(inSet, inSubset, notInSubset))
       }
       subsetCell
     }
@@ -52,7 +56,7 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
     val powsetCell = arena.topCell
     arena = arena.appendHas(powsetCell, subsets: _*)
     for (subset <- subsets) {
-      rewriter.solverContext.assertGroundExpr(tla.in(subset.toNameEx, powsetCell.toNameEx))
+      rewriter.solverContext.assertGroundExpr(tla.apalacheStoreInSet(subset.toNameEx, powsetCell.toNameEx))
     }
 
     // that's it!

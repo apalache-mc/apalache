@@ -32,14 +32,15 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
 
       def isInAndEqSetElem(powsetDomainElem: ArenaCell) = {
         // powsetDomainElem \in powsetDomain /\ powsetDomainElem = setElem
-        simplifier.simplifyShallow(tla.and(tla.in(powsetDomainElem.toNameEx, powsetDomain.toNameEx),
+        simplifier.simplifyShallow(tla.and(tla.apalacheSelectInSet(powsetDomainElem.toNameEx, powsetDomain.toNameEx),
                 tla.eql(powsetDomainElem.toNameEx, setElem.toNameEx)))
       }
 
       val elemsInAndEqSetElem = powsetDomainElems.map(isInAndEqSetElem)
       // pred <=> (setElem \in elemCell => elemsInAndEqSetElem.1 \/ ... \/ elemsInAndEqSetElem.n)
       rewriter.solverContext.assertGroundExpr(simplifier.simplifyShallow(tla.equiv(pred.toNameEx,
-                  tla.or(tla.not(tla.in(setElem.toNameEx, elemCell.toNameEx)), tla.or(elemsInAndEqSetElem: _*)))))
+                  tla.or(tla.not(tla.apalacheSelectInSet(setElem.toNameEx, elemCell.toNameEx)),
+                      tla.or(elemsInAndEqSetElem: _*)))))
       pred.toNameEx
     }
 
@@ -74,7 +75,8 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
 
       def inAndEq(elem: ArenaCell) = {
         simplifier
-          .simplifyShallow(tla.and(tla.in(elem.toNameEx, setCell.toNameEx), tla.eql(elem.toNameEx, elemCell.toNameEx)))
+          .simplifyShallow(tla.and(tla.apalacheSelectInSet(elem.toNameEx, setCell.toNameEx),
+                  tla.eql(elem.toNameEx, elemCell.toNameEx)))
       }
 
       val elemsInAndEq = potentialElems.map(inAndEq)

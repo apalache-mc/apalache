@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, OracleHelper}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -126,15 +125,15 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
       val (predState: SymbState, predEs: Seq[TlaEx]) =
         rewriter.rewriteBoundSeqUntilDone(setState, setCells.map(mkPair))
 
-      val nonEmpty = tla.or(setCells.map(c => tla.in(c.toNameEx, set.toNameEx)): _*)
-      val empty = tla.and(setCells.map(c => tla.not(tla.in(c.toNameEx, set.toNameEx))): _*)
+      val nonEmpty = tla.or(setCells.map(c => tla.apalacheSelectInSet(c.toNameEx, set.toNameEx)): _*)
+      val empty = tla.and(setCells.map(c => tla.not(tla.apalacheSelectInSet(c.toNameEx, set.toNameEx))): _*)
 
       def elemWitnesses(elemAndPred: (ArenaCell, TlaEx)): TlaEx = {
-        tla.and(tla.in(elemAndPred._1.toNameEx, set.toNameEx), elemAndPred._2)
+        tla.and(tla.apalacheSelectInSet(elemAndPred._1.toNameEx, set.toNameEx), elemAndPred._2)
       }
 
       def elemSatisfies(elemAndPred: (ArenaCell, TlaEx)): TlaEx = {
-        tla.or(tla.not(tla.in(elemAndPred._1.toNameEx, set.toNameEx)), elemAndPred._2)
+        tla.or(tla.not(tla.apalacheSelectInSet(elemAndPred._1.toNameEx, set.toNameEx)), elemAndPred._2)
       }
 
       var finalState = predState.updateArena(_.appendCell(BoolT()))
