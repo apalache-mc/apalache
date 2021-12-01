@@ -1,14 +1,14 @@
 package at.forsyte.apalache.io
 
-import at.forsyte.apalache.infra.passes.WriteablePassOptions
-
 import com.typesafe.scalalogging.LazyLogging
-import java.io.{File, FileInputStream, PrintWriter, FileWriter}
+
+import java.io.{File, FileInputStream, FileWriter, PrintWriter}
 import java.nio.file.{Files, Path, Paths}
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import org.yaml.snakeyaml.Yaml
-import org.apache.commons.io.{FileUtils, FilenameUtils}
+
+import scala.io.Source
 
 trait OutputManagerConfig {
   def outDir: Option[File]
@@ -47,6 +47,21 @@ object OutputManager extends LazyLogging {
         IntermediateFlag -> false,
         ProfilingFlag -> false
     )
+
+  // For bug report templates as well as the next iteration of error messages, we will need to reference
+  // lines in the original input. This variable stores them.
+  private var sourceLinesOpt: Option[IndexedSeq[String]] = None
+
+  // Should be called only if input is a .tla file
+  def initSourceLines(file: File): Unit =
+    if (sourceLinesOpt.isEmpty) {
+      val src = Source.fromFile(file)
+      try sourceLinesOpt = Some(src.getLines().toIndexedSeq)
+      finally src.close()
+    }
+
+  def getLineInSrc(n: Int): Option[String] = sourceLinesOpt.map { _(n) }
+  def getAllSrc: Option[String] = sourceLinesOpt.map { _.mkString("\n").trim }
 
   private def setOutDir(base: Path, namespace: String): Unit = {
     outDirOpt = Some(base.resolve(namespace).toAbsolutePath())
@@ -265,4 +280,21 @@ object OutputManager extends LazyLogging {
       }
       .getOrElse(false)
   }
+
+  /**
+   * Reads the contents of a file into a string
+   */
+  def readFileIntoString(file: File): String = {
+    val src = Source.fromFile(file)
+    try src.mkString.trim
+    finally src.close()
+  }
+
+  /**
+   * Calls `readFileIntoString` relative to the run directory
+   */
+  def readContentsOfFileInRunDir(filename: String): Option[String] = runDirPathOpt
+    .map { runDir =>
+      readFileIntoString(new File(runDir.toFile, filename))
+    }
 }
