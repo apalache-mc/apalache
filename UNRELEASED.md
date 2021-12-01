@@ -13,3 +13,4 @@
 ### Bug fixes
 
 * Remove duplicate function indices when decoding symbolic states, fixes #962
+* Improve error messaging for Seq, see #1126
