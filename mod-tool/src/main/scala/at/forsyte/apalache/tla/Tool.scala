@@ -52,8 +52,12 @@ object Tool extends LazyLogging {
     System.exit(exitcode)
   }
 
-  private def outputAndLogConfig(namePrefix: String, cmd: General): Unit = {
+  private def outputAndLogConfig(file: File, cmd: General): Unit = {
+    val namePrefix: String = file.getName
     OutputManager.configure(namePrefix, cmd)
+    if (namePrefix.endsWith(".tla")) {
+      OutputManager.initSourceLines(file)
+    }
     println(s"Output directory: ${OutputManager.runDir.normalize()}")
     OutputManager.withWriterInRunDir(OutputManager.Names.RunFile)(
         _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
@@ -92,19 +96,19 @@ object Tool extends LazyLogging {
         command match {
           case Some(parse: ParseCmd) =>
             val injector = injectorFactory(parse)
-            handleExceptions(injector, runParse(injector, parse))(parse.file)
+            handleExceptions[ParseCmd](injector, runParse(injector, _), parse)
 
           case Some(check: CheckCmd) =>
             val injector = injectorFactory(check)
-            handleExceptions(injector, runCheck(injector, check))(check.file)
+            handleExceptions[CheckCmd](injector, runCheck(injector, _), check)
 
           case Some(test: TestCmd) =>
             val injector = injectorFactory(test)
-            handleExceptions(injector, runTest(injector, test))(test.file)
+            handleExceptions[TestCmd](injector, runTest(injector, _), test)
 
           case Some(typecheck: TypeCheckCmd) =>
             val injector = injectorFactory(typecheck)
-            handleExceptions(injector, runTypeCheck(injector, typecheck))(typecheck.file)
+            handleExceptions[TypeCheckCmd](injector, runTypeCheck(injector, _), typecheck)
 
           case Some(config: ConfigCmd) =>
             configure(config)
@@ -146,7 +150,7 @@ object Tool extends LazyLogging {
     val executor = injector.getInstance(classOf[PassChainExecutor])
 
     // init
-    outputAndLogConfig(parse.file.getName, parse)
+    outputAndLogConfig(parse.file, parse)
     logger.info("Parse " + parse.file)
 
     executor.options.set("parser.filename", parse.file.getAbsolutePath)
@@ -171,7 +175,7 @@ object Tool extends LazyLogging {
   private def runCheck(injector: => Injector, check: CheckCmd): Int = {
     val executor = injector.getInstance(classOf[PassChainExecutor])
 
-    outputAndLogConfig(check.file.getName, check)
+    outputAndLogConfig(check.file, check)
     logger.info(
         "Checker options: filename=%s, init=%s, next=%s, inv=%s"
           .format(check.file, check.init, check.next, check.inv)
@@ -223,7 +227,7 @@ object Tool extends LazyLogging {
     // This is a special version of the `check` command that is tuned towards testing scenarios
     val executor = injector.getInstance(classOf[PassChainExecutor])
 
-    outputAndLogConfig(test.file.getName, test)
+    outputAndLogConfig(test.file, test)
     logger.info(
         "Checker options: filename=%s, before=%s, action=%s, after=%s"
           .format(test.file, test.before, test.action, test.assertion))
@@ -271,7 +275,7 @@ object Tool extends LazyLogging {
     // type checker
     val executor = injector.getInstance(classOf[PassChainExecutor])
 
-    outputAndLogConfig(typecheck.file.getName, typecheck)
+    outputAndLogConfig(typecheck.file, typecheck)
     logger.info("Type checking " + typecheck.file)
 
     executor.options.set("parser.filename", typecheck.file.getAbsolutePath)
@@ -343,10 +347,10 @@ object Tool extends LazyLogging {
     }
   }
 
-  private def handleExceptions(injector: Injector, fun: => Int)(specFile: File): Int = {
+  private def handleExceptions[C <: General](injector: Injector, fun: C => Int, cmd: C): Int = {
     val adapter = injector.getInstance(classOf[ExceptionAdapter])
     try {
-      fun
+      fun(cmd)
     } catch {
       case e: Exception if adapter.toMessage.isDefinedAt(e) =>
         adapter.toMessage(e) match {
@@ -356,7 +360,7 @@ object Tool extends LazyLogging {
           case FailureMessage(text) =>
             logger.error(text, e)
             val absPath = ReportGenerator.prepareReportFile(
-                specFile,
+                cmd.invocation.split(" ").dropRight(1).mkString(" "),
                 s"${Version.version} build ${Version.build}"
             )
             Console.err.println(
@@ -398,7 +402,7 @@ object Tool extends LazyLogging {
   }
 
   private def configure(config: ConfigCmd): Int = {
-    outputAndLogConfig("config", config)
+    outputAndLogConfig(new File("config"), config)
     logger.info("Configuring Apalache")
     config.submitStats match {
       case Some(isEnabled) =>
