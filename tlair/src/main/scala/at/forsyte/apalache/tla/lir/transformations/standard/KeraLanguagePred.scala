@@ -167,7 +167,6 @@ object KeraLanguagePred {
         TlaSeqOper.concat,
         TlcOper.atat,
         TlcOper.colonGreater,
-        TlcOper.assert,
         TlcOper.colonGreater,
         TlcOper.atat,
         ApalacheOper.assign
