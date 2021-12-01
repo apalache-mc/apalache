@@ -172,7 +172,7 @@
                     <main>
                         <h1><a class="header" href="#adr-008-apalache-outputs" id="adr-008-apalache-outputs">ADR-008: Apalache Outputs</a></h1>
 <table><thead><tr><th>author</th><th align="right">revision</th></tr></thead><tbody>
-<tr><td>Jure Kukovec, Shon Feder</td><td align="right">2</td></tr>
+<tr><td>Jure Kukovec, Shon Feder</td><td align="right">2.1</td></tr>
 </tbody></table>
 <p>This ADR documents the various files produced by Apalache, and where they get written to.</p>
 <h2><a class="header" href="#1-categories-of-outputs" id="1-categories-of-outputs">1. Categories of outputs</a></h2>
@@ -215,6 +215,7 @@ following:</p>
 <ul>
 <li>A file <code>run.txt</code>, containing the command issued for this run, with all implicit parameters filled in, so it can be replicated exactly</li>
 <li>0 or more counterexample files</li>
+<li>a pre-filled bug report file <code>BugReport.md</code>, if the tool exited with a <code>FailureMessage</code></li>
 <li>if <code>--write-intermediate</code> is set, a subdirectory <code>intermediate</code>, containing outputs associated with each of the passes in Apalache</li>
 <li>an Apalache log file <code>detailed.log</code>.</li>
 <li>an SMT log file <code>log0.smt</code></li>
