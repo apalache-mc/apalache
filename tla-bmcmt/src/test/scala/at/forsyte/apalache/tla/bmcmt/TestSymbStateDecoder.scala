@@ -167,6 +167,30 @@ trait TestSymbStateDecoder extends RewriterBase {
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
+  // See https://github.com/informalsystems/apalache/issues/962
+  test("decode fun does not show duplicate indices") { rewriterType: String =>
+    // The specified domain includes duplicate values
+    val domEx = enumSet(int(1), int(1))
+      .typed(types, "I")
+    // But the expected domain after decoding should only include a single occurance
+    val exexpectedDom = enumSet(int(1))
+      .typed(types, "I")
+    val funEx = funDef(plus(name("x") ? "i", int(1)) ? "i", name("x") ? "i", domEx)
+      .typed(types, "i_to_i")
+    val state = new SymbState(funEx, arena, Binding())
+    val rewriter = create(rewriterType)
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    val cell = nextState.asCell
+    val decoder = new SymbStateDecoder(solverContext, rewriter)
+    val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
+    val expectedOutcome: TlaEx = (colonGreater(int(1), int(2)) ? "i_to_i").typed(types, "i_to_i")
+    assert(expectedOutcome == decodedEx)
+    val eq = eql(decodedEx, funEx)
+      .typed(BoolT1())
+    assertTlaExAndRestore(rewriter, nextState.setRex(eq))
+  }
+
   test("decode statically empty fun") { rewriterType: String =>
     val domEx = enumSet() ? "I"
     val funEx = funDef(plus(name("x") ? "i", int(1)) ? "i", name("x") ? "i", domEx)

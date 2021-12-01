@@ -133,13 +133,22 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     case funT @ FunT(_, _) =>
       val funT1 = funT.toTlaType1.asInstanceOf[FunT1]
 
-      def appendPair(fun: TlaEx, key: ArenaCell, value: ArenaCell): TlaEx = {
-        val pair = tla
-          .colonGreater(decodeCellToTlaEx(arena, key), decodeCellToTlaEx(arena, value))
-          .typed(FunT1(funT1.arg, funT1.res))
-        tla
-          .atat(fun, pair)
-          .typed(funT1)
+      // Adds (key :> value) mapping to the `fun`, unless the `key` is already in `keys`
+      // Returns a new set of keys including the added `key` and the new function that includes the mapping
+      def appendPair(keys: Set[TlaEx], fun: TlaEx, key: ArenaCell, value: ArenaCell): (Set[TlaEx], TlaEx) = {
+        val keyEx = decodeCellToTlaEx(arena, key)
+        // If we've already seen the key, don't add it again
+        if (keys(keyEx)) {
+          (keys, fun)
+        } else {
+          val pair = tla
+            .colonGreater(keyEx, decodeCellToTlaEx(arena, value))
+            .typed(FunT1(funT1.arg, funT1.res))
+          val ex = tla
+            .atat(fun, pair)
+            .typed(funT1)
+          (keys + keyEx, ex)
+        }
       }
 
       // in the new implementation, every function is represented with the relation {(x, f[x]) : x \in S}
@@ -164,18 +173,21 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
 
         case Some(first) =>
           // this is the common case
-          val head = arena.getHas(first)
+          val keyCell0 :: valueCell0 :: _ = arena.getHas(first)
+          val keyExp = decodeCellToTlaEx(arena, keyCell0)
           val firstPair = tla
-            .colonGreater(decodeCellToTlaEx(arena, head(0)), decodeCellToTlaEx(arena, head(1)))
+            .colonGreater(keyExp, decodeCellToTlaEx(arena, valueCell0))
             .typed(FunT1(funT1.arg, funT1.res))
-          pairs.tail.foldLeft(firstPair) { case (f, p) =>
+          val keys0 = Set(keyExp) // Used to track seen indices, so we don't include duplicates
+          val (_, fun) = pairs.tail.foldLeft((keys0, firstPair)) { case ((keys, f), p) =>
             if (p == first) {
-              f
+              (keys, f)
             } else {
-              val pair = arena.getHas(p)
-              appendPair(f, pair(0), pair(1))
+              val idx :: value :: _ = arena.getHas(p)
+              appendPair(keys, f, idx, value)
             }
           }
+          fun
       }
 
     case SeqT(elemT) =>
