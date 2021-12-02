@@ -7,12 +7,11 @@ import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestModelValueHandler extends FunSuite {
-  val prefix = ModelValueHandler.PREFIX
   test("Pattern matching") {
     val s1 = "string"
-    val s2 = s"${prefix}_A_1"
-    val s3 = s"${prefix}_B_1"
-    val s4 = s"${prefix}_lowercase_1"
+    val s2 = "1_OF_A"
+    val s3 = "1_OF_B"
+    val s4 = "1_OF_lowercase"
 
     val f = ModelValueHandler.modelValueOrString _
 
@@ -40,11 +39,11 @@ class TestModelValueHandler extends FunSuite {
     )
 
     val values = Seq(
-        "A_1",
-        "A_2",
-        "B_one",
-        "B_two"
-    ) map { s => s"${prefix}_$s" }
+        ("A", "1"),
+        ("A", "2"),
+        ("B", "one"),
+        ("B", "two")
+    ) map { p => s"${p._2}_OF_${p._1}" }
 
     assert(
         values.forall(v => ti(v).map(x => ctr((x._1.name, x._2))).contains(v))

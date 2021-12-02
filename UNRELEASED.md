@@ -14,6 +14,8 @@
 
  * Added bug report templates, see #1094
 
+ * Improve the format of uninterpreted constants to name_OF_TYPE, see #1130
+
 ### Bug fixes
 
  * Remove duplicate function indices when decoding symbolic states, fixes #962
