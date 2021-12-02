@@ -1,7 +1,7 @@
 ------------------------ MODULE MC3_TwoPhaseUFO -------------------------------
 \* a fixed instance of TwoPhaseUFO to be checked with Apalache or TLC
 
-Values_RM == { "uval_SORT_RM_r1", "uval_SORT_RM_r2", "uval_SORT_RM_r3" }
+Values_RM == { "r1_OF_SORT_RM", "r2_OF_SORT_RM", "r3_OF_SORT_RM" }
 
 VARIABLES
   \* rmState[rm] is the state of resource manager RM.

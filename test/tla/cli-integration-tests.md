@@ -1584,6 +1584,16 @@ $ apalache-mc check --cinit=CInit --inv=Inv ModelValFail.tla | sed 's/[IEW]@.*//
 EXITCODE: ERROR (12)
 ```
 
+### check MC3_TwoPhaseUFO.tla succeeds with model values
+
+Test that advanced use of model values is working.
+
+```sh
+$ apalache-mc check --inv=TCConsistent MC3_TwoPhaseUFO.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check PolyFold.tla reports no error: regression for #1085
 
 ```sh
