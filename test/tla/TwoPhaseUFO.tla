@@ -66,10 +66,10 @@ Init ==
   (*************************************************************************)
   (* The initial predicate.                                                *)
   (*************************************************************************)
-  \* working_OF_SORT_STATE is interpreted
+  \* uval_SORT_STATE_working is interpreted
   \* as a distinct constant 'working' of the sort SORT_STATE
-  /\ rmState = [rm \in Values_RM |-> "working_OF_SORT_STATE"]
-  /\ tmState = "init_OF_SORT_STATE"
+  /\ rmState = [rm \in Values_RM |-> "uval_SORT_STATE_working"]
+  /\ tmState = "uval_SORT_STATE_init"
   \*/\ tmPrepared   = {}
   /\ tmPrepared = [rm \in Values_RM |-> FALSE]
   \*/\ msgs = {}
@@ -87,7 +87,7 @@ TMRcvPrepared(rm) ==
   (*************************************************************************)
   (* The TM receives a $"Prepared"$ message from resource manager $rm$.    *)
   (*************************************************************************)
-  /\ tmState = "init_OF_SORT_STATE"
+  /\ tmState = "uval_SORT_STATE_init"
   \*/\ [type |-> "Prepared", rm |-> rm] \in msgs
   /\ msgsPrepared[rm]
   \*/\ tmPrepared' = tmPrepared \union {rm}
@@ -99,11 +99,11 @@ TMCommit ==
   (* The TM commits the transaction; enabled iff the TM is in its initial  *)
   (* state and every RM has sent a $"Prepared"$ message.                   *)
   (*************************************************************************)
-  /\ tmState = "init_OF_SORT_STATE"
+  /\ tmState = "uval_SORT_STATE_init"
   \*/\ tmPrepared = RM
   /\ \A rm \in Values_RM:
         tmPrepared[rm]
-  /\ tmState' = "committed_OF_SORT_STATE"
+  /\ tmState' = "uval_SORT_STATE_committed"
   \*/\ msgs' = msgs \union {[type |-> "Commit"]}
   /\ msgsCommit' = TRUE
   /\ UNCHANGED <<rmState, tmPrepared, msgsPrepared, msgsAbort>>
@@ -112,8 +112,8 @@ TMAbort ==
   (*************************************************************************)
   (* The TM spontaneously aborts the transaction.                          *)
   (*************************************************************************)
-  /\ tmState = "init_OF_SORT_STATE"
-  /\ tmState' = "aborted_OF_SORT_STATE"
+  /\ tmState = "uval_SORT_STATE_init"
+  /\ tmState' = "uval_SORT_STATE_aborted"
   \*/\ msgs' = msgs \union {[type |-> "Abort"]}
   /\ msgsAbort' = TRUE
   /\ UNCHANGED <<rmState, tmPrepared, msgsPrepared, msgsCommit>>
@@ -123,8 +123,8 @@ RMPrepare(rm) ==
   (*************************************************************************)
   (* Resource manager $rm$ prepares.                                       *)
   (*************************************************************************)
-  /\ rmState[rm] = "working_OF_SORT_STATE"
-  /\ rmState' = [rmState EXCEPT ![rm] = "prepared_OF_SORT_STATE"]
+  /\ rmState[rm] = "uval_SORT_STATE_working"
+  /\ rmState' = [rmState EXCEPT ![rm] = "uval_SORT_STATE_prepared"]
   \*/\ msgs' = msgs \union {[type |-> "Prepared", rm |-> rm]}
   /\ msgsPrepared' = [ msgsPrepared EXCEPT ![rm] = TRUE ]
   /\ UNCHANGED <<tmState, tmPrepared, msgsAbort, msgsCommit>>
@@ -135,8 +135,8 @@ RMChooseToAbort(rm) ==
   (* Resource manager $rm$ spontaneously decides to abort.  As noted       *)
   (* above, $rm$ does not send any message in our simplified spec.         *)
   (*************************************************************************)
-  /\ rmState[rm] = "working_OF_SORT_STATE"
-  /\ rmState' = [rmState EXCEPT ![rm] = "aborted_OF_SORT_STATE"]
+  /\ rmState[rm] = "uval_SORT_STATE_working"
+  /\ rmState' = [rmState EXCEPT ![rm] = "uval_SORT_STATE_aborted"]
   /\ UNCHANGED <<tmState, tmPrepared, msgsPrepared, msgsCommit, msgsAbort>>
 
 \* @type: (SORT_RM) => Bool;
@@ -146,7 +146,7 @@ RMRcvCommitMsg(rm) ==
   (*************************************************************************)
   \*/\ [type |-> "Commit"] \in msgs
   /\ msgsCommit
-  /\ rmState' = [rmState EXCEPT ![rm] = "committed_OF_SORT_STATE"]
+  /\ rmState' = [rmState EXCEPT ![rm] = "uval_SORT_STATE_committed"]
   /\ UNCHANGED <<tmState, tmPrepared, msgsPrepared, msgsCommit, msgsAbort>>
 
 \* @type: (SORT_RM) => Bool;
@@ -156,7 +156,7 @@ RMRcvAbortMsg(rm) ==
   (*************************************************************************)
   \*/\ [type |-> "Abort"] \in msgs
   /\ msgsAbort
-  /\ rmState' = [rmState EXCEPT ![rm] = "aborted_OF_SORT_STATE"]
+  /\ rmState' = [rmState EXCEPT ![rm] = "uval_SORT_STATE_aborted"]
   /\ UNCHANGED <<tmState, tmPrepared, msgsPrepared, msgsCommit, msgsAbort>>
 
 Next ==
@@ -181,8 +181,8 @@ TCConsistent ==
   (*************************************************************************)
   \*\A rm1, rm2 \in RM :
   \A rm1, rm2 \in Values_RM :
-       ~ /\ rmState[rm1] = "aborted_OF_SORT_STATE"
-         /\ rmState[rm2] = "committed_OF_SORT_STATE"
+       ~ /\ rmState[rm1] = "uval_SORT_STATE_aborted"
+         /\ rmState[rm2] = "uval_SORT_STATE_committed"
 ==============================================================================
 
 =============================================================================
