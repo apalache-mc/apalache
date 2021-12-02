@@ -270,7 +270,7 @@ class Desugarer(gen: UniqueNameGenerator, tracker: TransformationTracker) extend
       case (FunT1(argT, resT), _) =>
         if (Typed(argT) != arg.typeTag) {
           val actualArgType = arg.typeTag.asTlaType1()
-          throw new TypingException(s"Expected a function argument of type $argT, found $actualArgType")
+          throw new TypingException(s"Expected a function argument of type $argT, found $actualArgType", arg.ID)
         } else {
           (argT, resT)
         }
@@ -278,7 +278,7 @@ class Desugarer(gen: UniqueNameGenerator, tracker: TransformationTracker) extend
       case (SeqT1(elem), _) =>
         if (Typed(IntT1()) != arg.typeTag) {
           val actualArgType = arg.typeTag.asTlaType1()
-          throw new TypingException(s"Expected a sequence argument to be an integer, found $actualArgType")
+          throw new TypingException(s"Expected a sequence argument to be an integer, found $actualArgType", arg.ID)
         } else {
           (IntT1(), elem)
         }
@@ -291,7 +291,7 @@ class Desugarer(gen: UniqueNameGenerator, tracker: TransformationTracker) extend
         }
 
       case (tt @ RecT1(_), _) =>
-        throw new TypingException(s"Expected a string argument for $tt, found: $arg")
+        throw new TypingException(s"Expected a string argument for $tt, found: $arg", arg.ID)
 
       case (tt @ TupT1(elems @ _*), ValEx(TlaInt(index))) =>
         if (index > 0 && index <= elems.length) {
@@ -301,10 +301,10 @@ class Desugarer(gen: UniqueNameGenerator, tracker: TransformationTracker) extend
         }
 
       case (tt @ TupT1(_), _) =>
-        throw new TypingException(s"Expected a string argument for $tt, found: $arg")
+        throw new TypingException(s"Expected a string argument for $tt, found: $arg", arg.ID)
 
       case _ =>
-        throw new TypingException(s"Unexpected type in function application: $arg")
+        throw new TypingException(s"Unexpected type in function application: $arg", arg.ID)
     }
   }
 

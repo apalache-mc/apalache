@@ -6,11 +6,12 @@
 
 package at.forsyte.apalache.tla.typecheck
 
-import at.forsyte.apalache.tla.lir.TypingException
+import at.forsyte.apalache.tla.lir.{TypingException, UID}
 
 /**
  * This exception is thrown, whenever the type checker finds an irrecoverable error in the user input.
  *
- * @author konnov
+ * @param message error message
+ * @param causeExprId the id of a problematic expression, may be UID.nullId
  */
-class TypingInputException(message: String) extends TypingException(message)
+class TypingInputException(message: String, causeExprId: UID) extends TypingException(message, causeExprId)

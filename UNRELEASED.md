@@ -12,9 +12,15 @@
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
 ### Features
 
- * Added bug report templates, see #1094
+ * Add bug report templates, see #1094
 
 ### Bug fixes
+
+* Remove duplicate function indices when decoding symbolic states, fixes #962
+
+### Refactoring
+
+* Change the format of type exceptions, see #1090
 
  * Remove duplicate function indices when decoding symbolic states, fixes #962
 

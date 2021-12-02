@@ -46,11 +46,11 @@ class ParameterNormalizer(
         } else {
           throw new TypingException(
               "The signature of operator %s has %d parameters whereas the type tag has %d parameters"
-                .format(decl.name, sigParamCount, typeParamCount))
+                .format(decl.name, sigParamCount, typeParamCount), decl.ID)
         }
 
       case _ =>
-        throw new TypingException(s"Operator ${decl.name} has an invalid type tag: " + decl.typeTag)
+        throw new TypingException(s"Operator ${decl.name} has an invalid type tag: " + decl.typeTag, decl.ID)
     }
   }
 
@@ -130,7 +130,7 @@ class ParameterNormalizer(
                   .typed(ex.typeTag.asTlaType1())
 
               case _ =>
-                throw new TypingException(s"Expected a higher-order parameter $name, found type: $paramType")
+                throw new TypingException(s"Expected a higher-order parameter $name, found type: $paramType", ex.ID)
             }
         }
       }

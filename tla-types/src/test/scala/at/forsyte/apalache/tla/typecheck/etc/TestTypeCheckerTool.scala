@@ -80,7 +80,7 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
       val typechecker = new TypeCheckerTool(annotationStore, false)
 
       def defaultTag(uid: UID): Nothing = {
-        throw new TypingException("No type for UID: " + uid)
+        throw new TypingException("No type for UID: " + uid, uid)
       }
 
       typechecker.checkAndTag(new IdleTracker(), listener, defaultTag, mod) match {
@@ -114,7 +114,7 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
       val typechecker = new TypeCheckerTool(annotationStore, false)
 
       def defaultTag(uid: UID): Nothing = {
-        throw new TypingException("No type for UID: " + uid)
+        throw new TypingException("No type for UID: " + uid, uid)
       }
 
       val output = typechecker.checkAndTag(new IdleTracker(), listener, defaultTag, mod)
