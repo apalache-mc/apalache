@@ -13,7 +13,7 @@ class TypeWatchdogTransformationListener extends TransformationListener {
     (originalEx.typeTag, newEx.typeTag) match {
       case (Typed(_: TlaType1), Untyped()) =>
         throw new TypingException(
-            s"A typed expression ${originalEx.ID} was transformed to an untyped expression ${newEx.ID}")
+            s"A typed expression ${originalEx.ID} was transformed to an untyped expression ${newEx.ID}", newEx.ID)
 
       case _ => ()
     }
@@ -23,7 +23,8 @@ class TypeWatchdogTransformationListener extends TransformationListener {
     (originalDecl.typeTag, newDecl.typeTag) match {
       case (Typed(_: TlaType1), Untyped()) =>
         throw new TypingException(
-            s"A typed declaration ${originalDecl.name} was transformed to an untyped expression ${newDecl.name}")
+            s"A typed declaration ${originalDecl.name} was transformed to an untyped expression ${newDecl.name}",
+            newDecl.ID)
 
       case _ => ()
     }

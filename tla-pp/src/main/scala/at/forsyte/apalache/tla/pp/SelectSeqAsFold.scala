@@ -1,10 +1,8 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaActionOper, TlaControlOper, TlaFunOper, TlaOper, TlaSeqOper}
-import at.forsyte.apalache.tla.lir.{
-  BoolT1, LetInEx, NameEx, OperEx, OperParam, OperT1, SeqT1, TlaEx, TlaOperDecl, Typed, TypingException
-}
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir._
 
 /**
  * Replaces instances of SelectSeq, using the following definition:
@@ -19,17 +17,21 @@ class SelectSeqAsFold(nameGenerator: UniqueNameGenerator, tracker: Transformatio
   }
 
   def transform: TlaExTransformation = tracker.trackEx {
-    case OperEx(TlaSeqOper.selectseq, seqEx, testNameEx @ NameEx(operName)) =>
+    case ex @ OperEx(TlaSeqOper.selectseq, seqEx, testNameEx @ NameEx(operName)) =>
       // Sanity check on types
       val seqElemType = seqEx.typeTag match {
-        case Typed(SeqT1(a)) => a
-        case badType         => throw new TypingException(s"Argument $seqEx expected to have type Seq(a), found $badType.")
+        case Typed(SeqT1(a)) =>
+          a
+
+        case badType =>
+          throw new TypingException(s"Argument $seqEx expected to have type Seq(a), found $badType.", ex.ID)
       }
 
       testNameEx.typeTag match {
         case Typed(OperT1(Seq(`seqElemType`), BoolT1())) => () // all good
         case badType =>
-          throw new TypingException(s"$operName expected to have type ($seqElemType) => Bool, found $badType.")
+          val msg = s"$operName expected to have type ($seqElemType) => Bool, found $badType."
+          throw new TypingException(msg, testNameEx.ID)
       }
 
       // Prep fresh names for the operator and its params

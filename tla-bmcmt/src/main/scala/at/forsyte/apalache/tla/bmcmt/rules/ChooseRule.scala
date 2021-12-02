@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.types.FinSetT
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, SetT1, TlaEx, TypingException}
+import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, SetT1, TlaEx, TypingException, UID}
 
 /**
  * <p>Rewriting rule for CHOOSE. Similar to TLC, we implement a non-deterministic choice.
@@ -99,7 +99,7 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // pick only the elements that belong to the set
       val elemType = setCell.cellType.toTlaType1 match {
         case SetT1(tt) => tt
-        case tt        => throw new TypingException("Expected a set, found: " + tt)
+        case tt        => throw new TypingException("Expected a set, found: " + tt, state.ex.ID)
       }
       val elemsIn = elems map { e =>
         tla

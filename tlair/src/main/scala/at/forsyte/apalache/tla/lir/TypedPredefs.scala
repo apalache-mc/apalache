@@ -57,7 +57,7 @@ object TypedPredefs {
         case Typed(tt: TlaType1) => tt
 
         case _ =>
-          throw new TypingException("Expected Typed(_: TlaType1), found: " + tag)
+          throw new TypingException("Expected Typed(_: TlaType1), found: " + tag, UID.nullId)
       }
     }
   }
