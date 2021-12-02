@@ -5,20 +5,20 @@ import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.standard._
-import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.{TlaDecl, TlaModule, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.transformations.{
+  PredResultFail, PredResultOk, TlaModuleTransformation, TransformationTracker
+}
+import at.forsyte.apalache.tla.lir.{TlaDecl, TlaModule, TlaOperDecl, UID}
 import at.forsyte.apalache.tla.pp.{Desugarer, Keramelizer, Normalizer, UniqueNameGenerator}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
-import java.nio.file.Path
-
 /**
  * A preprocessing pass that simplifies TLA+ expression by running multiple transformation.
  *
- * @param options  pass options
- * @param gen      name generator
+ * @param options pass options
+ * @param gen     name generator
  * @param tracker  transformation tracker
  * @param nextPass next pass to call
  */
@@ -27,6 +27,7 @@ class PreproPassImpl @Inject() (
     sourceStore: SourceStore, changeListener: ChangeListener, writerFactory: TlaWriterFactory,
     @Named("AfterPrepro") nextPass: Pass with TlaModuleMixin
 ) extends PreproPass with LazyLogging {
+  val MANUAL_LINK = "https://apalache.informal.systems/docs/apalache/known-issues.html"
 
   private var outputTlaModule: Option[TlaModule] = None
 
@@ -73,13 +74,27 @@ class PreproPassImpl @Inject() (
     writerFactory.writeModuleAllFormats(afterModule.copy(name = "08_OutPrepro"), TlaWriter.STANDARD_MODULES)
     outputTlaModule = Some(afterModule)
 
+    // when --debug is enabled, check that all identifiers are assigned a location
     if (options.getOrElse[Boolean]("general", "debug", false)) {
       val sourceLocator =
         SourceLocator(sourceStore.makeSourceMap, changeListener)
       outputTlaModule.get.operDeclarations foreach sourceLocator.checkConsistency
     }
 
-    true
+    // check, whether all expressions fit in KerA+
+    val shallContinue = KeraLanguagePred().isModuleOk(outputTlaModule.get) match {
+      case PredResultOk() =>
+        true
+
+      case PredResultFail(failedIds) =>
+        for ((id, errorMessage) <- failedIds) {
+          val message = "%s: unsupported expression: %s".format(findLoc(id), errorMessage)
+          logger.error(message)
+        }
+        false
+    }
+
+    shallContinue
   }
 
   private def createModuleTransformerForPrimePropagation(varSet: Set[String]): ModuleByExTransformer = {
@@ -101,6 +116,15 @@ class PreproPassImpl @Inject() (
     outputTlaModule map { m =>
       nextPass.setModule(m)
       nextPass
+    }
+  }
+
+  private def findLoc(id: UID): String = {
+    val sourceLocator: SourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)
+
+    sourceLocator.sourceOf(id) match {
+      case Some(loc) => loc.toString
+      case None      => "<unknown>"
     }
   }
 }

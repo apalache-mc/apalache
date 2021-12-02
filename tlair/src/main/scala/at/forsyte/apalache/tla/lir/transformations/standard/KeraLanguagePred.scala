@@ -65,13 +65,19 @@ class KeraLanguagePred extends LanguagePred {
 
       case OperEx(oper, args @ _*)
           if oper == TlaSetOper.map || oper == TlaFunOper.funDef || oper == TlaFunOper.recFunDef =>
-        val evenArgs = args.zipWithIndex.filter { p => p._2 % 2 == 0 } map { _._1 }
+        val evenArgs = args.zipWithIndex.filter { p => p._2 % 2 == 0 } map {
+          _._1
+        }
         evenArgs.foldLeft[PredResult](PredResultOk()) { case (r, arg) =>
           r.and(isOkInContext(letDefs, arg))
         }
 
       case OperEx(TlaFunOper.recFunRef) =>
         PredResultOk()
+
+      case OperEx(TlaSetOper.seqSet, _) =>
+        val message = "Seq(_) produces an infinite set of unbounded sequences. See: " + KeraLanguagePred.MANUAL_LINK_SEQ
+        PredResultFail(Seq((expr.ID, message)))
 
       case LetInEx(body, defs @ _*) =>
         // go inside the let definitions (similar to FlatLanguagePred)
@@ -110,6 +116,8 @@ class KeraLanguagePred extends LanguagePred {
 }
 
 object KeraLanguagePred {
+  val MANUAL_LINK_SEQ = "https://apalache.informal.systems/docs/apalache/known-issues.html#using-seqs"
+
   private val singleton = new KeraLanguagePred
 
   protected val unaryOps: HashSet[TlaOper] =
@@ -125,7 +133,6 @@ object KeraLanguagePred {
         TlaSeqOper.head,
         TlaSeqOper.tail,
         TlaSeqOper.len,
-        TlcOper.printT, // TODO: preprocess into NullEx in Keramelizer
         ApalacheOper.skolem,
         ApalacheOper.gen,
         ApalacheOper.expand,
@@ -160,8 +167,6 @@ object KeraLanguagePred {
         TlaSeqOper.concat,
         TlcOper.atat,
         TlcOper.colonGreater,
-        TlcOper.print, // TODO: preprocess into NullEx in Keramelizer
-        TlcOper.assert,
         TlcOper.colonGreater,
         TlcOper.atat,
         ApalacheOper.assign
