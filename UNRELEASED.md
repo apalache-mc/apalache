@@ -16,4 +16,4 @@
 
 ### Refactoring
 
-* Merge TypeException and TypingException, see #1090
+* Changed the format of type exceptions, see #1090
