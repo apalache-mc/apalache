@@ -16,7 +16,7 @@ VARIABLE
   \* @type: Str;
   s
 
-CInit == C = "uval_UT_1" /\ G = "uval_XY_1"
+CInit == C = "1_OF_UT" /\ G = "1_OF_XY"
 
 Init == x = {} /\ z = {G} /\ s = "init"
 
