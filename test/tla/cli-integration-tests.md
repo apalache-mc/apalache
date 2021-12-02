@@ -1533,7 +1533,7 @@ Test that the model checker nicely complains about unresolved polymorphism.
 ```sh
 $ apalache-mc check --inv=Inv Bug931.tla | sed 's/[IEW]@.*//'
 ...
-Typing input error: [Bug931.tla:6:20-6:21]: Found a polymorphic type: Set(b)
+Bug931.tla:6:20-6:21: type input error: Found a polymorphic type: Set(b)
 ...
 EXITCODE: ERROR (255)
 ```
