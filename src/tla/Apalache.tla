@@ -6,9 +6,9 @@
 (* As we like to preserve compatibility with TLC and TLAPS, we define the    *)
 (* operator bodies by erasure. The actual interpretation of the operators is *)
 (* encoded inside Apalache. For the moment, these operators are mirrored in  *)
-(* the class at.forsyte.apalache.tla.lir.oper.BmcOper.                       *)
+(* the class at.forsyte.apalache.tla.lir.oper.ApalacheOper.                  *)
 (*                                                                           *)
-(* Igor Konnov, 2020                                                         *)
+(* Igor Konnov, Jure Kukovec, Informal Systems 2020-2021                     *)
 (*****************************************************************************)
 
 (*****************************************************************************)

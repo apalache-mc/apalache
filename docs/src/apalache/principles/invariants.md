@@ -13,7 +13,7 @@ reason about finite executions.
 You have probably seen state invariants before. Consider the following specification.
 
 ```tla
-{{#include ../../../test/tla/Invariants.tla:1:38}}
+{{#include ../../../../test/tla/Invariants.tla:1:38}}
 ```
 
 We let you guess what this specification is doing. As for its properties, it contains
@@ -45,7 +45,7 @@ to 10 steps.*
 Let's have a look at two other predicates in `Invariants.tla`:
 
 ```tla
-{{#include ../../../test/tla/Invariants.tla:39:48}}
+{{#include ../../../../test/tla/Invariants.tla:39:48}}
 ```
 
 Can you see a difference between `ActionInv` & `BuggyActionInv` and `StateInv`
@@ -80,7 +80,7 @@ what kind of invariant it is dealing with.
 Let's have a look at the following two predicates in `Invariants.tla`:
 
 ```tla
-{{#include ../../../test/tla/Invariants.tla:49:62}}
+{{#include ../../../../test/tla/Invariants.tla:49:62}}
 ```
 
 These predicates are quite different from state invariants and action
