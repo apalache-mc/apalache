@@ -7,7 +7,7 @@ Most of the operators in that modules are introduced internally by Apalache,
 when it is rewriting a TLA+ specification.  It is useful to read the comments
 to the operators defined in `Apalache.tla`, as they will help you in
 understanding the [detailed output](./running.md#detailed) produced by the
-tool, see.  Perhaps, the most interesting operator in `Apalache` is the type
+tool, see.  Perhaps, the most interesting operator in `Apalache` is the
 assignment operator that is defined as follows:
 
 ```tla
