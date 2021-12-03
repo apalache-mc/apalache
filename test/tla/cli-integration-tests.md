@@ -1602,6 +1602,14 @@ $ apalache-mc check --inv=Inv --length=1 PolyFold.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check Bug1136.tla reports no error: regression for #1136
+
+```sh
+$ apalache-mc check --inv=Inv Bug1136.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
 
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
