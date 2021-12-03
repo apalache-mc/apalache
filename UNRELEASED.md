@@ -18,7 +18,9 @@
 
 ### Bug fixes
 
-* Remove duplicate function indices when decoding symbolic states, fixes #962
+ * Remove duplicate function indices when decoding symbolic states, fixes #962
+
+ * Translate `a^b` for non-constant `a` and `b`, fixes #1136
 
 ### Refactoring
 
