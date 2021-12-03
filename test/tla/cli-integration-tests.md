@@ -1602,6 +1602,18 @@ $ apalache-mc check --inv=Inv --length=1 PolyFold.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check Test669.tla reports an error
+
+```sh
+$ apalache-mc check Test669.tla | sed 's/[IEW]@.*//'
+...
+This error may show up when CONSTANTS are not initialized.
+Check the manual: https://apalache.informal.systems/docs/apalache/parameters.html
+Input error (see the manual): SubstRule: Variable N is not assigned a value
+...
+EXITCODE: ERROR (255)
+```
+
 ## running the typecheck command
 
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
