@@ -14,4 +14,4 @@ operator that is defined as follows:
 x := e == x = e
 ```
 
-See the [discussion](./principles.md#assignments) on the role of assignments in Apalache.
+See the [discussion](./principles/index.md#assignments) on the role of assignments in Apalache.
