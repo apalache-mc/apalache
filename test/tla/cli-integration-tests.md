@@ -1602,12 +1602,18 @@ $ apalache-mc check --inv=Inv --length=1 PolyFold.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check Bug1136.tla reports no error: regression for #1136
+
+```sh
+$ apalache-mc check --inv=Inv Bug1136.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check Test928.tla reports no error on Inv1: regression for #928
 
 ```sh
 $ apalache-mc check --inv=Inv1 --length=1 Test928.tla | sed 's/[IEW]@.*//'
-...
-EXITCODE: OK
 ```
 
 ### check Test928.tla reports an error on Inv2: regression for #928

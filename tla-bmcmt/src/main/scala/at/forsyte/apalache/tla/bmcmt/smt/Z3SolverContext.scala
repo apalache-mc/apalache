@@ -732,6 +732,12 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         val mod = z3context.mkMod(le.asInstanceOf[IntExpr], re.asInstanceOf[IntExpr])
         (mod.asInstanceOf[ExprSort], 1 + ln + rn)
 
+      case OperEx(TlaArithOper.exp, left, right) =>
+        val (le, ln) = toArithExpr(left)
+        val (re, rn) = toArithExpr(right)
+        val mod = z3context.mkPower(le.asInstanceOf[IntExpr], re.asInstanceOf[IntExpr])
+        (mod.asInstanceOf[ExprSort], 1 + ln + rn)
+
       case OperEx(TlaArithOper.uminus, subex) =>
         val (e, n) = toArithExpr(subex)
         val minus = z3context.mkUnaryMinus(e.asInstanceOf[IntExpr])
