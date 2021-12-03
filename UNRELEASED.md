@@ -32,4 +32,3 @@
 
  * Restructure and update the Apalache manual:
    https://apalache.informal.systems/docs/index.html
-
