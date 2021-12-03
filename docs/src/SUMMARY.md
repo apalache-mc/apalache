@@ -18,17 +18,17 @@
         - [Source](./apalache/installation/source.md)
     - [Running the Tool](./apalache/running.md)
     - [Apalache global configuration file](./apalache/config.md)
-    - [Invariants: State, Action, Trace](./apalache/invariants.md)
-    - [Enumeration of counterexamples](./apalache/enumeration.md)
     - [TLA+ Execution Statistics](./apalache/statistics.md)
     - [An Example TLA+ Specification](./apalache/example.md)
     - [Specification Parameters](./apalache/parameters.md)
-    - [Principles of Symbolic Model Checking with Apalache](./apalache/principles/index.md)
+    - [Symbolic Model Checking with Apalache](./apalache/principles/index.md)
         - [Assignments and symbolic transitions](./apalache/principles/assignments.md)
+        - [Folding sets and functions](./apalache/principles/folds.md)
+        - [Invariants: State, Action, Trace](./apalache/principles/invariants.md)
+        - [Enumeration of counterexamples](./apalache/principles/enumeration.md)
+        - [The Apalache Module](./apalache/principles/apalache-mod.md)
         - [Recursive operators and functions](./apalache/principles/recursive.md)
         - [Naturals](./apalache/principles/naturals.md)
-    - [The Apalache Module](./apalache/apalache-mod.md)
-    - [Folding Operators](./apalache/fold.md)
     - [Profiling Your Specification](./apalache/profiling.md)
     - [Five minutes of theory](./apalache/theory.md)
 - [TLC Configuration Files](./apalache/tlc-config.md)
@@ -37,8 +37,9 @@
 - [Known Issues](./apalache/known-issues.md)
 - [TLA+ Preprocessing](./apalache/preprocessing.md)
 - [Fine Tuning](./apalache/tuning.md)
+- [Assignments and Symbolic Transitions in Depth](./apalache/assignments-in-depth.md)
 - [KerA: kernel logic of actions](./apalache/kera.md)
-- [Assignments in Apalache](./apalache/assignments.md)
+
 
 # HOWTOs
 

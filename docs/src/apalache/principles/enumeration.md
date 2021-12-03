@@ -8,7 +8,7 @@ for instance, to generate multiple tests.
 Consider the following TLA+ specification:
 
 ```tla
-{{#include ../../../test/tla/View2.tla:1:24}}
+{{#include ../../../../test/tla/View2.tla:1:24}}
 ```
 
 We can run Apalache to check the state invariant `Inv`:
@@ -86,7 +86,7 @@ Basically, two states are considered to be similar, if they have the same view.
 In our example, we compute the state view with the operator `View1`:
 
 ```tla
-{{#include ../../../test/tla/View2.tla:25:27}}
+{{#include ../../../../test/tla/View2.tla:25:27}}
 ```
 
 Hence, the states with `x = 1` and `x = 25` are similar, because their view has the

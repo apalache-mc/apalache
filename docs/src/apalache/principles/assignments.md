@@ -77,3 +77,8 @@ Total time: 1.88 sec
 EXITCODE: ERROR (99)
 ```
 
+### More details
+
+**Check [Assignments and Symbolic Transitions in
+Depth](../assignments-in-depth.md).**
+
