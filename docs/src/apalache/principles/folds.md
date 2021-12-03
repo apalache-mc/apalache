@@ -1,5 +1,6 @@
-Folding Operators
-==========================
+## Folding Sets and Sequences
+
+**Folds are an efficient replacement for recursive operators and functions.**
 
 Apalache natively implements two operators users might be familiar with from the [community modules](https://github.com/tlaplus/CommunityModules) or functional programming. Those operators are `FoldSet` and `FoldSeq`. This brief introduction to fold operators highlights the following:
 
@@ -176,13 +177,13 @@ Our general advice is to use folds over `CHOOSE` with quantified predicates wher
 Here we give some examples of common operators, implemented using folds:
 
 ```tla
-{{#include ../../../test/tla/FoldDefined.tla::}}
+{{#include ../../../../test/tla/FoldDefined.tla::}}
 ```
 
 For the sake of comparison, we rewrite the above operators using recursion, `CHOOSE` or quantification:
 
 ```tla
-{{#include ../../../test/tla/NonFoldDefined.tla::}}
+{{#include ../../../../test/tla/NonFoldDefined.tla::}}
 ```
 
 In most cases, recursive operators are much more verbose, and the operators using `CHOOSE` and/or quantification mask double iteration (and thus have quadratic complexity). 

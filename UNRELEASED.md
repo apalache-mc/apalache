@@ -29,3 +29,8 @@
  * Remove duplicate function indices when decoding symbolic states, fixes #962
 
  * Improve error messaging for Seq, see #1126 and #1127
+
+### Documentation
+
+ * Restructure and update the Apalache manual:
+   https://apalache.informal.systems/docs/index.html
