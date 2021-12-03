@@ -23,7 +23,7 @@
     - [Specification Parameters](./apalache/parameters.md)
     - [Symbolic Model Checking with Apalache](./apalache/principles/index.md)
         - [Assignments and symbolic transitions](./apalache/principles/assignments.md)
-        - [Folding sets and functions](./apalache/principles/folds.md)
+        - [Folding sets and sequences](./apalache/principles/folds.md)
         - [Invariants: State, Action, Trace](./apalache/principles/invariants.md)
         - [Enumeration of counterexamples](./apalache/principles/enumeration.md)
         - [The Apalache Module](./apalache/principles/apalache-mod.md)

@@ -2,12 +2,15 @@
 <a name="recursion"></a>
 ## Recursive operators and functions
 
+**We are going to remove support for recursive operators and functions soon.
+See [Folding sets and sequences](./folds.md).**
+
 **WARNING:** In our experience, it is hard to check recursive operators and
 functions in Apalache:
 
   - Recursive operators need additional annotations.
   - Resursive operators and functions usually apply `CHOOSE`, which
-    is hard to implement faithfully without blow up the SMT encoding.
+    is hard to implement faithfully without blowing up the SMT encoding.
 
 Hence, we recommend using the operators `FoldSet` and `FoldSeq`:
 
@@ -19,6 +22,8 @@ These operators are treated by Apalache in a more efficient manner than
 recursive operators. They are always terminating and thus do not require an
 annotation that specifies an upper bound on the number of operator iterations.
 We are preparing a tutorial on this topic.
+
+**See [Folding sets and sequences](./folds.md).**
 
 <a name="rec-op"></a>
 ### Recursive operators
