@@ -55,7 +55,7 @@ unroll the recursive operator up to this bound. To this end, we define two
 additional operators. For instance:
 
 ```tla
-{{#include ../../../../test/tla/MC_Rec6.tla::}}
+{{#include ../../../../test/tla/Rec6.tla::}}
 ```
 
 In this case, Apalache unrolls every call to `Sum` exactly `UNROLL_TIMES_Sum`
