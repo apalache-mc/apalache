@@ -45,7 +45,11 @@ class TypeSubstitutor(tracker: TransformationTracker, sub: Substitution) extends
       }
 
     case letInEx @ LetInEx(body, defs @ _*) =>
-      def mapDecl(d: TlaOperDecl): TlaOperDecl = d.copy(body = transform(d.body))
+      def mapDecl(d: TlaOperDecl): TlaOperDecl = {
+        val genericType = d.typeTag.asTlaType1()
+        val reducedType = sub.subRec(genericType)
+        d.copy(body = transform(d.body)).withTag(Typed(reducedType))
+      }
 
       val genericType = letInEx.typeTag.asTlaType1()
       val reducedType = sub.subRec(genericType)
