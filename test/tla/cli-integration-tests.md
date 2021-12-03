@@ -1626,6 +1626,8 @@ EXITCODE: OK
 
 ```sh
 $ apalache-mc check --inv=Inv1 --length=1 Test928.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
 ```
 
 ### check Test928.tla reports an error on Inv2: regression for #928
@@ -1633,9 +1635,9 @@ $ apalache-mc check --inv=Inv1 --length=1 Test928.tla | sed 's/[IEW]@.*//'
 ```sh
 $ apalache-mc check --inv=Inv2 --length=1 Test928.tla | sed 's/[IEW]@.*//'
 ...
-[Test928.tla:6:18-6:19]: Found a polymorphic type: Set(a)
+Found a polymorphic type: Set(a)
 Probable causes: an empty set { } needs a type annotation or an incorrect record field is used
-Typing input error: [Test928.tla:6:18-6:19]: Found a polymorphic type: Set(a)
+Test928.tla:6:18-6:19: type input error: Found a polymorphic type: Set(a)
 ...
 EXITCODE: ERROR (255)
 ```
