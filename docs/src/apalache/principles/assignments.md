@@ -11,9 +11,9 @@ and run `apalache` against
 $ apalache check y2k_override.tla
 ```
 
- We can check the detailed output of the `TransitionFinderPass` in the file
-`x/<timestamp>/out-transition.tla`, where `<timestamp>` looks like
-`09.03-10.03.2020-508266549191958257`:
+We can check the detailed output of the `TransitionFinderPass` in the file
+`_apalache-out/y2k_override.tla/<timestamp>/09_OutTransition.tla`, where
+`<timestamp>` looks like `2021-12-01T12-07-41_1998641578103809179`:
 
 ```tla
 {{#include ../../../../test/tla/y2k_override.tla::}}
