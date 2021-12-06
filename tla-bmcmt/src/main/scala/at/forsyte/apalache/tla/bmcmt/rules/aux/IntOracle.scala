@@ -3,9 +3,10 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.IntT
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
-import at.forsyte.apalache.tla.lir.TlaEx
+import at.forsyte.apalache.tla.lir.{TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.values.TlaBool
 
 /**
  * An oracle that uses an integer variable. Although using integers as an oracle is
@@ -33,21 +34,25 @@ class IntOracle(val intCell: ArenaCell, nvalues: Int) extends Oracle {
   /**
    * Produce a ground expression that contains assertions for the possible oracle values.
    *
-   * @param state      a symbolic state
-   * @param assertions a sequence of assertions, one per oracle value
+   * @param state          a symbolic state
+   * @param assertions     a sequence of assertions, one per oracle value
+   * @param elseAssertions an optional sequence of assertions, one per oracle value
    * @return an expression ite(oracle = 0, ite(oracle = 1, ...))
    */
-  override def caseAssertions(state: SymbState, assertions: Seq[TlaEx]): TlaEx = {
+  override def caseAssertions(state: SymbState, assertions: Seq[TlaEx], elseAssertions: Seq[TlaEx] = Seq()): TlaEx = {
+    if (elseAssertions.nonEmpty & assertions.size != elseAssertions.size) {
+      throw new IllegalStateException(s"Invailid call to Oracle, malformed elseAssertions")
+    }
+
     nvalues match {
       case 0 => state.arena.cellTrue().toNameEx
 
       case 1 => assertions.head
 
       case _ =>
-        val es = assertions
-          .slice(0, nvalues)
-          .zipWithIndex
-          .map { case (e, i) => tla.or(e, tla.not(whenEqualTo(state, i))) }
+        val iteCases = assertions.zipAll(elseAssertions, ValEx(TlaBool(true)), ValEx(TlaBool(true)))
+        val es =
+          iteCases.slice(0, nvalues).zipWithIndex.map { case (e, i) => tla.ite(whenEqualTo(state, i), e._1, e._2) }
         tla.and(es: _*)
     }
   }
