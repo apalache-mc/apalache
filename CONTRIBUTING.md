@@ -89,6 +89,8 @@ of landing changes:
 2. Once the issue is created, maintainers may request more detailed
    documentation in the form of a [Request for Comment (RFC)][rfc] or
    [Architectural Decision Record (ADR)][adr].
+   - Please draft ADRs by starting with [our
+     template](./docs/src/adr/NNNadr-template.md).
 3. Discussion at the RFC stage will build collective understanding of the
    dimensions of the problem and help structure conversations around trade-offs.
 4. When the problem is well understood but the solution leads to large
