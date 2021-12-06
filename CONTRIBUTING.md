@@ -196,6 +196,9 @@ and set up a new project.
 You can use the [metals][] Scala language server together with [lsp-mode][] for
 a nice IDE experience in the world's best lisp driven operating system.
 
+If you are developing in Emacs, you probably also want to get familiar with the
+incremental build server [bloop](./docs/internal/using-bloop.md).
+
 ##### Install `metals-emacs`
 
 ###### Arch
