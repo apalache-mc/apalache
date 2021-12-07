@@ -1120,6 +1120,17 @@ Bug1126.tla:15:14-15:27: unsupported expression: Seq(_) produces an infinite set
 EXITCODE: ERROR (12)
 ```
 
+### check SetSndRcv succeeds (array-encoding)
+
+Regression test for https://github.com/informalsystems/apalache/issues/1152
+Sets should not become unconstrained when choosing an element in a set minus operation.
+
+```sh
+$ apalache-mc check --inv=Inv --length=6 --cinit=CInit SetSndRcv.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
 ## configure the check command
 
 Testing various flags that are set via command-line options and the TLC configuration file. The CLI has priority over

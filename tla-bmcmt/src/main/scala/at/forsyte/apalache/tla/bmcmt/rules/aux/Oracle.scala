@@ -25,9 +25,10 @@ trait Oracle extends Serializable {
    *
    * @param state a symbolic state
    * @param assertions a sequence of assertions, one per oracle value
+   * @param elseAssertions an optional sequence of assertions, one per oracle value
    * @return an expression ite(oracle = 0, ite(oracle = 1, ...))
    */
-  def caseAssertions(state: SymbState, assertions: Seq[TlaEx]): TlaEx
+  def caseAssertions(state: SymbState, assertions: Seq[TlaEx], elseAssertions: Seq[TlaEx] = Seq()): TlaEx
 
   /**
    * Get a symbolic state and decode the value of the oracle variable into an integer.
