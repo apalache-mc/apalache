@@ -471,7 +471,10 @@ class CherryPick(rewriter: SymbStateRewriter) {
       // add the cell to the arena
       nextState = nextState.updateArena(_.appendHas(resultCell, picked))
       // (chosen = 1 /\ in(z_i, R) = in(c_i, S_1)) \/ (chosen = 2 /\ in(z_i, R) = in(d_i, S_2))
-      solverAssert(oracle.caseAssertions(nextState, assertions._1 :+ elseAssert, assertions._2 :+ ValEx(TlaBool(true))))
+      val membershipAssertions = assertions._1
+      val nonMembershipAssertions = assertions._2
+      solverAssert(oracle.caseAssertions(nextState, membershipAssertions :+ elseAssert,
+              nonMembershipAssertions :+ ValEx(TlaBool(true))))
     }
 
     0.until(maxLen) foreach pickOneElement
