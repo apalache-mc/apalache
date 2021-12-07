@@ -4,7 +4,8 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.{MalformedSepecificationError, TlaEx}
+import at.forsyte.apalache.tla.lir.values.TlaBool
+import at.forsyte.apalache.tla.lir.{MalformedSepecificationError, TlaEx, ValEx}
 
 import scala.collection.immutable.SortedMap
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
@@ -320,7 +321,13 @@ class CherryPick(rewriter: SymbStateRewriter) {
             val ite = tla.ite(tla.apalacheSelectInSet(keyCell.toNameEx, dom.toNameEx),
                 tla.apalacheStoreInSet(keyCell.toNameEx, newDom.toNameEx),
                 tla.apalacheStoreNotInSet(keyCell.toNameEx, newDom.toNameEx))
-            rewriter.solverContext.assertGroundExpr(tla.impl(oracle.whenEqualTo(nextState, no), ite))
+            val unchangedSet = if (rewriter.solverContext.config.smtEncoding == "arrays") {
+              // In the arrays encoding we need to propagate the SSA representation of the array if nothing changes
+              tla.apalacheStoreNotInSet(keyCell.toNameEx, newDom.toNameEx)
+            } else {
+              tla.bool(true)
+            }
+            rewriter.solverContext.assertGroundExpr(tla.ite(oracle.whenEqualTo(nextState, no), ite, unchangedSet))
           } else {
             // The domain pointed by the oracle does not contain the key
             val notInDom = tla.apalacheStoreNotInSet(keyCell.toNameEx, newDom.toNameEx)
@@ -441,22 +448,33 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
       // The awesome property of the oracle is that we do not have to compare the sets directly!
       // Instead, we compare the oracle values.
-      //  (chosen = 1 /\ in(z_i, R) <=> in(c_i, S_1)) \/ (chosen = 2 /\ in(z_i, R) <=> in(d_i, S_2)) \/ (chosen = N <=> elseAssert)
-      def nthIn(elemAndSet: (ArenaCell, ArenaCell), no: Int): TlaEx = {
+      // (chosen = 1 /\ in(z_i, R) <=> in(c_i, S_1)) \/ (chosen = 2 /\ in(z_i, R) <=> in(d_i, S_2)) \/ (chosen = N <=> elseAssert)
+      def nthIn(elemAndSet: (ArenaCell, ArenaCell), no: Int): (TlaEx, TlaEx) = {
         if (elemsOfMemberSets(no).nonEmpty) {
-          tla.ite(tla.apalacheSelectInSet(elemAndSet._1.toNameEx, elemAndSet._2.toNameEx),
+          val inSet = tla.ite(tla.apalacheSelectInSet(elemAndSet._1.toNameEx, elemAndSet._2.toNameEx),
               tla.apalacheStoreInSet(picked.toNameEx, resultCell.toNameEx),
               tla.apalacheStoreNotInSet(picked.toNameEx, resultCell.toNameEx))
+          val unchangedSet = if (rewriter.solverContext.config.smtEncoding == "arrays") {
+            // In the arrays encoding we need to propagate the SSA representation of the array if nothing changes
+            tla.apalacheStoreNotInSet(picked.toNameEx, resultCell.toNameEx)
+          } else {
+            tla.bool(true)
+          }
+          (inSet, unchangedSet)
         } else {
-          tla.apalacheStoreNotInSet(picked.toNameEx, resultCell.toNameEx) // nothing belongs to the set
+          // nothing belongs to the set
+          (tla.apalacheStoreNotInSet(picked.toNameEx, resultCell.toNameEx), tla.bool(true))
         }
       }
 
-      val assertions = toPickFrom.zip(memberSets).zipWithIndex map (nthIn _).tupled
+      val assertions = (toPickFrom.zip(memberSets).zipWithIndex map (nthIn _).tupled).unzip
       // add the cell to the arena
       nextState = nextState.updateArena(_.appendHas(resultCell, picked))
       // (chosen = 1 /\ in(z_i, R) = in(c_i, S_1)) \/ (chosen = 2 /\ in(z_i, R) = in(d_i, S_2))
-      solverAssert(oracle.caseAssertions(nextState, assertions :+ elseAssert))
+      val membershipAssertions = assertions._1
+      val nonMembershipAssertions = assertions._2
+      solverAssert(oracle.caseAssertions(nextState, membershipAssertions :+ elseAssert,
+              nonMembershipAssertions :+ ValEx(TlaBool(true))))
     }
 
     0.until(maxLen) foreach pickOneElement

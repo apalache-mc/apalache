@@ -1,4 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
+
 import at.forsyte.apalache.tla.bmcmt.SymbState
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.lir.TlaEx
@@ -25,11 +26,14 @@ class MockOracle(fixedValue: Int) extends Oracle {
   /**
    * Produce a ground expression that contains assertions for the possible oracle values.
    *
-   * @param state      a symbolic state
-   * @param assertions a sequence of assertions, one per oracle value
+   * @param state          a symbolic state
+   * @param assertions     a sequence of assertions, one per oracle value
+   * @param elseAssertions an optional sequence of assertions, one per oracle value
    * @return an expression ite(oracle = 0, ite(oracle = 1, ...))
    */
-  override def caseAssertions(state: SymbState, assertions: Seq[TlaEx]): TlaEx = { assertions(fixedValue) }
+  override def caseAssertions(state: SymbState, assertions: Seq[TlaEx], elseAssertions: Seq[TlaEx] = Seq()): TlaEx = {
+    assertions(fixedValue)
+  }
 
   /**
    * Get a symbolic state and decode the value of the oracle variable into an integer.
