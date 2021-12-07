@@ -94,6 +94,13 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     new mutable.HashMap[(Int, Int), (ExprSort, Int)]
 
   /**
+   * A cache for declarations of empty sets of different types.
+   * Used in the arrays encoding to avoid duplicate declarations.
+   */
+  private val emptySetCache: mutable.Map[Sort, (Expr[Sort], Int)] =
+    new mutable.HashMap[Sort, (ExprSort, Int)]
+
+  /**
    * Sometimes, we lose a fresh arena in the rewriting rules. As this situation is very hard to debug,
    * we are tracking here the largest cell id per SMT context. If the user is trying to add a cell
    * with a smaller id, there is a good chance that a fresher arena was overwritten with an older one.
@@ -141,7 +148,13 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     // If arrays are used to encode sets, they are initialized here to represent empty sets.
     if (cellSort.isInstanceOf[ArraySort[Sort, BoolSort]]) {
       val arrayDomain = cellSort.asInstanceOf[ArraySort[Sort, Sort]].getDomain()
-      val arrayInitializer = z3context.mkEq(const, z3context.mkConstArray(arrayDomain, z3context.mkFalse()))
+      val arrayInitializer = emptySetCache.get(arrayDomain) match {
+        case Some(emptySet) =>
+          z3context.mkEq(const, emptySet._1)
+        case None =>
+          emptySetCache += (arrayDomain -> (const, level))
+          z3context.mkEq(const, z3context.mkConstArray(arrayDomain, z3context.mkFalse()))
+      }
 
       log(s"(assert $arrayInitializer)")
       z3solver.add(arrayInitializer)
@@ -382,6 +395,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       cellCache.foreach(entry => cellCache += entry.copy(_2 = entry._2.filter(_._3 <= level)))
       cellCache.retain((_, value) => value.nonEmpty)
       inCache.retain((_, value) => value._2 <= level)
+      emptySetCache.retain((_, value) => value._2 <= level)
     }
   }
 
@@ -398,6 +412,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       cellCache.foreach(entry => cellCache += entry.copy(_2 = entry._2.filter(_._3 <= level)))
       cellCache.retain((_, value) => value.nonEmpty)
       inCache.retain((_, value) => value._2 <= level)
+      emptySetCache.retain((_, value) => value._2 <= level)
     }
   }
 
