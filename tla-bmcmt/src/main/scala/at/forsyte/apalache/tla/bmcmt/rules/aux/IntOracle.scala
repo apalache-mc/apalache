@@ -41,7 +41,7 @@ class IntOracle(val intCell: ArenaCell, nvalues: Int) extends Oracle {
    */
   override def caseAssertions(state: SymbState, assertions: Seq[TlaEx], elseAssertions: Seq[TlaEx] = Seq()): TlaEx = {
     if (elseAssertions.nonEmpty & assertions.size != elseAssertions.size) {
-      throw new IllegalStateException(s"Invailid call to Oracle, malformed elseAssertions")
+      throw new IllegalStateException(s"Invalid call to Oracle, malformed elseAssertions")
     }
 
     nvalues match {
