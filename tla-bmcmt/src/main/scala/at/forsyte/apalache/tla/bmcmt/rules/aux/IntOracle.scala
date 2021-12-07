@@ -50,6 +50,9 @@ class IntOracle(val intCell: ArenaCell, nvalues: Int) extends Oracle {
       case 1 => assertions.head
 
       case _ =>
+        // iteCases is a sequence of tuples, with the fst and snd elements of each tuple being the "if" and "else" cases of an ite.
+        // If elseAssertions is not empty, each tuple has its fst element from assertions and its snd form elseAssertions.
+        // If elseAssertions is empty, each tuple has its fst element from assertions and its snd defaults to "ValEx(TlaBool(true))".
         val iteCases = assertions.zipAll(elseAssertions, ValEx(TlaBool(true)), ValEx(TlaBool(true)))
         val es =
           iteCases.slice(0, nvalues).zipWithIndex.map { case (e, i) => tla.ite(whenEqualTo(state, i), e._1, e._2) }
