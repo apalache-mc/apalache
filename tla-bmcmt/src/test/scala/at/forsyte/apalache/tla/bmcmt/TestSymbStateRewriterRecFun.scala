@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.SMTEncodings._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
@@ -13,7 +14,7 @@ trait TestSymbStateRewriterRecFun extends RewriterBase with TestingPredefs {
         "i_to_i" -> FunT1(IntT1(), IntT1())
     )
 
-  test("""recursive fun: f[n \in { 1, 2, 3 }] == IF n <= 1 THEN 2 ELSE 2 * f[n - 1]""") { rewriterType: String =>
+  test("""recursive fun: f[n \in { 1, 2, 3 }] == IF n <= 1 THEN 2 ELSE 2 * f[n - 1]""") { rewriterType: SMTEncoding =>
     val set = enumSet(int(1), int(2), int(3)) ? "I"
     val ref = recFunRef() ? "i_to_i"
 

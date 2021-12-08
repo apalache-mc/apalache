@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.SMTEncodings._
 import at.forsyte.apalache.tla.bmcmt.rules.FoldSeqRule
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
@@ -8,7 +9,7 @@ import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 
 trait TestSymbStateRewriterFoldSeq extends RewriterBase {
 
-  test("""FoldSeq( LAMBDA x,y: C, v, S ) = C""") { rewriterType: String =>
+  test("""FoldSeq( LAMBDA x,y: C, v, S ) = C""") { rewriterType: SMTEncoding =>
     // A : (a,b) => a
     // A(p,q) == 0
     val a = IntT1()
@@ -38,7 +39,7 @@ trait TestSymbStateRewriterFoldSeq extends RewriterBase {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""FoldSeq( LAMBDA x,y: ..., v, <<>> ) = v""") { rewriterType: String =>
+  test("""FoldSeq( LAMBDA x,y: ..., v, <<>> ) = v""") { rewriterType: SMTEncoding =>
     // A : (a,b) => a
     // A(p,q) == 0
     val a = IntT1()
@@ -66,7 +67,7 @@ trait TestSymbStateRewriterFoldSeq extends RewriterBase {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""FoldSeq( LAMBDA x,y: x + 1, 0, s ) = Card(Len(s))""") { rewriterType: String =>
+  test("""FoldSeq( LAMBDA x,y: x + 1, 0, s ) = Card(Len(s))""") { rewriterType: SMTEncoding =>
     // A : (a,b) => a
     // A(p,q) == p + 1
     val a = IntT1()
@@ -96,7 +97,7 @@ trait TestSymbStateRewriterFoldSeq extends RewriterBase {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""FoldSeq( LAMBDA x,y: x + y, 0, s ) = Sum(s)""") { rewriterType: String =>
+  test("""FoldSeq( LAMBDA x,y: x + y, 0, s ) = Sum(s)""") { rewriterType: SMTEncoding =>
     // A : (a,b) => a
     // A(p,q) == p + q
     val a = IntT1()

@@ -1,11 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.SMTEncodings._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 trait TestSymbStateRewriter extends RewriterBase {
-  test("SE-SUBST1: x[cell/x] ~~> cell") { rewriterType: String =>
+  test("SE-SUBST1: x[cell/x] ~~> cell") { rewriterType: SMTEncoding =>
     arena = arena.appendCell(UnknownT())
     val cell = arena.topCell
     val binding = Binding("x" -> cell)

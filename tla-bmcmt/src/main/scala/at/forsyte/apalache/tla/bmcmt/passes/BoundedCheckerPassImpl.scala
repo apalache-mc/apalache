@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.passes
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
 import at.forsyte.apalache.tla.bmcmt.Checker.NoError
+import at.forsyte.apalache.tla.bmcmt.SMTEncodings._
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore}
 import at.forsyte.apalache.tla.bmcmt.rewriter.{MetricProfilerListener, RewriterConfig}
@@ -31,9 +32,6 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
     exprGradeStore: ExprGradeStore, sourceStore: SourceStore, changeListener: ChangeListener,
     @Named("AfterChecker") nextPass: Pass)
     extends BoundedCheckerPass with LazyLogging {
-
-  private val oopsla19Encoding = "oopsla19"
-  private val arraysEncoding = "arrays"
 
   /**
    * The pass name.
@@ -83,7 +81,11 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
     val tuning = options.getOrElse[Map[String, String]]("general", "tuning", Map[String, String]())
     val debug = options.getOrElse[Boolean]("general", "debug", false)
     val saveDir = options.getOrError[Path]("io", "outdir").toFile
-    val smtEncoding = options.get[Option[String]]("checker", "smt-encoding").flatten.getOrElse(oopsla19Encoding)
+    val smtEncoding = options.get[Option[String]]("checker", "smt-encoding").flatten.getOrElse("oopsla19") match {
+      case "oopsla19"      => oopsla19Encoding
+      case "arrays"        => arraysEncoding
+      case oddEncodingType => throw new IllegalArgumentException(s"Unexpected SMT encoding type $oddEncodingType")
+    }
 
     val params = new ModelCheckerParams(input, stepsBound, saveDir, tuning, debug)
     params.discardDisabled = options.getOrElse[Boolean]("checker", "discardDisabled", true)

@@ -2,30 +2,30 @@ package at.forsyte.apalache.tla.bmcmt
 
 import java.io.{PrintWriter, StringWriter}
 
-import at.forsyte.apalache.tla.bmcmt.EncodingBase._
+import at.forsyte.apalache.tla.bmcmt.SMTEncodings._
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.scalatest.fixture
 
 trait RewriterBase extends fixture.FunSuite {
-  protected type FixtureParam = String
+  protected type FixtureParam = SMTEncoding
 
   protected var solverContext: SolverContext = _
   protected var arena: Arena = _
 
-  protected def create(rewriterType: String): SymbStateRewriter = {
+  protected def create(rewriterType: SMTEncoding): SymbStateRewriter = {
     rewriterType match {
-      case `oopsla19EncodingType` => new SymbStateRewriterAuto(solverContext)
-      case `arraysEncodingType`   => new SymbStateRewriterAutoWithArrays(solverContext)
-      case oddRewriterType        => throw new IllegalArgumentException(s"Unexpected rewriter of type $oddRewriterType")
+      case `oopsla19Encoding` => new SymbStateRewriterAuto(solverContext)
+      case `arraysEncoding`   => new SymbStateRewriterAutoWithArrays(solverContext)
+      case oddRewriterType    => throw new IllegalArgumentException(s"Unexpected rewriter of type $oddRewriterType")
     }
   }
 
-  protected def createWithoutCache(rewriterType: String): SymbStateRewriter = {
+  protected def createWithoutCache(rewriterType: SMTEncoding): SymbStateRewriter = {
     rewriterType match {
-      case `oopsla19EncodingType` => new SymbStateRewriterImpl(solverContext)
-      case `arraysEncodingType`   => new SymbStateRewriterImplWithArrays(solverContext)
+      case `oopsla19Encoding` => new SymbStateRewriterImpl(solverContext)
+      case `arraysEncoding`   => new SymbStateRewriterImplWithArrays(solverContext)
       case oddRewriterType =>
         throw new IllegalArgumentException(s"Unexpected cacheless rewriter of type $oddRewriterType")
     }

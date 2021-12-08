@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.EncodingBase._
+import at.forsyte.apalache.tla.bmcmt.SMTEncodings._
 import at.forsyte.apalache.tla.bmcmt.rules.aux._
 import at.forsyte.apalache.tla.bmcmt.smt.{PreproSolverContext, SolverConfig, Z3SolverContext}
 import org.junit.runner.RunWith
@@ -20,9 +20,9 @@ class TestRewriterWithOOPSLA19
     with TestUninterpretedConstOracle {
   override protected def withFixture(test: OneArgTest): Outcome = {
     solverContext = new PreproSolverContext(new Z3SolverContext(SolverConfig.default.copy(debug = true,
-                smtEncoding = oopsla19EncodingType)))
+                smtEncoding = oopsla19Encoding)))
     arena = Arena.create(solverContext)
-    val result = test(oopsla19EncodingType)
+    val result = test(oopsla19Encoding)
     solverContext.dispose()
     result
   }

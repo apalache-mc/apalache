@@ -1,11 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.SMTEncodings._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.{BoolT1, StrT1}
 
 trait TestSymbStateRewriterStr extends RewriterBase {
-  test(""" rewrite "red" """) { rewriterType: String =>
+  test(""" rewrite "red" """) { rewriterType: SMTEncoding =>
     val string = str("red").typed(StrT1())
     val neq = not(eql(str("red"), str("blue")).typed(BoolT1()))
       .typed(BoolT1())

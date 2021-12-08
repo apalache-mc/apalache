@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
+import at.forsyte.apalache.tla.bmcmt.SMTEncodings._
 import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.bmcmt.{Binding, RewriterBase, SymbState}
 import at.forsyte.apalache.tla.lir.TestingPredefs
@@ -7,7 +8,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 trait TestSparseOracle extends RewriterBase with TestingPredefs {
-  test("""Sparse Oracle.create""") { rewriterType: String =>
+  test("""Sparse Oracle.create""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
     var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
@@ -16,7 +17,7 @@ trait TestSparseOracle extends RewriterBase with TestingPredefs {
     assert(solverContext.sat())
   }
 
-  test("""Sparse Oracle.whenEqualTo""") { rewriterType: String =>
+  test("""Sparse Oracle.whenEqualTo""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
     var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
@@ -27,7 +28,7 @@ trait TestSparseOracle extends RewriterBase with TestingPredefs {
     assert(solverContext.sat())
   }
 
-  test("""Sparse Oracle.evalPosition""") { rewriterType: String =>
+  test("""Sparse Oracle.evalPosition""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
     var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
@@ -40,7 +41,7 @@ trait TestSparseOracle extends RewriterBase with TestingPredefs {
     assert(5 == position)
   }
 
-  test("""Sparse Oracle.caseAssertions""") { rewriterType: String =>
+  test("""Sparse Oracle.caseAssertions""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
     var state = new SymbState(tla.bool(true), arena, Binding())
     state = state.updateArena(_.appendCell(BoolT()))

@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
+import at.forsyte.apalache.tla.bmcmt.SMTEncodings._
 import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.bmcmt.{Binding, RewriterBase, SymbState}
 import at.forsyte.apalache.tla.lir.TestingPredefs
@@ -7,7 +8,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 trait TestUninterpretedConstOracle extends RewriterBase with TestingPredefs {
-  test("""UninterpretedConst Oracle.create""") { rewriterType: String =>
+  test("""UninterpretedConst Oracle.create""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
     var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
@@ -15,7 +16,7 @@ trait TestUninterpretedConstOracle extends RewriterBase with TestingPredefs {
     assert(solverContext.sat())
   }
 
-  test("""UninterpretedConst Oracle.whenEqualTo""") { rewriterType: String =>
+  test("""UninterpretedConst Oracle.whenEqualTo""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
     var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
@@ -27,7 +28,7 @@ trait TestUninterpretedConstOracle extends RewriterBase with TestingPredefs {
     assert(!solverContext.sat())
   }
 
-  test("""UninterpretedConst Oracle.evalPosition""") { rewriterType: String =>
+  test("""UninterpretedConst Oracle.evalPosition""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
     var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
@@ -39,7 +40,7 @@ trait TestUninterpretedConstOracle extends RewriterBase with TestingPredefs {
     assert(3 == position)
   }
 
-  test("""UninterpretedConst Oracle.caseAssertions""") { rewriterType: String =>
+  test("""UninterpretedConst Oracle.caseAssertions""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
     var state = new SymbState(tla.bool(true), arena, Binding())
     state = state.updateArena(_.appendCell(BoolT()))

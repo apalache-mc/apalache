@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.SMTEncodings._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
@@ -12,7 +13,7 @@ trait TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
       "O" -> OperT1(Seq(), IntT1())
   )
 
-  test("""IF 3 > 2 THEN 2 < 4 ELSE 5 < 1""") { rewriterType: String =>
+  test("""IF 3 > 2 THEN 2 < 4 ELSE 5 < 1""") { rewriterType: SMTEncoding =>
     val pred = gt(int(3), int(2))
     val e1 = lt(int(2), int(4))
     val e2 = lt(int(5), int(1))
@@ -23,7 +24,7 @@ trait TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(create(rewriterType), state.setRex(ifThenElse))
   }
 
-  test("""IF 3 < 2 THEN 2 < 4 ELSE 5 < 1""") { rewriterType: String =>
+  test("""IF 3 < 2 THEN 2 < 4 ELSE 5 < 1""") { rewriterType: SMTEncoding =>
     val pred = lt(int(3), int(2))
     val e1 = lt(int(2), int(4))
     val e2 = lt(int(5), int(1))
@@ -34,7 +35,7 @@ trait TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(create(rewriterType), state.setRex(ifThenElse))
   }
 
-  test("""IF 3 > 2 THEN 4 ELSE 1""") { rewriterType: String =>
+  test("""IF 3 > 2 THEN 4 ELSE 1""") { rewriterType: SMTEncoding =>
     val pred = gt(int(3), int(2))
     val e1 = int(4)
     val e2 = int(1)
@@ -46,7 +47,7 @@ trait TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""IF 3 < 2 THEN 4 ELSE 1""") { rewriterType: String =>
+  test("""IF 3 < 2 THEN 4 ELSE 1""") { rewriterType: SMTEncoding =>
     val pred = lt(int(3), int(2))
     val e1 = int(4)
     val e2 = int(1)
@@ -58,7 +59,7 @@ trait TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""IF 3 < 2 THEN {1, 2} ELSE {2, 3} equals {2, 3}""") { rewriterType: String =>
+  test("""IF 3 < 2 THEN {1, 2} ELSE {2, 3} equals {2, 3}""") { rewriterType: SMTEncoding =>
     val pred = lt(int(3), int(2))
     val e1 = enumSet(int(1), int(2))
     val e2 = enumSet(int(2), int(3))
@@ -71,7 +72,7 @@ trait TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""IF 1 = 1 THEN {2} ELSE {1} ]""") { rewriterType: String =>
+  test("""IF 1 = 1 THEN {2} ELSE {1} ]""") { rewriterType: SMTEncoding =>
     val ifThenElse = ite(eql(int(1), int(1)) ? "b", enumSet(int(2)) ? "I", enumSet(int(1)) ? "I")
     val eq = eql(enumSet(int(2)) ? "I", ifThenElse ? "I")
       .typed(types, "b")
@@ -80,7 +81,7 @@ trait TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""SE-ITE[5]: IF 2 < 3 THEN {1, 2} ELSE {2, 3} ~~> {1, 2}""") { rewriterType: String =>
+  test("""SE-ITE[5]: IF 2 < 3 THEN {1, 2} ELSE {2, 3} ~~> {1, 2}""") { rewriterType: SMTEncoding =>
     val pred = lt(int(2), int(3))
     val e1 = enumSet(int(1), int(2))
     val e2 = enumSet(int(2), int(3))
@@ -93,7 +94,7 @@ trait TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""1 + (IF 3 < 2 THEN 4 ELSE 1)""") { rewriterType: String =>
+  test("""1 + (IF 3 < 2 THEN 4 ELSE 1)""") { rewriterType: SMTEncoding =>
     val pred = lt(int(3), int(2))
     val e1 = int(4)
     val e2 = int(1)
@@ -106,7 +107,7 @@ trait TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
   }
 
   // LET-IN is often used to cache computation results
-  test("""LET A == 1 + 2 IN 1 + A equals 4""") { rewriterType: String =>
+  test("""LET A == 1 + 2 IN 1 + A equals 4""") { rewriterType: SMTEncoding =>
     val decl = declOp("A", plus(int(1), int(2)) ? "i")
       .typedOperDecl(types, "O")
     val let = letIn(plus(int(1), appOp(name("A") ? "O") ? "i") ? "i", decl)

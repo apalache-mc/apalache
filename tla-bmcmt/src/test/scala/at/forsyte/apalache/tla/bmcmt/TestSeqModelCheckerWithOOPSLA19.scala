@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.EncodingBase._
+import at.forsyte.apalache.tla.bmcmt.SMTEncodings._
 import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStoreImpl
 import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig}
 import org.junit.runner.RunWith
@@ -11,7 +11,7 @@ import org.scalatest.junit.JUnitRunner
 class TestSeqModelCheckerWithOOPSLA19 extends TestSeqModelCheckerTrait {
   override protected def withFixture(test: OneArgTest): Outcome = {
     val solver = RecordingSolverContext.createZ3(None,
-        SolverConfig(debug = false, profile = false, 0, smtEncoding = oopsla19EncodingType))
+        SolverConfig(debug = false, profile = false, 0, smtEncoding = oopsla19Encoding))
     val rewriter = new SymbStateRewriterImpl(solver, new ExprGradeStoreImpl)
     test(rewriter)
   }

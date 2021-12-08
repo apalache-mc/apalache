@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.SMTEncodings._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
@@ -14,7 +15,7 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
         "b_to_b" -> FunT1(BoolT1(), BoolT1()), "b_TO_b" -> SetT1(FunT1(BoolT1(), BoolT1())),
         "i_to_b_to_b" -> FunT1(IntT1(), FunT1(BoolT1(), BoolT1())))
 
-  test("""[x \in {1,2,3,4} |-> x / 3: ]""") { rewriterType: String =>
+  test("""[x \in {1,2,3,4} |-> x / 3: ]""") { rewriterType: SMTEncoding =>
     val set = enumSet(1.to(4).map(int): _*)
       .typed(types, "I")
     val mapping = div(name("x") ? "i", int(3))
@@ -42,7 +43,7 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     }
   }
 
-  test(""" [x \in {1,2,3} |-> IF x = 1 THEN {2} ELSE IF x = 2 THEN {3} ELSE {1} ]""") { rewriterType: String =>
+  test(""" [x \in {1,2,3} |-> IF x = 1 THEN {2} ELSE IF x = 2 THEN {3} ELSE {1} ]""") { rewriterType: SMTEncoding =>
     val set = enumSet(1.to(3).map(int): _*)
       .typed(types, "I")
 
@@ -68,7 +69,7 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""[x \in {1,2} |-> {} ][1] = {}""") { rewriterType: String =>
+  test("""[x \in {1,2} |-> {} ][1] = {}""") { rewriterType: SMTEncoding =>
     val set = enumSet(int(1), int(2))
       .typed(types, "I")
     val mapping = enumSet()
@@ -96,7 +97,7 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""[x \in {1,2} |-> IF x = 1 THEN {2} ELSE {1} ][1]""") { rewriterType: String =>
+  test("""[x \in {1,2} |-> IF x = 1 THEN {2} ELSE {1} ][1]""") { rewriterType: SMTEncoding =>
     val set = enumSet(int(1), int(2))
       .typed(types, "I")
     val mapping = ite(eql(name("x") ? "i", int(1)) ? "b", enumSet(int(2)) ? "I", enumSet(int(1)) ? "I")
@@ -127,7 +128,7 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
   }
 
   // regression: this test did not work with EWD840
-  test("""[x \in {1,2} |-> ["a" |-> x] ][1]""") { rewriterType: String =>
+  test("""[x \in {1,2} |-> ["a" |-> x] ][1]""") { rewriterType: SMTEncoding =>
     val set = enumSet(int(1), int(2))
       .typed(types, "I")
     val mapping = enumFun(str("a"), name("x") ? "i")
@@ -157,7 +158,7 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""f[4]""") { rewriterType: String =>
+  test("""f[4]""") { rewriterType: SMTEncoding =>
     val set = enumSet(1.to(4).map(int): _*)
       .typed(types, "I")
     val mapping = mult(name("x"), int(3))
@@ -196,7 +197,7 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""[x \in {1, 2} |-> x][4] ~~> failure!""") { rewriterType: String =>
+  test("""[x \in {1, 2} |-> x][4] ~~> failure!""") { rewriterType: SMTEncoding =>
     val set = enumSet(int(1), int(2))
       .typed(types, "I")
     val fun = funDef(name("x") ? "i", name("x") ? "i", set)
@@ -223,7 +224,7 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
   // Raft is directly using f @@ e :> r to construct a function g such as:
   // DOMAIN g = {e} \cup DOMAIN f and g[e] = r and g[a] = f[a] for a \in DOMAIN f
   // It is trivial to implement this extension with our encoding
-  test("""[x \in {1, 2} |-> x] @@ 3 :> 4""") { rewriterType: String =>
+  test("""[x \in {1, 2} |-> x] @@ 3 :> 4""") { rewriterType: SMTEncoding =>
     val set = enumSet(int(1), int(2))
     val fun = funDef(name("x") ? "i", name("x") ? "i", set ? "I")
     val extFun = atat(fun ? "i_to_i", colonGreater(int(3), int(4)) ? "i_to_i")
@@ -237,7 +238,7 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(rewriter, extState.setRex(eq1))
   }
 
-  test("""[x \in {3} |-> {1, x}][3]""") { rewriterType: String =>
+  test("""[x \in {3} |-> {1, x}][3]""") { rewriterType: SMTEncoding =>
     val set = enumSet(int(3))
     val mapping = enumSet(int(1), name("x") ? "i")
     val fun = funDef(mapping ? "I", name("x") ? "i", set ? "I")
@@ -251,7 +252,7 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(rewriter, state.setRex(appEq))
   }
 
-  test("""[x \in {} |-> x][3]""") { rewriterType: String =>
+  test("""[x \in {} |-> x][3]""") { rewriterType: SMTEncoding =>
     // regression: function application with an empty domain should not crash.
     // The result of this function is undefined in TLA+.
     val fun = funDef(name("x") ? "i", name("x") ? "i", enumSet() ? "I")
@@ -263,7 +264,7 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     assert(solverContext.sat())
   }
 
-  test("""[y \in BOOLEAN |-> ~y] = [x \in BOOLEAN |-> ~x]""") { rewriterType: String =>
+  test("""[y \in BOOLEAN |-> ~y] = [x \in BOOLEAN |-> ~x]""") { rewriterType: SMTEncoding =>
     val fun1 = funDef(not(name("y") ? "b") ? "b", name("y") ? "b", booleanSet() ? "B")
       .typed(types, "b_to_b")
     val fun2 = funDef(not(name("x") ? "b") ? "b", name("x") ? "b", booleanSet() ? "B")
@@ -277,7 +278,7 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
   }
 
   // a function returning a function
-  test("""[x \in {3} |-> [y \in BOOLEAN |-> ~y]][3]""") { rewriterType: String =>
+  test("""[x \in {3} |-> [y \in BOOLEAN |-> ~y]][3]""") { rewriterType: SMTEncoding =>
     val boolNegFun = funDef(not(name("y") ? "b") ? "b", name("y") ? "b", booleanSet() ? "B")
       .typed(types, "b_to_b")
 
@@ -294,7 +295,7 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""[x \in {1, 2} |-> IF x = 1 THEN 11 ELSE 2 * x][1]""") { rewriterType: String =>
+  test("""[x \in {1, 2} |-> IF x = 1 THEN 11 ELSE 2 * x][1]""") { rewriterType: SMTEncoding =>
     val set = enumSet(int(1), int(2))
     val pred = eql(name("x") ? "i", int(1))
     val ifThenElse = ite(pred ? "b", int(11), mult(int(2), name("x") ? "i") ? "i")
@@ -308,7 +309,7 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""[[x \in {1, 2} |-> 2 * x] EXCEPT ![1] = 11]""") { rewriterType: String =>
+  test("""[[x \in {1, 2} |-> 2 * x] EXCEPT ![1] = 11]""") { rewriterType: SMTEncoding =>
     val set = enumSet(int(1), int(2))
     val mapExpr = mult(int(2), name("x") ? "i")
     val fun = funDef(mapExpr ? "i", name("x") ? "i", set ? "I")
@@ -339,7 +340,7 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(rewriter, nextState.setRex(resFun1eq11))
   }
 
-  test("""[[x \in {"a", "b"} |-> 3] EXCEPT !["a"] = 11]""") { rewriterType: String =>
+  test("""[[x \in {"a", "b"} |-> 3] EXCEPT !["a"] = 11]""") { rewriterType: SMTEncoding =>
     val set = enumSet(str("a"), str("b"))
     val mapExpr = int(3)
     val fun = funDef(mapExpr ? "i", name("x") ? "s", set ? "S")
@@ -354,7 +355,7 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(rewriter, state.setRex(resFun1eq11))
   }
 
-  test("""fun in a set: \E x \in {[y \in BOOLEAN |-> ~y]}: x[FALSE]""") { rewriterType: String =>
+  test("""fun in a set: \E x \in {[y \in BOOLEAN |-> ~y]}: x[FALSE]""") { rewriterType: SMTEncoding =>
     // this test was failing in the buggy implementation with PICK .. FROM and FUN-MERGE
     val fun1 = funDef(not(name("y") ? "b") ? "b", name("y") ? "b", booleanSet() ? "B")
       .typed(types, "b_to_b")
@@ -369,7 +370,7 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""DOMAIN [x \in {1,2,3} |-> x / 2: ]""") { rewriterType: String =>
+  test("""DOMAIN [x \in {1,2,3} |-> x / 2: ]""") { rewriterType: SMTEncoding =>
     val set = enumSet(int(1), int(2), int(3))
     val mapping = div(name("x"), int(2))
     val fun = funDef(mapping ? "i", name("x") ? "i", set ? "I")

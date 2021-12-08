@@ -1,5 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
+import at.forsyte.apalache.tla.bmcmt.SMTEncodings._
+
 /**
  * Configuration option to be passed to SolverContext. This class is declared as a case class
  * to enable the concise copy syntax of Scala.
@@ -11,12 +13,13 @@ package at.forsyte.apalache.tla.bmcmt.smt
  *
  * @author Igor Konnov, Rodrigo Otoni
  */
-sealed case class SolverConfig(debug: Boolean, profile: Boolean, randomSeed: Int, smtEncoding: String) {}
+sealed case class SolverConfig(debug: Boolean, profile: Boolean, randomSeed: Int, smtEncoding: SMTEncoding) {}
 
 object SolverConfig {
 
   /**
    * Get the default configuration.
    */
-  val default: SolverConfig = new SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = "oopsla19")
+  val default: SolverConfig =
+    new SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = oopsla19Encoding)
 }

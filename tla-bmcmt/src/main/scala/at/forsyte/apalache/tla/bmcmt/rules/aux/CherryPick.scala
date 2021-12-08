@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
+import at.forsyte.apalache.tla.bmcmt.SMTEncodings._
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -321,7 +322,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
             val ite = tla.ite(tla.apalacheSelectInSet(keyCell.toNameEx, dom.toNameEx),
                 tla.apalacheStoreInSet(keyCell.toNameEx, newDom.toNameEx),
                 tla.apalacheStoreNotInSet(keyCell.toNameEx, newDom.toNameEx))
-            val unchangedSet = if (rewriter.solverContext.config.smtEncoding == "arrays") {
+            val unchangedSet = if (rewriter.solverContext.config.smtEncoding == arraysEncoding) {
               // In the arrays encoding we need to propagate the SSA representation of the array if nothing changes
               tla.apalacheStoreNotInSet(keyCell.toNameEx, newDom.toNameEx)
             } else {
@@ -454,7 +455,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
           val inSet = tla.ite(tla.apalacheSelectInSet(elemAndSet._1.toNameEx, elemAndSet._2.toNameEx),
               tla.apalacheStoreInSet(picked.toNameEx, resultCell.toNameEx),
               tla.apalacheStoreNotInSet(picked.toNameEx, resultCell.toNameEx))
-          val unchangedSet = if (rewriter.solverContext.config.smtEncoding == "arrays") {
+          val unchangedSet = if (rewriter.solverContext.config.smtEncoding == arraysEncoding) {
             // In the arrays encoding we need to propagate the SSA representation of the array if nothing changes
             tla.apalacheStoreNotInSet(picked.toNameEx, resultCell.toNameEx)
           } else {
@@ -615,7 +616,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       // In the oopsla19 encoding resultSet is initially unconstrained, and thus can contain any combination of elems.
       // To emulate this in the arrays encoding, in which the all sets are initially empty, unconstrained predicates
       // are used to allow the SMT solver to consider all possible combinations of elems.
-      if (rewriter.solverContext.config.smtEncoding == "arrays") {
+      if (rewriter.solverContext.config.smtEncoding == arraysEncoding) {
         nextState = nextState.updateArena(_.appendCell(BoolT()))
         val pred = nextState.arena.topCell.toNameEx
         val storeElem = tla.apalacheStoreInSet(elem.toNameEx, resultSet.toNameEx)
