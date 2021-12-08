@@ -265,6 +265,11 @@ attempting to update an entry outside the function's domain will lead to no chan
 (assert (= (select finSucc_5 tuple_with_4) 16)) ; SAT
 ```
 
+In contrast to the current encoding, which produces a number of constraints that is linear in the
+size of the set approximating the function when encoding both function application and update,
+the new encoding will produce a single constraint for each operation. This will potentially lead
+to a significant increase in solving performance.
+
 ### Code changes
 
 The following changes will be made to implement the new encoding of functions:
