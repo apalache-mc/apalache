@@ -43,7 +43,8 @@ class OfflineExecutionContext(var rewriter: SymbStateRewriter)
     // TODO: issue #105, remove references to SolverContext, so recovery becomes less of a hack
     val newRewriter = rewriter match {
       case _: SymbStateRewriterImplWithArrays => new SymbStateRewriterImplWithArrays(solver, rewriter.exprGradeStore)
-      case _                                  => new SymbStateRewriterImpl(solver, rewriter.exprGradeStore)
+      case _: SymbStateRewriterImpl           => new SymbStateRewriterImpl(solver, rewriter.exprGradeStore)
+      case oddRewriterType                    => throw new IllegalArgumentException(s"Unexpected rewriter of type $oddRewriterType")
     }
     newRewriter.formulaHintsStore = rewriter.formulaHintsStore
     newRewriter.config = rewriter.config

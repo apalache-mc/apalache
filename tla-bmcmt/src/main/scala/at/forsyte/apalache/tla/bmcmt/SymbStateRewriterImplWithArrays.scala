@@ -11,7 +11,6 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * This class extends SymbStateRewriterImpl with encoding rules for the encoding with SMT arrays.
- * TODO: enforce that _solverContext.config.smtEncoding is correct?
  *
  * @param _solverContext   a fresh solver context that will be populated with constraints
  * @param exprGradeStore   a labeling scheme that associated a grade with each expression;
