@@ -180,12 +180,12 @@ The new encoding of functions will thus encompass sequences, as their tuple repr
 intended to be kept.
 
 The new encoding will, like the current one, also map tuples of arguments to return values, but
-will do so natively  instead of simply relying on sets. A function will be represented by two SMT
+will do so natively instead of simply relying on sets. A function will be represented by two SMT
 arrays. The first array will store the domain of the function and will be encoded as a standard 
 TLA+ set. The second array will store the mappings, having sort `<S1,...,Sn>` as its domain, with
 `Si` being the sort of argument `i`, and the sort of the function's codomain as its range. 
 The sorts of the array domain and range can be infinite, but the domain of the function itself,
-and by implication the number of mappings, will always be finite.
+and by implication the number of mappings tuples, will always be finite.
 
 To encode the TLA+ function `finSucc = [x \in {1,2,3} |-> x + 1 ]`, which computes the successors
 of integers from `1` to `3`, we first have to declare its domain, as shown below; tuples are
