@@ -81,11 +81,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
     val tuning = options.getOrElse[Map[String, String]]("general", "tuning", Map[String, String]())
     val debug = options.getOrElse[Boolean]("general", "debug", false)
     val saveDir = options.getOrError[Path]("io", "outdir").toFile
-    val smtEncoding = options.get[Option[String]]("checker", "smt-encoding").flatten.getOrElse("oopsla19") match {
-      case "oopsla19"      => oopsla19Encoding
-      case "arrays"        => arraysEncoding
-      case oddEncodingType => throw new IllegalArgumentException(s"Unexpected SMT encoding type $oddEncodingType")
-    }
+    val smtEncoding = options.getOrError[SMTEncoding]("checker", "smt-encoding")
 
     val params = new ModelCheckerParams(input, stepsBound, saveDir, tuning, debug)
     params.discardDisabled = options.getOrElse[Boolean]("checker", "discardDisabled", true)
