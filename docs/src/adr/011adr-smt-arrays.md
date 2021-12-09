@@ -1,8 +1,8 @@
 # ADR-011: alternative SMT encoding using arrays
 
 | author        | revision |
-| ------------- | --------:|
-| Rodrigo Otoni |      1.2 |
+| ------------- |---------:|
+| Rodrigo Otoni |      1.3 |
 
 This ADR describes an alternative encoding of the [KerA+] fragment of TLA+ into SMT.
 Compound data structures, e.g. sets, are currently encoded using the [core theory] of SMT,
@@ -169,11 +169,117 @@ The following changes will be made to implement the new encoding of sets:
     (assert (= (select set_1 7) false)) ; Without the list we would query set_3 here 
     ```
 
-## 4. Encoding tuples and records
+## 4. Encoding functions and sequences
 
-TODO
+Functions are currently encoded as sets of pairs, with each pair representing a mapping present in
+the function. The first element of a pair is a tuple containing some function arguments and the second
+element is the return value given by such arguments. The handling of functions is thus given by 
+operations over sets and tuples. Sequences of type `T` are currently encoded as tuples of form
+`⟨start,end,fun⟩`, where `start` and `end` are integers and `fun` is a function from integers to `T`.
+The new encoding of functions will thus encompass sequences, as their tuple representations is
+intended to be kept.
 
-## 5. Encoding functions and sequences
+The new encoding will, like the current one, also map tuples of arguments to return values, but
+will do so natively instead of simply relying on sets. A function will be represented by two SMT
+arrays. The first array will store the domain of the function and will be encoded as a standard 
+TLA+ set. The second array will store the mappings, having sort `<S1,...,Sn>` as its domain, with
+`Si` being the sort of argument `i`, and the sort of the function's codomain as its range. 
+The sorts of the array domain and range can be infinite, but the domain of the function itself,
+and by implication the number of mappings tuples, will always be finite.
+
+To encode the TLA+ function `finSucc = [x \in {1,2,3} |-> x + 1 ]`, which computes the successors
+of integers from `1` to `3`, we first have to declare its domain, as shown below; tuples are
+represented here as per the OOPSLA'19 encoding.
+
+```
+(declare-sort Tuple_Int 0) ; Sort of <Int>
+(declare-const tuple_with_1 Tuple_Int) ; <1>
+(declare-const tuple_with_2 Tuple_Int) ; <2>
+(declare-const tuple_with_3 Tuple_Int) ; <3>
+
+(declare-const finSucc_domain_0 (Array Tuple_Int Bool))
+(declare-const finSucc_domain_1 (Array Tuple_Int Bool))
+(declare-const finSucc_domain_2 (Array Tuple_Int Bool))
+(declare-const finSucc_domain_3 (Array Tuple_Int Bool))
+
+(assert (= finSucc_domain_0 ((as const (Array Tuple_Int Bool)) false)))  ; {}
+(assert (= finSucc_domain_1 (store finSucc_domain_0 tuple_with_1 true))) ; {<1>}
+(assert (= finSucc_domain_2 (store finSucc_domain_1 tuple_with_2 true))) ; {<1>,<2>}
+(assert (= finSucc_domain_3 (store finSucc_domain_2 tuple_with_3 true))) ; {<1>,<2>,<3>}
+```
+
+The array storing the function's domain is used to guard the definition of the array storing the
+function's mappings, since mappings should only be present for values in the domain. The array
+storing the mappings of `finSucc` is shown below.
+
+```
+(declare-const finSucc_0 (Array Tuple_Int Int))
+(declare-const finSucc_1 (Array Tuple_Int Int))
+(declare-const finSucc_2 (Array Tuple_Int Int))
+(declare-const finSucc_3 (Array Tuple_Int Int))
+
+(assert (ite (select finSucc_domain_3 tuple_with_1)
+             (= finSucc_1 (store finSucc_0 tuple_with_1 2))
+             (= finSucc_1 finSucc_0)))
+(assert (ite (select finSucc_domain_3 tuple_with_2)
+             (= finSucc_2 (store finSucc_1 tuple_with_2 3))
+             (= finSucc_2 finSucc_1)))
+(assert (ite (select finSucc_domain_3 tuple_with_3)
+             (= finSucc_3 (store finSucc_2 tuple_with_3 4))
+             (= finSucc_3 finSucc_2)))
+```
+
+Note that, unlike with the new encoding for sets, we do not use constant arrays. The reason is that
+the function's domain cannot be altered, so the array has to constrain only the values in said domain.
+Function application can be done by simply accessing the array at the index of the passed arguments.
+A function application with arguments outside the function's domain leads to an unspecified result in
+TLA+, which is perfectly captured by unconstrained entries in the SMT array. Below are some examples
+of function application.
+
+```
+(assert (= (select finSucc_3 tuple_with_1) 2)) ; SAT
+(assert (= (select finSucc_3 tuple_with_2) 3)) ; SAT
+(assert (= (select finSucc_3 tuple_with_3) 4)) ; SAT
+
+(declare-const tuple_with_4 Tuple_Int) ; <4>
+(assert (= (select finSucc_3 tuple_with_4) 16)) ; SAT
+```
+
+Although a function's domain cannot be altered, its image can be changed via the TLA+ function
+update operator. The update will be encoded as a guarded array update, as illustrated below;
+attempting to update an entry outside the function's domain will lead to no change happening.
+
+```
+(declare-const finSucc_4 (Array Tuple_Int Int))
+(declare-const finSucc_5 (Array Tuple_Int Int))
+
+(assert (ite (select finSucc_domain_3 tuple_with_1) ; [finSucc EXCEPT ![1] = 9]
+             (= finSucc_4 (store finSucc_3 tuple_with_1 9))
+             (= finSucc_4 finSucc_3)))
+(assert (ite (select finSucc_domain_3 tuple_with_4) ; [finSucc EXCEPT ![4] = 25]
+             (= finSucc_5 (store finSucc_4 tuple_with_4 25))
+             (= finSucc_5 finSucc_4)))
+
+(assert (= (select finSucc_5 tuple_with_1) 2))  ; UNSAT
+(assert (= (select finSucc_5 tuple_with_1) 9))  ; SAT
+(assert (= (select finSucc_5 tuple_with_4) 16)) ; SAT
+```
+
+In contrast to the current encoding, which produces a number of constraints that is linear in the
+size of the set approximating the function when encoding both function application and update,
+the new encoding will produce a single constraint for each operation. This will potentially lead
+to a significant increase in solving performance.
+
+### Code changes
+
+The following changes will be made to implement the new encoding of functions:
+
+- Add alternative rewriting rules for functions when appropriate, by extending the existing rules. The
+  same caveats stated for the rewriting rules for sets will apply here.
+- Update class `SymbStateRewriterImplWithArrays` with the rules for functions.
+- Update class `Z3SolverContext` to handle the new SMT constraints over arrays.
+
+## 5. Encoding tuples and records
 
 TODO
 
