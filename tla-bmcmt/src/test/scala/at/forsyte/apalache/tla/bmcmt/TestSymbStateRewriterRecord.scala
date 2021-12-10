@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.SMTEncodings._
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, ConstT, FinSetT, IntT, RecordT}
 import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, NameEx, RecT1, SetT1, StrT1, TupT1}
 import at.forsyte.apalache.tla.lir.convenience.tla._

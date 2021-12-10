@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.SMTEncodings._
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.NoRule
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, IntT}
 import at.forsyte.apalache.tla.lir.TypedPredefs._

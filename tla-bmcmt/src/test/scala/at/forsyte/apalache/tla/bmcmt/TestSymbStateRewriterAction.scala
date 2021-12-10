@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.SMTEncodings._
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.Continue
 import at.forsyte.apalache.tla.bmcmt.types.IntT
 import at.forsyte.apalache.tla.lir.NameEx

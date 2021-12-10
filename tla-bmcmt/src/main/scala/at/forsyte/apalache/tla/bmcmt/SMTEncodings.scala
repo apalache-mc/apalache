@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-object SMTEncodings extends Enumeration {
-  type SMTEncoding = Value
-  val oopsla19Encoding, arraysEncoding, invalidEncoding = Value
-}
+sealed trait SMTEncoding
+
+case object oopsla19Encoding extends SMTEncoding
+case object arraysEncoding extends SMTEncoding

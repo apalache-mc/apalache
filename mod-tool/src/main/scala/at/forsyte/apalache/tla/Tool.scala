@@ -9,7 +9,6 @@ import at.forsyte.apalache.infra.passes.{PassChainExecutor, PassOptions, TlaModu
 import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorMessage, PassOptionException}
 import at.forsyte.apalache.io.{OutputManager, ReportGenerator}
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
-import at.forsyte.apalache.tla.bmcmt.SMTEncodings._
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.tooling.{ExitCodes, Version}
 import at.forsyte.apalache.tla.tooling.opt.{CheckCmd, ConfigCmd, General, ParseCmd, TestCmd, TypeCheckCmd}
@@ -186,12 +185,6 @@ object Tool extends LazyLogging {
     tuning = overrideProperties(tuning, check.tuningOptions)
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
-    val smtEncoding: SMTEncoding = check.smtEncoding.getOrElse("oopsla19") match {
-      case "arrays"        => arraysEncoding
-      case "oopsla19"      => oopsla19Encoding
-      case oddEncodingType => throw new IllegalArgumentException(s"Unexpected SMT encoding type $oddEncodingType")
-    }
-
     executor.options.set("general.tuning", tuning)
     executor.options.set("parser.filename", check.file.getAbsolutePath)
     if (check.config != "")
@@ -209,7 +202,7 @@ object Tool extends LazyLogging {
     executor.options.set("checker.discardDisabled", check.discardDisabled)
     executor.options.set("checker.noDeadlocks", check.noDeadlocks)
     executor.options.set("checker.algo", check.algo)
-    executor.options.set("checker.smt-encoding", smtEncoding)
+    executor.options.set("checker.smt-encoding", check.smtEncoding)
     executor.options.set("checker.maxError", check.maxError)
     if (check.view != "")
       executor.options.set("checker.view", check.view)

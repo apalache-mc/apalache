@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
-import at.forsyte.apalache.tla.bmcmt.SMTEncodings._
+import at.forsyte.apalache.tla.bmcmt.oopsla19Encoding
 import org.junit.runner.RunWith
 import org.scalatest.Outcome
 import org.scalatest.junit.JUnitRunner
