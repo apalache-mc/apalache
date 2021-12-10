@@ -47,7 +47,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   }
 
   private def arraysEnabled(): Boolean = {
-    config.smtEncoding == "arrays"
+    config.smtEncoding == arraysEncoding
   }
 
   var level: Int = 0

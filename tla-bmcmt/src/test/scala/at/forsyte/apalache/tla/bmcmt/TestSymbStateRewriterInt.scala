@@ -10,7 +10,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
   private val Bool = BoolT1()
   private val IntSet = SetT1(IntT1())
 
-  test("$C$_i: Int = $C$_j: Int") { rewriterType: String =>
+  test("$C$_i: Int = $C$_j: Int") { rewriterType: SMTEncoding =>
     arena = arena.appendCell(IntT())
     val leftCell = arena.topCell
     arena = arena.appendCell(IntT())
@@ -50,7 +50,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     }
   }
 
-  test("$Z$Int = $Z$j ~~> $B$k") { rewriterType: String =>
+  test("$Z$Int = $Z$j ~~> $B$k") { rewriterType: SMTEncoding =>
     arena = arena.appendCell(IntT())
     val leftInt = arena.topCell.toNameEx
     arena = arena.appendCell(IntT())
@@ -85,7 +85,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
         fail("Unexpected rewriting result")
     }
   }
-  test("$C$_i: Int < $C$_j: Int ~~> valInt(...) < valInt(...)") { rewriterType: String =>
+  test("$C$_i: Int < $C$_j: Int ~~> valInt(...) < valInt(...)") { rewriterType: SMTEncoding =>
     arena = arena.appendCell(IntT())
     val leftCell = arena.topCell
     arena = arena.appendCell(IntT())
@@ -115,7 +115,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     }
   }
 
-  test("$C$_i: Int <= $C$_j: Int ~~> valInt(...) <= valInt(...)") { rewriterType: String =>
+  test("$C$_i: Int <= $C$_j: Int ~~> valInt(...) <= valInt(...)") { rewriterType: SMTEncoding =>
     arena = arena.appendCell(IntT())
     val leftCell = arena.topCell
     arena = arena.appendCell(IntT())
@@ -145,7 +145,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     }
   }
 
-  test("$C$_i: Int > $C$_j: Int ~~> valInt(...) > valInt(...)") { rewriterType: String =>
+  test("$C$_i: Int > $C$_j: Int ~~> valInt(...) > valInt(...)") { rewriterType: SMTEncoding =>
     arena = arena.appendCell(IntT())
     val leftCell = arena.topCell
     arena = arena.appendCell(IntT())
@@ -175,7 +175,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     }
   }
 
-  test("(composite expressions): 1 + 5 > 6 - 3 ~~> $B$_k") { rewriterType: String =>
+  test("(composite expressions): 1 + 5 > 6 - 3 ~~> $B$_k") { rewriterType: SMTEncoding =>
     val left = plus(int(1), int(5)).typed(IntT1())
     val right = minus(int(6), int(3)).typed(IntT1())
     val state = new SymbState(gt(left, right).typed(BoolT1()), arena, Binding())
@@ -196,7 +196,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     }
   }
 
-  test("$C$_i: Int >= $C$_j: Int ~~> valInt(...) >= valInt(...)") { rewriterType: String =>
+  test("$C$_i: Int >= $C$_j: Int ~~> valInt(...) >= valInt(...)") { rewriterType: SMTEncoding =>
     arena = arena.appendCell(IntT())
     val leftCell = arena.topCell
     arena = arena.appendCell(IntT())
@@ -226,7 +226,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     }
   }
 
-  test("~($Z$Int = $Z$j) ~~> $B$k") { rewriterType: String =>
+  test("~($Z$Int = $Z$j) ~~> $B$k") { rewriterType: SMTEncoding =>
     arena = arena.appendCell(IntT())
     val leftInt = arena.topCell.toNameEx
     arena = arena.appendCell(IntT())
@@ -263,7 +263,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     }
   }
 
-  test("$Z$Int + $Z$j ~~> $Z$k") { rewriterType: String =>
+  test("$Z$Int + $Z$j ~~> $Z$k") { rewriterType: SMTEncoding =>
     arena = arena.appendCell(IntT())
     val leftInt = arena.topCell.toNameEx
     arena = arena.appendCell(IntT())
@@ -291,7 +291,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     }
   }
 
-  test("$Z$Int - $Z$j ~~> $Z$k") { rewriterType: String =>
+  test("$Z$Int - $Z$j ~~> $Z$k") { rewriterType: SMTEncoding =>
     arena = arena.appendCell(IntT())
     val leftInt = arena.topCell.toNameEx
     arena = arena.appendCell(IntT())
@@ -319,7 +319,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     }
   }
 
-  test("-$Z$j ~~> $Z$k") { rewriterType: String =>
+  test("-$Z$j ~~> $Z$k") { rewriterType: SMTEncoding =>
     arena = arena.appendCell(IntT())
     val leftInt = arena.topCell.toNameEx
     val expr = uminus(leftInt as Int) as Int
@@ -343,7 +343,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     }
   }
 
-  test("$Z$Int * $Z$j ~~> $Z$k") { rewriterType: String =>
+  test("$Z$Int * $Z$j ~~> $Z$k") { rewriterType: SMTEncoding =>
     arena = arena.appendCell(IntT())
     val leftInt = arena.topCell.toNameEx
     arena = arena.appendCell(IntT())
@@ -371,7 +371,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     }
   }
 
-  test("$Z$Int / $Z$j ~~> $Z$k") { rewriterType: String =>
+  test("$Z$Int / $Z$j ~~> $Z$k") { rewriterType: SMTEncoding =>
     arena = arena.appendCell(IntT())
     val leftInt = arena.topCell.toNameEx
     arena = arena.appendCell(IntT())
@@ -399,7 +399,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     }
   }
 
-  test("$Z$Int % $Z$j ~~> $Z$k") { rewriterType: String =>
+  test("$Z$Int % $Z$j ~~> $Z$k") { rewriterType: SMTEncoding =>
     arena = arena.appendCell(IntT())
     val leftInt = arena.topCell.toNameEx
     arena = arena.appendCell(IntT())
@@ -427,7 +427,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     }
   }
 
-  test("""2..5  = {2, 3, 4, 5}""") { rewriterType: String =>
+  test("""2..5  = {2, 3, 4, 5}""") { rewriterType: SMTEncoding =>
     val expected = enumSet(2.until(6).map(int): _*).typed(SetT1(IntT1()))
     val range = dotdot(int(2), int(5)).typed(SetT1(IntT1()))
     val eqExpected = eql(range, expected).typed(BoolT1())
@@ -451,7 +451,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     }
   }
 
-  test("""SE-INT-RNG: 2..(6 - 1)  = {2, 3, 4, 5}""") { rewriterType: String =>
+  test("""SE-INT-RNG: 2..(6 - 1)  = {2, 3, 4, 5}""") { rewriterType: SMTEncoding =>
     val expected = enumSet(2.to(5).map(int): _*).typed(SetT1(IntT1()))
     val range = dotdot(int(2), minus(int(6), int(1)) as Int) as IntSet
     val eqExpected = eql(range, expected).typed(BoolT1())

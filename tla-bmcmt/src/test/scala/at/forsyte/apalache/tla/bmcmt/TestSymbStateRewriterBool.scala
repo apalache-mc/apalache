@@ -24,7 +24,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     xyBinding = Binding("x" -> x, "y" -> y, "S" -> set)
   }
 
-  test("FALSE ~~> $C$0") { rewriterType: String =>
+  test("FALSE ~~> $C$0") { rewriterType: SMTEncoding =>
     prepareArena()
     val ex = tla.bool(false).typed()
     val state = new SymbState(ex, arena, Binding())
@@ -39,7 +39,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("TRUE ~~> $C$1") { rewriterType: String =>
+  test("TRUE ~~> $C$1") { rewriterType: SMTEncoding =>
     prepareArena()
     val ex = tla.bool(true).typed()
     val state = new SymbState(ex, arena, Binding())
@@ -54,7 +54,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("BOOLEAN ~~> c_BOOLEAN") { rewriterType: String =>
+  test("BOOLEAN ~~> c_BOOLEAN") { rewriterType: SMTEncoding =>
     prepareArena()
     val boolset = tla.booleanSet().typed(SetT1(BoolT1()))
     val state = new SymbState(boolset, arena, Binding())
@@ -69,7 +69,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("x => y ~~> ~x \\/ y") { rewriterType: String =>
+  test("x => y ~~> ~x \\/ y") { rewriterType: SMTEncoding =>
     // outside of KerA+, should be handled by Keramelizer and Normalizer
     prepareArena()
     val ex = tla
@@ -79,7 +79,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     assert(NoRule() == create(rewriterType).rewriteOnce(state))
   }
 
-  test("x <=> y") { rewriterType: String =>
+  test("x <=> y") { rewriterType: SMTEncoding =>
     // outside of KerA+, should be handled by Keramelizer and Normalizer
     arena = arena.appendCell(BoolT())
     val left = arena.topCell
@@ -92,7 +92,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     assert(NoRule() == create(rewriterType).rewriteOnce(state))
   }
 
-  test("""IF-THEN-ELSE with \E: IF \E i \in {}: x' \in {i} THEN x' ELSE 0""") { rewriterType: String =>
+  test("""IF-THEN-ELSE with \E: IF \E i \in {}: x' \in {i} THEN x' ELSE 0""") { rewriterType: SMTEncoding =>
     // this tricky test comes from Bakery, where an assignment is made in one branch of a conjunction
     prepareArena()
     val exists =
@@ -112,7 +112,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
-  test("""~c_i ~~> b_new""") { rewriterType: String =>
+  test("""~c_i ~~> b_new""") { rewriterType: SMTEncoding =>
     prepareArena()
     arena = arena.appendCell(BoolT())
     val cell = arena.topCell
@@ -144,7 +144,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""~x ~~> TRUE""") { rewriterType: String =>
+  test("""~x ~~> TRUE""") { rewriterType: SMTEncoding =>
     prepareArena()
     val ex = tla
       .not(tla.name("x") ? "b")
@@ -156,7 +156,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(rewriter, nextState.setRex(tla.eql(nextState.ex, tla.bool(true)).typed(BoolT1())))
   }
 
-  test("""FALSE = TRUE ~~> FALSE""") { rewriterType: String =>
+  test("""FALSE = TRUE ~~> FALSE""") { rewriterType: SMTEncoding =>
     prepareArena()
     val ex = tla
       .eql(arena.cellFalse().toNameEx ? "b", arena.cellTrue().toNameEx ? "b")
@@ -170,7 +170,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
-  test("""x = TRUE ~~> FALSE when x = FALSE""") { rewriterType: String =>
+  test("""x = TRUE ~~> FALSE when x = FALSE""") { rewriterType: SMTEncoding =>
     prepareArena()
     val ex = tla
       .eql(tla.name("x") ? "b", tla.bool(true) ? "b")
@@ -183,7 +183,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
-  test("""~(x = TRUE) ~~> TRUE when x = FALSE""") { rewriterType: String =>
+  test("""~(x = TRUE) ~~> TRUE when x = FALSE""") { rewriterType: SMTEncoding =>
     prepareArena()
     val ex = tla
       .not(tla.eql(tla.name("x") ? "b", tla.bool(true)) ? "b")
@@ -198,7 +198,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
-  test("""FALSE /\ TRUE ~~> $B$0""") { rewriterType: String =>
+  test("""FALSE /\ TRUE ~~> $B$0""") { rewriterType: SMTEncoding =>
     prepareArena()
     val ex = tla
       .and(tla.bool(false), tla.bool(true))
@@ -214,7 +214,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""c_1 /\ c_2 ~~> b_new""") { rewriterType: String =>
+  test("""c_1 /\ c_2 ~~> b_new""") { rewriterType: SMTEncoding =>
     prepareArena()
     arena = arena.appendCell(BoolT())
     val c1 = arena.topCell
@@ -259,7 +259,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""empty \/ ~~> $B$0""") { rewriterType: String =>
+  test("""empty \/ ~~> $B$0""") { rewriterType: SMTEncoding =>
     prepareArena()
     val ex = tla.or().typed(BoolT1())
     val state = new SymbState(ex, arena, Binding())
@@ -273,7 +273,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""empty /\ ~~> $B$1""") { rewriterType: String =>
+  test("""empty /\ ~~> $B$1""") { rewriterType: SMTEncoding =>
     prepareArena()
     val ex = tla.and().typed(BoolT1())
     val state = new SymbState(ex, arena, Binding())
@@ -287,7 +287,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""FALSE \/ TRUE ~~> $B$1""") { rewriterType: String =>
+  test("""FALSE \/ TRUE ~~> $B$1""") { rewriterType: SMTEncoding =>
     prepareArena()
     val ex = tla.or(tla.bool(false), tla.bool(true)).typed(BoolT1())
     val state = new SymbState(ex, arena, Binding())
@@ -301,7 +301,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""c_1 \/ c_2 ~~> b_new""") { rewriterType: String =>
+  test("""c_1 \/ c_2 ~~> b_new""") { rewriterType: SMTEncoding =>
     prepareArena()
     arena = arena.appendCell(BoolT())
     val left = arena.topCell
@@ -339,7 +339,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""~($B$1 = $B$2) ~~> $B$3""") { rewriterType: String =>
+  test("""~($B$1 = $B$2) ~~> $B$3""") { rewriterType: SMTEncoding =>
     prepareArena()
     arena = arena.appendCell(BoolT())
     val left = arena.topCell
@@ -400,7 +400,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""\E x \in {}: TRUE ~~> FALSE""") { rewriterType: String =>
+  test("""\E x \in {}: TRUE ~~> FALSE""") { rewriterType: SMTEncoding =>
     prepareArena()
     val ex = tla
       .exists(tla.name("x") ? "i", tla.enumSet() ? "I", tla.bool(true))
@@ -410,7 +410,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     assert(arena.cellFalse().toNameEx == nextState.ex)
   }
 
-  test("""\E x \in {1, 2, 3}: x = 2 ~~> $B$k""") { rewriterType: String =>
+  test("""\E x \in {1, 2, 3}: x = 2 ~~> $B$k""") { rewriterType: SMTEncoding =>
     prepareArena()
     val set123 = tla.enumSet(tla.int(1), tla.int(2), tla.int(3)).typed(SetT1(IntT1()))
     val ex =
@@ -430,7 +430,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
   }
 
   /** Jure, 9.12.19: Why should this throw? */
-  test("""\E x \in {1, 2}: y' := x ~~> 2 assignments, regression""") { rewriterType: String =>
+  test("""\E x \in {1, 2}: y' := x ~~> 2 assignments, regression""") { rewriterType: SMTEncoding =>
     prepareArena()
     val set12 = tla
       .enumSet(tla.int(1), tla.int(2))
@@ -477,7 +477,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     }
   }
 
-  test("""\E x \in {1, 2, 3}: x > 4 ~~> $B$k""") { rewriterType: String =>
+  test("""\E x \in {1, 2, 3}: x > 4 ~~> $B$k""") { rewriterType: SMTEncoding =>
     prepareArena()
     val set123 = tla.enumSet(tla.int(1), tla.int(2), tla.int(3)).typed(SetT1(IntT1()))
     val ex =
@@ -496,7 +496,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     assert(solverContext.sat())
   }
 
-  test("""\E x \in {t \in {1}: FALSE}: x > 4, regression""") { rewriterType: String =>
+  test("""\E x \in {t \in {1}: FALSE}: x > 4, regression""") { rewriterType: SMTEncoding =>
     prepareArena()
     def dynEmpty(left: TlaEx): TlaEx = {
       tla
@@ -519,7 +519,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(rewriter, nextState.setRex(tla.not(nextState.ex).typed(BoolT1())))
   }
 
-  test("""skolem: \E i \in Nat: i = 10 /\ x' \in {i}""") { rewriterType: String =>
+  test("""skolem: \E i \in Nat: i = 10 /\ x' \in {i}""") { rewriterType: SMTEncoding =>
     prepareArena()
     // this works for skolem constants only
     val ex =
@@ -543,7 +543,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(rewriter, nextState.setRex(eql))
   }
 
-  test("""skolemization over range: \E i \in a..b: i % 3 = 1 /\ x' \in {i}""") { rewriterType: String =>
+  test("""skolemization over range: \E i \in a..b: i % 3 = 1 /\ x' \in {i}""") { rewriterType: SMTEncoding =>
     // this works for skolem constants only
     prepareArena()
     val ex =
@@ -579,7 +579,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
-  test("""\A x \in {1, 2, 3}: x < 10 ~~> $B$k""") { rewriterType: String =>
+  test("""\A x \in {1, 2, 3}: x < 10 ~~> $B$k""") { rewriterType: SMTEncoding =>
     prepareArena()
     val set123 = tla.enumSet(tla.int(1), tla.int(2), tla.int(3)).typed(SetT1(IntT1()))
     val ex =
@@ -598,7 +598,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     assertUnsatOrExplain(rewriter, nextState)
   }
 
-  test("""\A x \in {1, 2, 3}: x > 2 ~~> $B$k""") { rewriterType: String =>
+  test("""\A x \in {1, 2, 3}: x > 2 ~~> $B$k""") { rewriterType: SMTEncoding =>
     prepareArena()
     val set123 = tla.enumSet(tla.int(1), tla.int(2), tla.int(3)).typed(SetT1(IntT1()))
     val ex =

@@ -2177,6 +2177,26 @@ Type checker [OK]
 EXITCODE: OK
 ```
 
+### typecheck LamportMutexTyped.tla
+
+Typecheck a real spec by Leslie Lamport.
+
+```sh
+$ apalache-mc typecheck LamportMutexTyped.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### typecheck MC_LamportMutexTyped.tla
+
+Typecheck a model checking instance.
+
+```sh
+$ apalache-mc typecheck MC_LamportMutexTyped.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ## Running the config command
 
 ### config --enable-stats=false

@@ -33,7 +33,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     state
   }
 
-  test("""CHERRY-PICK {1, 2, 2}""") { rewriterType: String =>
+  test("""CHERRY-PICK {1, 2, 2}""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
     var state = new SymbState(bool(true).typed(BoolT1()), arena, Binding())
     // introduce an oracle that tells us which element to pick
@@ -59,7 +59,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     assertEqWhenChosen(rewriter, pickedState, oracle, 2, int(2).typed())
   }
 
-  test("""CHERRY-PICK {<<1, 2>>, <<3, 4>>}""") { rewriterType: String =>
+  test("""CHERRY-PICK {<<1, 2>>, <<3, 4>>}""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
     var state = new SymbState(bool(true).typed(), arena, Binding())
     // introduce an oracle that tells us which element to pick
@@ -80,7 +80,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     assertEqWhenChosen(rewriter, state, oracle, 1, tuples(1).toNameEx)
   }
 
-  test("""CHERRY-PICK {<<1, <<2, 3>> >>, <<3, <<4, 5>> >>}""") { rewriterType: String =>
+  test("""CHERRY-PICK {<<1, <<2, 3>> >>, <<3, <<4, 5>> >>}""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
     var state = new SymbState(bool(true).typed(), arena, Binding())
     // introduce an oracle that tells us which element to pick
@@ -101,7 +101,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     assertEqWhenChosen(rewriter, state, oracle, 1, tuples(1).toNameEx)
   }
 
-  test("""CHERRY-PICK-SEQ {<<1, 2>>, <<3, 4>>}""") { rewriterType: String =>
+  test("""CHERRY-PICK-SEQ {<<1, 2>>, <<3, 4>>}""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
     var state = new SymbState(bool(true).typed(BoolT1()), arena, Binding())
     // introduce an oracle that tells us which element to pick
@@ -123,7 +123,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     assertEqWhenChosen(rewriter, state, oracle, 1, seqs(1).toNameEx)
   }
 
-  test("""CHERRY-PICK {[a |-> 1, b |-> 2], [a |-> 3, b |-> 4]}""") { rewriterType: String =>
+  test("""CHERRY-PICK {[a |-> 1, b |-> 2], [a |-> 3, b |-> 4]}""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
     var state = new SymbState(bool(true).typed(), arena, Binding())
     // introduce an oracle that tells us which element to pick
@@ -146,7 +146,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     assertEqWhenChosen(rewriter, state, oracle, 1, records(1).toNameEx)
   }
 
-  test("""CHERRY-PICK [a |-> 1, b |-> 2] or [a |-> 3]""") { rewriterType: String =>
+  test("""CHERRY-PICK [a |-> 1, b |-> 2] or [a |-> 3]""") { rewriterType: SMTEncoding =>
     // After switching to Snowcat, we allow sets to mix records of compatible types.
     // The old encoding was always introducing spurious fields for all records, as it was extending the records.
     val rec1 = enumFun(str("a"), int(1), str("b"), int(2))
@@ -173,7 +173,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     assertEqWhenChosen(rewriter, state, oracle, 1, rec2Cell.toNameEx)
   }
 
-  test("""CHERRY-PICK {[a |-> 1, b |-> 2], [a |-> 3]}""") { rewriterType: String =>
+  test("""CHERRY-PICK {[a |-> 1, b |-> 2], [a |-> 3]}""") { rewriterType: SMTEncoding =>
     // After switching to Snowcat, we allow sets to mix records of compatible types.
     // The old encoding was always introducing spurious fields for all records, as it was extending the records.
     val rec1 = enumFun(str("a"), int(1), str("b"), int(2))
@@ -204,7 +204,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(rewriter, state.setRex(eq1or2))
   }
 
-  test("""CHERRY-PICK { {1, 2}, {3, 4} }""") { rewriterType: String =>
+  test("""CHERRY-PICK { {1, 2}, {3, 4} }""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
     var state = new SymbState(bool(true).typed(), arena, Binding())
     // introduce an oracle that tells us which element to pick
@@ -226,7 +226,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     assertEqWhenChosen(rewriter, state, oracle, 1, sets(1).toNameEx)
   }
 
-  test("""CHERRY-PICK { {1, 2}, {} }""") { rewriterType: String =>
+  test("""CHERRY-PICK { {1, 2}, {} }""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
     var state = new SymbState(bool(true).typed(), arena, Binding())
     // introduce an oracle that tells us which element to pick
@@ -246,7 +246,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     assertEqWhenChosen(rewriter, state, oracle, 1, sets(1).toNameEx)
   }
 
-  test("""CHERRY-PICK { {} }""") { rewriterType: String =>
+  test("""CHERRY-PICK { {} }""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
     var state = new SymbState(bool(true).typed(), arena, Binding())
     // introduce an oracle that tells us which element to pick
@@ -265,7 +265,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     assertEqWhenChosen(rewriter, state, oracle, 0, sets(0).toNameEx)
   }
 
-  test("""CHERRY-PICK { {{1, 2}, {3, 4}}, {{5, 6}} }""") { rewriterType: String =>
+  test("""CHERRY-PICK { {{1, 2}, {3, 4}}, {{5, 6}} }""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
     var state = new SymbState(bool(true).typed(), arena, Binding())
     // introduce an oracle that tells us which element to pick
@@ -290,7 +290,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     assertEqWhenChosen(rewriter, state, oracle, 1, sets(1).toNameEx)
   }
 
-  test("""CHERRY-PICK { [x \in {1, 2} |-> 2 + x], [x \in {2, 3} |-> 2 * x] }""") { rewriterType: String =>
+  test("""CHERRY-PICK { [x \in {1, 2} |-> 2 + x], [x \in {2, 3} |-> 2 * x] }""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
     var state = new SymbState(bool(true).typed(), arena, Binding())
     // introduce an oracle that tells us which element to pick

@@ -16,7 +16,7 @@ trait TestSymbStateRewriterTuple extends RewriterBase {
       "ibI" -> TupT1(IntT1(), BoolT1(), SetT1(IntT1()))
   )
 
-  test("""<<1, FALSE, {2}>>""") { rewriterType: String =>
+  test("""<<1, FALSE, {2}>>""") { rewriterType: SMTEncoding =>
     val tup = tuple(int(1), bool(false), enumSet(int(2)) ? "I")
       .typed(types, "ibI")
 
@@ -25,7 +25,7 @@ trait TestSymbStateRewriterTuple extends RewriterBase {
     assert(solverContext.sat())
   }
 
-  test(""" <<1, FALSE, {2}>>[2] returns FALSE""") { rewriterType: String =>
+  test(""" <<1, FALSE, {2}>>[2] returns FALSE""") { rewriterType: SMTEncoding =>
     val tup = tuple(int(1), bool(false), enumSet(int(2)) ? "I")
     val tupleAcc = appFun(tup ? "ibI", int(2))
       .typed(types, "b")
@@ -36,7 +36,7 @@ trait TestSymbStateRewriterTuple extends RewriterBase {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""{<<1, FALSE>>, <<2, TRUE>>} works""") { rewriterType: String =>
+  test("""{<<1, FALSE>>, <<2, TRUE>>} works""") { rewriterType: SMTEncoding =>
     val tuple1 = tuple(int(1), bool(false))
     val tuple2 = tuple(int(2), bool(true))
     val tupleSet = enumSet(tuple1 ? "ib", tuple2 ? "ib")
@@ -47,7 +47,7 @@ trait TestSymbStateRewriterTuple extends RewriterBase {
     assert(solverContext.sat())
   }
 
-  test("""~(<<2, FALSE>> = <<2, TRUE>>)""") { rewriterType: String =>
+  test("""~(<<2, FALSE>> = <<2, TRUE>>)""") { rewriterType: SMTEncoding =>
     val tuple1 = tuple(int(2), bool(false))
     val tuple2 = tuple(int(2), bool(true))
     val eq = not(eql(tuple1 ? "ib", tuple2 ? "ib") ? "b")
@@ -58,7 +58,7 @@ trait TestSymbStateRewriterTuple extends RewriterBase {
     assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""<<2, FALSE>> = <<2, FALSE>>""") { rewriterType: String =>
+  test("""<<2, FALSE>> = <<2, FALSE>>""") { rewriterType: SMTEncoding =>
     val tuple1 = tuple(int(2), bool(false))
     val tuple2 = tuple(int(2), bool(false))
     val eq = eql(tuple1 ? "ib", tuple2 ? "ib")
@@ -69,7 +69,7 @@ trait TestSymbStateRewriterTuple extends RewriterBase {
     assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""DOMAIN <<2, FALSE, "c">> = {1, 2, 3}""") { rewriterType: String =>
+  test("""DOMAIN <<2, FALSE, "c">> = {1, 2, 3}""") { rewriterType: SMTEncoding =>
     val tup = tuple(int(2), bool(false), str("c"))
     val set123 = enumSet(1.to(3) map int: _*)
     val eq = eql(dom(tup ? "ibs") ? "I", set123 ? "I")
@@ -79,7 +79,7 @@ trait TestSymbStateRewriterTuple extends RewriterBase {
     assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""[ <<1, FALSE>> EXCEPT ![1] = 3 ]""") { rewriterType: String =>
+  test("""[ <<1, FALSE>> EXCEPT ![1] = 3 ]""") { rewriterType: SMTEncoding =>
     val tup = tuple(int(1), bool(false))
     val newTuple = except(tup ? "ib", tuple(int(1)) ? "(i)", int(3))
       .typed(types, "ib")

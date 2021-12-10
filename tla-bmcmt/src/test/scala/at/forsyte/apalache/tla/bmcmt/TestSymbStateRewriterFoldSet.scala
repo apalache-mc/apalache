@@ -18,7 +18,7 @@ trait TestSymbStateRewriterFoldSet extends RewriterBase {
       "ibI" -> TupT1(IntT1(), BoolT1(), SetT1(IntT1()))
   )
 
-  test("""FoldSet( LAMBDA x,y: C, v, S ) = C""") { rewriterType: String =>
+  test("""FoldSet( LAMBDA x,y: C, v, S ) = C""") { rewriterType: SMTEncoding =>
     // A : (a,b) => a
     // A(p,q) == 0
     val a = IntT1()
@@ -48,7 +48,7 @@ trait TestSymbStateRewriterFoldSet extends RewriterBase {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""FoldSet( LAMBDA x,y: ..., v, {} ) = v""") { rewriterType: String =>
+  test("""FoldSet( LAMBDA x,y: ..., v, {} ) = v""") { rewriterType: SMTEncoding =>
     // A : (a,b) => a
     // A(p,q) == 0
     val a = IntT1()
@@ -75,7 +75,7 @@ trait TestSymbStateRewriterFoldSet extends RewriterBase {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""FoldSet( LAMBDA x,y: x + 1, 0, S ) = Card(S)""") { rewriterType: String =>
+  test("""FoldSet( LAMBDA x,y: x + 1, 0, S ) = Card(S)""") { rewriterType: SMTEncoding =>
     // A : (a,b) => a
     // A(p,q) == p + 1
     val a = IntT1()
@@ -106,7 +106,7 @@ trait TestSymbStateRewriterFoldSet extends RewriterBase {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""FoldSet( LAMBDA x,y: x + y, 0, S ) = Sum(S)""") { rewriterType: String =>
+  test("""FoldSet( LAMBDA x,y: x + y, 0, S ) = Sum(S)""") { rewriterType: SMTEncoding =>
     // A : (a,b) => a
     // A(p,q) == p + q
     val a = IntT1()
