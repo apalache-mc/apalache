@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.lir.oper.TlcOper
 import at.forsyte.apalache.tla.lir._
 
 trait TestSymbStateRewriterTlc extends RewriterBase {
-  test("SE-TLC-PRINT: PRINT(...) -> TRUE") { rewriterType: String =>
+  test("SE-TLC-PRINT: PRINT(...) -> TRUE") { rewriterType: SMTEncoding =>
     // Builder does not have a standard method for TLC!Print, as we do not construct internally
     val print = OperEx(TlcOper.print, int(1).typed(), str("hello").typed())(Typed(StrT1()))
     val state = new SymbState(print, arena, Binding())
@@ -22,7 +22,7 @@ trait TestSymbStateRewriterTlc extends RewriterBase {
     }
   }
 
-  test("SE-TLC-PRINT: PRINTT(...) -> TRUE") { rewriterType: String =>
+  test("SE-TLC-PRINT: PRINTT(...) -> TRUE") { rewriterType: SMTEncoding =>
     // Builder does not have a standard method for TLC!PrintT, as we do not construct internally
     val print = OperEx(TlcOper.printT, str("hello").typed())(Typed(StrT1()))
     val state = new SymbState(print, arena, Binding())
@@ -38,7 +38,7 @@ trait TestSymbStateRewriterTlc extends RewriterBase {
     }
   }
 
-  test("SE-TLC-ASSERT: Assert(TRUE, _) -> reach") { rewriterType: String =>
+  test("SE-TLC-ASSERT: Assert(TRUE, _) -> reach") { rewriterType: SMTEncoding =>
     // Builder does not have a standard method for TLC!Assert, as we do not construct internally
     val assertEx = OperEx(TlcOper.assert, bool(true).typed(), str("oops").typed())(Typed(BoolT1()))
     val state = new SymbState(assertEx, arena, Binding())
@@ -54,7 +54,7 @@ trait TestSymbStateRewriterTlc extends RewriterBase {
     }
   }
 
-  test("SE-TLC-ASSERT: Assert(FALSE, _) -> TRUE") { rewriterType: String =>
+  test("SE-TLC-ASSERT: Assert(FALSE, _) -> TRUE") { rewriterType: SMTEncoding =>
     // Builder does not have a standard method for TLC!Assert, as we do not construct internally
     val assertEx = OperEx(TlcOper.assert, bool(false).typed(), str("oops").typed())(Typed(BoolT1()))
     val state = new SymbState(assertEx, arena, Binding())

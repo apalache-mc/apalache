@@ -14,7 +14,7 @@ trait TestSymbStateRewriterPowerset extends RewriterBase {
       "b" -> BoolT1()
   )
 
-  test("""SUBSET {1, 2, 3}""") { rewriterType: String =>
+  test("""SUBSET {1, 2, 3}""") { rewriterType: SMTEncoding =>
     val ex = powSet(enumSet(int(1), int(2), int(3)) ? "I")
       .typed(types, "II")
     val state = new SymbState(ex, arena, Binding())
@@ -35,7 +35,7 @@ trait TestSymbStateRewriterPowerset extends RewriterBase {
     }
   }
 
-  test("""SE-SUBSET1: {1, 2} \in SUBSET {1, 2, 3}""") { rewriterType: String =>
+  test("""SE-SUBSET1: {1, 2} \in SUBSET {1, 2, 3}""") { rewriterType: SMTEncoding =>
     val set12 = enumSet(int(1), int(2)) ? "I"
     val powset = powSet(enumSet(int(1), int(2), int(3)) ? "I") ? "II"
     val inEx = in(set12, powset)
@@ -44,7 +44,7 @@ trait TestSymbStateRewriterPowerset extends RewriterBase {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""SE-SUBSET1: {} \in SUBSET {1, 2, 3}""") { rewriterType: String =>
+  test("""SE-SUBSET1: {} \in SUBSET {1, 2, 3}""") { rewriterType: SMTEncoding =>
     // an empty set requires a type annotation
     val emptySet = enumSet()
       .typed(types, "I")
@@ -55,7 +55,7 @@ trait TestSymbStateRewriterPowerset extends RewriterBase {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""SE-SUBSET1: {1, 2, 3} \in SUBSET {1, 2, 3}""") { rewriterType: String =>
+  test("""SE-SUBSET1: {1, 2, 3} \in SUBSET {1, 2, 3}""") { rewriterType: SMTEncoding =>
     val set1to3 = enumSet(int(1), int(2), int(3)) ? "I"
     val powset = powSet(set1to3) ? "II"
     val inEx = in(set1to3, powset)
@@ -64,7 +64,7 @@ trait TestSymbStateRewriterPowerset extends RewriterBase {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""SE-SUBSET1: {1, 2, 3, 4} \in SUBSET {1, 2, 3}""") { rewriterType: String =>
+  test("""SE-SUBSET1: {1, 2, 3, 4} \in SUBSET {1, 2, 3}""") { rewriterType: SMTEncoding =>
     def setTo(k: Int) = enumSet(1 to k map int: _*)
 
     val set1to4 = setTo(4) ? "I"
@@ -75,7 +75,7 @@ trait TestSymbStateRewriterPowerset extends RewriterBase {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""SE-SUBSET: \E X \in SUBSET {1, 2}: TRUE (sat)""") { rewriterType: String =>
+  test("""SE-SUBSET: \E X \in SUBSET {1, 2}: TRUE (sat)""") { rewriterType: SMTEncoding =>
     // a regression test that failed in the previous versions
     val set = enumSet(int(1), int(2)) ? "I"
     val ex = exists(name("X") ? "I", powSet(set) ? "II", bool(true))
@@ -90,7 +90,7 @@ trait TestSymbStateRewriterPowerset extends RewriterBase {
     }
   }
 
-  test("""SE-SUBSET: Skolem(\E X \in SUBSET {1, 2}: TRUE) (sat)""") { rewriterType: String =>
+  test("""SE-SUBSET: Skolem(\E X \in SUBSET {1, 2}: TRUE) (sat)""") { rewriterType: SMTEncoding =>
     // a regression test that failed in the previous versions
     val set = enumSet(int(1), int(2)) ? "I"
     val ex =
@@ -110,7 +110,7 @@ trait TestSymbStateRewriterPowerset extends RewriterBase {
     }
   }
 
-  test("""SE-SUBSET: Skolem(\E X \in SUBSET {1, 2}: FALSE (unsat))""") { rewriterType: String =>
+  test("""SE-SUBSET: Skolem(\E X \in SUBSET {1, 2}: FALSE (unsat))""") { rewriterType: SMTEncoding =>
     // a regression test that failed in the previous versions
     val set = enumSet(int(1), int(2)) ? "I"
     val ex =
@@ -131,7 +131,7 @@ trait TestSymbStateRewriterPowerset extends RewriterBase {
     }
   }
 
-  test("""PowSetCtor {1, 2}""") { rewriterType: String =>
+  test("""PowSetCtor {1, 2}""") { rewriterType: SMTEncoding =>
     val baseset = enumSet(int(1), int(2))
       .typed(types, "I")
     val state = new SymbState(baseset, arena, Binding())

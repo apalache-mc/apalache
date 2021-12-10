@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 trait TestSymbStateRewriter extends RewriterBase {
-  test("SE-SUBST1: x[cell/x] ~~> cell") { rewriterType: String =>
+  test("SE-SUBST1: x[cell/x] ~~> cell") { rewriterType: SMTEncoding =>
     arena = arena.appendCell(UnknownT())
     val cell = arena.topCell
     val binding = Binding("x" -> cell)

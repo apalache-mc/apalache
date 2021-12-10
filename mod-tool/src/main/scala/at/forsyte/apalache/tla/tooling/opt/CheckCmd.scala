@@ -1,7 +1,9 @@
 package at.forsyte.apalache.tla.tooling.opt
 
-import java.io.File
+import at.forsyte.apalache.tla.bmcmt.{SMTEncoding, arraysEncoding, oopsla19Encoding}
+import org.backuity.clist.util.Read
 
+import java.io.File
 import org.backuity.clist.{Command, _}
 
 /**
@@ -11,12 +13,20 @@ import org.backuity.clist.{Command, _}
  */
 class CheckCmd extends Command(name = "check", description = "Check a TLA+ specification") with General {
 
+  // Parses the smtEncoding option
+  implicit val smtEncodingRead: Read[SMTEncoding] =
+    Read.reads[SMTEncoding]("a SMT encoding, either oopsla19 or arrays") {
+      case "arrays"        => arraysEncoding
+      case "oopsla19"      => oopsla19Encoding
+      case oddEncodingType => throw new IllegalArgumentException(s"Unexpected SMT encoding type $oddEncodingType")
+    }
+
   var file: File = arg[File](description = "a file containing a TLA+ specification (.tla or .json)")
   var nworkers: Int = opt[Int](name = "nworkers", default = 1,
       description = "the number of workers for the parallel checker (soon), default: 1")
   var algo: String = opt[String](name = "algo", default = "incremental",
       description = "the search algorithm: offline, incremental, parallel (soon), default: incremental")
-  var smtEncoding: Option[String] = opt[Option[String]](name = "smt-encoding", useEnv = true,
+  var smtEncoding: SMTEncoding = opt[SMTEncoding](name = "smt-encoding", useEnv = true, default = oopsla19Encoding,
       description =
         "the SMT encoding: oopsla19, arrays (experimental), default: oopsla19 (overrides envvar SMT_ENCODING)")
   var config: String = opt[String](name = "config", default = "",

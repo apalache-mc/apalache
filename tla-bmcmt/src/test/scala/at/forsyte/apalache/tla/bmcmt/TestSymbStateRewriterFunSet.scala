@@ -34,7 +34,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
         "i_to_b_to_b" -> FunT1(IntT1(), FunT1(BoolT1(), BoolT1()))
     )
 
-  test("""[{1, 2, 3} -> {FALSE, TRUE}]""") { rewriterType: String =>
+  test("""[{1, 2, 3} -> {FALSE, TRUE}]""") { rewriterType: SMTEncoding =>
     val domain = enumSet(int(1), int(2), int(3))
     val codomain = enumSet(bool(false), bool(true))
     val fs = funSet(domain ? "I", codomain ? "B")
@@ -61,7 +61,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
     }
   }
 
-  test("""[{1, 2} -> Expand(SUBSET {FALSE, TRUE})]""") { rewriterType: String =>
+  test("""[{1, 2} -> Expand(SUBSET {FALSE, TRUE})]""") { rewriterType: SMTEncoding =>
     val domain = enumSet(int(1), int(2))
     val codomain = apalacheExpand(powSet(enumSet(bool(false), bool(true)) ? "B") ? "BB")
     val fs = funSet(domain ? "I", codomain ? "BB")
@@ -87,7 +87,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
   }
 
   // the existential over a function set should work without expanding the powerset!
-  test("""Skolem(\E f \in [{1, 2} -> SUBSET {FALSE, TRUE}]: g' <- f)""") { rewriterType: String =>
+  test("""Skolem(\E f \in [{1, 2} -> SUBSET {FALSE, TRUE}]: g' <- f)""") { rewriterType: SMTEncoding =>
     val domain = enumSet(int(1), int(2)) ? "I"
     val codomain = powSet(enumSet(bool(false), bool(true)) ? "B") ? "BB"
     val pred = assign(prime(name("g") ? "i_to_B") ? "i_to_B", name("f") ? "i_to_B")
@@ -107,7 +107,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
   }
 
   // the existential over a function set should work without expanding the powerset!
-  test("""Skolem(\E f \in [{1, 2} -> SUBSET {FALSE}]: f[1] = {TRUE})""") { rewriterType: String =>
+  test("""Skolem(\E f \in [{1, 2} -> SUBSET {FALSE}]: f[1] = {TRUE})""") { rewriterType: SMTEncoding =>
     val domain = enumSet(int(1), int(2)) ? "I"
     val codomain = powSet(enumSet(bool(false)) ? "B") ? "BB"
     val pred = eql(appFun(name("f") ? "i_to_B", int(1)) ? "B", enumSet(bool(true)) ? "B")
@@ -124,7 +124,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
   }
 
   // An existential over a function set that returns a function set to a powerset. Does it blow up your mind? :-)
-  test("""Skolem(\E f \in [{1, 2} -> [{3} -> SUBSET {FALSE, TRUE}]]: g' <- f)""") { rewriterType: String =>
+  test("""Skolem(\E f \in [{1, 2} -> [{3} -> SUBSET {FALSE, TRUE}]]: g' <- f)""") { rewriterType: SMTEncoding =>
     val domain1 = enumSet(int(1), int(2))
     val domain2 = enumSet(int(3))
     val codomain2 = powSet(enumSet(bool(false), bool(true)) ? "B") ? "BB"
@@ -148,7 +148,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
   }
 
   // this should be fixed by implementing #91
-  test("""[x \in {1, 2} |-> {x = 1}] \in [{1, 2} -> SUBSET {FALSE, TRUE}]""") { rewriterType: String =>
+  test("""[x \in {1, 2} |-> {x = 1}] \in [{1, 2} -> SUBSET {FALSE, TRUE}]""") { rewriterType: SMTEncoding =>
     val domain = enumSet(int(1), int(2)) ? "I"
     val codomain = powSet(enumSet(bool(false), bool(true)) ? "B") ? "BB"
     val funset = funSet(domain, codomain) ? "i_to_B"
@@ -160,7 +160,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""[x \in {1, 2} |-> 3] \in [{1, 2} -> {3, 4}]""") { rewriterType: String =>
+  test("""[x \in {1, 2} |-> 3] \in [{1, 2} -> {3, 4}]""") { rewriterType: SMTEncoding =>
     val domain = enumSet(int(1), int(2)) ? "I"
     val codomain = enumSet(int(3), int(4)) ? "I"
     val funset = funSet(domain, codomain) ? "i_TO_i"
@@ -173,7 +173,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
   }
 
   // this should be redundant in the presence of #91
-  test("""[x \in {0, 1, 2} \ {0} |-> 3] \in [{1, 2} -> {3, 4}]""") { rewriterType: String =>
+  test("""[x \in {0, 1, 2} \ {0} |-> 3] \in [{1, 2} -> {3, 4}]""") { rewriterType: SMTEncoding =>
     // although 0 is in the function domain at the arena level, it does not belong to the set difference
     def setminus(set: TlaEx, intVal: Int): TlaEx = {
       filter(name("t") ? "i", set, not(eql(name("t") ? "i", int(intVal)) ? "b") ? "b")
@@ -199,7 +199,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
   }
 
   // this should be fixed by implementing #91
-  test("""[x \in {1, 2} |-> {TRUE}] \in [{1, 2} -> SUBSET {FALSE}]""") { rewriterType: String =>
+  test("""[x \in {1, 2} |-> {TRUE}] \in [{1, 2} -> SUBSET {FALSE}]""") { rewriterType: SMTEncoding =>
     val domain = enumSet(int(1), int(2)) ? "I"
     val codomain = powSet(enumSet(bool(false)) ? "B") ? "BB"
     val funset = funSet(domain, codomain)
@@ -217,7 +217,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
   }
 
   // this should be fixed by implementing #91
-  test("""[x \in {1, 2} |-> {TRUE}] \in [{1, 2} -> SUBSET {FALSE, TRUE}]""") { rewriterType: String =>
+  test("""[x \in {1, 2} |-> {TRUE}] \in [{1, 2} -> SUBSET {FALSE, TRUE}]""") { rewriterType: SMTEncoding =>
     val domain = enumSet(int(1), int(2)) ? "I"
     val codomain = powSet(enumSet(bool(false), bool(true)) ? "B") ? "BB"
     val funset = funSet(domain, codomain)
@@ -234,7 +234,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
   }
 
   // bugfix 27/12/2017
-  test("""SE-FUNSET1: [0..(5 - 1) -> {FALSE, TRUE}]""") { rewriterType: String =>
+  test("""SE-FUNSET1: [0..(5 - 1) -> {FALSE, TRUE}]""") { rewriterType: SMTEncoding =>
     val domain = dotdot(int(0), minus(int(5), int(1)) ? "i") ? "I"
     val codomain = enumSet(bool(false), bool(true)) ? "B"
     val fs = funSet(domain, codomain)

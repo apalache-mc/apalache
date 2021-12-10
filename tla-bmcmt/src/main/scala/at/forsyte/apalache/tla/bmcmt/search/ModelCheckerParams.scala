@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.search
 
 import java.io.File
-import at.forsyte.apalache.tla.bmcmt.CheckerInput
+import at.forsyte.apalache.tla.bmcmt.{CheckerInput, SMTEncoding, oopsla19Encoding}
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode.{AfterJoin, BeforeJoin, InvariantMode}
 
 object ModelCheckerParams {
@@ -95,7 +95,7 @@ class ModelCheckerParams(checkerInput: CheckerInput, val stepsBound: Int, val sa
   /**
    * The SMT encoding to be used.
    */
-  var smtEncoding: String = ""
+  var smtEncoding: SMTEncoding = oopsla19Encoding
 
   // does the transition number satisfy the given filter at the given step?
   def stepMatchesFilter(stepNo: Int, transitionNo: Int): Boolean = {

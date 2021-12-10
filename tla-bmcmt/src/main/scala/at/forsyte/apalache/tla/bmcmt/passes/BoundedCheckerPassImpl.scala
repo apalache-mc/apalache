@@ -32,9 +32,6 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
     @Named("AfterChecker") nextPass: Pass)
     extends BoundedCheckerPass with LazyLogging {
 
-  private val oopsla19Encoding = "oopsla19"
-  private val arraysEncoding = "arrays"
-
   /**
    * The pass name.
    *
@@ -83,7 +80,8 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
     val tuning = options.getOrElse[Map[String, String]]("general", "tuning", Map[String, String]())
     val debug = options.getOrElse[Boolean]("general", "debug", false)
     val saveDir = options.getOrError[Path]("io", "outdir").toFile
-    val smtEncoding = options.get[Option[String]]("checker", "smt-encoding").flatten.getOrElse(oopsla19Encoding)
+    // TODO: default smtEncoding option is needed here for executions with TestCmd, add encoding option to TestCmd instead
+    val smtEncoding = options.getOrElse[SMTEncoding]("checker", "smt-encoding", oopsla19Encoding)
 
     val params = new ModelCheckerParams(input, stepsBound, saveDir, tuning, debug)
     params.discardDisabled = options.getOrElse[Boolean]("checker", "discardDisabled", true)

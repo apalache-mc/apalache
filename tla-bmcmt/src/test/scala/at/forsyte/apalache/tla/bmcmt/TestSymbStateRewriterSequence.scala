@@ -15,7 +15,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
 
   // As sequences are not distinguishable from tuples, we need a type annotation.
   // In the not so far away future, a type inference engine would tell us, whether to construct a sequence or a tuple
-  test("""<<>> as Seq(Int)""") { rewriterType: String =>
+  test("""<<>> as Seq(Int)""") { rewriterType: SMTEncoding =>
     val tup = tuple()
       .typed(types, "Qi")
 
@@ -33,7 +33,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     }
   }
 
-  test("""<<1, 2, 3>> as Seq(Int)""") { rewriterType: String =>
+  test("""<<1, 2, 3>> as Seq(Int)""") { rewriterType: SMTEncoding =>
     val tup = tuple(1.to(3).map(int): _*)
       .typed(types, "Qi")
 
@@ -51,7 +51,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     }
   }
 
-  test("""(<<3, 4, 5>> as Seq(Int))[2]""") { rewriterType: String =>
+  test("""(<<3, 4, 5>> as Seq(Int))[2]""") { rewriterType: SMTEncoding =>
     val tup = tuple(3.to(5).map(int): _*)
       .typed(types, "Qi")
 
@@ -71,7 +71,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     assertTlaExAndRestore(rewriter, nextState.setRex(eq3))
   }
 
-  test("""(<<>> as Seq(Int))[1]""") { rewriterType: String =>
+  test("""(<<>> as Seq(Int))[1]""") { rewriterType: SMTEncoding =>
     // regression: <<>>[1] should produce no contradiction, nor throw an exception
     val tup = tuple()
       .typed(types, "Qi")
@@ -82,7 +82,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     assert(solverContext.sat())
   }
 
-  test("""Head(<<3, 4, 5>> as Seq(Int))""") { rewriterType: String =>
+  test("""Head(<<3, 4, 5>> as Seq(Int))""") { rewriterType: SMTEncoding =>
     val tup = tuple(3.to(5).map(int): _*) ? "Qi"
     val seqHead = head(tup) ? "i"
     val eq = eql(seqHead, int(3))
@@ -92,7 +92,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""Len(<<3, 4, 5>> <: Seq(Int))""") { rewriterType: String =>
+  test("""Len(<<3, 4, 5>> <: Seq(Int))""") { rewriterType: SMTEncoding =>
     val tup = tuple(3.to(5).map(i => int(i)): _*)
       .typed(types, "Qi")
     val seqLen = len(tup) ? "i"
@@ -103,7 +103,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""Tail(<<3, 4, 5>> as Seq(Int))""") { rewriterType: String =>
+  test("""Tail(<<3, 4, 5>> as Seq(Int))""") { rewriterType: SMTEncoding =>
     val tup = tuple(3.to(5).map(int): _*) ? "Qi"
     val seqTail = tail(tup) ? "Qi"
     val expected = tuple(int(4), int(5)) ? "Qi"
@@ -114,7 +114,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""regression: Tail(<<>> as Seq(Int)) does not unsat and its length is zero""") { rewriterType: String =>
+  test("""regression: Tail(<<>> as Seq(Int)) does not unsat and its length is zero""") { rewriterType: SMTEncoding =>
     val emptyTuple = tuple()
       .typed(types, "Qi")
     val seqTail = tail(emptyTuple)
@@ -126,7 +126,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""SubSeq(S, 2, 4)""") { rewriterType: String =>
+  test("""SubSeq(S, 2, 4)""") { rewriterType: SMTEncoding =>
     val tup = tuple(3.to(6).map(int): _*)
       .typed(types, "Qi")
     val subseqEx = subseq(tup, int(2), int(3))
@@ -149,7 +149,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     assertTlaExAndRestore(rewriter, nextState.setRex(eq3))
   }
 
-  test("""regression: SubSeq(S, 3, 1) does not unsat and has length 0""") { rewriterType: String =>
+  test("""regression: SubSeq(S, 3, 1) does not unsat and has length 0""") { rewriterType: SMTEncoding =>
     val tup = tuple(3.to(6).map(int): _*)
       .typed(types, "Qi")
     val subseqEx = subseq(tup, int(3), int(1))
@@ -161,7 +161,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""Append(S, 10)""") { rewriterType: String =>
+  test("""Append(S, 10)""") { rewriterType: SMTEncoding =>
     val tup = tuple(4.to(5).map(int): _*)
       .typed(types, "Qi")
     val seqAppend = append(tup, int(10))
@@ -186,7 +186,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     assertTlaExAndRestore(rewriter, nextState.setRex(eq4))
   }
 
-  test("""Append(SubSeq(S, 2, 3), 10)""") { rewriterType: String =>
+  test("""Append(SubSeq(S, 2, 3), 10)""") { rewriterType: SMTEncoding =>
     val tup = tuple(3.to(6).map(int): _*) ? "Qi"
     val subseqEx = subseq(tup, int(2), int(3)) ? "Qi"
     val seqAppend = append(subseqEx, int(10))
@@ -211,7 +211,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     assertTlaExAndRestore(rewriter, nextState.setRex(eq4))
   }
 
-  test("""<<4, 5>> = SubSeq(<<3, 4, 5, 6>>, 2, 3)""") { rewriterType: String =>
+  test("""<<4, 5>> = SubSeq(<<3, 4, 5, 6>>, 2, 3)""") { rewriterType: SMTEncoding =>
     val tup3456 = tuple(3.to(6).map(int): _*) ? "Qi"
     val subseqEx = subseq(tup3456, int(2), int(3)) ? "Qi"
     val tup45 = tuple(4.to(5).map(int): _*) ? "Qi"
@@ -222,7 +222,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""DOMAIN SubSeq(<<3, 4, 5, 6>>, 2, 3) equals {2, 3}""") { rewriterType: String =>
+  test("""DOMAIN SubSeq(<<3, 4, 5, 6>>, 2, 3) equals {2, 3}""") { rewriterType: SMTEncoding =>
     val tup3456 = tuple(3.to(6).map(int): _*) ? "Qi"
     val subseqEx = subseq(tup3456, int(2), int(3)) ? "Qi"
     val domEx = dom(subseqEx) ? "I"
@@ -233,7 +233,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""<<9, 10>> \o SubSeq(S, 2, 3)""") { rewriterType: String =>
+  test("""<<9, 10>> \o SubSeq(S, 2, 3)""") { rewriterType: SMTEncoding =>
     val tup3_6 = tuple(3.to(6).map(int): _*) ? "Qi"
     val subseqRes = subseq(tup3_6, int(2), int(3)) ? "Qi" // <<4, 5>>
     val tup9_10 = tuple(int(9), int(10)) ? "Qi"
@@ -246,7 +246,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""regression: <<9, 10>> \o Tail(<<>>) does not unsat""") { rewriterType: String =>
+  test("""regression: <<9, 10>> \o Tail(<<>>) does not unsat""") { rewriterType: SMTEncoding =>
     val t9_10 = tuple(int(9), int(10)) ? "Qi"
     // Tail(<<>>) produces some undefined value. In this case, \o should also produce an undefined value.
     val concatRes = concat(t9_10, tail(tuple() ? "Qi") ? "Qi")
