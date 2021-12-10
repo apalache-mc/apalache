@@ -56,14 +56,16 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
         def addOnlyCellCons(thisSet: ArenaCell, thisElem: ArenaCell): Unit = {
           val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, thisSet.toNameEx)
           val inCup = tla.apalacheStoreInSet(thisElem.toNameEx, newSetCell.toNameEx)
-          rewriter.solverContext.assertGroundExpr(tla.equiv(inCup, inThis))
+          val notInCup = tla.apalacheStoreNotInSet(thisElem.toNameEx, newSetCell.toNameEx)
+          rewriter.solverContext.assertGroundExpr(tla.ite(inThis, inCup, notInCup))
         }
 
         def addEitherCellCons(thisElem: ArenaCell): Unit = {
           val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, leftSetCell.toNameEx)
           val inOther = tla.apalacheSelectInSet(thisElem.toNameEx, rightSetCell.toNameEx)
           val inCup = tla.apalacheStoreInSet(thisElem.toNameEx, newSetCell.toNameEx)
-          rewriter.solverContext.assertGroundExpr(tla.equiv(inCup, tla.or(inThis, inOther)))
+          val notInCup = tla.apalacheStoreNotInSet(thisElem.toNameEx, newSetCell.toNameEx)
+          rewriter.solverContext.assertGroundExpr(tla.ite(tla.or(inThis, inOther), inCup, notInCup))
         }
 
         // new implementation: as we are not using uninterpreted functions anymore, we do not have to care about

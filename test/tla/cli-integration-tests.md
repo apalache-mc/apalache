@@ -1131,6 +1131,17 @@ $ apalache-mc check --inv=Inv --length=6 --cinit=CInit SetSndRcv.tla | sed 's/I@
 EXITCODE: OK
 ```
 
+### check SetAddDel succeeds (array-encoding)
+
+Regression test for https://github.com/informalsystems/apalache/issues/1162
+Sets should not become unconstrained when union is performed.
+
+```sh
+$ apalache-mc check --inv=Inv --length=6 --cinit=CInit SetAddDel.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
 ## configure the check command
 
 Testing various flags that are set via command-line options and the TLC configuration file. The CLI has priority over
