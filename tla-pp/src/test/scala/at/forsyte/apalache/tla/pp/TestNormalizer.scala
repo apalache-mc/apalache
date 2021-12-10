@@ -38,6 +38,30 @@ class TestNormalizer extends FunSuite with BeforeAndAfterEach {
     assert(expected == output)
   }
 
+  test("""~ IF x THEN y ELSE z ~~> IF x THEN ~y ELSE ~z""") {
+    val input = tla
+      .not(
+          tla.ite(
+              tla.name("x") ? "b",
+              tla.name("y") ? "b",
+              tla.name("z") ? "b"
+          ) ? "b"
+      )
+      .typed(types, "b")
+
+    val output = normalizer.apply(input)
+
+    val expected = tla
+      .ite(
+          tla.name("x") ? "b",
+          tla.not(tla.name("y") ? "b") ? "b",
+          tla.not(tla.name("z") ? "b") ? "b"
+      )
+      .typed(types, "b")
+
+    assert(expected == output)
+  }
+
   test("""~(x /\ y) ~~> ~x \/ ~y""") {
     val input =
       tla
@@ -63,4 +87,32 @@ class TestNormalizer extends FunSuite with BeforeAndAfterEach {
         .typed(types, "b")
     assert(expected == output)
   }
+
+  test("""x => y ~~> ~x \/ y""") {}
+
+  test("""~ (x => y) ~~> x /\ ~y""") {}
+
+  test("""(~FALSE <=> x) ~~> TRUE <=> x""") {}
+
+  test("""~ (~FALSE <=> x) ~~> TRUE \neq x""") {}
+
+  test("""~ \E x \in s . y ~~> \A x \in s . ~y""") {}
+
+  test("""~ \A x \in s . y ~~> \E x \in s . ~y""") {}
+
+  test("""~ (x < y) ~~> x >= y""") {}
+
+  test("""~ (x <= y) ~~> x > y""") {}
+
+  test("""~ (x > y) ~~> x <= y""") {}
+
+  test("""~ (x >= y) ~~> x < y""") {}
+
+  test("""~(x \neq y) ~~> x <=> y""") {}
+
+  test("""~(~FALSE \in s) ~~> ~(TRUE \in s)""") {}
+
+  test("""~<>x ~~> []~x""") {}
+
+  test("""~[]x ~~> <>x""") {}
 }
