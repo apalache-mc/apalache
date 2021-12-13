@@ -239,7 +239,7 @@ In the above example, the type checker would not be able to infer the type of
 ```tla
 \* @type: [ a: Int, b: Str ];
 RowAccess(m) ==
-    m.a > 0         \* should flag a type error
+    m.a > 0         \* should not flag a type error
 ```
 
 **Blocker.** It is not clear to me, what type we would assign to the record
