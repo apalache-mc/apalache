@@ -114,6 +114,7 @@ object OutputManager extends LazyLogging {
       ensureDirExists(dir)
     }
   }
+
   /**
    * Configure OutputManager, with cli configuration taking precedence
    * over the configuration file
@@ -121,8 +122,7 @@ object OutputManager extends LazyLogging {
   def configure(config: ApalacheConfig): Unit = {
     cfgOpt = Some(config)
 
-    val fileName = cfg
-      .file
+    val fileName = cfg.file
       .getOrElse(throw new IllegalStateException("OutputManager configured without file"))
       .getName
 
@@ -214,7 +214,8 @@ object OutputManager extends LazyLogging {
   }
 
   /**
-   * Conditionally write into "profile-rules.txt", depending on whether the `profiling` config is set */
+   * Conditionally write into "profile-rules.txt", depending on whether the `profiling` config is set
+   */
   def withProfilingWriter(f: PrintWriter => Unit): Boolean = {
     if (cfg.profiling) {
       withWriterInRunDir("profile-rules.txt")(f)

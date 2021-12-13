@@ -53,12 +53,9 @@ trait CliConfig {
 
 /** The application's configurable values, along with their base defaults */
 case class ApalacheConfig(
-  file: Option[File] = None,
-  outDir: File = new File(System.getProperty("user.dir"), "_apalache-out"),
-  runDir: Option[File] = None,
-  configFile: Option[File] = None,
-  writeIntermediate: Boolean = false,
-  profiling: Boolean = false
+    file: Option[File] = None, outDir: File = new File(System.getProperty("user.dir"), "_apalache-out"),
+    runDir: Option[File] = None, configFile: Option[File] = None, writeIntermediate: Boolean = false,
+    profiling: Boolean = false
 )
 
 case class ConfigManager(cmd: CliConfig) {
@@ -101,18 +98,18 @@ case class ConfigManager(cmd: CliConfig) {
 
     localConfig
       .getOrElse(ConfigSource.empty)
-    // `withFallback` supplies configuration sources that only apply if the preceding configs aren't set
+      // `withFallback` supplies configuration sources that only apply if the preceding configs aren't set
       .withFallback(globalConfig.optional)
       .load[ApalacheConfig]
       .map(cfg =>
         // TODO Is there no better way than hardcoding these overrides?
         cfg.copy(
-          file = Some(cmd.file),
-          outDir = cmd.outDir.getOrElse(cfg.outDir),
-          runDir = cmd.runDir.orElse(cfg.runDir),
-          configFile = cmd.configFile.orElse(cfg.configFile),
-          writeIntermediate = cmd.writeIntermediate.getOrElse(cfg.writeIntermediate),
-          profiling = cmd.profiling.getOrElse(cfg.profiling)
+            file = Some(cmd.file),
+            outDir = cmd.outDir.getOrElse(cfg.outDir),
+            runDir = cmd.runDir.orElse(cfg.runDir),
+            configFile = cmd.configFile.orElse(cfg.configFile),
+            writeIntermediate = cmd.writeIntermediate.getOrElse(cfg.writeIntermediate),
+            profiling = cmd.profiling.getOrElse(cfg.profiling)
         )
       )
   }

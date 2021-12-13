@@ -18,7 +18,8 @@ class RewriterConfig {
   var lazyCircuit = false
 
   /**
-   * If true, then write profiling report */
+   * If true, then write profiling report
+   */
   var profilingReport = false
 }
 
