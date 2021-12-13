@@ -10,13 +10,6 @@ import org.yaml.snakeyaml.Yaml
 
 import scala.io.Source
 
-trait OutputManagerConfig {
-  def outDir: Option[File]
-  def runDir: Option[File]
-  def writeIntermediate: Option[Boolean]
-  def profiling: Option[Boolean]
-}
-
 /**
  * The OutputManager is the central source of truth, for all IO related locations.
  * Any IO operation should request read/write target paths from this object.
@@ -24,16 +17,13 @@ trait OutputManagerConfig {
 object OutputManager extends LazyLogging {
 
   object Names {
-    val OutdirNameInCfg = "out-dir"
-    val IntermediateFlag = "write-intermediate"
     val IntermediateFoldername = "intermediate"
-    val ProfilingFlag = "profiling"
-    val CfgFile = ".tlaplus/apalache-global-config.yml"
-    val DefaultOutdir = "_apalache-out"
     val RunFile = "run.txt"
   }
   import Names._
 
+  // TODO RM once OutputManager isn't a singleton
+  private var cfgOpt: Option[ApalacheConfig] = None
   // outDirOpt is stored as an expanded and absolute path
   private var outDirOpt: Option[Path] = None
   // This should only be set if the IntermediateFlag is true
@@ -42,11 +32,6 @@ object OutputManager extends LazyLogging {
   private var runDirOpt: Option[Path] = None
   // The run directory that users can specify directly through CLI arguments
   private var customRunDirOpt: Option[Path] = None
-  private var flags: Map[String, Boolean] =
-    Map(
-        IntermediateFlag -> false,
-        ProfilingFlag -> false
-    )
 
   // For bug report templates as well as the next iteration of error messages, we will need to reference
   // lines in the original input. This variable stores them.
@@ -99,6 +84,11 @@ object OutputManager extends LazyLogging {
     runDirOpt.getOrElse(throw new IllegalStateException("run directory does not exist"))
   }
 
+  // Private accessor for accessing configuration settings
+  private def cfg: ApalacheConfig = {
+    cfgOpt.getOrElse(throw new IllegalStateException("OutputManager is not configured"))
+  }
+
   // The intermdiate output directory in the configured custom
   // run directory
   private def customIntermediateRunDir: Option[Path] = {
@@ -116,95 +106,37 @@ object OutputManager extends LazyLogging {
     }
   }
 
-  // Create the custom run directory, if one is specified, otherwise
-  // this is a no-op
-  private def createCustomRunDir(): Unit = {
-    customRunDirOpt.foreach(ensureDirExists)
-  }
-
-  private def expandedFilePath(s: String): Path = {
-    val home = System.getProperty("user.home")
-    Paths.get(if (s.startsWith("~")) s.replaceFirst("~", home) else s)
-  }
-
-  /** Loads the Apalache configuration file from HOME/.tlaplus */
-  private def syncFromGlobalConfig(namespace: String): Unit = {
-    val home = System.getProperty("user.home")
-    val configFile = new File(home, CfgFile)
-    if (configFile.exists()) {
-      val yaml = new Yaml
-      val configYaml: java.util.Map[String, Any] = yaml.load(new FileInputStream(configFile.getCanonicalPath))
-
-      configYaml.forEach { case (flagName, flagValue) =>
-        // `OutdirNameInCfg` is a special flag that governs the output directory
-        if (flagName == OutdirNameInCfg) {
-          flagValue match {
-            case path: String => setOutDir(expandedFilePath(path), namespace)
-            case _ =>
-              throw new ConfigurationError(
-                  s"Flag [$flagName] in [${configFile.getAbsolutePath}] must be a directory path string.")
-          }
-        } else if (flags.keySet.contains(flagName)) {
-          // if not `OutdirNameInCfg`, it must be bool, so check for T/F
-          flagValue match {
-            case boolVal: Boolean =>
-              flags += flagName -> boolVal
-            case _ =>
-              throw new ConfigurationError(
-                  s"Flag [$flagName] in [${configFile.getAbsolutePath}] must be a Boolean value.")
-          }
-        } else {
-          throw new ConfigurationError(
-              s"[$flagName] in [${configFile.getAbsolutePath}] is not a valid Apalache parameter.")
-        }
-
-      }
-    }
-    // If `OutdirNameInCfg` is not specified, default to making rundir = <CWD>/_apalache-out/
-    if (outDirOpt.isEmpty) {
-      setOutDir(Paths.get(System.getProperty("user.dir"), DefaultOutdir), namespace)
+  // Sets the customRunDir, if one is given, otherwise is noop
+  private def setCustomRunDir(fopt: Option[File]) {
+    fopt.foreach { f =>
+      val dir = f.toPath().toAbsolutePath()
+      customRunDirOpt = Some(dir)
+      ensureDirExists(dir)
     }
   }
-
-  /** Configure OutputManager based on supported CLI flags */
-  // TODO(shon): Perhaps we should reworking this object as a class that takes a configuration
-  // matching the specification of this trait?
-  private def syncFromCli(namespace: String, cli: OutputManagerConfig): Unit = {
-    cli.outDir.foreach(d => setOutDir(d.toPath(), namespace))
-    cli.runDir.foreach(d => customRunDirOpt = Some(d.toPath().toAbsolutePath()))
-    cli.writeIntermediate.foreach(flags += IntermediateFlag -> _)
-    cli.profiling.foreach(flags += ProfilingFlag -> _)
-  }
-
   /**
    * Configure OutputManager, with cli configuration taking precedence
    * over the configuration file
    */
-  def configure(namespace: String, cli: OutputManagerConfig): Unit = {
-    syncFromGlobalConfig(namespace)
-    syncFromCli(namespace, cli)
+  def configure(config: ApalacheConfig): Unit = {
+    cfgOpt = Some(config)
 
+    val fileName = cfg
+      .file
+      .getOrElse(throw new IllegalStateException("OutputManager configured without file"))
+      .getName
+
+    setOutDir(cfg.outDir.toPath(), fileName)
     ensureDirExists(outDir)
     createRunDirectory()
-    customRunDirOpt.foreach(ensureDirExists)
+    setCustomRunDir(config.runDir)
 
-    if (flags(Names.IntermediateFlag)) {
-      setIntermediateDir(namespace)
+    if (cfg.writeIntermediate) {
+      setIntermediateDir(fileName)
       intermediateDirOpt.foreach(ensureDirExists)
       customIntermediateRunDir.foreach(ensureDirExists)
     }
   }
-
-  /** lends flags to execute `cmd` conditionally */
-  // TODO: remove this once all flag operations are moved into PassOptions
-  def doIfFlag(flagName: String)(cmd: => Unit): Unit =
-    flags
-      .get(flagName)
-      .foreach(flag =>
-        if (flag) {
-          cmd
-        }
-      )
 
   /* Inside `outputDirOpt`, create a directory for an individual run */
   private def createRunDirectory(): Unit = {
@@ -279,6 +211,17 @@ object OutputManager extends LazyLogging {
         true
       }
       .getOrElse(false)
+  }
+
+  /**
+   * Conditionally write into "profile-rules.txt", depending on whether the `profiling` config is set */
+  def withProfilingWriter(f: PrintWriter => Unit): Boolean = {
+    if (cfg.profiling) {
+      withWriterInRunDir("profile-rules.txt")(f)
+      true
+    } else {
+      false
+    }
   }
 
   /**

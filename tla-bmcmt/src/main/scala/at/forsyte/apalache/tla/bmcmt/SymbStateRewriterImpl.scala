@@ -528,7 +528,7 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
   }
 
   override def flushStatistics(): Unit = {
-    statListener.locator.writeStats("profile-rules.txt")
+    statListener.locator.writeStats()
   }
 
   /**
