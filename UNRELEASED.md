@@ -13,3 +13,6 @@
 ### Design
 
  * ADR-014 on precise type checking for records and variants, see #1151
+### Bug fixes
+
+* Fix the use of set union in the array encoding, see #1162
