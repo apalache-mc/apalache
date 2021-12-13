@@ -57,8 +57,7 @@ The type checker assigns the type `Set([type: Str, a: Int, b: Int])` to `S`. As
 a result, one can write the expression `m.a > m.b`, which does not make a lot
 of sense. This may lead to unexpected results in a large specification. In the
 above example, the model checker would just produce some values for `m.a` or
-`m.b`, which will probably result in a strange counterexample. Such
-counterexamples are usually called spurious.
+`m.b`, which will probably result in a spurious counterexample.
 
 Further, multiple related issues and potential solutions were underlined in
 [#401][] and [#789][].
