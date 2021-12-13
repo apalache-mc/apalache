@@ -72,8 +72,7 @@ There are two main patterns of record use in TLA+:
 
 ### 2.1. Untyped plain records
 
-When it comes to records, it is clear that the users expect from the type
-checker that it would complain about missing record fields. Indeed, it is very
+When it comes to records, it is clear that users expect the type checker to complain about missing record fields. Indeed, it is very
 easy to introduce a spurious record field by mistyping the field name. It
 happened to all of us.
 
