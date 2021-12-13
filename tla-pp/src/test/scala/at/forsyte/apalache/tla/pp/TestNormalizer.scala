@@ -127,19 +127,23 @@ class TestNormalizer extends FunSuite with BeforeAndAfterEach {
 
   test("""~ \E x \in s . y ~~> \A x \in s . ~y""") {
     val input =
-      tla.not(tla.exists(tla.name("x") as BoolT1(), tla.name("s") as SetT1(IntT1()), tla.name("y") as BoolT1()) as BoolT1()) as BoolT1()
+      tla.not(tla.exists(tla.name("x") as BoolT1(), tla.name("s") as SetT1(IntT1()),
+              tla.name("y") as BoolT1()) as BoolT1()) as BoolT1()
     val output = normalizer.apply(input)
     val expected =
-      tla.forall(tla.name("x") as BoolT1(), tla.name("s") as SetT1(IntT1()), tla.not(tla.name("y") as BoolT1()) as BoolT1()) as BoolT1()
+      tla.forall(tla.name("x") as BoolT1(), tla.name("s") as SetT1(IntT1()),
+          tla.not(tla.name("y") as BoolT1()) as BoolT1()) as BoolT1()
     assert(expected == output)
   }
 
   test("""~ \A x \in s . y ~~> \E x \in s . ~y""") {
     val input =
-      tla.not(tla.forall(tla.name("x") as BoolT1(), tla.name("s") as SetT1(IntT1()), tla.name("y") as BoolT1()) as BoolT1()) as BoolT1()
+      tla.not(tla.forall(tla.name("x") as BoolT1(), tla.name("s") as SetT1(IntT1()),
+              tla.name("y") as BoolT1()) as BoolT1()) as BoolT1()
     val output = normalizer.apply(input)
     val expected =
-      tla.exists(tla.name("x") as BoolT1(), tla.name("s") as SetT1(IntT1()), tla.not(tla.name("y") as BoolT1()) as BoolT1()) as BoolT1()
+      tla.exists(tla.name("x") as BoolT1(), tla.name("s") as SetT1(IntT1()),
+          tla.not(tla.name("y") as BoolT1()) as BoolT1()) as BoolT1()
     assert(expected == output)
   }
 
@@ -217,18 +221,18 @@ class TestNormalizer extends FunSuite with BeforeAndAfterEach {
 
   test("""unchanged cases""") {
     val expressions = List(
-      // x ~> y
-      tla.leadsTo(tla.name("x") as BoolT1(), tla.name("y") as BoolT1()) as BoolT1(),
-      // TODO: Add remaining unchanged scenarios
+        // x ~> y
+        tla.leadsTo(tla.name("x") as BoolT1(), tla.name("y") as BoolT1()) as BoolT1()
+        // TODO: Add remaining unchanged scenarios
     )
 
     expressions.foreach({ expression =>
-                          val output = normalizer.apply(expression)
-                          assert(expression == output)
+      val output = normalizer.apply(expression)
+      assert(expression == output)
 
-                          val negatedExpression = tla.not(expression) as BoolT1()
-                          val negatedOutput = normalizer.apply(negatedExpression)
-                          assert(negatedExpression == negatedOutput)
-                        })
+      val negatedExpression = tla.not(expression) as BoolT1()
+      val negatedOutput = normalizer.apply(negatedExpression)
+      assert(negatedExpression == negatedOutput)
+    })
   }
 }
