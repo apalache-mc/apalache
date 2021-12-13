@@ -159,9 +159,9 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
 
     case ex @ OperEx(TlaTempOper.box, args @ _*) =>
       if (!neg) {
-        OperEx(TlaTempOper.box, args map nnf(true): _*)(ex.typeTag)
+        OperEx(TlaTempOper.box, args map transform: _*)(ex.typeTag)
       } else {
-        OperEx(TlaTempOper.diamond, args map transform: _*)(ex.typeTag)
+        OperEx(TlaTempOper.diamond, args map nnf(true): _*)(ex.typeTag)
       }
 
     case ex @ OperEx(TlaTempOper.leadsTo, args @ _*) =>
