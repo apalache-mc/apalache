@@ -321,7 +321,7 @@ Hence, we formulate the type inference rule for record access in our type
 system as follows:
 
 ```
-r: Rec(RowCons("f", t_1), t_2)
+r: Rec(RowCons("f", t_1, t_2))
 -------------------------------- [rec_acc]
 r.f: t_1
 ```
