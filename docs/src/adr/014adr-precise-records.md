@@ -272,7 +272,7 @@ Rec(RowCons("a", Int, z))
 In this example, `RowCons("a", Int, z)` is a type term indicating that the type
 has the field called `a`, and its type is `Int`. On top of that, this row
 extends a parametric type `z`, which either contains a non-empty sequence of
-rows, or is an empty sequence, that is, `RowNil`. Importantly, `RecCons` is
+rows, or is an empty sequence, that is, `RowNil`. Importantly, `RowCons` is
 wrapped with the term `Rec`, so no additional fields can be added to the type.
 
 The example `FieldAccess` contains a record constructor
