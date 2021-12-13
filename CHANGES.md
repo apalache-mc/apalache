@@ -2,6 +2,12 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.18.2
+
+### Bug fixes
+
+* Fix the use of set union in the array encoding, see #1162
+
 ## 0.18.1
 
 ### Bug fixes
