@@ -76,7 +76,6 @@ case class ConfigManager(cmd: CliConfig) {
   }
 
   private def localConfig(): Option[ConfigObjectSource] = {
-    // TODO Ensure an error is raised if config file is specifid in cmd but file cannot be loaded!
     cmd.configFile.map(ConfigSource.file).orElse(findLocalConfig(Paths.get(".").toAbsolutePath()))
   }
 
