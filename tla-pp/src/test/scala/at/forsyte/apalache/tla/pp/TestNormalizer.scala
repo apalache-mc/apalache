@@ -235,6 +235,29 @@ class TestNormalizer extends FunSuite with BeforeAndAfterEach {
     assert(expected == output)
   }
 
+  test("""LET x = ~FALSE IN ~~x ~~> LET x = TRUE IN x""") {
+    val decl = tla.declOp("x", tla.not(tla.bool(false)) as BoolT1()) as BoolT1()
+    val input = tla.letIn(tla.not(tla.not(tla.name("x") as BoolT1()) as BoolT1()) as BoolT1(), decl) as BoolT1()
+    val output = normalizer.apply(input)
+
+    val expectedDecl = tla.declOp("x", tla.bool(true)) as BoolT1()
+    val expected =
+      tla.letIn(tla.name("x") as BoolT1(), expectedDecl) as BoolT1()
+    assert(expected == output)
+  }
+
+  test("""~ (LET x = ~FALSE IN ~x ~~> LET x = ~FALSE IN x)""") {
+    val decl = tla.declOp("x", tla.not(tla.bool(false)) as BoolT1()) as BoolT1()
+    val input = tla.not(tla.letIn(tla.not(tla.name("x") as BoolT1()) as BoolT1(), decl) as BoolT1()) as BoolT1()
+    val output = normalizer.apply(input)
+    println(output)
+
+    val expectedDecl = tla.declOp("x", tla.not(tla.bool(false)) as BoolT1()) as BoolT1()
+    val expected =
+      tla.letIn(tla.name("x") as BoolT1(), expectedDecl) as BoolT1()
+    assert(expected == output)
+  }
+
   test("""unchanged cases""") {
     val expressions = List(
         // x ~> y and negation
