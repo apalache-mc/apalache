@@ -194,10 +194,26 @@ class TestNormalizer extends FunSuite with BeforeAndAfterEach {
 
   test("""~(~FALSE \in s) ~~> ~(TRUE \in s)""") {
     val input =
-      tla.not(tla.in(tla.not(tla.bool(false)) as BoolT1(), tla.name("s") as SetT1(IntT1())) as BoolT1()) as BoolT1()
+      tla.not(tla.in(tla.not(tla.bool(false)) as BoolT1(), tla.name("s") as SetT1(BoolT1())) as BoolT1()) as BoolT1()
     val output = normalizer.apply(input)
     val expected =
-      tla.not(tla.in(tla.bool(true), tla.name("s") as SetT1(IntT1())) as BoolT1()) as BoolT1()
+      tla.not(tla.in(tla.bool(true), tla.name("s") as SetT1(BoolT1())) as BoolT1()) as BoolT1()
+    assert(expected == output)
+  }
+
+  test("""(~FALSE \notin s) ~~> ~(TRUE \in s)""") {
+    val input =
+      tla.notin(tla.not(tla.bool(false)) as BoolT1(), tla.name("s") as SetT1(BoolT1())) as BoolT1()
+    val output = normalizer.apply(input)
+    val expected =
+      tla.not(tla.in(tla.bool(true), tla.name("s") as SetT1(BoolT1())) as BoolT1()) as BoolT1()
+    assert(expected == output)
+  }
+
+  test("""lab(a) :: ~FALSE ~~> lab(a) :: TRUE""") {
+    val input = tla.label(tla.not(tla.bool(false)) as BoolT1(), "lab", "a") as BoolT1()
+    val output = normalizer.apply(input)
+    val expected = tla.label(tla.bool(true), "lab", "a") as BoolT1()
     assert(expected == output)
   }
 
