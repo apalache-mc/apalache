@@ -23,7 +23,7 @@ object OutputManager extends LazyLogging {
   import Names._
 
   // TODO RM once OutputManager isn't a singleton
-  private var cfgOpt: Option[ApalacheConfig] = None
+  private var cfg: ApalacheConfig = ApalacheConfig()
   // outDirOpt is stored as an expanded and absolute path
   private var outDirOpt: Option[Path] = None
   // This should only be set if the IntermediateFlag is true
@@ -84,11 +84,6 @@ object OutputManager extends LazyLogging {
     runDirOpt.getOrElse(throw new IllegalStateException("run directory does not exist"))
   }
 
-  // Private accessor for accessing configuration settings
-  private def cfg: ApalacheConfig = {
-    cfgOpt.getOrElse(throw new IllegalStateException("OutputManager is not configured"))
-  }
-
   // The intermdiate output directory in the configured custom
   // run directory
   private def customIntermediateRunDir: Option[Path] = {
@@ -120,7 +115,8 @@ object OutputManager extends LazyLogging {
    * over the configuration file
    */
   def configure(config: ApalacheConfig): Unit = {
-    cfgOpt = Some(config)
+    // Replace the default config used for initialiation with the config loaded on startup
+    cfg = config
 
     val fileName = cfg.file
       .getOrElse(throw new IllegalStateException("OutputManager configured without file"))
