@@ -1,8 +1,9 @@
-# ADR-008: Apalache Outputs
+---
+authors: Jure Kukovec, Shon Feder
+last revised: 2021-12-14
+---
 
-| author                   | revision |
-|--------------------------|---------:|
-| Jure Kukovec, Shon Feder |        2.1 |
+# ADR-008: Apalache Outputs
 
 This ADR documents the various files produced by Apalache, and where they get written to.
 
@@ -67,9 +68,18 @@ following:
 
 ## 4. Global Configuration File
 
-Apalache should define a global configuration file `apalache-global-config`, e.g. in the `<HOME>/.tlaplus` directory, in which users can define the default values of all parameters, including all flags listed in section 1, as well as `out-dir`. The format of the configuration file is an implementation detail and will not be specified here.
+Apalache should define a global configuration file `apalache.cfg`, e.g. in the `<HOME>/.tlaplus` directory, in which users can define the default values of all parameters, including all flags listed in section 1, as well as `out-dir`. The format of the configuration file is an implementation detail and will not be specified here.
+
+Apalache should also look for a local configuration file `.apalache.cfg`, within
+current working directory or its parents. If it finds such file, any configured
+parameters therein will override the parameters from the global config file.
+
 If a parameter is specified in the configuration file, it replaces the default value, but specifying a parameter manually always overrides config defaults.
 In other words, parameter values are determined in the following way, by order of priority:
-  1. If `--<flag>=<value>` is given, use `<value>`, otherwise
-  2. If `apalache-global-config` specifies `<flag>=<CFGvalue>` use `<CFGvalue>`, otherwise 
-  3. Use Apalache defaults.
+
+1. If `--<flag>=<value>` is given, use `<value>`, otherwise
+2. if a local `.apalache.cfg` file is found containing `<flag>: <value>`, then
+    use `<value>`, otherwise
+3. if the global `apalache.cfg` specifies `<flag>=: <value>` use `<value>`,
+    otherwise
+4. Use the defaults specified in the `ApalacheConfig` class.
