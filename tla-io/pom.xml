@@ -41,6 +41,12 @@
             <artifactId>scala-parser-combinators_${scalaBinaryVersion}</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.github.pureconfig</groupId>
+            <artifactId>pureconfig_${scalaBinaryVersion}</artifactId>
+            <version>0.17.1</version>
+        </dependency>
+
         <!-- https://mvnrepository.com/artifact/org.yaml/snakeyaml -->
         <dependency>
             <groupId>org.yaml</groupId>

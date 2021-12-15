@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.tooling.opt
 
 import org.backuity.clist.{Command, _}
+import java.io.File
 
 /**
  * This command initiates the 'config' command line.
@@ -12,4 +13,7 @@ class ConfigCmd extends Command(name = "config", description = "Configure Apalac
   var submitStats: Option[Boolean] = opt[Option[Boolean]](name = "enable-stats",
       description = "Let Apalache submit usage statistics to tlapl.us\n"
         + "(shared with TLC and TLA+ Toolbox)\nSee: https://apalache.informal.systems/docs/apalache/statistics.html")
+
+  // Used for application (esp. output) configuration
+  def file = new File("config")
 }
