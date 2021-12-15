@@ -21,3 +21,4 @@
 ### Bug fixes
 
 * Fix the use of set union in the array encoding, see #1162
+* Fix preprocesor's normalization of negated temporal formulas and negated `LET .. IN` expressions, see #1165

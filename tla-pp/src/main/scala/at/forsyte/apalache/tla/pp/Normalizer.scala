@@ -159,9 +159,9 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
 
     case ex @ OperEx(TlaTempOper.box, args @ _*) =>
       if (!neg) {
-        OperEx(TlaTempOper.box, args map nnf(true): _*)(ex.typeTag)
+        OperEx(TlaTempOper.box, args map transform: _*)(ex.typeTag)
       } else {
-        OperEx(TlaTempOper.diamond, args map transform: _*)(ex.typeTag)
+        OperEx(TlaTempOper.diamond, args map nnf(true): _*)(ex.typeTag)
       }
 
     case ex @ OperEx(TlaTempOper.leadsTo, args @ _*) =>
@@ -193,14 +193,16 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
       }
 
     case letIn @ LetInEx(body, defs @ _*) =>
+      // always normalize the bodies of the definitions
+      def transformDef(decl: TlaOperDecl): TlaOperDecl = decl.copy(body = transform(decl.body))
+      val normalizedDefs = defs map transformDef
+
       if (neg) {
         // a negation of the let body
-        nnfLetIn(neg, body, defs)
+        nnfLetIn(neg, body, normalizedDefs)
       } else {
-        // no negation, simply normalize the body and the bodies of the definitions
-        def transformDef(decl: TlaOperDecl): TlaOperDecl = decl.copy(body = transform(decl.body))
-
-        LetInEx(transform(body), defs map transformDef: _*)(letIn.typeTag)
+        // no negation, simply normalize the body
+        LetInEx(transform(body), normalizedDefs: _*)(letIn.typeTag)
       }
 
     case ex @ OperEx(oper, args @ _*) =>
