@@ -170,27 +170,60 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#apalache-global-configuration-file" id="apalache-global-configuration-file">Apalache global configuration file</a></h1>
-<p>Apalache allows you to specify certain parameters, governing outputs produced by it, as described in <a href="../adr/009adr-outputs.html">ADR-009</a>.</p>
-<p>You can create a global configuration file named <code>apalache-global-config.yml</code> in <code>$HOME/.tlaplus/</code> and populate it with values for the following flags, in YAML format:</p>
-<ul>
-<li><code>out-dir</code> (String): The value of <code>out-dir</code> defines a path to the directory,
-in which all Apalache runs write their outputs. Each run will produce a unique
-subdirectory inside <code>out-dir</code> using the following convention:
-<code>&lt;SPECNAME&gt;_yyyy-MM-dd_HH-mm-ss_&lt;UNIQUEID&gt;</code>. The use of <code>~</code> in the path
-specification is permitted. The directory path need not already exist.
-Example value: <code>'~/apalache-out'</code>.
-If this value is not defined in <code>apalache-global-config.yml</code>, Apalache will, for each individual run, define it to be equal to <code>CWD/_apalache-out/</code>, where <code>CWD</code> is the current working directory.</li>
-<li><code>profiling</code> (Bool): This flag governs the creation of <code>profile-rules.txt</code> used in <a href="profiling.html">profiling</a>. The file is only created if <code>profiling</code> is set to <code>True</code>.  Setting <code>profiling</code> to <code>False</code> is incompatible with the <code>--smtprof</code> flag.
-The default is <code>False</code>.</li>
-<li><code>write-intermediate</code> (Bool): This Boolean flag governs the creation of intermediate outputs. If set to <code>True</code>, apalache will produce an <code>intermediate</code> subdirectory in the run directory and output the state of the module after each pass.
-The default is <code>False</code>.</li>
-</ul>
-<p>Example of a valid <code>apalache-global-config.yml</code>:</p>
-<pre><code>out-dir: '~/apalache-out'
-profiling: True
-write-intermediate: True
+                        <h1><a class="header" href="#apalache-configuration" id="apalache-configuration">Apalache configuration</a></h1>
+<p>Apalache supports configuration of some parameters governing its behavior.</p>
+<p>Application configuration is loaded from the following four sources:</p>
+<ol>
+<li>Command line arguments</li>
+<li>Environment variables</li>
+<li>A local configuration file</li>
+<li>The global configuration file</li>
+</ol>
+<p>The order of precedence of the sources follows their numbering: i.e., and any
+configuration set in an earlier numbered source overrides a configuration set in
+a later numbered source.</p>
+<h2><a class="header" href="#command-line-arguments-and-environment-variables" id="command-line-arguments-and-environment-variables">Command line arguments and environment variables</a></h2>
+<p>To view the available command line arguments, run Apalache with the <code>--help</code>
+flag and consult the section on <a href="./running.html">Running the Tool</a> for more
+details.</p>
+<p><em>Some</em> parameters configurable via the command line are also configurable via environment
+variables. These parameters are noted in the CLI's inline help. If a parameter
+is configured both through a CLI argument and an environment variable, then the
+CLI argument always takes precedence. </p>
+<h2><a class="header" href="#configuration-files" id="configuration-files">Configuration files</a></h2>
+<h3><a class="header" href="#file-format-and-supported-parameters" id="file-format-and-supported-parameters">File format and supported parameters</a></h3>
+<p>Local configuration files support JSON and the JSON superset
+<a href="https://github.com/lightbend/config/blob/master/HOCON.md">HOCON</a>.</p>
+<p>Here's an example of a valid configuration for the currently 
+supported parameters, along with their default values: </p>
+<pre><code class="language-yaml"># Directory in which to write all log files and records of each run
+out-dir: &quot;${PWD}/_apalache-out&quot;
+
+# Whether or not to write additional files, that report on intermediate
+# processing steps
+write-intermediate: false
+
+# Whether or not to write the SMT profiling file
+profiling: false
+
+# Fixed directory into which generated files are written (absent by default)
+# run-dir: ~/my-run-dir
 </code></pre>
+<p>A <code>~</code> found at the beginning of a file path will expanded into the value set for
+the user's home directory.</p>
+<p>Details on the effect of these parameters can be found in <a href="./running.html">Running the
+Too</a>.</p>
+<h3><a class="header" href="#local-configuration-file" id="local-configuration-file">Local configuration file</a></h3>
+<p>You can specify a local configuration file explicitly via the <code>config-file</code>
+command line argument. If this is not provided, then Apalache will look for the
+nearest <code>.apalache.cfg</code> file, beginning in the current working directory and
+searching up through its parents.</p>
+<p>Parameters configured in the local configuration file will be overridden by
+values set via CLI arguments or environment variables, and will override
+parameters configured via the global configuration file.</p>
+<h3><a class="header" href="#global-configuration-file" id="global-configuration-file">Global configuration file</a></h3>
+<p>The final fallback for configuration parameters is the global configuration file
+named <code>$HOME/.tlaplus/apalache.cfg</code>.</p>
 
                     </main>
 

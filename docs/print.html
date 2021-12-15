@@ -612,10 +612,13 @@ will submit anonymized statistics to
 <p>The model checker can be run as follows:</p>
 <pre><code class="language-bash">$ apalache check [--config=filename] [--init=Init] [--cinit=ConstInit] \
     [--next=Next] [--inv=Inv] [--length=10] [--algo=(incremental|offline)] \
-    [--discard-disabled] [--no-deadlock] [--tuning=filename] [--tune-here=options] \
+    [--discard-disabled] [--no-deadlock] \
+    [--tuning=filename] [--tune-here=options] \
     [--smt-encoding=(oopsla19|arrays)] \
     [--out-dir=./path/to/dir] \
     [--write-intermediate=(true|false)] \
+    [--config-file=./path/to/file] \
+    [--profiling=false] \
     &lt;myspec&gt;.tla
 </code></pre>
 <p>The arguments are as follows:</p>
@@ -640,7 +643,7 @@ using the non-incremental
 (offline) SMT solver</p>
 </li>
 <li>
-<p><code>smt-encoding</code> lets you choose how the SMT instances are encoded: <code>oopsla19</code> (default) uses QF_UFNIA, and
+<p><code>--smt-encoding</code> lets you choose how the SMT instances are encoded: <code>oopsla19</code> (default) uses QF_UFNIA, and
 <code>arrays</code> (experimental) uses arrays with extensionality. This parameter can also be set via the
 <code>SMT_ENCODING</code> environment variable. See the <a href="apalache/../adr/011adr-smt-arrays.html">alternative SMT encoding using arrays</a> for details.</p>
 </li>
@@ -674,6 +677,16 @@ deadlocks are found in any case.</p>
 <li>
 <p><code>--run-dir=DIRECTORY</code> write all outputs directly into the specified
 <code>DIRECTORY</code></p>
+</li>
+<li>
+<p><code>--config-file</code> a file to use for loading configuration parameters. This
+will prevent Apalache from looking for any local <code>.apalache.cfg</code> file.</p>
+</li>
+<li>
+<p><code>--profiling</code> (Bool): This flag governs the creation of <code>profile-rules.txt</code>
+used in <a href="apalache/profiling.html">profiling</a>. The file is only created if <code>profiling</code>
+is set to <code>True</code>.  Setting <code>profiling</code> to <code>False</code> is incompatible with the
+<code>--smtprof</code> flag. The default is <code>False</code>.</p>
 <p>The options that are passed with the option <code>--tuning-options</code>
 have priority over the options that are passed with the option <code>--tuning</code>.</p>
 </li>
@@ -815,11 +828,30 @@ list of paths to directories separated by <code>:</code>.</li>
 the <a href="https://github.com/tlaplus/CommunityModules">TLA+ Community Modules</a>.</p>
 <p><a name="detailed"></a></p>
 <h2><a class="header" href="#detailed-output" id="detailed-output">Detailed output</a></h2>
-<p>The tool will display only important messages on stdout, but a detailed log can be found in <code>detailed.log</code>.</p>
-<p>Additionally, if the flag <code>--write-intermediate=true</code> is set or this option is
-enabled in the <code>apalache-global-config.yml</code> (see <a href="apalache/config.html">configuration
-instructions</a>) each pass of the model checker produces an
-intermediate TLA+ file in the run-specific directory:</p>
+<p>The location for detailed output is determined by the value of the <code>out-dir</code>
+parameter, which specifies the path to a directory into which all Apalache
+runs write their outputs (see <a href="apalache/config.html">configuration instructions</a>. </p>
+<p>Each run will produce a unique subdirectory inside its &quot;namespace&quot;, derived from
+the file name of the specification, using the following convention
+<code>yyyy-MM-ddTHH-mm-ss_&lt;UNIQUEID&gt;</code>. </p>
+<p>For an example, consider using the default location of the <code>run-dir</code> for a run of
+Apalache on a spec named <code>test.tla</code>. This will create a directory structuring matching following pattern:</p>
+<pre><code>./_apalache-out/
+└── test.tla
+    └── 2021-11-05T22-54-55_810261790529975561
+</code></pre>
+<p>The default value for the <code>out-dir</code> is the <code>_apalache-out</code> directory in the
+current working directly. The subdirectory <code>test.tla</code> is derived from the name
+of the spec on which the tool was run, and the run-specific subdirectory
+<code>2021-11-05T22-54-55_810261790529975561</code> gives a unique location to write the
+all the outputs produced by the run.</p>
+<p>The tool only writes important messages on stdout, but a detailed log can be
+found in the <code>detailed.log</code> in the run-specific subdirectory.</p>
+<p>The directory also includes a file <code>run.txt</code>, reporting the command line
+arguments used during the run.</p>
+<p>Additionally, if the parameter <code>write-intermediate</code> is set to <code>true</code> (see
+<a href="apalache/config.html">configuration instructions</a>) each pass of the model checker produces
+intermediate TLA+ files in the run-specific subdirectory:</p>
 <ul>
 <li>File <code>out-parser.tla</code> is produced as a result of parsing and importing into the intermediate representation, Apalache
 TLA IR.</li>
@@ -1885,27 +1917,60 @@ Inv == x &gt;= 0
 <p>Given that you will need the value <code>Int</code> for a type annotation, it probably
 does not make a lot of sense to extend <code>Naturals</code> in your own specifications,
 as you will have to extend <code>Integers</code> for the type annotation too.</p>
-<h1><a class="header" href="#apalache-global-configuration-file" id="apalache-global-configuration-file">Apalache global configuration file</a></h1>
-<p>Apalache allows you to specify certain parameters, governing outputs produced by it, as described in <a href="apalache/../adr/009adr-outputs.html">ADR-009</a>.</p>
-<p>You can create a global configuration file named <code>apalache-global-config.yml</code> in <code>$HOME/.tlaplus/</code> and populate it with values for the following flags, in YAML format:</p>
-<ul>
-<li><code>out-dir</code> (String): The value of <code>out-dir</code> defines a path to the directory,
-in which all Apalache runs write their outputs. Each run will produce a unique
-subdirectory inside <code>out-dir</code> using the following convention:
-<code>&lt;SPECNAME&gt;_yyyy-MM-dd_HH-mm-ss_&lt;UNIQUEID&gt;</code>. The use of <code>~</code> in the path
-specification is permitted. The directory path need not already exist.
-Example value: <code>'~/apalache-out'</code>.
-If this value is not defined in <code>apalache-global-config.yml</code>, Apalache will, for each individual run, define it to be equal to <code>CWD/_apalache-out/</code>, where <code>CWD</code> is the current working directory.</li>
-<li><code>profiling</code> (Bool): This flag governs the creation of <code>profile-rules.txt</code> used in <a href="apalache/profiling.html">profiling</a>. The file is only created if <code>profiling</code> is set to <code>True</code>.  Setting <code>profiling</code> to <code>False</code> is incompatible with the <code>--smtprof</code> flag.
-The default is <code>False</code>.</li>
-<li><code>write-intermediate</code> (Bool): This Boolean flag governs the creation of intermediate outputs. If set to <code>True</code>, apalache will produce an <code>intermediate</code> subdirectory in the run directory and output the state of the module after each pass.
-The default is <code>False</code>.</li>
-</ul>
-<p>Example of a valid <code>apalache-global-config.yml</code>:</p>
-<pre><code>out-dir: '~/apalache-out'
-profiling: True
-write-intermediate: True
+<h1><a class="header" href="#apalache-configuration" id="apalache-configuration">Apalache configuration</a></h1>
+<p>Apalache supports configuration of some parameters governing its behavior.</p>
+<p>Application configuration is loaded from the following four sources:</p>
+<ol>
+<li>Command line arguments</li>
+<li>Environment variables</li>
+<li>A local configuration file</li>
+<li>The global configuration file</li>
+</ol>
+<p>The order of precedence of the sources follows their numbering: i.e., and any
+configuration set in an earlier numbered source overrides a configuration set in
+a later numbered source.</p>
+<h2><a class="header" href="#command-line-arguments-and-environment-variables" id="command-line-arguments-and-environment-variables">Command line arguments and environment variables</a></h2>
+<p>To view the available command line arguments, run Apalache with the <code>--help</code>
+flag and consult the section on <a href="apalache/./running.html">Running the Tool</a> for more
+details.</p>
+<p><em>Some</em> parameters configurable via the command line are also configurable via environment
+variables. These parameters are noted in the CLI's inline help. If a parameter
+is configured both through a CLI argument and an environment variable, then the
+CLI argument always takes precedence. </p>
+<h2><a class="header" href="#configuration-files" id="configuration-files">Configuration files</a></h2>
+<h3><a class="header" href="#file-format-and-supported-parameters" id="file-format-and-supported-parameters">File format and supported parameters</a></h3>
+<p>Local configuration files support JSON and the JSON superset
+<a href="https://github.com/lightbend/config/blob/master/HOCON.md">HOCON</a>.</p>
+<p>Here's an example of a valid configuration for the currently 
+supported parameters, along with their default values: </p>
+<pre><code class="language-yaml"># Directory in which to write all log files and records of each run
+out-dir: &quot;${PWD}/_apalache-out&quot;
+
+# Whether or not to write additional files, that report on intermediate
+# processing steps
+write-intermediate: false
+
+# Whether or not to write the SMT profiling file
+profiling: false
+
+# Fixed directory into which generated files are written (absent by default)
+# run-dir: ~/my-run-dir
 </code></pre>
+<p>A <code>~</code> found at the beginning of a file path will expanded into the value set for
+the user's home directory.</p>
+<p>Details on the effect of these parameters can be found in <a href="apalache/./running.html">Running the
+Too</a>.</p>
+<h3><a class="header" href="#local-configuration-file" id="local-configuration-file">Local configuration file</a></h3>
+<p>You can specify a local configuration file explicitly via the <code>config-file</code>
+command line argument. If this is not provided, then Apalache will look for the
+nearest <code>.apalache.cfg</code> file, beginning in the current working directory and
+searching up through its parents.</p>
+<p>Parameters configured in the local configuration file will be overridden by
+values set via CLI arguments or environment variables, and will override
+parameters configured via the global configuration file.</p>
+<h3><a class="header" href="#global-configuration-file" id="global-configuration-file">Global configuration file</a></h3>
+<p>The final fallback for configuration parameters is the global configuration file
+named <code>$HOME/.tlaplus/apalache.cfg</code>.</p>
 <h1><a class="header" href="#tla-anonymized-execution-statistics" id="tla-anonymized-execution-statistics">TLA+ Anonymized Execution Statistics</a></h1>
 <p>Apalache participates in the optional <a href="https://github.com/tlaplus/tlaplus/blob/master/tlatools/org.lamport.tlatools/src/util/ExecutionStatisticsCollector.md">anonymized statistics programme</a> along
 with <a href="http://lamport.azurewebsites.net/tla/toolbox.html">TLA+ Toolbox</a>, TLC (which is part of the Toolbox), and <a href="https://marketplace.visualstudio.com/items?itemName=alygin.vscode-tlaplus">Visual Studio
@@ -10527,10 +10592,10 @@ If Sany produces an exception Apalache catches it and re-throws a class extendin
 <li>Suggestions on how to fix the exception</li>
 <li>A link to the manual, explaining the cause of the exception</li>
 </ul>
+<hr />
+<h2>authors: Jure Kukovec, Shon Feder
+last revised: 2021-12-14</h2>
 <h1><a class="header" href="#adr-008-apalache-outputs" id="adr-008-apalache-outputs">ADR-008: Apalache Outputs</a></h1>
-<table><thead><tr><th>author</th><th align="right">revision</th></tr></thead><tbody>
-<tr><td>Jure Kukovec, Shon Feder</td><td align="right">2.1</td></tr>
-</tbody></table>
 <p>This ADR documents the various files produced by Apalache, and where they get written to.</p>
 <h2><a class="header" href="#1-categories-of-outputs" id="1-categories-of-outputs">1. Categories of outputs</a></h2>
 <p>Files produced by Apalache belong to one of the following categories:</p>
@@ -10579,13 +10644,19 @@ following:</p>
 <li>Files associated with enabled analyses, e.g. <code>profile-rules.txt</code></li>
 </ul>
 <h2><a class="header" href="#4-global-configuration-file" id="4-global-configuration-file">4. Global Configuration File</a></h2>
-<p>Apalache should define a global configuration file <code>apalache-global-config</code>, e.g. in the <code>&lt;HOME&gt;/.tlaplus</code> directory, in which users can define the default values of all parameters, including all flags listed in section 1, as well as <code>out-dir</code>. The format of the configuration file is an implementation detail and will not be specified here.
-If a parameter is specified in the configuration file, it replaces the default value, but specifying a parameter manually always overrides config defaults.
+<p>Apalache should define a global configuration file <code>apalache.cfg</code>, e.g. in the <code>&lt;HOME&gt;/.tlaplus</code> directory, in which users can define the default values of all parameters, including all flags listed in section 1, as well as <code>out-dir</code>. The format of the configuration file is an implementation detail and will not be specified here.</p>
+<p>Apalache should also look for a local configuration file <code>.apalache.cfg</code>, within
+current working directory or its parents. If it finds such file, any configured
+parameters therein will override the parameters from the global config file.</p>
+<p>If a parameter is specified in the configuration file, it replaces the default value, but specifying a parameter manually always overrides config defaults.
 In other words, parameter values are determined in the following way, by order of priority:</p>
 <ol>
 <li>If <code>--&lt;flag&gt;=&lt;value&gt;</code> is given, use <code>&lt;value&gt;</code>, otherwise</li>
-<li>If <code>apalache-global-config</code> specifies <code>&lt;flag&gt;=&lt;CFGvalue&gt;</code> use <code>&lt;CFGvalue&gt;</code>, otherwise </li>
-<li>Use Apalache defaults.</li>
+<li>if a local <code>.apalache.cfg</code> file is found (or is specified with the <code>--config-file</code> argument) containing <code>&lt;flag&gt;: &lt;value&gt;</code>, then
+use <code>&lt;value&gt;</code>, otherwise</li>
+<li>if the global <code>apalache.cfg</code> specifies <code>&lt;flag&gt;: &lt;value&gt;</code> use <code>&lt;value&gt;</code>,
+otherwise</li>
+<li>Use the defaults specified in the <code>ApalacheConfig</code> class.</li>
 </ol>
 <h1><a class="header" href="#adr-011-alternative-smt-encoding-using-arrays" id="adr-011-alternative-smt-encoding-using-arrays">ADR-011: alternative SMT encoding using arrays</a></h1>
 <table><thead><tr><th>author</th><th align="right">revision</th></tr></thead><tbody>

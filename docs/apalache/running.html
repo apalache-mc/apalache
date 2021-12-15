@@ -178,10 +178,13 @@ will submit anonymized statistics to
 <p>The model checker can be run as follows:</p>
 <pre><code class="language-bash">$ apalache check [--config=filename] [--init=Init] [--cinit=ConstInit] \
     [--next=Next] [--inv=Inv] [--length=10] [--algo=(incremental|offline)] \
-    [--discard-disabled] [--no-deadlock] [--tuning=filename] [--tune-here=options] \
+    [--discard-disabled] [--no-deadlock] \
+    [--tuning=filename] [--tune-here=options] \
     [--smt-encoding=(oopsla19|arrays)] \
     [--out-dir=./path/to/dir] \
     [--write-intermediate=(true|false)] \
+    [--config-file=./path/to/file] \
+    [--profiling=false] \
     &lt;myspec&gt;.tla
 </code></pre>
 <p>The arguments are as follows:</p>
@@ -206,7 +209,7 @@ using the non-incremental
 (offline) SMT solver</p>
 </li>
 <li>
-<p><code>smt-encoding</code> lets you choose how the SMT instances are encoded: <code>oopsla19</code> (default) uses QF_UFNIA, and
+<p><code>--smt-encoding</code> lets you choose how the SMT instances are encoded: <code>oopsla19</code> (default) uses QF_UFNIA, and
 <code>arrays</code> (experimental) uses arrays with extensionality. This parameter can also be set via the
 <code>SMT_ENCODING</code> environment variable. See the <a href="../adr/011adr-smt-arrays.html">alternative SMT encoding using arrays</a> for details.</p>
 </li>
@@ -240,6 +243,16 @@ deadlocks are found in any case.</p>
 <li>
 <p><code>--run-dir=DIRECTORY</code> write all outputs directly into the specified
 <code>DIRECTORY</code></p>
+</li>
+<li>
+<p><code>--config-file</code> a file to use for loading configuration parameters. This
+will prevent Apalache from looking for any local <code>.apalache.cfg</code> file.</p>
+</li>
+<li>
+<p><code>--profiling</code> (Bool): This flag governs the creation of <code>profile-rules.txt</code>
+used in <a href="profiling.html">profiling</a>. The file is only created if <code>profiling</code>
+is set to <code>True</code>.  Setting <code>profiling</code> to <code>False</code> is incompatible with the
+<code>--smtprof</code> flag. The default is <code>False</code>.</p>
 <p>The options that are passed with the option <code>--tuning-options</code>
 have priority over the options that are passed with the option <code>--tuning</code>.</p>
 </li>
@@ -381,11 +394,30 @@ list of paths to directories separated by <code>:</code>.</li>
 the <a href="https://github.com/tlaplus/CommunityModules">TLA+ Community Modules</a>.</p>
 <p><a name="detailed"></a></p>
 <h2><a class="header" href="#detailed-output" id="detailed-output">Detailed output</a></h2>
-<p>The tool will display only important messages on stdout, but a detailed log can be found in <code>detailed.log</code>.</p>
-<p>Additionally, if the flag <code>--write-intermediate=true</code> is set or this option is
-enabled in the <code>apalache-global-config.yml</code> (see <a href="config.html">configuration
-instructions</a>) each pass of the model checker produces an
-intermediate TLA+ file in the run-specific directory:</p>
+<p>The location for detailed output is determined by the value of the <code>out-dir</code>
+parameter, which specifies the path to a directory into which all Apalache
+runs write their outputs (see <a href="config.html">configuration instructions</a>. </p>
+<p>Each run will produce a unique subdirectory inside its &quot;namespace&quot;, derived from
+the file name of the specification, using the following convention
+<code>yyyy-MM-ddTHH-mm-ss_&lt;UNIQUEID&gt;</code>. </p>
+<p>For an example, consider using the default location of the <code>run-dir</code> for a run of
+Apalache on a spec named <code>test.tla</code>. This will create a directory structuring matching following pattern:</p>
+<pre><code>./_apalache-out/
+└── test.tla
+    └── 2021-11-05T22-54-55_810261790529975561
+</code></pre>
+<p>The default value for the <code>out-dir</code> is the <code>_apalache-out</code> directory in the
+current working directly. The subdirectory <code>test.tla</code> is derived from the name
+of the spec on which the tool was run, and the run-specific subdirectory
+<code>2021-11-05T22-54-55_810261790529975561</code> gives a unique location to write the
+all the outputs produced by the run.</p>
+<p>The tool only writes important messages on stdout, but a detailed log can be
+found in the <code>detailed.log</code> in the run-specific subdirectory.</p>
+<p>The directory also includes a file <code>run.txt</code>, reporting the command line
+arguments used during the run.</p>
+<p>Additionally, if the parameter <code>write-intermediate</code> is set to <code>true</code> (see
+<a href="config.html">configuration instructions</a>) each pass of the model checker produces
+intermediate TLA+ files in the run-specific subdirectory:</p>
 <ul>
 <li>File <code>out-parser.tla</code> is produced as a result of parsing and importing into the intermediate representation, Apalache
 TLA IR.</li>
