@@ -194,6 +194,30 @@ object ApalacheOper {
   }
 
   /**
+   * The storeInSetOneStep operator is a variant of storeInSet.
+   * It signals a step in a sequence of operations enforcing set membership.
+   */
+  object storeInSetOneStep extends ApalacheOper {
+    override def name: String = "Apalache!StoreInSetOneStep"
+
+    override def arity: OperArity = FixedArity(3)
+
+    override def precedence: (Int, Int) = (5, 5)
+  }
+
+  /**
+   * The storeInSetLastStep operator is a variant of storeInSet.
+   * It signals the last step in a sequence of operations enforcing set membership.
+   */
+  object storeInSetLastStep extends ApalacheOper {
+    override def name: String = "Apalache!StoreInSetLastStep"
+
+    override def arity: OperArity = FixedArity(2)
+
+    override def precedence: (Int, Int) = (5, 5)
+  }
+
+  /**
    * The storeNotInSet operator is a variant of storeInSet.
    * It signals that the negation of set membership should be enforced.
    */

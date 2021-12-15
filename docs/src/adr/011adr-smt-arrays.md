@@ -136,10 +136,11 @@ The following changes will be made to implement the new encoding of sets:
     elements will remain unchanged.
 - In class `SymbStateRewriterImplWithArrays`, add the new rules to `ruleLookupTable` by overriding
   the entries to their older versions.
-- Add three new Apalache IR operators in `ApalacheOper`, `Builder`, `ConstSimplifierForSmt`, and 
+- Add five new Apalache IR operators in `ApalacheOper`, `Builder`, `ConstSimplifierForSmt`, and 
   `PreproSolverContext`, to represent the array operations.
   - The `selectInSet` IR operator represents the SMT `select`.
   - The `storeInSet` IR operator represents the SMT `store`.
+  - The `storeInSetOneStep` and `storeInSetLastStep` IR operators represent a compound SMT `store`.
   - The `unchangedSet` IR operator represents an equality between the current and new SSA array
     representations. This is required to constraint the array representation as it evolves. It is
     important to note that this operator assumes that all arrays are initially empty, so an element
@@ -153,6 +154,11 @@ The following changes will be made to implement the new encoding of sets:
     and `getInPred`, will not be applied to the new encoding. Cases for the new IR operators will 
     be added to `toExpr`, which will default to `TlaSetOper.in` and `TlaSetOper.notin` for the 
     existing encoding.
+  - The `storeInSetOneStep` and `storeInSetLastStep` IR operators, encoding a sequence of `store`
+    operations into a single clause, are used to more efficiently encode array updates dealing
+    with many elements. Their benefit stand from avoiding the declaration of many intermediary
+    arrays. They represent a shift in the mechanical way in which set updates are done in the
+    OOPSLA'19 encoding, and thus should only be used in the new encoding.
   - Cases for `FinSetT` and `PowSetT` will be added to `getOrMkCellSort`, as these types are no
     longer represented by uninterpreted constants.
   - `cellCache` will be changed to contain a list of cells, in order to handle the effects of

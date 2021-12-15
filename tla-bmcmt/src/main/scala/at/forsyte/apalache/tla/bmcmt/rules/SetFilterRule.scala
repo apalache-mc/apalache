@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
-import at.forsyte.apalache.tla.lir.{NameEx, NullEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{BuilderEx, NameEx, NullEx, OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
@@ -69,9 +69,32 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
           rewriter.solverContext.assertGroundExpr(ite)
         }
 
+        def addCellConsSeq(elems: Seq[(ArenaCell, TlaEx)]): Unit = {
+          def addCons(elems: Seq[(ArenaCell, TlaEx)]): BuilderEx = {
+            val cell = elems.head._1
+            val pred = elems.head._2
+            val inOldSet = tla.apalacheSelectInSet(cell.toNameEx, setCell.toNameEx)
+            val inOldSetAndPred = tla.and(pred, inOldSet)
+
+            elems.tail match {
+              case Seq() => tla.apalacheStoreInSetOneStep(cell.toNameEx, newSetCell.toNameEx, inOldSetAndPred)
+              case tail  => tla.apalacheStoreInSetOneStep(cell.toNameEx, addCons(tail), inOldSetAndPred)
+            }
+          }
+
+          if (elems.nonEmpty) {
+            val cons = addCons(elems)
+            rewriter.solverContext.assertGroundExpr(tla.apalacheStoreInSetLastStep(newSetCell.toNameEx, cons))
+          }
+        }
+
         // add SMT constraints
-        for ((cell, pred) <- filteredCellsAndPreds)
-          addCellCons(cell, pred)
+        if (rewriter.solverContext.config.smtEncoding == arraysEncoding) {
+          addCellConsSeq(filteredCellsAndPreds)
+        } else {
+          for ((cell, pred) <- filteredCellsAndPreds)
+            addCellCons(cell, pred)
+        }
 
         newState.setArena(newArena).setRex(newSetCell.toNameEx)
 

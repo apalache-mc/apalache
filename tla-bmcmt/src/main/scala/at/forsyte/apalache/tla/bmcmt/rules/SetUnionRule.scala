@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types.FinSetT
-import at.forsyte.apalache.tla.lir.{OperEx, TypingException}
+import at.forsyte.apalache.tla.lir.{BuilderEx, OperEx, TypingException}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -76,8 +76,37 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
             rewriter.solverContext.assertGroundExpr(ite)
           }
 
+          def addOneElemConsSeq(elemsCells: Seq[ArenaCell]): Unit = {
+            def addCons(elemsCells: Seq[ArenaCell]): BuilderEx = {
+              val elemCell = elemsCells.head
+              def isPointedBySet(set: ArenaCell, setElems: Set[ArenaCell]): Boolean = setElems.contains(elemCell)
+              val pointingSets = (sets.zip(elemsOfSets) filter (isPointedBySet _).tupled) map (_._1)
+              def inPointingSet(set: ArenaCell) = {
+                // this is sound, because we have generated element equalities
+                // and thus can use congruence of in(...) for free
+                tla.and(tla.apalacheSelectInSet(set.toNameEx, topSetCell.toNameEx),
+                    tla.apalacheSelectInSet(elemCell.toNameEx, set.toNameEx))
+              }
+              val existsIncludingSet = tla.or(pointingSets map inPointingSet: _*)
+
+              elemsCells.tail match {
+                case Seq() => tla.apalacheStoreInSetOneStep(elemCell.toNameEx, newSetCell.toNameEx, existsIncludingSet)
+                case tail  => tla.apalacheStoreInSetOneStep(elemCell.toNameEx, addCons(tail), existsIncludingSet)
+              }
+            }
+
+            if (elemsCells.nonEmpty) {
+              val cons = addCons(elemsCells)
+              rewriter.solverContext.assertGroundExpr(tla.apalacheStoreInSetLastStep(newSetCell.toNameEx, cons))
+            }
+          }
+
           // add SMT constraints
-          unionOfSets foreach addOneElemCons
+          if (rewriter.solverContext.config.smtEncoding == arraysEncoding) {
+            addOneElemConsSeq(unionOfSets.toSeq)
+          } else {
+            unionOfSets foreach addOneElemCons
+          }
 
           // that's it
           nextState.setRex(newSetCell.toNameEx)

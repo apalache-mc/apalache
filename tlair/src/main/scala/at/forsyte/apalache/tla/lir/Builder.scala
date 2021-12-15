@@ -604,6 +604,14 @@ class Builder {
     BuilderOper(ApalacheOper.storeInSet, elem, set)
   }
 
+  def apalacheStoreInSetOneStep(elem: BuilderEx, set: BuilderEx, cond: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.storeInSetOneStep, elem, set, cond)
+  }
+
+  def apalacheStoreInSetLastStep(elem: BuilderEx, set: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.storeInSetLastStep, elem, set)
+  }
+
   def apalacheStoreNotInSet(elem: BuilderEx, set: BuilderEx): BuilderEx = {
     BuilderOper(ApalacheOper.storeNotInSet, elem, set)
   }
