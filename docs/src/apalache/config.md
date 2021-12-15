@@ -1,23 +1,72 @@
-# Apalache global configuration file
-Apalache allows you to specify certain parameters, governing outputs produced by it, as described in [ADR-009](../adr/009adr-outputs.md).
+# Apalache configuration
 
-You can create a global configuration file named `apalache-global-config.yml` in `$HOME/.tlaplus/` and populate it with values for the following flags, in YAML format:
-  - `out-dir` (String): The value of `out-dir` defines a path to the directory,
-  in which all Apalache runs write their outputs. Each run will produce a unique
-  subdirectory inside `out-dir` using the following convention:
-  `<SPECNAME>_yyyy-MM-dd_HH-mm-ss_<UNIQUEID>`. The use of `~` in the path
-  specification is permitted. The directory path need not already exist.
-  Example value: `'~/apalache-out'`.
-  If this value is not defined in `apalache-global-config.yml`, Apalache will, for each individual run, define it to be equal to `CWD/_apalache-out/`, where `CWD` is the current working directory.
-  - `profiling` (Bool): This flag governs the creation of `profile-rules.txt` used in [profiling](profiling.md). The file is only created if `profiling` is set to `True`.  Setting `profiling` to `False` is incompatible with the `--smtprof` flag.
-  The default is `False`.
-  - `write-intermediate` (Bool): This Boolean flag governs the creation of intermediate outputs. If set to `True`, apalache will produce an `intermediate` subdirectory in the run directory and output the state of the module after each pass.
-  The default is `False`.
+Apalache supports configuration of some parameters governing its behavior.
 
+Application configuration is loaded from the following four sources:
 
-Example of a valid `apalache-global-config.yml`:
+1. Command line arguments
+2. Environment variables
+3. A local configuration file
+4. The global configuration file
+
+The order of precedence of the sources follows their numbering: i.e., and any
+configuration set in an earlier numbered source overrides a configuration set in
+a later numbered source.
+
+## Command line arguments and environment variables
+
+To view the available command line arguments, run Apalache with the `--help`
+flag and consult the section on [Running the Too](./running.md) for more
+details.
+
+*Some* parameters configurable the command are also configurable via environment
+variables. These parameters are noted in the CLI's inline help. If a parameter
+is configured both through a CLI argument and an environment variable, then the
+CLI argument always takes precedence. 
+
+## Configuration files
+
+### File format and supported parameters
+
+Local configuration files support JSON and the JSON superset
+[HOCON](https://github.com/lightbend/config/blob/master/HOCON.md).
+
+Here's an example of a valid configuration for the currently 
+supported parameters, along with their default values: 
+
+```yaml
+# Directory in which to write all log files and records of each run
+out-dir: "${PWD}/_apalache-out"
+
+# Whether or not to write additional files, that report on intermediate
+# processing steps
+write-intermediate: false
+
+# Whether or not to write the SMT profiling file
+profiling: false
+
+# Fixed directory into which generated files are written (absent by default)
+# run-dir: ~/my-run-dir
 ```
-out-dir: '~/apalache-out'
-profiling: True
-write-intermediate: True
-```
+
+A `~` found at the beginning of a file path will expanded into the value set for
+the user's home directory.
+
+Details on the effect of these parameters can be found in [Running the
+Too](./running.md).
+
+### Local configuration file
+
+You can specify a local configuration file explicitly via the `config-file`
+command line argument. If this is not provided, then Apalache will look for the
+nearest `.apalache.cfg` file, beginning in the current working directory and
+searching up through its parents.
+
+Parameters configured in the local configuration file will be overridden by
+values set via CLI arguments or environment variables, and will override
+parameters configured via the global configuration file.
+
+### Global configuration file
+
+The final fallback for configuration parameters is the global configuration file
+named `$HOME/.tlaplus/apalache.cfg`.
