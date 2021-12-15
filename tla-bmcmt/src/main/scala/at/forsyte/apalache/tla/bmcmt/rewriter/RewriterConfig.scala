@@ -16,11 +16,6 @@ class RewriterConfig {
    * If true, for A /\ B, check satisfiability of A with SMT and only if it is true, rewrite B.
    */
   var lazyCircuit = false
-
-  /**
-   * If true, then write profiling report
-   */
-  var profilingReport = false
 }
 
 object RewriterConfig {
