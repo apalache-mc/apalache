@@ -269,7 +269,7 @@ Apalache on a spec named `test.tla`. This will create a directory structuring ma
     └── 2021-11-05T22-54-55_810261790529975561
 ```
 
-The default value for the `out-dir` is the `_apalahce-out` directory in the
+The default value for the `out-dir` is the `_apalache-out` directory in the
 current working directly. The subdirectory `test.tla` is derived from the name
 of the spec on which the tool was run, and the run-specific subdirectory
 `2021-11-05T22-54-55_810261790529975561` gives a unique location to write the
@@ -283,7 +283,7 @@ arguments used during the run.
 
 Additionally, if the parameter `write-intermediate` is set to `true` (see
 [configuration instructions](config.md)) each pass of the model checker produces
-an intermediate TLA+ file in the run-specific subdirectory:
+intermediate TLA+ files in the run-specific subdirectory:
 
 - File `out-parser.tla` is produced as a result of parsing and importing into the intermediate representation, Apalache
   TLA IR.

@@ -78,8 +78,8 @@ If a parameter is specified in the configuration file, it replaces the default v
 In other words, parameter values are determined in the following way, by order of priority:
 
 1. If `--<flag>=<value>` is given, use `<value>`, otherwise
-2. if a local `.apalache.cfg` file is found containing `<flag>: <value>`, then
+2. if a local `.apalache.cfg` file is found (or is specified with the `--config-file` argument) containing `<flag>: <value>`, then
     use `<value>`, otherwise
-3. if the global `apalache.cfg` specifies `<flag>=: <value>` use `<value>`,
+3. if the global `apalache.cfg` specifies `<flag>: <value>` use `<value>`,
     otherwise
 4. Use the defaults specified in the `ApalacheConfig` class.

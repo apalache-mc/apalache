@@ -59,9 +59,9 @@ case class ApalacheConfig(
 )
 
 case class ConfigManager(cmd: CliConfig) {
-  val TLA_PLUS_DIR = ".tlaplus"
-  val APALACHE_CFG = "apalache.cfg"
-  val DOT_APALACHE_CFG = "." + APALACHE_CFG
+  private val TLA_PLUS_DIR = ".tlaplus"
+  private val APALACHE_CFG = "apalache.cfg"
+  private val DOT_APALACHE_CFG = "." + APALACHE_CFG
 
   import Converters._
 

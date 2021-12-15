@@ -16,10 +16,10 @@ a later numbered source.
 ## Command line arguments and environment variables
 
 To view the available command line arguments, run Apalache with the `--help`
-flag and consult the section on [Running the Too](./running.md) for more
+flag and consult the section on [Running the Tool](./running.md) for more
 details.
 
-*Some* parameters configurable the command are also configurable via environment
+*Some* parameters configurable via the command line are also configurable via environment
 variables. These parameters are noted in the CLI's inline help. If a parameter
 is configured both through a CLI argument and an environment variable, then the
 CLI argument always takes precedence. 
