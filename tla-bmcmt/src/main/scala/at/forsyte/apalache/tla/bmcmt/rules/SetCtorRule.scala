@@ -38,25 +38,18 @@ class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val newSetCell = nextState.arena.topCell
         nextState = nextState.updateArena(_.appendHas(newSetCell, cells: _*))
 
-        if (rewriter.solverContext.config.smtEncoding == arraysEncoding) {
+        if (cells.nonEmpty) {
           def addCons(cells: Seq[ArenaCell]): BuilderEx = {
-            val c = cells.head
+            val cell = cells.head
 
             cells.tail match {
-              case Seq() => tla.apalacheStoreInSetOneStep(c.toNameEx, newSetCell.toNameEx, ValEx(TlaBool(true)))
-              case tail  => tla.apalacheStoreInSetOneStep(c.toNameEx, addCons(tail), ValEx(TlaBool(true)))
+              case Seq() => tla.apalacheStoreInSetOneStep(cell.toNameEx, newSetCell.toNameEx, ValEx(TlaBool(true)))
+              case tail  => tla.apalacheStoreInSetOneStep(cell.toNameEx, addCons(tail), ValEx(TlaBool(true)))
             }
           }
 
-          if (cells.nonEmpty) {
-            val cons = addCons(cells)
-            rewriter.solverContext.assertGroundExpr(tla.apalacheStoreInSetLastStep(newSetCell.toNameEx, cons))
-          }
-        } else {
-          for (c <- cells) {
-            val inExpr = tla.apalacheStoreInSet(c.toNameEx, newSetCell.toNameEx)
-            rewriter.solverContext.assertGroundExpr(inExpr)
-          }
+          val cons = addCons(cells)
+          rewriter.solverContext.assertGroundExpr(tla.apalacheStoreInSetLastStep(newSetCell.toNameEx, cons))
         }
 
         nextState.setRex(newSetCell.toNameEx)

@@ -36,7 +36,7 @@ class SymbStateRewriterImplWithArrays(_solverContext: SolverContext,
         key(tla.in(tla.name("x"), tla.name("S")))
           -> List(new SetInRuleWithArrays(this)), // TODO: add support for funSet later
         key(tla.apalacheSelectInSet(tla.name("x"), tla.name("S")))
-          -> List(new SetInRule(this)),
+          -> List(new SetInRuleWithArrays(this)),
         key(tla.subseteq(tla.name("x"), tla.name("S")))
           -> List(new SetInclusionRuleWithArrays(this))
         // TODO: consider copying one array and storing the edges of the other in SetCupRule

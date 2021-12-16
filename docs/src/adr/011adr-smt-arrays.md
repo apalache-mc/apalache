@@ -157,8 +157,7 @@ The following changes will be made to implement the new encoding of sets:
   - The `storeInSetOneStep` and `storeInSetLastStep` IR operators, encoding a sequence of `store`
     operations into a single clause, are used to more efficiently encode array updates dealing
     with many elements. Their benefit stand from avoiding the declaration of many intermediary
-    arrays. They represent a shift in the mechanical way in which set updates are done in the
-    OOPSLA'19 encoding, and thus should only be used in the new encoding.
+    arrays.
   - Cases for `FinSetT` and `PowSetT` will be added to `getOrMkCellSort`, as these types are no
     longer represented by uninterpreted constants.
   - `cellCache` will be changed to contain a list of cells, in order to handle the effects of

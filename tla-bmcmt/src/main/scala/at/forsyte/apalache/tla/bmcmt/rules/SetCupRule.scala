@@ -53,51 +53,37 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
         nextState = nextState.updateArena(_.appendHas(newSetCell, allDistinct: _*))
 
         // require each cell to be in in the union iff it is exactly in its origin set
-        def addOnlyCellCons(thisSet: ArenaCell, thisElem: ArenaCell): Unit = {
-          val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, thisSet.toNameEx)
-          val inCup = tla.apalacheStoreInSet(thisElem.toNameEx, newSetCell.toNameEx)
-          val notInCup = tla.apalacheStoreNotInSet(thisElem.toNameEx, newSetCell.toNameEx)
-          rewriter.solverContext.assertGroundExpr(tla.ite(inThis, inCup, notInCup))
-        }
-
-        def addOnlyCellConsSeq(thisSet: ArenaCell, elems: Seq[ArenaCell]): Unit = {
-          def addCons(thisSet: ArenaCell, elems: Seq[ArenaCell]): BuilderEx = {
-            val thisElem = elems.head
-            val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, thisSet.toNameEx)
-            elems.tail match {
-              case Seq() => tla.apalacheStoreInSetOneStep(thisElem.toNameEx, newSetCell.toNameEx, inThis)
-              case tail  => tla.apalacheStoreInSetOneStep(thisElem.toNameEx, addCons(thisSet, tail), inThis)
-            }
-          }
-
+        def addOnlyCellCons(thisSet: ArenaCell, elems: Seq[ArenaCell]): Unit = {
           if (elems.nonEmpty) {
+            def addCons(thisSet: ArenaCell, elems: Seq[ArenaCell]): BuilderEx = {
+              val thisElem = elems.head
+              val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, thisSet.toNameEx)
+
+              elems.tail match {
+                case Seq() => tla.apalacheStoreInSetOneStep(thisElem.toNameEx, newSetCell.toNameEx, inThis)
+                case tail  => tla.apalacheStoreInSetOneStep(thisElem.toNameEx, addCons(thisSet, tail), inThis)
+              }
+            }
+
             val cons = addCons(thisSet, elems)
             rewriter.solverContext.assertGroundExpr(tla.apalacheStoreInSetLastStep(newSetCell.toNameEx, cons))
           }
         }
 
-        def addEitherCellCons(thisElem: ArenaCell): Unit = {
-          val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, leftSetCell.toNameEx)
-          val inOther = tla.apalacheSelectInSet(thisElem.toNameEx, rightSetCell.toNameEx)
-          val inCup = tla.apalacheStoreInSet(thisElem.toNameEx, newSetCell.toNameEx)
-          val notInCup = tla.apalacheStoreNotInSet(thisElem.toNameEx, newSetCell.toNameEx)
-          rewriter.solverContext.assertGroundExpr(tla.ite(tla.or(inThis, inOther), inCup, notInCup))
-        }
-
-        def addEitherCellConsSeq(elems: Seq[ArenaCell]): Unit = {
-          def addCons(elems: Seq[ArenaCell]): BuilderEx = {
-            val thisElem = elems.head
-            val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, leftSetCell.toNameEx)
-            val inOther = tla.apalacheSelectInSet(thisElem.toNameEx, rightSetCell.toNameEx)
-            val inThisOrOther = tla.or(inThis, inOther)
-
-            elems.tail match {
-              case Seq() => tla.apalacheStoreInSetOneStep(thisElem.toNameEx, newSetCell.toNameEx, inThisOrOther)
-              case tail  => tla.apalacheStoreInSetOneStep(thisElem.toNameEx, addCons(tail), inThisOrOther)
-            }
-          }
-
+        def addEitherCellCons(elems: Seq[ArenaCell]): Unit = {
           if (elems.nonEmpty) {
+            def addCons(elems: Seq[ArenaCell]): BuilderEx = {
+              val thisElem = elems.head
+              val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, leftSetCell.toNameEx)
+              val inOther = tla.apalacheSelectInSet(thisElem.toNameEx, rightSetCell.toNameEx)
+              val inThisOrOther = tla.or(inThis, inOther)
+
+              elems.tail match {
+                case Seq() => tla.apalacheStoreInSetOneStep(thisElem.toNameEx, newSetCell.toNameEx, inThisOrOther)
+                case tail  => tla.apalacheStoreInSetOneStep(thisElem.toNameEx, addCons(tail), inThisOrOther)
+              }
+            }
+
             val cons = addCons(elems)
             rewriter.solverContext.assertGroundExpr(tla.apalacheStoreInSetLastStep(newSetCell.toNameEx, cons))
           }
@@ -111,15 +97,9 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
 //        val eqState = rewriter.lazyEq.cacheEqConstraints(rightState.setArena(arena), prodIter.toSeq)
         // bugfix: we have to compare the elements in both sets and thus to introduce a quadratic number of constraints
         // add SMT constraints
-        if (rewriter.solverContext.config.smtEncoding == arraysEncoding) {
-          addOnlyCellConsSeq(leftSetCell, onlyLeft.toSeq)
-          addOnlyCellConsSeq(rightSetCell, onlyRight.toSeq)
-          addEitherCellConsSeq(common.toSeq)
-        } else {
-          onlyLeft foreach (addOnlyCellCons(leftSetCell, _))
-          onlyRight foreach (addOnlyCellCons(rightSetCell, _))
-          common foreach addEitherCellCons
-        }
+        addOnlyCellCons(leftSetCell, onlyLeft.toSeq)
+        addOnlyCellCons(rightSetCell, onlyRight.toSeq)
+        addEitherCellCons(common.toSeq)
 
         // that's it
         nextState.setRex(newSetCell.toNameEx)

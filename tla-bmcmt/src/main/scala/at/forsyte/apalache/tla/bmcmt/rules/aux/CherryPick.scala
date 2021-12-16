@@ -621,18 +621,18 @@ class CherryPick(rewriter: SymbStateRewriter) {
     // To emulate this in the arrays encoding, in which the all sets are initially empty, unconstrained predicates
     // are used to allow the SMT solver to consider all possible combinations of elems.
     def unconstrainElems(elems: Seq[ArenaCell]): Unit = {
-      def addCons(elems: Seq[ArenaCell]): BuilderEx = {
-        val elem = elems.head
-        nextState = nextState.updateArena(_.appendCell(BoolT()))
-        val pred = nextState.arena.topCell.toNameEx
+      if (rewriter.solverContext.config.smtEncoding == arraysEncoding & elems.nonEmpty) {
+        def addCons(elems: Seq[ArenaCell]): BuilderEx = {
+          val elem = elems.head
+          nextState = nextState.updateArena(_.appendCell(BoolT()))
+          val pred = nextState.arena.topCell.toNameEx
 
-        elems.tail match {
-          case Seq() => tla.apalacheStoreInSetOneStep(elem.toNameEx, resultSet.toNameEx, pred)
-          case tail  => tla.apalacheStoreInSetOneStep(elem.toNameEx, addCons(tail), pred)
+          elems.tail match {
+            case Seq() => tla.apalacheStoreInSetOneStep(elem.toNameEx, resultSet.toNameEx, pred)
+            case tail  => tla.apalacheStoreInSetOneStep(elem.toNameEx, addCons(tail), pred)
+          }
         }
-      }
 
-      if (elems.nonEmpty & rewriter.solverContext.config.smtEncoding == arraysEncoding) {
         val cons = addCons(elems)
         rewriter.solverContext.assertGroundExpr(tla.apalacheStoreInSetLastStep(resultSet.toNameEx, cons))
       }

@@ -59,42 +59,27 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val newArena = arena.appendHas(newSetCell, filteredCellsAndPreds.map(_._1): _*)
 
         // require each cell to satisfy the predicate
-        def addCellCons(cell: ArenaCell, pred: TlaEx): Unit = {
-          val inNewSet = tla.apalacheStoreInSet(cell.toNameEx, newSetCell.toNameEx)
-          val notInNewSet =
-            tla.apalacheStoreNotInSet(cell.toNameEx, newSetCell.toNameEx) // This ensures that cell is not in newSetCell
-          val inOldSet = tla.apalacheSelectInSet(cell.toNameEx, setCell.toNameEx)
-          val inOldSetAndPred = tla.and(pred, inOldSet)
-          val ite = tla.ite(inOldSetAndPred, inNewSet, notInNewSet)
-          rewriter.solverContext.assertGroundExpr(ite)
-        }
-
-        def addCellConsSeq(elems: Seq[(ArenaCell, TlaEx)]): Unit = {
-          def addCons(elems: Seq[(ArenaCell, TlaEx)]): BuilderEx = {
-            val cell = elems.head._1
-            val pred = elems.head._2
-            val inOldSet = tla.apalacheSelectInSet(cell.toNameEx, setCell.toNameEx)
-            val inOldSetAndPred = tla.and(pred, inOldSet)
-
-            elems.tail match {
-              case Seq() => tla.apalacheStoreInSetOneStep(cell.toNameEx, newSetCell.toNameEx, inOldSetAndPred)
-              case tail  => tla.apalacheStoreInSetOneStep(cell.toNameEx, addCons(tail), inOldSetAndPred)
-            }
-          }
-
+        def addCellCons(elems: Seq[(ArenaCell, TlaEx)]): Unit = {
           if (elems.nonEmpty) {
+            def addCons(elems: Seq[(ArenaCell, TlaEx)]): BuilderEx = {
+              val cell = elems.head._1
+              val pred = elems.head._2
+              val inOldSet = tla.apalacheSelectInSet(cell.toNameEx, setCell.toNameEx)
+              val inOldSetAndPred = tla.and(pred, inOldSet)
+
+              elems.tail match {
+                case Seq() => tla.apalacheStoreInSetOneStep(cell.toNameEx, newSetCell.toNameEx, inOldSetAndPred)
+                case tail  => tla.apalacheStoreInSetOneStep(cell.toNameEx, addCons(tail), inOldSetAndPred)
+              }
+            }
+
             val cons = addCons(elems)
             rewriter.solverContext.assertGroundExpr(tla.apalacheStoreInSetLastStep(newSetCell.toNameEx, cons))
           }
         }
 
         // add SMT constraints
-        if (rewriter.solverContext.config.smtEncoding == arraysEncoding) {
-          addCellConsSeq(filteredCellsAndPreds)
-        } else {
-          for ((cell, pred) <- filteredCellsAndPreds)
-            addCellCons(cell, pred)
-        }
+        addCellCons(filteredCellsAndPreds)
 
         newState.setArena(newArena).setRex(newSetCell.toNameEx)
 

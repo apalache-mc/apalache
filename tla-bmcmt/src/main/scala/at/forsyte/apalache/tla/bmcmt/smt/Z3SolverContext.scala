@@ -234,16 +234,76 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     eqStore.asInstanceOf[ExprSort]
   }
 
-  private def updateSetConst(setId: Int): ExprSort = {
-    val (set, setT, _) = cellCache(setId).head
-    val newSSAIndex = cellCache(setId).size
-    val updatedSetName = set.toString.split("_").head + "_" + newSSAIndex
-    val setSort = getOrMkCellSort(setT)
-    log(s"(declare-const $updatedSetName $setSort)")
-    val updatedSet = z3context.mkConst(updatedSetName, setSort)
-    cellCache += (setId -> ((updatedSet, setT, level) :: cellCache(setId)))
-    _metrics = _metrics.addNConsts(1)
-    updatedSet.asInstanceOf[ExprSort]
+  private def mkStoreOneStep(elemName: String, setName: String, setEx: TlaEx, cond: TlaEx): (ExprSort, Long) = {
+    if (arraysEnabled) {
+      val elemId = ArenaCell.idFromName(elemName)
+      val (elem, _, _) = cellCache(elemId).head
+      val (condZ3, cn) = toExpr(cond)
+
+      setEx match {
+        case NameEx(_) => // Base case
+          val setId = ArenaCell.idFromName(setName)
+          val (set, _, _) = cellCache(setId).head
+          log(s";; [START] declaring multiple edge inclusions to set $set")
+          log(s";; declare edge inclusion of element $elem")
+          val store = z3context.mkStore(
+              set.asInstanceOf[Expr[ArraySort[Sort, BoolSort]]], elem.asInstanceOf[Expr[Sort]],
+              condZ3.asInstanceOf[Expr[BoolSort]])
+          (store.asInstanceOf[ExprSort], 1 + cn)
+
+        case OperEx(ApalacheOper.storeInSetOneStep, NameEx(nestedElemName), nestedSetEx, nestedCond) =>
+          val (nestedSetUpdate, nsn) = mkStoreOneStep(nestedElemName, setName, nestedSetEx, nestedCond)
+          log(s";; declare edge inclusion of element $elem")
+          val store = z3context.mkStore(
+              nestedSetUpdate.asInstanceOf[Expr[ArraySort[Sort, BoolSort]]], elem.asInstanceOf[Expr[Sort]],
+              condZ3.asInstanceOf[Expr[BoolSort]])
+          (store.asInstanceOf[ExprSort], 1 + cn + nsn)
+
+        case _ =>
+          throw new IllegalStateException(s"Malformed single update operation of set $setName")
+      }
+    } else {
+      val setMembership = OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))
+      val setMembershipWithCond = OperEx(TlaBoolOper.equiv, setMembership, cond)
+      val (setUpdate, sn) = toExpr(setMembershipWithCond) // Set membership in the oopsla19 encoding, with a condition
+
+      setEx match {
+        case NameEx(_) => // Base case
+          (setUpdate, sn)
+
+        case OperEx(ApalacheOper.storeInSetOneStep, NameEx(nestedElemName), nestedSetEx, nestedCond) =>
+          val (nestedSetUpdate, nsn) = mkStoreOneStep(nestedElemName, setName, nestedSetEx, nestedCond)
+          val conj = z3context.mkAnd(nestedSetUpdate.asInstanceOf[BoolExpr], setUpdate.asInstanceOf[BoolExpr])
+          (conj.asInstanceOf[ExprSort], 1 + sn + nsn)
+
+        case _ =>
+          throw new IllegalStateException(s"Malformed single update operation of set $setName")
+      }
+    }
+  }
+
+  private def mkStoreLastStep(setName: String, setEx: TlaEx): (ExprSort, Long) = {
+    if (arraysEnabled) {
+      setEx match {
+        case OperEx(ApalacheOper.storeInSetOneStep, NameEx(elemName), _, cond) =>
+          val (setUpdate, sn) = mkStoreOneStep(elemName, setName, setEx, cond)
+          log(s";; [DONE] declaring multiple edge inclusions to set $setName")
+          // The evaluation of setUpdate needs to precede updateSetConst, since updateSetConst updates the SSA index
+          val setId = ArenaCell.idFromName(setName)
+          val updatedSet = updateSetConst(setId)
+          val eq = toEqExpr(updatedSet, setUpdate)
+          (eq.asInstanceOf[ExprSort], 1 + sn)
+        case _ =>
+          throw new IllegalStateException(s"Malformed compound update operation of set $setName")
+      }
+    } else {
+      setEx match {
+        case OperEx(ApalacheOper.storeInSetOneStep, NameEx(elemName), _, cond) =>
+          mkStoreOneStep(elemName, setName, setEx, cond)
+        case _ =>
+          throw new IllegalStateException(s"Malformed compound update operation of set $setName")
+      }
+    }
   }
 
   private def mkUnchangedSet(setId: Int): ExprSort = {
@@ -260,6 +320,18 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       throw new IllegalStateException(
           s"SMT $id: Corrupted cellCache, $setId key is present, but it does not refer to any array.")
     }
+  }
+
+  private def updateSetConst(setId: Int): ExprSort = {
+    val (set, setT, _) = cellCache(setId).head
+    val newSSAIndex = cellCache(setId).size
+    val updatedSetName = set.toString.split("_").head + "_" + newSSAIndex
+    val setSort = getOrMkCellSort(setT)
+    log(s"(declare-const $updatedSetName $setSort)")
+    val updatedSet = z3context.mkConst(updatedSetName, setSort)
+    cellCache += (setId -> ((updatedSet, setT, level) :: cellCache(setId)))
+    _metrics = _metrics.addNConsts(1)
+    updatedSet.asInstanceOf[ExprSort]
   }
 
   /**
@@ -632,7 +704,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             val elemId = ArenaCell.idFromName(elemName)
             (mkSelect(setId, elemId), 1)
           case false =>
-            toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla91 encoding
+            toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla19 encoding
         }
 
       case OperEx(ApalacheOper.storeInSet, NameEx(elemName), NameEx(setName)) =>
@@ -642,56 +714,11 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             val elemId = ArenaCell.idFromName(elemName)
             (mkStore(setId, elemId), 1)
           case false =>
-            toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla91 encoding
+            toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla19 encoding
         }
 
-      case OperEx(ApalacheOper.storeInSetOneStep, NameEx(elemName), setEx, cond) =>
-        arraysEnabled match {
-          case true =>
-            val elemId = ArenaCell.idFromName(elemName)
-            val (elem, _, _) = cellCache(elemId).head
-            val (condZ3, cn) = toExpr(cond)
-
-            setEx match {
-              case NameEx(name) =>
-                val setId = ArenaCell.idFromName(name)
-                val (set, _, _) = cellCache(setId).head
-                log(s";; [START] declaring multiple edge inclusions to set $set")
-                log(s";; declare edge inclusion of element $elem")
-                val store = z3context.mkStore(
-                    set.asInstanceOf[Expr[ArraySort[Sort, BoolSort]]], elem.asInstanceOf[Expr[Sort]],
-                    condZ3.asInstanceOf[Expr[BoolSort]])
-                (store.asInstanceOf[ExprSort], 1 + cn)
-
-              case OperEx(ApalacheOper.storeInSetOneStep, _*) =>
-                val (nestedSet, nn) = toExpr(setEx)
-                log(s";; declare edge inclusion of element $elem")
-                val store = z3context.mkStore(
-                    nestedSet.asInstanceOf[Expr[ArraySort[Sort, BoolSort]]], elem.asInstanceOf[Expr[Sort]],
-                    condZ3.asInstanceOf[Expr[BoolSort]])
-                (store.asInstanceOf[ExprSort], 1 + cn + nn)
-            }
-
-          case false =>
-            throw new IllegalStateException(s"Expression $ex is not supported by the SMT encoding used")
-        }
-
-      case OperEx(ApalacheOper.storeInSetLastStep, NameEx(setName), setEx: OperEx)
-          if setEx.oper == ApalacheOper.storeInSetOneStep =>
-        arraysEnabled match {
-          case true =>
-            // The evaluation of setEx needs to precede updateSetConst, since updateSetConst updates the SSA index
-            val (nestedSetEx, nn) = toExpr(setEx) // Combines all
-            log(s";; [DONE] declaring multiple edge inclusions to set $setName")
-
-            val setId = ArenaCell.idFromName(setName)
-            val updatedSet = updateSetConst(setId)
-            val eq = toEqExpr(updatedSet, nestedSetEx)
-            (eq.asInstanceOf[ExprSort], 1 + nn)
-
-          case false =>
-            throw new IllegalStateException(s"Expression $ex is not supported by the SMT encoding used")
-        }
+      case OperEx(ApalacheOper.storeInSetLastStep, NameEx(setName), setEx) =>
+        mkStoreLastStep(setName, setEx)
 
       case OperEx(ApalacheOper.storeNotInSet, NameEx(elemName), NameEx(setName)) =>
         arraysEnabled match {
