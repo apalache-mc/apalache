@@ -41,11 +41,10 @@
             <artifactId>scala-parser-combinators_${scalaBinaryVersion}</artifactId>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/org.yaml/snakeyaml -->
         <dependency>
-            <groupId>org.yaml</groupId>
-            <artifactId>snakeyaml</artifactId>
-            <version>1.29</version>
+            <groupId>com.github.pureconfig</groupId>
+            <artifactId>pureconfig_${scalaBinaryVersion}</artifactId>
+            <version>0.17.1</version>
         </dependency>
 
         <!-- parent's dependencies -->

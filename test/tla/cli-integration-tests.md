@@ -2395,3 +2395,43 @@ MC.out
 run.txt
 $ rm -rf ./test-out-dir ./test-run-dir
 ```
+
+## configuration management
+
+### configuration management: read run-dir from local `.apalache.cfg`
+
+```sh
+$ echo "run-dir: ./configured-run-dir" > .apalache.cfg
+$ apalache-mc check --length=0 Counter.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+$ ls ./configured-run-dir | ./sort.sh
+detailed.log
+run.txt
+$ rm -rf ./configured-run-dir ./.apalache.cfg
+```
+
+### configuration management: CLI config file overrides local `.apalache.cfg`
+
+```sh
+$ echo "run-dir: ./to-override-dir" > .apalache.cfg
+$ echo "run-dir: ./configured-run-dir" > cli-config.cfg
+$ apalache-mc check --config-file=cli-config.cfg --length=0 Counter.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+$ ! test -d ./to-override-dir
+$ test -d ./configured-run-dir
+$ rm -rf ./configured-run-dir ./.apalache.cfg ./cli-config.cfg
+```
+
+### configuration management: CLI argument overrides config-file
+
+```sh
+$ echo "run-dir: ./to-override-dir" > cli-config.cfg
+$ apalache-mc check --config-file=cli-config.cfg --run-dir=./configured-run-dir --length=0 Counter.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+$ ! test -d ./to-override-dir
+$ test -d ./configured-run-dir
+$ rm -rf ./configured-run-dir ./cli-config.cfg
+```
