@@ -344,7 +344,7 @@ like:
 
 Obviously, we cannot fit both of the records into a single plain record type,
 provided that we want to precisely track the fields that are present in a
-record.  So the type checker should report a type error, if we only implement
+record. So the type checker should report a type error, if we only implement
 type inference for the case explained in Section 5.1. To support this important
 pattern, we introduce variants. They are similar to [unions in
 TypeScript](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types).
