@@ -90,4 +90,3 @@ We are currently considering 3 different prioritization schemes:
 3. Finally, perhaps a more subjective strategy would be to have people voting on
    tasks they think are more important and using that as a basis for
    prioritizing.
-
