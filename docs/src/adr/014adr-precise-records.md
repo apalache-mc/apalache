@@ -288,8 +288,9 @@ e_1: t_1, ..., e_n: t_n
     RowCons(f_1, t_1,
       RowCons(f_2, t_2,
         ...
-          RowNil)
-      )...)
+          RowCons(f_n, t_n, RowNil)
+      ...)
+    )
   )
 ```
 
