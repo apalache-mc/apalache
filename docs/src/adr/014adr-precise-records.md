@@ -33,8 +33,8 @@ feature. On the downside, we would have to:
 
 1. Require the users to modify their specs to use the variant operators.
 
-We have tried to make type annotations as non-intrusive and compatible with
-TLC, as possible. After precisely specifying the requirements for the variant
+As much as possible, we have tried to make the type annotations non-intrusive and compatible with
+TLC. After precisely specifying the requirements for the variant
 type, we have found that it would be impossible to do sound type checking
 without introducing additional operators.
 
