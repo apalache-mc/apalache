@@ -251,9 +251,14 @@ operator `.` as an equality over type variables and types.
 
 ### 4.3. Support plain records and variants, including row typing
 
-This solution follows the approach outlined by [Leijen05][], except that we
-require field names to be unique, not scoped. We present our approach in the
-next section.
+This solution is inspired by the approach outlined by [Leijen05][], but is much more limited. The following features discussed in [Leijen05][] are neither needed needed nor supported:
+
+- extension for records
+- extension for variants
+- record restriction
+- scoped labels
+
+Our use is limited to a few special cases that give support for subtyping and incremental inference of anonymous record types, in which we cannot know the full set of fields up front. 
 
 ## 5. Solution
 
