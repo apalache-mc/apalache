@@ -400,7 +400,7 @@ Variant([ tag |-> "<TAG>", f_1 |-> e_1, ..., f_n |-> e_n ]):
 According to the rule `[variant]`, the operator `Variant` wraps a record
 constructor that contains a string literal for the field `tag`. The variant
 contains the record that was passed in the constructor, whereas the other
-elements of the variant are captured with a fresh type variable `z`, which must
+alternatives of the variant are captured with a fresh type variable `z`, which must
 be a row.
 
 Importantly, we use rows at two levels:
