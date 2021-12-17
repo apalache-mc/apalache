@@ -46,7 +46,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   //      logWriter.println(";; %s = %s".format(p, Global.getParameter(p)))
   }
 
-  private def arraysEnabled: Boolean = config.smtEncoding == arraysEncoding
+  private def encoding: SMTEncoding = config.smtEncoding
 
   var level: Int = 0
   var nBoolConsts: Int = 0 // the solver introduces Boolean constants internally
@@ -184,7 +184,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val name = s"in_${elemT.signature}${elem.id}_${setT.signature}${set.id}"
     if (!inCache.contains((set.id, elem.id))) {
       // The concept of an in-relation is not present in the arrays encoding
-      if (!arraysEnabled) {
+      if (encoding == oopsla19Encoding) {
         smtListener.onIntroSmtConst(name)
         log(s";; declare edge predicate $name: Bool")
         log(s"(declare-const $name Bool)")
@@ -235,74 +235,84 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   }
 
   private def mkStoreOneStep(elemName: String, setName: String, setEx: TlaEx, cond: TlaEx): (ExprSort, Long) = {
-    if (arraysEnabled) {
-      val elemId = ArenaCell.idFromName(elemName)
-      val (elem, _, _) = cellCache(elemId).head
-      val (condZ3, cn) = toExpr(cond)
+    encoding match {
+      case `arraysEncoding` =>
+        val elemId = ArenaCell.idFromName(elemName)
+        val (elem, _, _) = cellCache(elemId).head
+        val (condZ3, cn) = toExpr(cond)
 
-      setEx match {
-        case NameEx(_) => // Base case
-          val setId = ArenaCell.idFromName(setName)
-          val (set, _, _) = cellCache(setId).head
-          log(s";; [START] declaring multiple edge inclusions to set $set")
-          log(s";; declare edge inclusion of element $elem")
-          val store = z3context.mkStore(
-              set.asInstanceOf[Expr[ArraySort[Sort, BoolSort]]], elem.asInstanceOf[Expr[Sort]],
-              condZ3.asInstanceOf[Expr[BoolSort]])
-          (store.asInstanceOf[ExprSort], 1 + cn)
+        setEx match {
+          case NameEx(_) => // Base case
+            val setId = ArenaCell.idFromName(setName)
+            val (set, _, _) = cellCache(setId).head
+            log(s";; [START] declaring multiple edge inclusions to set $set")
+            log(s";; declare edge inclusion of element $elem")
+            val store = z3context.mkStore(
+                set.asInstanceOf[Expr[ArraySort[Sort, BoolSort]]], elem.asInstanceOf[Expr[Sort]],
+                condZ3.asInstanceOf[Expr[BoolSort]])
+            (store.asInstanceOf[ExprSort], 1 + cn)
 
-        case OperEx(ApalacheOper.storeInSetOneStep, NameEx(nestedElemName), nestedSetEx, nestedCond) =>
-          val (nestedSetUpdate, nsn) = mkStoreOneStep(nestedElemName, setName, nestedSetEx, nestedCond)
-          log(s";; declare edge inclusion of element $elem")
-          val store = z3context.mkStore(
-              nestedSetUpdate.asInstanceOf[Expr[ArraySort[Sort, BoolSort]]], elem.asInstanceOf[Expr[Sort]],
-              condZ3.asInstanceOf[Expr[BoolSort]])
-          (store.asInstanceOf[ExprSort], 1 + cn + nsn)
+          case OperEx(ApalacheOper.storeInSetOneStep, NameEx(nestedElemName), nestedSetEx, nestedCond) =>
+            val (nestedSetUpdate, nsn) = mkStoreOneStep(nestedElemName, setName, nestedSetEx, nestedCond)
+            log(s";; declare edge inclusion of element $elem")
+            val store = z3context.mkStore(
+                nestedSetUpdate.asInstanceOf[Expr[ArraySort[Sort, BoolSort]]], elem.asInstanceOf[Expr[Sort]],
+                condZ3.asInstanceOf[Expr[BoolSort]])
+            (store.asInstanceOf[ExprSort], 1 + cn + nsn)
 
-        case _ =>
-          throw new IllegalStateException(s"Malformed single update operation of set $setName")
-      }
-    } else {
-      val setMembership = OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))
-      val setMembershipWithCond = OperEx(TlaBoolOper.equiv, setMembership, cond)
-      val (setUpdate, sn) = toExpr(setMembershipWithCond) // Set membership in the oopsla19 encoding, with a condition
+          case _ =>
+            throw new IllegalStateException(s"Malformed single update operation of set $setName")
+        }
 
-      setEx match {
-        case NameEx(_) => // Base case
-          (setUpdate, sn)
+      case `oopsla19Encoding` =>
+        val setMembership = OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))
+        val setMembershipWithCond = OperEx(TlaBoolOper.equiv, setMembership, cond)
+        val (setUpdate, sn) = toExpr(setMembershipWithCond) // Set membership in the oopsla19 encoding, with a condition
 
-        case OperEx(ApalacheOper.storeInSetOneStep, NameEx(nestedElemName), nestedSetEx, nestedCond) =>
-          val (nestedSetUpdate, nsn) = mkStoreOneStep(nestedElemName, setName, nestedSetEx, nestedCond)
-          val conj = z3context.mkAnd(nestedSetUpdate.asInstanceOf[BoolExpr], setUpdate.asInstanceOf[BoolExpr])
-          (conj.asInstanceOf[ExprSort], 1 + sn + nsn)
+        setEx match {
+          case NameEx(_) => // Base case
+            (setUpdate, sn)
 
-        case _ =>
-          throw new IllegalStateException(s"Malformed single update operation of set $setName")
-      }
+          case OperEx(ApalacheOper.storeInSetOneStep, NameEx(nestedElemName), nestedSetEx, nestedCond) =>
+            val (nestedSetUpdate, nsn) = mkStoreOneStep(nestedElemName, setName, nestedSetEx, nestedCond)
+            val conj = z3context.mkAnd(nestedSetUpdate.asInstanceOf[BoolExpr], setUpdate.asInstanceOf[BoolExpr])
+            (conj.asInstanceOf[ExprSort], 1 + sn + nsn)
+
+          case _ =>
+            throw new IllegalStateException(s"Malformed single update operation of set $setName")
+        }
+
+      case oddEncodingType =>
+        throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
     }
   }
 
   private def mkStoreLastStep(setName: String, setEx: TlaEx): (ExprSort, Long) = {
-    if (arraysEnabled) {
-      setEx match {
-        case OperEx(ApalacheOper.storeInSetOneStep, NameEx(elemName), _, cond) =>
-          val (setUpdate, sn) = mkStoreOneStep(elemName, setName, setEx, cond)
-          log(s";; [DONE] declaring multiple edge inclusions to set $setName")
-          // The evaluation of setUpdate needs to precede updateSetConst, since updateSetConst updates the SSA index
-          val setId = ArenaCell.idFromName(setName)
-          val updatedSet = updateSetConst(setId)
-          val eq = toEqExpr(updatedSet, setUpdate)
-          (eq.asInstanceOf[ExprSort], 1 + sn)
-        case _ =>
-          throw new IllegalStateException(s"Malformed compound update operation of set $setName")
-      }
-    } else {
-      setEx match {
-        case OperEx(ApalacheOper.storeInSetOneStep, NameEx(elemName), _, cond) =>
-          mkStoreOneStep(elemName, setName, setEx, cond)
-        case _ =>
-          throw new IllegalStateException(s"Malformed compound update operation of set $setName")
-      }
+    encoding match {
+      case `arraysEncoding` =>
+        setEx match {
+          case OperEx(ApalacheOper.storeInSetOneStep, NameEx(elemName), _, cond) =>
+            val (setUpdate, sn) = mkStoreOneStep(elemName, setName, setEx, cond)
+            log(s";; [DONE] declaring multiple edge inclusions to set $setName")
+            // The evaluation of setUpdate needs to precede updateSetConst, since updateSetConst updates the SSA index
+            val setId = ArenaCell.idFromName(setName)
+            val updatedSet = updateSetConst(setId)
+            val eq = toEqExpr(updatedSet, setUpdate)
+            (eq.asInstanceOf[ExprSort], 1 + sn)
+          case _ =>
+            throw new IllegalStateException(s"Malformed compound update operation of set $setName")
+        }
+
+      case `oopsla19Encoding` =>
+        setEx match {
+          case OperEx(ApalacheOper.storeInSetOneStep, NameEx(elemName), _, cond) =>
+            mkStoreOneStep(elemName, setName, setEx, cond)
+          case _ =>
+            throw new IllegalStateException(s"Malformed compound update operation of set $setName")
+        }
+
+      case oddEncodingType =>
+        throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
     }
   }
 
@@ -564,10 +574,10 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
           case IntT() =>
             z3context.getIntSort
 
-          case FinSetT(elemType) if arraysEnabled =>
+          case FinSetT(elemType) if encoding == arraysEncoding =>
             z3context.mkArraySort(getOrMkCellSort(elemType), z3context.getBoolSort)
 
-          case PowSetT(domType) if arraysEnabled =>
+          case PowSetT(domType) if encoding == arraysEncoding =>
             z3context.mkArraySort(getOrMkCellSort(domType), z3context.getBoolSort)
 
           case _ =>
@@ -698,37 +708,43 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         (getInPred(setId, elemId), 1)
 
       case OperEx(ApalacheOper.selectInSet, NameEx(elemName), NameEx(setName)) =>
-        arraysEnabled match {
-          case true =>
+        encoding match {
+          case `arraysEncoding` =>
             val setId = ArenaCell.idFromName(setName)
             val elemId = ArenaCell.idFromName(elemName)
             (mkSelect(setId, elemId), 1)
-          case false =>
+          case `oopsla19Encoding` =>
             toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla19 encoding
+          case oddEncodingType =>
+            throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
       case OperEx(ApalacheOper.storeInSet, NameEx(elemName), NameEx(setName)) =>
-        arraysEnabled match {
-          case true =>
+        encoding match {
+          case `arraysEncoding` =>
             val setId = ArenaCell.idFromName(setName)
             val elemId = ArenaCell.idFromName(elemName)
             (mkStore(setId, elemId), 1)
-          case false =>
+          case `oopsla19Encoding` =>
             toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla19 encoding
+          case oddEncodingType =>
+            throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
       case OperEx(ApalacheOper.storeInSetLastStep, NameEx(setName), setEx) =>
         mkStoreLastStep(setName, setEx)
 
       case OperEx(ApalacheOper.storeNotInSet, NameEx(elemName), NameEx(setName)) =>
-        arraysEnabled match {
-          case true =>
+        encoding match {
+          case `arraysEncoding` =>
             // In the arrays encoding the sets are initially empty, so elem is not a member of set implicitly
             val setId = ArenaCell.idFromName(setName)
             (mkUnchangedSet(setId), 1)
-          case false =>
+          case `oopsla19Encoding` =>
             // In the oopsla19 encoding the sets are not initially empty, so membership has to be negated explicitly
             toExpr(OperEx(TlaBoolOper.not, OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))))
+          case oddEncodingType =>
+            throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
       // the old implementation allowed us to do that, but the new one is encoding edges directly

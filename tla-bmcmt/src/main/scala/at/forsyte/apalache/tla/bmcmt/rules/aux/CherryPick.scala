@@ -321,11 +321,14 @@ class CherryPick(rewriter: SymbStateRewriter) {
             val ite = tla.ite(tla.apalacheSelectInSet(keyCell.toNameEx, dom.toNameEx),
                 tla.apalacheStoreInSet(keyCell.toNameEx, newDom.toNameEx),
                 tla.apalacheStoreNotInSet(keyCell.toNameEx, newDom.toNameEx))
-            val unchangedSet = if (rewriter.solverContext.config.smtEncoding == arraysEncoding) {
-              // In the arrays encoding we need to propagate the SSA representation of the array if nothing changes
-              tla.apalacheStoreNotInSet(keyCell.toNameEx, newDom.toNameEx)
-            } else {
-              tla.bool(true)
+            val unchangedSet = rewriter.solverContext.config.smtEncoding match {
+              case `arraysEncoding` =>
+                // In the arrays encoding we need to propagate the SSA representation of the array if nothing changes
+                tla.apalacheStoreNotInSet(keyCell.toNameEx, newDom.toNameEx)
+              case `oopsla19Encoding` =>
+                tla.bool(true)
+              case oddEncodingType =>
+                throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
             }
             rewriter.solverContext.assertGroundExpr(tla.ite(oracle.whenEqualTo(nextState, no), ite, unchangedSet))
           } else {
@@ -454,11 +457,14 @@ class CherryPick(rewriter: SymbStateRewriter) {
           val inSet = tla.ite(tla.apalacheSelectInSet(elemAndSet._1.toNameEx, elemAndSet._2.toNameEx),
               tla.apalacheStoreInSet(picked.toNameEx, resultCell.toNameEx),
               tla.apalacheStoreNotInSet(picked.toNameEx, resultCell.toNameEx))
-          val unchangedSet = if (rewriter.solverContext.config.smtEncoding == arraysEncoding) {
-            // In the arrays encoding we need to propagate the SSA representation of the array if nothing changes
-            tla.apalacheStoreNotInSet(picked.toNameEx, resultCell.toNameEx)
-          } else {
-            tla.bool(true)
+          val unchangedSet = rewriter.solverContext.config.smtEncoding match {
+            case `arraysEncoding` =>
+              // In the arrays encoding we need to propagate the SSA representation of the array if nothing changes
+              tla.apalacheStoreNotInSet(picked.toNameEx, resultCell.toNameEx)
+            case `oopsla19Encoding` =>
+              tla.bool(true)
+            case oddEncodingType =>
+              throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
           }
           (inSet, unchangedSet)
         } else {
