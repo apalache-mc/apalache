@@ -331,7 +331,7 @@ Note that the above rule can be rewritten into a series of equalities over
 types variables and type terms, which is how this would be implemented in the
 type checker.
 
-If we only had to deal with plain records, that would be a complete solution.
+If we only had to deal with records, that would be a complete solution.
 Unfortunately, variants introduce additional complexity.
 
 ### 5.2. Variants
