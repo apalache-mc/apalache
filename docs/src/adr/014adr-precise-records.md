@@ -262,8 +262,8 @@ user-facing syntax of the type system later in the text.
 
 ### 5.1. Plain records
 
-By using [Row types][], we should be able to infer the type of `m` in
-`RowAccess`:
+By using [Row types][], we should be able to infer a polymorphic record type for  `m` in the unannotated
+`RowAccess` operator:
 
 ```
 Rec(RowCons("a", Int, z))
