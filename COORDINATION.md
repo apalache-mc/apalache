@@ -16,17 +16,24 @@ enabling cooperative work, but it's not necessarily obvious what the scope or
 intended meaning of each feature is. The following table is used to align our
 shared understanding of how to use and interpret the main features:
 
-| Feature       | Scope                                                   | Communicates...        |
-|---------------|---------------------------------------------------------|------------------------|
-| issue         | a distinct problem or task                              | what to work on        |
-| pull request  | (part of) a solution or fulfillment of a task           | the ongoing work       |
-| milestone     | a distinct feature or a closely related set of problems | what work is towards   |
-| label         | a more or less vague category/topic/quality             | attributes of the work |
-| project board | concurrent human processes with a common dynamic        | how work is done       |
-| discussion    | free ranging and open discussion                        | whatever               |
+| Feature                  | Scope                                                   | Communicates...        |
+|--------------------------|---------------------------------------------------------|------------------------|
+| [issue][issues]          | a distinct problem or task                              | what to work on        |
+| [pull request][prs]      | (part of) a solution or fulfillment of a task           | the ongoing work       |
+| [milestone][milestones]  | a distinct feature or a closely related set of problems | what work is towards   |
+| [label][labels]          | a more or less vague category/topic/quality             | attributes of the work |
+| [project board][project] | concurrent human processes with a common dynamic        | how work is done       |
+| [discussion][discussion] | free ranging and open discussion                        | whatever               |
 
 (For more on projects vs. milestones, see
 https://stackoverflow.com/a/47542346/1187277)
+
+[issues]: https://github.com/informalsystems/apalache/issues
+[prs]: https://stackoverflow.com/a/47542346/1187277) "https://github.com/informalsystems/apalache/pulls"
+[milestones]: https://github.com/informalsystems/apalache/milestones
+[labels]: https://github.com/informalsystems/apalache/issues/labels
+[project]: https://github.com/orgs/informalsystems/projects/30
+[discussion]: https://github.com/informalsystems/apalache/discussions
 
 ### Project board
 
