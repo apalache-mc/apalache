@@ -11,9 +11,10 @@ we communicate in furtherance of our collaboration.
 ## Elements of our project coordination
 
 We currently use GitHub as the main platform for sharing the communications
-that let us coordinate our work. GitHug offers 
-
-We currently coordinate our cooperative work 
+that let us coordinate our work. GitHub has a number of different features for
+enabling cooperative work, but it's not necessarily obvious what the scope or
+intended meaning of each feature is. The following table is used to align our
+shared understanding of how to use and interpret the main features:
 
 | Feature      | Scope                                                   | Communicates...        |
 |--------------|---------------------------------------------------------|------------------------|
