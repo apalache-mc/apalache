@@ -269,8 +269,8 @@ By using [Row types][], we should be able to infer a polymorphic record type for
 Rec(RowCons("a", Int, z))
 ```
 
-In this example, `RowCons("a", Int, z)` is a type term indicating that the type
-has the field called `a`, and its type is `Int`. On top of that, this row
+In this example, `RowCons("a", Int, z)` indicates a row indicating that the type of the record enclosing it
+has the field `a` of type `Int`. On top of that, this row
 extends a parametric type `z`, which either contains a non-empty sequence of
 rows, or is an empty sequence, that is, `RowNil`. Importantly, `RowCons` is
 wrapped with the term `Rec`, so no additional fields can be added to the type.
