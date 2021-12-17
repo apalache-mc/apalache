@@ -29,7 +29,7 @@ shared understanding of how to use and interpret the main features:
 https://stackoverflow.com/a/47542346/1187277)
 
 [issues]: https://github.com/informalsystems/apalache/issues
-[prs]: https://stackoverflow.com/a/47542346/1187277) "https://github.com/informalsystems/apalache/pulls"
+[prs]: https://github.com/informalsystems/apalache/pulls
 [milestones]: https://github.com/informalsystems/apalache/milestones
 [labels]: https://github.com/informalsystems/apalache/issues/labels
 [project]: https://github.com/orgs/informalsystems/projects/30
