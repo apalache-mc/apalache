@@ -194,23 +194,11 @@ object ApalacheOper {
   }
 
   /**
-   * The storeInSetOneStep operator is a variant of storeInSet.
-   * It signals a step in a sequence of operations enforcing set membership.
+   * The storeNotInSet operator is a variant of storeInSet.
+   * It signals that the negation of set membership should be enforced.
    */
-  object storeInSetOneStep extends ApalacheOper {
-    override def name: String = "Apalache!StoreInSetOneStep"
-
-    override def arity: OperArity = FixedArity(3)
-
-    override def precedence: (Int, Int) = (5, 5)
-  }
-
-  /**
-   * The storeInSetLastStep operator is a variant of storeInSet.
-   * It signals the last step in a sequence of operations enforcing set membership.
-   */
-  object storeInSetLastStep extends ApalacheOper {
-    override def name: String = "Apalache!StoreInSetLastStep"
+  object storeNotInSet extends ApalacheOper {
+    override def name: String = "Apalache!UnchangedSet"
 
     override def arity: OperArity = FixedArity(2)
 
@@ -218,11 +206,22 @@ object ApalacheOper {
   }
 
   /**
-   * The storeNotInSet operator is a variant of storeInSet.
-   * It signals that the negation of set membership should be enforced.
+   * The chain operator allows the chaining of individual operations.
+   * It can improve solver performance by eliminating intermediary declarations.
    */
-  object storeNotInSet extends ApalacheOper {
-    override def name: String = "Apalache!UnchangedSet"
+  object chain extends ApalacheOper {
+    override def name: String = "Apalache!Chain"
+
+    override def arity: OperArity = FixedArity(3)
+
+    override def precedence: (Int, Int) = (5, 5)
+  }
+
+  /**
+   * The assignChain operator assigns the result of a chain of operations to an element.
+   */
+  object assignChain extends ApalacheOper {
+    override def name: String = "Apalache!AssignChain"
 
     override def arity: OperArity = FixedArity(2)
 

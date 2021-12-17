@@ -61,27 +61,27 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
           // in contrast to the old approach with equalities and uninterpreted functions, which required O(n^2) constraints.
           def addOneElemCons(elemsCells: Seq[ArenaCell]): Unit = {
             if (elemsCells.nonEmpty) {
-              def addCons(elemsCells: Seq[ArenaCell]): BuilderEx = {
+              def consChain(elemsCells: Seq[ArenaCell]): BuilderEx = {
                 val elemCell = elemsCells.head
                 def isPointedBySet(set: ArenaCell, setElems: Set[ArenaCell]): Boolean = setElems.contains(elemCell)
-                val pointingSets = (sets.zip(elemsOfSets) filter (isPointedBySet _).tupled) map (_._1)
                 def inPointingSet(set: ArenaCell) = {
                   // this is sound, because we have generated element equalities
                   // and thus can use congruence of in(...) for free
                   tla.and(tla.apalacheSelectInSet(set.toNameEx, topSetCell.toNameEx),
                       tla.apalacheSelectInSet(elemCell.toNameEx, set.toNameEx))
                 }
+                val pointingSets = (sets.zip(elemsOfSets) filter (isPointedBySet _).tupled) map (_._1)
+                val inUnion = tla.apalacheStoreInSet(elemCell.toNameEx, newSetCell.toNameEx)
                 val existsIncludingSet = tla.or(pointingSets map inPointingSet: _*)
 
                 elemsCells.tail match {
-                  case Seq() =>
-                    tla.apalacheStoreInSetOneStep(elemCell.toNameEx, newSetCell.toNameEx, existsIncludingSet)
-                  case tail => tla.apalacheStoreInSetOneStep(elemCell.toNameEx, addCons(tail), existsIncludingSet)
+                  case Seq() => tla.apalacheChain(inUnion, newSetCell.toNameEx, existsIncludingSet)
+                  case tail  => tla.apalacheChain(inUnion, consChain(tail), existsIncludingSet)
                 }
               }
 
-              val cons = addCons(elemsCells)
-              rewriter.solverContext.assertGroundExpr(tla.apalacheStoreInSetLastStep(newSetCell.toNameEx, cons))
+              val cons = consChain(elemsCells)
+              rewriter.solverContext.assertGroundExpr(tla.apalacheAssignChain(newSetCell.toNameEx, cons))
             }
           }
 

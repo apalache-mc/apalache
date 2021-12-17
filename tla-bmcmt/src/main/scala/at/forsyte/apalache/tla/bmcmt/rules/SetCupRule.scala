@@ -55,37 +55,39 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // require each cell to be in in the union iff it is exactly in its origin set
         def addOnlyCellCons(thisSet: ArenaCell, elems: Seq[ArenaCell]): Unit = {
           if (elems.nonEmpty) {
-            def addCons(thisSet: ArenaCell, elems: Seq[ArenaCell]): BuilderEx = {
+            def consChain(thisSet: ArenaCell, elems: Seq[ArenaCell]): BuilderEx = {
               val thisElem = elems.head
+              val inCup = tla.apalacheStoreInSet(thisElem.toNameEx, newSetCell.toNameEx)
               val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, thisSet.toNameEx)
 
               elems.tail match {
-                case Seq() => tla.apalacheStoreInSetOneStep(thisElem.toNameEx, newSetCell.toNameEx, inThis)
-                case tail  => tla.apalacheStoreInSetOneStep(thisElem.toNameEx, addCons(thisSet, tail), inThis)
+                case Seq() => tla.apalacheChain(inCup, newSetCell.toNameEx, inThis)
+                case tail  => tla.apalacheChain(inCup, consChain(thisSet, tail), inThis)
               }
             }
 
-            val cons = addCons(thisSet, elems)
-            rewriter.solverContext.assertGroundExpr(tla.apalacheStoreInSetLastStep(newSetCell.toNameEx, cons))
+            val cons = consChain(thisSet, elems)
+            rewriter.solverContext.assertGroundExpr(tla.apalacheAssignChain(newSetCell.toNameEx, cons))
           }
         }
 
         def addEitherCellCons(elems: Seq[ArenaCell]): Unit = {
           if (elems.nonEmpty) {
-            def addCons(elems: Seq[ArenaCell]): BuilderEx = {
+            def consChain(elems: Seq[ArenaCell]): BuilderEx = {
               val thisElem = elems.head
+              val inCup = tla.apalacheStoreInSet(thisElem.toNameEx, newSetCell.toNameEx)
               val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, leftSetCell.toNameEx)
               val inOther = tla.apalacheSelectInSet(thisElem.toNameEx, rightSetCell.toNameEx)
               val inThisOrOther = tla.or(inThis, inOther)
 
               elems.tail match {
-                case Seq() => tla.apalacheStoreInSetOneStep(thisElem.toNameEx, newSetCell.toNameEx, inThisOrOther)
-                case tail  => tla.apalacheStoreInSetOneStep(thisElem.toNameEx, addCons(tail), inThisOrOther)
+                case Seq() => tla.apalacheChain(inCup, newSetCell.toNameEx, inThisOrOther)
+                case tail  => tla.apalacheChain(inCup, consChain(tail), inThisOrOther)
               }
             }
 
-            val cons = addCons(elems)
-            rewriter.solverContext.assertGroundExpr(tla.apalacheStoreInSetLastStep(newSetCell.toNameEx, cons))
+            val cons = consChain(elems)
+            rewriter.solverContext.assertGroundExpr(tla.apalacheAssignChain(newSetCell.toNameEx, cons))
           }
         }
 

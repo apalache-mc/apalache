@@ -628,19 +628,20 @@ class CherryPick(rewriter: SymbStateRewriter) {
     // are used to allow the SMT solver to consider all possible combinations of elems.
     def unconstrainElems(elems: Seq[ArenaCell]): Unit = {
       if (rewriter.solverContext.config.smtEncoding == arraysEncoding & elems.nonEmpty) {
-        def addCons(elems: Seq[ArenaCell]): BuilderEx = {
+        def consChain(elems: Seq[ArenaCell]): BuilderEx = {
           val elem = elems.head
+          val inResultSet = tla.apalacheStoreInSet(elem.toNameEx, resultSet.toNameEx)
           nextState = nextState.updateArena(_.appendCell(BoolT()))
           val pred = nextState.arena.topCell.toNameEx
 
           elems.tail match {
-            case Seq() => tla.apalacheStoreInSetOneStep(elem.toNameEx, resultSet.toNameEx, pred)
-            case tail  => tla.apalacheStoreInSetOneStep(elem.toNameEx, addCons(tail), pred)
+            case Seq() => tla.apalacheChain(inResultSet, resultSet.toNameEx, pred)
+            case tail  => tla.apalacheChain(inResultSet, consChain(tail), pred)
           }
         }
 
-        val cons = addCons(elems)
-        rewriter.solverContext.assertGroundExpr(tla.apalacheStoreInSetLastStep(resultSet.toNameEx, cons))
+        val cons = consChain(elems)
+        rewriter.solverContext.assertGroundExpr(tla.apalacheAssignChain(resultSet.toNameEx, cons))
       }
     }
 

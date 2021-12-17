@@ -3,10 +3,9 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, FinSetT}
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
-import at.forsyte.apalache.tla.lir.{BuilderEx, OperEx, TlaEx, TlaType1, TypingException, ValEx}
+import at.forsyte.apalache.tla.lir.{BuilderEx, OperEx, TlaEx, TlaType1, TypingException}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.values.TlaBool
 
 /**
  * Rewrites the set constructor {e_1, ..., e_k}.
@@ -39,17 +38,18 @@ class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         nextState = nextState.updateArena(_.appendHas(newSetCell, cells: _*))
 
         if (cells.nonEmpty) {
-          def addCons(cells: Seq[ArenaCell]): BuilderEx = {
+          def consChain(cells: Seq[ArenaCell]): BuilderEx = {
             val cell = cells.head
+            val inSet = tla.apalacheStoreInSet(cell.toNameEx, newSetCell.toNameEx)
 
             cells.tail match {
-              case Seq() => tla.apalacheStoreInSetOneStep(cell.toNameEx, newSetCell.toNameEx, ValEx(TlaBool(true)))
-              case tail  => tla.apalacheStoreInSetOneStep(cell.toNameEx, addCons(tail), ValEx(TlaBool(true)))
+              case Seq() => tla.apalacheChain(inSet, newSetCell.toNameEx)
+              case tail  => tla.apalacheChain(inSet, consChain(tail))
             }
           }
 
-          val cons = addCons(cells)
-          rewriter.solverContext.assertGroundExpr(tla.apalacheStoreInSetLastStep(newSetCell.toNameEx, cons))
+          val cons = consChain(cells)
+          rewriter.solverContext.assertGroundExpr(tla.apalacheAssignChain(newSetCell.toNameEx, cons))
         }
 
         nextState.setRex(newSetCell.toNameEx)

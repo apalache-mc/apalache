@@ -4,8 +4,7 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.bmcmt.types.FinSetT
-import at.forsyte.apalache.tla.lir.values.TlaBool
-import at.forsyte.apalache.tla.lir.{BuilderEx, ValEx}
+import at.forsyte.apalache.tla.lir.BuilderEx
 
 /**
  * This class constructs the power set of S, that is, SUBSET S. Sometimes, this is just unavoidable, e.g.,
@@ -30,18 +29,19 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
       val subsetCell = arena.topCell
       arena = arena.appendHas(subsetCell, filtered: _*)
       if (filtered.nonEmpty) {
-        def addCons(elems: Seq[ArenaCell]): BuilderEx = {
+        def consChain(elems: Seq[ArenaCell]): BuilderEx = {
           val elem = elems.head
+          val inSubset = tla.apalacheStoreInSet(elem.toNameEx, subsetCell.toNameEx)
           val inSet = tla.apalacheSelectInSet(elem.toNameEx, set.toNameEx)
 
           elems.tail match {
-            case Seq() => tla.apalacheStoreInSetOneStep(elem.toNameEx, subsetCell.toNameEx, inSet)
-            case tail  => tla.apalacheStoreInSetOneStep(elem.toNameEx, addCons(tail), inSet)
+            case Seq() => tla.apalacheChain(inSubset, subsetCell.toNameEx, inSet)
+            case tail  => tla.apalacheChain(inSubset, consChain(tail), inSet)
           }
         }
 
-        val cons = addCons(filtered)
-        rewriter.solverContext.assertGroundExpr(tla.apalacheStoreInSetLastStep(subsetCell.toNameEx, cons))
+        val cons = consChain(filtered)
+        rewriter.solverContext.assertGroundExpr(tla.apalacheAssignChain(subsetCell.toNameEx, cons))
       }
       subsetCell
     }
@@ -65,17 +65,18 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
     val powsetCell = arena.topCell
     arena = arena.appendHas(powsetCell, subsets: _*)
     if (subsets.nonEmpty) {
-      def addCons(subsets: Seq[ArenaCell]): BuilderEx = {
+      def consChain(subsets: Seq[ArenaCell]): BuilderEx = {
         val subset = subsets.head
+        val inPowset = tla.apalacheStoreInSet(subset.toNameEx, powsetCell.toNameEx)
 
         subsets.tail match {
-          case Seq() => tla.apalacheStoreInSetOneStep(subset.toNameEx, powsetCell.toNameEx, ValEx(TlaBool(true)))
-          case tail  => tla.apalacheStoreInSetOneStep(subset.toNameEx, addCons(tail), ValEx(TlaBool(true)))
+          case Seq() => tla.apalacheChain(inPowset, powsetCell.toNameEx)
+          case tail  => tla.apalacheChain(inPowset, consChain(tail))
         }
       }
 
-      val cons = addCons(subsets)
-      rewriter.solverContext.assertGroundExpr(tla.apalacheStoreInSetLastStep(powsetCell.toNameEx, cons))
+      val cons = consChain(subsets)
+      rewriter.solverContext.assertGroundExpr(tla.apalacheAssignChain(powsetCell.toNameEx, cons))
     }
 
     // that's it!

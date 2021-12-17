@@ -3,10 +3,9 @@ package at.forsyte.apalache.tla.bmcmt.caches
 import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, IntT}
-import at.forsyte.apalache.tla.lir.{BuilderEx, ValEx}
+import at.forsyte.apalache.tla.lir.BuilderEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.values.TlaBool
 
 /**
  * Cache tuple domains as well as ranges a..b.
@@ -38,17 +37,18 @@ class IntRangeCache(solverContext: SolverContext, intValueCache: IntValueCache)
     arena = arena.appendHas(set, cells: _*)
     // force that every element is in the set
     if (cells.nonEmpty) {
-      def addCons(cells: Seq[ArenaCell]): BuilderEx = {
+      def consChain(cells: Seq[ArenaCell]): BuilderEx = {
         val cell = cells.head
+        val inSet = tla.apalacheStoreInSet(cell.toNameEx, set.toNameEx)
 
         cells.tail match {
-          case Seq() => tla.apalacheStoreInSetOneStep(cell.toNameEx, set.toNameEx, ValEx(TlaBool(true)))
-          case tail  => tla.apalacheStoreInSetOneStep(cell.toNameEx, addCons(tail), ValEx(TlaBool(true)))
+          case Seq() => tla.apalacheChain(inSet, set.toNameEx)
+          case tail  => tla.apalacheChain(inSet, consChain(tail))
         }
       }
 
-      val cons = addCons(cells)
-      solverContext.assertGroundExpr(tla.apalacheStoreInSetLastStep(set.toNameEx, cons))
+      val cons = consChain(cells)
+      solverContext.assertGroundExpr(tla.apalacheAssignChain(set.toNameEx, cons))
     }
     (arena, set)
   }

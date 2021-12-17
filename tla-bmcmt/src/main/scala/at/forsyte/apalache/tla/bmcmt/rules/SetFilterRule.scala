@@ -59,22 +59,23 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val newArena = arena.appendHas(newSetCell, filteredCellsAndPreds.map(_._1): _*)
 
         // require each cell to satisfy the predicate
-        def addCellCons(elems: Seq[(ArenaCell, TlaEx)]): Unit = {
-          if (elems.nonEmpty) {
-            def addCons(elems: Seq[(ArenaCell, TlaEx)]): BuilderEx = {
-              val cell = elems.head._1
-              val pred = elems.head._2
+        def addCellCons(cellsAndPreds: Seq[(ArenaCell, TlaEx)]): Unit = {
+          if (cellsAndPreds.nonEmpty) {
+            def consChain(cellsAndPreds: Seq[(ArenaCell, TlaEx)]): BuilderEx = {
+              val cell = cellsAndPreds.head._1
+              val pred = cellsAndPreds.head._2
+              val inNewSet = tla.apalacheStoreInSet(cell.toNameEx, newSetCell.toNameEx)
               val inOldSet = tla.apalacheSelectInSet(cell.toNameEx, setCell.toNameEx)
               val inOldSetAndPred = tla.and(pred, inOldSet)
 
-              elems.tail match {
-                case Seq() => tla.apalacheStoreInSetOneStep(cell.toNameEx, newSetCell.toNameEx, inOldSetAndPred)
-                case tail  => tla.apalacheStoreInSetOneStep(cell.toNameEx, addCons(tail), inOldSetAndPred)
+              cellsAndPreds.tail match {
+                case Seq() => tla.apalacheChain(inNewSet, newSetCell.toNameEx, inOldSetAndPred)
+                case tail  => tla.apalacheChain(inNewSet, consChain(tail), inOldSetAndPred)
               }
             }
 
-            val cons = addCons(elems)
-            rewriter.solverContext.assertGroundExpr(tla.apalacheStoreInSetLastStep(newSetCell.toNameEx, cons))
+            val cons = consChain(cellsAndPreds)
+            rewriter.solverContext.assertGroundExpr(tla.apalacheAssignChain(newSetCell.toNameEx, cons))
           }
         }
 

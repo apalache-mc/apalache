@@ -604,16 +604,16 @@ class Builder {
     BuilderOper(ApalacheOper.storeInSet, elem, set)
   }
 
-  def apalacheStoreInSetOneStep(elem: BuilderEx, set: BuilderEx, cond: BuilderEx): BuilderEx = {
-    BuilderOper(ApalacheOper.storeInSetOneStep, elem, set, cond)
-  }
-
-  def apalacheStoreInSetLastStep(elem: BuilderEx, set: BuilderEx): BuilderEx = {
-    BuilderOper(ApalacheOper.storeInSetLastStep, elem, set)
-  }
-
   def apalacheStoreNotInSet(elem: BuilderEx, set: BuilderEx): BuilderEx = {
     BuilderOper(ApalacheOper.storeNotInSet, elem, set)
+  }
+
+  def apalacheChain(op: BuilderEx, tail: BuilderEx, cond: BuilderEx = bool(true)): BuilderEx = {
+    BuilderOper(ApalacheOper.chain, op, tail, cond)
+  }
+
+  def apalacheAssignChain(elem: BuilderEx, chain: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.assignChain, elem, chain)
   }
 
   private val m_nameMap: Map[String, TlaOper] =

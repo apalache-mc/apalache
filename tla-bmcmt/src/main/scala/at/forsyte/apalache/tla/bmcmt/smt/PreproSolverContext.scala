@@ -74,16 +74,14 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
         }
 
       case OperEx(op, NameEx(left), NameEx(right))
-          if op == TlaSetOper.in || op == ApalacheOper.selectInSet || op == ApalacheOper.storeInSet ||
-            op == ApalacheOper.storeInSetOneStep || op == ApalacheOper.storeInSetLastStep ||
-            op == ApalacheOper.storeNotInSet =>
+          if op == TlaSetOper.in || op == ApalacheOper.selectInSet || op == ApalacheOper.storeInSet =>
         // in and not(notin), the latter is transformed by simplifier
         if (ArenaCell.isValidName(left) && ArenaCell.isValidName(right)) {
           cache.put((left, right), PreproInEntry(true))
           context.log(";;    -> pp in cached as true ")
         }
 
-      case OperEx(TlaSetOper.notin, NameEx(left), NameEx(right)) =>
+      case OperEx(op, NameEx(left), NameEx(right)) if op == TlaSetOper.notin || op == ApalacheOper.storeNotInSet =>
         // notin and not(in), the latter is transformed by simplifier
         if (ArenaCell.isValidName(left) && ArenaCell.isValidName(right)) {
           cache.put((left, right), PreproInEntry(false))
@@ -142,18 +140,6 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
           case None         => ex
         }
 
-      case OperEx(ApalacheOper.storeInSetOneStep, NameEx(left), NameEx(right)) =>
-        cache.get((left, right)) match {
-          case Some(cached) => cached.asTlaEx(negate = false)
-          case None         => ex
-        }
-
-      case OperEx(ApalacheOper.storeInSetLastStep, NameEx(left), NameEx(right)) =>
-        cache.get((left, right)) match {
-          case Some(cached) => cached.asTlaEx(negate = false)
-          case None         => ex
-        }
-
       case OperEx(TlaSetOper.notin, NameEx(left), NameEx(right)) =>
         cache.get((left, right)) match {
           case Some(cached) => cached.asTlaEx(negate = true)
@@ -167,7 +153,6 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
         }
 
       case OperEx(TlaSetOper.in, _*) | OperEx(ApalacheOper.selectInSet, _*) | OperEx(ApalacheOper.storeInSet, _*) |
-          OperEx(ApalacheOper.storeInSetOneStep, _*) | OperEx(ApalacheOper.storeInSetLastStep, _*) |
           OperEx(TlaSetOper.notin, _*) | OperEx(ApalacheOper.storeNotInSet, _*) =>
         // do not preprocess these expressions, as we have to find sorts from the names
         ex

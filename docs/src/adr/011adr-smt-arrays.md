@@ -140,7 +140,7 @@ The following changes will be made to implement the new encoding of sets:
   `PreproSolverContext`, to represent the array operations.
   - The `selectInSet` IR operator represents the SMT `select`.
   - The `storeInSet` IR operator represents the SMT `store`.
-  - The `storeInSetOneStep` and `storeInSetLastStep` IR operators represent a compound SMT `store`.
+  - The `chain` and `assignChain` IR operators represent compound SMT operations.
   - The `unchangedSet` IR operator represents an equality between the current and new SSA array
     representations. This is required to constraint the array representation as it evolves. It is
     important to note that this operator assumes that all arrays are initially empty, so an element
@@ -154,10 +154,10 @@ The following changes will be made to implement the new encoding of sets:
     and `getInPred`, will not be applied to the new encoding. Cases for the new IR operators will 
     be added to `toExpr`, which will default to `TlaSetOper.in` and `TlaSetOper.notin` for the 
     existing encoding.
-  - The `storeInSetOneStep` and `storeInSetLastStep` IR operators, encoding a sequence of `store`
-    operations into a single clause, are used to more efficiently encode array updates dealing
-    with many elements. Their benefit stand from avoiding the declaration of many intermediary
-    arrays.
+  - The `chain` and `assignChain` IR operators encode a sequence of SMT operations into a single
+    clause. They can be used to efficiently encode compound `store` operations when many elements
+    need to be added a set, by avoiding the declaration of intermediary arrays. In addition to
+    `store`, they can also be used to compound other operations, such as arithmetic ones.
   - Cases for `FinSetT` and `PowSetT` will be added to `getOrMkCellSort`, as these types are no
     longer represented by uninterpreted constants.
   - `cellCache` will be changed to contain a list of cells, in order to handle the effects of
