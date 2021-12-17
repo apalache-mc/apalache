@@ -33,8 +33,8 @@ feature. On the downside, we would have to:
 
 1. Require the users to modify their specs to use the variant operators.
 
-We have tried to make type annotations as non-intrusive and compatible with
-TLC, as possible. After precisely specifying the requirements for the variant
+As much as possible, we have tried to make the type annotations non-intrusive and compatible with
+TLC. After precisely specifying the requirements for the variant
 type, we have found that it would be impossible to do sound type checking
 without introducing additional operators.
 
@@ -57,8 +57,7 @@ The type checker assigns the type `Set([type: Str, a: Int, b: Int])` to `S`. As
 a result, one can write the expression `m.a > m.b`, which does not make a lot
 of sense. This may lead to unexpected results in a large specification. In the
 above example, the model checker would just produce some values for `m.a` or
-`m.b`, which will probably result in a strange counterexample. Such
-counterexamples are usually called spurious.
+`m.b`, which will probably result in a spurious counterexample.
 
 Further, multiple related issues and potential solutions were underlined in
 [#401][] and [#789][].
@@ -73,8 +72,7 @@ There are two main patterns of record use in TLA+:
 
 ### 2.1. Untyped plain records
 
-When it comes to records, it is clear that the users expect from the type
-checker that it would complain about missing record fields. Indeed, it is very
+When it comes to records, it is clear that users expect the type checker to complain about missing record fields. Indeed, it is very
 easy to introduce a spurious record field by mistyping the field name. It
 happened to all of us.
 
@@ -241,7 +239,7 @@ In the above example, the type checker would not be able to infer the type of
 ```tla
 \* @type: [ a: Int, b: Str ];
 RowAccess(m) ==
-    m.a > 0         \* should flag a type error
+    m.a > 0         \* should not flag a type error
 ```
 
 **Blocker.** It is not clear to me, what type we would assign to the record
@@ -264,17 +262,17 @@ user-facing syntax of the type system later in the text.
 
 ### 5.1. Plain records
 
-By using [Row types][], we should be able to infer the type of `m` in
-`RowAccess`:
+By using [Row types][], we should be able to infer a polymorphic record type for  `m` in the unannotated
+`RowAccess` operator:
 
 ```
 Rec(RowCons("a", Int, z))
 ```
 
-In this example, `RowCons("a", Int, z)` is a type term indicating that the type
-has the field called `a`, and its type is `Int`. On top of that, this row
+In this example, `RowCons("a", Int, z)` indicates a row indicating that the type of the record enclosing it
+has the field `a` of type `Int`. On top of that, this row
 extends a parametric type `z`, which either contains a non-empty sequence of
-rows, or is an empty sequence, that is, `RowNil`. Importantly, `RecCons` is
+rows, or is an empty sequence, that is, `RowNil`. Importantly, `RowCons` is
 wrapped with the term `Rec`, so no additional fields can be added to the type.
 
 The example `FieldAccess` contains a record constructor
@@ -324,7 +322,7 @@ Hence, we formulate the type inference rule for record access in our type
 system as follows:
 
 ```
-r: Rec(RowCons("f", t_1), t_2)
+r: Rec(RowCons("f", t_1, t_2))
 -------------------------------- [rec_acc]
 r.f: t_1
 ```
@@ -347,7 +345,7 @@ like:
 
 Obviously, we cannot fit both of the records into a single plain record type,
 provided that we want to precisely track the fields that are present in a
-record.  So the type checker should report a type error, if we only implement
+record. So the type checker should report a type error, if we only implement
 type inference for the case explained in Section 5.1. To support this important
 pattern, we introduce variants. They are similar to [unions in
 TypeScript](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types).
@@ -403,7 +401,7 @@ Variant([ tag |-> "<TAG>", f_1 |-> e_1, ..., f_n |-> e_n ]):
 According to the rule `[variant]`, the operator `Variant` wraps a record
 constructor that contains a string literal for the field `tag`. The variant
 contains the record that was passed in the constructor, whereas the other
-elements of the variant are captured with a fresh type variable `z`, which must
+alternatives of the variant are captured with a fresh type variable `z`, which must
 be a row.
 
 Importantly, we use rows at two levels:
