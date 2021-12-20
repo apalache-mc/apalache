@@ -6,7 +6,7 @@ But, without question, collaboration on software development calls for a lot of
 communication.
 
 This document records our shared (always evolving) understanding of the key ways
-we communicate in furtherance of our collaboration.
+we communicate in furtherance of our collaboration. Its intention is to ensure that we are aligned between ourselves in regard to how and why we use the tools we do.
 
 ## Elements of our project coordination
 
@@ -37,7 +37,9 @@ https://stackoverflow.com/a/47542346/1187277)
 
 ### Project board
 
-#### Overall workflow reflection
+Our project board is the main resource to help with our day-to-day coordination. We use a Kanban-styled continuous workflow board with a high level view of whats being done and some queues for what is up next.
+
+#### Why
 
 The column order in the board represents different points in the timeline:
 
@@ -63,7 +65,9 @@ For the **past**:
 - Celebrations
 - Knowledge dissemination
 
-#### Using the **Next** column
+#### How
+
+##### Using the **Next** column
 
 Generally, a backlog is something we cannot control. If a new bug is identified,
 it has to go into some sort of backlog and there is nothing we can do about it.
@@ -80,7 +84,7 @@ of deciding which tasks should be on the "Next" column is usually called
 The Next column needs a size limit since "if everything is a priority, then
 nothing is a priority".
 
-##### How do we prioritize work?
+###### How do we prioritize work?
 
 We are currently considering 3 different prioritization schemes:
 
