@@ -46,17 +46,55 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
     check(prop, minSuccessful(2500), sizeRange(8))
   }
 
-  test("simplifies sums with zeroes") {
+  test("simplifies arithmetical operations with their neutral values") {
     val gens = new IrGenerators {
       override val maxArgs: Int = 2
     }
     val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
     val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
-      val expression = tla.plus(tla.int(0), ex) as IntT1()
-      val result = simplifier.simplify(expression)
-      val expected = simplifier.simplify(ex)
+      val expressions = List (
+        tla.plus(tla.int(0), ex) as IntT1(),
+        tla.plus(ex, tla.int(0)) as IntT1(),
+        tla.minus(ex, tla.int(0)) as IntT1(),
+        tla.mult(ex, tla.int(1)) as IntT1(),
+        tla.mult(tla.int(1), ex) as IntT1(),
+        tla.div(ex, tla.int(1)) as IntT1(),
+        tla.exp(ex, tla.int(1)) as IntT1(),
+      )
+      expressions.forall({ expression =>
+                        val result = simplifier.simplify(expression)
+                        val expected = simplifier.simplify(ex)
+                        result == expected
+                      })
 
-      result == expected
+    }
+    check(prop, minSuccessful(250), sizeRange(8))
+  }
+
+  test("simplifies arithmetical operations that result in 0") {
+    val gens = new IrGenerators {
+      override val maxArgs: Int = 2
+    }
+    val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
+    val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
+      val expressions = List (
+        tla.minus(ex, ex) as IntT1(),
+        tla.mult(ex, tla.int(0)) as IntT1(),
+        tla.mult(tla.int(0), ex) as IntT1(),
+        // tla.div(tla.int(0), ex) as IntT1(),
+        tla.mod(ex, tla.int(1)) as IntT1(),
+        // tla.exp(tla.int(0), ex) as IntT1(),
+      )
+      expressions.forall({ expression =>
+                           val result = simplifier.simplify(expression)
+                           result match {
+                             case ValEx(TlaInt(x)) =>
+                               x == 0
+                             case _ =>
+                               false
+                           }
+                         })
+
     }
     check(prop, minSuccessful(250), sizeRange(8))
   }
@@ -69,21 +107,6 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
       result match {
         case ValEx(TlaInt(x)) =>
           x == a - b
-        case _ =>
-          false
-      }
-    }
-    check(prop, minSuccessful(2500), sizeRange(8))
-  }
-
-  test("simplifies subtractions that result in 0") {
-    val prop = forAll { (a: BigInt) =>
-      val expression = tla.minus(tla.int(a), tla.int(a)) as IntT1()
-      val result = simplifier.simplify(expression)
-
-      result match {
-        case ValEx(TlaInt(x)) =>
-          x == 0
         case _ =>
           false
       }

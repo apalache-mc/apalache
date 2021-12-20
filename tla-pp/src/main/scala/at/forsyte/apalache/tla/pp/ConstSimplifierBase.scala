@@ -29,14 +29,9 @@ abstract class ConstSimplifierBase {
 
     // integer operations
     case OperEx(TlaArithOper.plus, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
-      if (left == 0) {
-        ValEx(TlaInt(right))(intTag)
-      } else if (right == 0) {
-        ValEx(TlaInt(left))(intTag)
-      } else {
-        ValEx(TlaInt(left + right))(intTag)
-      }
+      ValEx(TlaInt(left + right))(intTag)
 
+    // 0 + x = x
     case OperEx(TlaArithOper.plus, ValEx(TlaInt(left)), rightEx) =>
       val rightExSimplified = simplifyShallow(rightEx)
       if (left == 0) {
@@ -45,36 +40,133 @@ abstract class ConstSimplifierBase {
         OperEx(TlaArithOper.plus, ValEx(TlaInt(left))(intTag), rightExSimplified)(intTag)
       }
 
+    // x + 0 = x
+    case OperEx(TlaArithOper.plus, leftEx, ValEx(TlaInt(right))) =>
+      val leftExSimplified = simplifyShallow(leftEx)
+      if (right == 0) {
+        leftExSimplified
+      } else {
+        OperEx(TlaArithOper.plus, leftExSimplified, ValEx(TlaInt(right))(intTag))(intTag)
+      }
+
     case OperEx(TlaArithOper.minus, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
       ValEx(TlaInt(left - right))(intTag)
 
-    case ex @ OperEx(TlaArithOper.minus, NameEx(left), NameEx(right)) =>
-      if (left == right) ValEx(TlaInt(0))(intTag) else ex // this actually happens
+    // 0 - x = -x
+    case OperEx(TlaArithOper.minus, ValEx(TlaInt(left)), rightEx) =>
+      val rightExSimplified = simplifyShallow(rightEx)
+      if (left == 0) {
+        // TODO: 0 - 1 should be ValInt(-1)
+        OperEx(TlaArithOper.uminus, rightExSimplified)(intTag)
+      } else {
+        OperEx(TlaArithOper.minus, ValEx(TlaInt(left))(intTag), rightExSimplified)(intTag)
+      }
+
+    // x - 0 = x
+    case OperEx(TlaArithOper.minus, leftEx, ValEx(TlaInt(right))) =>
+      val leftExSimplified = simplifyShallow(leftEx)
+      if (right == 0) {
+        leftExSimplified
+      } else {
+        OperEx(TlaArithOper.minus, leftExSimplified, ValEx(TlaInt(right))(intTag))(intTag)
+      }
+
+    // x - x = 0
+    case ex @ OperEx(TlaArithOper.minus, leftEx, rightEx) =>
+      if (leftEx == rightEx) ValEx(TlaInt(0))(intTag) else ex // this actually happens
 
     case OperEx(TlaArithOper.mult, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
-      if (left == 0 || right == 0) {
-        ValEx(TlaInt(BigInt(0)))(intTag)
+      ValEx(TlaInt(left * right))(intTag)
+
+    // 0 * x = 0
+    // 1 * x = x
+    case OperEx(TlaArithOper.mult, ValEx(TlaInt(left)), rightEx) =>
+      val rightExSimplified = simplifyShallow(rightEx)
+      if (left == 0) {
+        ValEx(TlaInt(0))(intTag)
       } else if (left == 1) {
-        ValEx(TlaInt(right))(intTag)
-      } else if (right == 1) {
-        ValEx(TlaInt(left))(intTag)
+        rightExSimplified
       } else {
-        ValEx(TlaInt(left * right))(intTag)
+        OperEx(TlaArithOper.mult, ValEx(TlaInt(left))(intTag), rightExSimplified)(intTag)
+      }
+
+    // x * 0 = 0
+    // x * 1 = x
+    case OperEx(TlaArithOper.mult, leftEx, ValEx(TlaInt(right))) =>
+      val leftExSimplified = simplifyShallow(leftEx)
+      if (right == 0) {
+        ValEx(TlaInt(0))(intTag)
+      } else if (right == 1) {
+        leftExSimplified
+      } else {
+        OperEx(TlaArithOper.mult, leftExSimplified, ValEx(TlaInt(right))(intTag))(intTag)
       }
 
     case ex @ OperEx(TlaArithOper.div, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
       if (right == 0) {
-        // TODO: run without this to check which error SMT is raising and copy it to raise it here
+        // TODO: raise exception
         ex
       } else {
         ValEx(TlaInt(left / right))(intTag)
       }
 
+    // 0 / x = 0
+    case OperEx(TlaArithOper.div, ValEx(TlaInt(left)), rightEx) =>
+      val rightExSimplified = simplifyShallow(rightEx)
+      if (left == 0) {
+        ValEx(TlaInt(0))(intTag)
+      } else {
+        OperEx(TlaArithOper.div, ValEx(TlaInt(left))(intTag), rightExSimplified)(intTag)
+      }
+
+    // x / 1 = x
+    case ex @ OperEx(TlaArithOper.div, leftEx, ValEx(TlaInt(right))) =>
+      val leftExSimplified = simplifyShallow(leftEx)
+      if (right == 0) {
+        // TODO: raise exception
+        ex
+      } else if (right == 1) {
+        leftExSimplified
+      } else {
+        OperEx(TlaArithOper.div, leftExSimplified, ValEx(TlaInt(right))(intTag))(intTag)
+      }
+
+    // x / x = 1
+    case ex @ OperEx(TlaArithOper.div, leftEx, rightEx) =>
+      if (leftEx == rightEx) {
+        ValEx(TlaInt(1))(intTag)
+      } else {
+        // TODO: fix overall recursion
+        OperEx(TlaArithOper.div, simplifyShallow(leftEx), simplifyShallow(rightEx))(intTag)
+      }
+
     case OperEx(TlaArithOper.mod, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
       ValEx(TlaInt(left % right))(intTag)
 
+    // x % 1 = 0
+    case ex @ OperEx(TlaArithOper.mod, leftEx, ValEx(TlaInt(right))) =>
+      val leftExSimplified = simplifyShallow(leftEx)
+      if (right == 0) {
+        // TODO: raise exception
+        ex
+      } else if (right == 1) {
+        ValEx(TlaInt(0))(intTag)
+      } else {
+        OperEx(TlaArithOper.mod, leftExSimplified, ValEx(TlaInt(right))(intTag))(intTag)
+      }
+
+    // x % x = 1
+    case OperEx(TlaArithOper.mod, leftEx, rightEx) =>
+      if (leftEx == rightEx) {
+        ValEx(TlaInt(0))(intTag)
+      } else {
+        // TODO: fix overall recursion
+        OperEx(TlaArithOper.mod, simplifyShallow(leftEx), simplifyShallow(rightEx))(intTag)
+      }
+
     case ex @ OperEx(TlaArithOper.exp, ValEx(TlaInt(base)), ValEx(TlaInt(power))) =>
       if (power < 0) {
+        // TODO: raise exception
         ex
       } else if (power.isValidInt) {
         ValEx(TlaInt(base.pow(power.toInt)))(intTag)
@@ -85,8 +177,32 @@ abstract class ConstSimplifierBase {
         ValEx(TlaInt(powAsBigInt))(intTag)
       }
 
+    // 0 ^ x = 0
+    // 1 ^ x = 1
+    case OperEx(TlaArithOper.exp, ValEx(TlaInt(left)), rightEx) =>
+      if (left == 0) {
+        ValEx(TlaInt(0))(intTag)
+      } else if (left == 1) {
+        ValEx(TlaInt(1))(intTag)
+      } else {
+        val rightExSimplified = simplifyShallow(rightEx)
+        OperEx(TlaArithOper.exp, ValEx(TlaInt(left))(intTag), rightExSimplified)(intTag)
+      }
+
+    // x ^ 0 = 1
+    // x ^ 1 = x
+    case OperEx(TlaArithOper.exp, leftEx, ValEx(TlaInt(right))) =>
+      val leftExSimplified = simplifyShallow(leftEx)
+      if (right == 0) {
+        ValEx(TlaInt(0))(intTag)
+      } else if (right == 1) {
+        leftExSimplified
+      } else {
+        OperEx(TlaArithOper.exp, leftExSimplified, ValEx(TlaInt(right))(intTag))(intTag)
+      }
+
     case OperEx(TlaArithOper.uminus, ValEx(TlaInt(value))) =>
-      ValEx(TlaInt(-value))(intTag)
+      if (value == 0) ValEx(TlaInt(0))(intTag) else ValEx(TlaInt(-value))(intTag)
 
     case OperEx(TlaArithOper.lt, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
       ValEx(TlaBool(left < right))(boolTag)
@@ -116,7 +232,7 @@ abstract class ConstSimplifierBase {
     case ex @ OperEx(TlaOper.ne, NameEx(left), NameEx(right)) =>
       if (left == right) ValEx(TlaBool(false))(boolTag) else ex
 
-    case ex @ OperEx(TlaOper.eq, ValEx(TlaStr(left)), ValEx(TlaStr(right))) =>
+    case ex @ OperEx(TlaOper.ne, ValEx(TlaStr(left)), ValEx(TlaStr(right))) =>
       // bugfix #197
       if (left == right) ValEx(TlaBool(false))(boolTag) else ex
 
