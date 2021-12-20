@@ -37,6 +37,14 @@ abstract class ConstSimplifierBase {
         ValEx(TlaInt(left + right))(intTag)
       }
 
+    case OperEx(TlaArithOper.plus, ValEx(TlaInt(left)), rightEx) =>
+      val rightExSimplified = simplifyShallow(rightEx)
+      if (left == 0) {
+        rightExSimplified
+      } else {
+        OperEx(TlaArithOper.plus, ValEx(TlaInt(left))(intTag), rightExSimplified)(intTag)
+      }
+
     case OperEx(TlaArithOper.minus, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
       ValEx(TlaInt(left - right))(intTag)
 
@@ -54,14 +62,21 @@ abstract class ConstSimplifierBase {
         ValEx(TlaInt(left * right))(intTag)
       }
 
-    case OperEx(TlaArithOper.div, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
-      ValEx(TlaInt(left / right))(intTag)
+    case ex @ OperEx(TlaArithOper.div, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
+      if (right == 0) {
+        // TODO: run without this to check which error SMT is raising and copy it to raise it here
+        ex
+      } else {
+        ValEx(TlaInt(left / right))(intTag)
+      }
 
     case OperEx(TlaArithOper.mod, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
       ValEx(TlaInt(left % right))(intTag)
 
-    case OperEx(TlaArithOper.exp, ValEx(TlaInt(base)), ValEx(TlaInt(power))) =>
-      if (power.isValidInt) {
+    case ex @ OperEx(TlaArithOper.exp, ValEx(TlaInt(base)), ValEx(TlaInt(power))) =>
+      if (power < 0) {
+        ex
+      } else if (power.isValidInt) {
         ValEx(TlaInt(base.pow(power.toInt)))(intTag)
       } else {
         // the power does not fit into an integer. That is a lot. Use doubles.
