@@ -104,8 +104,7 @@ abstract class ConstSimplifierBase {
 
     case ex @ OperEx(TlaArithOper.div, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
       if (right == 0) {
-        // TODO: raise exception
-        ex
+        throw new IllegalArgumentException(s"Division by zero at ${ex.toString}")
       } else {
         ValEx(TlaInt(left / right))(intTag)
       }
@@ -123,8 +122,7 @@ abstract class ConstSimplifierBase {
     case ex @ OperEx(TlaArithOper.div, leftEx, ValEx(TlaInt(right))) =>
       val leftExSimplified = simplifyShallow(leftEx)
       if (right == 0) {
-        // TODO: raise exception
-        ex
+        throw new IllegalArgumentException(s"Division by zero at ${ex.toString}")
       } else if (right == 1) {
         leftExSimplified
       } else {
@@ -140,22 +138,25 @@ abstract class ConstSimplifierBase {
         OperEx(TlaArithOper.div, simplifyShallow(leftEx), simplifyShallow(rightEx))(intTag)
       }
 
-    case OperEx(TlaArithOper.mod, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
-      ValEx(TlaInt(left % right))(intTag)
+    case ex @ OperEx(TlaArithOper.mod, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
+      if (right == 0) {
+        throw new IllegalArgumentException(s"Mod by zero at ${ex.toString}")
+      } else {
+        ValEx(TlaInt(left % right))(intTag)
+      }
 
     // x % 1 = 0
     case ex @ OperEx(TlaArithOper.mod, leftEx, ValEx(TlaInt(right))) =>
       val leftExSimplified = simplifyShallow(leftEx)
       if (right == 0) {
-        // TODO: raise exception
-        ex
+        throw new IllegalArgumentException(s"Mod by zero at ${ex.toString}")
       } else if (right == 1) {
         ValEx(TlaInt(0))(intTag)
       } else {
         OperEx(TlaArithOper.mod, leftExSimplified, ValEx(TlaInt(right))(intTag))(intTag)
       }
 
-    // x % x = 1
+    // x % x = 0
     case OperEx(TlaArithOper.mod, leftEx, rightEx) =>
       if (leftEx == rightEx) {
         ValEx(TlaInt(0))(intTag)
@@ -166,18 +167,32 @@ abstract class ConstSimplifierBase {
 
     case ex @ OperEx(TlaArithOper.exp, ValEx(TlaInt(base)), ValEx(TlaInt(power))) =>
       if (power < 0) {
-        // TODO: raise exception
-        ex
-      } else if (power.isValidInt) {
-        ValEx(TlaInt(base.pow(power.toInt)))(intTag)
+        throw new IllegalArgumentException(s"Negative power at ${ex.toString}")
       } else {
-        // the power does not fit into an integer. That is a lot. Use doubles.
-        val pow = Math.pow(base.toDouble, power.toDouble)
-        val powAsBigInt = BigDecimal(pow).setScale(0, BigDecimal.RoundingMode.DOWN).toBigInt()
-        ValEx(TlaInt(powAsBigInt))(intTag)
+        try {
+          ValEx(TlaInt(base.pow(power.toInt)))(intTag)
+        } catch {
+          case _ : ArithmeticException =>
+            // the power does not fit into an integer. That is a lot. Use doubles.
+            val pow = Math.pow(base.toDouble, power.toDouble)
+            val powAsBigInt = BigDecimal(pow).setScale(0, BigDecimal.RoundingMode.DOWN).toBigInt()
+            ValEx(TlaInt(powAsBigInt))(intTag)
+        }
       }
 
-    // 0 ^ x = 0
+    // x ^ 0 = 1
+    // x ^ 1 = x
+    case OperEx(TlaArithOper.exp, leftEx, ValEx(TlaInt(right))) =>
+      val leftExSimplified = simplifyShallow(leftEx)
+      if (right == 0) {
+        ValEx(TlaInt(1))(intTag)
+      } else if (right == 1) {
+        leftExSimplified
+      } else {
+        OperEx(TlaArithOper.exp, leftExSimplified, ValEx(TlaInt(right))(intTag))(intTag)
+      }
+
+    // 0 ^ x = 0 (except if x = 0 which will match the previous case)
     // 1 ^ x = 1
     case OperEx(TlaArithOper.exp, ValEx(TlaInt(left)), rightEx) =>
       if (left == 0) {
@@ -186,19 +201,7 @@ abstract class ConstSimplifierBase {
         ValEx(TlaInt(1))(intTag)
       } else {
         val rightExSimplified = simplifyShallow(rightEx)
-        OperEx(TlaArithOper.exp, ValEx(TlaInt(left))(intTag), rightExSimplified)(intTag)
-      }
-
-    // x ^ 0 = 1
-    // x ^ 1 = x
-    case OperEx(TlaArithOper.exp, leftEx, ValEx(TlaInt(right))) =>
-      val leftExSimplified = simplifyShallow(leftEx)
-      if (right == 0) {
-        ValEx(TlaInt(0))(intTag)
-      } else if (right == 1) {
-        leftExSimplified
-      } else {
-        OperEx(TlaArithOper.exp, leftExSimplified, ValEx(TlaInt(right))(intTag))(intTag)
+          OperEx(TlaArithOper.exp, ValEx(TlaInt(left))(intTag), rightExSimplified)(intTag)
       }
 
     case OperEx(TlaArithOper.uminus, ValEx(TlaInt(value))) =>
