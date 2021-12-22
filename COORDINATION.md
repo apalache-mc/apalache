@@ -111,3 +111,46 @@ We are currently considering 3 different prioritization schemes:
 3. Finally, perhaps a more subjective strategy would be to have people voting on
    tasks they think are more important and using that as a basis for
    prioritizing.
+
+
+### Milestones
+
+[Milestones](https://en.wikipedia.org/wiki/Milestone) mark discrete points in
+our **progress**. Milestones can be **finished**, at which point they are closed.
+This records that the target point has been reached.
+
+> An [open] milestone answers the question, "What is remaining to finish this product?"
+> ([source](https://stackoverflow.com/a/47542346/1187277))
+
+Milestones collect a set work items that build towards a distinct feature or
+articulate a complex problem. We use them focus future towards specific,
+achievable, goals, and to record the history of the work done towards these
+ends.
+
+#### Why
+
+Much of work involves complex sets of tasks that all work towards a single end.
+E.g., designing and implementing a novel feature or testing hypotheses that
+requires many related experiments or complicated set ups. It is important to be
+able to keep this broader goals in view, even while we break them up into
+smaller sub tasks to allow us to focus on more manageable units of work.
+
+It is also useful and encouraging to see how much planned work remains before
+such goals are reached.
+
+#### How
+
+[According to
+GitHub](https://docs.github.com/en/issues/using-labels-and-milestones-to-track-work/about-milestones)
+
+> You can use milestones to track progress on groups of issues or pull requests in a repository.
+
+Progress tracking is supported by the following features:
+
+- A description that describes the goal to be completed.
+- An optional due date.
+- A completion percentage meter, showing how much work remains to be done.
+- A list of all the open and closed work items grouped under the milestone.
+
+Note that an issue or PR can only belong to a single milestone.
+
