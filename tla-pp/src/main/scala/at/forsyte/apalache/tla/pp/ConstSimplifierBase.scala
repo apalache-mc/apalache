@@ -53,7 +53,6 @@ abstract class ConstSimplifierBase {
     // 0 - x = -x
     case OperEx(TlaArithOper.minus, ValEx(TlaInt(left)), rightEx) =>
       if (left == 0) {
-        // TODO: 0 - 1 should be ValInt(-1)
         OperEx(TlaArithOper.uminus, rightEx)(intTag)
       } else {
         OperEx(TlaArithOper.minus, ValEx(TlaInt(left))(intTag), rightEx)(intTag)
@@ -157,16 +156,12 @@ abstract class ConstSimplifierBase {
     case ex @ OperEx(TlaArithOper.exp, ValEx(TlaInt(base)), ValEx(TlaInt(power))) =>
       if (power < 0) {
         throw new IllegalArgumentException(s"Negative power at ${ex.toString}")
+      } else if (!power.isValidInt) {
+        throw new IllegalArgumentException(s"Power of ${power} is bigger than an integer at ${ex.toString}")
       } else {
-        try {
-          ValEx(TlaInt(base.pow(power.toInt)))(intTag)
-        } catch {
-          case _ : ArithmeticException =>
-            // the power does not fit into an integer. That is a lot. Use doubles.
-            val pow = Math.pow(base.toDouble, power.toDouble)
-            val powAsBigInt = BigDecimal(pow).setScale(0, BigDecimal.RoundingMode.DOWN).toBigInt()
-            ValEx(TlaInt(powAsBigInt))(intTag)
-        }
+        // This can take a long time for big base values i.e. 2147484647 ^ 1100000
+        // Maybe we should consider implementing a timeout + error reporting
+        ValEx(TlaInt(base.pow(power.toInt)))(intTag)
       }
 
     // x ^ 0 = 1

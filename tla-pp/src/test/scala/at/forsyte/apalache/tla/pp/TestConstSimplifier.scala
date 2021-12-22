@@ -190,30 +190,31 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
         val expression = tla.mod(tla.int(a), tla.int(b)) as IntT1()
         val result = simplifier.simplify(expression)
 
-        result match {
-          case ValEx(TlaInt(x)) =>
-            x == a % b
-          case _ =>
-            false
-        }
+        result shouldBe (ValEx(TlaInt(a % b))(Typed(IntT1())))
+        true
       }
     }
     check(prop, minSuccessful(2500), sizeRange(8))
   }
 
-  // test("simplifies expoents") {
-  //   val prop = forAll(posNum[BigInt]) { (a: BigInt, b: BigInt) =>
-  //     val expression = tla.exp(tla.int(a), tla.int(b)) as IntT1()
-  //     val result = simplifier.simplify(expression)
+  // Since exponential operators are highly value dependent due to precision and sizes, let's use unit tests
+  test("simplifies expoents when values are usual") {
+    val base : BigInt = 8888888
+    val power : Int = 400
+    val expression = tla.exp(tla.int(base), tla.int(power)) as IntT1()
+    val result = simplifier.simplify(expression)
 
-  //     result match {
-  //       case ValEx(TlaInt(x)) =>
-  //         x == a.pow(b.toInt)
-  //       case _ =>
-  //         false
-  //     }
-  //   }
-  //   check(prop, minSuccessful(2), sizeRange(8))
-  // }
+    result shouldBe (ValEx(TlaInt(base.pow(power)))(Typed(IntT1())))
+  }
 
+  test("raises error when power is too big") {
+    val base : BigInt = 8888888
+    val power : BigInt = BigInt(Int.MaxValue) + 1000
+    val expression = tla.exp(tla.int(base), tla.int(power)) as IntT1()
+    val thrown = intercept[Exception] {
+       simplifier.simplify(expression)
+    }
+
+    thrown.getMessage shouldBe ("Power of 2147484647 is bigger than an integer at 8888888 ^ 2147484647")
+  }
 }
