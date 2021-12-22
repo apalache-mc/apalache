@@ -8,6 +8,9 @@ communication.
 This document records our shared (always evolving) understanding of the key ways
 we communicate in furtherance of our collaboration. Its intention is to ensure that we are aligned between ourselves in regard to how and why we use the tools we do.
 
+**NOTE**: This document is primarily for internal use among the core development
+team and it may include links to resources that are not accessible publicly.
+
 ## Elements of our project coordination
 
 We currently use GitHub as the main platform for sharing the communications
