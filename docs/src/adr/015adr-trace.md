@@ -386,16 +386,6 @@ require any understanding of TLA+.
      Did it work, not work, was changed, upgraded, etc.
 -->
 
-Nothing yet. However, we expect this format to become an exchange format
-for the tools that consume traces at their input:
-
- - End-to-end testing tools,
-
- - Bug reproduction tools,
-
- - Trace visualization tools,
-
- - Trace fuzzers.
 
 [ADR005]: https://apalache.informal.systems/docs/adr/005adr-json.html
 [MissionariesAndCannibalsTyped]: https://github.com/informalsystems/apalache/blob/unstable/test/tla/MissionariesAndCannibalsTyped.tla
