@@ -65,5 +65,12 @@
             <artifactId>scalacheck_${scalaBinaryVersion}</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>at.forsyte.apalache</groupId>
+            <artifactId>tlair</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>
