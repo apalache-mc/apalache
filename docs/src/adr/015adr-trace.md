@@ -253,7 +253,7 @@ As in the trace object, the field `#meta` may be an arbitrary object.
 Different tools may use this object to write their metadata into this object.
 
 The names `<var1>, ..., <varN>` are the names of the variables that are
-specified in the field `vars`. The syntax of `<expr>` is specified below.
+specified in the field `vars`. Each state must define a value for every specified variable. The syntax of `<expr>` is specified below. 
 
 **Expressions.** As usual, expressions are inductively defined. An expression
 `<expr>` is one of the following:
