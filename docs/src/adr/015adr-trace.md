@@ -36,8 +36,8 @@ These counterexamples have two shapes:
 
  1. A *lasso execution*, that is, a finite sequence of states (prefix) followed
  by an infinitely repeated sequence of states (loop). Any infinite execution of
- a *finite-state system* can be represented with a lasso.  (Not all executions
- of infinite-state systems cannot be represented with a lasso.)
+ a *finite-state system* can be represented by a lasso.  (In general, executions
+ of infinite-state systems cannot be represented by lassos.)
 
 Although the concept of an execution in TLA+ is quite simple, it builds upon
 the vocabulary of TLA+. Moreover, TLA+ counterexamples are using the expression
