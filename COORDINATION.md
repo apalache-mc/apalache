@@ -154,3 +154,47 @@ Progress tracking is supported by the following features:
 
 Note that an issue or PR can only belong to a single milestone.
 
+### Labels
+
+Labels are for categorizing issues into groups based on certain shared qualities
+of the planned work, or based on some common attribute. Labels are very flexible
+and freeform. They can server as catchall buckets for groupings that don't fit
+into the time-based buckets of project boards or the product-based buckets of
+milestones.
+
+## Why
+
+Labels let us add metadata to work items, which we can then use for filtering
+and grouping the work. These filters can provide a flexible mechanisms for
+giving different kinds of insights into planned or completed work. Filters on
+labels can be combined, allowing us to mix perspectives: I.e., we might see just
+those issues which are good for first time contributors **and** that fix bugs.
+
+## How
+
+A good label serves to help a user or contributor see our project from a
+distinct, useful perspective.  Multiple labels can be assigned to the same work
+items, since an item may exhibit many overlapping qualities, and they can be
+seen from many different points of view.
+
+Some examples of useful labels are:
+
+- Label issues that are good for first time contributors.
+- Label issues that report bugs vs. issues that request features.
+- Label issues that propose refactoring or maintenance work, so you can track
+  how much time we are devoting to paying down our technical debt.
+- Label issues that are "chores" so you can prevent overloading anyone with
+  unpleasant work.
+
+There are only two constraints limiting the content of a label:
+
+1. Don't use labels to indicate the status of ongoing work. That is represented
+   by the *status* defined in whatever projects the work item belongs to.
+2. Don't use a label for trying to group issues that build towards a common goal
+   (e.g., issues that implement a new feature). That is represented by a
+   [milestone](#milestones).
+
+An additional consideration is that having too many labels can reduce their
+effectiveness: the more lables in use, the more difficult it becomes to select
+the right labels for an issue, and the more likely we are to see multiple labels
+introduced for the same purpose.
