@@ -2435,3 +2435,15 @@ $ ! test -d ./to-override-dir
 $ test -d ./configured-run-dir
 $ rm -rf ./configured-run-dir ./cli-config.cfg
 ```
+
+## server mode
+
+### server mode: subcommand is not yet implemented
+
+```sh
+$ apalache-mc server | sed 's/[IEW]@.*//'
+...
+Server mode is not yet implemented!
+...
+EXITCODE: ERROR (255)
+```
