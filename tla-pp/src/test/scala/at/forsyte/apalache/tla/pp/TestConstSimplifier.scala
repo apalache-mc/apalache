@@ -9,9 +9,7 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.prop.Checkers
 import org.scalatest.{AppendedClues, Matchers}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir.BoolT1
-import at.forsyte.apalache.tla.lir.SetT1
+import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.lir.IntT1
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
@@ -38,30 +36,30 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
     }
     val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
     val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
-      val expressions = List (
-        tla.plus(tla.int(0), ex) as IntT1(),
-        tla.plus(ex, tla.int(0)) as IntT1(),
-        tla.minus(ex, tla.int(0)) as IntT1(),
-        tla.mult(ex, tla.int(1)) as IntT1(),
-        tla.mult(tla.int(1), ex) as IntT1(),
-        tla.div(ex, tla.int(1)) as IntT1(),
-        tla.exp(ex, tla.int(1)) as IntT1(),
-        // A more complex case to ensure recursion works properly: ex + (x - x)
-        tla.plus(ex, tla.minus(tla.name("x") as IntT1(), tla.name("x") as IntT1()) as IntT1()) as IntT1(),
+      val expressions = List(
+          tla.plus(tla.int(0), ex) as IntT1(),
+          tla.plus(ex, tla.int(0)) as IntT1(),
+          tla.minus(ex, tla.int(0)) as IntT1(),
+          tla.mult(ex, tla.int(1)) as IntT1(),
+          tla.mult(tla.int(1), ex) as IntT1(),
+          tla.div(ex, tla.int(1)) as IntT1(),
+          tla.exp(ex, tla.int(1)) as IntT1(),
+          // A more complex case to ensure recursion works properly: ex + (x - x)
+          tla.plus(ex, tla.minus(tla.name("x") as IntT1(), tla.name("x") as IntT1()) as IntT1()) as IntT1()
       )
       expressions.forall({ expression =>
-                           try {
-                             val result = simplifier.simplify(expression)
-                             val expected = simplifier.simplify(ex)
-                             result shouldBe expected
-                             true
-                           } catch {
-                             case _: IllegalArgumentException => true
-                           }
-                         })
+        try {
+          val result = simplifier.simplify(expression)
+
+          result shouldBe simplifier.simplify(ex) withClue s"when simplifying ${expression.toString}"
+          true
+        } catch {
+          case _: IllegalArgumentException => true
+        }
+      })
 
     }
-    check(prop, minSuccessful(2500), sizeRange(8))
+    check(prop, minSuccessful(1000), sizeRange(8))
   }
 
   test("simplifies arithmetical operations that result in 0") {
@@ -71,27 +69,36 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
     val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
     val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
       val expressions = List(
-        tla.minus(ex, ex) as IntT1(),
-        tla.mult(ex, tla.int(0)) as IntT1(),
-        tla.mult(tla.int(0), ex) as IntT1(),
-        tla.div(tla.int(0), ex) as IntT1(),
-        tla.mod(ex, tla.int(1)) as IntT1(),
-        tla.mod(ex, ex) as IntT1(),
-        // TODO: This should not be 0 only when ex = 0. Find a way to test it.
-        // tla.exp(tla.int(0), ex) as IntT1(),
+          tla.minus(ex, ex) as IntT1(),
+          tla.mult(ex, tla.int(0)) as IntT1(),
+          tla.mult(tla.int(0), ex) as IntT1(),
+          tla.div(tla.int(0), ex) as IntT1(),
+          tla.mod(ex, tla.int(1)) as IntT1(),
+          tla.mod(ex, ex) as IntT1()
       )
+
+      // 0 ^ ex should not be 0 only when ex == 0
+      try {
+        if (simplifier.simplify(ex) != (tla.int(0) as IntT1())) {
+          expressions :+ (tla.exp(tla.int(0), ex) as IntT1())
+        }
+      } catch {
+        case _: IllegalArgumentException =>
+      }
+
       expressions.forall({ expression =>
-                           try{
-                             val result = simplifier.simplify(expression)
-                             result shouldBe (ValEx(TlaInt(0))(Typed(IntT1()))) withClue s"${expression.toString} should be simplified to 0 but is instead ${result.toString}"
-                             true
-                           } catch {
-                             case _: IllegalArgumentException => true
-                           }
-                         })
+        try {
+          val result = simplifier.simplify(expression)
+
+          result shouldBe (tla.int(0) as IntT1()) withClue s"when simplifying ${expression.toString}"
+          true
+        } catch {
+          case _: IllegalArgumentException => true
+        }
+      })
 
     }
-    check(prop, minSuccessful(2500), sizeRange(8))
+    check(prop, minSuccessful(1000), sizeRange(8))
   }
 
   test("simplifies arithmetical operations that result in 1") {
@@ -100,22 +107,23 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
     }
     val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
     val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
-      val expressions = List (
-        tla.div(ex, ex) as IntT1(),
-        tla.exp(tla.int(1), ex) as IntT1(),
+      val expressions = List(
+          tla.div(ex, ex) as IntT1(),
+          tla.exp(tla.int(1), ex) as IntT1()
       )
       expressions.forall({ expression =>
-                           try{
-                             val result = simplifier.simplify(expression)
-                             result shouldBe (ValEx(TlaInt(1))(Typed(IntT1()))) withClue s"${expression.toString} should be simplified to 0 but is instead ${result.toString}"
-                             true
-                           } catch {
-                             case _: IllegalArgumentException => true
-                           }
-                         })
+        try {
+          val result = simplifier.simplify(expression)
+
+          result shouldBe (tla.int(1) as IntT1()) withClue s"when simplifying ${expression.toString}"
+          true
+        } catch {
+          case _: IllegalArgumentException => true
+        }
+      })
 
     }
-    check(prop, minSuccessful(2500), sizeRange(8))
+    check(prop, minSuccessful(1000), sizeRange(8))
   }
 
   test("simplifies sums") {
@@ -123,14 +131,10 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
       val expression = tla.plus(tla.int(a), tla.int(b)) as IntT1()
       val result = simplifier.simplify(expression)
 
-      result match {
-        case ValEx(TlaInt(x)) =>
-          x == a + b
-        case _ =>
-          false
-      }
+      result shouldBe (tla.int(a + b) as IntT1()) withClue s"when simplifying ${expression.toString}"
+      true
     }
-    check(prop, minSuccessful(2500), sizeRange(8))
+    check(prop, minSuccessful(1000), sizeRange(8))
   }
 
   test("simplifies subtractions") {
@@ -138,14 +142,10 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
       val expression = tla.minus(tla.int(a), tla.int(b)) as IntT1()
       val result = simplifier.simplify(expression)
 
-      result match {
-        case ValEx(TlaInt(x)) =>
-          x == a - b
-        case _ =>
-          false
-      }
+      result shouldBe (tla.int(a - b) as IntT1()) withClue s"when simplifying ${expression.toString}"
+      true
     }
-    check(prop, minSuccessful(2500), sizeRange(8))
+    check(prop, minSuccessful(1000), sizeRange(8))
   }
 
   test("simplifies multiplications") {
@@ -153,68 +153,83 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
       val expression = tla.mult(tla.int(a), tla.int(b)) as IntT1()
       val result = simplifier.simplify(expression)
 
-      result match {
-        case ValEx(TlaInt(x)) =>
-          x == a * b
-        case _ =>
-          false
-      }
+      result shouldBe (tla.int(a * b) as IntT1()) withClue s"when simplifying ${expression.toString}"
+      true
     }
-    check(prop, minSuccessful(2500), sizeRange(8))
+    check(prop, minSuccessful(1000), sizeRange(8))
   }
 
-  test("simplifies divisions") {
+  test("simplifies divisions or throws error when invalid") {
     val prop = forAll { (a: BigInt, b: BigInt) =>
-      if (b == 0) {
-        true
-      } else {
-        val expression = tla.div(tla.int(a), tla.int(b)) as IntT1()
-        val result = simplifier.simplify(expression)
+      val expression = tla.div(tla.int(a), tla.int(b)) as IntT1()
 
-        result match {
-          case ValEx(TlaInt(x)) =>
-            x == a / b
-          case _ =>
-            false
+      if (b == 0) {
+        val thrown = intercept[IllegalArgumentException] {
+          simplifier.simplify(expression)
         }
-      }
-    }
-    check(prop, minSuccessful(2500), sizeRange(8))
-  }
 
-  test("simplifies mods") {
-    val prop = forAll { (a: BigInt, b: BigInt) =>
-      if (b == 0) {
+        thrown.getMessage should startWith("Division by zero at") withClue s"when simplifying ${expression.toString}"
         true
       } else {
-        val expression = tla.mod(tla.int(a), tla.int(b)) as IntT1()
         val result = simplifier.simplify(expression)
 
-        result shouldBe (ValEx(TlaInt(a % b))(Typed(IntT1())))
+        result shouldBe (tla.int(a / b) as IntT1()) withClue s"when simplifying ${expression.toString}"
         true
       }
     }
-    check(prop, minSuccessful(2500), sizeRange(8))
+    check(prop, minSuccessful(1000), sizeRange(8))
+  }
+
+  test("simplifies mods or throws error when invalid") {
+    val prop = forAll { (a: BigInt, b: BigInt) =>
+      val expression = tla.mod(tla.int(a), tla.int(b)) as IntT1()
+
+      if (b == 0) {
+        val thrown = intercept[IllegalArgumentException] {
+          simplifier.simplify(expression)
+        }
+
+        thrown.getMessage should startWith("Mod by zero at") withClue s"when simplifying ${expression.toString}"
+        true
+      } else {
+        val result = simplifier.simplify(expression)
+
+        result shouldBe (tla.int(a % b) as IntT1())
+        true
+      }
+    }
+    check(prop, minSuccessful(1000), sizeRange(8))
   }
 
   // Since exponential operators are highly value dependent due to precision and sizes, let's use unit tests
   test("simplifies expoents when values are usual") {
-    val base : BigInt = 8888888
-    val power : Int = 400
+    val base: BigInt = 8888888
+    val power: Int = 400
     val expression = tla.exp(tla.int(base), tla.int(power)) as IntT1()
     val result = simplifier.simplify(expression)
 
-    result shouldBe (ValEx(TlaInt(base.pow(power)))(Typed(IntT1())))
+    result shouldBe (tla.int(base.pow(power)) as IntT1()) withClue s"when simplifying ${expression.toString}"
   }
 
   test("raises error when power is too big") {
-    val base : BigInt = 8888888
-    val power : BigInt = BigInt(Int.MaxValue) + 1000
+    val base: BigInt = 8888888
+    val power: BigInt = BigInt(Int.MaxValue) + 1000
     val expression = tla.exp(tla.int(base), tla.int(power)) as IntT1()
-    val thrown = intercept[Exception] {
-       simplifier.simplify(expression)
+    val thrown = intercept[IllegalArgumentException] {
+      simplifier.simplify(expression)
     }
 
     thrown.getMessage shouldBe ("Power of 2147484647 is bigger than an integer at 8888888 ^ 2147484647")
+  }
+
+  test("raises error when result would be too big") {
+    val base: Int = 2147483647
+    val power: Int = 2103446789
+    val expression = tla.exp(tla.int(base), tla.int(power)) as IntT1()
+    val thrown = intercept[IllegalArgumentException] {
+      simplifier.simplify(expression)
+    }
+
+    thrown.getMessage shouldBe ("The result of 2147483647 ^ 2103446789 exceedes the limit")
   }
 }

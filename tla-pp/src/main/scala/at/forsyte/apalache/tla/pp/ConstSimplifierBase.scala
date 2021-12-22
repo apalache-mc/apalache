@@ -159,9 +159,14 @@ abstract class ConstSimplifierBase {
       } else if (!power.isValidInt) {
         throw new IllegalArgumentException(s"Power of ${power} is bigger than an integer at ${ex.toString}")
       } else {
-        // This can take a long time for big base values i.e. 2147484647 ^ 1100000
-        // Maybe we should consider implementing a timeout + error reporting
-        ValEx(TlaInt(base.pow(power.toInt)))(intTag)
+        try {
+          // This can take a long time for big base values i.e. 2147484647 ^ 1100000
+          // Maybe we should consider implementing a timeout
+          ValEx(TlaInt(base.pow(power.toInt)))(intTag)
+        } catch {
+          case _: ArithmeticException =>
+            throw new IllegalArgumentException(s"The result of ${ex.toString} exceedes the limit")
+        }
       }
 
     // x ^ 0 = 1
