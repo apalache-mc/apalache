@@ -280,7 +280,7 @@ specified in the field `vars`. Each state must define a value for every specifie
 
  1. A tuple of the form `{ "#tup": [ <expr>, ..., <expr> ] }`. There is no
  strict rule about when to use sequences or tuples. Apalache differentiates
- between tuples and sequences and it may produce expressions of the both forms.
+ between tuples and sequences, and it may produce both forms of expressions.
 
  1. A set of the form `{ "#set": [ <expr>, ..., <expr> ] }`. A set is different
  from a list in that it does not assume any ordering of its elements. However,
