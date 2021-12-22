@@ -40,7 +40,14 @@ https://stackoverflow.com/a/47542346/1187277)
 
 ### Project board
 
-Our project board is the main resource to help with our day-to-day coordination. We use a Kanban-styled continuous workflow board with a high level view of whats being done and some queues for what is up next.
+Projects coordinate perpetual, ongoing **processes** used by **people**.
+
+> A Project answers the question, "What are we working on at the moment?"
+> ([source](https://stackoverflow.com/a/47542346/1187277))
+
+Our project board is the main resource to help with ongoing our day-to-day
+coordination. We use a Kanban-styled continuous workflow board with a high level
+view of whats being done and some queues for what is up next.
 
 #### Why
 
