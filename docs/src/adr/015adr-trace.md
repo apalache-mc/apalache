@@ -242,7 +242,7 @@ the field may look like:
 
 ```js
   {
-    "#meta": <optional object",
+    "#meta": <optional object>,
     "<var1>": <expr>,
     ...
     "<varN>": <expr>
