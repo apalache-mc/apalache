@@ -96,7 +96,7 @@ nothing is a priority".
 
 ###### How do we prioritize work?
 
-We are currently considering 3 different prioritization schemes:
+We considered 3 different prioritization schemes:
 
 1. Action Priority Matrix: This works by us placing our tasks on a matrix
    according to _impact_ and _effort_. Then we analyze the resulting matrix and
@@ -112,6 +112,9 @@ We are currently considering 3 different prioritization schemes:
    tasks they think are more important and using that as a basis for
    prioritizing.
 
+In the end, we've opted to adopt the Action Priority Matrix. However, we have
+yet to work out the process by which this prioritization will be applied to
+issues.
 
 ### Milestones
 
