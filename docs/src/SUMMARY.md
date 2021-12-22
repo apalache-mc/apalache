@@ -99,3 +99,4 @@
 - [ADR-008: exceptions](./adr/008adr-exceptions.md)
 - [ADR-009: outputs](./adr/009adr-outputs.md)
 - [ADR-011: alternative SMT encoding using arrays](./adr/011adr-smt-arrays.md)
+- [ADR-015: ITF: informal trace format](./adr/015adr-trace.md)
