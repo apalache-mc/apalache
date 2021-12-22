@@ -147,7 +147,7 @@ simple shape:
 
    1. TLC operators over functions: `:>` and `@@`.
 
-In the hindsight, the above expressions are not very far from the JSON format.
+In hindsight, the above expressions are not very far from the JSON format.
 As many engineers know [JSON][], it seems natural to write these counterexamples
 in JSON.
 
