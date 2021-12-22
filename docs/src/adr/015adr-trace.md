@@ -185,7 +185,7 @@ files in this format should end with the extension `.itf.json`.
 
 ### The ITF Format
 
-**Trace object**. A trace in TTF is a JSON object:
+**Trace object**. A trace in ITF is a JSON object:
 
 ```js
 {
