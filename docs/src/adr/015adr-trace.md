@@ -375,9 +375,9 @@ The counterexample to `NoSolution` may be written in the ITF format as follows:
 ```
 
 Compare the above trace format with the TLA+ counterexample. The TLA+ example
-looks more compact. The ITF example is heavier on the brackets and braces.
-However, the example in the ITF format is self-explanatory and it does not
-require any dive in TLA+.
+looks more compact. The ITF example is heavier on the brackets and braces, but it is also designed with machine-readability and tool automation in mind, whereas TLA+ counterexamples are not. 
+However, the example in the ITF format is also self-explanatory and does not
+require any understanding of TLA+.
 
 
 ## Consequences
