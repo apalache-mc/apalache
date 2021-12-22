@@ -208,12 +208,12 @@ like:
   }
 ```
 
-The optional field `parameters` is an array of names that must be set in the
+The optional field `params` is an array of names that must be set in the
 initial state (if there are any parameters). The parameters play the same role
 as `CONSTANTS` in TLA+. For example, the field may look like:
 
 ```js
-  "parameters": [ "Missionaries", "Cannibals" ]
+  "params": [ "Missionaries", "Cannibals" ]
 ```
 
 The field `vars` is an array of names that must be set in every state.
