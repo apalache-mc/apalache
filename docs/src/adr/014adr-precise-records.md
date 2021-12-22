@@ -238,7 +238,7 @@ In the above example, the type checker would not be able to infer the type of
 
 ```tla
 \* @type: [ a: Int, b: Str ];
-RowAccess(m) ==
+RowAccessAnnotated(m) ==
     m.a > 0         \* should not flag a type error
 ```
 
