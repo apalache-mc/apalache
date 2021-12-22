@@ -46,12 +46,15 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
         tla.mult(tla.int(1), ex) as IntT1(),
         tla.div(ex, tla.int(1)) as IntT1(),
         tla.exp(ex, tla.int(1)) as IntT1(),
+        // A more complex case to ensure recursion works properly: ex + (x - x)
+        tla.plus(ex, tla.minus(tla.name("x") as IntT1(), tla.name("x") as IntT1()) as IntT1()) as IntT1(),
       )
       expressions.forall({ expression =>
                            try {
                              val result = simplifier.simplify(expression)
                              val expected = simplifier.simplify(ex)
-                             result == expected
+                             result shouldBe expected
+                             true
                            } catch {
                              case _: IllegalArgumentException => true
                            }
