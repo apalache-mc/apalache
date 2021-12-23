@@ -158,6 +158,7 @@ in JSON.
     - Pros:
 
       - easy to understand, if you know TLA+.
+      - it looks amazing in PDF.
 
     - Cons:
 
@@ -173,7 +174,22 @@ in JSON.
     - Cons:
 
       - almost impossible to read.
-      - requires the knowledge of Apalache IR.
+      - too detailed and too verbose.
+      - requires the knowledge of Apalache IR and of TLA+.
+
+ 1. Use the Informal Trace Format, which is proposed in this ADR:
+
+    - Pros:
+
+      - almost no introduction is required to read the traces.
+      - relatively compact.
+      - easy to parse automatically.
+      - uses the idioms that are understood by the engineers.
+      - not bound to TLA+.
+
+    - Cons:
+
+      - consistency of the format is in conflict with the ease of writing.
 
 ## Solution
 
