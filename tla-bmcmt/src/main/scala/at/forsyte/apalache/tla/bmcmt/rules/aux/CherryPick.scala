@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.values.TlaBool
-import at.forsyte.apalache.tla.lir.{MalformedSepecificationError, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{BuilderEx, MalformedSepecificationError, TlaEx, ValEx}
 
 import scala.collection.immutable.SortedMap
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
@@ -321,11 +321,14 @@ class CherryPick(rewriter: SymbStateRewriter) {
             val ite = tla.ite(tla.apalacheSelectInSet(keyCell.toNameEx, dom.toNameEx),
                 tla.apalacheStoreInSet(keyCell.toNameEx, newDom.toNameEx),
                 tla.apalacheStoreNotInSet(keyCell.toNameEx, newDom.toNameEx))
-            val unchangedSet = if (rewriter.solverContext.config.smtEncoding == arraysEncoding) {
-              // In the arrays encoding we need to propagate the SSA representation of the array if nothing changes
-              tla.apalacheStoreNotInSet(keyCell.toNameEx, newDom.toNameEx)
-            } else {
-              tla.bool(true)
+            val unchangedSet = rewriter.solverContext.config.smtEncoding match {
+              case `arraysEncoding` =>
+                // In the arrays encoding we need to propagate the SSA representation of the array if nothing changes
+                tla.apalacheStoreNotInSet(keyCell.toNameEx, newDom.toNameEx)
+              case `oopsla19Encoding` =>
+                tla.bool(true)
+              case oddEncodingType =>
+                throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
             }
             rewriter.solverContext.assertGroundExpr(tla.ite(oracle.whenEqualTo(nextState, no), ite, unchangedSet))
           } else {
@@ -454,11 +457,14 @@ class CherryPick(rewriter: SymbStateRewriter) {
           val inSet = tla.ite(tla.apalacheSelectInSet(elemAndSet._1.toNameEx, elemAndSet._2.toNameEx),
               tla.apalacheStoreInSet(picked.toNameEx, resultCell.toNameEx),
               tla.apalacheStoreNotInSet(picked.toNameEx, resultCell.toNameEx))
-          val unchangedSet = if (rewriter.solverContext.config.smtEncoding == arraysEncoding) {
-            // In the arrays encoding we need to propagate the SSA representation of the array if nothing changes
-            tla.apalacheStoreNotInSet(picked.toNameEx, resultCell.toNameEx)
-          } else {
-            tla.bool(true)
+          val unchangedSet = rewriter.solverContext.config.smtEncoding match {
+            case `arraysEncoding` =>
+              // In the arrays encoding we need to propagate the SSA representation of the array if nothing changes
+              tla.apalacheStoreNotInSet(picked.toNameEx, resultCell.toNameEx)
+            case `oopsla19Encoding` =>
+              tla.bool(true)
+            case oddEncodingType =>
+              throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
           }
           (inSet, unchangedSet)
         } else {
@@ -612,22 +618,34 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
     // if resultSet has an element, then it must be also in baseSet
     def inResultIfInBase(elem: ArenaCell): Unit = {
-      // In the oopsla19 encoding resultSet is initially unconstrained, and thus can contain any combination of elems.
-      // To emulate this in the arrays encoding, in which the all sets are initially empty, unconstrained predicates
-      // are used to allow the SMT solver to consider all possible combinations of elems.
-      if (rewriter.solverContext.config.smtEncoding == arraysEncoding) {
-        nextState = nextState.updateArena(_.appendCell(BoolT()))
-        val pred = nextState.arena.topCell.toNameEx
-        val storeElem = tla.apalacheStoreInSet(elem.toNameEx, resultSet.toNameEx)
-        val notStoreElem = tla.apalacheStoreNotInSet(elem.toNameEx, resultSet.toNameEx)
-        rewriter.solverContext.assertGroundExpr(tla.ite(pred, storeElem, notStoreElem))
-      }
-
       val inResult = tla.apalacheSelectInSet(elem.toNameEx, resultSet.toNameEx)
       val inBase = tla.apalacheSelectInSet(elem.toNameEx, baseSet.toNameEx)
       rewriter.solverContext.assertGroundExpr(tla.impl(inResult, inBase))
     }
 
+    // In the oopsla19 encoding resultSet is initially unconstrained, and thus can contain any combination of elems.
+    // To emulate this in the arrays encoding, in which the all sets are initially empty, unconstrained predicates
+    // are used to allow the SMT solver to consider all possible combinations of elems.
+    def unconstrainElems(elems: Seq[ArenaCell]): Unit = {
+      if (rewriter.solverContext.config.smtEncoding == arraysEncoding & elems.nonEmpty) {
+        def consChain(elems: Seq[ArenaCell]): BuilderEx = {
+          val elem = elems.head
+          val inResultSet = tla.apalacheStoreInSet(elem.toNameEx, resultSet.toNameEx)
+          nextState = nextState.updateArena(_.appendCell(BoolT()))
+          val pred = nextState.arena.topCell.toNameEx
+
+          elems.tail match {
+            case Seq() => tla.apalacheChain(inResultSet, resultSet.toNameEx, pred)
+            case tail  => tla.apalacheChain(inResultSet, consChain(tail), pred)
+          }
+        }
+
+        val cons = consChain(elems)
+        rewriter.solverContext.assertGroundExpr(tla.apalacheAssignChain(resultSet.toNameEx, cons))
+      }
+    }
+
+    unconstrainElems(elems)
     elems foreach inResultIfInBase
     rewriter.solverContext.log("; } PICK %s FROM %s".format(resultType, set))
     nextState.setRex(resultSet.toNameEx)

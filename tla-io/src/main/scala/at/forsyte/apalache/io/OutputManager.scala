@@ -6,7 +6,6 @@ import java.io.{File, FileInputStream, FileWriter, PrintWriter}
 import java.nio.file.{Files, Path, Paths}
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import org.yaml.snakeyaml.Yaml
 
 import scala.io.Source
 
