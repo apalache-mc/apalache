@@ -57,7 +57,7 @@ abstract class ConstSimplifierBase {
     case OperEx(TlaArithOper.mult, leftEx, ValEx(TlaInt(right))) if (right == 1) => leftEx
 
     // x / 0 = undefined
-    case ex @ OperEx(TlaArithOper.div, leftEx, ValEx(TlaInt(right))) if (right == 0) => throw new IllegalArgumentException(s"Division by zero at ${ex.toString}")
+    case ex @ OperEx(TlaArithOper.div, leftEx, ValEx(TlaInt(right))) if (right == 0) => throw new TlaInputError(s"Division by zero at ${ex.toString}")
     // Evaluate constant division
     case OperEx(TlaArithOper.div, ValEx(TlaInt(left)), ValEx(TlaInt(right))) => ValEx(TlaInt(left / right))(intTag)
     // 0 / x = 0
@@ -68,7 +68,7 @@ abstract class ConstSimplifierBase {
     case OperEx(TlaArithOper.div, leftEx, rightEx) if (leftEx == rightEx) => ValEx(TlaInt(1))(intTag)
 
     // x % 0 = undefined
-    case ex @ OperEx(TlaArithOper.mod, leftEx, ValEx(TlaInt(right))) if (right == 0) => throw new IllegalArgumentException(s"Mod by zero at ${ex.toString}")
+    case ex @ OperEx(TlaArithOper.mod, leftEx, ValEx(TlaInt(right))) if (right == 0) => throw new TlaInputError(s"Mod by zero at ${ex.toString}")
     // Evaluate constant mod
     case OperEx(TlaArithOper.mod, ValEx(TlaInt(left)), ValEx(TlaInt(right))) => ValEx(TlaInt(left % right))(intTag)
     // x % 1 = 0
@@ -77,13 +77,13 @@ abstract class ConstSimplifierBase {
     case OperEx(TlaArithOper.mod, leftEx, rightEx) if (leftEx == rightEx) => ValEx(TlaInt(0))(intTag)
 
     // 0 ^ 0 = undefined
-    case ex @ OperEx(TlaArithOper.exp, ValEx(TlaInt(base)), ValEx(TlaInt(power))) if (base == 0 && power == 0) => throw new IllegalArgumentException(s"0 ^ 0 is undefined")
+    case ex @ OperEx(TlaArithOper.exp, ValEx(TlaInt(base)), ValEx(TlaInt(power))) if (base == 0 && power == 0) => throw new TlaInputError(s"0 ^ 0 is undefined")
     // Try to evaluante constant exponentiation
     case ex @ OperEx(TlaArithOper.exp, ValEx(TlaInt(base)), ValEx(TlaInt(power))) =>
       if (power < 0) {
-        throw new IllegalArgumentException(s"Negative power at ${ex.toString}")
+        throw new TlaInputError(s"Negative power at ${ex.toString}")
       } else if (!power.isValidInt) {
-        throw new IllegalArgumentException(s"Power of ${power} is bigger than an integer at ${ex.toString}")
+        throw new TlaInputError(s"Power of ${power} is bigger than the max allowed of ${Int.MaxValue} at ${ex.toString}")
       } else {
         try {
           // This can take a long time for big base values i.e. 2147484647 ^ 1100000
@@ -91,7 +91,7 @@ abstract class ConstSimplifierBase {
           ValEx(TlaInt(base.pow(power.toInt)))(intTag)
         } catch {
           case _: ArithmeticException =>
-            throw new IllegalArgumentException(s"The result of ${ex.toString} exceedes the limit")
+            throw new TlaInputError(s"The result of ${ex.toString} exceedes the limit of 2^${Int.MaxValue}")
         }
       }
     // x ^ 0 = 1

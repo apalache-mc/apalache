@@ -54,7 +54,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
           result shouldBe simplifier.simplify(ex) withClue s"when simplifying ${expression.toString}"
           true
         } catch {
-          case _: IllegalArgumentException => true
+          case _: TlaInputError => true
         }
       })
 
@@ -83,7 +83,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
           expressions :+ (tla.exp(tla.int(0), ex) as IntT1())
         }
       } catch {
-        case _: IllegalArgumentException =>
+        case _: TlaInputError =>
       }
 
       expressions.forall({ expression =>
@@ -93,7 +93,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
           result shouldBe (tla.int(0) as IntT1()) withClue s"when simplifying ${expression.toString}"
           true
         } catch {
-          case _: IllegalArgumentException => true
+          case _: TlaInputError => true
         }
       })
 
@@ -118,7 +118,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
           result shouldBe (tla.int(1) as IntT1()) withClue s"when simplifying ${expression.toString}"
           true
         } catch {
-          case _: IllegalArgumentException => true
+          case _: TlaInputError => true
         }
       })
 
@@ -164,7 +164,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
       val expression = tla.div(tla.int(a), tla.int(b)) as IntT1()
 
       if (b == 0) {
-        val thrown = intercept[IllegalArgumentException] {
+        val thrown = intercept[TlaInputError] {
           simplifier.simplify(expression)
         }
 
@@ -185,7 +185,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
       val expression = tla.mod(tla.int(a), tla.int(b)) as IntT1()
 
       if (b == 0) {
-        val thrown = intercept[IllegalArgumentException] {
+        val thrown = intercept[TlaInputError] {
           simplifier.simplify(expression)
         }
 
@@ -215,21 +215,21 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
     val base: BigInt = 8888888
     val power: BigInt = BigInt(Int.MaxValue) + 1000
     val expression = tla.exp(tla.int(base), tla.int(power)) as IntT1()
-    val thrown = intercept[IllegalArgumentException] {
+    val thrown = intercept[TlaInputError] {
       simplifier.simplify(expression)
     }
 
-    thrown.getMessage shouldBe ("Power of 2147484647 is bigger than an integer at 8888888 ^ 2147484647")
+    thrown.getMessage shouldBe ("Power of 2147484647 is bigger than the max allowed of 2147483647 at 8888888 ^ 2147484647")
   }
 
   test("raises error when result would be too big") {
     val base: Int = 2147483647
     val power: Int = 2103446789
     val expression = tla.exp(tla.int(base), tla.int(power)) as IntT1()
-    val thrown = intercept[IllegalArgumentException] {
+    val thrown = intercept[TlaInputError] {
       simplifier.simplify(expression)
     }
 
-    thrown.getMessage shouldBe ("The result of 2147483647 ^ 2103446789 exceedes the limit")
+    thrown.getMessage shouldBe ("The result of 2147483647 ^ 2103446789 exceedes the limit of 2^2147483647")
   }
 }
