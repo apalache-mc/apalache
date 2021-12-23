@@ -391,9 +391,49 @@ The counterexample to `NoSolution` may be written in the ITF format as follows:
 ```
 
 Compare the above trace format with the TLA+ counterexample. The TLA+ example
-looks more compact. The ITF example is heavier on the brackets and braces, but it is also designed with machine-readability and tool automation in mind, whereas TLA+ counterexamples are not. 
-However, the example in the ITF format is also self-explanatory and does not
-require any understanding of TLA+.
+looks more compact. The ITF example is heavier on the brackets and braces, but
+it is also designed with machine-readability and tool automation in mind,
+whereas TLA+ counterexamples are not.  However, the example in the ITF format
+is also self-explanatory and does not require any understanding of TLA+.
+
+Note that we did not output the operator `InvariantViolation` of the TLA+
+example. This operator is simply not a part of the trace. It could be added in
+the `#meta` object by Apalache.
+
+### Discussion
+
+Shon Feder @shonfeder flagged important concerns about irregularity of the
+proposed format in the [PR
+comments](https://github.com/informalsystems/apalache/pull/1190). In a
+regular approach we would treat all expressions uniformly. For example:
+
+```js
+// proposed form:
+"hello"
+// regular form:
+{ "#type": "string", "#value": "hello" }
+
+// proposed form:
+{ "#set": [ 1, 2, 3] }
+// regular form:
+{ 
+  "#type": "set",
+  "#value": [
+    { "#type": "int", "#value": "1" },
+    { "#type": "int", "#value": "2" },
+    { "#type": "int", "#value": "3" }
+  ]
+}
+```
+
+The more regular approach is less concise. In the future, we might want to add
+a flag that lets the user choose between the regular output and the output
+proposed in this ADR, which is more ad hoc.
+
+Another suggestion is to use [JSON
+schema](https://cswr.github.io/JsonSchema/#what-is-json-schema?).  For the
+moment, it seems to be a heavy-weight solution with no obvious value.  However,
+we should keep it in mind and use schemas, when the need arises.
 
 
 ## Consequences
@@ -401,6 +441,8 @@ require any understanding of TLA+.
 <!-- Records the results of the decision over the long term.
      Did it work, not work, was changed, upgraded, etc.
 -->
+
+Reserved for the future.
 
 
 [ADR005]: https://apalache.informal.systems/docs/adr/005adr-json.html
