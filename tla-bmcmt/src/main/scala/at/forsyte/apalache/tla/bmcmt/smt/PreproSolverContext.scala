@@ -74,14 +74,14 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
         }
 
       case OperEx(op, NameEx(left), NameEx(right))
-          if op == TlaSetOper.in || op == ApalacheOper.selectInSet || op == ApalacheOper.storeInSet || op == ApalacheOper.storeNotInSet =>
+          if op == TlaSetOper.in || op == ApalacheOper.selectInSet || op == ApalacheOper.storeInSet =>
         // in and not(notin), the latter is transformed by simplifier
         if (ArenaCell.isValidName(left) && ArenaCell.isValidName(right)) {
           cache.put((left, right), PreproInEntry(true))
           context.log(";;    -> pp in cached as true ")
         }
 
-      case OperEx(TlaSetOper.notin, NameEx(left), NameEx(right)) =>
+      case OperEx(op, NameEx(left), NameEx(right)) if op == TlaSetOper.notin || op == ApalacheOper.storeNotInSet =>
         // notin and not(in), the latter is transformed by simplifier
         if (ArenaCell.isValidName(left) && ArenaCell.isValidName(right)) {
           cache.put((left, right), PreproInEntry(false))

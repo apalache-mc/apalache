@@ -204,4 +204,27 @@ object ApalacheOper {
 
     override def precedence: (Int, Int) = (5, 5)
   }
+
+  /**
+   * The chain operator allows the chaining of individual operations.
+   * It can improve solver performance by eliminating intermediary declarations.
+   */
+  object chain extends ApalacheOper {
+    override def name: String = "Apalache!Chain"
+
+    override def arity: OperArity = FixedArity(3)
+
+    override def precedence: (Int, Int) = (5, 5)
+  }
+
+  /**
+   * The assignChain operator assigns the result of a chain of operations to an element.
+   */
+  object assignChain extends ApalacheOper {
+    override def name: String = "Apalache!AssignChain"
+
+    override def arity: OperArity = FixedArity(2)
+
+    override def precedence: (Int, Int) = (5, 5)
+  }
 }

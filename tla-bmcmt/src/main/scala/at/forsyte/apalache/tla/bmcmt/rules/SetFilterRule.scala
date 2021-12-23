@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
-import at.forsyte.apalache.tla.lir.{NameEx, NullEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{BuilderEx, NameEx, NullEx, OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
@@ -59,19 +59,28 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val newArena = arena.appendHas(newSetCell, filteredCellsAndPreds.map(_._1): _*)
 
         // require each cell to satisfy the predicate
-        def addCellCons(cell: ArenaCell, pred: TlaEx): Unit = {
-          val inNewSet = tla.apalacheStoreInSet(cell.toNameEx, newSetCell.toNameEx)
-          val notInNewSet =
-            tla.apalacheStoreNotInSet(cell.toNameEx, newSetCell.toNameEx) // This ensures that cell is not in newSetCell
-          val inOldSet = tla.apalacheSelectInSet(cell.toNameEx, setCell.toNameEx)
-          val inOldSetAndPred = tla.and(pred, inOldSet)
-          val ite = tla.ite(inOldSetAndPred, inNewSet, notInNewSet)
-          rewriter.solverContext.assertGroundExpr(ite)
+        def addCellCons(cellsAndPreds: Seq[(ArenaCell, TlaEx)]): Unit = {
+          if (cellsAndPreds.nonEmpty) {
+            def consChain(cellsAndPreds: Seq[(ArenaCell, TlaEx)]): BuilderEx = {
+              val cell = cellsAndPreds.head._1
+              val pred = cellsAndPreds.head._2
+              val inNewSet = tla.apalacheStoreInSet(cell.toNameEx, newSetCell.toNameEx)
+              val inOldSet = tla.apalacheSelectInSet(cell.toNameEx, setCell.toNameEx)
+              val inOldSetAndPred = tla.and(pred, inOldSet)
+
+              cellsAndPreds.tail match {
+                case Seq() => tla.apalacheChain(inNewSet, newSetCell.toNameEx, inOldSetAndPred)
+                case tail  => tla.apalacheChain(inNewSet, consChain(tail), inOldSetAndPred)
+              }
+            }
+
+            val cons = consChain(cellsAndPreds)
+            rewriter.solverContext.assertGroundExpr(tla.apalacheAssignChain(newSetCell.toNameEx, cons))
+          }
         }
 
         // add SMT constraints
-        for ((cell, pred) <- filteredCellsAndPreds)
-          addCellCons(cell, pred)
+        addCellCons(filteredCellsAndPreds)
 
         newState.setArena(newArena).setRex(newSetCell.toNameEx)
 
