@@ -36,8 +36,8 @@ These counterexamples have two shapes:
 
  1. A *lasso execution*, that is, a finite sequence of states (prefix) followed
  by an infinitely repeated sequence of states (loop). Any infinite execution of
- a *finite-state system* can be represented with a lasso.  (Not all executions
- of infinite-state systems cannot be represented with a lasso.)
+ a *finite-state system* can be represented by a lasso.  (In general, executions
+ of infinite-state systems cannot be represented by lassos.)
 
 Although the concept of an execution in TLA+ is quite simple, it builds upon
 the vocabulary of TLA+. Moreover, TLA+ counterexamples are using the expression
@@ -147,7 +147,7 @@ simple shape:
 
    1. TLC operators over functions: `:>` and `@@`.
 
-In the hindsight, the above expressions are not very far from the JSON format.
+In hindsight, the above expressions are not very far from the JSON format.
 As many engineers know [JSON][], it seems natural to write these counterexamples
 in JSON.
 
@@ -201,7 +201,7 @@ files in this format should end with the extension `.itf.json`.
 
 ### The ITF Format
 
-**Trace object**. A trace in TTF is a JSON object:
+**Trace object**. A trace in ITF is a JSON object:
 
 ```js
 {
@@ -258,7 +258,7 @@ the field may look like:
 
 ```js
   {
-    "#meta": <optional object",
+    "#meta": <optional object>,
     "<var1>": <expr>,
     ...
     "<varN>": <expr>
@@ -269,7 +269,7 @@ As in the trace object, the field `#meta` may be an arbitrary object.
 Different tools may use this object to write their metadata into this object.
 
 The names `<var1>, ..., <varN>` are the names of the variables that are
-specified in the field `vars`. The syntax of `<expr>` is specified below.
+specified in the field `vars`. Each state must define a value for every specified variable. The syntax of `<expr>` is specified below. 
 
 **Expressions.** As usual, expressions are inductively defined. An expression
 `<expr>` is one of the following:
@@ -296,7 +296,7 @@ specified in the field `vars`. The syntax of `<expr>` is specified below.
 
  1. A tuple of the form `{ "#tup": [ <expr>, ..., <expr> ] }`. There is no
  strict rule about when to use sequences or tuples. Apalache differentiates
- between tuples and sequences and it may produce expressions of the both forms.
+ between tuples and sequences, and it may produce both forms of expressions.
 
  1. A set of the form `{ "#set": [ <expr>, ..., <expr> ] }`. A set is different
  from a list in that it does not assume any ordering of its elements. However,
@@ -391,9 +391,9 @@ The counterexample to `NoSolution` may be written in the ITF format as follows:
 ```
 
 Compare the above trace format with the TLA+ counterexample. The TLA+ example
-looks more compact. The ITF example is heavier on the brackets and braces.
-However, the example in the ITF format is self-explanatory and it does not
-require any dive in TLA+.
+looks more compact. The ITF example is heavier on the brackets and braces, but it is also designed with machine-readability and tool automation in mind, whereas TLA+ counterexamples are not. 
+However, the example in the ITF format is also self-explanatory and does not
+require any understanding of TLA+.
 
 
 ## Consequences
@@ -402,16 +402,6 @@ require any dive in TLA+.
      Did it work, not work, was changed, upgraded, etc.
 -->
 
-Nothing yet. However, we expect this format to become an exchange format
-for the tools that consume traces at their input:
-
- - End-to-end testing tools,
-
- - Bug reproduction tools,
-
- - Trace visualization tools,
-
- - Trace fuzzers.
 
 [ADR005]: https://apalache.informal.systems/docs/adr/005adr-json.html
 [MissionariesAndCannibalsTyped]: https://github.com/informalsystems/apalache/blob/unstable/test/tla/MissionariesAndCannibalsTyped.tla
