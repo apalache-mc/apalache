@@ -1,7 +1,7 @@
 ---
 authors: Igor Konnov
 proposed by: Vitor Enes, Andrey Kupriyanov
-last revised: 2021-12-22
+last revised: 2021-12-23
 ---
 
 # ADR-015: Informal Trace Format in JSON
