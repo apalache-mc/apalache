@@ -32,11 +32,11 @@ abstract class ConstSimplifierBase {
       ValEx(TlaInt(left + right))(intTag)
 
     // 0 + x = x
-    case OperEx(TlaArithOper.plus, ValEx(TlaInt(left)), rightEx) =>
+    case ex @ OperEx(TlaArithOper.plus, ValEx(TlaInt(left)), rightEx) =>
       if (left == 0) {
         rightEx
       } else {
-        OperEx(TlaArithOper.plus, ValEx(TlaInt(left))(intTag), rightEx)(intTag)
+        ex
       }
 
     // x + 0 = x
@@ -51,19 +51,19 @@ abstract class ConstSimplifierBase {
       ValEx(TlaInt(left - right))(intTag)
 
     // 0 - x = -x
-    case OperEx(TlaArithOper.minus, ValEx(TlaInt(left)), rightEx) =>
+    case ex @ OperEx(TlaArithOper.minus, ValEx(TlaInt(left)), rightEx) =>
       if (left == 0) {
         OperEx(TlaArithOper.uminus, rightEx)(intTag)
       } else {
-        OperEx(TlaArithOper.minus, ValEx(TlaInt(left))(intTag), rightEx)(intTag)
+        ex
       }
 
     // x - 0 = x
-    case OperEx(TlaArithOper.minus, leftEx, ValEx(TlaInt(right))) =>
+    case ex @ OperEx(TlaArithOper.minus, leftEx, ValEx(TlaInt(right))) =>
       if (right == 0) {
         leftEx
       } else {
-        OperEx(TlaArithOper.minus, leftEx, ValEx(TlaInt(right))(intTag))(intTag)
+        ex
       }
 
     // x - x = 0
@@ -75,24 +75,24 @@ abstract class ConstSimplifierBase {
 
     // 0 * x = 0
     // 1 * x = x
-    case OperEx(TlaArithOper.mult, ValEx(TlaInt(left)), rightEx) =>
+    case ex @ OperEx(TlaArithOper.mult, ValEx(TlaInt(left)), rightEx) =>
       if (left == 0) {
         ValEx(TlaInt(0))(intTag)
       } else if (left == 1) {
         rightEx
       } else {
-        OperEx(TlaArithOper.mult, ValEx(TlaInt(left))(intTag), rightEx)(intTag)
+        ex
       }
 
     // x * 0 = 0
     // x * 1 = x
-    case OperEx(TlaArithOper.mult, leftEx, ValEx(TlaInt(right))) =>
+    case ex @ OperEx(TlaArithOper.mult, leftEx, ValEx(TlaInt(right))) =>
       if (right == 0) {
         ValEx(TlaInt(0))(intTag)
       } else if (right == 1) {
         leftEx
       } else {
-        OperEx(TlaArithOper.mult, leftEx, ValEx(TlaInt(right))(intTag))(intTag)
+        ex
       }
 
     case ex @ OperEx(TlaArithOper.div, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
@@ -103,11 +103,11 @@ abstract class ConstSimplifierBase {
       }
 
     // 0 / x = 0
-    case OperEx(TlaArithOper.div, ValEx(TlaInt(left)), rightEx) =>
+    case ex @ OperEx(TlaArithOper.div, ValEx(TlaInt(left)), rightEx) =>
       if (left == 0) {
         ValEx(TlaInt(0))(intTag)
       } else {
-        OperEx(TlaArithOper.div, ValEx(TlaInt(left))(intTag), rightEx)(intTag)
+        ex
       }
 
     // x / 1 = x
@@ -117,7 +117,7 @@ abstract class ConstSimplifierBase {
       } else if (right == 1) {
         leftEx
       } else {
-        OperEx(TlaArithOper.div, leftEx, ValEx(TlaInt(right))(intTag))(intTag)
+        ex
       }
 
     // x / x = 1
@@ -125,7 +125,7 @@ abstract class ConstSimplifierBase {
       if (leftEx == rightEx) {
         ValEx(TlaInt(1))(intTag)
       } else {
-        OperEx(TlaArithOper.div, leftEx, rightEx)(intTag)
+        ex
       }
 
     case ex @ OperEx(TlaArithOper.mod, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
@@ -142,15 +142,15 @@ abstract class ConstSimplifierBase {
       } else if (right == 1) {
         ValEx(TlaInt(0))(intTag)
       } else {
-        OperEx(TlaArithOper.mod, leftEx, ValEx(TlaInt(right))(intTag))(intTag)
+        ex
       }
 
     // x % x = 0
-    case OperEx(TlaArithOper.mod, leftEx, rightEx) =>
+    case ex @ OperEx(TlaArithOper.mod, leftEx, rightEx) =>
       if (leftEx == rightEx) {
         ValEx(TlaInt(0))(intTag)
       } else {
-        OperEx(TlaArithOper.mod, leftEx, rightEx)(intTag)
+        ex
       }
 
     case ex @ OperEx(TlaArithOper.exp, ValEx(TlaInt(base)), ValEx(TlaInt(power))) =>
@@ -171,24 +171,24 @@ abstract class ConstSimplifierBase {
 
     // x ^ 0 = 1
     // x ^ 1 = x
-    case OperEx(TlaArithOper.exp, leftEx, ValEx(TlaInt(right))) =>
+    case ex @ OperEx(TlaArithOper.exp, leftEx, ValEx(TlaInt(right))) =>
       if (right == 0) {
         ValEx(TlaInt(1))(intTag)
       } else if (right == 1) {
         leftEx
       } else {
-        OperEx(TlaArithOper.exp, leftEx, ValEx(TlaInt(right))(intTag))(intTag)
+        ex
       }
 
     // 0 ^ x = 0 (except if x = 0 which will match the previous case)
     // 1 ^ x = 1
-    case OperEx(TlaArithOper.exp, ValEx(TlaInt(left)), rightEx) =>
+    case ex @ OperEx(TlaArithOper.exp, ValEx(TlaInt(left)), rightEx) =>
       if (left == 0) {
         ValEx(TlaInt(0))(intTag)
       } else if (left == 1) {
         ValEx(TlaInt(1))(intTag)
       } else {
-        OperEx(TlaArithOper.exp, ValEx(TlaInt(left))(intTag), rightEx)(intTag)
+        ex
       }
 
     case OperEx(TlaArithOper.uminus, ValEx(TlaInt(value))) =>
