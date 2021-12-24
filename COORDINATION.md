@@ -173,7 +173,7 @@ giving different kinds of insights into planned or completed work. Filters on
 labels can be combined, allowing us to mix perspectives: I.e., we might see just
 those issues which are good for first time contributors **and** that fix bugs.
 
-## How
+#### How
 
 A good label serves to help a user or contributor see our project from a
 distinct, useful perspective.  Multiple labels can be assigned to the same work
