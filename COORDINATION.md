@@ -165,7 +165,7 @@ and freeform. They can server as catchall buckets for groupings that don't fit
 into the time-based buckets of project boards or the product-based buckets of
 milestones.
 
-## Why
+#### Why
 
 Labels let us add metadata to work items, which we can then use for filtering
 and grouping the work. These filters can provide a flexible mechanisms for
