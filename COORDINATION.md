@@ -150,7 +150,7 @@ GitHub](https://docs.github.com/en/issues/using-labels-and-milestones-to-track-w
 
 Progress tracking is supported by the following features:
 
-- A description that describes the goal to be completed.
+- A description of the goal to be completed.
 - An optional due date.
 - A completion percentage meter, showing how much work remains to be done.
 - A list of all the open and closed work items grouped under the milestone.
