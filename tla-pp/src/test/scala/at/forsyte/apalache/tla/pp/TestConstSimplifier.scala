@@ -204,7 +204,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
   // Since exponential operators are highly value dependent due to precision and sizes, let's use unit tests
   test("simplifies expoents when values are usual") {
     val base: BigInt = 8888888
-    val power: Int = 400
+    val power: Int = 40
     val expression = tla.exp(tla.int(base), tla.int(power)) as IntT1()
     val result = simplifier.simplify(expression)
 
@@ -219,17 +219,6 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
       simplifier.simplify(expression)
     }
 
-    thrown.getMessage shouldBe ("Power of 2147484647 is bigger than the max allowed of 2147483647 at 8888888 ^ 2147484647")
-  }
-
-  test("raises error when result would be too big") {
-    val base: Int = 2147483647
-    val power: Int = 2103446789
-    val expression = tla.exp(tla.int(base), tla.int(power)) as IntT1()
-    val thrown = intercept[TlaInputError] {
-      simplifier.simplify(expression)
-    }
-
-    thrown.getMessage shouldBe ("The result of 2147483647 ^ 2103446789 exceedes the limit of 2^2147483647")
+    thrown.getMessage shouldBe ("Power of 2147484647 is bigger than the max allowed of 64 at 8888888 ^ 2147484647")
   }
 }
