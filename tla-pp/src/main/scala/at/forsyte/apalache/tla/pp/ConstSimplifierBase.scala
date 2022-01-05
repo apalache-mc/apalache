@@ -126,54 +126,44 @@ abstract class ConstSimplifierBase {
       ValEx(TlaBool(left >= right))(boolTag)
 
     // x == x = TRUE
-    case ex @ OperEx(TlaOper.eq, left, right) if (left == right) =>
-      ValEx(TlaBool(true))(boolTag)
+    case OperEx(TlaOper.eq, left, right) if (left == right) => ValEx(TlaBool(true))(boolTag)
 
     // Evaluate constant comparisson
-    case OperEx(TlaOper.eq, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
-      ValEx(TlaBool(left == right))(boolTag)
-    case ex @ OperEx(TlaOper.eq, NameEx(left), NameEx(right)) =>
-      if (left == right) ValEx(TlaBool(true))(boolTag) else ex
-    case ex @ OperEx(TlaOper.eq, ValEx(TlaStr(left)), ValEx(TlaStr(right))) =>
-      // bugfix #197
-      if (left == right) ValEx(TlaBool(true))(boolTag) else ex
+    case OperEx(TlaOper.eq, ValEx(TlaInt(left)), ValEx(TlaInt(right))) => ValEx(TlaBool(left == right))(boolTag)
+    // bugfix #197
+    case OperEx(TlaOper.eq, ValEx(TlaStr(left)), ValEx(TlaStr(right))) => ValEx(TlaBool(left == right))(boolTag)
 
     // x != x = FALSE
-    case ex @ OperEx(TlaOper.ne, left, right) if (left == right) =>
-      ValEx(TlaBool(false))(boolTag)
+    case OperEx(TlaOper.ne, left, right) if (left == right) => ValEx(TlaBool(false))(boolTag)
 
     // Evaluate constant comparisson
-    case OperEx(TlaOper.ne, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
-      ValEx(TlaBool(left != right))(boolTag)
-    case ex @ OperEx(TlaOper.ne, NameEx(left), NameEx(right)) =>
-      if (left == right) ValEx(TlaBool(false))(boolTag) else ex
-    case ex @ OperEx(TlaOper.ne, ValEx(TlaStr(left)), ValEx(TlaStr(right))) =>
-      // bugfix #197
-      if (left == right) ValEx(TlaBool(false))(boolTag) else ex
+    case OperEx(TlaOper.ne, ValEx(TlaInt(left)), ValEx(TlaInt(right))) => ValEx(TlaBool(left != right))(boolTag)
+    // bugfix #197
+    case OperEx(TlaOper.ne, ValEx(TlaStr(left)), ValEx(TlaStr(right))) => ValEx(TlaBool(left != right))(boolTag)
 
     // boolean operations
     case OperEx(TlaBoolOper.and, args @ _*) =>
       val simpArgs = args.filterNot {
         _ == ValEx(TlaBool(true))(boolTag)
       }
-      if (simpArgs.isEmpty) {
-        ValEx(TlaBool(true))(boolTag) // an empty conjunction is true
-      } else if (simpArgs.contains(ValEx(TlaBool(false))(boolTag))) {
-        ValEx(TlaBool(false))(boolTag) // one false make conjunction false
-      } else {
-        OperEx(TlaBoolOper.and, simpArgs: _*)(boolTag)
+      simpArgs match {
+        case Seq()      => ValEx(TlaBool(true))(boolTag) // an empty conjunction is true
+        case Seq(first) => first
+        // one false make conjunction false
+        case _ if simpArgs.contains(ValEx(TlaBool(false))(boolTag)) => ValEx(TlaBool(false))(boolTag)
+        case _                                                      => OperEx(TlaBoolOper.and, simpArgs: _*)(boolTag)
       }
 
     case OperEx(TlaBoolOper.or, args @ _*) =>
       val simpArgs = args.filterNot {
         _ == ValEx(TlaBool(false))(boolTag)
       }
-      if (simpArgs.isEmpty) {
-        ValEx(TlaBool(false))(boolTag) // an empty disjunction is true
-      } else if (simpArgs.contains(ValEx(TlaBool(true))(boolTag))) {
-        ValEx(TlaBool(true))(boolTag) // one true make disjunction true
-      } else {
-        OperEx(TlaBoolOper.or, simpArgs: _*)(boolTag)
+      simpArgs match {
+        case Seq()      => ValEx(TlaBool(false))(boolTag) // an empty disjunction is false
+        case Seq(first) => first
+        // one true make disjunction true
+        case _ if simpArgs.contains(ValEx(TlaBool(true))(boolTag)) => ValEx(TlaBool(true))(boolTag)
+        case _                                                     => OperEx(TlaBoolOper.or, simpArgs: _*)(boolTag)
       }
 
     case OperEx(TlaBoolOper.not, ValEx(TlaBool(b))) =>
@@ -182,8 +172,9 @@ abstract class ConstSimplifierBase {
     case OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.not, underDoubleNegation)) =>
       underDoubleNegation
 
-    case OperEx(TlaBoolOper.not, OperEx(TlaOper.ne, lhs, rhs)) =>
-      OperEx(TlaOper.eq, lhs, rhs)(boolTag)
+    // This is conflicting with double negation simplification, we will probably have to choose between the two or change recursion
+    // case OperEx(TlaBoolOper.not, OperEx(TlaOper.ne, lhs, rhs)) =>
+    //   OperEx(TlaOper.eq, lhs, rhs)(boolTag)
 
     case OperEx(TlaBoolOper.implies, ValEx(TlaBool(left)), ValEx(TlaBool(right))) =>
       ValEx(TlaBool(!left || right))(boolTag)
@@ -218,27 +209,19 @@ abstract class ConstSimplifierBase {
       }
 
     // many ite expressions can be simplified like this
-    case OperEx(TlaControlOper.ifThenElse, ValEx(TlaBool(true)), thenEx, _) =>
-      thenEx
+    case OperEx(TlaControlOper.ifThenElse, ValEx(TlaBool(true)), thenEx, _) => thenEx
 
-    case OperEx(TlaControlOper.ifThenElse, ValEx(TlaBool(false)), _, elseEx) =>
-      elseEx
+    case OperEx(TlaControlOper.ifThenElse, ValEx(TlaBool(false)), _, elseEx) => elseEx
 
     case OperEx(TlaControlOper.ifThenElse, pred, ValEx(TlaBool(false)), elseEx) =>
       OperEx(TlaBoolOper.and, OperEx(TlaBoolOper.not, pred)(boolTag), elseEx)(boolTag)
 
-    case OperEx(TlaControlOper.ifThenElse, pred, ValEx(TlaBool(true)), ValEx(TlaBool(false))) =>
-      pred
+    case OperEx(TlaControlOper.ifThenElse, pred, ValEx(TlaBool(true)), ValEx(TlaBool(false))) => pred
 
     case OperEx(TlaControlOper.ifThenElse, pred, ValEx(TlaBool(false)), ValEx(TlaBool(true))) =>
       OperEx(TlaBoolOper.not, pred)(boolTag)
 
-    case ite @ OperEx(TlaControlOper.ifThenElse, _, thenEx, elseEx) =>
-      if (thenEx != elseEx) {
-        ite
-      } else {
-        thenEx
-      }
+    case OperEx(TlaControlOper.ifThenElse, _, thenEx, elseEx) if (thenEx == elseEx) => thenEx
 
     // default
     case ex =>

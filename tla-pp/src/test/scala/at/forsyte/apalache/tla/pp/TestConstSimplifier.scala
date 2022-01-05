@@ -285,4 +285,36 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
     check(prop, minSuccessful(1000), sizeRange(8))
   }
 
+  test("simplifies logical expressions that result in part of the expression") {
+    val gens = new IrGenerators {
+      override val maxArgs: Int = 3
+    }
+    val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
+    val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
+      val expressions = List(
+          tla.and(ex, tla.bool(true) as BoolT1()) as BoolT1(),
+          tla.or(ex, tla.bool(false) as BoolT1()) as BoolT1(),
+          // tla.equiv(ex, tla.bool(true) as BoolT1()) as BoolT1(),
+          // tla.equiv(ex, tla.bool(false) as BoolT1()) as BoolT1(),
+          tla.ite(tla.bool(true) as BoolT1(), ex, tla.bool(false) as BoolT1()) as BoolT1(),
+          tla.ite(tla.bool(false) as BoolT1(), tla.bool(false) as BoolT1(), ex) as BoolT1(),
+          tla.ite(ex, tla.bool(true) as BoolT1(), tla.bool(false) as BoolT1()) as BoolT1(),
+          tla.ite(ex, ex, ex) as BoolT1(),
+          tla.not(tla.not(ex) as BoolT1()) as BoolT1()
+      )
+      expressions.forall({ expression =>
+        try {
+          val result = simplifier.simplify(expression)
+
+          result shouldBe simplifier.simplify(ex) withClue s"when simplifying ${expression.toString}"
+          true
+        } catch {
+          case _: TlaInputError => true
+        }
+      })
+
+    }
+    check(prop, minSuccessful(1000), sizeRange(8))
+  }
+
 }
