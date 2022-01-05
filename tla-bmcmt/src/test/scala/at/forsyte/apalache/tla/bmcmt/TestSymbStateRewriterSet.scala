@@ -30,10 +30,11 @@ trait TestSymbStateRewriterSet extends RewriterBase {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
           case set @ NameEx(_) =>
-            val falseInSet = in(arena.cellFalse().toNameEx as boolT, set as boolSetT) as boolT
+            val falseInSet = apalacheSelectInSet(arena.cellFalse().toNameEx as boolT, set as boolSetT) as boolT
             solverContext.assertGroundExpr(falseInSet)
             assert(solverContext.sat())
-            val notTrueInSet = not(in(arena.cellTrue().toNameEx as boolT, set as boolSetT) as boolT) as boolT
+            val notTrueInSet =
+              not(apalacheSelectInSet(arena.cellTrue().toNameEx as boolT, set as boolSetT) as boolT) as boolT
             solverContext.assertGroundExpr(notTrueInSet)
             assert(!solverContext.sat())
 

@@ -11,7 +11,7 @@ import at.forsyte.apalache.io.{OutputManager, ReportGenerator}
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.tooling.{ExitCodes, Version}
-import at.forsyte.apalache.tla.tooling.opt.{CheckCmd, ConfigCmd, General, ParseCmd, TestCmd, TypeCheckCmd}
+import at.forsyte.apalache.tla.tooling.opt.{CheckCmd, ConfigCmd, General, ParseCmd, TestCmd, TypeCheckCmd, ServerCmd}
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import com.google.inject.{Guice, Injector}
 import com.typesafe.scalalogging.LazyLogging
@@ -79,11 +79,20 @@ object Tool extends LazyLogging {
     printHeaderAndStatsConfig()
 
     // first, call the arguments parser, which can also handle the standard commands such as version
-    Cli
+    val cli = Cli
       .parse(args)
       .withProgramName("apalache-mc")
       .version("%s build %s".format(Version.version, Version.build), "version")
-      .withCommands(new ParseCmd, new CheckCmd, new TypeCheckCmd, new TestCmd, new ConfigCmd) match {
+      .withCommands(
+          new ParseCmd,
+          new CheckCmd,
+          new TypeCheckCmd,
+          new TestCmd,
+          new ConfigCmd,
+          new ServerCmd
+      )
+
+    cli match {
       // A standard option, e.g., --version or --help. No header, no timer.
       case None => OK_EXIT_CODE
       case Some(cmd) => {
@@ -110,6 +119,10 @@ object Tool extends LazyLogging {
             case typecheck: TypeCheckCmd =>
               val injector = injectorFactory(typecheck)
               handleExceptions[TypeCheckCmd](injector, runTypeCheck(injector, _), typecheck)
+
+            case server: ServerCmd =>
+              val injector = injectorFactory(server)
+              handleExceptions[ServerCmd](injector, runServer(injector, _), server)
 
             case config: ConfigCmd =>
               configure(config)
@@ -287,6 +300,19 @@ object Tool extends LazyLogging {
     }
   }
 
+  private def runServer(injector: => Injector, server: ServerCmd): Int = {
+    // type checker
+    val executor = injector.getInstance(classOf[PassChainExecutor])
+
+    logger.info("Running server...")
+
+    // NOTE Must go after all other options are set due to side-effecting
+    // behavior of current OutmputManager configuration
+    setCommonOptions(server, executor.options)
+    logger.info("Server mode is not yet implemented!")
+    ExitCodes.ERROR
+  }
+
   private def loadProperties(filename: String): Map[String, String] = {
     // use an apache-commons library, as it supports variable substitution
     try {
@@ -334,6 +360,7 @@ object Tool extends LazyLogging {
       case _: CheckCmd     => Guice.createInjector(new CheckerModule)
       case _: TestCmd      => Guice.createInjector(new CheckerModule)
       case _: TypeCheckCmd => Guice.createInjector(new TypeCheckerModule)
+      case _: ServerCmd    => Guice.createInjector(new CheckerModule)
       case _               => throw new RuntimeException("Unexpected command: " + cmd)
     }
   }

@@ -71,12 +71,15 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     def addCellCons(domElem: ArenaCell, relElem: ArenaCell): Unit = {
       val inDomain = tla.apalacheSelectInSet(domElem.toNameEx, domainCell.toNameEx).typed(BoolT1())
       val inRelation = tla.apalacheStoreInSet(relElem.toNameEx, relation.toNameEx).typed(BoolT1())
-      val expr = if (rewriter.solverContext.config.smtEncoding == arraysEncoding) {
-        // In the arrays encoding we also need to update the array if inDomain does not hold
-        val notInRelation = tla.apalacheStoreNotInSet(relElem.toNameEx, relation.toNameEx).typed(BoolT1())
-        tla.ite(inDomain, inRelation, notInRelation).typed(BoolT1())
-      } else {
-        tla.equiv(inDomain, inRelation).typed(BoolT1())
+      val expr = rewriter.solverContext.config.smtEncoding match {
+        case `arraysEncoding` =>
+          // In the arrays encoding we also need to update the array if inDomain does not hold
+          val notInRelation = tla.apalacheStoreNotInSet(relElem.toNameEx, relation.toNameEx).typed(BoolT1())
+          tla.ite(inDomain, inRelation, notInRelation).typed(BoolT1())
+        case `oopsla19Encoding` =>
+          tla.equiv(inDomain, inRelation).typed(BoolT1())
+        case oddEncodingType =>
+          throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
       }
       rewriter.solverContext.assertGroundExpr(expr)
     }

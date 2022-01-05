@@ -610,6 +610,14 @@ class Builder {
     BuilderOper(ApalacheOper.storeNotInSet, elem, set)
   }
 
+  def apalacheChain(op: BuilderEx, tail: BuilderEx, cond: BuilderEx = bool(true)): BuilderEx = {
+    BuilderOper(ApalacheOper.chain, op, tail, cond)
+  }
+
+  def apalacheAssignChain(elem: BuilderEx, chain: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.assignChain, elem, chain)
+  }
+
   private val m_nameMap: Map[String, TlaOper] =
     scala.collection.immutable.Map(
         TlaOper.eq.name -> TlaOper.eq,
