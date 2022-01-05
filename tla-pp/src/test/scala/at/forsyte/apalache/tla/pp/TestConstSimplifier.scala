@@ -10,7 +10,7 @@ import org.scalatest.prop.Checkers
 import org.scalatest.{AppendedClues, Matchers}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.lir.IntT1
+import at.forsyte.apalache.tla.lir.{IntT1, BoolT1}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.TypedPredefs._
@@ -232,4 +232,57 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
 
     thrown.getMessage shouldBe ("The result of 2147483647 ^ 2103446789 exceedes the limit of 2^2147483647")
   }
+
+  test("simplifies logical expressions that result in TRUE") {
+    val gens = new IrGenerators {
+      override val maxArgs: Int = 3
+    }
+    val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
+    val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
+      val expressions = List(
+          tla.eql(ex, ex) as BoolT1(),
+          tla.or(ex, tla.bool(true) as BoolT1()) as BoolT1(),
+          tla.impl(ex, tla.bool(true) as BoolT1()) as BoolT1(),
+          tla.impl(tla.bool(false) as BoolT1(), ex) as BoolT1()
+      )
+      expressions.forall({ expression =>
+        try {
+          val result = simplifier.simplify(expression)
+
+          result shouldBe (tla.bool(true) as BoolT1()) withClue s"when simplifying ${expression.toString}"
+          true
+        } catch {
+          case _: TlaInputError => true
+        }
+      })
+
+    }
+    check(prop, minSuccessful(1000), sizeRange(8))
+  }
+
+  test("simplifies logical expressions that result in FALSE") {
+    val gens = new IrGenerators {
+      override val maxArgs: Int = 3
+    }
+    val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
+    val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
+      val expressions = List(
+          tla.neql(ex, ex) as BoolT1(),
+          tla.and(ex, tla.bool(false) as BoolT1()) as BoolT1()
+      )
+      expressions.forall({ expression =>
+        try {
+          val result = simplifier.simplify(expression)
+
+          result shouldBe (tla.bool(false) as BoolT1()) withClue s"when simplifying ${expression.toString}"
+          true
+        } catch {
+          case _: TlaInputError => true
+        }
+      })
+
+    }
+    check(prop, minSuccessful(1000), sizeRange(8))
+  }
+
 }

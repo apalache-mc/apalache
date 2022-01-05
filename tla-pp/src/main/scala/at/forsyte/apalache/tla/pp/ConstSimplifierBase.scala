@@ -125,22 +125,28 @@ abstract class ConstSimplifierBase {
     case OperEx(TlaArithOper.ge, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
       ValEx(TlaBool(left >= right))(boolTag)
 
+    // x == x = TRUE
+    case ex @ OperEx(TlaOper.eq, left, right) if (left == right) =>
+      ValEx(TlaBool(true))(boolTag)
+
+    // Evaluate constant comparisson
     case OperEx(TlaOper.eq, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
       ValEx(TlaBool(left == right))(boolTag)
-
     case ex @ OperEx(TlaOper.eq, NameEx(left), NameEx(right)) =>
       if (left == right) ValEx(TlaBool(true))(boolTag) else ex
-
     case ex @ OperEx(TlaOper.eq, ValEx(TlaStr(left)), ValEx(TlaStr(right))) =>
       // bugfix #197
       if (left == right) ValEx(TlaBool(true))(boolTag) else ex
 
+    // x != x = FALSE
+    case ex @ OperEx(TlaOper.ne, left, right) if (left == right) =>
+      ValEx(TlaBool(false))(boolTag)
+
+    // Evaluate constant comparisson
     case OperEx(TlaOper.ne, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
       ValEx(TlaBool(left != right))(boolTag)
-
     case ex @ OperEx(TlaOper.ne, NameEx(left), NameEx(right)) =>
       if (left == right) ValEx(TlaBool(false))(boolTag) else ex
-
     case ex @ OperEx(TlaOper.ne, ValEx(TlaStr(left)), ValEx(TlaStr(right))) =>
       // bugfix #197
       if (left == right) ValEx(TlaBool(false))(boolTag) else ex
