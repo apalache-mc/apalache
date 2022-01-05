@@ -10,7 +10,7 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
-     
+
 ### Features
 
 * New errors for the following constant simplification scenarios (see #1191):
