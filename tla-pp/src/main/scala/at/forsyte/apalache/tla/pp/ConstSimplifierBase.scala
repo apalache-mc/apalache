@@ -86,12 +86,18 @@ abstract class ConstSimplifierBase {
     case ex @ OperEx(TlaArithOper.exp, ValEx(TlaInt(base)), ValEx(TlaInt(power))) =>
       if (power < 0) {
         throw new TlaInputError(s"Negative power at ${ex.toString}")
-      } else if (power >= 64) {
-        throw new TlaInputError(s"Power of ${power} is bigger than the max allowed of 64 at ${ex.toString}")
+      } else if (!power.isValidInt) {
+        throw new TlaInputError(
+            s"Power of ${power} is bigger than the max allowed of ${Int.MaxValue} at ${ex.toString}")
       } else {
-        // This can take a long time for big base values i.e. 2147484647 ^ 1100000
-        // Maybe we should consider implementing a timeout
-        ValEx(TlaInt(base.pow(power.toInt)))(intTag)
+        try {
+          // This can take a long time for big base values i.e. 2147484647 ^ 1100000
+          // Maybe we should consider implementing a timeout
+          ValEx(TlaInt(base.pow(power.toInt)))(intTag)
+        } catch {
+          case _: ArithmeticException =>
+            throw new TlaInputError(s"The result of ${ex.toString} exceedes the limit of 2^${Int.MaxValue}")
+        }
       }
     // x ^ 0 = 1
     case OperEx(TlaArithOper.exp, leftEx, ValEx(TlaInt(right))) if (right == 0) => ValEx(TlaInt(1))(intTag)
