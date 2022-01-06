@@ -113,17 +113,11 @@ abstract class ConstSimplifierBase {
     // Evaluate unary minus
     case OperEx(TlaArithOper.uminus, ValEx(TlaInt(value))) => ValEx(TlaInt(-value))(intTag)
 
-    case OperEx(TlaArithOper.lt, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
-      ValEx(TlaBool(left < right))(boolTag)
-
-    case OperEx(TlaArithOper.le, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
-      ValEx(TlaBool(left <= right))(boolTag)
-
-    case OperEx(TlaArithOper.gt, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
-      ValEx(TlaBool(left > right))(boolTag)
-
-    case OperEx(TlaArithOper.ge, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
-      ValEx(TlaBool(left >= right))(boolTag)
+    // Evaluate relational expressions between integers
+    case OperEx(TlaArithOper.lt, ValEx(TlaInt(left)), ValEx(TlaInt(right))) => ValEx(TlaBool(left < right))(boolTag)
+    case OperEx(TlaArithOper.le, ValEx(TlaInt(left)), ValEx(TlaInt(right))) => ValEx(TlaBool(left <= right))(boolTag)
+    case OperEx(TlaArithOper.gt, ValEx(TlaInt(left)), ValEx(TlaInt(right))) => ValEx(TlaBool(left > right))(boolTag)
+    case OperEx(TlaArithOper.ge, ValEx(TlaInt(left)), ValEx(TlaInt(right))) => ValEx(TlaBool(left >= right))(boolTag)
 
     // x == x = TRUE
     case OperEx(TlaOper.eq, left, right) if (left == right) => ValEx(TlaBool(true))(boolTag)

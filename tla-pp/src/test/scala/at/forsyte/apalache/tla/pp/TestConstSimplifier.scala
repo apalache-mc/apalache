@@ -317,4 +317,72 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
     check(prop, minSuccessful(1000), sizeRange(8))
   }
 
+  test("simplifies relational expressions") {
+    val prop = forAll { (a: BigInt, b: BigInt) =>
+      var trueExpressions : Seq[TlaEx] = Seq()
+      var falseExpressions : Seq[TlaEx] = Seq()
+
+      if (a < b) {
+        trueExpressions = trueExpressions :+ (tla.lt(tla.int(a), tla.int(b)) as BoolT1())
+        trueExpressions = trueExpressions :+ (tla.le(tla.int(a), tla.int(b)) as BoolT1())
+        trueExpressions = trueExpressions :+ (tla.neql(tla.int(a), tla.int(b)) as BoolT1())
+
+        falseExpressions = falseExpressions :+ (tla.eql(tla.int(a), tla.int(b)) as BoolT1())
+        falseExpressions = falseExpressions :+ (tla.gt(tla.int(a), tla.int(b)) as BoolT1())
+        falseExpressions = falseExpressions :+ (tla.ge(tla.int(a), tla.int(b)) as BoolT1())
+      } else if (a > b) {
+        trueExpressions = trueExpressions :+ (tla.gt(tla.int(a), tla.int(b)) as BoolT1())
+        trueExpressions = trueExpressions :+ (tla.ge(tla.int(a), tla.int(b)) as BoolT1())
+        trueExpressions = trueExpressions :+ (tla.neql(tla.int(a), tla.int(b)) as BoolT1())
+
+        falseExpressions = falseExpressions :+ (tla.eql(tla.int(a), tla.int(b)) as BoolT1())
+        falseExpressions = falseExpressions :+ (tla.lt(tla.int(a), tla.int(b)) as BoolT1())
+        falseExpressions = falseExpressions :+ (tla.le(tla.int(a), tla.int(b)) as BoolT1())
+      } else if (a == b) {
+        trueExpressions = trueExpressions :+ (tla.ge(tla.int(a), tla.int(b)) as BoolT1())
+        trueExpressions = trueExpressions :+ (tla.le(tla.int(a), tla.int(b)) as BoolT1())
+        trueExpressions = trueExpressions :+ (tla.eql(tla.int(a), tla.int(b)) as BoolT1())
+
+        falseExpressions = falseExpressions :+ (tla.neql(tla.int(a), tla.int(b)) as BoolT1())
+        falseExpressions = falseExpressions :+ (tla.lt(tla.int(a), tla.int(b)) as BoolT1())
+        falseExpressions = falseExpressions :+ (tla.gt(tla.int(a), tla.int(b)) as BoolT1())
+      }
+
+      trueExpressions.forall({ expression =>
+                               val result = simplifier.simplify(expression)
+
+                               result shouldBe (tla.bool(true) as BoolT1()) withClue s"when simplifying ${expression.toString}"
+                               true
+                             })
+
+      falseExpressions.forall({ expression =>
+                               val result = simplifier.simplify(expression)
+
+                               result shouldBe (tla.bool(false) as BoolT1()) withClue s"when simplifying ${expression.toString}"
+                                true
+                              })
+    }
+    check(prop, minSuccessful(1000), sizeRange(8))
+  }
+
+  test("simplifies equality between strings") {
+    val prop = forAll { (a: String, b: String) =>
+      val eqlExpression = tla.eql(tla.str(a), tla.str(b)) as BoolT1()
+      val eqlResult = simplifier.simplify(eqlExpression)
+
+      val neqlExpression = tla.neql(tla.str(a), tla.str(b)) as BoolT1()
+      val neqlResult = simplifier.simplify(neqlExpression)
+
+      if (a == b) {
+        eqlResult shouldBe (tla.bool(true) as BoolT1()) withClue s"when simplifying ${eqlExpression.toString}"
+        neqlResult shouldBe (tla.bool(false) as BoolT1()) withClue s"when simplifying ${neqlExpression.toString}"
+      } else {
+        eqlResult shouldBe (tla.bool(false) as BoolT1()) withClue s"when simplifying ${eqlExpression.toString}"
+        neqlResult shouldBe (tla.bool(true) as BoolT1()) withClue s"when simplifying ${neqlExpression.toString}"
+      }
+      true
+    }
+    check(prop, minSuccessful(1000), sizeRange(8))
+  }
+
 }
