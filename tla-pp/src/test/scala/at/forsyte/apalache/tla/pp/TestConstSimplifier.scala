@@ -294,8 +294,8 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
       val expressions = List(
           tla.and(ex, tla.bool(true) as BoolT1()) as BoolT1(),
           tla.or(ex, tla.bool(false) as BoolT1()) as BoolT1(),
-          // tla.equiv(ex, tla.bool(true) as BoolT1()) as BoolT1(),
-          // tla.equiv(ex, tla.bool(false) as BoolT1()) as BoolT1(),
+          tla.equiv(ex, tla.bool(true) as BoolT1()) as BoolT1(),
+          tla.equiv(tla.bool(true) as BoolT1(), ex) as BoolT1(),
           tla.ite(tla.bool(true) as BoolT1(), ex, tla.bool(false) as BoolT1()) as BoolT1(),
           tla.ite(tla.bool(false) as BoolT1(), tla.bool(false) as BoolT1(), ex) as BoolT1(),
           tla.ite(ex, tla.bool(true) as BoolT1(), tla.bool(false) as BoolT1()) as BoolT1(),
@@ -317,50 +317,90 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
     check(prop, minSuccessful(1000), sizeRange(8))
   }
 
-  test("simplifies relational expressions") {
+  test("simplifies logical expressions that result in part of the expression negated") {
+    val gens = new IrGenerators {
+      override val maxArgs: Int = 3
+    }
+    val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
+    val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
+      val expressions = List(
+          tla.impl(ex, tla.bool(false) as BoolT1()) as BoolT1(),
+          tla.equiv(ex, tla.bool(false) as BoolT1()) as BoolT1(),
+          tla.equiv(tla.bool(false) as BoolT1(), ex) as BoolT1()
+      )
+
+      expressions.forall({ expression =>
+        try {
+          val result = simplifier.simplify(expression)
+
+          val negatedEx = tla.not(ex) as BoolT1()
+          result shouldBe simplifier.simplify(negatedEx) withClue s"when simplifying ${expression.toString}"
+          true
+        } catch {
+          case _: TlaInputError => true
+        }
+      })
+
+    }
+    check(prop, minSuccessful(1000), sizeRange(8))
+  }
+
+  test("evaluates relational expressions over constants") {
     val prop = forAll { (a: BigInt, b: BigInt) =>
-      var trueExpressions : Seq[TlaEx] = Seq()
-      var falseExpressions : Seq[TlaEx] = Seq()
+      var trueExpressions: Seq[TlaEx] = Seq()
+      var falseExpressions: Seq[TlaEx] = Seq()
 
       if (a < b) {
-        trueExpressions = trueExpressions :+ (tla.lt(tla.int(a), tla.int(b)) as BoolT1())
-        trueExpressions = trueExpressions :+ (tla.le(tla.int(a), tla.int(b)) as BoolT1())
-        trueExpressions = trueExpressions :+ (tla.neql(tla.int(a), tla.int(b)) as BoolT1())
+        trueExpressions = Seq(
+            tla.lt(tla.int(a), tla.int(b)) as BoolT1(),
+            tla.le(tla.int(a), tla.int(b)) as BoolT1(),
+            tla.neql(tla.int(a), tla.int(b)) as BoolT1()
+        )
 
-        falseExpressions = falseExpressions :+ (tla.eql(tla.int(a), tla.int(b)) as BoolT1())
-        falseExpressions = falseExpressions :+ (tla.gt(tla.int(a), tla.int(b)) as BoolT1())
-        falseExpressions = falseExpressions :+ (tla.ge(tla.int(a), tla.int(b)) as BoolT1())
+        falseExpressions = Seq(
+            tla.eql(tla.int(a), tla.int(b)) as BoolT1(),
+            tla.gt(tla.int(a), tla.int(b)) as BoolT1(),
+            tla.ge(tla.int(a), tla.int(b)) as BoolT1()
+        )
       } else if (a > b) {
-        trueExpressions = trueExpressions :+ (tla.gt(tla.int(a), tla.int(b)) as BoolT1())
-        trueExpressions = trueExpressions :+ (tla.ge(tla.int(a), tla.int(b)) as BoolT1())
-        trueExpressions = trueExpressions :+ (tla.neql(tla.int(a), tla.int(b)) as BoolT1())
+        trueExpressions = Seq(
+            tla.gt(tla.int(a), tla.int(b)) as BoolT1(),
+            tla.ge(tla.int(a), tla.int(b)) as BoolT1(),
+            tla.neql(tla.int(a), tla.int(b)) as BoolT1()
+        )
 
-        falseExpressions = falseExpressions :+ (tla.eql(tla.int(a), tla.int(b)) as BoolT1())
-        falseExpressions = falseExpressions :+ (tla.lt(tla.int(a), tla.int(b)) as BoolT1())
-        falseExpressions = falseExpressions :+ (tla.le(tla.int(a), tla.int(b)) as BoolT1())
-      } else if (a == b) {
-        trueExpressions = trueExpressions :+ (tla.ge(tla.int(a), tla.int(b)) as BoolT1())
-        trueExpressions = trueExpressions :+ (tla.le(tla.int(a), tla.int(b)) as BoolT1())
-        trueExpressions = trueExpressions :+ (tla.eql(tla.int(a), tla.int(b)) as BoolT1())
+        falseExpressions = Seq(
+            tla.eql(tla.int(a), tla.int(b)) as BoolT1(),
+            tla.lt(tla.int(a), tla.int(b)) as BoolT1(),
+            tla.le(tla.int(a), tla.int(b)) as BoolT1()
+        )
+      } else {
+        trueExpressions = Seq(
+            tla.ge(tla.int(a), tla.int(b)) as BoolT1(),
+            tla.le(tla.int(a), tla.int(b)) as BoolT1(),
+            tla.eql(tla.int(a), tla.int(b)) as BoolT1()
+        )
 
-        falseExpressions = falseExpressions :+ (tla.neql(tla.int(a), tla.int(b)) as BoolT1())
-        falseExpressions = falseExpressions :+ (tla.lt(tla.int(a), tla.int(b)) as BoolT1())
-        falseExpressions = falseExpressions :+ (tla.gt(tla.int(a), tla.int(b)) as BoolT1())
+        falseExpressions = Seq(
+            tla.neql(tla.int(a), tla.int(b)) as BoolT1(),
+            tla.lt(tla.int(a), tla.int(b)) as BoolT1(),
+            tla.gt(tla.int(a), tla.int(b)) as BoolT1()
+        )
       }
 
       trueExpressions.forall({ expression =>
-                               val result = simplifier.simplify(expression)
+        val result = simplifier.simplify(expression)
 
-                               result shouldBe (tla.bool(true) as BoolT1()) withClue s"when simplifying ${expression.toString}"
-                               true
-                             })
+        result shouldBe (tla.bool(true) as BoolT1()) withClue s"when simplifying ${expression.toString}"
+        true
+      })
 
       falseExpressions.forall({ expression =>
-                               val result = simplifier.simplify(expression)
+        val result = simplifier.simplify(expression)
 
-                               result shouldBe (tla.bool(false) as BoolT1()) withClue s"when simplifying ${expression.toString}"
-                                true
-                              })
+        result shouldBe (tla.bool(false) as BoolT1()) withClue s"when simplifying ${expression.toString}"
+        true
+      })
     }
     check(prop, minSuccessful(1000), sizeRange(8))
   }
@@ -385,4 +425,35 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
     check(prop, minSuccessful(1000), sizeRange(8))
   }
 
+  test("evaluates logical expressions over constants") {
+    var trueExpressions: Seq[TlaEx] = Seq(
+        tla.not(tla.bool(false)) as BoolT1(),
+        tla.impl(tla.bool(false), tla.bool(true)) as BoolT1(),
+        tla.impl(tla.bool(false), tla.bool(false)) as BoolT1(),
+        tla.impl(tla.bool(true), tla.bool(true)) as BoolT1(),
+        tla.equiv(tla.bool(false), tla.bool(false)) as BoolT1(),
+        tla.equiv(tla.bool(true), tla.bool(true)) as BoolT1()
+    )
+
+    var falseExpressions: Seq[TlaEx] = Seq(
+        tla.not(tla.bool(true)) as BoolT1(),
+        tla.impl(tla.bool(true), tla.bool(false)) as BoolT1(),
+        tla.equiv(tla.bool(true), tla.bool(false)) as BoolT1(),
+        tla.equiv(tla.bool(false), tla.bool(true)) as BoolT1()
+    )
+
+    trueExpressions.forall({ expression =>
+      val result = simplifier.simplify(expression)
+
+      result shouldBe (tla.bool(true) as BoolT1()) withClue s"when simplifying ${expression.toString}"
+      true
+    })
+
+    falseExpressions.forall({ expression =>
+      val result = simplifier.simplify(expression)
+
+      result shouldBe (tla.bool(false) as BoolT1()) withClue s"when simplifying ${expression.toString}"
+      true
+    })
+  }
 }

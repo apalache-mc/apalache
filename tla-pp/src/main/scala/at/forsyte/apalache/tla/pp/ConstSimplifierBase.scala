@@ -160,47 +160,43 @@ abstract class ConstSimplifierBase {
         case _                                                     => OperEx(TlaBoolOper.or, simpArgs: _*)(boolTag)
       }
 
-    case OperEx(TlaBoolOper.not, ValEx(TlaBool(b))) =>
-      ValEx(TlaBool(!b))(boolTag)
+    // !FALSE = TRUE
+    // !TRUE = FALSE
+    case OperEx(TlaBoolOper.not, ValEx(TlaBool(b))) => ValEx(TlaBool(!b))(boolTag)
 
-    case OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.not, underDoubleNegation)) =>
-      underDoubleNegation
+    // !!x = x
+    case OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.not, underDoubleNegation)) => underDoubleNegation
 
     // This is conflicting with double negation simplification, we will probably have to choose between the two or change recursion
     // case OperEx(TlaBoolOper.not, OperEx(TlaOper.ne, lhs, rhs)) =>
     //   OperEx(TlaOper.eq, lhs, rhs)(boolTag)
 
+    // Evaluate implication of constants
     case OperEx(TlaBoolOper.implies, ValEx(TlaBool(left)), ValEx(TlaBool(right))) =>
       ValEx(TlaBool(!left || right))(boolTag)
+    case OperEx(TlaBoolOper.implies, ValEx(TlaBool(false)), _) => ValEx(TlaBool(true))(boolTag)
+    case OperEx(TlaBoolOper.implies, _, ValEx(TlaBool(true)))  => ValEx(TlaBool(true))(boolTag)
 
-    case OperEx(TlaBoolOper.implies, ValEx(TlaBool(false)), _) =>
-      ValEx(TlaBool(true))(boolTag)
-
-    case OperEx(TlaBoolOper.implies, ValEx(TlaBool(true)), right) =>
-      simplifyShallow(OperEx(TlaBoolOper.not, right)(boolTag))
-
-    case OperEx(TlaBoolOper.implies, _, ValEx(TlaBool(true))) =>
-      ValEx(TlaBool(true))(boolTag)
-
+    // TRUE -> x = x
+    case OperEx(TlaBoolOper.implies, ValEx(TlaBool(true)), right) => right
+    // x -> FALSE = !x
     case OperEx(TlaBoolOper.implies, lhs, ValEx(TlaBool(false))) =>
       simplifyShallow(OperEx(TlaBoolOper.not, lhs)(boolTag))
 
+    // Evaluate equivalence between constants
     case OperEx(TlaBoolOper.equiv, ValEx(TlaBool(left)), ValEx(TlaBool(right))) =>
       ValEx(TlaBool(left == right))(boolTag)
 
-    case OperEx(TlaBoolOper.equiv, ValEx(TlaBool(left)), right) =>
-      if (left) {
-        right
-      } else {
-        simplifyShallow(OperEx(TlaBoolOper.not, right)(boolTag))
-      }
-
-    case OperEx(TlaBoolOper.equiv, left, ValEx(TlaBool(right))) =>
-      if (right) {
-        left
-      } else {
-        simplifyShallow(OperEx(TlaBoolOper.not, left)(boolTag))
-      }
+    // TRUE <=> x = x
+    case OperEx(TlaBoolOper.equiv, ValEx(TlaBool(true)), right) => right
+    // FALSE <=> x = !x
+    case OperEx(TlaBoolOper.equiv, ValEx(TlaBool(false)), right) =>
+      simplifyShallow(OperEx(TlaBoolOper.not, right)(boolTag))
+    // x <=> TRUE = x
+    case OperEx(TlaBoolOper.equiv, left, ValEx(TlaBool(true))) => left
+    // x <=> FALSE = !x
+    case OperEx(TlaBoolOper.equiv, left, ValEx(TlaBool(false))) =>
+      simplifyShallow(OperEx(TlaBoolOper.not, left)(boolTag))
 
     // many ite expressions can be simplified like this
     case OperEx(TlaControlOper.ifThenElse, ValEx(TlaBool(true)), thenEx, _) => thenEx
