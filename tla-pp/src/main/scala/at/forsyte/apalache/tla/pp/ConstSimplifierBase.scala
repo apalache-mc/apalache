@@ -156,7 +156,8 @@ abstract class ConstSimplifierBase {
         case Seq(first) => first
         // one false make conjunction false
         case _ if simpArgs.contains(ValEx(TlaBool(false))(boolTag)) => ValEx(TlaBool(false))(boolTag)
-        case _                                                      => OperEx(TlaBoolOper.and, simpArgs: _*)(boolTag)
+        // TRUE /\ x /\ y = x /\ y
+        case _ => OperEx(TlaBoolOper.and, simpArgs: _*)(boolTag)
       }
 
     case OperEx(TlaBoolOper.or, args @ _*) =>
@@ -168,7 +169,8 @@ abstract class ConstSimplifierBase {
         case Seq(first) => first
         // one true make disjunction true
         case _ if simpArgs.contains(ValEx(TlaBool(true))(boolTag)) => ValEx(TlaBool(true))(boolTag)
-        case _                                                     => OperEx(TlaBoolOper.or, simpArgs: _*)(boolTag)
+        // FALSE \/ x \/ y = x \/ y
+        case _ => OperEx(TlaBoolOper.or, simpArgs: _*)(boolTag)
       }
 
     // Evaluate implication of constants

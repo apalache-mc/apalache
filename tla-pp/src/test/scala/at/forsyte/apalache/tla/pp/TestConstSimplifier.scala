@@ -26,15 +26,20 @@ import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers with AppendedClues with Matchers {
   private var simplifier: ConstSimplifier = _
 
+  private val gens = new IrGenerators {
+    override val maxArgs: Int = 3
+  }
+  private val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
+  private val twoExpressions = for {
+    e1 <- gens.genTlaEx(ops)(gens.emptyContext)
+    e2 <- gens.genTlaEx(ops)(gens.emptyContext)
+  } yield (e1, e2)
+
   override def beforeEach(): Unit = {
     simplifier = new ConstSimplifier(new IdleTracker())
   }
 
   test("simplifies arithmetical operations with their neutral values") {
-    val gens = new IrGenerators {
-      override val maxArgs: Int = 3
-    }
-    val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
     val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
       val expressions = List(
           tla.plus(tla.int(0), ex) as IntT1(),
@@ -63,10 +68,6 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
   }
 
   test("simplifies arithmetical operations that result in 0") {
-    val gens = new IrGenerators {
-      override val maxArgs: Int = 3
-    }
-    val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
     val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
       val expressions = List(
           tla.minus(ex, ex) as IntT1(),
@@ -102,10 +103,6 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
   }
 
   test("simplifies arithmetical operations that result in 1") {
-    val gens = new IrGenerators {
-      override val maxArgs: Int = 3
-    }
-    val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
     val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
       val expressions = List(
           tla.div(ex, ex) as IntT1(),
@@ -234,10 +231,6 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
   }
 
   test("simplifies logical expressions that result in TRUE") {
-    val gens = new IrGenerators {
-      override val maxArgs: Int = 3
-    }
-    val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
     val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
       val expressions = List(
           tla.eql(ex, ex) as BoolT1(),
@@ -261,10 +254,6 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
   }
 
   test("simplifies logical expressions that result in FALSE") {
-    val gens = new IrGenerators {
-      override val maxArgs: Int = 3
-    }
-    val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
     val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
       val expressions = List(
           tla.neql(ex, ex) as BoolT1(),
@@ -286,10 +275,6 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
   }
 
   test("simplifies logical expressions that result in part of the expression") {
-    val gens = new IrGenerators {
-      override val maxArgs: Int = 3
-    }
-    val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
     val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
       val expressions = List(
           tla.and(ex) as BoolT1(),
@@ -320,10 +305,6 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
   }
 
   test("simplifies logical expressions that result in part of the expression negated") {
-    val gens = new IrGenerators {
-      override val maxArgs: Int = 3
-    }
-    val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
     val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
       val expressions = List(
           tla.impl(ex, tla.bool(false) as BoolT1()) as BoolT1(),
@@ -464,106 +445,40 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
     })
   }
 
-  test("simplifies if-then-else to and statement when then expression is false") {
-    val gens = new IrGenerators {
-      override val maxArgs: Int = 3
-    }
-    val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
-    val twoExpressions = for {
-      e1 <- gens.genTlaEx(ops)(gens.emptyContext)
-      e2 <- gens.genTlaEx(ops)(gens.emptyContext)
-    } yield (e1, e2)
-
+  test("simplifies operations over multiple expressions") {
     val prop = forAll(twoExpressions) { expressions =>
       expressions match {
         case (e1, e2) =>
-          val expression = tla.ite(e1, tla.bool(false) as BoolT1(), e2) as BoolT1()
+          val expectations = Map(
+              // !(x = y) = x /= y
+              (tla.not(tla.eql(e1, e2) as BoolT1()) as BoolT1()) -> (tla.neql(e1, e2) as BoolT1()),
+              // !(x /= y) = x = y
+              (tla.not(tla.neql(e1, e2) as BoolT1()) as BoolT1()) -> (tla.eql(e1, e2) as BoolT1()),
+              // TRUE /\ x /\ y = x /\ y
+              (tla.and(tla.bool(true) as BoolT1(), e1, e2) as BoolT1()) -> (tla.and(e1, e2) as BoolT1()),
+              // FALSE \/ x \/ y = x \/ y
+              (tla.or(tla.bool(false) as BoolT1(), e1, e2) as BoolT1()) -> (tla.or(e1, e2) as BoolT1()),
+              // IF x THEN FALSE ELSE y = !x /\ y
+              (tla.ite(e1, tla.bool(false) as BoolT1(), e2) as BoolT1()) -> (tla.and(tla.not(e1) as BoolT1(),
+                  e2) as BoolT1()),
+              // x \notin y = !(x \in y)
+              (tla.notin(e1, e2) as BoolT1()) -> (tla.not(tla.in(e1, e2) as BoolT1()) as BoolT1()),
+              // !(x \notin y) = x \in y
+              (tla.not(tla.notin(e1, e2) as BoolT1()) as BoolT1()) -> (tla.in(e1, e2) as BoolT1())
+          )
 
-          try {
-            val result = simplifier.simplify(expression)
+          expectations.forall { case (expression, expectedSimplification) =>
+            try {
+              val result = simplifier.simplify(expression)
+              result shouldBe simplifier.simplify(
+                  expectedSimplification) withClue s"when simplifying ${expression.toString}"
 
-            val expectedEx = tla.and(tla.not(e1) as BoolT1(), e2) as BoolT1()
-            result shouldBe simplifier.simplify(expectedEx) withClue s"when simplifying ${expression.toString}"
-
-            true
-          } catch {
-            case _: TlaInputError => true
+              true
+            } catch {
+              case _: TlaInputError => true
+            }
           }
-        case _ => false
       }
-
-    }
-    check(prop, minSuccessful(1000), sizeRange(8))
-  }
-
-  test("removes neutral elements from 'and' and 'or' clauses") {
-    val gens = new IrGenerators {
-      override val maxArgs: Int = 3
-    }
-    val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
-    val twoExpressions = for {
-      e1 <- gens.genTlaEx(ops)(gens.emptyContext)
-      e2 <- gens.genTlaEx(ops)(gens.emptyContext)
-    } yield (e1, e2)
-
-    val prop = forAll(twoExpressions) { expressions =>
-      expressions match {
-        case (e1, e2) =>
-          val andExpression = tla.and(tla.bool(true) as BoolT1(), e1, e2) as BoolT1()
-          val orExpression = tla.or(tla.bool(false) as BoolT1(), e1, e2) as BoolT1()
-
-          try {
-            val resultAnd = simplifier.simplify(andExpression)
-            val expectedAnd = tla.and(e1, e2) as BoolT1()
-            resultAnd shouldBe simplifier.simplify(expectedAnd) withClue s"when simplifying ${andExpression.toString}"
-
-            val resultOr = simplifier.simplify(orExpression)
-            val expectedOr = tla.or(e1, e2) as BoolT1()
-            resultOr shouldBe simplifier.simplify(expectedOr) withClue s"when simplifying ${orExpression.toString}"
-
-            true
-          } catch {
-            case _: TlaInputError => true
-          }
-        case _ => false
-      }
-
-    }
-    check(prop, minSuccessful(1000), sizeRange(8))
-  }
-
-  test("changes between 'eq' and 'neq' when under negation") {
-    val gens = new IrGenerators {
-      override val maxArgs: Int = 3
-    }
-    val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
-    val twoExpressions = for {
-      e1 <- gens.genTlaEx(ops)(gens.emptyContext)
-      e2 <- gens.genTlaEx(ops)(gens.emptyContext)
-    } yield (e1, e2)
-
-    val prop = forAll(twoExpressions) { expressions =>
-      expressions match {
-        case (e1, e2) =>
-          val eqExpression = tla.not(tla.eql(e1, e2) as BoolT1()) as BoolT1()
-          val neqExpression = tla.not(tla.neql(e1, e2) as BoolT1()) as BoolT1()
-
-          try {
-            val resultEq = simplifier.simplify(eqExpression)
-            val expectedEq = tla.neql(e1, e2) as BoolT1()
-            resultEq shouldBe simplifier.simplify(expectedEq) withClue s"when simplifying ${eqExpression.toString}"
-
-            val resultNeq = simplifier.simplify(neqExpression)
-            val expectedNeq = tla.eql(e1, e2) as BoolT1()
-            resultNeq shouldBe simplifier.simplify(expectedNeq) withClue s"when simplifying ${neqExpression.toString}"
-
-            true
-          } catch {
-            case _: TlaInputError => true
-          }
-        case _ => false
-      }
-
     }
     check(prop, minSuccessful(1000), sizeRange(8))
   }
