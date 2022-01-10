@@ -117,6 +117,8 @@ class Builder {
 
   def int(value: Int): BuilderVal = BuilderVal(TlaInt(value))
 
+  def int(value: BigInt): BuilderVal = BuilderVal(TlaInt(value))
+
   def bool(value: Boolean): BuilderVal = BuilderVal(TlaBool(value))
 
   def str(value: String): BuilderVal = BuilderVal(TlaStr(value))

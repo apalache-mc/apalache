@@ -29,49 +29,89 @@ abstract class ConstSimplifierBase {
 
     // integer operations
     case OperEx(TlaArithOper.plus, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
-      if (left == 0) {
-        ValEx(TlaInt(right))(intTag)
-      } else if (right == 0) {
-        ValEx(TlaInt(left))(intTag)
+      ValEx(TlaInt(left + right))(intTag)
+
+    // 0 + x = x
+    case OperEx(TlaArithOper.plus, ValEx(TlaInt(left)), rightEx) if left == 0 => rightEx
+    // x + 0 = x
+    case OperEx(TlaArithOper.plus, leftEx, ValEx(TlaInt(right))) if right == 0 => leftEx
+
+    // Evaluate constant subtraction
+    case OperEx(TlaArithOper.minus, ValEx(TlaInt(left)), ValEx(TlaInt(right))) => ValEx(TlaInt(left - right))(intTag)
+    // 0 - x = -x
+    case OperEx(TlaArithOper.minus, ValEx(TlaInt(left)), rightEx) if left == 0 =>
+      OperEx(TlaArithOper.uminus, rightEx)(intTag)
+    // x - 0 = x
+    case OperEx(TlaArithOper.minus, leftEx, ValEx(TlaInt(right))) if right == 0 => leftEx
+    // x - x = 0 (this actually happens)
+    case OperEx(TlaArithOper.minus, leftEx, rightEx) if (leftEx == rightEx) => ValEx(TlaInt(0))(intTag)
+
+    // Evaluate constant multiplication
+    case OperEx(TlaArithOper.mult, ValEx(TlaInt(left)), ValEx(TlaInt(right))) => ValEx(TlaInt(left * right))(intTag)
+    // 0 * x = 0
+    case OperEx(TlaArithOper.mult, ValEx(TlaInt(left)), rightEx) if (left == 0) => ValEx(TlaInt(0))(intTag)
+    // 1 * x = x
+    case OperEx(TlaArithOper.mult, ValEx(TlaInt(left)), rightEx) if (left == 1) => rightEx
+    // x * 0 = 0
+    case OperEx(TlaArithOper.mult, leftEx, ValEx(TlaInt(right))) if (right == 0) => ValEx(TlaInt(0))(intTag)
+    // x * 1 = x
+    case OperEx(TlaArithOper.mult, leftEx, ValEx(TlaInt(right))) if (right == 1) => leftEx
+
+    // x / 0 = undefined
+    case ex @ OperEx(TlaArithOper.div, leftEx, ValEx(TlaInt(right))) if (right == 0) =>
+      throw new TlaInputError(s"Division by zero at ${ex.toString}")
+    // Evaluate constant division
+    case OperEx(TlaArithOper.div, ValEx(TlaInt(left)), ValEx(TlaInt(right))) => ValEx(TlaInt(left / right))(intTag)
+    // 0 / x = 0
+    case OperEx(TlaArithOper.div, ValEx(TlaInt(left)), rightEx) if (left == 0) => ValEx(TlaInt(0))(intTag)
+    // x / 1 = x
+    case OperEx(TlaArithOper.div, leftEx, ValEx(TlaInt(right))) if (right == 1) => leftEx
+    // x / x = 1
+    case OperEx(TlaArithOper.div, leftEx, rightEx) if (leftEx == rightEx) => ValEx(TlaInt(1))(intTag)
+
+    // x % 0 = undefined
+    case ex @ OperEx(TlaArithOper.mod, leftEx, ValEx(TlaInt(right))) if (right == 0) =>
+      throw new TlaInputError(s"Mod by zero at ${ex.toString}")
+    // Evaluate constant mod
+    case OperEx(TlaArithOper.mod, ValEx(TlaInt(left)), ValEx(TlaInt(right))) => ValEx(TlaInt(left % right))(intTag)
+    // x % 1 = 0
+    case OperEx(TlaArithOper.mod, leftEx, ValEx(TlaInt(right))) if (right == 1) => ValEx(TlaInt(0))(intTag)
+    // x % x = 0
+    case OperEx(TlaArithOper.mod, leftEx, rightEx) if (leftEx == rightEx) => ValEx(TlaInt(0))(intTag)
+
+    // 0 ^ 0 = undefined
+    case ex @ OperEx(TlaArithOper.exp, ValEx(TlaInt(base)), ValEx(TlaInt(power))) if (base == 0 && power == 0) =>
+      throw new TlaInputError(s"0 ^ 0 is undefined")
+    // Try to evaluante constant exponentiation
+    case ex @ OperEx(TlaArithOper.exp, ValEx(TlaInt(base)), ValEx(TlaInt(power))) =>
+      if (power < 0) {
+        throw new TlaInputError(s"Negative power at ${ex.toString}")
+      } else if (!power.isValidInt) {
+        throw new TlaInputError(
+            s"Power of ${power} is bigger than the max allowed of ${Int.MaxValue} at ${ex.toString}")
       } else {
-        ValEx(TlaInt(left + right))(intTag)
+        try {
+          // This can take a long time for big base values i.e. 2147484647 ^ 1100000
+          // Maybe we should consider implementing a timeout
+          ValEx(TlaInt(base.pow(power.toInt)))(intTag)
+        } catch {
+          case _: ArithmeticException =>
+            throw new TlaInputError(s"The result of ${ex.toString} exceedes the limit of 2^${Int.MaxValue}")
+        }
       }
+    // x ^ 0 = 1
+    case OperEx(TlaArithOper.exp, leftEx, ValEx(TlaInt(right))) if (right == 0) => ValEx(TlaInt(1))(intTag)
+    // x ^ 1 = x
+    case OperEx(TlaArithOper.exp, leftEx, ValEx(TlaInt(right))) if (right == 1) => leftEx
+    // 0 ^ x = 0
+    case OperEx(TlaArithOper.exp, ValEx(TlaInt(left)), rightEx) if (left == 0) => ValEx(TlaInt(0))(intTag)
+    // 1 ^ x = 1
+    case OperEx(TlaArithOper.exp, ValEx(TlaInt(left)), rightEx) if (left == 1) => ValEx(TlaInt(1))(intTag)
 
-    case OperEx(TlaArithOper.minus, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
-      ValEx(TlaInt(left - right))(intTag)
-
-    case ex @ OperEx(TlaArithOper.minus, NameEx(left), NameEx(right)) =>
-      if (left == right) ValEx(TlaInt(0))(intTag) else ex // this actually happens
-
-    case OperEx(TlaArithOper.mult, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
-      if (left == 0 || right == 0) {
-        ValEx(TlaInt(BigInt(0)))(intTag)
-      } else if (left == 1) {
-        ValEx(TlaInt(right))(intTag)
-      } else if (right == 1) {
-        ValEx(TlaInt(left))(intTag)
-      } else {
-        ValEx(TlaInt(left * right))(intTag)
-      }
-
-    case OperEx(TlaArithOper.div, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
-      ValEx(TlaInt(left / right))(intTag)
-
-    case OperEx(TlaArithOper.mod, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
-      ValEx(TlaInt(left % right))(intTag)
-
-    case OperEx(TlaArithOper.exp, ValEx(TlaInt(base)), ValEx(TlaInt(power))) =>
-      if (power.isValidInt) {
-        ValEx(TlaInt(base.pow(power.toInt)))(intTag)
-      } else {
-        // the power does not fit into an integer. That is a lot. Use doubles.
-        val pow = Math.pow(base.toDouble, power.toDouble)
-        val powAsBigInt = BigDecimal(pow).setScale(0, BigDecimal.RoundingMode.DOWN).toBigInt()
-        ValEx(TlaInt(powAsBigInt))(intTag)
-      }
-
-    case OperEx(TlaArithOper.uminus, ValEx(TlaInt(value))) =>
-      ValEx(TlaInt(-value))(intTag)
+    // -0 = 0
+    case OperEx(TlaArithOper.uminus, ValEx(TlaInt(value))) if (value == 0) => ValEx(TlaInt(0))(intTag)
+    // Evaluate unary minus
+    case OperEx(TlaArithOper.uminus, ValEx(TlaInt(value))) => ValEx(TlaInt(-value))(intTag)
 
     case OperEx(TlaArithOper.lt, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
       ValEx(TlaBool(left < right))(boolTag)
@@ -101,7 +141,7 @@ abstract class ConstSimplifierBase {
     case ex @ OperEx(TlaOper.ne, NameEx(left), NameEx(right)) =>
       if (left == right) ValEx(TlaBool(false))(boolTag) else ex
 
-    case ex @ OperEx(TlaOper.eq, ValEx(TlaStr(left)), ValEx(TlaStr(right))) =>
+    case ex @ OperEx(TlaOper.ne, ValEx(TlaStr(left)), ValEx(TlaStr(right))) =>
       // bugfix #197
       if (left == right) ValEx(TlaBool(false))(boolTag) else ex
 

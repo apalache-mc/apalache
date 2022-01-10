@@ -1685,7 +1685,7 @@ $ apalache-mc typecheck CarTalkPuzzleTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 PASS #2: Terminal
 Type checker [OK]
@@ -1713,7 +1713,7 @@ $ apalache-mc typecheck GameOfLifeTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 PASS #2: Terminal
 Type checker [OK]
@@ -1728,7 +1728,7 @@ $ apalache-mc typecheck MissionariesAndCannibalsTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 PASS #2: Terminal
 Type checker [OK]
@@ -1743,7 +1743,7 @@ $ apalache-mc typecheck PrisonersTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 PASS #2: Terminal
 Type checker [OK]
@@ -1761,7 +1761,7 @@ $ apalache-mc typecheck QueensTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 ...
 Type checker [OK]
@@ -1776,7 +1776,7 @@ $ apalache-mc typecheck SlidingPuzzlesTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 PASS #2: Terminal
 Type checker [OK]
@@ -1791,7 +1791,7 @@ $ apalache-mc typecheck TwoPhaseTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 PASS #2: Terminal
 Type checker [OK]
@@ -1806,7 +1806,7 @@ $ apalache-mc typecheck FunctionsTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 ...
 Type checker [OK]
@@ -1821,7 +1821,7 @@ $ apalache-mc typecheck FiniteSetsExtTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 ...
 Type checker [OK]
@@ -1836,7 +1836,7 @@ $ apalache-mc typecheck HourClockTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 ...
 Type checker [OK]
@@ -1861,7 +1861,7 @@ $ apalache-mc typecheck ChannelTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 ...
 Type checker [OK]
@@ -1876,7 +1876,7 @@ $ apalache-mc typecheck PascalTriangle.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 ...
 Type checker [OK]
@@ -1891,7 +1891,7 @@ $ apalache-mc typecheck ChangRobertsTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 ...
 Type checker [OK]
@@ -1906,7 +1906,7 @@ $ apalache-mc typecheck ChangRobertsTyped_Test.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 ...
 Type checker [OK]
@@ -1921,7 +1921,7 @@ $ apalache-mc typecheck AnnotationsAndInstances592.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 ...
 Type checker [OK]
@@ -1936,7 +1936,7 @@ $ apalache-mc typecheck AnnotationsAndSubstitutions596.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 ...
 Type checker [OK]
@@ -1951,7 +1951,7 @@ $ apalache-mc typecheck Except617.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 ...
 Type checker [OK]
@@ -1966,7 +1966,7 @@ $ apalache-mc typecheck Unchanged660.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 ...
 Type checker [OK]
@@ -2005,7 +2005,7 @@ $ apalache-mc typecheck TestAnnotations.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 ...
 Type checker [OK]
@@ -2020,7 +2020,7 @@ $ apalache-mc typecheck schroedinger_cat.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 ...
 Type checker [OK]
@@ -2084,7 +2084,7 @@ $ apalache-mc typecheck letpoly.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 ...
 Type checker [OK]
@@ -2101,7 +2101,7 @@ $ apalache-mc typecheck letpoly_inst.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 ...
 Type checker [OK]
@@ -2118,7 +2118,7 @@ $ apalache-mc typecheck Poly1084.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 ...
 Type checker [OK]
@@ -2135,7 +2135,7 @@ $ apalache-mc typecheck Poly1085.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 ...
 Type checker [OK]
@@ -2152,7 +2152,7 @@ $ apalache-mc typecheck Poly1085.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 ...
 Type checker [OK]
@@ -2169,7 +2169,7 @@ $ apalache-mc typecheck Poly1107.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
- > Your types are great!
+ > Your types are purrfect!
  > All expressions are typed
 ...
 Type checker [OK]
