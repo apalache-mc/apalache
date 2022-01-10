@@ -21,10 +21,6 @@ class ConstSimplifier(tracker: TransformationTracker) extends ConstSimplifierBas
   }
 
   private def rewriteDeep: TlaExTransformation = tracker.trackEx {
-    case ex @ ValEx(_) => ex
-
-    case ex @ NameEx(_) => ex
-
     case ex @ OperEx(oper, args @ _*) =>
       simplifyShallow(OperEx(oper, args map rewriteDeep: _*)(ex.typeTag))
 
@@ -35,17 +31,6 @@ class ConstSimplifier(tracker: TransformationTracker) extends ConstSimplifierBas
       LetInEx(simplify(body), newDefs: _*)(ex.typeTag)
 
     case ex => ex
-  }
-
-  override def simplifyShallow: TlaEx => TlaEx = {
-    // boolean operations
-
-    case OperEx(TlaBoolOper.not, inex @ OperEx(TlaSetOper.notin, lhs, rhs)) =>
-      OperEx(TlaSetOper.in, lhs, rhs)(inex.typeTag)
-
-    // default
-    case ex =>
-      super.simplifyShallow(ex)
   }
 }
 
