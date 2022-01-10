@@ -514,12 +514,48 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
 
           try {
             val resultAnd = simplifier.simplify(andExpression)
-            val expectedAnd = simplifier.simplify(tla.and(e1, e2) as BoolT1())
+            val expectedAnd = tla.and(e1, e2) as BoolT1()
             resultAnd shouldBe simplifier.simplify(expectedAnd) withClue s"when simplifying ${andExpression.toString}"
 
             val resultOr = simplifier.simplify(orExpression)
-            val expectedOr = simplifier.simplify(tla.or(e1, e2) as BoolT1())
+            val expectedOr = tla.or(e1, e2) as BoolT1()
             resultOr shouldBe simplifier.simplify(expectedOr) withClue s"when simplifying ${orExpression.toString}"
+
+            true
+          } catch {
+            case _: TlaInputError => true
+          }
+        case _ => false
+      }
+
+    }
+    check(prop, minSuccessful(1000), sizeRange(8))
+  }
+
+  test("changes between 'eq' and 'neq' when under negation") {
+    val gens = new IrGenerators {
+      override val maxArgs: Int = 3
+    }
+    val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
+    val twoExpressions = for {
+      e1 <- gens.genTlaEx(ops)(gens.emptyContext)
+      e2 <- gens.genTlaEx(ops)(gens.emptyContext)
+    } yield (e1, e2)
+
+    val prop = forAll(twoExpressions) { expressions =>
+      expressions match {
+        case (e1, e2) =>
+          val eqExpression = tla.not(tla.eql(e1, e2) as BoolT1()) as BoolT1()
+          val neqExpression = tla.not(tla.neql(e1, e2) as BoolT1()) as BoolT1()
+
+          try {
+            val resultEq = simplifier.simplify(eqExpression)
+            val expectedEq = tla.neql(e1, e2) as BoolT1()
+            resultEq shouldBe simplifier.simplify(expectedEq) withClue s"when simplifying ${eqExpression.toString}"
+
+            val resultNeq = simplifier.simplify(neqExpression)
+            val expectedNeq = tla.eql(e1, e2) as BoolT1()
+            resultNeq shouldBe simplifier.simplify(expectedNeq) withClue s"when simplifying ${neqExpression.toString}"
 
             true
           } catch {
