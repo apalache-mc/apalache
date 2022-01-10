@@ -21,16 +21,27 @@ abstract class ConstSimplifierBase {
    * A shallow simplification that does not recurse into the expression structure.
    */
   def simplifyShallow: TlaEx => TlaEx = {
+    // !FALSE = TRUE
+    // !TRUE = FALSE
+    case OperEx(TlaBoolOper.not, ValEx(TlaBool(b))) => ValEx(TlaBool(!b))(boolTag)
+
+    // !!x = x
+    case OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.not, underDoubleNegation)) => underDoubleNegation
+    // !(x /= y) = x = y
+    case OperEx(TlaBoolOper.not, OperEx(TlaOper.ne, lhs, rhs)) => OperEx(TlaOper.eq, lhs, rhs)(boolTag)
+    // !(x = y) = x /= y
+    case OperEx(TlaBoolOper.not, OperEx(TlaOper.eq, lhs, rhs)) => OperEx(TlaOper.ne, lhs, rhs)(boolTag)
+
+    // Replace \notin with \in
+    // x \notin y = !(x \in y)
     case OperEx(TlaSetOper.notin, lhs, rhs) =>
       OperEx(TlaBoolOper.not, OperEx(TlaSetOper.in, lhs, rhs)(boolTag))(boolTag)
-
-    case OperEx(TlaBoolOper.not, OperEx(TlaSetOper.notin, lhs, rhs)) =>
-      OperEx(TlaSetOper.in, lhs, rhs)(boolTag)
+    // !(x \notin y) = x \in y
+    case OperEx(TlaBoolOper.not, OperEx(TlaSetOper.notin, lhs, rhs)) => OperEx(TlaSetOper.in, lhs, rhs)(boolTag)
 
     // integer operations
-    case OperEx(TlaArithOper.plus, ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
-      ValEx(TlaInt(left + right))(intTag)
-
+    // Evaluate constant addition
+    case OperEx(TlaArithOper.plus, ValEx(TlaInt(left)), ValEx(TlaInt(right))) => ValEx(TlaInt(left + right))(intTag)
     // 0 + x = x
     case OperEx(TlaArithOper.plus, ValEx(TlaInt(left)), rightEx) if left == 0 => rightEx
     // x + 0 = x
@@ -160,17 +171,6 @@ abstract class ConstSimplifierBase {
         case _                                                     => OperEx(TlaBoolOper.or, simpArgs: _*)(boolTag)
       }
 
-    // !FALSE = TRUE
-    // !TRUE = FALSE
-    case OperEx(TlaBoolOper.not, ValEx(TlaBool(b))) => ValEx(TlaBool(!b))(boolTag)
-
-    // !!x = x
-    case OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.not, underDoubleNegation)) => underDoubleNegation
-
-    // This is conflicting with double negation simplification, we will probably have to choose between the two or change recursion
-    // case OperEx(TlaBoolOper.not, OperEx(TlaOper.ne, lhs, rhs)) =>
-    //   OperEx(TlaOper.eq, lhs, rhs)(boolTag)
-
     // Evaluate implication of constants
     case OperEx(TlaBoolOper.implies, ValEx(TlaBool(left)), ValEx(TlaBool(right))) =>
       ValEx(TlaBool(!left || right))(boolTag)
@@ -199,23 +199,24 @@ abstract class ConstSimplifierBase {
       simplifyShallow(OperEx(TlaBoolOper.not, left)(boolTag))
 
     // many ite expressions can be simplified like this
+    // IF true THEN x ELSE y = x
     case OperEx(TlaControlOper.ifThenElse, ValEx(TlaBool(true)), thenEx, _) => thenEx
-
+    // IF false THEN x ELSE y = y
     case OperEx(TlaControlOper.ifThenElse, ValEx(TlaBool(false)), _, elseEx) => elseEx
-
-    case OperEx(TlaControlOper.ifThenElse, pred, ValEx(TlaBool(false)), elseEx) =>
-      OperEx(TlaBoolOper.and, OperEx(TlaBoolOper.not, pred)(boolTag), elseEx)(boolTag)
-
+    // IF x THEN TRUE ELSE FALSE = x
     case OperEx(TlaControlOper.ifThenElse, pred, ValEx(TlaBool(true)), ValEx(TlaBool(false))) => pred
-
+    // IF x THEN FALSE ELSE TRUE = !x
     case OperEx(TlaControlOper.ifThenElse, pred, ValEx(TlaBool(false)), ValEx(TlaBool(true))) =>
-      OperEx(TlaBoolOper.not, pred)(boolTag)
-
+      simplifyShallow(OperEx(TlaBoolOper.not, pred)(boolTag))
+    // IF x THEN FALSE ELSE y = !x /\ y
+    case OperEx(TlaControlOper.ifThenElse, pred, ValEx(TlaBool(false)), elseEx) =>
+      val newPredicate = simplifyShallow(OperEx(TlaBoolOper.not, pred)(boolTag))
+      simplifyShallow(OperEx(TlaBoolOper.and, newPredicate, elseEx)(boolTag))
+    // IF x THEN y ELSE y = y
     case OperEx(TlaControlOper.ifThenElse, _, thenEx, elseEx) if (thenEx == elseEx) => thenEx
 
     // default
     case ex =>
       ex
   }
-
 }

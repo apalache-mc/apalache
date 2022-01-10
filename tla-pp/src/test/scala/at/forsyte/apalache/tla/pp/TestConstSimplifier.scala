@@ -292,7 +292,9 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
     val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
     val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
       val expressions = List(
+          tla.and(ex) as BoolT1(),
           tla.and(ex, tla.bool(true) as BoolT1()) as BoolT1(),
+          tla.or(ex) as BoolT1(),
           tla.or(ex, tla.bool(false) as BoolT1()) as BoolT1(),
           tla.equiv(ex, tla.bool(true) as BoolT1()) as BoolT1(),
           tla.equiv(tla.bool(true) as BoolT1(), ex) as BoolT1(),
@@ -326,7 +328,8 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
       val expressions = List(
           tla.impl(ex, tla.bool(false) as BoolT1()) as BoolT1(),
           tla.equiv(ex, tla.bool(false) as BoolT1()) as BoolT1(),
-          tla.equiv(tla.bool(false) as BoolT1(), ex) as BoolT1()
+          tla.equiv(tla.bool(false) as BoolT1(), ex) as BoolT1(),
+          tla.ite(ex, tla.bool(false) as BoolT1(), tla.bool(true) as BoolT1()) as BoolT1()
       )
 
       expressions.forall({ expression =>
@@ -432,14 +435,18 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
         tla.impl(tla.bool(false), tla.bool(false)) as BoolT1(),
         tla.impl(tla.bool(true), tla.bool(true)) as BoolT1(),
         tla.equiv(tla.bool(false), tla.bool(false)) as BoolT1(),
-        tla.equiv(tla.bool(true), tla.bool(true)) as BoolT1()
+        tla.equiv(tla.bool(true), tla.bool(true)) as BoolT1(),
+        tla.and(tla.bool(true)) as BoolT1(),
+        tla.and() as BoolT1()
     )
 
     var falseExpressions: Seq[TlaEx] = Seq(
         tla.not(tla.bool(true)) as BoolT1(),
         tla.impl(tla.bool(true), tla.bool(false)) as BoolT1(),
         tla.equiv(tla.bool(true), tla.bool(false)) as BoolT1(),
-        tla.equiv(tla.bool(false), tla.bool(true)) as BoolT1()
+        tla.equiv(tla.bool(false), tla.bool(true)) as BoolT1(),
+        tla.or(tla.bool(false)) as BoolT1(),
+        tla.or() as BoolT1()
     )
 
     trueExpressions.forall({ expression =>
@@ -456,4 +463,73 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
       true
     })
   }
+
+  test("simplifies if-then-else to and statement when then expression is false") {
+    val gens = new IrGenerators {
+      override val maxArgs: Int = 3
+    }
+    val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
+    val twoExpressions = for {
+      e1 <- gens.genTlaEx(ops)(gens.emptyContext)
+      e2 <- gens.genTlaEx(ops)(gens.emptyContext)
+    } yield (e1, e2)
+
+    val prop = forAll(twoExpressions) { expressions =>
+      expressions match {
+        case (e1, e2) =>
+          val expression = tla.ite(e1, tla.bool(false) as BoolT1(), e2) as BoolT1()
+
+          try {
+            val result = simplifier.simplify(expression)
+
+            val expectedEx = tla.and(tla.not(e1) as BoolT1(), e2) as BoolT1()
+            result shouldBe simplifier.simplify(expectedEx) withClue s"when simplifying ${expression.toString}"
+
+            true
+          } catch {
+            case _: TlaInputError => true
+          }
+        case _ => false
+      }
+
+    }
+    check(prop, minSuccessful(1000), sizeRange(8))
+  }
+
+  test("removes neutral elements from 'and' and 'or' clauses") {
+    val gens = new IrGenerators {
+      override val maxArgs: Int = 3
+    }
+    val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
+    val twoExpressions = for {
+      e1 <- gens.genTlaEx(ops)(gens.emptyContext)
+      e2 <- gens.genTlaEx(ops)(gens.emptyContext)
+    } yield (e1, e2)
+
+    val prop = forAll(twoExpressions) { expressions =>
+      expressions match {
+        case (e1, e2) =>
+          val andExpression = tla.and(tla.bool(true) as BoolT1(), e1, e2) as BoolT1()
+          val orExpression = tla.or(tla.bool(false) as BoolT1(), e1, e2) as BoolT1()
+
+          try {
+            val resultAnd = simplifier.simplify(andExpression)
+            val expectedAnd = simplifier.simplify(tla.and(e1, e2) as BoolT1())
+            resultAnd shouldBe simplifier.simplify(expectedAnd) withClue s"when simplifying ${andExpression.toString}"
+
+            val resultOr = simplifier.simplify(orExpression)
+            val expectedOr = simplifier.simplify(tla.or(e1, e2) as BoolT1())
+            resultOr shouldBe simplifier.simplify(expectedOr) withClue s"when simplifying ${orExpression.toString}"
+
+            true
+          } catch {
+            case _: TlaInputError => true
+          }
+        case _ => false
+      }
+
+    }
+    check(prop, minSuccessful(1000), sizeRange(8))
+  }
+
 }
