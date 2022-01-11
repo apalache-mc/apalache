@@ -2436,6 +2436,20 @@ $ test -d ./configured-run-dir
 $ rm -rf ./configured-run-dir ./cli-config.cfg
 ```
 
+### configuration management: tilde is expanded in configured paths
+
+We set `user.home` to the current working directly, so we can test tilde
+expansion in the path without writing outside of the test directory.
+
+```sh
+$ echo "run-dir: ~/run-dir" > .apalache.cfg
+$ JVM_ARGS="-Duser.home=$PWD" apalache-mc check --length=0 Counter.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+$ test -d ./run-dir
+$ rm -rf ./run-dir ./.apalache.cfg
+```
+
 ## server mode
 
 ### server mode: subcommand is not yet implemented
