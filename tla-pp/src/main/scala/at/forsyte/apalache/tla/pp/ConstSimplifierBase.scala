@@ -27,10 +27,14 @@ abstract class ConstSimplifierBase {
 
     // !!x = x
     case OperEx(TlaBoolOper.not, OperEx(TlaBoolOper.not, underDoubleNegation)) => underDoubleNegation
+
+    // Relace \neq with \eq
+    // x /= y = !(x = y)
+    case OperEx(TlaOper.ne, lhs, rhs) =>
+      val equality = simplifyShallow(OperEx(TlaOper.eq, lhs, rhs)(boolTag))
+      simplifyShallow(OperEx(TlaBoolOper.not, equality)(boolTag))
     // !(x /= y) = x = y
-    case OperEx(TlaBoolOper.not, OperEx(TlaOper.ne, lhs, rhs)) => OperEx(TlaOper.eq, lhs, rhs)(boolTag)
-    // !(x = y) = x /= y
-    case OperEx(TlaBoolOper.not, OperEx(TlaOper.eq, lhs, rhs)) => OperEx(TlaOper.ne, lhs, rhs)(boolTag)
+    case OperEx(TlaBoolOper.not, OperEx(TlaOper.ne, lhs, rhs)) => simplifyShallow(OperEx(TlaOper.eq, lhs, rhs)(boolTag))
 
     // Replace \notin with \in
     // x \notin y = !(x \in y)
@@ -137,14 +141,6 @@ abstract class ConstSimplifierBase {
     case OperEx(TlaOper.eq, ValEx(TlaInt(left)), ValEx(TlaInt(right))) => ValEx(TlaBool(left == right))(boolTag)
     // bugfix #197
     case OperEx(TlaOper.eq, ValEx(TlaStr(left)), ValEx(TlaStr(right))) => ValEx(TlaBool(left == right))(boolTag)
-
-    // x != x = FALSE
-    case OperEx(TlaOper.ne, left, right) if (left == right) => ValEx(TlaBool(false))(boolTag)
-
-    // Evaluate constant comparisson
-    case OperEx(TlaOper.ne, ValEx(TlaInt(left)), ValEx(TlaInt(right))) => ValEx(TlaBool(left != right))(boolTag)
-    // bugfix #197
-    case OperEx(TlaOper.ne, ValEx(TlaStr(left)), ValEx(TlaStr(right))) => ValEx(TlaBool(left != right))(boolTag)
 
     // boolean operations
     case OperEx(TlaBoolOper.and, args @ _*) =>

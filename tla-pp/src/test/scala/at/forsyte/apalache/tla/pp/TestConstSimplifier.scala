@@ -450,8 +450,8 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
       expressions match {
         case (e1, e2) =>
           val expectations = Map(
-              // !(x = y) = x /= y
-              (tla.not(tla.eql(e1, e2) as BoolT1()) as BoolT1()) -> (tla.neql(e1, e2) as BoolT1()),
+              // x /= y = !(x = y)
+              (tla.neql(e1, e2) as BoolT1()) -> (tla.not(tla.eql(e1, e2) as BoolT1()) as BoolT1()),
               // !(x /= y) = x = y
               (tla.not(tla.neql(e1, e2) as BoolT1()) as BoolT1()) -> (tla.eql(e1, e2) as BoolT1()),
               // TRUE /\ x /\ y = x /\ y
