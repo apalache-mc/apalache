@@ -11,7 +11,6 @@ import com.typesafe.config.ConfigObject
 private object Converters {
   import pureconfig.ConvertHelpers._
 
-
   private def expandedFilePath(s: String): Path = {
     Paths.get(if (s.startsWith("~")) s.replaceFirst("~", System.getProperty("user.home")) else s)
   }
