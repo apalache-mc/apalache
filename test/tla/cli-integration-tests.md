@@ -2441,9 +2441,12 @@ $ rm -rf ./configured-run-dir ./cli-config.cfg
 We set `user.home` to the current working directly, so we can test tilde
 expansion in the path without writing outside of the test directory.
 
+NOTE: We need to set the home to a relative path to the cwd in order to
+ensure the tests also works in the docker container.
+
 ```sh
 $ echo "run-dir: ~/run-dir" > .apalache.cfg
-$ JVM_ARGS="-Duser.home=$PWD" apalache-mc check --length=0 Counter.tla | sed 's/[IEW]@.*//'
+$ JVM_ARGS="-Duser.home=." apalache-mc check --length=0 Counter.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 $ test -d ./run-dir
