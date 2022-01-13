@@ -122,6 +122,8 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
       throw new IllegalArgumentException("Unexpected expression in an ITF counterexample: " + e)
   }
 
+  // as TLA+ does not offer a simple constructor for functions by enumeration,
+  // we have to decode a function by collection the TLC operators :> and @@
   private def collectFun: TlaEx => List[ujson.Value] = {
     case OperEx(TlcOper.colonGreater, key, value) =>
       List(ujson.Arr(exToJson(key), exToJson(value)))
