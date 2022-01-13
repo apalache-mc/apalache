@@ -26,6 +26,12 @@ engineers](https://apalache.informal.systems/docs/lang/index.html).
 
 ## Talks
 
+- [Informal Systems Tutorial: TLA+ Basics](https://www.youtube.com/watch?v=peKYddIvCIs)
+
+- [Extended version of the Apalache
+   tutorial](https://www.youtube.com/watch?v=Ml7d_3vlH88).
+  TLA+ tutorial at DISC 2021 (October 2021).
+
 - [How TLA+ and Apalache Helped Us to Design the Tendermint Light Client](https://www.crowdcast.io/e/interchain-conversations-II/38).
     Interchain Conversations 2020 (December 2020).
 
