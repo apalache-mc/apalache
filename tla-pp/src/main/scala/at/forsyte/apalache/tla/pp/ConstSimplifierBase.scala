@@ -184,21 +184,6 @@ abstract class ConstSimplifierBase {
     case OperEx(TlaBoolOper.implies, lhs, ValEx(TlaBool(false))) =>
       simplifyShallow(OperEx(TlaBoolOper.not, lhs)(boolTag))
 
-    // Evaluate equivalence between constants
-    case OperEx(TlaBoolOper.equiv, ValEx(TlaBool(left)), ValEx(TlaBool(right))) =>
-      ValEx(TlaBool(left == right))(boolTag)
-
-    // TRUE <=> x = x
-    case OperEx(TlaBoolOper.equiv, ValEx(TlaBool(true)), right) => right
-    // FALSE <=> x = !x
-    case OperEx(TlaBoolOper.equiv, ValEx(TlaBool(false)), right) =>
-      simplifyShallow(OperEx(TlaBoolOper.not, right)(boolTag))
-    // x <=> TRUE = x
-    case OperEx(TlaBoolOper.equiv, left, ValEx(TlaBool(true))) => left
-    // x <=> FALSE = !x
-    case OperEx(TlaBoolOper.equiv, left, ValEx(TlaBool(false))) =>
-      simplifyShallow(OperEx(TlaBoolOper.not, left)(boolTag))
-
     // many ite expressions can be simplified like this
     // IF true THEN x ELSE y = x
     case OperEx(TlaControlOper.ifThenElse, ValEx(TlaBool(true)), thenEx, _) => thenEx

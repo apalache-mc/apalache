@@ -281,8 +281,6 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
           tla.and(ex, tla.bool(true) as BoolT1()) as BoolT1(),
           tla.or(ex) as BoolT1(),
           tla.or(ex, tla.bool(false) as BoolT1()) as BoolT1(),
-          tla.equiv(ex, tla.bool(true) as BoolT1()) as BoolT1(),
-          tla.equiv(tla.bool(true) as BoolT1(), ex) as BoolT1(),
           tla.ite(tla.bool(true) as BoolT1(), ex, tla.bool(false) as BoolT1()) as BoolT1(),
           tla.ite(tla.bool(false) as BoolT1(), tla.bool(false) as BoolT1(), ex) as BoolT1(),
           tla.ite(ex, tla.bool(true) as BoolT1(), tla.bool(false) as BoolT1()) as BoolT1(),
@@ -308,8 +306,6 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
     val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
       val expressions = List(
           tla.impl(ex, tla.bool(false) as BoolT1()) as BoolT1(),
-          tla.equiv(ex, tla.bool(false) as BoolT1()) as BoolT1(),
-          tla.equiv(tla.bool(false) as BoolT1(), ex) as BoolT1(),
           tla.ite(ex, tla.bool(false) as BoolT1(), tla.bool(true) as BoolT1()) as BoolT1()
       )
 
@@ -415,8 +411,6 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
         tla.impl(tla.bool(false), tla.bool(true)) as BoolT1(),
         tla.impl(tla.bool(false), tla.bool(false)) as BoolT1(),
         tla.impl(tla.bool(true), tla.bool(true)) as BoolT1(),
-        tla.equiv(tla.bool(false), tla.bool(false)) as BoolT1(),
-        tla.equiv(tla.bool(true), tla.bool(true)) as BoolT1(),
         tla.and(tla.bool(true)) as BoolT1(),
         tla.and() as BoolT1()
     )
@@ -424,8 +418,6 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
     var falseExpressions: Seq[TlaEx] = Seq(
         tla.not(tla.bool(true)) as BoolT1(),
         tla.impl(tla.bool(true), tla.bool(false)) as BoolT1(),
-        tla.equiv(tla.bool(true), tla.bool(false)) as BoolT1(),
-        tla.equiv(tla.bool(false), tla.bool(true)) as BoolT1(),
         tla.or(tla.bool(false)) as BoolT1(),
         tla.or() as BoolT1()
     )
