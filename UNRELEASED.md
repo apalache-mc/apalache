@@ -16,4 +16,5 @@
 
 ### Bug Fixes
 
+* Fix expansion of `~` in configured paths, see #1208
 * Fix a bug where an implication with its left side simplified to the `TRUE` constant was incorrectly translated, see #1206
