@@ -453,6 +453,8 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
               // IF x THEN FALSE ELSE y = !x /\ y
               (tla.ite(e1, tla.bool(false) as BoolT1(), e2) as BoolT1()) -> (tla.and(tla.not(e1) as BoolT1(),
                   e2) as BoolT1()),
+              // IF x THEN TRUE ELSE y = x \/ y
+              (tla.ite(e1, tla.bool(true) as BoolT1(), e2) as BoolT1()) -> (tla.or(e1, e2) as BoolT1()),
               // x \notin y = !(x \in y)
               (tla.notin(e1, e2) as BoolT1()) -> (tla.not(tla.in(e1, e2) as BoolT1()) as BoolT1()),
               // !(x \notin y) = x \in y

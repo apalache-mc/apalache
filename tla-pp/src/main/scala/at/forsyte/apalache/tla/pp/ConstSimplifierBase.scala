@@ -198,6 +198,9 @@ abstract class ConstSimplifierBase {
     case OperEx(TlaControlOper.ifThenElse, pred, ValEx(TlaBool(false)), elseEx) =>
       val newPredicate = simplifyShallow(OperEx(TlaBoolOper.not, pred)(boolTag))
       simplifyShallow(OperEx(TlaBoolOper.and, newPredicate, elseEx)(boolTag))
+    // IF x THEN TRUE ELSE y = x \/ y
+    case OperEx(TlaControlOper.ifThenElse, pred, ValEx(TlaBool(true)), elseEx) =>
+      simplifyShallow(OperEx(TlaBoolOper.or, pred, elseEx)(boolTag))
     // IF x THEN y ELSE y = y
     case OperEx(TlaControlOper.ifThenElse, _, thenEx, elseEx) if (thenEx == elseEx) => thenEx
 
