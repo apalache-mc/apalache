@@ -7,26 +7,8 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
-import java.io.{PrintWriter, StringWriter}
-
 @RunWith(classOf[JUnitRunner])
-class TestCounterexampleWriter extends FunSuite {
-
-  def compare(kind: String, rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState],
-      expected: String): Unit = {
-
-    val stringWriter = new StringWriter()
-    val printWriter = new PrintWriter(stringWriter)
-    val writer = CounterexampleWriter(kind, printWriter)
-    writer.write(rootModule, notInvariant, states)
-    printWriter.flush()
-    val dateErasure = stringWriter.toString.replaceFirst(
-        "Created by Apalache on [A-Za-z 0-9:]*( \\*\\))?\n",
-        "Created by Apalache on DATETIME$1\n"
-    )
-    assert(dateErasure == expected)
-  }
-
+class TestCounterexampleWriter extends FunSuite with TestCounterexampleWriterBase {
   test("single state") {
     compare(
         "tla",
@@ -793,5 +775,4 @@ class TestCounterexampleWriter extends FunSuite {
         |}""".stripMargin
     )
   }
-
 }
