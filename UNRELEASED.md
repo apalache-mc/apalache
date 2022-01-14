@@ -12,7 +12,7 @@
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
 ### Features
 
- * Output in the Informal Trace Format, see #1215
+ * Output in the Informal Trace Format, see #1220
 
 ### Bug fixes
 
