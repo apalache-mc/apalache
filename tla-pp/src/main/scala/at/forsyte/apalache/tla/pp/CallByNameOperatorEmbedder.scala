@@ -1,10 +1,12 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
+import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, OperT1, TlaEx, TlaOperDecl, Typed, TypingException}
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
 import at.forsyte.apalache.tla.lir.transformations.standard.DeepCopy
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier}
 
 /**
  * Replaces instances of call-by-name, identified by the ApalacheOper.callByName wrapper, with
@@ -48,8 +50,20 @@ class CallByNameOperatorEmbedder(tracker: TransformationTracker, operMap: BodyMa
     bodyMap.get(nameEx.name) match {
       case Some(d @ TlaOperDecl(_, params, body)) =>
         val newName = nameGenerator.newName()
-        // same parameter names, same body (copy)
-        val declCopy = TlaOperDecl(newName, params, deepCopy(body))(d.typeTag)
+        val monoOperType = nameEx.typeTag.asTlaType1()
+        val declMaybePolytype = d.typeTag.asTlaType1()
+        val unifOpt = (new TypeUnifier).unify(Substitution.empty, monoOperType, declMaybePolytype)
+
+        // substitute types in body with sub derived from nameEx.type
+        val declCopy = unifOpt
+          .map { case (sub, tp) =>
+            val newBody = new TypeSubstitutor(tracker, sub).apply(body)
+            // same parameter names, same body (up to type tags)
+            TlaOperDecl(newName, params, newBody)(Typed(tp))
+          }
+          .getOrElse(
+              TlaOperDecl(newName, params, deepCopy(body))(nameEx.typeTag)
+          )
         LetInEx(NameEx(newName)(nameEx.typeTag), declCopy)(nameEx.typeTag)
       case None =>
         throw new TlaInputError(s"Cannot fold with operator ${nameEx.name}: no definition found.", Some(nameEx.ID))

@@ -105,24 +105,24 @@ object Tool extends LazyLogging {
         try {
           cmd match {
             case parse: ParseCmd =>
-              val injector = injectorFactory(parse)
-              handleExceptions[ParseCmd](injector, runParse(injector, _), parse)
+              val injector = Guice.createInjector(new ParserModule)
+              handleExceptions(runParse, injector, parse)
 
             case check: CheckCmd =>
-              val injector = injectorFactory(check)
-              handleExceptions[CheckCmd](injector, runCheck(injector, _), check)
+              val injector = Guice.createInjector(new CheckerModule)
+              handleExceptions(runCheck, injector, check)
 
             case test: TestCmd =>
-              val injector = injectorFactory(test)
-              handleExceptions[TestCmd](injector, runTest(injector, _), test)
+              val injector = Guice.createInjector(new CheckerModule)
+              handleExceptions(runTest, injector, test)
 
             case typecheck: TypeCheckCmd =>
-              val injector = injectorFactory(typecheck)
-              handleExceptions[TypeCheckCmd](injector, runTypeCheck(injector, _), typecheck)
+              val injector = Guice.createInjector(new TypeCheckerModule)
+              handleExceptions(runTypeCheck, injector, typecheck)
 
             case server: ServerCmd =>
-              val injector = injectorFactory(server)
-              handleExceptions[ServerCmd](injector, runServer(injector, _), server)
+              val injector = Guice.createInjector(new CheckerModule)
+              handleExceptions(runServer, injector, server)
 
             case config: ConfigCmd =>
               configure(config)
@@ -354,21 +354,10 @@ object Tool extends LazyLogging {
     props ++ hereProps
   }
 
-  private def injectorFactory(cmd: Command): Injector = {
-    cmd match {
-      case _: ParseCmd     => Guice.createInjector(new ParserModule)
-      case _: CheckCmd     => Guice.createInjector(new CheckerModule)
-      case _: TestCmd      => Guice.createInjector(new CheckerModule)
-      case _: TypeCheckCmd => Guice.createInjector(new TypeCheckerModule)
-      case _: ServerCmd    => Guice.createInjector(new CheckerModule)
-      case _               => throw new RuntimeException("Unexpected command: " + cmd)
-    }
-  }
-
-  private def handleExceptions[C <: General](injector: Injector, fun: C => Int, cmd: C): Int = {
+  private def handleExceptions[C <: General](runner: (=> Injector, C) => Int, injector: Injector, cmd: C): Int = {
     val adapter = injector.getInstance(classOf[ExceptionAdapter])
     try {
-      fun(cmd)
+      runner(injector, cmd)
     } catch {
       case e: Exception if adapter.toMessage.isDefinedAt(e) =>
         adapter.toMessage(e) match {

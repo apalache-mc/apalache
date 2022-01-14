@@ -88,6 +88,8 @@ solve it.
 
 ## Talks
 
+- [Informal Systems Tutorial: TLA+ Basics](https://www.youtube.com/watch?v=peKYddIvCIs)
+
 - [Extended version of the Apalache tutorial](https://www.youtube.com/watch?v=Ml7d_3vlH88).
   TLA+ tutorial at DISC 2021 (October 2021).
 
