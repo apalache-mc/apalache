@@ -13,3 +13,7 @@
 ### Features
 
  * Output in the Informal Trace Format, see #1215
+
+### Bug fixes
+
+* Fix expansion of `~` in configured paths, see #1208

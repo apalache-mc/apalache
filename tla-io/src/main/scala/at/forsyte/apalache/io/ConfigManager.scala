@@ -4,39 +4,23 @@ import pureconfig._
 import pureconfig.generic.auto._
 import java.io.{File}
 import java.nio.file.{Path, Files, Paths}
+import com.typesafe.config.ConfigValueFactory
+import com.typesafe.config.ConfigObject
 
-object Converters {
+// Provides implicit conversions used when deserializing into configurable values.
+private object Converters {
+  import pureconfig.ConvertHelpers._
 
   private def expandedFilePath(s: String): Path = {
     Paths.get(if (s.startsWith("~")) s.replaceFirst("~", System.getProperty("user.home")) else s)
   }
 
-  // Value class to allow adding a new implicit for the File
-  case class ExpandedFile(val file: File) extends AnyVal
-
-  object ExpandedFile {
-    def apply(f: File): ExpandedFile = {
-      new ExpandedFile(expandedFilePath(f.toString()).toFile())
-    }
-  }
-
-  // Value class to allow adding a new implicit for Path
-  case class ExpandedPath(val path: Path) extends AnyVal
-
-  object ExpandedPath {
-    def apply(f: Path): ExpandedPath = {
-      new ExpandedPath(expandedFilePath(f.toString()))
-    }
-  }
-
-  // Briniging these implicits in scope lets us override the existing
-  // file deserialization behavior, so we get path expansion in all configured
-  // paths
-  implicit def expandedFileConfigReader: ConfigReader[ExpandedFile] =
-    ConfigReader[File].map(ExpandedFile.apply)
-
-  implicit def expandedPathConfigReader: ConfigReader[ExpandedPath] =
-    ConfigReader[Path].map(ExpandedPath.apply)
+  // Briniging these implicits in scope lets us override the existing File and
+  // Path deserialization behavior, so we get path expansion in all configured
+  // paths.
+  // See https://pureconfig.github.io/docs/overriding-behavior-for-types.html
+  implicit val overridePathReader = ConfigReader.fromString[Path](catchReadError(expandedFilePath))
+  implicit val overrideFileReader = ConfigReader.fromString[File](catchReadError(expandedFilePath(_).toFile()))
 }
 
 /** The configuration values that can be overriden based on CLI arguments */
