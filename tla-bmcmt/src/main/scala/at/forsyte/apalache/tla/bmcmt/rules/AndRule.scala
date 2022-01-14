@@ -94,12 +94,9 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         finalState
 
-      case e @ ValEx(_) =>
-        // the simplifier has rewritten the disjunction to TRUE or FALSE
-        rewriter.rewriteUntilDone(state.setRex(e))
-
       case e @ _ =>
-        throw new RewriterException("%s is not applicable to %s".format(getClass.getSimpleName, e), e)
+        // the simplifier has rewritten the conjunction to some other expression
+        rewriter.rewriteUntilDone(state.setRex(e))
     }
   }
 
