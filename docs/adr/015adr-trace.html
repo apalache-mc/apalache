@@ -439,47 +439,39 @@ specified in the field <code>vars</code>. Each state must define a value for eve
 <code>&lt;expr&gt;</code> is one of the following:</p>
 <ol>
 <li>
-<p>A JSON string literal, e.g., <code>&quot;hello&quot;</code>. TLA+ strings are written as strings
-in this format.</p>
+<p>A JSON Boolean: either <code>false</code> or <code>true</code>.</p>
 </li>
 <li>
-<p>A JSON integer, e.g., 123. According to <a href="https://datatracker.ietf.org/doc/html/rfc7159.html">RFC7159</a>, JSON integers
-must be in the range: <code>[-(2**53)+1, (2**53)-1]</code>. Integers in this
-range <em>may be</em> written as JSON integers.</p>
+<p>A JSON string literal, e.g., <code>&quot;hello&quot;</code>. TLA+ strings are written as strings in this format.</p>
 </li>
 <li>
-<p>A big integer of the following form: <code>{ &quot;#bigint&quot;: &quot;[-][0-9]+&quot; }</code>.
-We are using this format, as many JSON parsers impose limits on
-integer values, see <a href="https://datatracker.ietf.org/doc/html/rfc7159.html">RFC7159</a>. Big and small integers <em>may be</em>
+<p>A JSON integer, e.g., 123. According to <a href="https://datatracker.ietf.org/doc/html/rfc7159.html">RFC7159</a>, JSON integers must be in the range: <code>[-(2**53)+1, (2**53)-1]</code>.
+Integers in this range <em>may be</em> written as JSON integers.</p>
+</li>
+<li>
+<p>A big integer of the following form: <code>{ &quot;#bigint&quot;: &quot;[-][0-9]+&quot; }</code>. We are using this format, as many JSON parsers
+impose limits on integer values, see <a href="https://datatracker.ietf.org/doc/html/rfc7159.html">RFC7159</a>. Big and small integers <em>may be</em>
 written in this format.</p>
 </li>
 <li>
-<p>A list of the form <code>[ &lt;expr&gt;, ..., &lt;expr&gt; ]</code>. A list is just a
-JSON array. TLA+ sequences are written as lists in this format.</p>
+<p>A list of the form <code>[ &lt;expr&gt;, ..., &lt;expr&gt; ]</code>. A list is just a JSON array. TLA+ sequences are written as lists in this format.</p>
 </li>
 <li>
-<p>A record of the form <code>{ &quot;field1&quot;: &lt;expr&gt;, ..., &quot;fieldN&quot;: &lt;expr&gt; }</code>. A
-record is just a JSON object. Field names should not start with <code>#</code>
-and hence should not pose any collision with other constructs.
-TLA+ records are written as records in this format.</p>
+<p>A record of the form <code>{ &quot;field1&quot;: &lt;expr&gt;, ..., &quot;fieldN&quot;: &lt;expr&gt; }</code>. A record is just a JSON object. Field names should not start with <code>#</code>
+and hence should not pose any collision with other constructs. TLA+ records are written as records in this format.</p>
 </li>
 <li>
-<p>A tuple of the form <code>{ &quot;#tup&quot;: [ &lt;expr&gt;, ..., &lt;expr&gt; ] }</code>. There is no
-strict rule about when to use sequences or tuples. Apalache differentiates
+<p>A tuple of the form <code>{ &quot;#tup&quot;: [ &lt;expr&gt;, ..., &lt;expr&gt; ] }</code>. There is no strict rule about when to use sequences or tuples. Apalache differentiates
 between tuples and sequences, and it may produce both forms of expressions.</p>
 </li>
 <li>
-<p>A set of the form <code>{ &quot;#set&quot;: [ &lt;expr&gt;, ..., &lt;expr&gt; ] }</code>. A set is different
-from a list in that it does not assume any ordering of its elements. However,
-it is only a syntax form in our format. Apalache distinguishes between sets
-and lists and thus it will output sets in the set form. Other tools may
+<p>A set of the form <code>{ &quot;#set&quot;: [ &lt;expr&gt;, ..., &lt;expr&gt; ] }</code>. A set is different from a list in that it does not assume any ordering of its elements. However,
+it is only a syntax form in our format. Apalache distinguishes between sets and lists and thus it will output sets in the set form. Other tools may
 interpret sets as lists.</p>
 </li>
 <li>
-<p>A map of the form <code>{ &quot;#map&quot;: [ [ &lt;expr&gt;, &lt;expr&gt; ], ..., [ &lt;expr&gt;, &lt;expr&gt; ] ] }</code>.  That is, a map holds a JSON array of two-element arrays. Each
-two-element array <code>p</code> is interpreted as follows: <code>p[0]</code> is the map key and
-<code>p[1]</code> is the map value. Importantly, a key may be an arbitrary expression. It
-does not have to be a string or an integer. TLA+ functions are written as maps
+<p>A map of the form <code>{ &quot;#map&quot;: [ [ &lt;expr&gt;, &lt;expr&gt; ], ..., [ &lt;expr&gt;, &lt;expr&gt; ] ] }</code>. That is, a map holds a JSON array of two-element arrays. Each two-element array <code>p</code> is interpreted as follows: <code>p[0]</code> is the map key and
+<code>p[1]</code> is the map value. Importantly, a key may be an arbitrary expression. It does not have to be a string or an integer. TLA+ functions are written as maps
 in this format.</p>
 </li>
 </ol>
