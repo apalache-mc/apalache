@@ -17,6 +17,9 @@ abstract class ConstSimplifierBase {
   private val boolTag = Typed(BoolT1())
   private val intTag = Typed(IntT1())
 
+  private val trueEx = ValEx(TlaBool(true))(boolTag)
+  private val falseEx = ValEx(TlaBool(false))(boolTag)
+
   /**
    * A shallow simplification that does not recurse into the expression structure.
    */
@@ -135,7 +138,7 @@ abstract class ConstSimplifierBase {
     case OperEx(TlaArithOper.ge, ValEx(TlaInt(left)), ValEx(TlaInt(right))) => ValEx(TlaBool(left >= right))(boolTag)
 
     // x == x = TRUE
-    case OperEx(TlaOper.eq, left, right) if (left == right) => ValEx(TlaBool(true))(boolTag)
+    case OperEx(TlaOper.eq, left, right) if (left == right) => trueEx
 
     // Evaluate constant comparisson
     case OperEx(TlaOper.eq, ValEx(TlaInt(left)), ValEx(TlaInt(right))) => ValEx(TlaBool(left == right))(boolTag)
@@ -145,26 +148,26 @@ abstract class ConstSimplifierBase {
     // boolean operations
     case OperEx(TlaBoolOper.and, args @ _*) =>
       val simpArgs = args.filterNot {
-        _ == ValEx(TlaBool(true))(boolTag)
+        _ == trueEx
       }
       simpArgs match {
-        case Seq()      => ValEx(TlaBool(true))(boolTag) // an empty conjunction is true
+        case Seq()      => trueEx // an empty conjunction is true
         case Seq(first) => first
         // one false make conjunction false
-        case _ if simpArgs.contains(ValEx(TlaBool(false))(boolTag)) => ValEx(TlaBool(false))(boolTag)
+        case _ if simpArgs.contains(falseEx) => falseEx
         // TRUE /\ x /\ y = x /\ y
         case _ => OperEx(TlaBoolOper.and, simpArgs: _*)(boolTag)
       }
 
     case OperEx(TlaBoolOper.or, args @ _*) =>
       val simpArgs = args.filterNot {
-        _ == ValEx(TlaBool(false))(boolTag)
+        _ == falseEx
       }
       simpArgs match {
-        case Seq()      => ValEx(TlaBool(false))(boolTag) // an empty disjunction is false
+        case Seq()      => falseEx // an empty disjunction is false
         case Seq(first) => first
         // one true make disjunction true
-        case _ if simpArgs.contains(ValEx(TlaBool(true))(boolTag)) => ValEx(TlaBool(true))(boolTag)
+        case _ if simpArgs.contains(trueEx) => trueEx
         // FALSE \/ x \/ y = x \/ y
         case _ => OperEx(TlaBoolOper.or, simpArgs: _*)(boolTag)
       }
@@ -172,8 +175,8 @@ abstract class ConstSimplifierBase {
     // Evaluate implication of constants
     case OperEx(TlaBoolOper.implies, ValEx(TlaBool(left)), ValEx(TlaBool(right))) =>
       ValEx(TlaBool(!left || right))(boolTag)
-    case OperEx(TlaBoolOper.implies, ValEx(TlaBool(false)), _) => ValEx(TlaBool(true))(boolTag)
-    case OperEx(TlaBoolOper.implies, _, ValEx(TlaBool(true)))  => ValEx(TlaBool(true))(boolTag)
+    case OperEx(TlaBoolOper.implies, ValEx(TlaBool(false)), _) => trueEx
+    case OperEx(TlaBoolOper.implies, _, ValEx(TlaBool(true)))  => trueEx
 
     // TRUE -> x = x
     case OperEx(TlaBoolOper.implies, ValEx(TlaBool(true)), right) => right
