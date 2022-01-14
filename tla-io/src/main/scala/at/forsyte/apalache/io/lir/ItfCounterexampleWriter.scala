@@ -37,9 +37,9 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
   def mkJson(rootModule: TlaModule, states: List[NextState]): ujson.Value = {
     // merge constant initialization and variable initialization into a single state
     val state0 = states match {
-      case constInit :: Nil                => constInit._2
+      case constInit :: Nil            => constInit._2
       case constInit :: initState :: _ => constInit._2 ++ initState._2
-      case Nil                     => throw new IllegalArgumentException("Expected at least one state, found none")
+      case Nil                         => throw new IllegalArgumentException("Expected at least one state, found none")
     }
     val mappedStates = state0 :: states.drop(2).map(_._2)
     // construct the root JSON object
