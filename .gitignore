@@ -1,7 +1,7 @@
 *.iml
 .idea
 out
-target
+target/
 .directory
 
 log*.smt
