@@ -10,6 +10,10 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
+### Design
+
+ * ADR-014 on precise type checking for records and variants, see #1151
+
 ### Features
 
  * Output in the Informal Trace Format, see #1220
