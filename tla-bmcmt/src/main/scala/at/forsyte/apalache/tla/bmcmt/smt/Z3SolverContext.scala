@@ -46,9 +46,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   //      logWriter.println(";; %s = %s".format(p, Global.getParameter(p)))
   }
 
-  private def arraysEnabled(): Boolean = {
-    config.smtEncoding == arraysEncoding
-  }
+  private def encoding: SMTEncoding = config.smtEncoding
 
   var level: Int = 0
   var nBoolConsts: Int = 0 // the solver introduces Boolean constants internally
@@ -186,7 +184,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val name = s"in_${elemT.signature}${elem.id}_${setT.signature}${set.id}"
     if (!inCache.contains((set.id, elem.id))) {
       // The concept of an in-relation is not present in the arrays encoding
-      if (!arraysEnabled) {
+      if (encoding == oopsla19Encoding) {
         smtListener.onIntroSmtConst(name)
         log(s";; declare edge predicate $name: Bool")
         log(s"(declare-const $name Bool)")
@@ -227,18 +225,62 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val (elem, elemT, _) = cellCache(elemId).head
 
     val edgeName = s"in_${elemT.signature}${elemId}_${setT.signature}$setId"
-    val updatedSetName = set.toString + "_" + edgeName
-    val setSort = getOrMkCellSort(setT)
     log(s";; declare edge inclusion $edgeName")
-    log(s"(declare-const $updatedSetName $setSort)")
-    val updatedSet = z3context.mkConst(updatedSetName, setSort)
-    cellCache += (setId -> ((updatedSet, setT, level) :: cellCache(setId)))
-    _metrics = _metrics.addNConsts(1)
+    val updatedSet = updateSetConst(setId)
 
     val store = z3context.mkStore(
         set.asInstanceOf[Expr[ArraySort[Sort, BoolSort]]], elem.asInstanceOf[Expr[Sort]], z3context.mkTrue())
     val eqStore = z3context.mkEq(updatedSet, store)
     eqStore.asInstanceOf[ExprSort]
+  }
+
+  private def mkStoreChain(elemName: String, setName: String, tail: TlaEx, cond: TlaEx): (ExprSort, Long) = {
+    encoding match {
+      case `arraysEncoding` =>
+        val elemId = ArenaCell.idFromName(elemName)
+        val (elem, _, _) = cellCache(elemId).head
+        val (condZ3, cn) = toExpr(cond)
+
+        tail match {
+          case NameEx(_) => // Base case
+            val setId = ArenaCell.idFromName(setName)
+            val (set, _, _) = cellCache(setId).head
+            log(s";; declare edge inclusion of element $elem")
+            val store = z3context.mkStore(
+                set.asInstanceOf[Expr[ArraySort[Sort, BoolSort]]], elem.asInstanceOf[Expr[Sort]],
+                condZ3.asInstanceOf[Expr[BoolSort]])
+            (store.asInstanceOf[ExprSort], 1 + cn)
+
+          case nestedChain @ OperEx(ApalacheOper.chain, _*) =>
+            val (nestedSet, nsn) = toExpr(nestedChain)
+            log(s";; declare edge inclusion of element $elem")
+            val store = z3context.mkStore(
+                nestedSet.asInstanceOf[Expr[ArraySort[Sort, BoolSort]]], elem.asInstanceOf[Expr[Sort]],
+                condZ3.asInstanceOf[Expr[BoolSort]])
+            (store.asInstanceOf[ExprSort], 1 + cn + nsn)
+
+          case _ =>
+            throw new IllegalStateException(s"Malformed chain update operation of set $setName")
+        }
+
+      case `oopsla19Encoding` =>
+        val setMembership = OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))
+        val setMembershipWithCond = OperEx(TlaBoolOper.equiv, setMembership, cond)
+
+        tail match {
+          case NameEx(_) => // Base case
+            toExpr(setMembershipWithCond)
+
+          case nestedChain @ OperEx(ApalacheOper.chain, _*) =>
+            toExpr(OperEx(TlaBoolOper.and, setMembershipWithCond, nestedChain))
+
+          case _ =>
+            throw new IllegalStateException(s"Malformed chain update operation of set $setName")
+        }
+
+      case oddEncodingType =>
+        throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
+    }
   }
 
   private def mkUnchangedSet(setId: Int): ExprSort = {
@@ -254,6 +296,34 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       logWriter.flush() // flush the SMT log
       throw new IllegalStateException(
           s"SMT $id: Corrupted cellCache, $setId key is present, but it does not refer to any array.")
+    }
+  }
+
+  private def updateSetConst(setId: Int): ExprSort = {
+    val (set, setT, _) = cellCache(setId).head
+    val newSSAIndex = cellCache(setId).size
+    val updatedSetName = set.toString.split("_").head + "_" + newSSAIndex
+    val setSort = getOrMkCellSort(setT)
+    log(s"(declare-const $updatedSetName $setSort)")
+    val updatedSet = z3context.mkConst(updatedSetName, setSort)
+    cellCache += (setId -> ((updatedSet, setT, level) :: cellCache(setId)))
+    _metrics = _metrics.addNConsts(1)
+    updatedSet.asInstanceOf[ExprSort]
+  }
+
+  private def assignChainToSet(setName: String, chainEx: (ExprSort, Long)): (ExprSort, Long) = {
+    encoding match {
+      case `arraysEncoding` =>
+        val setId = ArenaCell.idFromName(setName)
+        val updatedSet = updateSetConst(setId)
+        val eq = toEqExpr(updatedSet, chainEx._1)
+        (eq.asInstanceOf[ExprSort], 1 + chainEx._2)
+
+      case `oopsla19Encoding` =>
+        chainEx
+
+      case oddEncodingType =>
+        throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
     }
   }
 
@@ -487,10 +557,10 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
           case IntT() =>
             z3context.getIntSort
 
-          case FinSetT(elemType) if arraysEnabled =>
+          case FinSetT(elemType) if encoding == arraysEncoding =>
             z3context.mkArraySort(getOrMkCellSort(elemType), z3context.getBoolSort)
 
-          case PowSetT(domType) if arraysEnabled =>
+          case PowSetT(domType) if encoding == arraysEncoding =>
             z3context.mkArraySort(getOrMkCellSort(domType), z3context.getBoolSort)
 
           case _ =>
@@ -621,34 +691,57 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         (getInPred(setId, elemId), 1)
 
       case OperEx(ApalacheOper.selectInSet, NameEx(elemName), NameEx(setName)) =>
-        arraysEnabled match {
-          case true =>
+        encoding match {
+          case `arraysEncoding` =>
             val setId = ArenaCell.idFromName(setName)
             val elemId = ArenaCell.idFromName(elemName)
             (mkSelect(setId, elemId), 1)
-          case false =>
-            toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla91 encoding
+          case `oopsla19Encoding` =>
+            toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla19 encoding
+          case oddEncodingType =>
+            throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
       case OperEx(ApalacheOper.storeInSet, NameEx(elemName), NameEx(setName)) =>
-        arraysEnabled match {
-          case true =>
+        encoding match {
+          case `arraysEncoding` =>
             val setId = ArenaCell.idFromName(setName)
             val elemId = ArenaCell.idFromName(elemName)
             (mkStore(setId, elemId), 1)
-          case false =>
-            toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla91 encoding
+          case `oopsla19Encoding` =>
+            toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla19 encoding
+          case oddEncodingType =>
+            throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
       case OperEx(ApalacheOper.storeNotInSet, NameEx(elemName), NameEx(setName)) =>
-        arraysEnabled match {
-          case true =>
+        encoding match {
+          case `arraysEncoding` =>
             // In the arrays encoding the sets are initially empty, so elem is not a member of set implicitly
             val setId = ArenaCell.idFromName(setName)
             (mkUnchangedSet(setId), 1)
-          case false =>
+          case `oopsla19Encoding` =>
             // In the oopsla19 encoding the sets are not initially empty, so membership has to be negated explicitly
             toExpr(OperEx(TlaBoolOper.not, OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))))
+          case oddEncodingType =>
+            throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
+        }
+
+      case OperEx(ApalacheOper.chain, op, tail, cond) =>
+        op match {
+          case OperEx(ApalacheOper.storeInSet, NameEx(elemName), NameEx(setName)) =>
+            mkStoreChain(elemName, setName, tail, cond)
+          case _ =>
+            throw new IllegalStateException("Malformed chain operation")
+        }
+
+      case OperEx(ApalacheOper.assignChain, NameEx(elemName), chain) =>
+        val chainEx = toExpr(chain)
+        val elemId = ArenaCell.idFromName(elemName)
+        val elemType = cellCache(elemId).head._2
+        elemType match {
+          case FinSetT(_) => assignChainToSet(elemName, chainEx)
+          case _          => throw new IllegalStateException("Malformed chain assignment operation")
         }
 
       // the old implementation allowed us to do that, but the new one is encoding edges directly

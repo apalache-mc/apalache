@@ -2,6 +2,32 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.19.1
+
+### Features
+
+* New errors for the following constant simplification scenarios (see #1191):
+  1. Division by 0
+  1. Mod (%) by 0
+  1. Negative expoents
+  1. Expoents bigger than an Integer
+  1. Expoential operations that would overflow `BigInt`
+
+## 0.19.0
+
+### Breaking changes
+
+* The global config file is now named `$HOME/.tlaplus/apalache.cfg`, see #1160
+
+### Features
+
+* Support for a local config file (defaulting to `$PWD/.apalache.cfg`) see #1160
+
+### Bug fixes
+
+* Fix the use of set union in the array encoding, see #1162
+* Fix preprocesor's normalization of negated temporal formulas and negated `LET .. IN` expressions, see #1165
+
 ## 0.18.1
 
 ### Bug fixes

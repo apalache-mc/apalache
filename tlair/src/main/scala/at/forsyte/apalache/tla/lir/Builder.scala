@@ -117,6 +117,8 @@ class Builder {
 
   def int(value: Int): BuilderVal = BuilderVal(TlaInt(value))
 
+  def int(value: BigInt): BuilderVal = BuilderVal(TlaInt(value))
+
   def bool(value: Boolean): BuilderVal = BuilderVal(TlaBool(value))
 
   def str(value: String): BuilderVal = BuilderVal(TlaStr(value))
@@ -606,6 +608,14 @@ class Builder {
 
   def apalacheStoreNotInSet(elem: BuilderEx, set: BuilderEx): BuilderEx = {
     BuilderOper(ApalacheOper.storeNotInSet, elem, set)
+  }
+
+  def apalacheChain(op: BuilderEx, tail: BuilderEx, cond: BuilderEx = bool(true)): BuilderEx = {
+    BuilderOper(ApalacheOper.chain, op, tail, cond)
+  }
+
+  def apalacheAssignChain(elem: BuilderEx, chain: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.assignChain, elem, chain)
   }
 
   private val m_nameMap: Map[String, TlaOper] =

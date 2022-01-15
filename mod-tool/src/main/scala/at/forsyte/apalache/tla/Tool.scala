@@ -11,7 +11,7 @@ import at.forsyte.apalache.io.{OutputManager, ReportGenerator}
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.tooling.{ExitCodes, Version}
-import at.forsyte.apalache.tla.tooling.opt.{CheckCmd, ConfigCmd, General, ParseCmd, TestCmd, TypeCheckCmd}
+import at.forsyte.apalache.tla.tooling.opt.{CheckCmd, ConfigCmd, General, ParseCmd, TestCmd, TypeCheckCmd, ServerCmd}
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import com.google.inject.{Guice, Injector}
 import com.typesafe.scalalogging.LazyLogging
@@ -24,6 +24,8 @@ import util.ExecutionStatisticsCollector.Selection
 import scala.collection.JavaConverters._
 import scala.util.Random
 import at.forsyte.apalache.infra.passes.WriteablePassOptions
+import at.forsyte.apalache.io.ApalacheConfig
+import at.forsyte.apalache.io.ConfigManager
 
 /**
  * Command line access to the APALACHE tools.
@@ -52,11 +54,10 @@ object Tool extends LazyLogging {
     System.exit(exitcode)
   }
 
-  private def outputAndLogConfig(file: File, cmd: General): Unit = {
-    val namePrefix: String = file.getName
-    OutputManager.configure(namePrefix, cmd)
-    if (namePrefix.endsWith(".tla")) {
-      OutputManager.initSourceLines(file)
+  private def outputAndLogConfig(cmd: General, cfg: ApalacheConfig): Unit = {
+    OutputManager.configure(cfg)
+    if (cmd.file.getName.endsWith(".tla")) {
+      OutputManager.initSourceLines(cmd.file)
     }
     println(s"Output directory: ${OutputManager.runDir.normalize()}")
     OutputManager.withWriterInRunDir(OutputManager.Names.RunFile)(
@@ -78,46 +79,57 @@ object Tool extends LazyLogging {
     printHeaderAndStatsConfig()
 
     // first, call the arguments parser, which can also handle the standard commands such as version
-    val command =
-      Cli
-        .parse(args)
-        .withProgramName("apalache-mc")
-        .version("%s build %s".format(Version.version, Version.build), "version")
-        .withCommands(new ParseCmd, new CheckCmd, new TypeCheckCmd, new TestCmd, new ConfigCmd)
+    val cli = Cli
+      .parse(args)
+      .withProgramName("apalache-mc")
+      .version("%s build %s".format(Version.version, Version.build), "version")
+      .withCommands(
+          new ParseCmd,
+          new CheckCmd,
+          new TypeCheckCmd,
+          new TestCmd,
+          new ConfigCmd,
+          new ServerCmd
+      )
 
-    if (!command.isInstanceOf[Some[General]]) {
+    cli match {
       // A standard option, e.g., --version or --help. No header, no timer.
-      OK_EXIT_CODE
-    } else {
-      // One of our commands. Print the header and measure time
-      val startTime = LocalDateTime.now()
+      case None => OK_EXIT_CODE
+      case Some(cmd) => {
 
-      try {
-        command match {
-          case Some(parse: ParseCmd) =>
-            val injector = injectorFactory(parse)
-            handleExceptions[ParseCmd](injector, runParse(injector, _), parse)
+        // One of our commands. Print the header and measure time
+        val startTime = LocalDateTime.now()
 
-          case Some(check: CheckCmd) =>
-            val injector = injectorFactory(check)
-            handleExceptions[CheckCmd](injector, runCheck(injector, _), check)
+        outputAndLogConfig(cmd, ConfigManager(cmd))
 
-          case Some(test: TestCmd) =>
-            val injector = injectorFactory(test)
-            handleExceptions[TestCmd](injector, runTest(injector, _), test)
+        try {
+          cmd match {
+            case parse: ParseCmd =>
+              val injector = Guice.createInjector(new ParserModule)
+              handleExceptions(runParse, injector, parse)
 
-          case Some(typecheck: TypeCheckCmd) =>
-            val injector = injectorFactory(typecheck)
-            handleExceptions[TypeCheckCmd](injector, runTypeCheck(injector, _), typecheck)
+            case check: CheckCmd =>
+              val injector = Guice.createInjector(new CheckerModule)
+              handleExceptions(runCheck, injector, check)
 
-          case Some(config: ConfigCmd) =>
-            configure(config)
+            case test: TestCmd =>
+              val injector = Guice.createInjector(new CheckerModule)
+              handleExceptions(runTest, injector, test)
 
-          case _ =>
-            OK_EXIT_CODE // nothing to do
+            case typecheck: TypeCheckCmd =>
+              val injector = Guice.createInjector(new TypeCheckerModule)
+              handleExceptions(runTypeCheck, injector, typecheck)
+
+            case server: ServerCmd =>
+              val injector = Guice.createInjector(new CheckerModule)
+              handleExceptions(runServer, injector, server)
+
+            case config: ConfigCmd =>
+              configure(config)
+          }
+        } finally {
+          printTimeDiff(startTime)
         }
-      } finally {
-        printTimeDiff(startTime)
       }
     }
   }
@@ -138,10 +150,6 @@ object Tool extends LazyLogging {
     options.set("general.debug", cli.debug)
     options.set("smt.prof", cli.smtprof)
     // TODO: Remove pass option, and just rely on OutputManager config
-    OutputManager.doIfFlag(OutputManager.Names.ProfilingFlag) {
-      options.set(s"general.${OutputManager.Names.ProfilingFlag}", true)
-    }
-    // TODO: Remove pass option, and just rely on OutputManager config
     options.set("io.outdir", OutputManager.outDir)
   }
 
@@ -150,7 +158,6 @@ object Tool extends LazyLogging {
     val executor = injector.getInstance(classOf[PassChainExecutor])
 
     // init
-    outputAndLogConfig(parse.file, parse)
     logger.info("Parse " + parse.file)
 
     executor.options.set("parser.filename", parse.file.getAbsolutePath)
@@ -175,7 +182,6 @@ object Tool extends LazyLogging {
   private def runCheck(injector: => Injector, check: CheckCmd): Int = {
     val executor = injector.getInstance(classOf[PassChainExecutor])
 
-    outputAndLogConfig(check.file, check)
     logger.info(
         "Checker options: filename=%s, init=%s, next=%s, inv=%s"
           .format(check.file, check.init, check.next, check.inv)
@@ -227,7 +233,6 @@ object Tool extends LazyLogging {
     // This is a special version of the `check` command that is tuned towards testing scenarios
     val executor = injector.getInstance(classOf[PassChainExecutor])
 
-    outputAndLogConfig(test.file, test)
     logger.info(
         "Checker options: filename=%s, before=%s, action=%s, after=%s"
           .format(test.file, test.before, test.action, test.assertion))
@@ -275,7 +280,6 @@ object Tool extends LazyLogging {
     // type checker
     val executor = injector.getInstance(classOf[PassChainExecutor])
 
-    outputAndLogConfig(typecheck.file, typecheck)
     logger.info("Type checking " + typecheck.file)
 
     executor.options.set("parser.filename", typecheck.file.getAbsolutePath)
@@ -294,6 +298,19 @@ object Tool extends LazyLogging {
         logger.info("Type checker [OK]")
         ExitCodes.NO_ERROR
     }
+  }
+
+  private def runServer(injector: => Injector, server: ServerCmd): Int = {
+    // type checker
+    val executor = injector.getInstance(classOf[PassChainExecutor])
+
+    logger.info("Running server...")
+
+    // NOTE Must go after all other options are set due to side-effecting
+    // behavior of current OutmputManager configuration
+    setCommonOptions(server, executor.options)
+    logger.info("Server mode is not yet implemented!")
+    ExitCodes.ERROR
   }
 
   private def loadProperties(filename: String): Map[String, String] = {
@@ -337,20 +354,10 @@ object Tool extends LazyLogging {
     props ++ hereProps
   }
 
-  private def injectorFactory(cmd: Command): Injector = {
-    cmd match {
-      case _: ParseCmd     => Guice.createInjector(new ParserModule)
-      case _: CheckCmd     => Guice.createInjector(new CheckerModule)
-      case _: TestCmd      => Guice.createInjector(new CheckerModule)
-      case _: TypeCheckCmd => Guice.createInjector(new TypeCheckerModule)
-      case _               => throw new RuntimeException("Unexpected command: " + cmd)
-    }
-  }
-
-  private def handleExceptions[C <: General](injector: Injector, fun: C => Int, cmd: C): Int = {
+  private def handleExceptions[C <: General](runner: (=> Injector, C) => Int, injector: Injector, cmd: C): Int = {
     val adapter = injector.getInstance(classOf[ExceptionAdapter])
     try {
-      fun(cmd)
+      runner(injector, cmd)
     } catch {
       case e: Exception if adapter.toMessage.isDefinedAt(e) =>
         adapter.toMessage(e) match {
@@ -402,7 +409,6 @@ object Tool extends LazyLogging {
   }
 
   private def configure(config: ConfigCmd): Int = {
-    outputAndLogConfig(new File("config"), config)
     logger.info("Configuring Apalache")
     config.submitStats match {
       case Some(isEnabled) =>

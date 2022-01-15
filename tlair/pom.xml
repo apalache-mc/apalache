@@ -4,11 +4,11 @@
     <parent>
         <groupId>at.forsyte.apalache</groupId>
         <artifactId>apalache</artifactId>
-        <version>0.18.2-SNAPSHOT</version>
+        <version>0.19.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>tlair</artifactId>
-        <version>0.18.2-SNAPSHOT</version>
+        <version>0.19.2-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>tlair</name>
@@ -60,8 +60,25 @@
         <dependency>
             <groupId>com.lihaoyi</groupId>
             <artifactId>ujson_2.12</artifactId>
-            <version>1.4.3</version>
+            <version>1.4.4</version>
         </dependency>
 
     </dependencies>
+    <!-- Export tests to allow other projects to use utilities under src/test such as IrGenerators.scala -->
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.2</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
