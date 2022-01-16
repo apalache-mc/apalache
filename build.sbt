@@ -1,4 +1,7 @@
-// Build-wide settings
+///////////////////////////
+// Project-wide settings //
+///////////////////////////
+
 // See https://www.scala-sbt.org/1.x/docs/Multi-Project.html#Build-wide+settings
 
 ThisBuild / organization := "at.forsyte"
@@ -27,6 +30,8 @@ ThisBuild / libraryDependencies ++= {
         // Scala-compiler specific
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
         "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.0",
+        // NOTE: I'm suggesting promoting this to system wide dep
+        "org.scalaz" %% "scalaz-core" % "7.3.5",
     )
   }
 
@@ -45,20 +50,104 @@ ThisBuild / libraryDependencies ++= {
   libraryDeps ++ testDeps
 }
 
-// scalafmt configuration
-ThisBuild / scalafmtFilter := "diff-dirty"
+/////////////////////
+// scalafmt config //
+/////////////////////
+
+import net.moznion.sbt.spotless.config._
+
+// TODO configure to ratchet from unstable
+ThisBuild / spotlessScala := ScalaConfig(
+    scalafmt = ScalafmtConfig(
+        version = "2.4.6",
+    ),
+)
+
+////////////////////////////////////////////
+// Dependencies used in multiple projects //
+////////////////////////////////////////////
+
+lazy val commonsIo = "commons-io" % "commons-io" % "2.11.0"
+
+/////////////////////////////
+// Sub-project definitions //
+/////////////////////////////
+
+lazy val tlaModuleTestSettings = Seq(
+    // we have to tell SANY the location of Apalache modules for the tests
+    Test / fork := true, // Forking is required for the system options to take effect in the tests
+    Test / javaOptions += s"""-DTLA-Library=${(ThisBuild / baseDirectory).value / "src" / "tla"}""",
+)
+
+lazy val tlair = (project in file("tlair"))
+  .settings(
+      libraryDependencies ++= Seq(
+          "com.lihaoyi" %% "ujson" % "1.4.4",
+          "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.5.0",
+      ),
+  )
+
+lazy val infra = (project in file("mod-infra"))
+  .dependsOn(tlair)
+
+// TODO: Why is this project prefixed with "tla"?
+lazy val tla_io = (project in file("tla-io"))
+  .dependsOn(tlair, infra)
+  .settings(
+      tlaModuleTestSettings,
+      libraryDependencies ++= Seq(
+          commonsIo,
+          "com.github.pureconfig" %% "pureconfig" % "0.17.1",
+      ),
+  )
+
+lazy val tla_types = (project in file("tla-types"))
+  .dependsOn(tlair, infra, tla_io)
+  .settings(
+      tlaModuleTestSettings,
+      libraryDependencies += commonsIo,
+  )
+
+lazy val tla_pp = (project in file("tla-pp"))
+  .dependsOn(
+      tlair,
+      // property based tests depend on IR generators defined in the tlair tests
+      // See https://www.scala-sbt.org/1.x/docs/Multi-Project.html#Per-configuration+classpath+dependencies
+      tlair % "test->test",
+      infra,
+      tla_io,
+      tla_types,
+  )
+  .settings(
+      tlaModuleTestSettings,
+      libraryDependencies += commonsIo,
+  )
 
 // Sub-projects
 lazy val tla_assignments = (project in file("tla-assignments"))
+  .dependsOn(tlair, infra, tla_io, tla_pp, tla_types)
+  .settings(
+      libraryDependencies += commonsIo,
+  )
+
 lazy val tla_bmcmt = (project in file("tla-bmcmt"))
-lazy val tla_io = (project in file("tla-io"))
-lazy val tla_pp = (project in file("tla-pp"))
-lazy val tla_types = (project in file("tla-types"))
-lazy val tlair = (project in file("tlair"))
+  .dependsOn(tlair, infra, tla_io, tla_pp, tla_assignments)
 
-lazy val mod_distribution = (project in file("mod-distribution"))
-lazy val mod_infra = (project in file("mod-infra"))
-lazy val mod_tool = (project in file("mod-tool"))
-  .dependsOn(tla_io)
+lazy val tool = {
+  (project in file("mod-tool"))
+    .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt)
+    .settings(
+        libraryDependencies ++= {
+          val clistVersion = "3.5.1"
+          Seq(
+              "org.apache.commons" % "commons-configuration2" % "2.7",
+              "commons-beanutils" % "commons-beanutils" % "1.9.4",
+              "org.backuity.clist" %% "clist-core" % clistVersion,
+              "org.backuity.clist" %% "clist-macros" % clistVersion,
+          )
+        },
+    )
+}
 
-// TODO A useful declaration is "test->test" which means test depends on test. This allows you to put utility code for testing in util/src/test/scala and then use that code in core/src/test/scala, for example.
+lazy val distribution = (project in file("mod-distribution"))
+  .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt, tool)
