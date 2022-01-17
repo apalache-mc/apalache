@@ -2,7 +2,7 @@
 
 | author        | revision |
 | ------------- |---------:|
-| Rodrigo Otoni |      1.3 |
+| Rodrigo Otoni |      1.4 |
 
 This ADR describes an alternative encoding of the [KerA+] fragment of TLA+ into SMT.
 Compound data structures, e.g. sets, are currently encoded using the [core theory] of SMT,
@@ -136,7 +136,7 @@ The following changes will be made to implement the new encoding of sets:
     elements will remain unchanged.
 - In class `SymbStateRewriterImplWithArrays`, add the new rules to `ruleLookupTable` by overriding
   the entries to their older versions.
-- Add five new Apalache IR operators in `ApalacheOper`, `Builder`, `ConstSimplifierForSmt`, and 
+- Add six new Apalache IR operators in `ApalacheOper`, `Builder`, `ConstSimplifierForSmt`, and 
   `PreproSolverContext`, to represent the array operations.
   - The `selectInSet` IR operator represents the SMT `select`.
   - The `storeInSet` IR operator represents the SMT `store`.
@@ -146,6 +146,7 @@ The following changes will be made to implement the new encoding of sets:
     important to note that this operator assumes that all arrays are initially empty, so an element
     not explicitly added is assumed to not be in the array. To check absence of an element,
     `selectInSet` should be used with negation.
+  - The `smtMap` IR operator represents the use of SMT map.
 - In class `Z3SolverContext`, add/change appropriate methods to handle SMT constraints over arrays.
   - The main changes will de done in `declareCell` and the new `mkSelect`, `mkStore`, and 
     `mkUnchangedSet` methods, as these methods are directly responsible for creating the SMT 
@@ -158,6 +159,10 @@ The following changes will be made to implement the new encoding of sets:
     clause. They can be used to efficiently encode compound `store` operations when many elements
     need to be added a set, by avoiding the declaration of intermediary arrays. In addition to
     `store`, they can also be used to compound other operations, such as arithmetic ones.
+  - The `smtMap` IR operator will be used to encode the TLA+ set filter operation. It constructs
+    a temporary array that contains the evaluation of the filter's predicate for each set element
+    and uses SMT map to compute the intersection of the set being filtered and the set represented
+    by the temporary array constructed.
   - Cases for `FinSetT` and `PowSetT` will be added to `getOrMkCellSort`, as these types are no
     longer represented by uninterpreted constants.
   - `cellCache` will be changed to contain a list of cells, in order to handle the effects of
