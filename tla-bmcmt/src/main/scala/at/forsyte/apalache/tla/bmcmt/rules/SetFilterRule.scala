@@ -74,13 +74,43 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
               }
             }
 
-            val cons = consChain(cellsAndPreds)
+            val cons = consChain(cellsAndPreds) // Produces a chain of SMT store
             rewriter.solverContext.assertGroundExpr(tla.apalacheAssignChain(newSetCell.toNameEx, cons))
           }
         }
 
+        def addCellConsWithSmtMap(cellsAndPreds: Seq[(ArenaCell, TlaEx)]): Unit = {
+          if (cellsAndPreds.nonEmpty) {
+            def consChain(cellsAndPreds: Seq[(ArenaCell, TlaEx)]): BuilderEx = {
+              val cell = cellsAndPreds.head._1
+              val pred = cellsAndPreds.head._2
+              val inNewSet = tla.apalacheSelectInSet(cell.toNameEx, newSetCell.toNameEx)
+              val inOldSet = tla.apalacheSelectInSet(cell.toNameEx, setCell.toNameEx)
+              val inOldSetAndPred = tla.and(pred, inOldSet)
+              val and = tla.and(tla.eql(inNewSet, inOldSetAndPred))
+
+              cellsAndPreds.tail match {
+                case Seq() => tla.apalacheChain(and, tla.bool(true))
+                case tail  => tla.apalacheChain(and, consChain(tail))
+              }
+            }
+
+            val cons = consChain(cellsAndPreds) // Produces a chain of conjunctions of conditional SMT select
+            rewriter.solverContext.assertGroundExpr(tla.apalacheSmtMap(setCell.toNameEx, cons, newSetCell.toNameEx))
+          }
+        }
+
         // add SMT constraints
-        addCellCons(filteredCellsAndPreds)
+        rewriter.solverContext.config.smtEncoding match {
+          case `arraysEncoding` =>
+            addCellConsWithSmtMap(filteredCellsAndPreds)
+
+          case `oopsla19Encoding` =>
+            addCellCons(filteredCellsAndPreds)
+
+          case oddEncodingType =>
+            throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
+        }
 
         newState.setArena(newArena).setRex(newSetCell.toNameEx)
 

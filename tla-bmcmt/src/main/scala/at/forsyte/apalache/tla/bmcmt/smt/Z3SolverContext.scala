@@ -211,6 +211,25 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     }
   }
 
+  private def mkAndChain(args: Seq[TlaEx], tail: TlaEx, cond: TlaEx): (ExprSort, Long) = {
+    val arg = args.head
+    val (argZ3, an) = toExpr(arg)
+    //val (condZ3, _) = toExpr(cond) // The conjunction happens unconditionally. This might change in the future.
+
+    tail match {
+      case ValEx(TlaBool(true)) => // Base case
+        (argZ3.asInstanceOf[ExprSort], an)
+
+      case nestedChain @ OperEx(ApalacheOper.chain, _*) =>
+        val (nestedExp, nen) = toExpr(nestedChain)
+        val and = z3context.mkAnd(argZ3.asInstanceOf[BoolExpr], nestedExp.asInstanceOf[BoolExpr])
+        (and.asInstanceOf[ExprSort], 1 + an + nen)
+
+      case _ =>
+        throw new IllegalStateException(s"Malformed chain conjunction operation")
+    }
+  }
+
   private def mkSelect(setId: Int, elemId: Int): ExprSort = {
     val set = cellCache(setId).head._1
     val elem = cellCache(elemId).head._1
@@ -729,6 +748,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
       case OperEx(ApalacheOper.chain, op, tail, cond) =>
         op match {
+          case OperEx(TlaBoolOper.and, args @ _*) =>
+            mkAndChain(args, tail, cond)
           case OperEx(ApalacheOper.storeInSet, NameEx(elemName), NameEx(setName)) =>
             mkStoreChain(elemName, setName, tail, cond)
           case _ =>
@@ -743,6 +764,23 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
           case FinSetT(_) => assignChainToSet(elemName, chainEx)
           case _          => throw new IllegalStateException("Malformed chain assignment operation")
         }
+
+      case OperEx(ApalacheOper.smtMap, NameEx(inputSetName), consChain, NameEx(resultSetName)) =>
+        val inputSetId = ArenaCell.idFromName(inputSetName)
+        val resultSetId = ArenaCell.idFromName(resultSetName)
+        // A temporary set is made, to contain the constraints that will be used on the SMT map
+        val tempResultSet = updateSetConst(resultSetId) // The temporary set is initially an unconstrained array
+        val (consChainZ3, ccn) = toExpr(consChain) // The constraints added have tempResultSet as target of inputSetName
+        // An updated set is made, to contain the outcome of the SMT map
+        val updatedResultSet = updateSetConst(resultSetId).asInstanceOf[ArrayExpr[Sort, BoolSort]]
+        val inputSet = cellCache(inputSetId).head._1.asInstanceOf[ArrayExpr[Sort, BoolSort]]
+        val constraintsSet = tempResultSet.asInstanceOf[ArrayExpr[Sort, BoolSort]]
+        // The intersection of inputSet and constraintsSet is taken and equated to updatedResultSet
+        val map = z3context.mkMap(z3context.mkAnd().getFuncDecl, inputSet, constraintsSet)
+        val eq = toEqExpr(updatedResultSet, map)
+        // The returned expression is the conjunction of the SMT map with the constraints of constraintsSet
+        val and = z3context.mkAnd(eq, consChainZ3.asInstanceOf[BoolExpr])
+        (and.asInstanceOf[ExprSort], 3 + ccn)
 
       // the old implementation allowed us to do that, but the new one is encoding edges directly
       case OperEx(TlaSetOper.in, ValEx(TlaInt(_)), NameEx(_)) | OperEx(TlaSetOper.in, ValEx(TlaBool(_)), NameEx(_)) =>
