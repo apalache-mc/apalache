@@ -10,6 +10,3 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
-### Bug fixes
-
- * Fix the ITF writer on empty functions, see #1232
