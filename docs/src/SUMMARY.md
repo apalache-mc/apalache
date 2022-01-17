@@ -35,6 +35,7 @@
 - [The Snowcat Type Checker](./apalache/typechecker-snowcat.md)
 - [Supported Features](./apalache/features.md)
 - [Known Issues](./apalache/known-issues.md)
+- [Antipatterns](./apalache/antipatterns.md)
 - [TLA+ Preprocessing](./apalache/preprocessing.md)
 - [Fine Tuning](./apalache/tuning.md)
 - [Assignments and Symbolic Transitions in Depth](./apalache/assignments-in-depth.md)
