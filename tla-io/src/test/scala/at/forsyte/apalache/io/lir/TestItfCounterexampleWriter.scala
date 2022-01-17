@@ -2,6 +2,7 @@ package at.forsyte.apalache.io.lir
 
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import org.junit.runner.RunWith
@@ -70,8 +71,10 @@ class TestItfCounterexampleWriter extends FunSuite {
         TlaVarDecl("d")(Typed(intSet)),
         TlaVarDecl("e")(Typed(fooBar)),
         TlaVarDecl("f")(Typed(intAndStr)),
-        TlaVarDecl("g")(Typed(intToStr))
+        TlaVarDecl("g")(Typed(intToStr)),
+        TlaVarDecl("h")(Typed(intToStr))
     )
+
     compareJson(
         TlaModule("test", decls),
         List(
@@ -97,7 +100,11 @@ class TestItfCounterexampleWriter extends FunSuite {
                     "g" -> atat(colonGreater(int(1), str("a")) as intToStr,
                         atat(colonGreater(int(2), str("b")) as intToStr,
                             colonGreater(int(3), str("c")) as intToStr) as intToStr)
-                      .as(intToStr)
+                      .as(intToStr),
+                    // [ x \in {} |-> x ]
+                    // technically, this expression is not type-correct
+                    "h" -> funDef(name("x").typed(IntT1()), name("x").typed(IntT1()), enumSet().typed(SetT1(StrT1())))
+                      .typed(intToStr)
                 ))
         ),
         """{
@@ -106,7 +113,7 @@ class TestItfCounterexampleWriter extends FunSuite {
         |    "format-description": "https://apalache.informal.systems/docs/adr/015adr-trace.html",
         |    "description": "Created by Apalache"
         |  },
-        |  "vars": [ "a", "b", "c", "d", "e", "f", "g" ],
+        |  "vars": [ "a", "b", "c", "d", "e", "f", "g", "h" ],
         |  "states": [
         |    {
         |      "#meta": { "index": 0 },
@@ -116,7 +123,8 @@ class TestItfCounterexampleWriter extends FunSuite {
         |      "d": { "#set": [ 5, 6 ] },
         |      "e": { "foo": 3, "bar": true },
         |      "f": { "#tup": [ 7, "myStr" ] },
-        |      "g": { "#map": [[1, "a"], [2, "b"], [3, "c"]] }
+        |      "g": { "#map": [[1, "a"], [2, "b"], [3, "c"]] },
+        |      "h": { "#map": [] }
         |    }
         |  ]
         |}""".stripMargin
