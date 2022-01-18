@@ -128,3 +128,16 @@ lazy val tool = {
 
 lazy val distribution = (project in file("mod-distribution"))
   .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt, tool)
+
+
+///////////////
+// Packaging //
+///////////////
+
+// TODO Include the needed TLA resources etc. from src/assembly/bin.xml
+// Define the main entrypoint and uber jar package
+lazy val root = (project in file("."))
+  .dependsOn(distribution)
+  .settings(
+    assembly / mainClass := Some("at.forsyte.apalache.tla.Tool"),
+  )
