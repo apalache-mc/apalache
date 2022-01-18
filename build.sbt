@@ -1,3 +1,5 @@
+import Dependencies._
+
 ///////////////////////////
 // Project-wide settings //
 ///////////////////////////
@@ -12,43 +14,23 @@ ThisBuild / scalaVersion := "2.12.15"
 ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
 
 // Shared dependencies accross all sub projects
-ThisBuild / libraryDependencies ++= {
-
-  // NOTE: Dependencies that require specification of the Scala version use the
-  // `%%` operator to append the specified scala version.  See
-  // https://www.scala-sbt.org/1.x/docs/Library-Dependencies.html#Getting+the+right+Scala+version+with
-
-  val libraryDeps = {
-    val logbackVersion = "1.2.10"
-    Seq(
-        "com.google.inject" % "guice" % "5.0.1",
-        "ch.qos.logback" % "logback-classic" % logbackVersion,
-        "ch.qos.logback" % "logback-core" % logbackVersion,
-        "org.slf4j" % "slf4j-api" % "1.7.33",
-        "org.lamport" % "tla2tools" % "1.7.0-SNAPSHOT",
-        "io.github.tudo-aqua" % "z3-turnkey" % "4.8.14",
-        // Scala-compiler specific
-        "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
-        "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.0",
-        // NOTE: I'm suggesting promoting this to system wide dep
-        "org.scalaz" %% "scalaz-core" % "7.3.5",
-    )
-  }
-
-  val testDeps = {
-    val spotlessVersion = "2.20.0"
-    Seq(
-        "junit" % "junit" % "4.13.2",
-        "org.easymock" % "easymock" % "4.3",
-        "com.diffplug.spotless" % "spotless-maven-plugin" % spotlessVersion,
-        // Scala-compiler specific
-        "org.scalatest" %% "scalatest" % "3.0.1",
-        "org.scalacheck" %% "scalacheck" % "1.15.4",
-    ).map(_ % Test)
-  }
-
-  libraryDeps ++ testDeps
-}
+ThisBuild / libraryDependencies ++= Seq(
+    Deps.guice,
+    Deps.logbackClassic,
+    Deps.logbackCore,
+    Deps.slf4j,
+    Deps.tla2tools,
+    Deps.z3,
+    Deps.logging,
+    Deps.scalaParserCombinators,
+    // NOTE: I'm suggesting promoting this to system wide dep
+    Deps.scalaz,
+    TestDeps.junit,
+    TestDeps.easymock,
+    TestDeps.spotless,
+    TestDeps.scalatest,
+    TestDeps.scalacheck,
+)
 
 /////////////////////
 // scalafmt config //
@@ -67,8 +49,6 @@ ThisBuild / spotlessScala := ScalaConfig(
 // Dependencies used in multiple projects //
 ////////////////////////////////////////////
 
-lazy val commonsIo = "commons-io" % "commons-io" % "2.11.0"
-
 /////////////////////////////
 // Sub-project definitions //
 /////////////////////////////
@@ -82,8 +62,8 @@ lazy val tlaModuleTestSettings = Seq(
 lazy val tlair = (project in file("tlair"))
   .settings(
       libraryDependencies ++= Seq(
-          "com.lihaoyi" %% "ujson" % "1.4.4",
-          "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.5.0",
+          Deps.ujson,
+          Deps.kiama,
       ),
   )
 
@@ -96,8 +76,8 @@ lazy val tla_io = (project in file("tla-io"))
   .settings(
       tlaModuleTestSettings,
       libraryDependencies ++= Seq(
-          commonsIo,
-          "com.github.pureconfig" %% "pureconfig" % "0.17.1",
+          Deps.commonsIo,
+          Deps.pureConfig,
       ),
   )
 
@@ -105,7 +85,7 @@ lazy val tla_types = (project in file("tla-types"))
   .dependsOn(tlair, infra, tla_io)
   .settings(
       tlaModuleTestSettings,
-      libraryDependencies += commonsIo,
+      libraryDependencies += Deps.commonsIo,
   )
 
 lazy val tla_pp = (project in file("tla-pp"))
@@ -120,14 +100,14 @@ lazy val tla_pp = (project in file("tla-pp"))
   )
   .settings(
       tlaModuleTestSettings,
-      libraryDependencies += commonsIo,
+      libraryDependencies += Deps.commonsIo,
   )
 
 // Sub-projects
 lazy val tla_assignments = (project in file("tla-assignments"))
   .dependsOn(tlair, infra, tla_io, tla_pp, tla_types)
   .settings(
-      libraryDependencies += commonsIo,
+      libraryDependencies += Deps.commonsIo,
   )
 
 lazy val tla_bmcmt = (project in file("tla-bmcmt"))
@@ -137,15 +117,12 @@ lazy val tool = {
   (project in file("mod-tool"))
     .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt)
     .settings(
-        libraryDependencies ++= {
-          val clistVersion = "3.5.1"
-          Seq(
-              "org.apache.commons" % "commons-configuration2" % "2.7",
-              "commons-beanutils" % "commons-beanutils" % "1.9.4",
-              "org.backuity.clist" %% "clist-core" % clistVersion,
-              "org.backuity.clist" %% "clist-macros" % clistVersion,
-          )
-        },
+        libraryDependencies ++= Seq(
+            Deps.commonsConfiguration2,
+            Deps.commonsBeanutils,
+            Deps.clistCore,
+            Deps.clistMacros,
+        ),
     )
 }
 
