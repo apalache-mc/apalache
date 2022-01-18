@@ -103,20 +103,19 @@ abstract class ConstSimplifierBase {
     // Try to evaluante constant exponentiation
     case ex @ OperEx(TlaArithOper.exp, ValEx(TlaInt(base)), ValEx(TlaInt(power))) =>
       if (power < 0) {
-        throw new TlaInputError(s"Negative power at ${ex.toString}")
-      } else if (!power.isValidInt) {
-        throw new TlaInputError(
-            s"Power of ${power} is bigger than the max allowed of ${Int.MaxValue} at ${ex.toString}")
+        throw new TlaInputError(s"Negative power at ${ex}")
       } else {
         try {
-          // This can take a long time for big base values i.e. 2147484647 ^ 1100000
-          // Maybe we should consider implementing a timeout
-          ValEx(TlaInt(base.pow(power.toInt)))(intTag)
+          // Use doubles to calculate since they have a reasonable size limit
+          val pow = Math.pow(base.toDouble, power.toDouble)
+          val powAsBigInt = BigDecimal(pow).setScale(0, BigDecimal.RoundingMode.DOWN).toBigInt()
+          ValEx(TlaInt(powAsBigInt))(intTag)
         } catch {
-          case _: ArithmeticException =>
-            throw new TlaInputError(s"The result of ${ex.toString} exceedes the limit of 2^${Int.MaxValue}")
+          case _: NumberFormatException =>
+            throw new TlaInputError(s"The result of ${ex.toString} exceedes the limit of ${Double.MaxValue}")
         }
       }
+
     // x ^ 0 = 1
     case OperEx(TlaArithOper.exp, leftEx, ValEx(TlaInt(right))) if (right == 0) => ValEx(TlaInt(1))(intTag)
     // x ^ 1 = x
