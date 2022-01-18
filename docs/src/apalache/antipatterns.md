@@ -41,7 +41,7 @@ F(S) == FoldSet( G, v, S )
 `FoldSet` (and `FoldSeq`) were introduced precisely for these scenarios, and should be used over `RECURSIVE + CHOOSE` in most cases.
 
 ## Incremental computation
-When defining an expression `Y` from `X`, instead of saying "`Y` is an expression with properties a,b,c,...", it is possible to define all the intermediate steps of transforming `X` into `Y`: "`X` is slightly changed into `X1` (e.g. by adding one element to a set, or via `EXCEPT`), which is changed into `X2`, etc. until `Xn = Y`". Doing this in Apalache is almost always a bad idea.
+Often, users introduce an expression `Y`, which is derived from another expression `X` (`Y == F(X)`, for some `F`). Instead of defining `Y` directly, in terms of the properties it possesses,  it is possible to define all the intermediate steps of transforming `X` into `Y`: "`X` is slightly changed into `X1` (e.g. by adding one element to a set, or via `EXCEPT`), which is changed into `X2`, etc. until `Xn = Y`". Doing this in Apalache is almost always a bad idea, if a direct characterization of `Y` exists.
 
 Concretely, the following constructs are APs:
 1. Incremental `EXCEPT`
