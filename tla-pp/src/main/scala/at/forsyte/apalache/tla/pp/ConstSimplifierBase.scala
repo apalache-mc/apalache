@@ -106,15 +106,15 @@ abstract class ConstSimplifierBase {
         throw new TlaInputError(s"Negative power at ${ex}")
       }
       if (!power.isValidInt) {
-          throw new TlaInputError(s"The power at ${ex.toString} exceedes the limit of ${Int.MaxValue}")
+        throw new TlaInputError(s"The power at ${ex.toString} exceedes the limit of ${Int.MaxValue}")
       } else {
-          // Use doubles to calculate since they have a reasonable size limit
-          val estimatedPow = Math.pow(base.toDouble, power.toDouble)
-          if (estimatedPow < Double.MinValue || estimatedPow > Double.MaxValue) {
-              throw new TlaInputError(s"The result of ${ex.toString} exceedes the limit of ${Double.MaxValue}")
-          }
-          val pow = base.pow(power.toInt)
-          ValEx(TlaInt(pow))(intTag)
+        // Use doubles to calculate since they have a reasonable size limit
+        val estimatedPow = Math.pow(base.toDouble, power.toDouble)
+        if (estimatedPow < Double.MinValue || estimatedPow > Double.MaxValue) {
+          throw new TlaInputError(s"The result of ${ex.toString} exceedes the limit of ${Double.MaxValue}")
+        }
+        val pow = base.pow(power.toInt)
+        ValEx(TlaInt(pow))(intTag)
       }
 
     // x ^ 0 = 1
