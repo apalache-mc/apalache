@@ -2324,8 +2324,10 @@ $ apalache-mc check --out-dir=./test-out-dir --length=2 --inv=Inv factorization.
 ...
 EXITCODE: ERROR (12)
 $ ls ./test-out-dir/factorization.tla/* | ./sort.sh
+counterexample1.itf.json
 counterexample1.json
 counterexample1.tla
+counterexample.itf.json
 counterexample.json
 counterexample.tla
 detailed.log
@@ -2385,8 +2387,10 @@ $ apalache-mc check --out-dir=./test-out-dir --length=2 --inv=Inv --run-dir=./te
 ...
 EXITCODE: ERROR (12)
 $ ls ./test-run-dir | ./sort.sh
+counterexample1.itf.json
 counterexample1.json
 counterexample1.tla
+counterexample.itf.json
 counterexample.json
 counterexample.tla
 detailed.log

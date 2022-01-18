@@ -3,6 +3,6 @@ EXTENDS  FiniteSets
 
 Init == TRUE
 Next == TRUE
-Inv == Cardinality({}) = 0
+Inv == Cardinality({}) /= 1
 
 ===================================
