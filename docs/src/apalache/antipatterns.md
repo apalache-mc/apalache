@@ -1,6 +1,6 @@
 # Antipatterns
 
-This page collects known Apalache antipatterns (APs). APs are syntactic forms or specification approaches that, for one reason or another, have particularly slow/complex encodings. For a pattern to be an AP, there must exist a known, equivalent, efficient pattern. 
+This page collects known antipaterns (APs) when writing TLA+ for Apalache. In this context, APs are syntactic forms or specification approaches that, for one reason or another, have particularly slow/complex encodings for the target model checker. For a pattern to be an AP, there must exist a known, equivalent, efficient pattern. 
 
 Often, APs arise from a user's past experiences with writing TLA+ for TLC, or from a direct translation of imperative OOP code into TLA+, as those follow a different paradigm, and therefore entail different cost evaluation of which expressions are slow/complex and which are not.
 
