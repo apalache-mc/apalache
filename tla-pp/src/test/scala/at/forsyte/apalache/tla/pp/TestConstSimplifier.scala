@@ -216,7 +216,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
       simplifier.simplify(expression)
     }
 
-    thrown.getMessage shouldBe ("The result of 8888888 ^ 2147484647 exceedes the limit of 1.7976931348623157E308")
+    thrown.getMessage shouldBe ("The power at 8888888 ^ 2147484647 exceedes the limit of 2147483647")
   }
 
   test("raises error when result would be too big") {

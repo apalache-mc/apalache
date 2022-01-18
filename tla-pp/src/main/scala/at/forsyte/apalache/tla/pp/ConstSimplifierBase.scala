@@ -104,16 +104,17 @@ abstract class ConstSimplifierBase {
     case ex @ OperEx(TlaArithOper.exp, ValEx(TlaInt(base)), ValEx(TlaInt(power))) =>
       if (power < 0) {
         throw new TlaInputError(s"Negative power at ${ex}")
+      }
+      if (!power.isValidInt) {
+        throw new TlaInputError(s"The power at ${ex.toString} exceedes the limit of ${Int.MaxValue}")
       } else {
-        try {
-          // Use doubles to calculate since they have a reasonable size limit
-          val pow = Math.pow(base.toDouble, power.toDouble)
-          val powAsBigInt = BigDecimal(pow).setScale(0, BigDecimal.RoundingMode.DOWN).toBigInt()
-          ValEx(TlaInt(powAsBigInt))(intTag)
-        } catch {
-          case _: NumberFormatException =>
-            throw new TlaInputError(s"The result of ${ex.toString} exceedes the limit of ${Double.MaxValue}")
+        // Use doubles to calculate since they have a reasonable size limit
+        val estimatedPow = Math.pow(base.toDouble, power.toDouble)
+        if (estimatedPow < Double.MinValue || estimatedPow > Double.MaxValue) {
+          throw new TlaInputError(s"The result of ${ex.toString} exceedes the limit of ${Double.MaxValue}")
         }
+        val pow = base.pow(power.toInt)
+        ValEx(TlaInt(pow))(intTag)
       }
 
     // x ^ 0 = 1
