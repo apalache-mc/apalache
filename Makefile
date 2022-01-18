@@ -29,14 +29,14 @@ apalache-jar:
 
 # Just compile with quick settings
 compile:
-	MAVEN_OPTS=$(QUICK_MAVEN_OPTS) mvn $(QUICK_MAVEN_ARGS) compile
+	sbt compile
 
 # Build with quick settings, but and skip the tests
 build-quick:
 	MAVEN_OPTS=$(QUICK_MAVEN_OPTS) mvn $(QUICK_MAVEN_ARGS) package
 
 test:
-	mvn test
+	sbt test
 
 integration:
 	test/mdx-test.py --debug "$(TEST_FILTER)"
