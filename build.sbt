@@ -129,15 +129,30 @@ lazy val tool = {
 lazy val distribution = (project in file("mod-distribution"))
   .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt, tool)
 
-
 ///////////////
 // Packaging //
 ///////////////
 
-// TODO Include the needed TLA resources etc. from src/assembly/bin.xml
 // Define the main entrypoint and uber jar package
 lazy val root = (project in file("."))
   .dependsOn(distribution)
   .settings(
-    assembly / mainClass := Some("at.forsyte.apalache.tla.Tool"),
+      Compile / packageBin / mappings ++= Seq(
+          // Include theese assets in the compiled package at the specified locations
+          ((ThisBuild / baseDirectory).value / "README.md" -> "README.md"),
+          ((ThisBuild / baseDirectory).value / "LICENSE" -> "LICENSE"),
+      ),
+      assembly / assemblyJarName := s"apalache-pkg-${version.value}-full.jar",
+      assembly / mainClass := Some("at.forsyte.apalache.tla.Tool"),
+      assembly / assembledMappings += {
+        val src_dir = (ThisBuild / baseDirectory).value / "src" / "tla"
+        // See https://github.com/sbt/sbt-assembly/issues/227#issuecomment-283504401
+        sbtassembly.MappingSet(
+            None,
+            Vector(
+                (src_dir / "Apalache.tla") -> "tla2sany/StandardModules/Apalacha.tla",
+                (src_dir / "Variants.tla") -> "tla2sany/StandardModules/Variants.tla",
+            ),
+        )
+      },
   )
