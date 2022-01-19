@@ -1,17 +1,4 @@
-# a good old Makefile for the end users, as Maven is too much pain
-
-ENV=NO_MVN=1
-
-# See https://www.jrebel.com/blog/how-to-speed-up-your-maven-build
-#
-# - verify:none disables bytecode verification giving a speed boost, but should
-#   not be used for releases or productin. See https://blogs.oracle.com/buck/never-disable-bytecode-verification-in-a-production-system
-QUICK_MAVEN_OPTS := "-XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none"
-
-# - skip the tests
-# - tell scoverage to skip: http://scoverage.github.io/scoverage-maven-plugin/1.4.0/report-mojo.html#skip
-# - run up to 4 threads per core (4C): https://cwiki.apache.org/confluence/display/MAVEN/Parallel+builds+in+Maven+3
-QUICK_MAVEN_ARGS := -DskipTests -Dscoverage.skip=true -T 4C
+# a good old Makefile for the end users, so they don't need to learn SBT commands
 
 # Markdown files used for integration tests
 TEST_MD_FILES := $(wildcard test/tla/*.md)
