@@ -16,10 +16,7 @@ FROM maven:3.6.3-jdk-8-slim AS builder
 ADD . /opt/apalache/
 WORKDIR /opt/apalache/
 
-# --batch-mode because we are running non-interactive
-# skipTests because we check the test in CI, not when packaing the container
-RUN mvn --batch-mode -DskipTests package
-
+RUN sbt assembly
 
 # 2. APP IMAGE
 FROM openjdk:16-slim
@@ -44,12 +41,13 @@ COPY --from=builder \
 RUN true
 # The jars
 COPY --from=builder \
-    /opt/apalache/mod-distribution/target/apalache-pkg-*.jar \
-    /opt/apalache/mod-distribution/target/
+    /opt/apalache/target/scala-2.12/apalache-pkg-*.jar \
+    /opt/apalache/target/scala-2.12/
+# TODO rm: are packaged in jar?
 # Apalache's .tla libraries
-COPY --from=builder \
-    /opt/apalache/src/tla \
-    /opt/apalache/src/tla
+# COPY --from=builder \
+#     /opt/apalache/src/tla \
+#     /opt/apalache/src/tla
 
 # Workaround for Surefire not finding ForkedBooter
 # (see https://stackoverflow.com/questions/53010200/maven-surefire-could-not-find-forkedbooter-class)

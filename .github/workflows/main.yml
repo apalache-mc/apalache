@@ -54,6 +54,7 @@ jobs:
           java-version: 8
       - name: Coursier cache
         uses: coursier/cache-action@v6
+      # TODO rm
       # - name: Cache local Maven repository
       #   uses: actions/cache@v2
       #   with:
@@ -94,9 +95,9 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          key: ${{ runner.os }}-sbt-${{ hashFiles('project/Dependencies.scala') }}
           restore-keys: |
-            ${{ runner.os }}-maven-
+            ${{ runner.os }}-sbt-
             ${{ runner.os }}-
       - name: Cache nix store
         # Workaround for cache action not playing well with permissions
@@ -120,9 +121,7 @@ jobs:
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
       - name: Build dev-shell
         run: nix develop -c bash -c exit
-      - name: Build apalache
-        run: nix develop -c make build-quick
-      - name: Run integration tests
+      - name: Build and run integration tests
         run: nix develop -c make integration
         env:
           SMT_ENCODING: ${{ matrix.smt-encoding }}

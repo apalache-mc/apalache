@@ -20,25 +20,23 @@ TEST_MD_FILES := $(wildcard test/tla/*.md)
 
 all: apalache
 
+# test and assemble the package
 apalache:
-	# tell maven to load the binary libraries and build the package
-	mvn package
+	sbt test assembly
 
-apalache-jar:
-	mvn --batch-mode --no-transfer-progress package -Dmaven.test.skip=true
+# package the project without running tests
+package:
+	sbt assembly
 
-# Just compile with quick settings
+# compile, but don't assemble the package
 compile:
 	sbt compile
-
-# Build with quick settings, but and skip the tests
-build-quick:
-	MAVEN_OPTS=$(QUICK_MAVEN_OPTS) mvn $(QUICK_MAVEN_ARGS) package
 
 test:
 	sbt test
 
-integration:
+# run the integration tests
+integration: package
 	test/mdx-test.py --debug "$(TEST_FILTER)"
 
 # Invokes the md targets below
@@ -58,5 +56,5 @@ fmt-fix:
 	mvn --batch-mode spotless:apply
 
 clean:
-	mvn clean
+	sbt clean
 	rm -rf target/
