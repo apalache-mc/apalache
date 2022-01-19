@@ -118,6 +118,10 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
     case e @ OperEx(TlcOper.atat, _, _) =>
       ujson.Obj("#map" -> collectFun(e))
 
+    // the degenerate case of an empty function [ x \in {} |-> x ]
+    case e @ OperEx(TlaFunOper.funDef, _, _, OperEx(TlaSetOper.enumSet)) =>
+      ujson.Obj("#map" -> ujson.Arr())
+
     case e =>
       throw new IllegalArgumentException("Unexpected expression in an ITF counterexample: " + e)
   }
