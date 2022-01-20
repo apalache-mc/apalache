@@ -10,8 +10,10 @@
 # introduces nondetermistic behavior into the Z3 library -- JDK 9+ doesn't have
 # this problem.
 
+# TODO Just use SBT native packager!
+
 # 1. BUILD IMAGE
-FROM maven:3.6.3-jdk-8-slim AS builder
+FROM eclipse-temurin:8-jdk AS builder
 
 ADD . /opt/apalache/
 WORKDIR /opt/apalache/
@@ -19,7 +21,7 @@ WORKDIR /opt/apalache/
 RUN sbt assembly
 
 # 2. APP IMAGE
-FROM openjdk:16-slim
+FROM eclipse-temurin:16-alpine
 
 # To prepare the app image, we do the following:
 #
