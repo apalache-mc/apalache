@@ -127,9 +127,20 @@ lazy val distribution = (project in file("mod-distribution"))
 // Define the main entrypoint and uber jar package
 lazy val root = (project in file("."))
   .dependsOn(distribution)
+  .aggregate(
+      // will propagate commands to these sub-projects
+      tlair,
+      infra,
+      tla_io,
+      tla_types,
+      tla_pp,
+      tla_assignments,
+      tla_bmcmt,
+      tool,
+      distribution,
+  )
   .settings(
       name := "apalache",
-
       // Package definition
       Compile / packageBin / mappings ++= Seq(
           // Include theese assets in the compiled package at the specified locations
