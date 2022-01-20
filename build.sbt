@@ -60,7 +60,6 @@ lazy val tlair = (project in file("tlair"))
 lazy val infra = (project in file("mod-infra"))
   .dependsOn(tlair)
 
-// TODO: Why is this project prefixed with "tla"?
 lazy val tla_io = (project in file("tla-io"))
   .dependsOn(tlair, infra)
   .settings(
