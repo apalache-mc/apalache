@@ -91,7 +91,7 @@ jobs:
             smt-encoding: arrays
     steps:
       - uses: actions/checkout@v2
-      - name: Cache local Maven repository
+      - name: Cache local m2 repository
         uses: actions/cache@v2
         with:
           path: ~/.m2/repository
