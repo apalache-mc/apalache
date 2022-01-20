@@ -181,25 +181,34 @@ docker / dockerfile := {
   val jarTarget = s"/opt/apalache/target/scala-2.12/${fatJar.name}"
 
   val runners = rootDir / "bin"
-  val runnersTarget = s"/opt/apalache/bin"
+  val runnersTarget = "/opt/apalache/bin"
+
+  val modules = rootDir / "src" / "tla"
+  val modulesTarget = "/opt/apalache/src/tla"
 
   val license = rootDir / "LICENSE"
   val readme = rootDir / "README.md"
 
   new Dockerfile {
     from("eclipse-temurin:16")
+
+    workDir("/opt/apalache/")
+
     add(fatJar, jarTarget)
     add(runners, runnersTarget)
     add(license, "/opt/apalache/LICENSE")
     add(readme, "/opt/apalache/README.md")
-    workDir("/opt/apalache/")
+    add(modules, modulesTarget)
+
     // TLA parser requires all specification files to be in the same directory
     // We assume the user bind-mounted the spec dir into /var/apalache
     // In case the directory was not bind-mounted, we create one
     run("mkdir", "/var/apalache")
+
     // We need sudo to run apalache using the user (created in the entrypoint script)
     run("apt", "update")
     run("apt", "install", "sudo")
+
     entryPoint("/opt/apalache/bin/run-in-docker-container")
   }
 }
