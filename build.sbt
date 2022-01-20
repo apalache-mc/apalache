@@ -4,10 +4,14 @@ import Dependencies._
 // Project-wide settings //
 ///////////////////////////
 
+name := "apalache"
+
 // See https://www.scala-sbt.org/1.x/docs/Multi-Project.html#Build-wide+settings
+ThisBuild / organizationName := "Informal Systems Inc."
+ThisBuild / organizationHomepage := Some(url("https://informal.systems"))
+ThisBuild / licenses += "Apache 2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")
 
 ThisBuild / organization := "at.forsyte"
-ThisBuild / version := "0.19.2-SNAPSHOT"
 ThisBuild / scalaVersion := "2.12.15"
 
 // https://oss.sonatype.org/content/repositories/snapshots/
@@ -131,7 +135,6 @@ lazy val root = (project in file("."))
       distribution,
   )
   .settings(
-      name := "apalache",
       // Package definition
       Compile / packageBin / mappings ++= Seq(
           // Include theese assets in the compiled package at the specified locations
