@@ -31,11 +31,6 @@ ThisBuild / libraryDependencies ++= Seq(
     TestDeps.scalacheck,
 )
 
-
-/////////////////////
-// scalafmt config //
-/////////////////////
-
 // Only check/fix against (tracked) files that have changed relative to the trunk
 ThisBuild / scalafmtFilter := "diff-ref=origin/unstable"
 
@@ -102,18 +97,16 @@ lazy val tla_assignments = (project in file("tla-assignments"))
 lazy val tla_bmcmt = (project in file("tla-bmcmt"))
   .dependsOn(tlair, infra, tla_io, tla_pp, tla_assignments)
 
-lazy val tool = {
-  (project in file("mod-tool"))
-    .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt)
-    .settings(
-        libraryDependencies ++= Seq(
-            Deps.commonsConfiguration2,
-            Deps.commonsBeanutils,
-            Deps.clistCore,
-            Deps.clistMacros,
-        ),
-    )
-}
+lazy val tool = (project in file("mod-tool"))
+  .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt)
+  .settings(
+      libraryDependencies ++= Seq(
+          Deps.commonsConfiguration2,
+          Deps.commonsBeanutils,
+          Deps.clistCore,
+          Deps.clistMacros,
+      ),
+  )
 
 lazy val distribution = (project in file("mod-distribution"))
   .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt, tool)
@@ -140,11 +133,11 @@ lazy val root = (project in file("."))
   .settings(
       name := "apalache",
       // Package definition
-        Compile / packageBin / mappings ++= Seq (
-            // Include theese assets in the compiled package at the specified locations
-            ((ThisBuild / baseDirectory).value / "README.md" -> "README.md"),
-            ((ThisBuild / baseDirectory).value / "LICENSE" -> "LICENSE"),
-        ),
+      Compile / packageBin / mappings ++= Seq(
+          // Include theese assets in the compiled package at the specified locations
+          ((ThisBuild / baseDirectory).value / "README.md" -> "README.md"),
+          ((ThisBuild / baseDirectory).value / "LICENSE" -> "LICENSE"),
+      ),
       assembly / assemblyJarName := s"apalache-pkg-${version.value}-full.jar",
       assembly / mainClass := Some("at.forsyte.apalache.tla.Tool"),
       assembly / assembledMappings += {
@@ -216,7 +209,6 @@ docker / dockerfile := {
     entryPoint("/opt/apalache/bin/run-in-docker-container")
   }
 }
-
 
 //////////////
 // appendix //
