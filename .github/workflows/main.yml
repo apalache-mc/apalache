@@ -154,10 +154,10 @@ jobs:
       - name: Build dev-shell
         run: nix develop -c bash -c exit
       - name: Build the docker image
-        run: docker build -t ghcr.io/informalsystems/apalache:ci .
+        run: make docker
       - name: Run integration tests in docker container
         run: |
           nix develop -c bash -c "source ./test/.envrc && test/mdx-test.py --debug"
         env:
           USE_DOCKER: true
-          APALACHE_TAG: ci
+          APALACHE_TAG: latest

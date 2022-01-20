@@ -26,6 +26,10 @@ test:
 integration: package
 	test/mdx-test.py --debug "$(TEST_FILTER)"
 
+# build the docker image
+docker:
+	sbt docker
+
 # Invokes the md targets below
 promote: $(TEST_MD_FILES)
 

@@ -133,10 +133,13 @@ lazy val distribution = (project in file("mod-distribution"))
 // Packaging //
 ///////////////
 
+enablePlugins(DockerPlugin)
+
 // Define the main entrypoint and uber jar package
 lazy val root = (project in file("."))
   .dependsOn(distribution)
   .settings(
+      name := "apalache",
       Compile / packageBin / mappings ++= Seq(
           // Include theese assets in the compiled package at the specified locations
           ((ThisBuild / baseDirectory).value / "README.md" -> "README.md"),
@@ -156,3 +159,47 @@ lazy val root = (project in file("."))
         )
       },
   )
+
+docker / imageNames := {
+  val img: String => ImageName = s =>
+    ImageName(
+        namespace = Some("ghcr.io/informalsystems"),
+        repository = name.value,
+        tag = Some(s),
+    )
+  Seq(
+    img(version.value),
+    img("latest"),
+  )
+}
+
+// TODO REfactor out repeated strings
+docker / dockerfile := {
+  val rootDir = (ThisBuild / baseDirectory).value
+
+  val fatJar = assembly.value
+  val jarTarget = s"/opt/apalache/target/scala-2.12/${fatJar.name}"
+
+  val runners = rootDir / "bin"
+  val runnersTarget = s"/opt/apalache/bin"
+
+  val license = rootDir / "LICENSE"
+  val readme = rootDir / "README.md"
+
+  new Dockerfile {
+    from("eclipse-temurin:16")
+    add(fatJar, jarTarget)
+    add(runners, runnersTarget)
+    add(license, "/opt/apalache/LICENSE")
+    add(readme, "/opt/apalache/README.md")
+    workDir("/opt/apalache/")
+    // TLA parser requires all specification files to be in the same directory
+    // We assume the user bind-mounted the spec dir into /var/apalache
+    // In case the directory was not bind-mounted, we create one
+    run("mkdir", "/var/apalache")
+    // We need sudo to run apalache using the user (created in the entrypoint script)
+    run("apt", "update")
+    run("apt", "install", "sudo")
+    entryPoint("/opt/apalache/bin/run-in-docker-container")
+  }
+}
