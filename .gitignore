@@ -22,9 +22,6 @@ tla-bmcmt/profile-rules.txt
 # Ignore directories where test artifacts are stored
 x/
 
-# Ignore backup files created by `mvn versions`
-*.versionsBackup
-
 # Ignore artifacts created when previewing the gh-pages site
 /Gemfile.lock
 /_site/
