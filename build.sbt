@@ -27,7 +27,6 @@ ThisBuild / libraryDependencies ++= Seq(
     Deps.scalaz,
     TestDeps.junit,
     TestDeps.easymock,
-    TestDeps.spotless,
     TestDeps.scalatest,
     TestDeps.scalacheck,
 )

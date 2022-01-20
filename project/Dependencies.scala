@@ -36,14 +36,10 @@ object Dependencies {
 
   // Test only depenendencies
   object TestDeps {
-    // Version
-    lazy val spotlessVersion = "2.20.0"
-
     // Libraries
     val easymock = "org.easymock" % "easymock" % "4.3" % Test
     val junit = "junit" % "junit" % "4.13.2" % Test
     val scalacheck = "org.scalacheck" %% "scalacheck" % "1.15.4" % Test
     val scalatest = "org.scalatest" %% "scalatest" % "3.0.1" % Test
-    val spotless = "com.diffplug.spotless" % "spotless-maven-plugin" % spotlessVersion % Test
   }
 }
