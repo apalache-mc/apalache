@@ -18,7 +18,7 @@ case `cat $DISTS | wc -l | sed 's/[[:space:]]*//g'` in
         echo "# Package:   $JAR"
         ;;
     0) 
-        echo "ERROR: Distribution jar not found. Did you run mvn package?"
+        echo "ERROR: Distribution jar not found. Did you run make package?"
         exit 1
         ;;
     *) 
@@ -26,7 +26,7 @@ case `cat $DISTS | wc -l | sed 's/[[:space:]]*//g'` in
         cat $DISTS
         echo ""
         echo "To resolve this, run:"
-        echo "  mvn clean && mvn package"
+        echo "  make clean package"
         exit 1
         ;;
 esac
