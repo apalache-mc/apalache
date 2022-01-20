@@ -173,18 +173,19 @@ docker / imageNames := {
   )
 }
 
-// TODO REfactor out repeated strings
 docker / dockerfile := {
   val rootDir = (ThisBuild / baseDirectory).value
+  // Docker Working Dir
+  val dwd = "/opt/apalache"
 
   val fatJar = assembly.value
-  val jarTarget = s"/opt/apalache/target/scala-2.12/${fatJar.name}"
+  val jarTarget = s"${dwd}/target/scala-2.12/${fatJar.name}"
 
   val runners = rootDir / "bin"
-  val runnersTarget = "/opt/apalache/bin"
+  val runnersTarget = s"${dwd}/bin"
 
   val modules = rootDir / "src" / "tla"
-  val modulesTarget = "/opt/apalache/src/tla"
+  val modulesTarget = s"${dwd}/src/tla"
 
   val license = rootDir / "LICENSE"
   val readme = rootDir / "README.md"
@@ -192,12 +193,12 @@ docker / dockerfile := {
   new Dockerfile {
     from("eclipse-temurin:16")
 
-    workDir("/opt/apalache/")
+    workDir(dwd)
 
     add(fatJar, jarTarget)
     add(runners, runnersTarget)
-    add(license, "/opt/apalache/LICENSE")
-    add(readme, "/opt/apalache/README.md")
+    add(license, s"${dwd}/${license.name}")
+    add(readme, s"${dwd}/${readme.name}")
     add(modules, modulesTarget)
 
     // TLA parser requires all specification files to be in the same directory
