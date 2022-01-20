@@ -36,15 +36,6 @@ ThisBuild / libraryDependencies ++= Seq(
 // scalafmt config //
 /////////////////////
 
-import net.moznion.sbt.spotless.config._
-
-// TODO configure to ratchet from unstable
-ThisBuild / spotlessScala := ScalaConfig(
-    scalafmt = ScalafmtConfig(
-        version = "2.4.6",
-    ),
-)
-
 ////////////////////////////////////////////
 // Dependencies used in multiple projects //
 ////////////////////////////////////////////
@@ -133,13 +124,13 @@ lazy val distribution = (project in file("mod-distribution"))
 // Packaging //
 ///////////////
 
-enablePlugins(DockerPlugin)
-
 // Define the main entrypoint and uber jar package
 lazy val root = (project in file("."))
   .dependsOn(distribution)
   .settings(
       name := "apalache",
+
+      // Package definition
       Compile / packageBin / mappings ++= Seq(
           // Include theese assets in the compiled package at the specified locations
           ((ThisBuild / baseDirectory).value / "README.md" -> "README.md"),
@@ -160,6 +151,9 @@ lazy val root = (project in file("."))
       },
   )
 
+// Specify and build the docker file
+enablePlugins(DockerPlugin)
+
 docker / imageNames := {
   val img: String => ImageName = s =>
     ImageName(
@@ -168,8 +162,8 @@ docker / imageNames := {
         tag = Some(s),
     )
   Seq(
-    img(version.value),
-    img("latest"),
+      img(version.value),
+      img("latest"),
   )
 }
 
