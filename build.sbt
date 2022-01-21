@@ -135,6 +135,7 @@ lazy val root = (project in file("."))
       distribution,
   )
   .settings(
+      commands ++= Seq(setReleaseVersion),
       // Package definition
       Compile / packageBin / mappings ++= Seq(
           // Include theese assets in the compiled package at the specified locations
@@ -220,3 +221,14 @@ docker / dockerfile := {
 // For some reason `scalafmtFilter` doesn't register as being used, tho it is
 // so this quiets the erroneous linting.
 Global / excludeLintKeys += scalafmtFilter
+
+lazy val showVersion = taskKey[Unit]("Show project version")
+showVersion := {
+  showSuccess := false
+  println(version.value)
+}
+
+lazy val setReleaseVersion: Command = Command.command("setReleaseVersion") { state =>
+  releaseProcess := Seq(ReleaseTransformations.setReleaseVersion)
+  Command.process("release", state)
+}
