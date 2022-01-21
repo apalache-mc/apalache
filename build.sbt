@@ -125,7 +125,7 @@ lazy val distribution = (project in file("mod-distribution"))
 lazy val root = (project in file("."))
   .dependsOn(distribution)
   .aggregate(
-      // will propagate commands to these sub-projects
+      // propagate commands to these sub-projects
       tlair,
       infra,
       tla_io,
@@ -204,7 +204,7 @@ docker / dockerfile := {
 
     // TLA parser requires all specification files to be in the same directory
     // We assume the user bind-mounted the spec dir into /var/apalache
-    // In case the directory was not bind-mounted, we create one
+    // but, in case the directory was not bind-mounted, we create one
     run("mkdir", "/var/apalache")
 
     // We need sudo to run apalache using the user (created in the entrypoint script)
