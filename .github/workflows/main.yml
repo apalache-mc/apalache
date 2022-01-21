@@ -54,15 +54,6 @@ jobs:
           java-version: 8
       - name: Coursier cache
         uses: coursier/cache-action@v6
-      # TODO rm
-      # - name: Cache local Maven repository
-      #   uses: actions/cache@v2
-      #   with:
-      #     path: ~/.m2/repository
-      #     key: ${{ runner.os }}-sbt-${{ hashFiles('project/Dependencies.scala', 'build.sbt') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-maven-
-      #       ${{ runner.os }}-
       - name: Build and Unit Test
         run: make test
       - name: Cleanup before cache
