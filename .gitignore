@@ -3,6 +3,7 @@
 out
 target/
 .directory
+.bsp
 
 log*.smt
 test/tla/testSpec\.smt2
