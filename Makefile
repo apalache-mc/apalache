@@ -39,12 +39,12 @@ test/tla/%.md: target/test/tla/%.md.corrected
 
 fmt-check:
 	git fetch origin
-	sbt scalafmtCheckAll || \
+	sbt scalafmtCheckAll scalafmtSbtCheck || \
 		( echo "TO FIX: run 'make fmt-fix' and commit the changes" ; \
 		  exit 1 )
 
 fmt-fix:
-	sbt scalafmtAll
+	sbt scalafmtAll scalafmtSbt
 
 clean:
 	sbt clean
