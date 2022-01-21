@@ -44,6 +44,7 @@ ThisBuild / scalafmtFilter := "diff-ref=origin/unstable"
 // Sub-project definitions //
 /////////////////////////////
 
+// NOTE: Include these settings in any projects that require Apalache's TLA+ modules
 lazy val tlaModuleTestSettings = Seq(
     // we have to tell SANY the location of Apalache modules for the tests
     Test / fork := true, // Forking is required for the system options to take effect in the tests
