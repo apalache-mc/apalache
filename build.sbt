@@ -11,6 +11,9 @@ ThisBuild / organizationName := "Informal Systems Inc."
 ThisBuild / organizationHomepage := Some(url("https://informal.systems"))
 ThisBuild / licenses += "Apache 2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")
 
+// We store the version in a bare file to make accessing and updating the version trivial
+ThisBuild / version := scala.io.Source.fromFile((ThisBuild / baseDirectory).value / "VERSION").mkString.trim
+
 ThisBuild / organization := "at.forsyte"
 ThisBuild / scalaVersion := "2.12.15"
 
@@ -220,38 +223,3 @@ docker / dockerfile := {
 // For some reason `scalafmtFilter` doesn't register as being used, tho it is
 // so this quiets the erroneous linting.
 Global / excludeLintKeys += scalafmtFilter
-
-lazy val showVersion = taskKey[Unit]("Show project version")
-showVersion := {
-  showSuccess := false
-  println(version.value)
-}
-
-/**
-  * Convert the given command string to a release step action, preserving and      invoking remaining commands
-  * Note: This was copied from https://github.com/sbt/sbt-release/blob/663cfd426361484228a21a1244b2e6b0f7656bdf/src/main/scala/ReleasePlugin.scala#L99-L115
-  */
-def runCommandAndRemaining(command: String): State => State = { st: State =>
-  import sbt.complete.Parser
-  @annotation.tailrec
-  def runCommand(command: String, state: State): State = {
-    val nextState = Parser.parse(command, state.combinedParser) match {
-      case Right(cmd) => cmd()
-      case Left(msg) => throw sys.error(s"Invalid programmatic input:\n$msg")
-    }
-    nextState.remainingCommands.toList match {
-      case Nil => nextState
-      case head :: tail => runCommand(head.commandLine, nextState.copy(remainingCommands = tail))
-    }
-  }
-  runCommand(command, st.copy(remainingCommands = Nil)).copy(remainingCommands = st.remainingCommands)
-}
-
-// TODO Replace with release process fully amanged by sbt-release
-lazy val removeSnapshot = taskKey[Unit]("set the release version")
-removeSnapshot := {
-  import ReleaseTransformations._
-  releaseProcess := Seq(setReleaseVersion)
-  runCommandAndRemaining("release")(state.value)
-  state.value
-}
