@@ -30,7 +30,6 @@ ThisBuild / libraryDependencies ++= Seq(
     Deps.z3,
     Deps.logging,
     Deps.scalaParserCombinators,
-    // NOTE: I'm suggesting promoting this to system wide dep
     Deps.scalaz,
     TestDeps.junit,
     TestDeps.easymock,
