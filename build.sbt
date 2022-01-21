@@ -135,7 +135,6 @@ lazy val root = (project in file("."))
       distribution,
   )
   .settings(
-      commands ++= Seq(setReleaseVersion),
       // Package definition
       Compile / packageBin / mappings ++= Seq(
           // Include theese assets in the compiled package at the specified locations
@@ -228,7 +227,31 @@ showVersion := {
   println(version.value)
 }
 
-lazy val setReleaseVersion: Command = Command.command("setReleaseVersion") { state =>
-  releaseProcess := Seq(ReleaseTransformations.setReleaseVersion)
-  Command.process("release", state)
+/**
+  * Convert the given command string to a release step action, preserving and      invoking remaining commands
+  * Note: This was copied from https://github.com/sbt/sbt-release/blob/663cfd426361484228a21a1244b2e6b0f7656bdf/src/main/scala/ReleasePlugin.scala#L99-L115
+  */
+def runCommandAndRemaining(command: String): State => State = { st: State =>
+  import sbt.complete.Parser
+  @annotation.tailrec
+  def runCommand(command: String, state: State): State = {
+    val nextState = Parser.parse(command, state.combinedParser) match {
+      case Right(cmd) => cmd()
+      case Left(msg) => throw sys.error(s"Invalid programmatic input:\n$msg")
+    }
+    nextState.remainingCommands.toList match {
+      case Nil => nextState
+      case head :: tail => runCommand(head.commandLine, nextState.copy(remainingCommands = tail))
+    }
+  }
+  runCommand(command, st.copy(remainingCommands = Nil)).copy(remainingCommands = st.remainingCommands)
+}
+
+// TODO Replace with release process fully amanged by sbt-release
+lazy val removeSnapshot = taskKey[Unit]("set the release version")
+removeSnapshot := {
+  import ReleaseTransformations._
+  releaseProcess := Seq(setReleaseVersion)
+  runCommandAndRemaining("release")(state.value)
+  state.value
 }
