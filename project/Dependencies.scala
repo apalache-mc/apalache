@@ -8,7 +8,6 @@ import sbt._
 // See https://www.scala-sbt.org/1.x/docs/Organizing-Build.html#Tracking+dependencies+in+one+place
 object Dependencies {
 
-
   object Deps {
     // Versions
     lazy val logbackVersion = "1.2.10"
@@ -17,7 +16,8 @@ object Dependencies {
     // Libraries
     val clistCore = "org.backuity.clist" %% "clist-core" % clistVersion
     val clistMacros = "org.backuity.clist" %% "clist-macros" % clistVersion
-    val commonsBeanutils = "commons-beanutils" % "commons-beanutils" % "1.9.4" // Apparently an untracked dependency of commonsConfiguration2
+    val commonsBeanutils =
+      "commons-beanutils" % "commons-beanutils" % "1.9.4" // Apparently an untracked dependency of commonsConfiguration2
     val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.7"
     val commonsIo = "commons-io" % "commons-io" % "2.11.0"
     val guice = "com.google.inject" % "guice" % "5.0.1"
