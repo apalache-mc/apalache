@@ -108,7 +108,7 @@ We can implement a specialized encoding, which does not use arena logic of any k
 
 We propose option (2), and give the following categorization of the Simple fragment:
 
-  - Boolean, integer an uninterpreted literals (including strings)
+  - Boolean, integer and uninterpreted literals (including strings)
   - Boolean operators (`/\, \/, =>, <=>, ~`)
   - Quantified expressions (`\E x \in S: P, \A x \in S: P`), on the condition that `P` is Simple and `S` is one of the following:
      - `Int`, `Nat` or `BOOLEAN`, or 
