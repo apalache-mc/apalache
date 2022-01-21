@@ -94,7 +94,6 @@ lazy val tla_pp = (project in file("tla-pp"))
       libraryDependencies += Deps.commonsIo,
   )
 
-// Sub-projects
 lazy val tla_assignments = (project in file("tla-assignments"))
   .dependsOn(tlair, infra, tla_io, tla_pp, tla_types)
   .settings(
