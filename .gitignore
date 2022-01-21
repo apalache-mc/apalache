@@ -5,6 +5,9 @@ target/
 .directory
 .bsp
 
+# Auto generated file for metals
+
+metals.sbt
 log*.smt
 test/tla/testSpec\.smt2
 test/tla/counterexample*
