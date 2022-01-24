@@ -44,7 +44,7 @@ make apalache
 
 # Relative location of the jar that gets published in releases
 # This must be a relative path. Aboslute paths break the zip archive.
-RELEASE_JAR="mod-distribution/target/apalache-pkg-${VERSION}-full.jar"
+RELEASE_JAR="target/scala-2.12/apalache-pkg-${VERSION}-full.jar"
 
 # Confirm the jar was produced
 if [ ! -f "$RELEASE_JAR" ]; then
