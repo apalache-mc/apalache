@@ -12,7 +12,8 @@ ThisBuild / organizationHomepage := Some(url("https://informal.systems"))
 ThisBuild / licenses += "Apache 2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")
 
 // We store the version in a bare file to make accessing and updating the version trivial
-ThisBuild / version := scala.io.Source.fromFile((ThisBuild / baseDirectory).value / "VERSION").mkString.trim
+ThisBuild / versionFile := (ThisBuild / baseDirectory).value / "VERSION"
+ThisBuild / version := scala.io.Source.fromFile(versionFile.value).mkString.trim
 
 ThisBuild / organization := "at.forsyte"
 ThisBuild / scalaVersion := "2.12.15"
@@ -246,3 +247,10 @@ docker / dockerfile := {
 // For some reason `scalafmtFilter` doesn't register as being used, tho it is
 // so this quiets the erroneous linting.
 Global / excludeLintKeys += scalafmtFilter
+
+lazy val versionFile = settingKey[File]("Location of the file tracking the project version")
+
+lazy val printVersion = taskKey[Unit]("Print the current version")
+ThisBuild / printVersion := {
+  println((ThisBuild / version).value)
+}

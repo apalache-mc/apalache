@@ -14,9 +14,5 @@ source "$DIR"/shared.sh
 # We need to be in the root dir to get the project version from mvn
 cd "$PROJ_ROOT"
 
-# See https://stackoverflow.com/a/26514030/1187277
-mvn -q \
-    -Dexec.executable=echo \
-    -Dexec.args='${project.version}' \
-    --non-recursive \
-    exec:exec
+# Just print the current project version
+sbt --error -no-colors printVersion

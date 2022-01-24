@@ -5,7 +5,7 @@ set -o xtrace
 
 # Prepare a release on the current branch.
 #
-# NOTE: You must have a release commit checked out to run thie script
+# NOTE: You must have a release commit checked out to run this script
 # successfully.
 #
 # NOTE: While this script can be run locally, is mainly desgined for use in our
