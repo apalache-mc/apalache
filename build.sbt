@@ -275,15 +275,17 @@ setVersion := {
 lazy val incrVersion = taskKey[String]("Increment to the next patch snapshot version")
 incrVersion := {
   val fullVersion = (ThisBuild / version).value
-  val (currentVersion, qualifier) = fullVersion.split("-") match {
-    case Array(v)    => (v, "-SNAPSHOT")
-    case Array(v, q) => (v, "-" + q)
-    case _           => throw new RuntimeException(s"Invalid version: ${fullVersion}")
-  }
+  val currentVersion =
+    try {
+      fullVersion.split("-")(0)
+    } catch {
+      case _: ArrayIndexOutOfBoundsException =>
+        throw new RuntimeException(s"Invalid version: ${fullVersion}")
+    }
   val nextVersion = currentVersion.split("\\.") match {
     case Array(maj, min, patch) => {
       val nextPatch = ((patch.toInt) + 1).toString
-      s"${maj}.${min}.${nextPatch}${qualifier}"
+      s"${maj}.${min}.${nextPatch}-SNAPSHOT"
     }
     case arr =>
       throw new RuntimeException(s"Invalid version: ${fullVersion}")
