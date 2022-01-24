@@ -23,7 +23,7 @@ to achieve (quality)\
 accepting (downside).\
 -->
 
-We propose introducing support for a severely restricted fragment of TLA+, named Simple, which covers uninterpreted first-order logic. The simplicity of this fragment should allow Apalache to use a more straightforward encoding, both in SMT, as well as potentially in languages suited for alternative backend solvers. 
+We propose introducing support for a severely restricted fragment of TLA+, named Relational TLA (rTLA for short), which covers uninterpreted first-order logic. The simplicity of this fragment should allow Apalache to use a more straightforward encoding, both in SMT, as well as potentially in languages suited for alternative backend solvers. 
 
 Running Apalache with this encoding would skip the model-checking pass and instead produce a standalone file containing all of the generated constraints, which could be consumed by other tools.
 
@@ -68,7 +68,7 @@ Next ==
   \/ ReadT1
 ```
 
-By encoding, for example, set membership checks as characteristic function evaluations, one can write some specifications in a fragment of TLA+ that avoids all complex data structures, sets-of-sets, records, sequences, and so on, and replaces them with predicates (functions).
+By encoding, for example, set membership checks as predicate evaluations, one can write some specifications in a fragment of TLA+ that avoids all complex data structures, sets-of-sets, records, sequences, and so on, and replaces them with predicates (functions).
 Rewriting specifications in this way is nontrivial, and shouldn't be expected of engineers, however, should a specification author undertake such a transformation, we should be able to provide some payoff.
 If we only limit ourselves to specifications in this restricted fragment (defined explicitly below), the current SMT encoding is needlessly complex. 
 We can implement a specialized encoding, which does not use arena logic of any kind, but is much more direct and even lends itself well to multiple kinds of solvers (e.g. IVy or VMT, in addition to standard SMT).
@@ -106,27 +106,30 @@ We can implement a specialized encoding, which does not use arena logic of any k
 <!-- Communicates what solution was decided, and it is expected to solve the
      problem. -->
 
-We propose option (2), and give the following categorization of the Simple fragment:
+We propose option (2), and give the following categorization of the rTLA fragment:
 
   - Boolean, integer and uninterpreted literals (including strings)
+  - Restricted sets: 
+    - `Int`, `Nat` or `BOOLEAN`, or 
+    - `CONSTANT`-declared and has a type `Set(T)`, for some uninterpreted type `T`, or
+    - a range `a..b`, where both `a` and `b` are in rTLA.
   - Boolean operators (`/\, \/, =>, <=>, ~`)
-  - Quantified expressions (`\E x \in S: P, \A x \in S: P`), on the condition that `P` is Simple and `S` is one of the following:
-     - `Int`, `Nat` or `BOOLEAN`, or 
-     - `CONSTANT`-declared and has a type `Set(T)`, for some uninterpreted type `T`, or
-     - a range `a..b`, where both `a` and `b` are Simple.
+  - Quantified expressions (`\E x \in S: P, \A x \in S: P`), on the condition that `P` is in rTLA and `S` is a restricted set.
   - Functions:
     - Definitions (`[x1 \in S1, ..., xn \in Sn |-> e]`), on the condition that:
-      - `e` is Simple and has an `Int`, `Bool` or uninterpreted type
-      - All `Si` are subject to the same constraints as sets used in quantification
-    - Updates (`[f EXCEPT ![x] = y]`), if `y` is Simple
+      - `e` is in rTLA and has an `Int`, `Bool` or uninterpreted type
+      - All `Si` are restricted sets.
+    - Updates (`[f EXCEPT ![x] = y]`), if `y` is in rTLA
     - Applications (`f[x]`)
   - (In)equality and assignments:
-    - `a = b` and `a /= b` if both `a` and `b` are Simple
-    - `x' = v` if `x` is a `VARIABLE` and `v` is Simple
+    - `a = b` and `a /= b` if both `a` and `b` are in rTLA
+    - `x' = v` if `x` is a `VARIABLE` and `v` is in rTLA
   - Control flow:
-    - `IF p THEN a ELSE b` if `p,a,b` are all simple
+    - `IF p THEN a ELSE b` if `p,a,b` are all in rTLA
+
+In potential future versions we are likely to also support: 
   - Standard integer operators (`+, -, u-, *, %, <, >, <=, >=`)
-  - (?) Possibly tuples, but likely not in `v1`.
+  - Tuples
 
 ## Consequences
 
