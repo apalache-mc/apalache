@@ -13,7 +13,6 @@ on:
   push:
     branches:
       - unstable
-      - shon/fix-docker-cd
 
 env:
   REGISTRY: ghcr.io
