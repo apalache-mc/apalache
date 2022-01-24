@@ -278,7 +278,7 @@ incrVersion := {
   val (currentVersion, qualifier) = fullVersion.split("-") match {
     case Array(v)    => (v, "-SNAPSHOT")
     case Array(v, q) => (v, "-" + q)
-    case _           => throw new RuntimeException(s"Invalid version q: ${fullVersion}")
+    case _           => throw new RuntimeException(s"Invalid version: ${fullVersion}")
   }
   val nextVersion = currentVersion.split("\\.") match {
     case Array(maj, min, patch) => {
@@ -286,7 +286,7 @@ incrVersion := {
       s"${maj}.${min}.${nextPatch}" + qualifier
     }
     case arr =>
-      throw new RuntimeException(s"""Invalid version: ${fullVersion} - ${arr.mkString(".")}""")
+      throw new RuntimeException(s"Invalid version: ${fullVersion}")
   }
   IO.writeLines((ThisBuild / versionFile).value, Seq(nextVersion))
   nextVersion
