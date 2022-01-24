@@ -2,6 +2,9 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.19.4
+
+
 ## 0.19.3
 
 ### Bug fixes
