@@ -40,9 +40,9 @@ ThisBuild / libraryDependencies ++= Seq(
 // Only check/fix against (tracked) files that have changed relative to the trunk
 ThisBuild / scalafmtFilter := "diff-ref=origin/unstable"
 
-/////////////////////////////
-// Sub-project definitions //
-/////////////////////////////
+///////////////////////////////
+// Test configuration //
+///////////////////////////////
 
 // NOTE: Include these settings in any projects that require Apalache's TLA+ modules
 lazy val tlaModuleTestSettings = Seq(
@@ -51,8 +51,17 @@ lazy val tlaModuleTestSettings = Seq(
     Test / javaOptions += s"""-DTLA-Library=${(ThisBuild / baseDirectory).value / "src" / "tla"}""",
 )
 
+lazy val testSettings = Seq(
+    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oDT"),
+)
+
+/////////////////////////////
+// Sub-project definitions //
+/////////////////////////////
+
 lazy val tlair = (project in file("tlair"))
   .settings(
+      testSettings,
       libraryDependencies ++= Seq(
           Deps.ujson,
           Deps.kiama,
@@ -61,10 +70,14 @@ lazy val tlair = (project in file("tlair"))
 
 lazy val infra = (project in file("mod-infra"))
   .dependsOn(tlair)
+  .settings(
+      testSettings,
+  )
 
 lazy val tla_io = (project in file("tla-io"))
   .dependsOn(tlair, infra)
   .settings(
+      testSettings,
       tlaModuleTestSettings,
       libraryDependencies ++= Seq(
           Deps.commonsIo,
@@ -75,6 +88,7 @@ lazy val tla_io = (project in file("tla-io"))
 lazy val tla_types = (project in file("tla-types"))
   .dependsOn(tlair, infra, tla_io)
   .settings(
+      testSettings,
       tlaModuleTestSettings,
       libraryDependencies += Deps.commonsIo,
   )
@@ -90,6 +104,7 @@ lazy val tla_pp = (project in file("tla-pp"))
       tla_types,
   )
   .settings(
+      testSettings,
       tlaModuleTestSettings,
       libraryDependencies += Deps.commonsIo,
   )
@@ -97,15 +112,20 @@ lazy val tla_pp = (project in file("tla-pp"))
 lazy val tla_assignments = (project in file("tla-assignments"))
   .dependsOn(tlair, infra, tla_io, tla_pp, tla_types)
   .settings(
+      testSettings,
       libraryDependencies += Deps.commonsIo,
   )
 
 lazy val tla_bmcmt = (project in file("tla-bmcmt"))
   .dependsOn(tlair, infra, tla_io, tla_pp, tla_assignments)
+  .settings(
+      testSettings,
+  )
 
 lazy val tool = (project in file("mod-tool"))
   .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt)
   .settings(
+      testSettings,
       libraryDependencies ++= Seq(
           Deps.commonsConfiguration2,
           Deps.commonsBeanutils,
@@ -116,6 +136,9 @@ lazy val tool = (project in file("mod-tool"))
 
 lazy val distribution = (project in file("mod-distribution"))
   .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt, tool)
+  .settings(
+      testSettings,
+  )
 
 ///////////////
 // Packaging //
@@ -137,6 +160,7 @@ lazy val root = (project in file("."))
       distribution,
   )
   .settings(
+      testSettings,
       // Package definition
       Compile / packageBin / mappings ++= Seq(
           // Include theese assets in the compiled package at the specified locations

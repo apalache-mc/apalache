@@ -22,6 +22,10 @@ compile:
 test:
 	sbt test
 
+# Run tests with scoverage report
+test-coverage:
+	sbt coverage test coverageAggregate
+
 # run the integration tests
 integration: package
 	test/mdx-test.py --debug "$(TEST_FILTER)"

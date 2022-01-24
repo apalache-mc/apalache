@@ -55,7 +55,9 @@ jobs:
       - name: Coursier cache
         uses: coursier/cache-action@v6
       - name: Build and Unit Test
-        run: make test
+        run: make test-coverage
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
       - name: Cleanup before cache
         # See https://www.scala-sbt.org/1.x/docs/GitHub-Actions-with-sbt.html#Caching
         shell: bash
