@@ -34,10 +34,10 @@ RELEASE_VERSION=${RELEASE_VERSION:-''}
 if [ -n "$RELEASE_VERSION" ]
 then
     # Explicitly set the release version
-    mvn versions:set -DnewVersion="${RELEASE_VERSION}"
+    sbt "setVersion ${RELEASE_VERSION}"
 else
     # Derive the relesae version by removing the -SNAPSHOT suffix
-    mvn versions:set -DremoveSnapshot
+    sbt removeVersionSnapshot
     RELEASE_VERSION=$("$DIR"/get-version.sh)
 fi
 
