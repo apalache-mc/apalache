@@ -283,7 +283,7 @@ incrVersion := {
   val nextVersion = currentVersion.split("\\.") match {
     case Array(maj, min, patch) => {
       val nextPatch = ((patch.toInt) + 1).toString
-      s"${maj}.${min}.${nextPatch}" + qualifier
+      s"${maj}.${min}.${nextPatch}${qualifier}"
     }
     case arr =>
       throw new RuntimeException(s"Invalid version: ${fullVersion}")
