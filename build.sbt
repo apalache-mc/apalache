@@ -250,7 +250,44 @@ Global / excludeLintKeys += scalafmtFilter
 
 lazy val versionFile = settingKey[File]("Location of the file tracking the project version")
 
+// These tasks are used in our bespoke release pipeline
+// TODO(shon): Once we've changed our packaging to conform to more standard SBT structures and practices,
+// we should consider moving to a release pipeline based around sbt-release.
+// See https://github.com/informalsystems/apalache/issues/1248
+
 lazy val printVersion = taskKey[Unit]("Print the current version")
-ThisBuild / printVersion := {
+printVersion := {
   println((ThisBuild / version).value)
+}
+
+lazy val removeVersionSnapshot = taskKey[Unit]("Remove version snapshot from the version file")
+removeVersionSnapshot := {
+  val releaseVersion = (ThisBuild / version).value.stripSuffix("-SNAPSHOT")
+  IO.writeLines((ThisBuild / versionFile).value, Seq(releaseVersion))
+}
+
+lazy val setVersion = inputKey[Unit]("Set the version recorded in the version file")
+setVersion := {
+  val version: String = complete.Parsers.spaceDelimited("<args>").parsed(0)
+  IO.writeLines((ThisBuild / versionFile).value, Seq(version))
+}
+
+lazy val incrVersion = taskKey[String]("Increment to the next patch snapshot version")
+incrVersion := {
+  val fullVersion = (ThisBuild / version).value
+  val (currentVersion, qualifier) = fullVersion.split("-") match {
+    case Array(v)    => (v, "")
+    case Array(v, q) => (v, "-" + q)
+    case _           => throw new RuntimeException(s"Invalid version q: ${fullVersion}")
+  }
+  val nextVersion = currentVersion.split("\\.") match {
+    case Array(maj, min, patch) => {
+      val nextPatch = ((patch.toInt) + 1).toString
+      s"${maj}.${min}.${nextPatch}" + qualifier
+    }
+    case arr =>
+      throw new RuntimeException(s"""Invalid version: ${fullVersion} - ${arr.mkString(".")}""")
+  }
+  IO.writeLines((ThisBuild / versionFile).value, Seq(nextVersion))
+  nextVersion
 }

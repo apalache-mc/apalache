@@ -26,7 +26,7 @@ then
 fi
 
 # Bump version to next SNAPSHOT
-mvn --batch-mode release:update-versions -DautoVersionSubmodules=true
+sbt incrVersion
 
 "$DIR"/update-changes.sh
 
