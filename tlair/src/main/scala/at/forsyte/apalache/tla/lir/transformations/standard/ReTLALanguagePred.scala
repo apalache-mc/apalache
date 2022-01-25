@@ -24,6 +24,11 @@ class ReTLALanguagePred extends LanguagePred {
     isOkInContext(Set(), expr)
   }
 
+  private def allArgsOk(letDefs: Set[String], args: Traversable[TlaEx]): PredResult =
+    args.foldLeft[PredResult](PredResultOk()) { case (r, arg) =>
+      r.and(isOkInContext(letDefs, arg))
+    }
+
   private def isOkInContext(letDefs: Set[String], expr: TlaEx): PredResult = {
     expr match {
       case ValEx(TlaBool(_)) | ValEx(TlaInt(_)) | ValEx(TlaStr(_)) =>
@@ -43,9 +48,7 @@ class ReTLALanguagePred extends LanguagePred {
           .and(isOkInContext(letDefs, rhs))
 
       case OperEx(oper, args @ _*) if ReTLALanguagePred.naryOps.contains(oper) =>
-        args.foldLeft[PredResult](PredResultOk()) { case (r, arg) =>
-          r.and(isOkInContext(letDefs, arg))
-        }
+        allArgsOk(letDefs, args)
 
       case OperEx(oper, NameEx(_), set, pred) if ReTLALanguagePred.bindingOps.contains(oper) =>
         isOkInContext(letDefs, set).and(isOkInContext(letDefs, pred))
@@ -54,6 +57,44 @@ class ReTLALanguagePred extends LanguagePred {
         isOkInContext(letDefs, pred)
           .and(isOkInContext(letDefs, thenEx))
           .and(isOkInContext(letDefs, elseEx))
+
+      case OperEx(TlaFunOper.funDef, args @ _*) =>
+        allArgsOk(letDefs, args)
+
+      // Function application and except are the only place we allow tuples, because that's how multivariable functions
+      // get expanded
+      case OperEx(TlaFunOper.app, fn, arg) =>
+        isOkInContext(letDefs, fn).and(
+            arg match {
+              case OperEx(TlaFunOper.tuple, args @ _*) => allArgsOk(letDefs, args)
+              case _                                   => isOkInContext(letDefs, arg)
+            }
+        )
+
+      // SANY quirk #19123:
+      // [f EXCEPT ![1] = ...] expands to
+      // OperEx( except, << 1 >>, ... ) and
+      // [f EXCEPT ![1,2] = ...] expands to
+      // OperEx(except, << << 1, 2 >> >> , ...)
+      // reTLA supports ONLY one-at-a-time, single-level EXCEPT, i.e.
+      // [f EXCEPT ![a,b,c,...] = r] (not [f EXCEPT ![a][b] = r] or [f EXCEPT ![a] = r, ![b] = s] )
+      case OperEx(TlaFunOper.except, fn, key, value) =>
+        isOkInContext(letDefs, fn)
+          .and(
+              isOkInContext(letDefs, value)
+          )
+          .and(
+              key match {
+                // ![a,b,...] case
+                case OperEx(TlaFunOper.tuple, OperEx(TlaFunOper.tuple, args @ _*)) =>
+                  allArgsOk(letDefs, args)
+                // ![a] case
+                case OperEx(TlaFunOper.tuple, args @ _*) =>
+                  allArgsOk(letDefs, args)
+                // Impossible, but we need case-completeness
+                case _ => PredResultFail(List())
+              }
+          )
 
       case LetInEx(body, defs @ _*) =>
         // go inside the let definitions (similar to FlatLanguagePred)
@@ -98,33 +139,34 @@ object ReTLALanguagePred {
     HashSet(
         TlaActionOper.prime,
         TlaBoolOper.not,
-        TlaArithOper.uminus,
+//        TlaArithOper.uminus,
         ApalacheOper.skolem
     )
 
   protected val binaryOps: HashSet[TlaOper] =
     HashSet(
         TlaOper.eq,
-        TlaFunOper.app,
-        TlaArithOper.plus,
-        TlaArithOper.minus,
-        TlaArithOper.mult,
-        TlaArithOper.div,
-        TlaArithOper.mod,
-        TlaArithOper.exp,
-        TlaArithOper.lt,
-        TlaArithOper.gt,
-        TlaArithOper.le,
-        TlaArithOper.ge,
+        TlaOper.ne,
+        TlaBoolOper.implies,
+        TlaBoolOper.equiv,
+        // IntArith not in v1
+//        TlaArithOper.plus,
+//        TlaArithOper.minus,
+//        TlaArithOper.mult,
+//        TlaArithOper.div,
+//        TlaArithOper.mod,
+//        TlaArithOper.exp,
+//        TlaArithOper.lt,
+//        TlaArithOper.gt,
+//        TlaArithOper.le,
+//        TlaArithOper.ge,
         ApalacheOper.assign
     )
 
   protected val naryOps: HashSet[TlaOper] =
     HashSet(
         TlaBoolOper.and,
-        TlaBoolOper.or,
-        TlaFunOper.except,
-        TlaFunOper.tuple // Only for args of multivariable functions, f[a,b] parses as f[<<a,b>>]
+        TlaBoolOper.or
     )
 
   protected val bindingOps: HashSet[TlaOper] =
