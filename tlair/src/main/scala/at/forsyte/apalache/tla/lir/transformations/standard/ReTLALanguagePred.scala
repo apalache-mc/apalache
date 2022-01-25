@@ -8,12 +8,12 @@ import at.forsyte.apalache.tla.lir.values._
 import scala.collection.immutable.HashSet
 
 /**
- * <p>Test whether the expressions fit into the Simple fragment: all calls to user operators are inlined,
+ * <p>Test whether the expressions fit into the reTLA fragment: all calls to user operators are inlined,
  * except the calls to nullary let-in definitions.</p>
  *
  * @author Jure Kukovec
  */
-class SimpleLanguagePred extends LanguagePred {
+class ReTLALanguagePred extends LanguagePred {
   override def isModuleOk(mod: TlaModule): PredResult = {
     mod.operDeclarations.foldLeft[PredResult](PredResultOk()) { case (r, d) =>
       r.and(isExprOk(d.body))
@@ -35,19 +35,19 @@ class SimpleLanguagePred extends LanguagePred {
       case NameEx(_) =>
         PredResultOk()
 
-      case OperEx(oper, arg) if SimpleLanguagePred.unaryOps.contains(oper) =>
+      case OperEx(oper, arg) if ReTLALanguagePred.unaryOps.contains(oper) =>
         isOkInContext(letDefs, arg)
 
-      case OperEx(oper, lhs, rhs) if SimpleLanguagePred.binaryOps.contains(oper) =>
+      case OperEx(oper, lhs, rhs) if ReTLALanguagePred.binaryOps.contains(oper) =>
         isOkInContext(letDefs, lhs)
           .and(isOkInContext(letDefs, rhs))
 
-      case OperEx(oper, args @ _*) if SimpleLanguagePred.naryOps.contains(oper) =>
+      case OperEx(oper, args @ _*) if ReTLALanguagePred.naryOps.contains(oper) =>
         args.foldLeft[PredResult](PredResultOk()) { case (r, arg) =>
           r.and(isOkInContext(letDefs, arg))
         }
 
-      case OperEx(oper, NameEx(_), set, pred) if SimpleLanguagePred.bindingOps.contains(oper) =>
+      case OperEx(oper, NameEx(_), set, pred) if ReTLALanguagePred.bindingOps.contains(oper) =>
         isOkInContext(letDefs, set).and(isOkInContext(letDefs, pred))
 
       case OperEx(TlaControlOper.ifThenElse, pred, thenEx, elseEx) =>
@@ -91,8 +91,8 @@ class SimpleLanguagePred extends LanguagePred {
   }
 }
 
-object SimpleLanguagePred {
-  private val singleton = new SimpleLanguagePred
+object ReTLALanguagePred {
+  private val singleton = new ReTLALanguagePred
 
   protected val unaryOps: HashSet[TlaOper] =
     HashSet(
@@ -112,7 +112,6 @@ object SimpleLanguagePred {
         TlaArithOper.div,
         TlaArithOper.mod,
         TlaArithOper.exp,
-        TlaArithOper.dotdot,
         TlaArithOper.lt,
         TlaArithOper.gt,
         TlaArithOper.le,
@@ -125,7 +124,7 @@ object SimpleLanguagePred {
         TlaBoolOper.and,
         TlaBoolOper.or,
         TlaFunOper.except,
-        TlaFunOper.tuple // Only for args of multivariable functions
+        TlaFunOper.tuple // Only for args of multivariable functions, f[a,b] parses as f[<<a,b>>]
     )
 
   protected val bindingOps: HashSet[TlaOper] =
@@ -134,5 +133,5 @@ object SimpleLanguagePred {
         TlaBoolOper.forall
     )
 
-  def apply(): SimpleLanguagePred = singleton
+  def apply(): ReTLALanguagePred = singleton
 }
