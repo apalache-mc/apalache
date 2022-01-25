@@ -68,7 +68,7 @@ class ReTLALanguagePred extends LanguagePred {
             arg match {
               case OperEx(TlaFunOper.tuple, args @ _*) => allArgsOk(letDefs, args)
               case _                                   => isOkInContext(letDefs, arg)
-            }
+            },
         )
 
       // SANY quirk #19123:
@@ -81,7 +81,7 @@ class ReTLALanguagePred extends LanguagePred {
       case OperEx(TlaFunOper.except, fn, key, value) =>
         isOkInContext(letDefs, fn)
           .and(
-              isOkInContext(letDefs, value)
+              isOkInContext(letDefs, value),
           )
           .and(
               key match {
@@ -93,7 +93,7 @@ class ReTLALanguagePred extends LanguagePred {
                   allArgsOk(letDefs, args)
                 // Impossible, but we need case-completeness
                 case _ => PredResultFail(List())
-              }
+              },
           )
 
       case LetInEx(body, defs @ _*) =>
@@ -140,7 +140,7 @@ object ReTLALanguagePred {
         TlaActionOper.prime,
         TlaBoolOper.not,
 //        TlaArithOper.uminus,
-        ApalacheOper.skolem
+        ApalacheOper.skolem,
     )
 
   protected val binaryOps: HashSet[TlaOper] =
@@ -160,19 +160,19 @@ object ReTLALanguagePred {
 //        TlaArithOper.gt,
 //        TlaArithOper.le,
 //        TlaArithOper.ge,
-        ApalacheOper.assign
+        ApalacheOper.assign,
     )
 
   protected val naryOps: HashSet[TlaOper] =
     HashSet(
         TlaBoolOper.and,
-        TlaBoolOper.or
+        TlaBoolOper.or,
     )
 
   protected val bindingOps: HashSet[TlaOper] =
     HashSet(
         TlaBoolOper.exists,
-        TlaBoolOper.forall
+        TlaBoolOper.forall,
     )
 
   def apply(): ReTLALanguagePred = singleton
