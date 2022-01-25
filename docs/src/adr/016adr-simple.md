@@ -23,7 +23,7 @@ to achieve (quality)\
 accepting (downside).\
 -->
 
-We propose introducing support for a severely restricted fragment of TLA+, named Relational TLA (rTLA for short), which covers uninterpreted first-order logic. The simplicity of this fragment should allow Apalache to use a more straightforward encoding, both in SMT, as well as potentially in languages suited for alternative backend solvers. 
+We propose introducing support for a severely restricted fragment of TLA+, named Relational TLA (reTLA for short), which covers uninterpreted first-order logic. The simplicity of this fragment should allow Apalache to use a more straightforward encoding, both in SMT, as well as potentially in languages suited for alternative backend solvers. 
 
 Running Apalache with this encoding would skip the model-checking pass and instead produce a standalone file containing all of the generated constraints, which could be consumed by other tools.
 
@@ -106,29 +106,29 @@ We can implement a specialized encoding, which does not use arena logic of any k
 <!-- Communicates what solution was decided, and it is expected to solve the
      problem. -->
 
-We propose option (2), and give the following categorization of the rTLA fragment:
+We propose option (2), and give the following categorization of the reTLA fragment:
 
   - Boolean, integer and uninterpreted literals (including strings)
   - Restricted sets: 
     - `Int`, `Nat` or `BOOLEAN`, or 
     - `CONSTANT`-declared and has a type `Set(T)`, for some uninterpreted type `T`, or
-    - a range `a..b`, where both `a` and `b` are in rTLA.
   - Boolean operators (`/\, \/, =>, <=>, ~`)
-  - Quantified expressions (`\E x \in S: P, \A x \in S: P`), on the condition that `P` is in rTLA and `S` is a restricted set.
+  - Quantified expressions (`\E x \in S: P, \A x \in S: P`), on the condition that `P` is in reTLA and `S` is a restricted set.
   - Functions:
     - Definitions (`[x1 \in S1, ..., xn \in Sn |-> e]`), on the condition that:
-      - `e` is in rTLA and has an `Int`, `Bool` or uninterpreted type
+      - `e` is in reTLA and has an `Int`, `Bool` or uninterpreted type
       - All `Si` are restricted sets.
-    - Updates (`[f EXCEPT ![x] = y]`), if `y` is in rTLA
+    - Updates (`[f EXCEPT ![x] = y]`), if `y` is in reTLA
     - Applications (`f[x]`)
   - (In)equality and assignments:
-    - `a = b` and `a /= b` if both `a` and `b` are in rTLA
-    - `x' = v` if `x` is a `VARIABLE` and `v` is in rTLA
+    - `a = b` and `a /= b` if both `a` and `b` are in reTLA
+    - `x' = v` if `x` is a `VARIABLE` and `v` is in reTLA
   - Control flow:
-    - `IF p THEN a ELSE b` if `p,a,b` are all in rTLA
+    - `IF p THEN a ELSE b` if `p,a,b` are all in reTLA
 
 In potential future versions we are likely to also support: 
   - Standard integer operators (`+, -, u-, *, %, <, >, <=, >=`)
+  - ranges `a..b`, where both `a` and `b` are in reTLA.
   - Tuples
 
 ## Consequences
