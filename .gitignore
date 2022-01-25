@@ -1,9 +1,13 @@
 *.iml
 .idea
 out
-target
+target/
 .directory
+.bsp
 
+# Auto generated file for metals
+
+metals.sbt
 log*.smt
 test/tla/testSpec\.smt2
 test/tla/counterexample*
@@ -21,9 +25,6 @@ tla-bmcmt/profile-rules.txt
 
 # Ignore directories where test artifacts are stored
 x/
-
-# Ignore backup files created by `mvn versions`
-*.versionsBackup
 
 # Ignore artifacts created when previewing the gh-pages site
 /Gemfile.lock

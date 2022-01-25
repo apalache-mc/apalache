@@ -177,7 +177,7 @@ to update dependencies one by one though.
 ### Formatting
 
 We use [scalafmt](https://scalameta.org/scalafmt/) to standardize formatting
-across the codebase. It is integrated into our maven build configuration, and
+across the codebase. It is integrated into our sbt build configuration, and
 formatting fixes will be applied on build, or via the make target `make fmt-fix`.
 
 However, for a smoother development experience you should ensure your editor
@@ -190,8 +190,10 @@ Our scalafmt configuration is specified in [./.scalafmt.conf](./.scalafmt.conf).
 
 #### IntelliJ IDEA
 
-Download the community edition of [IntelliJ IDEA](https://www.jetbrains.com/idea/)
-and set up a new project.
+Download the community edition of [IntelliJ
+IDEA](https://www.jetbrains.com/idea/) and set up a new project. If you already
+have IntelliJ installed, please ensure you using version 2021.3.1 or later.
+We've had reports of build failures with earlier versions.
 
 #### Emacs
 

@@ -47,12 +47,7 @@ function expect_ok() {
 
 
 cd "$DIR"
-if [ "$NO_MVN" != "" ]; then
-    echo "# Skipped mvn package, as NO_MVN=$NO_MVN"
-else
-    echo "# Building the package with Maven"
-    mvn package
-fi
+sbt package
 
 echo "# Running the tests"
 cd "$DIR/test/tlaplus-suite"

@@ -45,10 +45,16 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
+      # Our Dockerfile is specified in the build.sbt file, so we need to
+      # generate the file along with the artifacts it requires for inclusion
+      # in the image.
+      - name: Build Dockerfile
+        run: make docker
+
       - name: Build and push Docker image
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
-          context: .
+          context: target/docker
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
