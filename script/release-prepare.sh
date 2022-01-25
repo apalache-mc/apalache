@@ -5,7 +5,7 @@ set -o xtrace
 
 # Prepare a release on the current branch.
 #
-# NOTE: You must have a release commit checked out to run thie script
+# NOTE: You must have a release commit checked out to run this script
 # successfully.
 #
 # NOTE: While this script can be run locally, is mainly desgined for use in our
@@ -34,10 +34,10 @@ RELEASE_VERSION=${RELEASE_VERSION:-''}
 if [ -n "$RELEASE_VERSION" ]
 then
     # Explicitly set the release version
-    mvn versions:set -DnewVersion="${RELEASE_VERSION}"
+    sbt "setVersion ${RELEASE_VERSION}"
 else
     # Derive the relesae version by removing the -SNAPSHOT suffix
-    mvn versions:set -DremoveSnapshot
+    sbt removeVersionSnapshot
     RELEASE_VERSION=$("$DIR"/get-version.sh)
 fi
 

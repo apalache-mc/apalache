@@ -1,17 +1,4 @@
-# a good old Makefile for the end users, as Maven is too much pain
-
-ENV=NO_MVN=1
-
-# See https://www.jrebel.com/blog/how-to-speed-up-your-maven-build
-#
-# - verify:none disables bytecode verification giving a speed boost, but should
-#   not be used for releases or productin. See https://blogs.oracle.com/buck/never-disable-bytecode-verification-in-a-production-system
-QUICK_MAVEN_OPTS := "-XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none"
-
-# - skip the tests
-# - tell scoverage to skip: http://scoverage.github.io/scoverage-maven-plugin/1.4.0/report-mojo.html#skip
-# - run up to 4 threads per core (4C): https://cwiki.apache.org/confluence/display/MAVEN/Parallel+builds+in+Maven+3
-QUICK_MAVEN_ARGS := -DskipTests -Dscoverage.skip=true -T 4C
+# a good old Makefile for the end users, so they don't need to learn SBT commands
 
 # Markdown files used for integration tests
 TEST_MD_FILES := $(wildcard test/tla/*.md)
@@ -20,26 +7,32 @@ TEST_MD_FILES := $(wildcard test/tla/*.md)
 
 all: apalache
 
+# test and assemble the package
 apalache:
-	# tell maven to load the binary libraries and build the package
-	mvn package
+	sbt test assembly
 
-apalache-jar:
-	mvn --batch-mode --no-transfer-progress package -Dmaven.test.skip=true
+# package the project without running tests
+package:
+	sbt assembly
 
-# Just compile with quick settings
+# compile, but don't assemble the package
 compile:
-	MAVEN_OPTS=$(QUICK_MAVEN_OPTS) mvn $(QUICK_MAVEN_ARGS) compile
-
-# Build with quick settings, but and skip the tests
-build-quick:
-	MAVEN_OPTS=$(QUICK_MAVEN_OPTS) mvn $(QUICK_MAVEN_ARGS) package
+	sbt compile
 
 test:
-	mvn test
+	sbt test
 
-integration:
+# Run tests with scoverage report
+test-coverage:
+	sbt coverage test coverageAggregate
+
+# run the integration tests
+integration: package
 	test/mdx-test.py --debug "$(TEST_FILTER)"
+
+# build the docker image
+docker:
+	sbt docker
 
 # Invokes the md targets below
 promote: $(TEST_MD_FILES)
@@ -50,13 +43,13 @@ test/tla/%.md: target/test/tla/%.md.corrected
 
 fmt-check:
 	git fetch origin
-	mvn --batch-mode spotless:check || \
+	sbt scalafmtCheckAll scalafmtSbtCheck || \
 		( echo "TO FIX: run 'make fmt-fix' and commit the changes" ; \
 		  exit 1 )
 
 fmt-fix:
-	mvn --batch-mode spotless:apply
+	sbt scalafmtAll scalafmtSbt
 
 clean:
-	mvn clean
+	sbt clean
 	rm -rf target/
