@@ -27,9 +27,14 @@ key :> value ==
 \* @type: (a -> b, a -> b) => (a -> b);
 f1 @@ f2 == 
     \* cache f1, f2, and the domains, Apalache would not inline them
-    LET __f1 == f1
-        __f2 == f2 IN
-    LET __d1 == DOMAIN __f1
+    LET \* @type: () => (a -> b);
+        __f1 == f1
+        \* @type: () => (a -> b);
+        __f2 == f2
+    IN
+    LET \* @type: () => Set(b);
+        __d1 == DOMAIN __f1
+        \* @type: () => Set(b);
         __d2 == DOMAIN __f2
     IN
     [x \in __d1 \union __d2 |->
