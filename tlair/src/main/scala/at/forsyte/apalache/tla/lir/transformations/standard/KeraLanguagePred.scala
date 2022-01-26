@@ -136,7 +136,7 @@ object KeraLanguagePred {
         ApalacheOper.skolem,
         ApalacheOper.gen,
         ApalacheOper.expand,
-        ApalacheOper.constCard
+        ApalacheOper.constCard,
         // for the future
         //    TlaActionOper.enabled,
         //    TlaActionOper.unchanged,
@@ -165,11 +165,7 @@ object KeraLanguagePred {
         TlaSetOper.cup,
         TlaSetOper.subseteq,
         TlaSeqOper.concat,
-        TlcOper.atat,
-        TlcOper.colonGreater,
-        TlcOper.colonGreater,
-        TlcOper.atat,
-        ApalacheOper.assign
+        ApalacheOper.assign,
         // for the future
         //      TlaActionOper.composition,
         //      TlaTempOper.leadsTo,
@@ -185,7 +181,7 @@ object KeraLanguagePred {
         TlaFunOper.tuple,
         TlaFunOper.enum,
         TlaSeqOper.subseq,
-        TlaOper.label
+        TlaOper.label,
     ) /////
 
   protected val bindingOps: HashSet[TlaOper] =
@@ -193,7 +189,7 @@ object KeraLanguagePred {
         TlaBoolOper.exists,
         TlaBoolOper.forall,
         TlaOper.chooseBounded,
-        TlaSetOper.filter
+        TlaSetOper.filter,
     ) /////
 
   def apply(): KeraLanguagePred = singleton

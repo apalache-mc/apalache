@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.oper.TlcOper
 import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
@@ -64,14 +63,6 @@ class TestKeraLanguagePred extends LanguagePredTestSuite {
   test("KerA miscellania") {
     expectOk(pred.isExprOk(label(int(2), "a")))
     expectOk(pred.isExprOk(label(int(2), "a", "b")))
-  }
-
-  test("KerA partial support of TLC") {
-    expectFail(pred.isExprOk(OperEx(TlcOper.print, tla.bool(true), tla.str("msg"))))
-    expectFail(pred.isExprOk(OperEx(TlcOper.printT, tla.str("msg"))))
-    expectFail(pred.isExprOk(OperEx(TlcOper.assert, tla.bool(true), tla.str("msg"))))
-    expectOk(pred.isExprOk(OperEx(TlcOper.colonGreater, tla.int(1), tla.int(2))))
-    expectOk(pred.isExprOk(OperEx(TlcOper.atat, NameEx("fun"), NameEx("pair"))))
   }
 
   test("a KerA integer expression") {

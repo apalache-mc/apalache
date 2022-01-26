@@ -172,10 +172,10 @@ TlcJavaTime == JavaTime
 \* @type: () => Int;
 TlcGet == TLCGet(3)
 TlcSet == TLCSet(3, "a")
-TlcColorGt == 1 :> "a"
+TlcSmiley == 1 :> "a"
 TlcAtAt == (1 :> "a") @@ (2 :> "b")
 TlcPermutations == Permutations({1, 2})
-\* @type: (Seq(Int), ((Int, Int) => Bool)) => Seq(Int);
+\* @type: (Seq(Int), ((Int, Int) => Bool)) => (Int -> Int);
 TlcSortSeq(seq, F(_, _)) == SortSeq(seq, F)
 TlcRandomElement == RandomElement({1, 2})
 \* @type: () => Int;

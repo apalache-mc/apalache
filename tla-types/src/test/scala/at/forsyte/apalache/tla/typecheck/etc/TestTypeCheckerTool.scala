@@ -36,10 +36,12 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
   }
 
   def getMegaSpec1: Source = {
-    Source.fromResource("MegaSpec1.tla")
+    // Previously, we were using fromResource, but it was too unstable across environments
+    // (e.g., it failed in Intellij Idea). Now we are just reading it from the current working directory.
+    Source.fromFile("src/test/resources/MegaSpec1.tla")
   }
 
-  test("the tools runs and reports no type errors") {
+  test("the tool runs and reports no type errors") {
     val (rootName, modules) =
       sanyImporter.loadFromSource("MegaSpec1", getMegaSpec1)
 
@@ -55,13 +57,13 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
       // but no type errors
     }
     whenExecuting(listener) {
-      val typechecker = new TypeCheckerTool(annotationStore, false)
+      val typechecker = new TypeCheckerTool(annotationStore, true)
       val isWellTyped = typechecker.check(listener, mod)
       assert(isWellTyped)
     }
   }
 
-  test("the tools runs and tags all expressions") {
+  test("the tool runs and tags all expressions") {
     val (rootName, modules) =
       sanyImporter.loadFromSource("MegaSpec1", getMegaSpec1)
 
@@ -77,7 +79,7 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
       // but no type errors
     }
     whenExecuting(listener) {
-      val typechecker = new TypeCheckerTool(annotationStore, false)
+      val typechecker = new TypeCheckerTool(annotationStore, true)
 
       def defaultTag(uid: UID): Nothing = {
         throw new TypingException("No type for UID: " + uid, uid)
@@ -111,7 +113,7 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
       // but no type errors
     }
     whenExecuting(listener) {
-      val typechecker = new TypeCheckerTool(annotationStore, false)
+      val typechecker = new TypeCheckerTool(annotationStore, true)
 
       def defaultTag(uid: UID): Nothing = {
         throw new TypingException("No type for UID: " + uid, uid)

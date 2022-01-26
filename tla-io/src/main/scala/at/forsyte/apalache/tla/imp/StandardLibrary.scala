@@ -13,21 +13,19 @@ import at.forsyte.apalache.tla.lir.values.TlaRealInfinity
 object StandardLibrary {
 
   /**
-   * The operators in the following modules are overloaded by the importer, so we exclude their
-   * operator definitions from the user modules. (Moreover, the standard modules sometimes contain garbage
-   * or complex definitions that should not be analyzed by our tool.)
+   * Library values are translated to the IR values.
    */
-  val standardModules: Set[String] =
-    Set("Naturals", "Integers", "Sequences", "TLC", "FiniteSets", "Reals", "Apalache", "Typing")
-
   val libraryValues: Map[Tuple2[String, String], TlaValue] =
     Map(
         ("Naturals", "Nat") -> TlaNatSet,
         ("Integers", "Int") -> TlaIntSet,
         ("Reals", "Real") -> TlaRealSet,
-        ("Reals", "Infinity") -> TlaRealInfinity
+        ("Reals", "Infinity") -> TlaRealInfinity,
     ) ////
 
+  /**
+   * Library operators are translated to the IR operators.
+   */
   val libraryOperators: Map[Tuple2[String, String], TlaOper] =
     Map(
         ("Naturals", "+") -> TlaArithOper.plus,
@@ -55,20 +53,22 @@ object StandardLibrary {
         ("Sequences", "SelectSeq") -> TlaSeqOper.selectseq,
         ("FiniteSets", "IsFiniteSet") -> TlaFiniteSetOper.isFiniteSet,
         ("FiniteSets", "Cardinality") -> TlaFiniteSetOper.cardinality,
-        ("TLC", "Any") -> TlcOper.any,
-        ("TLC", "Assert") -> TlcOper.assert,
-        ("TLC", "@@") -> TlcOper.atat,
-        ("TLC", ":>") -> TlcOper.colonGreater,
-        ("TLC", "JavaTime") -> TlcOper.javaTime,
-        ("TLC", "Permutations") -> TlcOper.permutations,
-        ("TLC", "RandomElement") -> TlcOper.randomElement,
-        ("TLC", "SortSeq") -> TlcOper.sortSeq,
-        ("TLC", "TLCEval") -> TlcOper.tlcEval,
-        ("TLC", "TLCGet") -> TlcOper.tlcGet,
-        ("TLC", "TLCSet") -> TlcOper.tlcSet,
-        ("TLC", "ToString") -> TlcOper.tlcToString,
-        ("TLC", "Print") -> TlcOper.print,
-        ("TLC", "PrintT") -> TlcOper.printT,
+        /*
+      ("TLC", "Any") -> TlcOper.any,
+      ("TLC", "Assert") -> TlcOper.assert,
+      ("TLC", "@@") -> TlcOper.atat,
+      ("TLC", ":>") -> TlcOper.colonGreater,
+      ("TLC", "JavaTime") -> TlcOper.javaTime,
+      ("TLC", "Permutations") -> TlcOper.permutations,
+      ("TLC", "RandomElement") -> TlcOper.randomElement,
+      ("TLC", "SortSeq") -> TlcOper.sortSeq,
+      ("TLC", "TLCEval") -> TlcOper.tlcEval,
+      ("TLC", "TLCGet") -> TlcOper.tlcGet,
+      ("TLC", "TLCSet") -> TlcOper.tlcSet,
+      ("TLC", "ToString") -> TlcOper.tlcToString,
+      ("TLC", "Print") -> TlcOper.print,
+      ("TLC", "PrintT") -> TlcOper.printT,
+         */
         ("Apalache", ":=") -> ApalacheOper.assign,
         ("Apalache", "Gen") -> ApalacheOper.gen,
         ("Apalache", "Skolem") -> ApalacheOper.skolem,
@@ -76,13 +76,27 @@ object StandardLibrary {
         ("Apalache", "ConstCardinality") -> ApalacheOper.constCard,
         ("Apalache", "FunAsSeq") -> ApalacheOper.funAsSeq,
         ("Apalache", "FoldSet") -> ApalacheOper.foldSet,
-        ("Apalache", "FoldSeq") -> ApalacheOper.foldSeq
+        ("Apalache", "FoldSeq") -> ApalacheOper.foldSeq,
     ) ////
 
+  /**
+   * The names of the modules that should be wired by Apalache with custom modules.
+   *
+   * @see at.forsyte.apalache.tla.imp.SanyNameToStream
+   */
+  val wiredModules: Map[String, String] =
+    Map(
+        "TLC.tla" -> "__rewire_tlc_in_apalache.tla",
+    ) ////
+
+  /**
+   * Global operators are translated to IR operators. However, we advise against this practice:
+   * TLA+ does not allow one to override the same operator in different modules.
+   */
   val globalOperators: Map[String, TlaOper] =
     Map[String, TlaOper](
         // This operator is deprecated and should not be used.
         // We still parse it, so the type checker can complain about it.
-        "<:" -> ApalacheOper.withType
+        "<:" -> ApalacheOper.withType,
     ) ////
 }

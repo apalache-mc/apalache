@@ -1,9 +1,11 @@
 package at.forsyte.apalache.io.lir
 
+import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.convenience.tla._
+import at.forsyte.apalache.tla.lir.aux.SmileyFunFun._
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import org.junit.runner.RunWith
@@ -394,7 +396,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
         str("x3"),
         name("x4"),
         str("x5"),
-        name("x6")
+        name("x6"),
     ) ////
     writer.write(expr)
     printWriter.flush()
@@ -411,7 +413,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
         str("verylong3"),
         name("verylong4"),
         str("verylong5"),
-        name("verylong6")
+        name("verylong6"),
     ) ////
     writer.write(expr)
     printWriter.flush()
@@ -430,7 +432,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
         str("verylong3"),
         name("verylong4"),
         str("verylong5"),
-        name("verylong6")
+        name("verylong6"),
     ) ////
     writer.write(expr)
     printWriter.flush()
@@ -446,7 +448,10 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("TLC @@") {
     val writer = new PrettyWriter(printWriter, layout40)
-    val expr = atatInterleaved(str("a"), int(1), str("b"), int(2), str("c"), int(3))
+
+    val strToInt = FunT1(IntT1(), StrT1())
+    val expr = funfun(strToInt, smiley(strToInt, str("a").typed(), int(1).typed()),
+        funfun(strToInt, smiley(strToInt, str("b"), int(2)), smiley(strToInt, str("c"), int(3))))
     writer.write(expr)
     printWriter.flush()
     val expected = """"a" :> 1 @@ "b" :> 2 @@ "c" :> 3""".stripMargin
@@ -461,7 +466,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
         str("x3"),
         name("x4"),
         str("x5"),
-        name("x6")
+        name("x6"),
     ) ////
     writer.write(expr)
     printWriter.flush()
@@ -478,7 +483,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
         str("verylong3"),
         name("verylong4"),
         str("verylong5"),
-        name("verylong6")
+        name("verylong6"),
     ) ////
     writer.write(expr)
     printWriter.flush()
@@ -640,7 +645,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     val expr = except(
         name("verylongname1"),
         tuple(name("verylongname2")),
-        name("verylongname3")
+        name("verylongname3"),
     ) ///
 
     writer.write(expr)
@@ -660,7 +665,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
         tuple(name("verylongname2")),
         name("verylongname3"),
         tuple(name("verylongname4")),
-        name("verylongname5")
+        name("verylongname5"),
     ) ///
 
     writer.write(expr)
@@ -823,7 +828,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     val fDecl = TlaOperDecl(
         "A",
         List(OperParam("x")),
-        body
+        body,
     ) ///
     writer.write(fDecl)
     printWriter.flush()
@@ -842,7 +847,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     val fDecl = TlaOperDecl(
         "A",
         List(OperParam("x")),
-        body
+        body,
     ) ///
     fDecl.isRecursive = true
 
@@ -864,7 +869,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     val fDecl = TlaOperDecl(
         "A",
         List(OperParam("x")),
-        body
+        body,
     ) ///
     fDecl.isRecursive = true
 
@@ -889,7 +894,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     val fDecl = TlaOperDecl(
         "f",
         List(),
-        recFun
+        recFun,
     ) ///
     val expr = letIn(appDecl(fDecl), fDecl)
     writer.write(expr)
@@ -908,7 +913,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
     val fDecl = TlaOperDecl(
         "f",
         List(),
-        recFun
+        recFun,
     ) ///
     writer.write(fDecl)
     printWriter.flush()
