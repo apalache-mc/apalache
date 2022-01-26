@@ -16,18 +16,8 @@ import scala.collection.immutable.HashSet
  * @see TestKeraLanguagePred
  * @author Igor Konnov
  */
-class KeraLanguagePred extends LanguagePred {
-  override def isModuleOk(mod: TlaModule): PredResult = {
-    mod.operDeclarations.foldLeft[PredResult](PredResultOk()) { case (r, d) =>
-      r.and(isExprOk(d.body))
-    }
-  }
-
-  override def isExprOk(expr: TlaEx): PredResult = {
-    isOkInContext(Set(), expr)
-  }
-
-  private def isOkInContext(letDefs: Set[String], expr: TlaEx): PredResult = {
+class KeraLanguagePred extends ContextualLanguagePred {
+  override protected def isOkInContext(letDefs: Set[String], expr: TlaEx): PredResult = {
     expr match {
       case ValEx(TlaBool(_)) | ValEx(TlaInt(_)) | ValEx(TlaStr(_)) =>
         PredResultOk()
@@ -80,18 +70,6 @@ class KeraLanguagePred extends LanguagePred {
         PredResultFail(Seq((expr.ID, message)))
 
       case LetInEx(body, defs @ _*) =>
-        // go inside the let definitions (similar to FlatLanguagePred)
-        def eachDefRec(ctx: Set[String], ds: List[TlaOperDecl]): PredResult = {
-          ds match {
-            case Nil =>
-              PredResultOk()
-
-            case head :: tail =>
-              isOkInContext(ctx, head.body) // check the first operator definition
-                .and(eachDefRec(ctx + head.name, tail)) // check the other operator definitions
-          }
-        }
-
         // check the let-definitions first, in a sequence, as they may refer to each other
         val defsResult = eachDefRec(letDefs, defs.toList)
         val newLetDefs = defs.map(_.name).toSet
@@ -136,7 +114,7 @@ object KeraLanguagePred {
         ApalacheOper.skolem,
         ApalacheOper.gen,
         ApalacheOper.expand,
-        ApalacheOper.constCard
+        ApalacheOper.constCard,
         // for the future
         //    TlaActionOper.enabled,
         //    TlaActionOper.unchanged,
@@ -169,7 +147,7 @@ object KeraLanguagePred {
         TlcOper.colonGreater,
         TlcOper.colonGreater,
         TlcOper.atat,
-        ApalacheOper.assign
+        ApalacheOper.assign,
         // for the future
         //      TlaActionOper.composition,
         //      TlaTempOper.leadsTo,
@@ -185,7 +163,7 @@ object KeraLanguagePred {
         TlaFunOper.tuple,
         TlaFunOper.enum,
         TlaSeqOper.subseq,
-        TlaOper.label
+        TlaOper.label,
     ) /////
 
   protected val bindingOps: HashSet[TlaOper] =
@@ -193,7 +171,7 @@ object KeraLanguagePred {
         TlaBoolOper.exists,
         TlaBoolOper.forall,
         TlaOper.chooseBounded,
-        TlaSetOper.filter
+        TlaSetOper.filter,
     ) /////
 
   def apply(): KeraLanguagePred = singleton
