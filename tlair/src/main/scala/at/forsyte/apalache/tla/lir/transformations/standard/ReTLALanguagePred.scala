@@ -13,23 +13,8 @@ import scala.collection.immutable.HashSet
  *
  * @author Jure Kukovec
  */
-class ReTLALanguagePred extends LanguagePred {
-  override def isModuleOk(mod: TlaModule): PredResult = {
-    mod.operDeclarations.foldLeft[PredResult](PredResultOk()) { case (r, d) =>
-      r.and(isExprOk(d.body))
-    }
-  }
-
-  override def isExprOk(expr: TlaEx): PredResult = {
-    isOkInContext(Set(), expr)
-  }
-
-  private def allArgsOk(letDefs: Set[String], args: Traversable[TlaEx]): PredResult =
-    args.foldLeft[PredResult](PredResultOk()) { case (r, arg) =>
-      r.and(isOkInContext(letDefs, arg))
-    }
-
-  private def isOkInContext(letDefs: Set[String], expr: TlaEx): PredResult = {
+class ReTLALanguagePred extends ContextualLanguagePred {
+  override protected def isOkInContext(letDefs: Set[String], expr: TlaEx): PredResult = {
     expr match {
       case ValEx(TlaBool(_)) | ValEx(TlaInt(_)) | ValEx(TlaStr(_)) =>
         PredResultOk()
@@ -40,18 +25,8 @@ class ReTLALanguagePred extends LanguagePred {
       case NameEx(_) =>
         PredResultOk()
 
-      case OperEx(oper, arg) if ReTLALanguagePred.unaryOps.contains(oper) =>
-        isOkInContext(letDefs, arg)
-
-      case OperEx(oper, lhs, rhs) if ReTLALanguagePred.binaryOps.contains(oper) =>
-        isOkInContext(letDefs, lhs)
-          .and(isOkInContext(letDefs, rhs))
-
-      case OperEx(oper, args @ _*) if ReTLALanguagePred.naryOps.contains(oper) =>
+      case OperEx(oper, args @ _*) if ReTLALanguagePred.operators.contains(oper) =>
         allArgsOk(letDefs, args)
-
-      case OperEx(oper, NameEx(_), set, pred) if ReTLALanguagePred.bindingOps.contains(oper) =>
-        isOkInContext(letDefs, set).and(isOkInContext(letDefs, pred))
 
       case OperEx(TlaControlOper.ifThenElse, pred, thenEx, elseEx) =>
         isOkInContext(letDefs, pred)
@@ -97,18 +72,6 @@ class ReTLALanguagePred extends LanguagePred {
           )
 
       case LetInEx(body, defs @ _*) =>
-        // go inside the let definitions (similar to FlatLanguagePred)
-        def eachDefRec(ctx: Set[String], ds: List[TlaOperDecl]): PredResult = {
-          ds match {
-            case Nil =>
-              PredResultOk()
-
-            case head :: tail =>
-              isOkInContext(ctx, head.body) // check the first operator definition
-                .and(eachDefRec(ctx + head.name, tail)) // check the other operator definitions
-          }
-        }
-
         // check the let-definitions first, in a sequence, as they may refer to each other
         val defsResult = eachDefRec(letDefs, defs.toList)
         val newLetDefs = defs.map(_.name).toSet
@@ -135,44 +98,32 @@ class ReTLALanguagePred extends LanguagePred {
 object ReTLALanguagePred {
   private val singleton = new ReTLALanguagePred
 
-  protected val unaryOps: HashSet[TlaOper] =
+  protected val operators: HashSet[TlaOper] =
     HashSet(
         TlaActionOper.prime,
         TlaBoolOper.not,
-//        TlaArithOper.uminus,
         ApalacheOper.skolem,
-    )
-
-  protected val binaryOps: HashSet[TlaOper] =
-    HashSet(
         TlaOper.eq,
         TlaOper.ne,
         TlaBoolOper.implies,
         TlaBoolOper.equiv,
-        // IntArith not in v1
-//        TlaArithOper.plus,
-//        TlaArithOper.minus,
-//        TlaArithOper.mult,
-//        TlaArithOper.div,
-//        TlaArithOper.mod,
-//        TlaArithOper.exp,
-//        TlaArithOper.lt,
-//        TlaArithOper.gt,
-//        TlaArithOper.le,
-//        TlaArithOper.ge,
         ApalacheOper.assign,
-    )
-
-  protected val naryOps: HashSet[TlaOper] =
-    HashSet(
         TlaBoolOper.and,
         TlaBoolOper.or,
-    )
-
-  protected val bindingOps: HashSet[TlaOper] =
-    HashSet(
         TlaBoolOper.exists,
         TlaBoolOper.forall,
+        // IntArith not in v1
+        //        TlaArithOper.uminus,
+        //        TlaArithOper.plus,
+        //        TlaArithOper.minus,
+        //        TlaArithOper.mult,
+        //        TlaArithOper.div,
+        //        TlaArithOper.mod,
+        //        TlaArithOper.exp,
+        //        TlaArithOper.lt,
+        //        TlaArithOper.gt,
+        //        TlaArithOper.le,
+        //        TlaArithOper.ge,
     )
 
   def apply(): ReTLALanguagePred = singleton

@@ -114,7 +114,7 @@ class TestReTLALangaugePred extends LanguagePredTestSuite {
   }
 
   /**
-   * **************************** the tests from TestFlatLanguagePred ********************************************
+   * **************************** the tests for nullary LET-IN ********************************************
    */
 
   test("a call to a user operator") {
