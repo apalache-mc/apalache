@@ -4,7 +4,7 @@
  (1) the type checker does not fail on them, and (2) all expressions are tagged with types.
  *)
 
-EXTENDS Integers, Sequences, FiniteSets, Reals, Apalache, TLC
+EXTENDS Integers, Sequences, FiniteSets, Reals, Apalache
 CONSTANTS
  \* @typeAlias: ELEM = Int;
  \* @type: ELEM;
@@ -163,23 +163,4 @@ RealDiv(x, y) == x / y
 \* Apalache
 \* @type: (Int -> Str) => Seq(Str);
 Fas(f) == FunAsSeq(f, 3)
-
-\* TLC
-TlcPrint == Print("hello", 3)
-TlcPrintT == PrintT("world")
-TlcAssert == Assert(4 > 3, "no way")
-TlcJavaTime == JavaTime
-\* @type: () => Int;
-TlcGet == TLCGet(3)
-TlcSet == TLCSet(3, "a")
-TlcSmiley == 1 :> "a"
-TlcAtAt == (1 :> "a") @@ (2 :> "b")
-TlcPermutations == Permutations({1, 2})
-\* @type: (Seq(Int), ((Int, Int) => Bool)) => (Int -> Int);
-TlcSortSeq(seq, F(_, _)) == SortSeq(seq, F)
-TlcRandomElement == RandomElement({1, 2})
-\* @type: () => Int;
-TlcAny == Any
-TlcToString == ToString(12)
-TlcEval == TLCEval(10)
 ===============================================================================

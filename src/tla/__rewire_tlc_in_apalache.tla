@@ -22,16 +22,18 @@ LOCAL INSTANCE Naturals
 key :> value ==
     [ x \in { key } |-> value ]
 
-\* Function composition.
+\* Function composition (fun-fun).
 \* 
-\* @type: (a -> b, a -> b) => a -> b;
+\* @type: (a -> b, a -> b) => (a -> b);
 f1 @@ f2 == 
-    \* cache f1 and f2 with LET
+    \* cache f1, f2, and the domains, Apalache would not inline them
     LET __f1 == f1
-        __f2 == f2
+        __f2 == f2 IN
+    LET __d1 == DOMAIN __f1
+        __d2 == DOMAIN __f2
     IN
-    [x \in (DOMAIN __f1) \union (DOMAIN __f2) |->
-            IF x \in DOMAIN __f1
+    [x \in __d1 \union __d2 |->
+            IF x \in __d1
             THEN __f1[x]
             ELSE __f2[x]]
 
