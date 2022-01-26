@@ -21,7 +21,7 @@ object SmileyFunFun {
    */
   def smiley(funT1: FunT1, key: TlaEx, value: TlaEx): TlaEx = {
     val smileyType = OperT1(Seq(funT1.arg, funT1.res), funT1)
-    OperEx(TlaOper.apply, NameEx(":>")(Typed(smileyType)), key, value)(Typed(FunT1(funT1.arg, funT1.res)))
+    OperEx(TlaOper.apply, NameEx(":>")(Typed(smileyType)), key, value)(Typed(funT1))
   }
 
   /**
