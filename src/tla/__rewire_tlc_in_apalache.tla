@@ -3,9 +3,11 @@
  * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
  * We have to call this module TLC in any case, otherwise, SANY complains.
  *
- * This file contains alternative definitions for the TLC operators,
- * which are translated by Apalache more efficiently than the
- * standard definitions. Moreover, we are adding type annotations.
+ * This file contains alternative definitions for the TLC operators.
+ * Most importantly, we are adding type annotations. We also define the
+ * Apalache-compatible behavior. The majority of these operators
+ * are imperative, so we define stubs for these operators, as they are
+ * incompatible with symbolic execution.
  *
  * These definitions are automatically rewired by the Apalache importer.
  *
