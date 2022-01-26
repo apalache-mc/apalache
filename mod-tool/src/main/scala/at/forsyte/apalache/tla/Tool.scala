@@ -8,10 +8,12 @@ import at.forsyte.apalache.infra.log.LogbackConfigurator
 import at.forsyte.apalache.infra.passes.{PassChainExecutor, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorMessage, PassOptionException}
 import at.forsyte.apalache.io.{OutputManager, ReportGenerator}
-import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
+import at.forsyte.apalache.tla.bmcmt.config.{CheckerModule, ConstraintModule}
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.tooling.{ExitCodes, Version}
-import at.forsyte.apalache.tla.tooling.opt.{CheckCmd, ConfigCmd, General, ParseCmd, TestCmd, TypeCheckCmd, ServerCmd}
+import at.forsyte.apalache.tla.tooling.opt.{
+  CheckCmd, ConfigCmd, ConstrainCmd, General, ParseCmd, ServerCmd, TestCmd, TypeCheckCmd,
+}
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import com.google.inject.{Guice, Injector}
 import com.typesafe.scalalogging.LazyLogging
@@ -61,7 +63,7 @@ object Tool extends LazyLogging {
     }
     println(s"Output directory: ${OutputManager.runDir.normalize()}")
     OutputManager.withWriterInRunDir(OutputManager.Names.RunFile)(
-        _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
+        _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}"),
     )
     // force our programmatic logback configuration, as the autoconfiguration works unpredictably
     new LogbackConfigurator(OutputManager.runDirPathOpt, OutputManager.customRunDirPathOpt).configureDefaultContext()
@@ -89,7 +91,8 @@ object Tool extends LazyLogging {
           new TypeCheckCmd,
           new TestCmd,
           new ConfigCmd,
-          new ServerCmd
+          new ServerCmd,
+          new ConstrainCmd,
       )
 
     cli match {
@@ -123,6 +126,10 @@ object Tool extends LazyLogging {
             case server: ServerCmd =>
               val injector = Guice.createInjector(new CheckerModule)
               handleExceptions(runServer, injector, server)
+
+            case constrain: ConstrainCmd =>
+              val injector = Guice.createInjector(new ConstraintModule)
+              handleExceptions(runConstrain, injector, constrain)
 
             case config: ConfigCmd =>
               configure(config)
@@ -184,7 +191,7 @@ object Tool extends LazyLogging {
 
     logger.info(
         "Checker options: filename=%s, init=%s, next=%s, inv=%s"
-          .format(check.file, check.init, check.next, check.inv)
+          .format(check.file, check.init, check.next, check.inv),
     )
     var tuning =
       if (check.tuning != "") loadProperties(check.tuning) else Map[String, String]()
@@ -313,6 +320,45 @@ object Tool extends LazyLogging {
     ExitCodes.ERROR
   }
 
+  private def runConstrain(injector: => Injector, constrain: ConstrainCmd): Int = {
+    val executor = injector.getInstance(classOf[PassChainExecutor])
+
+    logger.info(
+        "Checker options: filename=%s, init=%s, next=%s, inv=%s"
+          .format(constrain.file, constrain.init, constrain.next, constrain.inv),
+    )
+
+    executor.options.set("parser.filename", constrain.file.getAbsolutePath)
+    if (constrain.config != "")
+      executor.options.set("checker.config", constrain.config)
+    if (constrain.init != "")
+      executor.options.set("checker.init", constrain.init)
+    if (constrain.next != "")
+      executor.options.set("checker.next", constrain.next)
+    if (constrain.inv != "")
+      executor.options.set("checker.inv", List(constrain.inv))
+    if (constrain.cinit != "")
+      executor.options.set("checker.cinit", constrain.cinit)
+    executor.options.set("checker.length", constrain.length)
+    // for now, enable polymorphic types. We probably want to disable this option for the type checker
+    executor.options.set("typechecker.inferPoly", true)
+
+    // NOTE Must go after all other options are set due to side-effecting
+    // behavior of current OutmputManager configuration
+    setCommonOptions(constrain, executor.options)
+
+    logger.warn("Constraint mode is not yet implemented! All messages are work in progress.")
+
+    val result = executor.run()
+    if (result.isDefined) {
+      logger.info("Checker reports no error up to computation length " + constrain.length)
+      ExitCodes.NO_ERROR
+    } else {
+      logger.info("Checker has found an error")
+      ExitCodes.ERROR_COUNTEREXAMPLE
+    }
+  }
+
   private def loadProperties(filename: String): Map[String, String] = {
     // use an apache-commons library, as it supports variable substitution
     try {
@@ -368,10 +414,10 @@ object Tool extends LazyLogging {
             logger.error(text, e)
             val absPath = ReportGenerator.prepareReportFile(
                 cmd.invocation.split(" ").dropRight(1).mkString(" "),
-                s"${Version.version} build ${Version.build}"
+                s"${Version.version} build ${Version.build}",
             )
             Console.err.println(
-                s"Please report an issue at $ISSUES_LINK: $e\nA bug report template has been generated at [$absPath].\nIf you choose to use it, please complete the template with a description of the expected behavior."
+                s"Please report an issue at $ISSUES_LINK: $e\nA bug report template has been generated at [$absPath].\nIf you choose to use it, please complete the template with a description of the expected behavior.",
             )
 
         }

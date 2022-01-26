@@ -73,8 +73,8 @@ class ReTLAPreproPassImpl @Inject() (
       outputTlaModule.get.operDeclarations foreach sourceLocator.checkConsistency
     }
 
-    // check, whether all expressions fit in KerA+
-    val shallContinue = KeraLanguagePred().isModuleOk(outputTlaModule.get) match {
+    // check, whether all expressions fit in reTla
+    val shallContinue = ReTLALanguagePred().isModuleOk(outputTlaModule.get) match {
       case PredResultOk() =>
         true
 

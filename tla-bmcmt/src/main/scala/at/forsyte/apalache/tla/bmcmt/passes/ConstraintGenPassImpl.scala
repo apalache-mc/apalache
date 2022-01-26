@@ -11,7 +11,7 @@ import com.typesafe.scalalogging.LazyLogging
 /**
  * The implementation of a bounded model checker with SMT.
  *
- * @author Igor Konnov
+ * @author Jure Kukovec
  */
 class ConstraintGenPassImpl @Inject() (val options: PassOptions, pred: LanguagePred,
     @Named("AfterConstraintGen") nextPass: Pass)
