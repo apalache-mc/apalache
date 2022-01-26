@@ -13,32 +13,11 @@ import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, PredResult, Pr
  * @see TestFlatLanguagePred
  * @author Igor Konnov
  */
-class FlatLanguagePred extends LanguagePred {
-  override def isModuleOk(mod: TlaModule): PredResult = {
-    mod.operDeclarations.foldLeft[PredResult](PredResultOk()) { case (r, d) =>
-      r.and(isExprOk(d.body))
-    }
-  }
+class FlatLanguagePred extends ContextualLanguagePred {
 
-  override def isExprOk(expr: TlaEx): PredResult = {
-    isOkInContext(Set(), expr)
-  }
-
-  private def isOkInContext(letDefs: Set[String], expr: TlaEx): PredResult = {
+  override protected def isOkInContext(letDefs: Set[String], expr: TlaEx): PredResult = {
     expr match {
       case LetInEx(body, defs @ _*) =>
-        // go inside the let definitions
-        def eachDefRec(ctx: Set[String], ds: List[TlaOperDecl]): PredResult = {
-          ds match {
-            case Nil =>
-              PredResultOk()
-
-            case head :: tail =>
-              isOkInContext(ctx, head.body) // check the first operator definition
-                .and(eachDefRec(ctx + head.name, tail)) // check the other operator definitions
-          }
-        }
-
         // check the let-definitions first, in a sequence, as they may refer to each other
         val defsResult = eachDefRec(letDefs, defs.toList)
         val newLetDefs = defs.map(_.name).toSet
