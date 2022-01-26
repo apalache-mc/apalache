@@ -51,7 +51,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     val and1 =
       and(
           assign(x_prime, int(1)) ? "b",
-          assign(y_prime, int(2)) ? "b",
+          assign(y_prime, int(2)) ? "b"
       ).typed(types, "b")
 
     val state = new SymbState(and1, arena, Binding())
@@ -71,7 +71,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     assertUnsatOrExplain(rewriter, nextState) // should not be possible
     rewriter.pop()
     rewriter.push()
-    solverContext.assertGroundExpr(neql(y_cell, int(5)).typed(types, "b"))
+    solverContext.assertGroundExpr(neql(y_cell, int(2)).typed(types, "b"))
     assertUnsatOrExplain(rewriter, nextState) // should not be possible
   }
 
