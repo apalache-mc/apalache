@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.pp.passes
 
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
-import at.forsyte.apalache.tla.lir.TlaModule
+import at.forsyte.apalache.tla.lir.{TlaModule, TransformedTlaModule, ModuleProperty}
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
@@ -41,7 +41,7 @@ class DesugarerPassImpl @Inject() (
    */
   override def execute(): Boolean = {
     logger.info("  > Desugaring...")
-    val input = tlaModule.get
+    val input = tlaModule.get.module
     val afterDesug = ModuleByExTransformer(Desugarer(gen, tracker))(input)
     val output = ModuleByExTransformer(SelectSeqAsFold(gen, tracker))(afterDesug)
 
@@ -60,8 +60,11 @@ class DesugarerPassImpl @Inject() (
    */
   override def next(): Option[Pass] = {
     outputTlaModule map { m =>
-      nextPass.setModule(m)
+      val module = new TransformedTlaModule(m, tlaModule.get.properties + ModuleProperty.Desugared)
+      nextPass.setModule(module)
       nextPass
     }
   }
+
+  override def dependencies = Set(ModuleProperty.TypeChecked)
 }

@@ -4,6 +4,7 @@ import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.bmcmt.CheckerException
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
+import at.forsyte.apalache.tla.lir.{TlaModule, ModuleProperty, TransformedTlaModule}
 import at.forsyte.apalache.tla.lir.transformations.{TransformationTracker, fromTouchToExTransformation}
 import at.forsyte.apalache.tla.lir.transformations.standard.ModuleByExTransformer
 import at.forsyte.apalache.tla.lir.{NullEx, TlaAssumeDecl, TlaEx, TlaOperDecl}
@@ -30,6 +31,8 @@ class AnalysisPassImpl @Inject() (val options: PassOptions, hintsStoreImpl: Form
    */
   override def name: String = "AnalysisPass"
 
+  private var outputTlaModule: Option[TlaModule] = None
+
   object StringOrdering extends Ordering[Object] {
     override def compare(x: Object, y: Object): Int = x.toString compare y.toString
   }
@@ -55,7 +58,7 @@ class AnalysisPassImpl @Inject() (val options: PassOptions, hintsStoreImpl: Form
       ) ///
 
     logger.info(" > Marking skolemizable existentials and sets to be expanded...")
-    val marked = transformationSequence.foldLeft(tlaModule.get) { case (m, (name, tr)) =>
+    val marked = transformationSequence.foldLeft(tlaModule.get.module) { case (m, (name, tr)) =>
       logger.info("  > %s".format(name))
       ModuleByExTransformer(tr).apply(m)
     }
@@ -79,7 +82,7 @@ class AnalysisPassImpl @Inject() (val options: PassOptions, hintsStoreImpl: Form
       case _                => ()
     }
 
-    nextPass.setModule(marked)
+    outputTlaModule = Some(marked)
 
     writerFactory.writeModuleAllFormats(marked.copy(name = "11_OutAnalysis"), TlaWriter.STANDARD_MODULES)
 
@@ -96,6 +99,12 @@ class AnalysisPassImpl @Inject() (val options: PassOptions, hintsStoreImpl: Form
    * @return the next pass, if exists, or None otherwise
    */
   override def next(): Option[Pass] = {
-    Some(nextPass)
+    outputTlaModule map { m =>
+      val module = new TransformedTlaModule(m, tlaModule.get.properties + ModuleProperty.Analyzed)
+      nextPass.setModule(module)
+      nextPass
+    }
   }
+
+  override def dependencies = Set(ModuleProperty.TransitionsFound)
 }

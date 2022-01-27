@@ -31,15 +31,17 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
     seq.foldLeft(ex) { case (partial, tr) => tr(partial) }
   }
 
+  private var outputTlaModule: Option[TlaModule] = None
+
   /**
    * Run the pass
    *
    * @return true, if the pass was successful
    */
   override def execute(): Boolean = {
-    val declarations = tlaModule.get.declarations
-    val varSet = tlaModule.get.varDeclarations.map(_.name).toSet
-    val constSet = tlaModule.get.constDeclarations.map(_.name).toSet
+    val declarations = tlaModule.get.module.declarations
+    val varSet = tlaModule.get.module.varDeclarations.map(_.name).toSet
+    val constSet = tlaModule.get.module.constDeclarations.map(_.name).toSet
     val deepCopy = DeepCopy(tracker)
 
     val bodyMap = BodyMapFactory.makeFromDecls(declarations)
@@ -71,11 +73,11 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
     val initPrimed = Some(TlaOperDecl(initPrimedName, List(), newBody))
 
     val newDeclarations: Seq[TlaDecl] = declarations ++ Seq(cinitPrimed, initPrimed).flatten
-    val newModule = new TlaModule(tlaModule.get.name, newDeclarations)
+    val newModule = new TlaModule(tlaModule.get.module.name, newDeclarations)
 
     writerFactory.writeModuleAllFormats(newModule.copy(name = "06_OutPriming"), TlaWriter.STANDARD_MODULES)
 
-    setModule(newModule)
+    outputTlaModule = Some(newModule)
     true
   }
 
@@ -86,9 +88,12 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
    * @return the next pass, if exists, or None otherwise
    */
   override def next(): Option[Pass] = {
-    tlaModule map { m =>
-      nextPass.setModule(m)
+    outputTlaModule map { m =>
+      val module = new TransformedTlaModule(m, tlaModule.get.properties + ModuleProperty.Primed)
+      nextPass.setModule(module)
       nextPass
     }
   }
+
+  override def dependencies = Set(ModuleProperty.Unrolled, ModuleProperty.Configured)
 }

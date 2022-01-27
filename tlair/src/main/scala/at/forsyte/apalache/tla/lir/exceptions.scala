@@ -24,6 +24,8 @@ class LanguagePredError(message: String, val failedIds: Seq[(UID, String)]) exte
  */
 class MalformedTlaError(message: String, val causeExpr: TlaEx) extends LirError(message)
 
+class MissingTransformationError(message: String, val causeModule: TransformedTlaModule) extends LirError(message)
+
 /**
  * This exception is thrown when an input specification is malformed at the declaration or module level.
  * For malformed expressions, use MalformedTlaException

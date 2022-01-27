@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.transformations.{
   PredResultFail, PredResultOk, TlaModuleTransformation, TransformationTracker
 }
-import at.forsyte.apalache.tla.lir.{TlaDecl, TlaModule, TlaOperDecl, UID}
+import at.forsyte.apalache.tla.lir.{TlaDecl, TlaModule, TlaOperDecl, UID, TransformedTlaModule, ModuleProperty}
 import at.forsyte.apalache.tla.pp.{Desugarer, Keramelizer, Normalizer, UniqueNameGenerator}
 import com.google.inject.Inject
 import com.google.inject.name.Named
@@ -45,7 +45,7 @@ class PreproPassImpl @Inject() (
    */
   override def execute(): Boolean = {
     logger.info("  > Before preprocessing: unique renaming")
-    val input = tlaModule.get
+    val input = tlaModule.get.module
     val varSet = input.varDeclarations.map(_.name).toSet
 
     val transformationSequence: List[(String, TlaModuleTransformation)] =
@@ -114,10 +114,13 @@ class PreproPassImpl @Inject() (
    */
   override def next(): Option[Pass] = {
     outputTlaModule map { m =>
-      nextPass.setModule(m)
+      val module = new TransformedTlaModule(m, tlaModule.get.properties + ModuleProperty.Preprocessed)
+      nextPass.setModule(module)
       nextPass
     }
   }
+
+  override def dependencies = Set(ModuleProperty.Inlined)
 
   private def findLoc(id: UID): String = {
     val sourceLocator: SourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)

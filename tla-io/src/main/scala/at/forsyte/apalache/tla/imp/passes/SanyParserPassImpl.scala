@@ -5,7 +5,7 @@ import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.io.json.impl.{Type1TagReader, UJsonRep, UJsonToTla}
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.{CyclicDependencyError, TlaModule}
+import at.forsyte.apalache.tla.lir.{CyclicDependencyError, TlaModule, TransformedTlaModule, ModuleProperty}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.standard.DeclarationSorter
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
@@ -131,7 +131,10 @@ class SanyParserPassImpl @Inject() (
    */
   override def next(): Option[Pass] =
     rootModule map { m =>
-      nextPass.setModule(m)
+      val module = new TransformedTlaModule(m, Set(ModuleProperty.Parsed))
+      nextPass.setModule(module)
       nextPass
     }
+
+  override def dependencies = Set()
 }

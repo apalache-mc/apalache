@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.imp.findBodyOf
 import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
 import at.forsyte.apalache.tla.lir.transformations._
 import at.forsyte.apalache.tla.lir.transformations.standard.ModuleByExTransformer
-import at.forsyte.apalache.tla.lir.{TlaModule, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.{TlaModule, TlaOperDecl, TransformedTlaModule, ModuleProperty}
 import at.forsyte.apalache.tla.pp._
 import com.google.inject.Inject
 import com.google.inject.name.Named
@@ -40,7 +40,7 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
    * @return true, if the pass was successful
    */
   override def execute(): Boolean = {
-    val baseModule = tlaModule.get
+    val baseModule = tlaModule.get.module
 
     /*
     Disable the preprocessing pass that introduces nullary operators for call results.
@@ -127,8 +127,11 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
    */
   override def next(): Option[Pass] = {
     outputTlaModule map { m =>
-      nextPass.setModule(m)
+      val module = new TransformedTlaModule(m, tlaModule.get.properties + ModuleProperty.Inlined)
+      nextPass.setModule(module)
       nextPass
     }
   }
+
+  override def dependencies = Set(ModuleProperty.Unrolled)
 }

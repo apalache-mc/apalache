@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
-import at.forsyte.apalache.tla.lir.{TlaModule, TypeTag, UID, Untyped}
+import at.forsyte.apalache.tla.lir.{TlaModule, TransformedTlaModule, TypeTag, UID, Untyped, ModuleProperty}
 import at.forsyte.apalache.tla.typecheck.TypeCheckerTool
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer
 import com.google.inject.Inject
@@ -48,7 +48,7 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
       false
     } else {
       logger.info(" > Running Snowcat .::.")
-      dumpToJson(tlaModule.get, "pre")
+      dumpToJson(tlaModule.get.module, "pre")
 
       val tool = new TypeCheckerTool(annotationStore, inferPoly)
 
@@ -64,7 +64,7 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
       }
 
       val listener = new LoggingTypeCheckerListener(sourceStore, changeListener, inferPoly)
-      val taggedModule = tool.checkAndTag(tracker, listener, defaultTag, tlaModule.get)
+      val taggedModule = tool.checkAndTag(tracker, listener, defaultTag, tlaModule.get.module)
 
       taggedModule match {
         case Some(newModule) =>
@@ -110,7 +110,10 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
    */
   override def next(): Option[Pass] =
     outputTlaModule map { m =>
-      nextPass.setModule(m)
+      val module = new TransformedTlaModule(m, tlaModule.get.properties + ModuleProperty.TypeChecked)
+      nextPass.setModule(module)
       nextPass
     }
+
+  override def dependencies = Set(ModuleProperty.Parsed)
 }

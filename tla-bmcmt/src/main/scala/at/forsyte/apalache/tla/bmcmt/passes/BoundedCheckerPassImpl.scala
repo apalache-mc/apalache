@@ -11,6 +11,7 @@ import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig}
 import at.forsyte.apalache.tla.bmcmt.trex._
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.NullEx
+import at.forsyte.apalache.tla.lir.ModuleProperty
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.LanguageWatchdog
 import at.forsyte.apalache.tla.lir.transformations.standard.KeraLanguagePred
@@ -48,7 +49,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
     if (tlaModule.isEmpty) {
       throw new CheckerException(s"The input of $name pass is not initialized", NullEx)
     }
-    val module = tlaModule.get
+    val module = tlaModule.get.module
 
     for (decl <- module.operDeclarations) {
       LanguageWatchdog(KeraLanguagePred()).check(decl.body)
@@ -257,4 +258,6 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
    */
   override def next(): Option[Pass] =
     tlaModule map { _ => nextPass }
+
+  override def dependencies = Set(ModuleProperty.Analyzed)
 }

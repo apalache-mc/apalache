@@ -1,5 +1,7 @@
 package at.forsyte.apalache.infra.passes
 
+import at.forsyte.apalache.tla.lir.ModuleProperty
+
 /**
  * <p>An analysis or transformation pass. Instead of explicitly setting
  * a pass' input and output, we interconnect passes with Google Guice and
@@ -37,4 +39,6 @@ trait Pass {
    * @return the next pass, if exists, or None otherwise
    */
   def next(): Option[Pass]
+
+  def dependencies: Set[ModuleProperty.Value]
 }

@@ -5,6 +5,7 @@ import java.nio.file.Path
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.bmcmt.{CheckerException, VCGenerator}
 import at.forsyte.apalache.tla.lir.NullEx
+import at.forsyte.apalache.tla.lir.{TlaModule, TransformedTlaModule, ModuleProperty}
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import com.google.inject.Inject
@@ -27,6 +28,9 @@ class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTrac
    */
   override def name: String = "VCGen"
 
+
+  private var outputTlaModule: Option[TlaModule] = None
+
   /**
    * Run the pass.
    *
@@ -40,7 +44,7 @@ class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTrac
     val newModule =
       options.get[List[String]]("checker", "inv") match {
         case Some(invariants) =>
-          invariants.foldLeft(tlaModule.get) { (mod, invName) =>
+          invariants.foldLeft(tlaModule.get.module) { (mod, invName) =>
             logger.info(s"  > Producing verification conditions from the invariant $invName")
             val optViewName = options.get[String]("checker", "view")
             if (optViewName.isDefined) {
@@ -50,12 +54,12 @@ class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTrac
           }
         case None =>
           logger.info("  > No invariant given. Only deadlocks will be checked")
-          tlaModule.get
+          tlaModule.get.module
       }
 
     writerFactory.writeModuleAllFormats(newModule.copy(name = "07_OutVCGen"), TlaWriter.STANDARD_MODULES)
 
-    nextPass.setModule(newModule)
+    outputTlaModule = Some(newModule)
     true
   }
 
@@ -66,6 +70,13 @@ class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTrac
    * @return the next pass, if exists, or None otherwise
    */
   override def next(): Option[Pass] = {
-    Some(nextPass)
+    outputTlaModule map { m =>
+      val module = new TransformedTlaModule(m, tlaModule.get.properties + ModuleProperty.VCGenerated)
+      nextPass.setModule(module)
+      nextPass
+    }
   }
+
+  override def dependencies = Set(ModuleProperty.Inlined)
+
 }

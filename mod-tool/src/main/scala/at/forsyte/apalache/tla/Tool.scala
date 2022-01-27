@@ -170,7 +170,7 @@ object Tool extends LazyLogging {
     val result = executor.run()
     if (result.isDefined) {
       logger.info("Parsed successfully")
-      val tlaModule = result.get.asInstanceOf[TlaModuleMixin].unsafeGetModule
+      val tlaModule = result.get.asInstanceOf[TlaModuleMixin].unsafeGetModule.module
       logger.info("Root module: %s with %d declarations".format(tlaModule.name, tlaModule.declarations.length))
       ExitCodes.NO_ERROR
     } else {

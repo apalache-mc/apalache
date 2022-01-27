@@ -32,13 +32,15 @@ class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceSto
    */
   override def name: String = "TransitionFinderPass"
 
+  private var outputTlaModule: Option[TlaModule] = None
+
   /**
    * Run the pass
    *
    * @return true, if the pass was successful
    */
   override def execute(): Boolean = {
-    val inModule = tlaModule.get
+    val inModule = tlaModule.get.module
 
     // extract transitions from InitPrimed
     val initOperName = options.getOrElse("checker", "init", "Init")
@@ -79,7 +81,7 @@ class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceSto
     // print the resulting module
     writerFactory.writeModuleAllFormats(outModule.copy(name = "09_OutTransition"), TlaWriter.STANDARD_MODULES)
 
-    setModule(outModule)
+    outputTlaModule = Some(outModule)
     true
   }
 
@@ -103,9 +105,12 @@ class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceSto
    * @return the next pass, if exists, or None otherwise
    */
   override def next(): Option[Pass] = {
-    tlaModule map { m =>
-      nextPass.setModule(m)
+    outputTlaModule map { m =>
+      val module = new TransformedTlaModule(m, tlaModule.get.properties + ModuleProperty.TransitionsFound)
+      nextPass.setModule(module)
       nextPass
     }
   }
+
+  override def dependencies = Set(ModuleProperty.Primed, ModuleProperty.VCGenerated, ModuleProperty.Preprocessed)
 }

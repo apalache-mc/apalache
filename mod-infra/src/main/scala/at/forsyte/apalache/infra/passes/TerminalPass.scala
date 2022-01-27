@@ -1,5 +1,7 @@
 package at.forsyte.apalache.infra.passes
 
+import at.forsyte.apalache.tla.lir.ModuleProperty
+
 /**
  * This pass does nothing but it can be used to collect the output of the final pass.
  */
@@ -30,4 +32,6 @@ class TerminalPass extends Pass {
   override def next(): Option[Pass] = {
     None
   }
+
+  override def dependencies: Set[ModuleProperty.Value] = Set()
 }
