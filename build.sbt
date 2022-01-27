@@ -210,9 +210,6 @@ docker / dockerfile := {
   val runners = rootDir / "bin"
   val runnersTarget = s"${dwd}/bin"
 
-  // val modules = rootDir / "src" / "tla"
-  // val modulesTarget = s"${dwd}/src/tla"
-
   val license = rootDir / "LICENSE"
   val readme = rootDir / "README.md"
 
@@ -225,7 +222,6 @@ docker / dockerfile := {
     add(runners, runnersTarget)
     add(license, s"${dwd}/${license.name}")
     add(readme, s"${dwd}/${readme.name}")
-    // add(modules, modulesTarget)
 
     // TLA parser requires all specification files to be in the same directory
     // We assume the user bind-mounted the spec dir into /var/apalache

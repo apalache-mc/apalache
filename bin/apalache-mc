@@ -32,18 +32,6 @@ case `cat $DISTS | wc -l | sed 's/[[:space:]]*//g'` in
 esac
 rm -f "$DISTS"
 
-# an additional lookup list for the TLA+ modules
-TLA_LIB="$DIR/src/tla"
-
-# This is a temporary solution for handling TLA_PATH via a Java variable.
-# See apalache/#187.
-# Once tlaplus/#490,#493 are released, remove this workaround.
-if [ -z "$TLA_PATH" ]; then
-    TLA_PATH="$TLA_LIB"
-else
-    TLA_PATH="$TLA_LIB:$TLA_PATH"
-fi
-
 JVM_ARGS=${JVM_ARGS:-""}
 
 # Check of the heap size is already set
