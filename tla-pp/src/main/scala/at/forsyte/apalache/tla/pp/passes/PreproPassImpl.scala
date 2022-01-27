@@ -6,7 +6,7 @@ import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.transformations.{
-  PredResultFail, PredResultOk, TlaModuleTransformation, TransformationTracker
+  PredResultFail, PredResultOk, TlaModuleTransformation, TransformationTracker,
 }
 import at.forsyte.apalache.tla.lir.{TlaDecl, TlaModule, TlaOperDecl, UID}
 import at.forsyte.apalache.tla.pp.{Desugarer, Keramelizer, Normalizer, UniqueNameGenerator}
@@ -23,20 +23,18 @@ import com.typesafe.scalalogging.LazyLogging
  * @param nextPass next pass to call
  */
 class PreproPassImpl @Inject() (
-    val options: PassOptions, gen: UniqueNameGenerator, renaming: IncrementalRenaming, tracker: TransformationTracker,
+    options: PassOptions, gen: UniqueNameGenerator, renaming: IncrementalRenaming, tracker: TransformationTracker,
     sourceStore: SourceStore, changeListener: ChangeListener, writerFactory: TlaWriterFactory,
-    @Named("AfterPrepro") nextPass: Pass with TlaModuleMixin
-) extends PreproPass with LazyLogging {
-  val MANUAL_LINK = "https://apalache.informal.systems/docs/apalache/known-issues.html"
-
-  private var outputTlaModule: Option[TlaModule] = None
-
-  /**
-   * The pass name.
-   *
-   * @return the name associated with the pass
-   */
-  override def name: String = "PreprocessingPass"
+    @Named("AfterPrepro") nextPass: Pass with TlaModuleMixin,
+) extends PreproPassPartial(
+        options,
+        renaming,
+        tracker,
+        sourceStore,
+        changeListener,
+        writerFactory,
+        nextPass,
+    ) {
 
   /**
    * Run the pass.
@@ -54,77 +52,9 @@ class PreproPassImpl @Inject() (
           ("Desugarer", ModuleByExTransformer(Desugarer(gen, tracker))),
           ("UniqueRenamer", renaming.renameInModule),
           ("Normalizer", ModuleByExTransformer(Normalizer(tracker))),
-          ("Keramelizer", ModuleByExTransformer(Keramelizer(gen, tracker)))
+          ("Keramelizer", ModuleByExTransformer(Keramelizer(gen, tracker))),
       )
 
-    logger.info(" > Applying standard transformations:")
-    val preprocessed = transformationSequence.foldLeft(input) { case (m, (name, xformer)) =>
-      logger.info(s"  > $name")
-      val transfomed = xformer(m)
-      // dump the result of preprocessing after every transformation, in case the next one fails
-      writerFactory.writeModuleAllFormats(transfomed.copy(name = "08_OutPrepro"), TlaWriter.STANDARD_MODULES)
-      transfomed
-    }
-
-    // unique renaming after all transformations
-    logger.info("  > After preprocessing: UniqueRenamer")
-    val afterModule = renaming.renameInModule(preprocessed)
-
-    // dump the result of preprocessing
-    writerFactory.writeModuleAllFormats(afterModule.copy(name = "08_OutPrepro"), TlaWriter.STANDARD_MODULES)
-    outputTlaModule = Some(afterModule)
-
-    // when --debug is enabled, check that all identifiers are assigned a location
-    if (options.getOrElse[Boolean]("general", "debug", false)) {
-      val sourceLocator =
-        SourceLocator(sourceStore.makeSourceMap, changeListener)
-      outputTlaModule.get.operDeclarations foreach sourceLocator.checkConsistency
-    }
-
-    // check, whether all expressions fit in KerA+
-    val shallContinue = KeraLanguagePred().isModuleOk(outputTlaModule.get) match {
-      case PredResultOk() =>
-        true
-
-      case PredResultFail(failedIds) =>
-        for ((id, errorMessage) <- failedIds) {
-          val message = "%s: unsupported expression: %s".format(findLoc(id), errorMessage)
-          logger.error(message)
-        }
-        false
-    }
-
-    shallContinue
-  }
-
-  private def createModuleTransformerForPrimePropagation(varSet: Set[String]): ModuleByExTransformer = {
-    val cinitName = options.getOrElse[String]("checker", "cinit", "CInit") + "Primed"
-    val includeAllButConstInit: TlaDecl => Boolean = {
-      case TlaOperDecl(name, _, _) => cinitName != name
-      case _                       => true
-    }
-    ModuleByExTransformer(new PrimePropagation(tracker, varSet), includeAllButConstInit)
-  }
-
-  /**
-   * Get the next pass in the chain. What is the next pass is up
-   * to the module configuration and the pass outcome.
-   *
-   * @return the next pass, if exists, or None otherwise
-   */
-  override def next(): Option[Pass] = {
-    outputTlaModule map { m =>
-      nextPass.setModule(m)
-      nextPass
-    }
-  }
-
-  private def findLoc(id: UID): String = {
-    val sourceLocator: SourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)
-
-    sourceLocator.sourceOf(id) match {
-      case Some(loc) => loc.toString
-      case None      => "<unknown>"
-    }
+    executeWithParams(transformationSequence, postRename = true, KeraLanguagePred())
   }
 }

@@ -5,14 +5,14 @@ import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import at.forsyte.apalache.infra.log.LogbackConfigurator
-import at.forsyte.apalache.infra.passes.{PassChainExecutor, PassOptions, TlaModuleMixin}
+import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor, PassOptions, TlaModuleMixin, WriteablePassOptions}
 import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorMessage, PassOptionException}
 import at.forsyte.apalache.io.{OutputManager, ReportGenerator}
 import at.forsyte.apalache.tla.bmcmt.config.{CheckerModule, ConstraintModule}
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.tooling.{ExitCodes, Version}
 import at.forsyte.apalache.tla.tooling.opt.{
-  CheckCmd, ConfigCmd, ConstrainCmd, General, ParseCmd, ServerCmd, TestCmd, TypeCheckCmd,
+  CheckCmd, ConfigCmd, ConstrainCmd, CoreSolverCmd, General, ParseCmd, ServerCmd, TestCmd, TypeCheckCmd,
 }
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import com.google.inject.{Guice, Injector}
@@ -25,7 +25,6 @@ import util.ExecutionStatisticsCollector.Selection
 
 import scala.collection.JavaConverters._
 import scala.util.Random
-import at.forsyte.apalache.infra.passes.WriteablePassOptions
 import at.forsyte.apalache.io.ApalacheConfig
 import at.forsyte.apalache.io.ConfigManager
 
@@ -160,6 +159,37 @@ object Tool extends LazyLogging {
     options.set("io.outdir", OutputManager.outDir)
   }
 
+  private def runAndExit(executor: PassChainExecutor, msgIfOk: Pass => String, msgIfFail: Pass => String,
+      errCode: Int = ExitCodes.ERROR): Int = {
+    val result = executor.run()
+    if (result.isDefined) {
+      logger.info(msgIfOk(result.get))
+      ExitCodes.NO_ERROR
+    } else {
+      logger.info(msgIfFail(result.get))
+      errCode
+    }
+  }
+
+  private def setCoreOptions(executor: PassChainExecutor, cmd: CoreSolverCmd): Unit = {
+    logger.info(
+        "Checker options: filename=%s, init=%s, next=%s, inv=%s"
+          .format(cmd.file, cmd.init, cmd.next, cmd.inv),
+    )
+    executor.options.set("parser.filename", cmd.file.getAbsolutePath)
+    if (cmd.config != "")
+      executor.options.set("checker.config", cmd.config)
+    if (cmd.init != "")
+      executor.options.set("checker.init", cmd.init)
+    if (cmd.next != "")
+      executor.options.set("checker.next", cmd.next)
+    if (cmd.inv != "")
+      executor.options.set("checker.inv", List(cmd.inv))
+    if (cmd.cinit != "")
+      executor.options.set("checker.cinit", cmd.cinit)
+    executor.options.set("checker.length", cmd.length)
+  }
+
   private def runParse(injector: => Injector, parse: ParseCmd): Int = {
     // here, we implement a terminal pass to get the parse results
     val executor = injector.getInstance(classOf[PassChainExecutor])
@@ -174,44 +204,28 @@ object Tool extends LazyLogging {
     // behavior of current OutmputManager configuration
     setCommonOptions(parse, executor.options)
 
-    val result = executor.run()
-    if (result.isDefined) {
-      logger.info("Parsed successfully")
-      val tlaModule = result.get.asInstanceOf[TlaModuleMixin].unsafeGetModule
-      logger.info("Root module: %s with %d declarations".format(tlaModule.name, tlaModule.declarations.length))
-      ExitCodes.NO_ERROR
-    } else {
-      logger.info("Parser has failed")
-      ExitCodes.ERROR
-    }
+    runAndExit(
+        executor,
+        r => {
+          val tlaModule = r.asInstanceOf[TlaModuleMixin].unsafeGetModule
+          s"Parsed successfully\nRoot module: ${tlaModule.name} with ${tlaModule.declarations.length} declarations."
+        },
+        _ => "Parser has failed",
+    )
   }
 
   private def runCheck(injector: => Injector, check: CheckCmd): Int = {
     val executor = injector.getInstance(classOf[PassChainExecutor])
 
-    logger.info(
-        "Checker options: filename=%s, init=%s, next=%s, inv=%s"
-          .format(check.file, check.init, check.next, check.inv),
-    )
+    setCoreOptions(executor, check)
+
     var tuning =
       if (check.tuning != "") loadProperties(check.tuning) else Map[String, String]()
     tuning = overrideProperties(tuning, check.tuningOptions)
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
     executor.options.set("general.tuning", tuning)
-    executor.options.set("parser.filename", check.file.getAbsolutePath)
-    if (check.config != "")
-      executor.options.set("checker.config", check.config)
-    if (check.init != "")
-      executor.options.set("checker.init", check.init)
-    if (check.next != "")
-      executor.options.set("checker.next", check.next)
-    if (check.inv != "")
-      executor.options.set("checker.inv", List(check.inv))
-    if (check.cinit != "")
-      executor.options.set("checker.cinit", check.cinit)
     executor.options.set("checker.nworkers", check.nworkers)
-    executor.options.set("checker.length", check.length)
     executor.options.set("checker.discardDisabled", check.discardDisabled)
     executor.options.set("checker.noDeadlocks", check.noDeadlocks)
     executor.options.set("checker.algo", check.algo)
@@ -226,14 +240,12 @@ object Tool extends LazyLogging {
     // behavior of current OutmputManager configuration
     setCommonOptions(check, executor.options)
 
-    val result = executor.run()
-    if (result.isDefined) {
-      logger.info("Checker reports no error up to computation length " + check.length)
-      ExitCodes.NO_ERROR
-    } else {
-      logger.info("Checker has found an error")
-      ExitCodes.ERROR_COUNTEREXAMPLE
-    }
+    runAndExit(
+        executor,
+        _ => "Checker reports no error up to computation length " + check.length,
+        _ => "Checker has found an error",
+        ExitCodes.ERROR_COUNTEREXAMPLE,
+    )
   }
 
   private def runTest(injector: => Injector, test: TestCmd): Int = {
@@ -273,14 +285,12 @@ object Tool extends LazyLogging {
     // behavior of current OutmputManager configuration
     setCommonOptions(test, executor.options)
 
-    val result = executor.run()
-    if (result.isDefined) {
-      logger.info("No example found")
-      ExitCodes.NO_ERROR
-    } else {
-      logger.info("Checker has found an example. Check counterexample.tla.")
-      ExitCodes.ERROR_COUNTEREXAMPLE
-    }
+    runAndExit(
+        executor,
+        _ => "No example found",
+        _ => "Checker has found an example. Check counterexample.tla.",
+        ExitCodes.ERROR_COUNTEREXAMPLE,
+    )
   }
 
   private def runTypeCheck(injector: => Injector, typecheck: TypeCheckCmd): Int = {
@@ -296,15 +306,11 @@ object Tool extends LazyLogging {
     // behavior of current OutmputManager configuration
     setCommonOptions(typecheck, executor.options)
 
-    executor.run() match {
-      case None =>
-        logger.info("Type checker [FAILED]")
-        ExitCodes.ERROR
-
-      case Some(_) =>
-        logger.info("Type checker [OK]")
-        ExitCodes.NO_ERROR
-    }
+    runAndExit(
+        executor,
+        _ => "Type checker [OK]",
+        _ => "Type checker [FAILED]",
+    )
   }
 
   private def runServer(injector: => Injector, server: ServerCmd): Int = {
@@ -323,23 +329,7 @@ object Tool extends LazyLogging {
   private def runConstrain(injector: => Injector, constrain: ConstrainCmd): Int = {
     val executor = injector.getInstance(classOf[PassChainExecutor])
 
-    logger.info(
-        "Checker options: filename=%s, init=%s, next=%s, inv=%s"
-          .format(constrain.file, constrain.init, constrain.next, constrain.inv),
-    )
-
-    executor.options.set("parser.filename", constrain.file.getAbsolutePath)
-    if (constrain.config != "")
-      executor.options.set("checker.config", constrain.config)
-    if (constrain.init != "")
-      executor.options.set("checker.init", constrain.init)
-    if (constrain.next != "")
-      executor.options.set("checker.next", constrain.next)
-    if (constrain.inv != "")
-      executor.options.set("checker.inv", List(constrain.inv))
-    if (constrain.cinit != "")
-      executor.options.set("checker.cinit", constrain.cinit)
-    executor.options.set("checker.length", constrain.length)
+    setCoreOptions(executor, constrain)
     // for now, enable polymorphic types. We probably want to disable this option for the type checker
     executor.options.set("typechecker.inferPoly", true)
 
@@ -347,16 +337,13 @@ object Tool extends LazyLogging {
     // behavior of current OutmputManager configuration
     setCommonOptions(constrain, executor.options)
 
-    logger.warn("Constraint mode is not yet implemented! All messages are work in progress.")
+    val msg = "Constraint mode is not yet implemented!"
 
-    val result = executor.run()
-    if (result.isDefined) {
-      logger.info("Checker reports no error up to computation length " + constrain.length)
-      ExitCodes.NO_ERROR
-    } else {
-      logger.info("Checker has found an error")
-      ExitCodes.ERROR_COUNTEREXAMPLE
-    }
+    runAndExit(
+        executor,
+        _ => msg,
+        _ => msg,
+    )
   }
 
   private def loadProperties(filename: String): Map[String, String] = {
