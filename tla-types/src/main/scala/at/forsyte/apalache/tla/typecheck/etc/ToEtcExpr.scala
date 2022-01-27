@@ -431,9 +431,10 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         // DOMAIN f
         val a = varPool.fresh
         val b = varPool.fresh
+        val c = varPool.fresh
         val funType = OperT1(Seq(FunT1(a, b)), SetT1(a)) // (a -> b) => Set(a)
         val seqType =
-          OperT1(Seq(SeqT1(a)), SetT1(IntT1())) // Seq(a) => Set(Int)
+          OperT1(Seq(SeqT1(a)), SetT1(IntT1())) // Seq(c) => Set(Int)
         val recType = OperT1(Seq(RecT1()), SetT1(StrT1())) // [] => Set(Str)
         val tupType =
           OperT1(Seq(SparseTupT1()), SetT1(IntT1())) // {} => Set(Int)

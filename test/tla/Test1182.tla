@@ -10,7 +10,7 @@ NonNegative(z) == IF 0 < z THEN z ELSE 0
 
 \* @type: () => Bool;
 Init == LET
-    \* @type: () => Str -> THING;
+    \* @type: () => (Str -> THING);
     F == 
         "A" :>  [
             cnt          |-> 0
@@ -18,7 +18,7 @@ Init == LET
         "B" :> [
             cnt          |-> 2
         ]
-    \* @type: () => Str -> THING;
+    \* @type: () => (Str -> THING);
     G == [
         e \in {"B", "C"} |-> 
             [
