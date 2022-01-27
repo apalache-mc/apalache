@@ -159,14 +159,14 @@ object Tool extends LazyLogging {
     options.set("io.outdir", OutputManager.outDir)
   }
 
-  private def runAndExit(executor: PassChainExecutor, msgIfOk: Pass => String, msgIfFail: Pass => String,
+  private def runAndExit(executor: PassChainExecutor, msgIfOk: Pass => String, msgIfFail: String,
       errCode: Int = ExitCodes.ERROR): Int = {
     val result = executor.run()
     if (result.isDefined) {
       logger.info(msgIfOk(result.get))
       ExitCodes.NO_ERROR
     } else {
-      logger.info(msgIfFail(result.get))
+      logger.info(msgIfFail)
       errCode
     }
   }
@@ -210,7 +210,7 @@ object Tool extends LazyLogging {
           val tlaModule = r.asInstanceOf[TlaModuleMixin].unsafeGetModule
           s"Parsed successfully\nRoot module: ${tlaModule.name} with ${tlaModule.declarations.length} declarations."
         },
-        _ => "Parser has failed",
+        "Parser has failed",
     )
   }
 
@@ -243,7 +243,7 @@ object Tool extends LazyLogging {
     runAndExit(
         executor,
         _ => "Checker reports no error up to computation length " + check.length,
-        _ => "Checker has found an error",
+        "Checker has found an error",
         ExitCodes.ERROR_COUNTEREXAMPLE,
     )
   }
@@ -288,7 +288,7 @@ object Tool extends LazyLogging {
     runAndExit(
         executor,
         _ => "No example found",
-        _ => "Checker has found an example. Check counterexample.tla.",
+        "Checker has found an example. Check counterexample.tla.",
         ExitCodes.ERROR_COUNTEREXAMPLE,
     )
   }
@@ -309,7 +309,7 @@ object Tool extends LazyLogging {
     runAndExit(
         executor,
         _ => "Type checker [OK]",
-        _ => "Type checker [FAILED]",
+        "Type checker [FAILED]",
     )
   }
 
@@ -342,7 +342,7 @@ object Tool extends LazyLogging {
     runAndExit(
         executor,
         _ => msg,
-        _ => msg,
+        msg,
     )
   }
 
