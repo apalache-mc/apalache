@@ -2731,9 +2731,6 @@ do that after the algorithm has made a good number of steps.</p>
 <li>
 <p><strong>Short circuiting</strong>: <code>rewriter.shortCircuit=(false|true)</code>. When <code>rewriter.shortCircuit=true</code>, <code>A \/ B</code> and <code>A /\ B</code> are translated to SMT as if-then-else expressions, e.g., <code>(ite A true B)</code>. Otherwise, disjunctions and conjunctions are directly translated to <code>(or ...)</code> and <code>(and ...)</code> respectively. By default, <code>rewriter.shortCircuit=false</code>.</p>
 </li>
-<li>
-<p><strong>Lazy short circuiting</strong>: <code>rewriter.lazyCircuit=(false|true)</code>. Given <code>A /\ B</code>, first check with the solver, whether <code>A</code> is satisfiable. If not, return reduce to <code>false</code> immediately; otherwise, rewrite <code>B</code>. By default, <code>rewriter.lazyCircuit=false</code>.</p>
-</li>
 </ol>
 <h1><a class="header" href="#assignments-in-apalache" id="assignments-in-apalache">Assignments in Apalache</a></h1>
 <p>Any run of Apalache requires an operator name as the value for the parameter
