@@ -11,7 +11,7 @@ import org.backuity.clist.{Command, _}
  *
  * @author Igor Konnov
  */
-class CheckCmd extends CoreSolverCmd(name = "check", description = "Check a TLA+ specification") with General {
+class CheckCmd extends AbstractCheckerCmd(name = "check", description = "Check a TLA+ specification") with General {
 
   // Parses the smtEncoding option
   implicit val smtEncodingRead: Read[SMTEncoding] =

@@ -18,11 +18,11 @@ import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, TypeLiteral}
 
 /**
- * A configuration that binds all the passes from the parser to the constraint output.
+ * Transpiels reTLA inputs to VMT
  *
  * @author Jure Kukovec
  */
-class ConstraintModule extends AbstractModule {
+class ReTLAToVMTModule extends AbstractModule {
   override def configure(): Unit = {
     // the options singleton
     bind(classOf[PassOptions])
@@ -131,11 +131,11 @@ class ConstraintModule extends AbstractModule {
       .to(classOf[PostTypeCheckerPassImpl])
 
     // ConstraintGenPass is in the very end of the pipeline
-    bind(classOf[ConstraintGenPass])
-      .to(classOf[ConstraintGenPassImpl])
+    bind(classOf[TranspilePass])
+      .to(classOf[ReTLAToVMTTranspilePassImpl])
     bind(classOf[Pass])
       .annotatedWith(Names.named("AfterPostTypeChecker"))
-      .to(classOf[ConstraintGenPass])
+      .to(classOf[TranspilePass])
 
     // the final pass is TerminalPass
     bind(classOf[Pass])

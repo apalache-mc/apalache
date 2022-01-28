@@ -4,8 +4,8 @@ import org.backuity.clist.{Command, arg, opt}
 
 import java.io.File
 
-// Holds the minimal necessary info for solving
-abstract class CoreSolverCmd(name: String, description: String) extends Command(name, description) with General {
+// Holds the minimal necessary info about a specification.
+abstract class AbstractCheckerCmd(name: String, description: String) extends Command(name, description) with General {
   var file: File = arg[File](description = "a file containing a TLA+ specification (.tla or .json)")
   var config: String = opt[String](name = "config", default = "",
       description = "configuration file in TLC format,\n" +

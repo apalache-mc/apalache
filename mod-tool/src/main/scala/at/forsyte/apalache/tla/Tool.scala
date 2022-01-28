@@ -8,11 +8,11 @@ import at.forsyte.apalache.infra.log.LogbackConfigurator
 import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor, PassOptions, TlaModuleMixin, WriteablePassOptions}
 import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorMessage, PassOptionException}
 import at.forsyte.apalache.io.{OutputManager, ReportGenerator}
-import at.forsyte.apalache.tla.bmcmt.config.{CheckerModule, ConstraintModule}
+import at.forsyte.apalache.tla.bmcmt.config.{CheckerModule, ReTLAToVMTModule}
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.tooling.{ExitCodes, Version}
 import at.forsyte.apalache.tla.tooling.opt.{
-  CheckCmd, ConfigCmd, ConstrainCmd, CoreSolverCmd, General, ParseCmd, ServerCmd, TestCmd, TypeCheckCmd,
+  CheckCmd, ConfigCmd, TranspileCmd, AbstractCheckerCmd, General, ParseCmd, ServerCmd, TestCmd, TypeCheckCmd,
 }
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import com.google.inject.{Guice, Injector}
@@ -91,7 +91,7 @@ object Tool extends LazyLogging {
           new TestCmd,
           new ConfigCmd,
           new ServerCmd,
-          new ConstrainCmd,
+          new TranspileCmd,
       )
 
     cli match {
@@ -126,8 +126,8 @@ object Tool extends LazyLogging {
               val injector = Guice.createInjector(new CheckerModule)
               handleExceptions(runServer, injector, server)
 
-            case constrain: ConstrainCmd =>
-              val injector = Guice.createInjector(new ConstraintModule)
+            case constrain: TranspileCmd =>
+              val injector = Guice.createInjector(new ReTLAToVMTModule)
               handleExceptions(runConstrain, injector, constrain)
 
             case config: ConfigCmd =>
@@ -171,7 +171,7 @@ object Tool extends LazyLogging {
     }
   }
 
-  private def setCoreOptions(executor: PassChainExecutor, cmd: CoreSolverCmd): Unit = {
+  private def setCoreOptions(executor: PassChainExecutor, cmd: AbstractCheckerCmd): Unit = {
     logger.info(
         "Checker options: filename=%s, init=%s, next=%s, inv=%s"
           .format(cmd.file, cmd.init, cmd.next, cmd.inv),
@@ -326,7 +326,7 @@ object Tool extends LazyLogging {
     ExitCodes.ERROR
   }
 
-  private def runConstrain(injector: => Injector, constrain: ConstrainCmd): Int = {
+  private def runConstrain(injector: => Injector, constrain: TranspileCmd): Int = {
     val executor = injector.getInstance(classOf[PassChainExecutor])
 
     setCoreOptions(executor, constrain)

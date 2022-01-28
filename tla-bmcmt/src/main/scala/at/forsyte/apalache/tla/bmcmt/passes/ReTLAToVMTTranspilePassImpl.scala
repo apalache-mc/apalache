@@ -9,20 +9,15 @@ import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
 /**
- * The implementation of a bounded model checker with SMT.
+ * The reTLA to VMT transpilation pass
  *
  * @author Jure Kukovec
  */
-class ConstraintGenPassImpl @Inject() (val options: PassOptions, pred: LanguagePred,
+class ReTLAToVMTTranspilePassImpl @Inject() (val options: PassOptions, pred: LanguagePred,
     @Named("AfterConstraintGen") nextPass: Pass)
-    extends ConstraintGenPass with LazyLogging {
+    extends TranspilePass with LazyLogging {
 
-  /**
-   * The pass name.
-   *
-   * @return the name associated with the pass
-   */
-  override def name: String = "ConstraintGenerator"
+  override def name: String = "Transpiler"
 
   // TODO
   override def execute(): Boolean = {
