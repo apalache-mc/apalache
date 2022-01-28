@@ -1682,6 +1682,14 @@ $ apalache-mc check --inv=Inv Test951.tla | sed 's/[IEW]@.*//'
 EXITCODE: ERROR (12)
 ```
 
+### check Test1259.tla reports no error: regression for #1259
+
+```sh
+$ apalache-mc check Test1259.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
 
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
