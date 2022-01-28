@@ -61,7 +61,7 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
           _ => LetInExpander(tracker, keepNullary = true), // expand LET-IN, but ignore call-by-name
           _ => wrapHandler.unwrap, // unwrap, to remove ApalacheOper.callByName
           // the second pass of Inliner may be needed, when the higher-order operators were inlined by LetInExpander
-          InlinerOfUserOper(_, tracker)
+          InlinerOfUserOper(_, tracker),
       )
     }
 
@@ -90,7 +90,7 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
       case d => d // keep the rest as they are
     }
     val constInlinedModule = inlined.copy(
-        declarations = inlined.declarations map declTr
+        declarations = inlined.declarations map declTr,
     )
 
     // Fixing issue 283: https://github.com/informalsystems/apalache/issues/283
@@ -107,7 +107,7 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
     }
 
     val filtered = constInlinedModule.copy(
-        declarations = filteredDefs
+        declarations = filteredDefs,
     )
 
     // dump the result of preprocessing

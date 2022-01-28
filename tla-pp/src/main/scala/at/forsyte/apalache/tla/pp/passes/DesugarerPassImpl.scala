@@ -22,7 +22,7 @@ import java.nio.file.Path
  */
 class DesugarerPassImpl @Inject() (
     val options: PassOptions, tracker: TransformationTracker, gen: UniqueNameGenerator, writerFactory: TlaWriterFactory,
-    @Named("AfterDesugarer") val nextPass: Pass with TlaModuleMixin
+    @Named("AfterDesugarer") val nextPass: Pass with TlaModuleMixin,
 ) extends DesugarerPass with LazyLogging {
 
   /**

@@ -33,7 +33,8 @@ class PassChainExecutor @Inject() (val options: WriteablePassOptions, @Named("In
           // Raise error if the pass dependencies aren't satisfied
           if (!nextPass.dependencies.subsetOf(module.properties)) {
             val missing = nextPass.dependencies -- module.properties
-            throw new MissingTransformationError(s"${nextPass.name} cannot run for a module without the properties: ${missing}", module)
+            throw new MissingTransformationError(
+                s"${nextPass.name} cannot run for a module without the properties: ${missing}", module)
           }
 
           exec(1 + seqNo, nextPass) // call the next pass in line

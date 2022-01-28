@@ -52,7 +52,7 @@ class AnalysisPassImpl @Inject() (val options: PassOptions, hintsStoreImpl: Form
           // mark some expressions to be expanded
           "Expansion" -> new ExpansionMarker(tracker),
           // SkolemizationMarker may introduce unused let-definitions. Remove them.
-          "Remove unused let-in defs" -> fromTouchToExTransformation(new LetInOptimizer(tracker))
+          "Remove unused let-in defs" -> fromTouchToExTransformation(new LetInOptimizer(tracker)),
       ) ///
 
     logger.info(" > Marking skolemizable existentials and sets to be expanded...")

@@ -25,7 +25,7 @@ import org.apache.commons.io.FilenameUtils
  */
 class SanyParserPassImpl @Inject() (
     val options: PassOptions, val sourceStore: SourceStore, val annotationStore: AnnotationStore,
-    val writerFactory: TlaWriterFactory, @Named("AfterParser") val nextPass: Pass with TlaModuleMixin
+    val writerFactory: TlaWriterFactory, @Named("AfterParser") val nextPass: Pass with TlaModuleMixin,
 ) extends SanyParserPass with LazyLogging {
 
   /**
@@ -95,13 +95,13 @@ class SanyParserPassImpl @Inject() (
               writerFactory.writeModuleToTla(
                   rootModule.get.copy(name),
                   TlaWriter.STANDARD_MODULES,
-                  Some(outfile)
+                  Some(outfile),
               )
             case "json" =>
               writerFactory.writeModuleToJson(
                   rootModule.get.copy(name),
                   TlaWriter.STANDARD_MODULES,
-                  Some(outfile)
+                  Some(outfile),
               )
             case _ =>
               logger.error(s"  > Unrecognized file format: ${outfile.toString}. Supported formats: .tla and .json")

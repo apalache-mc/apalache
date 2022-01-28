@@ -43,7 +43,7 @@ class OptPassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator,
       List(
           ConstSimplifier(tracker),
           ExprOptimizer(gen, tracker),
-          ConstSimplifier(tracker)
+          ConstSimplifier(tracker),
       ) ///
 
     logger.info(" > Applying optimizations:")

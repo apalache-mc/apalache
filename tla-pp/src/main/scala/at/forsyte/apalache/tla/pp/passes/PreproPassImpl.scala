@@ -6,7 +6,7 @@ import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.transformations.{
-  PredResultFail, PredResultOk, TlaModuleTransformation, TransformationTracker
+  PredResultFail, PredResultOk, TlaModuleTransformation, TransformationTracker,
 }
 import at.forsyte.apalache.tla.lir.{TlaDecl, TlaModule, TlaOperDecl, UID, TransformedTlaModule, ModuleProperty}
 import at.forsyte.apalache.tla.pp.{Desugarer, Keramelizer, Normalizer, UniqueNameGenerator}
@@ -25,7 +25,7 @@ import com.typesafe.scalalogging.LazyLogging
 class PreproPassImpl @Inject() (
     val options: PassOptions, gen: UniqueNameGenerator, renaming: IncrementalRenaming, tracker: TransformationTracker,
     sourceStore: SourceStore, changeListener: ChangeListener, writerFactory: TlaWriterFactory,
-    @Named("AfterPrepro") val nextPass: Pass with TlaModuleMixin
+    @Named("AfterPrepro") val nextPass: Pass with TlaModuleMixin,
 ) extends PreproPass with LazyLogging {
   val MANUAL_LINK = "https://apalache.informal.systems/docs/apalache/known-issues.html"
 
@@ -52,7 +52,7 @@ class PreproPassImpl @Inject() (
           ("Desugarer", ModuleByExTransformer(Desugarer(gen, tracker))),
           ("UniqueRenamer", renaming.renameInModule),
           ("Normalizer", ModuleByExTransformer(Normalizer(tracker))),
-          ("Keramelizer", ModuleByExTransformer(Keramelizer(gen, tracker)))
+          ("Keramelizer", ModuleByExTransformer(Keramelizer(gen, tracker))),
       )
 
     logger.info(" > Applying standard transformations:")
