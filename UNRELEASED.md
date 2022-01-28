@@ -22,4 +22,5 @@
 ### Bug fixes
 
  * Fix the semantics of @@ by using the TLC definition, see #1182, #951, #1234
+ * Fix unexpected polymorphism, see #1262
   
