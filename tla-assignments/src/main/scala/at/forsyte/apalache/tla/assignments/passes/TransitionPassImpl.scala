@@ -96,7 +96,7 @@ class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceSto
     ModuleAdapter.exprsToOperDefs(outOperName, sortedTransitions)
   }
 
-  override def dependencies = Set(ModuleProperty.Primed, ModuleProperty.VCGenerated, ModuleProperty.Preprocessed)
+  override def dependencies = Set(ModuleProperty.Primed, ModuleProperty.Preprocessed)
 
   override def transformations = Set(ModuleProperty.TransitionsFound)
 }

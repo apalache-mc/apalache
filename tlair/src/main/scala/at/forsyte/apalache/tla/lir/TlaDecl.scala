@@ -38,7 +38,7 @@ case class TlaModule(name: String, declarations: Seq[TlaDecl]) extends Serializa
   }
 }
 
-class TransformedTlaModule(val module: TlaModule, val properties: Set[ModuleProperty.Value]) {}
+case class TransformedTlaModule(module: TlaModule, properties: Set[ModuleProperty.Value])
 
 /** a constant as defined by CONSTANT */
 case class TlaConstDecl(name: String)(implicit typeTag: TypeTag) extends TlaDecl with Serializable {

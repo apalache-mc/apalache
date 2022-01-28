@@ -26,15 +26,15 @@ class PassChainExecutor @Inject() (val options: WriteablePassOptions, @Named("In
       if (!result) {
         None // return the negative result
       } else {
-        if (passToRun.nextPass.asInstanceOf[TlaModuleMixin].hasModule) {
-          val nextPass = passToRun.nextPass
+        val nextPass = passToRun.nextPass
+        if (nextPass.asInstanceOf[TlaModuleMixin].hasModule) {
           val module = nextPass.asInstanceOf[TlaModuleMixin].unsafeGetModule
 
           // Raise error if the pass dependencies aren't satisfied
           if (!nextPass.dependencies.subsetOf(module.properties)) {
             val missing = nextPass.dependencies -- module.properties
             throw new MissingTransformationError(
-                s"${nextPass.name} cannot run for a module without the properties: ${missing}", module)
+                s"${nextPass.name} cannot run for a module without the properties: ${missing.mkstring(", ")}", module)
           }
 
           exec(1 + seqNo, nextPass) // call the next pass in line
