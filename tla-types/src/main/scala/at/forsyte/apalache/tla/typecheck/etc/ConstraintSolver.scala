@@ -84,7 +84,11 @@ class ConstraintSolver(approximateSolution: Substitution = Substitution.empty) {
    * @return true if the variable occurs in the partial solution of the solver
    */
   def isFreeVar(varNo: Int): Boolean = {
-    approximateSolution.mapping.keySet.forall(cls => !cls.typeVars.contains(varNo))
+    def outsideClass(cls: EqClass): Boolean = !cls.typeVars.contains(varNo)
+    // Check both the approximate solution, which the solver was initialized with, and the solution, if it exists.
+    // This is probably a computationally expensive check:
+    // https://github.com/informalsystems/apalache/issues/973
+    approximateSolution.mapping.keySet.forall(outsideClass) && solution.mapping.keySet.forall(outsideClass)
   }
 
   private def solveOne(solution: Substitution, constraint: Clause): Option[(Substitution, TlaType1)] = {
