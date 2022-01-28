@@ -1,13 +1,40 @@
 package at.forsyte.apalache.tla.bmcmt.trex
 
+import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStoreImpl
+import at.forsyte.apalache.tla.bmcmt.smt.{SolverContext}
+import at.forsyte.apalache.tla.bmcmt.{SymbStateRewriterImpl}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import org.scalatest.fixture
+import java.io.{PrintStream, File, FileOutputStream}
+import org.scalatest.{fixture, Outcome}
 
 trait ExecutorBase[SnapshotT] extends fixture.FunSuite {
   type ExecutorContextT = ExecutionContext[SnapshotT]
   type FixtureParam = ExecutorContextT
+
+  /**
+   * Create a `withFixture` method using that works within execution context constructed
+   * from the `ctxFactory`, using the given solver
+   */
+  protected def withFixtureInContext(solver: SolverContext, exeCtxFactory: SymbStateRewriterImpl => ExecutorContextT,
+      test: OneArgTest): Outcome = {
+    val rewriter = new SymbStateRewriterImpl(solver, new ExprGradeStoreImpl())
+    val exeCtx = exeCtxFactory(rewriter)
+
+    // Tmp file to capture the noisy stdout from these tests
+    // otherwise they pollut stdout on our CI making it hard to see failures
+    val tmp = File.createTempFile("tla-bmcmt-test-output-", ".tmp")
+    tmp.deleteOnExit()
+
+    try {
+      System.setOut(new PrintStream(new FileOutputStream(tmp)))
+      test(exeCtx)
+    } finally {
+      rewriter.dispose()
+      System.setOut(System.out)
+    }
+  }
 
   protected def assertValid(trex: TransitionExecutorImpl[SnapshotT], assertion: TlaEx): Unit = {
     var snapshot = trex.snapshot()

@@ -1,18 +1,19 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import java.io.PrintWriter
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.values._
-import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.UntypedPredefs.BuilderExAsUntyped
+import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.aux.SmileyFunFun
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.convenience.tla.fromTlaEx
+import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 import com.typesafe.scalalogging.LazyLogging
 
+import java.io.PrintWriter
 import scala.collection.immutable.{HashSet, SortedSet}
 
 /**
@@ -141,12 +142,8 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         if (keys(keyEx)) {
           (keys, fun)
         } else {
-          val pair = tla
-            .colonGreater(keyEx, decodeCellToTlaEx(arena, value))
-            .typed(FunT1(funT1.arg, funT1.res))
-          val ex = tla
-            .atat(fun, pair)
-            .typed(funT1)
+          val pair = SmileyFunFun.smiley(funT1, keyEx, decodeCellToTlaEx(arena, value))
+          val ex = SmileyFunFun.funfun(funT1, fun, pair)
           (keys + keyEx, ex)
         }
       }
@@ -175,9 +172,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
           // this is the common case
           val keyCell0 :: valueCell0 :: _ = arena.getHas(first)
           val keyExp = decodeCellToTlaEx(arena, keyCell0)
-          val firstPair = tla
-            .colonGreater(keyExp, decodeCellToTlaEx(arena, valueCell0))
-            .typed(FunT1(funT1.arg, funT1.res))
+          val firstPair = SmileyFunFun.smiley(funT1, keyExp, decodeCellToTlaEx(arena, valueCell0))
           val keys0 = Set(keyExp) // Used to track seen indices, so we don't include duplicates
           val (_, fun) = pairs.tail.foldLeft((keys0, firstPair)) { case ((keys, f), p) =>
             if (p == first) {

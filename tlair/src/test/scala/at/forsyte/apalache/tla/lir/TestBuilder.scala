@@ -45,14 +45,14 @@ class TestBuilder extends FunSuite with TestingPredefs {
           TlaOperDecl(
               "A",
               List(OperParam("B", 0)),
-              OperEx(TlaOper.apply, n_B)
+              OperEx(TlaOper.apply, n_B),
           ))
     assert(
         decl4 ==
           TlaOperDecl(
               "A",
               List(OperParam("x"), OperParam("B", 1)),
-              OperEx(TlaOper.apply, n_B, n_x)
+              OperEx(TlaOper.apply, n_B, n_x),
           ))
 
     val appEx1 = bd.appDecl(decl1).untyped()
@@ -1609,12 +1609,4 @@ class TestBuilder extends FunSuite with TestingPredefs {
     assert(powersetBuildBad2 == NullEx)
 
   }
-
-  test("Test direct methods: TlctOper") {
-    val assertMsg = "None"
-    val assertion = bd.tlcAssert(NullEx, assertMsg).untyped()
-
-    assert(assertion == OperEx(TlcOper.assert, NullEx, bd.str(assertMsg)))
-  }
-
 }

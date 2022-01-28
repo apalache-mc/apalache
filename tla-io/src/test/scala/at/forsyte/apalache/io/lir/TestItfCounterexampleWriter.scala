@@ -2,7 +2,7 @@ package at.forsyte.apalache.io.lir
 
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.aux.SmileyFunFun._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import org.junit.runner.RunWith
@@ -36,25 +36,25 @@ class TestItfCounterexampleWriter extends FunSuite {
     compareJson(
         TlaModule("test", List(TlaConstDecl("N")(intTag), TlaVarDecl("x")(intTag))),
         List(
-            ("0", SortedMap("N" -> ValEx(TlaInt(4))(intTag)))
+            ("0", SortedMap("N" -> ValEx(TlaInt(4))(intTag))),
         ),
         """{
-        |  "#meta": {
-        |    "format": "ITF",
-        |    "format-description": "https://apalache.informal.systems/docs/adr/015adr-trace.html",
-        |    "description": "Created by Apalache"
-        |  },
-        |  "params": [ "N" ],
-        |  "vars": [ "x" ],
-        |  "states": [
-        |    {
-        |      "#meta": {
-        |        "index": 0
-        |      },
-        |      "N": 4
-        |    }
-        |  ]
-        |}""".stripMargin
+          |  "#meta": {
+          |    "format": "ITF",
+          |    "format-description": "https://apalache.informal.systems/docs/adr/015adr-trace.html",
+          |    "description": "Created by Apalache"
+          |  },
+          |  "params": [ "N" ],
+          |  "vars": [ "x" ],
+          |  "states": [
+          |    {
+          |      "#meta": {
+          |        "index": 0
+          |      },
+          |      "N": 4
+          |    }
+          |  ]
+          |}""".stripMargin,
     )
   }
 
@@ -72,7 +72,7 @@ class TestItfCounterexampleWriter extends FunSuite {
         TlaVarDecl("e")(Typed(fooBar)),
         TlaVarDecl("f")(Typed(intAndStr)),
         TlaVarDecl("g")(Typed(intToStr)),
-        TlaVarDecl("h")(Typed(intToStr))
+        TlaVarDecl("h")(Typed(intToStr)),
     )
 
     compareJson(
@@ -97,37 +97,37 @@ class TestItfCounterexampleWriter extends FunSuite {
                     "f" -> tuple(int(7), str("myStr"))
                       .as(intAndStr),
                     // ((1 :> "a") @@ (2 :> "b")) @@ (3 :> "c")
-                    "g" -> atat(colonGreater(int(1), str("a")) as intToStr,
-                        atat(colonGreater(int(2), str("b")) as intToStr,
-                            colonGreater(int(3), str("c")) as intToStr) as intToStr)
+                    "g" -> funfun(intToStr, smiley(intToStr, int(1).typed(), str("a").typed()),
+                        funfun(intToStr, smiley(intToStr, int(2).typed(), str("b").typed()),
+                            smiley(intToStr, int(3).typed(), str("c").typed())))
                       .as(intToStr),
                     // [ x \in {} |-> x ]
                     // technically, this expression is not type-correct
                     "h" -> funDef(name("x").typed(IntT1()), name("x").typed(IntT1()), enumSet().typed(SetT1(StrT1())))
-                      .typed(intToStr)
-                ))
+                      .typed(intToStr),
+                )),
         ),
         """{
-        |  "#meta": {
-        |    "format": "ITF",
-        |    "format-description": "https://apalache.informal.systems/docs/adr/015adr-trace.html",
-        |    "description": "Created by Apalache"
-        |  },
-        |  "vars": [ "a", "b", "c", "d", "e", "f", "g", "h" ],
-        |  "states": [
-        |    {
-        |      "#meta": { "index": 0 },
-        |      "a": 2,
-        |      "b": "hello",
-        |      "c": [ 3, { "#bigint": "1000000000000000000" } ],
-        |      "d": { "#set": [ 5, 6 ] },
-        |      "e": { "foo": 3, "bar": true },
-        |      "f": { "#tup": [ 7, "myStr" ] },
-        |      "g": { "#map": [[1, "a"], [2, "b"], [3, "c"]] },
-        |      "h": { "#map": [] }
-        |    }
-        |  ]
-        |}""".stripMargin
+          |  "#meta": {
+          |    "format": "ITF",
+          |    "format-description": "https://apalache.informal.systems/docs/adr/015adr-trace.html",
+          |    "description": "Created by Apalache"
+          |  },
+          |  "vars": [ "a", "b", "c", "d", "e", "f", "g", "h" ],
+          |  "states": [
+          |    {
+          |      "#meta": { "index": 0 },
+          |      "a": 2,
+          |      "b": "hello",
+          |      "c": [ 3, { "#bigint": "1000000000000000000" } ],
+          |      "d": { "#set": [ 5, 6 ] },
+          |      "e": { "foo": 3, "bar": true },
+          |      "f": { "#tup": [ 7, "myStr" ] },
+          |      "g": { "#map": [[1, "a"], [2, "b"], [3, "c"]] },
+          |      "h": { "#map": [] }
+          |    }
+          |  ]
+          |}""".stripMargin,
     )
   }
 }
