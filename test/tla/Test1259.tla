@@ -6,12 +6,8 @@ VARIABLES
 
 \* @type: (a -> b) => (a -> b);
 Foo(f) ==
-    LET \* @type: a -> b;
-        f2 == f
-    IN
-    LET
-        d == DOMAIN f2
-    IN
+    LET f2 == f IN
+    LET d == DOMAIN f2 IN
     [ x \in d |-> f[x] ]
 
 Init ==
