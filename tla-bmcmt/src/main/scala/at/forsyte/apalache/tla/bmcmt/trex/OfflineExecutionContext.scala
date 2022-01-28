@@ -46,7 +46,6 @@ class OfflineExecutionContext(var rewriter: SymbStateRewriter)
       case _: SymbStateRewriterImpl           => new SymbStateRewriterImpl(solver, rewriter.exprGradeStore)
       case oddRewriterType                    => throw new IllegalArgumentException(s"Unexpected rewriter of type $oddRewriterType")
     }
-    newRewriter.formulaHintsStore = rewriter.formulaHintsStore
     newRewriter.config = rewriter.config
     newRewriter.recover(snapshot.rewriterSnapshot)
     newRewriter.solverContext = solver

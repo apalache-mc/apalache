@@ -60,8 +60,6 @@ class SymbStateRewriterAuto(private var _solverContext: SolverContext) extends S
 
   override def exprCache: ExprCache = impl.exprCache
 
-  override def formulaHintsStore: FormulaHintsStore = impl.formulaHintsStore
-
   override def exprGradeStore: ExprGradeStore = exprGradeStoreImpl
 
   private def reset(arena: Arena, binding: Binding): Unit = {}

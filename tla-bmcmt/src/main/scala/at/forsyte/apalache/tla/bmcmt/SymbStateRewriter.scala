@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.RewritingResult
-import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore}
+import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStore
 import at.forsyte.apalache.tla.bmcmt.caches.{ExprCache, IntValueCache, ModelValueCache, RecordDomainCache}
 import at.forsyte.apalache.tla.bmcmt.rewriter.{Recoverable, RewriterConfig, SymbStateRewriterSnapshot}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
@@ -80,11 +80,6 @@ trait SymbStateRewriter extends StackableContext with MessageStorage with Recove
    * @return
    */
   def exprGradeStore: ExprGradeStore
-
-  /**
-   * The store that contains formula hints. By default, empty.
-   */
-  def formulaHintsStore: FormulaHintsStore
 
   /**
    * Rewrite a symbolic expression by applying at most one rewriting rule.
