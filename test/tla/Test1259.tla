@@ -1,14 +1,14 @@
 ------------------ MODULE Test1259 ---------------------
 
 VARIABLES
-    \* @type: Str -> Int;
+    \* @type: Bool;
     fun
 
-\* @type: (a -> b) => (a -> b);
+\* @type: (a -> b) => Bool;
 Foo(f) ==
     LET f2 == f IN
     LET d == DOMAIN f2 IN
-    [ x \in d |-> f[x] ]
+    d = DOMAIN f
 
 Init ==
     fun = Foo([ x \in { "a" } |-> 1 ])
