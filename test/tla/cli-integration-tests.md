@@ -1674,12 +1674,10 @@ EXITCODE: OK
 
 ### check Test951.tla reports no error on Inv: regression for #951
 
-But currently, it does. Bad luck. It should be fixed.
-
 ```sh
 $ apalache-mc check --inv=Inv Test951.tla | sed 's/[IEW]@.*//'
 ...
-EXITCODE: ERROR (12)
+EXITCODE: OK
 ```
 
 ### check Test1259.tla reports no error: regression for #1259
