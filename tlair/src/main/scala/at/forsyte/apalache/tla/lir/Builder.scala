@@ -534,48 +534,8 @@ class Builder {
     BuilderOper(TlaSetOper.powerset, set)
   }
 
-  // tlc
-  def tlcAssert(assertion: BuilderEx, errorMessage: String): BuilderEx = {
-    BuilderOper(TlcOper.assert, assertion, BuilderVal(TlaStr(errorMessage)))
-  }
-
   def primeInSingleton(nameToPrime: BuilderEx, onlySetElem: BuilderEx): BuilderEx = {
     in(prime(nameToPrime), enumSet(onlySetElem))
-  }
-
-  /**
-   * The TLC operator that creates a singleton function: key :> value.
-   */
-  def colonGreater(key: BuilderEx, value: BuilderEx): BuilderEx = {
-    BuilderOper(TlcOper.colonGreater, key, value)
-  }
-
-  /**
-   * The TLC operator that concatenates two functions: fun1 @@ fun2.
-   *
-   * @param lhs function on the left-hand side
-   * @param rhs function on the right-hand side
-   * @return a new function that operates on the joint domain of lhs and rhs
-   */
-  def atat(lhs: BuilderEx, rhs: BuilderEx): BuilderEx = {
-    BuilderOper(TlcOper.atat, lhs, rhs)
-  }
-
-  /**
-   * Produce a function out of a sequence of keys and values, that is, key_1 :> value_1 @@ ... @@ key_k :> value_k.
-   *
-   * TODO: this method introduces an intermediate builder expression, so it cannot be used to construct a typed expression.
-   *
-   * @param args an alternating list of keys and values
-   */
-  def atatInterleaved(args: BuilderEx*): BuilderEx = {
-    if (args.isEmpty) {
-      BuilderOper(TlcOper.atat)
-    } else {
-      val kvs = args.sliding(2, 2).toList
-      val pairs = kvs.map(p => BuilderOper(TlcOper.colonGreater, p.head, p(1)))
-      BuilderOper(TlcOper.atat, pairs: _*)
-    }
   }
 
   def assign(lhs: BuilderEx, rhs: BuilderEx): BuilderEx = {
@@ -695,7 +655,7 @@ class Builder {
         TlaSetOper.setminus.name -> TlaSetOper.setminus,
         TlaSetOper.subseteq.name -> TlaSetOper.subseteq,
         TlaSetOper.times.name -> TlaSetOper.times,
-        TlaSetOper.union.name -> TlaSetOper.union
+        TlaSetOper.union.name -> TlaSetOper.union,
     )
 
   def byName(operatorName: String, args: BuilderEx*): BuilderEx = {
@@ -708,7 +668,7 @@ class Builder {
       .map(op =>
         if (op.isCorrectArity(args.size))
           BuilderOper(op, args: _*)
-        else BuilderTlaExWrapper(NullEx)
+        else BuilderTlaExWrapper(NullEx),
       )
       .getOrElse(BuilderTlaExWrapper(NullEx))
 }

@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.aux.SmileyFunFun._
 
 trait TestSymbStateDecoder extends RewriterBase {
   private val types = Map(
@@ -14,7 +15,7 @@ trait TestSymbStateDecoder extends RewriterBase {
       "rib" -> RecT1("a" -> IntT1(), "b" -> BoolT1()),
       "b" -> BoolT1(),
       "i_to_i" -> FunT1(IntT1(), IntT1()),
-      "i_TO_i" -> SetT1(FunT1(IntT1(), IntT1()))
+      "i_TO_i" -> SetT1(FunT1(IntT1(), IntT1())),
   )
 
   test("decode bool") { rewriterType: SMTEncoding =>
@@ -158,13 +159,12 @@ trait TestSymbStateDecoder extends RewriterBase {
     val cell = nextState.asCell
     val decoder = new SymbStateDecoder(solverContext, rewriter)
     val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
+
+    val intToInt = FunT1(IntT1(), IntT1())
     val expectedOutcome: TlaEx =
-      atat(colonGreater(int(1), int(2)) ? "i_to_i", colonGreater(int(2), int(3)) ? "i_to_i")
-        .typed(types, "i_to_i")
+      funfun(intToInt, smiley(intToInt, int(1).typed(), int(2).typed()),
+          smiley(intToInt, int(2).typed(), int(3).typed()))
     assert(expectedOutcome == decodedEx)
-    val eq = eql(decodedEx, funEx)
-      .typed(BoolT1())
-    assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
   // See https://github.com/informalsystems/apalache/issues/962
@@ -184,11 +184,9 @@ trait TestSymbStateDecoder extends RewriterBase {
     val cell = nextState.asCell
     val decoder = new SymbStateDecoder(solverContext, rewriter)
     val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
-    val expectedOutcome: TlaEx = (colonGreater(int(1), int(2)) ? "i_to_i").typed(types, "i_to_i")
+    val intToInt = FunT1(IntT1(), IntT1())
+    val expectedOutcome: TlaEx = smiley(intToInt, int(1).typed(), int(2).typed())
     assert(expectedOutcome == decodedEx)
-    val eq = eql(decodedEx, funEx)
-      .typed(BoolT1())
-    assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
   test("decode statically empty fun") { rewriterType: SMTEncoding =>

@@ -206,7 +206,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
         val lambdaClause = EqClause(lambdaTypeVar, operType)
           .setOnTypeFound(tt => onTypeFound(ex.sourceRef, tt))
           .setOnTypeError((_, ts) =>
-            onTypeError(ex.sourceRef.asInstanceOf[ExactRef], "Type error in parameters: " + ts.head)
+            onTypeError(ex.sourceRef.asInstanceOf[ExactRef], "Type error in parameters: " + ts.head),
           )
         solver.addConstraint(lambdaClause)
         operType
@@ -257,8 +257,8 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
 
         // produce constraints for the operator signature
         def onError(sub: Substitution, ts: Seq[TlaType1]): Unit = {
-          val sepSigs = String.join(" and ", ts.map(_.toString()): _*)
-          onTypeError(defEx.sourceRef, s"Expected ${operScheme.principalType} in $name. Found: $sepSigs")
+          val sepSigs = String.join(" and ", ts.map(t => sub.subRec(t).toString): _*)
+          onTypeError(defEx.sourceRef, s"Expected ${sub.subRec(operScheme.principalType)} in $name. Found: $sepSigs")
         }
 
         val operVar = varPool.fresh

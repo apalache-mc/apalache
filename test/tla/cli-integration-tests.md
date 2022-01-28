@@ -1664,6 +1664,24 @@ Test928.tla:6:18-6:19: type input error: Found a polymorphic type: Set(a)
 EXITCODE: ERROR (255)
 ```
 
+### check Test1182.tla reports no error on Inv: regression for #1182
+
+```sh
+$ apalache-mc check --inv=Inv Test1182.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check Test951.tla reports no error on Inv: regression for #951
+
+But currently, it does. Bad luck. It should be fixed.
+
+```sh
+$ apalache-mc check --inv=Inv Test951.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: ERROR (12)
+```
+
 ## running the typecheck command
 
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
@@ -2069,7 +2087,7 @@ See: https://github.com/informalsystems/apalache/issues/925
 ```sh
 $ apalache-mc typecheck Bug925.tla | sed 's/[IEW]@.*//'
 ...
-[Bug925.tla:7:1-7:24]: Expected ((b) => [f: Set(b)]) in Optional. Found: ((a) => [f: a])
+[Bug925.tla:7:1-7:24]: Expected ((a) => [f: Set(a)]) in Optional. Found: ((a) => [f: a])
 [Bug925.tla:7:1-7:24]: Error when computing the type of Optional
 ...
 EXITCODE: ERROR (255)

@@ -8,16 +8,33 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
+import org.scalatest.Outcome
+import java.io.{PrintStream, File, FileOutputStream}
 
 @RunWith(classOf[JUnitRunner])
 class TestTransformations extends FunSuite with TestingPredefs {
+
+  override protected def withFixture(test: NoArgTest): Outcome = {
+    // Tmp file to capture the noisy stdout from these tests
+    // otherwise they pollut stdout on our CI making it hard to see failures
+    val tmp = File.createTempFile("tlair-test-output-", ".tmp")
+    tmp.deleteOnExit()
+
+    try {
+      System.setOut(new PrintStream(new FileOutputStream(tmp)))
+      super.withFixture(test)
+    } finally {
+      System.setOut(System.out)
+    }
+
+  }
 
   import tla._
 
   test("Test Prime") {
     val vars: Set[String] = Set(
         "x",
-        "a"
+        "a",
     )
     val transformation = Prime(vars, new IdleTracker())
 
@@ -30,7 +47,7 @@ class TestTransformations extends FunSuite with TestingPredefs {
         pa1,
         pa2,
         pa3,
-        pa4
+        pa4,
     )
     val cmp = expected map { case (k, v) =>
       (v, transformation(k))
@@ -51,34 +68,34 @@ class TestTransformations extends FunSuite with TestingPredefs {
         and(
             or(
                 or(n_a, n_b),
-                or(n_c, n_d)
-            )
+                or(n_c, n_d),
+            ),
         ),
         and(
             or(
                 or(n_e, n_f),
-                or(n_g, NameEx("h"))
-            )
-        )
+                or(n_g, NameEx("h")),
+            ),
+        ),
     ).untyped() -> and(
         or(n_a, n_b, n_c, n_d),
-        or(n_e, n_f, n_g, NameEx("h"))
+        or(n_e, n_f, n_g, NameEx("h")),
     ).untyped()
     val pa6 = enumSet(or(n_x, and(n_y, n_z))).untyped() -> enumSet(or(n_x, and(n_y, n_z))).untyped()
     val pa7 = letIn(
         appOp(n_A),
-        declOp("A", int(1)).untypedOperDecl()
+        declOp("A", int(1)).untypedOperDecl(),
     ).untyped() -> letIn(
         appOp(n_A),
-        declOp("A", int(1)).untypedOperDecl()
+        declOp("A", int(1)).untypedOperDecl(),
     ).untyped()
 
     val pa8 = letIn(
         appOp(n_A),
-        declOp("A", or(n_x, or(n_y, n_z))).untypedOperDecl()
+        declOp("A", or(n_x, or(n_y, n_z))).untypedOperDecl(),
     ).untyped() -> letIn(
         appOp(n_A),
-        declOp("A", or(n_x, n_y, n_z)).untypedOperDecl()
+        declOp("A", or(n_x, n_y, n_z)).untypedOperDecl(),
     ).untyped()
 
     val expected = Seq(
@@ -89,7 +106,7 @@ class TestTransformations extends FunSuite with TestingPredefs {
         pa5,
         pa6,
         pa7,
-        pa8
+        pa8,
     )
     val cmp = expected map { case (k, v) =>
       (v, transformation(k))

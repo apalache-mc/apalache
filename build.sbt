@@ -53,7 +53,10 @@ lazy val tlaModuleTestSettings = Seq(
 )
 
 lazy val testSettings = Seq(
-    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oDT"),
+    // Configure the test reporters for concise but informative output.
+    // See https://www.scalatest.org/user_guide/using_scalatest_with_sbt
+    // for the meaning of the flags.
+    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oCDEHT"),
 )
 
 /////////////////////////////
@@ -176,8 +179,9 @@ lazy val root = (project in file("."))
         sbtassembly.MappingSet(
             None,
             Vector(
-                (src_dir / "Apalache.tla") -> "tla2sany/StandardModules/Apalacha.tla",
+                (src_dir / "Apalache.tla") -> "tla2sany/StandardModules/Apalache.tla",
                 (src_dir / "Variants.tla") -> "tla2sany/StandardModules/Variants.tla",
+                (src_dir / "__rewire_tlc_in_apalache.tla") -> "tla2sany/StandardModules/__rewire_tlc_in_apalache.tla",
             ),
         )
       },
@@ -210,9 +214,6 @@ docker / dockerfile := {
   val runners = rootDir / "bin"
   val runnersTarget = s"${dwd}/bin"
 
-  val modules = rootDir / "src" / "tla"
-  val modulesTarget = s"${dwd}/src/tla"
-
   val license = rootDir / "LICENSE"
   val readme = rootDir / "README.md"
 
@@ -225,7 +226,6 @@ docker / dockerfile := {
     add(runners, runnersTarget)
     add(license, s"${dwd}/${license.name}")
     add(readme, s"${dwd}/${readme.name}")
-    add(modules, modulesTarget)
 
     // TLA parser requires all specification files to be in the same directory
     // We assume the user bind-mounted the spec dir into /var/apalache
