@@ -11,6 +11,7 @@ import util.SimpleFilenameToStream
 import java.io._
 import java.nio.file.Files
 import scala.io.Source
+import scala.util.{Failure, Success, Try}
 
 /**
  * This is the entry point for parsing TLA+ code with SANY and constructing an intermediate representation.
@@ -30,12 +31,12 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) {
     val errBuf = new StringWriter()
     // use.toString() to retrieve the error messages
     val specObj =
-      new SpecObj(file.getAbsolutePath, new SimpleFilenameToStream())
+      new SpecObj(file.getAbsolutePath, new SanyNameToStream())
     // call SANY
     SANY.frontEndMain(
         specObj,
         file.getAbsolutePath,
-        new PrintStream(new WriterOutputStream(errBuf, "UTF8"))
+        new PrintStream(new WriterOutputStream(errBuf, "UTF8")),
     )
     // abort on errors
     throwOnError(specObj)
@@ -58,7 +59,7 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) {
    * @return the pair (the root module name, a map of modules)
    */
   def loadFromSource(
-      moduleName: String, source: Source
+      moduleName: String, source: Source,
   ): (String, Map[String, TlaModule]) = {
     val tempDir = Files.createTempDirectory("sanyimp").toFile
     val temp = new File(tempDir, moduleName + ".tla")
@@ -66,7 +67,10 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) {
       // write the contents to a temporary file
       val pw = new PrintWriter(temp)
       try {
-        source.getLines().foreach(line => pw.println(line))
+        Try(source.getLines()) match {
+          case Success(lines) => lines.foreach(line => pw.println(line))
+          case Failure(e)     => throw new FileNotFoundException("Source not found: " + e.getMessage)
+        }
       } finally {
         pw.close()
       }
@@ -97,7 +101,7 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) {
     // the error level is above zero, so SANY failed for an unknown reason
     if (specObj.getErrorLevel > 0) {
       throw new SanyException(
-          "Unknown SANY error (error level=%d)".format(specObj.getErrorLevel)
+          "Unknown SANY error (error level=%d)".format(specObj.getErrorLevel),
       )
     }
   }

@@ -40,7 +40,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     def assertForDecl(decl: TlaDecl): Unit = {
       assert(
           sourceStore.contains(decl.ID),
-          s"(No source location for declaration $decl.name)"
+          s"(No source location for declaration $decl.name)",
       )
     }
 
@@ -69,7 +69,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
   }
 
   def expectOperDecl(
-      name: String, params: List[OperParam], body: TlaEx
+      name: String, params: List[OperParam], body: TlaEx,
   ): (TlaDecl => Unit) = {
     case d: TlaOperDecl =>
       assert(name == d.name)
@@ -78,12 +78,12 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
       // the source location of the definition body has been saved
       assert(
           sourceStore.contains(d.body.ID),
-          s"(Source location of the definition body ${d.body.ID} is not stored)"
+          s"(Source location of the definition body ${d.body.ID} is not stored)",
       )
       // the source location of the definition has been saved
       assert(
           sourceStore.contains(d.ID),
-          s"(Source of the definition ${d.name} is not stored)"
+          s"(Source of the definition ${d.name} is not stored)",
       )
 
     case d @ _ =>
@@ -91,13 +91,13 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
   }
 
   def findAndExpectOperDecl(
-      mod: TlaModule, name: String, params: List[OperParam], body: TlaEx
+      mod: TlaModule, name: String, params: List[OperParam], body: TlaEx,
   ): Unit = {
     mod.declarations.find {
       _.name == name
     } match {
       case Some(d: TlaOperDecl) =>
-        expectOperDecl(name, params, body)
+        expectOperDecl(name, params, body)(d)
 
       case _ =>
         fail("Expected a TlaDecl")
@@ -370,7 +370,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
         assert(
-            OperEx(TlaBoolOper.or, ValEx(TlaBool(false)), ValEx(TlaBool(true))) == actionDecl.body
+            OperEx(TlaBoolOper.or, ValEx(TlaBool(false)), ValEx(TlaBool(true))) == actionDecl.body,
         )
         assert(sourceStore.contains(actionDecl.body.ID)) // and source file information has been saved
         val loc = sourceStore.find(actionDecl.body.ID).get
@@ -588,49 +588,49 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
 
     expectDecl(
         "Eq",
-        OperEx(TlaOper.eq, ValEx(TlaBool(false)), ValEx(TlaBool(true)))
+        OperEx(TlaOper.eq, ValEx(TlaBool(false)), ValEx(TlaBool(true))),
     )
     expectDecl(
         "Ne",
-        OperEx(TlaOper.ne, ValEx(TlaBool(false)), ValEx(TlaBool(true)))
+        OperEx(TlaOper.ne, ValEx(TlaBool(false)), ValEx(TlaBool(true))),
     )
     expectDecl("Prime", OperEx(TlaActionOper.prime, NameEx("x")))
     expectDecl("Not", OperEx(TlaBoolOper.not, NameEx("x")))
     expectDecl(
         "Or",
-        OperEx(TlaBoolOper.or, ValEx(TlaBool(false)), ValEx(TlaBool(true)))
+        OperEx(TlaBoolOper.or, ValEx(TlaBool(false)), ValEx(TlaBool(true))),
     )
     expectDecl(
         "And",
-        OperEx(TlaBoolOper.and, ValEx(TlaBool(false)), ValEx(TlaBool(true)))
+        OperEx(TlaBoolOper.and, ValEx(TlaBool(false)), ValEx(TlaBool(true))),
     )
     expectDecl(
         "Equiv",
-        OperEx(TlaBoolOper.equiv, ValEx(TlaBool(false)), ValEx(TlaBool(true)))
+        OperEx(TlaBoolOper.equiv, ValEx(TlaBool(false)), ValEx(TlaBool(true))),
     )
     expectDecl(
         "Implies",
-        OperEx(TlaBoolOper.implies, ValEx(TlaBool(false)), ValEx(TlaBool(true)))
+        OperEx(TlaBoolOper.implies, ValEx(TlaBool(false)), ValEx(TlaBool(true))),
     )
     expectDecl("Subset", OperEx(TlaSetOper.powerset, NameEx("x")))
     expectDecl("Union", OperEx(TlaSetOper.union, NameEx("x")))
     expectDecl("Domain", OperEx(TlaFunOper.domain, NameEx("x")))
     expectDecl(
         "Subseteq",
-        OperEx(TlaSetOper.subseteq, NameEx("x"), NameEx("x"))
+        OperEx(TlaSetOper.subseteq, NameEx("x"), NameEx("x")),
     )
     expectDecl("In", OperEx(TlaSetOper.in, NameEx("x"), NameEx("x")))
     expectDecl("Notin", OperEx(TlaSetOper.notin, NameEx("x"), NameEx("x")))
     expectDecl(
         "Setminus",
-        OperEx(TlaSetOper.setminus, NameEx("x"), NameEx("x"))
+        OperEx(TlaSetOper.setminus, NameEx("x"), NameEx("x")),
     )
     expectDecl("Cap", OperEx(TlaSetOper.cap, NameEx("x"), NameEx("x")))
     expectDecl("Cup", OperEx(TlaSetOper.cup, NameEx("x"), NameEx("x")))
     expectDecl("Times", OperEx(TlaSetOper.times, NameEx("x"), NameEx("x")))
     expectDecl(
         "LeadsTo",
-        OperEx(TlaTempOper.leadsTo, ValEx(TlaBool(true)), ValEx(TlaBool(true)))
+        OperEx(TlaTempOper.leadsTo, ValEx(TlaBool(true)), ValEx(TlaBool(true))),
     )
     expectDecl("Box", OperEx(TlaTempOper.box, ValEx(TlaBool(true))))
     expectDecl("Diamond", OperEx(TlaTempOper.diamond, ValEx(TlaBool(true))))
@@ -638,15 +638,15 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     expectDecl("Unchanged", OperEx(TlaActionOper.unchanged, NameEx("x")))
     expectDecl(
         "Cdot",
-        OperEx(TlaActionOper.composition, trueOperEx, trueOperEx)
+        OperEx(TlaActionOper.composition, trueOperEx, trueOperEx),
     )
     expectDecl(
         "Guarantees",
-        OperEx(TlaTempOper.guarantees, trueOperEx, trueOperEx)
+        OperEx(TlaTempOper.guarantees, trueOperEx, trueOperEx),
     )
     expectDecl(
         "Angleact",
-        OperEx(TlaActionOper.nostutter, trueOperEx, NameEx("x"))
+        OperEx(TlaActionOper.nostutter, trueOperEx, NameEx("x")),
     )
     expectDecl(
         "BoundedChoose",
@@ -654,24 +654,24 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             TlaOper.chooseBounded,
             NameEx("y"),
             NameEx("x"),
-            ValEx(TlaBool(true))
-        )
+            ValEx(TlaBool(true)),
+        ),
     )
     expectDecl(
         "BoundedExists",
-        OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("x"), ValEx(TlaBool(true)))
+        OperEx(TlaBoolOper.exists, NameEx("y"), NameEx("x"), ValEx(TlaBool(true))),
     )
     expectDecl(
         "BoundedForall",
-        OperEx(TlaBoolOper.forall, NameEx("y"), NameEx("x"), ValEx(TlaBool(true)))
+        OperEx(TlaBoolOper.forall, NameEx("y"), NameEx("x"), ValEx(TlaBool(true))),
     )
     expectDecl(
         "CartesianProd",
-        OperEx(TlaSetOper.times, NameEx("x"), NameEx("x"), NameEx("x"))
+        OperEx(TlaSetOper.times, NameEx("x"), NameEx("x"), NameEx("x")),
     )
     expectDecl(
         "Pair",
-        OperEx(TlaFunOper.tuple, ValEx(TlaInt(1)), ValEx(TlaInt(2)))
+        OperEx(TlaFunOper.tuple, ValEx(TlaInt(1)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Tuple",
@@ -679,35 +679,35 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             TlaFunOper.tuple,
             ValEx(TlaInt(1)),
             ValEx(TlaInt(2)),
-            ValEx(TlaInt(3))
-        )
+            ValEx(TlaInt(3)),
+        ),
     )
     expectDecl(
         "Case",
-        OperEx(TlaControlOper.caseNoOther, 1.to(6).map(i => ValEx(TlaInt(i))): _*)
+        OperEx(TlaControlOper.caseNoOther, 1.to(6).map(i => ValEx(TlaInt(i))): _*),
     )
     expectDecl(
         "CaseOther",
         OperEx(
             TlaControlOper.caseWithOther,
-            (7 +: 1.to(6)).map(i => ValEx(TlaInt(i))): _*
-        )
+            (7 +: 1.to(6)).map(i => ValEx(TlaInt(i))): _*,
+        ),
     )
     expectDecl(
         "ConjList",
         OperEx(
             TlaBoolOper.and,
             List(TlaBool(false), TlaBool(true), TlaBool(false))
-              .map(b => ValEx(b)): _*
-        )
+              .map(b => ValEx(b)): _*,
+        ),
     )
     expectDecl(
         "DisjList",
         OperEx(
             TlaBoolOper.or,
             List(TlaBool(false), TlaBool(true), TlaBool(false))
-              .map(b => ValEx(b)): _*
-        )
+              .map(b => ValEx(b)): _*,
+        ),
     )
     expectDecl(
         "Except",
@@ -715,8 +715,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             TlaFunOper.except,
             NameEx("x"),
             OperEx(TlaFunOper.tuple, ValEx(TlaInt(0))),
-            ValEx(TlaInt(1))
-        )
+            ValEx(TlaInt(1)),
+        ),
     )
     expectDecl(
         "ExceptAt",
@@ -727,18 +727,18 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             OperEx(
                 TlaBoolOper.and,
                 OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(0))),
-                ValEx(TlaBool(true))
-            )
-        )
+                ValEx(TlaBool(true)),
+            ),
+        ),
     )
     expectDecl(
         "FcnApply",
-        OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(1)))
+        OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(1))),
     )
     val cup = OperEx(TlaSetOper.cup, NameEx("y"), NameEx("y"))
     expectDecl(
         "FcnCtor",
-        OperEx(TlaFunOper.funDef, cup, NameEx("y"), NameEx("x"))
+        OperEx(TlaFunOper.funDef, cup, NameEx("y"), NameEx("x")),
     )
     expectDecl(
         "FcnCtor2",
@@ -748,8 +748,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             NameEx("a"),
             NameEx("x"),
             NameEx("b"),
-            ValEx(TlaBoolSet)
-        )
+            ValEx(TlaBoolSet),
+        ),
     )
     expectDecl(
         "FcnCtor3",
@@ -757,8 +757,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             TlaFunOper.funDef,
             OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")),
             OperEx(TlaFunOper.tuple, NameEx("a"), NameEx("b")),
-            OperEx(TlaSetOper.times, NameEx("x"), ValEx(TlaBoolSet))
-        )
+            OperEx(TlaSetOper.times, NameEx("x"), ValEx(TlaBoolSet)),
+        ),
     )
     expectDecl(
         "IfThenElse",
@@ -766,8 +766,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             TlaControlOper.ifThenElse,
             ValEx(TlaBool(true)),
             ValEx(TlaBool(false)),
-            ValEx(TlaBool(true))
-        )
+            ValEx(TlaBool(true)),
+        ),
     )
     expectDecl(
         "RcdCtor",
@@ -776,12 +776,12 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             ValEx(TlaStr("a")),
             ValEx(TlaInt(1)),
             ValEx(TlaStr("b")),
-            ValEx(TlaInt(2))
-        )
+            ValEx(TlaInt(2)),
+        ),
     )
     expectDecl(
         "RcdSelect",
-        OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaStr("foo")))
+        OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaStr("foo"))),
     )
     expectDecl(
         "SetEnumerate",
@@ -789,8 +789,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             TlaSetOper.enumSet,
             ValEx(TlaInt(1)),
             ValEx(TlaInt(2)),
-            ValEx(TlaInt(3))
-        )
+            ValEx(TlaInt(3)),
+        ),
     )
     expectDecl("SetOfFcns", OperEx(TlaSetOper.funSet, NameEx("x"), NameEx("x")))
     expectDecl(
@@ -800,44 +800,44 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             ValEx(TlaStr("a")),
             NameEx("x"),
             ValEx(TlaStr("b")),
-            NameEx("x")
-        )
+            NameEx("x"),
+        ),
     )
     expectDecl(
         "StrongFairness",
-        OperEx(TlaTempOper.strongFairness, NameEx("x"), trueOperEx)
+        OperEx(TlaTempOper.strongFairness, NameEx("x"), trueOperEx),
     )
     expectDecl(
         "WeakFairness",
-        OperEx(TlaTempOper.weakFairness, NameEx("x"), trueOperEx)
+        OperEx(TlaTempOper.weakFairness, NameEx("x"), trueOperEx),
     )
     expectDecl(
         "SquareAct",
-        OperEx(TlaActionOper.stutter, trueOperEx, NameEx("x"))
+        OperEx(TlaActionOper.stutter, trueOperEx, NameEx("x")),
     )
     expectDecl(
         "TemporalExists",
-        OperEx(TlaTempOper.EE, NameEx("y"), trueOperEx)
+        OperEx(TlaTempOper.EE, NameEx("y"), trueOperEx),
     )
     expectDecl(
         "TemporalForall",
-        OperEx(TlaTempOper.AA, NameEx("y"), trueOperEx)
+        OperEx(TlaTempOper.AA, NameEx("y"), trueOperEx),
     )
     expectDecl(
         "UnboundedChoose",
-        OperEx(TlaOper.chooseUnbounded, NameEx("y"), ValEx(TlaBool(true)))
+        OperEx(TlaOper.chooseUnbounded, NameEx("y"), ValEx(TlaBool(true))),
     )
     expectDecl(
         "UnboundedExists",
-        OperEx(TlaBoolOper.existsUnbounded, NameEx("y"), ValEx(TlaBool(true)))
+        OperEx(TlaBoolOper.existsUnbounded, NameEx("y"), ValEx(TlaBool(true))),
     )
     expectDecl(
         "UnboundedForall",
-        OperEx(TlaBoolOper.forallUnbounded, NameEx("y"), ValEx(TlaBool(true)))
+        OperEx(TlaBoolOper.forallUnbounded, NameEx("y"), ValEx(TlaBool(true))),
     )
     expectDecl(
         "SetOfAll",
-        OperEx(TlaSetOper.map, ValEx(TlaInt(1)), NameEx("y"), NameEx("x"))
+        OperEx(TlaSetOper.map, ValEx(TlaInt(1)), NameEx("y"), NameEx("x")),
     )
     expectDecl(
         "SetOfTuples",
@@ -847,12 +847,12 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             NameEx("a"),
             NameEx("x"),
             NameEx("b"),
-            NameEx("x")
-        )
+            NameEx("x"),
+        ),
     )
     expectDecl(
         "SubsetOf",
-        OperEx(TlaSetOper.filter, NameEx("y"), NameEx("x"), ValEx(TlaBool(true)))
+        OperEx(TlaSetOper.filter, NameEx("y"), NameEx("x"), ValEx(TlaBool(true))),
     )
     expectDecl("Boolean", ValEx(TlaBoolSet))
     expectDecl("String", ValEx(TlaStrSet))
@@ -884,8 +884,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             TlaSetOper.filter,
             OperEx(TlaFunOper.tuple, NameEx("x"), NameEx("y")),
             NameEx("XY"),
-            OperEx(TlaOper.eq, NameEx("x"), ValEx(TlaInt(1)))
-        )
+            OperEx(TlaOper.eq, NameEx("x"), ValEx(TlaInt(1))),
+        ),
     ) ////
     expectDecl(
         "MapTuples",
@@ -893,8 +893,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             TlaSetOper.map,
             OperEx(TlaOper.eq, NameEx("x"), ValEx(TlaInt(1))),
             OperEx(TlaFunOper.tuple, NameEx("x"), NameEx("y")),
-            NameEx("XY")
-        )
+            NameEx("XY"),
+        ),
     ) ////
     expectDecl(
         "MapTuples2",
@@ -904,8 +904,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             NameEx("x"),
             NameEx("XY"),
             NameEx("y"),
-            NameEx("XY")
-        )
+            NameEx("XY"),
+        ),
     ) ////
   }
 
@@ -942,9 +942,9 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
                 TlaBoolOper.exists,
                 NameEx("y"),
                 NameEx("X"),
-                ValEx(TlaBool(true))
-            )
-        )
+                ValEx(TlaBool(true)),
+            ),
+        ),
     )(mod.declarations(2))
     expectDecl(
         "Q2",
@@ -956,9 +956,9 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
                 TlaBoolOper.exists,
                 NameEx("y"),
                 NameEx("X"),
-                ValEx(TlaBool(true))
-            )
-        )
+                ValEx(TlaBool(true)),
+            ),
+        ),
     )(mod.declarations(3))
     expectDecl(
         "Q3",
@@ -974,10 +974,10 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
                     TlaBoolOper.exists,
                     NameEx("z"),
                     NameEx("Z"),
-                    ValEx(TlaBool(true))
-                )
-            )
-        )
+                    ValEx(TlaBool(true)),
+                ),
+            ),
+        ),
     )(mod.declarations(4))
     expectDecl(
         "Q4",
@@ -997,19 +997,19 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
                         TlaBoolOper.exists,
                         NameEx("z"),
                         NameEx("Z"),
-                        ValEx(TlaBool(true))
-                    )
-                )
-            )
-        )
+                        ValEx(TlaBool(true)),
+                    ),
+                ),
+            ),
+        ),
     )(mod.declarations(5))
     expectDecl(
         "Q5",
         OperEx(
             TlaBoolOper.existsUnbounded,
             NameEx("x"),
-            OperEx(TlaBoolOper.existsUnbounded, NameEx("y"), ValEx(TlaBool(true)))
-        )
+            OperEx(TlaBoolOper.existsUnbounded, NameEx("y"), ValEx(TlaBool(true))),
+        ),
     )(mod.declarations(6))
   }
 
@@ -1039,8 +1039,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             TlaFunOper.except,
             NameEx("x"),
             OperEx(TlaFunOper.tuple, ValEx(TlaInt(0))),
-            ValEx(TlaInt(1))
-        )
+            ValEx(TlaInt(1)),
+        ),
     )(mod.declarations(1))
 
     expectDecl(
@@ -1053,9 +1053,9 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             OperEx(
                 TlaBoolOper.and,
                 OperEx(TlaFunOper.app, NameEx("x"), ValEx(TlaInt(0))),
-                ValEx(TlaBool(true))
-            )
-        )
+                ValEx(TlaBool(true)),
+            ),
+        ),
     )(mod.declarations(2))
 
     expectDecl(
@@ -1065,8 +1065,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             TlaFunOper.except,
             NameEx("x"),
             OperEx(TlaFunOper.tuple, OperEx(TlaFunOper.tuple, ValEx(TlaInt(0)))),
-            ValEx(TlaInt(1))
-        )
+            ValEx(TlaInt(1)),
+        ),
     )(mod.declarations(3))
 
     // 1. The importer automatically substitutes @ with the corresponding function application
@@ -1081,9 +1081,9 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             tuple(int(1), int(2)),
             and(
                 appFun(appFun(name("x"), int(1)), int(2)),
-                bool(true)
-            )
-        )
+                bool(true),
+            ),
+        ),
     )(mod.declarations(4))
 
     /*  // the old test when Desugarer was part of SanyImporter
@@ -1132,8 +1132,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
           OperEx(
               TlaOper.label,
               OperEx(TlaSetOper.enumSet, ValEx(TlaBool(true))),
-              ValEx(TlaStr("l1"))
-          )
+              ValEx(TlaStr("l1")),
+          ),
       ) ////
     expectDecl("A", List(), expectedABody)(mod.declarations.head)
 
@@ -1147,8 +1147,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
           OperEx(
               TlaOper.label,
               OperEx(TlaOper.ne, NameEx("x"), ValEx(TlaBool(false))),
-              ValEx(TlaStr("l2"))
-          )
+              ValEx(TlaStr("l2")),
+          ),
       ) ////
     expectDecl("B", List(), expectedBBody)(mod.declarations.tail.head)
   }
@@ -1218,8 +1218,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             OperEx(TlaFunOper.tuple, ValEx(TlaInt(0))),
             ValEx(TlaInt(1)),
             OperEx(TlaFunOper.tuple, ValEx(TlaInt(2))),
-            ValEx(TlaInt(3))
-        )
+            ValEx(TlaInt(3)),
+        ),
     )(mod.declarations(1))
 
     // SanyImporter no longer unfolds a multi-argument EXCEPT into a chain.
@@ -1229,8 +1229,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         except(
             name("f"),
             tuple(int(0), int(1), int(2)),
-            int(3)
-        )
+            int(3),
+        ),
     )(mod.declarations(2))
 
     expectDecl(
@@ -1239,8 +1239,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             TlaFunOper.except,
             NameEx("f"),
             OperEx(TlaFunOper.tuple, OperEx(TlaFunOper.tuple, ValEx(TlaInt(0)), ValEx(TlaInt(1)), ValEx(TlaInt(2)))),
-            ValEx(TlaInt(3))
-        )
+            ValEx(TlaInt(3)),
+        ),
     )(mod.declarations(3))
 
     // using @ in EXCEPT: https://github.com/informalsystems/apalache/issues/286
@@ -1254,9 +1254,9 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
                 TlaFunOper.except,
                 OperEx(TlaFunOper.app, NameEx("f"), ValEx(TlaInt(0))), // this is the equivalent of @
                 OperEx(TlaFunOper.tuple, ValEx(TlaStr("state"))),
-                ValEx(TlaInt(4))
-            )
-        )
+                ValEx(TlaInt(4)),
+            ),
+        ),
     )(mod.declarations(4))
   }
 
@@ -1283,8 +1283,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         OperEx(
             TlaFunOper.app,
             OperEx(TlaFunOper.app, NameEx("f"), ValEx(TlaStr("a"))),
-            ValEx(TlaStr("b"))
-        )
+            ValEx(TlaStr("b")),
+        ),
     )(mod.declarations(1))
     expectDecl(
         "S2",
@@ -1293,10 +1293,10 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             OperEx(
                 TlaFunOper.app,
                 OperEx(TlaFunOper.app, NameEx("f"), ValEx(TlaStr("a"))),
-                ValEx(TlaStr("b"))
+                ValEx(TlaStr("b")),
             ),
-            ValEx(TlaStr("c"))
-        )
+            ValEx(TlaStr("c")),
+        ),
     )(mod.declarations(2))
   }
 
@@ -1328,8 +1328,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             NameEx("x"),
             NameEx("X"),
             NameEx("y"),
-            NameEx("X")
-        )
+            NameEx("X"),
+        ),
     )(mod.declarations(2))
     expectDecl(
         "C2",
@@ -1339,8 +1339,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             NameEx("x"),
             NameEx("X"),
             NameEx("y"),
-            NameEx("X")
-        )
+            NameEx("X"),
+        ),
     )(mod.declarations(3))
     expectDecl(
         "C3",
@@ -1352,8 +1352,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             NameEx("y"),
             NameEx("X"),
             NameEx("z"),
-            NameEx("Z")
-        )
+            NameEx("Z"),
+        ),
     )(mod.declarations(4))
 
     // the tuple <<a, b>> is no longer collapsed to a_b by SanyImporter.
@@ -1369,8 +1369,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             tuple(name("a"), name("b")),
             name("Z"),
             name("z"),
-            name("Z")
-        )
+            name("Z"),
+        ),
     )(mod.declarations(5))
 
     // the old test when Desugarer was part of SanyImporter
@@ -1407,7 +1407,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
           TlaSetOper.filter,
           NameEx("x"),
           NameEx("S"),
-          OperEx(TlaSetOper.in, NameEx("x"), NameEx("S"))
+          OperEx(TlaSetOper.in, NameEx("x"), NameEx("S")),
       )
     expectDecl("Op", filter)(mod.declarations(1))
   }
@@ -1433,12 +1433,12 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     expectDecl(
         "A",
         List(OperParam("i"), OperParam("j")),
-        OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j"))
+        OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j")),
     )(mod.declarations(2))
     expectDecl(
         "**",
         List(OperParam("i"), OperParam("j")),
-        OperEx(TlaSetOper.cap, NameEx("i"), NameEx("j"))
+        OperEx(TlaSetOper.cap, NameEx("i"), NameEx("j")),
     )(mod.declarations(3))
     val aDecl = mod.declarations(2).asInstanceOf[TlaOperDecl]
     expectDecl(
@@ -1448,8 +1448,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             TlaOper.apply,
             NameEx(aDecl.name),
             ValEx(TlaInt(1)),
-            ValEx(TlaInt(2))
-        )
+            ValEx(TlaInt(2)),
+        ),
     )(mod.declarations(4))
   }
 
@@ -1481,17 +1481,17 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         List(
             OperParam("i"),
             OperParam("j"),
-            OperParam("f", 1)
+            OperParam("f", 1),
         ),
         OperEx(
             TlaOper.apply,
             NameEx("f"),
-            OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j"))
-        )
+            OperEx(TlaSetOper.cup, NameEx("i"), NameEx("j")),
+        ),
     )(mod.declarations(2))
     val aDecl = mod.declarations(2).asInstanceOf[TlaOperDecl]
     expectDecl("C", List(), appDecl(aDecl, int(0), int(1), name("B")))(
-        mod.declarations(4)
+        mod.declarations(4),
     )
   }
 
@@ -1525,7 +1525,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         assert("X" == xDecl.name)
         val yDecl = defs(1)
         assert(
-            TlaOperDecl("Y", List(OperParam("a")), NameEx("a")) == yDecl
+            TlaOperDecl("Y", List(OperParam("a")), NameEx("a")) == yDecl,
         )
         assert(sourceStore.contains(yDecl.body.ID)) // and source file information has been saved
 
@@ -1534,10 +1534,10 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
           case TlaOperDecl(
                   "Z",
                   List(OperParam("f", 1), OperParam("a", 0)),
-                  _
+                  _,
               ) =>
             assert(
-                OperEx(TlaOper.apply, NameEx("f"), NameEx("a")) == zDecl.body
+                OperEx(TlaOper.apply, NameEx("f"), NameEx("a")) == zDecl.body,
             )
         }
         assert(sourceStore.contains(zDecl.body.ID)) // and source file information has been saved
@@ -1587,7 +1587,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
       case TlaOperDecl(
               _,
               _,
-              OperEx(TlaOper.apply, NameEx("A"), lambda, ValEx(TlaInt(i)))
+              OperEx(TlaOper.apply, NameEx("A"), lambda, ValEx(TlaInt(i))),
           ) =>
         lambda match {
           case LetInEx(
@@ -1595,8 +1595,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
                   TlaOperDecl(
                       "LAMBDA",
                       List(OperParam("x", 0)),
-                      OperEx(TlaOper.eq, NameEx("x"), ValEx(TlaInt(_)))
-                  )
+                      OperEx(TlaOper.eq, NameEx("x"), ValEx(TlaInt(_))),
+                  ),
               ) =>
           // ok
 
@@ -1639,7 +1639,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             TlaFunOper.recFunDef,
             OperEx(TlaFunOper.app, OperEx(TlaFunOper.recFunRef), NameEx("x")),
             NameEx("x"),
-            ValEx(TlaBoolSet)
+            ValEx(TlaBoolSet),
         )
 
       assert(expectedBody == fDecl.body)
@@ -1748,9 +1748,9 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
                 OperEx(
                     TlaOper.apply,
                     NameEx("F"),
-                    OperEx(TlaArithOper.minus, NameEx("n"), ValEx(TlaInt(1)))
-                )
-            )
+                    OperEx(TlaArithOper.minus, NameEx("n"), ValEx(TlaInt(1))),
+                ),
+            ),
         )
         assert(d.body == ite)
         assert(sourceStore.contains(d.body.ID)) // and source file information has been saved
@@ -1794,7 +1794,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
 
     assertTlaRecFunDecl(
         "nonRecFun",
-        OperEx(TlaFunOper.funDef, NameEx("x"), NameEx("x"), NameEx("S"))
+        OperEx(TlaFunOper.funDef, NameEx("x"), NameEx("x"), NameEx("S")),
     )
 
     assertTlaRecFunDecl(
@@ -1803,14 +1803,14 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             TlaFunOper.recFunDef,
             OperEx(TlaFunOper.app, OperEx(TlaFunOper.recFunRef), NameEx("x")),
             NameEx("x"),
-            NameEx("S")
-        )
+            NameEx("S"),
+        ),
     )
 
     val bodyOfFun2 = OperEx(
         TlaFunOper.app,
         OperEx(TlaFunOper.recFunRef),
-        OperEx(TlaFunOper.tuple, NameEx("y"), NameEx("x"))
+        OperEx(TlaFunOper.tuple, NameEx("y"), NameEx("x")),
     )
     assertTlaRecFunDecl(
         "recFun2",
@@ -1820,8 +1820,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             NameEx("x"),
             NameEx("S"),
             NameEx("y"),
-            NameEx("S")
-        )
+            NameEx("S"),
+        ),
     )
   }
 
@@ -1865,8 +1865,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
               TlaOperDecl(
                   _,
                   params,
-                  OperEx(TlaArithOper.plus, NameEx("x"), NameEx("M"))
-              )
+                  OperEx(TlaArithOper.plus, NameEx("x"), NameEx("M")),
+              ),
           ) =>
         assert(params.length == 1)
         assert(params.head.isInstanceOf[OperParam])
@@ -1959,7 +1959,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         aOfM.isInstanceOf[TlaOperDecl] && aOfM
           .asInstanceOf[TlaOperDecl]
           .formalParams
-          .size == 1
+          .size == 1,
     )
   }
 
@@ -2093,7 +2093,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
       case body @ OperEx(
               TlaOper.eq,
               OperEx(TlaOper.apply, NameEx("V!chosen")),
-              OperEx(TlaSetOper.enumSet, ValEx(TlaInt(i)))
+              OperEx(TlaSetOper.enumSet, ValEx(TlaInt(i))),
           ) =>
         assert(i == 2)
         assert(sourceStore.contains(body.ID))
@@ -2209,51 +2209,51 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     expectDecl("NatSet", ValEx(TlaNatSet))
     expectDecl(
         "Plus",
-        OperEx(TlaArithOper.plus, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.plus, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Minus",
-        OperEx(TlaArithOper.minus, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.minus, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Mult",
-        OperEx(TlaArithOper.mult, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.mult, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Power",
-        OperEx(TlaArithOper.exp, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.exp, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Less",
-        OperEx(TlaArithOper.lt, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.lt, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Greater",
-        OperEx(TlaArithOper.gt, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.gt, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Leq",
-        OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Leq2",
-        OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Geq",
-        OperEx(TlaArithOper.ge, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.ge, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Mod",
-        OperEx(TlaArithOper.mod, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.mod, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Div",
-        OperEx(TlaArithOper.div, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.div, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Range",
-        OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(3)))
+        OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(3))),
     )
 
     // check the source info
@@ -2263,7 +2263,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
       case Some(TlaOperDecl(_, _, oe @ OperEx(oper, _*))) =>
         val loc = sourceStore.find(oe.ID).get
         assert(
-            SourceRegion(SourcePosition(4, 9), SourcePosition(4, 13)) == loc.region
+            SourceRegion(SourcePosition(4, 9), SourcePosition(4, 13)) == loc.region,
         )
 
       case _ => fail()
@@ -2308,47 +2308,47 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     expectDecl("IntSet", ValEx(TlaIntSet))
     expectDecl(
         "Plus",
-        OperEx(TlaArithOper.plus, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.plus, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Minus",
-        OperEx(TlaArithOper.minus, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.minus, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Mult",
-        OperEx(TlaArithOper.mult, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.mult, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Power",
-        OperEx(TlaArithOper.exp, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.exp, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Less",
-        OperEx(TlaArithOper.lt, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.lt, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Greater",
-        OperEx(TlaArithOper.gt, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.gt, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Leq",
-        OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Geq",
-        OperEx(TlaArithOper.ge, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.ge, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Mod",
-        OperEx(TlaArithOper.mod, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.mod, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Div",
-        OperEx(TlaArithOper.div, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.div, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Range",
-        OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(3)))
+        OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(3))),
     )
     expectDecl("UnaryMinus", OperEx(TlaArithOper.uminus, ValEx(TlaInt(2))))
   }
@@ -2391,52 +2391,52 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     expectDecl("Inf", ValEx(TlaRealInfinity))
     expectDecl(
         "Plus",
-        OperEx(TlaArithOper.plus, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.plus, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Minus",
-        OperEx(TlaArithOper.minus, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.minus, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Mult",
-        OperEx(TlaArithOper.mult, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.mult, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Power",
-        OperEx(TlaArithOper.exp, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.exp, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Less",
-        OperEx(TlaArithOper.lt, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.lt, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Greater",
-        OperEx(TlaArithOper.gt, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.gt, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Leq",
-        OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.le, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Geq",
-        OperEx(TlaArithOper.ge, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.ge, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Mod",
-        OperEx(TlaArithOper.mod, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.mod, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Div",
-        OperEx(TlaArithOper.div, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.div, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
     expectDecl(
         "Range",
-        OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(3)))
+        OperEx(TlaArithOper.dotdot, ValEx(TlaInt(2)), ValEx(TlaInt(3))),
     )
     expectDecl("UnaryMinus", OperEx(TlaArithOper.uminus, ValEx(TlaInt(2))))
     expectDecl(
         "RealDiv",
-        OperEx(TlaArithOper.realDiv, ValEx(TlaInt(3)), ValEx(TlaInt(2)))
+        OperEx(TlaArithOper.realDiv, ValEx(TlaInt(3)), ValEx(TlaInt(2))),
     )
   }
 
@@ -2483,11 +2483,11 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     expectDecl("ATail", tail(tuple(int(1), int(2), int(3))))
     expectDecl(
         "ASubSeq",
-        subseq(tuple(int(1), int(2), int(3), int(4)), int(2), int(3))
+        subseq(tuple(int(1), int(2), int(3), int(4)), int(2), int(3)),
     )
     expectDecl(
         "ASelectSeq",
-        selectseq(tuple(int(1), int(2), int(3), int(4)), name("Test"))
+        selectseq(tuple(int(1), int(2), int(3), int(4)), name("Test")),
     )
   }
 
@@ -2518,7 +2518,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     // the root module contains its own declarations and the declarations by FiniteSets
     expectDecl(
         "IsFinSet",
-        OperEx(TlaFiniteSetOper.isFiniteSet, ValEx(TlaBoolSet))
+        OperEx(TlaFiniteSetOper.isFiniteSet, ValEx(TlaBoolSet)),
     )
     expectDecl("Card", OperEx(TlaFiniteSetOper.cardinality, ValEx(TlaBoolSet)))
   }
@@ -2551,45 +2551,44 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
 
     val (rootName, modules) = sanyImporter
       .loadFromSource("tlc", Source.fromString(text))
-    assert(5 == modules.size) // our module + 4 LOCAL modules
-    // the root module and naturals
+    // the root module and integers
     val root = modules(rootName)
     expectSourceInfoInDefs(root)
 
-    def expectDecl(name: String, body: TlaEx) =
+    def expectDecl(name: String, body: TlaEx): Unit =
       findAndExpectOperDecl(root, name, List(), body)
 
-    // the definitions of the standard operators are filtered out
-    assert(16 == root.declarations.size)
+    // the definitions of tlc and TLC
+    assert(30 == root.declarations.size)
 
-    expectDecl("APrint", OperEx(TlcOper.print, str("TLC Print"), bool(true)))
-    expectDecl("APrintT", OperEx(TlcOper.printT, str("TLC PrintT")))
-    expectDecl("AAssert", OperEx(TlcOper.assert, str("TLC Assert"), bool(true)))
-    expectDecl("AJavaTime", OperEx(TlcOper.javaTime))
-    expectDecl("ATLCGet", OperEx(TlcOper.tlcGet, name("i")))
-    expectDecl("ATLCSet", OperEx(TlcOper.tlcSet, name("i"), int(3)))
+    expectDecl("APrint", OperEx(TlaOper.apply, NameEx("Print"), str("TLC Print"), bool(true)))
+    expectDecl("APrintT", OperEx(TlaOper.apply, NameEx("PrintT"), str("TLC PrintT")))
+    expectDecl("AAssert", OperEx(TlaOper.apply, NameEx("Assert"), str("TLC Assert"), bool(true)))
+    expectDecl("AJavaTime", OperEx(TlaOper.apply, NameEx("JavaTime")))
+    expectDecl("ATLCGet", OperEx(TlaOper.apply, NameEx("TLCGet"), name("i")))
+    expectDecl("ATLCSet", OperEx(TlaOper.apply, NameEx("TLCSet"), name("i"), int(3)))
     expectDecl(
         "AColonGreater",
-        OperEx(TlcOper.colonGreater, enumSet(int(1), int(2)), int(3))
+        OperEx(TlaOper.apply, NameEx(":>"), enumSet(int(1), int(2)), int(3)),
     )
     val fun12 = funDef(name("j"), name("j"), enumSet(int(1), int(2)))
     val fun34 = funDef(name("k"), name("k"), enumSet(int(3), int(4)))
-    expectDecl("AtAt", OperEx(TlcOper.atat, fun12, fun34))
+    expectDecl("AtAt", OperEx(TlaOper.apply, NameEx("@@"), fun12, fun34))
     expectDecl(
         "APermutations",
-        OperEx(TlcOper.permutations, tuple(int(1), int(2)))
+        OperEx(TlaOper.apply, NameEx("Permutations"), tuple(int(1), int(2))),
     )
     expectDecl(
         "ASortSeq",
-        OperEx(TlcOper.sortSeq, tuple(int(2), int(1)), name("FakeSort"))
+        OperEx(TlaOper.apply, NameEx("SortSeq"), tuple(int(2), int(1)), name("FakeSort")),
     )
     expectDecl(
         "ARandomElement",
-        OperEx(TlcOper.randomElement, enumSet(int(1), int(2)))
+        OperEx(TlaOper.apply, NameEx("RandomElement"), enumSet(int(1), int(2))),
     )
-    expectDecl("AAny", OperEx(TlcOper.any))
-    expectDecl("ATLCEval", OperEx(TlcOper.tlcEval, int(42)))
-    expectDecl("AToString", OperEx(TlcOper.tlcToString, int(42)))
+    expectDecl("AAny", OperEx(TlaOper.apply, NameEx("Any")))
+    expectDecl("ATLCEval", OperEx(TlaOper.apply, NameEx("TLCEval"), int(42)))
+    expectDecl("AToString", OperEx(TlaOper.apply, NameEx("ToString"), int(42)))
   }
 
   test("EXTENDS Bags") {
@@ -2602,12 +2601,13 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
 
     val (rootName, modules) = sanyImporter
       .loadFromSource("localSum", Source.fromString(text))
-    assert(6 == modules.size) // Naturals, Sequences, TLC, FiniteSets, Bags, and our module
+    assert(4 == modules.size) // Naturals, Sequences, TLC, FiniteSets, Bags, and our module
 
     val root = modules("localSum")
     expectSourceInfoInDefs(root)
-    // this number may change when a new version of Bags.tla is shipped in tla2tools.jar
-    assert(13 == root.declarations.size)
+    // This number may change when a new version of Bags.tla is shipped in tla2tools.jar.
+    // The declarations include the declarations by __rewire_tlc_in_apalache.tla and Bags.tla.
+    assert(27 == root.declarations.size)
   }
 
   test("EXTENDS Apalache") {
@@ -2629,7 +2629,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
     //
     // -DTLA-Library=<APALACHE_HOME>/src/tla
     System.out.println(
-        "TLA-Library = %s".format(System.getProperty("TLA-Library"))
+        "TLA-Library = %s".format(System.getProperty("TLA-Library")),
     )
 
     val (rootName, modules) = sanyImporter
@@ -2649,8 +2649,8 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
         OperEx(
             ApalacheOper.assign,
             OperEx(TlaActionOper.prime, NameEx("x")),
-            ValEx(TlaInt(1))
-        )
+            ValEx(TlaInt(1)),
+        ),
     )
     expectDecl(
         "Sklm",
@@ -2660,13 +2660,13 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
                 TlaBoolOper.exists,
                 NameEx("y"),
                 NameEx("S"),
-                ValEx(TlaBool(true))
-            )
-        )
+                ValEx(TlaBool(true)),
+            ),
+        ),
     )
     expectDecl(
         "Expnd",
-        OperEx(ApalacheOper.expand, OperEx(TlaSetOper.powerset, NameEx("S")))
+        OperEx(ApalacheOper.expand, OperEx(TlaSetOper.powerset, NameEx("S"))),
     )
     expectDecl(
         "CC",
@@ -2675,9 +2675,9 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
             OperEx(
                 TlaArithOper.ge,
                 OperEx(TlaFiniteSetOper.cardinality, NameEx("S")),
-                ValEx(TlaInt(2))
-            )
-        )
+                ValEx(TlaInt(2)),
+            ),
+        ),
     )
   }
 
@@ -2825,7 +2825,7 @@ class TestSanyImporter extends FunSuite with BeforeAndAfter {
 
   ////////////////////////////////////////////////////////////////////
   private def expectSingleModule(
-      expectedRootName: String, rootName: String, modules: Map[String, TlaModule]
+      expectedRootName: String, rootName: String, modules: Map[String, TlaModule],
   ): TlaModule = {
     assert(expectedRootName == rootName)
     assert(1 == modules.size)

@@ -2,14 +2,13 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.oper.TlcOper
 import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestReTLALangaugePred extends LanguagePredTestSuite {
+class TestReTLALanguagePred extends LanguagePredTestSuite {
   private val pred = new ReTLALanguagePred
 
   import tla._
@@ -71,14 +70,6 @@ class TestReTLALangaugePred extends LanguagePredTestSuite {
   test("reTLA: misc.") {
     expectFail(pred.isExprOk(label(int(2), "a")))
     expectFail(pred.isExprOk(label(int(2), "a", "b")))
-  }
-
-  test("reTLA: TLC support") {
-    expectFail(pred.isExprOk(OperEx(TlcOper.print, tla.bool(true), tla.str("msg"))))
-    expectFail(pred.isExprOk(OperEx(TlcOper.printT, tla.str("msg"))))
-    expectFail(pred.isExprOk(OperEx(TlcOper.assert, tla.bool(true), tla.str("msg"))))
-    expectFail(pred.isExprOk(OperEx(TlcOper.colonGreater, tla.int(1), tla.int(2))))
-    expectFail(pred.isExprOk(OperEx(TlcOper.atat, NameEx("fun"), NameEx("pair"))))
   }
 
   test("reTLA: integer expressions") {

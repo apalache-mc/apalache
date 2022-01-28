@@ -143,10 +143,6 @@ object KeraLanguagePred {
         TlaSetOper.cup,
         TlaSetOper.subseteq,
         TlaSeqOper.concat,
-        TlcOper.atat,
-        TlcOper.colonGreater,
-        TlcOper.colonGreater,
-        TlcOper.atat,
         ApalacheOper.assign,
         // for the future
         //      TlaActionOper.composition,

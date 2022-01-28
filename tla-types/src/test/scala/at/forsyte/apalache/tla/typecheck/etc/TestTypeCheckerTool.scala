@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.typecheck.{TypeCheckerListener, TypeCheckerTool}
 import at.forsyte.apalache.io.annotations.store._
-import at.forsyte.apalache.tla.lir.{TlaType1, Typed, TypingException, UID}
+import at.forsyte.apalache.tla.lir.{TlaModule, TlaType1, Typed, TypingException, UID}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
 import org.easymock.EasyMock
@@ -28,6 +28,9 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
   private var sanyImporter: SanyImporter = _
   private var parser: Type1Parser = _
 
+  private val megaSpec = "MegaSpec1"
+  private val tlcSpec = "TlcSpec1"
+
   override def beforeEach() {
     sourceStore = new SourceStore()
     annotationStore = createAnnotationStore()
@@ -35,13 +38,15 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
     parser = DefaultType1Parser
   }
 
-  def getMegaSpec1: Source = {
-    Source.fromResource("MegaSpec1.tla")
+  def loadSpecFromResource(name: String): Source = {
+    // Previously, we were using fromResource, but it was too unstable across environments
+    // (e.g., it failed in Intellij Idea). Now we are just reading it from the current working directory.
+    Source.fromFile(s"src/test/resources/$name.tla")
   }
 
-  test("the tools runs and reports no type errors") {
+  test("the tool runs and reports no type errors") {
     val (rootName, modules) =
-      sanyImporter.loadFromSource("MegaSpec1", getMegaSpec1)
+      sanyImporter.loadFromSource(megaSpec, loadSpecFromResource(megaSpec))
 
     val mod = modules(rootName)
 
@@ -55,15 +60,15 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
       // but no type errors
     }
     whenExecuting(listener) {
-      val typechecker = new TypeCheckerTool(annotationStore, false)
+      val typechecker = new TypeCheckerTool(annotationStore, true)
       val isWellTyped = typechecker.check(listener, mod)
       assert(isWellTyped)
     }
   }
 
-  test("the tools runs and tags all expressions") {
+  test("the tool runs and tags all expressions") {
     val (rootName, modules) =
-      sanyImporter.loadFromSource("MegaSpec1", getMegaSpec1)
+      sanyImporter.loadFromSource(megaSpec, loadSpecFromResource(megaSpec))
 
     val mod = modules(rootName)
 
@@ -77,7 +82,7 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
       // but no type errors
     }
     whenExecuting(listener) {
-      val typechecker = new TypeCheckerTool(annotationStore, false)
+      val typechecker = new TypeCheckerTool(annotationStore, true)
 
       def defaultTag(uid: UID): Nothing = {
         throw new TypingException("No type for UID: " + uid, uid)
@@ -95,14 +100,26 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
     }
   }
 
-  test("the tool consumes its output") {
+  test("the tool consumes its output on MegaSpec1") {
+    typecheckSpec("MegaSpec1")
+  }
+
+  // fixing this test is scheduled in: https://github.com/informalsystems/apalache/issues/1255
+  ignore("the tool consumes its output on TlcSpec1") {
+    typecheckSpec("TlcSpec1")
+  }
+
+  private def typecheckSpec(specName: String): Unit = {
     val (rootName, modules) =
-      sanyImporter.loadFromSource("MegaSpec1", getMegaSpec1)
+      sanyImporter.loadFromSource(specName, loadSpecFromResource(specName))
 
     val mod = modules(rootName)
 
-    val listener = mock[TypeCheckerListener]
+    def defaultTag(uid: UID): Nothing = {
+      throw new TypingException("No type for UID: " + uid, uid)
+    }
 
+    val listener = mock[TypeCheckerListener]
     expecting {
       // lots of types found
       listener
@@ -111,15 +128,13 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
       // but no type errors
     }
     whenExecuting(listener) {
-      val typechecker = new TypeCheckerTool(annotationStore, false)
-
-      def defaultTag(uid: UID): Nothing = {
-        throw new TypingException("No type for UID: " + uid, uid)
-      }
+      val typechecker = new TypeCheckerTool(annotationStore, true)
 
       val output = typechecker.checkAndTag(new IdleTracker(), listener, defaultTag, mod)
       assert(output.isDefined)
-      val output2 = typechecker.checkAndTag(new IdleTracker(), listener, defaultTag, output.get)
+
+      val typechecker2 = new TypeCheckerTool(annotationStore, true)
+      val output2 = typechecker2.checkAndTag(new IdleTracker(), listener, defaultTag, output.get)
       assert(output2.isDefined)
     }
   }
