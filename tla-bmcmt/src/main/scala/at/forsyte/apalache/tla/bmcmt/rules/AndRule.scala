@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
-import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, TlaEx}
 
 /**
  * Implements the rule for conjunction. Similar to TLC, we short-circuit A /\ B as IF A THEN B ELSE FALSE.
@@ -76,40 +76,6 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case e @ _ =>
         // the simplifier has rewritten the conjunction to some other expression
         rewriter.rewriteUntilDone(state.setRex(e))
-    }
-  }
-
-  private def lazyCircuit(state: SymbState, es: Seq[TlaEx]): SymbState = {
-    val cellFalse = state.arena.cellFalse()
-    if (es.isEmpty) {
-      state.setRex(state.arena.cellTrue().toNameEx)
-    } else {
-      val (head, tail) = (es.head, es.tail)
-      val headState = rewriter.rewriteUntilDone(state.setRex(head))
-      val headCell = headState.asCell
-      rewriter.solverContext.push()
-      rewriter.solverContext.assertGroundExpr(headCell.toNameEx)
-      val sat = rewriter.solverContext.sat()
-      rewriter.solverContext.pop()
-      if (!sat) {
-        // always unsat, prune immediately
-        headState.setRex(cellFalse.toNameEx)
-      } else {
-        val tailState = lazyCircuit(headState, tail)
-        if (simplifier.isFalseConst(tailState.ex)) {
-          // prune by propagating false
-          tailState
-        } else {
-          // propagate
-          var nextState = tailState.updateArena(_.appendCell(BoolT()))
-          val pred = nextState.asCell.toNameEx
-          val eq = tla
-            .equiv(pred ? "b", tla.and(headCell.toNameEx ? "b", tailState.ex) ? "b")
-            .typed(boolTypes, "b")
-          rewriter.solverContext.assertGroundExpr(eq)
-          nextState.setRex(pred)
-        }
-      }
     }
   }
 }
