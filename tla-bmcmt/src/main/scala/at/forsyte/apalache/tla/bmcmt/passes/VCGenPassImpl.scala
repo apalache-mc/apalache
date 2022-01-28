@@ -18,7 +18,7 @@ import com.typesafe.scalalogging.LazyLogging
  * @author Igor Konnov
  */
 class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTracker, writerFactory: TlaWriterFactory,
-    @Named("AfterVCGen") nextPass: Pass with TlaModuleMixin)
+    @Named("AfterVCGen") val nextPass: Pass with TlaModuleMixin)
     extends VCGenPass with LazyLogging {
 
   /**
@@ -27,9 +27,6 @@ class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTrac
    * @return the name associated with the pass
    */
   override def name: String = "VCGen"
-
-
-  private var outputTlaModule: Option[TlaModule] = None
 
   /**
    * Run the pass.
@@ -59,24 +56,11 @@ class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTrac
 
     writerFactory.writeModuleAllFormats(newModule.copy(name = "07_OutVCGen"), TlaWriter.STANDARD_MODULES)
 
-    outputTlaModule = Some(newModule)
+    nextPass.updateModule(this, tlaModule, newModule)
     true
-  }
-
-  /**
-   * Get the next pass in the chain. What is the next pass is up
-   * to the module configuration and the pass outcome.
-   *
-   * @return the next pass, if exists, or None otherwise
-   */
-  override def next(): Option[Pass] = {
-    outputTlaModule map { m =>
-      val module = new TransformedTlaModule(m, tlaModule.get.properties + ModuleProperty.VCGenerated)
-      nextPass.setModule(module)
-      nextPass
-    }
   }
 
   override def dependencies = Set(ModuleProperty.Inlined)
 
+  override def transformations = Set(ModuleProperty.VCGenerated)
 }

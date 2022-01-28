@@ -24,8 +24,6 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
     val writerFactory: TlaWriterFactory, @Named("AfterTypeChecker") val nextPass: Pass with TlaModuleMixin)
     extends EtcTypeCheckerPass with LazyLogging {
 
-  private var outputTlaModule: Option[TlaModule] = None
-
   protected def inferPoly: Boolean = options.getOrElse[Boolean]("typecheck", "inferPoly", true)
 
   protected def passNumber: String = "01"
@@ -73,7 +71,7 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
           dumpToJson(newModule, "post")
           writerFactory.writeModuleAllFormats(newModule.copy(name = s"${passNumber}_Out$name"),
               TlaWriter.STANDARD_MODULES)
-          outputTlaModule = Some(newModule)
+          nextPass.updateModule(this, tlaModule, newModule)
           true
 
         case None =>
@@ -102,18 +100,7 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
     }
   }
 
-  /**
-   * Get the next pass in the chain. What is the next pass is up
-   * to the module configuration and the pass outcome.
-   *
-   * @return the next pass, if exists, or None otherwise
-   */
-  override def next(): Option[Pass] =
-    outputTlaModule map { m =>
-      val module = new TransformedTlaModule(m, tlaModule.get.properties + ModuleProperty.TypeChecked)
-      nextPass.setModule(module)
-      nextPass
-    }
-
   override def dependencies = Set(ModuleProperty.Parsed)
+
+  override def transformations = Set(ModuleProperty.TypeChecked)
 }

@@ -22,10 +22,8 @@ import java.nio.file.Path
  */
 class DesugarerPassImpl @Inject() (
     val options: PassOptions, tracker: TransformationTracker, gen: UniqueNameGenerator, writerFactory: TlaWriterFactory,
-    @Named("AfterDesugarer") nextPass: Pass with TlaModuleMixin
+    @Named("AfterDesugarer") val nextPass: Pass with TlaModuleMixin
 ) extends DesugarerPass with LazyLogging {
-
-  private var outputTlaModule: Option[TlaModule] = None
 
   /**
    * The pass name.
@@ -47,24 +45,12 @@ class DesugarerPassImpl @Inject() (
 
     // dump the result of preprocessing
     writerFactory.writeModuleAllFormats(output.copy(name = "03_OutDesugarer"), TlaWriter.STANDARD_MODULES)
-    outputTlaModule = Some(output)
+    nextPass.updateModule(this, tlaModule, output)
 
     true
   }
 
-  /**
-   * Get the next pass in the chain. What is the next pass is up
-   * to the module configuration and the pass outcome.
-   *
-   * @return the next pass, if exists, or None otherwise
-   */
-  override def next(): Option[Pass] = {
-    outputTlaModule map { m =>
-      val module = new TransformedTlaModule(m, tlaModule.get.properties + ModuleProperty.Desugared)
-      nextPass.setModule(module)
-      nextPass
-    }
-  }
-
   override def dependencies = Set(ModuleProperty.TypeChecked)
+
+  override def transformations = Set(ModuleProperty.Desugared)
 }

@@ -22,10 +22,8 @@ import com.typesafe.scalalogging.LazyLogging
  * @param nextPass next pass to call
  */
 class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator, tracker: TransformationTracker,
-    writerFactory: TlaWriterFactory, @Named("AfterInline") nextPass: Pass with TlaModuleMixin)
+    writerFactory: TlaWriterFactory, @Named("AfterInline") val nextPass: Pass with TlaModuleMixin)
     extends InlinePass with LazyLogging {
-
-  private var outputTlaModule: Option[TlaModule] = None
 
   /**
    * The pass name.
@@ -115,23 +113,11 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
     // dump the result of preprocessing
     writerFactory.writeModuleAllFormats(filtered.copy(name = "05_OutInline"), TlaWriter.STANDARD_MODULES)
 
-    outputTlaModule = Some(filtered)
+    nextPass.updateModule(this, tlaModule, filtered)
     true
   }
 
-  /**
-   * Get the next pass in the chain. What is the next pass is up
-   * to the module configuration and the pass outcome.
-   *
-   * @return the next pass, if exists, or None otherwise
-   */
-  override def next(): Option[Pass] = {
-    outputTlaModule map { m =>
-      val module = new TransformedTlaModule(m, tlaModule.get.properties + ModuleProperty.Inlined)
-      nextPass.setModule(module)
-      nextPass
-    }
-  }
-
   override def dependencies = Set(ModuleProperty.Unrolled)
+
+  override def transformations = Set(ModuleProperty.Inlined)
 }

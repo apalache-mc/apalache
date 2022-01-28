@@ -30,7 +30,7 @@ import java.nio.file.Path
  */
 class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: FormulaHintsStore,
     exprGradeStore: ExprGradeStore, sourceStore: SourceStore, changeListener: ChangeListener,
-    @Named("AfterChecker") nextPass: Pass)
+    @Named("AfterChecker") val nextPass: Pass)
     extends BoundedCheckerPass with LazyLogging {
 
   /**
@@ -250,14 +250,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
   }
    */
 
-  /**
-   * Get the next pass in the chain. What is the next pass is up
-   * to the module configuration and the pass outcome.
-   *
-   * @return the next pass, if exists, or None otherwise
-   */
-  override def next(): Option[Pass] =
-    tlaModule map { _ => nextPass }
-
   override def dependencies = Set(ModuleProperty.Analyzed)
+
+  override def transformations = Set()
 }

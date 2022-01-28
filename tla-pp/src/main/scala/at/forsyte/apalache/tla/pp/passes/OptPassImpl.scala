@@ -21,10 +21,8 @@ import com.typesafe.scalalogging.LazyLogging
  * @param nextPass next pass to call
  */
 class OptPassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator, tracker: TransformationTracker,
-    writerFactory: TlaWriterFactory, @Named("AfterOpt") nextPass: Pass with TlaModuleMixin)
+    writerFactory: TlaWriterFactory, @Named("AfterOpt") val nextPass: Pass with TlaModuleMixin)
     extends OptPass with LazyLogging {
-
-  private var outputTlaModule: Option[TlaModule] = None
 
   /**
    * The pass name.
@@ -57,23 +55,11 @@ class OptPassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator,
     // dump the result of preprocessing
     writerFactory.writeModuleAllFormats(optimized.copy(name = "10_OutOpt"), TlaWriter.STANDARD_MODULES)
 
-    outputTlaModule = Some(optimized)
+    nextPass.updateModule(this, tlaModule, optimized)
     true
   }
 
-  /**
-   * Get the next pass in the chain. What is the next pass is up
-   * to the module configuration and the pass outcome.
-   *
-   * @return the next pass, if exists, or None otherwise
-   */
-  override def next(): Option[Pass] = {
-    outputTlaModule map { m =>
-      val module = new TransformedTlaModule(m, tlaModule.get.properties + ModuleProperty.Optimized)
-      nextPass.setModule(module)
-      nextPass
-    }
-  }
-
   override def dependencies = Set(ModuleProperty.Preprocessed)
+
+  override def transformations = Set(ModuleProperty.Optimized)
 }

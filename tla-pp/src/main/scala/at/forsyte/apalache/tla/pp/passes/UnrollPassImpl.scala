@@ -21,10 +21,8 @@ import com.typesafe.scalalogging.LazyLogging
  */
 class UnrollPassImpl @Inject() (val options: PassOptions, nameGenerator: UniqueNameGenerator,
     tracker: TransformationTracker, renaming: IncrementalRenaming, writerFactory: TlaWriterFactory,
-    @Named("AfterUnroll") nextPass: Pass with TlaModuleMixin)
+    @Named("AfterUnroll") val nextPass: Pass with TlaModuleMixin)
     extends UnrollPass with LazyLogging {
-
-  private var outputTlaModule: Option[TlaModule] = None
 
   /**
    * The pass name.
@@ -62,23 +60,11 @@ class UnrollPassImpl @Inject() (val options: PassOptions, nameGenerator: UniqueN
     // dump the result of preprocessing
     writerFactory.writeModuleAllFormats(newModule.copy(name = "04_OutUnroll"), TlaWriter.STANDARD_MODULES)
 
-    outputTlaModule = Some(newModule)
+    nextPass.updateModule(this, tlaModule, newModule)
     true
   }
 
-  /**
-   * Get the next pass in the chain. What is the next pass is up
-   * to the module configuration and the pass outcome.
-   *
-   * @return the next pass, if exists, or None otherwise
-   */
-  override def next(): Option[Pass] = {
-    outputTlaModule map { m =>
-      val module = new TransformedTlaModule(m, tlaModule.get.properties + ModuleProperty.Unrolled)
-      nextPass.setModule(module)
-      nextPass
-    }
-  }
-
   override def dependencies = Set(ModuleProperty.Desugared)
+
+  override def transformations = Set(ModuleProperty.Unrolled)
 }

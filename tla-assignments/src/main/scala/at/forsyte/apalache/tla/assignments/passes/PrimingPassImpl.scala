@@ -17,7 +17,7 @@ import com.typesafe.scalalogging.LazyLogging
  * PrimingPass adds primes to the variables in state initializers and constant initializers.
  */
 class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTracker, writerFactory: TlaWriterFactory,
-    @Named("AfterPriming") nextPass: Pass with TlaModuleMixin)
+    @Named("AfterPriming") val nextPass: Pass with TlaModuleMixin)
     extends PrimingPass with LazyLogging {
 
   /**
@@ -30,8 +30,6 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
   private def trSeq(seq: Seq[TlaExTransformation]): TlaExTransformation = { ex =>
     seq.foldLeft(ex) { case (partial, tr) => tr(partial) }
   }
-
-  private var outputTlaModule: Option[TlaModule] = None
 
   /**
    * Run the pass
@@ -77,23 +75,11 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
 
     writerFactory.writeModuleAllFormats(newModule.copy(name = "06_OutPriming"), TlaWriter.STANDARD_MODULES)
 
-    outputTlaModule = Some(newModule)
+    nextPass.updateModule(this, tlaModule, newModule)
     true
   }
 
-  /**
-   * Get the next pass in the chain. What is the next pass is up
-   * to the module configuration and the pass outcome.
-   *
-   * @return the next pass, if exists, or None otherwise
-   */
-  override def next(): Option[Pass] = {
-    outputTlaModule map { m =>
-      val module = new TransformedTlaModule(m, tlaModule.get.properties + ModuleProperty.Primed)
-      nextPass.setModule(module)
-      nextPass
-    }
-  }
-
   override def dependencies = Set(ModuleProperty.Unrolled, ModuleProperty.Configured)
+
+  override def transformations = Set(ModuleProperty.Primed)
 }

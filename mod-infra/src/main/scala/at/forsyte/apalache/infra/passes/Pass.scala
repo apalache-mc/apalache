@@ -38,7 +38,10 @@ trait Pass {
    *
    * @return the next pass, if exists, or None otherwise
    */
-  def next(): Option[Pass]
+  def nextPass: Pass
 
   def dependencies: Set[ModuleProperty.Value]
+
+  def transformations: Set[ModuleProperty.Value]
+
 }

@@ -28,8 +28,6 @@ class SanyParserPassImpl @Inject() (
     val writerFactory: TlaWriterFactory, @Named("AfterParser") val nextPass: Pass with TlaModuleMixin
 ) extends SanyParserPass with LazyLogging {
 
-  private var rootModule: Option[TlaModule] = None
-
   /**
    * The name of the pass
    *
@@ -43,6 +41,8 @@ class SanyParserPassImpl @Inject() (
    * @return true, if the pass was successful
    */
   override def execute(): Boolean = {
+    var rootModule: Option[TlaModule] = None
+
     val filename = options.getOrError[String]("parser", "filename")
     if (filename.endsWith(".json")) {
       try {
@@ -119,22 +119,12 @@ class SanyParserPassImpl @Inject() (
           }
         }
 
+        rootModule.map { m => nextPass.updateModule(this, None, m) }
         true
     }
   }
 
-  /**
-   * Get the next pass in the chain. What is the next pass is up
-   * to the module configuration and the pass outcome.
-   *
-   * @return the next pass, if exists, or None otherwise
-   */
-  override def next(): Option[Pass] =
-    rootModule map { m =>
-      val module = new TransformedTlaModule(m, Set(ModuleProperty.Parsed))
-      nextPass.setModule(module)
-      nextPass
-    }
-
   override def dependencies = Set()
+
+  override def transformations = Set(ModuleProperty.Parsed)
 }

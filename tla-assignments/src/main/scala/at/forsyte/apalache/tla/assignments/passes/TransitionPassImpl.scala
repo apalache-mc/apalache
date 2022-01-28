@@ -22,7 +22,7 @@ import java.nio.file.Path
  */
 class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceStore, tracker: TransformationTracker,
     changeListener: ChangeListener, incrementalRenaming: IncrementalRenaming, writerFactory: TlaWriterFactory,
-    @Named("AfterTransitionFinder") nextPass: Pass with TlaModuleMixin)
+    @Named("AfterTransitionFinder") val nextPass: Pass with TlaModuleMixin)
     extends TransitionPass with LazyLogging {
 
   /**
@@ -31,8 +31,6 @@ class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceSto
    * @return the name associated with the pass
    */
   override def name: String = "TransitionFinderPass"
-
-  private var outputTlaModule: Option[TlaModule] = None
 
   /**
    * Run the pass
@@ -81,7 +79,7 @@ class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceSto
     // print the resulting module
     writerFactory.writeModuleAllFormats(outModule.copy(name = "09_OutTransition"), TlaWriter.STANDARD_MODULES)
 
-    outputTlaModule = Some(outModule)
+    nextPass.updateModule(this, tlaModule, outModule)
     true
   }
 
@@ -98,19 +96,7 @@ class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceSto
     ModuleAdapter.exprsToOperDefs(outOperName, sortedTransitions)
   }
 
-  /**
-   * Get the next pass in the chain. What is the next pass is up
-   * to the module configuration and the pass outcome.
-   *
-   * @return the next pass, if exists, or None otherwise
-   */
-  override def next(): Option[Pass] = {
-    outputTlaModule map { m =>
-      val module = new TransformedTlaModule(m, tlaModule.get.properties + ModuleProperty.TransitionsFound)
-      nextPass.setModule(module)
-      nextPass
-    }
-  }
-
   override def dependencies = Set(ModuleProperty.Primed, ModuleProperty.VCGenerated, ModuleProperty.Preprocessed)
+
+  override def transformations = Set(ModuleProperty.TransitionsFound)
 }

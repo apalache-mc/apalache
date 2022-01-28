@@ -29,9 +29,9 @@ class TerminalPass extends Pass {
    *
    * @return the next pass, if exists, or None otherwise
    */
-  override def next(): Option[Pass] = {
-    None
-  }
+  override def nextPass = new TerminalPassWithTlaModule
 
   override def dependencies: Set[ModuleProperty.Value] = Set()
+
+  override def transformations: Set[ModuleProperty.Value] = Set()
 }

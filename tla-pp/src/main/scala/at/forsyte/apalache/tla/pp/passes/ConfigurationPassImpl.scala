@@ -30,10 +30,8 @@ import java.nio.file.Path
  */
 class ConfigurationPassImpl @Inject() (
     val options: WriteablePassOptions, tracker: TransformationTracker, writerFactory: TlaWriterFactory,
-    @Named("AfterConfiguration") nextPass: Pass with TlaModuleMixin
+    @Named("AfterConfiguration") val nextPass: Pass with TlaModuleMixin
 ) extends ConfigurationPass with LazyLogging {
-
-  private var outputTlaModule: Option[TlaModule] = None
 
   /**
    * The pass name.
@@ -72,7 +70,7 @@ class ConfigurationPassImpl @Inject() (
     // dump the configuration result
     writerFactory.writeModuleAllFormats(configuredModule.copy(name = "02_OutConfig"), TlaWriter.STANDARD_MODULES)
 
-    outputTlaModule = Some(configuredModule)
+    nextPass.updateModule(this, tlaModule, configuredModule)
     true
   }
 
@@ -375,19 +373,7 @@ class ConfigurationPassImpl @Inject() (
     }
   }
 
-  /**
-   * Get the next pass in the chain. What is the next pass is up
-   * to the module configuration and the pass outcome.
-   *
-   * @return the next pass, if exists, or None otherwise
-   */
-  override def next(): Option[Pass] = {
-    outputTlaModule map { m =>
-      val module = new TransformedTlaModule(m, tlaModule.get.properties + ModuleProperty.Configured)
-      nextPass.setModule(module)
-      nextPass
-    }
-  }
-
   override def dependencies = Set(ModuleProperty.TypeChecked)
+
+  override def transformations = Set(ModuleProperty.Configured)
 }

@@ -21,7 +21,7 @@ import java.nio.file.Path
  */
 class AnalysisPassImpl @Inject() (val options: PassOptions, hintsStoreImpl: FormulaHintsStoreImpl,
     exprGradeStoreImpl: ExprGradeStoreImpl, tracker: TransformationTracker, writerFactory: TlaWriterFactory,
-    @Named("AfterAnalysis") nextPass: Pass with TlaModuleMixin)
+    @Named("AfterAnalysis") val nextPass: Pass with TlaModuleMixin)
     extends AnalysisPass with LazyLogging {
 
   /**
@@ -30,8 +30,6 @@ class AnalysisPassImpl @Inject() (val options: PassOptions, hintsStoreImpl: Form
    * @return the name associated with the pass
    */
   override def name: String = "AnalysisPass"
-
-  private var outputTlaModule: Option[TlaModule] = None
 
   object StringOrdering extends Ordering[Object] {
     override def compare(x: Object, y: Object): Int = x.toString compare y.toString
@@ -82,7 +80,7 @@ class AnalysisPassImpl @Inject() (val options: PassOptions, hintsStoreImpl: Form
       case _                => ()
     }
 
-    outputTlaModule = Some(marked)
+    nextPass.updateModule(this, tlaModule, marked)
 
     writerFactory.writeModuleAllFormats(marked.copy(name = "11_OutAnalysis"), TlaWriter.STANDARD_MODULES)
 
@@ -92,19 +90,7 @@ class AnalysisPassImpl @Inject() (val options: PassOptions, hintsStoreImpl: Form
     true
   }
 
-  /**
-   * Get the next pass in the chain. What is the next pass is up
-   * to the module configuration and the pass outcome.
-   *
-   * @return the next pass, if exists, or None otherwise
-   */
-  override def next(): Option[Pass] = {
-    outputTlaModule map { m =>
-      val module = new TransformedTlaModule(m, tlaModule.get.properties + ModuleProperty.Analyzed)
-      nextPass.setModule(module)
-      nextPass
-    }
-  }
-
   override def dependencies = Set(ModuleProperty.TransitionsFound)
+
+  override def transformations = Set(ModuleProperty.Analyzed)
 }
