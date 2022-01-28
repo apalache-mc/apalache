@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.analyses.FormulaHintsStore
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.lir.TypedPredefs._
@@ -49,47 +48,27 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
               }
             }
 
-            if (
-                rewriter.config.lazyCircuit &&
-                rewriter.formulaHintsStore.getHint(state.ex.ID).contains(FormulaHintsStore.HighAnd())
-            ) {
-              // lazy short-circuiting: evaluate the conditions and prune them in runtime
-              val level = rewriter.contextLevel
-              rewriter.push()
-              val result = lazyCircuit(state, args)
-              if (simplifier.isFalseConst(result.ex)) {
-                rewriter.pop(rewriter.contextLevel - level) // roll back, nothing to keep
-                result.setRex(state.arena.cellFalse().toNameEx)
+            // no lazy short-circuiting: simply translate if-then-else to a chain of if-then-else expressions
+            val newState =
+              if (rewriter.config.shortCircuit) {
+                // create a chain of IF-THEN-ELSE expressions and rewrite them
+                state.setRex(toIte(args))
               } else {
-                // We have to pop the context. Otherwise, we break the stack contract.
-                rewriter.pop()
-                // is there a workaround?
-                val newState = state.setRex(toIte(args))
-                rewriter.rewriteUntilDone(newState)
-              }
-            } else {
-              // no lazy short-circuiting: simply translate if-then-else to a chain of if-then-else expressions
-              val newState =
-                if (rewriter.config.shortCircuit) {
-                  // create a chain of IF-THEN-ELSE expressions and rewrite them
-                  state.setRex(toIte(args))
-                } else {
-                  // simply translate to a conjunction
-                  var nextState = state.updateArena(_.appendCell(BoolT()))
-                  val pred = nextState.arena.topCell.toNameEx
+                // simply translate to a conjunction
+                var nextState = state.updateArena(_.appendCell(BoolT()))
+                val pred = nextState.arena.topCell.toNameEx
 
-                  def mapArg(argEx: TlaEx): TlaEx = {
-                    nextState = rewriter.rewriteUntilDone(nextState.setRex(argEx))
-                    nextState.ex
-                  }
-
-                  val rewrittenArgs = args map mapArg
-                  val eq = tla.eql(pred ? "b", tla.and(rewrittenArgs: _*) ? "b").typed(boolTypes, "b")
-                  rewriter.solverContext.assertGroundExpr(eq)
-                  nextState.setRex(pred)
+                def mapArg(argEx: TlaEx): TlaEx = {
+                  nextState = rewriter.rewriteUntilDone(nextState.setRex(argEx))
+                  nextState.ex
                 }
-              rewriter.rewriteUntilDone(newState)
-            }
+
+                val rewrittenArgs = args map mapArg
+                val eq = tla.eql(pred ? "b", tla.and(rewrittenArgs: _*) ? "b").typed(boolTypes, "b")
+                rewriter.solverContext.assertGroundExpr(eq)
+                nextState.setRex(pred)
+              }
+            rewriter.rewriteUntilDone(newState)
           }
 
         finalState

@@ -110,11 +110,6 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
   protected lazy val substRule = new SubstRule(this)
 
   /**
-   * The store that contains formula hints. By default, empty.
-   */
-  var formulaHintsStore: FormulaHintsStore = new FormulaHintsStoreImpl()
-
-  /**
    * A storage for the messages associated with assertion failures, see MessageStorage.
    */
   private var messages: mutable.Map[Int, String] = new mutable.HashMap()
