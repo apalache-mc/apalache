@@ -14,11 +14,11 @@ import at.forsyte.apalache.tla.lir.MissingTransformationError
  * @author Igor Konnov
  */
 
-class PassChainExecutor @Inject() (val options: WriteablePassOptions, @Named("InitialPass") val initialPass: Pass)
+class PassChainExecutor @Inject() (val options: WriteablePassOptions, @Named("InitialPass") val initialPass: Pass with TlaModuleMixin)
     extends LazyLogging {
 
   def run(): Option[Pass] = {
-    def exec(seqNo: Int, passToRun: Pass): Option[Pass] = {
+    def exec(seqNo: Int, passToRun: Pass with TlaModuleMixin): Option[Pass] = {
       logger.info("PASS #%d: %s".format(seqNo, passToRun.name))
       val result = passToRun.execute()
       val outcome = if (result) "[OK]" else "[FAIL]"
@@ -27,14 +27,14 @@ class PassChainExecutor @Inject() (val options: WriteablePassOptions, @Named("In
         None // return the negative result
       } else {
         val nextPass = passToRun.nextPass
-        if (nextPass.asInstanceOf[TlaModuleMixin].hasModule) {
-          val module = nextPass.asInstanceOf[TlaModuleMixin].unsafeGetModule
+        if (nextPass.hasModule) {
+          val module = nextPass.unsafeGetModule
 
           // Raise error if the pass dependencies aren't satisfied
           if (!nextPass.dependencies.subsetOf(module.properties)) {
             val missing = nextPass.dependencies -- module.properties
             throw new MissingTransformationError(
-                s"${nextPass.name} cannot run for a module without the properties: ${missing.mkstring(", ")}", module)
+                s"${nextPass.name} cannot run for a module without the properties: ${missing.mkString(", ")}", module)
           }
 
           exec(1 + seqNo, nextPass) // call the next pass in line

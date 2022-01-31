@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
+import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
 import at.forsyte.apalache.tla.bmcmt.Checker.NoError
 import at.forsyte.apalache.tla.bmcmt._
@@ -30,7 +30,7 @@ import java.nio.file.Path
  */
 class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: FormulaHintsStore,
     exprGradeStore: ExprGradeStore, sourceStore: SourceStore, changeListener: ChangeListener,
-    @Named("AfterChecker") val nextPass: Pass)
+    @Named("AfterChecker") val nextPass: Pass with TlaModuleMixin)
     extends BoundedCheckerPass with LazyLogging {
 
   /**

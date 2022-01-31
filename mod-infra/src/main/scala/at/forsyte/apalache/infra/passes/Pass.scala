@@ -38,7 +38,7 @@ trait Pass {
    *
    * @return the next pass, if exists, or None otherwise
    */
-  def nextPass: Pass
+  def nextPass: Pass with TlaModuleMixin
 
   def dependencies: Set[ModuleProperty.Value]
 
