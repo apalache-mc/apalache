@@ -4,7 +4,7 @@ import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
 import at.forsyte.apalache.tla.bmcmt.Checker.NoError
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, FormulaHintsStore}
+import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStore
 import at.forsyte.apalache.tla.bmcmt.rewriter.{MetricProfilerListener, RewriterConfig}
 import at.forsyte.apalache.tla.bmcmt.search._
 import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig}
@@ -27,9 +27,8 @@ import java.nio.file.Path
  *
  * @author Igor Konnov
  */
-class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: FormulaHintsStore,
-    exprGradeStore: ExprGradeStore, sourceStore: SourceStore, changeListener: ChangeListener,
-    @Named("AfterChecker") nextPass: Pass)
+class BoundedCheckerPassImpl @Inject() (val options: PassOptions, exprGradeStore: ExprGradeStore,
+    sourceStore: SourceStore, changeListener: ChangeListener, @Named("AfterChecker") nextPass: Pass)
     extends BoundedCheckerPass with LazyLogging {
 
   /**
@@ -124,7 +123,6 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
       case oddEncoding => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
     }
 
-    rewriter.formulaHintsStore = hintsStore
     rewriter.config = RewriterConfig(tuning)
 
     type SnapshotT = IncrementalExecutionContextSnapshot
@@ -154,7 +152,6 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, hintsStore: Fo
       case `arraysEncoding`   => new SymbStateRewriterImplWithArrays(solverContext, exprGradeStore)
       case oddEncoding        => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
     }
-    rewriter.formulaHintsStore = hintsStore
     rewriter.config = RewriterConfig(tuning)
 
     type SnapshotT = OfflineExecutionContextSnapshot
