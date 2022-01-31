@@ -1,6 +1,5 @@
 package at.forsyte.apalache.io.annotations
 
-import at.forsyte.apalache.io.annotations.AnnotationParser.{Failure, Success}
 import org.junit.runner.RunWith
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen.{alphaNumStr, alphaStr, identifier, listOf, oneOf}
@@ -28,13 +27,7 @@ class TestAnnotationParser extends FunSuite with Checkers {
   } yield AnnotationBool(b)
 
   test("test on empty input") {
-    AnnotationParser.parse("") match {
-      case AnnotationParser.Success(List()) =>
-        ()
-
-      case r =>
-        fail("Unexpected parser outcome: " + r)
-    }
+    AnnotationParser.parse("").map(r => fail("Expected failure on empty text. Found: " + r))
   }
 
   test("test on one-line input") {
@@ -43,47 +36,35 @@ class TestAnnotationParser extends FunSuite with Checkers {
           "greet",
           AnnotationStr("hello"),
           AnnotationInt(2021),
-          AnnotationBool(true)
+          AnnotationBool(true),
       )
-    AnnotationParser.parse("""  @greet("hello", 2021, true)   """) match {
-      case AnnotationParser.Success(List(parsed)) =>
-        assert(expected == parsed)
 
-      case r =>
-        fail("Unexpected parser outcome: " + r)
-    }
+    AnnotationParser
+      .parse("""  @greet("hello", 2021, true)   """)
+      .map(a => assert(expected == a))
+      .swap
+      .map(r => "Unexpected parser outcome: " + r)
   }
 
   test("test on one-line input with arbitrary text around") {
-    val expected =
-      Annotation(
-          "greet",
-          AnnotationStr("hello"),
-          AnnotationInt(2021),
-          AnnotationBool(true)
-      )
-    AnnotationParser.parse("""\* zxfzx @ hjhsd99. @greet("hello", 2021, true)  zzz vvv!#@ """) match {
-      case AnnotationParser.Success(List(parsed)) =>
-        assert(expected == parsed)
-
-      case r =>
-        fail("Unexpected parser outcome: " + r)
-    }
+    // The text should be preprocessed by CommentPreprocessor first, so we expect a failure.
+    AnnotationParser
+      .parse("""\* zxfzx @ hjhsd99. @greet("hello", 2021, true)  zzz vvv!#@ """)
+      .map(r => fail("Expected a failure. Found: " + r))
   }
 
   test("test the special form of a one-argument annotation") {
     val expected =
       Annotation(
           "type",
-          AnnotationStr(" (Int, Int) -> Set(Int) ")
+          AnnotationStr(" (Int, Int) -> Set(Int) "),
       )
-    AnnotationParser.parse("""  @type: (Int, Int) -> Set(Int) ;""") match {
-      case AnnotationParser.Success(List(parsed)) =>
-        assert(expected.toPrettyString == parsed.toPrettyString)
 
-      case r =>
-        fail("Unexpected parser outcome: " + r)
-    }
+    AnnotationParser
+      .parse("""  @type: (Int, Int) -> Set(Int) ;""")
+      .map(a => assert(expected == a))
+      .swap
+      .map(r => "Unexpected parser outcome: " + r)
   }
 
   test("test on multiline input") {
@@ -92,54 +73,43 @@ class TestAnnotationParser extends FunSuite with Checkers {
           "greet",
           AnnotationStr("hello"),
           AnnotationInt(2021),
-          AnnotationBool(true)
+          AnnotationBool(true),
       )
     val text =
       """  @greet("hello",
         |         2021,
         |         true)     """.stripMargin
-    AnnotationParser.parse(text) match {
-      case AnnotationParser.Success(List(parsed)) =>
-        assert(expected == parsed)
 
-      case r =>
-        fail("Unexpected parser outcome: " + r)
-    }
+    AnnotationParser
+      .parse(text)
+      .map(a => assert(expected == a))
+      .swap
+      .map(r => "Unexpected parser outcome: " + r)
   }
 
   test("regression") {
-    val expected =
-      Annotation("type", AnnotationStr(" Str"))
+    // The text should be preprocessed by CommentPreprocessor first, so we expect a failure.
     val text =
       """  \* TODO: use a model type here
         |  \* when #570 is closed: https://github.com/informalsystems/apalache/issues/570
         |  \* @type: Str;""".stripMargin
-    AnnotationParser.parse(text) match {
-      case AnnotationParser.Success(List(parsed)) =>
-        assert(expected == parsed)
-
-      case r =>
-        fail("Unexpected parser outcome: " + r)
-    }
+    AnnotationParser
+      .parse(text)
+      .map(r => fail("Expected a failure. Found: " + r))
   }
 
   test("multiple annotations as in unit tests") {
-    val expected =
-      List(Annotation("require", AnnotationIdent("ConstInit")), Annotation("require", AnnotationIdent("Init")),
-          Annotation("ensure", AnnotationIdent("AssertWinner")), Annotation("testAction", AnnotationIdent("Next")))
+    // The text should be preprocessed by CommentPreprocessor first, so we expect a failure.
     val text =
       """@require(ConstInit)
         |@require(Init)
         |@ensure(AssertWinner)
         |@testAction(Next)
         """.stripMargin
-    AnnotationParser.parse(text) match {
-      case AnnotationParser.Success(parsed) =>
-        assert(expected == parsed)
 
-      case r =>
-        fail("Unexpected parser outcome: " + r)
-    }
+    AnnotationParser
+      .parse(text)
+      .map(r => fail("Expected a failure. Found: " + r))
   }
 
   // For some reason, if there is a bug in the parser, e.g., comment out boolArg in TlaAnnotationParser.arg),
@@ -155,16 +125,16 @@ class TestAnnotationParser extends FunSuite with Checkers {
             forAll(listOf(oneOf(genStr, genInt, genBool))) { args =>
               val annotation = Annotation(name, args: _*)
               AnnotationParser.parse(annotation.toString) match {
-                case AnnotationParser.Success(List(parsed)) =>
+                case Right(parsed) =>
                   annotation ?= parsed
 
-                case AnnotationParser.Failure(_) =>
+                case Left(_) =>
                   falsified
               }
             }
           }
         },
-        minSuccessful(200)
+        minSuccessful(200),
     )
   }
 
@@ -172,18 +142,15 @@ class TestAnnotationParser extends FunSuite with Checkers {
     check(
         {
           forAll(alphaStr) { str =>
-            AnnotationParser.parse(str) match {
-              // Pass the test on successful parse.
-              // To see how testing is different from verification,
-              // replace 'passed' with 'falsified' and observe that no error will be found ;-)
-              case Success(_) => passed
-
-              case Failure(_) => passed
-            }
+            AnnotationParser.parse(str)
+            // Pass the test on successful parse.
+            // To see how testing is different from verification,
+            // replace 'passed' with 'falsified' and observe that no error will be found ;-)
+            passed
           // no exceptions
           }
         },
-        minSuccessful(300)
+        minSuccessful(300),
     )
   }
 }

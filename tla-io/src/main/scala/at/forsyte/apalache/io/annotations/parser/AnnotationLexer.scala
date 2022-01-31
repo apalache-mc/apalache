@@ -17,7 +17,7 @@ import scala.util.parsing.combinator.RegexParsers
 object AnnotationLexer extends RegexParsers {
   override def skipWhitespace: Boolean = true
 
-  override val whiteSpace: Regex = """([ \t\r\f\n]+|\\\*|\(\*|\*\))""".r
+  override val whiteSpace: Regex = """([ \t\r\f\n]+)""".r
 
   /**
    * Parse the input stream and return the list of tokens. Although collecting the list of all tokens in memory is
@@ -27,24 +27,20 @@ object AnnotationLexer extends RegexParsers {
    * @return the list of parsed tokens
    * @throws AnnotationParserError when the lexer finds an error
    */
-  def apply(reader: Reader): Seq[AnnotationToken] = parseAll(program, reader) match {
+  def apply(reader: Reader): Either[String, Seq[AnnotationToken]] = parse(program, reader) match {
     case Success(result, _) =>
-      result
+      Right(result)
 
     case NoSuccess(msg, _) =>
       // we ignore the position, as it is the position that is relative to a comment
-      throw new AnnotationParserError(msg)
+      Left(msg)
   }
 
-  def program: Parser[Seq[AnnotationToken]] = {
-    skip ~> rep(token <~ skip) <~ eof ^^ { tokens => tokens.filter(_ != JUNK()) }
-  }
-
-  def eof: Parser[String] = "\\z".r | failure("unexpected character")
+  def program: Parser[Seq[AnnotationToken]] = phrase(rep1(token))
 
   def token: Parser[AnnotationToken] =
     positioned(
-        leftParen | rightParen | comma | dot | boolean | atIdentifier | identifier | number | string | inline_string | junk
+        leftParen | rightParen | comma | dot | boolean | atIdentifier | identifier | number | string | inline_string | unexpected_char,
     ) ///
 
   def skip: Parser[Unit] = rep(whiteSpace) ^^^ Unit
@@ -61,37 +57,22 @@ object AnnotationLexer extends RegexParsers {
 
   private def string: Parser[STRING] = {
     """"[a-zA-Z0-9_~!@#\\$%^&*\-+=|(){}\[\],:;`'<>.?/ \t\r\f\n]*"""".r ^^ { name =>
-      STRING(removeLeadingCommentsAndControlChars(name.substring(1, name.length - 1)))
+      STRING(name.substring(1, name.length - 1))
     }
   }
 
   private def inline_string: Parser[INLINE_STRING] = {
-    """:[a-zA-Z0-9_~!#\\$%^&*\-+=|(){}\[\],:`'<>.?/ \t\r\f\n]*;""".r ^^ { name =>
-      INLINE_STRING(removeLeadingCommentsAndControlChars(name.substring(1, name.length - 1)))
+    """:[a-zA-Z0-9_~!#\\$%^&*\-+=|(){}\[\],:`'<>.?/ \t\r\f\n]*;""".r ^^ { text =>
+      val contents = text.substring(1, text.length - 1)
+      // Inline string may contain line feeds and other control characters. Remove them.
+      val cleared = whiteSpace.replaceAllIn(contents, " ")
+      INLINE_STRING(cleared)
     }
   }
 
-  /**
-   * <p>It is not uncommon to write multiline strings in annotations. Since these strings are written in comments,
-   * it should be possible to write them like:</p>
-   *
-   * <pre>
-   *
-   * \* @type: Int
-   * \*          => Int;
-   * \*
-   * \* @type("Int
-   * \*          => Int")
-   * </pre>
-   *
-   * <p>This method removes the leading "\*" from a multiline string. Additionally, it replaces with a space
-   * a group of carriage returns, form feeds, line feeds, and tabs.</p>
-   *
-   * @param text text to preprocess
-   * @return text without leading "\*" and ASCII control characters
-   */
-  private def removeLeadingCommentsAndControlChars(text: String): String = {
-    text.replaceAll("""\n[ \t\r\f]*\\\*""", "").replaceAll("[\n\t\r\f]*", "")
+  private def unexpected_char: Parser[Nothing] = {
+    failure(
+        "Unexpected syntax in annotation. Expected: Boolean, string, number, identifier, inline text, '.', ',', '(', or ')'")
   }
 
   private def number: Parser[NUMBER] = {
@@ -116,11 +97,5 @@ object AnnotationLexer extends RegexParsers {
 
   private def dot: Parser[DOT] = {
     "." ^^ (_ => DOT())
-  }
-
-  // Whatever is not recognized as a token above, should be treated as junk.
-  // We take care of not consuming the character '@' as junk, if it is followed by a letter or underscore.
-  private def junk: Parser[JUNK] = {
-    "(@[^a-zA-Z_]|[^@]+)".r ^^ { _ => JUNK() }
   }
 }

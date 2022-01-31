@@ -8,12 +8,6 @@ import scala.util.parsing.input.Positional
 sealed trait AnnotationToken extends Positional
 
 /**
- * Arbitrary text that could be used outside of an annotation.
- * The lexer may produce such tokens internally, but it never gives them to the API user.
- */
-case class JUNK() extends AnnotationToken {}
-
-/**
  * An identifier
  *
  * @param name the name associated with the identifier
