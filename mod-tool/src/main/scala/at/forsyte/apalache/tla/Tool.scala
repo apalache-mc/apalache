@@ -5,13 +5,15 @@ import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import at.forsyte.apalache.infra.log.LogbackConfigurator
-import at.forsyte.apalache.infra.passes.{PassChainExecutor, PassOptions, TlaModuleMixin}
+import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor, PassOptions, TlaModuleMixin, WriteablePassOptions}
 import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorMessage, PassOptionException}
 import at.forsyte.apalache.io.{OutputManager, ReportGenerator}
-import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
+import at.forsyte.apalache.tla.bmcmt.config.{CheckerModule, ReTLAToVMTModule}
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.tooling.{ExitCodes, Version}
-import at.forsyte.apalache.tla.tooling.opt.{CheckCmd, ConfigCmd, General, ParseCmd, TestCmd, TypeCheckCmd, ServerCmd}
+import at.forsyte.apalache.tla.tooling.opt.{
+  CheckCmd, ConfigCmd, TranspileCmd, AbstractCheckerCmd, General, ParseCmd, ServerCmd, TestCmd, TypeCheckCmd,
+}
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import com.google.inject.{Guice, Injector}
 import com.typesafe.scalalogging.LazyLogging
@@ -23,7 +25,6 @@ import util.ExecutionStatisticsCollector.Selection
 
 import scala.collection.JavaConverters._
 import scala.util.Random
-import at.forsyte.apalache.infra.passes.WriteablePassOptions
 import at.forsyte.apalache.io.ApalacheConfig
 import at.forsyte.apalache.io.ConfigManager
 
@@ -61,7 +62,7 @@ object Tool extends LazyLogging {
     }
     println(s"Output directory: ${OutputManager.runDir.normalize()}")
     OutputManager.withWriterInRunDir(OutputManager.Names.RunFile)(
-        _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
+        _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}"),
     )
     // force our programmatic logback configuration, as the autoconfiguration works unpredictably
     new LogbackConfigurator(OutputManager.runDirPathOpt, OutputManager.customRunDirPathOpt).configureDefaultContext()
@@ -89,7 +90,8 @@ object Tool extends LazyLogging {
           new TypeCheckCmd,
           new TestCmd,
           new ConfigCmd,
-          new ServerCmd
+          new ServerCmd,
+          new TranspileCmd,
       )
 
     cli match {
@@ -124,6 +126,10 @@ object Tool extends LazyLogging {
               val injector = Guice.createInjector(new CheckerModule)
               handleExceptions(runServer, injector, server)
 
+            case constrain: TranspileCmd =>
+              val injector = Guice.createInjector(new ReTLAToVMTModule)
+              handleExceptions(runConstrain, injector, constrain)
+
             case config: ConfigCmd =>
               configure(config)
           }
@@ -153,6 +159,37 @@ object Tool extends LazyLogging {
     options.set("io.outdir", OutputManager.outDir)
   }
 
+  private def runAndExit(executor: PassChainExecutor, msgIfOk: Pass => String, msgIfFail: String,
+      errCode: Int = ExitCodes.ERROR): Int = {
+    val result = executor.run()
+    if (result.isDefined) {
+      logger.info(msgIfOk(result.get))
+      ExitCodes.NO_ERROR
+    } else {
+      logger.info(msgIfFail)
+      errCode
+    }
+  }
+
+  private def setCoreOptions(executor: PassChainExecutor, cmd: AbstractCheckerCmd): Unit = {
+    logger.info(
+        "Checker options: filename=%s, init=%s, next=%s, inv=%s"
+          .format(cmd.file, cmd.init, cmd.next, cmd.inv),
+    )
+    executor.options.set("parser.filename", cmd.file.getAbsolutePath)
+    if (cmd.config != "")
+      executor.options.set("checker.config", cmd.config)
+    if (cmd.init != "")
+      executor.options.set("checker.init", cmd.init)
+    if (cmd.next != "")
+      executor.options.set("checker.next", cmd.next)
+    if (cmd.inv != "")
+      executor.options.set("checker.inv", List(cmd.inv))
+    if (cmd.cinit != "")
+      executor.options.set("checker.cinit", cmd.cinit)
+    executor.options.set("checker.length", cmd.length)
+  }
+
   private def runParse(injector: => Injector, parse: ParseCmd): Int = {
     // here, we implement a terminal pass to get the parse results
     val executor = injector.getInstance(classOf[PassChainExecutor])
@@ -167,44 +204,28 @@ object Tool extends LazyLogging {
     // behavior of current OutmputManager configuration
     setCommonOptions(parse, executor.options)
 
-    val result = executor.run()
-    if (result.isDefined) {
-      logger.info("Parsed successfully")
-      val tlaModule = result.get.asInstanceOf[TlaModuleMixin].unsafeGetModule
-      logger.info("Root module: %s with %d declarations".format(tlaModule.name, tlaModule.declarations.length))
-      ExitCodes.NO_ERROR
-    } else {
-      logger.info("Parser has failed")
-      ExitCodes.ERROR
-    }
+    runAndExit(
+        executor,
+        r => {
+          val tlaModule = r.asInstanceOf[TlaModuleMixin].unsafeGetModule
+          s"Parsed successfully\nRoot module: ${tlaModule.name} with ${tlaModule.declarations.length} declarations."
+        },
+        "Parser has failed",
+    )
   }
 
   private def runCheck(injector: => Injector, check: CheckCmd): Int = {
     val executor = injector.getInstance(classOf[PassChainExecutor])
 
-    logger.info(
-        "Checker options: filename=%s, init=%s, next=%s, inv=%s"
-          .format(check.file, check.init, check.next, check.inv)
-    )
+    setCoreOptions(executor, check)
+
     var tuning =
       if (check.tuning != "") loadProperties(check.tuning) else Map[String, String]()
     tuning = overrideProperties(tuning, check.tuningOptions)
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
     executor.options.set("general.tuning", tuning)
-    executor.options.set("parser.filename", check.file.getAbsolutePath)
-    if (check.config != "")
-      executor.options.set("checker.config", check.config)
-    if (check.init != "")
-      executor.options.set("checker.init", check.init)
-    if (check.next != "")
-      executor.options.set("checker.next", check.next)
-    if (check.inv != "")
-      executor.options.set("checker.inv", List(check.inv))
-    if (check.cinit != "")
-      executor.options.set("checker.cinit", check.cinit)
     executor.options.set("checker.nworkers", check.nworkers)
-    executor.options.set("checker.length", check.length)
     executor.options.set("checker.discardDisabled", check.discardDisabled)
     executor.options.set("checker.noDeadlocks", check.noDeadlocks)
     executor.options.set("checker.algo", check.algo)
@@ -219,14 +240,12 @@ object Tool extends LazyLogging {
     // behavior of current OutmputManager configuration
     setCommonOptions(check, executor.options)
 
-    val result = executor.run()
-    if (result.isDefined) {
-      logger.info("Checker reports no error up to computation length " + check.length)
-      ExitCodes.NO_ERROR
-    } else {
-      logger.info("Checker has found an error")
-      ExitCodes.ERROR_COUNTEREXAMPLE
-    }
+    runAndExit(
+        executor,
+        _ => "Checker reports no error up to computation length " + check.length,
+        "Checker has found an error",
+        ExitCodes.ERROR_COUNTEREXAMPLE,
+    )
   }
 
   private def runTest(injector: => Injector, test: TestCmd): Int = {
@@ -266,14 +285,12 @@ object Tool extends LazyLogging {
     // behavior of current OutmputManager configuration
     setCommonOptions(test, executor.options)
 
-    val result = executor.run()
-    if (result.isDefined) {
-      logger.info("No example found")
-      ExitCodes.NO_ERROR
-    } else {
-      logger.info("Checker has found an example. Check counterexample.tla.")
-      ExitCodes.ERROR_COUNTEREXAMPLE
-    }
+    runAndExit(
+        executor,
+        _ => "No example found",
+        "Checker has found an example. Check counterexample.tla.",
+        ExitCodes.ERROR_COUNTEREXAMPLE,
+    )
   }
 
   private def runTypeCheck(injector: => Injector, typecheck: TypeCheckCmd): Int = {
@@ -289,15 +306,11 @@ object Tool extends LazyLogging {
     // behavior of current OutmputManager configuration
     setCommonOptions(typecheck, executor.options)
 
-    executor.run() match {
-      case None =>
-        logger.info("Type checker [FAILED]")
-        ExitCodes.ERROR
-
-      case Some(_) =>
-        logger.info("Type checker [OK]")
-        ExitCodes.NO_ERROR
-    }
+    runAndExit(
+        executor,
+        _ => "Type checker [OK]",
+        "Type checker [FAILED]",
+    )
   }
 
   private def runServer(injector: => Injector, server: ServerCmd): Int = {
@@ -311,6 +324,26 @@ object Tool extends LazyLogging {
     setCommonOptions(server, executor.options)
     logger.info("Server mode is not yet implemented!")
     ExitCodes.ERROR
+  }
+
+  private def runConstrain(injector: => Injector, constrain: TranspileCmd): Int = {
+    val executor = injector.getInstance(classOf[PassChainExecutor])
+
+    setCoreOptions(executor, constrain)
+    // for now, enable polymorphic types. We probably want to disable this option for the type checker
+    executor.options.set("typechecker.inferPoly", true)
+
+    // NOTE Must go after all other options are set due to side-effecting
+    // behavior of current OutmputManager configuration
+    setCommonOptions(constrain, executor.options)
+
+    val msg = "Constraint mode is not yet implemented!"
+
+    runAndExit(
+        executor,
+        _ => msg,
+        msg,
+    )
   }
 
   private def loadProperties(filename: String): Map[String, String] = {
@@ -368,10 +401,10 @@ object Tool extends LazyLogging {
             logger.error(text, e)
             val absPath = ReportGenerator.prepareReportFile(
                 cmd.invocation.split(" ").dropRight(1).mkString(" "),
-                s"${Version.version} build ${Version.build}"
+                s"${Version.version} build ${Version.build}",
             )
             Console.err.println(
-                s"Please report an issue at $ISSUES_LINK: $e\nA bug report template has been generated at [$absPath].\nIf you choose to use it, please complete the template with a description of the expected behavior."
+                s"Please report an issue at $ISSUES_LINK: $e\nA bug report template has been generated at [$absPath].\nIf you choose to use it, please complete the template with a description of the expected behavior.",
             )
 
         }
