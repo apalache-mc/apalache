@@ -51,6 +51,11 @@ class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceSto
     val nextDeclarations = extractTransitions(inModule, nextOperName, NormalizedNames.NEXT_PREFIX)
     logger.info(s"  > Found ${nextDeclarations.size} transitions")
 
+    val invDeclarations: Seq[TlaDecl] = options.get[List[String]]("checker", "inv") match {
+      case Some(invariants) => invariants.map { invariant => inModule.declarations.find(_.name == invariant).get }
+      case None => Seq()
+    }
+
     // convert an optional CInit operator
     val cinitDeclarations =
       options.get[String]("checker", "cinit") match {
@@ -70,8 +75,11 @@ class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceSto
 
     // Add the constants, variables, and assumptions; then add CInit, Init*, Next*; then add verification conditions.
     val vcDeclarations = inModule.declarations.filter(NormalizedNames.isVC)
+    // In case verification conditions weren't generated yet, keep the raw invariants
+    val vcDeclarationsOrInvariants = if (vcDeclarations.isEmpty) invDeclarations else vcDeclarations
+
     val newDecls = inModule.constDeclarations ++ inModule.varDeclarations ++ inModule.assumeDeclarations ++
-      cinitDeclarations ++ initDeclarations ++ nextDeclarations ++ vcDeclarations
+      cinitDeclarations ++ initDeclarations ++ nextDeclarations ++ vcDeclarationsOrInvariants
 
     logger.info(s"  > Applying unique renaming")
     val outModule = incrementalRenaming.renameInModule(new TlaModule(inModule.name, newDecls))
