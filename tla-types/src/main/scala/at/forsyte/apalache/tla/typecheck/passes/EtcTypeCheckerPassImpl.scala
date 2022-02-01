@@ -100,7 +100,7 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
     }
   }
 
-  override def dependencies = Set(ModuleProperty.Parsed)
+  override def dependencies = Set()
 
   override def transformations = Set(ModuleProperty.TypeChecked)
 }

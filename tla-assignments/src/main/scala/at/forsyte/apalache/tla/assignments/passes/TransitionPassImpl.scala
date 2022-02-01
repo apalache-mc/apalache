@@ -53,7 +53,7 @@ class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceSto
 
     val invDeclarations: Seq[TlaDecl] = options.get[List[String]]("checker", "inv") match {
       case Some(invariants) => invariants.map { invariant => inModule.declarations.find(_.name == invariant).get }
-      case None => Seq()
+      case None             => Seq()
     }
 
     // convert an optional CInit operator

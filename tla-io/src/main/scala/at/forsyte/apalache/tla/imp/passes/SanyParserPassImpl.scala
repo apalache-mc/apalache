@@ -126,5 +126,5 @@ class SanyParserPassImpl @Inject() (
 
   override def dependencies = Set()
 
-  override def transformations = Set(ModuleProperty.Parsed)
+  override def transformations = Set()
 }

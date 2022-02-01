@@ -14,7 +14,8 @@ import at.forsyte.apalache.tla.lir.MissingTransformationError
  * @author Igor Konnov
  */
 
-class PassChainExecutor @Inject() (val options: WriteablePassOptions, @Named("InitialPass") val initialPass: Pass with TlaModuleMixin)
+class PassChainExecutor @Inject() (val options: WriteablePassOptions,
+    @Named("InitialPass") val initialPass: Pass with TlaModuleMixin)
     extends LazyLogging {
 
   def run(): Option[Pass] = {
