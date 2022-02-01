@@ -4,7 +4,6 @@ import at.forsyte.apalache.io.annotations.Annotation
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.TlaOper
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfter, FunSuite}
@@ -55,7 +54,7 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
         val annotations = annotationStore(d.ID)
         val expected = Annotation("awesome") :: Annotation(
             "type",
-            mkStr("  Set(Int)  ")
+            mkStr("  Set(Int)  "),
         ) :: Nil
         assert(expected == annotations)
 
@@ -81,7 +80,7 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
         val annotations = annotationStore(d.ID)
         val expected = Annotation("amazing") :: Annotation(
             "type",
-            mkStr(" Set(Int) ")
+            mkStr(" Set(Int) "),
         ) :: Nil
         assert(expected == annotations)
 
@@ -104,11 +103,10 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
     module.declarations.find(_.name == "X") match {
       case Some(d @ TlaOperDecl(_, _, _)) =>
         val annotations = annotationStore(d.ID)
-        val expected = Annotation(
-            "type",
-            mkStr("Int")
-        ) :: Nil
-        assert(expected == annotations)
+        val expected = Annotation("type", mkStr("Int"))
+        assert(annotations.length == 2)
+        // ignore the #freeText annotation
+        assert(expected == annotations(1))
 
       case _ =>
         fail("Expected an operator")
@@ -134,7 +132,7 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
         val annotations = annotationStore(d.ID)
         val expected = Annotation("pure") :: Annotation(
             "type",
-            mkStr("Int => Int")
+            mkStr("Int => Int"),
         ) :: Nil
         assert(expected == annotations)
 
@@ -168,7 +166,7 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
         val annotations = annotationStore(localDef.ID)
         val expected = Annotation("pure") :: Annotation(
             "type",
-            mkStr("Int => Int")
+            mkStr("Int => Int"),
         ) :: Nil
         assert(expected == annotations)
 
@@ -203,7 +201,7 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
         val annotations = annotationStore(incDecl.ID)
         val expected = Annotation("pure") :: Annotation(
             "type",
-            mkStr("Int => Int")
+            mkStr("Int => Int"),
         ) :: Nil
         assert(expected == annotations)
 
@@ -236,7 +234,7 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
         val annotations = annotationStore(d.ID)
         val expected = Annotation("tailrec") :: Annotation(
             "type",
-            mkStr("Int => Int")
+            mkStr("Int => Int"),
         ) :: Nil
         assert(expected == annotations)
 
@@ -290,6 +288,37 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
         val annotations = annotationStore(d.ID)
         val expected = Annotation("type", mkStr("Int -> Int")) :: Nil
         assert(expected == annotations)
+
+      case _ =>
+        fail("Expected an operator")
+    }
+  }
+
+  test("corner cases") {
+    val text =
+      """-------- MODULE corner ------------
+        |(*
+        |  this annotation finishes with \n
+        |  @withlinefeed
+        | *)
+        |(* this annotation finishes at the end of the comment
+        |  @withstar*)
+        |\* this annotation finishes at the end of the comment string!
+        |\* @witheof
+        |Corner == TRUE
+        |================================
+      """.stripMargin
+
+    val module = loadModule(text, "corner")
+
+    module.declarations.find(_.name == "Corner") match {
+      case Some(d @ TlaOperDecl(_, _, _)) =>
+        val annotations = annotationStore(d.ID)
+        assert(annotations.length == 4)
+        // the head is #freeText, which we don't care about
+        assert(Annotation("withlinefeed") == annotations(1))
+        assert(Annotation("withstar") == annotations(2))
+        assert(Annotation("witheof") == annotations(3))
 
       case _ =>
         fail("Expected an operator")

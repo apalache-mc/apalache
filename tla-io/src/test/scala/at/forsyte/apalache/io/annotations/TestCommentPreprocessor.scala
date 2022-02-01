@@ -74,13 +74,15 @@ class TestCommentPreprocessor extends FunSuite with Checkers {
         |\* @multi: aaa
         |\* bbb
         |\* ccc;ddd
+        |\* zzz@bbb(1)
         |""".stripMargin
     val (output, potentialAnnotations) = CommentPreprocessor()(input)
     val expected =
-      """  (aaa)
+      """ (aaa)
         | not an annotation: john@example.org
-        |  xxx
-        | ddd
+        | xxx
+        |ddd
+        | zzz@bbb(1)
         |""".stripMargin
     assert(output == expected)
     assert(potentialAnnotations == List("@annotation(\"a\", 1)", "@semi: foo ;", "@multi: aaa bbb ccc;"))
@@ -93,11 +95,11 @@ class TestCommentPreprocessor extends FunSuite with Checkers {
         |""".stripMargin
     val (output, potentialAnnotations) = CommentPreprocessor()(input)
     val expected =
-      """ xx  bar 
+      """ xx: bar 
         |""".stripMargin
     assert(output == expected)
     // The extracted annotation is ill-formed. This will be detected by the annotation parser.
-    assert(potentialAnnotations == List("@annotation(\"a\", aaa @semi:"))
+    assert(potentialAnnotations == List("@annotation(\"a\", aaa @semi"))
   }
 
   test("annotations in strings") {
@@ -111,10 +113,10 @@ class TestCommentPreprocessor extends FunSuite with Checkers {
         |""".stripMargin
     val (output, potentialAnnotations) = CommentPreprocessor()(input)
     val expected =
-      """  (aaa)
-        | 
-        | type annotation 
-        | 
+      """ (aaa)
+        |
+        | type annotation
+        |
         |""".stripMargin
     assert(output == expected)
     assert(potentialAnnotations.size == 4)

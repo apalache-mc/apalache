@@ -15,6 +15,7 @@ package at.forsyte.apalache.io.annotations.parser
  * annotations, if they are ill-formed in the original text. This preprocessor prunes the comment
  * tokens, even in arguably valid cases (e.g., inside a string). Although it is usually not a good idea
  * to write an ad-hoc lexer, it is not obvious to me, how to use a lexer generator here.
+ * However, if someone knows how to write this preprocessor with a lexer generator, it would be great!
  * </p>
  *
  * <p>See the annotations HOWTO: https://apalache.informal.systems/docs/HOWTOs/howto-write-type-annotations.html</p>
@@ -22,7 +23,7 @@ package at.forsyte.apalache.io.annotations.parser
  * @author Igor Konnov
  */
 class CommentPreprocessor {
-  private val tokenRegex = """(\n|\\\*|\(\*|\*\)|@[a-zA-Z_][a-zA-Z0-9_]*[ \t\r]*[:(]|\)|;|")""".r
+  private val tokenRegex = """(\n|\\\*|\(\*|\*\)|[ \t\n\r]@[a-zA-Z_][a-zA-Z0-9_]*|\)|;|")""".r
 
   // internal state of the preprocessor
   private case class State(inOneLineComment: Boolean = false, multiCommentLevel: Int = 0,
@@ -97,24 +98,44 @@ class CommentPreprocessor {
     val textBuilder = new StringBuilder()
     var annotationBuilder = new StringBuilder()
     var annotations: List[String] = List()
-    var lastIndex = 0
+    var lastIndexOfUnmatchedText = 0
     var state = State()
     val matchIterator = tokenRegex.findAllIn(text)
     while (matchIterator.hasNext) {
       val group = matchIterator.next()
-      if (matchIterator.start > lastIndex && !state.isExcludingText) {
+      if (matchIterator.start > lastIndexOfUnmatchedText && !state.isExcludingText) {
         // add the text between the last match and this match
-        val fragment = text.substring(lastIndex, matchIterator.start)
+        val fragment = text.substring(lastIndexOfUnmatchedText, matchIterator.start)
         if (state.inAnnotation) {
           annotationBuilder.append(fragment)
         } else {
           textBuilder.append(fragment)
         }
       }
-      if ((group == "\n" || group == ")" || group == ";" || group == "\"") && !state.inAnnotation) {
+      // advance the index of the unmatched text
+      lastIndexOfUnmatchedText = matchIterator.end
+      // do not eat the special tokens
+      if (!state.inAnnotation && (group == "\n" || group == ")" || group == ";" || group == "\"")) {
         textBuilder.append(group)
       }
-      val nextState = getNextState(state, group)
+      // look one character ahead to figure out the annotation type
+      val lookaheadChar = if (lastIndexOfUnmatchedText < text.length) Some(text(lastIndexOfUnmatchedText)) else None
+      // figure out whether we have met an annotation or not
+      if (!state.inAnnotation && !state.inString && group.startsWith(" @")) {
+        if (lookaheadChar.contains(':') || lookaheadChar.contains('(')) {
+          // Advance the last unmatched index beyond "@annotation:" or "@annotation(".
+          lastIndexOfUnmatchedText += 1
+        } else if (isEndOfParameterlessAnnotation(lookaheadChar)) {
+          // Add this annotation immediately.
+          // Do not advance the index in case of "@annotation " or similar.
+          annotations = annotations :+ group.trim
+        } else {
+          // this is not an annotation, push it back to the free text
+          textBuilder.append(group)
+        }
+      }
+
+      val nextState = getNextState(state, group, lookaheadChar)
 
       (state.inAnnotation, nextState.inAnnotation) match {
         case (false, false) => ()
@@ -122,7 +143,9 @@ class CommentPreprocessor {
         case (false, true) =>
           // open an annotation
           annotationBuilder = new StringBuilder()
-          annotationBuilder.append(group)
+          annotationBuilder.append(group.trim)
+          // don't forget '(' or ':' that are stored in look-ahead
+          annotationBuilder.append(lookaheadChar.get)
 
         case (true, true) =>
           if (group != "\\*" && group != "(*" && group != "*)" && group != "\n") {
@@ -137,12 +160,11 @@ class CommentPreprocessor {
       }
 
       state = nextState
-      lastIndex = matchIterator.end
     }
 
-    if (lastIndex < text.length) {
+    if (lastIndexOfUnmatchedText < text.length) {
       // mind the text after the last matched group
-      textBuilder.append(text.substring(lastIndex))
+      textBuilder.append(text.substring(lastIndexOfUnmatchedText))
     }
 
     if (annotationBuilder.nonEmpty) {
@@ -153,7 +175,7 @@ class CommentPreprocessor {
     (textBuilder.toString(), annotations)
   }
 
-  private def getNextState(state: State, group: String): State = {
+  private def getNextState(state: State, group: String, lookaheadChar: Option[Char]): State = {
     group match {
       case "\\*" =>
         state.enterOneLineComment()
@@ -200,13 +222,16 @@ class CommentPreprocessor {
         }
 
       case _ =>
-        if (!group.startsWith("@")) {
+        if (!group.startsWith(" @")) {
           state
         } else {
-          if (group.endsWith("(") && !state.inAnnotation) {
+          if (lookaheadChar.contains('(') && !state.inAnnotation) {
             state.enterParensAnnotation()
-          } else if (group.endsWith(":") && !state.inAnnotation) {
+          } else if (lookaheadChar.contains(':') && !state.inAnnotation) {
             state.enterColonAnnotation()
+          } else if (!state.inAnnotation && isEndOfParameterlessAnnotation(lookaheadChar)) {
+            // an annotation like "@awesome " is immediately consumed
+            state
           } else {
             if (state.inString) {
               // Somebody wrote an annotation inside a string, which resides inside an annotation. Life is tough.
@@ -219,6 +244,10 @@ class CommentPreprocessor {
           }
         }
     }
+  }
+
+  private def isEndOfParameterlessAnnotation(lookaheadChar: Option[Char]): Boolean = {
+    lookaheadChar.isEmpty || lookaheadChar.exists(c => " \n\t\r*".contains(c))
   }
 }
 
