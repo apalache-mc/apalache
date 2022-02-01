@@ -38,7 +38,7 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
    * @return true, if the pass was successful
    */
   override def execute(): Boolean = {
-    val baseModule = tlaModule.get
+    val baseModule = rawModule.get
 
     /*
     Disable the preprocessing pass that introduces nullary operators for call results.
@@ -50,7 +50,7 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
     }).toSet
     val module = appWrap.moduleTransform(operNames)(baseModule)
      */
-    val module: TlaModule = baseModule
+    val module = baseModule
 
     val transformationSequence: List[BodyMap => TlaExTransformation] = {
       val wrapHandler = CallByNameWrapHandler(tracker)

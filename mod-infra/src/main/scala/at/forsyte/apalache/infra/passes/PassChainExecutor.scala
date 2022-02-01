@@ -18,8 +18,8 @@ class PassChainExecutor @Inject() (val options: WriteablePassOptions,
     @Named("InitialPass") val initialPass: Pass with TlaModuleMixin)
     extends LazyLogging {
 
-  def run(): Option[Pass] = {
-    def exec(seqNo: Int, passToRun: Pass with TlaModuleMixin): Option[Pass] = {
+  def run(): Option[Pass with TlaModuleMixin] = {
+    def exec(seqNo: Int, passToRun: Pass with TlaModuleMixin): Option[Pass with TlaModuleMixin] = {
       logger.info("PASS #%d: %s".format(seqNo, passToRun.name))
       val result = passToRun.execute()
       val outcome = if (result) "[OK]" else "[FAIL]"

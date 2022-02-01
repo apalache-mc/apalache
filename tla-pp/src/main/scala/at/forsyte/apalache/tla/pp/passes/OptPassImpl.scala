@@ -37,7 +37,7 @@ class OptPassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator,
    * @return true, if the pass was successful
    */
   override def execute(): Boolean = {
-    val module: TlaModule = tlaModule.get
+    val module = rawModule.get
 
     val transformationSequence =
       List(

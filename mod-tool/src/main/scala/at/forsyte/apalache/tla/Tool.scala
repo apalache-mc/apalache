@@ -159,7 +159,7 @@ object Tool extends LazyLogging {
     options.set("io.outdir", OutputManager.outDir)
   }
 
-  private def runAndExit(executor: PassChainExecutor, msgIfOk: Pass => String, msgIfFail: String,
+  private def runAndExit(executor: PassChainExecutor, msgIfOk: Pass with TlaModuleMixin => String, msgIfFail: String,
       errCode: Int = ExitCodes.ERROR): Int = {
     val result = executor.run()
     if (result.isDefined) {
@@ -207,7 +207,7 @@ object Tool extends LazyLogging {
     runAndExit(
         executor,
         r => {
-          val tlaModule = result.get.asInstanceOf[TlaModuleMixin].unsafeGetModule.module
+          val tlaModule = r.rawModule.get
           s"Parsed successfully\nRoot module: ${tlaModule.name} with ${tlaModule.declarations.length} declarations."
         },
         "Parser has failed",

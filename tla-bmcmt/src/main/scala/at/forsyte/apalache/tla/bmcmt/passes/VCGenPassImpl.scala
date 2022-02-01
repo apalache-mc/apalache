@@ -41,7 +41,7 @@ class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTrac
     val newModule =
       options.get[List[String]]("checker", "inv") match {
         case Some(invariants) =>
-          invariants.foldLeft(tlaModule.get) { (mod, invName) =>
+          invariants.foldLeft(rawModule.get) { (mod, invName) =>
             logger.info(s"  > Producing verification conditions from the invariant $invName")
             val optViewName = options.get[String]("checker", "view")
             if (optViewName.isDefined) {

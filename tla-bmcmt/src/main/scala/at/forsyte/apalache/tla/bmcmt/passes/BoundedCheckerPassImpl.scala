@@ -28,8 +28,8 @@ import java.nio.file.Path
  *
  * @author Igor Konnov
  */
-class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
-    exprGradeStore: ExprGradeStore, sourceStore: SourceStore, changeListener: ChangeListener,
+class BoundedCheckerPassImpl @Inject() (val options: PassOptions, exprGradeStore: ExprGradeStore,
+    sourceStore: SourceStore, changeListener: ChangeListener,
     @Named("AfterChecker") val nextPass: Pass with TlaModuleMixin)
     extends BoundedCheckerPass with LazyLogging {
 
