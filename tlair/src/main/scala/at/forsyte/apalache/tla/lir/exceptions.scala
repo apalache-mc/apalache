@@ -21,9 +21,16 @@ class LanguagePredError(message: String, val failedIds: Seq[(UID, String)]) exte
  * An exception that should be thrown when a TLA+ expression is malformed.
  *
  * @param message the error message
+ * @param causeExpr the malformed TLA expression
  */
 class MalformedTlaError(message: String, val causeExpr: TlaEx) extends LirError(message)
 
+/**
+ * An exception that should be thrown when a TlaModule is used before required transformations are applied
+ *
+ * @param message the error message
+ * @param causeModule the module that lacks some transformation
+ */
 class MissingTransformationError(message: String, val causeModule: TlaModule with Transformations)
     extends LirError(message)
 
