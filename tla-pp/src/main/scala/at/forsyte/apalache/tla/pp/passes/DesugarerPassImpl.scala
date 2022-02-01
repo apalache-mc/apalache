@@ -25,18 +25,8 @@ class DesugarerPassImpl @Inject() (
     @Named("AfterDesugarer") val nextPass: Pass with TlaModuleMixin,
 ) extends DesugarerPass with LazyLogging {
 
-  /**
-   * The pass name.
-   *
-   * @return the name associated with the pass
-   */
   override def name: String = "DesugarerPass"
 
-  /**
-   * Run the pass.
-   *
-   * @return true, if the pass was successful
-   */
   override def execute(): Boolean = {
     logger.info("  > Desugaring...")
     val input = tlaModule.get
@@ -45,7 +35,7 @@ class DesugarerPassImpl @Inject() (
 
     // dump the result of preprocessing
     writerFactory.writeModuleAllFormats(output.copy(name = "03_OutDesugarer"), TlaWriter.STANDARD_MODULES)
-    nextPass.updateModule(this, tlaModule, output)
+    nextPass.updateModule(this, output)
 
     true
   }

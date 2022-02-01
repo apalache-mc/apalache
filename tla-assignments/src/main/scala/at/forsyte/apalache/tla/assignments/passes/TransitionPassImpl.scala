@@ -25,18 +25,8 @@ class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceSto
     @Named("AfterTransitionFinder") val nextPass: Pass with TlaModuleMixin)
     extends TransitionPass with LazyLogging {
 
-  /**
-   * The name of the pass
-   *
-   * @return the name associated with the pass
-   */
   override def name: String = "TransitionFinderPass"
 
-  /**
-   * Run the pass
-   *
-   * @return true, if the pass was successful
-   */
   override def execute(): Boolean = {
     val inModule = tlaModule.get
 
@@ -87,7 +77,7 @@ class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceSto
     // print the resulting module
     writerFactory.writeModuleAllFormats(outModule.copy(name = "09_OutTransition"), TlaWriter.STANDARD_MODULES)
 
-    nextPass.updateModule(this, tlaModule, outModule)
+    nextPass.updateModule(this, outModule)
     true
   }
 

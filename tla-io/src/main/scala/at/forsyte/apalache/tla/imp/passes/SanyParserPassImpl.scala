@@ -26,20 +26,10 @@ import org.apache.commons.io.FilenameUtils
 class SanyParserPassImpl @Inject() (
     val options: PassOptions, val sourceStore: SourceStore, val annotationStore: AnnotationStore,
     val writerFactory: TlaWriterFactory, @Named("AfterParser") val nextPass: Pass with TlaModuleMixin,
-) extends SanyParserPass with LazyLogging {
+) extends SanyParserPass with LazyLogging with TlaModuleMixin {
 
-  /**
-   * The name of the pass
-   *
-   * @return the name associated with the pass
-   */
   override def name: String = "SanyParser"
 
-  /**
-   * Run the pass
-   *
-   * @return true, if the pass was successful
-   */
   override def execute(): Boolean = {
     var rootModule: Option[TlaModule] = None
 
@@ -119,7 +109,7 @@ class SanyParserPassImpl @Inject() (
           }
         }
 
-        rootModule.map { m => nextPass.updateModule(this, None, m) }
+        rootModule.map { m => nextPass.updateModule(this, m) }
         true
     }
   }

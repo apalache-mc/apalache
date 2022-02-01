@@ -29,7 +29,7 @@ class PassChainExecutor @Inject() (val options: WriteablePassOptions,
       } else {
         val nextPass = passToRun.nextPass
         if (nextPass.hasModule) {
-          val module = nextPass.unsafeGetModule
+          val module = nextPass.tlaModule.get
 
           // Raise error if the pass dependencies aren't satisfied
           if (!nextPass.dependencies.subsetOf(module.properties)) {

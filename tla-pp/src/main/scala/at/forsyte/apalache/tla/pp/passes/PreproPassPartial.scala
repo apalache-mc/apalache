@@ -19,11 +19,6 @@ abstract class PreproPassPartial(
 ) extends PreproPass with LazyLogging {
   private var outputTlaModule: Option[TlaModule] = None
 
-  /**
-   * The pass name.
-   *
-   * @return the name associated with the pass
-   */
   override def name: String = "PreprocessingPass"
 
   protected def writeAndReturn(module: TlaModule): TlaModule = {
@@ -78,7 +73,7 @@ abstract class PreproPassPartial(
     val afterModule = applyTx(input, transformationSequence, postRename)
 
     outputTlaModule = Some(afterModule)
-    nextPass.updateModule(this, tlaModule, afterModule)
+    nextPass.updateModule(this, afterModule)
 
     checkLocations()
 

@@ -33,18 +33,8 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, exprGradeStore
     @Named("AfterChecker") val nextPass: Pass with TlaModuleMixin)
     extends BoundedCheckerPass with LazyLogging {
 
-  /**
-   * The pass name.
-   *
-   * @return the name associated with the pass
-   */
   override def name: String = "BoundedChecker"
 
-  /**
-   * Run the pass.
-   *
-   * @return true, if the pass was successful
-   */
   override def execute(): Boolean = {
     if (tlaModule.isEmpty) {
       throw new CheckerException(s"The input of $name pass is not initialized", NullEx)

@@ -28,18 +28,8 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
 
   protected def passNumber: String = "01"
 
-  /**
-   * The name of the pass
-   *
-   * @return the name associated with the pass
-   */
   override def name: String = "TypeCheckerSnowcat"
 
-  /**
-   * Run the pass.
-   *
-   * @return true, if the pass was successful
-   */
   override def execute(): Boolean = {
     if (tlaModule.isEmpty) {
       logger.info(" > no input for type checker")
@@ -71,7 +61,7 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
           dumpToJson(newModule, "post")
           writerFactory.writeModuleAllFormats(newModule.copy(name = s"${passNumber}_Out$name"),
               TlaWriter.STANDARD_MODULES)
-          nextPass.updateModule(this, tlaModule, newModule)
+          nextPass.updateModule(this, newModule)
           true
 
         case None =>

@@ -24,18 +24,8 @@ class OptPassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator,
     writerFactory: TlaWriterFactory, @Named("AfterOpt") val nextPass: Pass with TlaModuleMixin)
     extends OptPass with LazyLogging {
 
-  /**
-   * The pass name.
-   *
-   * @return the name associated with the pass
-   */
   override def name: String = "OptimizationPass"
 
-  /**
-   * Run the pass.
-   *
-   * @return true, if the pass was successful
-   */
   override def execute(): Boolean = {
     val module = rawModule.get
 
@@ -55,7 +45,7 @@ class OptPassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator,
     // dump the result of preprocessing
     writerFactory.writeModuleAllFormats(optimized.copy(name = "10_OutOpt"), TlaWriter.STANDARD_MODULES)
 
-    nextPass.updateModule(this, tlaModule, optimized)
+    nextPass.updateModule(this, optimized)
     true
   }
 

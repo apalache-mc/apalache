@@ -21,18 +21,8 @@ class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTrac
     @Named("AfterVCGen") val nextPass: Pass with TlaModuleMixin)
     extends VCGenPass with LazyLogging {
 
-  /**
-   * The pass name.
-   *
-   * @return the name associated with the pass
-   */
   override def name: String = "VCGen"
 
-  /**
-   * Run the pass.
-   *
-   * @return true, if the pass was successful
-   */
   override def execute(): Boolean = {
     if (tlaModule.isEmpty) {
       throw new CheckerException(s"The input of $name pass is not initialized", NullEx)
@@ -56,7 +46,7 @@ class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTrac
 
     writerFactory.writeModuleAllFormats(newModule.copy(name = "07_OutVCGen"), TlaWriter.STANDARD_MODULES)
 
-    nextPass.updateModule(this, tlaModule, newModule)
+    nextPass.updateModule(this, newModule)
     true
   }
 

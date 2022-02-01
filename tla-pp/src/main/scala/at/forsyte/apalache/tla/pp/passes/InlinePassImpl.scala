@@ -25,18 +25,8 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
     writerFactory: TlaWriterFactory, @Named("AfterInline") val nextPass: Pass with TlaModuleMixin)
     extends InlinePass with LazyLogging {
 
-  /**
-   * The pass name.
-   *
-   * @return the name associated with the pass
-   */
   override def name: String = "InlinePass"
 
-  /**
-   * Run the pass.
-   *
-   * @return true, if the pass was successful
-   */
   override def execute(): Boolean = {
     val baseModule = rawModule.get
 
@@ -113,7 +103,7 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
     // dump the result of preprocessing
     writerFactory.writeModuleAllFormats(filtered.copy(name = "05_OutInline"), TlaWriter.STANDARD_MODULES)
 
-    nextPass.updateModule(this, tlaModule, filtered)
+    nextPass.updateModule(this, filtered)
     true
   }
 

@@ -24,18 +24,8 @@ class UnrollPassImpl @Inject() (val options: PassOptions, nameGenerator: UniqueN
     @Named("AfterUnroll") val nextPass: Pass with TlaModuleMixin)
     extends UnrollPass with LazyLogging {
 
-  /**
-   * The pass name.
-   *
-   * @return the name associated with the pass
-   */
   override def name: String = "UnrollPass"
 
-  /**
-   * Run the pass.
-   *
-   * @return true, if the pass was successful
-   */
   override def execute(): Boolean = {
     val module = tlaModule.get
 
@@ -60,7 +50,7 @@ class UnrollPassImpl @Inject() (val options: PassOptions, nameGenerator: UniqueN
     // dump the result of preprocessing
     writerFactory.writeModuleAllFormats(newModule.copy(name = "04_OutUnroll"), TlaWriter.STANDARD_MODULES)
 
-    nextPass.updateModule(this, tlaModule, newModule)
+    nextPass.updateModule(this, newModule)
     true
   }
 

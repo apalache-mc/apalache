@@ -33,18 +33,8 @@ class ConfigurationPassImpl @Inject() (
     @Named("AfterConfiguration") val nextPass: Pass with TlaModuleMixin,
 ) extends ConfigurationPass with LazyLogging {
 
-  /**
-   * The pass name.
-   *
-   * @return the name associated with the pass
-   */
   override def name: String = "ConfigurationPass"
 
-  /**
-   * Run the pass.
-   *
-   * @return true, if the pass was successful
-   */
   override def execute(): Boolean = {
     // this pass is hard to read, too many things are happening here...
     val currentModule = tlaModule.get
@@ -70,7 +60,7 @@ class ConfigurationPassImpl @Inject() (
     // dump the configuration result
     writerFactory.writeModuleAllFormats(configuredModule.copy(name = "02_OutConfig"), TlaWriter.STANDARD_MODULES)
 
-    nextPass.updateModule(this, tlaModule, configuredModule)
+    nextPass.updateModule(this, configuredModule)
     true
   }
 

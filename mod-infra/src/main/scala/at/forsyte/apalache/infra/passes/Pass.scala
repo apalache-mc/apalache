@@ -36,12 +36,22 @@ trait Pass {
    * Get the next pass in the chain. What is the next pass is up
    * to the module configuration and the pass outcome.
    *
-   * @return the next pass, if exists, or None otherwise
+   * @return the next pass with the module trait
    */
   def nextPass: Pass with TlaModuleMixin
 
+  /**
+   * List the dependencies of the pass. These are properties the module has to have in order to be processed by the pass.
+   *
+   * @return the set of dependencies
+   */
   def dependencies: Set[ModuleProperty.Value]
 
+  /**
+   * List transformations the pass applies. These are properties the module will additionally have at the end of the execution
+   *
+   * @return the set of transformations
+   */
   def transformations: Set[ModuleProperty.Value]
 
 }

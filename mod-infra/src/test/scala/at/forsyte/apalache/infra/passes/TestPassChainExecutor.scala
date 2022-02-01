@@ -14,7 +14,7 @@ class TestPassChainExecutor extends FunSuite {
       extends Pass with TlaModuleMixin {
     override def name = "TestPass"
     override def execute() = {
-      nextPass.updateModule(this, None, new TlaModule("TestModule", Seq()))
+      nextPass.updateModule(this, new TlaModule("TestModule", Seq()))
       result
     }
     override def dependencies = deps

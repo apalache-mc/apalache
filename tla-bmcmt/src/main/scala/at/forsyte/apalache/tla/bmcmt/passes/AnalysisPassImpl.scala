@@ -21,22 +21,12 @@ class AnalysisPassImpl @Inject() (val options: PassOptions, exprGradeStoreImpl: 
     @Named("AfterAnalysis") val nextPass: Pass with TlaModuleMixin)
     extends AnalysisPass with LazyLogging {
 
-  /**
-   * The pass name.
-   *
-   * @return the name associated with the pass
-   */
   override def name: String = "AnalysisPass"
 
   object StringOrdering extends Ordering[Object] {
     override def compare(x: Object, y: Object): Int = x.toString compare y.toString
   }
 
-  /**
-   * Run the pass.
-   *
-   * @return true, if the pass was successful
-   */
   override def execute(): Boolean = {
     if (tlaModule.isEmpty) {
       throw new CheckerException(s"The input of $name pass is not initialized", NullEx)
@@ -76,7 +66,7 @@ class AnalysisPassImpl @Inject() (val options: PassOptions, exprGradeStoreImpl: 
       case _                => ()
     }
 
-    nextPass.updateModule(this, tlaModule, marked)
+    nextPass.updateModule(this, marked)
 
     writerFactory.writeModuleAllFormats(marked.copy(name = "11_OutAnalysis"), TlaWriter.STANDARD_MODULES)
 

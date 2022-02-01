@@ -28,7 +28,7 @@ class ReTLAToVMTTranspilePassImpl @Inject() (val options: PassOptions, pred: Lan
 
     // Check if still ok fragment (sanity check, see postTypeChecker)
     LanguageWatchdog(pred).check(module)
-    nextPass.updateModule(this, tlaModule, module)
+    nextPass.updateModule(this, module)
 
     true
   }

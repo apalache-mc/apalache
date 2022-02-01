@@ -11,18 +11,8 @@ class WatchdogPassImpl @Inject() (val options: PassOptions, val pred: LanguagePr
     @Named("AfterWatchdog") val nextPass: Pass with TlaModuleMixin)
     extends WatchdogPass with LazyLogging {
 
-  /**
-   * The pass name.
-   *
-   * @return the name associated with the pass
-   */
   override def name: String = "WatchdogPass"
 
-  /**
-   * Run the pass.
-   *
-   * @return true, if the pass was successful
-   */
   override def execute(): Boolean = {
     val module = tlaModule.get
 
@@ -30,7 +20,7 @@ class WatchdogPassImpl @Inject() (val options: PassOptions, val pred: LanguagePr
     LanguageWatchdog(pred).check(module)
 
     // Copy the module to next pass
-    nextPass.updateModule(this, tlaModule, module)
+    nextPass.updateModule(this, module)
 
     true
   }
