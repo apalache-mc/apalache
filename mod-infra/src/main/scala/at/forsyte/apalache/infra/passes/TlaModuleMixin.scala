@@ -1,6 +1,6 @@
 package at.forsyte.apalache.infra.passes
 
-import at.forsyte.apalache.tla.lir.{TlaModule, TransformedTlaModule, ModuleProperty}
+import at.forsyte.apalache.tla.lir.{TlaModule, ModuleProperty, Transformations}
 
 /**
  * A pass that receives a TLA+ module at its input.
@@ -8,11 +8,14 @@ import at.forsyte.apalache.tla.lir.{TlaModule, TransformedTlaModule, ModulePrope
  * @author Igor Konnov
  */
 trait TlaModuleMixin {
-  protected var tlaModule: Option[TransformedTlaModule] = None
-  def updateModule(pass: Pass, currentModule: Option[TransformedTlaModule], module: TlaModule): Unit = {
-    val properties: Set[ModuleProperty.Value] = if (currentModule.isDefined) currentModule.get.properties else Set()
-    tlaModule = Some(new TransformedTlaModule(module, properties ++ pass.transformations))
+  protected var tlaModule: Option[TlaModule with Transformations] = None
+  def updateModule(pass: Pass, currentModule: Option[TlaModule with Transformations], module: TlaModule): Unit = {
+    val currentProperties: Set[ModuleProperty.Value] = if (currentModule.isDefined) currentModule.get.properties else Set()
+    val newModule = module.asInstanceOf[TlaModule with Transformations]
+
+    newModule.properties = currentProperties ++ pass.transformations
+    tlaModule = Some(newModule)
   }
   def hasModule: Boolean = tlaModule.isDefined
-  def unsafeGetModule: TransformedTlaModule = tlaModule.get
+  def unsafeGetModule: TlaModule with Transformations = tlaModule.get
 }

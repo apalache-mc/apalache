@@ -47,7 +47,7 @@ class ConfigurationPassImpl @Inject() (
    */
   override def execute(): Boolean = {
     // this pass is hard to read, too many things are happening here...
-    val currentModule = tlaModule.get.module
+    val currentModule = tlaModule.get
     val relevantOptions = new WriteablePassOptions()
     copyRelevantOptions(options, relevantOptions)
     // try to read from the TLC configuration file and produce constant overrides

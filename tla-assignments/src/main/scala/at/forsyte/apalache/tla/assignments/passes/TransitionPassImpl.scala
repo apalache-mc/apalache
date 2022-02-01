@@ -38,7 +38,7 @@ class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceSto
    * @return true, if the pass was successful
    */
   override def execute(): Boolean = {
-    val inModule = tlaModule.get.module
+    val inModule = tlaModule.get
 
     // extract transitions from InitPrimed
     val initOperName = options.getOrElse("checker", "init", "Init")

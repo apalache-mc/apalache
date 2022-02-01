@@ -4,6 +4,7 @@ out
 target/
 .directory
 .bsp
+.bloop
 
 # Auto generated file for metals
 

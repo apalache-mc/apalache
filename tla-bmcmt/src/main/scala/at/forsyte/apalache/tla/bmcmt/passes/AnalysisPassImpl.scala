@@ -4,7 +4,7 @@ import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.bmcmt.CheckerException
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
-import at.forsyte.apalache.tla.lir.{TlaModule, ModuleProperty, TransformedTlaModule}
+import at.forsyte.apalache.tla.lir.{TlaModule, ModuleProperty}
 import at.forsyte.apalache.tla.lir.transformations.{TransformationTracker, fromTouchToExTransformation}
 import at.forsyte.apalache.tla.lir.transformations.standard.ModuleByExTransformer
 import at.forsyte.apalache.tla.lir.{NullEx, TlaAssumeDecl, TlaEx, TlaOperDecl}
@@ -53,7 +53,8 @@ class AnalysisPassImpl @Inject() (val options: PassOptions, exprGradeStoreImpl: 
       ) ///
 
     logger.info(" > Marking skolemizable existentials and sets to be expanded...")
-    val marked = transformationSequence.foldLeft(tlaModule.get.module) { case (m, (name, tr)) =>
+    val module: TlaModule = tlaModule.get
+    val marked = transformationSequence.foldLeft(module) { case (m, (name, tr)) =>
       logger.info("  > %s".format(name))
       ModuleByExTransformer(tr).apply(m)
     }

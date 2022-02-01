@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.imp.findBodyOf
 import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
 import at.forsyte.apalache.tla.lir.transformations._
 import at.forsyte.apalache.tla.lir.transformations.standard.ModuleByExTransformer
-import at.forsyte.apalache.tla.lir.{TlaModule, TlaOperDecl, TransformedTlaModule, ModuleProperty}
+import at.forsyte.apalache.tla.lir.{TlaModule, TlaOperDecl, ModuleProperty}
 import at.forsyte.apalache.tla.pp._
 import com.google.inject.Inject
 import com.google.inject.name.Named
@@ -38,7 +38,7 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
    * @return true, if the pass was successful
    */
   override def execute(): Boolean = {
-    val baseModule = tlaModule.get.module
+    val baseModule = tlaModule.get
 
     /*
     Disable the preprocessing pass that introduces nullary operators for call results.
@@ -50,7 +50,7 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
     }).toSet
     val module = appWrap.moduleTransform(operNames)(baseModule)
      */
-    val module = baseModule
+    val module: TlaModule = baseModule
 
     val transformationSequence: List[BodyMap => TlaExTransformation] = {
       val wrapHandler = CallByNameWrapHandler(tracker)

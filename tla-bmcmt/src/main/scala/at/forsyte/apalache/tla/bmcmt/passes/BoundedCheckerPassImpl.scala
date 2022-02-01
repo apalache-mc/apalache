@@ -28,8 +28,8 @@ import java.nio.file.Path
  *
  * @author Igor Konnov
  */
-class BoundedCheckerPassImpl @Inject() (val options: PassOptions, exprGradeStore: ExprGradeStore,
-    sourceStore: SourceStore, changeListener: ChangeListener,
+class BoundedCheckerPassImpl @Inject() (val options: PassOptions,
+    exprGradeStore: ExprGradeStore, sourceStore: SourceStore, changeListener: ChangeListener,
     @Named("AfterChecker") val nextPass: Pass with TlaModuleMixin)
     extends BoundedCheckerPass with LazyLogging {
 
@@ -49,7 +49,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, exprGradeStore
     if (tlaModule.isEmpty) {
       throw new CheckerException(s"The input of $name pass is not initialized", NullEx)
     }
-    val module = tlaModule.get.module
+    val module = tlaModule.get
 
     for (decl <- module.operDeclarations) {
       LanguageWatchdog(KeraLanguagePred()).check(decl.body)

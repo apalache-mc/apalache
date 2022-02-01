@@ -37,9 +37,9 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
    * @return true, if the pass was successful
    */
   override def execute(): Boolean = {
-    val declarations = tlaModule.get.module.declarations
-    val varSet = tlaModule.get.module.varDeclarations.map(_.name).toSet
-    val constSet = tlaModule.get.module.constDeclarations.map(_.name).toSet
+    val declarations = tlaModule.get.declarations
+    val varSet = tlaModule.get.varDeclarations.map(_.name).toSet
+    val constSet = tlaModule.get.constDeclarations.map(_.name).toSet
     val deepCopy = DeepCopy(tracker)
 
     val bodyMap = BodyMapFactory.makeFromDecls(declarations)
@@ -71,7 +71,7 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
     val initPrimed = Some(TlaOperDecl(initPrimedName, List(), newBody))
 
     val newDeclarations: Seq[TlaDecl] = declarations ++ Seq(cinitPrimed, initPrimed).flatten
-    val newModule = new TlaModule(tlaModule.get.module.name, newDeclarations)
+    val newModule = new TlaModule(tlaModule.get.name, newDeclarations)
 
     writerFactory.writeModuleAllFormats(newModule.copy(name = "06_OutPriming"), TlaWriter.STANDARD_MODULES)
 

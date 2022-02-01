@@ -5,7 +5,7 @@ import java.nio.file.Path
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.bmcmt.{CheckerException, VCGenerator}
 import at.forsyte.apalache.tla.lir.NullEx
-import at.forsyte.apalache.tla.lir.{TlaModule, TransformedTlaModule, ModuleProperty}
+import at.forsyte.apalache.tla.lir.{TlaModule, ModuleProperty}
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import com.google.inject.Inject
@@ -41,7 +41,7 @@ class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTrac
     val newModule =
       options.get[List[String]]("checker", "inv") match {
         case Some(invariants) =>
-          invariants.foldLeft(tlaModule.get.module) { (mod, invName) =>
+          invariants.foldLeft(tlaModule.get) { (mod, invName) =>
             logger.info(s"  > Producing verification conditions from the invariant $invName")
             val optViewName = options.get[String]("checker", "view")
             if (optViewName.isDefined) {
@@ -51,7 +51,7 @@ class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTrac
           }
         case None =>
           logger.info("  > No invariant given. Only deadlocks will be checked")
-          tlaModule.get.module
+          tlaModule.get
       }
 
     writerFactory.writeModuleAllFormats(newModule.copy(name = "07_OutVCGen"), TlaWriter.STANDARD_MODULES)

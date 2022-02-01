@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.pp.passes
 import java.io.File
 import java.nio.file.Path
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
-import at.forsyte.apalache.tla.lir.{TlaModule, TransformedTlaModule, ModuleProperty}
+import at.forsyte.apalache.tla.lir.{TlaModule, ModuleProperty}
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
@@ -37,7 +37,7 @@ class UnrollPassImpl @Inject() (val options: PassOptions, nameGenerator: UniqueN
    * @return true, if the pass was successful
    */
   override def execute(): Boolean = {
-    val module = tlaModule.get.module
+    val module = tlaModule.get
 
     // We have to rename the input, as LOCAL-toplevel TLA+ functions get
     // introduced as LET-IN operators (copying the definition). The problem is,

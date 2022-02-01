@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.pp.passes
 import java.io.File
 import java.nio.file.Path
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
-import at.forsyte.apalache.tla.lir.{TlaModule, TransformedTlaModule, ModuleProperty}
+import at.forsyte.apalache.tla.lir.{TlaModule, ModuleProperty}
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
@@ -37,7 +37,7 @@ class OptPassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator,
    * @return true, if the pass was successful
    */
   override def execute(): Boolean = {
-    val module = tlaModule.get.module
+    val module: TlaModule = tlaModule.get
 
     val transformationSequence =
       List(
