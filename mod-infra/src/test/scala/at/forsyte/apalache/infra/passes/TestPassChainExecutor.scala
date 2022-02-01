@@ -4,43 +4,56 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.easymock.EasyMockSugar
 import org.scalatest.junit.JUnitRunner
+import at.forsyte.apalache.tla.lir.{TlaModule, ModuleProperty}
 
 @RunWith(classOf[JUnitRunner])
-class TestPassChainExecutor extends FunSuite with EasyMockSugar {
-  test("""2 passes, OK""") {
-    val pass1 = mock[Pass]
-    val pass2 = mock[Pass]
-    expecting {
-      pass1.name.andReturn("pass1").anyTimes()
-      pass1.execute().andReturn(true)
-      pass1.next().andReturn(Some(pass2))
-      pass2.name.andReturn("pass2").anyTimes()
-      pass2.execute().andReturn(true)
-      pass2.next().andReturn(None)
+class TestPassChainExecutor extends FunSuite {
+  // Helper class to enable instantiation of different passes to be tested
+  class ParametrizedPass(val nextPass: Pass with TlaModuleMixin, result: Boolean, deps: Set[ModuleProperty.Value],
+      transfs: Set[ModuleProperty.Value])
+      extends Pass with TlaModuleMixin {
+    override def name = "TestPass"
+    override def execute() = {
+      nextPass.updateModule(this, None, new TlaModule("TestModule", Seq()))
+      result
     }
-    // run the chain
-    whenExecuting(pass1, pass2) {
-      val options = new WriteablePassOptions()
-      val executor = new PassChainExecutor(options, pass1)
-      val result = executor.run()
-      assert(result.isDefined)
-      assert(result.contains(pass2))
-    }
+    override def dependencies = deps
+    override def transformations = transfs
   }
 
-  test("""2 passes, first fails""") {
-    val pass1 = mock[Pass]
-    val pass2 = mock[Pass]
-    expecting {
-      pass1.name.andReturn("pass1").anyTimes()
-      pass1.execute().andReturn(false)
+  private val terminalPass = new TerminalPassWithTlaModule
+  private val options = new WriteablePassOptions()
+
+  test("""Executes a correctly ordered chain""") {
+    val pass2 = new ParametrizedPass(terminalPass, true, Set(ModuleProperty.Inlined), Set())
+    val pass1 = new ParametrizedPass(pass2, true, Set(), Set(ModuleProperty.Inlined))
+
+    val executor = new PassChainExecutor(options, pass1)
+    val result = executor.run()
+    assert(result.equals(Some(terminalPass)))
+  }
+
+  test("""Throws error on a bad ordered chain""") {
+    // Inlined is a unmet dependency
+    val pass2 = new ParametrizedPass(terminalPass, true, Set(ModuleProperty.Inlined), Set())
+    val pass1 = new ParametrizedPass(pass2, true, Set(), Set())
+
+    val executor = new PassChainExecutor(options, pass1)
+    val thrown = intercept[Exception] {
+      executor.run()
     }
-    // run the chain
-    whenExecuting(pass1, pass2) {
-      val options = new WriteablePassOptions()
-      val executor = new PassChainExecutor(options, pass1)
-      val result = executor.run()
-      assert(result.isEmpty)
-    }
+
+    assert(thrown.getMessage === "TestPass cannot run for a module without the properties: Inlined")
+  }
+
+  test("""Returns empty result when an execution is faulty""") {
+    // execute() will return false for pass2
+    val pass2 = new ParametrizedPass(terminalPass, false, Set(), Set())
+    val pass1 = new ParametrizedPass(pass2, true, Set(), Set())
+
+    val executor = new PassChainExecutor(options, pass1)
+
+    val result = executor.run()
+    assert(result.isEmpty)
   }
 }
