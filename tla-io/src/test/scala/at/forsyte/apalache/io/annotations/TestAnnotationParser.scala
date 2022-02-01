@@ -98,13 +98,25 @@ class TestAnnotationParser extends FunSuite with Checkers {
       .map(r => fail("Expected a failure. Found: " + r))
   }
 
+  test("regression #954") {
+    // The text should be preprocessed by CommentPreprocessor first, so we expect a failure.
+    val text =
+      """
+        |  @type: ACTION
+        |
+        |""".stripMargin
+    AnnotationParser
+      .parse(text)
+      .map(r => fail("Expected a failure. Found: " + r))
+  }
+
   test("multiple annotations as in unit tests") {
     // The text should be preprocessed by CommentPreprocessor first, so we expect a failure.
     val text =
-      """@require(ConstInit)
-        |@require(Init)
-        |@ensure(AssertWinner)
-        |@testAction(Next)
+      """ @require(ConstInit)
+        | @require(Init)
+        | @ensure(AssertWinner)
+        | @testAction(Next)
         """.stripMargin
 
     AnnotationParser

@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.io.annotations.{Annotation, AnnotationParser, AnnotationStr}
+import at.forsyte.apalache.io.annotations.{Annotation, AnnotationParser, AnnotationParserError, AnnotationStr}
 import at.forsyte.apalache.io.annotations.parser.CommentPreprocessor
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.AnnotationExtractor.FREE_TEXT
@@ -25,10 +25,8 @@ class AnnotationExtractor(annotationStore: AnnotationStore) extends LazyLogging 
 
       case Left(message) =>
         // Warn the user and continue. It may be a piece of text that looks like an annotation, but it is not an annotation.
-        logger.warn("%s: Failed to parse annotations in the comments. This may lead to a type error later.",
-            node.getLocation.toString)
-        logger.warn(message)
-        None
+        val msg = node.getLocation.toString + ": " + message
+        throw new AnnotationParserError(msg)
     }
 
     val freeTextTrimmed = freeText.trim()

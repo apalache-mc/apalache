@@ -71,8 +71,7 @@ object AnnotationLexer extends RegexParsers {
   }
 
   private def unexpected_char: Parser[Nothing] = {
-    failure(
-        "Unexpected syntax in annotation. Expected: Boolean, string, number, identifier, inline text, '.', ',', '(', or ')'")
+    failure("Unexpected character. Missing ')' or ';'?")
   }
 
   private def number: Parser[NUMBER] = {

@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.io.annotations.Annotation
+import at.forsyte.apalache.io.annotations.{Annotation, AnnotationParserError}
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
@@ -269,29 +269,21 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
     }
   }
 
-  test("annotated non-recursive function") {
+  test("missing semicolon") {
+    // regression for #954
     val text =
-      """-------- MODULE fun ------------
-        |EXTENDS Integers
-        |
-        |(*
-        |   @type("Int -> Int")
-        |*)
-        |Inc[n \in Int] == n + 1
+      """-------- MODULE missing ------------
+        |\* last action performed
+        |\* @type: ACTION
+        |action == TRUE
         |================================
       """.stripMargin
 
-    val module = loadModule(text, "fun")
-
-    module.declarations.find(_.name == "Inc") match {
-      case Some(d @ TlaOperDecl(_, _, _)) =>
-        val annotations = annotationStore(d.ID)
-        val expected = Annotation("type", mkStr("Int -> Int")) :: Nil
-        assert(expected == annotations)
-
-      case _ =>
-        fail("Expected an operator")
+    val caught = intercept[AnnotationParserError] {
+      loadModule(text, "missing")
     }
+    assert(
+        "line 4, col 1 to line 4, col 14 of module missing: Unexpected character. Missing ')' or ';'?" == caught.getMessage)
   }
 
   test("corner cases") {
