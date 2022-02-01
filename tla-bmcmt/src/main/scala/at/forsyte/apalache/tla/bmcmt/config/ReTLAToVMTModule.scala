@@ -10,19 +10,19 @@ import at.forsyte.apalache.tla.bmcmt.passes._
 import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
-import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.standard.ReTLALanguagePred
+import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, TransformationListener, TransformationTracker}
 import at.forsyte.apalache.tla.pp.passes._
 import at.forsyte.apalache.tla.typecheck.passes.{EtcTypeCheckerPass, EtcTypeCheckerPassImpl}
 import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, TypeLiteral}
 
 /**
- * A configuration that binds all the passes from the parser to the checker.
- * If you are not sure how the binding works, check the tutorial on Google Guice.
+ * Transpiels reTLA inputs to VMT
  *
- * @author Igor Konnov
+ * @author Jure Kukovec
  */
-class CheckerModule extends AbstractModule {
+class ReTLAToVMTModule extends AbstractModule {
   override def configure(): Unit = {
     // the options singleton
     bind(classOf[PassOptions])
@@ -30,6 +30,9 @@ class CheckerModule extends AbstractModule {
     // exception handler
     bind(classOf[ExceptionAdapter])
       .to(classOf[CheckerExceptionAdapter])
+
+    bind(classOf[LanguagePred])
+      .to(classOf[ReTLALanguagePred])
 
     // stores
     // Create an annotation store with the custom provider.
@@ -59,10 +62,15 @@ class CheckerModule extends AbstractModule {
       .annotatedWith(Names.named("InitialPass"))
       .to(classOf[SanyParserPass])
 
+    // Next, check language restrictions
+    bind(classOf[Pass])
+      .annotatedWith(Names.named("AfterParser"))
+      .to(classOf[WatchdogPassImpl])
+
     // The next pass is Snowcat that is called EtcTypeCheckerPassImpl for now.
     // We provide guice with a concrete implementation here, as we also use PostTypeCheckerPassImpl later in the pipeline.
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterParser"))
+      .annotatedWith(Names.named("AfterWatchdog"))
       .to(classOf[EtcTypeCheckerPassImpl])
 
     // the next pass is ConfigurationPass
@@ -72,23 +80,11 @@ class CheckerModule extends AbstractModule {
       .annotatedWith(Names.named("AfterTypeChecker"))
       .to(classOf[ConfigurationPass])
 
-    // the next pass is DesugarerPass
-    bind(classOf[DesugarerPass])
-      .to(classOf[DesugarerPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterConfiguration"))
-      .to(classOf[DesugarerPass])
-    // the next pass is UnrollPass
-    bind(classOf[UnrollPass])
-      .to(classOf[UnrollPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterDesugarer"))
-      .to(classOf[UnrollPass])
     // the next pass is InlinePass
     bind(classOf[InlinePass])
       .to(classOf[InlinePassImpl])
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterUnroll"))
+      .annotatedWith(Names.named("AfterConfiguration"))
       .to(classOf[InlinePass])
     // the next pass is PrimingPass
     bind(classOf[PrimingPass])
@@ -104,7 +100,7 @@ class CheckerModule extends AbstractModule {
       .to(classOf[VCGenPass])
     // the next pass is PreproPass
     bind(classOf[PreproPass])
-      .to(classOf[PreproPassImpl])
+      .to(classOf[ReTLAPreproPassImpl])
     bind(classOf[Pass])
       .annotatedWith(Names.named("AfterVCGen"))
       .to(classOf[PreproPass])
@@ -132,17 +128,17 @@ class CheckerModule extends AbstractModule {
       .annotatedWith(Names.named("AfterAnalysis"))
       .to(classOf[PostTypeCheckerPassImpl])
 
-    // BoundedCheckerPass is in the very end of the pipeline
-    bind(classOf[BoundedCheckerPass])
-      .to(classOf[BoundedCheckerPassImpl])
+    // ConstraintGenPass is in the very end of the pipeline
+    bind(classOf[TranspilePass])
+      .to(classOf[ReTLAToVMTTranspilePassImpl])
     bind(classOf[Pass])
       .annotatedWith(Names.named("AfterPostTypeChecker"))
-      .to(classOf[BoundedCheckerPass])
+      .to(classOf[TranspilePass])
 
     // the final pass is TerminalPass
     bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterChecker"))
-      .to(classOf[TerminalPassWithTlaModule])
+      .annotatedWith(Names.named("AfterConstraintGen"))
+      .to(classOf[TerminalPass])
   }
 
 }
