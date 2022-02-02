@@ -49,13 +49,7 @@ object Tool extends LazyLogging {
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
-    val exitcode = run(args)
-    if (exitcode == OK_EXIT_CODE) {
-      Console.out.println("EXITCODE: OK")
-    } else {
-      Console.out.println(s"EXITCODE: ERROR ($exitcode)")
-    }
-    System.exit(exitcode)
+    System.exit(run(args))
   }
 
   private def outputAndLogConfig(cmd: General, cfg: ApalacheConfig): Unit = {
@@ -80,8 +74,6 @@ object Tool extends LazyLogging {
    * @return the exit code; as usual, 0 means success.
    */
   def run(args: Array[String]): Int = {
-    printHeaderAndStatsConfig()
-
     // first, call the arguments parser, which can also handle the standard commands such as version
     val cli = Cli
       .parse(args)
@@ -98,47 +90,58 @@ object Tool extends LazyLogging {
       )
 
     cli match {
-      // A standard option, e.g., --version or --help. No header, no timer.
+      // A standard option, e.g., --version or --help. No header, no timer, no noise
       case None => OK_EXIT_CODE
       case Some(cmd) => {
+
+        printHeaderAndStatsConfig()
 
         // One of our commands. Print the header and measure time
         val startTime = LocalDateTime.now()
 
         outputAndLogConfig(cmd, ConfigManager(cmd))
 
-        try {
-          cmd match {
-            case parse: ParseCmd =>
-              val injector = Guice.createInjector(new ParserModule)
-              handleExceptions(runParse, injector, parse)
+        val exitcode =
+          try {
+            cmd match {
+              case parse: ParseCmd =>
+                val injector = Guice.createInjector(new ParserModule)
+                handleExceptions(runParse, injector, parse)
 
-            case check: CheckCmd =>
-              val injector = Guice.createInjector(new CheckerModule)
-              handleExceptions(runCheck, injector, check)
+              case check: CheckCmd =>
+                val injector = Guice.createInjector(new CheckerModule)
+                handleExceptions(runCheck, injector, check)
 
-            case test: TestCmd =>
-              val injector = Guice.createInjector(new CheckerModule)
-              handleExceptions(runTest, injector, test)
+              case test: TestCmd =>
+                val injector = Guice.createInjector(new CheckerModule)
+                handleExceptions(runTest, injector, test)
 
-            case typecheck: TypeCheckCmd =>
-              val injector = Guice.createInjector(new TypeCheckerModule)
-              handleExceptions(runTypeCheck, injector, typecheck)
+              case typecheck: TypeCheckCmd =>
+                val injector = Guice.createInjector(new TypeCheckerModule)
+                handleExceptions(runTypeCheck, injector, typecheck)
 
-            case server: ServerCmd =>
-              val injector = Guice.createInjector(new CheckerModule)
-              handleExceptions(runServer, injector, server)
+              case server: ServerCmd =>
+                val injector = Guice.createInjector(new CheckerModule)
+                handleExceptions(runServer, injector, server)
 
-            case constrain: TranspileCmd =>
-              val injector = Guice.createInjector(new ReTLAToVMTModule)
-              handleExceptions(runConstrain, injector, constrain)
+              case constrain: TranspileCmd =>
+                val injector = Guice.createInjector(new ReTLAToVMTModule)
+                handleExceptions(runConstrain, injector, constrain)
 
-            case config: ConfigCmd =>
-              configure(config)
+              case config: ConfigCmd =>
+                configure(config)
+            }
+          } finally {
+            printTimeDiff(startTime)
           }
-        } finally {
-          printTimeDiff(startTime)
+
+        if (exitcode == OK_EXIT_CODE) {
+          Console.out.println("EXITCODE: OK")
+        } else {
+          Console.out.println(s"EXITCODE: ERROR ($exitcode)")
         }
+
+        exitcode
       }
     }
   }
