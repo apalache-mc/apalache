@@ -363,6 +363,8 @@ class ConfigurationPassImpl @Inject() (
     }
   }
 
+  // This is an implementation dependency, not a logical one
+  // We should refactor this pass to make it independent from type checking
   override def dependencies = Set(ModuleProperty.TypeChecked)
 
   override def transformations = Set(ModuleProperty.Configured)

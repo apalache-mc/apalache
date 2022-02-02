@@ -41,14 +41,18 @@ trait Pass {
   def nextPass: Pass with TlaModuleMixin
 
   /**
-   * List the dependencies of the pass. These are properties the module has to have in order to be processed by the pass.
+   * List the dependencies of the pass.
+   * These are properties the module has to have in order to be processed by the pass.
+   * Transitive dependencies are ignored, so if A depends on B and B depends on C
+   * The possible dependency from A to C will not be declared
    *
    * @return the set of dependencies
    */
   def dependencies: Set[ModuleProperty.Value]
 
   /**
-   * List transformations the pass applies. These are properties the module will additionally have at the end of the execution
+   * List transformations the pass applies.
+   * These are properties the module will additionally have at the end of the execution
    *
    * @return the set of transformations
    */
