@@ -136,7 +136,7 @@ lazy val tool = (project in file("mod-tool"))
       // See https://github.com/sbt/sbt-buildinfo
       buildInfoPackage := "apalache",
       buildInfoKeys := {
-        val build = scala.sys.process.Process("git describe --tags").!!.trim
+        val build = scala.sys.process.Process("git describe --tags --always").!!.trim
         Seq[BuildInfoKey](
             BuildInfoKey.map(version) { case (k, v) =>
               if (isSnapshot.value) (k -> build) else (k -> v)
