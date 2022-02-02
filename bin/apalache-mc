@@ -56,7 +56,8 @@ sigterm() {
 
 trap sigterm SIGTERM SIGINT
 
-if [[ "$APALACHE_PKG_INFO" = true ]]
+# Check whether the CLI args contains the debug flag
+if [[ "$*" =~ '--debug' ]]
 then
     echo "# Tool home: $DIR"
     echo "# Package:   $JAR"
