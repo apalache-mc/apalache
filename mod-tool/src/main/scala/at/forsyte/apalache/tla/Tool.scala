@@ -429,11 +429,8 @@ object Tool extends LazyLogging {
 
   private def printHeaderAndStatsConfig(): Unit = {
     Console.println(s"""# APALACHE
-                       |#   version: ${BuildInfo.version}
-                       |#   build  : ${BuildInfo.build}
-                       |#
-                       |# WARNING: This tool is in the experimental stage.
-                       |#          Please report bugs at: " + ${ISSUES_LINK})
+                       |# version: ${BuildInfo.version}
+                       |# build  : ${BuildInfo.build}
                        |#""".stripMargin)
 
     if (ExecutionStatisticsCollector.promptUser()) {
