@@ -142,7 +142,7 @@ class CheckerModule extends AbstractModule {
     // the final pass is TerminalPass
     bind(classOf[Pass])
       .annotatedWith(Names.named("AfterChecker"))
-      .to(classOf[TerminalPass])
+      .to(classOf[TerminalPassWithTlaModule])
   }
 
 }

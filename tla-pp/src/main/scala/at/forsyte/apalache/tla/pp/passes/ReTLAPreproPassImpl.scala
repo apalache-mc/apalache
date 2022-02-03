@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.transformations.{
   PredResultFail, PredResultOk, TlaModuleTransformation, TransformationTracker,
 }
-import at.forsyte.apalache.tla.lir.{TlaDecl, TlaModule, TlaOperDecl, UID}
+import at.forsyte.apalache.tla.lir.{TlaDecl, TlaModule, TlaOperDecl, UID, ModuleProperty}
 import at.forsyte.apalache.tla.pp.{Desugarer, Keramelizer, Normalizer, UniqueNameGenerator}
 import com.google.inject.Inject
 import com.google.inject.name.Named
@@ -25,7 +25,7 @@ import com.typesafe.scalalogging.LazyLogging
 class ReTLAPreproPassImpl @Inject() (
     options: PassOptions, gen: UniqueNameGenerator, renaming: IncrementalRenaming, tracker: TransformationTracker,
     sourceStore: SourceStore, changeListener: ChangeListener, writerFactory: TlaWriterFactory,
-    @Named("AfterPrepro") nextPass: Pass with TlaModuleMixin,
+    @Named("AfterPrepro") val nextPass: Pass with TlaModuleMixin,
 ) extends PreproPassPartial(
         options,
         renaming,
@@ -55,5 +55,9 @@ class ReTLAPreproPassImpl @Inject() (
     // Doesn't need a postRename, since Normalizer won't introduce bound vars
     executeWithParams(transformationSequence, postRename = false, ReTLALanguagePred())
   }
+
+  override def dependencies = Set(ModuleProperty.Inlined)
+
+  override def transformations = Set(ModuleProperty.Preprocessed)
 
 }
