@@ -15,14 +15,14 @@ import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
 /**
- * A preprocessing pass that simplifies TLA+ expression by running multiple transformation.
+ * A preprocessing pass that simplifies TLA+ expressions by running multiple transformations.
  *
  * @param options pass options
  * @param gen     name generator
  * @param tracker  transformation tracker
  * @param nextPass next pass to call
  */
-class PreproPassImpl @Inject() (
+class ReTLAPreproPassImpl @Inject() (
     options: PassOptions, gen: UniqueNameGenerator, renaming: IncrementalRenaming, tracker: TransformationTracker,
     sourceStore: SourceStore, changeListener: ChangeListener, writerFactory: TlaWriterFactory,
     @Named("AfterPrepro") nextPass: Pass with TlaModuleMixin,
@@ -42,19 +42,18 @@ class PreproPassImpl @Inject() (
    * @return true, if the pass was successful
    */
   override def execute(): Boolean = {
-    logger.info("  > Before preprocessing: unique renaming")
     val input = tlaModule.get
     val varSet = input.varDeclarations.map(_.name).toSet
 
     val transformationSequence: List[(String, TlaModuleTransformation)] =
       List(
           ("PrimePropagation", createModuleTransformerForPrimePropagation(varSet)),
-          ("Desugarer", ModuleByExTransformer(Desugarer(gen, tracker))),
           ("UniqueRenamer", renaming.renameInModule),
           ("Normalizer", ModuleByExTransformer(Normalizer(tracker))),
-          ("Keramelizer", ModuleByExTransformer(Keramelizer(gen, tracker))),
       )
 
-    executeWithParams(transformationSequence, postRename = true, KeraLanguagePred())
+    // Doesn't need a postRename, since Normalizer won't introduce bound vars
+    executeWithParams(transformationSequence, postRename = false, ReTLALanguagePred())
   }
+
 }

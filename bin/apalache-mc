@@ -6,7 +6,7 @@
 
 DIR=`dirname $0`
 DIR=`cd "$DIR/.."; pwd`
-echo "# Tool home: $DIR"
+
 # try to find either a release jar, or a local build
 DISTS=`mktemp /tmp/apalache-dists.XXXX`
 find >$DISTS "$DIR" "$DIR/target/scala-2.12" \
@@ -15,7 +15,6 @@ find >$DISTS "$DIR" "$DIR/target/scala-2.12" \
 case `cat $DISTS | wc -l | sed 's/[[:space:]]*//g'` in
     1)
         JAR=`head -n 1 $DISTS`
-        echo "# Package:   $JAR"
         ;;
     0) 
         echo "ERROR: Distribution jar not found. Did you run make package?"
@@ -41,10 +40,11 @@ then
     JVM_ARGS="${JVM_ARGS} -Xmx4096m"
 fi
 
-JVM_ARGS="$JVM_ARGS -DTLA-Library=$TLA_PATH"
-
-echo "# JVM args: $JVM_ARGS"
-echo "#"
+# Append TLA_PATH to JVM_ARGS, if it is set
+if [ -n "$TLA_PATH" ]
+then
+    JVM_ARGS="$JVM_ARGS -DTLA-Library=$TLA_PATH"
+fi
 
 # a trap for SIGINT and SIGTERM
 sigterm() {
@@ -55,6 +55,15 @@ sigterm() {
 }
 
 trap sigterm SIGTERM SIGINT
+
+# Check whether the CLI args contains the debug flag
+if [[ "$*" =~ '--debug' ]]
+then
+    echo "# Tool home: $DIR"
+    echo "# Package:   $JAR"
+    echo "# JVM args: $JVM_ARGS"
+    echo "#"
+fi
 
 # run java in the background in order to react to SIGTERM
 java $JVM_ARGS -jar "$JAR" "$@" &
