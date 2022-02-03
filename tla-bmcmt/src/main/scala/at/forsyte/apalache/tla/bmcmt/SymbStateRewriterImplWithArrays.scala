@@ -108,8 +108,6 @@ class SymbStateRewriterImplWithArrays(_solverContext: SolverContext,
         key(tla.appDecl(TlaOperDecl("userOp", List(), tla.int(3)))) ->
           List(new UserOperRule(this)),
         // functions
-        key(tla.funSet(tla.name("X"), tla.name("Y")))
-          -> List(new FunSetCtorRule(this)),
         key(tla.recFunDef(tla.name("e"), tla.name("x"), tla.name("S")))
           -> List(new RecFunDefAndRefRule(this)),
         key(tla.recFunRef())
