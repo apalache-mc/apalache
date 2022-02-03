@@ -280,6 +280,35 @@ class TestSanyImporterInstances extends SanyImporterTestBase {
     }
   }
 
+  // regression for #1254
+  test("renaming higher-order operators inside instances") {
+    val text =
+      """---- MODULE test1254 ----
+        |---- MODULE base ----
+        |FF(a) == TRUE
+        |Check(a, func(_)) == func(a)
+        |B == Check(1, FF)
+        |==============================
+        |BASE == INSTANCE base
+        |==============================""".stripMargin
+
+    val (rootName, modules) = sanyImporter
+      .loadFromSource("test1254", Source.fromString(text))
+    assert(1 == modules.size)
+    val root = modules(rootName)
+    val base = root.declarations
+      .find(_.name == "BASE!B")
+      .getOrElse(fail("BASE!B"))
+    base.asInstanceOf[TlaOperDecl].body match {
+      case OperEx(TlaOper.apply, NameEx("BASE!Check"), args @ _*) =>
+        assert(ValEx(TlaInt(1)) == args.head)
+        assert(NameEx("BASE!FF") == args(1))
+
+      case _ =>
+        fail("unexpected structure")
+    }
+  }
+
   // regression for #143
   test("Series of substitutions") {
     val text =
