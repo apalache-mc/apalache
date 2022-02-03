@@ -128,8 +128,22 @@ lazy val tla_bmcmt = (project in file("tla-bmcmt"))
 
 lazy val tool = (project in file("mod-tool"))
   .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt)
+  .enablePlugins(BuildInfoPlugin)
   .settings(
       testSettings,
+      // The following buildInfo values will be available in the source
+      // code in the `apalache.BuildInfo` singleton.
+      // See https://github.com/sbt/sbt-buildinfo
+      buildInfoPackage := "apalache",
+      buildInfoKeys := {
+        val build = scala.sys.process.Process("git describe --tags --always").!!.trim
+        Seq[BuildInfoKey](
+            BuildInfoKey.map(version) { case (k, v) =>
+              if (isSnapshot.value) (k -> build) else (k -> v)
+            },
+            BuildInfoKey.action("build")(build),
+        )
+      },
       libraryDependencies ++= Seq(
           Deps.commonsConfiguration2,
           Deps.commonsBeanutils,

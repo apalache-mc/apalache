@@ -1,5 +1,8 @@
 package at.forsyte.apalache.tla
 
+// Generated from the build.sbt file by the buildInfo plugin
+import apalache.BuildInfo
+
 import java.io.{File, FileNotFoundException, FileWriter, PrintWriter}
 import java.nio.file.Path
 import java.time.LocalDateTime
@@ -10,7 +13,7 @@ import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorM
 import at.forsyte.apalache.io.{OutputManager, ReportGenerator}
 import at.forsyte.apalache.tla.bmcmt.config.{CheckerModule, ReTLAToVMTModule}
 import at.forsyte.apalache.tla.imp.passes.ParserModule
-import at.forsyte.apalache.tla.tooling.{ExitCodes, Version}
+import at.forsyte.apalache.tla.tooling.ExitCodes
 import at.forsyte.apalache.tla.tooling.opt.{
   CheckCmd, ConfigCmd, TranspileCmd, AbstractCheckerCmd, General, ParseCmd, ServerCmd, TestCmd, TypeCheckCmd,
 }
@@ -46,13 +49,7 @@ object Tool extends LazyLogging {
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
-    val exitcode = run(args)
-    if (exitcode == OK_EXIT_CODE) {
-      Console.out.println("EXITCODE: OK")
-    } else {
-      Console.out.println(s"EXITCODE: ERROR ($exitcode)")
-    }
-    System.exit(exitcode)
+    System.exit(run(args))
   }
 
   private def outputAndLogConfig(cmd: General, cfg: ApalacheConfig): Unit = {
@@ -77,13 +74,11 @@ object Tool extends LazyLogging {
    * @return the exit code; as usual, 0 means success.
    */
   def run(args: Array[String]): Int = {
-    printHeaderAndStatsConfig()
-
     // first, call the arguments parser, which can also handle the standard commands such as version
     val cli = Cli
       .parse(args)
       .withProgramName("apalache-mc")
-      .version("%s build %s".format(Version.version, Version.build), "version")
+      .version(BuildInfo.version)
       .withCommands(
           new ParseCmd,
           new CheckCmd,
@@ -95,47 +90,58 @@ object Tool extends LazyLogging {
       )
 
     cli match {
-      // A standard option, e.g., --version or --help. No header, no timer.
+      // A standard option, e.g., --version or --help. No header, no timer, no noise
       case None => OK_EXIT_CODE
       case Some(cmd) => {
+
+        printHeaderAndStatsConfig()
 
         // One of our commands. Print the header and measure time
         val startTime = LocalDateTime.now()
 
         outputAndLogConfig(cmd, ConfigManager(cmd))
 
-        try {
-          cmd match {
-            case parse: ParseCmd =>
-              val injector = Guice.createInjector(new ParserModule)
-              handleExceptions(runParse, injector, parse)
+        val exitcode =
+          try {
+            cmd match {
+              case parse: ParseCmd =>
+                val injector = Guice.createInjector(new ParserModule)
+                handleExceptions(runParse, injector, parse)
 
-            case check: CheckCmd =>
-              val injector = Guice.createInjector(new CheckerModule)
-              handleExceptions(runCheck, injector, check)
+              case check: CheckCmd =>
+                val injector = Guice.createInjector(new CheckerModule)
+                handleExceptions(runCheck, injector, check)
 
-            case test: TestCmd =>
-              val injector = Guice.createInjector(new CheckerModule)
-              handleExceptions(runTest, injector, test)
+              case test: TestCmd =>
+                val injector = Guice.createInjector(new CheckerModule)
+                handleExceptions(runTest, injector, test)
 
-            case typecheck: TypeCheckCmd =>
-              val injector = Guice.createInjector(new TypeCheckerModule)
-              handleExceptions(runTypeCheck, injector, typecheck)
+              case typecheck: TypeCheckCmd =>
+                val injector = Guice.createInjector(new TypeCheckerModule)
+                handleExceptions(runTypeCheck, injector, typecheck)
 
-            case server: ServerCmd =>
-              val injector = Guice.createInjector(new CheckerModule)
-              handleExceptions(runServer, injector, server)
+              case server: ServerCmd =>
+                val injector = Guice.createInjector(new CheckerModule)
+                handleExceptions(runServer, injector, server)
 
-            case constrain: TranspileCmd =>
-              val injector = Guice.createInjector(new ReTLAToVMTModule)
-              handleExceptions(runConstrain, injector, constrain)
+              case constrain: TranspileCmd =>
+                val injector = Guice.createInjector(new ReTLAToVMTModule)
+                handleExceptions(runConstrain, injector, constrain)
 
-            case config: ConfigCmd =>
-              configure(config)
+              case config: ConfigCmd =>
+                configure(config)
+            }
+          } finally {
+            printTimeDiff(startTime)
           }
-        } finally {
-          printTimeDiff(startTime)
+
+        if (exitcode == OK_EXIT_CODE) {
+          Console.out.println("EXITCODE: OK")
+        } else {
+          Console.out.println(s"EXITCODE: ERROR ($exitcode)")
         }
+
+        exitcode
       }
     }
   }
@@ -401,7 +407,7 @@ object Tool extends LazyLogging {
             logger.error(text, e)
             val absPath = ReportGenerator.prepareReportFile(
                 cmd.invocation.split(" ").dropRight(1).mkString(" "),
-                s"${Version.version} build ${Version.build}",
+                s"${BuildInfo.version} build ${BuildInfo.build}",
             )
             Console.err.println(
                 s"Please report an issue at $ISSUES_LINK: $e\nA bug report template has been generated at [$absPath].\nIf you choose to use it, please complete the template with a description of the expected behavior.",
@@ -422,11 +428,10 @@ object Tool extends LazyLogging {
   }
 
   private def printHeaderAndStatsConfig(): Unit = {
-    Console.println("# APALACHE version %s build %s".format(Version.version, Version.build))
-    Console.println("#")
-    Console.println("# WARNING: This tool is in the experimental stage.")
-    Console.println("#          Please report bugs at: " + ISSUES_LINK)
-    Console.println("# ")
+    Console.println(s"""# APALACHE
+                       |# version: ${BuildInfo.version}
+                       |# build  : ${BuildInfo.build}
+                       |#""".stripMargin)
 
     if (ExecutionStatisticsCollector.promptUser()) {
       // Statistics collection is not enabled. Cry for help.
@@ -504,7 +509,7 @@ object Tool extends LazyLogging {
     val statCollector = new ExecutionStatisticsCollector()
     if (statCollector.isEnabled) {
       val params = new java.util.HashMap[String, String]()
-      params.put("ver", "apalache-%s-%s".format(Version.version, Version.build))
+      params.put("ver", "apalache-%s-%s".format(BuildInfo.version, BuildInfo.build))
       params.put("osName", System.getProperty("os.name"))
       params.put("osArch", System.getProperty("os.arch"))
       params.put("osVersion", System.getProperty("os.version"))
