@@ -1,15 +1,15 @@
 package at.forsyte.apalache.io.json
 
 import at.forsyte.apalache.io.json.impl.{DefaultTagReader, TlaToUJson, UJsonToTla}
+import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet, TlaNatSet, TlaStrSet}
 import org.junit.runner.RunWith
+import org.scalacheck.Prop.{AnyOperators, forAll}
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs
-import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet, TlaNatSet, TlaPredefSet, TlaStrSet}
-import org.scalacheck.Prop.{AnyOperators, forAll}
 import org.scalatest.prop.Checkers
 
 @RunWith(classOf[JUnitRunner])
@@ -126,7 +126,7 @@ class TestUJsonToTla extends FunSuite with Checkers {
 
       module =? moduleFromJson
     }
-    check(prop, minSuccessful(500), sizeRange(4))
+    check(prop, minSuccessful(500), sizeRange(7))
   }
 
 }

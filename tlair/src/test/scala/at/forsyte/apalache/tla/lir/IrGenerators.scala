@@ -28,7 +28,7 @@ import org.scalacheck.Gen.{choose, const, identifier, listOf, listOfN, lzy, oneO
  *
  * @author Igor Konnov
  */
-trait IrGenerators {
+trait IrGenerators extends TlaType1Gen {
 
   // an internal representation of operator signatures (for user-defined operators).
   case class UserOperSig(name: String, nparams: Int)
@@ -95,8 +95,8 @@ trait IrGenerators {
       TlaTempOper.strongFairness, TlaTempOper.weakFairness)
 
   def genTypeTag: Gen[TypeTag] = for {
-    i <- arbitrary[Int]
-    tt <- oneOf(Untyped(), Typed[Int](i))
+    tp <- genType1
+    tt <- oneOf(Untyped(), Typed(tp))
   } yield tt
 
   /**

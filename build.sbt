@@ -96,7 +96,10 @@ lazy val tla_io = (project in file("tla-io"))
   )
 
 lazy val tla_types = (project in file("tla-types"))
-  .dependsOn(tlair, infra, tla_io)
+  .dependsOn(tlair, infra,
+      // property based tests depend on IR generators defined in the tlair tests
+      // See https://www.scala-sbt.org/1.x/docs/Multi-Project.html#Per-configuration+classpath+dependencies
+      tlair % "test->test", tla_io)
   .settings(
       testSettings,
       tlaModuleTestSettings,
