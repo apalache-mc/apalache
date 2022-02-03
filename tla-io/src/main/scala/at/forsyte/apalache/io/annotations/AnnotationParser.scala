@@ -1,40 +1,37 @@
 package at.forsyte.apalache.io.annotations
 
-import at.forsyte.apalache.io.annotations.parser.{
-  AT_IDENT, AnnotationLexer, AnnotationToken, AnnotationTokenReader, BOOLEAN, COMMA, DOT, IDENT, INLINE_STRING, LPAREN,
-  NUMBER, RPAREN, STRING
-}
+import at.forsyte.apalache.io.annotations.parser._
 
 import java.io.{Reader, StringReader}
 import scala.util.parsing.combinator.Parsers
 
 /**
- * A parser for TLA+ annotations. Use the object TlaAnnotationParser to parser the input.
+ * A parser for TLA+ annotations. Use the object TlaAnnotationParser to parse the input.
  *
  * @author Igor Konnov
  */
 class AnnotationParser extends Parsers {
   override type Elem = AnnotationToken
 
-  def annotationsInText: Parser[List[Annotation]] = rep(junk) ~ repsep(isolatedAnnotation, rep(junk)) ^^ {
-    case _ ~ annotations =>
-      annotations
+  def apply(tokens: Seq[AnnotationToken]): Either[String, Annotation] = {
+    val reader = new AnnotationTokenReader(tokens)
+    annotation(reader) match {
+      case Success(annotation: Annotation, _) =>
+        Right(annotation)
+
+      case Failure(msg, _) => Left(msg)
+
+      case Error(msg, _) => Left(msg)
+    }
   }
 
-  def isolatedAnnotation: Parser[Annotation] = atIdent ~ opt(argsInParentheses | argAfterColon) ^^ {
+  def annotation: Parser[Annotation] = phrase(atIdent ~ opt(argsInParentheses | argAfterColon)) ^^ {
     case name ~ None =>
       Annotation(name)
 
     case name ~ Some(args) =>
       Annotation(name, args: _*)
   }
-
-  // As annotations are embedded in text comments, the lexer may recognize some character sequences as tokens.
-  // It's OK, we will ignore them.
-  private def junk: Parser[String] =
-    (ident | string | inlineString | number | boolean | COMMA() | DOT() | LPAREN() | RPAREN()) ^^ { _ =>
-      ""
-    }
 
   def argsInParentheses: Parser[List[AnnotationArg]] = LPAREN() ~ repsep(arg, COMMA()) ~ RPAREN() ^^ {
     case _ ~ args ~ _ =>
@@ -93,30 +90,16 @@ class AnnotationParser extends Parsers {
 }
 
 object AnnotationParser {
-  abstract class Result
-
-  case class Success(annotation: List[Annotation]) extends Result
-
-  case class Failure(message: String) extends Result
-
   private val parser: AnnotationParser = new AnnotationParser
 
-  def parse(reader: Reader): Result = {
-    val tokenReader = new AnnotationTokenReader(AnnotationLexer(reader))
-    parser.annotationsInText(tokenReader) match {
-      case parser.Success(annotations: List[Annotation], _) =>
-        Success(annotations)
-
-      case parser.Success(res, _) =>
-        Failure("Expected a list of annotations, found: " + res)
-
-      case parser.Failure(msg, _) => Failure(msg)
-
-      case parser.Error(msg, _) => Failure(msg)
-    }
+  def parse(reader: Reader): Either[String, Annotation] = {
+    for {
+      tokens <- AnnotationLexer(reader).right
+      ast <- new AnnotationParser()(tokens).right
+    } yield ast
   }
 
-  def parse(text: String): Result = {
+  def parse(text: String): Either[String, Annotation] = {
     parse(new StringReader(text))
   }
 }

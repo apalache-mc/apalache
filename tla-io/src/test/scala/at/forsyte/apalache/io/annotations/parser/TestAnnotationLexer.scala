@@ -14,92 +14,93 @@ import java.io.StringReader
  */
 @RunWith(classOf[JUnitRunner])
 class TestAnnotationLexer extends FunSuite {
-  test("empty") {
-    val text = "   "
-    val output = AnnotationLexer.apply(new StringReader(text))
-    assert(output.isEmpty)
+  private def expectOk(expectedTokens: List[AnnotationToken], inputText: String) = {
+    AnnotationLexer(new StringReader(inputText))
+      .map(output => assert(expectedTokens == output))
+      .swap
+      .map(r => fail("Unexpected lexer error: " + r))
   }
 
-  test("@test") {
+  private def expectError(inputText: String) = {
+    AnnotationLexer(new StringReader(inputText))
+      .map(r => fail("Expected lexer error. Found: " + r))
+  }
+
+  test("empty") {
+    val text = "   "
+    expectError(text)
+  }
+
+  test("@test without arguments") {
+    val text = "  @test  "
+    val expected = List(AT_IDENT("test"))
+    expectOk(expected, text)
+  }
+
+  test("@test surrounded by junk") {
     val text = "(*  @test *)"
-    val output = AnnotationLexer.apply(new StringReader(text))
-    assert(List(AT_IDENT("test")) == output)
+    expectError(text)
   }
 
   test("@test(123, TRUE)") {
     val text = "  @test(123, TRUE) "
-    val output = AnnotationLexer.apply(new StringReader(text)).toList
     val expected = List(AT_IDENT("test"), LPAREN(), NUMBER(123), COMMA(), BOOLEAN(true), RPAREN())
-    assert(expected == output)
+    expectOk(expected, text)
   }
 
   test("an annotation surrounded by some text") {
+    // This should report an error. We are using CommentPreprocessor to fish for annotations in the sea of junk.
     val text = """\* example by foo@example.org: @test(123, TRUE) the rest is junk. :-)"""
-    val output = AnnotationLexer.apply(new StringReader(text)).toList
-    val expected =
-      List(IDENT("example"), IDENT("by"), IDENT("foo"), AT_IDENT("example"), DOT(), IDENT("org"), AT_IDENT("test"),
-          LPAREN(), NUMBER(123), COMMA(), BOOLEAN(true), RPAREN(), IDENT("the"), IDENT("rest"), IDENT("is"),
-          IDENT("junk"), DOT())
-    assert(expected == output)
+    expectError(text)
   }
 
   test("identifier argument") {
     val text = """@foo(Bar)"""
-    val output = AnnotationLexer.apply(new StringReader(text)).toList
     val expected = List(AT_IDENT("foo"), LPAREN(), IDENT("Bar"), RPAREN())
-    assert(expected == output)
+    expectOk(expected, text)
   }
 
   test("string argument") {
     val text = """@foo("one", "two")"""
-    val output = AnnotationLexer.apply(new StringReader(text)).toList
     val expected =
       List(AT_IDENT("foo"), LPAREN(), STRING("one"), COMMA(), STRING("two"), RPAREN())
-    assert(expected == output)
+    expectOk(expected, text)
   }
 
   test("inline string argument") {
     val text = """@baz: one;"""
-    val output = AnnotationLexer.apply(new StringReader(text)).toList
     val expected = List(AT_IDENT("baz"), INLINE_STRING(" one"))
-    assert(expected == output)
+    expectOk(expected, text)
   }
 
   test("mismatch in a string") {
+    // it is a job of CommentPreprocessor to feed us with proper annotations
     val text = """ 1.3 " zzz """
-    val output = AnnotationLexer.apply(new StringReader(text)).toList
-    val expected = List(NUMBER(1), DOT(), NUMBER(3))
-    assert(expected == output)
+    expectError(text)
   }
 
   test("annotation with comments inside") {
-    // It should be possible to write a multiline string using the ":...;" syntax.
-    // As such a string would be inside a TLA+ comment, we have to remove the leading comment characters.
+    // it is a job of CommentPreprocessor to feed us with proper annotations
     val text =
       """\* @type: Int
       |\*          => Int;""".stripMargin
-    val output = AnnotationLexer.apply(new StringReader(text)).toList
-    val expected = List(AT_IDENT("type"), INLINE_STRING(" Int          => Int"))
-    assert(expected == output)
+    expectError(text)
   }
 
   test("regression") {
-    // It should be also possible to write multiline strings in quotes.
+    // it is a job of CommentPreprocessor to feed us with proper annotations
     val text =
       """  \* TODO: use a model type here
         |  \* when #570 is closed: https://github.com/informalsystems/apalache/issues/570
         |  \* @type: Str;""".stripMargin
-    val output = AnnotationLexer.apply(new StringReader(text)).toList
-    val expected = List(IDENT("TODO"), AT_IDENT("type"), INLINE_STRING(" Str"))
-    assert(expected == output)
+    expectError(text)
   }
 
   test("annotation with ASCII codes") {
     // a sequence of control characters is replaced with a single space
     val text =
-      "\\* @type: Int \t\f\r\n => Int;".stripMargin
-    val output = AnnotationLexer.apply(new StringReader(text)).toList
-    val expected = List(AT_IDENT("type"), INLINE_STRING(" Int  => Int"))
-    assert(expected == output)
+      " @type: Int \t\f\r\n => Int;".stripMargin
+    val expected = List(AT_IDENT("type"), INLINE_STRING(" Int => Int"))
+    expectOk(expected, text)
   }
 }
