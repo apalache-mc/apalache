@@ -50,4 +50,8 @@ class ArenaCell(val id: Int, val cellType: CellT) extends Comparable[ArenaCell] 
     } else {
       id.equals(o.asInstanceOf[ArenaCell].id)
     }
+
+  // This field enforces that the SMT representation of the cell is unconstrained, update with care.
+  // E.g., in the arrays encoding a set would not be made empty upon definition if isUnconstrained = true.
+  var isUnconstrained = false
 }

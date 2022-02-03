@@ -602,12 +602,24 @@ class Builder {
     BuilderOper(ApalacheOper.selectInSet, elem, set)
   }
 
+  def apalacheSelectInFun(elem: BuilderEx, fun: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.selectInSet, elem, fun)
+  }
+
   def apalacheStoreInSet(elem: BuilderEx, set: BuilderEx): BuilderEx = {
     BuilderOper(ApalacheOper.storeInSet, elem, set)
   }
 
+  def apalacheStoreInFun(elem: BuilderEx, fun: BuilderEx, arg: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.storeInSet, elem, fun, arg)
+  }
+
   def apalacheStoreNotInSet(elem: BuilderEx, set: BuilderEx): BuilderEx = {
     BuilderOper(ApalacheOper.storeNotInSet, elem, set)
+  }
+
+  def apalacheStoreNotInFun(elem: BuilderEx, fun: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.storeNotInSet, elem, fun)
   }
 
   def apalacheChain(op: BuilderEx, tail: BuilderEx, cond: BuilderEx = bool(true)): BuilderEx = {

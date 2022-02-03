@@ -182,13 +182,13 @@ object ApalacheOper {
   }
 
   /**
-   * The storeInSet operator is a variant of TlaSetOper.in.
-   * It signals that set membership should be enforced.
+   * The storeInSet operator is a variant of TlaSetOper.in when handling sets. It signals set membership.
+   * It is also used to update functions, in which case the updated value is provided as an additional argument.
    */
   object storeInSet extends ApalacheOper {
     override def name: String = "Apalache!StoreInSet"
 
-    override def arity: OperArity = FixedArity(2)
+    override def arity: OperArity = FixedArity(2) || FixedArity(3)
 
     override def precedence: (Int, Int) = (5, 5)
   }

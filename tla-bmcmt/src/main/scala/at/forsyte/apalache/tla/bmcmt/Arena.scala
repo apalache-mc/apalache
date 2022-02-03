@@ -186,7 +186,15 @@ class Arena private (val solverContext: SolverContext, val cellCount: Int, val t
     create(this, types)
   }
 
-  protected def appendCellWithoutDeclaration(cellType: CellT): Arena = {
+  /**
+   * Append a new cell to arena. This method returns a new arena, not the new cell.
+   * The new cell can be accessed with topCell.
+   * This method does not generate SMT constraints.
+   *
+   * @param cellType a cell type
+   * @return new arena
+   */
+  def appendCellWithoutDeclaration(cellType: CellT): Arena = {
     val newCell = new ArenaCell(cellCount, cellType)
     assert(!cellMap.contains(newCell.toString)) // this might happen, if we messed up arenas
     new Arena(solverContext, cellCount + 1, newCell, cellMap + (newCell.toString -> newCell), hasEdges, domEdges,

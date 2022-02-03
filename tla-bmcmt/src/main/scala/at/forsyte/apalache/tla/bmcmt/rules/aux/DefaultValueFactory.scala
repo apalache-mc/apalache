@@ -64,14 +64,16 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         newState.setRex(recCell.toNameEx)
 
       case tp @ FinSetT(_) => // {}
-        var arena = state.arena.appendCell(tp)
+        val arena = state.arena.appendCell(tp)
         val set = arena.topCell
         state.setArena(arena).setRex(set.toNameEx).setArena(arena)
 
-      case tp @ FunT(domT, cdmT) => // [x \in {} |-> {}]
-        val relState = makeUpValue(state, FinSetT(TupleT(Seq(tp.argType, tp.resultType))))
+      case tp @ FunT(_, _) => // [x \in {} |-> {}]
+        val domState = makeUpValue(state, FinSetT(tp.argType))
+        val relState = makeUpValue(domState, FinSetT(TupleT(Seq(tp.argType, tp.resultType))))
         var arena = relState.arena.appendCell(tp)
         val funCell = arena.topCell
+        arena = arena.setDom(funCell, domState.asCell)
         arena = arena.setCdm(funCell, relState.asCell)
         relState.setArena(arena).setRex(funCell.toNameEx)
 

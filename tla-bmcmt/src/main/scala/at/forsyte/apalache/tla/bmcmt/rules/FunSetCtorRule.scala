@@ -32,7 +32,7 @@ class FunSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val newArena = arena
           .setDom(newCell, dom)
           .setCdm(newCell, cdm)
-        state.setArena(newArena).setRex(newCell.toNameEx)
+        nextState.setArena(newArena).setRex(newCell.toNameEx)
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)

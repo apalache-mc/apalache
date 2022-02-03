@@ -37,9 +37,20 @@ class SymbStateRewriterImplWithArrays(_solverContext: SolverContext,
           -> List(new SetInRuleWithArrays(this)), // TODO: add support for funSet later
         key(tla.apalacheSelectInSet(tla.name("x"), tla.name("S")))
           -> List(new SetInRuleWithArrays(this)),
+        key(tla.apalacheSelectInFun(tla.name("x"), tla.name("F")))
+          -> List(new SetInRuleWithArrays(this)),
         key(tla.subseteq(tla.name("x"), tla.name("S")))
-          -> List(new SetInclusionRuleWithArrays(this))
+          -> List(new SetInclusionRuleWithArrays(this)),
         // TODO: consider copying one array and storing the edges of the other in SetCupRule
+        // functions
+        key(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S")))
+          -> List(new FunCtorRuleWithArrays(this)),
+        key(tla.appFun(tla.name("f"), tla.name("x")))
+          -> List(new FunAppRuleWithArrays(this)),
+        key(tla.except(tla.name("f"), tla.int(1), tla.int(42)))
+          -> List(new FunExceptRuleWithArrays(this)),
+        key(tla.dom(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S"))))
+          -> List(new DomainRuleWithArrays(this, intRangeCache))
     )
   }
 
@@ -48,22 +59,6 @@ class SymbStateRewriterImplWithArrays(_solverContext: SolverContext,
         // logic
         key(tla.choose(tla.name("x"), tla.name("S"), tla.name("p")))
           -> List(new ChooseRule(this)),
-        // control flow
-        key(tla.letIn(tla.int(1), TlaOperDecl("A", List(), tla.int(2))))
-          -> List(new LetInRule(this)),
-        key(tla.appDecl(TlaOperDecl("userOp", List(), tla.int(3)))) ->
-          List(new UserOperRule(this)),
-        // functions
-        key(tla.except(tla.name("f"), tla.int(1), tla.int(42)))
-          -> List(new FunExceptRule(this)),
-        key(tla.funSet(tla.name("X"), tla.name("Y")))
-          -> List(new FunSetCtorRule(this)),
-        key(tla.dom(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S"))))
-          -> List(new DomainRule(this, intRangeCache)), // also works for records
-        key(tla.recFunDef(tla.name("e"), tla.name("x"), tla.name("S")))
-          -> List(new RecFunDefAndRefRule(this)),
-        key(tla.recFunRef())
-          -> List(new RecFunDefAndRefRule(this)),
         // tuples, records, and sequences
         key(tla.head(tla.tuple(tla.name("x"))))
           -> List(new SeqOpsRule(this)),
@@ -78,10 +73,6 @@ class SymbStateRewriterImplWithArrays(_solverContext: SolverContext,
         key(tla.concat(tla.name("Seq1"), tla.name("Seq2")))
           -> List(new SeqOpsRule(this)),
         // FiniteSets
-        key(OperEx(ApalacheOper.constCard, tla.ge(tla.card(tla.name("S")), tla.int(3))))
-          -> List(new CardinalityConstRule(this)),
-        key(OperEx(TlaFiniteSetOper.cardinality, tla.name("S")))
-          -> List(new CardinalityRule(this)),
         key(OperEx(TlaFiniteSetOper.isFiniteSet, tla.name("S")))
           -> List(new IsFiniteSetRule(this)),
         // misc
@@ -100,13 +91,9 @@ class SymbStateRewriterImplWithArrays(_solverContext: SolverContext,
         key(OperEx(TlcOper.printT, tla.str("msg")))
           -> List(new TlcRule(this)),
         key(OperEx(TlcOper.assert, tla.bool(true), tla.str("msg")))
-          -> List(new TlcRule(this)),
-        key(OperEx(TlcOper.colonGreater, tla.int(1), tla.int(2))) // :>
-          -> List(new TlcRule(this)),
-        key(OperEx(TlcOper.atat, NameEx("fun"), NameEx("pair"))) // @@
           -> List(new TlcRule(this))
         // -----------------------------------------------------------------------
-        // RULES BELOW WERE NOT REMOVED TO RUN UNIT TESTS, WILL BE LOOKED AT LATER
+        // RULES BELOW WERE NOT REMOVED TO RUN TESTS, WILL BE LOOKED AT LATER
         // -----------------------------------------------------------------------
         /*
         // logic
@@ -119,16 +106,27 @@ class SymbStateRewriterImplWithArrays(_solverContext: SolverContext,
         // control flow
         key(tla.ite(tla.name("cond"), tla.name("then"), tla.name("else")))
           -> List(new IfThenElseRule(this)),
+        key(tla.letIn(tla.int(1), TlaOperDecl("A", List(), tla.int(2))))
+          -> List(new LetInRule(this)),
+        key(tla.appDecl(TlaOperDecl("userOp", List(), tla.int(3)))) ->
+          List(new UserOperRule(this)),
         // functions
-        key(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S")))
-          -> List(new FunCtorRule(this)),
-        key(tla.appFun(tla.name("f"), tla.name("x")))
-          -> List(new FunAppRule(this)),
+        key(tla.funSet(tla.name("X"), tla.name("Y")))
+          -> List(new FunSetCtorRule(this)),
+        key(tla.recFunDef(tla.name("e"), tla.name("x"), tla.name("S")))
+          -> List(new RecFunDefAndRefRule(this)),
+        key(tla.recFunRef())
+          -> List(new RecFunDefAndRefRule(this)),
         // tuples, records, and sequences
         key(tla.tuple(tla.name("x"), tla.int(2)))
           -> List(new TupleOrSeqCtorRule(this)),
         key(tla.enumFun(tla.str("a"), tla.int(2)))
           -> List(new RecCtorRule(this))
+        // TLC
+        key(OperEx(TlcOper.colonGreater, tla.int(1), tla.int(2))) // :>
+          -> List(new TlcRule(this)),
+        key(OperEx(TlcOper.atat, NameEx("fun"), NameEx("pair"))) // @@
+          -> List(new TlcRule(this))
          */
     )
   }

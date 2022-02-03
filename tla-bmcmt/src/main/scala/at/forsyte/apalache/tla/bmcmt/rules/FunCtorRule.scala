@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir._
 
 /**
  * The new implementation of a function constructor that encodes a function f = [x \in S |-> e] the classical way:
- * f = {(a, b) : a \in S, b = e[a/x]. For efficiency, we are still carrying the domain set in a separate cell.
+ * f = {(a, b) : a \in S, b = e[a/x]}. For efficiency, we are still carrying the domain set in a separate cell.
  *
  * @author Igor Konnov
  */
@@ -36,7 +36,7 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def rewriteFunCtor(state: SymbState, funT1: FunT1, mapEx: TlaEx, varName: String, setEx: TlaEx) = {
+  protected def rewriteFunCtor(state: SymbState, funT1: FunT1, mapEx: TlaEx, varName: String, setEx: TlaEx) = {
     // rewrite the set expression into a memory cell
     var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
     val domainCell = nextState.asCell
@@ -55,7 +55,7 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
       mapCells(nextState, pairEx, varName, setEx, domainCells)
 
     nextState = afterMapState
-    // Add the cell for the set that stores the relation <<x, f[x]>>.
+    // Add the cell for the set that stores the relation <<x, f[x]>>
     nextState = nextState.updateArena(_.appendCell(funT))
     val funCell = nextState.arena.topCell
     nextState = nextState.updateArena(_.appendCell(FinSetT(TupleT(Seq(elemT, resultT)))))
@@ -92,7 +92,7 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     nextState.setRex(funCell.toNameEx)
   }
 
-  private def mapCells(state: SymbState, mapEx: TlaEx, varName: String, setEx: TlaEx, oldCells: Seq[ArenaCell]) = {
+  protected def mapCells(state: SymbState, mapEx: TlaEx, varName: String, setEx: TlaEx, oldCells: Seq[ArenaCell]) = {
     // similar to SymbStateRewriter.rewriteSeqUntilDone and SetFilterRule
     def process(st: SymbState, seq: Seq[ArenaCell]): (SymbState, Seq[TlaEx]) = {
       seq match {

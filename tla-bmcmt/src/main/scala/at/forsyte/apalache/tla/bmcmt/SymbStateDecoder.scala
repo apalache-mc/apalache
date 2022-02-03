@@ -151,43 +151,66 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         }
       }
 
-      // in the new implementation, every function is represented with the relation {(x, f[x]) : x \in S}
+      // In the implementation, every function contains the relation {(x, f[x]) : x \in S}
       val relation = arena.getCdm(cell)
+      val pairs = arena.getHas(relation)
 
-      def isInRelation(pair: ArenaCell): Boolean = {
-        val mem = tla
-          .apalacheSelectInSet(fromTlaEx(pair.toNameEx).typed(funT1.arg),
-              fromTlaEx(relation.toNameEx).typed(TupT1(funT1.arg, funT1.res)))
-          .typed(BoolT1())
-        solverContext.evalGroundExpr(mem) == tla.bool(true).typed(BoolT1())
+      val domIsEmpty = solverContext.config.smtEncoding match {
+        case `arraysEncoding` =>
+          val domain = arena.getDom(cell)
+          val domainElems = arena.getHas(domain)
+
+          def inDom(elem: ArenaCell): TlaEx = {
+            val elemEx = fromTlaEx(elem.toNameEx).typed(funT1.arg)
+            val domEx = fromTlaEx(domain.toNameEx).typed(SetT1(funT1.arg))
+            tla.apalacheSelectInSet(elemEx, domEx).typed(BoolT1())
+          }
+
+          // Check if the domain is empty
+          val oneElemInDom = tla.or(domainElems map inDom: _*).typed(BoolT1())
+          solverContext.evalGroundExpr(oneElemInDom) == tla.bool(false).typed(BoolT1())
+
+        case `oopsla19Encoding` =>
+          def isInRelation(pair: ArenaCell): Boolean = {
+            val pairEx = fromTlaEx(pair.toNameEx).typed(funT1.arg)
+            val relationEx = fromTlaEx(relation.toNameEx).typed(TupT1(funT1.arg, funT1.res))
+            val mem = tla.apalacheSelectInSet(pairEx, relationEx).typed(BoolT1())
+            solverContext.evalGroundExpr(mem) == tla.bool(true).typed(BoolT1())
+          }
+
+          // Check if the domain is empty
+          pairs find isInRelation match {
+            case None    => true
+            case Some(_) => false
+          }
+
+        case oddEncodingType =>
+          throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
       }
 
-      val pairs = arena.getHas(relation)
-      pairs find isInRelation match {
-        case None =>
-          // this is a pathological case, produce: [ x \in {} |-> x ]
-          tla
-            .funDef(tla.name("x").typed(funT1.arg), tla.name("x").typed(funT1.arg),
-                tla.enumSet().typed(SetT1(funT1.res)))
-            .typed(funT1)
-
-        case Some(first) =>
-          // this is the common case
-          val keyCell0 :: valueCell0 :: _ = arena.getHas(first)
-          val keyExp = decodeCellToTlaEx(arena, keyCell0)
-          val firstPair = tla
-            .colonGreater(keyExp, decodeCellToTlaEx(arena, valueCell0))
-            .typed(FunT1(funT1.arg, funT1.res))
-          val keys0 = Set(keyExp) // Used to track seen indices, so we don't include duplicates
-          val (_, fun) = pairs.tail.foldLeft((keys0, firstPair)) { case ((keys, f), p) =>
-            if (p == first) {
-              (keys, f)
-            } else {
-              val idx :: value :: _ = arena.getHas(p)
-              appendPair(keys, f, idx, value)
-            }
+      if (domIsEmpty) {
+        // this is a pathological case, produce: [ x \in {} |-> x ]
+        tla
+          .funDef(tla.name("x").typed(funT1.arg), tla.name("x").typed(funT1.arg), tla.enumSet().typed(SetT1(funT1.res)))
+          .typed(funT1)
+      } else {
+        // this is the common case
+        val first = pairs.head
+        val keyCell0 :: valueCell0 :: _ = arena.getHas(first)
+        val keyExp = decodeCellToTlaEx(arena, keyCell0)
+        val firstPair = tla
+          .colonGreater(keyExp, decodeCellToTlaEx(arena, valueCell0))
+          .typed(FunT1(funT1.arg, funT1.res))
+        val keys0 = Set(keyExp) // Used to track seen indices, so we don't include duplicates
+        val (_, fun) = pairs.tail.foldLeft((keys0, firstPair)) { case ((keys, f), p) =>
+          if (p == first) {
+            (keys, f)
+          } else {
+            val idx :: value :: _ = arena.getHas(p)
+            appendPair(keys, f, idx, value)
           }
-          fun
+        }
+        fun
       }
 
     case SeqT(elemT) =>

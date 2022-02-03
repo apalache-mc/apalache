@@ -9,8 +9,8 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
   private val types =
     Map("b" -> BoolT1(), "B" -> SetT1(BoolT1()), "i" -> IntT1(), "I" -> SetT1(IntT1()), "(i)" -> TupT1(IntT1()),
         "i_to_i" -> FunT1(IntT1(), IntT1()), "i_to_I" -> FunT1(IntT1(), SetT1(IntT1())), "r" -> RecT1("a" -> IntT1()),
-        "s" -> StrT1(), "S" -> SetT1(StrT1()), "(s)" -> TupT1(StrT1()), "i_to_s" -> FunT1(StrT1(), IntT1()),
-        "s_to_i" -> FunT1(IntT1(), StrT1()), "i_to_r" -> FunT1(IntT1(), RecT1("a" -> IntT1())),
+        "s" -> StrT1(), "S" -> SetT1(StrT1()), "(s)" -> TupT1(StrT1()), "i_to_s" -> FunT1(IntT1(), StrT1()),
+        "s_to_i" -> FunT1(StrT1(), IntT1()), "i_to_r" -> FunT1(IntT1(), RecT1("a" -> IntT1())),
         "b_to_b" -> FunT1(BoolT1(), BoolT1()), "b_TO_b" -> SetT1(FunT1(BoolT1(), BoolT1())),
         "i_to_b_to_b" -> FunT1(IntT1(), FunT1(BoolT1(), BoolT1())))
 
@@ -218,23 +218,6 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
       case _ =>
         fail("Unexpected rewriting result")
     }
-  }
-
-  // Raft is directly using f @@ e :> r to construct a function g such as:
-  // DOMAIN g = {e} \cup DOMAIN f and g[e] = r and g[a] = f[a] for a \in DOMAIN f
-  // It is trivial to implement this extension with our encoding
-  test("""[x \in {1, 2} |-> x] @@ 3 :> 4""") { rewriterType: SMTEncoding =>
-    val set = enumSet(int(1), int(2))
-    val fun = funDef(name("x") ? "i", name("x") ? "i", set ? "I")
-    val extFun = atat(fun ? "i_to_i", colonGreater(int(3), int(4)) ? "i_to_i")
-      .typed(types, "i_to_i")
-
-    val rewriter = create(rewriterType)
-    val extState = rewriter.rewriteUntilDone(new SymbState(extFun, arena, Binding()))
-    assert(solverContext.sat())
-    val eq1 = eql(int(4), appFun(extFun, int(3)) ? "i")
-      .typed(types, "b")
-    assertTlaExAndRestore(rewriter, extState.setRex(eq1))
   }
 
   test("""[x \in {3} |-> {1, x}][3]""") { rewriterType: SMTEncoding =>
