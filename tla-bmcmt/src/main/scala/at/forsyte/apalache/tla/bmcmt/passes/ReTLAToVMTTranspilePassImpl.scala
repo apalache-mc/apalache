@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
+import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.NullEx
 import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, LanguageWatchdog}
@@ -14,7 +14,7 @@ import com.typesafe.scalalogging.LazyLogging
  * @author Jure Kukovec
  */
 class ReTLAToVMTTranspilePassImpl @Inject() (val options: PassOptions, pred: LanguagePred,
-    @Named("AfterConstraintGen") nextPass: Pass)
+    @Named("AfterConstraintGen") val nextPass: Pass with TlaModuleMixin)
     extends TranspilePass with LazyLogging {
 
   override def name: String = "Transpiler"
@@ -28,16 +28,11 @@ class ReTLAToVMTTranspilePassImpl @Inject() (val options: PassOptions, pred: Lan
 
     // Check if still ok fragment (sanity check, see postTypeChecker)
     LanguageWatchdog(pred).check(module)
+    nextPass.updateModule(this, module)
 
     true
   }
 
-  /**
-   * Get the next pass in the chain. What is the next pass is up
-   * to the module configuration and the pass outcome.
-   *
-   * @return the next pass, if exists, or None otherwise
-   */
-  override def next(): Option[Pass] =
-    tlaModule map { _ => nextPass }
+  override def dependencies = Set()
+  override def transformations = Set()
 }

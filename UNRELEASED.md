@@ -18,3 +18,4 @@
 ### Bug fixes
 
 * Fixed JSON decoder failing on inputs with `"Untyped"`, see #1281
+* Correctly resolve higher-order operators in names instances, see #1289

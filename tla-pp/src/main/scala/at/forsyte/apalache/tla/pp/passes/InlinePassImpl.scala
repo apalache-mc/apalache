@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.imp.findBodyOf
 import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
 import at.forsyte.apalache.tla.lir.transformations._
 import at.forsyte.apalache.tla.lir.transformations.standard.ModuleByExTransformer
-import at.forsyte.apalache.tla.lir.{TlaModule, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.{TlaModule, TlaOperDecl, ModuleProperty}
 import at.forsyte.apalache.tla.pp._
 import com.google.inject.Inject
 import com.google.inject.name.Named
@@ -22,25 +22,13 @@ import com.typesafe.scalalogging.LazyLogging
  * @param nextPass next pass to call
  */
 class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator, tracker: TransformationTracker,
-    writerFactory: TlaWriterFactory, @Named("AfterInline") nextPass: Pass with TlaModuleMixin)
+    writerFactory: TlaWriterFactory, @Named("AfterInline") val nextPass: Pass with TlaModuleMixin)
     extends InlinePass with LazyLogging {
 
-  private var outputTlaModule: Option[TlaModule] = None
-
-  /**
-   * The pass name.
-   *
-   * @return the name associated with the pass
-   */
   override def name: String = "InlinePass"
 
-  /**
-   * Run the pass.
-   *
-   * @return true, if the pass was successful
-   */
   override def execute(): Boolean = {
-    val baseModule = tlaModule.get
+    val baseModule = rawModule.get
 
     /*
     Disable the preprocessing pass that introduces nullary operators for call results.
@@ -63,7 +51,7 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
           _ => LetInExpander(tracker, keepNullary = true), // expand LET-IN, but ignore call-by-name
           _ => wrapHandler.unwrap, // unwrap, to remove ApalacheOper.callByName
           // the second pass of Inliner may be needed, when the higher-order operators were inlined by LetInExpander
-          InlinerOfUserOper(_, tracker)
+          InlinerOfUserOper(_, tracker),
       )
     }
 
@@ -92,7 +80,7 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
       case d => d // keep the rest as they are
     }
     val constInlinedModule = inlined.copy(
-        declarations = inlined.declarations map declTr
+        declarations = inlined.declarations map declTr,
     )
 
     // Fixing issue 283: https://github.com/informalsystems/apalache/issues/283
@@ -109,26 +97,17 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
     }
 
     val filtered = constInlinedModule.copy(
-        declarations = filteredDefs
+        declarations = filteredDefs,
     )
 
     // dump the result of preprocessing
     writerFactory.writeModuleAllFormats(filtered.copy(name = "05_OutInline"), TlaWriter.STANDARD_MODULES)
 
-    outputTlaModule = Some(filtered)
+    nextPass.updateModule(this, filtered)
     true
   }
 
-  /**
-   * Get the next pass in the chain. What is the next pass is up
-   * to the module configuration and the pass outcome.
-   *
-   * @return the next pass, if exists, or None otherwise
-   */
-  override def next(): Option[Pass] = {
-    outputTlaModule map { m =>
-      nextPass.setModule(m)
-      nextPass
-    }
-  }
+  override def dependencies = Set(ModuleProperty.Unrolled)
+
+  override def transformations = Set(ModuleProperty.Inlined)
 }

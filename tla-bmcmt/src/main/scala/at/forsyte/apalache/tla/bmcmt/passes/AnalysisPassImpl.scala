@@ -4,6 +4,7 @@ import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.bmcmt.CheckerException
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
+import at.forsyte.apalache.tla.lir.{TlaModule, ModuleProperty}
 import at.forsyte.apalache.tla.lir.transformations.{TransformationTracker, fromTouchToExTransformation}
 import at.forsyte.apalache.tla.lir.transformations.standard.ModuleByExTransformer
 import at.forsyte.apalache.tla.lir.{NullEx, TlaAssumeDecl, TlaEx, TlaOperDecl}
@@ -17,25 +18,15 @@ import com.typesafe.scalalogging.LazyLogging
  */
 class AnalysisPassImpl @Inject() (val options: PassOptions, exprGradeStoreImpl: ExprGradeStoreImpl,
     tracker: TransformationTracker, writerFactory: TlaWriterFactory,
-    @Named("AfterAnalysis") nextPass: Pass with TlaModuleMixin)
+    @Named("AfterAnalysis") val nextPass: Pass with TlaModuleMixin)
     extends AnalysisPass with LazyLogging {
 
-  /**
-   * The pass name.
-   *
-   * @return the name associated with the pass
-   */
   override def name: String = "AnalysisPass"
 
   object StringOrdering extends Ordering[Object] {
     override def compare(x: Object, y: Object): Int = x.toString compare y.toString
   }
 
-  /**
-   * Run the pass.
-   *
-   * @return true, if the pass was successful
-   */
   override def execute(): Boolean = {
     if (tlaModule.isEmpty) {
       throw new CheckerException(s"The input of $name pass is not initialized", NullEx)
@@ -52,7 +43,8 @@ class AnalysisPassImpl @Inject() (val options: PassOptions, exprGradeStoreImpl: 
       ) ///
 
     logger.info(" > Marking skolemizable existentials and sets to be expanded...")
-    val marked = transformationSequence.foldLeft(tlaModule.get) { case (m, (name, tr)) =>
+    val module: TlaModule = tlaModule.get
+    val marked = transformationSequence.foldLeft(module) { case (m, (name, tr)) =>
       logger.info("  > %s".format(name))
       ModuleByExTransformer(tr).apply(m)
     }
@@ -74,7 +66,7 @@ class AnalysisPassImpl @Inject() (val options: PassOptions, exprGradeStoreImpl: 
       case _                => ()
     }
 
-    nextPass.setModule(marked)
+    nextPass.updateModule(this, marked)
 
     writerFactory.writeModuleAllFormats(marked.copy(name = "11_OutAnalysis"), TlaWriter.STANDARD_MODULES)
 
@@ -83,13 +75,7 @@ class AnalysisPassImpl @Inject() (val options: PassOptions, exprGradeStoreImpl: 
     true
   }
 
-  /**
-   * Get the next pass in the chain. What is the next pass is up
-   * to the module configuration and the pass outcome.
-   *
-   * @return the next pass, if exists, or None otherwise
-   */
-  override def next(): Option[Pass] = {
-    Some(nextPass)
-  }
+  override def dependencies = Set(ModuleProperty.TransitionsFound)
+
+  override def transformations = Set(ModuleProperty.Analyzed)
 }

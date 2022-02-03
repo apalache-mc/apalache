@@ -38,6 +38,14 @@ case class TlaModule(name: String, declarations: Seq[TlaDecl]) extends Serializa
   }
 }
 
+/**
+ * A trait to include a set of properties to a transformed TLA Module
+ */
+trait TlaModuleProperties {
+  _: TlaModule =>
+  var properties: Set[ModuleProperty.Value] = Set()
+}
+
 /** a constant as defined by CONSTANT */
 case class TlaConstDecl(name: String)(implicit typeTag: TypeTag) extends TlaDecl with Serializable {
   override def withTag(newTypeTag: TypeTag): TlaConstDecl = TlaConstDecl(name)(newTypeTag)
@@ -82,7 +90,7 @@ case class TlaOperDecl(name: String, formalParams: List[OperParam], var body: Tl
 
   // Temporary solution, until #345 is resolved
   def copy(
-      name: String = this.name, formalParams: List[OperParam] = this.formalParams, body: TlaEx = this.body
+      name: String = this.name, formalParams: List[OperParam] = this.formalParams, body: TlaEx = this.body,
   )(implicit copyTypeTag: TypeTag = typeTag): TlaOperDecl = {
     val ret = TlaOperDecl(name, formalParams, body)(copyTypeTag)
     ret.isRecursive = this.isRecursive

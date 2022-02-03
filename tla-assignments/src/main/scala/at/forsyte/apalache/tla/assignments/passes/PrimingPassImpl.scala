@@ -17,25 +17,15 @@ import com.typesafe.scalalogging.LazyLogging
  * PrimingPass adds primes to the variables in state initializers and constant initializers.
  */
 class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTracker, writerFactory: TlaWriterFactory,
-    @Named("AfterPriming") nextPass: Pass with TlaModuleMixin)
+    @Named("AfterPriming") val nextPass: Pass with TlaModuleMixin)
     extends PrimingPass with LazyLogging {
 
-  /**
-   * The name of the pass
-   *
-   * @return the name associated with the pass
-   */
   override def name: String = "PrimingPass"
 
   private def trSeq(seq: Seq[TlaExTransformation]): TlaExTransformation = { ex =>
     seq.foldLeft(ex) { case (partial, tr) => tr(partial) }
   }
 
-  /**
-   * Run the pass
-   *
-   * @return true, if the pass was successful
-   */
   override def execute(): Boolean = {
     val declarations = tlaModule.get.declarations
     val varSet = tlaModule.get.varDeclarations.map(_.name).toSet
@@ -65,7 +55,7 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
     logger.info(s"  > Introducing $initPrimedName for $initName'")
     // add primes to variables
     val newBody = primeTransformer(
-        deepCopy.deepCopyEx(bodyMap(initName).body)
+        deepCopy.deepCopyEx(bodyMap(initName).body),
     )
     // Safe constructor: cannot be recursive
     val initPrimed = Some(TlaOperDecl(initPrimedName, List(), newBody))
@@ -75,20 +65,11 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
 
     writerFactory.writeModuleAllFormats(newModule.copy(name = "06_OutPriming"), TlaWriter.STANDARD_MODULES)
 
-    setModule(newModule)
+    nextPass.updateModule(this, newModule)
     true
   }
 
-  /**
-   * Get the next pass in the chain. What is the next pass is up
-   * to the module configuration and the pass outcome.
-   *
-   * @return the next pass, if exists, or None otherwise
-   */
-  override def next(): Option[Pass] = {
-    tlaModule map { m =>
-      nextPass.setModule(m)
-      nextPass
-    }
-  }
+  override def dependencies = Set(ModuleProperty.Unrolled, ModuleProperty.Configured)
+
+  override def transformations = Set(ModuleProperty.Primed)
 }
