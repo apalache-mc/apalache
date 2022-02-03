@@ -31,7 +31,7 @@ class MalformedTlaError(message: String, val causeExpr: TlaEx) extends LirError(
  * @param message the error message
  * @param causeModule the module that lacks some transformation
  */
-class MissingTransformationError(message: String, val causeModule: TlaModule with TlaModuleTransformations)
+class MissingTransformationError(message: String, val causeModule: TlaModule with TlaModuleProperties)
     extends LirError(message)
 
 /**

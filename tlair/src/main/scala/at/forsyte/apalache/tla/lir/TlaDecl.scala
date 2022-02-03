@@ -41,7 +41,7 @@ case class TlaModule(name: String, declarations: Seq[TlaDecl]) extends Serializa
 /**
  * A trait to include a set of properties to a transformed TLA Module
  */
-trait TlaModuleTransformations {
+trait TlaModuleProperties {
   _: TlaModule =>
   var properties: Set[ModuleProperty.Value] = Set()
 }
