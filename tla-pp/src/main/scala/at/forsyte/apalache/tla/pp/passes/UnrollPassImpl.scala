@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.pp.passes
 import java.io.File
 import java.nio.file.Path
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
-import at.forsyte.apalache.tla.lir.TlaModule
+import at.forsyte.apalache.tla.lir.{TlaModule, ModuleProperty}
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
@@ -21,23 +21,11 @@ import com.typesafe.scalalogging.LazyLogging
  */
 class UnrollPassImpl @Inject() (val options: PassOptions, nameGenerator: UniqueNameGenerator,
     tracker: TransformationTracker, renaming: IncrementalRenaming, writerFactory: TlaWriterFactory,
-    @Named("AfterUnroll") nextPass: Pass with TlaModuleMixin)
+    @Named("AfterUnroll") val nextPass: Pass with TlaModuleMixin)
     extends UnrollPass with LazyLogging {
 
-  private var outputTlaModule: Option[TlaModule] = None
-
-  /**
-   * The pass name.
-   *
-   * @return the name associated with the pass
-   */
   override def name: String = "UnrollPass"
 
-  /**
-   * Run the pass.
-   *
-   * @return true, if the pass was successful
-   */
   override def execute(): Boolean = {
     val module = tlaModule.get
 
@@ -62,21 +50,11 @@ class UnrollPassImpl @Inject() (val options: PassOptions, nameGenerator: UniqueN
     // dump the result of preprocessing
     writerFactory.writeModuleAllFormats(newModule.copy(name = "04_OutUnroll"), TlaWriter.STANDARD_MODULES)
 
-    outputTlaModule = Some(newModule)
+    nextPass.updateModule(this, newModule)
     true
   }
 
-  /**
-   * Get the next pass in the chain. What is the next pass is up
-   * to the module configuration and the pass outcome.
-   *
-   * @return the next pass, if exists, or None otherwise
-   */
-  override def next(): Option[Pass] = {
-    outputTlaModule map { m =>
-      nextPass.setModule(m)
-      nextPass
-    }
-  }
+  override def dependencies = Set(ModuleProperty.Desugared)
 
+  override def transformations = Set(ModuleProperty.Unrolled)
 }

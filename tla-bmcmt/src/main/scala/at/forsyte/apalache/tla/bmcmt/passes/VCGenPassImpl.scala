@@ -5,6 +5,7 @@ import java.nio.file.Path
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.bmcmt.{CheckerException, VCGenerator}
 import at.forsyte.apalache.tla.lir.NullEx
+import at.forsyte.apalache.tla.lir.{TlaModule, ModuleProperty}
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import com.google.inject.Inject
@@ -17,21 +18,11 @@ import com.typesafe.scalalogging.LazyLogging
  * @author Igor Konnov
  */
 class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTracker, writerFactory: TlaWriterFactory,
-    @Named("AfterVCGen") nextPass: Pass with TlaModuleMixin)
+    @Named("AfterVCGen") val nextPass: Pass with TlaModuleMixin)
     extends VCGenPass with LazyLogging {
 
-  /**
-   * The pass name.
-   *
-   * @return the name associated with the pass
-   */
   override def name: String = "VCGen"
 
-  /**
-   * Run the pass.
-   *
-   * @return true, if the pass was successful
-   */
   override def execute(): Boolean = {
     if (tlaModule.isEmpty) {
       throw new CheckerException(s"The input of $name pass is not initialized", NullEx)
@@ -40,7 +31,7 @@ class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTrac
     val newModule =
       options.get[List[String]]("checker", "inv") match {
         case Some(invariants) =>
-          invariants.foldLeft(tlaModule.get) { (mod, invName) =>
+          invariants.foldLeft(rawModule.get) { (mod, invName) =>
             logger.info(s"  > Producing verification conditions from the invariant $invName")
             val optViewName = options.get[String]("checker", "view")
             if (optViewName.isDefined) {
@@ -55,17 +46,11 @@ class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTrac
 
     writerFactory.writeModuleAllFormats(newModule.copy(name = "07_OutVCGen"), TlaWriter.STANDARD_MODULES)
 
-    nextPass.setModule(newModule)
+    nextPass.updateModule(this, newModule)
     true
   }
 
-  /**
-   * Get the next pass in the chain. What is the next pass is up
-   * to the module configuration and the pass outcome.
-   *
-   * @return the next pass, if exists, or None otherwise
-   */
-  override def next(): Option[Pass] = {
-    Some(nextPass)
-  }
+  override def dependencies = Set(ModuleProperty.Inlined)
+
+  override def transformations = Set(ModuleProperty.VCGenerated)
 }

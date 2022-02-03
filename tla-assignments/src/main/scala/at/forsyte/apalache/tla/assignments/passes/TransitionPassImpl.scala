@@ -22,21 +22,11 @@ import java.nio.file.Path
  */
 class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceStore, tracker: TransformationTracker,
     changeListener: ChangeListener, incrementalRenaming: IncrementalRenaming, writerFactory: TlaWriterFactory,
-    @Named("AfterTransitionFinder") nextPass: Pass with TlaModuleMixin)
+    @Named("AfterTransitionFinder") val nextPass: Pass with TlaModuleMixin)
     extends TransitionPass with LazyLogging {
 
-  /**
-   * The name of the pass
-   *
-   * @return the name associated with the pass
-   */
   override def name: String = "TransitionFinderPass"
 
-  /**
-   * Run the pass
-   *
-   * @return true, if the pass was successful
-   */
   override def execute(): Boolean = {
     val inModule = tlaModule.get
 
@@ -50,6 +40,11 @@ class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceSto
     val nextOperName = options.getOrElse("checker", "next", "Next")
     val nextDeclarations = extractTransitions(inModule, nextOperName, NormalizedNames.NEXT_PREFIX)
     logger.info(s"  > Found ${nextDeclarations.size} transitions")
+
+    val invDeclarations: Seq[TlaDecl] = options.get[List[String]]("checker", "inv") match {
+      case Some(invariants) => invariants.map { invariant => inModule.declarations.find(_.name == invariant).get }
+      case None             => Seq()
+    }
 
     // convert an optional CInit operator
     val cinitDeclarations =
@@ -70,8 +65,11 @@ class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceSto
 
     // Add the constants, variables, and assumptions; then add CInit, Init*, Next*; then add verification conditions.
     val vcDeclarations = inModule.declarations.filter(NormalizedNames.isVC)
+    // In case verification conditions weren't generated yet, keep the raw invariants
+    val vcDeclarationsOrInvariants = if (vcDeclarations.isEmpty) invDeclarations else vcDeclarations
+
     val newDecls = inModule.constDeclarations ++ inModule.varDeclarations ++ inModule.assumeDeclarations ++
-      cinitDeclarations ++ initDeclarations ++ nextDeclarations ++ vcDeclarations
+      cinitDeclarations ++ initDeclarations ++ nextDeclarations ++ vcDeclarationsOrInvariants
 
     logger.info(s"  > Applying unique renaming")
     val outModule = incrementalRenaming.renameInModule(new TlaModule(inModule.name, newDecls))
@@ -79,7 +77,7 @@ class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceSto
     // print the resulting module
     writerFactory.writeModuleAllFormats(outModule.copy(name = "09_OutTransition"), TlaWriter.STANDARD_MODULES)
 
-    setModule(outModule)
+    nextPass.updateModule(this, outModule)
     true
   }
 
@@ -96,16 +94,7 @@ class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceSto
     ModuleAdapter.exprsToOperDefs(outOperName, sortedTransitions)
   }
 
-  /**
-   * Get the next pass in the chain. What is the next pass is up
-   * to the module configuration and the pass outcome.
-   *
-   * @return the next pass, if exists, or None otherwise
-   */
-  override def next(): Option[Pass] = {
-    tlaModule map { m =>
-      nextPass.setModule(m)
-      nextPass
-    }
-  }
+  override def dependencies = Set(ModuleProperty.Primed, ModuleProperty.Preprocessed)
+
+  override def transformations = Set(ModuleProperty.TransitionsFound)
 }

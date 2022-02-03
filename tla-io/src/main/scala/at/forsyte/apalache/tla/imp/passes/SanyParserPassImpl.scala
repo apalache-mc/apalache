@@ -25,24 +25,14 @@ import org.apache.commons.io.FilenameUtils
  */
 class SanyParserPassImpl @Inject() (
     val options: PassOptions, val sourceStore: SourceStore, val annotationStore: AnnotationStore,
-    val writerFactory: TlaWriterFactory, @Named("AfterParser") val nextPass: Pass with TlaModuleMixin
-) extends SanyParserPass with LazyLogging {
+    val writerFactory: TlaWriterFactory, @Named("AfterParser") val nextPass: Pass with TlaModuleMixin,
+) extends SanyParserPass with LazyLogging with TlaModuleMixin {
 
-  private var rootModule: Option[TlaModule] = None
-
-  /**
-   * The name of the pass
-   *
-   * @return the name associated with the pass
-   */
   override def name: String = "SanyParser"
 
-  /**
-   * Run the pass
-   *
-   * @return true, if the pass was successful
-   */
   override def execute(): Boolean = {
+    var rootModule: Option[TlaModule] = None
+
     val filename = options.getOrError[String]("parser", "filename")
     if (filename.endsWith(".json")) {
       try {
@@ -95,13 +85,13 @@ class SanyParserPassImpl @Inject() (
               writerFactory.writeModuleToTla(
                   rootModule.get.copy(name),
                   TlaWriter.STANDARD_MODULES,
-                  Some(outfile)
+                  Some(outfile),
               )
             case "json" =>
               writerFactory.writeModuleToJson(
                   rootModule.get.copy(name),
                   TlaWriter.STANDARD_MODULES,
-                  Some(outfile)
+                  Some(outfile),
               )
             case _ =>
               logger.error(s"  > Unrecognized file format: ${outfile.toString}. Supported formats: .tla and .json")
@@ -119,19 +109,12 @@ class SanyParserPassImpl @Inject() (
           }
         }
 
+        rootModule.map { m => nextPass.updateModule(this, m) }
         true
     }
   }
 
-  /**
-   * Get the next pass in the chain. What is the next pass is up
-   * to the module configuration and the pass outcome.
-   *
-   * @return the next pass, if exists, or None otherwise
-   */
-  override def next(): Option[Pass] =
-    rootModule map { m =>
-      nextPass.setModule(m)
-      nextPass
-    }
+  override def dependencies = Set()
+
+  override def transformations = Set()
 }

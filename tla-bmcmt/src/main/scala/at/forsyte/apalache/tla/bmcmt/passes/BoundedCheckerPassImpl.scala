@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions}
+import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
 import at.forsyte.apalache.tla.bmcmt.Checker.NoError
 import at.forsyte.apalache.tla.bmcmt._
@@ -11,6 +11,7 @@ import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig}
 import at.forsyte.apalache.tla.bmcmt.trex._
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.NullEx
+import at.forsyte.apalache.tla.lir.ModuleProperty
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.LanguageWatchdog
 import at.forsyte.apalache.tla.lir.transformations.standard.KeraLanguagePred
@@ -28,21 +29,12 @@ import java.nio.file.Path
  * @author Igor Konnov
  */
 class BoundedCheckerPassImpl @Inject() (val options: PassOptions, exprGradeStore: ExprGradeStore,
-    sourceStore: SourceStore, changeListener: ChangeListener, @Named("AfterChecker") nextPass: Pass)
+    sourceStore: SourceStore, changeListener: ChangeListener,
+    @Named("AfterChecker") val nextPass: Pass with TlaModuleMixin)
     extends BoundedCheckerPass with LazyLogging {
 
-  /**
-   * The pass name.
-   *
-   * @return the name associated with the pass
-   */
   override def name: String = "BoundedChecker"
 
-  /**
-   * Run the pass.
-   *
-   * @return true, if the pass was successful
-   */
   override def execute(): Boolean = {
     if (tlaModule.isEmpty) {
       throw new CheckerException(s"The input of $name pass is not initialized", NullEx)
@@ -246,12 +238,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, exprGradeStore
   }
    */
 
-  /**
-   * Get the next pass in the chain. What is the next pass is up
-   * to the module configuration and the pass outcome.
-   *
-   * @return the next pass, if exists, or None otherwise
-   */
-  override def next(): Option[Pass] =
-    tlaModule map { _ => nextPass }
+  override def dependencies = Set(ModuleProperty.Analyzed)
+
+  override def transformations = Set()
 }

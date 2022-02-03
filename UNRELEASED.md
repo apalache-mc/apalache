@@ -17,3 +17,7 @@
 
 ### Features
 * Add support for functions in the arrays encoding
+
+### Bug fixes
+
+* Correctly resolve higher-order operators in names instances, see #1289
