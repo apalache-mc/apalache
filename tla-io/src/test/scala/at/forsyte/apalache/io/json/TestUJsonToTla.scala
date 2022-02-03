@@ -8,8 +8,8 @@ import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs
+import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet, TlaNatSet, TlaPredefSet, TlaStrSet}
 import org.scalacheck.Prop.{AnyOperators, forAll}
-
 import org.scalatest.prop.Checkers
 
 @RunWith(classOf[JUnitRunner])
@@ -66,10 +66,58 @@ class TestUJsonToTla extends FunSuite with Checkers {
     assert(dec.fromRoot(enc.makeRoot(modules)) == modules)
   }
 
-  val gens: IrGenerators = new IrGenerators {
-    override val maxArgs: Int = 3
+  test("Predef sets (see #1281)") {
+    val sets: Seq[ValEx] = Seq(
+        TlaIntSet,
+        TlaNatSet,
+        TlaBoolSet,
+        TlaStrSet,
+    ) map { v =>
+      ValEx(v).withTag(Untyped())
+    }
+
+    sets.foreach { s =>
+      assert(dec.asTlaEx(enc(s)) == s)
+    }
+
   }
+
+  test("TypeReader correctly reads valid type strings and fails on invalid type strings") {
+    val valid: Seq[String] = Seq(
+        "Untyped",
+        "Int",
+        "Set(Bool)",
+        "() => a -> b",
+        "(UT, Int) => [x: Str]",
+    )
+
+    val invalid: Seq[String] = Seq(
+        "",
+        "SomeType",
+        "Untyped()",
+        "-12",
+        "Set(true)",
+        "() > a -> b",
+        "(UT, Int) => [x: 9]",
+        "Typed[Str](\"cake\")",
+    )
+
+    // No throw
+    valid.foreach { s =>
+      DefaultTagReader.apply(s)
+    }
+    invalid.foreach { s =>
+      assertThrows[JsonDeserializationError] {
+        DefaultTagReader.apply(s)
+      }
+    }
+
+  }
+
   test("Deserializing a serialized IR produces an equivalent IR") {
+    val gens: IrGenerators = new IrGenerators {
+      override val maxArgs: Int = 3
+    }
     val operators = gens.simpleOperators ++ gens.setOperators ++ gens.logicOperators ++ gens.arithOperators
     val genDecl = gens.genTlaDeclButNotVar(gens.genTlaEx(operators)) _
     val prop = forAll(gens.genTlaModuleWith(genDecl)) { module =>
