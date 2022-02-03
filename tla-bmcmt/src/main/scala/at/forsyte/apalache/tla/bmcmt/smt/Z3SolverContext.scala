@@ -211,16 +211,6 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     }
   }
 
-  private def mkSelect(arrayId: Int, elemId: Int): ExprSort = {
-    val array = cellCache(arrayId).head._1
-    val elem = cellCache(elemId).head._1
-
-    z3context.mkSelect(array.asInstanceOf[ArrayExpr[Sort, Sort]], elem.asInstanceOf[Expr[Sort]]).asInstanceOf[ExprSort]
-  }
-
-  private def mkNestedSelect(outerArrayId: Int, innerArrayId: Int, elemId: Int): ExprSort = {
-    val outerArray = cellCache(outerArrayId).head._1
-    val innerArray = cellCache(innerArrayId).head._1
   private def mkAndChain(args: Seq[TlaEx], tail: TlaEx, cond: TlaEx): (ExprSort, Long) = {
     val arg = args.head
     val (argZ3, an) = toExpr(arg)
@@ -240,8 +230,16 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     }
   }
 
-  private def mkSelect(setId: Int, elemId: Int): ExprSort = {
-    val set = cellCache(setId).head._1
+  private def mkSelect(arrayId: Int, elemId: Int): ExprSort = {
+    val array = cellCache(arrayId).head._1
+    val elem = cellCache(elemId).head._1
+
+    z3context.mkSelect(array.asInstanceOf[ArrayExpr[Sort, Sort]], elem.asInstanceOf[Expr[Sort]]).asInstanceOf[ExprSort]
+  }
+
+  private def mkNestedSelect(outerArrayId: Int, innerArrayId: Int, elemId: Int): ExprSort = {
+    val outerArray = cellCache(outerArrayId).head._1
+    val innerArray = cellCache(innerArrayId).head._1
     val elem = cellCache(elemId).head._1
 
     val innerSelect = z3context
@@ -824,10 +822,10 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         val inputSetId = ArenaCell.idFromName(inputSetName)
         val resultSetId = ArenaCell.idFromName(resultSetName)
         // A temporary set is made, to contain the constraints that will be used on the SMT map
-        val tempResultSet = updateSetConst(resultSetId) // The temporary set is initially an unconstrained array
+        val tempResultSet = updateArrayConst(resultSetId) // The temporary set is initially an unconstrained array
         val (consChainZ3, ccn) = toExpr(consChain) // The constraints added have tempResultSet as target of inputSetName
         // An updated set is made, to contain the outcome of the SMT map
-        val updatedResultSet = updateSetConst(resultSetId).asInstanceOf[ArrayExpr[Sort, BoolSort]]
+        val updatedResultSet = updateArrayConst(resultSetId).asInstanceOf[ArrayExpr[Sort, BoolSort]]
         val inputSet = cellCache(inputSetId).head._1.asInstanceOf[ArrayExpr[Sort, BoolSort]]
         val constraintsSet = tempResultSet.asInstanceOf[ArrayExpr[Sort, BoolSort]]
         // The intersection of inputSet and constraintsSet is taken and equated to updatedResultSet

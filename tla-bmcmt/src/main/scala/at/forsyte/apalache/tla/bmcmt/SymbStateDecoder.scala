@@ -195,9 +195,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         val first = pairs.head
         val keyCell0 :: valueCell0 :: _ = arena.getHas(first)
         val keyExp = decodeCellToTlaEx(arena, keyCell0)
-        val firstPair = tla
-          .colonGreater(keyExp, decodeCellToTlaEx(arena, valueCell0))
-          .typed(FunT1(funT1.arg, funT1.res))
+        val firstPair = SmileyFunFun.smiley(funT1, keyExp, decodeCellToTlaEx(arena, valueCell0))
         val keys0 = Set(keyExp) // Used to track seen indices, so we don't include duplicates
         val (_, fun) = pairs.tail.foldLeft((keys0, firstPair)) { case ((keys, f), p) =>
           if (p == first) {
