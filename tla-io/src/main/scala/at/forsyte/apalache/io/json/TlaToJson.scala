@@ -1,6 +1,6 @@
 package at.forsyte.apalache.io.json
 
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaDecimal, TlaInt, TlaStr}
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaBoolSet, TlaDecimal, TlaInt, TlaIntSet, TlaStr, TlaStrSet}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.io.lir.TypeTagPrinter
 import at.forsyte.apalache.tla.lir.storage.SourceLocator
@@ -52,7 +52,7 @@ import at.forsyte.apalache.tla.lir.storage.SourceLocator
  * }
  */
 class TlaToJson[T <: JsonRepresentation](
-    factory: JsonFactory[T], locatorOpt: Option[SourceLocator] = None
+    factory: JsonFactory[T], locatorOpt: Option[SourceLocator] = None,
 )(implicit typeTagPrinter: TypeTagPrinter)
     extends JsonEncoder[T] {
   import TlaToJson._
@@ -74,12 +74,12 @@ class TlaToJson[T <: JsonRepresentation](
             "filename" -> sourceLoc.filename,
             "from" -> factory.mkObj(
                 "line" -> sourceLoc.region.start.line,
-                "column" -> sourceLoc.region.start.column
+                "column" -> sourceLoc.region.start.column,
             ),
             "to" -> factory.mkObj(
                 "line" -> sourceLoc.region.end.line,
-                "column" -> sourceLoc.region.end.column
-            )
+                "column" -> sourceLoc.region.end.column,
+            ),
         )
       } getOrElse {
         "UNKNOWN" // Locator is given, but doesn't know the source
@@ -95,7 +95,7 @@ class TlaToJson[T <: JsonRepresentation](
         withLoc(
             typeFieldName -> typeTagPrinter(ex.typeTag),
             kindFieldName -> "NameEx",
-            "name" -> name
+            "name" -> name,
         )
 
       case ValEx(value) =>
@@ -103,12 +103,12 @@ class TlaToJson[T <: JsonRepresentation](
           case TlaStr(strValue) =>
             factory.mkObj(
                 kindFieldName -> "TlaStr",
-                "value" -> strValue
+                "value" -> strValue,
             )
           case TlaDecimal(decValue) =>
             factory.mkObj(
                 kindFieldName -> "TlaDecimal",
-                "value" -> decValue.toString() // let the parser care when reading
+                "value" -> decValue.toString(), // let the parser care when reading
             )
           case TlaInt(bigIntValue) =>
             val intVal: T =
@@ -116,21 +116,33 @@ class TlaToJson[T <: JsonRepresentation](
               else factory.mkObj("bigInt" -> bigIntValue.toString())
             factory.mkObj(
                 kindFieldName -> "TlaInt",
-                "value" -> intVal
+                "value" -> intVal,
             )
           case TlaBool(boolValue) =>
             factory.mkObj(
                 kindFieldName -> "TlaBool",
-                "value" -> boolValue
+                "value" -> boolValue,
+            )
+          case TlaBoolSet =>
+            factory.mkObj(
+                kindFieldName -> "TlaBoolSet",
+            )
+          case TlaIntSet =>
+            factory.mkObj(
+                kindFieldName -> "TlaIntSet",
+            )
+          case TlaStrSet =>
+            factory.mkObj(
+                kindFieldName -> "TlaStrSet",
             )
           case _ =>
-            //unsupported (TlaReal, TlaPredefSet)
+            //unsupported TlaReal
             factory.mkObj()
         }
         withLoc(
             typeFieldName -> typeTagPrinter(ex.typeTag),
             kindFieldName -> "ValEx",
-            "value" -> inner
+            "value" -> inner,
         )
 
       case OperEx(oper, args @ _*) =>
@@ -139,7 +151,7 @@ class TlaToJson[T <: JsonRepresentation](
             typeFieldName -> typeTagPrinter(ex.typeTag),
             kindFieldName -> "OperEx",
             "oper" -> oper.name,
-            "args" -> factory.fromTraversable(argJsons)
+            "args" -> factory.fromTraversable(argJsons),
         )
       case LetInEx(body, decls @ _*) =>
         val bodyJson = apply(body)
@@ -148,7 +160,7 @@ class TlaToJson[T <: JsonRepresentation](
             typeFieldName -> typeTagPrinter(ex.typeTag),
             kindFieldName -> "LetInEx",
             "body" -> bodyJson,
-            "decls" -> factory.fromTraversable(declJsons)
+            "decls" -> factory.fromTraversable(declJsons),
         )
 
       case NullEx =>
@@ -165,21 +177,21 @@ class TlaToJson[T <: JsonRepresentation](
             typeFieldName -> typeTagPrinter(decl.typeTag),
             kindFieldName -> "TlaTheoremDecl",
             "name" -> name,
-            "body" -> bodyJson
+            "body" -> bodyJson,
         )
 
       case TlaVarDecl(name) =>
         withLoc(
             typeFieldName -> typeTagPrinter(decl.typeTag),
             kindFieldName -> "TlaVarDecl",
-            "name" -> name
+            "name" -> name,
         )
 
       case TlaConstDecl(name) =>
         withLoc(
             typeFieldName -> typeTagPrinter(decl.typeTag),
             kindFieldName -> "TlaConstDecl",
-            "name" -> name
+            "name" -> name,
         )
 
       case decl @ TlaOperDecl(name, formalParams, body) =>
@@ -188,7 +200,7 @@ class TlaToJson[T <: JsonRepresentation](
           factory.mkObj(
               kindFieldName -> "OperParam",
               "name" -> paramName,
-              "arity" -> arity
+              "arity" -> arity,
           )
         }
         withLoc(
@@ -197,7 +209,7 @@ class TlaToJson[T <: JsonRepresentation](
             "name" -> name,
             "formalParams" -> factory.fromTraversable(paramsJsons),
             "isRecursive" -> decl.isRecursive,
-            "body" -> bodyJson
+            "body" -> bodyJson,
         )
 
       case TlaAssumeDecl(body) =>
@@ -205,7 +217,7 @@ class TlaToJson[T <: JsonRepresentation](
         withLoc(
             typeFieldName -> typeTagPrinter(decl.typeTag),
             kindFieldName -> "TlaAssumeDecl",
-            "body" -> bodyJson
+            "body" -> bodyJson,
         )
     }
   }
@@ -215,7 +227,7 @@ class TlaToJson[T <: JsonRepresentation](
     factory.mkObj(
         kindFieldName -> "TlaModule",
         "name" -> module.name,
-        "declarations" -> factory.fromTraversable(declJsons)
+        "declarations" -> factory.fromTraversable(declJsons),
     )
   }
 
@@ -225,7 +237,7 @@ class TlaToJson[T <: JsonRepresentation](
         "name" -> "ApalacheIR",
         versionFieldName -> JsonVersion.current,
         "description" -> "https://apalache.informal.systems/docs/adr/005adr-json.html",
-        "modules" -> factory.fromTraversable(moduleJsons)
+        "modules" -> factory.fromTraversable(moduleJsons),
     )
   }
 }

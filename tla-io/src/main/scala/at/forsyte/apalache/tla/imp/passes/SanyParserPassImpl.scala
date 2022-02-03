@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.imp.passes
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.io.annotations.store._
-import at.forsyte.apalache.io.json.impl.{Type1TagReader, UJsonRep, UJsonToTla}
+import at.forsyte.apalache.io.json.impl.{DefaultTagReader, UJsonRep, UJsonToTla}
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{CyclicDependencyError, TlaModule}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
@@ -25,7 +25,7 @@ import org.apache.commons.io.FilenameUtils
  */
 class SanyParserPassImpl @Inject() (
     val options: PassOptions, val sourceStore: SourceStore, val annotationStore: AnnotationStore,
-    val writerFactory: TlaWriterFactory, @Named("AfterParser") val nextPass: Pass with TlaModuleMixin
+    val writerFactory: TlaWriterFactory, @Named("AfterParser") val nextPass: Pass with TlaModuleMixin,
 ) extends SanyParserPass with LazyLogging {
 
   private var rootModule: Option[TlaModule] = None
@@ -47,7 +47,7 @@ class SanyParserPassImpl @Inject() (
     if (filename.endsWith(".json")) {
       try {
         val moduleJson = UJsonRep(ujson.read(new File(filename)))
-        val modules = new UJsonToTla(Some(sourceStore))(Type1TagReader).fromRoot(moduleJson)
+        val modules = new UJsonToTla(Some(sourceStore))(DefaultTagReader).fromRoot(moduleJson)
         rootModule = modules match {
           case rMod +: Nil => Some(rMod)
           case _           => None
@@ -95,13 +95,13 @@ class SanyParserPassImpl @Inject() (
               writerFactory.writeModuleToTla(
                   rootModule.get.copy(name),
                   TlaWriter.STANDARD_MODULES,
-                  Some(outfile)
+                  Some(outfile),
               )
             case "json" =>
               writerFactory.writeModuleToJson(
                   rootModule.get.copy(name),
                   TlaWriter.STANDARD_MODULES,
-                  Some(outfile)
+                  Some(outfile),
               )
             case _ =>
               logger.error(s"  > Unrecognized file format: ${outfile.toString}. Supported formats: .tla and .json")
