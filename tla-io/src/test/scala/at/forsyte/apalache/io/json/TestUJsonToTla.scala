@@ -7,10 +7,16 @@ import org.junit.runner.RunWith
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.io.lir.{TlaType1PrinterPredefs, TypeTagPrinter, UntypedReader}
+import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs
+import org.scalacheck.Prop
+import org.scalacheck.Prop.{AnyOperators, all, forAll, passed}
+import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatest.junit.JUnitRunner
+import org.scalatest.prop.Checkers
+import org.scalatest.{AppendedClues, Matchers}
 
 @RunWith(classOf[JUnitRunner])
-class TestUJsonToTla extends FunSuite with BeforeAndAfterEach with TestingPredefs {
+class TestUJsonToTla extends FunSuite with Checkers {
   implicit val reader = DefaultTagReader
   implicit val printer = TlaType1PrinterPredefs.printer
 
@@ -62,4 +68,22 @@ class TestUJsonToTla extends FunSuite with BeforeAndAfterEach with TestingPredef
 
     assert(dec.fromRoot(enc.makeRoot(modules)) == modules)
   }
+
+  val gens: IrGenerators = new IrGenerators {
+    override val maxArgs: Int = 3
+  }
+  test("Deserializing a serialized IR produces an equivalent IR") {
+
+    // all names are considered constants
+    val operators = gens.simpleOperators ++ gens.setOperators ++ gens.logicOperators ++ gens.arithOperators
+    val genDecl = gens.genTlaDeclButNotVar(gens.genTlaEx(operators)) _
+    val prop = forAll(gens.genTlaModuleWith(genDecl)) { module =>
+      val moduleJson = enc(module)
+      val moduleFromJson = dec.asTlaModule(moduleJson)
+
+      module =? moduleFromJson
+    }
+    check(prop, minSuccessful(500), sizeRange(4))
+  }
+
 }
