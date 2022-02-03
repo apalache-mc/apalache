@@ -14,3 +14,7 @@
 
 * `version` command only prints the version, see #1279
 * tool and jar location no longer output by default, see #1279
+
+### Bug fixes
+
+* Fixed JSON decoder failing on inputs with `"Untyped"`, see #1281
