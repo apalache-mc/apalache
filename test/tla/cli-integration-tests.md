@@ -160,6 +160,15 @@ EXITCODE: OK
 ...
 ```
 
+### parse Test1254 succeeds
+
+```sh
+$ apalache-mc parse Test1254.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+...
+```
+
 ### parse --output=annotations.tla Annotations succeeds
 
 And also check that it actually parses into TLA (see #1079)

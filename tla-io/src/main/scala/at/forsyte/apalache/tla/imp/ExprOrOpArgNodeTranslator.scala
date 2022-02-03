@@ -17,7 +17,7 @@ import scala.collection.JavaConverters._
  * @author konnov
  */
 class ExprOrOpArgNodeTranslator(
-    sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context, recStatus: RecursionStatus
+    sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context, recStatus: RecursionStatus,
 ) extends LazyLogging {
   def translate(node: ExprOrOpArgNode): TlaEx = {
     val result =
@@ -66,7 +66,7 @@ class ExprOrOpArgNodeTranslator(
 
         case n =>
           throw new SanyImporterException(
-              "Unexpected subclass of tla2sany.ExprOrOpArgNode: " + n.getClass
+              "Unexpected subclass of tla2sany.ExprOrOpArgNode: " + n.getClass,
           )
       }
 
@@ -121,14 +121,14 @@ class ExprOrOpArgNodeTranslator(
         sourceStore,
         annotationStore,
         letInContext,
-        recStatus
+        recStatus,
     ).translate(letIn.getBody)
     LetInEx(body, letInDeclarations: _*)
   }
 
   // translate an operator definition that is used as an expression, that is, LAMBDA
   private def translateLambdaOrOperatorAsArgument(
-      opArgNode: OpArgNode
+      opArgNode: OpArgNode,
   ): TlaEx = {
     // Instead of extending the IR with a new expression type, we simply introduce a local LET-IN definition.
     // Although this is a well-defined expression in the IR, it does not correspond to a well-defined TLA+ expression.
@@ -144,8 +144,10 @@ class ExprOrOpArgNodeTranslator(
 
       // passing an operator
       case _: OpDefNode =>
-        // simply return a reference to the operator by name
-        NameEx(name)
+        // Return a reference to the operator by name.
+        // Bugfix #1254: add the prefix, if the operator is inside an instantiated module.
+        val unit = context.lookup(name)
+        NameEx(unit.name)
 
       // passing a parameter that carries an operator
       case _: FormalParamNode =>
@@ -154,7 +156,7 @@ class ExprOrOpArgNodeTranslator(
 
       case e =>
         throw new SanyImporterException(
-            "Expected an operator definition as an argument, found: " + e
+            "Expected an operator definition as an argument, found: " + e,
         )
     }
   }
@@ -183,7 +185,7 @@ class ExprOrOpArgNodeTranslator(
 
       case e @ _ =>
         throw new SanyImporterException(
-            "Unexpected index expression in EXCEPT: " + e
+            "Unexpected index expression in EXCEPT: " + e,
         )
     }
   }
@@ -198,13 +200,13 @@ class ExprOrOpArgNodeTranslator(
 
 object ExprOrOpArgNodeTranslator {
   def apply(
-      sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context, recStatus: RecursionStatus
+      sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context, recStatus: RecursionStatus,
   ): ExprOrOpArgNodeTranslator = {
     new ExprOrOpArgNodeTranslator(
         sourceStore,
         annotationStore,
         context,
-        recStatus
+        recStatus,
     )
   }
 }
