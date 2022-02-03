@@ -667,7 +667,7 @@ class Builder {
         TlaSetOper.setminus.name -> TlaSetOper.setminus,
         TlaSetOper.subseteq.name -> TlaSetOper.subseteq,
         TlaSetOper.times.name -> TlaSetOper.times,
-        TlaSetOper.union.name -> TlaSetOper.union
+        TlaSetOper.union.name -> TlaSetOper.union,
     )
 
   def byName(operatorName: String, args: BuilderEx*): BuilderEx = {
@@ -680,7 +680,7 @@ class Builder {
       .map(op =>
         if (op.isCorrectArity(args.size))
           BuilderOper(op, args: _*)
-        else BuilderTlaExWrapper(NullEx)
+        else BuilderTlaExWrapper(NullEx),
       )
       .getOrElse(BuilderTlaExWrapper(NullEx))
 }

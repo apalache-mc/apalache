@@ -50,7 +50,7 @@ class SymbStateRewriterImplWithArrays(_solverContext: SolverContext,
         key(tla.except(tla.name("f"), tla.int(1), tla.int(42)))
           -> List(new FunExceptRuleWithArrays(this)),
         key(tla.dom(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S"))))
-          -> List(new DomainRuleWithArrays(this, intRangeCache))
+          -> List(new DomainRuleWithArrays(this, intRangeCache)),
     )
   }
 
@@ -88,7 +88,7 @@ class SymbStateRewriterImplWithArrays(_solverContext: SolverContext,
         key(OperEx(ApalacheOper.foldSet, tla.name("A"), tla.name("v"), tla.name("S")))
           -> List(new FoldSetRule(this)),
         key(OperEx(ApalacheOper.foldSeq, tla.name("A"), tla.name("v"), tla.name("s")))
-          -> List(new FoldSeqRule(this))
+          -> List(new FoldSeqRule(this)),
         // -----------------------------------------------------------------------
         // RULES BELOW WERE NOT REMOVED TO RUN TESTS, WILL BE LOOKED AT LATER
         // -----------------------------------------------------------------------
