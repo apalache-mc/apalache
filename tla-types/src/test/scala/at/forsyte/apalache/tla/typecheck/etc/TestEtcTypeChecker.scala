@@ -292,7 +292,7 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     // lambda x \in Set(Int): Bool
     val lambda = mkUniqAbs(
         pred, // this is a predicate
-        (xName, xDomain) // the scope of the variable x, which is used in the predicate
+        (xName, xDomain), // the scope of the variable x, which is used in the predicate
     ) /////
     val operType = parser("(a => Bool) => Set(a)")
     val app = mkUniqApp(Seq(operType), lambda)
@@ -323,7 +323,7 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     val lambda = mkUniqAbs(
         pred, // this is a predicate
         (xName, xDomain), // the scope of the variable x, which is used in the predicate
-        (yName, yDomain) // the scope of the variable y, which is used in the predicate
+        (yName, yDomain), // the scope of the variable y, which is used in the predicate
     ) /////
     val operType = parser("((a, b) => Bool) => Set(<<a, b>>)")
     val app = mkUniqApp(Seq(operType), lambda)
@@ -352,7 +352,7 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     // lambda x \in Int: Bool
     val lambda = mkUniqAbs(
         mkUniqConst(parser("Bool")), // this is a predicate
-        (xName, domain) // the ill-typed scope of the variable x
+        (xName, domain), // the ill-typed scope of the variable x
     ) /////
     val operType = parser("(a => Bool) => Set(a)")
     val app = mkUniqApp(Seq(operType), lambda)
@@ -862,4 +862,53 @@ class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfter
     }
   }
 
+  test("regression for principal types (issue #1259)") {
+    val fooType = parser("(a -> b) => Bool")
+    // \* @type: (a -> b) => Bool;
+    // Foo(f) ==
+    //   LET f2 == f IN
+    //   LET d == DOMAIN f2 IN
+    //   d = DOMAIN f
+
+    // DOMAIN f
+    val f = mkUniqName("f")
+    val domF = mkUniqApp(Seq(parser("(x -> y) => Set(x)")), f)
+    // d = DOMAIN f
+    val d = mkUniqName("d")
+    val appD = mkUniqAppByName(d)
+    val eq = mkUniqApp(Seq(parser("(z, z) => Bool")), appD, domF)
+    // DOMAIN f2
+    val f2 = mkUniqName("f2")
+    val appF2 = mkUniqAppByName(f2)
+    val domF2 = mkUniqApp(Seq(parser("(i -> j) => Set(i)")), appF2)
+    // LET d == DOMAIN f2 IN ...
+    val lambdaD = mkUniqAbs(domF2)
+    val letD = mkUniqLet("d", lambdaD, eq)
+    // LET f2 == f IN ...
+    val fAgain = mkUniqName("f")
+    val lambdaF = mkUniqAbs(fAgain)
+    val letF2 = mkUniqLet("f2", lambdaF, letD)
+    // Foo(f) == ...
+    val terminal = mkUniqConst(parser("Bool"))
+    val fParam = mkUniqConst(parser("f"))
+    val fOnceAgain = mkUniqName("f")
+    val lambdaLetF2 = mkUniqAbs(letF2, (fOnceAgain, fParam))
+    val letFoo = mkUniqLet("Foo", lambdaLetF2, terminal)
+
+    val listener = mock[TypeCheckerListener]
+    expecting {
+      // the type of d should be () => Set(a)
+      listener.onTypeFound(lambdaD.sourceRef.asInstanceOf[ExactRef], parser("() => Set(a)"))
+      // we don't care about the rest
+      listener
+        .onTypeFound(EasyMock.not(EasyMock.eq(lambdaD.sourceRef.asInstanceOf[ExactRef])), EasyMock.anyObject[TlaType1])
+        .anyTimes()
+      // but no type errors
+    }
+    whenExecuting(listener) {
+      // no failure
+      val annotations = TypeContext("Foo" -> TlaType1Scheme(fooType, Set(0, 1)))
+      checker.compute(listener, annotations, letFoo)
+    }
+  }
 }

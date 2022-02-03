@@ -2,13 +2,13 @@ package at.forsyte.apalache.io.lir
 
 import java.io.{File, FileWriter, PrintWriter}
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlcOper, _}
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir._
 import org.bitbucket.inkytonik.kiama.output.PrettyPrinter
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
-import scala.collection.immutable.HashMap
+import scala.collection.immutable.{HashMap, HashSet}
 
 /**
  * <p>A pretty printer to a file that formats a TLA+ expression to a given text width (normally, 80 characters).
@@ -50,7 +50,7 @@ class PrettyWriter(writer: PrintWriter, layout: TextLayout = new TextLayout,
 
   def writeHeader(moduleName: String, extensionModuleNames: List[String] = List.empty): Unit =
     prettyWriteDoc(
-        moduleNameDoc(moduleName) <> moduleExtendsDoc(extensionModuleNames) <> line
+        moduleNameDoc(moduleName) <> moduleExtendsDoc(extensionModuleNames) <> line,
     )
 
   def writeFooter(): Unit = prettyWriteDoc(moduleTerminalDoc)
@@ -160,7 +160,7 @@ class PrettyWriter(writer: PrintWriter, layout: TextLayout = new TextLayout,
                   text(sign) <> space <> text(x.toString) <> space <>
                     text(PrettyWriter.binaryOps(TlaSetOper.in)) <> softline <>
                     toDoc(op.precedence, set) <> text(":")) <>
-                nest(line <> toDoc(op.precedence, pred))
+                nest(line <> toDoc(op.precedence, pred)),
           ) ///
 
         wrapWithParen(parentPrecedence, op.precedence, doc)
@@ -170,7 +170,7 @@ class PrettyWriter(writer: PrintWriter, layout: TextLayout = new TextLayout,
         val doc =
           group(
               group(text(sign) <> space <> text(x.toString) <> ":") <>
-                nest(line <> toDoc(op.precedence, pred))
+                nest(line <> toDoc(op.precedence, pred)),
           ) ///
 
         wrapWithParen(parentPrecedence, op.precedence, doc)
@@ -209,7 +209,7 @@ class PrettyWriter(writer: PrintWriter, layout: TextLayout = new TextLayout,
         group(
             text("[") <>
               nest(line <> binders <> space <> "|->" <> nest(line <> bodyDoc)) <> line <>
-              text("]")
+              text("]"),
         ) ////
 
       case OperEx(TlaSetOper.map, body, keysAndValues @ _*) =>
@@ -221,7 +221,7 @@ class PrettyWriter(writer: PrintWriter, layout: TextLayout = new TextLayout,
             .zip(values)
             .map(p =>
               group(toDoc(TlaSetOper.in.precedence, p._1) <> space <>
-                    "\\in" <> nest(line <> toDoc(TlaSetOper.in.precedence, p._2)))
+                    "\\in" <> nest(line <> toDoc(TlaSetOper.in.precedence, p._2))),
             ) ///
 
         val binders = ssep(boxes.toList, comma <> line)
@@ -231,12 +231,12 @@ class PrettyWriter(writer: PrintWriter, layout: TextLayout = new TextLayout,
       case OperEx(TlaSetOper.filter, name, set, pred) =>
         val binding = group(
             toDoc(TlaSetOper.in.precedence, name) <> softline <> "\\in" <>
-              nest(line <> toDoc(TlaSetOper.in.precedence, set))
+              nest(line <> toDoc(TlaSetOper.in.precedence, set)),
         ) ///
         // use the precedence (0, 0), as there is no need for parentheses around the predicate
         val filter = toDoc((0, 0), pred)
         group(
-            text("{") <> nest(line <> binding <> ":" <> nest(line <> filter)) <> line <> text("}")
+            text("{") <> nest(line <> binding <> ":" <> nest(line <> filter)) <> line <> text("}"),
         ) ///
 
       // a function of multiple arguments that are packed into a tuple: don't print the angular brackets <<...>>
@@ -244,14 +244,14 @@ class PrettyWriter(writer: PrintWriter, layout: TextLayout = new TextLayout,
         val argDocs = args.map(toDoc(op.precedence, _))
         val commaSeparatedArgs = folddoc(argDocs.toList, _ <> text(",") <@> _)
         group(
-            toDoc(TlaFunOper.app.precedence, funEx) <> brackets(commaSeparatedArgs)
+            toDoc(TlaFunOper.app.precedence, funEx) <> brackets(commaSeparatedArgs),
         ) ///
 
       // a function of a single argument
       case OperEx(TlaFunOper.app, funEx, argEx) =>
         group(
             toDoc(TlaFunOper.app.precedence, funEx) <>
-              text("[") <> nest(linebreak <> toDoc(TlaFunOper.app.precedence, argEx)) <> linebreak <> text("]")
+              text("[") <> nest(linebreak <> toDoc(TlaFunOper.app.precedence, argEx)) <> linebreak <> text("]"),
         ) ///
 
       case OperEx(TlaControlOper.ifThenElse, pred, thenEx, elseEx) =>
@@ -260,7 +260,7 @@ class PrettyWriter(writer: PrintWriter, layout: TextLayout = new TextLayout,
           group(
               text("IF") <> space <> toDoc(prec, pred) <> line <>
                 text("THEN") <> space <> toDoc(prec, thenEx) <> line <>
-                text("ELSE") <> space <> toDoc(prec, elseEx)
+                text("ELSE") <> space <> toDoc(prec, elseEx),
           ) ///
 
         wrapWithParen(parentPrecedence, prec, doc)
@@ -275,7 +275,7 @@ class PrettyWriter(writer: PrintWriter, layout: TextLayout = new TextLayout,
             .zip(updates)
             .map(p =>
               group(toDoc(prec, p._1) <>
-                    nest(line <> text("->") <> space <> toDoc(prec, p._2)))
+                    nest(line <> text("->") <> space <> toDoc(prec, p._2))),
             ) ///
 
         val pairsWithOther =
@@ -383,11 +383,13 @@ class PrettyWriter(writer: PrintWriter, layout: TextLayout = new TextLayout,
       case OperEx(TlaFunOper.recFunRef) =>
         text(recFunName) // even if the name is undefined, print it
 
+      // a unary operator that is mapped to Apalache IR
       case OperEx(op, arg) if PrettyWriter.unaryOps.contains(op) =>
         // in all other cases, introduce parentheses.
         // Yse the minimal precedence, as we are introducing the parentheses in any case.
         text(PrettyWriter.unaryOps(op)) <> parens(toDoc((0, 0), arg))
 
+      // a binary infix operator that is mapped to Apalache IR
       case OperEx(op, lhs, rhs) if PrettyWriter.binaryOps.contains(op) =>
         val doc =
           toDoc(op.precedence, lhs) <>
@@ -397,6 +399,17 @@ class PrettyWriter(writer: PrintWriter, layout: TextLayout = new TextLayout,
                   toDoc(op.precedence, rhs))
         wrapWithParen(parentPrecedence, op.precedence, group(doc))
 
+      // a user-defined binary infix operator such as :> or @@
+      case OperEx(TlaOper.apply, NameEx(operName), lhs, rhs) if PrettyWriter.userDefinedBinaryOps.contains(operName) =>
+        val doc =
+          toDoc((0, 0), lhs) <>
+            nest(
+                line <>
+                  text(operName) <> space <>
+                  toDoc((0, 0), rhs))
+        wrapWithParen(parentPrecedence, (0, 0), group(doc))
+
+      // a n-ary operator that is mapped to Apalache IR
       case OperEx(op, args @ _*) if PrettyWriter.naryOps.contains(op) =>
         val sign = PrettyWriter.naryOps(op)
         val argDocs = args.map(toDoc(op.precedence, _)).toList
@@ -604,7 +617,7 @@ object PrettyWriter {
       TlaActionOper.unchanged -> "UNCHANGED ",
       TlaFunOper.domain -> "DOMAIN ",
       TlaTempOper.box -> "[]",
-      TlaTempOper.diamond -> "<>"
+      TlaTempOper.diamond -> "<>",
   ) ////
 
   protected val binaryOps =
@@ -635,13 +648,15 @@ object PrettyWriter {
         TlaTempOper.leadsTo -> "~>",
         TlaTempOper.guarantees -> "-+->",
         TlaSeqOper.concat -> "\\o",
-        TlcOper.colonGreater -> ":>",
-        ApalacheOper.assign -> ":="
+        ApalacheOper.assign -> ":=",
     ) ////
+
+  // binary operators that are not mapped to Apalache operators
+  protected val userDefinedBinaryOps =
+    HashSet(":>", "@@")
 
   protected val naryOps: Map[TlaOper, String] = HashMap(
       TlaSetOper.times -> "\\X",
-      TlcOper.atat -> "@@"
   ) ////
 
   protected val bindingOps = HashMap(
@@ -649,6 +664,6 @@ object PrettyWriter {
       TlaBoolOper.forall -> "\\A",
       TlaOper.chooseBounded -> "CHOOSE",
       TlaTempOper.EE -> "\\EE",
-      TlaTempOper.AA -> "\\AA"
+      TlaTempOper.AA -> "\\AA",
   ) ////
 }

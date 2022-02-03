@@ -12,14 +12,11 @@ import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
-import java.io.File
-import java.nio.file.Path
-
 /**
  * Find free-standing existential quantifiers, grade expressions, and produce hints about some formulas.
  */
-class AnalysisPassImpl @Inject() (val options: PassOptions, hintsStoreImpl: FormulaHintsStoreImpl,
-    exprGradeStoreImpl: ExprGradeStoreImpl, tracker: TransformationTracker, writerFactory: TlaWriterFactory,
+class AnalysisPassImpl @Inject() (val options: PassOptions, exprGradeStoreImpl: ExprGradeStoreImpl,
+    tracker: TransformationTracker, writerFactory: TlaWriterFactory,
     @Named("AfterAnalysis") nextPass: Pass with TlaModuleMixin)
     extends AnalysisPass with LazyLogging {
 
@@ -51,7 +48,7 @@ class AnalysisPassImpl @Inject() (val options: PassOptions, hintsStoreImpl: Form
           // mark some expressions to be expanded
           "Expansion" -> new ExpansionMarker(tracker),
           // SkolemizationMarker may introduce unused let-definitions. Remove them.
-          "Remove unused let-in defs" -> fromTouchToExTransformation(new LetInOptimizer(tracker))
+          "Remove unused let-in defs" -> fromTouchToExTransformation(new LetInOptimizer(tracker)),
       ) ///
 
     logger.info(" > Marking skolemizable existentials and sets to be expanded...")
@@ -65,12 +62,10 @@ class AnalysisPassImpl @Inject() (val options: PassOptions, hintsStoreImpl: Form
     val consts = marked.constDeclarations.map(_.name).toSet
     val vars = marked.varDeclarations.map(_.name).toSet
 
-    val hintFinder = new HintFinder(hintsStoreImpl)
     val gradeAnalysis = new ExprGradeAnalysis(exprGradeStoreImpl)
 
     def analyzeExpr(expr: TlaEx): Unit = {
       gradeAnalysis.labelExpr(consts, vars, expr)
-      hintFinder.introHints(expr)
     }
 
     marked.declarations.foreach {
@@ -84,7 +79,6 @@ class AnalysisPassImpl @Inject() (val options: PassOptions, hintsStoreImpl: Form
     writerFactory.writeModuleAllFormats(marked.copy(name = "11_OutAnalysis"), TlaWriter.STANDARD_MODULES)
 
     logger.info("  > Introduced expression grades")
-    logger.info("  > Introduced %d formula hints".format(hintsStoreImpl.store.size))
 
     true
   }

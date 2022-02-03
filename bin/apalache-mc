@@ -6,19 +6,18 @@
 
 DIR=`dirname $0`
 DIR=`cd "$DIR/.."; pwd`
-echo "# Tool home: $DIR"
+
 # try to find either a release jar, or a local build
 DISTS=`mktemp /tmp/apalache-dists.XXXX`
-find >$DISTS "$DIR" "$DIR/mod-distribution/target/" \
+find >$DISTS "$DIR" "$DIR/target/scala-2.12" \
     -maxdepth 1 -name "apalache-pkg-*-full.jar"
 
 case `cat $DISTS | wc -l | sed 's/[[:space:]]*//g'` in
     1)
         JAR=`head -n 1 $DISTS`
-        echo "# Package:   $JAR"
         ;;
     0) 
-        echo "ERROR: Distribution jar not found. Did you run mvn package?"
+        echo "ERROR: Distribution jar not found. Did you run make package?"
         exit 1
         ;;
     *) 
@@ -26,23 +25,11 @@ case `cat $DISTS | wc -l | sed 's/[[:space:]]*//g'` in
         cat $DISTS
         echo ""
         echo "To resolve this, run:"
-        echo "  mvn clean && mvn package"
+        echo "  make clean package"
         exit 1
         ;;
 esac
 rm -f "$DISTS"
-
-# an additional lookup list for the TLA+ modules
-TLA_LIB="$DIR/src/tla"
-
-# This is a temporary solution for handling TLA_PATH via a Java variable.
-# See apalache/#187.
-# Once tlaplus/#490,#493 are released, remove this workaround.
-if [ -z "$TLA_PATH" ]; then
-    TLA_PATH="$TLA_LIB"
-else
-    TLA_PATH="$TLA_LIB:$TLA_PATH"
-fi
 
 JVM_ARGS=${JVM_ARGS:-""}
 
@@ -53,10 +40,11 @@ then
     JVM_ARGS="${JVM_ARGS} -Xmx4096m"
 fi
 
-JVM_ARGS="$JVM_ARGS -DTLA-Library=$TLA_PATH"
-
-echo "# JVM args: $JVM_ARGS"
-echo "#"
+# Append TLA_PATH to JVM_ARGS, if it is set
+if [ -n "$TLA_PATH" ]
+then
+    JVM_ARGS="$JVM_ARGS -DTLA-Library=$TLA_PATH"
+fi
 
 # a trap for SIGINT and SIGTERM
 sigterm() {
@@ -67,6 +55,15 @@ sigterm() {
 }
 
 trap sigterm SIGTERM SIGINT
+
+# Check whether the CLI args contains the debug flag
+if [[ "$*" =~ '--debug' ]]
+then
+    echo "# Tool home: $DIR"
+    echo "# Package:   $JAR"
+    echo "# JVM args: $JVM_ARGS"
+    echo "#"
+fi
 
 # run java in the background in order to react to SIGTERM
 java $JVM_ARGS -jar "$JAR" "$@" &

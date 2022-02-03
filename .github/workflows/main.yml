@@ -48,19 +48,28 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 1.8
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v2
         with:
-          java-version: 1.8
-      - name: Cache local Maven repository
-        uses: actions/cache@v2
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
-            ${{ runner.os }}-
+          distribution: temurin
+          java-version: 8
+      - name: Coursier cache
+        uses: coursier/cache-action@v6
       - name: Build and Unit Test
-        run: mvn --batch-mode --no-transfer-progress test
+        run: make test-coverage
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          # See https://app.codecov.io/gh/informalsystems/apalache/
+          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+      - name: Cleanup before cache
+        # See https://www.scala-sbt.org/1.x/docs/GitHub-Actions-with-sbt.html#Caching
+        shell: bash
+        run: |
+          rm -rf "$HOME/.ivy2/local" || true
+          find $HOME/Library/Caches/Coursier/v1        -name "ivydata-*.properties" -delete || true
+          find $HOME/.ivy2/cache                       -name "ivydata-*.properties" -delete || true
+          find $HOME/.cache/coursier/v1                -name "ivydata-*.properties" -delete || true
+          find $HOME/.sbt                              -name "*.lock"               -delete || true
 
   integration-tests:
     runs-on: ${{ matrix.operating-system }}
@@ -78,13 +87,13 @@ jobs:
             smt-encoding: arrays
     steps:
       - uses: actions/checkout@v2
-      - name: Cache local Maven repository
+      - name: Cache local m2 repository
         uses: actions/cache@v2
         with:
           path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          key: ${{ runner.os }}-sbt-${{ hashFiles('project/Dependencies.scala') }}
           restore-keys: |
-            ${{ runner.os }}-maven-
+            ${{ runner.os }}-sbt-
             ${{ runner.os }}-
       - name: Cache nix store
         # Workaround for cache action not playing well with permissions
@@ -108,9 +117,7 @@ jobs:
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
       - name: Build dev-shell
         run: nix develop -c bash -c exit
-      - name: Build apalache
-        run: nix develop -c make build-quick
-      - name: Run integration tests
+      - name: Build and run integration tests
         run: nix develop -c make integration
         env:
           SMT_ENCODING: ${{ matrix.smt-encoding }}
@@ -143,10 +150,10 @@ jobs:
       - name: Build dev-shell
         run: nix develop -c bash -c exit
       - name: Build the docker image
-        run: docker build -t ghcr.io/informalsystems/apalache:ci .
+        run: make docker
       - name: Run integration tests in docker container
         run: |
           nix develop -c bash -c "source ./test/.envrc && test/mdx-test.py --debug"
         env:
           USE_DOCKER: true
-          APALACHE_TAG: ci
+          APALACHE_TAG: latest

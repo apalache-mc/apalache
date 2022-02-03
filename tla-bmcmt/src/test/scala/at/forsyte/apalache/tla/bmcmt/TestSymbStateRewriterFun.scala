@@ -51,7 +51,7 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     val mapping = ite(
         eql(name("x"), int(1)) ? "b",
         intSet(2),
-        ite(eql(name("x") ? "i", int(2)) ? "b", intSet(3), intSet(1)) ? "I"
+        ite(eql(name("x") ? "i", int(2)) ? "b", intSet(3), intSet(1)) ? "I",
     ).typed(types, "I")
     val fun = funDef(mapping, name("x") ? "i", set)
       .typed(types, "i_to_I")

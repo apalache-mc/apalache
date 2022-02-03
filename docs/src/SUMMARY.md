@@ -35,6 +35,7 @@
 - [The Snowcat Type Checker](./apalache/typechecker-snowcat.md)
 - [Supported Features](./apalache/features.md)
 - [Known Issues](./apalache/known-issues.md)
+- [Antipatterns](./apalache/antipatterns.md)
 - [TLA+ Preprocessing](./apalache/preprocessing.md)
 - [Fine Tuning](./apalache/tuning.md)
 - [Assignments and Symbolic Transitions in Depth](./apalache/assignments-in-depth.md)
@@ -100,3 +101,4 @@
 - [ADR-009: outputs](./adr/009adr-outputs.md)
 - [ADR-011: alternative SMT encoding using arrays](./adr/011adr-smt-arrays.md)
 - [ADR-015: ITF: informal trace format](./adr/015adr-trace.md)
+- [ADR-016: Uninterpreted first-order logic fragment encoding](./adr/016adr-simple.md)

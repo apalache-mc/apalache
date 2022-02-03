@@ -60,4 +60,3 @@ mode may drastically reduce memory consumption, but it may take longer than the
 
   1. __Short circuiting__: `rewriter.shortCircuit=(false|true)`. When `rewriter.shortCircuit=true`, `A \/ B` and `A /\ B` are translated to SMT as if-then-else expressions, e.g., `(ite A true B)`. Otherwise, disjunctions and conjunctions are directly translated to `(or ...)` and `(and ...)` respectively. By default, `rewriter.shortCircuit=false`.
 
-  1. __Lazy short circuiting__: `rewriter.lazyCircuit=(false|true)`. Given `A /\ B`, first check with the solver, whether `A` is satisfiable. If not, return reduce to `false` immediately; otherwise, rewrite `B`. By default, `rewriter.lazyCircuit=false`.

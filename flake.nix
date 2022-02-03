@@ -60,7 +60,7 @@
                 scala_2_12
 
                 # Build
-                maven
+                sbt
 
                 # Development
                 metals

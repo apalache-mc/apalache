@@ -73,6 +73,10 @@ class SymbStateRewriterImplWithArrays(_solverContext: SolverContext,
         key(tla.concat(tla.name("Seq1"), tla.name("Seq2")))
           -> List(new SeqOpsRule(this)),
         // FiniteSets
+        key(OperEx(ApalacheOper.constCard, tla.ge(tla.card(tla.name("S")), tla.int(3))))
+          -> List(new CardinalityConstRule(this)),
+        key(OperEx(TlaFiniteSetOper.cardinality, tla.name("S")))
+          -> List(new CardinalityRule(this)),
         key(OperEx(TlaFiniteSetOper.isFiniteSet, tla.name("S")))
           -> List(new IsFiniteSetRule(this)),
         // misc
@@ -84,14 +88,7 @@ class SymbStateRewriterImplWithArrays(_solverContext: SolverContext,
         key(OperEx(ApalacheOper.foldSet, tla.name("A"), tla.name("v"), tla.name("S")))
           -> List(new FoldSetRule(this)),
         key(OperEx(ApalacheOper.foldSeq, tla.name("A"), tla.name("v"), tla.name("s")))
-          -> List(new FoldSeqRule(this)),
-        // TLC
-        key(OperEx(TlcOper.print, tla.bool(true), tla.str("msg")))
-          -> List(new TlcRule(this)),
-        key(OperEx(TlcOper.printT, tla.str("msg")))
-          -> List(new TlcRule(this)),
-        key(OperEx(TlcOper.assert, tla.bool(true), tla.str("msg")))
-          -> List(new TlcRule(this))
+          -> List(new FoldSeqRule(this))
         // -----------------------------------------------------------------------
         // RULES BELOW WERE NOT REMOVED TO RUN TESTS, WILL BE LOOKED AT LATER
         // -----------------------------------------------------------------------
@@ -122,11 +119,6 @@ class SymbStateRewriterImplWithArrays(_solverContext: SolverContext,
           -> List(new TupleOrSeqCtorRule(this)),
         key(tla.enumFun(tla.str("a"), tla.int(2)))
           -> List(new RecCtorRule(this))
-        // TLC
-        key(OperEx(TlcOper.colonGreater, tla.int(1), tla.int(2))) // :>
-          -> List(new TlcRule(this)),
-        key(OperEx(TlcOper.atat, NameEx("fun"), NameEx("pair"))) // @@
-          -> List(new TlcRule(this))
          */
     )
   }

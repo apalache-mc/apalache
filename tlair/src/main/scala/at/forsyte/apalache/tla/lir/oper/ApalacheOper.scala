@@ -205,6 +205,14 @@ object ApalacheOper {
     override def precedence: (Int, Int) = (5, 5)
   }
 
+  object smtMap extends ApalacheOper {
+    override def name: String = "Apalache!SmtMap"
+
+    override def arity: OperArity = FixedArity(3)
+
+    override def precedence: (Int, Int) = (5, 5)
+  }
+
   /**
    * The chain operator allows the chaining of individual operations.
    * It can improve solver performance by eliminating intermediary declarations.

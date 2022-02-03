@@ -36,8 +36,6 @@ class CheckerModule extends AbstractModule {
     // We have to use TypeLiteral, as otherwise Guice is getting confused by type erasure.
     bind(new TypeLiteral[AnnotationStore]() {})
       .toProvider(classOf[AnnotationStoreProvider])
-    bind(classOf[FormulaHintsStore])
-      .to(classOf[FormulaHintsStoreImpl])
     bind(classOf[ExprGradeStore])
       .to(classOf[ExprGradeStoreImpl])
 

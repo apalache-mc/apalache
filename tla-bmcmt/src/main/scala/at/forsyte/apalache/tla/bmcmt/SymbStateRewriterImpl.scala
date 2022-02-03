@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.caches._
 import at.forsyte.apalache.tla.bmcmt.profiler.RuleStatListener
 import at.forsyte.apalache.tla.bmcmt.rewriter.{
-  MetricProfilerListener, Recoverable, RewriterConfig, SymbStateRewriterSnapshot
+  MetricProfilerListener, Recoverable, RewriterConfig, SymbStateRewriterSnapshot,
 }
 import at.forsyte.apalache.tla.bmcmt.rules._
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
@@ -108,11 +108,6 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
 
   @transient
   protected lazy val substRule = new SubstRule(this)
-
-  /**
-   * The store that contains formula hints. By default, empty.
-   */
-  var formulaHintsStore: FormulaHintsStore = new FormulaHintsStoreImpl()
 
   /**
    * A storage for the messages associated with assertion failures, see MessageStorage.
@@ -288,17 +283,6 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
           -> List(new FoldSetRule(this)),
         key(OperEx(ApalacheOper.foldSeq, tla.name("A"), tla.name("v"), tla.name("s")))
           -> List(new FoldSeqRule(this)),
-        // TLC
-        key(OperEx(TlcOper.print, tla.bool(true), tla.str("msg")))
-          -> List(new TlcRule(this)),
-        key(OperEx(TlcOper.printT, tla.str("msg")))
-          -> List(new TlcRule(this)),
-        key(OperEx(TlcOper.assert, tla.bool(true), tla.str("msg")))
-          -> List(new TlcRule(this)),
-        key(OperEx(TlcOper.colonGreater, tla.int(1), tla.int(2))) // :>
-          -> List(new TlcRule(this)),
-        key(OperEx(TlcOper.atat, NameEx("fun"), NameEx("pair"))) // @@
-          -> List(new TlcRule(this))
     )
   } ///// ADD YOUR RULES ABOVE
 

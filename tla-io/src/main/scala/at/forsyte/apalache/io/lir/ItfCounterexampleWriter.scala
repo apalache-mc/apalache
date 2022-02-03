@@ -1,9 +1,9 @@
 package at.forsyte.apalache.io.lir
 
 import at.forsyte.apalache.tla.lir.oper.TlaOper.deinterleave
-import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper, TlcOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir.{OperEx, SeqT1, TlaConstDecl, TlaEx, TlaModule, TlaVarDecl, Typed, ValEx}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, SeqT1, TlaConstDecl, TlaEx, TlaModule, TlaVarDecl, Typed, ValEx}
 
 import java.io.PrintWriter
 import java.util.Calendar
@@ -48,7 +48,7 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
         ujson.Obj(
             "format" -> "ITF",
             "format-description" -> "https://apalache.informal.systems/docs/adr/015adr-trace.html",
-            "description" -> "Created by Apalache on %s".format(Calendar.getInstance().getTime)
+            "description" -> "Created by Apalache on %s".format(Calendar.getInstance().getTime),
         ))
     paramsToJson(rootModule).foreach(params => rootMap.put("params", params))
     rootMap.put("vars", varsToJson(rootModule))
@@ -112,10 +112,10 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
       val values = valuesEs.map(exToJson)
       ujson.Obj(mutable.LinkedHashMap(keys.zip(values): _*))
 
-    case OperEx(TlcOper.colonGreater, key, value) =>
+    case OperEx(TlaOper.apply, NameEx(":>"), key, value) =>
       ujson.Obj("#map" -> ujson.Arr(exToJson(key), exToJson(value)))
 
-    case e @ OperEx(TlcOper.atat, _, _) =>
+    case e @ OperEx(TlaOper.apply, NameEx("@@"), _, _) =>
       ujson.Obj("#map" -> collectFun(e))
 
     // the degenerate case of an empty function [ x \in {} |-> x ]
@@ -129,10 +129,10 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
   // as TLA+ does not offer a simple constructor for functions by enumeration,
   // we have to decode a function by collection the TLC operators :> and @@
   private def collectFun: TlaEx => List[ujson.Value] = {
-    case OperEx(TlcOper.colonGreater, key, value) =>
+    case OperEx(TlaOper.apply, NameEx(":>"), key, value) =>
       List(ujson.Arr(exToJson(key), exToJson(value)))
 
-    case OperEx(TlcOper.atat, leftFun, rightFun) =>
+    case OperEx(TlaOper.apply, NameEx("@@"), leftFun, rightFun) =>
       (collectFun(leftFun) ++ collectFun(rightFun))
 
     case e =>

@@ -83,7 +83,6 @@ test/tla
 ```sh
 $ apalache-mc version
 ...
-EXITCODE: OK
 ```
 
 ### executable prints help
@@ -91,7 +90,6 @@ EXITCODE: OK
 ```sh
 $ apalache-mc help
 ...
-EXITCODE: OK
 ```
 
 ### executable responds to JVM_ARGS environment variable
@@ -99,21 +97,19 @@ EXITCODE: OK
 We can set some JVM args and still have the default max heap size supplied. (Note we also trim out the `TLA_Library` argument, since is environment sensitive and makes the tests unstable.)
 
 ```sh
-$ JVM_ARGS="-Xms1m -XX:+UseSerialGC" apalache-mc version | sed 's/-DTLA-Library.*//'
+$ JVM_ARGS="-Xms1m -XX:+UseSerialGC" apalache-mc --debug version | sed 's/-DTLA-Library.*//'
 ...
 # JVM args: -Xms1m -XX:+UseSerialGC -Xmx4096m
 ...
-EXITCODE: OK
 ```
 
 If we set the max heap size (with `-Xmx`) it will override the default max heap size:
 
 ```sh
-$ JVM_ARGS="-Xmx16m" apalache-mc version | sed 's/-DTLA-Library.*//'
+$ JVM_ARGS="-Xmx16m" apalache-mc --debug version | sed 's/-DTLA-Library.*//'
 ...
 # JVM args: -Xmx16m
 ...
-EXITCODE: OK
 ```
 
 ## running the parse command
@@ -1664,6 +1660,30 @@ Test928.tla:6:18-6:19: type input error: Found a polymorphic type: Set(a)
 EXITCODE: ERROR (255)
 ```
 
+### check Test1182.tla reports no error on Inv: regression for #1182
+
+```sh
+$ apalache-mc check --inv=Inv Test1182.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check Test951.tla reports no error on Inv: regression for #951
+
+```sh
+$ apalache-mc check --inv=Inv Test951.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check Test1259.tla reports no error: regression for #1259
+
+```sh
+$ apalache-mc check Test1259.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
 
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
@@ -2069,7 +2089,7 @@ See: https://github.com/informalsystems/apalache/issues/925
 ```sh
 $ apalache-mc typecheck Bug925.tla | sed 's/[IEW]@.*//'
 ...
-[Bug925.tla:7:1-7:24]: Expected ((b) => [f: Set(b)]) in Optional. Found: ((a) => [f: a])
+[Bug925.tla:7:1-7:24]: Expected ((a) => [f: Set(a)]) in Optional. Found: ((a) => [f: a])
 [Bug925.tla:7:1-7:24]: Error when computing the type of Optional
 ...
 EXITCODE: ERROR (255)
