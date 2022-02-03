@@ -4,16 +4,13 @@ import at.forsyte.apalache.io.json.impl.{DefaultTagReader, TlaToUJson, UJsonToTl
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import org.junit.runner.RunWith
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs
-import org.scalacheck.Prop
-import org.scalacheck.Prop.{AnyOperators, all, forAll, passed}
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
-import org.scalatest.junit.JUnitRunner
+import org.scalacheck.Prop.{AnyOperators, forAll}
+
 import org.scalatest.prop.Checkers
-import org.scalatest.{AppendedClues, Matchers}
 
 @RunWith(classOf[JUnitRunner])
 class TestUJsonToTla extends FunSuite with Checkers {
@@ -73,8 +70,6 @@ class TestUJsonToTla extends FunSuite with Checkers {
     override val maxArgs: Int = 3
   }
   test("Deserializing a serialized IR produces an equivalent IR") {
-
-    // all names are considered constants
     val operators = gens.simpleOperators ++ gens.setOperators ++ gens.logicOperators ++ gens.arithOperators
     val genDecl = gens.genTlaDeclButNotVar(gens.genTlaEx(operators)) _
     val prop = forAll(gens.genTlaModuleWith(genDecl)) { module =>

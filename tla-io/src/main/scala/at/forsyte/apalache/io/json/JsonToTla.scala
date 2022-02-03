@@ -69,6 +69,7 @@ class JsonToTla[T <: JsonRepresentation](
       case "TlaBoolSet" => TlaBoolSet
       case "TlaIntSet"  => TlaIntSet
       case "TlaStrSet"  => TlaStrSet
+      case "TlaNatSet"  => TlaNatSet
       case _            => throw new JsonDeserializationError(s"$kind is not a valid TlaValue kind")
     }
   }

@@ -1,6 +1,6 @@
 package at.forsyte.apalache.io.json
 
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaBoolSet, TlaDecimal, TlaInt, TlaIntSet, TlaStr, TlaStrSet}
+import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.io.lir.TypeTagPrinter
 import at.forsyte.apalache.tla.lir.storage.SourceLocator
@@ -134,6 +134,10 @@ class TlaToJson[T <: JsonRepresentation](
           case TlaStrSet =>
             factory.mkObj(
                 kindFieldName -> "TlaStrSet",
+            )
+          case TlaNatSet =>
+            factory.mkObj(
+                kindFieldName -> "TlaNatSet",
             )
           case _ =>
             //unsupported TlaReal
