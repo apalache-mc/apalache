@@ -3,7 +3,7 @@ package at.forsyte.apalache.io.json
 import at.forsyte.apalache.tla.imp.src.{SourceLocation, SourceStore}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.src.{SourceLocation, SourcePosition, SourceRegion}
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaDecimal, TlaInt, TlaStr}
+import at.forsyte.apalache.tla.lir.values._
 import convenience.tla
 import UntypedPredefs._
 import at.forsyte.apalache.io.lir.TypeTagReader
@@ -15,7 +15,7 @@ import at.forsyte.apalache.io.lir.TypeTagReader
  */
 
 class JsonToTla[T <: JsonRepresentation](
-    scalaFactory: ScalaFactory[T], sourceStoreOpt: Option[SourceStore] = None
+    scalaFactory: ScalaFactory[T], sourceStoreOpt: Option[SourceStore] = None,
 )(implicit typeTagReader: TypeTagReader)
     extends JsonDecoder[T] {
 
@@ -66,7 +66,11 @@ class JsonToTla[T <: JsonRepresentation](
         val valField = getOrThrow(json, "value")
         val valBool = scalaFactory.asBool(valField)
         TlaBool(valBool)
-      case _ => throw new JsonDeserializationError(s"$kind is not a valid TlaValue kind")
+      case "TlaBoolSet" => TlaBoolSet
+      case "TlaIntSet"  => TlaIntSet
+      case "TlaStrSet"  => TlaStrSet
+      case "TlaNatSet"  => TlaNatSet
+      case _            => throw new JsonDeserializationError(s"$kind is not a valid TlaValue kind")
     }
   }
 
@@ -83,8 +87,8 @@ class JsonToTla[T <: JsonRepresentation](
       fileName,
       SourceRegion(
           SourcePosition(fromLine, fromCol),
-          SourcePosition(toLine, toCol)
-      )
+          SourcePosition(toLine, toCol),
+      ),
   )
 
   def setLoc(identifiable: Identifiable, locationOpt: Option[SourceLocation]): Unit =
