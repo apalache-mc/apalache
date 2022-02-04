@@ -1,5 +1,7 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
+import at.forsyte.apalache.io.annotations.store._
+import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.typecheck.{TypeCheckerListener, TypeCheckerTool}
@@ -8,7 +10,8 @@ import at.forsyte.apalache.io.json.impl.{DefaultTagReader, TlaToUJson, UJsonToTl
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs
 import at.forsyte.apalache.tla.lir.{TlaModule, TlaType1, Typed, TypingException, UID}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
+import at.forsyte.apalache.tla.lir.{TlaType1, Typed, TypingException, UID}
+import at.forsyte.apalache.tla.typecheck.{TypeCheckerListener, TypeCheckerTool}
 import org.easymock.EasyMock
 import org.junit.runner.RunWith
 import org.scalatest.easymock.EasyMockSugar
@@ -110,10 +113,10 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
     typecheckSpecAndEncoding("MegaSpec1")
   }
 
-  // fixing this test is scheduled in: https://github.com/informalsystems/apalache/issues/1255
-  ignore("the tool consumes its output on TlcSpec1") {
+  test("the tool consumes its output on TlcSpec1") {
     typecheckSpec("TlcSpec1")
   }
+  
   private def typecheckSpecAndEncoding(specName: String): Unit = {
     val (rootName, modules) =
       sanyImporter.loadFromSource(specName, loadSpecFromResource(specName))
