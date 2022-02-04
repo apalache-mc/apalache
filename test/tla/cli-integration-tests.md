@@ -169,6 +169,20 @@ EXITCODE: OK
 ...
 ```
 
+### parse Test1275 succeeds
+
+We have decided to display a warning instead of exiting with an error,
+because TLA+ Toolbox generates comments that look like malformed annotations.
+
+```sh
+$ apalache-mc parse Test1275.tla | sed 's/W@.*//'
+...
+[Test1275:5:1-5:12]: Syntax error in annotation -- Unexpected character. Missing ')' or ';'?
+...
+EXITCODE: OK
+...
+```
+
 ### parse --output=annotations.tla Annotations succeeds
 
 And also check that it actually parses into TLA (see #1079)

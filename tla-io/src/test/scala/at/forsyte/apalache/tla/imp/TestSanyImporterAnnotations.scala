@@ -279,11 +279,14 @@ class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val caught = intercept[AnnotationParserError] {
-      loadModule(text, "missing")
-    }
-    assert(
-        "line 4, col 1 to line 4, col 14 of module missing: Unexpected character. Missing ')' or ';'?" == caught.getMessage)
+    // as explained in #1292, we are not throwing an exception anymore
+    val module = loadModule(text, "missing")
+
+    val action = module.declarations
+      .find(_.name == "action")
+      .getOrElse(fail("Expected an operator"))
+    val annotations = annotationStore(action.ID)
+    assert(annotations.length == 1)
   }
 
   test("corner cases") {

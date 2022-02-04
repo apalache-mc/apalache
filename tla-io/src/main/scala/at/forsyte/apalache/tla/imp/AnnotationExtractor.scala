@@ -25,8 +25,13 @@ class AnnotationExtractor(annotationStore: AnnotationStore) extends LazyLogging 
 
       case Left(message) =>
         // Warn the user and continue. It may be a piece of text that looks like an annotation, but it is not an annotation.
-        val msg = node.getLocation.toString + ": " + message
-        throw new AnnotationParserError(msg)
+        // It would be better to throw an exception here. However, TLA+ Toolbox is automatically generating comments
+        // that look like malformed annotations, e.g., CONSTANT definitions @modelParameterConstants:0Foo
+        val loc = node.getLocation
+        val msg = "[%s:%d:%d-%d:%d]: Syntax error in annotation -- %s"
+          .format(loc.source(), loc.beginLine(), loc.beginColumn(), loc.endLine(), loc.endColumn(), message)
+        logger.warn(msg)
+        None
     }
 
     val freeTextTrimmed = freeText.trim()
