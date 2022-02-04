@@ -1,5 +1,7 @@
 # Idiom 7: Use Boolean operators in actions, not `IF-THEN-ELSE`
 
+**author:** Gabriela Mafra
+
 ## Description
 
 TLA+ provides an `IF-THEN-ELSE` operator, and it can be pretty tempting to use it for flow control, as it's done in procedural programming. However, TLA+ is about transitions over a state machine, and a transition-defining action declared with `IF-THEN-ELSE` can be more complex than 2 actions declared without it. Considering that any expression of the form `IF b THEN x ELSE y`, where `x` and `y` are Booleans, can be rewritten as `(b /\ x) \/ (~b /\ y)`, there's a pattern we can apply to get rid of some potentially troublesome `IF-THEN-ELSE` definitions.
