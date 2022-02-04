@@ -104,7 +104,6 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
     typecheckSpec("MegaSpec1")
   }
 
-  // fixing this test is scheduled in: https://github.com/informalsystems/apalache/issues/1255
   test("the tool consumes its output on TlcSpec1") {
     typecheckSpec("TlcSpec1")
   }
