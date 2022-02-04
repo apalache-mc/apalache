@@ -227,6 +227,60 @@ $ cat output.json | head
 $ rm output.json
 ```
 
+### typecheck --output=output.tla Annotations succeeds
+
+Check that it actually parses into TLA (see #1284)
+
+```sh
+$ apalache-mc typecheck --output=output.tla Annotations.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+$ cat output.tla | head
+-------------------------------- MODULE output --------------------------------
+
+EXTENDS Integers, Sequences, FiniteSets, TLC, Apalache
+
+CONSTANT
+  (*
+    @type: Int;
+  *)
+  N
+
+$ rm output.tla
+```
+
+### typecheck --output=output.json Annotations succeeds
+
+And also check that it actually parses into JSON (see #1284)
+
+```sh
+$ apalache-mc typecheck --output=output.json Annotations.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+$ cat output.json | head
+{
+  "name": "ApalacheIR",
+  "version": "1.0",
+  "description": "https://apalache.informal.systems/docs/adr/005adr-json.html",
+  "modules": [
+    {
+      "kind": "TlaModule",
+      "name": "output",
+      "declarations": [
+        {
+$ rm output.json
+```
+
+### typecheck can consume own --output
+
+Check that a file produced with `--output` is valid input (see #1281)
+
+```sh
+$ apalache-mc typecheck --output=output.json Annotations.tla ; apalache-mc typecheck output.json | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
 ### parse FormulaRefs fails
 
 ```sh

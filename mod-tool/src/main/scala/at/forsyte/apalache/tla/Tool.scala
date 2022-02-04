@@ -306,6 +306,7 @@ object Tool extends LazyLogging {
     logger.info("Type checking " + typecheck.file)
 
     executor.options.set("parser.filename", typecheck.file.getAbsolutePath)
+    typecheck.output.foreach(executor.options.set("io.output", _))
     executor.options.set("typechecker.inferPoly", typecheck.inferPoly)
 
     // NOTE Must go after all other options are set due to side-effecting
