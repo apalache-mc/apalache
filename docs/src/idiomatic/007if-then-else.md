@@ -2,15 +2,15 @@
 
 ## Description
 
-TLA+ provides an `IF-THEN-ELSE` operator, and it can be pretty tempting to use it for flow control as it's done in procedural programming. However, TLA+ is about transitions over a state machine, and a transition-defining action declared with `IF-THEN-ELSE` can be more complex than 2 actions declared without it. Considering that any expression in the form `IF b THEN x ELSE y` with `x` and `y` being booleans (and most TLA+ expressions are booleans) can be rewritten as `(b /\ x) \/ (!b /\ y)`, there's a pattern we can apply to get rid of some potentially troubled `IF-THEN-ELSE` definitions.
+TLA+ provides an `IF-THEN-ELSE` operator, and it can be pretty tempting to use it for flow control, as it's done in procedural programming. However, TLA+ is about transitions over a state machine, and a transition-defining action declared with `IF-THEN-ELSE` can be more complex than 2 actions declared without it. Considering that any expression of the form `IF b THEN x ELSE y`, where `x` and `y` are Booleans, can be rewritten as `(b /\ x) \/ (~b /\ y)`, there's a pattern we can apply to get rid of some potentially troublesome `IF-THEN-ELSE` definitions.
 
-The `IF-THEN-ELSE` operator can be used either to define a value or to branch some action as a sort of flow control. Defining values with `IF-THEN-ELSE` is common practice and is similar to the use of `IF` expressions on declarative programming languages. However, flow control in TLA+ can be done naturally by behavior definition through actions, making the use of `IF-THEN-ELSE` for flow control unnecessary. This idiom aims to clarify different usages of `IF-THEN-ELSE` expressions keeping in mind the TLA+ essence of declaring actions to define sets of transitions. 
+The `IF-THEN-ELSE` operator can be used either to define a value, or to branch some action as a sort of flow control. Defining values with `IF-THEN-ELSE` is common practice and is similar to the use of `IF` expressions in declarative programming languages. However, flow control in TLA+ can be done naturally by behavior definition through actions, making the use of `IF-THEN-ELSE` for flow control unnecessary. This idiom aims to clarify different usages of `IF-THEN-ELSE` expressions, keeping in mind the TLA+ essence of declaring actions to define transitions. 
 
 ## When to use `IF-THEN-ELSE`
 
 ### When the result is not Boolean
 
-When the `IF-THEN-ELSE` expression doesn't evaluate to a boolean value, it cannot be rewritten using boolean operators, so this idiom doesn't apply.
+When the `IF-THEN-ELSE` expression doesn't evaluate to a boolean value, it cannot be rewritten using boolean operators, so this idiom doesn't apply. For example:
 
 ```tla
 SafeDiv(x, y) == IF y /= 0 THEN x/y ELSE 0
@@ -29,7 +29,7 @@ Although it could be rewritten with boolean operators, it doesn't read as nicely
 ```tla
 ValidIdentity(person) == \/ /\ Nationalized(person)
                             /\ ValidId(person)
-                         \/ /\ !Nationalized(person)
+                         \/ /\ ~Nationalized(person)
                             /\ ValidPassport(person)
 ```
 
@@ -41,7 +41,7 @@ Mixing `IF-THEN-ELSE` expressions with action operators introduces unnecessary b
 Withdraw(amount) == IF balance >= amount 
                      THEN /\ balance' = balance - amount
                           /\ response' = "SUCCESS"
-                     ELSE /\ UNCHANGED<balance>
+                     ELSE /\ UNCHANGED balance
                           /\ response' = "FAILURE"
 ```
 
@@ -54,7 +54,7 @@ WithdrawSuccess(amount) == /\ balance >= amount
                             
 WithdrawFailure(amount) == /\ balance < amount 
                            /\ response' = "FAILURE"
-                           /\ UNCHANGED<balance> 
+                           /\ UNCHANGED balance 
                             
 Withdraw(amount) == WithdrawSuccess(amount) \/ WithdrawFailure(amount)
 ```
