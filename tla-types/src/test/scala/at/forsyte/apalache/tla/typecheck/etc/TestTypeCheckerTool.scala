@@ -116,7 +116,7 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
   test("the tool consumes its output on TlcSpec1") {
     typecheckSpec("TlcSpec1")
   }
-  
+
   private def typecheckSpecAndEncoding(specName: String): Unit = {
     val (rootName, modules) =
       sanyImporter.loadFromSource(specName, loadSpecFromResource(specName))
