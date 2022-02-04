@@ -12,7 +12,7 @@ The `IF-THEN-ELSE` operator can be used either to define a value, or to branch s
 
 ### When the result is not Boolean
 
-When the `IF-THEN-ELSE` expression doesn't evaluate to a boolean value, it cannot be rewritten using boolean operators, so this idiom doesn't apply. For example:
+When the `IF-THEN-ELSE` expression doesn't evaluate to a Boolean value, it cannot be rewritten using Boolean operators, so this idiom doesn't apply. For example:
 
 ```tla
 SafeDiv(x, y) == IF y /= 0 THEN x/y ELSE 0
@@ -20,19 +20,45 @@ SafeDiv(x, y) == IF y /= 0 THEN x/y ELSE 0
 
 ### When the result is a state formula
 
-State formulas are formulas that don't contain any action operator (e.g. primed variables, `UNCHANGED`). Using `IF-THEN-ELSE` on this type of formula can make it easier to read in some situations, and don't come with any disadvantage. This example state formula uses `IF-THEN-ELSE` to return a boolean value: 
+State formulas are formulas that don't contain any action operator (e.g. primed variables, `UNCHANGED`). Using `IF-THEN-ELSE` on this type of formula can make it easier to read in some situations, and don't come with any disadvantage. This example state formula uses `IF-THEN-ELSE` to return a Boolean value: 
 
 ```tla
 ValidIdentity(person) == IF Nationalized(person) THEN ValidId(person) ELSE ValidPassport(person)
 ```
 
-Although it could be rewritten with boolean operators, it doesn't read as nicely:
+Although it could be rewritten with Boolean operators, it doesn't read as nicely:
 
 ```tla
 ValidIdentity(person) == \/ /\ Nationalized(person)
                             /\ ValidId(person)
                          \/ /\ ~Nationalized(person)
                             /\ ValidPassport(person)
+```
+
+## When there are dependent conditions
+
+Nesting `IF-THEN-ELSE` expressions can be useful when there is a dependency between the conditions where some conditions are only relevant if other conditions are met. This is an example where using an `IF-THEN-ELSE` expressions is clearer than the Boolean operator form. Consider the following:
+
+```tla
+IF c1
+THEN a1
+ELSE IF c2
+THEN a2
+ELSE IF
+...
+ELSE IF cn
+THEN an
+ELSE a 
+```
+
+The Boolean operator version is quite verbose:
+
+```tla
+\/ c1 /\ a1
+\/ ~c1 /\ c2 /\ a2
+\/ ...
+\/ ~c1 /\ ... /\ ~c_{n-1} /\ cn /\ an
+\/ ~c1 /\ ... /\ ~c_{n-1} /\ ~cn /\ a
 ```
 
 ## When (and how) *not* to use `IF-THEN-ELSE`
@@ -64,7 +90,7 @@ Withdraw(amount) == WithdrawSuccess(amount) \/ WithdrawFailure(amount)
 ## Advantages
 
 - Each action declares fewer transitions, so it's easier to reason about it
-- A disjunction of actions is closer to a union of transition sets than an `IF-THEN-ELSE` expression
+- A disjunction of actions is closer to a union of transition relations than an `IF-THEN-ELSE` expression is
 - Nested `IF-THEN-ELSE` expressions are an extrapolation of these problems and can over-constrain some branches if not done carefully. Using different actions defining its conditions explicitly leaves less room for implicit wrong constraints that an `ELSE` branch allows. See the example below.
 
 Assuming `C1()` is a condition for `A1()` and `C2()` is a condition for `A2()`:
@@ -89,7 +115,7 @@ Next == \/ /\ C1()
            
 ```
 
-This second definition can allow more behaviors than the first one (depending on whether `C1()` and `C2()` overlap), and therefore is safer in most cases.
+This second definition can allow more behaviors than the first one (depending on whether `C1()` and `C2()` overlap), and these additional behaviors can be unintentionally left out when `IF-THEN-ELSE` is used without attention.
 
 ## Disadvantages
 
