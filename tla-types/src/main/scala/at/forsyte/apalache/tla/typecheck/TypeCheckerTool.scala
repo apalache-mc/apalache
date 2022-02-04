@@ -116,9 +116,9 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) exte
     def findInTag: TypeTag => Int = {
       case Typed(tt: TlaType1) =>
         val used = tt.usedNames
-        if (used.isEmpty) 0 else used.max
+        if (used.isEmpty) -1 else used.max
 
-      case _ => 0
+      case _ => -1
     }
 
     def findInEx: TlaEx => Int = {
@@ -127,10 +127,10 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) exte
         defs.map(findInDecl).foldLeft(findInEx(body))(Math.max)
 
       case OperEx(_, args @ _*) =>
-        args.map(findInEx).foldLeft(0)(Math.max)
+        args.map(findInEx).foldLeft(-1)(Math.max)
 
       case _ =>
-        0
+        -1
     }
 
     def findInDecl: TlaDecl => Int = {
@@ -141,6 +141,6 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) exte
         findInTag(d.typeTag)
     }
 
-    module.declarations.map(findInDecl).foldLeft(0)(Math.max)
+    module.declarations.map(findInDecl).foldLeft(-1)(Math.max)
   }
 }
