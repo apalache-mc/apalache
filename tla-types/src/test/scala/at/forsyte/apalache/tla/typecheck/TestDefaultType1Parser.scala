@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.typecheck
 
 import at.forsyte.apalache.io.typecheck.parser.Type1ParseError
 import at.forsyte.apalache.tla.lir.{
-  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecT1, SeqT1, SetT1, SparseTupT1, StrT1, TupT1, VarT1
+  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1Gen, TupT1, VarT1,
 }
 import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import org.junit.runner.RunWith

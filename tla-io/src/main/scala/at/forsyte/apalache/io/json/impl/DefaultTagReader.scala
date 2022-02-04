@@ -1,0 +1,24 @@
+package at.forsyte.apalache.io.json.impl
+
+import at.forsyte.apalache.io.json.JsonDeserializationError
+import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1ParseError}
+import at.forsyte.apalache.tla.lir.{TypeTag, Typed, Untyped}
+import at.forsyte.apalache.io.lir.TypeTagReader
+
+object DefaultTagReader extends TypeTagReader {
+  override def apply(tagStr: String): TypeTag = {
+    tagStr match {
+      case "Untyped" => Untyped()
+      case s =>
+        try {
+          Typed(DefaultType1Parser(tagStr))
+        } catch {
+          case e: Type1ParseError =>
+            throw new JsonDeserializationError(
+                s"Error in type annotation: Expected Type1 expression or 'Untyped', found: $s",
+            )
+        }
+
+    }
+  }
+}

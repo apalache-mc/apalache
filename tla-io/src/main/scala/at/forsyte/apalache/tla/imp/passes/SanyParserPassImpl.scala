@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.imp.passes
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.io.annotations.store._
-import at.forsyte.apalache.io.json.impl.{Type1TagReader, UJsonRep, UJsonToTla}
+import at.forsyte.apalache.io.json.impl.{DefaultTagReader, UJsonRep, UJsonToTla}
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{CyclicDependencyError, TlaModule}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
@@ -37,7 +37,7 @@ class SanyParserPassImpl @Inject() (
     if (filename.endsWith(".json")) {
       try {
         val moduleJson = UJsonRep(ujson.read(new File(filename)))
-        val modules = new UJsonToTla(Some(sourceStore))(Type1TagReader).fromRoot(moduleJson)
+        val modules = new UJsonToTla(Some(sourceStore))(DefaultTagReader).fromRoot(moduleJson)
         rootModule = modules match {
           case rMod +: Nil => Some(rMod)
           case _           => None
