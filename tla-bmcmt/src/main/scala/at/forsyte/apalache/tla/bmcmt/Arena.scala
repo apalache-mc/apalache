@@ -28,11 +28,11 @@ object Arena {
     // by convention, the first cells have the following semantics:
     //  0 stores FALSE, 1 stores TRUE, 2 stores BOOLEAN, 3 stores Nat, 4 stores Int
     arena = arena
-      .appendCellWithoutDeclaration(BoolT())
-      .appendCellWithoutDeclaration(BoolT())
-      .appendCellWithoutDeclaration(FinSetT(BoolT()))
-      .appendCellWithoutDeclaration(InfSetT(IntT()))
-      .appendCellWithoutDeclaration(InfSetT(IntT()))
+      .appendCellNoSmt(BoolT())
+      .appendCellNoSmt(BoolT())
+      .appendCellNoSmt(FinSetT(BoolT()))
+      .appendCellNoSmt(InfSetT(IntT()))
+      .appendCellNoSmt(InfSetT(IntT()))
     // declare Boolean cells in SMT
     val cellFalse = arena.cellFalse()
     val cellTrue = arena.cellTrue()
@@ -157,7 +157,7 @@ class Arena private (val solverContext: SolverContext, val cellCount: Int, val t
    * @return new arena
    */
   def appendCell(cellType: CellT): Arena = {
-    val newArena = appendCellWithoutDeclaration(cellType)
+    val newArena = appendCellNoSmt(cellType)
     val newCell = newArena.topCell
     solverContext.declareCell(newCell)
     newArena
@@ -194,7 +194,7 @@ class Arena private (val solverContext: SolverContext, val cellCount: Int, val t
    * @param cellType a cell type
    * @return new arena
    */
-  def appendCellWithoutDeclaration(cellType: CellT): Arena = {
+  def appendCellNoSmt(cellType: CellT): Arena = {
     val newCell = new ArenaCell(cellCount, cellType)
     assert(!cellMap.contains(newCell.toString)) // this might happen, if we messed up arenas
     new Arena(solverContext, cellCount + 1, newCell, cellMap + (newCell.toString -> newCell), hasEdges, domEdges,

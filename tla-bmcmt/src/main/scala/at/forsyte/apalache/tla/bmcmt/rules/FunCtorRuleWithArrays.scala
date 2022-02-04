@@ -38,7 +38,7 @@ class FunCtorRuleWithArrays(rewriter: SymbStateRewriter) extends FunCtorRule(rew
     val funCell = nextState.arena.topCell
     nextState = nextState.updateArena(_.setDom(funCell, domainCell))
     // We construct a set of pairs and have it store the pairs <arg,res> produced
-    nextState = nextState.updateArena(_.appendCellWithoutDeclaration(FinSetT(TupleT(Seq(elemT, resultT)))))
+    nextState = nextState.updateArena(_.appendCellNoSmt(FinSetT(TupleT(Seq(elemT, resultT)))))
     val relation = nextState.arena.topCell
     nextState = nextState.updateArena(_.appendHasNoSmt(relation, relationCells: _*))
     nextState = nextState.updateArena(_.setCdm(funCell, relation))

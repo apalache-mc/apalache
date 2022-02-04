@@ -26,7 +26,7 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
     val relationElems = nextState.arena.getHas(relationCell)
     val nElems = relationElems.size
 
-    nextState = nextState.updateArena(_.appendCellWithoutDeclaration(elemT))
+    nextState = nextState.updateArena(_.appendCellNoSmt(elemT))
     val res = nextState.arena.topCell
     res.isUnconstrained = true // The declared cell is forced to be unconstrained
     rewriter.solverContext.declareCell(res)

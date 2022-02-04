@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
+import at.forsyte.apalache.tla.lir.TypedPredefs.{BuilderExAsTyped, tlaExToBuilderExAsTyped}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, TlaEx, TupT1}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -36,15 +36,15 @@ class FunExceptRuleWithArrays(rewriter: SymbStateRewriter) extends FunExceptRule
     // Declare the updated set of pairs <arg,res>
     val relation = nextState.arena.getCdm(funCell)
     val relationCells = nextState.arena.getHas(relation)
-    nextState = nextState.updateArena(_.appendCellWithoutDeclaration(relation.cellType))
+    nextState = nextState.updateArena(_.appendCellNoSmt(relation.cellType))
     val resultRelation = nextState.arena.topCell
 
     def eachRelationPair(pair: ArenaCell) = {
       val tupT = TupT1(funT.arg, funT.res)
       val pairIndex = nextState.arena.getHas(pair).head
       val ite = tla
-        .ite(tla.eql(pairIndex.toNameEx ? "p", indexCell.toNameEx ? "i") ? "b", newPairCell.toNameEx ? "p",
-            pair.toNameEx ? "p")
+        .ite(tla.eql(pairIndex.toNameEx as tupT, indexCell.toNameEx as funT.arg) as BoolT1(),
+            newPairCell.toNameEx as tupT, pair.toNameEx as tupT)
         .typed(Map("p" -> tupT, "i" -> funT.arg, "b" -> BoolT1()), "p")
 
       nextState = rewriter.rewriteUntilDone(nextState.setRex(ite))
