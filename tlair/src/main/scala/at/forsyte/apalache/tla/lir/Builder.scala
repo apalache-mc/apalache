@@ -656,6 +656,8 @@ class Builder {
         TlaSetOper.subseteq.name -> TlaSetOper.subseteq,
         TlaSetOper.times.name -> TlaSetOper.times,
         TlaSetOper.union.name -> TlaSetOper.union,
+        TlaFunOper.recFunRef.name -> TlaFunOper.recFunRef,
+        TlaFunOper.recFunDef.name -> TlaFunOper.recFunDef,
     )
 
   def byName(operatorName: String, args: BuilderEx*): BuilderEx = {
