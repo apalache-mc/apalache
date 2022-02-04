@@ -24,3 +24,4 @@
 * Fixed JSON decoder failing on inputs with `"Untyped"`, see #1281
 * Fixed JSON decoder failing on inputs with `"FUN_REC_REF"` or `"FUN_REC_CTOR"`
 * Correctly resolve higher-order operators in names instances, see #1289
+* Fix ITF output for singleton functions, see #1293
