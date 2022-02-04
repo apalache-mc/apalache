@@ -1,6 +1,6 @@
 # Idiomatic TLA+
 
-**Authors:** Shon Feder, Igor Konnov + (who likes to contribute?)
+**Authors:** Shon Feder, Igor Konnov, Gabriela Mafra + (who likes to contribute?)
 
 _This document is under construction.
 If you like to contribute, open a pull request._
@@ -63,7 +63,7 @@ __Idiom 5:__ Introduce pure operators :see_no_evil:
 
 __Idiom 6:__ Introduce a naming convention for operator parameters :passport_control:
 
-__Idiom 7:__ Use Boolean operators in actions, not `IF-THEN-ELSE` :no_good:
+__Idiom 7:__ [Use Boolean operators in actions, not `IF-THEN-ELSE`](007if-then-else.md) :no_good:
 
 __Idiom 8:__ `CHOOSE` smart, prefer `\E` :guardsman:
 
