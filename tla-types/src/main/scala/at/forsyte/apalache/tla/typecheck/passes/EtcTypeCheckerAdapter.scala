@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.typecheck.passes
 
 import at.forsyte.apalache.infra.{ErrorMessage, ExceptionAdapter, FailureMessage, NormalErrorMessage}
+import at.forsyte.apalache.io.annotations.AnnotationParserError
 import at.forsyte.apalache.tla.imp.SanyException
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
@@ -20,6 +21,9 @@ class EtcTypeCheckerAdapter @Inject() (sourceStore: SourceStore, changeListener:
   override def toMessage: PartialFunction[Exception, ErrorMessage] = {
     case err: SanyException =>
       NormalErrorMessage("Error by TLA+ parser: " + err.getMessage)
+
+    case err: AnnotationParserError =>
+      NormalErrorMessage("Syntax error in annotation: " + err.getMessage)
 
     case err: TypingInputException =>
       NormalErrorMessage("Typing input error: " + err.getMessage)

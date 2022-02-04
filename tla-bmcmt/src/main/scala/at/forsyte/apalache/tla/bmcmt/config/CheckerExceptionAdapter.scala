@@ -2,13 +2,14 @@ package at.forsyte.apalache.tla.bmcmt.config
 
 import at.forsyte.apalache.infra.{ErrorMessage, ExceptionAdapter, FailureMessage, NormalErrorMessage}
 import at.forsyte.apalache.io.ConfigurationError
+import at.forsyte.apalache.io.annotations.AnnotationParserError
 import at.forsyte.apalache.tla.assignments.AssignmentException
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.imp.SanyException
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.{
-  LanguagePredError, MalformedSepecificationError, MalformedTlaError, OutdatedAnnotationsError, TypingException, UID
+  LanguagePredError, MalformedSepecificationError, MalformedTlaError, OutdatedAnnotationsError, TypingException, UID,
 }
 import at.forsyte.apalache.tla.pp.{IrrecoverablePreprocessingError, NotInKeraError, OverridingError, TlaInputError}
 import at.forsyte.apalache.tla.typecheck.TypingInputException
@@ -30,6 +31,9 @@ class CheckerExceptionAdapter @Inject() (sourceStore: SourceStore, changeListene
     // normal errors
     case err: SanyException =>
       NormalErrorMessage("Error by TLA+ parser: " + err.getMessage)
+
+    case err: AnnotationParserError =>
+      NormalErrorMessage("Syntax error in annotation: " + err.getMessage)
 
     case err: ConfigurationError =>
       NormalErrorMessage("Configuration error (see the manual): " + err.getMessage)
