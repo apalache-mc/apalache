@@ -3,13 +3,13 @@ package at.forsyte.apalache.tla.imp.passes
 import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
 import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.io.annotations.store._
-import at.forsyte.apalache.io.json.impl.{Type1TagReader, UJsonRep, UJsonToTla}
+import at.forsyte.apalache.io.json.impl.{DefaultTagReader, UJsonRep, UJsonToTla}
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{CyclicDependencyError, TlaModule}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.standard.DeclarationSorter
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
-import at.forsyte.apalache.tla.imp.{SanyImporter, SanyImporterException}
+import at.forsyte.apalache.tla.imp.{SanyImporter, SanyImporterException, utils}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -37,7 +37,7 @@ class SanyParserPassImpl @Inject() (
     if (filename.endsWith(".json")) {
       try {
         val moduleJson = UJsonRep(ujson.read(new File(filename)))
-        val modules = new UJsonToTla(Some(sourceStore))(Type1TagReader).fromRoot(moduleJson)
+        val modules = new UJsonToTla(Some(sourceStore))(DefaultTagReader).fromRoot(moduleJson)
         rootModule = modules match {
           case rMod +: Nil => Some(rMod)
           case _           => None
@@ -73,41 +73,7 @@ class SanyParserPassImpl @Inject() (
         writerFactory.writeModuleAllFormats(rootModule.get.copy(name = "00_OutParser"), TlaWriter.STANDARD_MODULES)
 
         // write parser output to specified destination, if requested
-        options.get[String]("io", "output").foreach { output =>
-          val outfile = new File(output)
-          val outfileName = outfile.toString()
-
-          val ext = FilenameUtils.getExtension(outfileName)
-          val name = FilenameUtils.getBaseName(outfileName)
-
-          ext match {
-            case "tla" =>
-              writerFactory.writeModuleToTla(
-                  rootModule.get.copy(name),
-                  TlaWriter.STANDARD_MODULES,
-                  Some(outfile),
-              )
-            case "json" =>
-              writerFactory.writeModuleToJson(
-                  rootModule.get.copy(name),
-                  TlaWriter.STANDARD_MODULES,
-                  Some(outfile),
-              )
-            case _ =>
-              logger.error(s"  > Unrecognized file format: ${outfile.toString}. Supported formats: .tla and .json")
-          }
-
-          if (options.getOrElse[Boolean]("general", "debug", false)) {
-            val sourceLocator =
-              SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
-            rootModule.get.operDeclarations foreach sourceLocator.checkConsistency
-          }
-          if (options.getOrElse[Boolean]("general", "debug", false)) {
-            val sourceLocator =
-              SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
-            rootModule.get.operDeclarations foreach sourceLocator.checkConsistency
-          }
-        }
+        utils.writeToOutput(rootModule.get, options, writerFactory, logger, sourceStore)
 
         rootModule.map { m => nextPass.updateModule(this, m) }
         true

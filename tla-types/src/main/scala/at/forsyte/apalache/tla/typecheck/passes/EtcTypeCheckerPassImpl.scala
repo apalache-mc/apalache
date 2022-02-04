@@ -9,9 +9,10 @@ import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
-import at.forsyte.apalache.tla.lir.{TlaModule, TypeTag, UID, Untyped, ModuleProperty}
+import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule, TypeTag, UID, Untyped}
 import at.forsyte.apalache.tla.typecheck.TypeCheckerTool
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer
+import at.forsyte.apalache.tla.imp.utils
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -61,6 +62,9 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
           dumpToJson(newModule, "post")
           writerFactory.writeModuleAllFormats(newModule.copy(name = s"${passNumber}_Out$name"),
               TlaWriter.STANDARD_MODULES)
+
+          utils.writeToOutput(newModule, options, writerFactory, logger, sourceStore)
+
           nextPass.updateModule(this, newModule)
           true
 

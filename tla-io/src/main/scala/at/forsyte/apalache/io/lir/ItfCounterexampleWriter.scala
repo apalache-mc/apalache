@@ -113,7 +113,7 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
       ujson.Obj(mutable.LinkedHashMap(keys.zip(values): _*))
 
     case OperEx(TlaOper.apply, NameEx(":>"), key, value) =>
-      ujson.Obj("#map" -> ujson.Arr(exToJson(key), exToJson(value)))
+      ujson.Obj("#map" -> ujson.Arr(ujson.Arr(exToJson(key), exToJson(value))))
 
     case e @ OperEx(TlaOper.apply, NameEx("@@"), _, _) =>
       ujson.Obj("#map" -> collectFun(e))
