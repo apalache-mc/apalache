@@ -26,7 +26,8 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) exte
    * @return the flag that indicates whether the module is well-typed
    */
   def check(listener: TypeCheckerListener, module: TlaModule): Boolean = {
-    val varPool = new TypeVarPool()
+    val maxTypeVar = findMaxUsedTypeVar(module)
+    val varPool = new TypeVarPool(maxTypeVar + 1)
     val aliasSubstitution = loadTypeAliases(module.declarations)
     val toEtc = new ToEtcExpr(annotationStore, aliasSubstitution, varPool)
 
@@ -70,7 +71,7 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) exte
     } else {
       val transformer = new TypeRewriter(tracker, defaultTag)(recorder.toMap)
       val taggedDecls = module.declarations.map(transformer(_))
-      Some(new TlaModule(module.name, taggedDecls))
+      Some(TlaModule(module.name, taggedDecls))
     }
   }
 
@@ -83,7 +84,7 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) exte
         annotations.filter(_.name == StandardAnnotations.TYPE_ALIAS).foreach { annot =>
           annot.args match {
             case Seq(AnnotationStr(text)) =>
-              aliases += parseTypeAlias(decl.name, aliases, text)
+              aliases += parseTypeAlias(decl.name, text)
 
             case args =>
               throw new TypingInputException(
@@ -98,7 +99,7 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) exte
   }
 
   // parse type from its text representation
-  private def parseTypeAlias(where: String, aliases: Map[String, TlaType1], text: String): (String, TlaType1) = {
+  private def parseTypeAlias(where: String, text: String): (String, TlaType1) = {
     try {
       DefaultType1Parser.parseAlias(text)
     } catch {
@@ -106,5 +107,40 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) exte
         logger.error("Parsing error in the alias annotation: " + text)
         throw new TypingInputException(s"Parser error in type alias of $where: ${e.msg}", UID.nullId)
     }
+  }
+
+  // Find the maximum index used in type tags of a module.
+  // We need this index to initialize the variable pool,
+  // so the fresh type variables do not conflict with the old type variables.
+  private def findMaxUsedTypeVar(module: TlaModule): Int = {
+    def findInTag: TypeTag => Int = {
+      case Typed(tt: TlaType1) =>
+        val used = tt.usedNames
+        if (used.isEmpty) -1 else used.max
+
+      case _ => -1
+    }
+
+    def findInEx: TlaEx => Int = {
+      // only LET-IN expressions may introduce fresh type variables, as we have let polymorphism
+      case LetInEx(body, defs @ _*) =>
+        defs.map(findInDecl).foldLeft(findInEx(body))(Math.max)
+
+      case OperEx(_, args @ _*) =>
+        args.map(findInEx).foldLeft(-1)(Math.max)
+
+      case _ =>
+        -1
+    }
+
+    def findInDecl: TlaDecl => Int = {
+      case d @ TlaOperDecl(_, _, body) =>
+        Math.max(findInEx(body), findInTag(d.typeTag))
+
+      case d =>
+        findInTag(d.typeTag)
+    }
+
+    module.declarations.map(findInDecl).foldLeft(-1)(Math.max)
   }
 }
