@@ -9,36 +9,37 @@ import at.forsyte.apalache.tla.lir.{TlaModule, ModuleProperty}
 @RunWith(classOf[JUnitRunner])
 class TestPassChainExecutor extends FunSuite {
   // Helper class to enable instantiation of different passes to be tested
-  class ParametrizedPass(val nextPass: Pass with TlaModuleMixin, result: Boolean, deps: Set[ModuleProperty.Value],
-      transfs: Set[ModuleProperty.Value])
-      extends Pass with TlaModuleMixin {
+  class ParametrizedPass(result: Boolean, deps: Set[ModuleProperty.Value], transfs: Set[ModuleProperty.Value])
+      extends Pass {
     override def name = "TestPass"
-    override def execute() = {
-      nextPass.updateModule(this, new TlaModule("TestModule", Seq()))
-      result
+    override def execute(tlaModule: TlaModule): Option[TlaModule] = {
+      if (result) {
+        Some(new TlaModule("TestModule", Seq()))
+      } else {
+        None
+      }
     }
     override def dependencies = deps
     override def transformations = transfs
   }
 
-  private val terminalPass = new TerminalPassWithTlaModule
   private val options = new WriteablePassOptions()
 
   test("""Executes a correctly ordered chain""") {
-    val pass2 = new ParametrizedPass(terminalPass, true, Set(ModuleProperty.Inlined), Set())
-    val pass1 = new ParametrizedPass(pass2, true, Set(), Set(ModuleProperty.Inlined))
+    val pass2 = new ParametrizedPass(true, Set(ModuleProperty.Inlined), Set())
+    val pass1 = new ParametrizedPass(true, Set(), Set(ModuleProperty.Inlined))
 
-    val executor = new PassChainExecutor(options, pass1)
+    val executor = new PassChainExecutor(options, Seq(pass1, pass2))
     val result = executor.run()
-    assert(result.equals(Some(terminalPass)))
+    assert(result.isDefined)
   }
 
   test("""Throws error on a bad ordered chain""") {
     // Inlined is a unmet dependency
-    val pass2 = new ParametrizedPass(terminalPass, true, Set(ModuleProperty.Inlined), Set())
-    val pass1 = new ParametrizedPass(pass2, true, Set(), Set())
+    val pass2 = new ParametrizedPass(true, Set(ModuleProperty.Inlined), Set())
+    val pass1 = new ParametrizedPass(true, Set(), Set())
 
-    val executor = new PassChainExecutor(options, pass1)
+    val executor = new PassChainExecutor(options, Seq(pass1, pass2))
     val thrown = intercept[Exception] {
       executor.run()
     }
@@ -48,10 +49,10 @@ class TestPassChainExecutor extends FunSuite {
 
   test("""Returns empty result when an execution is faulty""") {
     // execute() will return false for pass2
-    val pass2 = new ParametrizedPass(terminalPass, false, Set(), Set())
-    val pass1 = new ParametrizedPass(pass2, true, Set(), Set())
+    val pass2 = new ParametrizedPass(false, Set(), Set())
+    val pass1 = new ParametrizedPass(true, Set(), Set())
 
-    val executor = new PassChainExecutor(options, pass1)
+    val executor = new PassChainExecutor(options, Seq(pass1, pass2))
 
     val result = executor.run()
     assert(result.isEmpty)
