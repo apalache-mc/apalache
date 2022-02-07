@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.typecheck.passes
 
 import at.forsyte.apalache.infra.ExceptionAdapter
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TerminalPassWithTlaModule, WriteablePassOptions, ToolModule}
+import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TerminalPass, WriteablePassOptions, ToolModule}
 import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
@@ -37,27 +37,16 @@ class TypeCheckerModule extends ToolModule {
     bind(classOf[TransformationListener])
       .to(classOf[ChangeListener])
 
-    // SanyParserPassImpl is the default implementation of SanyParserPass
-    bind(classOf[SanyParserPass])
-      .to(classOf[SanyParserPassImpl])
-    // and it also the initial pass for PassChainExecutor
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("InitialPass"))
-      .to(classOf[SanyParserPass])
-
-    // EtcTypeCheckerPassImpl
-    bind(classOf[EtcTypeCheckerPass])
-      .to(classOf[EtcTypeCheckerPassImpl])
-    // the type checker is the next one after the parser
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterParser"))
-      .to(classOf[EtcTypeCheckerPass])
-
-    // the next pass after EtcTypeCheckerPass is the terminal pass
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterTypeChecker"))
-      .to(classOf[TerminalPassWithTlaModule])
+    // Bind all passes
+    bind(classOf[SanyParserPass]).to(classOf[SanyParserPassImpl])
+    bind(classOf[EtcTypeCheckerPass]).to(classOf[EtcTypeCheckerPassImpl])
   }
 
-  override def passes: Seq[Class[_ <: Pass]] = Seq()
+  override def passes: Seq[Class[_ <: Pass]] = {
+    Seq(
+        classOf[SanyParserPass],
+        classOf[EtcTypeCheckerPassImpl],
+        classOf[TerminalPass],
+    )
+  }
 }

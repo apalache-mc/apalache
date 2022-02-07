@@ -1,3 +1,3 @@
 package at.forsyte.apalache.infra.passes
 
-class TerminalPassWithTlaModule extends TerminalPass with TlaModuleMixin
+class TerminalPassWithTlaModule extends TerminalPass

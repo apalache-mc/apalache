@@ -66,7 +66,7 @@ class CheckerModule extends ToolModule {
     bind(classOf[BoundedCheckerPass]).to(classOf[BoundedCheckerPassImpl])
   }
 
-  def passes: Seq[Class[_ <: Pass]] = {
+  override def passes: Seq[Class[_ <: Pass]] = {
     Seq(
         classOf[SanyParserPass],
         // The next pass is Snowcat that is called EtcTypeCheckerPassImpl for now.
