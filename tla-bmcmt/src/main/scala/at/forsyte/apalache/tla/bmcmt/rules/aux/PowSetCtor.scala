@@ -3,7 +3,8 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.bmcmt.types.FinSetT
+import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT}
+import at.forsyte.apalache.tla.bmcmt.util.ConsChainUtil
 import at.forsyte.apalache.tla.lir.BuilderEx
 
 /**
@@ -29,16 +30,16 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
       val subsetCell = arena.topCell
       arena = arena.appendHas(subsetCell, filtered: _*)
       if (filtered.nonEmpty) {
-        def consChain(elems: Seq[ArenaCell]): BuilderEx = {
-          val elem = elems.head
-          val inSubset = tla.apalacheStoreInSet(elem.toNameEx, subsetCell.toNameEx)
-          val inSet = tla.apalacheSelectInSet(elem.toNameEx, set.toNameEx)
-
-          elems.tail match {
-            case Seq() => tla.apalacheChain(inSubset, subsetCell.toNameEx, inSet)
-            case tail  => tla.apalacheChain(inSubset, consChain(tail), inSet)
-          }
-        }
+        def consChain(elems: Seq[ArenaCell]): BuilderEx =
+          ConsChainUtil.consChainFold[ArenaCell](
+            elems,
+            subsetCell.toNameEx,
+            { elem =>
+              val inSubset = tla.apalacheStoreInSet(elem.toNameEx, subsetCell.toNameEx)
+              val inSet = tla.apalacheSelectInSet(elem.toNameEx, set.toNameEx)
+              (inSubset, inSet)
+            }
+          )
 
         val cons = consChain(filtered)
         rewriter.solverContext.assertGroundExpr(tla.apalacheAssignChain(subsetCell.toNameEx, cons))
@@ -65,15 +66,15 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
     val powsetCell = arena.topCell
     arena = arena.appendHas(powsetCell, subsets: _*)
     if (subsets.nonEmpty) {
-      def consChain(subsets: Seq[ArenaCell]): BuilderEx = {
-        val subset = subsets.head
-        val inPowset = tla.apalacheStoreInSet(subset.toNameEx, powsetCell.toNameEx)
-
-        subsets.tail match {
-          case Seq() => tla.apalacheChain(inPowset, powsetCell.toNameEx)
-          case tail  => tla.apalacheChain(inPowset, consChain(tail))
-        }
-      }
+      def consChain(elems: Seq[ArenaCell]): BuilderEx =
+        ConsChainUtil.consChainFold[ArenaCell](
+          elems,
+          powsetCell.toNameEx,
+          { subset =>
+            val inPowset = tla.apalacheStoreInSet(subset.toNameEx, powsetCell.toNameEx)
+            (inPowset, tla.bool(true))
+          }
+        )
 
       val cons = consChain(subsets)
       rewriter.solverContext.assertGroundExpr(tla.apalacheAssignChain(powsetCell.toNameEx, cons))

@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.bmcmt.util.ConsChainUtil
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.values.TlaBool
@@ -628,17 +629,17 @@ class CherryPick(rewriter: SymbStateRewriter) {
     // are used to allow the SMT solver to consider all possible combinations of elems.
     def unconstrainElems(elems: Seq[ArenaCell]): Unit = {
       if (rewriter.solverContext.config.smtEncoding == arraysEncoding & elems.nonEmpty) {
-        def consChain(elems: Seq[ArenaCell]): BuilderEx = {
-          val elem = elems.head
-          val inResultSet = tla.apalacheStoreInSet(elem.toNameEx, resultSet.toNameEx)
-          nextState = nextState.updateArena(_.appendCell(BoolT()))
-          val pred = nextState.arena.topCell.toNameEx
-
-          elems.tail match {
-            case Seq() => tla.apalacheChain(inResultSet, resultSet.toNameEx, pred)
-            case tail  => tla.apalacheChain(inResultSet, consChain(tail), pred)
-          }
-        }
+        def consChain(elems: Seq[ArenaCell]): BuilderEx =
+          ConsChainUtil.consChainFold[ArenaCell](
+            elems,
+            resultSet.toNameEx,
+            { elem =>
+              val inResultSet = tla.apalacheStoreInSet(elem.toNameEx, resultSet.toNameEx)
+              nextState = nextState.updateArena(_.appendCell(BoolT()))
+              val pred = nextState.arena.topCell.toNameEx
+              (inResultSet, pred)
+            }
+          )
 
         val cons = consChain(elems)
         rewriter.solverContext.assertGroundExpr(tla.apalacheAssignChain(resultSet.toNameEx, cons))

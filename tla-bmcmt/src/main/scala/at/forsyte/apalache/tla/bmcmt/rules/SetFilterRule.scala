@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.bmcmt.util.ConsChainUtil
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{BuilderEx, NameEx, NullEx, OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.convenience._
@@ -61,18 +62,17 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // require each cell to satisfy the predicate
         def addCellCons(cellsAndPreds: Seq[(ArenaCell, TlaEx)]): Unit = {
           if (cellsAndPreds.nonEmpty) {
-            def consChain(cellsAndPreds: Seq[(ArenaCell, TlaEx)]): BuilderEx = {
-              val cell = cellsAndPreds.head._1
-              val pred = cellsAndPreds.head._2
-              val inNewSet = tla.apalacheStoreInSet(cell.toNameEx, newSetCell.toNameEx)
-              val inOldSet = tla.apalacheSelectInSet(cell.toNameEx, setCell.toNameEx)
-              val inOldSetAndPred = tla.and(pred, inOldSet)
-
-              cellsAndPreds.tail match {
-                case Seq() => tla.apalacheChain(inNewSet, newSetCell.toNameEx, inOldSetAndPred)
-                case tail  => tla.apalacheChain(inNewSet, consChain(tail), inOldSetAndPred)
-              }
-            }
+            def consChain(elems: Seq[(ArenaCell, TlaEx)]): BuilderEx =
+              ConsChainUtil.consChainFold[(ArenaCell, TlaEx)](
+                elems,
+                newSetCell.toNameEx,
+                { case (cell, pred) =>
+                  val inNewSet = tla.apalacheStoreInSet(cell.toNameEx, newSetCell.toNameEx)
+                  val inOldSet = tla.apalacheSelectInSet(cell.toNameEx, setCell.toNameEx)
+                  val inOldSetAndPred = tla.and(pred, inOldSet)
+                  (inNewSet, inOldSetAndPred)
+                }
+              )
 
             val cons = consChain(cellsAndPreds) // Produces a chain of SMT store
             rewriter.solverContext.assertGroundExpr(tla.apalacheAssignChain(newSetCell.toNameEx, cons))
@@ -81,19 +81,18 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         def addCellConsWithSmtMap(cellsAndPreds: Seq[(ArenaCell, TlaEx)]): Unit = {
           if (cellsAndPreds.nonEmpty) {
-            def consChain(cellsAndPreds: Seq[(ArenaCell, TlaEx)]): BuilderEx = {
-              val cell = cellsAndPreds.head._1
-              val pred = cellsAndPreds.head._2
-              val inNewSet = tla.apalacheSelectInSet(cell.toNameEx, newSetCell.toNameEx)
-              val inOldSet = tla.apalacheSelectInSet(cell.toNameEx, setCell.toNameEx)
-              val inOldSetAndPred = tla.and(pred, inOldSet)
-              val and = tla.and(tla.eql(inNewSet, inOldSetAndPred))
-
-              cellsAndPreds.tail match {
-                case Seq() => tla.apalacheChain(and, tla.bool(true))
-                case tail  => tla.apalacheChain(and, consChain(tail))
-              }
-            }
+            def consChain(elems: Seq[(ArenaCell, TlaEx)]): BuilderEx =
+              ConsChainUtil.consChainFold[(ArenaCell, TlaEx)](
+                elems,
+                tla.bool(true),
+                { case (cell, pred) =>
+                  val inNewSet = tla.apalacheSelectInSet(cell.toNameEx, newSetCell.toNameEx)
+                  val inOldSet = tla.apalacheSelectInSet(cell.toNameEx, setCell.toNameEx)
+                  val inOldSetAndPred = tla.and(pred, inOldSet)
+                  val and = tla.and(tla.eql(inNewSet, inOldSetAndPred))
+                  (and, tla.bool(true))
+                }
+              )
 
             val cons = consChain(cellsAndPreds) // Produces a chain of conjunctions of conditional SMT select
             rewriter.solverContext.assertGroundExpr(tla.apalacheSmtMap(setCell.toNameEx, cons, newSetCell.toNameEx))
