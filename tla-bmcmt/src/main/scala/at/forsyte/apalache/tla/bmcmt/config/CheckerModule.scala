@@ -86,7 +86,6 @@ class CheckerModule extends ToolModule {
         classOf[PostTypeCheckerPassImpl],
         // BoundedCheckerPass is in the very end of the pipeline
         classOf[BoundedCheckerPass],
-        classOf[TerminalPass],
     )
   }
 

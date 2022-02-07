@@ -86,7 +86,6 @@ class ReTLAToVMTModule extends ToolModule {
         classOf[PostTypeCheckerPassImpl],
         // ConstraintGenPass is in the very end of the pipeline
         classOf[TranspilePass],
-        classOf[TerminalPass],
     )
   }
 
