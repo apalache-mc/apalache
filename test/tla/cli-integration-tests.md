@@ -1784,7 +1784,6 @@ PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
  > Your types are purrfect!
  > All expressions are typed
-PASS #2: Terminal
 Type checker [OK]
 ...
 EXITCODE: OK
@@ -1812,7 +1811,6 @@ PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
  > Your types are purrfect!
  > All expressions are typed
-PASS #2: Terminal
 Type checker [OK]
 ...
 EXITCODE: OK
@@ -1827,7 +1825,6 @@ PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
  > Your types are purrfect!
  > All expressions are typed
-PASS #2: Terminal
 Type checker [OK]
 ...
 EXITCODE: OK
@@ -1842,7 +1839,6 @@ PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
  > Your types are purrfect!
  > All expressions are typed
-PASS #2: Terminal
 Type checker [OK]
 ...
 EXITCODE: OK
@@ -1875,7 +1871,6 @@ PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
  > Your types are purrfect!
  > All expressions are typed
-PASS #2: Terminal
 Type checker [OK]
 ...
 EXITCODE: OK
@@ -1890,7 +1885,6 @@ PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
  > Your types are purrfect!
  > All expressions are typed
-PASS #2: Terminal
 Type checker [OK]
 ...
 EXITCODE: OK
