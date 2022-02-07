@@ -86,6 +86,7 @@
 - [Keep state variables to the minimum](idiomatic/000keep-minimum-state-variables.md)
 - [Update state variables with assignments](idiomatic/001assignments.md)
 - [Apply primes only to state variables](idiomatic/002primes.md)
+- [Use Boolean operators in actions, not `IF-THEN-ELSE`](idiomatic/007if-then-else.md)
 - [Avoid sets of mixed records](./idiomatic/003record-sets.md)
 
 
