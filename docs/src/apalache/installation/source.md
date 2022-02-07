@@ -5,8 +5,9 @@
    - Apalache currently requires Scala 12.0 so **you must install version 8 of
      Java, otherwise Scala will not compile!** See the [compatibility table][].
 3. Install [sbt][].
-   - On Debian Linux or Ubuntu: `sudo apt-get install maven`.
-   - On Arch: `sudo pacman -Syu maven`
+   - On Debian Linux or Ubuntu, [follow this guide](https://www.scala-sbt.org/1.x/docs/Installing-sbt-on-Linux.html#Ubuntu+and+other+Debian-based+distributions)
+   - On Arch: `sudo pacman -Syu sbt`
+   - On macOS / Homebrew: `brew install sbt`
 4. Clone the git repository: `git clone https://github.com/informalsystems/apalache.git`.
 5. Change into the project directory: `cd apalache`.
 7. Run `make`.
