@@ -26,8 +26,8 @@ class TestPassChainExecutor extends FunSuite {
   private val options = new WriteablePassOptions()
 
   test("""Executes a correctly ordered chain""") {
-    val pass2 = new ParametrizedPass(true, Set(ModuleProperty.Inlined), Set())
     val pass1 = new ParametrizedPass(true, Set(), Set(ModuleProperty.Inlined))
+    val pass2 = new ParametrizedPass(true, Set(ModuleProperty.Inlined), Set())
 
     val executor = new PassChainExecutor(options, Seq(pass1, pass2))
     val result = executor.run()
@@ -36,8 +36,8 @@ class TestPassChainExecutor extends FunSuite {
 
   test("""Throws error on a bad ordered chain""") {
     // Inlined is a unmet dependency
-    val pass2 = new ParametrizedPass(true, Set(ModuleProperty.Inlined), Set())
     val pass1 = new ParametrizedPass(true, Set(), Set())
+    val pass2 = new ParametrizedPass(true, Set(ModuleProperty.Inlined), Set())
 
     val executor = new PassChainExecutor(options, Seq(pass1, pass2))
     val thrown = intercept[Exception] {
@@ -48,9 +48,9 @@ class TestPassChainExecutor extends FunSuite {
   }
 
   test("""Returns empty result when an execution is faulty""") {
-    // execute() will return false for pass2
-    val pass2 = new ParametrizedPass(false, Set(), Set())
+    // execute() will return None for pass2
     val pass1 = new ParametrizedPass(true, Set(), Set())
+    val pass2 = new ParametrizedPass(false, Set(), Set())
 
     val executor = new PassChainExecutor(options, Seq(pass1, pass2))
 

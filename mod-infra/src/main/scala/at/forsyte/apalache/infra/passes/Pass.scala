@@ -27,8 +27,9 @@ trait Pass {
 
   /**
    * Run the pass.
+   * @param module  The module to be transformed by the pass
    *
-   * @return true, if the pass was successful
+   * @return the transformed module, if the pass was successful
    */
   def execute(module: TlaModule): Option[TlaModule]
 

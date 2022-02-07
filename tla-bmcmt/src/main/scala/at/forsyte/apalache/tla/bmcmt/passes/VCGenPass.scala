@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
-import at.forsyte.apalache.infra.passes.{Pass}
+import at.forsyte.apalache.infra.passes.Pass
 
 /**
  * The pass that generates verification conditions.
