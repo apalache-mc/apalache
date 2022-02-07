@@ -14,17 +14,17 @@ import at.forsyte.apalache.tla.lir.{MissingTransformationError, TlaModule, TlaMo
  * @author Igor Konnov
  */
 
-class PassChainExecutor(val options: WriteablePassOptions, passes: Seq[Pass with TlaModuleMixin]) extends LazyLogging {
+class PassChainExecutor(val options: WriteablePassOptions, passes: Seq[Pass]) extends LazyLogging {
 
-  def run(): Option[Pass with TlaModuleMixin] = {
-    def exec(seqNo: Int, passToRun: Pass with TlaModuleMixin, module: TlaModule): Option[TlaModule] = {
+  def run(): Option[TlaModule] = {
+    def exec(seqNo: Int, passToRun: Pass, module: TlaModule): Option[TlaModule] = {
       logger.info("PASS #%d: %s".format(seqNo, passToRun.name))
       val result = passToRun.execute(module)
       val outcome = if (result.isDefined) "[OK]" else "[FAIL]"
       logger.debug("PASS #%d: %s %s".format(seqNo, passToRun.name, outcome))
       result
     }
-    // val result: Option[TlaModule with TlaModuleProperties] = None
+
     var module = new TlaModule("empty", Seq()) with TlaModuleProperties
     passes.zipWithIndex.foreach { case (pass, index) =>
       // Raise error if the pass dependencies aren't satisfied
@@ -45,33 +45,6 @@ class PassChainExecutor(val options: WriteablePassOptions, passes: Seq[Pass with
           module = newModule
       }
     }
-    Some(passes.last)
+    Some(module)
   }
-
-  // def exec1(seqNo: Int, passToRun: Pass with TlaModuleMixin): Option[Pass with TlaModuleMixin] = {
-  //   logger.info("PASS #%d: %s".format(seqNo, passToRun.name))
-  //   val result = passToRun.execute()
-  //   val outcome = if (result) "[OK]" else "[FAIL]"
-  //   logger.debug("PASS #%d: %s %s".format(seqNo, passToRun.name, outcome))
-  //   if (!result) {
-  //     None // return the negative result
-  //   } else {
-  //     val nextPass = passToRun.nextPass
-  //     if (nextPass.hasModule) {
-  //       val module = nextPass.tlaModule.get
-
-  //       // Raise error if the pass dependencies aren't satisfied
-  //       if (!nextPass.dependencies.subsetOf(module.properties)) {
-  //         val missing = nextPass.dependencies -- module.properties
-  //         throw new MissingTransformationError(
-  //           s"${nextPass.name} cannot run for a module without the properties: ${missing.mkString(", ")}", module)
-  //       }
-
-  //       exec1(1 + seqNo, nextPass) // call the next pass in line
-  //     } else {
-  //       Some(passToRun) // finished
-  //     }
-  //   }
-  // }
-
 }

@@ -8,9 +8,8 @@ import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import at.forsyte.apalache.infra.log.LogbackConfigurator
-import at.forsyte.apalache.infra.passes.{
-  Pass, PassChainExecutor, PassOptions, TlaModuleMixin, WriteablePassOptions, ToolModule,
-}
+import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor, PassOptions, WriteablePassOptions, ToolModule}
+import at.forsyte.apalache.tla.lir.{TlaModule}
 import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorMessage, PassOptionException}
 import at.forsyte.apalache.io.{OutputManager, ReportGenerator}
 import at.forsyte.apalache.tla.bmcmt.config.{CheckerModule, ReTLAToVMTModule}
@@ -161,7 +160,7 @@ object Tool extends LazyLogging {
     options.set("io.outdir", OutputManager.outDir)
   }
 
-  private def runAndExit(executor: PassChainExecutor, msgIfOk: Pass with TlaModuleMixin => String, msgIfFail: String,
+  private def runAndExit(executor: PassChainExecutor, msgIfOk: TlaModule => String, msgIfFail: String,
       errCode: Int = ExitCodes.ERROR): Int = {
     val result = executor.run()
     if (result.isDefined) {
@@ -207,9 +206,8 @@ object Tool extends LazyLogging {
 
     runAndExit(
         executor,
-        r => {
-          val tlaModule = r.rawModule.get
-          s"Parsed successfully\nRoot module: ${tlaModule.name} with ${tlaModule.declarations.length} declarations."
+        m => {
+          s"Parsed successfully\nRoot module: ${m.name} with ${m.declarations.length} declarations."
         },
         "Parser has failed",
     )
@@ -382,7 +380,7 @@ object Tool extends LazyLogging {
 
   private def runForModule[C <: General](runner: (PassChainExecutor, C) => Int, module: ToolModule, cmd: C): Int = {
     val injector = Guice.createInjector(module)
-    val passes = module.passes.map { p => injector.getInstance(p).asInstanceOf[Pass with TlaModuleMixin] }
+    val passes = module.passes.map { p => injector.getInstance(p).asInstanceOf[Pass] }
     val options = injector.getInstance(classOf[WriteablePassOptions])
     val executor = new PassChainExecutor(options, passes)
 
