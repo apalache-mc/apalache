@@ -70,7 +70,7 @@ class CheckerModule extends ToolModule {
     Seq(
         classOf[SanyParserPass],
         // The next pass is Snowcat that is called EtcTypeCheckerPassImpl for now.
-        // We provide guice with a concrete implementation here, as we also use PostTypeCheckerPassImpl later in the pipeline.
+        // We use a concrete implementation here, as we also do with PostTypeCheckerPassImpl later in the pipeline.
         classOf[EtcTypeCheckerPassImpl],
         classOf[ConfigurationPass],
         classOf[DesugarerPass],
