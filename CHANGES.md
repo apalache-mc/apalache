@@ -2,6 +2,12 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.20.2
+
+### Bug fixes
+
+ * Fix polymorphic types when the type checker is called twice, see #1300
+
 ## 0.20.1
 
 ### Breaking changes
