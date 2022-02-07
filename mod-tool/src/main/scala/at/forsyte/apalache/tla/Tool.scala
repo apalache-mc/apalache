@@ -8,7 +8,9 @@ import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import at.forsyte.apalache.infra.log.LogbackConfigurator
-import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor, PassOptions, TlaModuleMixin, WriteablePassOptions}
+import at.forsyte.apalache.infra.passes.{
+  Pass, PassChainExecutor, PassOptions, TlaModuleMixin, WriteablePassOptions, ToolModule,
+}
 import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorMessage, PassOptionException}
 import at.forsyte.apalache.io.{OutputManager, ReportGenerator}
 import at.forsyte.apalache.tla.bmcmt.config.{CheckerModule, ReTLAToVMTModule}
@@ -105,28 +107,22 @@ object Tool extends LazyLogging {
           try {
             cmd match {
               case parse: ParseCmd =>
-                val injector = Guice.createInjector(new ParserModule)
-                handleExceptions(runParse, injector, parse)
+                runForModule(runParse, new ParserModule, parse)
 
               case check: CheckCmd =>
-                val injector = Guice.createInjector(new CheckerModule)
-                handleExceptions(runCheck, injector, check)
+                runForModule(runCheck, new CheckerModule, check)
 
               case test: TestCmd =>
-                val injector = Guice.createInjector(new CheckerModule)
-                handleExceptions(runTest, injector, test)
+                runForModule(runTest, new CheckerModule, test)
 
               case typecheck: TypeCheckCmd =>
-                val injector = Guice.createInjector(new TypeCheckerModule)
-                handleExceptions(runTypeCheck, injector, typecheck)
+                runForModule(runTypeCheck, new TypeCheckerModule, typecheck)
 
               case server: ServerCmd =>
-                val injector = Guice.createInjector(new CheckerModule)
-                handleExceptions(runServer, injector, server)
+                runForModule(runServer, new CheckerModule, server)
 
               case constrain: TranspileCmd =>
-                val injector = Guice.createInjector(new ReTLAToVMTModule)
-                handleExceptions(runConstrain, injector, constrain)
+                runForModule(runConstrain, new ReTLAToVMTModule, constrain)
 
               case config: ConfigCmd =>
                 configure(config)
@@ -196,9 +192,8 @@ object Tool extends LazyLogging {
     executor.options.set("checker.length", cmd.length)
   }
 
-  private def runParse(injector: => Injector, parse: ParseCmd): Int = {
+  private def runParse(executor: PassChainExecutor, parse: ParseCmd): Int = {
     // here, we implement a terminal pass to get the parse results
-    val executor = injector.getInstance(classOf[PassChainExecutor])
 
     // init
     logger.info("Parse " + parse.file)
@@ -220,9 +215,7 @@ object Tool extends LazyLogging {
     )
   }
 
-  private def runCheck(injector: => Injector, check: CheckCmd): Int = {
-    val executor = injector.getInstance(classOf[PassChainExecutor])
-
+  private def runCheck(executor: PassChainExecutor, check: CheckCmd): Int = {
     setCoreOptions(executor, check)
 
     var tuning =
@@ -254,9 +247,8 @@ object Tool extends LazyLogging {
     )
   }
 
-  private def runTest(injector: => Injector, test: TestCmd): Int = {
+  private def runTest(executor: PassChainExecutor, test: TestCmd): Int = {
     // This is a special version of the `check` command that is tuned towards testing scenarios
-    val executor = injector.getInstance(classOf[PassChainExecutor])
 
     logger.info(
         "Checker options: filename=%s, before=%s, action=%s, after=%s"
@@ -299,9 +291,8 @@ object Tool extends LazyLogging {
     )
   }
 
-  private def runTypeCheck(injector: => Injector, typecheck: TypeCheckCmd): Int = {
+  private def runTypeCheck(executor: PassChainExecutor, typecheck: TypeCheckCmd): Int = {
     // type checker
-    val executor = injector.getInstance(classOf[PassChainExecutor])
 
     logger.info("Type checking " + typecheck.file)
 
@@ -320,10 +311,7 @@ object Tool extends LazyLogging {
     )
   }
 
-  private def runServer(injector: => Injector, server: ServerCmd): Int = {
-    // type checker
-    val executor = injector.getInstance(classOf[PassChainExecutor])
-
+  private def runServer(executor: PassChainExecutor, server: ServerCmd): Int = {
     logger.info("Running server...")
 
     // NOTE Must go after all other options are set due to side-effecting
@@ -333,9 +321,7 @@ object Tool extends LazyLogging {
     ExitCodes.ERROR
   }
 
-  private def runConstrain(injector: => Injector, constrain: TranspileCmd): Int = {
-    val executor = injector.getInstance(classOf[PassChainExecutor])
-
+  private def runConstrain(executor: PassChainExecutor, constrain: TranspileCmd): Int = {
     setCoreOptions(executor, constrain)
     // for now, enable polymorphic types. We probably want to disable this option for the type checker
     executor.options.set("typechecker.inferPoly", true)
@@ -394,10 +380,20 @@ object Tool extends LazyLogging {
     props ++ hereProps
   }
 
-  private def handleExceptions[C <: General](runner: (=> Injector, C) => Int, injector: Injector, cmd: C): Int = {
+  private def runForModule[C <: General](runner: (PassChainExecutor, C) => Int, module: ToolModule, cmd: C): Int = {
+    val injector = Guice.createInjector(module)
+    val passes = module.passes.map { p => injector.getInstance(p).asInstanceOf[Pass with TlaModuleMixin] }
+    val options = injector.getInstance(classOf[WriteablePassOptions])
+    val executor = new PassChainExecutor(options, passes)
+
+    handleExceptions(runner, injector, executor, cmd)
+  }
+
+  private def handleExceptions[C <: General](runner: (PassChainExecutor, C) => Int, injector: Injector,
+      executor: PassChainExecutor, cmd: C): Int = {
     val adapter = injector.getInstance(classOf[ExceptionAdapter])
     try {
-      runner(injector, cmd)
+      runner(executor, cmd)
     } catch {
       case e: Exception if adapter.toMessage.isDefinedAt(e) =>
         adapter.toMessage(e) match {

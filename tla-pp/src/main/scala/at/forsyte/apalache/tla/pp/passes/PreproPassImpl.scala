@@ -25,7 +25,6 @@ import com.typesafe.scalalogging.LazyLogging
 class PreproPassImpl @Inject() (
     options: PassOptions, gen: UniqueNameGenerator, renaming: IncrementalRenaming, tracker: TransformationTracker,
     sourceStore: SourceStore, changeListener: ChangeListener, writerFactory: TlaWriterFactory,
-    @Named("AfterPrepro") val nextPass: Pass with TlaModuleMixin,
 ) extends PreproPassPartial(
         options,
         renaming,
@@ -33,18 +32,11 @@ class PreproPassImpl @Inject() (
         sourceStore,
         changeListener,
         writerFactory,
-        nextPass,
     ) {
 
-  /**
-   * Run the pass.
-   *
-   * @return true, if the pass was successful
-   */
-  override def execute(): Boolean = {
+  override def execute(tlaModule: TlaModule): Option[TlaModule] = {
     logger.info("  > Before preprocessing: unique renaming")
-    val input = tlaModule.get
-    val varSet = input.varDeclarations.map(_.name).toSet
+    val varSet = tlaModule.varDeclarations.map(_.name).toSet
 
     val transformationSequence: List[(String, TlaModuleTransformation)] =
       List(
@@ -55,7 +47,7 @@ class PreproPassImpl @Inject() (
           ("Keramelizer", ModuleByExTransformer(Keramelizer(gen, tracker))),
       )
 
-    executeWithParams(transformationSequence, postRename = true, KeraLanguagePred())
+    executeWithParams(tlaModule, transformationSequence, postRename = true, KeraLanguagePred())
   }
 
   override def dependencies = Set(ModuleProperty.Inlined)

@@ -1,7 +1,9 @@
 package at.forsyte.apalache.tla.imp.passes
 
 import at.forsyte.apalache.infra.ExceptionAdapter
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TerminalPassWithTlaModule, WriteablePassOptions}
+import at.forsyte.apalache.infra.passes.{
+  Pass, PassOptions, TerminalPassWithTlaModule, WriteablePassOptions, ToolModule, TlaModuleMixin,
+}
 import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.ParserExceptionAdapter
@@ -14,7 +16,7 @@ import com.google.inject.{AbstractModule, TypeLiteral}
  *
  * @author Igor Konnov
  */
-class ParserModule extends AbstractModule {
+class ParserModule extends ToolModule {
   override def configure(): Unit = {
     // the options singleton
     bind(classOf[PassOptions])
@@ -43,4 +45,6 @@ class ParserModule extends AbstractModule {
       .annotatedWith(Names.named("AfterParser"))
       .to(classOf[TerminalPassWithTlaModule])
   }
+
+  override def passes: Seq[Class[_ <: Pass]] = Seq()
 }

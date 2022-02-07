@@ -23,10 +23,9 @@ import com.typesafe.scalalogging.LazyLogging
  * @param nextPass        next pass to be used
  */
 class PostTypeCheckerPassImpl @Inject() (options: PassOptions, sourceStore: SourceStore, changeListener: ChangeListener,
-    tracker: TransformationTracker, annotationStore: AnnotationStore, tlaWriterFactory: TlaWriterFactory,
-    @Named("AfterPostTypeChecker") nextPass: Pass with TlaModuleMixin)
-    extends EtcTypeCheckerPassImpl(options, sourceStore, changeListener, tracker, annotationStore, tlaWriterFactory,
-        nextPass) with LazyLogging {
+    tracker: TransformationTracker, annotationStore: AnnotationStore, tlaWriterFactory: TlaWriterFactory)
+    extends EtcTypeCheckerPassImpl(options, sourceStore, changeListener, tracker, annotationStore, tlaWriterFactory)
+    with LazyLogging {
 
   // in the post-checking, polytypes are not allowed, as the model checker will not be able to handle them
   override def inferPoly: Boolean = false

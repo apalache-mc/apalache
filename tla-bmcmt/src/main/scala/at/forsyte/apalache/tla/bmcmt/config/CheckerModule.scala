@@ -22,7 +22,7 @@ import com.google.inject.{AbstractModule, TypeLiteral}
  *
  * @author Igor Konnov
  */
-class CheckerModule extends AbstractModule {
+class CheckerModule extends ToolModule {
   override def configure(): Unit = {
     // the options singleton
     bind(classOf[PassOptions])
@@ -51,98 +51,43 @@ class CheckerModule extends AbstractModule {
     bind(classOf[TransformationTracker])
       .toProvider(classOf[TransformationTrackerProvider])
 
-    // SanyParserPassImpl is the default implementation of SanyParserPass
-    bind(classOf[SanyParserPass])
-      .to(classOf[SanyParserPassImpl])
-    // and it also the initial pass for PassChainExecutor
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("InitialPass"))
-      .to(classOf[SanyParserPass])
+    // Bind all passes
+    bind(classOf[SanyParserPass]).to(classOf[SanyParserPassImpl])
+    bind(classOf[ConfigurationPass]).to(classOf[ConfigurationPassImpl])
+    bind(classOf[DesugarerPass]).to(classOf[DesugarerPassImpl])
+    bind(classOf[UnrollPass]).to(classOf[UnrollPassImpl])
+    bind(classOf[InlinePass]).to(classOf[InlinePassImpl])
+    bind(classOf[PrimingPass]).to(classOf[PrimingPassImpl])
+    bind(classOf[VCGenPass]).to(classOf[VCGenPassImpl])
+    bind(classOf[PreproPass]).to(classOf[PreproPassImpl])
+    bind(classOf[TransitionPass]).to(classOf[TransitionPassImpl])
+    bind(classOf[OptPass]).to(classOf[OptPassImpl])
+    bind(classOf[AnalysisPass]).to(classOf[AnalysisPassImpl])
+    bind(classOf[BoundedCheckerPass]).to(classOf[BoundedCheckerPassImpl])
+  }
 
-    // The next pass is Snowcat that is called EtcTypeCheckerPassImpl for now.
-    // We provide guice with a concrete implementation here, as we also use PostTypeCheckerPassImpl later in the pipeline.
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterParser"))
-      .to(classOf[EtcTypeCheckerPassImpl])
-
-    // the next pass is ConfigurationPass
-    bind(classOf[ConfigurationPass])
-      .to(classOf[ConfigurationPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterTypeChecker"))
-      .to(classOf[ConfigurationPass])
-
-    // the next pass is DesugarerPass
-    bind(classOf[DesugarerPass])
-      .to(classOf[DesugarerPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterConfiguration"))
-      .to(classOf[DesugarerPass])
-    // the next pass is UnrollPass
-    bind(classOf[UnrollPass])
-      .to(classOf[UnrollPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterDesugarer"))
-      .to(classOf[UnrollPass])
-    // the next pass is InlinePass
-    bind(classOf[InlinePass])
-      .to(classOf[InlinePassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterUnroll"))
-      .to(classOf[InlinePass])
-    // the next pass is PrimingPass
-    bind(classOf[PrimingPass])
-      .to(classOf[PrimingPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterInline"))
-      .to(classOf[PrimingPass])
-    // the next pass is VCGenPass
-    bind(classOf[VCGenPass])
-      .to(classOf[VCGenPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterPriming"))
-      .to(classOf[VCGenPass])
-    // the next pass is PreproPass
-    bind(classOf[PreproPass])
-      .to(classOf[PreproPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterVCGen"))
-      .to(classOf[PreproPass])
-    // the next pass is TransitionPass
-    bind(classOf[TransitionPass])
-      .to(classOf[TransitionPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterPrepro"))
-      .to(classOf[TransitionPass])
-    // the next pass is OptimizationPass
-    bind(classOf[OptPass])
-      .to(classOf[OptPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterTransitionFinder"))
-      .to(classOf[OptPass])
-    // the next pass is AnalysisPass
-    bind(classOf[AnalysisPass])
-      .to(classOf[AnalysisPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterOpt"))
-      .to(classOf[AnalysisPass])
-
-    // do the final type checking again, as preprocessing may have introduced gaps in the expression types
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterAnalysis"))
-      .to(classOf[PostTypeCheckerPassImpl])
-
-    // BoundedCheckerPass is in the very end of the pipeline
-    bind(classOf[BoundedCheckerPass])
-      .to(classOf[BoundedCheckerPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterPostTypeChecker"))
-      .to(classOf[BoundedCheckerPass])
-
-    // the final pass is TerminalPass
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterChecker"))
-      .to(classOf[TerminalPassWithTlaModule])
+  def passes: Seq[Class[_ <: Pass]] = {
+    Seq(
+        classOf[SanyParserPass],
+        // The next pass is Snowcat that is called EtcTypeCheckerPassImpl for now.
+        // We provide guice with a concrete implementation here, as we also use PostTypeCheckerPassImpl later in the pipeline.
+        classOf[EtcTypeCheckerPassImpl],
+        classOf[ConfigurationPass],
+        classOf[DesugarerPass],
+        classOf[UnrollPass],
+        classOf[InlinePass],
+        classOf[PrimingPass],
+        classOf[VCGenPass],
+        classOf[PreproPass],
+        classOf[TransitionPass],
+        classOf[OptPass],
+        classOf[AnalysisPass],
+        // do the final type checking again, as preprocessing may have introduced gaps in the expression types
+        classOf[PostTypeCheckerPassImpl],
+        // BoundedCheckerPass is in the very end of the pipeline
+        classOf[BoundedCheckerPass],
+        classOf[TerminalPass],
+    )
   }
 
 }

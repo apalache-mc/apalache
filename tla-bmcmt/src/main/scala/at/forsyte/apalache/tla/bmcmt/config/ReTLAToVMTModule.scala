@@ -22,7 +22,7 @@ import com.google.inject.{AbstractModule, TypeLiteral}
  *
  * @author Jure Kukovec
  */
-class ReTLAToVMTModule extends AbstractModule {
+class ReTLAToVMTModule extends ToolModule {
   override def configure(): Unit = {
     // the options singleton
     bind(classOf[PassOptions])
@@ -141,4 +141,5 @@ class ReTLAToVMTModule extends AbstractModule {
       .to(classOf[TerminalPass])
   }
 
+  override def passes: Seq[Class[_ <: Pass]] = Seq()
 }

@@ -22,14 +22,12 @@ import com.typesafe.scalalogging.LazyLogging
  * @param nextPass next pass to call
  */
 class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator, tracker: TransformationTracker,
-    writerFactory: TlaWriterFactory, @Named("AfterInline") val nextPass: Pass with TlaModuleMixin)
+    writerFactory: TlaWriterFactory)
     extends InlinePass with LazyLogging {
 
   override def name: String = "InlinePass"
 
-  override def execute(): Boolean = {
-    val baseModule = rawModule.get
-
+  override def execute(module: TlaModule): Option[TlaModule] = {
     /*
     Disable the preprocessing pass that introduces nullary operators for call results.
     We have to integrate it properly with the type checker.
@@ -40,7 +38,6 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
     }).toSet
     val module = appWrap.moduleTransform(operNames)(baseModule)
      */
-    val module = baseModule
 
     val transformationSequence: List[BodyMap => TlaExTransformation] = {
       val wrapHandler = CallByNameWrapHandler(tracker)
@@ -103,8 +100,7 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
     // dump the result of preprocessing
     writerFactory.writeModuleAllFormats(filtered.copy(name = "05_OutInline"), TlaWriter.STANDARD_MODULES)
 
-    nextPass.updateModule(this, filtered)
-    true
+    Some(filtered)
   }
 
   override def dependencies = Set(ModuleProperty.Unrolled)

@@ -30,20 +30,18 @@ import java.nio.file.Path
  */
 class ConfigurationPassImpl @Inject() (
     val options: WriteablePassOptions, tracker: TransformationTracker, writerFactory: TlaWriterFactory,
-    @Named("AfterConfiguration") val nextPass: Pass with TlaModuleMixin,
 ) extends ConfigurationPass with LazyLogging {
 
   override def name: String = "ConfigurationPass"
 
-  override def execute(): Boolean = {
+  override def execute(tlaModule: TlaModule): Option[TlaModule] = {
     // this pass is hard to read, too many things are happening here...
-    val currentModule = tlaModule.get
     val relevantOptions = new WriteablePassOptions()
     copyRelevantOptions(options, relevantOptions)
     // try to read from the TLC configuration file and produce constant overrides
-    val overrides = loadOptionsFromTlcConfig(currentModule, relevantOptions)
+    val overrides = loadOptionsFromTlcConfig(tlaModule, relevantOptions)
     val currentAndOverrides =
-      new TlaModule(currentModule.name, currentModule.declarations ++ overrides)
+      new TlaModule(tlaModule.name, tlaModule.declarations ++ overrides)
     setFallbackOptions(relevantOptions)
 
     // make sure that the required operators are defined
@@ -60,8 +58,7 @@ class ConfigurationPassImpl @Inject() (
     // dump the configuration result
     writerFactory.writeModuleAllFormats(configuredModule.copy(name = "02_OutConfig"), TlaWriter.STANDARD_MODULES)
 
-    nextPass.updateModule(this, configuredModule)
-    true
+    Some(configuredModule)
   }
 
   // if checker.init and checker.next are not set, set them to Init and Next, respectively

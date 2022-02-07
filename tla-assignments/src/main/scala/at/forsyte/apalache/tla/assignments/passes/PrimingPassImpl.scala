@@ -16,8 +16,7 @@ import com.typesafe.scalalogging.LazyLogging
 /**
  * PrimingPass adds primes to the variables in state initializers and constant initializers.
  */
-class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTracker, writerFactory: TlaWriterFactory,
-    @Named("AfterPriming") val nextPass: Pass with TlaModuleMixin)
+class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTracker, writerFactory: TlaWriterFactory)
     extends PrimingPass with LazyLogging {
 
   override def name: String = "PrimingPass"
@@ -26,10 +25,10 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
     seq.foldLeft(ex) { case (partial, tr) => tr(partial) }
   }
 
-  override def execute(): Boolean = {
-    val declarations = tlaModule.get.declarations
-    val varSet = tlaModule.get.varDeclarations.map(_.name).toSet
-    val constSet = tlaModule.get.constDeclarations.map(_.name).toSet
+  override def execute(tlaModule: TlaModule): Option[TlaModule] = {
+    val declarations = tlaModule.declarations
+    val varSet = tlaModule.varDeclarations.map(_.name).toSet
+    val constSet = tlaModule.constDeclarations.map(_.name).toSet
     val deepCopy = DeepCopy(tracker)
 
     val bodyMap = BodyMapFactory.makeFromDecls(declarations)
@@ -61,12 +60,11 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
     val initPrimed = Some(TlaOperDecl(initPrimedName, List(), newBody))
 
     val newDeclarations: Seq[TlaDecl] = declarations ++ Seq(cinitPrimed, initPrimed).flatten
-    val newModule = new TlaModule(tlaModule.get.name, newDeclarations)
+    val newModule = new TlaModule(tlaModule.name, newDeclarations)
 
     writerFactory.writeModuleAllFormats(newModule.copy(name = "06_OutPriming"), TlaWriter.STANDARD_MODULES)
 
-    nextPass.updateModule(this, newModule)
-    true
+    Some(newModule)
   }
 
   override def dependencies = Set(ModuleProperty.Unrolled, ModuleProperty.Configured)

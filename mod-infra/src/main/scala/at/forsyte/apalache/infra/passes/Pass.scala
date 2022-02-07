@@ -1,6 +1,6 @@
 package at.forsyte.apalache.infra.passes
 
-import at.forsyte.apalache.tla.lir.ModuleProperty
+import at.forsyte.apalache.tla.lir.{TlaModule, ModuleProperty}
 
 /**
  * <p>An analysis or transformation pass. Instead of explicitly setting
@@ -30,15 +30,7 @@ trait Pass {
    *
    * @return true, if the pass was successful
    */
-  def execute(): Boolean
-
-  /**
-   * Get the next pass in the chain. What is the next pass is up
-   * to the module configuration and the pass outcome.
-   *
-   * @return the next pass with the module trait
-   */
-  def nextPass: Pass with TlaModuleMixin
+  def execute(module: TlaModule): Option[TlaModule]
 
   /**
    * List the dependencies of the pass.

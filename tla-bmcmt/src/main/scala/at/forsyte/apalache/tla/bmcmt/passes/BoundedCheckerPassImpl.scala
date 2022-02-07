@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig}
 import at.forsyte.apalache.tla.bmcmt.trex._
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.NullEx
-import at.forsyte.apalache.tla.lir.ModuleProperty
+import at.forsyte.apalache.tla.lir.{TlaModule, ModuleProperty}
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.LanguageWatchdog
 import at.forsyte.apalache.tla.lir.transformations.standard.KeraLanguagePred
@@ -29,18 +29,12 @@ import java.nio.file.Path
  * @author Igor Konnov
  */
 class BoundedCheckerPassImpl @Inject() (val options: PassOptions, exprGradeStore: ExprGradeStore,
-    sourceStore: SourceStore, changeListener: ChangeListener,
-    @Named("AfterChecker") val nextPass: Pass with TlaModuleMixin)
+    sourceStore: SourceStore, changeListener: ChangeListener)
     extends BoundedCheckerPass with LazyLogging {
 
   override def name: String = "BoundedChecker"
 
-  override def execute(): Boolean = {
-    if (tlaModule.isEmpty) {
-      throw new CheckerException(s"The input of $name pass is not initialized", NullEx)
-    }
-    val module = tlaModule.get
-
+  override def execute(module: TlaModule): Option[TlaModule] = {
     for (decl <- module.operDeclarations) {
       LanguageWatchdog(KeraLanguagePred()).check(decl.body)
     }
@@ -84,7 +78,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, exprGradeStore
     val smtRandomSeed = tuning.getOrElse("smt.randomSeed", "0").toInt
     val solverConfig = SolverConfig(debug, smtProfile, smtRandomSeed, smtEncoding)
 
-    options.getOrElse[String]("checker", "algo", "incremental") match {
+    val result = options.getOrElse[String]("checker", "algo", "incremental") match {
       /*
         TODO: uncomment when the parallel checker is transferred from ik/multicore
       case "parallel" => runParallelChecker(params, input, tuning, nworkers)
@@ -94,6 +88,11 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, exprGradeStore
       case algo          => throw new IllegalArgumentException(s"Unexpected checker.algo=$algo")
     }
 
+    if (result) {
+      Some(module)
+    } else {
+      None
+    }
   }
 
   private def runIncrementalChecker(params: ModelCheckerParams, input: CheckerInput, tuning: Map[String, String],

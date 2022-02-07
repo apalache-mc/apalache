@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.typecheck.passes
 
 import at.forsyte.apalache.infra.ExceptionAdapter
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TerminalPassWithTlaModule, WriteablePassOptions}
+import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TerminalPassWithTlaModule, WriteablePassOptions, ToolModule}
 import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
@@ -12,7 +12,7 @@ import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import com.google.inject.{AbstractModule, TypeLiteral}
 import com.google.inject.name.Names
 
-class TypeCheckerModule extends AbstractModule {
+class TypeCheckerModule extends ToolModule {
 
   override def configure(): Unit = {
     // the options singleton
@@ -58,4 +58,6 @@ class TypeCheckerModule extends AbstractModule {
       .annotatedWith(Names.named("AfterTypeChecker"))
       .to(classOf[TerminalPassWithTlaModule])
   }
+
+  override def passes: Seq[Class[_ <: Pass]] = Seq()
 }

@@ -17,21 +17,16 @@ import com.typesafe.scalalogging.LazyLogging
  *
  * @author Igor Konnov
  */
-class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTracker, writerFactory: TlaWriterFactory,
-    @Named("AfterVCGen") val nextPass: Pass with TlaModuleMixin)
+class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTracker, writerFactory: TlaWriterFactory)
     extends VCGenPass with LazyLogging {
 
   override def name: String = "VCGen"
 
-  override def execute(): Boolean = {
-    if (tlaModule.isEmpty) {
-      throw new CheckerException(s"The input of $name pass is not initialized", NullEx)
-    }
-
+  override def execute(tlaModule: TlaModule): Option[TlaModule] = {
     val newModule =
       options.get[List[String]]("checker", "inv") match {
         case Some(invariants) =>
-          invariants.foldLeft(rawModule.get) { (mod, invName) =>
+          invariants.foldLeft(tlaModule) { (mod, invName) =>
             logger.info(s"  > Producing verification conditions from the invariant $invName")
             val optViewName = options.get[String]("checker", "view")
             if (optViewName.isDefined) {
@@ -41,13 +36,12 @@ class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTrac
           }
         case None =>
           logger.info("  > No invariant given. Only deadlocks will be checked")
-          tlaModule.get
+          tlaModule
       }
 
     writerFactory.writeModuleAllFormats(newModule.copy(name = "07_OutVCGen"), TlaWriter.STANDARD_MODULES)
 
-    nextPass.updateModule(this, newModule)
-    true
+    Some(newModule)
   }
 
   override def dependencies = Set(ModuleProperty.Inlined)

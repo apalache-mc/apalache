@@ -22,7 +22,7 @@ import java.nio.file.Path
 
 class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStore: SourceStore,
     changeListener: ChangeListener, tracker: TransformationTracker, val annotationStore: AnnotationStore,
-    val writerFactory: TlaWriterFactory, @Named("AfterTypeChecker") val nextPass: Pass with TlaModuleMixin)
+    val writerFactory: TlaWriterFactory)
     extends EtcTypeCheckerPass with LazyLogging {
 
   protected def inferPoly: Boolean = options.getOrElse[Boolean]("typecheck", "inferPoly", true)
@@ -31,47 +31,40 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
 
   override def name: String = "TypeCheckerSnowcat"
 
-  override def execute(): Boolean = {
-    if (tlaModule.isEmpty) {
-      logger.info(" > no input for type checker")
-      false
-    } else {
-      logger.info(" > Running Snowcat .::.")
-      dumpToJson(tlaModule.get, "pre")
+  override def execute(tlaModule: TlaModule): Option[TlaModule] = {
+    logger.info(" > Running Snowcat .::.")
+    dumpToJson(tlaModule, "pre")
 
-      val tool = new TypeCheckerTool(annotationStore, inferPoly)
+    val tool = new TypeCheckerTool(annotationStore, inferPoly)
 
-      // when this flag is true by the end of type checking, we have recovered the types of all expressions
-      var isTypeCoverageComplete = true
+    // when this flag is true by the end of type checking, we have recovered the types of all expressions
+    var isTypeCoverageComplete = true
 
-      def defaultTag(uid: UID): TypeTag = {
-        isTypeCoverageComplete = false
-        val locStr = findLoc(uid)
-        val msg = s"[$locStr]: Failed to recover the expression type for uid=$uid. You may see an error later."
-        logger.error(msg)
-        Untyped()
-      }
+    def defaultTag(uid: UID): TypeTag = {
+      isTypeCoverageComplete = false
+      val locStr = findLoc(uid)
+      val msg = s"[$locStr]: Failed to recover the expression type for uid=$uid. You may see an error later."
+      logger.error(msg)
+      Untyped()
+    }
 
-      val listener = new LoggingTypeCheckerListener(sourceStore, changeListener, inferPoly)
-      val taggedModule = tool.checkAndTag(tracker, listener, defaultTag, tlaModule.get)
+    val listener = new LoggingTypeCheckerListener(sourceStore, changeListener, inferPoly)
+    val taggedModule = tool.checkAndTag(tracker, listener, defaultTag, tlaModule)
 
-      taggedModule match {
-        case Some(newModule) =>
-          logger.info(" > Your types are purrfect!")
-          logger.info(if (isTypeCoverageComplete) " > All expressions are typed" else " > Some expressions are untyped")
-          dumpToJson(newModule, "post")
-          writerFactory.writeModuleAllFormats(newModule.copy(name = s"${passNumber}_Out$name"),
-              TlaWriter.STANDARD_MODULES)
+    taggedModule match {
+      case Some(newModule) =>
+        logger.info(" > Your types are purrfect!")
+        logger.info(if (isTypeCoverageComplete) " > All expressions are typed" else " > Some expressions are untyped")
+        dumpToJson(newModule, "post")
+        writerFactory.writeModuleAllFormats(newModule.copy(name = s"${passNumber}_Out$name"),
+            TlaWriter.STANDARD_MODULES)
 
-          utils.writeToOutput(newModule, options, writerFactory, logger, sourceStore)
+        utils.writeToOutput(newModule, options, writerFactory, logger, sourceStore)
 
-          nextPass.updateModule(this, newModule)
-          true
-
-        case None =>
-          logger.info(" > Snowcat asks you to fix the types. Meow.")
-          false
-      }
+        Some(newModule)
+      case None =>
+        logger.info(" > Snowcat asks you to fix the types. Meow.")
+        None
     }
   }
 

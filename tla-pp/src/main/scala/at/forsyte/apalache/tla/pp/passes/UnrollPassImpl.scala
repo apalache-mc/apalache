@@ -20,15 +20,12 @@ import com.typesafe.scalalogging.LazyLogging
  * @param nextPass next pass to call
  */
 class UnrollPassImpl @Inject() (val options: PassOptions, nameGenerator: UniqueNameGenerator,
-    tracker: TransformationTracker, renaming: IncrementalRenaming, writerFactory: TlaWriterFactory,
-    @Named("AfterUnroll") val nextPass: Pass with TlaModuleMixin)
+    tracker: TransformationTracker, renaming: IncrementalRenaming, writerFactory: TlaWriterFactory)
     extends UnrollPass with LazyLogging {
 
   override def name: String = "UnrollPass"
 
-  override def execute(): Boolean = {
-    val module = tlaModule.get
-
+  override def execute(module: TlaModule): Option[TlaModule] = {
     // We have to rename the input, as LOCAL-toplevel TLA+ functions get
     // introduced as LET-IN operators (copying the definition). The problem is,
     // the operator bodies may introduce namespace collisions, e.g. with
@@ -50,8 +47,7 @@ class UnrollPassImpl @Inject() (val options: PassOptions, nameGenerator: UniqueN
     // dump the result of preprocessing
     writerFactory.writeModuleAllFormats(newModule.copy(name = "04_OutUnroll"), TlaWriter.STANDARD_MODULES)
 
-    nextPass.updateModule(this, newModule)
-    true
+    Some(newModule)
   }
 
   override def dependencies = Set(ModuleProperty.Desugared)
