@@ -5,8 +5,10 @@ import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaTempOper}
 /**
  * This class computes the level of a TLA+ expression. See Lamport. Specifying Systems, p. 322.
  *
- * @param nameLevel a function that returns the level of a name.
- * @author Igor Konnov
+ * @param nameLevel
+ *   a function that returns the level of a name.
+ * @author
+ *   Igor Konnov
  */
 class TlaExLevelFinder(nameLevel: String => TlaLevel) {
   def apply(ex: TlaEx): TlaLevel = find(ex)
@@ -42,6 +44,6 @@ object TlaExLevelFinder {
       TlaTempOper.strongFairness -> TlaLevelTemporal,
       TlaTempOper.guarantees -> TlaLevelTemporal,
       TlaTempOper.AA -> TlaLevelTemporal,
-      TlaTempOper.EE -> TlaLevelTemporal
+      TlaTempOper.EE -> TlaLevelTemporal,
   )
 }

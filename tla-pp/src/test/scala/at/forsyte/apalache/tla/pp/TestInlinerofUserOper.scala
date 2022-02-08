@@ -52,14 +52,14 @@ class TestInlinerofUserOper extends FunSuite {
     // 1 = 0 \/ C(A()) >= 0
     val ex5 = or(
         eql(int(1), int(0)) ? "b",
-        ge(appOp(name("C") ? "C", appOp(name("A") ? "U") ? "i") ? "i", int(0)) ? "b"
+        ge(appOp(name("C") ? "C", appOp(name("A") ? "U") ? "i") ? "i", int(0)) ? "b",
     )
       .typed(types, "b")
     // LET X == C(p) IN X()
     val ex6 = letIn(
         appOp(name("X") ? "U") ? "i",
         declOp("X", appOp(name("C") ? "C", name("p") ? "i") ? "i")
-          .typedOperDecl(types, "U")
+          .typedOperDecl(types, "U"),
     ).typed(types, "i")
 
     // no inlining, as B is just passed by name
@@ -70,13 +70,13 @@ class TestInlinerofUserOper extends FunSuite {
     // the bodies of A and C are inlined
     val expected5 = or(
         eql(int(1), int(0)) ? "b",
-        ge(plus(name("k") ? "i", int(1)) ? "i", int(0)) ? "b"
+        ge(plus(name("k") ? "i", int(1)) ? "i", int(0)) ? "b",
     ).typed(types, "b")
     // C is inlined, but X is not
     val expected6 = letIn(
         appOp(name("X") ? "U") ? "i",
         declOp("X", plus(name("p") ? "i", int(1)) ? "i")
-          .typedOperDecl(types, "U")
+          .typedOperDecl(types, "U"),
     ).typed(types, "i")
 
     assert(expected1 == transformation(ex1))

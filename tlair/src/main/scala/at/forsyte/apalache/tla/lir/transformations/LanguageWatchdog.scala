@@ -3,12 +3,14 @@ package at.forsyte.apalache.tla.lir.transformations
 import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule, LanguagePredError}
 
 /**
- * Given a language predicate, the watchdog checks, whether an expression or a module satisfies the predicate.
- * If not, the watchdog throws UnexpectedLanguageError.
+ * Given a language predicate, the watchdog checks, whether an expression or a module satisfies the predicate. If not,
+ * the watchdog throws UnexpectedLanguageError.
  *
- * @param pred a language predicate
+ * @param pred
+ *   a language predicate
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class LanguageWatchdog(pred: LanguagePred) {
   private val predName: String = pred.getClass.getSimpleName

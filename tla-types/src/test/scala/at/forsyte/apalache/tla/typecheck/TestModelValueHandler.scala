@@ -27,7 +27,7 @@ class TestModelValueHandler extends FunSuite {
         ("A", "1"),
         ("A", "2"),
         ("B", "one"),
-        ("B", "two")
+        ("B", "two"),
     )
 
     val ctr = ModelValueHandler.construct _
@@ -42,8 +42,8 @@ class TestModelValueHandler extends FunSuite {
         ("A", "1"),
         ("A", "2"),
         ("B", "one"),
-        ("B", "two")
-    ) map { p => s"${p._2}_OF_${p._1}" }
+        ("B", "two"),
+    ).map { p => s"${p._2}_OF_${p._1}" }
 
     assert(
         values.forall(v => ti(v).map(x => ctr((x._1.name, x._2))).contains(v))

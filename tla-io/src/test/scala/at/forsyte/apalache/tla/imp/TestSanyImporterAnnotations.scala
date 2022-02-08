@@ -13,7 +13,8 @@ import scala.io.Source
 /**
  * Tests on parsing annotations with the SANY importer.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
 class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {

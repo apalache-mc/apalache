@@ -48,8 +48,8 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         }
 
         // compute predicates for all the cells, some may statically result in NullEx
-        val computedPreds: Seq[TlaEx] = potentialCells map eachElem
-        val filteredCellsAndPreds = (potentialCells zip computedPreds) filter (_._2 != NullEx)
+        val computedPreds: Seq[TlaEx] = potentialCells.map(eachElem)
+        val filteredCellsAndPreds = (potentialCells.zip(computedPreds)).filter(_._2 != NullEx)
 
         // get the result type from the type finder
         val resultType = CellT.fromTypeTag(ex.typeTag)

@@ -83,22 +83,21 @@ class TestIncrementalRenaming extends FunSuite with TestingPredefs with BeforeAn
         eql(
             plus(
                 name(makeName("x", 1)),
-                prime(name(makeName("z", 3)))
+                prime(name(makeName("z", 3))),
             ),
-            int(2)
+            int(2),
         ),
         prime(n_x),
-        name(makeName("x", 2))
+        name(makeName("x", 2)),
     )
 
     val ex2Map = nameCounterMapFromEx(takeMax = true)(ex2)
-    assert(
-        ex2Map ==
-          Map(
-              "x" -> 2,
-              "y" -> 8,
-              "z" -> 3
-          ))
+    assert(ex2Map ==
+      Map(
+          "x" -> 2,
+          "y" -> 8,
+          "z" -> 3,
+      ))
   }
 
   test("Test nameCounterMapFromEx [LET-IN TlaDecl]") {
@@ -114,12 +113,12 @@ class TestIncrementalRenaming extends FunSuite with TestingPredefs with BeforeAn
           and(
               ge(
                   name(p1Name),
-                  int(0)
+                  int(0),
               ),
-              primeInSingleton(n_x, name(p1Name))
+              primeInSingleton(n_x, name(p1Name)),
           ),
           p1Name,
-          (makeName("t", 99), 2) //unused
+          (makeName("t", 99), 2), // unused
       ).untypedOperDecl()
 
     val yDecl =
@@ -131,30 +130,24 @@ class TestIncrementalRenaming extends FunSuite with TestingPredefs with BeforeAn
               eql(
                   plus(
                       name(s3Name),
-                      name(p3Name)
+                      name(p3Name),
                   ),
-                  n_x
-              )
+                  n_x,
+              ),
           ),
-          p3Name
+          p3Name,
       ).untypedOperDecl()
 
     val zDecl =
       declOp(
           makeName("Z", 1),
           name(p8Name),
-          p8Name
+          p8Name,
       ).untypedOperDecl()
 
     /**
-     * LET X(p1,t99(_,_)) == /\ p1 >= 0
-     * /\ x' \in {p1}
-     * Z1(p8) == p8
-     * IN LET Y6(p3) == \E s3 \in T1 : s3 + p3 = x
-     * IN /\ \A s5 \in T1 : /\ Z1(s5)
-     * /\ Y6(s5)
-     * /\ y
-     * /\ X(0,x)
+     * LET X(p1,t99(_,_)) == /\ p1 >= 0 /\ x' \in {p1} Z1(p8) == p8 IN LET Y6(p3) == \E s3 \in T1 : s3 + p3 = x IN /\ \A
+     * s5 \in T1 : /\ Z1(s5) /\ Y6(s5) /\ y /\ X(0,x)
      */
     val letInEx =
       letIn(
@@ -165,29 +158,28 @@ class TestIncrementalRenaming extends FunSuite with TestingPredefs with BeforeAn
                       name(makeName("T", 1)),
                       and(
                           appDecl(zDecl, name(s5Name)),
-                          appDecl(yDecl, name(s5Name))
-                      )
+                          appDecl(yDecl, name(s5Name)),
+                      ),
                   ),
                   n_y,
-                  appDecl(xDecl, int(0), n_x)
+                  appDecl(xDecl, int(0), n_x),
               ),
-              yDecl
+              yDecl,
           ),
           xDecl,
-          zDecl
+          zDecl,
       )
 
     val letInExMap = nameCounterMapFromEx(takeMax = true)(letInEx)
-    assert(
-        letInExMap ==
-          Map(
-              "p" -> 8,
-              "s" -> 5,
-              "T" -> 1,
-              "Y" -> 6,
-              "Z" -> 1,
-              "t" -> 99
-          ))
+    assert(letInExMap ==
+      Map(
+          "p" -> 8,
+          "s" -> 5,
+          "T" -> 1,
+          "Y" -> 6,
+          "Z" -> 1,
+          "t" -> 99,
+      ))
 
   }
 
@@ -213,7 +205,7 @@ class TestIncrementalRenaming extends FunSuite with TestingPredefs with BeforeAn
     def expected(offset: Int): TlaEx =
       and(
           exists(name(makeName("x", offset + 1)), n_S, gt(name(makeName("x", offset + 1)), int(1))),
-          forall(name(makeName("x", offset + 2)), n_T, lt(name(makeName("x", offset + 2)), int(42)))
+          forall(name(makeName("x", offset + 2)), n_T, lt(name(makeName("x", offset + 2)), int(42))),
       )
 
     val renamed = renaming(original)
@@ -228,7 +220,7 @@ class TestIncrementalRenaming extends FunSuite with TestingPredefs with BeforeAn
     val original =
       cup(
           filter(n_x, n_S, eql(n_x, int(1))),
-          filter(n_x, n_S, eql(n_x, int(2)))
+          filter(n_x, n_S, eql(n_x, int(2))),
       )
     val x1 = makeName("x", 1)
     val x2 = makeName("x", 2)
@@ -236,7 +228,7 @@ class TestIncrementalRenaming extends FunSuite with TestingPredefs with BeforeAn
     def expected(offset: Int): TlaEx =
       cup(
           filter(name(makeName("x", offset + 1)), n_S, eql(name(makeName("x", offset + 1)), int(1))),
-          filter(name(makeName("x", offset + 2)), n_S, eql(name(makeName("x", offset + 2)), int(2)))
+          filter(name(makeName("x", offset + 2)), n_S, eql(name(makeName("x", offset + 2)), int(2))),
       )
 
     val renamed = renaming(original)
@@ -251,7 +243,7 @@ class TestIncrementalRenaming extends FunSuite with TestingPredefs with BeforeAn
     val original =
       letIn(
           exists(n_x, n_S, appOp(name("p"), n_x)),
-          declOp("p", forall(n_x, n_S, appOp(name("R"), name("t"), n_x)), "t").untypedOperDecl()
+          declOp("p", forall(n_x, n_S, appOp(name("R"), name("t"), n_x)), "t").untypedOperDecl(),
       )
 
     val expected =
@@ -259,7 +251,7 @@ class TestIncrementalRenaming extends FunSuite with TestingPredefs with BeforeAn
           exists(name(makeName("x", 2)), n_S, appOp(name(makeName("p", 1)), name(makeName("x", 2)))),
           declOp(makeName("p", 1),
               forall(name(makeName("x", 1)), n_S, appOp(name("R"), name(makeName("t", 1)), name(makeName("x", 1)))),
-              makeName("t", 1)).untypedOperDecl()
+              makeName("t", 1)).untypedOperDecl(),
       ).untyped()
 
     val actual = renaming(original)
@@ -273,7 +265,7 @@ class TestIncrementalRenaming extends FunSuite with TestingPredefs with BeforeAn
           exists(name(makeName("x", 4)), n_S, appOp(name(makeName("p", 2)), name(makeName("x", 4)))),
           declOp(makeName("p", 2),
               forall(name(makeName("x", 3)), n_S, appOp(name("R"), name(makeName("t", 2)), name(makeName("x", 3)))),
-              makeName("t", 2)).untypedOperDecl()
+              makeName("t", 2)).untypedOperDecl(),
       ).untyped()
 
     assert(renamedTwice == expected2)
@@ -285,24 +277,24 @@ class TestIncrementalRenaming extends FunSuite with TestingPredefs with BeforeAn
       and(
           letIn(
               appOp(name("X")),
-              declOp("X", trueEx).untypedOperDecl()
+              declOp("X", trueEx).untypedOperDecl(),
           ),
           letIn(
               appOp(name("X")),
-              declOp("X", falseEx).untypedOperDecl()
-          )
+              declOp("X", falseEx).untypedOperDecl(),
+          ),
       )
 
     def expected(offset: Int) =
       and(
           letIn(
               appOp(name(makeName("X", offset + 1))),
-              declOp(makeName("X", offset + 1), trueEx).untypedOperDecl()
+              declOp(makeName("X", offset + 1), trueEx).untypedOperDecl(),
           ),
           letIn(
               appOp(name(makeName("X", offset + 2))),
-              declOp(makeName("X", offset + 2), falseEx).untypedOperDecl()
-          )
+              declOp(makeName("X", offset + 2), falseEx).untypedOperDecl(),
+          ),
       ).untyped()
 
     val renamed = renaming(original)
@@ -347,23 +339,23 @@ class TestIncrementalRenaming extends FunSuite with TestingPredefs with BeforeAn
     val offsets = Map(
         "x" -> 4,
         "y" -> 2,
-        "z" -> 3
+        "z" -> 3,
     )
 
     val ex = gt(
         plus(
             name(makeName("x", 5)),
-            name(makeName("y", 3))
+            name(makeName("y", 3)),
         ),
-        name(makeName("z", 4))
+        name(makeName("z", 4)),
     )
 
     val expected = gt(
         plus(
             name(makeName("x", 1)),
-            name(makeName("y", 1))
+            name(makeName("y", 1)),
         ),
-        name(makeName("z", 1))
+        name(makeName("z", 1)),
     ).untyped()
 
     val actual = renaming.shiftCounters(offsets)(ex)
@@ -374,17 +366,17 @@ class TestIncrementalRenaming extends FunSuite with TestingPredefs with BeforeAn
     val ex = gt(
         plus(
             name(makeName("x", 5)),
-            name(makeName("y", 3))
+            name(makeName("y", 3)),
         ),
-        name(makeName("z", 4))
+        name(makeName("z", 4)),
     )
 
     val expected = gt(
         plus(
             name(makeName("x", 1)),
-            name(makeName("y", 1))
+            name(makeName("y", 1)),
         ),
-        name(makeName("z", 1))
+        name(makeName("z", 1)),
     ).untyped()
 
     val actual = renaming.normalize(ex)
@@ -414,7 +406,7 @@ class TestIncrementalRenaming extends FunSuite with TestingPredefs with BeforeAn
     val decls = Seq(xDecl, yDecl)
     val expected = Seq(
         declOp("X", exists(name(makeName("x", 1)), n_S, n_p)).untypedOperDecl(),
-        declOp("Y", exists(name(makeName("x", 2)), n_S, n_p)).untypedOperDecl()
+        declOp("Y", exists(name(makeName("x", 2)), n_S, n_p)).untypedOperDecl(),
     )
 
     val actual = renaming.syncAndNormalizeDs(decls)

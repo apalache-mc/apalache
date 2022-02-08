@@ -23,8 +23,10 @@ object SmtTools {
 
   /**
    * Converts a BoolFormula to an smt2 string
-   * @param phi Input formula
-   * @return SMT encoding of the boolean formula
+   * @param phi
+   *   Input formula
+   * @return
+   *   SMT encoding of the boolean formula
    */
   def toSmt2(phi: BoolFormula, varSym: String = "b", fnSym: String = "R"): String = {
     val self: BoolFormula => String = toSmt2(_, varSym, fnSym)
@@ -50,16 +52,16 @@ object SmtTools {
 
   /**
    * Removes redundant connectives.
-   * @param phi Input formula
-   * @return Logically equivalent subset formula.
+   * @param phi
+   *   Input formula
+   * @return
+   *   Logically equivalent subset formula.
    */
   def simplify(phi: BoolFormula): BoolFormula = {
     phi match {
       /**
-       * Recursively simplify branches first.
-       * If any branch is false, the whole formula is false.
-       * It is important to recurse first,
-       * since otherwise false-simplification would not propagate upward.
+       * Recursively simplify branches first. If any branch is false, the whole formula is false. It is important to
+       * recurse first, since otherwise false-simplification would not propagate upward.
        */
       case And(args @ _*) =>
         val newargs = args.map(simplify)
@@ -69,8 +71,8 @@ object SmtTools {
           And(newargs: _*)
 
       /**
-       * Recursively simplify, then drop all False() branches.
-       * Afterwards, if the new tree has too few branches prune accordingly.
+       * Recursively simplify, then drop all False() branches. Afterwards, if the new tree has too few branches prune
+       * accordingly.
        */
       case Or(args @ _*) =>
         val newargs = args.map(simplify).filterNot(_ == False())

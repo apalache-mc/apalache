@@ -58,19 +58,19 @@ class TestReplaceFixed extends FunSuite with TestingPredefs {
     val pa4 = ite(n_p, n_x, n_y).untyped() -> ite(n_p, n_y, n_y).untyped()
     val pa5 = letIn(
         plus(n_z, appOp(n_A)),
-        declOp("A", n_q).untypedOperDecl()
+        declOp("A", n_q).untypedOperDecl(),
     ).untyped() -> letIn(
         plus(n_z, appOp(n_A)),
-        declOp("A", n_q).untypedOperDecl()
+        declOp("A", n_q).untypedOperDecl(),
     ).untyped()
     val pa6 = letIn(
         enumSet(plus(n_x, appOp(n_A)), appOp(n_B, n_x)),
         declOp("A", n_x).untypedOperDecl(),
-        declOp("B", n_p, "p").untypedOperDecl()
+        declOp("B", n_p, "p").untypedOperDecl(),
     ).untyped() -> letIn(
         enumSet(plus(n_y, appOp(n_A)), appOp(n_B, n_y)),
         declOp("A", n_y).untypedOperDecl(),
-        declOp("B", n_p, "p").untypedOperDecl()
+        declOp("B", n_p, "p").untypedOperDecl(),
     ).untyped()
 
     val expected = Seq(
@@ -79,12 +79,12 @@ class TestReplaceFixed extends FunSuite with TestingPredefs {
         pa3,
         pa4,
         pa5,
-        pa6
+        pa6,
     )
-    val cmp = expected map { case (k, v) =>
+    val cmp = expected.map { case (k, v) =>
       (v, transformation(k))
     }
-    cmp foreach { case (ex, act) =>
+    cmp.foreach { case (ex, act) =>
       assert(ex == act)
     }
   }

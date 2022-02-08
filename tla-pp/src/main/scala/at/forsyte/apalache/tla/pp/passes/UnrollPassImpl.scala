@@ -22,8 +22,12 @@ import com.typesafe.scalalogging.LazyLogging
  * @param nextPass
  *   next pass to call
  */
-class UnrollPassImpl @Inject() (val options: PassOptions, nameGenerator: UniqueNameGenerator,
-    tracker: TransformationTracker, renaming: IncrementalRenaming, writerFactory: TlaWriterFactory)
+class UnrollPassImpl @Inject() (
+    val options: PassOptions,
+    nameGenerator: UniqueNameGenerator,
+    tracker: TransformationTracker,
+    renaming: IncrementalRenaming,
+    writerFactory: TlaWriterFactory)
     extends UnrollPass with LazyLogging {
 
   override def name: String = "UnrollPass"

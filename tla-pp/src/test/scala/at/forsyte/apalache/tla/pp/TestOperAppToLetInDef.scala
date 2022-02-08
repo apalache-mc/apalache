@@ -23,11 +23,11 @@ class TestOperAppToLetInDef extends FunSuite with BeforeAndAfterEach with Testin
     val exs = List(
         tla.plus(tla.int(1), tla.int(2)).typed(IntT1()),
         tla.tuple(n_x ? "i", n_y ? "b", n_z ? "i").typed(types, "t"),
-        tla.exists(n_x ? "i", n_S ? "S", tla.gt(n_x ? "i", n_f ? "i") ? "b").typed(types, "b")
+        tla.exists(n_x ? "i", n_S ? "S", tla.gt(n_x ? "i", n_f ? "i") ? "b").typed(types, "b"),
     )
 
     val tr = wrapper.wrap(Set.empty)
-    val newExs = exs map tr
+    val newExs = exs.map(tr)
     assert(exs == newExs)
   }
 

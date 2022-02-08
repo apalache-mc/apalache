@@ -9,12 +9,13 @@ import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import com.typesafe.scalalogging.LazyLogging
 
 /**
- * This listener registers the SMT metrics that are created when an expression is being translated in SMT.
- * These metrics are collected only for those expressions that have source information, which can be
- * displayed to the user.
+ * This listener registers the SMT metrics that are created when an expression is being translated in SMT. These metrics
+ * are collected only for those expressions that have source information, which can be displayed to the user.
  *
- * @param sourceStore the storage of source locations
- * @param changeListener the tracer of expression updates
+ * @param sourceStore
+ *   the storage of source locations
+ * @param changeListener
+ *   the tracer of expression updates
  */
 class MetricProfilerListener(sourceStore: SourceStore, changeListener: ChangeListener, outFile: File)
     extends SymbStateRewriterListener with LazyLogging {
@@ -24,8 +25,10 @@ class MetricProfilerListener(sourceStore: SourceStore, changeListener: ChangeLis
 
   /**
    * This method is called by the symbolic state rewriter.
-   * @param translatedEx an expression to report
-   * @param metricsDelta the SMT metrics that were reported during the translation to SMT
+   * @param translatedEx
+   *   an expression to report
+   * @param metricsDelta
+   *   the SMT metrics that were reported during the translation to SMT
    */
   override def onRewrite(translatedEx: TlaEx, metricsDelta: SolverContextMetrics): Unit = {
     val id = translatedEx.ID

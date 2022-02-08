@@ -8,8 +8,10 @@ object TlaExUtil {
 
   /**
    * Find the names that are used in an expression.
-   * @param expr an expression
-   * @return the set of used names
+   * @param expr
+   *   an expression
+   * @return
+   *   the set of used names
    */
   def findUsedNames(expr: TlaEx): Set[String] = {
     var used = Set[String]()
@@ -25,10 +27,10 @@ object TlaExUtil {
       case OperEx(ApalacheOper.foldSet | ApalacheOper.foldSeq, LetInEx(_, TlaOperDecl(_, _, localBody)),
               baseExAndCollectionEx @ _*) =>
         findRec(localBody)
-        baseExAndCollectionEx foreach findRec
+        baseExAndCollectionEx.foreach(findRec)
 
       case OperEx(_, args @ _*) =>
-        args foreach findRec
+        args.foreach(findRec)
 
       case ex @ LetInEx(body, defs @ _*) =>
         def findInDef: TlaOperDecl => Unit = {

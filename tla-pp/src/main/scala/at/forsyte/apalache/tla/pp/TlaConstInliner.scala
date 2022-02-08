@@ -5,8 +5,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 
 /**
- * Replaces primitive-valued constants initialized in ConstInit
- * with the values they hold.
+ * Replaces primitive-valued constants initialized in ConstInit with the values they hold.
  */
 class TlaConstInliner(tracker: TransformationTracker, constants: Set[String]) {
 
@@ -44,12 +43,12 @@ class TlaConstInliner(tracker: TransformationTracker, constants: Set[String]) {
         case Some(v) => ValEx(v.value)(v.typeTag)
       }
     case ex @ OperEx(op, args @ _*) =>
-      val newArgs = args map replaceConstWithValue(constValMap)
+      val newArgs = args.map(replaceConstWithValue(constValMap))
       if (args == newArgs) ex else OperEx(op, newArgs: _*)(ex.typeTag)
 
     case ex @ LetInEx(body, defs @ _*) =>
       val tr = replaceConstWithValue(constValMap)
-      val newDefs = defs map tracker.trackOperDecl { d => d.copy(body = tr(d.body)) }
+      val newDefs = defs.map(tracker.trackOperDecl { d => d.copy(body = tr(d.body)) })
       val newBody = tr(body)
       if (defs == newDefs && body == newBody) ex else LetInEx(newBody, newDefs: _*)(ex.typeTag)
     case ex => ex

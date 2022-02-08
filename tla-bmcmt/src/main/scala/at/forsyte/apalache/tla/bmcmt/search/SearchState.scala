@@ -3,12 +3,13 @@ package at.forsyte.apalache.tla.bmcmt.search
 import at.forsyte.apalache.tla.bmcmt.Checker
 
 /**
- * The search state machine that is implemented by SeqModelChecker.
- * This machine is simple when the model checker fails on the first error.
- * It becomes complex when multiple errors are allowed.
+ * The search state machine that is implemented by SeqModelChecker. This machine is simple when the model checker fails
+ * on the first error. It becomes complex when multiple errors are allowed.
  *
- * @param params model checker parameters
- * @author Igor Konnov
+ * @param params
+ *   model checker parameters
+ * @author
+ *   Igor Konnov
  */
 class SearchState(params: ModelCheckerParams) {
 
@@ -20,14 +21,16 @@ class SearchState(params: ModelCheckerParams) {
   /**
    * Get the number of errors that were found so far (excluding deadlocks and runtime errors).
    *
-   * @return number of found errors
+   * @return
+   *   number of found errors
    */
   def nFoundErrors: Int = _nFoundErrors
 
   /**
    * Get the cumulative result of the machine.
    *
-   * @return NoError(), if there were no errors, and an error otherwise
+   * @return
+   *   NoError(), if there were no errors, and an error otherwise
    */
   def finalResult: CheckerResult = {
     _result match {
@@ -46,7 +49,8 @@ class SearchState(params: ModelCheckerParams) {
   /**
    * Does the state of the state machine allow to continue the search.
    *
-   * @return true, if the search may continue
+   * @return
+   *   true, if the search may continue
    */
   def canContinue: Boolean = {
     _result match {
@@ -58,7 +62,8 @@ class SearchState(params: ModelCheckerParams) {
   /**
    * Register a checking result.
    *
-   * @param result a result of checking an invariant or a property
+   * @param result
+   *   a result of checking an invariant or a property
    */
   def onResult(result: CheckerResult): Unit = {
     result match {

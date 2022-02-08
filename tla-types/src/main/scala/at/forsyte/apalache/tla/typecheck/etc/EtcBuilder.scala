@@ -4,12 +4,12 @@ import at.forsyte.apalache.tla.lir.{TlaType1, UID}
 import at.forsyte.apalache.tla.typecheck._
 
 /**
- * A builder trait to conveniently construct instances of EtcExpr.
- * Mix this trait to your class to construct Etc expressions without pain.
- * This class shields the user from the weird syntax of case classes that have two kinds of fields:
- * the fields counted in equals, and the fields that are ignored in equals.
+ * A builder trait to conveniently construct instances of EtcExpr. Mix this trait to your class to construct Etc
+ * expressions without pain. This class shields the user from the weird syntax of case classes that have two kinds of
+ * fields: the fields counted in equals, and the fields that are ignored in equals.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 trait EtcBuilder {
   protected def mkConst(sourceRef: EtcRef, tt: TlaType1): EtcConst = {
@@ -72,7 +72,11 @@ trait EtcBuilder {
     mkAppByName(BlameRef(UID.unique), name, args: _*)
   }
 
-  protected def mkLet(sourceRef: EtcRef, name: String, bound: EtcExpr, body: EtcExpr): EtcLet = {
+  protected def mkLet(
+      sourceRef: EtcRef,
+      name: String,
+      bound: EtcExpr,
+      body: EtcExpr): EtcLet = {
     EtcLet(name, bound, body)(sourceRef)
   }
 
@@ -84,7 +88,11 @@ trait EtcBuilder {
     mkLet(BlameRef(UID.unique), name, bound, body)
   }
 
-  protected def mkTypeDecl(sourceRef: EtcRef, name: String, declaredType: TlaType1, scopedEx: EtcExpr): EtcTypeDecl = {
+  protected def mkTypeDecl(
+      sourceRef: EtcRef,
+      name: String,
+      declaredType: TlaType1,
+      scopedEx: EtcExpr): EtcTypeDecl = {
     EtcTypeDecl(name, declaredType, scopedEx)(sourceRef)
   }
 

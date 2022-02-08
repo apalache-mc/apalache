@@ -28,7 +28,7 @@ class TestTlaToUJson extends FunSuite with BeforeAndAfterEach with TestingPredef
     val str = tla.str("abc").untyped()
     val bool = tla.bool(true).untyped()
 
-    val Seq(jsonInt, jsonStr, jsonBool) = Seq(int, str, bool) map {
+    val Seq(jsonInt, jsonStr, jsonBool) = Seq(int, str, bool).map {
       getEncVal
     }
 
@@ -43,9 +43,9 @@ class TestTlaToUJson extends FunSuite with BeforeAndAfterEach with TestingPredef
 
   test("TLA+ collections") {
     val set = tla.enumSet(tla.int(1), tla.int(2), tla.int(3)).untyped()
-    val tup = tla.tuple(Seq("x", "y", "z") map tla.str: _*).untyped()
+    val tup = tla.tuple(Seq("x", "y", "z").map(tla.str): _*).untyped()
 
-    val Seq(jsonSeq, jsonTup) = Seq(set, tup) map {
+    val Seq(jsonSeq, jsonTup) = Seq(set, tup).map {
       getEncVal
     }
 
@@ -66,14 +66,14 @@ class TestTlaToUJson extends FunSuite with BeforeAndAfterEach with TestingPredef
       .declOp(
           "A",
           tla.plus(n_p, tla.int(1)),
-          "p"
+          "p",
       )
       .untypedOperDecl()
     // LET A(p) == p + 1
     //  IN A(0)
     val letInEx = tla.letIn(
         tla.appDecl(decl, tla.int(0)),
-        decl
+        decl,
     )
 
     val letJson = getEncVal(letInEx)
@@ -112,7 +112,7 @@ class TestTlaToUJson extends FunSuite with BeforeAndAfterEach with TestingPredef
     recursive.isRecursive = true
 
     val jsons @ Seq(jsonNullary, jsonUnary, jsonHO, jsonRec) =
-      Seq(nullary, unary, higherOrder, recursive) map getEncVal
+      Seq(nullary, unary, higherOrder, recursive).map(getEncVal)
 
     assert(jsons.forall { _(kindField).str == "TlaOperDecl" })
     assert(jsons.forall { _("name").str == "T" })

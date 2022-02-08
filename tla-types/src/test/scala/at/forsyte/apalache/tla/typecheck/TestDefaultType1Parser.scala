@@ -194,20 +194,20 @@ class TestDefaultType1Parser extends FunSuite with Checkers with TlaType1Gen {
 
   test("no crashes: either parse, or raise an error") {
     check({
-      forAll(alphaStr) { str =>
-        try {
-          DefaultType1Parser(str)
-          passed
-        } catch {
-          case _: Type1ParseError =>
-            passed
+          forAll(alphaStr) { str =>
+            try {
+              DefaultType1Parser(str)
+              passed
+            } catch {
+              case _: Type1ParseError =>
+                passed
 
-          case _ =>
-            falsified
-        }
-      // no exceptions
-      }
-    }, minSuccessful(300))
+              case _ =>
+                falsified
+            }
+          // no exceptions
+          }
+        }, minSuccessful(300))
   }
 
   test("parse primitive types") {

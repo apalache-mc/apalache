@@ -67,7 +67,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |NEXT == Next
         |
         |================================================================================
-        |""".stripMargin
+        |""".stripMargin,
     )
   }
 
@@ -84,7 +84,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |SPECIFICATION == Spec
         |
         |================================================================================
-        |""".stripMargin
+        |""".stripMargin,
     )
   }
 
@@ -111,7 +111,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |NEXT == Next
         |
         |================================================================================
-        |""".stripMargin
+        |""".stripMargin,
     )
   }
 
@@ -140,7 +140,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |NEXT == Next
         |
         |================================================================================
-        |""".stripMargin
+        |""".stripMargin,
     )
   }
 
@@ -179,7 +179,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |NEXT == Next
         |
         |================================================================================
-        |""".stripMargin
+        |""".stripMargin,
     )
   }
 
@@ -230,7 +230,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |NEXT == Next
         |
         |================================================================================
-        |""".stripMargin
+        |""".stripMargin,
     )
   }
 
@@ -256,7 +256,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
           |NEXT == Next
           |
           |================================================================================
-          |""".stripMargin
+          |""".stripMargin,
     )
   }
 
@@ -282,7 +282,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |NEXT == Next
         |
         |================================================================================
-        |""".stripMargin
+        |""".stripMargin,
     )
   }
 
@@ -308,7 +308,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |NEXT == Next
         |
         |================================================================================
-        |""".stripMargin
+        |""".stripMargin,
     )
   }
 
@@ -334,7 +334,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |NEXT == Next
         |
         |================================================================================
-        |""".stripMargin
+        |""".stripMargin,
     )
   }
 
@@ -392,7 +392,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
           |NEXT == Next
           |
           |================================================================================
-          |""".stripMargin
+          |""".stripMargin,
     )
   }
 }

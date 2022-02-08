@@ -29,8 +29,11 @@ import java.nio.file.Path
  * @author
  *   Igor Konnov
  */
-class BoundedCheckerPassImpl @Inject() (val options: PassOptions, exprGradeStore: ExprGradeStore,
-    sourceStore: SourceStore, changeListener: ChangeListener)
+class BoundedCheckerPassImpl @Inject() (
+    val options: PassOptions,
+    exprGradeStore: ExprGradeStore,
+    sourceStore: SourceStore,
+    changeListener: ChangeListener)
     extends BoundedCheckerPass with LazyLogging {
 
   override def name: String = "BoundedChecker"
@@ -96,7 +99,10 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, exprGradeStore
     }
   }
 
-  private def runIncrementalChecker(params: ModelCheckerParams, input: CheckerInput, tuning: Map[String, String],
+  private def runIncrementalChecker(
+      params: ModelCheckerParams,
+      input: CheckerInput,
+      tuning: Map[String, String],
       solverConfig: SolverConfig): Boolean = {
     val solverContext: RecordingSolverContext = RecordingSolverContext.createZ3(None, solverConfig)
 
@@ -131,7 +137,10 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, exprGradeStore
     outcome == NoError()
   }
 
-  private def runOfflineChecker(params: ModelCheckerParams, input: CheckerInput, tuning: Map[String, String],
+  private def runOfflineChecker(
+      params: ModelCheckerParams,
+      input: CheckerInput,
+      tuning: Map[String, String],
       solverConfig: SolverConfig): Boolean = {
     val solverContext: RecordingSolverContext = RecordingSolverContext.createZ3(None, solverConfig)
 

@@ -57,7 +57,7 @@ class TestVCGenerator extends FunSuite {
     val hist = name("hist") ? "s"
     val invBody = gt(
         appFun(appOp(hist, len(hist) ? "i") ? "r", str("x")) ? "i",
-        appFun(appOp(hist, int(1)) ? "r", str("x")) ? "i"
+        appFun(appOp(hist, int(1)) ? "r", str("x")) ? "i",
     ) ? "b"
     val traceInv = declOp("TraceInv", invBody, OperParam("hist", 0)).typed(types, "o")
     val xDecl = TlaVarDecl("x")(Typed(IntT1()))

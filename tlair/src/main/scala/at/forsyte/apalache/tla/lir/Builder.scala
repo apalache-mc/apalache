@@ -5,16 +5,18 @@ import at.forsyte.apalache.tla.lir.values.TlaBoolSet
 import at.forsyte.apalache.tla.lir.values._
 
 /**
- * The base class of expressions that are produced by the builder. These expressions are to be further translated
- * by the code that knows how to treat types. E.g., see TypedPredefs and UntypedPredefs.
+ * The base class of expressions that are produced by the builder. These expressions are to be further translated by the
+ * code that knows how to treat types. E.g., see TypedPredefs and UntypedPredefs.
  */
 sealed trait BuilderEx {
 
   /**
    * Wrap the expression block with an alias, which can be used for type assignments.
    *
-   * @param alias alias name
-   * @return a new block that wraps this one
+   * @param alias
+   *   alias name
+   * @return
+   *   a new block that wraps this one
    */
   def ?(alias: String): BuilderAlias = {
     BuilderAlias(this, alias)
@@ -24,8 +26,10 @@ sealed trait BuilderEx {
 /**
  * An alias of an expression that can be used to tag the expression with a type later.
  *
- * @param target the target block
- * @param alias  a name
+ * @param target
+ *   the target block
+ * @param alias
+ *   a name
  */
 case class BuilderAlias(target: BuilderEx, alias: String) extends BuilderEx {
   override def ?(newAlias: String): BuilderAlias = {
@@ -36,71 +40,84 @@ case class BuilderAlias(target: BuilderEx, alias: String) extends BuilderEx {
 /**
  * A constructed expression that does not need any further processing from the builder.
  *
- * @param ex a constructed expression
+ * @param ex
+ *   a constructed expression
  */
 case class BuilderTlaExWrapper(ex: TlaEx) extends BuilderEx
 
 /**
  * A value to be constructed.
  *
- * @param tlaValue a TLA+ value
+ * @param tlaValue
+ *   a TLA+ value
  */
 case class BuilderVal(tlaValue: TlaValue) extends BuilderEx
 
 /**
  * A name to be constructed.
  *
- * @param name a string
+ * @param name
+ *   a string
  */
 case class BuilderName(name: String) extends BuilderEx
 
 /**
  * An operator application to be constructed.
  *
- * @param oper an operator type
- * @param args arguments to the operator
+ * @param oper
+ *   an operator type
+ * @param args
+ *   arguments to the operator
  */
 case class BuilderOper(oper: TlaOper, args: BuilderEx*) extends BuilderEx
 
 /**
  * A LET-IN definition.
  *
- * @param body      the expression in the IN ... part.
- * @param builtDefs the definitions in the LET ... part.
+ * @param body
+ *   the expression in the IN ... part.
+ * @param builtDefs
+ *   the definitions in the LET ... part.
  */
 case class BuilderLet(body: BuilderEx, builtDefs: TlaOperDecl*) extends BuilderEx
 
 /**
- * The base class for declarations that are produced by the builder. They have to be futher translated by
- * type-aware code, e.g., in TypedPredefs and UntypedPredefs.
+ * The base class for declarations that are produced by the builder. They have to be futher translated by type-aware
+ * code, e.g., in TypedPredefs and UntypedPredefs.
  */
 sealed trait BuilderDecl {}
 
 /**
  * A building block of an operator declaration.
  *
- * @param name         operator name
- * @param formalParams formal parameters
- * @param body         the definition body
+ * @param name
+ *   operator name
+ * @param formalParams
+ *   formal parameters
+ * @param body
+ *   the definition body
  */
 case class BuilderOperDecl(name: String, formalParams: List[OperParam], body: BuilderEx) extends BuilderDecl
 
 /**
  * <p>A builder for TLA expressions. A singleton instance of this class is defined in *.lir.convenience.</p>
  *
- * <p>Contains methods for constructing various types of [[TlaEx]] expressions, guaranteeing
- * correct arity where the arity of the associated [[oper.TlaOper TlaOper]] is fixed.</p>
+ * <p>Contains methods for constructing various types of [[TlaEx]] expressions, guaranteeing correct arity where the
+ * arity of the associated [[oper.TlaOper TlaOper]] is fixed.</p>
  *
- * @author jkukovec, konnov
+ * @author
+ *   jkukovec, konnov
  */
 class Builder {
 
   /**
-   * Construct a builder block from a complete TLA expression. This method is usually not needed, as we are
-   * using implicit conversions. It is here for the case you want to avoid implicits.
+   * Construct a builder block from a complete TLA expression. This method is usually not needed, as we are using
+   * implicit conversions. It is here for the case you want to avoid implicits.
    *
-   * @param ex an expression that builder treats as a completely constructed expression
-   * @return the expression that is wrapped with BuilderCompiledEx
+   * @param ex
+   *   an expression that builder treats as a completely constructed expression
+   * @return
+   *   the expression that is wrapped with BuilderCompiledEx
    */
   def fromTlaEx(ex: TlaEx): BuilderTlaExWrapper = {
     BuilderTlaExWrapper(ex)
@@ -126,21 +143,24 @@ class Builder {
   /**
    * The set BOOLEAN.
    *
-   * @return the value expression that corresponds to BOOLEAN.
+   * @return
+   *   the value expression that corresponds to BOOLEAN.
    */
   def booleanSet(): BuilderVal = BuilderVal(TlaBoolSet)
 
   /**
    * The set Int of all integers.
    *
-   * @return the value expression that corresponds to Int.
+   * @return
+   *   the value expression that corresponds to Int.
    */
   def intSet(): BuilderVal = BuilderVal(TlaIntSet)
 
   /**
    * The set Nat of all natural numbers.
    *
-   * @return the value expression that corresponds to Nat.
+   * @return
+   *   the value expression that corresponds to Nat.
    */
   def natSet(): BuilderVal = BuilderVal(TlaNatSet)
 
@@ -155,8 +175,7 @@ class Builder {
       val nameEx = BuilderName(decl.name)
       BuilderOper(TlaOper.apply, (nameEx +: args): _*)
     } else {
-      throw new IllegalArgumentException(
-          "Operator %s of %d parameters is applied to %d arguments"
+      throw new IllegalArgumentException("Operator %s of %d parameters is applied to %d arguments"
             .format(decl.name, decl.formalParams.length, args.length))
     }
   }
@@ -182,14 +201,18 @@ class Builder {
   }
 
   /**
-   * Decorate a TLA+ expression with a label (a TLA+2 feature), e.g.,
-   * lab(a, b) :: e decorates e with the label "lab" whose arguments are "a" and "b".
-   * This method needs a type tag for `name` and `args`. The type of the expression itself is inherited from ex.
+   * Decorate a TLA+ expression with a label (a TLA+2 feature), e.g., lab(a, b) :: e decorates e with the label "lab"
+   * whose arguments are "a" and "b". This method needs a type tag for `name` and `args`. The type of the expression
+   * itself is inherited from ex.
    *
-   * @param ex   a TLA+ expression to decorate
-   * @param name label identifier
-   * @param args label arguments (also identifiers)
-   * @return OperEx(TlaOper.label, ex, name as ValEx(TlaStr(_)), args as ValEx(TlaStr(_)))
+   * @param ex
+   *   a TLA+ expression to decorate
+   * @param name
+   *   label identifier
+   * @param args
+   *   label arguments (also identifiers)
+   * @return
+   *   OperEx(TlaOper.label, ex, name as ValEx(TlaStr(_)), args as ValEx(TlaStr(_)))
    */
   def label(ex: BuilderEx, name: String, args: String*): BuilderEx = {
     val nameAsVal = BuilderVal(TlaStr(name))
@@ -281,7 +304,10 @@ class Builder {
     BuilderOper(TlaControlOper.caseNoOther, guard1 +: effect1 +: guardsAndEffectsInterleaved: _*)
   }
 
-  def caseOther(effectOnOther: BuilderEx, guard1: BuilderEx, effect1: BuilderEx,
+  def caseOther(
+      effectOnOther: BuilderEx,
+      guard1: BuilderEx,
+      effect1: BuilderEx,
       guardsAndEffectsInterleaved: BuilderEx*): BuilderEx = {
     BuilderOper(TlaControlOper.caseWithOther, effectOnOther +: guard1 +: effect1 +: guardsAndEffectsInterleaved: _*)
   }
@@ -405,15 +431,27 @@ class Builder {
     BuilderOper(TlaFunOper.enum, key1 +: value1 +: keysAndValuesInterleaved: _*)
   }
 
-  def except(fun: BuilderEx, key1: BuilderEx, value1: BuilderEx, keysAndValuesInterleaved: BuilderEx*): BuilderEx = {
+  def except(
+      fun: BuilderEx,
+      key1: BuilderEx,
+      value1: BuilderEx,
+      keysAndValuesInterleaved: BuilderEx*): BuilderEx = {
     BuilderOper(TlaFunOper.except, fun +: key1 +: value1 +: keysAndValuesInterleaved: _*)
   }
 
-  def funDef(mapExpr: BuilderEx, var1: BuilderEx, set1: BuilderEx, varsAndSetsInterleaved: BuilderEx*): BuilderEx = {
+  def funDef(
+      mapExpr: BuilderEx,
+      var1: BuilderEx,
+      set1: BuilderEx,
+      varsAndSetsInterleaved: BuilderEx*): BuilderEx = {
     BuilderOper(TlaFunOper.funDef, mapExpr +: var1 +: set1 +: varsAndSetsInterleaved: _*)
   }
 
-  def recFunDef(mapExpr: BuilderEx, var1: BuilderEx, set1: BuilderEx, varsAndSetsInterleaved: BuilderEx*): BuilderEx = {
+  def recFunDef(
+      mapExpr: BuilderEx,
+      var1: BuilderEx,
+      set1: BuilderEx,
+      varsAndSetsInterleaved: BuilderEx*): BuilderEx = {
     BuilderOper(TlaFunOper.recFunDef, mapExpr +: var1 +: set1 +: varsAndSetsInterleaved: _*)
   }
 
@@ -449,10 +487,14 @@ class Builder {
   /**
    * Get a subsequence of S, that is, SubSeq(S, from, to)
    *
-   * @param seq       a sequence, e.g., constructed with tla.tuple
-   * @param fromIndex the first index of the subsequene, greater or equal to 1
-   * @param toIndex   the last index of the subsequence, not greater than Len(S)
-   * @return the expression that corresponds to SubSeq(S, from, to)
+   * @param seq
+   *   a sequence, e.g., constructed with tla.tuple
+   * @param fromIndex
+   *   the first index of the subsequene, greater or equal to 1
+   * @param toIndex
+   *   the last index of the subsequence, not greater than Len(S)
+   * @return
+   *   the expression that corresponds to SubSeq(S, from, to)
    */
   def subseq(seq: BuilderEx, fromIndex: BuilderEx, toIndex: BuilderEx): BuilderEx = {
     BuilderOper(TlaSeqOper.subseq, seq, fromIndex, toIndex)
@@ -461,9 +503,12 @@ class Builder {
   /**
    * Get the subsequence of S that consists of the elements matching a predicate.
    *
-   * @param seq  a sequence
-   * @param test a predicate, it should be an action name
-   * @return the expression that corresponds to SelectSeq(S, test)
+   * @param seq
+   *   a sequence
+   * @param test
+   *   a predicate, it should be an action name
+   * @return
+   *   the expression that corresponds to SelectSeq(S, test)
    */
   def selectseq(seq: BuilderEx, test: BuilderEx): BuilderEx = {
     BuilderOper(TlaSeqOper.selectseq, seq, test)
@@ -502,7 +547,11 @@ class Builder {
     BuilderOper(TlaSetOper.filter, variable, set, predicate)
   }
 
-  def map(mapExpr: BuilderEx, var1: BuilderEx, set1: BuilderEx, varsAndSetsInterleaved: BuilderEx*): BuilderEx = {
+  def map(
+      mapExpr: BuilderEx,
+      var1: BuilderEx,
+      set1: BuilderEx,
+      varsAndSetsInterleaved: BuilderEx*): BuilderEx = {
     BuilderOper(TlaSetOper.map, mapExpr +: var1 +: set1 +: varsAndSetsInterleaved: _*)
   }
 
@@ -687,7 +736,6 @@ class Builder {
       .map(op =>
         if (op.isCorrectArity(args.size))
           BuilderOper(op, args: _*)
-        else BuilderTlaExWrapper(NullEx),
-      )
+        else BuilderTlaExWrapper(NullEx))
       .getOrElse(BuilderTlaExWrapper(NullEx))
 }

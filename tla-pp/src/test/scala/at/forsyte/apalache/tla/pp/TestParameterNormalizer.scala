@@ -23,7 +23,7 @@ class TestParameterNormalizer extends FunSuite with BeforeAndAfterEach with Test
   test("Nullary: No-op") {
 
     // A == 1
-    val input = tla.declOp("A", tla.int(1)) as OperT1(Seq(), IntT1())
+    val input = tla.declOp("A", tla.int(1)).as(OperT1(Seq(), IntT1()))
 
     val output = parNorm.normalizeDeclaration(input)
 
@@ -90,8 +90,9 @@ class TestParameterNormalizer extends FunSuite with BeforeAndAfterEach with Test
         assert(input.typeTag == d.typeTag)
 
         body match {
-          case letin @ LetInEx(letInBody, TlaOperDecl(newName, List(OperParam(intermediateParam, 0)), appex @ OperEx(
-                          TlaOper.apply, nex @ NameEx(appliedOperName), NameEx(arg)))) =>
+          case letin @ LetInEx(letInBody,
+                  TlaOperDecl(newName, List(OperParam(intermediateParam, 0)),
+                      appex @ OperEx(TlaOper.apply, nex @ NameEx(appliedOperName), NameEx(arg)))) =>
             assert(opName == appliedOperName)
             assert(arg == intermediateParam)
             assert(Typed(IntT1()) == letin.typeTag)

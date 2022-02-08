@@ -10,8 +10,8 @@ import java.time.format.DateTimeFormatter
 import scala.io.Source
 
 /**
- * The OutputManager is the central source of truth, for all IO related locations.
- * Any IO operation should request read/write target paths from this object.
+ * The OutputManager is the central source of truth, for all IO related locations. Any IO operation should request
+ * read/write target paths from this object.
  */
 object OutputManager extends LazyLogging {
 
@@ -68,7 +68,8 @@ object OutputManager extends LazyLogging {
   /**
    * Accessor for the configured output directory.
    *
-   * @throws IllegalStateException if called before OutputManager is configured: this is considered an implementator error
+   * @throws IllegalStateException
+   *   if called before OutputManager is configured: this is considered an implementator error
    */
   def outDir: Path = {
     outDirOpt.getOrElse(throw new IllegalStateException("out-dir is not configured"))
@@ -77,7 +78,8 @@ object OutputManager extends LazyLogging {
   /**
    * Accessor for the configured run directory.
    *
-   * @throws IllegalStateException if called before OutputManager is configured: this is considered an implementator error
+   * @throws IllegalStateException
+   *   if called before OutputManager is configured: this is considered an implementator error
    */
   def runDir: Path = {
     runDirOpt.getOrElse(throw new IllegalStateException("run directory does not exist"))
@@ -110,8 +112,7 @@ object OutputManager extends LazyLogging {
   }
 
   /**
-   * Configure OutputManager, with cli configuration taking precedence
-   * over the configuration file
+   * Configure OutputManager, with cli configuration taking precedence over the configuration file
    */
   def configure(config: ApalacheConfig): Unit = {
     // Replace the default config used for initialiation with the config loaded on startup
@@ -154,11 +155,11 @@ object OutputManager extends LazyLogging {
   }
 
   /**
-   *  Create a PrintWriter to the file formed by appending `fileParts` to the `base` file
+   * Create a PrintWriter to the file formed by appending `fileParts` to the `base` file
    *
    * E.g., to create a writer to the file `foo/bar/bas.json`:
    *
-   *    val w = printWriter("foo", "bar", "baz.json")
+   * val w = printWriter("foo", "bar", "baz.json")
    */
   def printWriter(base: String, fileParts: String*): PrintWriter = {
     printWriter(Paths.get(base), fileParts: _*)
@@ -192,10 +193,13 @@ object OutputManager extends LazyLogging {
   /**
    * Conditionally applies a function to a PrintWriter constructed relative to the intermediate directory
    *
-   * @param parts path parts describing a path relative to the intermediate directory (all parents must exist)
-   * @param f a function that will be applied to the `PrintWriter`, if the `IntermediateFlag` is set.
-   * @return `true` if the `IntermediateFlag` is true, and `f` can be applied to the PrintWriter
-   *        created by appending the `parts` to the intermediate output dir. Otherwise, `false`.
+   * @param parts
+   *   path parts describing a path relative to the intermediate directory (all parents must exist)
+   * @param f
+   *   a function that will be applied to the `PrintWriter`, if the `IntermediateFlag` is set.
+   * @return
+   *   `true` if the `IntermediateFlag` is true, and `f` can be applied to the PrintWriter created by appending the
+   *   `parts` to the intermediate output dir. Otherwise, `false`.
    */
   def withWriterInIntermediateDir(parts: String*)(f: PrintWriter => Unit): Boolean = {
     val writeToDir: Path => Unit = dir => withWriter(f)(printWriter(dir, parts: _*))

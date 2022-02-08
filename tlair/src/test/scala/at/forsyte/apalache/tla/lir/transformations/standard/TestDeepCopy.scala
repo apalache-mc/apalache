@@ -9,7 +9,8 @@ import org.scalatest.{BeforeAndAfter, FunSuite}
 /**
  * Tests for DeepCopy using Scalacheck.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class TestDeepCopy extends FunSuite with BeforeAndAfter with Checkers {
   private def equalExCopies: (TlaEx, TlaEx) => Boolean = {
@@ -21,19 +22,19 @@ class TestDeepCopy extends FunSuite with BeforeAndAfter with Checkers {
 
     case (l @ OperEx(lop, largs @ _*), r @ OperEx(rop, rargs @ _*)) =>
       l.ID != r.ID &&
-        lop == rop &&
-        l.typeTag == r.typeTag &&
-        largs.length == rargs.length &&
-        largs.zip(rargs).forall(equalExCopies.tupled)
+      lop == rop &&
+      l.typeTag == r.typeTag &&
+      largs.length == rargs.length &&
+      largs.zip(rargs).forall(equalExCopies.tupled)
 
     case (l @ LetInEx(lbody, ldefs @ _*), r @ LetInEx(rbody, rdefs @ _*)) =>
       equalExCopies(lbody, rbody) &&
-        l.ID != r.ID &&
-        l.typeTag == r.typeTag &&
-        ldefs.length == rdefs.length &&
-        ldefs
-          .zip(rdefs)
-          .forall(equalDeclCopies.tupled)
+      l.ID != r.ID &&
+      l.typeTag == r.typeTag &&
+      ldefs.length == rdefs.length &&
+      ldefs
+        .zip(rdefs)
+        .forall(equalDeclCopies.tupled)
 
     case _ => false
   }
@@ -50,17 +51,17 @@ class TestDeepCopy extends FunSuite with BeforeAndAfter with Checkers {
 
     case (l @ TlaTheoremDecl(lname, lbody), r @ TlaTheoremDecl(rname, rbody)) =>
       l.ID != r.ID &&
-        lname == rname &&
-        equalExCopies(lbody, rbody) &&
-        l.typeTag == r.typeTag
+      lname == rname &&
+      equalExCopies(lbody, rbody) &&
+      l.typeTag == r.typeTag
 
     case (l @ TlaOperDecl(lname, lparams, lbody), r @ TlaOperDecl(rname, rparams, rbody)) =>
       l.ID != r.ID &&
-        lname == rname &&
-        lparams == rparams &&
-        equalExCopies(lbody, rbody) &&
-        l.isRecursive == r.isRecursive &&
-        l.typeTag == r.typeTag
+      lname == rname &&
+      lparams == rparams &&
+      equalExCopies(lbody, rbody) &&
+      l.isRecursive == r.isRecursive &&
+      l.typeTag == r.typeTag
 
     case _ => false
   }

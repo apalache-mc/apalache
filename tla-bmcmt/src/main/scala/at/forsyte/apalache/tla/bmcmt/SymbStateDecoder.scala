@@ -19,7 +19,8 @@ import scala.collection.immutable.{HashSet, SortedSet}
 /**
  * This class dumps relevant values from an SMT model using an arena.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter) extends LazyLogging {
 
@@ -136,7 +137,11 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
 
       // Adds (key :> value) mapping to the `fun`, unless the `key` is already in `keys`
       // Returns a new set of keys including the added `key` and the new function that includes the mapping
-      def appendPair(keys: Set[TlaEx], fun: TlaEx, key: ArenaCell, value: ArenaCell): (Set[TlaEx], TlaEx) = {
+      def appendPair(
+          keys: Set[TlaEx],
+          fun: TlaEx,
+          key: ArenaCell,
+          value: ArenaCell): (Set[TlaEx], TlaEx) = {
         val keyEx = decodeCellToTlaEx(arena, key)
         // If we've already seen the key, don't add it again
         if (keys(keyEx)) {
@@ -160,7 +165,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       }
 
       val pairs = arena.getHas(relation)
-      pairs find isInRelation match {
+      pairs.find(isInRelation) match {
         case None =>
           // this is a pathological case, produce: [ x \in {} |-> x ]
           tla
@@ -187,13 +192,13 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
 
     case SeqT(elemT) =>
       val elemT1 = elemT.toTlaType1
-      val startEndFun = arena.getHas(cell) map (decodeCellToTlaEx(arena, _))
+      val startEndFun = arena.getHas(cell).map(decodeCellToTlaEx(arena, _))
       startEndFun match {
         case ValEx(TlaInt(start)) :: ValEx(TlaInt(end)) +: cells =>
           // note that start >= 0 and end = Len(S) - start
           def isIn(elem: TlaEx, no: Int): Boolean = no >= start && no < end
 
-          val filtered = cells.zipWithIndex filter (isIn _).tupled map (_._1)
+          val filtered = cells.zipWithIndex.filter((isIn _).tupled).map(_._1)
           // return a tuple as it is the canonical representation of a sequence
           tla.tuple(filtered: _*).typed(SeqT1(elemT1))
 
@@ -209,7 +214,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       // Note that the domain may have fewer fields than the record type is saying.
       // This comes from the fact that we can extend a record with a richer type.
       val domCell = arena.getDom(cell)
-      val dom = decodeSet(arena, domCell) map exToStr
+      val dom = decodeSet(arena, domCell).map(exToStr)
       val fieldValues = arena.getHas(cell)
       val keyList = r.fields.keySet.toList
 
@@ -281,7 +286,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         }
 
       case OperEx(oper, args @ _*) =>
-        OperEx(oper, args map rec: _*)(ex.typeTag)
+        OperEx(oper, args.map(rec): _*)(ex.typeTag)
 
       case _ =>
         ex

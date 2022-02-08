@@ -9,7 +9,8 @@ import org.scalatest.junit.JUnitRunner
 /**
  * The tests for TransitionExecutorImpl that are using IncrementalSnapshot.
  *
- * @author Igor Konnov, Shon Feder
+ * @author
+ *   Igor Konnov, Shon Feder
  */
 @RunWith(classOf[JUnitRunner])
 class TestTransitionExecutorWithIncrementalAndOOPSLA19

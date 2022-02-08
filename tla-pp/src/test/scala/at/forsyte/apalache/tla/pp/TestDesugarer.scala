@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.{
-  BoolT1, FunT1, IntT1, OperT1, RecT1, SeqT1, SetT1, OperParam, StrT1, TlaEx, TlaType1, TupT1
+  BoolT1, FunT1, IntT1, OperT1, RecT1, SeqT1, SetT1, OperParam, StrT1, TlaEx, TlaType1, TupT1,
 }
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -42,7 +42,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
       "i2" -> TupT1(IntT1(), IntT1()),
       "i3" -> TupT1(IntT1(), IntT1(), IntT1()),
       "s" -> StrT1(),
-      "s1" -> TupT1(StrT1())
+      "s1" -> TupT1(StrT1()),
   )
   private val unchangedTypes = Map(
       "i" -> IntT1(),
@@ -53,7 +53,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
       "ib_2" -> TupT1(IntT1(), BoolT1()),
       "ibi_3" -> TupT1(IntT1(), BoolT1()),
       "i_ib_2_2" -> TupT1(IntT1(), TupT1(IntT1(), BoolT1())),
-      "f1" -> FunT1(IntT1(), IntT1())
+      "f1" -> FunT1(IntT1(), IntT1()),
   )
   private val tupleTypes = Map(
       "b" -> BoolT1(),
@@ -65,7 +65,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
       "i_ii_2_2" -> TupT1(IntT1(), TupT1(IntT1(), IntT1())),
       "I_II_2_2" -> SetT1(TupT1(IntT1(), TupT1(IntT1(), IntT1()))),
       "II_2" -> SetT1(TupT1(IntT1(), IntT1())),
-      "i_ii_2_2_to_ii_2" -> FunT1(TupT1(IntT1(), TupT1(IntT1(), IntT1())), TupT1(IntT1(), IntT1()))
+      "i_ii_2_2_to_ii_2" -> FunT1(TupT1(IntT1(), TupT1(IntT1(), IntT1())), TupT1(IntT1(), IntT1())),
   )
 
   override def beforeEach(): Unit = {
@@ -113,7 +113,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
         .typed(exceptTypes, "f1")
     // output: the same as input
     val output = desugarer.transform(input)
-    assert(output eqTyped input)
+    assert(output.eqTyped(input))
   }
 
   test("EXCEPT two-dimensional, one index") {
@@ -141,7 +141,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
           .declOp("t_3",
               tla.except(callAndAccess("t_1", "f1"), tla.tuple(tla.name("i") ? "i") ? "i1",
                   callAndAccess("t_2", "f1")) ? "f2")
-          .typedOperDecl(exceptTypes, "O2")
+          .typedOperDecl(exceptTypes, "O2"),
     )
 
     val expected: TlaEx =
@@ -149,7 +149,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
         .letIn(callAndAccess("t_3", "f2"), defs: _*)
         .typed(exceptTypes, "f2")
 
-    assert(expected eqTyped output)
+    assert(expected.eqTyped(output))
   }
 
   test("EXCEPT two-dimensional, function + record") {
@@ -177,7 +177,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
           .declOp("t_3",
               tla.except(callAndAccess("t_1", "r"), tla.tuple(tla.name("i") ? "i") ? "i1",
                   callAndAccess("t_2", "f1")) ? "fr")
-          .typedOperDecl(exceptTypes, "ofr")
+          .typedOperDecl(exceptTypes, "ofr"),
     )
 
     val expected: TlaEx =
@@ -185,7 +185,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
         .letIn(callAndAccess("t_3", "fr"), defs: _*)
         .typed(exceptTypes, "fr")
 
-    assert(expected eqTyped output)
+    assert(expected.eqTyped(output))
   }
 
   test("EXCEPT two-dimensional, function + tuple") {
@@ -212,7 +212,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
           .declOp("t_3",
               tla.except(callAndAccess("t_1", "si"), tla.tuple(tla.name("i") ? "i") ? "i1",
                   callAndAccess("t_2", "si")) ? "f_si")
-          .typedOperDecl(exceptTypes, "o_f_si")
+          .typedOperDecl(exceptTypes, "o_f_si"),
     )
 
     val expected: TlaEx =
@@ -220,7 +220,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
         .letIn(callAndAccess("t_3", "f_si"), defs: _*)
         .typed(exceptTypes, "f_si")
 
-    assert(expected eqTyped output)
+    assert(expected.eqTyped(output))
   }
 
   test("EXCEPT two-dimensional, function + sequence") {
@@ -249,7 +249,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
           .declOp("t_3",
               tla.except(callAndAccess("t_1", "Qs"), tla.tuple(tla.name("i") ? "i") ? "i1",
                   callAndAccess("t_2", "si")) ? "i_to_Qs")
-          .typedOperDecl(exceptTypes, "o_i_to_Qs")
+          .typedOperDecl(exceptTypes, "o_i_to_Qs"),
     )
 
     val expected: TlaEx =
@@ -257,7 +257,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
         .letIn(callAndAccess("t_3", "f_si"), defs: _*)
         .typed(exceptTypes, "i_to_Qs")
 
-    assert(expected eqTyped output)
+    assert(expected.eqTyped(output))
   }
 
   test("EXCEPT three-dimensional, one index") {
@@ -292,7 +292,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
           .declOp("t_4",
               tla.except(callAndAccess("t_1", "f1"), tla.tuple(tla.name("i") ? "i") ? "i1",
                   callAndAccess("t_3", "f3")) ? "f3")
-          .typedOperDecl(exceptTypes, "O3")
+          .typedOperDecl(exceptTypes, "O3"),
     )
 
     val expected: TlaEx =
@@ -300,7 +300,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
         .letIn(callAndAccess("t_4", "f3"), defs: _*)
         .typed(exceptTypes, "f3")
 
-    assert(expected eqTyped output)
+    assert(expected.eqTyped(output))
   }
 
   test("EXCEPT with two updates") {
@@ -327,10 +327,11 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
               tla.except(callAndAccess("t_1", "f2", "i"), tla.tuple(tla.name("j") ? "i") ? "i1",
                   tla.name("e1") ? "i") ? "f1")
           .typedOperDecl(exceptTypes, "O1"),
-        tla.declOp("t_3",
-            tla.except(callAndAccess("t_1", "f2"), tla.tuple(tla.name("i") ? "i") ? "i1",
-                callAndAccess("t_2", "f1")) ? "f2")
-          typedOperDecl (exceptTypes, "O2"),
+        tla
+          .declOp("t_3",
+              tla.except(callAndAccess("t_1", "f2"), tla.tuple(tla.name("i") ? "i") ? "i1",
+                  callAndAccess("t_2", "f1")) ? "f2")
+          .typedOperDecl(exceptTypes, "O2"),
         tla
           .declOp("t_4",
               tla.except(callAndAccess("t_3", "f2", "k"), tla.tuple(tla.name("l") ? "i") ? "i1",
@@ -340,7 +341,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
           .declOp("t_5",
               tla.except(callAndAccess("t_3", "f2"), tla.tuple(tla.name("k") ? "i") ? "i1",
                   callAndAccess("t_4", "f1")) ? "f2")
-          .typedOperDecl(exceptTypes, "O2")
+          .typedOperDecl(exceptTypes, "O2"),
     )
 
     val expected: TlaEx =
@@ -348,7 +349,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
         .letIn(callAndAccess("t_5", "f2"), defs: _*)
         .typed(exceptTypes, "f2")
 
-    assert(expected eqTyped output)
+    assert(expected.eqTyped(output))
   }
 
   test("""rewrite UNCHANGED x to x' = x""") {
@@ -362,7 +363,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
       tla
         .eql(tla.prime(tla.name("x") ? "i") ? "i", tla.name("x") ? "i")
         .typed(unchangedTypes, "b")
-    assert(expected eqTyped output)
+    assert(expected.eqTyped(output))
   }
 
   test("""rewrite UNCHANGED <<x, <<y>> >> to x' = x /\ y' = y""") {
@@ -377,10 +378,10 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
       tla
         .and(
             tla.eql(tla.prime(tla.name("x") ? "i") ? "i", tla.name("x") ? "i") ? "b",
-            tla.eql(tla.prime(tla.name("y") ? "b") ? "b", tla.name("y") ? "b") ? "b"
+            tla.eql(tla.prime(tla.name("y") ? "b") ? "b", tla.name("y") ? "b") ? "b",
         )
         .typed(unchangedTypes, "b")
-    assert(expected eqTyped output)
+    assert(expected.eqTyped(output))
   }
 
   test("""rewrite <<x, y>> = <<a, b>> to x = a /\ y = b""") {
@@ -398,10 +399,10 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
       tla
         .and(
             tla.eql(tla.name("x") ? "i", tla.name("a") ? "b") ? "b",
-            tla.eql(tla.name("y") ? "i", tla.name("b") ? "b") ? "b"
+            tla.eql(tla.name("y") ? "i", tla.name("b") ? "b") ? "b",
         )
         .typed(unchangedTypes, "b")
-    assert(expected eqTyped output)
+    assert(expected.eqTyped(output))
   }
 
   test("""rewrite <<x, y>> /= <<a, b>> to x /= a \/ y /= b""") {
@@ -416,10 +417,10 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
       tla
         .or(
             tla.neql(tla.name("x") ? "i", tla.name("a") ? "b") ? "b",
-            tla.neql(tla.name("y") ? "i", tla.name("b") ? "b") ? "b"
+            tla.neql(tla.name("y") ? "i", tla.name("b") ? "b") ? "b",
         )
         .typed(unchangedTypes, "b")
-    assert(expected eqTyped output)
+    assert(expected.eqTyped(output))
   }
 
   test("""rewrite <<x, y>> = <<a, b, c>> to FALSE""") {
@@ -431,7 +432,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     val output = desugarer.transform(input)
     // output: FALSE
     val expected: TlaEx = tla.bool(false).typed()
-    assert(expected eqTyped output)
+    assert(expected.eqTyped(output))
   }
 
   test("""rewrite <<x, y>> /= <<a, b, c>> to TRUE""") {
@@ -443,7 +444,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     val output = desugarer.transform(parallel)
     // output: TRUE
     val expected: TlaEx = tla.bool(true).typed()
-    assert(expected eqTyped output)
+    assert(expected.eqTyped(output))
   }
 
   test("unfold UNCHANGED <<x, <<y, z>> >> to UNCHANGED <<x, y, z>>") {
@@ -453,7 +454,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     val unchanged =
       tla
         .unchanged(tla.tuple(tla.name("x") ? "i",
-                tla.tuple(tla.name("y") ? "i", tla.name("z") ? "b") ? "ib_2") ? "i_ib_2_2")
+            tla.tuple(tla.name("y") ? "i", tla.name("z") ? "b") ? "ib_2") ? "i_ib_2_2")
         .typed(unchangedTypes, "b")
     val sugarFree = desugarer.transform(unchanged)
     val expected: TlaEx =
@@ -461,10 +462,10 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
         .and(
             tla.eql(tla.prime(tla.name("x") ? "i") ? "i", tla.name("x") ? "i") ? "b",
             tla.eql(tla.prime(tla.name("y") ? "i") ? "i", tla.name("y") ? "i") ? "b",
-            tla.eql(tla.prime(tla.name("z") ? "i") ? "i", tla.name("z") ? "i") ? "b"
+            tla.eql(tla.prime(tla.name("z") ? "i") ? "i", tla.name("z") ? "i") ? "b",
         )
         .typed(unchangedTypes, "b")
-    assert(expected eqTyped sugarFree)
+    assert(expected.eqTyped(sugarFree))
   }
 
   test("""rewrite UNCHANGED <<>> to TRUE""") {
@@ -474,7 +475,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     val output = desugarer.transform(input)
     // output: TRUE
     val expected: TlaEx = tla.bool(true).typed()
-    assert(expected eqTyped output)
+    assert(expected.eqTyped(output))
   }
 
   test("""rewrite UNCHANGED << <<>>, <<>> >> to TRUE""") {
@@ -486,7 +487,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
     val output = desugarer.transform(input)
     // output: TRUE
     val expected: TlaEx = tla.bool(true).typed()
-    assert(expected eqTyped output)
+    assert(expected.eqTyped(output))
   }
 
   test("""rewrite UNCHANGED f[i] to (f[i])' = f[i]""") {
@@ -504,7 +505,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
       tla
         .eql(tla.prime(app) ? "b", app)
         .typed(unchangedTypes, "b")
-    assert(expected eqTyped output)
+    assert(expected.eqTyped(output))
   }
 
   test("simplify tuples in filters") {
@@ -526,10 +527,10 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
             tla.and(
                 tla.eql(tla.appFun(tla.name("x_y_z") ? "i_ii_2_2", tla.int(1)) ? "i", tla.int(3) ? "i") ? "b",
                 tla.eql(tla.appFun(tla.appFun(tla.name("x_y_z") ? "i_ii_2_2", tla.int(2)) ? "i", tla.int(1)) ? "i",
-                    tla.int(4)) ? "b"
+                    tla.int(4)) ? "b",
             ) ? "b")
         .typed(tupleTypes, "I_II_2_2")
-    assert(output eqTyped sugarFree)
+    assert(output.eqTyped(sugarFree))
   }
 
   test("simplify tuples in maps") {
@@ -549,10 +550,10 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
             tla.plus(tla.appFun(tla.name("x_y_z") ? "i_ii_2_2", tla.int(1)) ? "i",
                 tla.appFun(tla.appFun(tla.name("x_y_z") ? "i_ii_2_2", tla.int(2)) ? "ii_2", tla.int(1)) ? "i") ? "i",
             tla.name("x_y_z") ? "i_ii_2_2",
-            tla.name("XYZ") ? "I_II_2_2"
+            tla.name("XYZ") ? "I_II_2_2",
         )
         .typed(tupleTypes, "II_2")
-    assert(expected eqTyped output)
+    assert(expected.eqTyped(output))
   }
 
   test("simplify tuples in existentials") {
@@ -574,10 +575,10 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
             tla.and(
                 tla.eql(tla.appFun(tla.name("x_y_z") ? "i_ii_2_2", tla.int(1)) ? "i", tla.int(3)) ? "b",
                 tla.eql(tla.appFun(tla.appFun(tla.name("x_y_z") ? "i_ii_2_2", tla.int(2)) ? "i", tla.int(1)) ? "i",
-                    tla.int(4)) ? "b"
+                    tla.int(4)) ? "b",
             ) ? "b")
         .typed(tupleTypes, "b")
-    assert(output eqTyped sugarFree)
+    assert(output.eqTyped(sugarFree))
   }
 
   test("simplify tuples in universals") {
@@ -599,10 +600,10 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
             tla.and(
                 tla.eql(tla.appFun(tla.name("x_y_z") ? "i_ii_2_2", tla.int(1)) ? "i", tla.int(3)) ? "b",
                 tla.eql(tla.appFun(tla.appFun(tla.name("x_y_z") ? "i_ii_2_2", tla.int(2)) ? "i", tla.int(1)) ? "i",
-                    tla.int(4)) ? "b"
+                    tla.int(4)) ? "b",
             ) ? "b")
         .typed(tupleTypes, "b")
-    assert(output eqTyped sugarFree)
+    assert(output.eqTyped(sugarFree))
   }
 
   test("simplify tuples in functions") {
@@ -622,11 +623,11 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
             tla.plus(tla.appFun(tla.name("x_y_z") ? "i_ii_2_2", tla.int(1)) ? "i",
                 tla.appFun(tla.appFun(tla.name("x_y_z") ? "i_ii_2_2", tla.int(2)) ? "ii_2", tla.int(1)) ? "i") ? "i",
             tla.name("x_y_z") ? "i_ii_2_2",
-            tla.name("XYZ") ? "I_II_2_2"
+            tla.name("XYZ") ? "I_II_2_2",
         )
         .typed(tupleTypes, "i_ii_2_2_to_ii_2")
 
-    assert(expected eqTyped output)
+    assert(expected.eqTyped(output))
   }
 
   test("keep one argument functions") {
@@ -637,7 +638,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
         .funDef(tla.enumSet(tla.name("x") ? "i") ? "I", tla.name("x") ? "i", tla.name("X") ? "I")
         .typed(tupleTypes, "i_to_I")
     val output = desugarer.transform(input)
-    assert(input eqTyped output)
+    assert(input.eqTyped(output))
   }
 
   test("simplify multi-argument functions") {
@@ -656,10 +657,10 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
             tla.plus(tla.appFun(tla.name("x_y") ? "ii_2", tla.int(1)) ? "i",
                 tla.appFun(tla.name("x_y") ? "ii_2", tla.int(2)) ? "i") ? "i",
             tla.name("x_y") ? "ii_2",
-            tla.times(tla.name("X") ? "I", tla.name("Y") ? "I") ? "II_2"
+            tla.times(tla.name("X") ? "I", tla.name("Y") ? "I") ? "II_2",
         )
         .typed(tupleTypes, "ii_to_i")
-    assert(expected eqTyped sugarFree)
+    assert(expected.eqTyped(sugarFree))
   }
 
   test("simplify tuples in recursive functions") {
@@ -678,10 +679,10 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
             tla.plus(tla.appFun(tla.name("x_y") ? "ii_2", tla.int(1)) ? "i",
                 tla.appFun(tla.name("x_y") ? "ii_2", tla.int(2)) ? "i") ? "i",
             tla.name("x_y") ? "ii_2",
-            tla.times(tla.name("S") ? "I", tla.name("T") ? "I") ? "II_2"
+            tla.times(tla.name("S") ? "I", tla.name("T") ? "I") ? "II_2",
         )
         .typed(tupleTypes, "ii_to_i")
-    assert(expected eqTyped output)
+    assert(expected.eqTyped(output))
   }
 
   test("keep one argument recursive functions") {
@@ -692,7 +693,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
         .recFunDef(tla.enumSet(tla.name("x") ? "i") ? "I", tla.name("x") ? "i", tla.name("X") ? "I")
         .typed(tupleTypes, "i_to_I")
     val output = desugarer.transform(input)
-    assert(input eqTyped output)
+    assert(input.eqTyped(output))
   }
 
   test("accept calls to user-defined operators") {
@@ -704,7 +705,7 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
         .typed(types, "i")
     val output = desugarer(input)
     // do nothing and do not complain
-    assert(output eqTyped input)
+    assert(output.eqTyped(input))
   }
 
   test("accept n-ary let-in definitions") {

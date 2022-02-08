@@ -53,19 +53,19 @@ class TestSkolemizationMarker extends FunSuite with BeforeAndAfterEach {
 
   // skolemize let-definitions, if they are used positively as part of a formula, see the issue #985
   test("""mark: LET A == \E y \in S: P IN A \/ TRUE""") {
-    val bodyOfA = exists(name("y") as Int, name("S") as IntSet, name("P") as Bool) as Bool
-    val declOfA = declOp("A", bodyOfA) as BoolOper0
-    val A = name("A") as BoolOper0
+    val bodyOfA = exists(name("y").as(Int), name("S").as(IntSet), name("P").as(Bool)).as(Bool)
+    val declOfA = declOp("A", bodyOfA).as(BoolOper0)
+    val A = name("A").as(BoolOper0)
     val B = bool(true).typed()
-    val input = letIn(or(appOp(A) as Bool, B) as Bool, declOfA) as Bool
+    val input = letIn(or(appOp(A).as(Bool), B).as(Bool), declOfA).as(Bool)
 
     // the body of A is skolemized
-    val bodyOfAskolem = apalacheSkolem(bodyOfA) as Bool
+    val bodyOfAskolem = apalacheSkolem(bodyOfA).as(Bool)
     // the skolemized copy of A is used
-    val declOfAskolem = declOp("A$_skolem", bodyOfAskolem) as BoolOper0
+    val declOfAskolem = declOp("A$_skolem", bodyOfAskolem).as(BoolOper0)
     // note that we have two let-in definitions now: one that is skolemized and one that is not skolemized
-    val skolemA = name("A$_skolem") as BoolOper0
-    val expected = letIn(or(appOp(skolemA) as Bool, B) as Bool, declOfA, declOfAskolem) as Bool
+    val skolemA = name("A$_skolem").as(BoolOper0)
+    val expected = letIn(or(appOp(skolemA).as(Bool), B).as(Bool), declOfA, declOfAskolem).as(Bool)
 
     val output = marker(input)
     assert(expected == output)
@@ -73,18 +73,18 @@ class TestSkolemizationMarker extends FunSuite with BeforeAndAfterEach {
 
   // do not skolemize let-definitions, if they are used as a value, see the issue #985
   test("""mark: LET A == \E y \in S: P IN A = FALSE""") {
-    val bodyOfA = exists(name("y") as Int, name("S") as IntSet, name("P") as Bool) as Bool
-    val declOfA = declOp("A", bodyOfA) as BoolOper0
-    val A = name("A") as BoolOper0
+    val bodyOfA = exists(name("y").as(Int), name("S").as(IntSet), name("P").as(Bool)).as(Bool)
+    val declOfA = declOp("A", bodyOfA).as(BoolOper0)
+    val A = name("A").as(BoolOper0)
     val B = bool(false).typed()
-    val input = letIn(eql(appOp(A) as Bool, B) as Bool, declOfA) as Bool
+    val input = letIn(eql(appOp(A).as(Bool), B).as(Bool), declOfA).as(Bool)
 
     // the body of A is skolemized
-    val bodyOfAskolem = apalacheSkolem(bodyOfA) as Bool
+    val bodyOfAskolem = apalacheSkolem(bodyOfA).as(Bool)
     // the skolemized copy of A is used
-    val declOfAskolem = declOp("A$_skolem", bodyOfAskolem) as BoolOper0
+    val declOfAskolem = declOp("A$_skolem", bodyOfAskolem).as(BoolOper0)
     // note that we have two let-in definitions now: one that is skolemized and one that is not skolemized
-    val expected = letIn(eql(appOp(A) as Bool, B) as Bool, declOfA, declOfAskolem) as Bool
+    val expected = letIn(eql(appOp(A).as(Bool), B).as(Bool), declOfA, declOfAskolem).as(Bool)
 
     val output = marker(input)
     assert(expected == output)

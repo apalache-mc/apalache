@@ -14,7 +14,8 @@ import java.nio.file.Path
 /**
  * A hand-written configurator for logback, as it fails to discover logback-old.xml in some environments.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 // TODO Configure to take OutputManager as parameter?
 class LogbackConfigurator(runDir: Option[Path], customRunDir: Option[Path]) extends ContextAwareBase with Configurator {
@@ -41,8 +42,7 @@ class LogbackConfigurator(runDir: Option[Path], customRunDir: Option[Path]) exte
     // only warnings at the root level
     rootLogger.setLevel(Level.WARN)
     (runDir ++ customRunDir).foreach(d =>
-      rootLogger.addAppender(mkFileAppender(loggerContext, d.resolve("detailed.log").toFile()))
-    )
+      rootLogger.addAppender(mkFileAppender(loggerContext, d.resolve("detailed.log").toFile())))
     rootLogger.addAppender(consoleAppender)
     // debug messages at the apalache level
     val apalacheLogger = loggerContext.getLogger("at.forsyte.apalache")

@@ -249,7 +249,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("one-line conjunction") {
     val writer = new PrettyWriter(printWriter, layout80)
-    val expr = and(1.to(3) map (_ => name("verylongname")): _*)
+    val expr = and(1.to(3).map(_ => name("verylongname")): _*)
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -259,7 +259,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("multi-line conjunction") {
     val writer = new PrettyWriter(printWriter, layout40)
-    val expr = impl(bool(true), and(1.to(5) map (_ => name("verylongname")): _*))
+    val expr = impl(bool(true), and(1.to(5).map(_ => name("verylongname")): _*))
     writer.write(expr)
     printWriter.flush()
     // a multi-line vertical box always breaks from the previous line, as otherwise it is incredibly hard to indent
@@ -275,8 +275,8 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("nested multiline conjunction/disjunction") {
     val writer = new PrettyWriter(printWriter, layout80)
-    val orEx = or(1.to(3) map (_ => name("verylongname")): _*)
-    val andEx = and(1.to(3) map (_ => orEx): _*)
+    val orEx = or(1.to(3).map(_ => name("verylongname")): _*)
+    val andEx = and(1.to(3).map(_ => orEx): _*)
     writer.write(andEx)
     printWriter.flush()
     val expected =
@@ -288,7 +288,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("nested multiline conjunction under negation") {
     val writer = new PrettyWriter(printWriter, layout20)
-    val andEx = and(1.to(3) map (_ => name("verylongname")): _*)
+    val andEx = and(1.to(3).map(_ => name("verylongname")): _*)
     writer.write(not(andEx))
     printWriter.flush()
     val expected =

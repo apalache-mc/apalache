@@ -19,12 +19,12 @@ import scala.io.Source
 /**
  * <p>A collection of tests that check how SanyImporter loads the standard modules.</p>
  *
- * <p>If you run this test in an IDE, and the test fails, add the following line to the VM parameters
- * (don't forget to replace <APALACHE_HOME> with the directory where you checked out the project):
- * -DTLA-Library=<APALACHE_HOME>/src/tla
- * </p>
+ * <p>If you run this test in an IDE, and the test fails, add the following line to the VM parameters (don't forget to
+ * replace <APALACHE_HOME> with the directory where you checked out the project):
+ * -DTLA-Library=<APALACHE_HOME>/src/tla </p>
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
 class TestSanyImporterStandardModules extends SanyImporterTestBase {
@@ -139,7 +139,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
       case Some(TlaOperDecl(_, _, oe @ OperEx(oper, _*))) =>
         val loc = sourceStore.find(oe.ID).get
         assert(
-            SourceRegion(SourcePosition(4, 9), SourcePosition(4, 13)) == loc.region,
+            SourceRegion(SourcePosition(4, 9), SourcePosition(4, 13)) == loc.region
         )
 
       case _ => fail()
@@ -505,7 +505,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
     //
     // -DTLA-Library=<APALACHE_HOME>/src/tla
     System.out.println(
-        "TLA-Library = %s".format(System.getProperty("TLA-Library")),
+        "TLA-Library = %s".format(System.getProperty("TLA-Library"))
     )
 
     val (rootName, modules) = sanyImporter

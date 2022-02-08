@@ -10,44 +10,50 @@ sealed trait AnnotationToken extends Positional
 /**
  * An identifier
  *
- * @param name the name associated with the identifier
+ * @param name
+ *   the name associated with the identifier
  */
 case class IDENT(name: String) extends AnnotationToken {}
 
 /**
- * Annotation name that start with "@". We introduce a special token for that instead of using
- * a token for "@" and IDENT. The reason is that we want to ignore standalone "@" in the parser.
- * See: https://github.com/informalsystems/apalache/issues/757
+ * Annotation name that start with "@". We introduce a special token for that instead of using a token for "@" and
+ * IDENT. The reason is that we want to ignore standalone "@" in the parser. See:
+ * https://github.com/informalsystems/apalache/issues/757
  *
- * @param name the name associated with the identifier
+ * @param name
+ *   the name associated with the identifier
  */
 case class AT_IDENT(name: String) extends AnnotationToken {}
 
 /**
  * A string according to the TLA+ syntax, that is a sequence of characters between quotes, "...".
  *
- * @param text the contents of the string
+ * @param text
+ *   the contents of the string
  */
 case class STRING(text: String) extends AnnotationToken {}
 
 /**
  * A string that appears between ":" and ";".
  *
- * @param text the contents of the string
+ * @param text
+ *   the contents of the string
  */
 case class INLINE_STRING(text: String) extends AnnotationToken {}
 
 /**
  * A number
  *
- * @param num the value of the number
+ * @param num
+ *   the value of the number
  */
 case class NUMBER(num: BigInt) extends AnnotationToken {}
 
 /**
  * A Boolean value, FALSE or TRUE.
  *
- * @param bool string representation of a Boolean value: "FALSE" or "TRUE"
+ * @param bool
+ *   string representation of a Boolean value: "FALSE" or "TRUE"
  */
 case class BOOLEAN(bool: Boolean) extends AnnotationToken {}
 

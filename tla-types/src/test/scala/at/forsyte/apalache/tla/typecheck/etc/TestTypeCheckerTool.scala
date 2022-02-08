@@ -23,7 +23,8 @@ import scala.io.Source
 /**
  * Unit tests for the type checker as a tool.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
 class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMockSugar {
@@ -149,7 +150,7 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
 
       val deserializaedSerialization = dec.asTlaModule(enc(postModule))
 
-      deserializaedSerialization.declarations.zip(postModule.declarations) map { case (d1, d2) =>
+      deserializaedSerialization.declarations.zip(postModule.declarations).map { case (d1, d2) =>
         assert(d1.eqTyped(d2))
       }
 

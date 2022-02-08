@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.lir
 
 /**
- * Default settings for the untyped language layer. To use the `Untyped()` tag, import the definitions from `UntypedPredefs`.
+ * Default settings for the untyped language layer. To use the `Untyped()` tag, import the definitions from
+ * `UntypedPredefs`.
  */
 object UntypedPredefs {
   implicit val untyped: TypeTag = Untyped()
@@ -9,8 +10,10 @@ object UntypedPredefs {
   /**
    * An implicit conversion of an expression to a builder block
    *
-   * @param ex a TLA+ expression
-   * @return a builder block
+   * @param ex
+   *   a TLA+ expression
+   * @return
+   *   a builder block
    */
   implicit def tlaExToBlock(ex: TlaEx): BuilderTlaExWrapper = {
     BuilderTlaExWrapper(ex)
@@ -19,8 +22,10 @@ object UntypedPredefs {
   /**
    * An implicit conversion of a sequence of expressions to a sequence of builder blocks.
    *
-   * @param es a sequence of TLA+ expressions
-   * @return the corresponding sequence of builder blocks
+   * @param es
+   *   a sequence of TLA+ expressions
+   * @return
+   *   the corresponding sequence of builder blocks
    */
   implicit def seqOfTlaExToSeqOfBlocks(es: Seq[TlaEx]): Seq[BuilderTlaExWrapper] = {
     es.map(tlaExToBlock)
@@ -38,7 +43,7 @@ object UntypedPredefs {
         builderExToTlaEx(target)
 
       case BuilderOper(oper, args @ _*) =>
-        val builtArgs = args map (a => builderExToTlaEx(a))
+        val builtArgs = args.map(a => builderExToTlaEx(a))
         OperEx(oper, builtArgs: _*)
 
       case BuilderLet(body, defs @ _*) =>

@@ -11,12 +11,14 @@ import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import com.typesafe.scalalogging.LazyLogging
 
 /**
- * <p>ToEtcExpr takes a TLA+ expression and produces an EtcExpr.
- * The most interesting part of this translation is dealing with the built-in operators.
- * This translator is an extension of the ideas that appear in SignatureGenerator by Jure Kukovec.</p>
+ * <p>ToEtcExpr takes a TLA+ expression and produces an EtcExpr. The most interesting part of this translation is
+ * dealing with the built-in operators. This translator is an extension of the ideas that appear in SignatureGenerator
+ * by Jure Kukovec.</p>
  *
- * @see at.forsyte.apalache.tla.types.SignatureGenerator
- * @author Igor Konnov
+ * @see
+ *   at.forsyte.apalache.tla.types.SignatureGenerator
+ * @author
+ *   Igor Konnov
  */
 class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubstitution, varPool: TypeVarPool)
     extends EtcBuilder with LazyLogging {
@@ -56,9 +58,12 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
   /**
    * Translate an operator declaration.
    *
-   * @param decl      an operator declaration
-   * @param inScopeEx an expression to chain in the bottom of let-definition, it should have been translated
-   * @return the translated let-in expression with inScopeEx attached
+   * @param decl
+   *   an operator declaration
+   * @param inScopeEx
+   *   an expression to chain in the bottom of let-definition, it should have been translated
+   * @return
+   *   the translated let-in expression with inScopeEx attached
    */
   private def operDefToDecl(decl: TlaOperDecl, inScopeEx: EtcExpr): EtcExpr = {
     // The type of the lambda is what we want to see as the type of the declaration.
@@ -113,7 +118,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
 
       case _ =>
         // use a type annotation, if there is any
-        findAnnotation(annotationStore, decl.ID, StandardAnnotations.TYPE) map {
+        findAnnotation(annotationStore, decl.ID, StandardAnnotations.TYPE).map {
           case Annotation(StandardAnnotations.TYPE, AnnotationStr(annotationText)) =>
             parseType(decl.name, annotationText)
 
@@ -155,15 +160,17 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
     // since we group by 2 below, this case should be unreachable
     case moreThanTwo =>
       throw new IllegalArgumentException(
-          s"Reached impossible state in validateRecSetPair: ${moreThanTwo}",
+          s"Reached impossible state in validateRecSetPair: ${moreThanTwo}"
       )
   }
 
   /**
    * Translate an expression.
    *
-   * @param ex a TLA expression
-   * @return an expression in the simply typed lambda calculus variant Etc
+   * @param ex
+   *   a TLA expression
+   * @return
+   *   an expression in the simply typed lambda calculus variant Etc
    */
   def apply(ex: TlaEx): EtcExpr = {
     val tex = transform(ex)
@@ -198,7 +205,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
       case ValEx(v) =>
         mkConst(ref, typeOfLiteralExpr(v))
 
-      //******************************************** GENERAL OPERATORS **************************************************
+      // ******************************************** GENERAL OPERATORS **************************************************
       case OperEx(op, args @ _*) if op == TlaOper.eq || op == TlaOper.ne =>
         // x = y, x /= y
         val a = varPool.fresh
@@ -246,7 +253,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         // the resulting expression is (((a => Bool) => a) (λ x ∈ Set(b). P))
         mkApp(ref, Seq(chooseType), chooseLambda)
 
-      //******************************************** LET-IN ****************************************************
+      // ******************************************** LET-IN ****************************************************
       case LetInEx(body, declarations @ _*) =>
         val output =
           declarations.foldRight(this(body)) { case (decl, term) =>
@@ -257,7 +264,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val identity = OperT1(Seq(a), a)
         mkApp(ref, Seq(identity), output)
 
-      //******************************************** BOOLEANS **************************************************
+      // ******************************************** BOOLEANS **************************************************
       case OperEx(op, a, b) if op == TlaBoolOper.equiv || op == TlaBoolOper.implies =>
         // A <=> B, A => B
         val args = Seq(a, b)
@@ -288,7 +295,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         // the resulting expression is (principal lambda)
         mkApp(ref, Seq(principal), lambda)
 
-      //******************************************** SETS **************************************************
+      // ******************************************** SETS **************************************************
       case OperEx(TlaSetOper.enumSet) =>
         // empty set {} is not an operator but a constant
         val a = varPool.fresh
@@ -384,11 +391,11 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
       case OperEx(TlaSetOper.map, mapExpr, args @ _*) =>
         // { x \in S, y \in T: e }
         val (vars, sets) = TlaOper.deinterleave(args)
-        val bindings = translateBindings(vars zip sets: _*)
+        val bindings = translateBindings(vars.zip(sets): _*)
         val a = varPool.fresh
         val otherTypeVars =
           varPool.fresh(
-              bindings.length,
+              bindings.length
           ) // start with "b", as "a" goes to the result
         // the principal type of is ((b, c) => a) => Set(a)
         val principal = OperT1(Seq(OperT1(otherTypeVars, a)), SetT1(a))
@@ -396,7 +403,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val lambda = mkAbs(BlameRef(mapExpr.ID), this(mapExpr), bindings: _*)
         mkApp(ref, Seq(principal), lambda)
 
-      //******************************************** FUNCTIONS **************************************************
+      // ******************************************** FUNCTIONS **************************************************
       case OperEx(TlaFunOper.enum, args @ _*) =>
         // [f1 |-> e1, f2 |-> e2]
         val (fields, values) =
@@ -456,7 +463,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
                   case orphan =>
                     throw new TypingException(s"Invalid bound variables and sets $orphan in: $ex", ex.ID)
                 }
-                .toSeq: _*,
+                .toSeq: _*
           )
 
         val a = varPool.fresh
@@ -487,7 +494,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         // To guarantee that the function and the updates have the same types, produce (c, ..., c) => c
         val a = varPool.fresh
         val nargs = accessors.length + 1
-        val sig = OperT1(1.to(nargs) map { _ => a }, a)
+        val sig = OperT1(1.to(nargs).map { _ => a }, a)
         mkApp(ref, Seq(sig), this(fun) +: towersOfUnapply: _*)
 
       case funDef @ OperEx(TlaFunOper.recFunDef, body, args @ _*) =>
@@ -505,7 +512,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
                   case orphan =>
                     throw new TypingException(s"Invalid bound variables and sets ${orphan} in: $ex", ex.ID)
                 }
-                .toSeq: _*,
+                .toSeq: _*
           )
 
         val resultType = varPool.fresh
@@ -543,7 +550,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
       case OperEx(TlaFunOper.recFunRef) =>
         mkName(ref, TlaFunOper.recFunRef.uniqueName)
 
-      //******************************************** CONTROL **************************************************
+      // ******************************************** CONTROL **************************************************
 
       case OperEx(TlaControlOper.ifThenElse, predEx, thenEx, elseEx) =>
         // IF e1 THEN e2 ELSE E2
@@ -566,7 +573,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val opsig = OperT1(operArgs, a)
         mkExRefApp(opsig, args)
 
-      //******************************************** FiniteSets ************************************************
+      // ******************************************** FiniteSets ************************************************
       case OperEx(TlaFiniteSetOper.isFiniteSet, setEx) =>
         val a = varPool.fresh
         val opsig = OperT1(Seq(SetT1(a)), BoolT1()) // Set(a) => Bool
@@ -577,7 +584,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val opsig = OperT1(Seq(SetT1(a)), IntT1()) // Set(a) => Int
         mkExRefApp(opsig, Seq(setEx))
 
-      //*************************************** ACTION OPERATORS ***********************************************
+      // *************************************** ACTION OPERATORS ***********************************************
       case OperEx(TlaActionOper.prime, inner) =>
         val a = varPool.fresh
         val opsig = OperT1(Seq(a), a) // a => a
@@ -614,7 +621,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
           OperT1(Seq(BoolT1(), BoolT1()), BoolT1()) // (Bool, Bool) => Bool
         mkExRefApp(opsig, Seq(a, b))
 
-      //******************************************** Sequences *************************************************
+      // ******************************************** Sequences *************************************************
       case OperEx(TlaSeqOper.head, s) =>
         val a = varPool.fresh
         val opsig = OperT1(Seq(SeqT1(a)), a) // Seq(a) => a
@@ -660,7 +667,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
           ) // Seq(a), (a => Bool) => Seq(a)
         mkExRefApp(opsig, args)
 
-      //******************************************** INTEGERS **************************************************
+      // ******************************************** INTEGERS **************************************************
       case OperEx(TlaArithOper.uminus, args @ _*) =>
         // -x
         val opsig = OperT1(Seq(IntT1()), IntT1())
@@ -689,7 +696,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val opsig = OperT1(List(RealT1(), RealT1()), RealT1())
         mkExRefApp(opsig, args)
 
-      //***************************************** TEMPORAL *************************************************
+      // ***************************************** TEMPORAL *************************************************
       case OperEx(op, inner) if op == TlaTempOper.box || op == TlaTempOper.diamond =>
         val opsig = OperT1(Seq(BoolT1()), BoolT1()) // Bool => Bool
         mkExRefApp(opsig, Seq(inner))
@@ -704,7 +711,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val opsig = OperT1(Seq(a, BoolT1()), BoolT1()) // (a, Bool) => Bool
         mkExRefApp(opsig, Seq(sub, act))
 
-      //******************************************** Apalache **************************************************
+      // ******************************************** Apalache **************************************************
       case OperEx(ApalacheOper.funAsSeq, fun, len) =>
         val a = varPool.fresh
         // ((Int -> a), Int) => Seq(a)
@@ -759,7 +766,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val opsig = OperT1(Seq(OperT1(Seq(a, b), a), a, SeqT1(b)), a)
         mkExRefApp(opsig, Seq(oper, base, seq))
 
-      //******************************************** MISC **************************************************
+      // ******************************************** MISC **************************************************
       case OperEx(TlaOper.label, labelledEx, nameAndArgs @ _*) =>
         val typeVar = varPool.fresh
         mkExRefApp(OperT1(nameAndArgs.map(_ => StrT1()) :+ typeVar, typeVar), nameAndArgs :+ labelledEx)
@@ -778,19 +785,25 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
   }
 
   /**
-   * Usually, one uses bindings like x \in S, y \in T in set comprehensions and function definitions.
-   * However, TLA+ allows for advanced syntax in bindings, e.g., << x, y >> \in S, << u, << v, w >> >> \in T.
-   * This method does a general translation for variable bindings
+   * Usually, one uses bindings like x \in S, y \in T in set comprehensions and function definitions. However, TLA+
+   * allows for advanced syntax in bindings, e.g., << x, y >> \in S, << u, << v, w >> >> \in T. This method does a
+   * general translation for variable bindings
    *
-   * @param bindings pairs of expressions, e.g., (NameEx("x"), NameEx("S"))
-   * @return translated bindings, where all tuples have been unpacked
+   * @param bindings
+   *   pairs of expressions, e.g., (NameEx("x"), NameEx("S"))
+   * @return
+   *   translated bindings, where all tuples have been unpacked
    */
   private def translateBindings(
-      bindings: (TlaEx, TlaEx)*,
-  ): Seq[(EtcName, EtcExpr)] = {
+      bindings: (TlaEx, TlaEx)*): Seq[(EtcName, EtcExpr)] = {
     // Project a tuple and a set of dim-tuples on the ith element (starting with 0!).
     // We have to pass a tuple as well, in order to back-propagate the type later.
-    def project(id: UID, tupleId: UID, setEx: EtcExpr, dim: Int, index: Int): EtcExpr = {
+    def project(
+        id: UID,
+        tupleId: UID,
+        setEx: EtcExpr,
+        dim: Int,
+        index: Int): EtcExpr = {
       val typeVars = varPool.fresh(dim)
       val tupleType = TupT1(typeVars: _*)
       // e.g., (<<a, b, c>>, Set(<<a, b, c>>)) => Set(b)
@@ -803,8 +816,9 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
     }
 
     def unpackOne(
-        id: UID, target: TlaEx, set: EtcExpr,
-    ): Seq[(EtcName, EtcExpr)] = {
+        id: UID,
+        target: TlaEx,
+        set: EtcExpr): Seq[(EtcName, EtcExpr)] = {
       target match {
         // simplest case: name is bound to set
         case nameEx @ NameEx(_) =>
@@ -829,8 +843,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
 
   // Translate a sequence of formal parameters into type variables
   private def formalParamsToTypeVars(
-      params: Seq[OperParam],
-  ): Seq[(String, TlaType1)] = {
+      params: Seq[OperParam]): Seq[(String, TlaType1)] = {
     params match {
       case Seq() => Seq()
 

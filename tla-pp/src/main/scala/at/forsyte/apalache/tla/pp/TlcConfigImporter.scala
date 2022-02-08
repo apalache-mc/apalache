@@ -10,10 +10,11 @@ import com.typesafe.scalalogging.LazyLogging
 /**
  * <p>An importer of all components of a parsed TLC config into a TLA module.</p>
  *
- * <p>Igor: This class does not compose well with the rest of ConfigurationPassImpl. So we are not using the result
- * of rewriting. We should come back to this class later.</p>
+ * <p>Igor: This class does not compose well with the rest of ConfigurationPassImpl. So we are not using the result of
+ * rewriting. We should come back to this class later.</p>
  *
- * @author Andrey Kuprianov
+ * @author
+ *   Andrey Kuprianov
  */
 class TlcConfigImporter(config: TlcConfig, tracker: TransformationTracker)
     extends TlaModuleTransformation with LazyLogging {
@@ -28,7 +29,7 @@ class TlcConfigImporter(config: TlcConfig, tracker: TransformationTracker)
     val assignments = config.constAssignments.map { case (param, value) =>
       val valueEx = value.toTlaEx
       val operT = OperT1(Seq(), valueEx.typeTag.asTlaType1())
-      tla.declOp(ConstAndDefRewriter.OVERRIDE_PREFIX + param, value.toTlaEx) as operT
+      tla.declOp(ConstAndDefRewriter.OVERRIDE_PREFIX + param, value.toTlaEx).as(operT)
     }
     val replacements = config.constReplacements.map { case (param, value) =>
       mod.declarations.find(_.name == value) match {
@@ -38,7 +39,7 @@ class TlcConfigImporter(config: TlcConfig, tracker: TransformationTracker)
             assert(tt.isInstanceOf[OperT1])
             val operT = tt.asInstanceOf[OperT1]
             val application = tla.appOp(tla.name(value).typed(operT)).typed(operT.res)
-            tla.declOp(ConstAndDefRewriter.OVERRIDE_PREFIX + param, application) as operT
+            tla.declOp(ConstAndDefRewriter.OVERRIDE_PREFIX + param, application).as(operT)
           } else {
             val nparams = d.formalParams.size
             throw new TLCConfigurationError(
@@ -48,33 +49,33 @@ class TlcConfigImporter(config: TlcConfig, tracker: TransformationTracker)
         case Some(d) =>
           // This is a branch from the old untyped encoding. Does it make sense in the type encoding?
           val tt = d.typeTag.asTlaType1()
-          tla.declOp(ConstAndDefRewriter.OVERRIDE_PREFIX + param, tla.name(value).typed(tt)) as OperT1(Seq(), tt)
+          tla.declOp(ConstAndDefRewriter.OVERRIDE_PREFIX + param, tla.name(value).typed(tt)).as(OperT1(Seq(), tt))
 
         case None =>
           throw new TLCConfigurationError(s"Met a replacement $param <- $value, but $value is not found")
       }
     }
     val stateConstraints = config.stateConstraints.zipWithIndex.map { case (value, index) =>
-      tla.declOp(TlcConfigImporter.STATE_PREFIX + index, mkBoolName(value)) as boolOperT
+      tla.declOp(TlcConfigImporter.STATE_PREFIX + index, mkBoolName(value)).as(boolOperT)
     }
     val actionConstraints = config.actionConstraints.zipWithIndex.map { case (value, index) =>
-      tla.declOp(TlcConfigImporter.ACTION_PREFIX + index, mkBoolName(value)) as boolOperT
+      tla.declOp(TlcConfigImporter.ACTION_PREFIX + index, mkBoolName(value)).as(boolOperT)
     }
     val invariants = config.invariants.zipWithIndex.map { case (value, index) =>
-      tla.declOp(TlcConfigImporter.INVARIANT_PREFIX + index, mkBoolName(value)) as boolOperT
+      tla.declOp(TlcConfigImporter.INVARIANT_PREFIX + index, mkBoolName(value)).as(boolOperT)
     }
     val temporalProps = config.temporalProps.zipWithIndex.map { case (value, index) =>
-      tla.declOp(TlcConfigImporter.TEMPORAL_PREFIX + index, mkBoolName(value)) as boolOperT
+      tla.declOp(TlcConfigImporter.TEMPORAL_PREFIX + index, mkBoolName(value)).as(boolOperT)
     }
     val behaviorSpec = config.behaviorSpec match {
       case InitNextSpec(init, next) =>
         List(
-            tla.declOp(TlcConfigImporter.INIT, mkBoolName(init)) as boolOperT,
-            tla.declOp(TlcConfigImporter.NEXT, mkBoolName(next)) as boolOperT
+            tla.declOp(TlcConfigImporter.INIT, mkBoolName(init)).as(boolOperT),
+            tla.declOp(TlcConfigImporter.NEXT, mkBoolName(next)).as(boolOperT),
         )
 
       case TemporalSpec(name) =>
-        List(tla.declOp(TlcConfigImporter.SPEC, mkBoolName(name)) as boolOperT)
+        List(tla.declOp(TlcConfigImporter.SPEC, mkBoolName(name)).as(boolOperT))
 
       case NullSpec() =>
         throw new TLCConfigurationError("Neither INIT and NEXT, nor SPECIFICATION found in the TLC configuration file")

@@ -5,7 +5,7 @@ import java.io.File
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode
 import at.forsyte.apalache.tla.bmcmt.trex.{
-  FilteredTransitionExecutor, IncrementalExecutionContext, TransitionExecutorImpl
+  FilteredTransitionExecutor, IncrementalExecutionContext, TransitionExecutorImpl,
 }
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
@@ -23,7 +23,7 @@ trait TestSeqModelCheckerTrait extends fixture.FunSuite {
       "bb" -> TupT1(BoolT1(), BoolT1()),
       "r" -> RecT1(SortedMap("x" -> IntT1())),
       "s" -> SeqT1(RecT1(SortedMap("x" -> IntT1()))),
-      "Ob" -> OperT1(Seq(), BoolT1())
+      "Ob" -> OperT1(Seq(), BoolT1()),
   )
   private val intTag: Typed[TlaType1] = Typed(IntT1())
 
@@ -425,7 +425,7 @@ trait TestSeqModelCheckerTrait extends fixture.FunSuite {
     val hist = name("hist") ? "s"
     val inv = le(
         appFun(appFun(hist, len(hist) ? "i") ? "r", str("x")) ? "i",
-        plus(int(10), appFun(appFun(hist, int(1)) ? "r", str("x")) ? "i") ? "i"
+        plus(int(10), appFun(appFun(hist, int(1)) ? "r", str("x")) ? "i") ? "i",
     ).typed(types, "b")
     val invDecl = TlaOperDecl("TraceInv", List(OperParam("hist", 0)), inv)(Untyped())
     val notInv = not(inv).typed(types, "b")
@@ -451,7 +451,7 @@ trait TestSeqModelCheckerTrait extends fixture.FunSuite {
     val hist = name("hist") ? "s"
     val inv = le(
         appFun(appFun(hist, len(hist) ? "i") ? "r", str("x")) ? "i",
-        plus(int(9), appFun(appFun(hist, int(1)) ? "r", str("x")) ? "i") ? "i"
+        plus(int(9), appFun(appFun(hist, int(1)) ? "r", str("x")) ? "i") ? "i",
     ).typed(types, "b")
     val invDecl = TlaOperDecl("TraceInv", List(OperParam("hist", 0)), inv)(Untyped())
     val notInv = not(inv).typed(types, "b")
@@ -499,14 +499,13 @@ trait TestSeqModelCheckerTrait extends fixture.FunSuite {
     // y' <- 1 /\ x' <- 1
     val initTrans = List(and(mkAssign("y", 1), mkAssign("x", 1)).typed(BoolT1()))
     // y' <- y + 1 /\ x' <- x + 1
-    val nextTrans = List(
-        and(
+    val nextTrans = List(and(
             mkAssign("y", plus(name("y") ? "i", int(1)) ? "i", IntT1()),
-            mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1())
+            mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1()),
         ).typed(BoolT1())) ///
     val inv = eql(
         eql(int(3), name("x") ? "i") ? "b",
-        eql(int(3), name("y") ? "i") ? "b"
+        eql(int(3), name("y") ? "i") ? "b",
     ).typed(types, "b")
     val notInv = not(inv).typed(types, "b")
 
@@ -712,12 +711,11 @@ trait TestSeqModelCheckerTrait extends fixture.FunSuite {
     val nextTrans = List(trans1, trans2)
     // a constant initializer: \E t \in { 20, 10 }: N' \in {t}
     val cInit =
-      apalacheSkolem(
-          exists(
-              name("t") ? "i",
-              enumSet(int(20), int(10)) ? "I",
-              mkAssign("N", name("t") ? "i", IntT1())
-          ) ? "b")
+      apalacheSkolem(exists(
+          name("t") ? "i",
+          enumSet(int(20), int(10)) ? "I",
+          mkAssign("N", name("t") ? "i", IntT1()),
+      ) ? "b")
         .typed(types, "b")
 
     // ~(x <= N)

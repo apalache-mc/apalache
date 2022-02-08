@@ -12,8 +12,10 @@ import scala.collection.mutable
 /**
  * This class produces counterexamples in the Informal Trace Format.
  *
- * @param writer a print writer to use
- * @author Igor Konnov
+ * @param writer
+ *   a print writer to use
+ * @author
+ *   Igor Konnov
  */
 class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter {
 
@@ -30,9 +32,12 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
   /**
    * Produce a JSON representation of a counterexample in the ITF format
    *
-   * @param rootModule the module that produced the counterexample
-   * @param states     a sequence of next states
-   * @return the JSON representation of the counterexample in the ITF format
+   * @param rootModule
+   *   the module that produced the counterexample
+   * @param states
+   *   a sequence of next states
+   * @return
+   *   the JSON representation of the counterexample in the ITF format
    */
   def mkJson(rootModule: TlaModule, states: List[NextState]): ujson.Value = {
     // merge constant initialization and variable initialization into a single state
@@ -108,7 +113,7 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
 
     case OperEx(TlaFunOper.enum, args @ _*) =>
       val (keyEs, valuesEs) = deinterleave(args)
-      val keys = keyEs collect { case ValEx(TlaStr(s)) => s }
+      val keys = keyEs.collect { case ValEx(TlaStr(s)) => s }
       val values = valuesEs.map(exToJson)
       ujson.Obj(mutable.LinkedHashMap(keys.zip(values): _*))
 

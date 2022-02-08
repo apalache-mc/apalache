@@ -41,7 +41,7 @@ class TestSourceLocator extends FunSuite {
 
   val decls = List(
       decl1,
-      decl2
+      decl2,
   )
 
   val bodyMap = BodyMapFactory.makeFromDecls(decls)
@@ -53,7 +53,7 @@ class TestSourceLocator extends FunSuite {
   val ex2 = letIn(
       ge(appOp(name("A") ? "iTOi", int(1)) ? "i", int(0)) ? "b",
       declOp("A", plus(name("p") ? "i", int(1)) ? "i", OperParam("p"))
-        .typedOperDecl(types, "iTOi")
+        .typedOperDecl(types, "iTOi"),
   ).typed(types, "b")
   // plus(x, 1)
   val ex3 = appOp(name("plus") ? "iiTOi", name("x") ? "i", int(1)).typed(types, "i")
@@ -61,7 +61,7 @@ class TestSourceLocator extends FunSuite {
   // IF y THEN App(I, 0) ELSE FALSE
   val ex4 = letIn(
       ite(name("y") ? "b", appOp(name("App") ? "D2", name("I") ? "X", int(0)) ? "i", bool(false)) ? "b",
-      declOp("I", name("p") ? "i", OperParam("p")).typedOperDecl(types, "b")
+      declOp("I", name("p") ? "i", OperParam("p")).typedOperDecl(types, "b"),
   ).typed(types, "b")
   // LET A(p, q) == IntentionallyUndefinedOper(p, q) IN
   //   LET B == b
@@ -74,16 +74,16 @@ class TestSourceLocator extends FunSuite {
         letIn(
             letIn(
                 appOp(name("C") ? "iTOi", appOp(name("D") ? "TOi") ? "i") ? "i",
-                declOp("D", name("x") ? "i").typedOperDecl(types, "TOi")
+                declOp("D", name("x") ? "i").typedOperDecl(types, "TOi"),
             ) ? "i",
             declOp("B", name("b") ? "i").typedOperDecl(types, "TOi"),
             declOp("C", appOp(name("A") ? "iiTOi", name("p") ? "i", appOp(name("B") ? "TOi") ? "i") ? "i",
                 OperParam("p"))
-              .typedOperDecl(types, "iTOi")
+              .typedOperDecl(types, "iTOi"),
         ) ? "i",
         declOp("A", appOp(name("IntentionallyUndefinedOper") ? "iiTOi", name("p") ? "i", name("q") ? "i") ? "i",
             OperParam("p"), OperParam("q"))
-          .typedOperDecl(types, "iiTOi")
+          .typedOperDecl(types, "iiTOi"),
     ).typed(types, "i")
   // UNCHANGED x
   val ex6 = unchanged(name("x") ? "i").typed(types, "b")
@@ -101,7 +101,7 @@ class TestSourceLocator extends FunSuite {
       ex5,
       ex6,
       ex7,
-      ex9
+      ex9,
   )
 
   def generateLoc(uid: UID) =
@@ -109,15 +109,16 @@ class TestSourceLocator extends FunSuite {
         "filename",
         new SourceRegion(
             new SourcePosition(uid.id.toInt),
-            new SourcePosition(uid.id.toInt)
-        )
+            new SourcePosition(uid.id.toInt),
+        ),
     )
 
   // Arbitrary assignment, all exs get a unique position equal to their UID
   val sourceMap: SourceMap =
-    ((exs.map(allUidsBelow) ++ decls.map(_.body).map(allUidsBelow)).foldLeft(Set.empty[UID]) {
-      _ ++ _
-    } map { x =>
+    ((exs.map(allUidsBelow) ++ decls.map(_.body).map(allUidsBelow))
+          .foldLeft(Set.empty[UID]) {
+        _ ++ _
+      }.map { x =>
       x -> generateLoc(x)
     }).toMap
 
@@ -140,7 +141,7 @@ class TestSourceLocator extends FunSuite {
   val locator = SourceLocator(sourceMap, changeListener)
 
   def testTransformation(t: TlaExTransformation): Unit = {
-    val post = exs map t
+    val post = exs.map(t)
     val postIds = post.map(allUidsBelow).foldLeft(Set.empty[UID]) {
       _ ++ _
     }

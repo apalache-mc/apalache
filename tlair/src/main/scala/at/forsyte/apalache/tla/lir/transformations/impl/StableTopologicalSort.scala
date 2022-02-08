@@ -1,23 +1,28 @@
 package at.forsyte.apalache.tla.lir.transformations.impl
 
 /**
- * An implementation of a topological sort following <a href="https://en.wikipedia.org/wiki/Topological_sorting">Kahn's algorithm</a>.
- * Our sorting is stable, that is, when two graph nodes belong to the same layer, they are ordered by the original ordering.
- * (We are assuming that the input list contains no duplicates.)
+ * An implementation of a topological sort following <a href="https://en.wikipedia.org/wiki/Topological_sorting">Kahn's
+ * algorithm</a>. Our sorting is stable, that is, when two graph nodes belong to the same layer, they are ordered by the
+ * original ordering. (We are assuming that the input list contains no duplicates.)
  *
- * @tparam T the type of graph vertices
- * @author Igor Konnov
+ * @tparam T
+ *   the type of graph vertices
+ * @author
+ *   Igor Konnov
  */
 class StableTopologicalSort[T]() {
   type Edges = Map[T, Set[T]]
 
   /**
-   * Sort the elements of the list `unsorted` according to the dependencies that are stored in the incoming edges.
-   * We are assuming that `inEdges` contain values for all elements of `unsorted`.
+   * Sort the elements of the list `unsorted` according to the dependencies that are stored in the incoming edges. We
+   * are assuming that `inEdges` contain values for all elements of `unsorted`.
    *
-   * @param inEdges  a set of incoming edges per every element of unsorted (may be empty)
-   * @param unsorted a list of nodes
-   * @return either Left(sorted) that contains the sorted nodes, or Right(nodes) that contains a subgraph with a cycle inside.
+   * @param inEdges
+   *   a set of incoming edges per every element of unsorted (may be empty)
+   * @param unsorted
+   *   a list of nodes
+   * @return
+   *   either Left(sorted) that contains the sorted nodes, or Right(nodes) that contains a subgraph with a cycle inside.
    */
   def sort(inEdges: Edges, unsorted: Seq[T]): Either[List[T], Set[T]] = {
     require(inEdges.keySet == unsorted.toSet)

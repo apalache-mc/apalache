@@ -77,8 +77,8 @@ class TestStableTopologicalSort extends FunSuite with BeforeAndAfterEach with Ch
         result match {
           case Left(sorted) =>
             isSorted(edgesMap, sorted) :| ("sorted: " + sorted) &&
-              ((unsorted.distinct == unsorted) ==>
-                isStableLayer0(edgesMap, unsorted, sorted) :| ("sorted: " + sorted))
+            ((unsorted.distinct == unsorted) ==>
+              isStableLayer0(edgesMap, unsorted, sorted) :| ("sorted: " + sorted))
 
           case Right(witnesses) =>
             isOnCycle(edgesMap, witnesses) :| ("witnesses: " + witnesses)

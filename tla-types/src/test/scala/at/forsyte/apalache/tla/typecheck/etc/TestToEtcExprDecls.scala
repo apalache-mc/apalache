@@ -13,7 +13,8 @@ import org.scalatest.{BeforeAndAfterEach, FunSuite}
 /**
  * Unit tests for translating declarations rather than single expressions.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
 class TestToEtcExprDecls extends FunSuite with BeforeAndAfterEach with EtcBuilder {

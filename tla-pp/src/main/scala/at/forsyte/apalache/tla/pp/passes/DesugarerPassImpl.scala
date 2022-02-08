@@ -24,8 +24,11 @@ import java.nio.file.Path
  *   next pass to call
  */
 class DesugarerPassImpl @Inject() (
-    val options: PassOptions, tracker: TransformationTracker, gen: UniqueNameGenerator, writerFactory: TlaWriterFactory,
-) extends DesugarerPass with LazyLogging {
+    val options: PassOptions,
+    tracker: TransformationTracker,
+    gen: UniqueNameGenerator,
+    writerFactory: TlaWriterFactory)
+    extends DesugarerPass with LazyLogging {
 
   override def name: String = "DesugarerPass"
 

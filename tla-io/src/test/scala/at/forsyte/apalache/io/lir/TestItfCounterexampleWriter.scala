@@ -18,9 +18,12 @@ class TestItfCounterexampleWriter extends FunSuite {
   /**
    * Write a counterexample and compare the output to the expected result.
    *
-   * @param rootModule the module that produced the counterexample
-   * @param states     a list of states: state 0 is the constant initializer, state 1 is the initial state, etc.
-   * @param expected   the expected output as a string
+   * @param rootModule
+   *   the module that produced the counterexample
+   * @param states
+   *   a list of states: state 0 is the constant initializer, state 1 is the initial state, etc.
+   * @param expected
+   *   the expected output as a string
    */
   def compareJson(rootModule: TlaModule, states: List[NextState], expected: String): Unit = {
     val writer = new ItfCounterexampleWriter(new PrintWriter(new StringWriter()))
@@ -36,7 +39,7 @@ class TestItfCounterexampleWriter extends FunSuite {
     compareJson(
         TlaModule("test", List(TlaConstDecl("N")(intTag), TlaVarDecl("x")(intTag))),
         List(
-            ("0", SortedMap("N" -> ValEx(TlaInt(4))(intTag))),
+            ("0", SortedMap("N" -> ValEx(TlaInt(4))(intTag)))
         ),
         """{
           |  "#meta": {

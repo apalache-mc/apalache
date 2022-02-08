@@ -11,7 +11,8 @@ import scala.math.BigInt
  *
  * <p>Bugfix #450: make sure that the integers are simplified with BigInt.</p>
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 abstract class ConstSimplifierBase {
   private val boolTag = Typed(BoolT1())

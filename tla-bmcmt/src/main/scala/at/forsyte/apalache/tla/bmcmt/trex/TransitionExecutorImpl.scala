@@ -9,9 +9,11 @@ import com.typesafe.scalalogging.LazyLogging
 /**
  * An implementation of TransitionExecutor.
  *
- * @see at.forsyte.apalache.tla.bmcmt.trex.TransitionExecutor
+ * @see
+ *   at.forsyte.apalache.tla.bmcmt.trex.TransitionExecutor
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], ctx: ExecutionContext[ExecCtxT])
     extends TransitionExecutor[ExecCtxT] with LazyLogging {
@@ -42,14 +44,16 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
 
   /**
    * Retrieve the translated symbolic execution
-   * @return the accumulated execution
+   * @return
+   *   the accumulated execution
    */
   override def execution: EncodedExecution = EncodedExecution(lastState.arena, revStack.reverse)
 
   /**
    * Initialize CONSTANTS by applying assignments within a given expression.
    *
-   * @param constInit a constant initializer that contains assignments to primed constants.
+   * @param constInit
+   *   a constant initializer that contains assignments to primed constants.
    */
   override def initializeConstants(constInit: TlaEx): Unit = {
     assert(controlState == Preparing())
@@ -74,15 +78,18 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
   }
 
   /**
-   * Translate a transition into SMT and save it under the given number. This method returns false,
-   * if the transition was found to be disabled during the translation. In this case, the translation result
-   * is still saved in the SMT context. It is user's responsibility to pop the context, e.g., by recovering from
-   * a snapshot. (In an incremental solver, it is cheap; in an offline solver, this may slow down the checker.)
+   * Translate a transition into SMT and save it under the given number. This method returns false, if the transition
+   * was found to be disabled during the translation. In this case, the translation result is still saved in the SMT
+   * context. It is user's responsibility to pop the context, e.g., by recovering from a snapshot. (In an incremental
+   * solver, it is cheap; in an offline solver, this may slow down the checker.)
    *
-   * @param transitionNo a number associated with the transition, must be unique for the current step
-   * @param transitionEx the expression that encodes the transition, it must be a TLA+ action expression
-   * @return true, if the transition has been successfully translated;
-   *         false, if the translation has found that the transition is disabled
+   * @param transitionNo
+   *   a number associated with the transition, must be unique for the current step
+   * @param transitionEx
+   *   the expression that encodes the transition, it must be a TLA+ action expression
+   * @return
+   *   true, if the transition has been successfully translated; false, if the translation has found that the transition
+   *   is disabled
    */
   override def prepareTransition(transitionNo: Int, transitionEx: TlaEx): Boolean = {
     assert(controlState == Preparing())
@@ -90,8 +97,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
       throw new IllegalStateException(s"prepareTransition is called for $transitionNo two times")
     }
     logger.debug(s"Step #${stepNo}, transition #${transitionNo}")
-    ctx.rewriter.solverContext.log(
-        "; ------- STEP: %d, SMT LEVEL: %d TRANSITION: %d {"
+    ctx.rewriter.solverContext.log("; ------- STEP: %d, SMT LEVEL: %d TRANSITION: %d {"
           .format(stepNo, ctx.rewriter.contextLevel, transitionNo))
     logger.debug("Translating to SMT...")
     val erased = lastState.setBinding(lastState.binding.forgetPrimed) // forget the previous assignments
@@ -129,11 +135,11 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
   }
 
   /**
-   * Assume that a previously prepared transition fires. Use this method to check,
-   * whether a prepared transition is enabled.
-   * This method should be called after prepareTransition.
+   * Assume that a previously prepared transition fires. Use this method to check, whether a prepared transition is
+   * enabled. This method should be called after prepareTransition.
    *
-   * @param transitionNo the number of a previously prepared transition
+   * @param transitionNo
+   *   the number of a previously prepared transition
    */
   override def assumeTransition(transitionNo: Int): Unit = {
     assert(controlState == Preparing())
@@ -152,12 +158,15 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
   }
 
   /**
-   * A syntactic test on whether a translated transition may change satisfiability of an assertion.
-   * It tests, whether all variables mentioned in the assertion belong to the unchanged set of the transition.
+   * A syntactic test on whether a translated transition may change satisfiability of an assertion. It tests, whether
+   * all variables mentioned in the assertion belong to the unchanged set of the transition.
    *
-   * @param transitionNo the index of a previously prepared transition
-   * @param assertion    a state expression
-   * @return true, if the transition may affect satisfiability of the assertion
+   * @param transitionNo
+   *   the index of a previously prepared transition
+   * @param assertion
+   *   a state expression
+   * @return
+   *   true, if the transition may affect satisfiability of the assertion
    */
   override def mayChangeAssertion(transitionNo: Int, assertion: TlaEx): Boolean = {
     val trans = preparedTransitions(transitionNo)
@@ -191,8 +200,8 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
   /**
    * Push an assertion about the current controlState.
    *
-   * @param assertion a Boolean-valued TLA+ expression, usually a controlState expression,
-   *                  though it may be an action expression.
+   * @param assertion
+   *   a Boolean-valued TLA+ expression, usually a controlState expression, though it may be an action expression.
    */
   override def assertState(assertion: TlaEx): Unit = {
     val nextState = ctx.rewriter.rewriteUntilDone(lastState.setRex(assertion))
@@ -201,9 +210,9 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
   }
 
   /**
-   * Pick non-deterministically one transition among the transitions that are prepared
-   * in the current step. Further, assume that the picked transition has fired.
-   * This method must be called after at least one call to prepareTransition.
+   * Pick non-deterministically one transition among the transitions that are prepared in the current step. Further,
+   * assume that the picked transition has fired. This method must be called after at least one call to
+   * prepareTransition.
    */
   override def pickTransition(): Oracle = {
     assert(controlState == Preparing())
@@ -236,16 +245,16 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
       var nextState = oracleState
 
       def pickVar(x: String): ArenaCell = {
-        val toPickFrom = sortedTransitions map (p => p._2.binding(x))
-        nextState = picker.pickByOracle(nextState, oracle, toPickFrom,
-            nextState.arena.cellFalse().toNameEx) // no else case
+        val toPickFrom = sortedTransitions.map(p => p._2.binding(x))
+        nextState = picker
+          .pickByOracle(nextState, oracle, toPickFrom, nextState.arena.cellFalse().toNameEx) // no else case
         nextState.asCell
       }
 
       def getAssignedVars(binding: Binding) = binding.forgetNonPrimed(Set()).toMap.keySet
       val primedVars = getAssignedVars(sortedTransitions.head._2.binding) // only VARIABLES, not CONSTANTS
 
-      val finalVarBinding = Binding(primedVars.toSeq map (n => (n, pickVar(n))): _*) // variables only
+      val finalVarBinding = Binding(primedVars.toSeq.map(n => (n, pickVar(n))): _*) // variables only
       val constBinding = Binding(oracleState.binding.toMap.filter(p => consts.contains(p._1)))
       lastState = nextState.setBinding(finalVarBinding ++ constBinding)
       // the sparse oracle is mapping the oracle values to the transition numbers
@@ -263,15 +272,16 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
   /**
    * Get the numbers of prepared transitions.
    *
-   * @return a sequence of numbers
+   * @return
+   *   a sequence of numbers
    */
   def preparedTransitionNumbers: Set[Int] = {
     preparedTransitions.keySet
   }
 
   /**
-   * Advance symbolic execution by renaming primed variables to non-primed.
-   * This method must be called after pickTransition.
+   * Advance symbolic execution by renaming primed variables to non-primed. This method must be called after
+   * pickTransition.
    */
   override def nextState(): Unit = {
     assert(controlState == Picked())
@@ -292,10 +302,11 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
   /**
    * Check, whether the current context of the symbolic execution is satisfiable.
    *
-   * @param timeoutSec timeout in seconds
-   * @return Some(true), if the context is satisfiable;
-   *         Some(false), if the context is unsatisfiable;
-   *         None, if the solver timed out or reported *unknown*.
+   * @param timeoutSec
+   *   timeout in seconds
+   * @return
+   *   Some(true), if the context is satisfiable; Some(false), if the context is unsatisfiable; None, if the solver
+   *   timed out or reported *unknown*.
    */
   override def sat(timeoutSec: Long): Option[Boolean] = {
     ctx.rewriter.solverContext.satOrTimeout(timeoutSec)
@@ -314,10 +325,11 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
   }
 
   /**
-   * Create a snapshot of the current symbolic execution. The user should not access
-   * the snapshot, which is an opaque object.
+   * Create a snapshot of the current symbolic execution. The user should not access the snapshot, which is an opaque
+   * object.
    *
-   * @return a snapshot
+   * @return
+   *   a snapshot
    */
   def snapshot(): ExecutionSnapshot[ExecCtxT] = {
     val exe = new EncodedExecution(lastState.arena, ((lastState.binding, new MockOracle(0)) :: revStack).reverse)
@@ -327,7 +339,8 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
   /**
    * Recover a controlState of symbolic execution from a snapshot.
    *
-   * @param snapshot a snapshot that was created by an earlier call to snapshot.
+   * @param snapshot
+   *   a snapshot that was created by an earlier call to snapshot.
    */
   def recover(snapshot: ExecutionSnapshot[ExecCtxT]): Unit = {
     ctx.recover(snapshot.contextSnapshot)
@@ -350,10 +363,11 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
   }
 
   /**
-   * Push the last state by renaming primed variable to unprimed.
-   * Record the picked transition by using the provided oracle.
+   * Push the last state by renaming primed variable to unprimed. Record the picked transition by using the provided
+   * oracle.
    *
-   * @param oracle the oracle that records the choice of the transition.
+   * @param oracle
+   *   the oracle that records the choice of the transition.
    */
   private def pushLastState(oracle: Oracle): Unit = {
     revStack = (lastState.binding.shiftBinding(consts), oracle) :: revStack

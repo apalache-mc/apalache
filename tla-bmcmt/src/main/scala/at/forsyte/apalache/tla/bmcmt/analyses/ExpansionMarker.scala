@@ -8,17 +8,18 @@ import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
 /**
- * <p>This analysis tracks down the exponentially expensive expressions such as SUBSET S and [S -> T].
- * When such an expression has to be expanded in the arena, the expression is wrapped with BmcOper!Expand.
- * The user also receives a warning that this operation is going to be expensive.</p>
+ * <p>This analysis tracks down the exponentially expensive expressions such as SUBSET S and [S -> T]. When such an
+ * expression has to be expanded in the arena, the expression is wrapped with BmcOper!Expand. The user also receives a
+ * warning that this operation is going to be expensive.</p>
  *
- * <p>TODO: This is a simple form of constraint generation. Perhaps, we should lift the rewriting framework
- * to collecting constraints, rather than eagerly and lazily expanding the sets.</p>
+ * <p>TODO: This is a simple form of constraint generation. Perhaps, we should lift the rewriting framework to
+ * collecting constraints, rather than eagerly and lazily expanding the sets.</p>
  *
- * <p>It is a simple form of type inference on top of our type system.
- * Can we integrate this class into the type system?</p>
+ * <p>It is a simple form of type inference on top of our type system. Can we integrate this class into the type
+ * system?</p>
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class ExpansionMarker @Inject() (tracker: TransformationTracker) extends TlaExTransformation with LazyLogging {
 
@@ -78,7 +79,7 @@ class ExpansionMarker @Inject() (tracker: TransformationTracker) extends TlaExTr
     case ex @ OperEx(op, args @ _*) if op == TlaSetOper.cup || op == TlaSetOper.union =>
       // binary union and UNION require arena cells, hence, expand
       val tag = ex.typeTag
-      OperEx(op, args map transform(true): _*)(tag)
+      OperEx(op, args.map(transform(true)): _*)(tag)
 
     case ex @ OperEx(op @ TlaSetOper.filter, name, set, pred) =>
       // For the moment, we require the set to be expanded. However, we could think of collecting constraints on the way.
@@ -88,7 +89,7 @@ class ExpansionMarker @Inject() (tracker: TransformationTracker) extends TlaExTr
     case ex @ OperEx(op, body, args @ _*)
         if op == TlaSetOper.map || op == TlaFunOper.funDef || op == TlaFunOper.recFunDef =>
       val tbody: TlaEx = transform(false)(body)
-      val targs = args map transform(true)
+      val targs = args.map(transform(true))
       val tag = ex.typeTag
       OperEx(op, tbody +: targs: _*)(tag)
 
@@ -97,12 +98,12 @@ class ExpansionMarker @Inject() (tracker: TransformationTracker) extends TlaExTr
       def mapDef(df: TlaOperDecl) = df.copy(body = transform(shallExpand)(df.body))
 
       val tag = ex.typeTag
-      LetInEx(transform(shallExpand)(body), defs map mapDef: _*)(tag)
+      LetInEx(transform(shallExpand)(body), defs.map(mapDef): _*)(tag)
 
     case ex @ OperEx(oper, args @ _*) =>
       // try to descend in the children, which may contain Boolean operations, e.g., { \E x \in S: P }
       val tag = ex.typeTag
-      OperEx(oper, args map transform(shallExpand): _*)(tag)
+      OperEx(oper, args.map(transform(shallExpand)): _*)(tag)
 
     case terminal =>
       terminal // terminal expression, stop here

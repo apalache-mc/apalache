@@ -24,10 +24,10 @@ class TestTlaDeclLevelFinder extends FunSuite with Checkers {
     val prop = forAll(gens.genTlaModuleWith(genDecl)) { module =>
       val finder = new TlaDeclLevelFinder(module)
 
-      all(module.operDeclarations map {
+      all(module.operDeclarations.map {
         finder(_) =? TlaLevelConst
       }: _*) &&
-      all(module.constDeclarations map {
+      all(module.constDeclarations.map {
         finder(_) =? TlaLevelConst
       }: _*)
     }
@@ -53,11 +53,11 @@ class TestTlaDeclLevelFinder extends FunSuite with Checkers {
           (level =? TlaLevelState || level =? TlaLevelConst)
       }
 
-      all(module.operDeclarations map expectedLevel: _*) &&
-      all(module.constDeclarations map {
+      all(module.operDeclarations.map(expectedLevel): _*) &&
+      all(module.constDeclarations.map {
         finder(_) =? TlaLevelConst
       }: _*) &&
-      all(module.varDeclarations map {
+      all(module.varDeclarations.map {
         finder(_) =? TlaLevelState
       }: _*)
     }
@@ -81,11 +81,11 @@ class TestTlaDeclLevelFinder extends FunSuite with Checkers {
           (level =? TlaLevelState || level =? TlaLevelConst || level =? TlaLevelAction)
       }
 
-      all(module.operDeclarations map expectedLevel: _*) &&
-      all(module.constDeclarations map {
+      all(module.operDeclarations.map(expectedLevel): _*) &&
+      all(module.constDeclarations.map {
         finder(_) =? TlaLevelConst
       }: _*) &&
-      all(module.varDeclarations map {
+      all(module.varDeclarations.map {
         finder(_) =? TlaLevelState
       }: _*)
     }
@@ -120,7 +120,7 @@ class TestTlaDeclLevelFinder extends FunSuite with Checkers {
         }
       }
 
-      all(module.operDeclarations map expectedLevel: _*)
+      all(module.operDeclarations.map(expectedLevel): _*)
     }
 
     check(prop, minSuccessful(2000), sizeRange(5))

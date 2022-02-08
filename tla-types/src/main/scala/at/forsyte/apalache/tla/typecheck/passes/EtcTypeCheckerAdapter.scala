@@ -13,7 +13,8 @@ import com.typesafe.scalalogging.LazyLogging
 /**
  * The adapter for the exceptions that are produced by the parser and type checker.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 @Singleton
 class EtcTypeCheckerAdapter @Inject() (sourceStore: SourceStore, changeListener: ChangeListener)

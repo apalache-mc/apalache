@@ -37,7 +37,7 @@ class TestUJsonToTla extends FunSuite with Checkers {
         ),
     )
 
-    exs foreach { ex =>
+    exs.foreach { ex =>
       val encEx = enc(ex)
       val decEx = dec.asTlaEx(encEx)
       assert(decEx == ex)
@@ -50,7 +50,7 @@ class TestUJsonToTla extends FunSuite with Checkers {
         TlaVarDecl("v"),
     )
 
-    decls foreach { decl =>
+    decls.foreach { decl =>
       assert(dec.asTlaDecl(enc(decl)) == decl)
     }
 
@@ -59,7 +59,7 @@ class TestUJsonToTla extends FunSuite with Checkers {
         new TlaModule("Module", decls),
     )
 
-    modules foreach { m =>
+    modules.foreach { m =>
       assert(dec.asTlaModule(enc(m)) == m)
     }
 
@@ -72,7 +72,7 @@ class TestUJsonToTla extends FunSuite with Checkers {
         TlaNatSet,
         TlaBoolSet,
         TlaStrSet,
-    ) map { v =>
+    ).map { v =>
       ValEx(v).withTag(Untyped())
     }
 

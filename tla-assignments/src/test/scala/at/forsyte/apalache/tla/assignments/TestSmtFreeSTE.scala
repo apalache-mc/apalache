@@ -75,10 +75,9 @@ class TestSmtFreeSTE extends FunSuite with TestingPredefs {
     val asgn3 = tla.primeEq(n_y, tla.int(1)).untyped()
     val declB = tla.declOp("B", asgn3).untypedOperDecl()
     val ex2 = tla
-      .letIn(
-          tla.and(
+      .letIn(tla.and(
               tla.appDecl(declA2, tla.int(1)),
-              tla.appDecl(declB)
+              tla.appDecl(declB),
           ), declA2)
       .untyped()
 

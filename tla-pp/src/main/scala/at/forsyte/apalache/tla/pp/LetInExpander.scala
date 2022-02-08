@@ -7,13 +7,14 @@ import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 
 /**
- * <p>A transformation which replaces all occurrences of LET-IN expressions with
- * copies of their bodies, in which LET-IN defined operators have been expanded.
- * If the `keepNullary` flag is set to true, only operators with strictly positive arity get expanded.</p>
+ * <p>A transformation which replaces all occurrences of LET-IN expressions with copies of their bodies, in which LET-IN
+ * defined operators have been expanded. If the `keepNullary` flag is set to true, only operators with strictly positive
+ * arity get expanded.</p>
  *
  * <p>Example: `LET X(a) == a + b IN X(0) > 1` becomes `1 + b > 1`. </p>
  *
- * @author Jure Kukovec
+ * @author
+ *   Jure Kukovec
  */
 class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean) extends TlaExTransformation {
   override def apply(ex: TlaEx): TlaEx = transform(ex)
@@ -25,7 +26,7 @@ class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean) extend
       val expandedBody = transform(body)
 
       /** .. or another operator */
-      val expandedDefs = defs map tracker.trackOperDecl { d => d.copy(body = transform(d.body)) }
+      val expandedDefs = defs.map(tracker.trackOperDecl { d => d.copy(body = transform(d.body)) })
 
       def needsExpansion(d: TlaOperDecl): Boolean = {
         // Expand only the definitions that:
@@ -71,7 +72,7 @@ class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean) extend
 
     // recursive processing of composite operators
     case ex @ OperEx(op, args @ _*) =>
-      val newArgs = args map transform
+      val newArgs = args.map(transform)
       if (args == newArgs) ex else OperEx(op, newArgs: _*)(ex.typeTag)
 
     case ex => ex

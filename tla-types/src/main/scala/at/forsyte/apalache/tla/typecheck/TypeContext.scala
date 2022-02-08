@@ -7,16 +7,20 @@ import scala.collection.immutable.SortedMap
 /**
  * A type context assigns poly- or monotypes to names (such as operator names and the names of quantified variables).
  *
- * @param types a map from a name to the assigned typed and universal type variables
- * @author Igor Konnov
+ * @param types
+ *   a map from a name to the assigned typed and universal type variables
+ * @author
+ *   Igor Konnov
  */
 class TypeContext(val types: Map[String, TlaType1Scheme]) {
 
   /**
    * Get the name and the set of universally quantified type variables (as integers) that are associated with the name.
    *
-   * @param name a name in the type context
-   * @return the associated type and the set of type variables (as integers) that are associated with the name.
+   * @param name
+   *   a name in the type context
+   * @return
+   *   the associated type and the set of type variables (as integers) that are associated with the name.
    */
   def apply(name: String): TlaType1Scheme = {
     types.get(name) match {

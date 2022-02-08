@@ -2,7 +2,7 @@ package at.forsyte.apalache.io.tlc
 
 import at.forsyte.apalache.io.tlc.config.{
   ConfigBoolValue, ConfigIntValue, ConfigModelValue, ConfigSetValue, ConfigStrValue, InitNextSpec, TemporalSpec,
-  TlcConfigParseError
+  TlcConfigParseError,
 }
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -11,7 +11,8 @@ import org.scalatest.junit.JUnitRunner
 /**
  * Tests for the TLC configuration parser.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
 class TestTlcConfigParserApalache extends FunSuite {
@@ -128,9 +129,8 @@ class TestTlcConfigParserApalache extends FunSuite {
       """.stripMargin
 
     val config = TlcConfigParserApalache(text)
-    assert(
-        config.constAssignments ==
-          Map("N" -> ConfigSetValue(ConfigStrValue("foo"), ConfigSetValue(ConfigIntValue(1), ConfigModelValue("Moo")))))
+    assert(config.constAssignments ==
+      Map("N" -> ConfigSetValue(ConfigStrValue("foo"), ConfigSetValue(ConfigIntValue(1), ConfigModelValue("Moo")))))
     assert(config.constReplacements.isEmpty)
   }
 
@@ -145,9 +145,8 @@ class TestTlcConfigParserApalache extends FunSuite {
       """.stripMargin
 
     val config = TlcConfigParserApalache(text)
-    assert(
-        config.constAssignments ==
-          Map("ChainIds" -> ConfigSetValue(ConfigStrValue("Chain-A"), ConfigStrValue("Chain-B"))))
+    assert(config.constAssignments ==
+      Map("ChainIds" -> ConfigSetValue(ConfigStrValue("Chain-A"), ConfigStrValue("Chain-B"))))
     assert(config.constReplacements.isEmpty)
   }
 

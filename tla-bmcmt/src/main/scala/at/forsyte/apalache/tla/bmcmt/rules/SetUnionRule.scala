@@ -39,7 +39,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
           }
 
         val sets = Set(nextState.arena.getHas(topSetCell): _*).toList // remove duplicates too
-        val elemsOfSets = sets map (s => Set(nextState.arena.getHas(s): _*))
+        val elemsOfSets = sets.map(s => Set(nextState.arena.getHas(s): _*))
 
         val unionOfSets = elemsOfSets.foldLeft(Set[ArenaCell]())(_.union(_))
         // introduce a set cell
@@ -76,9 +76,9 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
                         tla.and(tla.apalacheSelectInSet(set.toNameEx, topSetCell.toNameEx),
                             tla.apalacheSelectInSet(elemCell.toNameEx, set.toNameEx))
                       }
-                      val pointingSets = (sets.zip(elemsOfSets) filter (isPointedBySet _).tupled) map (_._1)
+                      val pointingSets = (sets.zip(elemsOfSets).filter((isPointedBySet _).tupled)).map(_._1)
                       val inUnion = tla.apalacheStoreInSet(elemCell.toNameEx, newSetCell.toNameEx)
-                      val existsIncludingSet = tla.or(pointingSets map inPointingSet: _*)
+                      val existsIncludingSet = tla.or(pointingSets.map(inPointingSet): _*)
                       (inUnion, existsIncludingSet)
                     },
                 )

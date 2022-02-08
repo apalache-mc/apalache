@@ -31,16 +31,13 @@ class TestModule extends FunSuite {
     val ZeroOneSet = OperEx(TlaSetOper.enumSet, ValEx(TlaInt(0)), ValEx(TlaInt(1)))
     val emptySeq = OperEx(TlaFunOper.tuple)
 
-    /** --------------------------------------------------------------------------------------------------------------- */
+    /**
+     * ---------------------------------------------------------------------------------------------------------------
+     */
 
     /**
-     * ABInit = /\ msgQ =   <<>>
-     * /\ ackQ =   <<>>
-     * /\ sBit \in {0,1}
-     * /\ sAck =   sBit
-     * /\ rBit =   sBit
-     * /\ sent \in Data
-     * /\ rcvd \in Data
+     * ABInit = /\ msgQ = <<>> /\ ackQ = <<>> /\ sBit \in {0,1} /\ sAck = sBit /\ rBit = sBit /\ sent \in Data /\ rcvd
+     * \in Data
      */
     val ABInit =
       new TlaOperDecl("ABInit", List(),
@@ -50,13 +47,8 @@ class TestModule extends FunSuite {
               OperEx(TlaSetOper.in, NameEx("sBit"), ZeroOneSet), OperEx(TlaSetOper.in, NameEx("sBit"), ZeroOneSet)))
 
     /**
-     * ABTypeInv == /\ msgQ \in Seq( {0,1} \times Data )
-     * /\ ackQ \in Seq( {0,1} )
-     * /\ sBit \in {0,1}
-     * /\ sAck \in {0,1}
-     * /\ rBit \in {0,1}
-     * /\ sent \in Data
-     * /\ rcvd \in Data
+     * ABTypeInv == /\ msgQ \in Seq( {0,1} \times Data ) /\ ackQ \in Seq( {0,1} ) /\ sBit \in {0,1} /\ sAck \in {0,1} /\
+     * rBit \in {0,1} /\ sent \in Data /\ rcvd \in Data
      */
     val ABTypeInv =
       new TlaOperDecl("ABTypeInv", List(),
@@ -68,14 +60,13 @@ class TestModule extends FunSuite {
               OperEx(TlaSetOper.in, NameEx("rBit"), ZeroOneSet), OperEx(TlaSetOper.in, NameEx("sent"), NameEx("Data")),
               OperEx(TlaSetOper.in, NameEx("rcvd"), NameEx("Data"))))
 
-    /** --------------------------------------------------------------------------------------------------------------- */
+    /**
+     * ---------------------------------------------------------------------------------------------------------------
+     */
 
     /**
-     * SndNewValue(d) == /\ sAck      = sBit
-     * /\ sent'     = d
-     * /\ sBit'     = 1 - sBit
-     * /\ msgQ'     = Append( msgQ, << sBit', d >> )
-     * /\ UNCHANGED   << ackQ, sAck, rBit, rcvd >>
+     * SndNewValue(d) == /\ sAck = sBit /\ sent' = d /\ sBit' = 1 - sBit /\ msgQ' = Append( msgQ, << sBit', d >> ) /\
+     * UNCHANGED << ackQ, sAck, rBit, rcvd >>
      */
     val SndNewValue =
       new TlaOperDecl("SndNewValue", List(OperParam("d")),
@@ -89,13 +80,12 @@ class TestModule extends FunSuite {
                   OperEx(TlaSeqOper.append, NameEx("msgQ"),
                       OperEx(TlaFunOper.tuple, OperEx(TlaActionOper.prime, NameEx("sBit")), NameEx("d")))),
               OperEx(TlaActionOper.unchanged,
-                  OperEx(TlaFunOper.tuple, NameEx("ackQ"), NameEx("sAck"), NameEx("rBit"), NameEx("rcvd")))
+                  OperEx(TlaFunOper.tuple, NameEx("ackQ"), NameEx("sAck"), NameEx("rBit"), NameEx("rcvd"))),
           ))
 
     /**
-     * ReSndMsg == /\ sAck      # sBit
-     * /\ msgQ'     = Append( msgQ, << sBit, sent >> )
-     * /\ UNCHANGED   << ackQ, sBit, sAck, rBit, sent, rcvd >>
+     * ReSndMsg == /\ sAck # sBit /\ msgQ' = Append( msgQ, << sBit, sent >> ) /\ UNCHANGED << ackQ, sBit, sAck, rBit,
+     * sent, rcvd >>
      */
     val ReSndMsg =
       new TlaOperDecl("ReSndMsg", List(),
@@ -107,11 +97,8 @@ class TestModule extends FunSuite {
                       NameEx("sent"), NameEx("rcvd")))))
 
     /**
-     * RcvMsg == /\ msgQ      # <<>>
-     * /\ msgQ'     = Tail( msgQ )
-     * /\ rBit'     = Head( msgQ ) [ 1 ]
-     * /\ rcvd'     = Head( msgQ ) [ 2 ]
-     * /\ UNCHANGED   << ackQ, sBit, sAck, sent >>
+     * RcvMsg == /\ msgQ # <<>> /\ msgQ' = Tail( msgQ ) /\ rBit' = Head( msgQ ) [ 1 ] /\ rcvd' = Head( msgQ ) [ 2 ] /\
+     * UNCHANGED << ackQ, sBit, sAck, sent >>
      */
     val RcvMsg =
       new TlaOperDecl("RcvMsg", List(),
@@ -124,12 +111,11 @@ class TestModule extends FunSuite {
               OperEx(TlaOper.eq, OperEx(TlaActionOper.prime, NameEx("rcvd")),
                   OperEx(TlaFunOper.app, OperEx(TlaSeqOper.head, NameEx("msgQ")), ValEx(TlaInt(2)))),
               OperEx(TlaActionOper.unchanged,
-                  OperEx(TlaFunOper.tuple, NameEx("ackQ"), NameEx("sBit"), NameEx("sAck"), NameEx("sent")))
+                  OperEx(TlaFunOper.tuple, NameEx("ackQ"), NameEx("sBit"), NameEx("sAck"), NameEx("sent"))),
           ))
 
     /**
-     * SndAck == /\ ackQ'     = Append( ackQ, rBit )
-     * /\ UNCHANGED   << msgQ, sBit, sAck, rBit, sent, rcvd >>
+     * SndAck == /\ ackQ' = Append( ackQ, rBit ) /\ UNCHANGED << msgQ, sBit, sAck, rBit, sent, rcvd >>
      */
     val SndAck =
       new TlaOperDecl("SndAck", List(),
@@ -141,10 +127,8 @@ class TestModule extends FunSuite {
                       NameEx("sent"), NameEx("rcvd")))))
 
     /**
-     * RcvAck == /\ ackQ      # <<>>
-     * /\ ackQ'     = Tail( ackQ )
-     * /\ sAck'     = Head( ackQ )
-     * /\ UNCHANGED   << msgQ, sBit, rBit, sent, rcvd >>
+     * RcvAck == /\ ackQ # <<>> /\ ackQ' = Tail( ackQ ) /\ sAck' = Head( ackQ ) /\ UNCHANGED << msgQ, sBit, rBit, sent,
+     * rcvd >>
      */
     val RcvAck =
       new TlaOperDecl("RcvAck", List(),
@@ -156,11 +140,8 @@ class TestModule extends FunSuite {
                       NameEx("rcvd")))))
 
     /**
-     * Lose( q ) == /\ q # <<>>
-     * /\ \exists i \in 1 .. Len( q ) :
-     * q' = [ j \in 1 .. ( Len( q ) - 1 ) |-> IF j < i THEN q[ j ]
-     * ELSE q[ j + 1 ] ]
-     * /\ UNCHANGED << sBit, sAck, rBit, sent, rcvd >>
+     * Lose( q ) == /\ q # <<>> /\ \exists i \in 1 .. Len( q ) : q' = [ j \in 1 .. ( Len( q ) - 1 ) |-> IF j < i THEN q[
+     * j ] ELSE q[ j + 1 ] ] /\ UNCHANGED << sBit, sAck, rBit, sent, rcvd >>
      */
     val Lose =
       new TlaOperDecl("Lose", List(OperParam("q")),
@@ -192,9 +173,7 @@ class TestModule extends FunSuite {
               OperEx(TlaActionOper.unchanged, NameEx("msgQ"))))
 
     /**
-     * ABNext == \/ \exists d \in Data : SndNewValue(d)
-     * \/ ReSndMsg \/ RcvMsg \/ SndAck \/ RcvAck
-     * \/ LoseMsg \/ LoseAck
+     * ABNext == \/ \exists d \in Data : SndNewValue(d) \/ ReSndMsg \/ RcvMsg \/ SndAck \/ RcvAck \/ LoseMsg \/ LoseAck
      */
     val ABNext =
       new TlaOperDecl("ABNext", List(),
@@ -203,7 +182,9 @@ class TestModule extends FunSuite {
                   OperEx(TlaOper.apply, NameEx("SndNewValue"), NameEx("d"))), NameEx("ReSndMsg"), NameEx("RcvMsg"),
               NameEx("SndAck"), NameEx("RcvAck"), NameEx("LoseMsg"), NameEx("LoseAck")))
 
-    /** --------------------------------------------------------------------------------------------------------------- */
+    /**
+     * ---------------------------------------------------------------------------------------------------------------
+     */
 
     /**
      * abvars == << msgQ, ackQ, sBit, sAck, rBit, sent, rcvd >>
@@ -215,8 +196,7 @@ class TestModule extends FunSuite {
               NameEx("sent"), NameEx("rcvd")))
 
     /**
-     * ABFairness == /\ WF_abvars( ReSndMsg ) /\ WF_abvars( SndAck )
-     * /\ SF_abvars( RcvMsg ) /\ SF_abvars( RcvAck )
+     * ABFairness == /\ WF_abvars( ReSndMsg ) /\ WF_abvars( SndAck ) /\ SF_abvars( RcvMsg ) /\ SF_abvars( RcvAck )
      */
     val ABFairness =
       new TlaOperDecl("AbFairness", List(),
@@ -225,7 +205,9 @@ class TestModule extends FunSuite {
               OperEx(TlaTempOper.strongFairness, NameEx("abvars"), NameEx("RcvMsg")),
               OperEx(TlaTempOper.strongFairness, NameEx("abvars"), NameEx("RcvAck"))))
 
-    /** --------------------------------------------------------------------------------------------------------------- */
+    /**
+     * ---------------------------------------------------------------------------------------------------------------
+     */
 
     /**
      * ABSpec == ABInit /\ [][ABNext]_abvars /\ ABFairness
@@ -236,7 +218,9 @@ class TestModule extends FunSuite {
           OperEx(TlaBoolOper.and, NameEx("ABInit"), OperEx(TlaActionOper.stutter, NameEx("ABNext"), NameEx("abvars")),
               NameEx("ABFairness")))
 
-    /** --------------------------------------------------------------------------------------------------------------- */
+    /**
+     * ---------------------------------------------------------------------------------------------------------------
+     */
 
     /**
      * THEOREM ABSpec => []( ABTypeInv )
