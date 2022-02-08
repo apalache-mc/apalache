@@ -3,7 +3,7 @@ package at.forsyte.apalache.infra.passes
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.tla.lir.{MissingTransformationError, TlaModule, TlaModuleProperties}
+import at.forsyte.apalache.tla.lir.{MissingTransformationError, TlaModule, TlaModuleProperties, ModuleProperty}
 
 /**
  * This class executes the passes starting with the initial one,
@@ -25,26 +25,29 @@ class PassChainExecutor(val options: WriteablePassOptions, passes: Seq[Pass]) ex
       result
     }
 
-    var module = new TlaModule("empty", Seq()) with TlaModuleProperties
-    passes.zipWithIndex.foreach { case (pass, index) =>
-      // Raise error if the pass dependencies aren't satisfied
+    def checkDependencies(module: TlaModule with TlaModuleProperties, pass: Pass): Unit = {
       if (!pass.dependencies.subsetOf(module.properties)) {
         val missing = pass.dependencies -- module.properties
         throw new MissingTransformationError(
             s"${pass.name} cannot run for a module without the properties: ${missing.mkString(", ")}", module)
       }
-
-      val transformedModule = exec(index, pass, module)
-
-      transformedModule match {
-        case None => return None
-        case Some(m) =>
-          val newModule = new TlaModule(m.name, m.declarations) with TlaModuleProperties
-          newModule.properties = module.properties ++ pass.transformations
-
-          module = newModule
-      }
     }
-    Some(module)
+
+    passes.zipWithIndex
+      .foldLeft(Option[TlaModule with TlaModuleProperties](new TlaModule("empty", Seq()) with TlaModuleProperties)) {
+        case (moduleOpt, (pass, index)) =>
+          // Raise error if the pass dependencies aren't satisfied
+          moduleOpt.map { m => checkDependencies(m, pass) }
+
+          for {
+            module <- moduleOpt
+            transformedModule <- exec(index, pass, module)
+          } yield {
+            val newModule = new TlaModule(transformedModule.name, transformedModule.declarations)
+              with TlaModuleProperties
+            newModule.properties = module.properties ++ pass.transformations
+            newModule
+          }
+      }
   }
 }
