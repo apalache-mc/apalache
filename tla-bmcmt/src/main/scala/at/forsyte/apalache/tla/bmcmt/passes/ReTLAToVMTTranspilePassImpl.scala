@@ -11,7 +11,8 @@ import com.typesafe.scalalogging.LazyLogging
 /**
  * The reTLA to VMT transpilation pass
  *
- * @author Jure Kukovec
+ * @author
+ *   Jure Kukovec
  */
 class ReTLAToVMTTranspilePassImpl @Inject() (val options: PassOptions, pred: LanguagePred)
     extends TranspilePass with LazyLogging {

@@ -26,7 +26,8 @@ import java.nio.file.Path
 /**
  * The implementation of a bounded model checker with SMT.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class BoundedCheckerPassImpl @Inject() (val options: PassOptions, exprGradeStore: ExprGradeStore,
     sourceStore: SourceStore, changeListener: ChangeListener)

@@ -5,6 +5,7 @@ import at.forsyte.apalache.infra.passes.Pass
 /**
  * A pass that does TLA+ desugaring.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 trait DesugarerPass extends Pass

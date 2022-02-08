@@ -35,7 +35,8 @@ import at.forsyte.apalache.io.ConfigManager
 /**
  * Command line access to the APALACHE tools.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 object Tool extends LazyLogging {
   lazy val ISSUES_LINK: String = "[https://github.com/informalsystems/apalache/issues]"
@@ -43,11 +44,11 @@ object Tool extends LazyLogging {
   lazy val OK_EXIT_CODE = 0
 
   /**
-   * Run the tool in the standalone mode with the provided arguments.
-   * This method calls System.exit with the computed exit code.
-   * If you like to call the tool without System.exit, use the the Tool#run.
+   * Run the tool in the standalone mode with the provided arguments. This method calls System.exit with the computed
+   * exit code. If you like to call the tool without System.exit, use the the Tool#run.
    *
-   * @param args the command line arguments
+   * @param args
+   *   the command line arguments
    */
   def main(args: Array[String]): Unit = {
     System.exit(run(args))
@@ -71,8 +72,10 @@ object Tool extends LazyLogging {
   /**
    * Run the tool in a library mode, that is, with a call to System.exit.
    *
-   * @param args the command line arguments
-   * @return the exit code; as usual, 0 means success.
+   * @param args
+   *   the command line arguments
+   * @return
+   *   the exit code; as usual, 0 means success.
    */
   def run(args: Array[String]): Int = {
     // first, call the arguments parser, which can also handle the standard commands such as version
@@ -143,12 +146,10 @@ object Tool extends LazyLogging {
 
   private def printTimeDiff(startTime: LocalDateTime): Unit = {
     val endTime = LocalDateTime.now()
-    logger.info(
-        "It took me %d days %2d hours %2d min %2d sec"
+    logger.info("It took me %d days %2d hours %2d min %2d sec"
           .format(ChronoUnit.DAYS.between(startTime, endTime), ChronoUnit.HOURS.between(startTime, endTime) % 24,
               ChronoUnit.MINUTES.between(startTime, endTime) % 60, ChronoUnit.SECONDS.between(startTime, endTime) % 60))
-    logger.info(
-        "Total time: %d.%d sec"
+    logger.info("Total time: %d.%d sec"
           .format(ChronoUnit.SECONDS.between(startTime, endTime), ChronoUnit.MILLIS.between(startTime, endTime) % 1000))
   }
 
@@ -248,8 +249,7 @@ object Tool extends LazyLogging {
   private def runTest(executor: PassChainExecutor, test: TestCmd): Int = {
     // This is a special version of the `check` command that is tuned towards testing scenarios
 
-    logger.info(
-        "Checker options: filename=%s, before=%s, action=%s, after=%s"
+    logger.info("Checker options: filename=%s, before=%s, action=%s, after=%s"
           .format(test.file, test.before, test.action, test.assertion))
 
     // Tune for testing:

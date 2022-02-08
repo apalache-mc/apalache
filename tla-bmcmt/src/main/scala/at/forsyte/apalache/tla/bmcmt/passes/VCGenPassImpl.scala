@@ -15,7 +15,8 @@ import com.typesafe.scalalogging.LazyLogging
 /**
  * The pass that generates verification conditions.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTracker, writerFactory: TlaWriterFactory)
     extends VCGenPass with LazyLogging {

@@ -12,7 +12,8 @@ import com.google.inject.{AbstractModule, TypeLiteral}
 /**
  * A module that consists only of the parsing pass.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class ParserModule extends ToolModule {
   override def configure(): Unit = {

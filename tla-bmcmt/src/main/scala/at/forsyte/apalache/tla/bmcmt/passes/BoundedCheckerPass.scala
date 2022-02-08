@@ -5,7 +5,8 @@ import at.forsyte.apalache.infra.passes.Pass
 /**
  * A bounded model checker that uses the symbolic transitions found by AssignmentPass.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 trait BoundedCheckerPass extends Pass {
 

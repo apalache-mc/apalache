@@ -6,12 +6,14 @@ import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.tla.lir.{MissingTransformationError, TlaModule, TlaModuleProperties, ModuleProperty}
 
 /**
- * This class executes the passes starting with the initial one,
- * until the final pass returns None.
+ * This class executes the passes starting with the initial one, until the final pass returns None.
  *
- * @param options     the options that can be used by all the passes
- * @param initialPass the first pass to run
- * @author Igor Konnov
+ * @param options
+ *   the options that can be used by all the passes
+ * @param initialPass
+ *   the first pass to run
+ * @author
+ *   Igor Konnov
  */
 
 class PassChainExecutor(val options: WriteablePassOptions, passes: Seq[Pass]) extends LazyLogging {

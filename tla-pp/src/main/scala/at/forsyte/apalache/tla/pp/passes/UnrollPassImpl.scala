@@ -15,9 +15,12 @@ import com.typesafe.scalalogging.LazyLogging
 /**
  * An unrolling pass that
  *
- * @param options  pass options
- * @param tracker  transformation tracker
- * @param nextPass next pass to call
+ * @param options
+ *   pass options
+ * @param tracker
+ *   transformation tracker
+ * @param nextPass
+ *   next pass to call
  */
 class UnrollPassImpl @Inject() (val options: PassOptions, nameGenerator: UniqueNameGenerator,
     tracker: TransformationTracker, renaming: IncrementalRenaming, writerFactory: TlaWriterFactory)

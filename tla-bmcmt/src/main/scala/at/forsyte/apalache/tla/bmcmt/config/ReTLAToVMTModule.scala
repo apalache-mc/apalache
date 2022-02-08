@@ -20,7 +20,8 @@ import com.google.inject.{AbstractModule, TypeLiteral}
 /**
  * Transpiels reTLA inputs to VMT
  *
- * @author Jure Kukovec
+ * @author
+ *   Jure Kukovec
  */
 class ReTLAToVMTModule extends ToolModule {
   override def configure(): Unit = {

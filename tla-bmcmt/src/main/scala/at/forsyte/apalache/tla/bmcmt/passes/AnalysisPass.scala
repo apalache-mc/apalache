@@ -5,6 +5,7 @@ import at.forsyte.apalache.infra.passes.Pass
 /**
  * A pass that runs simple skolemization.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 trait AnalysisPass extends Pass

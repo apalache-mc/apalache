@@ -12,15 +12,19 @@ import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
 /**
- * A copy of EtcTypeCheckerPassImpl that we run after all preprocessing steps.
- * We introduce one more class, as otherwise Google Guice would not let us to use the same pass in the different
- * parts of the pipeline.
+ * A copy of EtcTypeCheckerPassImpl that we run after all preprocessing steps. We introduce one more class, as otherwise
+ * Google Guice would not let us to use the same pass in the different parts of the pipeline.
  *
- * @param options         options
- * @param sourceStore     source store
- * @param tracker         transformation tracker
- * @param annotationStore annotations store
- * @param nextPass        next pass to be used
+ * @param options
+ *   options
+ * @param sourceStore
+ *   source store
+ * @param tracker
+ *   transformation tracker
+ * @param annotationStore
+ *   annotations store
+ * @param nextPass
+ *   next pass to be used
  */
 class PostTypeCheckerPassImpl @Inject() (options: PassOptions, sourceStore: SourceStore, changeListener: ChangeListener,
     tracker: TransformationTracker, annotationStore: AnnotationStore, tlaWriterFactory: TlaWriterFactory)

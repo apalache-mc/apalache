@@ -5,6 +5,7 @@ import at.forsyte.apalache.infra.passes.Pass
 /**
  * An optimization pass that applies to KerA+.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 trait OptPass extends Pass

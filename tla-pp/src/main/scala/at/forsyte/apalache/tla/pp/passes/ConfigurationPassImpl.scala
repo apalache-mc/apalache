@@ -20,13 +20,15 @@ import java.io.{File, FileNotFoundException, FileReader}
 import java.nio.file.Path
 
 /**
- * The pass that collects the configuration parameters and overrides constants and definitions.
- * This pass also overrides attributes in the PassOptions object:
- * checker.init, checker.next, checker.cinit, checker.inv. In general, passes should not override options.
- * This is a reasonable exception to this rule, as this pass configures the options based on the user input.
+ * The pass that collects the configuration parameters and overrides constants and definitions. This pass also overrides
+ * attributes in the PassOptions object: checker.init, checker.next, checker.cinit, checker.inv. In general, passes
+ * should not override options. This is a reasonable exception to this rule, as this pass configures the options based
+ * on the user input.
  *
- * @param options  pass options
- * @param nextPass next pass to call
+ * @param options
+ *   pass options
+ * @param nextPass
+ *   next pass to call
  */
 class ConfigurationPassImpl @Inject() (
     val options: WriteablePassOptions, tracker: TransformationTracker, writerFactory: TlaWriterFactory,
@@ -89,9 +91,12 @@ class ConfigurationPassImpl @Inject() (
   /**
    * Produce the configuration options from a TLC config, if it is present.
    *
-   * @param module     the input module
-   * @param outOptions the pass options to update from the configuration file
-   * @return additional declarations, which originate from assignments and replacements
+   * @param module
+   *   the input module
+   * @param outOptions
+   *   the pass options to update from the configuration file
+   * @return
+   *   additional declarations, which originate from assignments and replacements
    */
   private def loadOptionsFromTlcConfig(
       module: TlaModule, outOptions: WriteablePassOptions,
@@ -268,9 +273,12 @@ class ConfigurationPassImpl @Inject() (
   /**
    * Extract Init and Next from the spec definition that has the canonical form Init /\ [Next]_vars /\ ...
    *
-   * @param module   TLA+ module
-   * @param specName the name of the specification definition
-   * @return the pair (Init, Next)
+   * @param module
+   *   TLA+ module
+   * @param specName
+   *   the name of the specification definition
+   * @return
+   *   the pair (Init, Next)
    */
   private def extractFromSpec(
       module: TlaModule, contextName: String, specName: String,

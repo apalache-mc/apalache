@@ -5,6 +5,7 @@ import at.forsyte.apalache.infra.passes.Pass
 /**
  * The pass that generates verification conditions.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 trait VCGenPass extends Pass

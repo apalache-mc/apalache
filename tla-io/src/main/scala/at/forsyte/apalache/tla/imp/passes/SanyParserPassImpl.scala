@@ -21,7 +21,8 @@ import org.apache.commons.io.FilenameUtils
 /**
  * Parsing TLA+ code with SANY.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class SanyParserPassImpl @Inject() (
     val options: PassOptions, val sourceStore: SourceStore, val annotationStore: AnnotationStore,

@@ -17,10 +17,14 @@ import com.typesafe.scalalogging.LazyLogging
 /**
  * A preprocessing pass that simplifies TLA+ expressions by running multiple transformations.
  *
- * @param options pass options
- * @param gen     name generator
- * @param tracker  transformation tracker
- * @param nextPass next pass to call
+ * @param options
+ *   pass options
+ * @param gen
+ *   name generator
+ * @param tracker
+ *   transformation tracker
+ * @param nextPass
+ *   next pass to call
  */
 class ReTLAPreproPassImpl @Inject() (
     options: PassOptions, gen: UniqueNameGenerator, renaming: IncrementalRenaming, tracker: TransformationTracker,

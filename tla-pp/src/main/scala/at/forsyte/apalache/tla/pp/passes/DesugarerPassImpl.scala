@@ -16,9 +16,12 @@ import java.nio.file.Path
 /**
  * Desugarer pass.
  *
- * @param options  pass options
- * @param tracker  transformation tracker
- * @param nextPass next pass to call
+ * @param options
+ *   pass options
+ * @param tracker
+ *   transformation tracker
+ * @param nextPass
+ *   next pass to call
  */
 class DesugarerPassImpl @Inject() (
     val options: PassOptions, tracker: TransformationTracker, gen: UniqueNameGenerator, writerFactory: TlaWriterFactory,

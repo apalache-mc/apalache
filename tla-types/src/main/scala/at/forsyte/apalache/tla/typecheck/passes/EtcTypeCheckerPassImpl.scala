@@ -56,8 +56,8 @@ class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStor
         logger.info(" > Your types are purrfect!")
         logger.info(if (isTypeCoverageComplete) " > All expressions are typed" else " > Some expressions are untyped")
         dumpToJson(newModule, "post")
-        writerFactory.writeModuleAllFormats(newModule.copy(name = s"${passNumber}_Out$name"),
-            TlaWriter.STANDARD_MODULES)
+        writerFactory
+          .writeModuleAllFormats(newModule.copy(name = s"${passNumber}_Out$name"), TlaWriter.STANDARD_MODULES)
 
         utils.writeToOutput(newModule, options, writerFactory, logger, sourceStore)
 

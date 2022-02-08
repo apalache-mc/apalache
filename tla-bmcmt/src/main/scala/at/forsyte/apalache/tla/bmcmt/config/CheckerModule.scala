@@ -17,10 +17,11 @@ import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, TypeLiteral}
 
 /**
- * A configuration that binds all the passes from the parser to the checker.
- * If you are not sure how the binding works, check the tutorial on Google Guice.
+ * A configuration that binds all the passes from the parser to the checker. If you are not sure how the binding works,
+ * check the tutorial on Google Guice.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class CheckerModule extends ToolModule {
   override def configure(): Unit = {

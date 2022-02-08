@@ -16,10 +16,14 @@ import com.typesafe.scalalogging.LazyLogging
 /**
  * A pass that expands operators and let-in definitions.
  *
- * @param options  pass options
- * @param gen      name generator
- * @param tracker  transformation tracker
- * @param nextPass next pass to call
+ * @param options
+ *   pass options
+ * @param gen
+ *   name generator
+ * @param tracker
+ *   transformation tracker
+ * @param nextPass
+ *   next pass to call
  */
 class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator, tracker: TransformationTracker,
     writerFactory: TlaWriterFactory)
