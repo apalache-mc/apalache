@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
+import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.io.lir.TlaWriterFactory
@@ -12,21 +12,24 @@ import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
 /**
- * A copy of EtcTypeCheckerPassImpl that we run after all preprocessing steps.
- * We introduce one more class, as otherwise Google Guice would not let us to use the same pass in the different
- * parts of the pipeline.
+ * A copy of EtcTypeCheckerPassImpl that we run after all preprocessing steps. We introduce one more class, as otherwise
+ * Google Guice would not let us to use the same pass in the different parts of the pipeline.
  *
- * @param options         options
- * @param sourceStore     source store
- * @param tracker         transformation tracker
- * @param annotationStore annotations store
- * @param nextPass        next pass to be used
+ * @param options
+ *   options
+ * @param sourceStore
+ *   source store
+ * @param tracker
+ *   transformation tracker
+ * @param annotationStore
+ *   annotations store
+ * @param nextPass
+ *   next pass to be used
  */
 class PostTypeCheckerPassImpl @Inject() (options: PassOptions, sourceStore: SourceStore, changeListener: ChangeListener,
-    tracker: TransformationTracker, annotationStore: AnnotationStore, tlaWriterFactory: TlaWriterFactory,
-    @Named("AfterPostTypeChecker") nextPass: Pass with TlaModuleMixin)
-    extends EtcTypeCheckerPassImpl(options, sourceStore, changeListener, tracker, annotationStore, tlaWriterFactory,
-        nextPass) with LazyLogging {
+    tracker: TransformationTracker, annotationStore: AnnotationStore, tlaWriterFactory: TlaWriterFactory)
+    extends EtcTypeCheckerPassImpl(options, sourceStore, changeListener, tracker, annotationStore, tlaWriterFactory)
+    with LazyLogging {
 
   // in the post-checking, polytypes are not allowed, as the model checker will not be able to handle them
   override def inferPoly: Boolean = false

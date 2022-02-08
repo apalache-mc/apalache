@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.imp.passes
 
 import at.forsyte.apalache.infra.ExceptionAdapter
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TerminalPassWithTlaModule, WriteablePassOptions}
+import at.forsyte.apalache.infra.passes.{Pass, PassOptions, WriteablePassOptions, ToolModule}
 import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.ParserExceptionAdapter
@@ -12,9 +12,10 @@ import com.google.inject.{AbstractModule, TypeLiteral}
 /**
  * A module that consists only of the parsing pass.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
-class ParserModule extends AbstractModule {
+class ParserModule extends ToolModule {
   override def configure(): Unit = {
     // the options singleton
     bind(classOf[PassOptions])
@@ -31,16 +32,9 @@ class ParserModule extends AbstractModule {
     bind(classOf[TlaWriterFactory])
       .to(classOf[PrettyWriterWithAnnotationsFactory])
 
-    // SanyParserPassImpl is the default implementation of SanyParserPass
     bind(classOf[SanyParserPass])
       .to(classOf[SanyParserPassImpl])
-    // and it also the initial pass for PassChainExecutor
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("InitialPass"))
-      .to(classOf[SanyParserPass])
-    // the next pass after SanyParserPass is the terminal pass
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterParser"))
-      .to(classOf[TerminalPassWithTlaModule])
   }
+
+  override def passes: Seq[Class[_ <: Pass]] = Seq(classOf[SanyParserPass])
 }

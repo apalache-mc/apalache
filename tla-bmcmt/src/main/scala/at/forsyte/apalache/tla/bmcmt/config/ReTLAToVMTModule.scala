@@ -20,9 +20,10 @@ import com.google.inject.{AbstractModule, TypeLiteral}
 /**
  * Transpiels reTLA inputs to VMT
  *
- * @author Jure Kukovec
+ * @author
+ *   Jure Kukovec
  */
-class ReTLAToVMTModule extends AbstractModule {
+class ReTLAToVMTModule extends ToolModule {
   override def configure(): Unit = {
     // the options singleton
     bind(classOf[PassOptions])
@@ -54,91 +55,39 @@ class ReTLAToVMTModule extends AbstractModule {
     bind(classOf[TransformationTracker])
       .toProvider(classOf[TransformationTrackerProvider])
 
-    // SanyParserPassImpl is the default implementation of SanyParserPass
-    bind(classOf[SanyParserPass])
-      .to(classOf[SanyParserPassImpl])
-    // and it also the initial pass for PassChainExecutor
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("InitialPass"))
-      .to(classOf[SanyParserPass])
+    // Bind all passes
+    bind(classOf[SanyParserPass]).to(classOf[SanyParserPassImpl])
+    bind(classOf[ConfigurationPass]).to(classOf[ConfigurationPassImpl])
+    bind(classOf[InlinePass]).to(classOf[InlinePassImpl])
+    bind(classOf[PrimingPass]).to(classOf[PrimingPassImpl])
+    bind(classOf[VCGenPass]).to(classOf[VCGenPassImpl])
+    bind(classOf[PreproPass]).to(classOf[ReTLAPreproPassImpl])
+    bind(classOf[TransitionPass]).to(classOf[TransitionPassImpl])
+    bind(classOf[OptPass]).to(classOf[OptPassImpl])
+    bind(classOf[AnalysisPass]).to(classOf[AnalysisPassImpl])
+    bind(classOf[TranspilePass]).to(classOf[ReTLAToVMTTranspilePassImpl])
+  }
 
-    // Next, check language restrictions
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterParser"))
-      .to(classOf[WatchdogPassImpl])
-
-    // The next pass is Snowcat that is called EtcTypeCheckerPassImpl for now.
-    // We provide guice with a concrete implementation here, as we also use PostTypeCheckerPassImpl later in the pipeline.
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterWatchdog"))
-      .to(classOf[EtcTypeCheckerPassImpl])
-
-    // the next pass is ConfigurationPass
-    bind(classOf[ConfigurationPass])
-      .to(classOf[ConfigurationPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterTypeChecker"))
-      .to(classOf[ConfigurationPass])
-
-    // the next pass is InlinePass
-    bind(classOf[InlinePass])
-      .to(classOf[InlinePassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterConfiguration"))
-      .to(classOf[InlinePass])
-    // the next pass is PrimingPass
-    bind(classOf[PrimingPass])
-      .to(classOf[PrimingPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterInline"))
-      .to(classOf[PrimingPass])
-    // the next pass is VCGenPass
-    bind(classOf[VCGenPass])
-      .to(classOf[VCGenPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterPriming"))
-      .to(classOf[VCGenPass])
-    // the next pass is PreproPass
-    bind(classOf[PreproPass])
-      .to(classOf[ReTLAPreproPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterVCGen"))
-      .to(classOf[PreproPass])
-    // the next pass is TransitionPass
-    bind(classOf[TransitionPass])
-      .to(classOf[TransitionPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterPrepro"))
-      .to(classOf[TransitionPass])
-    // the next pass is OptimizationPass
-    bind(classOf[OptPass])
-      .to(classOf[OptPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterTransitionFinder"))
-      .to(classOf[OptPass])
-    // the next pass is AnalysisPass
-    bind(classOf[AnalysisPass])
-      .to(classOf[AnalysisPassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterOpt"))
-      .to(classOf[AnalysisPass])
-
-    // do the final type checking again, as preprocessing may have introduced gaps in the expression types
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterAnalysis"))
-      .to(classOf[PostTypeCheckerPassImpl])
-
-    // ConstraintGenPass is in the very end of the pipeline
-    bind(classOf[TranspilePass])
-      .to(classOf[ReTLAToVMTTranspilePassImpl])
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterPostTypeChecker"))
-      .to(classOf[TranspilePass])
-
-    // the final pass is TerminalPass
-    bind(classOf[Pass])
-      .annotatedWith(Names.named("AfterConstraintGen"))
-      .to(classOf[TerminalPass])
+  override def passes: Seq[Class[_ <: Pass]] = {
+    Seq(
+        classOf[SanyParserPass],
+        classOf[WatchdogPassImpl],
+        // The next pass is Snowcat that is called EtcTypeCheckerPassImpl for now.
+        // We use a concrete implementation here, as we also do with PostTypeCheckerPassImpl later in the pipeline.
+        classOf[EtcTypeCheckerPassImpl],
+        classOf[ConfigurationPass],
+        classOf[InlinePass],
+        classOf[PrimingPass],
+        classOf[VCGenPass],
+        classOf[PreproPass],
+        classOf[TransitionPass],
+        classOf[OptPass],
+        classOf[AnalysisPass],
+        // do the final type checking again, as preprocessing may have introduced gaps in the expression types
+        classOf[PostTypeCheckerPassImpl],
+        // ConstraintGenPass is in the very end of the pipeline
+        classOf[TranspilePass],
+    )
   }
 
 }

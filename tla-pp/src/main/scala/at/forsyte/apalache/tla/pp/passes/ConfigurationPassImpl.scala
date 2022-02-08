@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.pp.passes
 
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin, WriteablePassOptions}
+import at.forsyte.apalache.infra.passes.{PassOptions, WriteablePassOptions}
 import at.forsyte.apalache.io.ConfigurationError
 import at.forsyte.apalache.io.tlc.TlcConfigParserApalache
 import at.forsyte.apalache.io.tlc.config._
@@ -20,30 +20,30 @@ import java.io.{File, FileNotFoundException, FileReader}
 import java.nio.file.Path
 
 /**
- * The pass that collects the configuration parameters and overrides constants and definitions.
- * This pass also overrides attributes in the PassOptions object:
- * checker.init, checker.next, checker.cinit, checker.inv. In general, passes should not override options.
- * This is a reasonable exception to this rule, as this pass configures the options based on the user input.
+ * The pass that collects the configuration parameters and overrides constants and definitions. This pass also overrides
+ * attributes in the PassOptions object: checker.init, checker.next, checker.cinit, checker.inv. In general, passes
+ * should not override options. This is a reasonable exception to this rule, as this pass configures the options based
+ * on the user input.
  *
- * @param options  pass options
- * @param nextPass next pass to call
+ * @param options
+ *   pass options
+ * @param nextPass
+ *   next pass to call
  */
 class ConfigurationPassImpl @Inject() (
     val options: WriteablePassOptions, tracker: TransformationTracker, writerFactory: TlaWriterFactory,
-    @Named("AfterConfiguration") val nextPass: Pass with TlaModuleMixin,
 ) extends ConfigurationPass with LazyLogging {
 
   override def name: String = "ConfigurationPass"
 
-  override def execute(): Boolean = {
+  override def execute(tlaModule: TlaModule): Option[TlaModule] = {
     // this pass is hard to read, too many things are happening here...
-    val currentModule = tlaModule.get
     val relevantOptions = new WriteablePassOptions()
     copyRelevantOptions(options, relevantOptions)
     // try to read from the TLC configuration file and produce constant overrides
-    val overrides = loadOptionsFromTlcConfig(currentModule, relevantOptions)
+    val overrides = loadOptionsFromTlcConfig(tlaModule, relevantOptions)
     val currentAndOverrides =
-      new TlaModule(currentModule.name, currentModule.declarations ++ overrides)
+      new TlaModule(tlaModule.name, tlaModule.declarations ++ overrides)
     setFallbackOptions(relevantOptions)
 
     // make sure that the required operators are defined
@@ -60,8 +60,7 @@ class ConfigurationPassImpl @Inject() (
     // dump the configuration result
     writerFactory.writeModuleAllFormats(configuredModule.copy(name = "02_OutConfig"), TlaWriter.STANDARD_MODULES)
 
-    nextPass.updateModule(this, configuredModule)
-    true
+    Some(configuredModule)
   }
 
   // if checker.init and checker.next are not set, set them to Init and Next, respectively
@@ -92,9 +91,12 @@ class ConfigurationPassImpl @Inject() (
   /**
    * Produce the configuration options from a TLC config, if it is present.
    *
-   * @param module     the input module
-   * @param outOptions the pass options to update from the configuration file
-   * @return additional declarations, which originate from assignments and replacements
+   * @param module
+   *   the input module
+   * @param outOptions
+   *   the pass options to update from the configuration file
+   * @return
+   *   additional declarations, which originate from assignments and replacements
    */
   private def loadOptionsFromTlcConfig(
       module: TlaModule, outOptions: WriteablePassOptions,
@@ -271,9 +273,12 @@ class ConfigurationPassImpl @Inject() (
   /**
    * Extract Init and Next from the spec definition that has the canonical form Init /\ [Next]_vars /\ ...
    *
-   * @param module   TLA+ module
-   * @param specName the name of the specification definition
-   * @return the pair (Init, Next)
+   * @param module
+   *   TLA+ module
+   * @param specName
+   *   the name of the specification definition
+   * @return
+   *   the pair (Init, Next)
    */
   private def extractFromSpec(
       module: TlaModule, contextName: String, specName: String,
