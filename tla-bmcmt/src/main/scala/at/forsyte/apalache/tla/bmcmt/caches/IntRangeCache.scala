@@ -11,7 +11,8 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 /**
  * Cache tuple domains as well as ranges a..b.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class IntRangeCache(solverContext: SolverContext, intValueCache: IntValueCache)
     extends AbstractCache[Arena, (Int, Int), ArenaCell] with Serializable {
@@ -19,9 +20,12 @@ class IntRangeCache(solverContext: SolverContext, intValueCache: IntValueCache)
   /**
    * Create a set a..b.
    *
-   * @param context  the context before creating a new value
-   * @param range a constant integer range
-   * @return a target value that is going to be cached and the new context
+   * @param context
+   *   the context before creating a new value
+   * @param range
+   *   a constant integer range
+   * @return
+   *   a target value that is going to be cached and the new context
    */
   override def create(context: Arena, range: (Int, Int)): (Arena, ArenaCell) = {
     var arena = context
@@ -40,12 +44,12 @@ class IntRangeCache(solverContext: SolverContext, intValueCache: IntValueCache)
     if (cells.nonEmpty) {
       def consChain(elems: Seq[ArenaCell]): BuilderEx =
         ConsChainUtil.consChainFold[ArenaCell](
-          elems,
-          set.toNameEx,
-          { cell =>
-            val inSet = tla.apalacheStoreInSet(cell.toNameEx, set.toNameEx)
-            (inSet, tla.bool(true))
-          }
+            elems,
+            set.toNameEx,
+            { cell =>
+              val inSet = tla.apalacheStoreInSet(cell.toNameEx, set.toNameEx)
+              (inSet, tla.bool(true))
+            },
         )
 
       val cons = consChain(cells)

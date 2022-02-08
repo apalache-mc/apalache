@@ -11,7 +11,8 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 /**
  * Rewrites the set constructor {e_1, ..., e_k}.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
@@ -41,12 +42,12 @@ class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         if (cells.nonEmpty) {
           def consChain(elems: Seq[ArenaCell]): BuilderEx =
             ConsChainUtil.consChainFold[ArenaCell](
-              elems,
-              newSetCell.toNameEx,
-              { cell =>
-                val inSet = tla.apalacheStoreInSet(cell.toNameEx, newSetCell.toNameEx)
-                (inSet, tla.bool(true))
-              }
+                elems,
+                newSetCell.toNameEx,
+                { cell =>
+                  val inSet = tla.apalacheStoreInSet(cell.toNameEx, newSetCell.toNameEx)
+                  (inSet, tla.bool(true))
+                },
             )
 
           val cons = consChain(cells)

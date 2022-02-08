@@ -11,7 +11,8 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 /**
  * Implements the rule for a union of all set elements, that is, UNION S for a set S that contains sets as elements.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
@@ -64,21 +65,22 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
             if (elemsCells.nonEmpty) {
               def consChain(elems: Seq[ArenaCell]): BuilderEx =
                 ConsChainUtil.consChainFold[ArenaCell](
-                  elems,
-                  newSetCell.toNameEx,
-                  { elemCell =>
-                    def isPointedBySet(set: ArenaCell, setElems: Set[ArenaCell]): Boolean = setElems.contains(elemCell)
-                    def inPointingSet(set: ArenaCell) = {
-                      // this is sound, because we have generated element equalities
-                      // and thus can use congruence of in(...) for free
-                      tla.and(tla.apalacheSelectInSet(set.toNameEx, topSetCell.toNameEx),
-                        tla.apalacheSelectInSet(elemCell.toNameEx, set.toNameEx))
-                    }
-                    val pointingSets = (sets.zip(elemsOfSets) filter (isPointedBySet _).tupled) map (_._1)
-                    val inUnion = tla.apalacheStoreInSet(elemCell.toNameEx, newSetCell.toNameEx)
-                    val existsIncludingSet = tla.or(pointingSets map inPointingSet: _*)
-                    (inUnion, existsIncludingSet)
-                  }
+                    elems,
+                    newSetCell.toNameEx,
+                    { elemCell =>
+                      def isPointedBySet(set: ArenaCell, setElems: Set[ArenaCell]): Boolean =
+                        setElems.contains(elemCell)
+                      def inPointingSet(set: ArenaCell) = {
+                        // this is sound, because we have generated element equalities
+                        // and thus can use congruence of in(...) for free
+                        tla.and(tla.apalacheSelectInSet(set.toNameEx, topSetCell.toNameEx),
+                            tla.apalacheSelectInSet(elemCell.toNameEx, set.toNameEx))
+                      }
+                      val pointingSets = (sets.zip(elemsOfSets) filter (isPointedBySet _).tupled) map (_._1)
+                      val inUnion = tla.apalacheStoreInSet(elemCell.toNameEx, newSetCell.toNameEx)
+                      val existsIncludingSet = tla.or(pointingSets map inPointingSet: _*)
+                      (inUnion, existsIncludingSet)
+                    },
                 )
 
               val cons = consChain(elemsCells)

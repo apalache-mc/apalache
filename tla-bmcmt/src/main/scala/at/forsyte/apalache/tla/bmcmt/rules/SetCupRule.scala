@@ -8,11 +8,11 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 
 /**
- * Rewrites X \cup Y, that is, a union of two sets (not UNION).
- * In the first encoding, we used a linear number of `in` queries.
- * However, this happens to be unsound, and we need a quadratic number of queries.
+ * Rewrites X \cup Y, that is, a union of two sets (not UNION). In the first encoding, we used a linear number of `in`
+ * queries. However, this happens to be unsound, and we need a quadratic number of queries.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
@@ -43,8 +43,7 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
         if (newType.isEmpty) {
           val msg =
             s"Failed to unify types ${leftSetCell.cellType} and ${rightSetCell.cellType} when rewriting ${state.ex}"
-          throw new TypingException(
-              s"Failed to unify types ${leftSetCell.cellType}"
+          throw new TypingException(s"Failed to unify types ${leftSetCell.cellType}"
                 + " and ${rightSetCell.cellType} when rewriting ${state.ex}", state.ex.ID)
         }
         nextState = nextState.updateArena(_.appendCell(newType.get))
@@ -63,7 +62,7 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
                     val inCup = tla.apalacheStoreInSet(thisElem.toNameEx, newSetCell.toNameEx)
                     val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, thisSet.toNameEx)
                     (inCup, inThis)
-                  }
+                  },
               )
 
             val cons = consChain(elems)
@@ -75,15 +74,15 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
           if (elems.nonEmpty) {
             def consChain(elems: Seq[ArenaCell]): BuilderEx =
               ConsChainUtil.consChainFold[ArenaCell](
-                elems,
-                newSetCell.toNameEx,
-                { thisElem =>
-                  val inCup = tla.apalacheStoreInSet(thisElem.toNameEx, newSetCell.toNameEx)
-                  val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, leftSetCell.toNameEx)
-                  val inOther = tla.apalacheSelectInSet(thisElem.toNameEx, rightSetCell.toNameEx)
-                  val inThisOrOther = tla.or(inThis, inOther)
-                  (inCup, inThisOrOther)
-                }
+                  elems,
+                  newSetCell.toNameEx,
+                  { thisElem =>
+                    val inCup = tla.apalacheStoreInSet(thisElem.toNameEx, newSetCell.toNameEx)
+                    val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, leftSetCell.toNameEx)
+                    val inOther = tla.apalacheSelectInSet(thisElem.toNameEx, rightSetCell.toNameEx)
+                    val inThisOrOther = tla.or(inThis, inOther)
+                    (inCup, inThisOrOther)
+                  },
               )
 
             val cons = consChain(elems)

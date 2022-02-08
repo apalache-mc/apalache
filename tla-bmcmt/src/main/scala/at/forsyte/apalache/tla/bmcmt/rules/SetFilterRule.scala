@@ -11,7 +11,8 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 /**
  * Rewrites a set comprehension { x \in S: P }.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
@@ -64,14 +65,14 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
           if (cellsAndPreds.nonEmpty) {
             def consChain(elems: Seq[(ArenaCell, TlaEx)]): BuilderEx =
               ConsChainUtil.consChainFold[(ArenaCell, TlaEx)](
-                elems,
-                newSetCell.toNameEx,
-                { case (cell, pred) =>
-                  val inNewSet = tla.apalacheStoreInSet(cell.toNameEx, newSetCell.toNameEx)
-                  val inOldSet = tla.apalacheSelectInSet(cell.toNameEx, setCell.toNameEx)
-                  val inOldSetAndPred = tla.and(pred, inOldSet)
-                  (inNewSet, inOldSetAndPred)
-                }
+                  elems,
+                  newSetCell.toNameEx,
+                  { case (cell, pred) =>
+                    val inNewSet = tla.apalacheStoreInSet(cell.toNameEx, newSetCell.toNameEx)
+                    val inOldSet = tla.apalacheSelectInSet(cell.toNameEx, setCell.toNameEx)
+                    val inOldSetAndPred = tla.and(pred, inOldSet)
+                    (inNewSet, inOldSetAndPred)
+                  },
               )
 
             val cons = consChain(cellsAndPreds) // Produces a chain of SMT store
@@ -83,15 +84,15 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
           if (cellsAndPreds.nonEmpty) {
             def consChain(elems: Seq[(ArenaCell, TlaEx)]): BuilderEx =
               ConsChainUtil.consChainFold[(ArenaCell, TlaEx)](
-                elems,
-                tla.bool(true),
-                { case (cell, pred) =>
-                  val inNewSet = tla.apalacheSelectInSet(cell.toNameEx, newSetCell.toNameEx)
-                  val inOldSet = tla.apalacheSelectInSet(cell.toNameEx, setCell.toNameEx)
-                  val inOldSetAndPred = tla.and(pred, inOldSet)
-                  val and = tla.and(tla.eql(inNewSet, inOldSetAndPred))
-                  (and, tla.bool(true))
-                }
+                  elems,
+                  tla.bool(true),
+                  { case (cell, pred) =>
+                    val inNewSet = tla.apalacheSelectInSet(cell.toNameEx, newSetCell.toNameEx)
+                    val inOldSet = tla.apalacheSelectInSet(cell.toNameEx, setCell.toNameEx)
+                    val inOldSetAndPred = tla.and(pred, inOldSet)
+                    val and = tla.and(tla.eql(inNewSet, inOldSetAndPred))
+                    (and, tla.bool(true))
+                  },
               )
 
             val cons = consChain(cellsAndPreds) // Produces a chain of conjunctions of conditional SMT select

@@ -8,10 +8,11 @@ import at.forsyte.apalache.tla.bmcmt.util.ConsChainUtil
 import at.forsyte.apalache.tla.lir.BuilderEx
 
 /**
- * This class constructs the power set of S, that is, SUBSET S. Sometimes, this is just unavoidable, e.g.,
- * consider { Q \in SUBSET S: 2 * Cardinality(Q) =  }. Obviously, this produces an enormous explosion of constraints.
+ * This class constructs the power set of S, that is, SUBSET S. Sometimes, this is just unavoidable, e.g., consider { Q
+ * \in SUBSET S: 2 * Cardinality(Q) = }. Obviously, this produces an enormous explosion of constraints.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class PowSetCtor(rewriter: SymbStateRewriter) {
 
@@ -32,13 +33,13 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
       if (filtered.nonEmpty) {
         def consChain(elems: Seq[ArenaCell]): BuilderEx =
           ConsChainUtil.consChainFold[ArenaCell](
-            elems,
-            subsetCell.toNameEx,
-            { elem =>
-              val inSubset = tla.apalacheStoreInSet(elem.toNameEx, subsetCell.toNameEx)
-              val inSet = tla.apalacheSelectInSet(elem.toNameEx, set.toNameEx)
-              (inSubset, inSet)
-            }
+              elems,
+              subsetCell.toNameEx,
+              { elem =>
+                val inSubset = tla.apalacheStoreInSet(elem.toNameEx, subsetCell.toNameEx)
+                val inSet = tla.apalacheSelectInSet(elem.toNameEx, set.toNameEx)
+                (inSubset, inSet)
+              },
           )
 
         val cons = consChain(filtered)
@@ -68,12 +69,12 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
     if (subsets.nonEmpty) {
       def consChain(elems: Seq[ArenaCell]): BuilderEx =
         ConsChainUtil.consChainFold[ArenaCell](
-          elems,
-          powsetCell.toNameEx,
-          { subset =>
-            val inPowset = tla.apalacheStoreInSet(subset.toNameEx, powsetCell.toNameEx)
-            (inPowset, tla.bool(true))
-          }
+            elems,
+            powsetCell.toNameEx,
+            { subset =>
+              val inPowset = tla.apalacheStoreInSet(subset.toNameEx, powsetCell.toNameEx)
+              (inPowset, tla.bool(true))
+            },
         )
 
       val cons = consChain(subsets)
@@ -81,8 +82,7 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
     }
 
     // that's it!
-    rewriter.solverContext.log(
-        "; } %s returns %s [%d arena cells])"
+    rewriter.solverContext.log("; } %s returns %s [%d arena cells])"
           .format(getClass.getSimpleName, state.ex, state.arena.cellCount))
 
     state.setArena(arena).setRex(powsetCell.toNameEx)
