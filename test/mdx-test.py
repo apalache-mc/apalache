@@ -148,7 +148,7 @@ if __name__ == "__main__":
         logger.info(line)
 
     if process.returncode != 0:
-        logger.error(f"Failed to run test. Check {log_file}. Error: {process.stderr}")
+        logger.error(f"Failed to run test. Check {log_file}. Error: {process.stderr.read()}")
         sys.exit(1)
 
     # Run diff to check the corrected results against the expected results
