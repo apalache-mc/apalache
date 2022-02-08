@@ -36,8 +36,8 @@ logical paradoxes. Basically, the values are Booleans, integers, strings, sets,
 functions, etc.
 
 In the above example, the operator `Init` evaluates to `TRUE` on exactly one
-state, which we can conveniently write using the record constructor as follows:
-`[x |-> 0, y |-> 0]`.
+state, which we can conveniently write using the [record
+constructor](./records.md) as follows: `[x |-> 0, y |-> 0]`.
 
 The operator `Next` contains primes (`'`) and thus represents pairs of states,
 which we call _transitions_. An operator over unprimed and primed variables
