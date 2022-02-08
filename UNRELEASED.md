@@ -11,5 +11,5 @@
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
 ### Bug fixes
-
+* Fixed infinite recursion in `consChain`, see #1307
 * Fix a bug where some simplified `Or` expressions were not expected by the rewriting rules, see #1285
