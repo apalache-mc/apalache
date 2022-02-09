@@ -26,10 +26,8 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
     val relationElems = nextState.arena.getHas(relationCell)
     val nElems = relationElems.size
 
-    nextState = nextState.updateArena(_.appendCellNoSmt(elemT))
+    nextState = nextState.updateArena(_.appendCell(elemT, isUnconstrained = true)) // The cell will be unconstrained
     val res = nextState.arena.topCell
-    res.isUnconstrained = true // The declared cell is forced to be unconstrained
-    rewriter.solverContext.declareCell(res)
 
     // If the domain is non-empty we query the array representing the function
     // if the domain is empty we return an unconstrained value

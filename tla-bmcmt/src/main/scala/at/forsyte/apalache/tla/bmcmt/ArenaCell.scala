@@ -23,9 +23,13 @@ object ArenaCell {
 /**
  * A symbolic memory cell. Each cell has an identifier (similar to a memory address in a physical computer).
  *
+ * @param id Id of the cell
+ * @param cellType Type of the cell
+ * @param isUnconstrained Flag defining if the SMT representation of the cell is unconstrained, default is false.
  * @author Igor Konnov
  */
-class ArenaCell(val id: Int, val cellType: CellT) extends Comparable[ArenaCell] with Serializable {
+class ArenaCell(val id: Int, val cellType: CellT, val isUnconstrained: Boolean = false)
+    extends Comparable[ArenaCell] with Serializable {
   override def toString: String = {
     Arena.namePrefix + id
   }
@@ -50,8 +54,4 @@ class ArenaCell(val id: Int, val cellType: CellT) extends Comparable[ArenaCell] 
     } else {
       id.equals(o.asInstanceOf[ArenaCell].id)
     }
-
-  // This field enforces that the SMT representation of the cell is unconstrained, update with care.
-  // E.g., in the arrays encoding a set would not be made empty upon definition if isUnconstrained = true.
-  var isUnconstrained = false
 }

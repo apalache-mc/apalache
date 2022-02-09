@@ -154,10 +154,11 @@ class Arena private (val solverContext: SolverContext, val cellCount: Int, val t
    * The new cell can be accessed with topCell.
    *
    * @param cellType a cell type
+   * @param isUnconstrained a flag defining if the SMT representation of the cell is unconstrained, default is false.
    * @return new arena
    */
-  def appendCell(cellType: CellT): Arena = {
-    val newArena = appendCellNoSmt(cellType)
+  def appendCell(cellType: CellT, isUnconstrained: Boolean = false): Arena = {
+    val newArena = appendCellNoSmt(cellType, isUnconstrained)
     val newCell = newArena.topCell
     solverContext.declareCell(newCell)
     newArena
@@ -192,10 +193,11 @@ class Arena private (val solverContext: SolverContext, val cellCount: Int, val t
    * This method does not generate SMT constraints.
    *
    * @param cellType a cell type
+   * @param isUnconstrained a flag defining if the SMT representation of the cell is unconstrained, default is false.
    * @return new arena
    */
-  def appendCellNoSmt(cellType: CellT): Arena = {
-    val newCell = new ArenaCell(cellCount, cellType)
+  def appendCellNoSmt(cellType: CellT, isUnconstrained: Boolean = false): Arena = {
+    val newCell = new ArenaCell(cellCount, cellType, isUnconstrained)
     assert(!cellMap.contains(newCell.toString)) // this might happen, if we messed up arenas
     new Arena(solverContext, cellCount + 1, newCell, cellMap + (newCell.toString -> newCell), hasEdges, domEdges,
         cdmEdges)
