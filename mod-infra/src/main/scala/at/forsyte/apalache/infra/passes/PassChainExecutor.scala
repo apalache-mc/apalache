@@ -3,48 +3,53 @@ package at.forsyte.apalache.infra.passes
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.tla.lir.MissingTransformationError
+import at.forsyte.apalache.tla.lir.{MissingTransformationError, TlaModule, TlaModuleProperties, ModuleProperty}
 
 /**
- * This class executes the passes starting with the initial one,
- * until the final pass returns None.
+ * This class executes the passes starting with the initial one, until the final pass returns None.
  *
- * @param options     the options that can be used by all the passes
- * @param initialPass the first pass to run
- * @author Igor Konnov
+ * @param options
+ *   the options that can be used by all the passes
+ * @param initialPass
+ *   the first pass to run
+ * @author
+ *   Igor Konnov
  */
 
-class PassChainExecutor @Inject() (val options: WriteablePassOptions,
-    @Named("InitialPass") val initialPass: Pass with TlaModuleMixin)
-    extends LazyLogging {
+class PassChainExecutor(val options: WriteablePassOptions, passes: Seq[Pass]) extends LazyLogging {
 
-  def run(): Option[Pass with TlaModuleMixin] = {
-    def exec(seqNo: Int, passToRun: Pass with TlaModuleMixin): Option[Pass with TlaModuleMixin] = {
+  def run(): Option[TlaModule] = {
+    def exec(seqNo: Int, passToRun: Pass, module: TlaModule): Option[TlaModule] = {
       logger.info("PASS #%d: %s".format(seqNo, passToRun.name))
-      val result = passToRun.execute()
-      val outcome = if (result) "[OK]" else "[FAIL]"
+      val result = passToRun.execute(module)
+      val outcome = if (result.isDefined) "[OK]" else "[FAIL]"
       logger.debug("PASS #%d: %s %s".format(seqNo, passToRun.name, outcome))
-      if (!result) {
-        None // return the negative result
-      } else {
-        val nextPass = passToRun.nextPass
-        if (nextPass.hasModule) {
-          val module = nextPass.tlaModule.get
+      result
+    }
 
-          // Raise error if the pass dependencies aren't satisfied
-          if (!nextPass.dependencies.subsetOf(module.properties)) {
-            val missing = nextPass.dependencies -- module.properties
-            throw new MissingTransformationError(
-                s"${nextPass.name} cannot run for a module without the properties: ${missing.mkString(", ")}", module)
-          }
-
-          exec(1 + seqNo, nextPass) // call the next pass in line
-        } else {
-          Some(passToRun) // finished
-        }
+    def checkDependencies(module: TlaModule with TlaModuleProperties, pass: Pass): Unit = {
+      if (!pass.dependencies.subsetOf(module.properties)) {
+        val missing = pass.dependencies -- module.properties
+        throw new MissingTransformationError(
+            s"${pass.name} cannot run for a module without the properties: ${missing.mkString(", ")}", module)
       }
     }
 
-    exec(0, initialPass)
+    passes.zipWithIndex
+      .foldLeft(Option[TlaModule with TlaModuleProperties](new TlaModule("empty", Seq()) with TlaModuleProperties)) {
+        case (moduleOpt, (pass, index)) =>
+          // Raise error if the pass dependencies aren't satisfied
+          moduleOpt.map { m => checkDependencies(m, pass) }
+
+          for {
+            module <- moduleOpt
+            transformedModule <- exec(index, pass, module)
+          } yield {
+            val newModule = new TlaModule(transformedModule.name, transformedModule.declarations)
+              with TlaModuleProperties
+            newModule.properties = module.properties ++ pass.transformations
+            newModule
+          }
+      }
   }
 }

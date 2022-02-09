@@ -10,15 +10,6 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
-### Breaking changes
-
-* `version` command only prints the version, see #1279
-* tool and jar location no longer output by default, see #1279
-
-### Features
-* Add support for functions in the arrays encoding, see #1169
-
 ### Bug fixes
-
-* Fixed JSON decoder failing on inputs with `"Untyped"`, see #1281
-* Correctly resolve higher-order operators in names instances, see #1289
+* Fixed infinite recursion in `consChain`, see #1307
+* Fix a bug where some simplified `Or` expressions were not expected by the rewriting rules, see #1285

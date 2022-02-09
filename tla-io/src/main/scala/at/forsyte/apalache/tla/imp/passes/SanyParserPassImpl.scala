@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.imp.passes
 
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
+import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.io.json.impl.{DefaultTagReader, UJsonRep, UJsonToTla}
@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.{CyclicDependencyError, TlaModule}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.standard.DeclarationSorter
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
-import at.forsyte.apalache.tla.imp.{SanyImporter, SanyImporterException}
+import at.forsyte.apalache.tla.imp.{SanyImporter, SanyImporterException, utils}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
@@ -21,16 +21,17 @@ import org.apache.commons.io.FilenameUtils
 /**
  * Parsing TLA+ code with SANY.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class SanyParserPassImpl @Inject() (
     val options: PassOptions, val sourceStore: SourceStore, val annotationStore: AnnotationStore,
-    val writerFactory: TlaWriterFactory, @Named("AfterParser") val nextPass: Pass with TlaModuleMixin,
-) extends SanyParserPass with LazyLogging with TlaModuleMixin {
+    val writerFactory: TlaWriterFactory,
+) extends SanyParserPass with LazyLogging {
 
   override def name: String = "SanyParser"
 
-  override def execute(): Boolean = {
+  override def execute(module: TlaModule): Option[TlaModule] = {
     var rootModule: Option[TlaModule] = None
 
     val filename = options.getOrError[String]("parser", "filename")
@@ -56,7 +57,7 @@ class SanyParserPassImpl @Inject() (
     rootModule match {
       case None =>
         logger.error("  > Error parsing file " + filename)
-        false
+        None
 
       case Some(mod) =>
         // In rare cases, declarations may be out of order, as a result of substitution. Reorder them.
@@ -73,44 +74,9 @@ class SanyParserPassImpl @Inject() (
         writerFactory.writeModuleAllFormats(rootModule.get.copy(name = "00_OutParser"), TlaWriter.STANDARD_MODULES)
 
         // write parser output to specified destination, if requested
-        options.get[String]("io", "output").foreach { output =>
-          val outfile = new File(output)
-          val outfileName = outfile.toString()
+        utils.writeToOutput(rootModule.get, options, writerFactory, logger, sourceStore)
 
-          val ext = FilenameUtils.getExtension(outfileName)
-          val name = FilenameUtils.getBaseName(outfileName)
-
-          ext match {
-            case "tla" =>
-              writerFactory.writeModuleToTla(
-                  rootModule.get.copy(name),
-                  TlaWriter.STANDARD_MODULES,
-                  Some(outfile),
-              )
-            case "json" =>
-              writerFactory.writeModuleToJson(
-                  rootModule.get.copy(name),
-                  TlaWriter.STANDARD_MODULES,
-                  Some(outfile),
-              )
-            case _ =>
-              logger.error(s"  > Unrecognized file format: ${outfile.toString}. Supported formats: .tla and .json")
-          }
-
-          if (options.getOrElse[Boolean]("general", "debug", false)) {
-            val sourceLocator =
-              SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
-            rootModule.get.operDeclarations foreach sourceLocator.checkConsistency
-          }
-          if (options.getOrElse[Boolean]("general", "debug", false)) {
-            val sourceLocator =
-              SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
-            rootModule.get.operDeclarations foreach sourceLocator.checkConsistency
-          }
-        }
-
-        rootModule.map { m => nextPass.updateModule(this, m) }
-        true
+        rootModule
     }
   }
 

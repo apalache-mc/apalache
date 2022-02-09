@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.pp.passes
 
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
+import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
@@ -17,15 +17,18 @@ import com.typesafe.scalalogging.LazyLogging
 /**
  * A preprocessing pass that simplifies TLA+ expressions by running multiple transformations.
  *
- * @param options pass options
- * @param gen     name generator
- * @param tracker  transformation tracker
- * @param nextPass next pass to call
+ * @param options
+ *   pass options
+ * @param gen
+ *   name generator
+ * @param tracker
+ *   transformation tracker
+ * @param nextPass
+ *   next pass to call
  */
 class ReTLAPreproPassImpl @Inject() (
     options: PassOptions, gen: UniqueNameGenerator, renaming: IncrementalRenaming, tracker: TransformationTracker,
     sourceStore: SourceStore, changeListener: ChangeListener, writerFactory: TlaWriterFactory,
-    @Named("AfterPrepro") val nextPass: Pass with TlaModuleMixin,
 ) extends PreproPassPartial(
         options,
         renaming,
@@ -33,17 +36,10 @@ class ReTLAPreproPassImpl @Inject() (
         sourceStore,
         changeListener,
         writerFactory,
-        nextPass,
     ) {
 
-  /**
-   * Run the pass.
-   *
-   * @return true, if the pass was successful
-   */
-  override def execute(): Boolean = {
-    val input = tlaModule.get
-    val varSet = input.varDeclarations.map(_.name).toSet
+  override def execute(tlaModule: TlaModule): Option[TlaModule] = {
+    val varSet = tlaModule.varDeclarations.map(_.name).toSet
 
     val transformationSequence: List[(String, TlaModuleTransformation)] =
       List(
@@ -53,7 +49,7 @@ class ReTLAPreproPassImpl @Inject() (
       )
 
     // Doesn't need a postRename, since Normalizer won't introduce bound vars
-    executeWithParams(transformationSequence, postRename = false, ReTLALanguagePred())
+    executeWithParams(tlaModule, transformationSequence, postRename = false, ReTLALanguagePred())
   }
 
   override def dependencies = Set(ModuleProperty.Inlined)

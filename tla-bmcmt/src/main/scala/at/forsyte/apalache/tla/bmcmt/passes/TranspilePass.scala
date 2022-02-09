@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
-import at.forsyte.apalache.infra.passes.{Pass, TlaModuleMixin}
+import at.forsyte.apalache.infra.passes.Pass
 
-trait TranspilePass extends Pass with TlaModuleMixin {
+trait TranspilePass extends Pass {
 
   /**
    * The exitcode that is used to stop the system when one thread has failed with an exception.

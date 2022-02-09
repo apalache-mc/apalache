@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.pp.passes
 
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
+import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{TlaDecl, TlaModule, TlaOperDecl, UID}
@@ -15,7 +15,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 abstract class PreproPassPartial(
     val options: PassOptions, renaming: IncrementalRenaming, tracker: TransformationTracker, sourceStore: SourceStore,
-    changeListener: ChangeListener, writerFactory: TlaWriterFactory, nextPass: Pass with TlaModuleMixin,
+    changeListener: ChangeListener, writerFactory: TlaWriterFactory,
 ) extends PreproPass with LazyLogging {
   private var outputTlaModule: Option[TlaModule] = None
 
@@ -52,32 +52,27 @@ abstract class PreproPassPartial(
     }
   }
 
-  protected def postLanguageCheck(lPred: LanguagePred): Boolean =
+  protected def postLanguageCheck(tlaModule: TlaModule, lPred: LanguagePred): Option[TlaModule] =
     // check, whether all expressions fit in the language
-    lPred.isModuleOk(outputTlaModule.get) match {
+    lPred.isModuleOk(tlaModule) match {
       case PredResultOk() =>
-        true
+        Some(tlaModule)
 
       case PredResultFail(failedIds) =>
         for ((id, errorMessage) <- failedIds) {
           val message = "%s: unsupported expression: %s".format(findLoc(id), errorMessage)
           logger.error(message)
         }
-        false
+        None
     }
 
-  protected def executeWithParams(transformationSequence: List[(String, TlaModuleTransformation)], postRename: Boolean,
-      lPred: LanguagePred): Boolean = {
-    val input = tlaModule.get
-
-    val afterModule = applyTx(input, transformationSequence, postRename)
-
-    outputTlaModule = Some(afterModule)
-    nextPass.updateModule(this, afterModule)
+  protected def executeWithParams(tlaModule: TlaModule, transformationSequence: List[(String, TlaModuleTransformation)],
+      postRename: Boolean, lPred: LanguagePred): Option[TlaModule] = {
+    val afterModule = applyTx(tlaModule, transformationSequence, postRename)
 
     checkLocations()
 
-    postLanguageCheck(lPred)
+    postLanguageCheck(afterModule, lPred)
   }
 
   protected def createModuleTransformerForPrimePropagation(varSet: Set[String]): ModuleByExTransformer = {

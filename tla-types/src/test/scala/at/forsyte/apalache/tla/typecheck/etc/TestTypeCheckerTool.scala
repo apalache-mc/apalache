@@ -1,12 +1,17 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
+import at.forsyte.apalache.io.annotations.store._
+import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.typecheck.{TypeCheckerListener, TypeCheckerTool}
 import at.forsyte.apalache.io.annotations.store._
+import at.forsyte.apalache.io.json.impl.{DefaultTagReader, TlaToUJson, UJsonToTla}
+import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs
 import at.forsyte.apalache.tla.lir.{TlaModule, TlaType1, Typed, TypingException, UID}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
+import at.forsyte.apalache.tla.lir.{TlaType1, Typed, TypingException, UID}
+import at.forsyte.apalache.tla.typecheck.{TypeCheckerListener, TypeCheckerTool}
 import org.easymock.EasyMock
 import org.junit.runner.RunWith
 import org.scalatest.easymock.EasyMockSugar
@@ -100,13 +105,55 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
     }
   }
 
-  test("the tool consumes its output on MegaSpec1") {
+  test("the tool consumes its TLA output on MegaSpec1") {
     typecheckSpec("MegaSpec1")
   }
 
-  // fixing this test is scheduled in: https://github.com/informalsystems/apalache/issues/1255
-  ignore("the tool consumes its output on TlcSpec1") {
+  test("the tool consumes its JSON output on MegaSpec1") {
+    typecheckSpecAndEncoding("MegaSpec1")
+  }
+
+  test("the tool consumes its output on TlcSpec1") {
     typecheckSpec("TlcSpec1")
+  }
+
+  private def typecheckSpecAndEncoding(specName: String): Unit = {
+    val (rootName, modules) =
+      sanyImporter.loadFromSource(specName, loadSpecFromResource(specName))
+
+    val mod = modules(rootName)
+
+    def defaultTag(uid: UID): Nothing = {
+      throw new TypingException("No type for UID: " + uid, uid)
+    }
+
+    val listener = mock[TypeCheckerListener]
+    expecting {
+      // lots of types found
+      listener
+        .onTypeFound(EasyMock.anyObject[ExactRef], EasyMock.anyObject[TlaType1])
+        .anyTimes()
+      // but no type errors
+    }
+
+    val dec = new UJsonToTla(sourceStoreOpt = None)(DefaultTagReader)
+    val enc = new TlaToUJson(locatorOpt = None)(TlaType1PrinterPredefs.printer)
+
+    whenExecuting(listener) {
+      val typechecker = new TypeCheckerTool(annotationStore, true)
+
+      val output = typechecker.checkAndTag(new IdleTracker(), listener, defaultTag, mod)
+      assert(output.isDefined)
+
+      val postModule = output.get
+
+      val deserializaedSerialization = dec.asTlaModule(enc(postModule))
+
+      deserializaedSerialization.declarations.zip(postModule.declarations) map { case (d1, d2) =>
+        assert(d1.eqTyped(d2))
+      }
+
+    }
   }
 
   private def typecheckSpec(specName: String): Unit = {

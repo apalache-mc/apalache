@@ -105,6 +105,8 @@ class TestItfCounterexampleWriter extends FunSuite {
                     // technically, this expression is not type-correct
                     "h" -> funDef(name("x").typed(IntT1()), name("x").typed(IntT1()), enumSet().typed(SetT1(StrT1())))
                       .typed(intToStr),
+                    // (1 :> "a"
+                    "i" -> smiley(intToStr, int(1).typed(), str("a").typed()),
                 )),
         ),
         """{
@@ -124,7 +126,8 @@ class TestItfCounterexampleWriter extends FunSuite {
           |      "e": { "foo": 3, "bar": true },
           |      "f": { "#tup": [ 7, "myStr" ] },
           |      "g": { "#map": [[1, "a"], [2, "b"], [3, "c"]] },
-          |      "h": { "#map": [] }
+          |      "h": { "#map": [] },
+          |      "i": { "#map": [[1, "a"]] }
           |    }
           |  ]
           |}""".stripMargin,

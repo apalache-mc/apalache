@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.pp.passes
 
 import java.io.File
 import java.nio.file.Path
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
+import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.lir.{TlaModule, ModuleProperty}
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
@@ -15,20 +15,22 @@ import com.typesafe.scalalogging.LazyLogging
 /**
  * A preprocessing pass that simplifies TLA+ expression by running multiple transformation.
  *
- * @param options  pass options
- * @param gen      name generator
- * @param tracker  transformation tracker
- * @param nextPass next pass to call
+ * @param options
+ *   pass options
+ * @param gen
+ *   name generator
+ * @param tracker
+ *   transformation tracker
+ * @param nextPass
+ *   next pass to call
  */
 class OptPassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator, tracker: TransformationTracker,
-    writerFactory: TlaWriterFactory, @Named("AfterOpt") val nextPass: Pass with TlaModuleMixin)
+    writerFactory: TlaWriterFactory)
     extends OptPass with LazyLogging {
 
   override def name: String = "OptimizationPass"
 
-  override def execute(): Boolean = {
-    val module = rawModule.get
-
+  override def execute(module: TlaModule): Option[TlaModule] = {
     val transformationSequence =
       List(
           ConstSimplifier(tracker),
@@ -45,8 +47,7 @@ class OptPassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator,
     // dump the result of preprocessing
     writerFactory.writeModuleAllFormats(optimized.copy(name = "10_OutOpt"), TlaWriter.STANDARD_MODULES)
 
-    nextPass.updateModule(this, optimized)
-    true
+    Some(optimized)
   }
 
   override def dependencies = Set(ModuleProperty.Preprocessed)
