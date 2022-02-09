@@ -1,18 +1,18 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.util.Prod2SeqIterator
+import at.forsyte.apalache.tla.bmcmt.util.{ConsChainUtil, Prod2SeqIterator}
 import at.forsyte.apalache.tla.lir.{BuilderEx, OperEx, TypingException}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 
 /**
- * Rewrites X \cup Y, that is, a union of two sets (not UNION).
- * In the first encoding, we used a linear number of `in` queries.
- * However, this happens to be unsound, and we need a quadratic number of queries.
+ * Rewrites X \cup Y, that is, a union of two sets (not UNION). In the first encoding, we used a linear number of `in`
+ * queries. However, this happens to be unsound, and we need a quadratic number of queries.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
@@ -43,8 +43,7 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
         if (newType.isEmpty) {
           val msg =
             s"Failed to unify types ${leftSetCell.cellType} and ${rightSetCell.cellType} when rewriting ${state.ex}"
-          throw new TypingException(
-              s"Failed to unify types ${leftSetCell.cellType}"
+          throw new TypingException(s"Failed to unify types ${leftSetCell.cellType}"
                 + " and ${rightSetCell.cellType} when rewriting ${state.ex}", state.ex.ID)
         }
         nextState = nextState.updateArena(_.appendCell(newType.get))
@@ -55,36 +54,36 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // require each cell to be in in the union iff it is exactly in its origin set
         def addOnlyCellCons(thisSet: ArenaCell, elems: Seq[ArenaCell]): Unit = {
           if (elems.nonEmpty) {
-            def consChain(thisSet: ArenaCell, elems: Seq[ArenaCell]): BuilderEx = {
-              val thisElem = elems.head
-              val inCup = tla.apalacheStoreInSet(thisElem.toNameEx, newSetCell.toNameEx)
-              val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, thisSet.toNameEx)
+            def consChain(elems: Seq[ArenaCell]): BuilderEx =
+              ConsChainUtil.consChainFold[ArenaCell](
+                  elems,
+                  newSetCell.toNameEx,
+                  { thisElem =>
+                    val inCup = tla.apalacheStoreInSet(thisElem.toNameEx, newSetCell.toNameEx)
+                    val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, thisSet.toNameEx)
+                    (inCup, inThis)
+                  },
+              )
 
-              elems.tail match {
-                case Seq() => tla.apalacheChain(inCup, newSetCell.toNameEx, inThis)
-                case tail  => tla.apalacheChain(inCup, consChain(thisSet, tail), inThis)
-              }
-            }
-
-            val cons = consChain(thisSet, elems)
+            val cons = consChain(elems)
             rewriter.solverContext.assertGroundExpr(tla.apalacheAssignChain(newSetCell.toNameEx, cons))
           }
         }
 
         def addEitherCellCons(elems: Seq[ArenaCell]): Unit = {
           if (elems.nonEmpty) {
-            def consChain(elems: Seq[ArenaCell]): BuilderEx = {
-              val thisElem = elems.head
-              val inCup = tla.apalacheStoreInSet(thisElem.toNameEx, newSetCell.toNameEx)
-              val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, leftSetCell.toNameEx)
-              val inOther = tla.apalacheSelectInSet(thisElem.toNameEx, rightSetCell.toNameEx)
-              val inThisOrOther = tla.or(inThis, inOther)
-
-              elems.tail match {
-                case Seq() => tla.apalacheChain(inCup, newSetCell.toNameEx, inThisOrOther)
-                case tail  => tla.apalacheChain(inCup, consChain(tail), inThisOrOther)
-              }
-            }
+            def consChain(elems: Seq[ArenaCell]): BuilderEx =
+              ConsChainUtil.consChainFold[ArenaCell](
+                  elems,
+                  newSetCell.toNameEx,
+                  { thisElem =>
+                    val inCup = tla.apalacheStoreInSet(thisElem.toNameEx, newSetCell.toNameEx)
+                    val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, leftSetCell.toNameEx)
+                    val inOther = tla.apalacheSelectInSet(thisElem.toNameEx, rightSetCell.toNameEx)
+                    val inThisOrOther = tla.or(inThis, inOther)
+                    (inCup, inThisOrOther)
+                  },
+              )
 
             val cons = consChain(elems)
             rewriter.solverContext.assertGroundExpr(tla.apalacheAssignChain(newSetCell.toNameEx, cons))

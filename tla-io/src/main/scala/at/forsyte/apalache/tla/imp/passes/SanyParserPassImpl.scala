@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.imp.passes
 
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
+import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.io.json.impl.{DefaultTagReader, UJsonRep, UJsonToTla}
@@ -21,16 +21,17 @@ import org.apache.commons.io.FilenameUtils
 /**
  * Parsing TLA+ code with SANY.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class SanyParserPassImpl @Inject() (
     val options: PassOptions, val sourceStore: SourceStore, val annotationStore: AnnotationStore,
-    val writerFactory: TlaWriterFactory, @Named("AfterParser") val nextPass: Pass with TlaModuleMixin,
-) extends SanyParserPass with LazyLogging with TlaModuleMixin {
+    val writerFactory: TlaWriterFactory,
+) extends SanyParserPass with LazyLogging {
 
   override def name: String = "SanyParser"
 
-  override def execute(): Boolean = {
+  override def execute(module: TlaModule): Option[TlaModule] = {
     var rootModule: Option[TlaModule] = None
 
     val filename = options.getOrError[String]("parser", "filename")
@@ -56,7 +57,7 @@ class SanyParserPassImpl @Inject() (
     rootModule match {
       case None =>
         logger.error("  > Error parsing file " + filename)
-        false
+        None
 
       case Some(mod) =>
         // In rare cases, declarations may be out of order, as a result of substitution. Reorder them.
@@ -75,8 +76,7 @@ class SanyParserPassImpl @Inject() (
         // write parser output to specified destination, if requested
         utils.writeToOutput(rootModule.get, options, writerFactory, logger, sourceStore)
 
-        rootModule.map { m => nextPass.updateModule(this, m) }
-        true
+        rootModule
     }
   }
 
