@@ -13,4 +13,3 @@
 ### Bug fixes
 * Fixed infinite recursion in `consChain`, see #1307
 * Fixed a bug where some simplified `Or` expressions were not expected by the rewriting rules, see #1285
-* Fixed a bug with consistency checking in `PreproPassPartial`, see #1313
