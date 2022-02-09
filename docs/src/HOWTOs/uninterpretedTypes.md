@@ -30,12 +30,11 @@ where `UTNAME` matches the pattern `[A-Z_][A-Z0-9_]*`, and is not a type alias d
 ## How to introduce values belonging to an uninterpreted type
 Apalache uses the following convention-based naming scheme for values of uninterpreted types:
 ```tla
-"uval_TYPENAME_IDENTIFIER"
+"identifier_OF_TYPENAME"
 ```
 where:
   - `TYPENAME` is the uninterpreted type to which this value belongs, matching the pattern `[A-Z_][A-Z0-9_]*`, and
-  - `IDENTIFIER` is a unique identifier within the uninterpreted type, and matches the pattern
-  `[a-zA-Z0-9]+`.
+  - `identifier` is a unique identifier within the uninterpreted type, matching the pattern `[a-zA-Z0-9_]+`.
 
 Example: `"uval_UT_1"` is a value belonging to the uninterpreted type `UT`, as is `"uval_UT_2"`. These two values are distinct by definition. On the contrary, 
 `"uval_ut_1"` does _not_ meet the criteria for a value belonging to an uninterpreted type ( lowercase `ut` is not a valid identifier for an uninterpreted type), so it is treated as a string value.
