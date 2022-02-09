@@ -33,7 +33,7 @@ Apalache uses the following convention-based naming scheme for values of uninter
 "uval_TYPENAME_IDENTIFIER"
 ```
 where:
-  - `TYPENAME` is the uninterpreted type, to which this value belongs, and
+  - `TYPENAME` is the uninterpreted type to which this value belongs, matching the pattern `[A-Z_][A-Z0-9_]*`, and
   - `IDENTIFIER` is a unique identifier within the uninterpreted type, and matches the pattern
   `[a-zA-Z0-9]+`.
 
