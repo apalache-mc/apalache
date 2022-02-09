@@ -3378,32 +3378,31 @@ The type checker <a href="HOWTOs/../apalache/typechecker-snowcat.html">Snowcat</
 <p>where <code>UTNAME</code> matches the pattern <code>[A-Z_][A-Z0-9_]*</code>, and is not a type alias defined elsewhere.</p>
 <h2><a class="header" href="#how-to-introduce-values-belonging-to-an-uninterpreted-type" id="how-to-introduce-values-belonging-to-an-uninterpreted-type">How to introduce values belonging to an uninterpreted type</a></h2>
 <p>Apalache uses the following convention-based naming scheme for values of uninterpreted types:</p>
-<pre><code class="language-tla">&quot;uval_TYPENAME_IDENTIFIER&quot;
+<pre><code class="language-tla">&quot;identifier_OF_TYPENAME&quot;
 </code></pre>
 <p>where:</p>
 <ul>
-<li><code>TYPENAME</code> is the uninterpreted type, to which this value belongs, and</li>
-<li><code>IDENTIFIER</code> is a unique identifier within the uninterpreted type, and matches the pattern
-<code>[a-zA-Z0-9]+</code>.</li>
+<li><code>TYPENAME</code> is the uninterpreted type to which this value belongs, matching the pattern <code>[A-Z_][A-Z0-9_]*</code>, and</li>
+<li><code>identifier</code> is a unique identifier within the uninterpreted type, matching the pattern <code>[a-zA-Z0-9_]+</code>.</li>
 </ul>
-<p>Example: <code>&quot;uval_UT_1&quot;</code> is a value belonging to the uninterpreted type <code>UT</code>, as is <code>&quot;uval_UT_2&quot;</code>. These two values are distinct by definition. On the contrary, 
-<code>&quot;uval_ut_1&quot;</code> does <em>not</em> meet the criteria for a value belonging to an uninterpreted type ( lowercase <code>ut</code> is not a valid identifier for an uninterpreted type), so it is treated as a string value.</p>
+<p>Example: <code>&quot;1_OF_UT&quot;</code> is a value belonging to the uninterpreted type <code>UT</code>, as is <code>&quot;2_OF_UT&quot;</code>. These two values are distinct by definition. On the contrary,
+<code>&quot;1_OF_ut&quot;</code> does <em>not</em> meet the criteria for a value belonging to an uninterpreted type ( lowercase <code>ut</code> is not a valid identifier for an uninterpreted type), so it is treated as a string value.</p>
 <h2><a class="header" href="#uninterpreted-types-str-and-comparisons" id="uninterpreted-types-str-and-comparisons">Uninterpreted types, <code>Str</code>, and comparisons</a></h2>
 <p>Importantly, while both strings and values belonging to uninterpreted types are introduced using the <code>&quot;...&quot;</code> notation, they are treated as having distinct, incomparable types.
 Examples:</p>
 <ul>
 <li>The following expression is type-incorrect:
-<pre><code class="language-tla">&quot;abc&quot; = &quot;uval_A_bc&quot; \* Cannot compare values of types Str and A
+<pre><code class="language-tla">&quot;abc&quot; = &quot;bc_OF_A&quot; \* Cannot compare values of types Str and A
 </code></pre>
 </li>
 <li>The following expression is type-incorrect:
-<pre><code class="language-tla">&quot;uval_A_1&quot; = &quot;uval_B_1&quot; \* Cannot compare values of types A and B
+<pre><code class="language-tla">&quot;1_OF_A&quot; = &quot;1_OF_B&quot; \* Cannot compare values of types A and B
 </code></pre>
 </li>
 <li>The following expressions are type-correct:
 <pre><code class="language-tla">\* Can compare 2 values of type A. 
-&quot;uval_A_1&quot; = &quot;uval_A_2&quot; \* = FALSE, identifiers are different
-&quot;uval_A_1&quot; = &quot;uval_A_1&quot; \* = TRUE, identifiers are the same
+&quot;1_OF_A&quot; = &quot;2_OF_A&quot; \* = FALSE, identifiers are different
+&quot;1_OF_A&quot; = &quot;1_OF_A&quot; \* = TRUE, identifiers are the same
 </code></pre>
 </li>
 </ul>
