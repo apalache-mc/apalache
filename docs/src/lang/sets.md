@@ -258,8 +258,8 @@ is undefined.
 
 **Errors:** Pure TLA+ does not restrict the operator arguments.  TLC flags a
 model checking error, when it discovers that elements of `S` cannot be compared
-to the elements of `T`. Apalache produces a static type error, `S` and `T` are
-either not sets, or sets of incompatible types.
+to the elements of `T`. Apalache produces a static type error, if `S` and `T`
+are either not sets, or sets of incompatible types.
 
 **Example in TLA+:**
 
@@ -306,8 +306,8 @@ of `S` **as well** as the elements of `T`, and no other values.
 
 **Errors:** Pure TLA+ does not restrict the operator arguments.  TLC flags a
 model checking error, when it discovers that elements of `S` cannot be compared
-to the elements of `T`. Apalache produces a static type error, `S` and `T` are
-either not sets, or sets of incompatible types.
+to the elements of `T`. Apalache produces a static type error, if `S` and `T`
+are either not sets, or sets of incompatible types.
 
 **Example in TLA+:**
 
@@ -355,8 +355,8 @@ of `S` that **also** belong to `T`, and no other values.
 
 **Errors:** Pure TLA+ does not restrict the operator arguments.  TLC flags a
 model checking error, when it discovers that elements of `S` cannot be compared
-to the elements of `T`. Apalache produces a static type error, `S` and `T` are
-either not sets, or sets of incompatible types.
+to the elements of `T`. Apalache produces a static type error, if `S` and `T`
+are either not sets, or sets of incompatible types.
 
 **Example in TLA+:**
 
@@ -404,8 +404,8 @@ of `S` that **do not** belong to `T`, and no other values.
 
 **Errors:** Pure TLA+ does not restrict the operator arguments.  TLC flags a
 model checking error, when it discovers that elements of `S` cannot be compared
-to the elements of `T`. Apalache produces a static type error, `S` and `T` are
-either not sets, or sets of incompatible types.
+to the elements of `T`. Apalache produces a static type error, if `S` and `T`
+are either not sets, or sets of incompatible types.
 
 **Example in TLA+:**
 
