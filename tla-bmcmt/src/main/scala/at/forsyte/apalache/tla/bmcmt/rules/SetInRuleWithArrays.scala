@@ -120,7 +120,11 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
 
       // EqConstraints need to be generated, since missing in-relations, e.g. in sets of tuples, will lead to errors.
       // TODO: Inlining this method is pointless. We should consider handling tuples and other structures natively in SMT.
-      nextState = rewriter.lazyEq.cacheEqConstraints(nextState, potentialElems.map((_, elemCell)))
+      // If elemCell is a function, cacheEqConstraints will generate constraints over its set of relations. This is
+      // problematic because the relations are only being carried in the arena, without SMT constrains being generated.
+      if (!elemCell.cellType.isInstanceOf[FunT]) {
+        nextState = rewriter.lazyEq.cacheEqConstraints(nextState, potentialElems.map((_, elemCell)))
+      }
 
       def inAndEq(elem: ArenaCell) = {
         simplifier
