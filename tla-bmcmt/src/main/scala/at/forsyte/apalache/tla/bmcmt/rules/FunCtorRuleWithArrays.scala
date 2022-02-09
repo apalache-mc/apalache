@@ -7,11 +7,11 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir._
 
 /**
- * Encodes the construction of a function f = [x \in S |-> e].
- * We carry the domain set in a separate set cell.
- * The function's range is propagated as metadata for cex generation, but does not lead to any SMT constraints.
+ * Encodes the construction of a function f = [x \in S |-> e]. We carry the domain set in a separate set cell. The
+ * function's range is propagated as metadata for cex generation, but does not lead to any SMT constraints.
  *
- * @author Rodrigo Otoni
+ * @author
+ *   Rodrigo Otoni
  */
 class FunCtorRuleWithArrays(rewriter: SymbStateRewriter) extends FunCtorRule(rewriter) {
 

@@ -12,7 +12,8 @@ import at.forsyte.apalache.tla.lir.{FunT1, RecT1, TupT1, BoolT1, SetT1}
 /**
  * Rewriting EXCEPT for functions, tuples, and records.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private def cacheEq(s: SymbState, l: ArenaCell, r: ArenaCell) = rewriter.lazyEq.cacheOneEqConstraint(s, l, r)
@@ -123,7 +124,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     val keyToUpdate = indexEx match {
       case ValEx(TlaStr(key)) => key
-      case ex                 => throw new RewriterException("Expected a string when updating a record, found: " + ex, ex)
+      case ex => throw new RewriterException("Expected a string when updating a record, found: " + ex, ex)
     }
 
     // create a new record
@@ -154,7 +155,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     val indexToUpdate = indexEx match {
       case ValEx(TlaInt(index)) => index.toInt
-      case ex                   => throw new RewriterException("Expected a number when updating a tuple, found: " + ex, ex)
+      case ex => throw new RewriterException("Expected a number when updating a tuple, found: " + ex, ex)
     }
 
     // create a new tuple

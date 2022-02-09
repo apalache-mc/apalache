@@ -12,7 +12,8 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 /**
  * Rewrites set membership tests: x \in S, x \in SUBSET S, and x \in [S -> T].
  *
- * @author Rodrigo Otoni
+ * @author
+ *   Rodrigo Otoni
  */
 class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewriter) {
   private val simplifier = new ConstSimplifierForSmt

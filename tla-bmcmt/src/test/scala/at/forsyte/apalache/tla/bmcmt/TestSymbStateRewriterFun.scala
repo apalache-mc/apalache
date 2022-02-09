@@ -343,7 +343,7 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
       .typed(types, "b_to_b")
     val existsForm =
       apalacheSkolem(exists(name("x") ? "b_to_b", enumSet(fun1) ? "b_TO_b",
-              appFun(name("x") ? "b_to_b", bool(false)) ? "b") ? "b")
+          appFun(name("x") ? "b_to_b", bool(false)) ? "b") ? "b")
         .typed(types, "b")
 
     val rewriter = createWithoutCache(rewriterType)

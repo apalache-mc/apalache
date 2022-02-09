@@ -9,7 +9,8 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 /**
  * Rewriting EXCEPT for functions, tuples, and records.
  *
- * @author Rodrigo Otoni
+ * @author
+ *   Rodrigo Otoni
  */
 class FunExceptRuleWithArrays(rewriter: SymbStateRewriter) extends FunExceptRule(rewriter) {
 

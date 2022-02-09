@@ -19,7 +19,8 @@ import scala.collection.immutable.{HashSet, SortedSet}
 /**
  * This class dumps relevant values from an SMT model using an arena.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter) extends LazyLogging {
 

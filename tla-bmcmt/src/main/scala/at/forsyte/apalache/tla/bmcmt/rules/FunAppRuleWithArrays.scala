@@ -9,7 +9,8 @@ import at.forsyte.apalache.tla.lir.{FunT1, TlaEx}
 /**
  * Implements f[x] for: functions, records, and tuples.
  *
- * @author Rodrigo Otoni
+ * @author
+ *   Rodrigo Otoni
  */
 class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewriter) {
 

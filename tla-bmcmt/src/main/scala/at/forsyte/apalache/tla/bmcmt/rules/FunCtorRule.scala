@@ -8,10 +8,11 @@ import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir._
 
 /**
- * The new implementation of a function constructor that encodes a function f = [x \in S |-> e] the classical way:
- * f = {(a, b) : a \in S, b = e[a/x]}. For efficiency, we are still carrying the domain set in a separate cell.
+ * The new implementation of a function constructor that encodes a function f = [x \in S |-> e] the classical way: f =
+ * {(a, b) : a \in S, b = e[a/x]}. For efficiency, we are still carrying the domain set in a separate cell.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
@@ -30,8 +31,7 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriteFunCtor(state, funT, mapEx, varName, setEx)
 
       case _ =>
-        throw new RewriterException(
-            "%s is not applicable to %s"
+        throw new RewriterException("%s is not applicable to %s"
               .format(getClass.getSimpleName, state.ex), state.ex)
     }
   }

@@ -9,7 +9,8 @@ import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 /**
  * Rewriting DOMAIN f, that is, translating the domain of a function, record, tuple, or sequence.
  *
- * @author Rodrigo Otoni
+ * @author
+ *   Rodrigo Otoni
  */
 class DomainRuleWithArrays(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache)
     extends DomainRule(rewriter, intRangeCache) {
