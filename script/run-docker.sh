@@ -28,7 +28,7 @@ cmd="docker run \
     -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) \
     --rm \
     -v $(pwd):/var/apalache \
-    -v "$HOME/.tlaplus":/root/.tlaplus \
+    -v "$HOME/.tlaplus":/home/apalache/.tlaplus \
     ${img} ${*}"
 >&2 echo "# running command: ${cmd}"
 $cmd
