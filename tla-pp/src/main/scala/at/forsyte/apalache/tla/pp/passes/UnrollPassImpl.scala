@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.pp.passes
 
 import java.io.File
 import java.nio.file.Path
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
+import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.lir.{TlaModule, ModuleProperty}
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
@@ -15,20 +15,20 @@ import com.typesafe.scalalogging.LazyLogging
 /**
  * An unrolling pass that
  *
- * @param options  pass options
- * @param tracker  transformation tracker
- * @param nextPass next pass to call
+ * @param options
+ *   pass options
+ * @param tracker
+ *   transformation tracker
+ * @param nextPass
+ *   next pass to call
  */
 class UnrollPassImpl @Inject() (val options: PassOptions, nameGenerator: UniqueNameGenerator,
-    tracker: TransformationTracker, renaming: IncrementalRenaming, writerFactory: TlaWriterFactory,
-    @Named("AfterUnroll") val nextPass: Pass with TlaModuleMixin)
+    tracker: TransformationTracker, renaming: IncrementalRenaming, writerFactory: TlaWriterFactory)
     extends UnrollPass with LazyLogging {
 
   override def name: String = "UnrollPass"
 
-  override def execute(): Boolean = {
-    val module = tlaModule.get
-
+  override def execute(module: TlaModule): Option[TlaModule] = {
     // We have to rename the input, as LOCAL-toplevel TLA+ functions get
     // introduced as LET-IN operators (copying the definition). The problem is,
     // the operator bodies may introduce namespace collisions, e.g. with
@@ -50,8 +50,7 @@ class UnrollPassImpl @Inject() (val options: PassOptions, nameGenerator: UniqueN
     // dump the result of preprocessing
     writerFactory.writeModuleAllFormats(newModule.copy(name = "04_OutUnroll"), TlaWriter.STANDARD_MODULES)
 
-    nextPass.updateModule(this, newModule)
-    true
+    Some(newModule)
   }
 
   override def dependencies = Set(ModuleProperty.Desugared)

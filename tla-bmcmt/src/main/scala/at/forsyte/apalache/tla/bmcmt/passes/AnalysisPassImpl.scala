@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions, TlaModuleMixin}
+import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.bmcmt.CheckerException
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
@@ -17,8 +17,7 @@ import com.typesafe.scalalogging.LazyLogging
  * Find free-standing existential quantifiers, grade expressions, and produce hints about some formulas.
  */
 class AnalysisPassImpl @Inject() (val options: PassOptions, exprGradeStoreImpl: ExprGradeStoreImpl,
-    tracker: TransformationTracker, writerFactory: TlaWriterFactory,
-    @Named("AfterAnalysis") val nextPass: Pass with TlaModuleMixin)
+    tracker: TransformationTracker, writerFactory: TlaWriterFactory)
     extends AnalysisPass with LazyLogging {
 
   override def name: String = "AnalysisPass"
@@ -27,11 +26,7 @@ class AnalysisPassImpl @Inject() (val options: PassOptions, exprGradeStoreImpl: 
     override def compare(x: Object, y: Object): Int = x.toString compare y.toString
   }
 
-  override def execute(): Boolean = {
-    if (tlaModule.isEmpty) {
-      throw new CheckerException(s"The input of $name pass is not initialized", NullEx)
-    }
-
+  override def execute(module: TlaModule): Option[TlaModule] = {
     val transformationSequence =
       List(
           // mark some expressions as to be Skolemized
@@ -43,7 +38,6 @@ class AnalysisPassImpl @Inject() (val options: PassOptions, exprGradeStoreImpl: 
       ) ///
 
     logger.info(" > Marking skolemizable existentials and sets to be expanded...")
-    val module: TlaModule = tlaModule.get
     val marked = transformationSequence.foldLeft(module) { case (m, (name, tr)) =>
       logger.info("  > %s".format(name))
       ModuleByExTransformer(tr).apply(m)
@@ -66,13 +60,11 @@ class AnalysisPassImpl @Inject() (val options: PassOptions, exprGradeStoreImpl: 
       case _                => ()
     }
 
-    nextPass.updateModule(this, marked)
-
     writerFactory.writeModuleAllFormats(marked.copy(name = "11_OutAnalysis"), TlaWriter.STANDARD_MODULES)
 
     logger.info("  > Introduced expression grades")
 
-    true
+    Some(marked)
   }
 
   override def dependencies = Set(ModuleProperty.TransitionsFound)
