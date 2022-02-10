@@ -1,7 +1,11 @@
 package at.forsyte.apalache.tla.lir.formulas
 
+import at.forsyte.apalache.tla.lir.formulas.StandardSorts.BoolSort
+
 object Booleans {
-  type BoolExpr = Term[StandardSorts.BoolSort]
+  trait BoolExpr extends Term {
+    val sort: Sort = BoolSort()
+  }
 
   object False extends BoolExpr
   object True extends BoolExpr
@@ -10,7 +14,7 @@ object Booleans {
   sealed case class Neg(arg: BoolExpr) extends BoolExpr
   sealed case class Impl(lhs: BoolExpr, rhs: BoolExpr) extends BoolExpr
   sealed case class Equiv(lhs: BoolExpr, rhs: BoolExpr) extends BoolExpr
-  sealed case class Forall(name: String, sort: Sort, arg: BoolExpr) extends BoolExpr
-  sealed case class Exists(name: String, sort: Sort, arg: BoolExpr) extends BoolExpr
-  sealed case class BoolVar(name: String) extends Variable[StandardSorts.BoolSort](name) with BoolExpr
+  sealed case class Forall(name: String, ofSort: Sort, arg: BoolExpr) extends BoolExpr
+  sealed case class Exists(name: String, ofSort: Sort, arg: BoolExpr) extends BoolExpr
+  sealed case class BoolVar(name: String) extends Variable(name) with BoolExpr
 }

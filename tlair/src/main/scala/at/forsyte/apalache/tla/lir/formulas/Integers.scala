@@ -1,8 +1,12 @@
 package at.forsyte.apalache.tla.lir.formulas
 
+import at.forsyte.apalache.tla.lir.formulas.StandardSorts.IntSort
+
 object Integers {
 
-  type IntExpr = Term[StandardSorts.IntSort]
+  trait IntExpr extends Term {
+    val sort: Sort = IntSort()
+  }
 
   sealed case class Plus(lhs: IntExpr, rhs: IntExpr) extends IntExpr
   sealed case class Minus(lhs: IntExpr, rhs: IntExpr) extends IntExpr
@@ -17,5 +21,6 @@ object Integers {
   sealed case class Gt(lhs: IntExpr, rhs: IntExpr) extends Booleans.BoolExpr
   sealed case class Ge(lhs: IntExpr, rhs: IntExpr) extends Booleans.BoolExpr
 
-  sealed case class IntVar(name: String) extends Variable[StandardSorts.IntSort](name) with IntExpr
+  sealed case class IntLiteral(i: BigInt) extends IntExpr
+  sealed case class IntVar(name: String) extends Variable(name) with IntExpr
 }

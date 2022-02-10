@@ -1,8 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt.rules.vmt
 
+import at.forsyte.apalache.tla.bmcmt.RewriterException
 import at.forsyte.apalache.tla.lir.{NameEx, TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.formulas.{Sort, StandardSorts}
-import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet, TlaNatSet, TlaRealSet, TlaStrSet}
+import at.forsyte.apalache.tla.lir.values.{TlaRealSet, TlaStrSet}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -14,28 +15,29 @@ class TestJudgement extends FunSuite {
 
   sealed case class CustomSort(id: Int) extends Sort("")
 
+  val constantMap = Map(
+      "x" -> StandardSorts.BoolSort(),
+      "y" -> StandardSorts.IntSort(),
+      "z" -> CustomSort(1),
+  )
+
+  val allowed: Seq[TlaEx] = (Seq(
+      tla.intSet(),
+      tla.natSet(),
+      tla.booleanSet(),
+  ) map { _.untyped() }) ++ (constantMap.keys.toSeq.map { tla.name(_).untyped() })
+
+  val disallowed: Seq[TlaEx] = Seq(
+      ValEx(TlaRealSet),
+      ValEx(TlaStrSet),
+      tla.enumSet(tla.int(1), tla.int(2)),
+      tla.dotdot(tla.int(0), tla.int(42)),
+      NameEx("potato"),
+  )
+
+  val judgement = new RestrictedSetJudgement(constantMap)
+
   test("Restricted set recognition") {
-    val constantMap = Map(
-        "x" -> StandardSorts.BoolSort(),
-        "y" -> StandardSorts.IntSort(),
-        "z" -> CustomSort(1),
-    )
-    val judgement = new RestrictedSetJudgement(constantMap)
-
-    val allowed: Seq[TlaEx] = (Seq(
-        TlaIntSet,
-        TlaNatSet,
-        TlaBoolSet,
-    ) map { ValEx(_) }) ++ constantMap.keys.toSeq.map { NameEx(_) }
-
-    val disallowed: Seq[TlaEx] = Seq(
-        ValEx(TlaRealSet),
-        ValEx(TlaStrSet),
-        tla.enumSet(tla.int(1), tla.int(2)),
-        tla.dotdot(tla.int(0), tla.int(42)),
-        NameEx("potato"),
-    )
-
     allowed.foreach { ex =>
       assert(judgement.isRestrictedSet(ex))
     }
@@ -44,5 +46,23 @@ class TestJudgement extends FunSuite {
       assert(!judgement.isRestrictedSet(ex))
     }
 
+  }
+
+  test("Restricted set Sort recognition") {
+    val expected: Map[TlaEx, Sort] = Map(
+        tla.intSet().untyped() -> StandardSorts.IntSort(),
+        tla.natSet().untyped() -> StandardSorts.IntSort(),
+        tla.booleanSet().untyped() -> StandardSorts.BoolSort(),
+    ) ++ (constantMap map { case (k, v) => tla.name(k).untyped() -> v })
+
+    allowed.foreach { ex =>
+      assert(judgement.getSort(ex) == expected(ex))
+    }
+
+    disallowed.foreach { ex =>
+      assertThrows[RewriterException] {
+        judgement.getSort(ex)
+      }
+    }
   }
 }

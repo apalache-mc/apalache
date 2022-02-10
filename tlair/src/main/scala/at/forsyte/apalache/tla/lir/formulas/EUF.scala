@@ -4,16 +4,24 @@ object EUF {
 
   import Booleans.BoolExpr
 
-  sealed case class Equal[S <: Sort](lhs: Term[S], rhs: Term[S]) extends BoolExpr
-  sealed case class ITE[S <: Sort](cond: BoolExpr, lhs: Term[S], rhs: Term[S]) extends Term[S]
-  sealed case class Apply[S <: Sort](fn: Function[S], args: AbstractTerm*) extends Term[S] {
+  sealed case class UninterpretedLiteral(s: String, sort: Sort) extends Term
+  sealed case class UninterpretedVar(name: String, sort: Sort) extends Variable(name)
+  sealed case class Equal(lhs: Term, rhs: Term) extends BoolExpr {
+    require(lhs.sort == rhs.sort)
+  }
+  sealed case class ITE(cond: BoolExpr, lhs: Term, rhs: Term) extends Term {
+    require(lhs.sort == rhs.sort)
+    val sort: Sort = lhs.sort
+  }
+  sealed case class Apply(fn: Function, args: Term*) extends Term {
     require(isValid)
     private def isValid: Boolean =
       if (args.size != fn.from.size) false
       else {
-        args.zip(fn.from).forall { case (arg, param) =>
-          arg.isInstanceOf[Term[param.type]]
+        args.zip(fn.from).forall { case (arg, expectedSort) =>
+          arg.sort == expectedSort
         }
       }
+    val sort: Sort = fn.to
   }
 }
