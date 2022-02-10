@@ -53,3 +53,16 @@ fmt-fix:
 clean:
 	sbt clean
 	rm -rf target/
+
+# Adapted from https://github.com/ocaml/dune/blob/d60cfbc0c78bb8733115d9100a8f7f6cb3dcf85b/Makefile#L121-L127
+# If the first argument is "run"...
+ifeq (run,$(firstword $(MAKECMDGOALS)))
+  # use the rest as arguments for "run"
+  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  # ...and turn them into do-nothing targets
+  $(eval $(RUN_ARGS):;@:)
+endif
+
+# Run apalache with the given `RUN_ARGS`, ensuring it has been built first
+run:
+	sbt "tool / run $(RUN_ARGS)"
