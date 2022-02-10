@@ -112,6 +112,43 @@ $ JVM_ARGS="-Xmx16m" apalache-mc --debug version | sed 's/-DTLA-Library.*//'
 ...
 ```
 
+## Running the config command
+
+Enable statistics collection.
+
+### config --enable-stats=true
+
+Test that it is possible to turn on the statistics. Before and after calling
+this command, we turn the stats off, so tla2tools do not call home.
+
+```sh
+$ echo NO_STATISTICS >$HOME/.tlaplus/esc.txt
+$ apalache-mc config --enable-stats=true | sed 's/[IEW]@.*//'
+...
+Statistics collection is ON.
+...
+EXITCODE: OK
+$ grep -q -v NO_STATISTICS $HOME/.tlaplus/esc.txt
+$ echo NO_STATISTICS >$HOME/.tlaplus/esc.txt
+```
+
+### config --enable-stats=false
+
+Disable statistics collection. We fix the installation id, so we can
+distinguish it from normal users. After executing the command, we turn the
+statistics off again.
+
+```sh
+$ echo c1cd000000000000000000000000c1cd >$HOME/.tlaplus/esc.txt
+$ apalache-mc config --enable-stats=false | sed 's/[IEW]@.*//'
+...
+Statistics collection is OFF.
+...
+EXITCODE: OK
+$ head -n 1 $HOME/.tlaplus/esc.txt
+NO_STATISTICS
+```
+
 ## running the parse command
 
 This command parses a TLA+ specification with the SANY parser.
@@ -2291,28 +2328,6 @@ Typecheck a model checking instance.
 
 ```sh
 $ apalache-mc typecheck MC_LamportMutexTyped.tla | sed 's/[IEW]@.*//'
-...
-EXITCODE: OK
-```
-
-## Running the config command
-
-### config --enable-stats=false
-
-```sh
-$ apalache-mc config --enable-stats=false | sed 's/[IEW]@.*//'
-...
-Statistics collection is OFF.
-...
-EXITCODE: OK
-```
-
-### config --enable-stats=true
-
-```sh
-$ apalache-mc config --enable-stats=true | sed 's/[IEW]@.*//'
-...
-Statistics collection is ON.
 ...
 EXITCODE: OK
 ```
