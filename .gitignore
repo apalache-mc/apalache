@@ -6,26 +6,14 @@ target/
 .bsp
 .bloop
 
+# Generated if running integration tests locally
+_apalache-out/
+
 # Auto generated file for metals
-
 metals.sbt
-log*.smt
-test/tla/testSpec\.smt2
-test/tla/counterexample*
-
-tla-assignments/src/test/resources/assignmentTest1.smt2
-tla-bmcmt/counterexample*
-tla-bmcmt/profile-rules.txt
-
-*.err
-*.out
-*.log
 
 # Local envars for direnv
 /.local-envrc
-
-# Ignore directories where test artifacts are stored
-x/
 
 # Ignore artifacts created when previewing the gh-pages site
 /Gemfile.lock
