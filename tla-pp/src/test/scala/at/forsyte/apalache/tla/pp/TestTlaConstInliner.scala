@@ -54,6 +54,12 @@ class TestTlaConstInliner extends FunSuite with BeforeAndAfterEach with Matchers
     result shouldBe tla.plus(nonConst, tla.minus(primitiveValue, nonPrimitiveValuedConst)).untyped()
   }
 
+  test("leaves nested OperEx without primitive-valued constants unchanged") {
+    val input = tla.plus(nonConst, tla.minus(nonConst, nonPrimitiveValuedConst))
+    val result = constInliner.replaceConstWithValue(constMap)(input)
+    result shouldBe input.untyped()
+  }
+
   test("inlines LetInEx body and operator declaration") {
     val body = tla.plus(nonConst, tla.minus(primitiveValuedConst, nonPrimitiveValuedConst))
     val operDecl = tla.declOp("A", tla.plus(primitiveValuedConst, nonPrimitiveValuedConst))
@@ -62,6 +68,39 @@ class TestTlaConstInliner extends FunSuite with BeforeAndAfterEach with Matchers
     // should replace `primitiveValuedConst` with `primitiveValue` in body and operator declaration
     val expectedBody = tla.plus(nonConst, tla.minus(primitiveValue, nonPrimitiveValuedConst))
     val expectedOperDecl = tla.declOp("A", tla.plus(primitiveValue, nonPrimitiveValuedConst)).untypedOperDecl()
+    result shouldBe tla.letIn(expectedBody, expectedOperDecl).untyped()
+  }
+
+  test("inlines only LetInEx body if operator declaration without primitive-valued constants") {
+    val body = tla.plus(nonConst, tla.minus(primitiveValuedConst, nonPrimitiveValuedConst))
+    val operDecl = tla.declOp("A", tla.plus(nonConst, nonPrimitiveValuedConst))
+    val input = tla.letIn(body, operDecl.untypedOperDecl())
+    val result = constInliner.replaceConstWithValue(constMap)(input)
+    // should replace `primitiveValuedConst` with `primitiveValue` only in body
+    val expectedBody = tla.plus(nonConst, tla.minus(primitiveValue, nonPrimitiveValuedConst))
+    val expectedOperDecl = operDecl.untypedOperDecl()
+    result shouldBe tla.letIn(expectedBody, expectedOperDecl).untyped()
+  }
+
+  test("inlines only LetInEx operator declaration if body without primitive-valued constants") {
+    val body = tla.plus(nonConst, nonPrimitiveValuedConst)
+    val operDecl = tla.declOp("A", tla.plus(primitiveValuedConst, nonPrimitiveValuedConst))
+    val input = tla.letIn(body, operDecl.untypedOperDecl())
+    val result = constInliner.replaceConstWithValue(constMap)(input)
+    // should replace `primitiveValuedConst` with `primitiveValue` in body and operator declaration
+    val expectedBody = body
+    val expectedOperDecl = tla.declOp("A", tla.plus(primitiveValue, nonPrimitiveValuedConst)).untypedOperDecl()
+    result shouldBe tla.letIn(expectedBody, expectedOperDecl).untyped()
+  }
+
+  test("leaves LetInEx unchanged if neither operator declaration nor body contain primitive-valued constants") {
+    val body = tla.plus(nonConst, nonPrimitiveValuedConst)
+    val operDecl = tla.declOp("A", tla.plus(nonConst, nonPrimitiveValuedConst))
+    val input = tla.letIn(body, operDecl.untypedOperDecl())
+    val result = constInliner.replaceConstWithValue(constMap)(input)
+    // should replace `primitiveValuedConst` with `primitiveValue` in body and operator declaration
+    val expectedBody = body
+    val expectedOperDecl = operDecl.untypedOperDecl()
     result shouldBe tla.letIn(expectedBody, expectedOperDecl).untyped()
   }
 }
