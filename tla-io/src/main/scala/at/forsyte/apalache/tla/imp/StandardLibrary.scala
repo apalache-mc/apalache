@@ -8,7 +8,8 @@ import at.forsyte.apalache.tla.lir.values.TlaRealInfinity
 /**
  * Values and operators that are defined in the standard TLA+ library.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 object StandardLibrary {
 
@@ -67,7 +68,8 @@ object StandardLibrary {
   /**
    * The names of the modules that should be wired by Apalache with custom modules.
    *
-   * @see at.forsyte.apalache.tla.imp.SanyNameToStream
+   * @see
+   *   at.forsyte.apalache.tla.imp.SanyNameToStream
    */
   val wiredModules: Map[String, String] =
     Map(
@@ -75,8 +77,8 @@ object StandardLibrary {
     ) ////
 
   /**
-   * Global operators are translated to IR operators. However, we advise against this practice:
-   * TLA+ does not allow one to override the same operator in different modules.
+   * Global operators are translated to IR operators. However, we advise against this practice: TLA+ does not allow one
+   * to override the same operator in different modules.
    */
   val globalOperators: Map[String, TlaOper] =
     Map[String, TlaOper](

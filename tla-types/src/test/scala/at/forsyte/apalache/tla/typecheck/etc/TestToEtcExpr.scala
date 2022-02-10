@@ -16,7 +16,8 @@ import org.scalatest.{BeforeAndAfterEach, FunSuite}
 /**
  * Unit tests for translating TLA+ expressions to EtcExpr.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
 class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {

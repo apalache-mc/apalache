@@ -10,7 +10,8 @@ import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 /**
  * Implements a rule for Apalache!SetAsFun.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class SetAsFunRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {

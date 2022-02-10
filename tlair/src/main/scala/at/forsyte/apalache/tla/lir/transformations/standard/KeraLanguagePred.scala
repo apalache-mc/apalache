@@ -8,13 +8,15 @@ import at.forsyte.apalache.tla.lir.values._
 import scala.collection.immutable.HashSet
 
 /**
- * <p>Test whether the expressions fit into the flat fragment: all calls to user operators are inlined,
- * except the calls to nullary let-in definitions.</p>
+ * <p>Test whether the expressions fit into the flat fragment: all calls to user operators are inlined, except the calls
+ * to nullary let-in definitions.</p>
  *
  * <p>To get a better idea of the accepted fragment, check TestKeraLanguagePred.</p>
  *
- * @see TestKeraLanguagePred
- * @author Igor Konnov
+ * @see
+ *   TestKeraLanguagePred
+ * @author
+ *   Igor Konnov
  */
 class KeraLanguagePred extends ContextualLanguagePred {
   override protected def isOkInContext(letDefs: Set[String], expr: TlaEx): PredResult = {

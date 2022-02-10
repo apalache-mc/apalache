@@ -11,7 +11,8 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 /**
  * Rewriting DOMAIN f, that is, translating the domain of a function, record, tuple, or sequence.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
