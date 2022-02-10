@@ -317,6 +317,7 @@ Check that a file produced with `--output` is valid input (see #1281)
 $ apalache-mc typecheck --output=output.json Annotations.tla ; apalache-mc typecheck output.json | sed 's/I@.*//'
 ...
 EXITCODE: OK
+$ rm output.json
 ```
 
 ### parse FormulaRefs fails
