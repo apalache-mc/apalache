@@ -122,7 +122,7 @@ Test that it is possible to turn on the statistics. Before and after calling
 this command, we turn the stats off, so tla2tools do not call home.
 
 ```sh
-$ echo NO_STATISTICS >$HOME/.tlaplus/esc.txt
+$ mkdir -p $HOME/.tlaplus && echo NO_STATISTICS >$HOME/.tlaplus/esc.txt
 $ apalache-mc config --enable-stats=true | sed 's/[IEW]@.*//'
 ...
 Statistics collection is ON.
@@ -139,6 +139,7 @@ distinguish it from normal users. After executing the command, we turn the
 statistics off again.
 
 ```sh
+$ mkdir -p $HOME/.tlaplus
 $ echo c1cd000000000000000000000000c1cd >$HOME/.tlaplus/esc.txt
 $ apalache-mc config --enable-stats=false | sed 's/[IEW]@.*//'
 ...
