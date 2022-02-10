@@ -1761,6 +1761,13 @@ $ apalache-mc check Test1259.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check MegaSpec1.tla reports no error with `--debug`: regression for #1313
+```sh
+$ apalache-mc check --debug --cinit=CInit MegaSpec1.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
 
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
