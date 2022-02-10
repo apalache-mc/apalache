@@ -1800,7 +1800,16 @@ $ apalache-mc check Test1259.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check Test1226.tla reports no error
+
+```sh
+$ apalache-mc check --length=1 --inv=Inv Test1226.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check MegaSpec1.tla reports no error with `--debug`: regression for #1313
+
 ```sh
 $ apalache-mc check --debug --cinit=CInit MegaSpec1.tla | sed 's/[IEW]@.*//'
 ...

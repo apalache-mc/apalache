@@ -11,12 +11,14 @@ import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import com.typesafe.scalalogging.LazyLogging
 
 /**
- * <p>ToEtcExpr takes a TLA+ expression and produces an EtcExpr.
- * The most interesting part of this translation is dealing with the built-in operators.
- * This translator is an extension of the ideas that appear in SignatureGenerator by Jure Kukovec.</p>
+ * <p>ToEtcExpr takes a TLA+ expression and produces an EtcExpr. The most interesting part of this translation is
+ * dealing with the built-in operators. This translator is an extension of the ideas that appear in SignatureGenerator
+ * by Jure Kukovec.</p>
  *
- * @see at.forsyte.apalache.tla.types.SignatureGenerator
- * @author Igor Konnov
+ * @see
+ *   at.forsyte.apalache.tla.types.SignatureGenerator
+ * @author
+ *   Igor Konnov
  */
 class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubstitution, varPool: TypeVarPool)
     extends EtcBuilder with LazyLogging {
@@ -56,9 +58,12 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
   /**
    * Translate an operator declaration.
    *
-   * @param decl      an operator declaration
-   * @param inScopeEx an expression to chain in the bottom of let-definition, it should have been translated
-   * @return the translated let-in expression with inScopeEx attached
+   * @param decl
+   *   an operator declaration
+   * @param inScopeEx
+   *   an expression to chain in the bottom of let-definition, it should have been translated
+   * @return
+   *   the translated let-in expression with inScopeEx attached
    */
   private def operDefToDecl(decl: TlaOperDecl, inScopeEx: EtcExpr): EtcExpr = {
     // The type of the lambda is what we want to see as the type of the declaration.
@@ -162,8 +167,10 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
   /**
    * Translate an expression.
    *
-   * @param ex a TLA expression
-   * @return an expression in the simply typed lambda calculus variant Etc
+   * @param ex
+   *   a TLA expression
+   * @return
+   *   an expression in the simply typed lambda calculus variant Etc
    */
   def apply(ex: TlaEx): EtcExpr = {
     val tex = transform(ex)
@@ -198,7 +205,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
       case ValEx(v) =>
         mkConst(ref, typeOfLiteralExpr(v))
 
-      //******************************************** GENERAL OPERATORS **************************************************
+      // ******************************************** GENERAL OPERATORS **************************************************
       case OperEx(op, args @ _*) if op == TlaOper.eq || op == TlaOper.ne =>
         // x = y, x /= y
         val a = varPool.fresh
@@ -246,7 +253,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         // the resulting expression is (((a => Bool) => a) (λ x ∈ Set(b). P))
         mkApp(ref, Seq(chooseType), chooseLambda)
 
-      //******************************************** LET-IN ****************************************************
+      // ******************************************** LET-IN ****************************************************
       case LetInEx(body, declarations @ _*) =>
         val output =
           declarations.foldRight(this(body)) { case (decl, term) =>
@@ -257,7 +264,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val identity = OperT1(Seq(a), a)
         mkApp(ref, Seq(identity), output)
 
-      //******************************************** BOOLEANS **************************************************
+      // ******************************************** BOOLEANS **************************************************
       case OperEx(op, a, b) if op == TlaBoolOper.equiv || op == TlaBoolOper.implies =>
         // A <=> B, A => B
         val args = Seq(a, b)
@@ -288,7 +295,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         // the resulting expression is (principal lambda)
         mkApp(ref, Seq(principal), lambda)
 
-      //******************************************** SETS **************************************************
+      // ******************************************** SETS **************************************************
       case OperEx(TlaSetOper.enumSet) =>
         // empty set {} is not an operator but a constant
         val a = varPool.fresh
@@ -396,7 +403,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val lambda = mkAbs(BlameRef(mapExpr.ID), this(mapExpr), bindings: _*)
         mkApp(ref, Seq(principal), lambda)
 
-      //******************************************** FUNCTIONS **************************************************
+      // ******************************************** FUNCTIONS **************************************************
       case OperEx(TlaFunOper.enum, args @ _*) =>
         // [f1 |-> e1, f2 |-> e2]
         val (fields, values) =
@@ -543,7 +550,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
       case OperEx(TlaFunOper.recFunRef) =>
         mkName(ref, TlaFunOper.recFunRef.uniqueName)
 
-      //******************************************** CONTROL **************************************************
+      // ******************************************** CONTROL **************************************************
 
       case OperEx(TlaControlOper.ifThenElse, predEx, thenEx, elseEx) =>
         // IF e1 THEN e2 ELSE E2
@@ -566,7 +573,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val opsig = OperT1(operArgs, a)
         mkExRefApp(opsig, args)
 
-      //******************************************** FiniteSets ************************************************
+      // ******************************************** FiniteSets ************************************************
       case OperEx(TlaFiniteSetOper.isFiniteSet, setEx) =>
         val a = varPool.fresh
         val opsig = OperT1(Seq(SetT1(a)), BoolT1()) // Set(a) => Bool
@@ -577,7 +584,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val opsig = OperT1(Seq(SetT1(a)), IntT1()) // Set(a) => Int
         mkExRefApp(opsig, Seq(setEx))
 
-      //*************************************** ACTION OPERATORS ***********************************************
+      // *************************************** ACTION OPERATORS ***********************************************
       case OperEx(TlaActionOper.prime, inner) =>
         val a = varPool.fresh
         val opsig = OperT1(Seq(a), a) // a => a
@@ -614,7 +621,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
           OperT1(Seq(BoolT1(), BoolT1()), BoolT1()) // (Bool, Bool) => Bool
         mkExRefApp(opsig, Seq(a, b))
 
-      //******************************************** Sequences *************************************************
+      // ******************************************** Sequences *************************************************
       case OperEx(TlaSeqOper.head, s) =>
         val a = varPool.fresh
         val opsig = OperT1(Seq(SeqT1(a)), a) // Seq(a) => a
@@ -660,7 +667,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
           ) // Seq(a), (a => Bool) => Seq(a)
         mkExRefApp(opsig, args)
 
-      //******************************************** INTEGERS **************************************************
+      // ******************************************** INTEGERS **************************************************
       case OperEx(TlaArithOper.uminus, args @ _*) =>
         // -x
         val opsig = OperT1(Seq(IntT1()), IntT1())
@@ -689,7 +696,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val opsig = OperT1(List(RealT1(), RealT1()), RealT1())
         mkExRefApp(opsig, args)
 
-      //***************************************** TEMPORAL *************************************************
+      // ***************************************** TEMPORAL *************************************************
       case OperEx(op, inner) if op == TlaTempOper.box || op == TlaTempOper.diamond =>
         val opsig = OperT1(Seq(BoolT1()), BoolT1()) // Bool => Bool
         mkExRefApp(opsig, Seq(inner))
@@ -704,12 +711,19 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val opsig = OperT1(Seq(a, BoolT1()), BoolT1()) // (a, Bool) => Bool
         mkExRefApp(opsig, Seq(sub, act))
 
-      //******************************************** Apalache **************************************************
+      // ******************************************** Apalache **************************************************
       case OperEx(ApalacheOper.funAsSeq, fun, len) =>
         val a = varPool.fresh
         // ((Int -> a), Int) => Seq(a)
         val opsig = OperT1(Seq(FunT1(IntT1(), a), IntT1()), SeqT1(a))
         mkExRefApp(opsig, Seq(fun, len))
+
+      case OperEx(ApalacheOper.setAsFun, set) =>
+        val a = varPool.fresh
+        val b = varPool.fresh
+        // Set(<<a, b>>) => (a -> b)
+        val opsig = OperT1(Seq(SetT1(TupT1(a, b))), FunT1(a, b))
+        mkExRefApp(opsig, Seq(set))
 
       case OperEx(ApalacheOper.gen, bound) =>
         val a = varPool.fresh
@@ -759,7 +773,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val opsig = OperT1(Seq(OperT1(Seq(a, b), a), a, SeqT1(b)), a)
         mkExRefApp(opsig, Seq(oper, base, seq))
 
-      //******************************************** MISC **************************************************
+      // ******************************************** MISC **************************************************
       case OperEx(TlaOper.label, labelledEx, nameAndArgs @ _*) =>
         val typeVar = varPool.fresh
         mkExRefApp(OperT1(nameAndArgs.map(_ => StrT1()) :+ typeVar, typeVar), nameAndArgs :+ labelledEx)
@@ -778,12 +792,14 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
   }
 
   /**
-   * Usually, one uses bindings like x \in S, y \in T in set comprehensions and function definitions.
-   * However, TLA+ allows for advanced syntax in bindings, e.g., << x, y >> \in S, << u, << v, w >> >> \in T.
-   * This method does a general translation for variable bindings
+   * Usually, one uses bindings like x \in S, y \in T in set comprehensions and function definitions. However, TLA+
+   * allows for advanced syntax in bindings, e.g., << x, y >> \in S, << u, << v, w >> >> \in T. This method does a
+   * general translation for variable bindings
    *
-   * @param bindings pairs of expressions, e.g., (NameEx("x"), NameEx("S"))
-   * @return translated bindings, where all tuples have been unpacked
+   * @param bindings
+   *   pairs of expressions, e.g., (NameEx("x"), NameEx("S"))
+   * @return
+   *   translated bindings, where all tuples have been unpacked
    */
   private def translateBindings(
       bindings: (TlaEx, TlaEx)*,
