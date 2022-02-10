@@ -1,8 +1,6 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.oper.TlaArithOper.{minus, plus}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import org.junit.runner.RunWith
@@ -26,7 +24,7 @@ class TestTlaConstInliner extends FunSuite with BeforeAndAfterEach with Matchers
   private var constInliner: TlaConstInliner = _
 
   override def beforeEach(): Unit = {
-    constInliner = new TlaConstInliner(new IdleTracker(), constants)
+    constInliner = TlaConstInliner(new IdleTracker(), constants)
   }
 
   test("inlines mapped NameEx constant") {
