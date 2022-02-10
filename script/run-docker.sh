@@ -26,6 +26,9 @@ cmd="docker run \
     -e OUT_DIR -e WRITE_INTERMEDIATE -e SMT_ENCODING \
     -e TLA_PATH -e JVM_ARGS \
     -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) \
-    --rm -v $(pwd):/var/apalache ${img} ${*}"
+    --rm \
+    -v $(pwd):/var/apalache \
+    -v "$HOME/.tlaplus":/root/.tlaplus \
+    ${img} ${*}"
 >&2 echo "# running command: ${cmd}"
 $cmd
