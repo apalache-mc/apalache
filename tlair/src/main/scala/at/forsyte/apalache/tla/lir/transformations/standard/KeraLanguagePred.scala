@@ -115,6 +115,7 @@ object KeraLanguagePred {
         ApalacheOper.gen,
         ApalacheOper.expand,
         ApalacheOper.constCard,
+        ApalacheOper.setAsFun,
         // for the future
         //    TlaActionOper.enabled,
         //    TlaActionOper.unchanged,
