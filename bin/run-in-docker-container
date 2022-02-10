@@ -13,6 +13,13 @@ GROUP_ID=${GROUP_ID:-1000}
 groupadd --gid "$GROUP_ID" --non-unique apalache
 useradd --create-home --shell /bin/bash --uid "$USER_ID" --non-unique --gid "$GROUP_ID" apalache
 
+# Since we bound mount the users ~/.tlaplus into the home dir, useradd won't
+# populate the existing home with the usual skeleton, so we do that as a followup.
+cp -r /etc/skel/. /home/apalache
+
+# Ensure the apalache user owns their home
+chown -R apalache:apalache /home/apalache
+
 echo 'Assuming you bind-mounted your local directory into /var/apalache...'
 cd /var/apalache
 if [ "$(ls -A *.tla 2>/dev/null)" == "" ]; then
