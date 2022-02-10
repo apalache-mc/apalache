@@ -266,6 +266,8 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
           -> List(new SeqOpsRule(this)),
         key(tla.concat(tla.name("Seq1"), tla.name("Seq2")))
           -> List(new SeqOpsRule(this)),
+        key(tla.apalacheSetAsFun(tla.enumSet()))
+          -> List(new SetAsFunRule(this)),
         // FiniteSets
         key(OperEx(ApalacheOper.constCard, tla.ge(tla.card(tla.name("S")), tla.int(3))))
           -> List(new CardinalityConstRule(this)),

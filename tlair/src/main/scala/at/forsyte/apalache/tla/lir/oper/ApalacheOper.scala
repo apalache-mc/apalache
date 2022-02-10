@@ -146,13 +146,35 @@ object ApalacheOper {
    *
    * The following equivalence should hold:
    * FoldSeq( Op, v, seq ) = IF seq = <<>>
-   *                         THEN v
-   *                         ELSE FoldSeq( Op, Op(v,Head(seq)), Tail(seq) )
+   * THEN v
+   * ELSE FoldSeq( Op, Op(v,Head(seq)), Tail(seq) )
    */
   object foldSeq extends ApalacheOper {
     override def name: String = "Apalache!FoldSeq"
 
     override def arity: OperArity = FixedArity(3)
+
+    override val precedence: (Int, Int) = (100, 100)
+  }
+
+  /**
+   * <p>The operator SetAsFun converts a set of pairs `R` to a function `F`.
+   * The function `F` could be expressed as follows:</p>
+   *
+   * <pre>
+   * LET Dom == { key:   &lt;&lt;key, value&gt;&gt; \in R }
+   * Rng == { value: &lt;&lt;key, value&gt;&gt; \in R }
+   * IN
+   * [ key \in Dom |-> CHOOSE value \in Rng: &lt;&lt;key, value&gt;&gt; \in R ]
+   * </pre>
+   *
+   * <p>Note that the relation `R` may be ambiguous in the sense that the same key has more than one value.
+   * In this case, the Apalache encodings choose one of the values, which corresponds to `CHOOSE`.</p>
+   */
+  object setAsFun extends ApalacheOper {
+    override def name: String = "Apalache!SetAsFun"
+
+    override def arity: OperArity = FixedArity(1)
 
     override val precedence: (Int, Int) = (100, 100)
   }
