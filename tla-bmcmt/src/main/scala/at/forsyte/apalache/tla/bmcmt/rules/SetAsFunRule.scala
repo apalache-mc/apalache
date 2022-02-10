@@ -45,6 +45,14 @@ class SetAsFunRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
+  /**
+   * <p>Translate a set of pairs `{ <<key_1, value_1>>, ..., <<key_n, value_n>> }` to a function that is equivalent
+   * to:</p>
+   *
+   * <pre>
+   *
+   * x \in { key_1, ..., key_n } |-> IF x = key_1 THEN value_1 ELSE IF x = key_2 THEN value_2 ELSE ... value_n ] </pre>
+   */
   private def translateRelation(pairsSet: ArenaCell, state: SymbState): SymbState = {
     var nextState = state.updateArena(_.appendCell(pairsSet.cellType))
     // construct the relation cell `funRel` and add all cells from the original set `setCell`
