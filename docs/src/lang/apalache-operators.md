@@ -34,6 +34,7 @@ IF x' := 1 THEN 1 ELSE 0  \* Assignment error in Apalache
 ```
 
 **Example in Python:**
+
 ```python
 >> a = 1          # a' := 1
 >> a == 1         # a' = 1
@@ -42,10 +43,60 @@ True
 >> a = (b == "c") # a' := (b = "c")
 ```
 
+## Folding
+
+The operators `FoldSet` and `FoldSeq` are explained in more detail in a dedicated section [here](../apalache/fold.md).
+
+----------------------------------------------------------------------------
+
+<a name="SetAsFun"></a>
+
+## Convert a relation to a function
+
+**Notation:** `SetAsFun(S)`
+
+**LaTeX notation:** `SetAsFun(S)`
+
+**Arguments:** One argument: A set of pairs `S`, which may be empty.
+
+**Apalache type:** `Set(<<a, b>>) => (a -> b)`, for some types `a` and `b`.
+
+**Effect:** Convert a set of pairs `S` to a function `F`. Note that if `S`
+contains at least two pairs `<<x, y>>` and `<<u, v>>` such that `x = u` and `y /= v`, then `F` is not uniquely defined.
+We use `CHOOSE` to resolve this ambiguity. The operator `SetAsFun` can be defined as follows:
+
+```tla
+SetAsFun(S) ==
+    LET Dom == { x: <<x, y>> \in S }
+        Rng == { y: <<x, y>> \in S }
+    IN
+    [ x \in Dom |-> CHOOSE y \in Rng: <<x, y>> \in S ]
+```
+
+Apalache implements a more efficient encoding of this operator than the default one.
+
+**Determinism:** Deterministic.
+
+**Errors:**
+If `S` is ill-typed, Apalache reports an error.
+
+**Example in TLA+:**
+
+```tla
+SetAsFun({ <<1, 2>>, <<3, 4>> }) = [x \in { 1, 3 } |-> x + 1]   \* TRUE
+SetAsFun({}) = [x \in {} |-> x]                                 \* TRUE
+LET F == SetAsFun({ <<1, 2>>, <<1, 3>>, <<1, 4>> }) IN
+  \* this is all we can guarantee, when the relation is non-deterministic
+  \/ F = [x \in { 1 } |-> 2]
+  \/ F = [x \in { 1 } |-> 3]
+  \/ F = [x \in { 1 } |-> 4]
+```
+
 ----------------------------------------------------------------------------
 
 <a name="Cast"></a>
-## Sequence cast
+
+## Interpret a function as a sequence
 
 **Notation:** `FunAsSeq(fn, maxLen)`
 
@@ -180,6 +231,3 @@ Skolem( 1 )                     \* 1 in TLC, type error in Apalache
 Skolem( TRUE )                  \* TRUE in TLC, error in Apalache
 ```
 
-## Folding
-
-The operators `FoldSet` and `FoldSeq` are explained in more detail in a dedicated section [here](../apalache/fold.md).
