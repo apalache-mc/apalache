@@ -62,7 +62,7 @@ The operators `FoldSet` and `FoldSeq` are explained in more detail in a dedicate
 **Apalache type:** `Set(<<a, b>>) => (a -> b)`, for some types `a` and `b`.
 
 **Effect:** Convert a set of pairs `S` to a function `F`. Note that if `S`
-contains at least two pairs `<<x, y>>` and `<<u, v>>` such that `x = u` and `y /= v`, then `F` is not uniquely defined.
+contains at least two pairs `<<x, y>>` and `<<x, z>>`, such that `y /= z`, then `F` is not uniquely defined.
 We use `CHOOSE` to resolve this ambiguity. The operator `SetAsFun` can be defined as follows:
 
 ```tla
