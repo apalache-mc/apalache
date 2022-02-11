@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{TlaEx, UID}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import com.typesafe.scalalogging.LazyLogging
+import at.forsyte.apalache.io.OutputManager
 
 /**
  * This listener registers the SMT metrics that are created when an expression is being translated in SMT.
@@ -16,8 +17,9 @@ import com.typesafe.scalalogging.LazyLogging
  * @param sourceStore the storage of source locations
  * @param changeListener the tracer of expression updates
  */
-class MetricProfilerListener(sourceStore: SourceStore, changeListener: ChangeListener, outFile: File)
+class MetricProfilerListener(sourceStore: SourceStore, changeListener: ChangeListener)
     extends SymbStateRewriterListener with LazyLogging {
+  private val profileFileName: String = "profile.csv"
   private var _metricsPerId: Map[UID, SolverContextMetrics] = Map()
   private val sourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)
   private var syncTimestampSecMillis: Long = System.currentTimeMillis()
@@ -53,17 +55,17 @@ class MetricProfilerListener(sourceStore: SourceStore, changeListener: ChangeLis
       .filter(_._2.weight >= MetricProfilerListener.MIN_WEIGHT)
       .toList
       .sorted(MetricProfilerListener.EntryOrdering)
-    val writer = new PrintWriter(new FileWriter(outFile, false))
-    try {
+
+    OutputManager.withWriterInRunDir(profileFileName) { writer =>
       writer.println("# weight,nCells,nConsts,nSmtExprs,location")
       for (entry <- sortedEntries) {
         writer.println(stringOfEntry(entry))
       }
-    } finally {
-      writer.close()
     }
 
-    logger.info("%d profile entries to be found in %s".format(sortedEntries.size, outFile))
+    logger
+      .info("%d profile entries to be found in %s".format(sortedEntries.size,
+              OutputManager.runDir.resolve(profileFileName)))
   }
 
   private def stringOfEntry(entry: (UID, SolverContextMetrics)): String = {
