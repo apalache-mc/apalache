@@ -51,7 +51,7 @@ The operators `FoldSet` and `FoldSeq` are explained in more detail in a dedicate
 
 <a name="SetAsFun"></a>
 
-## Convert a relation to a function
+## Convert a set of pairs to a function
 
 **Notation:** `SetAsFun(S)`
 
