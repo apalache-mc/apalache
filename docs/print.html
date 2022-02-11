@@ -1635,19 +1635,11 @@ computed by the view expressions.</p>
 <p>We are using this technique in model-based testing.  If you have found another
 interesting application of this technique, please let us know!</p>
 <h1><a class="header" href="#the-apalache-module" id="the-apalache-module">The Apalache Module</a></h1>
-<p>Similar to the <code>TLC</code> module, we provide the module called <code>Apalache</code>, which can
-be found in
-<a href="https://github.com/informalsystems/apalache/tree/unstable/src/tla">src/tla</a>.
-Most of the operators in that modules are introduced internally by Apalache,
-when it is rewriting a TLA+ specification.  It is useful to read the comments
-to the operators defined in <code>Apalache.tla</code>, as they will help you in
-understanding the <a href="apalache/principles/./running.html#detailed">detailed output</a> produced by the
-tool, see.  Perhaps, the most interesting operator in <code>Apalache</code> is the
-assignment operator that is defined as follows:</p>
-<pre><code class="language-tla">x := e == x = e
-</code></pre>
-<p>See the <a href="apalache/principles/./principles/assignments.html">discussion</a> on the role of assignments in
-Apalache.</p>
+<p>Similar to the <code>TLC</code> module, we provide a module called <code>Apalache</code>, which can be found in <a href="https://github.com/informalsystems/apalache/tree/unstable/src/tla/Apalache.tla">Apalache.tla</a>. Many of
+the operators in that module are used internally by Apalache, when rewriting a TLA+ specification. It is useful
+to read the comments to the operators defined in <a href="https://github.com/informalsystems/apalache/tree/unstable/src/tla/Apalache.tla">Apalache.tla</a>, as they will help you in understanding
+the <a href="apalache/principles/./running.html#detailed">detailed output</a> produced by the tool.</p>
+<p>See the detailed description of the <a href="https://apalache.informal.systems/docs/lang/apalache-operators.html">Apalache operators</a>.</p>
 <p><a name="recursion"></a></p>
 <h2><a class="header" href="#recursive-operators-and-functions" id="recursive-operators-and-functions">Recursive operators and functions</a></h2>
 <p><strong>We are going to remove support for recursive operators and functions soon.
@@ -8218,9 +8210,40 @@ True
 &gt;&gt; a = b = &quot;c&quot;    # b' := &quot;c&quot; /\ a' := b'
 &gt;&gt; a = (b == &quot;c&quot;) # a' := (b = &quot;c&quot;)
 </code></pre>
+<h2><a class="header" href="#folding" id="folding">Folding</a></h2>
+<p>The operators <code>FoldSet</code> and <code>FoldSeq</code> are explained in more detail in a dedicated section <a href="lang/../apalache/fold.html">here</a>.</p>
+<hr />
+<p><a name="SetAsFun"></a></p>
+<h2><a class="header" href="#convert-a-set-of-pairs-to-a-function" id="convert-a-set-of-pairs-to-a-function">Convert a set of pairs to a function</a></h2>
+<p><strong>Notation:</strong> <code>SetAsFun(S)</code></p>
+<p><strong>LaTeX notation:</strong> <code>SetAsFun(S)</code></p>
+<p><strong>Arguments:</strong> One argument: A set of pairs <code>S</code>, which may be empty.</p>
+<p><strong>Apalache type:</strong> <code>Set(&lt;&lt;a, b&gt;&gt;) =&gt; (a -&gt; b)</code>, for some types <code>a</code> and <code>b</code>.</p>
+<p><strong>Effect:</strong> Convert a set of pairs <code>S</code> to a function <code>F</code>, with the property that <code>F(x) = y =&gt; &lt;&lt;x,y&gt;&gt; \in S</code>. Note that if <code>S</code>
+contains at least two pairs <code>&lt;&lt;x, y&gt;&gt;</code> and <code>&lt;&lt;x, z&gt;&gt;</code>, such that <code>y /= z</code>, then <code>F</code> is not uniquely defined.
+We use <code>CHOOSE</code> to resolve this ambiguity. The operator <code>SetAsFun</code> can be defined as follows:</p>
+<pre><code class="language-tla">SetAsFun(S) ==
+    LET Dom == { x: &lt;&lt;x, y&gt;&gt; \in S }
+        Rng == { y: &lt;&lt;x, y&gt;&gt; \in S }
+    IN
+    [ x \in Dom |-&gt; CHOOSE y \in Rng: &lt;&lt;x, y&gt;&gt; \in S ]
+</code></pre>
+<p>Apalache implements a more efficient encoding of this operator than the default one.</p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong>
+If <code>S</code> is ill-typed, Apalache reports an error.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">SetAsFun({ &lt;&lt;1, 2&gt;&gt;, &lt;&lt;3, 4&gt;&gt; }) = [x \in { 1, 3 } |-&gt; x + 1]   \* TRUE
+SetAsFun({}) = [x \in {} |-&gt; x]                                 \* TRUE
+LET F == SetAsFun({ &lt;&lt;1, 2&gt;&gt;, &lt;&lt;1, 3&gt;&gt;, &lt;&lt;1, 4&gt;&gt; }) IN
+  \* this is all we can guarantee, when the relation is non-deterministic
+  \/ F = [x \in { 1 } |-&gt; 2]
+  \/ F = [x \in { 1 } |-&gt; 3]
+  \/ F = [x \in { 1 } |-&gt; 4]
+</code></pre>
 <hr />
 <p><a name="Cast"></a></p>
-<h2><a class="header" href="#sequence-cast" id="sequence-cast">Sequence cast</a></h2>
+<h2><a class="header" href="#interpret-a-function-as-a-sequence" id="interpret-a-function-as-a-sequence">Interpret a function as a sequence</a></h2>
 <p><strong>Notation:</strong> <code>FunAsSeq(fn, maxLen)</code></p>
 <p><strong>LaTeX notation:</strong> <code>FunAsSeq(fn, maxLen)</code></p>
 <p><strong>Arguments:</strong> Two arguments. The first is a function, the second is an integer.</p>
@@ -8305,8 +8328,6 @@ This is an operator produced internally by Apalache. You may see instances of th
 Skolem( 1 )                     \* 1 in TLC, type error in Apalache
 Skolem( TRUE )                  \* TRUE in TLC, error in Apalache
 </code></pre>
-<h2><a class="header" href="#folding" id="folding">Folding</a></h2>
-<p>The operators <code>FoldSet</code> and <code>FoldSeq</code> are explained in more detail in a dedicated section <a href="lang/../apalache/fold.html">here</a>.</p>
 <h1><a class="header" href="#idiomatic-tla" id="idiomatic-tla">Idiomatic TLA+</a></h1>
 <p><strong>Authors:</strong> Shon Feder, Igor Konnov, Gabriela Mafra + (who likes to contribute?)</p>
 <p><em>This document is under construction.
