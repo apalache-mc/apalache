@@ -4734,7 +4734,8 @@ FALSE &lt;=&gt; 1      \* runtime error in TLC, type error in Apalache
 1     &lt;=&gt; TRUE   \* runtime error in TLC, type error in Apalache
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<p>Assuming that both expressions are Boolean, <code>F &lt;=&gt; G</code> is equivalent to <code>F = G</code>.</p>
+<p>Assume that both expressions are Boolean. Then, in TLA+, <code>F &lt;=&gt; G</code> is
+equivalent to <code>F = G</code>. In Python, we express Boolean equality using <code>==</code>.</p>
 <pre><code class="language-python">&gt;&gt;&gt; False == True
 False
 &gt;&gt;&gt; True  == True
@@ -4773,8 +4774,8 @@ background theory of ZFC, this set is well-defined and is not subject to
 logical paradoxes. Basically, the values are Booleans, integers, strings, sets,
 functions, etc.</p>
 <p>In the above example, the operator <code>Init</code> evaluates to <code>TRUE</code> on exactly one
-state, which we can conveniently write using the record constructor as follows:
-<code>[x |-&gt; 0, y |-&gt; 0]</code>.</p>
+state, which we can conveniently write using the <a href="lang/./records.html">record
+constructor</a> as follows: <code>[x |-&gt; 0, y |-&gt; 0]</code>.</p>
 <p>The operator <code>Next</code> contains primes (<code>'</code>) and thus represents pairs of states,
 which we call <em>transitions</em>. An operator over unprimed and primed variables
 is called an <em>action</em> in TLA+. Intuitively, the operator <code>Next</code> in our example
@@ -4960,7 +4961,7 @@ However, we know of multiple sources of non-determinism in computer science. So
 we can think of <code>GUESS S</code> as being one of the following implementations:</p>
 <ol>
 <li>
-<p><code>GUESS S</code> can be a remote procedure call in a distributed system.  Unless,
+<p><code>GUESS S</code> can be a remote procedure call in a distributed system.  Unless
 we have centralized control over the distributed system, the returned value of
 RPC may be non-deterministic.</p>
 </li>
@@ -5007,7 +5008,7 @@ value for the name <code>y'</code>.</li>
 not have non-determinism and it can be evaluated by following the standard
 deterministic semantics of exists, see <a href="lang/./logic.html">Logic</a>.</p>
 <p><strong>Note:</strong> We do not consider action operators like <code>UNCHANGED y</code>. They can be
-translated into an equivalent form, e.g., <code>UNCHANGED x</code> is equivalent to <code>y' = y</code>.</p>
+translated into an equivalent form, e.g., <code>UNCHANGED x</code> is equivalent to <code>x' = x</code>.</p>
 <p>Now it is very easy to evaluate <code>\E x \in S: P</code>. We simply evaluate the
 following expression:</p>
 <pre><code class="language-tla">  LET x == GUESS S IN P
@@ -5404,7 +5405,7 @@ are evaluated to integer values.</p>
 that is, the set of all integers in the range from <code>a</code> to <code>b</code>, including <code>a</code>
 and <code>b</code>.  If <code>a &gt; b</code>, then <code>a..b</code> is the empty set <code>{}</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> In pure TLA+, the result is undefined, if one of the arguments
+<p><strong>Errors:</strong> In pure TLA+, the result is undefined if one of the arguments
 evaluates to a non-integer value. In this case, Apalache statically reports a
 type error, whereas TLC reports a runtime error.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -5432,7 +5433,7 @@ evaluates to an integer.</p>
 <p><strong>Apalache type:</strong> <code>Int =&gt; Int</code>.</p>
 <p><strong>Effect:</strong> <code>-i</code> evaluates to the negation of <code>i</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> In pure TLA+, the result is undefined, if the argument
+<p><strong>Errors:</strong> In pure TLA+, the result is undefined if the argument
 evaluates to a non-integer value. In this case, Apalache statically reports a
 type error, whereas TLC reports a runtime error.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -5457,7 +5458,7 @@ are evaluated to integer values.</p>
 <p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Int</code>.</p>
 <p><strong>Effect:</strong> <code>a + b</code> evaluates to the sum of <code>a</code> and <code>b</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -5481,7 +5482,7 @@ are evaluated to integer values.</p>
 <p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Int</code>.</p>
 <p><strong>Effect:</strong> <code>a - b</code> evaluates to the difference of <code>a</code> and <code>b</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -5508,7 +5509,7 @@ are evaluated to integer values.</p>
 <p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Int</code>.</p>
 <p><strong>Effect:</strong> <code>a * b</code> evaluates to the product of <code>a</code> and <code>b</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -5558,7 +5559,7 @@ table below.</em></p>
 TLC produce incompatible results for <code>b &lt; 0</code>. See <a href="https://github.com/informalsystems/apalache/issues/331">issue #331 in
 Apalache</a>.</em></p>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error. The value
 of <code>a \div b</code> is undefined for <code>b = 0</code>.</p>
@@ -5595,7 +5596,7 @@ are evaluated to integer values, and the second argument is different from 0.</p
 according to the TLA+ definition is different from the integer remainder <code>a % b</code> in the programming languages (C, Python, Java, Scala, Rust).  See the
 examples below.</em></p>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error. The value
 of <code>a % b</code> is undefined for <code>b = 0</code>.</p>
@@ -5641,7 +5642,7 @@ cases:</p>
 For instance, <code>3^(-5)</code> is defined on reals. However, reals are supported
 neither by TLC, nor by Apalache.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -5684,7 +5685,7 @@ are evaluated to integer values.</p>
 <li><code>FALSE</code>, otherwise.</li>
 </ul>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> In pure TLA+, the result is undefined, if
+<p><strong>Errors:</strong> In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -5715,7 +5716,7 @@ are evaluated to integer values.</p>
 <li><code>FALSE</code>, otherwise.</li>
 </ul>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -5746,7 +5747,7 @@ are evaluated to integer values.</p>
 <li><code>FALSE</code>, otherwise.</li>
 </ul>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -5777,7 +5778,7 @@ are evaluated to integer values.</p>
 <li><code>FALSE</code>, otherwise.</li>
 </ul>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -5979,8 +5980,8 @@ is not a member of <code>T</code>.</li>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
 model checking error, when it discovers that elements of <code>S</code> cannot be compared
-to the elements of <code>T</code>. Apalache produces a static type error, <code>S</code> and <code>T</code> are
-either not sets, or sets of incompatible types.</p>
+to the elements of <code>T</code>. Apalache produces a static type error, if <code>S</code> and <code>T</code>
+are either not sets, or sets of incompatible types.</p>
 <p><strong>Example in TLA+:</strong></p>
 <pre><code class="language-tla">     { 1, 2 } \subseteq { 1, 2, 3 }     \* TRUE
   { 1, 2, 3 } \subseteq { 1, 2, 3 }     \* TRUE
@@ -6012,8 +6013,8 @@ of <code>S</code> <strong>as well</strong> as the elements of <code>T</code>, an
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
 model checking error, when it discovers that elements of <code>S</code> cannot be compared
-to the elements of <code>T</code>. Apalache produces a static type error, <code>S</code> and <code>T</code> are
-either not sets, or sets of incompatible types.</p>
+to the elements of <code>T</code>. Apalache produces a static type error, if <code>S</code> and <code>T</code>
+are either not sets, or sets of incompatible types.</p>
 <p><strong>Example in TLA+:</strong></p>
 <pre><code class="language-tla">  { 0, 1, 2 } \union { 1, 2, 3 } \* { 0, 1, 2, 3 }
           { } \union { 1, 2, 3 } \* { 1, 2, 3 }
@@ -6046,8 +6047,8 @@ of <code>S</code> that <strong>also</strong> belong to <code>T</code>, and no ot
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
 model checking error, when it discovers that elements of <code>S</code> cannot be compared
-to the elements of <code>T</code>. Apalache produces a static type error, <code>S</code> and <code>T</code> are
-either not sets, or sets of incompatible types.</p>
+to the elements of <code>T</code>. Apalache produces a static type error, if <code>S</code> and <code>T</code>
+are either not sets, or sets of incompatible types.</p>
 <p><strong>Example in TLA+:</strong></p>
 <pre><code class="language-tla">  { 0, 1, 2 } \intersect { 1, 2, 3 } \* { 1, 2 }
           { } \intersect { 1, 2, 3 } \* { }
@@ -6080,8 +6081,8 @@ of <code>S</code> that <strong>do not</strong> belong to <code>T</code>, and no 
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
 model checking error, when it discovers that elements of <code>S</code> cannot be compared
-to the elements of <code>T</code>. Apalache produces a static type error, <code>S</code> and <code>T</code> are
-either not sets, or sets of incompatible types.</p>
+to the elements of <code>T</code>. Apalache produces a static type error, if <code>S</code> and <code>T</code>
+are either not sets, or sets of incompatible types.</p>
 <p><strong>Example in TLA+:</strong></p>
 <pre><code class="language-tla">  { 0, 1, 2 } \ { 1, 2, 3 }     \* { 0 }
           { } \ { 1, 2, 3 }     \* { }
@@ -6329,11 +6330,11 @@ produces a static type error, if the type of <code>S</code> is different from a 
 <p><strong>Example in Python:</strong> We can construct only finite sets in Python.</p>
 <h1><a class="header" href="#logic-1" id="logic-1">Logic</a></h1>
 <p><a href="lang/./standard-operators.html">[Back to all operators]</a></p>
-<p>In this section, you find the operators that, together with <a href="lang/./sets.html">Sets</a>
-form the foundation of TLA+. It is a bit strange that we call this section
-&quot;Logic&quot;, as the whole language of TLA+ is a logic. However, the operators
-of this section are often seen in first-order logic, as opposed to
-propositional logic (see <a href="lang/./booleans.html">Booleans</a>).</p>
+<p>In this section, you find the operators that – together with <a href="lang/./sets.html">Sets</a>
+– form the foundation of TLA+. It is a bit strange that we call this section
+&quot;Logic&quot;, as the whole language of TLA+ is a logic. However, the operators of
+this section are often seen in first-order logic, as opposed to propositional
+logic (see <a href="lang/./booleans.html">Booleans</a>).</p>
 <p>Note that the special form <code>\E y \in S: x' = y</code> is often used to express
 non-determinism in TLA+. See <a href="lang/./control-and-nondeterminism.html">Control Flow and Non-determinism</a>. In this
 section, we only consider the deterministic use of the existential quantifier.</p>
@@ -6651,7 +6652,7 @@ So TLC does some form of synthesis by brute force when it has to evaluate
 non-determinism with <code>CHOOSE</code>. For non-determinism, see:
 <a href="lang/./control-and-nondeterminism.html">Control Flow and Non-determinism</a>.</p>
 <p>Apalache picks a set element that satisfies the predicate <code>P</code>, but it does not
-guarantee the repeatability property of CHOOSE. It does not guarantee
+guarantee the repeatability property of <code>CHOOSE</code>. It does not guarantee
 non-determinism either. Interestingly, this behavior does not really make a
 difference for the use cases 1 and 2. If you believe that this causes a problem
 in your specification, <a href="https://github.com/informalsystems/apalache/issues/new/choose">open an issue...</a></p>

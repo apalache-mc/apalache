@@ -198,8 +198,8 @@ background theory of ZFC, this set is well-defined and is not subject to
 logical paradoxes. Basically, the values are Booleans, integers, strings, sets,
 functions, etc.</p>
 <p>In the above example, the operator <code>Init</code> evaluates to <code>TRUE</code> on exactly one
-state, which we can conveniently write using the record constructor as follows:
-<code>[x |-&gt; 0, y |-&gt; 0]</code>.</p>
+state, which we can conveniently write using the <a href="./records.html">record
+constructor</a> as follows: <code>[x |-&gt; 0, y |-&gt; 0]</code>.</p>
 <p>The operator <code>Next</code> contains primes (<code>'</code>) and thus represents pairs of states,
 which we call <em>transitions</em>. An operator over unprimed and primed variables
 is called an <em>action</em> in TLA+. Intuitively, the operator <code>Next</code> in our example
@@ -385,7 +385,7 @@ However, we know of multiple sources of non-determinism in computer science. So
 we can think of <code>GUESS S</code> as being one of the following implementations:</p>
 <ol>
 <li>
-<p><code>GUESS S</code> can be a remote procedure call in a distributed system.  Unless,
+<p><code>GUESS S</code> can be a remote procedure call in a distributed system.  Unless
 we have centralized control over the distributed system, the returned value of
 RPC may be non-deterministic.</p>
 </li>
@@ -432,7 +432,7 @@ value for the name <code>y'</code>.</li>
 not have non-determinism and it can be evaluated by following the standard
 deterministic semantics of exists, see <a href="./logic.html">Logic</a>.</p>
 <p><strong>Note:</strong> We do not consider action operators like <code>UNCHANGED y</code>. They can be
-translated into an equivalent form, e.g., <code>UNCHANGED x</code> is equivalent to <code>y' = y</code>.</p>
+translated into an equivalent form, e.g., <code>UNCHANGED x</code> is equivalent to <code>x' = x</code>.</p>
 <p>Now it is very easy to evaluate <code>\E x \in S: P</code>. We simply evaluate the
 following expression:</p>
 <pre><code class="language-tla">  LET x == GUESS S IN P

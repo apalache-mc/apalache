@@ -433,7 +433,8 @@ FALSE &lt;=&gt; 1      \* runtime error in TLC, type error in Apalache
 1     &lt;=&gt; TRUE   \* runtime error in TLC, type error in Apalache
 </code></pre>
 <p><strong>Example in Python:</strong></p>
-<p>Assuming that both expressions are Boolean, <code>F &lt;=&gt; G</code> is equivalent to <code>F = G</code>.</p>
+<p>Assume that both expressions are Boolean. Then, in TLA+, <code>F &lt;=&gt; G</code> is
+equivalent to <code>F = G</code>. In Python, we express Boolean equality using <code>==</code>.</p>
 <pre><code class="language-python">&gt;&gt;&gt; False == True
 False
 &gt;&gt;&gt; True  == True

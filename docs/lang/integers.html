@@ -225,7 +225,7 @@ are evaluated to integer values.</p>
 that is, the set of all integers in the range from <code>a</code> to <code>b</code>, including <code>a</code>
 and <code>b</code>.  If <code>a &gt; b</code>, then <code>a..b</code> is the empty set <code>{}</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> In pure TLA+, the result is undefined, if one of the arguments
+<p><strong>Errors:</strong> In pure TLA+, the result is undefined if one of the arguments
 evaluates to a non-integer value. In this case, Apalache statically reports a
 type error, whereas TLC reports a runtime error.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -253,7 +253,7 @@ evaluates to an integer.</p>
 <p><strong>Apalache type:</strong> <code>Int =&gt; Int</code>.</p>
 <p><strong>Effect:</strong> <code>-i</code> evaluates to the negation of <code>i</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> In pure TLA+, the result is undefined, if the argument
+<p><strong>Errors:</strong> In pure TLA+, the result is undefined if the argument
 evaluates to a non-integer value. In this case, Apalache statically reports a
 type error, whereas TLC reports a runtime error.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -278,7 +278,7 @@ are evaluated to integer values.</p>
 <p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Int</code>.</p>
 <p><strong>Effect:</strong> <code>a + b</code> evaluates to the sum of <code>a</code> and <code>b</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -302,7 +302,7 @@ are evaluated to integer values.</p>
 <p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Int</code>.</p>
 <p><strong>Effect:</strong> <code>a - b</code> evaluates to the difference of <code>a</code> and <code>b</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -329,7 +329,7 @@ are evaluated to integer values.</p>
 <p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Int</code>.</p>
 <p><strong>Effect:</strong> <code>a * b</code> evaluates to the product of <code>a</code> and <code>b</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -379,7 +379,7 @@ table below.</em></p>
 TLC produce incompatible results for <code>b &lt; 0</code>. See <a href="https://github.com/informalsystems/apalache/issues/331">issue #331 in
 Apalache</a>.</em></p>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error. The value
 of <code>a \div b</code> is undefined for <code>b = 0</code>.</p>
@@ -416,7 +416,7 @@ are evaluated to integer values, and the second argument is different from 0.</p
 according to the TLA+ definition is different from the integer remainder <code>a % b</code> in the programming languages (C, Python, Java, Scala, Rust).  See the
 examples below.</em></p>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error. The value
 of <code>a % b</code> is undefined for <code>b = 0</code>.</p>
@@ -462,7 +462,7 @@ cases:</p>
 For instance, <code>3^(-5)</code> is defined on reals. However, reals are supported
 neither by TLC, nor by Apalache.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -505,7 +505,7 @@ are evaluated to integer values.</p>
 <li><code>FALSE</code>, otherwise.</li>
 </ul>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> In pure TLA+, the result is undefined, if
+<p><strong>Errors:</strong> In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -536,7 +536,7 @@ are evaluated to integer values.</p>
 <li><code>FALSE</code>, otherwise.</li>
 </ul>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -567,7 +567,7 @@ are evaluated to integer values.</p>
 <li><code>FALSE</code>, otherwise.</li>
 </ul>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -598,7 +598,7 @@ are evaluated to integer values.</p>
 <li><code>FALSE</code>, otherwise.</li>
 </ul>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined, if
+<p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.</p>
 <p><strong>Example in TLA+:</strong></p>

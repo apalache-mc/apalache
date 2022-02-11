@@ -350,8 +350,8 @@ is not a member of <code>T</code>.</li>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
 model checking error, when it discovers that elements of <code>S</code> cannot be compared
-to the elements of <code>T</code>. Apalache produces a static type error, <code>S</code> and <code>T</code> are
-either not sets, or sets of incompatible types.</p>
+to the elements of <code>T</code>. Apalache produces a static type error, if <code>S</code> and <code>T</code>
+are either not sets, or sets of incompatible types.</p>
 <p><strong>Example in TLA+:</strong></p>
 <pre><code class="language-tla">     { 1, 2 } \subseteq { 1, 2, 3 }     \* TRUE
   { 1, 2, 3 } \subseteq { 1, 2, 3 }     \* TRUE
@@ -383,8 +383,8 @@ of <code>S</code> <strong>as well</strong> as the elements of <code>T</code>, an
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
 model checking error, when it discovers that elements of <code>S</code> cannot be compared
-to the elements of <code>T</code>. Apalache produces a static type error, <code>S</code> and <code>T</code> are
-either not sets, or sets of incompatible types.</p>
+to the elements of <code>T</code>. Apalache produces a static type error, if <code>S</code> and <code>T</code>
+are either not sets, or sets of incompatible types.</p>
 <p><strong>Example in TLA+:</strong></p>
 <pre><code class="language-tla">  { 0, 1, 2 } \union { 1, 2, 3 } \* { 0, 1, 2, 3 }
           { } \union { 1, 2, 3 } \* { 1, 2, 3 }
@@ -417,8 +417,8 @@ of <code>S</code> that <strong>also</strong> belong to <code>T</code>, and no ot
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
 model checking error, when it discovers that elements of <code>S</code> cannot be compared
-to the elements of <code>T</code>. Apalache produces a static type error, <code>S</code> and <code>T</code> are
-either not sets, or sets of incompatible types.</p>
+to the elements of <code>T</code>. Apalache produces a static type error, if <code>S</code> and <code>T</code>
+are either not sets, or sets of incompatible types.</p>
 <p><strong>Example in TLA+:</strong></p>
 <pre><code class="language-tla">  { 0, 1, 2 } \intersect { 1, 2, 3 } \* { 1, 2 }
           { } \intersect { 1, 2, 3 } \* { }
@@ -451,8 +451,8 @@ of <code>S</code> that <strong>do not</strong> belong to <code>T</code>, and no 
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
 model checking error, when it discovers that elements of <code>S</code> cannot be compared
-to the elements of <code>T</code>. Apalache produces a static type error, <code>S</code> and <code>T</code> are
-either not sets, or sets of incompatible types.</p>
+to the elements of <code>T</code>. Apalache produces a static type error, if <code>S</code> and <code>T</code>
+are either not sets, or sets of incompatible types.</p>
 <p><strong>Example in TLA+:</strong></p>
 <pre><code class="language-tla">  { 0, 1, 2 } \ { 1, 2, 3 }     \* { 0 }
           { } \ { 1, 2, 3 }     \* { }

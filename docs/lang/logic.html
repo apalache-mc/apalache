@@ -172,11 +172,11 @@
                     <main>
                         <h1><a class="header" href="#logic" id="logic">Logic</a></h1>
 <p><a href="./standard-operators.html">[Back to all operators]</a></p>
-<p>In this section, you find the operators that, together with <a href="./sets.html">Sets</a>
-form the foundation of TLA+. It is a bit strange that we call this section
-&quot;Logic&quot;, as the whole language of TLA+ is a logic. However, the operators
-of this section are often seen in first-order logic, as opposed to
-propositional logic (see <a href="./booleans.html">Booleans</a>).</p>
+<p>In this section, you find the operators that – together with <a href="./sets.html">Sets</a>
+– form the foundation of TLA+. It is a bit strange that we call this section
+&quot;Logic&quot;, as the whole language of TLA+ is a logic. However, the operators of
+this section are often seen in first-order logic, as opposed to propositional
+logic (see <a href="./booleans.html">Booleans</a>).</p>
 <p>Note that the special form <code>\E y \in S: x' = y</code> is often used to express
 non-determinism in TLA+. See <a href="./control-and-nondeterminism.html">Control Flow and Non-determinism</a>. In this
 section, we only consider the deterministic use of the existential quantifier.</p>
@@ -494,7 +494,7 @@ So TLC does some form of synthesis by brute force when it has to evaluate
 non-determinism with <code>CHOOSE</code>. For non-determinism, see:
 <a href="./control-and-nondeterminism.html">Control Flow and Non-determinism</a>.</p>
 <p>Apalache picks a set element that satisfies the predicate <code>P</code>, but it does not
-guarantee the repeatability property of CHOOSE. It does not guarantee
+guarantee the repeatability property of <code>CHOOSE</code>. It does not guarantee
 non-determinism either. Interestingly, this behavior does not really make a
 difference for the use cases 1 and 2. If you believe that this causes a problem
 in your specification, <a href="https://github.com/informalsystems/apalache/issues/new/choose">open an issue...</a></p>
