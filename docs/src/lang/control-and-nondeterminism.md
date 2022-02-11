@@ -36,8 +36,8 @@ logical paradoxes. Basically, the values are Booleans, integers, strings, sets,
 functions, etc.
 
 In the above example, the operator `Init` evaluates to `TRUE` on exactly one
-state, which we can conveniently write using the record constructor as follows:
-`[x |-> 0, y |-> 0]`.
+state, which we can conveniently write using the [record
+constructor](./records.md) as follows: `[x |-> 0, y |-> 0]`.
 
 The operator `Next` contains primes (`'`) and thus represents pairs of states,
 which we call _transitions_. An operator over unprimed and primed variables
@@ -276,7 +276,7 @@ How to implement `GUESS S`? There is no general answer to this question.
 However, we know of multiple sources of non-determinism in computer science. So
 we can think of `GUESS S` as being one of the following implementations:
 
- 1. `GUESS S` can be a remote procedure call in a distributed system.  Unless,
+ 1. `GUESS S` can be a remote procedure call in a distributed system.  Unless
  we have centralized control over the distributed system, the returned value of
  RPC may be non-deterministic.
 
@@ -324,8 +324,8 @@ not have non-determinism and it can be evaluated by following the standard
 deterministic semantics of exists, see [Logic](./logic.md).
 
 **Note:** We do not consider action operators like `UNCHANGED y`. They can be
-translated into an equivalent form, e.g., `UNCHANGED x` is equivalent to `y' =
-y`.
+translated into an equivalent form, e.g., `UNCHANGED x` is equivalent to `x' =
+x`.
 
 Now it is very easy to evaluate `\E x \in S: P`. We simply evaluate the
 following expression:

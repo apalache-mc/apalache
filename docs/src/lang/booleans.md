@@ -350,7 +350,8 @@ FALSE <=> 1      \* runtime error in TLC, type error in Apalache
 
 **Example in Python:**
 
-Assuming that both expressions are Boolean, `F <=> G` is equivalent to `F = G`.
+Assume that both expressions are Boolean. Then, in TLA+, `F <=> G` is
+equivalent to `F = G`. In Python, we express Boolean equality using `==`.
 
 ```python
 >>> False == True
