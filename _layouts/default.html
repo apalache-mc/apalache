@@ -38,13 +38,19 @@
         </ul>
         {% endif %}
 
-        <a class="twitter-timeline" href="https://twitter.com/ApalacheTLA?ref_src=twsrc%5Etfw">Tweets by ApalacheTLA</a> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+        <!-- Tall Twitter widget for wide screens. See `style.scss` for details. -->
+        <a class="twitter-timeline" id="twitter-timeline-0" href="https://twitter.com/ApalacheTLA?ref_src=twsrc%5Etfw">Tweets by ApalacheTLA</a>
       </header>
       <section>
 
       {{ content }}
 
       </section>
+
+      <!-- Short Twitter widget for narrow screens. See `style.scss` for details. -->
+      <a class="twitter-timeline" id="twitter-timeline-1" data-height="400" href="https://twitter.com/ApalacheTLA?ref_src=twsrc%5Etfw">Tweets by ApalacheTLA</a>
+      <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
     </div>
     <script src="{{ "/assets/js/scale.fix.js" | relative_url }}"></script>
     {% if site.google_analytics %}
