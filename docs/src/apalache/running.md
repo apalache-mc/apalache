@@ -254,11 +254,11 @@ the [TLA+ Community Modules](https://github.com/tlaplus/CommunityModules).
 
 The location for detailed output is determined by the value of the `out-dir`
 parameter, which specifies the path to a directory into which all Apalache
-runs write their outputs (see [configuration instructions](config.md). 
+runs write their outputs (see [configuration instructions](config.md)).
 
 Each run will produce a unique subdirectory inside its "namespace", derived from
 the file name of the specification, using the following convention
-`yyyy-MM-ddTHH-mm-ss_<UNIQUEID>`. 
+`yyyy-MM-ddTHH-mm-ss_<UNIQUEID>`.
 
 For an example, consider using the default location of the `run-dir` for a run of
 Apalache on a spec named `test.tla`. This will create a directory structuring matching following pattern:
