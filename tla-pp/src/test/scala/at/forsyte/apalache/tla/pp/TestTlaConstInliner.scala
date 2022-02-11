@@ -38,13 +38,13 @@ class TestTlaConstInliner extends FunSuite with BeforeAndAfterEach with Matchers
     result shouldBe primitiveValue.untyped()
   }
 
-  test("replaceConstWithValue passes unmapped NameEx unchanged") {
+  test("replaceConstWithValue returns unmapped NameEx unchanged") {
     val input = nonPrimitiveValuedConst
     val result = constInliner.replaceConstWithValue(constMap)(input)
     result shouldBe input.untyped()
   }
 
-  test("replaceConstWithValue passes non-CONSTANT NameEx unchanged") {
+  test("replaceConstWithValue returns non-CONSTANT NameEx unchanged") {
     val input = nonConst
     val result = constInliner.replaceConstWithValue(constMap)(input)
     result shouldBe input.untyped()
