@@ -6,15 +6,15 @@
 // Custom styles go here
 
 /* 
- * Workaround for showing a smaller Twitter widget on narrow screens.
+ * Show a smaller Twitter widget on narrow screens.
  *
  * We use two widgets, #twitter-widget-0 (unbounded height for wide screens),
  * and #twitter-widget-1 (bounded height for narrow screens).
  *
- * This workaround is necessary because the widget location is marked in HTML
- * using an <a> element. An iframe of correct bounding height is injected via
- * Twitter's JS. The iframe height is pre-set via `data-height` attribute on
- * the corresponding <a>.
+ * This CSS hack is necessary because the widget location is marked in HTML
+ * using an <a> element. An iframe of correct bounding height is injected at
+ * its location via Twitter's JS. The iframe height is pre-set via
+ * `data-height` attribute on the corresponding <a>.
  *
  * Custom resizing of the widget iframe via CSS is not an option, because
  *   - Twitter's injected JS resets the iframe height on resize events, and
@@ -22,7 +22,7 @@
  *     within the viewport.
  *
  * We use !important to override the element-level `display` property set by
- * Twitter JS.
+ * Twitter's JS.
  */
 
 // Default: hide the short twitter widget and its injection <a>.
