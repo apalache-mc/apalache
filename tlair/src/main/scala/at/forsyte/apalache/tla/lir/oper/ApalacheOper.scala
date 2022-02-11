@@ -1,10 +1,11 @@
 package at.forsyte.apalache.tla.lir.oper
 
 /**
- * The operators defined in the module Apalache.tla. This module gives the users a facility to provide hints.
- * The "Apalache" module is automatically looked up when Apalache is running.
+ * The operators defined in the module Apalache.tla. This module gives the users a facility to provide hints. The
+ * "Apalache" module is automatically looked up when Apalache is running.
  *
- * @author Igor Konnov, Rodrigo Otoni
+ * @author
+ *   Igor Konnov, Rodrigo Otoni
  */
 abstract class ApalacheOper extends TlaOper {
   override def interpretation: Interpretation.Value = Interpretation.StandardLib
@@ -37,8 +38,8 @@ object ApalacheOper {
 
   /**
    * A generator of a data structure. Given a positive integer `bound`, and assuming that the type of the operator
-   * application is known, we recursively generate a TLA+ data structure as a tree, whose width is bound by the
-   * number `bound`.
+   * application is known, we recursively generate a TLA+ data structure as a tree, whose width is bound by the number
+   * `bound`.
    */
   object gen extends ApalacheOper {
     override def name: String = "Apalache!Gen"
@@ -61,9 +62,9 @@ object ApalacheOper {
   }
 
   /**
-   * An expansion hint that can be applied to SUBSET S or [S -> T]. This hint orders the rewriter
-   * to expand the underlying expression into a finite set. Since, such an expansion results in an exponential
-   * blow up, this should be done carefully (and avoided as much as possible).
+   * An expansion hint that can be applied to SUBSET S or [S -> T]. This hint orders the rewriter to expand the
+   * underlying expression into a finite set. Since, such an expansion results in an exponential blow up, this should be
+   * done carefully (and avoided as much as possible).
    */
   object expand extends ApalacheOper {
     override def name: String = "Apalache!Expand"
@@ -74,9 +75,9 @@ object ApalacheOper {
   }
 
   /**
-   * An optimization hint for a cardinality constraint like Cardinality(S) >= k, where k is a constant.
-   * Similar to BMC!Skolem, this optimization has to be applied carefully, as it is not sound, when the cardinality
-   * test is located under negation.
+   * An optimization hint for a cardinality constraint like Cardinality(S) >= k, where k is a constant. Similar to
+   * BMC!Skolem, this optimization has to be applied carefully, as it is not sound, when the cardinality test is located
+   * under negation.
    */
   object constCard extends ApalacheOper {
     override def name: String = "Apalache!ConstCardinality"
@@ -87,8 +88,8 @@ object ApalacheOper {
   }
 
   /**
-   * The distinct operator that is equivalent to (distinct ...) in SMT-LIB.
-   * Formally, BMC!Distinct(x_1, ..., x_n) is equivalent to \A i, j \in 1..n: i /= j => x_i /= x_j.
+   * The distinct operator that is equivalent to (distinct ...) in SMT-LIB. Formally, BMC!Distinct(x_1, ..., x_n) is
+   * equivalent to \A i, j \in 1..n: i /= j => x_i /= x_j.
    *
    * XXX: there seems to be no way of defining a user-defined variadic operator in Apalache.tla.
    */
@@ -101,9 +102,8 @@ object ApalacheOper {
   }
 
   /**
-   * Attempt to dynamically cast an Int -> T function to a Seq(T).
-   * The first argument should be the function expression and the second argument
-   * should be an integer, denoting the maximal length of the sequence.
+   * Attempt to dynamically cast an Int -> T function to a Seq(T). The first argument should be the function expression
+   * and the second argument should be an integer, denoting the maximal length of the sequence.
    */
   object funAsSeq extends ApalacheOper {
     override def name: String = "Apalache!FunAsSeq"
@@ -114,20 +114,14 @@ object ApalacheOper {
   }
 
   /**
-   * The FoldSet operator from the community modules. Given a binary
-   * operator `Op(_,_)`, an initial value `v` and a set `S`, fold performs the
-   * equivalent of S.foldLeft(v)(Op) in Scala, that is, iteratively applies Op to
-   * the previous partial computation, starting with `v`, and an arbitrary element of S.
+   * The FoldSet operator from the community modules. Given a binary operator `Op(_,_)`, an initial value `v` and a set
+   * `S`, fold performs the equivalent of S.foldLeft(v)(Op) in Scala, that is, iteratively applies Op to the previous
+   * partial computation, starting with `v`, and an arbitrary element of S.
    *
-   * The type signature is:
-   * \forall T1,T2: FoldSet: ((T1,T2) => T1, T1, Set(T2)) => T1
+   * The type signature is: \forall T1,T2: FoldSet: ((T1,T2) => T1, T1, Set(T2)) => T1
    *
-   * The following equivalence should hold:
-   * FoldSet( Op, v, S ) = IF S = {}
-   *                       THEN v
-   *                       ELSE LET w == CHOOSE x \in S: TRUE
-   *                             IN LET T == S \ {w}
-   *                                 IN FoldSet( Op, Op(v,w), T )
+   * The following equivalence should hold: FoldSet( Op, v, S ) = IF S = {} THEN v ELSE LET w == CHOOSE x \in S: TRUE IN
+   * LET T == S \ {w} IN FoldSet( Op, Op(v,w), T )
    */
   object foldSet extends ApalacheOper {
     override def name: String = "Apalache!FoldSet"
@@ -138,16 +132,13 @@ object ApalacheOper {
   }
 
   /**
-   * The FoldSeq operator from the community modules. Similar to FoldSet, except the
-   * evaluation order is determined by the sequence.
+   * The FoldSeq operator from the community modules. Similar to FoldSet, except the evaluation order is determined by
+   * the sequence.
    *
-   * The type signature is:
-   * \forall T1,T2: FoldSeq: ((T1,T2) => T1, T1, Seq(T2)) => T1
+   * The type signature is: \forall T1,T2: FoldSeq: ((T1,T2) => T1, T1, Seq(T2)) => T1
    *
-   * The following equivalence should hold:
-   * FoldSeq( Op, v, seq ) = IF seq = <<>>
-   *                         THEN v
-   *                         ELSE FoldSeq( Op, Op(v,Head(seq)), Tail(seq) )
+   * The following equivalence should hold: FoldSeq( Op, v, seq ) = IF seq = <<>> THEN v ELSE FoldSeq( Op,
+   * Op(v,Head(seq)), Tail(seq) )
    */
   object foldSeq extends ApalacheOper {
     override def name: String = "Apalache!FoldSeq"
@@ -158,8 +149,26 @@ object ApalacheOper {
   }
 
   /**
-   * Wrapper for call-by-name expressions (values with operator types).
-   * Used to signify special treatment in preprocessing passes.
+   * <p>The operator SetAsFun converts a set of pairs `R` to a function `F`. The function `F` could be expressed as
+   * follows:</p>
+   *
+   * <pre> LET Dom == { key: &lt;&lt;key, value&gt;&gt; \in R } Rng == { value: &lt;&lt;key, value&gt;&gt; \in R } IN [
+   * key \in Dom |-> CHOOSE value \in Rng: &lt;&lt;key, value&gt;&gt; \in R ] </pre>
+   *
+   * <p>Note that the relation `R` may be ambiguous in the sense that the same key has more than one value. In this
+   * case, the Apalache encodings choose one of the values, which corresponds to `CHOOSE`.</p>
+   */
+  object setAsFun extends ApalacheOper {
+    override def name: String = "Apalache!SetAsFun"
+
+    override def arity: OperArity = FixedArity(1)
+
+    override val precedence: (Int, Int) = (100, 100)
+  }
+
+  /**
+   * Wrapper for call-by-name expressions (values with operator types). Used to signify special treatment in
+   * preprocessing passes.
    */
   object callByName extends ApalacheOper {
     override def name: String = "Apalache!CallByName"
@@ -170,8 +179,7 @@ object ApalacheOper {
   }
 
   /**
-   * The selectInSet operator is a variant of TlaSetOper.in.
-   * It signals that set membership should be checked.
+   * The selectInSet operator is a variant of TlaSetOper.in. It signals that set membership should be checked.
    */
   object selectInSet extends ApalacheOper {
     override def name: String = "Apalache!SelectInSet"
@@ -182,8 +190,7 @@ object ApalacheOper {
   }
 
   /**
-   * The storeInSet operator is a variant of TlaSetOper.in.
-   * It signals that set membership should be enforced.
+   * The storeInSet operator is a variant of TlaSetOper.in. It signals that set membership should be enforced.
    */
   object storeInSet extends ApalacheOper {
     override def name: String = "Apalache!StoreInSet"
@@ -194,8 +201,8 @@ object ApalacheOper {
   }
 
   /**
-   * The storeNotInSet operator is a variant of storeInSet.
-   * It signals that the negation of set membership should be enforced.
+   * The storeNotInSet operator is a variant of storeInSet. It signals that the negation of set membership should be
+   * enforced.
    */
   object storeNotInSet extends ApalacheOper {
     override def name: String = "Apalache!UnchangedSet"
@@ -214,8 +221,8 @@ object ApalacheOper {
   }
 
   /**
-   * The chain operator allows the chaining of individual operations.
-   * It can improve solver performance by eliminating intermediary declarations.
+   * The chain operator allows the chaining of individual operations. It can improve solver performance by eliminating
+   * intermediary declarations.
    */
   object chain extends ApalacheOper {
     override def name: String = "Apalache!Chain"

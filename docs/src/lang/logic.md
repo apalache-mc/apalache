@@ -2,11 +2,11 @@
 
 [[Back to all operators]](./standard-operators.md)
 
-In this section, you find the operators that, together with [Sets](./sets.md)
-form the foundation of TLA+. It is a bit strange that we call this section
-"Logic", as the whole language of TLA+ is a logic. However, the operators
-of this section are often seen in first-order logic, as opposed to
-propositional logic (see [Booleans](./booleans.md)).
+In this section, you find the operators that – together with [Sets](./sets.md)
+– form the foundation of TLA+. It is a bit strange that we call this section
+"Logic", as the whole language of TLA+ is a logic. However, the operators of
+this section are often seen in first-order logic, as opposed to propositional
+logic (see [Booleans](./booleans.md)).
 
 Note that the special form `\E y \in S: x' = y` is often used to express
 non-determinism in TLA+. See [Control Flow and Non-determinism]. In this
@@ -392,7 +392,7 @@ non-determinism with `CHOOSE`. For non-determinism, see:
 [Control Flow and Non-determinism].
 
 Apalache picks a set element that satisfies the predicate `P`, but it does not
-guarantee the repeatability property of CHOOSE. It does not guarantee
+guarantee the repeatability property of `CHOOSE`. It does not guarantee
 non-determinism either. Interestingly, this behavior does not really make a
 difference for the use cases 1 and 2. If you believe that this causes a problem
 in your specification, [open an issue...]

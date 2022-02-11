@@ -72,7 +72,7 @@ and `b`.  If `a > b`, then `a..b` is the empty set `{}`.
 
 **Determinism:** Deterministic.
 
-**Errors:** In pure TLA+, the result is undefined, if one of the arguments
+**Errors:** In pure TLA+, the result is undefined if one of the arguments
 evaluates to a non-integer value. In this case, Apalache statically reports a
 type error, whereas TLC reports a runtime error.
 
@@ -115,7 +115,7 @@ evaluates to an integer.
 
 **Determinism:** Deterministic.
 
-**Errors:** In pure TLA+, the result is undefined, if the argument
+**Errors:** In pure TLA+, the result is undefined if the argument
 evaluates to a non-integer value. In this case, Apalache statically reports a
 type error, whereas TLC reports a runtime error.
 
@@ -155,7 +155,7 @@ are evaluated to integer values.
 
 **Determinism:** Deterministic.
 
-**Errors:** No overflow is possible. In pure TLA+, the result is undefined, if
+**Errors:** No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.
 
@@ -194,7 +194,7 @@ are evaluated to integer values.
 
 **Determinism:** Deterministic.
 
-**Errors:** No overflow is possible. In pure TLA+, the result is undefined, if
+**Errors:** No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.
 
@@ -236,7 +236,7 @@ are evaluated to integer values.
 
 **Determinism:** Deterministic.
 
-**Errors:** No overflow is possible. In pure TLA+, the result is undefined, if
+**Errors:** No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.
 
@@ -305,7 +305,7 @@ Apalache](https://github.com/informalsystems/apalache/issues/331)._
 
 **Determinism:** Deterministic.
 
-**Errors:** No overflow is possible. In pure TLA+, the result is undefined, if
+**Errors:** No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error. The value
 of `a \div b` is undefined for `b = 0`.
@@ -359,7 +359,7 @@ examples below._
 
 **Determinism:** Deterministic.
 
-**Errors:** No overflow is possible. In pure TLA+, the result is undefined, if
+**Errors:** No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error. The value
 of `a % b` is undefined for `b = 0`.
@@ -419,7 +419,7 @@ neither by TLC, nor by Apalache.
 
 **Determinism:** Deterministic.
 
-**Errors:** No overflow is possible. In pure TLA+, the result is undefined, if
+**Errors:** No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.
 
@@ -476,7 +476,7 @@ are evaluated to integer values.
 
 **Determinism:** Deterministic.
 
-**Errors:** In pure TLA+, the result is undefined, if
+**Errors:** In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.
 
@@ -521,7 +521,7 @@ are evaluated to integer values.
 
 **Determinism:** Deterministic.
 
-**Errors:** No overflow is possible. In pure TLA+, the result is undefined, if
+**Errors:** No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.
 
@@ -566,7 +566,7 @@ are evaluated to integer values.
 
 **Determinism:** Deterministic.
 
-**Errors:** No overflow is possible. In pure TLA+, the result is undefined, if
+**Errors:** No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.
 
@@ -611,7 +611,7 @@ are evaluated to integer values.
 
 **Determinism:** Deterministic.
 
-**Errors:** No overflow is possible. In pure TLA+, the result is undefined, if
+**Errors:** No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
 statically reports a type error, whereas TLC reports a runtime error.
 

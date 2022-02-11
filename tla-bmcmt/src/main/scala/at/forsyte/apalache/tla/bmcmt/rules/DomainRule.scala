@@ -11,7 +11,8 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 /**
  * Rewriting DOMAIN f, that is, translating the domain of a function, record, tuple, or sequence.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
@@ -78,18 +79,48 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
   }
 
   private def mkFunDomain(state: SymbState, funCell: ArenaCell): SymbState = {
-    // the expression cache should help us here
+    // We are computing the domain every time. Although the expression cache should help us,
+    // it probably makes sense to cache the domain, once it has been computed.
+    // Function domain is tricky, as it is a left projection of the function relation.
+    // The function relation may contain ghost pairs, which are marked as being outside of the relation.
+    // Hence, we group the pairs into a map: key |-> list of pairs. Then, we include the key into the domain
+    // if and only if at least one of the pairs belongs to the relation.
     val relation = state.arena.getCdm(funCell)
     var nextState = state.updateArena(_.appendCell(FinSetT(funCell.cellType.asInstanceOf[FunT].argType)))
     val domCell = nextState.arena.topCell
+
     def getArg(c: ArenaCell): ArenaCell = nextState.arena.getHas(c).head
-    val domCells = nextState.arena.getHas(relation) map getArg
-    nextState = nextState.setArena(nextState.arena.appendHas(domCell, domCells: _*))
-    for (pair <- state.arena.getHas(relation)) {
-      val arg = getArg(pair)
-      val ite = tla.ite(tla.apalacheSelectInSet(pair.toNameEx, relation.toNameEx),
-          tla.apalacheStoreInSet(arg.toNameEx, domCell.toNameEx),
-          tla.apalacheStoreNotInSet(arg.toNameEx, domCell.toNameEx))
+
+    val pairs = nextState.arena.getHas(relation)
+    // importantly, add `domCells` to a set, to avoid duplicate cells (different cells still may be equal)
+    val domCells = pairs.map(getArg).toSet.toSeq
+    // construct a map from cell ids to lists of pairs
+    type KeyToPairs = Map[Int, Set[ArenaCell]]
+
+    def addPair(map: KeyToPairs, pair: ArenaCell): KeyToPairs = {
+      val key = getArg(pair)
+      val pairsForKey = map.getOrElse(key.id, Set.empty) + pair
+      map + (key.id -> pairsForKey)
+    }
+
+    val keysToPairs = pairs.foldLeft(Map[Int, Set[ArenaCell]]())(addPair)
+
+    // add the cells, some of which may be ghost cells
+    nextState = nextState.updateArena(_.appendHas(domCell, domCells: _*))
+    for (pairsForKey <- keysToPairs.values) {
+      val head = pairsForKey.head
+      val keyCell = getArg(head)
+      val isMem =
+        if (pairsForKey.size == 1) {
+          // 1. The trivial case: The cell appears only once.
+          tla.apalacheSelectInSet(head.toNameEx, relation.toNameEx)
+        } else {
+          // 2. The hard case: The cell appears in multiple pairs, some of them may be ghost cells.
+          tla.or(pairsForKey.toSeq.map(p => tla.apalacheSelectInSet(p.toNameEx, relation.toNameEx).untyped()): _*)
+        }
+
+      val ite = tla.ite(isMem, tla.apalacheStoreInSet(keyCell.toNameEx, domCell.toNameEx),
+          tla.apalacheStoreNotInSet(keyCell.toNameEx, domCell.toNameEx))
       rewriter.solverContext.assertGroundExpr(ite)
     }
 

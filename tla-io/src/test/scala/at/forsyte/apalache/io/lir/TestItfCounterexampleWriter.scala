@@ -2,7 +2,6 @@ package at.forsyte.apalache.io.lir
 
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.aux.SmileyFunFun._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import org.junit.runner.RunWith
@@ -18,9 +17,12 @@ class TestItfCounterexampleWriter extends FunSuite {
   /**
    * Write a counterexample and compare the output to the expected result.
    *
-   * @param rootModule the module that produced the counterexample
-   * @param states     a list of states: state 0 is the constant initializer, state 1 is the initial state, etc.
-   * @param expected   the expected output as a string
+   * @param rootModule
+   *   the module that produced the counterexample
+   * @param states
+   *   a list of states: state 0 is the constant initializer, state 1 is the initial state, etc.
+   * @param expected
+   *   the expected output as a string
    */
   def compareJson(rootModule: TlaModule, states: List[NextState], expected: String): Unit = {
     val writer = new ItfCounterexampleWriter(new PrintWriter(new StringWriter()))
@@ -64,6 +66,8 @@ class TestItfCounterexampleWriter extends FunSuite {
     val intSet = SetT1(IntT1())
     val fooBar = RecT1("foo" -> IntT1(), "bar" -> BoolT1())
     val intToStr = FunT1(IntT1(), StrT1())
+
+    def pair(i: Int, s: String) = tuple(int(i), str(s)) as intAndStr
     val decls = List(
         TlaVarDecl("a")(Typed(IntT1())),
         TlaVarDecl("b")(Typed(StrT1())),
@@ -96,17 +100,13 @@ class TestItfCounterexampleWriter extends FunSuite {
                     // <<7, "myStr">>
                     "f" -> tuple(int(7), str("myStr"))
                       .as(intAndStr),
-                    // ((1 :> "a") @@ (2 :> "b")) @@ (3 :> "c")
-                    "g" -> funfun(intToStr, smiley(intToStr, int(1).typed(), str("a").typed()),
-                        funfun(intToStr, smiley(intToStr, int(2).typed(), str("b").typed()),
-                            smiley(intToStr, int(3).typed(), str("c").typed())))
-                      .as(intToStr),
-                    // [ x \in {} |-> x ]
-                    // technically, this expression is not type-correct
-                    "h" -> funDef(name("x").typed(IntT1()), name("x").typed(IntT1()), enumSet().typed(SetT1(StrT1())))
-                      .typed(intToStr),
-                    // (1 :> "a"
-                    "i" -> smiley(intToStr, int(1).typed(), str("a").typed()),
+                    // SetAsFun({ <<1, "a">>, <<2, "b">>, <<3, "c">> })
+                    "g" -> (apalacheSetAsFun(enumSet(pair(1, "a"), pair(2, "b"), pair(3, "c"))
+                      as SetT1(intAndStr)) as intToStr),
+                    // SetAsFun({})
+                    "h" -> (apalacheSetAsFun(enumSet() as SetT1(intAndStr)) as intToStr),
+                    // SetAsFun({ <<1, "a">> })
+                    "i" -> (apalacheSetAsFun(enumSet(pair(1, "a")) as SetT1(intAndStr)) as intToStr),
                 )),
         ),
         """{

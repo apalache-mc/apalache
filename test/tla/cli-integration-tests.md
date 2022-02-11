@@ -112,6 +112,44 @@ $ JVM_ARGS="-Xmx16m" apalache-mc --debug version | sed 's/-DTLA-Library.*//'
 ...
 ```
 
+## Running the config command
+
+Enable statistics collection.
+
+### config --enable-stats=true
+
+Test that it is possible to turn on the statistics. Before and after calling
+this command, we turn the stats off, so tla2tools do not call home.
+
+```sh
+$ mkdir -p $HOME/.tlaplus && echo NO_STATISTICS >$HOME/.tlaplus/esc.txt
+$ apalache-mc config --enable-stats=true | sed 's/[IEW]@.*//'
+...
+Statistics collection is ON.
+...
+EXITCODE: OK
+$ grep -q -v NO_STATISTICS $HOME/.tlaplus/esc.txt
+$ echo NO_STATISTICS >$HOME/.tlaplus/esc.txt
+```
+
+### config --enable-stats=false
+
+Disable statistics collection. We fix the installation id, so we can
+distinguish it from normal users. After executing the command, we turn the
+statistics off again.
+
+```sh
+$ mkdir -p $HOME/.tlaplus
+$ echo c1cd000000000000000000000000c1cd >$HOME/.tlaplus/esc.txt
+$ apalache-mc config --enable-stats=false | sed 's/[IEW]@.*//'
+...
+Statistics collection is OFF.
+...
+EXITCODE: OK
+$ head -n 1 $HOME/.tlaplus/esc.txt
+NO_STATISTICS
+```
+
 ## running the parse command
 
 This command parses a TLA+ specification with the SANY parser.
@@ -279,6 +317,7 @@ Check that a file produced with `--output` is valid input (see #1281)
 $ apalache-mc typecheck --output=output.json Annotations.tla ; apalache-mc typecheck output.json | sed 's/I@.*//'
 ...
 EXITCODE: OK
+$ rm output.json
 ```
 
 ### parse FormulaRefs fails
@@ -1761,6 +1800,34 @@ $ apalache-mc check Test1259.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check Test1226.tla reports no error
+
+```sh
+$ apalache-mc check --length=1 --inv=Inv Test1226.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check MegaSpec1.tla reports no error with `--debug`: regression for #1313
+
+```sh
+$ apalache-mc check --debug --cinit=CInit MegaSpec1.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check Test1305.tla reports 10 errors
+
+Regression test for #1305.
+
+```sh
+$ apalache-mc check --inv=Inv --view=View  --max-error=10 Test1305.tla | sed 's/[IEW]@.*//'
+...
+Found 10 error(s)
+...
+EXITCODE: ERROR (12)
+```
+
 ## running the typecheck command
 
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
@@ -2284,28 +2351,6 @@ Typecheck a model checking instance.
 
 ```sh
 $ apalache-mc typecheck MC_LamportMutexTyped.tla | sed 's/[IEW]@.*//'
-...
-EXITCODE: OK
-```
-
-## Running the config command
-
-### config --enable-stats=false
-
-```sh
-$ apalache-mc config --enable-stats=false | sed 's/[IEW]@.*//'
-...
-Statistics collection is OFF.
-...
-EXITCODE: OK
-```
-
-### config --enable-stats=true
-
-```sh
-$ apalache-mc config --enable-stats=true | sed 's/[IEW]@.*//'
-...
-Statistics collection is ON.
 ...
 EXITCODE: OK
 ```

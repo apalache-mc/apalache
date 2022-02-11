@@ -1,9 +1,9 @@
 package at.forsyte.apalache.io.lir
 
 import at.forsyte.apalache.tla.lir.oper.TlaOper.deinterleave
-import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, SeqT1, TlaConstDecl, TlaEx, TlaModule, TlaVarDecl, Typed, ValEx}
+import at.forsyte.apalache.tla.lir._
 
 import java.io.PrintWriter
 import java.util.Calendar
@@ -12,8 +12,10 @@ import scala.collection.mutable
 /**
  * This class produces counterexamples in the Informal Trace Format.
  *
- * @param writer a print writer to use
- * @author Igor Konnov
+ * @param writer
+ *   a print writer to use
+ * @author
+ *   Igor Konnov
  */
 class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter {
 
@@ -30,9 +32,12 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
   /**
    * Produce a JSON representation of a counterexample in the ITF format
    *
-   * @param rootModule the module that produced the counterexample
-   * @param states     a sequence of next states
-   * @return the JSON representation of the counterexample in the ITF format
+   * @param rootModule
+   *   the module that produced the counterexample
+   * @param states
+   *   a sequence of next states
+   * @return
+   *   the JSON representation of the counterexample in the ITF format
    */
   def mkJson(rootModule: TlaModule, states: List[NextState]): ujson.Value = {
     // merge constant initialization and variable initialization into a single state
@@ -112,30 +117,13 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
       val values = valuesEs.map(exToJson)
       ujson.Obj(mutable.LinkedHashMap(keys.zip(values): _*))
 
-    case OperEx(TlaOper.apply, NameEx(":>"), key, value) =>
-      ujson.Obj("#map" -> ujson.Arr(ujson.Arr(exToJson(key), exToJson(value))))
-
-    case e @ OperEx(TlaOper.apply, NameEx("@@"), _, _) =>
-      ujson.Obj("#map" -> collectFun(e))
-
-    // the degenerate case of an empty function [ x \in {} |-> x ]
-    case e @ OperEx(TlaFunOper.funDef, _, _, OperEx(TlaSetOper.enumSet)) =>
-      ujson.Obj("#map" -> ujson.Arr())
+    case OperEx(ApalacheOper.setAsFun, OperEx(TlaSetOper.enumSet, args @ _*)) =>
+      val keyValueArrays = args.collect { case OperEx(TlaFunOper.tuple, key, value) =>
+        ujson.Arr(exToJson(key), exToJson(value))
+      }
+      ujson.Obj("#map" -> ujson.Arr(keyValueArrays: _*))
 
     case e =>
       throw new IllegalArgumentException("Unexpected expression in an ITF counterexample: " + e)
-  }
-
-  // as TLA+ does not offer a simple constructor for functions by enumeration,
-  // we have to decode a function by collection the TLC operators :> and @@
-  private def collectFun: TlaEx => List[ujson.Value] = {
-    case OperEx(TlaOper.apply, NameEx(":>"), key, value) =>
-      List(ujson.Arr(exToJson(key), exToJson(value)))
-
-    case OperEx(TlaOper.apply, NameEx("@@"), leftFun, rightFun) =>
-      (collectFun(leftFun) ++ collectFun(rightFun))
-
-    case e =>
-      throw new IllegalArgumentException("Unexpected expression in collectFun: " + e)
   }
 }

@@ -17,8 +17,6 @@ abstract class PreproPassPartial(
     val options: PassOptions, renaming: IncrementalRenaming, tracker: TransformationTracker, sourceStore: SourceStore,
     changeListener: ChangeListener, writerFactory: TlaWriterFactory,
 ) extends PreproPass with LazyLogging {
-  private var outputTlaModule: Option[TlaModule] = None
-
   override def name: String = "PreprocessingPass"
 
   protected def writeAndReturn(module: TlaModule): TlaModule = {
@@ -44,11 +42,11 @@ abstract class PreproPassPartial(
     } else preprocessed
   }
 
-  protected def checkLocations(): Unit = {
+  protected def checkLocations(module: TlaModule): Unit = {
     // when --debug is enabled, check that all identifiers are assigned a location
     if (options.getOrElse[Boolean]("general", "debug", false)) {
       val sourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)
-      outputTlaModule.get.operDeclarations foreach sourceLocator.checkConsistency
+      module.operDeclarations foreach sourceLocator.checkConsistency
     }
   }
 
@@ -70,7 +68,7 @@ abstract class PreproPassPartial(
       postRename: Boolean, lPred: LanguagePred): Option[TlaModule] = {
     val afterModule = applyTx(tlaModule, transformationSequence, postRename)
 
-    checkLocations()
+    checkLocations(tlaModule)
 
     postLanguageCheck(afterModule, lPred)
   }
