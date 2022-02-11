@@ -30,32 +30,31 @@ where `UTNAME` matches the pattern `[A-Z_][A-Z0-9_]*`, and is not a type alias d
 ## How to introduce values belonging to an uninterpreted type
 Apalache uses the following convention-based naming scheme for values of uninterpreted types:
 ```tla
-"uval_TYPENAME_IDENTIFIER"
+"identifier_OF_TYPENAME"
 ```
 where:
-  - `TYPENAME` is the uninterpreted type, to which this value belongs, and
-  - `IDENTIFIER` is a unique identifier within the uninterpreted type, and matches the pattern
-  `[a-zA-Z0-9]+`.
+  - `TYPENAME` is the uninterpreted type to which this value belongs, matching the pattern `[A-Z_][A-Z0-9_]*`, and
+  - `identifier` is a unique identifier within the uninterpreted type, matching the pattern `[a-zA-Z0-9_]+`.
 
-Example: `"uval_UT_1"` is a value belonging to the uninterpreted type `UT`, as is `"uval_UT_2"`. These two values are distinct by definition. On the contrary, 
-`"uval_ut_1"` does _not_ meet the criteria for a value belonging to an uninterpreted type ( lowercase `ut` is not a valid identifier for an uninterpreted type), so it is treated as a string value.
+Example: `"1_OF_UT"` is a value belonging to the uninterpreted type `UT`, as is `"2_OF_UT"`. These two values are distinct by definition. On the contrary,
+`"1_OF_ut"` does _not_ meet the criteria for a value belonging to an uninterpreted type ( lowercase `ut` is not a valid identifier for an uninterpreted type), so it is treated as a string value.
 
 ## Uninterpreted types, `Str`, and comparisons
 Importantly, while both strings and values belonging to uninterpreted types are introduced using the `"..."` notation, they are treated as having distinct, incomparable types.
 Examples:
   - The following expression is type-incorrect:
     ```tla 
-    "abc" = "uval_A_bc" \* Cannot compare values of types Str and A
+    "abc" = "bc_OF_A" \* Cannot compare values of types Str and A
     ```
   - The following expression is type-incorrect:
     ```tla 
-    "uval_A_1" = "uval_B_1" \* Cannot compare values of types A and B
+    "1_OF_A" = "1_OF_B" \* Cannot compare values of types A and B
     ```
 - The following expressions are type-correct:
     ```tla 
     \* Can compare 2 values of type A. 
-    "uval_A_1" = "uval_A_2" \* = FALSE, identifiers are different
-    "uval_A_1" = "uval_A_1" \* = TRUE, identifiers are the same
+    "1_OF_A" = "2_OF_A" \* = FALSE, identifiers are different
+    "1_OF_A" = "1_OF_A" \* = TRUE, identifiers are the same
     ```
 
 
