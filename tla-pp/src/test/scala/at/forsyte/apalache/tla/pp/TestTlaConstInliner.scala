@@ -35,7 +35,7 @@ class TestTlaConstInliner extends FunSuite with BeforeAndAfterEach with Matchers
   test("replaceConstWithValue inlines mapped NameEx constant") {
     val input = primitiveValuedConst
     val result = constInliner.replaceConstWithValue(constMap)(input)
-    result shouldBe tla.int(42).untyped()
+    result shouldBe primitiveValue.untyped()
   }
 
   test("replaceConstWithValue passes unmapped NameEx unchanged") {
