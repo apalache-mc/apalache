@@ -5,7 +5,6 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.convenience.tla._
-import at.forsyte.apalache.tla.lir.aux.SmileyFunFun._
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import org.junit.runner.RunWith
@@ -938,6 +937,16 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
         |
         |""".stripMargin
     assert(expected == stringWriter.toString)
+  }
+
+  private def smiley(funT1: FunT1, key: TlaEx, value: TlaEx): TlaEx = {
+    val smileyType = OperT1(Seq(funT1.arg, funT1.res), funT1)
+    OperEx(TlaOper.apply, NameEx(":>")(Typed(smileyType)), key, value)(Typed(funT1))
+  }
+
+  private def funfun(funT1: FunT1, f1: TlaEx, f2: TlaEx): TlaEx = {
+    val funfunType = OperT1(Seq(funT1, funT1), funT1)
+    OperEx(TlaOper.apply, NameEx("@@")(Typed((funfunType))), f1, f2)(Typed(funT1))
   }
 
 }

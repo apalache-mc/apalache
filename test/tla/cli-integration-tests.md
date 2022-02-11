@@ -1816,6 +1816,18 @@ $ apalache-mc check --debug --cinit=CInit MegaSpec1.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check Test1305.tla reports 10 errors
+
+Regression test for #1305.
+
+```sh
+$ apalache-mc check --inv=Inv --view=View  --max-error=10 Test1305.tla | sed 's/[IEW]@.*//'
+...
+Found 10 error(s)
+...
+EXITCODE: ERROR (12)
+```
+
 ## running the typecheck command
 
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482

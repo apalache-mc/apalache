@@ -5,7 +5,6 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.UntypedPredefs.BuilderExAsUntyped
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.aux.SmileyFunFun
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.convenience.tla.fromTlaEx
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper}
@@ -19,7 +18,8 @@ import scala.collection.immutable.{HashSet, SortedSet}
 /**
  * This class dumps relevant values from an SMT model using an arena.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter) extends LazyLogging {
 
@@ -134,56 +134,35 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     case funT @ FunT(_, _) =>
       val funT1 = funT.toTlaType1.asInstanceOf[FunT1]
 
-      // Adds (key :> value) mapping to the `fun`, unless the `key` is already in `keys`
-      // Returns a new set of keys including the added `key` and the new function that includes the mapping
-      def appendPair(keys: Set[TlaEx], fun: TlaEx, key: ArenaCell, value: ArenaCell): (Set[TlaEx], TlaEx) = {
-        val keyEx = decodeCellToTlaEx(arena, key)
-        // If we've already seen the key, don't add it again
-        if (keys(keyEx)) {
-          (keys, fun)
-        } else {
-          val pair = SmileyFunFun.smiley(funT1, keyEx, decodeCellToTlaEx(arena, value))
-          val ex = SmileyFunFun.funfun(funT1, fun, pair)
-          (keys + keyEx, ex)
-        }
-      }
-
-      // in the new implementation, every function is represented with the relation {(x, f[x]) : x \in S}
+      // a function is represented with the relation {(x, f[x]) : x \in S}
       val relation = arena.getCdm(cell)
 
       def isInRelation(pair: ArenaCell): Boolean = {
-        val mem = tla
-          .apalacheSelectInSet(fromTlaEx(pair.toNameEx).typed(funT1.arg),
-              fromTlaEx(relation.toNameEx).typed(TupT1(funT1.arg, funT1.res)))
-          .typed(BoolT1())
+        val mem =
+          tla.apalacheSelectInSet(pair.toNameEx as funT1.arg,
+              relation.toNameEx as TupT1(funT1.arg, funT1.res)) as BoolT1()
         solverContext.evalGroundExpr(mem) == tla.bool(true).typed(BoolT1())
       }
 
-      val pairs = arena.getHas(relation)
-      pairs find isInRelation match {
-        case None =>
-          // this is a pathological case, produce: [ x \in {} |-> x ]
-          tla
-            .funDef(tla.name("x").typed(funT1.arg), tla.name("x").typed(funT1.arg),
-                tla.enumSet().typed(SetT1(funT1.res)))
-            .typed(funT1)
-
-        case Some(first) =>
-          // this is the common case
-          val keyCell0 :: valueCell0 :: _ = arena.getHas(first)
-          val keyExp = decodeCellToTlaEx(arena, keyCell0)
-          val firstPair = SmileyFunFun.smiley(funT1, keyExp, decodeCellToTlaEx(arena, valueCell0))
-          val keys0 = Set(keyExp) // Used to track seen indices, so we don't include duplicates
-          val (_, fun) = pairs.tail.foldLeft((keys0, firstPair)) { case ((keys, f), p) =>
-            if (p == first) {
-              (keys, f)
-            } else {
-              val idx :: value :: _ = arena.getHas(p)
-              appendPair(keys, f, idx, value)
-            }
-          }
-          fun
+      def decodePair(seen: Map[TlaEx, TlaEx], pair: ArenaCell): Map[TlaEx, TlaEx] = {
+        val keyCell :: valueCell :: _ = arena.getHas(pair)
+        val keyEx = decodeCellToTlaEx(arena, keyCell)
+        if (seen.contains(keyEx)) {
+          seen
+        } else {
+          val valueEx = decodeCellToTlaEx(arena, valueCell)
+          seen + (keyEx -> valueEx)
+        }
       }
+
+      val pairT = TupT1(funT1.arg, funT1.res)
+      val pairs = arena
+        .getHas(relation)
+        .filter(isInRelation)
+        .foldLeft(Map[TlaEx, TlaEx]())(decodePair)
+        .map(p => tla.tuple(p._1, p._2) as pairT)
+        .toSeq
+      tla.apalacheSetAsFun(tla.enumSet(pairs: _*) as SetT1(pairT)) as funT1
 
     case SeqT(elemT) =>
       val elemT1 = elemT.toTlaType1
