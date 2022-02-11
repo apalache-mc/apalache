@@ -22,7 +22,7 @@ class TestTlaConstInliner extends FunSuite with BeforeAndAfterEach with Matchers
   // constants mapped to primitive values
   private val constMap = Map(primitiveValuedConst.name -> primitiveValue.untyped().asInstanceOf[ValEx],
       nonConst.name -> primitiveValue.untyped().asInstanceOf[ValEx])
-  // the inliner
+  // declare the reference to the inliner for use in each test case, initialized to the default value
   private var constInliner: TlaConstInliner = _
 
   override def beforeEach(): Unit = {
