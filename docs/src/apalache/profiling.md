@@ -37,7 +37,8 @@ parts of your specification. To activate this profiling mode, use the option
 apalache check --smtprof powerset.tla
 ```
 
-The profiling data is written in the file `profile.csv`:
+The profiling data is written in the file `profile.csv` in the [run
+directory](./running.md#detailed):
 
 ```
 # weight,nCells,nConsts,nSmtExprs,location

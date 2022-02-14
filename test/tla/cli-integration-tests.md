@@ -1691,11 +1691,12 @@ Check that the profiler output is produced as explained in
 [Profiling](https://apalache.informal.systems/docs/apalache/profiling.html).
 
 ```sh
-$ echo >profile.csv
-$ apalache-mc check --smtprof schroedinger_cat.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --run-dir=./profile-run-dir --smtprof schroedinger_cat.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
-$ test -s profile.csv
+$ head -n 1 ./profile-run-dir/profile.csv
+# weight,nCells,nConsts,nSmtExprs,location
+$ rm -rf ./profile-run-dir
 ```
 
 ### check ModelVal.tla succeeds
