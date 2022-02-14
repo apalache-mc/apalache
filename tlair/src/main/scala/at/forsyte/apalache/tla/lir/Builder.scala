@@ -580,6 +580,18 @@ class Builder {
     BuilderOper(ApalacheOper.expand, ex)
   }
 
+  /**
+   * Apply the operator `Apalache.setAsFun`.
+   *
+   * @param pairsSetEx
+   *   the argument, which should be a set of pairs
+   * @return
+   *   `SetAsFun` applied to `pairsSetEx`
+   */
+  def apalacheSetAsFun(pairsSetEx: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.setAsFun, pairsSetEx)
+  }
+
   def apalacheSkolem(ex: BuilderEx): BuilderEx = {
     BuilderOper(ApalacheOper.skolem, ex)
   }
@@ -717,6 +729,7 @@ class Builder {
         ApalacheOper.smtMap.name -> ApalacheOper.smtMap,
         ApalacheOper.chain.name -> ApalacheOper.chain,
         ApalacheOper.assignChain.name -> ApalacheOper.assignChain,
+        ApalacheOper.setAsFun.name -> ApalacheOper.setAsFun,
     )
 
   def byName(operatorName: String, args: BuilderEx*): BuilderEx = {

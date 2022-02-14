@@ -5,7 +5,6 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.UntypedPredefs.BuilderExAsUntyped
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.aux.SmileyFunFun
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.convenience.tla.fromTlaEx
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper}
@@ -135,6 +134,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     case funT @ FunT(_, _) =>
       val funT1 = funT.toTlaType1.asInstanceOf[FunT1]
 
+      // a function is represented with the relation {(x, f[x]) : x \in S}
       // Adds (key :> value) mapping to the `fun`, unless the `key` is already in `keys`
       // Returns a new set of keys including the added `key` and the new function that includes the mapping
       def appendPair(keys: Set[TlaEx], fun: TlaEx, key: ArenaCell, value: ArenaCell): (Set[TlaEx], TlaEx) = {
@@ -158,6 +158,12 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
           val domain = arena.getDom(cell)
           val domainElems = arena.getHas(domain)
 
+      def isInRelation(pair: ArenaCell): Boolean = {
+        val mem =
+          tla.apalacheSelectInSet(pair.toNameEx as funT1.arg,
+              relation.toNameEx as TupT1(funT1.arg, funT1.res)) as BoolT1()
+        solverContext.evalGroundExpr(mem) == tla.bool(true).typed(BoolT1())
+      }
           def inDom(elem: ArenaCell): TlaEx = {
             val elemEx = fromTlaEx(elem.toNameEx).typed(funT1.arg)
             val domEx = fromTlaEx(domain.toNameEx).typed(SetT1(funT1.arg))
@@ -176,6 +182,15 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
             solverContext.evalGroundExpr(mem) == tla.bool(true).typed(BoolT1())
           }
 
+      def decodePair(seen: Map[TlaEx, TlaEx], pair: ArenaCell): Map[TlaEx, TlaEx] = {
+        val keyCell :: valueCell :: _ = arena.getHas(pair)
+        val keyEx = decodeCellToTlaEx(arena, keyCell)
+        if (seen.contains(keyEx)) {
+          seen
+        } else {
+          val valueEx = decodeCellToTlaEx(arena, valueCell)
+          seen + (keyEx -> valueEx)
+        }
           // Check if the domain is empty
           pairs find isInRelation match {
             case None    => true
@@ -208,6 +223,15 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         }
         fun
       }
+
+      val pairT = TupT1(funT1.arg, funT1.res)
+      val pairs = arena
+        .getHas(relation)
+        .filter(isInRelation)
+        .foldLeft(Map[TlaEx, TlaEx]())(decodePair)
+        .map(p => tla.tuple(p._1, p._2) as pairT)
+        .toSeq
+      tla.apalacheSetAsFun(tla.enumSet(pairs: _*) as SetT1(pairT)) as funT1
 
     case SeqT(elemT) =>
       val elemT1 = elemT.toTlaType1

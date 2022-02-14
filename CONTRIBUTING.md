@@ -242,6 +242,14 @@ https://scalameta.org/metals/docs/editors/emacs.html
 
 ## Testing
 
+### Build and run Apalache from source
+
+Execute apalache from the unpackaged source, ensuring any updates are built, run
+
+```sh
+make run <arguments>
+```
+
 ### Unit tests
 
 Run the units

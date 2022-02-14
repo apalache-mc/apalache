@@ -16,7 +16,8 @@ import org.scalatest.{BeforeAndAfterEach, FunSuite}
 /**
  * Unit tests for translating TLA+ expressions to EtcExpr.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
 class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
@@ -738,6 +739,13 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
     val typ = parser("(Int -> a, Int) => Seq(a)")
     val expected = mkAppByName(Seq(typ), "fun", "len")
     val ex = OperEx(ApalacheOper.funAsSeq, tla.name("fun"), tla.name("len"))
+    assert(expected == gen(ex))
+  }
+
+  test("Apalache!SetAsFun(set)") {
+    val typ = parser("Set(<<a, b>>) => (a -> b)")
+    val expected = mkAppByName(Seq(typ), "set")
+    val ex = OperEx(ApalacheOper.setAsFun, tla.name("set"))
     assert(expected == gen(ex))
   }
 
