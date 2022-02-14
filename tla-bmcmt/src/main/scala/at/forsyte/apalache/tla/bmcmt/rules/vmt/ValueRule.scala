@@ -6,8 +6,9 @@ import at.forsyte.apalache.tla.lir.formulas.EUF.{UninterpretedLiteral, Uninterpr
 import at.forsyte.apalache.tla.lir.formulas.Integers.{IntLiteral, IntVar}
 import at.forsyte.apalache.tla.lir.formulas.StandardSorts.UninterpretedSort
 import at.forsyte.apalache.tla.lir.formulas.{StandardSorts, Term}
+import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, IntT1, NameEx, StrT1, TlaEx, Typed, Untyped, ValEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, IntT1, NameEx, OperEx, StrT1, TlaEx, Typed, Untyped, ValEx}
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 // Handles the conversion of literals and names
@@ -18,6 +19,7 @@ class ValueRule extends FormulaRule {
     ex match {
       case ValEx(_: TlaInt | _: TlaStr | _: TlaBool) => true
       case _: NameEx                                 => true
+      case OperEx(TlaActionOper.prime, _: NameEx)    => true
       case _                                         => false
     }
 
@@ -47,8 +49,11 @@ class ValueRule extends FormulaRule {
         case TlaBool(b) => if (b) True else False
         case _          => throwOn(ex)
       }
-    case nameEx: NameEx => termFromNameEx(nameEx)
-    case _              => throwOn(ex)
+    case nameEx: NameEx                                  => termFromNameEx(nameEx)
+    case OperEx(TlaActionOper.prime, nEx @ NameEx(name)) =>
+      // Rename x' to x^ for SMTLIB
+      termFromNameEx(NameEx(s"$name^")(nEx.typeTag))
+    case _ => throwOn(ex)
 
   }
 }

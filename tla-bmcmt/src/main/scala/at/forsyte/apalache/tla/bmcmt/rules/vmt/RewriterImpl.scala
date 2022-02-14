@@ -9,6 +9,7 @@ class RewriterImpl(constSets: Map[String, Sort]) extends Rewriter {
   private val rules: List[FormulaRule] = List(
       new BoolRule(this),
       new QuantifierRule(this, new RestrictedSetJudgement(constSets)),
+      new EUFRule(this),
       new ValueRule,
   )
 

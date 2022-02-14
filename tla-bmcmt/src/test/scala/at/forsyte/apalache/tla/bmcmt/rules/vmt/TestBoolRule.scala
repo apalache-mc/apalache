@@ -52,6 +52,7 @@ class TestBoolRule extends FunSuite {
     expected.foreach { case (k, expected) =>
       val actual = rule(k)
       assert(actual == expected)
+      println(TermWriter.mkSMT2String(actual))
     }
   }
 

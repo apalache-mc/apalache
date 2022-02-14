@@ -62,10 +62,10 @@ class TestTermConstruction extends FunSuite {
 
   test("Apply requirements.") {
 
-    val fNullary = Function(IntSort())
-    val fUnary1 = Function(IntSort(), BoolSort())
-    val fUnary2 = Function(usort1, usort2)
-    val fNary1 = Function(usort2, IntSort(), IntSort(), BoolSort())
+    val fNullary = Function("f", IntSort())
+    val fUnary1 = Function("f", IntSort(), BoolSort())
+    val fUnary2 = Function("f", usort1, usort2)
+    val fNary1 = Function("f", usort2, IntSort(), IntSort(), BoolSort())
 
     // Does not throw
     Apply(fNullary)

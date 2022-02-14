@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.lir.formulas
 
-abstract class Sort(sortName: String)
+abstract class Sort(val sortName: String)
 trait HasSort {
   val sort: Sort
 }
@@ -9,7 +9,7 @@ trait Term extends HasSort
 
 abstract class Variable(name: String) extends Term
 
-sealed case class Function(to: Sort, from: Sort*) {
+sealed case class Function(name: String, to: Sort, from: Sort*) {
   def arity: Int = from.size
 }
 
