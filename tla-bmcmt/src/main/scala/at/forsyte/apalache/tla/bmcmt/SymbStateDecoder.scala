@@ -135,28 +135,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       val funT1 = funT.toTlaType1.asInstanceOf[FunT1]
 
       // a function is represented with the relation {(x, f[x]) : x \in S}
-      // Adds (key :> value) mapping to the `fun`, unless the `key` is already in `keys`
-      // Returns a new set of keys including the added `key` and the new function that includes the mapping
-      def appendPair(keys: Set[TlaEx], fun: TlaEx, key: ArenaCell, value: ArenaCell): (Set[TlaEx], TlaEx) = {
-        val keyEx = decodeCellToTlaEx(arena, key)
-        // If we've already seen the key, don't add it again
-        if (keys(keyEx)) {
-          (keys, fun)
-        } else {
-          val pair = SmileyFunFun.smiley(funT1, keyEx, decodeCellToTlaEx(arena, value))
-          val ex = SmileyFunFun.funfun(funT1, fun, pair)
-          (keys + keyEx, ex)
-        }
-      }
-
-      // In the implementation, every function contains the relation {(x, f[x]) : x \in S}
       val relation = arena.getCdm(cell)
-      val pairs = arena.getHas(relation)
-
-      val domIsEmpty = solverContext.config.smtEncoding match {
-        case `arraysEncoding` =>
-          val domain = arena.getDom(cell)
-          val domainElems = arena.getHas(domain)
 
       def isInRelation(pair: ArenaCell): Boolean = {
         val mem =
@@ -164,23 +143,6 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
               relation.toNameEx as TupT1(funT1.arg, funT1.res)) as BoolT1()
         solverContext.evalGroundExpr(mem) == tla.bool(true).typed(BoolT1())
       }
-          def inDom(elem: ArenaCell): TlaEx = {
-            val elemEx = fromTlaEx(elem.toNameEx).typed(funT1.arg)
-            val domEx = fromTlaEx(domain.toNameEx).typed(SetT1(funT1.arg))
-            tla.apalacheSelectInSet(elemEx, domEx).typed(BoolT1())
-          }
-
-          // Check if the domain is empty
-          val oneElemInDom = tla.or(domainElems map inDom: _*).typed(BoolT1())
-          solverContext.evalGroundExpr(oneElemInDom) == tla.bool(false).typed(BoolT1())
-
-        case `oopsla19Encoding` =>
-          def isInRelation(pair: ArenaCell): Boolean = {
-            val pairEx = fromTlaEx(pair.toNameEx).typed(funT1.arg)
-            val relationEx = fromTlaEx(relation.toNameEx).typed(TupT1(funT1.arg, funT1.res))
-            val mem = tla.apalacheSelectInSet(pairEx, relationEx).typed(BoolT1())
-            solverContext.evalGroundExpr(mem) == tla.bool(true).typed(BoolT1())
-          }
 
       def decodePair(seen: Map[TlaEx, TlaEx], pair: ArenaCell): Map[TlaEx, TlaEx] = {
         val keyCell :: valueCell :: _ = arena.getHas(pair)
@@ -191,37 +153,6 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
           val valueEx = decodeCellToTlaEx(arena, valueCell)
           seen + (keyEx -> valueEx)
         }
-          // Check if the domain is empty
-          pairs find isInRelation match {
-            case None    => true
-            case Some(_) => false
-          }
-
-        case oddEncodingType =>
-          throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
-      }
-
-      if (domIsEmpty) {
-        // this is a pathological case, produce: [ x \in {} |-> x ]
-        tla
-          .funDef(tla.name("x").typed(funT1.arg), tla.name("x").typed(funT1.arg), tla.enumSet().typed(SetT1(funT1.res)))
-          .typed(funT1)
-      } else {
-        // this is the common case
-        val first = pairs.head
-        val keyCell0 :: valueCell0 :: _ = arena.getHas(first)
-        val keyExp = decodeCellToTlaEx(arena, keyCell0)
-        val firstPair = SmileyFunFun.smiley(funT1, keyExp, decodeCellToTlaEx(arena, valueCell0))
-        val keys0 = Set(keyExp) // Used to track seen indices, so we don't include duplicates
-        val (_, fun) = pairs.tail.foldLeft((keys0, firstPair)) { case ((keys, f), p) =>
-          if (p == first) {
-            (keys, f)
-          } else {
-            val idx :: value :: _ = arena.getHas(p)
-            appendPair(keys, f, idx, value)
-          }
-        }
-        fun
       }
 
       val pairT = TupT1(funT1.arg, funT1.res)

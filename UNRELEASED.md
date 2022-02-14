@@ -12,7 +12,3 @@
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
 ### Features
 * Add support for functions in the arrays encoding, see #1169
-
-### Bug fixes
-* Fixed infinite recursion in `consChain`, see #1307
-* Fix a bug where some simplified `Or` expressions were not expected by the rewriting rules, see #1285
