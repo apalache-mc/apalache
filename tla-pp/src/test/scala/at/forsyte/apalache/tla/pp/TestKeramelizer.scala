@@ -184,8 +184,8 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach with Matchers {
     val output = keramelizer.apply(input)
 
     /**
-     * We ignore the second guard to extend a partial function to a total function. This is sound, as
-     * CASE returns some (unknown) value when no guard holds true.
+     * We ignore the second guard to extend a partial function to a total function. This is sound, as CASE returns some
+     * (unknown) value when no guard holds true.
      *
      * IF p_1 THEN e_1 ELSE e_2
      */
@@ -219,7 +219,7 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach with Matchers {
             tla.and(tla.name("p_1") ? "b", tla.name("e_1") ? "b") ? "b",
             tla.and(tla.name("p_2") ? "b", tla.name("e_2") ? "b") ? "b",
             tla.and(tla.not(tla.name("p_1") ? "b") ? "b", tla.not(tla.name("p_2") ? "b") ? "b",
-                tla.name("e_def") ? "b") ? "b"
+                tla.name("e_def") ? "b") ? "b",
         )
         .typed(types, "b")
     assert(expected == output)
@@ -244,7 +244,7 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach with Matchers {
       tla
         .or(
             tla.and(tla.name("p_1") ? "b", tla.name("e_1") ? "b") ? "b",
-            tla.and(tla.name("p_2") ? "b", tla.name("e_2") ? "b") ? "b"
+            tla.and(tla.name("p_2") ? "b", tla.name("e_2") ? "b") ? "b",
         )
         .typed(types, "b")
     assert(expected == output)

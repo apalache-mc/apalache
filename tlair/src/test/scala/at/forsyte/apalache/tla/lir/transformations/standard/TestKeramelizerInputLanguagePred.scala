@@ -111,7 +111,8 @@ class TestKeramelizerInputLanguagePred extends LanguagePredTestSuite {
   }
 
   /**
-   * **************************** additional tests for [[KeramelizerInputLanguagePred]] ********************************************
+   * **************************** additional tests for [[KeramelizerInputLanguagePred]]
+   * ********************************************
    */
   test("accepts binding expressions where first argument is a name") {
     expectOk(pred.isExprOk(exists(name("a"), bool(true))))
