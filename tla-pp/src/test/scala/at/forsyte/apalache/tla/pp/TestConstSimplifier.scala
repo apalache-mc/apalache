@@ -415,7 +415,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
       val universalEx = tla.forall(n_x, n_S, tla.bool(true)) as BoolT1()
       val aResult = simplifier.simplify(universalEx)
 
-      aResult shouldBe (tla.bool(true) as BoolT1()) withClue s"when simplifying ${existentialEx.toString}"
+      aResult shouldBe (tla.bool(true) as BoolT1()) withClue s"when simplifying ${universalEx.toString}"
       eResult shouldBe (tla.bool(false) as BoolT1()) withClue s"when simplifying ${existentialEx.toString}"
       true
     }
