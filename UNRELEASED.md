@@ -14,5 +14,6 @@
 
  * The `profiling.csv` file output by the `--smtprof` flag moved into the
    configurable `run-dir`, see #1321
+
 ### Features
 * Add support for functions in the arrays encoding, see #1169
