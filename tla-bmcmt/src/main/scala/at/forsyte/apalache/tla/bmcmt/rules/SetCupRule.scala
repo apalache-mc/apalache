@@ -1,8 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.util.{ConsChainUtil, Prod2SeqIterator}
-import at.forsyte.apalache.tla.lir.{BuilderEx, OperEx, TypingException}
+import at.forsyte.apalache.tla.lir.{OperEx, TypingException}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
@@ -52,42 +51,19 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
         nextState = nextState.updateArena(_.appendHas(newSetCell, allDistinct: _*))
 
         // require each cell to be in in the union iff it is exactly in its origin set
-        def addOnlyCellCons(thisSet: ArenaCell, elems: Seq[ArenaCell]): Unit = {
-          if (elems.nonEmpty) {
-            def consChain(elems: Seq[ArenaCell]): BuilderEx =
-              ConsChainUtil.consChainFold[ArenaCell](
-                  elems,
-                  newSetCell.toNameEx,
-                  { thisElem =>
-                    val inCup = tla.apalacheStoreInSet(thisElem.toNameEx, newSetCell.toNameEx)
-                    val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, thisSet.toNameEx)
-                    (inCup, inThis)
-                  },
-              )
-
-            val cons = consChain(elems)
-            rewriter.solverContext.assertGroundExpr(tla.apalacheAssignChain(newSetCell.toNameEx, cons))
-          }
+        def addOnlyCellCons(thisSet: ArenaCell, thisElem: ArenaCell): Unit = {
+          val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, thisSet.toNameEx)
+          val inCup = tla.apalacheStoreInSet(thisElem.toNameEx, newSetCell.toNameEx)
+          val notInCup = tla.apalacheStoreNotInSet(thisElem.toNameEx, newSetCell.toNameEx)
+          rewriter.solverContext.assertGroundExpr(tla.ite(inThis, inCup, notInCup))
         }
 
-        def addEitherCellCons(elems: Seq[ArenaCell]): Unit = {
-          if (elems.nonEmpty) {
-            def consChain(elems: Seq[ArenaCell]): BuilderEx =
-              ConsChainUtil.consChainFold[ArenaCell](
-                  elems,
-                  newSetCell.toNameEx,
-                  { thisElem =>
-                    val inCup = tla.apalacheStoreInSet(thisElem.toNameEx, newSetCell.toNameEx)
-                    val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, leftSetCell.toNameEx)
-                    val inOther = tla.apalacheSelectInSet(thisElem.toNameEx, rightSetCell.toNameEx)
-                    val inThisOrOther = tla.or(inThis, inOther)
-                    (inCup, inThisOrOther)
-                  },
-              )
-
-            val cons = consChain(elems)
-            rewriter.solverContext.assertGroundExpr(tla.apalacheAssignChain(newSetCell.toNameEx, cons))
-          }
+        def addEitherCellCons(thisElem: ArenaCell): Unit = {
+          val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, leftSetCell.toNameEx)
+          val inOther = tla.apalacheSelectInSet(thisElem.toNameEx, rightSetCell.toNameEx)
+          val inCup = tla.apalacheStoreInSet(thisElem.toNameEx, newSetCell.toNameEx)
+          val notInCup = tla.apalacheStoreNotInSet(thisElem.toNameEx, newSetCell.toNameEx)
+          rewriter.solverContext.assertGroundExpr(tla.ite(tla.or(inThis, inOther), inCup, notInCup))
         }
 
         // new implementation: as we are not using uninterpreted functions anymore, we do not have to care about
@@ -98,9 +74,9 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
 //        val eqState = rewriter.lazyEq.cacheEqConstraints(rightState.setArena(arena), prodIter.toSeq)
         // bugfix: we have to compare the elements in both sets and thus to introduce a quadratic number of constraints
         // add SMT constraints
-        addOnlyCellCons(leftSetCell, onlyLeft.toSeq)
-        addOnlyCellCons(rightSetCell, onlyRight.toSeq)
-        addEitherCellCons(common.toSeq)
+        onlyLeft foreach (addOnlyCellCons(leftSetCell, _))
+        onlyRight foreach (addOnlyCellCons(rightSetCell, _))
+        common foreach addEitherCellCons
 
         // that's it
         nextState.setRex(newSetCell.toNameEx)

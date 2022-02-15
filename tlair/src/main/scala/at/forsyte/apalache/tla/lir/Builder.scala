@@ -612,16 +612,12 @@ class Builder {
     BuilderOper(ApalacheOper.storeNotInSet, elem, set)
   }
 
-  def apalacheSmtMap(inputSet: BuilderEx, consChain: BuilderEx, resultSet: BuilderEx): BuilderEx = {
-    BuilderOper(ApalacheOper.smtMap, inputSet, consChain, resultSet)
+  def apalacheSmtMap(inputSet: BuilderEx, resultSet: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.smtMap, inputSet, resultSet)
   }
 
-  def apalacheChain(op: BuilderEx, tail: BuilderEx, cond: BuilderEx = bool(true)): BuilderEx = {
-    BuilderOper(ApalacheOper.chain, op, tail, cond)
-  }
-
-  def apalacheAssignChain(elem: BuilderEx, chain: BuilderEx): BuilderEx = {
-    BuilderOper(ApalacheOper.assignChain, elem, chain)
+  def apalacheUnconstrainArray(arrayElemName: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.unconstrainArray, arrayElemName)
   }
 
   private val m_nameMap: Map[String, TlaOper] =
@@ -715,8 +711,7 @@ class Builder {
         ApalacheOper.storeInSet.name -> ApalacheOper.storeInSet,
         ApalacheOper.storeNotInSet.name -> ApalacheOper.storeNotInSet,
         ApalacheOper.smtMap.name -> ApalacheOper.smtMap,
-        ApalacheOper.chain.name -> ApalacheOper.chain,
-        ApalacheOper.assignChain.name -> ApalacheOper.assignChain,
+        ApalacheOper.unconstrainArray.name -> ApalacheOper.unconstrainArray,
         ApalacheOper.setAsFun.name -> ApalacheOper.setAsFun,
     )
 

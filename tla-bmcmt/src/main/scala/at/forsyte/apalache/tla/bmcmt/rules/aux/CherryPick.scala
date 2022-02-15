@@ -2,11 +2,10 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.bmcmt.util.ConsChainUtil
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.values.TlaBool
-import at.forsyte.apalache.tla.lir.{BuilderEx, MalformedSepecificationError, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{MalformedSepecificationError, TlaEx, ValEx}
 
 import scala.collection.immutable.SortedMap
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
@@ -666,34 +665,22 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
     // if resultSet has an element, then it must be also in baseSet
     def inResultIfInBase(elem: ArenaCell): Unit = {
+      // In the oopsla19 encoding resultSet is initially unconstrained, and thus can contain any combination of elems.
+      // To emulate this in the arrays encoding, in which the all sets are initially empty, unconstrained predicates
+      // are used to allow the SMT solver to consider all possible combinations of elems.
+      if (rewriter.solverContext.config.smtEncoding == arraysEncoding) {
+        nextState = nextState.updateArena(_.appendCell(BoolT()))
+        val pred = nextState.arena.topCell.toNameEx
+        val storeElem = tla.apalacheStoreInSet(elem.toNameEx, resultSet.toNameEx)
+        val notStoreElem = tla.apalacheStoreNotInSet(elem.toNameEx, resultSet.toNameEx)
+        rewriter.solverContext.assertGroundExpr(tla.ite(pred, storeElem, notStoreElem))
+      }
+
       val inResult = tla.apalacheSelectInSet(elem.toNameEx, resultSet.toNameEx)
       val inBase = tla.apalacheSelectInSet(elem.toNameEx, baseSet.toNameEx)
       rewriter.solverContext.assertGroundExpr(tla.impl(inResult, inBase))
     }
 
-    // In the oopsla19 encoding resultSet is initially unconstrained, and thus can contain any combination of elems.
-    // To emulate this in the arrays encoding, in which the all sets are initially empty, unconstrained predicates
-    // are used to allow the SMT solver to consider all possible combinations of elems.
-    def unconstrainElems(elems: Seq[ArenaCell]): Unit = {
-      if (rewriter.solverContext.config.smtEncoding == arraysEncoding & elems.nonEmpty) {
-        def consChain(elems: Seq[ArenaCell]): BuilderEx =
-          ConsChainUtil.consChainFold[ArenaCell](
-              elems,
-              resultSet.toNameEx,
-              { elem =>
-                val inResultSet = tla.apalacheStoreInSet(elem.toNameEx, resultSet.toNameEx)
-                nextState = nextState.updateArena(_.appendCell(BoolT()))
-                val pred = nextState.arena.topCell.toNameEx
-                (inResultSet, pred)
-              },
-          )
-
-        val cons = consChain(elems)
-        rewriter.solverContext.assertGroundExpr(tla.apalacheAssignChain(resultSet.toNameEx, cons))
-      }
-    }
-
-    unconstrainElems(elems)
     elems foreach inResultIfInBase
     rewriter.solverContext.log("; } PICK %s FROM %s".format(resultType, set))
     nextState.setRex(resultSet.toNameEx)
