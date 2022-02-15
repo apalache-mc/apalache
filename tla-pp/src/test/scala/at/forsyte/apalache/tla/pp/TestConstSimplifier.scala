@@ -50,7 +50,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
           tla.div(ex, tla.int(1)) as IntT1(),
           tla.exp(ex, tla.int(1)) as IntT1(),
           // A more complex case to ensure recursion works properly: ex + (x - x)
-          tla.plus(ex, tla.minus(tla.name("x") as IntT1(), tla.name("x") as IntT1()) as IntT1()) as IntT1()
+          tla.plus(ex, tla.minus(tla.name("x") as IntT1(), tla.name("x") as IntT1()) as IntT1()) as IntT1(),
       )
       expressions.forall({ expression =>
         try {
@@ -75,7 +75,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
           tla.mult(tla.int(0), ex) as IntT1(),
           tla.div(tla.int(0), ex) as IntT1(),
           tla.mod(ex, tla.int(1)) as IntT1(),
-          tla.mod(ex, ex) as IntT1()
+          tla.mod(ex, ex) as IntT1(),
       )
 
       // 0 ^ ex should not be 0 only when ex == 0
@@ -106,7 +106,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
     val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
       val expressions = List(
           tla.div(ex, ex) as IntT1(),
-          tla.exp(tla.int(1), ex) as IntT1()
+          tla.exp(tla.int(1), ex) as IntT1(),
       )
       expressions.forall({ expression =>
         try {
@@ -236,7 +236,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
           tla.eql(ex, ex) as BoolT1(),
           tla.or(ex, tla.bool(true) as BoolT1()) as BoolT1(),
           tla.impl(ex, tla.bool(true) as BoolT1()) as BoolT1(),
-          tla.impl(tla.bool(false) as BoolT1(), ex) as BoolT1()
+          tla.impl(tla.bool(false) as BoolT1(), ex) as BoolT1(),
       )
       expressions.forall({ expression =>
         try {
@@ -257,7 +257,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
     val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
       val expressions = List(
           tla.neql(ex, ex) as BoolT1(),
-          tla.and(ex, tla.bool(false) as BoolT1()) as BoolT1()
+          tla.and(ex, tla.bool(false) as BoolT1()) as BoolT1(),
       )
       expressions.forall({ expression =>
         try {
@@ -285,7 +285,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
           tla.ite(tla.bool(false) as BoolT1(), tla.bool(false) as BoolT1(), ex) as BoolT1(),
           tla.ite(ex, tla.bool(true) as BoolT1(), tla.bool(false) as BoolT1()) as BoolT1(),
           tla.ite(ex, ex, ex) as BoolT1(),
-          tla.not(tla.not(ex) as BoolT1()) as BoolT1()
+          tla.not(tla.not(ex) as BoolT1()) as BoolT1(),
       )
       expressions.forall({ expression =>
         try {
@@ -306,7 +306,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
     val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
       val expressions = List(
           tla.impl(ex, tla.bool(false) as BoolT1()) as BoolT1(),
-          tla.ite(ex, tla.bool(false) as BoolT1(), tla.bool(true) as BoolT1()) as BoolT1()
+          tla.ite(ex, tla.bool(false) as BoolT1(), tla.bool(true) as BoolT1()) as BoolT1(),
       )
 
       expressions.forall({ expression =>
@@ -334,37 +334,37 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
         trueExpressions = Seq(
             tla.lt(tla.int(a), tla.int(b)) as BoolT1(),
             tla.le(tla.int(a), tla.int(b)) as BoolT1(),
-            tla.neql(tla.int(a), tla.int(b)) as BoolT1()
+            tla.neql(tla.int(a), tla.int(b)) as BoolT1(),
         )
 
         falseExpressions = Seq(
             tla.eql(tla.int(a), tla.int(b)) as BoolT1(),
             tla.gt(tla.int(a), tla.int(b)) as BoolT1(),
-            tla.ge(tla.int(a), tla.int(b)) as BoolT1()
+            tla.ge(tla.int(a), tla.int(b)) as BoolT1(),
         )
       } else if (a > b) {
         trueExpressions = Seq(
             tla.gt(tla.int(a), tla.int(b)) as BoolT1(),
             tla.ge(tla.int(a), tla.int(b)) as BoolT1(),
-            tla.neql(tla.int(a), tla.int(b)) as BoolT1()
+            tla.neql(tla.int(a), tla.int(b)) as BoolT1(),
         )
 
         falseExpressions = Seq(
             tla.eql(tla.int(a), tla.int(b)) as BoolT1(),
             tla.lt(tla.int(a), tla.int(b)) as BoolT1(),
-            tla.le(tla.int(a), tla.int(b)) as BoolT1()
+            tla.le(tla.int(a), tla.int(b)) as BoolT1(),
         )
       } else {
         trueExpressions = Seq(
             tla.ge(tla.int(a), tla.int(b)) as BoolT1(),
             tla.le(tla.int(a), tla.int(b)) as BoolT1(),
-            tla.eql(tla.int(a), tla.int(b)) as BoolT1()
+            tla.eql(tla.int(a), tla.int(b)) as BoolT1(),
         )
 
         falseExpressions = Seq(
             tla.neql(tla.int(a), tla.int(b)) as BoolT1(),
             tla.lt(tla.int(a), tla.int(b)) as BoolT1(),
-            tla.gt(tla.int(a), tla.int(b)) as BoolT1()
+            tla.gt(tla.int(a), tla.int(b)) as BoolT1(),
         )
       }
 
@@ -405,6 +405,23 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
     check(prop, minSuccessful(1000), sizeRange(8))
   }
 
+  test("simplifies quantifiers with constant bodies") {
+    val prop = forAll(gens.genType1) { t: TlaType1 =>
+      def n_x = tla.name("x") as t
+      def n_S = tla.name("S") as SetT1(t)
+      val existentialEx = tla.exists(n_x, n_S, tla.bool(false)) as BoolT1()
+      val eResult = simplifier.simplify(existentialEx)
+
+      val universalEx = tla.forall(n_x, n_S, tla.bool(true)) as BoolT1()
+      val aResult = simplifier.simplify(universalEx)
+
+      aResult shouldBe (tla.bool(true) as BoolT1()) withClue s"when simplifying ${existentialEx.toString}"
+      eResult shouldBe (tla.bool(false) as BoolT1()) withClue s"when simplifying ${existentialEx.toString}"
+      true
+    }
+    check(prop, minSuccessful(1000), sizeRange(8))
+  }
+
   test("evaluates logical expressions over constants") {
     var trueExpressions: Seq[TlaEx] = Seq(
         tla.not(tla.bool(false)) as BoolT1(),
@@ -412,14 +429,14 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
         tla.impl(tla.bool(false), tla.bool(false)) as BoolT1(),
         tla.impl(tla.bool(true), tla.bool(true)) as BoolT1(),
         tla.and(tla.bool(true)) as BoolT1(),
-        tla.and() as BoolT1()
+        tla.and() as BoolT1(),
     )
 
     var falseExpressions: Seq[TlaEx] = Seq(
         tla.not(tla.bool(true)) as BoolT1(),
         tla.impl(tla.bool(true), tla.bool(false)) as BoolT1(),
         tla.or(tla.bool(false)) as BoolT1(),
-        tla.or() as BoolT1()
+        tla.or() as BoolT1(),
     )
 
     trueExpressions.forall({ expression =>
@@ -458,7 +475,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
               // x \notin y = !(x \in y)
               (tla.notin(e1, e2) as BoolT1()) -> (tla.not(tla.in(e1, e2) as BoolT1()) as BoolT1()),
               // !(x \notin y) = x \in y
-              (tla.not(tla.notin(e1, e2) as BoolT1()) as BoolT1()) -> (tla.in(e1, e2) as BoolT1())
+              (tla.not(tla.notin(e1, e2) as BoolT1()) as BoolT1()) -> (tla.in(e1, e2) as BoolT1()),
           )
 
           expectations.forall { case (expression, expectedSimplification) =>

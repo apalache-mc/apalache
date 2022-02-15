@@ -11,14 +11,15 @@ import scala.math.BigInt
  *
  * <p>Bugfix #450: make sure that the integers are simplified with BigInt.</p>
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 abstract class ConstSimplifierBase {
   private val boolTag = Typed(BoolT1())
   private val intTag = Typed(IntT1())
 
-  private val trueEx = ValEx(TlaBool(true))(boolTag)
-  private val falseEx = ValEx(TlaBool(false))(boolTag)
+  private def trueEx = ValEx(TlaBool(true))(boolTag)
+  private def falseEx = ValEx(TlaBool(false))(boolTag)
 
   /**
    * A shallow simplification that does not recurse into the expression structure.
@@ -203,6 +204,11 @@ abstract class ConstSimplifierBase {
       simplifyShallow(OperEx(TlaBoolOper.or, pred, elseEx)(boolTag))
     // IF x THEN y ELSE y = y
     case OperEx(TlaControlOper.ifThenElse, _, thenEx, elseEx) if (thenEx == elseEx) => thenEx
+
+    // \E x \in S: FALSE = FALSE
+    case OperEx(TlaBoolOper.exists, _, _, ValEx(TlaBool(false))) => falseEx
+    // \A x \in S: TRUE = TRUE
+    case OperEx(TlaBoolOper.forall, _, _, ValEx(TlaBool(true))) => trueEx
 
     // default
     case ex =>
