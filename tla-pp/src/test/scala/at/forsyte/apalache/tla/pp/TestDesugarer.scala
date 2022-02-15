@@ -68,9 +68,15 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
       "i_ii_2_2_to_ii_2" -> FunT1(TupT1(IntT1(), TupT1(IntT1(), IntT1())), TupT1(IntT1(), IntT1())),
   )
 
+  private val varNames = Set(
+      "x",
+      "y",
+      "z",
+  )
+
   override def beforeEach(): Unit = {
     gen = new UniqueNameGenerator()
-    desugarer = new Desugarer(gen, new IdleTracker())
+    desugarer = new Desugarer(gen, varNames, new IdleTracker())
   }
 
   // call the operator that returns a function of type stored in exceptTypes(funAlias) and access it with indices
@@ -353,34 +359,38 @@ class TestDesugarer extends FunSuite with BeforeAndAfterEach {
 
   test("""rewrite UNCHANGED x to x' := x""") {
     // input: x
-    val input = tla
-      .unchanged(tla.name("x") ? "i")
-      .typed(unchangedTypes, "b")
+    def xAsI = tla.name("x") as IntT1()
+    val input = tla.unchanged(xAsI) as BoolT1()
     val output = desugarer.transform(input)
     // output: x' = x
-    def xAsI = tla.name("x") as IntT1()
     val expected = tla.assign(tla.prime(xAsI) as IntT1(), xAsI) as BoolT1()
+    assert(expected eqTyped output)
+  }
+
+  test("""rewrite UNCHANGED N to N' = N""") {
+    // input: N
+    def nAsI = tla.name("N") as IntT1()
+    val input = tla.unchanged(nAsI) as BoolT1()
+    val output = desugarer.transform(input)
+    // output: x' = x
+    val expected = tla.eql(tla.prime(nAsI) as IntT1(), nAsI) as BoolT1()
     assert(expected eqTyped output)
   }
 
   test("""rewrite UNCHANGED <<x, <<y>> >> to x' := x /\ y' := y""") {
     // input: <<x, <<y>> >>
-    val input =
-      tla
-        .unchanged(tla.tuple(tla.name("x") ? "i", tla.tuple(tla.name("y") ? "b") ? "b1") ? "i_b1_2")
-        .typed(unchangedTypes, "b")
-    val output = desugarer.transform(input)
-    // output: x' = x /\ y' = y
     def varAsT(name: String, t: TlaType1) = tla.name(name) as t
     def n_x = varAsT("x", IntT1())
     def n_y = varAsT("y", BoolT1())
+    val input =
+      tla.unchanged(tla.tuple(n_x, tla.tuple(n_y) as TupT1(BoolT1())) as TupT1(IntT1(), TupT1(BoolT1()))) as BoolT1()
+    val output = desugarer.transform(input)
+    // output: x' = x /\ y' = y
     val expected: TlaEx =
-      tla
-        .and(
-            tla.assign(tla.prime(n_x) as IntT1(), n_x) as BoolT1(),
-            tla.assign(tla.prime(n_y) as BoolT1(), n_y) as BoolT1(),
-        )
-        .typed(unchangedTypes, "b")
+      tla.and(
+          tla.assign(tla.prime(n_x) as IntT1(), n_x) as BoolT1(),
+          tla.assign(tla.prime(n_y) as BoolT1(), n_y) as BoolT1(),
+      ) as BoolT1()
     assert(expected eqTyped output)
   }
 
