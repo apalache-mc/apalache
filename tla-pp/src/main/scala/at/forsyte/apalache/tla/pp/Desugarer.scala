@@ -16,7 +16,7 @@ import javax.inject.Singleton
  *   Igor Konnov, Jure Kukovec
  */
 @Singleton
-class Desugarer(gen: UniqueNameGenerator, varNames: Set[String], tracker: TransformationTracker)
+class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: TransformationTracker)
     extends TlaExTransformation {
 
   override def apply(expr: TlaEx): TlaEx = {
@@ -56,8 +56,8 @@ class Desugarer(gen: UniqueNameGenerator, varNames: Set[String], tracker: Transf
         def xb = tla.fromTlaEx(x) as tt
         // We translate UNCHANGED x' to x' := x and the generic UNCHANGED e to (e)' = e
         val asgnOrEq: (TlaEx, TlaEx) => BuilderEx = x match {
-          case NameEx(n) if varNames.contains(n) => tla.assign(_, _)
-          case _                                 => tla.eql(_, _)
+          case NameEx(n) if stateVariables.contains(n) => tla.assign(_, _)
+          case _                                       => tla.eql(_, _)
         }
         asgnOrEq(tla.prime(xb) as tt, xb) as BoolT1()
       }
@@ -393,7 +393,7 @@ class Desugarer(gen: UniqueNameGenerator, varNames: Set[String], tracker: Transf
 }
 
 object Desugarer {
-  def apply(gen: UniqueNameGenerator, varNames: Set[String], tracker: TransformationTracker): Desugarer = {
-    new Desugarer(gen, varNames, tracker)
+  def apply(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: TransformationTracker): Desugarer = {
+    new Desugarer(gen, stateVariables, tracker)
   }
 }
