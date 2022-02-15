@@ -151,7 +151,7 @@ object TlaSetOper {
    * To construct an empty set, use `enumSet` with no arguments.
    */
   object times extends TlaSetOper {
-    override val arity = AnyArity()
+    override val arity = MinimalArity(2)
     override val name = "SET_TIMES"
     override val precedence: (Int, Int) = (10, 13)
   }

@@ -1379,11 +1379,13 @@ class TestBuilder extends FunSuite with TestingPredefs {
 
     assert(setminusBuild == OperEx(TlaSetOper.setminus, n_a, n_b))
 
-    val timesBuild1 = bd.times().untyped()
-    val timesBuild2 = bd.times(n_a, n_b).untyped()
+    val timesBuild1 = bd.times(n_a, n_b).untyped()
+    val timesBuild2 = bd.times(n_a, n_b, n_c).untyped()
 
-    assert(timesBuild1 == OperEx(TlaSetOper.times))
-    assert(timesBuild2 == OperEx(TlaSetOper.times, n_a, n_b))
+    assertThrows[IllegalArgumentException](bd.times().untyped())
+    assertThrows[IllegalArgumentException](bd.times(n_a).untyped())
+    assert(timesBuild1 == OperEx(TlaSetOper.times, n_a, n_b))
+    assert(timesBuild2 == OperEx(TlaSetOper.times, n_a, n_b, n_c))
 
     val powSetBuild = bd.powSet(n_a).untyped()
 
@@ -1473,11 +1475,13 @@ class TestBuilder extends FunSuite with TestingPredefs {
     assert(setminusBuild == OperEx(TlaSetOper.setminus, n_a, n_b))
     assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.setminus.name, n_a, n_b, n_c).untyped())
 
-    val timesBuild1 = bd.byName(TlaSetOper.times.name).untyped()
-    val timesBuild2 = bd.byName(TlaSetOper.times.name, n_a, n_b).untyped()
+    val timesBuild1 = bd.byName(TlaSetOper.times.name, n_a, n_b).untyped()
+    val timesBuild2 = bd.byName(TlaSetOper.times.name, n_a, n_b, n_c).untyped()
 
-    assert(timesBuild1 == OperEx(TlaSetOper.times))
-    assert(timesBuild2 == OperEx(TlaSetOper.times, n_a, n_b))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.times.name).untyped())
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.times.name, n_a).untyped())
+    assert(timesBuild1 == OperEx(TlaSetOper.times, n_a, n_b))
+    assert(timesBuild2 == OperEx(TlaSetOper.times, n_a, n_b, n_c))
 
     val powSetBuild = bd.byName(TlaSetOper.powerset.name, n_a).untyped()
 
@@ -1594,11 +1598,15 @@ class TestBuilder extends FunSuite with TestingPredefs {
     assert(setminusBuild == OperEx(TlaSetOper.setminus, n_a, n_b))
     assert(setminusBuildBad2 == NullEx)
 
-    val timesBuild1 = bd.byNameOrNull(TlaSetOper.times.name).untyped()
-    val timesBuild2 = bd.byNameOrNull(TlaSetOper.times.name, n_a, n_b).untyped()
+    val timesBuildBad1 = bd.byNameOrNull(TlaSetOper.times.name).untyped()
+    val timesBuildBad2 = bd.byNameOrNull(TlaSetOper.times.name, n_a).untyped()
+    val timesBuild1 = bd.byNameOrNull(TlaSetOper.times.name, n_a, n_b).untyped()
+    val timesBuild2 = bd.byNameOrNull(TlaSetOper.times.name, n_a, n_b, n_c).untyped()
 
-    assert(timesBuild1 == OperEx(TlaSetOper.times))
-    assert(timesBuild2 == OperEx(TlaSetOper.times, n_a, n_b))
+    assert(timesBuildBad1 == NullEx)
+    assert(timesBuildBad2 == NullEx)
+    assert(timesBuild1 == OperEx(TlaSetOper.times, n_a, n_b))
+    assert(timesBuild2 == OperEx(TlaSetOper.times, n_a, n_b, n_c))
 
     val powersetBuildBad1 = bd.byNameOrNull(TlaSetOper.powerset.name).untyped()
     val powersetBuild = bd.byNameOrNull(TlaSetOper.powerset.name, n_a).untyped()
