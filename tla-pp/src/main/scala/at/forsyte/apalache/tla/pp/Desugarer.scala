@@ -12,10 +12,12 @@ import javax.inject.Singleton
 /**
  * <p>Remove all annoying syntactic sugar.</p>
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov, Jure Kukovec
  */
 @Singleton
-class Desugarer(gen: UniqueNameGenerator, tracker: TransformationTracker) extends TlaExTransformation {
+class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: TransformationTracker)
+    extends TlaExTransformation {
 
   override def apply(expr: TlaEx): TlaEx = {
     transform(expr)
@@ -51,10 +53,13 @@ class Desugarer(gen: UniqueNameGenerator, tracker: TransformationTracker) extend
       // map every x to x' = x
       val eqs = flatArgs map { x: TlaEx =>
         val tt = x.typeTag.asTlaType1()
-        val xb = tla.fromTlaEx(x)
-        tla
-          .eql(tla.prime(xb) ? "x", xb)
-          .typed(Map("b" -> BoolT1(), "x" -> tt), "b")
+        def xb = tla.fromTlaEx(x) as tt
+        // We translate UNCHANGED x' to x' := x and the generic UNCHANGED e to (e)' = e
+        val asgnOrEq: (TlaEx, TlaEx) => BuilderEx = x match {
+          case NameEx(n) if stateVariables.contains(n) => tla.assign(_, _)
+          case _                                       => tla.eql(_, _)
+        }
+        asgnOrEq(tla.prime(xb) as tt, xb) as BoolT1()
       }
       // x' = x /\ y' = y /\ z' = z
       eqs match {
@@ -230,10 +235,14 @@ class Desugarer(gen: UniqueNameGenerator, tracker: TransformationTracker) extend
   /**
    * Transform filter expressions like {<< x, y >> \in S: x = 1} to { x_y \in S: x_y[1] = 1 }
    *
-   * @param boundEx a bound expression, e.g., x or << x, y >>
-   * @param setEx   a set expression, e.g., S
-   * @param predEx  a predicate expression, e.g., x == 1
-   * @return transformed arguments
+   * @param boundEx
+   *   a bound expression, e.g., x or << x, y >>
+   * @param setEx
+   *   a set expression, e.g., S
+   * @param predEx
+   *   a predicate expression, e.g., x == 1
+   * @return
+   *   transformed arguments
    */
   def collapseTuplesInFilter(boundEx: TlaEx, setEx: TlaEx, predEx: TlaEx): Seq[TlaEx] = {
     val boundName = mkTupleName(boundEx) // rename a tuple into a name, if needed
@@ -247,9 +256,12 @@ class Desugarer(gen: UniqueNameGenerator, tracker: TransformationTracker) extend
   /**
    * Transform filter expressions like {x : << x, y >> \in S} to { x_y[1] : x_y \in S }
    *
-   * @param mapEx the mapping, e.g., x
-   * @param args  bindings and sets
-   * @return transformed arguments
+   * @param mapEx
+   *   the mapping, e.g., x
+   * @param args
+   *   bindings and sets
+   * @return
+   *   transformed arguments
    */
   def collapseTuplesInMap(mapEx: TlaEx, args: Seq[TlaEx]): Seq[TlaEx] = {
     val (boundEs, setEs) = TlaOper.deinterleave(args)
@@ -381,7 +393,7 @@ class Desugarer(gen: UniqueNameGenerator, tracker: TransformationTracker) extend
 }
 
 object Desugarer {
-  def apply(gen: UniqueNameGenerator, tracker: TransformationTracker): Desugarer = {
-    new Desugarer(gen, tracker)
+  def apply(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: TransformationTracker): Desugarer = {
+    new Desugarer(gen, stateVariables, tracker)
   }
 }
