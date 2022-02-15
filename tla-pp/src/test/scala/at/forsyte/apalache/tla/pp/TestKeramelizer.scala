@@ -300,7 +300,7 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach with Matchers {
     // Generator for PBT
     val gens = new IrGenerators { override val maxArgs: Int = 3 }
     // Generated operators
-    val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
+    val ops = gens.simpleOperators ++ gens.logicOperators ++ gens.arithOperators ++ gens.setOperators
     // Predicates for Keramelizer input and Keramelizer output (= KerA+)
     val inputPred = KeramelizerInputLanguagePred()
     val outputPred = KeraLanguagePred()
