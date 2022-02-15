@@ -9,15 +9,10 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.prop.Checkers
 import org.scalatest.{AppendedClues, Matchers}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.lir.{IntT1, BoolT1}
+import at.forsyte.apalache.tla.lir.{BoolT1, IntT1}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.TypedPredefs._
-import at.forsyte.apalache.tla.typecheck._
-
-import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 
 /**
  * Tests for ConstSimplifier.
@@ -34,6 +29,14 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
     e1 <- gens.genTlaEx(ops)(gens.emptyContext)
     e2 <- gens.genTlaEx(ops)(gens.emptyContext)
   } yield (e1, e2)
+
+  private def nonemptySetGen(k: Int): Gen[TlaEx] = for {
+    n <- Gen.choose(1, k)
+    s <- Gen.pick(n, 0 until k)
+    literalNonEmpty = tla.enumSet(s map { i => tla.int(i) as IntT1() }: _*) as SetT1(IntT1())
+    symbolic = tla.name("S") as SetT1(IntT1())
+    v <- Gen.oneOf(literalNonEmpty, symbolic)
+  } yield v
 
   override def beforeEach(): Unit = {
     simplifier = new ConstSimplifier(new IdleTracker())
@@ -405,18 +408,54 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
     check(prop, minSuccessful(1000), sizeRange(8))
   }
 
-  test("simplifies quantifiers with constant bodies") {
+  test("simplifies quantifiers which rewrite to Boolean constants") {
     val prop = forAll(gens.genType1) { t: TlaType1 =>
       def n_x = tla.name("x") as t
       def n_S = tla.name("S") as SetT1(t)
-      val existentialEx = tla.exists(n_x, n_S, tla.bool(false)) as BoolT1()
-      val eResult = simplifier.simplify(existentialEx)
+      def n_p = tla.name("p") as BoolT1()
 
-      val universalEx = tla.forall(n_x, n_S, tla.bool(true)) as BoolT1()
-      val aResult = simplifier.simplify(universalEx)
+      def emptySet = tla.enumSet() as SetT1(t)
 
-      aResult shouldBe (tla.bool(true) as BoolT1()) withClue s"when simplifying ${universalEx.toString}"
-      eResult shouldBe (tla.bool(false) as BoolT1()) withClue s"when simplifying ${existentialEx.toString}"
+      // \E x \in {}: P
+      val existsEmpty = tla.exists(n_x, emptySet, n_p) as BoolT1()
+      val existsEmptyResult = simplifier.simplify(existsEmpty)
+      // \A x \in {}: P
+      val forallEmpty = tla.forall(n_x, emptySet, n_p) as BoolT1()
+      val forallEmptyResult = simplifier.simplify(forallEmpty)
+      // \E x \in S: FALSE
+      val existsFalse = tla.exists(n_x, n_S, tla.bool(false)) as BoolT1()
+      val existsFalseResult = simplifier.simplify(existsFalse)
+      // \A x \in S: TRUE
+      val forallTrue = tla.forall(n_x, n_S, tla.bool(true)) as BoolT1()
+      val forallTrueResult = simplifier.simplify(forallTrue)
+
+      existsEmptyResult shouldBe (tla.bool(false) as BoolT1()) withClue s"when simplifying ${existsEmpty.toString}"
+      forallEmptyResult shouldBe (tla.bool(true) as BoolT1()) withClue s"when simplifying ${forallEmpty.toString}"
+      forallTrueResult shouldBe (tla.bool(true) as BoolT1()) withClue s"when simplifying ${forallTrue.toString}"
+      existsFalseResult shouldBe (tla.bool(false) as BoolT1()) withClue s"when simplifying ${existsFalse.toString}"
+      true
+    }
+    check(prop, minSuccessful(1000), sizeRange(8))
+  }
+
+  test("simplifies quantifiers which rewrite to set emptiness checks") {
+    val prop = forAll(nonemptySetGen(10)) { setEx =>
+      def n_x = tla.name("x") as IntT1()
+
+      def emptySet = tla.enumSet() as SetT1(IntT1())
+
+      // \E x \in S: TRUE
+      val existsTrue = tla.exists(n_x, setEx, tla.bool(true)) as BoolT1()
+      val existsTrueResult = simplifier.simplify(existsTrue)
+      // \A x \in S: FALSE
+      val forallFalse = tla.forall(n_x, setEx, tla.bool(false)) as BoolT1()
+      val forallFalseResult = simplifier.simplify(forallFalse)
+
+      def eql = tla.eql(setEx, emptySet) as BoolT1()
+
+      existsTrueResult shouldBe (tla.not(eql) as BoolT1()) withClue s"when simplifying ${existsTrue.toString}"
+      forallFalseResult shouldBe eql withClue s"when simplifying ${forallFalse.toString}"
+
       true
     }
     check(prop, minSuccessful(1000), sizeRange(8))
