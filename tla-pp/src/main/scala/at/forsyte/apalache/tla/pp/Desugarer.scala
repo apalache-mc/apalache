@@ -13,7 +13,7 @@ import javax.inject.Singleton
  * <p>Remove all annoying syntactic sugar.</p>
  *
  * @author
- *   Igor Konnov
+ *   Igor Konnov, Jure Kukovec
  */
 @Singleton
 class Desugarer(gen: UniqueNameGenerator, varNames: Set[String], tracker: TransformationTracker)
@@ -54,7 +54,7 @@ class Desugarer(gen: UniqueNameGenerator, varNames: Set[String], tracker: Transf
       val eqs = flatArgs map { x: TlaEx =>
         val tt = x.typeTag.asTlaType1()
         def xb = tla.fromTlaEx(x) as tt
-        // We translate UNCHANGED x' to x' := x and UNCHANGED F[x] to the generic F[x]' = F[x]
+        // We translate UNCHANGED x' to x' := x and the generic UNCHANGED e to (e)' = e
         val asgnOrEq: (TlaEx, TlaEx) => BuilderEx = x match {
           case NameEx(n) if varNames.contains(n) => tla.assign(_, _)
           case _                                 => tla.eql(_, _)
