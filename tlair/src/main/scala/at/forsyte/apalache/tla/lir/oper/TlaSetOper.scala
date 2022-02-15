@@ -35,7 +35,7 @@ object TlaSetOper {
    * that is, `ValEx(TlaStr("..."))` and not `NameEx("...")`.
    */
   object recSet extends TlaSetOper {
-    override def arity: OperArity = AnyEvenArity()
+    override def arity: OperArity = new OperArity(k => k >= 2 && k % 2 == 0)
 
     override val name: String = "RECORD_SET"
     override val precedence: (Int, Int) = (16, 16) // as the function application

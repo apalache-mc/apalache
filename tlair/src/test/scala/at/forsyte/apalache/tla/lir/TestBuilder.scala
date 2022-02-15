@@ -1360,13 +1360,13 @@ class TestBuilder extends FunSuite with TestingPredefs {
 
     assert(funSetBuild == OperEx(TlaSetOper.funSet, n_a, n_b))
 
-    val recSetBuild1 = bd.recSet().untyped()
-    val recSetBuild2 = bd.recSet(n_a, n_b).untyped()
+    val recSetBuild1 = bd.recSet(n_a, n_b).untyped()
+    val recSetBuild2 = bd.recSet(n_a, n_b, n_c, n_d).untyped()
 
-    assert(recSetBuild1 == OperEx(TlaSetOper.recSet))
-    assertThrows[IllegalArgumentException](bd.recSet(n_a).untyped())
-    assert(recSetBuild2 == OperEx(TlaSetOper.recSet, n_a, n_b))
+    assert(recSetBuild1 == OperEx(TlaSetOper.recSet, n_a, n_b))
     assertThrows[IllegalArgumentException](bd.recSet(n_a, n_b, n_c).untyped())
+    assert(recSetBuild2 == OperEx(TlaSetOper.recSet, n_a, n_b, n_c, n_d))
+    assertThrows[IllegalArgumentException](bd.recSet(n_a, n_b, n_c, n_d, n_e).untyped())
 
     val seqSetBuild = bd.seqSet(n_a).untyped()
 
@@ -1449,13 +1449,15 @@ class TestBuilder extends FunSuite with TestingPredefs {
     assert(funSetBuild == OperEx(TlaSetOper.funSet, n_a, n_b))
     assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.funSet.name, n_a, n_b, n_c).untyped())
 
-    val recSetBuild1 = bd.byNameOrNull(TlaSetOper.recSet.name).untyped()
-    val recSetBuild2 = bd.byNameOrNull(TlaSetOper.recSet.name, n_a, n_b).untyped()
+    val recSetBuild1 = bd.byNameOrNull(TlaSetOper.recSet.name, n_a, n_b).untyped()
+    val recSetBuild2 = bd.byNameOrNull(TlaSetOper.recSet.name, n_a, n_b, n_c, n_d).untyped()
 
-    assert(recSetBuild1 == OperEx(TlaSetOper.recSet))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.recSet.name).untyped())
     assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.recSet.name, n_a).untyped())
-    assert(recSetBuild2 == OperEx(TlaSetOper.recSet, n_a, n_b))
+    assert(recSetBuild1 == OperEx(TlaSetOper.recSet, n_a, n_b))
     assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.recSet.name, n_a, n_b, n_c).untyped())
+    assert(recSetBuild2 == OperEx(TlaSetOper.recSet, n_a, n_b, n_c, n_d))
+    assertThrows[IllegalArgumentException](bd.byName(TlaSetOper.recSet.name, n_a, n_b, n_c, n_d, n_e).untyped())
 
     val seqSetBuild = bd.byName(TlaSetOper.seqSet.name, n_a).untyped()
 
@@ -1564,15 +1566,19 @@ class TestBuilder extends FunSuite with TestingPredefs {
     assert(funSetBuild == OperEx(TlaSetOper.funSet, n_a, n_b))
     assert(funSetBuildBad2 == NullEx)
 
-    val recSetBuild1 = bd.byNameOrNull(TlaSetOper.recSet.name).untyped()
+    val recSetBuildBad0 = bd.byNameOrNull(TlaSetOper.recSet.name).untyped()
     val recSetBuildBad1 = bd.byNameOrNull(TlaSetOper.recSet.name, n_a).untyped()
-    val recSetBuild2 = bd.byNameOrNull(TlaSetOper.recSet.name, n_a, n_b).untyped()
+    val recSetBuild1 = bd.byNameOrNull(TlaSetOper.recSet.name, n_a, n_b).untyped()
     val recSetBuildBad2 = bd.byNameOrNull(TlaSetOper.recSet.name, n_a, n_b, n_c).untyped()
+    val recSetBuild2 = bd.byNameOrNull(TlaSetOper.recSet.name, n_a, n_b, n_c, n_d).untyped()
+    val recSetBuildBad3 = bd.byNameOrNull(TlaSetOper.recSet.name, n_a, n_b, n_c, n_d, n_e).untyped()
 
-    assert(recSetBuild1 == OperEx(TlaSetOper.recSet))
+    assert(recSetBuildBad0 == NullEx)
     assert(recSetBuildBad1 == NullEx)
-    assert(recSetBuild2 == OperEx(TlaSetOper.recSet, n_a, n_b))
+    assert(recSetBuild1 == OperEx(TlaSetOper.recSet, n_a, n_b))
     assert(recSetBuildBad2 == NullEx)
+    assert(recSetBuild2 == OperEx(TlaSetOper.recSet, n_a, n_b, n_c, n_d))
+    assert(recSetBuildBad3 == NullEx)
 
     val seqSetBuildBad1 = bd.byNameOrNull(TlaSetOper.seqSet.name).untyped()
     val seqSetBuild = bd.byNameOrNull(TlaSetOper.seqSet.name, n_a).untyped()
