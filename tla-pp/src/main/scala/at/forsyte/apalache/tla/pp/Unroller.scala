@@ -24,8 +24,7 @@ import at.forsyte.apalache.tla.lir.values.TlaInt
  *
  * Example: Fact(n) == IF n <= 0 THEN 1 ELSE n * Fact(n-1) UNROLL_TIMES_Fact == 1 UNROLL_DEFAULT_Fact == 0
  *
- * \|
- * \| V
+ * \| \| V
  *
  * Unrolled_Fact(n) == IF n <= 0 THEN 1 ELSE n * ( IF n-1 <= 0 THEN 1 ELSE (n-1) * 0 )
  *
