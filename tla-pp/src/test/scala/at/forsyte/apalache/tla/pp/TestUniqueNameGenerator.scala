@@ -1,11 +1,12 @@
 package at.forsyte.apalache.tla.pp
 
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
 
 @RunWith(classOf[JUnitRunner])
-class TestUniqueNameGenerator extends FunSuite with BeforeAndAfterEach {
+class TestUniqueNameGenerator extends AnyFunSuite with BeforeAndAfterEach {
   test("first three") {
     val gen = new UniqueNameGenerator
     assert("t_1" == gen.newName())

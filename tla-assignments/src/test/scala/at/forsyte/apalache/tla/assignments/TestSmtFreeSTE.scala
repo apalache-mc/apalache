@@ -6,11 +6,11 @@ import at.forsyte.apalache.tla.lir.TestingPredefs
 import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestSmtFreeSTE extends FunSuite with TestingPredefs {
+class TestSmtFreeSTE extends AnyFunSuite with TestingPredefs {
 
   val sourceLoc = new SourceLocator(Map.empty, new ChangeListener)
 

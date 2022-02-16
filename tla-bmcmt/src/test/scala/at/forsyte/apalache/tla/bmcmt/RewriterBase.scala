@@ -5,9 +5,9 @@ import java.io.{PrintWriter, StringWriter}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import org.scalatest.fixture
+import org.scalatest.funsuite.FixtureAnyFunSuite
 
-trait RewriterBase extends fixture.FunSuite {
+trait RewriterBase extends FixtureAnyFunSuite {
   protected type FixtureParam = SMTEncoding
 
   protected var solverContext: SolverContext = _

@@ -7,13 +7,14 @@ import UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.io.lir.TextLayout
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
 
 import java.io.{PrintWriter, StringWriter}
 
 @RunWith(classOf[JUnitRunner])
-class TestPrettyWriterWithAnnotations extends FunSuite with BeforeAndAfterEach {
+class TestPrettyWriterWithAnnotations extends AnyFunSuite with BeforeAndAfterEach {
   private var stringWriter: StringWriter = _
   private var printWriter: PrintWriter = _
   private val layout80 = TextLayout().copy(textWidth = 80)

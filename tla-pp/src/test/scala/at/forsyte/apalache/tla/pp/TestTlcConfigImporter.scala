@@ -9,14 +9,15 @@ import at.forsyte.apalache.io.lir.{PrettyWriter, TextLayout}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.typecheck.{MultiTypeCheckerListener, TypeCheckerTool}
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{Assertion, BeforeAndAfterEach, FunSuite}
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.{Assertion, BeforeAndAfterEach}
+import org.scalatest.funsuite.AnyFunSuite
 
 import java.io.{PrintWriter, StringWriter}
 import scala.io.Source
 
 @RunWith(classOf[JUnitRunner])
-class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
+class TestTlcConfigImporter extends AnyFunSuite with BeforeAndAfterEach {
   private var sourceStore: SourceStore = _
   private var annotationStore: AnnotationStore = _
   private var sanyImporter: SanyImporter = _
@@ -67,7 +68,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |NEXT == Next
         |
         |================================================================================
-        |""".stripMargin
+        |""".stripMargin,
     )
   }
 
@@ -84,7 +85,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |SPECIFICATION == Spec
         |
         |================================================================================
-        |""".stripMargin
+        |""".stripMargin,
     )
   }
 
@@ -111,7 +112,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |NEXT == Next
         |
         |================================================================================
-        |""".stripMargin
+        |""".stripMargin,
     )
   }
 
@@ -140,7 +141,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |NEXT == Next
         |
         |================================================================================
-        |""".stripMargin
+        |""".stripMargin,
     )
   }
 
@@ -179,7 +180,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |NEXT == Next
         |
         |================================================================================
-        |""".stripMargin
+        |""".stripMargin,
     )
   }
 
@@ -230,7 +231,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |NEXT == Next
         |
         |================================================================================
-        |""".stripMargin
+        |""".stripMargin,
     )
   }
 
@@ -256,7 +257,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
           |NEXT == Next
           |
           |================================================================================
-          |""".stripMargin
+          |""".stripMargin,
     )
   }
 
@@ -282,7 +283,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |NEXT == Next
         |
         |================================================================================
-        |""".stripMargin
+        |""".stripMargin,
     )
   }
 
@@ -308,7 +309,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |NEXT == Next
         |
         |================================================================================
-        |""".stripMargin
+        |""".stripMargin,
     )
   }
 
@@ -334,7 +335,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
         |NEXT == Next
         |
         |================================================================================
-        |""".stripMargin
+        |""".stripMargin,
     )
   }
 
@@ -392,7 +393,7 @@ class TestTlcConfigImporter extends FunSuite with BeforeAndAfterEach {
           |NEXT == Next
           |
           |================================================================================
-          |""".stripMargin
+          |""".stripMargin,
     )
   }
 }

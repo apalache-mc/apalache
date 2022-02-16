@@ -7,16 +7,18 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
  * Unit tests for translating declarations rather than single expressions.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
-class TestToEtcExprDecls extends FunSuite with BeforeAndAfterEach with EtcBuilder {
+class TestToEtcExprDecls extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder {
   var parser: Type1Parser = _
   var annotationStore: AnnotationStore = _
   var gen: ToEtcExpr = _

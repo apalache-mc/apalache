@@ -5,8 +5,8 @@ import at.forsyte.apalache.io.tlc.config.{
   TlcConfigParseError
 }
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 /**
  * Tests for the TLC configuration parser.
@@ -14,7 +14,7 @@ import org.scalatest.junit.JUnitRunner
  * @author Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
-class TestTlcConfigParserApalache extends FunSuite {
+class TestTlcConfigParserApalache extends AnyFunSuite {
 
   test("INIT-NEXT") {
     val text =

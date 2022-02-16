@@ -7,12 +7,12 @@ package at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
 
 @RunWith(classOf[JUnitRunner])
-class TestModule extends FunSuite {
+class TestModule extends AnyFunSuite {
   test("AlternatingBit module from Lamport's book") {
 
     /** CONSTANTS Data */

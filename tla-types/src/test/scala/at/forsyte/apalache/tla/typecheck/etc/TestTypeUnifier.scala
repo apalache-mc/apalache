@@ -3,12 +3,13 @@ package at.forsyte.apalache.tla.typecheck.etc
 import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecT1, SeqT1, SetT1, StrT1, VarT1}
 import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
 import org.junit.runner.RunWith
-import org.scalatest.easymock.EasyMockSugar
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatestplus.easymock.EasyMockSugar
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
 
 @RunWith(classOf[JUnitRunner])
-class TestTypeUnifier extends FunSuite with EasyMockSugar with BeforeAndAfterEach with EtcBuilder {
+class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfterEach with EtcBuilder {
   private val parser: Type1Parser = DefaultType1Parser
   private var unifier: TypeUnifier = _
 
@@ -25,8 +26,7 @@ class TestTypeUnifier extends FunSuite with EasyMockSugar with BeforeAndAfterEac
     val intToInt = parser("Int -> Int")
     assert(unifier.unify(Substitution.empty, intToInt, intToInt).contains((Substitution.empty, intToInt)))
     val intAndBoolToInt = parser("(Int, Bool) => Int")
-    assert(
-        unifier
+    assert(unifier
           .unify(Substitution.empty, intAndBoolToInt, intAndBoolToInt)
           .contains((Substitution.empty, intAndBoolToInt)))
     val tup1 = parser("<<Int, Bool>>")
@@ -79,72 +79,59 @@ class TestTypeUnifier extends FunSuite with EasyMockSugar with BeforeAndAfterEac
   }
 
   test("unifying polytypes") {
-    assert(
-        unifier
+    assert(unifier
           .unify(Substitution.empty, VarT1(0), IntT1())
           .contains((Substitution(EqClass(0) -> IntT1()), IntT1())))
-    assert(
-        unifier
+    assert(unifier
           .unify(Substitution.empty, FunT1(VarT1(0), IntT1()), FunT1(BoolT1(), VarT1(1)))
           .contains((Substitution(EqClass(0) -> BoolT1(), EqClass(1) -> IntT1()), FunT1(BoolT1(), IntT1()))))
-    assert(
-        unifier
+    assert(unifier
           .unify(Substitution.empty, VarT1(0), ConstT1("ID"))
           .contains((Substitution(EqClass(0) -> ConstT1("ID")), ConstT1("ID"))))
-    assert(
-        unifier
+    assert(unifier
           .unify(Substitution.empty, ConstT1("ID"), VarT1(0))
           .contains((Substitution(EqClass(0) -> ConstT1("ID")), ConstT1("ID"))))
 
     val rec1 = parser("[foo: Bool]")
     val rec2 = parser("[bar: Int]")
     val rec3 = parser("[foo: Bool, bar: Int]")
-    assert(
-        unifier
+    assert(unifier
           .unify(Substitution(EqClass(0) -> rec1), VarT1(0), rec2)
           .contains((Substitution(EqClass(0) -> rec3), rec3)))
   }
 
   test("unifying tricky polytypes") {
-    assert(
-        unifier
+    assert(unifier
           .unify(Substitution.empty, VarT1(0), VarT1(0))
           .contains((Substitution(EqClass(0) -> VarT1(0)), VarT1(0))))
-    assert(
-        unifier
+    assert(unifier
           .unify(Substitution(EqClass(0) -> IntT1()), VarT1(0), VarT1(0))
           .contains((Substitution(EqClass(0) -> IntT1()), IntT1())))
-    assert(
-        unifier
+    assert(unifier
           .unify(Substitution.empty, VarT1(0), VarT1(1))
           .contains((Substitution(EqClass(Set(0, 1)) -> VarT1(0)), VarT1(0))))
-    assert(
-        unifier
+    assert(unifier
           .unify(Substitution(EqClass(1) -> IntT1()), VarT1(0), VarT1(1))
           .contains((Substitution(EqClass(Set(0, 1)) -> IntT1()), IntT1())))
     // unify <<a, b>> and <<b, a>>
-    assert(
-        unifier
+    assert(unifier
           .unify(Substitution.empty, parser("<<a, b>>"), parser("<<b, a>>"))
           .contains((Substitution(EqClass(Set(0, 1)) -> VarT1(0)), parser("<<a, a>>"))))
     // there is no problem with the cycle a -> b -> c -> a
     val expectedSub = Substitution(EqClass(Set(0, 1, 2)) -> VarT1(0))
-    assert(
-        unifier
+    assert(unifier
           .unify(Substitution.empty, parser("<<a, b, c>>"), parser("<<b, c, a>>"))
           .contains((expectedSub, parser("<<a, a, a>>"))))
   }
 
   test("unifying Seq(a) and Seq(Int)") {
-    assert(
-        unifier
+    assert(unifier
           .unify(Substitution.empty, SeqT1(VarT1(0)), SeqT1(IntT1()))
           .contains((Substitution(EqClass(0) -> IntT1()), SeqT1(IntT1()))))
   }
 
   test("unifying a => Set(a) and Int => b") {
-    assert(
-        unifier
+    assert(unifier
           .unify(Substitution.empty, OperT1(Seq(VarT1(0)), SetT1(VarT1(0))), OperT1(Seq(IntT1()), VarT1(1)))
           .contains((Substitution(EqClass(0) -> IntT1(), EqClass(1) -> SetT1(VarT1(0))),
                   OperT1(Seq(IntT1()), SetT1(IntT1())))))
@@ -157,8 +144,7 @@ class TestTypeUnifier extends FunSuite with EasyMockSugar with BeforeAndAfterEac
 
   test("unifying with transitivity") {
     val expectedSubstitution = Substitution(EqClass(Set(1, 2)) -> parser("PERSON"))
-    assert(
-        unifier
+    assert(unifier
           .unify(Substitution.empty, parser("Set(b) -> Set(b)"), parser("Set(c) -> Set(PERSON)"))
           .contains((expectedSubstitution, parser("Set(PERSON) -> Set(PERSON)"))))
   }
@@ -168,8 +154,7 @@ class TestTypeUnifier extends FunSuite with EasyMockSugar with BeforeAndAfterEac
     val sub = Substitution(EqClass(1003) -> SetT1(VarT1(0)), EqClass(1004) -> SetT1(VarT1(1005)))
     val expected =
       Substitution(EqClass(Set(1003, 1004)) -> SetT1(VarT1(0)), EqClass(Set(0, 1005)) -> VarT1(0))
-    assert(
-        unifier
+    assert(unifier
           .unify(sub, VarT1(1004), VarT1(1003))
           .contains((expected, SetT1(VarT1(0)))))
   }
@@ -179,14 +164,13 @@ class TestTypeUnifier extends FunSuite with EasyMockSugar with BeforeAndAfterEac
     val sub = Substitution(
         EqClass(Set(1000, 1004)) -> VarT1(1000),
         EqClass(1005) -> OperT1(Seq(VarT1(1000)), VarT1(1001)),
-        EqClass(1006) -> VarT1(1000)
+        EqClass(1006) -> VarT1(1000),
     ) ////
     val expected = Substitution(
         EqClass(Set(1000, 1001, 1004, 1006)) -> VarT1(1000),
-        EqClass(1005) -> OperT1(Seq(VarT1(1000)), VarT1(1000))
+        EqClass(1005) -> OperT1(Seq(VarT1(1000)), VarT1(1000)),
     ) ////
-    assert(
-        unifier
+    assert(unifier
           .unify(sub, VarT1(1005), OperT1(Seq(VarT1(1004)), VarT1(1006)))
           .contains((expected, OperT1(Seq(VarT1(1000)), VarT1(1000)))))
   }

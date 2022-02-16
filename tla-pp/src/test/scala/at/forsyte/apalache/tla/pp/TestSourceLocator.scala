@@ -11,14 +11,14 @@ import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationListener}
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 import scala.collection.mutable
 
 // TODO: Igor, 27.08.2021: this test needs refactoring. It is barely readable.
 @RunWith(classOf[JUnitRunner])
-class TestSourceLocator extends FunSuite {
+class TestSourceLocator extends AnyFunSuite {
 
   import tla._
 

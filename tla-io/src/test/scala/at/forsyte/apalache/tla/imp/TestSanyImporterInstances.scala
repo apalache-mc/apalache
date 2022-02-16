@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaIntSet}
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 
 import scala.io.Source
 

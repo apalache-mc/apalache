@@ -2,11 +2,12 @@ package at.forsyte.apalache.tla.types
 
 import at.forsyte.apalache.tla.lir.TestingPredefs
 import org.junit.runner.RunWith
-import org.scalatest.{BeforeAndAfter, FunSuite}
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.BeforeAndAfter
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestTypeReduction extends FunSuite with TestingPredefs with BeforeAndAfter {
+class TestTypeReduction extends AnyFunSuite with TestingPredefs with BeforeAndAfter {
 
   var gen = new SmtVarGenerator
   var tr = new TypeReduction(gen)

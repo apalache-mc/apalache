@@ -4,11 +4,11 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestCounterexampleWriter extends FunSuite with TestCounterexampleWriterBase {
+class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriterBase {
   test("single state") {
     compare(
         "tla",

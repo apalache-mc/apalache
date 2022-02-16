@@ -6,11 +6,11 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import TypedPredefs._
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestSymbTransGenerator extends FunSuite with TestingPredefs {
+class TestSymbTransGenerator extends AnyFunSuite with TestingPredefs {
 
   val stg = new SymbTransGenerator(TrackerWithListeners())
 

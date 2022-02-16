@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.oopsla19Encoding
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
 import org.junit.runner.RunWith
 import org.scalatest.Outcome
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 
 /**
  * The tests for TransitionExecutorImpl that are using IncrementalSnapshot.

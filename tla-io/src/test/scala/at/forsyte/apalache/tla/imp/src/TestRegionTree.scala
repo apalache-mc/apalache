@@ -2,11 +2,11 @@ package at.forsyte.apalache.tla.imp.src
 
 import at.forsyte.apalache.tla.lir.src.{RegionTree, SourcePosition, SourceRegion}
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestRegionTree extends FunSuite {
+class TestRegionTree extends AnyFunSuite {
   test("add") {
     val tree = new RegionTree()
     val region = SourceRegion(SourcePosition(1, 20), SourcePosition(3, 10))

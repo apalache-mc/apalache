@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.lir.storage
 
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestDisjointSets extends FunSuite {
+class TestDisjointSets extends AnyFunSuite {
 
   test("bad calls") {
     val djs = DisjointSets.empty[Int].add(1, 2, 3)
