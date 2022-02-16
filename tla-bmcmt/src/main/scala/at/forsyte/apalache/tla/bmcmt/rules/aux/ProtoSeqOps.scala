@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir._
 
 /**
- * Proto sequences that implement the absolute minimum that is requred for implementing TLA+ sequences.
+ * Proto sequences that contain the absolute minimum for implementing TLA+ sequences.
  *
  * @param rewriter
  *   a symbolic rewriter
@@ -15,8 +15,6 @@ import at.forsyte.apalache.tla.lir._
  *   Igor Konnov
  */
 class ProtoSeqOps(rewriter: SymbStateRewriter) {
-  private val defaultValueFactory = new DefaultValueFactory(rewriter)
-  private val picker = new CherryPick(rewriter)
 
   /**
    * Create a proto sequence of the given capacity and initialize its elements with the function `mkElem`.
@@ -100,22 +98,25 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
    * Rewrite the index expression and access the element of the proto sequence. The indices are starting with 1, as in
    * Sequences.
    *
+   * @param picker
+   *   an instance that is used to pick the values
    * @param state
    *   a symbolic state to start with
-   * @param elemType
-   *   the expected type of the element (essential for the case when the sequence is empty)
+   * @param defaultValue
+   *   the value to return if the proto sequence has capacity of zero
    * @param indexBase1Ex
    *   an index expression
    * @return
    *   the new symbolic state that contains the retrieved cell as the expression
    */
-  def get(state: SymbState, elemType: TlaType1, protoSeq: ArenaCell, indexBase1Ex: TlaEx): SymbState = {
+  def get(picker: CherryPick, state: SymbState, defaultValue: ArenaCell, protoSeq: ArenaCell,
+      indexBase1Ex: TlaEx): SymbState = {
     val protoElems = elems(state.arena, protoSeq)
     val capacity = protoElems.size
     if (capacity == 0) {
       // The sequence is statically empty. Return the default value.
       // Most likely, this expression will be never used as a result.
-      defaultValueFactory.makeUpValue(state, CellT.fromType1(elemType))
+      state.setRex(defaultValue.toNameEx)
     } else {
       // TODO: take care of the special case, when indexEx is an integer literal
 

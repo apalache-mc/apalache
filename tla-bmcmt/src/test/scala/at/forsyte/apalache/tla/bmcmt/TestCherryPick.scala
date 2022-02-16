@@ -7,6 +7,8 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 
 trait TestCherryPick extends RewriterBase with TestingPredefs {
+  private val intSeqT = SeqT1(IntT1())
+
   private val types = Map(
       "b" -> BoolT1(),
       "i" -> IntT1(),
@@ -19,7 +21,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
       "rii" -> RecT1("a" -> IntT1(), "b" -> IntT1()),
       "riis" -> RecT1("a" -> IntT1(), "b" -> IntT1(), "c" -> StrT1()),
       "Riis" -> SetT1(RecT1("a" -> IntT1(), "b" -> IntT1(), "c" -> StrT1())),
-      "i_ii" -> TupT1(IntT1(), TupT1(IntT1(), IntT1()))
+      "i_ii" -> TupT1(IntT1(), TupT1(IntT1(), IntT1())),
   )
 
   private def assertEqWhenChosen(rewriter: SymbStateRewriter, state: SymbState, oracle: Oracle, position: Int,
@@ -109,8 +111,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     state = oracleState
 
     def mkSeq(args: Int*): ArenaCell = {
-      val tup = tuple(args map int: _*)
-        .typed(types, "Qi")
+      val tup = tuple(args map int: _*) as intSeqT
       state = rewriter.rewriteUntilDone(state.setRex(tup))
       state.asCell
     }
@@ -121,6 +122,28 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
 
     assertEqWhenChosen(rewriter, state, oracle, 0, seqs(0).toNameEx)
     assertEqWhenChosen(rewriter, state, oracle, 1, seqs(1).toNameEx)
+  }
+
+  test("""CHERRY-PICK-SEQ {<<1, 2>>, <<3, 4, 5>>, <<>>}""") { rewriterType: SMTEncoding =>
+    val rewriter = create(rewriterType)
+    var state = new SymbState(bool(true).typed(BoolT1()), arena, Binding())
+    // introduce an oracle that tells us which element to pick
+    val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 3)
+    state = oracleState
+
+    def mkSeq(args: Int*): ArenaCell = {
+      val tup = tuple(args map int: _*) as intSeqT
+      state = rewriter.rewriteUntilDone(state.setRex(tup))
+      state.asCell
+    }
+
+    val seqs = Seq(mkSeq(1, 2), mkSeq(3, 4, 5), mkSeq())
+    state = new CherryPick(rewriter).pickSequence(SeqT(IntT()), state, oracle, seqs, state.arena.cellFalse().toNameEx)
+    assert(solverContext.sat())
+
+    assertEqWhenChosen(rewriter, state, oracle, 0, seqs(0).toNameEx)
+    assertEqWhenChosen(rewriter, state, oracle, 1, seqs(1).toNameEx)
+    assertEqWhenChosen(rewriter, state, oracle, 2, seqs(2).toNameEx)
   }
 
   test("""CHERRY-PICK {[a |-> 1, b |-> 2], [a |-> 3, b |-> 4]}""") { rewriterType: SMTEncoding =>

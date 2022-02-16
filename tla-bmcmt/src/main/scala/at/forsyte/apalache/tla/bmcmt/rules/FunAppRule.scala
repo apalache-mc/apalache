@@ -45,7 +45,9 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
           case SeqT(elemT) =>
             val protoSeq = proto.fromSeq(funState.arena, funCell)
-            proto.get(funState, elemT.toTlaType1, protoSeq, argEx)
+            val nextState = defaultValueFactory.makeUpValue(funState, elemT)
+            val defaultValue = nextState.asCell
+            proto.get(picker, nextState, defaultValue, protoSeq, argEx)
 
           case _ => // general functions
             applyFun(funState, funCell, argEx)

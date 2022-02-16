@@ -11,21 +11,29 @@ import scala.collection.immutable.SortedSet
 /**
  * Given a type, this class produces a default value for that type. This is needed by ChooseRule and FunAppRule.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class DefaultValueFactory(rewriter: SymbStateRewriter) {
+  private val protoSeqOps = new ProtoSeqOps(rewriter)
+
   def makeUpValue(state: SymbState, set: ArenaCell): SymbState = {
     makeUpValue(state, findElemType(set))
   }
 
   /**
    * Produce a default value that, for instance, can be used as a value when picking from an empty set.
-   * @param state a symbolic state
-   * @param cellType a cell type FinSetT(...)
-   * @return a new symbolic state that contains the new value as the expression
+   *
+   * @param state
+   *   a symbolic state
+   * @param cellType
+   *   a cell type FinSetT(...)
+   * @return
+   *   a new symbolic state that contains the new value as the expression
    */
   def makeUpValue(state: SymbState, cellType: CellT): SymbState = {
     // TODO: introduce a cache for default values, otherwise there will be many identical copies
+    // See: https://github.com/informalsystems/apalache/issues/1348
     cellType match {
       case IntT() =>
         rewriter.rewriteUntilDone(state.setRex(tla.int(0)))
@@ -76,18 +84,12 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         relState.setArena(arena).setRex(funCell.toNameEx)
 
       case tp @ SeqT(resT) => // << >>
-        val relState = makeUpValue(state, resT)
-        var arena = relState.arena.appendCell(tp)
-        val seq = arena.topCell
-        arena = arena.appendCell(IntT()) // start
-        val start = arena.topCell
-        arena = arena.appendCell(IntT()) // end
-        val end = arena.topCell
-        arena = arena.appendHasNoSmt(seq, start, end)
-        for (cell <- Seq(start, end)) {
-          rewriter.solverContext.assertGroundExpr(tla.eql(cell.toNameEx, tla.int(0)))
-        }
-        relState.setArena(arena).setRex(seq.toNameEx)
+        // make an empty proto sequence
+        var nextState = protoSeqOps.make(state, 0, { (s, _) => (s, s.asCell) })
+        val protoSeq = nextState.asCell
+        nextState = rewriter.rewriteUntilDone(state.setRex(tla.int(0)))
+        val len = nextState.asCell
+        protoSeqOps.mkSeq(nextState, tp.toTlaType1, protoSeq, len)
 
       case tp @ _ =>
         throw new RewriterException(s"I do not know how to generate a default value for the type $tp", state.ex)

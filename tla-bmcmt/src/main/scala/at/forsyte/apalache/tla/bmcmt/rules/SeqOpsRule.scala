@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, ProtoSeqOps}
-import at.forsyte.apalache.tla.bmcmt.types.IntT
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory, ProtoSeqOps}
+import at.forsyte.apalache.tla.bmcmt.types.{CellT, IntT}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaSeqOper
@@ -17,6 +17,7 @@ import at.forsyte.apalache.tla.lir._
 class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val picker = new CherryPick(rewriter)
   private val proto = new ProtoSeqOps(rewriter)
+  private val defaultValueFactory = new DefaultValueFactory(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -57,12 +58,22 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
+  /**
+   * Translate Len(s) which is canonically defined as:
+   *
+   * <pre> CHOOSE n \in Nat : DOMAIN s = 1..n </pre>
+   */
   private def translateLen(state: SymbState, seq: TlaEx): SymbState = {
     val nextState = rewriter.rewriteUntilDone(state.setRex(seq))
     val lenCell = proto.seqLen(nextState.arena, nextState.asCell)
     nextState.setRex(lenCell.toNameEx as IntT1())
   }
 
+  /**
+   * Translate Head(s) which is canonically defined as:
+   *
+   * <pre> Head(s) == s[1] </pre>
+   */
   private def translateHead(state: SymbState, seqEx: TlaEx, elemType: TlaType1): SymbState = {
     val nextState = rewriter.rewriteUntilDone(state.setRex(seqEx))
     val seq = nextState.asCell
@@ -70,6 +81,11 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     nextState.setRex(proto.at(nextState.arena, protoSeq, 1).toNameEx as elemType)
   }
 
+  /**
+   * Translate Tail(s) which is canonically defined as:
+   *
+   * <pre> Tail(s) == CASE s # << >> -> [ i \in 1..(Len(s)-1) |-> s[i+1] ] </pre>
+   */
   private def translateTail(state: SymbState, seq: TlaEx): SymbState = {
     var nextState = rewriter.rewriteUntilDone(state.setRex(seq))
     val seqCell = nextState.asCell
@@ -92,6 +108,12 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
       proto.mkSeq(nextState, seq.typeTag.asTlaType1(), newProtoSeq, nextState.asCell)
     }
   }
+
+  /**
+   * Translate SubSeq(S, m, n), which is canonically defined as:
+   *
+   * <pre SubSeq(s, m, n) == [ i \in 1..(1+n-m) |-> s[i+m-1] ] </pre>
+   */
 
   private def translateSubSeq(state: SymbState, seqEx: TlaEx, newStartEx: TlaEx, newEndEx: TlaEx): SymbState = {
     // rewrite seqEx, newStartEx, and newEndEx
@@ -124,11 +146,14 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
         tla.ite(tla.le(asInt(newEndBase1), asInt(len)) as BoolT1(), asInt(newEndBase1),
             asInt(len)) as IntT1()) as BoolT1())
 
+    nextState = defaultValueFactory.makeUpValue(nextState, CellT.fromType1(seqT.elem))
+    val defaultValue = nextState.asCell
+
     def copy(state: SymbState, dstIndexBase1: Int): (SymbState, ArenaCell) = {
       // Blindly copy the element adjustedStart + (dstIndex - 1) into the position at dstIndex.
       // If srcIndexEx is out of bounds, then `get` returns a cell, which may result in a spurious counterexample.
       val srcIndexEx = tla.plus(adjustedStart.toNameEx as IntT1(), tla.int(dstIndexBase1 - 1)) as IntT1()
-      val newState = proto.get(state, seqT.elem, protoSeq, srcIndexEx)
+      val newState = proto.get(picker, state, defaultValue, protoSeq, srcIndexEx)
       (newState, newState.asCell)
     }
 
@@ -146,7 +171,12 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     proto.mkSeq(nextState, seqEx.typeTag.asTlaType1(), newProtoSeq, newLen)
   }
 
-  private def translateAppend(state: SymbState, seqEx: TlaEx, newElemEx: TlaEx) = {
+  /**
+   * Translate Append(s, e) which is canonically defined as:
+   *
+   * <pre> Append(s, e) == s \o << e >> </pre>
+   */
+  private def translateAppend(state: SymbState, seqEx: TlaEx, newElemEx: TlaEx): SymbState = {
     // rewrite seqEx and newElemEx
     var nextState = rewriter.rewriteUntilDone(state.setRex(seqEx))
     val seqCell = nextState.asCell
@@ -184,7 +214,11 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     proto.mkSeq(nextState, seqEx.typeTag.asTlaType1(), newProtoSeq, nextState.asCell)
   }
 
-  // Implement concatenation on sequences. This is the most expensive operation on sequences.
+  /**
+   * Translate concatenation of sequences, that is, s \o t, which is canonically defined as:
+   *
+   * <pre> s \o t == [ i \in 1..(Len(s) + Len(t)) |-> IF i \leq Len(s) THEN s[i] ELSE t[i-Len(s)] ] </pre>
+   */
   private def translateConcat(state: SymbState, seq1ex: TlaEx, seq2ex: TlaEx): SymbState = {
     // rewrite seq1ex and seq2ex
     var nextState = rewriter.rewriteUntilDone(state.setRex(seq1ex))
@@ -195,12 +229,16 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val seq2 = nextState.asCell
     val (protoSeq2, len2, capacity2) = proto.unpackSeq(nextState.arena, seq2)
 
+    // we need the default value, when the sequences are empty
+    nextState = defaultValueFactory.makeUpValue(nextState, CellT.fromType1(seqT.elem))
+    val defaultValue = nextState.asCell
+
     def pick(state: SymbState, dstIndexBase1: Int): (SymbState, ArenaCell) = {
       if (dstIndexBase1 > capacity1) {
         // The index is beyond the capacity of the first sequence.
         // We only have to access the element of the second sequence with the index dstIndex - len1
         val indexEx = tla.minus(tla.int(dstIndexBase1), len1.toNameEx as IntT1()) as IntT1()
-        val newState = proto.get(state, seqT.elem, protoSeq2, indexEx)
+        val newState = proto.get(picker, state, defaultValue, protoSeq2, indexEx)
         (newState, newState.asCell)
       } else {
         // we access the element of the first sequence directly, with a constant index
@@ -208,7 +246,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // we access the element of the second sequence indirectly,
         // as we cannot statically compute the length of the first sequence
         val indexEx2 = tla.minus(tla.int(dstIndexBase1), len1.toNameEx as IntT1()) as IntT1()
-        var newState = proto.get(state, seqT.elem, protoSeq2, indexEx2)
+        var newState = proto.get(picker, state, defaultValue, protoSeq2, indexEx2)
         val elem2 = newState.asCell
         val (oracleState, oracle) = picker.oracleFactory.newDefaultOracle(newState, 2)
         newState = picker.pickByOracle(oracleState, oracle, Seq(elem1, elem2), nextState.arena.cellTrue().toNameEx)
