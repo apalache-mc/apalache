@@ -5,7 +5,6 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.pp.TlaInputError
 
 trait TestSymbStateRewriterSequence extends RewriterBase {
   private val intT = IntT1()
@@ -81,15 +80,14 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
   }
 
   test("""(<<>> as Seq(Int))[1]""") { rewriterType: SMTEncoding =>
-    // static array out of bounds should throw: <<>>[1]
+    // regression: <<>>[i] should produce no contradiction, nor throw an exception
     val tup = tuple() as intSeqT
     val app = appFun(tup, int(1)) as IntT1()
 
     val state = new SymbState(app, arena, Binding())
     val rewriter = create(rewriterType)
-    assertThrows[TlaInputError] {
-      val _ = rewriter.rewriteUntilDone(state)
-    }
+    val _ = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
   }
 
   test("""(<<>> as Seq(Int))[x] when x = 1""") { rewriterType: SMTEncoding =>
@@ -107,15 +105,14 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
   }
 
   test("""(<<1, 2>> as Seq(Int))[7]""") { rewriterType: SMTEncoding =>
-    // static array out bounds should throw: <<1, 2>>[7]
+    // regression: <<1, 2>>[i] for i = 7 should produce no contradiction, nor throw an exception
     val tup = tuple(int(1), int(2)) as intSeqT
     val app = appFun(tup, int(7)) as IntT1()
 
     val state = new SymbState(app, arena, Binding())
     val rewriter = create(rewriterType)
-    assertThrows[TlaInputError] {
-      val _ = rewriter.rewriteUntilDone(state)
-    }
+    val _ = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
   }
 
   test("""(<<1, 2>> as Seq(Int))[x] for x = 7""") { rewriterType: SMTEncoding =>
@@ -161,20 +158,19 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
   }
 
   test("""Tail(<<>> as Seq(Int)) throws an error""") { rewriterType: SMTEncoding =>
+    // Tail(<<>>) returns <<>>. Since Tail(<<>>) is undefined, it is a correct behavior.
     val emptyTuple = tuple() as intSeqT
     val seqTail = tail(emptyTuple) as intSeqT
     val eq = eql(len(seqTail) as intT, int(0)) as boolT
-
     val state = new SymbState(eq, arena, Binding())
-    assertThrows[TlaInputError] {
-      assertTlaExAndRestore(create(rewriterType), state)
-    }
+    assertTlaExAndRestore(create(rewriterType), state)
   }
 
   test("""regression: Tail(SubSeq(<<1>>, 1, 0)) does not unsat and its length is -1""") { rewriterType: SMTEncoding =>
     val tuple1 = tuple(int(1)) as intSeqT
     val seqTail = tail(subseq(tuple1, int(1), int(0)) as intSeqT) as intSeqT
-    // One can argue that the Len(Tail(<<>>)) should be 0, but Tail(<<>>) is undefined, so we can report -1.
+    // One can argue that the Len(Tail(seqTail)) should be 0,
+    // but Tail is undefined on empty sequences, so we are free to report -1.
     val eq = eql(len(seqTail) as intT, int(-1)) as boolT
 
     val state = new SymbState(eq, arena, Binding())

@@ -67,10 +67,10 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     argEx match {
       case ValEx(TlaInt(indexBase1)) =>
         if (indexBase1 < 1 || indexBase1 > capacity) {
-          // this is the rare case when the spec author has made a typo, e.g., f[0]
-          val msg =
-            s"Out of bounds error when accessing a sequence of length up to $capacity with index $indexBase1"
-          throw new TlaInputError(msg, Some(state.ex.ID))
+          // This is the rare case when the spec author has made a typo, e.g., f[0].
+          // We cannot throw an error even in this case, as it would report an error in a legal specification, e.g.,
+          // 0 \in DOMAIN f \/ f[0] /= 1
+          nextState.setRex(defaultValue.toNameEx)
         } else {
           // accessing via the integer literal is cheap
           val elem = proto.at(nextState.arena, protoSeq, indexBase1.toInt)

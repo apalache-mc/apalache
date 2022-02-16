@@ -7,7 +7,6 @@ import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaSeqOper
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.pp.TlaInputError
 
 /**
  * Sequence operations: Head, Tail, Len, SubSeq, Append, Concat.
@@ -82,9 +81,10 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     if (capacity > 0) {
       nextState.setRex(proto.at(nextState.arena, protoSeq, 1).toNameEx as elemType)
     } else {
-      // this is the rare case when the spec author has made a typo, e.g., Head(<<>>)
-      val msg = s"Calling Head on an empty sequence"
-      throw new TlaInputError(msg, Some(state.ex.ID))
+      // This is the rare case when the spec author has made a typo, e.g., Head(<<>>).
+      // We cannot throw an exception here, as it would report an error in a correct specification, e.g.,
+      // Len(s) = 0 \/ Head(s) = 2
+      defaultValueFactory.makeUpValue(nextState, CellT.fromType1(elemType))
     }
   }
 
@@ -98,9 +98,12 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val seqCell = nextState.asCell
     val (protoSeq, len, capacity) = proto.unpackSeq(nextState.arena, seqCell)
     if (capacity <= 0) {
-      // this is the rare case when the spec author has made a typo, e.g., Tail(<<>>)
-      val msg = s"Calling Tail on an empty sequence"
-      throw new TlaInputError(msg, Some(state.ex.ID))
+      // This is the rare case when the spec author has made a typo, e.g., Tail(<<>>).
+      // We cannot throw an exception here, as it would report an error in a correct specification, e.g.,
+      // Len(s) = 0 \/ Tail(s) /= s.
+
+      // Return the empty sequence.
+      nextState.setRex(seqCell.toNameEx)
     } else {
       def shiftByOne(state: SymbState, indexBase1: Int): (SymbState, ArenaCell) = {
         val elem = proto.at(state.arena, protoSeq, indexBase1 + 1)
