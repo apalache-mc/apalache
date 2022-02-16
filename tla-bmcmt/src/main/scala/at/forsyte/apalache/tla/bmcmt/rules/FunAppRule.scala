@@ -7,7 +7,8 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, TlaType1, ValEx}
+import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.pp.TlaInputError
 
 /**
  * Implements f[x] for: functions, records, and tuples.
@@ -37,24 +38,48 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // we use funCell.cellType, not funEx.typeTag, because funEx can be the result of the rewriter
         funCell.cellType match {
           case TupleT(_) =>
+            // cheap access as `argEx` should be a literal
             applyTuple(funState, funCell, funEx, argEx)
 
           case RecordT(_) =>
+            // cheap access as `argEx` should be a literal
             val resultT = CellT.fromTypeTag(ex.typeTag)
             applyRecord(funState, funCell, funEx, argEx, resultT)
 
           case SeqT(elemT) =>
-            val protoSeq = proto.fromSeq(funState.arena, funCell)
-            val nextState = defaultValueFactory.makeUpValue(funState, elemT)
-            val defaultValue = nextState.asCell
-            proto.get(picker, nextState, defaultValue, protoSeq, argEx)
+            // cheap or expensive, depending on `argEx`
+            applySequence(funState, funCell, argEx, elemT)
 
-          case _ => // general functions
+          case _ =>
+            // general functions, which introduce `O(capacity)` SMT constraints.
             applyFun(funState, funCell, argEx)
         }
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
+    }
+  }
+
+  private def applySequence(state: SymbState, seqCell: ArenaCell, argEx: TlaEx, elemT: CellT): SymbState = {
+    val (protoSeq, _, capacity) = proto.unpackSeq(state.arena, seqCell)
+    val nextState = defaultValueFactory.makeUpValue(state, elemT)
+    val defaultValue = nextState.asCell
+    argEx match {
+      case ValEx(TlaInt(indexBase1)) =>
+        if (indexBase1 < 1 || indexBase1 > capacity) {
+          // this is the rare case when the spec author has made a typo, e.g., f[0]
+          val msg =
+            s"Out of bounds error when accessing a sequence of length up to $capacity with index $indexBase1"
+          throw new TlaInputError(msg, Some(state.ex.ID))
+        } else {
+          // accessing via the integer literal is cheap
+          val elem = proto.at(nextState.arena, protoSeq, indexBase1.toInt)
+          nextState.setRex(elem.toNameEx)
+        }
+
+      case _ =>
+        // the general case, which introduces `O(capacity)` SMT constraints.
+        proto.get(picker, defaultValue, nextState, protoSeq, argEx)
     }
   }
 

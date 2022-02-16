@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.pp.TlaInputError
 
 trait TestSymbStateRewriterSequence extends RewriterBase {
   private val intT = IntT1()
@@ -80,23 +81,53 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
   }
 
   test("""(<<>> as Seq(Int))[1]""") { rewriterType: SMTEncoding =>
-    // regression: <<>>[1] should produce no contradiction, nor throw an exception
+    // static array out of bounds should throw: <<>>[1]
     val tup = tuple() as intSeqT
     val app = appFun(tup, int(1)) as IntT1()
 
     val state = new SymbState(app, arena, Binding())
     val rewriter = create(rewriterType)
+    assertThrows[TlaInputError] {
+      val _ = rewriter.rewriteUntilDone(state)
+    }
+  }
+
+  test("""(<<>> as Seq(Int))[x] when x = 1""") { rewriterType: SMTEncoding =>
+    // regression: <<>>[i] should produce no contradiction, nor throw an exception
+    val tup = tuple() as intSeqT
+    val app = appFun(tup, name("x") as IntT1()) as IntT1()
+
+    var state = new SymbState(app, arena, Binding())
+    val rewriter = create(rewriterType)
+    // rewrite 1 into a cell, so function application does not statically detect out of bounds
+    state = rewriter.rewriteUntilDone(state.setRex(int(1) as IntT1()))
+    state = state.setBinding(Binding("x" -> state.asCell))
     val _ = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
   }
 
   test("""(<<1, 2>> as Seq(Int))[7]""") { rewriterType: SMTEncoding =>
-    // regression: <<1, 2>>[7] should produce no contradiction, nor throw an exception
+    // static array out bounds should throw: <<1, 2>>[7]
     val tup = tuple(int(1), int(2)) as intSeqT
     val app = appFun(tup, int(7)) as IntT1()
 
     val state = new SymbState(app, arena, Binding())
     val rewriter = create(rewriterType)
+    assertThrows[TlaInputError] {
+      val _ = rewriter.rewriteUntilDone(state)
+    }
+  }
+
+  test("""(<<1, 2>> as Seq(Int))[x] for x = 7""") { rewriterType: SMTEncoding =>
+    // regression: <<1, 2>>[i] for i = 7 should produce no contradiction, nor throw an exception
+    val tup = tuple(int(1), int(2)) as intSeqT
+    val app = appFun(tup, name("x") as IntT1()) as IntT1()
+
+    var state = new SymbState(app, arena, Binding())
+    val rewriter = create(rewriterType)
+    // rewrite 7 into a cell, so function application does not statically detect out of bounds
+    state = rewriter.rewriteUntilDone(state.setRex(int(7) as IntT1()))
+    state = state.setBinding(Binding("x" -> state.asCell))
     val _ = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
   }

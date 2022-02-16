@@ -7,7 +7,12 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir._
 
 /**
- * Proto sequences that contain the absolute minimum for implementing TLA+ sequences.
+ * Proto sequences that contain the absolute minimum for implementing TLA+ sequences. A proto sequence is essentially an
+ * array of fixed size (which we call 'capacity'). A sequence is a pair that consists of the length (an integer cell)
+ * and a proto sequence (a cell). The important property of the proto sequences is that they appear only in the arenas.
+ * Hence, the complexity of iterative operations over proto sequences does not directly propagate to SMT. All operators
+ * over sequences are expressible as operations over proto sequences, which makes proto sequences a nice layer of
+ * abstraction.
  *
  * @param rewriter
  *   a symbolic rewriter
@@ -60,8 +65,8 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
   }
 
   /**
-   * Get the elements attached to the proto sequence. This is always a sequence of the capacity. If you need to access a
-   * single element, use the method `at`.
+   * Retrieve the elements attached to the proto sequence. This is always a sequence of the [[capacity]]. If you need to
+   * access a single element, use the method [[at]].
    *
    * @param arena
    *   the current arena
@@ -75,7 +80,8 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
   }
 
   /**
-   * Retrieve the ith element of the proto sequence. The indices are starting with 1, as in Sequences.
+   * Retrieve the ith element of the proto sequence. This operation does not produce any SMT constraints and it should
+   * be used as much as possible instead of [[get]].
    *
    * @param arena
    *   the current arena
@@ -95,8 +101,8 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
   }
 
   /**
-   * Rewrite the index expression and access the element of the proto sequence. The indices are starting with 1, as in
-   * Sequences.
+   * Rewrite the index expression and access the element of the proto sequence. This operation produces `O(capacity)`
+   * SMT constraints and it should be avoided, when possible. If the index is an integer literal, use [[at]].
    *
    * @param picker
    *   an instance that is used to pick the values
@@ -105,11 +111,11 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
    * @param defaultValue
    *   the value to return if the proto sequence has capacity of zero
    * @param indexBase1Ex
-   *   an index expression
+   *   an index expression (indices are starting with 1)
    * @return
    *   the new symbolic state that contains the retrieved cell as the expression
    */
-  def get(picker: CherryPick, state: SymbState, defaultValue: ArenaCell, protoSeq: ArenaCell,
+  def get(picker: CherryPick, defaultValue: ArenaCell, state: SymbState, protoSeq: ArenaCell,
       indexBase1Ex: TlaEx): SymbState = {
     val protoElems = elems(state.arena, protoSeq)
     val capacity = protoElems.size
@@ -118,8 +124,6 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
       // Most likely, this expression will be never used as a result.
       state.setRex(defaultValue.toNameEx)
     } else {
-      // TODO: take care of the special case, when indexEx is an integer literal
-
       // rewrite `indexBase1Ex - 1` to a single cell
       var nextState = rewriter.rewriteUntilDone(state.setRex(tla.minus(indexBase1Ex, tla.int(1)) as IntT1()))
       val indexBase0 = nextState.asCell

@@ -153,7 +153,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // Blindly copy the element adjustedStart + (dstIndex - 1) into the position at dstIndex.
       // If srcIndexEx is out of bounds, then `get` returns a cell, which may result in a spurious counterexample.
       val srcIndexEx = tla.plus(adjustedStart.toNameEx as IntT1(), tla.int(dstIndexBase1 - 1)) as IntT1()
-      val newState = proto.get(picker, state, defaultValue, protoSeq, srcIndexEx)
+      val newState = proto.get(picker, defaultValue, state, protoSeq, srcIndexEx)
       (newState, newState.asCell)
     }
 
@@ -235,10 +235,10 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     def pick(state: SymbState, dstIndexBase1: Int): (SymbState, ArenaCell) = {
       if (dstIndexBase1 > capacity1) {
-        // The index is beyond the capacity of the first sequence.
+        // The index is above the capacity of the first sequence.
         // We only have to access the element of the second sequence with the index dstIndex - len1
         val indexEx = tla.minus(tla.int(dstIndexBase1), len1.toNameEx as IntT1()) as IntT1()
-        val newState = proto.get(picker, state, defaultValue, protoSeq2, indexEx)
+        val newState = proto.get(picker, defaultValue, state, protoSeq2, indexEx)
         (newState, newState.asCell)
       } else {
         // we access the element of the first sequence directly, with a constant index
@@ -246,7 +246,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // we access the element of the second sequence indirectly,
         // as we cannot statically compute the length of the first sequence
         val indexEx2 = tla.minus(tla.int(dstIndexBase1), len1.toNameEx as IntT1()) as IntT1()
-        var newState = proto.get(picker, state, defaultValue, protoSeq2, indexEx2)
+        var newState = proto.get(picker, defaultValue, state, protoSeq2, indexEx2)
         val elem2 = newState.asCell
         val (oracleState, oracle) = picker.oracleFactory.newDefaultOracle(newState, 2)
         newState = picker.pickByOracle(oracleState, oracle, Seq(elem1, elem2), nextState.arena.cellTrue().toNameEx)
