@@ -5,14 +5,14 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 /**
  * Tests for the TLA+ expressions that we can construct.
  */
 @RunWith(classOf[JUnitRunner])
-class TestTlaExpr extends FunSuite {
+class TestTlaExpr extends AnyFunSuite {
   test("no type tag") {
     // this expression is constructed with the implicit value for typeTag = Untyped().
     val ex = ValEx(TlaInt(42))

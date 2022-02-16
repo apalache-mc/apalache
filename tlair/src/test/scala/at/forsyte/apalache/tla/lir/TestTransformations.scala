@@ -6,13 +6,13 @@ import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.Outcome
 import java.io.{PrintStream, File, FileOutputStream}
 
 @RunWith(classOf[JUnitRunner])
-class TestTransformations extends FunSuite with TestingPredefs {
+class TestTransformations extends AnyFunSuite with TestingPredefs {
 
   override protected def withFixture(test: NoArgTest): Outcome = {
     // Tmp file to capture the noisy stdout from these tests

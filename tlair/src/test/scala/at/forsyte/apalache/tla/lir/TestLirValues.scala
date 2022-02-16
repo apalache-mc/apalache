@@ -2,8 +2,8 @@ package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.values._
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 import UntypedPredefs._
 
@@ -11,7 +11,7 @@ import UntypedPredefs._
  * Tests for the low-level intermediate representation.
  */
 @RunWith(classOf[JUnitRunner])
-class TestLirValues extends FunSuite {
+class TestLirValues extends AnyFunSuite {
   test("create booleans") {
     val b = TlaBool(false)
     assert(!b.value)

@@ -6,11 +6,12 @@ import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.{keep, touch}
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
 
 @RunWith(classOf[JUnitRunner])
-class TestLetInOptimizer extends FunSuite with BeforeAndAfterEach {
+class TestLetInOptimizer extends AnyFunSuite with BeforeAndAfterEach {
 
   import at.forsyte.apalache.tla.lir.convenience.tla._
 

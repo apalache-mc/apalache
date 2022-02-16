@@ -6,11 +6,12 @@ import at.forsyte.apalache.tla.lir._
 import TypedPredefs._
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import org.junit.runner.RunWith
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestOperAppToLetInDef extends FunSuite with BeforeAndAfterEach with TestingPredefs {
+class TestOperAppToLetInDef extends AnyFunSuite with BeforeAndAfterEach with TestingPredefs {
 
   private var wrapper = new OperAppToLetInDef(new UniqueNameGenerator, TrackerWithListeners())
 
@@ -23,7 +24,7 @@ class TestOperAppToLetInDef extends FunSuite with BeforeAndAfterEach with Testin
     val exs = List(
         tla.plus(tla.int(1), tla.int(2)).typed(IntT1()),
         tla.tuple(n_x ? "i", n_y ? "b", n_z ? "i").typed(types, "t"),
-        tla.exists(n_x ? "i", n_S ? "S", tla.gt(n_x ? "i", n_f ? "i") ? "b").typed(types, "b")
+        tla.exists(n_x ? "i", n_S ? "S", tla.gt(n_x ? "i", n_f ? "i") ? "b").typed(types, "b"),
     )
 
     val tr = wrapper.wrap(Set.empty)

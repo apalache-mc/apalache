@@ -8,12 +8,12 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet, TlaNatSet, TlaStrSet}
 import org.junit.runner.RunWith
 import org.scalacheck.Prop.{AnyOperators, forAll}
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.prop.Checkers
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatestplus.scalacheck.Checkers
 
 @RunWith(classOf[JUnitRunner])
-class TestUJsonToTla extends FunSuite with Checkers {
+class TestUJsonToTla extends AnyFunSuite with Checkers {
   implicit val reader = DefaultTagReader
   implicit val printer = TlaType1PrinterPredefs.printer
 

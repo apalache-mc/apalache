@@ -8,13 +8,14 @@ import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
 
 import java.io.{PrintWriter, StringWriter}
 
 @RunWith(classOf[JUnitRunner])
-class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
+class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
   private var stringWriter = new StringWriter()
   private var printWriter = new PrintWriter(stringWriter)
   private val layout80 = TextLayout().copy(textWidth = 80)

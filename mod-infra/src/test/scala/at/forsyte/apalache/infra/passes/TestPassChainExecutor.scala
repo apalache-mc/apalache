@@ -1,13 +1,13 @@
 package at.forsyte.apalache.infra.passes
 
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.easymock.EasyMockSugar
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.easymock.EasyMockSugar
+import org.scalatestplus.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.{TlaModule, ModuleProperty}
 
 @RunWith(classOf[JUnitRunner])
-class TestPassChainExecutor extends FunSuite {
+class TestPassChainExecutor extends AnyFunSuite {
   // Helper class to enable instantiation of different passes to be tested
   class ParametrizedPass(result: Boolean, deps: Set[ModuleProperty.Value], transfs: Set[ModuleProperty.Value])
       extends Pass {

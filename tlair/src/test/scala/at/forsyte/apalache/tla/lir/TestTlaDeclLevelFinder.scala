@@ -4,15 +4,15 @@ import at.forsyte.apalache.tla.lir.oper.TlaOper
 import org.junit.runner.RunWith
 import org.scalacheck.Prop
 import org.scalacheck.Prop.{AnyOperators, all, forAll, passed}
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.prop.Checkers
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatestplus.scalacheck.Checkers
 
 /**
  * Tests of TlaDeclLevelFinder.
  */
 @RunWith(classOf[JUnitRunner])
-class TestTlaDeclLevelFinder extends FunSuite with Checkers {
+class TestTlaDeclLevelFinder extends AnyFunSuite with Checkers {
 
   test("non-action operators + constants = constant level") {
     val gens = new IrGenerators {
