@@ -2,8 +2,7 @@
 (*
  * The purpose of this test is to make sure that all sequence operators are
  * working as expected. Hence, we write down a trivial state machine and write
- * all tests as state invariants. Some of them are reported as user errors,
- * so we have to check them individually.
+ * all tests as state invariants.
  *)
 
 EXTENDS Sequences, Integers, Apalache
