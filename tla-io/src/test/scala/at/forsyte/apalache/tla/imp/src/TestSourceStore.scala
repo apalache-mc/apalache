@@ -5,11 +5,11 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.src.SourceRegion
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestSourceStore extends FunSuite {
+class TestSourceStore extends AnyFunSuite {
   test("basic add and find") {
     val store = new SourceStore()
     val ex: TlaEx = tla.int(1)

@@ -37,9 +37,15 @@ object Dependencies {
   // Test only depenendencies
   object TestDeps {
     // Libraries
-    val easymock = "org.easymock" % "easymock" % "4.3" % Test
     val junit = "junit" % "junit" % "4.13.2" % Test
     val scalacheck = "org.scalacheck" %% "scalacheck" % "1.15.4" % Test
-    val scalatest = "org.scalatest" %% "scalatest" % "3.0.1" % Test
+    val easymock = "org.easymock" % "easymock" % "4.3" % Test
+
+    val scalaTestVersion = "3.2.11"
+    val scalatest = "org.scalatest" %% "scalatest" % scalaTestVersion % Test
+    val scalatestplusEasymock = "org.scalatestplus" %% "easymock-4-3" % s"${scalaTestVersion}.0" % Test
+    val scalatestplusJunit = "org.scalatestplus" %% "junit-4-13" % s"${scalaTestVersion}.0" % Test
+    val scalatestplusScalacheck = "org.scalatestplus" %% "scalacheck-1-15" % s"${scalaTestVersion}.0" % Test
+
   }
 }

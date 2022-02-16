@@ -5,11 +5,12 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
 
 @RunWith(classOf[JUnitRunner])
-class TestExpansionMarker extends FunSuite with BeforeAndAfterEach {
+class TestExpansionMarker extends AnyFunSuite with BeforeAndAfterEach {
   private var marker = new ExpansionMarker(TrackerWithListeners())
   val types = Map("S" -> SetT1(IntT1()), "PS" -> SetT1(SetT1(IntT1())), "i" -> IntT1(), "b" -> BoolT1(),
       "f" -> FunT1(IntT1(), IntT1()), "FS" -> SetT1(FunT1(IntT1(), IntT1())))
@@ -70,7 +71,7 @@ class TestExpansionMarker extends FunSuite with BeforeAndAfterEach {
       .forall(
           tla.name("x") ? "S",
           tla.powSet(tla.name("S") ? "S") ? "PS",
-          tla.name("P") ? "b"
+          tla.name("P") ? "b",
       )
       .typed(types, "b")
 
@@ -79,7 +80,7 @@ class TestExpansionMarker extends FunSuite with BeforeAndAfterEach {
       .forall(
           tla.name("x") ? "S",
           tla.apalacheExpand(tla.powSet(tla.name("S") ? "S") ? "PS") ? "PS",
-          tla.name("P") ? "b"
+          tla.name("P") ? "b",
       )
       .typed(types, "b")
 
@@ -91,7 +92,7 @@ class TestExpansionMarker extends FunSuite with BeforeAndAfterEach {
       .exists(
           tla.name("x") ? "S",
           tla.powSet(tla.name("S") ? "S") ? "PS",
-          tla.name("P") ? "b"
+          tla.name("P") ? "b",
       )
       .typed(types, "b")
 
@@ -100,7 +101,7 @@ class TestExpansionMarker extends FunSuite with BeforeAndAfterEach {
       .exists(
           tla.name("x") ? "S",
           tla.apalacheExpand(tla.powSet(tla.name("S") ? "S") ? "PS") ? "PS",
-          tla.name("P") ? "b"
+          tla.name("P") ? "b",
       )
       .typed(types, "b")
 
@@ -110,12 +111,11 @@ class TestExpansionMarker extends FunSuite with BeforeAndAfterEach {
   test("""not marked: Skolem(\E x \in SUBSET S: P)""") {
     val input =
       tla
-        .apalacheSkolem(
-            tla.exists(
-                tla.name("x") ? "S",
-                tla.powSet(tla.name("S") ? "S") ? "PS",
-                tla.name("P") ? "b"
-            ) ? "b")
+        .apalacheSkolem(tla.exists(
+            tla.name("x") ? "S",
+            tla.powSet(tla.name("S") ? "S") ? "PS",
+            tla.name("P") ? "b",
+        ) ? "b")
         .typed(types, "b")
 
     val output = marker.apply(input)
@@ -129,7 +129,7 @@ class TestExpansionMarker extends FunSuite with BeforeAndAfterEach {
         .choose(
             tla.name("x") ? "i",
             tla.powSet(tla.name("S") ? "S") ? "PS",
-            tla.name("P") ? "b"
+            tla.name("P") ? "b",
         )
         .typed(types, "i")
 

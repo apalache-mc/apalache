@@ -10,8 +10,9 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.typecheck._
 import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
  * Unit tests for translating TLA+ expressions to EtcExpr.
@@ -20,7 +21,7 @@ import org.scalatest.{BeforeAndAfterEach, FunSuite}
  *   Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
-class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
+class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder {
   private var parser: Type1Parser = _
   private var annotationStore: AnnotationStore = _
   private var gen: ToEtcExpr = _

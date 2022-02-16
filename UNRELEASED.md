@@ -10,11 +10,13 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
+### Breaking changes
+
+ * The `profiling.csv` file output by the `--smtprof` flag moved into the
+   configurable `run-dir`, see #1321
+
+ * Complete rework of sequences, see #1353
+
 ### Features
 
- * Implemented `SetAsFun` and use it in counterexamples instead of `:>` and `@@`, see #1319, #1327
-
-### Bug fixes
- * Fixed infinite recursion in `consChain`, see #1307
- * Fixed a bug where some simplified `Or` expressions were not expected by the rewriting rules, see #1285
- * Fixed a bug on broken `--view`, see #1327
+* `UNCHANGED x` now rewrites to `x' := x` instead of `x' = x`, when `x` is a variable name
