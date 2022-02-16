@@ -160,10 +160,22 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""regression: Tail(<<>> as Seq(Int)) does not unsat and its length is zero""") { rewriterType: SMTEncoding =>
+  test("""Tail(<<>> as Seq(Int)) throws an error""") { rewriterType: SMTEncoding =>
     val emptyTuple = tuple() as intSeqT
     val seqTail = tail(emptyTuple) as intSeqT
     val eq = eql(len(seqTail) as intT, int(0)) as boolT
+
+    val state = new SymbState(eq, arena, Binding())
+    assertThrows[TlaInputError] {
+      assertTlaExAndRestore(create(rewriterType), state)
+    }
+  }
+
+  test("""regression: Tail(SubSeq(<<1>>, 1, 0)) does not unsat and its length is -1""") { rewriterType: SMTEncoding =>
+    val tuple1 = tuple(int(1)) as intSeqT
+    val seqTail = tail(subseq(tuple1, int(1), int(0)) as intSeqT) as intSeqT
+    // One can argue that the Len(Tail(<<>>)) should be 0, but Tail(<<>>) is undefined, so we can report -1.
+    val eq = eql(len(seqTail) as intT, int(-1)) as boolT
 
     val state = new SymbState(eq, arena, Binding())
     assertTlaExAndRestore(create(rewriterType), state)
@@ -219,6 +231,16 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     val tup = tuple(3.to(6).map(int): _*) as intSeqT
     val subseqEx = subseq(tup, int(0), int(10)) as intSeqT
     val eq = eql(subseqEx, tup) as boolT
+
+    val state = new SymbState(eq, arena, Binding())
+    assertTlaExAndRestore(create(rewriterType), state)
+  }
+
+  test("""SubSeq(<<3, 4, 5, 6>>, 1, 0) = <<>>""") { rewriterType: SMTEncoding =>
+    // TLC throws an error in this case. We cannot produce side effects, so we are doing the best we can do here.
+    val tup = tuple(3.to(6).map(int): _*) as intSeqT
+    val subseqEx = subseq(tup, int(1), int(0)) as intSeqT
+    val eq = eql(subseqEx, tuple() as intSeqT) as boolT
 
     val state = new SymbState(eq, arena, Binding())
     assertTlaExAndRestore(create(rewriterType), state)
@@ -299,12 +321,13 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
 
   test("""regression: <<9, 10>> \o Tail(<<>>) does not unsat""") { rewriterType: SMTEncoding =>
     val t9_10 = tuple(int(9), int(10)) as intSeqT
-    // Tail(<<>>) produces some undefined value. In this case, \o should also produce an undefined value.
-    val concatRes = concat(t9_10, tail(tuple() as intSeqT) as intSeqT) as intSeqT
+    val t1 = tuple(int(1)) as intSeqT
+    // Tail(SubSeq(<<1>>, 1, 0)) produces some undefined value. In this case, \o should also produce an undefined value.
+    val concatRes = concat(t9_10, tail(subseq(t1, int(1), int(0)) as intSeqT) as intSeqT) as intSeqT
 
     val state = new SymbState(concatRes, arena, Binding())
     val rewriter = create(rewriterType)
-    val nextState = rewriter.rewriteUntilDone(state)
+    rewriter.rewriteUntilDone(state)
     // the result is undefined, but it should be sat
     assert(solverContext.sat())
   }

@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaSeqOper
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.pp.TlaInputError
 
 /**
  * Sequence operations: Head, Tail, Len, SubSeq, Append, Concat.
@@ -77,8 +78,14 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private def translateHead(state: SymbState, seqEx: TlaEx, elemType: TlaType1): SymbState = {
     val nextState = rewriter.rewriteUntilDone(state.setRex(seqEx))
     val seq = nextState.asCell
-    val protoSeq = proto.fromSeq(nextState.arena, seq)
-    nextState.setRex(proto.at(nextState.arena, protoSeq, 1).toNameEx as elemType)
+    val (protoSeq, _, capacity) = proto.unpackSeq(nextState.arena, seq)
+    if (capacity > 0) {
+      nextState.setRex(proto.at(nextState.arena, protoSeq, 1).toNameEx as elemType)
+    } else {
+      // this is the rare case when the spec author has made a typo, e.g., Head(<<>>)
+      val msg = s"Calling Head on an empty sequence"
+      throw new TlaInputError(msg, Some(state.ex.ID))
+    }
   }
 
   /**
@@ -91,9 +98,9 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val seqCell = nextState.asCell
     val (protoSeq, len, capacity) = proto.unpackSeq(nextState.arena, seqCell)
     if (capacity <= 0) {
-      // Tail(seq) is undefined when Len(seq) = 0.
-      // Therefore, we return the sequence itself, which would probably result in a spurious counterexample.
-      nextState.setRex(seqCell.toNameEx)
+      // this is the rare case when the spec author has made a typo, e.g., Tail(<<>>)
+      val msg = s"Calling Tail on an empty sequence"
+      throw new TlaInputError(msg, Some(state.ex.ID))
     } else {
       def shiftByOne(state: SymbState, indexBase1: Int): (SymbState, ArenaCell) = {
         val elem = proto.at(state.arena, protoSeq, indexBase1 + 1)
@@ -114,7 +121,6 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
    *
    * <pre SubSeq(s, m, n) == [ i \in 1..(1+n-m) |-> s[i+m-1] ] </pre>
    */
-
   private def translateSubSeq(state: SymbState, seqEx: TlaEx, newStartEx: TlaEx, newEndEx: TlaEx): SymbState = {
     // rewrite seqEx, newStartEx, and newEndEx
     var nextState = rewriter.rewriteUntilDone(state.setRex(seqEx))
