@@ -2,8 +2,10 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.caches.IntRangeCache
+import at.forsyte.apalache.tla.bmcmt.rules.aux.ProtoSeqOps
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.OperEx
+import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, OperEx}
+import at.forsyte.apalache.tla.lir.TypedPredefs.{BuilderExAsTyped, tlaExToBuilderExAsTyped}
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -15,6 +17,8 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
  *   Igor Konnov
  */
 class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) extends RewritingRule {
+  private val proto = new ProtoSeqOps(rewriter)
+
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaFunOper.domain, _) => true
@@ -60,19 +64,20 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
   }
 
   private def mkSeqDomain(state: SymbState, seqCell: ArenaCell): SymbState = {
-    // as we do not know the domain precisely, we create the set 1..N and include only its elements between start and end
-    val seqT = seqCell.cellType.asInstanceOf[SeqT]
-    val start :: end +: elems = state.arena.getHas(seqCell)
-    val (newArena, staticDom) = intRangeCache.create(state.arena, (1, elems.size))
+    val (protoSeq, len, capacity) = proto.unpackSeq(state.arena, seqCell)
+    // We do not know the domain precisely, as it depends on the length of the sequence.
+    // Hence, we create the set `1..capacity` and include only those elements that are not greater than `len`.
+    val (newArena, staticDom) = intRangeCache.create(state.arena, (1, capacity))
     // we cannot use staticDom directly, as its in-relation is restricted, create a copy
     var arena = newArena.appendCell(staticDom.cellType)
     val dom = arena.topCell
     arena = arena.appendHas(dom, arena.getHas(staticDom): _*)
-    for (domElem <- arena.getHas(staticDom)) {
+    for ((domElem, indexBase0) <- arena.getHas(staticDom).zipWithIndex) {
       val inDom = tla.apalacheStoreInSet(domElem.toNameEx, dom.toNameEx)
-      // note that start >=0 and end equals the last element, so use start < domElem and domElem <= end
-      val inRange = tla.and(tla.lt(start.toNameEx, domElem.toNameEx), tla.le(domElem.toNameEx, end.toNameEx))
-      rewriter.solverContext.assertGroundExpr(tla.eql(inDom, inRange))
+      val notInDom = tla.apalacheStoreNotInSet(domElem.toNameEx, dom.toNameEx)
+      // the element is in range, if indexBase0 < len
+      val inRange = tla.lt(tla.int(indexBase0), len.toNameEx as IntT1()) as BoolT1()
+      rewriter.solverContext.assertGroundExpr(tla.ite(inRange, inDom, notInDom))
     }
 
     state.setArena(arena).setRex(dom.toNameEx)

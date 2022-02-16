@@ -1,20 +1,23 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.rules.aux.ProtoSeqOps
 import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
- * Rewrites a tuple or sequence constructor, that is, <<e_1, ..., e_k>>.
- * A tuple may be interpreted as a sequence, if it was properly type-annotated,
- * e.g., <<>> <: Seq(Int).
+ * Rewrites a tuple or sequence constructor, that is, <<e_1, ..., e_k>>. A tuple may be interpreted as a sequence, if it
+ * is properly type-annotated.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class TupleOrSeqCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
+  private val proto = new ProtoSeqOps(rewriter)
+
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaFunOper.tuple, _*) => true
@@ -25,7 +28,7 @@ class TupleOrSeqCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case ex @ OperEx(TlaFunOper.tuple, elems @ _*) =>
-        // switch to cell theory
+        // rewrite all elements
         val (stateAfterElems: SymbState, groundElems: Seq[TlaEx]) =
           rewriter.rewriteSeqUntilDone(state, elems)
         val cells = groundElems.map(stateAfterElems.arena.findCellByNameEx)
@@ -54,18 +57,15 @@ class TupleOrSeqCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   private def createSeq(state: SymbState, seqT: SeqT, cells: Seq[ArenaCell]): SymbState = {
-    // create a sequence cell
-    var nextState = state.updateArena(_.appendCell(seqT))
-    val seq = nextState.arena.topCell
+    // initialize the proto sequence with the elements
+    def mkElem(s: SymbState, indexBase1: Int): (SymbState, ArenaCell) = (s, cells(indexBase1 - 1))
 
-    // connect N + 2 elements to seqT: the start (>= 0), the end (< len), and the sequence of values
-    nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.int(0)))
-    val start = nextState.asCell
+    var nextState = proto.make(state, cells.length, mkElem)
+    val newProtoSeq = nextState.asCell
+    // create the cell to store length
     nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.int(cells.length)))
-    val end = nextState.asCell
-    nextState = nextState.updateArena(_.appendHasNoSmt(seq, start +: end +: cells: _*))
-    // we do not add SMT constraints as they are not important
-    nextState.setRex(seq.toNameEx)
+    // create the sequence out of the proto sequence and its length
+    proto.mkSeq(nextState, seqT.toTlaType1, newProtoSeq, nextState.asCell)
   }
 
 }

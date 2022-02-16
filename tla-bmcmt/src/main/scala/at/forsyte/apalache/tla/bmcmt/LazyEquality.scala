@@ -3,16 +3,19 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt.caches.{EqCache, EqCacheSnapshot}
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rewriter.{ConstSimplifierForSmt, Recoverable}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.ProtoSeqOps
 import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.lir.TypedPredefs.{BuilderExAsTyped, tlaExToBuilderExAsTyped}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.{MalformedTlaError, NullEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, MalformedTlaError, NullEx, TlaEx}
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 /**
  * Generate equality constraints between cells and cache them to avoid redundant constraints.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class LazyEquality(rewriter: SymbStateRewriter)
     extends StackableContext with Serializable with Recoverable[EqCacheSnapshot] {
@@ -21,14 +24,18 @@ class LazyEquality(rewriter: SymbStateRewriter)
   private lazy val simplifier = new ConstSimplifierForSmt
 
   private val eqCache = new EqCache()
+  private val protoSeqOps = new ProtoSeqOps(rewriter)
 
   /**
-   * This method ensure that a pair of its arguments can be safely compared by the SMT equality,
-   * that is, all the necessary constraints have been generated with cacheEqualities.
+   * This method ensure that a pair of its arguments can be safely compared by the SMT equality, that is, all the
+   * necessary constraints have been generated with cacheEqualities.
    *
-   * @param left  a left cell
-   * @param right a right cell
-   * @return tla.eql(left, right), provided that left and right can be compared
+   * @param left
+   *   a left cell
+   * @param right
+   *   a right cell
+   * @return
+   *   tla.eql(left, right), provided that left and right can be compared
    */
   def safeEq(left: ArenaCell, right: ArenaCell): TlaEx = {
     if (!left.cellType.comparableWith(right.cellType)) {
@@ -54,16 +61,17 @@ class LazyEquality(rewriter: SymbStateRewriter)
   }
 
   /**
-   * Check that the equality constraints were cached for left and right.
-   * Then, if left and right are of comparable types, use SMT equality,
-   * otherwise just return false. The difference between safeEq and cachedEq is that
-   * safeEq is stricter: it does not allow to compare cells of different types at all.
-   * Use cachedEq when you comparisons might involve cells of different types,
-   * and it is clear that these elements cannot be equal.
+   * Check that the equality constraints were cached for left and right. Then, if left and right are of comparable
+   * types, use SMT equality, otherwise just return false. The difference between safeEq and cachedEq is that safeEq is
+   * stricter: it does not allow to compare cells of different types at all. Use cachedEq when you comparisons might
+   * involve cells of different types, and it is clear that these elements cannot be equal.
    *
-   * @param left  a left cell
-   * @param right a right cell
-   * @return depending on the types of the both cells, return either (= left right), or false
+   * @param left
+   *   a left cell
+   * @param right
+   *   a right cell
+   * @return
+   *   depending on the types of the both cells, return either (= left right), or false
    */
   def cachedEq(left: ArenaCell, right: ArenaCell): TlaEx = {
     if (left == right) {
@@ -85,15 +93,18 @@ class LazyEquality(rewriter: SymbStateRewriter)
 
   /**
    * Produce equality constraints for each pair in the sequence, so that we can later compare all the pairs as cells
-   * using SMT equality (=). Since equality semantics may require us to rewrite the arena and introduce
-   * new SMT constraints, this method may invoke rewriting rules and modify the symbolic state.
+   * using SMT equality (=). Since equality semantics may require us to rewrite the arena and introduce new SMT
+   * constraints, this method may invoke rewriting rules and modify the symbolic state.
    *
    * That the equality constraints were introduced for each pair is recorded in the local cache. Thus, the constraints
    * are generated only once for each pair of cells.
    *
-   * @param state a symbolic state to start with
-   * @param pairs pairs of cells, for which the equality constraints should be generated
-   * @return a new symbolic state that contains the constraints for every pair in the sequence
+   * @param state
+   *   a symbolic state to start with
+   * @param pairs
+   *   pairs of cells, for which the equality constraints should be generated
+   * @return
+   *   a new symbolic state that contains the constraints for every pair in the sequence
    */
   def cacheEqConstraints(state: SymbState, pairs: Traversable[(ArenaCell, ArenaCell)]): SymbState = {
     rewriter.solverContext.log("; [START] Caching equality constraints for a sequence: " + pairs)
@@ -108,13 +119,17 @@ class LazyEquality(rewriter: SymbStateRewriter)
   }
 
   /**
-   * Given a pair of cells, generate equality constraints and return a new symbolic state
-   * (leaving the original expression in the state unmodified).
+   * Given a pair of cells, generate equality constraints and return a new symbolic state (leaving the original
+   * expression in the state unmodified).
    *
-   * @param state a symbolic state
-   * @param left  left cell to compare
-   * @param right right cell to compare
-   * @return a new symbolic state
+   * @param state
+   *   a symbolic state
+   * @param left
+   *   left cell to compare
+   * @param right
+   *   right cell to compare
+   * @return
+   *   a new symbolic state
    */
   def cacheOneEqConstraint(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {
     val cacheEntry = eqCache.get(left, right)
@@ -164,12 +179,14 @@ class LazyEquality(rewriter: SymbStateRewriter)
   }
 
   /**
-   * Cache the equality as the SMT equality. When we know that we can use SMT equality by construction, e.g.,
-   * see PICK FROM {S_1, ..., S_n}, we can tell the cache just to use the SMT equality. Use this method with care,
-   * as it can easily produce unsound results!
+   * Cache the equality as the SMT equality. When we know that we can use SMT equality by construction, e.g., see PICK
+   * FROM {S_1, ..., S_n}, we can tell the cache just to use the SMT equality. Use this method with care, as it can
+   * easily produce unsound results!
    *
-   * @param left a left cell
-   * @param right a right cell
+   * @param left
+   *   a left cell
+   * @param right
+   *   a right cell
    */
   def cacheAsSmtEqualityByMagic(left: ArenaCell, right: ArenaCell): Unit = {
     eqCache.put(left, right, EqCache.EqEntry())
@@ -177,7 +194,9 @@ class LazyEquality(rewriter: SymbStateRewriter)
 
   /**
    * Count the number of valid equalities. Use this method only for debugging purposes, as it is quite slow.
-   * @return a pair: the number of valid equalities, and the total number of non-constant equalities
+   *
+   * @return
+   *   a pair: the number of valid equalities, and the total number of non-constant equalities
    */
   def countConstantEqualities(): (Int, Int) = {
     val solver = rewriter.solverContext
@@ -279,15 +298,19 @@ class LazyEquality(rewriter: SymbStateRewriter)
   }
 
   /**
-   * Check, whether one set is a subset of another set (not a proper one).
-   * This method changed the underlying theory to BoolTheory.
+   * Check, whether one set is a subset of another set (not a proper one). This method changed the underlying theory to
+   * BoolTheory.
    *
    * Since this operation is tightly related to set equality, we moved it here.
    *
-   * @param state a symbolic state
-   * @param left  a left cell that holds a set
-   * @param right a right cell that holds a set
-   * @return a new symbolic state with a (Boolean) predicate equivalent to `left \subseteq right`.
+   * @param state
+   *   a symbolic state
+   * @param left
+   *   a left cell that holds a set
+   * @param right
+   *   a right cell that holds a set
+   * @return
+   *   a new symbolic state with a (Boolean) predicate equivalent to `left \subseteq right`.
    */
   def subsetEq(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {
     val leftElems = state.arena.getHas(left)
@@ -345,7 +368,8 @@ class LazyEquality(rewriter: SymbStateRewriter)
   /**
    * Take a snapshot and return it
    *
-   * @return the snapshot
+   * @return
+   *   the snapshot
    */
   override def snapshot(): EqCacheSnapshot = {
     eqCache.snapshot()
@@ -354,7 +378,8 @@ class LazyEquality(rewriter: SymbStateRewriter)
   /**
    * Recover a previously saved snapshot (not necessarily saved by this object).
    *
-   * @param shot a snapshot
+   * @param shot
+   *   a snapshot
    */
   override def recover(shot: EqCacheSnapshot): Unit = {
     eqCache.recover(shot)
@@ -363,7 +388,8 @@ class LazyEquality(rewriter: SymbStateRewriter)
   /**
    * Get the current context level, that is the difference between the number of pushes and pops made so far.
    *
-   * @return the current level, always non-negative.
+   * @return
+   *   the current level, always non-negative.
    */
   override def contextLevel: Int = {
     eqCache.contextLevel
@@ -377,8 +403,8 @@ class LazyEquality(rewriter: SymbStateRewriter)
   }
 
   /**
-   * Pop the previously saved context. Importantly, pop may be called multiple times and thus it is not sufficient
-   * to save only the latest context.
+   * Pop the previously saved context. Importantly, pop may be called multiple times and thus it is not sufficient to
+   * save only the latest context.
    */
   override def pop(): Unit = {
     eqCache.pop()
@@ -387,7 +413,8 @@ class LazyEquality(rewriter: SymbStateRewriter)
   /**
    * Pop the context as many times as needed to reach a given level.
    *
-   * @param n pop n times, if n > 0, otherwise, do nothing
+   * @param n
+   *   pop n times, if n > 0, otherwise, do nothing
    */
   override def pop(n: Int): Unit = {
     eqCache.pop(n)
@@ -402,10 +429,12 @@ class LazyEquality(rewriter: SymbStateRewriter)
 
   /**
    * Compare two functions. In the new implementation, we just compare the associated relations as sets.
+   *
    * @param state
    * @param leftFun
    * @param rightFun
-   * @return the new symbolic state
+   * @return
+   *   the new symbolic state
    */
   private def mkFunEq(state: SymbState, leftFun: ArenaCell, rightFun: ArenaCell): SymbState = {
     val leftRel = state.arena.getCdm(leftFun)
@@ -501,27 +530,27 @@ class LazyEquality(rewriter: SymbStateRewriter)
   }
 
   private def mkSeqEq(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {
-    // XXXXabcXX = XabcXX
-    val leftCells = state.arena.getHas(left)
-    val rightCells = state.arena.getHas(right)
-    val (leftStart, leftEnd) = (leftCells.head, leftCells.tail.head)
-    val (rightStart, rightEnd) = (rightCells.head, rightCells.tail.head)
-    val (leftElems, rightElems) = (leftCells.tail.tail, rightCells.tail.tail)
+    val (proto1, len1, capacity1) = protoSeqOps.unpackSeq(state.arena, left)
+    val (proto2, len2, capacity2) = protoSeqOps.unpackSeq(state.arena, right)
+
+    // The proto sequences may have different capacities.
+    // Since we compare lengths, we only have to compare the shared prefix.
+    val sharedCapacity = Math.min(capacity1, capacity2)
+    val elems1 = protoSeqOps.elems(state.arena, proto1).slice(0, sharedCapacity)
+    val elems2 = protoSeqOps.elems(state.arena, proto2).slice(0, sharedCapacity)
+
+    // compare the shared prefix
     var nextState = state
-    def eqPairwise(no: Int): TlaEx = {
-      // Use function application here. This may look expensive, but is there any better way?
-      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.appFun(left.toNameEx, tla.int(no))))
-      val le = nextState.asCell
-      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.appFun(right.toNameEx, tla.int(no))))
-      val re = nextState.asCell
-      nextState = cacheEqConstraints(nextState, (le, re) :: Nil)
-      safeEq(le, re)
+
+    def eqPairwise(leftCell: ArenaCell, rightCell: ArenaCell): TlaEx = {
+      nextState = cacheOneEqConstraint(nextState, leftCell, rightCell)
+      safeEq(leftCell, rightCell)
     }
 
-    val minLen = Math.min(leftElems.size, rightElems.size)
-    val elemsEq = tla.and(1 to minLen map eqPairwise: _*)
-    val sizesEq =
-      tla.eql(tla.minus(leftEnd.toNameEx, leftStart.toNameEx), tla.minus(rightEnd.toNameEx, rightStart.toNameEx))
+    val elemsEq = tla.and(elems1.zip(elems2).map((eqPairwise _).tupled): _*)
+    val sizesEq = tla.eql(len1.toNameEx as IntT1(), len2.toNameEx as IntT1()) as BoolT1()
+
+    // seq1 and seq2 are equal if and only if: (1) their lengths are equal, and (2) their shared prefixes are equal.
     rewriter.solverContext
       .assertGroundExpr(tla.equiv(tla.eql(left.toNameEx, right.toNameEx), tla.and(sizesEq, elemsEq)))
     eqCache.put(left, right, EqCache.EqEntry())

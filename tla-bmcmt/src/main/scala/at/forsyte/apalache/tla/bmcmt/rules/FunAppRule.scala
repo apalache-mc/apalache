@@ -1,22 +1,24 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory, ProtoSeqOps}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, TlaType1, ValEx}
 
 /**
  * Implements f[x] for: functions, records, and tuples.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val picker = new CherryPick(rewriter)
   private val defaultValueFactory = new DefaultValueFactory(rewriter)
+  private val proto = new ProtoSeqOps(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -41,8 +43,9 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
             val resultT = CellT.fromTypeTag(ex.typeTag)
             applyRecord(funState, funCell, funEx, argEx, resultT)
 
-          case SeqT(_) =>
-            applySeq(funState, funCell, argEx)
+          case SeqT(elemT) =>
+            val protoSeq = proto.fromSeq(funState.arena, funCell)
+            proto.get(funState, elemT.toTlaType1, protoSeq, argEx)
 
           case _ => // general functions
             applyFun(funState, funCell, argEx)
@@ -57,7 +60,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       resultT: CellT): SymbState = {
     val key = argEx match {
       case ValEx(TlaStr(k)) => k
-      case _                => throw new RewriterException(s"Accessing a record $recEx with a non-constant key $argEx", argEx)
+      case _ => throw new RewriterException(s"Accessing a record $recEx with a non-constant key $argEx", argEx)
     }
     val fields = recordCell.cellType match {
       case RecordT(f) => f
@@ -88,43 +91,6 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     val tupleElem = elems(index)
     state.setRex(tupleElem.toNameEx)
-  }
-
-  private def applySeq(state: SymbState, seqCell: ArenaCell, argEx: TlaEx): SymbState = {
-    val solverAssert = rewriter.solverContext.assertGroundExpr _
-    var nextState = rewriter.rewriteUntilDone(state.setRex(argEx))
-    val argCell = nextState.asCell
-    val seqChildren = state.arena.getHas(seqCell)
-    val start = seqChildren.head // starts with 0
-    val end = seqChildren.tail.head // starts with 0
-    // Get the sequence of N elements. The range values[start : end] forms the actual sequence
-    val values = seqChildren.tail.tail
-
-    val nelems = values.size
-    if (nelems == 0) {
-      // The sequence is statically empty. Return the default value.
-      // Most likely, this expression will be never used as a result.
-      defaultValueFactory.makeUpValue(nextState, seqCell.cellType.asInstanceOf[SeqT].res)
-    } else {
-      // create the oracle
-      val (oracleState, oracle) = picker.oracleFactory.newIntOracle(nextState, nelems + 1)
-      nextState = oracleState
-      // pick an element to be the result
-      nextState = picker.pickByOracle(nextState, oracle, values, nextState.arena.cellTrue().toNameEx)
-      val pickedResult = nextState.asCell
-      // now it is getting interesting:
-      // If 1 <= arg <= end - start, just require oracle = arg - 1 + start,
-      // Otherwise, set oracle to N
-      val inRange =
-        tla.and(tla.le(tla.int(1), argCell.toNameEx), tla.le(argCell.toNameEx, tla.minus(end.toNameEx, start.toNameEx)))
-      nextState = rewriter
-        .rewriteUntilDone(nextState.setRex(tla.plus(tla.minus(argCell.toNameEx, tla.int(1)), start.toNameEx)))
-      val indexCell = nextState.asCell
-      val oracleEqArg = tla.eql(indexCell.toNameEx, oracle.intCell.toNameEx)
-      val oracleIsN = oracle.whenEqualTo(nextState, nelems)
-      solverAssert(tla.or(tla.and(inRange, oracleEqArg), tla.and(tla.not(inRange), oracleIsN)))
-      nextState.setRex(pickedResult.toNameEx)
-    }
   }
 
   private def applyFun(state: SymbState, funCell: ArenaCell, argEx: TlaEx): SymbState = {

@@ -59,7 +59,6 @@ trait RewriterBase extends fixture.FunSuite {
   private def assertOrExplain(msg: String, rewriter: SymbStateRewriter, state: SymbState, outcome: Boolean): Unit = {
     if (!outcome) {
       val writer = new StringWriter()
-      new SymbStateDecoder(solverContext, rewriter).dumpArena(state, new PrintWriter(writer))
       solverContext.log(writer.getBuffer.toString)
       solverContext.push() // push and pop flush the log output
       solverContext.pop()
