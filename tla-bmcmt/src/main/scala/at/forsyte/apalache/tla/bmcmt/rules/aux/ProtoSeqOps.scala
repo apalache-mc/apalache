@@ -105,7 +105,7 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
    * SMT constraints and it should be avoided, when possible. If the index is an integer literal, use [[at]].
    *
    * @param picker
-   *   an instance that is used to pick the values
+   *   an instance of CherryPick that is used to pick the values
    * @param state
    *   a symbolic state to start with
    * @param defaultValue
@@ -213,8 +213,12 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
   }
 
   /**
-   * Fold the proto sequence with `binOp`.
+   * Fold-left the proto sequence with a binary operator that takes a state `state` and an element of the sequence
+   * `elem` and produces the new state. The result is accumulated in `state.ex`. This function takes care of the case
+   * when the length of the sequence is below the capacity.
    *
+   * @param picker
+   *   an instance of CherryPick that is used to pick the values
    * @param state
    *   a symbolic state to start with
    * @param protoSeq
@@ -222,13 +226,35 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
    * @param len
    *   the length encoded as a cell
    * @param binOp
-   *   the binary operator to apply
+   *   the binary operator that is applied to the accumulated result (in `state.ex`) and the element
    * @return
    *   the new symbolic state that contains the result of folding as an expression
    */
-  def fold(state: SymbState, protoSeq: ArenaCell, len: ArenaCell, binOp: TlaOperDecl): SymbState = {
-    // TODO: implement!
-    throw new NotImplementedError("NIE")
+  def foldLeft(picker: CherryPick, state: SymbState, protoSeq: ArenaCell, len: ArenaCell,
+      binOp: (SymbState, ArenaCell) => SymbState): SymbState = {
+    // propagate the result only if the element is below the length
+    def applyOne(state: SymbState, elem: ArenaCell, indexBase1: Int) = {
+      // apply the operator, independently of whether we have reach the length or not (we don't know statically)
+      var nextState = binOp(state, elem)
+      val newResult = nextState.asCell
+      // choose between the old result (if above the length) and the new result (if not above the length)
+      val (oracleState, oracle) = picker.oracleFactory.newDefaultOracle(nextState, 2)
+      nextState = picker
+        .pickByOracle(oracleState, oracle, Seq(state.asCell, newResult), nextState.arena.cellTrue().toNameEx)
+      val picked = nextState.ex
+      val inRange = tla.le(tla.int(indexBase1), len.toNameEx as IntT1()) as BoolT1()
+      val pickNew = oracle.whenEqualTo(nextState, 1) as BoolT1()
+      val ite = tla.ite(inRange, pickNew, tla.not(pickNew) as BoolT1()) as BoolT1()
+      rewriter.solverContext.assertGroundExpr(ite)
+
+      nextState.setRex(picked)
+    }
+
+    // The rest is easy: Just fold over all elements.
+    val elems = state.arena.getHas(protoSeq)
+    elems.zipWithIndex.foldLeft(state) { case (s, (cell, indexBase0)) =>
+      applyOne(s, cell, indexBase0 + 1)
+    }
   }
 
   private def getLenAndProto(arena: Arena, seq: ArenaCell): (ArenaCell, ArenaCell) = {
