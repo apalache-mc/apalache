@@ -3,13 +3,14 @@ package at.forsyte.apalache.tla.pp
 import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, IntT1, RecT1, SetT1, StrT1, TlaEx, TupT1}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import org.junit.runner.RunWith
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 
 @RunWith(classOf[JUnitRunner])
-class TestKeramelizer extends FunSuite with BeforeAndAfterEach {
+class TestKeramelizer extends AnyFunSuite with BeforeAndAfterEach {
   private var keramelizer = new Keramelizer(new UniqueNameGenerator(), TrackerWithListeners())
 
   override def beforeEach(): Unit = {
@@ -179,8 +180,8 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach {
     val output = keramelizer.apply(input)
 
     /**
-     * We ignore the second guard to extend a partial function to a total function. This is sound, as
-     * CASE returns some (unknown) value when no guard holds true.
+     * We ignore the second guard to extend a partial function to a total function. This is sound, as CASE returns some
+     * (unknown) value when no guard holds true.
      *
      * IF p_1 THEN e_1 ELSE e_2
      */
@@ -214,7 +215,7 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach {
             tla.and(tla.name("p_1") ? "b", tla.name("e_1") ? "b") ? "b",
             tla.and(tla.name("p_2") ? "b", tla.name("e_2") ? "b") ? "b",
             tla.and(tla.not(tla.name("p_1") ? "b") ? "b", tla.not(tla.name("p_2") ? "b") ? "b",
-                tla.name("e_def") ? "b") ? "b"
+                tla.name("e_def") ? "b") ? "b",
         )
         .typed(types, "b")
     assert(expected == output)
@@ -239,7 +240,7 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach {
       tla
         .or(
             tla.and(tla.name("p_1") ? "b", tla.name("e_1") ? "b") ? "b",
-            tla.and(tla.name("p_2") ? "b", tla.name("e_2") ? "b") ? "b"
+            tla.and(tla.name("p_2") ? "b", tla.name("e_2") ? "b") ? "b",
         )
         .typed(types, "b")
     assert(expected == output)

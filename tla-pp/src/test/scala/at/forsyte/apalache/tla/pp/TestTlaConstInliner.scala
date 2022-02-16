@@ -4,12 +4,14 @@ import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterEach, FunSuite, Matchers}
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.funsuite.AnyFunSuite
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 @RunWith(classOf[JUnitRunner])
-class TestTlaConstInliner extends FunSuite with BeforeAndAfterEach with Matchers {
+class TestTlaConstInliner extends AnyFunSuite with BeforeAndAfterEach with Matchers {
   // some expressions to play with
   private val primitiveValuedConst = tla.name("PrimitiveValuedConst")
   private val nonPrimitiveValuedConst = tla.name("NonPrimitiveValuedConst")

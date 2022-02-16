@@ -5,11 +5,12 @@ import at.forsyte.apalache.tla.lir.TypedPredefs.{BuilderExAsTyped, BuilderOperDe
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
 
 @RunWith(classOf[JUnitRunner])
-class TestSkolemizationMarker extends FunSuite with BeforeAndAfterEach {
+class TestSkolemizationMarker extends AnyFunSuite with BeforeAndAfterEach {
 
   import at.forsyte.apalache.tla.lir.convenience.tla._
 

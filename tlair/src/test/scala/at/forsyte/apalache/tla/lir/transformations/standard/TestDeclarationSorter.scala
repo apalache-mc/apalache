@@ -4,11 +4,12 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
 
 @RunWith(classOf[JUnitRunner])
-class TestDeclarationSorter extends FunSuite with BeforeAndAfterEach {
+class TestDeclarationSorter extends AnyFunSuite with BeforeAndAfterEach {
   test("Bar calls Foo out of order") {
     val foo = tla.declOp("Foo", tla.bool(true))
     val bar = tla.declOp("Bar", tla.appOp(tla.name("Foo")))

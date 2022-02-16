@@ -3,12 +3,13 @@ package at.forsyte.apalache.tla.lir.transformations.impl
 import org.junit.runner.RunWith
 import org.scalacheck.Prop.{AnyOperators, falsified, forAll, passed, propBoolean}
 import org.scalacheck.{Arbitrary, Gen, Prop}
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.prop.Checkers
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatestplus.scalacheck.Checkers
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
 
 @RunWith(classOf[JUnitRunner])
-class TestStableTopologicalSort extends FunSuite with BeforeAndAfterEach with Checkers {
+class TestStableTopologicalSort extends AnyFunSuite with BeforeAndAfterEach with Checkers {
   private def genEdges(bound: Int): Gen[List[(Int, Set[Int])]] =
     for {
       size <- Gen.choose(1, bound)
@@ -77,8 +78,8 @@ class TestStableTopologicalSort extends FunSuite with BeforeAndAfterEach with Ch
         result match {
           case Left(sorted) =>
             isSorted(edgesMap, sorted) :| ("sorted: " + sorted) &&
-              ((unsorted.distinct == unsorted) ==>
-                isStableLayer0(edgesMap, unsorted, sorted) :| ("sorted: " + sorted))
+            ((unsorted.distinct == unsorted) ==>
+              isStableLayer0(edgesMap, unsorted, sorted) :| ("sorted: " + sorted))
 
           case Right(witnesses) =>
             isOnCycle(edgesMap, witnesses) :| ("witnesses: " + witnesses)

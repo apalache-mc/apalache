@@ -3,12 +3,12 @@ package at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 @RunWith(classOf[JUnitRunner])
-class TestBuilder extends FunSuite with TestingPredefs {
+class TestBuilder extends AnyFunSuite with TestingPredefs {
   private val bd = new Builder()
 
   test("Test direct methods: Names and values") {
@@ -40,20 +40,18 @@ class TestBuilder extends FunSuite with TestingPredefs {
 
     assert(decl1 == TlaOperDecl("A", List(), n_c))
     assert(decl2 == TlaOperDecl("A", List(OperParam("x")), n_x))
-    assert(
-        decl3 ==
-          TlaOperDecl(
-              "A",
-              List(OperParam("B", 0)),
-              OperEx(TlaOper.apply, n_B),
-          ))
-    assert(
-        decl4 ==
-          TlaOperDecl(
-              "A",
-              List(OperParam("x"), OperParam("B", 1)),
-              OperEx(TlaOper.apply, n_B, n_x),
-          ))
+    assert(decl3 ==
+      TlaOperDecl(
+          "A",
+          List(OperParam("B", 0)),
+          OperEx(TlaOper.apply, n_B),
+      ))
+    assert(decl4 ==
+      TlaOperDecl(
+          "A",
+          List(OperParam("x"), OperParam("B", 1)),
+          OperEx(TlaOper.apply, n_B, n_x),
+      ))
 
     val appEx1 = bd.appDecl(decl1).untyped()
     val appEx2 = bd.appDecl(decl2, n_a).untyped()

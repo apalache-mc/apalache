@@ -7,13 +7,14 @@ import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import TypedPredefs._
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.math.BigInt
 
 @RunWith(classOf[JUnitRunner])
-class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs {
+class TestUnroller extends AnyFunSuite with BeforeAndAfterEach with TestingPredefs {
 
   private val noTracker = new IdleTracker()
   private var unroller = new Unroller(new UniqueNameGenerator, noTracker, new IncrementalRenaming(noTracker))
@@ -38,7 +39,7 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
         ("A", tla.str("1").typed()),
         ("B", tla.int(0).typed()),
         ("C", cBody),
-        ("D", dBody)
+        ("D", dBody),
     ) map exAsDecl
 
     val module = new TlaModule("M", decls)
@@ -64,7 +65,7 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
 
     val decls = recDecl +: (Seq[(String, TlaEx)](
         (Unroller.UNROLL_TIMES_PREFIX + name, tla.int(0).typed(IntT1())),
-        (Unroller.UNROLL_DEFAULT_PREFIX + name, tla.bigInt(defaultVal.intValue).typed(IntT1()))
+        (Unroller.UNROLL_DEFAULT_PREFIX + name, tla.bigInt(defaultVal.intValue).typed(IntT1())),
     ) map exAsDecl)
 
     val module = new TlaModule("M", decls)
@@ -105,7 +106,7 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
 
     val decls = recDecl +: (Seq[(String, TlaEx)](
         (Unroller.UNROLL_TIMES_PREFIX + declarationName, tla.int(1).typed(IntT1())),
-        (Unroller.UNROLL_DEFAULT_PREFIX + declarationName, tla.int(defaultVal.intValue).typed(IntT1()))
+        (Unroller.UNROLL_DEFAULT_PREFIX + declarationName, tla.int(defaultVal.intValue).typed(IntT1())),
     ) map exAsDecl)
 
     val module = new TlaModule("M", decls)
@@ -169,7 +170,7 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
 
     val decls = nonRecDecl +: (Seq[(String, TlaEx)](
         (Unroller.UNROLL_TIMES_PREFIX + letInOpName, tla.int(1).typed(IntT1())),
-        (Unroller.UNROLL_DEFAULT_PREFIX + letInOpName, tla.int(defaultVal.intValue).typed(IntT1()))
+        (Unroller.UNROLL_DEFAULT_PREFIX + letInOpName, tla.int(defaultVal.intValue).typed(IntT1())),
     ) map exAsDecl)
 
     val module = new TlaModule("M", decls)
@@ -185,7 +186,7 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
 
     val altDecls = recDecl +: (Seq[(String, TlaEx)](
         (Unroller.UNROLL_TIMES_PREFIX + letInOpName, tla.int(1).typed(IntT1())),
-        (Unroller.UNROLL_DEFAULT_PREFIX + letInOpName, tla.bigInt(defaultVal.intValue).typed(IntT1()))
+        (Unroller.UNROLL_DEFAULT_PREFIX + letInOpName, tla.bigInt(defaultVal.intValue).typed(IntT1())),
     ) map exAsDecl)
 
     val altModule = new TlaModule("N", altDecls)

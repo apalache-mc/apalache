@@ -5,14 +5,14 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 import java.io.{PrintWriter, StringWriter}
 import scala.collection.immutable.SortedMap
 
 @RunWith(classOf[JUnitRunner])
-class TestItfCounterexampleWriter extends FunSuite {
+class TestItfCounterexampleWriter extends AnyFunSuite {
 
   /**
    * Write a counterexample and compare the output to the expected result.

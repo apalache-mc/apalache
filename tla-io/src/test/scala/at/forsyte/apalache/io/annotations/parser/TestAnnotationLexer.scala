@@ -1,19 +1,20 @@
 package at.forsyte.apalache.io.annotations.parser
 
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 import java.io.StringReader
 
 /**
- * Tests for the TLC configuration parser. As the lexer does not know the syntactic structure of annotations,
- * it may produce additional tokens that have to be resolved by the parser.
+ * Tests for the TLC configuration parser. As the lexer does not know the syntactic structure of annotations, it may
+ * produce additional tokens that have to be resolved by the parser.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
-class TestAnnotationLexer extends FunSuite {
+class TestAnnotationLexer extends AnyFunSuite {
   private def expectOk(expectedTokens: List[AnnotationToken], inputText: String) = {
     AnnotationLexer(new StringReader(inputText))
       .map(output => assert(expectedTokens == output))

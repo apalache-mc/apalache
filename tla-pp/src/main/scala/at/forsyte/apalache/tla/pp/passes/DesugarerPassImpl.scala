@@ -32,7 +32,8 @@ class DesugarerPassImpl @Inject() (
   override def execute(tlaModule: TlaModule): Option[TlaModule] = {
     logger.info("  > Desugaring...")
     val input = tlaModule
-    val afterDesug = ModuleByExTransformer(Desugarer(gen, tracker))(input)
+    val varNames = input.varDeclarations.map { _.name }.toSet
+    val afterDesug = ModuleByExTransformer(Desugarer(gen, varNames, tracker))(input)
     val output = ModuleByExTransformer(SelectSeqAsFold(gen, tracker))(afterDesug)
 
     // dump the result of preprocessing

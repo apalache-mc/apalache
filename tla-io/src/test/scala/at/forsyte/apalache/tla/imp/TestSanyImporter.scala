@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, ValEx, _}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 
 import scala.collection.immutable.HashSet
 import scala.io.Source
@@ -17,7 +17,8 @@ import scala.io.Source
 /**
  * Tests for the SANY importer.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
 class TestSanyImporter extends SanyImporterTestBase {

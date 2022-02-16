@@ -5,12 +5,13 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import org.junit.runner.RunWith
 import org.scalacheck.Prop.{falsified, forAll, passed}
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.prop.Checkers
-import org.scalatest.{BeforeAndAfter, FunSuite}
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatestplus.scalacheck.Checkers
+import org.scalatest.BeforeAndAfter
+import org.scalatest.funsuite.AnyFunSuite
 
 @RunWith(classOf[JUnitRunner])
-class TestIncrementalRenamingScalacheck extends FunSuite with BeforeAndAfter with Checkers {
+class TestIncrementalRenamingScalacheck extends AnyFunSuite with BeforeAndAfter with Checkers {
   type CounterMap = Map[String, Int]
 
   private val emptyCounters: CounterMap = Map.empty

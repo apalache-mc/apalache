@@ -6,11 +6,11 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import TypedPredefs._
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestSymbTransGenerator extends FunSuite with TestingPredefs {
+class TestSymbTransGenerator extends AnyFunSuite with TestingPredefs {
 
   val stg = new SymbTransGenerator(TrackerWithListeners())
 
@@ -54,7 +54,7 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
         Set(2, 3, 5),
         Set(2, 3, 6),
         Set(2, 4, 5),
-        Set(2, 4, 6)
+        Set(2, 4, 6),
     )
     val actual3 = allCombinations(Seq(s31, s32, s33))
 
@@ -72,7 +72,7 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
       .typed(BoolT1())
 
     val sel1: SelMapType = Map(
-        ex13.ID -> Set(Set(ex11.ID), Set(ex12.ID))
+        ex13.ID -> Set(Set(ex11.ID), Set(ex12.ID)),
     )
 
     val expected1 = Set(ex11.ID, ex12.ID)
@@ -97,7 +97,7 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
       ite(
           ge(int(0), int(1)) as Bool,
           xasgn11,
-          xasgn12
+          xasgn12,
       ) as Bool
 
     val ex2 = or(yasgn11, yasgn12) as Bool
@@ -112,7 +112,7 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
         Set(xasgn11.ID, yasgn11.ID),
         Set(xasgn11.ID, yasgn12.ID),
         Set(xasgn12.ID, yasgn11.ID),
-        Set(xasgn12.ID, yasgn12.ID)
+        Set(xasgn12.ID, yasgn12.ID),
     )
 
     val selections1 = possibleAssgnsX map { fromPossiblity(ex1, _) }
@@ -148,7 +148,7 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
 
     val possibleAssgnsXY2 = Seq(
         Set(xasgn21.ID, yasgn21.ID),
-        Set(xasgn21.ID, yasgn22.ID)
+        Set(xasgn21.ID, yasgn22.ID),
     )
 
     val selections4 = possibleAssgnsX2 map {
@@ -180,8 +180,8 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
         ite(
             tla.bool(true).typed(),
             asgn2,
-            asgn3
-        ) as Bool
+            asgn3,
+        ) as Bool,
     ) as Bool
 
     val sel = Seq(asgn1.ID, asgn2.ID, asgn3.ID)
@@ -207,7 +207,7 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
     val xDecl = declOp("X", asgn) as ToBool
     val disj = or(
         and(tla.name("A") as Bool, tla.appOp(tla.name("X") as ToBool) as Bool) as Bool,
-        and(tla.name("B") as Bool, tla.appOp(tla.name("X") as ToBool) as Bool) as Bool
+        and(tla.name("B") as Bool, tla.appOp(tla.name("X") as ToBool) as Bool) as Bool,
     ) as Bool
 
     val next = letIn(disj, xDecl) as Bool
@@ -230,7 +230,7 @@ class TestSymbTransGenerator extends FunSuite with TestingPredefs {
     val xDecl = declOp("X", asgn) as ToBool
     val disj = or(
         and(name("A"), appOp(name("X") as ToBool) as Bool) as Bool,
-        and(name("B"), appOp(name("X") as ToBool) as Bool) as Bool
+        and(name("B"), appOp(name("X") as ToBool) as Bool) as Bool,
     ) as Bool
 
     val next = letIn(disj, xDecl) as Bool

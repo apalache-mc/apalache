@@ -9,14 +9,14 @@ import org.junit.runner.RunWith
 import org.scalacheck.Gen.alphaStr
 import org.scalacheck.Prop
 import org.scalacheck.Prop.{AnyOperators, falsified, forAll, passed}
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.prop.Checkers
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatestplus.scalacheck.Checkers
 
 import scala.collection.immutable.SortedMap
 
 @RunWith(classOf[JUnitRunner])
-class TestDefaultType1Parser extends FunSuite with Checkers with TlaType1Gen {
+class TestDefaultType1Parser extends AnyFunSuite with Checkers with TlaType1Gen {
 
   test("non-sense") {
     assertThrows[Type1ParseError](DefaultType1Parser("non-sense"))
@@ -194,20 +194,20 @@ class TestDefaultType1Parser extends FunSuite with Checkers with TlaType1Gen {
 
   test("no crashes: either parse, or raise an error") {
     check({
-      forAll(alphaStr) { str =>
-        try {
-          DefaultType1Parser(str)
-          passed
-        } catch {
-          case _: Type1ParseError =>
-            passed
+          forAll(alphaStr) { str =>
+            try {
+              DefaultType1Parser(str)
+              passed
+            } catch {
+              case _: Type1ParseError =>
+                passed
 
-          case _ =>
-            falsified
-        }
-      // no exceptions
-      }
-    }, minSuccessful(300))
+              case _ =>
+                falsified
+            }
+          // no exceptions
+          }
+        }, minSuccessful(300))
   }
 
   test("parse primitive types") {
