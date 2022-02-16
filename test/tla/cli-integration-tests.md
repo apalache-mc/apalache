@@ -1828,6 +1828,14 @@ Found 10 error(s)
 EXITCODE: ERROR (12)
 ```
 
+### check TestSequences.tla reports no error
+
+```sh
+$ apalache-mc check --length=0 --inv=AllTests TestSequences.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
 
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
