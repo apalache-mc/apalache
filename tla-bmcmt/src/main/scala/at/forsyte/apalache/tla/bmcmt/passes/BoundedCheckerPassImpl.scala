@@ -103,7 +103,7 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, exprGradeStore
     val metricProfilerListener =
       if (solverConfig.profile) {
         logger.info("Profiling data will be written to profile.csv")
-        Some(new MetricProfilerListener(sourceStore, changeListener, new File("profile.csv")))
+        Some(new MetricProfilerListener(sourceStore, changeListener))
       } else {
         None
       }

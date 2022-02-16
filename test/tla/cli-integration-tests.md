@@ -1691,11 +1691,12 @@ Check that the profiler output is produced as explained in
 [Profiling](https://apalache.informal.systems/docs/apalache/profiling.html).
 
 ```sh
-$ echo >profile.csv
-$ apalache-mc check --smtprof schroedinger_cat.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --run-dir=./profile-run-dir --smtprof schroedinger_cat.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
-$ test -s profile.csv
+$ head -n 1 ./profile-run-dir/profile.csv
+# weight,nCells,nConsts,nSmtExprs,location
+$ rm -rf ./profile-run-dir
 ```
 
 ### check ModelVal.tla succeeds
@@ -1756,22 +1757,22 @@ $ apalache-mc check --inv=Inv Bug1136.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
-### check Test928.tla reports no error on Inv1: regression for #928
+### check Test928.tla reports no error on NoFail: regression for #928
 
 ```sh
-$ apalache-mc check --inv=Inv1 --length=1 Test928.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --inv=NoFail --length=1 Test928.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
 
-### check Test928.tla reports an error on Inv2: regression for #928
+### check Test928.tla reports an error on Fail: regression for #928
 
 ```sh
-$ apalache-mc check --inv=Inv2 --length=1 Test928.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --inv=Fail --length=1 Test928.tla | sed 's/[IEW]@.*//'
 ...
 Found a polymorphic type: Set(a)
 Probable causes: an empty set { } needs a type annotation or an incorrect record field is used
-Test928.tla:6:18-6:19: type input error: Found a polymorphic type: Set(a)
+Test928.tla:20:23-20:24: type input error: Found a polymorphic type: Set(a)
 ...
 EXITCODE: ERROR (255)
 ```
@@ -1826,6 +1827,16 @@ $ apalache-mc check --inv=Inv --view=View  --max-error=10 Test1305.tla | sed 's/
 Found 10 error(s)
 ...
 EXITCODE: ERROR (12)
+```
+
+### check Test1343.tla reports no error
+
+Regression test for #1343
+
+```sh
+$ apalache-mc check --length=2 Test1343.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
 ```
 
 ## running the typecheck command

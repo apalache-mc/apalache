@@ -9,15 +9,10 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.prop.Checkers
 import org.scalatest.{AppendedClues, Matchers}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.lir.{IntT1, BoolT1}
+import at.forsyte.apalache.tla.lir.{BoolT1, IntT1}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.TypedPredefs._
-import at.forsyte.apalache.tla.typecheck._
-
-import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 
 /**
  * Tests for ConstSimplifier.
@@ -35,6 +30,14 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
     e2 <- gens.genTlaEx(ops)(gens.emptyContext)
   } yield (e1, e2)
 
+  private def nonemptySetGen(k: Int): Gen[TlaEx] = for {
+    n <- Gen.choose(1, k)
+    s <- Gen.pick(n, 0 until k)
+    literalNonEmpty = tla.enumSet(s map { i => tla.int(i) as IntT1() }: _*) as SetT1(IntT1())
+    symbolic = tla.name("S") as SetT1(IntT1())
+    v <- Gen.oneOf(literalNonEmpty, symbolic)
+  } yield v
+
   override def beforeEach(): Unit = {
     simplifier = new ConstSimplifier(new IdleTracker())
   }
@@ -50,7 +53,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
           tla.div(ex, tla.int(1)) as IntT1(),
           tla.exp(ex, tla.int(1)) as IntT1(),
           // A more complex case to ensure recursion works properly: ex + (x - x)
-          tla.plus(ex, tla.minus(tla.name("x") as IntT1(), tla.name("x") as IntT1()) as IntT1()) as IntT1()
+          tla.plus(ex, tla.minus(tla.name("x") as IntT1(), tla.name("x") as IntT1()) as IntT1()) as IntT1(),
       )
       expressions.forall({ expression =>
         try {
@@ -75,7 +78,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
           tla.mult(tla.int(0), ex) as IntT1(),
           tla.div(tla.int(0), ex) as IntT1(),
           tla.mod(ex, tla.int(1)) as IntT1(),
-          tla.mod(ex, ex) as IntT1()
+          tla.mod(ex, ex) as IntT1(),
       )
 
       // 0 ^ ex should not be 0 only when ex == 0
@@ -106,7 +109,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
     val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
       val expressions = List(
           tla.div(ex, ex) as IntT1(),
-          tla.exp(tla.int(1), ex) as IntT1()
+          tla.exp(tla.int(1), ex) as IntT1(),
       )
       expressions.forall({ expression =>
         try {
@@ -236,7 +239,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
           tla.eql(ex, ex) as BoolT1(),
           tla.or(ex, tla.bool(true) as BoolT1()) as BoolT1(),
           tla.impl(ex, tla.bool(true) as BoolT1()) as BoolT1(),
-          tla.impl(tla.bool(false) as BoolT1(), ex) as BoolT1()
+          tla.impl(tla.bool(false) as BoolT1(), ex) as BoolT1(),
       )
       expressions.forall({ expression =>
         try {
@@ -257,7 +260,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
     val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
       val expressions = List(
           tla.neql(ex, ex) as BoolT1(),
-          tla.and(ex, tla.bool(false) as BoolT1()) as BoolT1()
+          tla.and(ex, tla.bool(false) as BoolT1()) as BoolT1(),
       )
       expressions.forall({ expression =>
         try {
@@ -285,7 +288,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
           tla.ite(tla.bool(false) as BoolT1(), tla.bool(false) as BoolT1(), ex) as BoolT1(),
           tla.ite(ex, tla.bool(true) as BoolT1(), tla.bool(false) as BoolT1()) as BoolT1(),
           tla.ite(ex, ex, ex) as BoolT1(),
-          tla.not(tla.not(ex) as BoolT1()) as BoolT1()
+          tla.not(tla.not(ex) as BoolT1()) as BoolT1(),
       )
       expressions.forall({ expression =>
         try {
@@ -306,7 +309,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
     val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
       val expressions = List(
           tla.impl(ex, tla.bool(false) as BoolT1()) as BoolT1(),
-          tla.ite(ex, tla.bool(false) as BoolT1(), tla.bool(true) as BoolT1()) as BoolT1()
+          tla.ite(ex, tla.bool(false) as BoolT1(), tla.bool(true) as BoolT1()) as BoolT1(),
       )
 
       expressions.forall({ expression =>
@@ -334,37 +337,37 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
         trueExpressions = Seq(
             tla.lt(tla.int(a), tla.int(b)) as BoolT1(),
             tla.le(tla.int(a), tla.int(b)) as BoolT1(),
-            tla.neql(tla.int(a), tla.int(b)) as BoolT1()
+            tla.neql(tla.int(a), tla.int(b)) as BoolT1(),
         )
 
         falseExpressions = Seq(
             tla.eql(tla.int(a), tla.int(b)) as BoolT1(),
             tla.gt(tla.int(a), tla.int(b)) as BoolT1(),
-            tla.ge(tla.int(a), tla.int(b)) as BoolT1()
+            tla.ge(tla.int(a), tla.int(b)) as BoolT1(),
         )
       } else if (a > b) {
         trueExpressions = Seq(
             tla.gt(tla.int(a), tla.int(b)) as BoolT1(),
             tla.ge(tla.int(a), tla.int(b)) as BoolT1(),
-            tla.neql(tla.int(a), tla.int(b)) as BoolT1()
+            tla.neql(tla.int(a), tla.int(b)) as BoolT1(),
         )
 
         falseExpressions = Seq(
             tla.eql(tla.int(a), tla.int(b)) as BoolT1(),
             tla.lt(tla.int(a), tla.int(b)) as BoolT1(),
-            tla.le(tla.int(a), tla.int(b)) as BoolT1()
+            tla.le(tla.int(a), tla.int(b)) as BoolT1(),
         )
       } else {
         trueExpressions = Seq(
             tla.ge(tla.int(a), tla.int(b)) as BoolT1(),
             tla.le(tla.int(a), tla.int(b)) as BoolT1(),
-            tla.eql(tla.int(a), tla.int(b)) as BoolT1()
+            tla.eql(tla.int(a), tla.int(b)) as BoolT1(),
         )
 
         falseExpressions = Seq(
             tla.neql(tla.int(a), tla.int(b)) as BoolT1(),
             tla.lt(tla.int(a), tla.int(b)) as BoolT1(),
-            tla.gt(tla.int(a), tla.int(b)) as BoolT1()
+            tla.gt(tla.int(a), tla.int(b)) as BoolT1(),
         )
       }
 
@@ -405,6 +408,59 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
     check(prop, minSuccessful(1000), sizeRange(8))
   }
 
+  test("simplifies quantifiers which rewrite to Boolean constants") {
+    val prop = forAll(gens.genType1) { t: TlaType1 =>
+      def n_x = tla.name("x") as t
+      def n_S = tla.name("S") as SetT1(t)
+      def n_p = tla.name("p") as BoolT1()
+
+      def emptySet = tla.enumSet() as SetT1(t)
+
+      // \E x \in {}: P
+      val existsEmpty = tla.exists(n_x, emptySet, n_p) as BoolT1()
+      val existsEmptyResult = simplifier.simplify(existsEmpty)
+      // \A x \in {}: P
+      val forallEmpty = tla.forall(n_x, emptySet, n_p) as BoolT1()
+      val forallEmptyResult = simplifier.simplify(forallEmpty)
+      // \E x \in S: FALSE
+      val existsFalse = tla.exists(n_x, n_S, tla.bool(false)) as BoolT1()
+      val existsFalseResult = simplifier.simplify(existsFalse)
+      // \A x \in S: TRUE
+      val forallTrue = tla.forall(n_x, n_S, tla.bool(true)) as BoolT1()
+      val forallTrueResult = simplifier.simplify(forallTrue)
+
+      existsEmptyResult shouldBe (tla.bool(false) as BoolT1()) withClue s"when simplifying ${existsEmpty.toString}"
+      forallEmptyResult shouldBe (tla.bool(true) as BoolT1()) withClue s"when simplifying ${forallEmpty.toString}"
+      existsFalseResult shouldBe (tla.bool(false) as BoolT1()) withClue s"when simplifying ${existsFalse.toString}"
+      forallTrueResult shouldBe (tla.bool(true) as BoolT1()) withClue s"when simplifying ${forallTrue.toString}"
+      true
+    }
+    check(prop, minSuccessful(1000), sizeRange(8))
+  }
+
+  test("simplifies quantifiers which rewrite to set emptiness checks") {
+    val prop = forAll(nonemptySetGen(10)) { setEx =>
+      def n_x = tla.name("x") as IntT1()
+
+      def emptySet = tla.enumSet() as SetT1(IntT1())
+
+      // \E x \in S: TRUE
+      val existsTrue = tla.exists(n_x, setEx, tla.bool(true)) as BoolT1()
+      val existsTrueResult = simplifier.simplify(existsTrue)
+      // \A x \in S: FALSE
+      val forallFalse = tla.forall(n_x, setEx, tla.bool(false)) as BoolT1()
+      val forallFalseResult = simplifier.simplify(forallFalse)
+
+      def eql = tla.eql(setEx, emptySet) as BoolT1()
+
+      existsTrueResult shouldBe (tla.not(eql) as BoolT1()) withClue s"when simplifying ${existsTrue.toString}"
+      forallFalseResult shouldBe eql withClue s"when simplifying ${forallFalse.toString}"
+
+      true
+    }
+    check(prop, minSuccessful(1000), sizeRange(8))
+  }
+
   test("evaluates logical expressions over constants") {
     var trueExpressions: Seq[TlaEx] = Seq(
         tla.not(tla.bool(false)) as BoolT1(),
@@ -412,14 +468,14 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
         tla.impl(tla.bool(false), tla.bool(false)) as BoolT1(),
         tla.impl(tla.bool(true), tla.bool(true)) as BoolT1(),
         tla.and(tla.bool(true)) as BoolT1(),
-        tla.and() as BoolT1()
+        tla.and() as BoolT1(),
     )
 
     var falseExpressions: Seq[TlaEx] = Seq(
         tla.not(tla.bool(true)) as BoolT1(),
         tla.impl(tla.bool(true), tla.bool(false)) as BoolT1(),
         tla.or(tla.bool(false)) as BoolT1(),
-        tla.or() as BoolT1()
+        tla.or() as BoolT1(),
     )
 
     trueExpressions.forall({ expression =>
@@ -458,7 +514,7 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
               // x \notin y = !(x \in y)
               (tla.notin(e1, e2) as BoolT1()) -> (tla.not(tla.in(e1, e2) as BoolT1()) as BoolT1()),
               // !(x \notin y) = x \in y
-              (tla.not(tla.notin(e1, e2) as BoolT1()) as BoolT1()) -> (tla.in(e1, e2) as BoolT1())
+              (tla.not(tla.notin(e1, e2) as BoolT1()) as BoolT1()) -> (tla.in(e1, e2) as BoolT1()),
           )
 
           expectations.forall { case (expression, expectedSimplification) =>
