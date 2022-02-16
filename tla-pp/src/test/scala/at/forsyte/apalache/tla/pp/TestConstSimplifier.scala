@@ -431,8 +431,8 @@ class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers
 
       existsEmptyResult shouldBe (tla.bool(false) as BoolT1()) withClue s"when simplifying ${existsEmpty.toString}"
       forallEmptyResult shouldBe (tla.bool(true) as BoolT1()) withClue s"when simplifying ${forallEmpty.toString}"
-      forallTrueResult shouldBe (tla.bool(true) as BoolT1()) withClue s"when simplifying ${forallTrue.toString}"
       existsFalseResult shouldBe (tla.bool(false) as BoolT1()) withClue s"when simplifying ${existsFalse.toString}"
+      forallTrueResult shouldBe (tla.bool(true) as BoolT1()) withClue s"when simplifying ${forallTrue.toString}"
       true
     }
     check(prop, minSuccessful(1000), sizeRange(8))
