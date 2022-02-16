@@ -7,13 +7,14 @@ import at.forsyte.apalache.tla.lir.{
   BoolT1, FunT1, IntT1, OperT1, RecT1, SeqT1, SetT1, OperParam, StrT1, TlaEx, TlaType1, TupT1,
 }
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.collection.immutable.SortedMap
 
 @RunWith(classOf[JUnitRunner])
-class TestDesugarer extends FunSuite with BeforeAndAfterEach {
+class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
   private var gen: UniqueNameGenerator = _
   private var desugarer: Desugarer = _
   private val exceptTypes = Map(

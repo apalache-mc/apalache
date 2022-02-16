@@ -4,10 +4,12 @@ import org.junit.runner.RunWith
 import org.scalacheck.Prop.{AnyOperators, forAll, passed}
 import org.scalacheck.Properties
 import org.scalacheck.Gen
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.prop.Checkers
-import org.scalatest.{AppendedClues, Matchers}
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatestplus.scalacheck.Checkers
+import org.scalatest.AppendedClues
+import org.scalatest.matchers.should.Matchers
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.{BoolT1, IntT1}
 import at.forsyte.apalache.tla.lir.convenience._
@@ -18,7 +20,7 @@ import at.forsyte.apalache.tla.lir.TypedPredefs._
  * Tests for ConstSimplifier.
  */
 @RunWith(classOf[JUnitRunner])
-class TestConstSimplifier extends FunSuite with BeforeAndAfterEach with Checkers with AppendedClues with Matchers {
+class TestConstSimplifier extends AnyFunSuite with BeforeAndAfterEach with Checkers with AppendedClues with Matchers {
   private var simplifier: ConstSimplifier = _
 
   private val gens = new IrGenerators {

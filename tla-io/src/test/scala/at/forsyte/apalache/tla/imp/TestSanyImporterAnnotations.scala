@@ -5,18 +5,20 @@ import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfter, FunSuite}
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.BeforeAndAfter
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.io.Source
 
 /**
  * Tests on parsing annotations with the SANY importer.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
-class TestSanyImporterAnnotations extends FunSuite with BeforeAndAfter {
+class TestSanyImporterAnnotations extends AnyFunSuite with BeforeAndAfter {
   private var sourceStore: SourceStore = _
   private var annotationStore: AnnotationStore = _
   private var sanyImporter: SanyImporter = _

@@ -8,11 +8,12 @@ import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.typecheck._
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
 
 @RunWith(classOf[JUnitRunner])
-class TestNormalizer extends FunSuite with BeforeAndAfterEach {
+class TestNormalizer extends AnyFunSuite with BeforeAndAfterEach {
   private var normalizer: Normalizer = _
   private val types = Map("b" -> BoolT1())
 
@@ -44,8 +45,8 @@ class TestNormalizer extends FunSuite with BeforeAndAfterEach {
           tla.ite(
               tla.name("x") as BoolT1(),
               tla.name("y") as BoolT1(),
-              tla.name("z") as BoolT1()
-          ) as BoolT1()
+              tla.name("z") as BoolT1(),
+          ) as BoolT1(),
       ) as BoolT1()
 
     val output = normalizer.apply(input)
@@ -54,7 +55,7 @@ class TestNormalizer extends FunSuite with BeforeAndAfterEach {
       .ite(
           tla.name("x") as BoolT1(),
           tla.not(tla.name("y") as BoolT1()) as BoolT1(),
-          tla.not(tla.name("z") as BoolT1()) as BoolT1()
+          tla.not(tla.name("z") as BoolT1()) as BoolT1(),
       ) as BoolT1()
 
     assert(expected == output)
@@ -128,7 +129,7 @@ class TestNormalizer extends FunSuite with BeforeAndAfterEach {
   test("""~ \E x \in s . y ~~> \A x \in s . ~y""") {
     val input =
       tla.not(tla.exists(tla.name("x") as BoolT1(), tla.name("s") as SetT1(IntT1()),
-              tla.name("y") as BoolT1()) as BoolT1()) as BoolT1()
+          tla.name("y") as BoolT1()) as BoolT1()) as BoolT1()
     val output = normalizer.apply(input)
     val expected =
       tla.forall(tla.name("x") as BoolT1(), tla.name("s") as SetT1(IntT1()),
@@ -139,7 +140,7 @@ class TestNormalizer extends FunSuite with BeforeAndAfterEach {
   test("""~ \A x \in s . y ~~> \E x \in s . ~y""") {
     val input =
       tla.not(tla.forall(tla.name("x") as BoolT1(), tla.name("s") as SetT1(IntT1()),
-              tla.name("y") as BoolT1()) as BoolT1()) as BoolT1()
+          tla.name("y") as BoolT1()) as BoolT1()) as BoolT1()
     val output = normalizer.apply(input)
     val expected =
       tla.exists(tla.name("x") as BoolT1(), tla.name("s") as SetT1(IntT1()),
@@ -286,7 +287,7 @@ class TestNormalizer extends FunSuite with BeforeAndAfterEach {
         // x = y
         tla.eql(tla.name("x") as IntT1(), tla.name("y") as IntT1()) as BoolT1(),
         // x \in s
-        tla.in(tla.name("x") as BoolT1(), tla.name("s") as SetT1(BoolT1())) as BoolT1()
+        tla.in(tla.name("x") as BoolT1(), tla.name("s") as SetT1(BoolT1())) as BoolT1(),
     )
 
     expressions.foreach({ expression =>

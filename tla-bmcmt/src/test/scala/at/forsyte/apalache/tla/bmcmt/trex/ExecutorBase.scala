@@ -7,15 +7,16 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import java.io.{PrintStream, File, FileOutputStream}
-import org.scalatest.{fixture, Outcome}
+import org.scalatest.Outcome
+import org.scalatest.funsuite.FixtureAnyFunSuite
 
-trait ExecutorBase[SnapshotT] extends fixture.FunSuite {
+trait ExecutorBase[SnapshotT] extends FixtureAnyFunSuite {
   type ExecutorContextT = ExecutionContext[SnapshotT]
   type FixtureParam = ExecutorContextT
 
   /**
-   * Create a `withFixture` method using that works within execution context constructed
-   * from the `ctxFactory`, using the given solver
+   * Create a `withFixture` method using that works within execution context constructed from the `ctxFactory`, using
+   * the given solver
    */
   protected def withFixtureInContext(solver: SolverContext, exeCtxFactory: SymbStateRewriterImpl => ExecutorContextT,
       test: OneArgTest): Outcome = {

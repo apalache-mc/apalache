@@ -8,13 +8,14 @@ import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir._
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.io.Source
 
 @RunWith(classOf[JUnitRunner])
-class TestConstAndDefRewriter extends FunSuite with BeforeAndAfterEach {
+class TestConstAndDefRewriter extends AnyFunSuite with BeforeAndAfterEach {
   private var sourceStore: SourceStore = _
   private var annotationStore: AnnotationStore = _
   private var sanyImporter: SanyImporter = _

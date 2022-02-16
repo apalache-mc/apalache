@@ -5,9 +5,9 @@ import at.forsyte.apalache.tla.bmcmt.types.IntT
 import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import org.scalatest.fixture
+import org.scalatest.funsuite.FixtureAnyFunSuite
 
-trait TestRecordingSolverContext extends fixture.FunSuite {
+trait TestRecordingSolverContext extends FixtureAnyFunSuite {
   protected type FixtureParam = Any
 
   protected var solverConfig: SolverConfig = _

@@ -7,11 +7,12 @@ import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.typecheck.etc.{EqClass, Substitution}
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
 
 @RunWith(classOf[JUnitRunner])
-class TestTypeSubstitutor extends FunSuite with BeforeAndAfterEach {
+class TestTypeSubstitutor extends AnyFunSuite with BeforeAndAfterEach {
 
   import tla._
 
