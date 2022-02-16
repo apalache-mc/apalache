@@ -306,15 +306,12 @@ class TestKeramelizer extends FunSuite with BeforeAndAfterEach with Matchers {
     val outputPred = KeraLanguagePred()
 
     val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
-      inputPred.isExprOk(ex) == PredResultOk() ==>
-        (try {
-          val keramelized = keramelizer(ex)
-          val inKera = outputPred.isExprOk(keramelized)
-          inKera shouldBe PredResultOk() withClue s"when keramelizing $ex to $keramelized"
-          true
-        } catch {
-          case _: MalformedTlaError => true
-        })
+      inputPred.isExprOk(ex) == PredResultOk() ==> {
+        val keramelized = keramelizer(ex)
+        val inKera = outputPred.isExprOk(keramelized)
+        inKera shouldBe PredResultOk() withClue s"when keramelizing $ex to $keramelized"
+        true
+      }
     }
     check(prop, minSuccessful(500), sizeRange(7))
   }

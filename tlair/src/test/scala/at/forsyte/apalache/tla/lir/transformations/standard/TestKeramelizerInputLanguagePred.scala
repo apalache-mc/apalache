@@ -3,7 +3,10 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.transformations.{PredResult, PredResultOk}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -12,6 +15,13 @@ class TestKeramelizerInputLanguagePred extends LanguagePredTestSuite {
   private val pred = new KeramelizerInputLanguagePred
 
   import tla._
+
+  // typed set to account for Keramelizer's set type checks
+  val typed_n_a = fromTlaEx(name("a") as IntT1())
+  val typed_n_b = fromTlaEx(name("b") as IntT1())
+  val typedSet = fromTlaEx(enumSet(int(1), int(2)) as SetT1(IntT1()))
+  val untypedSet = fromTlaEx(enumSet(int(1), int(2)).untyped())
+
 
   /**
    * ****************** tests from [[KeraLanguagePred]], except where otherwise noted *****************************
@@ -41,8 +51,8 @@ class TestKeramelizerInputLanguagePred extends LanguagePredTestSuite {
     expectOk(pred.isExprOk(dotdot(int(10), int(20))))
 
     // in TLA+, but not in KerA+
-    expectOk(pred.isExprOk(cap(enumSet(int(1)), enumSet(int(2)))))
-    expectOk(pred.isExprOk(setminus(enumSet(int(1)), enumSet(int(2)))))
+    expectOk(pred.isExprOk(cap(typedSet, enumSet(int(2)))))
+    expectOk(pred.isExprOk(setminus(typedSet, enumSet(int(2)))))
     expectOk(pred.isExprOk(notin(int(1), enumSet(int(2)))))
   }
 
@@ -69,8 +79,8 @@ class TestKeramelizerInputLanguagePred extends LanguagePredTestSuite {
     expectOk(pred.isExprOk(append(tuple(int(1), int(2)), tuple(int(2), int(3)))))
 
     // in TLA+, but not in KerA+
-    expectOk(pred.isExprOk(recSet(name("a"), name("A"))))
-    expectOk(pred.isExprOk(times(name("X"), name("Y"))))
+    expectOk(pred.isExprOk(recSet(typed_n_a, typedSet) as SetT1(IntT1())))
+    expectOk(pred.isExprOk(times(typedSet, typedSet)))
   }
 
   test("accepts TLA+ miscellania") {
@@ -111,8 +121,7 @@ class TestKeramelizerInputLanguagePred extends LanguagePredTestSuite {
   }
 
   /**
-   * **************************** additional tests for [[KeramelizerInputLanguagePred]]
-   * ********************************************
+   * *********** additional tests for [[KeramelizerInputLanguagePred]]  ***********
    */
   test("accepts binding expressions where first argument is a name") {
     expectOk(pred.isExprOk(exists(name("a"), bool(true))))
@@ -138,6 +147,30 @@ class TestKeramelizerInputLanguagePred extends LanguagePredTestSuite {
 
   test("rejects Seq(_)") {
     expectFail(pred.isExprOk(seqSet(name("A"))))
+  }
+
+  test("checks operators with set-typed arguments") {
+    // fails with IntT1 in place of expected SetT1(_)
+    expectFail(pred.isExprOk(cap(typed_n_a, natSet())))
+    expectFail(pred.isExprOk(setminus(typed_n_a, natSet())))
+    expectFail(pred.isExprOk(recSet(typed_n_a, typed_n_b)))
+    expectFail(pred.isExprOk(times(typed_n_a, natSet())))
+    expectFail(pred.isExprOk(times(natSet(), typed_n_a)))
+    expectFail(pred.isExprOk(in(prime(typed_n_a), typed_n_b)))
+
+    // fails with untyped set in place of expected SetT1(_)
+    expectFail(pred.isExprOk(cap(untypedSet, natSet())))
+    expectFail(pred.isExprOk(setminus(untypedSet, natSet())))
+    expectFail(pred.isExprOk(recSet(typed_n_a, untypedSet)))
+    expectFail(pred.isExprOk(times(untypedSet, natSet())))
+    expectFail(pred.isExprOk(in(prime(typed_n_a), untypedSet)))
+
+    // succeeds with typed SetT1(_)
+    expectOk(pred.isExprOk(cap(typedSet, natSet())))
+    expectOk(pred.isExprOk(setminus(typedSet, natSet())))
+    expectOk(pred.isExprOk(recSet(typed_n_a, typedSet) as SetT1(IntT1())))
+    expectOk(pred.isExprOk(times(typedSet, typedSet)))
+    expectOk(pred.isExprOk(in(prime(typed_n_a), typedSet)))
   }
 
   /**
