@@ -19,12 +19,12 @@ import scala.io.Source
 /**
  * <p>A collection of tests that check how SanyImporter loads the standard modules.</p>
  *
- * <p>If you run this test in an IDE, and the test fails, add the following line to the VM parameters
- * (don't forget to replace <APALACHE_HOME> with the directory where you checked out the project):
- * -DTLA-Library=<APALACHE_HOME>/src/tla
- * </p>
+ * <p>If you run this test in an IDE, and the test fails, add the following line to the VM parameters (don't forget to
+ * replace <APALACHE_HOME> with the directory where you checked out the project):
+ * -DTLA-Library=<APALACHE_HOME>/src/tla </p>
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
 class TestSanyImporterStandardModules extends SanyImporterTestBase {

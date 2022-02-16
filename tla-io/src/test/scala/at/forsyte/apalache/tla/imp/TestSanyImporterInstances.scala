@@ -13,7 +13,8 @@ import scala.io.Source
 /**
  * A collection of tests that check how SanyImporter processes instances.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
 class TestSanyImporterInstances extends SanyImporterTestBase {

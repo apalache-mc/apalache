@@ -16,7 +16,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         gt(name("x"), int(1)),
         List(
             ("", Map()),
-            ("", Map("x" -> int(2)))
+            ("", Map("x" -> int(2))),
         ),
         """---------------------------- MODULE counterexample ----------------------------
         |
@@ -34,7 +34,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |================================================================================
         |(* Created by Apalache on DATETIME *)
         |(* https://github.com/informalsystems/apalache *)
-        |""".stripMargin
+        |""".stripMargin,
     )
   }
 
@@ -47,7 +47,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
             ("", Map()),
             ("", Map("x" -> int(0))),
             ("Trans1", Map("x" -> int(1))),
-            ("Trans2", Map("x" -> int(2)))
+            ("Trans2", Map("x" -> int(2))),
         ),
         """---------------------------- MODULE counterexample ----------------------------
           |
@@ -71,7 +71,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
           |================================================================================
           |(* Created by Apalache on DATETIME *)
           |(* https://github.com/informalsystems/apalache *)
-          |""".stripMargin
+          |""".stripMargin,
     )
   }
 
@@ -84,7 +84,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
             ("", Map()),
             ("", Map("x" -> int(0), "y" -> int(8))),
             ("Trans1", Map("x" -> int(1), "y" -> int(9))),
-            ("Trans2", Map("x" -> int(2), "y" -> int(10)))
+            ("Trans2", Map("x" -> int(2), "y" -> int(10))),
         ),
         """---------------------------- MODULE counterexample ----------------------------
         |
@@ -108,7 +108,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |================================================================================
         |(* Created by Apalache on DATETIME *)
         |(* https://github.com/informalsystems/apalache *)
-        |""".stripMargin
+        |""".stripMargin,
     )
   }
 
@@ -119,7 +119,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         gt(name("x"), int(1)),
         List(
             ("", Map()),
-            ("", Map("x" -> int(2)))
+            ("", Map("x" -> int(2))),
         ),
         """@!@!@STARTMSG 2262:0 @!@!@
         |Created by Apalache on DATETIME
@@ -135,7 +135,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |x = 2
         |
         |@!@!@ENDMSG 2217 @!@!@
-        |""".stripMargin
+        |""".stripMargin,
     )
   }
 
@@ -148,7 +148,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
             ("", Map()),
             ("", Map("x" -> int(0))),
             ("Next", Map("x" -> int(1))),
-            ("Next", Map("x" -> int(2)))
+            ("Next", Map("x" -> int(2))),
         ),
         """@!@!@STARTMSG 2262:0 @!@!@
         |Created by Apalache on DATETIME
@@ -174,7 +174,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |x = 2
         |
         |@!@!@ENDMSG 2217 @!@!@
-        |""".stripMargin
+        |""".stripMargin,
     )
   }
 
@@ -187,7 +187,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
             ("", Map()),
             ("", Map("x" -> int(0), "y" -> int(8))),
             ("Trans1", Map("x" -> int(1), "y" -> int(9))),
-            ("Trans2", Map("x" -> int(2), "y" -> int(10)))
+            ("Trans2", Map("x" -> int(2), "y" -> int(10))),
         ),
         """@!@!@STARTMSG 2262:0 @!@!@
         |Created by Apalache on DATETIME
@@ -216,7 +216,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |/\ y = 10
         |
         |@!@!@ENDMSG 2217 @!@!@
-        |""".stripMargin
+        |""".stripMargin,
     )
   }
 
@@ -227,7 +227,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         gt(name("x"), int(1)),
         List(
             ("", Map()),
-            ("", Map("x" -> int(2)))
+            ("", Map("x" -> int(2))),
         ),
         """{
           |  "name": "ApalacheIR",
@@ -323,7 +323,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |      ]
         |    }
         |  ]
-        |}""".stripMargin
+        |}""".stripMargin,
     )
   }
 
@@ -336,7 +336,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
             ("", Map()),
             ("", Map("x" -> int(0))),
             ("Trans1", Map("x" -> int(1))),
-            ("Trans2", Map("x" -> int(2)))
+            ("Trans2", Map("x" -> int(2))),
         ),
         """{
         |  "name": "ApalacheIR",
@@ -504,7 +504,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |      ]
         |    }
         |  ]
-        |}""".stripMargin
+        |}""".stripMargin,
     )
   }
 
@@ -517,7 +517,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
             ("", Map()),
             ("", Map("x" -> int(0), "y" -> int(8))),
             ("Trans1", Map("x" -> int(1), "y" -> int(9))),
-            ("Trans2", Map("x" -> int(2), "y" -> int(10)))
+            ("Trans2", Map("x" -> int(2), "y" -> int(10))),
         ),
         """{
         |  "name": "ApalacheIR",
@@ -772,7 +772,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |      ]
         |    }
         |  ]
-        |}""".stripMargin
+        |}""".stripMargin,
     )
   }
 }

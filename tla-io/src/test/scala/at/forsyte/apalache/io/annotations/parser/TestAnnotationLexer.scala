@@ -7,10 +7,11 @@ import org.scalatestplus.junit.JUnitRunner
 import java.io.StringReader
 
 /**
- * Tests for the TLC configuration parser. As the lexer does not know the syntactic structure of annotations,
- * it may produce additional tokens that have to be resolved by the parser.
+ * Tests for the TLC configuration parser. As the lexer does not know the syntactic structure of annotations, it may
+ * produce additional tokens that have to be resolved by the parser.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
 class TestAnnotationLexer extends AnyFunSuite {

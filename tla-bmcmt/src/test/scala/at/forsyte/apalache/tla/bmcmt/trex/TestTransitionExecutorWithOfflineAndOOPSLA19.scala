@@ -9,13 +9,14 @@ import org.scalatestplus.junit.JUnitRunner
 /**
  * The tests for TransitionExecutorImpl that are using IncrementalSnapshot.
  *
- * @author Igor Konnov, Shon Feder
+ * @author
+ *   Igor Konnov, Shon Feder
  */
 @RunWith(classOf[JUnitRunner])
 class TestTransitionExecutorWithOfflineAndOOPSLA19 extends TestTransitionExecutorImpl[OfflineExecutionContextSnapshot] {
   override def withFixture(test: OneArgTest): Outcome = {
-    val solver = RecordingSolverContext.createZ3(None,
-        SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = oopsla19Encoding))
+    val solver = RecordingSolverContext
+      .createZ3(None, SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = oopsla19Encoding))
     withFixtureInContext(solver, (new OfflineExecutionContext(_)), test)
   }
 }

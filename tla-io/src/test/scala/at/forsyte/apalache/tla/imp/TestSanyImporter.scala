@@ -17,7 +17,8 @@ import scala.io.Source
 /**
  * Tests for the SANY importer.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
 class TestSanyImporter extends SanyImporterTestBase {
