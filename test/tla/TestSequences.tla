@@ -26,20 +26,29 @@ Add(i, j) == i + j
 
 IsOdd(i) == i % 2 = 1
 
+Concat(s, t) == s \o t
+
 (********************* TESTS ********************************)
 
 \* we cannot report a static error here, as it may ruin a formula
 TestHeadEmpty ==
-    Head(seqEmpty) = Head(seqEmpty)
+    \* wrap into a set to trick the simplifier
+    { Head(seqEmpty) } /= {} \* Head(<<>>) is undefined
 
 \* we cannot report a static error here, as it may ruin a formula
 TestTailEmpty ==
-    Tail(seqEmpty) = Tail(seqEmpty)
+    \* wrap into a set to trick the simplifier
+    { Tail(seqEmpty) } /= {} \* Tail(<<>>) is undefined
 
 \* we cannot report a static error here, as it may ruin a formula
 TestApply0 ==
-    \* this could be a typo
-    seq345[0] = seq345[0]
+    \* wrap into a set to trick the simplifier
+    { seq345[0] } /= {} \* out of bounds
+
+\* we cannot report a static error here, as it may ruin a formula
+TestApply4 ==
+    \* wrap into a set to trick the simplifier
+    { seq345[4] } /= {} \* out of bounds
 
 TestApplyNonStatic4 ==
     \* this query requires the solver
@@ -50,11 +59,6 @@ TestApplyNonStatic9 ==
     \* this query requires the solver
     \A i \in DOMAIN seq345:
         seq345[i] /= 9
-
-\* we cannot report a static error here, as it may ruin a formula
-TestApply4 ==
-    \* this could be a typo
-    seq345[4] = seq345[4]
 
 TestCtorEmpty ==
     Len(seqEmpty) = 0
@@ -136,6 +140,9 @@ TestFoldSeq345 ==
 TestFoldSeqEmpty ==
     FoldSeq(Add, 0, Tail(seqEmpty)) = 0
 
+TestFoldSeqFlatten ==
+    FoldSeq(Concat, <<>>, <<seq345, seqEmpty, seq26970>>) = <<3, 4, 5, 2, 6, 9, 7, 0>>
+
 TestSelectSeq345 ==
     SelectSeq(seq345, IsOdd) = <<3, 5>>
 
@@ -175,6 +182,7 @@ AllTests ==
     /\ TestFoldSeq697
     /\ TestFoldSeq345
     /\ TestFoldSeqEmpty
+    /\ TestFoldSeqFlatten
     /\ TestSelectSeq345
     /\ TestSelectSeqEmpty
     /\ TestFoldSeqOverSelectSeq
