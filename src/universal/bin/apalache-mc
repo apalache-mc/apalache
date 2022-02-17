@@ -45,7 +45,7 @@ then
     JVM_ARGS="$JVM_ARGS -DTLA-Library=$TLA_PATH"
 fi
 
-# Check wheter the CLI args contains the debug flag
+# Check whether the CLI args contains the debug flag
 if [[ "$*" =~ '--debug' ]]
 then
     echo "# Tool home: $DIR"
