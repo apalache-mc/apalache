@@ -597,14 +597,20 @@ Java, otherwise Scala will not compile!</strong> See the <a href="https://docs.s
 <li>To skip running the tests, you can run <code>make package</code></li>
 </ul>
 </li>
-<li><em>Optionally</em> install <a href="https://direnv.net/">direnv</a> and run <code>direnv allow</code></li>
-<li>Confirm you can run the executable. It should print the inline CLI help message.
-<ul>
-<li>If you used <code>direnv</code>, then <code>apalache-mc</code> will be in your path.</li>
-<li>Otherwise, run <code>./bin/apalache-mc</code>.</li>
-</ul>
-</li>
+<li>The distribution package will be built to <code>./target/universal/apalache-&lt;VERSION&gt;</code>, and you can
+move this wherever you'd like, and ensure that the <code>&lt;dist-package-location&gt;/bin</code> directory
+is added to your <code>PATH</code>.</li>
 </ol>
+<h2><a class="header" href="#running-from-within-the-apalache-repo" id="running-from-within-the-apalache-repo">Running from within the Apalache repo</a></h2>
+<p>If you prefer to keep the built package inside of the Apalache source
+repository, you have three options after running <code>make</code>:</p>
+<ul>
+<li>Add the <code>./bin</code> directory in the source repository to your <code>PATH</code>, which will
+make <code>apalche-mc</code> available.</li>
+<li>Install <a href="https://direnv.net/">direnv</a> and run <code>direnv allow</code>, which will put <code>apalche-mc</code> in your
+path when you are inside of the Apalache repo directory.</li>
+<li>Run <code>./bin/apalache-mc</code> directly.</li>
+</ul>
 <h1><a class="header" href="#running-the-tool" id="running-the-tool">Running the Tool</a></h1>
 <p><strong>Opt-in statistics programme</strong>: if you opt-in for statistics collection (off by default), then every run of Apalache
 will submit anonymized statistics to
