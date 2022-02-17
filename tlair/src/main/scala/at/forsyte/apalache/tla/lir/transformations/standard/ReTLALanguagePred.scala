@@ -26,15 +26,15 @@ class ReTLALanguagePred extends ContextualLanguagePred {
       case NameEx(_) =>
         PredResultOk()
 
+      // Primes are only allowed, when attached to Names
+      case OperEx(TlaActionOper.prime, _: NameEx) =>
+        PredResultOk()
+
+      // Only allow funDef for 3 args (no sugar)
+      case OperEx(TlaFunOper.funDef, x, s, p) =>
+        allArgsOk(letDefs, List(x, s, p))
+
       case OperEx(oper, args @ _*) if ReTLALanguagePred.operators.contains(oper) =>
-        allArgsOk(letDefs, args)
-
-      case OperEx(TlaControlOper.ifThenElse, pred, thenEx, elseEx) =>
-        isOkInContext(letDefs, pred)
-          .and(isOkInContext(letDefs, thenEx))
-          .and(isOkInContext(letDefs, elseEx))
-
-      case OperEx(TlaFunOper.funDef, args @ _*) =>
         allArgsOk(letDefs, args)
 
       // Function application and except are the only place we allow tuples, because that's how multivariable functions
@@ -101,18 +101,19 @@ object ReTLALanguagePred {
 
   protected val operators: HashSet[TlaOper] =
     HashSet(
-        TlaActionOper.prime,
-        TlaBoolOper.not,
+        ApalacheOper.assign,
         ApalacheOper.skolem,
         TlaOper.eq,
         TlaOper.ne,
-        TlaBoolOper.implies,
-        TlaBoolOper.equiv,
-        ApalacheOper.assign,
+        TlaBoolOper.not,
         TlaBoolOper.and,
         TlaBoolOper.or,
-        TlaBoolOper.exists,
+        TlaBoolOper.implies,
+        TlaBoolOper.equiv,
         TlaBoolOper.forall,
+        TlaBoolOper.exists,
+        TlaFunOper.app,
+        TlaControlOper.ifThenElse,
         // IntArith not in v1
         //        TlaArithOper.uminus,
         //        TlaArithOper.plus,

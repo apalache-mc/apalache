@@ -36,7 +36,7 @@ object TermWriter {
       case Forall(x, s, p)            => mkQuant("forall", x, s.sortName, p)
       case Exists(x, s, p)            => mkQuant("exists", x, s.sortName, p)
       case Equal(a, b)                => s"(= ${mkSMT2String(a)} ${mkSMT2String(b)})"
-      case Apply(fn, args @ _*)       => s"(${fn.name} ${args.map(mkSMT2String).mkString(" ")})"
+      case Apply(fn, args @ _*)       => s"(${mkSMT2String(fn)} ${args.map(mkSMT2String).mkString(" ")})"
       // ITE
       // Le
       // Lt

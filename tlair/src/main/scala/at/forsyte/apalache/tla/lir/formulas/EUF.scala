@@ -1,5 +1,7 @@
 package at.forsyte.apalache.tla.lir.formulas
 
+import at.forsyte.apalache.tla.lir.formulas.StandardSorts.FunctionSort
+
 object EUF {
 
   import Booleans.BoolExpr
@@ -13,15 +15,18 @@ object EUF {
     require(lhs.sort == rhs.sort)
     val sort: Sort = lhs.sort
   }
-  sealed case class Apply(fn: Function, args: Term*) extends Term {
+
+//  sealed case class UninterpretedFunLiteral(s: String, sort: FunctionSort) extends FnTerm
+  sealed case class UninterpretedFunVar(name: String, sort: FunctionSort) extends Variable(name) with FnTerm
+  sealed case class Apply(fn: FnTerm, args: Term*) extends Term {
     require(isValid)
     private def isValid: Boolean =
-      if (args.size != fn.from.size) false
+      if (args.size != fn.sort.from.size) false
       else {
-        args.zip(fn.from).forall { case (arg, expectedSort) =>
+        args.zip(fn.sort.from).forall { case (arg, expectedSort) =>
           arg.sort == expectedSort
         }
       }
-    val sort: Sort = fn.to
+    val sort: Sort = fn.sort.to
   }
 }

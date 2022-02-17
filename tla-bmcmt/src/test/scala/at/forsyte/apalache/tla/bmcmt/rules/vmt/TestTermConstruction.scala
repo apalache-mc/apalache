@@ -5,7 +5,7 @@ import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.formulas.EUF._
 import at.forsyte.apalache.tla.lir.formulas.Integers.{IntLiteral, IntVar}
-import at.forsyte.apalache.tla.lir.formulas.StandardSorts.{BoolSort, IntSort, UninterpretedSort}
+import at.forsyte.apalache.tla.lir.formulas.StandardSorts.{BoolSort, FunctionSort, IntSort, UninterpretedSort}
 import at.forsyte.apalache.tla.lir.formulas.Booleans._
 import at.forsyte.apalache.tla.lir.formulas._
 
@@ -62,28 +62,33 @@ class TestTermConstruction extends FunSuite {
 
   test("Apply requirements.") {
 
-    val fNullary = Function("f", IntSort())
-    val fUnary1 = Function("f", IntSort(), BoolSort())
-    val fUnary2 = Function("f", usort1, usort2)
-    val fNary1 = Function("f", usort2, IntSort(), IntSort(), BoolSort())
+    val fNullary = FunctionSort(IntSort())
+    val fUnary1 = FunctionSort(IntSort(), BoolSort())
+    val fUnary2 = FunctionSort(usort1, usort2)
+    val fNary1 = FunctionSort(usort2, IntSort(), IntSort(), BoolSort())
+
+    val fnTermNullary = UninterpretedFunVar("f", fNullary)
+    val fnTermUnary1 = UninterpretedFunVar("f", fUnary1)
+    val fnTermUnary2 = UninterpretedFunVar("f", fUnary2)
+    val fnTermNary = UninterpretedFunVar("f", fNary1)
 
     // Does not throw
-    Apply(fNullary)
-    Apply(fUnary1, True)
-    Apply(fUnary1, BoolVar("x"))
-    Equal(Apply(fUnary2, uval2), uvar1)
-    Apply(fNary1, int1, intV2, False)
+    Apply(fnTermNullary)
+    Apply(fnTermUnary1, True)
+    Apply(fnTermUnary1, BoolVar("x"))
+    Equal(Apply(fnTermUnary2, uval2), uvar1)
+    Apply(fnTermNary, int1, intV2, False)
 
     assertThrows[IllegalArgumentException] {
-      Apply(fUnary1, intV1)
+      Apply(fnTermUnary1, intV1)
     }
 
     assertThrows[IllegalArgumentException] {
-      Apply(fUnary2, uvar1)
+      Apply(fnTermUnary2, uvar1)
     }
 
     assertThrows[IllegalArgumentException] {
-      Apply(fNary1, False, uval1, intV1)
+      Apply(fnTermNary, False, uval1, intV1)
     }
 
   }

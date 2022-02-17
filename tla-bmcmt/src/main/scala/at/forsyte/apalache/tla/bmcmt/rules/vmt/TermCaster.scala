@@ -9,7 +9,7 @@ object TermCaster {
     val res = rewriter.rewrite(ex)
     res.sort match {
       case `sort` => res.asInstanceOf[T]
-      case s      => throw new RewriterException(s"Expected sort of $res to be Boolean, found: $s", ex)
+      case s      => throw new RewriterException(s"Expected sort of $res to be $sort, found: $s", ex)
     }
   }
 }
