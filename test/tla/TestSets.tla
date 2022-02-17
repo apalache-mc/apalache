@@ -205,6 +205,8 @@ TestIsFiniteSet ==
     /\ IsFiniteSet(Set26)
     /\ IsFiniteSet(Set1357)
 
+\* TODO: FIX IT!
+\* https://github.com/informalsystems/apalache/issues/1361
 TestIsFiniteSetOnInfinite ==
     /\ ~IsFiniteSet(Int)
     /\ ~IsFiniteSet(Nat)
