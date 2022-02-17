@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, IntT1, OperT1, RecT1, SetT1}
-import at.forsyte.apalache.tla.lir.convenience._
+import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import org.junit.runner.RunWith
@@ -11,6 +11,10 @@ import org.scalatest.funsuite.AnyFunSuite
 
 @RunWith(classOf[JUnitRunner])
 class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
+  private val intT = IntT1()
+  private val boolT = BoolT1()
+  private val intSetT = SetT1(IntT1())
+  private val boolSetT = SetT1(BoolT1())
   private var optimizer = new ExprOptimizer(new UniqueNameGenerator(), TrackerWithListeners())
 
   override def beforeEach(): Unit = {
@@ -19,70 +23,52 @@ class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
 
   // an optimization for integer ranges
   test("""e \in a..b ~~> e >= a /\ e <= b (but not if e is x')""") {
-    val types = Map("b" -> BoolT1(), "i" -> IntT1(), "S" -> SetT1(IntT1()))
     val input =
-      tla
-        .in(tla.name("e") ? "i", tla.dotdot(tla.name("a") ? "i", tla.name("b") ? "i") ? "S")
-        .typed(types, "b")
+      in(name("e") as intT, dotdot(name("a") as intT, name("b") as intT) as intSetT) as boolT
     val output = optimizer.apply(input)
     val expected =
-      tla
-        .and(tla.le(tla.name("a") ? "i", tla.name("e") ? "i") ? "b",
-            tla.le(tla.name("e") ? "i", tla.name("b") ? "i") ? "b")
-        .typed(types, "b")
+      and(le(name("a") as intT, name("e") as intT) as boolT, le(name("e") as intT, name("b") as intT) as boolT) as boolT
     assert(expected == output)
   }
 
   // an optimization for record accesses
   test("""[a |-> 1, b |-> 2].a becomes 2""") {
-    val types = Map("r" -> RecT1("a" -> IntT1(), "b" -> IntT1()), "i" -> IntT1())
+    val recT = RecT1("a" -> IntT1(), "b" -> IntT1())
     val record =
-      tla.enumFun(tla.str("a"), tla.int(1), tla.str("b"), tla.int(2))
-    val input = tla
-      .appFun(record ? "r", tla.str("b"))
-      .typed(types, "i")
+      enumFun(str("a"), int(1), str("b"), int(2))
+    val input = appFun(record as recT, str("b")) as intT
     val output = optimizer.apply(input)
-    val expected = tla.int(2).typed()
+    val expected = int(2).typed()
     assert(expected == output)
   }
 
   // an optimization for set comprehensions (maps)
   test("""\E x \in {foo[y]: y \in {1, 2}}: z = x ~~> \E y \in {1, 2}: z = foo[y]""") {
-    val types = Map("i" -> IntT1(), "S" -> SetT1(IntT1()), "f" -> FunT1(IntT1(), BoolT1()), "b" -> BoolT1(),
-        "B" -> SetT1(BoolT1()))
-    val set12 = tla.enumSet(tla.int(1), tla.int(2)) ? "S"
-    val funApp = tla.appFun(tla.name("foo") ? "f", tla.name("y") ? "i") ? "b"
-    val map = tla.map(funApp, tla.name("y") ? "i", set12) ? "B"
+    val funT = FunT1(IntT1(), BoolT1())
+    val set12 = enumSet(int(1), int(2)) as intSetT
+    val funApp = appFun(name("foo") as funT, name("y") as intT) as boolT
+    val mapEx = map(funApp, name("y") as intT, set12) as boolSetT
     val input =
-      tla
-        .exists(tla.name("x") ? "S", map, tla.eql(tla.name("z") ? "i", tla.name("x") ? "B") ? "b")
-        .typed(types, "b")
+      exists(name("x") as intSetT, mapEx, eql(name("z") as intT, name("x") as boolSetT) as boolT) as boolT
     val output = optimizer.apply(input)
-    val eq = tla.eql(tla.name("z") ? "b", funApp) ? "b"
+    val eq = eql(name("z") as boolT, funApp) as boolT
     val expected =
-      tla
-        .exists(tla.name("y") ? "i", set12, eq)
-        .typed(types, "b")
+      exists(name("y") as intT, set12, eq) as boolT
     assert(expected == output)
   }
 
   // an optimization for set comprehensions (filters)
   test("""\E x \in {y \in {1, 2}: y = 1}: z = x ~~> \E y \in {1, 2}: z = y /\ y = 1""") {
-    val types = Map("i" -> IntT1(), "S" -> SetT1(IntT1()), "b" -> BoolT1(), "B" -> SetT1(BoolT1()))
-    val set12 = tla.enumSet(tla.int(1), tla.int(2)) ? "S"
-    val filter =
-      tla.filter(tla.name("y") ? "i", set12, tla.eql(tla.name("y") ? "i", tla.int(1) ? "i") ? "b") ? "B"
+    val set12 = enumSet(int(1), int(2)) as intSetT
+    val filterEx =
+      filter(name("y") as intT, set12, eql(name("y") as intT, int(1) as intT) as boolT) as boolSetT
     val input =
-      tla
-        .exists(tla.name("x") ? "b", filter, tla.eql(tla.name("z") ? "i", tla.name("x") ? "b") ? "b")
-        .typed(types, "b")
+      exists(name("x") as boolT, filterEx, eql(name("z") as intT, name("x") as boolT) as boolT) as boolT
     val output = optimizer.apply(input)
-    val y_eq_1 = tla.eql(tla.name("y") ? "i", tla.int(1)) ? "b"
-    val z_eq_y = tla.eql(tla.name("z") ? "i", tla.name("y") ? "i") ? "b"
+    val y_eq_1 = eql(name("y") as intT, int(1)) as boolT
+    val z_eq_y = eql(name("z") as intT, name("y") as intT) as boolT
     val expected =
-      tla
-        .exists(tla.name("y") ? "i", set12, tla.and(y_eq_1, z_eq_y) ? "b")
-        .typed(types, "b")
+      exists(name("y") as intT, set12, and(y_eq_1, z_eq_y) as boolT) as boolT
 
     assert(expected == output)
   }
@@ -90,117 +76,81 @@ class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
   // optimizations for set cardinalities
 
   test("""Cardinality(S) = 0 becomes S = {}""") {
-    val types = Map("i" -> IntT1(), "S" -> SetT1(IntT1()), "b" -> BoolT1())
-    val input = tla
-      .eql(tla.card(tla.name("S") ? "S") ? "i", tla.int(0))
-      .typed(types, "b")
+    val input = eql(card(name("S") as intSetT) as intT, int(0)) as boolT
     val output = optimizer.apply(input)
-    val expected =
-      tla
-        .eql(tla.name("S") ? "S", tla.enumSet() ? "S")
-        .typed(types, "b")
+    val expected = eql(name("S") as intSetT, enumSet() as intSetT) as boolT
     assert(expected == output)
   }
 
   test("""Cardinality(S) > 0 becomes ~(S = {})""") {
-    val types = Map("i" -> IntT1(), "S" -> SetT1(IntT1()), "b" -> BoolT1())
-    val input = tla
-      .gt(tla.card(tla.name("S") ? "S") ? "i", tla.int(0))
-      .typed(types, "b")
+    val input = gt(card(name("S") as intSetT) as intT, int(0)) as boolT
     val output = optimizer.apply(input)
     val expected =
-      tla
-        .not(tla.eql(tla.name("S") ? "S", tla.enumSet() ? "S") ? "b")
-        .typed(types, "b")
+      not(eql(name("S") as intSetT, enumSet() as intSetT) as boolT) as boolT
     assert(expected == output)
   }
 
   test("""Cardinality(S) >= 1 becomes ~(S = {})""") {
     val types = Map("i" -> IntT1(), "S" -> SetT1(IntT1()), "b" -> BoolT1())
-    val input = tla
-      .ge(tla.card(tla.name("S") ? "S") ? "i", tla.int(1))
-      .typed(types, "b")
+    val input = ge(card(name("S") as intSetT) as intT, int(1)) as boolT
     val output = optimizer.apply(input)
     val expected =
-      tla
-        .not(tla.eql(tla.name("S") ? "S", tla.enumSet() ? "S") ? "b")
-        .typed(types, "b")
+      not(eql(name("S") as intSetT, enumSet() as intSetT) as boolT) as boolT
     assert(expected == output)
   }
 
   test("""Cardinality(S) /= 0 becomes ~(S = {})""") {
     val types = Map("i" -> IntT1(), "S" -> SetT1(IntT1()), "b" -> BoolT1())
-    val input = tla
-      .ge(tla.card(tla.name("S") ? "S") ? "i", tla.int(1))
-      .typed(types, "b")
+    val input = ge(card(name("S") as intSetT) as intT, int(1)) as boolT
     val output = optimizer.apply(input)
     val expected =
-      tla
-        .not(tla.eql(tla.name("S") ? "S", tla.enumSet() ? "S") ? "b")
-        .typed(types, "b")
+      not(eql(name("S") as intSetT, enumSet() as intSetT) as boolT) as boolT
     assert(expected == output)
   }
 
   test("""Cardinality(S) >= 2 becomes LET t_3 == S IN \E t_1 \in t_3: \E t_2 \in t_3: t_1 /= t_2""") {
-    val types = Map("i" -> IntT1(), "S" -> SetT1(IntT1()), "b" -> BoolT1(), "L" -> OperT1(Seq(), IntT1()))
-    val set = tla.name("S") ? "S"
-    val input = tla
-      .ge(tla.card(set) ? "i", tla.int(2))
-      .typed(types, "b")
+    val operT = OperT1(Seq(), IntT1())
+    val set = name("S") as intSetT
+    val input = ge(card(set) as intT, int(2)) as boolT
     val output = optimizer.apply(input)
-    val letApp = tla.appOp(tla.name("t_3") ? "L") ? "i"
+    val letApp = appOp(name("t_3") as operT) as intT
     val letBody =
-      tla.exists(tla.name("t_1") ? "i", letApp,
-          tla.exists(tla.name("t_2") ? "i", letApp,
-              tla.not(tla.eql(tla.name("t_1") ? "i", tla.name("t_2") ? "i") ? "b") ? "b") ? "b")
-    val decl = tla
-      .declOp("t_3", tla.name("S").typed(types, "S"))
-      .as(OperT1(Seq(), IntT1()))
-    val expected =
-      tla.letIn(letBody ? "b", decl).typed(types, "b")
+      exists(name("t_1") as intT, letApp,
+          exists(name("t_2") as intT, letApp,
+              not(eql(name("t_1") as intT, name("t_2") as intT) as boolT) as boolT) as boolT)
+    val decl = declOp("t_3", name("S") as intSetT) as OperT1(Seq(), IntT1())
+    val expected = letIn(letBody as boolT, decl) as boolT
     assert(expected == output)
   }
 
   test("""Cardinality(S) > 1 becomes LET t_3 == S IN \E t_1 \in t_3: \E t_1 \in t_3: t_1 /= t_2""") {
-    val types = Map("i" -> IntT1(), "S" -> SetT1(IntT1()), "b" -> BoolT1(), "L" -> OperT1(Seq(), IntT1()))
-    val set = tla.name("S") ? "S"
-    val input = tla
-      .gt(tla.card(set) ? "i", tla.int(1))
-      .typed(types, "b")
+    val operT = OperT1(Seq(), IntT1())
+    val set = name("S") as intSetT
+    val input = gt(card(set) as intT, int(1)) as boolT
     val output = optimizer.apply(input)
-    val letApp = tla.appOp(tla.name("t_3") ? "L") ? "i"
+    val letApp = appOp(name("t_3") ? "L") as intT
     val letBody =
-      tla.exists(tla.name("t_1") ? "i", letApp,
-          tla.exists(tla.name("t_2") ? "i", letApp,
-              tla.not(tla.eql(tla.name("t_1") ? "i", tla.name("t_2") ? "i") ? "b") ? "b") ? "b")
-    val decl = tla
-      .declOp("t_3", tla.name("S").typed(types, "S"))
-      .as(OperT1(Seq(), IntT1()))
+      exists(name("t_1") as intT, letApp,
+          exists(name("t_2") as intT, letApp,
+              not(eql(name("t_1") as intT, name("t_2") as intT) as boolT) as boolT) as boolT)
+    val decl = declOp("t_3", name("S") as intSetT) as OperT1(Seq(), IntT1())
     val expected =
-      tla.letIn(letBody ? "b", decl).typed(types, "b")
+      letIn(letBody as boolT, decl) as boolT
     assert(expected == output)
   }
 
   test("""Cardinality(5..9) > 5""") {
     // regression #748
-    val types = Map("i" -> IntT1(), "S" -> SetT1(IntT1()), "b" -> BoolT1())
-    val input = tla
-      .gt(tla.card(tla.dotdot(tla.int(5), tla.int(9)) ? "S") ? "i", tla.int(5))
-      .typed(types, "b")
+    val input = gt(card(dotdot(int(5), int(9)) as intSetT) as intT, int(5)) as boolT
     // check that it does not throw an exception
     optimizer.apply(input)
   }
 
   test("""Cardinality(a..b) becomes (b - a) + 1""") {
-    val types = Map("i" -> IntT1(), "S" -> SetT1(IntT1()), "b" -> BoolT1())
-    val input = tla
-      .card(tla.dotdot(tla.name("a") ? "i", tla.name("b") ? "i") ? "S")
-      .typed(types, "i")
+    val input = card(dotdot(name("a") as intT, name("b") as intT) as intSetT) as intT
     val output = optimizer.apply(input)
     val expected =
-      tla
-        .plus(tla.minus(tla.name("b") ? "i", tla.name("a") ? "i") ? "i", tla.int(1) ? "i")
-        .typed(types, "i")
+      plus(minus(name("b") as intT, name("a") as intT) as intT, int(1) as intT) as intT
     assert(expected == output)
   }
 }

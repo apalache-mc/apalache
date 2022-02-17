@@ -5,29 +5,36 @@ import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, SetT1, TlaEx}
 
 trait TestSymbStateRewriterFiniteSets extends RewriterBase {
-  private val types = Map(
-      "b" -> BoolT1(),
-      "i" -> IntT1(),
-      "I" -> SetT1(IntT1())
-  )
+  private val intT = IntT1()
+  private val boolT = BoolT1()
+  private val intSetT = SetT1(IntT1())
+  private val intSetSetT = SetT1(SetT1(IntT1()))
 
   test("""Cardinality({1, 2, 3}) = 3""") { rewriterType: SMTEncoding =>
     val set = enumSet(1.to(3).map(int): _*)
-    val cardinality = card(set ? "I")
-      .typed(types, "i")
-    val eq = eql(cardinality, int(3))
-      .typed(types, "b")
+    val cardinality = card(set as intSetT) as intT
+    val eq = eql(cardinality, int(3)) as boolT
 
     val state = new SymbState(eq, arena, Binding())
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
+  test("""Cardinality(SUBSET {1, 2}) = 4""") { rewriterType: SMTEncoding =>
+    val set = enumSet(1.to(2).map(int): _*) as intSetT
+    val powerset = powSet(set) as intSetSetT
+    val cardinality = card(powerset) as intT
+
+    val state = new SymbState(cardinality, arena, Binding())
+    assertThrows[RewriterException] {
+      // this case should be handled by preprocessing
+      create(rewriterType).rewriteUntilDone(state)
+    }
+  }
+
   test("""Cardinality({1, 2, 2, 2, 3, 3}) = 3""") { rewriterType: SMTEncoding =>
     val set = enumSet(Seq(1, 2, 2, 2, 3, 3).map(int): _*)
-    val cardinality = card(set ? "I")
-      .typed(types, "i")
-    val eq = eql(cardinality, int(3))
-      .typed(types, "b")
+    val cardinality = card(set as intSetT) as intT
+    val eq = eql(cardinality, int(3)) as boolT
 
     val state = new SymbState(eq, arena, Binding())
     assertTlaExAndRestore(create(rewriterType), state)
@@ -35,8 +42,7 @@ trait TestSymbStateRewriterFiniteSets extends RewriterBase {
 
   test("""Apalache!ConstCard(Cardinality({1, 2, 3}) >= 3)""") { rewriterType: SMTEncoding =>
     val set = enumSet(1.to(3).map(int): _*)
-    val cardCmp = apalacheConstCard(ge(card(set ? "I") ? "i", int(3)) ? "b")
-      .typed(types, "b")
+    val cardCmp = apalacheConstCard(ge(card(set as intSetT) as intT, int(3)) as boolT) as boolT
     val state = new SymbState(cardCmp, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -48,8 +54,7 @@ trait TestSymbStateRewriterFiniteSets extends RewriterBase {
 
   test("""Apalache!ConstCard(Cardinality({1, 2, 3}) >= 4)""") { rewriterType: SMTEncoding =>
     val set = enumSet(1.to(3).map(int): _*)
-    val cardCmp = apalacheConstCard(ge(card(set ? "I") ? "i", int(4)) ? "b")
-      .typed(types, "b")
+    val cardCmp = apalacheConstCard(ge(card(set as intSetT) as intT, int(4)) as boolT) as boolT
     val state = new SymbState(cardCmp, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -61,8 +66,7 @@ trait TestSymbStateRewriterFiniteSets extends RewriterBase {
 
   test("""Apalache!ConstCard(Cardinality({1, 2, 2, 3}) >= 4)""") { rewriterType: SMTEncoding =>
     val set = enumSet(Seq(1, 2, 2, 3).map(int): _*)
-    val cardCmp = apalacheConstCard(ge(card(set ? "I") ? "i", int(4)) ? "b")
-      .typed(types, "b")
+    val cardCmp = apalacheConstCard(ge(card(set as intSetT) as intT, int(4)) as boolT) as boolT
     val state = new SymbState(cardCmp, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -74,8 +78,7 @@ trait TestSymbStateRewriterFiniteSets extends RewriterBase {
 
   test("""Apalache!ConstCard(Cardinality({1, 2, 2, 3, 3}) >= 4)""") { rewriterType: SMTEncoding =>
     val set = enumSet(Seq(1, 2, 2, 3, 3).map(int): _*)
-    val cardCmp = apalacheConstCard(ge(card(set ? "I") ? "i", int(4)) ? "b")
-      .typed(types, "b")
+    val cardCmp = apalacheConstCard(ge(card(set as intSetT) as intT, int(4)) as boolT) as boolT
     val state = new SymbState(cardCmp, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -87,8 +90,7 @@ trait TestSymbStateRewriterFiniteSets extends RewriterBase {
 
   test("""Apalache!ConstCard(Cardinality({}) >= 0)""") { rewriterType: SMTEncoding =>
     val set = enumSet()
-    val cardCmp = apalacheConstCard(ge(card(set ? "I") ? "i", int(0)) ? "b")
-      .typed(types, "b")
+    val cardCmp = apalacheConstCard(ge(card(set as intSetT) as intT, int(0)) as boolT) as boolT
     val state = new SymbState(cardCmp, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -100,8 +102,7 @@ trait TestSymbStateRewriterFiniteSets extends RewriterBase {
 
   test("""Apalache!ConstCard(Cardinality({}) >= 1)""") { rewriterType: SMTEncoding =>
     val set = enumSet()
-    val cardCmp = apalacheConstCard(ge(card(set ? "I") ? "i", int(1)) ? "b")
-      .typed(types, "b")
+    val cardCmp = apalacheConstCard(ge(card(set as intSetT) as intT, int(1)) as boolT) as boolT
     val state = new SymbState(cardCmp, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -112,9 +113,8 @@ trait TestSymbStateRewriterFiniteSets extends RewriterBase {
   }
 
   test("""Apalache!ConstCard(Cardinality({x \in {}: FALSE}) >= 0)""") { rewriterType: SMTEncoding =>
-    val set = filter(name("x") ? "i", enumSet() ? "I", bool(false))
-    val cardCmp = apalacheConstCard(ge(card(set ? "I") ? "i", int(0)) ? "b")
-      .typed(types, "b")
+    val set = filter(name("x") as intT, enumSet() as intSetT, bool(false))
+    val cardCmp = apalacheConstCard(ge(card(set as intSetT) as intT, int(0)) as boolT) as boolT
     val state = new SymbState(cardCmp, arena, Binding())
     // note that this optimization only works in the positive form. Its negation may be SAT.
     val rewriter = create(rewriterType)
@@ -125,9 +125,8 @@ trait TestSymbStateRewriterFiniteSets extends RewriterBase {
   }
 
   test("""Apalache!ConstCard(Cardinality({x \in {}: FALSE}) >= 1)""") { rewriterType: SMTEncoding =>
-    val set = filter(name("x") ? "i", enumSet() ? "I", bool(false))
-    val cardCmp = apalacheConstCard(ge(card(set ? "I") ? "i", int(1)) ? "b")
-      .typed(types, "b")
+    val set = filter(name("x") as intT, enumSet() as intSetT, bool(false))
+    val cardCmp = apalacheConstCard(ge(card(set as intSetT) as intT, int(1)) as boolT) as boolT
     val state = new SymbState(cardCmp, arena, Binding())
     // note that this optimization only works in the positive form. Its negation may be SAT.
     val rewriter = create(rewriterType)
@@ -139,14 +138,12 @@ trait TestSymbStateRewriterFiniteSets extends RewriterBase {
 
   test("""Cardinality({1, 2, 3} \ {2}) = 2""") { rewriterType: SMTEncoding =>
     def setminus(set: TlaEx, intVal: Int): TlaEx = {
-      filter(name("t") ? "i", set ? "I", not(eql(name("t") ? "i", int(intVal)) ? "b") ? "b")
-        .typed(types, "I")
+      filter(name("t") as intT, set as intSetT, not(eql(name("t") as intT, int(intVal)) as boolT) as boolT) as intSetT
     }
 
-    val set = setminus(enumSet(1.to(3).map(int): _*).typed(types, "I"), 2)
-    val cardinality = card(set ? "I")
-    val eq = eql(cardinality ? "i", int(2))
-      .typed(types, "b")
+    val set = setminus(enumSet(1.to(3).map(int): _*) as intSetT, 2)
+    val cardinality = card(set as intSetT)
+    val eq = eql(cardinality as intT, int(2)) as boolT
 
     val state = new SymbState(eq, arena, Binding())
     assertTlaExAndRestore(create(rewriterType), state)
@@ -154,8 +151,7 @@ trait TestSymbStateRewriterFiniteSets extends RewriterBase {
 
   test("""IsFiniteSet({1, 2, 3}) = TRUE""") { rewriterType: SMTEncoding =>
     val set = enumSet(1.to(3).map(int): _*)
-    val isFiniteSet = isFin(set ? "I")
-      .typed(types, "b")
+    val isFiniteSet = isFin(set as intSetT) as boolT
     val state = new SymbState(isFiniteSet, arena, Binding())
     assertTlaExAndRestore(create(rewriterType), state)
   }

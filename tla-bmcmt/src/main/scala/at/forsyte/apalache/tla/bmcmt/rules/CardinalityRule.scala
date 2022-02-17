@@ -6,11 +6,13 @@ import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaFiniteSetOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
+import at.forsyte.apalache.tla.pp.TlaInputError
 
 /**
  * Implements the Cardinality operator.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class CardinalityRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
@@ -29,8 +31,14 @@ class CardinalityRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case OperEx(TlaFiniteSetOper.cardinality, setEx) =>
         var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
         val setCell = nextState.asCell
-        val elems = nextState.arena.getHas(setCell)
-        makeCardEquations(nextState, setCell, elems)
+        setCell.cellType match {
+          case FinSetT(_) =>
+            val elems = nextState.arena.getHas(setCell)
+            makeCardEquations(nextState, setCell, elems)
+
+          case tp =>
+            throw new TlaInputError("Cardinality expected a finite set, found: " + tp, Some(state.ex.ID))
+        }
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
