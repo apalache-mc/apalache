@@ -3,12 +3,12 @@ package at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 @RunWith(classOf[JUnitRunner])
-class TestBuilder extends FunSuite with TestingPredefs {
+class TestBuilder extends AnyFunSuite with TestingPredefs {
   private val bd = new Builder()
 
   test("Test direct methods: Names and values") {

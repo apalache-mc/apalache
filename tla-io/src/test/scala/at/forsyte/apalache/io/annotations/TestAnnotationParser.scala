@@ -4,12 +4,12 @@ import org.junit.runner.RunWith
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen.{alphaNumStr, alphaStr, identifier, listOf, oneOf}
 import org.scalacheck.Prop.{AnyOperators, falsified, forAll, passed}
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.prop.Checkers
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatestplus.scalacheck.Checkers
 
 @RunWith(classOf[JUnitRunner])
-class TestAnnotationParser extends FunSuite with Checkers {
+class TestAnnotationParser extends AnyFunSuite with Checkers {
   // generators for the case classes
   private val genStr = for {
     // I would like to check a string that contains ASCII characters, but not the quotes (").

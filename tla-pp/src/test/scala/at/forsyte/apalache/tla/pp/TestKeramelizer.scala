@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.TypedPredefs._
+import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.PredResultOk
@@ -9,12 +9,14 @@ import at.forsyte.apalache.tla.lir.transformations.standard.{KeraLanguagePred, K
 import org.junit.runner.RunWith
 import org.scalacheck.Prop.{forAll, propBoolean}
 import org.scalatest.AppendedClues.convertToClueful
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.prop.Checkers.{check, minSuccessful, sizeRange}
-import org.scalatest.{BeforeAndAfterEach, FunSuite, Matchers}
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatestplus.scalacheck.Checkers
 
 @RunWith(classOf[JUnitRunner])
-class TestKeramelizer extends FunSuite with BeforeAndAfterEach with Matchers {
+class TestKeramelizer extends AnyFunSuite with Checkers with BeforeAndAfterEach with Matchers {
   private var keramelizer = new Keramelizer(new UniqueNameGenerator(), TrackerWithListeners())
 
   override def beforeEach(): Unit = {

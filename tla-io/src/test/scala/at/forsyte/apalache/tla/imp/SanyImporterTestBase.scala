@@ -3,9 +3,10 @@ package at.forsyte.apalache.tla.imp
 import at.forsyte.apalache.io.annotations.store.{AnnotationStore, createAnnotationStore}
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, OperParam, TlaDecl, TlaEx, TlaModule, TlaOperDecl}
-import org.scalatest.{BeforeAndAfter, FunSuite}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.funsuite.AnyFunSuite
 
-trait SanyImporterTestBase extends FunSuite with BeforeAndAfter {
+trait SanyImporterTestBase extends AnyFunSuite with BeforeAndAfter {
   protected var sourceStore: SourceStore = _
   protected var annotationStore: AnnotationStore = _
   protected var sanyImporter: SanyImporter = _

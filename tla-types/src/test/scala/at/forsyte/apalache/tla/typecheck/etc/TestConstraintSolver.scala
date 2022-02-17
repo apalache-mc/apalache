@@ -3,12 +3,12 @@ package at.forsyte.apalache.tla.typecheck.etc
 import at.forsyte.apalache.tla.lir.{OperT1, VarT1}
 import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.easymock.EasyMockSugar
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.easymock.EasyMockSugar
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestConstraintSolver extends FunSuite with EasyMockSugar with EtcBuilder {
+class TestConstraintSolver extends AnyFunSuite with EasyMockSugar with EtcBuilder {
   private val parser: Type1Parser = DefaultType1Parser
 
   test("unique solution") {

@@ -5,12 +5,13 @@ import at.forsyte.apalache.tla.typecheck._
 import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
 import org.easymock.EasyMock
 import org.junit.runner.RunWith
-import org.scalatest.easymock.EasyMockSugar
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatestplus.easymock.EasyMockSugar
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
 
 @RunWith(classOf[JUnitRunner])
-class TestEtcTypeChecker extends FunSuite with EasyMockSugar with BeforeAndAfterEach with EtcBuilder {
+class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAfterEach with EtcBuilder {
   private val parser: Type1Parser = DefaultType1Parser
   private var checker: TypeChecker = _
 

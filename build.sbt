@@ -36,6 +36,9 @@ ThisBuild / libraryDependencies ++= Seq(
     TestDeps.easymock,
     TestDeps.scalatest,
     TestDeps.scalacheck,
+    TestDeps.scalatestplusEasymock,
+    TestDeps.scalatestplusJunit,
+    TestDeps.scalatestplusScalacheck,
 )
 
 // Only check/fix against (tracked) files that have changed relative to the trunk
@@ -56,7 +59,7 @@ lazy val testSettings = Seq(
     // Configure the test reporters for concise but informative output.
     // See https://www.scalatest.org/user_guide/using_scalatest_with_sbt
     // for the meaning of the flags.
-    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oCDEHT"),
+    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oCDEH"),
 )
 
 /////////////////////////////

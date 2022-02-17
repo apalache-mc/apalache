@@ -8,13 +8,13 @@ import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir._
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 import scala.io.Source
 
 @RunWith(classOf[JUnitRunner])
-class TestVCGenerator extends FunSuite {
+class TestVCGenerator extends AnyFunSuite {
   private def mkVCGen(): VCGenerator = {
     new VCGenerator(new IdleTracker)
   }
@@ -57,7 +57,7 @@ class TestVCGenerator extends FunSuite {
     val hist = name("hist") ? "s"
     val invBody = gt(
         appFun(appOp(hist, len(hist) ? "i") ? "r", str("x")) ? "i",
-        appFun(appOp(hist, int(1)) ? "r", str("x")) ? "i"
+        appFun(appOp(hist, int(1)) ? "r", str("x")) ? "i",
     ) ? "b"
     val traceInv = declOp("TraceInv", invBody, OperParam("hist", 0)).typed(types, "o")
     val xDecl = TlaVarDecl("x")(Typed(IntT1()))
