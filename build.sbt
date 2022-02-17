@@ -1,3 +1,4 @@
+import scala.sys.process._
 import Dependencies._
 
 ///////////////////////////
@@ -5,6 +6,7 @@ import Dependencies._
 ///////////////////////////
 
 name := "apalache"
+maintainer := "apalache@informal.org"
 
 // See https://www.scala-sbt.org/1.x/docs/Multi-Project.html#Build-wide+settings
 ThisBuild / organizationName := "Informal Systems Inc."
@@ -174,8 +176,11 @@ lazy val distribution = (project in file("mod-distribution"))
 // Packaging //
 ///////////////
 
+lazy val apalacheCurrentPackage = taskKey[File]("Set the current executable apalche-mc to the latest package")
+
 // Define the main entrypoint and uber jar package
 lazy val root = (project in file("."))
+  .enablePlugins(UniversalPlugin, sbtdocker.DockerPlugin)
   .dependsOn(distribution)
   .aggregate(
       // propagate commands to these sub-projects
@@ -197,6 +202,7 @@ lazy val root = (project in file("."))
           ((ThisBuild / baseDirectory).value / "README.md" -> "README.md"),
           ((ThisBuild / baseDirectory).value / "LICENSE" -> "LICENSE"),
       ),
+      // Assembly constructs our "fat jar"
       assembly / assemblyJarName := s"apalache-pkg-${version.value}-full.jar",
       assembly / mainClass := Some("at.forsyte.apalache.tla.Tool"),
       assembly / assembledMappings += {
@@ -211,10 +217,25 @@ lazy val root = (project in file("."))
             ),
         )
       },
+      // Package the distribution files
+      Universal / mappings ++= Seq(
+          // The fat jar
+          assembly.value -> "lib/apalache.jar",
+          (ThisBuild / baseDirectory).value / "LICENSE" -> "LICENSE",
+      ),
+      apalacheCurrentPackage := {
+        val log = streams.value.log
+        val pkg = (Universal / packageZipTarball).value
+        val (unzipped, _) = IO.split(pkg.toString)
+        val target_dir = (Universal / target).value
+        val current_pkg = (Universal / target).value / "current-pkg"
+        log.info(s"Unpacking package ${pkg}")
+        s"tar zxvf ${pkg} --overwrite -C ${target_dir}" ! log
+        log.info(s"Symlinking ${current_pkg} -> ${unzipped}")
+        s"ln -sfn ${unzipped} ${current_pkg}" ! log
+        file(unzipped)
+      },
   )
-
-// Specify and build the docker file
-enablePlugins(DockerPlugin)
 
 docker / imageNames := {
   val img: String => ImageName = s =>
@@ -234,13 +255,10 @@ docker / dockerfile := {
   // Docker Working Dir
   val dwd = "/opt/apalache"
 
-  val fatJar = assembly.value
-  val jarTarget = s"${dwd}/target/scala-2.12/${fatJar.name}"
+  val pkg = apalacheCurrentPackage.value
 
-  val runners = rootDir / "bin"
-  val runnersTarget = s"${dwd}/bin"
-
-  val license = rootDir / "LICENSE"
+  val runner = rootDir / "bin" / "run-in-docker-container"
+  val runnerTarget = s"${dwd}/bin/run-in-docker-container"
   val readme = rootDir / "README.md"
 
   new Dockerfile {
@@ -248,9 +266,8 @@ docker / dockerfile := {
 
     workDir(dwd)
 
-    add(fatJar, jarTarget)
-    add(runners, runnersTarget)
-    add(license, s"${dwd}/${license.name}")
+    add(pkg, ".")
+    add(runner, runnerTarget)
     add(readme, s"${dwd}/${readme.name}")
 
     // TLA parser requires all specification files to be in the same directory
