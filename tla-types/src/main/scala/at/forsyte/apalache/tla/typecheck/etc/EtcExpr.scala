@@ -17,6 +17,10 @@ sealed trait EtcExpr {
    * This identifier is not taken into account in equals and hash.
    */
   val sourceRef: EtcRef
+
+  var typeErrorExplanation: (String, String) => String = (_, _) => ""
+
+  def explain(sigInfo: String, argsInfo: String) : String = typeErrorExplanation(sigInfo, argsInfo)
 }
 
 /**

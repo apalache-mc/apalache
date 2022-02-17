@@ -128,7 +128,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
             // it should be the case that manySigs has at least two elements, but we also include the case of one
             val sepSigs = String.join(" or ", signatures.map(_.toString()): _*)
             onTypeError(appEx.sourceRef,
-                s"Need annotation. Found ${signatures.length} matching operator signatures $sepSigs for $argOrArgs $evalArgTypes")
+                s"Need annotation. Found ${signatures.length} matching operator signatures $sepSigs for $argOrArgs $evalArgTypes. ${appEx.explain(sepSigs, evalArgTypes)}")
           }
         }
 
@@ -137,7 +137,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
           val evalArgTypes = argTypes.map(sub.subRec).mkString(" and ")
           val argOrArgs = pluralArgs(argTypes.length)
           val evalSig = sub.subRec(operVar)
-          onTypeError(appEx.sourceRef, s"No match between operator signature $evalSig and $argOrArgs $evalArgTypes")
+          onTypeError(appEx.sourceRef, s"No match between operator signature $evalSig and $argOrArgs $evalArgTypes. ${appEx.explain(evalSig.toString, evalArgTypes)}")
         }
 
         // operVar = (arg_1, ..., arg_k) => resVar
@@ -150,7 +150,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
           val evalArgTypes = argTypes.map(sub.subRec).mkString(" and ")
           val argOrArgs = pluralArgs(argTypes.length)
           val evalSig = sigs.head
-          onTypeError(appEx.sourceRef, s"No match between operator signature $evalSig and $argOrArgs $evalArgTypes")
+          onTypeError(appEx.sourceRef, s"$appEx No match between operator signature $evalSig and $argOrArgs $evalArgTypes. ${appEx.explain(evalSig.toString, evalArgTypes)}")
         }
 
         if (operTypes.length == 1) {
@@ -187,7 +187,10 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
             .setOnTypeFound(tt => onTypeFound(name.sourceRef, tt))
           solver.addConstraint(clause)
           // delegate the rest to the application-by-type
-          computeRec(ctx, solver, mkApp(ex.sourceRef, Seq(instantiatedType), args: _*))
+          val instantiatedExpr = mkApp(ex.sourceRef, Seq(instantiatedType), args: _*)
+          instantiatedExpr.typeErrorExplanation = ex.typeErrorExplanation
+
+          computeRec(ctx, solver, instantiatedExpr)
         } else {
           onTypeError(ex.sourceRef, s"The operator $name is used before it is defined.")
           throw new UnwindException
@@ -356,7 +359,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
     listener.onTypeError(sourceRef, message)
   }
 
-  // tired of reading "arguments(s)", it's easy to fix
+  // tired of reading "argument(s)", it's easy to fix
   private def pluralArgs(count: Int): String = {
     if (count != 1) "arguments" else "argument"
   }

@@ -210,11 +210,15 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         // x = y, x /= y
         val a = varPool.fresh
         val opsig = OperT1(Seq(a, a), BoolT1())
-        mkExRefApp(opsig, args)
+        val etcExpr = mkExRefApp(opsig, args)
+        etcExpr.typeErrorExplanation = (sigInfo: String, argsInfo: String) => s"Arguments ${args.mkString(" and ")} on expression $ex should have the same type"
+        etcExpr
 
       case OperEx(TlaOper.apply, nameEx @ NameEx(_), args @ _*) =>
         // F(e_1, ..., e_n)
-        mkAppByName(ref, mkName(nameEx), args.map(this(_)): _*)
+        val etcExpr = mkAppByName(ref, mkName(nameEx), operArgTypes: _*)
+        etcExpr.typeErrorExplanation = (sigInfo: String, argsInfo: String) => s"Argument(s) ${args.mkString(" and ")} on expression $ex should have type(s) $argsInfo respectively"
+        etcExpr
 
       case ex @ OperEx(TlaOper.apply, opName, args @ _*) =>
         throw new TypingException(s"Bug in ToEtcExpr. Expected an operator name, found: ${opName}", ex.ID)
@@ -432,7 +436,9 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val signatures = mkFunLikeByArg(arg).map { case (funType, argType, resType) =>
           OperT1(Seq(funType, argType), resType)
         }
-        mkApp(ref, signatures, this(fun), this(arg))
+        val etcExpr = mkApp(ref, signatures, this(fun), this(arg))
+        etcExpr.typeErrorExplanation = (sigInfo: String, argsInfo: String) => s"Couldn't find a way to apply [] to a function $fun and an argument $arg in $ex"
+        etcExpr
 
       case OperEx(TlaFunOper.domain, fun) =>
         // DOMAIN f
