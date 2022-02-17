@@ -9,7 +9,7 @@ all: apalache
 
 # test and assemble the package
 apalache:
-	sbt test assembly
+	sbt test apalacheCurrentPackage
 
 # package the project for local use without running tests
 package:
