@@ -540,8 +540,8 @@ class Builder {
     BuilderOper(TlaSetOper.funSet, fromSet, toSet)
   }
 
-  def recSet(varsAndSetsInterleaved: BuilderEx*): BuilderEx = {
-    BuilderOper(TlaSetOper.recSet, varsAndSetsInterleaved: _*)
+  def recSet(var1: BuilderEx, set1: BuilderEx, varsAndSetsInterleaved: BuilderEx*): BuilderEx = {
+    BuilderOper(TlaSetOper.recSet, var1 +: set1 +: varsAndSetsInterleaved: _*)
   }
 
   def seqSet(p_S: BuilderEx): BuilderEx = {
