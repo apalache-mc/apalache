@@ -1,12 +1,10 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
+import at.forsyte.apalache.tla.lir.TypedPredefs._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
-import at.forsyte.apalache.tla.lir.TypedPredefs._
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.transformations.{PredResult, PredResultOk}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -21,7 +19,6 @@ class TestKeramelizerInputLanguagePred extends LanguagePredTestSuite {
   val typed_n_b = fromTlaEx(name("b") as IntT1())
   val typedSet = fromTlaEx(enumSet(int(1), int(2)) as SetT1(IntT1()))
   val untypedSet = fromTlaEx(enumSet(int(1), int(2)).untyped())
-
 
   /**
    * ****************** tests from [[KeraLanguagePred]], except where otherwise noted *****************************
@@ -121,7 +118,7 @@ class TestKeramelizerInputLanguagePred extends LanguagePredTestSuite {
   }
 
   /**
-   * *********** additional tests for [[KeramelizerInputLanguagePred]]  ***********
+   * *********** additional tests for [[KeramelizerInputLanguagePred]] ***********
    */
   test("accepts binding expressions where first argument is a name") {
     expectOk(pred.isExprOk(exists(name("a"), bool(true))))
