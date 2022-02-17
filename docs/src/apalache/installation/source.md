@@ -12,10 +12,20 @@
 5. Change into the project directory: `cd apalache`.
 7. Run `make`.
    - To skip running the tests, you can run `make package`
-6. *Optionally* install [direnv][] and run `direnv allow`
-8. Confirm you can run the executable. It should print the inline CLI help message.
-   - If you used `direnv`, then `apalache-mc` will be in your path.
-   - Otherwise, run `./bin/apalache-mc`.
+8. The distribution package will be built to `./target/universal/apalache-<VERSION>`, and you can
+   move this wherever you'd like, and ensure that the `<dist-package-location>/bin` directory
+   is added to your `PATH`.
+
+## Running from within the Apalache repo
+
+If you prefer to keep the built package inside of the Apalache source
+repository, you have three options after running `make`:
+
+- Add the `./bin` directory in the source repository to your `PATH`, which will
+  make `apalche-mc` available.
+- Install [direnv][] and run `direnv allow`, which will put `apalche-mc` in your
+  path when you are inside of the Apalache repo directory.
+- Run `./bin/apalache-mc` directly.
 
 
 [OpenJDK8]: https://openjdk.java.net/install/
