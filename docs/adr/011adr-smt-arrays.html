@@ -172,7 +172,7 @@
                     <main>
                         <h1><a class="header" href="#adr-011-alternative-smt-encoding-using-arrays" id="adr-011-alternative-smt-encoding-using-arrays">ADR-011: alternative SMT encoding using arrays</a></h1>
 <table><thead><tr><th>author</th><th align="right">revision</th></tr></thead><tbody>
-<tr><td>Rodrigo Otoni</td><td align="right">1.4</td></tr>
+<tr><td>Rodrigo Otoni</td><td align="right">1.5</td></tr>
 </tbody></table>
 <p>This ADR describes an alternative encoding of the <a href="https://apalache.informal.systems/docs/apalache/kera.html">KerA+</a> fragment of TLA+ into SMT.
 Compound data structures, e.g. sets, are currently encoded using the <a href="http://smtlib.cs.uiowa.edu/theories-Core.shtml">core theory</a> of SMT,
@@ -283,12 +283,11 @@ elements will remain unchanged.</li>
 </li>
 <li>In class <code>SymbStateRewriterImplWithArrays</code>, add the new rules to <code>ruleLookupTable</code> by overriding
 the entries to their older versions.</li>
-<li>Add six new Apalache IR operators in <code>ApalacheOper</code>, <code>Builder</code>, <code>ConstSimplifierForSmt</code>, and 
+<li>Add four new Apalache IR operators in <code>ApalacheOper</code>, <code>Builder</code>, <code>ConstSimplifierForSmt</code>, and 
 <code>PreproSolverContext</code>, to represent the array operations.
 <ul>
 <li>The <code>selectInSet</code> IR operator represents the SMT <code>select</code>.</li>
 <li>The <code>storeInSet</code> IR operator represents the SMT <code>store</code>.</li>
-<li>The <code>chain</code> and <code>assignChain</code> IR operators represent compound SMT operations.</li>
 <li>The <code>unchangedSet</code> IR operator represents an equality between the current and new SSA array
 representations. This is required to constraint the array representation as it evolves. It is
 important to note that this operator assumes that all arrays are initially empty, so an element
@@ -306,10 +305,6 @@ constraints representing sets and set membership.</li>
 and <code>getInPred</code>, will not be applied to the new encoding. Cases for the new IR operators will 
 be added to <code>toExpr</code>, which will default to <code>TlaSetOper.in</code> and <code>TlaSetOper.notin</code> for the 
 existing encoding.</li>
-<li>The <code>chain</code> and <code>assignChain</code> IR operators encode a sequence of SMT operations into a single
-clause. They can be used to efficiently encode compound <code>store</code> operations when many elements
-need to be added a set, by avoiding the declaration of intermediary arrays. In addition to
-<code>store</code>, they can also be used to compound other operations, such as arithmetic ones.</li>
 <li>The <code>smtMap</code> IR operator will be used to encode the TLA+ set filter operation. It constructs
 a temporary array that contains the evaluation of the filter's predicate for each set element
 and uses SMT map to compute the intersection of the set being filtered and the set represented
