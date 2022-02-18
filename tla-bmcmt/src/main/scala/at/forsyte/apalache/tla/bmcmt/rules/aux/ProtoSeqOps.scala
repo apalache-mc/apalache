@@ -7,12 +7,15 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir._
 
 /**
- * Proto sequences that contain the absolute minimum for implementing TLA+ sequences. A proto sequence is essentially an
- * array of fixed size (which we call 'capacity'). A sequence is a pair that consists of the length (an integer cell)
- * and a proto sequence (a cell). The important property of the proto sequences is that they appear only in the arenas.
- * Hence, the complexity of iterative operations over proto sequences does not directly propagate to SMT. All operators
- * over sequences are expressible as operations over proto sequences, which makes proto sequences a nice layer of
- * abstraction.
+ * <p>Proto sequences that contain the absolute minimum for implementing TLA+ sequences. A proto sequence is a
+ * collection of cells, which are ordered by indices 1, ..., `capacity`. Importantly, `capacity` is a static value,
+ * which does not have to be tracked symbolically. The important property of the proto sequences is that they appear
+ * only in the arenas. Hence, the complexity of iterative operations over proto sequences does not directly propagate to
+ * SMT.</p>
+ *
+ * <p>A TLA+ sequence is represented with a pair that consists of the length (an integer cell) and a proto sequence (a
+ * cell). All operators over sequences are expressible as operations over proto sequences, which makes proto sequences a
+ * nice layer of abstraction.</p>
  *
  * @param rewriter
  *   a symbolic rewriter
@@ -22,7 +25,8 @@ import at.forsyte.apalache.tla.lir._
 class ProtoSeqOps(rewriter: SymbStateRewriter) {
 
   /**
-   * Create a proto sequence of the given capacity and initialize its elements with the function `mkElem`.
+   * Create a proto sequence of the given capacity and initialize its elements with the function `mkElem`. It is
+   * important that `mkElem` is free of side effects.
    *
    * @param state
    *   a symbolic state to start with
@@ -34,19 +38,22 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
    *   a new symbolic state and the cell of the proto sequence
    */
   def make(state: SymbState, capacity: Int, mkElem: (SymbState, Int) => (SymbState, ArenaCell)): SymbState = {
-    // The proto sequence is a cell of unknown type, not introduced in SMT.
-    val afterAppend = state.updateArena(_.appendCellNoSmt(UnknownT()))
-    val protoSeq = afterAppend.arena.topCell
-
-    // initialize the proto sequence with `mkElem`
-    val (afterMk, cells) =
-      capacity.to(1, -1).foldLeft((afterAppend, List[ArenaCell]())) { case ((s, createdCells), i) =>
-        val (ns, cell) = mkElem(s, i)
-        (ns, cell :: createdCells)
+    // introduce an array to initialize the cells
+    val cellsAsArray = new Array[ArenaCell](capacity)
+    // initialize the elements with `mkElem`
+    var nextState =
+      1.to(capacity).foldLeft(state) { case (currentState, i) =>
+        val (changedState, cell) = mkElem(currentState, i)
+        cellsAsArray(i - 1) = cell
+        changedState
       }
 
+    // The proto sequence is a cell of unknown type, not introduced in SMT.
+    nextState = nextState.updateArena(_.appendCellNoSmt(UnknownT()))
+    val protoSeq = nextState.arena.topCell
+
     // attach the cells to the proto sequence, do not track this in SMT
-    val nextState = afterMk.updateArena(_.appendHasNoSmt(protoSeq, cells: _*))
+    nextState = nextState.updateArena(_.appendHasNoSmt(protoSeq, cellsAsArray: _*))
     nextState.setRex(protoSeq.toNameEx)
   }
 
@@ -65,17 +72,17 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
   }
 
   /**
-   * Retrieve the elements attached to the proto sequence. This is always a sequence of the [[capacity]]. If you need to
-   * access a single element, use the method [[at]].
+   * Retrieve the elements attached to the proto sequence. This is a Scala list that contains exactly [[capacity]]
+   * cells. If you need to access a single element, use the method [[at]].
    *
    * @param arena
    *   the current arena
    * @param protoSeq
    *   a proto sequence
    * @return
-   *   the sequence of cells that are attached to the proto sequence
+   *   the list of cells that are attached to the proto sequence
    */
-  def elems(arena: Arena, protoSeq: ArenaCell): Seq[ArenaCell] = {
+  def elems(arena: Arena, protoSeq: ArenaCell): List[ArenaCell] = {
     arena.getHas(protoSeq)
   }
 
@@ -118,7 +125,7 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
   def get(picker: CherryPick, defaultValue: ArenaCell, state: SymbState, protoSeq: ArenaCell,
       indexBase1Ex: TlaEx): SymbState = {
     val protoElems = elems(state.arena, protoSeq)
-    val capacity = protoElems.size
+    val capacity = protoElems.length
     if (capacity == 0) {
       // The sequence is statically empty. Return the default value.
       // Most likely, this expression will be never used as a result.
