@@ -233,8 +233,8 @@ class LazyEquality(rewriter: SymbStateRewriter)
     }
 
     val eqMap = eqCache.getMap
-    val nConst = (eqMap map (onEntry _).tupled).sum
-    val nNonStatic = (eqMap map (isNonStatic _).tupled).sum
+    val nConst = (eqMap.map((onEntry _).tupled)).sum
+    val nNonStatic = (eqMap.map((isNonStatic _).tupled)).sum
     (nConst, nNonStatic)
   }
 
@@ -330,7 +330,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
       newState.setRex(pred.toNameEx)
     } else {
       // SE-SUBSETEQ3
-      var newState = cacheEqConstraints(state, leftElems cross rightElems) // cache all the equalities
+      var newState = cacheEqConstraints(state, leftElems.cross(rightElems)) // cache all the equalities
       def exists(lelem: ArenaCell) = {
         def inAndEq(relem: ArenaCell) = {
           simplifier
@@ -490,7 +490,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
 
     newState = cacheOneEqConstraint(newState, leftDom, rightDom)
 
-    val eqs = commonKeys.toList map keyEq
+    val eqs = commonKeys.toList.map(keyEq)
     val cons =
       if (eqs.isEmpty)
         safeEq(leftDom, rightDom)
@@ -548,7 +548,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
     }
 
     val elemsEq = tla.and(elems1.zip(elems2).map((eqPairwise _).tupled): _*)
-    val sizesEq = tla.eql(len1.toNameEx as IntT1(), len2.toNameEx as IntT1()) as BoolT1()
+    val sizesEq = tla.eql(len1.toNameEx.as(IntT1()), len2.toNameEx.as(IntT1())).as(BoolT1())
 
     // seq1 and seq2 are equal if and only if: (1) their lengths are equal, and (2) their shared prefixes are equal.
     rewriter.solverContext

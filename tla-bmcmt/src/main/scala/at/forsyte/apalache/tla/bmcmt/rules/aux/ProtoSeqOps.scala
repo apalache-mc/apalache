@@ -115,7 +115,11 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
    * @return
    *   the new symbolic state that contains the retrieved cell as the expression
    */
-  def get(picker: CherryPick, defaultValue: ArenaCell, state: SymbState, protoSeq: ArenaCell,
+  def get(
+      picker: CherryPick,
+      defaultValue: ArenaCell,
+      state: SymbState,
+      protoSeq: ArenaCell,
       indexBase1Ex: TlaEx): SymbState = {
     val protoElems = elems(state.arena, protoSeq)
     val capacity = protoElems.size
@@ -125,7 +129,7 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
       state.setRex(defaultValue.toNameEx)
     } else {
       // rewrite `indexBase1Ex - 1` to a single cell
-      var nextState = rewriter.rewriteUntilDone(state.setRex(tla.minus(indexBase1Ex, tla.int(1)) as IntT1()))
+      var nextState = rewriter.rewriteUntilDone(state.setRex(tla.minus(indexBase1Ex, tla.int(1)).as(IntT1())))
       val indexBase0 = nextState.asCell
       // create the oracle
       val (oracleState, oracle) = picker.oracleFactory.newIntOracle(nextState, capacity)
@@ -137,11 +141,13 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
       // We do not refer to the actual length of the sequence (which we don't know).
       // Instead, we use the capacity of the proto sequence.
       val inRange =
-        tla.and(tla.le(tla.int(0), indexBase0.toNameEx as IntT1()) as BoolT1(),
-            tla.lt(indexBase0.toNameEx as IntT1(), tla.int(capacity)) as BoolT1()) as BoolT1()
+        tla
+          .and(tla.le(tla.int(0), indexBase0.toNameEx.as(IntT1())).as(BoolT1()),
+              tla.lt(indexBase0.toNameEx.as(IntT1()), tla.int(capacity)).as(BoolT1()))
+          .as(BoolT1())
       // (indexBase0 = oracle) <=> inRange
-      val oracleEqArg = tla.eql(indexBase0.toNameEx, oracle.intCell.toNameEx as IntT1()) as IntT1() as BoolT1()
-      val iff = tla.eql(oracleEqArg, inRange) as BoolT1()
+      val oracleEqArg = tla.eql(indexBase0.toNameEx, oracle.intCell.toNameEx.as(IntT1())).as(IntT1()).as(BoolT1())
+      val iff = tla.eql(oracleEqArg, inRange).as(BoolT1())
       rewriter.solverContext.assertGroundExpr(iff)
       nextState.setRex(pickedResult.toNameEx)
     }
@@ -161,7 +167,11 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
    * @return
    *   the new symbolic state that contains the created sequence as the expression
    */
-  def mkSeq(state: SymbState, seqT: TlaType1, protoSeq: ArenaCell, len: ArenaCell): SymbState = {
+  def mkSeq(
+      state: SymbState,
+      seqT: TlaType1,
+      protoSeq: ArenaCell,
+      len: ArenaCell): SymbState = {
     var nextState = state.updateArena(_.appendCell(CellT.fromType1(seqT)))
     val seq = nextState.arena.topCell
     // note that we do not track in SMT the relation between the sequence, the proto sequence, and its length
@@ -230,7 +240,11 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
    * @return
    *   the new symbolic state that contains the result of folding as an expression
    */
-  def foldLeft(picker: CherryPick, state: SymbState, protoSeq: ArenaCell, len: ArenaCell,
+  def foldLeft(
+      picker: CherryPick,
+      state: SymbState,
+      protoSeq: ArenaCell,
+      len: ArenaCell,
       binOp: (SymbState, ArenaCell) => SymbState): SymbState = {
     // propagate the result only if the element is below the length
     def applyOne(state: SymbState, elem: ArenaCell, indexBase1: Int) = {
@@ -242,9 +256,9 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
       nextState = picker
         .pickByOracle(oracleState, oracle, Seq(state.asCell, newResult), nextState.arena.cellTrue().toNameEx)
       val picked = nextState.ex
-      val inRange = tla.le(tla.int(indexBase1), len.toNameEx as IntT1()) as BoolT1()
-      val pickNew = oracle.whenEqualTo(nextState, 1) as BoolT1()
-      val ite = tla.ite(inRange, pickNew, tla.not(pickNew) as BoolT1()) as BoolT1()
+      val inRange = tla.le(tla.int(indexBase1), len.toNameEx.as(IntT1())).as(BoolT1())
+      val pickNew = oracle.whenEqualTo(nextState, 1).as(BoolT1())
+      val ite = tla.ite(inRange, pickNew, tla.not(pickNew).as(BoolT1())).as(BoolT1())
       rewriter.solverContext.assertGroundExpr(ite)
 
       nextState.setRex(picked)

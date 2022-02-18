@@ -97,8 +97,9 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
 
       def isInRelation(pair: ArenaCell): Boolean = {
         val mem =
-          tla.apalacheSelectInSet(pair.toNameEx as funT1.arg,
-              relation.toNameEx as TupT1(funT1.arg, funT1.res)) as BoolT1()
+          tla
+            .apalacheSelectInSet(pair.toNameEx.as(funT1.arg), relation.toNameEx.as(TupT1(funT1.arg, funT1.res)))
+            .as(BoolT1())
         solverContext.evalGroundExpr(mem) == tla.bool(true).typed(BoolT1())
       }
 
@@ -118,9 +119,9 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         .getHas(relation)
         .filter(isInRelation)
         .foldLeft(Map[TlaEx, TlaEx]())(decodePair)
-        .map(p => tla.tuple(p._1, p._2) as pairT)
+        .map(p => tla.tuple(p._1, p._2).as(pairT))
         .toSeq
-      tla.apalacheSetAsFun(tla.enumSet(pairs: _*) as SetT1(pairT)) as funT1
+      tla.apalacheSetAsFun(tla.enumSet(pairs: _*).as(SetT1(pairT))).as(funT1)
 
     case SeqT(elemT) =>
       val elemT1 = elemT.toTlaType1
@@ -147,7 +148,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       // Note that the domain may have fewer fields than the record type is saying.
       // This comes from the fact that we can extend a record with a richer type.
       val domCell = arena.getDom(cell)
-      val dom = decodeSet(arena, domCell) map exToStr
+      val dom = decodeSet(arena, domCell).map(exToStr)
       val fieldValues = arena.getHas(cell)
       val keyList = r.fields.keySet.toList
 
@@ -219,7 +220,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         }
 
       case OperEx(oper, args @ _*) =>
-        OperEx(oper, args map rec: _*)(ex.typeTag)
+        OperEx(oper, args.map(rec): _*)(ex.typeTag)
 
       case _ =>
         ex

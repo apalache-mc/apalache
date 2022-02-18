@@ -60,7 +60,11 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def applySequence(state: SymbState, seqCell: ArenaCell, argEx: TlaEx, elemT: CellT): SymbState = {
+  private def applySequence(
+      state: SymbState,
+      seqCell: ArenaCell,
+      argEx: TlaEx,
+      elemT: CellT): SymbState = {
     val (protoSeq, _, capacity) = proto.unpackSeq(state.arena, seqCell)
     val nextState = defaultValueFactory.makeUpValue(state, elemT)
     val defaultValue = nextState.asCell
@@ -83,7 +87,11 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def applyRecord(state: SymbState, recordCell: ArenaCell, recEx: TlaEx, argEx: TlaEx,
+  private def applyRecord(
+      state: SymbState,
+      recordCell: ArenaCell,
+      recEx: TlaEx,
+      argEx: TlaEx,
       resultT: CellT): SymbState = {
     val key = argEx match {
       case ValEx(TlaStr(k)) => k
@@ -103,7 +111,11 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def applyTuple(state: SymbState, tupleCell: ArenaCell, funEx: TlaEx, argEx: TlaEx): SymbState = {
+  private def applyTuple(
+      state: SymbState,
+      tupleCell: ArenaCell,
+      funEx: TlaEx,
+      argEx: TlaEx): SymbState = {
     val index = argEx match {
       case ValEx(TlaInt(i)) => i.toInt - 1
 
