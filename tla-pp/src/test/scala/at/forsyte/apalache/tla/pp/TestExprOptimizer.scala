@@ -14,6 +14,7 @@ class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
   private val intT = IntT1()
   private val boolT = BoolT1()
   private val intSetT = SetT1(IntT1())
+  private val intSetSetT = SetT1(IntT1())
   private val boolSetT = SetT1(BoolT1())
   private var optimizer = new ExprOptimizer(new UniqueNameGenerator(), TrackerWithListeners())
 
@@ -152,6 +153,13 @@ class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
     val output = optimizer.apply(input)
     val expected =
       plus(minus(name("b").as(intT), name("a").as(intT)).as(intT), int(1).as(intT)).as(intT)
+    assert(expected == output)
+  }
+
+  test("""Cardinality(SUBSET S) becomes 2^(Cardinality(S))""") {
+    val input = card(powSet(name("S").as(intSetT)).as(intSetSetT)).as(intT)
+    val output = optimizer.apply(input)
+    val expected = exp(int(2), card(name("S").as(intSetT)).as(intT)).as(intT)
     assert(expected == output)
   }
 }
