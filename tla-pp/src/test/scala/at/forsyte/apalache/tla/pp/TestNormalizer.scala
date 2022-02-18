@@ -136,8 +136,7 @@ class TestNormalizer extends AnyFunSuite with BeforeAndAfterEach {
   test("""~ \E x \in s . y ~~> \A x \in s . ~y""") {
     val input =
       tla
-        .not(
-            tla
+        .not(tla
               .exists(tla.name("x").as(BoolT1()), tla.name("s").as(SetT1(IntT1())), tla.name("y").as(BoolT1()))
               .as(BoolT1()))
         .as(BoolT1())
@@ -153,8 +152,7 @@ class TestNormalizer extends AnyFunSuite with BeforeAndAfterEach {
   test("""~ \A x \in s . y ~~> \E x \in s . ~y""") {
     val input =
       tla
-        .not(
-            tla
+        .not(tla
               .forall(tla.name("x").as(BoolT1()), tla.name("s").as(SetT1(IntT1())), tla.name("y").as(BoolT1()))
               .as(BoolT1()))
         .as(BoolT1())
