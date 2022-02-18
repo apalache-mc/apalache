@@ -13,7 +13,7 @@ trait TestSymbStateRewriterTuple extends RewriterBase {
       "ib" -> TupT1(IntT1(), BoolT1()),
       "ibs" -> TupT1(IntT1(), BoolT1(), StrT1()),
       "IB" -> SetT1(TupT1(IntT1(), BoolT1())),
-      "ibI" -> TupT1(IntT1(), BoolT1(), SetT1(IntT1()))
+      "ibI" -> TupT1(IntT1(), BoolT1(), SetT1(IntT1())),
   )
 
   test("""<<1, FALSE, {2}>>""") { rewriterType: SMTEncoding =>
@@ -71,7 +71,7 @@ trait TestSymbStateRewriterTuple extends RewriterBase {
 
   test("""DOMAIN <<2, FALSE, "c">> = {1, 2, 3}""") { rewriterType: SMTEncoding =>
     val tup = tuple(int(2), bool(false), str("c"))
-    val set123 = enumSet(1.to(3) map int: _*)
+    val set123 = enumSet(1.to(3).map(int): _*)
     val eq = eql(dom(tup ? "ibs") ? "I", set123 ? "I")
       .typed(types, "b")
     val state = new SymbState(eq, arena, Binding())

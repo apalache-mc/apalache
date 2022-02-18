@@ -10,7 +10,8 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 /**
  * Rewrites set membership tests: x \in S, x \in SUBSET S, and x \in [S -> T].
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
@@ -60,8 +61,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
             funSetIn(setState, setCell, elemCell)
 
           case _ =>
-            throw new RewriterException(
-                "SetInRule is not implemented for type %s (found in %s)"
+            throw new RewriterException("SetInRule is not implemented for type %s (found in %s)"
                   .format(setCell.cellType, state.ex), state.ex)
         }
 
@@ -116,17 +116,20 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
       nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.apalacheSelectInSet(res.toNameEx, funsetCdm.toNameEx)))
       val inCdm = nextState.asCell
       // BUGFIX: check only those pairs that actually belong to the relation
-      tla.or(tla.not(tla.apalacheSelectInSet(pair.toNameEx, relation.toNameEx)),
-          tla.and(inDom.toNameEx, inCdm.toNameEx))
+      tla
+        .or(tla.not(tla.apalacheSelectInSet(pair.toNameEx, relation.toNameEx)), tla.and(inDom.toNameEx, inCdm.toNameEx))
     }
 
     val relElems = nextState.arena.getHas(relation)
-    rewriter.solverContext.assertGroundExpr(tla.equiv(pred.toNameEx, tla.and(relElems map onPair: _*)))
+    rewriter.solverContext.assertGroundExpr(tla.equiv(pred.toNameEx, tla.and(relElems.map(onPair): _*)))
 
     rewriter.rewriteUntilDone(nextState.setRex(pred.toNameEx))
   }
 
-  protected def intOrNatSetIn(state: SymbState, setCell: ArenaCell, elemCell: ArenaCell,
+  protected def intOrNatSetIn(
+      state: SymbState,
+      setCell: ArenaCell,
+      elemCell: ArenaCell,
       elemType: types.CellT): SymbState = {
     if (setCell == state.arena.cellIntSet()) {
       // Do nothing, it is just true. The type checker should have taken care of that.
@@ -142,7 +145,11 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  protected def basicIn(state: SymbState, setCell: ArenaCell, elemCell: ArenaCell, elemType: types.CellT): SymbState = {
+  protected def basicIn(
+      state: SymbState,
+      setCell: ArenaCell,
+      elemCell: ArenaCell,
+      elemType: types.CellT): SymbState = {
     val potentialElems = state.arena.getHas(setCell)
     // The types of the element and the set may slightly differ, but they must be unifiable.
     // For instance, [a |-> 1] \in { [a |-> 2], [a |-> 3, b -> "foo"] }

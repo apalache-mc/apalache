@@ -9,12 +9,13 @@ import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, SetT1, TlaEx, TypingException, UID}
 
 /**
- * <p>Rewriting rule for CHOOSE. Similar to TLC, we implement a non-deterministic choice.
- * It is not hard to add the requirement of determinism, but that will most likely affect efficiency.</p>
+ * <p>Rewriting rule for CHOOSE. Similar to TLC, we implement a non-deterministic choice. It is not hard to add the
+ * requirement of determinism, but that will most likely affect efficiency.</p>
  *
  * <p>TODO: add determinism as an option.</p>
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val pickRule = new CherryPick(rewriter)
@@ -74,7 +75,11 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   // This translation is sound only in the happy scenario, that is, when CHOOSE is defined on its argument.
   // It should be used only after resolving the issue #95: https://github.com/informalsystems/apalache/issues/95
-  private def happyChoose(state: SymbState, varName: String, set: TlaEx, pred: TlaEx): SymbState = {
+  private def happyChoose(
+      state: SymbState,
+      varName: String,
+      set: TlaEx,
+      pred: TlaEx): SymbState = {
     // rewrite the bounding set
     val nextState = rewriter.rewriteUntilDone(state.setRex(set))
     val setCell = nextState.asCell
@@ -86,7 +91,11 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def happyChooseFromFinite(state: SymbState, setCell: ArenaCell, varName: String, pred: TlaEx): SymbState = {
+  private def happyChooseFromFinite(
+      state: SymbState,
+      setCell: ArenaCell,
+      varName: String,
+      pred: TlaEx): SymbState = {
     def solverAssert = rewriter.solverContext.assertGroundExpr _
 
     if (state.arena.getHas(setCell).isEmpty) {
@@ -101,7 +110,7 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
         case SetT1(tt) => tt
         case tt        => throw new TypingException("Expected a set, found: " + tt, state.ex.ID)
       }
-      val elemsIn = elems map { e =>
+      val elemsIn = elems.map { e =>
         tla
           .apalacheSelectInSet(e.toNameEx ? "e", setCell.toNameEx ? "s")
           .typed(Map("e" -> elemType, "s" -> SetT1(elemType), "b" -> BoolT1()), "b")
@@ -118,7 +127,11 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def happyChooseFromOther(state: SymbState, setCell: ArenaCell, varName: String, pred: TlaEx): SymbState = {
+  private def happyChooseFromOther(
+      state: SymbState,
+      setCell: ArenaCell,
+      varName: String,
+      pred: TlaEx): SymbState = {
     def solverAssert = rewriter.solverContext.assertGroundExpr _
 
     // the set is never empty, e.g., a powerset or a function set

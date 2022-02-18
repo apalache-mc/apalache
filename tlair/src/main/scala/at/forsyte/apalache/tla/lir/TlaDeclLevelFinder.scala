@@ -1,15 +1,18 @@
 package at.forsyte.apalache.tla.lir
 
 /**
- * This class computes the level of a TLA+ declaration by using TlaExLevelFinder. See Lamport. Specifying Systems, p. 322.
+ * This class computes the level of a TLA+ declaration by using TlaExLevelFinder. See Lamport. Specifying Systems, p.
+ * 322.
  *
- * @param module a TLA module that contains the declarations to query
- * @author Igor Konnov
+ * @param module
+ *   a TLA module that contains the declarations to query
+ * @author
+ *   Igor Konnov
  */
 class TlaDeclLevelFinder(module: TlaModule) {
   private val consts = Set(module.constDeclarations.map(_.name): _*)
   private val vars = Set(module.varDeclarations.map(_.name): _*)
-  private val defs = Map(module.operDeclarations map { d => d.name -> d }: _*)
+  private val defs = Map(module.operDeclarations.map { d => d.name -> d }: _*)
   private var levelCacheMap: Map[String, TlaLevel] = Map()
 
   def apply(decl: TlaDecl): TlaLevel = {

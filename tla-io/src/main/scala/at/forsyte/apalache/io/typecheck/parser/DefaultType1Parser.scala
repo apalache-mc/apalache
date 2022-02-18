@@ -9,14 +9,16 @@ import scala.util.parsing.input.NoPosition
 
 /**
  * <p>A parser for the expressions in Type System 1. This parser happened to be harder to write, as the straightforward
- * parsing of function and operator types leads to ambiguities. This parser is hand-written with the help of
- * Scala parser combinators. For small grammars such as this one this is a better choice in terms of long-term support
- * than a parser generator.</p>
+ * parsing of function and operator types leads to ambiguities. This parser is hand-written with the help of Scala
+ * parser combinators. For small grammars such as this one this is a better choice in terms of long-term support than a
+ * parser generator.</p>
  *
  * <p><b>Warning:</b> Avoid using this object directly. Rather use Type1ParserFactory.</p>
  *
- * @see at.forsyte.apalache.tla.typecheck.Type1ParserFactory
- * @author Igor Konnov, Shon Feder
+ * @see
+ *   at.forsyte.apalache.tla.typecheck.Type1ParserFactory
+ * @author
+ *   Igor Konnov, Shon Feder
  */
 object DefaultType1Parser extends Parsers with Type1Parser {
   override type Elem = Type1Token
@@ -24,8 +26,10 @@ object DefaultType1Parser extends Parsers with Type1Parser {
   /**
    * Parse a type from a string, possibly substituting aliases with types.
    *
-   * @param text a string
-   * @return a type on success; throws TlcConfigParseError on failure
+   * @param text
+   *   a string
+   * @return
+   *   a type on success; throws TlcConfigParseError on failure
    */
   override def parseType(text: String): TlaType1 = {
     closedTypeExpr(new Type1TokenReader(Type1Lexer(new StringReader(text)))) match {
@@ -39,8 +43,10 @@ object DefaultType1Parser extends Parsers with Type1Parser {
   /**
    * Parse a type alias from a string
    *
-   * @param text a string
-   * @return an alias name and a type on success; throws Type1ParseError on failure
+   * @param text
+   *   a string
+   * @return
+   *   an alias name and a type on success; throws Type1ParseError on failure
    */
   override def parseAlias(text: String): (String, TlaType1) = {
     closedAliasExpr(new Type1TokenReader(Type1Lexer(new StringReader(text)))) match {
@@ -147,9 +153,10 @@ object DefaultType1Parser extends Parsers with Type1Parser {
 
   // a field number in a sparse tuple, like 3
   private def fieldNo: Parser[FIELD_NO] = {
-    accept("field number", { case f @ FIELD_NO(_) =>
-      f
-    })
+    accept("field number",
+        { case f @ FIELD_NO(_) =>
+          f
+        })
   }
 
   // a record type like [a: Int, b: Bool]
@@ -169,9 +176,10 @@ object DefaultType1Parser extends Parsers with Type1Parser {
   // A record field name, like foo_BAR2.
   // As field name are colliding with CAPS_IDENT and TYPE_VAR, we expect all of them.
   private def fieldName: Parser[IDENT] = {
-    accept("field name", { case f @ IDENT(_) =>
-      f
-    })
+    accept("field name",
+        { case f @ IDENT(_) =>
+          f
+        })
   }
 
   // a type variable, e.g., c

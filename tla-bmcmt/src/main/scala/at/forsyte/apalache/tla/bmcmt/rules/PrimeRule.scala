@@ -8,7 +8,8 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 /**
  * Rename x' to NameEx("x'"). We only consider the case when prime is applied to a variable.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class PrimeRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {

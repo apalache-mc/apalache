@@ -10,16 +10,17 @@ import java.io.{FileWriter, PrintWriter}
 import scala.collection.immutable.HashMap
 
 /**
- * <p>This module transformation implements a stable topological sort of declarations in a module.
- * Substitutions may result in the wrong order of operators, that is, violating the define-before-use principle.
- * This class orders the declarations in a module according to the define-before-use principle, if possible.
- * Importantly, the sort is stable: The relative order of the definitions is changed only if required.</p>
+ * <p>This module transformation implements a stable topological sort of declarations in a module. Substitutions may
+ * result in the wrong order of operators, that is, violating the define-before-use principle. This class orders the
+ * declarations in a module according to the define-before-use principle, if possible. Importantly, the sort is stable:
+ * The relative order of the definitions is changed only if required.</p>
  *
- * <p>This implementation make the topological sort in ConstAndDefRewriter (by Andrey Kupriyanov) obsolete.
- * Note that this transformation does not require a transformation tracker as a parameter, as it only
- * changes the relative order of the operators, not their contents.</p>
+ * <p>This implementation make the topological sort in ConstAndDefRewriter (by Andrey Kupriyanov) obsolete. Note that
+ * this transformation does not require a transformation tracker as a parameter, as it only changes the relative order
+ * of the operators, not their contents.</p>
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class DeclarationSorter extends TlaModuleTransformation with LazyLogging {
   type Edges = Map[UID, Set[UID]]

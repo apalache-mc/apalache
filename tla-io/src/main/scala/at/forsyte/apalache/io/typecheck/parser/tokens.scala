@@ -5,13 +5,14 @@ import scala.util.parsing.input.Positional
 /**
  * A token.
  */
-private[parser] sealed trait Type1Token extends Positional
+sealed private[parser] trait Type1Token extends Positional
 
 /**
- * A field identifier. Since it syntactically includes CAPS_IDENT and LETTER_IDENT, one has to expect
- * CAPS_IDENT, LETTER_INDENT, and FIELD_INDENT, whenever a record field is expected.
+ * A field identifier. Since it syntactically includes CAPS_IDENT and LETTER_IDENT, one has to expect CAPS_IDENT,
+ * LETTER_INDENT, and FIELD_INDENT, whenever a record field is expected.
  *
- * @param name the name associated with the field
+ * @param name
+ *   the name associated with the field
  */
 private[parser] case class IDENT(name: String) extends Type1Token {
   override def toString: String = "record field '%s'".format(name)
@@ -139,7 +140,8 @@ private[parser] case class RCURLY() extends Type1Token {
 /**
  * A field number, e.g., 3
  *
- * @param no the number
+ * @param no
+ *   the number
  */
 private[parser] case class FIELD_NO(no: Int) extends Type1Token {
   override def toString: String = no.toString

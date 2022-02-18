@@ -34,7 +34,7 @@ class SymbTransGenerator(tracker: TransformationTracker) {
     def labelsAt(p_id: UID, p_partialSel: SelMapType): Set[UID] = p_partialSel
       .getOrElse(
           p_id,
-          Set.empty[Set[UID]]
+          Set.empty[Set[UID]],
       )
       .fold(
           Set.empty[UID]
@@ -43,33 +43,35 @@ class SymbTransGenerator(tracker: TransformationTracker) {
       )
 
     /**
-     * Given an assignment strategy A and a TLA+ expression \phi, computes
-     * { B \cap A | B \in Branches( \psi ) }
-     * for all expresisons \psi \in Sub(\phi)
+     * Given an assignment strategy A and a TLA+ expression \phi, computes { B \cap A | B \in Branches( \psi ) } for all
+     * expresisons \psi \in Sub(\phi)
      *
-     * @param ex       Top-level expression
-     * @param letInMap Auxiliary map, storing the already-computed branch-information for nullary LET-IN
-     *                 defined operators.
-     * @return A mapping of the form [e.ID |-> { B \cap A | B \in Branches( e ) } | e \in Sub(ex)]
+     * @param ex
+     *   Top-level expression
+     * @param letInMap
+     *   Auxiliary map, storing the already-computed branch-information for nullary LET-IN defined operators.
+     * @return
+     *   A mapping of the form [e.ID |-> { B \cap A | B \in Branches( e ) } | e \in Sub(ex)]
      */
     def allSelections(ex: TlaEx, letInMap: letInMapType = Map.empty): SelMapType = ex match {
       /** Base case, assignments */
       case e @ OperEx(ApalacheOper.assign, _, _) => Map(e.ID -> Set(Set(e.ID)))
 
       /**
-       * Branches( /\ \phi_i ) = { Br_1 U ... U Br_s | \forall i . Br_i \in Branches(\phi_i) }
-       * { S \cap A | S \in Branches( /\ phi_i ) } =
-       * { (Br_1 U ... U Br_s) \cap A | \forall i . Br_i \in Branches(\phi_i) } =
-       * { (Br_1 \cap A) U ... U (Br_s \cap A) | \forall i . Br_i \in Branches(\phi_i) } =
-       * { B_1 U ... U B_n | \forall i . B_i \in { T \cap A | T \in Branches(\phi_i)} }
+       * Branches( /\ \phi_i ) = { Br_1 U ... U Br_s | \forall i . Br_i \in Branches(\phi_i) } { S \cap A | S \in
+       * Branches( /\ phi_i ) } = { (Br_1 U ... U Br_s) \cap A | \forall i . Br_i \in Branches(\phi_i) } = { (Br_1 \cap
+       * A) U ... U (Br_s \cap A) | \forall i . Br_i \in Branches(\phi_i) } = { B_1 U ... U B_n | \forall i . B_i \in {
+       * T \cap A | T \in Branches(\phi_i)} }
        */
       case OperEx(TlaBoolOper.and, args @ _*) =>
         /** Unify all child maps, keysets are disjoint by construction */
-        val unifiedMap = (args map {
-          allSelections(_, letInMap)
-        }).fold(Map.empty[UID, AssignmentSelections]) {
-          _ ++ _
-        }
+        val unifiedMap = (args
+              .map {
+            allSelections(_, letInMap)
+          })
+          .fold(Map.empty[UID, AssignmentSelections]) {
+            _ ++ _
+          }
 
         val childBranchSets = args.flatMap(x => unifiedMap.get(x.ID))
 
@@ -78,17 +80,17 @@ class SymbTransGenerator(tracker: TransformationTracker) {
         if (mySet.isEmpty || mySet.exists(_.isEmpty)) unifiedMap else unifiedMap + (ex.ID -> mySet)
 
       /**
-       * Branches( \/ \phi_i ) = U Branches(\phi_i)
-       * { S \cap A | S \in Branches( \/ \phi_i )} =
-       * { S \cap A | S \in U Branches(\phi_i)} =
-       * U { S \cap A | S \in Branches(\phi_i)}
+       * Branches( \/ \phi_i ) = U Branches(\phi_i) { S \cap A | S \in Branches( \/ \phi_i )} = { S \cap A | S \in U
+       * Branches(\phi_i)} = U { S \cap A | S \in Branches(\phi_i)}
        */
       case OperEx(TlaBoolOper.or, args @ _*) =>
-        val unifiedMap = (args map {
-          allSelections(_, letInMap)
-        }).fold(Map.empty[UID, AssignmentSelections]) {
-          _ ++ _
-        }
+        val unifiedMap = (args
+              .map {
+            allSelections(_, letInMap)
+          })
+          .fold(Map.empty[UID, AssignmentSelections]) {
+            _ ++ _
+          }
 
         val childBranchSets = args.flatMap(x => unifiedMap.get(x.ID))
 
@@ -96,9 +98,8 @@ class SymbTransGenerator(tracker: TransformationTracker) {
         if (mySet.isEmpty || mySet.exists(_.isEmpty)) unifiedMap else unifiedMap + (ex.ID -> mySet)
 
       /**
-       * Branches( \E x \in S . \phi ) = Branches( \phi )
-       * { S \cap A | S \in Branches( \E x \in S . \phi )} =
-       * { S \cap A | S \in Branches( \phi )} =
+       * Branches( \E x \in S . \phi ) = Branches( \phi ) { S \cap A | S \in Branches( \E x \in S . \phi )} = { S \cap A
+       * \| S \in Branches( \phi )} =
        */
       case OperEx(TlaBoolOper.exists, _, _, phi) =>
         val childMap = allSelections(phi, letInMap)
@@ -106,17 +107,18 @@ class SymbTransGenerator(tracker: TransformationTracker) {
         if (mySet.exists(_.isEmpty)) childMap else childMap + (ex.ID -> mySet)
 
       /**
-       * Branches( ITE(\phi_c, \phi_t, \phi_e) ) = Branches( \phi_t ) U Branches( \phi_e )
-       * { S \cap A | S \in Branches( ITE(\phi_c, \phi_t, \phi_e) )} =
-       * { S \cap A | S \in Branches( \phi_t ) U Branches( \phi_e ) } =
-       * { S \cap A | S \in Branches( \phi_t ) } U { S \cap A | S \in Branches( \phi_e ) }
+       * Branches( ITE(\phi_c, \phi_t, \phi_e) ) = Branches( \phi_t ) U Branches( \phi_e ) { S \cap A | S \in Branches(
+       * ITE(\phi_c, \phi_t, \phi_e) )} = { S \cap A | S \in Branches( \phi_t ) U Branches( \phi_e ) } = { S \cap A | S
+       * \in Branches( \phi_t ) } U { S \cap A | S \in Branches( \phi_e ) }
        */
       case OperEx(TlaControlOper.ifThenElse, _, thenAndElse @ _*) =>
-        val unifiedMap = (thenAndElse map {
-          allSelections(_, letInMap)
-        }).fold(Map.empty[UID, AssignmentSelections]) {
-          _ ++ _
-        }
+        val unifiedMap = (thenAndElse
+              .map {
+            allSelections(_, letInMap)
+          })
+          .fold(Map.empty[UID, AssignmentSelections]) {
+            _ ++ _
+          }
 
         val childBranchSets = thenAndElse.flatMap(x => unifiedMap.get(x.ID))
 
@@ -124,7 +126,7 @@ class SymbTransGenerator(tracker: TransformationTracker) {
         if (mySet.isEmpty || mySet.exists(_.isEmpty)) unifiedMap else unifiedMap + (ex.ID -> mySet)
 
       case LetInEx(body, defs @ _*) =>
-        val defMap = (defs map { d =>
+        val defMap = (defs.map { d =>
           d.name -> (d.body.ID, allSelections(d.body, letInMap))
         }).toMap
         val childMap = allSelections(body, letInMap ++ defMap)
@@ -149,26 +151,21 @@ class SymbTransGenerator(tracker: TransformationTracker) {
       case ex @ OperEx(ApalacheOper.assign, _*)   => ex
       case ex @ OperEx(TlaBoolOper.or, args @ _*) =>
         /**
-         * Or-branches have the property that they either contain
-         * all assignments or none of them. Therefore it suffices to check for
-         * non-emptiness of the intersection.
+         * Or-branches have the property that they either contain all assignments or none of them. Therefore it suffices
+         * to check for non-emptiness of the intersection.
          */
         /**
-         * Jure, 16.9.19: This is no longer true, with the inclusion of LET-IN, as assignments that
-         * happen within a LET-IN operator body can appear to belong to multiple branches.
+         * Jure, 16.9.19: This is no longer true, with the inclusion of LET-IN, as assignments that happen within a
+         * LET-IN operator body can appear to belong to multiple branches.
          */
 
         val newArgs = args.filter { x =>
           /**
-           * \E S \in allSelections( x ) . S \cap selection \ne \emptyset
-           * <=>
-           * \E S \in allSelections( x ) . \E y \in S . y \in selection
-           * <=>
-           * \E S \in allSelections( x ) . \E y \in selection . y \in S
-           * <=>
-           * \E y \in selection . y \in \bigcup allSelections( x )
+           * \E S \in allSelections( x ) . S \cap selection \ne \emptyset <=> \E S \in allSelections( x ) . \E y \in S .
+           * y \in selection <=> \E S \in allSelections( x ) . \E y \in selection . y \in S <=> \E y \in selection . y
+           * \in \bigcup allSelections( x )
            */
-          labelsAt(x, allSelections) exists {
+          labelsAt(x, allSelections).exists {
             selection.contains
           }
         }
@@ -184,24 +181,22 @@ class SymbTransGenerator(tracker: TransformationTracker) {
         newArgs match {
           case Nil         => ex
           case head +: Nil => sliceWith(selection, allSelections)(head)
-          case _           => OperEx(TlaBoolOper.or, newArgs map sliceWith(selection, allSelections): _*)(ex.typeTag)
+          case _           => OperEx(TlaBoolOper.or, newArgs.map(sliceWith(selection, allSelections)): _*)(ex.typeTag)
         }
 
       /**
-       * We replace ITE(a,b,c) with either a /\ b or ~a /\ c, depending
-       * on which branch has the assignment.
-       * This only applies if exactly branch has an assignment, otherwise keep all
+       * We replace ITE(a,b,c) with either a /\ b or ~a /\ c, depending on which branch has the assignment. This only
+       * applies if exactly branch has an assignment, otherwise keep all
        */
       case ex @ OperEx(TlaControlOper.ifThenElse, ifEx, args @ _*) =>
         val newTail = args.map(x =>
           if (
-              labelsAt(x, allSelections) exists {
+              labelsAt(x, allSelections).exists {
                 selection.contains
               }
           )
             sliceWith(selection, allSelections)(x)
-          else ValEx(TlaBool(false))(ex.typeTag)
-        )
+          else ValEx(TlaBool(false))(ex.typeTag))
 
         newTail match {
           case ValEx(TlaBool(false)) +: ValEx(TlaBool(false)) +: Nil =>
@@ -216,7 +211,7 @@ class SymbTransGenerator(tracker: TransformationTracker) {
         }
 
       case ex @ OperEx(op, args @ _*) =>
-        val childVals = args map {
+        val childVals = args.map {
           sliceWith(selection, allSelections)
         }
         // Make sure to avoid creating new UIDs if not absolutely needed, as filtering
@@ -225,7 +220,7 @@ class SymbTransGenerator(tracker: TransformationTracker) {
 
       case ex @ LetInEx(body, defs @ _*) =>
         val slice = sliceWith(selection, allSelections)
-        val newDefs = defs map { d =>
+        val newDefs = defs.map { d =>
           d.copy(body = slice(d.body))
         } // filterNot { _.body == ValEx( TlaFalse ) } ?
 
@@ -243,28 +238,35 @@ class SymbTransGenerator(tracker: TransformationTracker) {
     /**
      * Orders a selection by \prec_A
      *
-     * @param selection A selection S \subseteq A
-     * @param strategy  An assignment strategy A.
-     * @return A sequence of elements s_1, ..., s_|S| from S, such that
-     *         s_1 \prec_A ... \prec_A s_|S|
+     * @param selection
+     *   A selection S \subseteq A
+     * @param strategy
+     *   An assignment strategy A.
+     * @return
+     *   A sequence of elements s_1, ..., s_|S| from S, such that s_1 \prec_A ... \prec_A s_|S|
      */
     def mkOrdered(
-        selection: Set[UID], strategy: StrategyType
-    ): AssignmentType = {
+        selection: Set[UID],
+        strategy: StrategyType): AssignmentType = {
       strategy.filter(selection.contains) // strategy is already ordered
     }
 
     /**
      * Gathers the orderedAssignments selections and their corresponding restricted formulas.
      *
-     * @param ex         Input formula.
-     * @param strategy   Assignment strategy
-     * @param selections Map of partial assignment selections.
-     * @return A sequence of pairs of ordered assignment selections and their symbolic transitions.
+     * @param ex
+     *   Input formula.
+     * @param strategy
+     *   Assignment strategy
+     * @param selections
+     *   Map of partial assignment selections.
+     * @return
+     *   A sequence of pairs of ordered assignment selections and their symbolic transitions.
      */
     def getTransitions(
-        ex: TlaEx, strategy: StrategyType, selections: SelMapType
-    ): Seq[SymbTrans] =
+        ex: TlaEx,
+        strategy: StrategyType,
+        selections: SelMapType): Seq[SymbTrans] =
       selections(ex.ID).map { s =>
         (mkOrdered(s, strategy), sliceWith(s, selections)(ex))
       }.toSeq
@@ -273,17 +275,20 @@ class SymbTransGenerator(tracker: TransformationTracker) {
   /**
    * Point of access method
    *
-   * @param phi          TLA+ formula
-   * @param asgnStrategy Assignment strategy A for `p_phi`.
-   * @return A collection of symbolic transitions, as defined by the equivalence classes of ~,,A,,
+   * @param phi
+   *   TLA+ formula
+   * @param asgnStrategy
+   *   Assignment strategy A for `p_phi`.
+   * @return
+   *   A collection of symbolic transitions, as defined by the equivalence classes of ~,,A,,
    */
   def apply(phi: TlaEx, asgnStrategy: StrategyType): Seq[SymbTrans] = {
 
     import helperFunctions._
 
     /**
-     * For certain purposes, we do not care about the order of assignments.
-     * It is therefore helpful to have a set structure, with faster lookups.
+     * For certain purposes, we do not care about the order of assignments. It is therefore helpful to have a set
+     * structure, with faster lookups.
      */
     val stratSet = asgnStrategy.toSet
 
@@ -292,12 +297,12 @@ class SymbTransGenerator(tracker: TransformationTracker) {
     val transformed = asgnTransform(phi)
 
     /**
-     * Since the new assignments have different UIDs, the new strategy is obtained
-     * by replacing the UIDs in the old strategy (preserving order)
+     * Since the new assignments have different UIDs, the new strategy is obtained by replacing the UIDs in the old
+     * strategy (preserving order)
      */
 
     // In the case of manual assignments, return own UID (no need to populate the map)
-    val newStrat = asgnStrategy map { x => asgnTransform.getReplacements.getOrElse(x, x) }
+    val newStrat = asgnStrategy.map { x => asgnTransform.getReplacements.getOrElse(x, x) }
 
     /** We compute the set of all branch intersections with `asgnStrategy` */
     val selections = allSelections(transformed, Map.empty)

@@ -59,7 +59,7 @@ class TestSanyImporterInstances extends SanyImporterTestBase {
                   _,
                   params,
                   OperEx(TlaArithOper.plus, NameEx("x"), NameEx("M")),
-              ),
+              )
           ) =>
         assert(params.length == 1)
         assert(params.head.isInstanceOf[OperParam])
@@ -137,7 +137,7 @@ class TestSanyImporterInstances extends SanyImporterTestBase {
         aOfM.isInstanceOf[TlaOperDecl] && aOfM
           .asInstanceOf[TlaOperDecl]
           .formalParams
-          .size == 1,
+          .size == 1
     )
   }
 

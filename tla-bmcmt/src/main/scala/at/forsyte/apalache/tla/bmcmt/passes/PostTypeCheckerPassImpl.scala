@@ -26,8 +26,13 @@ import com.typesafe.scalalogging.LazyLogging
  * @param nextPass
  *   next pass to be used
  */
-class PostTypeCheckerPassImpl @Inject() (options: PassOptions, sourceStore: SourceStore, changeListener: ChangeListener,
-    tracker: TransformationTracker, annotationStore: AnnotationStore, tlaWriterFactory: TlaWriterFactory)
+class PostTypeCheckerPassImpl @Inject() (
+    options: PassOptions,
+    sourceStore: SourceStore,
+    changeListener: ChangeListener,
+    tracker: TransformationTracker,
+    annotationStore: AnnotationStore,
+    tlaWriterFactory: TlaWriterFactory)
     extends EtcTypeCheckerPassImpl(options, sourceStore, changeListener, tracker, annotationStore, tlaWriterFactory)
     with LazyLogging {
 

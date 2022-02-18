@@ -13,8 +13,11 @@ import java.io.File
 object utils {
   // write output to specified destination (--output), if requested
   def writeToOutput(
-      module: TlaModule, options: PassOptions, writerFactory: TlaWriterFactory, logger: Logger, sourceStore: SourceStore,
-  ): Unit =
+      module: TlaModule,
+      options: PassOptions,
+      writerFactory: TlaWriterFactory,
+      logger: Logger,
+      sourceStore: SourceStore): Unit =
     options.get[String]("io", "output").foreach { output =>
       val outfile = new File(output)
       val outfileName = outfile.toString()
@@ -41,12 +44,12 @@ object utils {
       if (options.getOrElse[Boolean]("general", "debug", false)) {
         val sourceLocator =
           SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
-        module.operDeclarations foreach sourceLocator.checkConsistency
+        module.operDeclarations.foreach(sourceLocator.checkConsistency)
       }
       if (options.getOrElse[Boolean]("general", "debug", false)) {
         val sourceLocator =
           SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
-        module.operDeclarations foreach sourceLocator.checkConsistency
+        module.operDeclarations.foreach(sourceLocator.checkConsistency)
       }
     }
 }

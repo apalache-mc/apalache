@@ -28,7 +28,7 @@ class TestOperAppToLetInDef extends AnyFunSuite with BeforeAndAfterEach with Tes
     )
 
     val tr = wrapper.wrap(Set.empty)
-    val newExs = exs map tr
+    val newExs = exs.map(tr)
     assert(exs == newExs)
   }
 

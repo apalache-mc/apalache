@@ -8,22 +8,26 @@ import scala.util.parsing.combinator.RegexParsers
 /**
  * <p>A lexer for the TLC configuration files.</p>
  *
- * <p>This code follows the
- * <a href="http://nielssp.dk/2015/07/creating-a-scanner-using-parser-combinators-in-scala">tutorial on scanners</a>.</p>
+ * <p>This code follows the <a
+ * href="http://nielssp.dk/2015/07/creating-a-scanner-using-parser-combinators-in-scala">tutorial on scanners</a>.</p>
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 object TlcConfigLexer extends RegexParsers {
   override def skipWhitespace: Boolean = true
   override val whiteSpace: Regex = "[ \t\r\f]+".r // process linefeed separately, in order to parse one-line comments
 
   /**
-   * Parse the input stream and return the list of tokens. Although collecting the list of all tokens in memory is
-   * not optimal, TLC configurations files are tiny, so it should not be a big deal.
+   * Parse the input stream and return the list of tokens. Although collecting the list of all tokens in memory is not
+   * optimal, TLC configurations files are tiny, so it should not be a big deal.
    *
-   * @param reader a Java reader
-   * @return the list of parsed tokens
-   * @throws TlcConfigParseError when the lexer finds an error
+   * @param reader
+   *   a Java reader
+   * @return
+   *   the list of parsed tokens
+   * @throws TlcConfigParseError
+   *   when the lexer finds an error
    */
   def apply(reader: Reader): List[TlcConfigToken] = parseAll(program, reader) match {
     case Success(result, _)   => result

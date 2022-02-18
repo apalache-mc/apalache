@@ -73,7 +73,7 @@ object StandardLibrary {
    */
   val wiredModules: Map[String, String] =
     Map(
-        "TLC.tla" -> "__rewire_tlc_in_apalache.tla",
+        "TLC.tla" -> "__rewire_tlc_in_apalache.tla"
     ) ////
 
   /**
@@ -84,6 +84,6 @@ object StandardLibrary {
     Map[String, TlaOper](
         // This operator is deprecated and should not be used.
         // We still parse it, so the type checker can complain about it.
-        "<:" -> ApalacheOper.withType,
+        "<:" -> ApalacheOper.withType
     ) ////
 }

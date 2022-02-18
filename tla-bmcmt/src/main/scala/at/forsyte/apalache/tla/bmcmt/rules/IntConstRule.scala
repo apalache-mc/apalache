@@ -7,7 +7,8 @@ import at.forsyte.apalache.tla.lir.values.TlaInt
 /**
  * Rewrites integer constants.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class IntConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
 

@@ -12,14 +12,20 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 /**
  * This class extends SymbStateRewriterImpl with encoding rules for the encoding with SMT arrays.
  *
- * @param _solverContext   a fresh solver context that will be populated with constraints
- * @param exprGradeStore   a labeling scheme that associated a grade with each expression;
- *                         it is required to distinguish between state-level and action-level expressions.
- * @param profilerListener optional listener that is used to profile the rewriting rules
- * @author Rodrigo Otoni
+ * @param _solverContext
+ *   a fresh solver context that will be populated with constraints
+ * @param exprGradeStore
+ *   a labeling scheme that associated a grade with each expression; it is required to distinguish between state-level
+ *   and action-level expressions.
+ * @param profilerListener
+ *   optional listener that is used to profile the rewriting rules
+ * @author
+ *   Rodrigo Otoni
  */
-class SymbStateRewriterImplWithArrays(_solverContext: SolverContext,
-    exprGradeStore: ExprGradeStore = new ExprGradeStoreImpl(), profilerListener: Option[MetricProfilerListener] = None)
+class SymbStateRewriterImplWithArrays(
+    _solverContext: SolverContext,
+    exprGradeStore: ExprGradeStore = new ExprGradeStoreImpl(),
+    profilerListener: Option[MetricProfilerListener] = None)
     extends SymbStateRewriterImpl(_solverContext, exprGradeStore, profilerListener) {
 
   // TODO: remove unsupportedRules after passing over all rules

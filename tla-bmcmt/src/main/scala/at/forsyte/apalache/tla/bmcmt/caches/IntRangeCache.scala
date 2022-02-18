@@ -35,7 +35,7 @@ class IntRangeCache(solverContext: SolverContext, intValueCache: IntValueCache)
       cell
     }
 
-    val cells = range._1.to(range._2) map intToCell
+    val cells = range._1.to(range._2).map(intToCell)
     // create the domain cell
     arena = arena.appendCell(FinSetT(IntT()))
     val set = arena.topCell

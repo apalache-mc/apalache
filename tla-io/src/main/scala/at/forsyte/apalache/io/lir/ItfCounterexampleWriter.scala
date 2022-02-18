@@ -113,7 +113,7 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
 
     case OperEx(TlaFunOper.enum, args @ _*) =>
       val (keyEs, valuesEs) = deinterleave(args)
-      val keys = keyEs collect { case ValEx(TlaStr(s)) => s }
+      val keys = keyEs.collect { case ValEx(TlaStr(s)) => s }
       val values = valuesEs.map(exToJson)
       ujson.Obj(mutable.LinkedHashMap(keys.zip(values): _*))
 

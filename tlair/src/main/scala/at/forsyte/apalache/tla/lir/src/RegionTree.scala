@@ -2,10 +2,11 @@ package at.forsyte.apalache.tla.lir.src
 
 /**
  * A tree that stores source regions in the order of their nesting. We assume that a region can be included into
- * another, but otherwise regions cannot intersect. Every region in the tree is assigned a unique index that can be
- * used to access the region.
+ * another, but otherwise regions cannot intersect. Every region in the tree is assigned a unique index that can be used
+ * to access the region.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class RegionTree {
   private class Node(val index: Int, val region: SourceRegion, val children: Seq[Node])
@@ -15,10 +16,12 @@ class RegionTree {
   private var regions: Seq[SourceRegion] = Seq(rootRegion)
 
   /**
-   * Add a region in the tree. If the tree contains an overlapping region that does not include the given region,
-   * an IllegalArgumentException is thrown.
-   * @param region a region to add
-   * @return the index of the added region
+   * Add a region in the tree. If the tree contains an overlapping region that does not include the given region, an
+   * IllegalArgumentException is thrown.
+   * @param region
+   *   a region to add
+   * @return
+   *   the index of the added region
    */
   def add(region: SourceRegion): Int = {
     var newIndex: Int = -1
@@ -28,7 +31,7 @@ class RegionTree {
         // the new region should be added as a child, either of the node, or of one of its children
         if (node.children.exists(_.region.contains(region))) {
           // add the region as a child of one of the children
-          new Node(node.index, node.region, node.children map locateAndAdd)
+          new Node(node.index, node.region, node.children.map(locateAndAdd))
         } else if (node.children.exists(n => n.region.isIntersecting(region) && !n.region.isInside(region))) {
           // this is a problem
           val conflict = node.children.find(_.region.isIntersecting(region)).get
@@ -61,8 +64,10 @@ class RegionTree {
 
   /**
    * Find a region by an index. If there is no such a region, throw IndexOutOfBoundsException.
-   * @param index an index that was returned by add
-   * @return the region that has the given index
+   * @param index
+   *   an index that was returned by add
+   * @return
+   *   the region that has the given index
    */
   def apply(index: Int): SourceRegion = {
     regions(index) // as we are adding children to the head, not the tail
@@ -70,7 +75,8 @@ class RegionTree {
 
   /**
    * Return the number of regions in the tree.
-   * @return the number of regions
+   * @return
+   *   the number of regions
    */
   def size: Int = {
     regions.size - 1 // not counting the root region

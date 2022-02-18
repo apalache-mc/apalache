@@ -9,14 +9,17 @@ import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic._
 
 /**
- * Translate a substitution, that is the part that goes after WITH in INSTANCE Foo WITH x <- e1, y <- e2.
- * The module instantiation rules are quite sophisticated, see Specifying Systems [Ch. 17].
+ * Translate a substitution, that is the part that goes after WITH in INSTANCE Foo WITH x <- e1, y <- e2. The module
+ * instantiation rules are quite sophisticated, see Specifying Systems [Ch. 17].
  *
- * @author konnov
+ * @author
+ *   konnov
  */
 class SubstTranslator(
-    sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context
-) extends LazyLogging {
+    sourceStore: SourceStore,
+    annotationStore: AnnotationStore,
+    context: Context)
+    extends LazyLogging {
 
   def translate(substInNode: SubstInNode, body: TlaEx): TlaEx = {
     subExpr(mkRenaming(substInNode), body)
@@ -41,7 +44,7 @@ class SubstTranslator(
               copy
             }
 
-            val newLetIn = LetInEx(subRec(body), defs map subDecl: _*)
+            val newLetIn = LetInEx(subRec(body), defs.map(subDecl): _*)
             sourceStore.find(letIn.ID).foreach { id =>
               sourceStore.add(newLetIn.ID, id)
             }
@@ -53,7 +56,7 @@ class SubstTranslator(
                 && Seq(
                     TlaActionOper.enabled,
                     TlaActionOper.composition,
-                    TlaTempOper.leadsTo
+                    TlaTempOper.leadsTo,
                 ).exists(_.name == op.name)
             ) {
               // TODO: find out how to deal with ENABLED and other tricky operators
@@ -62,7 +65,7 @@ class SubstTranslator(
                     .format(op.name)
               )
             }
-            OperEx(op, args map subRec: _*)
+            OperEx(op, args.map(subRec): _*)
 
           case d => d
         }
@@ -105,7 +108,7 @@ class SubstTranslator(
           sourceStore,
           annotationStore,
           upperContext,
-          OutsideRecursion()
+          OutsideRecursion(),
       )
 
     def eachSubst(s: Subst): (String, TlaEx) = {
@@ -122,14 +125,15 @@ class SubstTranslator(
       s.getOp.getName.toString -> replacement
     }
 
-    Map(substInNode.getSubsts map eachSubst: _*)
+    Map(substInNode.getSubsts.map(eachSubst): _*)
   }
 }
 
 object SubstTranslator {
   def apply(
-      sourceStore: SourceStore, annotationStore: AnnotationStore, context: Context
-  ): SubstTranslator = {
+      sourceStore: SourceStore,
+      annotationStore: AnnotationStore,
+      context: Context): SubstTranslator = {
     new SubstTranslator(sourceStore, annotationStore, context)
   }
 }

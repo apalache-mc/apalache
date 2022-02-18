@@ -9,12 +9,13 @@ import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, TlaEx}
 
 /**
- * Implements the rule for conjunction. Similar to TLC, we short-circuit A /\ B as IF A THEN B ELSE FALSE.
- * This allows us to introduce an optimization on-the-fly for the conjunctions that were marked with a hint.
- * In this optimization, we push the context, assume A and check satisfiability of the SMT context.
- * If the context is unsat, we immediately return FALSE. Otherwise, we pop the context and continue.
+ * Implements the rule for conjunction. Similar to TLC, we short-circuit A /\ B as IF A THEN B ELSE FALSE. This allows
+ * us to introduce an optimization on-the-fly for the conjunctions that were marked with a hint. In this optimization,
+ * we push the context, assume A and check satisfiability of the SMT context. If the context is unsat, we immediately
+ * return FALSE. Otherwise, we pop the context and continue.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val simplifier = new ConstSimplifierForSmt()
@@ -63,7 +64,7 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
                   nextState.ex
                 }
 
-                val rewrittenArgs = args map mapArg
+                val rewrittenArgs = args.map(mapArg)
                 val eq = tla.eql(pred ? "b", tla.and(rewrittenArgs: _*) ? "b").typed(boolTypes, "b")
                 rewriter.solverContext.assertGroundExpr(eq)
                 nextState.setRex(pred)

@@ -8,7 +8,8 @@ import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 /**
  * Rewrites a string literal, e.g., "hello".
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class StrConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
 

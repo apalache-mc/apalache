@@ -15,14 +15,17 @@ import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaStr}
 import com.typesafe.scalalogging.LazyLogging
 
 /**
- * A new version of the sequential model checker. This version is using TransitionExecutor, which allows us to
- * freely switch between the online and offline SMT solving.
+ * A new version of the sequential model checker. This version is using TransitionExecutor, which allows us to freely
+ * switch between the online and offline SMT solving.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class SeqModelChecker[ExecutorContextT](
-    val params: ModelCheckerParams, val checkerInput: CheckerInput, trexImpl: TransitionExecutor[ExecutorContextT]
-) extends Checker with LazyLogging {
+    val params: ModelCheckerParams,
+    val checkerInput: CheckerInput,
+    trexImpl: TransitionExecutor[ExecutorContextT])
+    extends Checker with LazyLogging {
 
   type SnapshotT = ExecutionSnapshot[ExecutorContextT]
 
@@ -119,8 +122,8 @@ class SeqModelChecker[ExecutorContextT](
 
   // prepare transitions, check whether they are enabled, and maybe check the invariant (if the user chose so)
   private def prepareTransitionsAndCheckInvariants(
-      isNext: Boolean, transitions: Seq[TlaEx]
-  ): (Set[Int], Set[Int]) = {
+      isNext: Boolean,
+      transitions: Seq[TlaEx]): (Set[Int], Set[Int]) = {
     var maybeInvariantNos: Set[Int] = Set()
     var maybeActionInvariantNos: Set[Int] = Set()
 
@@ -230,8 +233,10 @@ class SeqModelChecker[ExecutorContextT](
   // This is a special case of --all-enabled and search.invariant.mode=before.
   // A transition has been prepared but not assumed.
   private def checkInvariantsForPreparedTransition(
-      isNext: Boolean, transitionNo: Int, maybeInvariantNos: Set[Int], maybeActionInvariantNos: Set[Int]
-  ): Unit = {
+      isNext: Boolean,
+      transitionNo: Int,
+      maybeInvariantNos: Set[Int],
+      maybeActionInvariantNos: Set[Int]): Unit = {
     val snapshot = trex.snapshot()
     // fast track the transition to check the invariants
     trex.assumeTransition(transitionNo)
@@ -249,8 +254,10 @@ class SeqModelChecker[ExecutorContextT](
 
   // check state invariants or action invariants as indicated by the set of numbers
   private def checkInvariants(
-      stateNo: Int, notInvs: Seq[TlaEx], numbersToCheck: Set[Int], kind: String
-  ): Unit = {
+      stateNo: Int,
+      notInvs: Seq[TlaEx],
+      numbersToCheck: Set[Int],
+      kind: String): Unit = {
     // check the invariants
     if (numbersToCheck.nonEmpty) {
       logger.info(s"State $stateNo: Checking ${numbersToCheck.size} $kind invariants")
@@ -354,7 +361,7 @@ class SeqModelChecker[ExecutorContextT](
 
     // construct a history sequence
     val seqType = SeqT1(stateType)
-    val hist = OperEx(TlaFunOper.tuple, path map mkRecord: _*)(Typed(seqType))
+    val hist = OperEx(TlaFunOper.tuple, path.map(mkRecord): _*)(Typed(seqType))
     // assume that the trace invariant is applied to the history sequence
     notTraceInv match {
       case TlaOperDecl(_, List(OperParam(name, 0)), body) =>
@@ -395,7 +402,7 @@ class SeqModelChecker[ExecutorContextT](
       // extract expressions from the model, as we are going to use these expressions (not the cells!) in path constraints
       val exec = trex.decodedExecution()
       // omit the first assignment, as it contains only assignments to the state variables
-      val pathConstraint = ValEx(TlaBool(true))(Typed(BoolT1())) :: (exec.path.tail.map(_._1) map computeViewNeq(view))
+      val pathConstraint = ValEx(TlaBool(true))(Typed(BoolT1())) :: (exec.path.tail.map(_._1).map(computeViewNeq(view)))
       trex.addPathOrConstraint(pathConstraint)
     }
   }
@@ -409,7 +416,7 @@ class SeqModelChecker[ExecutorContextT](
           suffix,
           checkerInput.rootModule,
           notInv,
-          states
+          states,
       )
     }
 

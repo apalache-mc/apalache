@@ -11,7 +11,7 @@ trait TestSymbStateRewriterPowerset extends RewriterBase {
       "i" -> IntT1(),
       "I" -> SetT1(IntT1()),
       "II" -> SetT1(SetT1(IntT1())),
-      "b" -> BoolT1()
+      "b" -> BoolT1(),
   )
 
   test("""SUBSET {1, 2, 3}""") { rewriterType: SMTEncoding =>
@@ -65,7 +65,7 @@ trait TestSymbStateRewriterPowerset extends RewriterBase {
   }
 
   test("""SE-SUBSET1: {1, 2, 3, 4} \in SUBSET {1, 2, 3}""") { rewriterType: SMTEncoding =>
-    def setTo(k: Int) = enumSet(1 to k map int: _*)
+    def setTo(k: Int) = enumSet((1 to k).map(int): _*)
 
     val set1to4 = setTo(4) ? "I"
     val powset = powSet(setTo(3) ? "I") ? "II"

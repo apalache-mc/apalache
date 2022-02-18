@@ -9,10 +9,11 @@ import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic.{OpDefNode, OpDefOrDeclNode}
 
 /**
- * This class extracts annotations from the strings that are attached to a SemanticNode.
- * We rely on SANY correctly attaching comments to the nodes.
+ * This class extracts annotations from the strings that are attached to a SemanticNode. We rely on SANY correctly
+ * attaching comments to the nodes.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class AnnotationExtractor(annotationStore: AnnotationStore) extends LazyLogging {
   def parseAndSave(uid: UID, node: OpDefOrDeclNode): Unit = {

@@ -8,11 +8,11 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
- * Rewrites a tuple or sequence constructor, that is, <<e_1, ..., e_k>>.
- * A tuple may be interpreted as a sequence, if it was properly type-annotated,
- * e.g., <<>> <: Seq(Int).
+ * Rewrites a tuple or sequence constructor, that is, <<e_1, ..., e_k>>. A tuple may be interpreted as a sequence, if it
+ * was properly type-annotated, e.g., <<>> <: Seq(Int).
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class TupleOrSeqCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {

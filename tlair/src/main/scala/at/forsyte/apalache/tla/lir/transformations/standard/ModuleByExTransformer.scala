@@ -6,11 +6,13 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModu
 /**
  * This transformer uses a TlaExTransformer to modify the bodies of operator declarations inside a module.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class ModuleByExTransformer(
-    exTrans: TlaExTransformation, applyTo: (TlaDecl => Boolean) = (_ => true)
-) extends TlaModuleTransformation {
+    exTrans: TlaExTransformation,
+    applyTo: (TlaDecl => Boolean) = (_ => true))
+    extends TlaModuleTransformation {
   override def apply(mod: TlaModule): TlaModule = {
     def mapOneDeclaration: TlaDecl => TlaDecl = {
       case d @ TlaOperDecl(_, _, body) =>
@@ -40,7 +42,7 @@ class ModuleByExTransformer(
       }
     }
 
-    new TlaModule(mod.name, mod.declarations map mapIfIncluded)
+    new TlaModule(mod.name, mod.declarations.map(mapIfIncluded))
   }
 }
 
@@ -50,8 +52,8 @@ object ModuleByExTransformer {
   }
 
   def apply(
-      exTrans: TlaExTransformation, include: TlaDecl => Boolean
-  ): ModuleByExTransformer = {
+      exTrans: TlaExTransformation,
+      include: TlaDecl => Boolean): ModuleByExTransformer = {
     new ModuleByExTransformer(exTrans, include)
   }
 }

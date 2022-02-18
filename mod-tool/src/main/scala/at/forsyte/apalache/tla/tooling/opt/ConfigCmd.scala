@@ -6,7 +6,8 @@ import java.io.File
 /**
  * This command initiates the 'config' command line.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class ConfigCmd extends Command(name = "config", description = "Configure Apalache options") with General {
 

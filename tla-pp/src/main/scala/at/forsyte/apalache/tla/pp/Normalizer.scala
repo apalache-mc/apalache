@@ -13,7 +13,8 @@ import javax.inject.Singleton
 /**
  * This transformation turns subexpressions of a TLA+ expression into negated normal form.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 @Singleton
 class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
@@ -49,11 +50,11 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
 
     case ex @ OperEx(TlaBoolOper.and, args @ _*) =>
       val oper: TlaBoolOper = if (neg) TlaBoolOper.or else TlaBoolOper.and
-      OperEx(oper, args map nnf(neg): _*)(ex.typeTag)
+      OperEx(oper, args.map(nnf(neg)): _*)(ex.typeTag)
 
     case ex @ OperEx(TlaBoolOper.or, args @ _*) =>
       val oper: TlaBoolOper = if (neg) TlaBoolOper.and else TlaBoolOper.or
-      OperEx(oper, args map nnf(neg): _*)(ex.typeTag)
+      OperEx(oper, args.map(nnf(neg)): _*)(ex.typeTag)
 
     case ex @ OperEx(TlaBoolOper.implies, left, right) =>
       val (nnfNonNegated, nnfNegated) = (nnf(neg = false), nnf(neg = true))
@@ -152,42 +153,42 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
 
     case ex @ OperEx(TlaTempOper.diamond, args @ _*) =>
       if (!neg) {
-        OperEx(TlaTempOper.diamond, args map transform: _*)(ex.typeTag)
+        OperEx(TlaTempOper.diamond, args.map(transform): _*)(ex.typeTag)
       } else {
-        OperEx(TlaTempOper.box, args map nnf(true): _*)(ex.typeTag)
+        OperEx(TlaTempOper.box, args.map(nnf(true)): _*)(ex.typeTag)
       }
 
     case ex @ OperEx(TlaTempOper.box, args @ _*) =>
       if (!neg) {
-        OperEx(TlaTempOper.box, args map transform: _*)(ex.typeTag)
+        OperEx(TlaTempOper.box, args.map(transform): _*)(ex.typeTag)
       } else {
-        OperEx(TlaTempOper.diamond, args map nnf(true): _*)(ex.typeTag)
+        OperEx(TlaTempOper.diamond, args.map(nnf(true)): _*)(ex.typeTag)
       }
 
     case ex @ OperEx(TlaTempOper.leadsTo, args @ _*) =>
       if (!neg) {
-        OperEx(TlaTempOper.leadsTo, args map transform: _*)(ex.typeTag)
+        OperEx(TlaTempOper.leadsTo, args.map(transform): _*)(ex.typeTag)
       } else {
         OperEx(TlaBoolOper.not, ex)(ex.typeTag) // keep ~(... ~> ...)
       }
 
     case ex @ OperEx(TlaTempOper.guarantees, args @ _*) =>
       if (!neg) {
-        OperEx(TlaTempOper.guarantees, args map transform: _*)(ex.typeTag)
+        OperEx(TlaTempOper.guarantees, args.map(transform): _*)(ex.typeTag)
       } else {
         OperEx(TlaBoolOper.not, ex)(ex.typeTag) // keep ~(... -+-> ...)
       }
 
     case ex @ OperEx(TlaTempOper.weakFairness, args @ _*) =>
       if (!neg) {
-        OperEx(TlaTempOper.weakFairness, args map transform: _*)(ex.typeTag)
+        OperEx(TlaTempOper.weakFairness, args.map(transform): _*)(ex.typeTag)
       } else {
         OperEx(TlaBoolOper.not, ex)(ex.typeTag) // keep ~WF_vars(A) as ~WF_vars(A)
       }
 
     case ex @ OperEx(TlaTempOper.strongFairness, args @ _*) =>
       if (!neg) {
-        OperEx(TlaTempOper.strongFairness, args map transform: _*)(ex.typeTag)
+        OperEx(TlaTempOper.strongFairness, args.map(transform): _*)(ex.typeTag)
       } else {
         OperEx(TlaBoolOper.not, ex)(ex.typeTag) // keep ~SF_vars(A) as ~SF_vars(A)
       }
@@ -195,7 +196,7 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
     case letIn @ LetInEx(body, defs @ _*) =>
       // always normalize the bodies of the definitions
       def transformDef(decl: TlaOperDecl): TlaOperDecl = decl.copy(body = transform(decl.body))
-      val normalizedDefs = defs map transformDef
+      val normalizedDefs = defs.map(transformDef)
 
       if (neg) {
         // a negation of the let body
@@ -209,9 +210,9 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
       // a non-Boolean operator: transform its arguments, which may be Boolean
       if (neg) {
         // why do we add a Boolean negation on top?
-        OperEx(TlaBoolOper.not, OperEx(oper, args map transform: _*)(ex.typeTag))(ex.typeTag)
+        OperEx(TlaBoolOper.not, OperEx(oper, args.map(transform): _*)(ex.typeTag))(ex.typeTag)
       } else {
-        OperEx(oper, args map transform: _*)(ex.typeTag)
+        OperEx(oper, args.map(transform): _*)(ex.typeTag)
       }
 
     case expr =>
@@ -226,10 +227,8 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
   private def nnfLetIn(neg: Boolean, body: TlaEx, defs: Seq[TlaOperDecl]): TlaEx = {
 
     /**
-     * To handle the case of LET X == ... IN ... ~X ...
-     * we introduce a new let-in operator NegX$, the body of which is the
-     * nnf transformation of the body of X. Then, we replace all calls to ~X in the
-     * LET-IN body with calls to NegX$.
+     * To handle the case of LET X == ... IN ... ~X ... we introduce a new let-in operator NegX$, the body of which is
+     * the nnf transformation of the body of X. Then, we replace all calls to ~X in the LET-IN body with calls to NegX$.
      */
     def negName(n: String): String = s"Neg$n$$"
 
@@ -258,7 +257,7 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
 
     val negOpers = negAppearingOpers(newBody)
 
-    val replacements = negOpers map { opName =>
+    val replacements = negOpers.map { opName =>
       val toReplace = tla.not(tla.appOp(tla.name(opName) ? "b") ? "b").typed(Map("b" -> BoolT1()), "b")
       lazy val replacement = tla
         .appOp(tla.name(negName(opName)) ? "op")
@@ -270,7 +269,7 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
       tr(b)
     }
 
-    val negDefs = defs withFilter { d => negOpers.contains(d.name) } map { d =>
+    val negDefs = defs.withFilter { d => negOpers.contains(d.name) }.map { d =>
       d.copy(name = negName(d.name), body = nnf(neg = true)(d.body))
     }
 
