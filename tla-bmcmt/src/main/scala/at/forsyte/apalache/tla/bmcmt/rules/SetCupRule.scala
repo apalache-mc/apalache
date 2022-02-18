@@ -74,9 +74,9 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
 //        val eqState = rewriter.lazyEq.cacheEqConstraints(rightState.setArena(arena), prodIter.toSeq)
         // bugfix: we have to compare the elements in both sets and thus to introduce a quadratic number of constraints
         // add SMT constraints
-        onlyLeft foreach (addOnlyCellCons(leftSetCell, _))
-        onlyRight foreach (addOnlyCellCons(rightSetCell, _))
-        common foreach addEitherCellCons
+        onlyLeft.foreach(addOnlyCellCons(leftSetCell, _))
+        onlyRight.foreach(addOnlyCellCons(rightSetCell, _))
+        common.foreach(addEitherCellCons)
 
         // that's it
         nextState.setRex(newSetCell.toNameEx)

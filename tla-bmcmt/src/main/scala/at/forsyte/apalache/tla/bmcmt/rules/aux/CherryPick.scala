@@ -104,7 +104,11 @@ class CherryPick(rewriter: SymbStateRewriter) {
    * @return
    *   a new symbolic state whose expression stores a fresh cell that corresponds to the picked element.
    */
-  def pickByOracle(state: SymbState, oracle: Oracle, elems: Seq[ArenaCell], elseAssert: TlaEx): SymbState = {
+  def pickByOracle(
+      state: SymbState,
+      oracle: Oracle,
+      elems: Seq[ArenaCell],
+      elseAssert: TlaEx): SymbState = {
     assert(elems.nonEmpty) // this is an advanced operator -- you should know what you are doing
     val targetType = elems.head.cellType
 
@@ -159,7 +163,11 @@ class CherryPick(rewriter: SymbStateRewriter) {
    * @return
    *   a new symbolic state with the expression holding a fresh cell that stores the picked element.
    */
-  def pickBasic(cellType: CellT, state: SymbState, oracle: Oracle, elems: Seq[ArenaCell],
+  def pickBasic(
+      cellType: CellT,
+      state: SymbState,
+      oracle: Oracle,
+      elems: Seq[ArenaCell],
       elseAssert: TlaEx): SymbState = {
     rewriter.solverContext.log("; CHERRY-PICK %s FROM [%s] {".format(cellType, elems.map(_.toString).mkString(", ")))
     var arena = state.arena.appendCell(cellType)
@@ -188,7 +196,11 @@ class CherryPick(rewriter: SymbStateRewriter) {
    * @return
    *   a new symbolic state with the expression holding a fresh cell that stores the picked element.
    */
-  def pickTuple(cellType: CellT, state: SymbState, oracle: Oracle, tuples: Seq[ArenaCell],
+  def pickTuple(
+      cellType: CellT,
+      state: SymbState,
+      oracle: Oracle,
+      tuples: Seq[ArenaCell],
       elseAssert: TlaEx): SymbState = {
     rewriter.solverContext.log("; CHERRY-PICK %s FROM [%s] {".format(cellType, tuples.map(_.toString).mkString(", ")))
     val tupleType = cellType.asInstanceOf[TupleT]
@@ -237,7 +249,11 @@ class CherryPick(rewriter: SymbStateRewriter) {
    * @return
    *   a new symbolic state with the expression holding a fresh cell that stores the picked element.
    */
-  def pickRecord(cellTypeToIgnore: CellT, state: SymbState, oracle: Oracle, records: Seq[ArenaCell],
+  def pickRecord(
+      cellTypeToIgnore: CellT,
+      state: SymbState,
+      oracle: Oracle,
+      records: Seq[ArenaCell],
       elseAssert: TlaEx): SymbState = {
     // the records do not always have the same type, but they do have compatible types
     val commonRecordT = findCommonRecordType(records)
@@ -323,8 +339,13 @@ class CherryPick(rewriter: SymbStateRewriter) {
    * @return
    *   a new cell that encodes a picked domain
    */
-  private def pickRecordDomain(commonRecordType: RecordT, domType: CellT, state: SymbState, oracle: Oracle,
-      records: Seq[ArenaCell], domains: Seq[ArenaCell]): SymbState = {
+  private def pickRecordDomain(
+      commonRecordType: RecordT,
+      domType: CellT,
+      state: SymbState,
+      oracle: Oracle,
+      records: Seq[ArenaCell],
+      domains: Seq[ArenaCell]): SymbState = {
     // It often happens that all the domains are actually the same cell. Return this cell.
     val distinct = domains.distinct
     if (distinct.size == 1) {
@@ -416,7 +437,11 @@ class CherryPick(rewriter: SymbStateRewriter) {
    * @return
    *   a new symbolic state with the expression holding a fresh cell that stores the picked element.
    */
-  def pickSet(cellType: CellT, state: SymbState, oracle: Oracle, memberSets: Seq[ArenaCell],
+  def pickSet(
+      cellType: CellT,
+      state: SymbState,
+      oracle: Oracle,
+      memberSets: Seq[ArenaCell],
       elseAssert: TlaEx): SymbState = {
     if (memberSets.isEmpty) {
       throw new RuntimeException("Picking from a statically empty set")
@@ -434,7 +459,11 @@ class CherryPick(rewriter: SymbStateRewriter) {
     }
   }
 
-  private def pickSetNonEmpty(cellType: CellT, state: SymbState, oracle: Oracle, memberSets: Seq[ArenaCell],
+  private def pickSetNonEmpty(
+      cellType: CellT,
+      state: SymbState,
+      oracle: Oracle,
+      memberSets: Seq[ArenaCell],
       elseAssert: TlaEx): SymbState = {
     def solverAssert(e: TlaEx): Unit = rewriter.solverContext.assertGroundExpr(e)
 
@@ -536,7 +565,11 @@ class CherryPick(rewriter: SymbStateRewriter) {
    * @return
    *   a new symbolic state with the expression holding a fresh cell that stores the picked element.
    */
-  def pickSequence(cellType: CellT, state: SymbState, oracle: Oracle, memberSeqs: Seq[ArenaCell],
+  def pickSequence(
+      cellType: CellT,
+      state: SymbState,
+      oracle: Oracle,
+      memberSeqs: Seq[ArenaCell],
       elseAssert: TlaEx): SymbState = {
     if (memberSeqs.isEmpty) {
       throw new RuntimeException("Picking a sequence from a statically empty set")
@@ -557,7 +590,11 @@ class CherryPick(rewriter: SymbStateRewriter) {
   }
 
   // Pick from a set of sequence. There is a large overlap with pickSetNonEmpty
-  private def pickSequenceNonEmpty(seqType: CellT, state: SymbState, oracle: Oracle, memberSeqs: Seq[ArenaCell],
+  private def pickSequenceNonEmpty(
+      seqType: CellT,
+      state: SymbState,
+      oracle: Oracle,
+      memberSeqs: Seq[ArenaCell],
       elseAssert: TlaEx): SymbState = {
     def solverAssert(e: TlaEx): Unit = rewriter.solverContext.assertGroundExpr(e)
 
@@ -625,7 +662,12 @@ class CherryPick(rewriter: SymbStateRewriter) {
    * @return
    *   a new symbolic state with the expression holding a fresh cell that stores the picked element.
    */
-  def pickFun(funType: FunT, state: SymbState, oracle: Oracle, funs: Seq[ArenaCell], elseAssert: TlaEx): SymbState = {
+  def pickFun(
+      funType: FunT,
+      state: SymbState,
+      oracle: Oracle,
+      funs: Seq[ArenaCell],
+      elseAssert: TlaEx): SymbState = {
     rewriter.solverContext.log("; CHERRY-PICK %s FROM [%s] {".format(funType, funs.map(_.toString).mkString(", ")))
     var nextState = state
     // pick the relation
@@ -681,8 +723,6 @@ class CherryPick(rewriter: SymbStateRewriter) {
       rewriter.solverContext.assertGroundExpr(tla.impl(inResult, inBase))
     }
 
-    elems foreach inResultIfInBase
-    unconstrainElems(elems)
     elems.foreach(inResultIfInBase)
     rewriter.solverContext.log("; } PICK %s FROM %s".format(resultType, set))
     nextState.setRex(resultSet.toNameEx)

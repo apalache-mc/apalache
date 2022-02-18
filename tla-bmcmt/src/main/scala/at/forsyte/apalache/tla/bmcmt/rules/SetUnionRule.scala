@@ -69,9 +69,9 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
                   tla.apalacheSelectInSet(elemCell.toNameEx, set.toNameEx))
             }
 
-            val pointingSets = (sets.zip(elemsOfSets) filter (isPointedBySet _).tupled) map (_._1)
+            val pointingSets = (sets.zip(elemsOfSets).filter((isPointedBySet _).tupled)).map(_._1)
             assert(pointingSets.nonEmpty)
-            val existsIncludingSet = tla.or(pointingSets map inPointingSet: _*)
+            val existsIncludingSet = tla.or(pointingSets.map(inPointingSet): _*)
             val inUnionSet = tla.apalacheStoreInSet(elemCell.toNameEx, newSetCell.toNameEx)
             val notInUnionSet = tla.apalacheStoreNotInSet(elemCell.toNameEx, newSetCell.toNameEx)
             val ite = tla.ite(existsIncludingSet, inUnionSet, notInUnionSet)
@@ -79,7 +79,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
           }
 
           // add SMT constraints
-          unionOfSets foreach addOneElemCons
+          unionOfSets.foreach(addOneElemCons)
 
           // that's it
           nextState.setRex(newSetCell.toNameEx)

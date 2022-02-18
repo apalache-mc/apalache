@@ -726,8 +726,9 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   }
 
   private def mkArithOp(
-      ctor: (Expr[ArithSort], Expr[ArithSort]) => ArithExpr[ArithSort],
-  )(a: ExprSort, b: ExprSort): ExprSort = {
+      ctor: (Expr[ArithSort], Expr[ArithSort]) => ArithExpr[ArithSort]
+    )(a: ExprSort,
+      b: ExprSort): ExprSort = {
     ctor(a.asInstanceOf[Expr[ArithSort]], b.asInstanceOf[Expr[ArithSort]]).asInstanceOf[ExprSort]
   }
 
