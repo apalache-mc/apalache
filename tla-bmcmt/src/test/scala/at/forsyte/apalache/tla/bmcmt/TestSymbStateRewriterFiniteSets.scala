@@ -19,7 +19,7 @@ trait TestSymbStateRewriterFiniteSets extends RewriterBase {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
-  test("""Cardinality(SUBSET {1, 2}) = 4""") { rewriterType: SMTEncoding =>
+  test("""Cardinality(SUBSET {1, 2}) throws""") { rewriterType: SMTEncoding =>
     val set = enumSet(1.to(2).map(int): _*).as(intSetT)
     val powerset = powSet(set).as(intSetSetT)
     val cardinality = card(powerset).as(intT)
