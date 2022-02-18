@@ -83,7 +83,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
     case OperEx(TlaFiniteSetOper.cardinality, OperEx(TlaSetOper.powerset, set)) =>
       // A pattern that emerged in issue #1360
       // Cardinality(SUBSET S) is equivalent to 2^Cardinality(S).
-      val cardEx = OperEx(TlaFiniteSetOper.cardinality, set)(set.typeTag)
+      val cardEx = OperEx(TlaFiniteSetOper.cardinality, set)(intTag)
       OperEx(TlaArithOper.exp, ValEx(TlaInt(2))(intTag), cardEx)(intTag)
 
     case OperEx(TlaOper.eq, OperEx(TlaFiniteSetOper.cardinality, set), ValEx(TlaInt(intVal))) if intVal == BigInt(0) =>
