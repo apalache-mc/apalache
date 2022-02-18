@@ -16,14 +16,17 @@ import com.typesafe.scalalogging.LazyLogging
 /**
  * Find free-standing existential quantifiers, grade expressions, and produce hints about some formulas.
  */
-class AnalysisPassImpl @Inject() (val options: PassOptions, exprGradeStoreImpl: ExprGradeStoreImpl,
-    tracker: TransformationTracker, writerFactory: TlaWriterFactory)
+class AnalysisPassImpl @Inject() (
+    val options: PassOptions,
+    exprGradeStoreImpl: ExprGradeStoreImpl,
+    tracker: TransformationTracker,
+    writerFactory: TlaWriterFactory)
     extends AnalysisPass with LazyLogging {
 
   override def name: String = "AnalysisPass"
 
   object StringOrdering extends Ordering[Object] {
-    override def compare(x: Object, y: Object): Int = x.toString compare y.toString
+    override def compare(x: Object, y: Object): Int = x.toString.compare(y.toString)
   }
 
   override def execute(module: TlaModule): Option[TlaModule] = {

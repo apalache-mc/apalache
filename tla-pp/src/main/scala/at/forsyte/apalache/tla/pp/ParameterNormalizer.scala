@@ -7,19 +7,17 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModu
 import TypedPredefs._
 
 /**
- * Transforms a declaration A(x,y(_,_)) == e
- * into parameter-normal form, i.e.
- * A(x,y(_,_)) == LET x_new == x
- * y_new(p1, p2) == y(p1,p2)
- * IN e[ x_new/x, y_new/y ]
- * This allows us to limit the number of substitutions when inlining A.
+ * Transforms a declaration A(x,y(_,_)) == e into parameter-normal form, i.e. A(x,y(_,_)) == LET x_new == x y_new(p1,
+ * p2) == y(p1,p2) IN e[ x_new/x, y_new/y ] This allows us to limit the number of substitutions when inlining A.
  *
- * @param decisionFn Normal-form transformation will only be applied to operator declarations (both top-level and LET-IN),
- *                   for which `decisionFn` evaluates to true. Default: returns true for all recursive operators.
+ * @param decisionFn
+ *   Normal-form transformation will only be applied to operator declarations (both top-level and LET-IN), for which
+ *   `decisionFn` evaluates to true. Default: returns true for all recursive operators.
  */
 class ParameterNormalizer(
-    nameGenerator: UniqueNameGenerator, tracker: TransformationTracker, decisionFn: TlaOperDecl => Boolean
-) {
+    nameGenerator: UniqueNameGenerator,
+    tracker: TransformationTracker,
+    decisionFn: TlaOperDecl => Boolean) {
 
   /** Declaration-level transformation */
   def normalizeDeclaration(decl: TlaOperDecl): TlaOperDecl = {
@@ -57,13 +55,13 @@ class ParameterNormalizer(
   /** Expression-level LET-IN transformation, applies `mkParamNormalForm` to all LET-IN declarations */
   private def normalizeInternalLetIn: TlaExTransformation = tracker.trackEx {
     case ex @ LetInEx(body, defs @ _*) =>
-      val newDefs = defs map { d => normalizeDeclaration(d) }
+      val newDefs = defs.map { d => normalizeDeclaration(d) }
       val newBody = normalizeInternalLetIn(body)
       if (defs == newDefs && body == newBody) ex
       else LetInEx(newBody, newDefs: _*)(ex.typeTag)
 
     case ex @ OperEx(op, args @ _*) =>
-      val newArgs = args map normalizeInternalLetIn
+      val newArgs = args.map(normalizeInternalLetIn)
       if (args == newArgs) ex
       else OperEx(op, newArgs: _*)(ex.typeTag)
 
@@ -84,7 +82,7 @@ class ParameterNormalizer(
             val types = Map("t" -> OperT1(Seq(), paramType), "p" -> fParamType)
             val tr = ReplaceFixed(tracker)(
                 tla.name(fParam.name).typed(types, "p"),
-                tla.appOp(tla.name(paramOperName) ? "t").typed(types, "p")
+                tla.appOp(tla.name(paramOperName) ? "t").typed(types, "p"),
             )
             val replaced = tr(partialEx)
             // if fParam is simple, the introduced operator is nullary
@@ -102,7 +100,7 @@ class ParameterNormalizer(
             // As both are operators, we don't need to introduce application
             val tr = ReplaceFixed(tracker)(
                 tla.name(fParam.name).typed(paramType),
-                tla.name(paramOperName).typed(paramType)
+                tla.name(paramOperName).typed(paramType),
             )
             val replaced = tr(partialEx)
 
@@ -138,7 +136,7 @@ class ParameterNormalizer(
 
   /** Module-level transformation, calls `mkParamNormalForm` on all operator declarations */
   def normalizeModule: TlaModuleTransformation = { m =>
-    val newDecls = m.declarations map {
+    val newDecls = m.declarations.map {
       case d: TlaOperDecl => normalizeDeclaration(d)
       case d              => d
     }
@@ -158,8 +156,8 @@ object ParameterNormalizer {
   }
 
   def apply(
-      nameGenerator: UniqueNameGenerator, tracker: TransformationTracker,
-      decisionFn: TlaOperDecl => Boolean = DecisionFn.recursive
-  ): ParameterNormalizer =
+      nameGenerator: UniqueNameGenerator,
+      tracker: TransformationTracker,
+      decisionFn: TlaOperDecl => Boolean = DecisionFn.recursive): ParameterNormalizer =
     new ParameterNormalizer(nameGenerator, tracker, decisionFn)
 }

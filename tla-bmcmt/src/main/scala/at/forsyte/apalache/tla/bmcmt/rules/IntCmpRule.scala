@@ -11,7 +11,8 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 /**
  * Integer comparisons: <, <=, >, >=. For equality and inequality, check EqRule.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val simplifier = new ConstSimplifierForSmt()

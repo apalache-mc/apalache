@@ -98,7 +98,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     val exists =
       tla
         .apalacheSkolem(tla.exists(tla.name("i") ? "i", tla.enumSet() ? "I",
-                tla.in(tla.prime(tla.name("x") ? "i") ? "i", tla.enumSet(tla.name("i") ? "i") ? "I") ? "b") ? "b")
+            tla.in(tla.prime(tla.name("x") ? "i") ? "i", tla.enumSet(tla.name("i") ? "i") ? "I") ? "b") ? "b")
         .typed(boolTypes, "b")
     val ite = tla
       .ite(exists, tla.prime(tla.name("x") ? "i") ? "i", tla.int(0))
@@ -440,7 +440,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
       .exists(
           tla.name("x") ? "i",
           set12,
-          tla.assign(tla.prime(tla.name("y") ? "i") ? "i", tla.name("x") ? "i") ? "b"
+          tla.assign(tla.prime(tla.name("y") ? "i") ? "i", tla.name("x") ? "i") ? "b",
       )
       .typed(boolTypes, "b")
     ////
@@ -525,10 +525,10 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     val ex =
       tla
         .apalacheSkolem(tla.exists(tla.name("i") ? "i", tla.natSet() ? "I",
-                tla.and(
-                    tla.eql(tla.name("i") ? "i", tla.int(10)) ? "b",
-                    tla.assign(tla.prime(tla.name("x") ? "i") ? "i", tla.name("i") ? "i") ? "b"
-                ) ? "b") ? "b")
+            tla.and(
+                tla.eql(tla.name("i") ? "i", tla.int(10)) ? "b",
+                tla.assign(tla.prime(tla.name("x") ? "i") ? "i", tla.name("i") ? "i") ? "b",
+            ) ? "b") ? "b")
         .typed(boolTypes, "b")
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
@@ -548,15 +548,14 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     prepareArena()
     val ex =
       tla
-        .apalacheSkolem(
-            tla.exists(
-                tla.name("i") ? "i",
-                tla.dotdot(tla.name("a") ? "i", tla.name("b") ? "i") ? "I",
-                tla.and(
-                    tla.eql(tla.mod(tla.name("i") ? "i", tla.int(3)) ? "i", tla.int(1)) ? "b",
-                    tla.assign(tla.prime(tla.name("x") ? "i") ? "i", tla.name("i") ? "i") ? "b"
-                ) ? "b"
-            ) ? "b")
+        .apalacheSkolem(tla.exists(
+            tla.name("i") ? "i",
+            tla.dotdot(tla.name("a") ? "i", tla.name("b") ? "i") ? "I",
+            tla.and(
+                tla.eql(tla.mod(tla.name("i") ? "i", tla.int(3)) ? "i", tla.int(1)) ? "b",
+                tla.assign(tla.prime(tla.name("x") ? "i") ? "i", tla.name("i") ? "i") ? "b",
+            ) ? "b",
+        ) ? "b")
         .typed(boolTypes, "b")
 
     val rewriter = create(rewriterType)

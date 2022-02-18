@@ -2,15 +2,16 @@ package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.lir.{
   BoolT1, ConstT1, FunT1, IntT1, NullEx, OperT1, RealT1, RecT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1, TupT1,
-  TypingException, UID, VarT1
+  TypingException, UID, VarT1,
 }
 
 /**
- * A substitution from constant names to types. It is very similar to Substitution. However, `ConstSubstitution` is meant
- * to replace constant types, e.g., ENTRY, with a concrete type, whereas `Substitution` replaces variables.
- * We use `ConstSubstitution` to implement aliases.
+ * A substitution from constant names to types. It is very similar to Substitution. However, `ConstSubstitution` is
+ * meant to replace constant types, e.g., ENTRY, with a concrete type, whereas `Substitution` replaces variables. We use
+ * `ConstSubstitution` to implement aliases.
  *
- * @param context a mapping from constant names to types.
+ * @param context
+ *   a mapping from constant names to types.
  */
 class ConstSubstitution(val context: Map[String, TlaType1]) {
   // we put an upper bound on the number of iterations in the closure computation, in case of cyclic dependencies
@@ -62,8 +63,8 @@ class ConstSubstitution(val context: Map[String, TlaType1]) {
 
   override def equals(other: Any): Boolean = other match {
     case that: ConstSubstitution =>
-      (that canEqual this) &&
-        context == that.context
+      (that.canEqual(this)) &&
+      context == that.context
     case _ => false
   }
 
@@ -87,7 +88,7 @@ class ConstSubstitution(val context: Map[String, TlaType1]) {
         search(elem)
 
       case TupT1(elems @ _*) =>
-        elems foreach search
+        elems.foreach(search)
 
       case SparseTupT1(fieldTypes) =>
         fieldTypes.foreach(p => search(p._2))

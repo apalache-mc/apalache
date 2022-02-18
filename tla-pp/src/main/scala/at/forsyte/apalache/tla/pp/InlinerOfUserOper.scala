@@ -10,13 +10,14 @@ import at.forsyte.apalache.tla.pp.InlinerOfUserOper.kStepParameters
 import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier}
 
 /**
- * <p>Attempts to instantiate the body of the operator named `name` with the provided arguments.
- * Returns None if the operator name is not a key in `bodyMap`, otherwise returns Some(b), where
- * b is the body of the operator with each formal parameter replaced by the corresponding value from `args`.</p>
+ * <p>Attempts to instantiate the body of the operator named `name` with the provided arguments. Returns None if the
+ * operator name is not a key in `bodyMap`, otherwise returns Some(b), where b is the body of the operator with each
+ * formal parameter replaced by the corresponding value from `args`.</p>
  *
  * <p>Throws IllegalArgumentException if the size of `args` does not match the operator arity.</p>
  *
- * @author Jure Kukovec
+ * @author
+ *   Jure Kukovec
  */
 class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker) extends TlaExTransformation {
 
@@ -60,9 +61,9 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker) ext
     // recursive processing of composite operators and let-in definitions
     case ex @ LetInEx(body, defs @ _*) =>
       // transform bodies of all op.defs
-      val newDefs = defs map tracker.trackOperDecl { d =>
+      val newDefs = defs.map(tracker.trackOperDecl { d =>
         d.copy(body = transform(stepLimitOpt)(d.body)).withTag(adjustedTag(d.typeTag))
-      }
+      })
       val newBody = transform(stepLimitOpt)(body)
       if (defs == newDefs && body == newBody) {
         ex
@@ -71,7 +72,7 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker) ext
       }
 
     case ex @ OperEx(op, args @ _*) =>
-      val newArgs = args map transform(stepLimitOpt)
+      val newArgs = args.map(transform(stepLimitOpt))
       if (args == newArgs) ex else OperEx(op, newArgs: _*)(ex.typeTag)
 
     case ex => ex
@@ -80,11 +81,13 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker) ext
   private def instantiateWithArgs(stepLimitOpt: Option[kStepParameters])(decl: TlaOperDecl, args: Seq[TlaEx]): TlaEx = {
     // Assumption: |decl.formalParams| = |args|
 
-    val postTr = stepLimitOpt map {
-      _.postTransform
-    } getOrElse {
-      Predef.identity[TlaEx] _
-    }
+    val postTr = stepLimitOpt
+      .map {
+        _.postTransform
+      }
+      .getOrElse {
+        Predef.identity[TlaEx] _
+      }
     // deep copy the body, to ensure uniqueness of the UIDs
     val bodyCopy = postTr(DeepCopy(tracker).deepCopyEx(decl.body))
 
@@ -115,13 +118,13 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker) ext
     }
 
     // the step limit, if it was defined, decreases by 1
-    val newStepLimit = stepLimitOpt map {
+    val newStepLimit = stepLimitOpt.map {
       _ - 1
     }
 
     // if further steps are allowed then recurse otherwise terminate with current result
     if (
-        newStepLimit forall {
+        newStepLimit.forall {
           _ > 0
         }
     ) {

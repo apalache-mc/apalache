@@ -6,7 +6,8 @@ import at.forsyte.apalache.tla.lir.TlaEx
 /**
  * A listener that is called when an expression is rewritten.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 trait SymbStateRewriterListener {
   def onRewrite(translatedEx: TlaEx, metricsDelta: SolverContextMetrics): Unit = {}

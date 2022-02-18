@@ -57,7 +57,7 @@ class KeraLanguagePred extends ContextualLanguagePred {
 
       case OperEx(oper, args @ _*)
           if oper == TlaSetOper.map || oper == TlaFunOper.funDef || oper == TlaFunOper.recFunDef =>
-        val evenArgs = args.zipWithIndex.filter { p => p._2 % 2 == 0 } map {
+        val evenArgs = args.zipWithIndex.filter { p => p._2 % 2 == 0 }.map {
           _._1
         }
         evenArgs.foldLeft[PredResult](PredResultOk()) { case (r, arg) =>

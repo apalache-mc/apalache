@@ -24,7 +24,10 @@ import com.typesafe.scalalogging.LazyLogging
  * @param nextPass
  *   next pass to call
  */
-class OptPassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator, tracker: TransformationTracker,
+class OptPassImpl @Inject() (
+    val options: PassOptions,
+    gen: UniqueNameGenerator,
+    tracker: TransformationTracker,
     writerFactory: TlaWriterFactory)
     extends OptPass with LazyLogging {
 

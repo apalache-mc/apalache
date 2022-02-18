@@ -1,10 +1,9 @@
 package at.forsyte.apalache.tla.lir
 
 /**
- * A declaration, e.g., of a variable, constant, or an operator.
- * Technically, this class should be called TlaDef, as we are dealing with
- * TLA+ definitions, see Specifying Systems, Ch. 17.3. Unfortunately, there are
- * variable declarations and operator definitions...
+ * A declaration, e.g., of a variable, constant, or an operator. Technically, this class should be called TlaDef, as we
+ * are dealing with TLA+ definitions, see Specifying Systems, Ch. 17.3. Unfortunately, there are variable declarations
+ * and operator definitions...
  */
 abstract class TlaDecl(implicit val typeTag: TypeTag) extends Identifiable with Serializable with TypeTagged[TlaDecl] {
   def name: String
@@ -13,8 +12,10 @@ abstract class TlaDecl(implicit val typeTag: TypeTag) extends Identifiable with 
 /**
  * A module as a basic unit that contains declarations.
  *
- * @param name         the module name
- * @param declarations all kinds of declarations
+ * @param name
+ *   the module name
+ * @param declarations
+ *   all kinds of declarations
  */
 case class TlaModule(name: String, declarations: Seq[TlaDecl]) extends Serializable {
   def constDeclarations: Seq[TlaConstDecl] = {
@@ -59,7 +60,8 @@ case class TlaVarDecl(name: String)(implicit typeTag: TypeTag) extends TlaDecl w
 /**
  * An assumption defined by ASSUME(...)
  *
- * @param body the assumption body
+ * @param body
+ *   the assumption body
  */
 case class TlaAssumeDecl(body: TlaEx)(implicit typeTag: TypeTag) extends TlaDecl with Serializable {
   val name: String = "ASSUME" + body.ID
@@ -73,12 +75,14 @@ case class TlaAssumeDecl(body: TlaEx)(implicit typeTag: TypeTag) extends TlaDecl
  * <p>If the operator is recursive, then the operator body contains OperEx(TlaOper.apply, NameEx(operName), ...).</p>
  *
  * <p>Note that the body is declared as a variable, which can be overwritten later. We need it to deal with INSTANCE.
- * Similarly, isRecursive is false by default, but it can be set to true during instantiation.
- * </p>
+ * Similarly, isRecursive is false by default, but it can be set to true during instantiation. </p>
  *
- * @param name         operator name
- * @param formalParams formal parameters
- * @param body         operator definition, that is a TLA+ expression that captures the operator definition
+ * @param name
+ *   operator name
+ * @param formalParams
+ *   formal parameters
+ * @param body
+ *   operator definition, that is a TLA+ expression that captures the operator definition
  */
 case class TlaOperDecl(name: String, formalParams: List[OperParam], var body: TlaEx)(implicit typeTag: TypeTag)
     extends TlaDecl with Serializable {
@@ -90,8 +94,10 @@ case class TlaOperDecl(name: String, formalParams: List[OperParam], var body: Tl
 
   // Temporary solution, until #345 is resolved
   def copy(
-      name: String = this.name, formalParams: List[OperParam] = this.formalParams, body: TlaEx = this.body,
-  )(implicit copyTypeTag: TypeTag = typeTag): TlaOperDecl = {
+      name: String = this.name,
+      formalParams: List[OperParam] = this.formalParams,
+      body: TlaEx = this.body,
+    )(implicit copyTypeTag: TypeTag = typeTag): TlaOperDecl = {
     val ret = TlaOperDecl(name, formalParams, body)(copyTypeTag)
     ret.isRecursive = this.isRecursive
     ret
@@ -103,8 +109,10 @@ case class TlaOperDecl(name: String, formalParams: List[OperParam], var body: Tl
 /**
  * <p>A THEOREM declaration. Currently, we do not support operators that are typically used in the proofs.</p>
  *
- * @param name theorem name
- * @param body theorem statement
+ * @param name
+ *   theorem name
+ * @param body
+ *   theorem statement
  */
 case class TlaTheoremDecl(name: String, body: TlaEx)(implicit typeTag: TypeTag) extends TlaDecl {
   override def withTag(newTypeTag: TypeTag): TlaTheoremDecl = TlaTheoremDecl(name, body)(newTypeTag)

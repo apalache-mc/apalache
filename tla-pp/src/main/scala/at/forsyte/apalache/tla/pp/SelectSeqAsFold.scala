@@ -7,8 +7,8 @@ import at.forsyte.apalache.tla.lir._
 /**
  * Replaces instances of SelectSeq, using the following definition:
  *
- * SelectSeq(seq, Test(_)) == LET CondAppend(s,e) == IF Test(e) THEN Append(s, e) ELSE s
- *                            IN FoldSeq( CondAppend, <<>>, seq )
+ * SelectSeq(seq, Test(_)) == LET CondAppend(s,e) == IF Test(e) THEN Append(s, e) ELSE s IN FoldSeq( CondAppend, <<>>,
+ * seq )
  */
 class SelectSeqAsFold(nameGenerator: UniqueNameGenerator, tracker: TransformationTracker) extends TlaExTransformation {
 
@@ -48,14 +48,14 @@ class SelectSeqAsFold(nameGenerator: UniqueNameGenerator, tracker: Transformatio
             TlaControlOper.ifThenElse,
             OperEx(TlaOper.apply, testNameEx, e())(Typed(BoolT1())),
             OperEx(TlaSeqOper.append, s(), e())(seqEx.typeTag),
-            s()
+            s(),
         )(seqEx.typeTag)
 
       val condAppDecl =
         TlaOperDecl(
             condAppOperName,
-            List(sParamName, eParamName) map { s => OperParam(s) },
-            condAppBody
+            List(sParamName, eParamName).map { s => OperParam(s) },
+            condAppBody,
         )(Typed(OperT1(Seq(SeqT1(seqElemType), seqElemType), SeqT1(seqElemType))))
 
       val foldEx =
@@ -63,18 +63,18 @@ class SelectSeqAsFold(nameGenerator: UniqueNameGenerator, tracker: Transformatio
             ApalacheOper.foldSeq,
             NameEx(condAppOperName)(condAppDecl.typeTag),
             OperEx(TlaFunOper.tuple)(seqEx.typeTag),
-            seqEx
+            seqEx,
         )(seqEx.typeTag)
 
       LetInEx(foldEx, condAppDecl)(foldEx.typeTag)
 
     case ex @ OperEx(op, args @ _*) =>
-      val newArgs = args map transform
+      val newArgs = args.map(transform)
       if (args == newArgs) ex else OperEx(op, newArgs: _*)(ex.typeTag)
 
     case ex @ LetInEx(body, defs @ _*) =>
       // Transform bodies of all op.defs
-      val newDefs = defs map tracker.trackOperDecl { d => d.copy(body = transform(d.body)) }
+      val newDefs = defs.map(tracker.trackOperDecl { d => d.copy(body = transform(d.body)) })
       val newBody = transform(body)
       if (defs == newDefs && body == newBody) ex else LetInEx(newBody, newDefs: _*)(ex.typeTag)
     case ex => ex

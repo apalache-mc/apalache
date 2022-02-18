@@ -12,7 +12,8 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 /**
  * Implements f[x] for: functions, records, and tuples.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val picker = new CherryPick(rewriter)
@@ -53,11 +54,15 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def applyRecord(state: SymbState, recordCell: ArenaCell, recEx: TlaEx, argEx: TlaEx,
+  private def applyRecord(
+      state: SymbState,
+      recordCell: ArenaCell,
+      recEx: TlaEx,
+      argEx: TlaEx,
       resultT: CellT): SymbState = {
     val key = argEx match {
       case ValEx(TlaStr(k)) => k
-      case _                => throw new RewriterException(s"Accessing a record $recEx with a non-constant key $argEx", argEx)
+      case _ => throw new RewriterException(s"Accessing a record $recEx with a non-constant key $argEx", argEx)
     }
     val fields = recordCell.cellType match {
       case RecordT(f) => f
@@ -73,7 +78,11 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def applyTuple(state: SymbState, tupleCell: ArenaCell, funEx: TlaEx, argEx: TlaEx): SymbState = {
+  private def applyTuple(
+      state: SymbState,
+      tupleCell: ArenaCell,
+      funEx: TlaEx,
+      argEx: TlaEx): SymbState = {
     val index = argEx match {
       case ValEx(TlaInt(i)) => i.toInt - 1
 

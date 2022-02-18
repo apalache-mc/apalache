@@ -29,7 +29,7 @@ class TestTlaToUJson extends AnyFunSuite with BeforeAndAfterEach with TestingPre
     val str = tla.str("abc").untyped()
     val bool = tla.bool(true).untyped()
 
-    val Seq(jsonInt, jsonStr, jsonBool) = Seq(int, str, bool) map {
+    val Seq(jsonInt, jsonStr, jsonBool) = Seq(int, str, bool).map {
       getEncVal
     }
 
@@ -44,9 +44,9 @@ class TestTlaToUJson extends AnyFunSuite with BeforeAndAfterEach with TestingPre
 
   test("TLA+ collections") {
     val set = tla.enumSet(tla.int(1), tla.int(2), tla.int(3)).untyped()
-    val tup = tla.tuple(Seq("x", "y", "z") map tla.str: _*).untyped()
+    val tup = tla.tuple(Seq("x", "y", "z").map(tla.str): _*).untyped()
 
-    val Seq(jsonSeq, jsonTup) = Seq(set, tup) map {
+    val Seq(jsonSeq, jsonTup) = Seq(set, tup).map {
       getEncVal
     }
 
@@ -113,7 +113,7 @@ class TestTlaToUJson extends AnyFunSuite with BeforeAndAfterEach with TestingPre
     recursive.isRecursive = true
 
     val jsons @ Seq(jsonNullary, jsonUnary, jsonHO, jsonRec) =
-      Seq(nullary, unary, higherOrder, recursive) map getEncVal
+      Seq(nullary, unary, higherOrder, recursive).map(getEncVal)
 
     assert(jsons.forall { _(kindField).str == "TlaOperDecl" })
     assert(jsons.forall { _("name").str == "T" })

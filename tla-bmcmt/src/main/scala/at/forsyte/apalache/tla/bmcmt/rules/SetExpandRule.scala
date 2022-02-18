@@ -9,7 +9,8 @@ import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaSetOper}
  * This rule expands a powerset, that is, SUBSET S for a set S. In the future, it might also expand a set of functions,
  * that is, [S -> T], but this does not seem to be practical.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class SetExpandRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {

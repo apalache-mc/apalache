@@ -16,7 +16,7 @@ trait TestSymbStateDecoder extends RewriterBase {
   private val boolT = parser("Bool")
   private val intSeqT = parser("Seq(Int)")
 
-  private def pair(i: Int, j: Int): TlaEx = tuple(int(i), int(j)) as int2
+  private def pair(i: Int, j: Int): TlaEx = tuple(int(i), int(j)).as(int2)
 
   test("decode bool") { rewriterType: SMTEncoding =>
     val originalEx: TlaEx = bool(true).typed()
@@ -29,7 +29,7 @@ trait TestSymbStateDecoder extends RewriterBase {
     val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
     assert(originalEx == decodedEx)
     // hard core comparison
-    val eq = eql(decodedEx, originalEx) as boolT
+    val eq = eql(decodedEx, originalEx).as(boolT)
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
@@ -44,7 +44,7 @@ trait TestSymbStateDecoder extends RewriterBase {
     val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
     assert(originalEx == decodedEx)
     // hard core comparison
-    val eq = eql(decodedEx, originalEx) as boolT
+    val eq = eql(decodedEx, originalEx).as(boolT)
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
@@ -59,12 +59,12 @@ trait TestSymbStateDecoder extends RewriterBase {
     val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
     assert(originalEx == decodedEx)
     // hard core comparison
-    val eq = eql(decodedEx, originalEx) as boolT
+    val eq = eql(decodedEx, originalEx).as(boolT)
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
   test("decode Int set") { rewriterType: SMTEncoding =>
-    val originalEx = intSet() as intSetT
+    val originalEx = intSet().as(intSetT)
     val state = new SymbState(originalEx, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -76,7 +76,7 @@ trait TestSymbStateDecoder extends RewriterBase {
   }
 
   test("decode Nat set") { rewriterType: SMTEncoding =>
-    val originalEx = natSet() as intSetT
+    val originalEx = natSet().as(intSetT)
     val state = new SymbState(originalEx, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -88,8 +88,8 @@ trait TestSymbStateDecoder extends RewriterBase {
   }
 
   test("decode set") { rewriterType: SMTEncoding =>
-    val originalEx = enumSet(int(2), int(1), int(2)) as intSetT
-    val simpleOriginalEx: TlaEx = enumSet(int(1), int(2)) as intSetT
+    val originalEx = enumSet(int(2), int(1), int(2)).as(intSetT)
+    val simpleOriginalEx: TlaEx = enumSet(int(1), int(2)).as(intSetT)
     val state = new SymbState(originalEx, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -99,14 +99,14 @@ trait TestSymbStateDecoder extends RewriterBase {
     val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
     assert(simpleOriginalEx == decodedEx)
     // hard core comparison
-    val eq = eql(decodedEx as intSetT, simpleOriginalEx as intSetT) as boolT
+    val eq = eql(decodedEx.as(intSetT), simpleOriginalEx.as(intSetT)).as(boolT)
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
   test("decode fun set") { rewriterType: SMTEncoding =>
-    val domEx = enumSet(int(1), int(2)) as intSetT
-    val cdmEx = enumSet(int(3), int(4)) as intSetT
-    val originalEx = funSet(domEx, cdmEx) as intToIntSetT
+    val domEx = enumSet(int(1), int(2)).as(intSetT)
+    val cdmEx = enumSet(int(3), int(4)).as(intSetT)
+    val originalEx = funSet(domEx, cdmEx).as(intToIntSetT)
     val state = new SymbState(originalEx, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -116,13 +116,13 @@ trait TestSymbStateDecoder extends RewriterBase {
     val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
     assert(originalEx == decodedEx)
     // hard core comparison
-    val eq = eql(decodedEx, originalEx) as boolT
+    val eq = eql(decodedEx, originalEx).as(boolT)
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
   test("decode SUBSET S") { rewriterType: SMTEncoding =>
-    val set = enumSet(int(1), int(2)) as intSetT
-    val powset = powSet(set) as intSetSetT
+    val set = enumSet(int(1), int(2)).as(intSetT)
+    val powset = powSet(set).as(intSetSetT)
     val state = new SymbState(powset, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -134,9 +134,9 @@ trait TestSymbStateDecoder extends RewriterBase {
   }
 
   test("decode fun") { rewriterType: SMTEncoding =>
-    val domEx = enumSet(int(1), int(2)) as intSetT
+    val domEx = enumSet(int(1), int(2)).as(intSetT)
     val funEx =
-      funDef(plus(name("x") as intT, int(1)) as intT, name("x") as intT, domEx) as intToIntT
+      funDef(plus(name("x").as(intT), int(1)).as(intT), name("x").as(intT), domEx).as(intToIntT)
     val state = new SymbState(funEx, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -146,16 +146,16 @@ trait TestSymbStateDecoder extends RewriterBase {
     val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
 
     val expectedOutcome: TlaEx =
-      apalacheSetAsFun(enumSet(pair(1, 2), pair(2, 3)) as SetT1(int2)) as intToIntT
+      apalacheSetAsFun(enumSet(pair(1, 2), pair(2, 3)).as(SetT1(int2))).as(intToIntT)
     assert(expectedOutcome == decodedEx)
   }
 
   // See https://github.com/informalsystems/apalache/issues/962
   test("decode fun does not show duplicate indices") { rewriterType: SMTEncoding =>
     // The specified domain includes duplicate values
-    val domEx = enumSet(int(1), int(1)) as intSetT
+    val domEx = enumSet(int(1), int(1)).as(intSetT)
     // But the expected domain after decoding should only include a single occurance
-    val funEx = funDef(plus(name("x") as intT, int(1)) as intT, name("x") as intT, domEx) as intToIntT
+    val funEx = funDef(plus(name("x").as(intT), int(1)).as(intT), name("x").as(intT), domEx).as(intToIntT)
     val state = new SymbState(funEx, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -163,13 +163,13 @@ trait TestSymbStateDecoder extends RewriterBase {
     val cell = nextState.asCell
     val decoder = new SymbStateDecoder(solverContext, rewriter)
     val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
-    val expectedOutcome = apalacheSetAsFun(enumSet(tuple(int(1), int(2)) as int2) as SetT1(int2)) as intToIntT
+    val expectedOutcome = apalacheSetAsFun(enumSet(tuple(int(1), int(2)).as(int2)).as(SetT1(int2))).as(intToIntT)
     assert(expectedOutcome == decodedEx)
   }
 
   test("decode statically empty fun") { rewriterType: SMTEncoding =>
-    val domEx = enumSet() as intSetT
-    val funEx = funDef(plus(name("x") as intT, int(1)) as intT, name("x") as intT, domEx) as intToIntT
+    val domEx = enumSet().as(intSetT)
+    val funEx = funDef(plus(name("x").as(intT), int(1)).as(intT), name("x").as(intT), domEx).as(intToIntT)
     val state = new SymbState(funEx, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -178,7 +178,7 @@ trait TestSymbStateDecoder extends RewriterBase {
     val decoder = new SymbStateDecoder(solverContext, rewriter)
     val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
     // the function of empty domain is simply SetAsFun({})
-    val expectedOutcome = apalacheSetAsFun(enumSet() as SetT1(int2)) as intToIntT
+    val expectedOutcome = apalacheSetAsFun(enumSet().as(SetT1(int2))).as(intToIntT)
     assert(expectedOutcome == decodedEx)
     assertTlaExAndRestore(rewriter, nextState.setRex(eql(decodedEx, funEx).typed(BoolT1())))
   }
@@ -186,13 +186,13 @@ trait TestSymbStateDecoder extends RewriterBase {
   test("decode dynamically empty fun") { rewriterType: SMTEncoding =>
     // this domain is not empty at the arena level, but it is in every SMT model
     def dynEmpty(left: BuilderEx): BuilderEx = {
-      filter(name("t") as intT, left, bool(false) as boolT)
+      filter(name("t").as(intT), left, bool(false).as(boolT))
     }
 
-    val domEx = dynEmpty(enumSet(int(1)) as intSetT) as intSetT
+    val domEx = dynEmpty(enumSet(int(1)).as(intSetT)).as(intSetT)
     // [ x \in {} |-> x + 1 ]
     val funEx =
-      funDef(plus(name("x") as intT, int(1)) as intT, name("x") as intT, domEx) as intToIntT
+      funDef(plus(name("x").as(intT), int(1)).as(intT), name("x").as(intT), domEx).as(intToIntT)
     val state = new SymbState(funEx, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -201,7 +201,7 @@ trait TestSymbStateDecoder extends RewriterBase {
     val decoder = new SymbStateDecoder(solverContext, rewriter)
     val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
     // the function of empty domain is simply SetAsFun({})
-    val expectedOutcome = apalacheSetAsFun(enumSet() as SetT1(int2)) as intToIntT
+    val expectedOutcome = apalacheSetAsFun(enumSet().as(SetT1(int2))).as(intToIntT)
     assert(expectedOutcome == decodedEx)
     // we cannot directly compare the outcome, as it comes in the same form as a record
     assertTlaExAndRestore(rewriter, nextState.setRex(eql(decodedEx, funEx).typed(BoolT1())))
@@ -209,8 +209,8 @@ trait TestSymbStateDecoder extends RewriterBase {
 
   test("decode sequence") { rewriterType: SMTEncoding =>
     val seqEx =
-      tuple(int(1), int(2), int(3), int(4)) as intSeqT
-    val subseqEx = subseq(seqEx, int(2), int(3)) as intSeqT
+      tuple(int(1), int(2), int(3), int(4)).as(intSeqT)
+    val subseqEx = subseq(seqEx, int(2), int(3)).as(intSeqT)
     val state = new SymbState(subseqEx, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -218,13 +218,13 @@ trait TestSymbStateDecoder extends RewriterBase {
     val cell = nextState.asCell
     val decoder = new SymbStateDecoder(solverContext, rewriter)
     val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
-    val expected = tuple(int(2), int(3)) as intSeqT
+    val expected = tuple(int(2), int(3)).as(intSeqT)
     assert(expected == decodedEx)
   }
 
   test("decode tuple") { rewriterType: SMTEncoding =>
     val tupleEx: TlaEx =
-      tuple(int(1), int(2), int(3)) as parser("<<Int, Int, Int>>")
+      tuple(int(1), int(2), int(3)).as(parser("<<Int, Int, Int>>"))
     val state = new SymbState(tupleEx, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -237,7 +237,7 @@ trait TestSymbStateDecoder extends RewriterBase {
 
   test("decode record") { rewriterType: SMTEncoding =>
     val recEx =
-      enumFun(str("a"), int(1), str("b"), bool(true)) as parser("[a: Int, b: Bool]")
+      enumFun(str("a"), int(1), str("b"), bool(true)).as(parser("[a: Int, b: Bool]"))
     val state = new SymbState(recEx, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)

@@ -81,10 +81,10 @@ class TestReplaceFixed extends AnyFunSuite with TestingPredefs {
         pa5,
         pa6,
     )
-    val cmp = expected map { case (k, v) =>
+    val cmp = expected.map { case (k, v) =>
       (v, transformation(k))
     }
-    cmp foreach { case (ex, act) =>
+    cmp.foreach { case (ex, act) =>
       assert(ex == act)
     }
   }

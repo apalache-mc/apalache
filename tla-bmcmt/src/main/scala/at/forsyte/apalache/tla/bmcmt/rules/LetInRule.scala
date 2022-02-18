@@ -10,7 +10,8 @@ object LetInRule {
 /**
  * A simple translation of LET ... IN that supports only the operators without arguments.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class LetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
@@ -36,8 +37,7 @@ class LetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   private def bindOperator(state: SymbState, decl: TlaOperDecl): SymbState = {
     if (decl.formalParams.nonEmpty) {
-      throw new RewriterException(
-          "Found unexpanded %d-ary LET-IN %s. This is a preprocessing bug."
+      throw new RewriterException("Found unexpanded %d-ary LET-IN %s. This is a preprocessing bug."
             .format(decl.formalParams.size, decl.name), state.ex)
     }
 

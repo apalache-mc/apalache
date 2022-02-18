@@ -3,31 +3,32 @@ package at.forsyte.apalache.io.annotations.parser
 /**
  * <p>This class preprocesses comments as they are produced by SANY and does the following:</p>
  *
- * <ul>
- * <li>Unconditionally remove the comment tokens: (*, *), and \*.</li>
- * <li>Extract candidates for annotations.</li>
- * <li>Exclude candidates for annotations in double comments, e.g., (* (* ... *) *).</li>
- * <li>Preserve the text outside the annotations and double comments.
- * </ul>
+ * <ul> <li>Unconditionally remove the comment tokens: (*, *), and \*.</li> <li>Extract candidates for annotations.</li>
+ * <li>Exclude candidates for annotations in double comments, e.g., (* (* ... *) *).</li> <li>Preserve the text outside
+ * the annotations and double comments. </ul>
  *
- * <p>The main design principle of the preprocessor is that it should not fail on any input.
- * The preprocessor should respect the structure of the comments, but it may return ill-formed
- * annotations, if they are ill-formed in the original text. This preprocessor prunes the comment
- * tokens, even in arguably valid cases (e.g., inside a string). Although it is usually not a good idea
- * to write an ad-hoc lexer, it is not obvious to me, how to use a lexer generator here.
- * However, if someone knows how to write this preprocessor with a lexer generator, it would be great!
+ * <p>The main design principle of the preprocessor is that it should not fail on any input. The preprocessor should
+ * respect the structure of the comments, but it may return ill-formed annotations, if they are ill-formed in the
+ * original text. This preprocessor prunes the comment tokens, even in arguably valid cases (e.g., inside a string).
+ * Although it is usually not a good idea to write an ad-hoc lexer, it is not obvious to me, how to use a lexer
+ * generator here. However, if someone knows how to write this preprocessor with a lexer generator, it would be great!
  * </p>
  *
  * <p>See the annotations HOWTO: https://apalache.informal.systems/docs/HOWTOs/howto-write-type-annotations.html</p>
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class CommentPreprocessor {
   private val tokenRegex = """(\n|\\\*|\(\*|\*\)|[ \t\n\r]@[a-zA-Z_][a-zA-Z0-9_]*|\)|;|")""".r
 
   // internal state of the preprocessor
-  private case class State(inOneLineComment: Boolean = false, multiCommentLevel: Int = 0,
-      inParensAnnotation: Boolean = false, inColonAnnotation: Boolean = false, inString: Boolean = false) {
+  private case class State(
+      inOneLineComment: Boolean = false,
+      multiCommentLevel: Int = 0,
+      inParensAnnotation: Boolean = false,
+      inColonAnnotation: Boolean = false,
+      inString: Boolean = false) {
     def enterParensAnnotation(): State = {
       // when entering an annotation, we can be neither inside a string, nor in another annotation
       this.copy(inParensAnnotation = true, inColonAnnotation = false, inString = false)
@@ -91,8 +92,10 @@ class CommentPreprocessor {
   /**
    * Given a multiline string, remove noisy tokens and find potential annotations.
    *
-   * @param text input string
-   * @return the string without the noisy tokens and potential annotations and potential annotations
+   * @param text
+   *   input string
+   * @return
+   *   the string without the noisy tokens and potential annotations and potential annotations
    */
   def apply(text: String): (String, List[String]) = {
     val textBuilder = new StringBuilder()

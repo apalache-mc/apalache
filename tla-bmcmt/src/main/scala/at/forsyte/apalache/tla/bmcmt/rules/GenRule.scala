@@ -9,7 +9,8 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaType1, ValEx}
 /**
  * Implements a rule for Apalache!Gen.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class GenRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {

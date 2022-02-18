@@ -3,7 +3,8 @@ package at.forsyte.apalache.tla.lir.oper
 /**
  * An abstract class of arithmetic operators.
  *
- * @author jkukovec
+ * @author
+ *   jkukovec
  */
 
 abstract class TlaArithOper extends TlaOper {
@@ -11,18 +12,18 @@ abstract class TlaArithOper extends TlaOper {
 }
 
 /**
- * <p>Arithmetic operators in TLA+ (as defined in Naturals, Integers, and Reals).
- * Note that modules inherit operator definitions. In other words,
- * Reals inherits definitions of + and - from Integers, which inherit definitions from Naturals.
- * Thus, though these operators are semantically different, these operators are introduced using
- * the same definition in TLA+ tools. We also instantiate each operator only once.</p>
+ * <p>Arithmetic operators in TLA+ (as defined in Naturals, Integers, and Reals). Note that modules inherit operator
+ * definitions. In other words, Reals inherits definitions of + and - from Integers, which inherit definitions from
+ * Naturals. Thus, though these operators are semantically different, these operators are introduced using the same
+ * definition in TLA+ tools. We also instantiate each operator only once.</p>
  *
- * <p>Alternatively, we could have introduced multiple copies of each operator (for Naturals, Integers, and Reals)
- * and use the most general operator, e.g., using addition on reals, when a module extends Reals.
- * However, this would not give us precise type information when one mixes integer and real arithmetic.
- * Consequently, we use just one copy per operator and hope that type analysis would be able to infer tighter types.</p>
+ * <p>Alternatively, we could have introduced multiple copies of each operator (for Naturals, Integers, and Reals) and
+ * use the most general operator, e.g., using addition on reals, when a module extends Reals. However, this would not
+ * give us precise type information when one mixes integer and real arithmetic. Consequently, we use just one copy per
+ * operator and hope that type analysis would be able to infer tighter types.</p>
  *
- * @author jkukovec, konnov
+ * @author
+ *   jkukovec, konnov
  */
 object TlaArithOper {
 
@@ -104,8 +105,8 @@ object TlaArithOper {
   }
 
   /**
-   * An integer/natural range as a set: `a..b`. Both `a` and `b` are included. It can be understood as
-   * `{ i \in Int: a <= i /\ i <= b }`.
+   * An integer/natural range as a set: `a..b`. Both `a` and `b` are included. It can be understood as `{ i \in Int: a
+   * <= i /\ i <= b }`.
    */
   object dotdot extends TlaArithOper {
     override val arity = FixedArity(2)

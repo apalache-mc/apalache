@@ -5,12 +5,13 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 
 /**
- * <p> Replaces ass assignment candidates of the form x' = e, which satisfy the predicate `isAssignment`,
- * into a special assignment form, x' <- e, for optimization purposes. </p>
+ * <p> Replaces ass assignment candidates of the form x' = e, which satisfy the predicate `isAssignment`, into a special
+ * assignment form, x' <- e, for optimization purposes. </p>
  */
 class AssignmentOperatorIntroduction(
-    isAssignment: UID => Boolean, tracker: TransformationTracker
-) extends TlaExTransformation {
+    isAssignment: UID => Boolean,
+    tracker: TransformationTracker)
+    extends TlaExTransformation {
   private var uidReplacementMap: Map[UID, UID] = Map.empty
 
   override def apply(expr: TlaEx): TlaEx = {
@@ -24,7 +25,7 @@ class AssignmentOperatorIntroduction(
       ret
 
     case ex @ OperEx(op, args @ _*) =>
-      val newArgs = args map transform
+      val newArgs = args.map(transform)
       if (args == newArgs) ex else OperEx(op, newArgs: _*)(ex.typeTag)
 
     case ex @ LetInEx(body, defs @ _*) =>

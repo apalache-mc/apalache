@@ -11,7 +11,8 @@ import scala.collection.immutable.SortedSet
 /**
  * Given a type, this class produces a default value for that type. This is needed by ChooseRule and FunAppRule.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class DefaultValueFactory(rewriter: SymbStateRewriter) {
   def makeUpValue(state: SymbState, set: ArenaCell): SymbState = {
@@ -20,9 +21,12 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
 
   /**
    * Produce a default value that, for instance, can be used as a value when picking from an empty set.
-   * @param state a symbolic state
-   * @param cellType a cell type FinSetT(...)
-   * @return a new symbolic state that contains the new value as the expression
+   * @param state
+   *   a symbolic state
+   * @param cellType
+   *   a cell type FinSetT(...)
+   * @return
+   *   a new symbolic state that contains the new value as the expression
    */
   def makeUpValue(state: SymbState, cellType: CellT): SymbState = {
     // TODO: introduce a cache for default values, otherwise there will be many identical copies

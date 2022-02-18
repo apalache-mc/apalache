@@ -311,7 +311,7 @@ class TestKeramelizer extends AnyFunSuite with Checkers with BeforeAndAfterEach 
       inputPred.isExprOk(ex) == PredResultOk() ==> {
         val keramelized = keramelizer(ex)
         val inKera = outputPred.isExprOk(keramelized)
-        inKera shouldBe PredResultOk() withClue s"when keramelizing $ex to $keramelized"
+        (inKera shouldBe PredResultOk()).withClue(s"when keramelizing $ex to $keramelized")
         true
       }
     }

@@ -27,12 +27,12 @@ class DeepCopy(tracker: TransformationTracker) {
     case e @ ValEx(v)  => ValEx(v)(e.typeTag)
     case e @ NameEx(n) => NameEx(n)(e.typeTag)
     case e @ LetInEx(body, decls @ _*) =>
-      LetInEx(deepCopyEx(body), decls map deepCopyDecl: _*)(e.typeTag)
+      LetInEx(deepCopyEx(body), decls.map(deepCopyDecl): _*)(e.typeTag)
     case e @ OperEx(oper, args @ _*) =>
-      OperEx(oper, args map deepCopyEx: _*)(e.typeTag)
+      OperEx(oper, args.map(deepCopyEx): _*)(e.typeTag)
   }
 
-  def deepCopyModule(module: TlaModule) = new TlaModule(module.name, module.declarations map deepCopyDecl)
+  def deepCopyModule(module: TlaModule) = new TlaModule(module.name, module.declarations.map(deepCopyDecl))
 }
 
 object DeepCopy {

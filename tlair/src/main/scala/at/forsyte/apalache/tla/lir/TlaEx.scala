@@ -4,8 +4,8 @@ import at.forsyte.apalache.tla.lir.io.UTFPrinter
 import at.forsyte.apalache.tla.lir.oper.{FixedArity, TlaOper}
 
 /**
- * An abstract TLA+ expression. Note that the class is sealed, so we allow only a limited set of values.
- * Importantly, `TlaEx` accepts an implicit type tag.
+ * An abstract TLA+ expression. Note that the class is sealed, so we allow only a limited set of values. Importantly,
+ * `TlaEx` accepts an implicit type tag.
  */
 sealed abstract class TlaEx(implicit val typeTag: TypeTag)
     extends Identifiable with Serializable with TypeTagged[TlaEx] {
@@ -15,11 +15,10 @@ sealed abstract class TlaEx(implicit val typeTag: TypeTag)
 }
 
 /**
- * This is a special expression that indicates that this expression does not have a meaningful value.
- * For instance, this expression can be used as the body of a library operator, which by default have
- * gibberish definitions by SANY.
- * We could use Option[TlaEx], but that would introduce unnecessary many pattern matches, as NoneEx is rare.
- * NullEx is always untyped.
+ * This is a special expression that indicates that this expression does not have a meaningful value. For instance, this
+ * expression can be used as the body of a library operator, which by default have gibberish definitions by SANY. We
+ * could use Option[TlaEx], but that would introduce unnecessary many pattern matches, as NoneEx is rare. NullEx is
+ * always untyped.
  */
 object NullEx extends TlaEx()(typeTag = Untyped()) with Serializable {
   // null expressions always carry the Untyped tag
@@ -27,16 +26,15 @@ object NullEx extends TlaEx()(typeTag = Untyped()) with Serializable {
 }
 
 /**
- * A constant TLA+ value, which is usually a literal such as: 42, TRUE, "foo", BOOLEAN.
- * Importantly, `ValEx` accepts an implicit type tag.
+ * A constant TLA+ value, which is usually a literal such as: 42, TRUE, "foo", BOOLEAN. Importantly, `ValEx` accepts an
+ * implicit type tag.
  */
 case class ValEx(value: TlaValue)(implicit typeTag: TypeTag) extends TlaEx with Serializable {
   override def withTag(newTypeTag: TypeTag): ValEx = ValEx(value)(newTypeTag)
 }
 
 /**
- * Referring by name to a variable, constant, operator, etc.
- * Importantly, `NameEx` accepts an implicit type tag.
+ * Referring by name to a variable, constant, operator, etc. Importantly, `NameEx` accepts an implicit type tag.
  */
 case class NameEx(name: String)(implicit typeTag: TypeTag) extends TlaEx with Serializable {
   override def withTag(newTypeTag: TypeTag): NameEx = NameEx(name)(newTypeTag)
@@ -51,16 +49,16 @@ case class LetInEx(body: TlaEx, decls: TlaOperDecl*)(implicit typeTag: TypeTag) 
 }
 
 /**
- * Application of a built-in operator. The standard operator `TlaOper.apply` allows us
- * to apply a user-defined operator (defined with `TlaOperDecl`) or an operator that is passed via a parameter
- * (that is, `OperFormalParam`). Importantly, `OperEx` accepts an implicit type tag.
+ * Application of a built-in operator. The standard operator `TlaOper.apply` allows us to apply a user-defined operator
+ * (defined with `TlaOperDecl`) or an operator that is passed via a parameter (that is, `OperFormalParam`). Importantly,
+ * `OperEx` accepts an implicit type tag.
  */
 case class OperEx(oper: TlaOper, args: TlaEx*)(implicit typeTag: TypeTag) extends TlaEx with Serializable {
   require(oper.isCorrectArity(args.size),
-      "unexpected arity %d in %s applied to %s".format(args.size, oper.name, args.map(_.toString) mkString ", "))
+      "unexpected arity %d in %s applied to %s".format(args.size, oper.name, args.map(_.toString).mkString(", ")))
 
   require(oper.permitsArgs(args),
-      "The invariant of %s is violated by the arguments: %s".format(oper.name, args.map(_.toString) mkString ", "))
+      "The invariant of %s is violated by the arguments: %s".format(oper.name, args.map(_.toString).mkString(", ")))
 
   override def withTag(newTypeTag: TypeTag): TlaEx = {
     OperEx(oper, args: _*)(newTypeTag)

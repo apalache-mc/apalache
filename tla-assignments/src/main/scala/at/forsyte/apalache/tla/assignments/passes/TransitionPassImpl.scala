@@ -20,8 +20,13 @@ import java.nio.file.Path
 /**
  * This pass finds symbolic transitions in Init and Next.
  */
-class TransitionPassImpl @Inject() (options: PassOptions, sourceStore: SourceStore, tracker: TransformationTracker,
-    changeListener: ChangeListener, incrementalRenaming: IncrementalRenaming, writerFactory: TlaWriterFactory)
+class TransitionPassImpl @Inject() (
+    options: PassOptions,
+    sourceStore: SourceStore,
+    tracker: TransformationTracker,
+    changeListener: ChangeListener,
+    incrementalRenaming: IncrementalRenaming,
+    writerFactory: TlaWriterFactory)
     extends TransitionPass with LazyLogging {
 
   override def name: String = "TransitionFinderPass"

@@ -31,7 +31,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
         "i_TO_B" -> FunT1(IntT1(), SetT1(BoolT1())),
         "i_TO_i_to_B" -> SetT1(FunT1(IntT1(), FunT1(IntT1(), SetT1(BoolT1())))),
         "i_to_i_to_B" -> FunT1(IntT1(), FunT1(IntT1(), SetT1(BoolT1()))),
-        "i_to_b_to_b" -> FunT1(IntT1(), FunT1(BoolT1(), BoolT1()))
+        "i_to_b_to_b" -> FunT1(IntT1(), FunT1(BoolT1(), BoolT1())),
     )
 
   test("""[{1, 2, 3} -> {FALSE, TRUE}]""") { rewriterType: SMTEncoding =>
@@ -180,8 +180,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
         .typed(types, "I")
     }
 
-    val domain1 = setminus(
-        enumSet(0.to(2).map(int): _*)
+    val domain1 = setminus(enumSet(0.to(2).map(int): _*)
           .typed(types, "I"), 0)
     val domain2 = enumSet(1.to(2).map(int): _*)
       .typed(types, "I")

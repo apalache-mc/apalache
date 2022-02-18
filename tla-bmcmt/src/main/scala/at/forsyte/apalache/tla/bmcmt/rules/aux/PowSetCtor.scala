@@ -55,7 +55,7 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
     }
     val subsets =
       if (elems.nonEmpty) {
-        BigInt(0).to(powSetSize - 1) map mkSetByNum
+        BigInt(0).to(powSetSize - 1).map(mkSetByNum)
       } else {
         // the set is statically empty: just introduce an empty set
         arena = arena.appendCell(set.cellType)

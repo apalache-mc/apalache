@@ -29,7 +29,8 @@ object NormalizedNames {
   /**
    * Extract operator names from the standard option names.
    *
-   * @param options the options object
+   * @param options
+   *   the options object
    * @return
    */
   def userOperatorNamesFromOptions(options: PassOptions): List[String] = {
@@ -42,8 +43,10 @@ object NormalizedNames {
 
   /**
    * Has been an operator declaration produced by the VCGenerator
-   * @param decl an operator declaration
-   * @return true, if the operator name matches the VC pattern
+   * @param decl
+   *   an operator declaration
+   * @return
+   *   true, if the operator name matches the VC pattern
    */
   def isVC(decl: TlaDecl): Boolean = {
     decl.isInstanceOf[TlaOperDecl] &&
@@ -52,11 +55,12 @@ object NormalizedNames {
   }
 
   /**
-   * Does a declaration present a temporal property.
-   * (Temporal properties are not supported by Apalache yet.)
+   * Does a declaration present a temporal property. (Temporal properties are not supported by Apalache yet.)
    *
-   * @param decl an operator declaration
-   * @return true, if the operator name starts with the VC_TEMPORAL_PROP_PREFIX
+   * @param decl
+   *   an operator declaration
+   * @return
+   *   true, if the operator name starts with the VC_TEMPORAL_PROP_PREFIX
    */
   def isTemporalVC(decl: TlaDecl): Boolean = {
     decl.isInstanceOf[TlaOperDecl] &&
@@ -67,8 +71,10 @@ object NormalizedNames {
   /**
    * Does an operator define the constant initializer (there is only one).
    *
-   * @param decl an operator declaration
-   * @return true, if the operator is a constant initializer
+   * @param decl
+   *   an operator declaration
+   * @return
+   *   true, if the operator is a constant initializer
    */
   def isConstInit(decl: TlaDecl): Boolean = {
     decl.isInstanceOf[TlaOperDecl] &&
@@ -79,8 +85,10 @@ object NormalizedNames {
   /**
    * Does an operator define an init predicate (there may be several).
    *
-   * @param decl an operator declaration
-   * @return true, if the operator is a state initializer
+   * @param decl
+   *   an operator declaration
+   * @return
+   *   true, if the operator is a state initializer
    */
   def isInit(decl: TlaDecl): Boolean = {
     decl.isInstanceOf[TlaOperDecl] &&
@@ -91,8 +99,10 @@ object NormalizedNames {
   /**
    * Does an operator define a transition predicate (there may be several).
    *
-   * @param decl an operator declaration
-   * @return true, if the operator is a transition predicate
+   * @param decl
+   *   an operator declaration
+   * @return
+   *   true, if the operator is a transition predicate
    */
   def isNext(decl: TlaOperDecl): Boolean = {
     decl.isInstanceOf[TlaOperDecl] &&

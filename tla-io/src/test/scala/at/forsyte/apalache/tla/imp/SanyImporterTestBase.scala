@@ -33,7 +33,7 @@ trait SanyImporterTestBase extends AnyFunSuite with BeforeAndAfter {
         }
 
       case OperEx(_, args @ _*) =>
-        args flatMap collectDefs
+        args.flatMap(collectDefs)
 
       case _ =>
         List()
@@ -43,7 +43,7 @@ trait SanyImporterTestBase extends AnyFunSuite with BeforeAndAfter {
       assertForDecl(decl)
       decl match {
         case operDecl: TlaOperDecl =>
-          collectDefs(operDecl.body) foreach assertForDecl
+          collectDefs(operDecl.body).foreach(assertForDecl)
 
         case _ => ()
       }
@@ -51,8 +51,9 @@ trait SanyImporterTestBase extends AnyFunSuite with BeforeAndAfter {
   }
 
   def expectOperDecl(
-      name: String, params: List[OperParam], body: TlaEx,
-  ): (TlaDecl => Unit) = {
+      name: String,
+      params: List[OperParam],
+      body: TlaEx): (TlaDecl => Unit) = {
     case d: TlaOperDecl =>
       assert(name == d.name)
       assert(params == d.formalParams)
@@ -73,8 +74,10 @@ trait SanyImporterTestBase extends AnyFunSuite with BeforeAndAfter {
   }
 
   def findAndExpectOperDecl(
-      mod: TlaModule, name: String, params: List[OperParam], body: TlaEx,
-  ): Unit = {
+      mod: TlaModule,
+      name: String,
+      params: List[OperParam],
+      body: TlaEx): Unit = {
     mod.declarations.find {
       _.name == name
     } match {

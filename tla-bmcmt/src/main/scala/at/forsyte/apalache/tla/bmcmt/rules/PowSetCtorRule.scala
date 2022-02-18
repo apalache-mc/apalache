@@ -8,7 +8,8 @@ import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 /**
  * Rewrites the powerset SUBSET S for a set S.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class PowSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {

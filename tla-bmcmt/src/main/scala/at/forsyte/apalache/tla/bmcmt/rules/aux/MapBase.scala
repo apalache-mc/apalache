@@ -13,18 +13,24 @@ import at.forsyte.apalache.tla.pp.TlaInputError
  * The base rules for a set map {e : x ∈ S}. This class was extracted from SetMapRule, as it was used in other rules
  * that are now obsolete. Due to the general nature of this mapping, we keep it in a separate class.
  *
- * @param rewriter the symbolic rewriter
- * @author Igor Konnov
+ * @param rewriter
+ *   the symbolic rewriter
+ * @author
+ *   Igor Konnov
  */
 class MapBase(rewriter: SymbStateRewriter) {
 
   /**
    * <p>Implement a mapping { e: x_1 ∈ S_1, ..., x_n ∈ S_n }.</p>
    *
-   * <p>This implementation computes the cross product and maps every cell using the map expression.
-   * It is not truly symbolic, we have to find a better way.</p>
+   * <p>This implementation computes the cross product and maps every cell using the map expression. It is not truly
+   * symbolic, we have to find a better way.</p>
    */
-  def rewriteSetMapManyArgs(state: SymbState, mapEx: TlaEx, varNames: Seq[String], setEs: Seq[TlaEx]): SymbState = {
+  def rewriteSetMapManyArgs(
+      state: SymbState,
+      mapEx: TlaEx,
+      varNames: Seq[String],
+      setEs: Seq[TlaEx]): SymbState = {
     // first, rewrite the variable domains S_1, ..., S_n
     var (nextState, sets) = rewriter.rewriteSeqUntilDone(state, setEs)
 
@@ -40,7 +46,7 @@ class MapBase(rewriter: SymbStateRewriter) {
       }
     }
 
-    val (setsAsCells, elemTypes) = (sets.map(nextState.arena.findCellByNameEx) map findSetCellAndElemType).unzip
+    val (setsAsCells, elemTypes) = (sets.map(nextState.arena.findCellByNameEx).map(findSetCellAndElemType)).unzip
     val elemsOfSets = setsAsCells.map(nextState.arena.getHas)
     val setLimits = elemsOfSets.map(_.size - 1)
     // find the types of the target expression and of the target set
@@ -52,9 +58,11 @@ class MapBase(rewriter: SymbStateRewriter) {
 
     // enumerate all possible indices and map the corresponding tuples to cells
     def byIndex(indices: Seq[Int]): Seq[ArenaCell] =
-      elemsOfSets.zip(indices) map Function.tupled { (s, i) =>
-        s(i)
-      }
+      elemsOfSets
+        .zip(indices)
+        .map(Function.tupled { (s, i) =>
+          s(i)
+        })
 
     val tupleIter = new IntTupleIterator(setLimits).map(byIndex)
 
@@ -66,8 +74,13 @@ class MapBase(rewriter: SymbStateRewriter) {
     newState.setRex(resultSetCell.toNameEx)
   }
 
-  private def mapCellsManyArgs(state: SymbState, targetSetCell: ArenaCell, mapEx: TlaEx, varNames: Seq[String],
-      setsAsCells: Seq[ArenaCell], cellsIter: Iterator[Seq[ArenaCell]]): (SymbState, Iterable[ArenaCell]) = {
+  private def mapCellsManyArgs(
+      state: SymbState,
+      targetSetCell: ArenaCell,
+      mapEx: TlaEx,
+      varNames: Seq[String],
+      setsAsCells: Seq[ArenaCell],
+      cellsIter: Iterator[Seq[ArenaCell]]): (SymbState, Iterable[ArenaCell]) = {
     // we could have done it with foldLeft, but that would be even less readable
     var newState = state
     // Collect target cells and the possible membership expressions in a hash map.
@@ -100,8 +113,13 @@ class MapBase(rewriter: SymbStateRewriter) {
     (newState, resultsToSource.keys)
   }
 
-  private def mapCellsManyArgsOnce(state: SymbState, targetSetCell: ArenaCell, mapEx: TlaEx, varNames: Seq[String],
-      setsAsCells: Seq[ArenaCell], valuesAsCells: Seq[ArenaCell]): (SymbState, ArenaCell, TlaEx) = {
+  private def mapCellsManyArgsOnce(
+      state: SymbState,
+      targetSetCell: ArenaCell,
+      mapEx: TlaEx,
+      varNames: Seq[String],
+      setsAsCells: Seq[ArenaCell],
+      valuesAsCells: Seq[ArenaCell]): (SymbState, ArenaCell, TlaEx) = {
     // bind the variables to the corresponding cells
     val newBinding: Binding = varNames.zip(valuesAsCells).foldLeft(state.binding)((m, p) => Binding(m.toMap + p))
     val mapState = state.setBinding(newBinding).setRex(mapEx)
@@ -119,7 +137,7 @@ class MapBase(rewriter: SymbStateRewriter) {
         inSourceSet(valuesAsCells.head, setsAsCells.head) // in_value_set
       } else {
         tla
-          .and(valuesAsCells.zip(setsAsCells) map (inSourceSet _).tupled: _*)
+          .and(valuesAsCells.zip(setsAsCells).map((inSourceSet _).tupled): _*)
           .untyped() // (and in_val1_set1 ... in_valk_setk)
       }
     }

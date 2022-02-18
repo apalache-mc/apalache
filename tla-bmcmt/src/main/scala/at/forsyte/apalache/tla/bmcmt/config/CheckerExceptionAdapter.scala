@@ -20,7 +20,8 @@ import javax.inject.{Inject, Singleton}
 /**
  * The adapter for all exceptions that can be produced when running the model checker.
  *
- * @author Igor Konnv
+ * @author
+ *   Igor Konnv
  */
 @Singleton
 class CheckerExceptionAdapter @Inject() (sourceStore: SourceStore, changeListener: ChangeListener)

@@ -124,12 +124,12 @@ class TestCaching extends AnyFunSuite with BeforeAndAfterEach with TestingPredef
             declB1.body == tla.appOp(n_B, tla.int(1)).untyped() && (
                 body match {
                   case OperEx(TlaArithOper.plus, `one`, LetInEx(letInBody, defs @ _*)) =>
-                    (defs exists { declT0 =>
+                    (defs.exists { declT0 =>
                       (declT0.body == tla.appOp(n_T, tla.int(0)).untyped()) &&
                       letInBody == tla.plus(tla.appDecl(declT0), tla.appDecl(declB1)).untyped()
                     }) &&
                     (
-                        defs exists { declT =>
+                        defs.exists { declT =>
                           declT.body match {
                             case LetInEx(tbody, declTx) =>
                               declTx.body == tla.appOp(n_T, n_x).untyped() &&
@@ -142,7 +142,7 @@ class TestCaching extends AnyFunSuite with BeforeAndAfterEach with TestingPredef
                 }
             )
           case _ => false
-        },
+        }
     )
   }
 }

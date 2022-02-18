@@ -24,7 +24,8 @@ object EqCache {
 /**
  * Equality cache.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class EqCache() extends StackableContext with Serializable with Recoverable[EqCacheSnapshot] {
 
@@ -34,8 +35,8 @@ class EqCache() extends StackableContext with Serializable with Recoverable[EqCa
   private var level: Int = 0
 
   /**
-   * A set of pairs, for which the equality constraints have been generated in SMT.
-   * This set can be partially cleaned up, when the pop method is called.
+   * A set of pairs, for which the equality constraints have been generated in SMT. This set can be partially cleaned
+   * up, when the pop method is called.
    *
    * The cache invariant key (left, right) is maintained: left.id <= right.id
    */
@@ -77,14 +78,16 @@ class EqCache() extends StackableContext with Serializable with Recoverable[EqCa
 
   /**
    * Get an immutable copy of the map
-   * @return the immutable copy of the cache entries
+   * @return
+   *   the immutable copy of the cache entries
    */
   def getMap: Map[(ArenaCell, ArenaCell), (CacheEntry, Int)] = eqCache.toMap
 
   /**
    * Take a snapshot and return it
    *
-   * @return the snapshot
+   * @return
+   *   the snapshot
    */
   override def snapshot(): EqCacheSnapshot = {
     val squashedCache = eqCache.map { case (key, (value, _)) => (key, (value, 0)) }
@@ -94,7 +97,8 @@ class EqCache() extends StackableContext with Serializable with Recoverable[EqCa
   /**
    * Recover a previously saved snapshot (not necessarily saved by this object).
    *
-   * @param shot a snapshot
+   * @param shot
+   *   a snapshot
    */
   override def recover(shot: EqCacheSnapshot): Unit = {
     eqCache = shot.cache
@@ -103,7 +107,8 @@ class EqCache() extends StackableContext with Serializable with Recoverable[EqCa
   /**
    * Get the current context level, that is the difference between the number of pushes and pops made so far.
    *
-   * @return the current level, always non-negative.
+   * @return
+   *   the current level, always non-negative.
    */
   override def contextLevel: Int = level
 
@@ -115,8 +120,8 @@ class EqCache() extends StackableContext with Serializable with Recoverable[EqCa
   }
 
   /**
-   * Pop the previously saved context. Importantly, pop may be called multiple times and thus it is not sufficient
-   * to save only the latest context.
+   * Pop the previously saved context. Importantly, pop may be called multiple times and thus it is not sufficient to
+   * save only the latest context.
    */
   override def pop(): Unit = {
     pop(1)
@@ -125,7 +130,8 @@ class EqCache() extends StackableContext with Serializable with Recoverable[EqCa
   /**
    * Pop the context as many times as needed to reach a given level.
    *
-   * @param n the number of times to call pop
+   * @param n
+   *   the number of times to call pop
    */
   override def pop(n: Int): Unit = {
     assert(level >= n)

@@ -115,9 +115,10 @@ class TestSourceLocator extends AnyFunSuite {
 
   // Arbitrary assignment, all exs get a unique position equal to their UID
   val sourceMap: SourceMap =
-    ((exs.map(allUidsBelow) ++ decls.map(_.body).map(allUidsBelow)).foldLeft(Set.empty[UID]) {
-      _ ++ _
-    } map { x =>
+    ((exs.map(allUidsBelow) ++ decls.map(_.body).map(allUidsBelow))
+          .foldLeft(Set.empty[UID]) {
+        _ ++ _
+      }.map { x =>
       x -> generateLoc(x)
     }).toMap
 
@@ -140,7 +141,7 @@ class TestSourceLocator extends AnyFunSuite {
   val locator = SourceLocator(sourceMap, changeListener)
 
   def testTransformation(t: TlaExTransformation): Unit = {
-    val post = exs map t
+    val post = exs.map(t)
     val postIds = post.map(allUidsBelow).foldLeft(Set.empty[UID]) {
       _ ++ _
     }

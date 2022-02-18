@@ -19,7 +19,8 @@ object SmtLog {
 /**
  * A differential log of declarations and assertions that were submitted to the SMT solver.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class SmtLog(val parentLog: Option[SmtLog], val records: List[SmtLog.Record]) {
 
@@ -33,12 +34,13 @@ class SmtLog(val parentLog: Option[SmtLog], val records: List[SmtLog.Record]) {
     // replay the parent's log first
     parentLog.foreach(_.replay(solver))
     // then, replay the diff
-    records foreach applyRecord
+    records.foreach(applyRecord)
   }
 
   /**
    * Compute the number of records, including the records in the parent.
-   * @return the total number of records, all way up to the root.
+   * @return
+   *   the total number of records, all way up to the root.
    */
   def lengthRec: Int = {
     parentLog match {
