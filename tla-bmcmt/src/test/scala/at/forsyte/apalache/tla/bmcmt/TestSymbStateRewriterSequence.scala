@@ -10,7 +10,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
       "i" -> IntT1(),
       "I" -> SetT1(IntT1()),
       "b" -> BoolT1(),
-      "Qi" -> SeqT1(IntT1())
+      "Qi" -> SeqT1(IntT1()),
   )
 
   // As sequences are not distinguishable from tuples, we need a type annotation.

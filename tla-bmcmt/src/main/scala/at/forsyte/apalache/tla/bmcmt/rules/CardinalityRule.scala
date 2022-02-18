@@ -10,7 +10,8 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 /**
  * Implements the Cardinality operator.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class CardinalityRule(rewriter: SymbStateRewriter) extends RewritingRule {
 

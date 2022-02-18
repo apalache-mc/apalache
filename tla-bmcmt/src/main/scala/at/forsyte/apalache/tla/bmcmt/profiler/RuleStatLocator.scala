@@ -9,7 +9,8 @@ import scala.collection.immutable.SortedMap
  * The locator keeps a registry of RuleStat instances
  * -- one per rule name -- and finds the required instances when needed.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class RuleStatLocator {
   private var ruleStats: Map[String, RuleStat] = Map()
@@ -31,14 +32,12 @@ class RuleStatLocator {
       writer.println("Rule profiling statistics")
       val hrule = List.fill(80)('-').mkString
       writer.println(hrule)
-      writer.println(
-          "%20s %9s %9s %9s %9s %9s"
+      writer.println("%20s %9s %9s %9s %9s %9s"
             .format("name", "calls", "cells", "smt-consts", "smt-asserts", "smt-avg-size"))
       writer.println(hrule)
       val stats = ruleStats.values.toSeq.sortWith(_.nCalls > _.nCalls)
       for (rs <- stats) {
-        writer.println(
-            "%-20s %9d %9d %9d %9d %9d"
+        writer.println("%-20s %9d %9d %9d %9d %9d"
               .format(rs.ruleName, rs.nCalls, rs.nCellsSelf, rs.nSmtConstsSelf, rs.nSmtAssertsSelf,
                   rs.smtAssertsSizeAvg))
       }

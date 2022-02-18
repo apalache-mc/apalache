@@ -11,9 +11,12 @@ import java.io.PrintWriter
 /**
  * A decorator of PrettyWriter that prints code annotations.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
-class PrettyWriterWithAnnotations(annotationStore: AnnotationStore, writer: PrintWriter,
+class PrettyWriterWithAnnotations(
+    annotationStore: AnnotationStore,
+    writer: PrintWriter,
     layout: TextLayout = TextLayout())
     extends TlaWriter {
 
@@ -49,7 +52,8 @@ class PrettyWriterWithAnnotations(annotationStore: AnnotationStore, writer: Prin
   /**
    * Write a module, including all declarations
    *
-   * @param mod a module
+   * @param mod
+   *   a module
    */
   override def write(mod: TlaModule, extendedModuleNames: List[String]): Unit = {
     prettyWriter.write(mod, extendedModuleNames)
@@ -58,7 +62,8 @@ class PrettyWriterWithAnnotations(annotationStore: AnnotationStore, writer: Prin
   /**
    * Write a declaration, including all expressions
    *
-   * @param decl a declaration
+   * @param decl
+   *   a declaration
    */
   override def write(decl: TlaDecl): Unit = {
     prettyWriter.write(decl)
@@ -67,7 +72,8 @@ class PrettyWriterWithAnnotations(annotationStore: AnnotationStore, writer: Prin
   /**
    * Write a TLA+ expression.
    *
-   * @param expr an expression
+   * @param expr
+   *   an expression
    */
   override def write(expr: TlaEx): Unit = {
     prettyWriter.write(expr)

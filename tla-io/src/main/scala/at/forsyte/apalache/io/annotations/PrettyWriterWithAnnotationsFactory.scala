@@ -10,7 +10,9 @@ import com.google.inject.{Inject, Singleton}
 import java.io.PrintWriter
 
 @Singleton
-class PrettyWriterWithAnnotationsFactory @Inject() (sourceStore: SourceStore, changeListener: ChangeListener,
+class PrettyWriterWithAnnotationsFactory @Inject() (
+    sourceStore: SourceStore,
+    changeListener: ChangeListener,
     store: AnnotationStore)
     extends TlaWriterFactory {
   override def createTlaWriter(printWriter: PrintWriter): TlaWriter = {

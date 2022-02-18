@@ -37,10 +37,12 @@ trait CliConfig {
 
 /** The application's configurable values, along with their base defaults */
 case class ApalacheConfig(
-    file: Option[File] = None, outDir: File = new File(System.getProperty("user.dir"), "_apalache-out"),
-    runDir: Option[File] = None, configFile: Option[File] = None, writeIntermediate: Boolean = false,
-    profiling: Boolean = false
-)
+    file: Option[File] = None,
+    outDir: File = new File(System.getProperty("user.dir"), "_apalache-out"),
+    runDir: Option[File] = None,
+    configFile: Option[File] = None,
+    writeIntermediate: Boolean = false,
+    profiling: Boolean = false)
 
 case class ConfigManager(cmd: CliConfig) {
   private val TLA_PLUS_DIR = ".tlaplus"
@@ -68,11 +70,8 @@ case class ConfigManager(cmd: CliConfig) {
    *
    * The following precedence is maintained, wherein lower numbered items override highest numbered items:
    *
-   * 1. CLI arguments
-   * 2. Environment variables (Overiding is taken care of by CLI parsing library)
-   * 3. Local config file
-   * 4. Globacl config file
-   * 5. `ApalacheConfig` defaults (as specified in the case class definition)
+   *   1. CLI arguments 2. Environment variables (Overiding is taken care of by CLI parsing library) 3. Local config
+   *      file 4. Globacl config file 5. `ApalacheConfig` defaults (as specified in the case class definition)
    */
   def load(): ConfigReader.Result[ApalacheConfig] = {
 
@@ -92,9 +91,8 @@ case class ConfigManager(cmd: CliConfig) {
             runDir = cmd.runDir.orElse(cfg.runDir),
             configFile = cmd.configFile.orElse(cfg.configFile),
             writeIntermediate = cmd.writeIntermediate.getOrElse(cfg.writeIntermediate),
-            profiling = cmd.profiling.getOrElse(cfg.profiling)
-        )
-      )
+            profiling = cmd.profiling.getOrElse(cfg.profiling),
+        ))
   }
 }
 

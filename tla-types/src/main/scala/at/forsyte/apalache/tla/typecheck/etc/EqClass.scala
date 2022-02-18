@@ -3,11 +3,13 @@ package at.forsyte.apalache.tla.typecheck.etc
 import at.forsyte.apalache.tla.lir.UID
 
 /**
- * An equivalence class that keeps track of type variables that are considered equal, e.g.,
- * by unification or constraint solving.
+ * An equivalence class that keeps track of type variables that are considered equal, e.g., by unification or constraint
+ * solving.
  *
- * @param includedVars a non-empty set of variables
- * @author Igor Konnov
+ * @param includedVars
+ *   a non-empty set of variables
+ * @author
+ *   Igor Konnov
  */
 class EqClass(includedVars: Set[Int]) {
   require(includedVars.nonEmpty)
@@ -30,7 +32,8 @@ class EqClass(includedVars: Set[Int]) {
   /**
    * Get the representative variable of a class.
    *
-   * @return a fixed variable from the class that works as a class representative.
+   * @return
+   *   a fixed variable from the class that works as a class representative.
    */
   def reprVar: Int = _reprVar
 
@@ -42,7 +45,8 @@ class EqClass(includedVars: Set[Int]) {
   /**
    * Set the type variables that are associated with the equivalence class.
    *
-   * @param newSet the new set
+   * @param newSet
+   *   the new set
    */
   def typeVars_=(newSet: Set[Int]): Unit = {
     require(newSet.nonEmpty)
@@ -53,7 +57,8 @@ class EqClass(includedVars: Set[Int]) {
   /**
    * Introduce a fresh copy of the equivalence class that has a different identifier.
    *
-   * @return a fresh copy of the class
+   * @return
+   *   a fresh copy of the class
    */
   def copy(): EqClass = {
     EqClass(this._typeVars)
@@ -73,8 +78,10 @@ class EqClass(includedVars: Set[Int]) {
   /**
    * Compare the structure of two equivalence classes: that is whether they have the same sets of variables.
    *
-   * @param other another equivalence class
-   * @return true, if both classes contain the same sets of variables
+   * @param other
+   *   another equivalence class
+   * @return
+   *   true, if both classes contain the same sets of variables
    */
   def deepEquals(other: EqClass): Boolean = {
     _typeVars == other._typeVars

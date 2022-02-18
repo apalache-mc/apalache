@@ -82,7 +82,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
         var (nextState, oracle) = oracleFactory.newDefaultOracle(state, elems.size + 1)
 
         // pick only the elements that belong to the set
-        val elemsIn = elems map { c => tla.apalacheSelectInSet(c.toNameEx, set.toNameEx).untyped() }
+        val elemsIn = elems.map { c => tla.apalacheSelectInSet(c.toNameEx, set.toNameEx).untyped() }
         rewriter.solverContext.assertGroundExpr(oracle.caseAssertions(nextState, elemsIn :+ elseAssert))
 
         pickByOracle(nextState, oracle, elems, elseAssert)
@@ -167,7 +167,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     // compare the set contents with the result
     val eqState = rewriter.lazyEq.cacheEqConstraints(state, elems.map(e => (e, resultCell)))
     // the new element equals to an existing element in the set
-    val asserts = elems map { el => rewriter.lazyEq.safeEq(resultCell, el) }
+    val asserts = elems.map { el => rewriter.lazyEq.safeEq(resultCell, el) }
     rewriter.solverContext.assertGroundExpr(oracle.caseAssertions(eqState, asserts :+ elseAssert))
 
     rewriter.solverContext.log(s"; } CHERRY-PICK $resultCell:$cellType")
@@ -206,7 +206,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     newState = newState.setArena(newState.arena.appendCell(cellType))
     val newTuple = newState.arena.topCell
     // for each index i, pick a value from the projection { t[i] : t \in tuples }
-    val newFields = tupleType.args.indices map pickAtPos
+    val newFields = tupleType.args.indices.map(pickAtPos)
 
     // The awesome property: we do not have to enforce equality of the field values, as this will be enforced by
     // the rule for the respective element t[i], as it will use the same oracle!
@@ -289,10 +289,10 @@ class CherryPick(rewriter: SymbStateRewriter) {
     val newRecord = newState.arena.topCell
     // pick the domain using the oracle.
     newState = pickRecordDomain(commonRecordT, FinSetT(ConstT()), newState, oracle, records,
-        records map (r => newState.arena.getDom(r)))
+        records.map(r => newState.arena.getDom(r)))
     val newDom = newState.asCell
     // pick the fields using the oracle
-    val fieldCells = commonRecordT.fields.keySet.toSeq map pickAtPos
+    val fieldCells = commonRecordT.fields.keySet.toSeq.map(pickAtPos)
     // and connect them to the record
     var newArena = newState.arena.setDom(newRecord, newDom)
     newArena = newArena.appendHasNoSmt(newRecord, fieldCells: _*)
@@ -446,7 +446,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     val resultCell = nextState.arena.topCell
 
     // get all the cells pointed by the elements of every member set
-    val elemsOfMemberSets: Seq[Seq[ArenaCell]] = memberSets map (s => Set(nextState.arena.getHas(s): _*).toSeq)
+    val elemsOfMemberSets: Seq[Seq[ArenaCell]] = memberSets.map(s => Set(nextState.arena.getHas(s): _*).toSeq)
 
     // Here we are using the awesome linear encoding that uses interleaving.
     // We give an explanation for two statically non-empty sets, statically empty sets should be treated differently.
@@ -461,7 +461,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     // ChooseProper: chosen = 1 => z_i = c_i /\ chosen = 2 => z_i = d_i
     // ChooseIn:     in(z_i, R) <=> (chosen = 1 /\ in(c_i, S_1) \/ (chosen = 2 /\ in(d_i, S_2)
 
-    val maxLen = elemsOfMemberSets map (_.size) reduce ((i, j) => if (i > j) i else j)
+    val maxLen = elemsOfMemberSets.map(_.size).reduce((i, j) => if (i > j) i else j)
     assert(maxLen != 0)
     val maxPadded = elemsOfMemberSets.find(_.size == maxLen).get // existence is guaranteed by maxLen
 
@@ -476,7 +476,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     val paddedOfMemberSets = elemsOfMemberSets.map(padNonEmptySeq(_, maxLen))
     // for each index i, pick from {c_i, ..., d_i}.
     def pickOneElement(i: Int): Unit = {
-      val toPickFrom = paddedOfMemberSets map { _(i) }
+      val toPickFrom = paddedOfMemberSets.map { _(i) }
       nextState = pickByOracle(nextState, oracle, toPickFrom, elseAssert)
       val picked = nextState.asCell
 
@@ -506,7 +506,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
         }
       }
 
-      val assertions = (toPickFrom.zip(memberSets).zipWithIndex map (nthIn _).tupled).unzip
+      val assertions = (toPickFrom.zip(memberSets).zipWithIndex.map((nthIn _).tupled)).unzip
       // add the cell to the arena
       nextState = nextState.updateArena(_.appendHas(resultCell, picked))
       // (chosen = 1 /\ in(z_i, R) = in(c_i, S_1)) \/ (chosen = 2 /\ in(z_i, R) = in(d_i, S_2))
@@ -516,7 +516,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
               nonMembershipAssertions :+ ValEx(TlaBool(true))))
     }
 
-    0.until(maxLen) foreach pickOneElement
+    0.until(maxLen).foreach(pickOneElement)
 
     rewriter.solverContext.log(s"; } CHERRY-PICK $resultCell:$cellType")
     nextState.setRex(resultCell.toNameEx)
@@ -569,7 +569,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     val resultCell = nextState.arena.topCell
 
     // get all the cells pointed by the elements of every member set, without changing their order!
-    val elemsOfMemberSeqs: Seq[Seq[ArenaCell]] = memberSeqs map (s => nextState.arena.getHas(s).toSeq)
+    val elemsOfMemberSeqs: Seq[Seq[ArenaCell]] = memberSeqs.map(s => nextState.arena.getHas(s).toSeq)
 
     // Here we are using the awesome linear encoding that uses interleaving.
     // We give an explanation for two statically non-empty sequences, the static case should be handled differently.
@@ -579,7 +579,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     //
     // As we are not tracking membership for sequences, no additional SMT constraints are needed
 
-    val maxLen = elemsOfMemberSeqs map (_.size) reduce ((i, j) => if (i > j) i else j)
+    val maxLen = elemsOfMemberSeqs.map(_.size).reduce((i, j) => if (i > j) i else j)
     assert(maxLen != 0)
     val maxPadded = elemsOfMemberSeqs.find(_.size == maxLen).get // there must be one like this
 
@@ -596,7 +596,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     // no empty sequences beyond this point
     // for each index i, pick from {c_i, ..., d_i}.
     def pickOneElement(i: Int): Unit = {
-      val toPickFrom = paddedSeqElems map { _(i) }
+      val toPickFrom = paddedSeqElems.map { _(i) }
       nextState = pickByOracle(nextState, oracle, toPickFrom, elseAssert)
       val picked = nextState.asCell
       // this property is enforced by the oracle magic: chosen = 1 => z_i = c_i /\ chosen = 2 => z_i = d_i
@@ -604,7 +604,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       nextState = nextState.updateArena(_.appendHasNoSmt(resultCell, picked))
     }
 
-    0.until(maxLen) foreach pickOneElement
+    0.until(maxLen).foreach(pickOneElement)
 
     rewriter.solverContext.log(s"; } CHERRY-PICK $resultCell:$seqType")
     nextState.setRex(resultCell.toNameEx)
@@ -630,7 +630,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     var nextState = state
     // pick the relation
     val relationT = FinSetT(TupleT(Seq(funType.argType, funType.resultType)))
-    nextState = pickSet(relationT, nextState, oracle, funs map state.arena.getCdm, elseAssert)
+    nextState = pickSet(relationT, nextState, oracle, funs.map(state.arena.getCdm), elseAssert)
     val pickedRelation = nextState.asCell
     // create a fresh cell to hold the function
     nextState = nextState.setArena(nextState.arena.appendCell(funType))
@@ -682,6 +682,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
     }
 
     elems foreach inResultIfInBase
+    unconstrainElems(elems)
+    elems.foreach(inResultIfInBase)
     rewriter.solverContext.log("; } PICK %s FROM %s".format(resultType, set))
     nextState.setRex(resultSet.toNameEx)
   }

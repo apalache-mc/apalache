@@ -38,7 +38,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
           }
 
         val sets = Set(nextState.arena.getHas(topSetCell): _*).toList // remove duplicates too
-        val elemsOfSets = sets map (s => Set(nextState.arena.getHas(s): _*))
+        val elemsOfSets = sets.map(s => Set(nextState.arena.getHas(s): _*))
 
         val unionOfSets = elemsOfSets.foldLeft(Set[ArenaCell]())(_.union(_))
         // introduce a set cell

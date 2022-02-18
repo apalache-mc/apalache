@@ -9,9 +9,12 @@ import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
 /**
  * ConstrainedTransitionExecutor allows us to add path constraints at certain depths.
  *
- * @param trex transition executor to decorate
- * @tparam ExecutorContext executor context
- * @author Igor Konnov
+ * @param trex
+ *   transition executor to decorate
+ * @tparam ExecutorContext
+ *   executor context
+ * @author
+ *   Igor Konnov
  */
 class ConstrainedTransitionExecutor[ExecutorContext](trex: TransitionExecutor[ExecutorContext])
     extends TransitionExecutor[ExecutorContext] {
@@ -21,10 +24,11 @@ class ConstrainedTransitionExecutor[ExecutorContext](trex: TransitionExecutor[Ex
   private var pathConstraints: Map[Int, List[PathConstraint]] = Map.empty
 
   /**
-   * Add a path constraint that is applied, whenever a symbolic execution is extended to the length of the path constraint.
-   * This constraint is translated into a disjunction of constraints over individual states.
+   * Add a path constraint that is applied, whenever a symbolic execution is extended to the length of the path
+   * constraint. This constraint is translated into a disjunction of constraints over individual states.
    *
-   * @param constraint path constraint
+   * @param constraint
+   *   path constraint
    */
   def addPathOrConstraint(constraint: PathConstraint): Unit = {
     val len = constraint.length

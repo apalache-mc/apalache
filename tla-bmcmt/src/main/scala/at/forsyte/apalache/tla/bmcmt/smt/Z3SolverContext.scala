@@ -577,7 +577,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         (z3context.mkNot(eq.asInstanceOf[BoolExpr]).asInstanceOf[ExprSort], 1 + n)
 
       case OperEx(ApalacheOper.distinct, args @ _*) =>
-        val (es, ns) = (args map toExpr).unzip
+        val (es, ns) = (args.map(toExpr)).unzip
         val distinct = z3context.mkDistinct(es: _*)
         (distinct.asInstanceOf[ExprSort],
             ns.foldLeft(1L) {
@@ -585,7 +585,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             })
 
       case OperEx(TlaBoolOper.and, args @ _*) =>
-        val (es, ns) = (args map toExpr).unzip
+        val (es, ns) = (args.map(toExpr)).unzip
         val and = z3context.mkAnd(es.map(_.asInstanceOf[BoolExpr]): _*)
         (and.asInstanceOf[ExprSort],
             ns.foldLeft(1L) {
@@ -593,7 +593,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             })
 
       case OperEx(TlaBoolOper.or, args @ _*) =>
-        val (es, ns) = (args map toExpr).unzip
+        val (es, ns) = (args.map(toExpr)).unzip
         val or = z3context.mkOr(es.map(_.asInstanceOf[BoolExpr]): _*)
         (or.asInstanceOf[ExprSort],
             ns.foldLeft(1L) {
@@ -725,8 +725,9 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     ctor(a.asInstanceOf[Expr[ArithSort]], b.asInstanceOf[Expr[ArithSort]]).asInstanceOf[ExprSort]
   }
 
-  private def mkArithOp(ctor: (Expr[ArithSort], Expr[ArithSort]) => ArithExpr[ArithSort])(a: ExprSort,
-      b: ExprSort): ExprSort = {
+  private def mkArithOp(
+      ctor: (Expr[ArithSort], Expr[ArithSort]) => ArithExpr[ArithSort],
+  )(a: ExprSort, b: ExprSort): ExprSort = {
     ctor(a.asInstanceOf[Expr[ArithSort]], b.asInstanceOf[Expr[ArithSort]]).asInstanceOf[ExprSort]
   }
 

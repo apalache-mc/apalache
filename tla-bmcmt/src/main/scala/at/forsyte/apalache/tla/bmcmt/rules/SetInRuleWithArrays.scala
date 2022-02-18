@@ -24,7 +24,7 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
     val powsetDomainElems = state.arena.getHas(powsetDomain)
     // EqConstraints need to be generated, since missing in-relations, e.g. in sets of tuples, will lead to errors.
     // TODO: Inlining this method is pointless. We should consider handling tuples and other structures natively in SMT.
-    var newState = rewriter.lazyEq.cacheEqConstraints(state, setElems cross powsetDomainElems)
+    var newState = rewriter.lazyEq.cacheEqConstraints(state, setElems.cross(powsetDomainElems))
 
     def isInPowset(setElem: ArenaCell): TlaEx = {
       newState = newState.updateArena(_.appendCell(BoolT()))
@@ -56,7 +56,10 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
     super.funSetIn(state, funsetCell, funCell)
   }
 
-  override protected def basicIn(state: SymbState, setCell: ArenaCell, elemCell: ArenaCell,
+  override protected def basicIn(
+      state: SymbState,
+      setCell: ArenaCell,
+      elemCell: ArenaCell,
       elemType: types.CellT): SymbState = {
     val potentialElems = state.arena.getHas(setCell)
     // The types of the element and the set may slightly differ, but they must be unifiable.

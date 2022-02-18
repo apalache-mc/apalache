@@ -50,7 +50,11 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
   }
 
   // produce an expression that projects a set of pairs on the set of its first (or second) components
-  private def mkProjection(fst: String, snd: String, projFirst: Boolean, set: String): EtcExpr = {
+  private def mkProjection(
+      fst: String,
+      snd: String,
+      projFirst: Boolean,
+      set: String): EtcExpr = {
     val axis = if (projFirst) fst else snd
     val tuple = TupT1(VarT1(fst), VarT1(snd))
     // Projection: depending on axis, either ((<<a, b>>, Set(<<a, b>>)) => Set(a)) or ((<<a, b>>, Set(<<a, b>>)) => Set(b))
@@ -260,7 +264,7 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
   test("invalid field string in record set construction") {
     val invalid = "invalidName"
     val exn = intercept[IllegalArgumentException](
-        gen(tla.recSet(tla.name(invalid), tla.str("x"))),
+        gen(tla.recSet(tla.name(invalid), tla.str("x")))
     )
     assert(exn.getMessage.contains(invalid))
   }

@@ -14,20 +14,25 @@ import scala.collection.immutable.SortedMap
 
 /**
  * Generator of verification conditions. In the current implementation, VCGenerator takes an invariant candidate,
- * decomposes the invariant into smaller invariant candidates and produces negations of the invariant candidates.
- * In the future, we would temporal formulas as well.
+ * decomposes the invariant into smaller invariant candidates and produces negations of the invariant candidates. In the
+ * future, we would temporal formulas as well.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
 
   /**
    * Given a module and the name of an invariant candidate, add verification conditions in the module.
    *
-   * @param module      an input module
-   * @param invName     name of an invariant
-   * @param optViewName optional name of a state view
-   * @return a transformed module
+   * @param module
+   *   an input module
+   * @param invName
+   *   name of an invariant
+   * @param optViewName
+   *   optional name of a state view
+   * @return
+   *   a transformed module
    */
   def gen(module: TlaModule, invName: String, optViewName: Option[String]): TlaModule = {
     val levelFinder = new TlaDeclLevelFinder(module)

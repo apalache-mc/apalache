@@ -5,20 +5,18 @@ import at.forsyte.apalache.tla.lir._
 import scala.collection.immutable.SortedMap
 
 /**
- * <p>A unification solver for the TlaType1 system. Note that our subtyping relation unifies records
- * and sparse tuples with a different number of fields. It does so by extending the key set, not by shrinking it.
- * </p>
+ * <p>A unification solver for the TlaType1 system. Note that our subtyping relation unifies records and sparse tuples
+ * with a different number of fields. It does so by extending the key set, not by shrinking it. </p>
  *
- * <p>For an explanation of unification, see a textbook on logic, e.g.,
- * Melvin Fitting. First-Order Logic and Automated Theorem Proving, Springer, 1996.
- * We adapted the classical unification to reason about equivalence classes of type variables.
- * We have focused on soundness of type unification. So this class may have poor performance when called by the
- * constraint solver multiple times. Some profiling is needed.
- * </p>
+ * <p>For an explanation of unification, see a textbook on logic, e.g., Melvin Fitting. First-Order Logic and Automated
+ * Theorem Proving, Springer, 1996. We adapted the classical unification to reason about equivalence classes of type
+ * variables. We have focused on soundness of type unification. So this class may have poor performance when called by
+ * the constraint solver multiple times. Some profiling is needed. </p>
  *
  * <p>This class is not designed for concurrency. Use different instances in different threads.</p>
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class TypeUnifier {
   // A variable is mapped to its equivalence class. By default, a variable sits in the singleton equivalence class
@@ -30,10 +28,10 @@ class TypeUnifier {
   private var solution: Map[EqClass, TlaType1] = Map.empty
 
   /**
-   * Try to unify lhs and rhs by starting with the given substitution. If successful, it returns Some(mgu, t),
-   * where mgu is the solution set showing how to unify lhs and rhs and t is the type resulting from
-   * successfully unifying lhs and rhs using mgu. Note that apart from variable substitution, our unification
-   * also involves merging record types. When there is no unifier, it returns None.
+   * Try to unify lhs and rhs by starting with the given substitution. If successful, it returns Some(mgu, t), where mgu
+   * is the solution set showing how to unify lhs and rhs and t is the type resulting from successfully unifying lhs and
+   * rhs using mgu. Note that apart from variable substitution, our unification also involves merging record types. When
+   * there is no unifier, it returns None.
    */
   def unify(substitution: Substitution, lhs: TlaType1, rhs: TlaType1): Option[(Substitution, TlaType1)] = {
     // Copy the equivalence classes and the mapping from the substitution.
@@ -61,7 +59,7 @@ class TypeUnifier {
 
     // try to unify
     val result =
-      compute(lhs, rhs) flatMap { unifiedType =>
+      compute(lhs, rhs).flatMap { unifiedType =>
         // use only the representative variables of every equivalence class
         val canonical = mkCanonicalSub
         val substitution = new Substitution(solution.mapValues { tt => canonical.sub(tt)._1 })
@@ -74,7 +72,9 @@ class TypeUnifier {
   }
 
   // Compute the unification of the value corresponding to the key in the two maps of fields
-  private def computeFields[K](key: K, lhsFields: SortedMap[K, TlaType1],
+  private def computeFields[K](
+      key: K,
+      lhsFields: SortedMap[K, TlaType1],
       rhsFields: SortedMap[K, TlaType1]): Option[TlaType1] = {
     (lhsFields.get(key), rhsFields.get(key)) match {
       case (None, None)       => None
@@ -248,7 +248,7 @@ class TypeUnifier {
       lcls.typeVars ++= rcls.typeVars
       // Move the variables of the right class to the left class and remove the right class.
       // This is safe, because terms never access the classes directly, but refer to them via variables.
-      rcls.typeVars foreach { v => varToClass += v -> lcls }
+      rcls.typeVars.foreach { v => varToClass += v -> lcls }
       solution -= rcls
       // if the assigned terms unify, add the unifier as a solution
       val unified = compute(lterm, rterm)

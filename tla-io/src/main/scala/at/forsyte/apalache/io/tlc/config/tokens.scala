@@ -9,7 +9,8 @@ sealed trait TlcConfigToken extends Positional
 
 /**
  * An identifier
- * @param name the name associated with the identifier
+ * @param name
+ *   the name associated with the identifier
  */
 case class IDENT(name: String) extends TlcConfigToken {
   override def toString: String = "identifier '%s'".format(name)
@@ -18,7 +19,8 @@ case class IDENT(name: String) extends TlcConfigToken {
 /**
  * A string according to the TLA+ syntax.
  *
- * @param name the name associated with the identifier
+ * @param name
+ *   the name associated with the identifier
  */
 case class STRING(name: String) extends TlcConfigToken {
   override def toString: String = "string \"%s\"".format(name)
@@ -26,7 +28,8 @@ case class STRING(name: String) extends TlcConfigToken {
 
 /**
  * A number
- * @param value the value of the number
+ * @param value
+ *   the value of the number
  */
 case class NUMBER(value: String) extends TlcConfigToken {
   override def toString: String = "number '%s'".format(value)
@@ -34,7 +37,8 @@ case class NUMBER(value: String) extends TlcConfigToken {
 
 /**
  * A Boolean value, FALSE or TRUE.
- * @param value string representation of a Boolean value: "FALSE" or "TRUE"
+ * @param value
+ *   string representation of a Boolean value: "FALSE" or "TRUE"
  */
 case class BOOLEAN(value: String) extends TlcConfigToken {
   override def toString: String = "boolean '%s'".format(value)

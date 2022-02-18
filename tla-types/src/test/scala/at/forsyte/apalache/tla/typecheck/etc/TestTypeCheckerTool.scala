@@ -151,7 +151,7 @@ class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyM
 
       val deserializaedSerialization = dec.asTlaModule(enc(postModule))
 
-      deserializaedSerialization.declarations.zip(postModule.declarations) map { case (d1, d2) =>
+      deserializaedSerialization.declarations.zip(postModule.declarations).map { case (d1, d2) =>
         assert(d1.eqTyped(d2))
       }
 

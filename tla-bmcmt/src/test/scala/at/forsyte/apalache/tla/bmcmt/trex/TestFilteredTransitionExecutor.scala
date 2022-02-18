@@ -7,7 +7,8 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 /**
  * An abstract test suite that is parameterized by the snapshot type.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 trait TestFilteredTransitionExecutor[SnapshotT] extends ExecutorBase[SnapshotT] {
   test("filtered check enabled and discard") { exeCtx: ExecutorContextT =>
@@ -17,7 +18,7 @@ trait TestFilteredTransitionExecutor[SnapshotT] extends ExecutorBase[SnapshotT] 
     val next1 = tla.and(mkAssign("x", tla.name("x")), mkAssign("y", tla.plus(tla.name("x"), tla.name("y"))))
     val next2 = tla.and(
         mkAssign("x", tla.name("y")),
-        mkAssign("y", tla.name("x"))
+        mkAssign("y", tla.name("x")),
     ) ///
     // check the transitions
     val impl = new TransitionExecutorImpl(Set.empty, Set("x", "y"), exeCtx)

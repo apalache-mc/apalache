@@ -14,16 +14,20 @@ import com.typesafe.scalalogging.LazyLogging
 /**
  * The API to the type checker. It first translates a TLA+ module into EtcExpr and then does the type checking.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) extends LazyLogging {
 
   /**
    * Check the types in a module. All type checking events are sent to a listener.
    *
-   * @param listener a listener of type checking events
-   * @param module   a module to type check
-   * @return the flag that indicates whether the module is well-typed
+   * @param listener
+   *   a listener of type checking events
+   * @param module
+   *   a module to type check
+   * @return
+   *   the flag that indicates whether the module is well-typed
    */
   def check(listener: TypeCheckerListener, module: TlaModule): Boolean = {
     val maxTypeVar = findMaxUsedTypeVar(module)
@@ -54,16 +58,24 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) exte
   }
 
   /**
-   * Check the types in a module and, if the module is well-typed, produce a new module that attaches a type tag
-   * to every expression and declaration in the module.
+   * Check the types in a module and, if the module is well-typed, produce a new module that attaches a type tag to
+   * every expression and declaration in the module.
    *
-   * @param tracker    a transformation tracker that is applied when expressions and declarations are tagged
-   * @param listener   a listener to type checking events
-   * @param defaultTag a function that returns a default type for UID, when type is missing
-   * @param module     a module to type check
-   * @return Some(newModule) if module is well-typed; None, otherwise
+   * @param tracker
+   *   a transformation tracker that is applied when expressions and declarations are tagged
+   * @param listener
+   *   a listener to type checking events
+   * @param defaultTag
+   *   a function that returns a default type for UID, when type is missing
+   * @param module
+   *   a module to type check
+   * @return
+   *   Some(newModule) if module is well-typed; None, otherwise
    */
-  def checkAndTag(tracker: TransformationTracker, listener: TypeCheckerListener, defaultTag: UID => TypeTag,
+  def checkAndTag(
+      tracker: TransformationTracker,
+      listener: TypeCheckerListener,
+      defaultTag: UID => TypeTag,
       module: TlaModule): Option[TlaModule] = {
     val recorder = new RecordingTypeCheckerListener()
     if (!check(new MultiTypeCheckerListener(listener, recorder), module)) {

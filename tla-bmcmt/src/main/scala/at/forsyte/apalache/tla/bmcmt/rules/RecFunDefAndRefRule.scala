@@ -10,11 +10,12 @@ import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet}
 import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, IntT1, NameEx, OperEx, TlaEx, TlaType1, ValEx}
 
 /**
- * This rule translates the definition of a recursive function. It is similar to CHOOSE.
- * Unlike CHOOSE, it does not have a fallback option, when the definition has no solution.
- * Hence, an infeasible definition of a recursive function may lead to a deadlock.
+ * This rule translates the definition of a recursive function. It is similar to CHOOSE. Unlike CHOOSE, it does not have
+ * a fallback option, when the definition has no solution. Hence, an infeasible definition of a recursive function may
+ * lead to a deadlock.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val pick = new CherryPick(rewriter)
@@ -43,13 +44,17 @@ class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
         }
 
       case _ =>
-        throw new RewriterException(
-            "%s is not applicable to %s"
+        throw new RewriterException("%s is not applicable to %s"
               .format(getClass.getSimpleName, state.ex), state.ex)
     }
   }
 
-  private def rewriteFunCtor(state: SymbState, funT1: FunT1, mapEx: TlaEx, varName: String, setEx: TlaEx) = {
+  private def rewriteFunCtor(
+      state: SymbState,
+      funT1: FunT1,
+      mapEx: TlaEx,
+      varName: String,
+      setEx: TlaEx) = {
     // rewrite the set expression into a memory cell
     var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
 
@@ -87,8 +92,7 @@ class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
     for (elem <- domainCells) {
       val oldBinding = nextState.binding
       // compute the right-hand side of the constraint by the recursive function
-      nextState = rewriter.rewriteUntilDone(
-          nextState
+      nextState = rewriter.rewriteUntilDone(nextState
             .setRex(mapEx)
             .setBinding(new Binding(oldBinding.toMap + (varName -> elem))))
       val rhs = nextState.asCell
@@ -97,8 +101,8 @@ class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
       nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.appFun(funCell.toNameEx, elem.toNameEx)))
       val lhs = nextState.asCell
       // either elem is outside of DOMAIN, or lhs equals rhs
-      val pred = tla.or(tla.not(tla.apalacheSelectInSet(elem.toNameEx, domainCell.toNameEx)),
-          tla.eql(lhs.toNameEx, rhs.toNameEx))
+      val pred = tla
+        .or(tla.not(tla.apalacheSelectInSet(elem.toNameEx, domainCell.toNameEx)), tla.eql(lhs.toNameEx, rhs.toNameEx))
       rewriter.solverContext.assertGroundExpr(pred)
     }
 

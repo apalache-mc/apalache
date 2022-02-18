@@ -25,7 +25,10 @@ import com.typesafe.scalalogging.LazyLogging
  * @param nextPass
  *   next pass to call
  */
-class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerator, tracker: TransformationTracker,
+class InlinePassImpl @Inject() (
+    val options: PassOptions,
+    gen: UniqueNameGenerator,
+    tracker: TransformationTracker,
     writerFactory: TlaWriterFactory)
     extends InlinePass with LazyLogging {
 
@@ -70,7 +73,7 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
     val cinitPrimedName = cinitName + "Primed"
 
     // Inline the primitive constants now
-    val constants = module.constDeclarations map { _.name }
+    val constants = module.constDeclarations.map { _.name }
     val cInitBody = findBodyOf(cinitName, inlined.declarations: _*)
     val constInliner = TlaConstInliner(tracker, constants.toSet)
     val constMap = constInliner.buildConstMap(Map.empty)(cInitBody)
@@ -81,7 +84,7 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
       case d => d // keep the rest as they are
     }
     val constInlinedModule = inlined.copy(
-        declarations = inlined.declarations map declTr,
+        declarations = inlined.declarations.map(declTr)
     )
 
     // Fixing issue 283: https://github.com/informalsystems/apalache/issues/283
@@ -98,7 +101,7 @@ class InlinePassImpl @Inject() (val options: PassOptions, gen: UniqueNameGenerat
     }
 
     val filtered = constInlinedModule.copy(
-        declarations = filteredDefs,
+        declarations = filteredDefs
     )
 
     // dump the result of preprocessing

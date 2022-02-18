@@ -12,9 +12,8 @@ abstract class TlaBoolOper extends TlaOper {
 object TlaBoolOper {
 
   /**
-   * A conjunction over an arbitrary number of arguments.
-   * By convention, it should be evaluated to TRUE, when the argument list is empty.
-   * Note that TLC interprets a conjunction A /\ B as IF A THEN B ELSE FALSE.
+   * A conjunction over an arbitrary number of arguments. By convention, it should be evaluated to TRUE, when the
+   * argument list is empty. Note that TLC interprets a conjunction A /\ B as IF A THEN B ELSE FALSE.
    */
   object and extends TlaBoolOper {
     override def arity = AnyArity()
@@ -23,10 +22,8 @@ object TlaBoolOper {
   }
 
   /**
-   * A disjunction over an arbitrary number of arguments.
-   * By convention, it should be evaluated to FALSE, when the argument list is empty.
-   * Note that TLC interprets a state-level disjunction A \/ B as
-   * IF A THEN TRUE ELSE B.
+   * A disjunction over an arbitrary number of arguments. By convention, it should be evaluated to FALSE, when the
+   * argument list is empty. Note that TLC interprets a state-level disjunction A \/ B as IF A THEN TRUE ELSE B.
    */
   object or extends TlaBoolOper {
     override def arity: OperArity = AnyArity()

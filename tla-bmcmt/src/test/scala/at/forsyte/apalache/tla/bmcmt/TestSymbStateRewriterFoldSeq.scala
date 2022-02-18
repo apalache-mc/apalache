@@ -19,14 +19,14 @@ trait TestSymbStateRewriterFoldSeq extends RewriterBase {
 
     def constVal = int(0)
 
-    val nullOperDecl = declOp("A", constVal, OperParam("p"), OperParam("q")) as opT
+    val nullOperDecl = declOp("A", constVal, OperParam("p"), OperParam("q")).as(opT)
     val letEx = LetInEx(name(nullOperDecl.name).typed(opT), nullOperDecl)(Typed(opT))
 
     val foldEx = OperEx(
         ApalacheOper.foldSeq,
         letEx,
         int(1).typed(IntT1()),
-        nonemptySeq
+        nonemptySeq,
     )(Typed(a))
 
     val eqn = eql(foldEx, constVal).typed(BoolT1())
@@ -47,7 +47,7 @@ trait TestSymbStateRewriterFoldSeq extends RewriterBase {
 
     val emptySeq = tuple().typed(SeqT1(b))
 
-    val nullOperDecl = declOp("A", int(0), OperParam("p"), OperParam("q")) as opT
+    val nullOperDecl = declOp("A", int(0), OperParam("p"), OperParam("q")).as(opT)
     val letEx = LetInEx(name(nullOperDecl.name).typed(opT), nullOperDecl)(Typed(opT))
 
     def v = int(1).typed(IntT1())
@@ -56,7 +56,7 @@ trait TestSymbStateRewriterFoldSeq extends RewriterBase {
         ApalacheOper.foldSeq,
         letEx,
         v,
-        emptySeq
+        emptySeq,
     )(Typed(a))
 
     val eqn = eql(foldEx, v).typed(BoolT1())
@@ -77,7 +77,7 @@ trait TestSymbStateRewriterFoldSeq extends RewriterBase {
     val plusOneOper = TlaOperDecl(
         "A",
         List(OperParam("p"), OperParam("q")),
-        plus(name("p").typed(a), int(1)).typed(IntT1())
+        plus(name("p").typed(a), int(1)).typed(IntT1()),
     )(Typed(opT))
 
     val letEx = LetInEx(name(plusOneOper.name).typed(opT), plusOneOper)(Typed(opT))
@@ -86,7 +86,7 @@ trait TestSymbStateRewriterFoldSeq extends RewriterBase {
         ApalacheOper.foldSeq,
         letEx,
         int(0).typed(IntT1()),
-        nonemptySeq
+        nonemptySeq,
     )(Typed(a))
 
     val eqn = eql(foldEx, len(nonemptySeq).typed(IntT1())).typed(BoolT1())
@@ -104,12 +104,12 @@ trait TestSymbStateRewriterFoldSeq extends RewriterBase {
     val opT = OperT1(Seq(a, b), a)
 
     val ints = Seq(2, 93, 4)
-    val nonemptySeq = tuple(ints map int: _*).typed(SeqT1(b))
+    val nonemptySeq = tuple(ints.map(int): _*).typed(SeqT1(b))
 
     val plusOneOper = TlaOperDecl(
         "A",
         List(OperParam("p"), OperParam("q")),
-        plus(name("p").typed(a), name("q").typed(b)).typed(IntT1())
+        plus(name("p").typed(a), name("q").typed(b)).typed(IntT1()),
     )(Typed(opT))
 
     val letEx = LetInEx(name(plusOneOper.name).typed(opT), plusOneOper)(Typed(opT))
@@ -118,7 +118,7 @@ trait TestSymbStateRewriterFoldSeq extends RewriterBase {
         ApalacheOper.foldSeq,
         letEx,
         int(0).typed(IntT1()),
-        nonemptySeq
+        nonemptySeq,
     )(Typed(a))
 
     val eqn = eql(foldEx, int(ints.sum)).typed(BoolT1())

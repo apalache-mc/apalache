@@ -12,7 +12,8 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, TlaType1}
 /**
  * Rewriting rule for IF A THEN B ELSE C.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val pickFrom = new CherryPick(rewriter)
@@ -58,7 +59,12 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def iteBasic(state: SymbState, commonType: CellT, pred: TlaEx, thenCell: ArenaCell, elseCell: ArenaCell) = {
+  private def iteBasic(
+      state: SymbState,
+      commonType: CellT,
+      pred: TlaEx,
+      thenCell: ArenaCell,
+      elseCell: ArenaCell) = {
     val newArena = state.arena.appendCell(commonType)
     val newCell = newArena.topCell
     // it's OK to use the SMT equality and ite, as we are dealing with the basic types here
@@ -69,7 +75,12 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   // Just use PICK FROM { thenValue, elseValue } to pick one of the two values.
   // The cool thing is that we do not have to compare the results anymore. It is all defined by the oracle.
-  private def iteGeneral(state: SymbState, commonType: CellT, pred: TlaEx, thenCell: ArenaCell, elseCell: ArenaCell) = {
+  private def iteGeneral(
+      state: SymbState,
+      commonType: CellT,
+      pred: TlaEx,
+      thenCell: ArenaCell,
+      elseCell: ArenaCell) = {
     def solverAssert = rewriter.solverContext.assertGroundExpr _
 
     // introduce an oracle \in 0..1. We use integers as the pick rules do so.

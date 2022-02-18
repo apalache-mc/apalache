@@ -18,9 +18,11 @@ sealed trait TlaLevel extends Ordered[TlaLevel] {
   /**
    * Compare this level to another level.
    *
-   * @param that the level to compare
-   * @return 0, if the levels are equal; a negative number if `this` is smaller than `that`, and a positive number
-   *         if `this` is larger than `that`.
+   * @param that
+   *   the level to compare
+   * @return
+   *   0, if the levels are equal; a negative number if `this` is smaller than `that`, and a positive number if `this`
+   *   is larger than `that`.
    */
   override def compare(that: TlaLevel): Int = {
     level - that.level
@@ -29,8 +31,10 @@ sealed trait TlaLevel extends Ordered[TlaLevel] {
   /**
    * Join the levels by computing the maximum of the levels of `this` and `that`.
    *
-   * @param that the level to join with
-   * @return the minimal level j that satisfies: `j <= this` and `j <= that`.
+   * @param that
+   *   the level to join with
+   * @return
+   *   the minimal level j that satisfies: `j <= this` and `j <= that`.
    */
   def join(that: TlaLevel): TlaLevel = {
     TlaLevel.fromInt(Math.max(level, that.level))
@@ -39,8 +43,10 @@ sealed trait TlaLevel extends Ordered[TlaLevel] {
   /**
    * Join the level with a sequence of level.
    *
-   * @param otherLevels a sequence of levels
-   * @return the join of `this` and otherLevels
+   * @param otherLevels
+   *   a sequence of levels
+   * @return
+   *   the join of `this` and otherLevels
    */
   def join(otherLevels: Seq[TlaLevel]): TlaLevel = {
     otherLevels.foldLeft(this) { case (l, r) => l.join(r) }
@@ -69,7 +75,8 @@ case object TlaLevelConst extends TlaLevel {
 }
 
 /**
- * State level: the constant-level, state variables, and expressions over them that are not actions or temporal formulas.
+ * State level: the constant-level, state variables, and expressions over them that are not actions or temporal
+ * formulas.
  */
 case object TlaLevelState extends TlaLevel {
   override val level: Int = 1

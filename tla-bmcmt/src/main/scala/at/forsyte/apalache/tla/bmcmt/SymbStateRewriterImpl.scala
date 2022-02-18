@@ -37,7 +37,8 @@ import scala.collection.mutable
  * @author
  *   Igor Konnov
  */
-class SymbStateRewriterImpl(private var _solverContext: SolverContext,
+class SymbStateRewriterImpl(
+    private var _solverContext: SolverContext,
     val exprGradeStore: ExprGradeStore = new ExprGradeStoreImpl(),
     val profilerListener: Option[MetricProfilerListener] = None)
     extends SymbStateRewriter with Serializable with Recoverable[SymbStateRewriterSnapshot] {
@@ -427,7 +428,7 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
       ns.ex
     }
 
-    val rewrittenExprs = es map eachExpr
+    val rewrittenExprs = es.map(eachExpr)
     (newState.setRex(state.ex), rewrittenExprs)
   }
 
@@ -451,7 +452,7 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
       ns.ex
     }
 
-    val rewrittenExprs = es map eachExpr
+    val rewrittenExprs = es.map(eachExpr)
     (newState.setRex(state.ex), rewrittenExprs)
   }
 
