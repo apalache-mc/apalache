@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, SetT1, TlaEx}
+import at.forsyte.apalache.tla.pp.TlaInputError
 
 trait TestSymbStateRewriterFiniteSets extends RewriterBase {
   private val intT = IntT1()
@@ -25,7 +26,7 @@ trait TestSymbStateRewriterFiniteSets extends RewriterBase {
     val cardinality = card(powerset).as(intT)
 
     val state = new SymbState(cardinality, arena, Binding())
-    assertThrows[RewriterException] {
+    assertThrows[TlaInputError] {
       // this case should be handled by preprocessing
       create(rewriterType).rewriteUntilDone(state)
     }

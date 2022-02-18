@@ -129,7 +129,7 @@ class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
     val set = name("S").as(intSetT)
     val input = gt(card(set).as(intT), int(1)).as(boolT)
     val output = optimizer.apply(input)
-    val letApp = appOp(name("t_3") ? "L").as(intT)
+    val letApp = appOp(name("t_3").as(operT)).as(intT)
     val letBody =
       exists(name("t_1").as(intT), letApp,
           exists(name("t_2").as(intT), letApp, not(eql(name("t_1").as(intT), name("t_2").as(intT)).as(boolT)).as(boolT))
