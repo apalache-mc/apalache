@@ -51,7 +51,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     val and1 =
       and(
           assign(x_prime, int(1)) ? "b",
-          assign(y_prime, int(2)) ? "b"
+          assign(y_prime, int(2)) ? "b",
       ).typed(types, "b")
 
     val state = new SymbState(and1, arena, Binding())
@@ -99,8 +99,8 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     }
 
     val asgn =
-      apalacheSkolem(exists(boundName, empty(enumSet(int(1))), assign(x_prime, boundName) ? "b") ? "b").typed(types,
-          "b")
+      apalacheSkolem(exists(boundName, empty(enumSet(int(1))), assign(x_prime, boundName) ? "b") ? "b")
+        .typed(types, "b")
 
     val state = new SymbState(asgn, arena, Binding())
     val rewriter = create(rewriterType)
@@ -471,7 +471,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     val set = enumSet(tuple1, tuple2).typed(SetT1(types("ibI")))
     val asgn =
       apalacheSkolem(exists(name("t") ? "ibI", set,
-              assign(prime(name("x") ? "ibI") ? "ibI", name("t") ? "ibI") ? "b") ? "b")
+          assign(prime(name("x") ? "ibI") ? "ibI", name("t") ? "ibI") ? "b") ? "b")
         .typed(types, "b")
 
     val state = new SymbState(asgn, arena, Binding())

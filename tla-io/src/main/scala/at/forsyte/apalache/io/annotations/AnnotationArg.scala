@@ -26,7 +26,8 @@ object AnnotationArg {
 /**
  * A string argument.
  *
- * @param text the text of the string argument.
+ * @param text
+ *   the text of the string argument.
  */
 case class AnnotationStr(text: String) extends AnnotationArg {
   override def toString: String = '"' + text + '"'
@@ -35,7 +36,8 @@ case class AnnotationStr(text: String) extends AnnotationArg {
 /**
  * An identifier argument.
  *
- * @param name the name of an identifier.
+ * @param name
+ *   the name of an identifier.
  */
 case class AnnotationIdent(name: String) extends AnnotationArg {
   override def toString: String = name
@@ -44,7 +46,8 @@ case class AnnotationIdent(name: String) extends AnnotationArg {
 /**
  * An integer argument.
  *
- * @param num the value of the argument.
+ * @param num
+ *   the value of the argument.
  */
 case class AnnotationInt(num: BigInt) extends AnnotationArg {
   override def toString: String = num.toString
@@ -53,7 +56,8 @@ case class AnnotationInt(num: BigInt) extends AnnotationArg {
 /**
  * A Boolean argument
  *
- * @param b the Boolean value of the argument.
+ * @param b
+ *   the Boolean value of the argument.
  */
 case class AnnotationBool(b: Boolean) extends AnnotationArg {
   override def toString: String = b.toString

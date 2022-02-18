@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt.caches.ModelValueCache
 import at.forsyte.apalache.tla.lir.{
   BoolT1, ConstT1, FunT1, IntT1, NullEx, OperT1, RealT1, RecT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1, TupT1,
-  TypeTag, TypingException, UID, VarT1
+  TypeTag, TypingException, UID, VarT1,
 }
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
@@ -21,19 +21,21 @@ package object types {
     /**
      * Test whether two types may produce objects that are comparable.
      *
-     * @param other other type
-     * @return true, if objects of the given types may be comparable
+     * @param other
+     *   other type
+     * @return
+     *   true, if objects of the given types may be comparable
      */
     def comparableWith(other: CellT): Boolean = {
       this.unify(other).nonEmpty
     }
 
     /**
-     * Produce a short signature that uniquely describes the type (up to unification),
-     * similar to Java's signature mangling. If one type can be unified to another,
-     * e.g., records, they have the same signature.
+     * Produce a short signature that uniquely describes the type (up to unification), similar to Java's signature
+     * mangling. If one type can be unified to another, e.g., records, they have the same signature.
      *
-     * @return a short signature that uniquely characterizes this type up to unification
+     * @return
+     *   a short signature that uniquely characterizes this type up to unification
      */
     val signature: String
 
@@ -47,8 +49,10 @@ package object types {
     /**
      * Compute a unifier of two types.
      *
-     * @param other another type
-     * @return Some(unifier), if there is one, or None otherwise
+     * @param other
+     *   another type
+     * @return
+     *   Some(unifier), if there is one, or None otherwise
      */
     def unify(other: CellT): Option[CellT] = {
       (this, other) match {
@@ -65,10 +69,10 @@ package object types {
           if (a == b) Some(this) else None
 
         case (FinSetT(left), FinSetT(right)) =>
-          left.unify(right) map FinSetT
+          left.unify(right).map(FinSetT)
 
         case (InfSetT(left), InfSetT(right)) =>
-          left.unify(right) map InfSetT
+          left.unify(right).map(InfSetT)
 
         case (FunT(leftDom, leftCodom), FunT(rightDom, rightCodom)) =>
           for {
@@ -83,10 +87,10 @@ package object types {
           } yield FinFunSetT(domUnif, cdmUnif)
 
         case (PowSetT(left), PowSetT(right)) =>
-          left.unify(right) map PowSetT
+          left.unify(right).map(PowSetT)
 
         case (SeqT(left), SeqT(right)) =>
-          left.unify(right) map SeqT
+          left.unify(right).map(SeqT)
 
         case (SeqT(seqType), TupleT(tupleTypes)) =>
           types.unify(seqType +: tupleTypes: _*) match {
@@ -101,15 +105,13 @@ package object types {
           }
 
         /**
-         * Jure, 13.9.18: Suggestion: Change TupleT( _ : Seq[...]) to TupleT(_ : Array[...]) or
-         * TupleT( _ : IndextSeq[...]) so
-         * a) length checks are const time
-         * b) you can do index-based arg comparison
+         * Jure, 13.9.18: Suggestion: Change TupleT( _ : Seq[...]) to TupleT(_ : Array[...]) or TupleT( _ :
+         * IndextSeq[...]) so a) length checks are const time b) you can do index-based arg comparison
          */
         case (TupleT(leftArgs), TupleT(rightArgs)) =>
           // in contrast to sequences, tuples of different lengths cannot be unified
           if (leftArgs.lengthCompare(rightArgs.length) == 0) {
-            val unified = leftArgs.zip(rightArgs) map (p => p._1.unify(p._2))
+            val unified = leftArgs.zip(rightArgs).map(p => p._1.unify(p._2))
             if (unified.forall(_.isDefined)) {
               Some(TupleT(unified.map(_.get)))
             } else {
@@ -189,8 +191,10 @@ package object types {
     /**
      * Convert a type tag to a cell type
      *
-     * @param typeTag a type tag
-     * @return the corresponding cell type, if the tag has type Typed(_: TlaType1); otherwise, throw an exception
+     * @param typeTag
+     *   a type tag
+     * @return
+     *   the corresponding cell type, if the tag has type Typed(_: TlaType1); otherwise, throw an exception
      */
     def fromTypeTag(typeTag: TypeTag): CellT = {
       fromType1(TlaType1.fromTypeTag(typeTag))
@@ -212,11 +216,11 @@ package object types {
   sealed case class UnknownT() extends CellT with Serializable {
 
     /**
-     * Produce a short signature that uniquely describes the type (up to unification),
-     * similar to Java's signature mangling. If one type can be unified to another,
-     * e.g., records, they have the same signature.
+     * Produce a short signature that uniquely describes the type (up to unification), similar to Java's signature
+     * mangling. If one type can be unified to another, e.g., records, they have the same signature.
      *
-     * @return a short signature that uniquely characterizes this type up to unification
+     * @return
+     *   a short signature that uniquely characterizes this type up to unification
      */
     override val signature: String = "u"
 
@@ -267,7 +271,8 @@ package object types {
   /**
    * A finite set.
    *
-   * @param elemType the elements type
+   * @param elemType
+   *   the elements type
    */
   sealed case class FinSetT(elemType: CellT) extends CellT with Serializable {
     override val signature: String = s"S${elemType.signature}"
@@ -278,10 +283,11 @@ package object types {
   }
 
   /**
-   * An infinite set such as Nat or Int. Although the rewriting system expands only finite sets,
-   * in some cases, we can pick a value from an infinite set, e.g., \E x \in Int: P.
+   * An infinite set such as Nat or Int. Although the rewriting system expands only finite sets, in some cases, we can
+   * pick a value from an infinite set, e.g., \E x \in Int: P.
    *
-   * @param elemType the elements type
+   * @param elemType
+   *   the elements type
    */
   sealed case class InfSetT(elemType: CellT) extends CellT with Serializable {
     override val signature: String = s"Z${elemType.signature}"
@@ -293,8 +299,8 @@ package object types {
 
   /**
    * The type of a powerset of a finite set, which is constructed as 'SUBSET S' in TLA+.
-   * @param domType the type of the argument is a finite set, i.e., typeof(S) in SUBSET S.
-   *                Currently, only FinSetT(_) is supported.
+   * @param domType
+   *   the type of the argument is a finite set, i.e., typeof(S) in SUBSET S. Currently, only FinSetT(_) is supported.
    */
   sealed case class PowSetT(domType: CellT) extends CellT with Serializable {
     require(domType.isInstanceOf[FinSetT]) // currently, we support only PowSetT(FinSetT(_))
@@ -309,11 +315,12 @@ package object types {
   /**
    * A function type.
    *
-   * TODO: in the future, we will replace domType with argType, as we are moving towards
-   * a minimalistic type system
+   * TODO: in the future, we will replace domType with argType, as we are moving towards a minimalistic type system
    *
-   * @param domType    the type of the domain (a finite set, a powerset, or a cross product).
-   * @param resultType result type (not the co-domain!)
+   * @param domType
+   *   the type of the domain (a finite set, a powerset, or a cross product).
+   * @param resultType
+   *   result type (not the co-domain!)
    */
   sealed case class FunT(domType: CellT, resultType: CellT) extends CellT with Serializable {
     override val signature: String = s"f${domType.signature}_${resultType.signature}"
@@ -337,14 +344,15 @@ package object types {
   /**
    * A finite set of functions.
    *
-   * @param domType the type of the domain (must be either a finite set or a powerset).
-   * @param cdmType the type of the co-domain (must be either a finite set or a powerset).
+   * @param domType
+   *   the type of the domain (must be either a finite set or a powerset).
+   * @param cdmType
+   *   the type of the co-domain (must be either a finite set or a powerset).
    */
   sealed case class FinFunSetT(domType: CellT, cdmType: CellT) extends CellT with Serializable {
-    require(
-        (domType.isInstanceOf[FinSetT] || domType.isInstanceOf[PowSetT])
-          && (cdmType.isInstanceOf[FinSetT] || cdmType.isInstanceOf[PowSetT]
-            || cdmType.isInstanceOf[FinFunSetT] || cdmType.isInstanceOf[InfSetT]))
+    require((domType.isInstanceOf[FinSetT] || domType.isInstanceOf[PowSetT])
+      && (cdmType.isInstanceOf[FinSetT] || cdmType.isInstanceOf[PowSetT]
+        || cdmType.isInstanceOf[FinFunSetT] || cdmType.isInstanceOf[InfSetT]))
 
     override val signature: String = s"F%${domType.signature}_%${cdmType.signature}"
 
@@ -376,7 +384,8 @@ package object types {
   /**
    * A tuple type
    *
-   * @param args the types of the tuple elements
+   * @param args
+   *   the types of the tuple elements
    */
   sealed case class TupleT(args: Seq[CellT]) extends CellT with Serializable {
 
@@ -390,11 +399,12 @@ package object types {
   }
 
   /**
-   * A sequence type. Note that in contrast to the standard TLA+ semantics,
-   * we distinguish tuples and sequences. The difference is that a tuple can have
-   * elements of different types, while a sequence has only elements of the same type.
+   * A sequence type. Note that in contrast to the standard TLA+ semantics, we distinguish tuples and sequences. The
+   * difference is that a tuple can have elements of different types, while a sequence has only elements of the same
+   * type.
    *
-   * @param res the type of the elements in the co-domain
+   * @param res
+   *   the type of the elements in the co-domain
    */
   sealed case class SeqT(res: CellT) extends CellT with Serializable {
 
@@ -408,13 +418,14 @@ package object types {
   /**
    * A record type
    *
-   * @param fields a map of fields and their types
+   * @param fields
+   *   a map of fields and their types
    */
   sealed case class RecordT(fields: SortedMap[String, CellT]) extends CellT with Serializable {
     override val signature: String = "R"
 
     override val toString: String =
-      s"Record[${fields.map { case (k, v) => "\"" + k + "\" -> " + v } mkString ", "}]"
+      s"Record[${fields.map { case (k, v) => "\"" + k + "\" -> " + v }.mkString(", ")}]"
 
     override def toTlaType1: TlaType1 = {
       RecT1(fields.mapValues(_.toTlaType1))
@@ -424,9 +435,12 @@ package object types {
   /**
    * Unify two types decorated with Option.
    *
-   * @param left a left type (may be None)
-   * @param right a right type (may be None)
-   * @return Some(unifier), if there is one, otherwise None
+   * @param left
+   *   a left type (may be None)
+   * @param right
+   *   a right type (may be None)
+   * @return
+   *   Some(unifier), if there is one, otherwise None
    */
   def unifyOption(left: Option[CellT], right: Option[CellT]): Option[CellT] = for {
     l <- left
@@ -436,8 +450,10 @@ package object types {
 
   /**
    * Unify a sequence of types
-   * @param ts a sequence of types
-   * @return Some(unifier), if exists, or None
+   * @param ts
+   *   a sequence of types
+   * @return
+   *   Some(unifier), if exists, or None
    */
   def unify(ts: CellT*): Option[CellT] =
     ts.map(Some(_)).reduce[Option[CellT]]((x, y) => unifyOption(x, y))

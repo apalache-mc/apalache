@@ -29,7 +29,7 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
     case ex @ NullEx    => ex
 
     case ex @ OperEx(TlaFunOper.except, fun, args @ _*) =>
-      val trArgs = args map transform
+      val trArgs = args.map(transform)
       val (accessors, newValues) = TlaOper.deinterleave(trArgs)
       val isMultidimensional = accessors.exists { case OperEx(TlaFunOper.tuple, lst @ _*) => lst.size > 1 }
       if (accessors.length < 2 && !isMultidimensional) {
@@ -51,15 +51,15 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
         .typed(TupT1(transformedArgs.map(_.typeTag.asTlaType1()): _*))
       val flatArgs = flattenTuplesInUnchanged(asTuple)
       // map every x to x' = x
-      val eqs = flatArgs map { x: TlaEx =>
+      val eqs = flatArgs.map { x: TlaEx =>
         val tt = x.typeTag.asTlaType1()
-        def xb = tla.fromTlaEx(x) as tt
+        def xb = tla.fromTlaEx(x).as(tt)
         // We translate UNCHANGED x' to x' := x and the generic UNCHANGED e to (e)' = e
         val asgnOrEq: (TlaEx, TlaEx) => BuilderEx = x match {
           case NameEx(n) if stateVariables.contains(n) => tla.assign(_, _)
           case _                                       => tla.eql(_, _)
         }
-        asgnOrEq(tla.prime(xb) as tt, xb) as BoolT1()
+        asgnOrEq(tla.prime(xb).as(tt), xb).as(BoolT1())
       }
       // x' = x /\ y' = y /\ z' = z
       eqs match {
@@ -80,7 +80,7 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
       if (largs.length != rargs.length) {
         tla.bool(false).typed()
       } else {
-        val eqs = largs.zip(rargs) map { case (l, r) => tla.eql(this(l), this(r)).typed(BoolT1()) }
+        val eqs = largs.zip(rargs).map { case (l, r) => tla.eql(this(l), this(r)).typed(BoolT1()) }
         tla.and(eqs: _*).typed(BoolT1())
       }
 
@@ -90,7 +90,7 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
       if (largs.length != rargs.length) {
         tla.bool(true).typed()
       } else {
-        val neqs = largs.zip(rargs) map { case (l, r) => tla.neql(this(l), this(r)).typed(BoolT1()) }
+        val neqs = largs.zip(rargs).map { case (l, r) => tla.neql(this(l), this(r)).typed(BoolT1()) }
         tla.or(neqs: _*).typed(BoolT1())
       }
 
@@ -115,11 +115,11 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
     case ex @ OperEx(TlaSetOper.map, args @ _*) =>
       // rewrite { <<x, <<y, z>> >> \in XYZ |-> e(x, y, z) }
       // to { x_y_z \in XYZ |-> e(x_y_z[1], x_y_z[1][1], x_y_z[1][2])
-      val trArgs = args map transform
+      val trArgs = args.map(transform)
       OperEx(TlaSetOper.map, collapseTuplesInMap(trArgs.head, trArgs.tail): _*)(ex.typeTag)
 
     case ex @ OperEx(funDefOp, args @ _*) if (funDefOp == TlaFunOper.funDef || funDefOp == TlaFunOper.recFunDef) =>
-      val trArgs = args map transform
+      val trArgs = args.map(transform)
       val fun = trArgs.head
       val (vars, sets) = TlaOper.deinterleave(trArgs.tail)
       val (onlyVar, onlySet) =
@@ -140,10 +140,10 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
       OperEx(funDefOp, collapseTuplesInMap(fun, Seq(onlyVar, onlySet)): _*)(ex.typeTag)
 
     case ex @ OperEx(op, args @ _*) =>
-      OperEx(op, args map transform: _*)(ex.typeTag)
+      OperEx(op, args.map(transform): _*)(ex.typeTag)
 
     case ex @ LetInEx(body, defs @ _*) =>
-      LetInEx(transform(body), defs map { d => d.copy(body = transform(d.body)) }: _*)(ex.typeTag)
+      LetInEx(transform(body), defs.map { d => d.copy(body = transform(d.body)) }: _*)(ex.typeTag)
   }
 
   private def flattenTuplesInUnchanged(ex: TlaEx): Seq[TlaEx] = ex match {
@@ -217,7 +217,7 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
     val uniqueName = gen.newName()
     val funT = fun.typeTag.asTlaType1()
     // LET tmp == fun IN
-    val firstDef = tla.declOp(uniqueName, fun) as OperT1(Seq(), funT)
+    val firstDef = tla.declOp(uniqueName, fun).as(OperT1(Seq(), funT))
 
     val defs =
       accessors.zip(newValues).foldLeft(Seq(firstDef)) { case (defs, (a, e)) =>
@@ -265,7 +265,7 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
    */
   def collapseTuplesInMap(mapEx: TlaEx, args: Seq[TlaEx]): Seq[TlaEx] = {
     val (boundEs, setEs) = TlaOper.deinterleave(args)
-    val boundNames = boundEs map { e =>
+    val boundNames = boundEs.map { e =>
       val tupleName = mkTupleName(e)
       NameEx(tupleName)(e.typeTag)
     } // rename tuples into a names, if needed
@@ -351,7 +351,7 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
       case NameEx(name) => name
 
       case OperEx(TlaFunOper.tuple, args @ _*) =>
-        (args map mkTupleName) mkString "_"
+        (args.map(mkTupleName)).mkString("_")
 
       case _ =>
         throw new IllegalArgumentException("Unexpected %s among set filter parameters".format(ex))
@@ -383,7 +383,7 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
         LetInEx(rename(body), newDefs: _*)(e.typeTag)
 
       case OperEx(op, args @ _*) =>
-        OperEx(op, args map rename: _*)(e.typeTag)
+        OperEx(op, args.map(rename): _*)(e.typeTag)
 
       case _ => e
     }

@@ -7,7 +7,8 @@ import at.forsyte.apalache.io.annotations.store._
 /**
  * This class provides us with a singleton factory for Google Guice.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 @Singleton
 class AnnotationStoreProvider extends Provider[AnnotationStore] {

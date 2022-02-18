@@ -13,12 +13,15 @@ private[parser] object Type1Lexer extends RegexParsers {
   override val whiteSpace: Regex = "[ \t\r\f]+".r
 
   /**
-   * Parse the input stream and return the list of tokens. Although collecting the list of all tokens in memory is
-   * not optimal, TLC configurations files are tiny, so it should not be a big deal.
+   * Parse the input stream and return the list of tokens. Although collecting the list of all tokens in memory is not
+   * optimal, TLC configurations files are tiny, so it should not be a big deal.
    *
-   * @param reader a Java reader
-   * @return the list of parsed tokens
-   * @throws TlcConfigParseError when the lexer finds an error
+   * @param reader
+   *   a Java reader
+   * @return
+   *   the list of parsed tokens
+   * @throws TlcConfigParseError
+   *   when the lexer finds an error
    */
   def apply(reader: Reader): List[Type1Token] = parseAll(expr, reader) match {
     case Success(result, _)   => result

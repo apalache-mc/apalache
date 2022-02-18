@@ -42,10 +42,10 @@ class TestAux extends AnyFunSuite with TestingPredefs {
         pa4,
         pa5,
     )
-    val cmp = expected map { case (k, v) =>
+    val cmp = expected.map { case (k, v) =>
       (v, aux.collectSegments(k))
     }
-    cmp foreach { case (ex, act) =>
+    cmp.foreach { case (ex, act) =>
       assert(ex == act)
     }
   }

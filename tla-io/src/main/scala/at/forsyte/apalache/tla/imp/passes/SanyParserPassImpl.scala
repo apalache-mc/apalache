@@ -25,9 +25,11 @@ import org.apache.commons.io.FilenameUtils
  *   Igor Konnov
  */
 class SanyParserPassImpl @Inject() (
-    val options: PassOptions, val sourceStore: SourceStore, val annotationStore: AnnotationStore,
-    val writerFactory: TlaWriterFactory,
-) extends SanyParserPass with LazyLogging {
+    val options: PassOptions,
+    val sourceStore: SourceStore,
+    val annotationStore: AnnotationStore,
+    val writerFactory: TlaWriterFactory)
+    extends SanyParserPass with LazyLogging {
 
   override def name: String = "SanyParser"
 

@@ -3,7 +3,8 @@ package at.forsyte.apalache.tla.lir.oper
 /**
  * The operators defined in the FiniteSets module.
  *
- * @author konnov
+ * @author
+ *   konnov
  */
 abstract class TlaFiniteSetOper extends TlaOper {
   override def interpretation: Interpretation.Value = Interpretation.StandardLib

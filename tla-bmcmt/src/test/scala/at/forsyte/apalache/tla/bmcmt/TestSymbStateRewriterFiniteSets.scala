@@ -8,7 +8,7 @@ trait TestSymbStateRewriterFiniteSets extends RewriterBase {
   private val types = Map(
       "b" -> BoolT1(),
       "i" -> IntT1(),
-      "I" -> SetT1(IntT1())
+      "I" -> SetT1(IntT1()),
   )
 
   test("""Cardinality({1, 2, 3}) = 3""") { rewriterType: SMTEncoding =>

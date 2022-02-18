@@ -7,16 +7,18 @@ import com.typesafe.scalalogging.LazyLogging
 /**
  * An executor context for an offline SMT solver.
  *
- * @param rewriter an expression rewriter
+ * @param rewriter
+ *   an expression rewriter
  */
 class OfflineExecutionContext(var rewriter: SymbStateRewriter)
     extends ExecutionContext[OfflineExecutionContextSnapshot] with LazyLogging {
 
   /**
-   * Create a snapshot of the context. This method is non-destructive, that is,
-   * the context may be used after a snapshot has been made.
+   * Create a snapshot of the context. This method is non-destructive, that is, the context may be used after a snapshot
+   * has been made.
    *
-   * @return a snapshot
+   * @return
+   *   a snapshot
    */
   override def snapshot(): OfflineExecutionContextSnapshot = {
     val rs = rewriter.snapshot()
@@ -26,17 +28,17 @@ class OfflineExecutionContext(var rewriter: SymbStateRewriter)
   }
 
   /**
-   * <p>Recover the context from a snapshot that was created earlier.
-   * It is up to the implementation to require, whether the snapshot should be created
-   * within the same context.</p>
+   * <p>Recover the context from a snapshot that was created earlier. It is up to the implementation to require, whether
+   * the snapshot should be created within the same context.</p>
    *
-   * <p>This method recovers the snapshot in place, so the context gets overwritten
-   * with the snapshot contents. Note that a call recover(A) renders useless the
-   * snapshots that were created in the time frame between A = snapshot()
-   * and recover(A).</p>
+   * <p>This method recovers the snapshot in place, so the context gets overwritten with the snapshot contents. Note
+   * that a call recover(A) renders useless the snapshots that were created in the time frame between A = snapshot() and
+   * recover(A).</p>
    *
-   * @param snapshot a snapshot
-   * @throws IllegalStateException when recovery is impossible
+   * @param snapshot
+   *   a snapshot
+   * @throws IllegalStateException
+   *   when recovery is impossible
    */
   override def recover(snapshot: OfflineExecutionContextSnapshot): Unit = {
     val solver = RecordingSolverContext.createZ3(Some(snapshot.smtLog), snapshot.solverConfig)
@@ -44,7 +46,7 @@ class OfflineExecutionContext(var rewriter: SymbStateRewriter)
     val newRewriter = rewriter match {
       case _: SymbStateRewriterImplWithArrays => new SymbStateRewriterImplWithArrays(solver, rewriter.exprGradeStore)
       case _: SymbStateRewriterImpl           => new SymbStateRewriterImpl(solver, rewriter.exprGradeStore)
-      case oddRewriterType                    => throw new IllegalArgumentException(s"Unexpected rewriter of type $oddRewriterType")
+      case oddRewriterType => throw new IllegalArgumentException(s"Unexpected rewriter of type $oddRewriterType")
     }
     newRewriter.config = rewriter.config
     newRewriter.recover(snapshot.rewriterSnapshot)
@@ -53,8 +55,8 @@ class OfflineExecutionContext(var rewriter: SymbStateRewriter)
   }
 
   /**
-   * Dispose the resources that are associated with the context: rewriter, solver, type finder.
-   * The context should not be used after the call to dispose.
+   * Dispose the resources that are associated with the context: rewriter, solver, type finder. The context should not
+   * be used after the call to dispose.
    */
   override def dispose(): Unit = {
     // dispose the rewriter, which will, in turn, dispose the solver

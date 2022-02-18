@@ -10,7 +10,8 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 /**
  * Implements the IsFiniteSet operator. It is trivial in our case.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class IsFiniteSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(state: SymbState): Boolean = {

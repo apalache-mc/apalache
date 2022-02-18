@@ -1,14 +1,15 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.lir.{
-  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1, TupT1, VarT1
+  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1, TupT1, VarT1,
 }
 import at.forsyte.apalache.tla.typecheck.etc.Substitution.SUB_LIMIT
 
 /**
  * A substitution from type variables to types.
  *
- * @param mapping a mapping from variable names to types.
+ * @param mapping
+ *   a mapping from variable names to types.
  */
 class Substitution(val mapping: Map[EqClass, TlaType1]) {
   // map every variable to its equivalence class (assuming that the classes are disjoint)
@@ -17,11 +18,13 @@ class Substitution(val mapping: Map[EqClass, TlaType1]) {
   }
 
   /**
-   * Substitute variables with the types that are assigned in the context.
-   * Importantly, the substitution is applied only once.
+   * Substitute variables with the types that are assigned in the context. Importantly, the substitution is applied only
+   * once.
    *
-   * @param tp a type term
-   * @return the type term in which the variables have been substituted and whether any substitution has happened
+   * @param tp
+   *   a type term
+   * @return
+   *   the type term in which the variables have been substituted and whether any substitution has happened
    */
   def sub(tp: TlaType1): (TlaType1, Boolean) = {
     tp match {
@@ -73,11 +76,13 @@ class Substitution(val mapping: Map[EqClass, TlaType1]) {
   }
 
   /**
-   * Recursively substitute variables with the types that are assigned in the context.
-   * This substitution applies until it converges, assuming that the substitution is acyclic.
+   * Recursively substitute variables with the types that are assigned in the context. This substitution applies until
+   * it converges, assuming that the substitution is acyclic.
    *
-   * @param tp a type term
-   * @return the type term in which the variables have been substituted
+   * @param tp
+   *   a type term
+   * @return
+   *   the type term in which the variables have been substituted
    */
   def subRec(tp: TlaType1): TlaType1 = {
     var limit = SUB_LIMIT
@@ -99,7 +104,8 @@ class Substitution(val mapping: Map[EqClass, TlaType1]) {
   /**
    * Is the substitution defined over the empty domain?
    *
-   * @return true if the substitution domain is empty
+   * @return
+   *   true if the substitution domain is empty
    */
   def isEmpty: Boolean = {
     mapping.isEmpty

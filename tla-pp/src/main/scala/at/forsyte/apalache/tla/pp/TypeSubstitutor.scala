@@ -10,7 +10,8 @@ import javax.inject.Singleton
 /**
  * <p>Apply a type substitution to the types of a subexpression.</p>
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 @Singleton
 class TypeSubstitutor(tracker: TransformationTracker, sub: Substitution) extends TlaExTransformation {
@@ -22,11 +23,12 @@ class TypeSubstitutor(tracker: TransformationTracker, sub: Substitution) extends
   /**
    * Apply a substitution.
    *
-   * @return a transformed set expression
+   * @return
+   *   a transformed set expression
    */
   def transform: TlaExTransformation = tracker.trackEx {
     case operEx @ OperEx(op, args @ _*) =>
-      val newArgs = args map transform
+      val newArgs = args.map(transform)
       val newOper =
         if (newArgs.map(_.ID) != args.map(_.ID)) {
           // Introduce a new operator only if the arguments have changed.

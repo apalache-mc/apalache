@@ -6,54 +6,23 @@ import at.forsyte.apalache.io.lir.TypeTagPrinter
 import at.forsyte.apalache.tla.lir.storage.SourceLocator
 
 /**
- * A semi-abstraction of a json encoder.
- * It is independent of the concrete JsonRepresentation, resp. JsonFactory implementation.
+ * A semi-abstraction of a json encoder. It is independent of the concrete JsonRepresentation, resp. JsonFactory
+ * implementation.
  *
- * Every internal representation object, Class( arg1 = v1, ... ,argN = vN, variadicArgs : T* = args) gets encoded as json in the following way:
- * {
- * "type": "untyped"
- *  "kind": "Class",
- *  "arg1": enc(v1),
- *  ...
- *  "argN": enc(vN),
- *  "variadicArgs": [
- *    enc(args[0]),
- *    ...
- *    enc(args[k])
- *    ]
- * }
+ * Every internal representation object, Class( arg1 = v1, ... ,argN = vN, variadicArgs : T* = args) gets encoded as
+ * json in the following way: { "type": "untyped" "kind": "Class", "arg1": enc(v1), ... "argN": enc(vN), "variadicArgs":
+ * [ enc(args[0]), ... enc(args[k]) ] }
  *
  * where enc is the encoding.
  *
- * Example:
- * OperEx( TlaArithOper.plus, ValEx( TlaInt(1) ), ValEx(TlaInt(2) ) ) ~~~~~>
- * {
- *  "type": "(Int, Int) => Int",
- *  "kind": "OperEx",
- *  "oper": "+"
- *  "args": [
- *    {
- *    "type": "Int",
- *    "kind": "ValEx",
- *    "value": {
- *      "kind": TlaInt,
- *      "value": 1
- *      }
- *    },
- *    {
- *    "type": "Int",
- *    "kind": "ValEx",
- *    "value": {
- *      "kind": TlaInt,
- *      "value": 2
- *      }
- *    }
- *  ]
- * }
+ * Example: OperEx( TlaArithOper.plus, ValEx( TlaInt(1) ), ValEx(TlaInt(2) ) ) ~~~~~> { "type": "(Int, Int) => Int",
+ * "kind": "OperEx", "oper": "+" "args": [ { "type": "Int", "kind": "ValEx", "value": { "kind": TlaInt, "value": 1 } },
+ * { "type": "Int", "kind": "ValEx", "value": { "kind": TlaInt, "value": 2 } } ] }
  */
 class TlaToJson[T <: JsonRepresentation](
-    factory: JsonFactory[T], locatorOpt: Option[SourceLocator] = None,
-)(implicit typeTagPrinter: TypeTagPrinter)
+    factory: JsonFactory[T],
+    locatorOpt: Option[SourceLocator] = None,
+  )(implicit typeTagPrinter: TypeTagPrinter)
     extends JsonEncoder[T] {
   import TlaToJson._
 
@@ -64,28 +33,31 @@ class TlaToJson[T <: JsonRepresentation](
   implicit def liftBool: Boolean => T = factory.fromBool
 
   /**
-   * If a SourceLocator is given, prepare a `sourceFieldName` field, holding a JSON
-   * with file & position info, in addition to the given fields.
+   * If a SourceLocator is given, prepare a `sourceFieldName` field, holding a JSON with file & position info, in
+   * addition to the given fields.
    */
   private def withOptionalLoc(identifiable: Identifiable)(fields: (String, T)*): T = {
-    val locFieldOpt: Option[T] = locatorOpt map { locator =>
-      locator.sourceOf(identifiable.ID) map { sourceLoc =>
-        factory.mkObj(
-            "filename" -> sourceLoc.filename,
-            "from" -> factory.mkObj(
-                "line" -> sourceLoc.region.start.line,
-                "column" -> sourceLoc.region.start.column,
-            ),
-            "to" -> factory.mkObj(
-                "line" -> sourceLoc.region.end.line,
-                "column" -> sourceLoc.region.end.column,
-            ),
-        )
-      } getOrElse {
-        "UNKNOWN" // Locator is given, but doesn't know the source
-      }
+    val locFieldOpt: Option[T] = locatorOpt.map { locator =>
+      locator
+        .sourceOf(identifiable.ID)
+        .map { sourceLoc =>
+          factory.mkObj(
+              "filename" -> sourceLoc.filename,
+              "from" -> factory.mkObj(
+                  "line" -> sourceLoc.region.start.line,
+                  "column" -> sourceLoc.region.start.column,
+              ),
+              "to" -> factory.mkObj(
+                  "line" -> sourceLoc.region.end.line,
+                  "column" -> sourceLoc.region.end.column,
+              ),
+          )
+        }
+        .getOrElse {
+          "UNKNOWN" // Locator is given, but doesn't know the source
+        }
     }
-    factory.mkObj((locFieldOpt map { sourceFieldName -> _ }) ++: fields: _*)
+    factory.mkObj((locFieldOpt.map { sourceFieldName -> _ }) ++: fields: _*)
   }
 
   override def apply(ex: TlaEx): T = {
@@ -125,22 +97,22 @@ class TlaToJson[T <: JsonRepresentation](
             )
           case TlaBoolSet =>
             factory.mkObj(
-                kindFieldName -> "TlaBoolSet",
+                kindFieldName -> "TlaBoolSet"
             )
           case TlaIntSet =>
             factory.mkObj(
-                kindFieldName -> "TlaIntSet",
+                kindFieldName -> "TlaIntSet"
             )
           case TlaStrSet =>
             factory.mkObj(
-                kindFieldName -> "TlaStrSet",
+                kindFieldName -> "TlaStrSet"
             )
           case TlaNatSet =>
             factory.mkObj(
-                kindFieldName -> "TlaNatSet",
+                kindFieldName -> "TlaNatSet"
             )
           case _ =>
-            //unsupported TlaReal
+            // unsupported TlaReal
             factory.mkObj()
         }
         withLoc(
@@ -150,7 +122,7 @@ class TlaToJson[T <: JsonRepresentation](
         )
 
       case OperEx(oper, args @ _*) =>
-        val argJsons = args map apply
+        val argJsons = args.map(apply)
         withLoc(
             typeFieldName -> typeTagPrinter(ex.typeTag),
             kindFieldName -> "OperEx",
@@ -159,7 +131,7 @@ class TlaToJson[T <: JsonRepresentation](
         )
       case LetInEx(body, decls @ _*) =>
         val bodyJson = apply(body)
-        val declJsons = decls map apply
+        val declJsons = decls.map(apply)
         withLoc(
             typeFieldName -> typeTagPrinter(ex.typeTag),
             kindFieldName -> "LetInEx",
@@ -200,7 +172,7 @@ class TlaToJson[T <: JsonRepresentation](
 
       case decl @ TlaOperDecl(name, formalParams, body) =>
         val bodyJson = apply(body)
-        val paramsJsons = formalParams map { case OperParam(paramName, arity) =>
+        val paramsJsons = formalParams.map { case OperParam(paramName, arity) =>
           factory.mkObj(
               kindFieldName -> "OperParam",
               "name" -> paramName,
@@ -227,7 +199,7 @@ class TlaToJson[T <: JsonRepresentation](
   }
 
   override def apply(module: TlaModule): T = {
-    val declJsons = module.declarations map apply
+    val declJsons = module.declarations.map(apply)
     factory.mkObj(
         kindFieldName -> "TlaModule",
         "name" -> module.name,
@@ -236,7 +208,7 @@ class TlaToJson[T <: JsonRepresentation](
   }
 
   override def makeRoot(modules: Traversable[TlaModule]): T = {
-    val moduleJsons = modules map apply
+    val moduleJsons = modules.map(apply)
     factory.mkObj(
         "name" -> "ApalacheIR",
         versionFieldName -> JsonVersion.current,

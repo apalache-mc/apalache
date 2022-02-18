@@ -7,7 +7,8 @@ import java.io.File
 /**
  * This command initiates the 'test' command line.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class TestCmd extends Command(name = "test", description = "Quickly test a TLA+ specification") with General {
 

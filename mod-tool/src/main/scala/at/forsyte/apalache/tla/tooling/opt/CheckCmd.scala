@@ -9,7 +9,8 @@ import org.backuity.clist.{Command, _}
 /**
  * This command initiates the 'check' command line.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class CheckCmd extends AbstractCheckerCmd(name = "check", description = "Check a TLA+ specification") with General {
 

@@ -13,7 +13,8 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 /**
  * Rewrites \A x \in S: P and \E x \in S: P. The existential quantifier is often replaced with a constant (skolemized).
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogging {
   private val pickRule = new CherryPick(rewriter)
@@ -78,7 +79,11 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
     case _                                                                      => false
   }
 
-  private def expandExistsOrForall(isExists: Boolean, state: SymbState, boundVar: String, boundingSetEx: TlaEx,
+  private def expandExistsOrForall(
+      isExists: Boolean,
+      state: SymbState,
+      boundVar: String,
+      boundingSetEx: TlaEx,
       predEx: TlaEx) = {
     rewriter.solverContext.log("; quantification over a finite set => expanding")
 
@@ -157,7 +162,10 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
     }
   }
 
-  private def skolemExistsInNatOrInt(state: SymbState, boundVar: String, predEx: TlaEx,
+  private def skolemExistsInNatOrInt(
+      state: SymbState,
+      boundVar: String,
+      predEx: TlaEx,
       boundingSetEx: TlaEx): SymbState = {
     rewriter.solverContext.log("; free existential rule over an infinite set " + boundingSetEx)
     var nextState = state.setArena(state.arena.appendCell(IntT()))
@@ -168,15 +176,18 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
     // enforce that the witness satisfies the predicate
     val extendedBinding = Binding(nextState.binding.toMap + (boundVar -> witness))
     // predState.ex contains the predicate applied to the witness
-    nextState = rewriter.rewriteUntilDone(
-        nextState
+    nextState = rewriter.rewriteUntilDone(nextState
           .setRex(predEx)
           .setBinding(extendedBinding))
     nextState
       .setBinding(Binding(nextState.binding.toMap - boundVar)) // forget the binding to x, but not the other bindings!
   }
 
-  private def skolemExistsInRange(state: SymbState, boundVar: String, predEx: TlaEx, leftBound: TlaEx,
+  private def skolemExistsInRange(
+      state: SymbState,
+      boundVar: String,
+      predEx: TlaEx,
+      leftBound: TlaEx,
       rightBound: TlaEx): SymbState = {
     rewriter.solverContext.log(s"; skolemizable existential $boundVar over $leftBound..$rightBound ")
     var nextState = state.setArena(state.arena.appendCell(IntT()))
@@ -189,15 +200,18 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
     // enforce that the witness satisfies the predicate
     val extendedBinding = Binding(nextState.binding.toMap + (boundVar -> witness))
     // predState.ex contains the predicate applied to the witness
-    nextState = rewriter.rewriteUntilDone(
-        nextState
+    nextState = rewriter.rewriteUntilDone(nextState
           .setRex(predEx)
           .setBinding(extendedBinding))
     nextState
       .setBinding(Binding(nextState.binding.toMap - boundVar)) // forget the binding to x, but not the other bindings!
   }
 
-  private def skolemExistsInSet(setState: SymbState, boundVar: String, predEx: TlaEx, set: ArenaCell) = {
+  private def skolemExistsInSet(
+      setState: SymbState,
+      boundVar: String,
+      predEx: TlaEx,
+      set: ArenaCell) = {
     val setCells = setState.arena.getHas(set)
     if (setCells.isEmpty) {
       // \E x \in {}... is FALSE
@@ -212,7 +226,11 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
   //
   // We have to take care of the case, when the set S is actually empty, e.g., S = {1} \ {1}.
   // In this case, exists should return FALSE.
-  private def skolemExistsInStaticallyNonEmptySet(setState: SymbState, boundVar: String, predEx: TlaEx, set: ArenaCell,
+  private def skolemExistsInStaticallyNonEmptySet(
+      setState: SymbState,
+      boundVar: String,
+      predEx: TlaEx,
+      set: ArenaCell,
       setCells: List[ArenaCell]) = {
     // note that \E x \in SUBSET(S): ... is handled separately, so we can use pickByOracle
     rewriter.solverContext.log("; free existential rule over a finite set")
@@ -226,8 +244,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
     // enforce that the witness satisfies the predicate
     val extendedBinding = Binding(nextState.binding.toMap + (boundVar -> pickedCell))
     // predState.ex contains the predicate applied to the witness
-    nextState = rewriter.rewriteUntilDone(
-        nextState
+    nextState = rewriter.rewriteUntilDone(nextState
           .setRex(predEx)
           .setBinding(extendedBinding))
     val predWitness = nextState.ex
@@ -247,7 +264,11 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
   // Introduce a Skolem constant for a free-standing existential quantifier:
   // In case of SUBSET(S), it is really easy: we have to enforce that a witness is a subset of S.
   // A powerset is never empty, so we do not have to worry about this case.
-  private def skolemExistsByPick(setState: SymbState, boundVar: String, predEx: TlaEx, set: ArenaCell) = {
+  private def skolemExistsByPick(
+      setState: SymbState,
+      boundVar: String,
+      predEx: TlaEx,
+      set: ArenaCell) = {
     rewriter.solverContext.log("; free existential rule over " + set.cellType)
     // pick an arbitrary witness
     val pickState = pickRule.pick(set, setState, setState.arena.cellFalse().toNameEx)
@@ -255,8 +276,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
     // enforce that the witness satisfies the predicate
     val extendedBinding = Binding(pickState.binding.toMap + (boundVar -> pickedCell))
     // predState.ex contains the predicate applied to the witness
-    val predState = rewriter.rewriteUntilDone(
-        pickState
+    val predState = rewriter.rewriteUntilDone(pickState
           .setRex(predEx)
           .setBinding(extendedBinding))
     val predWitness = predState.ex

@@ -24,7 +24,7 @@ class TestParameterNormalizer extends AnyFunSuite with BeforeAndAfterEach with T
   test("Nullary: No-op") {
 
     // A == 1
-    val input = tla.declOp("A", tla.int(1)) as OperT1(Seq(), IntT1())
+    val input = tla.declOp("A", tla.int(1)).as(OperT1(Seq(), IntT1()))
 
     val output = parNorm.normalizeDeclaration(input)
 

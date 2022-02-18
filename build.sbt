@@ -43,8 +43,10 @@ ThisBuild / libraryDependencies ++= Seq(
     TestDeps.scalatestplusScalacheck,
 )
 
+// TODO: Remove if we decide we are happy with allways reformatting all
 // Only check/fix against (tracked) files that have changed relative to the trunk
-ThisBuild / scalafmtFilter := "diff-ref=origin/unstable"
+// ThisBuild / scalafmtFilter := "diff-ref=origin/unstable"
+ThisBuild / scalafmtPrintDiff := true
 
 ///////////////////////////////
 // Test configuration //
@@ -61,7 +63,7 @@ lazy val testSettings = Seq(
     // Configure the test reporters for concise but informative output.
     // See https://www.scalatest.org/user_guide/using_scalatest_with_sbt
     // for the meaning of the flags.
-    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oCDEH"),
+    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oCDEH")
 )
 
 /////////////////////////////
@@ -80,7 +82,7 @@ lazy val tlair = (project in file("tlair"))
 lazy val infra = (project in file("mod-infra"))
   .dependsOn(tlair)
   .settings(
-      testSettings,
+      testSettings
   )
 
 lazy val tla_io = (project in file("tla-io"))
@@ -137,7 +139,7 @@ lazy val tla_assignments = (project in file("tla-assignments"))
 lazy val tla_bmcmt = (project in file("tla-bmcmt"))
   .dependsOn(tlair, infra, tla_io, tla_pp, tla_assignments)
   .settings(
-      testSettings,
+      testSettings
   )
 
 lazy val tool = (project in file("mod-tool"))
@@ -169,7 +171,7 @@ lazy val tool = (project in file("mod-tool"))
 lazy val distribution = (project in file("mod-distribution"))
   .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt, tool)
   .settings(
-      testSettings,
+      testSettings
   )
 
 ///////////////

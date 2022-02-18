@@ -15,10 +15,11 @@ import scala.collection.immutable.SortedSet
 /**
  * Rewrites a record constructor [f_1 |-> e_1, ..., f_k |-> e_k].
  *
- * Internally, a record is stored as a tuple,
- * where an index i corresponds to the ith key in the sorted set of record keys.
+ * Internally, a record is stored as a tuple, where an index i corresponds to the ith key in the sorted set of record
+ * keys.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val defaultValueFactory = new DefaultValueFactory(rewriter)
@@ -77,7 +78,7 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
           nextState = nextState.updateArena(_.appendHasNoSmt(recordCell, valueCell))
         }
 
-        recordT.fields foreach Function.tupled(addField)
+        recordT.fields.foreach(Function.tupled(addField))
 
         // Create the domain cell. Note that the actual domain may have fewer keys than recordT.fields.keys
         val (newArena, domain) =
@@ -106,6 +107,6 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         throw new RewriterException("Expected a string as a record key, found: " + k, ex)
     }
 
-    keys map eachKey
+    keys.map(eachKey)
   }
 }

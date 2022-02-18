@@ -18,8 +18,10 @@ class JsonTlaWriter(sourceStore: SourceStore, changeListener: ChangeListener, wr
   /**
    * Write a module, including all declarations
    *
-   * @param module              a module
-   * @param extendedModuleNames the names of the modules to be extended
+   * @param module
+   *   a module
+   * @param extendedModuleNames
+   *   the names of the modules to be extended
    */
   override def write(module: TlaModule, extendedModuleNames: List[String]): Unit = {
     // we ignore extendedModuleNames as they are irrelevant in the JSON representation
@@ -29,7 +31,8 @@ class JsonTlaWriter(sourceStore: SourceStore, changeListener: ChangeListener, wr
   /**
    * Write a declaration, including all expressions
    *
-   * @param decl a declaration
+   * @param decl
+   *   a declaration
    */
   override def write(decl: TlaDecl): Unit = {
     writer.print(new TlaToUJson(Some(sourceLocator)).apply(decl).toString)
@@ -38,7 +41,8 @@ class JsonTlaWriter(sourceStore: SourceStore, changeListener: ChangeListener, wr
   /**
    * Write a TLA+ expression.
    *
-   * @param expr an expression
+   * @param expr
+   *   an expression
    */
   override def write(expr: TlaEx): Unit = {
     writer.print(new TlaToUJson(Some(sourceLocator)).apply(expr).toString)

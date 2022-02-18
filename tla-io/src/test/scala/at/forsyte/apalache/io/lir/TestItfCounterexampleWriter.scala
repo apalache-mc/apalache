@@ -38,7 +38,7 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
     compareJson(
         TlaModule("test", List(TlaConstDecl("N")(intTag), TlaVarDecl("x")(intTag))),
         List(
-            ("0", SortedMap("N" -> ValEx(TlaInt(4))(intTag))),
+            ("0", SortedMap("N" -> ValEx(TlaInt(4))(intTag)))
         ),
         """{
           |  "#meta": {
@@ -67,7 +67,7 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
     val fooBar = RecT1("foo" -> IntT1(), "bar" -> BoolT1())
     val intToStr = FunT1(IntT1(), StrT1())
 
-    def pair(i: Int, s: String) = tuple(int(i), str(s)) as intAndStr
+    def pair(i: Int, s: String) = tuple(int(i), str(s)).as(intAndStr)
     val decls = List(
         TlaVarDecl("a")(Typed(IntT1())),
         TlaVarDecl("b")(Typed(StrT1())),
@@ -102,11 +102,11 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
                       .as(intAndStr),
                     // SetAsFun({ <<1, "a">>, <<2, "b">>, <<3, "c">> })
                     "g" -> (apalacheSetAsFun(enumSet(pair(1, "a"), pair(2, "b"), pair(3, "c"))
-                      as SetT1(intAndStr)) as intToStr),
+                              .as(SetT1(intAndStr))).as(intToStr)),
                     // SetAsFun({})
-                    "h" -> (apalacheSetAsFun(enumSet() as SetT1(intAndStr)) as intToStr),
+                    "h" -> (apalacheSetAsFun(enumSet().as(SetT1(intAndStr))).as(intToStr)),
                     // SetAsFun({ <<1, "a">> })
-                    "i" -> (apalacheSetAsFun(enumSet(pair(1, "a")) as SetT1(intAndStr)) as intToStr),
+                    "i" -> (apalacheSetAsFun(enumSet(pair(1, "a")).as(SetT1(intAndStr))).as(intToStr)),
                 )),
         ),
         """{

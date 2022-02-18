@@ -48,7 +48,8 @@ test/tla/%.md: target/test/tla/%.md.corrected
 	cp -f $< $@
 
 fmt-check:
-	git fetch origin
+  # TODO: rm if we decide to keep running on all source files
+	# git fetch origin
 	sbt scalafmtCheckAll scalafmtSbtCheck || \
 		( echo "TO FIX: run 'make fmt-fix' and commit the changes" ; \
 		  exit 1 )

@@ -14,7 +14,7 @@ object UJsonFactory extends JsonFactory[UJsonRep] {
     // ujson defines a nullary and non-nullary Obj.apply method separately, so we have to improvise a bit
     if (fields.isEmpty) Obj()
     else {
-      val (head, tail) = (fields.head, fields.tail map { case (a, b) => (a, b.value) })
+      val (head, tail) = (fields.head, fields.tail.map { case (a, b) => (a, b.value) })
       Obj.apply(head, tail: _*)
     }
   }

@@ -5,9 +5,9 @@ import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 
 /**
- * Wraps instances of call-by-name with the ApalacheOper.callByName operator, to allow passes to ignore certain
- * forms of processing for these expressions (e.g. not removing the local LET-IN definition)
- * or unwraps them when the operator is no longer necessary to guard against preprocessing.
+ * Wraps instances of call-by-name with the ApalacheOper.callByName operator, to allow passes to ignore certain forms of
+ * processing for these expressions (e.g. not removing the local LET-IN definition) or unwraps them when the operator is
+ * no longer necessary to guard against preprocessing.
  */
 class CallByNameWrapHandler(tracker: TransformationTracker) {
 //  We create class wrappers, so `tr.getClass.getSimpleName` works in the passes
@@ -27,12 +27,12 @@ class CallByNameWrapHandler(tracker: TransformationTracker) {
 
     // recursive processing of composite operators
     case ex @ OperEx(op, args @ _*) =>
-      val newArgs = args map wrap
+      val newArgs = args.map(wrap)
       if (args == newArgs) ex else OperEx(op, newArgs: _*)(ex.typeTag)
 
     case ex @ LetInEx(body, defs @ _*) =>
       // Transform bodies of all op.defs
-      val newDefs = defs map tracker.trackOperDecl { d => d.copy(body = wrap(d.body)) }
+      val newDefs = defs.map(tracker.trackOperDecl { d => d.copy(body = wrap(d.body)) })
       val newBody = wrap(body)
       if (defs == newDefs && body == newBody) ex else LetInEx(newBody, newDefs: _*)(ex.typeTag)
     case ex => ex
@@ -46,12 +46,12 @@ class CallByNameWrapHandler(tracker: TransformationTracker) {
 
     // recursive processing of composite operators
     case ex @ OperEx(op, args @ _*) =>
-      val newArgs = args map unwrap
+      val newArgs = args.map(unwrap)
       if (args == newArgs) ex else OperEx(op, newArgs: _*)(ex.typeTag)
 
     case ex @ LetInEx(body, defs @ _*) =>
       // Transform bodies of all op.defs
-      val newDefs = defs map tracker.trackOperDecl { d => d.copy(body = unwrap(d.body)) }
+      val newDefs = defs.map(tracker.trackOperDecl { d => d.copy(body = unwrap(d.body)) })
       val newBody = unwrap(body)
       if (defs == newDefs && body == newBody) ex else LetInEx(newBody, newDefs: _*)(ex.typeTag)
     case ex => ex

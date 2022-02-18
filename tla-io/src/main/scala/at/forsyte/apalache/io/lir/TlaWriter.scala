@@ -12,22 +12,26 @@ trait TlaWriter {
   /**
    * Write a module, including all declarations
    *
-   * @param mod                 a module
-   * @param extendedModuleNames the names of the modules to be extended
+   * @param mod
+   *   a module
+   * @param extendedModuleNames
+   *   the names of the modules to be extended
    */
   def write(mod: TlaModule, extendedModuleNames: List[String]): Unit
 
   /**
    * Write a declaration, including all expressions
    *
-   * @param decl a declaration
+   * @param decl
+   *   a declaration
    */
   def write(decl: TlaDecl): Unit
 
   /**
    * Write a TLA+ expression.
    *
-   * @param expr an expression
+   * @param expr
+   *   an expression
    */
   def write(expr: TlaEx): Unit
 }

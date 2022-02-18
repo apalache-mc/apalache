@@ -14,9 +14,13 @@ import at.forsyte.apalache.tla.lir.transformations.standard.{
 import com.typesafe.scalalogging.LazyLogging
 
 abstract class PreproPassPartial(
-    val options: PassOptions, renaming: IncrementalRenaming, tracker: TransformationTracker, sourceStore: SourceStore,
-    changeListener: ChangeListener, writerFactory: TlaWriterFactory,
-) extends PreproPass with LazyLogging {
+    val options: PassOptions,
+    renaming: IncrementalRenaming,
+    tracker: TransformationTracker,
+    sourceStore: SourceStore,
+    changeListener: ChangeListener,
+    writerFactory: TlaWriterFactory)
+    extends PreproPass with LazyLogging {
   override def name: String = "PreprocessingPass"
 
   protected def writeAndReturn(module: TlaModule): TlaModule = {
@@ -24,7 +28,9 @@ abstract class PreproPassPartial(
     module
   }
 
-  protected def applyTx(input: TlaModule, transformationSequence: List[(String, TlaModuleTransformation)],
+  protected def applyTx(
+      input: TlaModule,
+      transformationSequence: List[(String, TlaModuleTransformation)],
       postRename: Boolean = false): TlaModule = {
     logger.info(" > Applying standard transformations:")
     val preprocessed = transformationSequence.foldLeft(input) { case (m, (name, xformer)) =>
@@ -46,7 +52,7 @@ abstract class PreproPassPartial(
     // when --debug is enabled, check that all identifiers are assigned a location
     if (options.getOrElse[Boolean]("general", "debug", false)) {
       val sourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)
-      module.operDeclarations foreach sourceLocator.checkConsistency
+      module.operDeclarations.foreach(sourceLocator.checkConsistency)
     }
   }
 
@@ -64,8 +70,11 @@ abstract class PreproPassPartial(
         None
     }
 
-  protected def executeWithParams(tlaModule: TlaModule, transformationSequence: List[(String, TlaModuleTransformation)],
-      postRename: Boolean, lPred: LanguagePred): Option[TlaModule] = {
+  protected def executeWithParams(
+      tlaModule: TlaModule,
+      transformationSequence: List[(String, TlaModuleTransformation)],
+      postRename: Boolean,
+      lPred: LanguagePred): Option[TlaModule] = {
     val afterModule = applyTx(tlaModule, transformationSequence, postRename)
 
     checkLocations(tlaModule)

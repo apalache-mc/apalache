@@ -4,12 +4,13 @@ import at.forsyte.apalache.tla.lir.transformations._
 import at.forsyte.apalache.tla.lir._
 
 /**
- * <p>LetInOptimizer looks for unused let-in definitions and removes them. Such unused definitions can be introduced
- * by preprocessing passes such as Skolemization.</p>
+ * <p>LetInOptimizer looks for unused let-in definitions and removes them. Such unused definitions can be introduced by
+ * preprocessing passes such as Skolemization.</p>
  *
  * <p>This transformation assumes that all names are unique, that is, it should be used after `IncrementalRenaming`.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class LetInOptimizer(tracker: TransformationTracker) extends TlaExTouchTransformation {
   // this set stores the names that are not known to be used yet
