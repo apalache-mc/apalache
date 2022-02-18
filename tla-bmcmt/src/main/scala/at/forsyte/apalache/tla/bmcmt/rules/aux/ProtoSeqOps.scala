@@ -9,10 +9,10 @@ import at.forsyte.apalache.tla.lir._
 /**
  * Proto sequences that contain the absolute minimum for implementing TLA+ sequences. A proto sequence is essentially an
  * array of fixed size (which we call 'capacity'). A sequence is a pair that consists of the length (an integer cell)
- * and a proto sequence (a cell). The important property of the proto sequences is that they appear only in the arenas.
- * Hence, the complexity of iterative operations over proto sequences does not directly propagate to SMT. All operators
- * over sequences are expressible as operations over proto sequences, which makes proto sequences a nice layer of
- * abstraction.
+ * and a proto sequence (a cell). There are two important properties of proto sequences:
+ *
+ * - they only appear in arenas, so the complexity of iterative operations over proto sequences does not directly propagate to SMT. 
+ * - All operators over sequences are expressible as operations over proto sequences, which makes proto sequences a nice layer of abstraction.
  *
  * @param rewriter
  *   a symbolic rewriter
