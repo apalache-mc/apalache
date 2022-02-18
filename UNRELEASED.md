@@ -21,3 +21,8 @@
 ### Features
 
 * `UNCHANGED x` now rewrites to `x' := x` instead of `x' = x`, when `x` is a variable name
+
+
+### Bug fixes
+
+ * Handle `Cardinality(SUBSET S)` without failing, see #1370
