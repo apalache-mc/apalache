@@ -8,19 +8,13 @@ Once you have installed Java, download the [latest
 release](https://github.com/informalsystems/apalache/releases) and unpack into
 a directory of your choice. Depending on your OS, you have two options.
 
-*Option 1: Linux, MacOS.* You can run the script `./bin/apalache-mc`. It is
-that simple.
+*Option 1: Linux, MacOS.* You can run the script `./bin/apalache-mc`, or,
+better, add the `./bin` directory to your `PATH` and run `apalache-mc`.
 
-*Option 2: Windows.* You have to run Java directly:
-
-  - Check the application name in the directory `mod-distribution\target`.
-    It should be called `apalache-pkg-X.Y.Z-RELEASE-full.jar`, where `X.Y.Z`
-    is the release number, for instance, 0.8.0.
-
-  - Run Java as follows:
+*Option 2: Windows.* You have to run Java directly with
 
   ```
-  java.exe -jar mod-distribution\target\apalache-pkg-X.Y.Z-RELEASE-full.jar <args>
+  java.exe -jar ./lib/apalache.jar <args>
   ```
 
   The arguments `<args>` are explained in [Running the Tool](../running.md).
