@@ -10,10 +10,11 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.pp.InlinerOfUserOper
 
 /**
- * Rewriting rule for FoldSeq.
- * Unlike FoldSet, we do not need to consider overapproximations or exclude duplicate elements.
+ * Rewriting rule for FoldSeq. Unlike FoldSet, we do not need to consider overapproximations or exclude duplicate
+ * elements.
  *
- * @author Jure Kukovec
+ * @author
+ *   Jure Kukovec
  */
 class FoldSeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
@@ -54,7 +55,7 @@ class FoldSeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val types = Map(
           "a" -> a,
           "b" -> b,
-          "op" -> OperT1(Seq(a, b), a)
+          "op" -> OperT1(Seq(a, b), a),
       )
 
       // expressions are transient, we don't need tracking

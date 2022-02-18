@@ -27,9 +27,14 @@ import com.typesafe.scalalogging.LazyLogging
  *   next pass to call
  */
 class ReTLAPreproPassImpl @Inject() (
-    options: PassOptions, gen: UniqueNameGenerator, renaming: IncrementalRenaming, tracker: TransformationTracker,
-    sourceStore: SourceStore, changeListener: ChangeListener, writerFactory: TlaWriterFactory,
-) extends PreproPassPartial(
+    options: PassOptions,
+    gen: UniqueNameGenerator,
+    renaming: IncrementalRenaming,
+    tracker: TransformationTracker,
+    sourceStore: SourceStore,
+    changeListener: ChangeListener,
+    writerFactory: TlaWriterFactory)
+    extends PreproPassPartial(
         options,
         renaming,
         tracker,

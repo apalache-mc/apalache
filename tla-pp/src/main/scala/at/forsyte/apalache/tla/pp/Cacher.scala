@@ -11,8 +11,8 @@ class Cacher(nameGenerator: UniqueNameGenerator, tracker: TransformationTracker)
 
   def prepareAppMap(operNames: Set[String], init: Map[TlaEx, String] = Map.empty): TlaEx => Map[TlaEx, String] = {
     def inner(
-        initialMap: Map[TlaEx, String], ex: TlaEx
-    ): Map[TlaEx, String] = ex match {
+        initialMap: Map[TlaEx, String],
+        ex: TlaEx): Map[TlaEx, String] = ex match {
       case OperEx(TlaOper.apply, NameEx(operName), args @ _*) if operNames.contains(operName) =>
         val newMap = // args will be syntactically matched
           if (initialMap.contains(ex)) initialMap
@@ -35,27 +35,28 @@ class Cacher(nameGenerator: UniqueNameGenerator, tracker: TransformationTracker)
   }
 
   def replaceApplicationsWithNullary(
-      operNames: Set[String], appMap: Map[TlaEx, String], letInDecisionFn: TlaOperDecl => Boolean
-  ): TlaExTransformation = tracker.trackEx {
+      operNames: Set[String],
+      appMap: Map[TlaEx, String],
+      letInDecisionFn: TlaOperDecl => Boolean): TlaExTransformation = tracker.trackEx {
     case ex @ OperEx(TlaOper.apply, opName @ NameEx(operName), args @ _*) if operNames.contains(operName) =>
       // Assume ex is in the domain of appMap
       appMap.get(ex).map(n => OperEx(TlaOper.apply, NameEx(n))).getOrElse {
-        val newArgs = args map replaceApplicationsWithNullary(operNames, appMap, letInDecisionFn)
+        val newArgs = args.map(replaceApplicationsWithNullary(operNames, appMap, letInDecisionFn))
         if (args == newArgs) ex else OperEx(TlaOper.apply, opName +: newArgs: _*)
       }
 
     case ex @ OperEx(op, args @ _*) =>
-      val newArgs = args map replaceApplicationsWithNullary(operNames, appMap, letInDecisionFn)
+      val newArgs = args.map(replaceApplicationsWithNullary(operNames, appMap, letInDecisionFn))
       if (args == newArgs) ex else OperEx(op, newArgs: _*)
     case ex @ LetInEx(body, defs @ _*) =>
       // LET-IN introduces new operators which may or may not be added
       val extendedOperNames = operNames ++ defs.withFilter(letInDecisionFn).map(_.name)
-      val modifiedDefs = defs map {
+      val modifiedDefs = defs.map {
         cacheApplicaitons(extendedOperNames, letInDecisionFn)(_).asInstanceOf[TlaOperDecl]
       }
       val extendedAppMap = prepareAppMap(extendedOperNames, appMap)(body)
       val diffMap = extendedAppMap -- appMap.keySet
-      val extendedDefs = diffMap.toSeq map { case (k, v) =>
+      val extendedDefs = diffMap.toSeq.map { case (k, v) =>
         TlaOperDecl(v, List.empty,
             fixPointRepeat(replaceApplicationsWithNullary(extendedOperNames, diffMap - k, letInDecisionFn), k))
       }
@@ -76,8 +77,8 @@ class Cacher(nameGenerator: UniqueNameGenerator, tracker: TransformationTracker)
   }
 
   def cacheApplicaitons(
-      operNames: Set[String], letInDecisionFn: TlaOperDecl => Boolean
-  ): TlaDecl => TlaDecl = {
+      operNames: Set[String],
+      letInDecisionFn: TlaOperDecl => Boolean): TlaDecl => TlaDecl = {
     case decl @ TlaOperDecl(_, _, body) =>
       val appMap = prepareAppMap(operNames)(body)
       val letInBodyCandidate =
@@ -90,7 +91,7 @@ class Cacher(nameGenerator: UniqueNameGenerator, tracker: TransformationTracker)
           if (appMap.isEmpty) {
             letInBodyCandidate
           } else {
-            val defs = appMap.toSeq map { case (k, v) =>
+            val defs = appMap.toSeq.map { case (k, v) =>
               TlaOperDecl(v, List.empty,
                   fixPointRepeat(replaceApplicationsWithNullary(operNames, appMap - k, letInDecisionFn), k))
             }
@@ -109,7 +110,7 @@ class Cacher(nameGenerator: UniqueNameGenerator, tracker: TransformationTracker)
     val operDecls = module.operDeclarations
 
     val recursive = operDecls.withFilter(_.isRecursive).map(_.name).toSet
-    val newDecls = module.declarations map {
+    val newDecls = module.declarations.map {
       cacheApplicaitons(recursive, Cacher.DecisionFns.recursive)
     }
 

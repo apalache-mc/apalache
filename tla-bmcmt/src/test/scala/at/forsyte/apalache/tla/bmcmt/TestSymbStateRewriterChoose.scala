@@ -8,7 +8,7 @@ trait TestSymbStateRewriterChoose extends RewriterBase with TestingPredefs {
   private val types = Map(
       "b" -> BoolT1(),
       "i" -> IntT1(),
-      "I" -> SetT1(IntT1())
+      "I" -> SetT1(IntT1()),
   )
 
   test("""CHOOSE x \in {1, 2, 3}: x > 1""") { rewriterType: SMTEncoding =>

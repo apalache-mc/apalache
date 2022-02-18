@@ -7,15 +7,19 @@ import at.forsyte.apalache.tla.typecheck.etc.{EtcRef, ExactRef}
 import at.forsyte.apalache.tla.typecheck.{TypeCheckerListener, TypingInputException}
 import com.typesafe.scalalogging.LazyLogging
 
-class LoggingTypeCheckerListener(sourceStore: SourceStore, changeListener: ChangeListener,
+class LoggingTypeCheckerListener(
+    sourceStore: SourceStore,
+    changeListener: ChangeListener,
     isPolymorphismEnabled: Boolean)
     extends TypeCheckerListener with LazyLogging {
 
   /**
    * This method is called when the type checker finds the type of an expression.
    *
-   * @param sourceRef a reference to the source expression; this reference must be exact
-   * @param tp        its type
+   * @param sourceRef
+   *   a reference to the source expression; this reference must be exact
+   * @param tp
+   *   its type
    */
   override def onTypeFound(sourceRef: ExactRef, tp: TlaType1): Unit = {
     if (!isPolymorphismEnabled && tp.usedNames.nonEmpty) {
@@ -29,8 +33,10 @@ class LoggingTypeCheckerListener(sourceStore: SourceStore, changeListener: Chang
   /**
    * This method is called when the type checker finds a type error.
    *
-   * @param sourceRef a reference to the source expression; this one does not have to be exact
-   * @param message   the error description
+   * @param sourceRef
+   *   a reference to the source expression; this one does not have to be exact
+   * @param message
+   *   the error description
    */
   override def onTypeError(sourceRef: EtcRef, message: String): Unit = {
     logger.error("[%s]: %s".format(findLoc(sourceRef.tlaId), message))

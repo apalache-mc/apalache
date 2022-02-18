@@ -11,7 +11,8 @@ import at.forsyte.apalache.tla.lir.oper.TlaSeqOper
 /**
  * Sequence operations: Head, Tail, Len, SubSeq, and Append.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val picker = new CherryPick(rewriter)
@@ -78,7 +79,11 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     nextState.setRex(newSeqCell.toNameEx)
   }
 
-  private def translateSubSeq(state: SymbState, seq: TlaEx, newStartEx: TlaEx, newEndEx: TlaEx) = {
+  private def translateSubSeq(
+      state: SymbState,
+      seq: TlaEx,
+      newStartEx: TlaEx,
+      newEndEx: TlaEx) = {
     var nextState = state
 
     def rewriteToCell(ex: TlaEx): ArenaCell = {
@@ -102,12 +107,11 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val expectedEnd = rewriteToCell(expectedEndEx)
     // use the computed values, as soon as they do not violate the invariant:
     //   start <= end, start >= oldStart, end <= oldEnd
-    val seqInvariant = rewriteToCell(
-        tla
+    val seqInvariant = rewriteToCell(tla
           .and(
               tla.le(expectedStart.toNameEx ? "i", expectedEnd.toNameEx ? "i") ? "b",
               tla.le(start.toNameEx ? "i", expectedStart.toNameEx ? "i") ? "b",
-              tla.le(expectedEnd.toNameEx ? "i", end.toNameEx ? "i") ? "b"
+              tla.le(expectedEnd.toNameEx ? "i", end.toNameEx ? "i") ? "b",
           )
           .typed(types, "b"))
 
@@ -141,24 +145,22 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     def transform(oldElemCell: ArenaCell, no: Int): ArenaCell = {
       val (oracleState, oracle) = picker.oracleFactory.newDefaultOracle(nextState, 2)
       nextState = oracleState
-      nextState = picker.pickByOracle(nextState, oracle, Seq(oldElemCell, newElemCell),
-          nextState.arena.cellTrue().toNameEx)
+      nextState = picker
+        .pickByOracle(nextState, oracle, Seq(oldElemCell, newElemCell), nextState.arena.cellTrue().toNameEx)
       // pick the element from the old sequence: start <= no /\ no < end => oracle = 0
-      solverAssert(
-          tla
+      solverAssert(tla
             .impl(tla.and(tla.le(start.toNameEx ? "i", tla.int(no)) ? "b",
                     tla.lt(tla.int(no), end.toNameEx ? "i") ? "b") ? "b", oracle.whenEqualTo(nextState, 0) ? "b")
             .typed(types, "b"))
       // pick the element from the new sequence: no = end => oracle = 1
-      solverAssert(
-          tla
+      solverAssert(tla
             .impl(tla.eql(tla.int(no), end.toNameEx ? "i") ? "b", oracle.whenEqualTo(nextState, 1) ? "b")
             .typed(types, "b"))
       // the other elements are unrestricted, give some freedom to the solver
       nextState.asCell
     }
 
-    val transformedCells = oldElems.zipWithIndex map (transform _).tupled
+    val transformedCells = oldElems.zipWithIndex.map((transform _).tupled)
     val newCells = (newElemCell :: transformedCells.reverse).reverse
 
     // introduce a new sequence that statically has one more element
@@ -215,9 +217,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // pre-compute integer constants that are used when computing every element
     // offset2 = N1 + start2 - len1
     nextState = rewriter
-      .rewriteUntilDone(
-          nextState.setRex(
-              tla
+      .rewriteUntilDone(nextState.setRex(tla
                 .minus(tla.plus(tla.int(elems1.size) ? "i", start2.toNameEx ? "i") ? "i", len1.toNameEx ? "i")
                 .typed(types, "i")))
     val offset2 = nextState.asCell
@@ -257,7 +257,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
       pickedResult
     }
 
-    val newCells: Seq[ArenaCell] = 0.until(ntotal) map pickElem
+    val newCells: Seq[ArenaCell] = 0.until(ntotal).map(pickElem)
 
     // finally, add start, end, and the elements to the sequence
     nextState = nextState.updateArena(_.appendHasNoSmt(seq3, start3 +: end3 +: newCells: _*))

@@ -12,7 +12,8 @@ import at.forsyte.apalache.tla.pp.NotInKeraError
 /**
  * Rewrites an integer range a..b.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class IntDotDotRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) extends RewritingRule {
   private def simplifier = new ConstSimplifierForSmt()
@@ -40,7 +41,7 @@ class IntDotDotRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) e
 
   private def getRange(ex: TlaEx, elems: Seq[TlaEx]): (Int, Int) = {
     // Do a shallow simplification. The expression optimizer pass should have done a deep one.
-    elems map (simplifier.simplifyShallow(_)) match {
+    elems.map(simplifier.simplifyShallow(_)) match {
       case Seq(ValEx(TlaInt(left)), ValEx(TlaInt(right))) =>
         if (!left.isValidInt || !right.isValidInt) {
           throw new RewriterException("Range bounds are too large to fit in scala.Int", ex)

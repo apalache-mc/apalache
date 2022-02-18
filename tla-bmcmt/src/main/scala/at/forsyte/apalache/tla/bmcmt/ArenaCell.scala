@@ -23,7 +23,8 @@ object ArenaCell {
 /**
  * A symbolic memory cell. Each cell has an identifier (similar to a memory address in a physical computer).
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class ArenaCell(val id: Int, val cellType: CellT) extends Comparable[ArenaCell] with Serializable {
   override def toString: String = {

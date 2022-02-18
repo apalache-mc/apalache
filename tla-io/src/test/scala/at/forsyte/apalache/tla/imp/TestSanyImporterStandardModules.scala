@@ -139,7 +139,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
       case Some(TlaOperDecl(_, _, oe @ OperEx(oper, _*))) =>
         val loc = sourceStore.find(oe.ID).get
         assert(
-            SourceRegion(SourcePosition(4, 9), SourcePosition(4, 13)) == loc.region,
+            SourceRegion(SourcePosition(4, 9), SourcePosition(4, 13)) == loc.region
         )
 
       case _ => fail()
@@ -505,7 +505,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
     //
     // -DTLA-Library=<APALACHE_HOME>/src/tla
     System.out.println(
-        "TLA-Library = %s".format(System.getProperty("TLA-Library")),
+        "TLA-Library = %s".format(System.getProperty("TLA-Library"))
     )
 
     val (rootName, modules) = sanyImporter

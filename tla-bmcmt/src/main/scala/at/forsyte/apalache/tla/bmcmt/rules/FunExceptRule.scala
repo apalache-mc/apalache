@@ -14,7 +14,8 @@ import at.forsyte.apalache.tla.lir.{FunT1, RecT1, TupT1, BoolT1, SetT1}
 /**
  * Rewriting EXCEPT for functions, tuples, and records.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private def cacheEq(s: SymbState, l: ArenaCell, r: ArenaCell) = rewriter.lazyEq.cacheOneEqConstraint(s, l, r)
@@ -55,7 +56,11 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  def rewriteFun(state: SymbState, funCell: ArenaCell, funT: FunT1, indexCell: ArenaCell,
+  def rewriteFun(
+      state: SymbState,
+      funCell: ArenaCell,
+      funT: FunT1,
+      indexCell: ArenaCell,
       valueCell: ArenaCell): SymbState = {
     // rewrite tuples <<j_i, e_i>> to cells
     def mkPair(indexCell: ArenaCell, resCell: ArenaCell): TlaEx = {
@@ -100,7 +105,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
 
     // compute all updated cells in case we are dealing with a function over non-basic indices
-    val updatedCells = relationCells map eachRelationPair
+    val updatedCells = relationCells.map(eachRelationPair)
 
     // cache equality constraints between the indices and the indices in the function relation
     def cacheEqForPair(p: ArenaCell): Unit = {
@@ -109,7 +114,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
 
     // cache all equalities
-    relationCells foreach cacheEqForPair
+    relationCells.foreach(cacheEqForPair)
 
     // introduce new function
     nextState = nextState.updateArena(_.appendCell(funCell.cellType))
@@ -120,12 +125,16 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
       .setRex(newFunCell.toNameEx)
   }
 
-  def rewriteRec(state: SymbState, oldRecord: ArenaCell, recType: RecT1, indexEx: TlaEx,
+  def rewriteRec(
+      state: SymbState,
+      oldRecord: ArenaCell,
+      recType: RecT1,
+      indexEx: TlaEx,
       newValue: ArenaCell): SymbState = {
 
     val keyToUpdate = indexEx match {
       case ValEx(TlaStr(key)) => key
-      case ex                 => throw new RewriterException("Expected a string when updating a record, found: " + ex, ex)
+      case ex => throw new RewriterException("Expected a string when updating a record, found: " + ex, ex)
     }
 
     // create a new record
@@ -151,12 +160,16 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     rewriter.rewriteUntilDone(nextState.setRex(newRecord.toNameEx))
   }
 
-  def rewriteTuple(state: SymbState, oldTuple: ArenaCell, tupleT: TupT1, indexEx: TlaEx,
+  def rewriteTuple(
+      state: SymbState,
+      oldTuple: ArenaCell,
+      tupleT: TupT1,
+      indexEx: TlaEx,
       newValue: ArenaCell): SymbState = {
 
     val indexToUpdate = indexEx match {
       case ValEx(TlaInt(index)) => index.toInt
-      case ex                   => throw new RewriterException("Expected a number when updating a tuple, found: " + ex, ex)
+      case ex => throw new RewriterException("Expected a number when updating a tuple, found: " + ex, ex)
     }
 
     // create a new tuple

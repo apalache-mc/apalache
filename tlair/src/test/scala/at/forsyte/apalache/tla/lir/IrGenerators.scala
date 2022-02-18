@@ -8,25 +8,23 @@ import org.scalacheck.Gen
 import org.scalacheck.Gen.{choose, const, identifier, listOf, listOfN, lzy, oneOf, resize, sized}
 
 /**
- * <p>Generators of TLA expressions and declarations to enable testing of our code with Scalacheck.
- * The current implementation respects operator arity but it may disrespect the expected structure of the arguments,
- * which is usually documented in Javadoc. In the future, we may want to enforce the structure by one of the following
- * solutions: (1) By adding preconditions to the constructors of the IR operators, or (2) by throwing
- * `MalformedTlaError`.</p>
+ * <p>Generators of TLA expressions and declarations to enable testing of our code with Scalacheck. The current
+ * implementation respects operator arity but it may disrespect the expected structure of the arguments, which is
+ * usually documented in Javadoc. In the future, we may want to enforce the structure by one of the following solutions:
+ * (1) By adding preconditions to the constructors of the IR operators, or (2) by throwing `MalformedTlaError`.</p>
  *
  * <p>Assumptions and limitations:</p>
  *
- * <ol>
- * <li>The current implementation of the generators works best for the code that is unaware of the semantics
- * of TLA+ operators.</li>
+ * <ol> <li>The current implementation of the generators works best for the code that is unaware of the semantics of
+ * TLA+ operators.</li>
  *
  * <li>Our generators neither produce nor apply higher-order operators.</li>
  *
  * <li>The generators tag the produced expressions with either Untyped() or Typed[Int](i) for a random integer value,
- * which should be sufficient for checking that the types are correctly propagated.</li>
- * </ol>
+ * which should be sufficient for checking that the types are correctly propagated.</li> </ol>
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 trait IrGenerators extends TlaType1Gen {
 
@@ -47,8 +45,8 @@ trait IrGenerators extends TlaType1Gen {
   val maxArgs: Int = 4
 
   /**
-   * The maximal number of declarations per a LET-IN definition. Two is a good choice: It is large enough to capture
-   * the bugs where only one declaration is processed.
+   * The maximal number of declarations per a LET-IN definition. Two is a good choice: It is large enough to capture the
+   * bugs where only one declaration is processed.
    */
   val maxDefsPerLetIn: Int = 2
 
@@ -102,7 +100,8 @@ trait IrGenerators extends TlaType1Gen {
   /**
    * Generate an integer literal.
    *
-   * @return a generator of `ValEx(TlaInt(_))`.
+   * @return
+   *   a generator of `ValEx(TlaInt(_))`.
    */
   def genInt: Gen[ValEx] = for {
     i <- arbitrary[Int]
@@ -112,7 +111,8 @@ trait IrGenerators extends TlaType1Gen {
   /**
    * Generate a Boolean literal.
    *
-   * @return a generator of `ValEx(TlaBool(_))`.
+   * @return
+   *   a generator of `ValEx(TlaBool(_))`.
    */
   def genBool: Gen[ValEx] = for {
     b <- arbitrary[Boolean]
@@ -122,7 +122,8 @@ trait IrGenerators extends TlaType1Gen {
   /**
    * Generate a string literal. We always generate identifiers.
    *
-   * @return a generator of `ValEx(TlaStr(_))`.
+   * @return
+   *   a generator of `ValEx(TlaStr(_))`.
    */
   def genStr: Gen[ValEx] = for {
     s <- identifier
@@ -132,7 +133,8 @@ trait IrGenerators extends TlaType1Gen {
   /**
    * Generate a value expression.
    *
-   * @return a generator of `ValEx(_)`.
+   * @return
+   *   a generator of `ValEx(_)`.
    */
   def genValEx: Gen[ValEx] =
     oneOf(genInt, genBool, genStr, const(ValEx(TlaBoolSet)), const(ValEx(TlaIntSet)), const(ValEx(TlaNatSet)))
@@ -140,7 +142,8 @@ trait IrGenerators extends TlaType1Gen {
   /**
    * Generate a name expression.
    *
-   * @return a generator of `NameEx(_)`.
+   * @return
+   *   a generator of `NameEx(_)`.
    */
   def genNameEx(ctx: UserContext): Gen[NameEx] = for {
     s <- oneOf(ctx.keys)
@@ -150,8 +153,10 @@ trait IrGenerators extends TlaType1Gen {
   /**
    * Generate an application of a user-defined operator.
    *
-   * @param ctx a context of user-defined operators
-   * @return a generator that produces applications of user-defined operators
+   * @param ctx
+   *   a context of user-defined operators
+   * @return
+   *   a generator that produces applications of user-defined operators
    */
   def genOperApply(exGen: UserContext => Gen[TlaEx])(ctx: UserContext): Gen[TlaEx] = sized { size =>
     for {
@@ -165,9 +170,12 @@ trait IrGenerators extends TlaType1Gen {
   /**
    * Generate a let-in expression that declares 1..maxDefsPerLetIn operators.
    *
-   * @param exGen a generator of TLA expressions
-   * @param ctx   a context of user-defined operators
-   * @return a generator of let-in definitions
+   * @param exGen
+   *   a generator of TLA expressions
+   * @param ctx
+   *   a context of user-defined operators
+   * @return
+   *   a generator of let-in definitions
    */
   def genLetInEx(exGen: UserContext => Gen[TlaEx])(ctx: UserContext): Gen[TlaEx] = sized { size =>
     if (size <= 1) {
@@ -175,7 +183,7 @@ trait IrGenerators extends TlaType1Gen {
     } else {
       for {
         ndefs <- choose(1, maxDefsPerLetIn)
-        defs <- listOfN(ndefs, resize(size - 1, genTlaOperDecl(exGen)(ctx))) suchThat { ds =>
+        defs <- listOfN(ndefs, resize(size - 1, genTlaOperDecl(exGen)(ctx))).suchThat { ds =>
           // no new name is present in the context
           ds.map(_.name).toSet.intersect(ctx.keySet).isEmpty &&
           // and all new names are mutually unique
@@ -190,9 +198,12 @@ trait IrGenerators extends TlaType1Gen {
   /**
    * Generate a TLA expression.
    *
-   * @param builtInOpers a sequence of built-in operators to use.
-   * @param ctx          a context of user-defined operators.
-   * @return a generator that produces TLA expression (their height is bounded with `sized` and `resize`).
+   * @param builtInOpers
+   *   a sequence of built-in operators to use.
+   * @param ctx
+   *   a context of user-defined operators.
+   * @return
+   *   a generator that produces TLA expression (their height is bounded with `sized` and `resize`).
    */
   def genTlaEx(builtInOpers: Seq[TlaOper])(ctx: UserContext): Gen[TlaEx] = lzy {
     sized { size =>
@@ -228,25 +239,30 @@ trait IrGenerators extends TlaType1Gen {
   /**
    * Generate an operator declaration.
    *
-   * @param exGen a generator of TLA expressions
-   * @param ctx   a context of user-defined operators
-   * @return a generator of operator declarations
+   * @param exGen
+   *   a generator of TLA expressions
+   * @param ctx
+   *   a context of user-defined operators
+   * @return
+   *   a generator of operator declarations
    */
   def genTlaOperDecl(exGen: UserContext => Gen[TlaEx])(ctx: UserContext): Gen[TlaOperDecl] = {
     for {
-      name <- identifier suchThat (n => !ctx.contains(n))
+      name <- identifier.suchThat(n => !ctx.contains(n))
       body <- exGen(ctx)
       nparams <- choose(0, maxArgs)
       params <- listOfN(nparams, identifier)
       tt <- genTypeTag
-    } yield TlaOperDecl(name, params map (n => OperParam(n)), body).withTag(tt)
+    } yield TlaOperDecl(name, params.map(n => OperParam(n)), body).withTag(tt)
   }
 
   /**
    * Generate an assumption.
    *
-   * @param exGen a generator of TLA expressions
-   * @return a generator of assumptions
+   * @param exGen
+   *   a generator of TLA expressions
+   * @return
+   *   a generator of assumptions
    */
   def genTlaAssumeDecl(exGen: Gen[TlaEx]): Gen[TlaAssumeDecl] = {
     for {
@@ -258,12 +274,14 @@ trait IrGenerators extends TlaType1Gen {
   /**
    * Generate a constant declaration.
    *
-   * @param ctx a context of user declarations.
-   * @return a generator of constant declarations
+   * @param ctx
+   *   a context of user declarations.
+   * @return
+   *   a generator of constant declarations
    */
   def genTlaConstDecl(ctx: UserContext): Gen[TlaConstDecl] = {
     for {
-      name <- identifier suchThat (n => !ctx.contains(n))
+      name <- identifier.suchThat(n => !ctx.contains(n))
       tt <- genTypeTag
     } yield TlaConstDecl(name).withTag(tt)
   }
@@ -271,12 +289,14 @@ trait IrGenerators extends TlaType1Gen {
   /**
    * Generate a variable declaration.
    *
-   * @param ctx a context of user declarations.
-   * @return a generator of constant declarations
+   * @param ctx
+   *   a context of user declarations.
+   * @return
+   *   a generator of constant declarations
    */
   def genTlaVarDecl(ctx: UserContext): Gen[TlaVarDecl] = {
     for {
-      name <- identifier suchThat (n => !ctx.contains(n))
+      name <- identifier.suchThat(n => !ctx.contains(n))
       tt <- genTypeTag
     } yield TlaVarDecl(name).withTag(tt)
   }
@@ -284,8 +304,10 @@ trait IrGenerators extends TlaType1Gen {
   /**
    * Generate a declaration of: a constant, a variable, an operator definition, an assumption.
    *
-   * @param ctx a context of user declarations.
-   * @return a generator of constant declarations
+   * @param ctx
+   *   a context of user declarations.
+   * @return
+   *   a generator of constant declarations
    */
   def genTlaDecl(exGen: UserContext => Gen[TlaEx])(ctx: UserContext): Gen[TlaDecl] = {
     for {
@@ -296,8 +318,10 @@ trait IrGenerators extends TlaType1Gen {
   /**
    * Generate a declaration of: a constant, an operator definition, an assumption.
    *
-   * @param ctx a context of user declarations.
-   * @return a generator of constant declarations
+   * @param ctx
+   *   a context of user declarations.
+   * @return
+   *   a generator of constant declarations
    */
   def genTlaDeclButNotVar(exGen: UserContext => Gen[TlaEx])(ctx: UserContext): Gen[TlaDecl] = {
     for {
@@ -308,8 +332,10 @@ trait IrGenerators extends TlaType1Gen {
   /**
    * Generate a module by providing an expression generator.
    *
-   * @param exGen a generator of TLA expressions
-   * @return a generator of modules
+   * @param exGen
+   *   a generator of TLA expressions
+   * @return
+   *   a generator of modules
    */
   def genTlaModule(exGen: UserContext => Gen[TlaEx]): Gen[TlaModule] = {
     genTlaModuleWith(genTlaDecl(exGen))
@@ -318,8 +344,10 @@ trait IrGenerators extends TlaType1Gen {
   /**
    * Generate a module by providing the declaration generator and expression generator.
    *
-   * @param declGen generator of TLA declarations
-   * @return a generator of modules
+   * @param declGen
+   *   generator of TLA declarations
+   * @return
+   *   a generator of modules
    */
   def genTlaModuleWith(declGen: UserContext => Gen[TlaDecl]): Gen[TlaModule] = {
     for {
@@ -340,9 +368,9 @@ trait IrGenerators extends TlaType1Gen {
           head <- declGen(ctx)
           operSig = UserOperSig(head.name,
               head match {
-            case TlaOperDecl(_, params, _) => params.length
-            case _                         => 0
-          })
+                case TlaOperDecl(_, params, _) => params.length
+                case _                         => 0
+              })
           tail <- resize(size - 1, genTlaDeclList(declGen)(ctx + (head.name -> operSig)))
         } yield head :: tail
       }
@@ -357,7 +385,7 @@ trait IrGenerators extends TlaType1Gen {
 
     case arity =>
       for {
-        sz <- choose(0, maxArgs) suchThat arity.cond
+        sz <- choose(0, maxArgs).suchThat(arity.cond)
         lst <- listOfN(sz, argGen)
       } yield lst
   }

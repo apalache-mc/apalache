@@ -7,7 +7,8 @@ import org.backuity.clist.{Command, _}
 /**
  * This command initiates the 'typecheck' command line.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class TypeCheckCmd
     extends Command(name = "typecheck", description = "Check types in a TLA+ specification") with General {

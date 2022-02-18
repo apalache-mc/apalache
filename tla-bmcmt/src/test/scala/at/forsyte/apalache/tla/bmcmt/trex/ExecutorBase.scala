@@ -18,7 +18,9 @@ trait ExecutorBase[SnapshotT] extends FixtureAnyFunSuite {
    * Create a `withFixture` method using that works within execution context constructed from the `ctxFactory`, using
    * the given solver
    */
-  protected def withFixtureInContext(solver: SolverContext, exeCtxFactory: SymbStateRewriterImpl => ExecutorContextT,
+  protected def withFixtureInContext(
+      solver: SolverContext,
+      exeCtxFactory: SymbStateRewriterImpl => ExecutorContextT,
       test: OneArgTest): Outcome = {
     val rewriter = new SymbStateRewriterImpl(solver, new ExprGradeStoreImpl())
     val exeCtx = exeCtxFactory(rewriter)

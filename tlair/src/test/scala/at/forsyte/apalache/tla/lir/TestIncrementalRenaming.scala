@@ -309,7 +309,7 @@ class TestIncrementalRenaming extends AnyFunSuite with TestingPredefs with Befor
 
   test("Test offsetName") {
     val offsets = Map(
-        "x" -> 1,
+        "x" -> 1
     )
 
     val fn: String => String = offsetName(offsets)

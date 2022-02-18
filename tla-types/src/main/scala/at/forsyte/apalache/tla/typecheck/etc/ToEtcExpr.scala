@@ -118,7 +118,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
 
       case _ =>
         // use a type annotation, if there is any
-        findAnnotation(annotationStore, decl.ID, StandardAnnotations.TYPE) map {
+        findAnnotation(annotationStore, decl.ID, StandardAnnotations.TYPE).map {
           case Annotation(StandardAnnotations.TYPE, AnnotationStr(annotationText)) =>
             parseType(decl.name, annotationText)
 
@@ -160,7 +160,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
     // since we group by 2 below, this case should be unreachable
     case moreThanTwo =>
       throw new IllegalArgumentException(
-          s"Reached impossible state in validateRecSetPair: ${moreThanTwo}",
+          s"Reached impossible state in validateRecSetPair: ${moreThanTwo}"
       )
   }
 
@@ -395,11 +395,11 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
       case OperEx(TlaSetOper.map, mapExpr, args @ _*) =>
         // { x \in S, y \in T: e }
         val (vars, sets) = TlaOper.deinterleave(args)
-        val bindings = translateBindings(vars zip sets: _*)
+        val bindings = translateBindings(vars.zip(sets): _*)
         val a = varPool.fresh
         val otherTypeVars =
           varPool.fresh(
-              bindings.length,
+              bindings.length
           ) // start with "b", as "a" goes to the result
         // the principal type of is ((b, c) => a) => Set(a)
         val principal = OperT1(Seq(OperT1(otherTypeVars, a)), SetT1(a))
@@ -469,7 +469,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
                   case orphan =>
                     throw new TypingException(s"Invalid bound variables and sets $orphan in: $ex", ex.ID)
                 }
-                .toSeq: _*,
+                .toSeq: _*
           )
 
         val a = varPool.fresh
@@ -500,7 +500,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         // To guarantee that the function and the updates have the same types, produce (c, ..., c) => c
         val a = varPool.fresh
         val nargs = accessors.length + 1
-        val sig = OperT1(1.to(nargs) map { _ => a }, a)
+        val sig = OperT1(1.to(nargs).map { _ => a }, a)
         mkApp(ref, Seq(sig), this(fun) +: towersOfUnapply: _*)
 
       case funDef @ OperEx(TlaFunOper.recFunDef, body, args @ _*) =>
@@ -518,7 +518,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
                   case orphan =>
                     throw new TypingException(s"Invalid bound variables and sets ${orphan} in: $ex", ex.ID)
                 }
-                .toSeq: _*,
+                .toSeq: _*
           )
 
         val resultType = varPool.fresh
@@ -808,11 +808,15 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
    *   translated bindings, where all tuples have been unpacked
    */
   private def translateBindings(
-      bindings: (TlaEx, TlaEx)*,
-  ): Seq[(EtcName, EtcExpr)] = {
+      bindings: (TlaEx, TlaEx)*): Seq[(EtcName, EtcExpr)] = {
     // Project a tuple and a set of dim-tuples on the ith element (starting with 0!).
     // We have to pass a tuple as well, in order to back-propagate the type later.
-    def project(id: UID, tupleId: UID, setEx: EtcExpr, dim: Int, index: Int): EtcExpr = {
+    def project(
+        id: UID,
+        tupleId: UID,
+        setEx: EtcExpr,
+        dim: Int,
+        index: Int): EtcExpr = {
       val typeVars = varPool.fresh(dim)
       val tupleType = TupT1(typeVars: _*)
       // e.g., (<<a, b, c>>, Set(<<a, b, c>>)) => Set(b)
@@ -825,8 +829,9 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
     }
 
     def unpackOne(
-        id: UID, target: TlaEx, set: EtcExpr,
-    ): Seq[(EtcName, EtcExpr)] = {
+        id: UID,
+        target: TlaEx,
+        set: EtcExpr): Seq[(EtcName, EtcExpr)] = {
       target match {
         // simplest case: name is bound to set
         case nameEx @ NameEx(_) =>
@@ -851,8 +856,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
 
   // Translate a sequence of formal parameters into type variables
   private def formalParamsToTypeVars(
-      params: Seq[OperParam],
-  ): Seq[(String, TlaType1)] = {
+      params: Seq[OperParam]): Seq[(String, TlaType1)] = {
     params match {
       case Seq() => Seq()
 

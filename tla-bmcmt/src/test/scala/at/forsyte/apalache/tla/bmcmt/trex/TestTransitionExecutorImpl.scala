@@ -8,9 +8,11 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 /**
  * An abstract test suite that is parameterized by the snapshot type.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  *
- * @tparam SnapshotT the snapshot type
+ * @tparam SnapshotT
+ *   the snapshot type
  */
 trait TestTransitionExecutorImpl[SnapshotT] extends ExecutorBase[SnapshotT] {
   test("constant initialization") { exeCtx: ExecutorContextT =>
@@ -131,7 +133,7 @@ trait TestTransitionExecutorImpl[SnapshotT] extends ExecutorBase[SnapshotT] {
     // state 4 is produced either by transition 1, or by transition 2
     assert(1 == decPath(4)._2 || 2 == decPath(4)._2)
     assert(Map("x" -> tla.int(2).untyped(), "y" -> tla.int(3).untyped()) == decPath(4)._1
-          || Map("x" -> tla.int(3).untyped(), "y" -> tla.int(5).untyped()) == decPath(4)._1)
+      || Map("x" -> tla.int(3).untyped(), "y" -> tla.int(5).untyped()) == decPath(4)._1)
 
     // test the symbolic execution
     val exe = trex.execution

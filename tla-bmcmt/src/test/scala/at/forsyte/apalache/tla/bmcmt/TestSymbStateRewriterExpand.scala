@@ -11,7 +11,7 @@ trait TestSymbStateRewriterExpand extends RewriterBase {
       "I" -> SetT1(IntT1()),
       "II" -> SetT1(SetT1(IntT1())),
       "B" -> SetT1(BoolT1()),
-      "i_TO_b" -> SetT1(FunT1(IntT1(), BoolT1()))
+      "i_TO_b" -> SetT1(FunT1(IntT1(), BoolT1())),
   )
 
   test("""Expand(SUBSET {1, 2})""") { rewriterType: SMTEncoding =>

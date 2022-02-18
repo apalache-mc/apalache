@@ -55,7 +55,7 @@ class SignatureGenerator {
       val n = (operEx.args.length - 1) / 2
       val t = typeVarGenerator.getUnique
       val ts = typeVarGenerator.getNUnique(n)
-      val allPairs = ts flatMap { x => List(x, SetT(x)) }
+      val allPairs = ts.flatMap { x => List(x, SetT(x)) }
       List(PolyOperT(t +: ts, OperT(TupT(t +: allPairs: _*), SetT(t))))
     case TlaSetOper.powerset =>
       val t = typeVarGenerator.getUnique
@@ -77,7 +77,7 @@ class SignatureGenerator {
       val n = (operEx.args.length - 1) / 2
       val t = typeVarGenerator.getUnique
       val ts = typeVarGenerator.getNUnique(n)
-      val allPairs = ts flatMap { x => List(x, SetT(x)) }
+      val allPairs = ts.flatMap { x => List(x, SetT(x)) }
       List(PolyOperT(t +: ts, OperT(TupT(t +: allPairs: _*), FunT(TupT(ts: _*), t))))
 
     /** Records */
@@ -86,10 +86,10 @@ class SignatureGenerator {
         case (ValEx(TlaStr(s)), i) if i % 2 == 0 =>
           KvPair(s, typeVarGenerator.getUnique)
       }
-      val ts = kvPairs map {
+      val ts = kvPairs.map {
         _.v.asInstanceOf[TypeVar]
       }
-      val tupArgs = kvPairs flatMap { pa => List(StrT, SetT(pa.v)) }
+      val tupArgs = kvPairs.flatMap { pa => List(StrT, SetT(pa.v)) }
       List(PolyOperT(ts.toList, OperT(TupT(tupArgs: _*), SetT(RecT(kvPairs: _*)))))
 
     /** Tuples */
@@ -98,7 +98,7 @@ class SignatureGenerator {
       List(PolyOperT(ts, OperT(TupT(ts: _*), TupT(ts: _*))))
     case TlaSetOper.times =>
       val ts = typeVarGenerator.getNUnique(operEx.args.length)
-      List(PolyOperT(ts, OperT(TupT(ts map SetT: _*), SetT(TupT(ts: _*)))))
+      List(PolyOperT(ts, OperT(TupT(ts.map(SetT): _*), SetT(TupT(ts: _*)))))
 
     /** Control */
     case TlaControlOper.ifThenElse =>

@@ -12,7 +12,8 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 /**
  * Integer arithmetic operations: +, -, *, div, mod.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val intConstRule: IntConstRule = new IntConstRule(rewriter)

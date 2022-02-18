@@ -9,7 +9,8 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 /**
  * Rewriting BOOLEAN, Int, and Nat into predefined cells.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class BuiltinConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {

@@ -3,10 +3,11 @@ package at.forsyte.apalache.tla.lir
 import java.util.concurrent.atomic.AtomicLong
 
 /**
- * This is a basic class for keeping expression identifiers. The most important feature is the method unique
- * in the companion object, which allows us to assign unique identifiers to different expressions.
+ * This is a basic class for keeping expression identifiers. The most important feature is the method unique in the
+ * companion object, which allows us to assign unique identifiers to different expressions.
  *
- * @param id the value of the identifier.
+ * @param id
+ *   the value of the identifier.
  */
 class UID protected (val id: Long) extends Serializable {
 
@@ -26,8 +27,8 @@ class UID protected (val id: Long) extends Serializable {
 object UID {
 
   /**
-   * The value of the id that will be assigned by the next call to unique(). We start with 1, to omit the default value 0.
-   * By using AtomicLong, we make sure that unique() is assigning unique identifiers in the concurrent setting.
+   * The value of the id that will be assigned by the next call to unique(). We start with 1, to omit the default value
+   * 0. By using AtomicLong, we make sure that unique() is assigning unique identifiers in the concurrent setting.
    */
   private var nextId: AtomicLong = new AtomicLong(1)
 
@@ -40,10 +41,11 @@ object UID {
   val nullId: UID = new UID(0)
 
   /**
-   * Create a unique identifier, provided that all identifiers have been created only by calling this method.
-   * This method is thread-safe.
+   * Create a unique identifier, provided that all identifiers have been created only by calling this method. This
+   * method is thread-safe.
    *
-   * @return a new unique identifier
+   * @return
+   *   a new unique identifier
    */
   def unique: UID = {
     val newId = nextId.getAndAdd(1)

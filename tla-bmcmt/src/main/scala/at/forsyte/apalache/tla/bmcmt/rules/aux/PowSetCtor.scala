@@ -3,9 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT}
-import at.forsyte.apalache.tla.bmcmt.util.ConsChainUtil
-import at.forsyte.apalache.tla.lir.BuilderEx
+import at.forsyte.apalache.tla.bmcmt.types.FinSetT
 
 /**
  * This class constructs the power set of S, that is, SUBSET S. Sometimes, this is just unavoidable, e.g., consider { Q
@@ -30,20 +28,12 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
       arena = arena.appendCell(set.cellType)
       val subsetCell = arena.topCell
       arena = arena.appendHas(subsetCell, filtered: _*)
-      if (filtered.nonEmpty) {
-        def consChain(elems: Seq[ArenaCell]): BuilderEx =
-          ConsChainUtil.consChainFold[ArenaCell](
-              elems,
-              subsetCell.toNameEx,
-              { elem =>
-                val inSubset = tla.apalacheStoreInSet(elem.toNameEx, subsetCell.toNameEx)
-                val inSet = tla.apalacheSelectInSet(elem.toNameEx, set.toNameEx)
-                (inSubset, inSet)
-              },
-          )
-
-        val cons = consChain(filtered)
-        rewriter.solverContext.assertGroundExpr(tla.apalacheAssignChain(subsetCell.toNameEx, cons))
+      for (e <- filtered) {
+        val inSubset = tla.apalacheStoreInSet(e.toNameEx, subsetCell.toNameEx)
+        val notInSubset =
+          tla.apalacheStoreNotInSet(e.toNameEx, subsetCell.toNameEx) // This ensures that e is not in subsetCell
+        val inSet = tla.apalacheSelectInSet(e.toNameEx, set.toNameEx)
+        rewriter.solverContext.assertGroundExpr(tla.ite(inSet, inSubset, notInSubset))
       }
       subsetCell
     }
@@ -55,7 +45,7 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
     }
     val subsets =
       if (elems.nonEmpty) {
-        BigInt(0).to(powSetSize - 1) map mkSetByNum
+        BigInt(0).to(powSetSize - 1).map(mkSetByNum)
       } else {
         // the set is statically empty: just introduce an empty set
         arena = arena.appendCell(set.cellType)
@@ -66,19 +56,8 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
     arena = arena.appendCell(FinSetT(set.cellType))
     val powsetCell = arena.topCell
     arena = arena.appendHas(powsetCell, subsets: _*)
-    if (subsets.nonEmpty) {
-      def consChain(elems: Seq[ArenaCell]): BuilderEx =
-        ConsChainUtil.consChainFold[ArenaCell](
-            elems,
-            powsetCell.toNameEx,
-            { subset =>
-              val inPowset = tla.apalacheStoreInSet(subset.toNameEx, powsetCell.toNameEx)
-              (inPowset, tla.bool(true))
-            },
-        )
-
-      val cons = consChain(subsets)
-      rewriter.solverContext.assertGroundExpr(tla.apalacheAssignChain(powsetCell.toNameEx, cons))
+    for (subset <- subsets) {
+      rewriter.solverContext.assertGroundExpr(tla.apalacheStoreInSet(subset.toNameEx, powsetCell.toNameEx))
     }
 
     // that's it!

@@ -11,23 +11,26 @@ import scala.util.parsing.input.NoPosition
 /**
  * <p>A parser for the TLC configuration files. For the syntax, see ./docs/tlc-config.md.
  *
- * <p>This parser is built with
- * <a href="https://github.com/scala/scala-parser-combinators">Scala parser combinators</a>.</p>
+ * <p>This parser is built with <a href="https://github.com/scala/scala-parser-combinators">Scala parser
+ * combinators</a>.</p>
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 object TlcConfigParserApalache extends Parsers with TlcConfigParser with LazyLogging {
   override type Elem = TlcConfigToken
 
-  private abstract class ConstBinding
+  abstract private class ConstBinding
   private case class ConstAssignment(name: String, assignment: ConfigConstExpr) extends ConstBinding
   private case class ConstReplacement(name: String, replacement: String) extends ConstBinding
 
   /**
    * Parse a configuration file from a reader.
    *
-   * @param reader a reader
-   * @return a config on success; throws TlcConfigParseError on failure
+   * @param reader
+   *   a reader
+   * @return
+   *   a config on success; throws TlcConfigParseError on failure
    */
   def apply(reader: Reader): TlcConfig = {
     config(new TlcConfigTokenReader(TlcConfigLexer(reader))) match {
@@ -41,8 +44,10 @@ object TlcConfigParserApalache extends Parsers with TlcConfigParser with LazyLog
   /**
    * Parse a configuration file from a string.
    *
-   * @param text a string
-   * @return a config on success; throws TlcConfigParseError on failure
+   * @param text
+   *   a string
+   * @return
+   *   a config on success; throws TlcConfigParseError on failure
    */
   def apply(text: String): TlcConfig = {
     apply(new StringReader(text))

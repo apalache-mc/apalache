@@ -6,7 +6,8 @@ import at.forsyte.apalache.tla.lir.{TlaDecl, TlaEx, TlaType1, Typed, TypingExcep
 /**
  * A transformation tracker that throws an exception, if a typed expression has been transformed into an untyped one.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class TypeWatchdogTransformationListener extends TransformationListener {
   override def onTransformation(originalEx: TlaEx, newEx: TlaEx): Unit = {

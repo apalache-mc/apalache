@@ -8,21 +8,28 @@ import at.forsyte.apalache.tla.typecheck.etc.EtcTypeChecker.UnwindException
 /**
  * ETC: Embarrassingly simple Type Checker.
  *
- * @param varPool        a pool of fresh variables
- * @param inferPolytypes whether the type checker is allowed to compute polymorphic types of user-defined operators.
- * @author Igor Konnov
+ * @param varPool
+ *   a pool of fresh variables
+ * @param inferPolytypes
+ *   whether the type checker is allowed to compute polymorphic types of user-defined operators.
+ * @author
+ *   Igor Konnov
  */
 class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) extends TypeChecker with EtcBuilder {
   private var listener: TypeCheckerListener = new DefaultTypeCheckerListener()
 
   /**
-   * Compute the expression type in a type context. If the expression is not well-typed, return None.
-   * As a side effect, call the listener, when discovering new types or errors.
+   * Compute the expression type in a type context. If the expression is not well-typed, return None. As a side effect,
+   * call the listener, when discovering new types or errors.
    *
-   * @param typeListener a listener that will receive the type error or type info
-   * @param rootCtx      a typing context
-   * @param rootEx       an expression
-   * @return Some(type), if the expression is well-typed; and None otherwise.
+   * @param typeListener
+   *   a listener that will receive the type error or type info
+   * @param rootCtx
+   *   a typing context
+   * @param rootEx
+   *   an expression
+   * @return
+   *   Some(type), if the expression is well-typed; and None otherwise.
    */
   override def compute(typeListener: TypeCheckerListener, rootCtx: TypeContext, rootEx: EtcExpr): Option[TlaType1] = {
     listener = typeListener // set the type listener, so we do not have to pass it around
@@ -209,8 +216,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
         val lambdaClause = EqClause(lambdaTypeVar, operType)
           .setOnTypeFound(tt => onTypeFound(ex.sourceRef, tt))
           .setOnTypeError((_, ts) =>
-            onTypeError(ex.sourceRef.asInstanceOf[ExactRef], "Type error in parameters: " + ts.head),
-          )
+            onTypeError(ex.sourceRef.asInstanceOf[ExactRef], "Type error in parameters: " + ts.head))
         solver.addConstraint(lambdaClause)
         operType
 
@@ -243,8 +249,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
 
         // translate the binders in the lambda expression, so we can quickly propagate the types of the parameters
         val preCtx =
-          new TypeContext(
-              (ctx.types + (name -> operScheme))
+          new TypeContext((ctx.types + (name -> operScheme))
                 .mapValues(p => p.copy(approxSolution.subRec(p.principalType))))
         val extCtx = translateBinders(preCtx, letInSolver, binders)
         val annotationParams = operScheme.principalType.asInstanceOf[OperT1].args
@@ -314,7 +319,9 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
   }
 
   // produce constraints for the binders that are used in a lambda expression
-  private def translateBinders(ctx: TypeContext, solver: ConstraintSolver,
+  private def translateBinders(
+      ctx: TypeContext,
+      solver: ConstraintSolver,
       binders: Seq[(EtcName, EtcExpr)]): TypeContext = {
     // Apply `toList` first, in case `binders` is lazy. Because `computeRec` has side effects.
     val setTypes = binders.toList.map(binder => computeRec(ctx, solver, binder._2))

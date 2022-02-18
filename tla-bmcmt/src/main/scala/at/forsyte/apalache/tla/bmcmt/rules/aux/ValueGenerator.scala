@@ -11,9 +11,12 @@ import scala.collection.immutable.SortedSet
 /**
  * This class generates symbolic data structures whose width is bounded with `bound`
  *
- * @param rewriter a rewriter
- * @param bound    an upper bound on the size of the generated structures
- * @author Igor Konnov
+ * @param rewriter
+ *   a rewriter
+ * @param bound
+ *   an upper bound on the size of the generated structures
+ * @author
+ *   Igor Konnov
  */
 class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
   def gen(state: SymbState, resultType: TlaType1): SymbState = {
@@ -65,7 +68,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
     // convert the values to a list, so we don't have a lazy stream
     val elemTypes = recordType.fieldTypes.values.toList
     val elemCells =
-      elemTypes map { elemType =>
+      elemTypes.map { elemType =>
         nextState = gen(nextState, elemType)
         nextState.asCell
       }
@@ -78,7 +81,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
     val tupleCell = nextState.arena.topCell
     // convert the values to a list, so we don't have a lazy stream
     val elemCells =
-      tupleType.elems map { elemType =>
+      tupleType.elems.map { elemType =>
         nextState = gen(nextState, elemType)
         nextState.asCell
       }

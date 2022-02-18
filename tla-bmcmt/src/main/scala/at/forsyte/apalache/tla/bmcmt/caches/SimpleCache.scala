@@ -8,7 +8,8 @@ import scala.collection.immutable.HashMap
 /**
  * A stackable cache that allows one to store values and retrieve them later.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class SimpleCache[KeyT, ValueT] extends StackableContext with Recoverable[SimpleCacheSnapshot[KeyT, ValueT]] {
 
@@ -27,8 +28,10 @@ class SimpleCache[KeyT, ValueT] extends StackableContext with Recoverable[Simple
   /**
    * Put a value into the cache.
    *
-   * @param key   a key
-   * @param value a value
+   * @param key
+   *   a key
+   * @param value
+   *   a value
    */
   def put(key: KeyT, value: ValueT): Unit = {
     cache += (key -> (value, level))
@@ -37,8 +40,10 @@ class SimpleCache[KeyT, ValueT] extends StackableContext with Recoverable[Simple
   /**
    * Get a previously cached value for a given source value, if there is one. Otherwise, return none.
    *
-   * @param key a key
-   * @return Some(value) if there is a value matching the key, or None otherwise
+   * @param key
+   *   a key
+   * @return
+   *   Some(value) if there is a value matching the key, or None otherwise
    */
   def get(key: KeyT): Option[ValueT] = {
     cache.get(key) match {
@@ -50,7 +55,8 @@ class SimpleCache[KeyT, ValueT] extends StackableContext with Recoverable[Simple
   /**
    * Take a snapshot and return it
    *
-   * @return the snapshot
+   * @return
+   *   the snapshot
    */
   override def snapshot(): SimpleCacheSnapshot[KeyT, ValueT] = {
     val squashedCache = cache.map { case (key, (value, _)) => (key, (value, 0)) }
@@ -60,7 +66,8 @@ class SimpleCache[KeyT, ValueT] extends StackableContext with Recoverable[Simple
   /**
    * Recover a previously saved snapshot (not necessarily saved by this object).
    *
-   * @param shot a snapshot
+   * @param shot
+   *   a snapshot
    */
   override def recover(shot: SimpleCacheSnapshot[KeyT, ValueT]): Unit = {
     cache = shot.cache
@@ -69,7 +76,8 @@ class SimpleCache[KeyT, ValueT] extends StackableContext with Recoverable[Simple
   /**
    * Get the current context level, that is the difference between the number of pushes and pops made so far.
    *
-   * @return the current level, always non-negative.
+   * @return
+   *   the current level, always non-negative.
    */
   override def contextLevel: Int = level
 
@@ -81,8 +89,8 @@ class SimpleCache[KeyT, ValueT] extends StackableContext with Recoverable[Simple
   }
 
   /**
-   * Pop the previously saved context. Importantly, pop may be called multiple times and thus it is not sufficient
-   * to save only the latest context.
+   * Pop the previously saved context. Importantly, pop may be called multiple times and thus it is not sufficient to
+   * save only the latest context.
    */
   override def pop(): Unit = {
     pop(1)
@@ -91,7 +99,8 @@ class SimpleCache[KeyT, ValueT] extends StackableContext with Recoverable[Simple
   /**
    * Pop the context as many times as needed to reach a given level.
    *
-   * @param n the number of times to call pop
+   * @param n
+   *   the number of times to call pop
    */
   override def pop(n: Int): Unit = {
     assert(level >= n)
@@ -100,7 +109,7 @@ class SimpleCache[KeyT, ValueT] extends StackableContext with Recoverable[Simple
     def isEntryOld(mapEntry: (KeyT, (ValueT, Int))): Boolean =
       mapEntry._2._2 <= level
 
-    cache = cache filter isEntryOld
+    cache = cache.filter(isEntryOld)
   }
 
   /**

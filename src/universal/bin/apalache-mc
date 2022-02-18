@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+#
+# Run the APALACHE model checker
+#
+# NOTE: The primary intended use for this script is to be copied into the
+# packaged produced.
+#
+# Igor Konnov, Shon Feder 2018-2022
+
+# See https://sipb.mit.edu/doc/safe-shell/
+set -euf -o pipefail
+
+# The directory where the script is run from
+# See https://stackoverflow.com/a/246128/1187277
+SOURCE=${BASH_SOURCE[0]}
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
+  SOURCE=$(readlink "$SOURCE")
+  [[ $SOURCE != /* ]] && SOURCE=$DIR/$SOURCE # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
+
+APALACHE_JAR=${APALACHE_JAR:-"$DIR/../lib/apalache.jar"}
+JVM_ARGS=${JVM_ARGS:-""}
+TLA_PATH=${TLA_PATH:-""}
+
+if ! test -f "$APALACHE_JAR"
+then
+    echo "ERROR: No file found at ${APALACHE_JAR}"
+    echo "       Ensure you have run 'make package' and are running the script from the"
+    echo "       distribution pacakge, or else set APALACHE_JAR to point to your custom"
+    echo "       build jar."
+fi
+
+# Check of the heap size is already set
+if ! [[ "$JVM_ARGS" =~ -Xmx ]]
+then
+    # If not, set our default heap size
+    JVM_ARGS="${JVM_ARGS} -Xmx4096m"
+fi
+
+# Append TLA_PATH to JVM_ARGS, if it is set
+if [ -n "$TLA_PATH" ]
+then
+    JVM_ARGS="$JVM_ARGS -DTLA-Library=$TLA_PATH"
+fi
+
+# Check whether the CLI args contains the debug flag
+if [[ "$*" =~ '--debug' ]]
+then
+    echo "# Tool home: $DIR"
+    echo "# Package:   $APALACHE_JAR"
+    echo "# JVM args: $JVM_ARGS"
+    echo "#"
+fi
+
+# Run with `exec` to replace the PID, rather than running in a subshell.
+# This saves one process, and ensures signals are sent to the replacement process
+# C.f. https://github.com/sbt/sbt-native-packager/blob/e72f2f45b8cab5881add1cd62743bfc69c2b9b4d/src/main/resources/com/typesafe/sbt/packager/archetypes/scripts/bash-template#L141-L142
+exec java $JVM_ARGS -jar "$APALACHE_JAR" "$@"

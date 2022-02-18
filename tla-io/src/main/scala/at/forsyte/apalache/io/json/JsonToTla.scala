@@ -9,14 +9,14 @@ import UntypedPredefs._
 import at.forsyte.apalache.io.lir.TypeTagReader
 
 /**
- * A semi-abstraction of a json decoder.
- * It is independent of the concrete JsonRepresentation, resp. ScalaFactory implementation.
- * Inverse to TlaToJson, i.e. as{X}( TlaToJson( a : X) ) == a, where X = TlaEx/TlaDecl/TlaModule
+ * A semi-abstraction of a json decoder. It is independent of the concrete JsonRepresentation, resp. ScalaFactory
+ * implementation. Inverse to TlaToJson, i.e. as{X}( TlaToJson( a : X) ) == a, where X = TlaEx/TlaDecl/TlaModule
  */
 
 class JsonToTla[T <: JsonRepresentation](
-    scalaFactory: ScalaFactory[T], sourceStoreOpt: Option[SourceStore] = None,
-)(implicit typeTagReader: TypeTagReader)
+    scalaFactory: ScalaFactory[T],
+    sourceStoreOpt: Option[SourceStore] = None,
+  )(implicit typeTagReader: TypeTagReader)
     extends JsonDecoder[T] {
 
   private def missingField(fieldName: String): JsonDeserializationError =
@@ -56,11 +56,14 @@ class JsonToTla[T <: JsonRepresentation](
         TlaDecimal(dec)
       case "TlaInt" =>
         val valField = getOrThrow(json, "value")
-        val bi = valField.getFieldOpt("bigInt") map { biField =>
-          BigInt(scalaFactory.asStr(biField))
-        } getOrElse {
-          BigInt(scalaFactory.asInt(valField))
-        }
+        val bi = valField
+          .getFieldOpt("bigInt")
+          .map { biField =>
+            BigInt(scalaFactory.asStr(biField))
+          }
+          .getOrElse {
+            BigInt(scalaFactory.asInt(valField))
+          }
         TlaInt(bi)
       case "TlaBool" =>
         val valField = getOrThrow(json, "value")
@@ -76,13 +79,13 @@ class JsonToTla[T <: JsonRepresentation](
 
   def getSourceLocationOpt(json: T): Option[SourceLocation] = for {
     sourceObj <- json.getFieldOpt(TlaToJson.sourceFieldName)
-    fileName <- sourceObj.getFieldOpt("filename") map scalaFactory.asStr
+    fileName <- sourceObj.getFieldOpt("filename").map(scalaFactory.asStr)
     fromObj <- sourceObj.getFieldOpt("from")
     toObj <- sourceObj.getFieldOpt("to")
-    fromLine <- fromObj.getFieldOpt("line") map scalaFactory.asInt
-    fromCol <- fromObj.getFieldOpt("column") map scalaFactory.asInt
-    toLine <- toObj.getFieldOpt("line") map scalaFactory.asInt
-    toCol <- toObj.getFieldOpt("column") map scalaFactory.asInt
+    fromLine <- fromObj.getFieldOpt("line").map(scalaFactory.asInt)
+    fromCol <- fromObj.getFieldOpt("column").map(scalaFactory.asInt)
+    toLine <- toObj.getFieldOpt("line").map(scalaFactory.asInt)
+    toCol <- toObj.getFieldOpt("column").map(scalaFactory.asInt)
   } yield SourceLocation(
       fileName,
       SourceRegion(
@@ -92,8 +95,8 @@ class JsonToTla[T <: JsonRepresentation](
   )
 
   def setLoc(identifiable: Identifiable, locationOpt: Option[SourceLocation]): Unit =
-    sourceStoreOpt foreach { store =>
-      locationOpt foreach { loc =>
+    sourceStoreOpt.foreach { store =>
+      locationOpt.foreach { loc =>
         store.add(identifiable.ID, loc)
       }
     }
@@ -108,7 +111,7 @@ class JsonToTla[T <: JsonRepresentation](
     val name = scalaFactory.asStr(nameField)
     val declField = getOrThrow(moduleJson, "declarations")
     val declObjSeq = scalaFactory.asSeq(declField)
-    val decls = declObjSeq map asTlaDecl
+    val decls = declObjSeq.map(asTlaDecl)
 
     new TlaModule(name, decls)
   }
@@ -143,7 +146,7 @@ class JsonToTla[T <: JsonRepresentation](
         val body = asTlaEx(bodyField)
         val paramsField = getOrThrow(declJson, "formalParams")
         val paramsObjList = scalaFactory.asSeq(paramsField).toList
-        val fParams = paramsObjList map asFParam
+        val fParams = paramsObjList.map(asFParam)
         val opDecl = TlaOperDecl(name, fParams, body)(typeTag)
         opDecl.isRecursive = isRecursive
         opDecl
@@ -180,16 +183,16 @@ class JsonToTla[T <: JsonRepresentation](
         val argsField = getOrThrow(exJson, "args")
         val argsObjSeq = scalaFactory.asSeq(argsField)
         // TODO: Implement a oper.name -> oper mapping and avoid Builder hackery
-        val args = argsObjSeq map asTlaEx map { BuilderTlaExWrapper }
+        val args = argsObjSeq.map(asTlaEx).map { BuilderTlaExWrapper }
         tla.byName(operString, args: _*).withTag(typeTag)
       case "LetInEx" =>
         val bodyField = getOrThrow(exJson, "body")
         val body = asTlaEx(bodyField)
         val declsField = getOrThrow(exJson, "decls")
         val declsObjSeq = scalaFactory.asSeq(declsField)
-        val decls = declsObjSeq map asTlaDecl
-        assert(decls forall { _.isInstanceOf[TlaOperDecl] })
-        val operDecls = decls map { _.asInstanceOf[TlaOperDecl] }
+        val decls = declsObjSeq.map(asTlaDecl)
+        assert(decls.forall { _.isInstanceOf[TlaOperDecl] })
+        val operDecls = decls.map { _.asInstanceOf[TlaOperDecl] }
         LetInEx(body, operDecls: _*)(typeTag)
       case _ => throw new JsonDeserializationError(s"$kind is not a valid TlaEx kind")
     }
@@ -207,6 +210,6 @@ class JsonToTla[T <: JsonRepresentation](
     val modulesField = getOrThrow(rootJson, "modules")
     val modulesObjSeq = scalaFactory.asSeq(modulesField)
 
-    modulesObjSeq map asTlaModule
+    modulesObjSeq.map(asTlaModule)
   }
 }

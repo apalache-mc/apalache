@@ -57,12 +57,12 @@ class TlaConstInliner(tracker: TransformationTracker, constants: Set[String]) {
       }
 
     case ex @ OperEx(op, args @ _*) =>
-      val newArgs = args map replaceConstWithValue(constValMap)
+      val newArgs = args.map(replaceConstWithValue(constValMap))
       if (args == newArgs) ex else OperEx(op, newArgs: _*)(ex.typeTag)
 
     case ex @ LetInEx(body, defs @ _*) =>
       val tr = replaceConstWithValue(constValMap)
-      val newDefs = defs map tracker.trackOperDecl { d => d.copy(body = tr(d.body)) }
+      val newDefs = defs.map(tracker.trackOperDecl { d => d.copy(body = tr(d.body)) })
       val newBody = tr(body)
       if (defs == newDefs && body == newBody) ex else LetInEx(newBody, newDefs: _*)(ex.typeTag)
 
