@@ -149,8 +149,6 @@ TestForallInPowerset ==
     \A S \in SUBSET Set1357:
         6 \notin S
 
-\* TODO: FIX IT!
-\* https://github.com/informalsystems/apalache/issues/1360
 TestPowersetCardinality ==
     Cardinality(SUBSET Set263) = 8
 
@@ -243,8 +241,8 @@ AllTests ==
     /\ TestChooseEmpty
     /\ TestChooseSet
     /\ TestIsFiniteSet
+    /\ TestPowersetCardinality
     \* IGNORE UNTIL FIXED: /\ TestIsFiniteSetOnInfinite
-    \* IGNORE UNTIL FIXED: /\ TestPowersetCardinality
     \* IGNORE UNTIL FIXED: /\ TestPowersetEmpty
     \* IGNORE UNTIL FIXED: /\ TestPowerset26
     \* IGNORE UNTIL FIXED: /\ TestPowersetSubsetEq
