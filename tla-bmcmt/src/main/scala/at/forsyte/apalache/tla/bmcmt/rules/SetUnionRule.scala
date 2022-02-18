@@ -2,8 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types.FinSetT
-import at.forsyte.apalache.tla.bmcmt.util.ConsChainUtil
-import at.forsyte.apalache.tla.lir.{BuilderEx, OperEx, TlaEx, TypingException}
+import at.forsyte.apalache.tla.lir.{OperEx, TypingException}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -61,35 +60,26 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
           //
           // This approach is more expensive at the rewriting phase, but it produces O(n) constraints in SMT,
           // in contrast to the old approach with equalities and uninterpreted functions, which required O(n^2) constraints.
-          def addOneElemCons(elemsCells: Seq[ArenaCell]): Unit = {
-            if (elemsCells.nonEmpty) {
-              def consChain(elems: Seq[ArenaCell]): BuilderEx =
-                ConsChainUtil.consChainFold[ArenaCell](
-                    elems,
-                    newSetCell.toNameEx,
-                    { elemCell =>
-                      def isPointedBySet(set: ArenaCell, setElems: Set[ArenaCell]): Boolean =
-                        setElems.contains(elemCell)
-                      def inPointingSet(set: ArenaCell) = {
-                        // this is sound, because we have generated element equalities
-                        // and thus can use congruence of in(...) for free
-                        tla.and(tla.apalacheSelectInSet(set.toNameEx, topSetCell.toNameEx),
-                            tla.apalacheSelectInSet(elemCell.toNameEx, set.toNameEx))
-                      }
-                      val pointingSets = (sets.zip(elemsOfSets).filter((isPointedBySet _).tupled)).map(_._1)
-                      val inUnion = tla.apalacheStoreInSet(elemCell.toNameEx, newSetCell.toNameEx)
-                      val existsIncludingSet = tla.or(pointingSets.map(inPointingSet): _*)
-                      (inUnion, existsIncludingSet)
-                    },
-                )
-
-              val cons = consChain(elemsCells)
-              rewriter.solverContext.assertGroundExpr(tla.apalacheAssignChain(newSetCell.toNameEx, cons))
+          def addOneElemCons(elemCell: ArenaCell): Unit = {
+            def isPointedBySet(set: ArenaCell, setElems: Set[ArenaCell]): Boolean = setElems.contains(elemCell)
+            def inPointingSet(set: ArenaCell) = {
+              // this is sound, because we have generated element equalities
+              // and thus can use congruence of in(...) for free
+              tla.and(tla.apalacheSelectInSet(set.toNameEx, topSetCell.toNameEx),
+                  tla.apalacheSelectInSet(elemCell.toNameEx, set.toNameEx))
             }
+
+            val pointingSets = (sets.zip(elemsOfSets).filter((isPointedBySet _).tupled)).map(_._1)
+            assert(pointingSets.nonEmpty)
+            val existsIncludingSet = tla.or(pointingSets.map(inPointingSet): _*)
+            val inUnionSet = tla.apalacheStoreInSet(elemCell.toNameEx, newSetCell.toNameEx)
+            val notInUnionSet = tla.apalacheStoreNotInSet(elemCell.toNameEx, newSetCell.toNameEx)
+            val ite = tla.ite(existsIncludingSet, inUnionSet, notInUnionSet)
+            rewriter.solverContext.assertGroundExpr(ite)
           }
 
           // add SMT constraints
-          addOneElemCons(unionOfSets.toSeq)
+          unionOfSets.foreach(addOneElemCons)
 
           // that's it
           nextState.setRex(newSetCell.toNameEx)
