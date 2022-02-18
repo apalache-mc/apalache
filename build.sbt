@@ -231,8 +231,8 @@ lazy val root = (project in file("."))
         val (unzipped, _) = IO.split(pkg.toString)
         val target_dir = (Universal / target).value
         val current_pkg = (Universal / target).value / "current-pkg"
-        log.info(s"Unpacking package ${pkg}")
-        s"tar zxvf ${pkg} --overwrite -C ${target_dir}" ! log
+        log.info(s"Unpacking package ${pkg} to ${target_dir}")
+        s"tar zxvf ${pkg} -U -C ${target_dir}" ! log
         log.info(s"Symlinking ${current_pkg} -> ${unzipped}")
         s"ln -sfn ${unzipped} ${current_pkg}" ! log
         file(unzipped)
