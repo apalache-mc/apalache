@@ -2,9 +2,8 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.bmcmt.util.ConsChainUtil
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
-import at.forsyte.apalache.tla.lir.{BuilderEx, NameEx, NullEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{NameEx, NullEx, OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
@@ -61,52 +60,38 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val newArena = arena.appendHas(newSetCell, filteredCellsAndPreds.map(_._1): _*)
 
         // require each cell to satisfy the predicate
-        def addCellCons(cellsAndPreds: Seq[(ArenaCell, TlaEx)]): Unit = {
-          if (cellsAndPreds.nonEmpty) {
-            def consChain(elems: Seq[(ArenaCell, TlaEx)]): BuilderEx =
-              ConsChainUtil.consChainFold[(ArenaCell, TlaEx)](
-                  elems,
-                  newSetCell.toNameEx,
-                  { case (cell, pred) =>
-                    val inNewSet = tla.apalacheStoreInSet(cell.toNameEx, newSetCell.toNameEx)
-                    val inOldSet = tla.apalacheSelectInSet(cell.toNameEx, setCell.toNameEx)
-                    val inOldSetAndPred = tla.and(pred, inOldSet)
-                    (inNewSet, inOldSetAndPred)
-                  },
-              )
-
-            val cons = consChain(cellsAndPreds) // Produces a chain of SMT store
-            rewriter.solverContext.assertGroundExpr(tla.apalacheAssignChain(newSetCell.toNameEx, cons))
-          }
+        def addCellCons(cell: ArenaCell, pred: TlaEx): Unit = {
+          val inNewSet = tla.apalacheStoreInSet(cell.toNameEx, newSetCell.toNameEx)
+          val notInNewSet = tla.apalacheStoreNotInSet(cell.toNameEx, newSetCell.toNameEx) // cell is not in newSetCell
+          val inOldSet = tla.apalacheSelectInSet(cell.toNameEx, setCell.toNameEx)
+          val inOldSetAndPred = tla.and(pred, inOldSet)
+          val ite = tla.ite(inOldSetAndPred, inNewSet, notInNewSet)
+          rewriter.solverContext.assertGroundExpr(ite)
         }
 
-        def addCellConsWithSmtMap(cellsAndPreds: Seq[(ArenaCell, TlaEx)]): Unit = {
-          if (cellsAndPreds.nonEmpty) {
-            def consChain(elems: Seq[(ArenaCell, TlaEx)]): BuilderEx =
-              ConsChainUtil.consChainFold[(ArenaCell, TlaEx)](
-                  elems,
-                  tla.bool(true),
-                  { case (cell, pred) =>
-                    val inNewSet = tla.apalacheSelectInSet(cell.toNameEx, newSetCell.toNameEx)
-                    val inOldSet = tla.apalacheSelectInSet(cell.toNameEx, setCell.toNameEx)
-                    val inOldSetAndPred = tla.and(pred, inOldSet)
-                    val and = tla.and(tla.eql(inNewSet, inOldSetAndPred))
-                    (and, tla.bool(true))
-                  },
-              )
-
-            val cons = consChain(cellsAndPreds) // Produces a chain of conjunctions of conditional SMT select
-            rewriter.solverContext.assertGroundExpr(tla.apalacheSmtMap(setCell.toNameEx, cons, newSetCell.toNameEx))
-          }
+        // variant of addCellCons for use with SMT maps, which unconstrained newSetCell
+        def addCellConsForUnconstrainedNewSetCell(cell: ArenaCell, pred: TlaEx): Unit = {
+          // since newSetCell is assumed to be unconstrained we simple use SMT select here
+          val inNewSet = tla.apalacheSelectInSet(cell.toNameEx, newSetCell.toNameEx)
+          val notInNewSet = tla.not(tla.apalacheSelectInSet(cell.toNameEx, newSetCell.toNameEx))
+          val inOldSet = tla.apalacheSelectInSet(cell.toNameEx, setCell.toNameEx)
+          val inOldSetAndPred = tla.and(pred, inOldSet)
+          val ite = tla.ite(inOldSetAndPred, inNewSet, notInNewSet)
+          rewriter.solverContext.assertGroundExpr(ite)
         }
 
         // add SMT constraints
         rewriter.solverContext.config.smtEncoding match {
           case `arraysEncoding` =>
-            addCellConsWithSmtMap(filteredCellsAndPreds)
+            // we make an unconstrained array, constrain its needed entries, and intersect it with setCell using smtMap
+            rewriter.solverContext.assertGroundExpr(tla.apalacheUnconstrainArray(newSetCell.toNameEx))
+            for ((cell, pred) <- filteredCellsAndPreds)
+              addCellConsForUnconstrainedNewSetCell(cell, pred)
+            rewriter.solverContext.assertGroundExpr(tla.apalacheSmtMap(setCell.toNameEx, newSetCell.toNameEx))
 
           case `oopsla19Encoding` =>
-            addCellCons(filteredCellsAndPreds)
+            for ((cell, pred) <- filteredCellsAndPreds)
+              addCellCons(cell, pred)
 
           case oddEncodingType =>
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
