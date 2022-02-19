@@ -1839,7 +1839,7 @@ $ apalache-mc check --length=2 Test1343.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
-### check TestSets.tla reports no error
+### check TestSets.tla reports no error (array-encoding)
 
 ```sh
 $ apalache-mc check --length=0 --inv=AllTests TestSets.tla | sed 's/[IEW]@.*//'
