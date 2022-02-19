@@ -55,8 +55,6 @@ class SymbStateRewriterImplWithArrays(
         key(tla.choose(tla.name("x"), tla.name("S"), tla.name("p")))
           -> List(new ChooseRule(this)),
         // control flow
-        key(tla.letIn(tla.int(1), TlaOperDecl("A", List(), tla.int(2))))
-          -> List(new LetInRule(this)),
         key(tla.appDecl(TlaOperDecl("userOp", List(), tla.int(3)))) ->
           List(new UserOperRule(this)),
         // functions
