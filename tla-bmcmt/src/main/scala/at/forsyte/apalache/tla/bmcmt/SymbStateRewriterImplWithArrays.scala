@@ -79,12 +79,12 @@ class SymbStateRewriterImplWithArrays(
         key(tla.concat(tla.name("Seq1"), tla.name("Seq2")))
           -> List(new SeqOpsRule(this)),
         // FiniteSets
-        key(OperEx(ApalacheOper.constCard, tla.ge(tla.card(tla.name("S")), tla.int(3))))
-          -> List(new CardinalityConstRule(this)),
-        key(OperEx(TlaFiniteSetOper.cardinality, tla.name("S")))
-          -> List(new CardinalityRule(this)),
-        key(OperEx(TlaFiniteSetOper.isFiniteSet, tla.name("S")))
-          -> List(new IsFiniteSetRule(this)),
+//        key(OperEx(ApalacheOper.constCard, tla.ge(tla.card(tla.name("S")), tla.int(3))))
+//          -> List(new CardinalityConstRule(this)),
+//        key(OperEx(TlaFiniteSetOper.cardinality, tla.name("S")))
+//          -> List(new CardinalityRule(this)),
+//        key(OperEx(TlaFiniteSetOper.isFiniteSet, tla.name("S")))
+//          -> List(new IsFiniteSetRule(this)),
         // misc
         key(OperEx(TlaOper.label, tla.str("lab"), tla.str("x")))
           -> List(new LabelRule(this)),
