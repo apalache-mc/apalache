@@ -131,26 +131,48 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
       // Most likely, this expression will be never used as a result.
       state.setRex(defaultValue.toNameEx)
     } else {
-      // rewrite `indexBase1Ex - 1` to a single cell
-      var nextState = rewriter.rewriteUntilDone(state.setRex(tla.minus(indexBase1Ex, tla.int(1)) as IntT1()))
-      val indexBase0 = nextState.asCell
-      // create the oracle
-      val (oracleState, oracle) = picker.oracleFactory.newIntOracle(nextState, capacity)
-      // pick an element to be the result
-      nextState = picker.pickByOracle(oracleState, oracle, protoElems, nextState.arena.cellTrue().toNameEx)
-      val pickedResult = nextState.asCell
-      // If 0 <= indexBase0 < capacity, then require oracle = indexBase0.
-      // Otherwise, we do not restrict the outcome. This is consistent with Specifying Systems.
-      // We do not refer to the actual length of the sequence (which we don't know).
-      // Instead, we use the capacity of the proto sequence.
-      val inRange =
-        tla.and(tla.le(tla.int(0), indexBase0.toNameEx as IntT1()) as BoolT1(),
-            tla.lt(indexBase0.toNameEx as IntT1(), tla.int(capacity)) as BoolT1()) as BoolT1()
-      // (indexBase0 = oracle) <=> inRange
-      val oracleEqArg = tla.eql(indexBase0.toNameEx, oracle.intCell.toNameEx as IntT1()) as IntT1() as BoolT1()
-      val iff = tla.eql(oracleEqArg, inRange) as BoolT1()
-      rewriter.solverContext.assertGroundExpr(iff)
-      nextState.setRex(pickedResult.toNameEx)
+      // rewrite `indexBase1Ex` to a single cell
+      var nextState = rewriter.rewriteUntilDone(state.setRex(indexBase1Ex))
+      val indexCellBase1 = nextState.asCell
+
+      rewriter.intValueCache.findKey(indexCellBase1) match {
+        case None =>
+          // The general case: we cannot statically predict the value of indexCell.
+          // Hence, we have to pick one of the sequence elements and restrict it with an oracle.
+          // This introduces O(capacity) constraints.
+          val (oracleState, oracle) = picker.oracleFactory.newIntOracle(nextState, capacity)
+          // pick an element to be the result
+          nextState = picker.pickByOracle(oracleState, oracle, protoElems, nextState.arena.cellTrue().toNameEx)
+          val pickedResult = nextState.asCell
+          // If 0 < indexCell <= capacity, then require oracle = indexCell - 1.
+          // Otherwise, we do not restrict the outcome. This is consistent with Specifying Systems.
+          // We do not refer to the actual length of the sequence (which we don't know).
+          // Instead, we use the capacity of the proto sequence.
+          val inRange =
+            tla.and(tla.lt(tla.int(0), indexCellBase1.toNameEx as IntT1()) as BoolT1(),
+                tla.le(indexCellBase1.toNameEx as IntT1(), tla.int(capacity)) as BoolT1()) as BoolT1()
+          // (indexBase1 - 1 = oracle) <=> inRange
+          val oracleEqArg =
+            tla.eql(tla.minus(indexCellBase1.toNameEx, tla.int(1)) as IntT1(),
+                oracle.intCell.toNameEx as IntT1()) as IntT1() as BoolT1()
+          val iff = tla.eql(oracleEqArg, inRange) as BoolT1()
+          rewriter.solverContext.assertGroundExpr(iff)
+          nextState.setRex(pickedResult.toNameEx)
+
+        case Some(cachedBigInt) =>
+          // Special case: the integer is found in the value cache.
+          // This can happen if the expression is written under a quantifier over the sequence domain.
+          // For instance, \A i \in DOMAIN seq: seq[i] > 0.
+          // In this case, we do not have to introduce any constraints!
+          if (cachedBigInt < 1 || cachedBigInt > capacity) {
+            // Return the default value. We cannot throw an exception, as it may break a valid TLA+ spec.
+            nextState.setRex(defaultValue.toNameEx)
+          } else {
+            // Retrieve the element by its index.
+            val elem = elems(state.arena, protoSeq)(cachedBigInt.toInt - 1)
+            nextState.setRex(elem.toNameEx)
+          }
+      }
     }
   }
 
