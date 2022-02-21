@@ -26,7 +26,7 @@ class TestConstSimplifier extends AnyFunSuite with BeforeAndAfterEach with Check
   private val gens = new IrGenerators {
     override val maxArgs: Int = 3
   }
-  private val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
+  private val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators ++ gens.functionOperators
   private val twoExpressions = for {
     e1 <- gens.genTlaEx(ops)(gens.emptyContext)
     e2 <- gens.genTlaEx(ops)(gens.emptyContext)

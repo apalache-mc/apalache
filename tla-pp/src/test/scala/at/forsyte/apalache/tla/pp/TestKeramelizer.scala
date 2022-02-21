@@ -301,8 +301,11 @@ class TestKeramelizer extends AnyFunSuite with Checkers with BeforeAndAfterEach 
   test("simplifies TLA+ expressions to KerA+") {
     // Generator for PBT
     val gens = new IrGenerators { override val maxArgs: Int = 3 }
+
     // Generated operators
-    val ops = gens.simpleOperators ++ gens.logicOperators ++ gens.arithOperators ++ gens.setOperators
+    val ops =
+      gens.simpleOperators ++ gens.logicOperators ++ gens.arithOperators ++ gens.setOperators ++ gens.functionOperators
+
     // Predicates for Keramelizer input and Keramelizer output (= KerA+)
     val inputPred = KeramelizerInputLanguagePred()
     val outputPred = KeraLanguagePred()
