@@ -127,24 +127,31 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
         def onOverloadingError(sub: Substitution, signatures: Seq[TlaType1]): Unit = {
           // The constraint solver has failed to solve the disjunctive clause:
           // operVar = operType_1 \/ ... \/ operVar = operType_n
-          val evalArgTypes = argTypes.map(sub.subRec).mkString(" and ")
+          val evalArgTypes = argTypes.map(sub.subRec)
           val argOrArgs = pluralArgs(argTypes.length)
           if (signatures.isEmpty) {
             onTypeError(appEx.sourceRef, s"No matching signature for $argOrArgs $evalArgTypes")
           } else {
             // it should be the case that manySigs has at least two elements, but we also include the case of one
             val sepSigs = String.join(" or ", signatures.map(_.toString()): _*)
-            onTypeError(appEx.sourceRef,
-                s"Need annotation. Found ${signatures.length} matching operator signatures $sepSigs for $argOrArgs $evalArgTypes. ${appEx.explain(sepSigs, evalArgTypes)}")
+            val defaultMessage =
+              s"Need annotation. Found ${signatures.length} matching operator signatures $sepSigs for $argOrArgs ${evalArgTypes
+                  .mkString(" and ")}"
+            val specificMessage = appEx.explain(signatures.toList, evalArgTypes)
+            onTypeError(appEx.sourceRef, if (specificMessage != "") specificMessage else defaultMessage)
           }
         }
 
         def onArgsMatchError(sub: Substitution, types: Seq[TlaType1]): Unit = {
           // no solution for: operVar = (arg_1, ..., arg_k) => resVar
-          val evalArgTypes = argTypes.map(sub.subRec).mkString(" and ")
+          val evalArgTypes = argTypes.map(sub.subRec)
           val argOrArgs = pluralArgs(argTypes.length)
           val evalSig = sub.subRec(operVar)
-          onTypeError(appEx.sourceRef, s"No match between operator signature $evalSig and $argOrArgs $evalArgTypes. ${appEx.explain(evalSig.toString, evalArgTypes)}")
+          println(types)
+          val defaultMessage =
+            s"No match between operator signature $evalSig and $argOrArgs ${evalArgTypes.mkString(" and ")}"
+          val specificMessage = appEx.explain(List(evalSig), evalArgTypes)
+          onTypeError(appEx.sourceRef, if (specificMessage != "") specificMessage else defaultMessage)
         }
 
         // operVar = (arg_1, ..., arg_k) => resVar
@@ -154,10 +161,13 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
 
         def onSigMatchError(sub: Substitution, sigs: Seq[TlaType1]): Unit = {
           // no solution for: operVar = operType_1
-          val evalArgTypes = argTypes.map(sub.subRec).mkString(" and ")
+          val evalArgTypes = argTypes.map(sub.subRec)
           val argOrArgs = pluralArgs(argTypes.length)
           val evalSig = sigs.head
-          onTypeError(appEx.sourceRef, s"$appEx No match between operator signature $evalSig and $argOrArgs $evalArgTypes. ${appEx.explain(evalSig.toString, evalArgTypes)}")
+          val defaultMessage =
+            s"No match between operator signature $evalSig and $argOrArgs ${evalArgTypes.mkString(" and ")}"
+          val specificMessage = appEx.explain(List(evalSig), evalArgTypes)
+          onTypeError(appEx.sourceRef, if (specificMessage != "") specificMessage else defaultMessage)
         }
 
         if (operTypes.length == 1) {

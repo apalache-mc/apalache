@@ -197,6 +197,16 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
       mkApp(ref, Seq(sig), args.map(this(_)): _*)
     }
 
+    def diffArgTypes(args: List[TlaEx], expectedTypes: List[TlaType1], argsInfo: List[TlaType1]): List[String] = {
+      val illTypedArguments = args.toList.zip(expectedTypes).zip(argsInfo).filter {
+        case ((arg, expectedType), argType) => expectedType != argType
+      }
+
+      illTypedArguments.map { case ((arg, expectedType), argType) =>
+        s"Argument $arg should have type $expectedType but has type $argType"
+      }
+    }
+
     ex match {
       case nm @ NameEx(_) =>
         // x becomes x
@@ -211,13 +221,22 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val a = varPool.fresh
         val opsig = OperT1(Seq(a, a), BoolT1())
         val etcExpr = mkExRefApp(opsig, args)
-        etcExpr.typeErrorExplanation = (sigInfo: String, argsInfo: String) => s"Arguments ${args.mkString(" and ")} on expression $ex should have the same type"
+        etcExpr.typeErrorExplanation = (sigInfo: List[TlaType1], argsInfo: List[TlaType1]) => {
+          s"Arguments of equality should have the same type\nFor arguments ${args.mkString(", ")} with types ${argsInfo
+              .mkString(", ")}\nIn expression $ex"
+        }
         etcExpr
 
       case OperEx(TlaOper.apply, nameEx @ NameEx(_), args @ _*) =>
         // F(e_1, ..., e_n)
-        val etcExpr = mkAppByName(ref, mkName(nameEx), operArgTypes: _*)
-        etcExpr.typeErrorExplanation = (sigInfo: String, argsInfo: String) => s"Argument(s) ${args.mkString(" and ")} on expression $ex should have type(s) $argsInfo respectively"
+        val etcExpr = mkAppByName(ref, mkName(nameEx), args.map(this(_)): _*)
+        etcExpr.typeErrorExplanation = (sigInfo: List[TlaType1], argsInfo: List[TlaType1]) => {
+          val expectedTypes = sigInfo(0) match {
+            case OperT1(args, _) => args
+          }
+          val argErrors = diffArgTypes(args.toList, expectedTypes.toList, argsInfo)
+          s"${argErrors.mkString(" \n ")}\n on call for $nameEx with type ${sigInfo(0)}\nIn expression $ex"
+        }
         etcExpr
 
       case ex @ OperEx(TlaOper.apply, opName, args @ _*) =>
@@ -437,7 +456,8 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
           OperT1(Seq(funType, argType), resType)
         }
         val etcExpr = mkApp(ref, signatures, this(fun), this(arg))
-        etcExpr.typeErrorExplanation = (sigInfo: String, argsInfo: String) => s"Couldn't find a way to apply [] to a function $fun and an argument $arg in $ex"
+        etcExpr.typeErrorExplanation = (sigInfo: List[TlaType1], argsInfo: List[TlaType1]) =>
+          s"Couldn't find a way to apply [] to a function $fun and an argument $arg \nIn expression $ex"
         etcExpr
 
       case OperEx(TlaFunOper.domain, fun) =>

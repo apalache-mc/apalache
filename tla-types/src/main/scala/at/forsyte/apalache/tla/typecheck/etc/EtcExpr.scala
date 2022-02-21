@@ -18,9 +18,9 @@ sealed trait EtcExpr {
    */
   val sourceRef: EtcRef
 
-  var typeErrorExplanation: (String, String) => String = (_, _) => ""
+  var typeErrorExplanation: (List[TlaType1], List[TlaType1]) => String = (_, _) => ""
 
-  def explain(sigInfo: String, argsInfo: String) : String = typeErrorExplanation(sigInfo, argsInfo)
+  def explain(sigInfo: List[TlaType1], argsInfo: List[TlaType1]): String = typeErrorExplanation(sigInfo, argsInfo)
 }
 
 /**
