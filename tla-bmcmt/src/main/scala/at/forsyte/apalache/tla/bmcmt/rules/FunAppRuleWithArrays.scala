@@ -48,11 +48,11 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
           nextState = nextState.updateArena(_.appendHasNoSmt(res, nextState.arena.getHas(elemRes): _*))
 
           if (elemRes.cellType.isInstanceOf[FunT] | elemRes.cellType.isInstanceOf[FinFunSetT]) {
-            nextState = nextState.updateArena(_.setDom(res, nextState.arena.getDom(elemTuple.tail.head)))
-            nextState = nextState.updateArena(_.setCdm(res, nextState.arena.getCdm(elemTuple.tail.head)))
+            nextState = nextState.updateArena(_.setDom(res, nextState.arena.getDom(elemRes)))
+            nextState = nextState.updateArena(_.setCdm(res, nextState.arena.getCdm(elemRes)))
           } else if (elemRes.cellType.isInstanceOf[RecordT]) {
             // Records do not contain cdm metadata
-            nextState = nextState.updateArena(_.setDom(res, nextState.arena.getDom(elemTuple.tail.head)))
+            nextState = nextState.updateArena(_.setDom(res, nextState.arena.getDom(elemRes)))
           }
         }
       }

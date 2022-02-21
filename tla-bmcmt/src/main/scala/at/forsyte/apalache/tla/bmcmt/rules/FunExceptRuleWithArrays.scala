@@ -57,7 +57,7 @@ class FunExceptRuleWithArrays(rewriter: SymbStateRewriter) extends FunExceptRule
     relationCells foreach eachRelationPair
     nextState = nextState.updateArena(_.setCdm(resultFunCell, resultRelation))
 
-    // Add a constraint equating resultFunCell to funCell
+    // Add a constraint equating resultFunCell to funCell, since resultFunCell is initially unconstrained
     val eql = tla.eql(resultFunCell.toNameEx, funCell.toNameEx)
     rewriter.solverContext.assertGroundExpr(eql)
 
