@@ -58,7 +58,7 @@ class ReTLAToVMTTranspilePassImpl @Inject() (val options: PassOptions, pred: Lan
 
     val vmtWriter = new VMTWriter(gen)
 
-    vmtWriter.annotateAndWrite(module.varDeclarations, module.constDeclarations, initTrans, nextTrans, vcInvs)
+    vmtWriter.annotateAndWrite(module.varDeclarations, module.constDeclarations, cinitP, initTrans, nextTrans, vcInvs)
 
     Some(module)
   }

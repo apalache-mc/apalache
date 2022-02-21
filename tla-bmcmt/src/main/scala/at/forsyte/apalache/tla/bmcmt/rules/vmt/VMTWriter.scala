@@ -86,8 +86,8 @@ class VMTWriter(gen: UniqueNameGenerator) {
   }
 
   def annotateAndWrite(
-      varDecls: Seq[TlaVarDecl], constDecls: Seq[TlaConstDecl], initTransitions: Seq[(String, TlaEx)],
-      nextTransitions: Seq[(String, TlaEx)], invariants: Seq[(String, TlaEx)],
+      varDecls: Seq[TlaVarDecl], constDecls: Seq[TlaConstDecl], cInit: Seq[(String, TlaEx)],
+      initTransitions: Seq[(String, TlaEx)], nextTransitions: Seq[(String, TlaEx)], invariants: Seq[(String, TlaEx)],
   ): Unit = {
     val setConstants = constDecls
       .map { d => (d.name, d.typeTag) }
@@ -98,6 +98,11 @@ class VMTWriter(gen: UniqueNameGenerator) {
       .toMap[String, UninterpretedSort]
 
     val rewriter = new RewriterImpl(setConstants, gen)
+
+    val cinits = cInit map { case (_, ex) =>
+      rewriter.rewrite(ex)
+    }
+    val cinitStrs = cinits map TermWriter.mkSMT2String
 
     val inits = initTransitions map { case (name, ex) =>
       Init(name, rewriter.rewrite(ex))
@@ -153,6 +158,9 @@ class VMTWriter(gen: UniqueNameGenerator) {
       writer.println()
       writer.println(";Variable bindings")
       nextStrs foreach writer.println
+      writer.println()
+      writer.println(";TLA constant initialization")
+      cinitStrs foreach writer.println
       writer.println()
       writer.println(";Initial states")
       initStrs foreach writer.println
