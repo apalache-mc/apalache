@@ -643,12 +643,6 @@ class Builder {
     BuilderOper(ApalacheOper.storeNotInSet, elem, fun)
   }
 
-  def apalacheSmtMap(inputSet: BuilderEx, consChain: BuilderEx, resultSet: BuilderEx): BuilderEx = {
-    BuilderOper(ApalacheOper.smtMap, inputSet, consChain, resultSet)
-  }
-
-  def apalacheChain(op: BuilderEx, tail: BuilderEx, cond: BuilderEx = bool(true)): BuilderEx = {
-    BuilderOper(ApalacheOper.chain, op, tail, cond)
   def apalacheSmtMap(inputSet: BuilderEx, resultSet: BuilderEx): BuilderEx = {
     BuilderOper(ApalacheOper.smtMap, inputSet, resultSet)
   }

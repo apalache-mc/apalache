@@ -284,12 +284,6 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
 
       case OperEx(oper, args @ _*) =>
         OperEx(oper, args.map(rec): _*)(ex.typeTag)
-          .map(p => tla.tuple(p._1, p._2).as(pairT))
-        tla.apalacheSetAsFun(tla.enumSet(pairs: _*).as(SetT1(pairT))).as(funT1)
-        val startEndFun = arena.getHas(cell).map(decodeCellToTlaEx(arena, _))
-        val filtered = cells.zipWithIndex.filter((isIn _).tupled).map(_._1)
-        val dom = decodeSet(arena, domCell).map(exToStr)
-        OperEx(oper, args.map(rec): _*)(ex.typeTag)
 
       case _ =>
         ex

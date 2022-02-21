@@ -2,7 +2,7 @@
 
 | author        | revision |
 | ------------- |---------:|
-| Rodrigo Otoni |      1.5 |
+| Rodrigo Otoni |      1.6 |
 
 This ADR describes an alternative encoding of the [KerA+] fragment of TLA+ into SMT.
 Compound data structures, e.g. sets, are currently encoded using the [core theory] of SMT,

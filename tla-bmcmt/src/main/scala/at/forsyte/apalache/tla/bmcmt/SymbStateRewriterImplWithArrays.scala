@@ -57,16 +57,6 @@ class SymbStateRewriterImplWithArrays(
           -> List(new FunExceptRuleWithArrays(this)),
         key(tla.dom(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S"))))
           -> List(new DomainRuleWithArrays(this, intRangeCache)),
-        // misc
-        key(OperEx(TlaOper.label, tla.str("lab"), tla.str("x")))
-          -> List(new LabelRule(this)),
-        // FiniteSets
-        key(OperEx(ApalacheOper.constCard, tla.ge(tla.card(tla.name("S")), tla.int(3))))
-          -> List(new CardinalityConstRule(this)),
-        key(OperEx(TlaFiniteSetOper.cardinality, tla.name("S")))
-          -> List(new CardinalityRule(this)),
-        key(OperEx(TlaFiniteSetOper.isFiniteSet, tla.name("S")))
-          -> List(new IsFiniteSetRule(this)),
     )
   }
 

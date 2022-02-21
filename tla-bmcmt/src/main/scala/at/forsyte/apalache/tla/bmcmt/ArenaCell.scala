@@ -23,6 +23,12 @@ object ArenaCell {
 /**
  * A symbolic memory cell. Each cell has an identifier (similar to a memory address in a physical computer).
  *
+ * @param id
+ *   Id of the cell
+ * @param cellType
+ *   Type of the cell
+ * @param isUnconstrained
+ *   Flag defining if the SMT representation of the cell is unconstrained, default is false.
  * @author
  *   Igor Konnov
  */

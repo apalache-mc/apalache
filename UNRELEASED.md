@@ -20,12 +20,9 @@
 
 ### Features
 
+* Add support for functions in the arrays encoding, see #1169
 * `UNCHANGED x` now rewrites to `x' := x` instead of `x' = x`, when `x` is a variable name
-
 
 ### Bug fixes
 
  * Handle `Cardinality(SUBSET S)` without failing, see #1370
-
-### Features
-* Add support for functions in the arrays encoding, see #1169
