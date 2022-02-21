@@ -40,17 +40,17 @@ cd "$PROJ_ROOT"
 
 make dist
 
-TAG_NAME="v${VERSION}"
-
 # Package the artifacts
 # The archives without version suffix support stable links to the latest version.
 # See https://github.com/informalsystems/apalache/issues/716
-ZIPF="target/universal/apalache-${TAG_NAME}.zip"
+ZIPF="target/universal/apalache-${VERSION}.zip"
 ZIPF_NO_VER="target/universal/apalache.zip"
 
-TGZF="target/universal/apalache-${TAG_NAME}.tgz"
+TGZF="target/universal/apalache-${VERSION}.tgz"
 TGZF_NO_VER="target/universal/apalache.tgz"
 
+# We put a `v` in front of our versions for tags
+TAG_NAME="v${VERSION}"
 # Tag the commit and push the tag
 git tag -a "$TAG_NAME" -m "$msg"
 git push --tags
