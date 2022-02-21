@@ -121,6 +121,24 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
     }
   }
 
+  test("ill-typed application with custom error explanation") {
+    val oper = parser("Int => Int")
+    val arg = mkUniqConst(BoolT1())
+    val app = mkUniqApp(Seq(oper), arg)
+    val listener = mock[TypeCheckerListener]
+    app.typeErrorExplanation = (expectedTypes: List[TlaType1], actualTypes: List[TlaType1]) => "Mocked explanation"
+    val wrapper = wrapWithLet(app)
+    expecting {
+      listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef], "Mocked explanation")
+      // consume any types for the wrapper and lambda
+      consumeWrapperTypes(listener, wrapper)
+    }
+    whenExecuting(listener) {
+      val computed = checker.compute(listener, TypeContext.empty, wrapper)
+      assert(computed.isEmpty)
+    }
+  }
+
   test("unresolved argument") {
     val oper = parser("a => c")
     val arg = mkUniqConst(parser("b"))
@@ -208,6 +226,24 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
     expecting {
       listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef],
           "Need annotation. Found 2 matching operator signatures ((a) => Int) or ((a) => Bool) for argument Int")
+      // consume any types for the wrapper and lambda
+      consumeWrapperTypes(listener, wrapper)
+    }
+    whenExecuting(listener) {
+      val computed = checker.compute(listener, TypeContext.empty, wrapper)
+      assert(computed.isEmpty)
+    }
+  }
+
+  test("error: multiple signatures with custom error explanation") {
+    val operTypes = Seq(parser("a => Int"), parser("a => Bool"))
+    val arg = mkUniqConst(IntT1())
+    val app = mkUniqApp(operTypes, arg)
+    app.typeErrorExplanation = (expectedTypes: List[TlaType1], actualTypes: List[TlaType1]) => "Mocked explanation"
+    val listener = mock[TypeCheckerListener]
+    val wrapper = wrapWithLet(app)
+    expecting {
+      listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef], "Mocked explanation")
       // consume any types for the wrapper and lambda
       consumeWrapperTypes(listener, wrapper)
     }
