@@ -91,6 +91,12 @@ trait IrGenerators extends TlaType1Gen {
   val temporalOperators = List(TlaTempOper.box, TlaTempOper.diamond, TlaTempOper.leadsTo, TlaTempOper.guarantees,
       TlaTempOper.strongFairness, TlaTempOper.weakFairness)
 
+  /**
+   * Generates a type tag, either typed or untyped.
+   *
+   * @return
+   *   A generator of `TypeTag`.
+   */
   def genTypeTag: Gen[TypeTag] = for {
     tp <- genType1
     tt <- oneOf(Untyped(), Typed(tp))
