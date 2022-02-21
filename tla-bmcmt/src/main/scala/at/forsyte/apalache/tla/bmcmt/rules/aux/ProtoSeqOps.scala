@@ -17,6 +17,9 @@ import at.forsyte.apalache.tla.lir._
  * cell). All operators over sequences are expressible as operations over proto sequences, which makes proto sequences a
  * nice layer of abstraction.</p>
  *
+ * <p>This class effectively defines an abstract data type. We call it `ProtoSeqOps` to reflect that the instances of
+ * this class are not objects of this datatype but a set of functions over proto sequences.</p>
+ *
  * @param rewriter
  *   a symbolic rewriter
  * @author
