@@ -36,8 +36,6 @@ then
     exit 5
 fi
 
-cd "$PROJ_ROOT"
-
 make dist
 
 # Package the artifacts
@@ -51,6 +49,7 @@ TGZF_NO_VER="target/universal/apalache.tgz"
 
 # We put a `v` in front of our versions for tags
 TAG_NAME="v${VERSION}"
+
 # Tag the commit and push the tag
 git tag -a "$TAG_NAME" -m "$msg"
 git push --tags
