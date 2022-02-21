@@ -22,7 +22,7 @@ class TestIncrementalRenamingScalacheck extends AnyFunSuite with BeforeAndAfter 
     }
 
     val prop = {
-      val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators
+      val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators ++ gens.functionOperators
       val exGen = gens.genTlaEx(ops)(_)
       forAll(gens.genTlaModule(exGen)) { input =>
         try {
