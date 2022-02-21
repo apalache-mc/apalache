@@ -16,7 +16,11 @@ class FunExceptRuleWithArrays(rewriter: SymbStateRewriter) extends FunExceptRule
 
   // TODO: override rewriteRec and rewriteTuple later
 
-  override def rewriteFun(state: SymbState, funCell: ArenaCell, funT: FunT1, indexCell: ArenaCell,
+  override def rewriteFun(
+      state: SymbState,
+      funCell: ArenaCell,
+      funT: FunT1,
+      indexCell: ArenaCell,
       valueCell: ArenaCell): SymbState = {
 
     var nextState = state.updateArena(_.appendCell(funCell.cellType))
@@ -44,8 +48,9 @@ class FunExceptRuleWithArrays(rewriter: SymbStateRewriter) extends FunExceptRule
       val tupT = TupT1(funT.arg, funT.res)
       val pairIndex = nextState.arena.getHas(pair).head
       val ite = tla
-        .ite(tla.eql(pairIndex.toNameEx as tupT, indexCell.toNameEx as funT.arg) as BoolT1(),
-            newPairCell.toNameEx as tupT, pair.toNameEx as tupT) as tupT
+        .ite(tla.eql(pairIndex.toNameEx.as(tupT), indexCell.toNameEx.as(funT.arg)).as(BoolT1()),
+            newPairCell.toNameEx.as(tupT), pair.toNameEx.as(tupT))
+        .as(tupT)
 
       nextState = rewriter.rewriteUntilDone(nextState.setRex(ite))
       val updatedCell = nextState.asCell
@@ -53,7 +58,7 @@ class FunExceptRuleWithArrays(rewriter: SymbStateRewriter) extends FunExceptRule
     }
 
     // Add the appropriate pairs <arg,res> to resultRelation
-    relationCells foreach eachRelationPair
+    relationCells.foreach(eachRelationPair)
     nextState = nextState.updateArena(_.setCdm(resultFunCell, resultRelation))
 
     // Add a constraint equating resultFunCell to funCell, since resultFunCell is initially unconstrained

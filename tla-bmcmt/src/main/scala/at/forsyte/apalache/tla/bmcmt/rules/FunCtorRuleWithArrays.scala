@@ -15,7 +15,12 @@ import at.forsyte.apalache.tla.lir._
  */
 class FunCtorRuleWithArrays(rewriter: SymbStateRewriter) extends FunCtorRule(rewriter) {
 
-  override protected def rewriteFunCtor(state: SymbState, funT1: FunT1, mapEx: TlaEx, varName: String, setEx: TlaEx) = {
+  override protected def rewriteFunCtor(
+      state: SymbState,
+      funT1: FunT1,
+      mapEx: TlaEx,
+      varName: String,
+      setEx: TlaEx) = {
     val funT = CellT.fromType1(funT1)
     val elemT = CellT.fromType1(funT1.arg)
     val resultT = CellT.fromType1(funT1.res)
@@ -52,7 +57,7 @@ class FunCtorRuleWithArrays(rewriter: SymbStateRewriter) extends FunCtorRule(rew
     }
 
     // Add SMT constraints
-    for ((domElem, rangeElem) <- domainCells zip rangeCells)
+    for ((domElem, rangeElem) <- domainCells.zip(rangeCells))
       addCellCons(domElem, rangeElem)
 
     nextState.setRex(funCell.toNameEx)

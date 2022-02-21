@@ -84,9 +84,9 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // Since the expression goes to the solver, we don't care about types.
       val pairIndex = nextState.arena.getHas(pair).head // this is pair[1]
       val ite = tla
-        .ite(tla.eql(pairIndex.toNameEx as tupT, indexCell.toNameEx as funT.arg) as BoolT1(),
-            newPairCell.toNameEx as tupT, pair.toNameEx as tupT)
-        .typed(Map("p" -> tupT, "i" -> funT.arg, "b" -> BoolT1()), "p")
+        .ite(tla.eql(pairIndex.toNameEx.as(tupT), indexCell.toNameEx.as(funT.arg)).as(BoolT1()),
+            newPairCell.toNameEx.as(tupT), pair.toNameEx.as(tupT))
+        .as(tupT)
 
       nextState = rewriter.rewriteUntilDone(nextState.setRex(ite))
       val updatedCell = nextState.asCell

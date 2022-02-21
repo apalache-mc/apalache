@@ -101,7 +101,7 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
     }
 
     rewriter.solverContext.assertGroundExpr(tla.eql(funsetDom.toNameEx, funCellDom.toNameEx).typed(BoolT1()))
-    rewriter.solverContext.assertGroundExpr(tla.equiv(pred.toNameEx, tla.and(funsetDomElems map onFun: _*)))
+    rewriter.solverContext.assertGroundExpr(tla.equiv(pred.toNameEx, tla.and(funsetDomElems.map(onFun): _*)))
 
     rewriter.rewriteUntilDone(nextState.setRex(pred.toNameEx))
   }
