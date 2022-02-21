@@ -301,18 +301,30 @@ class TestKeramelizer extends AnyFunSuite with Checkers with BeforeAndAfterEach 
   test("simplifies TLA+ expressions to KerA+") {
     // Generator for PBT
     val gens = new IrGenerators { override val maxArgs: Int = 3 }
+
     // Generated operators
-    val ops = gens.simpleOperators ++ gens.logicOperators ++ gens.arithOperators ++ gens.setOperators
+    val ops =
+      gens.simpleOperators ++ gens.logicOperators ++ gens.arithOperators ++ gens.setOperators ++ gens.functionOperators
+
     // Predicates for Keramelizer input and Keramelizer output (= KerA+)
     val inputPred = KeramelizerInputLanguagePred()
     val outputPred = KeraLanguagePred()
 
     val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
       inputPred.isExprOk(ex) == PredResultOk() ==> {
-        val keramelized = keramelizer(ex)
-        val inKera = outputPred.isExprOk(keramelized)
-        (inKera shouldBe PredResultOk()).withClue(s"when keramelizing $ex to $keramelized")
-        true
+        try {
+          val keramelized = keramelizer(ex)
+          val inKera = outputPred.isExprOk(keramelized)
+          (inKera shouldBe PredResultOk()).withClue(s"when keramelizing $ex to $keramelized")
+          true
+        } catch {
+          // This is a workaround for when `IrGenerators` constructs an ill-typed expressions that fails in Keramelizer,
+          // as in #1364.
+          // TODO(#1379): Remove this try-catch when we have a well-typing expression generator.
+          case _: MalformedTlaError =>
+            alert("Ignored MalformedTlaError in PBT")
+            true
+        }
       }
     }
     check(prop, minSuccessful(500), sizeRange(7))

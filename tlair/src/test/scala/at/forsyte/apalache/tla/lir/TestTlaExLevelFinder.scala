@@ -18,7 +18,8 @@ class TestTlaExLevelFinder extends AnyFunSuite with Checkers {
     }
     // all names are considered constants
     val finder = new TlaExLevelFinder({ _ => TlaLevelConst })
-    val operators = gens.simpleOperators ++ gens.setOperators ++ gens.logicOperators ++ gens.arithOperators
+    val operators =
+      gens.simpleOperators ++ gens.setOperators ++ gens.functionOperators ++ gens.logicOperators ++ gens.arithOperators
     val prop = forAll(gens.genTlaEx(operators)(gens.emptyContext)) { ex =>
       finder(ex) =? TlaLevelConst
     }
@@ -30,7 +31,8 @@ class TestTlaExLevelFinder extends AnyFunSuite with Checkers {
       override val maxArgs: Int = 3
     }
     // all names are considered constants
-    val operators = gens.simpleOperators ++ gens.setOperators ++ gens.logicOperators ++ gens.arithOperators
+    val operators =
+      gens.simpleOperators ++ gens.setOperators ++ gens.functionOperators ++ gens.logicOperators ++ gens.arithOperators
     val prop = forAll(gens.genTlaEx(operators)(gens.emptyContext)) { ex =>
       val finder = new TlaExLevelFinder(_ => TlaLevelState)
       val level = finder(ex)
