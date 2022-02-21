@@ -21,6 +21,7 @@
 ### Features
 
 * `UNCHANGED x` now rewrites to `x' := x` instead of `x' = x`, when `x` is a variable name
+* Some simple type errors have more informative messages, see #1341
 
 
 ### Bug fixes
