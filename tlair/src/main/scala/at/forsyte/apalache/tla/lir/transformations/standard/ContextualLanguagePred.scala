@@ -4,8 +4,8 @@ import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule, TlaOperDecl}
 import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, PredResult, PredResultOk}
 
 /**
- * A partial implementation of `LanguagePred`, where operator names are rejected if they appear in
- * a context they are undefined in, and toplevel declarations are checked independently and in conjunction.
+ * A partial implementation of `LanguagePred`, where operator names are rejected if they appear in a context they are
+ * undefined in, and toplevel declarations are checked independently and in conjunction.
  */
 abstract class ContextualLanguagePred extends LanguagePred {
   override def isModuleOk(mod: TlaModule): PredResult = {

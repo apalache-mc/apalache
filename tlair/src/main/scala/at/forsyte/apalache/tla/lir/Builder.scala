@@ -304,7 +304,10 @@ class Builder {
     BuilderOper(TlaControlOper.caseNoOther, guard1 +: effect1 +: guardsAndEffectsInterleaved: _*)
   }
 
-  def caseOther(effectOnOther: BuilderEx, guard1: BuilderEx, effect1: BuilderEx,
+  def caseOther(
+      effectOnOther: BuilderEx,
+      guard1: BuilderEx,
+      effect1: BuilderEx,
       guardsAndEffectsInterleaved: BuilderEx*): BuilderEx = {
     BuilderOper(TlaControlOper.caseWithOther, effectOnOther +: guard1 +: effect1 +: guardsAndEffectsInterleaved: _*)
   }
@@ -428,15 +431,27 @@ class Builder {
     BuilderOper(TlaFunOper.enum, key1 +: value1 +: keysAndValuesInterleaved: _*)
   }
 
-  def except(fun: BuilderEx, key1: BuilderEx, value1: BuilderEx, keysAndValuesInterleaved: BuilderEx*): BuilderEx = {
+  def except(
+      fun: BuilderEx,
+      key1: BuilderEx,
+      value1: BuilderEx,
+      keysAndValuesInterleaved: BuilderEx*): BuilderEx = {
     BuilderOper(TlaFunOper.except, fun +: key1 +: value1 +: keysAndValuesInterleaved: _*)
   }
 
-  def funDef(mapExpr: BuilderEx, var1: BuilderEx, set1: BuilderEx, varsAndSetsInterleaved: BuilderEx*): BuilderEx = {
+  def funDef(
+      mapExpr: BuilderEx,
+      var1: BuilderEx,
+      set1: BuilderEx,
+      varsAndSetsInterleaved: BuilderEx*): BuilderEx = {
     BuilderOper(TlaFunOper.funDef, mapExpr +: var1 +: set1 +: varsAndSetsInterleaved: _*)
   }
 
-  def recFunDef(mapExpr: BuilderEx, var1: BuilderEx, set1: BuilderEx, varsAndSetsInterleaved: BuilderEx*): BuilderEx = {
+  def recFunDef(
+      mapExpr: BuilderEx,
+      var1: BuilderEx,
+      set1: BuilderEx,
+      varsAndSetsInterleaved: BuilderEx*): BuilderEx = {
     BuilderOper(TlaFunOper.recFunDef, mapExpr +: var1 +: set1 +: varsAndSetsInterleaved: _*)
   }
 
@@ -532,7 +547,11 @@ class Builder {
     BuilderOper(TlaSetOper.filter, variable, set, predicate)
   }
 
-  def map(mapExpr: BuilderEx, var1: BuilderEx, set1: BuilderEx, varsAndSetsInterleaved: BuilderEx*): BuilderEx = {
+  def map(
+      mapExpr: BuilderEx,
+      var1: BuilderEx,
+      set1: BuilderEx,
+      varsAndSetsInterleaved: BuilderEx*): BuilderEx = {
     BuilderOper(TlaSetOper.map, mapExpr +: var1 +: set1 +: varsAndSetsInterleaved: _*)
   }
 
@@ -540,8 +559,8 @@ class Builder {
     BuilderOper(TlaSetOper.funSet, fromSet, toSet)
   }
 
-  def recSet(varsAndSetsInterleaved: BuilderEx*): BuilderEx = {
-    BuilderOper(TlaSetOper.recSet, varsAndSetsInterleaved: _*)
+  def recSet(var1: BuilderEx, set1: BuilderEx, varsAndSetsInterleaved: BuilderEx*): BuilderEx = {
+    BuilderOper(TlaSetOper.recSet, var1 +: set1 +: varsAndSetsInterleaved: _*)
   }
 
   def seqSet(p_S: BuilderEx): BuilderEx = {
@@ -630,10 +649,12 @@ class Builder {
 
   def apalacheChain(op: BuilderEx, tail: BuilderEx, cond: BuilderEx = bool(true)): BuilderEx = {
     BuilderOper(ApalacheOper.chain, op, tail, cond)
+  def apalacheSmtMap(inputSet: BuilderEx, resultSet: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.smtMap, inputSet, resultSet)
   }
 
-  def apalacheAssignChain(elem: BuilderEx, chain: BuilderEx): BuilderEx = {
-    BuilderOper(ApalacheOper.assignChain, elem, chain)
+  def apalacheUnconstrainArray(arrayElemName: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.unconstrainArray, arrayElemName)
   }
 
   private val m_nameMap: Map[String, TlaOper] =
@@ -727,8 +748,7 @@ class Builder {
         ApalacheOper.storeInSet.name -> ApalacheOper.storeInSet,
         ApalacheOper.storeNotInSet.name -> ApalacheOper.storeNotInSet,
         ApalacheOper.smtMap.name -> ApalacheOper.smtMap,
-        ApalacheOper.chain.name -> ApalacheOper.chain,
-        ApalacheOper.assignChain.name -> ApalacheOper.assignChain,
+        ApalacheOper.unconstrainArray.name -> ApalacheOper.unconstrainArray,
         ApalacheOper.setAsFun.name -> ApalacheOper.setAsFun,
     )
 

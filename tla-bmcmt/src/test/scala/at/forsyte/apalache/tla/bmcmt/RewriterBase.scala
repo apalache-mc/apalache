@@ -5,9 +5,9 @@ import java.io.{PrintWriter, StringWriter}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import org.scalatest.fixture
+import org.scalatest.funsuite.FixtureAnyFunSuite
 
-trait RewriterBase extends fixture.FunSuite {
+trait RewriterBase extends FixtureAnyFunSuite {
   protected type FixtureParam = SMTEncoding
 
   protected var solverContext: SolverContext = _
@@ -56,7 +56,11 @@ trait RewriterBase extends fixture.FunSuite {
     rewriter.pop()
   }
 
-  private def assertOrExplain(msg: String, rewriter: SymbStateRewriter, state: SymbState, outcome: Boolean): Unit = {
+  private def assertOrExplain(
+      msg: String,
+      rewriter: SymbStateRewriter,
+      state: SymbState,
+      outcome: Boolean): Unit = {
     if (!outcome) {
       val writer = new StringWriter()
       new SymbStateDecoder(solverContext, rewriter).dumpArena(state, new PrintWriter(writer))

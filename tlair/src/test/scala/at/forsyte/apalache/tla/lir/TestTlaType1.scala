@@ -1,13 +1,13 @@
 package at.forsyte.apalache.tla.lir
 
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 import scala.collection.immutable.SortedMap
 
 @RunWith(classOf[JUnitRunner])
-class TestTlaType1 extends FunSuite {
+class TestTlaType1 extends AnyFunSuite {
   test("TlaType1.toString") {
     assert("Int" == IntT1().toString)
     assert("Real" == RealT1().toString)

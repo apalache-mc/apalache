@@ -14,7 +14,8 @@ import scala.math.BigInt
 /**
  * <p>An optimizer of KerA+ expressions.</p>
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 @Singleton
 class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker)
@@ -33,11 +34,12 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
   /**
    * Function transformations.
    *
-   * @return a transformed fun expression
+   * @return
+   *   a transformed fun expression
    */
   private def transformFuns: PartialFunction[TlaEx, TlaEx] = {
     case expr @ OperEx(TlaFunOper.app, OperEx(TlaFunOper.enum, ctorArgs @ _*), ValEx(TlaStr(accessedKey))) =>
-      val rewrittenArgs = ctorArgs map transform
+      val rewrittenArgs = ctorArgs.map(transform)
       val found = rewrittenArgs.grouped(2).find { case Seq(ValEx(TlaStr(key)), _) =>
         key == accessedKey
       }
@@ -53,7 +55,8 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
   /**
    * Set transformations.
    *
-   * @return a transformed expression
+   * @return
+   *   a transformed expression
    */
   private def transformSets: PartialFunction[TlaEx, TlaEx] = {
     case OperEx(TlaSetOper.in, mem, OperEx(TlaArithOper.dotdot, left, right)) =>
@@ -67,7 +70,8 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
   /**
    * Cardinality transformations.
    *
-   * @return a transformed expression
+   * @return
+   *   a transformed expression
    */
   private def transformCard: PartialFunction[TlaEx, TlaEx] = {
     case OperEx(TlaFiniteSetOper.cardinality, OperEx(TlaArithOper.dotdot, left, right)) =>
@@ -75,6 +79,12 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
       // Cardinality(a..b) is equivalent to (b - a) + 1.
       val bMinusA = OperEx(TlaArithOper.minus, right, left)(intTag)
       OperEx(TlaArithOper.plus, bMinusA, ValEx(TlaInt(1))(intTag))(intTag)
+
+    case OperEx(TlaFiniteSetOper.cardinality, OperEx(TlaSetOper.powerset, set)) =>
+      // A pattern that emerged in issue #1360
+      // Cardinality(SUBSET S) is equivalent to 2^Cardinality(S).
+      val cardEx = OperEx(TlaFiniteSetOper.cardinality, set)(intTag)
+      OperEx(TlaArithOper.exp, ValEx(TlaInt(2))(intTag), cardEx)(intTag)
 
     case OperEx(TlaOper.eq, OperEx(TlaFiniteSetOper.cardinality, set), ValEx(TlaInt(intVal))) if intVal == BigInt(0) =>
       // Cardinality(Set) = 0, that is, Set = {}.
@@ -142,7 +152,8 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
   /**
    * Transformations for existential quantification over sets: \exists x \in SetExpr: P.
    *
-   * @return a transformed \exists expression
+   * @return
+   *   a transformed \exists expression
    */
   private def transformExistsOverSets: PartialFunction[TlaEx, TlaEx] = {
     case OperEx(TlaBoolOper.exists, xe @ NameEx(x), OperEx(TlaSetOper.filter, ye @ NameEx(y), s, e), g) =>

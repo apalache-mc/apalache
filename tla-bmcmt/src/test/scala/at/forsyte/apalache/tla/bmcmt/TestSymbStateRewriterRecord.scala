@@ -20,7 +20,7 @@ trait TestSymbStateRewriterRecord extends RewriterBase {
       "RIBS" -> SetT1(RecT1("a" -> IntT1(), "b" -> BoolT1(), "c" -> StrT1())),
       "rib" -> RecT1("a" -> IntT1(), "b" -> BoolT1()),
       "rii" -> RecT1("a" -> IntT1(), "c" -> IntT1()),
-      "RII" -> SetT1(RecT1("a" -> IntT1(), "c" -> IntT1()))
+      "RII" -> SetT1(RecT1("a" -> IntT1(), "c" -> IntT1())),
   )
 
   test("""RecordDomainCache: ~(dom {"a", "b"} = dom {"a", "b", "c"})""") { rewriterType: SMTEncoding =>

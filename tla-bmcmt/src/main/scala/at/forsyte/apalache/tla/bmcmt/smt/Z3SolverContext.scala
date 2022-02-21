@@ -26,7 +26,7 @@ import scala.collection.mutable
  * in this class. </p>
  *
  * @author
- *   Igor Konnov
+ *   Igor Konnov, Rodrigo Otoni
  */
 class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   private val id: Long = Z3SolverContext.createId()
@@ -209,6 +209,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     }
   }
 
+  private def mkSelect(setId: Int, elemId: Int): ExprSort = {
+    val set = cellCache(setId).head._1
   private def mkAndChain(args: Seq[TlaEx], tail: TlaEx, cond: TlaEx): (ExprSort, Long) = {
     val arg = args.head
     val (argZ3, an) = toExpr(arg)
@@ -253,6 +255,13 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val (elem, elemT, _) = cellCache(elemId).head
     val (index, indexT, _) = cellCache(IndexId).head // Index 1 caches the value true
 
+    val edgeName = s"in_${elemT.signature}${elemId}_${setT.signature}$setId"
+    log(s";; declare edge inclusion $edgeName")
+    val updatedSet = updateSetConst(setId)
+
+    val store = z3context
+      .mkStore(set.asInstanceOf[Expr[ArraySort[Sort, BoolSort]]], elem.asInstanceOf[Expr[Sort]], z3context.mkTrue())
+    val eqStore = z3context.mkEq(updatedSet, store)
     val updatedArray = updateArrayConst(arrayId)
     val store = IndexId match {
       case 1 =>
@@ -272,6 +281,11 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     eqStore.asInstanceOf[ExprSort]
   }
 
+  private def mkUnchangedSet(setId: Int): ExprSort = {
+    if (cellCache(setId).size > 1) {
+      val currentSet = cellCache(setId).head._1
+      val oldSet = cellCache(setId).tail.head._1
+      val eqUnchanged = z3context.mkEq(currentSet, oldSet)
   private def mkSetStoreChain(elemName: String, setName: String, tail: TlaEx, cond: TlaEx): (ExprSort, Long) = {
     encoding match {
       case `arraysEncoding` =>
@@ -345,22 +359,6 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     cellCache += (arrayId -> ((updatedArray, arrayT, level) :: cellCache(arrayId)))
     _metrics = _metrics.addNConsts(1)
     updatedArray.asInstanceOf[ExprSort]
-  }
-
-  private def assignChainToSet(setName: String, chainEx: (ExprSort, Long)): (ExprSort, Long) = {
-    encoding match {
-      case `arraysEncoding` =>
-        val setId = ArenaCell.idFromName(setName)
-        val updatedSet = updateArrayConst(setId)
-        val eq = toEqExpr(updatedSet, chainEx._1)
-        (eq.asInstanceOf[ExprSort], 1 + chainEx._2)
-
-      case `oopsla19Encoding` =>
-        chainEx
-
-      case oddEncodingType =>
-        throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
-    }
   }
 
   /**
@@ -683,7 +681,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         (z3context.mkNot(eq.asInstanceOf[BoolExpr]).asInstanceOf[ExprSort], 1 + n)
 
       case OperEx(ApalacheOper.distinct, args @ _*) =>
-        val (es, ns) = (args map toExpr).unzip
+        val (es, ns) = (args.map(toExpr)).unzip
         val distinct = z3context.mkDistinct(es: _*)
         (distinct.asInstanceOf[ExprSort],
             ns.foldLeft(1L) {
@@ -691,7 +689,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             })
 
       case OperEx(TlaBoolOper.and, args @ _*) =>
-        val (es, ns) = (args map toExpr).unzip
+        val (es, ns) = (args.map(toExpr)).unzip
         val and = z3context.mkAnd(es.map(_.asInstanceOf[BoolExpr]): _*)
         (and.asInstanceOf[ExprSort],
             ns.foldLeft(1L) {
@@ -699,7 +697,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             })
 
       case OperEx(TlaBoolOper.or, args @ _*) =>
-        val (es, ns) = (args map toExpr).unzip
+        val (es, ns) = (args.map(toExpr)).unzip
         val or = z3context.mkOr(es.map(_.asInstanceOf[BoolExpr]): _*)
         (or.asInstanceOf[ExprSort],
             ns.foldLeft(1L) {
@@ -804,41 +802,22 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
-      case OperEx(ApalacheOper.chain, op, tail, cond) =>
-        op match {
-          case OperEx(TlaBoolOper.and, args @ _*) =>
-            mkAndChain(args, tail, cond)
-          case OperEx(ApalacheOper.storeInSet, NameEx(elemName), NameEx(setName)) =>
-            mkSetStoreChain(elemName, setName, tail, cond)
-          case _ =>
-            throw new IllegalStateException(s"Malformed chain operation with $op")
-        }
-
-      case OperEx(ApalacheOper.assignChain, NameEx(elemName), chain) =>
-        val chainEx = toExpr(chain)
-        val elemId = ArenaCell.idFromName(elemName)
-        val elemType = cellCache(elemId).head._2
-        elemType match {
-          case FinSetT(_) => assignChainToSet(elemName, chainEx)
-          case _          => throw new IllegalStateException("Malformed chain assignment operation")
-        }
-
-      case OperEx(ApalacheOper.smtMap, NameEx(inputSetName), consChain, NameEx(resultSetName)) =>
+      case OperEx(ApalacheOper.smtMap, NameEx(inputSetName), NameEx(resultSetName)) =>
         val inputSetId = ArenaCell.idFromName(inputSetName)
         val resultSetId = ArenaCell.idFromName(resultSetName)
-        // A temporary set is made, to contain the constraints that will be used on the SMT map
-        val tempResultSet = updateArrayConst(resultSetId) // The temporary set is initially an unconstrained array
-        val (consChainZ3, ccn) = toExpr(consChain) // The constraints added have tempResultSet as target of inputSetName
-        // An updated set is made, to contain the outcome of the SMT map
-        val updatedResultSet = updateArrayConst(resultSetId).asInstanceOf[ArrayExpr[Sort, BoolSort]]
+        // The latest SSA array for resultSet contains the constraints. An updated SSA array is made to store the result
         val inputSet = cellCache(inputSetId).head._1.asInstanceOf[ArrayExpr[Sort, BoolSort]]
-        val constraintsSet = tempResultSet.asInstanceOf[ArrayExpr[Sort, BoolSort]]
+        val constraintsSet = cellCache(resultSetId).head._1.asInstanceOf[ArrayExpr[Sort, BoolSort]]
+        val updatedResultSet = updateSetConst(resultSetId).asInstanceOf[ArrayExpr[Sort, BoolSort]]
         // The intersection of inputSet and constraintsSet is taken and equated to updatedResultSet
         val map = z3context.mkMap(z3context.mkAnd().getFuncDecl, inputSet, constraintsSet)
         val eq = toEqExpr(updatedResultSet, map)
-        // The returned expression is the conjunction of the SMT map with the constraints of constraintsSet
-        val and = z3context.mkAnd(eq, consChainZ3.asInstanceOf[BoolExpr])
-        (and.asInstanceOf[ExprSort], 3 + ccn)
+        (eq.asInstanceOf[ExprSort], 2)
+
+      case OperEx(ApalacheOper.unconstrainArray, NameEx(arrayElemName)) =>
+        val arrayElemId = ArenaCell.idFromName(arrayElemName)
+        updateSetConst(arrayElemId) // A new array is declared and left unconstrained
+        toExpr(ValEx(TlaBool(true))) // Nothing to assert
 
       // the old implementation allowed us to do that, but the new one is encoding edges directly
       case OperEx(TlaSetOper.in, ValEx(TlaInt(_)), NameEx(_)) | OperEx(TlaSetOper.in, ValEx(TlaBool(_)), NameEx(_)) =>
@@ -877,7 +856,9 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     ctor(a.asInstanceOf[Expr[ArithSort]], b.asInstanceOf[Expr[ArithSort]]).asInstanceOf[ExprSort]
   }
 
-  private def mkArithOp(ctor: (Expr[ArithSort], Expr[ArithSort]) => ArithExpr[ArithSort])(a: ExprSort,
+  private def mkArithOp(
+      ctor: (Expr[ArithSort], Expr[ArithSort]) => ArithExpr[ArithSort]
+    )(a: ExprSort,
       b: ExprSort): ExprSort = {
     ctor(a.asInstanceOf[Expr[ArithSort]], b.asInstanceOf[Expr[ArithSort]]).asInstanceOf[ExprSort]
   }

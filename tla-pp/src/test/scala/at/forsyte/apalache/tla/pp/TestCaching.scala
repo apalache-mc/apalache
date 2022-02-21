@@ -6,11 +6,12 @@ import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaArithOper
 import org.junit.runner.RunWith
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestCaching extends FunSuite with BeforeAndAfterEach with TestingPredefs {
+class TestCaching extends AnyFunSuite with BeforeAndAfterEach with TestingPredefs {
   private var cacher = new Cacher(new UniqueNameGenerator, TrackerWithListeners())
 
   override def beforeEach(): Unit = {
@@ -22,7 +23,7 @@ class TestCaching extends FunSuite with BeforeAndAfterEach with TestingPredefs {
     val decl = TlaOperDecl(operName, List("p"),
         tla.plus(
             tla.appOp(n_A, tla.minus(name("p"), tla.int(1))),
-            tla.appOp(n_A, tla.minus(name("p"), tla.int(1)))
+            tla.appOp(n_A, tla.minus(name("p"), tla.int(1))),
         ))(Untyped())
 
     decl.isRecursive = true
@@ -45,7 +46,7 @@ class TestCaching extends FunSuite with BeforeAndAfterEach with TestingPredefs {
     val decl = TlaOperDecl(operName, List("p"),
         tla.plus(
             tla.appOp(n_A, tla.minus(tla.name("p"), tla.int(1))),
-            tla.appOp(n_A, tla.minus(tla.name("p"), tla.int(2)))
+            tla.appOp(n_A, tla.minus(tla.name("p"), tla.int(2))),
         ))(Untyped())
 
     decl.isRecursive = true
@@ -103,9 +104,9 @@ class TestCaching extends FunSuite with BeforeAndAfterEach with TestingPredefs {
             tla.letIn(
                 tla.plus(
                     tla.appOp(n_T, tla.int(0)),
-                    tla.appOp(n_B, tla.int(1))
+                    tla.appOp(n_B, tla.int(1)),
                 ),
-                declT
+                declT,
             )))
 
     decl.isRecursive = false
@@ -123,20 +124,20 @@ class TestCaching extends FunSuite with BeforeAndAfterEach with TestingPredefs {
             declB1.body == tla.appOp(n_B, tla.int(1)).untyped() && (
                 body match {
                   case OperEx(TlaArithOper.plus, `one`, LetInEx(letInBody, defs @ _*)) =>
-                    (defs exists { declT0 =>
+                    (defs.exists { declT0 =>
                       (declT0.body == tla.appOp(n_T, tla.int(0)).untyped()) &&
                       letInBody == tla.plus(tla.appDecl(declT0), tla.appDecl(declB1)).untyped()
                     }) &&
-                      (
-                          defs exists { declT =>
-                            declT.body match {
-                              case LetInEx(tbody, declTx) =>
-                                declTx.body == tla.appOp(n_T, n_x).untyped() &&
-                                  tbody == tla.appDecl(declTx).untyped()
-                              case _ => false
-                            }
+                    (
+                        defs.exists { declT =>
+                          declT.body match {
+                            case LetInEx(tbody, declTx) =>
+                              declTx.body == tla.appOp(n_T, n_x).untyped() &&
+                              tbody == tla.appDecl(declTx).untyped()
+                            case _ => false
                           }
-                      )
+                        }
+                    )
                   case _ => false
                 }
             )

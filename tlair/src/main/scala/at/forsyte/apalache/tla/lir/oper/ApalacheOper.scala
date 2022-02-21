@@ -213,33 +213,25 @@ object ApalacheOper {
     override def precedence: (Int, Int) = (5, 5)
   }
 
+  /**
+   * The smtMap operator applies an SMT map using conjunction to two cells encoded as SMT arrays. Its current use is to
+   * encoded set intersection when handling TLA+ filters.
+   */
   object smtMap extends ApalacheOper {
     override def name: String = "Apalache!SmtMap"
 
-    override def arity: OperArity = FixedArity(3)
-
-    override def precedence: (Int, Int) = (5, 5)
-  }
-
-  /**
-   * The chain operator allows the chaining of individual operations. It can improve solver performance by eliminating
-   * intermediary declarations.
-   */
-  object chain extends ApalacheOper {
-    override def name: String = "Apalache!Chain"
-
-    override def arity: OperArity = FixedArity(3)
-
-    override def precedence: (Int, Int) = (5, 5)
-  }
-
-  /**
-   * The assignChain operator assigns the result of a chain of operations to an element.
-   */
-  object assignChain extends ApalacheOper {
-    override def name: String = "Apalache!AssignChain"
-
     override def arity: OperArity = FixedArity(2)
+
+    override def precedence: (Int, Int) = (5, 5)
+  }
+
+  /**
+   * The unconstrainArray operator increases the SSA index of a cell encoded as an SMT array.
+   */
+  object unconstrainArray extends ApalacheOper {
+    override def name: String = "Apalache!UnconstrainArray"
+
+    override def arity: OperArity = FixedArity(1)
 
     override def precedence: (Int, Int) = (5, 5)
   }

@@ -4,12 +4,12 @@ import at.forsyte.apalache.io.annotations.parser.CommentPreprocessor
 import org.junit.runner.RunWith
 import org.scalacheck.Gen.asciiStr
 import org.scalacheck.Prop.forAll
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.prop.Checkers
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatestplus.scalacheck.Checkers
 
 @RunWith(classOf[JUnitRunner])
-class TestCommentPreprocessor extends FunSuite with Checkers {
+class TestCommentPreprocessor extends AnyFunSuite with Checkers {
 
   test("test on empty input") {
     val (output, potentialAnnotations) = CommentPreprocessor()("")

@@ -10,8 +10,9 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.typecheck._
 import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
  * Unit tests for translating TLA+ expressions to EtcExpr.
@@ -20,7 +21,7 @@ import org.scalatest.{BeforeAndAfterEach, FunSuite}
  *   Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
-class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
+class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder {
   private var parser: Type1Parser = _
   private var annotationStore: AnnotationStore = _
   private var gen: ToEtcExpr = _
@@ -49,7 +50,11 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
   }
 
   // produce an expression that projects a set of pairs on the set of its first (or second) components
-  private def mkProjection(fst: String, snd: String, projFirst: Boolean, set: String): EtcExpr = {
+  private def mkProjection(
+      fst: String,
+      snd: String,
+      projFirst: Boolean,
+      set: String): EtcExpr = {
     val axis = if (projFirst) fst else snd
     val tuple = TupT1(VarT1(fst), VarT1(snd))
     // Projection: depending on axis, either ((<<a, b>>, Set(<<a, b>>)) => Set(a)) or ((<<a, b>>, Set(<<a, b>>)) => Set(b))
@@ -259,7 +264,7 @@ class TestToEtcExpr extends FunSuite with BeforeAndAfterEach with EtcBuilder {
   test("invalid field string in record set construction") {
     val invalid = "invalidName"
     val exn = intercept[IllegalArgumentException](
-        gen(tla.recSet(tla.name(invalid), tla.str("x"))),
+        gen(tla.recSet(tla.name(invalid), tla.str("x")))
     )
     assert(exn.getMessage.contains(invalid))
   }

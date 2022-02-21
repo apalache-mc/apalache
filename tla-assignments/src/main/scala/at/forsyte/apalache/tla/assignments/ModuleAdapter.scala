@@ -3,11 +3,12 @@ package at.forsyte.apalache.tla.assignments
 import at.forsyte.apalache.tla.lir._
 
 /**
- * Moving away from SpecWithTransitions ModuleAdapter allows us to re-insert special TlaEx
- * back into a TlaModule, as operators with special names. All such operators are suffixed with
- * `suffix`, which is a string disallowed by the TLA+ operator naming rules.
+ * Moving away from SpecWithTransitions ModuleAdapter allows us to re-insert special TlaEx back into a TlaModule, as
+ * operators with special names. All such operators are suffixed with `suffix`, which is a string disallowed by the TLA+
+ * operator naming rules.
  *
- * @author Jure Kukovec
+ * @author
+ *   Jure Kukovec
  */
 object ModuleAdapter {
   def exprToOperDef(name: String, expr: TlaEx): TlaOperDecl = {
@@ -21,7 +22,7 @@ object ModuleAdapter {
   }
 
   def exprsToOperDefs(operPrefix: String, transitions: Seq[TlaEx]): Seq[TlaOperDecl] =
-    transitions.zipWithIndex map { case (transExpr, index) =>
+    transitions.zipWithIndex.map { case (transExpr, index) =>
       // Name + $ + index is guaranteed to not clash with existing names, as
       // $ is not an allowed symbol in TLA.
       // We pad the number to 4 digits, so it is easy to sort them.
@@ -31,18 +32,17 @@ object ModuleAdapter {
   def declsFromTransitions(transitionOperName: String, transitions: Seq[SymbTrans]): Seq[TlaOperDecl] =
     // drop selections because of lacking implementation further on
     exprsToOperDefs(transitionOperName,
-        transitions map {
-      _._2
-    })
+        transitions.map {
+          _._2
+        })
 
   def insertTransitions(module: TlaModule, transitionOperName: String, transitions: Seq[SymbTrans]): TlaModule =
     TlaModule(module.name, declsFromTransitions(transitionOperName, transitions) ++ module.declarations)
 
   /**
-   * After re-inserting the transitions into the spec as operators with special names,
-   * we want to extract them again when we need them. We know all symbolic transition names
-   * (for init or next, depending on `baseName`) contain the `SymbolicTransitionInserter.suffix`
-   * string, that distinguishes them from normal operators.
+   * After re-inserting the transitions into the spec as operators with special names, we want to extract them again
+   * when we need them. We know all symbolic transition names (for init or next, depending on `baseName`) contain the
+   * `SymbolicTransitionInserter.suffix` string, that distinguishes them from normal operators.
    */
   def getTransitionsFromSpec(module: TlaModule, prefix: String): Seq[TlaEx] =
     module.operDeclarations
@@ -55,9 +55,11 @@ object ModuleAdapter {
       }
 
   def getOperatorOption(module: TlaModule, name: String): Option[TlaEx] =
-    module.operDeclarations.find {
-      _.name == name
-    } map {
-      _.body
-    }
+    module.operDeclarations
+      .find {
+        _.name == name
+      }
+      .map {
+        _.body
+      }
 }

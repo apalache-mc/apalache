@@ -3,9 +3,10 @@ package at.forsyte.apalache.tla.imp
 import at.forsyte.apalache.io.annotations.store.{AnnotationStore, createAnnotationStore}
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, OperParam, TlaDecl, TlaEx, TlaModule, TlaOperDecl}
-import org.scalatest.{BeforeAndAfter, FunSuite}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.funsuite.AnyFunSuite
 
-trait SanyImporterTestBase extends FunSuite with BeforeAndAfter {
+trait SanyImporterTestBase extends AnyFunSuite with BeforeAndAfter {
   protected var sourceStore: SourceStore = _
   protected var annotationStore: AnnotationStore = _
   protected var sanyImporter: SanyImporter = _
@@ -32,7 +33,7 @@ trait SanyImporterTestBase extends FunSuite with BeforeAndAfter {
         }
 
       case OperEx(_, args @ _*) =>
-        args flatMap collectDefs
+        args.flatMap(collectDefs)
 
       case _ =>
         List()
@@ -42,7 +43,7 @@ trait SanyImporterTestBase extends FunSuite with BeforeAndAfter {
       assertForDecl(decl)
       decl match {
         case operDecl: TlaOperDecl =>
-          collectDefs(operDecl.body) foreach assertForDecl
+          collectDefs(operDecl.body).foreach(assertForDecl)
 
         case _ => ()
       }
@@ -50,8 +51,9 @@ trait SanyImporterTestBase extends FunSuite with BeforeAndAfter {
   }
 
   def expectOperDecl(
-      name: String, params: List[OperParam], body: TlaEx,
-  ): (TlaDecl => Unit) = {
+      name: String,
+      params: List[OperParam],
+      body: TlaEx): (TlaDecl => Unit) = {
     case d: TlaOperDecl =>
       assert(name == d.name)
       assert(params == d.formalParams)
@@ -72,8 +74,10 @@ trait SanyImporterTestBase extends FunSuite with BeforeAndAfter {
   }
 
   def findAndExpectOperDecl(
-      mod: TlaModule, name: String, params: List[OperParam], body: TlaEx,
-  ): Unit = {
+      mod: TlaModule,
+      name: String,
+      params: List[OperParam],
+      body: TlaEx): Unit = {
     mod.declarations.find {
       _.name == name
     } match {

@@ -5,7 +5,8 @@ import at.forsyte.apalache.tla.lir.TlaType1
 /**
  * A constraint solver that collects a series of equations and solves them with the type unification algorithm.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class ConstraintSolver(approximateSolution: Substitution = Substitution.empty) {
   private var solution: Substitution = approximateSolution
@@ -80,8 +81,10 @@ class ConstraintSolver(approximateSolution: Substitution = Substitution.empty) {
   /**
    * Test whether a variable is free in the context that is induced by the solved constraints.
    *
-   * @param varNo a variable number
-   * @return true if the variable occurs in the partial solution of the solver
+   * @param varNo
+   *   a variable number
+   * @return
+   *   true if the variable occurs in the partial solution of the solver
    */
   def isFreeVar(varNo: Int): Boolean = {
     def outsideClass(cls: EqClass): Boolean = !cls.typeVars.contains(varNo)

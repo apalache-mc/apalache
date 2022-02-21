@@ -8,7 +8,8 @@ import javax.inject.{Inject, Singleton}
 /**
  * The adapter for all exceptions that can be produced when running the SANY parser and TlaImporter.
  *
- * @author Igor Konnv
+ * @author
+ *   Igor Konnv
  */
 @Singleton
 class ParserExceptionAdapter @Inject() () extends ExceptionAdapter {

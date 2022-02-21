@@ -58,13 +58,26 @@ object UTFPrinter extends Printer {
 
     def opAppStr(seq: Seq[TlaEx], sep: String = ", ") = mapMk(seq, sep, opApp)
 
-    def groupMapMk(seq: Seq[TlaEx], n: Int, pattern: String, sep: String, fn: TlaEx => String) =
+    def groupMapMk(
+        seq: Seq[TlaEx],
+        n: Int,
+        pattern: String,
+        sep: String,
+        fn: TlaEx => String) =
       seq.grouped(n).toSeq.map(s => pattern.format(s.map(fn): _*)).mkString(sep)
 
-    def strPattern(seq: Seq[TlaEx], n: Int, pattern: String, sep: String): String =
+    def strPattern(
+        seq: Seq[TlaEx],
+        n: Int,
+        pattern: String,
+        sep: String): String =
       groupMapMk(seq, n, pattern, sep, apply)
 
-    def opAppPattern(seq: Seq[TlaEx], n: Int, pattern: String, sep: String): String =
+    def opAppPattern(
+        seq: Seq[TlaEx],
+        n: Int,
+        pattern: String,
+        sep: String): String =
       groupMapMk(seq, n, pattern, sep, opApp)
 
     def opAppStrPairs(seq: Seq[TlaEx], mid: String = pad(m_rarrow), sep: String = pad(m_box)): String =
@@ -200,7 +213,7 @@ object UTFPrinter extends Printer {
             if (args.isEmpty)
               oper.name
             else "%s(%s)".format(oper.name, str(args))
-          //, args: _*) // the default format
+          // , args: _*) // the default format
         }
 
       case _ => ""
@@ -214,8 +227,10 @@ object UTFPrinter extends Printer {
   /**
    * Print a declaration
    *
-   * @param p_decl a declaration
-   * @return a string representation of TLA+ declaration
+   * @param p_decl
+   *   a declaration
+   * @return
+   *   a string representation of TLA+ declaration
    */
   override def apply(p_decl: TlaDecl): String = {
     def pr_param(p: OperParam): String = {

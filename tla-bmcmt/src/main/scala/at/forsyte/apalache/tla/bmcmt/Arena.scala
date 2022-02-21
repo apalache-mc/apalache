@@ -65,9 +65,14 @@ object Arena {
  * @author
  *   Igor Konnov
  */
-class Arena private (val solverContext: SolverContext, val cellCount: Int, val topCell: ArenaCell,
-    val cellMap: Map[String, ArenaCell], private val hasEdges: Map[ArenaCell, List[ArenaCell]],
-    private val domEdges: Map[ArenaCell, ArenaCell], private val cdmEdges: Map[ArenaCell, ArenaCell])
+class Arena private (
+    val solverContext: SolverContext,
+    val cellCount: Int,
+    val topCell: ArenaCell,
+    val cellMap: Map[String, ArenaCell],
+    private val hasEdges: Map[ArenaCell, List[ArenaCell]],
+    private val domEdges: Map[ArenaCell, ArenaCell],
+    private val cdmEdges: Map[ArenaCell, ArenaCell])
     extends Serializable {
   // TODO: remove solverContext from Arena, see issue #105
   def setSolver(newSolverContext: SolverContext): Arena = {

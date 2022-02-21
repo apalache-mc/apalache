@@ -2,11 +2,11 @@ package at.forsyte.apalache.tla.typecheck
 
 import at.forsyte.apalache.tla.lir.{ConstT1, StrT1}
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestModelValueHandler extends FunSuite {
+class TestModelValueHandler extends AnyFunSuite {
   test("Pattern matching") {
     val s1 = "string"
     val s2 = "1_OF_A"
@@ -27,7 +27,7 @@ class TestModelValueHandler extends FunSuite {
         ("A", "1"),
         ("A", "2"),
         ("B", "one"),
-        ("B", "two")
+        ("B", "two"),
     )
 
     val ctr = ModelValueHandler.construct _
@@ -42,8 +42,8 @@ class TestModelValueHandler extends FunSuite {
         ("A", "1"),
         ("A", "2"),
         ("B", "one"),
-        ("B", "two")
-    ) map { p => s"${p._2}_OF_${p._1}" }
+        ("B", "two"),
+    ).map { p => s"${p._2}_OF_${p._1}" }
 
     assert(
         values.forall(v => ti(v).map(x => ctr((x._1.name, x._2))).contains(v))

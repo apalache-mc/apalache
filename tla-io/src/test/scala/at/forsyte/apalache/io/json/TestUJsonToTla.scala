@@ -8,12 +8,12 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet, TlaNatSet, TlaStrSet}
 import org.junit.runner.RunWith
 import org.scalacheck.Prop.{AnyOperators, forAll}
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.prop.Checkers
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatestplus.scalacheck.Checkers
 
 @RunWith(classOf[JUnitRunner])
-class TestUJsonToTla extends FunSuite with Checkers {
+class TestUJsonToTla extends AnyFunSuite with Checkers {
   implicit val reader = DefaultTagReader
   implicit val printer = TlaType1PrinterPredefs.printer
 
@@ -37,7 +37,7 @@ class TestUJsonToTla extends FunSuite with Checkers {
         ),
     )
 
-    exs foreach { ex =>
+    exs.foreach { ex =>
       val encEx = enc(ex)
       val decEx = dec.asTlaEx(encEx)
       assert(decEx == ex)
@@ -50,7 +50,7 @@ class TestUJsonToTla extends FunSuite with Checkers {
         TlaVarDecl("v"),
     )
 
-    decls foreach { decl =>
+    decls.foreach { decl =>
       assert(dec.asTlaDecl(enc(decl)) == decl)
     }
 
@@ -59,7 +59,7 @@ class TestUJsonToTla extends FunSuite with Checkers {
         new TlaModule("Module", decls),
     )
 
-    modules foreach { m =>
+    modules.foreach { m =>
       assert(dec.asTlaModule(enc(m)) == m)
     }
 
@@ -72,7 +72,7 @@ class TestUJsonToTla extends FunSuite with Checkers {
         TlaNatSet,
         TlaBoolSet,
         TlaStrSet,
-    ) map { v =>
+    ).map { v =>
       ValEx(v).withTag(Untyped())
     }
 

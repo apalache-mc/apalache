@@ -6,11 +6,11 @@ import at.forsyte.apalache.tla.lir.TestingPredefs
 import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestSmtFreeSTE extends FunSuite with TestingPredefs {
+class TestSmtFreeSTE extends AnyFunSuite with TestingPredefs {
 
   val sourceLoc = new SourceLocator(Map.empty, new ChangeListener)
 
@@ -75,10 +75,9 @@ class TestSmtFreeSTE extends FunSuite with TestingPredefs {
     val asgn3 = tla.primeEq(n_y, tla.int(1)).untyped()
     val declB = tla.declOp("B", asgn3).untypedOperDecl()
     val ex2 = tla
-      .letIn(
-          tla.and(
+      .letIn(tla.and(
               tla.appDecl(declA2, tla.int(1)),
-              tla.appDecl(declB)
+              tla.appDecl(declB),
           ), declA2)
       .untyped()
 

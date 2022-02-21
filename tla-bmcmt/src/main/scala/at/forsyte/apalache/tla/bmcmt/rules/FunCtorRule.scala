@@ -36,7 +36,12 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  protected def rewriteFunCtor(state: SymbState, funT1: FunT1, mapEx: TlaEx, varName: String, setEx: TlaEx) = {
+  protected def rewriteFunCtor(
+      state: SymbState,
+      funT1: FunT1,
+      mapEx: TlaEx,
+      varName: String,
+      setEx: TlaEx) = {
     // rewrite the set expression into a memory cell
     var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
     val domainCell = nextState.asCell
@@ -85,14 +90,19 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
 
     // add SMT constraints
-    for ((domElem, relElem) <- domainCells zip relationCells)
+    for ((domElem, relElem) <- domainCells.zip(relationCells))
       addCellCons(domElem, relElem)
 
     // that's it
     nextState.setRex(funCell.toNameEx)
   }
 
-  protected def mapCells(state: SymbState, mapEx: TlaEx, varName: String, setEx: TlaEx, oldCells: Seq[ArenaCell]) = {
+  protected def mapCells(
+      state: SymbState,
+      mapEx: TlaEx,
+      varName: String,
+      setEx: TlaEx,
+      oldCells: Seq[ArenaCell]) = {
     // similar to SymbStateRewriter.rewriteSeqUntilDone and SetFilterRule
     def process(st: SymbState, seq: Seq[ArenaCell]): (SymbState, Seq[TlaEx]) = {
       seq match {

@@ -4,11 +4,12 @@ import at.forsyte.apalache.tla.lir.{NameEx, TlaEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestChangeListener extends FunSuite with BeforeAndAfterEach {
+class TestChangeListener extends AnyFunSuite with BeforeAndAfterEach {
   private var listener = new ChangeListener
 
   override protected def beforeEach(): Unit = {

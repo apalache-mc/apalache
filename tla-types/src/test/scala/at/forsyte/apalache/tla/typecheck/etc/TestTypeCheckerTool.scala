@@ -14,19 +14,21 @@ import at.forsyte.apalache.tla.lir.{TlaType1, Typed, TypingException, UID}
 import at.forsyte.apalache.tla.typecheck.{TypeCheckerListener, TypeCheckerTool}
 import org.easymock.EasyMock
 import org.junit.runner.RunWith
-import org.scalatest.easymock.EasyMockSugar
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatestplus.easymock.EasyMockSugar
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.io.Source
 
 /**
  * Unit tests for the type checker as a tool.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
-class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMockSugar {
+class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyMockSugar {
   var gen: ToEtcExpr = _
   private var sourceStore: SourceStore = _
   private var annotationStore: AnnotationStore = _
@@ -149,7 +151,7 @@ class TestTypeCheckerTool extends FunSuite with BeforeAndAfterEach with EasyMock
 
       val deserializaedSerialization = dec.asTlaModule(enc(postModule))
 
-      deserializaedSerialization.declarations.zip(postModule.declarations) map { case (d1, d2) =>
+      deserializaedSerialization.declarations.zip(postModule.declarations).map { case (d1, d2) =>
         assert(d1.eqTyped(d2))
       }
 

@@ -4,15 +4,15 @@ import at.forsyte.apalache.tla.lir.oper.TlaOper
 import org.junit.runner.RunWith
 import org.scalacheck.Prop
 import org.scalacheck.Prop.{AnyOperators, all, forAll, passed}
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.prop.Checkers
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatestplus.scalacheck.Checkers
 
 /**
  * Tests of TlaDeclLevelFinder.
  */
 @RunWith(classOf[JUnitRunner])
-class TestTlaDeclLevelFinder extends FunSuite with Checkers {
+class TestTlaDeclLevelFinder extends AnyFunSuite with Checkers {
 
   test("non-action operators + constants = constant level") {
     val gens = new IrGenerators {
@@ -24,10 +24,10 @@ class TestTlaDeclLevelFinder extends FunSuite with Checkers {
     val prop = forAll(gens.genTlaModuleWith(genDecl)) { module =>
       val finder = new TlaDeclLevelFinder(module)
 
-      all(module.operDeclarations map {
+      all(module.operDeclarations.map {
         finder(_) =? TlaLevelConst
       }: _*) &&
-      all(module.constDeclarations map {
+      all(module.constDeclarations.map {
         finder(_) =? TlaLevelConst
       }: _*)
     }
@@ -53,11 +53,11 @@ class TestTlaDeclLevelFinder extends FunSuite with Checkers {
           (level =? TlaLevelState || level =? TlaLevelConst)
       }
 
-      all(module.operDeclarations map expectedLevel: _*) &&
-      all(module.constDeclarations map {
+      all(module.operDeclarations.map(expectedLevel): _*) &&
+      all(module.constDeclarations.map {
         finder(_) =? TlaLevelConst
       }: _*) &&
-      all(module.varDeclarations map {
+      all(module.varDeclarations.map {
         finder(_) =? TlaLevelState
       }: _*)
     }
@@ -81,11 +81,11 @@ class TestTlaDeclLevelFinder extends FunSuite with Checkers {
           (level =? TlaLevelState || level =? TlaLevelConst || level =? TlaLevelAction)
       }
 
-      all(module.operDeclarations map expectedLevel: _*) &&
-      all(module.constDeclarations map {
+      all(module.operDeclarations.map(expectedLevel): _*) &&
+      all(module.constDeclarations.map {
         finder(_) =? TlaLevelConst
       }: _*) &&
-      all(module.varDeclarations map {
+      all(module.varDeclarations.map {
         finder(_) =? TlaLevelState
       }: _*)
     }
@@ -120,7 +120,7 @@ class TestTlaDeclLevelFinder extends FunSuite with Checkers {
         }
       }
 
-      all(module.operDeclarations map expectedLevel: _*)
+      all(module.operDeclarations.map(expectedLevel): _*)
     }
 
     check(prop, minSuccessful(2000), sizeRange(5))

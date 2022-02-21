@@ -6,11 +6,11 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestLetInExpander extends FunSuite {
+class TestLetInExpander extends AnyFunSuite {
 
   import tla._
 
@@ -91,19 +91,19 @@ class TestLetInExpander extends FunSuite {
               ge(n_c, int(0)) ? "b",
               letIn(
                   appOp(n_Y) ? "i",
-                  declOp("Y", appOp(n_X, n_c, n_c) ? "i").typedOperDecl(types, "U")
+                  declOp("Y", appOp(n_X, n_c, n_c) ? "i").typedOperDecl(types, "U"),
               ) ? "b",
-              appOp(n_X, n_p, int(3)) ? "b"
+              appOp(n_X, n_p, int(3)) ? "b",
           ) ? "b",
           declOp("X", ge(plus(n_a, n_b) ? "i", int(0)) ? "b", OperParam("a"), OperParam("b")).typedOperDecl(types,
-              "iiTOb")
+              "iiTOb"),
       ).typed(types, "i")
     val output = new LetInExpander(new IdleTracker(), keepNullary = false)(input)
     val expected =
       ite(
           ge(n_c, int(0)) ? "b",
           ge(plus(n_c, n_c) ? "i", int(0)) ? "b",
-          ge(plus(n_p, int(3)) ? "i", int(0)) ? "b"
+          ge(plus(n_p, int(3)) ? "i", int(0)) ? "b",
       ).typed(types, "b")
 
     assert(expected == output)
@@ -123,12 +123,12 @@ class TestLetInExpander extends FunSuite {
               ge(n_c, int(0)) ? "b",
               letIn(
                   appOp(n_Y) ? "i",
-                  declOp("Y", appOp(n_X, n_c, n_c) ? "b").typedOperDecl(types, "U")
+                  declOp("Y", appOp(n_X, n_c, n_c) ? "b").typedOperDecl(types, "U"),
               ) ? "b",
-              appOp(n_X, n_p, int(3)) ? "b"
+              appOp(n_X, n_p, int(3)) ? "b",
           ) ? "b",
           declOp("X", ge(plus(n_a, n_b) ? "i", int(0)) ? "b", OperParam("a"), OperParam("b")).typedOperDecl(types,
-              "iiTOb")
+              "iiTOb"),
       ).typed(types, "i")
     val output = new LetInExpander(new IdleTracker(), keepNullary = true)(input)
     val expected =
@@ -136,9 +136,9 @@ class TestLetInExpander extends FunSuite {
           ge(n_c, int(0)) ? "b",
           letIn(
               appOp(n_Y) ? "i",
-              declOp("Y", ge(plus(n_c, n_c) ? "i", int(0)) ? "b").typedOperDecl(types, "U")
+              declOp("Y", ge(plus(n_c, n_c) ? "i", int(0)) ? "b").typedOperDecl(types, "U"),
           ) ? "b",
-          ge(plus(n_p, int(3)) ? "i", int(0)) ? "b"
+          ge(plus(n_p, int(3)) ? "i", int(0)) ? "b",
       ).typed(types, "b")
 
     assert(expected == output)

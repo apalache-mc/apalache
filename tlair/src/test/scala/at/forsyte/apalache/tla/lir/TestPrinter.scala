@@ -5,12 +5,12 @@ import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.lir.convenience._
 
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 @RunWith(classOf[JUnitRunner])
-class TestPrinter extends FunSuite with TestingPredefs {
+class TestPrinter extends AnyFunSuite with TestingPredefs {
   val toUtf = UTFPrinter
   val sp = SimplePrinter
 

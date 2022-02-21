@@ -6,7 +6,8 @@ import tla2sany.semantic.FormalParamNode
 /**
  * A translator of FormalParamNode.
  *
- * @author konnov
+ * @author
+ *   konnov
  */
 class FormalParamTranslator {
   def translate(param: FormalParamNode): OperParam = {

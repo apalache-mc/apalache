@@ -8,13 +8,14 @@ import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
 
 import java.io.{PrintWriter, StringWriter}
 
 @RunWith(classOf[JUnitRunner])
-class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
+class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
   private var stringWriter = new StringWriter()
   private var printWriter = new PrintWriter(stringWriter)
   private val layout80 = TextLayout().copy(textWidth = 80)
@@ -248,7 +249,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("one-line conjunction") {
     val writer = new PrettyWriter(printWriter, layout80)
-    val expr = and(1.to(3) map (_ => name("verylongname")): _*)
+    val expr = and(1.to(3).map(_ => name("verylongname")): _*)
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -258,7 +259,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("multi-line conjunction") {
     val writer = new PrettyWriter(printWriter, layout40)
-    val expr = impl(bool(true), and(1.to(5) map (_ => name("verylongname")): _*))
+    val expr = impl(bool(true), and(1.to(5).map(_ => name("verylongname")): _*))
     writer.write(expr)
     printWriter.flush()
     // a multi-line vertical box always breaks from the previous line, as otherwise it is incredibly hard to indent
@@ -274,8 +275,8 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("nested multiline conjunction/disjunction") {
     val writer = new PrettyWriter(printWriter, layout80)
-    val orEx = or(1.to(3) map (_ => name("verylongname")): _*)
-    val andEx = and(1.to(3) map (_ => orEx): _*)
+    val orEx = or(1.to(3).map(_ => name("verylongname")): _*)
+    val andEx = and(1.to(3).map(_ => orEx): _*)
     writer.write(andEx)
     printWriter.flush()
     val expected =
@@ -287,7 +288,7 @@ class TestPrettyWriter extends FunSuite with BeforeAndAfterEach {
 
   test("nested multiline conjunction under negation") {
     val writer = new PrettyWriter(printWriter, layout20)
-    val andEx = and(1.to(3) map (_ => name("verylongname")): _*)
+    val andEx = and(1.to(3).map(_ => name("verylongname")): _*)
     writer.write(not(andEx))
     printWriter.flush()
     val expected =

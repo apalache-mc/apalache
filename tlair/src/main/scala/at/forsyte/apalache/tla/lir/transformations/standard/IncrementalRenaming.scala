@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.transformations.{
-  TlaDeclTransformation, TlaExTransformation, TlaModuleTransformation, TransformationTracker
+  TlaDeclTransformation, TlaExTransformation, TlaModuleTransformation, TransformationTracker,
 }
 
 import javax.inject.{Inject, Singleton}
@@ -26,14 +26,14 @@ object IncrementalRenaming {
   type counterMapType = Map[String, Int]
 
   /**
-   * Attempts to read a variable name as a (base,counter) pair. Reading a variable that's not written
-   * in the renaming-representation returns None, otherwise this method has the following property:
-   * parseName( makeName( a, b ) ) = Some( (a,b) )
+   * Attempts to read a variable name as a (base,counter) pair. Reading a variable that's not written in the
+   * renaming-representation returns None, otherwise this method has the following property: parseName( makeName( a, b )
+   * ) = Some( (a,b) )
    */
   def parseName(name: String): Option[(String, Int)] = {
     name.split(separatorRegex) match {
       // Already renamed before
-      case Array(n, i) if i forall {
+      case Array(n, i) if i.forall {
             _.isDigit
           } =>
         Some((n, i.toInt))
@@ -45,17 +45,15 @@ object IncrementalRenaming {
   }
 
   /**
-   * Attempts to read the base-name of a variable. Has the following property:
-   * getBase( makeName( a, b ) ) = a
+   * Attempts to read the base-name of a variable. Has the following property: getBase( makeName( a, b ) ) = a
    */
   def getBase(name: String): String = parseName(name).map(_._1).getOrElse(name)
 
   /**
-   * Merges two maps of type `counterMapType`. The new map has the following properties:
-   * 1) \A k \in m1.keys \ m2.keys . mergeNameCounters( b )( m1, m2 )[k] = m1[k]
-   * 2) \A k \in m2.keys \ m1.keys . mergeNameCounters( b )( m1, m2 )[k] = m2[k]
-   * 3) \A k \in m1.keys \cap m2.keys .
-   * mergeNameCounters( b )( m1, m2 )[k] = IF b THEN max(m1[k],m2[k]) ELSE min(m1[k],m2[k])
+   * Merges two maps of type `counterMapType`. The new map has the following properties: 1) \A k \in m1.keys \ m2.keys .
+   * mergeNameCounters( b )( m1, m2 )[k] = m1[k] 2) \A k \in m2.keys \ m1.keys . mergeNameCounters( b )( m1, m2 )[k] =
+   * m2[k] 3) \A k \in m1.keys \cap m2.keys . mergeNameCounters( b )( m1, m2 )[k] = IF b THEN max(m1[k],m2[k]) ELSE
+   * min(m1[k],m2[k])
    */
   def mergeNameCounters(takeMax: Boolean)(m1: counterMapType, m2: counterMapType): counterMapType = {
     val selectorFun: (Int, Int) => Int = if (takeMax) math.max else math.min
@@ -65,9 +63,9 @@ object IncrementalRenaming {
   }
 
   /**
-   * Computes a map of type `counterMapType`, that maps each base name n to the largest,
-   * if `takeMax` = true, or the smallest, if `takeMax` = false, counter k,
-   * for which a NameEx( makeName( n, k ) ) appears in a subexpression of `ex`.
+   * Computes a map of type `counterMapType`, that maps each base name n to the largest, if `takeMax` = true, or the
+   * smallest, if `takeMax` = false, counter k, for which a NameEx( makeName( n, k ) ) appears in a subexpression of
+   * `ex`.
    */
   def nameCounterMapFromEx(takeMax: Boolean)(ex: TlaEx): counterMapType = ex match {
     case NameEx(n) =>
@@ -90,8 +88,8 @@ object IncrementalRenaming {
   }
 
   /**
-   * For a given TlaOperDecl d, computes nameCounterMapFromEx( d.body ), extended with entries for
-   * the formal parmeters and the name of d.
+   * For a given TlaOperDecl d, computes nameCounterMapFromEx( d.body ), extended with entries for the formal parmeters
+   * and the name of d.
    */
   def nameCounterMapFromDecl(takeMax: Boolean)(decl: TlaDecl): counterMapType = decl match {
     case TlaOperDecl(name, params, body) =>
@@ -110,9 +108,8 @@ object IncrementalRenaming {
     }
 
   /**
-   * If `name` is of the form makeName( a, b ) and offsets contains a,
-   * returns makeName( a, b - offsets[a] ), otherwise returns `name`.
-   * Throws if b - offsets[a] <= 0.
+   * If `name` is of the form makeName( a, b ) and offsets contains a, returns makeName( a, b - offsets[a] ), otherwise
+   * returns `name`. Throws if b - offsets[a] <= 0.
    */
   def offsetName(offsets: counterMapType)(name: String): String = parseName(name) match {
     case Some((base, ctr)) =>
@@ -214,10 +211,10 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
     // LET-IN operators introduce operator names (and potentially parameter names), which
     // we rename the same way as bound variables
     case letInEx @ LetInEx(body, defs @ _*) =>
-      val opersAndFParamsNameMap = (defs flatMap {
+      val opersAndFParamsNameMap = (defs.flatMap {
         // For each operator the name and all parameters are assigned new names
         case TlaOperDecl(n, params, _) =>
-          (n -> getNextUniqueFromBase(n)) +: (params map { p =>
+          (n -> getNextUniqueFromBase(n)) +: (params.map { p =>
             val pName = p.name
             pName -> getNextUniqueFromBase(pName)
           })
@@ -233,16 +230,16 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
           // Copy preserves typeTag and .isRecursive
           d.copy(
               name = opersAndFParamsNameMap(n),
-              formalParams = ps map { case OperParam(p, a) =>
+              formalParams = ps.map { case OperParam(p, a) =>
                 OperParam(opersAndFParamsNameMap(p), a)
               },
               // We recurse over operator bodies, because newRenamed contains parameter
               // and operator renamings
-              body = newRenaming(b)
+              body = newRenaming(b),
           )
         }
 
-      val newDefs = defs map xform
+      val newDefs = defs.map(xform)
 
       // Finally, we recurse on the body
       val newBody = newRenaming(body)
@@ -280,14 +277,14 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
           // Copy preserves typeTag and .isRecursive
           d.copy(
               name = offsetFn(n),
-              formalParams = params map { case OperParam(p, a) =>
+              formalParams = params.map { case OperParam(p, a) =>
                 OperParam(offsetFn(p), a)
               },
-              body = self(b)
+              body = self(b),
           )
         }
 
-      val newDefs = defs map xform
+      val newDefs = defs.map(xform)
       val newBody = self(body)
       if (newBody == body && newDefs == defs) ex
       else LetInEx(newBody, newDefs: _*)(ex.typeTag)
@@ -306,17 +303,18 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
   }
 
   /**
-   * This method "normalizes" a previously renamed expression, so that the variable counter for each variable
-   * starts at 1, if only variables appearing in `ex` are considered
-   * E.g. x5 + y3 > z4 becomes x1 + y1 > z1
-   * Importatntly, it is assumed that `ex` has been renamed at least once.
+   * This method "normalizes" a previously renamed expression, so that the variable counter for each variable starts at
+   * 1, if only variables appearing in `ex` are considered E.g. x5 + y3 > z4 becomes x1 + y1 > z1 Importatntly, it is
+   * assumed that `ex` has been renamed at least once.
    */
   def normalize(ex: TlaEx): TlaEx = {
-    val offsetMap = nameCounterMapFromEx(takeMax = false)(ex) withFilter {
-      _._2 > 1
-    } map { case (k, v) =>
-      (k, v - 1)
-    }
+    val offsetMap = nameCounterMapFromEx(takeMax = false)(ex)
+      .withFilter {
+        _._2 > 1
+      }
+      .map { case (k, v) =>
+        (k, v - 1)
+      }
     shiftCounters(offsetMap)(ex)
   }
 
@@ -327,13 +325,15 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
       )
       .foldLeft(Map.empty[String, Int]) {
         mergeNameCounters(takeMax = false)
-      } withFilter {
-      _._2 > 1
-    } map { case (k, v) =>
-      (k, v - 1)
-    }
+      }
+      .withFilter {
+        _._2 > 1
+      }
+      .map { case (k, v) =>
+        (k, v - 1)
+      }
 
-    exs map {
+    exs.map {
       shiftCounters(offsetMap)
     }
   }
@@ -345,17 +345,19 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
 
   // lifted to decls
   def normalizeDs(decls: Traversable[TlaDecl]): Traversable[TlaDecl] = {
-    val offsetMap = nameCounterMapFromDecls(takeMax = false)(decls) withFilter {
-      _._2 > 1
-    } map { case (k, v) =>
-      (k, v - 1)
-    }
+    val offsetMap = nameCounterMapFromDecls(takeMax = false)(decls)
+      .withFilter {
+        _._2 > 1
+      }
+      .map { case (k, v) =>
+        (k, v - 1)
+      }
     shiftCountersDs(offsetMap)(decls)
   }
 
   /**
-   * Updates `nameCounters`, so that every for every entry a -> b, if makeName(a, c) appears in
-   * `ex`, it holds that c <= b
+   * Updates `nameCounters`, so that every for every entry a -> b, if makeName(a, c) appears in `ex`, it holds that c <=
+   * b
    */
   def syncFrom(ex: TlaEx): Unit = {
     val maxMap = nameCounterMapFromEx(takeMax = true)(ex)
@@ -369,7 +371,7 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
   }
 
   // Lifted to decls
-  private def syncFromDs: Traversable[TlaDecl] => Unit = _ foreach syncFromD
+  private def syncFromDs: Traversable[TlaDecl] => Unit = _.foreach(syncFromD)
 
   /**
    * Performs the following steps, in order:
@@ -383,8 +385,8 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
   }
 
   def syncAndNormalizeExs(exs: Traversable[TlaEx]): Traversable[TlaEx] = {
-    exs foreach syncFrom
-    normalizeExs(exs map {
+    exs.foreach(syncFrom)
+    normalizeExs(exs.map {
       apply
     })
   }

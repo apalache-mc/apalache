@@ -157,8 +157,9 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
 
           case `oopsla19Encoding` =>
             val mem =
-              tla.apalacheSelectInSet(pair.toNameEx as funT1.arg,
-                  relation.toNameEx as TupT1(funT1.arg, funT1.res)) as BoolT1()
+              tla
+                .apalacheSelectInSet(pair.toNameEx.as(funT1.arg), relation.toNameEx.as(TupT1(funT1.arg, funT1.res)))
+                .as(BoolT1())
             solverContext.evalGroundExpr(mem) == tla.bool(true).typed(BoolT1())
 
           case oddEncodingType =>
@@ -182,19 +183,19 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         .getHas(relation)
         .filter(isInRelation)
         .foldLeft(Map[TlaEx, TlaEx]())(decodePair)
-        .map(p => tla.tuple(p._1, p._2) as pairT)
+        .map(p => tla.tuple(p._1, p._2).as(pairT))
         .toSeq
-      tla.apalacheSetAsFun(tla.enumSet(pairs: _*) as SetT1(pairT)) as funT1
+      tla.apalacheSetAsFun(tla.enumSet(pairs: _*).as(SetT1(pairT))).as(funT1)
 
     case SeqT(elemT) =>
       val elemT1 = elemT.toTlaType1
-      val startEndFun = arena.getHas(cell) map (decodeCellToTlaEx(arena, _))
+      val startEndFun = arena.getHas(cell).map(decodeCellToTlaEx(arena, _))
       startEndFun match {
         case ValEx(TlaInt(start)) :: ValEx(TlaInt(end)) +: cells =>
           // note that start >= 0 and end = Len(S) - start
           def isIn(elem: TlaEx, no: Int): Boolean = no >= start && no < end
 
-          val filtered = cells.zipWithIndex filter (isIn _).tupled map (_._1)
+          val filtered = cells.zipWithIndex.filter((isIn _).tupled).map(_._1)
           // return a tuple as it is the canonical representation of a sequence
           tla.tuple(filtered: _*).typed(SeqT1(elemT1))
 
@@ -210,7 +211,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       // Note that the domain may have fewer fields than the record type is saying.
       // This comes from the fact that we can extend a record with a richer type.
       val domCell = arena.getDom(cell)
-      val dom = decodeSet(arena, domCell) map exToStr
+      val dom = decodeSet(arena, domCell).map(exToStr)
       val fieldValues = arena.getHas(cell)
       val keyList = r.fields.keySet.toList
 
@@ -282,7 +283,13 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         }
 
       case OperEx(oper, args @ _*) =>
-        OperEx(oper, args map rec: _*)(ex.typeTag)
+        OperEx(oper, args.map(rec): _*)(ex.typeTag)
+          .map(p => tla.tuple(p._1, p._2).as(pairT))
+        tla.apalacheSetAsFun(tla.enumSet(pairs: _*).as(SetT1(pairT))).as(funT1)
+        val startEndFun = arena.getHas(cell).map(decodeCellToTlaEx(arena, _))
+        val filtered = cells.zipWithIndex.filter((isIn _).tupled).map(_._1)
+        val dom = decodeSet(arena, domCell).map(exToStr)
+        OperEx(oper, args.map(rec): _*)(ex.typeTag)
 
       case _ =>
         ex

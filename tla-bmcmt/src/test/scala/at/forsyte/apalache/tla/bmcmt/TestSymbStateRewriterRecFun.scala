@@ -10,7 +10,7 @@ trait TestSymbStateRewriterRecFun extends RewriterBase with TestingPredefs {
         "b" -> BoolT1(),
         "i" -> IntT1(),
         "I" -> SetT1(IntT1()),
-        "i_to_i" -> FunT1(IntT1(), IntT1())
+        "i_to_i" -> FunT1(IntT1(), IntT1()),
     )
 
   test("""recursive fun: f[n \in { 1, 2, 3 }] == IF n <= 1 THEN 2 ELSE 2 * f[n - 1]""") { rewriterType: SMTEncoding =>
@@ -20,7 +20,7 @@ trait TestSymbStateRewriterRecFun extends RewriterBase with TestingPredefs {
     val map = ite(
         le(name("n") ? "i", int(1)) ? "b",
         int(2),
-        mult(int(2), appFun(ref, minus(name("n") ? "i", int(1)) ? "i") ? "i") ? "i"
+        mult(int(2), appFun(ref, minus(name("n") ? "i", int(1)) ? "i") ? "i") ? "i",
     ).typed(types, "i")
 
     val fun = recFunDef(map, name("n") ? "i", set)

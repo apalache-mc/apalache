@@ -27,9 +27,14 @@ import com.typesafe.scalalogging.LazyLogging
  *   next pass to call
  */
 class PreproPassImpl @Inject() (
-    options: PassOptions, gen: UniqueNameGenerator, renaming: IncrementalRenaming, tracker: TransformationTracker,
-    sourceStore: SourceStore, changeListener: ChangeListener, writerFactory: TlaWriterFactory,
-) extends PreproPassPartial(
+    options: PassOptions,
+    gen: UniqueNameGenerator,
+    renaming: IncrementalRenaming,
+    tracker: TransformationTracker,
+    sourceStore: SourceStore,
+    changeListener: ChangeListener,
+    writerFactory: TlaWriterFactory)
+    extends PreproPassPartial(
         options,
         renaming,
         tracker,
@@ -45,7 +50,7 @@ class PreproPassImpl @Inject() (
     val transformationSequence: List[(String, TlaModuleTransformation)] =
       List(
           ("PrimePropagation", createModuleTransformerForPrimePropagation(varSet)),
-          ("Desugarer", ModuleByExTransformer(Desugarer(gen, tracker))),
+          ("Desugarer", ModuleByExTransformer(Desugarer(gen, varSet, tracker))),
           ("UniqueRenamer", renaming.renameInModule),
           ("Normalizer", ModuleByExTransformer(Normalizer(tracker))),
           ("Keramelizer", ModuleByExTransformer(Keramelizer(gen, tracker))),

@@ -7,13 +7,14 @@ import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import TypedPredefs._
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.math.BigInt
 
 @RunWith(classOf[JUnitRunner])
-class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs {
+class TestUnroller extends AnyFunSuite with BeforeAndAfterEach with TestingPredefs {
 
   private val noTracker = new IdleTracker()
   private var unroller = new Unroller(new UniqueNameGenerator, noTracker, new IncrementalRenaming(noTracker))
@@ -22,12 +23,12 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
     unroller = new Unroller(new UniqueNameGenerator, noTracker, new IncrementalRenaming(noTracker))
   }
 
-  def exAsDecl(pa: (String, TlaEx)): TlaOperDecl = tla.declOp(pa._1, pa._2) as OperT1(Seq(), IntT1())
+  def exAsDecl(pa: (String, TlaEx)): TlaOperDecl = tla.declOp(pa._1, pa._2).as(OperT1(Seq(), IntT1()))
 
   test("No-op") {
     val strToInt = OperT1(Seq(StrT1()), IntT1())
     val types = Map("b" -> BoolT1(), "i" -> IntT1(), "T" -> strToInt)
-    val tDecl = tla.declOp("T", tla.name("p").typed(StrT1()), "p") as strToInt
+    val tDecl = tla.declOp("T", tla.name("p").typed(StrT1()), "p").as(strToInt)
     val dBody = tla
       .letIn(tla.appOp(n_T ? "T", tla.str("abc")) ? "i", tDecl)
       .typed(types, "i")
@@ -38,8 +39,8 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
         ("A", tla.str("1").typed()),
         ("B", tla.int(0).typed()),
         ("C", cBody),
-        ("D", dBody)
-    ) map exAsDecl
+        ("D", dBody),
+    ).map(exAsDecl)
 
     val module = new TlaModule("M", decls)
 
@@ -57,15 +58,15 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
       .appOp(n_A ? "T", n_p ? "s")
       .typed(types, "i")
     // A(p) == A(p)
-    val recDecl = tla.declOp(name, aBody, "p") as strToInt
+    val recDecl = tla.declOp(name, aBody, "p").as(strToInt)
     recDecl.isRecursive = true
 
     val defaultVal: BigInt = 42
 
     val decls = recDecl +: (Seq[(String, TlaEx)](
-        (Unroller.UNROLL_TIMES_PREFIX + name, tla.int(0).typed(IntT1())),
-        (Unroller.UNROLL_DEFAULT_PREFIX + name, tla.bigInt(defaultVal.intValue).typed(IntT1()))
-    ) map exAsDecl)
+            (Unroller.UNROLL_TIMES_PREFIX + name, tla.int(0).typed(IntT1())),
+            (Unroller.UNROLL_DEFAULT_PREFIX + name, tla.bigInt(defaultVal.intValue).typed(IntT1())),
+        ).map(exAsDecl))
 
     val module = new TlaModule("M", decls)
 
@@ -98,15 +99,15 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
       .appOp(tla.name(declarationName) ? "T", n_p ? "i")
       .typed(types, "i")
     // A(p) == A(p)
-    val recDecl = tla.declOp(declarationName, aBody, "p") as intToInt
+    val recDecl = tla.declOp(declarationName, aBody, "p").as(intToInt)
     recDecl.isRecursive = true
 
     val defaultVal: BigInt = 42
 
     val decls = recDecl +: (Seq[(String, TlaEx)](
-        (Unroller.UNROLL_TIMES_PREFIX + declarationName, tla.int(1).typed(IntT1())),
-        (Unroller.UNROLL_DEFAULT_PREFIX + declarationName, tla.int(defaultVal.intValue).typed(IntT1()))
-    ) map exAsDecl)
+            (Unroller.UNROLL_TIMES_PREFIX + declarationName, tla.int(1).typed(IntT1())),
+            (Unroller.UNROLL_DEFAULT_PREFIX + declarationName, tla.int(defaultVal.intValue).typed(IntT1())),
+        ).map(exAsDecl))
 
     val module = new TlaModule("M", decls)
 
@@ -154,7 +155,7 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
       .appOp(n_A ? "T", n_p ? "i")
       .typed(types, "i")
     // A(p) == A(p)
-    val recDecl = tla.declOp(letInOpName, aBody, "p") as intToInt
+    val recDecl = tla.declOp(letInOpName, aBody, "p").as(intToInt)
     recDecl.isRecursive = true
 
     val appEx = tla
@@ -168,9 +169,9 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
     val defaultVal: BigInt = 42
 
     val decls = nonRecDecl +: (Seq[(String, TlaEx)](
-        (Unroller.UNROLL_TIMES_PREFIX + letInOpName, tla.int(1).typed(IntT1())),
-        (Unroller.UNROLL_DEFAULT_PREFIX + letInOpName, tla.int(defaultVal.intValue).typed(IntT1()))
-    ) map exAsDecl)
+            (Unroller.UNROLL_TIMES_PREFIX + letInOpName, tla.int(1).typed(IntT1())),
+            (Unroller.UNROLL_DEFAULT_PREFIX + letInOpName, tla.int(defaultVal.intValue).typed(IntT1())),
+        ).map(exAsDecl))
 
     val module = new TlaModule("M", decls)
 
@@ -184,9 +185,9 @@ class TestUnroller extends FunSuite with BeforeAndAfterEach with TestingPredefs 
     unroller = new Unroller(new UniqueNameGenerator, noTracker, new IncrementalRenaming(noTracker))
 
     val altDecls = recDecl +: (Seq[(String, TlaEx)](
-        (Unroller.UNROLL_TIMES_PREFIX + letInOpName, tla.int(1).typed(IntT1())),
-        (Unroller.UNROLL_DEFAULT_PREFIX + letInOpName, tla.bigInt(defaultVal.intValue).typed(IntT1()))
-    ) map exAsDecl)
+            (Unroller.UNROLL_TIMES_PREFIX + letInOpName, tla.int(1).typed(IntT1())),
+            (Unroller.UNROLL_DEFAULT_PREFIX + letInOpName, tla.bigInt(defaultVal.intValue).typed(IntT1())),
+        ).map(exAsDecl))
 
     val altModule = new TlaModule("N", altDecls)
     val altUnrolled = unroller(altModule)

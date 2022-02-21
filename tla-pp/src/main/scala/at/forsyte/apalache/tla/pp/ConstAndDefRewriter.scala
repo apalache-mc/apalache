@@ -12,8 +12,10 @@ import com.typesafe.scalalogging.LazyLogging
  * A rewriter of definitions and constants that replaces every definition Foo with the definition seen in OVERRIDE_Foo,
  * if OVERRIDE_Foo is present.
  *
- * @author Igor Konnov
- * @author Andrey Kuprianov
+ * @author
+ *   Igor Konnov
+ * @author
+ *   Andrey Kuprianov
  */
 class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTransformation with LazyLogging {
   override def apply(mod: TlaModule): TlaModule = {
@@ -71,8 +73,8 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
     }
 
     // substitute the constant definitions and operator definitions with the replacement operators
-    val transformed = mod.declarations map transformDef
-    val filtered = transformed filter (!_.name.startsWith(ConstAndDefRewriter.OVERRIDE_PREFIX))
+    val transformed = mod.declarations.map(transformDef)
+    val filtered = transformed.filter(!_.name.startsWith(ConstAndDefRewriter.OVERRIDE_PREFIX))
     val sortedModule =
       try {
         new DeclarationSorter()(new TlaModule(mod.name, filtered))

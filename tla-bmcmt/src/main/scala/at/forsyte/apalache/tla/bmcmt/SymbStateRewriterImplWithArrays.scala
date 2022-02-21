@@ -22,8 +22,10 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
  * @author
  *   Rodrigo Otoni
  */
-class SymbStateRewriterImplWithArrays(_solverContext: SolverContext,
-    exprGradeStore: ExprGradeStore = new ExprGradeStoreImpl(), profilerListener: Option[MetricProfilerListener] = None)
+class SymbStateRewriterImplWithArrays(
+    _solverContext: SolverContext,
+    exprGradeStore: ExprGradeStore = new ExprGradeStoreImpl(),
+    profilerListener: Option[MetricProfilerListener] = None)
     extends SymbStateRewriterImpl(_solverContext, exprGradeStore, profilerListener) {
 
   // TODO: remove unsupportedRules after passing over all rules

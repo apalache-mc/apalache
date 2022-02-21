@@ -20,8 +20,12 @@ import com.typesafe.scalalogging.LazyLogging
 import java.io.{File, FileWriter, PrintWriter}
 import java.nio.file.Path
 
-class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStore: SourceStore,
-    changeListener: ChangeListener, tracker: TransformationTracker, val annotationStore: AnnotationStore,
+class EtcTypeCheckerPassImpl @Inject() (
+    val options: PassOptions,
+    val sourceStore: SourceStore,
+    changeListener: ChangeListener,
+    tracker: TransformationTracker,
+    val annotationStore: AnnotationStore,
     val writerFactory: TlaWriterFactory)
     extends EtcTypeCheckerPass with LazyLogging {
 

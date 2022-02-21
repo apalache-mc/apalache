@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, ValEx, _}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 
 import scala.collection.immutable.HashSet
 import scala.io.Source
@@ -17,7 +17,8 @@ import scala.io.Source
 /**
  * Tests for the SANY importer.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
 class TestSanyImporter extends SanyImporterTestBase {
@@ -288,7 +289,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         assert("MyOp" == actionDecl.name)
         assert(0 == actionDecl.formalParams.length)
         assert(
-            OperEx(TlaBoolOper.or, ValEx(TlaBool(false)), ValEx(TlaBool(true))) == actionDecl.body,
+            OperEx(TlaBoolOper.or, ValEx(TlaBool(false)), ValEx(TlaBool(true))) == actionDecl.body
         )
         assert(sourceStore.contains(actionDecl.body.ID)) // and source file information has been saved
         val loc = sourceStore.find(actionDecl.body.ID).get
@@ -608,7 +609,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         "CaseOther",
         OperEx(
             TlaControlOper.caseWithOther,
-            (7 +: 1.to(6)).map(i => ValEx(TlaInt(i))): _*,
+            (7 +: 1.to(6)).map(i => ValEx(TlaInt(i))): _*
         ),
     )
     expectDecl(
@@ -616,7 +617,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         OperEx(
             TlaBoolOper.and,
             List(TlaBool(false), TlaBool(true), TlaBool(false))
-              .map(b => ValEx(b)): _*,
+              .map(b => ValEx(b)): _*
         ),
     )
     expectDecl(
@@ -624,7 +625,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         OperEx(
             TlaBoolOper.or,
             List(TlaBool(false), TlaBool(true), TlaBool(false))
-              .map(b => ValEx(b)): _*,
+              .map(b => ValEx(b)): _*
         ),
     )
     expectDecl(
@@ -1376,7 +1377,7 @@ class TestSanyImporter extends SanyImporterTestBase {
     )(mod.declarations(2))
     val aDecl = mod.declarations(2).asInstanceOf[TlaOperDecl]
     expectDecl("C", List(), appDecl(aDecl, int(0), int(1), name("B")))(
-        mod.declarations(4),
+        mod.declarations(4)
     )
   }
 
@@ -1410,7 +1411,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         assert("X" == xDecl.name)
         val yDecl = defs(1)
         assert(
-            TlaOperDecl("Y", List(OperParam("a")), NameEx("a")) == yDecl,
+            TlaOperDecl("Y", List(OperParam("a")), NameEx("a")) == yDecl
         )
         assert(sourceStore.contains(yDecl.body.ID)) // and source file information has been saved
 
@@ -1422,7 +1423,7 @@ class TestSanyImporter extends SanyImporterTestBase {
                   _,
               ) =>
             assert(
-                OperEx(TlaOper.apply, NameEx("f"), NameEx("a")) == zDecl.body,
+                OperEx(TlaOper.apply, NameEx("f"), NameEx("a")) == zDecl.body
             )
         }
         assert(sourceStore.contains(zDecl.body.ID)) // and source file information has been saved
@@ -1466,31 +1467,33 @@ class TestSanyImporter extends SanyImporterTestBase {
     val root = modules(rootName)
     expectSourceInfoInDefs(root)
 
-    root.declarations.find {
-      _.name == "B"
-    } collect {
-      case TlaOperDecl(
-              _,
-              _,
-              OperEx(TlaOper.apply, NameEx("A"), lambda, ValEx(TlaInt(i))),
-          ) =>
-        lambda match {
-          case LetInEx(
-                  NameEx("LAMBDA"),
-                  TlaOperDecl(
-                      "LAMBDA",
-                      List(OperParam("x", 0)),
-                      OperEx(TlaOper.eq, NameEx("x"), ValEx(TlaInt(_))),
-                  ),
-              ) =>
-          // ok
+    root.declarations
+      .find {
+        _.name == "B"
+      }
+      .collect {
+        case TlaOperDecl(
+                _,
+                _,
+                OperEx(TlaOper.apply, NameEx("A"), lambda, ValEx(TlaInt(i))),
+            ) =>
+          lambda match {
+            case LetInEx(
+                    NameEx("LAMBDA"),
+                    TlaOperDecl(
+                        "LAMBDA",
+                        List(OperParam("x", 0)),
+                        OperEx(TlaOper.eq, NameEx("x"), ValEx(TlaInt(_))),
+                    ),
+                ) =>
+            // ok
 
-          case _ =>
-            fail("expected a LET-IN definition of LAMBDA and its usage by name")
-        }
+            case _ =>
+              fail("expected a LET-IN definition of LAMBDA and its usage by name")
+          }
 
-      case _ => fail("expected A")
-    }
+        case _ => fail("expected A")
+      }
   }
 
   // LET-IN with recursive operators
@@ -1513,29 +1516,31 @@ class TestSanyImporter extends SanyImporterTestBase {
     expectSourceInfoInDefs(root)
 
     // the root module contains its own declarations and the declarations by FiniteSets
-    root.declarations.find {
-      _.name == "A"
-    } collect { case TlaOperDecl(_, _, LetInEx(body, defs @ _*)) =>
-      assert(2 == defs.length)
-      val fDecl = defs.head
-      assert("f" == fDecl.name)
-      val expectedBody =
-        OperEx(
-            TlaFunOper.recFunDef,
-            OperEx(TlaFunOper.app, OperEx(TlaFunOper.recFunRef), NameEx("x")),
-            NameEx("x"),
-            ValEx(TlaBoolSet),
-        )
+    root.declarations
+      .find {
+        _.name == "A"
+      }
+      .collect { case TlaOperDecl(_, _, LetInEx(body, defs @ _*)) =>
+        assert(2 == defs.length)
+        val fDecl = defs.head
+        assert("f" == fDecl.name)
+        val expectedBody =
+          OperEx(
+              TlaFunOper.recFunDef,
+              OperEx(TlaFunOper.app, OperEx(TlaFunOper.recFunRef), NameEx("x")),
+              NameEx("x"),
+              ValEx(TlaBoolSet),
+          )
 
-      assert(expectedBody == fDecl.body)
-      assert(sourceStore.contains(fDecl.body.ID)) // and source file information has been saved
+        assert(expectedBody == fDecl.body)
+        assert(sourceStore.contains(fDecl.body.ID)) // and source file information has been saved
 
-      val xDecl = defs(1)
-      assert("X" == xDecl.name)
-      assert(appOp(name("X")).untyped() == xDecl.body)
-      assert(appDecl(xDecl).untyped() == body)
-      assert(sourceStore.contains(xDecl.body.ID)) // and source file information has been saved
-    }
+        val xDecl = defs(1)
+        assert("X" == xDecl.name)
+        assert(appOp(name("X")).untyped() == xDecl.body)
+        assert(appDecl(xDecl).untyped() == body)
+        assert(sourceStore.contains(xDecl.body.ID)) // and source file information has been saved
+      }
   }
 
   test("recursive operators") {
@@ -1776,8 +1781,9 @@ class TestSanyImporter extends SanyImporterTestBase {
 
   ////////////////////////////////////////////////////////////////////
   private def expectSingleModule(
-      expectedRootName: String, rootName: String, modules: Map[String, TlaModule],
-  ): TlaModule = {
+      expectedRootName: String,
+      rootName: String,
+      modules: Map[String, TlaModule]): TlaModule = {
     assert(expectedRootName == rootName)
     assert(1 == modules.size)
     val root = modules.get(rootName)

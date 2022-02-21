@@ -8,7 +8,8 @@ import scala.util.parsing.combinator.Parsers
 /**
  * A parser for TLA+ annotations. Use the object TlaAnnotationParser to parse the input.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class AnnotationParser extends Parsers {
   override type Elem = AnnotationToken
