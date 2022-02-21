@@ -147,7 +147,6 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
           val evalArgTypes = argTypes.map(sub.subRec)
           val argOrArgs = pluralArgs(argTypes.length)
           val evalSig = sub.subRec(operVar)
-          println(types)
           val defaultMessage =
             s"No match between operator signature $evalSig and $argOrArgs ${evalArgTypes.mkString(" and ")}"
           val specificMessage = appEx.explain(List(evalSig), evalArgTypes)

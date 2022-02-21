@@ -18,9 +18,24 @@ sealed trait EtcExpr {
    */
   val sourceRef: EtcRef
 
+  /**
+   * A function to explain type errors for this expression in case they occur.
+   */
   var typeErrorExplanation: (List[TlaType1], List[TlaType1]) => String = (_, _) => ""
 
-  def explain(sigInfo: List[TlaType1], argsInfo: List[TlaType1]): String = typeErrorExplanation(sigInfo, argsInfo)
+  /**
+   * Calls a type error explanation for this expression
+   *
+   * @param expectedTypes
+   *   Expected types for this expression (i.e. signatures)
+   * @param actualTypes
+   *   Actual types found for this expression (i.e. argument types)
+   *
+   * @return
+   *   A string with the error explanation
+   */
+  def explain(expectedTypes: List[TlaType1], actualTypes: List[TlaType1]): String =
+    typeErrorExplanation(expectedTypes, actualTypes)
 }
 
 /**
