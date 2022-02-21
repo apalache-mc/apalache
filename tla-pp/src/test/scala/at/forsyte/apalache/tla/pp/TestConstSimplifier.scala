@@ -1,20 +1,17 @@
 package at.forsyte.apalache.tla.pp
 
-import org.junit.runner.RunWith
-import org.scalacheck.Prop.{AnyOperators, forAll, passed}
-import org.scalacheck.Properties
-import org.scalacheck.Gen
-import org.scalatest.BeforeAndAfterEach
-import org.scalatest.funsuite.AnyFunSuite
-import org.scalatestplus.junit.JUnitRunner
-import org.scalatestplus.scalacheck.Checkers
-import org.scalatest.AppendedClues
-import org.scalatest.matchers.should.Matchers
-import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.{BoolT1, IntT1}
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import at.forsyte.apalache.tla.lir.TypedPredefs._
+import at.forsyte.apalache.tla.lir._
+import org.junit.runner.RunWith
+import org.scalacheck.Gen
+import org.scalacheck.Prop.forAll
+import org.scalatest.{AppendedClues, BeforeAndAfterEach}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatestplus.scalacheck.Checkers
 
 /**
  * Tests for ConstSimplifier.
@@ -26,7 +23,8 @@ class TestConstSimplifier extends AnyFunSuite with BeforeAndAfterEach with Check
   private val gens = new IrGenerators {
     override val maxArgs: Int = 3
   }
-  private val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators ++ gens.functionOperators
+  private val ops =
+    gens.simpleOperators ++ gens.logicOperators ++ gens.arithOperators ++ gens.setOperators ++ gens.functionOperators
   private val twoExpressions = for {
     e1 <- gens.genTlaEx(ops)(gens.emptyContext)
     e2 <- gens.genTlaEx(ops)(gens.emptyContext)
