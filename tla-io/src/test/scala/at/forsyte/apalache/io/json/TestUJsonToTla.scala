@@ -118,7 +118,8 @@ class TestUJsonToTla extends AnyFunSuite with Checkers {
     val gens: IrGenerators = new IrGenerators {
       override val maxArgs: Int = 3
     }
-    val operators = gens.simpleOperators ++ gens.setOperators ++ gens.logicOperators ++ gens.arithOperators
+    val operators =
+      gens.simpleOperators ++ gens.logicOperators ++ gens.arithOperators ++ gens.setOperators ++ gens.functionOperators ++ gens.actionOperators ++ gens.temporalOperators
     val genDecl = gens.genTlaDeclButNotVar(gens.genTlaEx(operators)) _
     val prop = forAll(gens.genTlaModuleWith(genDecl)) { module =>
       val moduleJson = enc(module)
