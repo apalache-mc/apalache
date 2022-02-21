@@ -9,16 +9,17 @@ import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.formulas.StandardSorts.UninterpretedSort
 
 @RunWith(classOf[JUnitRunner])
 class TestJudgement extends FunSuite {
 
-  sealed case class CustomSort(id: Int) extends Sort("")
+  def CustomSort(id: Int): UninterpretedSort = UninterpretedSort(s"S$id")
 
-  val constantMap = Map(
-      "x" -> StandardSorts.BoolSort(),
-      "y" -> StandardSorts.IntSort(),
-      "z" -> CustomSort(1),
+  val constantMap: ConstSetMapT = Map(
+      "x" -> CustomSort(1),
+      "y" -> CustomSort(2),
+      "z" -> UninterpretedSort("ZSORT"),
   )
 
   val allowed: Seq[TlaEx] = (Seq(

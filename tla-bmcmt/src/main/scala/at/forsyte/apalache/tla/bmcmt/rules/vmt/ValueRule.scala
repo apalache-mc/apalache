@@ -2,14 +2,17 @@ package at.forsyte.apalache.tla.bmcmt.rules.vmt
 
 import at.forsyte.apalache.tla.bmcmt.RewriterException
 import at.forsyte.apalache.tla.lir.formulas.Booleans.{BoolVar, False, True}
-import at.forsyte.apalache.tla.lir.formulas.EUF.{UninterpretedLiteral, UninterpretedVar}
+import at.forsyte.apalache.tla.lir.formulas.EUF.{FunctionVar, UninterpretedLiteral, UninterpretedVar}
 import at.forsyte.apalache.tla.lir.formulas.Integers.{IntLiteral, IntVar}
-import at.forsyte.apalache.tla.lir.formulas.StandardSorts.UninterpretedSort
-import at.forsyte.apalache.tla.lir.formulas.{StandardSorts, Term}
+import at.forsyte.apalache.tla.lir.formulas.StandardSorts.{FunctionSort, UninterpretedSort}
+import at.forsyte.apalache.tla.lir.formulas.{Sort, StandardSorts, Term, Variable}
 import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, IntT1, NameEx, OperEx, StrT1, TlaEx, Typed, Untyped, ValEx}
+import at.forsyte.apalache.tla.lir.{
+  BoolT1, ConstT1, FunT1, IntT1, NameEx, OperEx, StrT1, TlaEx, TlaType1, Typed, Untyped, ValEx,
+}
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
+import jdk.jshell.spi.ExecutionControl.NotImplementedException
 
 // Handles the conversion of literals and names
 // Assumption: all names appearing in the IR are unique
@@ -23,21 +26,7 @@ class ValueRule extends FormulaRule {
       case _                                         => false
     }
 
-  private def throwOn[T](ex: TlaEx): T =
-    throw new RewriterException(s"ValueRule not applicable to $ex", ex)
-
-  private def termFromNameEx(ex: NameEx): Term =
-    ex.typeTag match {
-      case Typed(tt) =>
-        tt match {
-          case IntT1()        => IntVar(ex.name)
-          case BoolT1()       => BoolVar(ex.name)
-          case StrT1()        => UninterpretedVar(ex.name, UninterpretedSort(tt.toString))
-          case ConstT1(tName) => UninterpretedVar(ex.name, UninterpretedSort(tName))
-          case _              => throwOn(ex)
-        }
-      case Untyped() => UninterpretedVar(ex.name, StandardSorts.UntypedSort())
-    }
+  import ValueRule._
 
   def apply(ex: TlaEx): Term = ex match {
     case ValEx(v) =>
@@ -49,11 +38,30 @@ class ValueRule extends FormulaRule {
         case TlaBool(b) => if (b) True else False
         case _          => throwOn(ex)
       }
-    case nameEx: NameEx                                  => termFromNameEx(nameEx)
-    case OperEx(TlaActionOper.prime, nEx @ NameEx(name)) =>
-      // Rename x' to x^ for SMTLIB
-      termFromNameEx(NameEx(s"$name^")(nEx.typeTag))
+    case nameEx: NameEx                           => termFromNameEx(nameEx)
+    case OperEx(TlaActionOper.prime, nEx: NameEx) =>
+      // Rename x' to x^ for VMT
+      termFromNameEx(renamePrimesForVMT(nEx))
     case _ => throwOn(ex)
 
   }
+}
+
+object ValueRule {
+
+  def throwOn[T](ex: TlaEx): T =
+    throw new RewriterException(s"ValueRule not applicable to $ex", ex)
+
+  def termFromNameEx(ex: NameEx): Variable =
+    ex.typeTag match {
+      case Typed(tt: TlaType1) =>
+        val sort = TermAndSortCaster.sortFromType(tt)
+        mkVariable(ex.name, sort)
+
+      case Untyped() =>
+        new Variable(ex.name) {
+          override val sort: Sort = StandardSorts.UntypedSort()
+        }
+      case _ => throw new NotImplementedException("Typed only supported for TlaType1.")
+    }
 }

@@ -3,15 +3,20 @@ package at.forsyte.apalache.tla.bmcmt.passes
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.vmt.{Init, Next, RewriterImpl, TermWriter, Trans}
-import at.forsyte.apalache.tla.lir.formulas.{Sort, StandardSorts}
+import at.forsyte.apalache.tla.bmcmt.rules.vmt.{
+  Init, Next, RewriterImpl, TermWriter, Trans, VMTWriter, ValueRule, mkVariable, nextName, renamePrimesForVMT,
+}
+import at.forsyte.apalache.tla.lir.formulas.Booleans._
+import at.forsyte.apalache.tla.lir.formulas.EUF._
+import at.forsyte.apalache.tla.lir.formulas.Term
 import at.forsyte.apalache.tla.lir.formulas.StandardSorts.UninterpretedSort
-import at.forsyte.apalache.tla.lir.{ConstT1, SetT1, StrT1, TlaConstDecl, TlaEx, TlaModule, Typed}
+import at.forsyte.apalache.tla.lir.{ConstT1, NameEx, SetT1, StrT1, TlaConstDecl, TlaEx, TlaModule, TlaVarDecl, Typed}
 import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, LanguageWatchdog}
-import at.forsyte.apalache.tla.pp.NormalizedNames
+import at.forsyte.apalache.tla.pp.{NormalizedNames, UniqueNameGenerator}
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
+import scalaz.Leibniz.subst
 
 /**
  * The reTLA to VMT transpilation pass
@@ -19,7 +24,7 @@ import com.typesafe.scalalogging.LazyLogging
  * @author
  *   Jure Kukovec
  */
-class ReTLAToVMTTranspilePassImpl @Inject() (val options: PassOptions, pred: LanguagePred)
+class ReTLAToVMTTranspilePassImpl @Inject() (val options: PassOptions, pred: LanguagePred, gen: UniqueNameGenerator)
     extends TranspilePass with LazyLogging {
 
   override def name: String = "Transpiler"
@@ -51,26 +56,9 @@ class ReTLAToVMTTranspilePassImpl @Inject() (val options: PassOptions, pred: Lan
 //    val traceInvariantsAndNegations = vcTraceInvs.zip(vcNotTraceInvs)
 //    val optView = module.operDeclarations.find(_.name == NormalizedNames.VC_VIEW).map(_.body)
 
-    val setConstants = module.constDeclarations
-      .map { d => (d.name, d.typeTag) }
-      .collect {
-        case (name, Typed(SetT1(ConstT1(sortName)))) => ((name, UninterpretedSort(sortName)))
-        case (name, Typed(SetT1(StrT1())))           => ((name, UninterpretedSort(StrT1().toString)))
-      }
-      .toMap[String, Sort]
+    val vmtWriter = new VMTWriter(gen)
 
-    val rewriter = new RewriterImpl(setConstants)
-
-    val inits = initTrans map { case (name, ex) =>
-      Init(name, rewriter.rewrite(ex))
-    }
-    val tansitions = nextTrans map { case (name, ex) =>
-      Trans(name, rewriter.rewrite(ex))
-    }
-    println(";Inits")
-    inits.foreach(i => println(TermWriter.mkVMTString(i)))
-    println(";Nexts")
-    tansitions.foreach(t => println(TermWriter.mkVMTString(t)))
+    vmtWriter.annotateAndWrite(module.varDeclarations, module.constDeclarations, initTrans, nextTrans, vcInvs)
 
     Some(module)
   }

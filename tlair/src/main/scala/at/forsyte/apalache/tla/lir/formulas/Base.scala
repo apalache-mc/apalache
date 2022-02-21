@@ -15,7 +15,7 @@ object StandardSorts {
   sealed case class BoolSort() extends Sort("Boolean")
   sealed case class IntSort() extends Sort("Integer")
   sealed case class UntypedSort() extends Sort("Untyped")
-  sealed case class UninterpretedSort(name: String) extends Sort(name)
+  sealed case class UninterpretedSort(override val sortName: String) extends Sort(sortName)
   sealed case class FunctionSort(to: Sort, from: Sort*) extends Sort("Function") {
     def arity: Int = from.size
   }

@@ -16,7 +16,7 @@ class QuantifierRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJu
   private def isRestrictedSet(ex: TlaEx) = restrictedSetJudgement.isRestrictedSet(ex)
 
   private def rewriteAndCast: TlaEx => BoolExpr =
-    TermCaster.rewriteAndCast[BoolExpr](rewriter, BoolSort())
+    TermAndSortCaster.rewriteAndCast[BoolExpr](rewriter, BoolSort())
 
   override def apply(ex: TlaEx): BoolExpr =
     ex match {

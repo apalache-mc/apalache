@@ -67,10 +67,10 @@ class TestTermConstruction extends FunSuite {
     val fUnary2 = FunctionSort(usort1, usort2)
     val fNary1 = FunctionSort(usort2, IntSort(), IntSort(), BoolSort())
 
-    val fnTermNullary = UninterpretedFunVar("f", fNullary)
-    val fnTermUnary1 = UninterpretedFunVar("f", fUnary1)
-    val fnTermUnary2 = UninterpretedFunVar("f", fUnary2)
-    val fnTermNary = UninterpretedFunVar("f", fNary1)
+    val fnTermNullary = FunctionVar("f", fNullary)
+    val fnTermUnary1 = FunctionVar("f", fUnary1)
+    val fnTermUnary2 = FunctionVar("f", fUnary2)
+    val fnTermNary = FunctionVar("f", fNary1)
 
     // Does not throw
     Apply(fnTermNullary)

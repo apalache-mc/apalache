@@ -82,7 +82,6 @@ class ReTLAToVMTModule extends ToolModule {
         classOf[PreproPass],
         classOf[TransitionPass],
         classOf[OptPass],
-        classOf[AnalysisPass],
         // do the final type checking again, as preprocessing may have introduced gaps in the expression types
         classOf[PostTypeCheckerPassImpl],
         // ConstraintGenPass is in the very end of the pipeline

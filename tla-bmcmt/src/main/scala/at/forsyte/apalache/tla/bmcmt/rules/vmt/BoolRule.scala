@@ -14,7 +14,7 @@ class BoolRule(rewriter: Rewriter) extends FormulaRule {
     }
 
   private def rewriteAndCast: TlaEx => BoolExpr =
-    TermCaster.rewriteAndCast[BoolExpr](rewriter, BoolSort())
+    TermAndSortCaster.rewriteAndCast[BoolExpr](rewriter, BoolSort())
 
   // Assume isApplicable
   override def apply(ex: TlaEx): BoolExpr =

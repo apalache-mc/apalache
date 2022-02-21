@@ -30,10 +30,6 @@ class ReTLALanguagePred extends ContextualLanguagePred {
       case OperEx(TlaActionOper.prime, _: NameEx) =>
         PredResultOk()
 
-      // Only allow funDef for 3 args (no sugar)
-      case OperEx(TlaFunOper.funDef, x, s, p) =>
-        allArgsOk(letDefs, List(x, s, p))
-
       case OperEx(oper, args @ _*) if ReTLALanguagePred.operators.contains(oper) =>
         allArgsOk(letDefs, args)
 
@@ -65,8 +61,8 @@ class ReTLALanguagePred extends ContextualLanguagePred {
                 case OperEx(TlaFunOper.tuple, OperEx(TlaFunOper.tuple, args @ _*)) =>
                   allArgsOk(letDefs, args)
                 // ![a] case
-                case OperEx(TlaFunOper.tuple, args @ _*) =>
-                  allArgsOk(letDefs, args)
+                case OperEx(TlaFunOper.tuple, arg) =>
+                  isOkInContext(letDefs, arg)
                 // Impossible, but we need case-completeness
                 case _ => PredResultFail(List())
               }
@@ -113,6 +109,7 @@ object ReTLALanguagePred {
         TlaBoolOper.forall,
         TlaBoolOper.exists,
         TlaFunOper.app,
+        TlaFunOper.funDef,
         TlaControlOper.ifThenElse,
         // IntArith not in v1
         //        TlaArithOper.uminus,
