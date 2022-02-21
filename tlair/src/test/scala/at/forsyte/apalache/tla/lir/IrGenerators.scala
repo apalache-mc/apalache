@@ -8,20 +8,19 @@ import org.scalacheck.Gen
 import org.scalacheck.Gen.{choose, const, identifier, listOf, listOfN, lzy, oneOf, resize, sized}
 
 /**
- * <p>Generators of TLA expressions and declarations to enable testing of our code with Scalacheck. The current
+ * Generators of TLA expressions and declarations to enable testing of our code with ScalaCheck. The current
  * implementation respects operator arity but it may disrespect the expected structure of the arguments, which is
- * usually documented in Javadoc. In the future, we may want to enforce the structure by one of the following solutions:
- * (1) By adding preconditions to the constructors of the IR operators, or (2) by throwing `MalformedTlaError`.</p>
+ * usually documented in Javadoc.
  *
- * <p>Assumptions and limitations:</p>
+ * In the future, we may want to enforce the structure by one of the following solutions:
+ *   1. By adding preconditions to the constructors of the IR operators, or
+ *   1. by throwing `MalformedTlaError`.
  *
- * <ol> <li>The current implementation of the generators works best for the code that is unaware of the semantics of
- * TLA+ operators.</li>
- *
- * <li>Our generators neither produce nor apply higher-order operators.</li>
- *
- * <li>The generators tag the produced expressions with either Untyped() or Typed[Int](i) for a random integer value,
- * which should be sufficient for checking that the types are correctly propagated.</li> </ol>
+ * Assumptions and limitations:
+ *   - The current implementation works best for code that is unaware of the semantics of TLA+ operators.
+ *   - Our generators neither produce nor apply higher-order operators.
+ *   - The generators tag the produced expressions with either Untyped() or Typed[Int](i) for a random integer value,
+ *     which should be sufficient for checking that the types are correctly propagated.
  *
  * @author
  *   Igor Konnov
