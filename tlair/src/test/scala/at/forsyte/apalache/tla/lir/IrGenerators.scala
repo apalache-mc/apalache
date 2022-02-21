@@ -1,27 +1,26 @@
 package at.forsyte.apalache.tla.lir
 
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import org.scalacheck.Gen.{choose, const, identifier, listOf, listOfN, lzy, oneOf, resize, sized}
 
 /**
- * <p>Generators of TLA expressions and declarations to enable testing of our code with Scalacheck. The current
+ * Generators of TLA expressions and declarations to enable testing of our code with ScalaCheck. The current
  * implementation respects operator arity but it may disrespect the expected structure of the arguments, which is
- * usually documented in Javadoc. In the future, we may want to enforce the structure by one of the following solutions:
- * (1) By adding preconditions to the constructors of the IR operators, or (2) by throwing `MalformedTlaError`.</p>
+ * usually documented in Javadoc.
  *
- * <p>Assumptions and limitations:</p>
+ * In the future, we may want to enforce the structure by one of the following solutions:
+ *   1. By adding preconditions to the constructors of the IR operators, or
+ *   1. by throwing `MalformedTlaError`.
  *
- * <ol> <li>The current implementation of the generators works best for the code that is unaware of the semantics of
- * TLA+ operators.</li>
- *
- * <li>Our generators neither produce nor apply higher-order operators.</li>
- *
- * <li>The generators tag the produced expressions with either Untyped() or Typed[Int](i) for a random integer value,
- * which should be sufficient for checking that the types are correctly propagated.</li> </ol>
+ * Assumptions and limitations:
+ *   - The current implementation works best for code that is unaware of the semantics of TLA+ operators.
+ *   - Our generators neither produce nor apply higher-order operators.
+ *   - The generators tag the produced expressions with either Untyped() or Typed[Int](i) for a random integer value,
+ *     which should be sufficient for checking that the types are correctly propagated.
  *
  * @author
  *   Igor Konnov
@@ -56,25 +55,25 @@ trait IrGenerators extends TlaType1Gen {
   val maxDeclsPerModule: Int = 10
 
   /**
-   * The list of the most basic operators that are defined in TlaOper.
+   * Fundamental operators (`TlaOper._`)
    */
   val simpleOperators = List(TlaOper.eq, TlaOper.ne, TlaOper.chooseBounded, TlaOper.apply)
 
   /**
-   * The list of propositional operators and quantifiers, excluding unbounded quantifiers.
+   * Propositional operators and quantifiers, excluding unbounded quantifiers (`TlaBoolOper._`)
    */
   val logicOperators = List(TlaBoolOper.and, TlaBoolOper.or, TlaBoolOper.not, TlaBoolOper.equiv, TlaBoolOper.implies,
       TlaBoolOper.exists, TlaBoolOper.forall)
 
   /**
-   * The list of arithmetic operators that are defined in TlaArithOper.
+   * Arithmetic operators (`TlaArithOper._`)
    */
   val arithOperators = List(TlaArithOper.div, TlaArithOper.dotdot, TlaArithOper.exp, TlaArithOper.ge, TlaArithOper.gt,
       TlaArithOper.le, TlaArithOper.lt, TlaArithOper.minus, TlaArithOper.mod, TlaArithOper.mult, TlaArithOper.plus,
       TlaArithOper.uminus)
 
   /**
-   * The list of all set operators.
+   * Set operators (`TlaSetOper._`)
    */
   val setOperators = List(TlaSetOper.cap, TlaSetOper.cup, TlaSetOper.enumSet, TlaSetOper.filter, TlaSetOper.funSet,
       TlaSetOper.in, TlaSetOper.notin, TlaSetOper.map, TlaSetOper.powerset, TlaSetOper.recSet, TlaSetOper.seqSet,
@@ -87,17 +86,23 @@ trait IrGenerators extends TlaType1Gen {
       TlaFunOper.recFunDef, TlaFunOper.recFunRef, TlaFunOper.except)
 
   /**
-   * The list of action operators.
+   * Action operators (`TlaActionOper._`)
    */
   val actionOperators = List(TlaActionOper.prime, TlaActionOper.enabled, TlaActionOper.stutter, TlaActionOper.nostutter,
       TlaActionOper.unchanged, TlaActionOper.composition)
 
   /**
-   * The list of temporal operators, excluding \AA and \EE, as those are not useful to us.
+   * Temporal operators, excluding `\AA` and `\EE`, as those are not useful to us (`TlaTempOper._`)
    */
   val temporalOperators = List(TlaTempOper.box, TlaTempOper.diamond, TlaTempOper.leadsTo, TlaTempOper.guarantees,
       TlaTempOper.strongFairness, TlaTempOper.weakFairness)
 
+  /**
+   * Generates a type tag, either typed or untyped.
+   *
+   * @return
+   *   A generator of `TypeTag`.
+   */
   def genTypeTag: Gen[TypeTag] = for {
     tp <- genType1
     tt <- oneOf(Untyped(), Typed(tp))
