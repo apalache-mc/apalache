@@ -47,7 +47,7 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
         if (elemArg == argCell) {
           nextState = nextState.updateArena(_.appendHasNoSmt(res, nextState.arena.getHas(elemRes): _*))
 
-          if (elemRes.cellType.isInstanceOf[FunT] | elemRes.cellType.isInstanceOf[FinFunSetT]) {
+          if (elemRes.cellType.isInstanceOf[FunT] || elemRes.cellType.isInstanceOf[FinFunSetT]) {
             nextState = nextState.updateArena(_.setDom(res, nextState.arena.getDom(elemRes)))
             nextState = nextState.updateArena(_.setCdm(res, nextState.arena.getCdm(elemRes)))
           } else if (elemRes.cellType.isInstanceOf[RecordT]) {
