@@ -1,21 +1,24 @@
 package at.forsyte.apalache.tla.bmcmt.rules.vmt
 
 import at.forsyte.apalache.tla.bmcmt.RewriterException
-import at.forsyte.apalache.tla.lir.formulas.Booleans.{BoolVar, False, True}
-import at.forsyte.apalache.tla.lir.formulas.EUF.{FunctionVar, UninterpretedLiteral, UninterpretedVar}
-import at.forsyte.apalache.tla.lir.formulas.Integers.{IntLiteral, IntVar}
-import at.forsyte.apalache.tla.lir.formulas.StandardSorts.{FunctionSort, UninterpretedSort}
+import at.forsyte.apalache.tla.lir.formulas.Booleans.{False, True}
+import at.forsyte.apalache.tla.lir.formulas.EUF.{UninterpretedLiteral}
+import at.forsyte.apalache.tla.lir.formulas.Integers.IntLiteral
+import at.forsyte.apalache.tla.lir.formulas.StandardSorts.UninterpretedSort
 import at.forsyte.apalache.tla.lir.formulas.{Sort, StandardSorts, Term, Variable}
 import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir.{
-  BoolT1, ConstT1, FunT1, IntT1, NameEx, OperEx, StrT1, TlaEx, TlaType1, Typed, Untyped, ValEx,
-}
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
-import jdk.jshell.spi.ExecutionControl.NotImplementedException
 
-// Handles the conversion of literals and names
-// Assumption: all names appearing in the IR are unique
+/**
+ * ValueRule handles the conversion of literals and names
+ *
+ * Assumption: all names appearing in the IR are unique
+ *
+ * @author
+ *   Jure Kukovec
+ */
 class ValueRule extends FormulaRule {
 
   def isApplicable(ex: TlaEx): Boolean =
@@ -47,21 +50,21 @@ class ValueRule extends FormulaRule {
   }
 }
 
+// Some generic utility methods
 object ValueRule {
 
   def throwOn[T](ex: TlaEx): T =
     throw new RewriterException(s"ValueRule not applicable to $ex", ex)
 
+  // helper method for variable construction.
   def termFromNameEx(ex: NameEx): Variable =
     ex.typeTag match {
       case Typed(tt: TlaType1) =>
         val sort = TermAndSortCaster.sortFromType(tt)
         mkVariable(ex.name, sort)
-
       case Untyped() =>
-        new Variable(ex.name) {
-          override val sort: Sort = StandardSorts.UntypedSort()
-        }
-      case _ => throw new NotImplementedException("Typed only supported for TlaType1.")
+        mkVariable(ex.name, StandardSorts.UntypedSort())
+      case Typed(other) =>
+        throw new RewriterException(s"Term construction is not supported: $other is not in TlaType1", ex)
     }
 }

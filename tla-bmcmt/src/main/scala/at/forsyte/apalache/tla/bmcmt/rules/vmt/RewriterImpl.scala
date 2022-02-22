@@ -4,6 +4,12 @@ import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.formulas.Term
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 
+/**
+ * The Rewriter implementation for reTLA to VMT.
+ *
+ * @author
+ *   Jure Kukovec
+ */
 class RewriterImpl(constSets: ConstSetMapT, gen: UniqueNameGenerator) extends Rewriter {
   // Less optimized rule lookup than SymbStateRewriter, since we have fewer rules, just search the list
   private val setJudgement = new RestrictedSetJudgement(constSets)

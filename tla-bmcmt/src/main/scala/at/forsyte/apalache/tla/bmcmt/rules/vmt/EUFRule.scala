@@ -10,7 +10,7 @@ import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaControlOper, TlaFunOpe
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 
 /**
- * BoolRule defines translations for reTLA patterns, which encode equality, introduce values defined by if-then else, or
+ * EUFRule defines translations for reTLA patterns, which encode equality, introduce values defined by if-then else, or
  * define, apply or update functions.
  *
  * @author
@@ -102,12 +102,14 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
           if TlaOper.deinterleave(varsAndSets)._2.forall(isRestrictedSet) =>
         val (vars, sets) = TlaOper.deinterleave(varsAndSets)
         val setSorts = sets.map(restrictedSetJudgement.getSort)
+        // Construct pairs of formal parameter names and sorts
         val argList = vars.zip(setSorts).toList.map { case (NameEx(name), sort) =>
           (name, sort)
         }
         FunDef(gen.newName(), argList, rewriter.rewrite(e))
       case OperEx(TlaFunOper.app, fn, arg) =>
         val castFn = castToFun(fn)
+        // Arity 2+ functions pack their arguments as a single tuple, which we might need to unpack
         arg match {
           case OperEx(TlaFunOper.tuple, args @ _*) => Apply(castFn, args.map(rewriter.rewrite): _*)
           case _                                   => Apply(castFn, rewriter.rewrite(arg))
@@ -115,6 +117,8 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
 
       case OperEx(TlaFunOper.except, fn, arg, newVal) =>
         val valTerm = rewriter.rewrite(newVal)
+        // Toplevel, arg is always a TLaFunOper.tuple. within, it's either a single value, or another
+        // tuple, in the case of arity 2+ functions
         val fnArgTerms = arg match {
           // ![a,b,...] case
           case OperEx(TlaFunOper.tuple, OperEx(TlaFunOper.tuple, args @ _*)) =>
@@ -130,6 +134,8 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
         // We have two scenarios: the original function is either defined, or symbolic
         // If it is defined, then we have a rule and arguments, which we can just reuse
         // If it is symbolic, we need to invent new variable names and apply it.
+        // If it is ever the case, in the future, that this is slow, we can change this code
+        // to use Apply in both cases.
         castToFun(fn) match {
           case FunDef(_, args, oldFnBody) =>
             exceptTermFn(args, oldFnBody)

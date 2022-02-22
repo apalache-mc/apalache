@@ -6,8 +6,15 @@ import at.forsyte.apalache.tla.lir.formulas.{Sort, StandardSorts}
 import at.forsyte.apalache.tla.lir.{NameEx, TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet, TlaNatSet, TlaPredefSet}
 
-// Restricted sets are Int, Nat, BOOLEAN and any CONSTANT values typed Set(_)
-// constNames is assumed to only contain the names of the CONSTANTs, who have set types
+/**
+ * RestrictedSetJudgement is used to evaluate sets permitted in the reTLA fragment (i.e. restricted sets).
+ *
+ * Restricted sets are Int, Nat, BOOLEAN and any CONSTANT values typed Set(_). `constNames` is assumed to only contain
+ * the names of the CONSTANTs with set types.
+ *
+ * @author
+ *   Jure Kukovec
+ */
 class RestrictedSetJudgement(constSets: Map[String, UninterpretedSort]) {
   def isRestrictedSet(ex: TlaEx): Boolean =
     ex match {

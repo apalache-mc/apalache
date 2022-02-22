@@ -6,7 +6,14 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.formulas.{StandardSorts, Term}
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 
-// TODO: tests
+/**
+ * QuantifierRule defines translations for quantified expressions in reTLA.
+ *
+ * `restrictedSetJudgement` determines which sets (by name) are considered restricted (and what their sorts are).
+ *
+ * @author
+ *   Jure Kukovec
+ */
 class QuantifierRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement) extends FormulaRule {
   override def isApplicable(ex: TlaEx): Boolean = ex match {
     case OperEx(TlaBoolOper.exists | TlaBoolOper.forall, _, _, _) => true
@@ -18,6 +25,7 @@ class QuantifierRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJu
   private def rewriteAndCast: TlaEx => BoolExpr =
     TermAndSortCaster.rewriteAndCast[BoolExpr](rewriter, BoolSort())
 
+  // No magic here, all quantifiers in reTLA have fixed arity and are 1-to-1 with SMT quantifiers
   override def apply(ex: TlaEx): BoolExpr =
     ex match {
       case OperEx(TlaBoolOper.exists, NameEx(name), set, pred) if isRestrictedSet(set) =>
