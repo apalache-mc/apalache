@@ -135,7 +135,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
             // it should be the case that manySigs has at least two elements, but we also include the case of one
             val sepSigs = String.join(" or ", signatures.map(_.toString()): _*)
             val defaultMessage =
-              s"Need annotation. Found ${signatures.length} matching operator signatures $sepSigs for $argOrArgs ${evalArgTypes
+              s"Annotation required. Found ${signatures.length} matching operator signatures $sepSigs for $argOrArgs ${evalArgTypes
                   .mkString(" and ")}"
             val specificMessage = appEx.explain(signatures.toList, evalArgTypes)
             onTypeError(appEx.sourceRef, if (specificMessage != "") specificMessage else defaultMessage)
@@ -148,7 +148,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
           val argOrArgs = pluralArgs(argTypes.length)
           val evalSig = sub.subRec(operVar)
           val defaultMessage =
-            s"No match between operator signature $evalSig and $argOrArgs ${evalArgTypes.mkString(" and ")}"
+            s"An operator with the signature $evalSig cannot be applied to the provided $argOrArgs of type ${evalArgTypes.mkString(" and ")}"
           val specificMessage = appEx.explain(List(evalSig), evalArgTypes)
           onTypeError(appEx.sourceRef, if (specificMessage != "") specificMessage else defaultMessage)
         }
@@ -164,7 +164,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
           val argOrArgs = pluralArgs(argTypes.length)
           val evalSig = sigs.head
           val defaultMessage =
-            s"No match between operator signature $evalSig and $argOrArgs ${evalArgTypes.mkString(" and ")}"
+            s"An operator with the signature $evalSig cannot be applied to the provided $argOrArgs of type ${evalArgTypes.mkString(" and ")}"
           val specificMessage = appEx.explain(List(evalSig), evalArgTypes)
           onTypeError(appEx.sourceRef, if (specificMessage != "") specificMessage else defaultMessage)
         }
@@ -375,7 +375,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
     listener.onTypeError(sourceRef, message)
   }
 
-  // tired of reading "argument(s)", it's easy to fix
+  // Pluralize the string "argument"
   private def pluralArgs(count: Int): String = {
     if (count != 1) "arguments" else "argument"
   }

@@ -198,12 +198,9 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
     }
 
     def diffArgTypes(args: List[TlaEx], expectedTypes: List[TlaType1], actualTypes: List[TlaType1]): List[String] = {
-      val illTypedArguments = args.zip(expectedTypes).zip(actualTypes).filter { case ((_, expectedType), argType) =>
-        expectedType != argType
-      }
-
-      illTypedArguments.map { case ((arg, expectedType), argType) =>
-        s"Argument $arg should have type $expectedType but has type $argType"
+      val illTypedArguments = args.zip(expectedTypes).zip(actualTypes).collect { 
+        case ((arg, expectedType), argType) if expectedType != argType => 
+          s"Argument $arg should have type $expectedType but has type $argType."
       }
     }
 
@@ -232,9 +229,9 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val etcExpr = mkAppByName(ref, mkName(nameEx), args.map(this(_)): _*)
         etcExpr.typeErrorExplanation = (expectedTypes: List[TlaType1], actualTypes: List[TlaType1]) => {
           expectedTypes match {
-            case List(OperT1(expectedArgumentTypes, _)) =>
+            case List(t@OperT1(expectedArgumentTypes, _)) =>
               val argErrors = diffArgTypes(args.toList, expectedArgumentTypes.toList, actualTypes)
-              s"${argErrors.mkString(" \n ")}\n on call for $nameEx with type ${expectedTypes(0)}\nIn expression $ex"
+              s"The operator $nameEx of type $t is applied to arguments of incompatible types in $ex:\n${argErrors.mkString("\n")}"
             case _ => ""
           }
         }
@@ -458,7 +455,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         }
         val etcExpr = mkApp(ref, signatures, this(fun), this(arg))
         etcExpr.typeErrorExplanation = (expectedTypes: List[TlaType1], actualTypes: List[TlaType1]) =>
-          s"Couldn't find a way to apply [] to a function $fun and an argument $arg \nIn expression $ex"
+          s"Cannot apply $fun to the argument $arg in $ex."
         etcExpr
 
       case OperEx(TlaFunOper.domain, fun) =>

@@ -24,7 +24,7 @@ sealed trait EtcExpr {
   var typeErrorExplanation: (List[TlaType1], List[TlaType1]) => String = (_, _) => ""
 
   /**
-   * Calls a type error explanation for this expression
+   * Returns a type error explanation for the arguments of an expression
    *
    * @param expectedTypes
    *   Expected types for this expression (i.e. signatures)
