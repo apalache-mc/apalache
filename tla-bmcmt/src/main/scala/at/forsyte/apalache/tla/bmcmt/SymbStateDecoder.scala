@@ -129,7 +129,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         case ValEx(TlaInt(n)) =>
           // if the length value is corrupt, adjust it
           if (n < 0 || n > capacity) {
-            logger.warn(s"Found corrupt sequence length $n above outside of 0..$capacity")
+            logger.warn(s"Sequence length should belong to 0..$capacity, found: $n")
             Math.min(Math.max(0, n.toInt), capacity)
           } else {
             n.toInt
