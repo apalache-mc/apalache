@@ -19,7 +19,8 @@ class TestTlaDeclLevelFinder extends AnyFunSuite with Checkers {
       override val maxArgs: Int = 3
     }
     // all names are considered constants
-    val operators = gens.simpleOperators ++ gens.setOperators ++ gens.logicOperators ++ gens.arithOperators
+    val operators =
+      gens.simpleOperators ++ gens.setOperators ++ gens.functionOperators ++ gens.logicOperators ++ gens.arithOperators
     val genDecl = gens.genTlaDeclButNotVar(gens.genTlaEx(operators))(_)
     val prop = forAll(gens.genTlaModuleWith(genDecl)) { module =>
       val finder = new TlaDeclLevelFinder(module)
@@ -39,7 +40,8 @@ class TestTlaDeclLevelFinder extends AnyFunSuite with Checkers {
       override val maxArgs: Int = 3
     }
     // all names are considered constants
-    val operators = gens.simpleOperators ++ gens.setOperators ++ gens.logicOperators ++ gens.arithOperators
+    val operators =
+      gens.simpleOperators ++ gens.setOperators ++ gens.functionOperators ++ gens.logicOperators ++ gens.arithOperators
 
     val prop = forAll(gens.genTlaModule(gens.genTlaEx(operators))) { module =>
       val finder = new TlaDeclLevelFinder(module)
