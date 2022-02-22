@@ -1,12 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.implicitConversions._
-import at.forsyte.apalache.tla.bmcmt.types.{CellT, FunT, RecordT, TupleT}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.TlaType1
 import at.forsyte.apalache.tla.lir.{FunT1, RecT1, TupT1, BoolT1, SetT1}
@@ -86,9 +84,9 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // Since the expression goes to the solver, we don't care about types.
       val pairIndex = nextState.arena.getHas(pair).head // this is pair[1]
       val ite = tla
-        .ite(tla.eql(pairIndex.toNameEx ? "p", indexCell.toNameEx ? "i") ? "b", newPairCell.toNameEx ? "p",
-            pair.toNameEx ? "p")
-        .typed(Map("p" -> tupT, "i" -> funT.arg, "b" -> BoolT1()), "p")
+        .ite(tla.eql(pairIndex.toNameEx.as(tupT), indexCell.toNameEx.as(funT.arg)).as(BoolT1()),
+            newPairCell.toNameEx.as(tupT), pair.toNameEx.as(tupT))
+        .as(tupT)
 
       nextState = rewriter.rewriteUntilDone(nextState.setRex(ite))
       val updatedCell = nextState.asCell

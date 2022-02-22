@@ -918,6 +918,31 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
+  test("""{[x \in {1, 2} |-> TRUE ]} \subseteq {[x \in {1, 2} |-> TRUE ]} ~~> (true)""") { rewriterType: SMTEncoding =>
+    val dom = enumSet(int(1), int(2)).as(intSetT)
+    val mapping = bool(true).as(boolT)
+    val fun = funDef(mapping, name("x").as(IntT1()), dom).as(FunT1(IntT1(), BoolT1()))
+    val set = enumSet(fun).as(SetT1(FunT1(IntT1(), BoolT1())))
+
+    val ex = subseteq(set, set).as(boolT)
+    val state = new SymbState(ex, arena, Binding())
+    val rewriter = create(rewriterType)
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case predEx @ NameEx(_) =>
+        rewriter.push()
+        solverContext.assertGroundExpr(predEx)
+        assert(solverContext.sat())
+        rewriter.pop()
+        rewriter.push()
+        solverContext.assertGroundExpr(not(predEx.as(boolT)).as(boolT))
+        assertUnsatOrExplain(rewriter, nextState)
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
   test("""UNION {{1, 2}, {2,3}} = {1, 2, 3}""") { rewriterType: SMTEncoding =>
     val setOf12 = enumSet(int(1), int(2)).as(intSetT)
     val setOf23 = enumSet(int(3), int(2)).as(intSetT)

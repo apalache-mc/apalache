@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt.implicitConversions.Crossable
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
-import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, PowSetT}
+import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, PowSetT, RecordT, TupleT, UnknownT}
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.convenience._
@@ -67,7 +67,11 @@ class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends SetInclusi
     } else {
       // EqConstraints need to be generated, since missing in-relations, e.g. in sets of tuples, will lead to errors.
       // TODO: Inlining this method is pointless. We should consider handling tuples and other structures natively in SMT.
-      newState = rewriter.lazyEq.cacheEqConstraints(state, leftElemsElems.cross(rightElemOrDomainElems))
+      val leftElemsElemsType = if (leftElemsElems.nonEmpty) leftElemsElems.head.cellType else UnknownT
+      val needsInRelations = leftElemsElemsType.isInstanceOf[TupleT] || leftElemsElemsType.isInstanceOf[RecordT]
+      if (needsInRelations) {
+        newState = rewriter.lazyEq.cacheEqConstraints(state, leftElemsElems.cross(rightElemOrDomainElems))
+      }
 
       def isInRightSet(leftElem: ArenaCell): TlaEx = {
         def isInAndEqLeftElem(rightElemOrDomainElem: ArenaCell) = {
