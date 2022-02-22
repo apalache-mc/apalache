@@ -276,8 +276,8 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
       val picked = nextState.ex
       val inRange = tla.le(tla.int(indexBase1), len.toNameEx as IntT1()) as BoolT1()
       val pickNew = oracle.whenEqualTo(nextState, 1) as BoolT1()
-      val ite = tla.ite(inRange, pickNew, tla.not(pickNew) as BoolT1()) as BoolT1()
-      rewriter.solverContext.assertGroundExpr(ite)
+      val eql = tla.eql(inRange, pickNew) as BoolT1()
+      rewriter.solverContext.assertGroundExpr(eql)
 
       nextState.setRex(picked)
     }
