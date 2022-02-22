@@ -28,11 +28,11 @@ object Arena {
     // by convention, the first cells have the following semantics:
     //  0 stores FALSE, 1 stores TRUE, 2 stores BOOLEAN, 3 stores Nat, 4 stores Int
     arena = arena
-      .appendCellWithoutDeclaration(BoolT())
-      .appendCellWithoutDeclaration(BoolT())
-      .appendCellWithoutDeclaration(FinSetT(BoolT()))
-      .appendCellWithoutDeclaration(InfSetT(IntT()))
-      .appendCellWithoutDeclaration(InfSetT(IntT()))
+      .appendCellNoSmt(BoolT())
+      .appendCellNoSmt(BoolT())
+      .appendCellNoSmt(FinSetT(BoolT()))
+      .appendCellNoSmt(InfSetT(IntT()))
+      .appendCellNoSmt(InfSetT(IntT()))
     // declare Boolean cells in SMT
     val cellFalse = arena.cellFalse()
     val cellTrue = arena.cellTrue()
@@ -173,11 +173,13 @@ class Arena private (
    *
    * @param cellType
    *   a cell type
+   * @param isUnconstrained
+   *   a flag defining if the SMT representation of the cell is unconstrained, default is false.
    * @return
    *   new arena
    */
-  def appendCell(cellType: CellT): Arena = {
-    val newArena = appendCellWithoutDeclaration(cellType)
+  def appendCell(cellType: CellT, isUnconstrained: Boolean = false): Arena = {
+    val newArena = appendCellNoSmt(cellType, isUnconstrained)
     val newCell = newArena.topCell
     solverContext.declareCell(newCell)
     newArena
@@ -208,8 +210,19 @@ class Arena private (
     create(this, types)
   }
 
-  protected def appendCellWithoutDeclaration(cellType: CellT): Arena = {
-    val newCell = new ArenaCell(cellCount, cellType)
+  /**
+   * Append a new cell to arena. This method returns a new arena, not the new cell. The new cell can be accessed with
+   * topCell. This method does not generate SMT constraints.
+   *
+   * @param cellType
+   *   a cell type
+   * @param isUnconstrained
+   *   a flag defining if the SMT representation of the cell is unconstrained, default is false.
+   * @return
+   *   new arena
+   */
+  def appendCellNoSmt(cellType: CellT, isUnconstrained: Boolean = false): Arena = {
+    val newCell = new ArenaCell(cellCount, cellType, isUnconstrained)
     assert(!cellMap.contains(newCell.toString)) // this might happen, if we messed up arenas
     new Arena(solverContext, cellCount + 1, newCell, cellMap + (newCell.toString -> newCell), hasEdges, domEdges,
         cdmEdges)

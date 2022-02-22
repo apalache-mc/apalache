@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
-import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT}
+import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, FunT}
 import at.forsyte.apalache.tla.bmcmt.{RewriterException, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.{MalformedTlaError, OperEx}
 
 class EqRuleWithArrays(rewriter: SymbStateRewriter) extends EqRule(rewriter) {
+
   override def apply(state: SymbState): SymbState = state.ex match {
     case OperEx(TlaOper.eq, lhs, rhs) =>
       var newState = rewriter.rewriteUntilDone(state.setRex(lhs))
@@ -26,9 +27,9 @@ class EqRuleWithArrays(rewriter: SymbStateRewriter) extends EqRule(rewriter) {
         newState = newState.updateArena(_.appendCell(BoolT()))
         val eqPred = newState.arena.topCell
 
-        // TODO: add additional elements as development in the "arrays" encoding progresses
+        // TODO: add additional elements as development in the arrays encoding progresses
         (leftCell.cellType, rightCell.cellType) match {
-          case (FinSetT(_), FinSetT(_)) =>
+          case (FinSetT(_), FinSetT(_)) | (FunT(_, _), FunT(_, _)) =>
             // direct SMT equality of arrays is used here
             val eqCons = tla.equiv(eqPred.toNameEx, tla.eql(leftCell.toNameEx, rightCell.toNameEx))
             rewriter.solverContext.assertGroundExpr(eqCons)
@@ -44,6 +45,7 @@ class EqRuleWithArrays(rewriter: SymbStateRewriter) extends EqRule(rewriter) {
             newState.setRex(eqPred.toNameEx)
         }
       }
+
     case _ =>
       throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
   }
