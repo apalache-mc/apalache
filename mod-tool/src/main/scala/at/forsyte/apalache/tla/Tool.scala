@@ -4,19 +4,19 @@ package at.forsyte.apalache.tla
 import apalache.BuildInfo
 
 import java.io.{File, FileNotFoundException, FileWriter, PrintWriter}
-import java.nio.file.Path
+import java.nio.file.{Path, Paths}
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import at.forsyte.apalache.infra.log.LogbackConfigurator
-import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor, PassOptions, WriteablePassOptions, ToolModule}
-import at.forsyte.apalache.tla.lir.{TlaModule}
+import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor, PassOptions, ToolModule, WriteablePassOptions}
+import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorMessage, PassOptionException}
 import at.forsyte.apalache.io.{OutputManager, ReportGenerator}
 import at.forsyte.apalache.tla.bmcmt.config.{CheckerModule, ReTLAToVMTModule}
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.tooling.ExitCodes
 import at.forsyte.apalache.tla.tooling.opt.{
-  CheckCmd, ConfigCmd, TranspileCmd, AbstractCheckerCmd, General, ParseCmd, ServerCmd, TestCmd, TypeCheckCmd,
+  AbstractCheckerCmd, CheckCmd, ConfigCmd, General, ParseCmd, ServerCmd, TestCmd, TranspileCmd, TypeCheckCmd,
 }
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import com.google.inject.{Guice, Injector}
@@ -31,6 +31,7 @@ import scala.collection.JavaConverters._
 import scala.util.Random
 import at.forsyte.apalache.io.ApalacheConfig
 import at.forsyte.apalache.io.ConfigManager
+import at.forsyte.apalache.tla.bmcmt.rules.vmt.VMTWriter
 
 /**
  * Command line access to the APALACHE tools.
@@ -331,12 +332,16 @@ object Tool extends LazyLogging {
     // behavior of current OutmputManager configuration
     setCommonOptions(constrain, executor.options)
 
-    val msg = "Constraint mode is not yet implemented!"
+    val outFilePath = OutputManager.runDirPathOpt
+      .map { p =>
+        p.resolve(VMTWriter.outFileName).toAbsolutePath
+      }
+      .getOrElse(VMTWriter.outFileName)
 
     runAndExit(
         executor,
-        _ => msg,
-        msg,
+        _ => s"VMT constraints successfully generated at\n$outFilePath",
+        "Failed to generate constraints",
     )
   }
 

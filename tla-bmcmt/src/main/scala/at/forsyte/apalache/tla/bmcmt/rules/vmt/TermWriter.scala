@@ -16,11 +16,15 @@ object TermWriter {
       case Nil      => onEmpty
       case h +: Nil => mkSMT2String(h)
       case _ =>
-        val argStrings = args map { x => s"${tr(x)}" }
+        val argStrings = args.map { x => s"${tr(x)}" }
         s"($head ${argStrings.mkString(" ")})"
     }
 
-  private def mkQuant(quant: String, x: String, s: String, p: Term): String =
+  private def mkQuant(
+      quant: String,
+      x: String,
+      s: String,
+      p: Term): String =
     s"($quant (($x $s)) ${tr(p)})"
 
   private def sortStringForQuant(sort: Sort): String =
@@ -33,7 +37,7 @@ object TermWriter {
     }
 
   private def sortAsFn(sort: Sort): (List[String], String) = sort match {
-    case FunctionSort(to, from @ _*) => (from.toList map sortStringForQuant, sortStringForQuant(to))
+    case FunctionSort(to, from @ _*) => (from.toList.map(sortStringForQuant), sortStringForQuant(to))
     case s                           => (List.empty, sortStringForQuant(s))
   }
 
@@ -62,7 +66,7 @@ object TermWriter {
       // Lt
       // Ge
       // Gt
-      case x => throw new NotImplementedError(s"$x is not supported yet.")
+      case x => throw new NotImplementedError(s"${x.getClass} is not supported yet.")
 
     }
 
@@ -82,7 +86,7 @@ object TermWriter {
 
   def mkFunDef(fd: FunDef): String = {
     val FunDef(name, args, body) = fd
-    val pairs = args map { case (name, argSort) =>
+    val pairs = args.map { case (name, argSort) =>
       s"($name ${sortStringForQuant(argSort)})"
     }
     val toSortString = sortStringForQuant(fd.sort.to)

@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir.formulas.Booleans.{And, BoolExpr, True}
 import at.forsyte.apalache.tla.lir.formulas.EUF.{Apply, Equal, FunDef, FunctionVar, ITE}
 import at.forsyte.apalache.tla.lir.formulas.StandardSorts.{BoolSort, FunctionSort}
 import at.forsyte.apalache.tla.lir.formulas.{FnTerm, Sort, Term}
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaControlOper, TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 
@@ -31,8 +31,9 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
 
   override def isApplicable(ex: TlaEx): Boolean =
     ex match {
-      case OperEx(oper, _*) => eufOper.contains(oper)
-      case _                => false
+      case OperEx(oper, _*)       => eufOper.contains(oper)
+      case LetInEx(_, decls @ _*) => decls.forall(_.formalParams.isEmpty)
+      case _                      => false
     }
 
   // Only restricted sets are allowed as function domains
@@ -95,13 +96,6 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
       case OperEx(TlaOper.eq | ApalacheOper.assign, lhs, rhs) =>
         // := is just = in VMT
         Equal(rewriter.rewrite(lhs), rewriter.rewrite(rhs))
-      // TODO: implement support for nullary LET-IN and TlaOper.apply
-      case OperEx(TlaOper.apply, fn, args @ _*) =>
-        throw new RewriterException(s"Not implemented yet", ex)
-      case OperEx(TlaControlOper.ifThenElse, ifEx, thenEx, elseEx) =>
-        // IfEx must be boolean, so we need a cast
-        val castIfEx = TermAndSortCaster.rewriteAndCast[BoolExpr](rewriter, BoolSort())(ifEx)
-        ITE(castIfEx, rewriter.rewrite(thenEx), rewriter.rewrite(elseEx))
 
       case OperEx(TlaFunOper.funDef, e, varsAndSets @ _*)
           // All domain-defining sets must be restricted.
@@ -114,7 +108,10 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
         FunDef(gen.newName(), argList, rewriter.rewrite(e))
       case OperEx(TlaFunOper.app, fn, arg) =>
         val castFn = castToFun(fn)
-        Apply(castFn, rewriter.rewrite(arg))
+        arg match {
+          case OperEx(TlaFunOper.tuple, args @ _*) => Apply(castFn, args.map(rewriter.rewrite): _*)
+          case _                                   => Apply(castFn, rewriter.rewrite(arg))
+        }
 
       case OperEx(TlaFunOper.except, fn, arg, newVal) =>
         val valTerm = rewriter.rewrite(newVal)
@@ -143,6 +140,12 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
             }
             exceptTermFn(fnArgPairs, Apply(fVar, appArgs: _*))
         }
+
+      case OperEx(TlaControlOper.ifThenElse, ifEx, thenEx, elseEx) =>
+        // IfEx must be boolean, so we need a cast
+        val castIfEx = TermAndSortCaster.rewriteAndCast[BoolExpr](rewriter, BoolSort())(ifEx)
+        ITE(castIfEx, rewriter.rewrite(thenEx), rewriter.rewrite(elseEx))
+
       case _ => throw new RewriterException(s"EUFRule not applicable to $ex", ex)
     }
 }

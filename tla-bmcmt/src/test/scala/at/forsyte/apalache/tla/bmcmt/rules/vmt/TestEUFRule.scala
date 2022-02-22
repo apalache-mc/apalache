@@ -1,11 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt.rules.vmt
 
 import at.forsyte.apalache.tla.lir.TypedPredefs._
-import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, IntT1, SetT1, TlaEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, FunT1, IntT1, SetT1, TlaEx, TupT1}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.formulas.Booleans._
-import at.forsyte.apalache.tla.lir.formulas.EUF.Equal
-import at.forsyte.apalache.tla.lir.formulas.StandardSorts.{IntSort, UninterpretedSort}
+import at.forsyte.apalache.tla.lir.formulas.EUF.{Apply, Equal, FunDef, FunctionVar, ITE}
+import at.forsyte.apalache.tla.lir.formulas.StandardSorts.{FunctionSort, IntSort, UninterpretedSort}
+import at.forsyte.apalache.tla.lir.formulas.Term
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
@@ -21,7 +22,14 @@ class TestEUFRule extends AnyFunSuite {
 
   val rewriter = RewriterImpl(constSets)
 
-  val rule = new EUFRule(rewriter, new RestrictedSetJudgement(constSets), new UniqueNameGenerator)
+  val funName = "f"
+  val constGen = new UniqueNameGenerator {
+    override def newName(): String = funName
+  }
+  val fType = FunT1(TupT1(sType, IntT1()), sType)
+  val f = tla.name(funName).as(fType)
+
+  val rule = new EUFRule(rewriter, new RestrictedSetJudgement(constSets), constGen)
 
   val b = BoolT1()
 
@@ -37,11 +45,17 @@ class TestEUFRule extends AnyFunSuite {
   val set = tla.name("S").as(SetT1(sType))
   val intSet = tla.intSet().as(SetT1(IntT1()))
 
-  val expected: Map[TlaEx, BoolExpr] = Map(
-      tla.assign(tla.prime(x).as(sType), x).as(b) -> Equal(xPrimeVar, xVar)
+  val expected: Map[TlaEx, Term] = Map(
+      tla.assign(tla.prime(x).as(sType), x).as(b) -> Equal(xPrimeVar, xVar),
+      tla.eql(x, x).as(b) -> Equal(xVar, xVar),
+      tla.ite(p, p, q).as(b) -> ITE(pVar, pVar, qVar),
+      tla.funDef(x, x, set, y, intSet).as(fType) ->
+        FunDef(funName, List(("x", sSort), ("y", IntSort())), xVar),
+      tla.appFun(f, tla.tuple(x, y).as(fType.arg)).as(fType.res) ->
+        Apply(FunctionVar(funName, FunctionSort(sSort, sSort, IntSort())), xVar, mkVariable("y", IntSort())),
   )
 
-  test("QuantRule applicability") {
+  test("EUFRule applicability") {
     expected.keys.foreach { ex =>
       assert(rule.isApplicable(ex))
     }
@@ -62,7 +76,7 @@ class TestEUFRule extends AnyFunSuite {
     }
   }
 
-  test("QuantRule correctness") {
+  test("EUFRule correctness") {
     expected.foreach { case (k, expected) =>
       val actual = rule(k)
       assert(actual == expected)

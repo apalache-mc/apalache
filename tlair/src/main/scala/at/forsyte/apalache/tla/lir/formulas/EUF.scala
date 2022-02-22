@@ -17,7 +17,7 @@ object EUF {
   }
 
   sealed case class FunDef(name: String, args: List[(String, Sort)], body: Term) extends FnTerm {
-    val sort: FunctionSort = FunctionSort(body.sort, args map { _._2 }: _*)
+    val sort: FunctionSort = FunctionSort(body.sort, args.map { _._2 }: _*)
   }
   sealed case class FunctionVar(name: String, sort: FunctionSort) extends Variable(name) with FnTerm
   sealed case class Apply(fn: FnTerm, args: Term*) extends Term {

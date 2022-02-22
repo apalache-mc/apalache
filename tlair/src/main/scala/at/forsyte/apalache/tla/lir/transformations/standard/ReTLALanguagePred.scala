@@ -108,7 +108,6 @@ object ReTLALanguagePred {
         TlaBoolOper.equiv,
         TlaBoolOper.forall,
         TlaBoolOper.exists,
-        TlaFunOper.app,
         TlaFunOper.funDef,
         TlaControlOper.ifThenElse,
         // IntArith not in v1

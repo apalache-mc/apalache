@@ -2,21 +2,12 @@ package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
-import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.vmt.{
-  Init, Next, RewriterImpl, TermWriter, Trans, VMTWriter, ValueRule, mkVariable, nextName, renamePrimesForVMT,
-}
-import at.forsyte.apalache.tla.lir.formulas.Booleans._
-import at.forsyte.apalache.tla.lir.formulas.EUF._
-import at.forsyte.apalache.tla.lir.formulas.Term
-import at.forsyte.apalache.tla.lir.formulas.StandardSorts.UninterpretedSort
-import at.forsyte.apalache.tla.lir.{ConstT1, NameEx, SetT1, StrT1, TlaConstDecl, TlaEx, TlaModule, TlaVarDecl, Typed}
+import at.forsyte.apalache.tla.bmcmt.rules.vmt.VMTWriter
+import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule}
 import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, LanguageWatchdog}
 import at.forsyte.apalache.tla.pp.{NormalizedNames, UniqueNameGenerator}
 import com.google.inject.Inject
-import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
-import scalaz.Leibniz.subst
 
 /**
  * The reTLA to VMT transpilation pass
@@ -47,18 +38,12 @@ class ReTLAToVMTTranspilePassImpl @Inject() (val options: PassOptions, pred: Lan
     val nextTrans = getTransitionsWithNames(module, NormalizedNames.NEXT_PREFIX)
     val cinitP = getTransitionsWithNames(module, NormalizedNames.CONST_INIT)
     val vcInvs = getTransitionsWithNames(module, NormalizedNames.VC_INV_PREFIX)
-    // Disabled, for now
-//    val vcActionInvs = ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.VC_ACTION_INV_PREFIX)
-//    val vcNotActionInvs = ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.VC_NOT_ACTION_INV_PREFIX)
-//    val actionInvariantsAndNegations = vcActionInvs.zip(vcNotActionInvs)
-//    val vcTraceInvs = module.operDeclarations.filter(d => d.name.startsWith(NormalizedNames.VC_TRACE_INV_PREFIX))
-//    val vcNotTraceInvs = module.operDeclarations.filter(d => d.name.startsWith(NormalizedNames.VC_NOT_TRACE_INV_PREFIX))
-//    val traceInvariantsAndNegations = vcTraceInvs.zip(vcNotTraceInvs)
-//    val optView = module.operDeclarations.find(_.name == NormalizedNames.VC_VIEW).map(_.body)
+    val vcActionInvs = getTransitionsWithNames(module, NormalizedNames.VC_ACTION_INV_PREFIX)
 
     val vmtWriter = new VMTWriter(gen)
 
-    vmtWriter.annotateAndWrite(module.varDeclarations, module.constDeclarations, cinitP, initTrans, nextTrans, vcInvs)
+    vmtWriter.annotateAndWrite(module.varDeclarations, module.constDeclarations, cinitP, initTrans, nextTrans,
+        vcInvs ++ vcActionInvs)
 
     Some(module)
   }
