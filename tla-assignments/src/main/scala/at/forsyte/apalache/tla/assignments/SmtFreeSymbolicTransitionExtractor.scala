@@ -60,7 +60,7 @@ class SmtFreeSymbolicTransitionExtractor(
           if (s.isEmpty) None
           else {
             val locString = getLocString(childEx)
-            Some(s"$locString: Missing assignments to: ${s.mkString(",")}")
+            Some(s"$locString: Missing assignments to: ${s.mkString(", ")}")
           }
         }
 
