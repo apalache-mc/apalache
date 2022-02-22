@@ -266,7 +266,7 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
       binOp: (SymbState, ArenaCell) => SymbState): SymbState = {
     // propagate the result only if the element is below the length
     def applyOne(state: SymbState, elem: ArenaCell, indexBase1: Int) = {
-      // apply the operator, independently of whether we have reach the length or not (we don't know statically)
+      // apply the operator, whether we have reached the length or not (we don't know statically)
       var nextState = binOp(state, elem)
       val newResult = nextState.asCell
       // choose between the old result (if above the length) and the new result (if not above the length)
