@@ -220,8 +220,8 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val opsig = OperT1(Seq(a, a), BoolT1())
         val etcExpr = mkExRefApp(opsig, args)
         etcExpr.typeErrorExplanation = (expectedTypes: List[TlaType1], actualTypes: List[TlaType1]) => {
-          s"Arguments of equality should have the same type\nFor arguments ${args.mkString(", ")} with types ${actualTypes
-              .mkString(", ")}\nIn expression $ex"
+          Some(s"Arguments of equality should have the same type\nFor arguments ${args.mkString(", ")} with types ${actualTypes
+              .mkString(", ")}\nIn expression $ex")
         }
         etcExpr
 
@@ -232,8 +232,9 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
           expectedTypes match {
             case List(t @ OperT1(expectedArgumentTypes, _)) =>
               val argErrors = diffArgTypes(args.toList, expectedArgumentTypes.toList, actualTypes)
-              s"The operator $nameEx of type $t is applied to arguments of incompatible types in $ex:\n${argErrors.mkString("\n")}"
-            case _ => ""
+              Some(s"The operator $nameEx of type $t is applied to arguments of incompatible types in $ex:\n${argErrors
+                  .mkString("\n")}")
+            case _ => None
           }
         }
         etcExpr
@@ -456,7 +457,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         }
         val etcExpr = mkApp(ref, signatures, this(fun), this(arg))
         etcExpr.typeErrorExplanation = (expectedTypes: List[TlaType1], actualTypes: List[TlaType1]) =>
-          s"Cannot apply $fun to the argument $arg in $ex."
+          Some(s"Cannot apply $fun to the argument $arg in $ex.")
         etcExpr
 
       case OperEx(TlaFunOper.domain, fun) =>

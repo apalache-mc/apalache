@@ -138,7 +138,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
               s"Annotation required. Found ${signatures.length} matching operator signatures $sepSigs for $argOrArgs ${evalArgTypes
                   .mkString(" and ")}"
             val specificMessage = appEx.explain(signatures.toList, evalArgTypes)
-            onTypeError(appEx.sourceRef, if (specificMessage != "") specificMessage else defaultMessage)
+            onTypeError(appEx.sourceRef, if (specificMessage.isDefined) specificMessage.get else defaultMessage)
           }
         }
 
@@ -151,7 +151,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
             s"An operator with the signature $evalSig cannot be applied to the provided $argOrArgs of type ${evalArgTypes
                 .mkString(" and ")}"
           val specificMessage = appEx.explain(List(evalSig), evalArgTypes)
-          onTypeError(appEx.sourceRef, if (specificMessage != "") specificMessage else defaultMessage)
+          onTypeError(appEx.sourceRef, if (specificMessage.isDefined) specificMessage.get else defaultMessage)
         }
 
         // operVar = (arg_1, ..., arg_k) => resVar
@@ -168,7 +168,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
             s"An operator with the signature $evalSig cannot be applied to the provided $argOrArgs of type ${evalArgTypes
                 .mkString(" and ")}"
           val specificMessage = appEx.explain(List(evalSig), evalArgTypes)
-          onTypeError(appEx.sourceRef, if (specificMessage != "") specificMessage else defaultMessage)
+          onTypeError(appEx.sourceRef, if (specificMessage.isDefined) specificMessage.get else defaultMessage)
         }
 
         if (operTypes.length == 1) {

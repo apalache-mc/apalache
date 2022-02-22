@@ -21,7 +21,7 @@ sealed trait EtcExpr {
   /**
    * A function to explain type errors for this expression in case they occur.
    */
-  var typeErrorExplanation: (List[TlaType1], List[TlaType1]) => String = (_, _) => ""
+  var typeErrorExplanation: (List[TlaType1], List[TlaType1]) => Option[String] = (_, _) => None
 
   /**
    * Returns a type error explanation for the arguments of an expression
@@ -32,9 +32,9 @@ sealed trait EtcExpr {
    *   Actual types found for this expression (i.e. argument types)
    *
    * @return
-   *   A string with the error explanation
+   *   A string with the error explanation, if present
    */
-  def explain(expectedTypes: List[TlaType1], actualTypes: List[TlaType1]): String =
+  def explain(expectedTypes: List[TlaType1], actualTypes: List[TlaType1]): Option[String] =
     typeErrorExplanation(expectedTypes, actualTypes)
 }
 
