@@ -208,8 +208,8 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val pickedCell = newState.asCell
         val cond = tla.le(tla.int(dstIndexBase1), len.toNameEx as IntT1()) as BoolT1()
         val when0 = oracle.whenEqualTo(nextState, 0)
-        val ite = tla.ite(cond, when0, tla.not(when0) as BoolT1()) as BoolT1()
-        rewriter.solverContext.assertGroundExpr(ite)
+        val eql = tla.eql(cond, when0 as BoolT1()) as BoolT1()
+        rewriter.solverContext.assertGroundExpr(eql)
         (newState, pickedCell)
       }
     }
