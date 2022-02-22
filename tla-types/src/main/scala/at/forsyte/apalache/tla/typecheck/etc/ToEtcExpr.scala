@@ -219,9 +219,10 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val a = varPool.fresh
         val opsig = OperT1(Seq(a, a), BoolT1())
         val etcExpr = mkExRefApp(opsig, args)
+        val operation = if (op == TlaOper.eq) "equality" else "inequality"
         etcExpr.typeErrorExplanation = (expectedTypes: List[TlaType1], actualTypes: List[TlaType1]) => {
-          Some(s"Arguments of equality should have the same type\nFor arguments ${args.mkString(", ")} with types ${actualTypes
-              .mkString(", ")}\nIn expression $ex")
+          Some(s"Arguments of $operation should have the same type. For arguments ${args.mkString(", ")} with types ${actualTypes
+              .mkString(", ")}, in expression $ex")
         }
         etcExpr
 
