@@ -678,8 +678,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
     var nextState = state
     rewriter.solverContext.config.smtEncoding match {
       case `arraysEncoding` =>
-        // Create a fresh cell to hold the function
-        nextState = nextState.updateArena(_.appendCell(funType))
+        // We create an unconstrained SMT array that can be equated to the cells of funs for the oracle assertions
+        nextState = nextState.updateArena(_.appendCell(funType, isUnconstrained = true))
         val funCell = nextState.arena.topCell
 
         // Pick a function in funs and generate a SMT equality between it and funCell
@@ -786,8 +786,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
     val cdm = arena.getCdm(funSet) // this is a set of potential results, may be expanded, may be not.
     // TODO: take care of [S -> {}], what is the semantics of it?
     val funType = funT.asInstanceOf[FunT] // for now, only FunT is supported
-    // create the function cell
-    arena = arena.appendCell(funT)
+    // create the unconstrained function cell
+    arena = arena.appendCell(funT, isUnconstrained = true)
     val funCell = arena.topCell
     // create the relation cell
     arena = arena.appendCell(FinSetT(TupleT(Seq(funType.argType, funType.resultType))))

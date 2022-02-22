@@ -39,7 +39,9 @@ class FunCtorRuleWithArrays(rewriter: SymbStateRewriter) extends FunCtorRule(rew
     val (afterMapMapExState, rangeCells) = mapCells(nextState, mapEx, varName, setEx, domainCells)
     nextState = afterMapMapExState
 
-    nextState = nextState.updateArena(_.appendCell(funT)) // An unconstrained SMT array is used to encode the function
+    // A constant SMT array constrained to a default value is used to encode the function
+    // Constant arrays are used to allow for sound use of SMT equality of functions
+    nextState = nextState.updateArena(_.appendCell(funT))
     val funCell = nextState.arena.topCell
     nextState = nextState.updateArena(_.setDom(funCell, domainCell))
     // We construct a set of pairs and have it store the pairs <arg,res> produced
@@ -49,11 +51,12 @@ class FunCtorRuleWithArrays(rewriter: SymbStateRewriter) extends FunCtorRule(rew
     nextState = nextState.updateArena(_.setCdm(funCell, relation))
 
     def addCellCons(domElem: ArenaCell, rangeElem: ArenaCell): Unit = {
-      val inDomain = tla.apalacheSelectInSet(domElem.toNameEx, domainCell.toNameEx).typed(BoolT1())
-      val inRange = tla.apalacheSelectInFun(domElem.toNameEx, funCell.toNameEx).typed(BoolT1())
-      val eql = tla.eql(rangeElem.toNameEx, inRange).typed(BoolT1())
-      val impl = tla.impl(inDomain, eql).typed(BoolT1()) // Function updates are guarded by the inDomain predicate
-      rewriter.solverContext.assertGroundExpr(impl)
+      val inDomain = tla.apalacheSelectInFun(domElem.toNameEx, domainCell.toNameEx).typed(BoolT1())
+      val inRange = tla.apalacheStoreInFun(rangeElem.toNameEx, funCell.toNameEx, domElem.toNameEx).typed(BoolT1())
+      val notInRange = tla.apalacheStoreNotInFun(domElem.toNameEx, funCell.toNameEx).typed(BoolT1())
+      // Function updates are guarded by the inDomain predicate
+      val ite = tla.ite(inDomain, inRange, notInRange).typed(BoolT1())
+      rewriter.solverContext.assertGroundExpr(ite)
     }
 
     // Add SMT constraints

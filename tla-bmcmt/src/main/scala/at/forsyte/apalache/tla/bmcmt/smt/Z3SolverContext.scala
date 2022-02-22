@@ -89,11 +89,17 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     new mutable.HashMap[(Int, Int), (ExprSort, Int)]
 
   /**
-   * A cache for declarations of empty sets of different types. Used in the arrays encoding to avoid duplicate
+   * A cache for declarations of constant arrays of different types. Used in the arrays encoding to avoid duplicate
    * declarations.
    */
-  private val emptySetCache: mutable.Map[Sort, (Expr[Sort], Int)] =
+  private val constantArrayCache: mutable.Map[Sort, (Expr[Sort], Int)] =
     new mutable.HashMap[Sort, (ExprSort, Int)]
+
+  /**
+   * Caching the default value for each cell signature. For integers, the value 0.
+   */
+  private val cellDefaults: mutable.Map[String, (ExprSort, Int)] =
+    new mutable.HashMap[String, (ExprSort, Int)]
 
   /**
    * Sometimes, we lose a fresh arena in the rewriting rules. As this situation is very hard to debug, we are tracking
@@ -141,15 +147,14 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val const = z3context.mkConst(cellName, cellSort)
     cellCache += (cell.id -> List((const, cell.cellType, level)))
 
-    // If arrays are used to encode sets, they are initialized here to represent empty sets.
-    if (cellSort.isInstanceOf[ArraySort[Sort, BoolSort]] & !cell.cellType.isInstanceOf[FunT] & !cell.isUnconstrained) {
-      val arrayDomain = cellSort.asInstanceOf[ArraySort[Sort, Sort]].getDomain()
-      val arrayInitializer = emptySetCache.get(arrayDomain) match {
+    // If arrays are used, they are initialized here.
+    if (cellSort.isInstanceOf[ArraySort[Sort, Sort]] && !cell.isUnconstrained) {
+      val arrayInitializer = constantArrayCache.get(cellSort) match {
         case Some(emptySet) =>
           z3context.mkEq(const, emptySet._1)
         case None =>
-          emptySetCache += (arrayDomain -> (const, level))
-          z3context.mkEq(const, z3context.mkConstArray(arrayDomain, z3context.mkFalse()))
+          constantArrayCache += (cellSort -> (const, level))
+          z3context.mkEq(const, getOrMkCellDefaultValue(cellSort))
       }
 
       log(s"(assert $arrayInitializer)")
@@ -229,26 +234,19 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       .asInstanceOf[ExprSort]
   }
 
-  private def mkStore(arrayId: Int, elemId: Int, IndexId: Int = 1): ExprSort = {
+  private def mkStore(arrayId: Int, IndexId: Int, elemId: Int = 1): ExprSort = {
     val (array, arrayT, _) = cellCache(arrayId).head
-    val (elem, elemT, _) = cellCache(elemId).head
-    val (index, indexT, _) = cellCache(IndexId).head // Index 1 caches the value true
+    val (index, indexT, _) = cellCache(IndexId).head
+    val (elem, elemT, _) = cellCache(elemId).head // Id 1 caches the value true
+
+    val oldEntry = s"${arrayT.signature}$arrayId[${indexT.signature}$IndexId]"
+    val newEntry = s"${elemT.signature}$elemId"
+    log(s"s;; declare update of $oldEntry to $newEntry")
 
     val updatedArray = updateArrayConst(arrayId)
-    val store = IndexId match {
-      case 1 =>
-        // The array represents a set, since cell.id == 1 stands for true
-        val edgeName = s"in_${elemT.signature}${elemId}_${arrayT.signature}$arrayId"
-        log(s";; declare edge inclusion $edgeName")
-        z3context.mkStore(array.asInstanceOf[Expr[ArraySort[Sort, Sort]]], elem.asInstanceOf[Expr[Sort]],
-            z3context.mkTrue().asInstanceOf[Expr[Sort]])
-      case _ =>
-        // The array represents a function
-        val updateName = s"${arrayT.signature}$arrayId[${elemT.signature}$elemId] to ${indexT.signature}$IndexId"
-        log(s"s;; declare update of $updateName")
-        z3context.mkStore(array.asInstanceOf[Expr[ArraySort[Sort, Sort]]], index.asInstanceOf[Expr[Sort]],
-            elem.asInstanceOf[Expr[Sort]])
-    }
+    val store = z3context.mkStore(array.asInstanceOf[Expr[ArraySort[Sort, Sort]]], index.asInstanceOf[Expr[Sort]],
+        elem.asInstanceOf[Expr[Sort]])
+
     val eqStore = z3context.mkEq(updatedArray, store)
     eqStore.asInstanceOf[ExprSort]
   }
@@ -428,7 +426,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       cellCache.foreach(entry => cellCache += entry.copy(_2 = entry._2.filter(_._3 <= level)))
       cellCache.retain((_, value) => value.nonEmpty)
       inCache.retain((_, value) => value._2 <= level)
-      emptySetCache.retain((_, value) => value._2 <= level)
+      constantArrayCache.retain((_, value) => value._2 <= level)
+      cellDefaults.retain((_, value) => value._2 <= level)
     }
   }
 
@@ -445,7 +444,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       cellCache.foreach(entry => cellCache += entry.copy(_2 = entry._2.filter(_._3 <= level)))
       cellCache.retain((_, value) => value.nonEmpty)
       inCache.retain((_, value) => value._2 <= level)
-      emptySetCache.retain((_, value) => value._2 <= level)
+      constantArrayCache.retain((_, value) => value._2 <= level)
+      cellDefaults.retain((_, value) => value._2 <= level)
     }
   }
 
@@ -541,6 +541,28 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
       cellSorts += (sig -> (newSort, level))
       newSort
+    }
+  }
+
+  private def getOrMkCellDefaultValue(cellSort: Sort): ExprSort = {
+    val sig = "Cell_" + cellSort
+    val sort = cellDefaults.get(sig)
+    if (sort.isDefined) {
+      sort.get._1
+    } else {
+      val newDefault = cellSort match {
+        case _: BoolSort =>
+          z3context.mkFalse()
+        case _: IntSort =>
+          z3context.mkInt(0)
+        case arraySort: ArraySort[Sort, Sort] =>
+          z3context.mkConstArray(arraySort.getDomain, getOrMkCellDefaultValue(arraySort.getRange))
+        case _ =>
+          z3context.mkConst(sig, cellSort)
+      }
+
+      cellDefaults += (sig -> (newDefault.asInstanceOf[ExprSort], level))
+      newDefault.asInstanceOf[ExprSort]
     }
   }
 
@@ -689,7 +711,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
           case `arraysEncoding` =>
             val setId = ArenaCell.idFromName(setName)
             val elemId = ArenaCell.idFromName(elemName)
-            (mkStore(setId, elemId), 1)
+            (mkStore(setId, elemId), 1) // elem is the arg of the SMT store here, since the range is fixed for sets
           case `oopsla19Encoding` =>
             toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla19 encoding
           case oddEncodingType =>
@@ -701,9 +723,9 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
           case `arraysEncoding` =>
             // Updates a function for a given argument
             val funId = ArenaCell.idFromName(funName)
-            val elemId = ArenaCell.idFromName(elemName)
             val argId = ArenaCell.idFromName(argName)
-            (mkStore(funId, elemId, argId), 1)
+            val elemId = ArenaCell.idFromName(elemName)
+            (mkStore(funId, argId, elemId), 1)
           case oddEncodingType =>
             // Function updates via store constraints not happen in the oopsla19 encoding
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")

@@ -23,7 +23,8 @@ class FunExceptRuleWithArrays(rewriter: SymbStateRewriter) extends FunExceptRule
       indexCell: ArenaCell,
       valueCell: ArenaCell): SymbState = {
 
-    var nextState = state.updateArena(_.appendCell(funCell.cellType))
+    // We create an unconstrained SMT array that can be equated to funCell and updated
+    var nextState = state.updateArena(_.appendCell(funCell.cellType, isUnconstrained = true))
     val resultFunCell = nextState.arena.topCell
 
     // Propagate the function's domain
