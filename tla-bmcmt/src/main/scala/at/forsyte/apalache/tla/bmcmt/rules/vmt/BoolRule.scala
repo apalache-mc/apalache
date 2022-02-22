@@ -25,8 +25,8 @@ class BoolRule(rewriter: Rewriter) extends FormulaRule {
   // Assume isApplicable
   override def apply(ex: TlaEx): BoolExpr =
     ex match {
-      case OperEx(TlaBoolOper.and, args @ _*)    => And(args map rewriteAndCast: _*)
-      case OperEx(TlaBoolOper.or, args @ _*)     => Or(args map rewriteAndCast: _*)
+      case OperEx(TlaBoolOper.and, args @ _*)    => And(args.map(rewriteAndCast): _*)
+      case OperEx(TlaBoolOper.or, args @ _*)     => Or(args.map(rewriteAndCast): _*)
       case OperEx(TlaBoolOper.not, arg)          => Neg(rewriteAndCast(arg))
       case OperEx(TlaBoolOper.implies, lhs, rhs) => Impl(rewriteAndCast(lhs), rewriteAndCast(rhs))
       case OperEx(TlaBoolOper.equiv, lhs, rhs)   => Equiv(rewriteAndCast(lhs), rewriteAndCast(rhs))
