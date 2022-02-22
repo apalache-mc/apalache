@@ -4,28 +4,27 @@ import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.{BoolT1, TlaEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.formulas.Booleans._
-import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestBoolRule extends FunSuite {
+class TestBoolRule extends AnyFunSuite {
   val rewriter = RewriterImpl()
 
   val rule = new BoolRule(rewriter)
 
   val b = BoolT1()
 
-  val p = tla.name("p") as b
+  val p = tla.name("p").as(b)
   val pVar = BoolVar("p")
-  val q = tla.name("q") as b
+  val q = tla.name("q").as(b)
   val qVar = BoolVar("q")
 
   val expected: Map[TlaEx, BoolExpr] = Map(
-      (tla.and(p, q) as b) -> And(pVar, qVar),
-      (tla.not(p) as b) -> Neg(pVar),
-      (tla.or(tla.impl(p, q) as b, p) as b) -> Or(Impl(pVar, qVar), pVar),
+      (tla.and(p, q).as(b)) -> And(pVar, qVar),
+      (tla.not(p).as(b)) -> Neg(pVar),
+      (tla.or(tla.impl(p, q).as(b), p).as(b)) -> Or(Impl(pVar, qVar), pVar),
   )
 
   test("BoolRule applicability") {
@@ -44,7 +43,7 @@ class TestBoolRule extends FunSuite {
         tla.bool(true),
     )
 
-    notApp foreach { ex =>
+    notApp.foreach { ex =>
       assert(!rule.isApplicable(ex.untyped()))
     }
   }

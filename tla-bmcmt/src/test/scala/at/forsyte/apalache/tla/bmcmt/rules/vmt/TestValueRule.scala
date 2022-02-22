@@ -9,11 +9,11 @@ import at.forsyte.apalache.tla.lir.formulas.StandardSorts.UninterpretedSort
 import at.forsyte.apalache.tla.lir.formulas.{StandardSorts, Term}
 import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, IntT1, StrT1, TlaEx}
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestValueRule extends FunSuite {
+class TestValueRule extends AnyFunSuite {
 
   val rule = new ValueRule
 
@@ -22,22 +22,17 @@ class TestValueRule extends FunSuite {
   val aType = ConstT1("A")
   val bType = ConstT1("B")
 
-  val intEx1 = tla.int(1) as i
-  val intEx2 = tla.name("x") as i
-  val intEx3 = tla.plus(intEx1, intEx2) as i
+  val intEx1 = tla.int(1).as(i)
+  val intEx2 = tla.name("x").as(i)
+  val intEx3 = tla.plus(intEx1, intEx2).as(i)
 
-  val boolEx1 = tla.bool(true) as b
-  val boolEx2 = tla.name("p") as b
-  val boolEx3 = tla.and(boolEx1, boolEx2) as b
+  val boolEx1 = tla.bool(true).as(b)
+  val boolEx2 = tla.name("p").as(b)
+  val boolEx3 = tla.and(boolEx1, boolEx2).as(b)
 
-  val uninterpEx1 = tla.str("1_OF_A") as aType
-  val uninterpEx2 = tla.name("v") as bType
-  val uninterpEx3 = tla.str("string") as StrT1()
-
-  val utEx = {
-    import at.forsyte.apalache.tla.lir.UntypedPredefs._
-    tla.name("g").untyped()
-  }
+  val uninterpEx1 = tla.str("1_OF_A").as(aType)
+  val uninterpEx2 = tla.name("v").as(bType)
+  val uninterpEx3 = tla.str("string").as(StrT1())
 
   val expected: Map[TlaEx, Term] = Map(
       intEx1 -> IntLiteral(1),
@@ -47,7 +42,6 @@ class TestValueRule extends FunSuite {
       uninterpEx1 -> UninterpretedLiteral("1", UninterpretedSort("A")),
       uninterpEx2 -> UninterpretedVar("v", UninterpretedSort("B")),
       uninterpEx3 -> UninterpretedLiteral("string", UninterpretedSort(StrT1().toString)),
-      utEx -> UninterpretedVar("g", StandardSorts.UntypedSort()),
   )
 
   test("ValueRule applicability") {
@@ -66,7 +60,7 @@ class TestValueRule extends FunSuite {
         tla.forall(tla.name("x"), tla.name("S"), tla.name("p")),
     )
 
-    notApp foreach { ex =>
+    notApp.foreach { ex =>
       assert(!rule.isApplicable(ex.untyped()))
     }
   }

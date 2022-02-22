@@ -1,16 +1,15 @@
 package at.forsyte.apalache.tla.bmcmt.rules.vmt
 
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.formulas.EUF._
 import at.forsyte.apalache.tla.lir.formulas.Integers.{IntLiteral, IntVar}
 import at.forsyte.apalache.tla.lir.formulas.StandardSorts.{BoolSort, FunctionSort, IntSort, UninterpretedSort}
 import at.forsyte.apalache.tla.lir.formulas.Booleans._
-import at.forsyte.apalache.tla.lir.formulas._
 
 @RunWith(classOf[JUnitRunner])
-class TestTermConstruction extends FunSuite {
+class TestTermConstruction extends AnyFunSuite {
 
   val int1 = IntLiteral(1)
   val int2 = IntLiteral(2)

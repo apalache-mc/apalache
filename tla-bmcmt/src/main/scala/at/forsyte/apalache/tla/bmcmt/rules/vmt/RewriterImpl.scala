@@ -1,8 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.vmt
 import at.forsyte.apalache.tla.bmcmt.RewriterException
-import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.{Continue, NoRule}
 import at.forsyte.apalache.tla.lir.TlaEx
-import at.forsyte.apalache.tla.lir.formulas.{Sort, Term}
+import at.forsyte.apalache.tla.lir.formulas.Term
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 
 class RewriterImpl(constSets: ConstSetMapT, gen: UniqueNameGenerator) extends Rewriter {

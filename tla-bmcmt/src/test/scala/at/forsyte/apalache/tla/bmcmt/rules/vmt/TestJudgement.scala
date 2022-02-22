@@ -5,14 +5,14 @@ import at.forsyte.apalache.tla.lir.{NameEx, TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.formulas.{Sort, StandardSorts}
 import at.forsyte.apalache.tla.lir.values.{TlaRealSet, TlaStrSet}
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.formulas.StandardSorts.UninterpretedSort
 
 @RunWith(classOf[JUnitRunner])
-class TestJudgement extends FunSuite {
+class TestJudgement extends AnyFunSuite {
 
   def CustomSort(id: Int): UninterpretedSort = UninterpretedSort(s"S$id")
 
@@ -23,10 +23,10 @@ class TestJudgement extends FunSuite {
   )
 
   val allowed: Seq[TlaEx] = (Seq(
-      tla.intSet(),
-      tla.natSet(),
-      tla.booleanSet(),
-  ) map { _.untyped() }) ++ (constantMap.keys.toSeq.map { tla.name(_).untyped() })
+          tla.intSet(),
+          tla.natSet(),
+          tla.booleanSet(),
+      ).map { _.untyped() }) ++ (constantMap.keys.toSeq.map { tla.name(_).untyped() })
 
   val disallowed: Seq[TlaEx] = Seq(
       ValEx(TlaRealSet),
@@ -54,7 +54,7 @@ class TestJudgement extends FunSuite {
         tla.intSet().untyped() -> StandardSorts.IntSort(),
         tla.natSet().untyped() -> StandardSorts.IntSort(),
         tla.booleanSet().untyped() -> StandardSorts.BoolSort(),
-    ) ++ (constantMap map { case (k, v) => tla.name(k).untyped() -> v })
+    ) ++ (constantMap.map { case (k, v) => tla.name(k).untyped() -> v })
 
     allowed.foreach { ex =>
       assert(judgement.getSort(ex) == expected(ex))

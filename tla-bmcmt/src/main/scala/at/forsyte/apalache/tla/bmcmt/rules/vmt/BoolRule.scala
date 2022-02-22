@@ -5,6 +5,12 @@ import at.forsyte.apalache.tla.lir.formulas.StandardSorts.BoolSort
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 
+/**
+ * BoolRule defines translations for reTLA patterns, which use operators from propositional logic.
+ *
+ * @author
+ *   Jure Kukovec
+ */
 class BoolRule(rewriter: Rewriter) extends FormulaRule {
   override def isApplicable(ex: TlaEx): Boolean =
     ex match {

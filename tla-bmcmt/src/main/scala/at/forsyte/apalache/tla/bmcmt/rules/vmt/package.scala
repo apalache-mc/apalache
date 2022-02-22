@@ -10,7 +10,9 @@ import at.forsyte.apalache.tla.lir.formulas.StandardSorts._
 package object vmt {
   type ConstSetMapT = Map[String, UninterpretedSort]
 
-  def renamePrimesForVMT(unprimedNameEx: NameEx): NameEx = NameEx(s"${unprimedNameEx.name}^")(unprimedNameEx.typeTag)
+  def VMTprimeName(s: String) = s"$s^"
+  def renamePrimesForVMT(unprimedNameEx: NameEx): NameEx =
+    NameEx(VMTprimeName(unprimedNameEx.name))(unprimedNameEx.typeTag)
   def nextName(name: String): String = s".$name"
 
   def mkVariable(name: String, sort: Sort): Variable = sort match {

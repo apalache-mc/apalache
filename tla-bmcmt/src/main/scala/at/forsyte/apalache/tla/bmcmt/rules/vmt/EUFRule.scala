@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.vmt
 
 import at.forsyte.apalache.tla.bmcmt.RewriterException
-import at.forsyte.apalache.tla.lir.formulas.Booleans.{And, BoolExpr, False, True}
+import at.forsyte.apalache.tla.lir.formulas.Booleans.{And, BoolExpr, True}
 import at.forsyte.apalache.tla.lir.formulas.EUF.{Apply, Equal, FunDef, FunctionVar, ITE}
 import at.forsyte.apalache.tla.lir.formulas.StandardSorts.{BoolSort, FunctionSort}
 import at.forsyte.apalache.tla.lir.formulas.{FnTerm, Sort, Term}
@@ -9,6 +9,13 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaControlOper, TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 
+/**
+ * BoolRule defines translations for reTLA patterns, which encode equality, introduce values defined by if-then else, or
+ * define, apply or update functions.
+ *
+ * @author
+ *   Jure Kukovec
+ */
 class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement, gen: UniqueNameGenerator)
     extends FormulaRule {
 
@@ -28,8 +35,10 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
       case _                => false
     }
 
+  // Only restricted sets are allowed as function domains
   private def isRestrictedSet(ex: TlaEx) = restrictedSetJudgement.isRestrictedSet(ex)
 
+  // Rewriter doesn't know it's producing terms with function sorts, so they have to be cast
   private def castToFun(ex: TlaEx): FnTerm = {
     def castEval: Sort => Boolean = {
       case _: FunctionSort => true
@@ -56,17 +65,23 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
    *   the term `ef`
    * @return
    */
-  private def exceptAsNewFunDef(fnArgTerms: List[Term], newCaseTerm: Term)(args: List[(String, Sort)],
+  private def exceptAsNewFunDef(
+      fnArgTerms: List[Term],
+      newCaseTerm: Term,
+    )(args: List[(String, Sort)],
       baseCaseTerm: Term): FunDef = {
     // sanity check
     assert(args.length == fnArgTerms.length)
 
-    val matchConds = args.zip(fnArgTerms) map { case ((name, sort), term) =>
+    // Except redefines at a point <<x1, ..., xn>>. We decompose <<y1,...,yn>> = <<x,...xn>>
+    // into y1 = x1 /\ ... /\ yn = xn
+    val matchConds = args.zip(fnArgTerms).map { case ((name, sort), term) =>
       Equal(mkVariable(name, sort), term)
     }
 
+    // We could use a generic And-wrapper, but it's more convenient to handle nullary and unary cases separately
     val ifCondition = matchConds match {
-      case Nil      => True // Should never happen
+      case Nil      => True // Should never happen, included for case-completeness
       case h :: Nil => h
       case _        => And(matchConds: _*)
     }
@@ -80,17 +95,20 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
       case OperEx(TlaOper.eq | ApalacheOper.assign, lhs, rhs) =>
         // := is just = in VMT
         Equal(rewriter.rewrite(lhs), rewriter.rewrite(rhs))
+      // TODO: implement support for nullary LET-IN and TlaOper.apply
       case OperEx(TlaOper.apply, fn, args @ _*) =>
         throw new RewriterException(s"Not implemented yet", ex)
       case OperEx(TlaControlOper.ifThenElse, ifEx, thenEx, elseEx) =>
+        // IfEx must be boolean, so we need a cast
         val castIfEx = TermAndSortCaster.rewriteAndCast[BoolExpr](rewriter, BoolSort())(ifEx)
         ITE(castIfEx, rewriter.rewrite(thenEx), rewriter.rewrite(elseEx))
 
       case OperEx(TlaFunOper.funDef, e, varsAndSets @ _*)
-          if TlaOper.deinterleave(varsAndSets)._2 forall isRestrictedSet =>
+          // All domain-defining sets must be restricted.
+          if TlaOper.deinterleave(varsAndSets)._2.forall(isRestrictedSet) =>
         val (vars, sets) = TlaOper.deinterleave(varsAndSets)
-        val setSorts = sets map restrictedSetJudgement.getSort
-        val argList = vars.zip(setSorts).toList map { case (NameEx(name), sort) =>
+        val setSorts = sets.map(restrictedSetJudgement.getSort)
+        val argList = vars.zip(setSorts).toList.map { case (NameEx(name), sort) =>
           (name, sort)
         }
         FunDef(gen.newName(), argList, rewriter.rewrite(e))
@@ -103,7 +121,7 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
         val fnArgTerms = arg match {
           // ![a,b,...] case
           case OperEx(TlaFunOper.tuple, OperEx(TlaFunOper.tuple, args @ _*)) =>
-            args.toList map rewriter.rewrite
+            args.toList.map(rewriter.rewrite)
           // ![a] case
           case OperEx(TlaFunOper.tuple, arg) =>
             List(rewriter.rewrite(arg))
@@ -112,12 +130,15 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
         val exceptTermFn = exceptAsNewFunDef(fnArgTerms, valTerm) _
 
         // Assume fnArgTerms nonempty
+        // We have two scenarios: the original function is either defined, or symbolic
+        // If it is defined, then we have a rule and arguments, which we can just reuse
+        // If it is symbolic, we need to invent new variable names and apply it.
         castToFun(fn) match {
           case FunDef(_, args, oldFnBody) =>
             exceptTermFn(args, oldFnBody)
           case fVar @ FunctionVar(_, FunctionSort(_, from @ _*)) =>
-            val fnArgPairs = from.toList map { sort => (gen.newName(), sort) }
-            val appArgs = fnArgPairs map { case (varName, varSort) =>
+            val fnArgPairs = from.toList.map { sort => (gen.newName(), sort) }
+            val appArgs = fnArgPairs.map { case (varName, varSort) =>
               mkVariable(varName, varSort)
             }
             exceptTermFn(fnArgPairs, Apply(fVar, appArgs: _*))

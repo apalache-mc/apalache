@@ -7,11 +7,11 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.formulas.Booleans._
 import at.forsyte.apalache.tla.lir.formulas.StandardSorts.{IntSort, UninterpretedSort}
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestQuantRule extends FunSuite {
+class TestQuantRule extends AnyFunSuite {
 
   val sType = ConstT1("SSORT")
   val sSort = UninterpretedSort("SSORT")
@@ -24,19 +24,19 @@ class TestQuantRule extends FunSuite {
 
   val b = BoolT1()
 
-  val p = tla.name("p") as b
+  val p = tla.name("p").as(b)
   val pVar = BoolVar("p")
-  val q = tla.name("q") as b
+  val q = tla.name("q").as(b)
   val qVar = BoolVar("q")
 
-  val x = tla.name("x") as sType
-  val y = tla.name("y") as IntT1()
-  val set = tla.name("S") as SetT1(sType)
-  val intSet = tla.intSet() as SetT1(IntT1())
+  val x = tla.name("x").as(sType)
+  val y = tla.name("y").as(IntT1())
+  val set = tla.name("S").as(SetT1(sType))
+  val intSet = tla.intSet().as(SetT1(IntT1()))
 
   val expected: Map[TlaEx, BoolExpr] = Map(
-      (tla.exists(x, set, p) as b) -> Exists("x", sSort, pVar),
-      (tla.forall(y, intSet, q) as b) -> Forall("y", IntSort(), qVar),
+      (tla.exists(x, set, p).as(b)) -> Exists("x", sSort, pVar),
+      (tla.forall(y, intSet, q).as(b)) -> Forall("y", IntSort(), qVar),
   )
 
   test("QuantRule applicability") {
@@ -46,7 +46,7 @@ class TestQuantRule extends FunSuite {
 
     assertThrows[RewriterException] {
       val tType = ConstT1("TSORT")
-      rule(tla.exists(tla.name("t") as tType, tla.name("T") as tType, p) as b)
+      rule(tla.exists(tla.name("t").as(tType), tla.name("T").as(tType), p).as(b))
     }
 
     import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -60,7 +60,7 @@ class TestQuantRule extends FunSuite {
         tla.bool(true),
     )
 
-    notApp foreach { ex =>
+    notApp.foreach { ex =>
       assert(!rule.isApplicable(ex.untyped()))
     }
   }
