@@ -10855,7 +10855,7 @@ otherwise</li>
 </ol>
 <h1><a class="header" href="#adr-011-alternative-smt-encoding-using-arrays" id="adr-011-alternative-smt-encoding-using-arrays">ADR-011: alternative SMT encoding using arrays</a></h1>
 <table><thead><tr><th>author</th><th align="right">revision</th></tr></thead><tbody>
-<tr><td>Rodrigo Otoni</td><td align="right">1.5</td></tr>
+<tr><td>Rodrigo Otoni</td><td align="right">1.6</td></tr>
 </tbody></table>
 <p>This ADR describes an alternative encoding of the <a href="https://apalache.informal.systems/docs/apalache/kera.html">KerA+</a> fragment of TLA+ into SMT.
 Compound data structures, e.g. sets, are currently encoded using the <a href="http://smtlib.cs.uiowa.edu/theories-Core.shtml">core theory</a> of SMT,
@@ -11099,9 +11099,32 @@ to a significant increase in solving performance.</p>
 <p>The following changes will be made to implement the new encoding of functions:</p>
 <ul>
 <li>Add alternative rewriting rules for functions when appropriate, by extending the existing rules. The
-same caveats stated for the rewriting rules for sets will apply here.</li>
+same caveats stated for the rewriting rules for sets will apply here.
+<ul>
+<li>The sets of pairs used in the current encoding are the basis for the counter-example generation in
+<code>SymbStateDecoder</code>. In order to continue having counter-examples, these sets will keep being produced,
+but will not be present in the SMT constraints. They will be carried only as metadata in the <code>Arena</code>.</li>
+</ul>
+</li>
 <li>Update class <code>SymbStateRewriterImplWithArrays</code> with the rules for functions.</li>
-<li>Update class <code>Z3SolverContext</code> to handle the new SMT constraints over arrays.</li>
+<li>Update the <code>storeInSet</code> IR operator to also store function updates. It will have the value resulting
+from the update as an optional argument.
+<ul>
+<li>Since functions will be encoded as SMT arrays, the <code>selectInSet</code>, <code>storeInSet</code>, and <code>unchangedSet</code>
+IR operators will be used when handling them. A future refactoring may rename these operators.</li>
+</ul>
+</li>
+<li>Update class <code>Z3SolverContext</code> to handle the new SMT constraints over arrays.
+<ul>
+<li>A case for <code>FunT</code> will be added to <code>getOrMkCellSort</code>.</li>
+<li>In <code>declareCell</code>, functions will be declared as arrays, but will be left unconstrained.</li>
+<li>The <code>mkStore</code> method will be updated to also handle functions. It will have an additional
+optional argument containing the value to be stored in the range of the array. The new
+argument's default value is <code>true</code>, for the handling of sets.</li>
+<li>The <code>mkNestedSelect</code> method is added to support set membership in function sets, i.e.,
+<code>f \in [S -&gt; T]</code>. The nesting has first <code>funAppRes = f[s \in S]</code>, followed by <code>funAppRes \in T</code>.</li>
+</ul>
+</li>
 </ul>
 <h2><a class="header" href="#5-encoding-tuples-and-records" id="5-encoding-tuples-and-records">5. Encoding tuples and records</a></h2>
 <p>TODO</p>
