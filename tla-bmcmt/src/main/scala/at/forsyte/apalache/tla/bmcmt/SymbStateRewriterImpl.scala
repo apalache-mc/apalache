@@ -313,8 +313,9 @@ class SymbStateRewriterImpl(
         if (substRule.isApplicable(state)) {
           statListener.enterRule(substRule.getClass.getSimpleName)
           // a variable that can be substituted with a cell
-          var nextState = substRule.apply(substRule.logOnEntry(solverContext, state))
-          nextState = substRule.logOnReturn(solverContext, nextState)
+          substRule.logOnEntry(solverContext, state)
+          val nextState = substRule.apply(state)
+          substRule.logOnReturn(solverContext, nextState)
           if (nextState.arena.cellCount < state.arena.cellCount) {
             throw new RewriterException("Implementation error: the number of cells decreased from %d to %d"
                   .format(state.arena.cellCount, nextState.arena.cellCount), state.ex)
@@ -333,7 +334,9 @@ class SymbStateRewriterImpl(
         potentialRules.find(r => r.isApplicable(state)) match {
           case Some(r) =>
             statListener.enterRule(r.getClass.getSimpleName)
-            val nextState = r.logOnReturn(solverContext, r.apply(r.logOnEntry(solverContext, state)))
+            r.logOnEntry(solverContext, state)
+            val nextState = r.apply(state)
+            r.logOnReturn(solverContext, nextState)
             if (nextState.arena.cellCount < state.arena.cellCount) {
               throw new RewriterException("Implementation error in rule %s: the number of cells decreased from %d to %d"
                     .format(r.getClass.getSimpleName, state.arena.cellCount, nextState.arena.cellCount), state.ex)
