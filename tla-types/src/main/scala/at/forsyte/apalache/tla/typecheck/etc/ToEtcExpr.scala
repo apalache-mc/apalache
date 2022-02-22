@@ -197,9 +197,10 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
       mkApp(ref, Seq(sig), args.map(this(_)): _*)
     }
 
+    // Utility function to prepare error messages for non-matching argument types
     def diffArgTypes(args: List[TlaEx], expectedTypes: List[TlaType1], actualTypes: List[TlaType1]): List[String] = {
-      val illTypedArguments = args.zip(expectedTypes).zip(actualTypes).collect { 
-        case ((arg, expectedType), argType) if expectedType != argType => 
+      args.zip(expectedTypes).zip(actualTypes).collect {
+        case ((arg, expectedType), argType) if expectedType != argType =>
           s"Argument $arg should have type $expectedType but has type $argType."
       }
     }
@@ -229,7 +230,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val etcExpr = mkAppByName(ref, mkName(nameEx), args.map(this(_)): _*)
         etcExpr.typeErrorExplanation = (expectedTypes: List[TlaType1], actualTypes: List[TlaType1]) => {
           expectedTypes match {
-            case List(t@OperT1(expectedArgumentTypes, _)) =>
+            case List(t @ OperT1(expectedArgumentTypes, _)) =>
               val argErrors = diffArgTypes(args.toList, expectedArgumentTypes.toList, actualTypes)
               s"The operator $nameEx of type $t is applied to arguments of incompatible types in $ex:\n${argErrors.mkString("\n")}"
             case _ => ""

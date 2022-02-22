@@ -148,7 +148,8 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
           val argOrArgs = pluralArgs(argTypes.length)
           val evalSig = sub.subRec(operVar)
           val defaultMessage =
-            s"An operator with the signature $evalSig cannot be applied to the provided $argOrArgs of type ${evalArgTypes.mkString(" and ")}"
+            s"An operator with the signature $evalSig cannot be applied to the provided $argOrArgs of type ${evalArgTypes
+                .mkString(" and ")}"
           val specificMessage = appEx.explain(List(evalSig), evalArgTypes)
           onTypeError(appEx.sourceRef, if (specificMessage != "") specificMessage else defaultMessage)
         }
@@ -164,7 +165,8 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
           val argOrArgs = pluralArgs(argTypes.length)
           val evalSig = sigs.head
           val defaultMessage =
-            s"An operator with the signature $evalSig cannot be applied to the provided $argOrArgs of type ${evalArgTypes.mkString(" and ")}"
+            s"An operator with the signature $evalSig cannot be applied to the provided $argOrArgs of type ${evalArgTypes
+                .mkString(" and ")}"
           val specificMessage = appEx.explain(List(evalSig), evalArgTypes)
           onTypeError(appEx.sourceRef, if (specificMessage != "") specificMessage else defaultMessage)
         }
