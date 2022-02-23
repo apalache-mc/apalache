@@ -22,21 +22,22 @@ class TestIncrementalRenamingScalacheck extends AnyFunSuite with BeforeAndAfter 
     }
 
     val prop = {
-      val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators ++ gens.functionOperators
+      val ops =
+        (gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators ++ gens.functionOperators).filterNot(op =>
+          // map, funDef, recFunDef cause lots of malformed expressions, exclude them
+          op match {
+            case TlaSetOper.map | TlaFunOper.funDef | TlaFunOper.recFunDef => true
+            case _                                                         => false
+          })
       val exGen = gens.genTlaEx(ops)(_)
       forAll(gens.genTlaModule(exGen)) { input =>
-        try {
-          val output = new IncrementalRenaming(new IdleTracker()).renameInModule(input)
-          val multiset = output.operDeclarations.foldLeft(emptyCounters) { case (set, d) =>
-            set ++ collectDefined(d.body)
-          }
-          multiset.find { case (_, i) => i > 1 } match {
-            case None            => passed
-            case Some((name, n)) => falsified :| s"Name $name is defined $n times"
-          }
-        } catch {
-          // the generator has produced a malformed expression
-          case _: MalformedTlaError => passed
+        val output = new IncrementalRenaming(new IdleTracker()).renameInModule(input)
+        val multiset = output.operDeclarations.foldLeft(emptyCounters) { case (set, d) =>
+          set ++ collectDefined(d.body)
+        }
+        multiset.find { case (_, i) => i > 1 } match {
+          case None            => passed
+          case Some((name, n)) => falsified :| s"Name $name is defined $n times"
         }
       }
     }
