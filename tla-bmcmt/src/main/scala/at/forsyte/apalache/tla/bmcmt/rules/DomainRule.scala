@@ -53,13 +53,13 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
     }
   }
 
-  private def mkTupleDomain(state: SymbState, funCell: ArenaCell): SymbState = {
+  protected def mkTupleDomain(state: SymbState, funCell: ArenaCell): SymbState = {
     val tupleT = funCell.cellType.asInstanceOf[TupleT]
     val (newArena, dom) = intRangeCache.create(state.arena, (1, tupleT.args.size))
     state.setArena(newArena).setRex(dom.toNameEx)
   }
 
-  private def mkSeqDomain(state: SymbState, seqCell: ArenaCell): SymbState = {
+  protected def mkSeqDomain(state: SymbState, seqCell: ArenaCell): SymbState = {
     // as we do not know the domain precisely, we create the set 1..N and include only its elements between start and end
     val seqT = seqCell.cellType.asInstanceOf[SeqT]
     val start :: end +: elems = state.arena.getHas(seqCell)
