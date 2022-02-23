@@ -1847,6 +1847,16 @@ $ apalache-mc check --length=0 --inv=AllTests TestSets.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check TestHash2.tla reports no error
+
+A regression test for using `--cinit` and hashes.
+
+```sh
+$ apalache-mc check --inv=Inv --cinit=ConstInit TestHash2.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
 
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
