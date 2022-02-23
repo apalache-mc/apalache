@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 
 /**
- * BoolRule defines translations for reTLA patterns, which use operators from propositional logic.
+ * BoolRule defines translations for reTLA patterns which use operators from propositional logic.
  *
  * @author
  *   Jure Kukovec

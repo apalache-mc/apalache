@@ -10,7 +10,7 @@ import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaControlOper, TlaFunOpe
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 
 /**
- * EUFRule defines translations for reTLA patterns, which encode equality, introduce values defined by if-then else, or
+ * EUFRule defines translations for reTLA patterns which encode equality, introduce values defined by if-then else, or
  * define, apply or update functions.
  *
  * @author

@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.pp.passes
 
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.io.lir.TlaWriterFactory
-//import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.storage.BodyMap
 import at.forsyte.apalache.tla.lir.transformations._
 import at.forsyte.apalache.tla.pp._
