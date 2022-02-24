@@ -55,10 +55,7 @@ fmt-check:
 		  exit 1 )
 
 fmt-fix:
-	sbt scalafmtAll scalafmtSbt
-
-fmt-fix-unused:
-	sbt "scalafix RemoveUnused"
+	sbt "scalafix RemoveUnused" scalafmtAll scalafmtSbt
 
 clean:
 	sbt clean
