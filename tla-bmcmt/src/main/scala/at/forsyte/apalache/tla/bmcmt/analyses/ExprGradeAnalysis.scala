@@ -76,8 +76,7 @@ class ExprGradeAnalysis @Inject() (val store: ExprGradeStoreImpl) {
    */
   def refineOrInExpr(expr: TlaEx): TlaEx = {
     expr match {
-      case OperEx(TlaBoolOper.or, args @ _*) =>
-        args.map(refineOrInExpr)
+      case OperEx(TlaBoolOper.or, _*) =>
         store.get(expr.ID) match {
           case Some(ExprGrade.Constant) | Some(ExprGrade.StateFree) | Some(ExprGrade.StateBound) =>
             expr // keep it

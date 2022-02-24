@@ -374,8 +374,6 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
    *   the name of the new function (declared in SMT)
    */
   def declareCellFun(cellName: String, argType: CellT, resultType: CellT): Unit = {
-    argType.signature
-    resultType.signature
     val funName = s"fun$cellName"
     if (funDecls.contains(funName)) {
       val msg = s"SMT $id: Declaring twice the function associated with cell $cellName"

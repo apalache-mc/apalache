@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaBool
@@ -15,8 +14,6 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
  *   Igor Konnov
  */
 class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  new ConstSimplifierForSmt()
-
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaArithOper.lt, _, _) | OperEx(TlaArithOper.le, _, _) | OperEx(TlaArithOper.gt, _, _) |
