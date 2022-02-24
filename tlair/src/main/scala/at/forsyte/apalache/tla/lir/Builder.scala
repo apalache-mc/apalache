@@ -149,6 +149,14 @@ class Builder {
   def booleanSet(): BuilderVal = BuilderVal(TlaBoolSet)
 
   /**
+   * The set STRING of all strings.
+   *
+   * @return
+   *   the value expression that corresponds to STRING.
+   */
+  def stringSet(): BuilderVal = BuilderVal(TlaStrSet)
+
+  /**
    * The set Int of all integers.
    *
    * @return

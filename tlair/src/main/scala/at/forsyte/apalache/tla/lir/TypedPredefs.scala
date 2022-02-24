@@ -187,6 +187,9 @@ object TypedPredefs {
         case BuilderVal(TlaRealSet) =>
           ValEx(TlaRealSet)(Typed(SetT1(RealT1())))
 
+        case BuilderVal(TlaStrSet) =>
+          ValEx(TlaStrSet)(Typed(SetT1(StrT1())))
+
         case BuilderVal(v) =>
           throw new BuilderError("Unexpected value: " + v)
       }
