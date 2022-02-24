@@ -13,7 +13,7 @@ object DefaultTagReader extends TypeTagReader {
         try {
           Typed(DefaultType1Parser(tagStr))
         } catch {
-          case e: Type1ParseError =>
+          case _: Type1ParseError =>
             throw new JsonDeserializationError(
                 s"Error in type annotation: Expected Type1 expression or 'Untyped', found: $s"
             )

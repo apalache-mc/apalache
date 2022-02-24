@@ -10,7 +10,6 @@ import at.forsyte.apalache.tla.lir.transformations.standard.ModuleByExTransforme
 import at.forsyte.apalache.tla.lir.{TlaModule, TlaOperDecl, ModuleProperty}
 import at.forsyte.apalache.tla.pp._
 import com.google.inject.Inject
-import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
 /**

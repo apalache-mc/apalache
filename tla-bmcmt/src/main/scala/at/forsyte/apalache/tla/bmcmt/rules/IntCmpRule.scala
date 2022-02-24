@@ -15,7 +15,7 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
  *   Igor Konnov
  */
 class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val simplifier = new ConstSimplifierForSmt()
+  new ConstSimplifierForSmt()
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -40,7 +40,7 @@ class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   private def rewriteGeneral(state: SymbState, ex: TlaEx) = ex match {
-    case ValEx(TlaBool(value)) =>
+    case ValEx(TlaBool(_)) =>
       // keep the simplified expression
       rewriter.rewriteUntilDone(state.setRex(ex))
 

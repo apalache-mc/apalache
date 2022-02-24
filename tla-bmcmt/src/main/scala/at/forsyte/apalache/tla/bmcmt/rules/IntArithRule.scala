@@ -17,7 +17,7 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
  */
 class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val intConstRule: IntConstRule = new IntConstRule(rewriter)
-  private val simplifier = new ConstSimplifierForSmt()
+  new ConstSimplifierForSmt()
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {

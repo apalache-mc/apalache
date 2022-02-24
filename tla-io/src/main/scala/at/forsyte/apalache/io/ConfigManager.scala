@@ -4,8 +4,6 @@ import pureconfig._
 import pureconfig.generic.auto._
 import java.io.{File}
 import java.nio.file.{Path, Files, Paths}
-import com.typesafe.config.ConfigValueFactory
-import com.typesafe.config.ConfigObject
 
 // Provides implicit conversions used when deserializing into configurable values.
 private object Converters {

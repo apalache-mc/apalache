@@ -2,7 +2,7 @@ package at.forsyte.apalache.io
 
 import com.typesafe.scalalogging.LazyLogging
 
-import java.io.{File, FileInputStream, FileWriter, PrintWriter}
+import java.io.{File, FileWriter, PrintWriter}
 import java.nio.file.{Files, Path, Paths}
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter

@@ -91,7 +91,7 @@ class AnnotationParser extends Parsers {
 }
 
 object AnnotationParser {
-  private val parser: AnnotationParser = new AnnotationParser
+  new AnnotationParser
 
   def parse(reader: Reader): Either[String, Annotation] = {
     for {

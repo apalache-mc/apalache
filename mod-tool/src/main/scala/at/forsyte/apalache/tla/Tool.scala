@@ -3,12 +3,11 @@ package at.forsyte.apalache.tla
 // Generated from the build.sbt file by the buildInfo plugin
 import apalache.BuildInfo
 
-import java.io.{File, FileNotFoundException, FileWriter, PrintWriter}
-import java.nio.file.Path
+import java.io.{File, FileNotFoundException}
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import at.forsyte.apalache.infra.log.LogbackConfigurator
-import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor, PassOptions, WriteablePassOptions, ToolModule}
+import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor, WriteablePassOptions, ToolModule}
 import at.forsyte.apalache.tla.lir.{TlaModule}
 import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorMessage, PassOptionException}
 import at.forsyte.apalache.io.{OutputManager, ReportGenerator}
@@ -23,7 +22,7 @@ import com.google.inject.{Guice, Injector}
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.configuration2.builder.fluent.Configurations
 import org.apache.commons.configuration2.ex.ConfigurationException
-import org.backuity.clist.{Cli, Command}
+import org.backuity.clist.Cli
 import util.ExecutionStatisticsCollector
 import util.ExecutionStatisticsCollector.Selection
 

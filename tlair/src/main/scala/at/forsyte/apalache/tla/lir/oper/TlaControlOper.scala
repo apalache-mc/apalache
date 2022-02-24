@@ -1,7 +1,5 @@
 package at.forsyte.apalache.tla.lir.oper
 
-import at.forsyte.apalache.tla.lir.TlaOperDecl
-
 /**
  * A control-flow operator.
  */

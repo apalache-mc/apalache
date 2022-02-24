@@ -9,8 +9,7 @@ import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, TransformationTracker}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import com.google.inject.{AbstractModule, TypeLiteral}
-import com.google.inject.name.Names
+import com.google.inject.TypeLiteral
 
 class TypeCheckerModule extends ToolModule {
 

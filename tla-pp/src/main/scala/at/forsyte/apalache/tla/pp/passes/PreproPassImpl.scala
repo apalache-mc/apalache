@@ -2,17 +2,13 @@ package at.forsyte.apalache.tla.pp.passes
 
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
-import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
+import at.forsyte.apalache.io.lir.TlaWriterFactory
+import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.standard._
-import at.forsyte.apalache.tla.lir.transformations.{
-  PredResultFail, PredResultOk, TlaModuleTransformation, TransformationTracker,
-}
-import at.forsyte.apalache.tla.lir.{TlaDecl, TlaModule, TlaOperDecl, UID, ModuleProperty}
+import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.{TlaModule, ModuleProperty}
 import at.forsyte.apalache.tla.pp.{Desugarer, Keramelizer, Normalizer, UniqueNameGenerator}
 import com.google.inject.Inject
-import com.google.inject.name.Named
-import com.typesafe.scalalogging.LazyLogging
 
 /**
  * A preprocessing pass that simplifies TLA+ expression by running multiple transformation.

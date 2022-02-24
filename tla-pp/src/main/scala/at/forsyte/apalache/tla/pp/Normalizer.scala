@@ -242,7 +242,7 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
       case OperEx(TlaBoolOper.not, OperEx(TlaOper.apply, NameEx(name))) if tlaEx.typeTag == Typed(toBoolT) =>
         Set(name)
 
-      case OperEx(op, args @ _*) =>
+      case OperEx(_, args @ _*) =>
         args.map(negAppearingOpers).foldLeft(Set.empty[String]) {
           _ ++ _
         }

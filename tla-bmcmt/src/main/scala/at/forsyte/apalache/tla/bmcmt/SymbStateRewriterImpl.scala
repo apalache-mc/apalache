@@ -309,7 +309,7 @@ class SymbStateRewriterImpl(
       case NameEx(name) if ArenaCell.isValidName(name) =>
         Done(state)
 
-      case NameEx(name) =>
+      case NameEx(_) =>
         if (substRule.isApplicable(state)) {
           statListener.enterRule(substRule.getClass.getSimpleName)
           // a variable that can be substituted with a cell

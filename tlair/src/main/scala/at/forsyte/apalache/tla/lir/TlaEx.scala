@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.io.UTFPrinter
-import at.forsyte.apalache.tla.lir.oper.{FixedArity, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.TlaOper
 
 /**
  * An abstract TLA+ expression. Note that the class is sealed, so we allow only a limited set of values. Importantly,

@@ -68,7 +68,7 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
    */
   private def replaceWithDefaults(defaultsMap: Map[String, TlaEx]): TlaExTransformation = tracker.trackEx {
     // We need to check the base name, because the names of recursive operators defined with LET get changed
-    case ex @ OperEx(TlaOper.apply, NameEx(name), _*) if defaultsMap.contains(IncrementalRenaming.getBase(name)) =>
+    case OperEx(TlaOper.apply, NameEx(name), _*) if defaultsMap.contains(IncrementalRenaming.getBase(name)) =>
       // Get the default body, ignore the args
       defaultsMap(IncrementalRenaming.getBase(name))
     // recursive processing of composite operators and let-in definitions

@@ -341,7 +341,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   private def initLog(): PrintWriter =
     OutputManager.runDirPathOpt match {
       case None => new PrintWriter(NullOutputStream.NULL_OUTPUT_STREAM)
-      case Some(runDir) => {
+      case Some(_) => {
         val writer = OutputManager.printWriter(OutputManager.runDir, s"log$id.smt")
         if (!config.debug) {
           writer.println("Logging is disabled (Z3SolverContext.debug = false). Activate with --debug.")
@@ -374,8 +374,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
    *   the name of the new function (declared in SMT)
    */
   def declareCellFun(cellName: String, argType: CellT, resultType: CellT): Unit = {
-    val domSig = argType.signature
-    val resSig = resultType.signature
+    argType.signature
+    resultType.signature
     val funName = s"fun$cellName"
     if (funDecls.contains(funName)) {
       val msg = s"SMT $id: Declaring twice the function associated with cell $cellName"
@@ -590,11 +590,11 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
           (n.asInstanceOf[ExprSort], 1)
         }
 
-      case OperEx(oper: TlaArithOper, lex, rex) =>
+      case OperEx(_: TlaArithOper, _, _) =>
         // convert to an arithmetic expression
         toArithExpr(ex)
 
-      case OperEx(oper: TlaArithOper, subex) =>
+      case OperEx(_: TlaArithOper, _) =>
         // convert to an arithmetic expression
         toArithExpr(ex)
 

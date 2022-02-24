@@ -61,7 +61,7 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
 
   private def mkSeqDomain(state: SymbState, seqCell: ArenaCell): SymbState = {
     // as we do not know the domain precisely, we create the set 1..N and include only its elements between start and end
-    val seqT = seqCell.cellType.asInstanceOf[SeqT]
+    seqCell.cellType.asInstanceOf[SeqT]
     val start :: end +: elems = state.arena.getHas(seqCell)
     val (newArena, staticDom) = intRangeCache.create(state.arena, (1, elems.size))
     // we cannot use staticDom directly, as its in-relation is restricted, create a copy

@@ -1,7 +1,6 @@
 package at.forsyte.apalache.io.typecheck.parser
 
 import java.io.Reader
-import at.forsyte.apalache.io.tlc.config.TlcConfigParseError
 
 import scala.util.matching.Regex
 import scala.util.parsing.combinator.RegexParsers

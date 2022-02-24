@@ -103,7 +103,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
 
     // compute all updated cells in case we are dealing with a function over non-basic indices
-    val updatedCells = relationCells.map(eachRelationPair)
+    relationCells.map(eachRelationPair)
 
     // cache equality constraints between the indices and the indices in the function relation
     def cacheEqForPair(p: ArenaCell): Unit = {

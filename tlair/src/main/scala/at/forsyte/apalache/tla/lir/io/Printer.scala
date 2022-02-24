@@ -66,13 +66,6 @@ object UTFPrinter extends Printer {
         fn: TlaEx => String) =
       seq.grouped(n).toSeq.map(s => pattern.format(s.map(fn): _*)).mkString(sep)
 
-    def strPattern(
-        seq: Seq[TlaEx],
-        n: Int,
-        pattern: String,
-        sep: String): String =
-      groupMapMk(seq, n, pattern, sep, apply)
-
     def opAppPattern(
         seq: Seq[TlaEx],
         n: Int,

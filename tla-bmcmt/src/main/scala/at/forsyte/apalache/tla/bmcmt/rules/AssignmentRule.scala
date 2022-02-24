@@ -16,7 +16,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
  *   Igor Konnov
  */
 class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val pickRule = new CherryPick(rewriter)
+  new CherryPick(rewriter)
 
   override def isApplicable(state: SymbState): Boolean = {
     def isUnbound(name: String) =

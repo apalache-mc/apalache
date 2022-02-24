@@ -32,7 +32,7 @@ class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = state.ex match {
     // assume isApplicable
-    case ex @ OperEx(ApalacheOper.foldSet, LetInEx(NameEx(_), opDecl), baseEx, setEx) =>
+    case OperEx(ApalacheOper.foldSet, LetInEx(NameEx(_), opDecl), baseEx, setEx) =>
       // rewrite baseEx to its final cell form
       val baseState = rewriter.rewriteUntilDone(state.setRex(baseEx))
       val baseCell = baseState.asCell
