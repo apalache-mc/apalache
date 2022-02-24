@@ -197,6 +197,14 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
       mkApp(ref, Seq(sig), args.map(this(_)): _*)
     }
 
+    // Utility function to prepare error messages for non-matching argument types
+    def diffArgTypes(args: List[TlaEx], expectedTypes: List[TlaType1], actualTypes: List[TlaType1]): List[String] = {
+      args.zip(expectedTypes).zip(actualTypes).collect {
+        case ((arg, expectedType), argType) if expectedType != argType =>
+          s"Argument $arg should have type $expectedType but has type $argType."
+      }
+    }
+
     ex match {
       case nm @ NameEx(_) =>
         // x becomes x
@@ -210,11 +218,27 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         // x = y, x /= y
         val a = varPool.fresh
         val opsig = OperT1(Seq(a, a), BoolT1())
-        mkExRefApp(opsig, args)
+        val etcExpr = mkExRefApp(opsig, args)
+        val operation = if (op == TlaOper.eq) "equality" else "inequality"
+        etcExpr.typeErrorExplanation = (expectedTypes: List[TlaType1], actualTypes: List[TlaType1]) => {
+          Some(s"Arguments of $operation should have the same type. For arguments ${args.mkString(", ")} with types ${actualTypes
+              .mkString(", ")}, in expression $ex")
+        }
+        etcExpr
 
       case OperEx(TlaOper.apply, nameEx @ NameEx(_), args @ _*) =>
         // F(e_1, ..., e_n)
-        mkAppByName(ref, mkName(nameEx), args.map(this(_)): _*)
+        val etcExpr = mkAppByName(ref, mkName(nameEx), args.map(this(_)): _*)
+        etcExpr.typeErrorExplanation = (expectedTypes: List[TlaType1], actualTypes: List[TlaType1]) => {
+          expectedTypes match {
+            case List(t @ OperT1(expectedArgumentTypes, _)) =>
+              val argErrors = diffArgTypes(args.toList, expectedArgumentTypes.toList, actualTypes)
+              Some(s"The operator $nameEx of type $t is applied to arguments of incompatible types in $ex:\n${argErrors
+                  .mkString("\n")}")
+            case _ => None
+          }
+        }
+        etcExpr
 
       case ex @ OperEx(TlaOper.apply, opName, args @ _*) =>
         throw new TypingException(s"Bug in ToEtcExpr. Expected an operator name, found: ${opName}", ex.ID)
@@ -432,7 +456,10 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val signatures = mkFunLikeByArg(arg).map { case (funType, argType, resType) =>
           OperT1(Seq(funType, argType), resType)
         }
-        mkApp(ref, signatures, this(fun), this(arg))
+        val etcExpr = mkApp(ref, signatures, this(fun), this(arg))
+        etcExpr.typeErrorExplanation = (expectedTypes: List[TlaType1], actualTypes: List[TlaType1]) =>
+          Some(s"Cannot apply $fun to the argument $arg in $ex.")
+        etcExpr
 
       case OperEx(TlaFunOper.domain, fun) =>
         // DOMAIN f
