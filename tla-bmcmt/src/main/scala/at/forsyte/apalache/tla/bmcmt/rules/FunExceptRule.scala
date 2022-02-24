@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.TlaType1
-import at.forsyte.apalache.tla.lir.{FunT1, RecT1, TupT1, BoolT1, SetT1}
+import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, RecT1, SetT1, TupT1}
 
 /**
  * Rewriting EXCEPT for functions, tuples, and records.

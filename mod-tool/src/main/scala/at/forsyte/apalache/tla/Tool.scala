@@ -7,15 +7,15 @@ import java.io.{File, FileNotFoundException}
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import at.forsyte.apalache.infra.log.LogbackConfigurator
-import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor, WriteablePassOptions, ToolModule}
-import at.forsyte.apalache.tla.lir.{TlaModule}
+import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor, ToolModule, WriteablePassOptions}
+import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorMessage, PassOptionException}
 import at.forsyte.apalache.io.{OutputManager, ReportGenerator}
 import at.forsyte.apalache.tla.bmcmt.config.{CheckerModule, ReTLAToVMTModule}
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.tooling.ExitCodes
 import at.forsyte.apalache.tla.tooling.opt.{
-  CheckCmd, ConfigCmd, TranspileCmd, AbstractCheckerCmd, General, ParseCmd, ServerCmd, TestCmd, TypeCheckCmd,
+  AbstractCheckerCmd, CheckCmd, ConfigCmd, General, ParseCmd, ServerCmd, TestCmd, TranspileCmd, TypeCheckCmd,
 }
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import com.google.inject.{Guice, Injector}

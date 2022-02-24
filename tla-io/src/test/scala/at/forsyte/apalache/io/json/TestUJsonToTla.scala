@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet, TlaNatSet, TlaStrSet}
 import org.junit.runner.RunWith
-import org.scalacheck.Prop.{AnyOperators, forAll}
+import org.scalacheck.Prop.{forAll, AnyOperators}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers

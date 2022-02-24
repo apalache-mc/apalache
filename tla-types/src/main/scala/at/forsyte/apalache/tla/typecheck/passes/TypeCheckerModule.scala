@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.typecheck.passes
 
 import at.forsyte.apalache.infra.ExceptionAdapter
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions, WriteablePassOptions, ToolModule}
+import at.forsyte.apalache.infra.passes.{Pass, PassOptions, ToolModule, WriteablePassOptions}
 import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}

@@ -3,7 +3,7 @@ package at.forsyte.apalache.io.annotations
 import org.junit.runner.RunWith
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen.{alphaNumStr, alphaStr, identifier, listOf, oneOf}
-import org.scalacheck.Prop.{AnyOperators, falsified, forAll, passed}
+import org.scalacheck.Prop.{falsified, forAll, passed, AnyOperators}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers

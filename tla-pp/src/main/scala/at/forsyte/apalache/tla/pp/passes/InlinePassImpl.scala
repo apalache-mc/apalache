@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.imp.findBodyOf
 import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
 import at.forsyte.apalache.tla.lir.transformations._
 import at.forsyte.apalache.tla.lir.transformations.standard.ModuleByExTransformer
-import at.forsyte.apalache.tla.lir.{TlaModule, TlaOperDecl, ModuleProperty}
+import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule, TlaOperDecl}
 import at.forsyte.apalache.tla.pp._
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging

@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.io.annotations.{Annotation, AnnotationStr, StandardAnnotations}
-import at.forsyte.apalache.io.annotations.store.{AnnotationStore, findAnnotation}
+import at.forsyte.apalache.io.annotations.store.{findAnnotation, AnnotationStore}
 import at.forsyte.apalache.io.typecheck.parser.Type1ParseError
 import at.forsyte.apalache.tla.lir.{SparseTupT1, ValEx, _}
 import at.forsyte.apalache.tla.lir.oper._

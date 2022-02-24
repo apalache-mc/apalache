@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.bmcmt.VCGenerator
-import at.forsyte.apalache.tla.lir.{TlaModule, ModuleProperty}
+import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import com.google.inject.Inject

@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.tooling.opt
 
-import at.forsyte.apalache.tla.bmcmt.{SMTEncoding, arraysEncoding, oopsla19Encoding}
+import at.forsyte.apalache.tla.bmcmt.{arraysEncoding, oopsla19Encoding, SMTEncoding}
 import org.backuity.clist.util.Read
 
 import org.backuity.clist._
