@@ -1,7 +1,11 @@
 package at.forsyte.apalache.tla.lir.formulas
 
-import at.forsyte.apalache.tla.lir.formulas.StandardSorts.BoolSort
-
+/**
+ * Booleans defines constructors for Boolean-sorted terms.
+ *
+ * @author
+ *   Jure Kukovec
+ */
 object Booleans {
   trait BoolExpr extends Term {
     val sort: Sort = BoolSort()

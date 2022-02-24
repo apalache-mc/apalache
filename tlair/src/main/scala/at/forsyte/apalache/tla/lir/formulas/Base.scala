@@ -1,24 +1,31 @@
 package at.forsyte.apalache.tla.lir.formulas
 
-import at.forsyte.apalache.tla.lir.formulas.StandardSorts.FunctionSort
-
+/**
+ * A representation of an SMT/VMT sort. We only support non-parametric sorts at the moment.
+ *
+ * @author
+ *   Jure Kukovec
+ */
 abstract class Sort(val sortName: String)
-trait HasSort {
+
+/**
+ * A representation of an SMT/VMT term. Each term has a singular sort.
+ *
+ * @author
+ *   Jure Kukovec
+ */
+trait Term {
   val sort: Sort
 }
 
-trait Term extends HasSort
-
 abstract class Variable(name: String) extends Term
 
-object StandardSorts {
-  sealed case class BoolSort() extends Sort("Boolean")
-  sealed case class IntSort() extends Sort("Integer")
-  sealed case class UntypedSort() extends Sort("Untyped")
-  sealed case class UninterpretedSort(override val sortName: String) extends Sort(sortName)
-  sealed case class FunctionSort(to: Sort, from: Sort*) extends Sort("Function") {
-    def arity: Int = from.size
-  }
+sealed case class BoolSort() extends Sort("Boolean")
+sealed case class IntSort() extends Sort("Integer")
+sealed case class UntypedSort() extends Sort("Untyped")
+sealed case class UninterpretedSort(override val sortName: String) extends Sort(sortName)
+sealed case class FunctionSort(to: Sort, from: Sort*) extends Sort("Function") {
+  def arity: Int = from.size
 }
 
 trait FnTerm extends Term {

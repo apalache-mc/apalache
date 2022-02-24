@@ -1,7 +1,5 @@
 package at.forsyte.apalache.tla.lir.formulas
 
-import at.forsyte.apalache.tla.lir.formulas.StandardSorts.IntSort
-
 object Integers {
 
   trait IntExpr extends Term {

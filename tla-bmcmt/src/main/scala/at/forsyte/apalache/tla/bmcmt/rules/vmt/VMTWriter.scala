@@ -3,15 +3,17 @@ package at.forsyte.apalache.tla.bmcmt.rules.vmt
 import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.tla.lir.formulas.Booleans.{And, BoolExpr, Equiv, Exists, Forall, Impl, Neg, Or}
 import at.forsyte.apalache.tla.lir.formulas.EUF.{Apply, Equal, FunDef, ITE, UninterpretedLiteral, UninterpretedVar}
-import at.forsyte.apalache.tla.lir.formulas.StandardSorts.{BoolSort, UninterpretedSort}
-import at.forsyte.apalache.tla.lir.formulas.Term
-import at.forsyte.apalache.tla.lir.{ConstT1, NameEx, SetT1, StrT1, TlaConstDecl, TlaEx, TlaVarDecl, Typed}
+import at.forsyte.apalache.tla.lir.formulas._
+import at.forsyte.apalache.tla.lir.{ConstT1, SetT1, StrT1, TlaConstDecl, TlaEx, TlaVarDecl, Typed}
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 
 /**
- * VMTWriter handles the last step of transpiling. It takes the disassembled module (extracted init, next, inv, etc.)
- * and determines how TermWriter gets called, then writes the output to the specified file.
+ * VMTWriter handles the last step of transpiling: assembling the .vmt output file.
+ *
+ * Given a disassembled module (extracted init, next, inv, etc.) VMTWriter determines which parts get which `VMTExpr`
+ * wrappers. Then, using TermWriter, it translates the VMT terms to output strings, and adds sort/function declarations
+ * and definitions.
  *
  * @author
  *   Jure Kukovec

@@ -2,10 +2,9 @@ package at.forsyte.apalache.tla.bmcmt.rules.vmt
 
 import at.forsyte.apalache.tla.bmcmt.RewriterException
 import at.forsyte.apalache.tla.lir.formulas.Booleans.{False, True}
-import at.forsyte.apalache.tla.lir.formulas.EUF.{UninterpretedLiteral}
+import at.forsyte.apalache.tla.lir.formulas.EUF.UninterpretedLiteral
 import at.forsyte.apalache.tla.lir.formulas.Integers.IntLiteral
-import at.forsyte.apalache.tla.lir.formulas.StandardSorts.UninterpretedSort
-import at.forsyte.apalache.tla.lir.formulas.{Sort, StandardSorts, Term, Variable}
+import at.forsyte.apalache.tla.lir.formulas._
 import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 import at.forsyte.apalache.tla.lir._
@@ -63,7 +62,7 @@ object ValueRule {
         val sort = TermAndSortCaster.sortFromType(tt)
         mkVariable(ex.name, sort)
       case Untyped() =>
-        mkVariable(ex.name, StandardSorts.UntypedSort())
+        mkVariable(ex.name, UntypedSort())
       case Typed(other) =>
         throw new RewriterException(s"Term construction is not supported: $other is not in TlaType1", ex)
     }

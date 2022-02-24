@@ -64,7 +64,6 @@ class ReTLAToVMTModule extends ToolModule {
     bind(classOf[PreproPass]).to(classOf[ReTLAPreproPassImpl])
     bind(classOf[TransitionPass]).to(classOf[TransitionPassImpl])
     bind(classOf[OptPass]).to(classOf[OptPassImpl])
-    bind(classOf[AnalysisPass]).to(classOf[AnalysisPassImpl])
     bind(classOf[TranspilePass]).to(classOf[ReTLAToVMTTranspilePassImpl])
   }
 

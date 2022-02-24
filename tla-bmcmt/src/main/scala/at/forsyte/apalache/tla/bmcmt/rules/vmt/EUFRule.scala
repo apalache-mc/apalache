@@ -2,10 +2,9 @@ package at.forsyte.apalache.tla.bmcmt.rules.vmt
 
 import at.forsyte.apalache.tla.bmcmt.RewriterException
 import at.forsyte.apalache.tla.lir.formulas.Booleans.{And, BoolExpr, True}
-import at.forsyte.apalache.tla.lir.formulas.EUF.{Apply, Equal, FunDef, FunctionVar, ITE}
-import at.forsyte.apalache.tla.lir.formulas.StandardSorts.{BoolSort, FunctionSort}
-import at.forsyte.apalache.tla.lir.formulas.{FnTerm, Sort, Term}
-import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.formulas.EUF._
+import at.forsyte.apalache.tla.lir.formulas._
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaControlOper, TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 
@@ -31,9 +30,8 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
 
   override def isApplicable(ex: TlaEx): Boolean =
     ex match {
-      case OperEx(oper, _*)       => eufOper.contains(oper)
-      case LetInEx(_, decls @ _*) => decls.forall(_.formalParams.isEmpty)
-      case _                      => false
+      case OperEx(oper, _*) => eufOper.contains(oper)
+      case _                => false
     }
 
   // Only restricted sets are allowed as function domains

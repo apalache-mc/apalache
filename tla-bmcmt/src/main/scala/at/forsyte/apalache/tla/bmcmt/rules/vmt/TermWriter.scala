@@ -4,8 +4,7 @@ import at.forsyte.apalache.tla.lir.{TlaType1, TlaVarDecl, Typed}
 import at.forsyte.apalache.tla.lir.formulas.Integers._
 import at.forsyte.apalache.tla.lir.formulas.Booleans._
 import at.forsyte.apalache.tla.lir.formulas.EUF._
-import at.forsyte.apalache.tla.lir.formulas.StandardSorts.{BoolSort, FunctionSort, IntSort, UninterpretedSort}
-import at.forsyte.apalache.tla.lir.formulas.{Sort, Term}
+import at.forsyte.apalache.tla.lir.formulas._
 
 /**
  * TermWriter manages the translation of Terms to strings, to be written to the final output file.

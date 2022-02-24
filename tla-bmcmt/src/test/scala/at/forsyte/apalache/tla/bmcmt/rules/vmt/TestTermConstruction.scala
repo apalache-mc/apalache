@@ -5,8 +5,8 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.formulas.EUF._
 import at.forsyte.apalache.tla.lir.formulas.Integers.{IntLiteral, IntVar}
-import at.forsyte.apalache.tla.lir.formulas.StandardSorts.{BoolSort, FunctionSort, IntSort, UninterpretedSort}
 import at.forsyte.apalache.tla.lir.formulas.Booleans._
+import at.forsyte.apalache.tla.lir.formulas._
 
 @RunWith(classOf[JUnitRunner])
 class TestTermConstruction extends AnyFunSuite {

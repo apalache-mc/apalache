@@ -5,8 +5,7 @@ import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, FunT1, IntT1, SetT1, TlaEx,
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.formulas.Booleans._
 import at.forsyte.apalache.tla.lir.formulas.EUF.{Apply, Equal, FunDef, FunctionVar, ITE}
-import at.forsyte.apalache.tla.lir.formulas.StandardSorts.{FunctionSort, IntSort, UninterpretedSort}
-import at.forsyte.apalache.tla.lir.formulas.Term
+import at.forsyte.apalache.tla.lir.formulas._
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite

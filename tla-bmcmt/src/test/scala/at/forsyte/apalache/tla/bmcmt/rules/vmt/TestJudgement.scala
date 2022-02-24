@@ -2,14 +2,13 @@ package at.forsyte.apalache.tla.bmcmt.rules.vmt
 
 import at.forsyte.apalache.tla.bmcmt.RewriterException
 import at.forsyte.apalache.tla.lir.{NameEx, TlaEx, ValEx}
-import at.forsyte.apalache.tla.lir.formulas.{Sort, StandardSorts}
+import at.forsyte.apalache.tla.lir.formulas._
 import at.forsyte.apalache.tla.lir.values.{TlaRealSet, TlaStrSet}
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.formulas.StandardSorts.UninterpretedSort
 
 @RunWith(classOf[JUnitRunner])
 class TestJudgement extends AnyFunSuite {
@@ -51,9 +50,9 @@ class TestJudgement extends AnyFunSuite {
 
   test("Restricted set Sort recognition") {
     val expected: Map[TlaEx, Sort] = Map(
-        tla.intSet().untyped() -> StandardSorts.IntSort(),
-        tla.natSet().untyped() -> StandardSorts.IntSort(),
-        tla.booleanSet().untyped() -> StandardSorts.BoolSort(),
+        tla.intSet().untyped() -> IntSort(),
+        tla.natSet().untyped() -> IntSort(),
+        tla.booleanSet().untyped() -> BoolSort(),
     ) ++ (constantMap.map { case (k, v) => tla.name(k).untyped() -> v })
 
     allowed.foreach { ex =>
