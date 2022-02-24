@@ -10,3 +10,5 @@ addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.9.3")
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.10.0")
 // https://github.com/sbt/sbt-native-packager
 addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.9.4")
+// https://scalacenter.github.io/scalafix/docs/users/installation.html
+addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.9.34")
