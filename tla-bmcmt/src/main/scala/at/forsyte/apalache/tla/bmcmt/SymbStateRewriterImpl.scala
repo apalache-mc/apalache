@@ -119,7 +119,7 @@ class SymbStateRewriterImpl(
   /**
    * A storage for the messages associated with assertion failures, see MessageStorage.
    */
-  private var messages: mutable.Map[Int, String] = new mutable.HashMap()
+  private val messages: mutable.Map[Int, String] = new mutable.HashMap()
 
   /**
    * Get the current context level, that is the difference between the number of pushes and pops made so far.
