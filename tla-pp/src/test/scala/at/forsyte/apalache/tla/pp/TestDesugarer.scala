@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.{
-  BoolT1, FunT1, IntT1, OperT1, RecT1, SeqT1, SetT1, OperParam, StrT1, TlaEx, TlaType1, TupT1,
+  BoolT1, FunT1, IntT1, OperParam, OperT1, RecT1, SeqT1, SetT1, StrT1, TlaEx, TlaType1, TupT1,
 }
 import org.junit.runner.RunWith
 import org.scalatestplus.junit.JUnitRunner

@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.io.annotations.{Annotation, AnnotationStr, StandardAnnotations}
-import at.forsyte.apalache.io.annotations.store.{AnnotationStore, findAnnotation}
+import at.forsyte.apalache.io.annotations.store.{findAnnotation, AnnotationStore}
 import at.forsyte.apalache.io.typecheck.parser.Type1ParseError
 import at.forsyte.apalache.tla.lir.{SparseTupT1, ValEx, _}
 import at.forsyte.apalache.tla.lir.oper._
@@ -220,7 +220,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val opsig = OperT1(Seq(a, a), BoolT1())
         val etcExpr = mkExRefApp(opsig, args)
         val operation = if (op == TlaOper.eq) "equality" else "inequality"
-        etcExpr.typeErrorExplanation = (expectedTypes: List[TlaType1], actualTypes: List[TlaType1]) => {
+        etcExpr.typeErrorExplanation = (_: List[TlaType1], actualTypes: List[TlaType1]) => {
           Some(s"Arguments of $operation should have the same type. For arguments ${args.mkString(", ")} with types ${actualTypes
               .mkString(", ")}, in expression $ex")
         }
@@ -240,7 +240,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         }
         etcExpr
 
-      case ex @ OperEx(TlaOper.apply, opName, args @ _*) =>
+      case ex @ OperEx(TlaOper.apply, opName, _*) =>
         throw new TypingException(s"Bug in ToEtcExpr. Expected an operator name, found: ${opName}", ex.ID)
 
       case OperEx(
@@ -457,7 +457,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
           OperT1(Seq(funType, argType), resType)
         }
         val etcExpr = mkApp(ref, signatures, this(fun), this(arg))
-        etcExpr.typeErrorExplanation = (expectedTypes: List[TlaType1], actualTypes: List[TlaType1]) =>
+        etcExpr.typeErrorExplanation = (_: List[TlaType1], _: List[TlaType1]) =>
           Some(s"Cannot apply $fun to the argument $arg in $ex.")
         etcExpr
 
@@ -466,9 +466,11 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val a = varPool.fresh
         val b = varPool.fresh
         val c = varPool.fresh
+        // The possible types to which which DOMAIN can be be applied,
+        // and the corresponding type of the domain when so applied:
         val funType = OperT1(Seq(FunT1(a, b)), SetT1(a)) // (a -> b) => Set(a)
         val seqType =
-          OperT1(Seq(SeqT1(a)), SetT1(IntT1())) // Seq(c) => Set(Int)
+          OperT1(Seq(SeqT1(c)), SetT1(IntT1())) // Seq(c) => Set(Int)
         val recType = OperT1(Seq(RecT1()), SetT1(StrT1())) // [] => Set(Str)
         val tupType =
           OperT1(Seq(SparseTupT1()), SetT1(IntT1())) // {} => Set(Int)
@@ -805,7 +807,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val typeVar = varPool.fresh
         mkExRefApp(OperT1(nameAndArgs.map(_ => StrT1()) :+ typeVar, typeVar), nameAndArgs :+ labelledEx)
 
-      case OperEx(ApalacheOper.withType, lhs, annotation) =>
+      case OperEx(ApalacheOper.withType, _, annotation) =>
         // Met an old type annotation. Warn the user and ignore the annotation.
         logger.error("Met an old type annotation: " + annotation)
         logger.error("See: https://apalache.informal.systems/docs/apalache/typechecker-snowcat.html")

@@ -120,7 +120,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
             // report the result of operator application, not the operator type itself
             onTypeFound(ex.sourceRef, res)
 
-          case tt =>
+          case _ =>
             throw new TypingException("Expected an operator type, found: ", appEx.sourceRef.tlaId)
         }
 
@@ -242,10 +242,10 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
         val letInSolver = new ConstraintSolver()
         val operScheme =
           ctx.types.get(name) match {
-            case Some(scheme @ TlaType1Scheme(declaredType @ OperT1(_, _), allVars)) =>
+            case Some(scheme @ TlaType1Scheme(OperT1(_, _), _)) =>
               scheme
 
-            case Some(scheme @ TlaType1Scheme(someType: TlaType1, allVars)) =>
+            case Some(TlaType1Scheme(someType: TlaType1, allVars)) =>
               // The definition has a type annotation which is not an operator. Assume it is a nullary operator.
               // Strictly speaking, this is a hack. However, it is quite common to declare a constant with LET.
               TlaType1Scheme(OperT1(Seq(), someType), allVars)

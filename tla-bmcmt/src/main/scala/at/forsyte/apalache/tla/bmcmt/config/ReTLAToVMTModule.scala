@@ -13,9 +13,8 @@ import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.standard.ReTLALanguagePred
 import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, TransformationListener, TransformationTracker}
 import at.forsyte.apalache.tla.pp.passes._
-import at.forsyte.apalache.tla.typecheck.passes.{EtcTypeCheckerPass, EtcTypeCheckerPassImpl}
-import com.google.inject.name.Names
-import com.google.inject.{AbstractModule, TypeLiteral}
+import at.forsyte.apalache.tla.typecheck.passes.EtcTypeCheckerPassImpl
+import com.google.inject.TypeLiteral
 
 /**
  * Transpiels reTLA inputs to VMT

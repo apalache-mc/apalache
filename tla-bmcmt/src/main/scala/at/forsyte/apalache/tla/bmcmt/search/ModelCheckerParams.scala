@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.search
 
 import java.io.File
-import at.forsyte.apalache.tla.bmcmt.{CheckerInput, SMTEncoding, oopsla19Encoding}
+import at.forsyte.apalache.tla.bmcmt.{oopsla19Encoding, CheckerInput, SMTEncoding}
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode.{AfterJoin, BeforeJoin, InvariantMode}
 
 object ModelCheckerParams {

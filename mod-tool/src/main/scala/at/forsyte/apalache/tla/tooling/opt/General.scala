@@ -4,7 +4,6 @@ import at.forsyte.apalache.io.CliConfig
 
 import java.io.File
 import org.backuity.clist._
-import at.forsyte.apalache.io.OutputManager
 
 /**
  * The general commands.

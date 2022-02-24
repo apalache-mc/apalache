@@ -65,7 +65,7 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
           overridingDef.copy(name = name)
         }
 
-      case df @ TlaVarDecl(name) if overrides.contains(name) =>
+      case TlaVarDecl(name) if overrides.contains(name) =>
         val msg = s"  > Trying to replace variable $name with an operator OVERRIDE_$name. Use INSTANCE ... WITH"
         throw new OverridingError(msg, NullEx)
 

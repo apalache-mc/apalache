@@ -14,7 +14,6 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
  *   Igor Konnov
  */
 class NegRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val substRule = new SubstRule(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {

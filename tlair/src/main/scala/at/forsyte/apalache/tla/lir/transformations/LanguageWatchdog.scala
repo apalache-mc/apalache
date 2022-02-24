@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.lir.transformations
 
-import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule, LanguagePredError}
+import at.forsyte.apalache.tla.lir.{LanguagePredError, TlaEx, TlaModule}
 
 /**
  * Given a language predicate, the watchdog checks, whether an expression or a module satisfies the predicate. If not,

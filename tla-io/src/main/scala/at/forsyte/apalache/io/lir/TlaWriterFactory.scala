@@ -2,9 +2,8 @@ package at.forsyte.apalache.io.lir
 
 import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.tla.lir.TlaModule
-import OutputManager.Names._
 
-import java.io.{File, FileWriter, PrintWriter}
+import java.io.{File, PrintWriter}
 
 /**
  * An interface for constructing instances of TlaWriter.

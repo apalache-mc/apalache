@@ -6,7 +6,6 @@ import at.forsyte.apalache.io.annotations.store._
 import org.apache.commons.io.output.WriterOutputStream
 import tla2sany.drivers.SANY
 import tla2sany.modanalyzer.SpecObj
-import util.SimpleFilenameToStream
 
 import java.io._
 import java.nio.file.Files

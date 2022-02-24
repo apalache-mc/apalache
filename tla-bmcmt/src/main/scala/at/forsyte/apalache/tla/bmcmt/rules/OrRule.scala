@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
-import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, TlaEx}
 
 /**
  * For state-level expressions, we express A \/ B as IF A THEN TRUE ELSE B. For action-level expressions, i.e.,

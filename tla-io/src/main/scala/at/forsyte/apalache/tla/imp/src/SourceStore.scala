@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.imp.src
 
 import at.forsyte.apalache.tla.lir.src.{
   RegionTree,
-  // Prevent name clash with the SourceLocation object defined in this dir
+// Prevent name clash with the SourceLocation object defined in this dir
   SourceLocation => SourceLocationClass,
 }
 import at.forsyte.apalache.tla.lir.storage.SourceMap
