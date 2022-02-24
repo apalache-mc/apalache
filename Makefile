@@ -3,7 +3,7 @@
 # Markdown files used for integration tests
 TEST_MD_FILES := $(wildcard test/tla/*.md)
 
-.PHONY: all apalache apalache-jar compile build-quick test integration clean deps promote docker dist
+.PHONY: all apalache apalache-jar compile build-quick test integration clean deps promote docker dist fmt-fix-unused
 
 all: apalache
 
@@ -56,6 +56,9 @@ fmt-check:
 
 fmt-fix:
 	sbt scalafmtAll scalafmtSbt
+
+fmt-fix-unused:
+	sbt "scalafix RemoveUnused"
 
 clean:
 	sbt clean
