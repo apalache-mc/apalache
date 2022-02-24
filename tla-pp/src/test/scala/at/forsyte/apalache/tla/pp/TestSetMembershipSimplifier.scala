@@ -33,16 +33,17 @@ class TestSetMembershipSimplifier
   private val strSet = tla.stringSet().as(SetT1(StrT1()))
   private val intSet = tla.intSet().as(SetT1(IntT1()))
 
+  val expressions = List(
+      (boolName, boolVal, boolSet),
+      (strName, strVal, strSet),
+      (intName, intVal, intSet),
+  )
+
   override def beforeEach(): Unit = {
     simplifier = SetMembershipSimplifier(new IdleTracker)
   }
 
   test("simplifies appropriately-typed set membership") {
-    val expressions = List(
-        (boolName, boolVal, boolSet),
-        (strName, strVal, strSet),
-        (intName, intVal, intSet),
-    )
     expressions.foreach { case (name, value, set) =>
       val inputName = tla.in(name, set).as(BoolT1())
       simplifier(inputName) shouldBe tlaTrue
@@ -59,11 +60,6 @@ class TestSetMembershipSimplifier
   }
 
   test("returns inappropriately-typed set membership unchanged") {
-    val expressions = List(
-        (boolName, boolVal, boolSet),
-        (strName, strVal, strSet),
-        (intName, intVal, intSet),
-    )
     expressions.foreach { case (name, value, _) =>
       expressions.filter { case (name2, _, _) => name != name2 }.foreach {
         case (otherName, _, otherSet) if name != otherName =>
