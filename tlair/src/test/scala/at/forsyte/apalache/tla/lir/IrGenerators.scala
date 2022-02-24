@@ -83,9 +83,10 @@ trait IrGenerators extends TlaType1Gen {
    * Function operators (`TlaFunOper._`)
    */
   val functionOperators =
-    List(TlaFunOper.enum, TlaFunOper.tuple, TlaFunOper.app, TlaFunOper.domain, TlaFunOper.recFunRef, TlaFunOper.except)
-  /* TlaFunOper.{funDef,recFunDef} seem to cause lots of malformed expressions; disable them for now.
-   * cf. https://github.com/informalsystems/apalache/pull/1386#discussion_r811016316
+    List(TlaFunOper.enum, TlaFunOper.tuple, TlaFunOper.app, TlaFunOper.domain, TlaFunOper.funDef, TlaFunOper.recFunRef, TlaFunOper.except)
+  /* TlaFunOper.recFunDef seems to cause lots of malformed expressions; disable it for now.
+   * cf. https://github.com/informalsystems/apalache/issues/1402 and
+   * https://github.com/informalsystems/apalache/pull/1386#discussion_r811016316
    */
 
   /**
