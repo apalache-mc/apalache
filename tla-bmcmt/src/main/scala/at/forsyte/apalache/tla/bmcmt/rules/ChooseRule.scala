@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory,
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, SetT1, TlaEx, TypingException}
+import at.forsyte.apalache.tla.lir.OperEx
 
 /**
  * <p>Rewriting rule for CHOOSE. Similar to TLC, we implement a non-deterministic choice. It is not hard to add the
