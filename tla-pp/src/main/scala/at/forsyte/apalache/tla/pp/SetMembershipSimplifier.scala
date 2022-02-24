@@ -16,7 +16,7 @@ import at.forsyte.apalache.tla.lir.values._
  */
 class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTransformer(tracker) {
   private val boolTag = Typed(BoolT1())
-  private val trueVal = ValEx(TlaBool(true))(boolTag)
+  private def trueVal: ValEx = ValEx(TlaBool(true))(boolTag)
 
   override val partialTransformers = List(transformMembership)
 
