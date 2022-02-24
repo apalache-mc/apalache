@@ -25,22 +25,19 @@ class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTr
     transform(expr)
   }
 
+  private def typeOfPredefSet: PartialFunction[TlaPredefSet, TlaType1] = {
+    case TlaBoolSet => BoolT1()
+    case TlaIntSet  => IntT1()
+    case TlaRealSet => RealT1()
+    case TlaStrSet  => StrT1()
+  }
+
+  private def matchesType(name: TlaEx, ps: TlaPredefSet): Boolean = name.typeTag == Typed(typeOfPredefSet(ps))
+  private def matchesSeqType(name: TlaEx, ps: TlaPredefSet): Boolean = name.typeTag == Typed(SeqT1(typeOfPredefSet(ps)))
+
   private def transformMembership: PartialFunction[TlaEx, TlaEx] = {
-    case OperEx(TlaSetOper.in, name, ValEx(TlaBoolSet)) if name.typeTag == Typed(BoolT1()) => trueVal
-    case OperEx(TlaSetOper.in, name, ValEx(TlaStrSet)) if name.typeTag == Typed(StrT1())   => trueVal
-    case OperEx(TlaSetOper.in, name, ValEx(TlaIntSet)) if name.typeTag == Typed(IntT1())   => trueVal
-    case OperEx(TlaSetOper.in, name, ValEx(TlaRealSet)) if name.typeTag == Typed(RealT1()) => trueVal
-    case OperEx(TlaSetOper.in, name, OperEx(TlaSetOper.seqSet, ValEx(TlaBoolSet)))
-        if name.typeTag == Typed(SeqT1(BoolT1())) =>
-      trueVal
-    case OperEx(TlaSetOper.in, name, OperEx(TlaSetOper.seqSet, ValEx(TlaStrSet)))
-        if name.typeTag == Typed(SeqT1(StrT1())) =>
-      trueVal
-    case OperEx(TlaSetOper.in, name, OperEx(TlaSetOper.seqSet, ValEx(TlaIntSet)))
-        if name.typeTag == Typed(SeqT1(IntT1())) =>
-      trueVal
-    case OperEx(TlaSetOper.in, name, OperEx(TlaSetOper.seqSet, ValEx(TlaRealSet)))
-        if name.typeTag == Typed(SeqT1(RealT1())) =>
+    case OperEx(TlaSetOper.in, name, ValEx(ps: TlaPredefSet)) if matchesType(name, ps) => trueVal
+    case OperEx(TlaSetOper.in, name, OperEx(TlaSetOper.seqSet, ValEx(ps: TlaPredefSet))) if matchesSeqType(name, ps) =>
       trueVal
     case ex => ex
   }
