@@ -33,10 +33,25 @@ class TestSetMembershipSimplifier
   private val strSet = tla.stringSet().as(SetT1(StrT1()))
   private val intSet = tla.intSet().as(SetT1(IntT1()))
 
+  private val boolSeqVal = tla.tuple(boolVal, boolName).as(SeqT1(BoolT1()))
+  private val strSeqVal = tla.tuple(strVal, strName).as(SeqT1(StrT1()))
+  private val intSeqVal = tla.tuple(intVal, intName).as(SeqT1(IntT1()))
+
+  private val boolSeqName = tla.name("boolSeq").as(SeqT1(BoolT1()))
+  private val strSeqName = tla.name("strSeq").as(SeqT1(StrT1()))
+  private val intSeqName = tla.name("intSeq").as(SeqT1(IntT1()))
+
+  private val boolSeqSet = tla.seqSet(tla.booleanSet()).as(SetT1(SeqT1(BoolT1())))
+  private val strSeqSet = tla.seqSet(tla.stringSet()).as(SetT1(SeqT1(StrT1())))
+  private val intSeqSet = tla.seqSet(tla.intSet()).as(SetT1(SeqT1(IntT1())))
+
   val expressions = List(
       (boolName, boolVal, boolSet),
       (strName, strVal, strSet),
       (intName, intVal, intSet),
+      (boolSeqName, boolSeqVal, boolSeqSet),
+      (strSeqName, strSeqVal, strSeqSet),
+      (intSeqName, intSeqVal, intSeqSet),
   )
 
   override def beforeEach(): Unit = {

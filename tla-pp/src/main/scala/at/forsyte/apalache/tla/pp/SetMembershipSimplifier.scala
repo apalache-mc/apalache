@@ -30,7 +30,19 @@ class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTr
     case OperEx(TlaSetOper.in, name, ValEx(TlaStrSet)) if name.typeTag == Typed(StrT1())   => trueVal
     case OperEx(TlaSetOper.in, name, ValEx(TlaIntSet)) if name.typeTag == Typed(IntT1())   => trueVal
     case OperEx(TlaSetOper.in, name, ValEx(TlaRealSet)) if name.typeTag == Typed(RealT1()) => trueVal
-    case ex                                                                                => ex
+    case OperEx(TlaSetOper.in, name, OperEx(TlaSetOper.seqSet, ValEx(TlaBoolSet)))
+        if name.typeTag == Typed(SeqT1(BoolT1())) =>
+      trueVal
+    case OperEx(TlaSetOper.in, name, OperEx(TlaSetOper.seqSet, ValEx(TlaStrSet)))
+        if name.typeTag == Typed(SeqT1(StrT1())) =>
+      trueVal
+    case OperEx(TlaSetOper.in, name, OperEx(TlaSetOper.seqSet, ValEx(TlaIntSet)))
+        if name.typeTag == Typed(SeqT1(IntT1())) =>
+      trueVal
+    case OperEx(TlaSetOper.in, name, OperEx(TlaSetOper.seqSet, ValEx(TlaRealSet)))
+        if name.typeTag == Typed(SeqT1(RealT1())) =>
+      trueVal
+    case ex => ex
   }
 }
 
