@@ -76,13 +76,12 @@ class TestSetMembershipSimplifier
 
   test("returns inappropriately-typed set membership unchanged") {
     expressions.foreach { case (name, value, _) =>
-      expressions.filter { case (name2, _, _) => name != name2 }.foreach {
-        case (_, _, otherSet) =>
-          val inputName = tla.in(name, otherSet).as(BoolT1())
-          simplifier(inputName) shouldBe inputName
+      expressions.filter { case (name2, _, _) => name != name2 }.foreach { case (_, _, otherSet) =>
+        val inputName = tla.in(name, otherSet).as(BoolT1())
+        simplifier(inputName) shouldBe inputName
 
-          val inputValue = tla.in(value, otherSet).as(BoolT1())
-          simplifier(inputValue) shouldBe inputValue
+        val inputValue = tla.in(value, otherSet).as(BoolT1())
+        simplifier(inputValue) shouldBe inputValue
       }
     }
   }
