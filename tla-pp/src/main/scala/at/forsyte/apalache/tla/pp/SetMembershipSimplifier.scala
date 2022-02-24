@@ -2,8 +2,8 @@ package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TransformationTracker}
 import at.forsyte.apalache.tla.lir.transformations.standard.FlatLanguagePred
+import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values._
 
 /**
@@ -17,7 +17,6 @@ import at.forsyte.apalache.tla.lir.values._
 class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTransformer(tracker) {
   private val boolTag = Typed(BoolT1())
   private val trueVal = ValEx(TlaBool(true))(boolTag)
-  private val falseVal = ValEx(TlaBool(false))(boolTag)
 
   override val partialTransformers = List(transformMembership)
 
