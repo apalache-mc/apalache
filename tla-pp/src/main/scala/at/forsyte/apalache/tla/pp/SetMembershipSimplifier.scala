@@ -16,6 +16,7 @@ import at.forsyte.apalache.tla.lir.values._
  */
 class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTransformer(tracker) {
   private val boolTag = Typed(BoolT1())
+  private val intTag = Typed(IntT1())
   private def trueVal: ValEx = ValEx(TlaBool(true))(boolTag)
 
   override val partialTransformers = List(transformMembership)
@@ -26,8 +27,8 @@ class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTr
   }
 
   /**
-   * Returns the type of a TLA+ predefined set, if this transformation is applicable. In particular, it is *not*
-   * applicable to `Nat`, since `i \in Nat` does not hold for all `IntT1`-typed `i`.
+   * Returns the type of a TLA+ predefined set, if rewriting set membership to TRUE is applicable. In particular, it is
+   * *not* applicable to `Nat`, since `i \in Nat` does not hold for all `IntT1`-typed `i`.
    */
   private def typeOfSupportedPredefSet: PartialFunction[TlaPredefSet, TlaType1] = {
     case TlaBoolSet => BoolT1()
@@ -52,12 +53,13 @@ class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTr
     typeOfSupportedPredefSet.isDefinedAt(ps) && name.typeTag == Typed(SeqT1(typeOfSupportedPredefSet(ps)))
 
   /**
-   * Rewrites vacuously true membership tests based on type information.
+   * Rewrites vacuously true membership tests based on type information, and rewrites `i \in Nat` to `i \ge 0`.
    *
-   * For example, `x \in BOOLEAN` is rewritten to `TRUE` if x is typed BoolT1.
+   * For example, `x \in BOOLEAN` is rewritten to `TRUE` if `x` is typed `BoolT1`.
    */
   private def transformMembership: PartialFunction[TlaEx, TlaEx] = {
-    // Note that the case `i \in Nat` where `i` * is typed `IntT1` is excluded in [[typeOfSupportedPredefSet]].
+    case OperEx(TlaSetOper.in, name, ValEx(TlaNatSet)) if name.typeTag == Typed(IntT1()) =>
+      OperEx(TlaArithOper.ge, name, ValEx(TlaInt(0))(intTag))(boolTag)
     case OperEx(TlaSetOper.in, name, ValEx(ps: TlaPredefSet)) if isApplicable(name, ps) => trueVal
     case OperEx(TlaSetOper.in, name, OperEx(TlaSetOper.seqSet, ValEx(ps: TlaPredefSet))) if isApplicableSeq(name, ps) =>
       trueVal
