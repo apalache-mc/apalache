@@ -63,8 +63,8 @@ Binary Searches and Mergesorts are Broken][]:
 17:     }
 ```
 
-Fast forward, as was found by Joshua Bloch, the expression in line 6 may throw
-an out of bounds exception, due to an integer overflow. This is because `low`
+Fast forward, as was found by Joshua Bloch, the addition in line 6 may throw
+an out of bounds exception at line 7, due to an integer overflow. This is because `low`
 and `high` are signed integers whose maximum value could not grow above `2^31 -
 1`, so the sum `low + high` could wrap into a negative number.
 
