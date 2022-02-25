@@ -123,6 +123,15 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
    * Translate SubSeq(S, m, n), which is canonically defined as:
    *
    * <pre SubSeq(s, m, n) == [ i \in 1..(1+n-m) |-> s[i+m-1] ] </pre>
+   *
+   * @param state
+   *   a symbolic state to start with
+   * @param seqEx
+   *   a sequence `S``
+   * @param newStartEx
+   *   the starting index `m` (inclusive)
+   * @param newEndEx
+   *   the ending index `n` (inclusive)
    */
   private def translateSubSeq(state: SymbState, seqEx: TlaEx, newStartEx: TlaEx, newEndEx: TlaEx): SymbState = {
     // rewrite seqEx, newStartEx, and newEndEx
@@ -145,15 +154,16 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     def asInt(cell: ArenaCell) = cell.toNameEx as IntT1()
 
     // adjustedStart = IF newStartBase1 > 0 THEN newStartBase1 ELSE 1
+    val newStartBase1asInt = asInt(newStartBase1)
     solverAssert(tla.eql(asInt(adjustedStart),
-        tla.ite(tla.gt(asInt(newStartBase1), tla.int(0)) as BoolT1(), asInt(newStartBase1),
+        tla.ite(tla.gt(newStartBase1asInt, tla.int(0)) as BoolT1(), newStartBase1asInt,
             tla.int(1)) as IntT1()) as BoolT1())
     // adjustedEnd = IF newEndBase1 <= len THEN newEndBase1 ELSE len
     nextState = nextState.updateArena(_.appendCell(IntT()))
     val adjustedEnd = nextState.arena.topCell
+    val newEndBase1asInt = asInt(newEndBase1)
     solverAssert(tla.eql(asInt(adjustedEnd),
-        tla.ite(tla.le(asInt(newEndBase1), asInt(len)) as BoolT1(), asInt(newEndBase1),
-            asInt(len)) as IntT1()) as BoolT1())
+        tla.ite(tla.le(newEndBase1asInt, asInt(len)) as BoolT1(), newEndBase1asInt, asInt(len)) as IntT1()) as BoolT1())
 
     nextState = defaultValueFactory.makeUpValue(nextState, CellT.fromType1(seqT.elem))
     val defaultValue = nextState.asCell
@@ -262,8 +272,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val pickedCell = newState.asCell
         val cond = tla.le(tla.int(dstIndexBase1), len1.toNameEx as IntT1()) as BoolT1()
         val when0 = oracle.whenEqualTo(nextState, 0) as BoolT1()
-        val ite = tla.ite(cond, when0, tla.not(when0) as BoolT1()) as BoolT1()
-        rewriter.solverContext.assertGroundExpr(ite)
+        rewriter.solverContext.assertGroundExpr(tla.eql(cond, when0) as BoolT1())
         (newState, pickedCell)
       }
     }
