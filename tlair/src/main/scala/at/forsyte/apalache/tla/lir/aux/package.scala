@@ -8,8 +8,9 @@ package object aux {
   type EoV[T] = ExceptionOrValue[T]
 
   def aggregate[T](
-      join: (T, T) => T, base: TlaEx => T
-  )(ex: TlaEx): T = {
+      join: (T, T) => T,
+      base: TlaEx => T,
+    )(ex: TlaEx): T = {
     val self = aggregate[T](join, base)(_)
     ex match {
       case LetInEx(body, defs @ _*) =>
@@ -17,7 +18,7 @@ package object aux {
             self(body),
             defs.map(_.body).map(self).foldLeft(base(ex)) {
               join
-            }
+            },
         )
 
       case OperEx(_, args @ _*) =>
@@ -30,12 +31,12 @@ package object aux {
 
   def allUidsBelow: TlaEx => Set[UID] = aggregate[Set[UID]](
       _ ++ _,
-      ex => Set(ex.ID)
+      ex => Set(ex.ID),
   )
 
   def uidToExMap: TlaEx => Map[UID, TlaEx] = aggregate[Map[UID, TlaEx]](
       _ ++ _,
-      ex => Map(ex.ID -> ex)
+      ex => Map(ex.ID -> ex),
   )
 
   def joinMaps(a: Map[String, Int], b: Map[String, Int]): Map[String, Int] = (for {
@@ -53,7 +54,7 @@ package object aux {
       opMaps.foldLeft(bodyMap)(joinMaps)
 
     case OperEx(_, args @ _*) =>
-      val argMaps = args map {
+      val argMaps = args.map {
         countCandidates(vars, _)
       }
       argMaps.foldLeft(Map.empty[String, Int]) {
@@ -65,8 +66,8 @@ package object aux {
   def hasPositiveArity(decl: TlaOperDecl): Boolean = decl.formalParams.nonEmpty
 
   /**
-   * We may need to split an ordered collection of OperDecls (from a LET-IN operator),
-   * into segments of 0 arity and >0 ariry operators
+   * We may need to split an ordered collection of OperDecls (from a LET-IN operator), into segments of 0 arity and >0
+   * ariry operators
    */
   def collectSegments(decls: Traversable[TlaOperDecl]): List[List[TlaOperDecl]] = decls match {
     case d if d.isEmpty => List.empty
@@ -84,19 +85,19 @@ package object aux {
 
   def diff(ex1: TlaEx, ex2: TlaEx)(implicit typeTag: TypeTag): TlaEx = (ex1, ex2) match {
     case (OperEx(op1, args1 @ _*), OperEx(op2, args2 @ _*)) if op1 == op2 =>
-      val argDiff = args1.zipAll(args2, NullEx, NullEx) map { case (x, y) => diff(x, y) }
+      val argDiff = args1.zipAll(args2, NullEx, NullEx).map { case (x, y) => diff(x, y) }
       OperEx(op1, argDiff: _*)
     case (ValEx(v1), ValEx(v2)) if v1 == v2   => ex1
     case (NameEx(n1), NameEx(n2)) if n1 == n2 => ex1
     case (LetInEx(b1, decls1 @ _*), LetInEx(b2, decls2 @ _*)) =>
       val defaultDecl = TlaOperDecl("Null", List.empty, NullEx)
       val defaultParam = OperParam("diffParam")
-      val declDiff = decls1.zipAll(decls2, defaultDecl, defaultDecl) map { case (d1, d2) =>
+      val declDiff = decls1.zipAll(decls2, defaultDecl, defaultDecl).map { case (d1, d2) =>
         if (d1.name == d2.name && d1.formalParams == d2.formalParams)
           d1.copy(body = diff(d1.body, d2.body))
         else {
           val name = s"DiffDecl_${d1.name}_${d2.name}"
-          val params = d1.formalParams.zipAll(d2.formalParams, defaultParam, defaultParam) map {
+          val params = d1.formalParams.zipAll(d2.formalParams, defaultParam, defaultParam).map {
             case (par1 @ OperParam(p1, 0), OperParam(p2, 0)) if p1 == p2 =>
               par1
             case (par1 @ OperParam(p1, n1), OperParam(p2, n2)) if p1 == p2 && n1 == n2 =>
@@ -113,16 +114,16 @@ package object aux {
   }
 
   def allDiffs(ex: TlaEx): Seq[TlaEx] = ex match {
-    case OperEx(TlaOper.apply, NameEx("Diff"), ex1, ex2) =>
+    case OperEx(TlaOper.apply, NameEx("Diff"), _, _) =>
       Seq(ex)
     case OperEx(_, args @ _*) =>
-      args flatMap {
+      args.flatMap {
         allDiffs
       }
     case LetInEx(body, defs @ _*) =>
-      (body +: (defs map {
+      (body +: (defs.map {
         _.body
-      })) flatMap allDiffs
+      })).flatMap(allDiffs)
     case _ =>
       Seq.empty
   }

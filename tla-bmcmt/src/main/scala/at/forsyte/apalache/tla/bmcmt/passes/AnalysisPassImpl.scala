@@ -1,29 +1,30 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.PassOptions
-import at.forsyte.apalache.tla.bmcmt.CheckerException
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
-import at.forsyte.apalache.tla.lir.{TlaModule, ModuleProperty}
-import at.forsyte.apalache.tla.lir.transformations.{TransformationTracker, fromTouchToExTransformation}
+import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
+import at.forsyte.apalache.tla.lir.transformations.{fromTouchToExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.transformations.standard.ModuleByExTransformer
-import at.forsyte.apalache.tla.lir.{NullEx, TlaAssumeDecl, TlaEx, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.{TlaAssumeDecl, TlaEx, TlaOperDecl}
 import at.forsyte.apalache.tla.pp.LetInOptimizer
 import com.google.inject.Inject
-import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
 /**
  * Find free-standing existential quantifiers, grade expressions, and produce hints about some formulas.
  */
-class AnalysisPassImpl @Inject() (val options: PassOptions, exprGradeStoreImpl: ExprGradeStoreImpl,
-    tracker: TransformationTracker, writerFactory: TlaWriterFactory)
+class AnalysisPassImpl @Inject() (
+    val options: PassOptions,
+    exprGradeStoreImpl: ExprGradeStoreImpl,
+    tracker: TransformationTracker,
+    writerFactory: TlaWriterFactory)
     extends AnalysisPass with LazyLogging {
 
   override def name: String = "AnalysisPass"
 
   object StringOrdering extends Ordering[Object] {
-    override def compare(x: Object, y: Object): Int = x.toString compare y.toString
+    override def compare(x: Object, y: Object): Int = x.toString.compare(y.toString)
   }
 
   override def execute(module: TlaModule): Option[TlaModule] = {

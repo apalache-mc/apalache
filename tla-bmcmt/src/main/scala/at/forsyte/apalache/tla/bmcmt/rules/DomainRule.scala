@@ -2,10 +2,9 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.caches.IntRangeCache
-import at.forsyte.apalache.tla.bmcmt.rules.aux.ProtoSeqOps
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, OperEx}
-import at.forsyte.apalache.tla.lir.TypedPredefs.{BuilderExAsTyped, tlaExToBuilderExAsTyped}
+import at.forsyte.apalache.tla.lir.TypedPredefs.{tlaExToBuilderExAsTyped, BuilderExAsTyped}
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -76,7 +75,7 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
       val inDom = tla.apalacheStoreInSet(domElem.toNameEx, dom.toNameEx)
       val notInDom = tla.apalacheStoreNotInSet(domElem.toNameEx, dom.toNameEx)
       // the element is in range, if indexBase0 < len
-      val inRange = tla.lt(tla.int(indexBase0), len.toNameEx as IntT1()) as BoolT1()
+      val inRange = tla.lt(tla.int(indexBase0), len.toNameEx.as(IntT1())).as(BoolT1())
       rewriter.solverContext.assertGroundExpr(tla.ite(inRange, inDom, notInDom))
     }
 

@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
-import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaEx, TlaOperDecl, TypeTag}
+import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaEx, TypeTag}
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 
@@ -23,7 +23,7 @@ object Flatten {
           ex
         else {
           // We want to preserve arg. order
-          val newArgs = args flatMap { x =>
+          val newArgs = args.flatMap { x =>
             if (hasSameOper(x)) {
               // We steal all children from OperEx subexpressions using the same operator
               x.asInstanceOf[OperEx].args
@@ -40,8 +40,7 @@ object Flatten {
   /**
    * Returns a transformation that replaces nested conjunction/disjunction with a flattened equivalent.
    *
-   * Example:
-   * ( a /\ b) /\ c [/\(/\(a,b),c)] -> a /\ b /\ c [/\(a,b,c)]
+   * Example: ( a /\ b) /\ c [/\(/\(a,b),c)] -> a /\ b /\ c [/\(a,b,c)]
    */
   def apply(tracker: TransformationTracker)(implicit typeTag: TypeTag): TlaExTransformation = tracker.trackEx { ex =>
     val tr = flattenOne(tracker)
@@ -49,20 +48,14 @@ object Flatten {
     ex match {
       case LetInEx(body, defs @ _*) =>
         // Transform bodies of all op.defs
-        def xform: TlaOperDecl => TlaOperDecl =
-          tracker.trackOperDecl { d: TlaOperDecl =>
-            d.copy(
-                body = self(d.body)
-            )
-          }
 
-        val newDefs = defs map tracker.trackOperDecl { d => d.copy(body = self(d.body)) }
+        val newDefs = defs.map(tracker.trackOperDecl { d => d.copy(body = self(d.body)) })
         val newBody = self(body)
         val retEx = if (defs == newDefs && body == newBody) ex else LetInEx(newBody, newDefs: _*)
         tr(retEx)
 
       case OperEx(op, args @ _*) =>
-        val newArgs = args map self
+        val newArgs = args.map(self)
         val newEx = if (args == newArgs) ex else OperEx(op, newArgs: _*)
         tr(newEx)
 

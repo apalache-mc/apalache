@@ -23,9 +23,17 @@ object ArenaCell {
 /**
  * A symbolic memory cell. Each cell has an identifier (similar to a memory address in a physical computer).
  *
- * @author Igor Konnov
+ * @param id
+ *   Id of the cell
+ * @param cellType
+ *   Type of the cell
+ * @param isUnconstrained
+ *   Flag defining if the SMT representation of the cell is unconstrained, default is false.
+ * @author
+ *   Igor Konnov
  */
-class ArenaCell(val id: Int, val cellType: CellT) extends Comparable[ArenaCell] with Serializable {
+class ArenaCell(val id: Int, val cellType: CellT, val isUnconstrained: Boolean = false)
+    extends Comparable[ArenaCell] with Serializable {
   override def toString: String = {
     Arena.namePrefix + id
   }

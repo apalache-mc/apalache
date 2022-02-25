@@ -18,7 +18,8 @@ object StandardAnnotations {
   /**
    * Construct a type annotation.
    *
-   * @param typeText the text of the type annotation
+   * @param typeText
+   *   the text of the type annotation
    * @return
    */
   def mkType(typeText: String): Annotation = {
@@ -28,7 +29,8 @@ object StandardAnnotations {
   /**
    * Construct a type alias annotation.
    *
-   * @param typeText the text of the type annotation
+   * @param typeText
+   *   the text of the type annotation
    * @return
    */
   def mkTypeAlias(typeText: String): Annotation = {

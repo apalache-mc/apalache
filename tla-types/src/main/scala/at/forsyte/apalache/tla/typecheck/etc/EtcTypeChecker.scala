@@ -8,21 +8,28 @@ import at.forsyte.apalache.tla.typecheck.etc.EtcTypeChecker.UnwindException
 /**
  * ETC: Embarrassingly simple Type Checker.
  *
- * @param varPool        a pool of fresh variables
- * @param inferPolytypes whether the type checker is allowed to compute polymorphic types of user-defined operators.
- * @author Igor Konnov
+ * @param varPool
+ *   a pool of fresh variables
+ * @param inferPolytypes
+ *   whether the type checker is allowed to compute polymorphic types of user-defined operators.
+ * @author
+ *   Igor Konnov
  */
 class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) extends TypeChecker with EtcBuilder {
   private var listener: TypeCheckerListener = new DefaultTypeCheckerListener()
 
   /**
-   * Compute the expression type in a type context. If the expression is not well-typed, return None.
-   * As a side effect, call the listener, when discovering new types or errors.
+   * Compute the expression type in a type context. If the expression is not well-typed, return None. As a side effect,
+   * call the listener, when discovering new types or errors.
    *
-   * @param typeListener a listener that will receive the type error or type info
-   * @param rootCtx      a typing context
-   * @param rootEx       an expression
-   * @return Some(type), if the expression is well-typed; and None otherwise.
+   * @param typeListener
+   *   a listener that will receive the type error or type info
+   * @param rootCtx
+   *   a typing context
+   * @param rootEx
+   *   an expression
+   * @return
+   *   Some(type), if the expression is well-typed; and None otherwise.
    */
   override def compute(typeListener: TypeCheckerListener, rootCtx: TypeContext, rootEx: EtcExpr): Option[TlaType1] = {
     listener = typeListener // set the type listener, so we do not have to pass it around
@@ -113,31 +120,38 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
             // report the result of operator application, not the operator type itself
             onTypeFound(ex.sourceRef, res)
 
-          case tt =>
+          case _ =>
             throw new TypingException("Expected an operator type, found: ", appEx.sourceRef.tlaId)
         }
 
         def onOverloadingError(sub: Substitution, signatures: Seq[TlaType1]): Unit = {
           // The constraint solver has failed to solve the disjunctive clause:
           // operVar = operType_1 \/ ... \/ operVar = operType_n
-          val evalArgTypes = argTypes.map(sub.subRec).mkString(" and ")
+          val evalArgTypes = argTypes.map(sub.subRec)
           val argOrArgs = pluralArgs(argTypes.length)
           if (signatures.isEmpty) {
             onTypeError(appEx.sourceRef, s"No matching signature for $argOrArgs $evalArgTypes")
           } else {
             // it should be the case that manySigs has at least two elements, but we also include the case of one
             val sepSigs = String.join(" or ", signatures.map(_.toString()): _*)
-            onTypeError(appEx.sourceRef,
-                s"Need annotation. Found ${signatures.length} matching operator signatures $sepSigs for $argOrArgs $evalArgTypes")
+            val defaultMessage =
+              s"Annotation required. Found ${signatures.length} matching operator signatures $sepSigs for $argOrArgs ${evalArgTypes
+                  .mkString(" and ")}"
+            val specificMessage = appEx.explain(signatures.toList, evalArgTypes)
+            onTypeError(appEx.sourceRef, if (specificMessage.isDefined) specificMessage.get else defaultMessage)
           }
         }
 
         def onArgsMatchError(sub: Substitution, types: Seq[TlaType1]): Unit = {
           // no solution for: operVar = (arg_1, ..., arg_k) => resVar
-          val evalArgTypes = argTypes.map(sub.subRec).mkString(" and ")
+          val evalArgTypes = argTypes.map(sub.subRec)
           val argOrArgs = pluralArgs(argTypes.length)
           val evalSig = sub.subRec(operVar)
-          onTypeError(appEx.sourceRef, s"No match between operator signature $evalSig and $argOrArgs $evalArgTypes")
+          val defaultMessage =
+            s"An operator with the signature $evalSig cannot be applied to the provided $argOrArgs of type ${evalArgTypes
+                .mkString(" and ")}"
+          val specificMessage = appEx.explain(List(evalSig), evalArgTypes)
+          onTypeError(appEx.sourceRef, if (specificMessage.isDefined) specificMessage.get else defaultMessage)
         }
 
         // operVar = (arg_1, ..., arg_k) => resVar
@@ -147,10 +161,14 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
 
         def onSigMatchError(sub: Substitution, sigs: Seq[TlaType1]): Unit = {
           // no solution for: operVar = operType_1
-          val evalArgTypes = argTypes.map(sub.subRec).mkString(" and ")
+          val evalArgTypes = argTypes.map(sub.subRec)
           val argOrArgs = pluralArgs(argTypes.length)
           val evalSig = sigs.head
-          onTypeError(appEx.sourceRef, s"No match between operator signature $evalSig and $argOrArgs $evalArgTypes")
+          val defaultMessage =
+            s"An operator with the signature $evalSig cannot be applied to the provided $argOrArgs of type ${evalArgTypes
+                .mkString(" and ")}"
+          val specificMessage = appEx.explain(List(evalSig), evalArgTypes)
+          onTypeError(appEx.sourceRef, if (specificMessage.isDefined) specificMessage.get else defaultMessage)
         }
 
         if (operTypes.length == 1) {
@@ -187,7 +205,10 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
             .setOnTypeFound(tt => onTypeFound(name.sourceRef, tt))
           solver.addConstraint(clause)
           // delegate the rest to the application-by-type
-          computeRec(ctx, solver, mkApp(ex.sourceRef, Seq(instantiatedType), args: _*))
+          val instantiatedExpr = mkApp(ex.sourceRef, Seq(instantiatedType), args: _*)
+          instantiatedExpr.typeErrorExplanation = ex.typeErrorExplanation
+
+          computeRec(ctx, solver, instantiatedExpr)
         } else {
           onTypeError(ex.sourceRef, s"The operator $name is used before it is defined.")
           throw new UnwindException
@@ -206,8 +227,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
         val lambdaClause = EqClause(lambdaTypeVar, operType)
           .setOnTypeFound(tt => onTypeFound(ex.sourceRef, tt))
           .setOnTypeError((_, ts) =>
-            onTypeError(ex.sourceRef.asInstanceOf[ExactRef], "Type error in parameters: " + ts.head),
-          )
+            onTypeError(ex.sourceRef.asInstanceOf[ExactRef], "Type error in parameters: " + ts.head))
         solver.addConstraint(lambdaClause)
         operType
 
@@ -222,10 +242,10 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
         val letInSolver = new ConstraintSolver()
         val operScheme =
           ctx.types.get(name) match {
-            case Some(scheme @ TlaType1Scheme(declaredType @ OperT1(_, _), allVars)) =>
+            case Some(scheme @ TlaType1Scheme(OperT1(_, _), _)) =>
               scheme
 
-            case Some(scheme @ TlaType1Scheme(someType: TlaType1, allVars)) =>
+            case Some(TlaType1Scheme(someType: TlaType1, allVars)) =>
               // The definition has a type annotation which is not an operator. Assume it is a nullary operator.
               // Strictly speaking, this is a hack. However, it is quite common to declare a constant with LET.
               TlaType1Scheme(OperT1(Seq(), someType), allVars)
@@ -240,8 +260,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
 
         // translate the binders in the lambda expression, so we can quickly propagate the types of the parameters
         val preCtx =
-          new TypeContext(
-              (ctx.types + (name -> operScheme))
+          new TypeContext((ctx.types + (name -> operScheme))
                 .mapValues(p => p.copy(approxSolution.subRec(p.principalType))))
         val extCtx = translateBinders(preCtx, letInSolver, binders)
         val annotationParams = operScheme.principalType.asInstanceOf[OperT1].args
@@ -311,7 +330,9 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
   }
 
   // produce constraints for the binders that are used in a lambda expression
-  private def translateBinders(ctx: TypeContext, solver: ConstraintSolver,
+  private def translateBinders(
+      ctx: TypeContext,
+      solver: ConstraintSolver,
       binders: Seq[(EtcName, EtcExpr)]): TypeContext = {
     // Apply `toList` first, in case `binders` is lazy. Because `computeRec` has side effects.
     val setTypes = binders.toList.map(binder => computeRec(ctx, solver, binder._2))
@@ -356,7 +377,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
     listener.onTypeError(sourceRef, message)
   }
 
-  // tired of reading "arguments(s)", it's easy to fix
+  // Pluralize the string "argument"
   private def pluralArgs(count: Int): String = {
     if (count != 1) "arguments" else "argument"
   }

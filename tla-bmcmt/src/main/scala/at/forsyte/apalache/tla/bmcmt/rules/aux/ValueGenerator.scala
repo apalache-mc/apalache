@@ -70,7 +70,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
     // convert the values to a list, so we don't have a lazy stream
     val elemTypes = recordType.fieldTypes.values.toList
     val elemCells =
-      elemTypes map { elemType =>
+      elemTypes.map { elemType =>
         nextState = gen(nextState, elemType)
         nextState.asCell
       }
@@ -83,7 +83,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
     val tupleCell = nextState.arena.topCell
     // convert the values to a list, so we don't have a lazy stream
     val elemCells =
-      tupleType.elems map { elemType =>
+      tupleType.elems.map { elemType =>
         nextState = gen(nextState, elemType)
         nextState.asCell
       }

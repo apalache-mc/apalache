@@ -96,10 +96,33 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       val relation = arena.getCdm(cell)
 
       def isInRelation(pair: ArenaCell): Boolean = {
-        val mem =
-          tla.apalacheSelectInSet(pair.toNameEx as funT1.arg,
-              relation.toNameEx as TupT1(funT1.arg, funT1.res)) as BoolT1()
-        solverContext.evalGroundExpr(mem) == tla.bool(true).typed(BoolT1())
+        solverContext.config.smtEncoding match {
+          case `arraysEncoding` =>
+            // in the arrays encoding the relation is only represented in the arena
+            // given this, we query the solver about the function's domain instead
+            val domain = arena.getDom(cell)
+
+            def inDom(elem: ArenaCell): TlaEx = {
+              val elemEx = fromTlaEx(elem.toNameEx).typed(funT1.arg)
+              val domEx = fromTlaEx(domain.toNameEx).typed(SetT1(funT1.arg))
+              tla.apalacheSelectInSet(elemEx, domEx).typed(BoolT1())
+            }
+
+            // check if the pair's head is in the domain
+            val funArgs = arena.getHas(pair).head
+            val argsInDom = inDom(funArgs).typed(BoolT1())
+            solverContext.evalGroundExpr(argsInDom) == tla.bool(true).typed(BoolT1())
+
+          case `oopsla19Encoding` =>
+            val mem =
+              tla
+                .apalacheSelectInSet(pair.toNameEx.as(funT1.arg), relation.toNameEx.as(TupT1(funT1.arg, funT1.res)))
+                .as(BoolT1())
+            solverContext.evalGroundExpr(mem) == tla.bool(true).typed(BoolT1())
+
+          case oddEncodingType =>
+            throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
+        }
       }
 
       def decodePair(seen: Map[TlaEx, TlaEx], pair: ArenaCell): Map[TlaEx, TlaEx] = {
@@ -118,9 +141,9 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         .getHas(relation)
         .filter(isInRelation)
         .foldLeft(Map[TlaEx, TlaEx]())(decodePair)
-        .map(p => tla.tuple(p._1, p._2) as pairT)
+        .map(p => tla.tuple(p._1, p._2).as(pairT))
         .toSeq
-      tla.apalacheSetAsFun(tla.enumSet(pairs: _*) as SetT1(pairT)) as funT1
+      tla.apalacheSetAsFun(tla.enumSet(pairs: _*).as(SetT1(pairT))).as(funT1)
 
     case SeqT(elemT) =>
       val elemT1 = elemT.toTlaType1
@@ -147,7 +170,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       // Note that the domain may have fewer fields than the record type is saying.
       // This comes from the fact that we can extend a record with a richer type.
       val domCell = arena.getDom(cell)
-      val dom = decodeSet(arena, domCell) map exToStr
+      val dom = decodeSet(arena, domCell).map(exToStr)
       val fieldValues = arena.getHas(cell)
       val keyList = r.fields.keySet.toList
 
@@ -176,7 +199,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       val elemAsExprs = tupleElems.map(c => decodeCellToTlaEx(arena, c))
       tla.tuple(elemAsExprs: _*).typed(t.toTlaType1)
 
-    case PowSetT(t @ FinSetT(_)) =>
+    case PowSetT(FinSetT(_)) =>
       val baseset = decodeCellToTlaEx(arena, arena.getDom(cell))
       tla.powSet(baseset).typed(SetT1(TlaType1.fromTypeTag(baseset.typeTag)))
 
@@ -219,7 +242,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         }
 
       case OperEx(oper, args @ _*) =>
-        OperEx(oper, args map rec: _*)(ex.typeTag)
+        OperEx(oper, args.map(rec): _*)(ex.typeTag)
 
       case _ =>
         ex

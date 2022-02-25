@@ -11,8 +11,11 @@ import at.forsyte.apalache.tla.lir.values._
 abstract class Printer {
   def apply(p_ex: TlaEx): String
 
-  def apply(p_decl: TlaDecl): String = ""
-
+  def apply(p_decl: TlaDecl): String = {
+    // Telling the compiler we know we're not using p_decl here
+    locally(p_decl);
+    ""
+  }
 }
 
 object UTFPrinter extends Printer {
@@ -52,19 +55,25 @@ object UTFPrinter extends Printer {
   override def apply(p_ex: TlaEx): String = apply(p_ex, false)
 
   def apply(p_ex: TlaEx, p_rmSpace: Boolean): String = {
-    def mapMk(seq: Seq[TlaEx], sep: String = ", ", fn: TlaEx => String) = seq.map(fn).mkString(sep)
+    def mapMk(seq: Seq[TlaEx], sep: String, fn: TlaEx => String) = seq.map(fn).mkString(sep)
 
     def str(seq: Seq[TlaEx], sep: String = ", ") = mapMk(seq, sep, apply)
 
-    def opAppStr(seq: Seq[TlaEx], sep: String = ", ") = mapMk(seq, sep, opApp)
+    def opAppStr(seq: Seq[TlaEx], sep: String) = mapMk(seq, sep, opApp)
 
-    def groupMapMk(seq: Seq[TlaEx], n: Int, pattern: String, sep: String, fn: TlaEx => String) =
+    def groupMapMk(
+        seq: Seq[TlaEx],
+        n: Int,
+        pattern: String,
+        sep: String,
+        fn: TlaEx => String) =
       seq.grouped(n).toSeq.map(s => pattern.format(s.map(fn): _*)).mkString(sep)
 
-    def strPattern(seq: Seq[TlaEx], n: Int, pattern: String, sep: String): String =
-      groupMapMk(seq, n, pattern, sep, apply)
-
-    def opAppPattern(seq: Seq[TlaEx], n: Int, pattern: String, sep: String): String =
+    def opAppPattern(
+        seq: Seq[TlaEx],
+        n: Int,
+        pattern: String,
+        sep: String): String =
       groupMapMk(seq, n, pattern, sep, opApp)
 
     def opAppStrPairs(seq: Seq[TlaEx], mid: String = pad(m_rarrow), sep: String = pad(m_box)): String =
@@ -200,7 +209,7 @@ object UTFPrinter extends Printer {
             if (args.isEmpty)
               oper.name
             else "%s(%s)".format(oper.name, str(args))
-          //, args: _*) // the default format
+          // , args: _*) // the default format
         }
 
       case _ => ""
@@ -214,8 +223,10 @@ object UTFPrinter extends Printer {
   /**
    * Print a declaration
    *
-   * @param p_decl a declaration
-   * @return a string representation of TLA+ declaration
+   * @param p_decl
+   *   a declaration
+   * @return
+   *   a string representation of TLA+ declaration
    */
   override def apply(p_decl: TlaDecl): String = {
     def pr_param(p: OperParam): String = {

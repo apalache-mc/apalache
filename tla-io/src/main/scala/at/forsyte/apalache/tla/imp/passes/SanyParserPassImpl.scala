@@ -1,22 +1,17 @@
 package at.forsyte.apalache.tla.imp.passes
 
 import at.forsyte.apalache.infra.passes.PassOptions
-import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.io.json.impl.{DefaultTagReader, UJsonRep, UJsonToTla}
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{CyclicDependencyError, TlaModule}
-import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.standard.DeclarationSorter
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
-import at.forsyte.apalache.tla.imp.{SanyImporter, SanyImporterException, utils}
+import at.forsyte.apalache.tla.imp.{utils, SanyImporter, SanyImporterException}
 import com.google.inject.Inject
-import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
 import java.io.File
-import java.nio.file.Path
-import org.apache.commons.io.FilenameUtils
 
 /**
  * Parsing TLA+ code with SANY.
@@ -25,9 +20,11 @@ import org.apache.commons.io.FilenameUtils
  *   Igor Konnov
  */
 class SanyParserPassImpl @Inject() (
-    val options: PassOptions, val sourceStore: SourceStore, val annotationStore: AnnotationStore,
-    val writerFactory: TlaWriterFactory,
-) extends SanyParserPass with LazyLogging {
+    val options: PassOptions,
+    val sourceStore: SourceStore,
+    val annotationStore: AnnotationStore,
+    val writerFactory: TlaWriterFactory)
+    extends SanyParserPass with LazyLogging {
 
   override def name: String = "SanyParser"
 

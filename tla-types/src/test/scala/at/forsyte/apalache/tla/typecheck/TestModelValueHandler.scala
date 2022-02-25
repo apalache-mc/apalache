@@ -35,7 +35,7 @@ class TestModelValueHandler extends AnyFunSuite {
     val ti = ModelValueHandler.typeAndIndex _
 
     assert(
-        pairs.forall(pa => read(ctr(pa)) == ConstT1(pa._1)),
+        pairs.forall(pa => read(ctr(pa)) == ConstT1(pa._1))
     )
 
     val values = Seq(
@@ -43,10 +43,10 @@ class TestModelValueHandler extends AnyFunSuite {
         ("A", "2"),
         ("B", "one"),
         ("B", "two"),
-    ) map { p => s"${p._2}_OF_${p._1}" }
+    ).map { p => s"${p._2}_OF_${p._1}" }
 
     assert(
-        values.forall(v => ti(v).map(x => ctr((x._1.name, x._2))).contains(v)),
+        values.forall(v => ti(v).map(x => ctr((x._1.name, x._2))).contains(v))
     )
   }
 

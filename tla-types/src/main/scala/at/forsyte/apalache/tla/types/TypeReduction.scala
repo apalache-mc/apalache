@@ -26,7 +26,7 @@ class TypeReduction(private val gen: SmtVarGenerator) {
       ReductionResult(oper(v1, v2), phi1 ++ phi2)
     case TupT(ts @ _*) =>
       val l = ts.length
-      val results = ts map { apply(_, m) }
+      val results = ts.map { apply(_, m) }
       val tupIdx = gen.getFreshInt
       val constraints = results.zipWithIndex.flatMap { case (ReductionResult(ti, phii), i) =>
         hasIndex(tupIdx, i, ti) +: phii
@@ -34,17 +34,15 @@ class TypeReduction(private val gen: SmtVarGenerator) {
       val phi = sizeOfEql(tupIdx, l) +: constraints
       ReductionResult(tup(tupIdx), phi)
     case RecT(ts @ _*) =>
-      val l = ts.length
       val recIdx = gen.getFreshInt
-      val constraints = ts flatMap { case KvPair(k, v) =>
+      val constraints = ts.flatMap { case KvPair(k, v) =>
         val ReductionResult(t, phi) = apply(v, m)
         hasField(recIdx, k, t) +: phi
       }
       ReductionResult(rec(recIdx), constraints)
     case SparseTupT(ts @ _*) =>
-      val l = ts.length
       val tupIdx = gen.getFreshInt
-      val constraints = ts flatMap { case KvPair(k, v) =>
+      val constraints = ts.flatMap { case KvPair(k, v) =>
         val ReductionResult(t, phi) = apply(v, m)
         hasIndex(tupIdx, k, t) +: phi
       }

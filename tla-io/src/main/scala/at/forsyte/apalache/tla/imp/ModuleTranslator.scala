@@ -12,11 +12,13 @@ import UntypedPredefs._
 /**
  * Translate a tla2tools ModuleNode to a TlaModule.
  *
- * @author konnov
+ * @author
+ *   konnov
  */
 class ModuleTranslator(
-    sourceStore: SourceStore, annotationStore: AnnotationStore
-) extends LazyLogging {
+    sourceStore: SourceStore,
+    annotationStore: AnnotationStore)
+    extends LazyLogging {
   private val annotationExtractor = new AnnotationExtractor(annotationStore)
 
   def translate(node: ModuleNode): TlaModule = {
@@ -106,12 +108,15 @@ class ModuleTranslator(
   }
 
   private def addAliasesOfBuiltins(
-      ctx: Context, instancePrefix: String, node: ModuleNode
-  ): Context = {
+      ctx: Context,
+      instancePrefix: String,
+      node: ModuleNode): Context = {
     // declare a library definition as an operator alias
     def subDef(
-        ctx: Context, modName: String, alias: String, opDefNode: OpDefNode
-    ): Context = {
+        ctx: Context,
+        modName: String,
+        alias: String,
+        opDefNode: OpDefNode): Context = {
       val opName = opDefNode.getName.toString.intern()
       var newCtx = ctx
       StandardLibrary.libraryOperators.get((modName, opName)).collect { case oper =>
@@ -160,15 +165,16 @@ class ModuleTranslator(
   }
 
   /**
-   * This is a temporary bugfix for the issue 130: https://github.com/informalsystems/apalache/issues/130
-   * TODO(igor) Once it is fixed in SANY, remove this method. This method does not detect mutually recursive operators,
-   * but I have never seen mutual recursion in TLA+.
+   * This is a temporary bugfix for the issue 130: https://github.com/informalsystems/apalache/issues/130 TODO(igor)
+   * Once it is fixed in SANY, remove this method. This method does not detect mutually recursive operators, but I have
+   * never seen mutual recursion in TLA+.
    *
-   * @param declared the set of names that have been introduced at higher levels.
+   * @param declared
+   *   the set of names that have been introduced at higher levels.
    */
   private def workaroundMarkRecursive(
-      declared: Set[TlaOperDecl], ex: TlaEx
-  ): Unit = {
+      declared: Set[TlaOperDecl],
+      ex: TlaEx): Unit = {
     ex match {
       case NameEx(name) =>
         declared.find(_.name == name).foreach {
@@ -203,8 +209,8 @@ class ModuleTranslator(
 object ModuleTranslator {
 
   def apply(
-      sourceStore: SourceStore, annotationStore: AnnotationStore
-  ): ModuleTranslator = {
+      sourceStore: SourceStore,
+      annotationStore: AnnotationStore): ModuleTranslator = {
     new ModuleTranslator(sourceStore, annotationStore)
   }
 }

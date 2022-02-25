@@ -3,7 +3,8 @@ package at.forsyte.apalache.tla.bmcmt.rewriter
 /**
  * Configuration options for SymbStateRewriter, see tuning.md.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class RewriterConfig {
 
@@ -17,8 +18,10 @@ object RewriterConfig {
 
   /**
    * Construct config from a map of string, e.g., produced by tuning.properties
-   * @param options a map of strings
-   * @return a new config
+   * @param options
+   *   a map of strings
+   * @return
+   *   a new config
    */
   def apply(options: Map[String, String]): RewriterConfig = {
     val config = new RewriterConfig

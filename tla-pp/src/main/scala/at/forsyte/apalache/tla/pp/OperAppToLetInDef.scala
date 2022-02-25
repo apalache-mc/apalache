@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
@@ -10,14 +10,13 @@ import TypedPredefs._
 /**
  * Replaces instances of user-defined operator applications with a LET-IN wrapper.
  *
- * Example:
- * A(x,y) ~~> LET App_1 == A(x,y) IN App_1
+ * Example: A(x,y) ~~> LET App_1 == A(x,y) IN App_1
  *
  * Operator constants and formal parameters are ignored.
  */
 class OperAppToLetInDef(
-    nameGenerator: UniqueNameGenerator, tracker: TransformationTracker
-) {
+    nameGenerator: UniqueNameGenerator,
+    tracker: TransformationTracker) {
 
   import OperAppToLetInDef.NAME_PREFIX
 
@@ -35,7 +34,7 @@ class OperAppToLetInDef(
         case Typed(tt: TlaType1) => tt
         case t                   => throw new TypingException("Expected Typed(_: TlaType1), found: " + t, ex.ID)
       }
-      val newArgs = args map wrap(wrappableNames)
+      val newArgs = args.map(wrap(wrappableNames))
       val newEx =
         if (args == newArgs) {
           ex
@@ -53,7 +52,7 @@ class OperAppToLetInDef(
       LetInEx(applyNewDecl, newDecl)(ex.typeTag)
 
     case ex @ OperEx(oper, args @ _*) =>
-      val newArgs = args map wrap(wrappableNames)
+      val newArgs = args.map(wrap(wrappableNames))
       if (args == newArgs) {
         ex
       } else {
@@ -79,7 +78,7 @@ class OperAppToLetInDef(
   }
 
   def moduleTransform(wrappableNames: Set[String]): TlaModuleTransformation = { m =>
-    val newDecls = m.declarations map {
+    val newDecls = m.declarations.map {
       case d @ TlaOperDecl(_, _, body) => d.copy(body = wrap(wrappableNames)(body))
       case d                           => d
     }
@@ -91,6 +90,6 @@ object OperAppToLetInDef {
   val NAME_PREFIX = "CALL"
 
   def apply(
-      nameGenerator: UniqueNameGenerator, tracker: TransformationTracker
-  ) = new OperAppToLetInDef(nameGenerator, tracker)
+      nameGenerator: UniqueNameGenerator,
+      tracker: TransformationTracker) = new OperAppToLetInDef(nameGenerator, tracker)
 }

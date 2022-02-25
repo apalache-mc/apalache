@@ -12,28 +12,28 @@ case class TlaInt(value: BigInt) extends TlaValue {
 }
 
 /**
- * A decimal constant d_1...d_k.d_k+1...d_m.
- * Since we represent the decimal value with BigDecimal, one should take care of rounding results.
+ * A decimal constant d_1...d_k.d_k+1...d_m. Since we represent the decimal value with BigDecimal, one should take care
+ * of rounding results.
  */
 case class TlaDecimal(value: BigDecimal) extends TlaValue
 
 /**
- * A truly real number, not a float.
- * This class is kept for compatibility with TLA+. We do not have an efficient representation for it.
+ * A truly real number, not a float. This class is kept for compatibility with TLA+. We do not have an efficient
+ * representation for it.
  */
 case class TlaReal() extends TlaValue
 
 /**
  * <p>The infinity constant that corresponds to Reals!Infinity.</p>
  *
- * <p>The word "real" in the name merely suggests that this is a constant defined in the Reals module,
- * and should not be understood as an invitation to a philosophical discourse on existence of infinite values :-)</p>
+ * <p>The word "real" in the name merely suggests that this is a constant defined in the Reals module, and should not be
+ * understood as an invitation to a philosophical discourse on existence of infinite values :-)</p>
  */
 object TlaRealInfinity extends TlaReal
 
 /**
- * A Boolean constant. Efficiently, there are two values: TlaBool(false) and TlaBool(true).
- * We keep the case class and do not introduce objects such as TlaFalse and TlaTrue for consistency with other values.
+ * A Boolean constant. Efficiently, there are two values: TlaBool(false) and TlaBool(true). We keep the case class and
+ * do not introduce objects such as TlaFalse and TlaTrue for consistency with other values.
  */
 case class TlaBool(value: Boolean) extends TlaValue
 

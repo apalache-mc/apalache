@@ -3,12 +3,11 @@ package at.forsyte.apalache.tla.bmcmt.trex
 /**
  * A state of the executor context:
  *
- * <ul>
- *   <li>In <b>Preparing</b>, new transitions and assertions may be added to the current state.</li>
- *   <li>In <b>Picked</b>, a transition has been fixed. Only assertions may be added.</li>
- * </ul>
+ * <ul> <li>In <b>Preparing</b>, new transitions and assertions may be added to the current state.</li> <li>In
+ * <b>Picked</b>, a transition has been fixed. Only assertions may be added.</li> </ul>
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 abstract class ExecutorControlState {}
 

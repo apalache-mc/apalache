@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.{NullEx, TlaEx}
+import at.forsyte.apalache.tla.lir.NullEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
@@ -23,7 +23,6 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
 
   /**
    * Produce a default value that, for instance, can be used as a value when picking from an empty set.
-   *
    * @param state
    *   a symbolic state
    * @param cellType
@@ -72,14 +71,16 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         newState.setRex(recCell.toNameEx)
 
       case tp @ FinSetT(_) => // {}
-        var arena = state.arena.appendCell(tp)
+        val arena = state.arena.appendCell(tp)
         val set = arena.topCell
         state.setArena(arena).setRex(set.toNameEx).setArena(arena)
 
-      case tp @ FunT(domT, cdmT) => // [x \in {} |-> {}]
-        val relState = makeUpValue(state, FinSetT(TupleT(Seq(tp.argType, tp.resultType))))
+      case tp @ FunT(_, _) => // [x \in {} |-> {}]
+        val domState = makeUpValue(state, FinSetT(tp.argType))
+        val relState = makeUpValue(domState, FinSetT(TupleT(Seq(tp.argType, tp.resultType))))
         var arena = relState.arena.appendCell(tp)
         val funCell = arena.topCell
+        arena = arena.setDom(funCell, domState.asCell)
         arena = arena.setCdm(funCell, relState.asCell)
         relState.setArena(arena).setRex(funCell.toNameEx)
 

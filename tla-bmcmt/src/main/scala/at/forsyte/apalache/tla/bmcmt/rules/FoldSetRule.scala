@@ -11,10 +11,10 @@ import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.pp.InlinerOfUserOper
 
 /**
- * Rewriting rule for FoldSet.
- * Similar to Cardinality, we need to consider element set presence and multiplicity.
+ * Rewriting rule for FoldSet. Similar to Cardinality, we need to consider element set presence and multiplicity.
  *
- * @author Jure Kukovec
+ * @author
+ *   Jure Kukovec
  */
 class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
@@ -32,7 +32,7 @@ class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = state.ex match {
     // assume isApplicable
-    case ex @ OperEx(ApalacheOper.foldSet, LetInEx(NameEx(_), opDecl), baseEx, setEx) =>
+    case OperEx(ApalacheOper.foldSet, LetInEx(NameEx(_), opDecl), baseEx, setEx) =>
       // rewrite baseEx to its final cell form
       val baseState = rewriter.rewriteUntilDone(state.setRex(baseEx))
       val baseCell = baseState.asCell
@@ -64,7 +64,7 @@ class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
           throw new TypingException(s"FoldSet argument $setEx should have the type Set(_), found $nonSet.", setEx.ID)
       }
       val opT = OperT1(Seq(a, b), a)
-      //sanity check
+      // sanity check
       opDecl.typeTag.asTlaType1() match {
         case `opT` => // all good
         case badType =>
@@ -77,7 +77,7 @@ class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
           "a" -> a,
           "b" -> b,
           "op" -> opT,
-          "bool" -> BoolT1()
+          "bool" -> BoolT1(),
       )
 
       val inliner = mkInliner(opDecl)
@@ -103,7 +103,7 @@ class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val condEx = tla
           .or(
               tla.not(tla.apalacheSelectInSet(currentCell.toNameEx, setNameEx) ? "bool") ? "bool",
-              tla.or(counted.map(eqToOther(setNameEx, currentCell, _)): _*) ? "bool"
+              tla.or(counted.map(eqToOther(setNameEx, currentCell, _)): _*) ? "bool",
           ) ? "bool"
         solverAssert(tla.eql(condCell.toNameEx, condEx).typed(types, "bool"))
 
@@ -122,7 +122,7 @@ class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
           .ite(
               condCell.toNameEx ? "bool",
               oldResultCellName ? "a",
-              inlinedCellName ? "a"
+              inlinedCellName ? "a",
           )
           .typed(types, "a")
 

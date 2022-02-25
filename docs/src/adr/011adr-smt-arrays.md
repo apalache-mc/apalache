@@ -2,7 +2,7 @@
 
 | author        | revision |
 | ------------- |---------:|
-| Rodrigo Otoni |      1.4 |
+| Rodrigo Otoni |      1.6 |
 
 This ADR describes an alternative encoding of the [KerA+] fragment of TLA+ into SMT.
 Compound data structures, e.g. sets, are currently encoded using the [core theory] of SMT,
@@ -136,11 +136,10 @@ The following changes will be made to implement the new encoding of sets:
     elements will remain unchanged.
 - In class `SymbStateRewriterImplWithArrays`, add the new rules to `ruleLookupTable` by overriding
   the entries to their older versions.
-- Add six new Apalache IR operators in `ApalacheOper`, `Builder`, `ConstSimplifierForSmt`, and 
+- Add four new Apalache IR operators in `ApalacheOper`, `Builder`, `ConstSimplifierForSmt`, and 
   `PreproSolverContext`, to represent the array operations.
   - The `selectInSet` IR operator represents the SMT `select`.
   - The `storeInSet` IR operator represents the SMT `store`.
-  - The `chain` and `assignChain` IR operators represent compound SMT operations.
   - The `unchangedSet` IR operator represents an equality between the current and new SSA array
     representations. This is required to constraint the array representation as it evolves. It is
     important to note that this operator assumes that all arrays are initially empty, so an element
@@ -155,10 +154,6 @@ The following changes will be made to implement the new encoding of sets:
     and `getInPred`, will not be applied to the new encoding. Cases for the new IR operators will 
     be added to `toExpr`, which will default to `TlaSetOper.in` and `TlaSetOper.notin` for the 
     existing encoding.
-  - The `chain` and `assignChain` IR operators encode a sequence of SMT operations into a single
-    clause. They can be used to efficiently encode compound `store` operations when many elements
-    need to be added a set, by avoiding the declaration of intermediary arrays. In addition to
-    `store`, they can also be used to compound other operations, such as arithmetic ones.
   - The `smtMap` IR operator will be used to encode the TLA+ set filter operation. It constructs
     a temporary array that contains the evaluation of the filter's predicate for each set element
     and uses SMT map to compute the intersection of the set being filtered and the set represented
@@ -286,8 +281,22 @@ The following changes will be made to implement the new encoding of functions:
 
 - Add alternative rewriting rules for functions when appropriate, by extending the existing rules. The
   same caveats stated for the rewriting rules for sets will apply here.
+  - The sets of pairs used in the current encoding are the basis for the counter-example generation in
+    `SymbStateDecoder`. In order to continue having counter-examples, these sets will keep being produced,
+    but will not be present in the SMT constraints. They will be carried only as metadata in the `Arena`.
 - Update class `SymbStateRewriterImplWithArrays` with the rules for functions.
+- Update the `storeInSet` IR operator to also store function updates. It will have the value resulting
+  from the update as an optional argument.
+  - Since functions will be encoded as SMT arrays, the `selectInSet`, `storeInSet`, and `unchangedSet`
+    IR operators will be used when handling them. A future refactoring may rename these operators.
 - Update class `Z3SolverContext` to handle the new SMT constraints over arrays.
+  - A case for `FunT` will be added to `getOrMkCellSort`.
+  - In `declareCell`, functions will be declared as arrays, but will be left unconstrained.
+  - The `mkStore` method will be updated to also handle functions. It will have an additional
+    optional argument containing the value to be stored in the range of the array. The new
+    argument's default value is `true`, for the handling of sets.
+  - The `mkNestedSelect` method is added to support set membership in function sets, i.e.,
+    `f \in [S -> T]`. The nesting has first `funAppRes = f[s \in S]`, followed by `funAppRes \in T`.
 
 ## 5. Encoding tuples and records
 

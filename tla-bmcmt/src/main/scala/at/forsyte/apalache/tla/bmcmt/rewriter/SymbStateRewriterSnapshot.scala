@@ -7,7 +7,8 @@ import at.forsyte.apalache.tla.lir.TlaEx
 
 import scala.collection.immutable.SortedSet
 
-class SymbStateRewriterSnapshot(val intValueCacheSnapshot: AbstractCacheSnapshot[Arena, BigInt, ArenaCell],
+class SymbStateRewriterSnapshot(
+    val intValueCacheSnapshot: AbstractCacheSnapshot[Arena, BigInt, ArenaCell],
     val intRangeCacheSnapshot: AbstractCacheSnapshot[Arena, (Int, Int), ArenaCell],
     val modelValueCacheSnapshot: AbstractCacheSnapshot[Arena, (String, String), ArenaCell],
     val recordDomainCache: AbstractCacheSnapshot[Arena, (SortedSet[String], SortedSet[String]), ArenaCell],

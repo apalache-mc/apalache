@@ -8,7 +8,8 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
  *
  * <p>TODO: move to *.apalache.tla.lir.transformations?</p>
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 abstract class AbstractTransformer(tracker: TransformationTracker) extends TlaExTransformation {
 
@@ -20,11 +21,12 @@ abstract class AbstractTransformer(tracker: TransformationTracker) extends TlaEx
   /**
    * Transform an expression recursively by calling transformers that are implemented as partial functions.
    *
-   * @return a new expression
+   * @return
+   *   a new expression
    */
   def transform: TlaExTransformation = tracker.trackEx {
     case oper @ OperEx(op, args @ _*) =>
-      val newArgs = args map transform
+      val newArgs = args.map(transform)
       val newOper =
         if (newArgs.map(_.ID) != args.map(_.ID)) {
           // Introduce a new operator only if the arguments have changed.
@@ -47,11 +49,12 @@ abstract class AbstractTransformer(tracker: TransformationTracker) extends TlaEx
   /**
    * Transform an expression without looking into the arguments.
    *
-   * @return a new expression
+   * @return
+   *   a new expression
    */
   private def transformOneLevel: TlaExTransformation = {
     // chain partial functions to handle different types of operators with different functions
-    tracker.trackEx(allTransformers reduceLeft (_ orElse _))
+    tracker.trackEx(allTransformers.reduceLeft(_ orElse _))
   }
 
   private val identity: PartialFunction[TlaEx, TlaEx] = { case e => e }

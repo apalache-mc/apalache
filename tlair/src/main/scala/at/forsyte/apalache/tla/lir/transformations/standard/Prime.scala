@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
-import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx}
@@ -28,7 +27,7 @@ object Prime {
       ex match {
         case LetInEx(body, defs @ _*) =>
           // Transform bodies of all op.defs
-          val newDefs = defs map tracker.trackOperDecl { d => d.copy(body = self(d.body)) }
+          val newDefs = defs.map(tracker.trackOperDecl { d => d.copy(body = self(d.body)) })
           val newBody = self(body)
           val retEx = if (defs == newDefs && body == newBody) ex else LetInEx(newBody, newDefs: _*)(ex.typeTag)
           tr(retEx)
@@ -37,7 +36,7 @@ object Prime {
           // Do not prime expressions which are already primed. This may happen when Init = Inv.
           tr(ex)
         case ex @ OperEx(op, args @ _*) =>
-          val newArgs = args map self
+          val newArgs = args.map(self)
           val retEx = if (args == newArgs) ex else OperEx(op, newArgs: _*)(ex.typeTag)
           tr(retEx)
 

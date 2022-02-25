@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.typecheck.integration
 
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaStr
 import TypedPredefs._
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
@@ -10,7 +10,8 @@ import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 /**
  * This class uses the map of types to set the types of TLA+ expressions and declarations.
  *
- * @param types a map from unique identifiers to types
+ * @param types
+ *   a map from unique identifiers to types
  */
 class TypeRewriter(tracker: TransformationTracker, defaultTag: UID => TypeTag)(types: Map[UID, TlaType1]) {
   def apply(e: TlaEx): TlaEx = {
@@ -35,7 +36,7 @@ class TypeRewriter(tracker: TransformationTracker, defaultTag: UID => TypeTag)(t
 
         def wrapIndexWithTuple: TlaEx => TlaEx = tracker.trackEx {
           case OperEx(TlaFunOper.tuple, indices @ _*) =>
-            val taggedIndices = indices map transform
+            val taggedIndices = indices.map(transform)
             val typesOfIndices = taggedIndices.map(_.typeTag.asTlaType1())
             val tupleTag = Typed(TupT1(typesOfIndices: _*))
             OperEx(TlaFunOper.tuple, taggedIndices: _*)(tupleTag)
@@ -45,8 +46,8 @@ class TypeRewriter(tracker: TransformationTracker, defaultTag: UID => TypeTag)(t
         }
 
         val (accessors, newValues) = TlaOper.deinterleave(args)
-        val transformedAccessors = accessors map wrapIndexWithTuple
-        val transformedValues = newValues map transform
+        val transformedAccessors = accessors.map(wrapIndexWithTuple)
+        val transformedValues = newValues.map(transform)
         val transformedArgs = TlaOper.interleave(transformedAccessors, transformedValues)
 
         OperEx(TlaFunOper.except, taggedFun +: transformedArgs: _*)(getOrDefault(ex.ID))

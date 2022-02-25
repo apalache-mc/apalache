@@ -61,8 +61,8 @@ class FoldSeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // the state holds the cell representing the accumulated result
         val prevResult = state.ex
         // newPartialResult = A(oldResultCellName, seqElemCell)
-        val appEx = tla.appOp(tla.name(opDecl.name) as operT, prevResult as resultT, elem.toNameEx as elemT)
-        val inlinedEx = inliner.apply(appEx as resultT)
+        val appEx = tla.appOp(tla.name(opDecl.name).as(operT), prevResult.as(resultT), elem.toNameEx.as(elemT))
+        val inlinedEx = inliner.apply(appEx.as(resultT))
         // There is nothing left to do (no asserts), since the top value in the returned state will
         // hold the fully rewritten application (single cell)
         rewriter.rewriteUntilDone(state.setRex(inlinedEx))

@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaArithOper
 import at.forsyte.apalache.tla.lir.transformations.TlaExTransformation
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import at.forsyte.apalache.tla.lir.{OperParam, NameEx, OperEx, TestingPredefs, TlaEx, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, OperParam, TestingPredefs, TlaEx, TlaOperDecl}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
@@ -81,10 +81,10 @@ class TestReplaceFixed extends AnyFunSuite with TestingPredefs {
         pa5,
         pa6,
     )
-    val cmp = expected map { case (k, v) =>
+    val cmp = expected.map { case (k, v) =>
       (v, transformation(k))
     }
-    cmp foreach { case (ex, act) =>
+    cmp.foreach { case (ex, act) =>
       assert(ex == act)
     }
   }

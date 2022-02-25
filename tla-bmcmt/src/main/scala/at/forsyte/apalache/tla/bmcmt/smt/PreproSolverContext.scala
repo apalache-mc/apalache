@@ -24,19 +24,17 @@ object PreproSolverContext {
 }
 
 /**
- * <p>A preprocessor of the SolverContext that caches the following types of constraints and propagates them
- * before pushing the constraints to the actual solver:</p>
+ * <p>A preprocessor of the SolverContext that caches the following types of constraints and propagates them before
+ * pushing the constraints to the actual solver:</p>
  *
- * <ul>
- * <li>Equalities between two cells: tla.eql(c1, c2) and tla.neq(c1, c2)</li>
- * <li>Set membership assertions between two cells: tla.in(c1, c2) and tla.not(tla.in(c1, c2)).
- * </ul>
+ * <ul> <li>Equalities between two cells: tla.eql(c1, c2) and tla.neq(c1, c2)</li> <li>Set membership assertions between
+ * two cells: tla.in(c1, c2) and tla.not(tla.in(c1, c2)). </ul>
  *
- * <p>This is helpful as our rewriting rules
- * introduce lots of redundant variables that can be easily eliminated by propagation.
- * We use delegation instead of inheritance, as we will integrate with other solvers in the future.</p>
+ * <p>This is helpful as our rewriting rules introduce lots of redundant variables that can be easily eliminated by
+ * propagation. We use delegation instead of inheritance, as we will integrate with other solvers in the future.</p>
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class PreproSolverContext(context: SolverContext) extends SolverContext {
   private val simplifier = new ConstSimplifierForSmt()
@@ -51,7 +49,8 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
   /**
    * Assert that a Boolean TLA+ expression holds true.
    *
-   * @param ex a simplified TLA+ expression over cells
+   * @param ex
+   *   a simplified TLA+ expression over cells
    */
   override def assertGroundExpr(ex: TlaEx): Unit = {
     // there are plenty of top-level constraints like (= c1 c2) or tla.in(c1, c2)
@@ -95,12 +94,13 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
   }
 
   /**
-   * Evaluate a ground TLA+ expression in the current model, which is available after a call to sat().
-   * This method assumes that the outcome is either a Boolean or integer.
-   * If not, it throws SmtEncodingException.
+   * Evaluate a ground TLA+ expression in the current model, which is available after a call to sat(). This method
+   * assumes that the outcome is either a Boolean or integer. If not, it throws SmtEncodingException.
    *
-   * @param ex an expression to evaluate
-   * @return a TLA+ value
+   * @param ex
+   *   an expression to evaluate
+   * @return
+   *   a TLA+ value
    */
   override def evalGroundExpr(ex: TlaEx): TlaEx = {
     context.evalGroundExpr(preprocess(ex))
@@ -163,7 +163,7 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
         OperEx(TlaFunOper.app, fun, preprocess(elem))
 
       case OperEx(oper, args @ _*) =>
-        OperEx(oper, args map preprocess: _*)
+        OperEx(oper, args.map(preprocess): _*)
 
       case _ => ex
     }
@@ -174,65 +174,76 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
   /**
    * Declare a constant for an arena cell.
    *
-   * @param cell a (previously undeclared) cell
+   * @param cell
+   *   a (previously undeclared) cell
    */
   override def declareCell(cell: ArenaCell): Unit = context.declareCell(cell)
 
   /**
    * Declare an arena edge of type 'has'. This method introduces a Boolean variable for the edge.
    *
-   * @param set  the containing set
-   * @param elem a set element
+   * @param set
+   *   the containing set
+   * @param elem
+   *   a set element
    */
   def declareInPredIfNeeded(set: ArenaCell, elem: ArenaCell): Unit = context.declareInPredIfNeeded(set, elem)
 
   /**
    * Check whether the current view of the SMT solver is consistent with arena.
    *
-   * @param arena an arena
+   * @param arena
+   *   an arena
    */
   override def checkConsistency(arena: Arena): Unit = context.checkConsistency(arena)
 
   /**
    * Write a message to the log file. This is helpful to debug the SMT encoding.
    *
-   * @param message message text, call-by-name
+   * @param message
+   *   message text, call-by-name
    */
   override def log(message: => String): Unit = context.log(message)
 
   /**
    * Is the current context satisfiable?
    *
-   * @return true if and only if the context is satisfiable
+   * @return
+   *   true if and only if the context is satisfiable
    */
   override def sat(): Boolean = context.sat()
 
   /**
    * Check satisfiability of the context with a timeout
    *
-   * @param timeoutSec the timeout in seconds. If timeout <= 0, it is not effective
-   * @return Some(result), if no timeout happened; otherwise, None
+   * @param timeoutSec
+   *   the timeout in seconds. If timeout <= 0, it is not effective
+   * @return
+   *   Some(result), if no timeout happened; otherwise, None
    */
   override def satOrTimeout(timeoutSec: Long): Option[Boolean] = context.satOrTimeout(timeoutSec)
 
   /**
    * Register an SMT listener
    *
-   * @param listener register a listener, overrides the previous listener, if it was set before
+   * @param listener
+   *   register a listener, overrides the previous listener, if it was set before
    */
   override def setSmtListener(listener: SmtListener): Unit = context.setSmtListener(listener)
 
   /**
    * Get the current context level, that is the difference between the number of pushes and pops made so far.
    *
-   * @return the current level, always non-negative.
+   * @return
+   *   the current level, always non-negative.
    */
   override def contextLevel: Int = context.contextLevel
 
   /**
    * Get the current metrics in the solver context. The metrics may change when the other methods are called.
    *
-   * @return the current metrics
+   * @return
+   *   the current metrics
    */
   override def metrics(): SolverContextMetrics = context.metrics()
 
@@ -245,8 +256,8 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
   }
 
   /**
-   * Pop the previously saved context. Importantly, pop may be called multiple times and thus it is not sufficient
-   * to save only the latest context.
+   * Pop the previously saved context. Importantly, pop may be called multiple times and thus it is not sufficient to
+   * save only the latest context.
    */
   override def pop(): Unit = {
     cache.pop()
@@ -256,7 +267,8 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
   /**
    * Pop the context as many times as needed to reach a given level.
    *
-   * @param n pop n times, if n > 0, otherwise, do nothing
+   * @param n
+   *   pop n times, if n > 0, otherwise, do nothing
    */
   override def pop(n: Int): Unit = {
     cache.pop(n)

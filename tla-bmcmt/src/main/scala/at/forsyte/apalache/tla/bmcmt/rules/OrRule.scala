@@ -6,14 +6,14 @@ import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
-import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, TlaEx}
 
 /**
- * For state-level expressions, we express A \/ B as IF A THEN TRUE ELSE B.
- * For action-level expressions, i.e., involving primes, we do a direct translation to A \/ B.
- * This mimics the behavior of TLC.
+ * For state-level expressions, we express A \/ B as IF A THEN TRUE ELSE B. For action-level expressions, i.e.,
+ * involving primes, we do a direct translation to A \/ B. This mimics the behavior of TLC.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class OrRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val boolTypes = Map("b" -> BoolT1())
@@ -60,7 +60,7 @@ class OrRule(rewriter: SymbStateRewriter) extends RewritingRule {
                 nextState.ex
               }
 
-              val rewrittenArgs = args map mapArg
+              val rewrittenArgs = args.map(mapArg)
               val eq = tla
                 .eql(pred ? "b", tla.or(rewrittenArgs: _*) ? "b")
                 .typed(boolTypes, "b")

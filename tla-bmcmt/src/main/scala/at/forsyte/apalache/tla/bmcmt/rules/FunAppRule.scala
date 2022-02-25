@@ -17,8 +17,8 @@ import at.forsyte.apalache.tla.pp.TlaInputError
  *   Igor Konnov
  */
 class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val picker = new CherryPick(rewriter)
-  private val defaultValueFactory = new DefaultValueFactory(rewriter)
+  protected val picker = new CherryPick(rewriter)
+  protected val defaultValueFactory = new DefaultValueFactory(rewriter)
   private val proto = new ProtoSeqOps(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
@@ -60,7 +60,11 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def applySequence(state: SymbState, seqCell: ArenaCell, argEx: TlaEx, elemT: CellT): SymbState = {
+  private def applySequence(
+      state: SymbState,
+      seqCell: ArenaCell,
+      argEx: TlaEx,
+      elemT: CellT): SymbState = {
     val (protoSeq, _, capacity) = proto.unpackSeq(state.arena, seqCell)
     val nextState = defaultValueFactory.makeUpValue(state, elemT)
     val defaultValue = nextState.asCell
@@ -83,7 +87,11 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def applyRecord(state: SymbState, recordCell: ArenaCell, recEx: TlaEx, argEx: TlaEx,
+  private def applyRecord(
+      state: SymbState,
+      recordCell: ArenaCell,
+      recEx: TlaEx,
+      argEx: TlaEx,
       resultT: CellT): SymbState = {
     val key = argEx match {
       case ValEx(TlaStr(k)) => k
@@ -103,7 +111,11 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def applyTuple(state: SymbState, tupleCell: ArenaCell, funEx: TlaEx, argEx: TlaEx): SymbState = {
+  private def applyTuple(
+      state: SymbState,
+      tupleCell: ArenaCell,
+      funEx: TlaEx,
+      argEx: TlaEx): SymbState = {
     val index = argEx match {
       case ValEx(TlaInt(i)) => i.toInt - 1
 
@@ -118,6 +130,43 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     val tupleElem = elems(index)
     state.setRex(tupleElem.toNameEx)
+  }
+
+  private def applySeq(state: SymbState, seqCell: ArenaCell, argEx: TlaEx): SymbState = {
+    val solverAssert = rewriter.solverContext.assertGroundExpr _
+    var nextState = rewriter.rewriteUntilDone(state.setRex(argEx))
+    val argCell = nextState.asCell
+    val seqChildren = state.arena.getHas(seqCell)
+    val start = seqChildren.head // starts with 0
+    val end = seqChildren.tail.head // starts with 0
+    // Get the sequence of N elements. The range values[start : end] forms the actual sequence
+    val values = seqChildren.tail.tail
+
+    val nelems = values.size
+    if (nelems == 0) {
+      // The sequence is statically empty. Return the default value.
+      // Most likely, this expression will be never used as a result.
+      defaultValueFactory.makeUpValue(nextState, seqCell.cellType.asInstanceOf[SeqT].res)
+    } else {
+      // create the oracle
+      val (oracleState, oracle) = picker.oracleFactory.newIntOracle(nextState, nelems + 1)
+      nextState = oracleState
+      // pick an element to be the result
+      nextState = picker.pickByOracle(nextState, oracle, values, nextState.arena.cellTrue().toNameEx)
+      val pickedResult = nextState.asCell
+      // now it is getting interesting:
+      // If 1 <= arg <= end - start, just require oracle = arg - 1 + start,
+      // Otherwise, set oracle to N
+      val inRange =
+        tla.and(tla.le(tla.int(1), argCell.toNameEx), tla.le(argCell.toNameEx, tla.minus(end.toNameEx, start.toNameEx)))
+      nextState = rewriter
+        .rewriteUntilDone(nextState.setRex(tla.plus(tla.minus(argCell.toNameEx, tla.int(1)), start.toNameEx)))
+      val indexCell = nextState.asCell
+      val oracleEqArg = tla.eql(indexCell.toNameEx, oracle.intCell.toNameEx)
+      val oracleIsN = oracle.whenEqualTo(nextState, nelems)
+      solverAssert(tla.or(tla.and(inRange, oracleEqArg), tla.and(tla.not(inRange), oracleIsN)))
+      nextState.setRex(pickedResult.toNameEx)
+    }
   }
 
   private def applyFun(state: SymbState, funCell: ArenaCell, argEx: TlaEx): SymbState = {

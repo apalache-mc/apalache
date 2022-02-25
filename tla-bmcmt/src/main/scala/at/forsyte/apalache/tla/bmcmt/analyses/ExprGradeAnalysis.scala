@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.analyses
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaActionOper, TlaBoolOper, TlaTempOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaTempOper}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.google.inject.Inject
 
@@ -10,7 +10,8 @@ import com.google.inject.Inject
  *
  * TODO: add tests
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class ExprGradeAnalysis @Inject() (val store: ExprGradeStoreImpl) {
   private def update(e: TlaEx, grade: ExprGrade.Value): ExprGrade.Value = {
@@ -21,9 +22,12 @@ class ExprGradeAnalysis @Inject() (val store: ExprGradeStoreImpl) {
   /**
    * Label all subexpressions of an expression with their grades. The grades are stored in the store.
    *
-   * @param consts names that are treated as TLA+ constants
-   * @param vars   names that are treated as TLA+ variables
-   * @param expr   an expression to label
+   * @param consts
+   *   names that are treated as TLA+ constants
+   * @param vars
+   *   names that are treated as TLA+ variables
+   * @param expr
+   *   an expression to label
    */
   def labelExpr(consts: Set[String], vars: Set[String], expr: TlaEx): ExprGrade.Value = {
     def eachExpr(e: TlaEx): ExprGrade.Value = e match {
@@ -52,8 +56,8 @@ class ExprGradeAnalysis @Inject() (val store: ExprGradeStoreImpl) {
         update(e, ExprGrade.Constant)
 
       case OperEx(_, args @ _*) =>
-        val grades = args map eachExpr
-        update(e, grades reduce ExprGrade.join)
+        val grades = args.map(eachExpr)
+        update(e, grades.reduce(ExprGrade.join))
 
       case _ =>
         update(e, ExprGrade.Higher)
@@ -65,13 +69,14 @@ class ExprGradeAnalysis @Inject() (val store: ExprGradeStoreImpl) {
   /**
    * Replace disjunctions with orParallel when the expression is action-level or higher.
    *
-   * @param expr a TLA+ expression
-   * @return an updated expression, all grades are updated if needed.
+   * @param expr
+   *   a TLA+ expression
+   * @return
+   *   an updated expression, all grades are updated if needed.
    */
   def refineOrInExpr(expr: TlaEx): TlaEx = {
     expr match {
-      case OperEx(TlaBoolOper.or, args @ _*) =>
-        val newArgs = args map refineOrInExpr
+      case OperEx(TlaBoolOper.or, _*) =>
         store.get(expr.ID) match {
           case Some(ExprGrade.Constant) | Some(ExprGrade.StateFree) | Some(ExprGrade.StateBound) =>
             expr // keep it
@@ -81,7 +86,7 @@ class ExprGradeAnalysis @Inject() (val store: ExprGradeStoreImpl) {
         }
 
       case OperEx(oper, args @ _*) =>
-        OperEx(oper, args map refineOrInExpr: _*)
+        OperEx(oper, args.map(refineOrInExpr): _*)
 
       case _ =>
         expr

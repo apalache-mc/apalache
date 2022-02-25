@@ -1,22 +1,20 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaActionOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
 
 /**
- * Implements the assignment rule.
- * Similar to TLC, this is a special form of x' \in S operator that is treated
- * as an assignment of a value from S to the variable x'.
+ * Implements the assignment rule. Similar to TLC, this is a special form of x' \in S operator that is treated as an
+ * assignment of a value from S to the variable x'.
  *
- * Since version 0.6.x, most of the work is delegated to existential quantification, that is,
- * assignments are treated as \E t \in S: x' = t
+ * Since version 0.6.x, most of the work is delegated to existential quantification, that is, assignments are treated as
+ * \E t \in S: x' = t
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class AssignmentRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val pickRule = new CherryPick(rewriter)
 
   override def isApplicable(state: SymbState): Boolean = {
     def isUnbound(name: String) =

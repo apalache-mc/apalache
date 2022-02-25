@@ -37,7 +37,8 @@ import scala.collection.mutable
  * @author
  *   Igor Konnov
  */
-class SymbStateRewriterImpl(private var _solverContext: SolverContext,
+class SymbStateRewriterImpl(
+    private var _solverContext: SolverContext,
     val exprGradeStore: ExprGradeStore = new ExprGradeStoreImpl(),
     val profilerListener: Option[MetricProfilerListener] = None)
     extends SymbStateRewriter with Serializable with Recoverable[SymbStateRewriterSnapshot] {
@@ -118,7 +119,7 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
   /**
    * A storage for the messages associated with assertion failures, see MessageStorage.
    */
-  private var messages: mutable.Map[Int, String] = new mutable.HashMap()
+  private val messages: mutable.Map[Int, String] = new mutable.HashMap()
 
   /**
    * Get the current context level, that is the difference between the number of pushes and pops made so far.
@@ -308,12 +309,13 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
       case NameEx(name) if ArenaCell.isValidName(name) =>
         Done(state)
 
-      case NameEx(name) =>
+      case NameEx(_) =>
         if (substRule.isApplicable(state)) {
           statListener.enterRule(substRule.getClass.getSimpleName)
           // a variable that can be substituted with a cell
-          var nextState = substRule.apply(substRule.logOnEntry(solverContext, state))
-          nextState = substRule.logOnReturn(solverContext, nextState)
+          substRule.logOnEntry(solverContext, state)
+          val nextState = substRule.apply(state)
+          substRule.logOnReturn(solverContext, nextState)
           if (nextState.arena.cellCount < state.arena.cellCount) {
             throw new RewriterException("Implementation error: the number of cells decreased from %d to %d"
                   .format(state.arena.cellCount, nextState.arena.cellCount), state.ex)
@@ -332,7 +334,9 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
         potentialRules.find(r => r.isApplicable(state)) match {
           case Some(r) =>
             statListener.enterRule(r.getClass.getSimpleName)
-            val nextState = r.logOnReturn(solverContext, r.apply(r.logOnEntry(solverContext, state)))
+            r.logOnEntry(solverContext, state)
+            val nextState = r.apply(state)
+            r.logOnReturn(solverContext, nextState)
             if (nextState.arena.cellCount < state.arena.cellCount) {
               throw new RewriterException("Implementation error in rule %s: the number of cells decreased from %d to %d"
                     .format(r.getClass.getSimpleName, state.arena.cellCount, nextState.arena.cellCount), state.ex)
@@ -427,7 +431,7 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
       ns.ex
     }
 
-    val rewrittenExprs = es map eachExpr
+    val rewrittenExprs = es.map(eachExpr)
     (newState.setRex(state.ex), rewrittenExprs)
   }
 
@@ -451,7 +455,7 @@ class SymbStateRewriterImpl(private var _solverContext: SolverContext,
       ns.ex
     }
 
-    val rewrittenExprs = es map eachExpr
+    val rewrittenExprs = es.map(eachExpr)
     (newState.setRex(state.ex), rewrittenExprs)
   }
 

@@ -7,7 +7,8 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
 /**
  * This rule rewrites an operator application (for constant operators).
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class UserOperRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {

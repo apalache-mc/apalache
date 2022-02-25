@@ -7,12 +7,13 @@ import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.pp.ConstSimplifierBase
 
 /**
- * <p>A simplifier of constant TLA+ expressions, e.g., rewriting 1 + 2 to 3.
- * This simplifier is using some knowledge about SMT.</p>
+ * <p>A simplifier of constant TLA+ expressions, e.g., rewriting 1 + 2 to 3. This simplifier is using some knowledge
+ * about SMT.</p>
  *
  * <p>Bugfix #450: make sure that the integers are simplified with BigInt.</p>
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class ConstSimplifierForSmt extends ConstSimplifierBase {
   def isFalseConst(ex: TlaEx): Boolean = {

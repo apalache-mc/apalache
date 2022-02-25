@@ -36,39 +36,19 @@ then
     exit 5
 fi
 
-cd "$PROJ_ROOT"
-
-# Build the package
-make clean
-make apalache
-
-# Relative location of the jar that gets published in releases
-# This must be a relative path. Aboslute paths break the zip archive.
-RELEASE_JAR="target/scala-2.12/apalache-pkg-${VERSION}-full.jar"
-
-# Confirm the jar was produced
-if [ ! -f "$RELEASE_JAR" ]; then
-    echo "error: release file not found: $RELEASE_JAR"
-    exit 6
-fi
-
-TAG_NAME="v${VERSION}"
-
-# Ensure target directory exists
-mkdir -p target
+make dist
 
 # Package the artifacts
 # The archives without version suffix support stable links to the latest version.
 # See https://github.com/informalsystems/apalache/issues/716
-ZIPF="target/apalache-${TAG_NAME}.zip"
-ZIPF_NO_VER="target/apalache.zip"
-zip -r "$ZIPF" LICENSE bin/apalache-mc "$RELEASE_JAR"
-zip -r "$ZIPF_NO_VER" LICENSE bin/apalache-mc "$RELEASE_JAR"
+ZIPF="target/universal/apalache-${VERSION}.zip"
+ZIPF_NO_VER="target/universal/apalache.zip"
 
-TGZF="target/apalache-${TAG_NAME}.tgz"
-TGZF_NO_VER="target/apalache.tgz"
-tar zpcf "$TGZF" LICENSE bin/apalache-mc "$RELEASE_JAR"
-tar zpcf "$TGZF_NO_VER" LICENSE bin/apalache-mc "$RELEASE_JAR"
+TGZF="target/universal/apalache-${VERSION}.tgz"
+TGZF_NO_VER="target/universal/apalache.tgz"
+
+# We put a `v` in front of our versions for tags
+TAG_NAME="v${VERSION}"
 
 # Tag the commit and push the tag
 git tag -a "$TAG_NAME" -m "$msg"

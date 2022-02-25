@@ -10,7 +10,7 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 /**
  * Rewrites a tuple or sequence constructor, that is, <<e_1, ..., e_k>>. A tuple may be interpreted as a sequence, if it
- * is properly type-annotated.
+ * was properly type-annotated.
  *
  * @author
  *   Igor Konnov

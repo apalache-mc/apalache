@@ -9,7 +9,7 @@ import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.Outcome
-import java.io.{PrintStream, File, FileOutputStream}
+import java.io.{File, FileOutputStream, PrintStream}
 
 @RunWith(classOf[JUnitRunner])
 class TestTransformations extends AnyFunSuite with TestingPredefs {
@@ -49,10 +49,10 @@ class TestTransformations extends AnyFunSuite with TestingPredefs {
         pa3,
         pa4,
     )
-    val cmp = expected map { case (k, v) =>
+    val cmp = expected.map { case (k, v) =>
       (v, transformation(k))
     }
-    cmp foreach { case (ex, act) =>
+    cmp.foreach { case (ex, act) =>
       assert(ex == act)
     }
   }
@@ -69,13 +69,13 @@ class TestTransformations extends AnyFunSuite with TestingPredefs {
             or(
                 or(n_a, n_b),
                 or(n_c, n_d),
-            ),
+            )
         ),
         and(
             or(
                 or(n_e, n_f),
                 or(n_g, NameEx("h")),
-            ),
+            )
         ),
     ).untyped() -> and(
         or(n_a, n_b, n_c, n_d),
@@ -108,10 +108,10 @@ class TestTransformations extends AnyFunSuite with TestingPredefs {
         pa7,
         pa8,
     )
-    val cmp = expected map { case (k, v) =>
+    val cmp = expected.map { case (k, v) =>
       (v, transformation(k))
     }
-    cmp foreach { case (ex, act) =>
+    cmp.foreach { case (ex, act) =>
       assert(ex == act)
     }
   }

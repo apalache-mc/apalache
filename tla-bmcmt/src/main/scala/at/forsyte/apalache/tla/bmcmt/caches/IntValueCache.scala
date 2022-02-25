@@ -11,7 +11,8 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 /**
  * A cache for integer constants that maps an integer to an integer constant in SMT.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class IntValueCache(solverContext: SolverContext) extends AbstractCache[Arena, BigInt, ArenaCell] with Serializable {
 

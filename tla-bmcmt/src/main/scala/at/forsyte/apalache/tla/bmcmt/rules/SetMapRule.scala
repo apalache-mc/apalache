@@ -8,7 +8,8 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
 /**
  * Translates a set comprehension { e: x_1 \in S_1, ..., x_k \in S_k }.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class SetMapRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val mapbase = new MapBase(rewriter)

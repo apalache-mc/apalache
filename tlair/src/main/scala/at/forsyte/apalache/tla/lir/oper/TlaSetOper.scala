@@ -29,13 +29,12 @@ object TlaSetOper {
   }
 
   /**
-   * Construct a set of records, e.g., `[ f_1: S_1, ..., f_k: S_k ]`.
-   * The order of the arguments is as follows: `(f_1, S_1, ..., f_k, S_k)`.
-   * The field names `f_1`, ..., `f_k`` are string constants,
-   * that is, `ValEx(TlaStr("..."))` and not `NameEx("...")`.
+   * Construct a set of records, e.g., `[ f_1: S_1, ..., f_k: S_k ]`. The order of the arguments is as follows: `(f_1,
+   * S_1, ..., f_k, S_k)`. The field names `f_1`, ..., `f_k`` are string constants, that is, `ValEx(TlaStr("..."))` and
+   * not `NameEx("...")`.
    */
   object recSet extends TlaSetOper {
-    override def arity: OperArity = AnyEvenArity()
+    override def arity: OperArity = new OperArity(k => k >= 2 && k % 2 == 0)
 
     override val name: String = "RECORD_SET"
     override val precedence: (Int, Int) = (16, 16) // as the function application
@@ -106,8 +105,7 @@ object TlaSetOper {
   }
 
   /**
-   * A restricted set comprehension: `{ x \in S : p }`.
-   * The argument order is: `(x, S, p)`. Note that x may be a tuple.
+   * A restricted set comprehension: `{ x \in S : p }`. The argument order is: `(x, S, p)`. Note that x may be a tuple.
    */
   object filter extends TlaSetOper {
     override val arity = FixedArity(3)
@@ -116,8 +114,7 @@ object TlaSetOper {
   }
 
   /**
-   * A set mapping: `{ e: x_1 \in S_1, ..., x_k \in S_k }`.
-   * The argument order is: `(e, x_1, S_1, ..., x_k, S_k)`.
+   * A set mapping: `{ e: x_1 \in S_1, ..., x_k \in S_k }`. The argument order is: `(e, x_1, S_1, ..., x_k, S_k)`.
    */
   object map extends TlaSetOper {
     override val arity = new OperArity(k => k >= 3 && k % 2 == 1)
@@ -126,8 +123,8 @@ object TlaSetOper {
   }
 
   /**
-   * The set of all subsets (of a given set): `SUBSET S`.
-   * We use the name 'SET_POWERSET' to avoid confusion with `SET_SUBSET_EQ`.
+   * The set of all subsets (of a given set): `SUBSET S`. We use the name 'SET_POWERSET' to avoid confusion with
+   * `SET_SUBSET_EQ`.
    */
   object powerset extends TlaSetOper {
     override val arity = FixedArity(1)
@@ -136,8 +133,7 @@ object TlaSetOper {
   }
 
   /**
-   * The union of all elements (of a given set): `UNION S`.
-   * This operator should not confused with `S \\union T`.
+   * The union of all elements (of a given set): `UNION S`. This operator should not confused with `S \\union T`.
    */
   object union extends TlaSetOper {
     override val arity = FixedArity(1)
@@ -146,12 +142,11 @@ object TlaSetOper {
   }
 
   /**
-   * Define a cartesian product of one or more sets.
-   * Note that we explicitly forbid to construct an empty set using this operator.
-   * To construct an empty set, use `enumSet` with no arguments.
+   * Define a cartesian product of one or more sets. Note that we explicitly forbid to construct an empty set using this
+   * operator. To construct an empty set, use `enumSet` with no arguments.
    */
   object times extends TlaSetOper {
-    override val arity = AnyArity()
+    override val arity = MinimalArity(2)
     override val name = "SET_TIMES"
     override val precedence: (Int, Int) = (10, 13)
   }

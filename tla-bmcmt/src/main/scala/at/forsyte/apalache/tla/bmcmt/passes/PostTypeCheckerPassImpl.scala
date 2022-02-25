@@ -8,7 +8,6 @@ import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.typecheck.passes.EtcTypeCheckerPassImpl
 import com.google.inject.Inject
-import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
 /**
@@ -26,8 +25,13 @@ import com.typesafe.scalalogging.LazyLogging
  * @param nextPass
  *   next pass to be used
  */
-class PostTypeCheckerPassImpl @Inject() (options: PassOptions, sourceStore: SourceStore, changeListener: ChangeListener,
-    tracker: TransformationTracker, annotationStore: AnnotationStore, tlaWriterFactory: TlaWriterFactory)
+class PostTypeCheckerPassImpl @Inject() (
+    options: PassOptions,
+    sourceStore: SourceStore,
+    changeListener: ChangeListener,
+    tracker: TransformationTracker,
+    annotationStore: AnnotationStore,
+    tlaWriterFactory: TlaWriterFactory)
     extends EtcTypeCheckerPassImpl(options, sourceStore, changeListener, tracker, annotationStore, tlaWriterFactory)
     with LazyLogging {
 

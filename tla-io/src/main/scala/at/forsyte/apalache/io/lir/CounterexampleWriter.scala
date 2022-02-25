@@ -7,15 +7,15 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.values.TlaBool
 
-import java.io.{File, FileWriter, PrintWriter}
+import java.io.PrintWriter
 import java.util.Calendar
-import org.apache.commons.io.FilenameUtils
 import com.typesafe.scalalogging.LazyLogging
 
 /**
  * A printer for counterexamples, in various formats: TLA+ , as TLC output, ...
  *
- * @author Andrey Kuprianov
+ * @author
+ *   Andrey Kuprianov
  */
 trait CounterexampleWriter {
   // Print out invariant violation
@@ -142,14 +142,20 @@ object CounterexampleWriter extends LazyLogging {
   /**
    * Write a counterexample in all supported formats (TLA+, MC.out, JSON), and return the list of files written.
    *
-   * @param suffix       suffix to be added in the end of a filename, may be empty
-   * @param rootModule   source module of the counterexample
-   * @param notInvariant negated invariant
-   * @param states       sequence of states that represent the counterexample
+   * @param suffix
+   *   suffix to be added in the end of a filename, may be empty
+   * @param rootModule
+   *   source module of the counterexample
+   * @param notInvariant
+   *   negated invariant
+   * @param states
+   *   sequence of states that represent the counterexample
    */
   def writeAllFormats(
-      suffix: String, rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]
-  ): List[String] = {
+      suffix: String,
+      rootModule: TlaModule,
+      notInvariant: NotInvariant,
+      states: List[NextState]): List[String] = {
     val writerHelper: String => PrintWriter => Unit =
       kind => writer => apply(kind, writer).write(rootModule, notInvariant, states)
 
@@ -157,7 +163,7 @@ object CounterexampleWriter extends LazyLogging {
         ("tla", s"counterexample$suffix.tla"),
         ("tlc", s"MC$suffix.out"),
         ("json", s"counterexample$suffix.json"),
-        ("itf.json", s"counterexample$suffix.itf.json")
+        ("itf.json", s"counterexample$suffix.itf.json"),
     )
 
     fileNames.flatMap { case (kind, name) =>

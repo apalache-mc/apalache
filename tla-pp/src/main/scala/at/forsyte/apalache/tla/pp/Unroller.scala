@@ -12,34 +12,21 @@ import at.forsyte.apalache.tla.lir.values.TlaInt
  * Replaces definitions of user-defined recursive operators with a bounded chain of the operator bodies.
  *
  * For each recursive operator A the user must define two additional TLA+ operators,
- *  - [UNROLL_TIMES_PREFIX]_A
- *  - [UNROLL_DEFAULT_PREFIX]_A
+ *   - [UNROLL_TIMES_PREFIX]_A
+ *   - [UNROLL_DEFAULT_PREFIX]_A
  *
- * Let U be the name of the operator produced by unrolling A with the above parameters.
- * The operator [UNROLL_TIMES_PREFIX]_A must evaluate to an integer `k` (with `ConstSimplifier`) and represents the
- * depth of the unrolling. If the computation of A, for a given argument `x`, requires k or fewer recursive calls, then
- * the value of U(x) is equal to A(x).
- * The operator [UNROLL_DEFAULT_PREFIX]_A must have the same type as that returned by A. If the computation of A,
- * for a given argument `x`, requires more than k recursive calls,
- * then the value of U(x) is equal to [UNROLL_DEFAULT_PREFIX]_A.
+ * Let U be the name of the operator produced by unrolling A with the above parameters. The operator
+ * [UNROLL_TIMES_PREFIX]_A must evaluate to an integer `k` (with `ConstSimplifier`) and represents the depth of the
+ * unrolling. If the computation of A, for a given argument `x`, requires k or fewer recursive calls, then the value of
+ * U(x) is equal to A(x). The operator [UNROLL_DEFAULT_PREFIX]_A must have the same type as that returned by A. If the
+ * computation of A, for a given argument `x`, requires more than k recursive calls, then the value of U(x) is equal to
+ * [UNROLL_DEFAULT_PREFIX]_A.
  *
- * Example:
- * Fact(n) == IF n <= 0 THEN 1 ELSE n * Fact(n-1)
- * UNROLL_TIMES_Fact == 1
- * UNROLL_DEFAULT_Fact == 0
+ * Example: Fact(n) == IF n <= 0 THEN 1 ELSE n * Fact(n-1) UNROLL_TIMES_Fact == 1 UNROLL_DEFAULT_Fact == 0
  *
- *    |
- *    |
- *    V
+ * \| \| V
  *
- * Unrolled_Fact(n) ==
- *  IF n <= 0
- *  THEN 1
- *  ELSE n * (
- *    IF n-1 <= 0
- *    THEN 1
- *    ELSE (n-1) * 0
- *    )
+ * Unrolled_Fact(n) == IF n <= 0 THEN 1 ELSE n * ( IF n-1 <= 0 THEN 1 ELSE (n-1) * 0 )
  *
  * Unrolled_Fact(0) = 1, Unrolled_Fact(1) = 1, but for k > 1 Unrolled_Fact(k) = 0
  */
@@ -50,8 +37,7 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
 
   // unrollLetIn performs unrolling on all recursive LET-IN defined operators in the expression
   private def unrollLetIn(
-      bodyMap: BodyMap
-  ): TlaExTransformation = tracker.trackEx {
+      bodyMap: BodyMap): TlaExTransformation = tracker.trackEx {
     case ex @ LetInEx(body, defs @ _*) =>
       val newMap = BodyMapFactory.makeFromDecls(defs, bodyMap)
       val defaultsMap = getDefaults(newMap).getOrThrow
@@ -59,7 +45,7 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
       val inliner = InlinerOfUserOper(newMap, tracker)
       // since unrolling preserves operator names, the only thing we need to do at this point is recursively unroll
       // all the LET-definitions
-      val newDefs = defs map {
+      val newDefs = defs.map {
         replaceRecursiveDecl(_, newMap, inliner, replaceTr).asInstanceOf[TlaOperDecl]
       }
 
@@ -71,18 +57,18 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
         LetInEx(newBody, newDefs: _*)(ex.typeTag)
 
     case ex @ OperEx(op, args @ _*) =>
-      val newArgs = args map unrollLetIn(bodyMap)
+      val newArgs = args.map(unrollLetIn(bodyMap))
       if (args == newArgs) ex else OperEx(op, newArgs: _*)(ex.typeTag)
     case ex => ex
   }
 
   /**
-   * Replaces all instances of operator application, for which a default body exists in `defaultsMap`
-   * with the default value.
+   * Replaces all instances of operator application, for which a default body exists in `defaultsMap` with the default
+   * value.
    */
   private def replaceWithDefaults(defaultsMap: Map[String, TlaEx]): TlaExTransformation = tracker.trackEx {
     // We need to check the base name, because the names of recursive operators defined with LET get changed
-    case ex @ OperEx(TlaOper.apply, NameEx(name), _*) if defaultsMap.contains(IncrementalRenaming.getBase(name)) =>
+    case OperEx(TlaOper.apply, NameEx(name), _*) if defaultsMap.contains(IncrementalRenaming.getBase(name)) =>
       // Get the default body, ignore the args
       defaultsMap(IncrementalRenaming.getBase(name))
     // recursive processing of composite operators and let-in definitions
@@ -97,7 +83,7 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
       else LetInEx(newBody, newDefs: _*)(ex.typeTag)
 
     case ex @ OperEx(op, args @ _*) =>
-      val newArgs = args map replaceWithDefaults(defaultsMap)
+      val newArgs = args.map(replaceWithDefaults(defaultsMap))
       if (args == newArgs) ex else OperEx(op, newArgs: _*)(ex.typeTag)
 
     case ex => ex
@@ -155,8 +141,10 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
 
   /** Performs unrolling on the declaration and all recursively defined LET-IN declarations within */
   private def replaceRecursiveDecl(
-      decl: TlaDecl, bodyMap: BodyMap, inliner: InlinerOfUserOper, replaceWithDefaultsTr: TlaExTransformation
-  ): TlaDecl = decl match {
+      decl: TlaDecl,
+      bodyMap: BodyMap,
+      inliner: InlinerOfUserOper,
+      replaceWithDefaultsTr: TlaExTransformation): TlaDecl = decl match {
     case d @ TlaOperDecl(name, fparams, body) if d.isRecursive =>
       // In the case of recursively defined operators inside LET-IN, renaming has mangled their names.
       // The unroll limit will be defined on the base name, if at all.
@@ -197,9 +185,8 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
   }
 
   /**
-   * Finds the names of all recursive operators defined under decl.
-   * This includes recursiveoperators defined in LET-IN subexpressions,
-   * as well as the name of `decl` itself, if it is recursive.
+   * Finds the names of all recursive operators defined under decl. This includes recursiveoperators defined in LET-IN
+   * subexpressions, as well as the name of `decl` itself, if it is recursive.
    */
   private def allRecursiveOperatorsInDecl(decl: TlaOperDecl): Set[String] = {
     // If this declaration is recursive, we take its base name (for LET-IN defined)
@@ -216,9 +203,10 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
         )
         .foldLeft(Set.empty[String]) {
           _ ++ _
-        } map { name =>
-        name -> getDefaultBody(name, bodyMap)
-      }
+        }
+        .map { name =>
+          name -> getDefaultBody(name, bodyMap)
+        }
     // We need to prepare a single ExceptionOrValue
     // If multiple keys point to a `FailWith`, we take the 1st
     val init: ExceptionOrValue[Map[String, TlaEx]] = SucceedWith(Map.empty[String, TlaEx])
@@ -245,7 +233,7 @@ class Unroller(nameGenerator: UniqueNameGenerator, tracker: TransformationTracke
     val replaceTr = replaceWithDefaults(defaultsMap)
     val inliner = InlinerOfUserOper(bodyMap, tracker)
     // ... and unroll all declarations
-    val newDecls = paramNormModule.declarations map {
+    val newDecls = paramNormModule.declarations.map {
       replaceRecursiveDecl(_, bodyMap, inliner, replaceTr)
     }
 
@@ -258,7 +246,9 @@ object Unroller {
   val UNROLL_DEFAULT_PREFIX: String = "UNROLL_DEFAULT_"
   val MANUAL_LINK: String = "https://apalache.informal.systems/docs/apalache/principles.html#recursion"
 
-  def apply(nameGenerator: UniqueNameGenerator, tracker: TransformationTracker,
+  def apply(
+      nameGenerator: UniqueNameGenerator,
+      tracker: TransformationTracker,
       renaming: IncrementalRenaming): Unroller = {
     new Unroller(nameGenerator, tracker, renaming)
   }

@@ -56,7 +56,11 @@ trait RewriterBase extends FixtureAnyFunSuite {
     rewriter.pop()
   }
 
-  private def assertOrExplain(msg: String, rewriter: SymbStateRewriter, state: SymbState, outcome: Boolean): Unit = {
+  private def assertOrExplain(
+      msg: String,
+      rewriter: SymbStateRewriter,
+      state: SymbState,
+      outcome: Boolean): Unit = {
     if (!outcome) {
       val writer = new StringWriter()
       solverContext.log(writer.getBuffer.toString)

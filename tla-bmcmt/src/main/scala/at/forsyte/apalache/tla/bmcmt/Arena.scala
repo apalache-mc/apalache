@@ -65,9 +65,14 @@ object Arena {
  * @author
  *   Igor Konnov
  */
-class Arena private (val solverContext: SolverContext, val cellCount: Int, val topCell: ArenaCell,
-    val cellMap: Map[String, ArenaCell], private val hasEdges: Map[ArenaCell, List[ArenaCell]],
-    private val domEdges: Map[ArenaCell, ArenaCell], private val cdmEdges: Map[ArenaCell, ArenaCell])
+class Arena private (
+    val solverContext: SolverContext,
+    val cellCount: Int,
+    val topCell: ArenaCell,
+    val cellMap: Map[String, ArenaCell],
+    private val hasEdges: Map[ArenaCell, List[ArenaCell]],
+    private val domEdges: Map[ArenaCell, ArenaCell],
+    private val cdmEdges: Map[ArenaCell, ArenaCell])
     extends Serializable {
   // TODO: remove solverContext from Arena, see issue #105
   def setSolver(newSolverContext: SolverContext): Arena = {
@@ -168,11 +173,13 @@ class Arena private (val solverContext: SolverContext, val cellCount: Int, val t
    *
    * @param cellType
    *   a cell type
+   * @param isUnconstrained
+   *   a flag defining if the SMT representation of the cell is unconstrained, default is false.
    * @return
    *   new arena
    */
-  def appendCell(cellType: CellT): Arena = {
-    val newArena = appendCellNoSmt(cellType)
+  def appendCell(cellType: CellT, isUnconstrained: Boolean = false): Arena = {
+    val newArena = appendCellNoSmt(cellType, isUnconstrained)
     val newCell = newArena.topCell
     solverContext.declareCell(newCell)
     newArena
@@ -203,8 +210,19 @@ class Arena private (val solverContext: SolverContext, val cellCount: Int, val t
     create(this, types)
   }
 
-  def appendCellNoSmt(cellType: CellT): Arena = {
-    val newCell = new ArenaCell(cellCount, cellType)
+  /**
+   * Append a new cell to arena. This method returns a new arena, not the new cell. The new cell can be accessed with
+   * topCell. This method does not generate SMT constraints.
+   *
+   * @param cellType
+   *   a cell type
+   * @param isUnconstrained
+   *   a flag defining if the SMT representation of the cell is unconstrained, default is false.
+   * @return
+   *   new arena
+   */
+  def appendCellNoSmt(cellType: CellT, isUnconstrained: Boolean = false): Arena = {
+    val newCell = new ArenaCell(cellCount, cellType, isUnconstrained)
     assert(!cellMap.contains(newCell.toString)) // this might happen, if we messed up arenas
     new Arena(solverContext, cellCount + 1, newCell, cellMap + (newCell.toString -> newCell), hasEdges, domEdges,
         cdmEdges)

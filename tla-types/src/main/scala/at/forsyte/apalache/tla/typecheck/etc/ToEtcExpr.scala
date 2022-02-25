@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.io.annotations.{Annotation, AnnotationStr, StandardAnnotations}
-import at.forsyte.apalache.io.annotations.store.{AnnotationStore, findAnnotation}
+import at.forsyte.apalache.io.annotations.store.{findAnnotation, AnnotationStore}
 import at.forsyte.apalache.io.typecheck.parser.Type1ParseError
 import at.forsyte.apalache.tla.lir.{SparseTupT1, ValEx, _}
 import at.forsyte.apalache.tla.lir.oper._
@@ -118,7 +118,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
 
       case _ =>
         // use a type annotation, if there is any
-        findAnnotation(annotationStore, decl.ID, StandardAnnotations.TYPE) map {
+        findAnnotation(annotationStore, decl.ID, StandardAnnotations.TYPE).map {
           case Annotation(StandardAnnotations.TYPE, AnnotationStr(annotationText)) =>
             parseType(decl.name, annotationText)
 
@@ -160,7 +160,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
     // since we group by 2 below, this case should be unreachable
     case moreThanTwo =>
       throw new IllegalArgumentException(
-          s"Reached impossible state in validateRecSetPair: ${moreThanTwo}",
+          s"Reached impossible state in validateRecSetPair: ${moreThanTwo}"
       )
   }
 
@@ -197,6 +197,14 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
       mkApp(ref, Seq(sig), args.map(this(_)): _*)
     }
 
+    // Utility function to prepare error messages for non-matching argument types
+    def diffArgTypes(args: List[TlaEx], expectedTypes: List[TlaType1], actualTypes: List[TlaType1]): List[String] = {
+      args.zip(expectedTypes).zip(actualTypes).collect {
+        case ((arg, expectedType), argType) if expectedType != argType =>
+          s"Argument $arg should have type $expectedType but has type $argType."
+      }
+    }
+
     ex match {
       case nm @ NameEx(_) =>
         // x becomes x
@@ -210,13 +218,29 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         // x = y, x /= y
         val a = varPool.fresh
         val opsig = OperT1(Seq(a, a), BoolT1())
-        mkExRefApp(opsig, args)
+        val etcExpr = mkExRefApp(opsig, args)
+        val operation = if (op == TlaOper.eq) "equality" else "inequality"
+        etcExpr.typeErrorExplanation = (_: List[TlaType1], actualTypes: List[TlaType1]) => {
+          Some(s"Arguments of $operation should have the same type. For arguments ${args.mkString(", ")} with types ${actualTypes
+              .mkString(", ")}, in expression $ex")
+        }
+        etcExpr
 
       case OperEx(TlaOper.apply, nameEx @ NameEx(_), args @ _*) =>
         // F(e_1, ..., e_n)
-        mkAppByName(ref, mkName(nameEx), args.map(this(_)): _*)
+        val etcExpr = mkAppByName(ref, mkName(nameEx), args.map(this(_)): _*)
+        etcExpr.typeErrorExplanation = (expectedTypes: List[TlaType1], actualTypes: List[TlaType1]) => {
+          expectedTypes match {
+            case List(t @ OperT1(expectedArgumentTypes, _)) =>
+              val argErrors = diffArgTypes(args.toList, expectedArgumentTypes.toList, actualTypes)
+              Some(s"The operator $nameEx of type $t is applied to arguments of incompatible types in $ex:\n${argErrors
+                  .mkString("\n")}")
+            case _ => None
+          }
+        }
+        etcExpr
 
-      case ex @ OperEx(TlaOper.apply, opName, args @ _*) =>
+      case ex @ OperEx(TlaOper.apply, opName, _*) =>
         throw new TypingException(s"Bug in ToEtcExpr. Expected an operator name, found: ${opName}", ex.ID)
 
       case OperEx(
@@ -391,11 +415,11 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
       case OperEx(TlaSetOper.map, mapExpr, args @ _*) =>
         // { x \in S, y \in T: e }
         val (vars, sets) = TlaOper.deinterleave(args)
-        val bindings = translateBindings(vars zip sets: _*)
+        val bindings = translateBindings(vars.zip(sets): _*)
         val a = varPool.fresh
         val otherTypeVars =
           varPool.fresh(
-              bindings.length,
+              bindings.length
           ) // start with "b", as "a" goes to the result
         // the principal type of is ((b, c) => a) => Set(a)
         val principal = OperT1(Seq(OperT1(otherTypeVars, a)), SetT1(a))
@@ -432,16 +456,21 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val signatures = mkFunLikeByArg(arg).map { case (funType, argType, resType) =>
           OperT1(Seq(funType, argType), resType)
         }
-        mkApp(ref, signatures, this(fun), this(arg))
+        val etcExpr = mkApp(ref, signatures, this(fun), this(arg))
+        etcExpr.typeErrorExplanation = (_: List[TlaType1], _: List[TlaType1]) =>
+          Some(s"Cannot apply $fun to the argument $arg in $ex.")
+        etcExpr
 
       case OperEx(TlaFunOper.domain, fun) =>
         // DOMAIN f
         val a = varPool.fresh
         val b = varPool.fresh
         val c = varPool.fresh
+        // The possible types to which which DOMAIN can be be applied,
+        // and the corresponding type of the domain when so applied:
         val funType = OperT1(Seq(FunT1(a, b)), SetT1(a)) // (a -> b) => Set(a)
         val seqType =
-          OperT1(Seq(SeqT1(a)), SetT1(IntT1())) // Seq(c) => Set(Int)
+          OperT1(Seq(SeqT1(c)), SetT1(IntT1())) // Seq(c) => Set(Int)
         val recType = OperT1(Seq(RecT1()), SetT1(StrT1())) // [] => Set(Str)
         val tupType =
           OperT1(Seq(SparseTupT1()), SetT1(IntT1())) // {} => Set(Int)
@@ -463,7 +492,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
                   case orphan =>
                     throw new TypingException(s"Invalid bound variables and sets $orphan in: $ex", ex.ID)
                 }
-                .toSeq: _*,
+                .toSeq: _*
           )
 
         val a = varPool.fresh
@@ -494,7 +523,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         // To guarantee that the function and the updates have the same types, produce (c, ..., c) => c
         val a = varPool.fresh
         val nargs = accessors.length + 1
-        val sig = OperT1(1.to(nargs) map { _ => a }, a)
+        val sig = OperT1(1.to(nargs).map { _ => a }, a)
         mkApp(ref, Seq(sig), this(fun) +: towersOfUnapply: _*)
 
       case funDef @ OperEx(TlaFunOper.recFunDef, body, args @ _*) =>
@@ -512,7 +541,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
                   case orphan =>
                     throw new TypingException(s"Invalid bound variables and sets ${orphan} in: $ex", ex.ID)
                 }
-                .toSeq: _*,
+                .toSeq: _*
           )
 
         val resultType = varPool.fresh
@@ -778,7 +807,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val typeVar = varPool.fresh
         mkExRefApp(OperT1(nameAndArgs.map(_ => StrT1()) :+ typeVar, typeVar), nameAndArgs :+ labelledEx)
 
-      case OperEx(ApalacheOper.withType, lhs, annotation) =>
+      case OperEx(ApalacheOper.withType, _, annotation) =>
         // Met an old type annotation. Warn the user and ignore the annotation.
         logger.error("Met an old type annotation: " + annotation)
         logger.error("See: https://apalache.informal.systems/docs/apalache/typechecker-snowcat.html")
@@ -802,11 +831,15 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
    *   translated bindings, where all tuples have been unpacked
    */
   private def translateBindings(
-      bindings: (TlaEx, TlaEx)*,
-  ): Seq[(EtcName, EtcExpr)] = {
+      bindings: (TlaEx, TlaEx)*): Seq[(EtcName, EtcExpr)] = {
     // Project a tuple and a set of dim-tuples on the ith element (starting with 0!).
     // We have to pass a tuple as well, in order to back-propagate the type later.
-    def project(id: UID, tupleId: UID, setEx: EtcExpr, dim: Int, index: Int): EtcExpr = {
+    def project(
+        id: UID,
+        tupleId: UID,
+        setEx: EtcExpr,
+        dim: Int,
+        index: Int): EtcExpr = {
       val typeVars = varPool.fresh(dim)
       val tupleType = TupT1(typeVars: _*)
       // e.g., (<<a, b, c>>, Set(<<a, b, c>>)) => Set(b)
@@ -819,8 +852,9 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
     }
 
     def unpackOne(
-        id: UID, target: TlaEx, set: EtcExpr,
-    ): Seq[(EtcName, EtcExpr)] = {
+        id: UID,
+        target: TlaEx,
+        set: EtcExpr): Seq[(EtcName, EtcExpr)] = {
       target match {
         // simplest case: name is bound to set
         case nameEx @ NameEx(_) =>
@@ -845,8 +879,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
 
   // Translate a sequence of formal parameters into type variables
   private def formalParamsToTypeVars(
-      params: Seq[OperParam],
-  ): Seq[(String, TlaType1)] = {
+      params: Seq[OperParam]): Seq[(String, TlaType1)] = {
     params match {
       case Seq() => Seq()
 

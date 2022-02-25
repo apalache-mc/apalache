@@ -3,17 +3,17 @@
 # Markdown files used for integration tests
 TEST_MD_FILES := $(wildcard test/tla/*.md)
 
-.PHONY: all apalache apalache-jar compile build-quick test integration clean deps promote
+.PHONY: all apalache apalache-jar compile build-quick test integration clean deps promote docker dist fmt-fix-unused
 
 all: apalache
 
 # test and assemble the package
 apalache:
-	sbt test assembly
+	sbt test apalacheCurrentPackage
 
-# package the project without running tests
+# package the project for local use without running tests
 package:
-	sbt assembly
+	sbt apalacheCurrentPackage
 
 # compile, but don't assemble the package
 compile:
@@ -30,9 +30,15 @@ test-coverage:
 integration: package
 	test/mdx-test.py --debug "$(TEST_FILTER)"
 
-# build the docker image
+# Build the docker image
 docker:
 	sbt docker
+
+# Create the distribution packages
+# The archives without version suffix support stable links to the latest version.
+# See https://github.com/informalsystems/apalache/issues/716
+dist:
+	sbt 'clean; Universal/packageZipTarball; Universal/packageBin; set Universal/packageName := "apalache"; Universal/packageZipTarball; Universal/packageBin'
 
 # Invokes the md targets below
 promote: $(TEST_MD_FILES)
@@ -42,13 +48,14 @@ test/tla/%.md: target/test/tla/%.md.corrected
 	cp -f $< $@
 
 fmt-check:
-	git fetch origin
+  # TODO: rm if we decide to keep running on all source files
+	# git fetch origin
 	sbt scalafmtCheckAll scalafmtSbtCheck || \
 		( echo "TO FIX: run 'make fmt-fix' and commit the changes" ; \
 		  exit 1 )
 
 fmt-fix:
-	sbt scalafmtAll scalafmtSbt
+	sbt "scalafix RemoveUnused" scalafmtAll scalafmtSbt
 
 clean:
 	sbt clean

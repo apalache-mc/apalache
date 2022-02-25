@@ -1,15 +1,15 @@
 package at.forsyte.apalache.tla.tooling.opt
 
-import at.forsyte.apalache.tla.bmcmt.{SMTEncoding, arraysEncoding, oopsla19Encoding}
+import at.forsyte.apalache.tla.bmcmt.{arraysEncoding, oopsla19Encoding, SMTEncoding}
 import org.backuity.clist.util.Read
 
-import java.io.File
-import org.backuity.clist.{Command, _}
+import org.backuity.clist._
 
 /**
  * This command initiates the 'check' command line.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class CheckCmd extends AbstractCheckerCmd(name = "check", description = "Check a TLA+ specification") with General {
 

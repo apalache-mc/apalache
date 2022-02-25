@@ -10,15 +10,16 @@ import com.typesafe.scalalogging.LazyLogging
 /**
  * <p>The skolemization analysis finds the existential quantifiers that can be safely replaced by constants
  * (Skolemizable). This class is not a pure analysis but a transformer, that is, it modifies an argument expression.
- * Additionally, this analysis finds the cardinality comparisons like Cardinality(S) >= 4 that can be checked
- * more optimally than the direct computation of the cardinalities.</p>
+ * Additionally, this analysis finds the cardinality comparisons like Cardinality(S) >= 4 that can be checked more
+ * optimally than the direct computation of the cardinalities.</p>
  *
- * <p>The previous version of this class was storing the identifiers of the Skolemizable expressions.
- * This had two disadvantages: (1) the code carried around the respective analysis store, and (2) the Skolemizable
- * expressions were not visible to the user in the intermediate output. By wrapping Skolemizable expressions
- * with skolemExists, we solve the problem more elegantly.</p>
+ * <p>The previous version of this class was storing the identifiers of the Skolemizable expressions. This had two
+ * disadvantages: (1) the code carried around the respective analysis store, and (2) the Skolemizable expressions were
+ * not visible to the user in the intermediate output. By wrapping Skolemizable expressions with skolemExists, we solve
+ * the problem more elegantly.</p>
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class SkolemizationMarker @Inject() (tracker: TransformationTracker) extends TlaExTransformation with LazyLogging {
   override def apply(e: TlaEx): TlaEx = {
@@ -43,10 +44,10 @@ class SkolemizationMarker @Inject() (tracker: TransformationTracker) extends Tla
       ex // stop here. This should be a leaf (and rare) expression, as we are dealing with the NNF.
 
     case ex @ OperEx(TlaBoolOper.and, args @ _*) =>
-      OperEx(TlaBoolOper.and, args map transform: _*)(ex.typeTag)
+      OperEx(TlaBoolOper.and, args.map(transform): _*)(ex.typeTag)
 
     case ex @ OperEx(TlaBoolOper.or, args @ _*) =>
-      OperEx(TlaBoolOper.or, args map transform: _*)(ex.typeTag)
+      OperEx(TlaBoolOper.or, args.map(transform): _*)(ex.typeTag)
 
     case ex @ OperEx(TlaControlOper.ifThenElse, cond, left, right) =>
       // try to identify existentials in the both arms

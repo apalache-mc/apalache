@@ -1,16 +1,22 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, IntT1, RecT1, SetT1, StrT1, TlaEx, TupT1}
+import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
+import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.convenience._
+import at.forsyte.apalache.tla.lir.transformations.PredResultOk
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
+import at.forsyte.apalache.tla.lir.transformations.standard.{KeraLanguagePred, KeramelizerInputLanguagePred}
 import org.junit.runner.RunWith
+import org.scalacheck.Prop.{forAll, propBoolean}
+import org.scalatest.AppendedClues.convertToClueful
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.junit.JUnitRunner
-import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.TypedPredefs._
+import org.scalatestplus.scalacheck.Checkers
 
 @RunWith(classOf[JUnitRunner])
-class TestKeramelizer extends AnyFunSuite with BeforeAndAfterEach {
+class TestKeramelizer extends AnyFunSuite with Checkers with BeforeAndAfterEach with Matchers {
   private var keramelizer = new Keramelizer(new UniqueNameGenerator(), TrackerWithListeners())
 
   override def beforeEach(): Unit = {
@@ -292,4 +298,35 @@ class TestKeramelizer extends AnyFunSuite with BeforeAndAfterEach {
     assert(expected == output)
   }
 
+  test("simplifies TLA+ expressions to KerA+") {
+    // Generator for PBT
+    val gens = new IrGenerators { override val maxArgs: Int = 3 }
+
+    // Generated operators
+    val ops =
+      gens.simpleOperators ++ gens.logicOperators ++ gens.arithOperators ++ gens.setOperators ++ gens.functionOperators
+
+    // Predicates for Keramelizer input and Keramelizer output (= KerA+)
+    val inputPred = KeramelizerInputLanguagePred()
+    val outputPred = KeraLanguagePred()
+
+    val prop = forAll(gens.genTlaEx(ops)(gens.emptyContext)) { ex =>
+      inputPred.isExprOk(ex) == PredResultOk() ==> {
+        try {
+          val keramelized = keramelizer(ex)
+          val inKera = outputPred.isExprOk(keramelized)
+          (inKera shouldBe PredResultOk()).withClue(s"when keramelizing $ex to $keramelized")
+          true
+        } catch {
+          // This is a workaround for when `IrGenerators` constructs an ill-typed expressions that fails in Keramelizer,
+          // as in #1364.
+          // TODO(#1379): Remove this try-catch when we have a well-typing expression generator.
+          case _: MalformedTlaError =>
+            alert("Ignored MalformedTlaError in PBT")
+            true
+        }
+      }
+    }
+    check(prop, minSuccessful(500), sizeRange(7))
+  }
 }

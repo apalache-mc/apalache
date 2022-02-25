@@ -1,18 +1,15 @@
 package at.forsyte.apalache.io.annotations.parser
 
-import at.forsyte.apalache.io.annotations.AnnotationParserError
-
 import java.io.Reader
 import scala.util.matching.Regex
 import scala.util.parsing.combinator.RegexParsers
 
 /**
- * <p>A lexer for annotations that are hidden in TLA+ comments.
- * Since the annotations are hidden in comments, it is tricky to parse comments like that.
- * Internally, the lexer is producing junk tokens and then filtering them out.
- * </p>
+ * <p>A lexer for annotations that are hidden in TLA+ comments. Since the annotations are hidden in comments, it is
+ * tricky to parse comments like that. Internally, the lexer is producing junk tokens and then filtering them out. </p>
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 object AnnotationLexer extends RegexParsers {
   override def skipWhitespace: Boolean = true
@@ -20,12 +17,15 @@ object AnnotationLexer extends RegexParsers {
   override val whiteSpace: Regex = """([ \t\r\f\n]+)""".r
 
   /**
-   * Parse the input stream and return the list of tokens. Although collecting the list of all tokens in memory is
-   * not optimal, streams of tokens produced from comments are supposed to be small.
+   * Parse the input stream and return the list of tokens. Although collecting the list of all tokens in memory is not
+   * optimal, streams of tokens produced from comments are supposed to be small.
    *
-   * @param reader a Java reader
-   * @return the list of parsed tokens
-   * @throws AnnotationParserError when the lexer finds an error
+   * @param reader
+   *   a Java reader
+   * @return
+   *   the list of parsed tokens
+   * @throws AnnotationParserError
+   *   when the lexer finds an error
    */
   def apply(reader: Reader): Either[String, Seq[AnnotationToken]] = parse(program, reader) match {
     case Success(result, _) =>
@@ -40,7 +40,7 @@ object AnnotationLexer extends RegexParsers {
 
   def token: Parser[AnnotationToken] =
     positioned(
-        leftParen | rightParen | comma | dot | boolean | atIdentifier | identifier | number | string | inline_string | unexpected_char,
+        leftParen | rightParen | comma | dot | boolean | atIdentifier | identifier | number | string | inline_string | unexpected_char
     ) ///
 
   def skip: Parser[Unit] = rep(whiteSpace) ^^^ Unit

@@ -9,9 +9,9 @@ sealed case class UJsonRep(protected[json] val value: ujson.Value) extends JsonR
   override def toString: String = ujson.write(value, indent = 2, escapeUnicode = false)
 
   /**
-   * If `this` represents a JSON object defining a field
-   * `fieldName : val`, the method returns a Some(_), containing the representation of `val`,
-   *  otherwise (if `this` is not an object or if it does not define a `fieldName` field) returns None.
+   * If `this` represents a JSON object defining a field `fieldName : val`, the method returns a Some(_), containing the
+   * representation of `val`, otherwise (if `this` is not an object or if it does not define a `fieldName` field)
+   * returns None.
    */
   override def getFieldOpt(fieldName: String): Option[this.type] = for {
     objAsMap <- value.objOpt

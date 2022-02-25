@@ -5,20 +5,22 @@ import java.util.concurrent.atomic.AtomicLong
 import com.google.inject.Singleton
 
 /**
- * A generator of unique and concise names. This class is used to produce unique names in bindings.
- * To guarantee uniqueness, this class is annotated with @Singleton, so Google Guice will instantiate it only once.
+ * A generator of unique and concise names. This class is used to produce unique names in bindings. To guarantee
+ * uniqueness, this class is annotated with @Singleton, so Google Guice will instantiate it only once.
  *
  * Importantly, this name is deterministic, that is, it produces names in sequence. This class is thread-safe.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 @Singleton
 class UniqueNameGenerator {
-  private var nextId: AtomicLong = new AtomicLong(1)
+  private val nextId: AtomicLong = new AtomicLong(1)
 
   /**
    * Produce a new unique name for a variable
-   * @return a name starting with "t_" followed by letters and digits
+   * @return
+   *   a name starting with "t_" followed by letters and digits
    */
   def newName(): String = {
     val id = nextId.getAndIncrement()
@@ -78,7 +80,7 @@ object UniqueNameGenerator {
         "w",
         "x",
         "y",
-        "z"
+        "z",
     ) ////
 
   /**

@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt.implicitConversions.Crossable
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
-import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, PowSetT}
+import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, PowSetT, RecordT, TupleT, UnknownT}
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.convenience._
@@ -25,16 +25,14 @@ class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends SetInclusi
 
           case (FinSetT(FinSetT(t1)), PowSetT(FinSetT(t2))) =>
             if (t1 != t2) {
-              throw new RewriterException(
-                  "Unexpected set types: %s and %s in %s"
+              throw new RewriterException("Unexpected set types: %s and %s in %s"
                     .format(t1, t2, state.ex), state.ex)
             } else {
               subset(rightState, leftCell, rightCell, true)
             }
 
           case _ =>
-            throw new RewriterException(
-                "Unexpected set types: %s and %s in %s"
+            throw new RewriterException("Unexpected set types: %s and %s in %s"
                   .format(leftCell.cellType, rightCell.cellType, state.ex), state.ex)
         }
 
@@ -44,7 +42,11 @@ class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends SetInclusi
   }
 
   // TODO: similar to SetInRuleWithArrays.powSetIn, potential for refactoring.
-  private def subset(state: SymbState, leftCell: ArenaCell, rightCell: ArenaCell, rightIsPowSet: Boolean): SymbState = {
+  private def subset(
+      state: SymbState,
+      leftCell: ArenaCell,
+      rightCell: ArenaCell,
+      rightIsPowSet: Boolean): SymbState = {
     val leftElems = state.arena.getHas(leftCell)
     val leftElemsElems = leftElems.flatMap(state.arena.getHas)
     val rightElemOrDomain = if (rightIsPowSet) state.arena.getDom(rightCell) else rightCell
@@ -65,7 +67,11 @@ class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends SetInclusi
     } else {
       // EqConstraints need to be generated, since missing in-relations, e.g. in sets of tuples, will lead to errors.
       // TODO: Inlining this method is pointless. We should consider handling tuples and other structures natively in SMT.
-      newState = rewriter.lazyEq.cacheEqConstraints(state, leftElemsElems cross rightElemOrDomainElems)
+      val leftElemsElemsType = if (leftElemsElems.nonEmpty) leftElemsElems.head.cellType else UnknownT
+      val needsInRelations = leftElemsElemsType.isInstanceOf[TupleT] || leftElemsElemsType.isInstanceOf[RecordT]
+      if (needsInRelations) {
+        newState = rewriter.lazyEq.cacheEqConstraints(state, leftElemsElems.cross(rightElemOrDomainElems))
+      }
 
       def isInRightSet(leftElem: ArenaCell): TlaEx = {
         def isInAndEqLeftElem(rightElemOrDomainElem: ArenaCell) = {

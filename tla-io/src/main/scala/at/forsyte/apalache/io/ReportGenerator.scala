@@ -2,7 +2,6 @@ package at.forsyte.apalache.io
 
 import java.io.File
 import java.util.regex.Matcher
-import scala.io.Source
 
 object ReportGenerator {
   private val reportFile = "BugReport.md"
@@ -29,7 +28,13 @@ object ReportGenerator {
     new File(OutputManager.runDir.toFile, reportFile).getCanonicalPath
   }
 
-  private def template(specTxt: String, cmd: String, log: String, version: String, os: String, jdk: String): String =
+  private def template(
+      specTxt: String,
+      cmd: String,
+      log: String,
+      version: String,
+      os: String,
+      jdk: String): String =
     s"""<!-- Thank you for filing a report! Please ensure you have filled out all -->
       |<!-- sections, as it help us to address the problem effectively. -->
       |

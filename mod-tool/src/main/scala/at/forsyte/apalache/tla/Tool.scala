@@ -3,27 +3,26 @@ package at.forsyte.apalache.tla
 // Generated from the build.sbt file by the buildInfo plugin
 import apalache.BuildInfo
 
-import java.io.{File, FileNotFoundException, FileWriter, PrintWriter}
-import java.nio.file.Path
+import java.io.{File, FileNotFoundException}
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import at.forsyte.apalache.infra.log.LogbackConfigurator
-import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor, PassOptions, WriteablePassOptions, ToolModule}
-import at.forsyte.apalache.tla.lir.{TlaModule}
+import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor, ToolModule, WriteablePassOptions}
+import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorMessage, PassOptionException}
 import at.forsyte.apalache.io.{OutputManager, ReportGenerator}
 import at.forsyte.apalache.tla.bmcmt.config.{CheckerModule, ReTLAToVMTModule}
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.tooling.ExitCodes
 import at.forsyte.apalache.tla.tooling.opt.{
-  CheckCmd, ConfigCmd, TranspileCmd, AbstractCheckerCmd, General, ParseCmd, ServerCmd, TestCmd, TypeCheckCmd,
+  AbstractCheckerCmd, CheckCmd, ConfigCmd, General, ParseCmd, ServerCmd, TestCmd, TranspileCmd, TypeCheckCmd,
 }
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import com.google.inject.{Guice, Injector}
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.configuration2.builder.fluent.Configurations
 import org.apache.commons.configuration2.ex.ConfigurationException
-import org.backuity.clist.{Cli, Command}
+import org.backuity.clist.Cli
 import util.ExecutionStatisticsCollector
 import util.ExecutionStatisticsCollector.Selection
 
@@ -61,7 +60,7 @@ object Tool extends LazyLogging {
     }
     println(s"Output directory: ${OutputManager.runDir.normalize()}")
     OutputManager.withWriterInRunDir(OutputManager.Names.RunFile)(
-        _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}"),
+        _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
     )
     // force our programmatic logback configuration, as the autoconfiguration works unpredictably
     new LogbackConfigurator(OutputManager.runDirPathOpt, OutputManager.customRunDirPathOpt).configureDefaultContext()
@@ -161,7 +160,10 @@ object Tool extends LazyLogging {
     options.set("io.outdir", OutputManager.outDir)
   }
 
-  private def runAndExit(executor: PassChainExecutor, msgIfOk: TlaModule => String, msgIfFail: String,
+  private def runAndExit(
+      executor: PassChainExecutor,
+      msgIfOk: TlaModule => String,
+      msgIfFail: String,
       errCode: Int = ExitCodes.ERROR): Int = {
     val result = executor.run()
     if (result.isDefined) {
@@ -176,7 +178,7 @@ object Tool extends LazyLogging {
   private def setCoreOptions(executor: PassChainExecutor, cmd: AbstractCheckerCmd): Unit = {
     logger.info(
         "Checker options: filename=%s, init=%s, next=%s, inv=%s"
-          .format(cmd.file, cmd.init, cmd.next, cmd.inv),
+          .format(cmd.file, cmd.init, cmd.next, cmd.inv)
     )
     executor.options.set("parser.filename", cmd.file.getAbsolutePath)
     if (cmd.config != "")
@@ -387,8 +389,11 @@ object Tool extends LazyLogging {
     handleExceptions(runner, injector, executor, cmd)
   }
 
-  private def handleExceptions[C <: General](runner: (PassChainExecutor, C) => Int, injector: Injector,
-      executor: PassChainExecutor, cmd: C): Int = {
+  private def handleExceptions[C <: General](
+      runner: (PassChainExecutor, C) => Int,
+      injector: Injector,
+      executor: PassChainExecutor,
+      cmd: C): Int = {
     val adapter = injector.getInstance(classOf[ExceptionAdapter])
     try {
       runner(executor, cmd)
@@ -405,7 +410,7 @@ object Tool extends LazyLogging {
                 s"${BuildInfo.version} build ${BuildInfo.build}",
             )
             Console.err.println(
-                s"Please report an issue at $ISSUES_LINK: $e\nA bug report template has been generated at [$absPath].\nIf you choose to use it, please complete the template with a description of the expected behavior.",
+                s"Please report an issue at $ISSUES_LINK: $e\nA bug report template has been generated at [$absPath].\nIf you choose to use it, please complete the template with a description of the expected behavior."
             )
 
         }

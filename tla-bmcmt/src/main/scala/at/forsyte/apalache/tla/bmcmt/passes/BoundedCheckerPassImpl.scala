@@ -10,17 +10,14 @@ import at.forsyte.apalache.tla.bmcmt.search._
 import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig}
 import at.forsyte.apalache.tla.bmcmt.trex._
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.NullEx
-import at.forsyte.apalache.tla.lir.{TlaModule, ModuleProperty}
+import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.LanguageWatchdog
 import at.forsyte.apalache.tla.lir.transformations.standard.KeraLanguagePred
 import at.forsyte.apalache.tla.pp.NormalizedNames
 import com.google.inject.Inject
-import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
-import java.io.File
 import java.nio.file.Path
 
 /**
@@ -29,8 +26,11 @@ import java.nio.file.Path
  * @author
  *   Igor Konnov
  */
-class BoundedCheckerPassImpl @Inject() (val options: PassOptions, exprGradeStore: ExprGradeStore,
-    sourceStore: SourceStore, changeListener: ChangeListener)
+class BoundedCheckerPassImpl @Inject() (
+    val options: PassOptions,
+    exprGradeStore: ExprGradeStore,
+    sourceStore: SourceStore,
+    changeListener: ChangeListener)
     extends BoundedCheckerPass with LazyLogging {
 
   override def name: String = "BoundedChecker"
@@ -96,7 +96,10 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, exprGradeStore
     }
   }
 
-  private def runIncrementalChecker(params: ModelCheckerParams, input: CheckerInput, tuning: Map[String, String],
+  private def runIncrementalChecker(
+      params: ModelCheckerParams,
+      input: CheckerInput,
+      tuning: Map[String, String],
       solverConfig: SolverConfig): Boolean = {
     val solverContext: RecordingSolverContext = RecordingSolverContext.createZ3(None, solverConfig)
 
@@ -131,7 +134,10 @@ class BoundedCheckerPassImpl @Inject() (val options: PassOptions, exprGradeStore
     outcome == NoError()
   }
 
-  private def runOfflineChecker(params: ModelCheckerParams, input: CheckerInput, tuning: Map[String, String],
+  private def runOfflineChecker(
+      params: ModelCheckerParams,
+      input: CheckerInput,
+      tuning: Map[String, String],
       solverConfig: SolverConfig): Boolean = {
     val solverContext: RecordingSolverContext = RecordingSolverContext.createZ3(None, solverConfig)
 

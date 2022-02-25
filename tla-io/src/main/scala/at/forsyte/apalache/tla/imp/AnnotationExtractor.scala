@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.io.annotations.{Annotation, AnnotationParser, AnnotationParserError, AnnotationStr}
+import at.forsyte.apalache.io.annotations.{Annotation, AnnotationParser, AnnotationStr}
 import at.forsyte.apalache.io.annotations.parser.CommentPreprocessor
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.AnnotationExtractor.FREE_TEXT
@@ -9,10 +9,11 @@ import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic.{OpDefNode, OpDefOrDeclNode}
 
 /**
- * This class extracts annotations from the strings that are attached to a SemanticNode.
- * We rely on SANY correctly attaching comments to the nodes.
+ * This class extracts annotations from the strings that are attached to a SemanticNode. We rely on SANY correctly
+ * attaching comments to the nodes.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class AnnotationExtractor(annotationStore: AnnotationStore) extends LazyLogging {
   def parseAndSave(uid: UID, node: OpDefOrDeclNode): Unit = {

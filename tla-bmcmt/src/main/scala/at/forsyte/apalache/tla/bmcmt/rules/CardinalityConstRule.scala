@@ -13,15 +13,16 @@ import at.forsyte.apalache.tla.lir.{OperEx, ValEx}
 /**
  * Optimization for Cardinality(S) >= k, where k is constant. See [docs/smt/Cardinality.md].
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val pickRule = new CherryPick(rewriter)
 
   override def isApplicable(state: SymbState): Boolean = {
     state.ex match {
-      case OperEx(ApalacheOper.constCard, OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, _), ValEx(
-                      TlaInt(_)))) =>
+      case OperEx(ApalacheOper.constCard,
+              OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, _), ValEx(TlaInt(_)))) =>
         true
 
       case _ =>
@@ -31,10 +32,10 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      case OperEx(ApalacheOper.constCard, OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, setEx), ValEx(
-                      TlaInt(thresholdBigInt)))) =>
+      case OperEx(ApalacheOper.constCard,
+              OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, setEx), ValEx(TlaInt(thresholdBigInt)))) =>
         val threshold = thresholdBigInt.toInt
-        var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
+        val nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
         val setCell = nextState.asCell
         val elems = nextState.arena.getHas(setCell)
         if (threshold <= 0) {
@@ -50,7 +51,11 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def mkWitnesses(state: SymbState, set: ArenaCell, elems: Seq[ArenaCell], threshold: Int): SymbState = {
+  private def mkWitnesses(
+      state: SymbState,
+      set: ArenaCell,
+      elems: Seq[ArenaCell],
+      threshold: Int): SymbState = {
     def solverAssert = rewriter.solverContext.assertGroundExpr(_)
 
     var nextState = state
@@ -72,7 +77,7 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     // create the inequality predicate
     val witnesses = 1.to(threshold).map(pick).toList
-    (witnesses cross witnesses).filter(p => p._1.id < p._2.id).foreach(cacheEq)
+    (witnesses.cross(witnesses)).filter(p => p._1.id < p._2.id).foreach(cacheEq)
     val witnessesNotEq = OperEx(ApalacheOper.distinct, witnesses.map(_.toNameEx): _*)
     nextState = nextState.updateArena(_.appendCell(BoolT()))
     val pred = nextState.arena.topCell

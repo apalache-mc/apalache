@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.search
 
 import java.io.File
-import at.forsyte.apalache.tla.bmcmt.{CheckerInput, SMTEncoding, oopsla19Encoding}
+import at.forsyte.apalache.tla.bmcmt.{oopsla19Encoding, CheckerInput, SMTEncoding}
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode.{AfterJoin, BeforeJoin, InvariantMode}
 
 object ModelCheckerParams {
@@ -18,10 +18,15 @@ object ModelCheckerParams {
 /**
  * A collection of model checker parameters that come from the user configuration.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
-class ModelCheckerParams(checkerInput: CheckerInput, val stepsBound: Int, val saveDirectory: File,
-    tuningOptions: Map[String, String] = Map(), val debug: Boolean = true) {
+class ModelCheckerParams(
+    checkerInput: CheckerInput,
+    val stepsBound: Int,
+    val saveDirectory: File,
+    tuningOptions: Map[String, String] = Map(),
+    val debug: Boolean = true) {
 
   /**
    * If pruneDisabled is set to false, there will be no check of whether a transition is enabled.
@@ -62,30 +67,30 @@ class ModelCheckerParams(checkerInput: CheckerInput, val stepsBound: Int, val sa
   var nMaxErrors: Int = 1
 
   /**
-   * A timeout upon which a transition is split in its own group.
-   * This is the minimal timeout. The actual timeout is updated at every step using `search.split.timeout.factor`.
-   * In our experiments, small timeouts lead to explosion of the search tree.
+   * A timeout upon which a transition is split in its own group. This is the minimal timeout. The actual timeout is
+   * updated at every step using `search.split.timeout.factor`. In our experiments, small timeouts lead to explosion of
+   * the search tree.
    */
   val jailTimeoutMinSec: Long =
     BigInt(tuningOptions.getOrElse("search.split.timeout.minimum", "1800")).toLong
 
   /**
-   * At every step, the jail timeout for the next step is computed as `maxTime * factor / 100`,
-   * where `maxTime` is the maximum checking time among all enabled or disabled transitions.
+   * At every step, the jail timeout for the next step is computed as `maxTime * factor / 100`, where `maxTime` is the
+   * maximum checking time among all enabled or disabled transitions.
    */
   val jailTimeoutFactor: Long =
     BigInt(tuningOptions.getOrElse("search.split.timeout.factor", "200")).toInt
 
   /**
-   * A timeout (in seconds) that indicates for how long an idle worker has to wait until splitting
-   * an active tree node into two.
+   * A timeout (in seconds) that indicates for how long an idle worker has to wait until splitting an active tree node
+   * into two.
    */
   val idleTimeoutSec: Long =
     BigInt(tuningOptions.getOrElse("search.idle.timeout", "1800")).toLong
 
   /**
-   * A timeout (in milliseconds) that indicates for how long an idle worker has to wait until splitting
-   * an active tree node into two.
+   * A timeout (in milliseconds) that indicates for how long an idle worker has to wait until splitting an active tree
+   * node into two.
    */
   def idleTimeoutMs: Long = idleTimeoutSec * 1000
 

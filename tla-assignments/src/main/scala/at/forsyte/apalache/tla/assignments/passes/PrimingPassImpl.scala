@@ -1,16 +1,13 @@
 package at.forsyte.apalache.tla.assignments.passes
 
-import java.io.File
-import java.nio.file.Path
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.google.inject.Inject
-import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
 /**
@@ -20,10 +17,6 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
     extends PrimingPass with LazyLogging {
 
   override def name: String = "PrimingPass"
-
-  private def trSeq(seq: Seq[TlaExTransformation]): TlaExTransformation = { ex =>
-    seq.foldLeft(ex) { case (partial, tr) => tr(partial) }
-  }
 
   override def execute(tlaModule: TlaModule): Option[TlaModule] = {
     val declarations = tlaModule.declarations
@@ -54,7 +47,7 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
     logger.info(s"  > Introducing $initPrimedName for $initName'")
     // add primes to variables
     val newBody = primeTransformer(
-        deepCopy.deepCopyEx(bodyMap(initName).body),
+        deepCopy.deepCopyEx(bodyMap(initName).body)
     )
     // Safe constructor: cannot be recursive
     val initPrimed = Some(TlaOperDecl(initPrimedName, List(), newBody))

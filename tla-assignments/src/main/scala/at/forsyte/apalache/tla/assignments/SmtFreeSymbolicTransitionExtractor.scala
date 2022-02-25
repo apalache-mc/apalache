@@ -10,11 +10,12 @@ import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
  *
  * Assignment candidates follow the assignment-before-use paradigm.
  *
- * @see [[SymbTransGenerator]]
+ * @see
+ *   [[SymbTransGenerator]]
  */
 class SmtFreeSymbolicTransitionExtractor(
-    tracker: TransformationTracker, sourceLoc: SourceLocator
-) {
+    tracker: TransformationTracker,
+    sourceLoc: SourceLocator) {
 
   private def getLocString(ex: TlaEx) = sourceLoc.sourceOf(ex).getOrElse("<[UNKNOWN]>")
 
@@ -31,9 +32,9 @@ class SmtFreeSymbolicTransitionExtractor(
       throw new AssignmentException(
           s"$locString: $name' is used before it is assigned. See ${SmtFreeSymbolicTransitionExtractor.MANUAL_LINK}")
     case OperEx(_, args @ _*) =>
-      args foreach throwOnUseBeforeAssignment(unassignedVars)
+      args.foreach(throwOnUseBeforeAssignment(unassignedVars))
     case LetInEx(body, defs @ _*) =>
-      defs foreach { d => throwOnUseBeforeAssignment(unassignedVars)(d.body) }
+      defs.foreach { d => throwOnUseBeforeAssignment(unassignedVars)(d.body) }
       throwOnUseBeforeAssignment(unassignedVars)(body)
     case _ =>
   }
@@ -44,8 +45,8 @@ class SmtFreeSymbolicTransitionExtractor(
   // Since disjunction and ITE behave exactly the same w.r.t. assignments, we write a unified routine
   private def handleDisjunctionOrITE(s: PartialState, operMap: BodyMap, args: Seq[TlaEx]): PartialState = {
     // We independently process each disjunct
-    val childStates = args map { getStrategyOptInternal(s, operMap)(_) }
-    val unassignedVarsSeq = childStates map { _.unassignedVars }
+    val childStates = args.map { getStrategyOptInternal(s, operMap)(_) }
+    val unassignedVarsSeq = childStates.map { _.unassignedVars }
     // We need to see whether all branches assign exactly the same variables
     val unassignedEverywhere = unassignedVarsSeq.foldLeft(s.unassignedVars) { _.intersect(_) }
     val unassignedSomewhere = unassignedVarsSeq.foldLeft(Set.empty[String]) { _.union(_) }
@@ -53,20 +54,20 @@ class SmtFreeSymbolicTransitionExtractor(
     val imbalancedAssignments = unassignedSomewhere -- unassignedEverywhere
     if (imbalancedAssignments.nonEmpty) {
       // Report problms for each disjunct, if any
-      val problems: Seq[String] = args.zip(childStates) flatMap {
-        case (childEx, PartialState(childUnassignedVars, _)) =>
+      val problems: Seq[String] =
+        args.zip(childStates).flatMap { case (childEx, PartialState(childUnassignedVars, _)) =>
           val s = childUnassignedVars.intersect(imbalancedAssignments)
           if (s.isEmpty) None
           else {
             val locString = getLocString(childEx)
-            Some(s"$locString: Missing assignments to: ${s.mkString(",")}")
+            Some(s"$locString: Missing assignments to: ${s.mkString(", ")}")
           }
-      }
+        }
 
       throw new AssignmentException(problems.mkString("\n"))
     }
     // Assuming all branches assign the same variables, works correctly if args.isEmpty (for whatever reason)
-    val unifiedStrat = (childStates map { _.partialStrat }).foldLeft(s.partialStrat) { case (a, b) =>
+    val unifiedStrat = (childStates.map { _.partialStrat }).foldLeft(s.partialStrat) { case (a, b) =>
       a ++ b.filterNot(a.contains)
     }
     PartialState(unassignedEverywhere, unifiedStrat)
@@ -101,7 +102,7 @@ class SmtFreeSymbolicTransitionExtractor(
       // We sequentially update the partial state
       args.foldLeft(currentState) { getStrategyOptInternal(_, operMap)(_) }
     /** Disjunction */
-    case ex @ OperEx(TlaBoolOper.or, args @ _*) =>
+    case OperEx(TlaBoolOper.or, args @ _*) =>
       handleDisjunctionOrITE(currentState, operMap, args)
 
     /** \E quantifier */
@@ -134,7 +135,7 @@ class SmtFreeSymbolicTransitionExtractor(
     case OperEx(TlaOper.apply, NameEx(operName), _*) =>
       // If the operator is known ( i.e. introduced by LET-IN ), we read it from the map
       val declOpt = operMap.get(operName)
-      val newStateOpt = declOpt map { d =>
+      val newStateOpt = declOpt.map { d =>
         if (d.isRecursive) {
           // recursive operators may not have assignments inside
           throwOnUseBeforeAssignment(currentState.unassignedVars)(d.body)
@@ -148,7 +149,7 @@ class SmtFreeSymbolicTransitionExtractor(
     /** Misc. operator */
     case OperEx(_, args @ _*) =>
       // For other operators, make sure they don't use unassigned variables ...
-      args foreach throwOnUseBeforeAssignment(currentState.unassignedVars)
+      args.foreach(throwOnUseBeforeAssignment(currentState.unassignedVars))
       // ... but don't update assignments
       currentState
 
@@ -172,9 +173,12 @@ class SmtFreeSymbolicTransitionExtractor(
   /**
    * Find assignments in an action expression and produce symbolic transitions, if possible.
    *
-   * @param vars names of the variables on which actionExpr is operating, e.g, the variables defined with VARIABLES
-   * @param actionExpr an expression over primed and unprimed variables, e.g., Next or Init
-   * @return A collection of symbolic transitions, if they can be extracted
+   * @param vars
+   *   names of the variables on which actionExpr is operating, e.g, the variables defined with VARIABLES
+   * @param actionExpr
+   *   an expression over primed and unprimed variables, e.g., Next or Init
+   * @return
+   *   A collection of symbolic transitions, if they can be extracted
    */
   def apply(vars: Set[String], actionExpr: TlaEx, operMap: BodyMap): Seq[SymbTrans] = {
     if (vars.nonEmpty) {

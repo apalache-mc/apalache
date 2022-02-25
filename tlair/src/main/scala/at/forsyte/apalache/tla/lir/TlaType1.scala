@@ -3,15 +3,16 @@ package at.forsyte.apalache.tla.lir
 import scala.collection.immutable.SortedMap
 
 /**
- * Trait for a type in Type System 1 as specified in
- * <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/adr/002adr-types.md">ADR-002</a>.
+ * Trait for a type in Type System 1 as specified in <a
+ * href="https://github.com/informalsystems/apalache/blob/unstable/docs/adr/002adr-types.md">ADR-002</a>.
  */
 sealed trait TlaType1 {
 
   /**
    * Compute the set of the names used in the type. These are names declared with VarT1.
    *
-   * @return the set of variable names (actually, integers) that are used in the type.
+   * @return
+   *   the set of variable names (actually, integers) that are used in the type.
    */
   def usedNames: Set[Int]
 }
@@ -19,8 +20,10 @@ sealed trait TlaType1 {
 /**
  * A type signature of a let definition after the definition by Damas and Milner.
  *
- * @param principalType  the parametric type of a definition, often called the principal type
- * @param quantifiedVars a subset of the variables used in `signature` that must be instantiated upon use.
+ * @param principalType
+ *   the parametric type of a definition, often called the principal type
+ * @param quantifiedVars
+ *   a subset of the variables used in `signature` that must be instantiated upon use.
  */
 case class TlaType1Scheme(principalType: TlaType1, quantifiedVars: Set[Int])
 
@@ -28,7 +31,7 @@ object TlaType1 {
   def fromTypeTag(typeTag: TypeTag): TlaType1 = {
     typeTag match {
       case Typed(tt: TlaType1) => tt
-      case _                   => throw new TypingException("Expected Typed(_: TlaType1), found: " + typeTag, UID.nullId)
+      case _ => throw new TypingException("Expected Typed(_: TlaType1), found: " + typeTag, UID.nullId)
     }
   }
 }
@@ -76,7 +79,8 @@ case class StrT1() extends TlaType1 {
 /**
  * An uninterpreted type constant.
  *
- * @param name unique name of the constant type
+ * @param name
+ *   unique name of the constant type
  */
 case class ConstT1(name: String) extends TlaType1 {
   require(name.forall(c => c.isUpper || c.isDigit || c == '_'),
@@ -89,11 +93,11 @@ case class ConstT1(name: String) extends TlaType1 {
 }
 
 /**
- * A type variable. Instead of using strings for names, we are just using integers, which makes it easier
- * to process them. To make vars user-friendly, we assign the names a..z to the numbers 0..25.
- * The rest are called a27, a28, etc.
+ * A type variable. Instead of using strings for names, we are just using integers, which makes it easier to process
+ * them. To make vars user-friendly, we assign the names a..z to the numbers 0..25. The rest are called a27, a28, etc.
  *
- * @param no the variable number
+ * @param no
+ *   the variable number
  */
 case class VarT1(no: Int) extends TlaType1 {
   require(no >= 0, "Variable identifier must be non-negative, found: " + no)
@@ -116,11 +120,13 @@ object VarT1 {
       "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z")
 
   /**
-   * Construct a variable from the human-readable form like 'b' or 'a100'.
-   * We use this method to write human-readable variable names in tests.
+   * Construct a variable from the human-readable form like 'b' or 'a100'. We use this method to write human-readable
+   * variable names in tests.
    *
-   * @param name a human-readable name
-   * @return the variable that matches to that name
+   * @param name
+   *   a human-readable name
+   * @return
+   *   the variable that matches to that name
    */
   def parse(name: String): VarT1 = {
     val len = name.length
@@ -150,8 +156,10 @@ object VarT1 {
   /**
    * Call parse(text).
    *
-   * @param text a string representation of a variable
-   * @return the variable, if text is in the right format. Otherwise, throw IllegalArgumentException.
+   * @param text
+   *   a string representation of a variable
+   * @return
+   *   the variable, if text is in the right format. Otherwise, throw IllegalArgumentException.
    */
   def apply(text: String): VarT1 = {
     parse(text)
@@ -160,8 +168,10 @@ object VarT1 {
   /**
    * Is the provided string a valid variable name
    *
-   * @param text a string
-   * @return true if `text` is a valid variable name
+   * @param text
+   *   a string
+   * @return
+   *   true if `text` is a valid variable name
    */
   def isValidName(text: String): Boolean = {
     try {
@@ -177,8 +187,10 @@ object VarT1 {
 /**
  * A function type.
  *
- * @param arg the type of the argument; multiple arguments should be written as a tuple
- * @param res the type of the result
+ * @param arg
+ *   the type of the argument; multiple arguments should be written as a tuple
+ * @param res
+ *   the type of the result
  */
 case class FunT1(arg: TlaType1, res: TlaType1) extends TlaType1 {
   // always wrap a function with parenthesis, to make it non-ambiguous
@@ -191,7 +203,8 @@ case class FunT1(arg: TlaType1, res: TlaType1) extends TlaType1 {
 /**
  * A set type.
  *
- * @param elem the type of the elements
+ * @param elem
+ *   the type of the elements
  */
 case class SetT1(elem: TlaType1) extends TlaType1 {
   override def toString: String = s"Set($elem)"
@@ -203,7 +216,8 @@ case class SetT1(elem: TlaType1) extends TlaType1 {
 /**
  * A sequence type.
  *
- * @param elem the type of the elements.
+ * @param elem
+ *   the type of the elements.
  */
 case class SeqT1(elem: TlaType1) extends TlaType1 {
   override def toString: String = s"Seq($elem)"
@@ -215,7 +229,8 @@ case class SeqT1(elem: TlaType1) extends TlaType1 {
 /**
  * A tuple type.
  *
- * @param elems a sequence of the element types
+ * @param elems
+ *   a sequence of the element types
  */
 case class TupT1(elems: TlaType1*) extends TlaType1 {
   override def toString: String = {
@@ -231,7 +246,8 @@ case class TupT1(elems: TlaType1*) extends TlaType1 {
 /**
  * A sparse tuple type. The keys are sorted by their names.
  *
- * @param fieldTypes a sorted map from field names to their types
+ * @param fieldTypes
+ *   a sorted map from field names to their types
  */
 case class SparseTupT1(fieldTypes: SortedMap[Int, TlaType1]) extends TlaType1 {
   override def toString: String = {
@@ -254,7 +270,8 @@ object SparseTupT1 {
 /**
  * A record type. The keys are sorted by their names.
  *
- * @param fieldTypes a sorted map from field names to their types
+ * @param fieldTypes
+ *   a sorted map from field names to their types
  */
 case class RecT1(fieldTypes: SortedMap[String, TlaType1]) extends TlaType1 {
   override def toString: String = {
@@ -277,8 +294,10 @@ object RecT1 {
 /**
  * An operator type.
  *
- * @param args the arguments' types
- * @param res  the result type
+ * @param args
+ *   the arguments' types
+ * @param res
+ *   the result type
  */
 case class OperT1(args: Seq[TlaType1], res: TlaType1) extends TlaType1 {
   override def toString: String = {

@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet, TlaNatSet, TlaStrSet}
 import org.junit.runner.RunWith
-import org.scalacheck.Prop.{AnyOperators, forAll}
+import org.scalacheck.Prop.{forAll, AnyOperators}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers
@@ -37,7 +37,7 @@ class TestUJsonToTla extends AnyFunSuite with Checkers {
         ),
     )
 
-    exs foreach { ex =>
+    exs.foreach { ex =>
       val encEx = enc(ex)
       val decEx = dec.asTlaEx(encEx)
       assert(decEx == ex)
@@ -50,7 +50,7 @@ class TestUJsonToTla extends AnyFunSuite with Checkers {
         TlaVarDecl("v"),
     )
 
-    decls foreach { decl =>
+    decls.foreach { decl =>
       assert(dec.asTlaDecl(enc(decl)) == decl)
     }
 
@@ -59,7 +59,7 @@ class TestUJsonToTla extends AnyFunSuite with Checkers {
         new TlaModule("Module", decls),
     )
 
-    modules foreach { m =>
+    modules.foreach { m =>
       assert(dec.asTlaModule(enc(m)) == m)
     }
 
@@ -72,7 +72,7 @@ class TestUJsonToTla extends AnyFunSuite with Checkers {
         TlaNatSet,
         TlaBoolSet,
         TlaStrSet,
-    ) map { v =>
+    ).map { v =>
       ValEx(v).withTag(Untyped())
     }
 
@@ -118,7 +118,8 @@ class TestUJsonToTla extends AnyFunSuite with Checkers {
     val gens: IrGenerators = new IrGenerators {
       override val maxArgs: Int = 3
     }
-    val operators = gens.simpleOperators ++ gens.setOperators ++ gens.logicOperators ++ gens.arithOperators
+    val operators =
+      gens.simpleOperators ++ gens.logicOperators ++ gens.arithOperators ++ gens.setOperators ++ gens.functionOperators ++ gens.actionOperators ++ gens.temporalOperators
     val genDecl = gens.genTlaDeclButNotVar(gens.genTlaEx(operators)) _
     val prop = forAll(gens.genTlaModuleWith(genDecl)) { module =>
       val moduleJson = enc(module)

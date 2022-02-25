@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.typecheck.passes
 
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.io.OutputManager
-import at.forsyte.apalache.io.OutputManager.Names.IntermediateFoldername
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.json.impl.TlaToUJson
 import at.forsyte.apalache.tla.imp.src.SourceStore
@@ -14,14 +13,14 @@ import at.forsyte.apalache.tla.typecheck.TypeCheckerTool
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer
 import at.forsyte.apalache.tla.imp.utils
 import com.google.inject.Inject
-import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
-import java.io.{File, FileWriter, PrintWriter}
-import java.nio.file.Path
-
-class EtcTypeCheckerPassImpl @Inject() (val options: PassOptions, val sourceStore: SourceStore,
-    changeListener: ChangeListener, tracker: TransformationTracker, val annotationStore: AnnotationStore,
+class EtcTypeCheckerPassImpl @Inject() (
+    val options: PassOptions,
+    val sourceStore: SourceStore,
+    changeListener: ChangeListener,
+    tracker: TransformationTracker,
+    val annotationStore: AnnotationStore,
     val writerFactory: TlaWriterFactory)
     extends EtcTypeCheckerPass with LazyLogging {
 

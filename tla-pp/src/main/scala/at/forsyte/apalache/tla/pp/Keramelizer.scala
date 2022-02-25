@@ -15,7 +15,8 @@ import javax.inject.Singleton
  *
  * <p>To get the idea about KerA+, check the paper at OOPSLA'19: TLA+ Model Checking Made Symbolic.<p>
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 @Singleton
 class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
@@ -41,17 +42,18 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
   /**
    * Set transformations.
    *
-   * @return a transformed set expression
+   * @return
+   *   a transformed set expression
    */
   private def transformSets: PartialFunction[TlaEx, TlaEx] = {
-    case ex @ OperEx(TlaSetOper.cap, setX, setY) =>
+    case OperEx(TlaSetOper.cap, setX, setY) =>
       val elemType = getElemType(setX)
       val tempName = gen.newName()
       tla
         .filter(tla.name(tempName) ? "e", setX, tla.in(tla.name(tempName) ? "e", setY) ? "b")
         .typed(Map("b" -> BoolT1(), "e" -> elemType, "s" -> SetT1(elemType)), "s")
 
-    case ex @ OperEx(TlaSetOper.setminus, setX, setY) =>
+    case OperEx(TlaSetOper.setminus, setX, setY) =>
       val elemType = getElemType(setX)
       val tempName = gen.newName()
       tla
@@ -67,16 +69,17 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
   /**
    * Record transformations.
    *
-   * @return a transformed expression
+   * @return
+   *   a transformed expression
    */
   private def transformRecords: PartialFunction[TlaEx, TlaEx] = {
     case ex @ OperEx(TlaSetOper.recSet, keysAndSets @ _*) =>
       // rewrite [ k_1: S_1, ..., k_n: S_n ]
       // into { y_1 \in S_1, ..., y_n \in S_n: [ k_1 |-> y_1, ..., k_n |-> y_n ] }
       val (keys, sets) = TlaOper.deinterleave(keysAndSets)
-      val elemTypes = sets map getElemType
+      val elemTypes = sets.map(getElemType)
       // produce a sequence of fresh names wrapped with NameEx
-      val names: Seq[TlaEx] = elemTypes map { t => NameEx(gen.newName())(Typed(t)) }
+      val names: Seq[TlaEx] = elemTypes.map { t => NameEx(gen.newName())(Typed(t)) }
       val keysAndNamesInterleaved = TlaOper.interleave(keys, names)
       val recordType = getElemType(ex)
       // [ x_1 |-> v_1, ..., x_n |-> v_n ]
@@ -89,12 +92,13 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
   /**
    * Tuple transformations.
    *
-   * @return a transformed expression
+   * @return
+   *   a transformed expression
    */
   private def transformTuples: PartialFunction[TlaEx, TlaEx] = { case ex @ OperEx(TlaSetOper.times, sets @ _*) =>
     // transform S_1 \X ... \X S_n
     // into { y_1 \in S_1, ..., y_n \in S_n: <<y_1, ..., y_n>> }
-    val elemTypes = sets map getElemType
+    val elemTypes = sets.map(getElemType)
     val names: Seq[TlaEx] = elemTypes.map(t => NameEx(gen.newName())(Typed(t)))
     val mapEx = OperEx(TlaFunOper.tuple, names: _*)(Typed(TupT1(elemTypes: _*)))
     val namesAndSets = TlaOper.interleave(names, sets)
@@ -104,11 +108,12 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
   /**
    * Boolean equivalences.
    *
-   * @return a transformed expression
+   * @return
+   *   a transformed expression
    */
   private def transformLogic: PartialFunction[TlaEx, TlaEx] = {
     case OperEx(TlaBoolOper.equiv, left, right) =>
-      tla.eql(left, right) typed BoolT1()
+      tla.eql(left, right).typed(BoolT1())
 
     case OperEx(TlaBoolOper.implies, left, right) =>
       tla
@@ -124,10 +129,11 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
   /**
    * Assignment-like expressions.
    *
-   * @return a transformed expression
+   * @return
+   *   a transformed expression
    */
   private def transformAssignments: PartialFunction[TlaEx, TlaEx] = {
-    case OperEx(TlaSetOper.in, prime @ OperEx(TlaActionOper.prime, NameEx(x)), set) =>
+    case OperEx(TlaSetOper.in, prime @ OperEx(TlaActionOper.prime, NameEx(_)), set) =>
       // rewrite x' \in S
       // into \E y \in S: x' = y
       val elemType = getElemType(set)
@@ -140,7 +146,8 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
   /**
    * Control flow transformations.
    *
-   * @return a transformed expression
+   * @return
+   *   a transformed expression
    */
   private def transformControl: PartialFunction[TlaEx, TlaEx] = {
 
@@ -150,7 +157,7 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
         // the Boolean case becomes a disjunction that has otherEx as an option
         val (guards, actions) = TlaOper.deinterleave(args)
         // produce g_1 /\ a_1, ..., g_n /\ a_n
-        val ands = guards.zip(actions) map { case (g, a) => tla.and(g, a).typed(BoolT1()) }
+        val ands = guards.zip(actions).map { case (g, a) => tla.and(g, a).typed(BoolT1()) }
         val otherForm = tla.and(guards.map(g => tla.not(g).typed(BoolT1())) :+ otherEx: _*).typed(BoolT1())
         // (g_1 /\ a_1) \/ ... \/ (g_n /\ a_n) \/ ~g_1 /\ ... /\ ~g_n /\ otherEx
         tla.or(ands :+ otherForm: _*).typed(BoolT1())
@@ -166,7 +173,7 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
         // the Boolean case becomes a disjunction
         val (guards, actions) = TlaOper.deinterleave(args)
         // produce g_1 /\ a_1, ..., g_n /\ a_n
-        val ands = guards.zip(actions) map { case (g, a) => tla.and(g, a).typed(BoolT1()) }
+        val ands = guards.zip(actions).map { case (g, a) => tla.and(g, a).typed(BoolT1()) }
         // (g_1 /\ a_1) \/ ... \/ (g_n /\ a_n)
         tla.or(ands: _*).typed(BoolT1())
       } else {

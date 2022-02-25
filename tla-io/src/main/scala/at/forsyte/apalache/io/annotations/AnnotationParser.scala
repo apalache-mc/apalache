@@ -8,7 +8,8 @@ import scala.util.parsing.combinator.Parsers
 /**
  * A parser for TLA+ annotations. Use the object TlaAnnotationParser to parse the input.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class AnnotationParser extends Parsers {
   override type Elem = AnnotationToken
@@ -90,8 +91,6 @@ class AnnotationParser extends Parsers {
 }
 
 object AnnotationParser {
-  private val parser: AnnotationParser = new AnnotationParser
-
   def parse(reader: Reader): Either[String, Annotation] = {
     for {
       tokens <- AnnotationLexer(reader).right

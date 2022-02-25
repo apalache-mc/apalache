@@ -6,17 +6,17 @@ package at.forsyte.apalache.tla.lir
 package oper {
 
   /**
-   * The levels of the operators as defined in the TLA+ book:
-   * Constant (contains only primitive operations and constants), State (reasons about current state),
-   * Action (reasons about a pair of states), and Temporal (reasons about executions).
+   * The levels of the operators as defined in the TLA+ book: Constant (contains only primitive operations and
+   * constants), State (reasons about current state), Action (reasons about a pair of states), and Temporal (reasons
+   * about executions).
    */
   object Level extends Enumeration {
     val Constant, State, Action, Temporal = Value
   }
 
   /**
-   * Interpretation shows how standard an operator is: Predefined (fixed interpretation),
-   * StandardLib (many standard interpretations), User (user-defined).
+   * Interpretation shows how standard an operator is: Predefined (fixed interpretation), StandardLib (many standard
+   * interpretations), User (user-defined).
    */
   object Interpretation extends Enumeration {
 

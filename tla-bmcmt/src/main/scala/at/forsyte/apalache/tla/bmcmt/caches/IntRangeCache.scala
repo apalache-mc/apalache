@@ -3,8 +3,6 @@ package at.forsyte.apalache.tla.bmcmt.caches
 import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, IntT}
-import at.forsyte.apalache.tla.bmcmt.util.ConsChainUtil
-import at.forsyte.apalache.tla.lir.BuilderEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
@@ -35,26 +33,13 @@ class IntRangeCache(solverContext: SolverContext, intValueCache: IntValueCache)
       cell
     }
 
-    val cells = range._1.to(range._2) map intToCell
+    val cells = range._1.to(range._2).map(intToCell)
     // create the domain cell
     arena = arena.appendCell(FinSetT(IntT()))
     val set = arena.topCell
     arena = arena.appendHas(set, cells: _*)
     // force that every element is in the set
-    if (cells.nonEmpty) {
-      def consChain(elems: Seq[ArenaCell]): BuilderEx =
-        ConsChainUtil.consChainFold[ArenaCell](
-            elems,
-            set.toNameEx,
-            { cell =>
-              val inSet = tla.apalacheStoreInSet(cell.toNameEx, set.toNameEx)
-              (inSet, tla.bool(true))
-            },
-        )
-
-      val cons = consChain(cells)
-      solverContext.assertGroundExpr(tla.apalacheAssignChain(set.toNameEx, cons))
-    }
+    for (cell <- cells) solverContext.assertGroundExpr(tla.apalacheStoreInSet(cell.toNameEx, set.toNameEx))
     (arena, set)
   }
 }

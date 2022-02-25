@@ -10,10 +10,10 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 /**
  * Implements logical negation.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class NegRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val substRule = new SubstRule(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {

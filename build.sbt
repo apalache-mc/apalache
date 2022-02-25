@@ -1,3 +1,4 @@
+import scala.sys.process._
 import Dependencies._
 
 ///////////////////////////
@@ -5,6 +6,7 @@ import Dependencies._
 ///////////////////////////
 
 name := "apalache"
+maintainer := "apalache@informal.org"
 
 // See https://www.scala-sbt.org/1.x/docs/Multi-Project.html#Build-wide+settings
 ThisBuild / organizationName := "Informal Systems Inc."
@@ -41,8 +43,21 @@ ThisBuild / libraryDependencies ++= Seq(
     TestDeps.scalatestplusScalacheck,
 )
 
+////////////////////////////
+// Linting and formatting //
+////////////////////////////
+
+// scalafmt
+// TODO: Remove if we decide we are happy with allways reformatting all
 // Only check/fix against (tracked) files that have changed relative to the trunk
-ThisBuild / scalafmtFilter := "diff-ref=origin/unstable"
+// ThisBuild / scalafmtFilter := "diff-ref=origin/unstable"
+ThisBuild / scalafmtPrintDiff := true
+
+// scalafix
+// https://scalacenter.github.io/scalafix/docs/rules/RemoveUnused.html
+ThisBuild / scalacOptions ++= Seq("-Ywarn-unused")
+ThisBuild / semanticdbEnabled := true
+ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
 ///////////////////////////////
 // Test configuration //
@@ -59,7 +74,7 @@ lazy val testSettings = Seq(
     // Configure the test reporters for concise but informative output.
     // See https://www.scalatest.org/user_guide/using_scalatest_with_sbt
     // for the meaning of the flags.
-    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oCDEH"),
+    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oCDEH")
 )
 
 /////////////////////////////
@@ -78,7 +93,7 @@ lazy val tlair = (project in file("tlair"))
 lazy val infra = (project in file("mod-infra"))
   .dependsOn(tlair)
   .settings(
-      testSettings,
+      testSettings
   )
 
 lazy val tla_io = (project in file("tla-io"))
@@ -135,7 +150,7 @@ lazy val tla_assignments = (project in file("tla-assignments"))
 lazy val tla_bmcmt = (project in file("tla-bmcmt"))
   .dependsOn(tlair, infra, tla_io, tla_pp, tla_assignments)
   .settings(
-      testSettings,
+      testSettings
   )
 
 lazy val tool = (project in file("mod-tool"))
@@ -167,15 +182,18 @@ lazy val tool = (project in file("mod-tool"))
 lazy val distribution = (project in file("mod-distribution"))
   .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt, tool)
   .settings(
-      testSettings,
+      testSettings
   )
 
 ///////////////
 // Packaging //
 ///////////////
 
+lazy val apalacheCurrentPackage = taskKey[File]("Set the current executable apalche-mc to the latest package")
+
 // Define the main entrypoint and uber jar package
 lazy val root = (project in file("."))
+  .enablePlugins(UniversalPlugin, sbtdocker.DockerPlugin)
   .dependsOn(distribution)
   .aggregate(
       // propagate commands to these sub-projects
@@ -197,6 +215,7 @@ lazy val root = (project in file("."))
           ((ThisBuild / baseDirectory).value / "README.md" -> "README.md"),
           ((ThisBuild / baseDirectory).value / "LICENSE" -> "LICENSE"),
       ),
+      // Assembly constructs our "fat jar"
       assembly / assemblyJarName := s"apalache-pkg-${version.value}-full.jar",
       assembly / mainClass := Some("at.forsyte.apalache.tla.Tool"),
       assembly / assembledMappings += {
@@ -211,10 +230,28 @@ lazy val root = (project in file("."))
             ),
         )
       },
+      // Package the distribution files
+      Universal / mappings ++= Seq(
+          // The fat jar
+          assembly.value -> "lib/apalache.jar",
+          (ThisBuild / baseDirectory).value / "LICENSE" -> "LICENSE",
+      ),
+      apalacheCurrentPackage := {
+        val log = streams.value.log
+        val pkg = (Universal / packageZipTarball).value
+        val (unzipped, _) = IO.split(pkg.toString)
+        val target_dir = (Universal / target).value
+        val current_pkg = (Universal / target).value / "current-pkg"
+        log.info(s"Unpacking package ${pkg} to ${target_dir}")
+        // send outputs directly to std{err,out} instead of logging here
+        // to avoid misleading logging output from tar
+        // See https://github.com/informalsystems/apalache/pull/1382
+        (s"tar zxvf ${pkg} -C ${target_dir}" !)
+        log.info(s"Symlinking ${current_pkg} -> ${unzipped}")
+        s"ln -sfn ${unzipped} ${current_pkg}" ! log
+        file(unzipped)
+      },
   )
-
-// Specify and build the docker file
-enablePlugins(DockerPlugin)
 
 docker / imageNames := {
   val img: String => ImageName = s =>
@@ -234,13 +271,10 @@ docker / dockerfile := {
   // Docker Working Dir
   val dwd = "/opt/apalache"
 
-  val fatJar = assembly.value
-  val jarTarget = s"${dwd}/target/scala-2.12/${fatJar.name}"
+  val pkg = apalacheCurrentPackage.value
 
-  val runners = rootDir / "bin"
-  val runnersTarget = s"${dwd}/bin"
-
-  val license = rootDir / "LICENSE"
+  val runner = rootDir / "bin" / "run-in-docker-container"
+  val runnerTarget = s"${dwd}/bin/run-in-docker-container"
   val readme = rootDir / "README.md"
 
   new Dockerfile {
@@ -248,9 +282,8 @@ docker / dockerfile := {
 
     workDir(dwd)
 
-    add(fatJar, jarTarget)
-    add(runners, runnersTarget)
-    add(license, s"${dwd}/${license.name}")
+    add(pkg, ".")
+    add(runner, runnerTarget)
     add(readme, s"${dwd}/${readme.name}")
 
     // TLA parser requires all specification files to be in the same directory

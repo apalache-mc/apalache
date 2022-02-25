@@ -2,16 +2,17 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, PredResult, PredResultFail, PredResultOk}
+import at.forsyte.apalache.tla.lir.transformations.{PredResult, PredResultFail, PredResultOk}
 import at.forsyte.apalache.tla.lir.values._
 
 import scala.collection.immutable.HashSet
 
 /**
- * <p>Test whether the expressions fit into the reTLA fragment: all calls to user operators are inlined,
- * except the calls to nullary let-in definitions.</p>
+ * <p>Test whether the expressions fit into the reTLA fragment: all calls to user operators are inlined, except the
+ * calls to nullary let-in definitions.</p>
  *
- * @author Jure Kukovec
+ * @author
+ *   Jure Kukovec
  */
 class ReTLALanguagePred extends ContextualLanguagePred {
   override protected def isOkInContext(letDefs: Set[String], expr: TlaEx): PredResult = {
@@ -43,7 +44,7 @@ class ReTLALanguagePred extends ContextualLanguagePred {
             arg match {
               case OperEx(TlaFunOper.tuple, args @ _*) => allArgsOk(letDefs, args)
               case _                                   => isOkInContext(letDefs, arg)
-            },
+            }
         )
 
       // SANY quirk #19123:
@@ -56,7 +57,7 @@ class ReTLALanguagePred extends ContextualLanguagePred {
       case OperEx(TlaFunOper.except, fn, key, value) =>
         isOkInContext(letDefs, fn)
           .and(
-              isOkInContext(letDefs, value),
+              isOkInContext(letDefs, value)
           )
           .and(
               key match {
@@ -68,7 +69,7 @@ class ReTLALanguagePred extends ContextualLanguagePred {
                   allArgsOk(letDefs, args)
                 // Impossible, but we need case-completeness
                 case _ => PredResultFail(List())
-              },
+              }
           )
 
       case LetInEx(body, defs @ _*) =>

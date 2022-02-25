@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaBool
@@ -11,11 +10,10 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 /**
  * Integer comparisons: <, <=, >, >=. For equality and inequality, check EqRule.
  *
- * @author Igor Konnov
+ * @author
+ *   Igor Konnov
  */
 class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val simplifier = new ConstSimplifierForSmt()
-
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaArithOper.lt, _, _) | OperEx(TlaArithOper.le, _, _) | OperEx(TlaArithOper.gt, _, _) |
@@ -39,7 +37,7 @@ class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   private def rewriteGeneral(state: SymbState, ex: TlaEx) = ex match {
-    case ValEx(TlaBool(value)) =>
+    case ValEx(TlaBool(_)) =>
       // keep the simplified expression
       rewriter.rewriteUntilDone(state.setRex(ex))
 
@@ -47,7 +45,7 @@ class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val leftState = rewriter.rewriteUntilDone(state.setRex(left))
       val rightState = rewriter.rewriteUntilDone(leftState.setRex(right))
       // compare integers directly in SMT
-      var arena = rightState.arena.appendCell(BoolT())
+      val arena = rightState.arena.appendCell(BoolT())
       val eqPred = arena.topCell
       val cons =
         OperEx(TlaOper.eq, eqPred.toNameEx, OperEx(oper, leftState.ex, rightState.ex))
