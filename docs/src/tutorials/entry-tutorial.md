@@ -483,7 +483,7 @@ Let's start with these two definitions:
 As you have probably guessed, we define two (local) values `mid` and `midVal`.
 The value `mid` is the average of `low` and `high`. The operator `\div` is
 simply integer division, which is usually written as `/` in programming
-languages. The value `midVal` is the value at the location `mid + 1`.  Since
+languages. The value `midVal` is the value at the location `mid + 1`. Since
 the TLA+ sequence `INPUT_SEQ` has indices in the range `1..Len(INPUT_SEQ)`,
 whereas we are computing zero-based indices, we are adjusting the index by one,
 that is, we write `INPUT_SEQ[mid + 1]` instead of `INPUT_SEQ[mid]`.
