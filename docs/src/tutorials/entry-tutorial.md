@@ -301,7 +301,7 @@ the value `-(low + 1)` in the next state. The expression `UNCHANGED <<low,
 high>>` is a convenient shortcut for writing `low' = low /\ high' = high`.
 
 It is important to understand that an expression like `returnValue' = -(low +
-1)` *does not immediately update* the variable in the left-hand side. Hence,
+1)` *does not immediately update* the variable on the left-hand side. Hence,
 `returnValue` still refers to the value in the state before evaluation of
 `Next`, whereas `returnValue'` refers to the value in the state that is
 computed after evaluation of `Next`. You can think of the effect of `x' = e`
