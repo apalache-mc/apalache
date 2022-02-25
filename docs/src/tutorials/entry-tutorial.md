@@ -458,7 +458,7 @@ $ apalache-mc check --inv=Postcondition MC3_8.tla
 ```
 
 This property holds true. However, it's a small win, as `MC3_8.tla` fixes all
-parameters. Hence, we have checked the property just for one data point.  In
+parameters. Hence, we have checked the property just for one data point. In
 Step 5, we will check `Postcondition` for all sequences admitted by `INT_WIDTH`.
 
 TODO: add the link to BinSearch3.tla and MC3_8.tla when we have them on github.
