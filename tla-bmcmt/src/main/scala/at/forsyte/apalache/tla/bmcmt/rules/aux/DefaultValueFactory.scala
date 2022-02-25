@@ -15,6 +15,8 @@ import scala.collection.immutable.SortedSet
  *   Igor Konnov
  */
 class DefaultValueFactory(rewriter: SymbStateRewriter) {
+  private val protoSeqOps = new ProtoSeqOps(rewriter)
+
   def makeUpValue(state: SymbState, set: ArenaCell): SymbState = {
     makeUpValue(state, findElemType(set))
   }
@@ -30,6 +32,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
    */
   def makeUpValue(state: SymbState, cellType: CellT): SymbState = {
     // TODO: introduce a cache for default values, otherwise there will be many identical copies
+    // See: https://github.com/informalsystems/apalache/issues/1348
     cellType match {
       case IntT() =>
         rewriter.rewriteUntilDone(state.setRex(tla.int(0)))
@@ -81,19 +84,13 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         arena = arena.setCdm(funCell, relState.asCell)
         relState.setArena(arena).setRex(funCell.toNameEx)
 
-      case tp @ SeqT(resT) => // << >>
-        val relState = makeUpValue(state, resT)
-        var arena = relState.arena.appendCell(tp)
-        val seq = arena.topCell
-        arena = arena.appendCell(IntT()) // start
-        val start = arena.topCell
-        arena = arena.appendCell(IntT()) // end
-        val end = arena.topCell
-        arena = arena.appendHasNoSmt(seq, start, end)
-        for (cell <- Seq(start, end)) {
-          rewriter.solverContext.assertGroundExpr(tla.eql(cell.toNameEx, tla.int(0)))
-        }
-        relState.setArena(arena).setRex(seq.toNameEx)
+      case tp @ SeqT(_) => // << >>
+        // make an empty proto sequence
+        var nextState = protoSeqOps.make(state, 0, { (s, _) => (s, s.asCell) })
+        val protoSeq = nextState.asCell
+        nextState = rewriter.rewriteUntilDone(state.setRex(tla.int(0)))
+        val len = nextState.asCell
+        protoSeqOps.mkSeq(nextState, tp.toTlaType1, protoSeq, len)
 
       case tp @ _ =>
         throw new RewriterException(s"I do not know how to generate a default value for the type $tp", state.ex)
