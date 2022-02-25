@@ -60,6 +60,6 @@ class OracleFactory(rewriter: SymbStateRewriter) {
    *   a new symbolic state and the oracle, the state.rex equals to state.rex
    */
   def newIntOracle(state: SymbState, nvalues: Int): (SymbState, IntOracle) = {
-    IntOracle.create(rewriter, state, nvalues)
+    IntOracle.create(state, nvalues)
   }
 }
