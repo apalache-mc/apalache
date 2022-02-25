@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.vmt
 
 import at.forsyte.apalache.io.OutputManager
-import at.forsyte.apalache.tla.lir.formulas.Booleans.{And, BoolExpr, Equiv, Exists, Forall, Impl, Neg, Or}
+import at.forsyte.apalache.tla.lir.formulas.Booleans.{And, Equiv, Exists, Forall, Impl, Neg, Or}
 import at.forsyte.apalache.tla.lir.formulas.EUF.{Apply, Equal, FunDef, ITE, UninterpretedLiteral, UninterpretedVar}
 import at.forsyte.apalache.tla.lir.formulas._
 import at.forsyte.apalache.tla.lir.{ConstT1, SetT1, StrT1, TlaConstDecl, TlaEx, TlaVarDecl, Typed}

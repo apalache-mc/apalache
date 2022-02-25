@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.vmt
 import at.forsyte.apalache.tla.bmcmt.RewriterException
 import at.forsyte.apalache.tla.lir.formulas.Booleans._
-import at.forsyte.apalache.tla.lir.formulas.{BoolSort, Term}
+import at.forsyte.apalache.tla.lir.formulas.Term
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 
