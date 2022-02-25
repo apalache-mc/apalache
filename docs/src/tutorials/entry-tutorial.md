@@ -295,8 +295,8 @@ To this end, we redefine `Next` as follows:
 
 Most likely, you have no problem reading this definition, except for the part
 that includes `isTerminated'`, `returnValue'`, and `UNCHANGED`. The expression
-`isTerminated' = TRUE` means that `isTerminated` has the value `TRUE` in the
-next state.  Likewise, `returnValue' = -(low + 1)` means that `returnValue` has
+`isTerminated' = TRUE` means that `isTerminated` shall have the value `TRUE` in the
+next state of our state machine.  Likewise, `returnValue' = -(low + 1)` means that `returnValue` has
 the value `-(low + 1)` in the next state. The expression `UNCHANGED <<low,
 high>>` is a convenient shortcut for writing `low' = low /\ high' = high`.
 
