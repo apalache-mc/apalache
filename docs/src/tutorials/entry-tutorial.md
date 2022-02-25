@@ -250,7 +250,7 @@ Init ==
   low = 0 /\ high = Len(INPUT_SEQ) - 1 /\ isTerminated = FALSE /\ returnValue = 0
 ```
 
-You probably have guessed, what the above line means. You are probably a bit
+You probably have guessed, what the above line means. You might be a bit
 puzzled about the mountain-like operator `/\`. It is called *conjunction*,
 which is usually written as `&&` or `and` in programming languages. The
 important effect of the above expression is that every variable in the
