@@ -44,6 +44,7 @@ class TestSetMembershipSimplifier
   private val boolSeqSet = tla.seqSet(tla.booleanSet()).as(SetT1(SeqT1(BoolT1())))
   private val strSeqSet = tla.seqSet(tla.stringSet()).as(SetT1(SeqT1(StrT1())))
   private val intSeqSet = tla.seqSet(tla.intSet()).as(SetT1(SeqT1(IntT1())))
+  private val natSeqSet = tla.seqSet(tla.natSet()).as(SetT1(SeqT1(IntT1())))
 
   val expressions = List(
       (boolName, boolVal, boolSet),
@@ -84,5 +85,15 @@ class TestSetMembershipSimplifier
         simplifier(inputValue) shouldBe inputValue
       }
     }
+
+    val intNameInNat = tla.in(intName, tla.natSet()).as(BoolT1())
+    val intValInNat = tla.in(intVal, tla.natSet()).as(BoolT1())
+    simplifier(intNameInNat) shouldBe intNameInNat
+    simplifier(intValInNat) shouldBe intValInNat
+
+    val intSeqNameInSeqNat = tla.in(intSeqName, natSeqSet).as(BoolT1())
+    val intSeqValInSeqNat = tla.in(intSeqVal, natSeqSet).as(BoolT1())
+    simplifier(intSeqNameInSeqNat) shouldBe intSeqNameInSeqNat
+    simplifier(intSeqValInSeqNat) shouldBe intSeqValInSeqNat
   }
 }
