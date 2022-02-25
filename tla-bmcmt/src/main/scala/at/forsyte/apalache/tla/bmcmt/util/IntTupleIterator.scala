@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.lir.NullEx
  *   Igor Konnov
  */
 class IntTupleIterator(limits: Seq[Int]) extends Iterator[Seq[Int]] {
-  private var vec: Array[Int] = (-1) +: Array.fill(limits.size - 1)(0)
+  private val vec: Array[Int] = (-1) +: Array.fill(limits.size - 1)(0)
   // we have to enumerate that many elements
   private var toEnumerate: BigInt = limits.map(BigInt(_) + 1).product // bugfix: use BigInt to avoid overflow
 

@@ -138,7 +138,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // i \in Nat <=> i >= 0
       assert(setCell == state.arena.cellNatSet())
       assert(elemType == IntT())
-      var nextState = state.updateArena(_.appendCell(BoolT()))
+      val nextState = state.updateArena(_.appendCell(BoolT()))
       val pred = nextState.arena.topCell
       rewriter.solverContext.assertGroundExpr(tla.equiv(pred.toNameEx, tla.ge(elemCell.toNameEx, tla.int(0))))
       nextState.setRex(pred.toNameEx)
@@ -158,7 +158,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // the set cell points to no other cell => return false
       state.setRex(state.arena.cellFalse().toNameEx)
     } else {
-      var nextState = state.updateArena(_.appendCell(BoolT()))
+      val nextState = state.updateArena(_.appendCell(BoolT()))
       val pred = nextState.arena.topCell.toNameEx
 
       // cache equality constraints first

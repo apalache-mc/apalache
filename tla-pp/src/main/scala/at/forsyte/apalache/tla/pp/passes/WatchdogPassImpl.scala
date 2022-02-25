@@ -4,7 +4,6 @@ import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, LanguageWatchdog}
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import com.google.inject.Inject
-import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
 class WatchdogPassImpl @Inject() (val options: PassOptions, val pred: LanguagePred)

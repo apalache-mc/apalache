@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.tooling.opt
 
-import org.backuity.clist.{Command, arg, opt}
+import org.backuity.clist.{arg, opt, Command}
 
 import java.io.File
 

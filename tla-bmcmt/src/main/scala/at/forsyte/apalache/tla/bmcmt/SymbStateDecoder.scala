@@ -240,7 +240,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       val elemAsExprs = tupleElems.map(c => decodeCellToTlaEx(arena, c))
       tla.tuple(elemAsExprs: _*).typed(t.toTlaType1)
 
-    case PowSetT(t @ FinSetT(_)) =>
+    case PowSetT(FinSetT(_)) =>
       val baseset = decodeCellToTlaEx(arena, arena.getDom(cell))
       tla.powSet(baseset).typed(SetT1(TlaType1.fromTypeTag(baseset.typeTag)))
 

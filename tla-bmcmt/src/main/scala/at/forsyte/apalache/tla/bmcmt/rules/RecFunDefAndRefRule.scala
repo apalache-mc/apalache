@@ -67,7 +67,7 @@ class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
         case FunT1(argT, BoolT1()) =>
           (CellT.fromType1(argT), ValEx(TlaBoolSet))
 
-        case FunT1(argT, resultT) =>
+        case FunT1(_, resultT) =>
           val msg = "A result of a recursive function must belong to Int or BOOLEAN. Found: " + resultT
           throw new RewriterException(msg, state.ex)
       }

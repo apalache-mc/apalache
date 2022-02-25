@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.lir.transformations.impl
 
 import org.junit.runner.RunWith
-import org.scalacheck.Prop.{AnyOperators, falsified, forAll, passed, propBoolean}
+import org.scalacheck.Prop.{falsified, forAll, passed, propBoolean, AnyOperators}
 import org.scalacheck.{Arbitrary, Gen, Prop}
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers

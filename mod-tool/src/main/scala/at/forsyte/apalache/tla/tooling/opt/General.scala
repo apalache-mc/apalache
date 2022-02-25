@@ -4,7 +4,6 @@ import at.forsyte.apalache.io.CliConfig
 
 import java.io.File
 import org.backuity.clist._
-import at.forsyte.apalache.io.OutputManager
 
 /**
  * The general commands.
@@ -38,7 +37,7 @@ trait General extends Command with CliConfig {
   private var _env = ""
 
   private def getOptionEnvVar(option: CliOption[_]): Option[String] = {
-    var envVar = option.name.replace("-", "_").toUpperCase()
+    val envVar = option.name.replace("-", "_").toUpperCase()
     sys.env.get(envVar).map(value => s"${envVar}=${value}")
   }
 

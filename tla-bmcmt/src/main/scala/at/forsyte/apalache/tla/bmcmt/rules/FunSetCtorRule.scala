@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.{FinFunSetT, FinSetT, PowSetT}
+import at.forsyte.apalache.tla.bmcmt.types.FinFunSetT
 import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 

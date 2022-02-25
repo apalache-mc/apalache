@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.{NullEx, TlaEx}
+import at.forsyte.apalache.tla.lir.NullEx
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 

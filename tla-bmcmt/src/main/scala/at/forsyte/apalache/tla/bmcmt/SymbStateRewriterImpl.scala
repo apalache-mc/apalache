@@ -119,7 +119,7 @@ class SymbStateRewriterImpl(
   /**
    * A storage for the messages associated with assertion failures, see MessageStorage.
    */
-  private var messages: mutable.Map[Int, String] = new mutable.HashMap()
+  private val messages: mutable.Map[Int, String] = new mutable.HashMap()
 
   /**
    * Get the current context level, that is the difference between the number of pushes and pops made so far.
@@ -309,7 +309,7 @@ class SymbStateRewriterImpl(
       case NameEx(name) if ArenaCell.isValidName(name) =>
         Done(state)
 
-      case NameEx(name) =>
+      case NameEx(_) =>
         if (substRule.isApplicable(state)) {
           statListener.enterRule(substRule.getClass.getSimpleName)
           // a variable that can be substituted with a cell

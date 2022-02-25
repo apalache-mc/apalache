@@ -4,10 +4,8 @@ import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.ConstT
 import at.forsyte.apalache.tla.lir.OperEx
-import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
-import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 /**
  * A cache for model values that are translated as uninterpreted constants, with a unique sort per uniterpreted type.

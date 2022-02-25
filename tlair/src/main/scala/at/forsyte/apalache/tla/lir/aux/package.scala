@@ -114,7 +114,7 @@ package object aux {
   }
 
   def allDiffs(ex: TlaEx): Seq[TlaEx] = ex match {
-    case OperEx(TlaOper.apply, NameEx("Diff"), ex1, ex2) =>
+    case OperEx(TlaOper.apply, NameEx("Diff"), _, _) =>
       Seq(ex)
     case OperEx(_, args @ _*) =>
       args.flatMap {

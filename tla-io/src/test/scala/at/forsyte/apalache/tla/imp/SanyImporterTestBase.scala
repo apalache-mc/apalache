@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.io.annotations.store.{AnnotationStore, createAnnotationStore}
+import at.forsyte.apalache.io.annotations.store.{createAnnotationStore, AnnotationStore}
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, OperParam, TlaDecl, TlaEx, TlaModule, TlaOperDecl}
 import org.scalatest.BeforeAndAfter

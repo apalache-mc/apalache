@@ -47,17 +47,17 @@ class CherryPick(rewriter: SymbStateRewriter) {
         // a powerset is never empty, pick an element
         pickFromPowset(t, set, state)
 
-      case FinFunSetT(domt @ FinSetT(_), cdm @ FinSetT(rest)) =>
+      case FinFunSetT(domt @ FinSetT(_), FinSetT(rest)) =>
         // No emptiness check, since we are dealing with a function set [S -> T].
         // If S is empty, we get a function of the empty set.
         pickFunFromFunSet(FunT(domt, rest), set, state)
 
-      case FinFunSetT(domt @ FinSetT(_), cdm @ InfSetT(rest)) =>
+      case FinFunSetT(domt @ FinSetT(_), InfSetT(rest)) =>
         // No emptiness check, since we are dealing with a function set [S -> T].
         // If S is empty, we get a function of the empty set.
         pickFunFromFunSet(FunT(domt, rest), set, state)
 
-      case FinFunSetT(domt @ FinSetT(_), cdm @ PowSetT(resultT @ FinSetT(_))) =>
+      case FinFunSetT(domt @ FinSetT(_), PowSetT(resultT @ FinSetT(_))) =>
         // No emptiness check, since we are dealing with a function set [S -> T].
         // If S is empty, we get a function of the empty set.
         pickFunFromFunSet(FunT(domt, resultT), set, state)
@@ -65,7 +65,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       case FinFunSetT(dom1T @ FinSetT(_), FinFunSetT(dom2T @ FinSetT(_), FinSetT(result2T))) =>
         pickFunFromFunSet(FunT(dom1T, FunT(dom2T, result2T)), set, state)
 
-      case FinFunSetT(dom1T @ FinSetT(_), cdm @ FinFunSetT(dom2T @ FinSetT(_), PowSetT(result2T @ FinSetT(_)))) =>
+      case FinFunSetT(dom1T @ FinSetT(_), FinFunSetT(dom2T @ FinSetT(_), PowSetT(result2T @ FinSetT(_)))) =>
         pickFunFromFunSet(FunT(dom1T, FunT(dom2T, result2T)), set, state)
 
       case FinFunSetT(FinSetT(_), PowSetT(_)) | FinFunSetT(FinSetT(_), FinFunSetT(_, _)) =>
@@ -173,7 +173,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       elems: Seq[ArenaCell],
       elseAssert: TlaEx): SymbState = {
     rewriter.solverContext.log("; CHERRY-PICK %s FROM [%s] {".format(cellType, elems.map(_.toString).mkString(", ")))
-    var arena = state.arena.appendCell(cellType)
+    val arena = state.arena.appendCell(cellType)
     val resultCell = arena.topCell
     // compare the set contents with the result
     val eqState = rewriter.lazyEq.cacheEqConstraints(state, elems.map(e => (e, resultCell)))
@@ -603,7 +603,6 @@ class CherryPick(rewriter: SymbStateRewriter) {
       oracle: Oracle,
       memberSeqs: Seq[ArenaCell],
       elseAssert: TlaEx): SymbState = {
-    def solverAssert(e: TlaEx): Unit = rewriter.solverContext.assertGroundExpr(e)
 
     rewriter.solverContext
       .log("; CHERRY-PICK %s FROM [%s] {".format(seqType, memberSeqs.map(_.toString).mkString(", ")))
@@ -860,7 +859,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
   // just declare an integer, and in case of Nat make it non-negative
   def pickFromIntOrNatSet(set: ArenaCell, state: SymbState): SymbState = {
     assert(set == state.arena.cellNatSet() || set == state.arena.cellIntSet())
-    var nextState = state.updateArena(_.appendCell(IntT()))
+    val nextState = state.updateArena(_.appendCell(IntT()))
     val intCell = nextState.arena.topCell
     if (set == state.arena.cellNatSet()) {
       rewriter.solverContext.assertGroundExpr(tla.ge(intCell.toNameEx, tla.int(0)))

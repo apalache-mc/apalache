@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.lir.transformations._
 import at.forsyte.apalache.tla.pp._
 import com.google.inject.Inject
 
+
 /**
  * A pass that expands operators and let-in definitions.
  *

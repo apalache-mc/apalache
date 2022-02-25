@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.PassOptions
-import at.forsyte.apalache.tla.assignments.ModuleAdapter
 import at.forsyte.apalache.tla.bmcmt.rules.vmt.VMTWriter
 import at.forsyte.apalache.tla.lir.transformations.standard.Deprime
 import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule}

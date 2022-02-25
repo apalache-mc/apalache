@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.bmcmt.{SymbState, SymbStateDecoder, SymbStateRewriter}
+import at.forsyte.apalache.tla.bmcmt.SymbState
 import at.forsyte.apalache.tla.lir.TlaEx
 
 /**

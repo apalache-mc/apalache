@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, PredResult, PredResultFail, PredResultOk}
+import at.forsyte.apalache.tla.lir.transformations.{PredResult, PredResultFail, PredResultOk}
 
 /**
  * <p>Test whether the expressions fit into the flat fragment: all calls to user operators are inlined, except the calls
@@ -43,7 +43,7 @@ class FlatLanguagePred extends ContextualLanguagePred {
           r.and(isOkInContext(letDefs, arg))
         }
 
-      case e =>
+      case _ =>
         PredResultOk()
     }
   }

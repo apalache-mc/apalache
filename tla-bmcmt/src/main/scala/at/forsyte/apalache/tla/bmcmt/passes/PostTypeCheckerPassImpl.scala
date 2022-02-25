@@ -8,7 +8,6 @@ import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.typecheck.passes.EtcTypeCheckerPassImpl
 import com.google.inject.Inject
-import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
 
 /**
