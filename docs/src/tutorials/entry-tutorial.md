@@ -493,7 +493,7 @@ Java code of `binarySearch`. We will fix them later. It is a good exercise
 to stop here and think about the source of this imprecision.*
 
 The following lines look like ASCII graphics, but by now you should know
-enough, in order to read them:
+enough to read them:
 
 ```tla
 {{#include ../../../test/tla/bin-search/BinSearch4.tla:60:71}}
