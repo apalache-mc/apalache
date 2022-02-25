@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaControlOper
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, TlaType1}
+import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 /**
  * Rewriting rule for IF A THEN B ELSE C.

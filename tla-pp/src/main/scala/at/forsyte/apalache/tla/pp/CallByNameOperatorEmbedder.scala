@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
-import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, OperT1, TlaEx, TlaOperDecl, Typed, TypingException}
+import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx, TlaOperDecl, Typed}
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory}
 import at.forsyte.apalache.tla.lir.transformations.standard.DeepCopy

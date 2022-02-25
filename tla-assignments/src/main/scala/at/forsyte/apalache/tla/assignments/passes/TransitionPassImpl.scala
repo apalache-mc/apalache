@@ -11,11 +11,7 @@ import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.tla.pp.NormalizedNames
 import com.google.inject.Inject
-import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
-
-import java.io.File
-import java.nio.file.Path
 
 /**
  * This pass finds symbolic transitions in Init and Next.

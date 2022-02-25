@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.trex
 
-import at.forsyte.apalache.tla.bmcmt.{SymbStateRewriterImpl, arraysEncoding}
+import at.forsyte.apalache.tla.bmcmt.{arraysEncoding, SymbStateRewriterImpl}
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
 import org.junit.runner.RunWith

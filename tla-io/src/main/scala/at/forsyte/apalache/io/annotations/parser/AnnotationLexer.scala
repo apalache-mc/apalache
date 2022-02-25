@@ -1,7 +1,5 @@
 package at.forsyte.apalache.io.annotations.parser
 
-import at.forsyte.apalache.io.annotations.AnnotationParserError
-
 import java.io.Reader
 import scala.util.matching.Regex
 import scala.util.parsing.combinator.RegexParsers

@@ -186,6 +186,13 @@ common editors.
 
 Our scalafmt configuration is specified in [./.scalafmt.conf](./.scalafmt.conf).
 
+#### Removing unused
+
+We have configured the compiler to warn on unused imports and variables, and we
+have enabled [scalafix](https://scalacenter.github.io/scalafix/) to automate
+removal of unused values. To automate removal of unused stuff run `make
+fmt-fix-unused`.
+
 ### Editors
 
 #### IntelliJ IDEA

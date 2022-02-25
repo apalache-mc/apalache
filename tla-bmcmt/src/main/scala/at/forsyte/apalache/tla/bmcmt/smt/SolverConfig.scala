@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
-import at.forsyte.apalache.tla.bmcmt.{SMTEncoding, oopsla19Encoding}
+import at.forsyte.apalache.tla.bmcmt.{oopsla19Encoding, SMTEncoding}
 
 /**
  * Configuration option to be passed to SolverContext. This class is declared as a case class to enable the concise copy

@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.lir.{TlaType1, UID}
-import at.forsyte.apalache.tla.typecheck._
 
 /**
  * A builder trait to conveniently construct instances of EtcExpr. Mix this trait to your class to construct Etc

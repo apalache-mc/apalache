@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.standard.FlatLanguagePred
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
 

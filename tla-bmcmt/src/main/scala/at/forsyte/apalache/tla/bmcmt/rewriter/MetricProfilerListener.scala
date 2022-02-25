@@ -1,7 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt.rewriter
 
-import java.io.{File, FileWriter, PrintWriter}
-
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContextMetrics
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{TlaEx, UID}
