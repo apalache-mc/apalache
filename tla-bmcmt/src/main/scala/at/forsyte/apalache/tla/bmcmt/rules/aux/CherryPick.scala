@@ -597,24 +597,22 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
   // Pick from a sequences of sequences
   private def pickSequenceNonEmpty(
-                                    seqType: CellT,
-                                    state: SymbState,
-                                    oracle: Oracle,
-                                    memberSeqs: Seq[ArenaCell],
-                                    elseAssert: TlaEx): SymbState = {
+      seqType: CellT,
+      state: SymbState,
+      oracle: Oracle,
+      memberSeqs: Seq[ArenaCell],
       elseAssert: TlaEx): SymbState = {
-
     rewriter.solverContext
       .log("; CHERRY-PICK %s FROM [%s] {".format(seqType, memberSeqs.map(_.toString).mkString(", ")))
 
     // get all the cells pointed by the elements of every member set, without changing their order!
-    val elemsOfMemberSeqs: Seq[Seq[ArenaCell]] = memberSeqs map { seq =>
+    val elemsOfMemberSeqs: Seq[Seq[ArenaCell]] = memberSeqs.map { seq =>
       val protoSeq = protoSeqOps.fromSeq(state.arena, seq)
       protoSeqOps.elems(state.arena, protoSeq)
     }
 
     // extract lengths of all sequences
-    val memberLengths = memberSeqs map { seq =>
+    val memberLengths = memberSeqs.map { seq =>
       protoSeqOps.seqLen(state.arena, seq)
     }
 
@@ -629,7 +627,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     // We construct a new sequence R = << z_1, ..., z_n >> where z_i = FROM { c_i, d_i }
     //
     // As we are not tracking membership for sequences, no additional SMT constraints are needed
-    val maxCapacity = elemsOfMemberSeqs map (_.size) reduce Math.max
+    val maxCapacity = elemsOfMemberSeqs.map(_.size).reduce(Math.max)
     assert(maxCapacity != 0)
 
     def padSeq(s: Seq[ArenaCell]): Seq[ArenaCell] = {

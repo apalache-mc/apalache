@@ -169,7 +169,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def applyFun(state: SymbState, funCell: ArenaCell, argEx: TlaEx): SymbState = {
+  protected def applyFun(state: SymbState, funCell: ArenaCell, argEx: TlaEx): SymbState = {
     val solverAssert = rewriter.solverContext.assertGroundExpr _
     // SE-FUN-APP2
     var nextState = rewriter.rewriteUntilDone(state.setRex(argEx))
