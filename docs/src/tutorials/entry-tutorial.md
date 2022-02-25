@@ -29,7 +29,7 @@ usually expected.
 
  - [Tutorial on Snowcat][] shows how to write type annotations for Apalache.
  - [TLA+ Cheatsheet in HTML][] summarizes the common TLA+ constructs.  If you
-   prefer the printable version in pdf, check the [Summary of TLA+][].
+   prefer a printable version in pdf, check the [Summary of TLA+][].
 
 ## Setup
 
