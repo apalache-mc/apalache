@@ -88,7 +88,7 @@ disappointed too fast. There are several reasons for that:
 
 ## Step 0: Introducing a template module
 
-Let's open a new file called `BinSearch0.tla` and type the very minimal module
+Let's open a new file called `BinSearch0.tla` and type a very minimal module
 definition:
 
 ```tla
