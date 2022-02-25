@@ -895,7 +895,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 }
 
 object Z3SolverContext {
-  private var nextId: AtomicLong = new AtomicLong(0)
+  private val nextId: AtomicLong = new AtomicLong(0)
 
   private def createId(): Long = {
     nextId.getAndIncrement()

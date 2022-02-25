@@ -120,7 +120,7 @@ object PropositionalOracle {
     // create nbits cells to hold the propositional variables
     val (newArena, newCells) = state.arena.appendCellSeq((0 until nbits).map(_ => BoolT()): _*)
     val oracle = new PropositionalOracle(newCells, nvalues)
-    var nextState = state.setArena(newArena)
+    val nextState = state.setArena(newArena)
 
     // exclude the values that are above nvalues
     def pow(n: Int): Int = if (n <= 0) 1 else 2 * pow(n - 1)

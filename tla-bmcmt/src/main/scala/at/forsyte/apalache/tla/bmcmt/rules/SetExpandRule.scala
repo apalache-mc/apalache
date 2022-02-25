@@ -27,7 +27,7 @@ class SetExpandRule(rewriter: SymbStateRewriter) extends RewritingRule {
         throw new RewriterException("Trying to expand a set of functions. This will blow up the solver.", ex)
 
       case OperEx(ApalacheOper.expand, OperEx(TlaSetOper.powerset, basesetEx)) =>
-        var nextState = rewriter.rewriteUntilDone(state.setRex(basesetEx))
+        val nextState = rewriter.rewriteUntilDone(state.setRex(basesetEx))
         new PowSetCtor(rewriter).confringo(nextState, nextState.asCell)
 
       case e @ _ =>

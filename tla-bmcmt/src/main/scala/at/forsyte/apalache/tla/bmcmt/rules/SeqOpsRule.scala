@@ -171,7 +171,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   private def translateLen(state: SymbState, seq: TlaEx) = {
-    var nextState = rewriter.rewriteUntilDone(state.setRex(seq))
+    val nextState = rewriter.rewriteUntilDone(state.setRex(seq))
     val cells = nextState.arena.getHas(nextState.asCell)
     val start = cells.head
     val end = cells.tail.head
