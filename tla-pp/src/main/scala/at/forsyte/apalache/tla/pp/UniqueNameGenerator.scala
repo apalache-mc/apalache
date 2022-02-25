@@ -15,7 +15,7 @@ import com.google.inject.Singleton
  */
 @Singleton
 class UniqueNameGenerator {
-  private var nextId: AtomicLong = new AtomicLong(1)
+  private val nextId: AtomicLong = new AtomicLong(1)
 
   /**
    * Produce a new unique name for a variable

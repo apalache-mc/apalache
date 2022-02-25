@@ -30,7 +30,7 @@ object UID {
    * The value of the id that will be assigned by the next call to unique(). We start with 1, to omit the default value
    * 0. By using AtomicLong, we make sure that unique() is assigning unique identifiers in the concurrent setting.
    */
-  private var nextId: AtomicLong = new AtomicLong(1)
+  private val nextId: AtomicLong = new AtomicLong(1)
 
   // TODO: remove this method in the future, as it allows one to work around uniqueness
   def apply(id: Long) = new UID(id)
