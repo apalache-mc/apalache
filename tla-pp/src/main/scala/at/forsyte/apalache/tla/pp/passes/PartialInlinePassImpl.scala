@@ -15,7 +15,6 @@ import com.typesafe.scalalogging.LazyLogging
  */
 abstract class PartialInlinePassImpl(
     val options: PassOptions,
-    gen: UniqueNameGenerator,
     tracker: TransformationTracker,
     writerFactory: TlaWriterFactory)
     extends InlinePass with LazyLogging {

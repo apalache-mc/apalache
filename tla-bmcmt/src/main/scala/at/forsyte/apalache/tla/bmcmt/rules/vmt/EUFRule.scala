@@ -37,15 +37,6 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
   // Only restricted sets are allowed as function domains
   private def isRestrictedSet(ex: TlaEx) = restrictedSetJudgement.isRestrictedSet(ex)
 
-  // Rewriter doesn't know it's producing terms with function sorts, so they have to be cast
-  private def castToFun(ex: TlaEx): FnTerm = {
-    def castEval: Sort => Boolean = {
-      case _: FunctionSort => true
-      case _               => false
-    }
-    TermAndSortCaster.rewriteAndCast[FnTerm](rewriter, castEval)(ex)
-  }
-
   /**
    * Given a function f: (S1,...,Sn) => S, with the rule f(y1,...,yn) = ef, args `x1: S1, ..., xn: Sn`, and an
    * expression eg, constructs a function definition for g, with the rule:
@@ -88,12 +79,15 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
     FunDef(gen.newName(), args, ITE(ifCondition, newCaseTerm, baseCaseTerm))
   }
 
+  // Convenience shorthand
+  private def rewrite: TlaEx => Term = rewriter.rewrite
+
   // Assume isApplicable
   override def apply(ex: TlaEx): Term =
     ex match {
       case OperEx(TlaOper.eq | ApalacheOper.assign, lhs, rhs) =>
         // := is just = in VMT
-        Equal(rewriter.rewrite(lhs), rewriter.rewrite(rhs))
+        Equal(rewrite(lhs), rewrite(rhs))
 
       case OperEx(TlaFunOper.funDef, e, varsAndSets @ _*)
           // All domain-defining sets must be restricted.
@@ -104,26 +98,26 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
         val argList = vars.zip(setSorts).toList.map { case (NameEx(name), sort) =>
           (name, sort)
         }
-        FunDef(gen.newName(), argList, rewriter.rewrite(e))
+        FunDef(gen.newName(), argList, rewrite(e))
       case OperEx(TlaFunOper.app, fn, arg) =>
-        val castFn = castToFun(fn)
+        val fnTerm = rewrite(fn)
         // Arity 2+ functions pack their arguments as a single tuple, which we might need to unpack
         arg match {
-          case OperEx(TlaFunOper.tuple, args @ _*) => Apply(castFn, args.map(rewriter.rewrite): _*)
-          case _                                   => Apply(castFn, rewriter.rewrite(arg))
+          case OperEx(TlaFunOper.tuple, args @ _*) => Apply(fnTerm, args.map(rewrite): _*)
+          case _                                   => Apply(fnTerm, rewrite(arg))
         }
 
       case OperEx(TlaFunOper.except, fn, arg, newVal) =>
-        val valTerm = rewriter.rewrite(newVal)
+        val valTerm = rewrite(newVal)
         // Toplevel, arg is always a TLaFunOper.tuple. within, it's either a single value, or another
         // tuple, in the case of arity 2+ functions
         val fnArgTerms = arg match {
           // ![a,b,...] case
           case OperEx(TlaFunOper.tuple, OperEx(TlaFunOper.tuple, args @ _*)) =>
-            args.toList.map(rewriter.rewrite)
+            args.toList.map(rewrite)
           // ![a] case
           case OperEx(TlaFunOper.tuple, arg) =>
-            List(rewriter.rewrite(arg))
+            List(rewrite(arg))
         }
 
         val exceptTermFn = exceptAsNewFunDef(fnArgTerms, valTerm) _
@@ -134,7 +128,7 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
         // If it is symbolic, we need to invent new variable names and apply it.
         // If it is ever the case, in the future, that this is slow, we can change this code
         // to use Apply in both cases.
-        castToFun(fn) match {
+        rewrite(fn) match {
           case FunDef(_, args, oldFnBody) =>
             exceptTermFn(args, oldFnBody)
           case fVar @ FunctionVar(_, FunctionSort(_, from @ _*)) =>
@@ -143,12 +137,11 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
               mkVariable(varName, varSort)
             }
             exceptTermFn(fnArgPairs, Apply(fVar, appArgs: _*))
+          case _ => throw new RewriterException(s"$fn must be a function term.", fn)
         }
 
       case OperEx(TlaControlOper.ifThenElse, ifEx, thenEx, elseEx) =>
-        // IfEx must be boolean, so we need a cast
-        val castIfEx = TermAndSortCaster.rewriteAndCast[BoolExpr](rewriter, BoolSort())(ifEx)
-        ITE(castIfEx, rewriter.rewrite(thenEx), rewriter.rewrite(elseEx))
+        ITE(rewrite(ifEx), rewrite(thenEx), rewrite(elseEx))
 
       case _ => throw new RewriterException(s"EUFRule not applicable to $ex", ex)
     }

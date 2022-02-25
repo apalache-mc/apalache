@@ -3,8 +3,9 @@ package at.forsyte.apalache.tla.bmcmt.passes
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
 import at.forsyte.apalache.tla.bmcmt.rules.vmt.VMTWriter
+import at.forsyte.apalache.tla.lir.transformations.standard.Deprime
 import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule}
-import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, LanguageWatchdog}
+import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, LanguageWatchdog, TransformationTracker}
 import at.forsyte.apalache.tla.pp.{NormalizedNames, UniqueNameGenerator}
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
@@ -15,7 +16,11 @@ import com.typesafe.scalalogging.LazyLogging
  * @author
  *   Jure Kukovec
  */
-class ReTLAToVMTTranspilePassImpl @Inject() (val options: PassOptions, pred: LanguagePred, gen: UniqueNameGenerator)
+class ReTLAToVMTTranspilePassImpl @Inject() (
+    val options: PassOptions,
+    pred: LanguagePred,
+    gen: UniqueNameGenerator,
+    tracker: TransformationTracker)
     extends TranspilePass with LazyLogging {
 
   override def name: String = "Transpiler"
@@ -34,7 +39,11 @@ class ReTLAToVMTTranspilePassImpl @Inject() (val options: PassOptions, pred: Lan
     // Check if still ok fragment (sanity check, see postTypeChecker)
     LanguageWatchdog(pred).check(module)
 
-    val initTrans = getTransitionsWithNames(module, NormalizedNames.INIT_PREFIX)
+    // Init has primes, for VMT we need to deprime it
+    val deprime = new Deprime(tracker)
+    val initTrans = getTransitionsWithNames(module, NormalizedNames.INIT_PREFIX).map { case (a, b) =>
+      (a, deprime(b))
+    }
     val nextTrans = getTransitionsWithNames(module, NormalizedNames.NEXT_PREFIX)
     val cinitP = getTransitionsWithNames(module, NormalizedNames.CONST_INIT)
     val vcInvs = getTransitionsWithNames(module, NormalizedNames.VC_INV_PREFIX)

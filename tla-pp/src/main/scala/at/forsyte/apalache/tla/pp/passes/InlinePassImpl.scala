@@ -24,7 +24,7 @@ class InlinePassImpl @Inject() (
     gen: UniqueNameGenerator,
     tracker: TransformationTracker,
     writerFactory: TlaWriterFactory)
-    extends PartialInlinePassImpl(options, gen, tracker, writerFactory) {
+    extends PartialInlinePassImpl(options, tracker, writerFactory) {
 
   override val transformationSequence: List[BodyMap => TlaExTransformation] = {
     val wrapHandler = CallByNameWrapHandler(tracker)

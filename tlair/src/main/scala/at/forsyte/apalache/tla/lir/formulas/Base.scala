@@ -27,7 +27,3 @@ sealed case class UninterpretedSort(override val sortName: String) extends Sort(
 sealed case class FunctionSort(to: Sort, from: Sort*) extends Sort("Function") {
   def arity: Int = from.size
 }
-
-trait FnTerm extends Term {
-  override val sort: FunctionSort
-}

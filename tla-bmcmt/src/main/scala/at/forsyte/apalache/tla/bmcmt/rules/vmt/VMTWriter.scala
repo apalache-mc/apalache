@@ -105,32 +105,33 @@ class VMTWriter(gen: UniqueNameGenerator) {
 //    }
 //    val cinitStrs = cinits.map(TermWriter.mkSMT2String)
 
-    def boolCast: TlaEx => BoolExpr = TermAndSortCaster.rewriteAndCast[BoolExpr](rewriter, BoolSort())
+    // convenience shorthand
+    def rewrite: TlaEx => Term = rewriter.rewrite
 
     // Each transition in initTransitions needs the VMT wrapper Init
     val inits = initTransitions.map { case (name, ex) =>
-      Init(name, boolCast(ex))
+      Init(name, rewrite(ex))
     }
 
     val initStrs = inits.map(TermWriter.mkVMTString)
 
     // Each transition in nextTransitions needs the VMT wrapper Trans
     val transitions = nextTransitions.map { case (name, ex) =>
-      Trans(name, boolCast(ex))
+      Trans(name, rewrite(ex))
     }
 
     val transStrs = transitions.map(TermWriter.mkVMTString)
 
     // Each invariant in invariants needs the VMT wrapper Invar
     val invs = invariants.zipWithIndex.map { case ((name, ex), i) =>
-      Invar(name, i, boolCast(ex))
+      Invar(name, i, rewrite(ex))
     }
 
     val invStrs = invs.map(TermWriter.mkVMTString)
 
     // Each variable v in varDecls needs the VMT binding Next(v, v')
     val nextBindings = varDecls.map { case d @ TlaVarDecl(name) =>
-      val sort = TermAndSortCaster.sortFromType(d.typeTag.asTlaType1())
+      val sort = TypeToSortConverter.sortFromType(d.typeTag.asTlaType1())
       Next(nextName(name), mkVariable(name, sort), mkVariable(VMTprimeName(name), sort))
     }
 

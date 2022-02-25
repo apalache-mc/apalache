@@ -6,6 +6,8 @@ object Integers {
     val sort: Sort = IntSort()
   }
 
+  // TODO: Before introducing integers, refactor static type requirement of IntExpr to require(_.sort == IntSort)
+
   sealed case class Plus(lhs: IntExpr, rhs: IntExpr) extends IntExpr
   sealed case class Minus(lhs: IntExpr, rhs: IntExpr) extends IntExpr
   sealed case class Uminus(arg: IntExpr) extends IntExpr

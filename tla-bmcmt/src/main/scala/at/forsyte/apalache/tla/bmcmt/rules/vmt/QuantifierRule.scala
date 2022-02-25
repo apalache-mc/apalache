@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.vmt
 import at.forsyte.apalache.tla.bmcmt.RewriterException
 import at.forsyte.apalache.tla.lir.formulas.Booleans.{BoolExpr, Exists, Forall}
-import at.forsyte.apalache.tla.lir.formulas.BoolSort
+import at.forsyte.apalache.tla.lir.formulas.{BoolSort, Term}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 
@@ -21,8 +21,10 @@ class QuantifierRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJu
 
   private def isRestrictedSet(ex: TlaEx) = restrictedSetJudgement.isRestrictedSet(ex)
 
-  private def rewriteAndCast: TlaEx => BoolExpr =
-    TermAndSortCaster.rewriteAndCast[BoolExpr](rewriter, BoolSort())
+  private def rewriteAndCast: TlaEx => Term = { ex =>
+    rewriter.rewrite(ex)
+//    TermAndSortCaster.rewriteAndCast[BoolExpr](rewriter, BoolSort())
+  }
 
   // No magic here, all quantifiers in reTLA have fixed arity and are 1-to-1 with SMT quantifiers
   override def apply(ex: TlaEx): BoolExpr =
