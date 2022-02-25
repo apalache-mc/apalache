@@ -338,7 +338,7 @@ Apalache complains that we have defined several parameters (`INPUT_SEQ`,
 
 **Adding a model file.** The standard approach in this case is either to fix
 all constants in a TLC configuration file, or to introduce another module that
-fixes the parameters and instantiates the general specification.  Although
+fixes the parameters and instantiates the general specification. Although
 Apalache supports [TLC Configuration Files][], we are inclined to introduce a
 new module TLA+ rather than recollecting the syntax of TLC configuration files.
 You will see later in this tutorial, why this approach is more organic to TLA+.
