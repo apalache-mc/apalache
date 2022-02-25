@@ -14,8 +14,8 @@ This tutorial is written under the assumption that the reader does not have any
 knowledge of TLA+ and Apalache. Since we are not diving into protocol and
 algorithm specifications too quickly, this is a nice example to start with.
 
-Sometimes, we refer to the model checker TLC in this text. TLC is the standard
-model checker for TLC, which was introduced in the late 90es.  If you are new
+Sometimes, we refer to the model checker TLC in this text. TLC is another
+model checker for TLA+ and was introduced in the late 90s.  If you are new
 to TLA+ and want to learn more about TLC, check the [TLC][] project and the
 [TLA+ Video Course][] by Leslie Lamport.  If you are an experienced TLC user,
 you will find this tutorial helpful too, as it demonstrates the strong points
