@@ -620,7 +620,7 @@ ConstInit ==
 In this new version, we use value generators to:
 
   - produce an unrestricted integer to be used as a value of `INPUT_KEY` and
-  - produce a  sequence of integers to be used as a value of `INPUT_SEQ`.  This
+  - produce a sequence of integers to be used as a value of `INPUT_SEQ`. This
     sequence is unrestricted, except its length is bounded with `MAX_INT`,
     which is exactly what we need in our case study.
 
