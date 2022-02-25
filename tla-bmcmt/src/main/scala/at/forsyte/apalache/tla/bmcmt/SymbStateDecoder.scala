@@ -13,9 +13,6 @@ import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 import com.typesafe.scalalogging.LazyLogging
 
-import java.io.PrintWriter
-import scala.collection.immutable.{HashSet, SortedSet}
-
 /**
  * This class dumps relevant values from an SMT model using an arena.
  *

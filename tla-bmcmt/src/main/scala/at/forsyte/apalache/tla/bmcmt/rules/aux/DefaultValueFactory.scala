@@ -84,7 +84,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         arena = arena.setCdm(funCell, relState.asCell)
         relState.setArena(arena).setRex(funCell.toNameEx)
 
-      case tp @ SeqT(resT) => // << >>
+      case tp @ SeqT(_) => // << >>
         // make an empty proto sequence
         var nextState = protoSeqOps.make(state, 0, { (s, _) => (s, s.asCell) })
         val protoSeq = nextState.asCell

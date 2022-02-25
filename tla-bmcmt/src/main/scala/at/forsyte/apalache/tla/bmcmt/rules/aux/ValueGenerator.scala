@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.types.{CellT, FinSetT, IntT, TupleT}
+import at.forsyte.apalache.tla.bmcmt.types.{CellT, FinSetT, TupleT}
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -119,8 +119,8 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
     nextState = genBasic(nextState, IntT1())
     val len = nextState.asCell
     // assert that 0 <= len /\ len <= bound
-    rewriter.solverContext.assertGroundExpr(tla.le(len.toNameEx as IntT1(), tla.int(bound)) as BoolT1())
-    rewriter.solverContext.assertGroundExpr(tla.ge(len.toNameEx as IntT1(), tla.int(0)) as BoolT1())
+    rewriter.solverContext.assertGroundExpr(tla.le(len.toNameEx.as(IntT1()), tla.int(bound)).as(BoolT1()))
+    rewriter.solverContext.assertGroundExpr(tla.ge(len.toNameEx.as(IntT1()), tla.int(0)).as(BoolT1()))
     // create the sequence out of the proto sequence and its length
     proto.mkSeq(nextState, SeqT1(elemType), newProtoSeq, nextState.asCell)
   }

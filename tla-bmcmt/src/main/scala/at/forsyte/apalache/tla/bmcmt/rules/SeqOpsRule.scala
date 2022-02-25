@@ -159,8 +159,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     // adjustedStart = IF newStartBase1 > 0 THEN newStartBase1 ELSE 1
     val newStartBase1asInt = asInt(newStartBase1)
-    solverAssert(
-        tla
+    solverAssert(tla
           .eql(asInt(adjustedStart),
               tla.ite(tla.gt(newStartBase1asInt, tla.int(0)).as(BoolT1()), newStartBase1asInt, tla.int(1)).as(IntT1()))
           .as(BoolT1()))
@@ -168,8 +167,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     nextState = nextState.updateArena(_.appendCell(IntT()))
     val adjustedEnd = nextState.arena.topCell
     val newEndBase1asInt = asInt(newEndBase1)
-    solverAssert(
-        tla
+    solverAssert(tla
           .eql(asInt(adjustedEnd),
               tla.ite(tla.le(newEndBase1asInt, asInt(len)).as(BoolT1()), newEndBase1asInt, asInt(len)).as(IntT1()))
           .as(BoolT1()))
@@ -192,8 +190,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // newLen = IF adjustedEnd >= adjustedStart THEN 1 + adjustedEnd - adjustedStart ELSE 0
     nextState = nextState.updateArena(_.appendCell(IntT()))
     val newLen = nextState.arena.topCell
-    solverAssert(
-        tla
+    solverAssert(tla
           .eql(asInt(newLen),
               tla
                 .ite(tla.ge(asInt(adjustedEnd), asInt(adjustedStart)).as(BoolT1()),
