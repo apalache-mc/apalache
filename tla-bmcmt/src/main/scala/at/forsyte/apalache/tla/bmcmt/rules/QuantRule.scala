@@ -141,7 +141,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
         tla.or(tla.not(tla.apalacheSelectInSet(elemAndPred._1.toNameEx, set.toNameEx)), elemAndPred._2)
       }
 
-      var finalState = predState.updateArena(_.appendCell(BoolT()))
+      val finalState = predState.updateArena(_.appendCell(BoolT()))
       val pred = finalState.arena.topCell
       val iff =
         if (isExists) {

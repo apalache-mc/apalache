@@ -173,7 +173,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       elems: Seq[ArenaCell],
       elseAssert: TlaEx): SymbState = {
     rewriter.solverContext.log("; CHERRY-PICK %s FROM [%s] {".format(cellType, elems.map(_.toString).mkString(", ")))
-    var arena = state.arena.appendCell(cellType)
+    val arena = state.arena.appendCell(cellType)
     val resultCell = arena.topCell
     // compare the set contents with the result
     val eqState = rewriter.lazyEq.cacheEqConstraints(state, elems.map(e => (e, resultCell)))
@@ -859,7 +859,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
   // just declare an integer, and in case of Nat make it non-negative
   def pickFromIntOrNatSet(set: ArenaCell, state: SymbState): SymbState = {
     assert(set == state.arena.cellNatSet() || set == state.arena.cellIntSet())
-    var nextState = state.updateArena(_.appendCell(IntT()))
+    val nextState = state.updateArena(_.appendCell(IntT()))
     val intCell = nextState.arena.topCell
     if (set == state.arena.cellNatSet()) {
       rewriter.solverContext.assertGroundExpr(tla.ge(intCell.toNameEx, tla.int(0)))

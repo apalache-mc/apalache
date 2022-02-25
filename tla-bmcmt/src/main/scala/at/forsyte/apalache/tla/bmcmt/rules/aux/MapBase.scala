@@ -46,7 +46,7 @@ class MapBase(rewriter: SymbStateRewriter) {
       }
     }
 
-    val (setsAsCells, elemTypes) = (sets.map(nextState.arena.findCellByNameEx).map(findSetCellAndElemType)).unzip
+    val (setsAsCells, _) = (sets.map(nextState.arena.findCellByNameEx).map(findSetCellAndElemType)).unzip
     val elemsOfSets = setsAsCells.map(nextState.arena.getHas)
     val setLimits = elemsOfSets.map(_.size - 1)
     // find the types of the target expression and of the target set
@@ -67,7 +67,7 @@ class MapBase(rewriter: SymbStateRewriter) {
     val tupleIter = new IntTupleIterator(setLimits).map(byIndex)
 
     // the SMT constraints are added right in the method
-    val (newState, resultElemCells) =
+    val (newState, _) =
       mapCellsManyArgs(nextState, resultSetCell, mapEx, varNames, setsAsCells, tupleIter)
 
     // that's it
@@ -87,7 +87,7 @@ class MapBase(rewriter: SymbStateRewriter) {
     // This is probably a memory-hungry solution.
     // We will replace it with a better one in an array-based SMT encoding:
     // https://github.com/informalsystems/apalache/issues/365
-    var resultsToSource = new HashMap[ArenaCell, Set[TlaEx]] with MultiMap[ArenaCell, TlaEx]
+    val resultsToSource = new HashMap[ArenaCell, Set[TlaEx]] with MultiMap[ArenaCell, TlaEx]
     for (argCells <- cellsIter) {
       val (ns, resultCell, memEx) =
         mapCellsManyArgsOnce(newState, targetSetCell, mapEx, varNames, setsAsCells, argCells)

@@ -45,7 +45,7 @@ class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val leftState = rewriter.rewriteUntilDone(state.setRex(left))
       val rightState = rewriter.rewriteUntilDone(leftState.setRex(right))
       // compare integers directly in SMT
-      var arena = rightState.arena.appendCell(BoolT())
+      val arena = rightState.arena.appendCell(BoolT())
       val eqPred = arena.topCell
       val cons =
         OperEx(TlaOper.eq, eqPred.toNameEx, OperEx(oper, leftState.ex, rightState.ex))
