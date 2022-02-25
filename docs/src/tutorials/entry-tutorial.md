@@ -40,7 +40,7 @@ We assume that you have Apalache installed. If not, check the manual page on
 
 We are not going to explain the idea of binary search in this tutorial. If you
 need more context on this, check the Wikipedia page on the [Binary search
-algorithm][]. Let's jump straight in the Java code that is given in [Nearly All
+algorithm][]. Let's jump straight into the Java code that is given in [Nearly All
 Binary Searches and Mergesorts are Broken][]:
 
 ```java
