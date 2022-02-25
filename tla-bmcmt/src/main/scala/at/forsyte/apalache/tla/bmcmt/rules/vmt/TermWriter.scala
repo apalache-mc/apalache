@@ -122,6 +122,6 @@ object TermWriter {
         s"(define-fun $name (${fromParis.mkString(" ")}) ${to} (! ${tr(current)} :next ${tr(next)}))"
       case Init(name, init)      => s"(define-fun $name () Bool (! ${tr(init)} :init true))"
       case Invar(name, idx, inv) => s"(define-fun $name () Bool (! ${tr(inv)} :invar-property $idx))"
-      case Trans(name, trEx)     => s"(define-fun $name () Bool (! ${tr(trEx)} :trans true))"
+      case Trans(name, trEx)     => s"(define-fun $name () Bool (! ${tr(trEx)} :action $name))"
     }
 }
