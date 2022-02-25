@@ -1032,7 +1032,7 @@ elements and 2 Billion elements respectively!
 
 Although Apalache gives us a good idea about whether the properties of the
 binary search hold true, it does give us an ultimate proof of correctness for
-Java integers. If you need such a proof, you should probably use TLAPS.  Check
+Java integers. If you need such a proof, you should probably use TLAPS. Check
 the paper on [Proving Safety Properties][] by Leslie Lamport.
 
 This tutorial is rather long. This is because we wanted to show the evolution
