@@ -690,7 +690,7 @@ If we check our source of truth, that is, the Java documentation in
 [Arrays.java in OpenJDK][], we will see the following sentences:
 
     The range must be sorted (as by the {@link #sort(int[], int, int)} method)
-    prior to making this call.  If it is not sorted, the results are undefined.
+    prior to making this call. If it is not sorted, the results are undefined.
     If the range contains multiple elements with the specified value, there is
     no guarantee which one will be found.
 
