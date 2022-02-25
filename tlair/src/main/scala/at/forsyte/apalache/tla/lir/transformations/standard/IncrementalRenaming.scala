@@ -38,7 +38,7 @@ object IncrementalRenaming {
           } =>
         Some((n, i.toInt))
       // Never renamed before
-      case Array(n) => None
+      case Array(_) => None
       // Error
       case _ => throw new IllegalArgumentException("Variable names should never contain more than one separator")
     }

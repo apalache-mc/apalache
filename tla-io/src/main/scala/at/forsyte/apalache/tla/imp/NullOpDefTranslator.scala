@@ -2,8 +2,7 @@ package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.TlaOper
-import tla2sany.semantic.{OpApplNode, OpDefNode}
+import tla2sany.semantic.OpDefNode
 
 /**
  * DummyOpDefTranslator creates a proper operator declaration but produces NullEx instead of the body.

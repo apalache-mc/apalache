@@ -120,31 +120,38 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
             // report the result of operator application, not the operator type itself
             onTypeFound(ex.sourceRef, res)
 
-          case tt =>
+          case _ =>
             throw new TypingException("Expected an operator type, found: ", appEx.sourceRef.tlaId)
         }
 
         def onOverloadingError(sub: Substitution, signatures: Seq[TlaType1]): Unit = {
           // The constraint solver has failed to solve the disjunctive clause:
           // operVar = operType_1 \/ ... \/ operVar = operType_n
-          val evalArgTypes = argTypes.map(sub.subRec).mkString(" and ")
+          val evalArgTypes = argTypes.map(sub.subRec)
           val argOrArgs = pluralArgs(argTypes.length)
           if (signatures.isEmpty) {
             onTypeError(appEx.sourceRef, s"No matching signature for $argOrArgs $evalArgTypes")
           } else {
             // it should be the case that manySigs has at least two elements, but we also include the case of one
             val sepSigs = String.join(" or ", signatures.map(_.toString()): _*)
-            onTypeError(appEx.sourceRef,
-                s"Need annotation. Found ${signatures.length} matching operator signatures $sepSigs for $argOrArgs $evalArgTypes")
+            val defaultMessage =
+              s"Annotation required. Found ${signatures.length} matching operator signatures $sepSigs for $argOrArgs ${evalArgTypes
+                  .mkString(" and ")}"
+            val specificMessage = appEx.explain(signatures.toList, evalArgTypes)
+            onTypeError(appEx.sourceRef, if (specificMessage.isDefined) specificMessage.get else defaultMessage)
           }
         }
 
         def onArgsMatchError(sub: Substitution, types: Seq[TlaType1]): Unit = {
           // no solution for: operVar = (arg_1, ..., arg_k) => resVar
-          val evalArgTypes = argTypes.map(sub.subRec).mkString(" and ")
+          val evalArgTypes = argTypes.map(sub.subRec)
           val argOrArgs = pluralArgs(argTypes.length)
           val evalSig = sub.subRec(operVar)
-          onTypeError(appEx.sourceRef, s"No match between operator signature $evalSig and $argOrArgs $evalArgTypes")
+          val defaultMessage =
+            s"An operator with the signature $evalSig cannot be applied to the provided $argOrArgs of type ${evalArgTypes
+                .mkString(" and ")}"
+          val specificMessage = appEx.explain(List(evalSig), evalArgTypes)
+          onTypeError(appEx.sourceRef, if (specificMessage.isDefined) specificMessage.get else defaultMessage)
         }
 
         // operVar = (arg_1, ..., arg_k) => resVar
@@ -154,10 +161,14 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
 
         def onSigMatchError(sub: Substitution, sigs: Seq[TlaType1]): Unit = {
           // no solution for: operVar = operType_1
-          val evalArgTypes = argTypes.map(sub.subRec).mkString(" and ")
+          val evalArgTypes = argTypes.map(sub.subRec)
           val argOrArgs = pluralArgs(argTypes.length)
           val evalSig = sigs.head
-          onTypeError(appEx.sourceRef, s"No match between operator signature $evalSig and $argOrArgs $evalArgTypes")
+          val defaultMessage =
+            s"An operator with the signature $evalSig cannot be applied to the provided $argOrArgs of type ${evalArgTypes
+                .mkString(" and ")}"
+          val specificMessage = appEx.explain(List(evalSig), evalArgTypes)
+          onTypeError(appEx.sourceRef, if (specificMessage.isDefined) specificMessage.get else defaultMessage)
         }
 
         if (operTypes.length == 1) {
@@ -194,7 +205,10 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
             .setOnTypeFound(tt => onTypeFound(name.sourceRef, tt))
           solver.addConstraint(clause)
           // delegate the rest to the application-by-type
-          computeRec(ctx, solver, mkApp(ex.sourceRef, Seq(instantiatedType), args: _*))
+          val instantiatedExpr = mkApp(ex.sourceRef, Seq(instantiatedType), args: _*)
+          instantiatedExpr.typeErrorExplanation = ex.typeErrorExplanation
+
+          computeRec(ctx, solver, instantiatedExpr)
         } else {
           onTypeError(ex.sourceRef, s"The operator $name is used before it is defined.")
           throw new UnwindException
@@ -228,10 +242,10 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
         val letInSolver = new ConstraintSolver()
         val operScheme =
           ctx.types.get(name) match {
-            case Some(scheme @ TlaType1Scheme(declaredType @ OperT1(_, _), allVars)) =>
+            case Some(scheme @ TlaType1Scheme(OperT1(_, _), _)) =>
               scheme
 
-            case Some(scheme @ TlaType1Scheme(someType: TlaType1, allVars)) =>
+            case Some(TlaType1Scheme(someType: TlaType1, allVars)) =>
               // The definition has a type annotation which is not an operator. Assume it is a nullary operator.
               // Strictly speaking, this is a hack. However, it is quite common to declare a constant with LET.
               TlaType1Scheme(OperT1(Seq(), someType), allVars)
@@ -363,7 +377,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
     listener.onTypeError(sourceRef, message)
   }
 
-  // tired of reading "arguments(s)", it's easy to fix
+  // Pluralize the string "argument"
   private def pluralArgs(count: Int): String = {
     if (count != 1) "arguments" else "argument"
   }

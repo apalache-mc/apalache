@@ -35,7 +35,7 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
       case OperEx(ApalacheOper.constCard,
               OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, setEx), ValEx(TlaInt(thresholdBigInt)))) =>
         val threshold = thresholdBigInt.toInt
-        var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
+        val nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
         val setCell = nextState.asCell
         val elems = nextState.arena.getHas(setCell)
         if (threshold <= 0) {

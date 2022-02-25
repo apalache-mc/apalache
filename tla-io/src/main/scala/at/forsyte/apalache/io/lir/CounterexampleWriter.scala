@@ -7,9 +7,8 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.values.TlaBool
 
-import java.io.{File, FileWriter, PrintWriter}
+import java.io.PrintWriter
 import java.util.Calendar
-import org.apache.commons.io.FilenameUtils
 import com.typesafe.scalalogging.LazyLogging
 
 /**

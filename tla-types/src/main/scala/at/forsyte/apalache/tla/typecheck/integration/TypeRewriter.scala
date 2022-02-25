@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.typecheck.integration
 
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaStr
 import TypedPredefs._
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler

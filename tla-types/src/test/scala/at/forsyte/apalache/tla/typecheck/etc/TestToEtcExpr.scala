@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.io.annotations.StandardAnnotations
-import at.forsyte.apalache.io.annotations.store.{AnnotationStore, createAnnotationStore}
+import at.forsyte.apalache.io.annotations.store.{createAnnotationStore, AnnotationStore}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper}
@@ -105,6 +105,9 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
 
     assert(mkExpected(parser("(a, a) => Bool")) == gen(tla.eql(tla.int(1), tla.int(2))))
     assert(mkExpected(parser("(b, b) => Bool")) == gen(tla.neql(tla.int(1), tla.int(2))))
+
+    // Has custom type error message
+    assert(gen(tla.eql(tla.int(1), tla.int(2))).explain(List(), List()) != "")
   }
 
   test("operator application") {
@@ -112,7 +115,11 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     val fName = mkUniqName("F")
     val expected2 = mkUniqAppByName(fName, mkUniqConst(IntT1()), mkUniqConst(BoolT1()))
 
-    assert(expected2 == gen(tla.appOp(tla.name("F"), tla.int(1), tla.bool(true))))
+    val expr = tla.appOp(tla.name("F"), tla.int(1), tla.bool(true))
+    assert(expected2 == gen(expr))
+
+    // Has custom type error message
+    assert(gen(expr).explain(List(OperT1(Seq(), BoolT1())), List()) != "")
   }
 
   test("LET-IN simple") {
@@ -399,6 +406,9 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     val expected = mkAppByName(funOrSeq, "f", "e")
     val access = tla.appFun(tla.name("f"), tla.name("e"))
     assert(expected == gen(access))
+
+    // Has custom type error message
+    assert(gen(access).explain(List(), List()) != "")
   }
 
   test("f[2]") {
@@ -408,6 +418,9 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     val expected = mkUniqApp(funOrSeqOrTuple, mkUniqName("f"), mkUniqConst(IntT1()))
     val access = tla.appFun(tla.name("f"), tla.int(2))
     assert(expected == gen(access))
+
+    // Has custom type error message
+    assert(gen(access).explain(List(), List()) != "")
   }
 
   test("""f["foo"]""") {
@@ -416,11 +429,14 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     val expected = mkUniqApp(funOrReq, mkUniqName("f"), mkUniqConst(StrT1()))
     val access = tla.appFun(tla.name("f"), tla.str("foo"))
     assert(expected == gen(access))
+
+    // Has custom type error message
+    assert(gen(access).explain(List(), List()) != "")
   }
 
   test("DOMAIN f") {
     // DOMAIN is applied to one of the four objects: a function, a sequence, a record, or a sparse tuple
-    val types = Seq(parser("(a -> b) => Set(a)"), parser("Seq(a) => Set(Int)"), parser("[] => Set(Str)"),
+    val types = Seq(parser("(a -> b) => Set(a)"), parser("Seq(c) => Set(Int)"), parser("[] => Set(Str)"),
         parser("{} => Set(Int)"))
 
     val expected = mkAppByName(types, "f")

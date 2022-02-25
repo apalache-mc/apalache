@@ -16,8 +16,8 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
  *   Igor Konnov
  */
 class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val picker = new CherryPick(rewriter)
-  private val defaultValueFactory = new DefaultValueFactory(rewriter)
+  protected val picker = new CherryPick(rewriter)
+  protected val defaultValueFactory = new DefaultValueFactory(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -136,7 +136,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def applyFun(state: SymbState, funCell: ArenaCell, argEx: TlaEx): SymbState = {
+  protected def applyFun(state: SymbState, funCell: ArenaCell, argEx: TlaEx): SymbState = {
     val solverAssert = rewriter.solverContext.assertGroundExpr _
     // SE-FUN-APP2
     var nextState = rewriter.rewriteUntilDone(state.setRex(argEx))
@@ -144,8 +144,8 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     val relationCell = nextState.arena.getCdm(funCell)
     val relationElems = nextState.arena.getHas(relationCell)
-    val nelems = relationElems.size
-    if (nelems == 0) {
+    val nElems = relationElems.size
+    if (nElems == 0) {
       // Just return a default value. Most likely, this expression will never propagate.
       defaultValueFactory.makeUpValue(nextState, funCell.cellType.asInstanceOf[FunT].resultType)
     } else {
@@ -158,7 +158,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // cache the equality between the picked argument and the supplied argument, O(1) constraints
       nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((pickedArg, argCell)))
       val argEqWhenNonEmpty =
-        tla.impl(tla.not(oracle.whenEqualTo(nextState, nelems)), tla.eql(pickedArg.toNameEx, argCell.toNameEx))
+        tla.impl(tla.not(oracle.whenEqualTo(nextState, nElems)), tla.eql(pickedArg.toNameEx, argCell.toNameEx))
       // if oracle < N, then pickedArg = argCell
       solverAssert(argEqWhenNonEmpty)
       // importantly, we require oracle = N iff there is no element equal to argCell, O(N) constraints
@@ -167,7 +167,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
         nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((argCell, elemArg)))
         val inRel = tla.apalacheSelectInSet(elem.toNameEx, relationCell.toNameEx)
         val neqArg = tla.not(rewriter.lazyEq.safeEq(elemArg, argCell))
-        val found = tla.not(oracle.whenEqualTo(nextState, nelems))
+        val found = tla.not(oracle.whenEqualTo(nextState, nElems))
         // ~inRel \/ neqArg \/ found, or equivalently, (inRel /\ elemArg = argCell) => found
         solverAssert(tla.or(tla.not(inRel), neqArg, found))
         // oracle = i => inRel. The equality pickedArg = argCell is enforced by argEqWhenNonEmpty

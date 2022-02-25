@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.typecheck.passes
 
 import at.forsyte.apalache.infra.ExceptionAdapter
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions, WriteablePassOptions, ToolModule}
+import at.forsyte.apalache.infra.passes.{Pass, PassOptions, ToolModule, WriteablePassOptions}
 import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
@@ -9,8 +9,7 @@ import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, TransformationTracker}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import com.google.inject.{AbstractModule, TypeLiteral}
-import com.google.inject.name.Names
+import com.google.inject.TypeLiteral
 
 class TypeCheckerModule extends ToolModule {
 

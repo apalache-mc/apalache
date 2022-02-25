@@ -51,7 +51,7 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
               throw new TlaInputError(message, Some(inv.body.ID))
           }
 
-        case Some(traceInv @ TlaOperDecl(name, params @ List(OperParam(_, 0)), body)) =>
+        case Some(traceInv @ TlaOperDecl(_, params @ List(OperParam(_, 0)), body)) =>
           // a trace invariant
           if (TlaLevelConst != levelFinder(traceInv)) {
             throw new TlaInputError(

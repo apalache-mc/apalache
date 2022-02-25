@@ -9,7 +9,7 @@ import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.Outcome
-import java.io.{PrintStream, File, FileOutputStream}
+import java.io.{File, FileOutputStream, PrintStream}
 
 @RunWith(classOf[JUnitRunner])
 class TestTransformations extends AnyFunSuite with TestingPredefs {

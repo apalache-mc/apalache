@@ -9,8 +9,8 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
   private val types =
     Map("b" -> BoolT1(), "B" -> SetT1(BoolT1()), "i" -> IntT1(), "I" -> SetT1(IntT1()), "(i)" -> TupT1(IntT1()),
         "i_to_i" -> FunT1(IntT1(), IntT1()), "i_to_I" -> FunT1(IntT1(), SetT1(IntT1())), "r" -> RecT1("a" -> IntT1()),
-        "s" -> StrT1(), "S" -> SetT1(StrT1()), "(s)" -> TupT1(StrT1()), "i_to_s" -> FunT1(StrT1(), IntT1()),
-        "s_to_i" -> FunT1(IntT1(), StrT1()), "i_to_r" -> FunT1(IntT1(), RecT1("a" -> IntT1())),
+        "s" -> StrT1(), "S" -> SetT1(StrT1()), "(s)" -> TupT1(StrT1()), "i_to_s" -> FunT1(IntT1(), StrT1()),
+        "s_to_i" -> FunT1(StrT1(), IntT1()), "i_to_r" -> FunT1(IntT1(), RecT1("a" -> IntT1())),
         "b_to_b" -> FunT1(BoolT1(), BoolT1()), "b_TO_b" -> SetT1(FunT1(BoolT1(), BoolT1())),
         "i_to_b_to_b" -> FunT1(IntT1(), FunT1(BoolT1(), BoolT1())))
 

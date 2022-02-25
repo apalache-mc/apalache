@@ -156,7 +156,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
    *   a transformed \exists expression
    */
   private def transformExistsOverSets: PartialFunction[TlaEx, TlaEx] = {
-    case OperEx(TlaBoolOper.exists, xe @ NameEx(x), OperEx(TlaSetOper.filter, ye @ NameEx(y), s, e), g) =>
+    case OperEx(TlaBoolOper.exists, xe @ NameEx(_), OperEx(TlaSetOper.filter, ye @ NameEx(y), s, e), g) =>
       // \E x \in {y \in S: e}: g becomes \E y \in S: e /\ g [x replaced with y]
       val eAndG = tla.and(e, g).typed(BoolT1())
       val newPred =
