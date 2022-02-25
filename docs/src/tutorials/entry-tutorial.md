@@ -402,7 +402,7 @@ Let us decompose this property into smaller pieces. First, we define the set
 
 With this TLA+ expression we define a *local constant* called `MatchingIndices`
 that is equal to the set of indices `i` in `INPUT_SEQ` so that the sequence
-elements defined with these indices are equal to `INPUT_KEY`.  If this syntax
+elements defined with these indices are equal to `INPUT_KEY`. If this syntax
 is hard to parse for you, here is how we could write a similar definition in a
 functional programming language (Scala):
 
