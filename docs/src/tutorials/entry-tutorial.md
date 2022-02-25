@@ -17,7 +17,7 @@ algorithm specifications too quickly, this is a nice example to start with.
 Sometimes, we refer to the model checker TLC in this text. TLC is another
 model checker for TLA+ and was introduced in the late 90s.  If you are new
 to TLA+ and want to learn more about TLC, check the [TLC][] project and the
-[TLA+ Video Course][] by Leslie Lamport.  If you are an experienced TLC user,
+[TLA+ Video Course][] by Leslie Lamport. If you are an experienced TLC user,
 you will find this tutorial helpful too, as it demonstrates the strong points
 of Apalache.
 
