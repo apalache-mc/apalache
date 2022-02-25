@@ -36,5 +36,5 @@ class ReTLAInlinePassImpl @Inject() (
   }
 
   override def dependencies = Set()
-
+  override def transformations = Set(ModuleProperty.Inlined, ModuleProperty.Unrolled)
 }

@@ -58,7 +58,6 @@ class ReTLAToVMTModule extends ToolModule {
     // Bind all passes
     bind(classOf[SanyParserPass]).to(classOf[SanyParserPassImpl])
     bind(classOf[ConfigurationPass]).to(classOf[ConfigurationPassImpl])
-    bind(classOf[DesugarerPass]).to(classOf[DesugarerPassImpl])
     bind(classOf[InlinePass]).to(classOf[ReTLAInlinePassImpl])
     bind(classOf[PrimingPass]).to(classOf[PrimingPassImpl])
     bind(classOf[VCGenPass]).to(classOf[VCGenPassImpl])
@@ -75,12 +74,11 @@ class ReTLAToVMTModule extends ToolModule {
         // We use a concrete implementation here, as we also do with PostTypeCheckerPassImpl later in the pipeline.
         classOf[EtcTypeCheckerPassImpl],
         classOf[ConfigurationPass],
-        classOf[DesugarerPass],
         classOf[InlinePass],
-        classOf[WatchdogPassImpl],
         classOf[PrimingPass],
         classOf[VCGenPass],
         classOf[PreproPass],
+        classOf[WatchdogPassImpl],
         classOf[TransitionPass],
         classOf[OptPass],
         // do the final type checking again, as preprocessing may have introduced gaps in the expression types
