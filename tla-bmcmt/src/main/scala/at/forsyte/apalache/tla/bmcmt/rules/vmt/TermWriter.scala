@@ -121,12 +121,18 @@ object TermWriter {
     vmtEx match {
       case Next(name, current, next) =>
         val (froms, to) = sortAsFn(current.sort)
-        val fromParis = froms.zipWithIndex.map { case (sortString, i) =>
-          val dummyName = s"_p$i@"
+        val dummyNamesAndSorts = froms.zipWithIndex.map { case (sortString, i) =>
+          (s"_p$i@", sortString)
+        }
+        val fromParis = dummyNamesAndSorts.map { case (dummyName, sortString) =>
           s"($dummyName $sortString)"
         }
+        val currentStr = tr(current)
+        val currentApp =
+          if (dummyNamesAndSorts.isEmpty) currentStr
+          else s"($currentStr ${dummyNamesAndSorts.map(_._1).mkString(" ")})"
 
-        s"(define-fun $name (${fromParis.mkString(" ")}) ${to} (! ${tr(current)} :next ${tr(next)}))"
+        s"(define-fun $name (${fromParis.mkString(" ")}) ${to} (! $currentApp :next ${tr(next)}))"
       case Init(name, init)      => s"(define-fun $name () Bool (! ${tr(init)} :init true))"
       case Invar(name, idx, inv) => s"(define-fun $name () Bool (! ${tr(inv)} :invar-property $idx))"
       case Trans(name, trEx)     => s"(define-fun $name () Bool (! ${tr(trEx)} :action $name))"
