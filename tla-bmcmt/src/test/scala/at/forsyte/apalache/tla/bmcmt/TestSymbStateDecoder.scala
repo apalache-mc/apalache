@@ -219,7 +219,7 @@ trait TestSymbStateDecoder extends RewriterBase {
     val decoder = new SymbStateDecoder(solverContext, rewriter)
     val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
     val expected = tuple(int(2), int(3)).as(intSeqT)
-    assert(expected == decodedEx)
+    assert(decodedEx == expected)
   }
 
   test("decode tuple") { rewriterType: SMTEncoding =>

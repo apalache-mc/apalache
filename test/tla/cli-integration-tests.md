@@ -1829,6 +1829,14 @@ Found 10 error(s)
 EXITCODE: ERROR (12)
 ```
 
+### check TestSequences.tla reports no error
+
+```sh
+$ apalache-mc check --length=0 --inv=AllTests TestSequences.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check Test1343.tla reports no error
 
 Regression test for #1343
