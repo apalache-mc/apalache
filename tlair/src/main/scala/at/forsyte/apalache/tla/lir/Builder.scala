@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.values.TlaBoolSet
 import at.forsyte.apalache.tla.lir.values._
 
 /**
@@ -150,6 +149,10 @@ class Builder {
 
   /**
    * The set STRING of all strings.
+   *
+   * @note
+   *   This is included for testing purposes only. It's almost never necessary, or a good idea, to reference the set of
+   *   all strings in a spec outside of `TypeOk`.
    *
    * @return
    *   the value expression that corresponds to STRING.
