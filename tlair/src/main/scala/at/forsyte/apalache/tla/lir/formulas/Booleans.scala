@@ -30,10 +30,10 @@ object Booleans {
     require(Seq(lhs, rhs).forall { _.sort == BoolSort() },
         "Equivalence is only applicable to arguments with Boolean sorts.")
   }
-  sealed case class Forall(name: String, ofSort: Sort, arg: Term) extends BoolExpr {
+  sealed case class Forall(boundVars: List[(String, Sort)], arg: Term) extends BoolExpr {
     require(arg.sort == BoolSort(), "Quantification condition must be Boolean.")
   }
-  sealed case class Exists(name: String, ofSort: Sort, arg: Term) extends BoolExpr {
+  sealed case class Exists(boundVars: List[(String, Sort)], arg: Term) extends BoolExpr {
     require(arg.sort == BoolSort(), "Quantification condition must be Boolean.")
   }
   sealed case class BoolVar(name: String) extends Variable(name) with BoolExpr

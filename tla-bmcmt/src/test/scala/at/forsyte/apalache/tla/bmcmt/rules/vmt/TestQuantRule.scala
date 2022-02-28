@@ -35,8 +35,8 @@ class TestQuantRule extends AnyFunSuite {
   val intSet = tla.intSet().as(SetT1(IntT1()))
 
   val expected: Map[TlaEx, BoolExpr] = Map(
-      (tla.exists(x, set, p).as(b)) -> Exists("x", sSort, pVar),
-      (tla.forall(y, intSet, q).as(b)) -> Forall("y", IntSort(), qVar),
+      (tla.exists(x, set, p).as(b)) -> Exists(List(("x", sSort)), pVar),
+      (tla.forall(y, intSet, q).as(b)) -> Forall(List(("y", IntSort())), qVar),
   )
 
   test("QuantRule applicability") {

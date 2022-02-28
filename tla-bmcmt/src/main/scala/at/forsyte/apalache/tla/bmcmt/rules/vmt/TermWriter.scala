@@ -26,12 +26,12 @@ object TermWriter {
         s"($head ${argStrings.mkString(" ")})"
     }
 
-  private def mkQuant(
-      quant: String,
-      x: String,
-      s: String,
-      p: Term): String =
-    s"($quant (($x $s)) ${tr(p)})"
+  private def mkQuant(quant: String, boundVars: List[(String, Sort)], p: Term): String = {
+    val pairs = boundVars.map { case (name, sort) =>
+      s"($name ${sortStringForQuant(sort)})"
+    }
+    s"($quant (${pairs.mkString(" ")}) ${tr(p)})"
+  }
 
   // In quantifiers, complex sorts aren't permitted.
   private def sortStringForQuant(sort: Sort): String =
@@ -68,8 +68,8 @@ object TermWriter {
       case Neg(x)                        => s"(not ${tr(x)})"
       case Impl(a, b)                    => s"(=> ${tr(a)} ${tr(b)})"
       case Equiv(a, b)                   => s"(= ${tr(a)} ${tr(b)})"
-      case Forall(x, s, p)               => mkQuant("forall", x, sortStringForQuant(s), p)
-      case Exists(x, s, p)               => mkQuant("exists", x, sortStringForQuant(s), p)
+      case Forall(boundVars, p)          => mkQuant("forall", boundVars, p)
+      case Exists(boundVars, p)          => mkQuant("exists", boundVars, p)
       case Equal(a, b)                   => s"(= ${tr(a)} ${tr(b)})"
       case Apply(fn, args @ _*)          => s"(${tr(fn)} ${args.map(tr).mkString(" ")})"
       case ITE(cond, thenTerm, elseTerm) => s"(ite ${tr(cond)} ${tr(thenTerm)} ${tr(elseTerm)})"

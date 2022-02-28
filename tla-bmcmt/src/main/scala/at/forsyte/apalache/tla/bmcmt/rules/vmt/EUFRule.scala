@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.vmt
 
 import at.forsyte.apalache.tla.bmcmt.RewriterException
-import at.forsyte.apalache.tla.lir.formulas.Booleans.{And, True}
+import at.forsyte.apalache.tla.lir.formulas.Booleans._
 import at.forsyte.apalache.tla.lir.formulas.EUF._
 import at.forsyte.apalache.tla.lir.formulas._
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
@@ -82,12 +82,83 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
   // Convenience shorthand
   private def rewrite: TlaEx => Term = rewriter.rewrite
 
+  // Applies a fixed renaming scheme to a term tree (e.g. renames all instances of "a" to "b")
+  private def replaceFixedLeaf(replacement: Map[Term, Term])(t: Term): Term = {
+    val replace = replaceFixedLeaf(replacement) _
+    t match {
+      case ITE(ifTerm, thenTerm, elseTerm) => ITE(replace(ifTerm), replace(thenTerm), replace(elseTerm))
+      case Apply(term, terms @ _*)         => Apply(replace(term), terms.map(replace): _*)
+      case And(terms @ _*)                 => And(terms.map(replace): _*)
+      case Or(terms @ _*)                  => Or(terms.map(replace): _*)
+      case Equiv(lhs, rhs)                 => Equiv(replace(lhs), replace(rhs))
+      case Equal(lhs, rhs)                 => Equal(replace(lhs), replace(rhs))
+      case Neg(term)                       => Neg(replace(term))
+      case Impl(lhs, rhs)                  => Impl(replace(lhs), replace(rhs))
+      case Forall(boundVars, term)         => Forall(boundVars, replace(term))
+      case Exists(boundVars, term)         => Exists(boundVars, replace(term))
+      case FunDef(name, args, body)        => FunDef(name, args, replace(body))
+      case _                               => replacement.getOrElse(t, t)
+    }
+  }
+
+  // Creates a function application from a list of arguments
+  private def mkApp(fnTerm: Term, args: List[(String, Sort)]): Term =
+    Apply(fnTerm, args.map { case (name, sort) => mkVariable(name, sort) }: _*)
+
+  // Creates axiomatic function equality. Functions f and g are equal over a domain S1 \X ... \X Sn, iff
+  // \A (x1,...,xn) \in S1 \X ... \X Sn: f(x1,...,xn) = g(x1,...xn)
+  // domain ... List((x1,S1), ..., (xn,Sn))
+  // lhs    ... f(x1,...,xn)
+  // rhs    ... g(x1,...,xn)
+  private def mkAxiomaticFunEq(domain: List[(String, Sort)], lhs: Term, rhs: Term): Term =
+    Forall(domain, Equal(lhs, rhs))
+
   // Assume isApplicable
   override def apply(ex: TlaEx): Term =
     ex match {
       case OperEx(TlaOper.eq | ApalacheOper.assign, lhs, rhs) =>
         // := is just = in VMT
-        Equal(rewrite(lhs), rewrite(rhs))
+        val lhsTerm = rewrite(lhs)
+        val rhsTerm = rewrite(rhs)
+
+        // Assume sorts are equal, so we just match the left sort.
+        // If not, this will get caught by Equal's `require` anyhow.
+        lhsTerm.sort match {
+          // For functions, do axiomatic equality, i.e.
+          // f = g <=> \A x \in DOMAIN f: f[x] = g[x]
+          case FunctionSort(_, from @ _*) =>
+            (lhsTerm, rhsTerm) match {
+              case (FunDef(_, largs, lbody), FunDef(_, rargs, rbody)) =>
+                // sanity check
+                assert(largs.length == rargs.length)
+                // We arbitrarily pick one set of argnames (the left), and rename the other body.
+                // We rename all instances of rargs in rbody to same-indexed largs
+                val renameMap: Map[Term, Term] = largs
+                  .zip(rargs)
+                  .map { case ((largName, lsort), (rargName, rsort)) =>
+                    mkVariable(rargName, rsort) -> mkVariable(largName, lsort)
+                  }
+                  .toMap
+                val renamedRBody = replaceFixedLeaf(renameMap)(rbody)
+                mkAxiomaticFunEq(largs, lbody, renamedRBody)
+
+              case (fv: FunctionVar, FunDef(_, args, body)) =>
+                mkAxiomaticFunEq(args, mkApp(fv, args), body)
+              case (FunDef(_, args, body), fv: FunctionVar) =>
+                mkAxiomaticFunEq(args, mkApp(fv, args), body)
+              case (lvar: FunctionVar, rvar: FunctionVar) =>
+                // we just invent formal argument names
+                val inventedVars = from.toList.map { s =>
+                  (gen.newName(), s)
+                }
+                mkAxiomaticFunEq(inventedVars, mkApp(lvar, inventedVars), mkApp(rvar, inventedVars))
+
+              case _ => Equal(lhsTerm, rhsTerm)
+            }
+
+          // Otherwise, do direct equality
+          case _ => Equal(lhsTerm, rhsTerm)
+        }
 
       case OperEx(TlaFunOper.funDef, e, varsAndSets @ _*)
           // All domain-defining sets must be restricted.
@@ -102,9 +173,27 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
       case OperEx(TlaFunOper.app, fn, arg) =>
         val fnTerm = rewrite(fn)
         // Arity 2+ functions pack their arguments as a single tuple, which we might need to unpack
-        arg match {
-          case OperEx(TlaFunOper.tuple, args @ _*) => Apply(fnTerm, args.map(rewrite): _*)
-          case _                                   => Apply(fnTerm, rewrite(arg))
+        val appArgs = arg match {
+          case OperEx(TlaFunOper.tuple, args @ _*) => args.map(rewrite)
+          case _                                   => Seq(rewrite(arg))
+        }
+
+        // When applying a FunDef, we inline it
+        fnTerm match {
+          case FunDef(_, args, body) =>
+            // sanity check
+            assert(args.length == appArgs.length)
+
+            val replacementMap: Map[Term, Term] = args
+              .zip(appArgs)
+              .map { case ((argName, argSort), concrete) =>
+                mkVariable(argName, argSort) -> concrete
+              }
+              .toMap
+            // For a function with a rule f(x1,...,xn) = e
+            // we inline f(a1,...,an) to e[x1\a1,...,xn\an]
+            replaceFixedLeaf(replacementMap)(body)
+          case _ => Apply(fnTerm, appArgs: _*)
         }
 
       case OperEx(TlaFunOper.except, fn, arg, newVal) =>

@@ -60,16 +60,20 @@ class VMTWriter(gen: UniqueNameGenerator) {
         collectAll(lhs)
         collectAll(rhs)
       case Neg(arg) => collectAll(arg)
-      case Forall(_, setSort, body) =>
-        setSort match {
-          case us: UninterpretedSort => addUS(us)
-          case _                     => ()
+      case Forall(boundVars, body) =>
+        boundVars.foreach { case (_, setSort) =>
+          setSort match {
+            case us: UninterpretedSort => addUS(us)
+            case _                     => ()
+          }
         }
         collectAll(body)
-      case Exists(_, setSort, body) =>
-        setSort match {
-          case us: UninterpretedSort => addUS(us)
-          case _                     => ()
+      case Exists(boundVars, body) =>
+        boundVars.foreach { case (_, setSort) =>
+          setSort match {
+            case us: UninterpretedSort => addUS(us)
+            case _                     => ()
+          }
         }
         collectAll(body)
       case UninterpretedVar(_, uvSort) => addUS(uvSort)
@@ -99,7 +103,7 @@ class VMTWriter(gen: UniqueNameGenerator) {
 
     val rewriter = new RewriterImpl(setConstants, gen)
 
-    // Not sure what to do with CInits yet
+    // Not sure what to do with CInits yet, we might want to add them ass axioms later
 //    val cinits = cInit.map { case (_, ex) =>
 //      rewriter.rewrite(ex)
 //    }
@@ -146,11 +150,6 @@ class VMTWriter(gen: UniqueNameGenerator) {
     transitions.foreach { t => collector.collectAll(t.transExpr) }
     invs.foreach { i => collector.collectAll(i.invExpr) }
 
-    // Function definitions
-    val fnDefs = collector.fnDefs.map {
-      TermWriter.mkFunDef
-    }
-
     // Sort declaration
     val allSorts = (setConstants.values ++ collector.uninterpSorts).toSet
     val sortDecls = allSorts.map(TermWriter.mkSortDecl)
@@ -175,9 +174,6 @@ class VMTWriter(gen: UniqueNameGenerator) {
       writer.println()
       writer.println(";Variables")
       smtVarDecls.foreach(writer.println)
-      writer.println()
-      writer.println(";Intermediate function definitions")
-      fnDefs.foreach(writer.println)
       writer.println()
       writer.println(";Variable bindings")
       nextStrs.foreach(writer.println)

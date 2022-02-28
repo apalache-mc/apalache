@@ -30,9 +30,9 @@ class QuantifierRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJu
   override def apply(ex: TlaEx): BoolExpr =
     ex match {
       case OperEx(TlaBoolOper.exists, NameEx(name), set, pred) if isRestrictedSet(set) =>
-        Exists(name, restrictedSetJudgement.getSort(set), rewriteAndCast(pred))
+        Exists(List((name, restrictedSetJudgement.getSort(set))), rewriteAndCast(pred))
       case OperEx(TlaBoolOper.forall, NameEx(name), set, pred) if isRestrictedSet(set) =>
-        Forall(name, restrictedSetJudgement.getSort(set), rewriteAndCast(pred))
+        Forall(List((name, restrictedSetJudgement.getSort(set))), rewriteAndCast(pred))
       case _ =>
         throw new RewriterException(s"QuantifierRule not applicable to $ex", ex)
     }
