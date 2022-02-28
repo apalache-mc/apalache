@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla._
-import at.forsyte.apalache.tla.lir.{BoolT1, StrT1}
+import at.forsyte.apalache.tla.lir.BoolT1
 
 trait TestSymbStateRewriterStr extends RewriterBase {
   test(""" rewrite "red" """) { rewriterType: SMTEncoding =>
