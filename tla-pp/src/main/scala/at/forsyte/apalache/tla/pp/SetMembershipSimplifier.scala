@@ -58,11 +58,15 @@ class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTr
    * For example, `x \in BOOLEAN` is rewritten to `TRUE` if `x` is typed `BoolT1`.
    */
   private def transformMembership: PartialFunction[TlaEx, TlaEx] = {
+    // n \in Nat  ->  x >= 0
     case OperEx(TlaSetOper.in, name, ValEx(TlaNatSet)) if name.typeTag == Typed(IntT1()) =>
       OperEx(TlaArithOper.ge, name, ValEx(TlaInt(0))(intTag))(boolTag)
+    // b \in BOOLEAN, i \in Int, r \in Real  ->  TRUE
     case OperEx(TlaSetOper.in, name, ValEx(ps: TlaPredefSet)) if isApplicable(name, ps) => trueVal
+    // seq \in Seq(_)  ->  TRUE
     case OperEx(TlaSetOper.in, name, OperEx(TlaSetOper.seqSet, ValEx(ps: TlaPredefSet))) if isApplicableSeq(name, ps) =>
       trueVal
+    // return `ex` unchanged
     case ex => ex
   }
 }
