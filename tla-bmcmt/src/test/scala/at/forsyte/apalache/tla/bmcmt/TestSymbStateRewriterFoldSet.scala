@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 
 trait TestSymbStateRewriterFoldSet extends RewriterBase {
-  private val types = Map(
+  Map(
       "b" -> BoolT1(),
       "i" -> IntT1(),
       "(i)" -> TupT1(IntT1()),

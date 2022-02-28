@@ -500,7 +500,7 @@ class TestSanyImporter extends SanyImporterTestBase {
     def expectDecl(name: String, body: TlaEx): Unit =
       findAndExpectOperDecl(root, name, List(), body)
 
-    val trueOperDecl = mod.declarations(1)
+    mod.declarations(1)
     expectDecl("True", ValEx(TlaBool(true)))
 
     val trueOperEx = OperEx(TlaOper.apply, NameEx("True"))
@@ -790,7 +790,7 @@ class TestSanyImporter extends SanyImporterTestBase {
 
     val (rootName, modules) = sanyImporter
       .loadFromSource("comprehensions", Source.fromString(text))
-    val mod = expectSingleModule("comprehensions", rootName, modules)
+    expectSingleModule("comprehensions", rootName, modules)
     val root = modules(rootName)
     expectSourceInfoInDefs(root)
 
@@ -1475,7 +1475,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         case TlaOperDecl(
                 _,
                 _,
-                OperEx(TlaOper.apply, NameEx("A"), lambda, ValEx(TlaInt(i))),
+                OperEx(TlaOper.apply, NameEx("A"), lambda, ValEx(TlaInt(_))),
             ) =>
           lambda match {
             case LetInEx(
@@ -1582,7 +1582,7 @@ class TestSanyImporter extends SanyImporterTestBase {
           // The caveat here is that the formal parameter R does not appear in the list of the R's formal parameters,
           // but it is accessible via the field recParam.
           assert(d.isRecursive)
-          val recParam = OperParam(name, nparams)
+          OperParam(name, nparams)
           assert(d.body == expectedBody)
           assert(sourceStore.contains(d.body.ID)) // and source file information has been saved
 
@@ -1627,7 +1627,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         // The caveat here is that the formal parameter F does not appear in the list of the F's formal parameters,
         // but it is accessible via the field recParam.
         assert(d.isRecursive)
-        val recParam = OperParam("F", 1)
+        OperParam("F", 1)
         val ite = OperEx(
             TlaControlOper.ifThenElse,
             OperEx(TlaOper.eq, NameEx("n"), ValEx(TlaInt(0))),

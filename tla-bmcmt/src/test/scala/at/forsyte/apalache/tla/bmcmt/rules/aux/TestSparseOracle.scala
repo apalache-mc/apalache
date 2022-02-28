@@ -12,7 +12,7 @@ trait TestSparseOracle extends RewriterBase with TestingPredefs {
     var state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
     val (nextState, oracle) = PropositionalOracle.create(rewriter, state, 2)
-    val sparseOracle = new SparseOracle(oracle, Set(1, 10))
+    new SparseOracle(oracle, Set(1, 10))
     assert(solverContext.sat())
   }
 

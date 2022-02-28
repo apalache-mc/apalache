@@ -15,18 +15,6 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
 class TestModule extends AnyFunSuite {
   test("AlternatingBit module from Lamport's book") {
 
-    /** CONSTANTS Data */
-    val Data = new TlaConstDecl("Data")
-
-    /** VARIABLES msgQ, ackQ, sBit, sAck, rBit, sent, rcvd */
-    val msgQ = new TlaVarDecl("msgQ")
-    val ackQ = new TlaVarDecl("ackQ")
-    val sBit = new TlaVarDecl("sBit")
-    val sAck = new TlaVarDecl("sAck")
-    val rBit = new TlaVarDecl("rBit")
-    val sent = new TlaVarDecl("sent")
-    val rcvd = new TlaVarDecl("rcvd")
-
     /** Constants {0,1} and <<>> */
     val ZeroOneSet = OperEx(TlaSetOper.enumSet, ValEx(TlaInt(0)), ValEx(TlaInt(1)))
     val emptySeq = OperEx(TlaFunOper.tuple)

@@ -45,7 +45,7 @@ trait TestSymbStateRewriterChoose extends RewriterBase with TestingPredefs {
       .typed(types, "i")
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
-    val nextState = rewriter.rewriteUntilDone(state)
+    rewriter.rewriteUntilDone(state)
     // the buggy implementation of choose fails on a dynamically empty set
     assert(solverContext.sat())
   // The semantics of choose does not restrict the outcome on the empty sets,
