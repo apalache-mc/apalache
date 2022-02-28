@@ -235,26 +235,40 @@ class LazyEquality(rewriter: SymbStateRewriter)
   }
 
   private def mkSetEq(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {
-    if (left.cellType == FinSetT(UnknownT()) && state.arena.getHas(left).isEmpty) {
-      // The statically empty set is a very special case, as its element type is unknown.
-      // Hence, we cannot use SMT equality, as it does not work with different sorts.
-      mkEmptySetEq(state, left, right)
-    } else if (right.cellType == FinSetT(UnknownT()) && state.arena.getHas(right).isEmpty) {
-      mkEmptySetEq(state, right, left) // same here
-    } else {
-      // in general, we need 2 * |X| * |Y| comparisons
-      val leftToRight: SymbState = subsetEq(state, left, right)
-      val rightToLeft: SymbState = subsetEq(leftToRight, right, left)
-      // the type checker makes sure that this holds true
-      assert(left.cellType.signature == right.cellType.signature)
-      // These two sets have the same signature and thus belong to the same sort.
-      // Hence, we can use SMT equality. This equality is needed by uninterpreted functions.
-      val eq = tla.equiv(tla.eql(left.toNameEx, right.toNameEx), tla.and(leftToRight.ex, rightToLeft.ex))
-      rewriter.solverContext.assertGroundExpr(eq)
-      eqCache.put(left, right, EqCache.EqEntry())
+    rewriter.solverContext.config.smtEncoding match {
+      case `arraysEncoding` =>
+        // In the arrays encoding we only cache the equalities between the sets' elements
+        val leftElems = state.arena.getHas(left)
+        val rightElems = state.arena.getHas(right)
+        cacheEqConstraints(state, leftElems.cross(rightElems)) // cache all the equalities
+        eqCache.put(left, right, EqCache.EqEntry())
+        state
 
-      // recover the original expression and theory
-      rightToLeft.setRex(state.ex)
+      case `oopsla19Encoding` =>
+        if (left.cellType == FinSetT(UnknownT()) && state.arena.getHas(left).isEmpty) {
+          // The statically empty set is a very special case, as its element type is unknown.
+          // Hence, we cannot use SMT equality, as it does not work with different sorts.
+          mkEmptySetEq(state, left, right)
+        } else if (right.cellType == FinSetT(UnknownT()) && state.arena.getHas(right).isEmpty) {
+          mkEmptySetEq(state, right, left) // same here
+        } else {
+          // in general, we need 2 * |X| * |Y| comparisons
+          val leftToRight: SymbState = subsetEq(state, left, right)
+          val rightToLeft: SymbState = subsetEq(leftToRight, right, left)
+          // the type checker makes sure that this holds true
+          assert(left.cellType.signature == right.cellType.signature)
+          // These two sets have the same signature and thus belong to the same sort.
+          // Hence, we can use SMT equality. This equality is needed by uninterpreted functions.
+          val eq = tla.equiv(tla.eql(left.toNameEx, right.toNameEx), tla.and(leftToRight.ex, rightToLeft.ex))
+          rewriter.solverContext.assertGroundExpr(eq)
+          eqCache.put(left, right, EqCache.EqEntry())
+
+          // recover the original expression and theory
+          rightToLeft.setRex(state.ex)
+        }
+
+      case oddEncodingType =>
+        throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
     }
   }
 
@@ -432,15 +446,29 @@ class LazyEquality(rewriter: SymbStateRewriter)
    *   the new symbolic state
    */
   private def mkFunEq(state: SymbState, leftFun: ArenaCell, rightFun: ArenaCell): SymbState = {
-    val leftRel = state.arena.getCdm(leftFun)
-    val rightRel = state.arena.getCdm(rightFun)
-    val relEq = mkSetEq(state, leftRel, rightRel)
-    rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(leftFun.toNameEx, rightFun.toNameEx),
-            tla.eql(leftRel.toNameEx, rightRel.toNameEx)))
-    eqCache.put(leftFun, rightFun, EqCache.EqEntry())
+    rewriter.solverContext.config.smtEncoding match {
+      case `arraysEncoding` =>
+        // In the arrays encoding we only cache the equalities between the elements of the functions' ranges
+        val leftElems = state.arena.getHas(state.arena.getCdm(leftFun))
+        val rightElems = state.arena.getHas(state.arena.getCdm(rightFun))
+        cacheEqConstraints(state, leftElems.cross(rightElems)) // cache all the equalities
+        eqCache.put(leftFun, rightFun, EqCache.EqEntry())
+        state
 
-    // restore the original expression and theory
-    relEq.setRex(state.ex)
+      case `oopsla19Encoding` =>
+        val leftRel = state.arena.getCdm(leftFun)
+        val rightRel = state.arena.getCdm(rightFun)
+        val relEq = mkSetEq(state, leftRel, rightRel)
+        rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(leftFun.toNameEx, rightFun.toNameEx),
+                tla.eql(leftRel.toNameEx, rightRel.toNameEx)))
+        eqCache.put(leftFun, rightFun, EqCache.EqEntry())
+
+        // restore the original expression and theory
+        relEq.setRex(state.ex)
+
+      case oddEncodingType =>
+        throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
+    }
   }
 
   private def mkRecordEq(state: SymbState, leftRec: ArenaCell, rightRec: ArenaCell): SymbState = {
