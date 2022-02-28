@@ -91,8 +91,14 @@ object TermWriter {
     s"(declare-sort ${us.sortName} 0)"
 
   // Constructs an SMT constant declaration for each uninterpreted literal.
-  def mkConstDecl(ul: UninterpretedLiteral): String =
-    s"(declare-fun ${ul.s}_${ul.sort.sortName} () ${ul.sort.sortName})"
+  def mkConstDecl(ul: UninterpretedLiteral): String = {
+    val sortName = ul.sort.sortName
+    val termName = s"${ul.s}_${ul.sort.sortName}"
+    val baseDecl = s"(declare-fun $termName () $sortName)"
+    // Global constants need to be declared :global for VMT
+    val globalDecl = s"(define-fun ${nextName(termName)} () ${ul.sort.sortName} (! $termName :global true))"
+    s"$baseDecl\n$globalDecl"
+  }
 
   // Constructs an SMT function definition from FunDef
   def mkFunDef(fd: FunDef): String = {
