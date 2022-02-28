@@ -82,7 +82,9 @@ object TermWriter {
     d.typeTag match {
       case Typed(tt: TlaType1) =>
         val (froms, to) = sortAsFn(TypeToSortConverter.sortFromType(tt))
-        s"(declare-fun ${d.name} (${froms.mkString(" ")}) $to)"
+        def mkDecl(name: String) = s"(declare-fun $name (${froms.mkString(" ")}) $to)"
+        s"${mkDecl(d.name)}\n${mkDecl(VMTprimeName(d.name))}"
+
       case _ => ""
     }
 
