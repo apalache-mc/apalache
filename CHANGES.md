@@ -2,6 +2,11 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.21.2
+
+### Breaking changes
+
+* Complete rework of sequences, see #1353
 ## 0.21.1
 
 ### Breaking changes
