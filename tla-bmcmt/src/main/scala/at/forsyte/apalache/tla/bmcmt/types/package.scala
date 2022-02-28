@@ -1,9 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.caches.ModelValueCache
 import at.forsyte.apalache.tla.lir.{
-  BoolT1, ConstT1, FunT1, IntT1, NullEx, OperT1, RealT1, RecT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1, TupT1,
-  TypeTag, TypingException, UID, VarT1,
+  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1, TupT1, TypeTag,
+  TypingException, UID, VarT1,
 }
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 

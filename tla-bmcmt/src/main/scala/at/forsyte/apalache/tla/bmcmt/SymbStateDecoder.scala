@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.rules.aux.ProtoSeqOps
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
@@ -12,9 +13,6 @@ import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 import com.typesafe.scalalogging.LazyLogging
 
-import java.io.PrintWriter
-import scala.collection.immutable.{HashSet, SortedSet}
-
 /**
  * This class dumps relevant values from an SMT model using an arena.
  *
@@ -22,50 +20,7 @@ import scala.collection.immutable.{HashSet, SortedSet}
  *   Igor Konnov
  */
 class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter) extends LazyLogging {
-
-  // a simple decoder that dumps values into a text file, in the future we need better recovery code
-  def dumpArena(state: SymbState, writer: PrintWriter): Unit = {
-    val sortedCells = SortedSet[ArenaCell]() ++ state.arena.cellMap.values
-    for (c <- sortedCells) {
-      writer.println("; %s = %s".format(c, decodeCellToTlaEx(state.arena, c)))
-    }
-
-    // compute the equivalence classes for the cells, totally suboptimally
-    // TODO: rewrite, I did not think too much at all
-    def iseq(c: ArenaCell, d: ArenaCell): Boolean = {
-      val query = tla.eql(c.toNameEx, d.toNameEx).untyped()
-      c.cellType == d.cellType && solverContext
-        .evalGroundExpr(query) == tla.bool(true).untyped()
-    }
-
-    def merge(cls: List[HashSet[ArenaCell]], c: ArenaCell, d: ArenaCell): List[HashSet[ArenaCell]] = {
-      if (!iseq(c, d) || c == d) {
-        cls
-      } else {
-        def pred(s: HashSet[ArenaCell]): Boolean = {
-          s.contains(c) || s.contains(d)
-        }
-
-        val (two: List[HashSet[ArenaCell]], rest: List[HashSet[ArenaCell]]) = cls.partition(pred)
-
-        def union(x: HashSet[ArenaCell], y: HashSet[ArenaCell]): HashSet[ArenaCell] = {
-          x.union(y)
-        }
-
-        rest ++ List(two.reduce(union))
-      }
-    }
-
-    var classes = sortedCells.toList.map(HashSet(_))
-    for (c <- sortedCells) {
-      for (d <- sortedCells) {
-        classes = merge(classes, c, d)
-      }
-    }
-    for (cls <- classes) {
-      writer.println("; Equiv. class: {%s}".format(cls.mkString(", ")))
-    }
-  }
+  private val protoSeqOps = new ProtoSeqOps(rewriter)
 
   def decodeStateVariables(state: SymbState): Map[String, TlaEx] = {
     state.binding.toMap.map(p => (p._1, reverseMapVar(decodeCellToTlaEx(state.arena, p._2), p._1, p._2)))
@@ -189,18 +144,19 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
 
     case SeqT(elemT) =>
       val elemT1 = elemT.toTlaType1
-      val startEndFun = arena.getHas(cell).map(decodeCellToTlaEx(arena, _))
-      startEndFun match {
-        case ValEx(TlaInt(start)) :: ValEx(TlaInt(end)) +: cells =>
-          // note that start >= 0 and end = Len(S) - start
-          def isIn(elem: TlaEx, no: Int): Boolean = no >= start && no < end
-
-          val filtered = cells.zipWithIndex.filter((isIn _).tupled).map(_._1)
-          // return a tuple as it is the canonical representation of a sequence
-          tla.tuple(filtered: _*).typed(SeqT1(elemT1))
-
-        case _ => throw new RewriterException("Corrupted sequence: " + startEndFun, NullEx)
+      val (protoSeq, lenCell, capacity) = protoSeqOps.unpackSeq(arena, cell)
+      val len = decodeCellToTlaEx(arena, lenCell) match {
+        case ValEx(TlaInt(n)) =>
+          // if the length value is corrupt, adjust it
+          if (n < 0 || n > capacity) {
+            logger.warn(s"Sequence length should belong to 0..$capacity, found: $n")
+            Math.min(Math.max(0, n.toInt), capacity)
+          } else {
+            n.toInt
+          }
       }
+      val decodedElems = protoSeqOps.elems(arena, protoSeq).map(decodeCellToTlaEx(arena, _)).toList.slice(0, len)
+      tla.tuple(decodedElems: _*).typed(SeqT1(elemT1))
 
     case r @ RecordT(_) =>
       def exToStr(ex: TlaEx): TlaStr = ex match {
@@ -240,7 +196,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       val elemAsExprs = tupleElems.map(c => decodeCellToTlaEx(arena, c))
       tla.tuple(elemAsExprs: _*).typed(t.toTlaType1)
 
-    case PowSetT(t @ FinSetT(_)) =>
+    case PowSetT(FinSetT(_)) =>
       val baseset = decodeCellToTlaEx(arena, arena.getDom(cell))
       tla.powSet(baseset).typed(SetT1(TlaType1.fromTypeTag(baseset.typeTag)))
 

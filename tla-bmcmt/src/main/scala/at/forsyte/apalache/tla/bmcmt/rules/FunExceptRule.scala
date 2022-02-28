@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.TlaType1
-import at.forsyte.apalache.tla.lir.{FunT1, RecT1, TupT1, BoolT1, SetT1}
+import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, RecT1, SetT1, TupT1}
 
 /**
  * Rewriting EXCEPT for functions, tuples, and records.
@@ -103,7 +103,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
 
     // compute all updated cells in case we are dealing with a function over non-basic indices
-    val updatedCells = relationCells.map(eachRelationPair)
+    relationCells.foreach(eachRelationPair)
 
     // cache equality constraints between the indices and the indices in the function relation
     def cacheEqForPair(p: ArenaCell): Unit = {

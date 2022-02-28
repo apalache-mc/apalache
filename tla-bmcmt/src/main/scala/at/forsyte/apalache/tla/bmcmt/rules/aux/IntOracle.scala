@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.IntT
-import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
+import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState}
 import at.forsyte.apalache.tla.lir.{TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -85,7 +85,7 @@ class IntOracle(val intCell: ArenaCell, nvalues: Int) extends Oracle {
 }
 
 object IntOracle {
-  def create(rewriter: SymbStateRewriter, state: SymbState, nvalues: Int): (SymbState, IntOracle) = {
+  def create(state: SymbState, nvalues: Int): (SymbState, IntOracle) = {
     val nextState = state.setArena(state.arena.appendCell(IntT()))
     val oracleCell = nextState.arena.topCell
     val oracle = new IntOracle(oracleCell, nvalues)

@@ -4,8 +4,6 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 
-import scala.math.BigInt
-
 /**
  * <p>A base class for constant simplification that is shared by more specialized simplifiers.</p>
  *
@@ -69,38 +67,38 @@ abstract class ConstSimplifierBase {
     // Evaluate constant multiplication
     case OperEx(TlaArithOper.mult, ValEx(TlaInt(left)), ValEx(TlaInt(right))) => ValEx(TlaInt(left * right))(intTag)
     // 0 * x = 0
-    case OperEx(TlaArithOper.mult, ValEx(TlaInt(left)), rightEx) if (left == 0) => ValEx(TlaInt(0))(intTag)
+    case OperEx(TlaArithOper.mult, ValEx(TlaInt(left)), _) if (left == 0) => ValEx(TlaInt(0))(intTag)
     // 1 * x = x
     case OperEx(TlaArithOper.mult, ValEx(TlaInt(left)), rightEx) if (left == 1) => rightEx
     // x * 0 = 0
-    case OperEx(TlaArithOper.mult, leftEx, ValEx(TlaInt(right))) if (right == 0) => ValEx(TlaInt(0))(intTag)
+    case OperEx(TlaArithOper.mult, _, ValEx(TlaInt(right))) if (right == 0) => ValEx(TlaInt(0))(intTag)
     // x * 1 = x
     case OperEx(TlaArithOper.mult, leftEx, ValEx(TlaInt(right))) if (right == 1) => leftEx
 
     // x / 0 = undefined
-    case ex @ OperEx(TlaArithOper.div, leftEx, ValEx(TlaInt(right))) if (right == 0) =>
+    case ex @ OperEx(TlaArithOper.div, _, ValEx(TlaInt(right))) if (right == 0) =>
       throw new TlaInputError(s"Division by zero at ${ex.toString}")
     // Evaluate constant division
     case OperEx(TlaArithOper.div, ValEx(TlaInt(left)), ValEx(TlaInt(right))) => ValEx(TlaInt(left / right))(intTag)
     // 0 / x = 0
-    case OperEx(TlaArithOper.div, ValEx(TlaInt(left)), rightEx) if (left == 0) => ValEx(TlaInt(0))(intTag)
+    case OperEx(TlaArithOper.div, ValEx(TlaInt(left)), _) if (left == 0) => ValEx(TlaInt(0))(intTag)
     // x / 1 = x
     case OperEx(TlaArithOper.div, leftEx, ValEx(TlaInt(right))) if (right == 1) => leftEx
     // x / x = 1
     case OperEx(TlaArithOper.div, leftEx, rightEx) if (leftEx == rightEx) => ValEx(TlaInt(1))(intTag)
 
     // x % 0 = undefined
-    case ex @ OperEx(TlaArithOper.mod, leftEx, ValEx(TlaInt(right))) if (right == 0) =>
+    case ex @ OperEx(TlaArithOper.mod, _, ValEx(TlaInt(right))) if (right == 0) =>
       throw new TlaInputError(s"Mod by zero at ${ex.toString}")
     // Evaluate constant mod
     case OperEx(TlaArithOper.mod, ValEx(TlaInt(left)), ValEx(TlaInt(right))) => ValEx(TlaInt(left % right))(intTag)
     // x % 1 = 0
-    case OperEx(TlaArithOper.mod, leftEx, ValEx(TlaInt(right))) if (right == 1) => ValEx(TlaInt(0))(intTag)
+    case OperEx(TlaArithOper.mod, _, ValEx(TlaInt(right))) if (right == 1) => ValEx(TlaInt(0))(intTag)
     // x % x = 0
     case OperEx(TlaArithOper.mod, leftEx, rightEx) if (leftEx == rightEx) => ValEx(TlaInt(0))(intTag)
 
     // 0 ^ 0 = undefined
-    case ex @ OperEx(TlaArithOper.exp, ValEx(TlaInt(base)), ValEx(TlaInt(power))) if (base == 0 && power == 0) =>
+    case OperEx(TlaArithOper.exp, ValEx(TlaInt(base)), ValEx(TlaInt(power))) if (base == 0 && power == 0) =>
       throw new TlaInputError(s"0 ^ 0 is undefined")
     // Try to evaluante constant exponentiation
     case ex @ OperEx(TlaArithOper.exp, ValEx(TlaInt(base)), ValEx(TlaInt(power))) =>
@@ -120,13 +118,13 @@ abstract class ConstSimplifierBase {
       }
 
     // x ^ 0 = 1
-    case OperEx(TlaArithOper.exp, leftEx, ValEx(TlaInt(right))) if (right == 0) => ValEx(TlaInt(1))(intTag)
+    case OperEx(TlaArithOper.exp, _, ValEx(TlaInt(right))) if (right == 0) => ValEx(TlaInt(1))(intTag)
     // x ^ 1 = x
     case OperEx(TlaArithOper.exp, leftEx, ValEx(TlaInt(right))) if (right == 1) => leftEx
     // 0 ^ x = 0
-    case OperEx(TlaArithOper.exp, ValEx(TlaInt(left)), rightEx) if (left == 0) => ValEx(TlaInt(0))(intTag)
+    case OperEx(TlaArithOper.exp, ValEx(TlaInt(left)), _) if (left == 0) => ValEx(TlaInt(0))(intTag)
     // 1 ^ x = 1
-    case OperEx(TlaArithOper.exp, ValEx(TlaInt(left)), rightEx) if (left == 1) => ValEx(TlaInt(1))(intTag)
+    case OperEx(TlaArithOper.exp, ValEx(TlaInt(left)), _) if (left == 1) => ValEx(TlaInt(1))(intTag)
 
     // -0 = 0
     case OperEx(TlaArithOper.uminus, ValEx(TlaInt(value))) if (value == 0) => ValEx(TlaInt(0))(intTag)

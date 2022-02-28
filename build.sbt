@@ -43,10 +43,21 @@ ThisBuild / libraryDependencies ++= Seq(
     TestDeps.scalatestplusScalacheck,
 )
 
+////////////////////////////
+// Linting and formatting //
+////////////////////////////
+
+// scalafmt
 // TODO: Remove if we decide we are happy with allways reformatting all
 // Only check/fix against (tracked) files that have changed relative to the trunk
 // ThisBuild / scalafmtFilter := "diff-ref=origin/unstable"
 ThisBuild / scalafmtPrintDiff := true
+
+// scalafix
+// https://scalacenter.github.io/scalafix/docs/rules/RemoveUnused.html
+ThisBuild / scalacOptions ++= Seq("-Ywarn-unused")
+ThisBuild / semanticdbEnabled := true
+ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
 ///////////////////////////////
 // Test configuration //

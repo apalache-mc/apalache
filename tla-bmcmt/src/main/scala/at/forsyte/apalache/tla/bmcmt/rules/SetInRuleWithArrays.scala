@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt.implicitConversions.Crossable
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, FinFunSetT, FinSetT, FunT, PowSetT}
-import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, SymbStateRewriter, types}
+import at.forsyte.apalache.tla.bmcmt.{types, ArenaCell, RewriterException, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
 import at.forsyte.apalache.tla.lir.{BoolT1, TlaEx}
 import at.forsyte.apalache.tla.lir.convenience.tla

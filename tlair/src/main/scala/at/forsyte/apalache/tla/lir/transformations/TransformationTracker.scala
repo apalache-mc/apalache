@@ -68,8 +68,7 @@ trait TransformationTracker {
    *   the new expression
    */
   def hold(from: TlaEx, to: TlaEx): TlaEx = {
-    def tr(f: TlaEx): TlaEx = to
-    trackEx(tr)(from)
+    trackEx(Function.const(to))(from)
   }
 
   /**

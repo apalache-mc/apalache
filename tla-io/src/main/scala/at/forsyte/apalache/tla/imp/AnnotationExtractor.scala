@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.io.annotations.{Annotation, AnnotationParser, AnnotationParserError, AnnotationStr}
+import at.forsyte.apalache.io.annotations.{Annotation, AnnotationParser, AnnotationStr}
 import at.forsyte.apalache.io.annotations.parser.CommentPreprocessor
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.AnnotationExtractor.FREE_TEXT

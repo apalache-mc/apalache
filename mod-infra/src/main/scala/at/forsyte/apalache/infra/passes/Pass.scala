@@ -1,6 +1,6 @@
 package at.forsyte.apalache.infra.passes
 
-import at.forsyte.apalache.tla.lir.{TlaModule, ModuleProperty}
+import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 
 /**
  * <p>An analysis or transformation pass. Instead of explicitly setting a pass' input and output, we interconnect passes

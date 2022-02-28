@@ -63,7 +63,6 @@ trait RewriterBase extends FixtureAnyFunSuite {
       outcome: Boolean): Unit = {
     if (!outcome) {
       val writer = new StringWriter()
-      new SymbStateDecoder(solverContext, rewriter).dumpArena(state, new PrintWriter(writer))
       solverContext.log(writer.getBuffer.toString)
       solverContext.push() // push and pop flush the log output
       solverContext.pop()

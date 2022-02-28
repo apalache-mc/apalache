@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.io.annotations.StandardAnnotations
-import at.forsyte.apalache.io.annotations.store.{AnnotationStore, createAnnotationStore}
+import at.forsyte.apalache.io.annotations.store.{createAnnotationStore, AnnotationStore}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper}
@@ -107,7 +107,7 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     assert(mkExpected(parser("(b, b) => Bool")) == gen(tla.neql(tla.int(1), tla.int(2))))
 
     // Has custom type error message
-    assert(gen(tla.eql(tla.int(1), tla.int(2))).explain(List(), List()) != "")
+    assert(gen(tla.eql(tla.int(1), tla.int(2))).explain(List(), List()).isDefined)
   }
 
   test("operator application") {
@@ -119,7 +119,7 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     assert(expected2 == gen(expr))
 
     // Has custom type error message
-    assert(gen(expr).explain(List(OperT1(Seq(), BoolT1())), List()) != "")
+    assert(gen(expr).explain(List(OperT1(Seq(), BoolT1())), List()).isDefined)
   }
 
   test("LET-IN simple") {
@@ -436,7 +436,7 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
 
   test("DOMAIN f") {
     // DOMAIN is applied to one of the four objects: a function, a sequence, a record, or a sparse tuple
-    val types = Seq(parser("(a -> b) => Set(a)"), parser("Seq(a) => Set(Int)"), parser("[] => Set(Str)"),
+    val types = Seq(parser("(a -> b) => Set(a)"), parser("Seq(c) => Set(Int)"), parser("[] => Set(Str)"),
         parser("{} => Set(Int)"))
 
     val expected = mkAppByName(types, "f")

@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.lir.TypedPredefs.{BuilderExAsTyped, tlaExToBuilderExAsTyped}
+import at.forsyte.apalache.tla.lir.TypedPredefs.{tlaExToBuilderExAsTyped, BuilderExAsTyped}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, TlaEx, TupT1}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._

@@ -1,22 +1,23 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, OperEx, TlaEx, TlaType1}
-import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory, ProtoSeqOps}
+import at.forsyte.apalache.tla.bmcmt.types.{CellT, IntT}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
-import at.forsyte.apalache.tla.bmcmt.types.CellT
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaSeqOper
+import at.forsyte.apalache.tla.lir._
 
 /**
- * Sequence operations: Head, Tail, Len, SubSeq, and Append.
+ * Sequence operations: Head, Tail, Len, SubSeq, Append, Concat.
  *
  * @author
  *   Igor Konnov
  */
 class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val picker = new CherryPick(rewriter)
-  private val types = Map("i" -> IntT1(), "b" -> BoolT1())
+  private val proto = new ProtoSeqOps(rewriter)
+  private val defaultValueFactory = new DefaultValueFactory(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -33,9 +34,9 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      case ex @ OperEx(TlaSeqOper.head, seq) =>
+      case ex @ OperEx(TlaSeqOper.head, seqEx) =>
         val elemType = TlaType1.fromTypeTag(ex.typeTag)
-        rewriter.rewriteUntilDone(state.setRex(tla.appFun(seq, tla.int(1)).typed(elemType)))
+        translateHead(state, seqEx, elemType)
 
       case OperEx(TlaSeqOper.len, seq) =>
         translateLen(state, seq)
@@ -57,212 +58,242 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def translateTail(state: SymbState, seq: TlaEx) = {
-    var nextState = rewriter.rewriteUntilDone(state.setRex(seq))
-    val seqCell = nextState.asCell
-    val cells = nextState.arena.getHas(seqCell)
-    val start = cells.head
-    val end = cells.tail.head
-    // increment start, unless it goes over the bound
-    val updatedStart =
-      tla
-        .ite(tla.lt(start.toNameEx ? "i", end.toNameEx ? "i") ? "b", tla.plus(tla.int(1), start.toNameEx ? "i") ? "i",
-            start.toNameEx ? "i")
-        .typed(Map("i" -> IntT1(), "b" -> BoolT1()), "i")
-    // increment start
-    nextState = rewriter.rewriteUntilDone(nextState.setRex(updatedStart))
-    val newStart = nextState.asCell
-    // introduce a new sequence that is different from seq in that the 0th element equals to newStart
-    nextState = nextState.updateArena(_.appendCell(seqCell.cellType))
-    val newSeqCell = nextState.arena.topCell
-    nextState = nextState.updateArena(_.appendHasNoSmt(newSeqCell, newStart +: cells.tail: _*))
-    nextState.setRex(newSeqCell.toNameEx)
+  /**
+   * Translate Len(s) which is canonically defined as:
+   *
+   * <pre> CHOOSE n \in Nat : DOMAIN s = 1..n </pre>
+   */
+  private def translateLen(state: SymbState, seq: TlaEx): SymbState = {
+    val nextState = rewriter.rewriteUntilDone(state.setRex(seq))
+    val lenCell = proto.seqLen(nextState.arena, nextState.asCell)
+    nextState.setRex(lenCell.toNameEx.as(IntT1()))
   }
 
+  /**
+   * Translate Head(s) which is canonically defined as:
+   *
+   * <pre> Head(s) == s[1] </pre>
+   */
+  private def translateHead(state: SymbState, seqEx: TlaEx, elemType: TlaType1): SymbState = {
+    val nextState = rewriter.rewriteUntilDone(state.setRex(seqEx))
+    val seq = nextState.asCell
+    val (protoSeq, _, capacity) = proto.unpackSeq(nextState.arena, seq)
+    if (capacity > 0) {
+      nextState.setRex(proto.at(nextState.arena, protoSeq, 1).toNameEx.as(elemType))
+    } else {
+      // This is the rare case when the spec author has made a typo, e.g., Head(<<>>).
+      // We cannot throw an exception here, as it would report an error in a correct specification, e.g.,
+      // Len(s) = 0 \/ Head(s) = 2
+      defaultValueFactory.makeUpValue(nextState, CellT.fromType1(elemType))
+    }
+  }
+
+  /**
+   * Translate Tail(s) which is canonically defined as:
+   *
+   * <pre> Tail(s) == CASE s # << >> -> [ i \in 1..(Len(s)-1) |-> s[i+1] ] </pre>
+   */
+  private def translateTail(state: SymbState, seq: TlaEx): SymbState = {
+    var nextState = rewriter.rewriteUntilDone(state.setRex(seq))
+    val seqCell = nextState.asCell
+    val (protoSeq, len, capacity) = proto.unpackSeq(nextState.arena, seqCell)
+    if (capacity <= 0) {
+      // This is the rare case when the spec author has made a typo, e.g., Tail(<<>>).
+      // We cannot throw an exception here, as it would report an error in a correct specification, e.g.,
+      // Len(s) = 0 \/ Tail(s) /= s.
+
+      // Return the empty sequence.
+      nextState.setRex(seqCell.toNameEx)
+    } else {
+      def shiftByOne(state: SymbState, indexBase1: Int): (SymbState, ArenaCell) = {
+        val elem = proto.at(state.arena, protoSeq, indexBase1 + 1)
+        (state, elem)
+      }
+
+      nextState = proto.make(nextState, capacity - 1, shiftByOne)
+      val newProtoSeq = nextState.asCell
+      // If Len(seq) = 0, then the new length is -1. This is fine, as Tail is undefined on empty sequences.
+      val newLen = tla.minus(len.toNameEx.as(IntT1()), tla.int(1)).as(IntT1())
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(newLen))
+      proto.mkSeq(nextState, seq.typeTag.asTlaType1(), newProtoSeq, nextState.asCell)
+    }
+  }
+
+  /**
+   * Translate SubSeq(S, m, n), which is canonically defined as:
+   *
+   * <pre SubSeq(s, m, n) == [ i \in 1..(1+n-m) |-> s[i+m-1] ] </pre>
+   *
+   * @param state
+   *   a symbolic state to start with
+   * @param seqEx
+   *   a sequence `S``
+   * @param newStartEx
+   *   the starting index `m` (inclusive)
+   * @param newEndEx
+   *   the ending index `n` (inclusive)
+   */
   private def translateSubSeq(
       state: SymbState,
-      seq: TlaEx,
+      seqEx: TlaEx,
       newStartEx: TlaEx,
-      newEndEx: TlaEx) = {
-    var nextState = state
-
-    def rewriteToCell(ex: TlaEx): ArenaCell = {
-      nextState = rewriter.rewriteUntilDone(nextState.setRex(ex))
-      nextState.asCell
-    }
-
-    val seqCell = rewriteToCell(seq)
-    val cells = nextState.arena.getHas(seqCell)
-    val start = cells.head
-    val end = cells.tail.head
-
-    val expectedStartEx = tla
-      .plus(start.toNameEx ? "i", tla.minus(newStartEx ? "i", tla.int(1)) ? "i")
-      .typed(types, "i")
-    // compute the new interval [expectedStart, expectedEnd)
-    val expectedStart = rewriteToCell(expectedStartEx)
-    val expectedEndEx = tla
-      .plus(start.toNameEx ? "i", newEndEx)
-      .typed(types, "i")
-    val expectedEnd = rewriteToCell(expectedEndEx)
-    // use the computed values, as soon as they do not violate the invariant:
-    //   start <= end, start >= oldStart, end <= oldEnd
-    val seqInvariant = rewriteToCell(tla
-          .and(
-              tla.le(expectedStart.toNameEx ? "i", expectedEnd.toNameEx ? "i") ? "b",
-              tla.le(start.toNameEx ? "i", expectedStart.toNameEx ? "i") ? "b",
-              tla.le(expectedEnd.toNameEx ? "i", end.toNameEx ? "i") ? "b",
-          )
-          .typed(types, "b"))
-
-    val newStart =
-      rewriteToCell(tla.ite(seqInvariant.toNameEx ? "b", expectedStart.toNameEx ? "i", tla.int(0)).typed(types, "i"))
-    val newEnd =
-      rewriteToCell(tla.ite(seqInvariant.toNameEx ? "b", expectedEnd.toNameEx ? "i", tla.int(0)).typed(types, "i"))
-
-    // introduce a new sequence that whose start and end are updated as required
-    nextState = nextState.updateArena(_.appendCell(seqCell.cellType))
-    val newSeqCell = nextState.arena.topCell
-    nextState = nextState.updateArena(_.appendHasNoSmt(newSeqCell, newStart :: newEnd +: cells.tail.tail: _*))
-    nextState.setRex(newSeqCell.toNameEx)
-  }
-
-  private def translateAppend(state: SymbState, seq: TlaEx, newElem: TlaEx) = {
-    def solverAssert = rewriter.solverContext.assertGroundExpr _
-    var nextState = rewriter.rewriteUntilDone(state.setRex(seq))
+      newEndEx: TlaEx): SymbState = {
+    // rewrite seqEx, newStartEx, and newEndEx
+    var nextState = rewriter.rewriteUntilDone(state.setRex(seqEx))
+    val seqT = seqEx.typeTag.asTlaType1().asInstanceOf[SeqT1]
     val seqCell = nextState.asCell
-    val cells = nextState.arena.getHas(seqCell)
-    val start = cells.head
-    val end = cells.tail.head
-    val oldElems = cells.tail.tail
-    nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.plus(tla.int(1), end.toNameEx ? "i").typed(types, "i")))
-    val newEnd = nextState.asCell
-    nextState = rewriter.rewriteUntilDone(nextState.setRex(newElem))
-    val newElemCell = nextState.asCell
-    // as we do not know the actual values of the range [start, end),
-    // pick from the original value s[i] and the new element, and restrict the choice
-    // based on the actual values of start and end
-    def transform(oldElemCell: ArenaCell, no: Int): ArenaCell = {
-      val (oracleState, oracle) = picker.oracleFactory.newDefaultOracle(nextState, 2)
-      nextState = oracleState
-      nextState = picker
-        .pickByOracle(nextState, oracle, Seq(oldElemCell, newElemCell), nextState.arena.cellTrue().toNameEx)
-      // pick the element from the old sequence: start <= no /\ no < end => oracle = 0
-      solverAssert(tla
-            .impl(tla.and(tla.le(start.toNameEx ? "i", tla.int(no)) ? "b",
-                    tla.lt(tla.int(no), end.toNameEx ? "i") ? "b") ? "b", oracle.whenEqualTo(nextState, 0) ? "b")
-            .typed(types, "b"))
-      // pick the element from the new sequence: no = end => oracle = 1
-      solverAssert(tla
-            .impl(tla.eql(tla.int(no), end.toNameEx ? "i") ? "b", oracle.whenEqualTo(nextState, 1) ? "b")
-            .typed(types, "b"))
-      // the other elements are unrestricted, give some freedom to the solver
-      nextState.asCell
+    val (protoSeq, len, capacity) = proto.unpackSeq(nextState.arena, seqCell)
+
+    nextState = rewriter.rewriteUntilDone(nextState.setRex(newStartEx))
+    val newStartBase1 = nextState.asCell
+    nextState = rewriter.rewriteUntilDone(nextState.setRex(newEndEx))
+    val newEndBase1 = nextState.asCell
+    // Computing the new length is quite tricky, as the users may mess up both start and end.
+    // We are trying to compensate for this. This is different from the behavior of TLC though.
+    nextState = nextState.updateArena(_.appendCell(IntT()))
+    val adjustedStart = nextState.arena.topCell
+
+    def solverAssert: TlaEx => Unit = rewriter.solverContext.assertGroundExpr
+
+    def asInt(cell: ArenaCell) = cell.toNameEx.as(IntT1())
+
+    // adjustedStart = IF newStartBase1 > 0 THEN newStartBase1 ELSE 1
+    val newStartBase1asInt = asInt(newStartBase1)
+    solverAssert(tla
+          .eql(asInt(adjustedStart),
+              tla.ite(tla.gt(newStartBase1asInt, tla.int(0)).as(BoolT1()), newStartBase1asInt, tla.int(1)).as(IntT1()))
+          .as(BoolT1()))
+    // adjustedEnd = IF newEndBase1 <= len THEN newEndBase1 ELSE len
+    nextState = nextState.updateArena(_.appendCell(IntT()))
+    val adjustedEnd = nextState.arena.topCell
+    val newEndBase1asInt = asInt(newEndBase1)
+    solverAssert(tla
+          .eql(asInt(adjustedEnd),
+              tla.ite(tla.le(newEndBase1asInt, asInt(len)).as(BoolT1()), newEndBase1asInt, asInt(len)).as(IntT1()))
+          .as(BoolT1()))
+
+    nextState = defaultValueFactory.makeUpValue(nextState, CellT.fromType1(seqT.elem))
+    val defaultValue = nextState.asCell
+
+    def copy(state: SymbState, dstIndexBase1: Int): (SymbState, ArenaCell) = {
+      // Blindly copy the element adjustedStart + (dstIndex - 1) into the position at dstIndex.
+      // If srcIndexEx is out of bounds, then `get` returns a cell, which may result in a spurious counterexample.
+      val srcIndexEx = tla.plus(adjustedStart.toNameEx.as(IntT1()), tla.int(dstIndexBase1 - 1)).as(IntT1())
+      val newState = proto.get(picker, defaultValue, state, protoSeq, srcIndexEx)
+      (newState, newState.asCell)
     }
 
-    val transformedCells = oldElems.zipWithIndex.map((transform _).tupled)
-    val newCells = (newElemCell :: transformedCells.reverse).reverse
+    // Create the proto sequence of the same capacity, which is the worst case scenario.
+    nextState = proto.make(nextState, capacity, copy)
+    val newProtoSeq = nextState.asCell
 
-    // introduce a new sequence that statically has one more element
-    nextState = nextState.updateArena(_.appendCell(seqCell.cellType))
-    val newSeqCell = nextState.arena.topCell
-    nextState = nextState.updateArena(_.appendHasNoSmt(newSeqCell, start :: newEnd +: newCells: _*))
-    nextState.setRex(newSeqCell.toNameEx)
+    // newLen = IF adjustedEnd >= adjustedStart THEN 1 + adjustedEnd - adjustedStart ELSE 0
+    nextState = nextState.updateArena(_.appendCell(IntT()))
+    val newLen = nextState.arena.topCell
+    solverAssert(tla
+          .eql(asInt(newLen),
+              tla
+                .ite(tla.ge(asInt(adjustedEnd), asInt(adjustedStart)).as(BoolT1()),
+                    tla.plus(tla.int(1), tla.minus(asInt(adjustedEnd), asInt(adjustedStart)).as(IntT1())).as(IntT1()),
+                    tla.int(0))
+                .as(IntT1()))
+          .as(BoolT1()))
+    proto.mkSeq(nextState, seqEx.typeTag.asTlaType1(), newProtoSeq, newLen)
   }
 
-  private def translateLen(state: SymbState, seq: TlaEx) = {
-    var nextState = rewriter.rewriteUntilDone(state.setRex(seq))
-    val cells = nextState.arena.getHas(nextState.asCell)
-    val start = cells.head
-    val end = cells.tail.head
-    // just return end - start
-    rewriter.rewriteUntilDone(nextState.setRex(tla.minus(end.toNameEx ? "i", start.toNameEx ? "i").typed(types, "i")))
-  }
+  /**
+   * Translate Append(s, e) which is canonically defined as:
+   *
+   * <pre> Append(s, e) == s \o << e >> </pre>
+   */
+  private def translateAppend(state: SymbState, seqEx: TlaEx, newElemEx: TlaEx): SymbState = {
+    // rewrite seqEx and newElemEx
+    var nextState = rewriter.rewriteUntilDone(state.setRex(seqEx))
+    val seqCell = nextState.asCell
+    val (protoSeq, len, capacity) = proto.unpackSeq(nextState.arena, seqCell)
+    nextState = rewriter.rewriteUntilDone(nextState.setRex(newElemEx))
+    val elemToAdd = nextState.asCell
 
-  // Implement concatenation on sequences. This is the most expensive operation on sequences.
-  private def translateConcat(state: SymbState, seq1: TlaEx, seq2: TlaEx): SymbState = {
-    def solverAssert = rewriter.solverContext.assertGroundExpr _
-
-    var nextState = state
-
-    def rewriteSeq(seqEx: TlaEx): (ArenaCell, ArenaCell, ArenaCell, Seq[ArenaCell], CellT) = {
-      nextState = rewriter.rewriteUntilDone(nextState.setRex(seqEx))
-      val cell = nextState.asCell
-      val connectedCells = nextState.arena.getHas(cell)
-      val start = connectedCells.head
-      val end = connectedCells.tail.head
-      val elems = connectedCells.tail.tail
-      nextState = rewriter.rewriteUntilDone(
-          nextState.setRex(tla.minus(end.toNameEx ? "i", start.toNameEx ? "i").typed(types, "i")))
-      val len = nextState.asCell
-      (start, end, len, elems, cell.cellType)
+    def pick(state: SymbState, dstIndexBase1: Int): (SymbState, ArenaCell) = {
+      // Since we do not know the actual length of the sequence,
+      // we have to pick the value at every position, except the last one.
+      if (dstIndexBase1 > capacity) {
+        // the last element is for sure equal to newElem (if lenCell == capacity)
+        (state, elemToAdd)
+      } else {
+        // for all other elements, we pick either the element in the ith position, or the new element
+        val seqElem = proto.at(state.arena, protoSeq, dstIndexBase1)
+        val (oracleState, oracle) = picker.oracleFactory.newDefaultOracle(state, 2)
+        val newState = picker
+          .pickByOracle(oracleState, oracle, Seq(seqElem, elemToAdd), nextState.arena.cellTrue().toNameEx)
+        val pickedCell = newState.asCell
+        val cond = tla.le(tla.int(dstIndexBase1), len.toNameEx.as(IntT1())).as(BoolT1())
+        val when0 = oracle.whenEqualTo(nextState, 0)
+        val eql = tla.eql(cond, when0.as(BoolT1())).as(BoolT1())
+        rewriter.solverContext.assertGroundExpr(eql)
+        (newState, pickedCell)
+      }
     }
 
-    // rewrite the expressions
-    val (start1, end1, len1, elems1, cellType) = rewriteSeq(seq1)
-    val (start2, end2, len2, elems2, _) = rewriteSeq(seq2)
-
-    // introduce a new sequence
-    nextState = nextState.updateArena(_.appendCell(cellType))
-    val seq3 = nextState.arena.topCell
-    nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.int(0).typed()))
-    val start3 = nextState.asCell
-    nextState = rewriter.rewriteUntilDone(
-        nextState.setRex(tla.plus(len1.toNameEx ? "i", len2.toNameEx ? "i").typed(types, "i")))
-    val end3 = nextState.asCell
-
-    val elems1then2 = elems1 ++ elems2
-    val ntotal = elems1then2.length
-
-    // pre-compute integer constants that are used when computing every element
-    // offset2 = N1 + start2 - len1
-    nextState = rewriter
-      .rewriteUntilDone(nextState.setRex(tla
-                .minus(tla.plus(tla.int(elems1.size) ? "i", start2.toNameEx ? "i") ? "i", len1.toNameEx ? "i")
-                .typed(types, "i")))
-    val offset2 = nextState.asCell
-    nextState = rewriter.rewriteUntilDone(
-        nextState.setRex(tla.plus(len1.toNameEx ? "i", len2.toNameEx ? "i").typed(types, "i")))
-    val len1plus2 = nextState.asCell
-
-    // introduce constraints for the i-th element of the resulting sequence
-    def pickElem(i: Int): ArenaCell = {
-      // create the oracle
-      val (oracleState, oracle) = picker.oracleFactory.newIntOracle(nextState, ntotal + 1)
-      nextState = oracleState
-      // pick an element to be the result
-      nextState = picker.pickByOracle(nextState, oracle, elems1then2, nextState.arena.cellTrue().toNameEx)
-      val pickedResult = nextState.asCell
-      // If 0 <= i < len1, then require oracle = i + start1,
-      // If len1 <= i < len1 + len2, then require oracle = i + offset2 = i - len1 + N1 + start2,
-      // Otherwise, set oracle to N
-      val inRange1 = tla.lt(tla.int(i), len1.toNameEx ? "i") ? "b"
-      val inRange2 =
-        tla.and(tla.le(len1.toNameEx ? "i", tla.int(i)) ? "b", tla.lt(tla.int(i), len1plus2.toNameEx ? "i") ? "b") ? "b"
-
-      val whenInRange1 =
-        tla.or(tla.not(inRange1) ? "b",
-            tla.eql(oracle.intCell.toNameEx ? "i", tla.plus(tla.int(i), start1.toNameEx ? "i") ? "i") ? "b") ? "b"
-      val whenInRange2 =
-        tla.or(tla.not(inRange2) ? "b",
-            tla.eql(oracle.intCell.toNameEx ? "i", tla.plus(tla.int(i), offset2.toNameEx ? "i") ? "i") ? "b") ? "b"
-      val whenOutOfRange =
-        tla.or(tla.lt(tla.int(i), len1plus2.toNameEx ? "i") ? "b",
-            tla.eql(oracle.intCell.toNameEx ? "i", tla.int(ntotal)) ? "b") ? "b"
-
-      solverAssert(whenInRange1.typed(types, "b"))
-      solverAssert(whenInRange2.typed(types, "b"))
-      solverAssert(whenOutOfRange.typed(types, "b"))
-
-      pickedResult
-    }
-
-    val newCells: Seq[ArenaCell] = 0.until(ntotal).map(pickElem)
-
-    // finally, add start, end, and the elements to the sequence
-    nextState = nextState.updateArena(_.appendHasNoSmt(seq3, start3 +: end3 +: newCells: _*))
-
-    nextState.setRex(seq3.toNameEx)
+    // Create the proto sequence of capacity + 1, which is the worst case scenario.
+    nextState = proto.make(nextState, capacity + 1, pick)
+    val newProtoSeq = nextState.asCell
+    // newLen = 1 + len
+    val newLen = tla.plus(tla.int(1), len.toNameEx.as(IntT1())).as(IntT1())
+    nextState = rewriter.rewriteUntilDone(nextState.setRex(newLen))
+    proto.mkSeq(nextState, seqEx.typeTag.asTlaType1(), newProtoSeq, nextState.asCell)
   }
 
+  /**
+   * Translate concatenation of sequences, that is, s \o t, which is canonically defined as:
+   *
+   * <pre> s \o t == [ i \in 1..(Len(s) + Len(t)) |-> IF i \leq Len(s) THEN s[i] ELSE t[i-Len(s)] ] </pre>
+   */
+  private def translateConcat(state: SymbState, seq1ex: TlaEx, seq2ex: TlaEx): SymbState = {
+    // rewrite seq1ex and seq2ex
+    var nextState = rewriter.rewriteUntilDone(state.setRex(seq1ex))
+    val seq1 = nextState.asCell
+    val seqT = seq1ex.typeTag.asTlaType1().asInstanceOf[SeqT1]
+    val (protoSeq1, len1, capacity1) = proto.unpackSeq(nextState.arena, seq1)
+    nextState = rewriter.rewriteUntilDone(nextState.setRex(seq2ex))
+    val seq2 = nextState.asCell
+    val (protoSeq2, len2, capacity2) = proto.unpackSeq(nextState.arena, seq2)
+
+    // we need the default value, when the sequences are empty
+    nextState = defaultValueFactory.makeUpValue(nextState, CellT.fromType1(seqT.elem))
+    val defaultValue = nextState.asCell
+
+    def pick(state: SymbState, dstIndexBase1: Int): (SymbState, ArenaCell) = {
+      if (dstIndexBase1 > capacity1) {
+        // The index is above the capacity of the first sequence.
+        // We only have to access the element of the second sequence with the index dstIndex - len1
+        val indexEx = tla.minus(tla.int(dstIndexBase1), len1.toNameEx.as(IntT1())).as(IntT1())
+        val newState = proto.get(picker, defaultValue, state, protoSeq2, indexEx)
+        (newState, newState.asCell)
+      } else {
+        // we access the element of the first sequence directly, with a constant index
+        val elem1 = proto.at(state.arena, protoSeq1, dstIndexBase1)
+        // we access the element of the second sequence indirectly,
+        // as we cannot statically compute the length of the first sequence
+        val indexEx2 = tla.minus(tla.int(dstIndexBase1), len1.toNameEx.as(IntT1())).as(IntT1())
+        var newState = proto.get(picker, defaultValue, state, protoSeq2, indexEx2)
+        val elem2 = newState.asCell
+        val (oracleState, oracle) = picker.oracleFactory.newDefaultOracle(newState, 2)
+        newState = picker.pickByOracle(oracleState, oracle, Seq(elem1, elem2), nextState.arena.cellTrue().toNameEx)
+        val pickedCell = newState.asCell
+        val cond = tla.le(tla.int(dstIndexBase1), len1.toNameEx.as(IntT1())).as(BoolT1())
+        val when0 = oracle.whenEqualTo(nextState, 0).as(BoolT1())
+        rewriter.solverContext.assertGroundExpr(tla.eql(cond, when0).as(BoolT1()))
+        (newState, pickedCell)
+      }
+    }
+
+    // Create the proto sequence of capacity = capacity1 + capacity2, which is the worst case scenario.
+    nextState = proto.make(nextState, capacity1 + capacity2, pick)
+    val newProtoSeq = nextState.asCell
+    // newLen = len1 + len2
+    val newLen = tla.plus(len1.toNameEx.as(IntT1()), len2.toNameEx.as(IntT1())).as(IntT1())
+    nextState = rewriter.rewriteUntilDone(nextState.setRex(newLen))
+    proto.mkSeq(nextState, seq1ex.typeTag.asTlaType1(), newProtoSeq, nextState.asCell)
+  }
 }

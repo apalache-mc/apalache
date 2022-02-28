@@ -17,8 +17,8 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
-      case OperEx(TlaSetOper.union, set) => true
-      case _                             => false
+      case OperEx(TlaSetOper.union, _) => true
+      case _                           => false
     }
   }
 

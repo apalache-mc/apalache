@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import org.junit.runner.RunWith
 import org.scalacheck.Prop
-import org.scalacheck.Prop.{AnyOperators, all, forAll, passed}
+import org.scalacheck.Prop.{all, forAll, passed, AnyOperators}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers

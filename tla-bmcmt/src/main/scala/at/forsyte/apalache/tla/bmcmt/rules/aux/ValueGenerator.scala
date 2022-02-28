@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.types.{CellT, FinSetT, IntT, TupleT}
+import at.forsyte.apalache.tla.bmcmt.types.{CellT, FinSetT, TupleT}
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -19,6 +19,8 @@ import scala.collection.immutable.SortedSet
  *   Igor Konnov
  */
 class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
+  private val proto = new ProtoSeqOps(rewriter)
+
   def gen(state: SymbState, resultType: TlaType1): SymbState = {
     rewriter.solverContext.log(s"; GEN $resultType up to $bound {")
     val nextState =
@@ -104,32 +106,23 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
   }
 
   private def genSeq(state: SymbState, elemType: TlaType1): SymbState = {
-    // The following code is following pretty much TupleOrSeqCtorRule.
-    // Sequences are much simpler than functions because all the elements in its domain are unique.
-
-    // Create a sequence cell.
-    val seqType = CellT.fromType1(SeqT1(elemType))
-    var nextState = state.updateArena(_.appendCell(seqType))
-    val seq = nextState.arena.topCell
-
-    // generate bound elements
-    var elems: List[ArenaCell] = Nil
-    for (_ <- 1 to bound) {
-      nextState = gen(nextState, elemType)
-      elems = nextState.asCell :: elems
+    // initialize the proto sequence with the elements
+    def genElem(s: SymbState, indexBase1: Int): (SymbState, ArenaCell) = {
+      // ignore indexBase1, as it is irrelevant
+      val ns = gen(s, elemType)
+      (ns, ns.asCell)
     }
 
-    // connect N + 2 elements to seqT: the start (>= 0), the end (< bound), and the sequence of values
-    nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.int(0).typed()))
-    val start = nextState.asCell
-    nextState = nextState.updateArena(_.appendCell(IntT()))
-    val end = nextState.arena.topCell
-    val types = Map("i" -> IntT1(), "b" -> BoolT1())
-    rewriter.solverContext.assertGroundExpr(tla.lt(end.toNameEx ? "i", tla.int(bound)).typed(types, "b"))
-    rewriter.solverContext.assertGroundExpr(tla.ge(end.toNameEx ? "i", tla.int(0)).typed(types, "b"))
-    nextState = nextState.updateArena(_.appendHasNoSmt(seq, start +: end +: elems: _*))
-    // we do not add SMT constraints as they are not important
-    nextState.setRex(seq.toNameEx)
+    var nextState = proto.make(state, bound, genElem)
+    val newProtoSeq = nextState.asCell
+    // create the cell to store length
+    nextState = genBasic(nextState, IntT1())
+    val len = nextState.asCell
+    // assert that 0 <= len /\ len <= bound
+    rewriter.solverContext.assertGroundExpr(tla.le(len.toNameEx.as(IntT1()), tla.int(bound)).as(BoolT1()))
+    rewriter.solverContext.assertGroundExpr(tla.ge(len.toNameEx.as(IntT1()), tla.int(0)).as(BoolT1()))
+    // create the sequence out of the proto sequence and its length
+    proto.mkSeq(nextState, SeqT1(elemType), newProtoSeq, nextState.asCell)
   }
 
   private def genFun(state: SymbState, funType: FunT1): SymbState = {

@@ -2,7 +2,6 @@ package at.forsyte.apalache.io
 
 import java.io.File
 import java.util.regex.Matcher
-import scala.io.Source
 
 object ReportGenerator {
   private val reportFile = "BugReport.md"

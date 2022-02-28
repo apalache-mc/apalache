@@ -1829,6 +1829,14 @@ Found 10 error(s)
 EXITCODE: ERROR (12)
 ```
 
+### check TestSequences.tla reports no error
+
+```sh
+$ apalache-mc check --length=0 --inv=AllTests TestSequences.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check Test1343.tla reports no error
 
 Regression test for #1343
@@ -1843,6 +1851,16 @@ EXITCODE: OK
 
 ```sh
 $ apalache-mc check --length=0 --inv=AllTests TestSets.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check TestHash2.tla reports no error (array-encoding)
+
+A regression test for using `--cinit` and hashes.
+
+```sh
+$ apalache-mc check --inv=Inv --cinit=ConstInit TestHash2.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```

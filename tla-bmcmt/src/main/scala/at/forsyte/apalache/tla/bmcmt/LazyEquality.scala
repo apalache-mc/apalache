@@ -3,10 +3,12 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt.caches.{EqCache, EqCacheSnapshot}
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rewriter.{ConstSimplifierForSmt, Recoverable}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.ProtoSeqOps
 import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.lir.TypedPredefs.{tlaExToBuilderExAsTyped, BuilderExAsTyped}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.{MalformedTlaError, NullEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, MalformedTlaError, NullEx, TlaEx}
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 /**
@@ -22,6 +24,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
   private lazy val simplifier = new ConstSimplifierForSmt
 
   private val eqCache = new EqCache()
+  private val protoSeqOps = new ProtoSeqOps(rewriter)
 
   /**
    * This method ensure that a pair of its arguments can be safely compared by the SMT equality, that is, all the
@@ -191,6 +194,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
 
   /**
    * Count the number of valid equalities. Use this method only for debugging purposes, as it is quite slow.
+   *
    * @return
    *   a pair: the number of valid equalities, and the total number of non-constant equalities
    */
@@ -308,8 +312,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
   }
 
   /**
-   * Check, whether one set is a subset of another set (not a proper one). This method changed the underlying theory to
-   * BoolTheory.
+   * Check, whether one set is a subset of another set (not a proper one).
    *
    * Since this operation is tightly related to set equality, we moved it here.
    *
@@ -439,6 +442,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
 
   /**
    * Compare two functions. In the new implementation, we just compare the associated relations as sets.
+   *
    * @param state
    * @param leftFun
    * @param rightFun
@@ -553,27 +557,27 @@ class LazyEquality(rewriter: SymbStateRewriter)
   }
 
   private def mkSeqEq(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {
-    // XXXXabcXX = XabcXX
-    val leftCells = state.arena.getHas(left)
-    val rightCells = state.arena.getHas(right)
-    val (leftStart, leftEnd) = (leftCells.head, leftCells.tail.head)
-    val (rightStart, rightEnd) = (rightCells.head, rightCells.tail.head)
-    val (leftElems, rightElems) = (leftCells.tail.tail, rightCells.tail.tail)
+    val (proto1, len1, capacity1) = protoSeqOps.unpackSeq(state.arena, left)
+    val (proto2, len2, capacity2) = protoSeqOps.unpackSeq(state.arena, right)
+
+    // The proto sequences may have different capacities.
+    // Since we compare lengths, we only have to compare the shared prefix.
+    val sharedCapacity = Math.min(capacity1, capacity2)
+    val elems1 = protoSeqOps.elems(state.arena, proto1).slice(0, sharedCapacity)
+    val elems2 = protoSeqOps.elems(state.arena, proto2).slice(0, sharedCapacity)
+
+    // compare the shared prefix
     var nextState = state
-    def eqPairwise(no: Int): TlaEx = {
-      // Use function application here. This may look expensive, but is there any better way?
-      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.appFun(left.toNameEx, tla.int(no))))
-      val le = nextState.asCell
-      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.appFun(right.toNameEx, tla.int(no))))
-      val re = nextState.asCell
-      nextState = cacheEqConstraints(nextState, (le, re) :: Nil)
-      safeEq(le, re)
+
+    def eqPairwise(leftCell: ArenaCell, rightCell: ArenaCell): TlaEx = {
+      nextState = cacheOneEqConstraint(nextState, leftCell, rightCell)
+      safeEq(leftCell, rightCell)
     }
 
-    val minLen = Math.min(leftElems.size, rightElems.size)
-    val elemsEq = tla.and((1 to minLen).map(eqPairwise): _*)
-    val sizesEq =
-      tla.eql(tla.minus(leftEnd.toNameEx, leftStart.toNameEx), tla.minus(rightEnd.toNameEx, rightStart.toNameEx))
+    val elemsEq = tla.and(elems1.zip(elems2).map((eqPairwise _).tupled): _*)
+    val sizesEq = tla.eql(len1.toNameEx.as(IntT1()), len2.toNameEx.as(IntT1())).as(BoolT1())
+
+    // seq1 and seq2 are equal if and only if: (1) their lengths are equal, and (2) their shared prefixes are equal.
     rewriter.solverContext
       .assertGroundExpr(tla.equiv(tla.eql(left.toNameEx, right.toNameEx), tla.and(sizesEq, elemsEq)))
     eqCache.put(left, right, EqCache.EqEntry())
