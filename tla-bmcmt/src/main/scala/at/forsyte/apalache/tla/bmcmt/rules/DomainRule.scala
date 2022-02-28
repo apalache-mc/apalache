@@ -63,7 +63,7 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
     state.setArena(newArena).setRex(dom.toNameEx)
   }
 
-  private def mkSeqDomain(state: SymbState, seqCell: ArenaCell): SymbState = {
+  protected def mkSeqDomain(state: SymbState, seqCell: ArenaCell): SymbState = {
     val (protoSeq, len, capacity) = proto.unpackSeq(state.arena, seqCell)
     // We do not know the domain precisely, as it depends on the length of the sequence.
     // Hence, we create the set `1..capacity` and include only those elements that are not greater than `len`.
