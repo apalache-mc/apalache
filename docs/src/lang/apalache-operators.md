@@ -67,7 +67,7 @@ effectively implementing data non-determinism.
 
 **Errors:**
 If the type of `Gen` cannot be inferred from its application context,
-or if `bound` is not an integers, Apalache reports an error.
+or if `bound` is not an integer, Apalache reports an error.
 
 **Example in TLA+:**
 
