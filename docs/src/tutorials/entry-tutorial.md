@@ -5,14 +5,21 @@
 In this tutorial, we show how to turn an implementation of binary search into a
 TLA+ specification. This implementation is known to have an out-of-bounds
 error, which once existed in Java, see [Nearly All Binary Searches and
-Mergesorts are Broken][] by Joshua Bloch (2006). Our goal is not to write a
-specification of an abstract binary search algorithm. You can find such a
-specification and a proof in [Proving Safety Properties][] and [Binary search
-with a TLAPS proof][] by [Leslie Lamport][] (2019).
+Mergesorts are Broken][] by Joshua Bloch (2006). Our goal is to write a
+specification after this implementation, not to write a specification of an
+abstract binary search algorithm. You can find such a specification and a proof
+in [Proving Safety Properties][] and [Binary search with a TLAPS proof][] by
+[Leslie Lamport][] (2019).
 
 This tutorial is written under the assumption that the reader does not have any
 knowledge of TLA+ and Apalache. Since we are not diving into protocol and
-algorithm specifications too quickly, this is a nice example to start with.
+algorithm specifications too quickly, this is a nice example to start with. We
+demonstrate how to use Apalache to find errors that are caused by integer
+overflow and the out-of-bounds error, which is caused by this overflow. We
+also show that the same overflow error prevents the algorithm from terminating
+in the number of steps that is expected from the binary search. Normally it is
+expected that the binary search terminates in `log2(n)` steps, where `n` is the
+length of the search interval.
 
 Sometimes, we refer to the model checker TLC in this text. TLC is another
 model checker for TLA+ and was introduced in the late 90s.  If you are new
@@ -20,10 +27,6 @@ to TLA+ and want to learn more about TLC, check the [TLC][] project and the
 [TLA+ Video Course][] by Leslie Lamport. If you are an experienced TLC user,
 you will find this tutorial helpful too, as it demonstrates the strong points
 of Apalache.
-
-We discover that the same bug not only causes the out-of-bounds error, but also
-prevents the algorithm from terminating in `log2(high - low + 1)`, as it is
-usually expected.
 
 ## Related documents
 
@@ -63,14 +66,17 @@ Binary Searches and Mergesorts are Broken][]:
 17:     }
 ```
 
-Fast forward, as was found by Joshua Bloch, the addition in line 6 may throw
+As was found by Joshua Bloch, the addition in line 6 may throw
 an out of bounds exception at line 7, due to an integer overflow. This is because `low`
 and `high` are signed integers whose maximum value could not grow above `2^31 -
 1`, so the sum `low + high` could wrap into a negative number.
 
-Let's see how TLA+ and Apalache can help us here. A bit of warning: The final
-TLA+ specification will happen to be longer than the 17 lines above. Don't get
-disappointed too fast. There are several reasons for that:
+This bug was
+[discussed](https://groups.google.com/g/tlaplus/c/msLltIcexF4/m/qnABiKJmDgAJ)
+in the TLA+ User Group in 2015. Let's see how TLA+ and Apalache can help us
+here. A bit of warning: The final TLA+ specification will happen to be longer
+than the 17 lines above. Don't get disappointed too fast. There are several
+reasons for that:
 
  1. TLA+ is not tuned towards one particular class of algorithms, e.g.,
  sequential algorithms.
@@ -81,8 +87,9 @@ disappointed too fast. There are several reasons for that:
  faster. However, if you have a sledgehammer like TLA+, you don't have to learn
  other languages.
 
- 3. We have to explicitly write the expected properties that are normally
- written in comments.
+ 3. We explicitly state the expected properties of the algorithm to be checked
+ by Apalache. In imperative languages, these properties are usually omitted or
+ written as plain-text comments.
 
  4. We have to introduce a bit of boilerplate, to make Apalache work.
 
@@ -97,13 +104,14 @@ definition:
 
 This module is doing almost nothing. However, it contains a few important things:
 
- - It uses three standard modules: `Integers`, `Sequences`, and `Apalache`.
+ - It imports constants and operators from three standard modules: `Integers`,
+   `Sequences`, and `Apalache`.
  - It declares the predicate `Init`. This predicate describes the initial
    states of our state machine. Since we have not declared any variables, it
    defines the only single state.
  - It declares the predicate `Next`. This predicate describes the transitions
-   of our state machine. Again, there are no variables and `Next == TRUE`,
-   so this transition goes from the initial state to itself.
+   of our state machine. Again, there are no variables and `Next == TRUE`, so
+   this transition goes from the initial state to itself.
 
 Now it is a good time to check that Apalache is working. Run the following command:   
 
