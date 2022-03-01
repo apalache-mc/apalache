@@ -108,12 +108,12 @@ This module does not yet specify any part of the binary search implementation. H
    `Sequences`, and `Apalache`.
  - It declares the predicate `Init`. This predicate describes the initial
    states of our state machine. Since we have not declared any variables, it
-   defines the only single state.
+   defines the single possible state.
  - It declares the predicate `Next`. This predicate describes the transitions
    of our state machine. Again, there are no variables and `Next == TRUE`, so
    this transition goes from the initial state to itself.
 
-Now it is a good time to check that Apalache is working. Run the following command:   
+Now it is a good time to check that Apalache works. Run the following command:   
 
 ```sh
 $ apalache-mc check BinSearch0.tla
@@ -134,10 +134,10 @@ Checker reports no error up to computation length 10
 ... 
 ```
 
-We can see that Apalache is running and it finds no error. Not unexpected.
+We can see that Apalache runs without finding an error, as expected.
 
 If you are curious, replace `TRUE` with `FALSE` in either `Init` or `Next`,
-run Apalache again and observe what is happening.
+run Apalache again and observe what happens.
 
 It is usually a good idea to start with a spec like `BinSearch0.tla`, to ensure
 that the tools are working.
@@ -153,7 +153,7 @@ called `a`, and an integer called `key`. Similar to these parameters, we introdu
 two specification parameters (called `CONSTANTS` in TLA+):
 
  - the input sequence `INPUT_SEQ`, and
- - the input key `INPUT_KEY`.
+ - the element to search for `INPUT_KEY`.
 
 ```tla
 {{#include ../../../test/tla/bin-search/BinSearch1.tla:1:1}}
@@ -163,12 +163,12 @@ two specification parameters (called `CONSTANTS` in TLA+):
 Importantly, the constants `INPUT_SEQ` and `INPUT_KEY` are prefixed with type
 annotations in the comments:
 
- - `INPUT_SEQ` has the type `Seq(Int)`, that is, it is a sequence of integers, and
+ - `INPUT_SEQ` has the type `Seq(Int)`, that is, it is a sequence of integers (sequences in TLA+ are indexed), and
  - `INPUT_KEY` has the type `Int`, that is, it is an integer.
 
 Recall that we wanted to specify signed and unsigned Java integers, which are
 32 bit long. *TLA+ is not tuned towards any computer architecture.* Its integers
-are always signed and can be arbitrary large (unbounded), like in school math.
+are mathematical integers: always signed and arbitrarily large (unbounded).
 To model fixed bit-width integers, we introduce another constant `INT_WIDTH` of
 type `Int`:
 
@@ -203,7 +203,7 @@ TODO: add the link to BinSearch1.tla when we have it on github.
 Copy `BinSearch1.tla` to `BinSearch2.tla` and open `BinSearch2.tla`.
 
 We start with the simplest possible case that occurs in `binarySearch`. Namely,
-we consider the case of `low > high`, that is, `binarySearch` is never entering
+we consider the case where `low > high`, that is, `binarySearch` never enters
 the loop.
 
 **Introduce variables**. To do that, we have to finally introduce some
@@ -211,32 +211,30 @@ variables. Obviously, we have to introduce variables `low` and `high`. This is
 how we do it:
 
 ```tla
-{{#include ../../../test/tla/bin-search/BinSearch2.tla:33:38}}
+{{#include ../../../test/tla/bin-search/BinSearch2.tla:32:38}}
 ```
 
-The variables `low` and `high` are called *state variables*. They are always
-present in a state of our state machine. That is, they are never introduced and
+The variables `low` and `high` are called *state variables*. They define a state of our state machine. That is, they are never introduced and
 never removed. Remember, TLA+ is not tuned towards any particular computer
 architecture and thus it does not even have the notion of an execution stack.
 You can think of `low` and `high` as being global variables. Yes, global
-variables are generally a bad smell in a program. However, when dealing with a
+variables are generally frowned upon in programming languages. However, when dealing with a
 specification, they are much easier to reason about than the execution stack.
-If you need to introduce local definitions, you will see how to do that later
-in this tutorial.
+We will demonstrate how to introduce local definitions later in this tutorial.
 
-Less obviously, we introduce two additional variables:
+We introduce two additional variables, the purpose of which might be less obvious:
 
 ```tla
 {{#include ../../../test/tla/bin-search/BinSearch2.tla:39:44}}
 ```
 
-The variable `isTerminated` indicates, whether our search has terminated. Why
-did we even have to introduce it? Because, in general, computer systems do not
+The variable `isTerminated` indicates whether our search has terminated. Why
+do we even have to introduce it? Because, in general, computer systems do not
 have to terminate. If we want to specify the Internet or Bitcoin, do we
 understand what it means for them to terminate?
 
 The variable `returnValue` will contain the result of the binary search, when
-the search terminated. Recall, there is no execution stack. Hence, we introduce
+the search terminates. Recall, there is no execution stack. Hence, we introduce
 the variable `returnValue` right away. The downside is that we have to do
 book-keeping for this variable.
 
@@ -277,7 +275,7 @@ for writing a big conjunction. Here is the standard way of writing `Init`
 {{#include ../../../test/tla/bin-search/BinSearch2.tla:46:51}}
 ```
 
-The above lines do not deserve a lot of explanation. As you have guessed,
+The above lines do not deserve a lot of explanation. As you have probably guessed,
 `Len(INPUT_SEQ)` computes the length of the input sequence.
 
 **Update variables.** Having done all the preparatory work, we are now ready to
@@ -306,7 +304,11 @@ that includes `isTerminated'`, `returnValue'`, and `UNCHANGED`. The expression
 `isTerminated' = TRUE` means that `isTerminated` shall have the value `TRUE` in the
 next state of our state machine.  Likewise, `returnValue' = -(low + 1)` means that `returnValue` has
 the value `-(low + 1)` in the next state. The expression `UNCHANGED <<low,
-high>>` is a convenient shortcut for writing `low' = low /\ high' = high`.
+high>>` is a convenient shortcut for writing `low' = low /\ high' = high`. Readers unfamiliar with specification languages might question the purpose of `UNCHANGED`, since in most programming languages variables only change when they are explicitly changed. 
+However, a transition predicate, like `Next`, establishes a relation between pairs of states. 
+If we were to omit `UNCHANGED`, this would mean that we consider states in which `low` and `high` have _completely arbitrary_ values as valid successors. 
+This is clearly not how Java code should behave. 
+To encode Java semantics, we must therefore explicitly state that `low` and `high` do not change in this step.
 
 It is important to understand that an expression like `returnValue' = -(low +
 1)` *does not immediately update* the variable on the left-hand side. Hence,
@@ -319,9 +321,9 @@ TODO: add the link to BinSearch2.tla when we have it on github.
 
 ## Step 3: Basic checks for the base case
 
-As we discussed, it is a good habit to run the model checker as you are writing
-the specification. Even if it would not check much, you would be able to catch
-the moment when the model checker would slow down. This may give you a useful
+As we discussed, it is a good habit to periodically run the model checker, as you are writing
+the specification. Even if it doesn't check much, you would be able to catch
+the moment when the model checker slows down. This may give you a useful
 hint about changing a few things before you have written too much code.
 
 Let us check `BinSearch2.tla`:
@@ -341,15 +343,14 @@ Input error (see the manual): SubstRule: Variable INPUT_SEQ is not assigned a va
 ...
 ```
 
-Apalache complains that we have defined several parameters (`INPUT_SEQ`,
-`INPUT_KEY`, and `INT_WIDTH`) but we have never defined them.
+Apalache complains that we have declared several constants (`INPUT_SEQ`,
+`INPUT_KEY`, and `INT_WIDTH`), but we have never defined them.
 
 **Adding a model file.** The standard approach in this case is either to fix
-all constants in a TLC configuration file, or to introduce another module that
+all constants, or to introduce another module that
 fixes the parameters and instantiates the general specification. Although
-Apalache supports [TLC Configuration Files][], we are inclined to introduce a
-new module TLA+ rather than recollecting the syntax of TLC configuration files.
-You will see later in this tutorial, why this approach is more organic to TLA+.
+Apalache supports [TLC Configuration Files][], for the purpose of this tutorial,
+we will stick to tool-agnostic TLA+ syntax.
 
 To this end, we add a new file `MC2_8.tla` with the following contents:
 
@@ -389,7 +390,7 @@ TODO: add the link to BinSearch2.tla and MC2_8.tla when we have them on github.
 Copy `MC2_8.tla` to `MC3_8.tla`. Copy `BinSearch2.tla` to `BinSearch3.tla` and
 open `BinSearch3.tla`.
 
-What do we expect from the binary search? We can check the Java documentation,
+What do we expect from binary search? We can check the Java documentation,
 e.g., [Arrays.java in OpenJDK][]:
 
 > ...the return value will be >= 0 if and only if the key is found.
@@ -398,7 +399,7 @@ This property is actually quite easy to write in TLA+. First, we
 introduce the property that we call `ReturnValueIsCorrect`:
 
 ```tla
-{{#include ../../../test/tla/bin-search/BinSearch3.tla:72:83}}
+{{#include ../../../test/tla/bin-search/BinSearch3.tla:71:83}}
 ```
 
 Let us decompose this property into smaller pieces. First, we define the set
@@ -410,7 +411,7 @@ Let us decompose this property into smaller pieces. First, we define the set
 
 With this TLA+ expression we define a *local constant* called `MatchingIndices`
 that is equal to the set of indices `i` in `INPUT_SEQ` so that the sequence
-elements defined with these indices are equal to `INPUT_KEY`. If this syntax
+elements at these indices are equal to `INPUT_KEY`. If this syntax
 is hard to parse for you, here is how we could write a similar definition in a
 functional programming language (Scala):
 
@@ -420,13 +421,13 @@ val MatchingIndices =
 ```
 
 Since the
-sequence indices in TLA+ are starting with 1, we require that `returnValue + 1`
+sequence indices in TLA+ start with 1, we require that `returnValue + 1`
 belongs to `MatchingIndices` when `MatchingIndices` is non-empty. If
 `MatchingIndices` is empty, we require `returnValue` to be negative.
 
 We can check that the property `ReturnValueIsCorrect` is an *invariant*, that
-is, it holds in every state that is reachable via a sequence of transitions
-represented via `Next` from the states represented via `Init`:
+is, it holds in every state that is reachable from the states specified by `Init`
+via a sequence of transitions specified by `Next`:
 
 ```sh
 $ apalache-mc check --inv=ReturnValueIsCorrect MC3_8.tla
@@ -435,12 +436,12 @@ $ apalache-mc check --inv=ReturnValueIsCorrect MC3_8.tla
 This property is violated in the initial state. To see why, check the file
 `counterexample1.tla`.
 
-Actually, we expect this property to hold when the computation is terminated,
+Actually, we only expect this property to hold after the computation terminates,
 that is, when `isTerminated` equals to `TRUE`. Hence, we add the following
 invariant:
 
 ```tla
-{{#include ../../../test/tla/bin-search/BinSearch3.tla:84:87}}
+{{#include ../../../test/tla/bin-search/BinSearch3.tla:84:86}}
 ```
 
 **Digression: Boolean connectives.** In the above code, the operator `=>` is
@@ -479,7 +480,7 @@ open `BinSearch4.tla`.
 We specify the loop of `binarySearch` in TLA+ as follows:
 
 ```tla
-{{#include ../../../test/tla/bin-search/BinSearch4.tla:55:78}}
+{{#include ../../../test/tla/bin-search/BinSearch4.tla:55:77}}
 ```
 
 Let's start with these two definitions:
@@ -490,7 +491,7 @@ Let's start with these two definitions:
 
 As you have probably guessed, we define two (local) values `mid` and `midVal`.
 The value `mid` is the average of `low` and `high`. The operator `\div` is
-simply integer division, which is usually written as `/` in programming
+simply integer division, which is usually written as `/` or `//` in programming
 languages. The value `midVal` is the value at the location `mid + 1`. Since
 the TLA+ sequence `INPUT_SEQ` has indices in the range `1..Len(INPUT_SEQ)`,
 whereas we are computing zero-based indices, we are adjusting the index by one,
@@ -527,7 +528,7 @@ The check goes through, but did it do much? Recall, that we fixed `INPUT_SEQ`
 to be the empty sequence `<< >>` in `MC4_8.tla`. Hence, we never enter the loop
 we have just specified.
 
-Actually, Apalache is giving us a hint that it has never tried some of the
+Actually, Apalache gives us a hint that it never tries some of the
 cases:
 
 ```
@@ -551,7 +552,7 @@ Step 2: picking a transition out of 1 transition(s)
 
 **Digression: symbolic transitions.** Internally, Apalache decomposes the
 predicates `Init` and `Next` into independent pieces like `Init == Init$0 \/
-Init$1` and `Next == Next$0 \/ Next$1 \/ Next$2 \/ Next$3`. If you want to see,
+Init$1` and `Next == Next$0 \/ Next$1 \/ Next$2 \/ Next$3`. If you want to see
 how it is done, run Apalache with the options `--write-intermediate` and `--run-dir`:
 
 ```sh
@@ -638,8 +639,7 @@ bounded with the argument of `Gen`. This lets Apalache check all instances of
 the data structure, without enumerating the instances!
 
 By doing so, we are able to check the specification for all the inputs, when we
-fix the bit width. In the model `MC5_8.tla`, we fix `INT_WIDTH` to 8, to get
-the feedback fast.
+fix the bit width. To quickly get feedback from Apalache, we fix `INT_WIDTH` to 8 in the model `MC5_8.tla`.
 
 Let us check `Postcondition` again:
 
@@ -689,7 +689,7 @@ State2 ==
 ...
 ```
 
-**Fixing Postcondition.** Is it a real issue? It is, but it is not the issue of
+Is it a real issue? It is, but it is not the issue of
 the search, rather our invariant `Postcondition` is imprecise.
 
 ## Step 5b: Fixing the postcondition
@@ -705,9 +705,9 @@ If we check our source of truth, that is, the Java documentation in
 It is quite easy to add this constraint. This is where TLA+ starts to shine:
 
 ```tla
-{{#include ../../../test/tla/bin-search/BinSearch5.tla:79:88}}
+{{#include ../../../test/tla/bin-search/BinSearch5.tla:80:88}}
 ...
-{{#include ../../../test/tla/bin-search/BinSearch5.tla:109:113}}
+{{#include ../../../test/tla/bin-search/BinSearch5.tla:109:112}}
 ```
 
 If we check `PostconditionSorted`, we do not get any error after 10 steps:
@@ -737,7 +737,7 @@ open `BinSearch6.tla`.
 
 Actually, we do not need 10 steps to check termination for the case `INT_WIDTH
 = 8`. If you recall the complexity of the binary search, it needs
-`log2(Len(INPUT_SEQ))` steps to terminate.
+`ceil(log2(Len(INPUT_SEQ)))` steps to terminate.
 
 To check this property, we add the number of steps as a variable in
 `BinSearch6.tla` and in `MC6_8.tla`:
@@ -799,7 +799,7 @@ Progress ==
 
 It takes about 10 seconds to check `Progress` as well.
 
-## Step 7: Fix-width integers
+## Step 7: Fixed-width integers
 
 Copy `BinSearch6.tla` to `BinSearch7.tla`, copy `MC6_8.tla` to `MC7_8.tla` and
 open `BinSearch7.tla`.
@@ -812,16 +812,16 @@ look at this piece of the specification again:
 ```
 
 You can see that all arithmetic operations are performed over TLA+ integers,
-that is, unbounded integers. We have to implement fix-width integers ourselves.
+that is, unbounded integers. We have to implement fixed-width integers ourselves.
 Fortunately, we do not have to implement the whole set of integer operators,
 but only the addition over signed integers, which has a potential to overflow.
 To this end, we have to recall how signed integers are represented in modern
 computers, see [Two's complement][]. Fortunately, we do not have to worry about
 an efficient implementation of integer addition. We simply use addition over
-unbounded integers to implement addition over fix-width integers:
+unbounded integers to implement addition over fixed-width integers:
 
 ```tla
-{{#include ../../../test/tla/bin-search/BinSearch7.tla:53:65}}
+{{#include ../../../test/tla/bin-search/BinSearch7.tla:54:65}}
 ```
 
 Having defined `IAdd`, we replace addition over unbounded integers with `IAdd`:
@@ -873,7 +873,7 @@ As we have seen in Step 7, the cause of all errors in `PostconditionSorted`,
 thus the expression `INPUT_SEQ[mid + 1]` accesses `INPUT_SEQ` outside of its
 domain.
 
-Why did not Apalache complain about access outside of the domain? Its behavior
+Why did Apalache not complain about access outside of the domain? Its behavior
 is actually consistent with [Specifying Systems][] (p. 302):
 
 > A function *f* has a domain DOMAIN *f*, and the value of *f*[*v*] is
@@ -888,10 +888,10 @@ we construct the following invariant:
 
 
 ```tla
-{{#include ../../../test/tla/bin-search/BinSearch8.tla:144:151}}
+{{#include ../../../test/tla/bin-search/BinSearch8.tla:144:150}}
 ```
 
-Apalache find a violation of this invariant in a few seconds:
+Apalache finds a violation of this invariant in a few seconds:
 
 ```
 $ apalache-mc check --cinit=ConstInit --inv=InBounds MC8_8.tla
@@ -995,20 +995,20 @@ Copy `BinSearch9.tla` to `BinSearch10.tla`, copy `MC9_8.tla` to `MC10_8.tla` and
 open `BinSearch10.tla`.
 
 We have reached our goals: TLA+ and Apalache helped us in finding the access
-bug and showing that its fix is working. Now it is time to look back at the
+bug and showing that its fix works. Now it is time to look back at the
 specification and make it easier to read.
 
 Let us have a look at our definition of `Next`:
 
 ```tla
-{{#include ../../../test/tla/bin-search/BinSearch9.tla:77:101}}
+{{#include ../../../test/tla/bin-search/BinSearch9.tla:77:100}}
 ```
 
 `Next` contains a massive expression. We can decompose it nicely in smaller
 pieces:
 
 ```tla
-{{#include ../../../test/tla/bin-search/BinSearch10.tla:78:114}}
+{{#include ../../../test/tla/bin-search/BinSearch10.tla:78:113}}
 ```
 
 The definitions `LoopIteration`, `LoopExit`, and `StutterOnTermination` are
@@ -1023,23 +1023,23 @@ TODO: add the link to BinSearchN.tla when we have it on github.
 In this tutorial we have shown how to:
 
  - Specify the behavior of a sequential algorithm (binary search).
- - Specify the invariants that check safety and termination.
+ - Specify invariants that check safety and termination.
  - Take into account the specifics of a computer architecture (fixed bit
    width).
- - Automatically find the examples of when all invariants are violated.
- - Efficiently check the expected properties against the fixed specification.
+ - Automatically find examples of simultaneous invariant violation.
+ - Efficiently check the expected properties against our specification.
 
-We have written our specification for parameterized bit width. This let us
-checking the invariants relatively quickly and get fast feedback from the model
-checker. We chose the bit width of 8, as it is non-trivial, while Apalache does
-not get stuck while running for this bit width. Importantly, the specification
+We have written our specification for parameterized bit width. This lets us
+check the invariants relatively quickly and get fast feedback from the model
+checker. We chose a bit width of 8, a non-trivial value for which
+Apalache terminates within reasonable time. Importantly, the specification
 for the bit width of 32 stays the same; we only have to change `INT_WIDTH`. Of
-course, Apalache reaches its limits, when we set `INT_WIDTH` to 16 or 32. In
+course, Apalache reaches its limits when we set `INT_WIDTH` to 16 or 32. In
 these cases, it has to reason about all sequences of length up to 32,767
-elements and 2 Billion elements respectively!
+elements or 2 Billion elements, respectively!
 
-Although Apalache gives us a good idea about whether the properties of the
-binary search hold true, it does give us an ultimate proof of correctness for
+Apalache gives us a good idea whether the properties of our
+binary search specification hold true. However, it does not give us an ultimate proof of correctness for
 Java integers. If you need such a proof, you should probably use TLAPS. Check
 the paper on [Proving Safety Properties][] by Leslie Lamport.
 
@@ -1048,14 +1048,14 @@ of a TLA+ specification, as we were writing it and checking it with Apalache.
 It took us 2-3 hours to iteratively develop a specification that is similar to
 the one demonstrated in this tutorial.
 
-Most likely, there are many different styles of writing TLA+ specifications.
+There are many different styles of writing TLA+ specifications.
 One of our goals was to demonstrate the incremental approach to specification
 writing. In fact, this approach is not very different from incremental
 development of programs in the spirit of [Test-driven development][].
 
 This tutorial touches upon the basics of TLA+ and Apalache. For instance, we
 did not discuss non-determinism, as our specification is entirely
-deterministic. We will demonstrate advanced features in the future tutorials.
+deterministic. We will demonstrate advanced features in future tutorials.
 
 If you are experiencing a problem with Apalache, feel free to [open an issue]
 or drop us a message on [Zulip chat].
