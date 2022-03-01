@@ -30,6 +30,7 @@ import scala.collection.JavaConverters._
 import scala.util.Random
 import at.forsyte.apalache.io.ApalacheConfig
 import at.forsyte.apalache.io.ConfigManager
+import at.forsyte.apalache.tla.bmcmt.rules.vmt.TlaExToVMTWriter
 
 /**
  * Command line access to the APALACHE tools.
@@ -330,12 +331,16 @@ object Tool extends LazyLogging {
     // behavior of current OutmputManager configuration
     setCommonOptions(constrain, executor.options)
 
-    val msg = "Constraint mode is not yet implemented!"
+    val outFilePath = OutputManager.runDirPathOpt
+      .map { p =>
+        p.resolve(TlaExToVMTWriter.outFileName).toAbsolutePath
+      }
+      .getOrElse(TlaExToVMTWriter.outFileName)
 
     runAndExit(
         executor,
-        _ => msg,
-        msg,
+        _ => s"VMT constraints successfully generated at\n$outFilePath",
+        "Failed to generate constraints",
     )
   }
 

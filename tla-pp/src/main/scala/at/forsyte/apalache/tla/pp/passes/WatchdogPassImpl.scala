@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.pp.passes
 
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, LanguageWatchdog}
-import at.forsyte.apalache.tla.lir.TlaModule
+import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
@@ -20,5 +20,5 @@ class WatchdogPassImpl @Inject() (val options: PassOptions, val pred: LanguagePr
 
   override def dependencies = Set()
 
-  override def transformations = Set()
+  override def transformations = Set(ModuleProperty.Unrolled)
 }

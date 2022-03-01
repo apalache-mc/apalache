@@ -26,15 +26,11 @@ class ReTLALanguagePred extends ContextualLanguagePred {
       case NameEx(_) =>
         PredResultOk()
 
+      // Primes are only allowed, when attached to Names
+      case OperEx(TlaActionOper.prime, _: NameEx) =>
+        PredResultOk()
+
       case OperEx(oper, args @ _*) if ReTLALanguagePred.operators.contains(oper) =>
-        allArgsOk(letDefs, args)
-
-      case OperEx(TlaControlOper.ifThenElse, pred, thenEx, elseEx) =>
-        isOkInContext(letDefs, pred)
-          .and(isOkInContext(letDefs, thenEx))
-          .and(isOkInContext(letDefs, elseEx))
-
-      case OperEx(TlaFunOper.funDef, args @ _*) =>
         allArgsOk(letDefs, args)
 
       // Function application and except are the only place we allow tuples, because that's how multivariable functions
@@ -65,8 +61,8 @@ class ReTLALanguagePred extends ContextualLanguagePred {
                 case OperEx(TlaFunOper.tuple, OperEx(TlaFunOper.tuple, args @ _*)) =>
                   allArgsOk(letDefs, args)
                 // ![a] case
-                case OperEx(TlaFunOper.tuple, args @ _*) =>
-                  allArgsOk(letDefs, args)
+                case OperEx(TlaFunOper.tuple, arg) =>
+                  isOkInContext(letDefs, arg)
                 // Impossible, but we need case-completeness
                 case _ => PredResultFail(List())
               }
@@ -101,30 +97,31 @@ object ReTLALanguagePred {
 
   protected val operators: HashSet[TlaOper] =
     HashSet(
-        TlaActionOper.prime,
-        TlaBoolOper.not,
-        ApalacheOper.skolem,
-        TlaOper.eq,
-        TlaOper.ne,
-        TlaBoolOper.implies,
-        TlaBoolOper.equiv,
         ApalacheOper.assign,
+        ApalacheOper.skolem,
         TlaBoolOper.and,
-        TlaBoolOper.or,
+        TlaBoolOper.equiv,
         TlaBoolOper.exists,
         TlaBoolOper.forall,
+        TlaBoolOper.implies,
+        TlaBoolOper.not,
+        TlaBoolOper.or,
+        TlaControlOper.ifThenElse,
+        TlaFunOper.funDef,
+        TlaOper.eq,
+        TlaOper.ne,
         // IntArith not in v1
-        //        TlaArithOper.uminus,
-        //        TlaArithOper.plus,
-        //        TlaArithOper.minus,
-        //        TlaArithOper.mult,
         //        TlaArithOper.div,
-        //        TlaArithOper.mod,
         //        TlaArithOper.exp,
-        //        TlaArithOper.lt,
+        //        TlaArithOper.ge,
         //        TlaArithOper.gt,
         //        TlaArithOper.le,
-        //        TlaArithOper.ge,
+        //        TlaArithOper.lt,
+        //        TlaArithOper.minus,
+        //        TlaArithOper.mod,
+        //        TlaArithOper.mult,
+        //        TlaArithOper.plus,
+        //        TlaArithOper.uminus,
     )
 
   def apply(): ReTLALanguagePred = singleton
