@@ -493,14 +493,13 @@ class TestSanyImporter extends SanyImporterTestBase {
 
     val (rootName, modules) = sanyImporter
       .loadFromSource("builtins", Source.fromString(text))
-    val mod = expectSingleModule("builtins", rootName, modules)
+    expectSingleModule("builtins", rootName, modules)
     val root = modules(rootName)
     expectSourceInfoInDefs(root)
 
     def expectDecl(name: String, body: TlaEx): Unit =
       findAndExpectOperDecl(root, name, List(), body)
 
-    mod.declarations(1)
     expectDecl("True", ValEx(TlaBool(true)))
 
     val trueOperEx = OperEx(TlaOper.apply, NameEx("True"))
@@ -1582,7 +1581,6 @@ class TestSanyImporter extends SanyImporterTestBase {
           // The caveat here is that the formal parameter R does not appear in the list of the R's formal parameters,
           // but it is accessible via the field recParam.
           assert(d.isRecursive)
-          OperParam(name, nparams)
           assert(d.body == expectedBody)
           assert(sourceStore.contains(d.body.ID)) // and source file information has been saved
 
@@ -1627,7 +1625,6 @@ class TestSanyImporter extends SanyImporterTestBase {
         // The caveat here is that the formal parameter F does not appear in the list of the F's formal parameters,
         // but it is accessible via the field recParam.
         assert(d.isRecursive)
-        OperParam("F", 1)
         val ite = OperEx(
             TlaControlOper.ifThenElse,
             OperEx(TlaOper.eq, NameEx("n"), ValEx(TlaInt(0))),
