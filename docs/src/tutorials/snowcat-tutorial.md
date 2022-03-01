@@ -1,6 +1,6 @@
 # Tutorial on the Snowcat:snowflake::cat: Type Checker
 
-**Difficulty: Blue trail -- Easy**
+**Difficulty: Blue trail – Easy**
 
 In this tutorial, we introduce the Snowcat :snowflake: :cat: type checker
 We give concrete steps on running the type checker and

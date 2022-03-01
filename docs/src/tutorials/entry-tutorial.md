@@ -1,6 +1,6 @@
 # Entry-level Tutorial on the Model Checker
 
-**Difficulty: Blue trail -- Easy**
+**Difficulty: Blue trail – Easy**
 
 In this tutorial, we show how to turn an implementation of binary search into a
 TLA+ specification. This implementation is known to have an out-of-bounds
@@ -68,8 +68,8 @@ Binary Searches and Mergesorts are Broken][]:
 
 As was found by Joshua Bloch, the addition in line 6 may throw
 an out of bounds exception at line 7, due to an integer overflow. This is because `low`
-and `high` are signed integers whose maximum value could not grow above `2^31 -
-1`, so the sum `low + high` could wrap into a negative number.
+and `high` are signed integers, with a maximum value of `2^31 - 1`. 
+However, the sum of two values, each smaller than `2^31-1`, may be greater than `2^31 -1`. If this  is the case, `low + high` can wrap into a negative number.
 
 This bug was
 [discussed](https://groups.google.com/g/tlaplus/c/msLltIcexF4/m/qnABiKJmDgAJ)
@@ -102,7 +102,7 @@ definition:
 {{#include ../../../test/tla/bin-search/BinSearch0.tla:1:8}}
 ```
 
-This module is doing almost nothing. However, it contains a few important things:
+This module does not yet specify any part of the binary search implementation. However, it contains a few important things:
 
  - It imports constants and operators from three standard modules: `Integers`,
    `Sequences`, and `Apalache`.
