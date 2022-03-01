@@ -18,7 +18,7 @@ class TestQuantRule extends AnyFunSuite {
 
   val constSets = Map("S" -> sSort)
 
-  val rewriter = RewriterImpl(constSets)
+  val rewriter = ToTermRewriterImpl(constSets)
 
   val rule = new QuantifierRule(rewriter, new RestrictedSetJudgement(constSets))
 

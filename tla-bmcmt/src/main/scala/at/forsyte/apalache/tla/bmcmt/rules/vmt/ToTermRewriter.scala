@@ -4,11 +4,11 @@ import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.formulas.Term
 
 /**
- * Rewriter defines a translation from TLA+ to SMT Terms.
+ * ToTermRewriter defines a translation from TLA+ to SMT Terms.
  *
  * @author
  *   Jure Kukovec
  */
-abstract class Rewriter {
+abstract class ToTermRewriter {
   def rewrite(ex: TlaEx): Term
 }

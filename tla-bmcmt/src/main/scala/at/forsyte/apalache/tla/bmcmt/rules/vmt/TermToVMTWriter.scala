@@ -7,12 +7,12 @@ import at.forsyte.apalache.tla.lir.formulas.EUF._
 import at.forsyte.apalache.tla.lir.formulas._
 
 /**
- * TermWriter manages the translation of Terms to strings, to be written to the final output file.
+ * TermToVMTWriter manages the translation of Terms to strings, to be written to the final output file.
  *
  * @author
  *   Jure Kukovec
  */
-object TermWriter {
+object TermToVMTWriter {
 
   private def tr: Term => String = mkSMT2String // shorthand rename
 
@@ -81,7 +81,7 @@ object TermWriter {
   def mkSMTDecl(d: TlaVarDecl): String =
     d.typeTag match {
       case Typed(tt: TlaType1) =>
-        val (froms, to) = sortAsFn(TypeToSortConverter.sortFromType(tt))
+        val (froms, to) = sortAsFn(TlaType1ToSortConverter.sortFromType(tt))
         def mkDecl(name: String) = s"(declare-fun $name (${froms.mkString(" ")}) $to)"
         s"${mkDecl(d.name)}\n${mkDecl(VMTprimeName(d.name))}"
 

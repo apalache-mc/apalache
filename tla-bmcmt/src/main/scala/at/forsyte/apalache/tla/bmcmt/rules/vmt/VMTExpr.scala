@@ -2,6 +2,13 @@ package at.forsyte.apalache.tla.bmcmt.rules.vmt
 
 import at.forsyte.apalache.tla.lir.formulas.{BoolSort, Term, Variable}
 
+/**
+ * VMTExpr objects are wrappers around SMT Terms. They exist to let the writer to the output file know which labels to
+ * add to which SMT expression.
+ *
+ * @author
+ *   Jure Kukovec
+ */
 abstract class VMTExpr
 
 sealed case class Next(name: String, current: Variable, next: Variable) extends VMTExpr {

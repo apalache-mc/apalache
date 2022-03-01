@@ -19,7 +19,7 @@ class TestEUFRule extends AnyFunSuite {
 
   val constSets = Map("S" -> sSort)
 
-  val rewriter = RewriterImpl(constSets)
+  val rewriter = ToTermRewriterImpl(constSets)
 
   val funName = "f"
   val constGen = new UniqueNameGenerator {

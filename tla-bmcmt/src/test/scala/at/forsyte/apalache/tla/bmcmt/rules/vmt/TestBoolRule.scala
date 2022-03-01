@@ -10,7 +10,7 @@ import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestBoolRule extends AnyFunSuite {
-  val rewriter = RewriterImpl()
+  val rewriter = ToTermRewriterImpl()
 
   val rule = new BoolRule(rewriter)
 

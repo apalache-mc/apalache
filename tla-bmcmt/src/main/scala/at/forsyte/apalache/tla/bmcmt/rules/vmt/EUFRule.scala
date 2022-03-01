@@ -15,7 +15,7 @@ import at.forsyte.apalache.tla.pp.UniqueNameGenerator
  * @author
  *   Jure Kukovec
  */
-class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement, gen: UniqueNameGenerator)
+class EUFRule(rewriter: ToTermRewriter, restrictedSetJudgement: RestrictedSetJudgement, gen: UniqueNameGenerator)
     extends FormulaRule {
 
   private val eufOper: Set[TlaOper] = Set(
@@ -38,17 +38,20 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
   private def isRestrictedSet(ex: TlaEx) = restrictedSetJudgement.isRestrictedSet(ex)
 
   /**
-   * Given a function f: (S1,...,Sn) => S, with the rule f(y1,...,yn) = ef, args `x1: S1, ..., xn: Sn`, and an
-   * expression eg, constructs a function definition for g, with the rule:
+   * When translating g = [f EXCEPT ![x1,...,xn] = a], we need to construct a VMT function representation, which differs
+   * from that of `f` at exactly one point.
+   *
+   * Given a function f: (S1,...,Sn) => S, constructed with the rule f(y1,...,yn) = ef, arguments `x1: S1, ..., xn: Sn`,
+   * and an expression `a`, constructs a function definition for g, with the rule:
    * ```
    * g(y1, ... yn) = if y1 = x1 /\ ... /\ yn = xn
-   *                 then eg
+   *                 then a
    *                 else ef
    * ```
    * @param fnArgTerms
    *   the values `x1, ..., xn`
    * @param newCaseTerm
-   *   the term `eg`
+   *   the term `a`
    * @param args
    *   pairs `(y1, S1),...,(yn,Sn)`
    * @param baseCaseTerm
@@ -170,6 +173,7 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
           (name, sort)
         }
         FunDef(gen.newName(), argList, rewrite(e))
+
       case OperEx(TlaFunOper.app, fn, arg) =>
         val fnTerm = rewrite(fn)
         // Arity 2+ functions pack their arguments as a single tuple, which we might need to unpack
@@ -198,7 +202,7 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
 
       case OperEx(TlaFunOper.except, fn, arg, newVal) =>
         val valTerm = rewrite(newVal)
-        // Toplevel, arg is always a TLaFunOper.tuple. within, it's either a single value, or another
+        // Toplevel, arg is always a TLaFunOper.tuple. Within, it's either a single value, or another
         // tuple, in the case of arity 2+ functions
         val fnArgTerms = arg match {
           // ![a,b,...] case
@@ -211,7 +215,7 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
 
         val exceptTermFn = exceptAsNewFunDef(fnArgTerms, valTerm) _
 
-        // Assume fnArgTerms nonempty
+        // Assume fnArgTerms is nonempty.
         // We have two scenarios: the original function is either defined, or symbolic
         // If it is defined, then we have a rule and arguments, which we can just reuse
         // If it is symbolic, we need to invent new variable names and apply it.
@@ -229,8 +233,8 @@ class EUFRule(rewriter: Rewriter, restrictedSetJudgement: RestrictedSetJudgement
           case _ => throw new RewriterException(s"$fn must be a function term.", fn)
         }
 
-      case OperEx(TlaControlOper.ifThenElse, ifEx, thenEx, elseEx) =>
-        ITE(rewrite(ifEx), rewrite(thenEx), rewrite(elseEx))
+      case OperEx(TlaControlOper.ifThenElse, condEx, thenEx, elseEx) =>
+        ITE(rewrite(condEx), rewrite(thenEx), rewrite(elseEx))
 
       case _ => throw new RewriterException(s"EUFRule not applicable to $ex", ex)
     }

@@ -15,6 +15,11 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
  *
  * `UNCHANGED <<x, <<y,z>>>>` is rejected
  *
+ * Desugarer also performs the same transformation, however, it performs additional transformations not desired in the
+ * VMT translation process.
+ *
+ * TODO: See #1422
+ *
  * @author
  *   Jure Kukovec
  */

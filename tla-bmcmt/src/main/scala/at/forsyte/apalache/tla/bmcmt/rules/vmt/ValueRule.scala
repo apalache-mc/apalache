@@ -59,7 +59,7 @@ object ValueRule {
   def termFromNameEx(ex: NameEx): Variable =
     ex.typeTag match {
       case Typed(tt: TlaType1) =>
-        val sort = TypeToSortConverter.sortFromType(tt)
+        val sort = TlaType1ToSortConverter.sortFromType(tt)
         mkVariable(ex.name, sort)
       case Untyped() =>
         mkVariable(ex.name, UntypedSort())

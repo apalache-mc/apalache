@@ -9,16 +9,16 @@ import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 
 /**
- * VMTWriter handles the last step of transpiling: assembling the .vmt output file.
+ * TlaExToVMTWriter handles the last step of transpiling: assembling the .vmt output file.
  *
  * Given a disassembled module (extracted init, next, inv, etc.) VMTWriter determines which parts get which `VMTExpr`
- * wrappers. Then, using TermWriter, it translates the VMT terms to output strings, and adds sort/function declarations
- * and definitions.
+ * wrappers. Then, using TermToVMTWriter, it translates the VMT terms to output strings, and adds sort/function
+ * declarations and definitions.
  *
  * @author
  *   Jure Kukovec
  */
-class VMTWriter(gen: UniqueNameGenerator) {
+class TlaExToVMTWriter(gen: UniqueNameGenerator) {
 
   // Collector is used to aggregate all function definitions, uninterpreted literals and uninterpreted sorts
   // that appear in any operator anywhere, so we can declare them in the VMT file.
@@ -101,13 +101,13 @@ class VMTWriter(gen: UniqueNameGenerator) {
       }
       .toMap[String, UninterpretedSort]
 
-    val rewriter = new RewriterImpl(setConstants, gen)
+    val rewriter = new ToTermRewriterImpl(setConstants, gen)
 
     // Not sure what to do with CInits yet, we might want to add them ass axioms later
 //    val cinits = cInit.map { case (_, ex) =>
 //      rewriter.rewrite(ex)
 //    }
-//    val cinitStrs = cinits.map(TermWriter.mkSMT2String)
+//    val cinitStrs = cinits.map(TermToVMTWriter.mkSMT2String)
 
     // convenience shorthand
     def rewrite: TlaEx => Term = rewriter.rewrite
@@ -117,32 +117,32 @@ class VMTWriter(gen: UniqueNameGenerator) {
       Init(name, rewrite(ex))
     }
 
-    val initStrs = inits.map(TermWriter.mkVMTString)
+    val initStrs = inits.map(TermToVMTWriter.mkVMTString)
 
     // Each transition in nextTransitions needs the VMT wrapper Trans
     val transitions = nextTransitions.map { case (name, ex) =>
       Trans(name, rewrite(ex))
     }
 
-    val transStrs = transitions.map(TermWriter.mkVMTString)
+    val transStrs = transitions.map(TermToVMTWriter.mkVMTString)
 
     // Each invariant in invariants needs the VMT wrapper Invar
     val invs = invariants.zipWithIndex.map { case ((name, ex), i) =>
       Invar(name, i, rewrite(ex))
     }
 
-    val invStrs = invs.map(TermWriter.mkVMTString)
+    val invStrs = invs.map(TermToVMTWriter.mkVMTString)
 
     // Each variable v in varDecls needs the VMT binding Next(v, v')
     val nextBindings = varDecls.map { case d @ TlaVarDecl(name) =>
-      val sort = TypeToSortConverter.sortFromType(d.typeTag.asTlaType1())
+      val sort = TlaType1ToSortConverter.sortFromType(d.typeTag.asTlaType1())
       Next(nextName(name), mkVariable(name, sort), mkVariable(VMTprimeName(name), sort))
     }
 
-    val nextStrs = nextBindings.map(TermWriter.mkVMTString)
+    val nextStrs = nextBindings.map(TermToVMTWriter.mkVMTString)
 
     // Variable declarations
-    val smtVarDecls = varDecls.map(TermWriter.mkSMTDecl)
+    val smtVarDecls = varDecls.map(TermToVMTWriter.mkSMTDecl)
 
     // Now we declare constants and define functions aggregated by Collector
     val collector = new Collector
@@ -152,18 +152,18 @@ class VMTWriter(gen: UniqueNameGenerator) {
 
     // Sort declaration
     val allSorts = (setConstants.values ++ collector.uninterpSorts).toSet
-    val sortDecls = allSorts.map(TermWriter.mkSortDecl)
+    val sortDecls = allSorts.map(TermToVMTWriter.mkSortDecl)
 
     // Uninterpreted literal declaration and uniqueness assert
-    val ulitDecls = collector.uninterpLits.map(TermWriter.mkConstDecl)
+    val ulitDecls = collector.uninterpLits.map(TermToVMTWriter.mkConstDecl)
     val disticntAsserts = allSorts.flatMap { s =>
       val litsForSortS = collector.uninterpLits.filter {
         _.sort == s
       }
-      (if (litsForSortS.size > 1) Some(litsForSortS) else None).map(TermWriter.assertDistinct)
+      (if (litsForSortS.size > 1) Some(litsForSortS) else None).map(TermToVMTWriter.assertDistinct)
     }
 
-    OutputManager.withWriterInRunDir(VMTWriter.outFileName) { writer =>
+    OutputManager.withWriterInRunDir(TlaExToVMTWriter.outFileName) { writer =>
       writer.println(";Sorts")
       sortDecls.foreach(writer.println)
       writer.println()
@@ -194,6 +194,6 @@ class VMTWriter(gen: UniqueNameGenerator) {
 
 }
 
-object VMTWriter {
+object TlaExToVMTWriter {
   val outFileName = "output.vmt"
 }

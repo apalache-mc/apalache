@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
  * @author
  *   Jure Kukovec
  */
-class BoolRule(rewriter: Rewriter) extends FormulaRule {
+class BoolRule(rewriter: ToTermRewriter) extends FormulaRule {
   override def isApplicable(ex: TlaEx): Boolean =
     ex match {
       case OperEx(TlaBoolOper.and | TlaBoolOper.or | TlaBoolOper.not | TlaBoolOper.implies | TlaBoolOper.equiv, _*) =>

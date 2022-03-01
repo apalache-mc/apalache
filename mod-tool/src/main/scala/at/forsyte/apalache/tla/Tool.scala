@@ -30,7 +30,7 @@ import scala.collection.JavaConverters._
 import scala.util.Random
 import at.forsyte.apalache.io.ApalacheConfig
 import at.forsyte.apalache.io.ConfigManager
-import at.forsyte.apalache.tla.bmcmt.rules.vmt.VMTWriter
+import at.forsyte.apalache.tla.bmcmt.rules.vmt.TlaExToVMTWriter
 
 /**
  * Command line access to the APALACHE tools.
@@ -333,9 +333,9 @@ object Tool extends LazyLogging {
 
     val outFilePath = OutputManager.runDirPathOpt
       .map { p =>
-        p.resolve(VMTWriter.outFileName).toAbsolutePath
+        p.resolve(TlaExToVMTWriter.outFileName).toAbsolutePath
       }
-      .getOrElse(VMTWriter.outFileName)
+      .getOrElse(TlaExToVMTWriter.outFileName)
 
     runAndExit(
         executor,

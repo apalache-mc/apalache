@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.PassOptions
-import at.forsyte.apalache.tla.bmcmt.rules.vmt.VMTWriter
+import at.forsyte.apalache.tla.bmcmt.rules.vmt.TlaExToVMTWriter
 import at.forsyte.apalache.tla.lir.transformations.standard.Deprime
 import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule}
 import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, LanguageWatchdog, TransformationTracker}
@@ -48,7 +48,7 @@ class ReTLAToVMTTranspilePassImpl @Inject() (
     val vcInvs = getTransitionsWithNames(module, NormalizedNames.VC_INV_PREFIX)
     val vcActionInvs = getTransitionsWithNames(module, NormalizedNames.VC_ACTION_INV_PREFIX)
 
-    val vmtWriter = new VMTWriter(gen)
+    val vmtWriter = new TlaExToVMTWriter(gen)
 
     vmtWriter.annotateAndWrite(module.varDeclarations, module.constDeclarations, cinitP, initTrans, nextTrans,
         vcInvs ++ vcActionInvs)
