@@ -77,7 +77,7 @@ ReturnValueIsCorrect ==
         { i \in DOMAIN INPUT_SEQ: INPUT_SEQ[i] = INPUT_KEY }
     IN
     IF MatchingIndices /= {}
-    THEN \* Indices are start with 1, whereas returnValue start with 0
+    THEN \* Indices in TLA+ start with 1, whereas the Java returnValue starts with 0
         returnValue + 1 \in MatchingIndices
     ELSE returnValue < 0
 
