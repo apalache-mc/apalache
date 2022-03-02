@@ -456,9 +456,10 @@ class LazyEquality(rewriter: SymbStateRewriter)
     rewriter.solverContext.config.smtEncoding match {
       case `arraysEncoding` =>
         // In the arrays encoding we only cache the equalities between the elements of the functions' ranges
+        // This is because the ranges consist of pairs of form <arg,res>, thus the domains are also handled
         val leftElems = state.arena.getHas(leftRel)
         val rightElems = state.arena.getHas(rightRel)
-        cacheEqConstraints(state, leftElems.cross(rightElems)) // cache all the equalities
+        cacheEqConstraints(state, leftElems.cross(rightElems)) // Cache all the equalities
         eqCache.put(leftFun, rightFun, EqCache.EqEntry())
         state
 
@@ -468,7 +469,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
                 tla.eql(leftRel.toNameEx, rightRel.toNameEx)))
         eqCache.put(leftFun, rightFun, EqCache.EqEntry())
 
-        // restore the original expression and theory
+        // Restore the original expression and theory
         relEq.setRex(state.ex)
 
       case oddEncodingType =>

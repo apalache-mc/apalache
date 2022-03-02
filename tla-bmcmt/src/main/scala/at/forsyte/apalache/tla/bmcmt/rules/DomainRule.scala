@@ -32,7 +32,6 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
         val funState = rewriter.rewriteUntilDone(state.setRex(funEx))
         val funCell = funState.asCell
 
-        // no type information from the type finder is needed, as types are propagated in a straightforward manner
         funCell.cellType match {
           case RecordT(_) =>
             val dom = funState.arena.getDom(funCell)
