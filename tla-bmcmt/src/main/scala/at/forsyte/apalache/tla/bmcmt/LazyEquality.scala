@@ -262,7 +262,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
           // the type checker makes sure that this holds true
           assert(left.cellType.signature == right.cellType.signature)
           // These two sets have the same signature and thus belong to the same sort.
-          // Hence, we can use SMT equality. This equality is needed by uninterpreted functions.
+          // Hence, we can use SMT equality.
           val eq = tla.equiv(tla.eql(left.toNameEx, right.toNameEx), tla.and(leftToRight.ex, rightToLeft.ex))
           rewriter.solverContext.assertGroundExpr(eq)
           eqCache.put(left, right, EqCache.EqEntry())
