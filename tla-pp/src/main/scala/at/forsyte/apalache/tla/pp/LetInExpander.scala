@@ -80,7 +80,7 @@ class LetInExpander(tracker: TransformationTracker, keepNullary: Boolean) extend
 }
 
 object LetInExpander {
-  def apply(tracker: TransformationTracker, keepNullary: Boolean)(implicit typeTag: TypeTag): LetInExpander = {
+  def apply(tracker: TransformationTracker, keepNullary: Boolean): LetInExpander = {
     new LetInExpander(tracker, keepNullary)
   }
 }

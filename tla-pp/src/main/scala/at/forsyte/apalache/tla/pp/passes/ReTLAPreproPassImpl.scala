@@ -44,6 +44,7 @@ class ReTLAPreproPassImpl @Inject() (
 
     val transformationSequence: List[(String, TlaModuleTransformation)] =
       List(
+          ("UnchangedUnroll", ModuleByExTransformer(SimpleUnchangedUnroller(tracker))),
           ("PrimePropagation", createModuleTransformerForPrimePropagation(varSet)),
           ("UniqueRenamer", renaming.renameInModule),
           ("Normalizer", ModuleByExTransformer(Normalizer(tracker))),
