@@ -74,16 +74,16 @@ or if `bound` is not an integer, Apalache reports an error.
 ```tla
 \* produce an unrestricted integer
 LET \* @type: Int;
-    Gen(1)
+    oneInt == Gen(1)
 IN
 \* produce a set of integers up to 10 elements
 LET \* @type: Set(Int);
-    Gen(10)
+    setOfInts == Gen(10)
 IN
 \* produce a sequence of up to 10 elements
 \* that are integers up to 10 elements each
 LET \* @type: Seq(Set(Int));
-    Gen(10)
+    sequenceOfInts == Gen(10)
 IN
 ...
 ```
