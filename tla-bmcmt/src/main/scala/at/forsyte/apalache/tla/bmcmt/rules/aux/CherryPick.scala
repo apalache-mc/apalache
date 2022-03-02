@@ -830,7 +830,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
           nextState = nextState.updateArena(_.appendHasNoSmt(relationCell, pair)) // We only carry the metadata here
           // Since relationCell was updated above with the pair for the current arg, we can use appFun now
           nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.appFun(funCell.toNameEx, arg.toNameEx)))
-          val appFunRes = nextState.arena.topCell
+          val appFunRes = nextState.asCell
 
           cdm.cellType match {
             case _: PowSetT =>

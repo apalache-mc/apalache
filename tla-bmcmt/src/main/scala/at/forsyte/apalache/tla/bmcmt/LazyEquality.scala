@@ -450,18 +450,19 @@ class LazyEquality(rewriter: SymbStateRewriter)
    *   the new symbolic state
    */
   private def mkFunEq(state: SymbState, leftFun: ArenaCell, rightFun: ArenaCell): SymbState = {
+    val leftRel = state.arena.getCdm(leftFun)
+    val rightRel = state.arena.getCdm(rightFun)
+
     rewriter.solverContext.config.smtEncoding match {
       case `arraysEncoding` =>
         // In the arrays encoding we only cache the equalities between the elements of the functions' ranges
-        val leftElems = state.arena.getHas(state.arena.getCdm(leftFun))
-        val rightElems = state.arena.getHas(state.arena.getCdm(rightFun))
+        val leftElems = state.arena.getHas(leftRel)
+        val rightElems = state.arena.getHas(rightRel)
         cacheEqConstraints(state, leftElems.cross(rightElems)) // cache all the equalities
         eqCache.put(leftFun, rightFun, EqCache.EqEntry())
         state
 
       case `oopsla19Encoding` =>
-        val leftRel = state.arena.getCdm(leftFun)
-        val rightRel = state.arena.getCdm(rightFun)
         val relEq = mkSetEq(state, leftRel, rightRel)
         rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(leftFun.toNameEx, rightFun.toNameEx),
                 tla.eql(leftRel.toNameEx, rightRel.toNameEx)))
