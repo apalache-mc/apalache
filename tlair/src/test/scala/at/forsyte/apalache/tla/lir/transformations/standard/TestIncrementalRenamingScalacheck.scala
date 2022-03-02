@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import org.junit.runner.RunWith
 import org.scalacheck.Prop.{falsified, forAll, passed}
+import org.scalacheck.rng.Seed
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers
 import org.scalatest.BeforeAndAfter
@@ -21,6 +22,11 @@ class TestIncrementalRenamingScalacheck extends AnyFunSuite with BeforeAndAfter 
       override val maxArgs: Int = 10
     }
 
+    val seed = Seed.random()
+    println("Seed: " + seed)
+    // Seed.fromBase64("EZHv16SqkaRmnFtqaxgjtAl6A4txUaobuB6TUAex--N=").get / runtime: 100,000s
+    // Seed.fromBase64("8EGaX3jhW2vLAp7ia2iOBnInFpipRxj0EDhmc2HLq8L=").get / runtime: 348,729s
+    // Seed.fromBase64("b3kmuvCv_t_xquzZA9YL-JNNGgBMVyBta_5pEkJYIeG=").get / runtime: 2,519,944s
     val prop = {
       val ops = gens.simpleOperators ++ gens.arithOperators ++ gens.setOperators ++ gens.functionOperators
       val exGen = gens.genTlaEx(ops)(_)
@@ -39,7 +45,7 @@ class TestIncrementalRenamingScalacheck extends AnyFunSuite with BeforeAndAfter 
           case _: MalformedTlaError => passed
         }
       }
-    }
+    }.useSeed("", seed)   // parameter name is irrelevant
 
     check(prop, minSuccessful(2500), sizeRange(8))
   }
