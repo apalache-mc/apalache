@@ -21,7 +21,6 @@ class DomainRuleWithArrays(rewriter: SymbStateRewriter, intRangeCache: IntRangeC
         val funState = rewriter.rewriteUntilDone(state.setRex(funEx))
         val funCell = funState.asCell
 
-        // no type information from the type finder is needed, as types are propagated in a straightforward manner
         // TODO: consider records, tuples, and sequences in the arrays encoding
         funCell.cellType match {
           case RecordT(_) =>
