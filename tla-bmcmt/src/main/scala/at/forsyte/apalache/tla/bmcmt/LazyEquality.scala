@@ -267,7 +267,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
           rewriter.solverContext.assertGroundExpr(eq)
           eqCache.put(left, right, EqCache.EqEntry())
 
-          // recover the original expression and theory
+          // recover the original expression
           rightToLeft.setRex(state.ex)
         }
 
