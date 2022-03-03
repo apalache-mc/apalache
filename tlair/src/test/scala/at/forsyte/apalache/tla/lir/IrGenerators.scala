@@ -260,10 +260,10 @@ trait IrGenerators extends TlaType1Gen {
    * @return
    *   a generator of operator declarations
    */
-  def genTlaOperDecl(exGen: UserContext => Gen[TlaEx])(ctx: UserContext): Gen[TlaOperDecl] = {
+  def genTlaOperDecl(exGen: UserContext => Gen[TlaEx])(ctx: UserContext): Gen[TlaOperDecl] = sized { size =>
     for {
       name <- identifier.suchThat(n => !ctx.contains(n))
-      body <- exGen(ctx)
+      body <- resize(size - 1, exGen(ctx))
       nparams <- choose(0, maxArgs)
       params <- listOfN(nparams, identifier)
       tt <- genTypeTag
