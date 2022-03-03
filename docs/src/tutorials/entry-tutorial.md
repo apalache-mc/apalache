@@ -106,12 +106,15 @@ This module does not yet specify any part of the binary search implementation. H
 
  - It imports constants and operators from three standard modules: `Integers`,
    `Sequences`, and `Apalache`.
+ 
  - It declares the predicate `Init`. This predicate describes the initial
    states of our state machine. Since we have not declared any variables, it
    defines the single possible state.
+
  - It declares the predicate `Next`. This predicate describes the transitions
    of our state machine. Again, there are no variables and `Next == TRUE`, so
-   this transition goes from the initial state to itself.
+   this transition defines the entire set of states as reachable in a single
+   step.
 
 Now it is a good time to check that Apalache works. Run the following command:   
 
@@ -228,9 +231,13 @@ We introduce two additional variables, the purpose of which might be less obviou
 {{#include ../../../test/tla/bin-search/BinSearch2.tla:39:44}}
 ```
 
-The variable `isTerminated` indicates whether our search has terminated. Why
-do we even have to introduce it? Because, in general, computer systems do not
-have to terminate. If we want to specify the Internet or Bitcoin, do we
+The variable `isTerminated` indicates whether our search has terminated. Why do
+we even have to introduce it? Because, some computer systems are not designed
+with termination in mind. For instance, such distributed systems as the
+Internet and Bitcoin are designed to periodically serve incoming requests
+instead of producing a single output for a single input.
+
+If we want to specify the Internet or Bitcoin, do we
 understand what it means for them to terminate?
 
 The variable `returnValue` will contain the result of the binary search, when
@@ -256,16 +263,12 @@ Init ==
   low = 0 /\ high = Len(INPUT_SEQ) - 1 /\ isTerminated = FALSE /\ returnValue = 0
 ```
 
-You probably have guessed, what the above line means. You might be a bit
+You probably have guessed, what the above line means. Maybe you are a bit
 puzzled about the mountain-like operator `/\`. It is called *conjunction*,
 which is usually written as `&&` or `and` in programming languages. The
 important effect of the above expression is that every variable in the
 left-hand side of `=` is required to have the value specified in the right-hand
-side of `=`. It is important to know that TLA+ does not impose any particular
-order of evaluation for `/\`. However, both Apalache and TLC evaluate
-some expressions of the form `x = e` in the initialization predicate as
-assignments. Hence, it is often a good idea to think about `/\` as being
-evaluated from left to right.
+side of `=`[^assignment-order].
 
 As it is hard to fit many expressions in one line, TLA+ offers special syntax
 for writing a big conjunction. Here is the standard way of writing `Init`
@@ -277,6 +280,12 @@ for writing a big conjunction. Here is the standard way of writing `Init`
 
 The above lines do not deserve a lot of explanation. As you have probably guessed,
 `Len(INPUT_SEQ)` computes the length of the input sequence.
+
+[^assignment-order]: It is important to know that TLA+ does not impose any
+particular order of evaluation for `/\`. However, both Apalache and TLC
+evaluate some expressions of the form `x = e` in the initialization predicate
+as assignments.  Hence, it is often a good idea to think about `/\` as being
+evaluated from left to right.
 
 **Update variables.** Having done all the preparatory work, we are now ready to
 specify the behavior in lines 5 and 16 of `binarySearch`.
@@ -300,15 +309,26 @@ To this end, we redefine `Next` as follows:
 ```
 
 Most likely, you have no problem reading this definition, except for the part
-that includes `isTerminated'`, `returnValue'`, and `UNCHANGED`. The expression
-`isTerminated' = TRUE` means that `isTerminated` shall have the value `TRUE` in the
-next state of our state machine.  Likewise, `returnValue' = -(low + 1)` means that `returnValue` has
-the value `-(low + 1)` in the next state. The expression `UNCHANGED <<low,
-high>>` is a convenient shortcut for writing `low' = low /\ high' = high`. Readers unfamiliar with specification languages might question the purpose of `UNCHANGED`, since in most programming languages variables only change when they are explicitly changed. 
-However, a transition predicate, like `Next`, establishes a relation between pairs of states. 
-If we were to omit `UNCHANGED`, this would mean that we consider states in which `low` and `high` have _completely arbitrary_ values as valid successors. 
-This is clearly not how Java code should behave. 
-To encode Java semantics, we must therefore explicitly state that `low` and `high` do not change in this step.
+that includes `isTerminated'`, `returnValue'`, and `UNCHANGED`. Recall that a
+transition predicate, like `Next`, specifies the relation between two states of
+the state machine; the current state, the variables of which are referenced by
+unprimed names, and the successor-state, the variables of which are referenced
+by primed names.
+
+The expression `isTerminated' = TRUE` means that only states where
+`isTerminated` equals to `TRUE` can be successors of the current state. In
+general, `isTerminated'` could also odepend on the value of `isTerminated`, but
+here, it does not. Likewise, `returnValue' = -(low + 1)` means that
+`returnValue` has the value `-(low + 1)` in the next state. The expression
+`UNCHANGED <<low, high>>` is a convenient shortcut for writing `low' = low /\
+high' = high`.  Readers unfamiliar with specification languages might question
+the purpose of `UNCHANGED`, since in most programming languages variables only
+change when they are explicitly changed.  However, a transition predicate, like
+`Next`, establishes a relation between pairs of states.  If we were to omit
+`UNCHANGED`, this would mean that we consider states in which `low` and `high`
+have _completely arbitrary_ values as valid successors.  This is clearly not
+how Java code should behave.  To encode Java semantics, we must therefore
+explicitly state that `low` and `high` do not change in this step.
 
 It is important to understand that an expression like `returnValue' = -(low +
 1)` *does not immediately update* the variable on the left-hand side. Hence,
@@ -702,7 +722,8 @@ If we check our source of truth, that is, the Java documentation in
     If the range contains multiple elements with the specified value, there is
     no guarantee which one will be found.
 
-It is quite easy to add this constraint. This is where TLA+ starts to shine:
+It is quite easy to add this constraint [^no-pre]. This is where TLA+ starts to
+shine:
 
 ```tla
 {{#include ../../../test/tla/bin-search/BinSearch5.tla:80:88}}
@@ -727,6 +748,13 @@ hours. Not bad.
 *Exercise.* If you are impatient, you can check `PostconditionSorted` for the
 configuration that has integer width of 4 bits. It takes only a few seconds to
 explore all executions.
+
+[^no-pre]: Instead of checking whether `INPUT_SEQ` is sorted in the
+post-condition, we could restrict the constant `INPUT_SEQ` to be sorted in
+every execution. That would effectively move this constraint into the
+pre-condition of the search. Had we done that, we would not be able to observe
+the behavior of the search on the unsorted inputs. An important property is
+whether the search is terminating on all inputs.
 
 TODO: add the link to BinSearch1.tla when we have it on github.
 
@@ -1045,13 +1073,12 @@ the paper on [Proving Safety Properties][] by Leslie Lamport.
 
 This tutorial is rather long. This is because we wanted to show the evolution
 of a TLA+ specification, as we were writing it and checking it with Apalache.
-It took us 2-3 hours to iteratively develop a specification that is similar to
-the one demonstrated in this tutorial.
-
-There are many different styles of writing TLA+ specifications.
-One of our goals was to demonstrate the incremental approach to specification
-writing. In fact, this approach is not very different from incremental
-development of programs in the spirit of [Test-driven development][].
+There are many different styles of writing TLA+ specifications. One of our
+goals was to demonstrate the incremental approach to specification writing. In
+fact, this approach is not very different from incremental development of
+programs in the spirit of [Test-driven development][]. It took us 2-3 hours to
+iteratively develop a specification that is similar to the one demonstrated in
+this tutorial.
 
 This tutorial touches upon the basics of TLA+ and Apalache. For instance, we
 did not discuss non-determinism, as our specification is entirely
