@@ -166,6 +166,8 @@ that the tools are working.
 *Source files for this step*:
 [BinSearch1.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch1.tla).
 
+*Diffs*: [BinSearch1.tla.patch](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch1.tla.patch).
+
 The Java code of `binarySearch` accepts two parameters: an array of integers
 called `a`, and an integer called `key`. Similar to these parameters, we introduce
 two specification parameters (called `CONSTANTS` in TLA+):
@@ -218,6 +220,8 @@ $ apalache-mc check BinSearch1.tla
 
 *Source files for this step*:
 [BinSearch2.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch2.tla).
+
+*Diffs*: [BinSearch2.tla.patch](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch2.tla.patch).
 
 We start with the simplest possible case that occurs in `binarySearch`. Namely,
 we consider the case where `low > high`, that is, `binarySearch` never enters
@@ -427,6 +431,11 @@ expectations yet!
 and
 [MC3_8.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC3_8.tla).
 
+*Diffs*:
+[BinSearch3.tla.patch](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch3.tla.patch)
+and
+[MC3_8.tla.patch](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC3_8.tla.patch).
+
 What do we expect from binary search? We can check the Java documentation,
 e.g., [Arrays.java in OpenJDK][]:
 
@@ -513,6 +522,11 @@ Step 5, we will check `Postcondition` for all sequences admitted by `INT_WIDTH`.
 [BinSearch4.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch4.tla)
 and
 [MC4_8.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC4_8.tla).
+
+*Diffs*:
+[BinSearch4.tla.patch](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch4.tla.patch)
+and
+[MC4_8.tla.patch](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC4_8.tla.patch).
 
 We specify the loop of `binarySearch` in TLA+ as follows:
 
@@ -606,6 +620,11 @@ a detailed explanation in the section on [Assignments in Apalache][].
 [BinSearch5.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch5.tla)
 and
 [MC5_8.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC5_8.tla).
+
+*Diffs*:
+[BinSearch5.tla.patch](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch5.tla.patch)
+and
+[MC5_8.tla.patch](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC5_8.tla.patch).
 
 In this step, we are going to check the invariant `Postcondition` for all
 possible input sequences and all input keys (for a fixed bit-width).
@@ -795,6 +814,11 @@ whether the search is terminating on all inputs.
 and
 [MC6_8.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC6_8.tla).
 
+*Diffs*:
+[BinSearch6.tla.patch](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch6.tla.patch)
+and
+[MC6_8.tla.patch](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC6_8.tla.patch).
+
 Actually, we do not need 10 steps to check termination for the case `INT_WIDTH
 = 8`. If you recall the complexity of the binary search, it needs
 `ceil(log2(Len(INPUT_SEQ)))` steps to terminate.
@@ -866,6 +890,11 @@ It takes about 10 seconds to check `Progress` as well.
 and
 [MC7_8.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC7_8.tla).
 
+*Diffs*:
+[BinSearch7.tla.patch](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch7.tla.patch)
+and
+[MC7_8.tla.patch](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC7_8.tla.patch).
+
 Do you recall that our specification of the loop had a caveat? Let us have a
 look at this piece of the specification again:
 
@@ -930,6 +959,11 @@ issue that is caused by the integer overflow!
 and
 [MC8_8.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC8_8.tla).
 
+*Diffs*:
+[BinSearch8.tla.patch](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch8.tla.patch)
+and
+[MC8_8.tla.patch](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC8_8.tla.patch).
+
 As we have seen in Step 7, the cause of all errors in `PostconditionSorted`,
 `Termination`, and `Progress` is that the addition `low + high` overflows and
 thus the expression `INPUT_SEQ[mid + 1]` accesses `INPUT_SEQ` outside of its
@@ -987,6 +1021,11 @@ In state 1, we have `low + high = 116 + 59 > 2^7`. Since we have `INT_WIDTH
 [BinSearch9.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch9.tla)
 and
 [MC9_8.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC9_8.tla).
+
+*Diffs*:
+[BinSearch9.tla.patch](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch9.tla.patch)
+and
+[MC9_8.tla.patch](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC9_8.tla.patch).
 
 Let us apply the fix that was proposed by Joshua Bloch in [Nearly All Binary
 Searches and Mergesorts are Broken][]. Namely, we update this line of
@@ -1057,6 +1096,11 @@ Observe that it takes Apalache significantly more time.
 [BinSearch10.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch10.tla)
 and
 [MC10_8.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC10_8.tla).
+
+*Diffs*:
+[BinSearch10.tla.patch](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch10.tla.patch)
+and
+[MC10_8.tla.patch](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC10_8.tla.patch).
 
 We have reached our goals: TLA+ and Apalache helped us in finding the access
 bug and showing that its fix works. Now it is time to look back at the
