@@ -1829,6 +1829,14 @@ Found 10 error(s)
 EXITCODE: ERROR (12)
 ```
 
+### check TestSequences.tla reports no error
+
+```sh
+$ apalache-mc check --length=0 --inv=AllTests TestSequences.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check Test1343.tla reports no error
 
 Regression test for #1343
@@ -1853,6 +1861,16 @@ A regression test for using `--cinit` and hashes.
 
 ```sh
 $ apalache-mc check --inv=Inv --cinit=ConstInit TestHash2.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check Test1425.tla reports no error
+
+A regression test for assignments under quantification over empty sets.
+
+```sh
+$ apalache-mc check --length=1 Test1425.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```

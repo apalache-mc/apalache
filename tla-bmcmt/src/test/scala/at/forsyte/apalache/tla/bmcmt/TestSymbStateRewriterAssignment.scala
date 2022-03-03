@@ -85,7 +85,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     nextState.ex match {
       case NameEx(name) =>
         assert(arena.cellFalse().toString == name)
-        assert(nextState.binding.toMap.isEmpty)
+        assert(nextState.binding.toMap.contains("x'"))
 
       case _ =>
         fail("Unexpected rewriting result")

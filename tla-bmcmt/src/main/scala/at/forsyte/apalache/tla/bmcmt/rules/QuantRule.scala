@@ -1,14 +1,15 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, OracleHelper}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory, OracleHelper}
 import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir._
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * Rewrites \A x \in S: P and \E x \in S: P. The existential quantifier is often replaced with a constant (skolemized).
@@ -18,6 +19,7 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
  */
 class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogging {
   private val pickRule = new CherryPick(rewriter)
+  private val defaultValueFactory = new DefaultValueFactory(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -73,10 +75,18 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
     }
   }
 
-  private def isAssignmentInside(ex: TlaEx): Boolean = ex match {
-    case OperEx(ApalacheOper.assign, OperEx(TlaActionOper.prime, NameEx(_)), _) => true
-    case OperEx(_, args @ _*)                                                   => args.exists(isAssignmentInside)
-    case _                                                                      => false
+  private def findAssignedNames(ex: TlaEx): Map[String, TlaType1] = ex match {
+    case OperEx(ApalacheOper.assign, OperEx(TlaActionOper.prime, nex @ NameEx(name)), _) =>
+      Map(name -> nex.typeTag.asTlaType1)
+
+    case OperEx(_, args @ _*) =>
+      args.flatMap(findAssignedNames).toMap
+
+    case LetInEx(body, decls @ _*) =>
+      decls.flatMap(d => findAssignedNames(d.body)).toMap ++ findAssignedNames(body)
+
+    case _ =>
+      Map.empty
   }
 
   private def expandExistsOrForall(
@@ -87,7 +97,8 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
       predEx: TlaEx) = {
     rewriter.solverContext.log("; quantification over a finite set => expanding")
 
-    if (isAssignmentInside(predEx)) {
+    val assignedNames = findAssignedNames(predEx)
+    if (assignedNames.nonEmpty) {
       val msg =
         if (isExists) {
           "Assignments inside \\E are currently supported only for skolemizable existentials"
@@ -214,8 +225,16 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
       set: ArenaCell) = {
     val setCells = setState.arena.getHas(set)
     if (setCells.isEmpty) {
-      // \E x \in {}... is FALSE
-      setState.setRex(setState.arena.cellFalse().toNameEx)
+      // \E x \in {}: P is FALSE
+      // However, P may contain assignments inside. Bind the names to the default values.
+      val assignedNames = findAssignedNames(predEx)
+      var nextState = setState
+      for ((name, tp) <- assignedNames) {
+        nextState = defaultValueFactory.makeUpValue(nextState, CellT.fromType1(tp))
+        val newBinding = nextState.binding ++ Binding(name + "'" -> nextState.asCell)
+        nextState = nextState.setBinding(newBinding)
+      }
+      nextState.setRex(setState.arena.cellFalse().toNameEx)
     } else {
       skolemExistsInStaticallyNonEmptySet(setState, boundVar, predEx, set, setCells)
     }
