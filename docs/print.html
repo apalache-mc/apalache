@@ -334,6 +334,7 @@ that the tools are working.</p>
 <h2><a class="header" href="#step-1-introducing-specification-parameters" id="step-1-introducing-specification-parameters">Step 1: Introducing specification parameters</a></h2>
 <p><em>Source files for this step</em>:
 <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch1.tla">BinSearch1.tla</a>.</p>
+<p><em>Diffs</em>: <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch1.tla.patch">BinSearch1.tla.patch</a>.</p>
 <p>The Java code of <code>binarySearch</code> accepts two parameters: an array of integers
 called <code>a</code>, and an integer called <code>key</code>. Similar to these parameters, we introduce
 two specification parameters (called <code>CONSTANTS</code> in TLA+):</p>
@@ -392,6 +393,7 @@ type errors, execute:</p>
 <h2><a class="header" href="#step-2-specifying-the-base-case" id="step-2-specifying-the-base-case">Step 2: Specifying the base case</a></h2>
 <p><em>Source files for this step</em>:
 <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch2.tla">BinSearch2.tla</a>.</p>
+<p><em>Diffs</em>: <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch2.tla.patch">BinSearch2.tla.patch</a>.</p>
 <p>We start with the simplest possible case that occurs in <code>binarySearch</code>. Namely,
 we consider the case where <code>low &gt; high</code>, that is, <code>binarySearch</code> never enters
 the loop.</p>
@@ -594,6 +596,10 @@ expectations yet!</p>
 <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch3.tla">BinSearch3.tla</a>
 and
 <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC3_8.tla">MC3_8.tla</a>.</p>
+<p><em>Diffs</em>:
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch3.tla.patch">BinSearch3.tla.patch</a>
+and
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC3_8.tla.patch">MC3_8.tla.patch</a>.</p>
 <p>What do we expect from binary search? We can check the Java documentation,
 e.g., <a href="https://github.com/openjdk/jdk/blob/d7f31d0d53bfec627edc83ceb75fc6202891e186/src/java.base/share/classes/java/util/Arrays.java#L1662-L1698">Arrays.java in OpenJDK</a>:</p>
 <blockquote>
@@ -671,6 +677,10 @@ Step 5, we will check <code>Postcondition</code> for all sequences admitted by <
 <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch4.tla">BinSearch4.tla</a>
 and
 <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC4_8.tla">MC4_8.tla</a>.</p>
+<p><em>Diffs</em>:
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch4.tla.patch">BinSearch4.tla.patch</a>
+and
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC4_8.tla.patch">MC4_8.tla.patch</a>.</p>
 <p>We specify the loop of <code>binarySearch</code> in TLA+ as follows:</p>
 <pre><code class="language-tla">\* Computation step (lines 5-16)
 Next ==
@@ -772,6 +782,10 @@ a detailed explanation in the section on <a href="tutorials/../apalache/assignme
 <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch5.tla">BinSearch5.tla</a>
 and
 <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC5_8.tla">MC5_8.tla</a>.</p>
+<p><em>Diffs</em>:
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch5.tla.patch">BinSearch5.tla.patch</a>
+and
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC5_8.tla.patch">MC5_8.tla.patch</a>.</p>
 <p>In this step, we are going to check the invariant <code>Postcondition</code> for all
 possible input sequences and all input keys (for a fixed bit-width).</p>
 <p>Create the file <code>MC5_8.tla</code> with the following contents:</p>
@@ -966,6 +980,10 @@ whether the search is terminating on all inputs.</p>
 <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch6.tla">BinSearch6.tla</a>
 and
 <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC6_8.tla">MC6_8.tla</a>.</p>
+<p><em>Diffs</em>:
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch6.tla.patch">BinSearch6.tla.patch</a>
+and
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC6_8.tla.patch">MC6_8.tla.patch</a>.</p>
 <p>Actually, we do not need 10 steps to check termination for the case <code>INT_WIDTH = 8</code>. If you recall the complexity of the binary search, it needs
 <code>ceil(log2(Len(INPUT_SEQ)))</code> steps to terminate.</p>
 <p>To check this property, we add the number of steps as a variable in
@@ -1017,6 +1035,10 @@ write a simpler property, which demonstrates progress of the search:</p>
 <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch7.tla">BinSearch7.tla</a>
 and
 <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC7_8.tla">MC7_8.tla</a>.</p>
+<p><em>Diffs</em>:
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch7.tla.patch">BinSearch7.tla.patch</a>
+and
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC7_8.tla.patch">MC7_8.tla.patch</a>.</p>
 <p>Do you recall that our specification of the loop had a caveat? Let us have a
 look at this piece of the specification again:</p>
 <pre><code class="language-tla">    IF ~isTerminated
@@ -1105,6 +1127,10 @@ issue that is caused by the integer overflow!</p>
 <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch8.tla">BinSearch8.tla</a>
 and
 <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC8_8.tla">MC8_8.tla</a>.</p>
+<p><em>Diffs</em>:
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch8.tla.patch">BinSearch8.tla.patch</a>
+and
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC8_8.tla.patch">MC8_8.tla.patch</a>.</p>
 <p>As we have seen in Step 7, the cause of all errors in <code>PostconditionSorted</code>,
 <code>Termination</code>, and <code>Progress</code> is that the addition <code>low + high</code> overflows and
 thus the expression <code>INPUT_SEQ[mid + 1]</code> accesses <code>INPUT_SEQ</code> outside of its
@@ -1154,6 +1180,10 @@ State1 ==
 <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch9.tla">BinSearch9.tla</a>
 and
 <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC9_8.tla">MC9_8.tla</a>.</p>
+<p><em>Diffs</em>:
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch9.tla.patch">BinSearch9.tla.patch</a>
+and
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC9_8.tla.patch">MC9_8.tla.patch</a>.</p>
 <p>Let us apply the fix that was proposed by Joshua Bloch in <a href="https://ai.googleblog.com/2006/06/extra-extra-read-all-about-it-nearly.html">Nearly All Binary
 Searches and Mergesorts are Broken</a>. Namely, we update this line of
 <code>BinSearch8.tla</code>:</p>
@@ -1206,6 +1236,10 @@ Observe that it takes Apalache significantly more time.</p>
 <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch10.tla">BinSearch10.tla</a>
 and
 <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC10_8.tla">MC10_8.tla</a>.</p>
+<p><em>Diffs</em>:
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch10.tla.patch">BinSearch10.tla.patch</a>
+and
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC10_8.tla.patch">MC10_8.tla.patch</a>.</p>
 <p>We have reached our goals: TLA+ and Apalache helped us in finding the access
 bug and showing that its fix works. Now it is time to look back at the
 specification and make it easier to read.</p>
