@@ -648,8 +648,8 @@ checker to reason about one integer, though it ranges over the infinite set of
 integers.
 
 **Value generators.** Fortunately, this problem can be easily circumvented by
-using Apalache [Value generators][], which are inspired by property-based testing,
-e.g., [QuickCheck][].
+using Apalache [Value generators][][^generators].
+
 
 Let us rewrite `ConstInit` in `MC5_8.tla` as follows:
 
@@ -659,20 +659,30 @@ ConstInit ==
     /\ INPUT_SEQ = Gen(MAX_INT)
 ```
 
-In this new version, we use value generators to:
+In this new version, we use the Apalache operator `Gen` to:
 
   - produce an unrestricted integer to be used as a value of `INPUT_KEY` and
   - produce a sequence of integers to be used as a value of `INPUT_SEQ`. This
     sequence is unrestricted, except its length is bounded with `MAX_INT`,
     which is exactly what we need in our case study.
 
-In contrast to property-based testing, an Apalache generator is not randomly
-producing values. Rather, it simply introduces a data structure whose size is
-bounded with the argument of `Gen`. This lets Apalache check all instances of
-the data structure, without enumerating the instances!
+The operator `Gen` introduces a data structure of proper type whose size is
+bounded with the argument of `Gen`. For instance, the type of `INPUT_SEQ` is
+the sequence of integers, and thus `Gen(MAX_INT)` produces an unrestricted
+sequence of up to `MAX_INT` elements. This sequence is bound to the name
+`INPUT_SEQ`. For details, see [Value generators][]. This lets Apalache check
+all instances of the data structure, without enumerating the instances!
 
 By doing so, we are able to check the specification for all the inputs, when we
 fix the bit width. To quickly get feedback from Apalache, we fix `INT_WIDTH` to 8 in the model `MC5_8.tla`.
+
+[^generators]: If you know property-based testing, e.g., [QuickCheck][],
+Apalache generators are inspired by this idea. In contrast to property-based
+testing, an Apalache generator is not randomly producing values. Rather,
+Apalache simply introduces an unconstrained data structure (e.g., a set, a
+function, or a sequence) of the proper type. Hence, Apalache is reasoning about
+all possible instances of this data structure, instead of reasoning about a
+small set of randomly chosen instances.
 
 Let us check `Postcondition` again:
 
