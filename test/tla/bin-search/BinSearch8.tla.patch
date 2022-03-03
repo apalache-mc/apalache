@@ -1,0 +1,15 @@
+1c1
+< --------------------------- MODULE BinSearch7 ---------------------------------
+---
+> --------------------------- MODULE BinSearch8 ---------------------------------
+4a5
+>  * Version 8. Check the boundaries.
+142a144,151
+> \* Make sure that INPUT_SEQ is accessed within its bounds
+> InBounds ==
+>   LET mid == IAdd(low, high) \div 2 IN
+>   \* collect the conditions of IF-THEN-ELSE
+>   ~isTerminated =>
+>     ((low <= high) =>
+>       (mid + 1) \in DOMAIN INPUT_SEQ)
+> 

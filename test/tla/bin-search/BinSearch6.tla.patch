@@ -1,0 +1,60 @@
+1c1
+< --------------------------- MODULE BinSearch5 ---------------------------------
+---
+> --------------------------- MODULE BinSearch6 ---------------------------------
+4a5
+>  * Version 6. Check termination and progress.
+47c48,51
+<     returnValue
+---
+>     returnValue,
+>     \* The number of executed steps.
+>     \* @type: Int;
+>     nSteps
+54a59
+>     /\ nSteps = 0
+61,72c66,78
+<         LET mid == (low + high) \div 2 IN
+<         LET midVal == INPUT_SEQ[mid + 1] IN
+<           \//\ midVal < INPUT_KEY \* lines 9-10
+<             /\ low' = mid + 1
+<             /\ UNCHANGED <<high, returnValue, isTerminated>>
+<           \//\ midVal > INPUT_KEY \* lines 11-12
+<             /\ high' = mid -1
+<             /\ UNCHANGED <<low, returnValue, isTerminated>>
+<           \//\ midVal = INPUT_KEY \* lines 13-14
+<             /\ returnValue' = mid
+<             /\ isTerminated' = TRUE
+<             /\ UNCHANGED <<low, high>>
+---
+>         /\ nSteps' = nSteps + 1
+>         /\ LET mid == (low + high) \div 2 IN
+>            LET midVal == INPUT_SEQ[mid + 1] IN
+>             \//\ midVal < INPUT_KEY \* lines 9-10
+>               /\ low' = mid + 1
+>               /\ UNCHANGED <<high, returnValue, isTerminated>>
+>             \//\ midVal > INPUT_KEY \* lines 11-12
+>               /\ high' = mid -1
+>               /\ UNCHANGED <<low, returnValue, isTerminated>>
+>             \//\ midVal = INPUT_KEY \* lines 13-14
+>               /\ returnValue' = mid
+>               /\ isTerminated' = TRUE
+>               /\ UNCHANGED <<low, high>>
+76c82
+<         /\ UNCHANGED <<low, high>>
+---
+>         /\ UNCHANGED <<low, high, nSteps>>
+78c84
+<       UNCHANGED <<low, high, returnValue, isTerminated>>
+---
+>       UNCHANGED <<low, high, returnValue, isTerminated, nSteps>>
+113a120,128
+> \* We know the exact number of steps to show termination.
+> Termination ==
+>     (nSteps >= INT_WIDTH) => isTerminated
+> 
+> \* By showing that the interval [low, high] is contracting,
+> \* we can implicitly show termination too.
+> Progress ==
+>     ~isTerminated' => (low' > low \/ high' < high)
+> 

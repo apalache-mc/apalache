@@ -95,6 +95,9 @@ reasons for that:
 
 ## Step 0: Introducing a template module
 
+*Source files for this step*:
+[BinSearch0.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch0.tla).
+
 TLA+ is built around the concept of a state machine. The specified system
 starts in a state that is picked from the set of its *initial states*. This
 set of states is described with a predicate over states in TLA+. This predicate
@@ -158,11 +161,10 @@ run Apalache again and observe what happens.
 It is usually a good idea to start with a spec like `BinSearch0.tla`, to ensure
 that the tools are working.
 
-TODO: add the link to BinSearch0.tla when we have it on github.
-
 ## Step 1: Introducing specification parameters
 
-Copy `BinSearch0.tla` to `BinSearch1.tla` and open `BinSearch1.tla`.
+*Source files for this step*:
+[BinSearch1.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch1.tla).
 
 The Java code of `binarySearch` accepts two parameters: an array of integers
 called `a`, and an integer called `key`. Similar to these parameters, we introduce
@@ -212,11 +214,10 @@ type errors, execute:
 $ apalache-mc check BinSearch1.tla
 ```
 
-TODO: add the link to BinSearch1.tla when we have it on github.
-
 ## Step 2: Specifying the base case
 
-Copy `BinSearch1.tla` to `BinSearch2.tla` and open `BinSearch2.tla`.
+*Source files for this step*:
+[BinSearch2.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch2.tla).
 
 We start with the simplest possible case that occurs in `binarySearch`. Namely,
 we consider the case where `low > high`, that is, `binarySearch` never enters
@@ -350,9 +351,12 @@ It is important to understand that an expression like `returnValue' = -(low +
 computed after evaluation of `Next`. You can think of the effect of `x' = e`
 being delayed until the whole predicate `Next` is evaluated.
 
-TODO: add the link to BinSearch2.tla when we have it on github.
+## Step 2b: Basic checks for the base case
 
-## Step 3: Basic checks for the base case
+*Source files for this step*:
+[BinSearch2.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch2.tla)
+and
+[MC2_8.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC2_8.tla).
 
 As we discussed, it is a good habit to periodically run the model checker, as you are writing
 the specification. Even if it doesn't check much, you would be able to catch
@@ -416,12 +420,12 @@ told us that it has not found any contradictions. But it did not tell us
 anything interesting about our expectations. Because we have not set our
 expectations yet!
 
-TODO: add the link to BinSearch2.tla and MC2_8.tla when we have them on github.
+## Step 3: Specifying an invariant and checking it for the base case
 
-## Step 3b: Specifying an invariant and checking it for the base case
-
-Copy `MC2_8.tla` to `MC3_8.tla`. Copy `BinSearch2.tla` to `BinSearch3.tla` and
-open `BinSearch3.tla`.
+*Source files for this step*:
+[BinSearch3.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch3.tla)
+and
+[MC3_8.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC3_8.tla).
 
 What do we expect from binary search? We can check the Java documentation,
 e.g., [Arrays.java in OpenJDK][]:
@@ -503,12 +507,12 @@ This property holds true. However, it's a small win, as `MC3_8.tla` fixes all
 parameters. Hence, we have checked the property just for one data point. In
 Step 5, we will check `Postcondition` for all sequences admitted by `INT_WIDTH`.
 
-TODO: add the link to BinSearch3.tla and MC3_8.tla when we have them on github.
-
 ## Step 4: Specifying the loop (with a caveat)
 
-Copy `MC3_8.tla` to `MC4_8.tla`. Copy `BinSearch3.tla` to `BinSearch4.tla` and
-open `BinSearch4.tla`.
+*Source files for this step*:
+[BinSearch4.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch4.tla)
+and
+[MC4_8.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC4_8.tla).
 
 We specify the loop of `binarySearch` in TLA+ as follows:
 
@@ -596,12 +600,12 @@ Check the file `out/intermediate/09_OutTransition.tla`, which contains the
 preprocessed specification that has `Init` and `Next` decomposed. You can find
 a detailed explanation in the section on [Assignments in Apalache][].
 
-
-TODO: add the link to BinSearch4.tla and MC4_8.tla when we have them on github.
-
 ## Step 5: Checking Postcondition for plenty of inputs
 
-Copy `BinSearch4.tla` to `BinSearch5.tla` and open `BinSearch5.tla`.
+*Source files for this step*:
+[BinSearch5.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch5.tla)
+and
+[MC5_8.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC5_8.tla).
 
 In this step, we are going to check the invariant `Postcondition` for all
 possible input sequences and all input keys (for a fixed bit-width).
@@ -737,6 +741,11 @@ the search, rather our invariant `Postcondition` is imprecise.
 
 ## Step 5b: Fixing the postcondition
 
+*Source files for this step*:
+[BinSearch5.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch5.tla)
+and
+[MC5_8.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC5_8.tla).
+
 If we check our source of truth, that is, the Java documentation in
 [Arrays.java in OpenJDK][], we will see the following sentences:
 
@@ -779,12 +788,12 @@ pre-condition of the search. Had we done that, we would not be able to observe
 the behavior of the search on the unsorted inputs. An important property is
 whether the search is terminating on all inputs.
 
-TODO: add the link to BinSearch1.tla when we have it on github.
-
 ## Step 6: Checking termination and progress
 
-Copy `BinSearch5.tla` to `BinSearch6.tla`, copy `MC5_8.tla` to `MC6_8.tla` and
-open `BinSearch6.tla`.
+*Source files for this step*:
+[BinSearch6.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch6.tla)
+and
+[MC6_8.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC6_8.tla).
 
 Actually, we do not need 10 steps to check termination for the case `INT_WIDTH
 = 8`. If you recall the complexity of the binary search, it needs
@@ -852,8 +861,10 @@ It takes about 10 seconds to check `Progress` as well.
 
 ## Step 7: Fixed-width integers
 
-Copy `BinSearch6.tla` to `BinSearch7.tla`, copy `MC6_8.tla` to `MC7_8.tla` and
-open `BinSearch7.tla`.
+*Source files for this step*:
+[BinSearch7.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch7.tla)
+and
+[MC7_8.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC7_8.tla).
 
 Do you recall that our specification of the loop had a caveat? Let us have a
 look at this piece of the specification again:
@@ -912,12 +923,12 @@ Total time: 39.540 sec
 As we can see, all of our invariants are violated. They all demonstrate the
 issue that is caused by the integer overflow!
 
-TODO: add the link to BinSearchN.tla when we have it on github.
-
 ## Step 8: Checking the boundaries
 
-Copy `BinSearch7.tla` to `BinSearch8.tla`, copy `MC7_8.tla` to `MC8_8.tla` and
-open `BinSearch8.tla`.
+*Source files for this step*:
+[BinSearch8.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch8.tla)
+and
+[MC8_8.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC8_8.tla).
 
 As we have seen in Step 7, the cause of all errors in `PostconditionSorted`,
 `Termination`, and `Progress` is that the addition `low + high` overflows and
@@ -972,8 +983,10 @@ In state 1, we have `low + high = 116 + 59 > 2^7`. Since we have `INT_WIDTH
 
 ## Step 9: Fixing the access bug
 
-Copy `BinSearch8.tla` to `BinSearch9.tla`, copy `MC8_8.tla` to `MC9_8.tla` and
-open `BinSearch9.tla`.
+*Source files for this step*:
+[BinSearch9.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch9.tla)
+and
+[MC9_8.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC9_8.tla).
 
 Let us apply the fix that was proposed by Joshua Bloch in [Nearly All Binary
 Searches and Mergesorts are Broken][]. Namely, we update this line of
@@ -1038,12 +1051,12 @@ it takes Apalache significantly less time.
 *Exercise:* Change `INT_WIDTH` to 16 and check all these invariants once again.
 Observe that it takes Apalache significantly more time.
 
-TODO: add the link to BinSearchN.tla when we have it on github.
-
 ## Step 10: Beautifying the specification
 
-Copy `BinSearch9.tla` to `BinSearch10.tla`, copy `MC9_8.tla` to `MC10_8.tla` and
-open `BinSearch10.tla`.
+*Source files for this step*:
+[BinSearch10.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch10.tla)
+and
+[MC10_8.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC10_8.tla).
 
 We have reached our goals: TLA+ and Apalache helped us in finding the access
 bug and showing that its fix works. Now it is time to look back at the
@@ -1067,9 +1080,12 @@ called actions in TLA+. It is usually a good idea to decompose a large `Next`
 formula into actions. Normally, an action contains assignments to all primed
 variables.
 
-TODO: add the link to BinSearchN.tla when we have it on github.
-
 ## Discussion
+
+The final specifications can be found in
+[BinSearch10.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch10.tla)
+and
+[MC10_8.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/MC10_8.tla).
 
 In this tutorial we have shown how to:
 

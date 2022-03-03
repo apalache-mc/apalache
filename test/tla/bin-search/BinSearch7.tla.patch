@@ -1,0 +1,32 @@
+1c1
+< --------------------------- MODULE BinSearch6 ---------------------------------
+---
+> --------------------------- MODULE BinSearch7 ---------------------------------
+4a5
+>  * Version 7. Introduce bounded integers.
+52a54,66
+> \* Addition over fix-width integers.
+> IAdd(i, j) ==
+>     \* add two integers with unbounded arithmetic
+>     LET res == i + j IN
+>     IF MIN_INT <= res /\ res <= MAX_INT
+>     THEN res
+>     ELSE \* wrap the result over 2^INT_WIDTH (probably redundant)
+>         LET wrapped == res % MAX_UINT IN
+>         IF wrapped <= MAX_INT
+>         THEN wrapped    \* a positive integer, return as is
+>         ELSE \* complement the value to represent it with an unbounded integer
+>           -(MAX_UINT - wrapped)
+> 
+67c81
+<         /\ LET mid == (low + high) \div 2 IN
+---
+>         /\ LET mid == IAdd(low, high) \div 2 IN
+70c84
+<               /\ low' = mid + 1
+---
+>               /\ low' = IAdd(mid, 1)
+73c87
+<               /\ high' = mid -1
+---
+>               /\ high' = IAdd(mid, - 1)
