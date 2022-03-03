@@ -16,7 +16,7 @@ specification, check the comments in the original [Pluscal specification][].
 
  - [Entry-level Tutorial on the Model Checker][]
  - [Tutorial on Snowcat][] shows how to write type annotations for Apalache.
- - [TLA+ Cheatsheet in HTML][] summarizes the common TLA+ constructs.  If you
+ - [TLA+ Cheatsheet in HTML][] summarizes the common TLA+ constructs. If you
    prefer a printable version in pdf, check the [Summary of TLA+][].
 
 ## Setup
@@ -50,7 +50,7 @@ Since we are not interested in the TLAPS proof, we copy [Bakery.tla][] to
     ...
     ```
 
-Alternatively, you can download the module `TLAPS.tla`.    
+Alternatively, you can download the module `TLAPS.tla`.
 
 ## Step 1: Add a module with type annotations
 
@@ -63,7 +63,7 @@ Typing input error: Expected a type annotation for VARIABLE max
 ```
 
 The type checker complains about missing type annotations. See the [Tutorial on
-Snowcat][] for details. When we want to add type annotations to the variables,
+Snowcat][] for details. When we try to add type annotations to the variables,
 we run into an issue. Indeed, the variables are declared with the Pluscal
 syntax:
 
@@ -77,7 +77,7 @@ expected, as the Pluscal translator erases the comments.
 
 A simple solution is to add type annotations directly to the declarations in
 the generated TLA+ code. However, this solution is volatile. If we change the
-Pluscal code, our annotations will get overriden. We propose another solution
+Pluscal code, our annotations will get overridden. We propose another solution
 that is stable under modification of the Pluscal code. To this end, we
 introduce a new module called `BakeryTyped.tla` with the following contents:
 
