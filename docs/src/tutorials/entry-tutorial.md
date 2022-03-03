@@ -95,6 +95,19 @@ reasons for that:
 
 ## Step 0: Introducing a template module
 
+TLA+ is built around the concept of a state machine. The specified system
+starts in a state that is picked from the set of its *initial states*. This
+set of states is described with a predicate over states in TLA+. This predicate
+is usually called `Init`. Further, the state machine makes a *transition* from
+the current state to a successor state. These transitions are described with a
+predicate over pairs of states `(current, successor)` in TLA+. This predicate
+is usually called `Next`.
+
+We start with the simplest possible specification of a single-state machine.
+If we visualize it as a state diagram, it looks like follows:
+
+![Tux, the Linux mascot](./img/single.drawio.svg)
+
 Let's open a new file called `BinSearch0.tla` and type a very minimal module
 definition:
 
