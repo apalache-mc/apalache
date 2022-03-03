@@ -167,8 +167,8 @@ The outcome is: NoError
 It took me 0 days  0 hours  0 min  6 sec
 ```
 
-Second, we check that for every state that satisfies `IndInv`, the following
-holds true: Its successors via `Next` satisfy `IndInv` too. This is done as
+Second, we check that for every state that satisfies `Inv`, the following
+holds true: Its successors via `Next` satisfy `Inv` too. This is done as
 follows:
 
 ```sh
