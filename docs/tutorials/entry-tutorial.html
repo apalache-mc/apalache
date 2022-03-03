@@ -1,0 +1,1354 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Entry-level Model Checker Tutorial - Apalache Documentation</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Tutorials</li><li class="chapter-item expanded "><a href="../tutorials/entry-tutorial.html" class="active"><strong aria-hidden="true">1.</strong> Entry-level Model Checker Tutorial</a></li><li class="chapter-item expanded "><a href="../tutorials/snowcat-tutorial.html"><strong aria-hidden="true">2.</strong> Type Checker Tutorial</a></li><li class="chapter-item expanded "><a href="../tutorials/symbmc.html"><strong aria-hidden="true">3.</strong> Symbolic Model Checking</a></li><li class="chapter-item expanded affix "><li class="part-title">Apalache User Manual</li><li class="chapter-item expanded "><a href="../apalache/index.html"><strong aria-hidden="true">4.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../apalache/getting-started.html"><strong aria-hidden="true">5.</strong> Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/apalache-or-tlc.html"><strong aria-hidden="true">5.1.</strong> Shall I use Apalache or TLC?</a></li><li class="chapter-item expanded "><a href="../apalache/system-reqs.html"><strong aria-hidden="true">5.2.</strong> System Requirements</a></li><li class="chapter-item expanded "><a href="../apalache/installation/index.html"><strong aria-hidden="true">5.3.</strong> Installation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/installation/jvm.html"><strong aria-hidden="true">5.3.1.</strong> Prebuilt Packages</a></li><li class="chapter-item expanded "><a href="../apalache/installation/docker.html"><strong aria-hidden="true">5.3.2.</strong> Docker</a></li><li class="chapter-item expanded "><a href="../apalache/installation/source.html"><strong aria-hidden="true">5.3.3.</strong> Source</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/running.html"><strong aria-hidden="true">5.4.</strong> Running the Tool</a></li><li class="chapter-item expanded "><a href="../apalache/example.html"><strong aria-hidden="true">5.5.</strong> An Example TLA+ Specification</a></li><li class="chapter-item expanded "><a href="../apalache/parameters.html"><strong aria-hidden="true">5.6.</strong> Specification Parameters</a></li><li class="chapter-item expanded "><a href="../apalache/principles/index.html"><strong aria-hidden="true">5.7.</strong> Symbolic Model Checking with Apalache</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/principles/assignments.html"><strong aria-hidden="true">5.7.1.</strong> Assignments and symbolic transitions</a></li><li class="chapter-item expanded "><a href="../apalache/principles/folds.html"><strong aria-hidden="true">5.7.2.</strong> Folding sets and sequences</a></li><li class="chapter-item expanded "><a href="../apalache/principles/invariants.html"><strong aria-hidden="true">5.7.3.</strong> Invariants: State, Action, Trace</a></li><li class="chapter-item expanded "><a href="../apalache/principles/enumeration.html"><strong aria-hidden="true">5.7.4.</strong> Enumeration of counterexamples</a></li><li class="chapter-item expanded "><a href="../apalache/principles/apalache-mod.html"><strong aria-hidden="true">5.7.5.</strong> The Apalache Module</a></li><li class="chapter-item expanded "><a href="../apalache/principles/recursive.html"><strong aria-hidden="true">5.7.6.</strong> Recursive operators and functions</a></li><li class="chapter-item expanded "><a href="../apalache/principles/naturals.html"><strong aria-hidden="true">5.7.7.</strong> Naturals</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/config.html"><strong aria-hidden="true">5.8.</strong> Apalache global configuration file</a></li><li class="chapter-item expanded "><a href="../apalache/statistics.html"><strong aria-hidden="true">5.9.</strong> TLA+ Execution Statistics</a></li><li class="chapter-item expanded "><a href="../apalache/profiling.html"><strong aria-hidden="true">5.10.</strong> Profiling Your Specification</a></li><li class="chapter-item expanded "><a href="../apalache/theory.html"><strong aria-hidden="true">5.11.</strong> Five minutes of theory</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/tlc-config.html"><strong aria-hidden="true">6.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../apalache/typechecker-snowcat.html"><strong aria-hidden="true">7.</strong> The Snowcat Type Checker</a></li><li class="chapter-item expanded "><a href="../apalache/features.html"><strong aria-hidden="true">8.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../apalache/known-issues.html"><strong aria-hidden="true">9.</strong> Known Issues</a></li><li class="chapter-item expanded "><a href="../apalache/antipatterns.html"><strong aria-hidden="true">10.</strong> Antipatterns</a></li><li class="chapter-item expanded "><a href="../apalache/preprocessing.html"><strong aria-hidden="true">11.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../apalache/tuning.html"><strong aria-hidden="true">12.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../apalache/assignments-in-depth.html"><strong aria-hidden="true">13.</strong> Assignments and Symbolic Transitions in Depth</a></li><li class="chapter-item expanded "><a href="../apalache/kera.html"><strong aria-hidden="true">14.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded affix "><li class="part-title">HOWTOs</li><li class="chapter-item expanded "><a href="../HOWTOs/index.html"><strong aria-hidden="true">15.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../HOWTOs/howto-write-type-annotations.html"><strong aria-hidden="true">16.</strong> How to write type annotations</a></li><li class="chapter-item expanded "><a href="../HOWTOs/uninterpretedTypes.html"><strong aria-hidden="true">17.</strong> How to use uninterpreted types</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ Language Manual for Engineers</li><li class="chapter-item expanded "><a href="../lang/index.html"><strong aria-hidden="true">18.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">19.</strong> The standard operators of TLA+</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/booleans.html"><strong aria-hidden="true">19.1.</strong> Booleans</a></li><li class="chapter-item expanded "><a href="../lang/control-and-nondeterminism.html"><strong aria-hidden="true">19.2.</strong> Control And Nondeterminism</a></li><li class="chapter-item expanded "><a href="../lang/conditionals.html"><strong aria-hidden="true">19.3.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="../lang/integers.html"><strong aria-hidden="true">19.4.</strong> Integers</a></li><li class="chapter-item expanded "><a href="../lang/sets.html"><strong aria-hidden="true">19.5.</strong> Sets</a></li><li class="chapter-item expanded "><a href="../lang/logic.html"><strong aria-hidden="true">19.6.</strong> Logic</a></li><li class="chapter-item expanded "><a href="../lang/functions.html"><strong aria-hidden="true">19.7.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../lang/records.html"><strong aria-hidden="true">19.8.</strong> Records</a></li><li class="chapter-item expanded "><a href="../lang/tuples.html"><strong aria-hidden="true">19.9.</strong> Tuples</a></li><li class="chapter-item expanded "><a href="../lang/sequences.html"><strong aria-hidden="true">19.10.</strong> Sequences</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">19.11.</strong> Bags</div></li></ol></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">20.</strong> User-defined operators</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/user/top-level-operators.html"><strong aria-hidden="true">20.1.</strong> Top-level operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/let-in.html"><strong aria-hidden="true">20.2.</strong> LET-IN definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/higher-order-operators.html"><strong aria-hidden="true">20.3.</strong> Higher-order operators definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/lambdas.html"><strong aria-hidden="true">20.4.</strong> Anonymous operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/recursive-operators.html"><strong aria-hidden="true">20.5.</strong> Recursive operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/local-operators.html"><strong aria-hidden="true">20.6.</strong> Local operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/recursive-functions.html"><strong aria-hidden="true">20.7.</strong> Recursive functions</a></li></ol></li><li class="chapter-item expanded "><a href="../lang/apalache-operators.html"><strong aria-hidden="true">21.</strong> Apalache operators</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">22.</strong> Modules, Extends, and Instances</div></li><li class="chapter-item expanded affix "><li class="part-title">Idiomatic TLA+</li><li class="chapter-item expanded "><a href="../idiomatic/index.html"><strong aria-hidden="true">23.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../idiomatic/000keep-minimum-state-variables.html"><strong aria-hidden="true">24.</strong> Keep state variables to the minimum</a></li><li class="chapter-item expanded "><a href="../idiomatic/001assignments.html"><strong aria-hidden="true">25.</strong> Update state variables with assignments</a></li><li class="chapter-item expanded "><a href="../idiomatic/002primes.html"><strong aria-hidden="true">26.</strong> Apply primes only to state variables</a></li><li class="chapter-item expanded "><a href="../idiomatic/007if-then-else.html"><strong aria-hidden="true">27.</strong> Use Boolean operators in actions, not IF-THEN-ELSE</a></li><li class="chapter-item expanded "><a href="../idiomatic/003record-sets.html"><strong aria-hidden="true">28.</strong> Avoid sets of mixed records</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../adr/002adr-types.html"><strong aria-hidden="true">29.</strong> ADR-002: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/003adr-trex.html"><strong aria-hidden="true">30.</strong> ADR-003: transition executor (TRex)</a></li><li class="chapter-item expanded "><a href="../adr/004adr-annotations.html"><strong aria-hidden="true">31.</strong> ADR-004: code annotations</a></li><li class="chapter-item expanded "><a href="../adr/005adr-json.html"><strong aria-hidden="true">32.</strong> ADR-005: JSON Serialization Format</a></li><li class="chapter-item expanded "><a href="../adr/006rfc-unit-testing.html"><strong aria-hidden="true">33.</strong> RFC-006: unit tests and property-based tests</a></li><li class="chapter-item expanded "><a href="../adr/007adr-restructuring.html"><strong aria-hidden="true">34.</strong> ADR-007: restructuring</a></li><li class="chapter-item expanded "><a href="../adr/008adr-exceptions.html"><strong aria-hidden="true">35.</strong> ADR-008: exceptions</a></li><li class="chapter-item expanded "><a href="../adr/009adr-outputs.html"><strong aria-hidden="true">36.</strong> ADR-009: outputs</a></li><li class="chapter-item expanded "><a href="../adr/011adr-smt-arrays.html"><strong aria-hidden="true">37.</strong> ADR-011: alternative SMT encoding using arrays</a></li><li class="chapter-item expanded "><a href="../adr/015adr-trace.html"><strong aria-hidden="true">38.</strong> ADR-015: ITF: informal trace format</a></li><li class="chapter-item expanded "><a href="../adr/016adr-simple.html"><strong aria-hidden="true">39.</strong> ADR-016: Uninterpreted first-order logic fragment encoding</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache Documentation</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/informalsystems/apalache" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#entry-level-tutorial-on-the-model-checker" id="entry-level-tutorial-on-the-model-checker">Entry-level Tutorial on the Model Checker</a></h1>
+<p><strong>Difficulty: Blue trail – Easy</strong></p>
+<p>In this tutorial, we show how to turn an implementation of binary search into a
+TLA+ specification. This implementation is known to have an out-of-bounds
+error, which once existed in Java, see <a href="https://ai.googleblog.com/2006/06/extra-extra-read-all-about-it-nearly.html">Nearly All Binary Searches and
+Mergesorts are Broken</a> by Joshua Bloch (2006). Our goal is to write a
+specification after this implementation, not to write a specification of an
+abstract binary search algorithm. You can find such a specification and a proof
+in <a href="http://lamport.azurewebsites.net/tla/proving-safety.pdf">Proving Safety Properties</a> and <a href="https://github.com/tlaplus/Examples/blob/master/specifications/LoopInvariance/BinarySearch.tla">Binary search with a TLAPS proof</a> by
+<a href="https://lamport.azurewebsites.net/">Leslie Lamport</a> (2019).</p>
+<p>This tutorial is written under the assumption that the reader does not have any
+knowledge of TLA+ and Apalache. Since we are not diving into protocol and
+algorithm specifications too quickly, this is a nice example to start with. We
+demonstrate how to use Apalache to find errors that are caused by integer
+overflow and the out-of-bounds error, which is caused by this overflow. We
+also show that the same overflow error prevents the algorithm from terminating
+in the number of steps that is expected from the binary search. Normally it is
+expected that the binary search terminates in <code>log2(n)</code> steps, where <code>n</code> is the
+length of the search interval.</p>
+<p>Sometimes, we refer to the model checker TLC in this text. TLC is another
+model checker for TLA+ and was introduced in the late 90s.  If you are new
+to TLA+ and want to learn more about TLC, check the <a href="https://github.com/tlaplus/tlaplus/">TLC</a> project and the
+<a href="http://lamport.azurewebsites.net/video/videos.html">TLA+ Video Course</a> by Leslie Lamport. If you are an experienced TLC user,
+you will find this tutorial helpful too, as it demonstrates the strong points
+of Apalache.</p>
+<h2><a class="header" href="#related-documents" id="related-documents">Related documents</a></h2>
+<ul>
+<li><a href="./snowcat-tutorial.html">Tutorial on Snowcat</a> shows how to write type annotations for Apalache.</li>
+<li><a href="https://mbt.informal.systems/docs/tla_basics_tutorials/tla+cheatsheet.html">TLA+ Cheatsheet in HTML</a> summarizes the common TLA+ constructs.  If you
+prefer a printable version in pdf, check the <a href="https://lamport.azurewebsites.net/tla/summary-standalone.pdf">Summary of TLA+</a>.</li>
+</ul>
+<h2><a class="header" href="#setup" id="setup">Setup</a></h2>
+<p>We assume that you have Apalache installed. If not, check the manual page on
+<a href="../apalache/installation/index.html">Apalache installation</a>. The minimal required version is 0.22.0.</p>
+<h2><a class="header" href="#running-example-binary-search" id="running-example-binary-search">Running example: Binary search</a></h2>
+<p>We are not going to explain the idea of binary search in this tutorial. If you
+need more context on this, check the Wikipedia page on the <a href="https://en.wikipedia.org/wiki/Binary_search_algorithm">Binary search
+algorithm</a>. Let's jump straight into the Java code that is given in <a href="https://ai.googleblog.com/2006/06/extra-extra-read-all-about-it-nearly.html">Nearly All
+Binary Searches and Mergesorts are Broken</a>:</p>
+<pre><code class="language-java">1:     public static int binarySearch(int[] a, int key) {
+2:         int low = 0;
+3:         int high = a.length - 1;
+4:
+5:         while (low &lt;= high) {
+6:             int mid = (low + high) / 2;
+7:             int midVal = a[mid];
+8:
+9:             if (midVal &lt; key)
+10:                 low = mid + 1
+11:             else if (midVal &gt; key)
+12:                 high = mid - 1;
+13:             else
+14:                 return mid; // key found
+15:         }
+16:         return -(low + 1);  // key not found.
+17:     }
+</code></pre>
+<p>As was found by Joshua Bloch, the addition in line 6 may throw
+an out of bounds exception at line 7, due to an integer overflow. This is because <code>low</code>
+and <code>high</code> are signed integers, with a maximum value of <code>2^31 - 1</code>. 
+However, the sum of two values, each smaller than <code>2^31-1</code>, may be greater than <code>2^31 -1</code>. If this  is the case, <code>low + high</code> can wrap into a negative number.</p>
+<p>This bug was
+<a href="https://groups.google.com/g/tlaplus/c/msLltIcexF4/m/qnABiKJmDgAJ">discussed</a>
+in the TLA+ User Group in 2015. Let's see how TLA+ and Apalache can help us
+here. A bit of warning: The final TLA+ specification will happen to be longer
+than the 17 lines above. Don't get disappointed too fast. There are several
+reasons for that:</p>
+<ol>
+<li>
+<p>TLA+ is not tuned towards one particular class of algorithms, e.g.,
+sequential algorithms.</p>
+</li>
+<li>
+<p>Related to the previous point, TLA+ and Apalache are not tuned to C or Java
+programs. A software model checker such as <a href="https://www.cprover.org/cbmc/">CBMC</a>, <a href="https://stainless.epfl.ch/">Stainless</a>, or
+<a href="https://www.microsoft.com/en-us/research/project/q-program-verifier/">Coral</a> would probably accept a shorter program, and it would check it
+faster. However, if you have a sledgehammer like TLA+, you don't have to learn
+other languages.</p>
+</li>
+<li>
+<p>We explicitly state the expected properties of the algorithm to be checked
+by Apalache. In imperative languages, these properties are usually omitted or
+written as plain-text comments.</p>
+</li>
+<li>
+<p>We have to introduce a bit of boilerplate, to make Apalache work.</p>
+</li>
+</ol>
+<h2><a class="header" href="#step-0-introducing-a-template-module" id="step-0-introducing-a-template-module">Step 0: Introducing a template module</a></h2>
+<p>TLA+ is built around the concept of a state machine. The specified system
+starts in a state that is picked from the set of its <em>initial states</em>. This
+set of states is described with a predicate over states in TLA+. This predicate
+is usually called <code>Init</code>. Further, the state machine makes a <em>transition</em> from
+the current state to a successor state. These transitions are described with a
+predicate over pairs of states <code>(current, successor)</code> in TLA+. This predicate
+is usually called <code>Next</code>.</p>
+<p>We start with the simplest possible specification of a single-state machine.
+If we visualize it as a state diagram, it looks like follows:</p>
+<p><img src="./img/single.drawio.svg" alt="Tux, the Linux mascot" /></p>
+<p>Let's open a new file called <code>BinSearch0.tla</code> and type a very minimal module
+definition:</p>
+<pre><code class="language-tla">--------------------------- MODULE BinSearch0 ---------------------------------
+EXTENDS Integers, Sequences, Apalache
+
+Init == TRUE
+
+Next == TRUE
+
+===============================================================================
+</code></pre>
+<p>This module does not yet specify any part of the binary search implementation. However, it contains a few important things:</p>
+<ul>
+<li>
+<p>It imports constants and operators from three standard modules: <code>Integers</code>,
+<code>Sequences</code>, and <code>Apalache</code>.</p>
+</li>
+<li>
+<p>It declares the predicate <code>Init</code>. This predicate describes the initial
+states of our state machine. Since we have not declared any variables, it
+defines the single possible state.</p>
+</li>
+<li>
+<p>It declares the predicate <code>Next</code>. This predicate describes the transitions
+of our state machine. Again, there are no variables and <code>Next == TRUE</code>, so
+this transition defines the entire set of states as reachable in a single
+step.</p>
+</li>
+</ul>
+<p>Now it is a good time to check that Apalache works. Run the following command:</p>
+<pre><code class="language-sh">$ apalache-mc check BinSearch0.tla
+</code></pre>
+<p>The tool output is a bit verbose. Below, you can see the important lines of the
+output:</p>
+<pre><code>...
+PASS #13: BoundedChecker
+Step 0: picking a transition out of 1 transition(s)
+Step 1: picking a transition out of 1 transition(s)
+...
+Step 10: picking a transition out of 1 transition(s)
+The outcome is: NoError
+Checker reports no error up to computation length 10
+... 
+</code></pre>
+<p>We can see that Apalache runs without finding an error, as expected.</p>
+<p>If you are curious, replace <code>TRUE</code> with <code>FALSE</code> in either <code>Init</code> or <code>Next</code>,
+run Apalache again and observe what happens.</p>
+<p>It is usually a good idea to start with a spec like <code>BinSearch0.tla</code>, to ensure
+that the tools are working.</p>
+<p>TODO: add the link to BinSearch0.tla when we have it on github.</p>
+<h2><a class="header" href="#step-1-introducing-specification-parameters" id="step-1-introducing-specification-parameters">Step 1: Introducing specification parameters</a></h2>
+<p>Copy <code>BinSearch0.tla</code> to <code>BinSearch1.tla</code> and open <code>BinSearch1.tla</code>.</p>
+<p>The Java code of <code>binarySearch</code> accepts two parameters: an array of integers
+called <code>a</code>, and an integer called <code>key</code>. Similar to these parameters, we introduce
+two specification parameters (called <code>CONSTANTS</code> in TLA+):</p>
+<ul>
+<li>the input sequence <code>INPUT_SEQ</code>, and</li>
+<li>the element to search for <code>INPUT_KEY</code>.</li>
+</ul>
+<pre><code class="language-tla">--------------------------- MODULE BinSearch1 ---------------------------------
+EXTENDS Integers, Sequences, Apalache
+
+CONSTANTS
+    \* The input sequence.
+    \*
+    \* @type: Seq(Int);
+    INPUT_SEQ,
+    \* The key to search for.
+    \*
+    \* @type: Int;
+    INPUT_KEY,
+</code></pre>
+<p>Importantly, the constants <code>INPUT_SEQ</code> and <code>INPUT_KEY</code> are prefixed with type
+annotations in the comments:</p>
+<ul>
+<li><code>INPUT_SEQ</code> has the type <code>Seq(Int)</code>, that is, it is a sequence of integers (sequences in TLA+ are indexed), and</li>
+<li><code>INPUT_KEY</code> has the type <code>Int</code>, that is, it is an integer.</li>
+</ul>
+<p>Recall that we wanted to specify signed and unsigned Java integers, which are
+32 bit long. <em>TLA+ is not tuned towards any computer architecture.</em> Its integers
+are mathematical integers: always signed and arbitrarily large (unbounded).
+To model fixed bit-width integers, we introduce another constant <code>INT_WIDTH</code> of
+type <code>Int</code>:</p>
+<pre><code class="language-tla">    \* Bit-width of machine integers.
+    \*
+    \* @type: Int;
+    INT_WIDTH
+</code></pre>
+<p>The benefit of defining the bit width as a parameter is that we can try
+our specification for various bit widths of integers: 4-bit, 8-bit, 16-bit, 32-bit,
+etc.  Similar to many programming languages, we introduce several constant
+definitions (<code>a^b</code> is <code>a</code> taken to the power of <code>b</code>):</p>
+<pre><code class="language-tla">\* the largest value of an unsigned integer
+MAX_UINT == 2^INT_WIDTH
+\* the largest value of a signed integer
+MAX_INT  == 2^(INT_WIDTH - 1) - 1
+\* the smallest value of a signed integer
+MIN_INT  == -2^(INT_WIDTH - 1)
+
+</code></pre>
+<p>Note that these definitions do not constrain integers in any way. They are
+simply convenient names for the constants that we will need in the
+specification.</p>
+<p>To make sure that the new specification does not contain syntax errors or
+type errors, execute:</p>
+<pre><code class="language-sh">$ apalache-mc check BinSearch1.tla
+</code></pre>
+<p>TODO: add the link to BinSearch1.tla when we have it on github.</p>
+<h2><a class="header" href="#step-2-specifying-the-base-case" id="step-2-specifying-the-base-case">Step 2: Specifying the base case</a></h2>
+<p>Copy <code>BinSearch1.tla</code> to <code>BinSearch2.tla</code> and open <code>BinSearch2.tla</code>.</p>
+<p>We start with the simplest possible case that occurs in <code>binarySearch</code>. Namely,
+we consider the case where <code>low &gt; high</code>, that is, <code>binarySearch</code> never enters
+the loop.</p>
+<p><strong>Introduce variables</strong>. To do that, we have to finally introduce some
+variables. Obviously, we have to introduce variables <code>low</code> and <code>high</code>. This is
+how we do it:</p>
+<pre><code class="language-tla">VARIABLES
+    \* The low end of the search interval (inclusive).
+    \* @type: Int;
+    low,
+    \* The high end of the search interval (inclusive).
+    \* @type: Int;
+    high,
+</code></pre>
+<p>The variables <code>low</code> and <code>high</code> are called <em>state variables</em>. They define a state of our state machine. That is, they are never introduced and
+never removed. Remember, TLA+ is not tuned towards any particular computer
+architecture and thus it does not even have the notion of an execution stack.
+You can think of <code>low</code> and <code>high</code> as being global variables. Yes, global
+variables are generally frowned upon in programming languages. However, when dealing with a
+specification, they are much easier to reason about than the execution stack.
+We will demonstrate how to introduce local definitions later in this tutorial.</p>
+<p>We introduce two additional variables, the purpose of which might be less obvious:</p>
+<pre><code class="language-tla">    \* Did the algorithm terminate.
+    \* @type: Bool;
+    isTerminated,
+    \* The result when terminated.
+    \* @type: Int;
+    returnValue
+</code></pre>
+<p>The variable <code>isTerminated</code> indicates whether our search has terminated. Why do
+we even have to introduce it? Because, some computer systems are not designed
+with termination in mind. For instance, such distributed systems as the
+Internet and Bitcoin are designed to periodically serve incoming requests
+instead of producing a single output for a single input.</p>
+<p>If we want to specify the Internet or Bitcoin, do we
+understand what it means for them to terminate?</p>
+<p>The variable <code>returnValue</code> will contain the result of the binary search, when
+the search terminates. Recall, there is no execution stack. Hence, we introduce
+the variable <code>returnValue</code> right away. The downside is that we have to do
+book-keeping for this variable.</p>
+<p><strong>Initialize variables.</strong> Having introduced the variables, we have to
+initialize them. That is, we want to specify lines 2-3 of the Java code:</p>
+<pre><code class="language-java">1:     public static int binarySearch(int[] a, int key) {
+2:         int low = 0;
+3:         int high = a.length - 1;
+           ...
+17:    }
+</code></pre>
+<p>To this end, we change the body of the predicate <code>Init</code> to the following:</p>
+<pre><code class="language-tla">Init ==
+  low = 0 /\ high = Len(INPUT_SEQ) - 1 /\ isTerminated = FALSE /\ returnValue = 0
+</code></pre>
+<p>You probably have guessed, what the above line means. Maybe you are a bit
+puzzled about the mountain-like operator <code>/\</code>. It is called <em>conjunction</em>,
+which is usually written as <code>&amp;&amp;</code> or <code>and</code> in programming languages. The
+important effect of the above expression is that every variable in the
+left-hand side of <code>=</code> is required to have the value specified in the right-hand
+side of <code>=</code><sup class="footnote-reference"><a href="#assignment-order">1</a></sup>.</p>
+<p>As it is hard to fit many expressions in one line, TLA+ offers special syntax
+for writing a big conjunction. Here is the standard way of writing <code>Init</code>
+(indentation is important):</p>
+<pre><code class="language-tla">\* Initialization step (lines 2-3)
+Init ==
+    /\ low = 0
+    /\ high = Len(INPUT_SEQ) - 1
+    /\ isTerminated = FALSE
+    /\ returnValue = 0
+</code></pre>
+<p>The above lines do not deserve a lot of explanation. As you have probably guessed,
+<code>Len(INPUT_SEQ)</code> computes the length of the input sequence.</p>
+<div class="footnote-definition" id="assignment-order"><sup class="footnote-definition-label">1</sup>
+<p>It is important to know that TLA+ does not impose any
+particular order of evaluation for <code>/\</code>. However, both Apalache and TLC
+evaluate some expressions of the form <code>x = e</code> in the initialization predicate
+as assignments.  Hence, it is often a good idea to think about <code>/\</code> as being
+evaluated from left to right.</p>
+</div>
+<p><strong>Update variables.</strong> Having done all the preparatory work, we are now ready to
+specify the behavior in lines 5 and 16 of <code>binarySearch</code>.</p>
+<pre><code class="language-java">1:     public static int binarySearch(int[] a, int key) {
+2:         int low = 0;
+3:         int high = a.length - 1;
+4:
+5:         while (low &lt;= high) {
+            ...
+15:        }
+16:        return -(low + 1);  // key not found.
+17:    }
+</code></pre>
+<p>To this end, we redefine <code>Next</code> as follows:</p>
+<pre><code class="language-tla">\* Computation step (lines 5-16)
+Next ==
+    IF ~isTerminated
+    THEN IF low &lt;= high
+      THEN          \* lines 6-14: not implemented yet
+        UNCHANGED &lt;&lt;low, high, isTerminated, returnValue&gt;&gt;
+      ELSE          \* line 16
+        /\ isTerminated' = TRUE
+        /\ returnValue' = -(low + 1)
+        /\ UNCHANGED &lt;&lt;low, high&gt;&gt;
+</code></pre>
+<p>Most likely, you have no problem reading this definition, except for the part
+that includes <code>isTerminated'</code>, <code>returnValue'</code>, and <code>UNCHANGED</code>. Recall that a
+transition predicate, like <code>Next</code>, specifies the relation between two states of
+the state machine; the current state, the variables of which are referenced by
+unprimed names, and the successor-state, the variables of which are referenced
+by primed names.</p>
+<p>The expression <code>isTerminated' = TRUE</code> means that only states where
+<code>isTerminated</code> equals to <code>TRUE</code> can be successors of the current state. In
+general, <code>isTerminated'</code> could also odepend on the value of <code>isTerminated</code>, but
+here, it does not. Likewise, <code>returnValue' = -(low + 1)</code> means that
+<code>returnValue</code> has the value <code>-(low + 1)</code> in the next state. The expression
+<code>UNCHANGED &lt;&lt;low, high&gt;&gt;</code> is a convenient shortcut for writing <code>low' = low /\ high' = high</code>.  Readers unfamiliar with specification languages might question
+the purpose of <code>UNCHANGED</code>, since in most programming languages variables only
+change when they are explicitly changed.  However, a transition predicate, like
+<code>Next</code>, establishes a relation between pairs of states.  If we were to omit
+<code>UNCHANGED</code>, this would mean that we consider states in which <code>low</code> and <code>high</code>
+have <em>completely arbitrary</em> values as valid successors.  This is clearly not
+how Java code should behave.  To encode Java semantics, we must therefore
+explicitly state that <code>low</code> and <code>high</code> do not change in this step.</p>
+<p>It is important to understand that an expression like <code>returnValue' = -(low + 1)</code> <em>does not immediately update</em> the variable on the left-hand side. Hence,
+<code>returnValue</code> still refers to the value in the state before evaluation of
+<code>Next</code>, whereas <code>returnValue'</code> refers to the value in the state that is
+computed after evaluation of <code>Next</code>. You can think of the effect of <code>x' = e</code>
+being delayed until the whole predicate <code>Next</code> is evaluated.</p>
+<p>TODO: add the link to BinSearch2.tla when we have it on github.</p>
+<h2><a class="header" href="#step-3-basic-checks-for-the-base-case" id="step-3-basic-checks-for-the-base-case">Step 3: Basic checks for the base case</a></h2>
+<p>As we discussed, it is a good habit to periodically run the model checker, as you are writing
+the specification. Even if it doesn't check much, you would be able to catch
+the moment when the model checker slows down. This may give you a useful
+hint about changing a few things before you have written too much code.</p>
+<p>Let us check <code>BinSearch2.tla</code>:</p>
+<pre><code class="language-sh">$ apalache-mc check BinSearch2.tla
+</code></pre>
+<p>If it is your first TLA+ specification, you may be surprised by this error:</p>
+<pre><code>...
+PASS #13: BoundedChecker
+This error may show up when CONSTANTS are not initialized.
+Check the manual: https://apalache.informal.systems/docs/apalache/parameters.html
+Input error (see the manual): SubstRule: Variable INPUT_SEQ is not assigned a value
+...
+</code></pre>
+<p>Apalache complains that we have declared several constants (<code>INPUT_SEQ</code>,
+<code>INPUT_KEY</code>, and <code>INT_WIDTH</code>), but we have never defined them.</p>
+<p><strong>Adding a model file.</strong> The standard approach in this case is either to fix
+all constants, or to introduce another module that
+fixes the parameters and instantiates the general specification. Although
+Apalache supports <a href="../apalache/parameters.html#tlc-configuration-file">TLC Configuration Files</a>, for the purpose of this tutorial,
+we will stick to tool-agnostic TLA+ syntax.</p>
+<p>To this end, we add a new file <code>MC2_8.tla</code> with the following contents:</p>
+<pre><code class="language-tla">-------------------------- MODULE MC2_8 ---------------------------------------
+\* an instance of BinSearch2 with all parameters fixed
+
+\* fix 8 bits
+INT_WIDTH == 8
+\* the input sequence to try
+\* @type: Seq(Int);
+INPUT_SEQ == &lt;&lt; &gt;&gt;
+\* the element to search for
+INPUT_KEY == 10
+
+\* introduce the variables to be used in BinSearch2
+VARIABLES
+    \* @type: Int;
+    low,
+    \* @type: Int;
+    high,
+    \* @type: Bool;
+    isTerminated,
+    \* @type: Int;
+    returnValue
+
+\* use an instance for the fixed constants
+INSTANCE BinSearch2
+</code></pre>
+<p>As you can see, we fix the values of all parameters. We are instantiating
+the module <code>BinSearch2</code> with these fixed parameters. Since instantiation
+requires all constants and variables to be defined, we copy the variables
+definitions from <code>BinSearch2.tla</code>.</p>
+<p>Since we are fixing the parameters with concrete values, <code>MC2_8.tla</code> looks very
+much like a unit test. It's a good start for debugging a few things, but since
+our program is entirely sequential, our specification is as good as a unit
+test. Later in this tutorial we will show how to leverage Apalache to check
+properties for all possible inputs (up to some bound).</p>
+<p>Let us check <code>MC2_8.tla</code>:</p>
+<pre><code class="language-sh">$ apalache-mc check MC2_8.tla
+...
+Checker reports no error up to computation length 10
+</code></pre>
+<p>This time Apalache has not complained. This is a good time to stop and think
+about whether the model checker has told us anything interesting. Kind of. It
+told us that it has not found any contradictions. But it did not tell us
+anything interesting about our expectations. Because we have not set our
+expectations yet!</p>
+<p>TODO: add the link to BinSearch2.tla and MC2_8.tla when we have them on github.</p>
+<h2><a class="header" href="#step-3b-specifying-an-invariant-and-checking-it-for-the-base-case" id="step-3b-specifying-an-invariant-and-checking-it-for-the-base-case">Step 3b: Specifying an invariant and checking it for the base case</a></h2>
+<p>Copy <code>MC2_8.tla</code> to <code>MC3_8.tla</code>. Copy <code>BinSearch2.tla</code> to <code>BinSearch3.tla</code> and
+open <code>BinSearch3.tla</code>.</p>
+<p>What do we expect from binary search? We can check the Java documentation,
+e.g., <a href="https://github.com/openjdk/jdk/blob/d7f31d0d53bfec627edc83ceb75fc6202891e186/src/java.base/share/classes/java/util/Arrays.java#L1662-L1698">Arrays.java in OpenJDK</a>:</p>
+<blockquote>
+<p>...the return value will be &gt;= 0 if and only if the key is found.</p>
+</blockquote>
+<p>This property is actually quite easy to write in TLA+. First, we
+introduce the property that we call <code>ReturnValueIsCorrect</code>:</p>
+<pre><code class="language-tla">\* The property of particular interest is this one:
+\*
+\* &quot;Note that this guarantees that the return value will be &gt;= 0 if
+\*  and only if the key is found.&quot;
+ReturnValueIsCorrect ==
+    LET MatchingIndices ==
+        { i \in DOMAIN INPUT_SEQ: INPUT_SEQ[i] = INPUT_KEY }
+    IN
+    IF MatchingIndices /= {}
+    THEN \* Indices in TLA+ start with 1, whereas the Java returnValue starts with 0
+        returnValue + 1 \in MatchingIndices
+    ELSE returnValue &lt; 0
+
+</code></pre>
+<p>Let us decompose this property into smaller pieces. First, we define the set
+<code>MatchingIndices</code>:</p>
+<pre><code class="language-tla">ReturnValueIsCorrect ==
+    LET MatchingIndices ==
+        { i \in DOMAIN INPUT_SEQ: INPUT_SEQ[i] = INPUT_KEY }
+</code></pre>
+<p>With this TLA+ expression we define a <em>local constant</em> called <code>MatchingIndices</code>
+that is equal to the set of indices <code>i</code> in <code>INPUT_SEQ</code> so that the sequence
+elements at these indices are equal to <code>INPUT_KEY</code>. If this syntax
+is hard to parse for you, here is how we could write a similar definition in a
+functional programming language (Scala):</p>
+<pre><code class="language-scala">val MatchingIndices =
+    INPUT_SEQ.indices.toSet.filter { i =&gt; INPUT_SEQ(i) == INPUT_KEY }
+</code></pre>
+<p>Since the
+sequence indices in TLA+ start with 1, we require that <code>returnValue + 1</code>
+belongs to <code>MatchingIndices</code> when <code>MatchingIndices</code> is non-empty. If
+<code>MatchingIndices</code> is empty, we require <code>returnValue</code> to be negative.</p>
+<p>We can check that the property <code>ReturnValueIsCorrect</code> is an <em>invariant</em>, that
+is, it holds in every state that is reachable from the states specified by <code>Init</code>
+via a sequence of transitions specified by <code>Next</code>:</p>
+<pre><code class="language-sh">$ apalache-mc check --inv=ReturnValueIsCorrect MC3_8.tla
+</code></pre>
+<p>This property is violated in the initial state. To see why, check the file
+<code>counterexample1.tla</code>.</p>
+<p>Actually, we only expect this property to hold after the computation terminates,
+that is, when <code>isTerminated</code> equals to <code>TRUE</code>. Hence, we add the following
+invariant:</p>
+<pre><code class="language-tla">\* What we expect from the search when it is finished.
+Postcondition ==
+    isTerminated =&gt; ReturnValueIsCorrect
+</code></pre>
+<p><strong>Digression: Boolean connectives.</strong> In the above code, the operator <code>=&gt;</code> is
+the <a href="https://en.wikipedia.org/wiki/Material_conditional">Classical implication</a>. In general, <code>A =&gt; B</code> is equivalent to <code>IF A THEN B ELSE TRUE</code>. The implication <code>A =&gt; B</code> is also equivalent to the TLA+
+expression <code>~A \/ B</code>, which one can read as &quot;not A holds, or B holds&quot;. The
+operator <code>\/</code> is called <em>disjunction</em>. As a reminder, here is the standard
+truth table for the Boolean connectives, which are no different from the
+Boolean logic in TLA+:</p>
+<table><thead><tr><th><code>A</code></th><th><code>B</code></th><th><code>~A</code></th><th><code>A \/ B</code></th><th><code>A /\ B</code></th><th><code>A =&gt; B</code></th></tr></thead><tbody>
+<tr><td><code>FALSE</code></td><td><code>FALSE</code></td><td><code>TRUE</code></td><td><code>FALSE</code></td><td><code>FALSE</code></td><td><code>TRUE</code></td></tr>
+<tr><td><code>FALSE</code></td><td><code>TRUE</code></td><td><code>TRUE</code></td><td><code>TRUE</code></td><td><code>FALSE</code></td><td><code>TRUE</code></td></tr>
+<tr><td><code>TRUE</code></td><td><code>FALSE</code></td><td><code>FALSE</code></td><td><code>TRUE</code></td><td><code>FALSE</code></td><td><code>FALSE</code></td></tr>
+<tr><td><code>TRUE</code></td><td><code>TRUE</code></td><td><code>FALSE</code></td><td><code>TRUE</code></td><td><code>TRUE</code></td><td><code>TRUE</code></td></tr>
+</tbody></table>
+<p><strong>Checking Postcondition.</strong>
+Let us check <code>Postcondition</code> on <code>MC3_8.tla</code>:</p>
+<pre><code class="language-sh">$ apalache-mc check --inv=Postcondition MC3_8.tla
+</code></pre>
+<p>This property holds true. However, it's a small win, as <code>MC3_8.tla</code> fixes all
+parameters. Hence, we have checked the property just for one data point. In
+Step 5, we will check <code>Postcondition</code> for all sequences admitted by <code>INT_WIDTH</code>.</p>
+<p>TODO: add the link to BinSearch3.tla and MC3_8.tla when we have them on github.</p>
+<h2><a class="header" href="#step-4-specifying-the-loop-with-a-caveat" id="step-4-specifying-the-loop-with-a-caveat">Step 4: Specifying the loop (with a caveat)</a></h2>
+<p>Copy <code>MC3_8.tla</code> to <code>MC4_8.tla</code>. Copy <code>BinSearch3.tla</code> to <code>BinSearch4.tla</code> and
+open <code>BinSearch4.tla</code>.</p>
+<p>We specify the loop of <code>binarySearch</code> in TLA+ as follows:</p>
+<pre><code class="language-tla">\* Computation step (lines 5-16)
+Next ==
+    IF ~isTerminated
+    THEN IF low &lt;= high
+      THEN          \* lines 6-14
+        LET mid == (low + high) \div 2 IN
+        LET midVal == INPUT_SEQ[mid + 1] IN
+          \//\ midVal &lt; INPUT_KEY \* lines 9-10
+            /\ low' = mid + 1
+            /\ UNCHANGED &lt;&lt;high, returnValue, isTerminated&gt;&gt;
+          \//\ midVal &gt; INPUT_KEY \* lines 11-12
+            /\ high' = mid -1
+            /\ UNCHANGED &lt;&lt;low, returnValue, isTerminated&gt;&gt;
+          \//\ midVal = INPUT_KEY \* lines 13-14
+            /\ returnValue' = mid
+            /\ isTerminated' = TRUE
+            /\ UNCHANGED &lt;&lt;low, high&gt;&gt;
+      ELSE          \* line 16
+        /\ isTerminated' = TRUE
+        /\ returnValue' = -(low + 1)
+        /\ UNCHANGED &lt;&lt;low, high&gt;&gt;
+    ELSE            \* isTerminated
+      UNCHANGED &lt;&lt;low, high, returnValue, isTerminated&gt;&gt;
+</code></pre>
+<p>Let's start with these two definitions:</p>
+<pre><code class="language-tla">        LET mid == (low + high) \div 2 IN
+        LET midVal == INPUT_SEQ[mid + 1] IN
+</code></pre>
+<p>As you have probably guessed, we define two (local) values <code>mid</code> and <code>midVal</code>.
+The value <code>mid</code> is the average of <code>low</code> and <code>high</code>. The operator <code>\div</code> is
+simply integer division, which is usually written as <code>/</code> or <code>//</code> in programming
+languages. The value <code>midVal</code> is the value at the location <code>mid + 1</code>. Since
+the TLA+ sequence <code>INPUT_SEQ</code> has indices in the range <code>1..Len(INPUT_SEQ)</code>,
+whereas we are computing zero-based indices, we are adjusting the index by one,
+that is, we write <code>INPUT_SEQ[mid + 1]</code> instead of <code>INPUT_SEQ[mid]</code>.</p>
+<p><em>Warning: The definitions of <code>mid</code> and <code>midVal</code> do not properly reflect the
+Java code of <code>binarySearch</code>. We will fix them later. It is a good exercise
+to stop here and think about the source of this imprecision.</em></p>
+<p>The following lines look like ASCII graphics, but by now you should know
+enough to read them:</p>
+<pre><code class="language-tla">        LET mid == (low + high) \div 2 IN
+        LET midVal == INPUT_SEQ[mid + 1] IN
+          \//\ midVal &lt; INPUT_KEY \* lines 9-10
+            /\ low' = mid + 1
+            /\ UNCHANGED &lt;&lt;high, returnValue, isTerminated&gt;&gt;
+          \//\ midVal &gt; INPUT_KEY \* lines 11-12
+            /\ high' = mid -1
+            /\ UNCHANGED &lt;&lt;low, returnValue, isTerminated&gt;&gt;
+          \//\ midVal = INPUT_KEY \* lines 13-14
+            /\ returnValue' = mid
+            /\ isTerminated' = TRUE
+            /\ UNCHANGED &lt;&lt;low, high&gt;&gt;
+</code></pre>
+<p>These lines are the indented form of <code>\/</code> for three cases:</p>
+<ul>
+<li>when <code>midVal &lt; INPUT_KEY</code>, or</li>
+<li>when <code>midVal &gt; INPUT_KEY</code>, or</li>
+<li>when <code>midVal = INPUT_KEY</code>.</li>
+</ul>
+<p>We could write these expressions with <code>IF-THEN-ELSE</code> or even with the TLA+
+operator <code>CASE</code> (see <a href="https://lamport.azurewebsites.net/tla/summary-standalone.pdf">Summary of TLA+</a>). However, we find the disjunctive
+form to be the least cluttered, though unusual.</p>
+<p>Now we can check the postcondition again:</p>
+<pre><code class="language-sh">$ apalache-mc check --inv=Postcondition MC4_8.tla
+</code></pre>
+<p>The check goes through, but did it do much? Recall, that we fixed <code>INPUT_SEQ</code>
+to be the empty sequence <code>&lt;&lt; &gt;&gt;</code> in <code>MC4_8.tla</code>. Hence, we never enter the loop
+we have just specified.</p>
+<p>Actually, Apalache gives us a hint that it never tries some of the
+cases:</p>
+<pre><code>...
+PASS #13: BoundedChecker
+State 0: Checking 1 state invariants
+Step 0: picking a transition out of 1 transition(s)
+Step 1: Transition #0 is disabled
+Step 1: Transition #1 is disabled
+Step 1: Transition #2 is disabled
+Step 1: Transition #3 is disabled
+State 1: Checking 1 state invariants
+Step 1: picking a transition out of 1 transition(s)
+Step 2: Transition #0 is disabled
+Step 2: Transition #1 is disabled
+Step 2: Transition #2 is disabled
+Step 2: Transition #4 is disabled
+Step 2: picking a transition out of 1 transition(s)
+...
+</code></pre>
+<p><strong>Digression: symbolic transitions.</strong> Internally, Apalache decomposes the
+predicates <code>Init</code> and <code>Next</code> into independent pieces like <code>Init == Init$0 \/ Init$1</code> and <code>Next == Next$0 \/ Next$1 \/ Next$2 \/ Next$3</code>. If you want to see
+how it is done, run Apalache with the options <code>--write-intermediate</code> and <code>--run-dir</code>:</p>
+<pre><code class="language-sh">$ apalache-mc check --inv=Postcondition --write-intermediate=1 --run-dir=out MC4_8.tla
+</code></pre>
+<p>Check the file <code>out/intermediate/09_OutTransition.tla</code>, which contains the
+preprocessed specification that has <code>Init</code> and <code>Next</code> decomposed. You can find
+a detailed explanation in the section on <a href="../apalache/assignments-in-depth.html">Assignments in Apalache</a>.</p>
+<p>TODO: add the link to BinSearch4.tla and MC4_8.tla when we have them on github.</p>
+<h2><a class="header" href="#step-5-checking-postcondition-for-plenty-of-inputs" id="step-5-checking-postcondition-for-plenty-of-inputs">Step 5: Checking Postcondition for plenty of inputs</a></h2>
+<p>Copy <code>BinSearch4.tla</code> to <code>BinSearch5.tla</code> and open <code>BinSearch5.tla</code>.</p>
+<p>In this step, we are going to check the invariant <code>Postcondition</code> for all
+possible input sequences and all input keys (for a fixed bit-width).</p>
+<p>Create the file <code>MC5_8.tla</code> with the following contents:</p>
+<pre><code class="language-tla">-------------------------- MODULE MC5_8 ---------------------------------------
+\* an instance of BinSearch5 with all parameters fixed
+EXTENDS Apalache
+
+\* fix 8 bits
+INT_WIDTH == 8
+
+\* We do not fix INT_SEQ and INPUT_KEY.
+\* Instead, we reason about all sequences with ConstInit.
+
+CONSTANTS
+    \* The input sequence.
+    \*
+    \* @type: Seq(Int);
+    INPUT_SEQ,
+    \* The key to search for.
+    \*
+    \* @type: Int;
+    INPUT_KEY
+
+\* introduce the variables to be used in BinSearch5
+VARIABLES
+    \* @type: Int;
+    low,
+    \* @type: Int;
+    high,
+    \* @type: Bool;
+    isTerminated,
+    \* @type: Int;
+    returnValue
+
+\* use an instance for the fixed constants
+INSTANCE BinSearch5
+
+==================
+</code></pre>
+<p>Note that we introduced <code>INPUT_SEQ</code> and <code>INPUT_KEY</code> as parameters again. We
+cannot check <code>MC5_8.tla</code> just like that. If we try to check <code>MC5_8.tla</code>,
+Apalache would complain again about a value missing for <code>INPUT_SEQ</code>.</p>
+<p>To check the invariant for all sequences, we will use two advanced features
+of Apalache: <a href="../apalache/parameters.html#constinit-predicate">ConstInit predicate</a> and <a href="../lang/apalache-operators.html#value-generators">Value generators</a>.</p>
+<p><strong>ConstInit.</strong> This idiom allows us to initialize <code>CONSTANTS</code> with a TLA+
+formula. Let us introduce the following operator definition in <code>MC5_8.tla</code>:</p>
+<pre><code class="language-tla">ConstInit ==
+    /\ INPUT_KEY \in Int
+    \* Seq(Int) is a set of all sequences that have integers as elements
+    /\ INPUT_SEQ \in Seq(Int) 
+</code></pre>
+<p>This is straightforward definition. However, it does not work in Apalache:</p>
+<pre><code class="language-sh">$ apalache-mc check --cinit=ConstInit --inv=Postcondition MC5_8.tla
+...
+MC5_8.tla:39:22-39:29: unsupported expression: Seq(_) produces an infinite set of unbounded sequences.
+Checker has found an error
+...
+</code></pre>
+<p>The issue with our definition of <code>ConstInit</code> is that it requires the model
+checker to reason about the infinite set of sequences, namely, <code>Seq(Int)</code>.
+Interestingly, the model checking does not complain about the expression
+<code>INPUT_KEY \in Int</code>. The reason is that this expression requires the model
+checker to reason about one integer, though it ranges over the infinite set of
+integers.</p>
+<p><strong>Value generators.</strong> Fortunately, this problem can be easily circumvented by
+using Apalache <a href="../lang/apalache-operators.html#value-generators">Value generators</a><sup class="footnote-reference"><a href="#generators">2</a></sup>.</p>
+<p>Let us rewrite <code>ConstInit</code> in <code>MC5_8.tla</code> as follows:</p>
+<pre><code class="language-tla">ConstInit ==
+    /\ INPUT_KEY = Gen(1)
+    /\ INPUT_SEQ = Gen(MAX_INT)
+</code></pre>
+<p>In this new version, we use the Apalache operator <code>Gen</code> to:</p>
+<ul>
+<li>produce an unrestricted integer to be used as a value of <code>INPUT_KEY</code> and</li>
+<li>produce a sequence of integers to be used as a value of <code>INPUT_SEQ</code>. This
+sequence is unrestricted, except its length is bounded with <code>MAX_INT</code>,
+which is exactly what we need in our case study.</li>
+</ul>
+<p>The operator <code>Gen</code> introduces a data structure of proper type whose size is
+bounded with the argument of <code>Gen</code>. For instance, the type of <code>INPUT_SEQ</code> is
+the sequence of integers, and thus <code>Gen(MAX_INT)</code> produces an unrestricted
+sequence of up to <code>MAX_INT</code> elements. This sequence is bound to the name
+<code>INPUT_SEQ</code>. For details, see <a href="../lang/apalache-operators.html#value-generators">Value generators</a>. This lets Apalache check
+all instances of the data structure, without enumerating the instances!</p>
+<p>By doing so, we are able to check the specification for all the inputs, when we
+fix the bit width. To quickly get feedback from Apalache, we fix <code>INT_WIDTH</code> to 8 in the model <code>MC5_8.tla</code>.</p>
+<div class="footnote-definition" id="generators"><sup class="footnote-definition-label">2</sup>
+<p>If you know property-based testing, e.g., <a href="https://en.wikipedia.org/wiki/QuickCheck">QuickCheck</a>,
+Apalache generators are inspired by this idea. In contrast to property-based
+testing, an Apalache generator is not randomly producing values. Rather,
+Apalache simply introduces an unconstrained data structure (e.g., a set, a
+function, or a sequence) of the proper type. Hence, Apalache is reasoning about
+all possible instances of this data structure, instead of reasoning about a
+small set of randomly chosen instances.</p>
+</div>
+<p>Let us check <code>Postcondition</code> again:</p>
+<pre><code class="language-sh">$ apalache-mc check --cinit=ConstInit --inv=Postcondition MC5_8.tla
+...
+State 2: state invariant 0 violated. Check the counterexample in: 
+  /[a long path]/counterexample1.tla
+...
+</code></pre>
+<p>Let us inspect the counterexample:</p>
+<pre><code class="language-tla">---------------------------- MODULE counterexample ----------------------------  
+EXTENDS MC5_8
+
+(* Constant initialization state *)
+ConstInit == INPUT_KEY = -1 /\ INPUT_SEQ = &lt;&lt;0, -1&gt;&gt;
+
+(* Initial state *)
+State0 ==
+  INPUT_KEY = -1
+    /\ INPUT_SEQ = &lt;&lt;0, -1&gt;&gt;
+    /\ high = 1
+    /\ isTerminated = FALSE
+    /\ low = 0
+    /\ returnValue = 0
+
+(* Transition 1 to State1 *)
+State1 ==
+  INPUT_KEY = -1
+    /\ INPUT_SEQ = &lt;&lt;0, -1&gt;&gt;
+    /\ high = -1
+    /\ isTerminated = FALSE
+    /\ low = 0
+    /\ returnValue = 0
+
+(* Transition 3 to State2 *)
+State2 ==
+  INPUT_KEY = -1
+    /\ INPUT_SEQ = &lt;&lt;0, -1&gt;&gt;
+    /\ high = -1
+    /\ isTerminated = TRUE
+    /\ low = 0
+    /\ returnValue = -1
+...
+</code></pre>
+<p>Is it a real issue? It is, but it is not the issue of
+the search, rather our invariant <code>Postcondition</code> is imprecise.</p>
+<h2><a class="header" href="#step-5b-fixing-the-postcondition" id="step-5b-fixing-the-postcondition">Step 5b: Fixing the postcondition</a></h2>
+<p>If we check our source of truth, that is, the Java documentation in
+<a href="https://github.com/openjdk/jdk/blob/d7f31d0d53bfec627edc83ceb75fc6202891e186/src/java.base/share/classes/java/util/Arrays.java#L1662-L1698">Arrays.java in OpenJDK</a>, we will see the following sentences:</p>
+<pre><code>The range must be sorted (as by the {@link #sort(int[], int, int)} method)
+prior to making this call. If it is not sorted, the results are undefined.
+If the range contains multiple elements with the specified value, there is
+no guarantee which one will be found.
+</code></pre>
+<p>It is quite easy to add this constraint <sup class="footnote-reference"><a href="#no-pre">3</a></sup>. This is where TLA+ starts to
+shine:</p>
+<pre><code class="language-tla">InputIsSorted ==
+    \* The most straightforward way to specify sortedness
+    \* is to use two quantifiers,
+    \* but that would produce O(Len(INPUT_SEQ)^2) constraints.
+    \* Here, we write it a bit smarter.
+    \A i \in DOMAIN INPUT_SEQ:
+        i + 1 \in DOMAIN INPUT_SEQ =&gt;
+          INPUT_SEQ[i] &lt;= INPUT_SEQ[i + 1]
+
+...
+
+\* What we expect from the search when it is finished.
+PostconditionSorted ==
+    isTerminated =&gt; (~InputIsSorted \/ ReturnValueIsCorrect)
+</code></pre>
+<p>If we check <code>PostconditionSorted</code>, we do not get any error after 10 steps:</p>
+<pre><code class="language-sh">$ apalache-mc check --cinit=ConstInit --inv=PostconditionSorted MC5_8.tla
+...
+The outcome is: NoError
+Checker reports no error up to computation length 10
+</code></pre>
+<p>It takes some time to explore all executions of length up to 10 steps, for all
+input sequences of length up to <code>2^7 - 1</code> arbitrary integers. If we think about
+it, the model checker managed to crunch infinitely many numbers in several
+hours. Not bad.</p>
+<p><em>Exercise.</em> If you are impatient, you can check <code>PostconditionSorted</code> for the
+configuration that has integer width of 4 bits. It takes only a few seconds to
+explore all executions.</p>
+<div class="footnote-definition" id="no-pre"><sup class="footnote-definition-label">3</sup>
+<p>Instead of checking whether <code>INPUT_SEQ</code> is sorted in the
+post-condition, we could restrict the constant <code>INPUT_SEQ</code> to be sorted in
+every execution. That would effectively move this constraint into the
+pre-condition of the search. Had we done that, we would not be able to observe
+the behavior of the search on the unsorted inputs. An important property is
+whether the search is terminating on all inputs.</p>
+</div>
+<p>TODO: add the link to BinSearch1.tla when we have it on github.</p>
+<h2><a class="header" href="#step-6-checking-termination-and-progress" id="step-6-checking-termination-and-progress">Step 6: Checking termination and progress</a></h2>
+<p>Copy <code>BinSearch5.tla</code> to <code>BinSearch6.tla</code>, copy <code>MC5_8.tla</code> to <code>MC6_8.tla</code> and
+open <code>BinSearch6.tla</code>.</p>
+<p>Actually, we do not need 10 steps to check termination for the case <code>INT_WIDTH = 8</code>. If you recall the complexity of the binary search, it needs
+<code>ceil(log2(Len(INPUT_SEQ)))</code> steps to terminate.</p>
+<p>To check this property, we add the number of steps as a variable in
+<code>BinSearch6.tla</code> and in <code>MC6_8.tla</code>:</p>
+<pre><code class="language-tla">VARIABLES
+    ...
+    \* The number of executed steps.
+    \* @type: Int;
+    nSteps
+</code></pre>
+<p>Also, we update <code>Init</code> and <code>Next</code> in <code>BinSearch6.tla</code> as follows:</p>
+<pre><code class="language-tla">Init ==
+    ...
+    /\ nSteps = 0
+
+Next ==
+    IF ~isTerminated
+    THEN IF low &lt;= high
+      THEN          \* lines 6-14
+        /\ nSteps' = nSteps + 1
+        /\ LET mid == (low + high) \div 2 IN
+         ...
+      ELSE          \* line 16
+        /\ isTerminated' = TRUE
+        /\ returnValue' = -(low + 1)
+        /\ UNCHANGED &lt;&lt;low, high, nSteps&gt;&gt;
+    ELSE            \* isTerminated
+      UNCHANGED &lt;&lt;low, high, returnValue, isTerminated, nSteps&gt;&gt;
+</code></pre>
+<p>Having <code>nSteps</code>, we can write the <code>Termination</code> property:</p>
+<pre><code class="language-tla">\* We know the exact number of steps to show termination.
+Termination ==
+    (nSteps &gt;= INT_WIDTH) =&gt; isTerminated
+</code></pre>
+<p>Let us check <code>Termination</code>:</p>
+<pre><code class="language-sh">$ apalache-mc check --cinit=ConstInit --inv=Termination MC6_8.tla
+...
+Checker reports no error up to computation length 10
+It took me 0 days  0 hours  0 min 19 sec
+</code></pre>
+<p>Even if did not know precisely complexity of the binary search, we could
+write a simpler property, which demonstrates progress of the search:</p>
+<pre><code class="language-tla">Progress ==
+    ~isTerminated' =&gt; (low' &gt; low \/ high' &lt; high)
+</code></pre>
+<p>It takes about 10 seconds to check <code>Progress</code> as well.</p>
+<h2><a class="header" href="#step-7-fixed-width-integers" id="step-7-fixed-width-integers">Step 7: Fixed-width integers</a></h2>
+<p>Copy <code>BinSearch6.tla</code> to <code>BinSearch7.tla</code>, copy <code>MC6_8.tla</code> to <code>MC7_8.tla</code> and
+open <code>BinSearch7.tla</code>.</p>
+<p>Do you recall that our specification of the loop had a caveat? Let us have a
+look at this piece of the specification again:</p>
+<pre><code class="language-tla">    IF ~isTerminated
+    THEN IF low &lt;= high
+      THEN          \* lines 6-14
+        /\ nSteps' = nSteps + 1
+        /\ LET mid == (low + high) \div 2 IN
+           LET midVal == INPUT_SEQ[mid + 1] IN
+            \//\ midVal &lt; INPUT_KEY \* lines 9-10
+              /\ low' = mid + 1
+              /\ UNCHANGED &lt;&lt;high, returnValue, isTerminated&gt;&gt;
+            \//\ midVal &gt; INPUT_KEY \* lines 11-12
+              /\ high' = mid -1
+              /\ UNCHANGED &lt;&lt;low, returnValue, isTerminated&gt;&gt;
+            \//\ midVal = INPUT_KEY \* lines 13-14
+              /\ returnValue' = mid
+              /\ isTerminated' = TRUE
+              /\ UNCHANGED &lt;&lt;low, high&gt;&gt;
+</code></pre>
+<p>You can see that all arithmetic operations are performed over TLA+ integers,
+that is, unbounded integers. We have to implement fixed-width integers ourselves.
+Fortunately, we do not have to implement the whole set of integer operators,
+but only the addition over signed integers, which has a potential to overflow.
+To this end, we have to recall how signed integers are represented in modern
+computers, see <a href="https://en.wikipedia.org/wiki/Two%27s_complement">Two's complement</a>. Fortunately, we do not have to worry about
+an efficient implementation of integer addition. We simply use addition over
+unbounded integers to implement addition over fixed-width integers:</p>
+<pre><code class="language-tla">\* Addition over fix-width integers.
+IAdd(i, j) ==
+    \* add two integers with unbounded arithmetic
+    LET res == i + j IN
+    IF MIN_INT &lt;= res /\ res &lt;= MAX_INT
+    THEN res
+    ELSE \* wrap the result over 2^INT_WIDTH (probably redundant)
+        LET wrapped == res % MAX_UINT IN
+        IF wrapped &lt;= MAX_INT
+        THEN wrapped    \* a positive integer, return as is
+        ELSE \* complement the value to represent it with an unbounded integer
+          -(MAX_UINT - wrapped)
+</code></pre>
+<p>Having defined <code>IAdd</code>, we replace addition over unbounded integers with <code>IAdd</code>:</p>
+<pre><code class="language-tla">Next ==
+    IF ~isTerminated
+    THEN IF low &lt;= high
+      THEN          \* lines 6-14
+        /\ nSteps' = nSteps + 1
+        /\ LET mid == IAdd(low, high) \div 2 IN
+           LET midVal == INPUT_SEQ[mid + 1] IN
+            \//\ midVal &lt; INPUT_KEY \* lines 9-10
+              /\ low' = IAdd(mid, 1)
+              /\ UNCHANGED &lt;&lt;high, returnValue, isTerminated&gt;&gt;
+            \//\ midVal &gt; INPUT_KEY \* lines 11-12
+              /\ high' = IAdd(mid, - 1)
+              /\ UNCHANGED &lt;&lt;low, returnValue, isTerminated&gt;&gt;
+            \//\ midVal = INPUT_KEY \* lines 13-14
+              /\ returnValue' = mid
+              /\ isTerminated' = TRUE
+              /\ UNCHANGED &lt;&lt;low, high&gt;&gt;
+      ELSE          \* line 16
+        ...
+</code></pre>
+<p>This finally gives us a specification that faithfully represents the Java code
+of <code>binarySearch</code>. Now we can check all expected properties once again:</p>
+<pre><code class="language-sh">$ apalache-mc check --cinit=ConstInit --inv=PostconditionSorted MC7_8.tla
+...
+State 2: state invariant 0 violated.
+...
+Total time: 2.786 sec
+</code></pre>
+<pre><code class="language-sh">$ apalache-mc check --cinit=ConstInit --inv=Progress MC7_8.tla
+...
+State 1: action invariant 0 violated.
+...
+Total time: 2.935 sec
+</code></pre>
+<pre><code class="language-sh">$ apalache-mc check --cinit=ConstInit --inv=Termination MC7_8.tla
+...
+State 8: state invariant 0 violated.
+...
+Total time: 39.540 sec
+</code></pre>
+<p>As we can see, all of our invariants are violated. They all demonstrate the
+issue that is caused by the integer overflow!</p>
+<p>TODO: add the link to BinSearchN.tla when we have it on github.</p>
+<h2><a class="header" href="#step-8-checking-the-boundaries" id="step-8-checking-the-boundaries">Step 8: Checking the boundaries</a></h2>
+<p>Copy <code>BinSearch7.tla</code> to <code>BinSearch8.tla</code>, copy <code>MC7_8.tla</code> to <code>MC8_8.tla</code> and
+open <code>BinSearch8.tla</code>.</p>
+<p>As we have seen in Step 7, the cause of all errors in <code>PostconditionSorted</code>,
+<code>Termination</code>, and <code>Progress</code> is that the addition <code>low + high</code> overflows and
+thus the expression <code>INPUT_SEQ[mid + 1]</code> accesses <code>INPUT_SEQ</code> outside of its
+domain.</p>
+<p>Why did Apalache not complain about access outside of the domain? Its behavior
+is actually consistent with <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a> (p. 302):</p>
+<blockquote>
+<p>A function <em>f</em> has a domain DOMAIN <em>f</em>, and the value of <em>f</em>[<em>v</em>] is
+specified only if <em>v</em> is an element of DOMAIN <em>f</em>.</p>
+</blockquote>
+<p>Hence, Apalache returns some value of a proper type, if <code>v</code> is outside of
+<code>DOMAIN f</code>. As we have seen in Step 7, such a value would usually show up in a
+counterexample. In the future, Apalache will probably have an automatic check
+for out-of-domain access. For the moment, we can write such a check as a state
+invariant. By propagating the conditions from <code>INPUT_SEQ[mid + 1]</code> up in <code>Next</code>,
+we construct the following invariant:</p>
+<pre><code class="language-tla">\* Make sure that INPUT_SEQ is accessed within its bounds
+InBounds ==
+  LET mid == IAdd(low, high) \div 2 IN
+  \* collect the conditions of IF-THEN-ELSE
+  ~isTerminated =&gt;
+    ((low &lt;= high) =&gt;
+      (mid + 1) \in DOMAIN INPUT_SEQ)
+</code></pre>
+<p>Apalache finds a violation of this invariant in a few seconds:</p>
+<pre><code>$ apalache-mc check --cinit=ConstInit --inv=InBounds MC8_8.tla
+...
+State 1: state invariant 0 violated.
+...
+Total time: 3.411 sec
+</code></pre>
+<p>If we check <code>counterexample1.tla</code>, it contains the following values for <code>low</code>
+and <code>high</code>:</p>
+<pre><code>State0 ==
+    /\ high = 116
+    /\ low = 0
+    ...
+
+State1 ==
+    /\ high = 116
+    /\ low = 59
+    ...
+</code></pre>
+<p>In state 1, we have <code>low + high = 116 + 59 &gt; 2^7</code>. Since we have <code>INT_WIDTH = 7</code>, we have <code>IAdd(116, 59) = -81</code>.</p>
+<h2><a class="header" href="#step-9-fixing-the-access-bug" id="step-9-fixing-the-access-bug">Step 9: Fixing the access bug</a></h2>
+<p>Copy <code>BinSearch8.tla</code> to <code>BinSearch9.tla</code>, copy <code>MC8_8.tla</code> to <code>MC9_8.tla</code> and
+open <code>BinSearch9.tla</code>.</p>
+<p>Let us apply the fix that was proposed by Joshua Bloch in <a href="https://ai.googleblog.com/2006/06/extra-extra-read-all-about-it-nearly.html">Nearly All Binary
+Searches and Mergesorts are Broken</a>. Namely, we update this line of
+<code>BinSearch8.tla</code>:</p>
+<pre><code class="language-tla">        /\ LET mid == IAdd(low, high) \div 2 IN
+           LET midVal == INPUT_SEQ[mid + 1] IN
+</code></pre>
+<p>The fix is as follows:</p>
+<pre><code class="language-tla">        /\ LET mid == IAdd(low, IAdd(high, -low) \div 2) IN
+           LET midVal == INPUT_SEQ[mid + 1] IN
+</code></pre>
+<p>We also update <code>InBounds</code> as follows:</p>
+<pre><code class="language-tla">\* Make sure that INPUT_SEQ is accessed within its bounds
+InBounds ==
+  LET mid == IAdd(low, IAdd(high, -low) \div 2) IN
+...
+</code></pre>
+<p>Now we check the four invariants: <code>InBounds</code>, <code>PostconditionSorted</code>,
+<code>Termination</code>, and <code>Progress</code>.</p>
+<pre><code class="language-sh">$ apalache-mc check --cinit=ConstInit --inv=InBounds MC9_8.tla
+...
+The outcome is: NoError
+...
+Total time: 76.352 sec
+</code></pre>
+<pre><code class="language-sh">$ apalache-mc check --cinit=ConstInit --inv=Progress MC9_8.tla
+...
+The outcome is: NoError
+...
+Total time: 63.578 sec
+</code></pre>
+<pre><code class="language-sh">$ apalache-mc check --cinit=ConstInit --inv=Termination MC9_8.tla
+...
+The outcome is: NoError
+...
+Total time: 72.682 sec
+</code></pre>
+<pre><code class="language-sh">$ apalache-mc check --cinit=ConstInit --inv=PostconditionSorted MC9_8.tla
+...
+The outcome is: NoError
+...
+Total time: 2154.646 sec
+</code></pre>
+<p><em>Exercise:</em> It takes quite a bit of time to check <code>PostconditionSorted</code>.
+Change <code>INT_WIDTH</code> to 6 and check all these invariants once again. Observe that
+it takes Apalache significantly less time.</p>
+<p><em>Exercise:</em> Change <code>INT_WIDTH</code> to 16 and check all these invariants once again.
+Observe that it takes Apalache significantly more time.</p>
+<p>TODO: add the link to BinSearchN.tla when we have it on github.</p>
+<h2><a class="header" href="#step-10-beautifying-the-specification" id="step-10-beautifying-the-specification">Step 10: Beautifying the specification</a></h2>
+<p>Copy <code>BinSearch9.tla</code> to <code>BinSearch10.tla</code>, copy <code>MC9_8.tla</code> to <code>MC10_8.tla</code> and
+open <code>BinSearch10.tla</code>.</p>
+<p>We have reached our goals: TLA+ and Apalache helped us in finding the access
+bug and showing that its fix works. Now it is time to look back at the
+specification and make it easier to read.</p>
+<p>Let us have a look at our definition of <code>Next</code>:</p>
+<pre><code class="language-tla">\* Computation step (lines 5-16)
+Next ==
+    IF ~isTerminated
+    THEN IF low &lt;= high
+      THEN          \* lines 6-14
+        /\ nSteps' = nSteps + 1
+        /\ LET mid == IAdd(low, IAdd(high, -low) \div 2) IN
+           LET midVal == INPUT_SEQ[mid + 1] IN
+            \//\ midVal &lt; INPUT_KEY \* lines 9-10
+              /\ low' = IAdd(mid, 1)
+              /\ UNCHANGED &lt;&lt;high, returnValue, isTerminated&gt;&gt;
+            \//\ midVal &gt; INPUT_KEY \* lines 11-12
+              /\ high' = IAdd(mid, - 1)
+              /\ UNCHANGED &lt;&lt;low, returnValue, isTerminated&gt;&gt;
+            \//\ midVal = INPUT_KEY \* lines 13-14
+              /\ returnValue' = mid
+              /\ isTerminated' = TRUE
+              /\ UNCHANGED &lt;&lt;low, high&gt;&gt;
+      ELSE          \* line 16
+        /\ isTerminated' = TRUE
+        /\ returnValue' = -(low + 1)
+        /\ UNCHANGED &lt;&lt;low, high, nSteps&gt;&gt;
+    ELSE            \* isTerminated
+      UNCHANGED &lt;&lt;low, high, returnValue, isTerminated, nSteps&gt;&gt;
+</code></pre>
+<p><code>Next</code> contains a massive expression. We can decompose it nicely in smaller
+pieces:</p>
+<pre><code class="language-tla">\* loop iteration
+LoopIteration ==
+    /\ ~isTerminated
+    /\ low &lt;= high      \* lines 6-14
+    /\ nSteps' = nSteps + 1
+    /\ LET mid == IAdd(low, IAdd(high, -low) \div 2) IN
+       LET midVal == INPUT_SEQ[mid + 1] IN
+          \//\ midVal &lt; INPUT_KEY \* lines 9-10
+            /\ low' = IAdd(mid, 1)
+            /\ UNCHANGED &lt;&lt;high, returnValue, isTerminated&gt;&gt;
+          \//\ midVal &gt; INPUT_KEY \* lines 11-12
+            /\ high' = IAdd(mid, - 1)
+            /\ UNCHANGED &lt;&lt;low, returnValue, isTerminated&gt;&gt;
+          \//\ midVal = INPUT_KEY \* lines 13-14
+            /\ returnValue' = mid
+            /\ isTerminated' = TRUE
+            /\ UNCHANGED &lt;&lt;low, high&gt;&gt;
+
+\* loop termination
+LoopExit ==
+    /\ ~isTerminated        \* line 16
+    /\ low &gt; high
+    /\ isTerminated' = TRUE
+    /\ returnValue' = -(low + 1)
+    /\ UNCHANGED &lt;&lt;low, high, nSteps&gt;&gt;
+
+\* instead of terminating the computation, we keep variables unchanged
+StutterOnTermination ==
+    /\ isTerminated
+    /\ UNCHANGED &lt;&lt;low, high, returnValue, isTerminated, nSteps&gt;&gt;
+
+\* Computation step (lines 5-16)
+Next ==
+    \/ LoopIteration
+    \/ LoopExit
+    \/ StutterOnTermination
+</code></pre>
+<p>The definitions <code>LoopIteration</code>, <code>LoopExit</code>, and <code>StutterOnTermination</code> are
+called actions in TLA+. It is usually a good idea to decompose a large <code>Next</code>
+formula into actions. Normally, an action contains assignments to all primed
+variables.</p>
+<p>TODO: add the link to BinSearchN.tla when we have it on github.</p>
+<h2><a class="header" href="#discussion" id="discussion">Discussion</a></h2>
+<p>In this tutorial we have shown how to:</p>
+<ul>
+<li>Specify the behavior of a sequential algorithm (binary search).</li>
+<li>Specify invariants that check safety and termination.</li>
+<li>Take into account the specifics of a computer architecture (fixed bit
+width).</li>
+<li>Automatically find examples of simultaneous invariant violation.</li>
+<li>Efficiently check the expected properties against our specification.</li>
+</ul>
+<p>We have written our specification for parameterized bit width. This lets us
+check the invariants relatively quickly and get fast feedback from the model
+checker. We chose a bit width of 8, a non-trivial value for which
+Apalache terminates within reasonable time. Importantly, the specification
+for the bit width of 32 stays the same; we only have to change <code>INT_WIDTH</code>. Of
+course, Apalache reaches its limits when we set <code>INT_WIDTH</code> to 16 or 32. In
+these cases, it has to reason about all sequences of length up to 32,767
+elements or 2 Billion elements, respectively!</p>
+<p>Apalache gives us a good idea whether the properties of our
+binary search specification hold true. However, it does not give us an ultimate proof of correctness for
+Java integers. If you need such a proof, you should probably use TLAPS. Check
+the paper on <a href="http://lamport.azurewebsites.net/tla/proving-safety.pdf">Proving Safety Properties</a> by Leslie Lamport.</p>
+<p>This tutorial is rather long. This is because we wanted to show the evolution
+of a TLA+ specification, as we were writing it and checking it with Apalache.
+There are many different styles of writing TLA+ specifications. One of our
+goals was to demonstrate the incremental approach to specification writing. In
+fact, this approach is not very different from incremental development of
+programs in the spirit of <a href="https://en.wikipedia.org/wiki/Test-driven_development">Test-driven development</a>. It took us 2-3 hours to
+iteratively develop a specification that is similar to the one demonstrated in
+this tutorial.</p>
+<p>This tutorial touches upon the basics of TLA+ and Apalache. For instance, we
+did not discuss non-determinism, as our specification is entirely
+deterministic. We will demonstrate advanced features in future tutorials.</p>
+<p>If you are experiencing a problem with Apalache, feel free to <a href="https://github.com/informalsystems/apalache/issues">open an issue</a>
+or drop us a message on <a href="https://informal-systems.zulipchat.com/login/#narrow/stream/265309-apalache">Zulip chat</a>.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../tutorials/snowcat-tutorial.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../tutorials/snowcat-tutorial.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
