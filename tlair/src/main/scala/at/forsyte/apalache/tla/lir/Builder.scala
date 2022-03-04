@@ -622,6 +622,20 @@ class Builder {
     BuilderOper(ApalacheOper.setAsFun, pairsSetEx)
   }
 
+  /**
+   * Apply the operator [[ApalacheOper.mkSeq]].
+   *
+   * @param lenEx
+   *   non-negative length of the sequence
+   * @param elemCtorEx
+   *   an operator to construct a single element (either a name, or a lambda)
+   * @return
+   *   `Seq(lenEx, elemCtorEx)`
+   */
+  def apalacheMkSeq(lenEx: BuilderEx, elemCtorEx: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.mkSeq, lenEx, elemCtorEx)
+  }
+
   def apalacheSkolem(ex: BuilderEx): BuilderEx = {
     BuilderOper(ApalacheOper.skolem, ex)
   }
@@ -747,6 +761,7 @@ class Builder {
         ApalacheOper.constCard.name -> ApalacheOper.constCard,
         ApalacheOper.distinct.name -> ApalacheOper.distinct,
         ApalacheOper.funAsSeq.name -> ApalacheOper.funAsSeq,
+        ApalacheOper.mkSeq.name -> ApalacheOper.mkSeq,
         ApalacheOper.foldSet.name -> ApalacheOper.foldSet,
         ApalacheOper.foldSeq.name -> ApalacheOper.foldSeq,
         ApalacheOper.selectInSet.name -> ApalacheOper.selectInSet,
