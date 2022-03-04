@@ -147,7 +147,7 @@ Past funding from [Der Wiener Wissenschafts-, Forschungs- und Technologiefonds](
 [master]: https://github.com/informalsystems/apalache/tree/master
 [unstable branch]: https://github.com/informalsystems/apalache/tree/unstable
 [apalache zulip stream]: https://informal-systems.zulipchat.com/#narrow/stream/265309-apalache
-[tendermint specs]: https://github.com/tendermint/tendermint/blob/master/spec/light-client/accountability/
+[tendermint specs]: https://github.com/tendermint/tendermint/tree/master/spec/light-client/accountability
 [tendermint blockchain]: https://github.com/tendermint
 [standard repository of tla+ examples]: https://github.com/tlaplus/Examples
 [apalache benchmarks]: https://github.com/informalsystems/apalache-tests
