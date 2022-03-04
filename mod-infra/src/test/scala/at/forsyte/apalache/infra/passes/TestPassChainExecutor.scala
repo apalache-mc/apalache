@@ -2,7 +2,6 @@ package at.forsyte.apalache.infra.passes
 
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatestplus.easymock.EasyMockSugar
 import org.scalatestplus.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 

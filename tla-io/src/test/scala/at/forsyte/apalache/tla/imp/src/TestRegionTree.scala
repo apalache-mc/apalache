@@ -63,7 +63,7 @@ class TestRegionTree extends AnyFunSuite {
   test("find non-existing index") {
     val tree = new RegionTree()
     val region = SourceRegion(SourcePosition(1, 20), SourcePosition(3, 10))
-    val idx = tree.add(region)
+    tree.add(region)
     assertThrows[IndexOutOfBoundsException] {
       tree(999)
     }

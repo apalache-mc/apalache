@@ -50,12 +50,12 @@ test/tla/%.md: target/test/tla/%.md.corrected
 fmt-check:
   # TODO: rm if we decide to keep running on all source files
 	# git fetch origin
-	sbt scalafmtCheckAll scalafmtSbtCheck || \
+	sbt scalafmtCheckAll scalafmtSbtCheck scalafixEnable "scalafixAll --check RemoveUnused" || \
 		( echo "TO FIX: run 'make fmt-fix' and commit the changes" ; \
 		  exit 1 )
 
 fmt-fix:
-	sbt "scalafix RemoveUnused" scalafmtAll scalafmtSbt
+	sbt scalafixEnable "scalafixAll RemoveUnused" scalafmtAll scalafmtSbt
 
 clean:
 	sbt clean

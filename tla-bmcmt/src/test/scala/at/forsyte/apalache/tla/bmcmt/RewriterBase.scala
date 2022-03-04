@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import java.io.{PrintWriter, StringWriter}
+import java.io.StringWriter
 
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.lir.convenience.tla

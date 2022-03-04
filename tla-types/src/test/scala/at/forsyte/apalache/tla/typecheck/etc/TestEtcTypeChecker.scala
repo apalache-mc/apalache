@@ -126,8 +126,7 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
     val arg = mkUniqConst(BoolT1())
     val app = mkUniqApp(Seq(oper), arg)
     val listener = mock[TypeCheckerListener]
-    app.typeErrorExplanation = (
-        expectedTypes: List[TlaType1], actualTypes: List[TlaType1]) => Some("Mocked explanation")
+    app.typeErrorExplanation = (_: List[TlaType1], _: List[TlaType1]) => Some("Mocked explanation")
     val wrapper = wrapWithLet(app)
     expecting {
       listener.onTypeError(app.sourceRef.asInstanceOf[ExactRef], "Mocked explanation")
@@ -240,8 +239,7 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
     val operTypes = Seq(parser("a => Int"), parser("a => Bool"))
     val arg = mkUniqConst(IntT1())
     val app = mkUniqApp(operTypes, arg)
-    app.typeErrorExplanation = (
-        expectedTypes: List[TlaType1], actualTypes: List[TlaType1]) => Some("Mocked explanation")
+    app.typeErrorExplanation = (_: List[TlaType1], _: List[TlaType1]) => Some("Mocked explanation")
     val listener = mock[TypeCheckerListener]
     val wrapper = wrapWithLet(app)
     expecting {
