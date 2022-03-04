@@ -43,7 +43,7 @@ trait TestSymbStateRewriterTuple extends RewriterBase {
       .typed(types, "IB")
 
     val state = new SymbState(tupleSet, arena, Binding())
-    val nextState = create(rewriterType).rewriteUntilDone(state)
+    create(rewriterType).rewriteUntilDone(state)
     assert(solverContext.sat())
   }
 

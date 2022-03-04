@@ -8,6 +8,8 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper}
 import at.forsyte.apalache.tla.lir.values.TlaReal
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
@@ -97,9 +99,6 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
   }
 
   test("equality and inequality") {
-    // equality and inequality
-    val a2ToBool = parser("(a, a) => Bool")
-
     def mkExpected(tt: TlaType1) = mkConstAppByType(tt, parser("Int"), parser("Int"))
 
     assert(mkExpected(parser("(a, a) => Bool")) == gen(tla.eql(tla.int(1), tla.int(2))))
@@ -289,8 +288,6 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
   }
 
   test("\\union, \\intersect, \\setminus") {
-    val binarySetOp = parser("(Set(a), Set(a)) => Set(a)")
-
     def mkExpected(tt: TlaType1) = mkConstAppByType(tt, parser("Set(Int)"), parser("Set(Int)"))
 
     assert(mkExpected(parser("(Set(a), Set(a)) => Set(a)")) == gen(tla.cup(tla.intSet(), tla.intSet())))

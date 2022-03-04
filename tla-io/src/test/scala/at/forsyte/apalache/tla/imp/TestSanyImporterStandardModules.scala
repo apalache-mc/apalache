@@ -133,10 +133,10 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
     )
 
     // check the source info
-    val plus = root.declarations.find {
+    root.declarations.find {
       _.name == "Plus"
     } match {
-      case Some(TlaOperDecl(_, _, oe @ OperEx(oper, _*))) =>
+      case Some(TlaOperDecl(_, _, oe @ OperEx(_, _*))) =>
         val loc = sourceStore.find(oe.ID).get
         assert(
             SourceRegion(SourcePosition(4, 9), SourcePosition(4, 13)) == loc.region

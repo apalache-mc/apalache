@@ -13,7 +13,6 @@ class TestAux extends AnyFunSuite with TestingPredefs {
 
     val ar0Decl1 = TlaOperDecl("X", List.empty, n_x)
     val ar0Decl2 = TlaOperDecl("Y", List.empty, n_y)
-    val ar0Decl3 = TlaOperDecl("Z", List.empty, n_z)
 
     val arGe0Decl1 = TlaOperDecl("A", List(OperParam("t")), n_a)
     val arGe0Decl2 = TlaOperDecl("B", List(OperParam("t")), n_b)

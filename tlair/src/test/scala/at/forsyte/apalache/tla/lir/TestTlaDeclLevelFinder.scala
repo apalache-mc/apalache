@@ -45,7 +45,6 @@ class TestTlaDeclLevelFinder extends AnyFunSuite with Checkers {
 
     val prop = forAll(gens.genTlaModule(gens.genTlaEx(operators))) { module =>
       val finder = new TlaDeclLevelFinder(module)
-      val vars = module.varDeclarations.map(_.name).toSet
 
       def expectedLevel(decl: TlaOperDecl): Prop = {
         val level = finder(decl)
