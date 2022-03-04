@@ -3,10 +3,10 @@
 **Difficulty: Blue trail – Easy**
 
 In this short tutorial, we show how to annotate a [Pluscal specification][] of
-the Bakery algorithm, to check it with Apalache. Further, we check mutual
-exclusion by bounded model checking for bounded executions. Moreover, we
-automatically prove mutual exclusion by induction and bounded model checking
-for unbounded executions.
+the Bakery algorithm, to check it with Apalache. In particular, we check mutual
+exclusion by _bounded model checking_ (which considers only bounded executions).
+Moreover, we automatically prove mutual exclusion for unbounded executions by
+_induction_.
 
 We only focus on the part
 related to Apalache. If you want to understand the Bakery algorithm and its
@@ -26,7 +26,7 @@ We assume that you have Apalache installed. If not, check the manual page on
 
 ## Running example: Bakery
 
-We are starting with the [Pluscal specification][] of the Bakery algorithm.
+We start with the [Pluscal specification][] of the Bakery algorithm.
 This specification has been checked with the model checker [TLC][].
 Moreover, [Leslie Lamport][] has proved safety of this algorithm with
 the [TLAPS][].
@@ -112,7 +112,7 @@ The type checker complains about types of `a` and `b` in the operator `\prec`:
 {{#include ../../../test/tla/bakery-pluscal/BakeryWoTlaps.tla:66:67}}
 ```
 
-The issue is that the type checker is not able to decide, whether `a` and `b`
+The issue is that the type checker is not able to decide whether `a` and `b`
 are functions, sequences, or tuples. We help the type checker by adding type
 annotations to the operator `\preceq`.
 
@@ -142,8 +142,8 @@ It took me 0 days  0 hours 32 min  2 sec
 ```
 
 Apalache reports no violation of `MutualExclusion`. This is a good start.
-Since Apalache by default analyzes the executions that make up to 10
-transitions, this analysis in incomplete.
+However, since Apalache only analyzes executions that make up to 10
+transitions by default, this analysis is incomplete.
 
 ## Step 4: Checking mutual exclusion for unbounded executions
 
@@ -199,7 +199,7 @@ define a predicate similar to `ConstInit4`. We cannot check the invariant for
 all values of `N`, as this would require Apalache to reason about unbounded
 sets and functions, which is currently not supported.
 
-## Discussion
+## Conclusion
 
 The final specifications can be found in
 [BakeryTyped.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bakery-pluscal/BakeryTyped.tla)
