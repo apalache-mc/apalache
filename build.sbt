@@ -56,7 +56,6 @@ ThisBuild / scalafmtPrintDiff := true
 // scalafix
 // https://scalacenter.github.io/scalafix/docs/rules/RemoveUnused.html
 ThisBuild / scalacOptions ++= Seq("-Ywarn-unused")
-ThisBuild / semanticdbEnabled := true
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
 ///////////////////////////////
