@@ -164,7 +164,8 @@ If `n` is not a constant or negative, Apalache reports an error.
 **Example in TLA+:**
 
 ```tla
-MkSeq(3, LAMBDA i: 2 * i) = <<2, 4, 6>>   \* TRUE
+LET Double(i) == 2 * i IN
+MkSeq(3, Double) = <<2, 4, 6>>   \* TRUE
 ```
 
 
