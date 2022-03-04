@@ -34,7 +34,9 @@ class MkSeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = state.ex match {
     case OperEx(ApalacheOper.mkSeq, lenEx, LetInEx(NameEx(_), opDecl)) =>
       val capacity = simplifier(lenEx) match {
-        case ValEx(TlaInt(n)) if n.isValidInt => n.toInt
+        case ValEx(TlaInt(n)) if n.isValidInt && n >= 0 =>
+          n.toInt
+
         case unexpectedEx =>
           val msg = "Expected a constant integer expression. Found: " + unexpectedEx
           throw new TlaInputError(msg, Some(lenEx.ID))
