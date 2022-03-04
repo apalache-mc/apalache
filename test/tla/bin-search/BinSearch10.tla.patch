@@ -1,0 +1,66 @@
+1c1
+< --------------------------- MODULE BinSearch9 ---------------------------------
+---
+> --------------------------- MODULE BinSearch10 --------------------------------
+4a5
+>  * Version 10. Beautifying the specification.
+76a78,108
+> \* loop iteration
+> LoopIteration ==
+>     /\ ~isTerminated
+>     /\ low <= high      \* lines 6-14
+>     /\ nSteps' = nSteps + 1
+>     /\ LET mid == IAdd(low, IAdd(high, -low) \div 2) IN
+>        LET midVal == INPUT_SEQ[mid + 1] IN
+>           \//\ midVal < INPUT_KEY \* lines 9-10
+>             /\ low' = IAdd(mid, 1)
+>             /\ UNCHANGED <<high, returnValue, isTerminated>>
+>           \//\ midVal > INPUT_KEY \* lines 11-12
+>             /\ high' = IAdd(mid, - 1)
+>             /\ UNCHANGED <<low, returnValue, isTerminated>>
+>           \//\ midVal = INPUT_KEY \* lines 13-14
+>             /\ returnValue' = mid
+>             /\ isTerminated' = TRUE
+>             /\ UNCHANGED <<low, high>>
+> 
+> \* loop termination
+> LoopExit ==
+>     /\ ~isTerminated        \* line 16
+>     /\ low > high
+>     /\ isTerminated' = TRUE
+>     /\ returnValue' = -(low + 1)
+>     /\ UNCHANGED <<low, high, nSteps>>
+> 
+> \* instead of terminating the computation, we keep variables unchanged
+> StutterOnTermination ==
+>     /\ isTerminated
+>     /\ UNCHANGED <<low, high, returnValue, isTerminated, nSteps>>
+> 
+79,100c111,114
+<     IF ~isTerminated
+<     THEN IF low <= high
+<       THEN          \* lines 6-14
+<         /\ nSteps' = nSteps + 1
+<         /\ LET mid == IAdd(low, IAdd(high, -low) \div 2) IN
+<            LET midVal == INPUT_SEQ[mid + 1] IN
+<             \//\ midVal < INPUT_KEY \* lines 9-10
+<               /\ low' = IAdd(mid, 1)
+<               /\ UNCHANGED <<high, returnValue, isTerminated>>
+<             \//\ midVal > INPUT_KEY \* lines 11-12
+<               /\ high' = IAdd(mid, - 1)
+<               /\ UNCHANGED <<low, returnValue, isTerminated>>
+<             \//\ midVal = INPUT_KEY \* lines 13-14
+<               /\ returnValue' = mid
+<               /\ isTerminated' = TRUE
+<               /\ UNCHANGED <<low, high>>
+<       ELSE          \* line 16
+<         /\ isTerminated' = TRUE
+<         /\ returnValue' = -(low + 1)
+<         /\ UNCHANGED <<low, high, nSteps>>
+<     ELSE            \* isTerminated
+<       UNCHANGED <<low, high, returnValue, isTerminated, nSteps>>
+---
+>     \/ LoopIteration
+>     \/ LoopExit
+>     \/ StutterOnTermination
+> 

@@ -1,0 +1,14 @@
+1,2c1,2
+< -------------------------- MODULE MC9_8 --------------------------------------
+< \* an instance of BinSearch9 with all parameters fixed
+---
+> -------------------------- MODULE MC10_8 --------------------------------------
+> \* an instance of BinSearch10 with all parameters fixed
+21c21
+< \* introduce the variables to be used in BinSearch9
+---
+> \* introduce the variables to be used in BinSearch10
+36c36
+< INSTANCE BinSearch9
+---
+> INSTANCE BinSearch10

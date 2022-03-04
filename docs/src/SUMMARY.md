@@ -4,7 +4,9 @@
 
 # Tutorials
 
+- [Entry-level Model Checker Tutorial](./tutorials/entry-tutorial.md)
 - [Type Checker Tutorial](./tutorials/snowcat-tutorial.md)
+- [Symbolic Model Checking](./tutorials/symbmc.md)
 
 # Apalache User Manual
 
@@ -47,12 +49,6 @@
 - [Overview](HOWTOs/index.md)
 - [How to write type annotations](./HOWTOs/howto-write-type-annotations.md)
 - [How to use uninterpreted types](./HOWTOs/uninterpretedTypes.md)
-
-# Tutorials
-
-- [Overview](./tutorials/index.md)
-- [The Snowcat:snowflake::cat: Type Checker](./tutorials/snowcat-tutorial.md)
-- [Symbolic Model Checking](./tutorials/symbmc.md)
 
 # TLA+ Language Manual for Engineers
 

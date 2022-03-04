@@ -1,0 +1,14 @@
+1c1
+< --------------------------- MODULE BinSearch8 ---------------------------------
+---
+> --------------------------- MODULE BinSearch9 ---------------------------------
+4a5
+>  * Version 9. Fixing the access bug.
+82c83
+<         /\ LET mid == IAdd(low, high) \div 2 IN
+---
+>         /\ LET mid == IAdd(low, IAdd(high, -low) \div 2) IN
+146c147
+<   LET mid == IAdd(low, high) \div 2 IN
+---
+>   LET mid == IAdd(low, IAdd(high, -low) \div 2) IN

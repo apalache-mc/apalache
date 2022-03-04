@@ -1,0 +1,25 @@
+1c1
+< --------------------------- MODULE BinSearch4 ---------------------------------
+---
+> --------------------------- MODULE BinSearch5 ---------------------------------
+4a5
+>  * Version 5. Check for all inputs (for a fixed bit width).
+78a80,88
+> InputIsSorted ==
+>     \* The most straightforward way to specify sortedness
+>     \* is to use two quantifiers,
+>     \* but that would produce O(Len(INPUT_SEQ)^2) constraints.
+>     \* Here, we write it a bit smarter.
+>     \A i \in DOMAIN INPUT_SEQ:
+>         i + 1 \in DOMAIN INPUT_SEQ =>
+>           INPUT_SEQ[i] <= INPUT_SEQ[i + 1]
+> 
+96c106
+< \* What we expect from the search when it is finished.
+---
+> \* What we expect from the search when it is finished (it does not hold).
+99a110,113
+> \* What we expect from the search when it is finished.
+> PostconditionSorted ==
+>     isTerminated => (~InputIsSorted \/ ReturnValueIsCorrect)
+> 

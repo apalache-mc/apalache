@@ -1865,6 +1865,16 @@ $ apalache-mc check --inv=Inv --cinit=ConstInit TestHash2.tla | sed 's/[IEW]@.*/
 EXITCODE: OK
 ```
 
+### check Test1425.tla reports no error
+
+A regression test for assignments under quantification over empty sets.
+
+```sh
+$ apalache-mc check --length=1 Test1425.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
 
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
