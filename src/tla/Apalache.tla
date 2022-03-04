@@ -56,7 +56,8 @@ SetAsFun(S) ==
 (**
  * A sequence constructor that is avoiding a function constructor.
  * Since Apalache is typed, this operator is more efficient than
- * FunAsSeq([ i \in 1..N |-> F(i) ]).
+ * FunAsSeq([ i \in 1..N |-> F(i) ]). Apalache requires N to be
+ * a constant expression.
  *
  * @type: (Int, (Int -> a)) => Seq(a);
  *)

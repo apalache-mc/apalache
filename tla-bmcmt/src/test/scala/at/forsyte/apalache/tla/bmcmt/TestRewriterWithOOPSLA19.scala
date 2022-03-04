@@ -16,7 +16,7 @@ class TestRewriterWithOOPSLA19
     with TestSymbStateRewriterPowerset with TestSymbStateRewriterRecFun with TestSymbStateRewriterRecord
     with TestSymbStateRewriterSequence with TestSymbStateRewriterSet with TestSymbStateRewriterStr
     with TestSymbStateRewriterTuple with TestPropositionalOracle with TestSparseOracle with TestUninterpretedConstOracle
-    with TestSymbStateRewriterApalache {
+    with TestSymbStateRewriterApalache with TestSymbStateRewriterMkSeq {
   override protected def withFixture(test: OneArgTest): Outcome = {
     solverContext = new PreproSolverContext(new Z3SolverContext(SolverConfig.default.copy(debug = true,
                 smtEncoding = oopsla19Encoding)))
