@@ -50,7 +50,7 @@ class TestQuantificationOptimizer extends AnyFunSuite with Checkers {
       case ValEx(TlaIntSet) => ex
       case ValEx(TlaNatSet) => outerOperatorCtor(varnameGe0, ex).as(BoolT1())
       case OperEx(TlaArithOper.dotdot, lowerBound, upperBound) =>
-        tla.and(varnameInBounds(lowerBound, upperBound), ex).as(BoolT1())
+        outerOperatorCtor(varnameInBounds(lowerBound, upperBound), ex).as(BoolT1())
       case _ => ex
     }
   }
