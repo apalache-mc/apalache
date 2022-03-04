@@ -50,10 +50,14 @@ class KeraLanguagePred extends ContextualLanguagePred {
           .and(isOkInContext(letDefs, thenEx))
           .and(isOkInContext(letDefs, elseEx))
 
-      case OperEx(ApalacheOper.foldSet | ApalacheOper.foldSeq | ApalacheOper.mkSeq, opName, base, collection) =>
+      case OperEx(ApalacheOper.foldSet | ApalacheOper.foldSeq, opName, base, collection) =>
         isOkInContext(letDefs, opName)
           .and(isOkInContext(letDefs, base))
           .and(isOkInContext(letDefs, collection))
+
+      case OperEx(ApalacheOper.mkSeq, len, opName) =>
+        isOkInContext(letDefs, opName)
+          .and(isOkInContext(letDefs, len))
 
       case OperEx(oper, args @ _*)
           if oper == TlaSetOper.map || oper == TlaFunOper.funDef || oper == TlaFunOper.recFunDef =>

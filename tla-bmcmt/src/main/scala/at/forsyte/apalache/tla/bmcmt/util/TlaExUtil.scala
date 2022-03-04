@@ -6,8 +6,8 @@ import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx, TlaOperDecl}
 
 object TlaExUtil {
   // Several Apalache operators accept definitions as arguments. Their variables are not considered.
-  private def hasLetInArg(op: TlaOper): Boolean = {
-    op == ApalacheOper.foldSet || op == ApalacheOper.foldSeq || op == ApalacheOper.mkSeq
+  private def isFold(op: TlaOper): Boolean = {
+    op == ApalacheOper.foldSet || op == ApalacheOper.foldSeq
   }
 
   /**
@@ -28,10 +28,15 @@ object TlaExUtil {
       case OperEx(TlaActionOper.prime, NameEx(name)) =>
         used = used + (name + "'")
 
-      // Do not count the fold operator LET-IN itself
-      case OperEx(op, LetInEx(_, TlaOperDecl(_, _, localBody)), baseExAndCollectionEx @ _*) if hasLetInArg(op) =>
+      // ignore the names in the auxiliary let-in definition
+      case OperEx(op, LetInEx(_, TlaOperDecl(_, _, localBody)), baseExAndCollectionEx @ _*) if isFold(op) =>
         findRec(localBody)
         baseExAndCollectionEx.foreach(findRec)
+
+      // ignore the names in the auxiliary let-in definition
+      case OperEx(op @ ApalacheOper.mkSeq, len, LetInEx(_, TlaOperDecl(_, _, localBody))) =>
+        findRec(localBody)
+        findRec(len)
 
       case OperEx(_, args @ _*) =>
         args.foreach(findRec)
