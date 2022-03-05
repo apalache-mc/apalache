@@ -22,13 +22,11 @@ class MkSeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val proto = new ProtoSeqOps(rewriter)
   private val simplifier = new ConstSimplifier(new IdleTracker())
 
-  override def isApplicable(symbState: SymbState): Boolean = {
-    symbState.ex match {
-      // match the internal representation of lambda expressions or embedded calls
-      case OperEx(ApalacheOper.mkSeq, _, LetInEx(NameEx(appName), TlaOperDecl(operName, params, _))) =>
-        appName == operName && params.size == 1
-      case _ => false
-    }
+  override def isApplicable(symbState: SymbState): Boolean = symbState.ex match {
+    // match the internal representation of lambda expressions or embedded calls
+    case OperEx(ApalacheOper.mkSeq, _, LetInEx(NameEx(appName), TlaOperDecl(operName, params, _))) =>
+      appName == operName && params.size == 1
+    case _ => false
   }
 
   override def apply(state: SymbState): SymbState = state.ex match {

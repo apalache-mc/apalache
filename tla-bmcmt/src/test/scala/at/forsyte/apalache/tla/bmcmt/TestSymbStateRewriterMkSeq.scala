@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla._
 
 trait TestSymbStateRewriterMkSeq extends RewriterBase {
   test("""MkSeq(3, LAMBDA x: x + 1) = << 2, 3, 4 >>""") { rewriterType: SMTEncoding =>
-    // x(p) == x + 1
+    // A(x) == x + 1
     val intT = IntT1()
     val seqT = SeqT1(intT)
     val opT = OperT1(Seq(intT), intT)
@@ -32,7 +32,7 @@ trait TestSymbStateRewriterMkSeq extends RewriterBase {
   }
 
   test("""MkSeq(0, LAMBDA x: x + 1) = << >>""") { rewriterType: SMTEncoding =>
-    // x(p) == x + 1
+    // A(x) == x + 1
     val intT = IntT1()
     val seqT = SeqT1(intT)
     val opT = OperT1(Seq(intT), intT)

@@ -630,7 +630,7 @@ class Builder {
    * @param elemCtorEx
    *   an operator to construct a single element (either a name, or a lambda)
    * @return
-   *   `Seq(lenEx, elemCtorEx)`
+   *   `MkSeq(lenEx, elemCtorEx)`
    */
   def apalacheMkSeq(lenEx: BuilderEx, elemCtorEx: BuilderEx): BuilderEx = {
     BuilderOper(ApalacheOper.mkSeq, lenEx, elemCtorEx)

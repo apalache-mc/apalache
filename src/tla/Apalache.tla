@@ -54,7 +54,7 @@ SetAsFun(S) ==
     [ x \in Dom |-> CHOOSE y \in Rng: <<x, y>> \in S ]
 
 (**
- * A sequence constructor that is avoiding a function constructor.
+ * A sequence constructor that avoids using a function constructor.
  * Since Apalache is typed, this operator is more efficient than
  * FunAsSeq([ i \in 1..N |-> F(i) ]). Apalache requires N to be
  * a constant expression.
@@ -73,7 +73,6 @@ MkSeq(N, F(_)) ==
  *
  * @type: ((Int -> a), Int) => Seq(a);
  *)
-LOCAL INSTANCE Sequences
 FunAsSeq(fn, maxSeqLen) ==
     LET F(i) == fn[i] IN
     MkSeq(maxSeqLen, F)

@@ -154,12 +154,12 @@ expression), and element constructor `F(i)`.
 
 **Apalache type:** `(Int, (Int => a)) => Seq(a)`, for some type `a`.
 
-**Effect:** Produce the sequence of `n` elements `<<F(1), .., F(n)>>.
+**Effect:** Produce the sequence of `n` elements `<<F(1), .., F(n)>>`.
 
 **Determinism:** Deterministic.
 
 **Errors:**
-If `n` is not a constant or negative, Apalache reports an error.
+If `n` is not a constant, or is negative, Apalache reports an error.
 
 **Example in TLA+:**
 

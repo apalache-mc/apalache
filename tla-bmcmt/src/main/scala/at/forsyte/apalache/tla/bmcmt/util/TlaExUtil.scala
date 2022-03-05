@@ -5,7 +5,6 @@ import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaActionOper, TlaOper}
 import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx, TlaOperDecl}
 
 object TlaExUtil {
-  // Several Apalache operators accept definitions as arguments. Their variables are not considered.
   private def isFold(op: TlaOper): Boolean = {
     op == ApalacheOper.foldSet || op == ApalacheOper.foldSeq
   }
