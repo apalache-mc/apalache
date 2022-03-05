@@ -163,6 +163,10 @@ TestMkSeqLen ==
     LET Double(i) == 2 * i IN
     Len(MkSeq(4, Double)) = 4
 
+TestMkSeqFold ==
+    LET Double(i) == 2 * i IN
+    FoldSeq(Add, 0, MkSeq(4, Double)) = 20
+
 TestSelectSeq345 ==
     SelectSeq(seq345, IsOdd) = <<3, 5>>
 
@@ -211,4 +215,5 @@ AllTests ==
     /\ TestMkSeqConcat
     /\ TestMkSeqSubSeq
     /\ TestMkSeqLen
+    /\ TestMkSeqFold
 ===============================================================================

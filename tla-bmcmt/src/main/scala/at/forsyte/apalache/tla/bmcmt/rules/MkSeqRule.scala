@@ -31,19 +31,12 @@ class MkSeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = state.ex match {
     case OperEx(ApalacheOper.mkSeq, lenEx, LetInEx(NameEx(_), opDecl)) =>
-      val capacity = simplifier(lenEx) match {
-        case ValEx(TlaInt(n)) if n.isValidInt && n >= 0 =>
-          n.toInt
-
-        case unexpectedEx =>
-          val msg = "Expected a constant integer expression. Found: " + unexpectedEx
-          throw new TlaInputError(msg, Some(lenEx.ID))
-      }
+      val capacity = extractCapacity(lenEx)
 
       val operT = opDecl.typeTag.asTlaType1()
       val elemT = operT match {
-        case OperT1(Seq(IntT1()), elemT) => elemT
-        case tp                          =>
+        case OperT1(Seq(IntT1()), et) => et
+        case tp                       =>
           // this case should be found by the type checker
           val msg = "Expected an operator of type Int => <elem type>. Found: " + tp
           throw new TlaInputError(msg, Some(opDecl.ID))
@@ -74,5 +67,21 @@ class MkSeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     case _ =>
       throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
+  }
+
+  // extract capacity from the length expression
+  private def extractCapacity(lenEx: TlaEx): Int = {
+    simplifier(lenEx) match {
+      case ValEx(TlaInt(n)) if n.isValidInt && n >= 0 =>
+        n.toInt
+
+      case ValEx(TlaInt(n)) if !n.isValidInt || n < 0 =>
+        val msg = s"Expected an integer in the range [0, ${Int.MaxValue}]. Found: $n"
+        throw new TlaInputError(msg, Some(lenEx.ID))
+
+      case unexpectedEx =>
+        val msg = "Expected a constant integer expression. Found: " + unexpectedEx
+        throw new TlaInputError(msg, Some(lenEx.ID))
+    }
   }
 }
