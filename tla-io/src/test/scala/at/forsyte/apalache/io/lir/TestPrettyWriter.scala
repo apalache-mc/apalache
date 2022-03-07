@@ -192,20 +192,6 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
         |  8,
         |  9,
         |  10 }""".stripMargin
-    // Igor: I would prefer the layout below, but do not know how to do it with kiama
-    val iLikeItBetterButItDoesNotWork =
-      """{
-        |  1,
-        |  2,
-        |  3,
-        |  4,
-        |  5,
-        |  6,
-        |  7,
-        |  8,
-        |  9,
-        |  10
-        |}""".stripMargin
     val result = stringWriter.toString
     assert(expected == result)
   }

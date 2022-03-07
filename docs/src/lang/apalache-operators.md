@@ -3,7 +3,7 @@
 In addition to the standard TLA+ operators described in the previous section, Apalache defines a number of operators, which do not belong to the core language of TLA+, but which Apalache uses to provide clarity, efficiency, or special functionality. These operators belong to the module `Apalache`, and can be used in any specification by declaring `EXTENDS Apalache`.
 
 <a name="Assignment"></a>
-## Assigmnent
+## Assignment
 
 **Notation:** `v' := e`
 
@@ -42,6 +42,53 @@ True
 >> a = b = "c"    # b' := "c" /\ a' := b'
 >> a = (b == "c") # a' := (b = "c")
 ```
+
+----------------------------------------------------------------------------
+
+<a name="Gen"></a>
+## Value generators
+
+**Notation:** `Gen(bound)`
+
+**LaTeX notation:** `Gen(bound)`
+
+**Arguments:** One argument: an integer literal or a constant expression (of
+the integer type).
+
+**Apalache type:** `Int => a`, for some type `a`.
+
+**Effect:** A generator of a data structure. Given a positive integer `bound`,
+and assuming that the type of the operator application is known, we recursively
+generate a TLA+ data structure as a tree, whose width is bound by the number
+`bound`.
+
+**Determinism:** The generated data structure is unrestricted.  It is
+effectively implementing data non-determinism.
+
+**Errors:**
+If the type of `Gen` cannot be inferred from its application context,
+or if `bound` is not an integer, Apalache reports an error.
+
+**Example in TLA+:**
+
+```tla
+\* produce an unrestricted integer
+LET \* @type: Int;
+    oneInt == Gen(1)
+IN
+\* produce a set of integers up to 10 elements
+LET \* @type: Set(Int);
+    setOfInts == Gen(10)
+IN
+\* produce a sequence of up to 10 elements
+\* that are integers up to 10 elements each
+LET \* @type: Seq(Set(Int));
+    sequenceOfInts == Gen(10)
+IN
+...
+```
+
+----------------------------------------------------------------------------
 
 ## Folding
 
@@ -91,6 +138,36 @@ LET F == SetAsFun({ <<1, 2>>, <<1, 3>>, <<1, 4>> }) IN
   \/ F = [x \in { 1 } |-> 3]
   \/ F = [x \in { 1 } |-> 4]
 ```
+
+----------------------------------------------------------------------------
+
+<a name="MkSeq"></a>
+
+## Construct a sequence
+
+**Notation:** `MkSeq(n, F)`
+
+**LaTeX notation:** `MkSeq(n, F)`
+
+**Arguments:** Two arguments: sequence length `n` (a constant integer
+expression), and element constructor `F(i)`.
+
+**Apalache type:** `(Int, (Int => a)) => Seq(a)`, for some type `a`.
+
+**Effect:** Produce the sequence of `n` elements `<<F(1), .., F(n)>>`.
+
+**Determinism:** Deterministic.
+
+**Errors:**
+If `n` is not a constant, or is negative, Apalache reports an error.
+
+**Example in TLA+:**
+
+```tla
+LET Double(i) == 2 * i IN
+MkSeq(3, Double) = <<2, 4, 6>>   \* TRUE
+```
+
 
 ----------------------------------------------------------------------------
 

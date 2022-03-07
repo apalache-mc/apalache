@@ -54,12 +54,28 @@ SetAsFun(S) ==
     [ x \in Dom |-> CHOOSE y \in Rng: <<x, y>> \in S ]
 
 (**
+ * A sequence constructor that avoids using a function constructor.
+ * Since Apalache is typed, this operator is more efficient than
+ * FunAsSeq([ i \in 1..N |-> F(i) ]). Apalache requires N to be
+ * a constant expression.
+ *
+ * @type: (Int, (Int -> a)) => Seq(a);
+ *)
+LOCAL INSTANCE Integers
+MkSeq(N, F(_)) ==
+    \* This is the TLC implementation. Apalache does it differently.
+    [ i \in (1..N) |-> F(i) ]
+
+(**
  * As TLA+ is untyped, one can use function- and sequence-specific operators
  * interchangeably. However, to maintain correctness w.r.t. our type-system,
  * an explicit cast is needed when using functions as sequences.
+ *
+ * @type: ((Int -> a), Int) => Seq(a);
  *)
-LOCAL INSTANCE Sequences
-FunAsSeq(fn, maxSeqLen) == SubSeq(fn, 1, maxSeqLen)
+FunAsSeq(fn, maxSeqLen) ==
+    LET F(i) == fn[i] IN
+    MkSeq(maxSeqLen, F)
 
 (**
  * Annotating an expression \E x \in S: P as Skolemizable. That is, it can
@@ -95,6 +111,9 @@ FoldSet( Op(_,_), v, S ) == IF S = {}
                             ELSE LET w == CHOOSE x \in S: TRUE
                                   IN LET T == S \ {w}
                                       IN FoldSet( Op, Op(v,w), T )
+
+\* required by our default definition of FoldSeq
+LOCAL INSTANCE Sequences
 
 (**
  * The folding operator, used to implement computation over a sequence.

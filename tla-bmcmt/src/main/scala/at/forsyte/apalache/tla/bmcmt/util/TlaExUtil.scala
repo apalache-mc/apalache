@@ -1,13 +1,17 @@
 package at.forsyte.apalache.tla.bmcmt.util
 
 import at.forsyte.apalache.tla.bmcmt.InvalidTlaExException
-import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaActionOper}
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaActionOper, TlaOper}
 import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx, TlaOperDecl}
 
 object TlaExUtil {
+  private def isFold(op: TlaOper): Boolean = {
+    op == ApalacheOper.foldSet || op == ApalacheOper.foldSeq
+  }
 
   /**
    * Find the names that are used in an expression.
+   *
    * @param expr
    *   an expression
    * @return
@@ -23,11 +27,15 @@ object TlaExUtil {
       case OperEx(TlaActionOper.prime, NameEx(name)) =>
         used = used + (name + "'")
 
-      // Do not count the fold operator LET-IN itself
-      case OperEx(ApalacheOper.foldSet | ApalacheOper.foldSeq, LetInEx(_, TlaOperDecl(_, _, localBody)),
-              baseExAndCollectionEx @ _*) =>
+      // ignore the names in the auxiliary let-in definition
+      case OperEx(op, LetInEx(_, TlaOperDecl(_, _, localBody)), baseExAndCollectionEx @ _*) if isFold(op) =>
         findRec(localBody)
         baseExAndCollectionEx.foreach(findRec)
+
+      // ignore the names in the auxiliary let-in definition
+      case OperEx(ApalacheOper.mkSeq, len, LetInEx(_, TlaOperDecl(_, _, localBody))) =>
+        findRec(localBody)
+        findRec(len)
 
       case OperEx(_, args @ _*) =>
         args.foreach(findRec)

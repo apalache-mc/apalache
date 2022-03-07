@@ -123,7 +123,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     rewriter.rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
-          case NameEx(name) =>
+          case NameEx(_) =>
             val eq = tla
               .eql(cell.toNameEx ? "b", arena.cellFalse().toNameEx ? "b")
               .typed(boolTypes, "b")
@@ -229,7 +229,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     rewriter.rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
-          case NameEx(name) =>
+          case NameEx(_) =>
             assert(solverContext.sat())
             solverContext.assertGroundExpr(nextState.ex)
             rewriter.push()
@@ -316,7 +316,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     rewriter.rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
-          case NameEx(name) =>
+          case NameEx(_) =>
             val eq1 = tla
               .eql(left.toNameEx ? "b", arena.cellFalse().toNameEx ? "b")
               .typed(boolTypes, "b")
@@ -353,7 +353,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case predEx @ NameEx(name) =>
+      case predEx @ NameEx(_) =>
         solverContext.assertGroundExpr(predEx)
         rewriter.push()
         // both false

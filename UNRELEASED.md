@@ -12,4 +12,5 @@
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
 ### Features
 
-* Enable records in the arrays encoding, see #1288
+ * Implement the sequence constructor `Apalache!MkSeq`, see #1439
+ * Enable records in the arrays encoding, see #1288

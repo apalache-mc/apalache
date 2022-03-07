@@ -142,6 +142,31 @@ TestFoldSeqEmpty ==
 TestFoldSeqFlatten ==
     FoldSeq(Concat, <<>>, <<seq345, seqEmpty, seq26970>>) = <<3, 4, 5, 2, 6, 9, 7, 0>>
 
+TestMkSeqDouble ==
+    LET Double(i) == 2 * i IN
+    MkSeq(4, Double) = <<2, 4, 6, 8>>
+
+TestMkSeqEmpty ==
+    LET Double(i) == 2 * i IN
+    MkSeq(0, Double) = << >>
+
+TestMkSeqConcat ==
+    LET Double(i) == 2 * i IN
+    LET Triple(i) == 3 * i IN
+    MkSeq(2, Double) \o MkSeq(3, Triple) = <<2, 4, 3, 6, 9>>
+
+TestMkSeqSubSeq ==
+    LET Triple(i) == 3 * i IN
+    SubSeq(MkSeq(5, Triple), 2, 3) = <<6, 9>>
+
+TestMkSeqLen ==
+    LET Double(i) == 2 * i IN
+    Len(MkSeq(4, Double)) = 4
+
+TestMkSeqFold ==
+    LET Double(i) == 2 * i IN
+    FoldSeq(Add, 0, MkSeq(4, Double)) = 20
+
 TestSelectSeq345 ==
     SelectSeq(seq345, IsOdd) = <<3, 5>>
 
@@ -185,5 +210,10 @@ AllTests ==
     /\ TestSelectSeq345
     /\ TestSelectSeqEmpty
     /\ TestFoldSeqOverSelectSeq
-
+    /\ TestMkSeqDouble
+    /\ TestMkSeqEmpty
+    /\ TestMkSeqConcat
+    /\ TestMkSeqSubSeq
+    /\ TestMkSeqLen
+    /\ TestMkSeqFold
 ===============================================================================

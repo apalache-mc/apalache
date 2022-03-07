@@ -85,7 +85,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     nextState.ex match {
       case NameEx(name) =>
         assert(arena.cellFalse().toString == name)
-        assert(nextState.binding.toMap.isEmpty)
+        assert(nextState.binding.toMap.contains("x'"))
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -457,7 +457,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
 
     val state = new SymbState(asgn, arena, Binding())
     val rewriter = create(rewriterType)
-    val nextState = rewriter.rewriteUntilDone(state)
+    rewriter.rewriteUntilDone(state)
     assert(rewriter.solverContext.sat())
   // there is not much to check here, since it is just a function that returns an integer
   }

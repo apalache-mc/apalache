@@ -82,11 +82,8 @@ trait IrGenerators extends TlaType1Gen {
   /**
    * Function operators (`TlaFunOper._`)
    */
-  val functionOperators =
-    List(TlaFunOper.enum, TlaFunOper.tuple, TlaFunOper.app, TlaFunOper.domain, TlaFunOper.recFunRef, TlaFunOper.except)
-  /* TlaFunOper.{funDef,recFunDef} seem to cause lots of malformed expressions; disable them for now.
-   * cf. https://github.com/informalsystems/apalache/pull/1386#discussion_r811016316
-   */
+  val functionOperators = List(TlaFunOper.enum, TlaFunOper.tuple, TlaFunOper.app, TlaFunOper.domain, TlaFunOper.funDef,
+      TlaFunOper.recFunDef, TlaFunOper.recFunRef, TlaFunOper.except)
 
   /**
    * Action operators (`TlaActionOper._`)
@@ -260,10 +257,10 @@ trait IrGenerators extends TlaType1Gen {
    * @return
    *   a generator of operator declarations
    */
-  def genTlaOperDecl(exGen: UserContext => Gen[TlaEx])(ctx: UserContext): Gen[TlaOperDecl] = {
+  def genTlaOperDecl(exGen: UserContext => Gen[TlaEx])(ctx: UserContext): Gen[TlaOperDecl] = sized { size =>
     for {
       name <- identifier.suchThat(n => !ctx.contains(n))
-      body <- exGen(ctx)
+      body <- resize(size - 1, exGen(ctx))
       nparams <- choose(0, maxArgs)
       params <- listOfN(nparams, identifier)
       tt <- genTypeTag

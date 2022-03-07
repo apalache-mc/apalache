@@ -93,7 +93,6 @@ class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("""Cardinality(S) >= 1 becomes ~(S = {})""") {
-    val types = Map("i" -> IntT1(), "S" -> SetT1(IntT1()), "b" -> BoolT1())
     val input = ge(card(name("S").as(intSetT)).as(intT), int(1)).as(boolT)
     val output = optimizer.apply(input)
     val expected =
@@ -102,7 +101,6 @@ class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("""Cardinality(S) /= 0 becomes ~(S = {})""") {
-    val types = Map("i" -> IntT1(), "S" -> SetT1(IntT1()), "b" -> BoolT1())
     val input = ge(card(name("S").as(intSetT)).as(intT), int(1)).as(boolT)
     val output = optimizer.apply(input)
     val expected =

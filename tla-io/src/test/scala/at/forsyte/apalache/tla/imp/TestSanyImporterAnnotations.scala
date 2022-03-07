@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.io.annotations.{Annotation, AnnotationParserError}
+import at.forsyte.apalache.io.annotations.Annotation
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
@@ -164,7 +164,7 @@ class TestSanyImporterAnnotations extends AnyFunSuite with BeforeAndAfter {
 
     module.declarations.find(_.name == "A") match {
       // SanyImporter introduces a let-definition before application of a LOCAL operator
-      case Some(d @ TlaOperDecl(_, _, LetInEx(_, localDef))) =>
+      case Some(TlaOperDecl(_, _, LetInEx(_, localDef))) =>
         val annotations = annotationStore(localDef.ID)
         val expected = Annotation("pure") :: Annotation(
             "type",
@@ -199,7 +199,7 @@ class TestSanyImporterAnnotations extends AnyFunSuite with BeforeAndAfter {
     val module = loadModule(text, "oper")
 
     module.declarations.find(_.name == "A") match {
-      case Some(d @ TlaOperDecl(_, _, LetInEx(_, incDecl))) =>
+      case Some(TlaOperDecl(_, _, LetInEx(_, incDecl))) =>
         val annotations = annotationStore(incDecl.ID)
         val expected = Annotation("pure") :: Annotation(
             "type",

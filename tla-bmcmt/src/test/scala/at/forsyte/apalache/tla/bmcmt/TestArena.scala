@@ -30,7 +30,6 @@ trait TestArena extends FixtureAnyFunSuite {
 
   test("BOOLEAN has FALSE and TRUE") { _ =>
     val arena = Arena.create(solver)
-    val boolean = arena.cellBooleanSet()
     assert(List(arena.cellFalse(), arena.cellTrue()) == arena.getHas(arena.cellBooleanSet()))
   }
 }
