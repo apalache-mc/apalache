@@ -43,7 +43,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case NameEx(name) =>
+      case NameEx(_) =>
         val cell = nextState.arena.findCellByNameEx(nextState.ex)
         assert(cell.cellType == FinFunSetT(FinSetT(IntT()), FinSetT(BoolT())))
         val dom = nextState.arena.getDom(cell)
@@ -71,7 +71,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case NameEx(name) =>
+      case NameEx(_) =>
         val cell = nextState.arena.findCellByNameEx(nextState.ex)
         assert(cell.cellType == FinFunSetT(FinSetT(IntT()), FinSetT(FinSetT(BoolT()))))
         val dom = nextState.arena.getDom(cell)
@@ -242,7 +242,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case NameEx(name) =>
+      case NameEx(_) =>
         val cell = nextState.arena.findCellByNameEx(nextState.ex)
         assert(cell.cellType == FinFunSetT(FinSetT(IntT()), FinSetT(BoolT())))
         val dom = nextState.arena.getDom(cell)

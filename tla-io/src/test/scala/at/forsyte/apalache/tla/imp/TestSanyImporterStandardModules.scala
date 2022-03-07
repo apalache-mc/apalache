@@ -133,10 +133,10 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
     )
 
     // check the source info
-    val plus = root.declarations.find {
+    root.declarations.find {
       _.name == "Plus"
     } match {
-      case Some(TlaOperDecl(_, _, oe @ OperEx(oper, _*))) =>
+      case Some(TlaOperDecl(_, _, oe @ OperEx(_, _*))) =>
         val loc = sourceStore.find(oe.ID).get
         assert(
             SourceRegion(SourcePosition(4, 9), SourcePosition(4, 13)) == loc.region
@@ -496,6 +496,8 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         |Sklm == Skolem(\E y \in S: TRUE)
         |Expnd == Expand(SUBSET S)
         |CC == ConstCardinality(Cardinality(S) >= 2)
+        |Identity(i) == i 
+        |Seq2to11 == MkSeq(10, Identity)
         |================================
       """.stripMargin
 
@@ -514,7 +516,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
 
     val root = modules("root")
     expectSourceInfoInDefs(root)
-    assert(6 == root.declarations.size)
+    assert(8 == root.declarations.size)
 
     def expectDecl(name: String, body: TlaEx) = {
       findAndExpectOperDecl(root, name, List(), body)
@@ -554,6 +556,10 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
                 ValEx(TlaInt(2)),
             ),
         ),
+    )
+    expectDecl(
+        "Seq2to11",
+        OperEx(ApalacheOper.mkSeq, ValEx(TlaInt(10)), NameEx("Identity")),
     )
   }
 }

@@ -139,7 +139,6 @@ trait TestSymbStateRewriterPowerset extends RewriterBase {
     var nextState = rewriter.rewriteUntilDone(state)
     val baseCell = nextState.asCell
     nextState = new PowSetCtor(rewriter).confringo(nextState, baseCell)
-    val powCell = nextState.asCell
     // check equality
     val eq = eql(nextState.ex,
         enumSet(enumSet() ? "I", enumSet(int(1)) ? "I", enumSet(int(2)) ? "I", enumSet(int(1), int(2)) ? "I") ? "II")

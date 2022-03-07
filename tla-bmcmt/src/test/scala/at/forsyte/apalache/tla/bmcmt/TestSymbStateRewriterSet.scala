@@ -77,7 +77,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case predEx @ NameEx(name) =>
+      case predEx @ NameEx(_) =>
         rewriter.push()
         solverContext.assertGroundExpr(predEx)
         assert(solverContext.sat())
@@ -99,7 +99,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case predEx @ NameEx(name) =>
+      case predEx @ NameEx(_) =>
         rewriter.push()
         solverContext.assertGroundExpr(predEx)
         assert(solverContext.sat())
@@ -118,7 +118,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case predEx @ NameEx(name) =>
+      case predEx @ NameEx(_) =>
         rewriter.push()
         solverContext.assertGroundExpr(predEx)
         assert(!solverContext.sat())
@@ -181,7 +181,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     rewriter.rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
-          case predEx @ NameEx(name) =>
+          case predEx @ NameEx(_) =>
             rewriter.push()
             solverContext.assertGroundExpr(not(predEx.as(boolT)).as(boolT))
             assert(!solverContext.sat())
@@ -204,7 +204,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     rewriter.rewriteUntilDone(state).ex match {
-      case predEx @ NameEx(name) =>
+      case predEx @ NameEx(_) =>
         rewriter.push()
         solverContext.assertGroundExpr(not(predEx.as(boolT)).as(boolT))
         assert(solverContext.sat())
@@ -227,7 +227,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     rewriter.rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
-          case predEx @ NameEx(name) =>
+          case predEx @ NameEx(_) =>
             rewriter.push()
             // cell = \TRUE
             solverContext.assertGroundExpr(eql(arena.cellTrue().toNameEx.as(boolT), cell.toNameEx.as(boolT)).as(boolT))
@@ -260,7 +260,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case predEx @ NameEx(name) =>
+      case predEx @ NameEx(_) =>
         nextState.arena.appendCell(IntT()) // the buggy rule implementation triggered an error here
         rewriter.push()
         solverContext.assertGroundExpr(predEx)
@@ -284,7 +284,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     rewriter.rewriteUntilDone(state).ex match {
-      case predEx @ NameEx(name) =>
+      case predEx @ NameEx(_) =>
         rewriter.push()
         // cell = TRUE
         solverContext.assertGroundExpr(eql(arena.cellTrue().toNameEx.as(boolT), cell.toNameEx.as(boolT)).as(boolT))
@@ -403,7 +403,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case predEx @ NameEx(name) =>
+      case predEx @ NameEx(_) =>
         rewriter.push()
         // not equal
         solverContext.assertGroundExpr(predEx)
@@ -451,7 +451,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case predEx @ NameEx(name) =>
+      case predEx @ NameEx(_) =>
         rewriter.push()
         // equal
         solverContext.assertGroundExpr(predEx)
@@ -510,7 +510,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case newSet @ NameEx(name) =>
+      case NameEx(_) =>
         rewriter.push()
         assert(solverContext.sat())
       // we check actual membership in another test
@@ -619,7 +619,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case membershipEx @ NameEx(name) =>
+      case membershipEx @ NameEx(_) =>
         rewriter.push()
         solverContext.assertGroundExpr(membershipEx)
         assert(!solverContext.sat())
@@ -659,7 +659,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case membershipEx @ NameEx(name) =>
+      case membershipEx @ NameEx(_) =>
         rewriter.push()
         solverContext.assertGroundExpr(membershipEx)
         assert(solverContext.sat())
@@ -682,7 +682,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case membershipEx @ NameEx(name) =>
+      case membershipEx @ NameEx(_) =>
         rewriter.push()
         solverContext.assertGroundExpr(membershipEx)
         assert(!solverContext.sat())
@@ -716,7 +716,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case membershipEx @ NameEx(name) =>
+      case membershipEx @ NameEx(_) =>
         rewriter.push()
         solverContext.assertGroundExpr(membershipEx)
         assert(solverContext.sat())
@@ -747,7 +747,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case membershipEx @ NameEx(name) =>
+      case membershipEx @ NameEx(_) =>
         rewriter.push()
         solverContext.assertGroundExpr(membershipEx)
         assert(solverContext.sat())
@@ -816,7 +816,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case predEx @ NameEx(name) =>
+      case predEx @ NameEx(_) =>
         assert(solverContext.sat())
         // check equality
         rewriter.push()
@@ -882,7 +882,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case predEx @ NameEx(name) =>
+      case predEx @ NameEx(_) =>
         rewriter.push()
         solverContext.assertGroundExpr(predEx)
         assert(solverContext.sat())
