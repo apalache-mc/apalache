@@ -176,6 +176,17 @@ TestSelectSeqEmpty ==
 TestFoldSeqOverSelectSeq ==
     FoldSeq(Add, 0, SelectSeq(seq345, IsOdd)) = 3 + 5
 
+TestFunAsSeq3 ==
+    LET f == [ i \in 1..3 |-> i + 1 ] IN
+    FunAsSeq(f, 3) = <<2, 3, 4>>
+
+TestFunAsSeqEmpty ==
+    LET
+        \* @type: Int -> Int;
+        f == [ i \in {} |-> i ]
+    IN
+    FunAsSeq(f, 0) = << >>
+
 \* this test is a disjunction of all smaller tests
 AllTests ==
     /\ TestHeadEmpty
@@ -216,4 +227,6 @@ AllTests ==
     /\ TestMkSeqSubSeq
     /\ TestMkSeqLen
     /\ TestMkSeqFold
+    /\ TestFunAsSeq3
+    /\ TestFunAsSeqEmpty
 ===============================================================================
