@@ -46,6 +46,19 @@ class TestSetMembershipSimplifier
   private val intSeqSet = tla.seqSet(tla.intSet()).as(SetT1(SeqT1(IntT1())))
   private val natSeqSet = tla.seqSet(tla.natSet()).as(SetT1(SeqT1(IntT1())))
 
+  private val boolSetVal = tla.enumSet(boolVal, boolName).as(SetT1(BoolT1()))
+  private val strSetVal = tla.enumSet(strVal, strName).as(SetT1(StrT1()))
+  private val intSetVal = tla.enumSet(intVal, intName).as(SetT1(IntT1()))
+
+  private val boolSetName = tla.name("boolSet").as(SetT1(BoolT1()))
+  private val strSetName = tla.name("strSet").as(SetT1(StrT1()))
+  private val intSetName = tla.name("intSet").as(SetT1(IntT1()))
+
+  private val boolPowerset = tla.seqSet(tla.booleanSet()).as(SetT1(SeqT1(BoolT1())))
+  private val strPowerset = tla.seqSet(tla.stringSet()).as(SetT1(SeqT1(StrT1())))
+  private val intPowerset = tla.seqSet(tla.intSet()).as(SetT1(SeqT1(IntT1())))
+  private val natPowerset = tla.seqSet(tla.natSet()).as(SetT1(SeqT1(IntT1())))
+
   val expressions = List(
       (boolName, boolVal, boolSet),
       (strName, strVal, strSet),
@@ -53,6 +66,9 @@ class TestSetMembershipSimplifier
       (boolSeqName, boolSeqVal, boolSeqSet),
       (strSeqName, strSeqVal, strSeqSet),
       (intSeqName, intSeqVal, intSeqSet),
+      (boolSetName, boolSetVal, boolPowerset),
+      (strSetName, strSetVal, strPowerset),
+      (intSetName, intSetVal, intPowerset),
   )
 
   override def beforeEach(): Unit = {
@@ -60,24 +76,54 @@ class TestSetMembershipSimplifier
   }
 
   test("simplifies appropriately-typed set membership") {
+    // i \in Nat  ~>  i >= 0
     val intNameInNat = tla.in(intName, tla.natSet()).as(BoolT1())
     val intValInNat = tla.in(intVal, tla.natSet()).as(BoolT1())
     simplifier(intNameInNat) shouldBe tla.ge(intName, tla.int(0)).as(BoolT1())
     simplifier(intValInNat) shouldBe tla.ge(intVal, tla.int(0)).as(BoolT1())
 
+    /* *** tests for all supported types of applicable sets *** */
+
     expressions.foreach { case (name, value, set) =>
+      // name \in ApplicableSet  ~>  TRUE
+      // e.g., b \in BOOLEAN, i \in Int, ...  ~>  TRUE
       val inputName = tla.in(name, set).as(BoolT1())
       simplifier(inputName) shouldBe tlaTrue
 
+      // literal \in ApplicableSet  ~>  TRUE
+      // e.g., TRUE \in BOOLEAN, 42 \in Int, ...  ~>  TRUE
       val inputValue = tla.in(value, set).as(BoolT1())
       simplifier(inputValue) shouldBe tlaTrue
 
+      /* *** nested cases *** */
+
+      // name \in ApplicableSet /\ _  ~>  TRUE
+      // e.g., i \in Int /\ _, ...  ~>  TRUE
       val nestedInputName = tla.and(tla.in(name, set).as(BoolT1()), tlaTrue).as(BoolT1())
       simplifier(nestedInputName) shouldBe tla.and(tlaTrue, tlaTrue).as(BoolT1())
 
+      // literal \in ApplicableSet /\ _  ~>  TRUE
+      // e.g., 42 \in Int /\ _, ...  ~>  TRUE
       val nestedInputValue = tla.and(tla.in(name, set).as(BoolT1()), tlaTrue).as(BoolT1())
       simplifier(nestedInputValue) shouldBe tla.and(tlaTrue, tlaTrue).as(BoolT1())
     }
+
+    /* *** tests of particular expressions *** */
+
+    // <<{{1}}>> \in Seq(SUBSET Int)  ~>  TRUE
+    val setOfSetOfInt = SetT1(SetT1(IntT1()))
+    val seqOfSetOfSetOfInt = SeqT1(setOfSetOfInt)
+    val nestedSeqSubsetVal =
+      tla.tuple(tla.enumSet(intSetVal).as(setOfSetOfInt)).as(SeqT1(setOfSetOfInt)).as(seqOfSetOfSetOfInt)
+    val nestedSeqSubsetTest =
+      tla.in(nestedSeqSubsetVal, tla.seqSet(tla.powSet(intSet).as(setOfSetOfInt)).as(seqOfSetOfSetOfInt)).as(BoolT1())
+    simplifier(nestedSeqSubsetTest) shouldBe tlaTrue
+
+    // {<<1>>} \in SUBSET (Seq(Int))  ~>  TRUE
+    val setOfSeqOfInt = SetT1(SeqT1(IntT1()))
+    val nestedSubsetSeqVal = tla.enumSet(tla.tuple(intVal).as(SeqT1(IntT1()))).as(setOfSeqOfInt)
+    val nestedSubsetSeqTest = tla.in(nestedSubsetSeqVal, tla.powSet(intSeqSet).as(setOfSeqOfInt)).as(BoolT1())
+    simplifier(nestedSubsetSeqTest) shouldBe tlaTrue
   }
 
   test("returns myInt \\in Nat unchanged") {
@@ -85,5 +131,10 @@ class TestSetMembershipSimplifier
     val intSeqValInSeqNat = tla.in(intSeqVal, natSeqSet).as(BoolT1())
     simplifier(intSeqNameInSeqNat) shouldBe intSeqNameInSeqNat
     simplifier(intSeqValInSeqNat) shouldBe intSeqValInSeqNat
+
+    val intSetNameInNatPowerset = tla.in(intSetName, natPowerset).as(BoolT1())
+    val intSetValInNatPowerset = tla.in(intSetVal, natPowerset).as(BoolT1())
+    simplifier(intSetNameInNatPowerset) shouldBe intSetNameInNatPowerset
+    simplifier(intSetValInNatPowerset) shouldBe intSetValInNatPowerset
   }
 }

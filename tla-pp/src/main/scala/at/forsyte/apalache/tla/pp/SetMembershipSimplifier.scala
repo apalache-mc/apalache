@@ -16,6 +16,7 @@ import at.forsyte.apalache.tla.lir.values._
  *   - `n \in Nat` ~> `x >= 0`
  *   - `b \in BOOLEAN`, `i \in Int`, `r \in Real` ~> `TRUE`
  *   - `seq \in Seq(_)` ~> `TRUE`
+ *   - `set \in SUBSET S` ~> `TRUE`
  *
  * @author
  *   Thomas Pani
@@ -38,17 +39,21 @@ class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTr
    *
    * The applicable sets are inductively defined as
    *   - the predefined sets BOOLEAN, Int, Real, STRING,
-   *   - sets of sequences over applicable sets, e.g., Seq(BOOLEAN), Seq(Int), Seq(Seq(Int)), ...
+   *   - sets of sequences over applicable sets, e.g., Seq(BOOLEAN), Seq(Int), Seq(Seq(Int)), Seq(SUBSET Int), ...
+   *   - power sets of applicable sets, e.g., SUBSET BOOLEAN, SUBSET Int, SUBSET Seq(Int), ...
    *
-   * In particular, it is *not* applicable to `Nat` and sequence sets, since `i \in Nat` does not hold for all
-   * `IntT1`-typed `i`.
+   * In particular, it is *not* applicable to `Nat` and sequence sets / power sets thereof, since `i \in Nat` does not
+   * hold for all `IntT1`-typed `i`.
    */
   private def isApplicable: Function[TlaEx, Boolean] = {
     // base case: BOOLEAN, Int, Real, STRING
     case ValEx(TlaBoolSet) | ValEx(TlaIntSet) | ValEx(TlaRealSet) | ValEx(TlaStrSet) => true
 
-    // inductive case: Seq(s) for applicable set `s`
+    // inductive cases:
+    // 1. Seq(s) for applicable set `s`
     case OperEx(TlaSetOper.seqSet, set) => isApplicable(set)
+    // 2. SUBSET s for applicable set `s`
+    case OperEx(TlaSetOper.powerset, set) => isApplicable(set)
 
     // otherwise
     case _ => false
