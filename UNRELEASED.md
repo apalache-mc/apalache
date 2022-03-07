@@ -13,3 +13,4 @@
 ### Features
 
  * Implement the sequence constructor `Apalache!MkSeq`, see #1439
+ * Add support for `Apalache!FunAsSeq`, see #1442
