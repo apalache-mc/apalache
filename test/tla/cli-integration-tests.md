@@ -1184,6 +1184,15 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
+### check SimpleLambda succeeds
+Regression test for https://github.com/informalsystems/apalache/issues/1446
+
+```sh
+$ apalache-mc check --inv=Inv SimpleLambda.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
 ### check Bug914 succeeds
 
 Regression test for https://github.com/informalsystems/apalache/issues/914 In
