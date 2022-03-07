@@ -12,13 +12,13 @@ import at.forsyte.apalache.tla.lir.values._
  * After Apalache's type-checking, we can rewrite some expressions to simpler forms. For example, the (after
  * type-checking) vacuously true `x \in BOOLEAN` is rewritten to `TRUE` (as `x` must be a `BoolT1`).
  *
- * We currently perform the following simplifications (for applicable sets AS, see [[isApplicable]]):
+ * We currently perform the following simplifications (for type-defining sets TDS, see [[isTypeDefining]]):
  *   - `n \in Nat` ~> `x >= 0`
  *   - `b \in BOOLEAN`, `i \in Int`, `r \in Real` ~> `TRUE`
- *   - `seq \in Seq(AS)` ~> `TRUE`
- *   - `set \in SUBSET AS` ~> `TRUE`
- *   - `fun \in [AS1 -> AS2]` ~> `TRUE`
- *   - `fun \in [Dom -> AS]` ~> `DOMAIN fun = Dom`
+ *   - `seq \in Seq(TDS)` ~> `TRUE`
+ *   - `set \in SUBSET TDS` ~> `TRUE`
+ *   - `fun \in [TDS1 -> TDS2]` ~> `TRUE`
+ *   - `fun \in [Dom -> TDS]` ~> `DOMAIN fun = Dom`
  *
  * @author
  *   Thomas Pani
@@ -36,29 +36,29 @@ class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTr
   }
 
   /**
-   * Returns true iff rewriting of a well-typed set-membership test `x \in arg` to `TRUE` is applicable for the
-   * function's argument.
+   * Returns true iff the passed TLA+ expression is a type-defining set. Type-defining sets contain all of the values of
+   * their respective element type.
    *
-   * The applicable sets are inductively defined as
+   * The type-defining sets are inductively defined as
    *   - the predefined sets BOOLEAN, Int, Real, STRING,
-   *   - sets of sequences over applicable sets, e.g., Seq(BOOLEAN), Seq(Int), Seq(Seq(Int)), Seq(SUBSET Int), ...
-   *   - power sets of applicable sets, e.g., SUBSET BOOLEAN, SUBSET Int, SUBSET Seq(Int), ...
-   *   - sets of functions over applicable sets, e.g., [Int -> BOOLEAN], ...
+   *   - sets of sequences over type-defining sets, e.g., Seq(BOOLEAN), Seq(Int), Seq(Seq(Int)), Seq(SUBSET Int), ...
+   *   - power sets of type-defining sets, e.g., SUBSET BOOLEAN, SUBSET Int, SUBSET Seq(Int), ...
+   *   - sets of functions over type-defining sets, e.g., [Int -> BOOLEAN], ...
    *
-   * In particular, it is *not* applicable to `Nat` and sequence sets / power sets thereof, since `i \in Nat` does not
+   * In particular, `Nat` is not type-defining, nor are sequence sets / power sets thereof, since `i \in Nat` does not
    * hold for all `IntT1`-typed `i`.
    */
-  private def isApplicable: Function[TlaEx, Boolean] = {
+  private def isTypeDefining: Function[TlaEx, Boolean] = {
     // base case: BOOLEAN, Int, Real, STRING
     case ValEx(TlaBoolSet) | ValEx(TlaIntSet) | ValEx(TlaRealSet) | ValEx(TlaStrSet) => true
 
     // inductive cases:
-    // 1. Seq(s) for applicable set `s`
-    case OperEx(TlaSetOper.seqSet, set) => isApplicable(set)
-    // 2. SUBSET s for applicable set `s`
-    case OperEx(TlaSetOper.powerset, set) => isApplicable(set)
-    // 3. [s1 -> s2] for applicable sets `s1` and `s2
-    case OperEx(TlaSetOper.funSet, set1, set2) => isApplicable(set1) && isApplicable(set2)
+    // 1. Seq(s) for a type-defining set `s`
+    case OperEx(TlaSetOper.seqSet, set) => isTypeDefining(set)
+    // 2. SUBSET s for a type-defining set `s`
+    case OperEx(TlaSetOper.powerset, set) => isTypeDefining(set)
+    // 3. [s1 -> s2] for type-defining sets `s1` and `s2
+    case OperEx(TlaSetOper.funSet, set1, set2) => isTypeDefining(set1) && isTypeDefining(set2)
 
     // otherwise
     case _ => false
@@ -75,13 +75,13 @@ class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTr
     case OperEx(TlaSetOper.in, name, ValEx(TlaNatSet)) =>
       OperEx(TlaArithOper.ge, name, ValEx(TlaInt(0))(intTag))(boolTag)
 
-    /* For ApplicableSets AS (see `isApplicable`): */
+    /* For type-defining sets TDS (see [[isTypeDefining]]): */
 
-    // x \in AS  ~>  TRUE
-    case OperEx(TlaSetOper.in, _, set) if isApplicable(set) => trueVal
+    // x \in TDS  ~>  TRUE
+    case OperEx(TlaSetOper.in, _, set) if isTypeDefining(set) => trueVal
 
-    // fun \in [Dom -> AS]  ~>  DOMAIN fun = Dom    (fun \in [AS1 -> AS2] is handled above)
-    case OperEx(TlaSetOper.in, fun, OperEx(TlaSetOper.funSet, domain, set2)) if isApplicable(set2) =>
+    // fun \in [Dom -> TDS]  ~>  DOMAIN fun = Dom    (fun \in [TDS1 -> TDS2] is handled above)
+    case OperEx(TlaSetOper.in, fun, OperEx(TlaSetOper.funSet, domain, set2)) if isTypeDefining(set2) =>
       OperEx(TlaOper.eq, OperEx(TlaFunOper.domain, fun)(domain.typeTag), domain)(boolTag)
 
     // otherwise, return `ex` unchanged
