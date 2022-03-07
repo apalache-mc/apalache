@@ -102,10 +102,15 @@ object ApalacheOper {
   }
 
   /**
-   * Attempt to dynamically cast an Int -> T function to a Seq(T). The first argument should be the function expression
-   * and the second argument should be an integer, denoting the maximal length of the sequence.
+   * <p>Attempt to dynamically cast an Int -> T function to a Seq(T). The first argument should be the function
+   * expression and the second argument should be an integer, denoting the maximal length of the sequence.</p>
+   *
+   * <p>We keep this operator in the IR. However, we are using the definition of this operator from Apalache.tla. Hence,
+   * if you construct an expression that contains `funAsSeq`, its constructor will throw.</p>
    */
   object funAsSeq extends ApalacheOper {
+    require(false, "This operator is defined in Apalache.tla. Do not construct it.")
+
     override def name: String = "Apalache!FunAsSeq"
 
     override def arity: OperArity = FixedArity(2)

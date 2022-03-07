@@ -328,5 +328,35 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     assert(solverContext.sat())
   }
 
+  test("""(<<3, 4, 5, 6>> EXCEPT ![2] = 7) = <<3, 7, 5, 6>>""") { rewriterType: SMTEncoding =>
+    val tup3to6 = tuple(3.to(6).map(int): _*).as(intSeqT)
+    val tup3756 = tuple(Seq(3, 7, 5, 6).map(int): _*).as(intSeqT)
+    val exceptEx = except(tup3to6, tuple(int(2)).as(TupT1(IntT1())), int(7)).as(intSeqT)
+    val eq = eql(exceptEx, tup3756).as(boolT)
+
+    val state = new SymbState(eq, arena, Binding())
+    assertTlaExAndRestore(create(rewriterType), state)
+  }
+
+  test("""(<<3, 4, 5, 6>> EXCEPT ![10] = 7) = <<3, 4, 5, 6>>""") { rewriterType: SMTEncoding =>
+    val tup3to6 = tuple(3.to(6).map(int): _*).as(intSeqT)
+    val exceptEx = except(tup3to6, tuple(int(10)).as(TupT1(IntT1())), int(7)).as(intSeqT)
+    // since 10 does not belong to the domain, the sequence does not change
+    val eq = eql(exceptEx, tup3to6).as(boolT)
+
+    val state = new SymbState(eq, arena, Binding())
+    assertTlaExAndRestore(create(rewriterType), state)
+  }
+
+  test("""(<< >> EXCEPT ![10] = 7) = << >>""") { rewriterType: SMTEncoding =>
+    val emptyTuple = tuple().as(intSeqT)
+    val exceptEx = except(emptyTuple, tuple(int(10)).as(TupT1(IntT1())), int(7)).as(intSeqT)
+    // since 10 does not belong to the domain, the sequence does not change
+    val eq = eql(exceptEx, emptyTuple).as(boolT)
+
+    val state = new SymbState(eq, arena, Binding())
+    assertTlaExAndRestore(create(rewriterType), state)
+  }
+
   // for PICK see TestCherryPick
 }
