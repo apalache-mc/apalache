@@ -182,28 +182,28 @@ functions in Apalache:</p>
 is hard to implement faithfully without blowing up the SMT encoding.</li>
 </ul>
 <p>Hence, we recommend using the operators <code>FoldSet</code> and <code>FoldSeq</code>:</p>
-<pre><code class="language-tla">(**
+<pre><code class="language-tla"> * an explicit cast is needed when using functions as sequences.
+ *
+ * @type: ((Int -&gt; a), Int) =&gt; Seq(a);
+ *)
+FunAsSeq(fn, maxSeqLen) ==
+    LET F(i) == fn[i] IN
+    MkSeq(maxSeqLen, F)
+
+(**
+ * Annotating an expression \E x \in S: P as Skolemizable. That is, it can
+ * be replaced with an expression c \in S /\ P(c) for a fresh constant c.
+ * Not every exisential can be replaced with a constant, this should be done
+ * with care. Apalache detects Skolemizable expressions by static analysis.
+ *)
+Skolem(e) == e
+
+(**
  * A hint to the model checker to expand a set S, instead of dealing
  * with it symbolically. Apalache finds out which sets have to be expanded
  * by static analysis.
  *)
 Expand(S) == S
-
-(**
- * A hint to the model checker to replace its argument Cardinality(S) &gt;= k
- * with a series of existential quantifiers for a constant k.
- * Similar to Skolem, this has to be done carefully. Apalache automatically
- * places this hint by static analysis.
- *)
-ConstCardinality(cardExpr) == cardExpr
-
-(**
- * The folding operator, used to implement computation over a set.
- * Apalache implements a more efficient encoding than the one below.
- * (from the community modules).
- *)
-RECURSIVE FoldSet(_,_,_)
-FoldSet( Op(_,_), v, S ) == IF S = {}
 </code></pre>
 <p>These operators are treated by Apalache in a more efficient manner than
 recursive operators. They are always terminating and thus do not require an
