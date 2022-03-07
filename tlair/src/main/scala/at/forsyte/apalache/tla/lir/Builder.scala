@@ -760,7 +760,6 @@ class Builder {
         ApalacheOper.expand.name -> ApalacheOper.expand,
         ApalacheOper.constCard.name -> ApalacheOper.constCard,
         ApalacheOper.distinct.name -> ApalacheOper.distinct,
-        ApalacheOper.funAsSeq.name -> ApalacheOper.funAsSeq,
         ApalacheOper.mkSeq.name -> ApalacheOper.mkSeq,
         ApalacheOper.foldSet.name -> ApalacheOper.foldSet,
         ApalacheOper.foldSeq.name -> ApalacheOper.foldSeq,

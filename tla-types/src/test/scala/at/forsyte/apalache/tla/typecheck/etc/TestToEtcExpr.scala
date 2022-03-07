@@ -752,13 +752,6 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     assert(expected == gen(ex))
   }
 
-  test("Apalache!FunAsSeq(fun, len)") {
-    val typ = parser("(Int -> a, Int) => Seq(a)")
-    val expected = mkAppByName(Seq(typ), "fun", "len")
-    val ex = OperEx(ApalacheOper.funAsSeq, tla.name("fun"), tla.name("len"))
-    assert(expected == gen(ex))
-  }
-
   test("Apalache!Seq(len, ctor)") {
     val typ = parser("(Int, Int => a) => Seq(a)")
     val expected = mkAppByName(Seq(typ), "len", "ctor")

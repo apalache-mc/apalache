@@ -176,6 +176,17 @@ TestSelectSeqEmpty ==
 TestFoldSeqOverSelectSeq ==
     FoldSeq(Add, 0, SelectSeq(seq345, IsOdd)) = 3 + 5
 
+TestFunAsSeq3 ==
+    LET f == [ i \in 1..3 |-> i + 1 ] IN
+    FunAsSeq(f, 3) = <<2, 3, 4>>
+
+TestFunAsSeqEmpty ==
+    LET
+        \* @type: Int -> Int;
+        f == [ i \in {} |-> i ]
+    IN
+    FunAsSeq(f, 0) = << >>
+
 TestExceptLen ==
     Len([seq345 EXCEPT ![2] = 10]) = 3
 
@@ -222,6 +233,8 @@ AllTests ==
     /\ TestMkSeqSubSeq
     /\ TestMkSeqLen
     /\ TestMkSeqFold
+    /\ TestFunAsSeq3
+    /\ TestFunAsSeqEmpty
     /\ TestExceptLen
     /\ TestExceptDomain
 ===============================================================================
