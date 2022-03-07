@@ -13,4 +13,4 @@
 ### Features
 
  * Implement the sequence constructor `Apalache!MkSeq`, see #1439
- * Enable records in the arrays encoding, see #1288
+ * Implement `EXCEPT` on sequences, see #1444
