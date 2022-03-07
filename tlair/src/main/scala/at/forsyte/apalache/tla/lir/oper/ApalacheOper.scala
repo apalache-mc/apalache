@@ -114,6 +114,18 @@ object ApalacheOper {
   }
 
   /**
+   * A sequence constructor that is avoiding a function constructor. Since Apalache is typed, this operator is more
+   * efficient than `FunAsSeq([ i \in 1..N |-> F(i) ])`.
+   */
+  object mkSeq extends ApalacheOper {
+    override def name: String = "Apalache!MkSeq"
+
+    override def arity: OperArity = FixedArity(2)
+
+    override val precedence: (Int, Int) = (100, 100)
+  }
+
+  /**
    * The FoldSet operator from the community modules. Given a binary operator `Op(_,_)`, an initial value `v` and a set
    * `S`, fold performs the equivalent of S.foldLeft(v)(Op) in Scala, that is, iteratively applies Op to the previous
    * partial computation, starting with `v`, and an arbitrary element of S.

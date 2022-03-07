@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx}
-import at.forsyte.apalache.tla.lir.oper.ApalacheOper
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaOper}
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 
 /**
@@ -10,20 +10,29 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
  * no longer necessary to guard against preprocessing.
  */
 class CallByNameWrapHandler(tracker: TransformationTracker) {
-//  We create class wrappers, so `tr.getClass.getSimpleName` works in the passes
+  //  We create class wrappers, so `tr.getClass.getSimpleName` works in the passes
   sealed class Wrap(tr: TlaExTransformation) extends TlaExTransformation {
     override def apply(arg: TlaEx): TlaEx = tr(arg)
   }
+
   sealed class Unwrap(tr: TlaExTransformation) extends TlaExTransformation {
     override def apply(arg: TlaEx): TlaEx = tr(arg)
   }
 
   private def wrapEx(nameEx: NameEx) = OperEx(ApalacheOper.callByName, nameEx)(nameEx.typeTag)
 
+  // should we wrap an operator
+  private def isFold(op: TlaOper) = {
+    op == ApalacheOper.foldSet || op == ApalacheOper.foldSeq
+  }
+
   def wrap: Wrap = new Wrap(tracker.trackEx {
-    // Currently, we only support call-by-name in folding
-    case foldEx @ OperEx(op @ (ApalacheOper.foldSet | ApalacheOper.foldSeq), nameEx: NameEx, base, set) =>
-      OperEx(op, wrapEx(nameEx), wrap(base), wrap(set))(foldEx.typeTag)
+    // Call-by-name in several Apalache operators
+    case toWrapEx @ OperEx(op, nameEx: NameEx, base, set) if isFold(op) =>
+      OperEx(op, wrapEx(nameEx), wrap(base), wrap(set))(toWrapEx.typeTag)
+
+    case toWrapEx @ OperEx(op @ ApalacheOper.mkSeq, len, nameEx: NameEx) =>
+      OperEx(op, wrap(len), wrapEx(nameEx))(toWrapEx.typeTag)
 
     // recursive processing of composite operators
     case ex @ OperEx(op, args @ _*) =>
@@ -40,9 +49,11 @@ class CallByNameWrapHandler(tracker: TransformationTracker) {
 
   def unwrap: Unwrap = new Unwrap(tracker.trackEx {
     // Currently, we only support call-by-name in folding
-    case foldEx @ OperEx(op @ (ApalacheOper.foldSet | ApalacheOper.foldSeq), OperEx(ApalacheOper.callByName, letInEx),
-            base, set) =>
+    case foldEx @ OperEx(op, OperEx(ApalacheOper.callByName, letInEx), base, set) if isFold(op) =>
       OperEx(op, unwrap(letInEx), unwrap(base), unwrap(set))(foldEx.typeTag)
+
+    case mkSeqEx @ OperEx(op @ ApalacheOper.mkSeq, len, OperEx(ApalacheOper.callByName, letInEx)) =>
+      OperEx(op, unwrap(len), unwrap(letInEx))(mkSeqEx.typeTag)
 
     // recursive processing of composite operators
     case ex @ OperEx(op, args @ _*) =>

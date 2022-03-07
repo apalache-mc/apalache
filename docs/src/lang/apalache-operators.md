@@ -141,6 +141,36 @@ LET F == SetAsFun({ <<1, 2>>, <<1, 3>>, <<1, 4>> }) IN
 
 ----------------------------------------------------------------------------
 
+<a name="MkSeq"></a>
+
+## Construct a sequence
+
+**Notation:** `MkSeq(n, F)`
+
+**LaTeX notation:** `MkSeq(n, F)`
+
+**Arguments:** Two arguments: sequence length `n` (a constant integer
+expression), and element constructor `F(i)`.
+
+**Apalache type:** `(Int, (Int => a)) => Seq(a)`, for some type `a`.
+
+**Effect:** Produce the sequence of `n` elements `<<F(1), .., F(n)>>`.
+
+**Determinism:** Deterministic.
+
+**Errors:**
+If `n` is not a constant, or is negative, Apalache reports an error.
+
+**Example in TLA+:**
+
+```tla
+LET Double(i) == 2 * i IN
+MkSeq(3, Double) = <<2, 4, 6>>   \* TRUE
+```
+
+
+----------------------------------------------------------------------------
+
 <a name="Cast"></a>
 
 ## Interpret a function as a sequence
