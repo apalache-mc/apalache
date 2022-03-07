@@ -21,6 +21,14 @@ class TestSetMembershipSimplifier
 
   private val tlaTrue = tla.bool(true).as(BoolT1())
 
+  private val boolSeqT: SeqT1 = SeqT1(BoolT1())
+  private val strSeqT: SeqT1 = SeqT1(StrT1())
+  private val intSeqT: SeqT1 = SeqT1(IntT1())
+
+  private val boolSetT: SetT1 = SetT1(BoolT1())
+  private val strSetT: SetT1 = SetT1(StrT1())
+  private val intSetT: SetT1 = SetT1(IntT1())
+
   private val boolVal = tla.bool(true).as(BoolT1())
   private val strVal = tla.str("abc").as(StrT1())
   private val intVal = tla.int(42).as(IntT1())
@@ -30,35 +38,35 @@ class TestSetMembershipSimplifier
   private val intName = tla.name("i").as(IntT1())
   private val funName = tla.name("fun").as(FunT1(IntT1(), BoolT1()))
 
-  private val boolSet = tla.booleanSet().as(SetT1(BoolT1()))
-  private val strSet = tla.stringSet().as(SetT1(StrT1()))
-  private val intSet = tla.intSet().as(SetT1(IntT1()))
+  private val boolSet = tla.booleanSet().as(boolSetT)
+  private val strSet = tla.stringSet().as(strSetT)
+  private val intSet = tla.intSet().as(intSetT)
 
-  private val boolSeqVal = tla.tuple(boolVal, boolName).as(SeqT1(BoolT1()))
-  private val strSeqVal = tla.tuple(strVal, strName).as(SeqT1(StrT1()))
-  private val intSeqVal = tla.tuple(intVal, intName).as(SeqT1(IntT1()))
+  private val boolSeqVal = tla.tuple(boolVal, boolName).as(boolSeqT)
+  private val strSeqVal = tla.tuple(strVal, strName).as(strSeqT)
+  private val intSeqVal = tla.tuple(intVal, intName).as(intSeqT)
 
-  private val boolSeqName = tla.name("boolSeq").as(SeqT1(BoolT1()))
-  private val strSeqName = tla.name("strSeq").as(SeqT1(StrT1()))
-  private val intSeqName = tla.name("intSeq").as(SeqT1(IntT1()))
+  private val boolSeqName = tla.name("boolSeq").as(boolSeqT)
+  private val strSeqName = tla.name("strSeq").as(strSeqT)
+  private val intSeqName = tla.name("intSeq").as(intSeqT)
 
-  private val boolSeqSet = tla.seqSet(tla.booleanSet()).as(SetT1(SeqT1(BoolT1())))
-  private val strSeqSet = tla.seqSet(tla.stringSet()).as(SetT1(SeqT1(StrT1())))
-  private val intSeqSet = tla.seqSet(tla.intSet()).as(SetT1(SeqT1(IntT1())))
-  private val natSeqSet = tla.seqSet(tla.natSet()).as(SetT1(SeqT1(IntT1())))
+  private val boolSeqSet = tla.seqSet(tla.booleanSet()).as(SetT1(boolSeqT))
+  private val strSeqSet = tla.seqSet(tla.stringSet()).as(SetT1(strSeqT))
+  private val intSeqSet = tla.seqSet(tla.intSet()).as(SetT1(intSeqT))
+  private val natSeqSet = tla.seqSet(tla.natSet()).as(SetT1(intSeqT))
 
-  private val boolSetVal = tla.enumSet(boolVal, boolName).as(SetT1(BoolT1()))
-  private val strSetVal = tla.enumSet(strVal, strName).as(SetT1(StrT1()))
-  private val intSetVal = tla.enumSet(intVal, intName).as(SetT1(IntT1()))
+  private val boolSetVal = tla.enumSet(boolVal, boolName).as(boolSetT)
+  private val strSetVal = tla.enumSet(strVal, strName).as(strSetT)
+  private val intSetVal = tla.enumSet(intVal, intName).as(intSetT)
 
-  private val boolSetName = tla.name("boolSet").as(SetT1(BoolT1()))
-  private val strSetName = tla.name("strSet").as(SetT1(StrT1()))
-  private val intSetName = tla.name("intSet").as(SetT1(IntT1()))
+  private val boolSetName = tla.name("boolSet").as(boolSetT)
+  private val strSetName = tla.name("strSet").as(strSetT)
+  private val intSetName = tla.name("intSet").as(intSetT)
 
-  private val boolPowerset = tla.seqSet(tla.booleanSet()).as(SetT1(SeqT1(BoolT1())))
-  private val strPowerset = tla.seqSet(tla.stringSet()).as(SetT1(SeqT1(StrT1())))
-  private val intPowerset = tla.seqSet(tla.intSet()).as(SetT1(SeqT1(IntT1())))
-  private val natPowerset = tla.seqSet(tla.natSet()).as(SetT1(SeqT1(IntT1())))
+  private val boolPowerset = tla.seqSet(tla.booleanSet()).as(SetT1(boolSeqT))
+  private val strPowerset = tla.seqSet(tla.stringSet()).as(SetT1(strSeqT))
+  private val intPowerset = tla.seqSet(tla.intSet()).as(SetT1(intSeqT))
+  private val natPowerset = tla.seqSet(tla.natSet()).as(SetT1(intSeqT))
 
   val expressions = List(
       (boolName, boolVal, boolSet),
@@ -119,7 +127,7 @@ class TestSetMembershipSimplifier
     /* *** tests of particular expressions *** */
 
     // <<{{1}}>> \in Seq(SUBSET Int)  ~>  TRUE
-    val setOfSetOfInt = SetT1(SetT1(IntT1()))
+    val setOfSetOfInt = SetT1(intSetT)
     val seqOfSetOfSetOfInt = SeqT1(setOfSetOfInt)
     val nestedSeqSubsetVal =
       tla.tuple(tla.enumSet(intSetVal).as(setOfSetOfInt)).as(SeqT1(setOfSetOfInt)).as(seqOfSetOfSetOfInt)
@@ -128,14 +136,14 @@ class TestSetMembershipSimplifier
     simplifier(nestedSeqSubsetTest) shouldBe tlaTrue
 
     // {<<1>>} \in SUBSET (Seq(Int))  ~>  TRUE
-    val setOfSeqOfInt = SetT1(SeqT1(IntT1()))
-    val nestedSubsetSeqVal = tla.enumSet(tla.tuple(intVal).as(SeqT1(IntT1()))).as(setOfSeqOfInt)
+    val setOfSeqOfInt = SetT1(intSeqT)
+    val nestedSubsetSeqVal = tla.enumSet(tla.tuple(intVal).as(intSeqT)).as(setOfSeqOfInt)
     val nestedSubsetSeqTest = tla.in(nestedSubsetSeqVal, tla.powSet(intSeqSet).as(setOfSeqOfInt)).as(BoolT1())
     simplifier(nestedSubsetSeqTest) shouldBe tlaTrue
 
     // fun \in [Seq(SUBSET Int) -> SUBSET Seq(BOOLEAN)], ...  ~>  TRUE
-    val intPowersetSeqType = SeqT1(SetT1(IntT1()))
-    val boolSeqPowersetType = SetT1(SeqT1(BoolT1()))
+    val intPowersetSeqType = SeqT1(intSetT)
+    val boolSeqPowersetType = SetT1(boolSeqT)
     val nestedFunSetType = SetT1(FunT1(intPowersetSeqType, boolSeqPowersetType))
     val nestedInput = tla
       .in(funName,
@@ -146,10 +154,10 @@ class TestSetMembershipSimplifier
     simplifier(nestedInput) shouldBe tlaTrue
 
     // fun \in [RM -> PredefSet], ...  ~>  DOMAIN fun = RM
-    val domain = tla.name("RM").as(SetT1(IntT1()))
+    val domain = tla.name("RM").as(intSetT)
     val funSetType = SetT1(FunT1(BoolT1(), IntT1()))
     val funConstToBoolean = tla.in(funName, tla.funSet(domain, boolSet).as(funSetType)).as(BoolT1())
-    simplifier(funConstToBoolean) shouldBe tla.eql(tla.dom(funName).as(SetT1(IntT1())), domain).as(BoolT1())
+    simplifier(funConstToBoolean) shouldBe tla.eql(tla.dom(funName).as(intSetT), domain).as(BoolT1())
   }
 
   test("returns myInt \\in Nat unchanged") {
