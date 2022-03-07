@@ -187,6 +187,12 @@ TestFunAsSeqEmpty ==
     IN
     FunAsSeq(f, 0) = << >>
 
+TestExceptLen ==
+    Len([seq345 EXCEPT ![2] = 10]) = 3
+
+TestExceptDomain ==
+    DOMAIN [seq345 EXCEPT ![2] = 10] = DOMAIN seq345
+
 \* this test is a disjunction of all smaller tests
 AllTests ==
     /\ TestHeadEmpty
@@ -229,4 +235,6 @@ AllTests ==
     /\ TestMkSeqFold
     /\ TestFunAsSeq3
     /\ TestFunAsSeqEmpty
+    /\ TestExceptLen
+    /\ TestExceptDomain
 ===============================================================================
