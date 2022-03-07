@@ -154,10 +154,11 @@ Operator  | Supported? | Milestone | Comment
 
 Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
-``<<...>>``, ``Head``, ``Tail``, ``Len``, ``SubSeq``, `Append`, `\o`, `f[e]` | ✔ | - | The sequence constructor ``<<...>>`` needs a [type annotation](https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html).
-`EXCEPT` | ✖ |   | If you need it, let us know, issue #324
+`<<...>>` | ✔ |   | Often needs a [type annotation](https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html).
+`Head`, `Tail`, `Len``, `SubSeq`, `Append`, `\o`, `f[e]` | ✔ | - |
+`EXCEPT` | ✔ |   |
+`SelectSeq` | ✔ | - | Not as efficient, as it could be, see [#1350](https://github.com/informalsystems/apalache/issues/1350).
 `Seq(S)` | ✖ | - | Use `Gen` of Apalache to produce bounded sequences
-`SelectSeq` | ✖ | - | Planned in [#873](https://github.com/informalsystems/apalache/issues/873). Till then, use `FoldSeq`.
 
 ### FiniteSets
 
