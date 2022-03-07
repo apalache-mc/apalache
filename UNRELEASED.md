@@ -14,3 +14,6 @@
 
  * Implement the sequence constructor `Apalache!MkSeq`, see #1439
  * Implement `EXCEPT` on sequences, see #1444
+
+### Bug fixes
+ * Fixed bug where TLA+ `LAMBDA`s wouldn't inline outside `Fold` and `MkSeq`, see #1446
