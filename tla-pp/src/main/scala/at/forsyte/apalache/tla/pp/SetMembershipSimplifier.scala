@@ -36,11 +36,22 @@ class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTr
    * Returns true iff rewriting of a well-typed set-membership test `x \in arg` to `TRUE` is applicable for the
    * function's argument.
    *
-   * In particular, it is *not* applicable to `Nat`, since `i \in Nat` does not hold for all `IntT1`-typed `i`.
+   * The applicable sets are inductively defined as
+   *   - the predefined sets BOOLEAN, Int, Real, STRING,
+   *   - sets of sequences over applicable sets, e.g., Seq(BOOLEAN), Seq(Int), Seq(Seq(Int)), ...
+   *
+   * In particular, it is *not* applicable to `Nat` and sequence sets, since `i \in Nat` does not hold for all
+   * `IntT1`-typed `i`.
    */
-  private def isApplicable: Function[TlaPredefSet, Boolean] = {
-    case TlaBoolSet | TlaIntSet | TlaRealSet | TlaStrSet => true
-    case _                                               => false
+  private def isApplicable: Function[TlaEx, Boolean] = {
+    // base case: BOOLEAN, Int, Real, STRING
+    case ValEx(TlaBoolSet) | ValEx(TlaIntSet) | ValEx(TlaRealSet) | ValEx(TlaStrSet) => true
+
+    // inductive case: Seq(s) for applicable set `s`
+    case OperEx(TlaSetOper.seqSet, set) => isApplicable(set)
+
+    // otherwise
+    case _ => false
   }
 
   /**
@@ -50,18 +61,14 @@ class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTr
    *   [[SetMembershipSimplifier]] for a full list of supported rewritings.
    */
   private def transformMembership: PartialFunction[TlaEx, TlaEx] = {
-    // n \in Nat  ->  x >= 0
+    // n \in Nat  ~>  x >= 0
     case OperEx(TlaSetOper.in, name, ValEx(TlaNatSet)) =>
       OperEx(TlaArithOper.ge, name, ValEx(TlaInt(0))(intTag))(boolTag)
 
-    // b \in BOOLEAN, i \in Int, r \in Real  ->  TRUE
-    case OperEx(TlaSetOper.in, name, ValEx(ps: TlaPredefSet)) if isApplicable(ps) => trueVal
+    // x \in AS  ~>  TRUE    for applicable sets AS (see `isApplicable`):
+    case OperEx(TlaSetOper.in, _, set) if isApplicable(set) => trueVal
 
-    // seq \in Seq(_)  ->  TRUE
-    case OperEx(TlaSetOper.in, name, OperEx(TlaSetOper.seqSet, ValEx(ps: TlaPredefSet))) if isApplicable(ps) =>
-      trueVal
-
-    // return `ex` unchanged
+    // otherwise, return `ex` unchanged
     case ex => ex
   }
 }
