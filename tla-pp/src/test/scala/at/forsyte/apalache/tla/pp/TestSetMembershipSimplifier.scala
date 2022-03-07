@@ -60,6 +60,11 @@ class TestSetMembershipSimplifier
   }
 
   test("simplifies appropriately-typed set membership") {
+    val intNameInNat = tla.in(intName, tla.natSet()).as(BoolT1())
+    val intValInNat = tla.in(intVal, tla.natSet()).as(BoolT1())
+    simplifier(intNameInNat) shouldBe tla.ge(intName, tla.int(0)).as(BoolT1())
+    simplifier(intValInNat) shouldBe tla.ge(intVal, tla.int(0)).as(BoolT1())
+
     expressions.foreach { case (name, value, set) =>
       val inputName = tla.in(name, set).as(BoolT1())
       simplifier(inputName) shouldBe tlaTrue
@@ -72,11 +77,6 @@ class TestSetMembershipSimplifier
 
       val nestedInputValue = tla.and(tla.in(name, set).as(BoolT1()), tlaTrue).as(BoolT1())
       simplifier(nestedInputValue) shouldBe tla.and(tlaTrue, tlaTrue).as(BoolT1())
-
-      val intNameInNat = tla.in(intName, tla.natSet()).as(BoolT1())
-      val intValInNat = tla.in(intVal, tla.natSet()).as(BoolT1())
-      simplifier(intNameInNat) shouldBe tla.ge(intName, tla.int(0)).as(BoolT1())
-      simplifier(intValInNat) shouldBe tla.ge(intVal, tla.int(0)).as(BoolT1())
     }
   }
 
