@@ -70,7 +70,8 @@ class TestSetMembershipSimplifier
 
   private val tupleVal = tla.tuple(tla.int(1).as(IntT1()), tla.int(42).as(IntT1())).as(intSeqT)
   private val tupleName = tla.name("tup").as(intSeqT)
-  private val cartesianSet = tla.times(tla.intSet().as(intSetT), tla.intSet().as(intSetT)).as(SetT1(intSeqT))
+  private val cartesianSet =
+    tla.times(tla.intSet().as(intSetT), tla.intSet().as(intSetT)).as(SetT1(TupT1(IntT1(), IntT1())))
 
   val expressions = List(
       (boolName, boolVal, boolSet),
