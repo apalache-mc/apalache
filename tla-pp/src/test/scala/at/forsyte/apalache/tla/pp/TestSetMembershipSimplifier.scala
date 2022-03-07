@@ -28,6 +28,7 @@ class TestSetMembershipSimplifier
   private val boolName = tla.name("b").as(BoolT1())
   private val strName = tla.name("s").as(StrT1())
   private val intName = tla.name("i").as(IntT1())
+  private val funName = tla.name("fun").as(FunT1(IntT1(), BoolT1()))
 
   private val boolSet = tla.booleanSet().as(SetT1(BoolT1()))
   private val strSet = tla.stringSet().as(SetT1(StrT1()))
@@ -106,6 +107,13 @@ class TestSetMembershipSimplifier
       // e.g., 42 \in Int /\ _, ...  ~>  TRUE
       val nestedInputValue = tla.and(tla.in(name, set).as(BoolT1()), tlaTrue).as(BoolT1())
       simplifier(nestedInputValue) shouldBe tla.and(tlaTrue, tlaTrue).as(BoolT1())
+
+      // fun \in [ApplicableSet1 -> ApplicableSet2], ...  ~>  TRUE
+      expressions.foreach { case (name2, _, set2) =>
+        val funSetType = SetT1(FunT1(name.typeTag.asTlaType1(), name2.typeTag.asTlaType1()))
+        val funInFunSet = tla.in(funName, tla.funSet(set, set2).as(funSetType)).as(BoolT1())
+        simplifier(funInFunSet) shouldBe tlaTrue
+      }
     }
 
     /* *** tests of particular expressions *** */
@@ -124,6 +132,24 @@ class TestSetMembershipSimplifier
     val nestedSubsetSeqVal = tla.enumSet(tla.tuple(intVal).as(SeqT1(IntT1()))).as(setOfSeqOfInt)
     val nestedSubsetSeqTest = tla.in(nestedSubsetSeqVal, tla.powSet(intSeqSet).as(setOfSeqOfInt)).as(BoolT1())
     simplifier(nestedSubsetSeqTest) shouldBe tlaTrue
+
+    // fun \in [Seq(SUBSET Int) -> SUBSET Seq(BOOLEAN)], ...  ~>  TRUE
+    val intPowersetSeqType = SeqT1(SetT1(IntT1()))
+    val boolSeqPowersetType = SetT1(SeqT1(BoolT1()))
+    val nestedFunSetType = SetT1(FunT1(intPowersetSeqType, boolSeqPowersetType))
+    val nestedInput = tla
+      .in(funName,
+          tla
+            .funSet(tla.seqSet(intSeqSet).as(intPowersetSeqType), tla.powSet(boolSeqSet).as(boolSeqPowersetType))
+            .as(nestedFunSetType))
+      .as(BoolT1())
+    simplifier(nestedInput) shouldBe tlaTrue
+
+    // fun \in [RM -> PredefSet], ...  ~>  DOMAIN fun = RM
+    val domain = tla.name("RM").as(SetT1(IntT1()))
+    val funSetType = SetT1(FunT1(BoolT1(), IntT1()))
+    val funConstToBoolean = tla.in(funName, tla.funSet(domain, boolSet).as(funSetType)).as(BoolT1())
+    simplifier(funConstToBoolean) shouldBe tla.eql(tla.dom(funName).as(SetT1(IntT1())), domain).as(BoolT1())
   }
 
   test("returns myInt \\in Nat unchanged") {

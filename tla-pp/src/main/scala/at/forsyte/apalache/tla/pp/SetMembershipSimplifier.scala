@@ -12,11 +12,13 @@ import at.forsyte.apalache.tla.lir.values._
  * After Apalache's type-checking, we can rewrite some expressions to simpler forms. For example, the (after
  * type-checking) vacuously true `x \in BOOLEAN` is rewritten to `TRUE` (as `x` must be a `BoolT1`).
  *
- * We currently perform the following simplifications:
+ * We currently perform the following simplifications (for applicable sets AS, see [[isApplicable]]):
  *   - `n \in Nat` ~> `x >= 0`
  *   - `b \in BOOLEAN`, `i \in Int`, `r \in Real` ~> `TRUE`
- *   - `seq \in Seq(_)` ~> `TRUE`
- *   - `set \in SUBSET S` ~> `TRUE`
+ *   - `seq \in Seq(AS)` ~> `TRUE`
+ *   - `set \in SUBSET AS` ~> `TRUE`
+ *   - `fun \in [AS1 -> AS2]` ~> `TRUE`
+ *   - `fun \in [Dom -> AS]` ~> `DOMAIN fun = Dom`
  *
  * @author
  *   Thomas Pani
@@ -41,6 +43,7 @@ class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTr
    *   - the predefined sets BOOLEAN, Int, Real, STRING,
    *   - sets of sequences over applicable sets, e.g., Seq(BOOLEAN), Seq(Int), Seq(Seq(Int)), Seq(SUBSET Int), ...
    *   - power sets of applicable sets, e.g., SUBSET BOOLEAN, SUBSET Int, SUBSET Seq(Int), ...
+   *   - sets of functions over applicable sets, e.g., [Int -> BOOLEAN], ...
    *
    * In particular, it is *not* applicable to `Nat` and sequence sets / power sets thereof, since `i \in Nat` does not
    * hold for all `IntT1`-typed `i`.
@@ -54,6 +57,8 @@ class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTr
     case OperEx(TlaSetOper.seqSet, set) => isApplicable(set)
     // 2. SUBSET s for applicable set `s`
     case OperEx(TlaSetOper.powerset, set) => isApplicable(set)
+    // 3. [s1 -> s2] for applicable sets `s1` and `s2
+    case OperEx(TlaSetOper.funSet, set1, set2) => isApplicable(set1) && isApplicable(set2)
 
     // otherwise
     case _ => false
@@ -70,8 +75,14 @@ class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTr
     case OperEx(TlaSetOper.in, name, ValEx(TlaNatSet)) =>
       OperEx(TlaArithOper.ge, name, ValEx(TlaInt(0))(intTag))(boolTag)
 
-    // x \in AS  ~>  TRUE    for applicable sets AS (see `isApplicable`):
+    /* For ApplicableSets AS (see `isApplicable`): */
+
+    // x \in AS  ~>  TRUE
     case OperEx(TlaSetOper.in, _, set) if isApplicable(set) => trueVal
+
+    // fun \in [Dom -> AS]  ~>  DOMAIN fun = Dom    (fun \in [AS1 -> AS2] is handled above)
+    case OperEx(TlaSetOper.in, fun, OperEx(TlaSetOper.funSet, domain, set2)) if isApplicable(set2) =>
+      OperEx(TlaOper.eq, OperEx(TlaFunOper.domain, fun)(domain.typeTag), domain)(boolTag)
 
     // otherwise, return `ex` unchanged
     case ex => ex
