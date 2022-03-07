@@ -2,6 +2,12 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.22.1
+
+### Bug fixes
+
+ * Fix a corner case in `\E x \in S: P`, see #1426
+
 ## 0.22.0
 
 ### Breaking changes
