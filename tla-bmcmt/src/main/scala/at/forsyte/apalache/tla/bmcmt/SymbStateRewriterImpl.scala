@@ -288,11 +288,13 @@ class SymbStateRewriterImpl(
           -> List(new LabelRule(this)),
         key(OperEx(ApalacheOper.gen, tla.int(2)))
           -> List(new GenRule(this)),
-        // folds
+        // folds and MkSeq
         key(OperEx(ApalacheOper.foldSet, tla.name("A"), tla.name("v"), tla.name("S")))
           -> List(new FoldSetRule(this)),
         key(OperEx(ApalacheOper.foldSeq, tla.name("A"), tla.name("v"), tla.name("s")))
           -> List(new FoldSeqRule(this)),
+        key(OperEx(ApalacheOper.mkSeq, tla.int(10), tla.name("A")))
+          -> List(new MkSeqRule(this)),
     )
   } ///// ADD YOUR RULES ABOVE
 

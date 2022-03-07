@@ -183,17 +183,24 @@ object Context {
     private var fwdList: Option[List[ContextUnit]] = None
 
     def push(decl: ContextUnit): Context = {
-      unitMap.get(decl.name).collect {
+      unitMap.get(decl.name).foreach {
         case dup if dup != decl =>
-          val printer = UTFPrinter
-          val dupS = printer(dup.asInstanceOf[DeclUnit].decl)
-          val declS = printer(decl.asInstanceOf[DeclUnit].decl)
+          val dupS = unitToString(dup)
+          val declS = unitToString(decl)
           throw new MalformedSepecificationError(
               s"Found two different declarations with the same name [${decl.name}]: [$dupS] and [$declS].")
+
+        case _ => () // do nothing
       }
 
       val newList = decl :: revList
       new ContextImpl(lookupPrefix, useQualifiedNames, newList, unitMap + (decl.name -> decl))
+    }
+
+    private def unitToString: ContextUnit => String = {
+      case DeclUnit(d)            => UTFPrinter(d)
+      case OperAliasUnit(_, oper) => oper.name
+      case u                      => u.toString
     }
 
     override def lookup(name: String): ContextUnit = {
