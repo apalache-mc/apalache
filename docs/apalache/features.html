@@ -289,10 +289,11 @@ argument.</p>
 </tbody></table>
 <h3><a class="header" href="#sequences" id="sequences">Sequences</a></h3>
 <table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
-<tr><td><code>&lt;&lt;...&gt;&gt;</code>, <code>Head</code>, <code>Tail</code>, <code>Len</code>, <code>SubSeq</code>, <code>Append</code>, <code>\o</code>, <code>f[e]</code></td><td align="center">✔</td><td align="center">-</td><td>The sequence constructor <code>&lt;&lt;...&gt;&gt;</code> needs a <a href="https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html">type annotation</a>.</td></tr>
-<tr><td><code>EXCEPT</code></td><td align="center">✖</td><td align="center"></td><td>If you need it, let us know, issue #324</td></tr>
+<tr><td><code>&lt;&lt;...&gt;&gt;</code></td><td align="center">✔</td><td align="center"></td><td>Often needs a <a href="https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html">type annotation</a>.</td></tr>
+<tr><td><code>Head</code>, <code>Tail</code>, <code>Len``, </code>SubSeq<code>, </code>Append<code>, </code>\o<code>, </code>f[e]`</td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>EXCEPT</code></td><td align="center">✔</td><td align="center"></td><td></td></tr>
+<tr><td><code>SelectSeq</code></td><td align="center">✔</td><td align="center">-</td><td>Not as efficient, as it could be, see <a href="https://github.com/informalsystems/apalache/issues/1350">#1350</a>.</td></tr>
 <tr><td><code>Seq(S)</code></td><td align="center">✖</td><td align="center">-</td><td>Use <code>Gen</code> of Apalache to produce bounded sequences</td></tr>
-<tr><td><code>SelectSeq</code></td><td align="center">✖</td><td align="center">-</td><td>Planned in <a href="https://github.com/informalsystems/apalache/issues/873">#873</a>. Till then, use <code>FoldSeq</code>.</td></tr>
 </tbody></table>
 <h3><a class="header" href="#finitesets" id="finitesets">FiniteSets</a></h3>
 <table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
