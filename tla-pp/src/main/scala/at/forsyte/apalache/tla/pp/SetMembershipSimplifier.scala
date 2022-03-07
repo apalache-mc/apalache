@@ -7,9 +7,18 @@ import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, Transforma
 import at.forsyte.apalache.tla.lir.values._
 
 /**
- * A simplifier that rewrites vacuously true membership tests based on type information.
+ * A simplifier that rewrites expressions commonly found in `TypeOK`. Assumes expressions to be well-typed.
  *
- * For example, `x \in BOOLEAN` is rewritten to `TRUE` if x is typed BoolT1.
+ * After Apalache's type-checking, we can rewrite some expressions to simpler forms. For example, the (after
+ * type-checking) vacuously true `x \in BOOLEAN` is rewritten to `TRUE` (as `x` must be a `BoolT1`).
+ *
+ * We currently perform the following simplifications (for type-defining sets TDS, see [[isTypeDefining]]):
+ *   - `n \in Nat` ~> `x >= 0`
+ *   - `b \in BOOLEAN`, `i \in Int`, `r \in Real` ~> `TRUE`
+ *   - `seq \in Seq(TDS)` ~> `TRUE`
+ *   - `set \in SUBSET TDS` ~> `TRUE`
+ *   - `fun \in [TDS1 -> TDS2]` ~> `TRUE`
+ *   - `fun \in [Dom -> TDS]` ~> `DOMAIN fun = Dom`
  *
  * @author
  *   Thomas Pani
@@ -27,46 +36,57 @@ class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTr
   }
 
   /**
-   * Returns the type of a TLA+ predefined set, if rewriting set membership to TRUE is applicable. In particular, it is
-   * *not* applicable to `Nat`, since `i \in Nat` does not hold for all `IntT1`-typed `i`.
+   * Returns true iff the passed TLA+ expression is a type-defining set. Type-defining sets contain all of the values of
+   * their respective element type.
+   *
+   * The type-defining sets are inductively defined as
+   *   - the predefined sets BOOLEAN, Int, Real, STRING,
+   *   - sets of sequences over type-defining sets, e.g., Seq(BOOLEAN), Seq(Int), Seq(Seq(Int)), Seq(SUBSET Int), ...
+   *   - power sets of type-defining sets, e.g., SUBSET BOOLEAN, SUBSET Int, SUBSET Seq(Int), ...
+   *   - sets of functions over type-defining sets, e.g., [Int -> BOOLEAN], ...
+   *
+   * In particular, `Nat` is not type-defining, nor are sequence sets / power sets thereof, since `i \in Nat` does not
+   * hold for all `IntT1`-typed `i`.
    */
-  private def typeOfSupportedPredefSet: PartialFunction[TlaPredefSet, TlaType1] = {
-    case TlaBoolSet => BoolT1()
-    case TlaIntSet  => IntT1()
-    case TlaRealSet => RealT1()
-    case TlaStrSet  => StrT1()
-    // intentionally omits TlaNatSet, see above.
+  private def isTypeDefining: Function[TlaEx, Boolean] = {
+    // base case: BOOLEAN, Int, Real, STRING
+    case ValEx(TlaBoolSet) | ValEx(TlaIntSet) | ValEx(TlaRealSet) | ValEx(TlaStrSet) => true
+
+    // inductive cases:
+    // 1. Seq(s) for a type-defining set `s`
+    case OperEx(TlaSetOper.seqSet, set) => isTypeDefining(set)
+    // 2. SUBSET s for a type-defining set `s`
+    case OperEx(TlaSetOper.powerset, set) => isTypeDefining(set)
+    // 3. [s1 -> s2] for type-defining sets `s1` and `s2
+    case OperEx(TlaSetOper.funSet, set1, set2) => isTypeDefining(set1) && isTypeDefining(set2)
+
+    // otherwise
+    case _ => false
   }
 
   /**
-   * Checks if this transformation is applicable (see [[typeOfSupportedPredefSet]]) to a TLA+ predefined set `ps` of
-   * primitives, and if the types of `name` and `ps` match.
-   */
-  private def isApplicable(name: TlaEx, ps: TlaPredefSet): Boolean =
-    typeOfSupportedPredefSet.isDefinedAt(ps) && name.typeTag == Typed(typeOfSupportedPredefSet(ps))
-
-  /**
-   * Checks if this transformation is applicable (see [[typeOfSupportedPredefSet]]) to a TLA+ predefined set of
-   * sequences (`Seq(_)`) `ps`, and if the types of `name` and `ps` match.
-   */
-  private def isApplicableSeq(name: TlaEx, ps: TlaPredefSet): Boolean =
-    typeOfSupportedPredefSet.isDefinedAt(ps) && name.typeTag == Typed(SeqT1(typeOfSupportedPredefSet(ps)))
-
-  /**
-   * Rewrites vacuously true membership tests based on type information, and rewrites `i \in Nat` to `i \ge 0`.
+   * Simplifies expressions commonly found in `TypeOK`, assuming they are well-typed.
    *
-   * For example, `x \in BOOLEAN` is rewritten to `TRUE` if `x` is typed `BoolT1`.
+   * @see
+   *   [[SetMembershipSimplifier]] for a full list of supported rewritings.
    */
   private def transformMembership: PartialFunction[TlaEx, TlaEx] = {
-    // n \in Nat  ->  x >= 0
-    case OperEx(TlaSetOper.in, name, ValEx(TlaNatSet)) if name.typeTag == Typed(IntT1()) =>
-      OperEx(TlaArithOper.ge, name, ValEx(TlaInt(0))(intTag))(boolTag)
-    // b \in BOOLEAN, i \in Int, r \in Real  ->  TRUE
-    case OperEx(TlaSetOper.in, name, ValEx(ps: TlaPredefSet)) if isApplicable(name, ps) => trueVal
-    // seq \in Seq(_)  ->  TRUE
-    case OperEx(TlaSetOper.in, name, OperEx(TlaSetOper.seqSet, ValEx(ps: TlaPredefSet))) if isApplicableSeq(name, ps) =>
-      trueVal
-    // return `ex` unchanged
+    case ex @ OperEx(TlaSetOper.in, name, set) =>
+      set match {
+        // x \in TDS  ~>  TRUE
+        case set if isTypeDefining(set) => trueVal
+
+        // n \in Nat  ~>  x >= 0
+        case ValEx(TlaNatSet) => OperEx(TlaArithOper.ge, name, ValEx(TlaInt(0))(intTag))(boolTag)
+
+        // fun \in [Dom -> TDS]  ~>  DOMAIN fun = Dom    (fun \in [TDS1 -> TDS2] is handled above)
+        case OperEx(TlaSetOper.funSet, domain, set2) if isTypeDefining(set2) =>
+          OperEx(TlaOper.eq, OperEx(TlaFunOper.domain, name)(domain.typeTag), domain)(boolTag)
+
+        // otherwise, return `ex` unchanged
+        case _ => ex
+      }
+    // return non-set membership expressions unchanged
     case ex => ex
   }
 }
