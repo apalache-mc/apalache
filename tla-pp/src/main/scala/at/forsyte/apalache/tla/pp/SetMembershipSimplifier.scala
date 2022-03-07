@@ -71,20 +71,22 @@ class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTr
    *   [[SetMembershipSimplifier]] for a full list of supported rewritings.
    */
   private def transformMembership: PartialFunction[TlaEx, TlaEx] = {
-    // n \in Nat  ~>  x >= 0
-    case OperEx(TlaSetOper.in, name, ValEx(TlaNatSet)) =>
-      OperEx(TlaArithOper.ge, name, ValEx(TlaInt(0))(intTag))(boolTag)
+    case ex @ OperEx(TlaSetOper.in, name, set) =>
+      set match {
+        // x \in TDS  ~>  TRUE
+        case set if isTypeDefining(set) => trueVal
 
-    /* For type-defining sets TDS (see [[isTypeDefining]]): */
+        // n \in Nat  ~>  x >= 0
+        case ValEx(TlaNatSet) => OperEx(TlaArithOper.ge, name, ValEx(TlaInt(0))(intTag))(boolTag)
 
-    // x \in TDS  ~>  TRUE
-    case OperEx(TlaSetOper.in, _, set) if isTypeDefining(set) => trueVal
+        // fun \in [Dom -> TDS]  ~>  DOMAIN fun = Dom    (fun \in [TDS1 -> TDS2] is handled above)
+        case OperEx(TlaSetOper.funSet, domain, set2) if isTypeDefining(set2) =>
+          OperEx(TlaOper.eq, OperEx(TlaFunOper.domain, name)(domain.typeTag), domain)(boolTag)
 
-    // fun \in [Dom -> TDS]  ~>  DOMAIN fun = Dom    (fun \in [TDS1 -> TDS2] is handled above)
-    case OperEx(TlaSetOper.in, fun, OperEx(TlaSetOper.funSet, domain, set2)) if isTypeDefining(set2) =>
-      OperEx(TlaOper.eq, OperEx(TlaFunOper.domain, fun)(domain.typeTag), domain)(boolTag)
-
-    // otherwise, return `ex` unchanged
+        // otherwise, return `ex` unchanged
+        case _ => ex
+      }
+    // return non-set membership expressions unchanged
     case ex => ex
   }
 }
