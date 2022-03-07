@@ -112,6 +112,9 @@ FoldSet( Op(_,_), v, S ) == IF S = {}
                                   IN LET T == S \ {w}
                                       IN FoldSet( Op, Op(v,w), T )
 
+\* required by our default definition of FoldSeq
+LOCAL INSTANCE Sequences
+
 (**
  * The folding operator, used to implement computation over a sequence.
  * Apalache implements a more efficient encoding than the one below.
