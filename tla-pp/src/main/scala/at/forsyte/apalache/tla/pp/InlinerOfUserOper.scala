@@ -58,6 +58,11 @@ class InlinerOfUserOper(defBodyMap: BodyMap, tracker: TransformationTracker) ext
         case _ => ex
       }
 
+    // Lambda and call-by name passed as LET-IN
+    case ex @ OperEx(TlaOper.apply, LetInEx(NameEx(name), decl @ TlaOperDecl(declName, params, _)), args @ _*)
+        if name == declName && params.size == args.size =>
+      instantiateWithArgs(stepLimitOpt)(decl, args).withTag(ex.typeTag)
+
     // recursive processing of composite operators and let-in definitions
     case ex @ LetInEx(body, defs @ _*) =>
       // transform bodies of all op.defs
