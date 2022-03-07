@@ -74,8 +74,7 @@ MkSeq(N, F(_)) ==
  * @type: ((Int -> a), Int) => Seq(a);
  *)
 FunAsSeq(fn, maxSeqLen) ==
-    LET F(i) == fn[i] IN
-    MkSeq(maxSeqLen, F)
+    MkSeq(maxSeqLen, LAMBDA i: fn[i])
 
 (**
  * Annotating an expression \E x \in S: P as Skolemizable. That is, it can
