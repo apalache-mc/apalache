@@ -12,7 +12,7 @@ import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers
 
 /**
- * Tests for SetMembershipSimplifier.
+ * Tests for [[SetMembershipSimplifier]].
  */
 @RunWith(classOf[JUnitRunner])
 class TestSetMembershipSimplifier
@@ -28,6 +28,9 @@ class TestSetMembershipSimplifier
   private val boolSetT: SetT1 = SetT1(BoolT1())
   private val strSetT: SetT1 = SetT1(StrT1())
   private val intSetT: SetT1 = SetT1(IntT1())
+
+  private val intPowersetSeqType = SeqT1(intSetT)
+  private val boolSeqPowersetType = SetT1(boolSeqT)
 
   private val boolVal = tla.bool(true).as(BoolT1())
   private val strVal = tla.str("abc").as(StrT1())
@@ -68,36 +71,30 @@ class TestSetMembershipSimplifier
   private val intPowerset = tla.seqSet(tla.intSet()).as(SetT1(intSeqT))
   private val natPowerset = tla.seqSet(tla.natSet()).as(SetT1(intSeqT))
 
-  private val tupleVal = tla.tuple(tla.int(1).as(IntT1()), tla.int(42).as(IntT1())).as(intSeqT)
-  private val tupleName = tla.name("tup").as(intSeqT)
+  private val tupleVal = tla.tuple(tla.int(1).as(IntT1()), tla.int(42).as(IntT1())).as(TupT1(IntT1(), IntT1()))
+  private val tupleName = tla.name("tup").as(TupT1(IntT1(), IntT1()))
   private val cartesianSet =
     tla.times(tla.intSet().as(intSetT), tla.intSet().as(intSetT)).as(SetT1(TupT1(IntT1(), IntT1())))
-
-  val expressions = List(
-      (boolName, boolVal, boolSet),
-      (strName, strVal, strSet),
-      (intName, intVal, intSet),
-      (boolSeqName, boolSeqVal, boolSeqSet),
-      (strSeqName, strSeqVal, strSeqSet),
-      (intSeqName, intSeqVal, intSeqSet),
-      (boolSetName, boolSetVal, boolPowerset),
-      (strSetName, strSetVal, strPowerset),
-      (intSetName, intSetVal, intPowerset),
-      (tupleVal, tupleName, cartesianSet),
-  )
 
   override def beforeEach(): Unit = {
     simplifier = SetMembershipSimplifier(new IdleTracker)
   }
 
-  test("simplifies appropriately-typed set membership") {
-    // i \in Nat  ~>  i >= 0
-    val intNameInNat = tla.in(intName, tla.natSet()).as(BoolT1())
-    val intValInNat = tla.in(intVal, tla.natSet()).as(BoolT1())
-    simplifier(intNameInNat) shouldBe tla.ge(intName, tla.int(0)).as(BoolT1())
-    simplifier(intValInNat) shouldBe tla.ge(intVal, tla.int(0)).as(BoolT1())
+  /* *** tests for all supported types of type-defining sets *** */
 
-    /* *** tests for all supported types of applicable sets *** */
+  test("simplifies type-defining set membership") {
+    val expressions = List(
+        (boolName, boolVal, boolSet),
+        (strName, strVal, strSet),
+        (intName, intVal, intSet),
+        (boolSeqName, boolSeqVal, boolSeqSet),
+        (strSeqName, strSeqVal, strSeqSet),
+        (intSeqName, intSeqVal, intSeqSet),
+        (boolSetName, boolSetVal, boolPowerset),
+        (strSetName, strSetVal, strPowerset),
+        (intSetName, intSetVal, intPowerset),
+        (tupleVal, tupleName, cartesianSet),
+    )
 
     expressions.foreach { case (name, value, set) =>
       // name \in ApplicableSet  ~>  TRUE
@@ -129,9 +126,11 @@ class TestSetMembershipSimplifier
         simplifier(funInFunSet) shouldBe tlaTrue
       }
     }
+  }
 
-    /* *** tests of particular expressions *** */
+  /* *** tests of particular expressions *** */
 
+  test("rewrites nested Seq/SUBSET to TRUE") {
     // <<{{1}}>> \in Seq(SUBSET Int)  ~>  TRUE
     val setOfSetOfInt = SetT1(intSetT)
     val seqOfSetOfSetOfInt = SeqT1(setOfSetOfInt)
@@ -146,10 +145,10 @@ class TestSetMembershipSimplifier
     val nestedSubsetSeqVal = tla.enumSet(tla.tuple(intVal).as(intSeqT)).as(setOfSeqOfInt)
     val nestedSubsetSeqTest = tla.in(nestedSubsetSeqVal, tla.powSet(intSeqSet).as(setOfSeqOfInt)).as(BoolT1())
     simplifier(nestedSubsetSeqTest) shouldBe tlaTrue
+  }
 
+  test("rewrites function over Seq/SUBSET to TRUE") {
     // fun \in [Seq(SUBSET Int) -> SUBSET Seq(BOOLEAN)], ...  ~>  TRUE
-    val intPowersetSeqType = SeqT1(intSetT)
-    val boolSeqPowersetType = SetT1(boolSeqT)
     val nestedFunSetType = SetT1(FunT1(intPowersetSeqType, boolSeqPowersetType))
     val nestedInput = tla
       .in(funName,
@@ -158,12 +157,24 @@ class TestSetMembershipSimplifier
             .as(nestedFunSetType))
       .as(BoolT1())
     simplifier(nestedInput) shouldBe tlaTrue
+  }
 
+  test("rewrites non-typedefining function set domain to DOMAIN") {
     // fun \in [RM -> PredefSet], ...  ~>  DOMAIN fun = RM
     val domain = tla.name("RM").as(intSetT)
     val funSetType = SetT1(FunT1(BoolT1(), IntT1()))
     val funConstToBoolean = tla.in(funName, tla.funSet(domain, boolSet).as(funSetType)).as(BoolT1())
     simplifier(funConstToBoolean) shouldBe tla.eql(tla.dom(funName).as(intSetT), domain).as(BoolT1())
+  }
+
+  /* *** rewriting of `Nat` *** */
+
+  test("rewrites i \\in Nat to \\ge") {
+    // i \in Nat  ~>  i >= 0
+    val intNameInNat = tla.in(intName, tla.natSet()).as(BoolT1())
+    val intValInNat = tla.in(intVal, tla.natSet()).as(BoolT1())
+    simplifier(intNameInNat) shouldBe tla.ge(intName, tla.int(0)).as(BoolT1())
+    simplifier(intValInNat) shouldBe tla.ge(intVal, tla.int(0)).as(BoolT1())
   }
 
   test("returns myInt \\in Nat unchanged") {
