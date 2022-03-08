@@ -126,12 +126,16 @@ class TestCommentPreprocessor extends AnyFunSuite with Checkers {
     assert(potentialAnnotations(3) == "@type: a          => Int ;")
   }
 
+  private def hasAnnotationsWhenNonEmpty(str: String): Boolean = {
+    val (text, annotations) = CommentPreprocessor()(str)
+    str.trim().nonEmpty == (text.trim().nonEmpty || annotations.nonEmpty)
+  }
+
   test("no failure on random inputs") {
     check(
         {
           forAll(asciiStr) { str =>
-            val (text, annotations) = CommentPreprocessor()(str)
-            str.trim().nonEmpty == (text.trim().nonEmpty || annotations.nonEmpty)
+            hasAnnotationsWhenNonEmpty(str)
           // no exceptions
           }
         },
