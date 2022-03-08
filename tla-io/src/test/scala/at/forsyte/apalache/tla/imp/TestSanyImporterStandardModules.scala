@@ -516,7 +516,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
 
     val root = modules("root")
     expectSourceInfoInDefs(root)
-    assert(8 == root.declarations.size)
+    assert(9 == root.declarations.size)
 
     def expectDecl(name: String, body: TlaEx) = {
       findAndExpectOperDecl(root, name, List(), body)
