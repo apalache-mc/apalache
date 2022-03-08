@@ -175,49 +175,60 @@ MkSeq(3, Double) = <<2, 4, 6>>   \* TRUE
 
 ## Interpret a function as a sequence
 
-**Notation:** `FunAsSeq(fn, maxLen)`
+**Notation:** `FunAsSeq(fn, len, maxLen)`
 
-**LaTeX notation:** `FunAsSeq(fn, maxLen)`
+**LaTeX notation:** `FunAsSeq(fn, len, capacity)`
 
-**Arguments:** Two arguments. The first is a function, the second is an integer.
+**Arguments:** Three arguments:
 
-**Apalache type:** `(Int -> a, Int) => Seq(a)`, for some type `a`
+* A function `fn` that should be interpreted as a sequence.
+* The length of the sequence. An integer such that has the property
+  `1..len \subseteq DOMAIN fn`. Apalache does not check this requirement. It is up to the user to ensure that it does
+  hold true. This expression is not necessarily constant.
+* A constant upper bound on `len`, that is, `len <= capacity`.
 
-**Effect:** The expression `FunAsSeq(fn, maxLen)` evaluates to the sequence `<< fn[1], ..., fn[maxLen] >>`.
-At the level of Apalache static analysis, `FunAsSeq` indicates type-casting a function type `Int -> a` to a sequence type `Seq(a)`, since one cannot use function constructors to define a sequence in Apalache otherwise.
+**Apalache type:** `(Int -> a, Int, Int) => Seq(a)`, for some type `a`
+
+**Effect:** The expression `FunAsSeq(fn, maxLen, capacity)` evaluates to the
+sequence `<< fn[1], ..., fn[Min(len, capacity)] >>`.
 
 **Determinism:** Deterministic.
 
-**Errors:** 
-If `fn` is not a function of the type `Int -> a` or if `maxLen` is not an integer, Apalache statically reports a type error. Additionally, if it is not the case that `1..maxLen \subseteq DOMAIN fn`, the result is undefined.
+**Errors:** If the types of `fn`, `len` or `capacity` do not match the expected types, Apalache statically reports a
+type error. Additionally, if it is not the case that `1..len \subseteq DOMAIN fn`, the result is undefined.
 
 **Example in TLA+:**
 
 ```tla
-Head( [ x \in 1..5 |-> x * x ] )                \* 1 in TLC, type error in Apalache
-FunAsSeq( [ x \in 1..5 |-> x * x ], 3 )         \* <<1,4,9>>
-Head( FunAsSeq( [ x \in 1..5 |-> x * x ], 3 ) ) \* 1
-FunAsSeq( <<1,2,3>>, 3 )                        \* <<1,2,3>> in TLC, type error in Apalache
-FunAsSeq( [ x \in {0,42} |-> x * x ], 3 )       \* UNDEFINED
+Head([ x \in 1..5 |-> x * x ])                \* 1 in TLC, type error in Apalache
+FunAsSeq([ x \in 1..5 |-> x * x ], 3, 3)      \* <<1,4,9>>
+Head(FunAsSeq([ x \in 1..5 |-> x * x ], 3, 3)) \* 1
+FunAsSeq(<<1,2,3>>, 3, 3)                     \* <<1,2,3>> in TLC, type error in Apalache
+FunAsSeq([ x \in {0,42} |-> x * x ], 3, 3)    \* UNDEFINED
 ```
 
 **Example in Python:**
 
 ```python
-def funAsSeq(f,imax):
-  # f === { x:f(x) | x \in Dom(f) }
-  return[f.get(i) for i in range(1,imax+1)]
+# define a TLA+-like dictionary via a python function
 def boundedFn(f, dom):
-  return { x:f(x) for x in dom } 
-f = boundedFn( lambda x: x*x, range(1,6) ) # [ x \in 1..5 |-> x * x ]
-g = boundedFn( lambda x: x*x, {0,42} )     # [ x \in {0,42} |-> x * x ]
->>> f[1]                                   # Head( [ x \in 1..5 |-> x * x ] )  
+  return { x: f(x) for x in dom }
+
+# this is how we could define funAsSeq in python
+def funAsSeq(f, length, capacity):
+  return [ f.get(i) for i in range(1, min(length, capacity) + 1) ]
+
+# TLA+: [ x \in 1..5 |-> x * x ]
+f = boundedFn(lambda x: x * x, range(1,6))
+# TLA+: [ x \in {0, 42} |-> x * x ]
+g = boundedFn(lambda x: x * x, {0, 42})
+>>> f[1]
 1
->>> funAsSeq(f, 3)                         # FunAsSeq( [ x \in 1..5 |-> x * x ], 3 ) 
-[1,4,9]
->>> funAsSeq(f, 3)[1]                      # Head( FunAsSeq( [ x \in 1..5 |-> x * x ], 3 ) )
+>>> funAsSeq(f, 3, 3)
+[1, 4, 9]
+>>> funAsSeq(f, 3, 3)[1]
 1
->>> funAsSeq( g, 3 )                       # FunAsSeq( [ x \in {0,42} |-> x * x ], 3 )
+>>> funAsSeq(g, 3, 3)
 [None, None, None]
 ```
 
