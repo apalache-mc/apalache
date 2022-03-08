@@ -190,8 +190,6 @@ TestFunAsSeqEmpty ==
 TestFunAsSeqLargerCapacity ==
     LET f == [ i \in 1..3 |-> i + 1 ] IN
     \* provide a larger upper bound
-    \* TODO: for some reason, FunAsSeq fails when using cap.
-    \*LET cap == 10 IN
     FunAsSeq(f, 3, 10) = <<2, 3, 4>>
 
 TestExceptLen ==
