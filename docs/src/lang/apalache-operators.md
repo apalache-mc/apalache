@@ -177,7 +177,7 @@ MkSeq(3, Double) = <<2, 4, 6>>   \* TRUE
 
 **Notation:** `FunAsSeq(fn, len, maxLen)`
 
-**LaTeX notation:** `FunAsSeq(fn, len, capacity)`
+**LaTeX notation:** `FunAsSeq(fn, len, maxLen)`
 
 **Arguments:** Three arguments:
 
@@ -185,16 +185,16 @@ MkSeq(3, Double) = <<2, 4, 6>>   \* TRUE
 * The length of the sequence. An integer such that has the property
   `1..len \subseteq DOMAIN fn`. Apalache does not check this requirement. It is up to the user to ensure that it does
   hold true. This expression is not necessarily constant.
-* A constant upper bound on `len`, that is, `len <= capacity`.
+* A constant upper bound on `len`, that is, `len <= maxLen`.
 
 **Apalache type:** `(Int -> a, Int, Int) => Seq(a)`, for some type `a`
 
-**Effect:** The expression `FunAsSeq(fn, maxLen, capacity)` evaluates to the
-sequence `<< fn[1], ..., fn[Min(len, capacity)] >>`.
+**Effect:** The expression `FunAsSeq(fn, len, maxLen)` evaluates to the
+sequence `<< fn[1], ..., fn[Min(len, maxLen)] >>`.
 
 **Determinism:** Deterministic.
 
-**Errors:** If the types of `fn`, `len` or `capacity` do not match the expected types, Apalache statically reports a
+**Errors:** If the types of `fn`, `len` or `maxLen` do not match the expected types, Apalache statically reports a
 type error. Additionally, if it is not the case that `1..len \subseteq DOMAIN fn`, the result is undefined.
 
 **Example in TLA+:**
@@ -215,8 +215,8 @@ def boundedFn(f, dom):
   return { x: f(x) for x in dom }
 
 # this is how we could define funAsSeq in python
-def funAsSeq(f, length, capacity):
-  return [ f.get(i) for i in range(1, min(length, capacity) + 1) ]
+def funAsSeq(f, length, maxLen):
+  return [ f.get(i) for i in range(1, min(length, maxLen) + 1) ]
 
 # TLA+: [ x \in 1..5 |-> x * x ]
 f = boundedFn(lambda x: x * x, range(1,6))
