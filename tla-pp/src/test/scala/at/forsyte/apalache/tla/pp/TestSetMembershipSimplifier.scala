@@ -94,12 +94,6 @@ class TestSetMembershipSimplifier
   }
 
   test("simplifies appropriately-typed set membership") {
-    // i \in Nat  ~>  i >= 0
-    val intNameInNat = tla.in(intName, tla.natSet()).as(BoolT1())
-    val intValInNat = tla.in(intVal, tla.natSet()).as(BoolT1())
-    simplifier(intNameInNat) shouldBe tla.ge(intName, tla.int(0)).as(BoolT1())
-    simplifier(intValInNat) shouldBe tla.ge(intVal, tla.int(0)).as(BoolT1())
-
     /* *** tests for all supported types of applicable sets *** */
 
     expressions.foreach { case (name, value, set) =>
@@ -165,6 +159,16 @@ class TestSetMembershipSimplifier
     val funSetType = SetT1(FunT1(BoolT1(), IntT1()))
     val funConstToBoolean = tla.in(funName, tla.funSet(domain, boolSet).as(funSetType)).as(BoolT1())
     simplifier(funConstToBoolean) shouldBe tla.eql(tla.dom(funName).as(intSetT), domain).as(BoolT1())
+  }
+
+  /* *** rewriting of `Nat` *** */
+
+  test("rewrites i \\in Nat to \\ge") {
+    // i \in Nat  ~>  i >= 0
+    val intNameInNat = tla.in(intName, tla.natSet()).as(BoolT1())
+    val intValInNat = tla.in(intVal, tla.natSet()).as(BoolT1())
+    simplifier(intNameInNat) shouldBe tla.ge(intName, tla.int(0)).as(BoolT1())
+    simplifier(intValInNat) shouldBe tla.ge(intVal, tla.int(0)).as(BoolT1())
   }
 
   test("returns myInt \\in Nat unchanged") {
