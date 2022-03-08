@@ -11,8 +11,8 @@
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
 ### Features
-
- * Implement the sequence constructor `Apalache!MkSeq`, see #143
+ * Enable records in the arrays encoding, see #1288
+ * Implement the sequence constructor `Apalache!MkSeq`, see #1439
  * Add support for `Apalache!FunAsSeq`, see #1442
  * Implement `EXCEPT` on sequences, see #1444
 
