@@ -12,7 +12,7 @@ import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers
 
 /**
- * Tests for SetMembershipSimplifier.
+ * Tests for [[SetMembershipSimplifier]].
  */
 @RunWith(classOf[JUnitRunner])
 class TestSetMembershipSimplifier
