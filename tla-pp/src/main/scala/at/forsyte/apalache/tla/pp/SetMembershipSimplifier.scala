@@ -64,7 +64,7 @@ class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTr
     // 3. [s1 -> s2] for type-defining sets `s1` and `s2`
     case OperEx(TlaSetOper.funSet, set1, set2) => isTypeDefining(set1) && isTypeDefining(set2)
     // 4. s1 \X ... \X sn for type-defining sets `s1` to `sn`
-    case OperEx(TlaSetOper.times, args @ _*) => args.forall(set => isTypeDefining(set))
+    case OperEx(TlaSetOper.times, args @ _*) => args.forall(isTypeDefining)
     // 5. [name_1: s1, ..., name_n: sn] for type-defining sets `s1` to `sn`
     case OperEx(TlaSetOper.recSet, namesAndSets @ _*) =>
       val (_, sets) = TlaOper.deinterleave(namesAndSets)
