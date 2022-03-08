@@ -68,8 +68,8 @@ class TestSetMembershipSimplifier
   private val intPowerset = tla.seqSet(tla.intSet()).as(SetT1(intSeqT))
   private val natPowerset = tla.seqSet(tla.natSet()).as(SetT1(intSeqT))
 
-  private val tupleVal = tla.tuple(tla.int(1).as(IntT1()), tla.int(42).as(IntT1())).as(intSeqT)
-  private val tupleName = tla.name("tup").as(intSeqT)
+  private val tupleVal = tla.tuple(tla.int(1).as(IntT1()), tla.int(42).as(IntT1())).as(TupT1(IntT1(), IntT1()))
+  private val tupleName = tla.name("tup").as(TupT1(IntT1(), IntT1()))
   private val cartesianSet =
     tla.times(tla.intSet().as(intSetT), tla.intSet().as(intSetT)).as(SetT1(TupT1(IntT1(), IntT1())))
 
