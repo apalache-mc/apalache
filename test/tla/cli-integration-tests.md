@@ -1193,6 +1193,15 @@ $ apalache-mc check --inv=Inv SimpleLambda.tla | sed 's/I@.*//'
 EXITCODE: OK
 ```
 
+### check NestedCallByName succeeds
+Regression test for embedding recursion
+
+```sh
+$ apalache-mc check --inv=Inv NestedCallByName.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
 ### check Bug914 succeeds
 
 Regression test for https://github.com/informalsystems/apalache/issues/914 In
