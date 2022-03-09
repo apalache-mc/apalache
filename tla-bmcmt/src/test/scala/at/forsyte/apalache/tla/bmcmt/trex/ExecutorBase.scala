@@ -1,12 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt.trex
 
 import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStoreImpl
-import at.forsyte.apalache.tla.bmcmt.smt.{SolverContext}
-import at.forsyte.apalache.tla.bmcmt.{SymbStateRewriterImpl}
+import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
+import at.forsyte.apalache.tla.bmcmt.SymbStateRewriterImpl
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import java.io.{PrintStream, File, FileOutputStream}
+import java.io.{File, FileOutputStream, PrintStream}
 import org.scalatest.Outcome
 import org.scalatest.funsuite.FixtureAnyFunSuite
 

@@ -29,7 +29,7 @@ class CardinalityRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case OperEx(TlaFiniteSetOper.cardinality, setEx) =>
-        var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
+        val nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
         val setCell = nextState.asCell
         setCell.cellType match {
           case FinSetT(_) =>

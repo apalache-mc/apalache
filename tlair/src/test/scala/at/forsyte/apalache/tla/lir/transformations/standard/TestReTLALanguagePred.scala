@@ -52,7 +52,7 @@ class TestReTLALanguagePred extends LanguagePredTestSuite {
     expectOk(pred.isExprOk(appFun(name("f"), int(3))))
     expectOk(pred.isExprOk(appFun(name("f"), tuple(int(3), int(3)))))
     expectOk(pred.isExprOk(except(name("f"), tuple(int(3)), bool(true))))
-    expectOk(pred.isExprOk(except(name("f"), tuple(int(3), int(3)), bool(true))))
+    expectOk(pred.isExprOk(except(name("f"), tuple(tuple(int(3), int(3))), bool(true))))
     expectFail(pred.isExprOk(funSet(name("X"), name("Y"))))
     expectFail(pred.isExprOk(dom(name("X"))))
   }

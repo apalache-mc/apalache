@@ -119,7 +119,7 @@ class SymbStateRewriterImpl(
   /**
    * A storage for the messages associated with assertion failures, see MessageStorage.
    */
-  private var messages: mutable.Map[Int, String] = new mutable.HashMap()
+  private val messages: mutable.Map[Int, String] = new mutable.HashMap()
 
   /**
    * Get the current context level, that is the difference between the number of pushes and pops made so far.
@@ -288,11 +288,13 @@ class SymbStateRewriterImpl(
           -> List(new LabelRule(this)),
         key(OperEx(ApalacheOper.gen, tla.int(2)))
           -> List(new GenRule(this)),
-        // folds
+        // folds and MkSeq
         key(OperEx(ApalacheOper.foldSet, tla.name("A"), tla.name("v"), tla.name("S")))
           -> List(new FoldSetRule(this)),
         key(OperEx(ApalacheOper.foldSeq, tla.name("A"), tla.name("v"), tla.name("s")))
           -> List(new FoldSeqRule(this)),
+        key(OperEx(ApalacheOper.mkSeq, tla.int(10), tla.name("A")))
+          -> List(new MkSeqRule(this)),
     )
   } ///// ADD YOUR RULES ABOVE
 
@@ -309,12 +311,13 @@ class SymbStateRewriterImpl(
       case NameEx(name) if ArenaCell.isValidName(name) =>
         Done(state)
 
-      case NameEx(name) =>
+      case NameEx(_) =>
         if (substRule.isApplicable(state)) {
           statListener.enterRule(substRule.getClass.getSimpleName)
           // a variable that can be substituted with a cell
-          var nextState = substRule.apply(substRule.logOnEntry(solverContext, state))
-          nextState = substRule.logOnReturn(solverContext, nextState)
+          substRule.logOnEntry(solverContext, state)
+          val nextState = substRule.apply(state)
+          substRule.logOnReturn(solverContext, nextState)
           if (nextState.arena.cellCount < state.arena.cellCount) {
             throw new RewriterException("Implementation error: the number of cells decreased from %d to %d"
                   .format(state.arena.cellCount, nextState.arena.cellCount), state.ex)
@@ -333,7 +336,9 @@ class SymbStateRewriterImpl(
         potentialRules.find(r => r.isApplicable(state)) match {
           case Some(r) =>
             statListener.enterRule(r.getClass.getSimpleName)
-            val nextState = r.logOnReturn(solverContext, r.apply(r.logOnEntry(solverContext, state)))
+            r.logOnEntry(solverContext, state)
+            val nextState = r.apply(state)
+            r.logOnReturn(solverContext, nextState)
             if (nextState.arena.cellCount < state.arena.cellCount) {
               throw new RewriterException("Implementation error in rule %s: the number of cells decreased from %d to %d"
                     .format(r.getClass.getSimpleName, state.arena.cellCount, nextState.arena.cellCount), state.ex)

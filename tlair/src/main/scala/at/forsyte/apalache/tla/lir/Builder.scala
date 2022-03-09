@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.values.TlaBoolSet
 import at.forsyte.apalache.tla.lir.values._
 
 /**
@@ -147,6 +146,18 @@ class Builder {
    *   the value expression that corresponds to BOOLEAN.
    */
   def booleanSet(): BuilderVal = BuilderVal(TlaBoolSet)
+
+  /**
+   * The set STRING of all strings.
+   *
+   * @note
+   *   This is included for testing purposes only. It's almost never necessary, or a good idea, to reference the set of
+   *   all strings in a spec outside of `TypeOk`.
+   *
+   * @return
+   *   the value expression that corresponds to STRING.
+   */
+  def stringSet(): BuilderVal = BuilderVal(TlaStrSet)
 
   /**
    * The set Int of all integers.
@@ -611,6 +622,20 @@ class Builder {
     BuilderOper(ApalacheOper.setAsFun, pairsSetEx)
   }
 
+  /**
+   * Apply the operator [[ApalacheOper.mkSeq]].
+   *
+   * @param lenEx
+   *   non-negative length of the sequence
+   * @param elemCtorEx
+   *   an operator to construct a single element (either a name, or a lambda)
+   * @return
+   *   `MkSeq(lenEx, elemCtorEx)`
+   */
+  def apalacheMkSeq(lenEx: BuilderEx, elemCtorEx: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.mkSeq, lenEx, elemCtorEx)
+  }
+
   def apalacheSkolem(ex: BuilderEx): BuilderEx = {
     BuilderOper(ApalacheOper.skolem, ex)
   }
@@ -623,12 +648,24 @@ class Builder {
     BuilderOper(ApalacheOper.selectInSet, elem, set)
   }
 
+  def apalacheSelectInFun(elem: BuilderEx, fun: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.selectInSet, elem, fun)
+  }
+
   def apalacheStoreInSet(elem: BuilderEx, set: BuilderEx): BuilderEx = {
     BuilderOper(ApalacheOper.storeInSet, elem, set)
   }
 
+  def apalacheStoreInFun(elem: BuilderEx, fun: BuilderEx, arg: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.storeInSet, elem, fun, arg)
+  }
+
   def apalacheStoreNotInSet(elem: BuilderEx, set: BuilderEx): BuilderEx = {
     BuilderOper(ApalacheOper.storeNotInSet, elem, set)
+  }
+
+  def apalacheStoreNotInFun(elem: BuilderEx, fun: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.storeNotInSet, elem, fun)
   }
 
   def apalacheSmtMap(inputSet: BuilderEx, resultSet: BuilderEx): BuilderEx = {
@@ -723,7 +760,7 @@ class Builder {
         ApalacheOper.expand.name -> ApalacheOper.expand,
         ApalacheOper.constCard.name -> ApalacheOper.constCard,
         ApalacheOper.distinct.name -> ApalacheOper.distinct,
-        ApalacheOper.funAsSeq.name -> ApalacheOper.funAsSeq,
+        ApalacheOper.mkSeq.name -> ApalacheOper.mkSeq,
         ApalacheOper.foldSet.name -> ApalacheOper.foldSet,
         ApalacheOper.foldSeq.name -> ApalacheOper.foldSeq,
         ApalacheOper.selectInSet.name -> ApalacheOper.selectInSet,

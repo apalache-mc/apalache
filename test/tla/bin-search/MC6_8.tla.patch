@@ -1,0 +1,21 @@
+1,2c1,2
+< -------------------------- MODULE MC5_8 ---------------------------------------
+< \* an instance of BinSearch5 with all parameters fixed
+---
+> -------------------------- MODULE MC6_8 ---------------------------------------
+> \* an instance of BinSearch6 with all parameters fixed
+21c21
+< \* introduce the variables to be used in BinSearch5
+---
+> \* introduce the variables to be used in BinSearch6
+30c30,33
+<     returnValue
+---
+>     returnValue,
+>     \* The number of executed steps.
+>     \* @type: Int;
+>     nSteps
+33c36
+< INSTANCE BinSearch5
+---
+> INSTANCE BinSearch6

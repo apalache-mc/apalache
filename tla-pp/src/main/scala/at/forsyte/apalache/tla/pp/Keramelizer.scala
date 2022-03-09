@@ -46,14 +46,14 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
    *   a transformed set expression
    */
   private def transformSets: PartialFunction[TlaEx, TlaEx] = {
-    case ex @ OperEx(TlaSetOper.cap, setX, setY) =>
+    case OperEx(TlaSetOper.cap, setX, setY) =>
       val elemType = getElemType(setX)
       val tempName = gen.newName()
       tla
         .filter(tla.name(tempName) ? "e", setX, tla.in(tla.name(tempName) ? "e", setY) ? "b")
         .typed(Map("b" -> BoolT1(), "e" -> elemType, "s" -> SetT1(elemType)), "s")
 
-    case ex @ OperEx(TlaSetOper.setminus, setX, setY) =>
+    case OperEx(TlaSetOper.setminus, setX, setY) =>
       val elemType = getElemType(setX)
       val tempName = gen.newName()
       tla
@@ -133,7 +133,7 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
    *   a transformed expression
    */
   private def transformAssignments: PartialFunction[TlaEx, TlaEx] = {
-    case OperEx(TlaSetOper.in, prime @ OperEx(TlaActionOper.prime, NameEx(x)), set) =>
+    case OperEx(TlaSetOper.in, prime @ OperEx(TlaActionOper.prime, NameEx(_)), set) =>
       // rewrite x' \in S
       // into \E y \in S: x' = y
       val elemType = getElemType(set)

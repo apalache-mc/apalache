@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.{FinFunSetT, FinSetT, PowSetT}
+import at.forsyte.apalache.tla.bmcmt.types.FinFunSetT
 import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 
@@ -33,7 +33,7 @@ class FunSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val newArena = arena
           .setDom(newCell, dom)
           .setCdm(newCell, cdm)
-        state.setArena(newArena).setRex(newCell.toNameEx)
+        nextState.setArena(newArena).setRex(newCell.toNameEx)
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)

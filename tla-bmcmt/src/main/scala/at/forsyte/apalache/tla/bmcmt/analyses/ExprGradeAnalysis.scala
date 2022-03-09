@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.analyses
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaActionOper, TlaBoolOper, TlaTempOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaTempOper}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.google.inject.Inject
 
@@ -76,8 +76,7 @@ class ExprGradeAnalysis @Inject() (val store: ExprGradeStoreImpl) {
    */
   def refineOrInExpr(expr: TlaEx): TlaEx = {
     expr match {
-      case OperEx(TlaBoolOper.or, args @ _*) =>
-        val newArgs = args.map(refineOrInExpr)
+      case OperEx(TlaBoolOper.or, _*) =>
         store.get(expr.ID) match {
           case Some(ExprGrade.Constant) | Some(ExprGrade.StateFree) | Some(ExprGrade.StateBound) =>
             expr // keep it

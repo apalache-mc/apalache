@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.imp.src
 
 import at.forsyte.apalache.tla.lir.src.{
   RegionTree,
-  // Prevent name clash with the SourceLocation object defined in this dir
+// Prevent name clash with the SourceLocation object defined in this dir
   SourceLocation => SourceLocationClass,
 }
 import at.forsyte.apalache.tla.lir.storage.SourceMap
@@ -31,12 +31,12 @@ class SourceStore extends TransformationListener with LazyLogging {
   /**
    * A mapping from a filenames to an index in trees. This map is typically quite small.
    */
-  private var filenameToIndex: mutable.Map[String, Int] = mutable.HashMap()
+  private val filenameToIndex: mutable.Map[String, Int] = mutable.HashMap()
 
   /**
    * An inverse mapping of filenameToIndex.
    */
-  private var indexToFilename: mutable.Map[Int, String] = mutable.HashMap()
+  private val indexToFilename: mutable.Map[Int, String] = mutable.HashMap()
 
   /**
    * A sequence of region trees, one per filename. The following invariant is maintained: filenames.size == trees.size.

@@ -1,0 +1,27 @@
+1c1
+< --------------------------- MODULE BinSearch3 ---------------------------------
+---
+> --------------------------- MODULE BinSearch4 ---------------------------------
+4a5
+>  * Version 4. Specify the loop (with a caveat).
+58,59c59,71
+<       THEN        \* lines 6-14: not implemented yet
+<         UNCHANGED <<low, high, isTerminated, returnValue>>
+---
+>       THEN          \* lines 6-14
+>         LET mid == (low + high) \div 2 IN
+>         LET midVal == INPUT_SEQ[mid + 1] IN
+>           \//\ midVal < INPUT_KEY \* lines 9-10
+>             /\ low' = mid + 1
+>             /\ UNCHANGED <<high, returnValue, isTerminated>>
+>           \//\ midVal > INPUT_KEY \* lines 11-12
+>             /\ high' = mid -1
+>             /\ UNCHANGED <<low, returnValue, isTerminated>>
+>           \//\ midVal = INPUT_KEY \* lines 13-14
+>             /\ returnValue' = mid
+>             /\ isTerminated' = TRUE
+>             /\ UNCHANGED <<low, high>>
+80c92
+<     THEN \* Indices in TLA+ start with 1, whereas the Java returnValue starts with 0
+---
+>     THEN \* Indices start with 1, whereas returnValue starts with 0

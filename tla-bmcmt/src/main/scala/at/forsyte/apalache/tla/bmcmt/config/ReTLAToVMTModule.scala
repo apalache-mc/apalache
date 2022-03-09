@@ -13,9 +13,8 @@ import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.standard.ReTLALanguagePred
 import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, TransformationListener, TransformationTracker}
 import at.forsyte.apalache.tla.pp.passes._
-import at.forsyte.apalache.tla.typecheck.passes.{EtcTypeCheckerPass, EtcTypeCheckerPassImpl}
-import com.google.inject.name.Names
-import com.google.inject.{AbstractModule, TypeLiteral}
+import at.forsyte.apalache.tla.typecheck.passes.EtcTypeCheckerPassImpl
+import com.google.inject.TypeLiteral
 
 /**
  * Transpiels reTLA inputs to VMT
@@ -58,20 +57,18 @@ class ReTLAToVMTModule extends ToolModule {
     // Bind all passes
     bind(classOf[SanyParserPass]).to(classOf[SanyParserPassImpl])
     bind(classOf[ConfigurationPass]).to(classOf[ConfigurationPassImpl])
-    bind(classOf[InlinePass]).to(classOf[InlinePassImpl])
+    bind(classOf[InlinePass]).to(classOf[ReTLAInlinePassImpl])
     bind(classOf[PrimingPass]).to(classOf[PrimingPassImpl])
     bind(classOf[VCGenPass]).to(classOf[VCGenPassImpl])
     bind(classOf[PreproPass]).to(classOf[ReTLAPreproPassImpl])
     bind(classOf[TransitionPass]).to(classOf[TransitionPassImpl])
     bind(classOf[OptPass]).to(classOf[OptPassImpl])
-    bind(classOf[AnalysisPass]).to(classOf[AnalysisPassImpl])
     bind(classOf[TranspilePass]).to(classOf[ReTLAToVMTTranspilePassImpl])
   }
 
   override def passes: Seq[Class[_ <: Pass]] = {
     Seq(
         classOf[SanyParserPass],
-        classOf[WatchdogPassImpl],
         // The next pass is Snowcat that is called EtcTypeCheckerPassImpl for now.
         // We use a concrete implementation here, as we also do with PostTypeCheckerPassImpl later in the pipeline.
         classOf[EtcTypeCheckerPassImpl],
@@ -80,9 +77,9 @@ class ReTLAToVMTModule extends ToolModule {
         classOf[PrimingPass],
         classOf[VCGenPass],
         classOf[PreproPass],
+        classOf[WatchdogPassImpl],
         classOf[TransitionPass],
         classOf[OptPass],
-        classOf[AnalysisPass],
         // do the final type checking again, as preprocessing may have introduced gaps in the expression types
         classOf[PostTypeCheckerPassImpl],
         // ConstraintGenPass is in the very end of the pipeline

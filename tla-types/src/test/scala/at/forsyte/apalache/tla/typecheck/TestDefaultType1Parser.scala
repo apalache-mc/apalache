@@ -8,7 +8,7 @@ import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import org.junit.runner.RunWith
 import org.scalacheck.Gen.alphaStr
 import org.scalacheck.Prop
-import org.scalacheck.Prop.{AnyOperators, falsified, forAll, passed}
+import org.scalacheck.Prop.{falsified, forAll, passed, AnyOperators}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers
@@ -202,7 +202,7 @@ class TestDefaultType1Parser extends AnyFunSuite with Checkers with TlaType1Gen 
               case _: Type1ParseError =>
                 passed
 
-              case _ =>
+              case _: Throwable =>
                 falsified
             }
           // no exceptions

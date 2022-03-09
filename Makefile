@@ -3,7 +3,7 @@
 # Markdown files used for integration tests
 TEST_MD_FILES := $(wildcard test/tla/*.md)
 
-.PHONY: all apalache apalache-jar compile build-quick test integration clean deps promote docker dist
+.PHONY: all apalache package compile test test-coverage integration docker dist fmt-check fmt-fix clean run
 
 all: apalache
 
@@ -50,12 +50,12 @@ test/tla/%.md: target/test/tla/%.md.corrected
 fmt-check:
   # TODO: rm if we decide to keep running on all source files
 	# git fetch origin
-	sbt scalafmtCheckAll scalafmtSbtCheck || \
+	sbt scalafmtCheckAll scalafmtSbtCheck scalafixEnable "scalafixAll --check RemoveUnused" || \
 		( echo "TO FIX: run 'make fmt-fix' and commit the changes" ; \
 		  exit 1 )
 
 fmt-fix:
-	sbt scalafmtAll scalafmtSbt
+	sbt scalafixEnable "scalafixAll RemoveUnused" scalafmtAll scalafmtSbt
 
 clean:
 	sbt clean

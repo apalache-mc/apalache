@@ -1,5 +1,6 @@
-import scala.sys.process._
 import Dependencies._
+
+import scala.sys.process._
 
 ///////////////////////////
 // Project-wide settings //
@@ -43,10 +44,24 @@ ThisBuild / libraryDependencies ++= Seq(
     TestDeps.scalatestplusScalacheck,
 )
 
+////////////////////////////
+// Linting and formatting //
+////////////////////////////
+
+// scalafmt
 // TODO: Remove if we decide we are happy with allways reformatting all
 // Only check/fix against (tracked) files that have changed relative to the trunk
 // ThisBuild / scalafmtFilter := "diff-ref=origin/unstable"
 ThisBuild / scalafmtPrintDiff := true
+
+// scalafix
+ThisBuild / scalacOptions ++= Seq(
+    // Enable `unused` compiler warnings; required by scalafix
+    // https://scalacenter.github.io/scalafix/docs/rules/RemoveUnused.html
+    "-Ywarn-unused",
+    // Fixes: Exhaustivity analysis reached max recursion depth, not all missing cases are reported.
+    "-Ypatmat-exhaust-depth", "22")
+ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
 ///////////////////////////////
 // Test configuration //
@@ -232,7 +247,10 @@ lazy val root = (project in file("."))
         val target_dir = (Universal / target).value
         val current_pkg = (Universal / target).value / "current-pkg"
         log.info(s"Unpacking package ${pkg} to ${target_dir}")
-        s"tar zxvf ${pkg} -C ${target_dir}" ! log
+        // send outputs directly to std{err,out} instead of logging here
+        // to avoid misleading logging output from tar
+        // See https://github.com/informalsystems/apalache/pull/1382
+        (s"tar zxvf ${pkg} -C ${target_dir}" !)
         log.info(s"Symlinking ${current_pkg} -> ${unzipped}")
         s"ln -sfn ${unzipped} ${current_pkg}" ! log
         file(unzipped)

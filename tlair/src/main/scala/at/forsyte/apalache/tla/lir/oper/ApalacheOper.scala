@@ -102,11 +102,28 @@ object ApalacheOper {
   }
 
   /**
-   * Attempt to dynamically cast an Int -> T function to a Seq(T). The first argument should be the function expression
-   * and the second argument should be an integer, denoting the maximal length of the sequence.
+   * <p>Attempt to dynamically cast an Int -> T function to a Seq(T). The first argument should be the function
+   * expression and the second argument should be an integer, denoting the maximal length of the sequence.</p>
+   *
+   * <p>We keep this operator in the IR. However, we are using the definition of this operator from Apalache.tla. Hence,
+   * if you construct an expression that contains `funAsSeq`, its constructor will throw.</p>
    */
   object funAsSeq extends ApalacheOper {
+    require(false, "This operator is defined in Apalache.tla. Do not construct it.")
+
     override def name: String = "Apalache!FunAsSeq"
+
+    override def arity: OperArity = FixedArity(2)
+
+    override val precedence: (Int, Int) = (100, 100)
+  }
+
+  /**
+   * A sequence constructor that is avoiding a function constructor. Since Apalache is typed, this operator is more
+   * efficient than `FunAsSeq([ i \in 1..N |-> F(i) ])`.
+   */
+  object mkSeq extends ApalacheOper {
+    override def name: String = "Apalache!MkSeq"
 
     override def arity: OperArity = FixedArity(2)
 
@@ -190,12 +207,13 @@ object ApalacheOper {
   }
 
   /**
-   * The storeInSet operator is a variant of TlaSetOper.in. It signals that set membership should be enforced.
+   * The storeInSet operator is a variant of TlaSetOper.in when handling sets. It signals set membership. It is also
+   * used to update functions, in which case the updated value is provided as an additional argument.
    */
   object storeInSet extends ApalacheOper {
     override def name: String = "Apalache!StoreInSet"
 
-    override def arity: OperArity = FixedArity(2)
+    override def arity: OperArity = FixedArity(2) || FixedArity(3)
 
     override def precedence: (Int, Int) = (5, 5)
   }

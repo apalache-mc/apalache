@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import org.junit.runner.RunWith
 import org.scalacheck.Prop
-import org.scalacheck.Prop.{AnyOperators, all, forAll, passed}
+import org.scalacheck.Prop.{all, forAll, passed, AnyOperators}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers
@@ -19,7 +19,8 @@ class TestTlaDeclLevelFinder extends AnyFunSuite with Checkers {
       override val maxArgs: Int = 3
     }
     // all names are considered constants
-    val operators = gens.simpleOperators ++ gens.setOperators ++ gens.logicOperators ++ gens.arithOperators
+    val operators =
+      gens.simpleOperators ++ gens.setOperators ++ gens.functionOperators ++ gens.logicOperators ++ gens.arithOperators
     val genDecl = gens.genTlaDeclButNotVar(gens.genTlaEx(operators))(_)
     val prop = forAll(gens.genTlaModuleWith(genDecl)) { module =>
       val finder = new TlaDeclLevelFinder(module)
@@ -39,11 +40,11 @@ class TestTlaDeclLevelFinder extends AnyFunSuite with Checkers {
       override val maxArgs: Int = 3
     }
     // all names are considered constants
-    val operators = gens.simpleOperators ++ gens.setOperators ++ gens.logicOperators ++ gens.arithOperators
+    val operators =
+      gens.simpleOperators ++ gens.setOperators ++ gens.functionOperators ++ gens.logicOperators ++ gens.arithOperators
 
     val prop = forAll(gens.genTlaModule(gens.genTlaEx(operators))) { module =>
       val finder = new TlaDeclLevelFinder(module)
-      val vars = module.varDeclarations.map(_.name).toSet
 
       def expectedLevel(decl: TlaOperDecl): Prop = {
         val level = finder(decl)

@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory, ProtoSeqOps}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
@@ -16,8 +16,9 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
  *   Igor Konnov
  */
 class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val picker = new CherryPick(rewriter)
-  private val defaultValueFactory = new DefaultValueFactory(rewriter)
+  protected val picker = new CherryPick(rewriter)
+  protected val defaultValueFactory = new DefaultValueFactory(rewriter)
+  private val proto = new ProtoSeqOps(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -36,21 +37,52 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // we use funCell.cellType, not funEx.typeTag, because funEx can be the result of the rewriter
         funCell.cellType match {
           case TupleT(_) =>
+            // cheap access as `argEx` should be a literal
             applyTuple(funState, funCell, funEx, argEx)
 
           case RecordT(_) =>
+            // cheap access as `argEx` should be a literal
             val resultT = CellT.fromTypeTag(ex.typeTag)
             applyRecord(funState, funCell, funEx, argEx, resultT)
 
-          case SeqT(_) =>
-            applySeq(funState, funCell, argEx)
+          case SeqT(elemT) =>
+            // cheap or expensive, depending on `argEx`
+            applySequence(funState, funCell, argEx, elemT)
 
-          case _ => // general functions
+          case _ =>
+            // general functions, which introduce `O(capacity)` SMT constraints.
             applyFun(funState, funCell, argEx)
         }
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
+    }
+  }
+
+  private def applySequence(
+      state: SymbState,
+      seqCell: ArenaCell,
+      argEx: TlaEx,
+      elemT: CellT): SymbState = {
+    val (protoSeq, _, capacity) = proto.unpackSeq(state.arena, seqCell)
+    val nextState = defaultValueFactory.makeUpValue(state, elemT)
+    val defaultValue = nextState.asCell
+    argEx match {
+      case ValEx(TlaInt(indexBase1)) =>
+        if (indexBase1 < 1 || indexBase1 > capacity) {
+          // This is the rare case when the spec author has made a typo, e.g., f[0].
+          // We cannot throw an error even in this case, as it would report an error in a legal specification, e.g.,
+          // 0 \in DOMAIN f \/ f[0] /= 1
+          nextState.setRex(defaultValue.toNameEx)
+        } else {
+          // accessing via the integer literal is cheap
+          val elem = proto.at(nextState.arena, protoSeq, indexBase1.toInt)
+          nextState.setRex(elem.toNameEx)
+        }
+
+      case _ =>
+        // the general case, which introduces `O(capacity)` SMT constraints.
+        proto.get(picker, defaultValue, nextState, protoSeq, argEx)
     }
   }
 
@@ -99,44 +131,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.setRex(tupleElem.toNameEx)
   }
 
-  private def applySeq(state: SymbState, seqCell: ArenaCell, argEx: TlaEx): SymbState = {
-    val solverAssert = rewriter.solverContext.assertGroundExpr _
-    var nextState = rewriter.rewriteUntilDone(state.setRex(argEx))
-    val argCell = nextState.asCell
-    val seqChildren = state.arena.getHas(seqCell)
-    val start = seqChildren.head // starts with 0
-    val end = seqChildren.tail.head // starts with 0
-    // Get the sequence of N elements. The range values[start : end] forms the actual sequence
-    val values = seqChildren.tail.tail
-
-    val nelems = values.size
-    if (nelems == 0) {
-      // The sequence is statically empty. Return the default value.
-      // Most likely, this expression will be never used as a result.
-      defaultValueFactory.makeUpValue(nextState, seqCell.cellType.asInstanceOf[SeqT].res)
-    } else {
-      // create the oracle
-      val (oracleState, oracle) = picker.oracleFactory.newIntOracle(nextState, nelems + 1)
-      nextState = oracleState
-      // pick an element to be the result
-      nextState = picker.pickByOracle(nextState, oracle, values, nextState.arena.cellTrue().toNameEx)
-      val pickedResult = nextState.asCell
-      // now it is getting interesting:
-      // If 1 <= arg <= end - start, just require oracle = arg - 1 + start,
-      // Otherwise, set oracle to N
-      val inRange =
-        tla.and(tla.le(tla.int(1), argCell.toNameEx), tla.le(argCell.toNameEx, tla.minus(end.toNameEx, start.toNameEx)))
-      nextState = rewriter
-        .rewriteUntilDone(nextState.setRex(tla.plus(tla.minus(argCell.toNameEx, tla.int(1)), start.toNameEx)))
-      val indexCell = nextState.asCell
-      val oracleEqArg = tla.eql(indexCell.toNameEx, oracle.intCell.toNameEx)
-      val oracleIsN = oracle.whenEqualTo(nextState, nelems)
-      solverAssert(tla.or(tla.and(inRange, oracleEqArg), tla.and(tla.not(inRange), oracleIsN)))
-      nextState.setRex(pickedResult.toNameEx)
-    }
-  }
-
-  private def applyFun(state: SymbState, funCell: ArenaCell, argEx: TlaEx): SymbState = {
+  protected def applyFun(state: SymbState, funCell: ArenaCell, argEx: TlaEx): SymbState = {
     val solverAssert = rewriter.solverContext.assertGroundExpr _
     // SE-FUN-APP2
     var nextState = rewriter.rewriteUntilDone(state.setRex(argEx))

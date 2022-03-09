@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.lir.transformations.impl
 
 import org.junit.runner.RunWith
-import org.scalacheck.Prop.{AnyOperators, falsified, forAll, passed, propBoolean}
+import org.scalacheck.Prop.{falsified, forAll, passed, propBoolean, AnyOperators}
 import org.scalacheck.{Arbitrary, Gen, Prop}
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers
@@ -19,7 +19,7 @@ class TestStableTopologicalSort extends AnyFunSuite with BeforeAndAfterEach with
       uses <- Gen.listOfN(size, Gen.choose(0, size - 1))
       // the declarations below the threshold do not refer to other declarations
       threshold <- Gen.choose(0, size - 1)
-    } yield nodes.zip(uses).map { case (n, i) =>
+    } yield nodes.zip(uses).map { case (_, i) =>
       // either no dependencies or a single dependency
       if (i <= threshold) (i, Set.empty[Int]) else (i, Set(uses(i)))
     }

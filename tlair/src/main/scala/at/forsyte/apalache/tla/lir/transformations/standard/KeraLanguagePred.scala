@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSeqOper, _}
-import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, PredResult, PredResultFail, PredResultOk}
+import at.forsyte.apalache.tla.lir.transformations.{PredResult, PredResultFail, PredResultOk}
 import at.forsyte.apalache.tla.lir.values._
 
 import scala.collection.immutable.HashSet
@@ -54,6 +54,10 @@ class KeraLanguagePred extends ContextualLanguagePred {
         isOkInContext(letDefs, opName)
           .and(isOkInContext(letDefs, base))
           .and(isOkInContext(letDefs, collection))
+
+      case OperEx(ApalacheOper.mkSeq, len, opName) =>
+        isOkInContext(letDefs, opName)
+          .and(isOkInContext(letDefs, len))
 
       case OperEx(oper, args @ _*)
           if oper == TlaSetOper.map || oper == TlaFunOper.funDef || oper == TlaFunOper.recFunDef =>

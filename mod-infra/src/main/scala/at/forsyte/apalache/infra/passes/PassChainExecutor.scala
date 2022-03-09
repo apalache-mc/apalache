@@ -1,9 +1,7 @@
 package at.forsyte.apalache.infra.passes
 
-import com.google.inject.Inject
-import com.google.inject.name.Named
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.tla.lir.{MissingTransformationError, TlaModule, TlaModuleProperties, ModuleProperty}
+import at.forsyte.apalache.tla.lir.{MissingTransformationError, TlaModule, TlaModuleProperties}
 
 /**
  * This class executes the passes starting with the initial one, until the final pass returns None.

@@ -104,7 +104,7 @@ class ConstraintSolver(approximateSolution: Substitution = Substitution.empty) {
         // try to solve a disjunctive clause
         eqs.flatMap(solveOne(solution, _)) match {
           case Seq(uniqueSolution) => Some(uniqueSolution)
-          case _noneOrAmbiguous    => None
+          case _                   => None
         }
     }
   }

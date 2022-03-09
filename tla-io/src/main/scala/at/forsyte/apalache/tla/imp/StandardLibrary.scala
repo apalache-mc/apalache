@@ -59,7 +59,7 @@ object StandardLibrary {
         ("Apalache", "Skolem") -> ApalacheOper.skolem,
         ("Apalache", "Expand") -> ApalacheOper.expand,
         ("Apalache", "ConstCardinality") -> ApalacheOper.constCard,
-        ("Apalache", "FunAsSeq") -> ApalacheOper.funAsSeq,
+        ("Apalache", "MkSeq") -> ApalacheOper.mkSeq,
         ("Apalache", "SetAsFun") -> ApalacheOper.setAsFun,
         ("Apalache", "FoldSet") -> ApalacheOper.foldSet,
         ("Apalache", "FoldSeq") -> ApalacheOper.foldSeq,

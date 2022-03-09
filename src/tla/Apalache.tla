@@ -54,12 +54,38 @@ SetAsFun(S) ==
     [ x \in Dom |-> CHOOSE y \in Rng: <<x, y>> \in S ]
 
 (**
+ * A sequence constructor that avoids using a function constructor.
+ * Since Apalache is typed, this operator is more efficient than
+ * FunAsSeq([ i \in 1..N |-> F(i) ]). Apalache requires N to be
+ * a constant expression.
+ *
+ * @type: (Int, (Int -> a)) => Seq(a);
+ *)
+LOCAL INSTANCE Integers
+MkSeq(N, F(_)) ==
+    \* This is the TLC implementation. Apalache does it differently.
+    [ i \in (1..N) |-> F(i) ]
+
+\* required by our default definition of FoldSeq and FunAsSeq
+LOCAL INSTANCE Sequences
+
+(**
  * As TLA+ is untyped, one can use function- and sequence-specific operators
  * interchangeably. However, to maintain correctness w.r.t. our type-system,
  * an explicit cast is needed when using functions as sequences.
+ *
+ * The parameters have the following meaning:
+ *
+ *  - fn is the function from 1..len that should be interpreted as a sequence.
+ *  - len is the length of the sequence, len = Cardinality(DOMAIN fn),
+ *    len may be a variable, a computable expression, etc.
+ *  - capacity is a static upper bound on the length, that is, len <= capacity.
+ *
+ * @type: ((Int -> a), Int, Int) => Seq(a);
  *)
-LOCAL INSTANCE Sequences
-FunAsSeq(fn, maxSeqLen) == SubSeq(fn, 1, maxSeqLen)
+FunAsSeq(fn, len, capacity) ==
+    LET __FunAsSeq_elem_ctor(i) == fn[i] IN
+    SubSeq(MkSeq(capacity, __FunAsSeq_elem_ctor), 1, len)
 
 (**
  * Annotating an expression \E x \in S: P as Skolemizable. That is, it can

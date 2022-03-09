@@ -2,7 +2,7 @@
 
 | author        | revision |
 | ------------- |---------:|
-| Rodrigo Otoni |      1.5 |
+| Rodrigo Otoni |      1.6 |
 
 This ADR describes an alternative encoding of the [KerA+] fragment of TLA+ into SMT.
 Compound data structures, e.g. sets, are currently encoded using the [core theory] of SMT,
@@ -281,8 +281,22 @@ The following changes will be made to implement the new encoding of functions:
 
 - Add alternative rewriting rules for functions when appropriate, by extending the existing rules. The
   same caveats stated for the rewriting rules for sets will apply here.
+  - The sets of pairs used in the current encoding are the basis for the counter-example generation in
+    `SymbStateDecoder`. In order to continue having counter-examples, these sets will keep being produced,
+    but will not be present in the SMT constraints. They will be carried only as metadata in the `Arena`.
 - Update class `SymbStateRewriterImplWithArrays` with the rules for functions.
+- Update the `storeInSet` IR operator to also store function updates. It will have the value resulting
+  from the update as an optional argument.
+  - Since functions will be encoded as SMT arrays, the `selectInSet`, `storeInSet`, and `unchangedSet`
+    IR operators will be used when handling them. A future refactoring may rename these operators.
 - Update class `Z3SolverContext` to handle the new SMT constraints over arrays.
+  - A case for `FunT` will be added to `getOrMkCellSort`.
+  - In `declareCell`, functions will be declared as arrays, but will be left unconstrained.
+  - The `mkStore` method will be updated to also handle functions. It will have an additional
+    optional argument containing the value to be stored in the range of the array. The new
+    argument's default value is `true`, for the handling of sets.
+  - The `mkNestedSelect` method is added to support set membership in function sets, i.e.,
+    `f \in [S -> T]`. The nesting has first `funAppRes = f[s \in S]`, followed by `funAppRes \in T`.
 
 ## 5. Encoding tuples and records
 

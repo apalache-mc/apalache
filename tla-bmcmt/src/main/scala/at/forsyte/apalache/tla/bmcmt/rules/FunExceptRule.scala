@@ -1,15 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.implicitConversions._
-import at.forsyte.apalache.tla.bmcmt.types.{CellT, FunT, RecordT, TupleT}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.ProtoSeqOps
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, OperEx, RecT1, SeqT1, SetT1, TlaEx, TlaType1, TupT1, ValEx}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
-import at.forsyte.apalache.tla.lir.TlaType1
-import at.forsyte.apalache.tla.lir.{FunT1, RecT1, TupT1, BoolT1, SetT1}
 
 /**
  * Rewriting EXCEPT for functions, tuples, and records.
@@ -18,6 +15,8 @@ import at.forsyte.apalache.tla.lir.{FunT1, RecT1, TupT1, BoolT1, SetT1}
  *   Igor Konnov
  */
 class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
+  private val proto = new ProtoSeqOps(rewriter)
+
   private def cacheEq(s: SymbState, l: ArenaCell, r: ArenaCell) = rewriter.lazyEq.cacheOneEqConstraint(s, l, r)
 
   private def solverAssert = rewriter.solverContext.assertGroundExpr _
@@ -47,6 +46,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
           case ft @ FunT1(_, _)  => rewriteFun(nextState, funCell, ft, indexCell, valueCell)
           case rt @ RecT1(_)     => rewriteRec(nextState, funCell, rt, indexEx, valueCell)
           case tt @ TupT1(_ @_*) => rewriteTuple(nextState, funCell, tt, indexEx, valueCell)
+          case SeqT1(et)         => rewriteSeq(nextState, funCell, et, indexCell, valueCell)
           case _ =>
             throw new NotImplementedError(s"EXCEPT is not implemented for $funT. Write a feature request.")
         }
@@ -86,9 +86,9 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // Since the expression goes to the solver, we don't care about types.
       val pairIndex = nextState.arena.getHas(pair).head // this is pair[1]
       val ite = tla
-        .ite(tla.eql(pairIndex.toNameEx ? "p", indexCell.toNameEx ? "i") ? "b", newPairCell.toNameEx ? "p",
-            pair.toNameEx ? "p")
-        .typed(Map("p" -> tupT, "i" -> funT.arg, "b" -> BoolT1()), "p")
+        .ite(tla.eql(pairIndex.toNameEx.as(tupT), indexCell.toNameEx.as(funT.arg)).as(BoolT1()),
+            newPairCell.toNameEx.as(tupT), pair.toNameEx.as(tupT))
+        .as(tupT)
 
       nextState = rewriter.rewriteUntilDone(nextState.setRex(ite))
       val updatedCell = nextState.asCell
@@ -105,7 +105,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
 
     // compute all updated cells in case we are dealing with a function over non-basic indices
-    val updatedCells = relationCells.map(eachRelationPair)
+    relationCells.foreach(eachRelationPair)
 
     // cache equality constraints between the indices and the indices in the function relation
     def cacheEqForPair(p: ArenaCell): Unit = {
@@ -190,5 +190,30 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
 
     rewriter.rewriteUntilDone(nextState.setRex(newTuple.toNameEx))
+  }
+
+  // rewrite a sequence with EXCEPT semantics
+  def rewriteSeq(
+      state: SymbState,
+      oldSeq: ArenaCell,
+      elemT: TlaType1,
+      indexCell: ArenaCell,
+      newValue: ArenaCell): SymbState = {
+    val (oldProtoSeq, len, capacity) = proto.unpackSeq(state.arena, oldSeq)
+
+    // make an element for the new proto sequence
+    def mkElem(state: SymbState, index: Int): (SymbState, ArenaCell) = {
+      val oldValue = proto.at(state.arena, oldProtoSeq, index)
+      val cond = tla.eql(indexCell.toNameEx, tla.int(index)).as(BoolT1())
+      // IF indexCell = index THEN newValue ELSE oldValue
+      val iteEx = tla.ite(cond, newValue.toNameEx, oldValue.toNameEx).as(elemT)
+      val newState = rewriter.rewriteUntilDone(state.setRex(iteEx))
+      (newState, newState.asCell)
+    }
+
+    // make a new proto sequence of the same capacity and the same length
+    val nextState = proto.make(state, capacity, mkElem)
+    val newProtoSeq = nextState.asCell
+    proto.mkSeq(nextState, SeqT1(elemT), newProtoSeq, len)
   }
 }

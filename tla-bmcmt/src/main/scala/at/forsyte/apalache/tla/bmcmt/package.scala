@@ -2,8 +2,6 @@ package at.forsyte.apalache.tla
 
 import at.forsyte.apalache.tla.lir.{NameEx, TlaEx}
 
-import scala.collection.immutable.HashMap
-
 package object bmcmt {
 
   /**

@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.typecheck.{TypeCheckerListener, TypeCheckerTool}
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.io.json.impl.{DefaultTagReader, TlaToUJson, UJsonToTla}
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs
-import at.forsyte.apalache.tla.lir.{TlaModule, TlaType1, Typed, TypingException, UID}
+import at.forsyte.apalache.tla.lir.{TlaType1, Typed, TypingException, UID}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.{TlaType1, Typed, TypingException, UID}
 import at.forsyte.apalache.tla.typecheck.{TypeCheckerListener, TypeCheckerTool}
@@ -36,7 +36,6 @@ class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyM
   private var parser: Type1Parser = _
 
   private val megaSpec = "MegaSpec1"
-  private val tlcSpec = "TlcSpec1"
 
   override def beforeEach() {
     sourceStore = new SourceStore()

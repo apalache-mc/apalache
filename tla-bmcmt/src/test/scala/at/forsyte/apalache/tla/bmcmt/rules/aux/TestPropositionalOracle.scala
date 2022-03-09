@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 trait TestPropositionalOracle extends RewriterBase with TestingPredefs {
   test("""Propositional Oracle.create""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
-    var state = new SymbState(tla.bool(true), arena, Binding())
+    val state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
     val (nextState, oracle) = PropositionalOracle.create(rewriter, state, 6)
     assert(solverContext.sat())
@@ -17,7 +17,7 @@ trait TestPropositionalOracle extends RewriterBase with TestingPredefs {
 
   test("""Propositional Oracle.whenEqualTo""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
-    var state = new SymbState(tla.bool(true), arena, Binding())
+    val state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
     val (nextState, oracle) = PropositionalOracle.create(rewriter, state, 6)
     assert(solverContext.sat())
@@ -29,7 +29,7 @@ trait TestPropositionalOracle extends RewriterBase with TestingPredefs {
 
   test("""Propositional Oracle.evalPosition""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
-    var state = new SymbState(tla.bool(true), arena, Binding())
+    val state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
     val (nextState, oracle) = PropositionalOracle.create(rewriter, state, 6)
     assert(solverContext.sat())

@@ -7,17 +7,6 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 
 trait TestSymbStateRewriterFoldSet extends RewriterBase {
-  private val types = Map(
-      "b" -> BoolT1(),
-      "i" -> IntT1(),
-      "(i)" -> TupT1(IntT1()),
-      "I" -> SetT1(IntT1()),
-      "ib" -> TupT1(IntT1(), BoolT1()),
-      "ibs" -> TupT1(IntT1(), BoolT1(), StrT1()),
-      "IB" -> SetT1(TupT1(IntT1(), BoolT1())),
-      "ibI" -> TupT1(IntT1(), BoolT1(), SetT1(IntT1())),
-  )
-
   test("""FoldSet( LAMBDA x,y: C, v, S ) = C""") { rewriterType: SMTEncoding =>
     // A : (a,b) => a
     // A(p,q) == 0

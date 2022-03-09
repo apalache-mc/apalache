@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.bmcmt.profiler
 
 import at.forsyte.apalache.io.OutputManager
 
-import java.io.{BufferedWriter, File, FileWriter, PrintWriter}
 import scala.collection.immutable.SortedMap
 
 /**

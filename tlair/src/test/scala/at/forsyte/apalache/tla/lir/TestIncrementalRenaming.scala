@@ -223,8 +223,6 @@ class TestIncrementalRenaming extends AnyFunSuite with TestingPredefs with Befor
           filter(n_x, n_S, eql(n_x, int(1))),
           filter(n_x, n_S, eql(n_x, int(2))),
       )
-    val x1 = makeName("x", 1)
-    val x2 = makeName("x", 2)
 
     def expected(offset: Int): TlaEx =
       cup(

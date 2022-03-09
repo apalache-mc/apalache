@@ -750,7 +750,6 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
     // initialize the model checker
-    val filter = "0,0,0,0,0,0,0,0,0,0,0" // old syntax
     val tuning = Map.empty[String, String] // Map("search.transitionFilter" -> filter)
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), tuning, false)
     val ctx = new IncrementalExecutionContext(rewriter)
@@ -813,8 +812,4 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
       .typed(types, "b")
   }
 
-  private def mkNotAssign(varName: String, rhs: BuilderEx, tt: TlaType1): TlaEx = {
-    eql(prime(name(varName) ? "_tt") ? "_tt", rhs)
-      .typed(types + ("_tt" -> tt), "b")
-  }
 }

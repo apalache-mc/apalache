@@ -2,10 +2,8 @@ package at.forsyte.apalache.io
 
 import pureconfig._
 import pureconfig.generic.auto._
-import java.io.{File}
-import java.nio.file.{Path, Files, Paths}
-import com.typesafe.config.ConfigValueFactory
-import com.typesafe.config.ConfigObject
+import java.io.File
+import java.nio.file.{Files, Path, Paths}
 
 // Provides implicit conversions used when deserializing into configurable values.
 private object Converters {

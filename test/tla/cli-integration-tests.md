@@ -385,7 +385,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check InvSub for SafeMath reports no error: regression for issue 450
+### check InvSub for SafeMath reports no error: regression for issue 450 (array-encoding)
 
 ```sh
 $ apalache-mc check --length=1 --inv=InvSub SafeMath.tla | sed 's/I@.*//'
@@ -395,7 +395,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check InvAdd for SafeMath reports no error: regression for issue 450
+### check InvAdd for SafeMath reports no error: regression for issue 450 (array-encoding)
 
 ```sh
 $ apalache-mc check --length=1 --inv=InvAdd SafeMath.tla | sed 's/I@.*//'
@@ -405,7 +405,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check Fix365_ExistsSubset succeeds: regression for issue 365
+### check Fix365_ExistsSubset succeeds: regression for issue 365 (array-encoding)
 
 ```sh
 $ apalache-mc check --length=10 Fix365_ExistsSubset.tla | sed 's/I@.*//'
@@ -425,7 +425,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check Fix365_ExistsSubset3 succeeds: regression for issue 365
+### check Fix365_ExistsSubset3 succeeds: regression for issue 365 (array-encoding)
 
 ```sh
 $ apalache-mc check --length=10 Fix365_ExistsSubset3.tla | sed 's/I@.*//'
@@ -455,7 +455,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check Bug540 succeeds: regression for issue 540
+### check Bug540 succeeds: regression for issue 540 (array-encoding)
 
 ```sh
 $ apalache-mc check --cinit=CInit Bug540.tla | sed 's/I@.*//'
@@ -515,7 +515,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check pr.tla suceeds
+### check pr.tla suceeds (array-encoding)
 
 ```sh
 $ apalache-mc check --length=2 pr.tla | sed 's/I@.*//'
@@ -1120,7 +1120,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check SimpT1 succeeds
+### check SimpT1 succeeds (array-encoding)
 
 This test was moved from a unit test of SymbTransGenerator. The goal of the test is to check that symbolic transitions
 are extracted from the spec. Hence, we run model checking only against the initial states.
@@ -1143,7 +1143,7 @@ Selections.tla:16:18-16:27: Missing assignments to: z
 EXITCODE: ERROR (255)
 ```
 
-### check test1 succeeds
+### check test1 succeeds (array-encoding)
 
 ```sh
 $ apalache-mc check test1.tla | sed 's/I@.*//'
@@ -1153,7 +1153,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check ITE_CASE succeeds
+### check ITE_CASE succeeds (array-encoding)
 
 ```sh
 $ apalache-mc check ITE_CASE.tla | sed 's/I@.*//'
@@ -1180,6 +1180,15 @@ EXITCODE: OK
 $ TLA_PATH=./tla-path-tests apalache-mc check ./tla-path-tests/ImportingModule.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check SimpleLambda succeeds
+Regression test for https://github.com/informalsystems/apalache/issues/1446
+
+```sh
+$ apalache-mc check --inv=Inv SimpleLambda.tla | sed 's/I@.*//'
 ...
 EXITCODE: OK
 ```
@@ -1829,6 +1838,14 @@ Found 10 error(s)
 EXITCODE: ERROR (12)
 ```
 
+### check TestSequences.tla reports no error
+
+```sh
+$ apalache-mc check --length=0 --inv=AllTests TestSequences.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check Test1343.tla reports no error
 
 Regression test for #1343
@@ -1843,6 +1860,26 @@ EXITCODE: OK
 
 ```sh
 $ apalache-mc check --length=0 --inv=AllTests TestSets.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check TestHash2.tla reports no error (array-encoding)
+
+A regression test for using `--cinit` and hashes.
+
+```sh
+$ apalache-mc check --inv=Inv --cinit=ConstInit TestHash2.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check Test1425.tla reports no error
+
+A regression test for assignments under quantification over empty sets.
+
+```sh
+$ apalache-mc check --length=1 Test1425.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```

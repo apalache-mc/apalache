@@ -162,6 +162,7 @@ class TestTlaExpr extends AnyFunSuite {
     }
   }
 
+  // TODO What are these testing? Just that no exceptions are thrown?
   test("declaring an order 2 operator") {
     // f(_, _)
     val fOper = OperParam("f", 2)
@@ -183,7 +184,7 @@ class TestTlaExpr extends AnyFunSuite {
       OperEx(TlaBoolOper.existsUnbounded, NameEx("x"), OperEx(TlaOper.eq, NameEx("x"), NameEx("x")))
     val ex2 =
       OperEx(TlaBoolOper.existsUnbounded, NameEx("x"), OperEx(TlaOper.eq, NameEx("x"), NameEx("x")))
-    val conj = OperEx(TlaBoolOper.and, ex1, ex2)
+    OperEx(TlaBoolOper.and, ex1, ex2)
   }
 
 }

@@ -1,18 +1,19 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.io.annotations.StandardAnnotations
-import at.forsyte.apalache.io.annotations.store.{AnnotationStore, createAnnotationStore}
+import at.forsyte.apalache.io.annotations.store.{createAnnotationStore, AnnotationStore}
+import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper}
 import at.forsyte.apalache.tla.lir.values.TlaReal
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.typecheck._
 import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
 import org.junit.runner.RunWith
-import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 /**
  * Unit tests for translating TLA+ expressions to EtcExpr.
@@ -98,13 +99,13 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
   }
 
   test("equality and inequality") {
-    // equality and inequality
-    val a2ToBool = parser("(a, a) => Bool")
-
     def mkExpected(tt: TlaType1) = mkConstAppByType(tt, parser("Int"), parser("Int"))
 
     assert(mkExpected(parser("(a, a) => Bool")) == gen(tla.eql(tla.int(1), tla.int(2))))
     assert(mkExpected(parser("(b, b) => Bool")) == gen(tla.neql(tla.int(1), tla.int(2))))
+
+    // Has custom type error message
+    assert(gen(tla.eql(tla.int(1), tla.int(2))).explain(List(), List()).isDefined)
   }
 
   test("operator application") {
@@ -112,7 +113,11 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     val fName = mkUniqName("F")
     val expected2 = mkUniqAppByName(fName, mkUniqConst(IntT1()), mkUniqConst(BoolT1()))
 
-    assert(expected2 == gen(tla.appOp(tla.name("F"), tla.int(1), tla.bool(true))))
+    val expr = tla.appOp(tla.name("F"), tla.int(1), tla.bool(true))
+    assert(expected2 == gen(expr))
+
+    // Has custom type error message
+    assert(gen(expr).explain(List(OperT1(Seq(), BoolT1())), List()).isDefined)
   }
 
   test("LET-IN simple") {
@@ -283,8 +288,6 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
   }
 
   test("\\union, \\intersect, \\setminus") {
-    val binarySetOp = parser("(Set(a), Set(a)) => Set(a)")
-
     def mkExpected(tt: TlaType1) = mkConstAppByType(tt, parser("Set(Int)"), parser("Set(Int)"))
 
     assert(mkExpected(parser("(Set(a), Set(a)) => Set(a)")) == gen(tla.cup(tla.intSet(), tla.intSet())))
@@ -399,6 +402,9 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     val expected = mkAppByName(funOrSeq, "f", "e")
     val access = tla.appFun(tla.name("f"), tla.name("e"))
     assert(expected == gen(access))
+
+    // Has custom type error message
+    assert(gen(access).explain(List(), List()).isDefined)
   }
 
   test("f[2]") {
@@ -408,6 +414,9 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     val expected = mkUniqApp(funOrSeqOrTuple, mkUniqName("f"), mkUniqConst(IntT1()))
     val access = tla.appFun(tla.name("f"), tla.int(2))
     assert(expected == gen(access))
+
+    // Has custom type error message
+    assert(gen(access).explain(List(), List()).isDefined)
   }
 
   test("""f["foo"]""") {
@@ -416,11 +425,14 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     val expected = mkUniqApp(funOrReq, mkUniqName("f"), mkUniqConst(StrT1()))
     val access = tla.appFun(tla.name("f"), tla.str("foo"))
     assert(expected == gen(access))
+
+    // Has custom type error message
+    assert(gen(access).explain(List(), List()).isDefined)
   }
 
   test("DOMAIN f") {
     // DOMAIN is applied to one of the four objects: a function, a sequence, a record, or a sparse tuple
-    val types = Seq(parser("(a -> b) => Set(a)"), parser("Seq(a) => Set(Int)"), parser("[] => Set(Str)"),
+    val types = Seq(parser("(a -> b) => Set(a)"), parser("Seq(c) => Set(Int)"), parser("[] => Set(Str)"),
         parser("{} => Set(Int)"))
 
     val expected = mkAppByName(types, "f")
@@ -740,10 +752,10 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     assert(expected == gen(ex))
   }
 
-  test("Apalache!FunAsSeq(fun, len)") {
-    val typ = parser("(Int -> a, Int) => Seq(a)")
-    val expected = mkAppByName(Seq(typ), "fun", "len")
-    val ex = OperEx(ApalacheOper.funAsSeq, tla.name("fun"), tla.name("len"))
+  test("Apalache!Seq(len, ctor)") {
+    val typ = parser("(Int, Int => a) => Seq(a)")
+    val expected = mkAppByName(Seq(typ), "len", "ctor")
+    val ex = OperEx(ApalacheOper.mkSeq, tla.name("len"), tla.name("ctor"))
     assert(expected == gen(ex))
   }
 

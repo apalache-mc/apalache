@@ -60,7 +60,7 @@ class SmtFreeSymbolicTransitionExtractor(
           if (s.isEmpty) None
           else {
             val locString = getLocString(childEx)
-            Some(s"$locString: Missing assignments to: ${s.mkString(",")}")
+            Some(s"$locString: Missing assignments to: ${s.mkString(", ")}")
           }
         }
 
@@ -102,7 +102,7 @@ class SmtFreeSymbolicTransitionExtractor(
       // We sequentially update the partial state
       args.foldLeft(currentState) { getStrategyOptInternal(_, operMap)(_) }
     /** Disjunction */
-    case ex @ OperEx(TlaBoolOper.or, args @ _*) =>
+    case OperEx(TlaBoolOper.or, args @ _*) =>
       handleDisjunctionOrITE(currentState, operMap, args)
 
     /** \E quantifier */
