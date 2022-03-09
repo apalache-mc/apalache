@@ -178,14 +178,19 @@ TestFoldSeqOverSelectSeq ==
 
 TestFunAsSeq3 ==
     LET f == [ i \in 1..3 |-> i + 1 ] IN
-    FunAsSeq(f, 3) = <<2, 3, 4>>
+    FunAsSeq(f, 3, 3) = <<2, 3, 4>>
 
 TestFunAsSeqEmpty ==
     LET
         \* @type: Int -> Int;
         f == [ i \in {} |-> i ]
     IN
-    FunAsSeq(f, 0) = << >>
+    FunAsSeq(f, 0, 0) = << >>
+
+TestFunAsSeqLargerCapacity ==
+    LET f == [ i \in 1..3 |-> i + 1 ] IN
+    \* provide a larger upper bound
+    FunAsSeq(f, 3, 10) = <<2, 3, 4>>
 
 TestExceptLen ==
     Len([seq345 EXCEPT ![2] = 10]) = 3
@@ -235,6 +240,7 @@ AllTests ==
     /\ TestMkSeqFold
     /\ TestFunAsSeq3
     /\ TestFunAsSeqEmpty
+    /\ TestFunAsSeqLargerCapacity
     /\ TestExceptLen
     /\ TestExceptDomain
 ===============================================================================
