@@ -121,7 +121,7 @@ jobs:
         run: nix develop -c make integration
         env:
           SMT_ENCODING: ${{ matrix.smt-encoding }}
-          TEST_FILTER: ${{ matrix.smt-encoding == 'arrays' && '' }}
+          TEST_FILTER: ${{ matrix.smt-encoding == 'arrays' && '' || '' }}
 
   docker-tests:
     runs-on: ubuntu-latest
