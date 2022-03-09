@@ -356,21 +356,21 @@ class CherryPick(rewriter: SymbStateRewriter) {
       state.setRex(distinct.head.toNameEx)
     } else {
       val (newState, keyToCell) = findRecordKeys(state, commonRecordType)
-      // introduce a new cell for the picked domain
+      // Introduce a new cell for the picked domain
       var nextState = newState.updateArena(_.appendCell(domType))
       val newDom = nextState.arena.topCell
       // Add the cells for all potential keys.
       // Importantly, they all come from strValueCache, so the same key produces the same cell.
       val keyCells = keyToCell.values.toSeq
       nextState = nextState.updateArena(_.appendHas(newDom, keyCells: _*))
-      // constrain membership with SMT
+      // Constrain membership with SMT
       for ((dom, no) <- domains.zipWithIndex) {
         val domainCells = nextState.arena.getHas(dom)
 
         for (keyCell <- keyCells) {
           // Although we search over a list, the list size is usually small, e.g., up to 10 elements
           if (domainCells.contains(keyCell)) {
-            // the key belongs to the new domain only if belongs to the domain that is pointed by the oracle
+            // The key belongs to the new domain only if it belongs to the domain that is pointed by the oracle
             val ite = tla.ite(tla.apalacheSelectInSet(keyCell.toNameEx, dom.toNameEx),
                 tla.apalacheStoreInSet(keyCell.toNameEx, newDom.toNameEx),
                 tla.apalacheStoreNotInSet(keyCell.toNameEx, newDom.toNameEx))
@@ -386,7 +386,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
             rewriter.solverContext.assertGroundExpr(tla.ite(oracle.whenEqualTo(nextState, no), ite, unchangedSet))
           } else {
             // The domain pointed by the oracle does not contain the key
-            val notInDom = tla.apalacheStoreNotInSet(keyCell.toNameEx, newDom.toNameEx)
+            val notInDom = tla.not(tla.apalacheSelectInSet(keyCell.toNameEx, newDom.toNameEx))
             rewriter.solverContext.assertGroundExpr(tla.impl(oracle.whenEqualTo(nextState, no), notInDom))
           }
         }
@@ -830,7 +830,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
           nextState = nextState.updateArena(_.appendHasNoSmt(relationCell, pair)) // We only carry the metadata here
           // Since relationCell was updated above with the pair for the current arg, we can use appFun now
           nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.appFun(funCell.toNameEx, arg.toNameEx)))
-          val appFunRes = nextState.arena.topCell
+          val appFunRes = nextState.asCell
 
           cdm.cellType match {
             case _: PowSetT =>
