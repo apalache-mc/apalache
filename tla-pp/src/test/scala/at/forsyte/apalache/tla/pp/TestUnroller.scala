@@ -72,10 +72,10 @@ class TestUnroller extends AnyFunSuite with BeforeAndAfterEach with TestingPrede
 
     val unrolled = unroller(module)
 
-    val newAOpt = unrolled.operDeclarations.find(_.name == name)
+    val newAOpt = unrolled.operDeclarations.find(_.name == name).get
 
     newAOpt match {
-      case Some(d @ TlaOperDecl(_, _, body)) =>
+      case d @ TlaOperDecl(_, _, body) =>
         assert(!d.isRecursive)
         body match {
           case LetInEx(letBody, TlaOperDecl(_, Nil, declBody)) =>
