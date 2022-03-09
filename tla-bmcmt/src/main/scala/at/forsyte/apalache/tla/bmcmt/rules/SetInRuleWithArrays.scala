@@ -88,7 +88,7 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
       funsetCdm.cellType match {
         case _: PowSetT =>
           nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.appFun(funCell.toNameEx, funsetDomElem.toNameEx)))
-          val funAppRes = nextState.arena.topCell
+          val funAppRes = nextState.asCell
           val powSetDom = nextState.arena.getDom(funsetCdm)
           val subsetEq = tla.subseteq(funAppRes.toNameEx, powSetDom.toNameEx)
           nextState = rewriter.rewriteUntilDone(nextState.setRex(subsetEq))
