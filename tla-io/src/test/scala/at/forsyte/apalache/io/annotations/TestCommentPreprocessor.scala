@@ -138,6 +138,16 @@ class TestCommentPreprocessor extends AnyFunSuite with Checkers {
     assert(potentialAnnotations.head == "@type: Int;")
   }
 
+  test("annotation in the very beginning") {
+    // Regression: https://github.com/informalsystems/apalache/issues/1304
+    val input =
+      """\*@type: Int;"""
+    val (output, potentialAnnotations) = CommentPreprocessor()(input)
+    assert(output.trim.isEmpty)
+    assert(potentialAnnotations.size == 1)
+    assert(potentialAnnotations.head == "@type: Int;")
+  }
+
   test("no failure on random inputs") {
     check(
         {

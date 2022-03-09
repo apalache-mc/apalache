@@ -107,7 +107,7 @@ class CommentPreprocessor {
     val matchIterator = tokenRegex.findAllIn(text)
     while (matchIterator.hasNext) {
       val group = matchIterator.next()
-      val hasWhitespaceBefore = (matchIterator.start == 0) || text(matchIterator.start - 1).isWhitespace
+      val isGoodStartForAnnotation = isValidCharBeforeAnnotation(text, matchIterator.start)
       if (matchIterator.start > lastIndexOfUnmatchedText && !state.isExcludingText) {
         // add the text between the last match and this match
         val fragment = text.substring(lastIndexOfUnmatchedText, matchIterator.start)
@@ -127,7 +127,7 @@ class CommentPreprocessor {
       val lookaheadChar = if (lastIndexOfUnmatchedText < text.length) Some(text(lastIndexOfUnmatchedText)) else None
       // figure out whether we have met an annotation or not
       if (!state.inAnnotation && !state.inString && group.startsWith("@")) {
-        if (!hasWhitespaceBefore) {
+        if (!isGoodStartForAnnotation) {
           // this is not an annotation, push it back to the free text
           textBuilder.append(group)
         } else {
@@ -145,7 +145,7 @@ class CommentPreprocessor {
         }
       }
 
-      val nextState = getNextState(state, group, lookaheadChar, hasWhitespaceBefore)
+      val nextState = getNextState(state, group, lookaheadChar, isGoodStartForAnnotation)
 
       (state.inAnnotation, nextState.inAnnotation) match {
         case (false, false) => ()
@@ -185,11 +185,20 @@ class CommentPreprocessor {
     (textBuilder.toString(), annotations)
   }
 
+  private def isValidCharBeforeAnnotation(text: String, index: Int): Boolean = {
+    if (index == 0) {
+      true
+    } else {
+      val char = text(index - 1)
+      char.isWhitespace || char == '*'
+    }
+  }
+
   private def getNextState(
       state: State,
       group: String,
       lookaheadChar: Option[Char],
-      isWhitespaceBefore: Boolean): State = {
+      isGoodStartForAnnotation: Boolean): State = {
     group match {
       case "\\*" =>
         state.enterOneLineComment()
@@ -236,7 +245,7 @@ class CommentPreprocessor {
         }
 
       case _ =>
-        if (!group.startsWith("@") || !isWhitespaceBefore) {
+        if (!group.startsWith("@") || !isGoodStartForAnnotation) {
           state
         } else {
           if (lookaheadChar.contains('(') && !state.inAnnotation) {
