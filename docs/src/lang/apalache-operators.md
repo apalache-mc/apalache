@@ -182,10 +182,9 @@ MkSeq(3, Double) = <<2, 4, 6>>   \* TRUE
 **Arguments:** Three arguments:
 
 * A function `fn` that should be interpreted as a sequence.
-* The length of the sequence. An integer such that has the property
-  `1..len \subseteq DOMAIN fn`. Apalache does not check this requirement. It is up to the user to ensure that it does
-  hold true. This expression is not necessarily constant.
-* A constant upper bound on `len`, that is, `len <= maxLen`.
+* An integer `len`, denoting the length of the sequence, with the property
+  `1..len \subseteq DOMAIN fn`. Apalache does not check this requirement. It is up to the user to ensure that it holds. This expression is not necessarily constant.
+* An integer constant `maxLen`, which is an upper bound on `len`, that is, `len <= maxLen`.
 
 **Apalache type:** `(Int -> a, Int, Int) => Seq(a)`, for some type `a`
 
