@@ -16,7 +16,7 @@ trait TestRecordingSolverContext extends FixtureAnyFunSuite {
 
   test("operations proxied") { _ =>
     val solver = RecordingSolverContext.createZ3(None, solverConfig)
-    var arena = Arena.create(solver).appendCell(IntT())
+    val arena = Arena.create(solver).appendCell(IntT())
     val x = arena.topCell
     solver.assertGroundExpr(tla.eql(x.toNameEx, int42))
     assert(solver.sat())
@@ -25,7 +25,7 @@ trait TestRecordingSolverContext extends FixtureAnyFunSuite {
 
   test("write and read") { _ =>
     val solver = RecordingSolverContext.createZ3(None, solverConfig)
-    var arena = Arena.create(solver).appendCell(IntT())
+    val arena = Arena.create(solver).appendCell(IntT())
     val x = arena.topCell
     solver.assertGroundExpr(tla.eql(x.toNameEx, int42))
     assert(solver.sat())
