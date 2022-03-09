@@ -147,17 +147,31 @@ class TestCommentPreprocessor extends AnyFunSuite with Checkers {
     assert(potentialAnnotations.size == 1)
     assert(potentialAnnotations.head == "@type: Int;")
   }
+  
+  test("Single-line comment only") {
+    hasAnnotationsWhenNonEmpty("""\*""")
+  }
+
+  test("Multi-line comment only") {
+    hasAnnotationsWhenNonEmpty("""(* aaa *)""")
+  }
 
   test("no failure on random inputs") {
     check(
         {
           forAll(asciiStr) { str =>
-            val (text, annotations) = CommentPreprocessor()(str)
-            str.trim().nonEmpty == (text.trim().nonEmpty || annotations.nonEmpty)
+            hasAnnotationsWhenNonEmpty(str)
           // no exceptions
           }
         },
         minSuccessful(300),
     )
+  }
+
+  private def hasAnnotationsWhenNonEmpty(str: String): Boolean = {
+    val (text, annotations) = CommentPreprocessor()(str)
+    // replace the comment literals with empty strings
+    val noComments = str.replaceAll("""(\\\*|\(\*|\*\))""", "").trim
+    noComments.nonEmpty == (text.trim().nonEmpty || annotations.nonEmpty)
   }
 }
