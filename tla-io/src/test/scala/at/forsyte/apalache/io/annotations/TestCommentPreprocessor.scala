@@ -147,7 +147,7 @@ class TestCommentPreprocessor extends AnyFunSuite with Checkers {
     assert(potentialAnnotations.size == 1)
     assert(potentialAnnotations.head == "@type: Int;")
   }
-  
+
   test("Single-line comment only") {
     hasAnnotationsWhenNonEmpty("""\*""")
   }
