@@ -70,7 +70,6 @@ knowing too much about the internals of Apalache. Solving these issues would
 improve usability! Please comment in the relevant issue, if you are going to
 solve it.
 
-- Rewriting `TypeOK` by knowing types: [#723](https://github.com/informalsystems/apalache/issues/723)
 - Writing annotations in the JSON format: [#804](https://github.com/informalsystems/apalache/issues/804)
 - Add support for VIEW in the TLC config: [#851](https://github.com/informalsystems/apalache/issues/851)
 - Translate `\E x \in STRING: P` and `\A x \in STRING: P`:

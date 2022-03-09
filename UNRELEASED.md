@@ -11,6 +11,10 @@
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
 ### Features
-
+ * Enable records in the arrays encoding, see #1288
  * Implement the sequence constructor `Apalache!MkSeq`, see #1439
+ * Add support for `Apalache!FunAsSeq`, see #1442
  * Implement `EXCEPT` on sequences, see #1444
+
+### Bug fixes
+ * Fixed bug where TLA+ `LAMBDA`s wouldn't inline outside `Fold` and `MkSeq`, see #1446
