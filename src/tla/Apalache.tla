@@ -66,16 +66,26 @@ MkSeq(N, F(_)) ==
     \* This is the TLC implementation. Apalache does it differently.
     [ i \in (1..N) |-> F(i) ]
 
+\* required by our default definition of FoldSeq and FunAsSeq
+LOCAL INSTANCE Sequences
+
 (**
  * As TLA+ is untyped, one can use function- and sequence-specific operators
  * interchangeably. However, to maintain correctness w.r.t. our type-system,
  * an explicit cast is needed when using functions as sequences.
  *
- * @type: ((Int -> a), Int) => Seq(a);
+ * The parameters have the following meaning:
+ *
+ *  - fn is the function from 1..len that should be interpreted as a sequence.
+ *  - len is the length of the sequence, len = Cardinality(DOMAIN fn),
+ *    len may be a variable, a computable expression, etc.
+ *  - capacity is a static upper bound on the length, that is, len <= capacity.
+ *
+ * @type: ((Int -> a), Int, Int) => Seq(a);
  *)
-FunAsSeq(fn, maxSeqLen) ==
+FunAsSeq(fn, len, capacity) ==
     LET __FunAsSeq_elem_ctor(i) == fn[i] IN
-    MkSeq(maxSeqLen, __FunAsSeq_elem_ctor)
+    SubSeq(MkSeq(capacity, __FunAsSeq_elem_ctor), 1, len)
 
 (**
  * Annotating an expression \E x \in S: P as Skolemizable. That is, it can
@@ -111,9 +121,6 @@ FoldSet( Op(_,_), v, S ) == IF S = {}
                             ELSE LET w == CHOOSE x \in S: TRUE
                                   IN LET T == S \ {w}
                                       IN FoldSet( Op, Op(v,w), T )
-
-\* required by our default definition of FoldSeq
-LOCAL INSTANCE Sequences
 
 (**
  * The folding operator, used to implement computation over a sequence.

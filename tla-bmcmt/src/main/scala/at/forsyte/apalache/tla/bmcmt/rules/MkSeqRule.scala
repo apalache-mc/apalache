@@ -10,7 +10,7 @@ import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.pp.{ConstSimplifier, InlinerOfUserOper, TlaInputError}
+import at.forsyte.apalache.tla.pp.{InlinerOfUserOper, TlaInputError}
 
 /**
  * Rewriting rule for MkSeq. This rule is similar to [[FoldSeqRule]].
@@ -20,7 +20,6 @@ import at.forsyte.apalache.tla.pp.{ConstSimplifier, InlinerOfUserOper, TlaInputE
  */
 class MkSeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val proto = new ProtoSeqOps(rewriter)
-  private val simplifier = new ConstSimplifier(new IdleTracker())
 
   override def isApplicable(symbState: SymbState): Boolean = symbState.ex match {
     // match the internal representation of lambda expressions or embedded calls
@@ -71,7 +70,7 @@ class MkSeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   // extract capacity from the length expression
   private def extractCapacity(lenEx: TlaEx): Int = {
-    simplifier(lenEx) match {
+    lenEx match {
       case ValEx(TlaInt(n)) if n.isValidInt && n >= 0 =>
         n.toInt
 
