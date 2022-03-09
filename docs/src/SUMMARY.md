@@ -6,6 +6,7 @@
 
 - [Entry-level Model Checker Tutorial](./tutorials/entry-tutorial.md)
 - [Type Checker Tutorial](./tutorials/snowcat-tutorial.md)
+- [Checking Pluscal specifications](./tutorials/pluscal-tutorial.md)
 - [Symbolic Model Checking](./tutorials/symbmc.md)
 
 # Apalache User Manual
