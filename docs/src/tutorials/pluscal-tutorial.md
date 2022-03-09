@@ -1,8 +1,8 @@
-# Tutorial on checking Pluscal specifications with Apalache
+# Tutorial on checking PlusCal specifications with Apalache
 
 **Difficulty: Blue trail – Easy**
 
-In this short tutorial, we show how to annotate a [Pluscal specification][] of
+In this short tutorial, we show how to annotate a [PlusCal specification][] of
 the Bakery algorithm, to check it with Apalache. In particular, we check mutual
 exclusion by _bounded model checking_ (which considers only bounded executions).
 Moreover, we automatically prove mutual exclusion for unbounded executions by
@@ -10,9 +10,9 @@ _induction_.
 
 We only focus on the part
 related to Apalache. If you want to understand the Bakery algorithm and its
-specification, check the comments in the original [Pluscal specification][].
+specification, check the comments in the original [PlusCal specification][].
 
-## Related documents
+## Further reading
 
  - [Entry-level Tutorial on the Model Checker][]
  - [Tutorial on Snowcat][] shows how to write type annotations for Apalache.
@@ -26,10 +26,9 @@ We assume that you have Apalache installed. If not, check the manual page on
 
 ## Running example: Bakery
 
-We start with the [Pluscal specification][] of the Bakery algorithm.
-This specification has been checked with the model checker [TLC][].
-Moreover, [Leslie Lamport][] has proved safety of this algorithm with
-the [TLAPS][].
+We start with the [PlusCal specification][] of the [Bakery algorithm][]. This
+specification has been checked with the model checker [TLC][].  Moreover,
+[Leslie Lamport][] has proved safety of this algorithm with the [TLAPS][].
 
 
 ## Step 0: Remove the TLAPS proof
@@ -50,8 +49,6 @@ Since we are not interested in the TLAPS proof, we copy [Bakery.tla][] to
     ...
     ```
 
-Alternatively, you can download the module `TLAPS.tla`.
-
 ## Step 1: Add a module with type annotations
 
 Let us check the types of [BakeryWoTlaps.tla][] with Apalache:
@@ -64,7 +61,7 @@ Typing input error: Expected a type annotation for VARIABLE max
 
 The type checker complains about missing type annotations. See the [Tutorial on
 Snowcat][] for details. When we try to add type annotations to the variables,
-we run into an issue. Indeed, the variables are declared with the Pluscal
+we run into an issue. Indeed, the variables are declared with the PlusCal
 syntax:
 
 ```tla
@@ -72,13 +69,13 @@ syntax:
 ```
 
 The most straightforward approach would be to add type annotations directly in
-the Pluscal code. As reported in [Issue 1412][], this does not work as
-expected, as the Pluscal translator erases the comments.
+the PlusCal code. As reported in [Issue 1412][], this does not work as
+expected, as the PlusCal translator erases the comments.
 
 A simple solution is to add type annotations directly to the declarations in
-the generated TLA+ code. However, this solution is volatile. If we change the
-Pluscal code, our annotations will get overridden. We propose another solution
-that is stable under modification of the Pluscal code. To this end, we
+the generated TLA+ code. However, this solution is fragile. If we change the
+PlusCal code, our annotations will get overridden. We propose another solution
+that is stable under modification of the PlusCal code. To this end, we
 introduce a new module called `BakeryTyped.tla` with the following contents:
 
 ```tla
@@ -88,7 +85,7 @@ introduce a new module called `BakeryTyped.tla` with the following contents:
 Due to the semantics of `INSTANCE`, the constants and variables declared in
 `BakeryTyped.tla` substitute the constants and variables of
 `BakeryWoTlaps.tla`. By doing so we effectively introduce type annotations.
-Since we introduce a separate module, any changes in the Pluscal code do not
+Since we introduce a separate module, any changes in the PlusCal code do not
 affect our type annotations.
 
 Additionally, we add a constant initializer `ConstInit4`, which we will use
@@ -128,6 +125,9 @@ $ apalache-mc typecheck BakeryTyped.tla
 ...
 Type checker [OK]
 ```
+
+Note that our annotation of `\preceq` would not get overwritten, when we update
+the PlusCal code. This is because `\preceq` is defined in the TLA+ section.
 
 ## Step 3: Checking mutual exclusion for bounded executions
 
@@ -208,7 +208,7 @@ and
 
 In this tutorial we have shown how to:
 
- - Annotate a Pluscal spec with types by introducing an additional TLA+ module.
+ - Annotate a PlusCal spec with types by introducing an additional TLA+ module.
  - Check safety of Bakery for bounded executions by bounded model checking (for
    `N=4`).
  - Check safety of Bakery for unbounded executions by invariant checking (for
@@ -218,7 +218,7 @@ If you are experiencing a problem with Apalache, feel free to [open an issue]
 or drop us a message on [Zulip chat].
 
 
-[Pluscal specification]: https://github.com/tlaplus/Examples/blob/master/specifications/Bakery-Boulangerie/Bakery.tla
+[PlusCal specification]: https://github.com/tlaplus/Examples/blob/master/specifications/Bakery-Boulangerie/Bakery.tla
 [Bakery.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/Bakery-Boulangerie/Bakery.tla
 [BakeryWoTlaps.tla]: https://github.com/informalsystems/apalache/blob/unstable/test/tla/bakery-pluscal/BakeryWoTlaps.tla
 [Entry-level Tutorial on the Model Checker]: ./entry-tutorial.md
@@ -237,5 +237,5 @@ or drop us a message on [Zulip chat].
 [TLC]: https://github.com/tlaplus/tlaplus/
 [TLAPS]: https://tla.msr-inria.inria.fr/tlaps/content/Home.html
 [Zulip chat]: https://informal-systems.zulipchat.com/login/#narrow/stream/265309-apalache
-
+[Bakery algorithm]: https://en.wikipedia.org/wiki/Lamport%27s_bakery_algorithm
 
