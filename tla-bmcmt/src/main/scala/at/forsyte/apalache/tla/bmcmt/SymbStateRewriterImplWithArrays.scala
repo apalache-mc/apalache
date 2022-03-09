@@ -4,9 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, ExprGradeStoreImp
 import at.forsyte.apalache.tla.bmcmt.rewriter.MetricProfilerListener
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.rules._
-import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
