@@ -178,7 +178,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     // The old encoding was always introducing spurious fields for all records, as it was extending the records.
     val rec1 = enumFun(str("a"), int(1), str("b"), int(2))
       .typed(types, "rii")
-    val rec2 = enumFun(str("a"), int(1))
+    val rec2 = enumFun(str("a"), int(3))
       .typed(types, "ri")
 
     // introduce an oracle that tells us which element to pick
@@ -205,7 +205,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     // The old encoding was always introducing spurious fields for all records, as it was extending the records.
     val rec1 = enumFun(str("a"), int(1), str("b"), int(2))
       .typed(types, "ri")
-    val rec2 = enumFun(str("a"), int(1))
+    val rec2 = enumFun(str("a"), int(3))
       .typed(types, "rii")
 
     // introduce an oracle that tells us which element to pick

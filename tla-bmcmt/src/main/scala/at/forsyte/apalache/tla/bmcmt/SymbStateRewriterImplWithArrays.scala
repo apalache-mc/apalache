@@ -4,9 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, ExprGradeStoreImp
 import at.forsyte.apalache.tla.bmcmt.rewriter.MetricProfilerListener
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.rules._
-import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
@@ -28,16 +26,11 @@ class SymbStateRewriterImplWithArrays(
     profilerListener: Option[MetricProfilerListener] = None)
     extends SymbStateRewriterImpl(_solverContext, exprGradeStore, profilerListener) {
 
-  // TODO: remove unsupportedRules after passing over all rules
   @transient
-  override lazy val ruleLookupTable: Map[String, List[RewritingRule]] =
-    (defaultRuleLookupTable ++ newRules) -- unsupportedRules.keys
+  override lazy val ruleLookupTable: Map[String, List[RewritingRule]] = defaultRuleLookupTable ++ newRules
 
   val newRules: Map[String, List[RewritingRule]] = {
     Map(
-        // logic
-        key(tla.eql(tla.name("x"), tla.name("y")))
-          -> List(new EqRuleWithArrays(this)), // TODO: update with additional elements later
         // sets
         key(tla.in(tla.name("x"), tla.name("S")))
           -> List(new SetInRuleWithArrays(this)), // TODO: add support for funSet later
@@ -57,63 +50,6 @@ class SymbStateRewriterImplWithArrays(
           -> List(new FunExceptRuleWithArrays(this)),
         key(tla.dom(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S"))))
           -> List(new DomainRuleWithArrays(this, intRangeCache)),
-    )
-  }
-
-  val unsupportedRules: Map[String, List[RewritingRule]] = {
-    Map(
-        // logic
-        key(tla.choose(tla.name("x"), tla.name("S"), tla.name("p")))
-          -> List(new ChooseRule(this)),
-        // tuples, records, and sequences
-        key(tla.head(tla.tuple(tla.name("x"))))
-          -> List(new SeqOpsRule(this)),
-        key(tla.tail(tla.tuple(tla.name("x"))))
-          -> List(new SeqOpsRule(this)),
-        key(tla.subseq(tla.tuple(tla.name("x")), tla.int(2), tla.int(4)))
-          -> List(new SeqOpsRule(this)),
-        key(tla.len(tla.tuple(tla.name("x"))))
-          -> List(new SeqOpsRule(this)),
-        key(tla.append(tla.tuple(tla.name("x")), tla.int(10)))
-          -> List(new SeqOpsRule(this)),
-        key(tla.concat(tla.name("Seq1"), tla.name("Seq2")))
-          -> List(new SeqOpsRule(this)),
-        key(OperEx(ApalacheOper.gen, tla.int(2)))
-          -> List(new GenRule(this)),
-        // folds
-        key(OperEx(ApalacheOper.foldSet, tla.name("A"), tla.name("v"), tla.name("S")))
-          -> List(new FoldSetRule(this)),
-        key(OperEx(ApalacheOper.foldSeq, tla.name("A"), tla.name("v"), tla.name("s")))
-          -> List(new FoldSeqRule(this)),
-        // -----------------------------------------------------------------------
-        // RULES BELOW WERE NOT REMOVED TO RUN TESTS, WILL BE LOOKED AT LATER
-        // -----------------------------------------------------------------------
-        /*
-        // logic
-        key(OperEx(ApalacheOper.skolem, tla.exists(tla.name("x"), tla.name("S"), tla.name("p"))))
-          -> List(new QuantRule(this)),
-        key(tla.exists(tla.name("x"), tla.name("S"), tla.name("p")))
-          -> List(new QuantRule(this)),
-        key(tla.forall(tla.name("x"), tla.name("S"), tla.name("p")))
-          -> List(new QuantRule(this)),
-        // control flow
-        key(tla.ite(tla.name("cond"), tla.name("then"), tla.name("else")))
-          -> List(new IfThenElseRule(this)),
-        key(tla.letIn(tla.int(1), TlaOperDecl("A", List(), tla.int(2))))
-          -> List(new LetInRule(this)),
-        key(tla.appDecl(TlaOperDecl("userOp", List(), tla.int(3)))) ->
-          List(new UserOperRule(this)),
-        // functions
-        key(tla.recFunDef(tla.name("e"), tla.name("x"), tla.name("S")))
-          -> List(new RecFunDefAndRefRule(this)),
-        key(tla.recFunRef())
-          -> List(new RecFunDefAndRefRule(this)),
-        // tuples, records, and sequences
-        key(tla.tuple(tla.name("x"), tla.int(2)))
-          -> List(new TupleOrSeqCtorRule(this)),
-        key(tla.enumFun(tla.str("a"), tla.int(2)))
-          -> List(new RecCtorRule(this))
-         */
     )
   }
 }
