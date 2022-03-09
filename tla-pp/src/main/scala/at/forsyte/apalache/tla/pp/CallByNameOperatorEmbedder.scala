@@ -52,15 +52,19 @@ class CallByNameOperatorEmbedder(tracker: TransformationTracker, operMap: BodyMa
         val declMaybePolytype = d.typeTag.asTlaType1()
         val unifOpt = (new TypeUnifier).unify(Substitution.empty, monoOperType, declMaybePolytype)
 
+        // We might have to process the body, since operators are processed independently, and _not_
+        // in dependency order
+        val boddyWithEmbeddings = transform(bodyMap)(body)
+
         // substitute types in body with sub derived from nameEx.type
         val declCopy = unifOpt
           .map { case (sub, tp) =>
-            val newBody = new TypeSubstitutor(tracker, sub).apply(body)
+            val newBody = new TypeSubstitutor(tracker, sub).apply(boddyWithEmbeddings)
             // same parameter names, same body (up to type tags)
             TlaOperDecl(newName, params, newBody)(Typed(tp))
           }
           .getOrElse(
-              TlaOperDecl(newName, params, deepCopy(body))(nameEx.typeTag)
+              TlaOperDecl(newName, params, deepCopy(boddyWithEmbeddings))(nameEx.typeTag)
           )
         LetInEx(NameEx(newName)(nameEx.typeTag), declCopy)(nameEx.typeTag)
       case None =>
