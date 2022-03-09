@@ -27,7 +27,7 @@ trait TestSymbStateRewriterRecFun extends RewriterBase with TestingPredefs {
       .typed(types, "i_to_i")
 
     val rewriter = create(rewriterType)
-    var state = rewriter.rewriteUntilDone(new SymbState(fun, arena, Binding()))
+    val state = rewriter.rewriteUntilDone(new SymbState(fun, arena, Binding()))
     val funCell = state.ex
 
     def resEq(i: Int, j: Int) = {

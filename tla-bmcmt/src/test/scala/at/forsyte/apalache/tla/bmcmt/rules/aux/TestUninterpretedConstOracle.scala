@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 trait TestUninterpretedConstOracle extends RewriterBase with TestingPredefs {
   test("""UninterpretedConst Oracle.create""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
-    var state = new SymbState(tla.bool(true), arena, Binding())
+    val state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
     val (nextState, oracle) = UninterpretedConstOracle.create(rewriter, state, 6)
     assert(solverContext.sat())
@@ -17,7 +17,7 @@ trait TestUninterpretedConstOracle extends RewriterBase with TestingPredefs {
 
   test("""UninterpretedConst Oracle.whenEqualTo""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
-    var state = new SymbState(tla.bool(true), arena, Binding())
+    val state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
     val (nextState, oracle) = UninterpretedConstOracle.create(rewriter, state, 6)
     assert(solverContext.sat())
@@ -29,7 +29,7 @@ trait TestUninterpretedConstOracle extends RewriterBase with TestingPredefs {
 
   test("""UninterpretedConst Oracle.evalPosition""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
-    var state = new SymbState(tla.bool(true), arena, Binding())
+    val state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
     val (nextState, oracle) = UninterpretedConstOracle.create(rewriter, state, 6)
     assert(solverContext.sat())

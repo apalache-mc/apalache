@@ -462,7 +462,7 @@ class TestConstSimplifier extends AnyFunSuite with BeforeAndAfterEach with Check
   }
 
   test("evaluates logical expressions over constants") {
-    var trueExpressions: Seq[TlaEx] = Seq(
+    val trueExpressions: Seq[TlaEx] = Seq(
         tla.not(tla.bool(false)).as(BoolT1()),
         tla.impl(tla.bool(false), tla.bool(true)).as(BoolT1()),
         tla.impl(tla.bool(false), tla.bool(false)).as(BoolT1()),
@@ -471,7 +471,7 @@ class TestConstSimplifier extends AnyFunSuite with BeforeAndAfterEach with Check
         tla.and().as(BoolT1()),
     )
 
-    var falseExpressions: Seq[TlaEx] = Seq(
+    val falseExpressions: Seq[TlaEx] = Seq(
         tla.not(tla.bool(true)).as(BoolT1()),
         tla.impl(tla.bool(true), tla.bool(false)).as(BoolT1()),
         tla.or(tla.bool(false)).as(BoolT1()),
