@@ -18,3 +18,4 @@
 
 ### Bug fixes
  * Fixed bug where TLA+ `LAMBDA`s wouldn't inline outside `Fold` and `MkSeq`, see #1446
+ * Fix the failing property-based test, see #1454
