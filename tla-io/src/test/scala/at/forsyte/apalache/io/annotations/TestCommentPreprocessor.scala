@@ -78,14 +78,14 @@ class TestCommentPreprocessor extends AnyFunSuite with Checkers {
         |""".stripMargin
     val (output, potentialAnnotations) = CommentPreprocessor()(input)
     val expected =
-      """ (aaa)
+      """  (aaa)
         | not an annotation: john@example.org
-        | xxx
-        |ddd
+        |  xxx
+        | ddd
         | zzz@bbb(1)
         |""".stripMargin
-    assert(output == expected)
     assert(potentialAnnotations == List("@annotation(\"a\", 1)", "@semi: foo ;", "@multi: aaa bbb ccc;"))
+    assert(output == expected)
   }
 
   test("unclosed annotations") {
@@ -95,7 +95,7 @@ class TestCommentPreprocessor extends AnyFunSuite with Checkers {
         |""".stripMargin
     val (output, potentialAnnotations) = CommentPreprocessor()(input)
     val expected =
-      """ xx: bar 
+      """ xx : bar 
         |""".stripMargin
     assert(output == expected)
     // The extracted annotation is ill-formed. This will be detected by the annotation parser.
@@ -113,10 +113,10 @@ class TestCommentPreprocessor extends AnyFunSuite with Checkers {
         |""".stripMargin
     val (output, potentialAnnotations) = CommentPreprocessor()(input)
     val expected =
-      """ (aaa)
-        |
-        | type annotation
-        |
+      """  (aaa)
+        | 
+        | type annotation 
+        | 
         |""".stripMargin
     assert(output == expected)
     assert(potentialAnnotations.size == 4)
@@ -126,16 +126,52 @@ class TestCommentPreprocessor extends AnyFunSuite with Checkers {
     assert(potentialAnnotations(3) == "@type: a          => Int ;")
   }
 
+  test("annotation starting with @") {
+    // Regression: https://github.com/informalsystems/apalache/issues/1304
+    val input =
+      """(*
+        |@type: Int;
+        |""".stripMargin
+    val (output, potentialAnnotations) = CommentPreprocessor()(input)
+    assert(output.trim.isEmpty)
+    assert(potentialAnnotations.size == 1)
+    assert(potentialAnnotations.head == "@type: Int;")
+  }
+
+  test("annotation in the very beginning") {
+    // Regression: https://github.com/informalsystems/apalache/issues/1304
+    val input =
+      """\*@type: Int;"""
+    val (output, potentialAnnotations) = CommentPreprocessor()(input)
+    assert(output.trim.isEmpty)
+    assert(potentialAnnotations.size == 1)
+    assert(potentialAnnotations.head == "@type: Int;")
+  }
+
+  test("Single-line comment only") {
+    hasAnnotationsWhenNonEmpty("""\*""")
+  }
+
+  test("Multi-line comment only") {
+    hasAnnotationsWhenNonEmpty("""(* aaa *)""")
+  }
+
   test("no failure on random inputs") {
     check(
         {
           forAll(asciiStr) { str =>
-            val (text, annotations) = CommentPreprocessor()(str)
-            str.trim().nonEmpty == (text.trim().nonEmpty || annotations.nonEmpty)
+            hasAnnotationsWhenNonEmpty(str)
           // no exceptions
           }
         },
         minSuccessful(300),
     )
+  }
+
+  private def hasAnnotationsWhenNonEmpty(str: String): Boolean = {
+    val (text, annotations) = CommentPreprocessor()(str)
+    // replace the comment literals with empty strings
+    val noComments = str.replaceAll("""(\\\*|\(\*|\*\))""", "").trim
+    noComments.nonEmpty == (text.trim().nonEmpty || annotations.nonEmpty)
   }
 }

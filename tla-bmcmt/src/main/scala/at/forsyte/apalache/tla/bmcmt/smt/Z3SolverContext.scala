@@ -148,7 +148,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     cellCache += (cell.id -> List((const, cell.cellType, level)))
 
     // If arrays are used, they are initialized here.
-    if (cellSort.isInstanceOf[ArraySort[Sort, Sort]] && !cell.isUnconstrained) {
+    if (cellSort.isInstanceOf[ArraySort[_, _]] && !cell.isUnconstrained) {
       val arrayInitializer = constantArrayCache.get(cellSort) match {
         case Some(emptySet) =>
           z3context.mkEq(const, emptySet._1)
@@ -553,7 +553,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
           z3context.mkFalse()
         case _: IntSort =>
           z3context.mkInt(0)
-        case arraySort: ArraySort[Sort, Sort] =>
+        case arraySort: ArraySort[_, _] =>
           z3context.mkConstArray(arraySort.getDomain, getOrMkCellDefaultValue(arraySort.getRange))
         case _ =>
           z3context.mkConst(sig, cellSort)

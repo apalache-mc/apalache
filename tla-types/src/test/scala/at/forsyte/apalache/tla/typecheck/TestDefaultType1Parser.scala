@@ -202,7 +202,7 @@ class TestDefaultType1Parser extends AnyFunSuite with Checkers with TlaType1Gen 
               case _: Type1ParseError =>
                 passed
 
-              case _ =>
+              case _: Throwable =>
                 falsified
             }
           // no exceptions

@@ -55,8 +55,11 @@ trait TestSymbStateRewriterApalache extends RewriterBase with TestingPredefs {
 
     def isIn(no: Int): TlaEx = apalacheSelectInSet(relationCells(no).toNameEx, relation.toNameEx).as(BoolT1())
 
-    assertTlaExAndRestore(rewriter, nextState.setRex(isIn(0)))
-    assertTlaExAndRestore(rewriter, nextState.setRex(not(isIn(1)).as(BoolT1())))
+    // These checks cannot be applied to the arrays encoding because it does not have constraints for relation
+    if (rewriter.solverContext.config.smtEncoding == oopsla19Encoding) {
+      assertTlaExAndRestore(rewriter, nextState.setRex(not(isIn(1)).as(BoolT1())))
+      assertTlaExAndRestore(rewriter, nextState.setRex(isIn(0)))
+    }
 
     // f[2] = 3
     val app2 = eql(appFun(fun, int(2)).as(IntT1()), int(3)).as(BoolT1())
