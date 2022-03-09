@@ -1,10 +1,14 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.types.{CellT, FinSetT, TupleT}
-import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, SymbStateRewriter}
+import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, FinSetT, TupleT}
+import at.forsyte.apalache.tla.bmcmt.{
+  arraysEncoding, oopsla19Encoding, ArenaCell, RewriterException, SymbState, SymbStateRewriter,
+}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
+import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaControlOper}
 
 import scala.collection.immutable.SortedSet
 
@@ -102,6 +106,18 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
     nextState = nextState.updateArena(a => a.appendCell(setType))
     val setCell = nextState.arena.topCell
     nextState = nextState.updateArena(a => a.appendHas(setCell, elems: _*))
+    // In the arrays encoding, set membership constraints are not generated in appendHas, so we add them below
+    if (rewriter.solverContext.config.smtEncoding == arraysEncoding) {
+      for (elem <- elems) {
+        nextState = nextState.updateArena(_.appendCell(BoolT()))
+        val pred = nextState.arena.topCell.toNameEx
+        val storeElem = OperEx(ApalacheOper.storeInSet, elem.toNameEx, setCell.toNameEx)
+        val notStoreElem = OperEx(ApalacheOper.storeNotInSet, elem.toNameEx, setCell.toNameEx)
+        // elem is added to setCell based on the unconstrained predicate pred
+        val ite = OperEx(TlaControlOper.ifThenElse, pred, storeElem, notStoreElem)
+        rewriter.solverContext.assertGroundExpr(ite)
+      }
+    }
     nextState.setRex(setCell.toNameEx.withTag(Typed(SetT1(elemType))))
   }
 
@@ -133,45 +149,89 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
       nextState = gen(nextState, TupT1(funType.arg, funType.res))
       pairs = nextState.asCell :: pairs
     }
-    // create a relation cell
-    val argT = CellT.fromType1(funType.arg)
-    val resT = CellT.fromType1(funType.res)
-    nextState = nextState.updateArena(_.appendCell(FinSetT(TupleT(Seq(argT, resT)))))
-    val relationCell = nextState.arena.topCell
-    // we just add the pairs, but do not restrict their membership, as the generator is free to produce a set
-    // that is an arbitrary subset of the pairs
-    nextState = nextState.updateArena(_.appendHas(relationCell, pairs: _*))
+
     // create a function cell
     nextState = nextState.updateArena(_.appendCell(CellT.fromType1(funType)))
     val funCell = nextState.arena.topCell
-    nextState = nextState.updateArena(_.setCdm(funCell, relationCell))
-    // Require that if two arguments belong to the domain, they are distinct.
-    val types = Map("p" -> TupT1(funType.arg, funType.res), "R" -> SetT1(TupT1(funType.arg, funType.res)),
-        "a" -> funType.arg, "b" -> BoolT1())
-    for ((p1, i1) <- pairs.zipWithIndex) {
-      for ((p2, i2) <- pairs.zipWithIndex) {
-        if (i1 < i2) {
-          // get the arguments that are associated with the pairs
-          val a1 = nextState.arena.getHas(p1).head
-          val a2 = nextState.arena.getHas(p2).head
-          // if two pairs belong to the relation, their arguments must be unequal
-          nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((a1, a2)))
-          val not1 = tla
-            .not(tla.in(p1.toNameEx ? "p", relationCell.toNameEx ? "R") ? "b")
-            .typed(types, "b")
-          val not2 = tla
-            .not(tla.in(p2.toNameEx ? "p", relationCell.toNameEx ? "R") ? "b")
-            .typed(types, "b")
-          val neq = tla
-            .not(tla.eql(a1.toNameEx ? "a", a2.toNameEx ? "a") ? "b")
-            .typed(types, "b")
-          rewriter.solverContext.assertGroundExpr(tla.or(not1, not2, neq).typed(BoolT1()))
+
+    val argT = CellT.fromType1(funType.arg)
+    val resT = CellT.fromType1(funType.res)
+
+    rewriter.solverContext.config.smtEncoding match {
+      case `arraysEncoding` =>
+        // create a relation cell
+        nextState = nextState.updateArena(_.appendCellNoSmt(FinSetT(TupleT(Seq(argT, resT)))))
+        val relationCell = nextState.arena.topCell
+        nextState = nextState.updateArena(_.appendHasNoSmt(relationCell, pairs: _*))
+        nextState = nextState.updateArena(_.setCdm(funCell, relationCell))
+
+        val domainCells = pairs.map(pair => nextState.arena.getHas(pair)(0))
+        val rangeCells = pairs.map(pair => nextState.arena.getHas(pair)(1))
+
+        nextState = nextState.updateArena(_.appendCell(FinSetT(argT)))
+        val domainCell = nextState.arena.topCell
+        nextState = nextState.updateArena(_.appendHas(domainCell, domainCells: _*))
+        // In the arrays encoding, set membership constraints are not generated in appendHas, so we add them below
+        for (domainElem <- domainCells) {
+          val inExpr = OperEx(ApalacheOper.storeInSet, domainElem.toNameEx, domainCell.toNameEx)
+          rewriter.solverContext.assertGroundExpr(inExpr)
         }
-      }
+        nextState = nextState.updateArena(_.setDom(funCell, domainCell))
+
+        def addCellCons(domElem: ArenaCell, rangeElem: ArenaCell): Unit = {
+          val inDomain = tla.apalacheSelectInFun(domElem.toNameEx, domainCell.toNameEx).typed(BoolT1())
+          val inRange = tla.apalacheStoreInFun(rangeElem.toNameEx, funCell.toNameEx, domElem.toNameEx).typed(BoolT1())
+          val notInRange = tla.apalacheStoreNotInFun(domElem.toNameEx, funCell.toNameEx).typed(BoolT1())
+          // function updates are guarded by the inDomain predicate
+          val ite = tla.ite(inDomain, inRange, notInRange).typed(BoolT1())
+          rewriter.solverContext.assertGroundExpr(ite)
+        }
+
+        // add SMT constraints
+        for ((domElem, rangeElem) <- domainCells.zip(rangeCells))
+          addCellCons(domElem, rangeElem)
+
+      case `oopsla19Encoding` =>
+        // create a relation cell
+        nextState = nextState.updateArena(_.appendCell(FinSetT(TupleT(Seq(argT, resT)))))
+        val relationCell = nextState.arena.topCell
+        // we just add the pairs, but do not restrict their membership, as the generator is free to produce a set
+        // that is an arbitrary subset of the pairs
+        nextState = nextState.updateArena(_.appendHas(relationCell, pairs: _*))
+
+        nextState = nextState.updateArena(_.setCdm(funCell, relationCell))
+        // Require that if two arguments belong to the domain, they are distinct.
+        // This will guarantee that we define a function, not an arbitrary relation.
+        // Note that we cannot simply require that all arguments are distinct,
+        // as there may be not enough values in the universe to guarantee that.
+        val types = Map("p" -> TupT1(funType.arg, funType.res), "R" -> SetT1(TupT1(funType.arg, funType.res)),
+            "a" -> funType.arg, "b" -> BoolT1())
+        for ((p1, i1) <- pairs.zipWithIndex) {
+          for ((p2, i2) <- pairs.zipWithIndex) {
+            if (i1 < i2) {
+              // get the arguments that are associated with the pairs
+              val a1 = nextState.arena.getHas(p1).head
+              val a2 = nextState.arena.getHas(p2).head
+              // if two pairs belong to the relation, their arguments must be unequal
+              nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((a1, a2)))
+              val not1 = tla
+                .not(tla.in(p1.toNameEx ? "p", relationCell.toNameEx ? "R") ? "b")
+                .typed(types, "b")
+              val not2 = tla
+                .not(tla.in(p2.toNameEx ? "p", relationCell.toNameEx ? "R") ? "b")
+                .typed(types, "b")
+              val neq = tla
+                .not(tla.eql(a1.toNameEx ? "a", a2.toNameEx ? "a") ? "b")
+                .typed(types, "b")
+              rewriter.solverContext.assertGroundExpr(tla.or(not1, not2, neq).typed(BoolT1()))
+            }
+          }
+        }
+
+      case oddEncodingType =>
+        throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
     }
-    // This will guarantee that we define a function, not an arbitrary relation.
-    // Note that we cannot simply require that all arguments are distinct,
-    // as there may be not enough values in the universe to guarantee that.
+
     nextState.setRex(funCell.toNameEx.withTag(Typed(funType)))
   }
 }

@@ -6,18 +6,17 @@ import org.junit.runner.RunWith
 import org.scalatest.Outcome
 import org.scalatestplus.junit.JUnitRunner
 
-// TODO: add TestSymbStateRewriterSequence, TestSymbStateRewriterApalache, and TestSymbStateRewriterApalacheGen
-
 @RunWith(classOf[JUnitRunner])
 class TestRewriterWithArrays
     extends TestCherryPick with TestSymbStateDecoder with TestSymbStateRewriter with TestSymbStateRewriterAction
-    with TestSymbStateRewriterAssignment with TestSymbStateRewriterBool with TestSymbStateRewriterChoose
-    with TestSymbStateRewriterControl with TestSymbStateRewriterExpand with TestSymbStateRewriterFiniteSets
-    with TestSymbStateRewriterFoldSeq with TestSymbStateRewriterFoldSet with TestSymbStateRewriterFun
-    with TestSymbStateRewriterFunSet with TestSymbStateRewriterInt with TestSymbStateRewriterPowerset
-    with TestSymbStateRewriterRecFun with TestSymbStateRewriterRecord with TestSymbStateRewriterSet
-    with TestSymbStateRewriterStr with TestSymbStateRewriterTuple with TestPropositionalOracle with TestSparseOracle
-    with TestUninterpretedConstOracle {
+    with TestSymbStateRewriterApalacheGen with TestSymbStateRewriterAssignment with TestSymbStateRewriterBool
+    with TestSymbStateRewriterChoose with TestSymbStateRewriterControl with TestSymbStateRewriterExpand
+    with TestSymbStateRewriterFiniteSets with TestSymbStateRewriterFoldSeq with TestSymbStateRewriterFoldSet
+    with TestSymbStateRewriterFun with TestSymbStateRewriterFunSet with TestSymbStateRewriterInt
+    with TestSymbStateRewriterPowerset with TestSymbStateRewriterRecFun with TestSymbStateRewriterRecord
+    with TestSymbStateRewriterSequence with TestSymbStateRewriterSet with TestSymbStateRewriterStr
+    with TestSymbStateRewriterTuple with TestPropositionalOracle with TestSparseOracle with TestUninterpretedConstOracle
+    with TestSymbStateRewriterApalache with TestSymbStateRewriterMkSeq {
   override protected def withFixture(test: OneArgTest): Outcome = {
     solverContext = new PreproSolverContext(new Z3SolverContext(SolverConfig.default.copy(debug = true,
                 smtEncoding = arraysEncoding)))
