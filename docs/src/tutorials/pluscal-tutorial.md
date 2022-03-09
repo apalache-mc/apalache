@@ -12,13 +12,6 @@ We only focus on the part
 related to Apalache. If you want to understand the Bakery algorithm and its
 specification, check the comments in the original [PlusCal specification][].
 
-## Further reading
-
- - [Entry-level Tutorial on the Model Checker][]
- - [Tutorial on Snowcat][] shows how to write type annotations for Apalache.
- - [TLA+ Cheatsheet in HTML][] summarizes the common TLA+ constructs. If you
-   prefer a printable version in pdf, check the [Summary of TLA+][].
-
 ## Setup
 
 We assume that you have Apalache installed. If not, check the manual page on
@@ -199,6 +192,50 @@ define a predicate similar to `ConstInit4`. We cannot check the invariant for
 all values of `N`, as this would require Apalache to reason about unbounded
 sets and functions, which is currently not supported.
 
+## Dealing with the define block
+
+PlusCal specifications may contain the special define-block. For example:
+
+```tla
+---- MODULE CountersPluscal ----
+
+(*
+  Pluscal code inside TLA+ code.
+
+--algorithm Counters {
+  variable x = 0;
+
+  define {
+    \* This is TLA+ code inside the PlusCal code.
+    IsPositive(x) == x > 0
+  }
+
+  ...
+}
+*)
+================================
+```
+
+Unfortunately, the PlusCal transpiler erases comments when translating PlusCal
+code to TLA+. Hence, the simplest solution is to move the define-block outside
+the PlusCal code. For example:
+
+```tla
+---- MODULE CountersPluscal ----
+
+\* @type: Int => Bool;
+IsPositive(x) == x > 0
+
+(*
+--algorithm Counters {
+  variable x = 0;
+
+  ...
+}
+*)
+================================
+```
+
 ## Conclusion
 
 The final specifications can be found in
@@ -216,6 +253,13 @@ In this tutorial we have shown how to:
 
 If you are experiencing a problem with Apalache, feel free to [open an issue]
 or drop us a message on [Zulip chat].
+
+## Further reading
+
+ - [Entry-level Tutorial on the Model Checker][]
+ - [Tutorial on Snowcat][] shows how to write type annotations for Apalache.
+ - [TLA+ Cheatsheet in HTML][] summarizes the common TLA+ constructs. If you
+   prefer a printable version in pdf, check the [Summary of TLA+][].
 
 
 [PlusCal specification]: https://github.com/tlaplus/Examples/blob/master/specifications/Bakery-Boulangerie/Bakery.tla
