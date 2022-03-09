@@ -33,7 +33,7 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
       val (accessors, newValues) = TlaOper.deinterleave(trArgs)
       val isMultidimensional = accessors.exists {
         case OperEx(TlaFunOper.tuple, lst @ _*) => lst.size > 1
-        case _                                  => assert(false); false // all accessors are tuples
+        case accessor => throw new LirError("Expected a tuple of keys as an accessor in EXCEPT. Found: " + accessor)
       }
       if (accessors.length < 2 && !isMultidimensional) {
         // the simplest update [ f EXCEPT ![i] = e ]
