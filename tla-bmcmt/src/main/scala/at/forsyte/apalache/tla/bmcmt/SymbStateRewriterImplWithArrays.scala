@@ -28,10 +28,8 @@ class SymbStateRewriterImplWithArrays(
     profilerListener: Option[MetricProfilerListener] = None)
     extends SymbStateRewriterImpl(_solverContext, exprGradeStore, profilerListener) {
 
-  // TODO: remove unsupportedRules after passing over all rules
   @transient
-  override lazy val ruleLookupTable: Map[String, List[RewritingRule]] =
-    (defaultRuleLookupTable ++ newRules) -- unsupportedRules.keys
+  override lazy val ruleLookupTable: Map[String, List[RewritingRule]] = defaultRuleLookupTable ++ newRules
 
   val newRules: Map[String, List[RewritingRule]] = {
     Map(
@@ -54,13 +52,6 @@ class SymbStateRewriterImplWithArrays(
           -> List(new FunExceptRuleWithArrays(this)),
         key(tla.dom(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S"))))
           -> List(new DomainRuleWithArrays(this, intRangeCache)),
-    )
-  }
-
-  val unsupportedRules: Map[String, List[RewritingRule]] = {
-    Map(
-        key(OperEx(ApalacheOper.gen, tla.int(2)))
-          -> List(new GenRule(this))
     )
   }
 }
