@@ -190,6 +190,7 @@ class CommentPreprocessor {
       true
     } else {
       val char = text(index - 1)
+      // @foo is written either after a whitespace (to exclude emails), or after the comment token, e.g., (* or \*
       char.isWhitespace || char == '*'
     }
   }
