@@ -1,5 +1,6 @@
-import scala.sys.process._
 import Dependencies._
+
+import scala.sys.process._
 
 ///////////////////////////
 // Project-wide settings //
@@ -54,8 +55,12 @@ ThisBuild / libraryDependencies ++= Seq(
 ThisBuild / scalafmtPrintDiff := true
 
 // scalafix
-// https://scalacenter.github.io/scalafix/docs/rules/RemoveUnused.html
-ThisBuild / scalacOptions ++= Seq("-Ywarn-unused")
+ThisBuild / scalacOptions ++= Seq(
+    // Enable `unused` compiler warnings; required by scalafix
+    // https://scalacenter.github.io/scalafix/docs/rules/RemoveUnused.html
+    "-Ywarn-unused",
+    // Fixes: Exhaustivity analysis reached max recursion depth, not all missing cases are reported.
+    "-Ypatmat-exhaust-depth", "22")
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
 ///////////////////////////////
