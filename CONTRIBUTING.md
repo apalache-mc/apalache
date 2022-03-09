@@ -180,18 +180,16 @@ We use [scalafmt](https://scalameta.org/scalafmt/) to standardize formatting
 across the codebase. It is integrated into our sbt build configuration, and
 formatting fixes will be applied on build, or via the make target `make fmt-fix`.
 
+In addition, we have configured the compiler to warn on unused imports and
+variables, and we have enabled [scalafix](https://scalacenter.github.io/scalafix/)
+to automate removal of unused values. To automate removal of unused stuff run
+`make fmt-fix`.
+
 However, for a smoother development experience you should ensure your editor
 automatically runs formatting. The scalafmt site documents installation for all
 common editors.
 
 Our scalafmt configuration is specified in [./.scalafmt.conf](./.scalafmt.conf).
-
-#### Removing unused
-
-We have configured the compiler to warn on unused imports and variables, and we
-have enabled [scalafix](https://scalacenter.github.io/scalafix/) to automate
-removal of unused values. To automate removal of unused stuff run `make
-fmt-fix-unused`.
 
 ### Editors
 
