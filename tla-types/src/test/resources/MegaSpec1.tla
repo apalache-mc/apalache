@@ -162,5 +162,5 @@ RealDiv(x, y) == x / y
 
 \* Apalache
 \* @type: (Int -> Str) => Seq(Str);
-Fas(f) == FunAsSeq(f, 3)
+Fas(f) == FunAsSeq(f, 3, 3)
 ===============================================================================
