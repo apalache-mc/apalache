@@ -361,6 +361,7 @@ class ConfigurationPassImpl @Inject() (
             }
 
             (init, next)
+          case _ => throwError(decl)
         }
 
       case Some(d) =>
