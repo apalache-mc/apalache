@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.DefaultValueFactory
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, RecordT}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -22,8 +21,6 @@ import scala.collection.immutable.SortedSet
  *   Igor Konnov
  */
 class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val defaultValueFactory = new DefaultValueFactory(rewriter)
-
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaFunOper.enum, _*) => true
@@ -71,8 +68,9 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
               valueCells(ctorKeys.indexOf(key)) // get the cell associated with the value
             } else {
               // produce a default value
-              nextState = defaultValueFactory.makeUpValue(nextState, tp)
-              nextState.asCell
+              val (stateAfter, defaultValue) = rewriter.defaultValueCache.getOrCreate(nextState, tp.toTlaType1)
+              nextState = stateAfter
+              defaultValue
             }
           // link this cell to the record
           nextState = nextState.updateArena(_.appendHasNoSmt(recordCell, valueCell))
