@@ -11,7 +11,7 @@ trait TestUninterpretedConstOracle extends RewriterBase with TestingPredefs {
     val rewriter = create(rewriterType)
     val state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
-    val (nextState, oracle) = UninterpretedConstOracle.create(rewriter, state, 6)
+    UninterpretedConstOracle.create(rewriter, state, 6)
     assert(solverContext.sat())
   }
 
