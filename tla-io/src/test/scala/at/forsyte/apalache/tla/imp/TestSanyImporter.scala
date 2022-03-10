@@ -29,8 +29,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = sanyImporter
-      .loadFromSource("justASimpleTest", Source.fromString(text))
+    val (rootName, _) = sanyImporter.loadFromSource("justASimpleTest", Source.fromString(text))
     assert("justASimpleTest" == rootName)
   }
 
@@ -51,8 +50,7 @@ class TestSanyImporter extends SanyImporterTestBase {
       pw.close()
     }
 
-    val (rootName, modules) = sanyImporter
-      .loadFromFile(temp)
+    val (rootName, _) = sanyImporter.loadFromFile(temp)
     assert("justASimpleTest" == rootName)
   }
 

@@ -475,8 +475,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = sanyImporter
-      .loadFromSource("localSum", Source.fromString(text))
+    val (_, modules) = sanyImporter.loadFromSource("localSum", Source.fromString(text))
     assert(4 == modules.size) // Naturals, Sequences, TLC, FiniteSets, Bags, and our module
 
     val root = modules("localSum")
@@ -510,8 +509,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         "TLA-Library = %s".format(System.getProperty("TLA-Library"))
     )
 
-    val (rootName, modules) = sanyImporter
-      .loadFromSource("root", Source.fromString(text))
+    val (_, modules) = sanyImporter.loadFromSource("root", Source.fromString(text))
     assert(6 == modules.size) // root, Apalache, Integers, FiniteSets, and whatever they import
 
     val root = modules("root")
