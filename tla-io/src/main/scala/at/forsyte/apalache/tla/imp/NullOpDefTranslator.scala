@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import tla2sany.semantic.OpDefNode
 
@@ -10,7 +9,7 @@ import tla2sany.semantic.OpDefNode
  * @author
  *   konnov
  */
-class NullOpDefTranslator(sourceStore: SourceStore, context: Context) {
+class NullOpDefTranslator {
   def translate(node: OpDefNode): TlaOperDecl = {
     val params = node.getParams.toList.map(FormalParamTranslator().translate)
     val nodeName = node.getName.toString.intern()
@@ -19,7 +18,7 @@ class NullOpDefTranslator(sourceStore: SourceStore, context: Context) {
 }
 
 object NullOpDefTranslator {
-  def apply(sourceStore: SourceStore, context: Context): NullOpDefTranslator = {
-    new NullOpDefTranslator(sourceStore, context)
+  def apply(): NullOpDefTranslator = {
+    new NullOpDefTranslator
   }
 }
