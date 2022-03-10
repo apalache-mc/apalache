@@ -11,7 +11,7 @@ trait TestPropositionalOracle extends RewriterBase with TestingPredefs {
     val rewriter = create(rewriterType)
     val state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
-    val (nextState, oracle) = PropositionalOracle.create(rewriter, state, 6)
+    PropositionalOracle.create(rewriter, state, 6)
     assert(solverContext.sat())
   }
 
