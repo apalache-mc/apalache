@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rewriter
 
 import at.forsyte.apalache.tla.bmcmt.analyses.ExprGrade
 import at.forsyte.apalache.tla.bmcmt.caches.{AbstractCacheSnapshot, SimpleCacheSnapshot}
-import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell, SymbState}
+import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
 import at.forsyte.apalache.tla.lir.{TlaEx, TlaType1}
 
 import scala.collection.immutable.SortedSet
