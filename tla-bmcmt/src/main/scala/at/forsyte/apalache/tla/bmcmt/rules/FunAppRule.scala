@@ -64,7 +64,8 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       argEx: TlaEx,
       elemT: CellT): SymbState = {
     val (protoSeq, _, capacity) = proto.unpackSeq(state.arena, seqCell)
-    val (nextState, defaultValue) = rewriter.defaultValueCache.getOrCreate(state, elemT.toTlaType1)
+    val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(state.arena, elemT.toTlaType1)
+    val nextState = state.setArena(newArena)
     argEx match {
       case ValEx(TlaInt(indexBase1)) =>
         if (indexBase1 < 1 || indexBase1 > capacity) {
@@ -104,8 +105,8 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       state.setRex(elems(index).toNameEx)
     } else {
       // The key does not belong to the record. This can happen as records of different domains can be unified
-      val (nextState, _) = rewriter.defaultValueCache.getOrCreate(state, resultT.toTlaType1)
-      nextState
+      val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(state.arena, resultT.toTlaType1)
+      state.setArena(newArena).setRex(defaultValue.toNameEx)
     }
   }
 
@@ -144,8 +145,8 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val funT = funCell.cellType.toTlaType1
       funT match {
         case FunT1(_, resultT) =>
-          val (stateAfter, _) = rewriter.defaultValueCache.getOrCreate(nextState, resultT)
-          stateAfter
+          val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(nextState.arena, resultT)
+          nextState.setArena(newArena).setRex(defaultValue.toNameEx)
 
         case _ =>
           throw new IllegalStateException(s"Expected a function, found: $funT")

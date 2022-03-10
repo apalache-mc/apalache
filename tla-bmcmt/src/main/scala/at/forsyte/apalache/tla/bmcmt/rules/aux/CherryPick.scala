@@ -291,8 +291,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
         // This record does not have the key, but it was mixed with other records and produced a more general type.
         // Return a default value. As we are iterating over fields of commonRecordT, we will always find a value.
         val valueT = commonRecordT.fields(key)
-        val (nextState, defaultValue) = rewriter.defaultValueCache.getOrCreate(newState, valueT.toTlaType1)
-        newState = nextState
+        val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(newState.arena, valueT.toTlaType1)
+        newState = newState.setArena(newArena)
         defaultValue
       }
     }
@@ -616,9 +616,9 @@ class CherryPick(rewriter: SymbStateRewriter) {
     }
 
     // we need the default value to pad the shorter sequences
-    val (stateAfter, defaultValue) =
-      rewriter.defaultValueCache.getOrCreate(state, seqType.toTlaType1.asInstanceOf[SeqT1].elem)
-    var nextState = stateAfter
+    val (newArena, defaultValue) =
+      rewriter.defaultValueCache.getOrCreate(state.arena, seqType.toTlaType1.asInstanceOf[SeqT1].elem)
+    var nextState = state.setArena(newArena)
 
     // Here we are using the awesome linear encoding that uses interleaving.
     // We give an explanation for two statically non-empty sequences, the static case should be handled differently.

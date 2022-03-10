@@ -46,8 +46,8 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
         if (nextState.arena.getHas(setCell).isEmpty) {
           setT match {
             case SetT1(elemT) =>
-              val (stateAfter, _) = rewriter.defaultValueCache.getOrCreate(nextState, elemT)
-              stateAfter
+              val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(nextState.arena, elemT)
+              nextState.setArena(newArena).setRex(defaultValue.toNameEx)
 
             case _ =>
               throw new IllegalStateException(s"Expected a set, found: $setT")

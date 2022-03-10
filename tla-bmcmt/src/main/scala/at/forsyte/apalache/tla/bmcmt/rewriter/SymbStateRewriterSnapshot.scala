@@ -11,6 +11,6 @@ class SymbStateRewriterSnapshot(
     val intValueCacheSnapshot: AbstractCacheSnapshot[Arena, BigInt, ArenaCell],
     val intRangeCacheSnapshot: AbstractCacheSnapshot[Arena, (Int, Int), ArenaCell],
     val modelValueCacheSnapshot: AbstractCacheSnapshot[Arena, (String, String), ArenaCell],
-    val defaultValueCacheSnapshot: AbstractCacheSnapshot[SymbState, TlaType1, ArenaCell],
+    val defaultValueCacheSnapshot: AbstractCacheSnapshot[Arena, TlaType1, ArenaCell],
     val recordDomainCache: AbstractCacheSnapshot[Arena, (SortedSet[String], SortedSet[String]), ArenaCell],
     val exprCacheSnapshot: SimpleCacheSnapshot[TlaEx, (TlaEx, ExprGrade.Value)]) {}

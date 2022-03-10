@@ -1,10 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.NullEx
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell, RewriterException, SymbStateRewriter}
+import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, FunT1, IntT1, NullEx, RecT1, SeqT1, SetT1, StrT1, TlaType1, TupT1}
+import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 import scala.collection.immutable.SortedSet
 
@@ -19,77 +18,71 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
 
   /**
    * Produce a default value that, for instance, can be used as a value when picking from an empty set.
-   * @param state
-   *   a symbolic state
-   * @param cellType
-   *   a cell type FinSetT(...)
+   *
+   * @param arena
+   *   an arena to start with
+   * @param valueType
+   *   the type of the value to be created
    * @return
    *   a new symbolic state that contains the new value as the expression
    */
-  def makeUpValue(state: SymbState, cellType: CellT): SymbState = {
-    // TODO: introduce a cache for default values, otherwise there will be many identical copies
-    // See: https://github.com/informalsystems/apalache/issues/1348
-    cellType match {
-      case IntT() =>
-        rewriter.rewriteUntilDone(state.setRex(tla.int(0)))
+  def makeUpValue(arena: Arena, valueType: TlaType1): (Arena, ArenaCell) = {
+    valueType match {
+      case IntT1() =>
+        rewriter.intValueCache.getOrCreate(arena, 0)
 
-      case BoolT() =>
-        rewriter.rewriteUntilDone(state.setRex(tla.bool(false)))
+      case BoolT1() =>
+        (arena, arena.cellFalse())
 
-      case ConstT(_) =>
-        rewriter.rewriteUntilDone(state.setRex(tla.str("None")))
+      case StrT1() =>
+        rewriter.modelValueCache.getOrCreate(arena, (ModelValueHandler.STRING_TYPE, "None"))
 
-      case tupT @ TupleT(argTypes) =>
-        var arena = state.arena.appendCell(tupT)
-        val tuple = arena.topCell
-        var newState = state.setArena(arena)
+      case ConstT1(utype) =>
+        rewriter.modelValueCache.getOrCreate(arena, (utype, "None"))
+
+      case tupT @ TupT1(argTypes @ _*) =>
+        var newArena = arena.appendCell(CellT.fromType1(tupT))
+        val tuple = newArena.topCell
         for (argt <- argTypes) {
-          newState = makeUpValue(newState, argt)
-          val fieldCell = newState.asCell
-          arena = newState.arena.appendHasNoSmt(tuple, fieldCell)
-          newState = newState.setArena(arena)
+          val (nextArena, valueCell) = makeUpValue(newArena, argt)
+          newArena = nextArena.appendHasNoSmt(tuple, valueCell)
         }
-        newState.setRex(tuple.toNameEx)
+        (newArena, tuple)
 
-      case recT @ RecordT(_) =>
-        var newState = state.updateArena(_.appendCell(recT))
-        val recCell = newState.arena.topCell
-        for (v <- recT.fields.values) {
-          newState = makeUpValue(newState, v)
-          val fieldCell = newState.asCell
-          newState = newState.updateArena(_.appendHasNoSmt(recCell, fieldCell))
+      case recT @ RecT1(_) =>
+        var newArena = arena.appendCell(CellT.fromType1(recT))
+        val recCell = newArena.topCell
+        for (v <- recT.fieldTypes.values) {
+          val (nextArena, valueCell) = makeUpValue(newArena, v)
+          newArena = nextArena.appendHasNoSmt(recCell, valueCell)
         }
         // create the domain and attach it to the record
-        val pairOfSets = (recT.fields.keySet, SortedSet[String]())
-        val (newArena, domain) =
-          rewriter.recordDomainCache.getOrCreate(newState.arena, pairOfSets)
-        newState = newState.setArena(newArena.setDom(recCell, domain))
-        newState.setRex(recCell.toNameEx)
+        val pairOfSets = (recT.fieldTypes.keySet, SortedSet[String]())
+        val (nextArena, domain) =
+          rewriter.recordDomainCache.getOrCreate(newArena, pairOfSets)
+        newArena = nextArena.setDom(recCell, domain)
+        (newArena, recCell)
 
-      case tp @ FinSetT(_) => // {}
-        val arena = state.arena.appendCell(tp)
-        val set = arena.topCell
-        state.setArena(arena).setRex(set.toNameEx).setArena(arena)
+      case tp @ SetT1(_) => // {}
+        val newArena = arena.appendCell(CellT.fromType1(tp))
+        (newArena, arena.topCell)
 
-      case tp @ FunT(_, _) => // [x \in {} |-> {}]
-        val domState = makeUpValue(state, FinSetT(tp.argType))
-        val relState = makeUpValue(domState, FinSetT(TupleT(Seq(tp.argType, tp.resultType))))
-        var arena = relState.arena.appendCell(tp)
-        val funCell = arena.topCell
-        arena = arena.setDom(funCell, domState.asCell)
-        arena = arena.setCdm(funCell, relState.asCell)
-        relState.setArena(arena).setRex(funCell.toNameEx)
+      case tp @ FunT1(argT, resT) => // [x \in {} |-> {}]
+        val (arena1, domCell) = makeUpValue(arena, SetT1(argT))
+        val (arena2, relCell) = makeUpValue(arena1, SetT1(TupT1(argT, resT)))
+        val arena3 = arena2.appendCell(CellT.fromType1(tp))
+        val funCell = arena3.topCell
+        val arena4 = arena3.setDom(funCell, domCell).setCdm(funCell, relCell)
+        (arena4, funCell)
 
-      case tp @ SeqT(_) => // << >>
+      case tp @ SeqT1(_) => // << >>
         // make an empty proto sequence
-        var nextState = protoSeqOps.make(state, 0, { (s, _) => (s, s.asCell) })
-        val protoSeq = nextState.asCell
-        nextState = rewriter.rewriteUntilDone(state.setRex(tla.int(0)))
-        val len = nextState.asCell
-        protoSeqOps.mkSeq(nextState, tp.toTlaType1, protoSeq, len)
+        val (arena2, protoSeq) = protoSeqOps.makeEmptyProtoSeq(arena)
+        val (arena3, zero) = rewriter.intValueCache.create(arena2, 0)
+        protoSeqOps.mkSeqCell(arena3, tp, protoSeq, zero)
 
       case tp @ _ =>
-        throw new RewriterException(s"I do not know how to generate a default value for the type $tp", state.ex)
+        throw new RewriterException(s"Unexpected type $tp when generating a default value", NullEx)
     }
   }
 }

@@ -83,8 +83,8 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // This is the rare case when the spec author has made a typo, e.g., Head(<<>>).
       // We cannot throw an exception here, as it would report an error in a correct specification, e.g.,
       // Len(s) = 0 \/ Head(s) = 2
-      val (stateAfter, _) = rewriter.defaultValueCache.getOrCreate(nextState, elemType)
-      stateAfter
+      val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(nextState.arena, elemType)
+      nextState.setArena(newArena).setRex(defaultValue.toNameEx)
     }
   }
 
@@ -127,7 +127,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
    * @param state
    *   a symbolic state to start with
    * @param seqEx
-   *   a sequence `S``
+   *   a sequence `S`
    * @param newStartEx
    *   the starting index `m` (inclusive)
    * @param newEndEx
@@ -172,8 +172,8 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
               tla.ite(tla.le(newEndBase1asInt, asInt(len)).as(BoolT1()), newEndBase1asInt, asInt(len)).as(IntT1()))
           .as(BoolT1()))
 
-    val (stateAfter, defaultValue) = rewriter.defaultValueCache.getOrCreate(nextState, seqT.elem)
-    nextState = stateAfter
+    val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(nextState.arena, seqT.elem)
+    nextState = nextState.setArena(newArena)
 
     def copy(state: SymbState, dstIndexBase1: Int): (SymbState, ArenaCell) = {
       // Blindly copy the element adjustedStart + (dstIndex - 1) into the position at dstIndex.
@@ -260,8 +260,8 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val (protoSeq2, len2, capacity2) = proto.unpackSeq(nextState.arena, seq2)
 
     // we need the default value, when the sequences are empty
-    val (stateAfter, defaultValue) = rewriter.defaultValueCache.getOrCreate(nextState, seqT.elem)
-    nextState = stateAfter
+    val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(nextState.arena, seqT.elem)
+    nextState = nextState.setArena(newArena)
 
     def pick(state: SymbState, dstIndexBase1: Int): (SymbState, ArenaCell) = {
       if (dstIndexBase1 > capacity1) {

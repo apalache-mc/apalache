@@ -68,8 +68,8 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
               valueCells(ctorKeys.indexOf(key)) // get the cell associated with the value
             } else {
               // produce a default value
-              val (stateAfter, defaultValue) = rewriter.defaultValueCache.getOrCreate(nextState, tp.toTlaType1)
-              nextState = stateAfter
+              val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(nextState.arena, tp.toTlaType1)
+              nextState = nextState.setArena(newArena)
               defaultValue
             }
           // link this cell to the record

@@ -61,6 +61,19 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
   }
 
   /**
+   * Create a cell that encodes a proto sequence of capacity 0.
+   *
+   * @param arena
+   *   an arena to start with
+   * @return
+   *   the new arena and the fresh cell that holds the proto sequence
+   */
+  def makeEmptyProtoSeq(arena: Arena): (Arena, ArenaCell) = {
+    val newArena = arena.appendCellNoSmt(UnknownT())
+    (newArena, newArena.topCell)
+  }
+
+  /**
    * Get the capacity of the proto sequence, that is, the number of cells allocated for the sequence elements.
    *
    * @param arena
@@ -189,7 +202,8 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
   }
 
   /**
-   * Make a sequence out of a proto sequence.
+   * Make a sequence out of a proto sequence. This method works over symbolic states. If you work over arenas, use
+   * [[mkSeqCell]].
    *
    * @param state
    *   a symbolic state to start with
@@ -207,11 +221,35 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
       seqT: TlaType1,
       protoSeq: ArenaCell,
       len: ArenaCell): SymbState = {
-    var nextState = state.updateArena(_.appendCell(CellT.fromType1(seqT)))
-    val seq = nextState.arena.topCell
+    val (newArena, seqCell) = mkSeqCell(state.arena, seqT, protoSeq, len)
+    state.setArena(newArena).setRex(seqCell.toNameEx)
+  }
+
+  /**
+   * Make a sequence out of a proto sequence. This method works over arenas. Often, it is more convenient to work with
+   * [[mkSeq]].
+   *
+   * @param arena
+   *   an arena to start with
+   * @param seqT
+   *   the type of the sequence
+   * @param protoSeq
+   *   a proto sequence
+   * @param len
+   *   a cell that encodes the actual length of the sequence
+   * @return
+   *   the new symbolic state that contains the created sequence as the expression
+   */
+  def mkSeqCell(
+      arena: Arena,
+      seqT: TlaType1,
+      protoSeq: ArenaCell,
+      len: ArenaCell): (Arena, ArenaCell) = {
+    var newArena = arena.appendCell(CellT.fromType1(seqT))
+    val seq = newArena.topCell
     // note that we do not track in SMT the relation between the sequence, the proto sequence, and its length
-    nextState = nextState.updateArena(_.appendHasNoSmt(seq, len, protoSeq))
-    nextState.setRex(seq.toNameEx)
+    newArena = newArena.appendHasNoSmt(seq, len, protoSeq)
+    (newArena, seq)
   }
 
   /**

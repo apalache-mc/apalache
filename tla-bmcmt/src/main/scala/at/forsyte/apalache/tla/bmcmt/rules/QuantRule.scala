@@ -229,9 +229,9 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
       val assignedNames = findAssignedNames(predEx)
       var nextState = setState
       for ((name, tp) <- assignedNames) {
-        val (stateAfter, defaultValue) = rewriter.defaultValueCache.getOrCreate(nextState, tp)
+        val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(nextState.arena, tp)
         val newBinding = nextState.binding ++ Binding(name + "'" -> defaultValue)
-        nextState = stateAfter.setBinding(newBinding)
+        nextState = nextState.setArena(newArena).setBinding(newBinding)
       }
       nextState.setRex(setState.arena.cellFalse().toNameEx)
     } else {
