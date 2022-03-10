@@ -17,10 +17,6 @@ import scala.collection.immutable.SortedSet
 class DefaultValueFactory(rewriter: SymbStateRewriter) {
   private val protoSeqOps = new ProtoSeqOps(rewriter)
 
-  def makeUpValue(state: SymbState, set: ArenaCell): SymbState = {
-    makeUpValue(state, findElemType(set))
-  }
-
   /**
    * Produce a default value that, for instance, can be used as a value when picking from an empty set.
    * @param state
@@ -94,16 +90,6 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
 
       case tp @ _ =>
         throw new RewriterException(s"I do not know how to generate a default value for the type $tp", state.ex)
-    }
-  }
-
-  private def findElemType(setCell: ArenaCell): CellT = {
-    setCell.cellType match {
-      case FinSetT(et) =>
-        et
-
-      case tp @ _ =>
-        throw new RewriterException(s"Expected a set, found: $tp", NullEx)
     }
   }
 }
