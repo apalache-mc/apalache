@@ -154,6 +154,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
           } else {
             n.toInt
           }
+        case ex => throw new RewriterException("Expected an int, found " + ex, ex)
       }
       val decodedElems = protoSeqOps.elems(arena, protoSeq).map(decodeCellToTlaEx(arena, _)).toList.slice(0, len)
       tla.tuple(decodedElems: _*).typed(SeqT1(elemT1))
