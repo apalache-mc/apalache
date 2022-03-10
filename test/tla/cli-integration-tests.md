@@ -1193,6 +1193,15 @@ $ apalache-mc check --inv=Inv SimpleLambda.tla | sed 's/I@.*//'
 EXITCODE: OK
 ```
 
+### check NestedCallByName succeeds
+Regression test for embedding recursion
+
+```sh
+$ apalache-mc check --inv=Inv NestedCallByName.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
 ### check Bug914 succeeds
 
 Regression test for https://github.com/informalsystems/apalache/issues/914 In
@@ -1856,7 +1865,7 @@ $ apalache-mc check --length=2 Test1343.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
-### check TestSets.tla reports no error
+### check TestSets.tla reports no error (array-encoding)
 
 ```sh
 $ apalache-mc check --length=0 --inv=AllTests TestSets.tla | sed 's/[IEW]@.*//'

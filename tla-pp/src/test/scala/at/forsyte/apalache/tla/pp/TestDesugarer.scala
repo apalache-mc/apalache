@@ -101,6 +101,9 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
           } else {
             throw new IllegalArgumentException(s"No index $key in $tt")
           }
+
+        case type_ =>
+          throw new IllegalArgumentException(s"Unexpected type $type_")
       }
     }
 

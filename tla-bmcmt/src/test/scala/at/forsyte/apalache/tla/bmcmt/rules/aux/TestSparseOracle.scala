@@ -11,7 +11,7 @@ trait TestSparseOracle extends RewriterBase with TestingPredefs {
     val rewriter = create(rewriterType)
     val state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
-    val (nextState, oracle) = PropositionalOracle.create(rewriter, state, 2)
+    val (_, oracle) = PropositionalOracle.create(rewriter, state, 2)
     new SparseOracle(oracle, Set(1, 10))
     assert(solverContext.sat())
   }

@@ -4,10 +4,10 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet}
-import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, IntT1, NameEx, OperEx, TlaEx, TlaType1, ValEx}
 
 /**
  * This rule translates the definition of a recursive function. It is similar to CHOOSE. Unlike CHOOSE, it does not have
@@ -59,18 +59,13 @@ class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
     var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
 
     val funT = CellT.fromType1(funT1)
-    val (elemT, codomain) =
-      funT1 match {
-        case FunT1(argT, IntT1()) =>
-          (CellT.fromType1(argT), ValEx(TlaIntSet))
-
-        case FunT1(argT, BoolT1()) =>
-          (CellT.fromType1(argT), ValEx(TlaBoolSet))
-
-        case FunT1(_, resultT) =>
-          val msg = "A result of a recursive function must belong to Int or BOOLEAN. Found: " + resultT
-          throw new RewriterException(msg, state.ex)
-      }
+    val codomain = funT1 match {
+      case FunT1(_, IntT1())  => ValEx(TlaIntSet)
+      case FunT1(_, BoolT1()) => ValEx(TlaBoolSet)
+      case FunT1(_, resultT) =>
+        val msg = "A result of a recursive function must belong to Int or BOOLEAN. Found: " + resultT
+        throw new RewriterException(msg, state.ex)
+    }
 
     // one more safety check, as the domain cell can happen to be a powerset or a function set
     val domainCell = nextState.asCell
