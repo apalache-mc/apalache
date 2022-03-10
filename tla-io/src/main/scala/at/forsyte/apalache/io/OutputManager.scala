@@ -52,7 +52,7 @@ object OutputManager extends LazyLogging {
   }
 
   /* This should only ever be set if the IntermediateFlag is true */
-  private def setIntermediateDir(namespace: String): Unit = {
+  private def setIntermediateDir: Unit = {
     intermediateDirOpt = Some(runDir.resolve(IntermediateFoldername))
   }
 
@@ -128,7 +128,7 @@ object OutputManager extends LazyLogging {
     setCustomRunDir(config.runDir)
 
     if (cfg.writeIntermediate) {
-      setIntermediateDir(fileName)
+      setIntermediateDir
       intermediateDirOpt.foreach(ensureDirExists)
       customIntermediateRunDir.foreach(ensureDirExists)
     }
