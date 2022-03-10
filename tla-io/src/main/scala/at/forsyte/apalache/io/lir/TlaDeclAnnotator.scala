@@ -1,6 +1,7 @@
 package at.forsyte.apalache.io.lir
 
 import at.forsyte.apalache.tla.lir.TlaDecl
+import scalaz.unused
 
 /**
  * An interface for additional decorators of declarations that can be used in PrettyWriter. The default behavior is to
@@ -22,5 +23,5 @@ class TlaDeclAnnotator {
    * @return
    *   a string annotation
    */
-  def apply(layout: TextLayout)(decl: TlaDecl): Option[List[String]] = None
+  def apply(@unused layout: TextLayout)(@unused decl: TlaDecl): Option[List[String]] = None
 }
