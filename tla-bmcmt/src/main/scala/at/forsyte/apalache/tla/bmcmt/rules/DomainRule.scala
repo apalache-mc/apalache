@@ -4,11 +4,11 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.caches.IntRangeCache
 import at.forsyte.apalache.tla.bmcmt.rules.aux.ProtoSeqOps
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, OperEx}
 import at.forsyte.apalache.tla.lir.TypedPredefs.{tlaExToBuilderExAsTyped, BuilderExAsTyped}
-import at.forsyte.apalache.tla.lir.oper.TlaFunOper
-import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.oper.TlaFunOper
+import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, OperEx}
 
 /**
  * Rewriting DOMAIN f, that is, translating the domain of a function, record, tuple, or sequence.

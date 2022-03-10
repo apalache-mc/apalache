@@ -1,16 +1,16 @@
 package at.forsyte.apalache.tla.imp
 
-import java.io.{File, PrintWriter}
-import java.nio.file.Files
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.src.{SourcePosition, SourceRegion}
 import at.forsyte.apalache.tla.lir.values._
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, ValEx, _}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatestplus.junit.JUnitRunner
 
+import java.io.{File, PrintWriter}
+import java.nio.file.Files
 import scala.collection.immutable.HashSet
 import scala.io.Source
 
