@@ -4,8 +4,8 @@ import at.forsyte.apalache.tla.bmcmt.RewriterException
 import at.forsyte.apalache.tla.lir.formulas.Booleans._
 import at.forsyte.apalache.tla.lir.formulas.EUF._
 import at.forsyte.apalache.tla.lir.formulas._
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaControlOper, TlaFunOper, TlaOper}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 
 /**
@@ -169,8 +169,9 @@ class EUFRule(rewriter: ToTermRewriter, restrictedSetJudgement: RestrictedSetJud
         val (vars, sets) = TlaOper.deinterleave(varsAndSets)
         val setSorts = sets.map(restrictedSetJudgement.getSort)
         // Construct pairs of formal parameter names and sorts
-        val argList = vars.zip(setSorts).toList.map { case (NameEx(name), sort) =>
-          (name, sort)
+        val argList = vars.zip(setSorts).toList.map {
+          case (NameEx(name), sort) => (name, sort)
+          case (ex, _)              => throw new RewriterException(s"$ex must be a name.", ex)
         }
         FunDef(gen.newName(), argList, rewrite(e))
 
