@@ -43,18 +43,18 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
       case tupT @ TupT1(argTypes @ _*) =>
         var newArena = arena.appendCell(CellT.fromType1(tupT))
         val tuple = newArena.topCell
-        for (argt <- argTypes) {
-          val (nextArena, valueCell) = makeUpValue(newArena, argt)
-          newArena = nextArena.appendHasNoSmt(tuple, valueCell)
+        newArena = argTypes.foldLeft(newArena) { (arena, argT) =>
+          val (nextArena, valueCell) = makeUpValue(arena, argT)
+          nextArena.appendHasNoSmt(tuple, valueCell)
         }
         (newArena, tuple)
 
       case recT @ RecT1(_) =>
         var newArena = arena.appendCell(CellT.fromType1(recT))
         val recCell = newArena.topCell
-        for (v <- recT.fieldTypes.values) {
-          val (nextArena, valueCell) = makeUpValue(newArena, v)
-          newArena = nextArena.appendHasNoSmt(recCell, valueCell)
+        newArena = recT.fieldTypes.values.foldLeft(newArena) { (arena, v) =>
+          val (nextArena, valueCell) = makeUpValue(arena, v)
+          nextArena.appendHasNoSmt(recCell, valueCell)
         }
         // create the domain and attach it to the record
         val pairOfSets = (recT.fieldTypes.keySet, SortedSet[String]())
