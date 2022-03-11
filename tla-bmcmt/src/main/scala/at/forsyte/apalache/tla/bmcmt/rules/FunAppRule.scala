@@ -1,13 +1,13 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory, ProtoSeqOps}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, ProtoSeqOps}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{FunT1, OperEx, TlaEx, ValEx}
 
 /**
  * Implements f[x] for: functions, records, and tuples.
@@ -17,7 +17,6 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
  */
 class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
   protected val picker = new CherryPick(rewriter)
-  protected val defaultValueFactory = new DefaultValueFactory(rewriter)
   private val proto = new ProtoSeqOps(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
@@ -65,8 +64,8 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       argEx: TlaEx,
       elemT: CellT): SymbState = {
     val (protoSeq, _, capacity) = proto.unpackSeq(state.arena, seqCell)
-    val nextState = defaultValueFactory.makeUpValue(state, elemT)
-    val defaultValue = nextState.asCell
+    val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(state.arena, elemT.toTlaType1)
+    val nextState = state.setArena(newArena)
     argEx match {
       case ValEx(TlaInt(indexBase1)) =>
         if (indexBase1 < 1 || indexBase1 > capacity) {
@@ -106,7 +105,8 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       state.setRex(elems(index).toNameEx)
     } else {
       // The key does not belong to the record. This can happen as records of different domains can be unified
-      defaultValueFactory.makeUpValue(state, resultT)
+      val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(state.arena, resultT.toTlaType1)
+      state.setArena(newArena).setRex(defaultValue.toNameEx)
     }
   }
 
@@ -142,7 +142,15 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val nelems = relationElems.size
     if (nelems == 0) {
       // Just return a default value. Most likely, this expression will never propagate.
-      defaultValueFactory.makeUpValue(nextState, funCell.cellType.asInstanceOf[FunT].resultType)
+      val funT = funCell.cellType.toTlaType1
+      funT match {
+        case FunT1(_, resultT) =>
+          val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(nextState.arena, resultT)
+          nextState.setArena(newArena).setRex(defaultValue.toNameEx)
+
+        case _ =>
+          throw new IllegalStateException(s"Expected a function, found: $funT")
+      }
     } else {
       val (oracleState, oracle) = picker.oracleFactory.newDefaultOracle(nextState, relationElems.size + 1)
       nextState = oracleState
