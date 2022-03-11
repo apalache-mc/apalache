@@ -115,6 +115,8 @@ ConstCardinality(cardExpr) == cardExpr
  * The folding operator, used to implement computation over a set.
  * Apalache implements a more efficient encoding than the one below.
  * (from the community modules).
+ *
+ * @type: ((a, b) => a, a, Set(b)) => a;
  *)
 RECURSIVE FoldSet(_, _, _)
 FoldSet(Op(_,_), v, S) ==
