@@ -63,28 +63,23 @@ class SymbStateRewriterAuto(private var _solverContext: SolverContext) extends S
 
   override def exprGradeStore: ExprGradeStore = exprGradeStoreImpl
 
-  private def reset(arena: Arena, binding: Binding): Unit = {}
-
   private def preprocess(ex: TlaEx): Unit = {
     exprGradeAnalysis.labelExpr(consts, vars, ex)
   }
 
   override def rewriteOnce(state: SymbState): SymbStateRewriter.RewritingResult = {
-    reset(state.arena, state.binding)
     preprocess(state.ex)
     impl.rewriteOnce(state)
   }
 
   // TODO: rename to rewrite
   override def rewriteUntilDone(state: SymbState): SymbState = {
-    reset(state.arena, state.binding)
     preprocess(state.ex)
     impl.rewriteUntilDone(state)
   }
 
   // TODO: rename to rewriteSeq
   override def rewriteSeqUntilDone(state: SymbState, es: Seq[TlaEx]): (SymbState, Seq[TlaEx]) = {
-    reset(state.arena, state.binding)
     preprocess(state.ex)
     es.foreach(preprocess)
     impl.rewriteSeqUntilDone(state, es)
@@ -92,7 +87,6 @@ class SymbStateRewriterAuto(private var _solverContext: SolverContext) extends S
 
   // TODO: rename to rewriteSeqWithBindings
   override def rewriteBoundSeqUntilDone(state: SymbState, es: Seq[(Binding, TlaEx)]): (SymbState, Seq[TlaEx]) = {
-    reset(state.arena, state.binding)
     preprocess(state.ex)
     es.map(_._2).foreach(preprocess)
     impl.rewriteBoundSeqUntilDone(state, es)

@@ -7,24 +7,14 @@ import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
-import at.forsyte.apalache.tla.pp.{Normalizer, UniqueNameGenerator}
+import at.forsyte.apalache.tla.pp.Normalizer
 import com.google.inject.Inject
 
 /**
  * A preprocessing pass that simplifies TLA+ expressions by running multiple transformations.
- *
- * @param options
- *   pass options
- * @param gen
- *   name generator
- * @param tracker
- *   transformation tracker
- * @param nextPass
- *   next pass to call
  */
 class ReTLAPreproPassImpl @Inject() (
     options: PassOptions,
-    gen: UniqueNameGenerator,
     renaming: IncrementalRenaming,
     tracker: TransformationTracker,
     sourceStore: SourceStore,

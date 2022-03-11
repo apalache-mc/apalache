@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.lir.oper
 
 import at.forsyte.apalache.tla.lir.{TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.values.TlaStr
+import scalaz.unused
 
 import scala.annotation.tailrec
 
@@ -39,7 +40,7 @@ trait TlaOper extends Serializable {
    * @return
    *   true, if the invariant is satisfied
    */
-  def permitsArgs(args: Seq[TlaEx]): Boolean = { true }
+  def permitsArgs(@unused args: Seq[TlaEx]): Boolean = true
 }
 
 object TlaOper {

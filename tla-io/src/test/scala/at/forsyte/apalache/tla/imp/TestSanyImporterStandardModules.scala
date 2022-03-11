@@ -472,8 +472,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         |================================
       """.stripMargin
 
-    val (rootName, modules) = sanyImporter
-      .loadFromSource("localSum", Source.fromString(text))
+    val (_, modules) = sanyImporter.loadFromSource("localSum", Source.fromString(text))
     assert(4 == modules.size) // Naturals, Sequences, TLC, FiniteSets, Bags, and our module
 
     val root = modules("localSum")
