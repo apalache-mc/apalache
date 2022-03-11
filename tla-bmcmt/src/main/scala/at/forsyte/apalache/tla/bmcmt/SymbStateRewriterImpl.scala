@@ -160,13 +160,13 @@ class SymbStateRewriterImpl(
           -> List(new AssignmentRule(this)),
         // constants
         key(ValEx(TlaBool(true)))
-          -> List(new BuiltinConstRule(this)),
+          -> List(new BuiltinConstRule),
         key(ValEx(TlaBoolSet))
-          -> List(new BuiltinConstRule(this)),
+          -> List(new BuiltinConstRule),
         key(ValEx(TlaIntSet))
-          -> List(new BuiltinConstRule(this)),
+          -> List(new BuiltinConstRule),
         key(ValEx(TlaNatSet))
-          -> List(new BuiltinConstRule(this)),
+          -> List(new BuiltinConstRule),
         key(ValEx(TlaInt(1)))
           -> List(new IntConstRule(this)),
         key(ValEx(TlaStr("red")))

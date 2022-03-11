@@ -12,7 +12,7 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
  * @author
  *   Igor Konnov
  */
-class BuiltinConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
+class BuiltinConstRule extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case ValEx(TlaBool(false)) | ValEx(TlaBool(true)) | ValEx(TlaBoolSet) | ValEx(TlaNatSet) | ValEx(TlaIntSet) =>
