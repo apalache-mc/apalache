@@ -12,6 +12,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaOper
 
 import scala.collection.immutable.SortedMap
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
+import scalaz.unused
 
 /**
  * An element picket that allows us:
@@ -254,7 +255,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
    *   a new symbolic state with the expression holding a fresh cell that stores the picked element.
    */
   def pickRecord(
-      cellTypeToIgnore: CellT,
+      @unused cellTypeToIgnore: CellT,
       state: SymbState,
       oracle: Oracle,
       records: Seq[ArenaCell],
