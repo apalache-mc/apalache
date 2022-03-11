@@ -309,7 +309,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     newState = newState.setArena(newState.arena.appendCell(commonRecordT))
     val newRecord = newState.arena.topCell
     // pick the domain using the oracle.
-    newState = pickRecordDomain(commonRecordT, FinSetT(ConstT()), newState, oracle, records,
+    newState = pickRecordDomain(commonRecordT, FinSetT(ConstT()), newState, oracle,
         records.map(r => newState.arena.getDom(r)))
     val newDom = newState.asCell
     // pick the fields using the oracle
@@ -349,7 +349,6 @@ class CherryPick(rewriter: SymbStateRewriter) {
       domType: CellT,
       state: SymbState,
       oracle: Oracle,
-      records: Seq[ArenaCell],
       domains: Seq[ArenaCell]): SymbState = {
     // It often happens that all the domains are actually the same cell. Return this cell.
     val distinct = domains.distinct
