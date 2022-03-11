@@ -57,7 +57,7 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
       .typed(TupT1(funT1.arg, funT1.res))
 
     val (afterMapState: SymbState, relationCells: Seq[ArenaCell]) =
-      mapCells(nextState, pairEx, varName, setEx, domainCells)
+      mapCells(nextState, pairEx, varName, domainCells)
 
     nextState = afterMapState
     // Add the cell for the set that stores the relation <<x, f[x]>>
@@ -101,7 +101,6 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
       state: SymbState,
       mapEx: TlaEx,
       varName: String,
-      setEx: TlaEx,
       oldCells: Seq[ArenaCell]) = {
     // similar to SymbStateRewriter.rewriteSeqUntilDone and SetFilterRule
     def process(st: SymbState, seq: Seq[ArenaCell]): (SymbState, Seq[TlaEx]) = {
