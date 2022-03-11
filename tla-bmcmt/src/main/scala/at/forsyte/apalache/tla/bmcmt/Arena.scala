@@ -399,7 +399,7 @@ class Arena private (
    *   true, if src has an edge to dst labelled with 'has'
    */
   def isLinkedViaHas(src: ArenaCell, dst: ArenaCell): Boolean = {
-    def default(c: ArenaCell): List[ArenaCell] = List()
+    def default: ArenaCell => List[ArenaCell] = _ => List()
 
     hasEdges.applyOrElse(src, default).contains(dst)
   }

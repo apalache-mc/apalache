@@ -1,9 +1,9 @@
 package at.forsyte.apalache.tla.pp
 
 import org.junit.runner.RunWith
-import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestUniqueNameGenerator extends AnyFunSuite with BeforeAndAfterEach {
@@ -16,7 +16,7 @@ class TestUniqueNameGenerator extends AnyFunSuite with BeforeAndAfterEach {
 
   test("after 10000") {
     val gen = new UniqueNameGenerator
-    for (i <- 1.to(10000)) {
+    1.to(10000).foreach { _ =>
       gen.newName()
     }
     assert("t_7pt" == gen.newName())
