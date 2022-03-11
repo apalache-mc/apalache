@@ -36,8 +36,8 @@ trait TestSymbStateRewriterChoose extends RewriterBase with TestingPredefs {
     assert(solverContext.sat())
     rewriter.pop()
     rewriter.push()
-    val ns = assertEq(1)
-    assertUnsatOrExplain(rewriter, ns)
+    assertEq(1)
+    assertUnsatOrExplain()
   }
 
   test("""CHOOSE x \in {1}: x > 1""") { rewriterType: SMTEncoding =>
@@ -72,7 +72,7 @@ trait TestSymbStateRewriterChoose extends RewriterBase with TestingPredefs {
 
     // Actually, semantics of choose does not restrict the outcome on the empty sets.
     // But we know that our implementation would always return 0 in this case.
-    val ns = assertEq(1)
-    assertUnsatOrExplain(rewriter, ns)
+    assertEq(1)
+    assertUnsatOrExplain()
   }
 }
