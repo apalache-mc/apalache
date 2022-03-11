@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
-import at.forsyte.apalache.tla.lir.OperParam
+import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, OperParam, OperT1}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.{keep, touch}
@@ -75,7 +75,9 @@ class TestLetInOptimizer extends AnyFunSuite with BeforeAndAfterEach {
     val fType = parser("Int => Bool")
     val f = declOp("f", bool(true).typed(), OperParam("x")).as(fType)
     val seqType = parser("Seq(Int)")
-    val input = selectseq(name("seq").as(seqType), letIn(name("f").as(fType), f).as(fType)).as(seqType)
+    val operT = OperT1(Seq(IntT1()), BoolT1())
+    val input =
+      appOp(name("SelectSeq").as(operT), name("seq").as(seqType), letIn(name("f").as(fType), f).as(fType)).as(seqType)
     assert(keep(input) == optimizer(touch(input)))
   }
 
