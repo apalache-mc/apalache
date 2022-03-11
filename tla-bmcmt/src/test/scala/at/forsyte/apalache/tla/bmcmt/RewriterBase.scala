@@ -30,7 +30,7 @@ trait RewriterBase extends FixtureAnyFunSuite {
     }
   }
 
-  protected def assertUnsatOrExplain(rewriter: SymbStateRewriter, state: SymbState): Unit = {
+  protected def assertUnsatOrExplain(): Unit = {
     assertOrExplain("UNSAT", !solverContext.sat())
   }
 
@@ -51,7 +51,7 @@ trait RewriterBase extends FixtureAnyFunSuite {
     rewriter.pop()
     rewriter.push()
     solverContext.assertGroundExpr(tla.not(nextState.ex))
-    assertUnsatOrExplain(rewriter, nextState)
+    assertUnsatOrExplain()
     rewriter.pop()
     rewriter.pop()
   }
@@ -64,6 +64,5 @@ trait RewriterBase extends FixtureAnyFunSuite {
       solverContext.pop()
       fail("Expected %s, check log.smt for explanation".format(msg))
     }
-
   }
 }
