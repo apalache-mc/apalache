@@ -65,7 +65,7 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
             tla.and(elems.map(e => tla.not(tla.apalacheSelectInSet(e.toNameEx, set.toNameEx))): _*)))
 
     // pick `threshold` cells that will act as witnesses
-    def pick(i: Int): ArenaCell = {
+    def pick(): ArenaCell = {
       nextState = pickRule.pick(set, nextState, emptyPred.toNameEx)
       nextState.asCell
     }
@@ -76,7 +76,7 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
 
     // create the inequality predicate
-    val witnesses = 1.to(threshold).map(pick).toList
+    val witnesses = 1.to(threshold).map(_ => pick()).toList
     (witnesses.cross(witnesses)).filter(p => p._1.id < p._2.id).foreach(cacheEq)
     val witnessesNotEq = OperEx(ApalacheOper.distinct, witnesses.map(_.toNameEx): _*)
     nextState = nextState.updateArena(_.appendCell(BoolT()))
