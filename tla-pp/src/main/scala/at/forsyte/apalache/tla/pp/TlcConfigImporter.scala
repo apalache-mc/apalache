@@ -4,7 +4,7 @@ import at.forsyte.apalache.io.tlc.config._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.TlaModuleTransformation
 import com.typesafe.scalalogging.LazyLogging
 
 /**
@@ -16,8 +16,7 @@ import com.typesafe.scalalogging.LazyLogging
  * @author
  *   Andrey Kuprianov
  */
-class TlcConfigImporter(config: TlcConfig, tracker: TransformationTracker)
-    extends TlaModuleTransformation with LazyLogging {
+class TlcConfigImporter(config: TlcConfig) extends TlaModuleTransformation with LazyLogging {
   private val boolOperT = OperT1(Seq(), BoolT1())
 
   private def mkBoolName(name: String): TlaEx = {

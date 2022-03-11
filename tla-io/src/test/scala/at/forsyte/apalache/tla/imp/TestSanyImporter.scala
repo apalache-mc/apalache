@@ -1570,7 +1570,7 @@ class TestSanyImporter extends SanyImporterTestBase {
     val root = modules(rootName)
     expectSourceInfoInDefs(root)
 
-    def assertRec(name: String, nparams: Int, expectedBody: TlaEx) = {
+    def assertRec(name: String, expectedBody: TlaEx) = {
       root.declarations.find {
         _.name == name
       } match {
@@ -1588,13 +1588,13 @@ class TestSanyImporter extends SanyImporterTestBase {
     }
 
     // in the recursive sections, the calls to recursive operators should be replaced with (apply ...)
-    assertRec("R", 1, OperEx(TlaOper.apply, NameEx("R"), NameEx("n")))
+    assertRec("R", OperEx(TlaOper.apply, NameEx("R"), NameEx("n")))
 
-    assertRec("A", 1, OperEx(TlaOper.apply, NameEx("B"), NameEx("n")))
-    assertRec("B", 1, OperEx(TlaOper.apply, NameEx("C"), NameEx("n")))
-    assertRec("C", 1, OperEx(TlaOper.apply, NameEx("A"), NameEx("n")))
+    assertRec("A", OperEx(TlaOper.apply, NameEx("B"), NameEx("n")))
+    assertRec("B", OperEx(TlaOper.apply, NameEx("C"), NameEx("n")))
+    assertRec("C", OperEx(TlaOper.apply, NameEx("A"), NameEx("n")))
 
-    assertRec("X", 0, OperEx(TlaOper.apply, NameEx("X")))
+    assertRec("X", OperEx(TlaOper.apply, NameEx("X")))
 
     // however, in non-recursive sections, the calls to recursive operators are just normal OperEx(operator, ...)
     root.declarations.find {

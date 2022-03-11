@@ -45,7 +45,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       } else {
         // if not in the cache, it might be the case that another cell, which has asserted equivalence
         // with the original cell can be found
-        findCellInSet(arena, rewriter.modelValueCache.values().toSeq, cell.toNameEx) match {
+        findCellInSet(rewriter.modelValueCache.values().toSeq, cell.toNameEx) match {
           // found among the cached keys
           case Some(c) =>
             decodeCellToTlaEx(arena, c)
@@ -221,7 +221,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     }
   }
 
-  private def findCellInSet(arena: Arena, cells: Seq[ArenaCell], ex: TlaEx): Option[ArenaCell] = {
+  private def findCellInSet(cells: Seq[ArenaCell], ex: TlaEx): Option[ArenaCell] = {
     def isEq(c: ArenaCell): Boolean = {
       val query = tla.and(tla.eql(c.toNameEx, ex))
       tla.bool(true).typed() == solverContext.evalGroundExpr(query.untyped())
