@@ -44,6 +44,15 @@ ThisBuild / libraryDependencies ++= Seq(
     TestDeps.scalatestplusScalacheck,
 )
 
+//////////////////////
+// Compiler options //
+//////////////////////
+
+ThisBuild / scalacOptions ++= Seq(
+    "-feature", // enable feature warnings
+    "-deprecation", // enable compiler warnings
+)
+
 ////////////////////////////
 // Linting and formatting //
 ////////////////////////////
@@ -61,6 +70,7 @@ ThisBuild / scalacOptions ++= Seq(
     "-Ywarn-unused",
     // Fixes: Exhaustivity analysis reached max recursion depth, not all missing cases are reported.
     "-Ypatmat-exhaust-depth", "22")
+// https://scalacenter.github.io/scalafix/docs/users/installation.html
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
 ///////////////////////////////
