@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.lir.io.UTFPrinter
 import at.forsyte.apalache.tla.lir.oper.TlaArithOper
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.pp.NotInKeraError
+import scalaz.unused
 
 /**
  * Rewrites an integer range a..b.
@@ -15,7 +16,7 @@ import at.forsyte.apalache.tla.pp.NotInKeraError
  * @author
  *   Igor Konnov
  */
-class IntDotDotRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) extends RewritingRule {
+class IntDotDotRule(@unused rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) extends RewritingRule {
   private def simplifier = new ConstSimplifierForSmt()
 
   override def isApplicable(symbState: SymbState): Boolean = {
