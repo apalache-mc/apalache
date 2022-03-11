@@ -228,9 +228,16 @@ lazy val root = (project in file("."))
         sbtassembly.MappingSet(
             None,
             Vector(
-                (src_dir / "Apalache.tla") -> "tla2sany/StandardModules/Apalache.tla",
-                (src_dir / "Variants.tla") -> "tla2sany/StandardModules/Variants.tla",
-                (src_dir / "__rewire_tlc_in_apalache.tla") -> "tla2sany/StandardModules/__rewire_tlc_in_apalache.tla",
+                (src_dir / "Apalache.tla") ->
+                  "tla2sany/StandardModules/Apalache.tla",
+                (src_dir / "Variants.tla") ->
+                  "tla2sany/StandardModules/Variants.tla",
+                (src_dir / "__rewire_tlc_in_apalache.tla") ->
+                  "tla2sany/StandardModules/__rewire_tlc_in_apalache.tla",
+                (src_dir / "__rewire_sequences_in_apalache.tla") ->
+                  "tla2sany/StandardModules/__rewire_sequences_in_apalache.tla",
+                (src_dir / "__apalache_folds.tla") ->
+                  "tla2sany/StandardModules/__apalache_folds.tla",
             ),
         )
       },
