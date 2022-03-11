@@ -154,7 +154,7 @@ class SymbStateRewriterImpl(
         key(NameEx("x"))
           -> List(substRule),
         key(tla.prime(NameEx("x")))
-          -> List(new PrimeRule(this)),
+          -> List(new PrimeRule),
         // assignment
         key(OperEx(ApalacheOper.assign, tla.name("x"), tla.name("y")))
           -> List(new AssignmentRule(this)),
