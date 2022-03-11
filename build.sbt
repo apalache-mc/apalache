@@ -49,8 +49,15 @@ ThisBuild / libraryDependencies ++= Seq(
 //////////////////////
 
 ThisBuild / scalacOptions ++= Seq(
-    "-feature", // enable feature warnings
-    "-deprecation", // enable compiler warnings
+    // Enable deprecation and feature warnings
+    "-deprecation",
+    "-feature",
+    // Enable `unused` compiler warnings; required by scalafix
+    // https://scalacenter.github.io/scalafix/docs/rules/RemoveUnused.html
+    "-Ywarn-unused",
+    // Fixes warning: "Exhaustivity analysis reached max recursion depth, not all missing cases are reported."
+    "-Ypatmat-exhaust-depth",
+    "22",
 )
 
 ////////////////////////////
@@ -64,12 +71,6 @@ ThisBuild / scalacOptions ++= Seq(
 ThisBuild / scalafmtPrintDiff := true
 
 // scalafix
-ThisBuild / scalacOptions ++= Seq(
-    // Enable `unused` compiler warnings; required by scalafix
-    // https://scalacenter.github.io/scalafix/docs/rules/RemoveUnused.html
-    "-Ywarn-unused",
-    // Fixes: Exhaustivity analysis reached max recursion depth, not all missing cases are reported.
-    "-Ypatmat-exhaust-depth", "22")
 // https://scalacenter.github.io/scalafix/docs/users/installation.html
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
