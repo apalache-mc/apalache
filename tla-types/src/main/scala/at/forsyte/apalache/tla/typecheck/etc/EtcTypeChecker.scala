@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir.{OperT1, SetT1, TlaType1, TlaType1Scheme, TypingException, VarT1}
 import at.forsyte.apalache.tla.typecheck._
 import at.forsyte.apalache.tla.typecheck.etc.EtcTypeChecker.UnwindException
+import scalaz.unused
 
 /**
  * ETC: Embarrassingly simple Type Checker.
@@ -142,7 +143,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
           }
         }
 
-        def onArgsMatchError(sub: Substitution, types: Seq[TlaType1]): Unit = {
+        def onArgsMatchError(sub: Substitution, @unused types: Seq[TlaType1]): Unit = {
           // no solution for: operVar = (arg_1, ..., arg_k) => resVar
           val evalArgTypes = argTypes.map(sub.subRec)
           val argOrArgs = pluralArgs(argTypes.length)

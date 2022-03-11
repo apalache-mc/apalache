@@ -10,6 +10,7 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, MalformedTlaError, NullEx, TlaEx}
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
+import scalaz.unused
 
 /**
  * Generate equality constraints between cells and cache them to avoid redundant constraints.
@@ -224,7 +225,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
       }
     }
 
-    def isNonStatic(pair: (ArenaCell, ArenaCell), entryAndLevel: (EqCache.CacheEntry, Int)): Int = {
+    def isNonStatic(@unused pair: (ArenaCell, ArenaCell), entryAndLevel: (EqCache.CacheEntry, Int)): Int = {
       entryAndLevel._1 match {
         case EqCache.FalseEntry() => 0
         case EqCache.TrueEntry()  => 0
@@ -233,8 +234,8 @@ class LazyEquality(rewriter: SymbStateRewriter)
     }
 
     val eqMap = eqCache.getMap
-    val nConst = (eqMap.map((onEntry _).tupled)).sum
-    val nNonStatic = (eqMap.map((isNonStatic _).tupled)).sum
+    val nConst = eqMap.map((onEntry _).tupled).sum
+    val nNonStatic = eqMap.map((isNonStatic _).tupled).sum
     (nConst, nNonStatic)
   }
 

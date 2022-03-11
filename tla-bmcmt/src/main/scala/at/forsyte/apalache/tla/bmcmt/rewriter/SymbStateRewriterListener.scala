@@ -10,7 +10,7 @@ import at.forsyte.apalache.tla.lir.TlaEx
  *   Igor Konnov
  */
 trait SymbStateRewriterListener {
-  def onRewrite(translatedEx: TlaEx, metricsDelta: SolverContextMetrics): Unit = {}
+  def onRewrite(translatedEx: TlaEx, metricsDelta: SolverContextMetrics): Unit
 
-  def dispose(): Unit = {}
+  def dispose(): Unit
 }

@@ -43,7 +43,7 @@ class TestTlcConfigImporter extends AnyFunSuite with BeforeAndAfterEach {
         .checkAndTag(new IdleTracker(), new MultiTypeCheckerListener(), defaultTag = { _ => Untyped() }, mod)
         .get
 
-    val mod2 = new TlcConfigImporter(config, new IdleTracker())(typedModule)
+    val mod2 = new TlcConfigImporter(config)(typedModule)
     val stringWriter = new StringWriter()
     val printWriter = new PrintWriter(stringWriter)
     val writer = new PrettyWriter(printWriter, layout80)
