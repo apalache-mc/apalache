@@ -186,6 +186,7 @@ is hard to implement faithfully without blowing up the SMT encoding.</li>
  * As TLA+ is untyped, one can use function- and sequence-specific operators
  * interchangeably. However, to maintain correctness w.r.t. our type-system,
  * an explicit cast is needed when using functions as sequences.
+ * FunAsSeq reinterprets a function over integers as a sequence.
  *
  * The parameters have the following meaning:
  *
@@ -203,7 +204,6 @@ FunAsSeq(fn, len, capacity) ==
 (**
  * Annotating an expression \E x \in S: P as Skolemizable. That is, it can
  * be replaced with an expression c \in S /\ P(c) for a fresh constant c.
- * Not every exisential can be replaced with a constant, this should be done
 </code></pre>
 <p>These operators are treated by Apalache in a more efficient manner than
 recursive operators. They are always terminating and thus do not require an
