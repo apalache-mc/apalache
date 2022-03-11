@@ -114,7 +114,7 @@ class SymbStateRewriterImpl(
   val exprCache = new ExprCache(exprGradeStore)
 
   @transient
-  protected lazy val substRule = new SubstRule(this)
+  protected lazy val substRule = new SubstRule
 
   /**
    * A storage for the messages associated with assertion failures, see MessageStorage.
