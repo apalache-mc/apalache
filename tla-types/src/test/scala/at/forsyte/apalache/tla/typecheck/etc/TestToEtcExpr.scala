@@ -8,8 +8,6 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper}
 import at.forsyte.apalache.tla.lir.values.TlaReal
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
@@ -734,13 +732,6 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     val typ = parser("(Seq(a), Int, Int) => Seq(a)")
     val expected = mkAppByName(Seq(typ), "s", "i", "j")
     val ex = tla.subseq(tla.name("s"), tla.name("i"), tla.name("j"))
-    assert(expected == gen(ex))
-  }
-
-  test("SelectSeq(s, A)") {
-    val typ = parser("(Seq(a), (a => Bool)) => Seq(a)")
-    val expected = mkAppByName(Seq(typ), "s", "A")
-    val ex = tla.selectseq(tla.name("s"), tla.name("A"))
     assert(expected == gen(ex))
   }
 
