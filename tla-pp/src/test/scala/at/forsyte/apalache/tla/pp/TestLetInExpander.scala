@@ -152,7 +152,8 @@ class TestLetInExpander extends AnyFunSuite {
       letIn(name("LAMBDA") ? "iTOb",
           declOp("LAMBDA", eql(name("x") ? "i", name("e") ? "i") ? "b", OperParam("x"))
             .typedOperDecl(types, "iTOi"))
-    val input = selectseq(name("s") ? "si", lambdaAsLetIn ? "iTOb").typed(types, "si")
+    val operT = OperT1(Seq(IntT1()), BoolT1())
+    val input = appOp(name("SelectSeq").as(operT), name("s") ? "si", lambdaAsLetIn ? "iTOb").typed(types, "si")
     val output = transformation(input)
     // there is nothing to expand here, as SelectSeq is the standard operator
     assert(output == input)
@@ -166,7 +167,8 @@ class TestLetInExpander extends AnyFunSuite {
           declOp("LAMBDA", eql(name("x") ? "i", name("e") ? "i") ? "b", OperParam("x"))
             .typedOperDecl(types, "iTOi"))
     // in this case, we cannot do anything, as the lambda operator is passed into the built-in operator
-    val input = selectseq(name("s") ? "si", lambdaAsLetIn ? "iTOb").typed(types, "si")
+    val operT = OperT1(Seq(IntT1()), BoolT1())
+    val input = appOp(name("SelectSeq").as(operT), name("s") ? "si", lambdaAsLetIn ? "iTOb").typed(types, "si")
     val output = transformation(input)
     // there is nothing to expand here, as SelectSeq is the standard operator
     assert(output == input)

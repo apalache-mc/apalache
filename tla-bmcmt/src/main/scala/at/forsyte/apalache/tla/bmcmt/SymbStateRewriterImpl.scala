@@ -103,6 +103,11 @@ class SymbStateRewriterImpl(
   val modelValueCache = new ModelValueCache(solverContext)
 
   /**
+   * A cache for default values.
+   */
+  val defaultValueCache = new DefaultValueCache(this)
+
+  /**
    * A cache of record domains.
    */
   val recordDomainCache = new RecordDomainCache(solverContext, modelValueCache)
@@ -471,7 +476,7 @@ class SymbStateRewriterImpl(
    */
   override def snapshot(): SymbStateRewriterSnapshot = {
     new SymbStateRewriterSnapshot(intValueCache.snapshot(), intRangeCache.snapshot(), modelValueCache.snapshot(),
-        recordDomainCache.snapshot(), exprCache.snapshot())
+        defaultValueCache.snapshot(), recordDomainCache.snapshot(), exprCache.snapshot())
   }
 
   /**
@@ -485,6 +490,7 @@ class SymbStateRewriterImpl(
     intValueCache.recover(shot.intValueCacheSnapshot)
     intRangeCache.recover(shot.intRangeCacheSnapshot)
     modelValueCache.recover(shot.modelValueCacheSnapshot)
+    defaultValueCache.recover(shot.defaultValueCacheSnapshot)
     recordDomainCache.recover(shot.recordDomainCache)
     exprCache.recover(shot.exprCacheSnapshot)
   }
@@ -497,6 +503,7 @@ class SymbStateRewriterImpl(
     intValueCache.push()
     intRangeCache.push()
     modelValueCache.push()
+    defaultValueCache.push()
     recordDomainCache.push()
     lazyEq.push()
     exprCache.push()
@@ -512,6 +519,7 @@ class SymbStateRewriterImpl(
     intValueCache.pop()
     intRangeCache.pop()
     modelValueCache.pop()
+    defaultValueCache.pop()
     recordDomainCache.pop()
     lazyEq.pop()
     exprCache.pop()
@@ -530,6 +538,7 @@ class SymbStateRewriterImpl(
     intValueCache.pop(n)
     intRangeCache.pop(n)
     modelValueCache.pop(n)
+    defaultValueCache.pop(n)
     recordDomainCache.pop(n)
     lazyEq.pop(n)
     exprCache.pop(n)
@@ -550,6 +559,7 @@ class SymbStateRewriterImpl(
     intValueCache.dispose()
     intRangeCache.dispose()
     modelValueCache.dispose()
+    defaultValueCache.dispose()
     recordDomainCache.dispose()
     lazyEq.dispose()
     solverContext.dispose()

@@ -51,7 +51,8 @@ object StandardLibrary {
         ("Sequences", "Head") -> TlaSeqOper.head,
         ("Sequences", "Tail") -> TlaSeqOper.tail,
         ("Sequences", "SubSeq") -> TlaSeqOper.subseq,
-        ("Sequences", "SelectSeq") -> TlaSeqOper.selectseq,
+        // SelectSeq is defined directly in the rewired module __rewire_sequences_in_apalache.tla
+        //        ("Sequences", "SelectSeq") -> TlaSeqOper.selectseq,
         ("FiniteSets", "IsFiniteSet") -> TlaFiniteSetOper.isFiniteSet,
         ("FiniteSets", "Cardinality") -> TlaFiniteSetOper.cardinality,
         ("Apalache", ":=") -> ApalacheOper.assign,
@@ -62,7 +63,9 @@ object StandardLibrary {
         ("Apalache", "MkSeq") -> ApalacheOper.mkSeq,
         ("Apalache", "SetAsFun") -> ApalacheOper.setAsFun,
         ("Apalache", "FoldSet") -> ApalacheOper.foldSet,
+        ("__apalache_folds", "__ApalacheFoldSet") -> ApalacheOper.foldSet,
         ("Apalache", "FoldSeq") -> ApalacheOper.foldSeq,
+        ("__apalache_folds", "__ApalacheFoldSeq") -> ApalacheOper.foldSeq,
     ) ////
 
   /**
@@ -73,7 +76,8 @@ object StandardLibrary {
    */
   val wiredModules: Map[String, String] =
     Map(
-        "TLC.tla" -> "__rewire_tlc_in_apalache.tla"
+        "TLC.tla" -> "__rewire_tlc_in_apalache.tla",
+        "Sequences.tla" -> "__rewire_sequences_in_apalache.tla",
     ) ////
 
   /**

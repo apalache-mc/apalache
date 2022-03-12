@@ -1,14 +1,14 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory, OracleHelper}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, OracleHelper}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
-import at.forsyte.apalache.tla.lir._
 import com.typesafe.scalalogging.LazyLogging
 
 /**
@@ -19,7 +19,6 @@ import com.typesafe.scalalogging.LazyLogging
  */
 class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogging {
   private val pickRule = new CherryPick(rewriter)
-  private val defaultValueFactory = new DefaultValueFactory(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -230,9 +229,9 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
       val assignedNames = findAssignedNames(predEx)
       var nextState = setState
       for ((name, tp) <- assignedNames) {
-        nextState = defaultValueFactory.makeUpValue(nextState, CellT.fromType1(tp))
-        val newBinding = nextState.binding ++ Binding(name + "'" -> nextState.asCell)
-        nextState = nextState.setBinding(newBinding)
+        val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(nextState.arena, tp)
+        val newBinding = nextState.binding ++ Binding(name + "'" -> defaultValue)
+        nextState = nextState.setArena(newArena).setBinding(newBinding)
       }
       nextState.setRex(setState.arena.cellFalse().toNameEx)
     } else {

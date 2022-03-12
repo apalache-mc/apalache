@@ -686,16 +686,6 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
           ) // Seq(a), Int, Int => Seq(a)
         mkExRefApp(opsig, args)
 
-      case OperEx(TlaSeqOper.selectseq, args @ _*) =>
-        val a = varPool.fresh
-        val filter = OperT1(Seq(a), BoolT1())
-        val opsig =
-          OperT1(
-              Seq(SeqT1(a), filter),
-              SeqT1(a),
-          ) // Seq(a), (a => Bool) => Seq(a)
-        mkExRefApp(opsig, args)
-
       // ******************************************** INTEGERS **************************************************
       case OperEx(TlaArithOper.uminus, args @ _*) =>
         // -x
