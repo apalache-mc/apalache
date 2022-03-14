@@ -3,18 +3,20 @@ package at.forsyte.apalache.tla.bmcmt.smt
 import at.forsyte.apalache.tla.bmcmt.Arena
 import at.forsyte.apalache.tla.bmcmt.types.IntT
 import at.forsyte.apalache.tla.lir.TlaEx
-import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import org.scalatest.funsuite.FixtureAnyFunSuite
+import at.forsyte.apalache.tla.lir.convenience.tla
+import org.scalatest.funsuite.AnyFunSuite
 
-trait TestRecordingSolverContext extends FixtureAnyFunSuite {
-  protected type FixtureParam = Any
-
+/**
+ * [[RecordingSolverContext]] tests. Override [[AnyFunSuite.withFixture()]] to set up specific solver contexts (e.g.,
+ * for different encodings).
+ */
+trait TestRecordingSolverContext extends AnyFunSuite {
   protected var solverConfig: SolverConfig = _
 
   private val int42: TlaEx = tla.int(42)
 
-  test("operations proxied") { _ =>
+  test("operations proxied") {
     val solver = RecordingSolverContext.createZ3(None, solverConfig)
     val arena = Arena.create(solver).appendCell(IntT())
     val x = arena.topCell
@@ -23,7 +25,7 @@ trait TestRecordingSolverContext extends FixtureAnyFunSuite {
     assert(solver.evalGroundExpr(x.toNameEx) == int42)
   }
 
-  test("write and read") { _ =>
+  test("write and read") {
     val solver = RecordingSolverContext.createZ3(None, solverConfig)
     val arena = Arena.create(solver).appendCell(IntT())
     val x = arena.topCell
@@ -42,7 +44,7 @@ trait TestRecordingSolverContext extends FixtureAnyFunSuite {
     assert(restoredSolver.evalGroundExpr(x.toNameEx) == int42)
   }
 
-  test("pop on empty") { _ =>
+  test("pop on empty") {
     val solver = RecordingSolverContext.createZ3(None, solverConfig)
     assertThrows[IllegalArgumentException](solver.pop(2))
   }
