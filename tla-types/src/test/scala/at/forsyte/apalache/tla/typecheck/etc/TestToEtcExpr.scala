@@ -13,6 +13,8 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 
+import scala.annotation.nowarn
+
 /**
  * Unit tests for translating TLA+ expressions to EtcExpr.
  *
@@ -822,8 +824,11 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
 
   test("old annotations: e <: tp") {
     val oldTypeAnnotation = tla.enumSet(tla.intSet())
+
     // we explicitly use OperEx here, as we have removed Builder.withType
+    @nowarn("cat=deprecation&msg=object withType in object ApalacheOper is deprecated")
     val input = OperEx(ApalacheOper.withType, tla.name("e"), oldTypeAnnotation)(Untyped())
+
     assertThrows[OutdatedAnnotationsError](gen(input))
   }
 }
