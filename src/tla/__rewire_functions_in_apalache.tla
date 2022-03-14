@@ -66,14 +66,27 @@ AntiFunction(f) == Inverse(f, DOMAIN f, Range(f))
  *
  * @type: (a -> b) => Bool;
  *)
-IsInjective(f) == \A a, b \in DOMAIN f : f[a] = f[b] => a = b
+IsInjective(f) ==
+    \A a, b \in DOMAIN f:
+        f[a] = f[b] => a = b
 
 (**
  * Set of injections between two sets.
  *
  * @type: (Set(a), Set(b)) => Set(a -> b);
  *)
-Injection(S, T) == { M \in [S -> T] : IsInjective(M) }
+Injection(S, T) == { f \in [S -> T]: IsInjective(f) }
+
+(**
+ * This operator is not defined in the community modules.
+ * Hence, we define it locally.
+ *
+ * @type: (Set(a), Set(b), a -> b) => Bool;
+ *)
+LOCAL IsSurjective(S, T, f) ==
+    \A t \in T:
+        \E s \in S:
+            f[s] = t
 
 (**
  * A map is a surjection iff for each element in the range there is some
@@ -81,14 +94,16 @@ Injection(S, T) == { M \in [S -> T] : IsInjective(M) }
  *
  * @type: (Set(a), Set(b)) => Set(a -> b);
  *)
-Surjection(S, T) == { M \in [S -> T] : \A t \in T : \E s \in S : M[s] = t }
+Surjection(S, T) ==
+    { f \in [S -> T]: IsSurjective(S, T, f) }
 
 (**
  * A map is a bijection iff it is both an injection and a surjection.
  *
  * @type: (Set(a), Set(b)) => Set(a -> b);
  *)
-Bijection(S,T) == Injection(S,T) \intersect Surjection(S,T)
+Bijection(S, T) ==
+    { f \in [S -> T]: IsSurjective(S, T, f) /\ IsInjective(f) }
 
 (**
  * An injection, surjection, or bijection exists if the corresponding set
