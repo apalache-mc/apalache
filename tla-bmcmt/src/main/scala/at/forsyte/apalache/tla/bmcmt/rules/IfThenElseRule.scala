@@ -8,7 +8,6 @@ import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaControlOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
-import scalaz.unused
 
 /**
  * Rewriting rule for IF A THEN B ELSE C.
@@ -51,7 +50,7 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
             case BoolT() | IntT() | ConstT(_) => iteBasic(nextState, resultType, predCell.toNameEx, thenCell, elseCell)
 
             // sets, functions, records, tuples, sequence: use pick
-            case _ => iteGeneral(nextState, resultType, predCell.toNameEx, thenCell, elseCell)
+            case _ => iteGeneral(nextState, predCell.toNameEx, thenCell, elseCell)
           }
         }
 
@@ -78,7 +77,6 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
   // The cool thing is that we do not have to compare the results anymore. It is all defined by the oracle.
   private def iteGeneral(
       state: SymbState,
-      @unused commonType: CellT,
       pred: TlaEx,
       thenCell: ArenaCell,
       elseCell: ArenaCell) = {
