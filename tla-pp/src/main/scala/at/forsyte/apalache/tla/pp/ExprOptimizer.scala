@@ -72,7 +72,8 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
         case _            => false
       }
 
-      val predSubstituted = ReplaceFixed(tracker)(isToReplace, mem)(pred)
+      val memCopy = DeepCopy(tracker).deepCopyEx(mem)
+      val predSubstituted = ReplaceFixed(tracker)(isToReplace, memCopy)(pred)
       val b = BoolT1()
       tla.and(tla.in(mem, set).as(b), predSubstituted).as(b)
   }
