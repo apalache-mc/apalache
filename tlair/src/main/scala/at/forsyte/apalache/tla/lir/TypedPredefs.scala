@@ -2,6 +2,8 @@ package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.values._
 
+import scala.language.implicitConversions
+
 object TypedPredefs {
   type Tag = Typed[TlaType1]
 
