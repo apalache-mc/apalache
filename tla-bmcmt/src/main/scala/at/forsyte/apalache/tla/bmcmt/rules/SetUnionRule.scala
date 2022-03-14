@@ -69,7 +69,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
                   tla.apalacheSelectInSet(elemCell.toNameEx, set.toNameEx))
             }
 
-            val pointingSets = sets.zip(elemsOfSets).filter { case (_, elems) => isPointedBySet(elems) }.map(_._1)
+            val pointingSets = sets.zip(elemsOfSets).collect { case (set, elems) if isPointedBySet(elems) => set }
             assert(pointingSets.nonEmpty)
             val existsIncludingSet = tla.or(pointingSets.map(inPointingSet): _*)
             val inUnionSet = tla.apalacheStoreInSet(elemCell.toNameEx, newSetCell.toNameEx)
