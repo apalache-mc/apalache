@@ -2,8 +2,9 @@ package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.tla.lir.TlaValue
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet, TlaRealSet}
-import at.forsyte.apalache.tla.lir.values.TlaRealInfinity
+import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet, TlaRealInfinity, TlaRealSet}
+
+import scala.annotation.nowarn
 
 /**
  * Values and operators that are defined in the standard TLA+ library.
@@ -84,6 +85,7 @@ object StandardLibrary {
    * Global operators are translated to IR operators. However, we advise against this practice: TLA+ does not allow one
    * to override the same operator in different modules.
    */
+  @nowarn("cat=deprecation&msg=object withType in object ApalacheOper is deprecated")
   val globalOperators: Map[String, TlaOper] =
     Map[String, TlaOper](
         // This operator is deprecated and should not be used.
