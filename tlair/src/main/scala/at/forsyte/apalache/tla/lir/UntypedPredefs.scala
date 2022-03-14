@@ -1,5 +1,7 @@
 package at.forsyte.apalache.tla.lir
 
+import scala.language.implicitConversions
+
 /**
  * Default settings for the untyped language layer. To use the `Untyped()` tag, import the definitions from
  * `UntypedPredefs`.
