@@ -204,4 +204,8 @@ object TlcConfigParserApalache extends Parsers with TlcConfigParser with LazyLog
   private def boolean: Parser[BOOLEAN] = {
     accept("boolean", { case n @ BOOLEAN(_) => n })
   }
+
+  private def anyToken: Parser[TlcConfigToken] = {
+    acceptIf(Function.const(true))(_ => "impossible")
+  }
 }
