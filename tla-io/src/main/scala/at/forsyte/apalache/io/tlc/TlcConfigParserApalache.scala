@@ -160,7 +160,7 @@ object TlcConfigParserApalache extends Parsers with TlcConfigParser with LazyLog
   }
 
   private def initNextSection: Parser[TlcConfig] = {
-    (INIT() ~ ident ~ NEXT() ~ ident | NEXT() ~ ident ~ INIT() ~ ident) ^^ {
+    (INIT() ~ ident ~ NEXT() ~ ident | NEXT() ~ ident ~ INIT() ~ ident) ^? {
       case INIT() ~ IDENT(initName) ~ _ ~ IDENT(nextName) =>
         TlcConfig.empty.setBehaviorSpecUnlessNull(InitNextSpec(initName, nextName))
 
