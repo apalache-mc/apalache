@@ -1,22 +1,21 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
 import at.forsyte.apalache.io.OutputManager
-
-import java.io.PrintWriter
-import java.util.concurrent.atomic.AtomicLong
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.profiler.{IdleSmtListener, SmtListener}
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
-import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, FinSetT, FunT, IntT, PowSetT}
+import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.io.UTFPrinter
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.microsoft.z3._
 import com.microsoft.z3.enumerations.Z3_lbool
 import org.apache.commons.io.output.NullOutputStream
 
+import java.io.PrintWriter
+import java.util.concurrent.atomic.AtomicLong
 import scala.collection.mutable
 
 /**
@@ -548,7 +547,9 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     if (sort.isDefined) {
       sort.get._1
     } else {
-      val newDefault = cellSort match {
+      // Explicitly annotate existential type of `newDefault`. Fixes "inferred existential type ..., which cannot be
+      // expressed by wildcards, should be enabled by making the implicit value scala.language.existentials visible."
+      val newDefault: Expr[_1] forSome { type _1 <: Sort } = cellSort match {
         case _: BoolSort =>
           z3context.mkFalse()
         case _: IntSort =>
