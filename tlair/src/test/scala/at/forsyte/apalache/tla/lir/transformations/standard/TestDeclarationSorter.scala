@@ -8,6 +8,8 @@ import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
 
+import java.io.File
+
 @RunWith(classOf[JUnitRunner])
 class TestDeclarationSorter extends AnyFunSuite with BeforeAndAfterEach {
   test("Bar calls Foo out of order") {
@@ -43,6 +45,9 @@ class TestDeclarationSorter extends AnyFunSuite with BeforeAndAfterEach {
     val baz = tla.declOp("Baz", tla.appOp(tla.name("Foo")))
     val input = new TlaModule("test", List(foo, bar, baz))
     assertThrows[CyclicDependencyError](DeclarationSorter.instance(input))
+    val witnessFile = new File("dependencies.dot")
+    assert(witnessFile.exists() == true)
+    witnessFile.delete()
   }
 
   test("regression: a cycle hidden via a call") {
@@ -52,6 +57,9 @@ class TestDeclarationSorter extends AnyFunSuite with BeforeAndAfterEach {
     val baz = tla.declOp("Baz", tla.appOp(tla.name("Foo"), tla.appOp(tla.name("Bar"))))
     val input = new TlaModule("test", List(foo, bar, baz))
     assertThrows[CyclicDependencyError](DeclarationSorter.instance(input))
+    val witnessFile = new File("dependencies.dot")
+    assert(witnessFile.exists() == true)
+    witnessFile.delete()
   }
 
   test("regression: a false cycle") {
