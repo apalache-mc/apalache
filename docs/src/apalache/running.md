@@ -226,23 +226,13 @@ InvariantViolation == hasLicense /\ year - BIRTH_YEAR < LICENSE_AGE
 ## Module lookup
 
 Apalache uses [the SANY parser](https://lamport.azurewebsites.net/tla/tools.html), which is the standard parser of TLC
-and TLA+ Toolbox. By default, SANY is looking for the modules in the current working directory and in the Java package
-`tla2sany.StandardModules`, which is usually provided by the `tla2tools.jar` that is included in the Java classpath.
-
-In addition to the modules in the current working directory, Appalache provides
-
-- a small standard library (located in `$APALACHE_HOME/src/tla`), and
-- support for additional source directories specified in the environment variable `TLA_PATH`. `TLA_PATH` should be a
-  list of paths to directories separated by `:`.
-
-(Directories in the `TLA_PATH` are provided to SANY via the `TLA-Library` Java system variable.)
-
-So the module lookup order in Apalache is as follows:
+and the TLA+ Toolbox. By default, SANY is looking for modules (in this order) in
 
 1. The current working directory.
-1. The directory `$APALACHE_HOME/src/tla`.
-1. The directories specified in the environment variable `TLA_PATH`.
-1. The Java package `tla2sany.StandardModules`.
+1. The directory containing the main TLA+ file passed on the CLI.
+1. A small Apalache standard library (bundled from `$APALACHE_HOME/src/tla`).
+1. The Java package `tla2sany.StandardModules` (usually provided by the `tla2tools.jar` that is included in the Java
+   classpath).
 
 __Note:__ To let TLA+ Toolbox and TLC know about the Apalache modules, include
 `$APALACHE_HOME/src/tla` in the lookup directories, as explained by Markus Kuppe for
