@@ -60,10 +60,10 @@ object TlcConfigParserApalache extends Parsers with TlcConfigParser with LazyLog
     }
   }
 
-  private def option: Parser[TlcConfig] = {
+  private def option: Parser[TlcConfig] =
     (constList | constraintList | actionConstraintList
       | initNextSection | specSection | invariantList | propertyList | symmetry | view
-      | alias | postcondition | checkDeadlock) ^^ { opt => opt }
+      | alias | postcondition | checkDeadlock)
 
   private def collectBidings(bindingList: List[ConstBinding]): TlcConfig = {
     val assignments = bindingList.collect { case ConstAssignment(nm, asgn) => nm -> asgn }
