@@ -1,10 +1,9 @@
 package at.forsyte.apalache.io.tlc
 
-import java.io.{Reader, StringReader}
-
 import at.forsyte.apalache.io.tlc.config._
 import com.typesafe.scalalogging.LazyLogging
 
+import java.io.{Reader, StringReader}
 import scala.util.parsing.combinator.Parsers
 import scala.util.parsing.input.NoPosition
 
