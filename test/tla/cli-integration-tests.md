@@ -1174,16 +1174,6 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check use of TLA_PATH for modules in child directory succeeds (array-encoding)
-
-```sh
-$ TLA_PATH=./tla-path-tests apalache-mc check ./tla-path-tests/ImportingModule.tla | sed 's/I@.*//'
-...
-The outcome is: NoError
-...
-EXITCODE: OK
-```
-
 ### check SimpleLambda succeeds
 Regression test for https://github.com/informalsystems/apalache/issues/1446
 
