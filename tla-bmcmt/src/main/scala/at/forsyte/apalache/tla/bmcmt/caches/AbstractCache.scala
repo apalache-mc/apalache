@@ -55,24 +55,37 @@ abstract class AbstractCache[ContextT, SourceT, TargetT]
     } else {
       // introduce a new constant
       val (newContext, targetValue) = create(context, srcValue)
-      cache = cache + (srcValue -> (targetValue, level))
-      reverseCache = reverseCache + (targetValue -> (srcValue, level))
+      addToCache(srcValue, targetValue)
+      cache += srcValue -> (targetValue, level)
+      reverseCache += targetValue -> (srcValue, level)
       (newContext, targetValue)
     }
   }
 
   /**
+   * Add a value to the cache. Implementations of this class may use this method for a more efficient mass construction
+   * of values.
+   *
+   * @param source
+   *   the source value
+   * @param target
+   *   the cached target value
+   */
+  protected def addToCache(source: SourceT, target: TargetT): Unit = {
+    cache += source -> (target, level)
+    reverseCache += target -> (source, level)
+  }
+
+  /**
    * Get a previously cached value for a given source value, if there is one. Otherwise, return none.
+   *
    * @param srcValue
    *   a source value
    * @return
    *   Some(result), or None
    */
   def get(srcValue: SourceT): Option[TargetT] = {
-    cache.get(srcValue) match {
-      case Some((target, _)) => Some(target)
-      case None              => None
-    }
+    cache.get(srcValue).map(_._1)
   }
 
   /**

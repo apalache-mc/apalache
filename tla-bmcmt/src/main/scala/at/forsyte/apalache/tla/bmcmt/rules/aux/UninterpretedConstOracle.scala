@@ -3,11 +3,10 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.ConstT
-import at.forsyte.apalache.tla.lir.{TlaEx, ValEx}
-import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.values.TlaBool
-import at.forsyte.apalache.tla.typecheck.ModelValueHandler
+import at.forsyte.apalache.tla.lir.{TlaEx, ValEx}
 
 class UninterpretedConstOracle(valueCells: Seq[ArenaCell], oracleCell: ArenaCell, nvalues: Int) extends Oracle {
 
@@ -79,24 +78,22 @@ class UninterpretedConstOracle(valueCells: Seq[ArenaCell], oracleCell: ArenaCell
 }
 
 object UninterpretedConstOracle {
+
+  /**
+   * Designated type to be used in this oracle.
+   */
+  val UNINTERPRETED_TYPE = "_oracle"
+
   def create(rewriter: SymbStateRewriter, state: SymbState, nvalues: Int): (SymbState, UninterpretedConstOracle) = {
     val solverAssert = rewriter.solverContext.assertGroundExpr _
-    var nextState = state
 
-    def introConst(i: Int): ArenaCell = {
-      val (newArena, valueCell) =
-        rewriter.modelValueCache.getOrCreate(nextState.arena, (ModelValueHandler.STRING_TYPE, i.toString))
-      nextState = nextState.setArena(newArena)
-      valueCell
-    }
-
-    val nums = 0 until nvalues
-    val valueCells = nums.map(introConst) // introduce a constant for every integer
-    nextState = state.setArena(nextState.arena.appendCell(ConstT()))
+    val (newArena, valueCells) =
+      rewriter.modelValueCache.createAndCacheMany(state.arena, UNINTERPRETED_TYPE, 0.until(nvalues).map(_.toString))
+    val nextState = state.setArena(newArena.appendCell(ConstT(UNINTERPRETED_TYPE)))
     val oracleCell = nextState.arena.topCell
     val oracle = new UninterpretedConstOracle(valueCells, oracleCell, nvalues)
     // the oracle value must be equal to one of the value cells
-    solverAssert(tla.or(nums.map(i => oracle.whenEqualTo(nextState, i)): _*))
+    solverAssert(tla.or(0.until(nvalues).map(i => oracle.whenEqualTo(nextState, i)): _*))
     (nextState, oracle)
   }
 }
