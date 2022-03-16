@@ -64,16 +64,20 @@ object TlcConfigParserApalache extends Parsers with TlcConfigParser with LazyLog
     (constList | constraintList | actionConstraintList
       | initNextSection | specSection | invariantList | propertyList | symmetry | view
       | alias | postcondition | checkDeadlock) ^^ { opt => opt }
+
+  private def collectBidings(bindingList: List[ConstBinding]): TlcConfig = {
+    val assignments = bindingList.collect { case ConstAssignment(nm, asgn) => nm -> asgn }
+    val replacements = bindingList.collect { case ConstReplacement(nm, repl) => nm -> repl }
+    TlcConfig.empty
+      .addConstAssignments(Map(assignments: _*))
+      .addConstReplacements(Map(replacements: _*))
+
   }
 
   private def constList: Parser[TlcConfig] = {
-    CONST() ~ rep1(assign | replace) ^^ { case _ ~ bindingList =>
-      val assignments = bindingList.collect { case ConstAssignment(nm, asgn) => nm -> asgn }
-      val replacements = bindingList.collect { case ConstReplacement(nm, repl) => nm -> repl }
-      TlcConfig.empty
-        .addConstAssignments(Map(assignments: _*))
-        .addConstReplacements(Map(replacements: _*))
-    }
+    (CONST() ~> rep1(assign | replace) ^^ collectBidings) |
+      (CONST() ~> anyToken) >> (unexpected =>
+        err(s"Expected a constant binding `A <- B` or `A = B` but found ${unexpected}"))
   }
 
   // SYMMETRY constraints. Ignore.
