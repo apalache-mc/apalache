@@ -122,6 +122,12 @@ object TlcConfigParserApalache extends Parsers with TlcConfigParser with LazyLog
     }
   }
 
+  private val replace: Parser[ConstBinding] = {
+    ident ~ LEFT_ARROW() ~ ident ^? { case IDENT(lhs) ~ LEFT_ARROW() ~ IDENT(rhs) =>
+      ConstReplacement(lhs, rhs)
+    }
+  }
+
   // constant expressions
   private def constExpr: Parser[ConfigConstExpr] = {
     (ident | number | string | boolean | (LEFT_BRACE() ~ constExprList ~ RIGHT_BRACE())) ^^ {
@@ -137,12 +143,6 @@ object TlcConfigParserApalache extends Parsers with TlcConfigParser with LazyLog
   // a comma-separated list of constant expressions
   private def constExprList: Parser[List[ConfigConstExpr]] = {
     repsep(constExpr, COMMA()) ^^ (list => list)
-  }
-
-  private def replace: Parser[ConstBinding] = {
-    ident ~ LEFT_ARROW() ~ ident ^^ { case IDENT(lhs) ~ LEFT_ARROW() ~ IDENT(rhs) =>
-      ConstReplacement(lhs, rhs)
-    }
   }
 
   private def constraintList: Parser[TlcConfig] = {
