@@ -1873,6 +1873,14 @@ $ apalache-mc check --length=0 --inv=AllTests TestSets.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check TestFunctions.tla reports no error (array-encoding)
+
+```sh
+$ apalache-mc check --length=0 --inv=AllTests TestFunctions.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check TestHash2.tla reports no error (array-encoding)
 
 A regression test for using `--cinit` and hashes.
