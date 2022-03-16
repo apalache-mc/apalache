@@ -3,6 +3,8 @@ package at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
+import scala.language.implicitConversions
+
 // Igor@02.11.2019: why are TestingPredefs located in src/main?
 // TODO: move TestingPredefs into src/test
 trait TestingPredefs {

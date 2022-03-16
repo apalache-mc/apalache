@@ -1,14 +1,15 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
-import at.forsyte.apalache.io.annotations.{Annotation, AnnotationStr, StandardAnnotations}
 import at.forsyte.apalache.io.annotations.store.{findAnnotation, AnnotationStore}
-import at.forsyte.apalache.io.typecheck.parser.Type1ParseError
-import at.forsyte.apalache.tla.lir.{SparseTupT1, ValEx, _}
+import at.forsyte.apalache.io.annotations.{Annotation, AnnotationStr, StandardAnnotations}
+import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1ParseError}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecheck._
-import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import com.typesafe.scalalogging.LazyLogging
+
+import scala.annotation.nowarn
 
 /**
  * <p>ToEtcExpr takes a TLA+ expression and produces an EtcExpr. The most interesting part of this translation is
@@ -188,6 +189,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
     }
   }
 
+  @nowarn("cat=deprecation&msg=object withType in object ApalacheOper is deprecated")
   private def transform(ex: TlaEx): EtcExpr = {
 
     val ref = ExactRef(ex.ID)
@@ -684,16 +686,6 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
               Seq(SeqT1(a), IntT1(), IntT1()),
               SeqT1(a),
           ) // Seq(a), Int, Int => Seq(a)
-        mkExRefApp(opsig, args)
-
-      case OperEx(TlaSeqOper.selectseq, args @ _*) =>
-        val a = varPool.fresh
-        val filter = OperT1(Seq(a), BoolT1())
-        val opsig =
-          OperT1(
-              Seq(SeqT1(a), filter),
-              SeqT1(a),
-          ) // Seq(a), (a => Bool) => Seq(a)
         mkExRefApp(opsig, args)
 
       // ******************************************** INTEGERS **************************************************

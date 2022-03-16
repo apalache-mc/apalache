@@ -55,9 +55,13 @@ object TlaSeqOper {
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }
 
+  // This operator is rewired in __rewire_sequences_in_apalache.tla.
+  // We keep it for a reference. Do not construct its instance.
   object selectseq extends TlaSeqOper {
     override val arity = FixedArity(2)
     override val name = "Sequences!SelectSeq"
     override val precedence: (Int, Int) = (16, 16) // as the function application
+
+    require(false, "This operator is rewired in __rewire_sequences_in_apalache.tla")
   }
 }

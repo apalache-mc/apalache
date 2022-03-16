@@ -511,20 +511,6 @@ class Builder {
     BuilderOper(TlaSeqOper.subseq, seq, fromIndex, toIndex)
   }
 
-  /**
-   * Get the subsequence of S that consists of the elements matching a predicate.
-   *
-   * @param seq
-   *   a sequence
-   * @param test
-   *   a predicate, it should be an action name
-   * @return
-   *   the expression that corresponds to SelectSeq(S, test)
-   */
-  def selectseq(seq: BuilderEx, test: BuilderEx): BuilderEx = {
-    BuilderOper(TlaSeqOper.selectseq, seq, test)
-  }
-
   /** TlaSetOper */
   def enumSet(args: BuilderEx*): BuilderEx = {
     BuilderOper(TlaSetOper.enumSet, args: _*)
@@ -736,7 +722,6 @@ class Builder {
         TlaSeqOper.tail.name -> TlaSeqOper.tail,
         TlaSeqOper.len.name -> TlaSeqOper.len,
         TlaSeqOper.subseq.name -> TlaSeqOper.subseq,
-        TlaSeqOper.selectseq.name -> TlaSeqOper.selectseq,
         TlaSetOper.enumSet.name -> TlaSetOper.enumSet,
         TlaSetOper.in.name -> TlaSetOper.in,
         TlaSetOper.notin.name -> TlaSetOper.notin,

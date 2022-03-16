@@ -8,7 +8,7 @@
  * encoded inside Apalache. For the moment, these operators are mirrored in
  * the class at.forsyte.apalache.tla.lir.oper.ApalacheOper.
  *                                                                          
- * Igor Konnov, Jure Kukovec, Informal Systems 2020-2021                    
+ * Igor Konnov, Jure Kukovec, Informal Systems 2020-2022                    
  *)
 
 (**
@@ -73,6 +73,7 @@ LOCAL INSTANCE Sequences
  * As TLA+ is untyped, one can use function- and sequence-specific operators
  * interchangeably. However, to maintain correctness w.r.t. our type-system,
  * an explicit cast is needed when using functions as sequences.
+ * FunAsSeq reinterprets a function over integers as a sequence.
  *
  * The parameters have the following meaning:
  *
@@ -114,22 +115,28 @@ ConstCardinality(cardExpr) == cardExpr
  * The folding operator, used to implement computation over a set.
  * Apalache implements a more efficient encoding than the one below.
  * (from the community modules).
+ *
+ * @type: ((a, b) => a, a, Set(b)) => a;
  *)
-RECURSIVE FoldSet(_,_,_)
-FoldSet( Op(_,_), v, S ) == IF S = {}
-                            THEN v
-                            ELSE LET w == CHOOSE x \in S: TRUE
-                                  IN LET T == S \ {w}
-                                      IN FoldSet( Op, Op(v,w), T )
+RECURSIVE FoldSet(_, _, _)
+FoldSet(Op(_,_), v, S) ==
+    IF S = {}
+    THEN v
+    ELSE LET w == CHOOSE x \in S: TRUE IN
+         LET T == S \ {w} IN
+         FoldSet(Op, Op(v,w), T)
 
 (**
  * The folding operator, used to implement computation over a sequence.
  * Apalache implements a more efficient encoding than the one below.
  * (from the community modules).
+ *
+ * @type: ((a, b) => a, a, Seq(b)) => a;
  *)
-RECURSIVE FoldSeq(_,_,_)
-FoldSeq( Op(_,_), v, seq ) == IF seq = <<>>
-                              THEN v
-                              ELSE FoldSeq( Op, Op(v,Head(seq)), Tail(seq) )
+RECURSIVE FoldSeq(_, _, _)
+FoldSeq(Op(_,_), v, seq) ==
+    IF seq = <<>>
+    THEN v
+    ELSE FoldSeq(Op, Op(v, Head(seq)), Tail(seq))
 
 ===============================================================================

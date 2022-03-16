@@ -5,9 +5,8 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.values.TlaBool
-import at.forsyte.apalache.tla.lir.{MalformedSepecificationError, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{MalformedSepecificationError, OperEx, SeqT1, TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 
 import scala.collection.immutable.SortedMap
@@ -26,7 +25,6 @@ import scalaz.unused
  *   Igor Konnov
  */
 class CherryPick(rewriter: SymbStateRewriter) {
-  private val defaultValueFactory = new DefaultValueFactory(rewriter)
   private val protoSeqOps = new ProtoSeqOps(rewriter)
   val oracleFactory = new OracleFactory(rewriter)
 
@@ -293,9 +291,10 @@ class CherryPick(rewriter: SymbStateRewriter) {
       } else {
         // This record does not have the key, but it was mixed with other records and produced a more general type.
         // Return a default value. As we are iterating over fields of commonRecordT, we will always find a value.
-        val valueT = commonRecordT.fields.get(key).get
-        newState = defaultValueFactory.makeUpValue(newState, valueT)
-        newState.asCell
+        val valueT = commonRecordT.fields(key)
+        val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(newState.arena, valueT.toTlaType1)
+        newState = newState.setArena(newArena)
+        defaultValue
       }
     }
 
@@ -617,8 +616,9 @@ class CherryPick(rewriter: SymbStateRewriter) {
     }
 
     // we need the default value to pad the shorter sequences
-    var nextState = defaultValueFactory.makeUpValue(state, seqType.asInstanceOf[SeqT].res)
-    val defaultValue = nextState.asCell
+    val (newArena, defaultValue) =
+      rewriter.defaultValueCache.getOrCreate(state.arena, seqType.toTlaType1.asInstanceOf[SeqT1].elem)
+    var nextState = state.setArena(newArena)
 
     // Here we are using the awesome linear encoding that uses interleaving.
     // We give an explanation for two statically non-empty sequences, the static case should be handled differently.
