@@ -44,18 +44,10 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
           comparableArgCell = true
           // If argCell is comparable at the Scala level, we generate SMT constraints based on it
           val select = tla.apalacheSelectInFun(elemArg.toNameEx, funCell.toNameEx)
-          val eql = tla.eql(res.toNameEx, select)
+          val eql = tla.eql(elemRes.toNameEx, select)
+          // We need the SMT eql because funCell might be unconstrained, if it originates from a function set
           rewriter.solverContext.assertGroundExpr(eql)
-
-          nextState = nextState.updateArena(_.appendHasNoSmt(res, nextState.arena.getHas(elemRes): _*))
-
-          if (elemRes.cellType.isInstanceOf[FunT] || elemRes.cellType.isInstanceOf[FinFunSetT]) {
-            nextState = nextState.updateArena(_.setDom(res, nextState.arena.getDom(elemRes)))
-            nextState = nextState.updateArena(_.setCdm(res, nextState.arena.getCdm(elemRes)))
-          } else if (elemRes.cellType.isInstanceOf[RecordT]) {
-            // Records do not contain cdm metadata
-            nextState = nextState.updateArena(_.setDom(res, nextState.arena.getDom(elemRes)))
-          }
+          return nextState.setRex(elemRes.toNameEx)
         }
       }
 
