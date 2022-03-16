@@ -141,7 +141,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val relationElems = nextState.arena.getHas(relationCell)
     val nelems = relationElems.size
     if (nelems == 0) {
-      // Just return a default value. Most likely, this expression will never propagate.
+      // Just return the default value. Most likely, this expression will never propagate.
       val funT = funCell.cellType.toTlaType1
       funT match {
         case FunT1(_, resultT) =>
@@ -152,34 +152,42 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
           throw new IllegalStateException(s"Expected a function, found: $funT")
       }
     } else {
-      val (oracleState, oracle) = picker.oracleFactory.newDefaultOracle(nextState, relationElems.size + 1)
-      nextState = oracleState
-      nextState = picker.pickByOracle(nextState, oracle, relationElems, nextState.arena.cellTrue().toNameEx)
-      val pickedPair = nextState.asCell
-      val pickedArg = nextState.arena.getHas(pickedPair).head
-      val pickedRes = nextState.arena.getHas(pickedPair).tail.head
-      // cache the equality between the picked argument and the supplied argument, O(1) constraints
-      nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((pickedArg, argCell)))
-      val argEqWhenNonEmpty =
-        tla.impl(tla.not(oracle.whenEqualTo(nextState, nelems)), tla.eql(pickedArg.toNameEx, argCell.toNameEx))
-      // if oracle < N, then pickedArg = argCell
-      solverAssert(argEqWhenNonEmpty)
-      // importantly, we require oracle = N iff there is no element equal to argCell, O(N) constraints
-      for ((elem, no) <- relationElems.zipWithIndex) {
-        val elemArg = nextState.arena.getHas(elem).head
-        nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((argCell, elemArg)))
-        val inRel = tla.apalacheSelectInSet(elem.toNameEx, relationCell.toNameEx)
-        val neqArg = tla.not(rewriter.lazyEq.safeEq(elemArg, argCell))
-        val found = tla.not(oracle.whenEqualTo(nextState, nelems))
-        // ~inRel \/ neqArg \/ found, or equivalently, (inRel /\ elemArg = argCell) => found
-        solverAssert(tla.or(tla.not(inRel), neqArg, found))
-        // oracle = i => inRel. The equality pickedArg = argCell is enforced by argEqWhenNonEmpty
-        solverAssert(tla.or(tla.not(oracle.whenEqualTo(nextState, no)), inRel))
-      }
+      val foundPair = relationElems.find(pair => nextState.arena.getHas(pair).head == argCell)
+      if (foundPair.isDefined) {
+        // Feeling lucky. The cell argCell belongs to the relation. Return the result.
+        val result = nextState.arena.getHas(foundPair.get)(1)
+        nextState.setRex(result.toNameEx)
+      } else {
+        // The general case. Another cell in the relation may be equal to argCell. However, only SMT can figure that out.
+        val (oracleState, oracle) = picker.oracleFactory.newDefaultOracle(nextState, relationElems.size + 1)
+        nextState = oracleState
+        nextState = picker.pickByOracle(nextState, oracle, relationElems, nextState.arena.cellTrue().toNameEx)
+        val pickedPair = nextState.asCell
+        val pickedArg = nextState.arena.getHas(pickedPair).head
+        val pickedRes = nextState.arena.getHas(pickedPair).tail.head
+        // cache the equality between the picked argument and the supplied argument, O(1) constraints
+        nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((pickedArg, argCell)))
+        val argEqWhenNonEmpty =
+          tla.impl(tla.not(oracle.whenEqualTo(nextState, nelems)), tla.eql(pickedArg.toNameEx, argCell.toNameEx))
+        // if oracle < N, then pickedArg = argCell
+        solverAssert(argEqWhenNonEmpty)
+        // importantly, we require oracle = N iff there is no element equal to argCell, O(N) constraints
+        for ((elem, no) <- relationElems.zipWithIndex) {
+          val elemArg = nextState.arena.getHas(elem).head
+          nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((argCell, elemArg)))
+          val inRel = tla.apalacheSelectInSet(elem.toNameEx, relationCell.toNameEx)
+          val neqArg = tla.not(rewriter.lazyEq.safeEq(elemArg, argCell))
+          val found = tla.not(oracle.whenEqualTo(nextState, nelems))
+          // ~inRel \/ neqArg \/ found, or equivalently, (inRel /\ elemArg = argCell) => found
+          solverAssert(tla.or(tla.not(inRel), neqArg, found))
+          // oracle = i => inRel. The equality pickedArg = argCell is enforced by argEqWhenNonEmpty
+          solverAssert(tla.or(tla.not(oracle.whenEqualTo(nextState, no)), inRel))
+        }
 
-      // If oracle = N, the picked cell is not constrained. In the past, we used a default value here,
-      // but it sometimes produced conflicts (e.g., a picked record domain had to coincide with a default domain)
-      nextState.setRex(pickedRes.toNameEx)
+        // If oracle = N, the picked cell is not constrained. In the past, we used a default value here,
+        // but it sometimes produced conflicts (e.g., a picked record domain had to coincide with a default domain)
+        nextState.setRex(pickedRes.toNameEx)
+      }
     }
   }
 }
