@@ -199,6 +199,27 @@ class TestTlcConfigParserApalache extends AnyFunSuite {
     assert(config.constReplacements == Map("A" -> "B", "C" -> "D"))
   }
 
+  // Helper to check we throw the correct error when the biding list is missing or deformed
+  private def assertConstantBindingError(text: String) = {
+    assert(intercept[TlcConfigParseError](TlcConfigParserApalache(text.stripMargin))
+          .getMessage()
+          .startsWith("Expected a constant binding"))
+  }
+
+  test("Nonsense instead of CONSTANT bindings produces a parse error") {
+    assertConstantBindingError("""
+      |CONSTANT
+      |FOO
+    """)
+  }
+
+  test("Missing CONSTANT bindings produce parse error") {
+    assertConstantBindingError("""
+        |CONSTANT
+        |INIT Init
+      """)
+  }
+
   test("CONSTANT assignments and replacements") {
     val text =
       """

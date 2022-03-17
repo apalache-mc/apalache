@@ -1,10 +1,9 @@
 package at.forsyte.apalache.io.tlc
 
-import java.io.{Reader, StringReader}
-
 import at.forsyte.apalache.io.tlc.config._
 import com.typesafe.scalalogging.LazyLogging
 
+import java.io.{Reader, StringReader}
 import scala.util.parsing.combinator.Parsers
 import scala.util.parsing.input.NoPosition
 
@@ -61,20 +60,24 @@ object TlcConfigParserApalache extends Parsers with TlcConfigParser with LazyLog
     }
   }
 
-  private def option: Parser[TlcConfig] = {
+  private def option: Parser[TlcConfig] =
     (constList | constraintList | actionConstraintList
       | initNextSection | specSection | invariantList | propertyList | symmetry | view
-      | alias | postcondition | checkDeadlock) ^^ { opt => opt }
+      | alias | postcondition | checkDeadlock)
+
+  private def collectBidings(bindingList: List[ConstBinding]): TlcConfig = {
+    val assignments = bindingList.collect { case ConstAssignment(nm, asgn) => nm -> asgn }
+    val replacements = bindingList.collect { case ConstReplacement(nm, repl) => nm -> repl }
+    TlcConfig.empty
+      .addConstAssignments(Map(assignments: _*))
+      .addConstReplacements(Map(replacements: _*))
+
   }
 
   private def constList: Parser[TlcConfig] = {
-    CONST() ~ rep1(assign | replace) ^^ { case _ ~ bindingList =>
-      val assignments = bindingList.collect { case ConstAssignment(nm, asgn) => nm -> asgn }
-      val replacements = bindingList.collect { case ConstReplacement(nm, repl) => nm -> repl }
-      TlcConfig.empty
-        .addConstAssignments(Map(assignments: _*))
-        .addConstReplacements(Map(replacements: _*))
-    }
+    (CONST() ~> rep1(assign | replace) ^^ collectBidings) |
+      (CONST() ~> anyToken) >> (unexpected =>
+        err(s"Expected a constant binding `A <- B` or `A = B` but found ${unexpected}"))
   }
 
   // SYMMETRY constraints. Ignore.
@@ -123,6 +126,12 @@ object TlcConfigParserApalache extends Parsers with TlcConfigParser with LazyLog
     }
   }
 
+  private val replace: Parser[ConstBinding] = {
+    ident ~ LEFT_ARROW() ~ ident ^? { case IDENT(lhs) ~ LEFT_ARROW() ~ IDENT(rhs) =>
+      ConstReplacement(lhs, rhs)
+    }
+  }
+
   // constant expressions
   private def constExpr: Parser[ConfigConstExpr] = {
     (ident | number | string | boolean | (LEFT_BRACE() ~ constExprList ~ RIGHT_BRACE())) ^^ {
@@ -140,12 +149,6 @@ object TlcConfigParserApalache extends Parsers with TlcConfigParser with LazyLog
     repsep(constExpr, COMMA()) ^^ (list => list)
   }
 
-  private def replace: Parser[ConstBinding] = {
-    ident ~ LEFT_ARROW() ~ ident ^^ { case IDENT(lhs) ~ LEFT_ARROW() ~ IDENT(rhs) =>
-      ConstReplacement(lhs, rhs)
-    }
-  }
-
   private def constraintList: Parser[TlcConfig] = {
     CONSTRAINT() ~ rep1(ident) ^^ { case _ ~ list =>
       val cons = list.collect { case IDENT(name) => name }
@@ -161,7 +164,7 @@ object TlcConfigParserApalache extends Parsers with TlcConfigParser with LazyLog
   }
 
   private def initNextSection: Parser[TlcConfig] = {
-    (INIT() ~ ident ~ NEXT() ~ ident | NEXT() ~ ident ~ INIT() ~ ident) ^^ {
+    (INIT() ~ ident ~ NEXT() ~ ident | NEXT() ~ ident ~ INIT() ~ ident) ^? {
       case INIT() ~ IDENT(initName) ~ _ ~ IDENT(nextName) =>
         TlcConfig.empty.setBehaviorSpecUnlessNull(InitNextSpec(initName, nextName))
 
@@ -204,5 +207,9 @@ object TlcConfigParserApalache extends Parsers with TlcConfigParser with LazyLog
 
   private def boolean: Parser[BOOLEAN] = {
     accept("boolean", { case n @ BOOLEAN(_) => n })
+  }
+
+  private def anyToken: Parser[TlcConfigToken] = {
+    acceptIf(Function.const(true))(_ => "impossible")
   }
 }
