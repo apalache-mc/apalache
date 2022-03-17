@@ -6,6 +6,8 @@ import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir._
 
+import scala.collection.immutable.ArraySeq
+
 /**
  * <p>Proto sequences that contain the absolute minimum for implementing TLA+ sequences. A proto sequence is a
  * collection of cells, which are ordered by indices 1, ..., `capacity`. Importantly, `capacity` is a static value,
@@ -56,7 +58,7 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
     val protoSeq = nextState.arena.topCell
 
     // attach the cells to the proto sequence, do not track this in SMT
-    nextState = nextState.updateArena(_.appendHasNoSmt(protoSeq, cellsAsArray: _*))
+    nextState = nextState.updateArena(_.appendHasNoSmt(protoSeq, ArraySeq.unsafeWrapArray(cellsAsArray): _*))
     nextState.setRex(protoSeq.toNameEx)
   }
 
