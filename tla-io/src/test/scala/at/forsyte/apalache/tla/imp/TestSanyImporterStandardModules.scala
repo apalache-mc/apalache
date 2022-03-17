@@ -492,12 +492,15 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         |Sklm == Skolem(\E y \in S: TRUE)
         |Expnd == Expand(SUBSET S)
         |CC == ConstCardinality(Cardinality(S) >= 2)
-        |Identity(i) == i 
+        |Identity(i) == i
         |Seq2to11 == MkSeq(10, Identity)
         |================================
       """.stripMargin
 
-    // We have to set TLA-Library, in order to look up Apalache.tla. This is done automatically in build.sbt.
+
+    // We have to set TLA-Library, in order to look up Apalache.tla. This is done during packaging
+    // in our build.sbt file.
+    //
     // If you run this test in an IDE, and the test fails, add the following line to the VM parameters
     // (don't forget to replace <APALACHE_HOME> with the directory where you checked out the project):
     //
