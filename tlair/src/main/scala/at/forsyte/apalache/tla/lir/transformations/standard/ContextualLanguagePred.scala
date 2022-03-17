@@ -18,13 +18,13 @@ abstract class ContextualLanguagePred extends LanguagePred {
     isOkInContext(Set(), expr)
   }
 
-  protected def allArgsOk(letDefs: Set[String], args: Traversable[TlaEx]): PredResult =
+  protected def allArgsOk(letDefs: Set[String], args: Iterable[TlaEx]): PredResult =
     args.foldLeft[PredResult](PredResultOk()) { case (r, arg) =>
       r.and(isOkInContext(letDefs, arg))
     }
 
   // Auxiliary method for checking LET-INs
-  protected def eachDefRec(ctx: Set[String], ds: Traversable[TlaOperDecl]): PredResult =
+  protected def eachDefRec(ctx: Set[String], ds: Iterable[TlaOperDecl]): PredResult =
     ds.foldLeft[(PredResult, Set[String])]((PredResultOk(), ctx)) {
       case ((partialRes, partialCtx), TlaOperDecl(name, _, body)) =>
         (
