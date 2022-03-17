@@ -154,34 +154,18 @@ NO_STATISTICS
 
 Ensure that we exit gracefully when commands are called on nonexistent files.
 
-NOTE: We strip the current working directory to make the tests consistent
-in different environments.
+NOTE: We truncate the output to avoid printing the file, making the test
+indifferent to the execution environment (including in docker).
 
 ```sh
-$ for cmd in check parse typecheck transpile; do apalache-mc $cmd nonexistent-file.tla 2>&1 | sed "s:$(pwd)::g"; done
-...
-Unknown location
-
-Cannot find source file for module /nonexistent-file.tla.
-...
+$ for cmd in check parse typecheck transpile; do apalache-mc $cmd nonexistent-file.tla 2>&1 | grep -o -e "EXITCODE: ERROR (255)" -e "Cannot find source file for module"; done
+Cannot find source file for module
 EXITCODE: ERROR (255)
-...
-Unknown location
-
-Cannot find source file for module /nonexistent-file.tla.
-...
+Cannot find source file for module
 EXITCODE: ERROR (255)
-...
-Unknown location
-
-Cannot find source file for module /nonexistent-file.tla.
-...
+Cannot find source file for module
 EXITCODE: ERROR (255)
-...
-Unknown location
-
-Cannot find source file for module /nonexistent-file.tla.
-...
+Cannot find source file for module
 EXITCODE: ERROR (255)
 ```
 
