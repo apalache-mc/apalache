@@ -18,7 +18,7 @@
 LOCAL INSTANCE Integers
 LOCAL INSTANCE FiniteSets
 LOCAL INSTANCE __apalache_folds 
-LOCAL INSTANCE __rewire_functions_in_apalache
+LOCAL INSTANCE Functions
 
 (**
  * Fold op over the elements of set using base as starting value.
