@@ -6,7 +6,8 @@ import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaTempOper}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.typesafe.scalalogging.LazyLogging
-import tla2sany.semantic._
+// Prevent shadowing our Context trait
+import tla2sany.semantic.{Context => _, _}
 
 /**
  * Translate a substitution, that is the part that goes after WITH in INSTANCE Foo WITH x <- e1, y <- e2. The module
