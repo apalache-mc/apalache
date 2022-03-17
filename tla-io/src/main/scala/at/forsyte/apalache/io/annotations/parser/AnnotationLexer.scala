@@ -43,9 +43,9 @@ object AnnotationLexer extends RegexParsers {
         leftParen | rightParen | comma | dot | boolean | atIdentifier | identifier | number | string | inline_string | unexpected_char
     ) ///
 
-  def skip: Parser[Unit] = rep(whiteSpace) ^^^ Unit
+  def skip: Parser[Unit] = rep(whiteSpace) ^^^ ()
 
-  def linefeed: Parser[Unit] = "\n" ^^^ Unit
+  def linefeed: Parser[Unit] = "\n" ^^^ ()
 
   private def identifier: Parser[IDENT] = {
     "[a-zA-Z_][a-zA-Z0-9_]*".r ^^ { name => IDENT(name) }

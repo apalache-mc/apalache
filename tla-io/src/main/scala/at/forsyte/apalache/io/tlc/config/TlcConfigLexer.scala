@@ -46,13 +46,13 @@ object TlcConfigLexer extends RegexParsers {
     ) ///
 
   // it is important that linefeed is not a whiteSpace, as otherwise singleComment consumes the whole input!
-  def skip: Parser[Unit] = rep(whiteSpace | singleComment | multiComment | linefeed) ^^^ Unit
+  def skip: Parser[Unit] = rep(whiteSpace | singleComment | multiComment | linefeed) ^^^ ()
 
-  def linefeed: Parser[Unit] = "\n" ^^^ Unit
+  def linefeed: Parser[Unit] = "\n" ^^^ ()
 
-  def singleComment: Parser[Unit] = "\\*" ~ rep(not("\n") ~ ".".r) ^^^ Unit
+  def singleComment: Parser[Unit] = "\\*" ~ rep(not("\n") ~ ".".r) ^^^ ()
 
-  def multiComment: Parser[Unit] = "(*" ~ rep(not("*)") ~ "(?s).".r) ~ "*)" ^^^ Unit
+  def multiComment: Parser[Unit] = "(*" ~ rep(not("*)") ~ "(?s).".r) ~ "*)" ^^^ ()
 
   private def identifier: Parser[IDENT] = {
     "[a-zA-Z_][a-zA-Z0-9_]*".r ^^ { name => IDENT(name) }
