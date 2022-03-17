@@ -20,7 +20,10 @@ object UJsonScalaFactory extends ScalaFactory[UJsonRep] {
   }
 
   override def asSeq(json: UJsonRep): Seq[UJsonRep] =
-    json.value.arrOpt.map { _.map(UJsonRep) }.getOrElse {
-      throw new JsonDeserializationError("Not an array.")
-    }
+    json.value.arrOpt
+      .map { _.map(UJsonRep) }
+      .getOrElse {
+        throw new JsonDeserializationError("Not an array.")
+      }
+      .toSeq
 }
