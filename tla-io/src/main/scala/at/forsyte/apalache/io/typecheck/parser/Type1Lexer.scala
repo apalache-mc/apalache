@@ -40,11 +40,11 @@ private[parser] object Type1Lexer extends RegexParsers {
     ) ///
 
   // it is important that linefeed is not in whiteSpace, as otherwise singleComment consumes the whole input!
-  def skip: Parser[Unit] = rep(whiteSpace | singleComment | linefeed) ^^^ Unit
+  def skip: Parser[Unit] = rep(whiteSpace | singleComment | linefeed) ^^^ ()
 
-  def linefeed: Parser[Unit] = "\n" ^^^ Unit
+  def linefeed: Parser[Unit] = "\n" ^^^ ()
 
-  def singleComment: Parser[Unit] = "//" ~ rep(not("\n") ~ ".".r) ^^^ Unit
+  def singleComment: Parser[Unit] = "//" ~ rep(not("\n") ~ ".".r) ^^^ ()
 
   private def identifier: Parser[IDENT] = {
     "[A-Za-z_][A-Za-z0-9_]*".r ^^ { name => IDENT(name) }
