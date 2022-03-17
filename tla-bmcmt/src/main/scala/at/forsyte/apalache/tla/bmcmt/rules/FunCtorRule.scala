@@ -102,7 +102,6 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
       oldCells: Seq[ArenaCell]): (SymbState, Seq[ArenaCell]) = {
     var nextState = state
 
-    // similar to SymbStateRewriter.rewriteSeqUntilDone and SetFilterRule
     def mapOne(cell: ArenaCell): ArenaCell = {
       // rewrite mapEx[cell/varName]
       val newBinding = Binding(nextState.binding.toMap + (varName -> cell))

@@ -56,8 +56,6 @@ abstract class AbstractCache[ContextT, SourceT, TargetT]
       // introduce a new constant
       val (newContext, targetValue) = create(context, srcValue)
       addToCache(srcValue, targetValue)
-      cache += srcValue -> (targetValue, level)
-      reverseCache += targetValue -> (srcValue, level)
       (newContext, targetValue)
     }
   }
