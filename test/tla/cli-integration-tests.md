@@ -150,6 +150,41 @@ $ head -n 1 $HOME/.tlaplus/esc.txt
 NO_STATISTICS
 ```
 
+## error handling for non-existent files
+
+Ensure that we exit gracefully when commands are called on nonexistent files.
+
+NOTE: We strip the current working directory to make the tests consistent
+in different environments.
+
+```sh
+$ for cmd in check parse typecheck transpile; do apalache-mc $cmd nonexistent-file.tla 2>&1 | sed "s:$(pwd)::g"; done
+...
+Unknown location
+
+Cannot find source file for module /nonexistent-file.tla.
+...
+EXITCODE: ERROR (255)
+...
+Unknown location
+
+Cannot find source file for module /nonexistent-file.tla.
+...
+EXITCODE: ERROR (255)
+...
+Unknown location
+
+Cannot find source file for module /nonexistent-file.tla.
+...
+EXITCODE: ERROR (255)
+...
+Unknown location
+
+Cannot find source file for module /nonexistent-file.tla.
+...
+EXITCODE: ERROR (255)
+```
+
 ## running the parse command
 
 This command parses a TLA+ specification with the SANY parser.

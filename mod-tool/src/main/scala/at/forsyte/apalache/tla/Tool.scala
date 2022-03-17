@@ -56,7 +56,8 @@ object Tool extends LazyLogging {
 
   private def outputAndLogConfig(cmd: General, cfg: ApalacheConfig): Unit = {
     OutputManager.configure(cfg)
-    if (cmd.file.getName.endsWith(".tla")) {
+    // We currently use dummy files for some commands, so we skip here on non-existing files
+    if (cmd.file.getName.endsWith(".tla") && cmd.file.exists()) {
       OutputManager.initSourceLines(cmd.file)
     }
     println(s"Output directory: ${OutputManager.runDir.normalize()}")
