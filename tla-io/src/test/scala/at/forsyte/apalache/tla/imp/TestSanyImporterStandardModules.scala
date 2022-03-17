@@ -497,7 +497,6 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         |================================
       """.stripMargin
 
-
     // We have to set TLA-Library, in order to look up Apalache.tla. This is done during packaging
     // in our build.sbt file.
     //
