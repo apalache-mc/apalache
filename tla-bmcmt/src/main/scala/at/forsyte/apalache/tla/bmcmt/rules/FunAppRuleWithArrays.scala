@@ -32,27 +32,21 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
     val res = nextState.arena.topCell
 
     if (nElems > 0) {
-      var comparableArgCell = false
-
       // We compare argCell with relationElems and if an equality is found we simply propagate elemRes
-      for (elem <- relationElems) {
-        val elemTuple = nextState.arena.getHas(elem)
+      // If argCell is not comparable at the Scala level, e.g., due to quantifier use, we need to use an oracle
+      val foundElem = relationElems.find(elem => nextState.arena.getHas(elem)(0) == argCell)
+      if (foundElem.isDefined) {
+        val elemTuple = nextState.arena.getHas(foundElem.get)
         assert(elemTuple.size == 2) // elem should always have only edges to <arg,res>
         val elemArg = elemTuple(0)
         val elemRes = elemTuple(1)
-        if (argCell == elemArg) {
-          comparableArgCell = true
-          // If argCell is comparable at the Scala level, we generate SMT constraints based on it
-          val select = tla.apalacheSelectInFun(elemArg.toNameEx, funCell.toNameEx)
-          val eql = tla.eql(elemRes.toNameEx, select)
-          // We need the SMT eql because funCell might be unconstrained, if it originates from a function set
-          rewriter.solverContext.assertGroundExpr(eql)
-          return nextState.setRex(elemRes.toNameEx)
-        }
-      }
-
-      // If argCell is not comparable at the Scala level, e.g., due to quantifier use, we need to use an oracle
-      if (!comparableArgCell) {
+        // If argCell is comparable at the Scala level, we generate SMT constraints based on it
+        val select = tla.apalacheSelectInFun(elemArg.toNameEx, funCell.toNameEx)
+        val eql = tla.eql(elemRes.toNameEx, select)
+        // We need the SMT eql because funCell might be unconstrained, if it originates from a function set
+        rewriter.solverContext.assertGroundExpr(eql)
+        return nextState.setRex(elemRes.toNameEx)
+      } else {
         // We use an oracle to pick an arg for which the function is applied
         val (oracleState, oracle) = picker.oracleFactory.newDefaultOracle(nextState, nElems + 1)
         nextState = picker.pickByOracle(oracleState, oracle, relationElems, oracleState.arena.cellTrue().toNameEx)
