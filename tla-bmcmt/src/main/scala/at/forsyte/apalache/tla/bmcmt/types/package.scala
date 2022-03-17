@@ -181,7 +181,7 @@ package object types {
         case SeqT1(elem)       => SeqT(fromType1(elem))
         case FunT1(arg, res)   => FunT(FinSetT(fromType1(arg)), fromType1(res))
         case TupT1(elems @ _*) => TupleT(elems.map(fromType1))
-        case RecT1(fieldTypes) => RecordT(fieldTypes.mapValues(fromType1))
+        case RecT1(fieldTypes) => RecordT(fieldTypes.view.mapValues(fromType1).toMap.to(SortedMap))
 
         case SparseTupT1(_) =>
           // sparse tuple can only appear in operator arguments, which must have been inlined
@@ -436,7 +436,7 @@ package object types {
       s"Record[${fields.map { case (k, v) => "\"" + k + "\" -> " + v }.mkString(", ")}]"
 
     override def toTlaType1: TlaType1 = {
-      RecT1(fields.mapValues(_.toTlaType1))
+      RecT1(fields.view.mapValues(_.toTlaType1).toMap.to(SortedMap))
     }
   }
 
