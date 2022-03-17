@@ -61,8 +61,7 @@ abstract class AbstractCache[ContextT, SourceT, TargetT]
   }
 
   /**
-   * Add a value to the cache. Implementations of this class may use this method for a more efficient mass construction
-   * of values.
+   * Add a value to the cache.
    *
    * @param source
    *   the source value
