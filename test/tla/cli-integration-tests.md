@@ -2648,6 +2648,37 @@ $ test -d ./run-dir
 $ rm -rf ./run-dir ./.apalache.cfg
 ```
 
+## module lookup
+
+### looks up modules in the same directory
+
+Regression test for https://github.com/informalsystems/apalache/issues/426
+
+```sh
+$ apalache-mc parse --output=output.tla module-lookup/subdir/Including.tla
+...
+EXITCODE: OK
+$ cat output.tla | grep VARIABLE
+VARIABLE same_dir
+$ rm output.tla
+```
+
+### looks up modules in the current working directory
+
+Files in current working directory take precedence over
+
+- files in the same directory as the supplied file
+- the Apalache standard library
+
+```sh
+$ cd module-lookup && apalache-mc parse --output=output.tla subdir/Including.tla
+...
+EXITCODE: OK
+$ cat module-lookup/output.tla | grep VARIABLE
+VARIABLE parent_dir
+$ rm module-lookup/output.tla
+```
+
 ## server mode
 
 ### server mode: subcommand is not yet implemented
