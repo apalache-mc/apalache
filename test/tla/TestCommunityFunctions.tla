@@ -112,6 +112,12 @@ TestNotInjection ==
     LET f == [ x \in 2..10 |-> x \div 2 ] IN
     f \notin Injection(DOMAIN f, Range(f))
 
+TestExistsInjection ==
+    ExistsInjection(1..3, 5..9)
+
+TestNotExistsInjection ==
+    ~ExistsInjection(1..10, 5..7)
+
 TestSurjection ==
     LET f == [ x \in 2..10 |-> x \div 2 ] IN
     f \in Surjection(DOMAIN f, Range(f))
@@ -119,6 +125,29 @@ TestSurjection ==
 TestNotSurjection ==
     LET f == [ x \in 2..10 |-> x \div 2 ] IN
     f \in Surjection({ 1 } \union (DOMAIN f), Range(f))
+
+TestExistsSurjection ==
+    ExistsSurjection(1..3, 5..7)
+
+TestNotExistsSurjection ==
+    ~ExistsSurjection(1..3, 5..9)
+
+TestBijection ==
+    LET f == [ x \in 2..10 |-> 2 * x ] IN
+    f \in Bijection(DOMAIN f, Range(f))
+
+TestNotBijection ==
+    LET f == [ x \in 2..10 |-> x \div 2 ] IN
+    f \notin Bijection(DOMAIN f, Range(f))
+
+TestExistsBijection ==
+    ExistsBijection(1..3, 5..7)
+
+TestNotExistsBijection ==
+    ~ExistsBijection(1..4, 5..6)
+
+TestNotExistsBijection2 ==
+    ~ExistsBijection(1..4, 5..10)
 
 AllTests ==
     /\ TestRestrict
@@ -141,7 +170,16 @@ AllTests ==
     /\ TestInverseEquiv
     /\ TestInjection
     /\ TestNotInjection
+    /\ TestExistsInjection
+    /\ TestNotExistsInjection
     /\ TestSurjection
     /\ TestNotSurjection
+    /\ TestExistsSurjection
+    /\ TestNotExistsSurjection
+    /\ TestBijection
+    /\ TestNotBijection
+    /\ TestExistsBijection
+    /\ TestNotExistsBijection
+    /\ TestNotExistsBijection2
 
 ===============================================================================

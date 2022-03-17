@@ -79,11 +79,13 @@ Injection(S, T) == { f \in [S -> T]: IsInjective(f) }
 
 (**
  * This operator is not defined in the community modules.
- * Hence, we define it locally.
+ * As a temporary workaround, we define it globally.
+ * It should be declared as LOCAL, once this issue is fixed:
+ * https://github.com/informalsystems/apalache/issues/1495
  *
  * @type: (Set(a), Set(b), a -> b) => Bool;
  *)
-LOCAL IsSurjective(S, T, f) ==
+IsSurjective(S, T, f) ==
     \A t \in T:
         \E s \in S:
             f[s] = t
