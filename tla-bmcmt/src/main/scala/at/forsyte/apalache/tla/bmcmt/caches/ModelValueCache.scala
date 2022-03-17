@@ -31,12 +31,14 @@ class ModelValueCache(solverContext: SolverContext)
   }
 
   /**
-   * Cache multiple values at once. This method is more efficient than caching multiple values with [[create]].
+   * Cache multiple values at once at the current level. This method is more efficient than caching multiple values with
+   * [[create]]: It does introduce the SMT constraint `distinct` over `n` values instead of introducing `n` calls to
+   * `distinct` with an increasing number of arguments: 1, 2, ..., n.
    *
    * @param arena
    *   the arena to start with
    * @param utype
-   *   the value type
+   *   the name of the uninterpreted type to use
    * @param newValues
    *   the values to cache
    * @return
