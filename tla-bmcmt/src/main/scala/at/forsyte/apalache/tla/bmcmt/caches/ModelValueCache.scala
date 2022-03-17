@@ -31,7 +31,7 @@ class ModelValueCache(solverContext: SolverContext)
   }
 
   /**
-   * Cache multiple values at once. This method is more efficient than caching multiple values with [[create]].
+   * Create and cache multiple values at once. This method is more efficient than caching multiple values with [[create]].
    *
    * @param arena
    *   the arena to start with
