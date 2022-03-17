@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.lir.{
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 import scala.collection.immutable.SortedMap
+import scala.math.Ordering.Implicits._
 
 package object types {
   // @Jure 29.10.2017: Change name, too ambiguous, especially with TLA Types in the other package -- Jure, 29.10.17
@@ -27,6 +28,11 @@ package object types {
      */
     def comparableWith(other: CellT): Boolean = {
       this.unify(other).nonEmpty
+    }
+
+    // Prive an odering for CellT so we can build SortedMaps
+    implicit val cellTOrdering = new Ordering[CellT] {
+      def compare(a: CellT, b: CellT) = a.signature.compare(b.signature)
     }
 
     /**
