@@ -13,3 +13,4 @@
 ### Bug fixes
 
 * Fix function application static check in arrays encoding, see #1490
+* Add support for the community modules FiniteSetsExt and Functions, see #1484
