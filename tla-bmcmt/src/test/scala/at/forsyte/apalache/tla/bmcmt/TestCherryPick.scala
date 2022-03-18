@@ -165,8 +165,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     }
 
     val records = Seq(mkRecord(1, 2), mkRecord(3, 4))
-    state = new CherryPick(rewriter).pickRecord(records.head.cellType, state, oracle, records,
-        state.arena.cellFalse().toNameEx)
+    state = new CherryPick(rewriter).pickRecord(state, oracle, records, state.arena.cellFalse().toNameEx)
     assert(solverContext.sat())
 
     assertEqWhenChosen(rewriter, state, oracle, 0, records(0).toNameEx)
@@ -191,8 +190,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     state = rewriter.rewriteUntilDone(state.setRex(rec2))
     val rec2Cell = state.asCell
 
-    val recordCellType = CellT.fromType1(types("riis"))
-    state = new CherryPick(rewriter).pickRecord(recordCellType, state, oracle, Seq(rec1Cell, rec2Cell),
+    state = new CherryPick(rewriter).pickRecord(state, oracle, Seq(rec1Cell, rec2Cell),
         state.arena.cellFalse().toNameEx)
     assert(solverContext.sat())
 
