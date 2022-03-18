@@ -20,10 +20,9 @@ trait TestSymbStateRewriterChoose extends RewriterBase with TestingPredefs {
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
 
-    def assertEq(i: Int): SymbState = {
+    def assertEq(i: Int): Unit = {
       val ns = rewriter.rewriteUntilDone(nextState.setRex(eql(nextState.ex ? "i", int(i)).typed(types, "b")))
       solverContext.assertGroundExpr(ns.ex)
-      ns
     }
 
     // in our implementation, CHOOSE is non-deterministic, so all three results below are possible
@@ -36,8 +35,8 @@ trait TestSymbStateRewriterChoose extends RewriterBase with TestingPredefs {
     assert(solverContext.sat())
     rewriter.pop()
     rewriter.push()
-    val ns = assertEq(1)
-    assertUnsatOrExplain(rewriter, ns)
+    assertEq(1)
+    assertUnsatOrExplain()
   }
 
   test("""CHOOSE x \in {1}: x > 1""") { rewriterType: SMTEncoding =>
@@ -62,17 +61,16 @@ trait TestSymbStateRewriterChoose extends RewriterBase with TestingPredefs {
     // the buggy implementation of choose fails on a dynamically empty set
     assert(solverContext.sat())
 
-    def assertEq(i: Int): SymbState = {
+    def assertEq(i: Int): Unit = {
       val eq = eql(nextState.ex ? "i", int(i))
         .typed(types, "b")
       val ns = rewriter.rewriteUntilDone(nextState.setRex(eq))
       solverContext.assertGroundExpr(ns.ex)
-      ns
     }
 
     // Actually, semantics of choose does not restrict the outcome on the empty sets.
     // But we know that our implementation would always return 0 in this case.
-    val ns = assertEq(1)
-    assertUnsatOrExplain(rewriter, ns)
+    assertEq(1)
+    assertUnsatOrExplain()
   }
 }
