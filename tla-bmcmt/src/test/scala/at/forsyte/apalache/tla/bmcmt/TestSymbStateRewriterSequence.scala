@@ -362,7 +362,6 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
   test("""(ApalacheSeqCapacity(<<3, 4, 5, 6>>) = 4""") { rewriterType: SMTEncoding =>
     val seq3to6 = tuple(3.to(6).map(int): _*).as(intSeqT)
     val ex = OperEx(ApalacheInternalOper.apalacheSeqCapacity, seq3to6)(Typed(IntT1()))
-    // since 10 does not belong to the domain, the sequence does not change
     val eq = eql(ex, int(4)).as(boolT)
 
     val state = new SymbState(eq, arena, Binding())
