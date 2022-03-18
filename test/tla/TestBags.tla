@@ -1,4 +1,4 @@
----------- MODULE BagsTest ----------
+---------- MODULE TestBags ----------
 
 EXTENDS Integers, ApalacheBags
 

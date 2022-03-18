@@ -79,6 +79,7 @@ object StandardLibrary {
     Map(
         "TLC.tla" -> "__rewire_tlc_in_apalache.tla",
         "Sequences.tla" -> "__rewire_sequences_in_apalache.tla",
+        "Bags" -> "__rewire_bags_in_apalache.tla",
     ) ////
 
   /**
