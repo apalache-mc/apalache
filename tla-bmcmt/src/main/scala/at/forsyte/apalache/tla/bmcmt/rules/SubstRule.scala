@@ -13,7 +13,7 @@ import com.typesafe.scalalogging.LazyLogging
  * @author
  *   Igor Konnov
  */
-class SubstRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogging {
+class SubstRule extends RewritingRule with LazyLogging {
   override def isApplicable(state: SymbState): Boolean = {
     state.ex match {
       case NameEx(x) =>
