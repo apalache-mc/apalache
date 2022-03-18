@@ -82,7 +82,10 @@ abstract class AbstractCache[ContextT, SourceT, TargetT]
    *   Some(result), or None
    */
   def get(srcValue: SourceT): Option[TargetT] = {
-    cache.get(srcValue).map(_._1)
+    cache.get(srcValue) match {
+      case Some((target, _)) => Some(target)
+      case None              => None
+    }
   }
 
   /**
