@@ -5,7 +5,11 @@
  *)
 
 (**
- * A copy of Apalache!FoldSet.
+ * A copy of Apalache!FoldSet, which should be used only in Apalache rewirings.
+ *
+ * The folding operator, used to implement computation over a set.
+ * Apalache implements a more efficient encoding than the one below.
+ * (from the community modules).
  *
  * @type: ((a, b) => a, a, Set(b)) => a;
  *)
@@ -14,7 +18,11 @@ __ApalacheFoldSet(Op(_, _), v, S) ==
     v
 
 (**
- * A copy of Apalache!FoldSeq.
+ * A copy of Apalache!FoldSeq, which should be used only in Apalache rewirings.
+ *
+ * The folding operator, used to implement computation over a sequence.
+ * Apalache implements a more efficient encoding than the one below.
+ * (from the community modules).
  *
  * @type: ((a, b) => a, a, Seq(b)) => a;
  *)

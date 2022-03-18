@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.oper.ApalacheInternalOper
 
 trait TestSymbStateRewriterSequence extends RewriterBase {
   private val intT = IntT1()
@@ -353,6 +354,16 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     val exceptEx = except(emptyTuple, tuple(int(10)).as(TupT1(IntT1())), int(7)).as(intSeqT)
     // since 10 does not belong to the domain, the sequence does not change
     val eq = eql(exceptEx, emptyTuple).as(boolT)
+
+    val state = new SymbState(eq, arena, Binding())
+    assertTlaExAndRestore(create(rewriterType), state)
+  }
+
+  test("""(ApalacheSeqCapacity(<<3, 4, 5, 6>>) = 4""") { rewriterType: SMTEncoding =>
+    val seq3to6 = tuple(3.to(6).map(int): _*).as(intSeqT)
+    val ex = OperEx(ApalacheInternalOper.apalacheSeqCapacity, seq3to6)(Typed(IntT1()))
+    // since 10 does not belong to the domain, the sequence does not change
+    val eq = eql(ex, int(4)).as(boolT)
 
     val state = new SymbState(eq, arena, Binding())
     assertTlaExAndRestore(create(rewriterType), state)
