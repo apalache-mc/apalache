@@ -65,15 +65,11 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
       val b = BoolT1()
       tla.and(tla.le(left, mem).as(b), tla.le(mem, right).as(b)).as(b)
 
-    case OperEx(TlaSetOper.in, mem, OperEx(TlaSetOper.filter, NameEx(x), set, pred)) =>
+    case OperEx(TlaSetOper.in, mem, OperEx(TlaSetOper.filter, nameEx@NameEx(x), set, pred)) =>
       // Transform x \in { y \in S: P } into x \in S /\ P[y/x]
-      def isToReplace: TlaEx => Boolean = {
-        case NameEx(name) => name == x
-        case _            => false
-      }
 
-      val memCopy = DeepCopy(tracker).deepCopyEx(mem)
-      val predSubstituted = ReplaceFixed(tracker)(isToReplace, memCopy)(pred)
+      def memCopy = DeepCopy(tracker).deepCopyEx(mem)
+      val predSubstituted = ReplaceFixed(tracker)(nameEx, memCopy)(pred)
       val b = BoolT1()
       tla.and(tla.in(mem, set).as(b), predSubstituted).as(b)
   }
