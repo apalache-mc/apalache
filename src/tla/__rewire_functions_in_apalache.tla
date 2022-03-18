@@ -108,11 +108,6 @@ Bijection(S, T) ==
     { f \in [S -> T]: IsSurjective(S, T, f) /\ IsInjective(f) }
 
 (**
- * An injection, surjection, or bijection exists if the corresponding set
- * is nonempty.
- *)
-
-(**
  * Is there an injection between S and T. Apalache defines it only on finite sets.
  *
  * @type: (Set(a), Set(b)) => Bool;
