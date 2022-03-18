@@ -76,8 +76,7 @@ ReduceSet(op(_, _), set, acc) ==
  * @type: Set(Set(a)) => Set(a);
  *)
 FlattenSet(S) ==
-  LET SetUnion(A, B) == A \union B IN
-  __ApalacheFoldSet(SetUnion, {}, S)
+  UNION S
 
 (**
  * The symmetric difference of two sets.

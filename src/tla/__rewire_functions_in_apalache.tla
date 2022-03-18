@@ -138,7 +138,7 @@ ExistsBijection(S, T)  ==
 
 
 (**
- * Applies the binary function op on all elements of seq in arbitrary
+ * Applies the binary function op on all elements of DOMAIN fun in arbitrary
  * order starting with op(f[k], base). The resulting function is:
  *    op(f[i],op(f[j], ..., op(f[k],base) ...))
  *
@@ -158,8 +158,9 @@ FoldFunction(op(_, _), base, fun) ==
 
 
 (**
- * Applies the binary function op on the given indices of seq in arbitrary
- * order starting with op(f[k], base). The resulting function is:
+ * Applies the binary function op on the given indices of DOMAIN fun
+ * in arbitrary * order starting with op(f[k], base). The resulting
+ * function is:
  *    op(f[i],op(f[j], ..., op(f[k],base) ...))
  *
  * op must be associative and commutative, because we can not assume a
