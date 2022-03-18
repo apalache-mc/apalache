@@ -808,7 +808,7 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     assert(expected == gen(ex))
   }
 
-  test("ApalacheInternal!____NotSupportedByModelChecker") {
+  test("ApalacheInternal!__NotSupportedByModelChecker") {
     val typ = parser("Str => a")
     val expected = mkAppByName(Seq(typ), "x")
     val ex = OperEx(ApalacheInternalOper.notSupportedByModelChecker, tla.name("x"))

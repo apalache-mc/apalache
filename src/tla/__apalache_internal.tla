@@ -11,9 +11,6 @@
 (**
  * Return the capacity of a sequence (a static upper bound on its length).
  *
- * The folding operator, used to implement computation over a set.
- * Apalache implements a more efficient encoding than the one below.
- * (from the community modules).
  *
  * @type: Seq(a) => Int;
  *)

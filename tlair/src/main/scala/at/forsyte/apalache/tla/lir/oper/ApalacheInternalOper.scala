@@ -7,9 +7,7 @@ package at.forsyte.apalache.tla.lir.oper
  * @author
  *   Igor Konnov
  */
-abstract class ApalacheInternalOper extends TlaOper {
-  override def interpretation: Interpretation.Value = Interpretation.StandardLib
-}
+abstract class ApalacheInternalOper extends ApalacheOper
 
 object ApalacheInternalOper {
 
@@ -17,7 +15,7 @@ object ApalacheInternalOper {
    * This operator receives an error message (a string literal), which should be printed if this operator reaches the
    * model checker.
    */
-  object notSupportedByModelChecker extends ApalacheOper {
+  object notSupportedByModelChecker extends ApalacheInternalOper {
     override def name: String = "ApalacheInternal!__NotSupportedByModelChecker"
 
     override def arity: OperArity = FixedArity(1)
@@ -28,7 +26,7 @@ object ApalacheInternalOper {
   /**
    * This operator returns the capacity of a given sequence, that is, a static upper bound on its length.
    */
-  object apalacheSeqCapacity extends ApalacheOper {
+  object apalacheSeqCapacity extends ApalacheInternalOper {
     override def name: String = "ApalacheInternal!__ApalacheSeqCapacity"
 
     override def arity: OperArity = FixedArity(1)
