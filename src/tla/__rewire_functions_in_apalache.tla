@@ -20,7 +20,7 @@ LOCAL INSTANCE FiniteSets
 LOCAL INSTANCE __apalache_folds 
 
 (**
- * Restriction of a function to a set (should be a subset of the domain).
+ * Restriction of a function to a set (must be a subset of the domain).
  *
  * @type: (a -> b, Set(a)) => (a -> b);
  *)
@@ -80,7 +80,7 @@ Injection(S, T) == { f \in [S -> T]: IsInjective(f) }
 (**
  * This operator is not defined in the community modules.
  * As a temporary workaround, we define it globally.
- * It should be declared as LOCAL, once this issue is fixed:
+ * TODO: It should be declared as LOCAL, once this issue is fixed:
  * https://github.com/informalsystems/apalache/issues/1495
  *
  * @type: (Set(a), Set(b), a -> b) => Bool;

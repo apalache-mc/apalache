@@ -88,7 +88,7 @@ FlattenSet(S) ==
  * @type: (Set(a), Set(a)) => Set(a);
  *)
 SymDiff(A, B) ==
-    { x \in A: x \notin B } \union { x \in B: x \notin A }
+    { x \in A \union B: x \notin A \/ x \notin B}
 
 (**
  * Quantify the elements in S matching the predicate (LAMDBA) P.
@@ -102,7 +102,8 @@ SymDiff(A, B) ==
  * @type: (Set(a), (a => Bool)) => Int;
  *)
 Quantify(S, P(_)) ==
-   Cardinality({s \in S : P(s)})
+   LET CondCount(n, e) == n + IF P(e) THEN 1 ELSE 0
+   FoldSet(CondCount, 0, S)
 
 
 (**
@@ -149,11 +150,11 @@ Choices(Sets) == LET ChoiceFunction(Ts) == { f \in [Ts -> UNION Ts] :
                  IN  { Range(f) : f \in ChoiceFunction(Sets) }
 
 (**
- * Chooses unique element from the input set matching the predicate
+ * Choose a unique element from the input set matching the predicate
  * (LAMDBA) P.
  *
  * Contrary to CHOOSE, fails with
- *      CHOOSE x \\in S: P, but no element of S satisfied P:
+ *      CHOOSE x \\in S: P, but no element of S satisfies P:
  * not just if P(_) holds for none of the elements in S, but also if
  * P(_) holds for more than one element in S.
  *
