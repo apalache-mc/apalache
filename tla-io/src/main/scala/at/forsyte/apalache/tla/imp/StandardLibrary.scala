@@ -82,6 +82,8 @@ object StandardLibrary {
         "TLC.tla" -> "__rewire_tlc_in_apalache.tla",
         "Sequences.tla" -> "__rewire_sequences_in_apalache.tla",
         "Bags.tla" -> "__rewire_bags_in_apalache.tla",
+        "Functions.tla" -> "__rewire_functions_in_apalache.tla",
+        "FiniteSetsExt.tla" -> "__rewire_finite_sets_ext_in_apalache.tla",
         // will be enabled later
         //        "SequencesExt.tla" -> "__rewire_sequences_ext_in_apalache.tla",
     ) ////

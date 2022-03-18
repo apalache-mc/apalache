@@ -1881,6 +1881,22 @@ $ apalache-mc check --length=0 --inv=AllTests TestSets.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check TestCommunityFunctions.tla reports no error (array-encoding)
+
+```sh
+$ apalache-mc check --length=0 --inv=AllTests TestCommunityFunctions.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check TestFiniteSetsExt.tla reports no error (array-encoding)
+
+```sh
+$ apalache-mc check --length=0 --inv=AllTests TestFiniteSetsExt.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check TestFunctions.tla reports no error
 
 ```sh
