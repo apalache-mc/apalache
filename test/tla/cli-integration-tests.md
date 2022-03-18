@@ -94,10 +94,10 @@ $ apalache-mc help
 
 ### executable responds to JVM_ARGS environment variable
 
-We can set some JVM args and still have the default max heap size supplied. (Note we also trim out the `TLA_Library` argument, since is environment sensitive and makes the tests unstable.)
+We can set some JVM args and still have the default max heap size supplied.
 
 ```sh
-$ JVM_ARGS="-Xms1m -XX:+UseSerialGC" apalache-mc --debug version | sed 's/-DTLA-Library.*//'
+$ JVM_ARGS="-Xms1m -XX:+UseSerialGC" apalache-mc version --debug
 ...
 # JVM args: -Xms1m -XX:+UseSerialGC -Xmx4096m
 ...
@@ -106,7 +106,7 @@ $ JVM_ARGS="-Xms1m -XX:+UseSerialGC" apalache-mc --debug version | sed 's/-DTLA-
 If we set the max heap size (with `-Xmx`) it will override the default max heap size:
 
 ```sh
-$ JVM_ARGS="-Xmx16m" apalache-mc --debug version | sed 's/-DTLA-Library.*//'
+$ JVM_ARGS="-Xmx16m" apalache-mc version --debug
 ...
 # JVM args: -Xmx16m
 ...
@@ -1869,6 +1869,14 @@ EXITCODE: OK
 
 ```sh
 $ apalache-mc check --length=0 --inv=AllTests TestSets.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check TestFunctions.tla reports no error
+
+```sh
+$ apalache-mc check --length=0 --inv=AllTests TestFunctions.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```

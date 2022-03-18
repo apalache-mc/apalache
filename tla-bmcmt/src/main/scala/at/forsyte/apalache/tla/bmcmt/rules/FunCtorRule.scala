@@ -41,7 +41,7 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
       funT1: FunT1,
       mapEx: TlaEx,
       varName: String,
-      setEx: TlaEx) = {
+      setEx: TlaEx): SymbState = {
     // rewrite the set expression into a memory cell
     var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
     val domainCell = nextState.asCell
@@ -66,8 +66,6 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     nextState = nextState.updateArena(_.appendCell(FinSetT(TupleT(Seq(elemT, resultT)))))
     val relation = nextState.arena.topCell
     val newArena = nextState.arena.appendHas(relation, relationCells: _*)
-    // we do not store the function domain anymore, as it is easy to get the domain and the relation out of sync
-//    nextState = nextState.setArena(newArena.setDom(funCell, domainCell))
     // For historical reasons, we are using cdm to store the relation, though it is not the co-domain.
     nextState = nextState.setArena(newArena.setCdm(funCell, relation))
     // require the relation to contain only those pairs whose argument actually belongs to the set
@@ -101,27 +99,19 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
       state: SymbState,
       mapEx: TlaEx,
       varName: String,
-      oldCells: Seq[ArenaCell]) = {
-    // similar to SymbStateRewriter.rewriteSeqUntilDone and SetFilterRule
-    def process(st: SymbState, seq: Seq[ArenaCell]): (SymbState, Seq[TlaEx]) = {
-      seq match {
-        case Seq() =>
-          (st, List())
+      oldCells: Seq[ArenaCell]): (SymbState, Seq[ArenaCell]) = {
+    var nextState = state
 
-        case cell :: tail =>
-          val (ts: SymbState, nt: List[TlaEx]) = process(st, tail)
-          val newBinding = Binding(ts.binding.toMap + (varName -> cell))
-          val cellState = new SymbState(mapEx, ts.arena, newBinding)
-          // add [cell/x]
-          val ns = rewriter.rewriteUntilDone(cellState)
-          (ns.setBinding(ts.binding), ns.ex :: nt) // reset binding and add the new expression in the head
-      }
+    def mapOne(cell: ArenaCell): ArenaCell = {
+      // rewrite mapEx[cell/varName]
+      val newBinding = Binding(nextState.binding.toMap + (varName -> cell))
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(mapEx).setBinding(newBinding))
+      nextState.asCell
     }
 
     // compute mappings for all the cells (some of them may coincide, that's fine)
-    val (newState: SymbState, newEs: Seq[TlaEx]) = process(state, oldCells)
-    val newCells = newEs.map(newState.arena.findCellByNameEx)
+    val mappedCells = oldCells.map(mapOne)
     // keep the sequence of results as it is, as it is will be zipped by the function constructor
-    (newState, newCells)
+    (nextState.setBinding(state.binding), mappedCells)
   }
 }
