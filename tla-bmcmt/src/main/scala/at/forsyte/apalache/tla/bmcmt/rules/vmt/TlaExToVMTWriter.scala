@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.lir.formulas._
 import at.forsyte.apalache.tla.lir.{ConstT1, SetT1, StrT1, TlaConstDecl, TlaEx, TlaVarDecl, Typed}
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
+import scalaz.unused
 
 /**
  * TlaExToVMTWriter handles the last step of transpiling: assembling the .vmt output file.
@@ -86,7 +87,7 @@ class TlaExToVMTWriter(gen: UniqueNameGenerator) {
   def annotateAndWrite(
       varDecls: Seq[TlaVarDecl],
       constDecls: Seq[TlaConstDecl],
-      cInit: Seq[(String, TlaEx)],
+      @unused cInit: Seq[(String, TlaEx)],
       initTransitions: Seq[(String, TlaEx)],
       nextTransitions: Seq[(String, TlaEx)],
       invariants: Seq[(String, TlaEx)]): Unit = {

@@ -51,8 +51,7 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
               iteBasic(nextState, resultType, predCell.toNameEx, thenCell, elseCell)
 
             // sets, functions, records, tuples, sequence: use pick
-            case _ =>
-              iteGeneral(nextState, resultType, predCell.toNameEx, thenCell, elseCell)
+            case _ => iteGeneral(nextState, predCell.toNameEx, thenCell, elseCell)
           }
         }
 
@@ -79,7 +78,6 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
   // The cool thing is that we do not have to compare the results anymore. It is all defined by the oracle.
   private def iteGeneral(
       state: SymbState,
-      commonType: CellT,
       pred: TlaEx,
       thenCell: ArenaCell,
       elseCell: ArenaCell) = {
