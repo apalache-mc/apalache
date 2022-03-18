@@ -33,6 +33,16 @@ class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
     assert(expected == output)
   }
 
+  // an optimization for x \in { y \in S: P }
+  test("""x \in { y \in 1..3: y > 2 }""") {
+    val set123 = enumSet(int(1), int(2), int(3)).as(intSetT)
+    val filteredSet = filter(name("y").as(intT), set123, gt(name("y").as(intT), int(2)).as(boolT)).as(intSetT)
+    val input = in(name("x").as(intT), filteredSet).as(boolT)
+    val output = optimizer.apply(input)
+    val expected = and(in(name("x").as(intT), set123).as(boolT), gt(name("x").as(intT), int(2)).as(boolT)).as(boolT)
+    assert(expected == output)
+  }
+
   // an optimization for record accesses
   test("""[a |-> 1, b |-> 2].a becomes 2""") {
     val recT = RecT1("a" -> IntT1(), "b" -> IntT1())
