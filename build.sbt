@@ -251,6 +251,8 @@ lazy val root = (project in file("."))
                   "tla2sany/StandardModules/__rewire_bags_in_apalache.tla",
                 (src_dir / "__apalache_folds.tla") ->
                   "tla2sany/StandardModules/__apalache_folds.tla",
+                (src_dir / "__apalache_internals.tla") ->
+                  "tla2sany/StandardModules/__apalache_internals.tla",
             ),
         )
       },

@@ -7,7 +7,7 @@
 (* Jure Kukovec, 2021                                                        *)
 (*****************************************************************************)
 
-EXTENDS Apalache, Integers
+EXTENDS Apalache, Integers, __apalache_internal
 
 (**
  * A bag is a function from `a` to Int, where `a` is the type of the bag contents
