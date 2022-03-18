@@ -65,7 +65,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
       val b = BoolT1()
       tla.and(tla.le(left, mem).as(b), tla.le(mem, right).as(b)).as(b)
 
-    case OperEx(TlaSetOper.in, mem, OperEx(TlaSetOper.filter, nameEx@NameEx(x), set, pred)) =>
+    case OperEx(TlaSetOper.in, mem, OperEx(TlaSetOper.filter, nameEx @ NameEx(_), set, pred)) =>
       // Transform x \in { y \in S: P } into x \in S /\ P[y/x]
 
       def memCopy = DeepCopy(tracker).deepCopyEx(mem)
