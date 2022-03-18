@@ -10,3 +10,6 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
+### Bug fixes
+
+* Fix function application static check in arrays encoding, see #1490
