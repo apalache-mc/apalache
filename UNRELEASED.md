@@ -13,3 +13,4 @@
 ### Bug fixes
 
  * Fix stack overflow and out-of-memory in function operators, see #1498
+* Fix function application static check in arrays encoding, see #1490

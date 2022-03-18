@@ -61,8 +61,7 @@ abstract class AbstractCache[ContextT, SourceT, TargetT]
   }
 
   /**
-   * Add a value to the cache. Implementations of this class may use this method for a more efficient mass construction
-   * of values.
+   * Add a value to the cache.
    *
    * @param source
    *   the source value
@@ -83,7 +82,10 @@ abstract class AbstractCache[ContextT, SourceT, TargetT]
    *   Some(result), or None
    */
   def get(srcValue: SourceT): Option[TargetT] = {
-    cache.get(srcValue).map(_._1)
+    cache.get(srcValue) match {
+      case Some((target, _)) => Some(target)
+      case None              => None
+    }
   }
 
   /**
