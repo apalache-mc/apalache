@@ -25,13 +25,13 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) {
    *
    * @param file
    *   an input file
-   * @param useLibraryPaths
+   * @param useRelativePathLookup
    *   Whether to use [[file]]'s containing directory as library path. Disable this flag when you [[loadFromSource]]; we
    *   then look up names in the paths given by the `TLA-Library` Java system variable instead.
    * @return
    *   the pair (the root module name, a map of modules)
    */
-  def loadFromFile(file: File, useLibraryPaths: Boolean = true): (String, Map[String, TlaModule]) = {
+  def loadFromFile(file: File, useRelativePathLookup: Boolean = true): (String, Map[String, TlaModule]) = {
     // create a string buffer to write SANY's error messages
     // use.toString() to retrieve the error messages
     val errBuf = new StringWriter()
@@ -41,7 +41,7 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) {
     // Otherwise, look up files in the paths given by the `TLA-Library` Java system variable (used to wire in the
     // Apalache Standard library in `src/tla` when running unit tests).
     // Compatible with TLC at commit https://github.com/tlaplus/tlaplus/commit/b905a86e31714bf5002290141b51b41ffe280c8e
-    val filenameResolver = if (useLibraryPaths) {
+    val filenameResolver = if (useRelativePathLookup) {
       file.getParent() match {
         case null          => SanyNameToStream()
         case parentDirPath => SanyNameToStream(parentDirPath)

@@ -8,7 +8,7 @@ import java.io.File
  * A decorator of SANY's SimpleFilenameToStream that rewires some names to Apalache names.
  *
  * @author
- *   Igor Konnov
+ *   Igor Konnov, Thomas Pani
  */
 trait SanyNameToStream extends SimpleFilenameToStream {
   override def resolve(name: String, isModule: Boolean): File = {
