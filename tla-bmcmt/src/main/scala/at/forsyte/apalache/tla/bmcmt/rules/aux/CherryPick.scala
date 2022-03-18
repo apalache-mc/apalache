@@ -11,7 +11,6 @@ import at.forsyte.apalache.tla.lir.oper.TlaOper
 
 import scala.collection.immutable.SortedMap
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
-import scalaz.unused
 
 /**
  * An element picket that allows us:
@@ -135,8 +134,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
       case t @ TupleT(_) =>
         pickTuple(t, state, oracle, elems, elseAssert)
 
-      case t @ RecordT(_) =>
-        pickRecord(t, state, oracle, elems, elseAssert)
+      case RecordT(_) =>
+        pickRecord(state, oracle, elems, elseAssert)
 
       case t @ FinSetT(_) =>
         pickSet(t, state, oracle, elems, elseAssert)
@@ -241,8 +240,6 @@ class CherryPick(rewriter: SymbStateRewriter) {
    * Note that some record fields may have bogus values, since not all the records in the set are required to have all
    * the keys assigned. That is an unavoidable loophole in the record types.
    *
-   * @param cellTypeToIgnore
-   *   a cell type to assign to the picked cell, this is not always the right type for records
    * @param state
    *   a symbolic state
    * @param oracle
@@ -253,7 +250,6 @@ class CherryPick(rewriter: SymbStateRewriter) {
    *   a new symbolic state with the expression holding a fresh cell that stores the picked element.
    */
   def pickRecord(
-      @unused cellTypeToIgnore: CellT,
       state: SymbState,
       oracle: Oracle,
       records: Seq[ArenaCell],
