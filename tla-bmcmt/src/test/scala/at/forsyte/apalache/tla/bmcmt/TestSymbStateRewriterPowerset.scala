@@ -124,7 +124,7 @@ trait TestSymbStateRewriterPowerset extends RewriterBase {
       case predEx @ NameEx(_) =>
         rewriter.push()
         solverContext.assertGroundExpr(predEx)
-        assertUnsatOrExplain(rewriter, nextState)
+        assertUnsatOrExplain()
 
       case _ =>
         fail("Unexpected rewriting result")
