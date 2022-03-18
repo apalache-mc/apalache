@@ -119,7 +119,7 @@ class SymbStateRewriterImpl(
   val exprCache = new ExprCache(exprGradeStore)
 
   @transient
-  protected lazy val substRule = new SubstRule(this)
+  protected lazy val substRule = new SubstRule
 
   /**
    * A storage for the messages associated with assertion failures, see MessageStorage.
@@ -159,19 +159,19 @@ class SymbStateRewriterImpl(
         key(NameEx("x"))
           -> List(substRule),
         key(tla.prime(NameEx("x")))
-          -> List(new PrimeRule(this)),
+          -> List(new PrimeRule),
         // assignment
         key(OperEx(ApalacheOper.assign, tla.name("x"), tla.name("y")))
           -> List(new AssignmentRule(this)),
         // constants
         key(ValEx(TlaBool(true)))
-          -> List(new BuiltinConstRule(this)),
+          -> List(new BuiltinConstRule),
         key(ValEx(TlaBoolSet))
-          -> List(new BuiltinConstRule(this)),
+          -> List(new BuiltinConstRule),
         key(ValEx(TlaIntSet))
-          -> List(new BuiltinConstRule(this)),
+          -> List(new BuiltinConstRule),
         key(ValEx(TlaNatSet))
-          -> List(new BuiltinConstRule(this)),
+          -> List(new BuiltinConstRule),
         key(ValEx(TlaInt(1)))
           -> List(new IntConstRule(this)),
         key(ValEx(TlaStr("red")))

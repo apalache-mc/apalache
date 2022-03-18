@@ -9,6 +9,7 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaControlOper}
+import scalaz.unused
 
 import scala.collection.immutable.SortedSet
 
@@ -123,7 +124,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
 
   private def genSeq(state: SymbState, elemType: TlaType1): SymbState = {
     // initialize the proto sequence with the elements
-    def genElem(s: SymbState, indexBase1: Int): (SymbState, ArenaCell) = {
+    def genElem(s: SymbState, @unused indexBase1: Int): (SymbState, ArenaCell) = {
       // ignore indexBase1, as it is irrelevant
       val ns = gen(s, elemType)
       (ns, ns.asCell)

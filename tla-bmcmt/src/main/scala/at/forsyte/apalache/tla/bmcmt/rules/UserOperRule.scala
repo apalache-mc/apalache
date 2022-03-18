@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
+import scalaz.unused
 
 /**
  * This rule rewrites an operator application (for constant operators).
@@ -10,7 +11,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx}
  * @author
  *   Igor Konnov
  */
-class UserOperRule(rewriter: SymbStateRewriter) extends RewritingRule {
+class UserOperRule(@unused rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaOper.apply, NameEx(_), _*) => true
