@@ -101,8 +101,10 @@ SymDiff(A, B) ==
  * @type: (Set(a), (a => Bool)) => Int;
  *)
 Quantify(S, P(_)) ==
-   LET CondCount(n, e) == n + IF P(e) THEN 1 ELSE 0
-   FoldSet(CondCount, 0, S)
+    LET CondCount(n, e) ==
+        n + IF P(e) THEN 1 ELSE 0
+    IN
+    __ApalacheFoldSet(CondCount, 0, S)
 
 
 (**
