@@ -178,8 +178,8 @@ object Tool extends LazyLogging {
 
   private def setCoreOptions(executor: PassChainExecutor, cmd: AbstractCheckerCmd): Unit = {
     logger.info {
-      val environment = if (cmd.env != "") s"(${cmd.env})" else ""
-      s"Checker options: ${environment} ${cmd.name} ${cmd.invocation}"
+      val environment = if (cmd.env != "") s"(${cmd.env}) " else ""
+      s"Checker options: ${environment}${cmd.name} ${cmd.invocation}"
     }
     executor.options.set("parser.filename", cmd.file.getAbsolutePath)
     if (cmd.config != "")
