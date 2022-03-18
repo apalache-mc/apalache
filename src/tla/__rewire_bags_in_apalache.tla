@@ -92,28 +92,29 @@ B1 \sqsubseteq B2  ==
   /\ (DOMAIN B1) \subseteq (DOMAIN B2)
   /\ \A e \in DOMAIN B1 : B1[e] \leq B2[e]
 
+\* TODO: Introduce Unsupported("...")
 \* @type: (a -> Int) => Set(a -> Int);
-SubBag(B) ==
+SubBag(B) == {}
   (************************************************************************)
   (* The set of all subbags of bag B.                                     *)
   (************************************************************************)
-  LET
-    \* @type: Set(a);
-    DOM == DOMAIN B
-  IN LET
-    \* @type: (Int,Int) => Int;
-    Max(a,b) == IF a > b THEN a ELSE b
-  IN LET
-    \* @type: () => Int;
-    MaxCount == FoldSet( Max, 0, { B[x]: x \in DOM } )
-  IN LET
-    \* @type: () => Set(a -> Int);
-    ResultWithZeros == { bag \in [ DOM -> 0..MaxCount ]: \A e \in DOM: bag[e] <= B[e] }
-  IN LET
-    \* @type: (a -> Int) => a -> Int;
-    RmZeroes(bag) == [x \in {e \in DOM: bag[e] > 0} |-> bag[x]]
-  IN
-    { RmZeroes(b) : b \in ResultWithZeros }
+  \* LET
+  \*   \* &type: Set(a);
+  \*   DOM == DOMAIN B
+  \* IN LET
+  \*   \* &type: (Int,Int) => Int;
+  \*   Max(a,b) == IF a > b THEN a ELSE b
+  \* IN LET
+  \*   \* &type: () => Int;
+  \*   MaxCount == FoldSet( Max, 0, { B[x]: x \in DOM } )
+  \* IN LET
+  \*   \* &type: () => Set(a -> Int);
+  \*   ResultWithZeros == { bag \in [ DOM -> 0..MaxCount ]: \A e \in DOM: bag[e] <= B[e] }
+  \* IN LET
+  \*   \* &type: (a -> Int) => a -> Int;
+  \*   RmZeroes(bag) == [x \in {e \in DOM: bag[e] > 0} |-> bag[x]]
+  \* IN
+  \*   { RmZeroes(b) : b \in ResultWithZeros }
 
   \* LET \* &type: (a, Int) => Set(a -> Int);
   \*     AllSingleElemBags(elem, max) == { [e \in {elem} |-> k]: k \in 1..max }

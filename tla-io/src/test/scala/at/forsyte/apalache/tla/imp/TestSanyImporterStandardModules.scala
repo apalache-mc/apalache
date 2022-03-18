@@ -473,13 +473,13 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
       """.stripMargin
 
     val (_, modules) = sanyImporter.loadFromSource("localSum", Source.fromString(text))
-    assert(4 == modules.size) // Naturals, Sequences, TLC, FiniteSets, Bags, and our module
+    assert(7 == modules.size) // Naturals, Sequences, TLC, FiniteSets, Bags, and our module
 
     val root = modules("localSum")
     expectSourceInfoInDefs(root)
     // This number may change when a new version of Bags.tla is shipped in tla2tools.jar.
     // The declarations include the declarations by __rewire_tlc_in_apalache.tla and Bags.tla.
-    assert(27 == root.declarations.size)
+    assert(14 == root.declarations.size)
   }
 
   test("EXTENDS Apalache") {
