@@ -67,6 +67,8 @@ object StandardLibrary {
         ("__apalache_folds", "__ApalacheFoldSet") -> ApalacheOper.foldSet,
         ("Apalache", "FoldSeq") -> ApalacheOper.foldSeq,
         ("__apalache_folds", "__ApalacheFoldSeq") -> ApalacheOper.foldSeq,
+        ("ApalacheInternal", "__NotSupportedByModelChecker") -> ApalacheInternalOper.notSupportedByModelChecker,
+        ("ApalacheInternal", "__ApalacheSeqCapacity") -> ApalacheInternalOper.apalacheSeqCapacity,
     ) ////
 
   /**
@@ -80,6 +82,8 @@ object StandardLibrary {
         "TLC.tla" -> "__rewire_tlc_in_apalache.tla",
         "Sequences.tla" -> "__rewire_sequences_in_apalache.tla",
         "Bags.tla" -> "__rewire_bags_in_apalache.tla",
+        // will be enabled later
+        //        "SequencesExt.tla" -> "__rewire_sequences_ext_in_apalache.tla",
     ) ////
 
   /**

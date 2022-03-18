@@ -275,6 +275,8 @@ class SymbStateRewriterImpl(
           -> List(new SeqOpsRule(this)),
         key(tla.len(tla.tuple(tla.name("x"))))
           -> List(new SeqOpsRule(this)),
+        key(OperEx(ApalacheInternalOper.apalacheSeqCapacity, tla.name("seq")))
+          -> List(new SeqOpsRule(this)),
         key(tla.append(tla.tuple(tla.name("x")), tla.int(10)))
           -> List(new SeqOpsRule(this)),
         key(tla.concat(tla.name("Seq1"), tla.name("Seq2")))
