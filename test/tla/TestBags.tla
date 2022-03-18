@@ -1,6 +1,6 @@
 ---------- MODULE TestBags ----------
 
-EXTENDS Integers, ApalacheBags
+EXTENDS Integers, Bags
 
 \* @type: (a, Int) => a -> Int;
 SingleElemBag(x, N) == [e \in {x} |-> N]
@@ -105,7 +105,89 @@ TestBagUnion ==
     /\ BagToSet(BU) = {"a","c"}
     /\ BU["a"] = 3
 
+TestSqsubseteq ==
+  LET 
+    A1 == SingleElemBag(1, 1)
+    A2 == SingleElemBag(1, 2)
+    B1 == SingleElemBag("a", 1)
+    B2 == SingleElemBag("c", 3)
+  IN LET
+    A1A2 == A1 \sqsubseteq A2
+    A2A1 == A2 \sqsubseteq A1
+    B1B2 == B1 \sqsubseteq B2
+    B2B1 == B2 \sqsubseteq B1
+  IN
+    /\ A1A2 
+    /\ ~A2A1
+    /\ ~B1B2
+    /\ ~B2B1
 
+\* Disabled, because SubBag is not supported
+TestSubBag == TRUE
+
+TestBagOfAll ==
+  LET
+    \* injective
+    \* @type: (a) => <<a,a>>;
+    F1(x) == <<x,x>>
+    \* non-injective
+    \* @type: (a) => Int;
+    F2(x) == 1
+  IN LET
+    A1 == SingleElemBag(1, 1) (+) SingleElemBag(2, 2)
+    A2 == SingleElemBag("a", 1) (+) SingleElemBag("c", 3)
+  IN LET 
+    A1F1 == BagOfAll(F1, A1)
+    A1F2 == BagOfAll(F2, A1)
+    A2F1 == BagOfAll(F1, A2)
+    A2F2 == BagOfAll(F2, A2)
+  IN
+    /\ DOMAIN A1F1 = {<<1,1>>, <<2,2>>}
+    /\ A1F1[1,1] = 1
+    /\ A1F1[2,2] = 2
+    /\ A1F2 = SingleElemBag(1,3)
+    /\ DOMAIN A2F1 = {<<"a","a">>, <<"c","c">>}
+    /\ A2F1["a","a"] = 1
+    /\ A2F1["c","c"] = 3
+    /\ A2F2 = SingleElemBag(1,4)
+
+TestBagCardinality ==
+  LET
+    A1 == SingleElemBag(1, 1)
+    A2 == SingleElemBag(1, 3)
+    B1 == SingleElemBag("a", 1)
+    B2 == SingleElemBag("b", 2)
+    \* @type: Int -> Int;
+    EB == EmptyBag
+  IN LET
+    CA1 == BagCardinality(A1)
+    CA2 == BagCardinality(A2)
+    CB1 == BagCardinality(B1)
+    CB2 == BagCardinality(B2)
+  IN
+    /\ CA1 = 1
+    /\ CA2 = 3
+    /\ CB1 = 1
+    /\ CB2 = 2
+    /\ BagCardinality(EB) = 0
+    /\ BagCardinality(A1 (+) A1) = 2 * CA1
+    /\ BagCardinality(A1 (+) A2) = CA1 + CA2
+    /\ BagCardinality(B2 (-) B1) = CB2 \* B2 - B1 = B2
+
+TestCopiesIn ==
+  LET
+    A == SingleElemBag(1, 1) (+) SingleElemBag(1, 3)
+    B == SingleElemBag("a", 1) (+) SingleElemBag("b", 2)
+    \* @type: Str -> Int;
+    EB == EmptyBag
+  IN 
+    /\ CopiesIn(1, A) = 4
+    /\ CopiesIn(2, A) = 0
+    /\ CopiesIn("a", B) = 1
+    /\ CopiesIn("b", B) = 2
+    /\ CopiesIn("c", B) = 0
+    /\ CopiesIn("a", EB) = 0
+    /\ CopiesIn("b", EB) = 0
 
 Init == TRUE
 
@@ -120,5 +202,10 @@ Inv ==
   /\ TestPlus
   /\ TestMinus
   /\ TestBagUnion
+  /\ TestSqsubseteq
+  /\ TestSubBag
+  /\ TestBagOfAll
+  /\ TestBagCardinality
+  /\ TestCopiesIn
 
 ====================
