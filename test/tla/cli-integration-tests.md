@@ -2650,7 +2650,7 @@ $ rm -rf ./run-dir ./.apalache.cfg
 
 ## module lookup
 
-### looks up modules in the same directory
+### module lookup: looks up modules in the same directory
 
 Regression test for https://github.com/informalsystems/apalache/issues/426
 
@@ -2663,7 +2663,7 @@ VARIABLE same_dir
 $ rm output.tla
 ```
 
-### looks up modules in the current working directory
+### module lookup: looks up modules in the current working directory
 
 Files in current working directory take precedence over
 
@@ -2677,6 +2677,19 @@ EXITCODE: OK
 $ cat module-lookup/output.tla | grep VARIABLE
 VARIABLE parent_dir
 $ rm module-lookup/output.tla
+```
+
+### module lookup: looks up modules when in same directory
+
+Test relative paths without prefixed directories
+
+```sh
+$ cd module-lookup/subdir && apalache-mc parse --output=output.tla Including.tla
+...
+EXITCODE: OK
+$ cat module-lookup/subdir/output.tla | grep VARIABLE
+VARIABLE same_dir
+$ rm module-lookup/subdir/output.tla
 ```
 
 ## server mode

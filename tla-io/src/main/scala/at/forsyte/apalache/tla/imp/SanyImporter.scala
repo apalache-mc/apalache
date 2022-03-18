@@ -42,7 +42,7 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) {
     // Apalache Standard library in `src/tla` when running unit tests).
     // Compatible with TLC at commit https://github.com/tlaplus/tlaplus/commit/b905a86e31714bf5002290141b51b41ffe280c8e
     val filenameResolver = if (useRelativePathLookup) {
-      file.getParent() match {
+      file.getAbsoluteFile().getParent() match {
         case null          => SanyNameToStream()
         case parentDirPath => SanyNameToStream(parentDirPath)
       }
