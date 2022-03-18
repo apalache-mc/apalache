@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import java.io.StringWriter
-
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.convenience.tla
 import org.scalatest.funsuite.FixtureAnyFunSuite
+
+import java.io.StringWriter
 
 trait RewriterBase extends FixtureAnyFunSuite {
   protected type FixtureParam = SMTEncoding
@@ -30,8 +30,8 @@ trait RewriterBase extends FixtureAnyFunSuite {
     }
   }
 
-  protected def assertUnsatOrExplain(rewriter: SymbStateRewriter, state: SymbState): Unit = {
-    assertOrExplain("UNSAT", rewriter, state, !solverContext.sat())
+  protected def assertUnsatOrExplain(): Unit = {
+    assertOrExplain("UNSAT", !solverContext.sat())
   }
 
   protected def assumeTlaEx(rewriter: SymbStateRewriter, state: SymbState): SymbState = {
@@ -51,16 +51,12 @@ trait RewriterBase extends FixtureAnyFunSuite {
     rewriter.pop()
     rewriter.push()
     solverContext.assertGroundExpr(tla.not(nextState.ex))
-    assertUnsatOrExplain(rewriter, nextState)
+    assertUnsatOrExplain()
     rewriter.pop()
     rewriter.pop()
   }
 
-  private def assertOrExplain(
-      msg: String,
-      rewriter: SymbStateRewriter,
-      state: SymbState,
-      outcome: Boolean): Unit = {
+  private def assertOrExplain(msg: String, outcome: Boolean): Unit = {
     if (!outcome) {
       val writer = new StringWriter()
       solverContext.log(writer.getBuffer.toString)
@@ -68,6 +64,5 @@ trait RewriterBase extends FixtureAnyFunSuite {
       solverContext.pop()
       fail("Expected %s, check log.smt for explanation".format(msg))
     }
-
   }
 }
