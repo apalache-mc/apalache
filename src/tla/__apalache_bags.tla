@@ -10,7 +10,6 @@
 EXTENDS Apalache, Integers
 
 \* A bag is a function from `a` to Int, where `a` is the type of the bag contents
-\* TODO: Currently, type aliasing is not fully hashed out for parameterized types.
 \*       One can alias `typeAlias: A = a -> a`,
 \*       but (A, a) is NOT equivalent to (a -> a, a), but to `(b -> b, a)` instead.
 \* Avoid using the alias until this is resolved.
@@ -82,7 +81,7 @@ BagUnion(S) ==
   LET
     \* @type: (a -> Int,a -> Int) => a -> Int;
     PlusAsPrefix(B1,B2) == B1 (+) B2
-  IN FoldSet( PlusAsPrefix, [x \in {} |-> 0], S )
+  IN FoldSet( PlusAsPrefix, EmptyBag, S )
 
 \* @type: (a -> Int, a -> Int) => Bool;
 B1 \sqsubseteq B2  ==

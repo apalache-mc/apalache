@@ -14,15 +14,8 @@ TestIsABag ==
     /\ ~IsABag(FakeBag)
 
 TestBagToSet ==
-  \* Workaround, see #1084
-  LET
-    \* &type: Set(Int);
-    B2S1 == BagToSet(SingleElemBag(1,1))
-    \* &type: Set(Str);
-    B2S2 == BagToSet(SingleElemBag("a", 1))
-  IN
-    /\ B2S1 = {1}
-    /\ B2S2 = {"a"}
+  /\ BagToSet(SingleElemBag(1,1)) = {1}
+  /\ BagToSet(SingleElemBag("a", 1)) = {"a"}
 
 TestSetToBag ==
   LET
@@ -101,16 +94,16 @@ TestBagUnion ==
     A1 == SingleElemBag(1, 1)
     A2 == SingleElemBag(1, 2)
     A3 == SingleElemBag(1, 3)
-    \* B1 == SingleElemBag("a", 1)
-    \* B2 == SingleElemBag("a", 2)
-    \* B3 == SingleElemBag("c", 3)
+    B1 == SingleElemBag("a", 1)
+    B2 == SingleElemBag("a", 2)
+    B3 == SingleElemBag("c", 3)
   IN LET
     AU == BagUnion({A1,A2,A3})
-    \* BU == BagUnion({B1,B2,B3})
+    BU == BagUnion({B1,B2,B3})
   IN
     /\ AU = SingleElemBag(1, 6)
-    \* /\ BagToSet(BU) = {"a","c"}
-    \* /\ BU["a"] = 3
+    /\ BagToSet(BU) = {"a","c"}
+    /\ BU["a"] = 3
 
 
 
@@ -119,13 +112,13 @@ Init == TRUE
 Next == TRUE
 
 Inv ==
-  \* /\ TestIsABag
-  \* /\ TestBagToSet
-  \* /\ TestSetToBag
-  \* /\ TestBagIn
-  \* /\ TestEmptyBag
-  \* /\ TestPlus
-  \* /\ TestMinus
+  /\ TestIsABag
+  /\ TestBagToSet
+  /\ TestSetToBag
+  /\ TestBagIn
+  /\ TestEmptyBag
+  /\ TestPlus
+  /\ TestMinus
   /\ TestBagUnion
 
 ====================
