@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
  * @author
  *   Igor Konnov
  */
-class PrimeRule(rewriter: SymbStateRewriter) extends RewritingRule {
+class PrimeRule extends RewritingRule {
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
       case OperEx(TlaActionOper.prime, _) => true
