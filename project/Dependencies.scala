@@ -20,7 +20,7 @@ object Dependencies {
       "commons-beanutils" % "commons-beanutils" % "1.9.4" // Apparently an untracked dependency of commonsConfiguration2
     val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.7"
     val commonsIo = "commons-io" % "commons-io" % "2.11.0"
-    val guice = "com.google.inject" % "guice" % "5.0.1"
+    val guice = "com.google.inject" % "guice" % "5.1.0"
     val kiama = "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.5.0"
     val logbackClassic = "ch.qos.logback" % "logback-classic" % logbackVersion
     val logbackCore = "ch.qos.logback" % "logback-core" % logbackVersion
@@ -30,7 +30,7 @@ object Dependencies {
     val scalaz = "org.scalaz" %% "scalaz-core" % "7.3.5"
     val slf4j = "org.slf4j" % "slf4j-api" % "1.7.33"
     val tla2tools = "org.lamport" % "tla2tools" % "1.7.0-SNAPSHOT"
-    val ujson = "com.lihaoyi" %% "ujson" % "1.4.4"
+    val ujson = "com.lihaoyi" %% "ujson" % "1.5.0"
     val z3 = "io.github.tudo-aqua" % "z3-turnkey" % "4.8.14"
   }
 

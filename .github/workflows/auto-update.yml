@@ -1,0 +1,18 @@
+# Help automate PR updates
+# See https://github.com/tibdex/auto-update/blob/main/.github/workflows/auto-update.yml
+name: Auto-update
+# Auto-update only listens to `push` events.
+# If a pull request is already outdated when enabling auto-merge, manually click on the "Update branch" button a first time to avoid having to wait for another commit to land on the base branch for the pull request to be updated.
+on:
+  push:
+    branches:
+      - unstable
+
+jobs:
+  Auto:
+    name: Auto-update
+    runs-on: ubuntu-latest
+    steps:
+      - uses: tibdex/auto-update@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}

@@ -93,6 +93,10 @@ class KeraLanguagePred extends ContextualLanguagePred {
           PredResultOk()
         }
 
+      case e @ OperEx(ApalacheInternalOper.notSupportedByModelChecker, ValEx(TlaStr(msg))) =>
+        // unconditionally report an error
+        PredResultFail(List((e.ID, "Not supported: " + msg)))
+
       case e =>
         PredResultFail(List((e.ID, e.toString)))
     }
@@ -122,6 +126,7 @@ object KeraLanguagePred {
         ApalacheOper.expand,
         ApalacheOper.constCard,
         ApalacheOper.setAsFun,
+        ApalacheInternalOper.apalacheSeqCapacity,
         // for the future
         //    TlaActionOper.enabled,
         //    TlaActionOper.unchanged,
