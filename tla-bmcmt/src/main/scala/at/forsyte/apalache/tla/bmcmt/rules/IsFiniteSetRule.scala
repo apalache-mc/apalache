@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.oper.TlaFiniteSetOper
 import at.forsyte.apalache.tla.lir.OperEx
+import scalaz.unused
 
 /**
  * Implements the IsFiniteSet operator. It is trivial in our case.
@@ -10,7 +11,7 @@ import at.forsyte.apalache.tla.lir.OperEx
  * @author
  *   Igor Konnov
  */
-class IsFiniteSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
+class IsFiniteSetRule(@unused rewriter: SymbStateRewriter) extends RewritingRule {
   override def isApplicable(state: SymbState): Boolean = {
     state.ex match {
       case OperEx(TlaFiniteSetOper.isFiniteSet, _) =>
