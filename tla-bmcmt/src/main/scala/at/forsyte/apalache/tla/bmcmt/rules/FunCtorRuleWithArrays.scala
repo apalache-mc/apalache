@@ -32,11 +32,11 @@ class FunCtorRuleWithArrays(rewriter: SymbStateRewriter) extends FunCtorRule(rew
 
     // We calculate and propagate the set of pairs <arg,res> for cex generation
     val pairEx = tla.tuple(tla.name(varName).typed(funT1.arg), mapEx).typed(TupT1(funT1.arg, funT1.res))
-    val (afterMapPairExState, relationCells) = mapCells(nextState, pairEx, varName, setEx, domainCells)
+    val (afterMapPairExState, relationCells) = mapCells(nextState, pairEx, varName, domainCells)
     nextState = afterMapPairExState
 
     // We calculate the range of the function to generate the SMT constraints
-    val (afterMapMapExState, rangeCells) = mapCells(nextState, mapEx, varName, setEx, domainCells)
+    val (afterMapMapExState, rangeCells) = mapCells(nextState, mapEx, varName, domainCells)
     nextState = afterMapMapExState
 
     // A constant SMT array constrained to a default value is used to encode the function
