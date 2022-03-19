@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.types.IntT
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.ApalacheOper
+import at.forsyte.apalache.tla.lir.oper.{ApalacheInternalOper, ApalacheOper, TlaArithOper}
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.values.TlaInt
@@ -30,8 +30,6 @@ class MkSeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = state.ex match {
     case OperEx(ApalacheOper.mkSeq, lenEx, LetInEx(NameEx(_), opDecl)) =>
-      val capacity = extractCapacity(lenEx)
-
       val operT = opDecl.typeTag.asTlaType1()
       val elemT = operT match {
         case OperT1(Seq(IntT1()), et) => et
@@ -56,7 +54,8 @@ class MkSeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
       }
 
       // create the proto sequence with the help of the user-defined operator
-      var nextState = proto.make(state, capacity, mkElem)
+      val (capState, capacity) = computeCapacity(state, lenEx)
+      var nextState = proto.make(capState, capacity, mkElem)
       val protoSeq = nextState.asCell
       // create the sequence on top of the proto sequence
       nextState = nextState.updateArena(_.appendCell(IntT()))
@@ -68,19 +67,46 @@ class MkSeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
       throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
   }
 
-  // extract capacity from the length expression
-  private def extractCapacity(lenEx: TlaEx): Int = {
-    lenEx match {
-      case ValEx(TlaInt(n)) if n.isValidInt && n >= 0 =>
-        n.toInt
+  // Extract capacity from a constant expression that may contain a call to __ApalacheSeqCapacity.
+  // The main use for this method is internal rewiring, e.g., in `__rewire_sequences_ext_in_apalache.tla`.
+  // This code somewhat duplicates ConstSimplifier.
+  private def computeCapacity: (SymbState, TlaEx) => (SymbState, Int) = {
+    case (state, ValEx(TlaInt(n))) if n.isValidInt && n >= 0 =>
+      (state, n.toInt)
 
-      case ValEx(TlaInt(n)) if !n.isValidInt || n < 0 =>
-        val msg = s"Expected an integer in the range [0, ${Int.MaxValue}]. Found: $n"
-        throw new TlaInputError(msg, Some(lenEx.ID))
+    case (_, e @ ValEx(TlaInt(n))) if !n.isValidInt || n < 0 =>
+      val msg = s"Expected an integer in the range [0, ${Int.MaxValue}]. Found: $n"
+      throw new TlaInputError(msg, Some(e.ID))
 
-      case unexpectedEx =>
-        val msg = "Expected a constant integer expression. Found: " + unexpectedEx
-        throw new TlaInputError(msg, Some(lenEx.ID))
-    }
+    case (state, OperEx(ApalacheInternalOper.apalacheSeqCapacity, seq)) =>
+      // rewrite the sequence expression and extract its constant capacity
+      val nextState = rewriter.rewriteUntilDone(state.setRex(seq))
+      val (_, _, capacity) = proto.unpackSeq(nextState.arena, nextState.asCell)
+      (nextState, capacity)
+
+    case (state, OperEx(TlaArithOper.plus, left, right)) =>
+      val (lstate, lcap) = computeCapacity(state, left)
+      val (rstate, rcap) = computeCapacity(lstate, right)
+      (rstate, lcap + rcap)
+
+    case (state, OperEx(TlaArithOper.minus, left, right)) =>
+      val (lstate, lcap) = computeCapacity(state, left)
+      val (rstate, rcap) = computeCapacity(lstate, right)
+      (rstate, lcap - rcap)
+
+    case (state, OperEx(TlaArithOper.mult, left, right)) =>
+      val (lstate, lcap) = computeCapacity(state, left)
+      val (rstate, rcap) = computeCapacity(lstate, right)
+      (rstate, lcap * rcap)
+
+    case (state, OperEx(TlaArithOper.div, left, right)) =>
+      val (lstate, lcap) = computeCapacity(state, left)
+      val (rstate, rcap) = computeCapacity(lstate, right)
+      (rstate, lcap / rcap)
+
+    case (_, unexpectedEx) =>
+      val msg = "Expected a constant integer expression. Found: " + unexpectedEx
+      throw new TlaInputError(msg, Some(unexpectedEx.ID))
+
   }
 }
