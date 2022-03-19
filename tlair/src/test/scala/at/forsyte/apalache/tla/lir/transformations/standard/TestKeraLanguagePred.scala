@@ -4,6 +4,8 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.oper.ApalacheInternalOper
+import at.forsyte.apalache.tla.lir.transformations.PredResultFail
 import org.junit.runner.RunWith
 import org.scalatestplus.junit.JUnitRunner
 
@@ -111,6 +113,13 @@ class TestKeraLanguagePred extends LanguagePredTestSuite {
   test("not a KerA control expression") {
     expectFail(pred.isExprOk(caseOther(int(1), bool(false), int(2))))
     expectFail(pred.isExprOk(caseSplit(bool(false), int(2))))
+  }
+
+  test("not supported by the model checker") {
+    pred.isExprOk(OperEx(ApalacheInternalOper.notSupportedByModelChecker, str("foo"))) match {
+      case PredResultFail(Seq((_, "Not supported: foo"))) => () // OK
+      case _                                              => fail("expected a failure")
+    }
   }
 
   /**

@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, OperEx, RecT1, SeqT1, SetT1, TlaEx, TlaType1, TupT1, ValEx}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
+import scalaz.unused
 
 /**
  * Rewriting EXCEPT for functions, tuples, and records.
@@ -163,7 +164,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
   def rewriteTuple(
       state: SymbState,
       oldTuple: ArenaCell,
-      tupleT: TupT1,
+      @unused tupleT: TupT1,
       indexEx: TlaEx,
       newValue: ArenaCell): SymbState = {
 
