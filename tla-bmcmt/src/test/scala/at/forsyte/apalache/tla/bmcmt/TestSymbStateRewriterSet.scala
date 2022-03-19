@@ -846,7 +846,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
         rewriter.pop()
         rewriter.push()
         solverContext.assertGroundExpr(not(predEx.as(boolT)).as(boolT))
-        assertUnsatOrExplain(rewriter, nextState)
+        assertUnsatOrExplain()
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -867,7 +867,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
         rewriter.pop()
         rewriter.push()
         solverContext.assertGroundExpr(not(predEx.as(boolT)).as(boolT))
-        assertUnsatOrExplain(rewriter, nextState)
+        assertUnsatOrExplain()
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -889,7 +889,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
         rewriter.pop()
         rewriter.push()
         solverContext.assertGroundExpr(not(predEx.as(boolT)).as(boolT))
-        assertUnsatOrExplain(rewriter, nextState)
+        assertUnsatOrExplain()
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -907,7 +907,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
       case predEx @ NameEx(_) =>
         rewriter.push()
         solverContext.assertGroundExpr(predEx)
-        assertUnsatOrExplain(rewriter, nextState)
+        assertUnsatOrExplain()
         rewriter.pop()
         rewriter.push()
         solverContext.assertGroundExpr(not(predEx.as(boolT)).as(boolT))
@@ -936,7 +936,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
         rewriter.pop()
         rewriter.push()
         solverContext.assertGroundExpr(not(predEx.as(boolT)).as(boolT))
-        assertUnsatOrExplain(rewriter, nextState)
+        assertUnsatOrExplain()
 
       case _ =>
         fail("Unexpected rewriting result")

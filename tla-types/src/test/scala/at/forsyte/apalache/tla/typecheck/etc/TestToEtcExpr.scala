@@ -6,7 +6,7 @@ import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper}
+import at.forsyte.apalache.tla.lir.oper.{ApalacheInternalOper, ApalacheOper, TlaFunOper}
 import at.forsyte.apalache.tla.lir.values.TlaReal
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
@@ -798,6 +798,20 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     val typ = parser("(a, a) => Bool")
     val expected = mkAppByName(Seq(typ), "x", "y")
     val ex = OperEx(ApalacheOper.distinct, tla.name("x"), tla.name("y"))
+    assert(expected == gen(ex))
+  }
+
+  test("ApalacheInternal!__ApalacheSeqCapacity") {
+    val typ = parser("Seq(a) => Int")
+    val expected = mkAppByName(Seq(typ), "x")
+    val ex = OperEx(ApalacheInternalOper.apalacheSeqCapacity, tla.name("x"))
+    assert(expected == gen(ex))
+  }
+
+  test("ApalacheInternal!__NotSupportedByModelChecker") {
+    val typ = parser("Str => a")
+    val expected = mkAppByName(Seq(typ), "x")
+    val ex = OperEx(ApalacheInternalOper.notSupportedByModelChecker, tla.name("x"))
     assert(expected == gen(ex))
   }
 

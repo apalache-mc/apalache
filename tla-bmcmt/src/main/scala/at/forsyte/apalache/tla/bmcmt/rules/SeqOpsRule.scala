@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.types.IntT
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.TlaSeqOper
+import at.forsyte.apalache.tla.lir.oper.{ApalacheInternalOper, TlaSeqOper}
 
 /**
  * Sequence operations: Head, Tail, Len, SubSeq, Append, Concat.
@@ -20,12 +20,13 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
-      case OperEx(TlaSeqOper.head, _)         => true
-      case OperEx(TlaSeqOper.tail, _)         => true
-      case OperEx(TlaSeqOper.subseq, _, _, _) => true
-      case OperEx(TlaSeqOper.len, _)          => true
-      case OperEx(TlaSeqOper.append, _, _)    => true
-      case OperEx(TlaSeqOper.concat, _, _)    => true
+      case OperEx(TlaSeqOper.head, _)                          => true
+      case OperEx(TlaSeqOper.tail, _)                          => true
+      case OperEx(TlaSeqOper.subseq, _, _, _)                  => true
+      case OperEx(TlaSeqOper.len, _)                           => true
+      case OperEx(TlaSeqOper.append, _, _)                     => true
+      case OperEx(TlaSeqOper.concat, _, _)                     => true
+      case OperEx(ApalacheInternalOper.apalacheSeqCapacity, _) => true
       // TlaSeqOper.selectseq => ???
       case _ => false
     }
@@ -51,6 +52,12 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
       case OperEx(TlaSeqOper.concat, seq, otherSeq) =>
         translateConcat(state, seq, otherSeq)
+
+      case OperEx(ApalacheInternalOper.apalacheSeqCapacity, seq) =>
+        val nextState = rewriter.rewriteUntilDone(state.setRex(seq))
+        val seqCell = nextState.asCell
+        val (_, _, capacity) = proto.unpackSeq(nextState.arena, seqCell)
+        nextState.setRex(tla.int(capacity).as(IntT1()))
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
