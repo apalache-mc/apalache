@@ -183,4 +183,70 @@ ReplaceAt(s, i, e) ==
 RemoveAt(s, i) == 
   SubSeq(s, 1, i - 1) \o SubSeq(s, i + 1, Len(s))
 
+-----------------------------------------------------------------------------
+
+(**
+ * Cons prepends an element at the beginning of a sequence.
+ *
+ * @type: (a, Seq(a)) => Seq(a);
+ *)
+Cons(elt, seq) == 
+    <<elt>> \o seq
+
+(**
+ * The sequence formed by removing its last element.
+ *
+ * @type: Seq(a) => Seq(a);
+ *)
+Front(seq) == 
+  SubSeq(seq, 1, Len(seq) - 1)
+
+(**
+ * The last element of the sequence.
+ *
+ * @type: Seq(a) => a;
+ *)
+Last(seq) ==
+  seq[Len(seq)]
+
+-----------------------------------------------------------------------------
+
+(**
+ * TRUE iff the sequence s is a prefix of the sequence t, s.t.
+ * \E u \in Seq(Range(t)) : t = s \o u. In other words, there exists
+ * a suffix u that with s prepended equals t.
+ *
+ * @type: (Seq(a), Seq(a)) => Bool;
+ *)
+IsPrefix(s, t) ==
+  Len(s) <= Len(t) /\ SubSeq(s, 1, Len(s)) = SubSeq(t, 1, Len(s))
+
+(**
+ * TRUE iff the sequence s is a prefix of the sequence t and s # t
+ *
+ * @type: (Seq(a), Seq(a)) => Bool;
+ *)
+IsStrictPrefix(s,t) ==
+  IsPrefix(s, t) /\ s # t
+
+(**
+ * TRUE iff the sequence s is a suffix of the sequence t, s.t.
+ * \E u \in Seq(Range(t)) : t = u \o s. In other words, there exists a
+ * prefix that with s appended equals t.
+ *
+ * @type: (Seq(a), Seq(a)) => Bool;
+ *)
+IsSuffix(s, t) ==
+  IsPrefix(Reverse(s), Reverse(t))
+
+(**
+ * TRUE iff the sequence s is a suffix of the sequence t and s # t
+ *
+ * @type: (Seq(a), Seq(a)) => Bool;
+ *)
+IsStrictSuffix(s, t) ==
+  IsSuffix(s,t) /\ s # t
+  
+-----------------------------------------------------------------------------
+
 ===============================================================================

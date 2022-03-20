@@ -176,6 +176,81 @@ TestReplaceAt1 ==
 TestReplaceAt2 ==
     ReplaceAt(<<1, 1, 1>>, 1, 2) = <<2, 1, 1>>
 
+TestCons1 ==
+    Cons(3, <<2, 4>>) = <<3, 2, 4>>
+
+TestFront1 ==
+    Front(<<3, 4, 5>>) = <<3, 4>>
+
+TestLast1 ==
+    Last(<<3, 4, 5>>) = 5
+
+TestPrefix1 ==
+    IsPrefix(intSeqEmpty, intSeqEmpty)
+
+TestPrefix2 ==
+    IsPrefix(intSeqEmpty, <<1>>)
+
+TestPrefix3 ==
+    IsPrefix(<<1>>, <<1,2>>)
+
+TestPrefix4 ==
+    IsPrefix(<<1,2>>, <<1,2>>)
+
+TestPrefix5 ==
+    IsPrefix(<<1,2>>, <<1,2,3>>)
+
+TestPrefix6 ==
+    ~IsPrefix(<<1,2,3>>, <<1,2>>)
+
+TestPrefix7 ==
+    ~IsPrefix(<<1,2,2>>, <<1,2,3>>)
+
+TestPrefix8 ==
+    ~IsPrefix(<<1,2,3>>, <<1,2,2>>)
+
+TestPrefix9 ==
+    ~IsPrefix(<<1>>, <<2>>)
+
+TestPrefix10 ==
+    ~IsPrefix(<<2>>, <<1>>)
+
+TestPrefix11 ==
+    ~IsPrefix(<<2,1>>, <<1,2>>)
+
+TestPrefix12 ==
+    ~IsPrefix(<<1,2>>, <<2,1>>)
+
+TestIsStrictPrefix1 ==
+    ~IsStrictPrefix(intSeqEmpty, intSeqEmpty)
+
+TestIsStrictPrefix2 ==
+    IsStrictPrefix(intSeqEmpty, <<1>>)
+
+TestIsStrictPrefix3 ==
+    IsStrictPrefix(<<1>>, <<1,2>>)
+
+TestIsStrictPrefix4 ==
+    ~IsStrictPrefix(<<1,2>>, <<1,2>>)
+
+TestIsStrictPrefix5 ==
+    IsStrictPrefix(<<1,2>>, <<1,2,3>>)
+
+TestSuffix1 ==
+    IsSuffix(<<3>>, <<1,2,3>>)
+
+TestSuffix2 ==
+    IsSuffix(<<2,3>>, <<1,2,3>>)
+
+TestSuffix3 ==
+    ~IsSuffix(<<3,2>>, <<1,2,3>>)
+
+TestSuffix4 ==
+    IsSuffix(<<1,2,3>>, <<1,2,3>>)
+
+TestIsStrictSuffix1 ==
+    ~IsStrictSuffix(<<1,2,3>>, <<1,2,3>>)
+
 \* this test is a disjunction of all smaller tests
 AllTests ==
     /\ TestSetToSeq1
@@ -224,5 +299,30 @@ AllTests ==
     /\ TestRemoveAt2
     /\ TestRemoveAt3
     /\ TestRemoveAt4
+    /\ TestCons1
+    /\ TestFront1
+    /\ TestLast1
+    /\ TestPrefix1
+    /\ TestPrefix2
+    /\ TestPrefix3
+    /\ TestPrefix4
+    /\ TestPrefix5
+    /\ TestPrefix6
+    /\ TestPrefix7
+    /\ TestPrefix8
+    /\ TestPrefix9
+    /\ TestPrefix10
+    /\ TestPrefix11
+    /\ TestPrefix12
+    /\ TestIsStrictPrefix1
+    /\ TestIsStrictPrefix2
+    /\ TestIsStrictPrefix3
+    /\ TestIsStrictPrefix4
+    /\ TestIsStrictPrefix5
+    /\ TestSuffix1
+    /\ TestSuffix2
+    /\ TestSuffix3
+    /\ TestSuffix4
+    /\ TestIsStrictSuffix1
 
 ===============================================================================
