@@ -249,4 +249,34 @@ IsStrictSuffix(s, t) ==
   
 -----------------------------------------------------------------------------
 
+(**
+ * The set of prefixes of the sequence s, including the empty sequence.
+ *
+ * @type: Seq(a) => Set(Seq(a));
+ *)
+Prefixes(s) ==
+  { SubSeq(s, 1, l) : l \in DOMAIN s } \union { <<>> }
+
+(**
+ * The set of all sequences that are prefixes of the set of sequences S.
+ *
+ * @type: Set(Seq(a)) => Set(Seq(a));
+ *)
+CommonPrefixes(S) ==
+  \* TODO: use FoldSet?
+  LET P == UNION { Prefixes(seq) : seq \in S }
+  IN { prefix \in P : \A t \in S: IsPrefix(prefix, t) }
+
+(**
+ * The longest common prefix of the sequences in the set S.
+ *
+ * @type: Set(Seq(a)) => Seq(a);
+ *)
+LongestCommonPrefix(S) ==
+  CHOOSE longest \in CommonPrefixes(S):  \* there can only be one LCP => CHOOSE
+      \A other \in CommonPrefixes(S):
+          Len(other) <= Len(longest)
+
+-----------------------------------------------------------------------------
+
 ===============================================================================

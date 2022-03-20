@@ -251,6 +251,37 @@ TestSuffix4 ==
 TestIsStrictSuffix1 ==
     ~IsStrictSuffix(<<1,2,3>>, <<1,2,3>>)
 
+TestPrefixes1 ==
+    Prefixes(<<"a", "b", "c">>) =
+        {<<>>, <<"a">>, <<"a", "b">>, <<"a", "b", "c">>}
+
+TestPrefixes2 ==
+    LET \* @type: Set(Seq(Str));
+        S == {<<"a", "b", "c">>, <<"a", "b", "d">>}
+    IN
+    LET P == UNION { Prefixes(seq) : seq \in S } IN
+    P = {<<>>, <<"a">>, <<"a", "b">>, <<"a", "b", "c">>, <<"a", "b", "d">>}
+
+TestCommonPrefixes1 ==
+    CommonPrefixes({<<"a", "b", "c">>, <<"a", "b", "d">>})
+        = {<<>>, <<"a">>, <<"a", "b">>}
+
+TestLongestCommonPrefix1 ==
+    LongestCommonPrefix({<<"a", "b", "c">>, <<"a", "b", "d">>}) = <<"a", "b">>
+
+TestLongestCommonPrefix2 ==
+    LongestCommonPrefix({<<"a", "b", "c">>, <<"a">>}) = <<"a">>
+
+TestLongestCommonPrefix3 ==
+    LongestCommonPrefix({strSeqEmpty}) = strSeqEmpty
+
+TestLongestCommonPrefix4 ==
+    LongestCommonPrefix({<<"a">>, <<"b">>}) = strSeqEmpty
+
+TestLongestCommonPrefix5 ==
+    LongestCommonPrefix({<<"a", "b", "c">>,
+        <<"a", "b", "c", "c">>, <<"a", "b", "c", "d">>}) = <<"a", "b", "c">>
+
 \* this test is a disjunction of all smaller tests
 AllTests ==
     /\ TestSetToSeq1
@@ -324,5 +355,15 @@ AllTests ==
     /\ TestSuffix3
     /\ TestSuffix4
     /\ TestIsStrictSuffix1
+    /\ TestPrefixes1
+    /\ TestPrefixes2
+    (*
+    /\ TestCommonPrefixes1
+    /\ TestLongestCommonPrefix1
+    /\ TestLongestCommonPrefix2
+    /\ TestLongestCommonPrefix3
+    /\ TestLongestCommonPrefix4
+    /\ TestLongestCommonPrefix5
+    *)
 
 ===============================================================================
