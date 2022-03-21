@@ -103,6 +103,11 @@ class SymbStateRewriterImpl(
   val modelValueCache = new ModelValueCache(solverContext)
 
   /**
+   * A cache for default values.
+   */
+  val defaultValueCache = new DefaultValueCache(this)
+
+  /**
    * A cache of record domains.
    */
   val recordDomainCache = new RecordDomainCache(solverContext, modelValueCache)
@@ -114,7 +119,7 @@ class SymbStateRewriterImpl(
   val exprCache = new ExprCache(exprGradeStore)
 
   @transient
-  protected lazy val substRule = new SubstRule(this)
+  protected lazy val substRule = new SubstRule
 
   /**
    * A storage for the messages associated with assertion failures, see MessageStorage.
@@ -154,19 +159,19 @@ class SymbStateRewriterImpl(
         key(NameEx("x"))
           -> List(substRule),
         key(tla.prime(NameEx("x")))
-          -> List(new PrimeRule(this)),
+          -> List(new PrimeRule),
         // assignment
         key(OperEx(ApalacheOper.assign, tla.name("x"), tla.name("y")))
           -> List(new AssignmentRule(this)),
         // constants
         key(ValEx(TlaBool(true)))
-          -> List(new BuiltinConstRule(this)),
+          -> List(new BuiltinConstRule),
         key(ValEx(TlaBoolSet))
-          -> List(new BuiltinConstRule(this)),
+          -> List(new BuiltinConstRule),
         key(ValEx(TlaIntSet))
-          -> List(new BuiltinConstRule(this)),
+          -> List(new BuiltinConstRule),
         key(ValEx(TlaNatSet))
-          -> List(new BuiltinConstRule(this)),
+          -> List(new BuiltinConstRule),
         key(ValEx(TlaInt(1)))
           -> List(new IntConstRule(this)),
         key(ValEx(TlaStr("red")))
@@ -269,6 +274,8 @@ class SymbStateRewriterImpl(
         key(tla.subseq(tla.tuple(tla.name("x")), tla.int(2), tla.int(4)))
           -> List(new SeqOpsRule(this)),
         key(tla.len(tla.tuple(tla.name("x"))))
+          -> List(new SeqOpsRule(this)),
+        key(OperEx(ApalacheInternalOper.apalacheSeqCapacity, tla.name("seq")))
           -> List(new SeqOpsRule(this)),
         key(tla.append(tla.tuple(tla.name("x")), tla.int(10)))
           -> List(new SeqOpsRule(this)),
@@ -471,7 +478,7 @@ class SymbStateRewriterImpl(
    */
   override def snapshot(): SymbStateRewriterSnapshot = {
     new SymbStateRewriterSnapshot(intValueCache.snapshot(), intRangeCache.snapshot(), modelValueCache.snapshot(),
-        recordDomainCache.snapshot(), exprCache.snapshot())
+        defaultValueCache.snapshot(), recordDomainCache.snapshot(), exprCache.snapshot())
   }
 
   /**
@@ -485,6 +492,7 @@ class SymbStateRewriterImpl(
     intValueCache.recover(shot.intValueCacheSnapshot)
     intRangeCache.recover(shot.intRangeCacheSnapshot)
     modelValueCache.recover(shot.modelValueCacheSnapshot)
+    defaultValueCache.recover(shot.defaultValueCacheSnapshot)
     recordDomainCache.recover(shot.recordDomainCache)
     exprCache.recover(shot.exprCacheSnapshot)
   }
@@ -497,6 +505,7 @@ class SymbStateRewriterImpl(
     intValueCache.push()
     intRangeCache.push()
     modelValueCache.push()
+    defaultValueCache.push()
     recordDomainCache.push()
     lazyEq.push()
     exprCache.push()
@@ -512,6 +521,7 @@ class SymbStateRewriterImpl(
     intValueCache.pop()
     intRangeCache.pop()
     modelValueCache.pop()
+    defaultValueCache.pop()
     recordDomainCache.pop()
     lazyEq.pop()
     exprCache.pop()
@@ -530,6 +540,7 @@ class SymbStateRewriterImpl(
     intValueCache.pop(n)
     intRangeCache.pop(n)
     modelValueCache.pop(n)
+    defaultValueCache.pop(n)
     recordDomainCache.pop(n)
     lazyEq.pop(n)
     exprCache.pop(n)
@@ -550,6 +561,7 @@ class SymbStateRewriterImpl(
     intValueCache.dispose()
     intRangeCache.dispose()
     modelValueCache.dispose()
+    defaultValueCache.dispose()
     recordDomainCache.dispose()
     lazyEq.dispose()
     solverContext.dispose()

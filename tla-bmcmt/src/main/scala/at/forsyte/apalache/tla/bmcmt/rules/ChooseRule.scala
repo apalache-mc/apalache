@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory, OracleHelper}
-import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, OracleHelper}
+import at.forsyte.apalache.tla.lir.{OperEx, SetT1}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.lir.OperEx
 
 /**
  * <p>Rewriting rule for CHOOSE. Similar to TLC, we implement a non-deterministic choice. It is not hard to add the
@@ -18,7 +18,6 @@ import at.forsyte.apalache.tla.lir.OperEx
  */
 class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val pickRule = new CherryPick(rewriter)
-  private val defaultValueFactory = new DefaultValueFactory(rewriter)
 
   override def isApplicable(state: SymbState): Boolean = {
     state.ex match {
@@ -37,14 +36,22 @@ class ChooseRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // that is, when CHOOSE is defined on its arguments and not, respectively.
 
         // compute set comprehension and then pick an element from it
+        val setT = set.typeTag.asTlaType1()
         val filterEx = tla
           .filter(varName, set, pred)
-          .typed(set.typeTag.asTlaType1())
+          .typed(setT)
         var nextState = rewriter.rewriteUntilDone(state.setRex(filterEx))
         // pick an arbitrary witness
         val setCell = nextState.asCell
         if (nextState.arena.getHas(setCell).isEmpty) {
-          defaultValueFactory.makeUpValue(nextState, setCell)
+          setT match {
+            case SetT1(elemT) =>
+              val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(nextState.arena, elemT)
+              nextState.setArena(newArena).setRex(defaultValue.toNameEx)
+
+            case _ =>
+              throw new IllegalStateException(s"Expected a set, found: $setT")
+          }
         } else {
           val elems = nextState.arena.getHas(setCell)
           // add an oracle \in 0..N, where the indices from 0 to N - 1 correspond to the set elements,

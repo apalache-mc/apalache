@@ -5,9 +5,8 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.values.TlaBool
-import at.forsyte.apalache.tla.lir.{MalformedSepecificationError, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{MalformedSepecificationError, OperEx, SeqT1, TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 
 import scala.collection.immutable.SortedMap
@@ -25,7 +24,6 @@ import at.forsyte.apalache.tla.typecheck.ModelValueHandler
  *   Igor Konnov
  */
 class CherryPick(rewriter: SymbStateRewriter) {
-  private val defaultValueFactory = new DefaultValueFactory(rewriter)
   private val protoSeqOps = new ProtoSeqOps(rewriter)
   val oracleFactory = new OracleFactory(rewriter)
 
@@ -136,8 +134,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
       case t @ TupleT(_) =>
         pickTuple(t, state, oracle, elems, elseAssert)
 
-      case t @ RecordT(_) =>
-        pickRecord(t, state, oracle, elems, elseAssert)
+      case RecordT(_) =>
+        pickRecord(state, oracle, elems, elseAssert)
 
       case t @ FinSetT(_) =>
         pickSet(t, state, oracle, elems, elseAssert)
@@ -242,8 +240,6 @@ class CherryPick(rewriter: SymbStateRewriter) {
    * Note that some record fields may have bogus values, since not all the records in the set are required to have all
    * the keys assigned. That is an unavoidable loophole in the record types.
    *
-   * @param cellTypeToIgnore
-   *   a cell type to assign to the picked cell, this is not always the right type for records
    * @param state
    *   a symbolic state
    * @param oracle
@@ -254,7 +250,6 @@ class CherryPick(rewriter: SymbStateRewriter) {
    *   a new symbolic state with the expression holding a fresh cell that stores the picked element.
    */
   def pickRecord(
-      cellTypeToIgnore: CellT,
       state: SymbState,
       oracle: Oracle,
       records: Seq[ArenaCell],
@@ -292,9 +287,10 @@ class CherryPick(rewriter: SymbStateRewriter) {
       } else {
         // This record does not have the key, but it was mixed with other records and produced a more general type.
         // Return a default value. As we are iterating over fields of commonRecordT, we will always find a value.
-        val valueT = commonRecordT.fields.get(key).get
-        newState = defaultValueFactory.makeUpValue(newState, valueT)
-        newState.asCell
+        val valueT = commonRecordT.fields(key)
+        val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(newState.arena, valueT.toTlaType1)
+        newState = newState.setArena(newArena)
+        defaultValue
       }
     }
 
@@ -308,7 +304,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     newState = newState.setArena(newState.arena.appendCell(commonRecordT))
     val newRecord = newState.arena.topCell
     // pick the domain using the oracle.
-    newState = pickRecordDomain(commonRecordT, FinSetT(ConstT()), newState, oracle, records,
+    newState = pickRecordDomain(commonRecordT, FinSetT(ConstT()), newState, oracle,
         records.map(r => newState.arena.getDom(r)))
     val newDom = newState.asCell
     // pick the fields using the oracle
@@ -348,7 +344,6 @@ class CherryPick(rewriter: SymbStateRewriter) {
       domType: CellT,
       state: SymbState,
       oracle: Oracle,
-      records: Seq[ArenaCell],
       domains: Seq[ArenaCell]): SymbState = {
     // It often happens that all the domains are actually the same cell. Return this cell.
     val distinct = domains.distinct
@@ -617,8 +612,9 @@ class CherryPick(rewriter: SymbStateRewriter) {
     }
 
     // we need the default value to pad the shorter sequences
-    var nextState = defaultValueFactory.makeUpValue(state, seqType.asInstanceOf[SeqT].res)
-    val defaultValue = nextState.asCell
+    val (newArena, defaultValue) =
+      rewriter.defaultValueCache.getOrCreate(state.arena, seqType.toTlaType1.asInstanceOf[SeqT1].elem)
+    var nextState = state.setArena(newArena)
 
     // Here we are using the awesome linear encoding that uses interleaving.
     // We give an explanation for two statically non-empty sequences, the static case should be handled differently.

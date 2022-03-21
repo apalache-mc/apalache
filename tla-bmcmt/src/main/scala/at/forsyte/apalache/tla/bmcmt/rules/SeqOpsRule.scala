@@ -1,12 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, DefaultValueFactory, ProtoSeqOps}
-import at.forsyte.apalache.tla.bmcmt.types.{CellT, IntT}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, ProtoSeqOps}
+import at.forsyte.apalache.tla.bmcmt.types.IntT
 import at.forsyte.apalache.tla.lir.TypedPredefs._
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.TlaSeqOper
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.oper.{ApalacheInternalOper, TlaSeqOper}
 
 /**
  * Sequence operations: Head, Tail, Len, SubSeq, Append, Concat.
@@ -17,16 +17,16 @@ import at.forsyte.apalache.tla.lir._
 class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val picker = new CherryPick(rewriter)
   private val proto = new ProtoSeqOps(rewriter)
-  private val defaultValueFactory = new DefaultValueFactory(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
-      case OperEx(TlaSeqOper.head, _)         => true
-      case OperEx(TlaSeqOper.tail, _)         => true
-      case OperEx(TlaSeqOper.subseq, _, _, _) => true
-      case OperEx(TlaSeqOper.len, _)          => true
-      case OperEx(TlaSeqOper.append, _, _)    => true
-      case OperEx(TlaSeqOper.concat, _, _)    => true
+      case OperEx(TlaSeqOper.head, _)                          => true
+      case OperEx(TlaSeqOper.tail, _)                          => true
+      case OperEx(TlaSeqOper.subseq, _, _, _)                  => true
+      case OperEx(TlaSeqOper.len, _)                           => true
+      case OperEx(TlaSeqOper.append, _, _)                     => true
+      case OperEx(TlaSeqOper.concat, _, _)                     => true
+      case OperEx(ApalacheInternalOper.apalacheSeqCapacity, _) => true
       // TlaSeqOper.selectseq => ???
       case _ => false
     }
@@ -52,6 +52,12 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
       case OperEx(TlaSeqOper.concat, seq, otherSeq) =>
         translateConcat(state, seq, otherSeq)
+
+      case OperEx(ApalacheInternalOper.apalacheSeqCapacity, seq) =>
+        val nextState = rewriter.rewriteUntilDone(state.setRex(seq))
+        val seqCell = nextState.asCell
+        val (_, _, capacity) = proto.unpackSeq(nextState.arena, seqCell)
+        nextState.setRex(tla.int(capacity).as(IntT1()))
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
@@ -84,7 +90,8 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // This is the rare case when the spec author has made a typo, e.g., Head(<<>>).
       // We cannot throw an exception here, as it would report an error in a correct specification, e.g.,
       // Len(s) = 0 \/ Head(s) = 2
-      defaultValueFactory.makeUpValue(nextState, CellT.fromType1(elemType))
+      val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(nextState.arena, elemType)
+      nextState.setArena(newArena).setRex(defaultValue.toNameEx)
     }
   }
 
@@ -127,7 +134,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
    * @param state
    *   a symbolic state to start with
    * @param seqEx
-   *   a sequence `S``
+   *   a sequence `S`
    * @param newStartEx
    *   the starting index `m` (inclusive)
    * @param newEndEx
@@ -172,8 +179,8 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
               tla.ite(tla.le(newEndBase1asInt, asInt(len)).as(BoolT1()), newEndBase1asInt, asInt(len)).as(IntT1()))
           .as(BoolT1()))
 
-    nextState = defaultValueFactory.makeUpValue(nextState, CellT.fromType1(seqT.elem))
-    val defaultValue = nextState.asCell
+    val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(nextState.arena, seqT.elem)
+    nextState = nextState.setArena(newArena)
 
     def copy(state: SymbState, dstIndexBase1: Int): (SymbState, ArenaCell) = {
       // Blindly copy the element adjustedStart + (dstIndex - 1) into the position at dstIndex.
@@ -260,8 +267,8 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val (protoSeq2, len2, capacity2) = proto.unpackSeq(nextState.arena, seq2)
 
     // we need the default value, when the sequences are empty
-    nextState = defaultValueFactory.makeUpValue(nextState, CellT.fromType1(seqT.elem))
-    val defaultValue = nextState.asCell
+    val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(nextState.arena, seqT.elem)
+    nextState = nextState.setArena(newArena)
 
     def pick(state: SymbState, dstIndexBase1: Int): (SymbState, ArenaCell) = {
       if (dstIndexBase1 > capacity1) {

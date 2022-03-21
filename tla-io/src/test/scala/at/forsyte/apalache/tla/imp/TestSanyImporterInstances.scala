@@ -63,7 +63,7 @@ class TestSanyImporterInstances extends SanyImporterTestBase {
           ) =>
         assert(params.length == 1)
         assert(params.head.isInstanceOf[OperParam])
-        assert("x" == params.head.asInstanceOf[OperParam].name)
+        assert("x" == params.head.name)
 
       case e =>
         fail("expected the body for J!F, found: " + e)
@@ -395,9 +395,9 @@ class TestSanyImporterInstances extends SanyImporterTestBase {
     val root = modules(rootName)
     expectSourceInfoInDefs(root)
     // the definitions of the standard operators are filtered out
-    assert(1 == root.declarations.size)
-    root.declarations(0) match {
-      case TlaOperDecl("A", _, body) =>
+    assert(2 == root.declarations.size)
+    root.declarations.find(_.name == "A") match {
+      case Some(TlaOperDecl("A", _, body)) =>
         assert(append(tuple(), enumSet()).untyped() == body)
 
       case d => fail("unexpected declaration: " + d)

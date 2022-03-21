@@ -9,7 +9,6 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaOper, TlaTempOper}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
-import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.pp._
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
@@ -144,9 +143,7 @@ class ConfigurationPassImpl @Inject() (
 
     try {
       val config = TlcConfigParserApalache.apply(new FileReader(filename))
-      configuredModule = new TlcConfigImporter(config, new IdleTracker())(
-          module
-      )
+      configuredModule = new TlcConfigImporter(config)(module)
       config.behaviorSpec match {
         case InitNextSpec(init, next) =>
           setInit(init)

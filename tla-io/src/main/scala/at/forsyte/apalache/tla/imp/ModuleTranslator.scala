@@ -51,7 +51,7 @@ class ModuleTranslator(
 
         case NoneUnit() =>
           // translate only the user-defined operators, skip the aliases
-          val decl = NullOpDefTranslator(sourceStore, ctx).translate(opDef)
+          val decl = NullOpDefTranslator().translate(opDef)
           ctx.push(DeclUnit(decl))
 
         case _ => ctx // skip the aliases

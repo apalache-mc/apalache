@@ -426,7 +426,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     assert(solverContext.sat())
     rewriter.pop()
     solverContext.assertGroundExpr(tla.not(nextState.ex).typed(BoolT1()))
-    assertUnsatOrExplain(rewriter, nextState)
+    assertUnsatOrExplain()
   }
 
   /** Jure, 9.12.19: Why should this throw? */
@@ -456,7 +456,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
       rewriter.pop()
       rewriter.push()
       solverContext.assertGroundExpr(tla.not(nextState.ex).typed(BoolT1()))
-      assertUnsatOrExplain(rewriter, nextState)
+      assertUnsatOrExplain()
       rewriter.pop()
       rewriter.push()
       solverContext.assertGroundExpr(nextState.ex)
@@ -490,7 +490,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     assert(solverContext.sat())
     rewriter.push()
     solverContext.assertGroundExpr(nextState.ex)
-    assertUnsatOrExplain(rewriter, nextState)
+    assertUnsatOrExplain()
     rewriter.pop()
     solverContext.assertGroundExpr(tla.not(nextState.ex).typed(BoolT1()))
     assert(solverContext.sat())
@@ -594,7 +594,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     assert(solverContext.sat())
     rewriter.pop()
     solverContext.assertGroundExpr(tla.not(nextState.ex).typed(BoolT1()))
-    assertUnsatOrExplain(rewriter, nextState)
+    assertUnsatOrExplain()
   }
 
   test("""\A x \in {1, 2, 3}: x > 2 ~~> $B$k""") { rewriterType: SMTEncoding =>
@@ -610,7 +610,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     assert(solverContext.sat())
     rewriter.push()
     solverContext.assertGroundExpr(nextState.ex)
-    assertUnsatOrExplain(rewriter, nextState)
+    assertUnsatOrExplain()
     rewriter.pop()
     solverContext.assertGroundExpr(tla.not(nextState.ex).typed(BoolT1()))
     assert(solverContext.sat())

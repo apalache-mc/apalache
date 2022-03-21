@@ -1,16 +1,11 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, TlaOperDecl, ValEx}
-import at.forsyte.apalache.tla.lir.oper.{
-  ApalacheOper, TlaActionOper, TlaArithOper, TlaBoolOper, TlaFiniteSetOper, TlaOper, TlaSetOper,
-}
-import at.forsyte.apalache.tla.lir.src.{SourcePosition, SourceRegion}
-import at.forsyte.apalache.tla.lir.values.{
-  TlaBool, TlaBoolSet, TlaInt, TlaIntSet, TlaNatSet, TlaRealInfinity, TlaRealSet,
-}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla._
-
+import at.forsyte.apalache.tla.lir.oper._
+import at.forsyte.apalache.tla.lir.src.{SourcePosition, SourceRegion}
+import at.forsyte.apalache.tla.lir.values._
+import at.forsyte.apalache.tla.lir._
 import org.junit.runner.RunWith
 import org.scalatestplus.junit.JUnitRunner
 
@@ -347,7 +342,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
       findAndExpectOperDecl(root, name, List(), body)
 
     // the definitions of the standard operators are filtered out
-    assert(11 == root.declarations.size)
+    assert(12 == root.declarations.size)
 
     expectDecl("Empty", tuple())
     expectDecl("Three", tuple(int(1), int(2), int(3)))
@@ -361,10 +356,12 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         "ASubSeq",
         subseq(tuple(int(1), int(2), int(3), int(4)), int(2), int(3)),
     )
+
+    // SelectSeq is special as it is rewired with a TLA+ definition
     expectDecl(
         "ASelectSeq",
-        selectseq(tuple(int(1), int(2), int(3), int(4)), name("Test")),
-    )
+        OperEx(TlaOper.apply, NameEx("SelectSeq"), tuple(int(1), int(2), int(3), int(4)), name("Test")),
+    ) ///
   }
 
   // FiniteSets
@@ -381,7 +378,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
 
     val (rootName, modules) = sanyImporter
       .loadFromSource("finitesets", Source.fromString(text))
-    assert(4 == modules.size) // Naturals, Sequences, FiniteSets, and our module
+    assert(5 == modules.size) // Naturals, Sequences, FiniteSets, and our module
     val root = modules(rootName)
     expectSourceInfoInDefs(root)
 
@@ -476,13 +473,13 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
       """.stripMargin
 
     val (_, modules) = sanyImporter.loadFromSource("localSum", Source.fromString(text))
-    assert(4 == modules.size) // Naturals, Sequences, TLC, FiniteSets, Bags, and our module
+    assert(8 == modules.size) // Naturals, Sequences, TLC, FiniteSets, Bags, and our module
 
     val root = modules("localSum")
     expectSourceInfoInDefs(root)
     // This number may change when a new version of Bags.tla is shipped in tla2tools.jar.
     // The declarations include the declarations by __rewire_tlc_in_apalache.tla and Bags.tla.
-    assert(27 == root.declarations.size)
+    assert(16 == root.declarations.size)
   }
 
   test("EXTENDS Apalache") {
@@ -495,12 +492,14 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         |Sklm == Skolem(\E y \in S: TRUE)
         |Expnd == Expand(SUBSET S)
         |CC == ConstCardinality(Cardinality(S) >= 2)
-        |Identity(i) == i 
+        |Identity(i) == i
         |Seq2to11 == MkSeq(10, Identity)
         |================================
       """.stripMargin
 
-    // We have to set TLA-Library, in order to look up Apalache.tla. This is done automatically in pom.xml.
+    // We have to set TLA-Library, in order to look up Apalache.tla. This is done during packaging
+    // in our build.sbt file.
+    //
     // If you run this test in an IDE, and the test fails, add the following line to the VM parameters
     // (don't forget to replace <APALACHE_HOME> with the directory where you checked out the project):
     //
@@ -509,14 +508,15 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         "TLA-Library = %s".format(System.getProperty("TLA-Library"))
     )
 
-    val (_, modules) = sanyImporter.loadFromSource("root", Source.fromString(text))
-    assert(6 == modules.size) // root, Apalache, Integers, FiniteSets, and whatever they import
+    val (_, modules) = sanyImporter
+      .loadFromSource("root", Source.fromString(text))
+    assert(7 == modules.size) // root, Apalache, Integers, FiniteSets, and whatever they import
 
     val root = modules("root")
     expectSourceInfoInDefs(root)
     assert(9 == root.declarations.size)
 
-    def expectDecl(name: String, body: TlaEx) = {
+    def expectDecl(name: String, body: TlaEx): Unit = {
       findAndExpectOperDecl(root, name, List(), body)
     }
 

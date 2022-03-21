@@ -369,7 +369,7 @@ The process proceeds in two steps:
 
 #### Prepare the release
 
-Assuming the current version recorded in the project's `pom.xml` files is
+Assuming the current version recorded in the project's `VERSION` file is
 `l.m.n-SNAPSHOT`, the manual release process is as follows:
 
 - [ ] `git checkout unstable && git pull`

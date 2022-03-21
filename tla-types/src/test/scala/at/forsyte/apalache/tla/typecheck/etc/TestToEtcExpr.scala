@@ -6,14 +6,14 @@ import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper}
+import at.forsyte.apalache.tla.lir.oper.{ApalacheInternalOper, ApalacheOper, TlaFunOper}
 import at.forsyte.apalache.tla.lir.values.TlaReal
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
+
+import scala.annotation.nowarn
 
 /**
  * Unit tests for translating TLA+ expressions to EtcExpr.
@@ -737,13 +737,6 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     assert(expected == gen(ex))
   }
 
-  test("SelectSeq(s, A)") {
-    val typ = parser("(Seq(a), (a => Bool)) => Seq(a)")
-    val expected = mkAppByName(Seq(typ), "s", "A")
-    val ex = tla.selectseq(tla.name("s"), tla.name("A"))
-    assert(expected == gen(ex))
-  }
-
   test("Labels") {
     val typ = parser("(Str, Str, Str, a) => a")
     val expected =
@@ -808,6 +801,20 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     assert(expected == gen(ex))
   }
 
+  test("ApalacheInternal!__ApalacheSeqCapacity") {
+    val typ = parser("Seq(a) => Int")
+    val expected = mkAppByName(Seq(typ), "x")
+    val ex = OperEx(ApalacheInternalOper.apalacheSeqCapacity, tla.name("x"))
+    assert(expected == gen(ex))
+  }
+
+  test("ApalacheInternal!__NotSupportedByModelChecker") {
+    val typ = parser("Str => a")
+    val expected = mkAppByName(Seq(typ), "x")
+    val ex = OperEx(ApalacheInternalOper.notSupportedByModelChecker, tla.name("x"))
+    assert(expected == gen(ex))
+  }
+
   test("unary temporal operators") {
     val unary = parser("Bool => Bool")
     val expectedUnary = mkAppByName(Seq(unary), "A")
@@ -831,8 +838,11 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
 
   test("old annotations: e <: tp") {
     val oldTypeAnnotation = tla.enumSet(tla.intSet())
+
     // we explicitly use OperEx here, as we have removed Builder.withType
+    @nowarn("cat=deprecation&msg=object withType in object ApalacheOper is deprecated")
     val input = OperEx(ApalacheOper.withType, tla.name("e"), oldTypeAnnotation)(Untyped())
+
     assertThrows[OutdatedAnnotationsError](gen(input))
   }
 }
