@@ -1,5 +1,5 @@
------- MODULE __rewire_sequences_ext_in_apalache -----------------------
-\*------------------------ MODULE SequencesExt ---------------------------------
+------------------------ MODULE SequencesExt ---------------------------------
+\*------ MODULE __rewire_sequences_ext_in_apalache -----------------------
 (**
  * ^^^^^^^^^^^^^^^^^^^^^^ We have to call this module SequencesExt in any
  * case, otherwise, SANY complains.
@@ -309,5 +309,35 @@ FoldSeq(op(_, _), base, seq) ==
   \* whereas FoldSeq is accumulating the result in the right argument.
   LET __map(y, x) == op(x, y) IN
   __ApalacheFoldSeq(__map, base, seq)
+
+(**
+ * FoldLeft folds op on all elements of seq from left to right, starting
+ * with the first element and base. The resulting function is:
+ *    op(op(...op(base,f[0]), ...f[n-1]), f[n])
+ *
+ * Example:
+ *    LET cons(x,y) == <<x,y>>
+ *    IN FoldLeft(cons, 0, <<3,1,2>>) = << << <<0,3>>, 1>>, 2>> 
+ *
+ * @type: ((a, b) => a, a, Seq(a)) => a;
+ *)
+FoldLeft(op(_, _), base, seq) == 
+  __ApalacheFoldSeq(op, base, seq)
+
+(**
+ * FoldRight folds op on all elements of seq from right to left, starting
+ * with the last element and base. The resulting function is:
+ *    op(f[0],op(f[1], ..., op(f[n],base) ...))
+ *
+ *
+ * Example:
+ *    LET cons(x,y) == <<x,y>>
+ *    IN FoldRight(cons, <<3,1,2>>, 0 ) = << 3, << 1, <<2,0>> >> >> 
+ *
+ * @type: ((a, b) => b, b, Seq(a)) => b;
+ *)
+FoldRight(op(_, _), seq, base) == 
+  LET __map(y, x) == op(x, y) IN
+  __ApalacheFoldSeq(__map, base, Reverse(seq))
 
 ===============================================================================
