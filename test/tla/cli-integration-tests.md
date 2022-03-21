@@ -150,6 +150,25 @@ $ head -n 1 $HOME/.tlaplus/esc.txt
 NO_STATISTICS
 ```
 
+## error handling for non-existent files
+
+Ensure that we exit gracefully when commands are called on nonexistent files.
+
+NOTE: We truncate the output to avoid printing the file, making the test
+indifferent to the execution environment (including in docker).
+
+```sh
+$ for cmd in check parse typecheck transpile; do apalache-mc $cmd nonexistent-file.tla 2>&1 | grep -o -e "EXITCODE: ERROR (255)" -e "Cannot find source file for module"; done
+Cannot find source file for module
+EXITCODE: ERROR (255)
+Cannot find source file for module
+EXITCODE: ERROR (255)
+Cannot find source file for module
+EXITCODE: ERROR (255)
+Cannot find source file for module
+EXITCODE: ERROR (255)
+```
+
 ## running the parse command
 
 This command parses a TLA+ specification with the SANY parser.
@@ -1855,6 +1874,14 @@ $ apalache-mc check --length=0 --inv=AllTests TestSequences.tla | sed 's/[IEW]@.
 EXITCODE: OK
 ```
 
+### check TestBags.tla reports no error
+
+```sh
+$ apalache-mc check --length=0 --inv=Inv TestBags.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check Test1343.tla reports no error
 
 Regression test for #1343
@@ -1869,6 +1896,30 @@ EXITCODE: OK
 
 ```sh
 $ apalache-mc check --length=0 --inv=AllTests TestSets.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check TestCommunityFunctions.tla reports no error (array-encoding)
+
+```sh
+$ apalache-mc check --length=0 --inv=AllTests TestCommunityFunctions.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check TestFiniteSetsExt.tla reports no error (array-encoding)
+
+```sh
+$ apalache-mc check --length=0 --inv=AllTests TestFiniteSetsExt.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check TestFunctions.tla reports no error
+
+```sh
+$ apalache-mc check --length=0 --inv=AllTests TestFunctions.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```

@@ -794,6 +794,19 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val opsig = OperT1(Seq(OperT1(Seq(a, b), a), a, SeqT1(b)), a)
         mkExRefApp(opsig, Seq(oper, base, seq))
 
+      // ******************************* Apalache internals **************************************************
+      case OperEx(ApalacheInternalOper.apalacheSeqCapacity, seq) =>
+        val a = varPool.fresh
+        // Seq(a) => Int
+        val opsig = OperT1(Seq(SeqT1(a)), IntT1())
+        mkExRefApp(opsig, Seq(seq))
+
+      case OperEx(ApalacheInternalOper.notSupportedByModelChecker, msg) =>
+        val a = varPool.fresh
+        // Str => a
+        val opsig = OperT1(Seq(StrT1()), a)
+        mkExRefApp(opsig, Seq(msg))
+
       // ******************************************** MISC **************************************************
       case OperEx(TlaOper.label, labelledEx, nameAndArgs @ _*) =>
         val typeVar = varPool.fresh

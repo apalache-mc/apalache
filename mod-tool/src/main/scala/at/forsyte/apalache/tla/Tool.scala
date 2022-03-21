@@ -56,7 +56,8 @@ object Tool extends LazyLogging {
 
   private def outputAndLogConfig(cmd: General, cfg: ApalacheConfig): Unit = {
     OutputManager.configure(cfg)
-    if (cmd.file.getName.endsWith(".tla")) {
+    // We currently use dummy files for some commands, so we skip here on non-existing files
+    if (cmd.file.getName.endsWith(".tla") && cmd.file.exists()) {
       OutputManager.initSourceLines(cmd.file)
     }
     println(s"Output directory: ${OutputManager.runDir.normalize()}")
@@ -177,10 +178,10 @@ object Tool extends LazyLogging {
   }
 
   private def setCoreOptions(executor: PassChainExecutor, cmd: AbstractCheckerCmd): Unit = {
-    logger.info(
-        "Checker options: filename=%s, init=%s, next=%s, inv=%s"
-          .format(cmd.file, cmd.init, cmd.next, cmd.inv)
-    )
+    logger.info {
+      val environment = if (cmd.env != "") s"(${cmd.env}) " else ""
+      s"Checker options: ${environment}${cmd.name} ${cmd.invocation}"
+    }
     executor.options.set("parser.filename", cmd.file.getAbsolutePath)
     if (cmd.config != "")
       executor.options.set("checker.config", cmd.config)
