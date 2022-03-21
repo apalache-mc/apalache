@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.lir.transformations.standard.{
   DeclarationSorter, DeepCopy, IncrementalRenaming, ReplaceFixed,
 }
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModuleTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.pp.Inliner.FilterFun
 import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier}
 
 /**
@@ -16,10 +17,12 @@ import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier}
  * @author
  *   Jure Kukovec
  */
-class Inliner(tracker: TransformationTracker, nameGenerator: UniqueNameGenerator, keepNullary: Boolean = true)
+class Inliner(
+    tracker: TransformationTracker,
+    nameGenerator: UniqueNameGenerator,
+    keepNullary: Boolean = true,
+    toplevelFilter: Inliner.DeclFilter = FilterFun.ALL)
     extends TlaModuleTransformation {
-
-  type DeclFilter = TlaOperDecl => Boolean
 
   private val renaming = new IncrementalRenaming(tracker)
   private val deepcopy = DeepCopy(tracker)
@@ -28,21 +31,22 @@ class Inliner(tracker: TransformationTracker, nameGenerator: UniqueNameGenerator
   import Inliner._
 
   // Bookeeping of scope, always called, but discards operators that won't be inlined
-  private def extendedScope(operFilterFn: DeclFilter, operatorsInScope: Scope)(d: TlaOperDecl): Scope = d match {
-    // We only inline operators if
+  private def extendedScope(operatorsInScope: Scope)(d: TlaOperDecl): Scope = d match {
+    // We only inline operators (i.e. track them in scope) if
     // - they're non-recursive, and
-    // - they don't satisfy the filter function
-    case decl: TlaOperDecl if !decl.isRecursive && !operFilterFn(decl) =>
+    // - they satisfy the scope filter function
+    case decl: TlaOperDecl if !decl.isRecursive && nonNullaryFilter(d) =>
       operatorsInScope + (decl.name -> decl)
     // ignore any other declaration
     case _ => operatorsInScope
   }
 
   // Iterative traversal of decls with a monotonically increasing scope.
-  // All operator declarations are either added to the scope, or kept in the declaration list.
-  // Operators are kept if they satisfy operFilterFn and added to the scope otherwise.
+  // Some operator declarations are added to the scope, some are kept in the declaration list.
+  // Operators are added to the scope if they satisfy nonNullaryFilter and kept if they satisfy
+  // operDeclFilter. By default, operDeclFilter = !nonNullaryFilter
   private def pushDeclsIntoScope(
-      operDeclFilter: DeclFilter
+      operDeclFilter: DeclFilter = negateFilter(nonNullaryFilter)
     )(initialScope: Scope,
       decls: Traversable[TlaDecl]): (Scope, List[TlaDecl]) =
     decls.foldLeft((initialScope, List.empty[TlaDecl])) { case ((scope, decls), decl) =>
@@ -50,15 +54,16 @@ class Inliner(tracker: TransformationTracker, nameGenerator: UniqueNameGenerator
         case opDecl: TlaOperDecl =>
           val newDeclBody = transform(scope)(opDecl.body)
           val newDecl = tracker.trackOperDecl { _ => opDecl.copy(body = newDeclBody) }(opDecl)
-          val newScope = extendedScope(operDeclFilter, scope)(newDecl)
+          val newScope = extendedScope(scope)(newDecl)
           if (operDeclFilter(newDecl)) (newScope, decls :+ newDecl)
           else (newScope, decls)
         case _ => (scope, decls :+ decl)
       }
     }
 
-  // Default operator filter, we keep only nullary operators and only if keepNullary is enabled
-  private def nullaryFilter(d: TlaOperDecl): Boolean = keepNullary && d.formalParams.isEmpty
+  // Default scope filter, we add nullary operators only if keepNullary is disabled
+  private def nonNullaryFilter(d: TlaOperDecl): Boolean = !keepNullary || d.formalParams.nonEmpty
+  private def negateFilter(df: DeclFilter): DeclFilter = d => !df(d)
 
   // Assume name is in scope.
   // Creates a fresh copy of the operator body and replaces formal parameter instances with the argument instances.
@@ -106,12 +111,15 @@ class Inliner(tracker: TransformationTracker, nameGenerator: UniqueNameGenerator
 
     // LET-IN extends scope
     case LetInEx(body, defs @ _*) =>
-      val (newScope, remainingOpers) = pushDeclsIntoScope(nullaryFilter)(operatorsInScope, defs)
+      val (newScope, remainingOpers) = pushDeclsIntoScope()(operatorsInScope, defs)
       val castDecls = remainingOpers.map(_.asInstanceOf[TlaOperDecl])
       val newBody = transform(newScope)(body)
 
       if (castDecls.isEmpty) newBody
       else LetInEx(newBody, castDecls: _*)(newBody.typeTag)
+
+    case ex @ OperEx(oper, args @ _*) =>
+      OperEx(oper, args.map(transform(operatorsInScope)): _*)(ex.typeTag)
 
     // TODO
     case ex => ex
@@ -126,7 +134,8 @@ class Inliner(tracker: TransformationTracker, nameGenerator: UniqueNameGenerator
     val sortedDecls = moduleWithSortedDecls.declarations
 
     // Instead of building a parallel BodyMap, we build scope iteratively, as the declarations are now in order.
-    val inlinedDecls = pushDeclsIntoScope(FilterFun.ALL)(emptyScope, sortedDecls)._2
+    // Because we keep global declarations, we may need to use FilterFun.ALL or a similar filter unrelated to arity
+    val inlinedDecls = pushDeclsIntoScope(toplevelFilter)(emptyScope, sortedDecls)._2
 
     m.copy(declarations = inlinedDecls)
   }
@@ -136,12 +145,13 @@ class Inliner(tracker: TransformationTracker, nameGenerator: UniqueNameGenerator
 object Inliner {
 
   type Scope = BodyMap
-
   def emptyScope: Scope = Map.empty
 
+  type DeclFilter = TlaOperDecl => Boolean
+
   object FilterFun {
-    def ALL: TlaOperDecl => Boolean = _ => true
-    def NAMED(set: Set[String]): TlaOperDecl => Boolean = d => set.contains(d.name)
+    def ALL: DeclFilter = _ => true
+    def NAMED(set: Set[String]): DeclFilter = d => set.contains(d.name)
   }
 
 }

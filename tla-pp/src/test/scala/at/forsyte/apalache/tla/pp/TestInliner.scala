@@ -89,9 +89,45 @@ class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
 
     val expectedBody = tla.plus(tla.int(1).as(IntT1()), tla.int(2).as(IntT1())).as(IntT1())
 
-    val scope = emptyScope
+    val actualBody = inliner.transform(emptyScope)(toplevel)
 
-    val actualBody = inliner.transform(scope)(toplevel)
+    assert(actualBody == expectedBody)
+  }
+
+  test("Test linear dependencies: P(x) == Q(x) + 1; Q(z) == z + 1; P(1) ~~> 1 + 1 + 1 ") {
+    val QBody = tla.plus(tla.name("z").as(IntT1()), tla.int(1).as(IntT1())).as(IntT1())
+    val QType = OperT1(Seq(IntT1()), IntT1())
+    val QDecl = TlaOperDecl("Q", List(OperParam("z")), QBody)(Typed(QType))
+    val PBody =
+      tla
+        .plus(tla
+              .appOp(
+                  tla.name("Q").as(QType),
+                  tla.name("x").as(IntT1()),
+              )
+              .as(IntT1()), tla.int(1).as(IntT1()))
+        .as(IntT1())
+
+    val PType = OperT1(Seq(IntT1()), IntT1())
+    val PDecl = TlaOperDecl("P", List(OperParam("x")), PBody)(Typed(PType))
+
+    val XDecl = TlaOperDecl("X", List.empty,
+        tla
+          .appOp(
+              tla.name("P").as(PType),
+              tla.int(1).as(IntT1()),
+          )
+          .as(IntT1()))(Typed(OperT1(Seq.empty, IntT1())))
+
+    val expectedBody =
+      tla.plus(tla.plus(tla.int(1).as(IntT1()), tla.int(1).as(IntT1())).as(IntT1()), tla.int(1).as(IntT1())).as(IntT1())
+
+    val decls = List(QDecl, PDecl, XDecl)
+    val module = mkModule(decls: _*)
+
+    val txModule = inliner.apply(module)
+
+    val actualBody = txModule.declarations(2).asInstanceOf[TlaOperDecl].body
 
     assert(actualBody == expectedBody)
   }
