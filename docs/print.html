@@ -2827,21 +2827,13 @@ InvariantViolation == hasLicense /\ year - BIRTH_YEAR &lt; LICENSE_AGE
 <p><a name="lookup"></a></p>
 <h2><a class="header" href="#module-lookup" id="module-lookup">Module lookup</a></h2>
 <p>Apalache uses <a href="https://lamport.azurewebsites.net/tla/tools.html">the SANY parser</a>, which is the standard parser of TLC
-and TLA+ Toolbox. By default, SANY is looking for the modules in the current working directory and in the Java package
-<code>tla2sany.StandardModules</code>, which is usually provided by the <code>tla2tools.jar</code> that is included in the Java classpath.</p>
-<p>In addition to the modules in the current working directory, Appalache provides</p>
-<ul>
-<li>a small standard library (located in <code>$APALACHE_HOME/src/tla</code>), and</li>
-<li>support for additional source directories specified in the environment variable <code>TLA_PATH</code>. <code>TLA_PATH</code> should be a
-list of paths to directories separated by <code>:</code>.</li>
-</ul>
-<p>(Directories in the <code>TLA_PATH</code> are provided to SANY via the <code>TLA-Library</code> Java system variable.)</p>
-<p>So the module lookup order in Apalache is as follows:</p>
+and the TLA+ Toolbox. By default, SANY is looking for modules (in this order) in</p>
 <ol>
 <li>The current working directory.</li>
-<li>The directory <code>$APALACHE_HOME/src/tla</code>.</li>
-<li>The directories specified in the environment variable <code>TLA_PATH</code>.</li>
-<li>The Java package <code>tla2sany.StandardModules</code>.</li>
+<li>The directory containing the main TLA+ file passed on the CLI.</li>
+<li>A small Apalache standard library (bundled from <code>$APALACHE_HOME/src/tla</code>).</li>
+<li>The Java package <code>tla2sany.StandardModules</code> (usually provided by the <code>tla2tools.jar</code> that is included in the Java
+classpath).</li>
 </ol>
 <p><strong>Note:</strong> To let TLA+ Toolbox and TLC know about the Apalache modules, include
 <code>$APALACHE_HOME/src/tla</code> in the lookup directories, as explained by Markus Kuppe for
