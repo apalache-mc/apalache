@@ -5,7 +5,8 @@ import org.backuity.clist.{arg, opt, Command}
 import java.io.File
 
 // Holds the minimal necessary info about a specification.
-abstract class AbstractCheckerCmd(name: String, description: String) extends Command(name, description) with General {
+abstract class AbstractCheckerCmd(val name: String, description: String)
+    extends Command(name, description) with General {
   var file: File = arg[File](description = "a file containing a TLA+ specification (.tla or .json)")
   var config: String = opt[String](name = "config", default = "",
       description = "configuration file in TLC format,\n" +
