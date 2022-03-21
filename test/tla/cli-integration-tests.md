@@ -2701,9 +2701,32 @@ $ rm -rf ./run-dir ./.apalache.cfg
 
 ## module lookup
 
+### module lookup: looks up dummy module from standard library
+
+```sh
+$ cd module-lookup/subdir-no-dummy && apalache-mc parse --output=output.tla Including.tla
+...
+EXITCODE: OK
+$ cat module-lookup/subdir-no-dummy/output.tla
+-------------------------------- MODULE output --------------------------------
+
+EXTENDS Integers, Sequences, FiniteSets, TLC, Apalache
+
+Init == TRUE
+
+Next == TRUE
+
+================================================================================
+$ rm module-lookup/subdir-no-dummy/output.tla
+```
+
 ### module lookup: looks up modules in the same directory
 
 Regression test for https://github.com/informalsystems/apalache/issues/426
+
+Look up files in the same directory as the file supplied on commandline.
+
+Files in that directory take precedence over the Apalache standard library.
 
 ```sh
 $ apalache-mc parse --output=output.tla module-lookup/subdir/Including.tla

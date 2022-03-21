@@ -241,6 +241,8 @@ lazy val root = (project in file("."))
             Vector(
                 (src_dir / "Apalache.tla") ->
                   "tla2sany/StandardModules/Apalache.tla",
+                (src_dir / "DummyForIntegrationTests.tla") ->
+                  "tla2sany/StandardModules/DummyForIntegrationTests.tla",
                 (src_dir / "Variants.tla") ->
                   "tla2sany/StandardModules/Variants.tla",
                 (src_dir / "__rewire_tlc_in_apalache.tla") ->
