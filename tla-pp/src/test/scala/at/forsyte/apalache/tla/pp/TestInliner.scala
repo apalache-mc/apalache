@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
+import at.forsyte.apalache.tla.pp.Inliner.emptyScope
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
@@ -51,6 +52,46 @@ class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
     val scope = Map(ADecl.name -> ADecl)
 
     val actualBody = inliner.transform(scope)(AApp)
+
+    assert(actualBody == expectedBody)
+  }
+
+  test("Test nested LET-IN: LET P(x,y) == LET Q(z) == z + y IN Q(x) IN P(1,2) ~~> 1 + 2 ") {
+    val QBody = tla.plus(tla.name("z").as(IntT1()), tla.name("y").as(IntT1())).as(IntT1())
+    val QType = OperT1(Seq(IntT1()), IntT1())
+    val QDecl = TlaOperDecl("Q", List(OperParam("z")), QBody)(Typed(QType))
+    val PBody = tla
+      .letIn(
+          tla
+            .appOp(
+                tla.name("Q").as(QType),
+                tla.name("x").as(IntT1()),
+            )
+            .as(IntT1()),
+          QDecl,
+      )
+      .as(IntT1())
+    val PType = OperT1(Seq(IntT1(), IntT1()), IntT1())
+    val PDecl = TlaOperDecl("P", List(OperParam("x"), OperParam("y")), PBody)(Typed(PType))
+
+    val toplevel = tla
+      .letIn(
+          tla
+            .appOp(
+                tla.name("P").as(PType),
+                tla.int(1).as(IntT1()),
+                tla.int(2).as(IntT1()),
+            )
+            .as(IntT1()),
+          PDecl,
+      )
+      .as(IntT1())
+
+    val expectedBody = tla.plus(tla.int(1).as(IntT1()), tla.int(2).as(IntT1())).as(IntT1())
+
+    val scope = emptyScope
+
+    val actualBody = inliner.transform(scope)(toplevel)
 
     assert(actualBody == expectedBody)
   }

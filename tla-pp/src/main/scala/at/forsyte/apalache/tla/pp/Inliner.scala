@@ -50,7 +50,7 @@ class Inliner(tracker: TransformationTracker, nameGenerator: UniqueNameGenerator
         case opDecl: TlaOperDecl =>
           val newDeclBody = transform(scope)(opDecl.body)
           val newDecl = tracker.trackOperDecl { _ => opDecl.copy(body = newDeclBody) }(opDecl)
-          val newScope = extendedScope(operDeclFilter, scope)(opDecl)
+          val newScope = extendedScope(operDeclFilter, scope)(newDecl)
           if (operDeclFilter(newDecl)) (newScope, decls :+ newDecl)
           else (newScope, decls)
         case _ => (scope, decls :+ decl)
