@@ -262,6 +262,12 @@ TestPrefixes2 ==
     LET P == UNION { Prefixes(seq) : seq \in S } IN
     P = {<<>>, <<"a">>, <<"a", "b">>, <<"a", "b", "c">>, <<"a", "b", "d">>}
 
+TestPrefixes3 ==
+    LET S1 == {<<>>, <<"a">>, <<"a", "b">>, <<"a", "b", "c">>} IN
+    LET S2 == {<<>>, <<"a">>, <<"a", "b">>, <<"a", "b", "d">>} IN
+    LET P == UNION { S1, S2 } IN
+    P = {<<>>, <<"a">>, <<"a", "b">>, <<"a", "b", "c">>, <<"a", "b", "d">>}
+
 TestCommonPrefixes1 ==
     CommonPrefixes({<<"a", "b", "c">>, <<"a", "b", "d">>})
         = {<<>>, <<"a">>, <<"a", "b">>}
@@ -287,7 +293,9 @@ AllTests ==
     /\ TestSetToSeq1
     /\ TestSetToSeq2
     /\ TestSetToSeq3
-    \*/\ TestSetToSortSeq
+    (* FAILING tests:
+    /\ TestSetToSortSeq
+     *)
     /\ TestToSet1
     /\ TestToSet2
     /\ TestToSet3
@@ -309,7 +317,7 @@ AllTests ==
     /\ TestReverse2
     /\ TestReverse3
     /\ TestReverse4
-    (*
+    (* FAILING tests:
     /\ TestRemove1
     /\ TestRemove2
     /\ TestRemove3
@@ -318,7 +326,7 @@ AllTests ==
     *)
     /\ TestReplaceAll1
     /\ TestReplaceAll2
-    (*
+    (* FAILING tests:
     /\ TestInsertAt1
     /\ TestInsertAt2
     /\ TestInsertAt3
@@ -357,7 +365,8 @@ AllTests ==
     /\ TestIsStrictSuffix1
     /\ TestPrefixes1
     /\ TestPrefixes2
-    (*
+    /\ TestPrefixes3
+    (* FAILING tests:
     /\ TestCommonPrefixes1
     /\ TestLongestCommonPrefix1
     /\ TestLongestCommonPrefix2

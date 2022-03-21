@@ -1,5 +1,5 @@
------------------------- MODULE SequencesExt ---------------------------------
-\*------ MODULE __rewire_sequences_ext_in_apalache -----------------------
+------ MODULE __rewire_sequences_ext_in_apalache -----------------------
+\*------------------------ MODULE SequencesExt ---------------------------------
 (**
  * ^^^^^^^^^^^^^^^^^^^^^^ We have to call this module SequencesExt in any
  * case, otherwise, SANY complains.
@@ -18,7 +18,6 @@
 LOCAL INSTANCE Integers
 LOCAL INSTANCE Sequences
 LOCAL INSTANCE FiniteSets
-LOCAL INSTANCE Apalache
 LOCAL INSTANCE __apalache_folds
 LOCAL INSTANCE __apalache_internal
 
@@ -65,7 +64,7 @@ SetToSortSeq(S, LessThan(_, _)) ==
            THEN newElem
            ELSE seq[i + 1]
     IN
-    MkSeq(__ApalacheSeqCapacity(seq) + 1, __copy_or_set)
+    __ApalacheMkSeq(__ApalacheSeqCapacity(seq) + 1, __copy_or_set)
   IN
   __ApalacheFoldSet(__insert_sorted, <<>>, S)
 
@@ -120,7 +119,7 @@ Contains(s, e) ==
 Reverse(s) ==
   LET __s_len == Len(s) IN
   LET __get_ith(i) == s[__s_len - i + 1] IN
-  SubSeq(MkSeq(__ApalacheSeqCapacity(s), __get_ith), 1, __s_len)
+  SubSeq(__ApalacheMkSeq(__ApalacheSeqCapacity(s), __get_ith), 1, __s_len)
 
 (**
  * The sequence s with e removed or s iff e \notin Range(s).
@@ -145,7 +144,8 @@ ReplaceAll(seq, old, new) ==
   LET __copy_or_set(i) ==
     IF seq[i] = old THEN new ELSE seq[i]
   IN
-  SubSeq(MkSeq(__ApalacheSeqCapacity(seq), __copy_or_set), 1, Len(seq))
+  SubSeq(__ApalacheMkSeq(__ApalacheSeqCapacity(seq), __copy_or_set),
+        1, Len(seq))
   
 (**  
  * Inserts element e at the position i moving the original element to i+1
@@ -165,7 +165,8 @@ InsertAt(seq, k, e) ==
          THEN seq[i]
          ELSE seq[i - 1]
   IN
-  SubSeq(MkSeq(__ApalacheSeqCapacity(seq) + 1, __copy_or_set), 1, Len(seq) + 1)
+  SubSeq(__ApalacheMkSeq(__ApalacheSeqCapacity(seq) + 1, __copy_or_set),
+        1, Len(seq) + 1)
 
 (**
  * Replaces the element at position i with the element e.
@@ -278,5 +279,35 @@ LongestCommonPrefix(S) ==
           Len(other) <= Len(longest)
 
 -----------------------------------------------------------------------------
+
+(**
+ * Range(a % b) = 0..b-1, but DOMAIN seq = 1..Len(seq).
+ * So to do modular arithmetic on sequences we need to map 0 to b.
+ *
+ * @type: (Int, Int) => Int;
+ *)
+SeqMod(a, b) == 
+  IF a % b = 0 THEN b ELSE a % b
+
+(**
+ * An alias of FoldFunction that op on all elements of seq an arbitrary
+ * order. The resulting function is:
+ *
+ *    op(f[i],op(f[j], ..., op(f[k],base) ...))
+ *
+ * op must be associative and commutative, because we can not assume a
+ * particular ordering of i, j, and k
+ *
+ * Example:
+ *
+ *  FoldSeq(LAMBDA x,y: {x} \cup y, {}, <<1,2,1>>) = Range(<<1,2,1>>)
+ *
+ * @type: ((a, b) => b, b, Seq(a)) => b;
+ *)
+FoldSeq(op(_, _), base, seq) == 
+  \* __ApalacheFoldSeq is accumulating the result in the left argument,
+  \* whereas FoldSeq is accumulating the result in the right argument.
+  LET __map(y, x) == op(x, y) IN
+  __ApalacheFoldSeq(__map, base, seq)
 
 ===============================================================================

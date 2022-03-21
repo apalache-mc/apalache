@@ -14,7 +14,7 @@
  * @type: ((a, b) => a, a, Set(b)) => a;
  *)
 __ApalacheFoldSet(Op(_, _), v, S) ==
-    \* A dummy implementation. Apalache rewires it with Apalache.foldSet.
+    \* A dummy implementation. Apalache rewires it with ApalacheOper.foldSet.
     v
 
 (**
@@ -27,7 +27,19 @@ __ApalacheFoldSet(Op(_, _), v, S) ==
  * @type: ((a, b) => a, a, Seq(b)) => a;
  *)
 __ApalacheFoldSeq(Op(_, _), v, seq) ==
-    \* A dummy implementation. Apalache rewires it with Apalache.foldSeq.
+    \* A dummy implementation. Apalache rewires it with ApalacheOper.foldSeq.
     v
+
+(**
+ * A sequence constructor that avoids using a function constructor.
+ * Since Apalache is typed, this operator is more efficient than
+ * FunAsSeq([ i \in 1..N |-> F(i) ]). Apalache requires N to be
+ * a constant expression.
+ *
+ * @type: (Int, (Int -> a)) => Seq(a);
+ *)
+__ApalacheMkSeq(N, F(_)) ==
+    \* A dummy implementation. Apalache rewires it with ApalacheOper.mkSeq.
+    <<>>
 
 ===============================================================================

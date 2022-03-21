@@ -67,6 +67,7 @@ object StandardLibrary {
         ("__apalache_folds", "__ApalacheFoldSet") -> ApalacheOper.foldSet,
         ("Apalache", "FoldSeq") -> ApalacheOper.foldSeq,
         ("__apalache_folds", "__ApalacheFoldSeq") -> ApalacheOper.foldSeq,
+        ("__apalache_folds", "__ApalacheMkSeq") -> ApalacheOper.mkSeq,
         ("__apalache_internal", "__NotSupportedByModelChecker") -> ApalacheInternalOper.notSupportedByModelChecker,
         ("__apalache_internal", "__ApalacheSeqCapacity") -> ApalacheInternalOper.apalacheSeqCapacity,
     ) ////
