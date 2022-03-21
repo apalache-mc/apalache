@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.pp
 
+import at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -17,15 +18,17 @@ class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
 
   def mkModule(decls: TlaDecl*): TlaModule = TlaModule("M", decls)
 
-  var inliner = new Inliner(new IdleTracker, new UniqueNameGenerator)
+  var inlinerKeepNullary = new Inliner(new IdleTracker, new UniqueNameGenerator)
+  var inlinerInlineNullary = new Inliner(new IdleTracker, new UniqueNameGenerator, keepNullary = false)
 
   def runFresh[T](scopeFn: Scope => T): T = scopeFn(Inliner.emptyScope)
 
   override def beforeEach(): Unit = {
-    inliner = new Inliner(new IdleTracker, new UniqueNameGenerator)
+    inlinerKeepNullary = new Inliner(new IdleTracker, new UniqueNameGenerator)
+    inlinerInlineNullary = new Inliner(new IdleTracker, new UniqueNameGenerator, keepNullary = false)
   }
 
-  test("Test LET inline: LET A(p) == e IN A(x) ~~> e[x/p]") {
+  test("LET inline: LET A(p) == e IN A(x) ~~> e[x/p]") {
 
     val ABody = tla.plus(tla.name("p").as(IntT1()), tla.int(1).as(IntT1())).as(IntT1())
     val AType = OperT1(Seq(IntT1()), IntT1())
@@ -36,12 +39,12 @@ class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
 
     val expectedBody = tla.plus(tla.name("x").as(IntT1()), tla.int(1).as(IntT1())).as(IntT1())
 
-    val actualBody = runFresh(inliner.transform(_)(letInEx))
+    val actualBody = runFresh(inlinerKeepNullary.transform(_)(letInEx))
 
     assert(actualBody == expectedBody)
   }
 
-  test("Test global inline: A(p) == e, A(x) ~~> e[x/p]") {
+  test("Global inline: A(p) == e, A(x) ~~> e[x/p]") {
     val ABody = tla.plus(tla.name("p").as(IntT1()), tla.int(1).as(IntT1())).as(IntT1())
     val AType = OperT1(Seq(IntT1()), IntT1())
     val ADecl = TlaOperDecl("A", List(OperParam("p")), ABody)(Typed(AType))
@@ -51,12 +54,12 @@ class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
 
     val scope = Map(ADecl.name -> ADecl)
 
-    val actualBody = inliner.transform(scope)(AApp)
+    val actualBody = inlinerKeepNullary.transform(scope)(AApp)
 
     assert(actualBody == expectedBody)
   }
 
-  test("Test nested LET-IN: LET P(x,y) == LET Q(z) == z + y IN Q(x) IN P(1,2) ~~> 1 + 2 ") {
+  test("Nested LET-IN: LET P(x,y) == LET Q(z) == z + y IN Q(x) IN P(1,2) ~~> 1 + 2 ") {
     val QBody = tla.plus(tla.name("z").as(IntT1()), tla.name("y").as(IntT1())).as(IntT1())
     val QType = OperT1(Seq(IntT1()), IntT1())
     val QDecl = TlaOperDecl("Q", List(OperParam("z")), QBody)(Typed(QType))
@@ -89,12 +92,12 @@ class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
 
     val expectedBody = tla.plus(tla.int(1).as(IntT1()), tla.int(2).as(IntT1())).as(IntT1())
 
-    val actualBody = inliner.transform(emptyScope)(toplevel)
+    val actualBody = inlinerKeepNullary.transform(emptyScope)(toplevel)
 
     assert(actualBody == expectedBody)
   }
 
-  test("Test linear dependencies: P(x) == Q(x) + 1; Q(z) == z + 1; P(1) ~~> 1 + 1 + 1 ") {
+  test("Linear dependencies: P(x) == Q(x) + 1; Q(z) == z + 1; P(1) ~~> 1 + 1 + 1 ") {
     val QBody = tla.plus(tla.name("z").as(IntT1()), tla.int(1).as(IntT1())).as(IntT1())
     val QType = OperT1(Seq(IntT1()), IntT1())
     val QDecl = TlaOperDecl("Q", List(OperParam("z")), QBody)(Typed(QType))
@@ -125,11 +128,36 @@ class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
     val decls = List(QDecl, PDecl, XDecl)
     val module = mkModule(decls: _*)
 
-    val txModule = inliner.apply(module)
+    val txModule = inlinerKeepNullary.apply(module)
 
     val actualBody = txModule.declarations(2).asInstanceOf[TlaOperDecl].body
 
     assert(actualBody == expectedBody)
+  }
+
+  test("KeepNullary: LET A == 1 B(x) == 2 IN A + B(0) ~~> LET A == 1 IN A + 2 or 1 + 2") {
+    val ABody = tla.int(1).as(IntT1())
+    val AType = OperT1(Seq.empty, IntT1())
+    val ADecl = TlaOperDecl("A", List.empty, ABody)(Typed(AType))
+
+    val BBody = tla.int(2).as(IntT1())
+    val BType = OperT1(Seq(IntT1()), IntT1())
+    val BDecl = TlaOperDecl("B", List(OperParam("x")), BBody)(Typed(BType))
+
+    val AApp = tla.appOp(tla.name("A").as(AType)).as(IntT1())
+    val BApp = tla.appOp(tla.name("B").as(BType), tla.int(0).as(IntT1())).as(IntT1())
+
+    val ex = LetInEx(tla.plus(AApp, BApp).as(IntT1()), ADecl, BDecl)(Typed(IntT1()))
+    val expectedIfKeep = LetInEx(tla.plus(AApp, tla.int(2).as(IntT1())).as(IntT1()), ADecl)(Typed(IntT1()))
+    val expectedIfInline = tla.plus(tla.int(1).as(IntT1()), tla.int(2).as(IntT1())).as(IntT1())
+    val actualKeep = inlinerKeepNullary.transform(emptyScope)(ex)
+
+    assert(actualKeep == expectedIfKeep)
+
+    val actualInline = inlinerInlineNullary.transform(emptyScope)(ex)
+
+    assert(actualInline == expectedIfInline)
+
   }
 
 }
