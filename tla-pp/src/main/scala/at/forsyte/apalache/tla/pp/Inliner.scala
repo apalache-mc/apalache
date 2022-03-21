@@ -7,7 +7,9 @@ import at.forsyte.apalache.tla.lir.storage.BodyMap
 import at.forsyte.apalache.tla.lir.transformations.standard.{
   DeclarationSorter, DeepCopy, IncrementalRenaming, ReplaceFixed,
 }
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModuleTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.{
+  fromTouchToExTransformation, TlaExTransformation, TlaModuleTransformation, TransformationTracker,
+}
 import at.forsyte.apalache.tla.pp.Inliner.FilterFun
 import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier}
 
@@ -65,9 +67,22 @@ class Inliner(
   private def nonNullaryFilter(d: TlaOperDecl): Boolean = !keepNullary || d.formalParams.nonEmpty
   private def negateFilter(df: DeclFilter): DeclFilter = d => !df(d)
 
+  private def getSubstitution(targetType: TlaType1, decl: TlaOperDecl): (Substitution, TlaType1) = {
+    val genericType = decl.typeTag.asTlaType1()
+    new TypeUnifier().unify(Substitution.empty, genericType, targetType) match {
+      case None =>
+        throw new TypingException(
+            s"Inliner: Unable to unify generic signature $genericType of ${decl.name} with the concrete type $targetType",
+            decl.ID)
+
+      case Some(pair) => pair
+    }
+
+  }
+
   // Assume name is in scope.
   // Creates a fresh copy of the operator body and replaces formal parameter instances with the argument instances.
-  def instantiateWithArgs(operatorsInScope: Scope)(name: String, args: Seq[TlaEx]): TlaEx = {
+  private def instantiateWithArgs(operatorsInScope: Scope)(name: String, args: Seq[TlaEx]): TlaEx = {
     val decl = operatorsInScope(name)
 
     // Note: it can happen that the body and the decl have desynced types,
@@ -84,15 +99,8 @@ class Inliner(
     // 1. Unify the operator type with the arguments.
     // 2. Apply the resulting substitution to the types in all subexpressions.
     val actualType = OperT1(args.map(_.typeTag.asTlaType1()), freshBody.typeTag.asTlaType1())
-    val genericType = decl.typeTag.asTlaType1()
-    val substitution = new TypeUnifier().unify(Substitution.empty, genericType, actualType) match {
-      case None =>
-        throw new TypingException(
-            s"Inliner: Unable to unify generic signature $genericType of ${decl.name} with the concrete type $actualType",
-            decl.ID)
 
-      case Some((sub, _)) => sub
-    }
+    val (substitution, _) = getSubstitution(actualType, decl)
 
     if (substitution.isEmpty) newBody
     else new TypeSubstitutor(tracker, substitution)(newBody)
@@ -100,8 +108,25 @@ class Inliner(
 
   // Assume name is in scope. Creates a local nullary LET-IN for call-by-name operators.
   // If Inliner is ever called 2+ times, every call but the first must have `keepNullary = true` to preserve this.
-  // TODO
-  def embedCallByName(nameEx: NameEx): TlaEx = nameEx
+  def embedCallByName(operatorsInScope: Scope)(nameEx: NameEx): TlaEx = {
+    val decl = operatorsInScope(nameEx.name)
+
+    val freshBody = deepCopy(decl.body)
+
+    val monoOperType = nameEx.typeTag.asTlaType1()
+
+    val (substitution, tp) = getSubstitution(monoOperType, decl)
+
+    val newBody =
+      if (substitution.isEmpty) freshBody
+      else new TypeSubstitutor(tracker, substitution)(freshBody)
+
+    val newName = nameGenerator.newName()
+
+    val newLocalDecl = TlaOperDecl(newName, decl.formalParams, newBody)(Typed(tp))
+
+    LetInEx(NameEx(newName)(nameEx.typeTag), newLocalDecl)(nameEx.typeTag)
+  }
 
   // TODO
   def transform(operatorsInScope: Scope): TlaExTransformation = tracker.trackEx {
@@ -117,6 +142,10 @@ class Inliner(
 
       if (castDecls.isEmpty) newBody
       else LetInEx(newBody, castDecls: _*)(newBody.typeTag)
+
+    // call-by-name
+    case nameEx: NameEx if operatorsInScope.contains(nameEx.name) =>
+      embedCallByName(operatorsInScope)(nameEx)
 
     case ex @ OperEx(oper, args @ _*) =>
       OperEx(oper, args.map(transform(operatorsInScope)): _*)(ex.typeTag)

@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.pp.Inliner.emptyScope
 import org.junit.runner.RunWith
@@ -157,6 +158,34 @@ class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
     val actualInline = inlinerInlineNullary.transform(emptyScope)(ex)
 
     assert(actualInline == expectedIfInline)
+
+  }
+
+  test("call-by-name inline: LET A(x, y) == 1 IN FoldSet(A, v, S) ~~> FoldSet( LET AA(x,y) == 1 IN AA, v, S)") {
+    val ABody = tla.int(1).as(IntT1())
+    val AType = OperT1(Seq(IntT1(), IntT1()), IntT1())
+    val AParams = List(OperParam("x"), OperParam("y"))
+    val ADecl = TlaOperDecl("A", AParams, ABody)(Typed(AType))
+
+    val n_v = tla.name("v").as(IntT1())
+    val n_S = tla.name("S").as(SetT1(IntT1()))
+
+    val ex = tla
+      .letIn(
+          OperEx(ApalacheOper.foldSet, tla.name("A").as(AType), n_v, n_S)(Typed(IntT1())),
+          ADecl,
+      )
+      .as(IntT1())
+    val actual = inlinerKeepNullary.transform(emptyScope)(ex)
+
+    // The localized name is an implementation detail
+    val cond = actual match {
+      case OperEx(ApalacheOper.foldSet, LetInEx(NameEx(genName), TlaOperDecl(opName, AParams, ABody)), _, _) =>
+        opName == genName
+      case _ => false
+    }
+
+    assert(cond)
 
   }
 
