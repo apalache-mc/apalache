@@ -348,7 +348,7 @@ FoldRight(op(_, _), seq, base) ==
  *
  * Examples:
  *
- *  FlattenSeq(<< <<1,2>>, <<1>> >>) = << 1, 2, 1 >>
+ *  FlattenSeq(<< <<1, 2>>, <<1>> >>) = << 1, 2, 1 >>
  *  FlattenSeq(<< <<"a">>, <<"b">> >>) = <<"a", "b">>
  *  FlattenSeq(<< "a", "b" >>) = "ab"
  *
@@ -361,15 +361,15 @@ FlattenSeq(seqs) ==
   __ApalacheFoldSeq(__concat, <<>>, seqs)
 
 (**
- * A sequence where the i-th tuple contains the i-th element of  s  and
- *   t  in this order.  Not defined for  Len(s) # Len(t)
+ * A sequence where the i-th tuple contains the i-th element of s and
+ * t in this order.  Not defined for  Len(s) # Len(t)
  *
  * Examples:
  *
  *  Zip(<< >>, << >>) = << >>
- *  Zip(<<"a">>, <<"b">>) = <<"a", "b">>
- *  Zip(<<1,3>>, <<2,4>>) = <<<<1>>, <<2>>, <<3>>, <<4>>>>
- *  FlattenSeq(Zip(<<1,3>>,<<2,4>>)) = <<1, 2, 3, 4>>
+ *  Zip(<<"a">>, <<"b">>) = << <<"a", "b">> >>
+ *  Zip(<<1, 3>>, <<2, 4>>) = << <<1, 2>>, <<3, 4>> >>
+ *  FlattenSeq(Zip(<<1, 3>>, <<2, 4>>)) = << <<1, 2>>, <<3, 4>> >>
  *
  * @type: (Seq(a), Seq(b)) => Seq(<<a, b>>);
  *)
@@ -382,7 +382,6 @@ Zip(s, t) ==
     <<>>
   ELSE
     SubSeq(__ApalacheMkSeq(__ApalacheSeqCapacity(s), __mk_tup), 1, Len(s))
-
 
 (**
  * The set of all subsequences of the sequence  s. Note that the empty
