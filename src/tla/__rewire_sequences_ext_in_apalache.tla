@@ -28,7 +28,7 @@ LOCAL INSTANCE __apalache_internal
  * @type: Seq(a) => Set(a);
  *)
 ToSet(s) ==
-  { s[i] : i \in DOMAIN s }
+  { s[__i] : __i \in DOMAIN s }
 
 (**
  * Convert a set to some sequence that contains all the elements of the
@@ -49,22 +49,22 @@ SetToSeq(S) ==
 SetToSortSeq(S, LessThan(_, _)) ==
   \* insert a new element element 
   LET \* @type: (Seq(b), b) => Seq(b);
-        __insert_sorted(seq, newElem) ==
+        __insert_sorted(__seq, __newElem) ==
     \* find the position for inserting the element at
     LET __insertion_pos ==
-      CHOOSE p \in (DOMAIN seq) \union { Len(seq) + 1 }:
-        \A i \in DOMAIN seq:
-          i < p <=> LessThan(seq[i], newElem)
+      CHOOSE __p \in (DOMAIN __seq) \union { Len(__seq) + 1 }:
+        \A __i \in DOMAIN __seq:
+          __i < __p <=> LessThan(__seq[__i], __newElem)
     IN
     \* copy the sequence elements or insert a new one
-    LET __copy_or_set(i) ==
-      IF i < __insertion_pos
-      THEN seq[i]
-      ELSE IF i = __insertion_pos
-           THEN newElem
-           ELSE seq[i + 1]
+    LET __copy_or_set(__i) ==
+      IF __i < __insertion_pos
+      THEN __seq[__i]
+      ELSE IF __i = __insertion_pos
+           THEN __newElem
+           ELSE __seq[__i + 1]
     IN
-    __ApalacheMkSeq(__ApalacheSeqCapacity(seq) + 1, __copy_or_set)
+    __ApalacheMkSeq(__ApalacheSeqCapacity(__seq) + 1, __copy_or_set)
   IN
   __ApalacheFoldSet(__insert_sorted, <<>>, S)
 
@@ -127,10 +127,10 @@ Reverse(s) ==
  * @type: (Seq(a), a) => Seq(a);
  *)
 Remove(seq, e) ==
-    LET __append_if_eq(res, t) ==
-        IF t /= e
-        THEN Append(res, e)
-        ELSE res
+    LET __append_if_eq(__res, __t) ==
+        IF __t /= e
+        THEN Append(__res, e)
+        ELSE __res
     IN
     __ApalacheFoldSeq(__append_if_eq, <<>>, seq)
 
@@ -141,8 +141,8 @@ Remove(seq, e) ==
  * @type: (Seq(a), a, a) => Seq(a);
  *)
 ReplaceAll(seq, old, new) ==
-  LET __copy_or_set(i) ==
-    IF seq[i] = old THEN new ELSE seq[i]
+  LET __copy_or_set(__i) ==
+    IF seq[__i] = old THEN new ELSE seq[__i]
   IN
   SubSeq(__ApalacheMkSeq(__ApalacheSeqCapacity(seq), __copy_or_set),
         1, Len(seq))
@@ -158,12 +158,12 @@ ReplaceAll(seq, old, new) ==
  * @type: (Seq(a), Int, a) => Seq(a);
  *)
 InsertAt(seq, k, e) ==
-  LET __copy_or_set(i) ==
-    IF i = e
+  LET __copy_or_set(__i) ==
+    IF __i = e
     THEN e
-    ELSE IF i < k
-         THEN seq[i]
-         ELSE seq[i - 1]
+    ELSE IF __i < k
+         THEN seq[__i]
+         ELSE seq[__i - 1]
   IN
   SubSeq(__ApalacheMkSeq(__ApalacheSeqCapacity(seq) + 1, __copy_or_set),
         1, Len(seq) + 1)
@@ -256,7 +256,7 @@ IsStrictSuffix(s, t) ==
  * @type: Seq(a) => Set(Seq(a));
  *)
 Prefixes(s) ==
-  { SubSeq(s, 1, l): l \in { 0 } \union DOMAIN s }
+  { SubSeq(s, 1, __l): __l \in { 0 } \union DOMAIN s }
 
 (**
  * The set of all sequences that are prefixes of the set of sequences S.
@@ -265,8 +265,8 @@ Prefixes(s) ==
  *)
 CommonPrefixes(S) ==
   \* TODO: use FoldSet?
-  LET P == UNION { Prefixes(seq) : seq \in S }
-  IN { prefix \in P : \A t \in S: IsPrefix(prefix, t) }
+  LET __P == UNION { Prefixes(seq) : seq \in S }
+  IN { __prefix \in __P: \A __t \in S: IsPrefix(__prefix, __t) }
 
 (**
  * The longest common prefix of the sequences in the set S.
@@ -274,9 +274,10 @@ CommonPrefixes(S) ==
  * @type: Set(Seq(a)) => Seq(a);
  *)
 LongestCommonPrefix(S) ==
-  CHOOSE longest \in CommonPrefixes(S):  \* there can only be one LCP => CHOOSE
-      \A other \in CommonPrefixes(S):
-          Len(other) <= Len(longest)
+  CHOOSE __longest \in CommonPrefixes(S):
+      \* there can only be one LCP => CHOOSE
+      \A __other \in CommonPrefixes(S):
+          Len(__other) <= Len(__longest)
 
 -----------------------------------------------------------------------------
 
@@ -390,7 +391,7 @@ Zip(s, t) ==
  * @type: Seq(a) => Set(Seq(a));
  *)
 SubSeqs(s) ==
-  { SubSeq(s, i + 1, j): i, j \in {0} \union (DOMAIN s) }
+  { SubSeq(s, __i + 1, __j): __i, __j \in {0} \union (DOMAIN s) }
 
 (**
  * The (1-based) index of the beginning of the subsequence haystack of the
@@ -423,10 +424,10 @@ IndexFirstSubSeq(needle, haystack) ==
  * @type: (Int, Seq(a), Seq(a), Seq(a)) => Seq(a);
  *)
 ReplaceSubSeqAt(i, r, s, t) ==
-  LET prefix == SubSeq(t, 1, i - 1)
-      suffix == SubSeq(t, i + Len(s), Len(t))
+  LET __prefix == SubSeq(t, 1, i - 1)
+      __suffix == SubSeq(t, i + Len(s), Len(t))
   IN
-  prefix \o r \o suffix 
+  __prefix \o r \o __suffix 
 
 (**
  * The sequence t with its subsequence s replaced by the sequence r.

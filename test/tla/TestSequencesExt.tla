@@ -15,9 +15,6 @@ Next == TRUE
 
 (********************* USEFUL DEFINITIONS ********************************)
 \* @type: Seq(Int);
-seq345 == <<3, 4, 5>>
-
-\* @type: Seq(Int);
 intSeqEmpty == <<>>
 
 \* @type: Seq(Seq(Int));
@@ -28,15 +25,6 @@ strSeqEmpty == <<>>
 
 \* @type: Set(Int);
 setEmpty == {}
-
-\* @type: Seq(Int);
-seq26970 == <<2, 6, 9, 7, 0>>
-
-Add(i, j) == i + j
-
-IsOdd(i) == i % 2 = 1
-
-Concat(s, t) == s \o t
 
 (********************* TESTS ********************************)
 TestToSet1 ==
@@ -190,40 +178,40 @@ TestFront1 ==
 TestLast1 ==
     Last(<<3, 4, 5>>) = 5
 
-TestPrefix1 ==
+TestIsPrefix1 ==
     IsPrefix(intSeqEmpty, intSeqEmpty)
 
-TestPrefix2 ==
+TestIsPrefix2 ==
     IsPrefix(intSeqEmpty, <<1>>)
 
-TestPrefix3 ==
+TestIsPrefix3 ==
     IsPrefix(<<1>>, <<1,2>>)
 
-TestPrefix4 ==
+TestIsPrefix4 ==
     IsPrefix(<<1,2>>, <<1,2>>)
 
-TestPrefix5 ==
+TestIsPrefix5 ==
     IsPrefix(<<1,2>>, <<1,2,3>>)
 
-TestPrefix6 ==
+TestIsPrefix6 ==
     ~IsPrefix(<<1,2,3>>, <<1,2>>)
 
-TestPrefix7 ==
+TestIsPrefix7 ==
     ~IsPrefix(<<1,2,2>>, <<1,2,3>>)
 
-TestPrefix8 ==
+TestIsPrefix8 ==
     ~IsPrefix(<<1,2,3>>, <<1,2,2>>)
 
-TestPrefix9 ==
+TestIsPrefix9 ==
     ~IsPrefix(<<1>>, <<2>>)
 
-TestPrefix10 ==
+TestIsPrefix10 ==
     ~IsPrefix(<<2>>, <<1>>)
 
-TestPrefix11 ==
+TestIsPrefix11 ==
     ~IsPrefix(<<2,1>>, <<1,2>>)
 
-TestPrefix12 ==
+TestIsPrefix12 ==
     ~IsPrefix(<<1,2>>, <<2,1>>)
 
 TestIsStrictPrefix1 ==
@@ -241,16 +229,16 @@ TestIsStrictPrefix4 ==
 TestIsStrictPrefix5 ==
     IsStrictPrefix(<<1,2>>, <<1,2,3>>)
 
-TestSuffix1 ==
+TestIsSuffix1 ==
     IsSuffix(<<3>>, <<1,2,3>>)
 
-TestSuffix2 ==
+TestIsSuffix2 ==
     IsSuffix(<<2,3>>, <<1,2,3>>)
 
-TestSuffix3 ==
+TestIsSuffix3 ==
     ~IsSuffix(<<3,2>>, <<1,2,3>>)
 
-TestSuffix4 ==
+TestIsSuffix4 ==
     IsSuffix(<<1,2,3>>, <<1,2,3>>)
 
 TestIsStrictSuffix1 ==
@@ -531,27 +519,27 @@ AllTests ==
     /\ TestCons1
     /\ TestFront1
     /\ TestLast1
-    /\ TestPrefix1
-    /\ TestPrefix2
-    /\ TestPrefix3
-    /\ TestPrefix4
-    /\ TestPrefix5
-    /\ TestPrefix6
-    /\ TestPrefix7
-    /\ TestPrefix8
-    /\ TestPrefix9
-    /\ TestPrefix10
-    /\ TestPrefix11
-    /\ TestPrefix12
+    /\ TestIsPrefix1
+    /\ TestIsPrefix2
+    /\ TestIsPrefix3
+    /\ TestIsPrefix4
+    /\ TestIsPrefix5
+    /\ TestIsPrefix6
+    /\ TestIsPrefix7
+    /\ TestIsPrefix8
+    /\ TestIsPrefix9
+    /\ TestIsPrefix10
+    /\ TestIsPrefix11
+    /\ TestIsPrefix12
     /\ TestIsStrictPrefix1
     /\ TestIsStrictPrefix2
     /\ TestIsStrictPrefix3
     /\ TestIsStrictPrefix4
     /\ TestIsStrictPrefix5
-    /\ TestSuffix1
-    /\ TestSuffix2
-    /\ TestSuffix3
-    /\ TestSuffix4
+    /\ TestIsSuffix1
+    /\ TestIsSuffix2
+    /\ TestIsSuffix3
+    /\ TestIsSuffix4
     /\ TestIsStrictSuffix1
     /\ TestPrefixes1
     /\ TestPrefixes2
