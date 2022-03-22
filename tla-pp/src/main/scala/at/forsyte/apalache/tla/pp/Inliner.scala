@@ -7,14 +7,20 @@ import at.forsyte.apalache.tla.lir.storage.BodyMap
 import at.forsyte.apalache.tla.lir.transformations.standard.{
   DeclarationSorter, DeepCopy, IncrementalRenaming, ReplaceFixed,
 }
-import at.forsyte.apalache.tla.lir.transformations.{
-  fromTouchToExTransformation, TlaExTransformation, TlaModuleTransformation, TransformationTracker,
-}
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModuleTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.pp.Inliner.FilterFun
 import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier}
 
 /**
- * TODO
+ * Given a module m, with global operators F1,...,Fn _in dependency order_, Inliner performs the following
+ * transformation:
+ *   - For each i, replaces all application instances Fi(a1i, ..., aki) in m, where Fi(p1i,...,pki) == ei, with
+ *     ei[a1/p1i, ..., aki/pki]
+ *   - Replaces each instance of LET G1(q11,...,qk1) == g1 ... Gm(q1m, ..., qkm) == gm IN f, with:
+ *     - f, inlined by the previous rule, as if G1, ..., Gm were global, if `keepNullary` is `false`, or,
+ *     - LET Gj1 == gj1 ... Gjl == gjl
+ *   - For each instance of call-by-name A (where a definition A(p1,...,pk) == e exists in scope), replaces
+ *     - A with LET A_LOCAL(p1,...,pk) = e IN A_LOCAL
  *
  * @author
  *   Jure Kukovec
@@ -33,14 +39,14 @@ class Inliner(
   import Inliner._
 
   // Bookeeping of scope, always called, but discards operators that won't be inlined
-  private def extendedScope(operatorsInScope: Scope)(d: TlaOperDecl): Scope = d match {
+  private def extendedScope(scope: Scope)(d: TlaOperDecl): Scope = d match {
     // We only inline operators (i.e. track them in scope) if
     // - they're non-recursive, and
     // - they satisfy the scope filter function
     case decl: TlaOperDecl if !decl.isRecursive && nonNullaryFilter(d) =>
-      operatorsInScope + (decl.name -> decl)
+      scope + (decl.name -> decl)
     // ignore any other declaration
-    case _ => operatorsInScope
+    case _ => scope
   }
 
   // Iterative traversal of decls with a monotonically increasing scope.
@@ -54,9 +60,13 @@ class Inliner(
     decls.foldLeft((initialScope, List.empty[TlaDecl])) { case ((scope, decls), decl) =>
       decl match {
         case opDecl: TlaOperDecl =>
+          // First, process the operator body in the current scope
           val newDeclBody = transform(scope)(opDecl.body)
+          // Source tracking
           val newDecl = tracker.trackOperDecl { _ => opDecl.copy(body = newDeclBody) }(opDecl)
+          // then, possibly extend scope with the new declaration
           val newScope = extendedScope(scope)(newDecl)
+          // Finally, store the declaration in the list if necessary
           if (operDeclFilter(newDecl)) (newScope, decls :+ newDecl)
           else (newScope, decls)
         case _ => (scope, decls :+ decl)
@@ -67,6 +77,8 @@ class Inliner(
   private def nonNullaryFilter(d: TlaOperDecl): Boolean = !keepNullary || d.formalParams.nonEmpty
   private def negateFilter(df: DeclFilter): DeclFilter = d => !df(d)
 
+  // Given a declaration (possibly holding a polymorphic type) and a monotyped target, computes
+  // a substitution of the two. A substitution is assumed to exist, otherwise TypingException is thrown.
   private def getSubstitution(targetType: TlaType1, decl: TlaOperDecl): (Substitution, TlaType1) = {
     val genericType = decl.typeTag.asTlaType1()
     new TypeUnifier().unify(Substitution.empty, genericType, targetType) match {
@@ -77,13 +89,12 @@ class Inliner(
 
       case Some(pair) => pair
     }
-
   }
 
   // Assume name is in scope.
   // Creates a fresh copy of the operator body and replaces formal parameter instances with the argument instances.
-  private def instantiateWithArgs(operatorsInScope: Scope)(name: String, args: Seq[TlaEx]): TlaEx = {
-    val decl = operatorsInScope(name)
+  private def instantiateWithArgs(scope: Scope)(name: String, args: Seq[TlaEx]): TlaEx = {
+    val decl = scope(name)
 
     // Note: it can happen that the body and the decl have desynced types,
     // due to the way type-checking is currently implemented for polymorphic operators.
@@ -92,7 +103,11 @@ class Inliner(
 
     // Each formal parameter gets instantiated independently.
     val newBody = decl.formalParams.zip(args).foldLeft(freshBody) { case (partialBody, (fParam, arg)) =>
-      ReplaceFixed(tracker)(NameEx(fParam.name)(arg.typeTag), arg)(partialBody)
+      val replaced = ReplaceFixed(tracker)(NameEx(fParam.name)(arg.typeTag), arg)(partialBody)
+      // Higher-order parameter instantiation warrants a call to transform, since the parameter can get
+      // instantiated with either a lambda or a global operator
+      if (!fParam.isOperator) replaced
+      else transform(scope)(replaced)
     }
 
     // If the operator has a parametric signature, we have to substitute type parameters with concrete parameters
@@ -106,54 +121,78 @@ class Inliner(
     else new TypeSubstitutor(tracker, substitution)(newBody)
   }
 
-  // Assume name is in scope. Creates a local nullary LET-IN for call-by-name operators.
-  // If Inliner is ever called 2+ times, every call but the first must have `keepNullary = true` to preserve this.
-  def embedCallByName(operatorsInScope: Scope)(nameEx: NameEx): TlaEx = {
-    val decl = operatorsInScope(nameEx.name)
+  // Assume name is in scope. Creates a local LET-IN for call-by-name operators.
+  private def embedCallByName(scope: Scope)(nameEx: NameEx): TlaEx = {
+    val decl = scope(nameEx.name)
 
+    // like in instantiateWithArgs, we compare the declaration type to the expected monotype
     val freshBody = deepCopy(decl.body)
-
     val monoOperType = nameEx.typeTag.asTlaType1()
 
     val (substitution, tp) = getSubstitution(monoOperType, decl)
+
+    val tpTag = Typed(tp)
 
     val newBody =
       if (substitution.isEmpty) freshBody
       else new TypeSubstitutor(tracker, substitution)(freshBody)
 
+    // To make a local definition, we use a fresh name
     val newName = nameGenerator.newName()
+    val newLocalDecl = TlaOperDecl(newName, decl.formalParams, newBody)(tpTag)
 
-    val newLocalDecl = TlaOperDecl(newName, decl.formalParams, newBody)(Typed(tp))
-
-    LetInEx(NameEx(newName)(nameEx.typeTag), newLocalDecl)(nameEx.typeTag)
+    LetInEx(NameEx(newName)(tpTag), newLocalDecl)(tpTag)
   }
 
-  // TODO
-  def transform(operatorsInScope: Scope): TlaExTransformation = tracker.trackEx {
+  // Checks for the specific LET-IN form used by LAMBDA and call-by-name
+  private def isCallByName(letInEx: LetInEx): Boolean = letInEx match {
+    case LetInEx(NameEx(bodyName), TlaOperDecl(operName, _, _)) => operName == bodyName
+    case _                                                      => false
+  }
+
+  // main access method, performs the transformations described above
+  def transform(scope: Scope): TlaExTransformation = tracker.trackEx {
     // Standard application
-    case OperEx(TlaOper.apply, NameEx(name), args @ _*) if operatorsInScope.contains(name) =>
-      instantiateWithArgs(operatorsInScope)(name, args)
+    case OperEx(TlaOper.apply, NameEx(name), args @ _*) if scope.contains(name) =>
+      instantiateWithArgs(scope)(name, args)
+
+    // Roundabout application, happens if you pass a lambda to a HO operator
+    case OperEx(TlaOper.apply, LetInEx(NameEx(name), decl @ TlaOperDecl(declName, params, _)), args @ _*)
+        if name == declName && params.size == args.size =>
+      // not 100% optimal, but much easier to read/maintain: just push the lambda into scope and apply the std case
+      val (newScope, _) = pushDeclsIntoScope()(scope, List(decl))
+      instantiateWithArgs(newScope)(name, args)
 
     // LET-IN extends scope
-    case LetInEx(body, defs @ _*) =>
-      val (newScope, remainingOpers) = pushDeclsIntoScope()(operatorsInScope, defs)
+    case letInEx @ LetInEx(body, defs @ _*) =>
+      // We never want to remove the definitions from a call-by-name or lambda, so the operator filter depends on whether or not
+      // this is a generic LET-IN or a call-by-name
+      val filterFun =
+        if (isCallByName(letInEx)) FilterFun.ALL
+        else negateFilter(nonNullaryFilter)
+
+      val (newScope, remainingOpers) = pushDeclsIntoScope(filterFun)(scope, defs)
+      // pushDeclsIntoScope is generic, so it doesn't know all TlaDecl are TlaOperDecl, so we just cast all of them
       val castDecls = remainingOpers.map(_.asInstanceOf[TlaOperDecl])
       val newBody = transform(newScope)(body)
 
+      // If we ended up pushing all declarations into the scope, then we can get rid of toplevel LET-IN
       if (castDecls.isEmpty) newBody
       else LetInEx(newBody, castDecls: _*)(newBody.typeTag)
 
     // call-by-name
-    case nameEx: NameEx if operatorsInScope.contains(nameEx.name) =>
-      embedCallByName(operatorsInScope)(nameEx)
+    case nameEx: NameEx if scope.contains(nameEx.name) =>
+      embedCallByName(scope)(nameEx)
 
+    // Standard recursive case
     case ex @ OperEx(oper, args @ _*) =>
-      OperEx(oper, args.map(transform(operatorsInScope)): _*)(ex.typeTag)
+      OperEx(oper, args.map(transform(scope)): _*)(ex.typeTag)
 
-    // TODO
+    // No inlining for non-operator non-name expressions
     case ex => ex
   }
 
+  // Module-level transformation. Guarantees traversal of declarations in dependency order
   override def apply(m: TlaModule): TlaModule = {
     val declSorter = new DeclarationSorter
     // Instead of pre-building a body map, sorts operators according to

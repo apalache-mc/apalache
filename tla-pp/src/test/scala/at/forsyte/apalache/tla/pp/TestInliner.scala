@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -187,6 +186,84 @@ class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
 
     assert(cond)
 
+  }
+
+  test("call-by-name in nested scope: NestedCallByName.tla ") {
+    val FBody = tla.name("new").as(IntT1())
+    val FType = OperT1(Seq(IntT1(), IntT1()), IntT1())
+    val FDecl = TlaOperDecl("F", List(OperParam("old"), OperParam("new")), FBody)(Typed(FType))
+    val innerFold =
+      OperEx(
+          ApalacheOper.foldSeq,
+          tla.name("F").as(FType),
+          tla.name("x").as(IntT1()),
+          tla.tuple(tla.name("y").as(IntT1())).as(SeqT1(IntT1())),
+      )(Typed(IntT1()))
+
+    val ABody = tla.letIn(innerFold, FDecl).as(IntT1())
+    val ATtype = FType
+    val ADecl = TlaOperDecl("A", List(OperParam("x"), OperParam("y")), ABody)(Typed(ATtype))
+
+    val invBody =
+      OperEx(
+          ApalacheOper.foldSeq,
+          tla.name("A").as(ATtype),
+          tla.int(0).as(IntT1()),
+          tla.tuple(tla.int(1).as(IntT1())).as(SeqT1(IntT1())),
+      )(Typed(IntT1()))
+
+    val InvDecl = TlaOperDecl("Inv", List.empty, invBody)(Typed(IntT1()))
+
+    val decls = List(ADecl, InvDecl)
+    val module = mkModule(decls: _*)
+
+    val txModule = inlinerKeepNullary.apply(module)
+
+    val actualBody = txModule.declarations(1).asInstanceOf[TlaOperDecl].body
+
+    val cond = actualBody match {
+      case OperEx(ApalacheOper.foldSeq, LetInEx(NameEx(outerNameInBody), decl), _, _) =>
+        decl match {
+          case TlaOperDecl(outerOpName, _,
+                  OperEx(ApalacheOper.foldSeq, LetInEx(NameEx(innerNameInBody), innerDecl), _, _))
+              if outerNameInBody == outerOpName =>
+            innerDecl match {
+              case TlaOperDecl(innerOpName, _, _) => innerNameInBody == innerOpName
+              case _                              => false
+            }
+          case _ => false
+        }
+      case _ => false
+    }
+
+    assert(cond)
+
+  }
+
+  test("Lambda passed to HO oper: A(F(_)) = F(x); A(LAMBDA p: p + 1) ~~> x + 1") {
+    val FType = OperT1(Seq(IntT1()), IntT1())
+    val ABody = tla.appOp(tla.name("F").as(FType), tla.name("x").as(IntT1())).as(IntT1())
+    val AType = OperT1(Seq(FType), IntT1())
+    val ADecl = TlaOperDecl("A", List(OperParam("F", 1)), ABody)(Typed(AType))
+    val lambda = tla
+      .letIn(
+          tla.name("LAMBDA").as(FType),
+          TlaOperDecl(
+              "LAMBDA",
+              List(OperParam("p")),
+              tla.plus(tla.name("p").as(IntT1()), tla.int(1).as(IntT1())).as(IntT1()),
+          )(Typed(FType)),
+      )
+      .as(FType)
+    val ex = tla.appOp(tla.name("A").as(AType), lambda).as(IntT1())
+
+    val expected = tla.plus(tla.name("x").as(IntT1()), tla.int(1).as(IntT1())).as(IntT1())
+
+    val scope = Map("A" -> ADecl) // we know no inlining is needed in ADecl, so we can manually build scope
+
+    val actual = inlinerKeepNullary.transform(scope)(ex)
+
+    assert(expected == actual)
   }
 
 }
