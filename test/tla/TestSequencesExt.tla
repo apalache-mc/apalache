@@ -131,7 +131,10 @@ TestRemove4 ==
     Remove(<<"a","a","b">>, "c") = <<"a","a","b">>
 
 TestRemove5 ==
-    Remove(<<{"a", "b"}, {"a","c"}>>, {"c", "a"}) = <<{"a", "b"}>>
+    Remove(<<{"a", "b"}, {"a", "c"}>>, {"c", "a"}) = <<{"a", "b"}>>
+
+TestRemove6 ==
+    Remove(intSeqEmpty, 1) = intSeqEmpty
 
 TestReplaceAll1 ==
     ReplaceAll(intSeqEmpty, 1, 4) = intSeqEmpty
@@ -495,13 +498,12 @@ AllTests ==
     /\ TestReverse2
     /\ TestReverse3
     /\ TestReverse4
-    (* FAILING tests:
     /\ TestRemove1
-    /\ TestRemove2
+    \*/\ TestRemove2
     /\ TestRemove3
-    /\ TestRemove4
-    /\ TestRemove5
-    *)
+    \*/\ TestRemove4
+    \*/\ TestRemove5
+    /\ TestRemove6
     /\ TestReplaceAll1
     /\ TestReplaceAll2
     (* FAILING tests:
@@ -544,13 +546,13 @@ AllTests ==
     /\ TestPrefixes1
     /\ TestPrefixes2
     /\ TestPrefixes3
+    /\ TestLongestCommonPrefix2
+    /\ TestLongestCommonPrefix3
+    /\ TestLongestCommonPrefix5
     (* FAILING tests:
     /\ TestCommonPrefixes1
     /\ TestLongestCommonPrefix1
-    /\ TestLongestCommonPrefix2
-    /\ TestLongestCommonPrefix3
     /\ TestLongestCommonPrefix4
-    /\ TestLongestCommonPrefix5
     *)
     /\ TestFoldSeq1
     /\ TestFoldLeft1
