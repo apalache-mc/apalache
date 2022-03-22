@@ -150,7 +150,7 @@ export APALACHE_FATAL_WARNINGS=true
 ```
 
 You may add this to your `.local-envrc` file at the root of this repo to have
-`denvenv` load this into your development environment.
+`direnv` load this into your development environment.
 
 ## Development Environment
 
