@@ -5,7 +5,9 @@
  * all tests as state invariants.
  *)
 
-EXTENDS Sequences, FiniteSets, SequencesExt, Integers, Apalache
+EXTENDS Sequences, FiniteSets, SequencesExt, Integers
+
+A == INSTANCE Apalache
 
 Init == TRUE
 
@@ -17,6 +19,9 @@ seq345 == <<3, 4, 5>>
 
 \* @type: Seq(Int);
 intSeqEmpty == <<>>
+
+\* @type: Seq(Seq(Int));
+intSeqSeqEmpty == <<>>
 
 \* @type: Seq(Str);
 strSeqEmpty == <<>>
@@ -50,16 +55,16 @@ TestToSet5 ==
     ToSet(<<1, 2, 3>>) = {1, 2, 3}
 
 TestToSet6 ==
-    ToSet(FunAsSeq([i \in 1..10 |-> 42], 10, 10)) = { 42 }
+    ToSet(A!FunAsSeq([i \in 1..10 |-> 42], 10, 10)) = { 42 }
 
 TestToSet7 ==
-    ToSet(FunAsSeq([i \in 1..10 |-> i], 10, 10)) = 1..10
+    ToSet(A!FunAsSeq([i \in 1..10 |-> i], 10, 10)) = 1..10
 
 TestToSet8 ==
-    ToSet(Tail(FunAsSeq([i \in 1..10 |-> i], 10, 10))) = 2..10
+    ToSet(Tail(A!FunAsSeq([i \in 1..10 |-> i], 10, 10))) = 2..10
 
 TestToSet9 ==
-    ToSet(FunAsSeq([i \in 0..9 |-> 42], 10, 10)) = { 42 }
+    ToSet(A!FunAsSeq([i \in 0..9 |-> 42], 10, 10)) = { 42 }
 
 TestSetToSeq1 ==
     SetToSeq(setEmpty) = intSeqEmpty
@@ -76,7 +81,7 @@ TestSetToSeq3 ==
 
 TestSetToSortSeq ==
     LET charToInt ==
-        SetAsFun({
+        A!SetAsFun({
             <<"a", 1>>, <<"c", 3>>, <<"e", 5>>,
             <<"h", 8>>, <<"l", 12>>, <<"p", 16>>
         })
@@ -288,6 +293,46 @@ TestLongestCommonPrefix5 ==
     LongestCommonPrefix({<<"a", "b", "c">>,
         <<"a", "b", "c", "c">>, <<"a", "b", "c", "d">>}) = <<"a", "b", "c">>
 
+TestFoldSeq1 ==
+    LET __plus_one(e, acc) == acc + e IN
+    FoldSeq(__plus_one, 0, <<1, 2, 1, 3, 1>>) = 8
+
+TestFoldLeft1 ==
+    LET __plus_one(acc, e) == acc + e IN
+    FoldLeft(__plus_one, 0, <<1, 2, 1, 3, 1>>) = 8
+
+TestFoldRight1 ==
+    LET __plus(e, acc) == acc + e IN
+    FoldRight(__plus, <<1, 2, 1, 3, 1>>, 0) = 8
+
+TestFlattenSeq1 ==
+    FlattenSeq(intSeqSeqEmpty) = <<>>
+
+TestFlattenSeq2 ==
+    FlattenSeq(<< <<1, 2>>, <<1>> >>) = << 1, 2, 1 >>
+
+\* an original test in the community modules, which is not well-typed
+(*
+TestFlattenSeq3 ==
+    FlattenSeq(<< <<1, 2>>, << << 1, 2 >> >> >>) = << 1, 2, << 1, 2 >> >>
+ *)
+
+TestFlattenSeq3 ==
+    FlattenSeq(<< << {1}, {2} >>, << {1}, {2}, {3}>> >>)
+        = << {1}, {2}, {1}, {2}, {3}>>
+
+TestFlattenSeq4 ==
+    FlattenSeq(intSeqSeqEmpty) = <<>>
+
+TestFlattenSeq5 ==
+    FlattenSeq(<< <<"a">>, <<"b">> >>) = <<"a", "b">>
+
+\* an original test in the community modules, which is not well-typed
+(*
+TestFlattenSeq6 ==
+    FlattenSeq(<<"a", "b">>) = "ab"
+ *)
+
 \* this test is a disjunction of all smaller tests
 AllTests ==
     /\ TestSetToSeq1
@@ -374,5 +419,13 @@ AllTests ==
     /\ TestLongestCommonPrefix4
     /\ TestLongestCommonPrefix5
     *)
+    /\ TestFoldSeq1
+    /\ TestFoldLeft1
+    /\ TestFoldRight1
+    /\ TestFlattenSeq1
+    /\ TestFlattenSeq2
+    /\ TestFlattenSeq3
+    /\ TestFlattenSeq4
+    /\ TestFlattenSeq5
 
 ===============================================================================

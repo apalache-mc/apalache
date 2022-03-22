@@ -307,7 +307,7 @@ SeqMod(a, b) ==
 FoldSeq(op(_, _), base, seq) == 
   \* __ApalacheFoldSeq is accumulating the result in the left argument,
   \* whereas FoldSeq is accumulating the result in the right argument.
-  LET __map(y, x) == op(x, y) IN
+  LET __map(__y, __x) == op(__x, __y) IN
   __ApalacheFoldSeq(__map, base, seq)
 
 (**
@@ -317,12 +317,13 @@ FoldSeq(op(_, _), base, seq) ==
  *
  * Example:
  *    LET cons(x,y) == <<x,y>>
- *    IN FoldLeft(cons, 0, <<3,1,2>>) = << << <<0,3>>, 1>>, 2>> 
+ *    IN FoldLeft(cons, 0, <<3, 1, 2>>) = << << <<0, 3>>, 1>>, 2>> 
  *
- * @type: ((a, b) => a, a, Seq(a)) => a;
+ * @type: ((b, a) => b, a, Seq(a)) => b;
  *)
 FoldLeft(op(_, _), base, seq) == 
-  __ApalacheFoldSeq(op, base, seq)
+  LET __map(__x, __y) == op(__x, __y) IN
+  __ApalacheFoldSeq(__map, base, seq)
 
 (**
  * FoldRight folds op on all elements of seq from right to left, starting
@@ -332,12 +333,12 @@ FoldLeft(op(_, _), base, seq) ==
  *
  * Example:
  *    LET cons(x,y) == <<x,y>>
- *    IN FoldRight(cons, <<3,1,2>>, 0 ) = << 3, << 1, <<2,0>> >> >> 
+ *    IN FoldRight(cons, <<3, 1, 2>>, 0 ) = << 3, << 1, <<2, 0>> >> >> 
  *
- * @type: ((a, b) => b, b, Seq(a)) => b;
+ * @type: ((a, b) => b, Seq(a), b) => b;
  *)
 FoldRight(op(_, _), seq, base) == 
-  LET __map(y, x) == op(x, y) IN
+  LET __map(__y, __x) == op(__x, __y) IN
   __ApalacheFoldSeq(__map, base, Reverse(seq))
 
 -----------------------------------------------------------------------------
@@ -354,9 +355,10 @@ FoldRight(op(_, _), seq, base) ==
  * @type: Seq(Seq(a)) => Seq(a);
  *)
 FlattenSeq(seqs) ==
-  LET Concat(s, t) == s \o t
+  LET \* @type: (Seq(a), Seq(a)) => Seq(a);
+      __concat(s, t) == s \o t
   IN
-  __ApalacheFoldSeq(Concat, <<>>, seqs)
+  __ApalacheFoldSeq(__concat, <<>>, seqs)
 
 (**
  * A sequence where the i-th tuple contains the i-th element of  s  and
