@@ -139,6 +139,19 @@ The necessary shell environment is specified in [.envrc](./.envrc). You can:
 
 [direnv]: https://direnv.net/
 
+#### Compiler warnings
+
+We fail CI builds on compiler warnings.
+
+To have compiler warnings also fail on local builds, set
+
+```sh
+export APALACHE_FATAL_WARNINGS=true
+```
+
+You may add this to your `.local-envrc` file at the root of this repo to have
+`direnv` load this into your development environment.
+
 ## Development Environment
 
 If you use a different development environment or editor set up, please document
