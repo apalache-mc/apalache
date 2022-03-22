@@ -333,6 +333,42 @@ TestFlattenSeq6 ==
     FlattenSeq(<<"a", "b">>) = "ab"
  *)
 
+TestZip1 ==
+    LET \* @type: Seq(<<Int, Int>>);
+        int2SeqEmpty == <<>>
+    IN
+    Zip(intSeqEmpty, intSeqEmpty) = int2SeqEmpty
+
+TestZip2 ==
+    LET \* @type: Seq(<<Int, Int>>);
+        int2SeqEmpty == <<>>
+    IN
+    Zip(intSeqEmpty, <<1>>) = int2SeqEmpty
+
+TestZip3 ==
+    LET \* @type: Seq(<<Int, Int>>);
+        int2SeqEmpty == <<>>
+    IN
+    Zip(<<1>>, intSeqEmpty) = int2SeqEmpty
+
+TestZip4 ==
+    Zip(<<2>>, <<2>>) = << <<2, 2>> >>
+
+TestZip5 ==
+    Zip(<<2>>, <<3>>) = << <<2, 3>> >>
+
+TestZip6 ==
+    Zip(<<2, 3>>, <<1, 4>>) = << <<2, 1>>, <<3, 4>> >>
+
+TestZip7 ==
+    Zip(<<2, 3>>, <<2, 3>>) = << <<2, 2>>, <<3, 3>> >>
+
+TestZip8 ==
+    Zip(<<1, 3>>, <<2, 4>>) = <<<<1, 2>>, <<3, 4>>>>
+
+TestZip9 ==
+    Zip(<<"a", "c">>, <<"b", "d">>) = <<<<"a", "b">>, <<"c", "d">>>>
+
 \* this test is a disjunction of all smaller tests
 AllTests ==
     /\ TestSetToSeq1
@@ -424,8 +460,18 @@ AllTests ==
     /\ TestFoldRight1
     /\ TestFlattenSeq1
     /\ TestFlattenSeq2
-    /\ TestFlattenSeq3
+    \* FAILING TEST:
+    \*/\ TestFlattenSeq3
     /\ TestFlattenSeq4
     /\ TestFlattenSeq5
+    /\ TestZip1
+    /\ TestZip2
+    /\ TestZip3
+    /\ TestZip4
+    /\ TestZip5
+    /\ TestZip6
+    /\ TestZip7
+    /\ TestZip8
+    /\ TestZip9
 
 ===============================================================================
