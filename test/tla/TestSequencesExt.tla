@@ -122,19 +122,22 @@ TestRemove1 ==
     Remove(strSeqEmpty, "c") = strSeqEmpty
 
 TestRemove2 ==
-    Remove(<<"a","a","b">>, "a") = <<"b">>
+    Remove(<<"a", "a", "b">>, "a") = <<"b">>
 
 TestRemove3 ==
-    Remove(<<"a","a","a">>, "a") = strSeqEmpty
+    Remove(<<"a", "a", "a">>, "a") = strSeqEmpty
 
 TestRemove4 ==
-    Remove(<<"a","a","b">>, "c") = <<"a","a","b">>
+    Remove(<<"a", "a", "b">>, "c") = <<"a", "a", "b">>
 
 TestRemove5 ==
     Remove(<<{"a", "b"}, {"a", "c"}>>, {"c", "a"}) = <<{"a", "b"}>>
 
 TestRemove6 ==
     Remove(intSeqEmpty, 1) = intSeqEmpty
+
+TestRemove7 ==
+    Remove(<<1, 1, 2>>, 1) = <<2>>
 
 TestReplaceAll1 ==
     ReplaceAll(intSeqEmpty, 1, 4) = intSeqEmpty
@@ -499,11 +502,12 @@ AllTests ==
     /\ TestReverse3
     /\ TestReverse4
     /\ TestRemove1
-    \*/\ TestRemove2
+    /\ TestRemove2
     /\ TestRemove3
-    \*/\ TestRemove4
+    /\ TestRemove4
     \*/\ TestRemove5
     /\ TestRemove6
+    /\ TestRemove7
     /\ TestReplaceAll1
     /\ TestReplaceAll2
     (* FAILING tests:

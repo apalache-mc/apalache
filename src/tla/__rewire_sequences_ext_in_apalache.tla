@@ -129,7 +129,7 @@ Reverse(s) ==
 Remove(seq, e) ==
     LET __append_if_eq(__res, __t) ==
         IF __t /= e
-        THEN Append(__res, e)
+        THEN Append(__res, __t)
         ELSE __res
     IN
     __ApalacheFoldSeq(__append_if_eq, <<>>, seq)
