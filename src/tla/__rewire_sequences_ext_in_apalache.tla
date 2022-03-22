@@ -256,7 +256,7 @@ IsStrictSuffix(s, t) ==
  * @type: Seq(a) => Set(Seq(a));
  *)
 Prefixes(s) ==
-  { SubSeq(s, 1, l) : l \in DOMAIN s } \union { <<>> }
+  { SubSeq(s, 1, l): l \in { 0 } \union DOMAIN s }
 
 (**
  * The set of all sequences that are prefixes of the set of sequences S.
@@ -340,4 +340,126 @@ FoldRight(op(_, _), seq, base) ==
   LET __map(y, x) == op(x, y) IN
   __ApalacheFoldSeq(__map, base, Reverse(seq))
 
+-----------------------------------------------------------------------------
+
+(**
+ * A sequence of all elements from all sequences in the sequence seqs.
+ *
+ * Examples:
+ *
+ *  FlattenSeq(<< <<1,2>>, <<1>> >>) = << 1, 2, 1 >>
+ *  FlattenSeq(<< <<"a">>, <<"b">> >>) = <<"a", "b">>
+ *  FlattenSeq(<< "a", "b" >>) = "ab"
+ *
+ * @type: Seq(Seq(a)) => Seq(a);
+ *)
+FlattenSeq(seqs) ==
+  LET Concat(s, t) == s \o t
+  IN
+  __ApalacheFoldSeq(Concat, <<>>, seqs)
+
+(**
+ * A sequence where the i-th tuple contains the i-th element of  s  and
+ *   t  in this order.  Not defined for  Len(s) # Len(t)
+ *
+ * Examples:
+ *
+ *  Zip(<< >>, << >>) = << >>
+ *  Zip(<<"a">>, <<"b">>) = <<"a", "b">>
+ *  Zip(<<1,3>>, <<2,4>>) = <<<<1>>, <<2>>, <<3>>, <<4>>>>
+ *  FlattenSeq(Zip(<<1,3>>,<<2,4>>)) = <<1, 2, 3, 4>>
+ *
+ * @type: (Seq(a), Seq(b)) => Seq(<<a, b>>);
+ *)
+Zip(s, t) ==
+  LET \* @type: Int => <<a, b>>;
+      __mk_tup(__i) == <<s[__i], t[__i]>>
+  IN
+  IF Len(s) /= Len(t)
+  THEN \* the community modules do not specify the behavior for this case
+    <<>>
+  ELSE
+    SubSeq(__ApalacheMkSeq(__ApalacheSeqCapacity(s), __mk_tup), 1, Len(s))
+
+
+(**
+ * The set of all subsequences of the sequence  s. Note that the empty
+ * sequence  <<>>  is defined to be a subsequence of any sequence.
+ *
+ * @type: Seq(a) => Set(Seq(a));
+ *)
+SubSeqs(s) ==
+  \* This is actually defined as Prefixes already
+  Prefixes(s)
+
+(**
+ * The (1-based) index of the beginning of the subsequence haystack of the
+ * sequence needle. If needle appears in haystack multiple times,
+ * this equals the lowest index.
+ *
+ * Note that if needle does not belong to haystack, the result is undefined.
+ *
+ * For example:  IndexFirstSubSeq(<<1>>, <<1,1,1>>) = 1
+ *
+ * @type: (Seq(a), Seq(a)) => Int;
+ *)
+IndexFirstSubSeq(needle, haystack) ==
+  LET __needle_len ==
+    Len(needle)
+  IN
+  LET __is_subseq(__i) ==
+    needle = SubSeq(haystack, __i, __i + __needle_len)
+  IN
+  LET __dom0 == {0} \union DOMAIN haystack IN
+  LET __last ==
+    CHOOSE __i \in __dom0:
+      /\ __is_subseq(__i)
+      /\ \A __j \in __dom0:
+          __j < __i => ~__is_subseq(__i)
+  IN __last - (__needle_len - 1)
+
+(**
+ * The sequence t with its subsequence s at position i replaced by
+ * the sequence r.
+ *
+ * @type: (Int, Seq(a), Seq(a), Seq(a)) => Seq(a);
+ *)
+ReplaceSubSeqAt(i, r, s, t) ==
+  LET prefix == SubSeq(t, 1, i - 1)
+      suffix == SubSeq(t, i + Len(s), Len(t))
+  IN
+  prefix \o r \o suffix 
+
+(**
+ * The sequence t with its subsequence s replaced by the sequence r.
+ *
+ * @type: (Seq(a), Seq(a), Seq(a)) => Seq(a);
+ *)
+ReplaceFirstSubSeq(r, s, t) ==
+  IF \*s \in SubSeqs(t)
+    \E __i \in {0} \union DOMAIN t:
+      s = SubSeq(t, __i, __i + Len(s))
+  THEN ReplaceSubSeqAt(IndexFirstSubSeq(s, t), r, s, t)
+  ELSE t
+
+(**
+ * The sequence  t  with all subsequences  s  replaced by the sequence  r
+ * Overlapping replacements are disambiguated by choosing the occurrence
+ * closer to the beginning of the sequence.
+ *
+ * Examples:
+ *
+ *  ReplaceAllSubSeqs(<<>>,<<>>,<<>>) = <<>>
+ *  ReplaceAllSubSeqs(<<4>>,<<>>,<<>>) = <<4>>
+ *  ReplaceAllSubSeqs(<<2>>,<<3>>,<<1,3>>) = <<1,2>>
+ *  ReplaceAllSubSeqs(<<2,2>>,<<1,1>>,<<1,1,1>>) = <<2,2,1>>
+ *)
+ReplaceAllSubSeqs(r, s, t) ==
+  \* This operator has a massive definition,
+  \* which we do not know how to translate.
+  \* We skip it.
+  \*
+  \* https://github.com/tlaplus/CommunityModules/blob/48d8f59a9f530d93838c68c1b7070e83549420b9/modules/SequencesExt.tla#L344-L382
+  __NotSupportedByModelChecker("ReplaceAllSubSeqs")
+  
 ===============================================================================
