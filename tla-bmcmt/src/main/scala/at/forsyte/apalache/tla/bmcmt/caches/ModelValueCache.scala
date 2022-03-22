@@ -22,15 +22,45 @@ class ModelValueCache(solverContext: SolverContext)
     val (utype, _) = typeAndIndex
     val newArena = arena.appendCell(ConstT(utype))
     val newCell = newArena.topCell
-    // the freshly created cell should differ from the others
-    for (
-        other <- values().withFilter { v =>
-          v.cellType == ConstT(utype) // compare just with same sorted cells
-        }
-    ) {
-      solverContext.assertGroundExpr(OperEx(ApalacheOper.distinct, newCell.toNameEx, other.toNameEx))
-    }
+    // The fresh cell should differ from the previously created cells.
+    // We use the SMT constraint (distinct ...).
+    val others = values().filter(_.cellType == ConstT(utype)).map(_.toNameEx).toSeq
+    solverContext.assertGroundExpr(OperEx(ApalacheOper.distinct, newCell.toNameEx +: others: _*))
     solverContext.log("; cached \"%s\" to %s".format(typeAndIndex, newCell))
     (newArena, newCell)
+  }
+
+  /**
+   * Cache multiple values at once at the current level. This method is more efficient than caching multiple values with
+   * [[create]]: It does introduce the SMT constraint `distinct` over `n` values instead of introducing `n` calls to
+   * `distinct` with an increasing number of arguments: 1, 2, ..., n.
+   *
+   * @param arena
+   *   the arena to start with
+   * @param utype
+   *   the name of the uninterpreted type to use
+   * @param newValues
+   *   the values to cache
+   * @return
+   *   the new arena and the sequence of cells that represent the cached values
+   */
+  def createAndCacheMany(arena: Arena, utype: String, newValues: Iterable[String]): (Arena, Seq[ArenaCell]) = {
+    var nextArena = arena
+    // the cells that exist in the cache
+    val oldCells = values().filter(_.cellType == ConstT(utype)).map(_.toNameEx).toSeq
+    // the cells that are already cached go to the left, the new cells go to the right
+    val foundOrNewCells = newValues.map { value =>
+      get((utype, value)).map(Left(_)).getOrElse {
+        nextArena = nextArena.appendCell(ConstT(utype))
+        addToCache((utype, value), nextArena.topCell)
+        Right(nextArena.topCell)
+      }
+    }
+    val newCells = foundOrNewCells.collect { case Right(c) => c }
+    // require that all new cells and old cells are distinct
+    if (newCells.nonEmpty) {
+      solverContext.assertGroundExpr(OperEx(ApalacheOper.distinct, oldCells ++ newCells.map(_.toNameEx): _*))
+    }
+    (nextArena, foundOrNewCells.map(_.fold(c => c, c => c)).toSeq)
   }
 }

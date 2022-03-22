@@ -94,10 +94,10 @@ $ apalache-mc help
 
 ### executable responds to JVM_ARGS environment variable
 
-We can set some JVM args and still have the default max heap size supplied. (Note we also trim out the `TLA_Library` argument, since is environment sensitive and makes the tests unstable.)
+We can set some JVM args and still have the default max heap size supplied.
 
 ```sh
-$ JVM_ARGS="-Xms1m -XX:+UseSerialGC" apalache-mc --debug version | sed 's/-DTLA-Library.*//'
+$ JVM_ARGS="-Xms1m -XX:+UseSerialGC" apalache-mc version --debug
 ...
 # JVM args: -Xms1m -XX:+UseSerialGC -Xmx4096m
 ...
@@ -106,7 +106,7 @@ $ JVM_ARGS="-Xms1m -XX:+UseSerialGC" apalache-mc --debug version | sed 's/-DTLA-
 If we set the max heap size (with `-Xmx`) it will override the default max heap size:
 
 ```sh
-$ JVM_ARGS="-Xmx16m" apalache-mc --debug version | sed 's/-DTLA-Library.*//'
+$ JVM_ARGS="-Xmx16m" apalache-mc version --debug
 ...
 # JVM args: -Xmx16m
 ...
@@ -148,6 +148,25 @@ Statistics collection is OFF.
 EXITCODE: OK
 $ head -n 1 $HOME/.tlaplus/esc.txt
 NO_STATISTICS
+```
+
+## error handling for non-existent files
+
+Ensure that we exit gracefully when commands are called on nonexistent files.
+
+NOTE: We truncate the output to avoid printing the file, making the test
+indifferent to the execution environment (including in docker).
+
+```sh
+$ for cmd in check parse typecheck transpile; do apalache-mc $cmd nonexistent-file.tla 2>&1 | grep -o -e "EXITCODE: ERROR (255)" -e "Cannot find source file for module"; done
+Cannot find source file for module
+EXITCODE: ERROR (255)
+Cannot find source file for module
+EXITCODE: ERROR (255)
+Cannot find source file for module
+EXITCODE: ERROR (255)
+Cannot find source file for module
+EXITCODE: ERROR (255)
 ```
 
 ## running the parse command
@@ -1174,16 +1193,6 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check use of TLA_PATH for modules in child directory succeeds (array-encoding)
-
-```sh
-$ TLA_PATH=./tla-path-tests apalache-mc check ./tla-path-tests/ImportingModule.tla | sed 's/I@.*//'
-...
-The outcome is: NoError
-...
-EXITCODE: OK
-```
-
 ### check SimpleLambda succeeds
 Regression test for https://github.com/informalsystems/apalache/issues/1446
 
@@ -1855,6 +1864,14 @@ $ apalache-mc check --length=0 --inv=AllTests TestSequences.tla | sed 's/[IEW]@.
 EXITCODE: OK
 ```
 
+### check TestBags.tla reports no error
+
+```sh
+$ apalache-mc check --length=0 --inv=Inv TestBags.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check Test1343.tla reports no error
 
 Regression test for #1343
@@ -1869,6 +1886,30 @@ EXITCODE: OK
 
 ```sh
 $ apalache-mc check --length=0 --inv=AllTests TestSets.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check TestCommunityFunctions.tla reports no error (array-encoding)
+
+```sh
+$ apalache-mc check --length=0 --inv=AllTests TestCommunityFunctions.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check TestFiniteSetsExt.tla reports no error (array-encoding)
+
+```sh
+$ apalache-mc check --length=0 --inv=AllTests TestFiniteSetsExt.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check TestFunctions.tla reports no error
+
+```sh
+$ apalache-mc check --length=0 --inv=AllTests TestFunctions.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2656,6 +2697,73 @@ $ JVM_ARGS="-Duser.home=." apalache-mc check --length=0 Counter.tla | sed 's/[IE
 EXITCODE: OK
 $ test -d ./run-dir
 $ rm -rf ./run-dir ./.apalache.cfg
+```
+
+## module lookup
+
+### module lookup: looks up dummy module from standard library
+
+```sh
+$ cd module-lookup/subdir-no-dummy && apalache-mc parse --output=output.tla Including.tla
+...
+EXITCODE: OK
+$ cat module-lookup/subdir-no-dummy/output.tla
+-------------------------------- MODULE output --------------------------------
+
+EXTENDS Integers, Sequences, FiniteSets, TLC, Apalache
+
+Init == TRUE
+
+Next == TRUE
+
+================================================================================
+$ rm module-lookup/subdir-no-dummy/output.tla
+```
+
+### module lookup: looks up modules in the same directory
+
+Regression test for https://github.com/informalsystems/apalache/issues/426
+
+Look up files in the same directory as the file supplied on commandline.
+
+Files in that directory take precedence over the Apalache standard library.
+
+```sh
+$ apalache-mc parse --output=output.tla module-lookup/subdir/Including.tla
+...
+EXITCODE: OK
+$ cat output.tla | grep VARIABLE
+VARIABLE same_dir
+$ rm output.tla
+```
+
+### module lookup: looks up modules in the current working directory
+
+Files in current working directory take precedence over
+
+- files in the same directory as the supplied file
+- the Apalache standard library
+
+```sh
+$ cd module-lookup && apalache-mc parse --output=output.tla subdir/Including.tla
+...
+EXITCODE: OK
+$ cat module-lookup/output.tla | grep VARIABLE
+VARIABLE parent_dir
+$ rm module-lookup/output.tla
+```
+
+### module lookup: looks up modules when in same directory
+
+Test relative paths without prefixed directories
+
+```sh
+$ cd module-lookup/subdir && apalache-mc parse --output=output.tla Including.tla
+...
+EXITCODE: OK
+$ cat module-lookup/subdir/output.tla | grep VARIABLE
+VARIABLE same_dir
+$ rm module-lookup/subdir/output.tla
 ```
 
 ## server mode

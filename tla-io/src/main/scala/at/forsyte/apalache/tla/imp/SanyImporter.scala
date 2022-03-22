@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.imp
 
+import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.TlaModule
-import at.forsyte.apalache.io.annotations.store._
 import org.apache.commons.io.output.WriterOutputStream
 import tla2sany.drivers.SANY
 import tla2sany.modanalyzer.SpecObj
@@ -25,16 +25,31 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) {
    *
    * @param file
    *   an input file
+   * @param useRelativePathLookup
+   *   Whether to use [[file]]'s containing directory as library path. Disable this flag when you [[loadFromSource]]; we
+   *   then look up names in the paths given by the `TLA-Library` Java system variable instead.
    * @return
    *   the pair (the root module name, a map of modules)
    */
-  def loadFromFile(file: File): (String, Map[String, TlaModule]) = {
+  def loadFromFile(file: File, useRelativePathLookup: Boolean = true): (String, Map[String, TlaModule]) = {
     // create a string buffer to write SANY's error messages
-    val errBuf = new StringWriter()
     // use.toString() to retrieve the error messages
-    val specObj =
-      new SpecObj(file.getAbsolutePath, new SanyNameToStream())
+    val errBuf = new StringWriter()
+
+    // Resolver for filenames, patched for wired modules.
+    // If `file` has a parent directory and `useLibraryPaths` is set, look up files in this parent directory.
+    // Otherwise, look up files in the paths given by the `TLA-Library` Java system variable (used to wire in the
+    // Apalache Standard library in `src/tla` when running unit tests).
+    // Compatible with TLC at commit https://github.com/tlaplus/tlaplus/commit/b905a86e31714bf5002290141b51b41ffe280c8e
+    val filenameResolver = if (useRelativePathLookup) {
+      file.getAbsoluteFile().getParent() match {
+        case null          => SanyNameToStream()
+        case parentDirPath => SanyNameToStream(parentDirPath)
+      }
+    } else SanyNameToStream()
+
     // call SANY
+    val specObj = new SpecObj(file.getAbsolutePath, filenameResolver)
     SANY.frontEndMain(
         specObj,
         file.getAbsolutePath,
@@ -79,7 +94,9 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) {
       } finally {
         pw.close()
       }
-      loadFromFile(temp)
+      // Disable use of library paths, as we are loading from a [[Source]] object.
+      // This prevents SANY from looking for wired modules ([[StandardLibrary.wiredModules]]) in `tempDir`.
+      loadFromFile(temp, false)
     } finally {
       temp.delete()
       tempDir.delete()
