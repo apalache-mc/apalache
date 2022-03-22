@@ -1193,16 +1193,6 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check use of TLA_PATH for modules in child directory succeeds (array-encoding)
-
-```sh
-$ TLA_PATH=./tla-path-tests apalache-mc check ./tla-path-tests/ImportingModule.tla | sed 's/I@.*//'
-...
-The outcome is: NoError
-...
-EXITCODE: OK
-```
-
 ### check SimpleLambda succeeds
 Regression test for https://github.com/informalsystems/apalache/issues/1446
 
@@ -2707,6 +2697,73 @@ $ JVM_ARGS="-Duser.home=." apalache-mc check --length=0 Counter.tla | sed 's/[IE
 EXITCODE: OK
 $ test -d ./run-dir
 $ rm -rf ./run-dir ./.apalache.cfg
+```
+
+## module lookup
+
+### module lookup: looks up dummy module from standard library
+
+```sh
+$ cd module-lookup/subdir-no-dummy && apalache-mc parse --output=output.tla Including.tla
+...
+EXITCODE: OK
+$ cat module-lookup/subdir-no-dummy/output.tla
+-------------------------------- MODULE output --------------------------------
+
+EXTENDS Integers, Sequences, FiniteSets, TLC, Apalache
+
+Init == TRUE
+
+Next == TRUE
+
+================================================================================
+$ rm module-lookup/subdir-no-dummy/output.tla
+```
+
+### module lookup: looks up modules in the same directory
+
+Regression test for https://github.com/informalsystems/apalache/issues/426
+
+Look up files in the same directory as the file supplied on commandline.
+
+Files in that directory take precedence over the Apalache standard library.
+
+```sh
+$ apalache-mc parse --output=output.tla module-lookup/subdir/Including.tla
+...
+EXITCODE: OK
+$ cat output.tla | grep VARIABLE
+VARIABLE same_dir
+$ rm output.tla
+```
+
+### module lookup: looks up modules in the current working directory
+
+Files in current working directory take precedence over
+
+- files in the same directory as the supplied file
+- the Apalache standard library
+
+```sh
+$ cd module-lookup && apalache-mc parse --output=output.tla subdir/Including.tla
+...
+EXITCODE: OK
+$ cat module-lookup/output.tla | grep VARIABLE
+VARIABLE parent_dir
+$ rm module-lookup/output.tla
+```
+
+### module lookup: looks up modules when in same directory
+
+Test relative paths without prefixed directories
+
+```sh
+$ cd module-lookup/subdir && apalache-mc parse --output=output.tla Including.tla
+...
+EXITCODE: OK
+$ cat module-lookup/subdir/output.tla | grep VARIABLE
+VARIABLE same_dir
+$ rm module-lookup/subdir/output.tla
 ```
 
 ## server mode

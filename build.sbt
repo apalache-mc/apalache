@@ -48,17 +48,23 @@ ThisBuild / libraryDependencies ++= Seq(
 // Compiler options //
 //////////////////////
 
-ThisBuild / scalacOptions ++= Seq(
-    // Enable deprecation and feature warnings
-    "-deprecation",
-    "-feature",
-    // Enable `unused` compiler warnings; required by scalafix
-    // https://scalacenter.github.io/scalafix/docs/rules/RemoveUnused.html
-    "-Ywarn-unused",
-    // Fixes warning: "Exhaustivity analysis reached max recursion depth, not all missing cases are reported."
-    "-Ypatmat-exhaust-depth",
-    "22",
-)
+fatalWarnings := sys.env.get("APALACHE_FATAL_WARNINGS").getOrElse("false").toBoolean
+ThisBuild / scalacOptions ++= {
+  val commonOptions = Seq(
+      // Enable deprecation and feature warnings
+      "-deprecation",
+      "-feature",
+      // Enable `unused` compiler warnings; required by scalafix
+      // https://scalacenter.github.io/scalafix/docs/rules/RemoveUnused.html
+      "-Ywarn-unused",
+      // Fixes warning: "Exhaustivity analysis reached max recursion depth, not all missing cases are reported."
+      "-Ypatmat-exhaust-depth",
+      "22",
+  )
+  val conditionalOptions = if (fatalWarnings.value) Seq("-Xfatal-warnings") else Nil
+
+  commonOptions ++ conditionalOptions
+}
 
 ////////////////////////////
 // Linting and formatting //
@@ -241,6 +247,8 @@ lazy val root = (project in file("."))
             Vector(
                 (src_dir / "Apalache.tla") ->
                   "tla2sany/StandardModules/Apalache.tla",
+                (src_dir / "DummyForIntegrationTests.tla") ->
+                  "tla2sany/StandardModules/DummyForIntegrationTests.tla",
                 (src_dir / "Variants.tla") ->
                   "tla2sany/StandardModules/Variants.tla",
                 (src_dir / "__rewire_tlc_in_apalache.tla") ->
@@ -384,3 +392,5 @@ incrVersion := {
   IO.writeLines((ThisBuild / versionFile).value, Seq(nextVersion))
   nextVersion
 }
+
+lazy val fatalWarnings = settingKey[Boolean]("Whether or not to compile with fatal warnings")

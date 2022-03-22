@@ -22,7 +22,6 @@ DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
 
 APALACHE_JAR=${APALACHE_JAR:-"$DIR/../lib/apalache.jar"}
 JVM_ARGS=${JVM_ARGS:-""}
-TLA_PATH=${TLA_PATH:-""}
 
 if ! test -f "$APALACHE_JAR"
 then
@@ -37,12 +36,6 @@ if ! [[ "$JVM_ARGS" =~ -Xmx ]]
 then
     # If not, set our default heap size
     JVM_ARGS="${JVM_ARGS} -Xmx4096m"
-fi
-
-# Append TLA_PATH to JVM_ARGS, if it is set
-if [ -n "$TLA_PATH" ]
-then
-    JVM_ARGS="$JVM_ARGS -DTLA-Library=$TLA_PATH"
 fi
 
 # Check whether the CLI args contains the debug flag

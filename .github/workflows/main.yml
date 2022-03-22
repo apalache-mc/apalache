@@ -39,6 +39,8 @@ jobs:
         run: make fmt-check
 
   unit-tests:
+    env:
+      APALACHE_FATAL_WARNINGS: true
     runs-on: ${{ matrix.operating-system }}
     strategy:
       # Allows other OS tests to proceed even if one fails
@@ -72,6 +74,8 @@ jobs:
           find $HOME/.sbt                              -name "*.lock"               -delete || true
 
   integration-tests:
+    env:
+      APALACHE_FATAL_WARNINGS: true
     runs-on: ${{ matrix.operating-system }}
     strategy:
       # Allows other OS tests to proceed even if one fails
@@ -124,6 +128,8 @@ jobs:
           TEST_FILTER: ${{ matrix.smt-encoding == 'arrays' && 'array-encoding' || '' }}
 
   docker-tests:
+    env:
+      APALACHE_FATAL_WARNINGS: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
