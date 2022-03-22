@@ -369,6 +369,29 @@ TestZip8 ==
 TestZip9 ==
     Zip(<<"a", "c">>, <<"b", "d">>) = <<<<"a", "b">>, <<"c", "d">>>>
 
+TestSubSeqs1 ==
+    SubSeqs(intSeqEmpty) = {<<>>}
+
+TestSubSeqs2 ==
+    SubSeqs(<<1>>) = {<<>>, <<1>>}
+
+TestSubSeqs3 ==
+    SubSeqs(<<1, 1>>) = {<<>>, <<1>>, <<1, 1>>}
+
+TestSubSeqs4 ==
+    SubSeqs(<<1, 1, 1>>) = {<<>>, <<1>>, <<1, 1>>, <<1, 1, 1>>}
+
+TestSubSeqs5 ==
+    SubSeqs(<<1, 2, 3, 2>>) = {
+        <<>>, <<1>>, <<2>>, <<3>>, <<1, 2>>, <<2, 3>>,
+        <<3, 2>>, <<1, 2, 3>>, <<2, 3, 2>>, <<1, 2, 3, 2>>
+    }
+
+TestSubSeqs6 ==
+    SubSeqs(<<1, 2, 3>>) = {
+        <<>>, <<1>>, <<2>>, <<3>>, <<1, 2>>, <<2, 3>>, <<1, 2, 3>>
+    }
+
 \* this test is a disjunction of all smaller tests
 AllTests ==
     /\ TestSetToSeq1
@@ -473,5 +496,11 @@ AllTests ==
     /\ TestZip7
     /\ TestZip8
     /\ TestZip9
+    /\ TestSubSeqs1
+    /\ TestSubSeqs2
+    /\ TestSubSeqs3
+    /\ TestSubSeqs4
+    /\ TestSubSeqs5
+    /\ TestSubSeqs6
 
 ===============================================================================

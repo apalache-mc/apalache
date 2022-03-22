@@ -390,8 +390,7 @@ Zip(s, t) ==
  * @type: Seq(a) => Set(Seq(a));
  *)
 SubSeqs(s) ==
-  \* This is actually defined as Prefixes already
-  Prefixes(s)
+  { SubSeq(s, i + 1, j): i, j \in {0} \union (DOMAIN s) }
 
 (**
  * The (1-based) index of the beginning of the subsequence haystack of the
