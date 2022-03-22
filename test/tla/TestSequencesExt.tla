@@ -404,6 +404,80 @@ TestIndexFirstSubSeq3 ==
 TestIndexFirstSubSeq4 ==
     IndexFirstSubSeq(<<3>>, <<1, 2, 3>>) = 3
 
+TestReplaceFirstSubSeq1 ==
+    ReplaceFirstSubSeq(intSeqEmpty, intSeqEmpty, intSeqEmpty) = intSeqEmpty
+
+TestReplaceFirstSubSeq2 ==
+    ReplaceFirstSubSeq(<<4>>, <<>>, <<>>) = <<4>>
+
+TestReplaceFirstSubSeq3 ==
+    ReplaceFirstSubSeq(<<4>>, <<4>>, <<>>) = <<>>
+
+TestReplaceFirstSubSeq4 ==
+    ReplaceFirstSubSeq(<<>>, <<>>, <<3, 2, 3, 4>>) = <<3, 2, 3, 4>>
+
+TestReplaceFirstSubSeq5 ==
+    ReplaceFirstSubSeq(<<4, 4>>, <<3, 2, 3, 4>>, <<3, 2, 3, 4>>) = <<4 ,4>>
+
+TestReplaceFirstSubSeq6 ==
+    ReplaceFirstSubSeq(<<4, 4>>, <<>>, <<3, 2, 3, 4>>) = <<4, 4, 3, 2, 3, 4>>
+
+TestReplaceFirstSubSeq7 ==
+    ReplaceFirstSubSeq(<<4, 4>>, <<4>>, <<3, 2, 3, 4>>) = <<3, 2, 3, 4, 4>>
+
+TestReplaceFirstSubSeq8 ==
+    ReplaceFirstSubSeq(<<>>, <<4>>, <<3, 2, 3, 4>>) = <<3, 2, 3>>
+
+TestReplaceFirstSubSeq9 ==
+    ReplaceFirstSubSeq(<<>>, <<4>>, <<3, 2, 3, 4, 4>>) = <<3, 2, 3, 4>>
+
+TestReplaceFirstSubSeq10 ==
+    ReplaceFirstSubSeq(<<4, 4>>, <<3>>, <<3, 2, 3, 4>>) = <<4, 4, 2, 3, 4>>
+
+TestReplaceFirstSubSeq11 ==
+    ReplaceFirstSubSeq(<<4>>, <<1, 2>>, <<1, 2, 1, 2>>) = <<4, 1, 2>>
+
+TestReplaceFirstSubSeq12 ==
+    ReplaceFirstSubSeq(<<4, 4>>, <<1, 2>>, <<1, 2, 1, 2>>) = <<4, 4, 1, 2>>
+
+TestReplaceFirstSubSeq13 ==
+    ReplaceFirstSubSeq(<<4, 4, 4>>, <<1, 2>>, <<1, 2, 1, 2>>)
+        = <<4, 4, 4, 1, 2>>
+
+TestReplaceFirstSubSeq14 ==
+    ReplaceFirstSubSeq(<<1, 2>>, <<1, 2>>, <<1, 2, 2, 1>>) = <<1, 2, 2, 1>>
+
+TestReplaceFirstSubSeq15 ==
+    ReplaceFirstSubSeq(<<2, 1>>, <<1, 2>>, <<1, 2, 2, 1>>) = <<2, 1, 2, 1>>
+
+(* WE DO NOT SUPPORT BoundedSeq
+TestReplaceFirstSubSeq16 ==
+    \A seq \in (BoundedSeq(1..5, 5) \ {<<>>}):
+        /\ ReplaceFirstSubSeq(<<6>>, <<>>, seq) = <<6>> \o seq
+        /\ ReplaceFirstSubSeq(<<6>>, <<Head(seq)>>, seq) = <<6>> \o Tail(seq)
+ *)
+
+TestReplaceFirstSubSeq18 ==
+    ReplaceFirstSubSeq(<<"a">>, <<>>, <<>>) = <<"a">>
+
+TestReplaceFirstSubSeq19 ==
+    ReplaceFirstSubSeq(<<"a">>, <<"b">>, <<>>) = <<>>
+
+TestReplaceFirstSubSeq20 ==
+    ReplaceFirstSubSeq(<<"a">>, <<"d">>, <<"a", "b", "c">>) = <<"a", "b", "c">>
+
+TestReplaceFirstSubSeq21 ==
+    ReplaceFirstSubSeq(<<"d", "d", "d">>, <<"a", "b">>, <<"a", "b", "a", "b">>)
+        = <<"d", "d", "d", "a", "b">>
+
+TestReplaceFirstSubSeq22 ==
+    ReplaceFirstSubSeq(<<"d", "d", "d">>, <<"a", "a">>, <<"a", "a", "a">>)
+        = <<"d", "d", "d", "a">>
+
+TestReplaceFirstSubSeq23 ==
+    ReplaceFirstSubSeq(<<"d", "d", "d">>,
+        <<"a", "b", "a", "b">>, <<"a", "b", "a", "b">>) = <<"d", "d", "d">>
+
 \* this test is a disjunction of all smaller tests
 AllTests ==
     /\ TestSetToSeq1
@@ -518,5 +592,26 @@ AllTests ==
     /\ TestIndexFirstSubSeq2
     /\ TestIndexFirstSubSeq3
     /\ TestIndexFirstSubSeq4
+    /\ TestReplaceFirstSubSeq1
+    /\ TestReplaceFirstSubSeq2
+    /\ TestReplaceFirstSubSeq3
+    /\ TestReplaceFirstSubSeq4
+    /\ TestReplaceFirstSubSeq5
+    /\ TestReplaceFirstSubSeq6
+    /\ TestReplaceFirstSubSeq7
+    /\ TestReplaceFirstSubSeq8
+    /\ TestReplaceFirstSubSeq9
+    /\ TestReplaceFirstSubSeq10
+    /\ TestReplaceFirstSubSeq11
+    /\ TestReplaceFirstSubSeq12
+    /\ TestReplaceFirstSubSeq13
+    /\ TestReplaceFirstSubSeq14
+    /\ TestReplaceFirstSubSeq15
+    /\ TestReplaceFirstSubSeq18
+    /\ TestReplaceFirstSubSeq19
+    /\ TestReplaceFirstSubSeq20
+    /\ TestReplaceFirstSubSeq21
+    /\ TestReplaceFirstSubSeq22
+    /\ TestReplaceFirstSubSeq23
 
 ===============================================================================
