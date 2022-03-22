@@ -510,12 +510,10 @@ AllTests ==
     /\ TestRemove7
     /\ TestReplaceAll1
     /\ TestReplaceAll2
-    (* FAILING tests:
     /\ TestInsertAt1
     /\ TestInsertAt2
     /\ TestInsertAt3
     /\ TestInsertAt4
-    *)
     /\ TestReplaceAt1
     /\ TestReplaceAt2
     /\ TestRemoveAt1

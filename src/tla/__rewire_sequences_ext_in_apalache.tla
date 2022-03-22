@@ -159,7 +159,7 @@ ReplaceAll(seq, old, new) ==
  *)
 InsertAt(seq, k, e) ==
   LET __copy_or_set(__i) ==
-    IF __i = e
+    IF __i = k
     THEN e
     ELSE IF __i < k
          THEN seq[__i]
