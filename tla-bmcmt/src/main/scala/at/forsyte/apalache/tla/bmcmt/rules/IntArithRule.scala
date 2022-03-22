@@ -15,7 +15,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, OperEx, ValEx}
  *   Igor Konnov
  */
 class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private lazy val substRule = new SubstRule(rewriter)
+  private lazy val substRule = new SubstRule
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
