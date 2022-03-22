@@ -392,6 +392,18 @@ TestSubSeqs6 ==
         <<>>, <<1>>, <<2>>, <<3>>, <<1, 2>>, <<2, 3>>, <<1, 2, 3>>
     }
 
+TestIndexFirstSubSeq1 ==
+    IndexFirstSubSeq(<<1, 2>>, <<1, 2, 3>>) = 1
+
+TestIndexFirstSubSeq2 ==
+    IndexFirstSubSeq(<<2, 3>>, <<1, 2, 3>>) = 2
+
+TestIndexFirstSubSeq3 ==
+    IndexFirstSubSeq(<<1, 2, 3>>, <<1, 2, 3>>) = 1
+
+TestIndexFirstSubSeq4 ==
+    IndexFirstSubSeq(<<3>>, <<1, 2, 3>>) = 3
+
 \* this test is a disjunction of all smaller tests
 AllTests ==
     /\ TestSetToSeq1
@@ -502,5 +514,9 @@ AllTests ==
     /\ TestSubSeqs4
     /\ TestSubSeqs5
     /\ TestSubSeqs6
+    /\ TestIndexFirstSubSeq1
+    /\ TestIndexFirstSubSeq2
+    /\ TestIndexFirstSubSeq3
+    /\ TestIndexFirstSubSeq4
 
 ===============================================================================

@@ -408,15 +408,13 @@ IndexFirstSubSeq(needle, haystack) ==
     Len(needle)
   IN
   LET __is_subseq(__i) ==
-    needle = SubSeq(haystack, __i, __i + __needle_len)
+    needle = SubSeq(haystack, __i, __i + __needle_len - 1)
   IN
   LET __dom0 == {0} \union DOMAIN haystack IN
-  LET __last ==
-    CHOOSE __i \in __dom0:
-      /\ __is_subseq(__i)
-      /\ \A __j \in __dom0:
-          __j < __i => ~__is_subseq(__i)
-  IN __last - (__needle_len - 1)
+  CHOOSE __i \in __dom0:
+    /\ __is_subseq(__i)
+    /\ \A __j \in __dom0:
+          __j < __i => ~__is_subseq(__j)
 
 (**
  * The sequence t with its subsequence s at position i replaced by
