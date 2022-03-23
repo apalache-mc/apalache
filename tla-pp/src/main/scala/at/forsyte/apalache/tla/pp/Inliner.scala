@@ -76,7 +76,6 @@ class Inliner(
 
   // Default scope filter, we add nullary operators only if keepNullary is disabled
   private def nonNullaryFilter(d: TlaOperDecl): Boolean = !keepNullary || d.formalParams.nonEmpty
-  private def negateFilter(df: DeclFilter): DeclFilter = d => !df(d)
 
   // Given a declaration (possibly holding a polymorphic type) and a monotyped target, computes
   // a substitution of the two. A substitution is assumed to exist, otherwise TypingException is thrown.
@@ -149,12 +148,6 @@ class Inliner(
     LetInEx(NameEx(newName)(tpTag), newLocalDecl)(tpTag)
   }
 
-  // Checks for the specific LET-IN form used by LAMBDA and call-by-name
-  private def isCallByName(letInEx: LetInEx): Boolean = letInEx match {
-    case LetInEx(NameEx(bodyName), TlaOperDecl(operName, _, _)) => operName == bodyName
-    case _                                                      => false
-  }
-
   // main access method, performs the transformations described above
   def transform(scope: Scope): TlaExTransformation = tracker.trackEx {
     // Standard application
@@ -170,16 +163,22 @@ class Inliner(
 
     // LET-IN extends scope
     case letInEx @ LetInEx(body, defs @ _*) =>
-      // We never want to remove the definitions from a call-by-name or lambda, so the operator filter depends on whether or not
-      // this is a generic LET-IN or a call-by-name
-      val filterFun =
-        if (isCallByName(letInEx)) FilterFun.ALL
-        else negateFilter(nonNullaryFilter)
+      // Depending on whether this is an instance of call-by-name/lambda, we have two considerations:
+      // 1) We never want to remove the definitions from a call-by-name or lambda, so the operator filter depends on
+      // whether or not this is a generic LET-IN or a call-by-name
+      // 2) As `transform` also embeds call-by-names, we don't want to embed an already embedded call-by-name
+      val (filterFun, bodyTx): (DeclFilter, (Scope, TlaEx) => TlaEx) =
+        if (isCallByName(letInEx))
+          (FilterFun.ALL, { case (_, e) => e }) // (ALL, NO-OP)
+        else
+          (negateFilter(nonNullaryFilter), { case (s, e) => transform(s)(e) }) // (!NULLARY, transform)
 
       val (newScope, remainingOpers) = pushDeclsIntoScope(filterFun)(scope, defs)
       // pushDeclsIntoScope is generic, so it doesn't know all TlaDecl are TlaOperDecl, so we just cast all of them
       val castDecls = remainingOpers.map(_.asInstanceOf[TlaOperDecl])
-      val newBody = transform(newScope)(body)
+      // if we know this is already a call-by name, no need to re-embed, since body must be a NameEx
+      // In this case newBody = body
+      val newBody = bodyTx(newScope, body)
 
       // If we ended up pushing all declarations into the scope, then we can get rid of toplevel LET-IN
       if (castDecls.isEmpty) newBody
@@ -223,9 +222,17 @@ object Inliner {
 
   type DeclFilter = TlaOperDecl => Boolean
 
+  def negateFilter(df: DeclFilter): DeclFilter = d => !df(d)
+
   object FilterFun {
     def ALL: DeclFilter = _ => true
     def NAMED(set: Set[String]): DeclFilter = d => set.contains(d.name)
+  }
+
+  // Checks for the specific LET-IN form used by LAMBDA and call-by-name
+  def isCallByName(letInEx: LetInEx): Boolean = letInEx match {
+    case LetInEx(NameEx(bodyName), TlaOperDecl(operName, _, _)) => operName == bodyName
+    case _                                                      => false
   }
 
 }

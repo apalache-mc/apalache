@@ -276,6 +276,50 @@ class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
     assert(actual == BBody)
   }
 
+  test("Call-by-name not deleted") {
+    // A(x) ==
+    //   LET F(p,q) == x IN
+    //   FoldSet(F, v, S)
+
+    val FBody = tla.name("x").as(IntT1())
+    val FType = OperT1(Seq(IntT1(), IntT1()), IntT1())
+    val FDecl = TlaOperDecl("F", List(OperParam("p"), OperParam("q")), FBody)(Typed(FType))
+
+    val n_v = tla.name("v").as(IntT1())
+    val n_S = tla.name("S").as(SetT1(IntT1()))
+
+    val ABody = tla
+      .letIn(
+          OperEx(ApalacheOper.foldSet, tla.name("F").as(FType), n_v, n_S)(Typed(IntT1())),
+          FDecl,
+      )
+      .as(IntT1())
+
+    val AType = OperT1(Seq(IntT1()), IntT1())
+    val ADecl = TlaOperDecl("A", List(OperParam("x")), ABody)(Typed(AType))
+
+    val arg = tla.int(0).as(IntT1())
+    val ex = tla.appOp(tla.name("A").as(AType), arg).as(IntT1())
+
+    val tmpDecl = TlaOperDecl("X", List.empty, ex)(Typed(OperT1(Seq.empty, IntT1())))
+
+    val decls = List(ADecl, tmpDecl)
+
+    val module = mkModule(decls: _*)
+
+    val txModule = inlinerKeepNullary.apply(module)
+
+    val actualBody = txModule.declarations(1).asInstanceOf[TlaOperDecl].body
+
+    val cond = actualBody match {
+      case OperEx(ApalacheOper.foldSet, letInEx: LetInEx, _, _) =>
+        Inliner.isCallByName(letInEx) && letInEx.decls.head.body == arg
+      case _ => false
+    }
+
+    assert(cond)
+  }
+
   test("Lambda passed to HO oper: A(F(_)) = F(x); A(LAMBDA p: p + 1) ~~> x + 1") {
     val FType = OperT1(Seq(IntT1()), IntT1())
     val ABody = tla.appOp(tla.name("F").as(FType), tla.name("x").as(IntT1())).as(IntT1())
