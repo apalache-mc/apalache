@@ -1,22 +1,21 @@
 package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.src.{SourcePosition, SourceRegion}
 import at.forsyte.apalache.tla.lir.values._
-import at.forsyte.apalache.tla.lir._
 import org.junit.runner.RunWith
 import org.scalatestplus.junit.JUnitRunner
 
 import scala.io.Source
 
 /**
- * <p>A collection of tests that check how SanyImporter loads the standard modules.</p>
+ * A collection of tests that check how SanyImporter loads the standard modules.
  *
- * <p>If you run this test in an IDE, and the test fails, add the following line to the VM parameters (don't forget to
- * replace <APALACHE_HOME> with the directory where you checked out the project):
- * -DTLA-Library=<APALACHE_HOME>/src/tla </p>
+ * If you run this test in an IDE and the test fails, set environment variable `APALACHE_HOME` to the root of the
+ * Apalache source tree.
  *
  * @author
  *   Igor Konnov
@@ -497,16 +496,8 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         |================================
       """.stripMargin
 
-    // We have to set TLA-Library, in order to look up Apalache.tla. This is done during packaging
-    // in our build.sbt file.
-    //
-    // If you run this test in an IDE, and the test fails, add the following line to the VM parameters
-    // (don't forget to replace <APALACHE_HOME> with the directory where you checked out the project):
-    //
-    // -DTLA-Library=<APALACHE_HOME>/src/tla
-    System.out.println(
-        "TLA-Library = %s".format(System.getProperty("TLA-Library"))
-    )
+    // If you run this test in an IDE and the test fails, set environment variable `APALACHE_HOME` to the root of the
+    // Apalache source tree.
 
     val (_, modules) = sanyImporter
       .loadFromSource("root", Source.fromString(text))
