@@ -226,7 +226,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
   test("module reals") {
     // check that the Reals module is imported properly
     val text =
-      """---- MODULE reals ----
+      """---- MODULE myreals ----
         |EXTENDS Reals
         |RealSet == Real
         |Inf == Infinity
@@ -247,7 +247,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("reals", Source.fromString(text))
+      .loadFromSource("myreals", Source.fromString(text))
     assert(4 == modules.size) // Reals include Integers that include Naturals
     val root = modules(rootName)
     // the definitions of the standard operators are filtered out
@@ -367,7 +367,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
   test("module finitesets") {
     // check that the FiniteSets module is imported properly
     val text =
-      """---- MODULE finitesets ----
+      """---- MODULE myfinitesets ----
         |EXTENDS FiniteSets
         |IsFinSet == IsFiniteSet(BOOLEAN)
         |Card == Cardinality(BOOLEAN)
@@ -376,7 +376,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("finitesets", Source.fromString(text))
+      .loadFromSource("myfinitesets", Source.fromString(text))
     assert(5 == modules.size) // Naturals, Sequences, FiniteSets, and our module
     val root = modules(rootName)
     expectSourceInfoInDefs(root)
