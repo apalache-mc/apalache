@@ -337,10 +337,10 @@ Every non-trivial PR must update the [unreleased changes log](./UNRELEASED.md).
 
 Changes for a given release should be split between the five sections:
 
-1. Breaking Changes
+1. Breaking changes
 2. Features
 3. Improvements
-4. Bug Fixes
+4. Bug fixes
 5. Documentation
 
 ## Releases
