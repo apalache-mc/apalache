@@ -256,7 +256,24 @@ class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
     val actualBody = txModule.declarations(1).asInstanceOf[TlaOperDecl].body
 
     assert(actualBody == ABody)
+  }
 
+  test("Inlining works correctly on nonbasic arguments:  B == e, A(x) == x, A(B()) ~~> e") {
+    val BBody = tla.int(0).as(IntT1())
+    val BType = OperT1(Seq.empty, IntT1())
+    val BDecl = TlaOperDecl("B", List.empty, BBody)(Typed(BType))
+
+    val ABody = tla.name("x").as(IntT1())
+    val AType = OperT1(Seq(IntT1()), IntT1())
+    val ADecl = TlaOperDecl("A", List(OperParam("x")), ABody)(Typed(AType))
+
+    val ex = tla.appOp(tla.name("A").as(AType), tla.appOp(tla.name("B").as(BType)).as(IntT1())).as(IntT1())
+
+    val scope = Map(ADecl.name -> ADecl, BDecl.name -> BDecl)
+
+    val actual = inlinerKeepNullary.transform(scope)(ex)
+
+    assert(actual == BBody)
   }
 
   test("Lambda passed to HO oper: A(F(_)) = F(x); A(LAMBDA p: p + 1) ~~> x + 1") {
