@@ -22,3 +22,4 @@
 
  * Fix uncaught `FileNotFoundException` in commands called on nonexistent files,
    see #1503
+ * Fix equality on sequences, see #1548  
