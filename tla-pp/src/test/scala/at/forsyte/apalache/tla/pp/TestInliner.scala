@@ -240,6 +240,25 @@ class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
 
   }
 
+  test("Nullary global operators get inlined") {
+    val ABody = tla.int(0).as(IntT1())
+    val AType = OperT1(Seq.empty, IntT1())
+    val ADecl = TlaOperDecl("A", List.empty, ABody)(Typed(AType))
+
+    val BBody = tla.appOp(tla.name("A").as(AType)).as(IntT1())
+    val BDecl = TlaOperDecl("B", List.empty, BBody)(Typed(AType))
+
+    val decls = List(ADecl, BDecl)
+    val module = mkModule(decls: _*)
+
+    val txModule = inlinerKeepNullary.apply(module)
+
+    val actualBody = txModule.declarations(1).asInstanceOf[TlaOperDecl].body
+
+    assert(actualBody == ABody)
+
+  }
+
   test("Lambda passed to HO oper: A(F(_)) = F(x); A(LAMBDA p: p + 1) ~~> x + 1") {
     val FType = OperT1(Seq(IntT1()), IntT1())
     val ABody = tla.appOp(tla.name("F").as(FType), tla.name("x").as(IntT1())).as(IntT1())

@@ -39,11 +39,11 @@ class Inliner(
   import Inliner._
 
   // Bookeeping of scope, always called, but discards operators that won't be inlined
-  private def extendedScope(scope: Scope)(d: TlaOperDecl): Scope = d match {
+  private def extendedScope(scope: Scope, scopeFilter: DeclFilter)(d: TlaOperDecl): Scope = d match {
     // We only inline operators (i.e. track them in scope) if
     // - they're non-recursive, and
     // - they satisfy the scope filter function
-    case decl: TlaOperDecl if !decl.isRecursive && nonNullaryFilter(d) =>
+    case decl: TlaOperDecl if !decl.isRecursive && scopeFilter(d) =>
       scope + (decl.name -> decl)
     // ignore any other declaration
     case _ => scope
@@ -51,10 +51,11 @@ class Inliner(
 
   // Iterative traversal of decls with a monotonically increasing scope.
   // Some operator declarations are added to the scope, some are kept in the declaration list.
-  // Operators are added to the scope if they satisfy nonNullaryFilter and kept if they satisfy
-  // operDeclFilter. By default, operDeclFilter = !nonNullaryFilter
+  // Operators are added to the scope if they satisfy scopeFilter and kept if they satisfy
+  // operDeclFilter. By default, operDeclFilter = !nonNullaryFilter, scopeFilter = nonNullaryFilter
   private def pushDeclsIntoScope(
-      operDeclFilter: DeclFilter = negateFilter(nonNullaryFilter)
+      operDeclFilter: DeclFilter = negateFilter(nonNullaryFilter),
+      scopeFilter: DeclFilter = nonNullaryFilter,
     )(initialScope: Scope,
       decls: Traversable[TlaDecl]): (Scope, List[TlaDecl]) =
     decls.foldLeft((initialScope, List.empty[TlaDecl])) { case ((scope, decls), decl) =>
@@ -65,7 +66,7 @@ class Inliner(
           // Source tracking
           val newDecl = tracker.trackOperDecl { _ => opDecl.copy(body = newDeclBody) }(opDecl)
           // then, possibly extend scope with the new declaration
-          val newScope = extendedScope(scope)(newDecl)
+          val newScope = extendedScope(scope, scopeFilter)(newDecl)
           // Finally, store the declaration in the list if necessary
           if (operDeclFilter(newDecl)) (newScope, decls :+ newDecl)
           else (newScope, decls)
@@ -203,7 +204,8 @@ class Inliner(
 
     // Instead of building a parallel BodyMap, we build scope iteratively, as the declarations are now in order.
     // Because we keep global declarations, we may need to use FilterFun.ALL or a similar filter unrelated to arity
-    val inlinedDecls = pushDeclsIntoScope(toplevelFilter)(emptyScope, sortedDecls)._2
+    // Also, because global operators are inlined even if nullary, we force scope filter to be ALL
+    val inlinedDecls = pushDeclsIntoScope(toplevelFilter, FilterFun.ALL)(emptyScope, sortedDecls)._2
 
     m.copy(declarations = inlinedDecls)
   }
