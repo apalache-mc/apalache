@@ -243,6 +243,18 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
+  test("""SubSeq(<<1, 2, 3>>, 1, 2) = SubSeq(<<1, 2, 4>>, 1, 2)""") { rewriterType: SMTEncoding =>
+    // TLC throws an error in this case. We cannot produce side effects, so we are doing the best we can do here.
+    val seq123 = tuple(int(1), int(2), int(3)).as(SeqT1(IntT1()))
+    val subseqEx1 = subseq(seq123, int(1), int(2)).as(intSeqT)
+    val seq124 = tuple(int(1), int(2), int(4)).as(SeqT1(IntT1()))
+    val subseqEx2 = subseq(seq124, int(1), int(2)).as(intSeqT)
+    val eq = eql(subseqEx1, subseqEx2).as(boolT)
+
+    val state = new SymbState(eq, arena, Binding())
+    assertTlaExAndRestore(create(rewriterType), state)
+  }
+
   test("""Append(<<4, 5>>, 10)""") { rewriterType: SMTEncoding =>
     val tup = tuple(4.to(5).map(int): _*).as(intSeqT)
     val seqAppend = append(tup, int(10)).as(intSeqT)

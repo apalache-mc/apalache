@@ -139,6 +139,19 @@ The necessary shell environment is specified in [.envrc](./.envrc). You can:
 
 [direnv]: https://direnv.net/
 
+#### Compiler warnings
+
+We fail CI builds on compiler warnings.
+
+To have compiler warnings also fail on local builds, set
+
+```sh
+export APALACHE_FATAL_WARNINGS=true
+```
+
+You may add this to your `.local-envrc` file at the root of this repo to have
+`direnv` load this into your development environment.
+
 ## Development Environment
 
 If you use a different development environment or editor set up, please document
@@ -324,10 +337,10 @@ Every non-trivial PR must update the [unreleased changes log](./UNRELEASED.md).
 
 Changes for a given release should be split between the five sections:
 
-1. Breaking Changes
+1. Breaking changes
 2. Features
 3. Improvements
-4. Bug Fixes
+4. Bug fixes
 5. Documentation
 
 ## Releases
