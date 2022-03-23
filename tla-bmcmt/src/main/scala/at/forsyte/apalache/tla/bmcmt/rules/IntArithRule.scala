@@ -2,20 +2,18 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types.IntT
+import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaArithOper
-import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, ValEx}
 
 /**
  * Integer arithmetic operations: +, -, *, div, mod.
  *
  * @author
- *   Igor Konnov
+ *   Igor Konnov, Thomas Pani
  */
-class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private lazy val substRule = new SubstRule
+class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule with IntArithPacker {
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -50,13 +48,13 @@ class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule {
    * cell in the packed constraint.
    *
    * @param state
-   *   current rewriter state
+   *   current rewriter state, `state.ex` is the arithmetic expression to rewrite
    * @return
    *   rewritten state, where the arithmetic expression has been rewritten into a new arena cell
    */
   private def rewritePacked(state: SymbState): SymbState = {
     // pack the arithmetic expression `state.ex` into `packedState.ex`
-    val packedState = packArithExpr(state)
+    val packedState = packArithExpr(state, rewriter)
 
     // add new arena cell
     val newArena = packedState.arena.appendCell(IntT())
@@ -66,42 +64,5 @@ class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule {
     rewriter.solverContext.assertGroundExpr(tla.eql(newCell.toNameEx, packedState.ex))
     // return rewritten state; the input arithmetic expression has been rewritten into the new arena cell
     packedState.setArena(newArena).setRex(newCell.toNameEx)
-  }
-
-  /**
-   * Rewrite [[state]]'s expression into an expression that is purely arithmetic, referring to arena cells for
-   * non-arithmetic subexpressions.
-   *
-   * @param state
-   *   current rewriter state, `state.ex` is to be rewritten
-   * @return
-   *   the rewritten state
-   */
-  private def packArithExpr(state: SymbState): SymbState = state.ex match {
-    /* *** base case: integer literals + names *** */
-
-    // keep integer literals as-is
-    case ValEx(TlaInt(_)) => state
-
-    // keep cell names as-is
-    case NameEx(name) if ArenaCell.isValidName(name) => state
-
-    // substitute variable names
-    case NameEx(_) => substRule(state)
-
-    /* *** recursion: recursively rewrite arithmetic expressions *** */
-
-    case OperEx(TlaArithOper.uminus, subex) =>
-      val subState = packArithExpr(state.setRex(subex))
-      subState.setRex(OperEx(TlaArithOper.uminus, subState.ex))
-
-    case OperEx(oper: TlaArithOper, left, right) =>
-      val leftState = packArithExpr(state.setRex(left))
-      val rightState = packArithExpr(leftState.setRex(right))
-      rightState.setRex(OperEx(oper, leftState.ex, rightState.ex))
-
-    case ex =>
-      // Cannot pack arbitrary expression, delegate to SymbStateRewriter
-      rewriter.rewriteUntilDone(state.setRex(ex))
   }
 }
