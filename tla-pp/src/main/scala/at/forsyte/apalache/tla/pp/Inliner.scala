@@ -12,13 +12,13 @@ import at.forsyte.apalache.tla.pp.Inliner.FilterFun
 import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier}
 
 /**
- * Given a module m, with global operators F1,...,Fn _in dependency order_, Inliner performs the following
- * transformation:
+ * Given a module m, with global operators F1,...,Fn, Inliner performs the following transformation:
  *   - For each i, replaces all application instances Fi(a1i, ..., aki) in m, where Fi(p1i,...,pki) == ei, with
  *     ei[a1/p1i, ..., aki/pki]
  *   - Replaces each instance of LET G1(q11,...,qk1) == g1 ... Gm(q1m, ..., qkm) == gm IN f, with:
  *     - f, inlined by the previous rule, as if G1, ..., Gm were global, if `keepNullary` is `false`, or,
- *     - LET Gj1 == gj1 ... Gjl == gjl
+ *     - LET Gj1 == gj1 ... Gjl == gjl IN ff, where Gj1, ..., Gjl are all the nullary operators among G1,...,Gm and ff
+ *       is the expression obtained by inlining f as though all G1,...,Gm, that are not among Gj1, ..., Gjl, were global
  *   - For each instance of call-by-name A (where a definition A(p1,...,pk) == e exists in scope), replaces
  *     - A with LET A_LOCAL(p1,...,pk) = e IN A_LOCAL
  *
