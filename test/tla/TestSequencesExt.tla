@@ -505,7 +505,7 @@ AllTests ==
     /\ TestRemove2
     /\ TestRemove3
     /\ TestRemove4
-    \*/\ TestRemove5
+    /\ TestRemove5
     /\ TestRemove6
     /\ TestRemove7
     /\ TestReplaceAll1
@@ -561,8 +561,7 @@ AllTests ==
     /\ TestFoldRight1
     /\ TestFlattenSeq1
     /\ TestFlattenSeq2
-    \* FAILING TEST:
-    \*/\ TestFlattenSeq3
+    /\ TestFlattenSeq3
     /\ TestFlattenSeq4
     /\ TestFlattenSeq5
     /\ TestZip1
