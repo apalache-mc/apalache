@@ -65,7 +65,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
 
       case tp @ SetT1(_) => // {}
         val newArena = arena.appendCell(CellT.fromType1(tp))
-        (newArena, arena.topCell)
+        (newArena, newArena.topCell)
 
       case tp @ FunT1(argT, resT) => // [x \in {} |-> {}]
         val (arena1, domCell) = makeUpValue(arena, SetT1(argT))
