@@ -103,13 +103,17 @@ class Inliner(
     val freshBody = deepCopy(decl.body)
 
     // Each formal parameter gets instantiated independently.
-    val newBody = decl.formalParams.zip(args).foldLeft(freshBody) { case (partialBody, (fParam, arg)) =>
-      val replaced = ReplaceFixed(tracker)(NameEx(fParam.name)(arg.typeTag), arg)(partialBody)
-      // Higher-order parameter instantiation warrants a call to transform, since the parameter can get
-      // instantiated with either a lambda or a global operator
-      if (!fParam.isOperator) replaced
-      else transform(scope)(replaced)
+    val replacedBody = decl.formalParams.zip(args).foldLeft(freshBody) { case (partialBody, (fParam, arg)) =>
+      ReplaceFixed(tracker)(NameEx(fParam.name)(arg.typeTag), arg)(partialBody)
     }
+
+    // There are two cases where the above instantiation might be incomplete:
+    // a) In the case of an application of the form A(B()), `arg` will have the value `B()`, which is _not_
+    //    a fully inlined expression
+    // b) In the case of an application of the form A(B), where A is a HO operator and `B` is an operator name
+    //    Then, if A(F(_)) == e, e[B/F] would contain applications of the form B(...), which are _not_ fully inlined
+    // To cover both cases at once, we run an additional transform on the replaced body
+    val newBody = transform(scope)(replacedBody)
 
     // If the operator has a parametric signature, we have to substitute type parameters with concrete parameters
     // 1. Unify the operator type with the arguments.
