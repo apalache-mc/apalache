@@ -201,6 +201,9 @@ TestExceptDomain ==
 TestSubSeqEq ==
     SubSeq(<<"a", "b", "c">>, 1, 2) = SubSeq(<<"a", "b", "d">>, 1, 2)
 
+TestSubSeqNeq ==
+    SubSeq(<<"a", "b", "c">>, 1, 3) /= SubSeq(<<"a", "b", "d">>, 1, 3)
+
 \* this test is a disjunction of all smaller tests
 AllTests ==
     /\ TestHeadEmpty
@@ -247,4 +250,6 @@ AllTests ==
     /\ TestExceptLen
     /\ TestExceptDomain
     /\ TestSubSeqEq
+    /\ TestSubSeqNeq
+
 ===============================================================================

@@ -583,7 +583,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
       tla.or(outside1, outside2, safeEq(cells._1, cells._2))
     }
 
-    val elemsEq = tla.and(1.until(sharedCapacity).zip(elems1.zip(elems2)).map((eqPairwise _).tupled): _*)
+    val elemsEq = tla.and(1.to(sharedCapacity).zip(elems1.zip(elems2)).map((eqPairwise _).tupled): _*)
     val sizesEq = tla.eql(len1Ex, len2Ex).as(BoolT1())
 
     // seq1 and seq2 are equal if and only if: (1) their lengths are equal, and (2) their shared prefixes are equal.
