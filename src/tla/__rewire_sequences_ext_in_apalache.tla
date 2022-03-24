@@ -50,9 +50,10 @@ SetToSortSeq(S, LessThan(_, _)) ==
   \* insert a new element element 
   LET \* @type: (Seq(b), b) => Seq(b);
         __insert_sorted(__seq, __newElem) ==
+    LET __next_len == Len(__seq) + 1 IN
     \* find the position for inserting the element at
     LET __insertion_pos ==
-      CHOOSE __p \in (DOMAIN __seq) \union { Len(__seq) + 1 }:
+      CHOOSE __p \in (DOMAIN __seq) \union { __next_len }:
         \A __i \in DOMAIN __seq:
           __i < __p <=> LessThan(__seq[__i], __newElem)
     IN
@@ -64,7 +65,12 @@ SetToSortSeq(S, LessThan(_, _)) ==
            THEN __newElem
            ELSE __seq[__i - 1]
     IN
-    __ApalacheMkSeq(__ApalacheSeqCapacity(__seq) + 1, __copy_or_set)
+    \* raw_seq may be longer than required
+    LET __raw_seq == 
+      __ApalacheMkSeq(__ApalacheSeqCapacity(__seq) + 1, __copy_or_set)
+    IN
+    \* prune the longer seq
+    SubSeq(__raw_seq, 1, __next_len)
   IN
   __ApalacheFoldSet(__insert_sorted, <<>>, S)
 
