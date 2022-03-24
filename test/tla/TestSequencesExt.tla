@@ -290,22 +290,6 @@ TestPrefixes5 ==
     LET P == UNION { Prefixes(seq) : seq \in { S1, S2 } } IN
     P = {<<>>, <<"a">>, <<"a", "b">>, <<"a", "b", "c">>, <<"a", "b", "d">>}
 
-TestPrefixes6 ==
-  LET (* @type: (() => Set(Seq(Str))); *)
-    __P_si_2 ==
-      UNION ({
-        { SubSeq(seq2, 1, __l2): __l2 \in {0} \union DOMAIN seq2 }:
-          seq2 \in { <<"a", "b", "c">>, <<"a", "b", "d">> }
-      })
-  IN
-  {
-    __prefix2 \in __P_si_2:
-      \A __t2 \in { <<"a", "b", "c">>, <<"a", "b", "d">> }:
-        /\ Len(__prefix2) <= Len(__t2)
-        /\ SubSeq(__prefix2, 1,
-                  (Len(__prefix2))) = SubSeq(__t2, 1, (Len(__prefix2)))
-  } = { <<>>, <<"a">>, <<"a", "b">> }
-
 TestCommonPrefixes1 ==
     CommonPrefixes({<<"a", "b", "c">>, <<"a", "b", "d">>})
         = {<<>>, <<"a">>, <<"a", "b">>}
@@ -593,11 +577,9 @@ AllTests ==
     /\ TestLongestCommonPrefix2
     /\ TestLongestCommonPrefix3
     /\ TestLongestCommonPrefix5
-    (* FAILING tests:
     /\ TestCommonPrefixes1
     /\ TestLongestCommonPrefix1
     /\ TestLongestCommonPrefix4
-    *)
     /\ TestFoldSeq1
     /\ TestFoldLeft1
     /\ TestFoldRight1
