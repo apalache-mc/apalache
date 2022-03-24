@@ -67,7 +67,12 @@ TestSetToSeq3 ==
     /\ Len(seq) = Cardinality(s)
     /\ ToSet(seq) = s
 
-TestSetToSortSeq ==
+TestSetToSeq4 ==
+  LET input == { 5, 1, 3, 3, 2, 4, 4, 1 } IN
+  LET output == SetToSeq(input) IN
+  ToSet(output) = input
+
+TestSetToSortSeq1 ==
     LET charToInt ==
         A!SetAsFun({
             <<"a", 1>>, <<"c", 3>>, <<"e", 5>>,
@@ -75,12 +80,51 @@ TestSetToSortSeq ==
         })
     IN
     LET LessThan(a, b) == charToInt[a] < charToInt[b] IN
-    LET s == {"a", "p", "a", "l", "a", "c", "h", "e"}
-        seq == SetToSortSeq(s, LessThan)
+    LET input == { "a", "p", "l", "c", "h", "e" }
+        output == SetToSortSeq(input, LessThan)
     IN
-    \*/\ Len(seq) = Cardinality(s)
-    \*/\ ToSet(seq) = s
-    /\ seq = <<"a", "c", "e", "h", "l", "p">>
+    /\ ToSet(output) = input
+    /\ output = <<"a", "c", "e", "h", "l", "p">>
+
+TestSetToSortSeq2 ==
+    LET charToInt ==
+        A!SetAsFun({
+            <<"a", 1>>, <<"c", 3>>, <<"e", 5>>,
+            <<"h", 8>>, <<"l", 12>>, <<"p", 16>>
+        })
+    IN
+    LET LessThan(a, b) == charToInt[a] < charToInt[b] IN
+    LET input == { "a", "p", "a", "l", "a", "c", "h", "e" }
+        output == SetToSortSeq(input, LessThan)
+    IN
+    /\ ToSet(output) = input
+    /\ output = <<"a", "c", "e", "h", "l", "p">>
+
+TestSetToSortSeq3 ==
+    LET \* @type: Seq(Int);
+        input == <<4, 7, 9, 12, 15>>
+    IN
+    LET SeqRange ==
+        { input[i]: i \in DOMAIN input }
+    IN
+    LET index ==
+        [ j \in SeqRange |-> CHOOSE i \in DOMAIN input: input[i] = j ]
+    IN
+    LET LessThan(i, j) ==
+        index[i] < index[j]
+    IN
+    LET output ==
+        SetToSortSeq(SeqRange, LessThan)
+    IN
+    output = input
+
+TestSetToSortSeq4 ==
+    LET LessThan(i, j) == i < j IN
+    LET input == { 5, 1, 3, 3, 2, 4, 4, 1 }
+        output == SetToSortSeq(input, LessThan)
+    IN
+    /\ ToSet(output) = input
+    /\ output = <<1, 2, 3, 4, 5>>
 
 TestContains1 ==
     ~Contains(intSeqEmpty, 3)
@@ -500,9 +544,11 @@ AllTests ==
     /\ TestSetToSeq1
     /\ TestSetToSeq2
     /\ TestSetToSeq3
-    (* FAILING tests:
-    /\ TestSetToSortSeq
-     *)
+    /\ TestSetToSeq4
+    /\ TestSetToSortSeq1
+    /\ TestSetToSortSeq2
+    /\ TestSetToSortSeq3
+    /\ TestSetToSortSeq4
     /\ TestToSet1
     /\ TestToSet2
     /\ TestToSet3

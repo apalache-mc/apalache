@@ -62,7 +62,7 @@ SetToSortSeq(S, LessThan(_, _)) ==
       THEN __seq[__i]
       ELSE IF __i = __insertion_pos
            THEN __newElem
-           ELSE __seq[__i + 1]
+           ELSE __seq[__i - 1]
     IN
     __ApalacheMkSeq(__ApalacheSeqCapacity(__seq) + 1, __copy_or_set)
   IN
