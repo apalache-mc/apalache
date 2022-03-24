@@ -244,7 +244,6 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
   }
 
   test("""SubSeq(<<1, 2, 3>>, 1, 2) = SubSeq(<<1, 2, 4>>, 1, 2)""") { rewriterType: SMTEncoding =>
-    // TLC throws an error in this case. We cannot produce side effects, so we are doing the best we can do here.
     val seq123 = tuple(int(1), int(2), int(3)).as(SeqT1(IntT1()))
     val subseqEx1 = subseq(seq123, int(1), int(2)).as(intSeqT)
     val seq124 = tuple(int(1), int(2), int(4)).as(SeqT1(IntT1()))
@@ -256,7 +255,6 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
   }
 
   test("""SubSeq(<<1, 2, 3>>, 1, 3) /= SubSeq(<<1, 2, 4>>, 1, 3)""") { rewriterType: SMTEncoding =>
-    // TLC throws an error in this case. We cannot produce side effects, so we are doing the best we can do here.
     val seq123 = tuple(int(1), int(2), int(3)).as(SeqT1(IntT1()))
     val seq124 = tuple(int(1), int(2), int(4)).as(SeqT1(IntT1()))
     val subseqEx1 = subseq(seq123, int(1), int(3)).as(intSeqT)
