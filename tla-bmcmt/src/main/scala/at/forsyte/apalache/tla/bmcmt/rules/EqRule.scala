@@ -29,10 +29,10 @@ class EqRule(rewriter: SymbStateRewriter) extends RewritingRule with IntArithPac
       state.setRex(state.arena.cellTrue().toNameEx)
 
     // Pack integer equality into a single SMT constraint
-    case OperEx(TlaOper.eq, lhs, rhs) if lhs.typeTag == rhs.typeTag && rhs.typeTag == Typed(IntT1()) =>
+    case OperEx(TlaOper.eq, lhs, rhs) if lhs.typeTag == Typed(IntT1()) && rhs.typeTag == Typed(IntT1()) =>
       // pack the arithmetic expression `state.ex` into `packedState.ex`
-      val leftState = packArithExpr(state.setRex(lhs), rewriter)
-      val rightState = packArithExpr(leftState.setRex(rhs), rewriter)
+      val leftState = packArithExpr(rewriter, state.setRex(lhs))
+      val rightState = packArithExpr(rewriter, leftState.setRex(rhs))
 
       // add new arena cell
       val newArena = rightState.arena.appendCell(BoolT())

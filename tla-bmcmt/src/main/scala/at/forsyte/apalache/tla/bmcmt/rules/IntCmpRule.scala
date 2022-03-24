@@ -39,8 +39,8 @@ class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule with IntArit
   private def rewritePacked(state: SymbState) = state.ex match {
     case OperEx(oper, left, right) =>
       // pack the arithmetic expression `state.ex` into `packedState.ex`
-      val leftState = packArithExpr(state.setRex(left), rewriter)
-      val rightState = packArithExpr(leftState.setRex(right), rewriter)
+      val leftState = packArithExpr(rewriter, state.setRex(left))
+      val rightState = packArithExpr(rewriter, leftState.setRex(right))
 
       // add new arena cell
       val newArena = rightState.arena.appendCell(BoolT())

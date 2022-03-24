@@ -19,14 +19,14 @@ trait IntArithPacker {
    * Rewrite [[state]]'s expression into an expression that is purely arithmetic, referring to arena cells for
    * non-arithmetic subexpressions.
    *
-   * @param state
-   *   current rewriter state, `state.ex` is the arithmetic expression to rewrite
    * @param rewriter
    *   rewriter to use for non-arithmetic subexpressions
+   * @param state
+   *   current rewriter state, `state.ex` is the arithmetic expression to rewrite
    * @return
    *   the rewritten state
    */
-  protected def packArithExpr(state: SymbState, rewriter: SymbStateRewriter): SymbState = state.ex match {
+  protected def packArithExpr(rewriter: SymbStateRewriter, state: SymbState): SymbState = state.ex match {
     /* *** base case: integer literals + names *** */
 
     // keep integer literals as-is
@@ -41,12 +41,12 @@ trait IntArithPacker {
     /* *** recursion: recursively rewrite arithmetic expressions *** */
 
     case OperEx(TlaArithOper.uminus, subex) =>
-      val subState = packArithExpr(state.setRex(subex), rewriter)
+      val subState = packArithExpr(rewriter, state.setRex(subex))
       subState.setRex(OperEx(TlaArithOper.uminus, subState.ex))
 
     case OperEx(oper: TlaArithOper, left, right) =>
-      val leftState = packArithExpr(state.setRex(left), rewriter)
-      val rightState = packArithExpr(leftState.setRex(right), rewriter)
+      val leftState = packArithExpr(rewriter, state.setRex(left))
+      val rightState = packArithExpr(rewriter, leftState.setRex(right))
       rightState.setRex(OperEx(oper, leftState.ex, rightState.ex))
 
     case ex =>
