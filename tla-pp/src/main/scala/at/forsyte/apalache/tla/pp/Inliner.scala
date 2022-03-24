@@ -38,7 +38,7 @@ class Inliner(
 
   import Inliner._
 
-  // Bookeeping of scope, always called, but discards operators that won't be inlined
+  // Return scope extended by decl if decl is non-recursive and passes scopeFilter. Used for bookkeeping below. 
   private def extendedScope(scope: Scope, scopeFilter: DeclFilter)(d: TlaOperDecl): Scope = d match {
     // We only inline operators (i.e. track them in scope) if
     // - they're non-recursive, and
@@ -50,8 +50,7 @@ class Inliner(
   }
 
   // Iterative traversal of decls with a monotonically increasing scope.
-  // Some operator declarations are added to the scope, some are kept in the declaration list.
-  // Operators are added to the scope if they satisfy scopeFilter and kept if they satisfy
+  // Operator declarations are added to the scope if they satisfy scopeFilter and kept in the declaration list if they satisfy
   // operDeclFilter. By default, operDeclFilter = !nonNullaryFilter, scopeFilter = nonNullaryFilter
   private def pushDeclsIntoScope(
       operDeclFilter: DeclFilter = negateFilter(nonNullaryFilter),
@@ -91,7 +90,7 @@ class Inliner(
     }
   }
 
-  // Assume name is in scope.
+  // Assume an operator declaration named name is in scope.
   // Creates a fresh copy of the operator body and replaces formal parameter instances with the argument instances.
   private def instantiateWithArgs(scope: Scope)(name: String, args: Seq[TlaEx]): TlaEx = {
     val decl = scope(name)
