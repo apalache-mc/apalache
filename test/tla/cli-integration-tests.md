@@ -128,6 +128,10 @@ $ apalache-mc config --enable-stats=true | sed 's/[IEW]@.*//'
 Statistics collection is ON.
 ...
 EXITCODE: OK
+$ apalache-mc parse Empty.tla | grep '# Usage statistics'
+...
+# Usage statistics is ON. Thank you!
+...
 $ grep -q -v NO_STATISTICS $HOME/.tlaplus/esc.txt
 $ echo NO_STATISTICS >$HOME/.tlaplus/esc.txt
 ```
@@ -146,6 +150,10 @@ $ apalache-mc config --enable-stats=false | sed 's/[IEW]@.*//'
 Statistics collection is OFF.
 ...
 EXITCODE: OK
+$ apalache-mc parse Empty.tla | grep '# Usage statistics'
+...
+# Usage statistics is OFF. We care about your privacy.
+...
 $ head -n 1 $HOME/.tlaplus/esc.txt
 NO_STATISTICS
 ```
