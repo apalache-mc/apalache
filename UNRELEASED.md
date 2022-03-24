@@ -17,6 +17,7 @@
 ### Features
 
  * Look up modules in the same directory, see #1491
+ * Support for the community SequencesExt, see #1539
 
 ### Bug fixes
 
