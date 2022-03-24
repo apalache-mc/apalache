@@ -571,14 +571,20 @@ class LazyEquality(rewriter: SymbStateRewriter)
 
     // compare the shared prefix
     var nextState = state
+    val len1Ex = len1.toNameEx.as(IntT1())
+    val len2Ex = len2.toNameEx.as(IntT1())
 
-    def eqPairwise(leftCell: ArenaCell, rightCell: ArenaCell): TlaEx = {
-      nextState = cacheOneEqConstraint(nextState, leftCell, rightCell)
-      safeEq(leftCell, rightCell)
+    def eqPairwise(indexBase1: Int, cells: (ArenaCell, ArenaCell)): TlaEx = {
+      nextState = cacheOneEqConstraint(nextState, cells._1, cells._2)
+      // Either (1) one of the lengths is below the index, or (2) the elements are equal.
+      // The case (1) is compensated with the constraint sizesEq below.
+      val outside1 = tla.lt(len1Ex, tla.int(indexBase1)).as(BoolT1())
+      val outside2 = tla.lt(len2Ex, tla.int(indexBase1)).as(BoolT1())
+      tla.or(outside1, outside2, safeEq(cells._1, cells._2))
     }
 
-    val elemsEq = tla.and(elems1.zip(elems2).map((eqPairwise _).tupled): _*)
-    val sizesEq = tla.eql(len1.toNameEx.as(IntT1()), len2.toNameEx.as(IntT1())).as(BoolT1())
+    val elemsEq = tla.and(1.to(sharedCapacity).zip(elems1.zip(elems2)).map((eqPairwise _).tupled): _*)
+    val sizesEq = tla.eql(len1Ex, len2Ex).as(BoolT1())
 
     // seq1 and seq2 are equal if and only if: (1) their lengths are equal, and (2) their shared prefixes are equal.
     rewriter.solverContext
