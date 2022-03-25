@@ -1896,6 +1896,16 @@ $ apalache-mc check --length=0 --inv=AllTests TestBagsExt.tla | sed 's/[IEW]@.*/
 EXITCODE: OK
 ```
 
+### check TestFolds.tla reports no error
+
+```sh
+$ apalache-mc check --length=0 --inv=AllTests TestFolds.tla | sed 's/[IEW]@.*//'
+...
+TestFolds.tla:21:5-21:50: unsupported expression: Not supported: MapThenFoldSet. Use FoldSet, FoldSeq, FoldFunction.
+...
+EXITCODE: ERROR (12)
+```
+
 ### check Test1343.tla reports no error
 
 Regression test for #1343
@@ -2481,6 +2491,16 @@ Typecheck a model checking instance.
 
 ```sh
 $ apalache-mc typecheck MC_LamportMutexTyped.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### typecheck TestFolds.tla
+
+Typecheck the test for Folds.tla.
+
+```sh
+$ apalache-mc typecheck TestFolds.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
