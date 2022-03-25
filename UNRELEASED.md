@@ -17,6 +17,12 @@
 ### Features
 
  * Look up modules in the same directory, see #1491
+ * Support for the community module `BagsExt`, see #1555
+
+### Improvements
+
+ * Pack arithmetic expressions and comparisons into a single SMT constraint,
+   see #1540 and #1545
 
 ### Bug fixes
 
