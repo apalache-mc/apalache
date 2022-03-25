@@ -37,7 +37,9 @@ __ApalacheFoldSeq(Op(_, _), v, seq) ==
  * application of `FunAsSeq([ i \in 1..N |-> F(i) ])`.
  *
  * @type: (Int, (Int -> a)) => Seq(a);
- *) __ApalacheMkSeq(N, F(_)) == \* A dummy implementation. Apalache rewires it
- with ApalacheOper.mkSeq.  <<>>
+ *)
+__ApalacheMkSeq(N, F(_)) ==
+  \* A dummy implementation. Apalache rewires it with ApalacheOper.mkSeq.
+  <<>>
 
 ===============================================================================
