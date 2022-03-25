@@ -1888,6 +1888,14 @@ $ apalache-mc check --length=0 --inv=Inv TestBags.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check TestBagsExt.tla reports no error
+
+```sh
+$ apalache-mc check --length=0 --inv=AllTests TestBagsExt.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check Test1343.tla reports no error
 
 Regression test for #1343
