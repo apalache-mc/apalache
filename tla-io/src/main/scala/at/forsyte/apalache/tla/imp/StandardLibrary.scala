@@ -67,8 +67,8 @@ object StandardLibrary {
         ("__apalache_folds", "__ApalacheFoldSet") -> ApalacheOper.foldSet,
         ("Apalache", "FoldSeq") -> ApalacheOper.foldSeq,
         ("__apalache_folds", "__ApalacheFoldSeq") -> ApalacheOper.foldSeq,
-        ("ApalacheInternal", "__NotSupportedByModelChecker") -> ApalacheInternalOper.notSupportedByModelChecker,
-        ("ApalacheInternal", "__ApalacheSeqCapacity") -> ApalacheInternalOper.apalacheSeqCapacity,
+        ("__apalache_internal", "__NotSupportedByModelChecker") -> ApalacheInternalOper.notSupportedByModelChecker,
+        ("__apalache_internal", "__ApalacheSeqCapacity") -> ApalacheInternalOper.apalacheSeqCapacity,
     ) ////
 
   /**
@@ -85,6 +85,7 @@ object StandardLibrary {
         "BagsExt.tla" -> "__rewire_bags_ext_in_apalache.tla",
         "Functions.tla" -> "__rewire_functions_in_apalache.tla",
         "FiniteSetsExt.tla" -> "__rewire_finite_sets_ext_in_apalache.tla",
+        "Folds.tla" -> "__rewire_folds_in_apalache.tla",
         // will be enabled later
         //        "SequencesExt.tla" -> "__rewire_sequences_ext_in_apalache.tla",
     ) ////
