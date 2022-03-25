@@ -18,6 +18,7 @@
 
  * Look up modules in the same directory, see #1491
  * Support for the community module `BagsExt`, see #1555
+ * Support for the community module `Folds`, see #1558
 
 ### Improvements
 
