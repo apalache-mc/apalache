@@ -31,15 +31,13 @@ __ApalacheFoldSeq(Op(_, _), v, seq) ==
     v
 
 (**
- * A sequence constructor that avoids using a function constructor.
- * Since Apalache is typed, this operator is more efficient than
- * FunAsSeq([ i \in 1..N |-> F(i) ]). Apalache requires N to be
- * a constant expression.
+ * A sequence constructor that avoids using a function constructor.  This
+ * operator creates the sequence `<<F(1), F(2), ..., F(N)>>` for a constant
+ * expression `N`.  This operator is more efficient than the indirect
+ * application of `FunAsSeq([ i \in 1..N |-> F(i) ])`.
  *
  * @type: (Int, (Int -> a)) => Seq(a);
- *)
-__ApalacheMkSeq(N, F(_)) ==
-    \* A dummy implementation. Apalache rewires it with ApalacheOper.mkSeq.
-    <<>>
+ *) __ApalacheMkSeq(N, F(_)) == \* A dummy implementation. Apalache rewires it
+ with ApalacheOper.mkSeq.  <<>>
 
 ===============================================================================

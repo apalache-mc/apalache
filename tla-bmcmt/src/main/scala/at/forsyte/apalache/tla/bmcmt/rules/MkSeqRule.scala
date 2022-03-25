@@ -87,17 +87,29 @@ class MkSeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
     case (state, OperEx(TlaArithOper.plus, left, right)) =>
       val (lstate, lcap) = computeCapacity(state, left)
       val (rstate, rcap) = computeCapacity(lstate, right)
-      (rstate, lcap + rcap)
+      val sumAsBigInt = BigInt(lcap) + rcap
+      if (!sumAsBigInt.isValidInt) {
+        throw new IllegalArgumentException("Overflow in sequence capacity: " + sumAsBigInt)
+      }
+      (rstate, sumAsBigInt.toInt)
 
     case (state, OperEx(TlaArithOper.minus, left, right)) =>
       val (lstate, lcap) = computeCapacity(state, left)
       val (rstate, rcap) = computeCapacity(lstate, right)
-      (rstate, lcap - rcap)
+      val diffAsBigInt = BigInt(lcap) - rcap
+      if (!diffAsBigInt.isValidInt) {
+        throw new IllegalArgumentException("Underflow in sequence capacity: " + diffAsBigInt)
+      }
+      (rstate, diffAsBigInt.toInt)
 
     case (state, OperEx(TlaArithOper.mult, left, right)) =>
       val (lstate, lcap) = computeCapacity(state, left)
       val (rstate, rcap) = computeCapacity(lstate, right)
-      (rstate, lcap * rcap)
+      val prodAsBigInt = BigInt(lcap) * rcap
+      if (!prodAsBigInt.isValidInt) {
+        throw new IllegalArgumentException("Overflow in sequence capacity: " + prodAsBigInt)
+      }
+      (rstate, prodAsBigInt.toInt)
 
     case (state, OperEx(TlaArithOper.div, left, right)) =>
       val (lstate, lcap) = computeCapacity(state, left)
