@@ -19,6 +19,11 @@
  * Look up modules in the same directory, see #1491
  * Support for the community SequencesExt, see #1539
 
+### Improvements
+
+ * Pack arithmetic expressions and comparisons into a single SMT constraint,
+   see #1540 and #1545
+
 ### Bug fixes
 
  * Fix uncaught `FileNotFoundException` in commands called on nonexistent files,
