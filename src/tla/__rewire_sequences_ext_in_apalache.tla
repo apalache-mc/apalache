@@ -105,7 +105,7 @@ SeqOf(set, n) ==
  * @type: (Set(a), Int) => Set(Seq(a));
  *)
 BoundedSeq(S, n) ==
-  __NotSupportedByModelChecker("SeqOf")
+  __NotSupportedByModelChecker("BoundedSeq")
 
 (**
  * TRUE iff the element e \in ToSet(s).
