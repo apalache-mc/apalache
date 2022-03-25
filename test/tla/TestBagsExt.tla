@@ -23,6 +23,18 @@ TestBagRemoveAll1 ==
     LET B == SetAsFun({<<1, 2>>, <<2, 1>>}) IN
     BagRemoveAll(B, 1) = SetToBag({2})
 
+TestSumBag1 ==
+    LET B == SetAsFun({<<1, 2>>, <<2, 1>>, <<3, 2>>}) IN
+    SumBag(B) = 10
+
+TestSumBag2 ==
+    LET B == SetAsFun({<<1, 2>>, <<-2, 1>>}) IN
+    SumBag(B) = 0
+
+TestProductBag1 ==
+    LET B == SetAsFun({<<1, 2>>, <<-2, 1>>}) IN
+    ProductBag(B) = -2
+
 Init == TRUE
 
 Next == TRUE
@@ -33,5 +45,8 @@ AllTests ==
   /\ TestBagRemove1
   /\ TestBagRemove2
   /\ TestBagRemoveAll1
+  /\ TestSumBag1
+  /\ TestSumBag2
+  /\ TestProductBag1
 
 ====================

@@ -46,4 +46,46 @@ BagRemove(B, x) ==
  *)
 BagRemoveAll(B, x) ==
    [e \in DOMAIN B \ {x} |-> B[e]]
+
+(**
+ * Fold operation op over the images through f of all elements of bag
+ * B, starting from base. The parameter choose indicates the order in
+ * which elements of the bag are processed; all replicas of an element
+ * are processed consecutively.
+ *
+ * Apalache does not support this operator. Use FoldFunction.
+ *
+ * @type: ((a, b) => b, b, a => b, Set(a) => a, a -> Int) => b;
+ *)
+MapThenFoldBag(op(_, _), base, f(_), choose(_), B) ==
+    __NotSupportedByModelChecker("MapThenFoldBag. Use FoldFunction.")
+
+(**
+ * Fold op over all elements of bag B, starting with value base.
+ *
+ * Apalache does not support this operator. Use FoldFunction.
+ *
+ * @type: ((a, b) => b, b, a -> Int) => (a -> Int);
+ *)
+FoldBag(op(_, _), base, B) ==
+    __NotSupportedByModelChecker("FoldBag. Use FoldFunction.")
+
+(**
+ * Compute the sum of the elements of B.
+ *
+ * @type: (Int -> Int) => Int;
+ *)
+SumBag(B) ==
+  LET __map(x, y) == x + y * B[y] IN
+  __ApalacheFoldSet(__map, 0, DOMAIN B)
+
+(**
+ * Compute the product of the elements of B.
+ *
+ * @type: (Int -> Int) => Int;
+ *)
+ProductBag(B) ==
+  LET __map(x, y) == x * (y^B[y]) IN
+  __ApalacheFoldSet(__map, 1, DOMAIN B)
+
 =============================================================================
