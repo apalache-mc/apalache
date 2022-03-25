@@ -357,6 +357,11 @@ FoldRight(op(_, _), seq, base) ==
  *
  *  FlattenSeq(<< <<1, 2>>, <<1>> >>) = << 1, 2, 1 >>
  *  FlattenSeq(<< <<"a">>, <<"b">> >>) = <<"a", "b">>
+ *
+ * In contrast to TLC, Apalache treats strings as indivisible.
+ * Hence, the following test of the community modules would not pass
+ * (it is actually ill-typed):
+ *
  *  FlattenSeq(<< "a", "b" >>) = "ab"
  *
  * @type: Seq(Seq(a)) => Seq(a);
