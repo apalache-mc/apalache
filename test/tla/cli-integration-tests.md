@@ -1872,6 +1872,13 @@ $ apalache-mc check --length=0 --inv=AllTests TestSequences.tla | sed 's/[IEW]@.
 EXITCODE: OK
 ```
 
+### check TestSequencesExt.tla reports no error
+
+```sh
+$ apalache-mc check --length=0 --inv=AllTests TestSequencesExt.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+
 ### check TestBags.tla reports no error
 
 ```sh
