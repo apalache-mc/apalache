@@ -1,4 +1,4 @@
-# ADR-16: Uninterpreted first-order logic fragment encoding
+# ADR-16: ReTLA - Relational TLA
 
 | author     | revision |
 | ------------ | --------:|
