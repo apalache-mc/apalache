@@ -479,7 +479,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
     expectSourceInfoInDefs(root)
     // This number may change when a new version of Bags.tla is shipped in tla2tools.jar.
     // The declarations include the declarations by __rewire_tlc_in_apalache.tla and Bags.tla.
-    assert(16 == root.declarations.size)
+    assert(14 == root.declarations.size)
   }
 
   test("EXTENDS Apalache") {
