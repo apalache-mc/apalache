@@ -105,7 +105,7 @@ SeqOf(set, n) ==
  * @type: (Set(a), Int) => Set(Seq(a));
  *)
 BoundedSeq(S, n) ==
-  __NotSupportedByModelChecker("SeqOf")
+  __NotSupportedByModelChecker("BoundedSeq")
 
 (**
  * TRUE iff the element e \in ToSet(s).
@@ -183,7 +183,7 @@ ReplaceAt(s, i, e) ==
   [s EXCEPT ![i] = e]  
 
 (**
- * Replaces the element at position i shortening the length of s by one.
+ * Removes the element at position i shortening the length of s by one.
  *
  * @type: (Seq(a), Int) => Seq(a);
  *)
@@ -226,7 +226,7 @@ Last(seq) ==
  * @type: (Seq(a), Seq(a)) => Bool;
  *)
 IsPrefix(s, t) ==
-  Len(s) <= Len(t) /\ SubSeq(s, 1, Len(s)) = SubSeq(t, 1, Len(s))
+  s = SubSeq(t, 1, Len(s))
 
 (**
  * TRUE iff the sequence s is a prefix of the sequence t and s # t
