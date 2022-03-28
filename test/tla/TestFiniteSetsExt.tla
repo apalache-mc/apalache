@@ -119,7 +119,10 @@ TestKSubset9 ==
  *)
 
 TestFoldSet1 ==
-    FoldSet(LAMBDA x,y : x + y, 0, 0 .. 10) = 55
+    FoldSet(LAMBDA x, y: x + y, 0, 0 .. 10) = 55
+
+TestFoldSet2 ==
+    FoldSet(LAMBDA x, y: x + y, 0, { 1, 1, 2, 3, 3, 3 }) = 6
 
 TestChooseUnique ==
     ChooseUnique({2, 3, 4, 5}, LAMBDA x : x % 3 = 1) = 4
@@ -172,6 +175,7 @@ AllTests ==
     /\ TestKSubset7
     /\ TestKSubset8
     /\ TestFoldSet1
+    /\ TestFoldSet2
     /\ TestChooseUnique
     /\ TestSymDiff1
     /\ TestSymDiff2
