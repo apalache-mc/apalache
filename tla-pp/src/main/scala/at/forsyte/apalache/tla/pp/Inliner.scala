@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.storage.BodyMap
 import at.forsyte.apalache.tla.lir.transformations.standard.{
   DeclarationSorter, DeepCopy, IncrementalRenaming, ReplaceFixed,
 }
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TlaModuleTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.pp.Inliner.FilterFun
 import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier}
 
