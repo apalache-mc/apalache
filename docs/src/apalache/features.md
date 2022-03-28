@@ -20,8 +20,8 @@ Construct  | Supported? | Milestone | Comment
 ``CONSTANTS C1, C2`` | ✔ | -  | Either define a ``ConstInit`` operator to initialize the constants, use a `.cfg` file, or declare operators instead of constants, e.g., C1 == 111
 ``VARIABLES x, y, z`` | ✔ | - |
 ``ASSUME P`` | ✔ / ✖ | - | Parsed, but not propagated to the solver
-``F(x1, ..., x_n) == exp`` | ✔ / ✖ | - | Every application of `F` is replaced with its body. Recursive operators need [unrolling annotations](./principles.md#recursive-operators). From 0.16.1 and later, for better performance and UX, use `FoldSet` and `FoldSeq`.
-``f[x ∈ S] == exp`` | ✔ / ✖ | - | Recursive functions are only supported if they return integers or Booleans. From 0.16.1 and later, for better performance and UX, use `FoldSet` and `FoldSeq`.
+``F(x1, ..., x_n) == exp`` | ✔ / ✖ | - | Every application of `F` is replaced with its body. [Recursive operators](./principles/recursive.md) not supported after 0.23.1. From 0.16.1 and later, for better performance and UX, use `FoldSet` and `FoldSeq`.
+``f[x ∈ S] == exp`` | ✔ / ✖ | - | [Recursive functions](./principles/recursive.md) not supported after 0.23.1. From 0.16.1 and later, for better performance and UX, use `FoldSet` and `FoldSeq`.
 ``INSTANCE M WITH ...`` | ✔ / ✖ | - | No special treatment for ``~>``, ``\cdot``, ``ENABLED``
 ``N(x1, ..., x_n) == INSTANCE M WITH...`` | ✔ / ✖ | - | Parameterized instances are not supported
 ``THEOREM P`` | ✔ / ✖ | - | Parsed but not used

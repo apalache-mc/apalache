@@ -2,7 +2,7 @@
 
 | author      | revision |
 | ----------- | --------:|
-| Igor Konnov |        2 |
+| Igor Konnov |        2.1 |
 
 This ADR documents our decision on using Java-like annotations in comments.
 Our main motivation to have annotations is to simplify type annotations, as
@@ -19,12 +19,11 @@ declaration. The following declarations are supported:
  1. Constant declarations, e.g., `CONSTANT N`.
  1. Variable declarations, e.g., `VARIABLE x`.
  1. Operator declarations, including:
-   1. Top-level operator declarations, e.g., `Foo(x) == e`.
-   1. Operators defined via LET-IN, e.g., `Foo(x) == LET Inner(y) == e IN f`.
-   1. Recursive operators, e.g., `RECURSIVE Fact(_) Fact(n) == ...`
- 1. Recursive and non-recursive functions including:
-   1. Top-level functions, e.g., `foo[i \in Int] == e`.
-   2. Functions defined via LET-IN, e.g.,`Foo == LET foo[i \in Int] == e IN f`
+    1. Top-level operator declarations, e.g., `Foo(x) == e`.
+    1. Operators defined via LET-IN, e.g., `Foo(x) == LET Inner(y) == e IN f`.
+ 1. Non-recursive functions including:
+    1. Top-level functions, e.g., `foo[i \in Int] == e`.
+    2. Functions defined via LET-IN, e.g.,`Foo == LET foo[i \in Int] == e IN f`
 
 For an example, see Section 3.
 
@@ -53,7 +52,6 @@ The sequence `<char sequence>` is a sequence of characters admitted by the TLA+ 
 **Examples.** The following strings are examples of syntactically correct
 annotations:
 
- 1. `@tailrec`
  1. `@type("(Int, Int) => Int")`
  1. `@require(Init)`
  1. `@type: (Int, Int) => Int ;`
@@ -94,7 +92,7 @@ the following examples demonstrate valid annotations inside TLA+ comments:
 
 The following specification shows how to write annotations, so they can be
 correctly parsed by the SANY parser and Apalache. Note the location of comments
-in front of: local operators, LET-definitions, and recursive operators.
+in front of: local operators, LET-definitions, and non-recursive operators.
 Although these locations may seem to be suboptimal, this is how the SANY
 parser locates comments that precede declarations.
 
@@ -125,17 +123,6 @@ A(n) ==
       Dec(x) == x + 1
   IN
   Dec(n)
-
-RECURSIVE Fact(_)
-\* @tailrec
-\* @type: Int => Int;
-Fact(n) ==
-  IF n <= 1 THEN 1 ELSE n * Fact(n - 1)
-
-\* @tailrec
-\* @type: Int -> Int;
-FactFun[n \in Int] ==
-  IF n <= 1 THEN 1 ELSE n * FactFun[n - 1]
 
 ===============================================================================
 ```

@@ -473,10 +473,7 @@ to `TRUE`.
 It is much easier to describe the effect of `SelectSeq` in words than to
 give a precise sequence of steps. See **Examples**.
 
-_This operator is not supported by Apalache, as it inlines all operators,
-before translating the specification in SMT. Hence, it cannot pass `Test`
-into a built-in operator. To work around it, write a user-defined
-recursive operator that is equivalent to `SelectSeq`._
+_One cannot pass the names of built-in operators by name. Use a LAMBDA or local LET-IN instead._
 
 **Determinism:** Deterministic.
 

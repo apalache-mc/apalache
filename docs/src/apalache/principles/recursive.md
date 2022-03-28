@@ -1,7 +1,7 @@
 <a name="recursion"></a>
 ## Recursive operators and functions
 
-While TLA+ allows the use of recursive operators and functions, we have decided to no longer support them in Apalache, and suggest the use of fold operators, described in [Folding sets and sequences](./folds.md) instead: 
+While TLA+ allows the use of recursive operators and functions, we have decided to no longer support them in Apalache from version `0.23.1` onward, and suggest the use of fold operators, described in [Folding sets and sequences](./folds.md) instead: 
 
 ```tla
 {{#include ../../../../src/tla/Apalache.tla:122:127}}

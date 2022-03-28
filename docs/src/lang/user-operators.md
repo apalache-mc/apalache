@@ -1,4 +1,4 @@
-# User-defined operators and recursive functions
+# User-defined operators
 
 _Like macros, to do a lot of things in one system step..._
 
@@ -9,13 +9,12 @@ functions in PL.) Then you realize that operators such as `Init` and `Next` are
 used as logic predicates. However, large specifications often contain operators
 that are not predicates, but in fact are similar to pure functions in
 programming languages: They are computing values over the system state but pose
-no constraints over the system states. On top of that, there are [Recursive
-functions] that syntactically looks very similar to
-operators.
+no constraints over the system states. 
 
 Recently, Leslie Lamport has extended the syntax of TLA+ operators in [TLA+
-version 2], which supports recursive operators and lambda operators.  The
-operator syntax that is described in [Specifying Systems] describes TLA+
+version 2], which supports recursive operators and lambda operators. We explain why Apalache does not support those in [Recursive operators and functions]. 
+
+The operator syntax that is described in [Specifying Systems] describes TLA+
 version 1. This page summarizes the syntax of user-defined operators in
 versions 1 and 2.
 
@@ -69,11 +68,7 @@ and recursive functions below:
 
  - [Anonymous operator definitions]
 
- - [Recursive operator definitions]
-
  - [Local operator definitions]
-
- - [Recursive functions]
 
 
 
@@ -86,7 +81,6 @@ and recursive functions below:
 [LET-IN definitions]: ./user/let-in.md
 [Higher-order operator definitions]: ./user/higher-order-operators.md
 [Anonymous operator definitions]: ./user/lambdas.md
-[Recursive operator definitions]: ./user/recursive-operators.md
 [Local operator definitions]: ./user/local-operators.md
-[Recursive functions]: ./user/recursive-functions.md
+[Recursive operators and functions]: ./principles/recursive.md
 
