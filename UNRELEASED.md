@@ -17,6 +17,7 @@
 ### Features
 
  * Look up modules in the same directory, see #1491
+ * `RECURSIVE` operators and functions are no longer supported, see #1565
 
 ### Bug fixes
 
