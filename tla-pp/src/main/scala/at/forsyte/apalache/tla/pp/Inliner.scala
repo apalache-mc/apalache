@@ -22,8 +22,8 @@ import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier}
  *   - For each instance of pass-by-name A (where a definition A(p1,...,pk) == e exists in scope), replaces
  *     - A with LET A_LOCAL(p1,...,pk) = e IN A_LOCAL
  *
- * If calling `transformModule`, then `moduleLevelFilter` determines which declarations remain in the module after
- * inlining. Default: ALL.
+ * If calling `transformModule`, then `moduleLevelFilter` determines which operator declarations remain in the module
+ * after inlining. Default: ALL.
  *
  * @author
  *   Jure Kukovec
