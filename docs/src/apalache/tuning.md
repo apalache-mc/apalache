@@ -44,8 +44,8 @@ mode may drastically reduce memory consumption, but it may take longer than the
   requires to start with the 0th transition, continue with the 5th transition,
   then execute either the 2nd or the 3rd transition and after that execute
   arbitrary transitions until the `length.` Note that there is no direct correspondence
-  between the transition numbers and the actions in the TLA+ spec. Check the
-  transition numbers in `./x/**/out-transition.tla`: 0th transition is called `Next$0`, 1st transition is called `Next$1`, etc.
+  between the transition numbers and the actions in the TLA+ spec. To find the numbers, run Apalache with `--write-intermediate=true` and check the
+  transition numbers in `_apalache-out/<MySpec>.tla/*/intermediate/09_OutTransition.tla`: the 0th transition is called `Next_si_0000`, 1st transition is called `Next_si_0001`, etc.
 
 1. __Invariant checking at certain steps__: `search.invariantFilter=regex`.
   Check the invariant only at the steps that satisfy the regular expression.
