@@ -128,7 +128,7 @@ class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
     val decls = List(QDecl, PDecl, XDecl)
     val module = mkModule(decls: _*)
 
-    val txModule = inlinerKeepNullary.apply(module)
+    val txModule = inlinerKeepNullary.transformModule(module)
 
     val actualBody = txModule.declarations(2).asInstanceOf[TlaOperDecl].body
 
@@ -217,7 +217,7 @@ class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
     val decls = List(ADecl, InvDecl)
     val module = mkModule(decls: _*)
 
-    val txModule = inlinerKeepNullary.apply(module)
+    val txModule = inlinerKeepNullary.transformModule(module)
 
     val actualBody = txModule.declarations(1).asInstanceOf[TlaOperDecl].body
 
@@ -251,7 +251,7 @@ class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
     val decls = List(ADecl, BDecl)
     val module = mkModule(decls: _*)
 
-    val txModule = inlinerKeepNullary.apply(module)
+    val txModule = inlinerKeepNullary.transformModule(module)
 
     val actualBody = txModule.declarations(1).asInstanceOf[TlaOperDecl].body
 
@@ -307,13 +307,13 @@ class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
 
     val module = mkModule(decls: _*)
 
-    val txModule = inlinerKeepNullary.apply(module)
+    val txModule = inlinerKeepNullary.transformModule(module)
 
     val actualBody = txModule.declarations(1).asInstanceOf[TlaOperDecl].body
 
     val cond = actualBody match {
       case OperEx(ApalacheOper.foldSet, letInEx: LetInEx, _, _) =>
-        Inliner.isCallByName(letInEx) && letInEx.decls.head.body == arg
+        Inliner.isPassByName(letInEx) && letInEx.decls.head.body == arg
       case _ => false
     }
 
