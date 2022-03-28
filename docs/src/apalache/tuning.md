@@ -40,7 +40,7 @@ mode may drastically reduce memory consumption, but it may take longer than the
   The regular expression should recognize words over of the form 's->t', where `s`
   is a regular expression over step numbers and `t` is a regular expression over
   transition numbers. For instance,
-  `search.transitionFilter=(0->0|1->5|2->2|3->3|[4-9]->.*|[1-9][0-9]+->.*)`
+  `search.transitionFilter=(0->0|1->5|2->2|2->3|[3-9]->.*|[1-9][0-9]+->.*)`
   requires to start with the 0th transition, continue with the 5th transition,
   then execute either the 2nd or the 3rd transition and after that execute
   arbitrary transitions until the `length.` Note that there is no direct correspondence
