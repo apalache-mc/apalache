@@ -5,9 +5,7 @@
 This tutorial collects tips and tricks that demonstrate the strong sides of
 Apalache.
 
-<a name="fold-except"/>
-
-## Tip 1: Use smart TLA+ instead of explicit iteration
+## <a name="fold-except"></a>Tip 1: Use smart TLA+ instead of explicit iteration
 
 The [Apalache
 antipatterns](../apalache/antipatterns.html#incremental-computation) mention
@@ -87,7 +85,7 @@ The plot below shows the running times for the versions `NextSlow` and
 
 ![Running times](./img/times.png)
 
-The plot talks for itself. The version `NextFast` is dramatically faster than
+The plot speaks for itself. The version `NextFast` is dramatically faster than
 `NextSlow` for an increasing number of processes. Interestingly, `NextFast` is also more concise and it follows
 the spirit of TLA+.
 
