@@ -579,8 +579,8 @@ class PrettyWriter(
   }
 
   private def parseableName(name: String): String = {
-    // An operator name may contain '!', if it comes from an instance. Replace it '!' with "_i_".
-    // Additionally, the name may contain '$', which is produced during preprocessing. Replace it with "_si_".
+    // An operator name may contain '!' if it comes from an instance. Replace '!' with "_i_".
+    // Additionally, the name may contain '$', which is produced during preprocessing. Replace '$' with "_si_".
     name.replaceAll("!", "_i_").replaceAll("\\$", "_si_")
   }
 
