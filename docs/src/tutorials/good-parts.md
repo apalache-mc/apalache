@@ -13,11 +13,11 @@ The [Apalache
 antipatterns](../apalache/antipatterns.html#incremental-computation) mention
 that one should not use explicit iteration (e.g., `FoldSet` and `FoldSeq`),
 unless it is really needed. In this tip, we present a concrete example
-that demonstrates how explicit iteration makes Apalache slower.
+that demonstrates how explicit iteration slows down Apalache.
 
 In our example, we model a system of processes from a set `Proc` that are
 equipped with individual clocks. These clocks may be completely unsynchronized.
-However, the get updated uniformly, that is, all clocks have the same speed.
+However, they get updated uniformly, that is, all clocks have the same speed.
 
 Let's have a look at the first part of this specification:
 
@@ -25,10 +25,10 @@ Let's have a look at the first part of this specification:
 {{#include ../../../test/tla/antipatterns/fold-except/FoldExcept.tla:1:23}}
 ```
 
-As we can see, the constant `Procs` is a specification parameter. For instance,
+As we can see, the constant `Proc` is a specification parameter. For instance,
 it can be equal to `{ "p1", "p2", "p3" }`. The variable `clocks` assigns a
-clock value to each process from `Procs`, whereas the variable `drift` collects
-the clock difference for each pair of processes from `Procs`. This relation
+clock value to each process from `Proc`, whereas the variable `drift` collects
+the clock difference for each pair of processes from `Proc`. This relation
 is easy to see in the predicate `Init`:
 
 ```tla
@@ -62,7 +62,7 @@ writer who has good experience in software engineering:
 {{#include ../../../test/tla/antipatterns/fold-except/FoldExcept.tla:35:53}}
 ```
 
-The version `NextSlow` is less concise than `NextFast`, but it is probably to
+The version `NextSlow` is less concise than `NextFast`, but it is probably easier to
 read for a software engineer. Indeed, we are updating the variable `clocks` via
 a set fold, which implements an iteration over the set of processes. What makes
 it easier to understand for a software engineer is a local update in the
@@ -74,7 +74,7 @@ sequences](../apalache/principles/folds.html).
 
 Although `NextSlow` may look more familiar, it is significantly harder for
 Apalache to check than `NextFast`. To see the difference, we measure
-performance of Apalache for several sizes of `Procs`: 3, 5, 7, and 10. We do
+performance of Apalache for several sizes of `Proc`: 3, 5, 7, and 10. We do
 this by running Apalache for the values of `N` equal to 3, 5, 7, 10:
 
 ```sh
@@ -88,14 +88,14 @@ The plot below shows the running times for the versions `NextSlow` and
 ![Running times](./img/times.png)
 
 The plot talks for itself. The version `NextFast` is dramatically faster than
-`NextSlow`. Interestingly, `NextFast` is also more concise and it follows
+`NextSlow` for an increasing number of processes. Interestingly, `NextFast` is also more concise and it follows
 the spirit of TLA+.
 
 The above plot may seem counterintuitive to software engineers. Indeed, we are
 simply updating an array-like data structure in a loop. Normally, it should not
-be hard. However, if you look behind the scenes in Apalache, you will see that
-that Apalache is producing constraints about all function elements for each
+be hard. However, behind the scenes,
+Apalache is producing constraints about all function elements for each
 iteration. Intuitively, you can think of it as being *fully copied at every
 iteration*, instead of one element being updated. From this perspective, the
-iteration in `NextSlow` looks less efficient.
+iteration in `NextSlow` is less efficient.
 
