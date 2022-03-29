@@ -40,7 +40,7 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
       case null                  => Nil
       case parentDirPath: String => Seq(parentDirPath)
     }
-    //   2. Patch in Apache standard library.
+    //   2. Patch in Apalache standard library.
     //      When running Apalache from the fat JAR, these TLA+ modules are baked into the JAR.
     //      Otherwise (e.g., running from `sbt`, an IDE, for unit tests), we include the standard library path for
     //      lookup from the filesystem.
