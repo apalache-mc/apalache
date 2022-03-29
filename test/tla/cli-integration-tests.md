@@ -1973,7 +1973,7 @@ EXITCODE: OK
 A test for folds with excepts, the slow case.
 
 ```sh
-$ apalache-mc check --inv=DriftInv --next=NextSlow MC_FoldExcept3.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --inv=DriftInv --next=NextSlow antipatterns/fold-except/MC_FoldExcept3.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -1983,7 +1983,7 @@ EXITCODE: OK
 A test for folds with excepts, the fast case.
 
 ```sh
-$ apalache-mc check --inv=DriftInv --next=NextFast MC_FoldExcept3.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --inv=DriftInv --next=NextFast antipatterns/fold-except/MC_FoldExcept3.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
