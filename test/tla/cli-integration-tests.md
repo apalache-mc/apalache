@@ -1896,7 +1896,15 @@ $ apalache-mc check --length=0 --inv=AllTests TestBagsExt.tla | sed 's/[IEW]@.*/
 EXITCODE: OK
 ```
 
-### check TestFolds.tla reports no error
+### check TestInlining.tla reports no error
+
+```sh
+$ apalache-mc check --length=0 --inv=Inv TestInlining.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check TestFolds.tla reports an error
 
 ```sh
 $ apalache-mc check --length=0 --inv=AllTests TestFolds.tla | sed 's/[IEW]@.*//'
