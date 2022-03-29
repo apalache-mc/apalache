@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.pp.passes
 
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, LanguageWatchdog}
-import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
+import at.forsyte.apalache.tla.lir.TlaModule
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
