@@ -20,5 +20,5 @@ class WatchdogPassImpl @Inject() (val options: PassOptions, val pred: LanguagePr
 
   override def dependencies = Set()
 
-  override def transformations = Set(ModuleProperty.Unrolled)
+  override def transformations = Set()
 }

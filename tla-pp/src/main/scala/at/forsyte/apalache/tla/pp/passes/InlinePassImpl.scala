@@ -61,7 +61,7 @@ class InlinePassImpl @Inject() (
     Some(constInlinedModule)
   }
 
-  override def dependencies = Set(ModuleProperty.Unrolled)
+  override def dependencies = Set()
 
   override def transformations = Set(ModuleProperty.Inlined)
 }

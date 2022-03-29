@@ -60,7 +60,7 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
     Some(newModule)
   }
 
-  override def dependencies = Set(ModuleProperty.Unrolled, ModuleProperty.Configured)
+  override def dependencies = Set(ModuleProperty.Configured)
 
   override def transformations = Set(ModuleProperty.Primed)
 }
