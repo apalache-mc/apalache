@@ -1968,6 +1968,26 @@ $ apalache-mc check --length=1 Test1425.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check MC_FoldExcept3.tla (slow) reports no error
+
+A test for folds with excepts, the slow case.
+
+```sh
+$ apalache-mc check --inv=DriftInv --next=NextSlow antipatterns/fold-except/MC_FoldExcept3.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check MC_FoldExcept3.tla (fast) reports no error
+
+A test for folds with excepts, the fast case.
+
+```sh
+$ apalache-mc check --inv=DriftInv --next=NextFast antipatterns/fold-except/MC_FoldExcept3.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
 
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
