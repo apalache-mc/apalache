@@ -10,3 +10,5 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
+### Breaking changes
+  * `RECURSIVE` operators and functions are no longer supported, see #1569
