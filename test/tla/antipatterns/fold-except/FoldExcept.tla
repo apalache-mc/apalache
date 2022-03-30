@@ -26,14 +26,14 @@ Init ==
     /\ drift = [ <<p, q>> \in Proc \X Proc |-> clocks[p] - clocks[q] ]
 
 \* Uniformly advance the clocks and update the drifts.
-\* This is smart TLA+.
+\* Constructing functions without iteration.
 NextFast ==
     \E delta \in Nat \ { 0 }:
         /\ clocks' = [ p \in Proc |-> clocks[p] + delta ]
         /\ drift' = [ <<p, q>> \in Proc \X Proc |-> clocks'[p] - clocks'[q] ]
 
 \* Uniformly advance the clocks and update the drifts.
-\* Not very smart TLA+. More like a program.
+\* Constructing functions via explicit iteration. More like a program.
 NextSlow ==
     \E delta \in Nat \ { 0 }:
         /\  LET \* @type: (Str -> Int, Str) => (Str -> Int);

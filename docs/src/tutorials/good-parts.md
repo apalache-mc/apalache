@@ -1,25 +1,18 @@
-# Apalache specification tips
+# Apalache trail tips: how to check your specs faster
 
 **Difficulty: Red trail – Medium**
 
 This tutorial collects tips and tricks that demonstrate the strong sides of
 Apalache.
 
-## <a name="fold-except"></a>Tip 1: Use smart TLA+ instead of explicit iteration
+## <a name="fold-except"></a>Tip 1: Use TLA+ constructs instead of explicit iteration
 
 The [Apalache
-<<<<<<< HEAD
-antipatterns](../apalache/antipatterns.md#incremental-computation) mention
-that one should not use explicit iteration (e.g., [`FoldSet` and
+antipatterns](../apalache/antipatterns.md#incremental-computation) mention that
+one should not use explicit iteration (e.g., [`FoldSet` and
 `FoldSeq`](../apalache/principles/folds.md)), unless it is really needed. In
 this tip, we present a concrete example that demonstrates how explicit
-iteration makes Apalache slower.
-=======
-antipatterns](../apalache/antipatterns.html#incremental-computation) mention
-that one should not use explicit iteration (e.g., `FoldSet` and `FoldSeq`),
-unless it is really needed. In this tip, we present a concrete example
-that demonstrates how explicit iteration slows down Apalache.
->>>>>>> 4d8c7252e78e84aa8700e07e2444ffc47711b034
+iteration slows down Apalache.
 
 In our example, we model a system of processes from a set `Proc` that are
 equipped with individual clocks. These clocks may be completely unsynchronized.
@@ -102,14 +95,21 @@ The plot below shows the running times for the versions `NextSlow` and
 ![Running times](./img/times.png)
 
 The plot speaks for itself. The version `NextFast` is dramatically faster than
-`NextSlow` for an increasing number of processes. Interestingly, `NextFast` is also more concise and it follows
-the spirit of TLA+.
+`NextSlow` for an increasing number of processes. Interestingly, `NextFast` is
+also more concise. In principle, both `NextFast` and `NextSlow` describe the
+same behavior. However, `NextFast` looks higher-level: It looks like it
+computes `clocks` and `drifts` in parallel, whereas `NextSlow` is computing
+these functions in a loop (though the order of iteration is unknown). Actually,
+whether these functions are computed sequentially or in parallel is irrelevant
+for our specification, as both `NextFast` and `NextSlow` describe a *single
+step* of our system! We can view `NextSlow` as an implementation of `NextFast`,
+as `NextSlow` contains a bit more computation details.
 
-The above plot may seem counterintuitive to software engineers. Indeed, we are
-simply updating an array-like data structure in a loop. Normally, it should not
-be hard. However, behind the scenes,
-Apalache is producing constraints about all function elements for each
-iteration. Intuitively, you can think of it as being *fully copied at every
-iteration*, instead of one element being updated. From this perspective, the
-iteration in `NextSlow` is less efficient.
+From the performance angle, the above plot may seem counterintuitive to
+software engineers. Indeed, we are simply updating an array-like data structure
+in a loop. Normally, it should not be computationally expensive. However,
+behind the scenes, Apalache is producing constraints about all function
+elements for each iteration. Intuitively, you can think of it as being *fully
+copied at every iteration*, instead of one element being updated. From this
+perspective, the iteration in `NextSlow` should be less efficient.
 
