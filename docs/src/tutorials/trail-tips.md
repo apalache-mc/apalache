@@ -43,10 +43,10 @@ Further, we write down a step of our system:
 ```
 
 The transition predicate `NextFast` uniformly advances the clocks of all
-processes by a non-negative number `delta`. Simultaneously, we are updating the
+processes by a non-negative number `delta`. Simultaneously, it updates the
 clock differences in the function `drift`.
 
-It is easy to see that `drift` is actually not changing between the steps.  We
+It is easy to see that `drift` actually does not change between the steps.  We
 can formulate this observation as an [action
 invariant](../apalache/principles/invariants.md#action-invariants):
 
@@ -54,7 +54,7 @@ invariant](../apalache/principles/invariants.md#action-invariants):
 {{#include ../../../test/tla/antipatterns/fold-except/FoldExcept.tla:54:58}}
 ```
 
-Our version of `NextFast` is quite concise and it is using the good parts of
+Our version of `NextFast` is quite concise and it uses the good parts of
 TLA+. However, new TLA+ users would probably write it differenty. Below you
 can see the version that is more likely to be written by a specification
 writer who has good experience in software engineering:
@@ -64,7 +64,7 @@ writer who has good experience in software engineering:
 ```
 
 The version `NextSlow` is less concise than `NextFast`, but it is probably easier to
-read for a software engineer. Indeed, we are updating the variable `clocks` via
+read for a software engineer. Indeed, we update the variable `clocks` via
 a set fold, which implements an iteration over the set of processes. What makes
 it easier to understand for a software engineer is a local update in the
 operator `IncrementInLoop`. Likewise, the variable `drift` is iteratively
@@ -100,7 +100,7 @@ The plot speaks for itself. The version `NextFast` is dramatically faster than
 `NextSlow` for an increasing number of processes. Interestingly, `NextFast` is
 also more concise. In principle, both `NextFast` and `NextSlow` describe the
 same behavior. However, `NextFast` looks higher-level: It looks like it
-computes `clocks` and `drifts` in parallel, whereas `NextSlow` is computing
+computes `clocks` and `drifts` in parallel, whereas `NextSlow` computes
 these functions in a loop (though the order of iteration is unknown). Actually,
 whether these functions are computed sequentially or in parallel is irrelevant
 for our specification, as both `NextFast` and `NextSlow` describe a *single
@@ -113,5 +113,5 @@ in a loop. Normally, it should not be computationally expensive. However,
 behind the scenes, Apalache is producing constraints about all function
 elements for each iteration. Intuitively, you can think of it as being *fully
 copied at every iteration*, instead of one element being updated. From this
-perspective, the iteration in `NextSlow` should be less efficient.
+perspective, the iteration in `NextSlow` should clearly be less efficient.
 
