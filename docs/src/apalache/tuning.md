@@ -63,7 +63,7 @@ passing the option `--tune-here` that has the following format:
 
 1. __Translation to SMT__:
 
-  1. __Short circuiting__: `rewriter.shortCircuit=(false|true)`. When
+    1. __Short circuiting__: `rewriter.shortCircuit=(false|true)`. When
      `rewriter.shortCircuit=true`, `A \/ B` and `A /\ B` are translated to SMT
      as if-then-else expressions, e.g., `(ite A true B)`. Otherwise,
      disjunctions and conjunctions are directly translated to `(or ...)` and
