@@ -76,6 +76,17 @@ TestDoubleHO ==
   LET G(F(_)) == F(1) IN
   G(LAMBDA p: GLOBAL_B1(p)) = 2
 
+TestPolymorphism == 
+  LET 
+    \* @type: (a => b, a) => b;
+    App(X(_), p) == X(p)
+  IN LET 
+    \* @type: (Int) => Int;
+    X1(p) == p + 1
+    \* @type: (Bool) => Bool;
+    X2(b) == ~b
+  IN App(X2, App(X1, 1) = 1 )
+
 Init == TRUE
 
 Next == TRUE
@@ -93,5 +104,6 @@ Inv ==
   /\ TestMixedScope
   /\ TestHONoLambda
   /\ TestDoubleHO
+  /\ TestPolymorphism
 
 ====================
