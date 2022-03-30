@@ -58,10 +58,10 @@ class TestSourceLocator extends AnyFunSuite {
   // plus(x, 1)
   val ex3 = appOp(name("plus") ? "iiTOi", name("x") ? "i", int(1)).typed(types, "i")
   // LET I(p) == p IN
-  // IF y THEN App(I, 0) ELSE FALSE
+  // IF y THEN App(I, 0) ELSE 1
   val ex4 = letIn(
-      ite(name("y") ? "b", appOp(name("App") ? "D2", name("I") ? "X", int(0)) ? "i", bool(false)) ? "b",
-      declOp("I", name("p") ? "i", OperParam("p")).typedOperDecl(types, "b"),
+      ite(name("y") ? "b", appOp(name("App") ? "D2", name("I") ? "X", int(0)) ? "i", int(1)) ? "i",
+      declOp("I", name("p") ? "i", OperParam("p")).typedOperDecl(types, "X"),
   ).typed(types, "b")
   // LET A(p, q) == IntentionallyUndefinedOper(p, q) IN
   //   LET B == b
