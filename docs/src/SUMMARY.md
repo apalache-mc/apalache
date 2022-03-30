@@ -8,7 +8,7 @@
 - [Entry-level Model Checker Tutorial](./tutorials/entry-tutorial.md)
 - [Type Checker Tutorial](./tutorials/snowcat-tutorial.md)
 - [Checking Pluscal specifications](./tutorials/pluscal-tutorial.md)
-- [Apalache trail tips: how to check your specs faster](./tutorials/good-parts.md)
+- [Apalache trail tips: how to check your specs faster](./tutorials/trail-tips.md)
 - [Symbolic Model Checking](./tutorials/symbmc.md)
 
 # Apalache User Manual
