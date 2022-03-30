@@ -6,7 +6,7 @@ import at.forsyte.apalache.io.tlc.TlcConfigParserApalache
 import at.forsyte.apalache.io.tlc.config._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
+import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaOper, TlaTempOper}
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TransformationTracker}
 import at.forsyte.apalache.tla.lir.transformations.standard.NonrecursiveLanguagePred
@@ -61,7 +61,7 @@ class ConfigurationPassImpl @Inject() (
     // However, that should be done very carefully. Maybe we should do that in the future.
 
     // dump the configuration result
-    writerFactory.writeModuleAllFormats(configuredModule.copy(name = "02_OutConfig"), TlaWriter.STANDARD_MODULES)
+    writeOut(writerFactory, configuredModule)
 
     Some(configuredModule)
   }

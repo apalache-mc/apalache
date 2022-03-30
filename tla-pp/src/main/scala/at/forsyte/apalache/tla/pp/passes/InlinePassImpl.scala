@@ -1,10 +1,11 @@
 package at.forsyte.apalache.tla.pp.passes
 
 import at.forsyte.apalache.infra.passes.PassOptions
-import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
+import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.imp.findBodyOf
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule, TlaOperDecl}
 import at.forsyte.apalache.tla.lir.transformations._
+import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.tla.pp._
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
@@ -16,6 +17,7 @@ class InlinePassImpl @Inject() (
     options: PassOptions,
     gen: UniqueNameGenerator,
     tracker: TransformationTracker,
+    renaming: IncrementalRenaming,
     writerFactory: TlaWriterFactory)
     extends InlinePass with LazyLogging {
 
@@ -37,8 +39,20 @@ class InlinePassImpl @Inject() (
     logger.info("Leaving only relevant operators: " + relevantOperatorsAndInitCInitPrimed.toList.sorted.mkString(", "))
     val moduleFilter = Inliner.FilterFun.RESTRICT_TO(relevantOperatorsAndInitCInitPrimed)
 
+    // We have to rename the input, as LOCAL-toplevel TLA+ functions get
+    // introduced as LET-IN operators (copying the definition). The problem is,
+    // the operator bodies may introduce namespace collisions, e.g. with
+    //
+    // LOCAL f[x \in S] = x
+    // Op(x) == f[x + 1]
+    //   |
+    //   V
+    // Op(x) == LET f == [x \in S] In f[(x + 1)] <- namespace collision on x
+    //
+    val renamedModule = renaming.renameInModule(module)
+
     val inliner = new Inliner(tracker, gen, keepNullary = true, moduleLevelFilter = moduleFilter)
-    val inlined = inliner.transformModule(module)
+    val inlined = inliner.transformModule(renamedModule)
 
     // Inline the primitive constants now
     val constants = module.constDeclarations.map { _.name }
@@ -56,7 +70,7 @@ class InlinePassImpl @Inject() (
     )
 
     // dump the result of preprocessing
-    writerFactory.writeModuleAllFormats(constInlinedModule.copy(name = "05_OutInline"), TlaWriter.STANDARD_MODULES)
+    writeOut(writerFactory, constInlinedModule)
 
     Some(constInlinedModule)
   }

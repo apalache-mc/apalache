@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.assignments.passes
 
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
+import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
@@ -53,9 +53,9 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
     val initPrimed = Some(TlaOperDecl(initPrimedName, List(), newBody))
 
     val newDeclarations: Seq[TlaDecl] = declarations ++ Seq(cinitPrimed, initPrimed).flatten
-    val newModule = new TlaModule(tlaModule.name, newDeclarations)
+    val newModule = tlaModule.copy(declarations = newDeclarations)
 
-    writerFactory.writeModuleAllFormats(newModule.copy(name = "06_OutPriming"), TlaWriter.STANDARD_MODULES)
+    writeOut(writerFactory, newModule)
 
     Some(newModule)
   }

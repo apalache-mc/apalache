@@ -1,16 +1,13 @@
 package at.forsyte.apalache.tla.typecheck.passes
 
 import at.forsyte.apalache.infra.passes.PassOptions
-import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
-import at.forsyte.apalache.io.json.impl.TlaToUJson
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
+import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule, TypeTag, UID, Untyped}
 import at.forsyte.apalache.tla.typecheck.TypeCheckerTool
-import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer
 import at.forsyte.apalache.tla.imp.utils
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
@@ -26,13 +23,10 @@ class EtcTypeCheckerPassImpl @Inject() (
 
   protected def inferPoly: Boolean = options.getOrElse[Boolean]("typecheck", "inferPoly", true)
 
-  protected def passNumber: String = "01"
-
   override def name: String = "TypeCheckerSnowcat"
 
   override def execute(tlaModule: TlaModule): Option[TlaModule] = {
     logger.info(" > Running Snowcat .::.")
-    dumpToJson(tlaModule, "pre")
 
     val tool = new TypeCheckerTool(annotationStore, inferPoly)
 
@@ -54,9 +48,7 @@ class EtcTypeCheckerPassImpl @Inject() (
       case Some(newModule) =>
         logger.info(" > Your types are purrfect!")
         logger.info(if (isTypeCoverageComplete) " > All expressions are typed" else " > Some expressions are untyped")
-        dumpToJson(newModule, "post")
-        writerFactory
-          .writeModuleAllFormats(newModule.copy(name = s"${passNumber}_Out$name"), TlaWriter.STANDARD_MODULES)
+        writeOut(writerFactory, newModule)
 
         utils.writeToOutput(newModule, options, writerFactory, logger, sourceStore)
 
@@ -64,16 +56,6 @@ class EtcTypeCheckerPassImpl @Inject() (
       case None =>
         logger.info(" > Snowcat asks you to fix the types. Meow.")
         None
-    }
-  }
-
-  private def dumpToJson(module: TlaModule, prefix: String): Unit = {
-    val fname = s"${passNumber}_out-$prefix-$name.json"
-    OutputManager.withWriterInIntermediateDir(fname) { writer =>
-      val sourceLocator: SourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)
-      val jsonText = new TlaToUJson(Some(sourceLocator)).makeRoot(Seq(module)).toString
-      writer.write(jsonText)
-      logger.debug(s" > JSON output: $fname")
     }
   }
 
