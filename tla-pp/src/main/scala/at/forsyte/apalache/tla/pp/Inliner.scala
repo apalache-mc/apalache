@@ -153,7 +153,7 @@ class Inliner(
   def transformEx: TlaExTransformation = transform(emptyScope)
 
   // main access method, performs the transformations described above
-  private[pp] def transform(scope: Scope): TlaExTransformation = tracker.trackEx {
+  def transform(scope: Scope): TlaExTransformation = tracker.trackEx {
     // Standard application
     case OperEx(TlaOper.apply, nameEx @ NameEx(name), args @ _*) if scope.contains(name) =>
       instantiateWithArgs(scope)(nameEx, args)

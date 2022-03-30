@@ -5,10 +5,9 @@ import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, ProtoSeqOps}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
-import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.pp.InlinerOfUserOper
+import at.forsyte.apalache.tla.pp.{Inliner, UniqueNameGenerator}
 
 /**
  * Rewriting rule for FoldSeq, which implements left-fold over sequences. Unlike FoldSet, we do not need to consider
@@ -55,14 +54,16 @@ class FoldSeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val operT = OperT1(Seq(resultT, elemT), resultT)
 
       // expressions are transient, we don't need tracking
-      val inliner = InlinerOfUserOper(BodyMapFactory.makeFromDecl(opDecl), new IdleTracker)
+      val inliner = new Inliner(new IdleTracker, new UniqueNameGenerator)
+      // We can make the scope directly, since InlinePass already ensures all is well.
+      val seededScope: Inliner.Scope = Map(opDecl.name -> opDecl)
 
       def binOp(state: SymbState, elem: ArenaCell): SymbState = {
         // the state holds the cell representing the accumulated result
         val prevResult = state.ex
         // newPartialResult = A(oldResultCellName, seqElemCell)
         val appEx = tla.appOp(tla.name(opDecl.name).as(operT), prevResult.as(resultT), elem.toNameEx.as(elemT))
-        val inlinedEx = inliner.apply(appEx.as(resultT))
+        val inlinedEx = inliner.transform(seededScope)(appEx.as(resultT))
         // There is nothing left to do (no asserts), since the top value in the returned state will
         // hold the fully rewritten application (single cell)
         rewriter.rewriteUntilDone(state.setRex(inlinedEx))
