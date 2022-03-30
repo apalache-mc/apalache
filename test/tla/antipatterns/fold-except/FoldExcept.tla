@@ -6,7 +6,7 @@
 EXTENDS Integers, Apalache 
 
 CONSTANT
-    \* A fixed set of processes.
+    \* A fixed set of processes
     \*
     \* @type: Set(Str);
     Proc
