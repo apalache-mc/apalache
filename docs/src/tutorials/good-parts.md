@@ -1,4 +1,4 @@
-# Apalache tips: the bad and good parts
+# Apalache specification tips
 
 **Difficulty: Red trail – Medium**
 
@@ -10,10 +10,11 @@ Apalache.
 ## Tip 1: Use smart TLA+ instead of explicit iteration
 
 The [Apalache
-antipatterns](../apalache/antipatterns.html#incremental-computation) mention
-that one should not use explicit iteration (e.g., `FoldSet` and `FoldSeq`),
-unless it is really needed. In this tip, we present a concrete example
-that demonstrates how explicit iteration makes Apalache slower.
+antipatterns](../apalache/antipatterns.md#incremental-computation) mention
+that one should not use explicit iteration (e.g., [`FoldSet` and
+`FoldSeq`](../apalache/principles/folds.md)), unless it is really needed. In
+this tip, we present a concrete example that demonstrates how explicit
+iteration makes Apalache slower.
 
 In our example, we model a system of processes from a set `Proc` that are
 equipped with individual clocks. These clocks may be completely unsynchronized.
@@ -47,7 +48,7 @@ clock differences in the function `drift`.
 
 It is easy to see that `drift` is actually not changing between the steps.  We
 can formulate this observation as an [action
-invariant](../apalache/principles/invariants.html#action-invariants):
+invariant](../apalache/principles/invariants.md#action-invariants):
 
 ```tla
 {{#include ../../../test/tla/antipatterns/fold-except/FoldExcept.tla:54:58}}
@@ -70,12 +71,20 @@ operator `IncrementInLoop`. Likewise, the variable `drift` is iteratively
 updated with the operator `SubtractInLoop`.
 
 If `FoldSet` looks unfamiliar to you, check the page on [folding sets and
-sequences](../apalache/principles/folds.html).
+sequences](../apalache/principles/folds.md).
 
 Although `NextSlow` may look more familiar, it is significantly harder for
 Apalache to check than `NextFast`. To see the difference, we measure
 performance of Apalache for several sizes of `Procs`: 3, 5, 7, and 10. We do
-this by running Apalache for the values of `N` equal to 3, 5, 7, 10:
+this by running Apalache for the values of `N` equal to 3, 5, 7, 10.
+To this end we define several model files called `MC_FoldExcept${N}.tla`
+for `N=3,5,7,10`. For instance, `MC_FoldExcept3.tla` looks as follows:
+
+```tla
+{{#include ../../../test/tla/antipatterns/fold-except/MC_FoldExcept3.tla:1:17}}
+```
+
+We run Apalache for different instances of `N`:
 
 ```sh
 apalache-mc check --next=NextSlow --inv=DriftInv MC_FoldExcept${N}.tla
