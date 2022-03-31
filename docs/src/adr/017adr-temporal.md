@@ -82,7 +82,7 @@ techniques to the domain of TLA+. For instance, we have to understand how to
 deal with `ENABLED`, `WF`, and `SF`, which deviate from the standard setting of
 model checking.
 
-Viktor Sergeev has written the [first prototype][] for liveness checking at
+Viktor Sergeev wrote the [first prototype][] for liveness checking at
 University of Lorraine in 2019. Since his implementation was tightly integrated
 with the exploration algorithm, which was refactored several times, this
 implementation has not been integrated in the main branch. We have learned from
@@ -115,18 +115,27 @@ once [ADR-010][] is implemented.
 
 The work plan is tracked in the [issue on temporal properties][].
 
-We propose to split this work into two big chunks of work:
+We propose to split this work into two big subtasks:
 
- 1. *Temporal operators*:
+ - *Task 1. Temporal operators*:
     Support for `<>P`, `[]P`, `<A>_e`, and `[A]_e` via preprocessing.
 
- 1. *Fairness*:
+ - *Task 2. Fairness*:
     Support for `ENABLED A`, `WF_e(A)`, and `SF_e(A)` via preprocessing.
+
+The task on *Temporal operators* is well-understood and poses no technical
+risk. By having solved Task 1, we can give users a relatively complete toolset
+for safety and liveness checking. Indeed, even fairness properties can be
+expressed via `<>` and `[]`.
+
+To support temporal reasoning as it was designed by Leslie Lamport, we have to
+solve Task 2. Most likely, we will have to introduce additional assumptions
+about specifications to solve this task.
 
 ### 1. Temporal operators
 
-This chunk of work boils down to the implementation of the encoding explained
-in [Biere et al. 2006][]. Explain the lassos.
+This task boils down to the implementation of the encoding explained in [Biere
+et al. 2006][]. Explain the lassos.
 
 
 There are two ways to encode the constraints in that encoding:
