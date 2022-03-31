@@ -10,6 +10,4 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
-### Features
 
- * `RECURSIVE` operators and functions are no longer supported, see #1565
