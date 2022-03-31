@@ -1,6 +1,6 @@
 ---
 authors: Igor Konnov
-last revised: 2022-03-28
+last revised: 2022-03-31
 ---
 
 # ADR-017: Support for temporal properties
@@ -113,8 +113,51 @@ once [ADR-010][] is implemented.
 
 ## Solution
 
-<!-- Communicates what solution was decided, and it is expected to solve the
-     problem. -->
+The work plan is tracked in the [issue on temporal properties][].
+
+We propose to split this work into two big chunks of work:
+
+ 1. *Temporal operators*:
+    Support for `<>P`, `[]P`, `<A>_e`, and `[A]_e` via preprocessing.
+
+ 1. *Fairness*:
+    Support for `ENABLED A`, `WF_e(A)`, and `SF_e(A)` via preprocessing.
+
+### 1. Temporal operators
+
+This chunk of work boils down to the implementation of the encoding explained
+in [Biere et al. 2006][]. Explain the lassos.
+
+
+There are two ways to encode the constraints in that encoding:
+
+ 1. Encode the lasso checking problem as a trace invariant.  Apalache can check
+ [trace invariants][]. This approach is most straighforward.  However it has
+ several drawbacks:
+
+    - Trace invariants require Apalache to pack the sequence of states.
+      This sometimes produces unnecessary constraints.
+
+    - When a trace invariant is violated, the intermediate definitions
+      in this invariant are not printed in the counterexample.
+      This will make printing of the counterexamples to liveness harder.
+
+ 1. Instrument the existing specification by adding auxilliary variables that
+ update the predicates as required by the encoding of [Biere et al. 2006][].
+ We could also extend it with the liveness-to-safety reduction, see [Biere et
+ al. 2006][]. If we choose this approach, we will be able to print
+ counterexamples. So this approach is more transparent.
+
+### 2. Fairness
+
+`WF_e(A)` and `SF_e(A)` use `ENABLED(A)` as part of their definitions. Hence,
+`ENABLED(A)` is of ultimate importance for handling `WF` and `SF`. However, we
+do not know how to efficiently translated `ENABLED(A)` in SMT. A
+straightforward approach requires to check that for all combinations of state
+variables `A` does not hold.
+
+This work requires further research, which we will do in parallel with the
+first part of work. To be detailed later...
 
 ## Consequences
 
@@ -130,3 +173,5 @@ once [ADR-010][] is implemented.
 [first prototype]: https://github.com/informalsystems/apalache/tree/feature/liveness
 [Transition Executor]: ./003adr-trex.md
 [ADR-010]: ./010rfc-transition-explorer.md
+[issue on temporal properties]: https://github.com/informalsystems/apalache/issues/488
+[trace invariants]: ../apalache/principles/invariants.md#trace-invariants
