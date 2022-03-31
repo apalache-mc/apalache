@@ -157,6 +157,9 @@ There are two ways to encode the constraints in that encoding:
  al. 2006][]. If we choose this approach, we will be able to print
  counterexamples. So this approach is more transparent.
 
+To choose between these two approaches, we will try both of them on a simple
+specification. For instance, [Folklore broadcast][].
+
 ### 2. Fairness
 
 `WF_e(A)` and `SF_e(A)` use `ENABLED(A)` as part of their definitions. Hence,
@@ -184,3 +187,4 @@ first part of work. To be detailed later...
 [ADR-010]: ./010rfc-transition-explorer.md
 [issue on temporal properties]: https://github.com/informalsystems/apalache/issues/488
 [trace invariants]: ../apalache/principles/invariants.md#trace-invariants
+[Folklore broadcast]: https://github.com/tlaplus/Examples/blob/master/specifications/bcastFolklore/bcastFolklore.tla
