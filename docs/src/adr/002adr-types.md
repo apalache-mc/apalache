@@ -2,7 +2,7 @@
 
 | authors                                | revision |
 | -------------------------------------- | --------:|
-| Shon Feder, Igor Konnov, Jure Kukovec  |        4.1 |
+| Shon Feder, Igor Konnov, Jure Kukovec  |      4.1 |
 
 *This is a request for comments. For user documentation, check the [Snowcat tutorial][]
 and [Snowcat HOWTO][].*

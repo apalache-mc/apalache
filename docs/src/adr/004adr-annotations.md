@@ -2,7 +2,7 @@
 
 | author      | revision |
 | ----------- | --------:|
-| Igor Konnov |        2.1 |
+| Igor Konnov |      2.1 |
 
 This ADR documents our decision on using Java-like annotations in comments.
 Our main motivation to have annotations is to simplify type annotations, as
@@ -92,7 +92,7 @@ the following examples demonstrate valid annotations inside TLA+ comments:
 
 The following specification shows how to write annotations, so they can be
 correctly parsed by the SANY parser and Apalache. Note the location of comments
-in front of: local operators, LET-definitions, and non-recursive operators.
+in front of operators and LET-definitions.
 Although these locations may seem to be suboptimal, this is how the SANY
 parser locates comments that precede declarations.
 
