@@ -52,8 +52,6 @@ subformulas:
    - `ENABLED A`, for an action formula `A`. It is true in a state `s`, if
      there is a state `t` such that `s` is tranformed to `t` via action `A`.
 
-   - `A \cdot B`. This language feature is never used, so we ignore it.
-
  - **Temporal formulas**:
 
    - Eventually: `<>F`, for a temporal formula `F`.
@@ -68,9 +66,10 @@ subformulas:
 
    - Leads-to: `F ~> G`, which is equivalent to `[](F => <>G)`.
 
-Technically, TLA+ also contains three other operators: `\EE x: F`, `\AA x: F`,
-and `F -+-> G`. These very advanced operators appear so rarely that we ignore
-them. For their semantics, check [Specifying Systems][] (Section 16.2.4).
+Technically, TLA+ also contains four other operators that are related to
+temporal properties: `A \cdot B`, `\EE x: F`, `\AA x: F`, and `F -+-> G`. These
+very advanced operators appear so rarely that we ignore them. For their
+semantics, check [Specifying Systems][] (Section 16.2.3-4).
 
 ## Options
 
@@ -135,13 +134,37 @@ about specifications to solve this task.
 ### 1. Temporal operators
 
 This task boils down to the implementation of the encoding explained in [Biere
-et al. 2006][]. Explain the lassos.
+et al. 2006][].
 
+In model checking of temporal properties, special attention is paid to lasso
+executions. A *lasso* execution is a sequence of states `s[0], s[1], ..., s[l],
+..., s[k]` that has the following properties:
 
-There are two ways to encode the constraints in that encoding:
+  - the initial state `s[0]` satisfies `Init`,
+  - every pair of states `s[i]` and `s[i+1]` satisfies `Next`, for `i \in 0..k-1`,
+    and
+  - the loop closes at index `l`, that is, `s[l] = s[k]`.
 
- 1. Encode the lasso checking problem as a trace invariant.  Apalache can check
- [trace invariants][]. This approach is most straighforward.  However it has
+The lasso executions play an important role in model checking, due to the lasso
+property of finite-state systems:
+
+    Whenever a finite-state transition system `M` violates a temporal property
+    `F`, this system has a lasso execution that violates `F`.
+
+You can find a proof in the book on [Model Checking][]. As a result, we can
+focus on finding a lasso as a counterexample to the temporal property.
+Importantly, this property holds only for finite-state systems. For example, if
+all variable domains are finite (and bounded), then the specification is
+finite-state. However, if a specification contains integer variables, it may
+produce infinitely many states. That is, an infinite-state system may still
+contain lassos as counterexamples but it does not have to, which makes this
+technique incomplete. An extension to infinite-state systems was studied by
+[Padon et al. 2021][]. This is beyond the scope of this task.
+
+There are two ways to encode the constraints by [Biere et al. 2006][]:
+
+ 1. Encode the lasso finding problem as a trace invariant. Apalache can check
+ [trace invariants][]. This approach is most straighforward. However it has
  several drawbacks:
 
     - Trace invariants require Apalache to pack the sequence of states.
@@ -188,3 +211,5 @@ first part of work. To be detailed later...
 [issue on temporal properties]: https://github.com/informalsystems/apalache/issues/488
 [trace invariants]: ../apalache/principles/invariants.md#trace-invariants
 [Folklore broadcast]: https://github.com/tlaplus/Examples/blob/master/specifications/bcastFolklore/bcastFolklore.tla
+[Model Checking]: https://mitpress.mit.edu/books/model-checking-second-edition
+[Padon et al. 2021]: https://link.springer.com/article/10.1007/s10703-021-00377-1
