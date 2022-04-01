@@ -86,9 +86,9 @@ ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
 // NOTE: Include these settings in any projects that require Apalache's TLA+ modules
 lazy val tlaModuleTestSettings = Seq(
-    // we have to tell SANY the location of Apalache modules for the tests
-    Test / fork := true, // Forking is required for the system options to take effect in the tests
-    Test / javaOptions += s"""-DTLA-Library=${(ThisBuild / baseDirectory).value / "src" / "tla"}""",
+    // This ensures that tests run from their respective sub-project directories
+    // and sequentially. FIXME: https://github.com/informalsystems/apalache/issues/1577
+    Test / fork := true
 )
 
 lazy val testSettings = Seq(
