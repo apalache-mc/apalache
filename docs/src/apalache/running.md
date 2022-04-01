@@ -309,7 +309,7 @@ In this case, Apalache performs the following steps:
    .
 
 1. If the `--write-intermediate` flag is given, it pretty-prints the IR into
-   `00_OutParser.json` and `00_OutParser.tla` in the output directory (see [Detailed output](#detailed)).
+   the output directory (see [Detailed output](#detailed)).
 
 You can also write output to a specified location by using the `--output` flag.
 E.g.,

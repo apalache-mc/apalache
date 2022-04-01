@@ -87,11 +87,27 @@ TestPolymorphism ==
     X2(b) == ~b
   IN App(X2, App(X1, 1) = 1 )
 
+TestLongChain == 
+  LET
+    A0(x) == x + x
+  IN LET
+    A1(x) == A0(x) + x
+  IN LET
+    A2(x) == A1(x) + x
+  IN LET
+    A3(x) == A2(x) + x
+  IN LET
+    A4(x) == A3(x) + x
+  IN LET
+    A5(x) == A4(x) + x
+  IN A5(1) = 7
+
+
 Init == TRUE
 
 Next == TRUE
 
-Inv ==
+AllTests ==
   /\ TestLetSimple
   /\ TestGlobalSimple
   /\ TestNestedLet
@@ -105,5 +121,6 @@ Inv ==
   /\ TestHONoLambda
   /\ TestDoubleHO
   /\ TestPolymorphism
+  /\ TestLongChain
 
 ====================

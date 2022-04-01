@@ -610,7 +610,7 @@ how it is done, run Apalache with the options `--write-intermediate` and `--run-
 $ apalache-mc check --inv=Postcondition --write-intermediate=1 --run-dir=out MC4_8.tla
 ```
 
-Check the file `out/intermediate/09_OutTransition.tla`, which contains the
+Check the file `out/intermediate/XX_OutTransitionFinderPass.tla`, which contains the
 preprocessed specification that has `Init` and `Next` decomposed. You can find
 a detailed explanation in the section on [Assignments in Apalache][].
 

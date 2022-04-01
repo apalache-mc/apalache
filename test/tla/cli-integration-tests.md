@@ -897,7 +897,17 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check Rec1.tla fails
+### check Rec1.tla succeeds typecheck
+
+```sh
+$ apalache-mc typecheck Rec1.tla | sed 's/I@.*//'
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### check Rec1.tla fails check
 
 ```sh
 $ apalache-mc check --length=5 --inv=Inv Rec1.tla | sed 's/I@.*//'
@@ -905,7 +915,17 @@ $ apalache-mc check --length=5 --inv=Inv Rec1.tla | sed 's/I@.*//'
 EXITCODE: ERROR (255)
 ```
 
-### check Rec2.tla fails
+### check Rec2.tla succeeds typecheck
+
+```sh
+$ apalache-mc typecheck Rec2.tla | sed 's/I@.*//'
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### check Rec2.tla fails check
 
 ```sh
 $ apalache-mc check --length=5 --inv=Inv Rec2.tla | sed 's/I@.*//'
@@ -913,14 +933,34 @@ $ apalache-mc check --length=5 --inv=Inv Rec2.tla | sed 's/I@.*//'
 EXITCODE: ERROR (255)
 ```
 
-### check Rec3.tla fails
+### check Rec3.tla succeeds typecheck
+
+```sh
+$ apalache-mc typecheck Rec3.tla | sed 's/I@.*//'
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### check Rec3.tla fails check
 ```sh
 $ apalache-mc check --length=10 --inv=Inv Rec3.tla | sed 's/I@.*//'
 ...
 EXITCODE: ERROR (255)
 ```
 
-### check Rec4.tla fails
+### check Rec4.tla succeeds typecheck
+
+```sh
+$ apalache-mc typecheck Rec4.tla | sed 's/I@.*//'
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### check Rec4.tla fails check
 
 Unfolding Fibonacci numbers
 
@@ -930,7 +970,17 @@ $ apalache-mc check --length=10 --inv=Inv Rec4.tla | sed 's/I@.*//'
 EXITCODE: ERROR (255)
 ```
 
-### check Rec5.tla fails
+### check Rec5.tla succeeds typecheck
+
+```sh
+$ apalache-mc typecheck Rec5.tla | sed 's/I@.*//'
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### check Rec5.tla fails check
 
 ```sh
 $ apalache-mc check --length=5 --inv=Inv Rec5.tla | sed 's/I@.*//'
@@ -938,7 +988,17 @@ $ apalache-mc check --length=5 --inv=Inv Rec5.tla | sed 's/I@.*//'
 EXITCODE: ERROR (255)
 ```
 
-### check Rec6.tla fails
+### check Rec6.tla succeeds typecheck
+
+```sh
+$ apalache-mc typecheck Rec6.tla | sed 's/I@.*//'
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### check Rec6.tla fails check
 
 ```sh
 $ apalache-mc check --length=5 --inv=Inv Rec6.tla | sed 's/I@.*//'
@@ -946,7 +1006,17 @@ $ apalache-mc check --length=5 --inv=Inv Rec6.tla | sed 's/I@.*//'
 EXITCODE: ERROR (255)
 ```
 
-### check Rec8.tla fails
+### check Rec8.tla succeeds typecheck
+
+```sh
+$ apalache-mc typecheck Rec8.tla | sed 's/I@.*//'
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### check Rec8.tla fails check
 
 ```sh
 $ apalache-mc check --length=10 --inv=Inv Rec8.tla | sed 's/I@.*//'
@@ -954,7 +1024,17 @@ $ apalache-mc check --length=10 --inv=Inv Rec8.tla | sed 's/I@.*//'
 EXITCODE: ERROR (255)
 ```
 
-### check Rec9.tla fails
+### check Rec9.tla succeeds typecheck
+
+```sh
+$ apalache-mc typecheck Rec9.tla | sed 's/I@.*//'
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### check Rec9.tla fails check
 
 ```sh
 $ apalache-mc check --length=3 --inv=Inv Rec9.tla | sed 's/I@.*//'
@@ -962,7 +1042,17 @@ $ apalache-mc check --length=3 --inv=Inv Rec9.tla | sed 's/I@.*//'
 EXITCODE: ERROR (255)
 ```
 
-### check Rec10.tla fails
+### check Rec10.tla succeeds typecheck
+
+```sh
+$ apalache-mc typecheck Rec10.tla | sed 's/I@.*//'
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### check Rec10.tla fails check
 
 ```sh
 $ apalache-mc check Rec10.tla | sed 's/[IEW]@.*//'
@@ -970,7 +1060,17 @@ $ apalache-mc check Rec10.tla | sed 's/[IEW]@.*//'
 EXITCODE: ERROR (255)
 ```
 
-### check Rec11.tla fails
+### check Rec11.tla succeeds typecheck
+
+```sh
+$ apalache-mc typecheck Rec11.tla | sed 's/I@.*//'
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### check Rec11.tla fails check
 
 ```sh
 $ apalache-mc check Rec11.tla | sed 's/[IEW]@.*//'
@@ -978,7 +1078,17 @@ $ apalache-mc check Rec11.tla | sed 's/[IEW]@.*//'
 EXITCODE: ERROR (255)
 ```
 
-### check Rec12.tla fails
+### check Rec12.tla succeeds typecheck
+
+```sh
+$ apalache-mc typecheck Rec12.tla | sed 's/I@.*//'
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### check Rec12.tla fails check
 
 ```sh
 $ apalache-mc check --inv=Inv Rec12.tla | sed 's/[IEW]@.*//'
@@ -1866,7 +1976,7 @@ EXITCODE: OK
 ### check TestInlining.tla reports no error
 
 ```sh
-$ apalache-mc check --length=0 --inv=Inv TestInlining.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --length=0 --inv=AllTests TestInlining.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
