@@ -2,8 +2,9 @@ package at.forsyte.apalache.tla.bmcmt.analyses
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.transformations.standard.KeraLanguagePred
-import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.{
+  LanguagePred, LanguageWatchdog, TlaExTransformation, TransformationTracker,
+}
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
@@ -21,10 +22,11 @@ import com.typesafe.scalalogging.LazyLogging
  * @author
  *   Igor Konnov
  */
-class ExpansionMarker @Inject() (tracker: TransformationTracker) extends TlaExTransformation with LazyLogging {
+class ExpansionMarker @Inject() (tracker: TransformationTracker, languagePred: LanguagePred)
+    extends TlaExTransformation with LazyLogging {
 
   override def apply(e: TlaEx): TlaEx = {
-    LanguageWatchdog(KeraLanguagePred()).check(e)
+    LanguageWatchdog(languagePred).check(e)
     transform(shallExpand = false)(e)
   }
 

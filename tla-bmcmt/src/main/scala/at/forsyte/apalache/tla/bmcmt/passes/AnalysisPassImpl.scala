@@ -5,7 +5,7 @@ import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
-import at.forsyte.apalache.tla.lir.transformations.{fromTouchToExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.{fromTouchToExTransformation, LanguagePred, TransformationTracker}
 import at.forsyte.apalache.tla.lir.transformations.standard.ModuleByExTransformer
 import at.forsyte.apalache.tla.lir.{TlaAssumeDecl, TlaEx, TlaOperDecl}
 import at.forsyte.apalache.tla.pp.LetInOptimizer
@@ -19,6 +19,7 @@ class AnalysisPassImpl @Inject() (
     val options: PassOptions,
     exprGradeStoreImpl: ExprGradeStoreImpl,
     tracker: TransformationTracker,
+    languagePred: LanguagePred,
     writerFactory: TlaWriterFactory)
     extends AnalysisPass with LazyLogging {
 
@@ -34,7 +35,7 @@ class AnalysisPassImpl @Inject() (
           // mark some expressions as to be Skolemized
           "Skolemization" -> new SkolemizationMarker(tracker),
           // mark some expressions to be expanded
-          "Expansion" -> new ExpansionMarker(tracker),
+          "Expansion" -> new ExpansionMarker(tracker, languagePred),
           // SkolemizationMarker may introduce unused let-definitions. Remove them.
           "Remove unused let-in defs" -> fromTouchToExTransformation(new LetInOptimizer(tracker)),
       ) ///

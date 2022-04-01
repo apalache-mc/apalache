@@ -22,5 +22,5 @@ object Integers {
   sealed case class Ge(lhs: IntExpr, rhs: IntExpr) extends Booleans.BoolExpr
 
   sealed case class IntLiteral(i: BigInt) extends IntExpr
-  sealed case class IntVar(name: String) extends Variable(name) with IntExpr
+  sealed case class IntVar(override val name: String) extends Variable(name) with IntExpr
 }

@@ -33,7 +33,6 @@ object TermToVMTWriter {
     s"($quant (${pairs.mkString(" ")}) ${tr(p)})"
   }
 
-  // In quantifiers, complex sorts aren't permitted.
   private def sortStringForQuant(sort: Sort): String =
     sort match {
       case IntSort()               => "Int"
@@ -45,10 +44,10 @@ object TermToVMTWriter {
 
   // In declare-fun, the syntax is (declare-fun (from1 ... fromN) to), where
   // (declare-fun () to) represents a constant declaration.
-  // sortAsFn constructs a pair (List(from1,...,fromN),to) from a given sort
-  private def sortAsFn(sort: Sort): (List[String], String) = sort match {
-    case FunctionSort(to, from @ _*) => (from.toList.map(sortStringForQuant), sortStringForQuant(to))
-    case s                           => (List.empty, sortStringForQuant(s))
+  // sortAsFn constructs a pair ("from1 ... fromN","to") from a given sort
+  private def sortAsFn(sort: Sort): (String, String) = sort match {
+    case FunctionSort(to, from @ _*) => (from.toList.map(sortStringForQuant).mkString(" "), sortStringForQuant(to))
+    case s                           => ("", sortStringForQuant(s))
   }
 
   // Main entry point, does the translation recursively
@@ -81,8 +80,8 @@ object TermToVMTWriter {
   def mkSMTDecl(d: TlaVarDecl): String =
     d.typeTag match {
       case Typed(tt: TlaType1) =>
-        val (froms, to) = sortAsFn(TlaType1ToSortConverter.sortFromType(tt))
-        def mkDecl(name: String) = s"(declare-fun $name (${froms.mkString(" ")}) $to)"
+        val (from, to) = sortAsFn(TlaType1ToSortConverter.sortFromType(tt))
+        def mkDecl(name: String) = s"(declare-fun $name ($from) $to)"
         s"${mkDecl(d.name)}\n${mkDecl(VMTprimeName(d.name))}"
 
       case _ => ""
@@ -92,14 +91,25 @@ object TermToVMTWriter {
   def mkSortDecl(us: UninterpretedSort): String =
     s"(declare-sort ${us.sortName} 0)"
 
+  // Constructs a base declaration and a :global annotation for VMT
+  private def mkBaseAndGlobal(toSortName: String, fromSortString: String, termName: String): String = {
+    val baseDecl = s"(declare-fun $termName ($fromSortString) $toSortName)"
+    val globalDecl = s"(define-fun ${nextName(termName)} ($fromSortString) $toSortName} (! $termName :global true))"
+    s"$baseDecl\n$globalDecl"
+  }
+
   // Constructs an SMT constant declaration for each uninterpreted literal.
   def mkConstDecl(ul: UninterpretedLiteral): String = {
     val sortName = ul.sort.sortName
+    val (fromSorts, toSort) = sortAsFn(ul.sort)
     val termName = s"${ul.s}_${ul.sort.sortName}"
-    val baseDecl = s"(declare-fun $termName () $sortName)"
-    // Global constants need to be declared :global for VMT
-    val globalDecl = s"(define-fun ${nextName(termName)} () ${ul.sort.sortName} (! $termName :global true))"
-    s"$baseDecl\n$globalDecl"
+    mkBaseAndGlobal(toSort, fromSorts, termName)
+  }
+
+  // Constructs an SMT constant declaration for each function constant.
+  def mkConstDecl(v: Variable): String = {
+    val (from, to) = sortAsFn(v.sort)
+    mkBaseAndGlobal(to, from, v.name)
   }
 
   // Constructs an SMT function definition from FunDef

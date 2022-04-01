@@ -35,7 +35,7 @@ class EUFRule(rewriter: ToTermRewriter, restrictedSetJudgement: RestrictedSetJud
     }
 
   // Only restricted sets are allowed as function domains
-  private def isRestrictedSet(ex: TlaEx) = restrictedSetJudgement.isRestrictedSet(ex)
+  private def isRestrictedSet(ex: TlaEx) = restrictedSetJudgement.isPrimitiveRestrictedSet(ex)
 
   /**
    * When translating g = [f EXCEPT ![x1,...,xn] = a], we need to construct a VMT function representation, which differs

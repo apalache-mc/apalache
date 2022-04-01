@@ -20,7 +20,7 @@ trait Term {
   val sort: Sort
 }
 
-abstract class Variable(@unused name: String) extends Term
+abstract class Variable(val name: String) extends Term
 
 sealed case class BoolSort() extends Sort("Boolean")
 sealed case class IntSort() extends Sort("Integer")

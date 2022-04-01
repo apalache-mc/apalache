@@ -36,5 +36,5 @@ object Booleans {
   sealed case class Exists(boundVars: List[(String, Sort)], arg: Term) extends BoolExpr {
     require(arg.sort == BoolSort(), "Quantification condition must be Boolean.")
   }
-  sealed case class BoolVar(name: String) extends Variable(name) with BoolExpr
+  sealed case class BoolVar(override val name: String) extends Variable(name) with BoolExpr
 }

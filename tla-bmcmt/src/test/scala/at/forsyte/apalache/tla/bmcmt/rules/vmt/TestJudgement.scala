@@ -39,11 +39,11 @@ class TestJudgement extends AnyFunSuite {
 
   test("Restricted set recognition") {
     allowed.foreach { ex =>
-      assert(judgement.isRestrictedSet(ex))
+      assert(judgement.isPrimitiveRestrictedSet(ex))
     }
 
     disallowed.foreach { ex =>
-      assert(!judgement.isRestrictedSet(ex))
+      assert(!judgement.isPrimitiveRestrictedSet(ex))
     }
 
   }

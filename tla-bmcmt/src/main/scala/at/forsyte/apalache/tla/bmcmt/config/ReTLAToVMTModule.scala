@@ -63,6 +63,7 @@ class ReTLAToVMTModule extends ToolModule {
     bind(classOf[PreproPass]).to(classOf[ReTLAPreproPassImpl])
     bind(classOf[TransitionPass]).to(classOf[TransitionPassImpl])
     bind(classOf[OptPass]).to(classOf[OptPassImpl])
+    bind(classOf[AnalysisPass]).to(classOf[AnalysisPassImpl])
     bind(classOf[TranspilePass]).to(classOf[ReTLAToVMTTranspilePassImpl])
   }
 
@@ -80,6 +81,7 @@ class ReTLAToVMTModule extends ToolModule {
         classOf[WatchdogPassImpl],
         classOf[TransitionPass],
         classOf[OptPass],
+        classOf[AnalysisPass],
         // do the final type checking again, as preprocessing may have introduced gaps in the expression types
         classOf[PostTypeCheckerPassImpl],
         // ConstraintGenPass is in the very end of the pipeline

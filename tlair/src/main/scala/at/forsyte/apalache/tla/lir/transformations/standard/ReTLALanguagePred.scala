@@ -30,6 +30,16 @@ class ReTLALanguagePred extends ContextualLanguagePred {
       case OperEx(TlaActionOper.prime, _: NameEx) =>
         PredResultOk()
 
+      // Special case, we allow function sets under \E quantification (because they might be skolemizable later)
+      case OperEx(TlaBoolOper.exists, el, OperEx(TlaSetOper.funSet, dom, cdm), pred) =>
+        val stdArgsOk = allArgsOk(letDefs, Seq(el, cdm, pred))
+        // This is also where we allow \X
+        val domPred = dom match {
+          case OperEx(TlaSetOper.times, sets @ _*) => allArgsOk(letDefs, sets)
+          case _                                   => isOkInContext(letDefs, dom)
+        }
+        stdArgsOk.and(domPred)
+
       case OperEx(oper, args @ _*) if ReTLALanguagePred.operators.contains(oper) =>
         allArgsOk(letDefs, args)
 

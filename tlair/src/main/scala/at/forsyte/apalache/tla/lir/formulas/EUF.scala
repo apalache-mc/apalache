@@ -15,7 +15,7 @@ object EUF {
   }
 
   sealed case class UninterpretedLiteral(s: String, sort: UninterpretedSort) extends Term
-  sealed case class UninterpretedVar(name: String, sort: UninterpretedSort) extends Variable(name)
+  sealed case class UninterpretedVar(override val name: String, sort: UninterpretedSort) extends Variable(name)
   sealed case class Equal(lhs: Term, rhs: Term) extends BoolExpr {
     // Sanity check
     require(lhs.sort == rhs.sort, "Equality is only defined for terms of matching sorts.")
@@ -38,7 +38,7 @@ object EUF {
   sealed case class FunDef(name: String, args: List[(String, Sort)], body: Term) extends FnExpr {
     val sort: FunctionSort = FunctionSort(body.sort, args.map { _._2 }: _*)
   }
-  sealed case class FunctionVar(name: String, sort: FunctionSort) extends Variable(name) with FnExpr
+  sealed case class FunctionVar(override val name: String, sort: FunctionSort) extends Variable(name) with FnExpr
   sealed case class Apply(fn: Term, args: Term*) extends Term {
     require(hasFnSort(fn), "Apply is only defined for terms with function sorts.")
     private val asFnSort = fn.sort.asInstanceOf[FunctionSort]
