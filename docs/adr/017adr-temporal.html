@@ -1,0 +1,436 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>ADR-017: Support for temporal properties - Apalache Documentation</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Tutorials</li><li class="chapter-item expanded "><a href="../tutorials/index.html"><strong aria-hidden="true">1.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../tutorials/entry-tutorial.html"><strong aria-hidden="true">2.</strong> Entry-level Model Checker Tutorial</a></li><li class="chapter-item expanded "><a href="../tutorials/snowcat-tutorial.html"><strong aria-hidden="true">3.</strong> Type Checker Tutorial</a></li><li class="chapter-item expanded "><a href="../tutorials/pluscal-tutorial.html"><strong aria-hidden="true">4.</strong> Checking Pluscal specifications</a></li><li class="chapter-item expanded "><a href="../tutorials/trail-tips.html"><strong aria-hidden="true">5.</strong> Apalache trail tips: how to check your specs faster</a></li><li class="chapter-item expanded "><a href="../tutorials/symbmc.html"><strong aria-hidden="true">6.</strong> Symbolic Model Checking</a></li><li class="chapter-item expanded affix "><li class="part-title">Apalache User Manual</li><li class="chapter-item expanded "><a href="../apalache/index.html"><strong aria-hidden="true">7.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../apalache/getting-started.html"><strong aria-hidden="true">8.</strong> Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/apalache-or-tlc.html"><strong aria-hidden="true">8.1.</strong> Shall I use Apalache or TLC?</a></li><li class="chapter-item expanded "><a href="../apalache/system-reqs.html"><strong aria-hidden="true">8.2.</strong> System Requirements</a></li><li class="chapter-item expanded "><a href="../apalache/installation/index.html"><strong aria-hidden="true">8.3.</strong> Installation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/installation/jvm.html"><strong aria-hidden="true">8.3.1.</strong> Prebuilt Packages</a></li><li class="chapter-item expanded "><a href="../apalache/installation/docker.html"><strong aria-hidden="true">8.3.2.</strong> Docker</a></li><li class="chapter-item expanded "><a href="../apalache/installation/source.html"><strong aria-hidden="true">8.3.3.</strong> Source</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/running.html"><strong aria-hidden="true">8.4.</strong> Running the Tool</a></li><li class="chapter-item expanded "><a href="../apalache/example.html"><strong aria-hidden="true">8.5.</strong> An Example TLA+ Specification</a></li><li class="chapter-item expanded "><a href="../apalache/parameters.html"><strong aria-hidden="true">8.6.</strong> Specification Parameters</a></li><li class="chapter-item expanded "><a href="../apalache/principles/index.html"><strong aria-hidden="true">8.7.</strong> Symbolic Model Checking with Apalache</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/principles/assignments.html"><strong aria-hidden="true">8.7.1.</strong> Assignments and symbolic transitions</a></li><li class="chapter-item expanded "><a href="../apalache/principles/folds.html"><strong aria-hidden="true">8.7.2.</strong> Folding sets and sequences</a></li><li class="chapter-item expanded "><a href="../apalache/principles/invariants.html"><strong aria-hidden="true">8.7.3.</strong> Invariants: State, Action, Trace</a></li><li class="chapter-item expanded "><a href="../apalache/principles/enumeration.html"><strong aria-hidden="true">8.7.4.</strong> Enumeration of counterexamples</a></li><li class="chapter-item expanded "><a href="../apalache/principles/apalache-mod.html"><strong aria-hidden="true">8.7.5.</strong> The Apalache Module</a></li><li class="chapter-item expanded "><a href="../apalache/principles/recursive.html"><strong aria-hidden="true">8.7.6.</strong> Recursive operators and functions</a></li><li class="chapter-item expanded "><a href="../apalache/principles/naturals.html"><strong aria-hidden="true">8.7.7.</strong> Naturals</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/config.html"><strong aria-hidden="true">8.8.</strong> Apalache global configuration file</a></li><li class="chapter-item expanded "><a href="../apalache/statistics.html"><strong aria-hidden="true">8.9.</strong> TLA+ Execution Statistics</a></li><li class="chapter-item expanded "><a href="../apalache/profiling.html"><strong aria-hidden="true">8.10.</strong> Profiling Your Specification</a></li><li class="chapter-item expanded "><a href="../apalache/theory.html"><strong aria-hidden="true">8.11.</strong> Five minutes of theory</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/tlc-config.html"><strong aria-hidden="true">9.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../apalache/typechecker-snowcat.html"><strong aria-hidden="true">10.</strong> The Snowcat Type Checker</a></li><li class="chapter-item expanded "><a href="../apalache/features.html"><strong aria-hidden="true">11.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../apalache/known-issues.html"><strong aria-hidden="true">12.</strong> Known Issues</a></li><li class="chapter-item expanded "><a href="../apalache/antipatterns.html"><strong aria-hidden="true">13.</strong> Antipatterns</a></li><li class="chapter-item expanded "><a href="../apalache/preprocessing.html"><strong aria-hidden="true">14.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../apalache/tuning.html"><strong aria-hidden="true">15.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../apalache/assignments-in-depth.html"><strong aria-hidden="true">16.</strong> Assignments and Symbolic Transitions in Depth</a></li><li class="chapter-item expanded "><a href="../apalache/kera.html"><strong aria-hidden="true">17.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded affix "><li class="part-title">HOWTOs</li><li class="chapter-item expanded "><a href="../HOWTOs/index.html"><strong aria-hidden="true">18.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../HOWTOs/howto-write-type-annotations.html"><strong aria-hidden="true">19.</strong> How to write type annotations</a></li><li class="chapter-item expanded "><a href="../HOWTOs/uninterpretedTypes.html"><strong aria-hidden="true">20.</strong> How to use uninterpreted types</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ Language Manual for Engineers</li><li class="chapter-item expanded "><a href="../lang/index.html"><strong aria-hidden="true">21.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">22.</strong> The standard operators of TLA+</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/booleans.html"><strong aria-hidden="true">22.1.</strong> Booleans</a></li><li class="chapter-item expanded "><a href="../lang/control-and-nondeterminism.html"><strong aria-hidden="true">22.2.</strong> Control And Nondeterminism</a></li><li class="chapter-item expanded "><a href="../lang/conditionals.html"><strong aria-hidden="true">22.3.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="../lang/integers.html"><strong aria-hidden="true">22.4.</strong> Integers</a></li><li class="chapter-item expanded "><a href="../lang/sets.html"><strong aria-hidden="true">22.5.</strong> Sets</a></li><li class="chapter-item expanded "><a href="../lang/logic.html"><strong aria-hidden="true">22.6.</strong> Logic</a></li><li class="chapter-item expanded "><a href="../lang/functions.html"><strong aria-hidden="true">22.7.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../lang/records.html"><strong aria-hidden="true">22.8.</strong> Records</a></li><li class="chapter-item expanded "><a href="../lang/tuples.html"><strong aria-hidden="true">22.9.</strong> Tuples</a></li><li class="chapter-item expanded "><a href="../lang/sequences.html"><strong aria-hidden="true">22.10.</strong> Sequences</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">22.11.</strong> Bags</div></li></ol></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">23.</strong> User-defined operators</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/user/top-level-operators.html"><strong aria-hidden="true">23.1.</strong> Top-level operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/let-in.html"><strong aria-hidden="true">23.2.</strong> LET-IN definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/higher-order-operators.html"><strong aria-hidden="true">23.3.</strong> Higher-order operators definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/lambdas.html"><strong aria-hidden="true">23.4.</strong> Anonymous operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/recursive-operators.html"><strong aria-hidden="true">23.5.</strong> Recursive operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/local-operators.html"><strong aria-hidden="true">23.6.</strong> Local operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/recursive-functions.html"><strong aria-hidden="true">23.7.</strong> Recursive functions</a></li></ol></li><li class="chapter-item expanded "><a href="../lang/apalache-operators.html"><strong aria-hidden="true">24.</strong> Apalache operators</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">25.</strong> Modules, Extends, and Instances</div></li><li class="chapter-item expanded affix "><li class="part-title">Idiomatic TLA+</li><li class="chapter-item expanded "><a href="../idiomatic/index.html"><strong aria-hidden="true">26.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../idiomatic/000keep-minimum-state-variables.html"><strong aria-hidden="true">27.</strong> Keep state variables to the minimum</a></li><li class="chapter-item expanded "><a href="../idiomatic/001assignments.html"><strong aria-hidden="true">28.</strong> Update state variables with assignments</a></li><li class="chapter-item expanded "><a href="../idiomatic/002primes.html"><strong aria-hidden="true">29.</strong> Apply primes only to state variables</a></li><li class="chapter-item expanded "><a href="../idiomatic/007if-then-else.html"><strong aria-hidden="true">30.</strong> Use Boolean operators in actions, not IF-THEN-ELSE</a></li><li class="chapter-item expanded "><a href="../idiomatic/003record-sets.html"><strong aria-hidden="true">31.</strong> Avoid sets of mixed records</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../adr/002adr-types.html"><strong aria-hidden="true">32.</strong> ADR-002: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/003adr-trex.html"><strong aria-hidden="true">33.</strong> ADR-003: transition executor (TRex)</a></li><li class="chapter-item expanded "><a href="../adr/004adr-annotations.html"><strong aria-hidden="true">34.</strong> ADR-004: code annotations</a></li><li class="chapter-item expanded "><a href="../adr/005adr-json.html"><strong aria-hidden="true">35.</strong> ADR-005: JSON Serialization Format</a></li><li class="chapter-item expanded "><a href="../adr/006rfc-unit-testing.html"><strong aria-hidden="true">36.</strong> RFC-006: unit tests and property-based tests</a></li><li class="chapter-item expanded "><a href="../adr/007adr-restructuring.html"><strong aria-hidden="true">37.</strong> ADR-007: restructuring</a></li><li class="chapter-item expanded "><a href="../adr/008adr-exceptions.html"><strong aria-hidden="true">38.</strong> ADR-008: exceptions</a></li><li class="chapter-item expanded "><a href="../adr/009adr-outputs.html"><strong aria-hidden="true">39.</strong> ADR-009: outputs</a></li><li class="chapter-item expanded "><a href="../adr/011adr-smt-arrays.html"><strong aria-hidden="true">40.</strong> ADR-011: alternative SMT encoding using arrays</a></li><li class="chapter-item expanded "><a href="../adr/015adr-trace.html"><strong aria-hidden="true">41.</strong> ADR-015: ITF: informal trace format</a></li><li class="chapter-item expanded "><a href="../adr/016adr-retla.html"><strong aria-hidden="true">42.</strong> ADR-016: ReTLA: Relational TLA</a></li><li class="chapter-item expanded "><a href="../adr/017adr-temporal.html" class="active"><strong aria-hidden="true">43.</strong> ADR-017: Support for temporal properties</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache Documentation</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/informalsystems/apalache" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <hr />
+<h2>authors: Igor Konnov
+last revised: 2022-03-31</h2>
+<h1><a class="header" href="#adr-017-support-for-temporal-properties" id="adr-017-support-for-temporal-properties">ADR-017: Support for temporal properties</a></h1>
+<p><strong>Table of Contents</strong></p>
+<ul>
+<li><a href="#summary">Summary (Overview)</a></li>
+<li><a href="#context">Context (Problem)</a></li>
+<li><a href="#options">Options (Alternatives)</a></li>
+<li><a href="#solution">Solution (Decision)</a></li>
+<li><a href="#consequences">Consequences (Retrospection)</a></li>
+</ul>
+<h2><a class="header" href="#summary" id="summary">Summary</a></h2>
+<p>TLA+ stands for <em>Temporal Logic of Actions</em>, whereas the plus sign (+) in the
+name stands for the rich syntax of this logic. So far, we have been focusing on
+the <em>plus</em> of TLA+ in Apalache. Indeed, the repository of <a href="https://github.com/tlaplus/Examples">TLA+ Examples</a>
+contains a few occurrences of temporal properties.</p>
+<p>In this ADR, we lay out a plan for implementing support for model checking
+of temporal properties in Apalache.</p>
+<h2><a class="header" href="#context" id="context">Context</a></h2>
+<!-- Communicates the forces at play (technical, political, social, project).
+     This is the story explaining the problem we are looking to resolve.
+-->
+<p>Apalache supports checking of several kinds of invariants: <a href="../apalache/principles/invariants.html">state, action, and
+trace invariants</a>. Some of the TLA+ users do not want to be limited by
+invariants, but want to write temporal properties, which let them express
+safety and liveness more naturally. A detailed description of temporal
+properties can be found in <a href="https://lamport.azurewebsites.net/tla/book.html">Specifying Systems</a> (Sections 16.2.3-4). In
+short, temporal formulas are Boolean combinations of the following kinds of
+subformulas:</p>
+<ul>
+<li>
+<p><strong>State predicates</strong>:</p>
+<ul>
+<li>Boolean formulas that do not contain primes.</li>
+</ul>
+</li>
+<li>
+<p><strong>Action predicates</strong>:</p>
+<ul>
+<li>
+<p>Stutter <code>A</code>: <code>[A]_e</code>, for an action formula <code>A</code>
+and an expression <code>e</code> (usually a tuple of variables).
+This predicate is equivalent to <code>A \/ e' = e</code>.</p>
+</li>
+<li>
+<p>No-stutter <code>A</code>: <code>&lt;A&gt;_e</code>, for an action formula <code>A</code>
+and an expression <code>e</code>, which is equivalent to <code>A /\ e' /= e</code>.</p>
+</li>
+<li>
+<p><code>ENABLED A</code>, for an action formula <code>A</code>. It is true in a state <code>s</code>, if
+there is a state <code>t</code> such that <code>s</code> is tranformed to <code>t</code> via action <code>A</code>.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>Temporal formulas</strong>:</p>
+<ul>
+<li>
+<p>Eventually: <code>&lt;&gt;F</code>, for a temporal formula <code>F</code>.</p>
+</li>
+<li>
+<p>Always: <code>[]F</code>, for a temporal formula <code>F</code>.</p>
+</li>
+<li>
+<p>Weak fairness: <code>WF_e(A)</code>, for an expression <code>e</code> and a formula <code>F</code>,
+which is equivalent to <code>[]&lt;&gt;~(ENABLED &lt;A&gt;_e) \/ []&lt;&gt;&lt;A&gt;_e</code>.</p>
+</li>
+<li>
+<p>Strong fairness: <code>SF_e(A)</code>, for an expression <code>e</code> and a formula <code>F</code>,
+which is equivalent to <code>&lt;&gt;[]~(ENABLED &lt;A&gt;_e) \/ []&lt;&gt;&lt;A&gt;_e</code>.</p>
+</li>
+<li>
+<p>Leads-to: <code>F ~&gt; G</code>, which is equivalent to <code>[](F =&gt; &lt;&gt;G)</code>.</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>Technically, TLA+ also contains four other operators that are related to
+temporal properties: <code>A \cdot B</code>, <code>\EE x: F</code>, <code>\AA x: F</code>, and <code>F -+-&gt; G</code>. These
+very advanced operators appear so rarely that we ignore them. For their
+semantics, check <a href="https://lamport.azurewebsites.net/tla/book.html">Specifying Systems</a> (Section 16.2.3-4).</p>
+<h2><a class="header" href="#options" id="options">Options</a></h2>
+<p>SAT encodings of bounded model checking for LTL are a textbook material. A
+linear encoding for LTL is presented in the paper <a href="https://lmcs.episciences.org/2236">Biere et al. 2006</a>. It is
+explained in <a href="https://ebooks.iospress.nl/publication/4999">Handbook of Satisfiability</a> (Chapter 14). Hence, we do not have
+to do much research around this. However, we have to adapt the standard
+techniques to the domain of TLA+. For instance, we have to understand how to
+deal with <code>ENABLED</code>, <code>WF</code>, and <code>SF</code>, which deviate from the standard setting of
+model checking.</p>
+<p>Viktor Sergeev wrote the <a href="https://github.com/informalsystems/apalache/tree/feature/liveness">first prototype</a> for liveness checking at
+University of Lorraine in 2019. Since his implementation was tightly integrated
+with the exploration algorithm, which was refactored several times, this
+implementation has not been integrated in the main branch. We have learned from
+this prototype and discuss our options under this angle.</p>
+<p>There are two principally different approaches to the implementation of LTL
+model checking:</p>
+<ol>
+<li>
+<p>Tight integration with <a href="./003adr-trex.html">Transition Executor</a>.</p>
+<p>In this approach, we would extend the transition executor to incrementally
+check LTL properties via the encoding by <a href="https://lmcs.episciences.org/2236">Biere et al. 2006</a>. This approach
+would let us implement various optimizations. However, it would be harder
+to maintain and adapt, as we have seen from the first prototype.</p>
+</li>
+<li>
+<p>Specification preprocessing.</p>
+<p>In this approach, given a specification <code>S</code> and a temporal property <code>P</code>, we
+would produce another specification <code>S_P</code> and an invariant <code>I_P</code> that has
+the following property: the temporal property <code>P</code> holds on specification
+<code>S</code> if and only if the invariant <code>I_P</code> holds on specification <code>S_P</code>.</p>
+</li>
+</ol>
+<p>We choose the second approach via specification preprocessing. This will
+simplify maintenance of the codebase. Additionally, the users will be able to
+see the result of preprocessing and optimize it, if needed. When the new
+implementation is well understood, we can revisit it and consider Option 1,
+once <a href="./010rfc-transition-explorer.html">ADR-010</a> is implemented.</p>
+<h2><a class="header" href="#solution" id="solution">Solution</a></h2>
+<p>The work plan is tracked in the <a href="https://github.com/informalsystems/apalache/issues/488">issue on temporal properties</a>.</p>
+<p>We propose to split this work into two big subtasks:</p>
+<ul>
+<li>
+<p><em>Task 1. Temporal operators</em>:
+Support for <code>&lt;&gt;P</code>, <code>[]P</code>, <code>&lt;A&gt;_e</code>, and <code>[A]_e</code> via preprocessing.</p>
+</li>
+<li>
+<p><em>Task 2. Fairness</em>:
+Support for <code>ENABLED A</code>, <code>WF_e(A)</code>, and <code>SF_e(A)</code> via preprocessing.</p>
+</li>
+</ul>
+<p>The task on <em>Temporal operators</em> is well-understood and poses no technical
+risk. By having solved Task 1, we can give users a relatively complete toolset
+for safety and liveness checking. Indeed, even fairness properties can be
+expressed via <code>&lt;&gt;</code> and <code>[]</code>.</p>
+<p>To support temporal reasoning as it was designed by Leslie Lamport, we have to
+solve Task 2. Most likely, we will have to introduce additional assumptions
+about specifications to solve this task.</p>
+<h3><a class="header" href="#1-temporal-operators" id="1-temporal-operators">1. Temporal operators</a></h3>
+<p>This task boils down to the implementation of the encoding explained in <a href="https://lmcs.episciences.org/2236">Biere
+et al. 2006</a>.</p>
+<p>In model checking of temporal properties, special attention is paid to lasso
+executions. A <em>lasso</em> execution is a sequence of states <code>s[0], s[1], ..., s[l], ..., s[k]</code> that has the following properties:</p>
+<ul>
+<li>the initial state <code>s[0]</code> satisfies <code>Init</code>,</li>
+<li>every pair of states <code>s[i]</code> and <code>s[i+1]</code> satisfies <code>Next</code>, for <code>i \in 0..k-1</code>,
+and</li>
+<li>the loop closes at index <code>l</code>, that is, <code>s[l] = s[k]</code>.</li>
+</ul>
+<p>The lasso executions play an important role in model checking, due to the lasso
+property of finite-state systems:</p>
+<pre><code>Whenever a finite-state transition system `M` violates a temporal property
+`F`, this system has a lasso execution that violates `F`.
+</code></pre>
+<p>You can find a proof in the book on <a href="https://mitpress.mit.edu/books/model-checking-second-edition">Model Checking</a>. As a result, we can
+focus on finding a lasso as a counterexample to the temporal property.
+Importantly, this property holds only for finite-state systems. For example, if
+all variable domains are finite (and bounded), then the specification is
+finite-state. However, if a specification contains integer variables, it may
+produce infinitely many states. That is, an infinite-state system may still
+contain lassos as counterexamples but it does not have to, which makes this
+technique incomplete. An extension to infinite-state systems was studied by
+<a href="https://link.springer.com/article/10.1007/s10703-021-00377-1">Padon et al. 2021</a>. This is beyond the scope of this task.</p>
+<p>There are two ways to encode the constraints by <a href="https://lmcs.episciences.org/2236">Biere et al. 2006</a>:</p>
+<ol>
+<li>
+<p>Encode the lasso finding problem as a trace invariant. Apalache can check
+<a href="../apalache/principles/invariants.html#trace-invariants">trace invariants</a>. This approach is most straighforward. However it has
+several drawbacks:</p>
+<ul>
+<li>
+<p>Trace invariants require Apalache to pack the sequence of states.
+This sometimes produces unnecessary constraints.</p>
+</li>
+<li>
+<p>When a trace invariant is violated, the intermediate definitions
+in this invariant are not printed in the counterexample.
+This will make printing of the counterexamples to liveness harder.</p>
+</li>
+</ul>
+</li>
+<li>
+<p>Instrument the existing specification by adding auxilliary variables that
+update the predicates as required by the encoding of <a href="https://lmcs.episciences.org/2236">Biere et al. 2006</a>.
+We could also extend it with the liveness-to-safety reduction, see <a href="https://lmcs.episciences.org/2236">Biere et
+al. 2006</a>. If we choose this approach, we will be able to print
+counterexamples. So this approach is more transparent.</p>
+</li>
+</ol>
+<p>To choose between these two approaches, we will try both of them on a simple
+specification. For instance, <a href="https://github.com/tlaplus/Examples/blob/master/specifications/bcastFolklore/bcastFolklore.tla">Folklore broadcast</a>.</p>
+<h3><a class="header" href="#2-fairness" id="2-fairness">2. Fairness</a></h3>
+<p><code>WF_e(A)</code> and <code>SF_e(A)</code> use <code>ENABLED(A)</code> as part of their definitions. Hence,
+<code>ENABLED(A)</code> is of ultimate importance for handling <code>WF</code> and <code>SF</code>. However, we
+do not know how to efficiently translate <code>ENABLED(A)</code> into SMT. A
+straightforward approach requires to check that for all combinations of state
+variables <code>A</code> does not hold.</p>
+<p>This work requires further research, which we will do in parallel with the
+first part of work. To be detailed later...</p>
+<h2><a class="header" href="#consequences" id="consequences">Consequences</a></h2>
+<!-- Records the results of the decision over the long term.
+     Did it work, not work, was changed, upgraded, etc.
+-->
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../adr/016adr-retla.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../adr/016adr-retla.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
