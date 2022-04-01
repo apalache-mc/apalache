@@ -31,7 +31,7 @@ of temporal properties in Apalache.
 
 Apalache supports checking of several kinds of invariants: [state, action, and
 trace invariants][]. Some of the TLA+ users do not want to be limited by
-invariants, but want to write temporal properties, which let them to express
+invariants, but want to write temporal properties, which let them express
 safety and liveness more naturally. A detailed description of temporal
 properties can be found in [Specifying Systems][] (Sections 16.2.3-4). In
 short, temporal formulas are Boolean combinations of the following kinds of
@@ -187,7 +187,7 @@ specification. For instance, [Folklore broadcast][].
 
 `WF_e(A)` and `SF_e(A)` use `ENABLED(A)` as part of their definitions. Hence,
 `ENABLED(A)` is of ultimate importance for handling `WF` and `SF`. However, we
-do not know how to efficiently translated `ENABLED(A)` in SMT. A
+do not know how to efficiently translate `ENABLED(A)` into SMT. A
 straightforward approach requires to check that for all combinations of state
 variables `A` does not hold.
 
