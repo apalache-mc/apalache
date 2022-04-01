@@ -40,7 +40,6 @@ import at.forsyte.apalache.tla.bmcmt.rules.vmt.TlaExToVMTWriter
  */
 object Tool extends LazyLogging {
   lazy val ISSUES_LINK: String = "[https://github.com/informalsystems/apalache/issues]"
-  lazy val ERROR_EXIT_CODE = 99
   lazy val OK_EXIT_CODE = 0
 
   /**
@@ -439,15 +438,15 @@ object Tool extends LazyLogging {
                        |# build  : ${BuildInfo.build}
                        |#""".stripMargin)
 
-    if (ExecutionStatisticsCollector.promptUser()) {
+    if (new ExecutionStatisticsCollector().isEnabled) {
+      // Statistic collection is enabled. Thank the user
+      Console.println("# Usage statistics is ON. Thank you!")
+      Console.println("# If you have changed your mind, disable the statistics with config --enable-stats=false.")
+    } else {
       // Statistics collection is not enabled. Cry for help.
       Console.println("# Usage statistics is OFF. We care about your privacy.")
       Console.println(
           "# If you want to help our project, consider enabling statistics with config --enable-stats=true.")
-    } else {
-      // Statistic collection is enabled. Thank the user
-      Console.println("# Usage statistics is ON. Thank you!")
-      Console.println("# If you have changed your mind, disable the statistics with config --enable-stats=false.")
     }
     Console.println("")
   }
