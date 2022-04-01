@@ -212,6 +212,10 @@ IDEA](https://www.jetbrains.com/idea/) and set up a new project. If you already
 have IntelliJ installed, please ensure you using version 2021.3.1 or later.
 We've had reports of build failures with earlier versions.
 
+For some tests to succeed, you will have to [set the environment
+variable](https://www.jetbrains.com/help/objc/add-environment-variables-and-program-arguments.html#add-environment-variables)
+`APALACHE_HOME` to the root of the Apalache source tree.
+
 #### Emacs
 
 You can use the [metals][] Scala language server together with [lsp-mode][] for
