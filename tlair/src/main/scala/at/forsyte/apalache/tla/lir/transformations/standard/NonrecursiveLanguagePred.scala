@@ -5,8 +5,8 @@ import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaEx, TlaModule, TlaOperDe
 import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, PredResult, PredResultFail, PredResultOk}
 
 /**
- * * <p>Test whether the expressions fit into the non-recursive fragment, i.e. no recursive functions or operators are
- * used</p>
+ * Test whether the expressions fit into the non-recursive fragment, i.e. no recursive functions or operators are
+ * used
  *
  * @author
  *   Jure Kukovec
