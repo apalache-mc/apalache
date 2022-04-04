@@ -39,6 +39,18 @@ x := e == x = e
 Gen(size) == {}
 
 (**
+ * A non-deterministic version of CHOOSE x \in S: TRUE.  That is, whenever
+ * Guess(S) is called twice, it is free to return arbitrary elements of S, if S
+ * is non-empty. If S is empty, Guess(S) returns some value of the proper type.
+ *
+ * @type: Set(a) => a;
+ *)
+Guess(S) ==
+    \* Since this is not supported by TLC,
+    \* we fall back to the deterministic version for TLC.
+    CHOOSE x \in S: TRUE
+
+(**
  * Convert a set of pairs S to a function F. Note that if S contains at least
  * two pairs <<x, y>> and <<u, v>> such that x = u and y /= v,
  * then F is not uniquely defined. We use CHOOSE to resolve this ambiguity.

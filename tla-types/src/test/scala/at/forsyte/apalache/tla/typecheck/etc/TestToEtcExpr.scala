@@ -780,6 +780,13 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     assert(expected == gen(ex))
   }
 
+  test("Apalache!Guess(S)") {
+    val finType = parser("(Set(a) => a)")
+    val expected = mkAppByName(Seq(finType), "S")
+    val ex = tla.guess(tla.name("S"))
+    assert(expected == gen(ex))
+  }
+
   test("Apalache!Expand") {
     val typ = parser("a => a")
     val expected = mkAppByName(Seq(typ), "S")

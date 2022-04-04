@@ -62,6 +62,22 @@ object ApalacheOper {
   }
 
   /**
+   * A non-deterministic version of `CHOOSE x \in S: TRUE`. Since we cannot define a new syntactic form where `x` ranges
+   * over `S` in TLA+, we define the operator `Guess(S)` over a set `S`. If you want to write a non-deterministic
+   * version of `CHOOSE x \in S: P`, simply write `Guess({ x \in S: P })`.
+   */
+  object guess extends TlaOper {
+    /* the number of arguments the operator has */
+    override val name: String = "Apalache!Guess"
+
+    override def arity: OperArity = FixedArity(1)
+
+    override def interpretation: Interpretation.Value = Interpretation.Predefined
+
+    override val precedence: (Int, Int) = (0, 0) // see Section 15.2.1 in Lamport's book
+  }
+
+  /**
    * An expansion hint that can be applied to SUBSET S or [S -> T]. This hint orders the rewriter to expand the
    * underlying expression into a finite set. Since, such an expansion results in an exponential blow up, this should be
    * done carefully (and avoided as much as possible).

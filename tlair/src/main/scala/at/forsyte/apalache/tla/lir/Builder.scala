@@ -211,6 +211,10 @@ class Builder {
     BuilderOper(TlaOper.chooseBounded, variable, set, predicate)
   }
 
+  def guess(set: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.guess, set)
+  }
+
   /**
    * Decorate a TLA+ expression with a label (a TLA+2 feature), e.g., lab(a, b) :: e decorates e with the label "lab"
    * whose arguments are "a" and "b". This method needs a type tag for `name` and `args`. The type of the expression
@@ -754,6 +758,7 @@ class Builder {
         ApalacheOper.smtMap.name -> ApalacheOper.smtMap,
         ApalacheOper.unconstrainArray.name -> ApalacheOper.unconstrainArray,
         ApalacheOper.setAsFun.name -> ApalacheOper.setAsFun,
+        ApalacheOper.guess.name -> ApalacheOper.guess,
     )
 
   def byName(operatorName: String, args: BuilderEx*): BuilderEx = {
