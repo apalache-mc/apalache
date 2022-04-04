@@ -4,7 +4,7 @@
  * We introduce a trivial state machine and write tests as state invariants.
  *)
 
-EXTENDS Integers, FiniteSets
+EXTENDS Integers, FiniteSets, Apalache
 
 Init == TRUE
 Next == TRUE
@@ -175,6 +175,14 @@ TestChooseMin ==
     IN
     min = 1
 
+TestGuessMin ==
+    LET min == Guess({
+            i \in Set1357:
+                \A j \in Set1357: i <= j
+        })
+    IN
+    min = 1
+
 TestChooseSet ==
     LET S ==
         CHOOSE T \in { SetEmpty, Set263, Set1357 }:
@@ -182,12 +190,26 @@ TestChooseSet ==
     IN
     S = Set263
 
+TestGuessSet ==
+    LET S ==
+        Guess({ T \in { SetEmpty, Set263, Set1357 }: 6 \in T })
+    IN
+    S = Set263
+
 TestChooseInSingleton ==
     LET x == CHOOSE i \in { 3 }: TRUE IN
     x = 3
 
+TestGuessInSingleton ==
+    LET x == Guess({ 3 }) IN
+    x = 3
+
 TestChooseEmpty ==
     LET x == CHOOSE i \in SetEmpty: TRUE IN
+    x <= 0 \/ x > 0
+
+TestGuessEmpty ==
+    LET x == Guess(SetEmpty) IN
     x <= 0 \/ x > 0
 
 TestForallSet ==
@@ -240,6 +262,10 @@ AllTests ==
     /\ TestChooseInSingleton
     /\ TestChooseEmpty
     /\ TestChooseSet
+    /\ TestGuessMin
+    /\ TestGuessInSingleton
+    /\ TestGuessEmpty
+    /\ TestGuessSet
     /\ TestIsFiniteSet
     /\ TestPowersetCardinality
     \* IGNORE UNTIL FIXED: /\ TestIsFiniteSetOnInfinite
