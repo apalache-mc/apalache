@@ -110,10 +110,10 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
       for (elem <- elems) {
         nextState = nextState.updateArena(_.appendCell(BoolT()))
         val pred = nextState.arena.topCell.toNameEx
-        val storeElem = tla.apalacheStoreInSet(elem.toNameEx, setCell.toNameEx)
-        val notStoreElem = tla.apalacheStoreNotInSet(elem.toNameEx, setCell.toNameEx)
+        val storeElem = tla.apalacheStoreInSet(elem.toNameEx, setCell.toNameEx).typed(SetT1(elemType))
+        val notStoreElem = tla.apalacheStoreNotInSet(elem.toNameEx, setCell.toNameEx).typed(SetT1(elemType))
         // elem is added to setCell based on the unconstrained predicate pred
-        val ite = tla.ite(pred, storeElem, notStoreElem).typed(BoolT1())
+        val ite = tla.ite(pred, storeElem, notStoreElem).typed(SetT1(elemType))
         rewriter.solverContext.assertGroundExpr(ite)
       }
     }
