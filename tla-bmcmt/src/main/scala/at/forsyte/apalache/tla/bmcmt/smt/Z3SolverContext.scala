@@ -621,7 +621,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         val (eq, n) = toExpr(OperEx(TlaOper.eq, lhs, rhs))
         (z3context.mkNot(eq.asInstanceOf[BoolExpr]).asInstanceOf[ExprSort], 1 + n)
 
-      case OperEx(ApalacheOper.distinct, args @ _*) =>
+      case OperEx(ApalacheInternalOper.distinct, args @ _*) =>
         val (es, ns) = (args.map(toExpr)).unzip
         val distinct = z3context.mkDistinct(es: _*)
         (distinct.asInstanceOf[ExprSort],
@@ -679,7 +679,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         val elemId = ArenaCell.idFromName(elemName)
         (getInPred(setId, elemId), 1)
 
-      case OperEx(ApalacheOper.selectInSet, NameEx(elemName), NameEx(setName)) =>
+      case OperEx(ApalacheInternalOper.selectInSet, NameEx(elemName), NameEx(setName)) =>
         encoding match {
           case `arraysEncoding` =>
             val setId = ArenaCell.idFromName(setName)
@@ -691,8 +691,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
-      case OperEx(ApalacheOper.selectInSet, OperEx(ApalacheOper.selectInSet, NameEx(elemName), NameEx(funName)),
-              NameEx(setName)) =>
+      case OperEx(ApalacheInternalOper.selectInSet,
+              OperEx(ApalacheInternalOper.selectInSet, NameEx(elemName), NameEx(funName)), NameEx(setName)) =>
         encoding match {
           case `arraysEncoding` =>
             // Nested selects are used to check if the result of a function application is in a given set
@@ -705,7 +705,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
-      case OperEx(ApalacheOper.storeInSet, NameEx(elemName), NameEx(setName)) =>
+      case OperEx(ApalacheInternalOper.storeInSet, NameEx(elemName), NameEx(setName)) =>
         encoding match {
           case `arraysEncoding` =>
             val setId = ArenaCell.idFromName(setName)
@@ -717,7 +717,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
-      case OperEx(ApalacheOper.storeInSet, NameEx(elemName), NameEx(funName), NameEx(argName)) =>
+      case OperEx(ApalacheInternalOper.storeInSet, NameEx(elemName), NameEx(funName), NameEx(argName)) =>
         encoding match {
           case `arraysEncoding` =>
             // Updates a function for a given argument
@@ -730,7 +730,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
-      case OperEx(ApalacheOper.storeNotInSet, NameEx(elemName), NameEx(setName)) =>
+      case OperEx(ApalacheInternalOper.storeNotInSet, NameEx(elemName), NameEx(setName)) =>
         encoding match {
           case `arraysEncoding` =>
             // In the arrays encoding the sets are initially empty, so elem is not a member of set implicitly
@@ -743,7 +743,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
-      case OperEx(ApalacheOper.smtMap, NameEx(inputSetName), NameEx(resultSetName)) =>
+      case OperEx(ApalacheInternalOper.smtMap, NameEx(inputSetName), NameEx(resultSetName)) =>
         val inputSetId = ArenaCell.idFromName(inputSetName)
         val resultSetId = ArenaCell.idFromName(resultSetName)
         // The latest SSA array for resultSet contains the constraints. An updated SSA array is made to store the result
@@ -755,7 +755,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         val eq = toEqExpr(updatedResultSet, map)
         (eq.asInstanceOf[ExprSort], 2)
 
-      case OperEx(ApalacheOper.unconstrainArray, NameEx(arrayElemName)) =>
+      case OperEx(ApalacheInternalOper.unconstrainArray, NameEx(arrayElemName)) =>
         val arrayElemId = ArenaCell.idFromName(arrayElemName)
         updateArrayConst(arrayElemId) // A new array is declared and left unconstrained
         toExpr(ValEx(TlaBool(true))) // Nothing to assert

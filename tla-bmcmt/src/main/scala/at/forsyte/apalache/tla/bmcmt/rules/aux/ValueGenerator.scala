@@ -5,10 +5,8 @@ import at.forsyte.apalache.tla.bmcmt.{
   arraysEncoding, oopsla19Encoding, ArenaCell, RewriterException, SymbState, SymbStateRewriter,
 }
 import at.forsyte.apalache.tla.lir.TypedPredefs._
-import at.forsyte.apalache.tla.lir.UntypedPredefs.untyped
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaControlOper}
 import scalaz.unused
 
 import scala.collection.immutable.SortedSet
@@ -112,10 +110,10 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
       for (elem <- elems) {
         nextState = nextState.updateArena(_.appendCell(BoolT()))
         val pred = nextState.arena.topCell.toNameEx
-        val storeElem = OperEx(ApalacheOper.storeInSet, elem.toNameEx, setCell.toNameEx)
-        val notStoreElem = OperEx(ApalacheOper.storeNotInSet, elem.toNameEx, setCell.toNameEx)
+        val storeElem = tla.apalacheStoreInSet(elem.toNameEx, setCell.toNameEx)
+        val notStoreElem = tla.apalacheStoreNotInSet(elem.toNameEx, setCell.toNameEx)
         // elem is added to setCell based on the unconstrained predicate pred
-        val ite = OperEx(TlaControlOper.ifThenElse, pred, storeElem, notStoreElem)
+        val ite = tla.ite(pred, storeElem, notStoreElem).typed(BoolT1())
         rewriter.solverContext.assertGroundExpr(ite)
       }
     }
@@ -174,7 +172,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
         nextState = nextState.updateArena(_.appendHas(domainCell, domainCells: _*))
         // In the arrays encoding, set membership constraints are not generated in appendHas, so we add them below
         for (domainElem <- domainCells) {
-          val inExpr = OperEx(ApalacheOper.storeInSet, domainElem.toNameEx, domainCell.toNameEx)
+          val inExpr = tla.apalacheStoreInSet(domainElem.toNameEx, domainCell.toNameEx).typed(BoolT1())
           rewriter.solverContext.assertGroundExpr(inExpr)
         }
         nextState = nextState.updateArena(_.setDom(funCell, domainCell))
