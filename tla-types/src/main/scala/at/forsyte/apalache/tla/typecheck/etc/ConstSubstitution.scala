@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.lir.{
-  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1, TupT1,
-  TypingException, UID, VarT1,
+  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecRowT1, RecT1, RowConsT1, RowNilT1, SeqT1, SetT1, SparseTupT1, StrT1,
+  TlaType1, TupT1, TypingException, UID, VarT1, VariantT1,
 }
 
 /**
@@ -178,6 +178,22 @@ object ConstSubstitution {
           val (newArgs, achanged) = foldWithChanged(args, recFun)
           val (newRes, rchanged) = recFun(res)
           (OperT1(newArgs, newRes), achanged || rchanged)
+
+        case RowNilT1() =>
+          (RowNilT1(), false)
+
+        case RowConsT1(fieldName, fieldType, tail) =>
+          val (newFieldType, ftChanged) = recFun(fieldType)
+          val (newTail, tailChanged) = recFun(tail)
+          (RowConsT1(fieldName, newFieldType, newTail), ftChanged || tailChanged)
+
+        case RecRowT1(row) =>
+          val (newRow, rowChanged) = recFun(row)
+          (RecRowT1(newRow), rowChanged)
+
+        case VariantT1(row) =>
+          val (newRow, rowChanged) = recFun(row)
+          (VariantT1(newRow), rowChanged)
       }
     }
 

@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.lir.{
-  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1, TupT1, VarT1,
+  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecRowT1, RecT1, RowConsT1, RowNilT1, SeqT1, SetT1, SparseTupT1, StrT1,
+  TlaType1, TupT1, VarT1, VariantT1,
 }
 import at.forsyte.apalache.tla.typecheck.etc.Substitution.SUB_LIMIT
 
@@ -72,6 +73,22 @@ class Substitution(val mapping: Map[EqClass, TlaType1]) {
         val (nargs, isChangedArgs) = args.map(sub).unzip
         val (nres, isChangedRes) = sub(res)
         (OperT1(nargs, nres), isChangedRes || isChangedArgs.contains(true))
+
+      case RowNilT1() =>
+        (RowNilT1(), false)
+
+      case RowConsT1(fieldName, fieldType, tail) =>
+        val (newFieldType, ftChanged) = sub(fieldType)
+        val (newTail, tailChanged) = sub(tail)
+        (RowConsT1(fieldName, newFieldType, newTail), ftChanged || tailChanged)
+
+      case RecRowT1(row) =>
+        val (newRow, rowChanged) = sub(row)
+        (RecRowT1(newRow), rowChanged)
+
+      case VariantT1(row) =>
+        val (newRow, rowChanged) = sub(row)
+        (VariantT1(newRow), rowChanged)
     }
   }
 

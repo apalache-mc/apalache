@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.lir.{
-  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1, TupT1, TypeTag,
-  TypingException, UID, VarT1,
+  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecRowT1, RecT1, RowConsT1, RowNilT1, SeqT1, SetT1, SparseTupT1, StrT1,
+  TlaType1, TupT1, TypeTag, TypingException, UID, VarT1, VariantT1,
 }
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
@@ -184,6 +184,9 @@ package object types {
         case OperT1(_, _) =>
           // all operators are inlined
           throw new TypingException("Unexpected operator type OperT1", UID.nullId)
+
+        case RowNilT1() | RowConsT1(_, _, _) | RecRowT1(_) | VariantT1(_) =>
+          throw new NotImplementedError("Row types are not supported by the model checker yet")
       }
     }
 

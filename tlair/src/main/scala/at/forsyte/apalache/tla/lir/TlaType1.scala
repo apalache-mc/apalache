@@ -5,6 +5,9 @@ import scala.collection.immutable.SortedMap
 /**
  * Trait for a type in Type System 1 as specified in <a
  * href="https://github.com/informalsystems/apalache/blob/unstable/docs/adr/002adr-types.md">ADR-002</a>.
+ *
+ * It also contains experimental extensions that are specified in <a
+ * href="https://github.com/informalsystems/apalache/blob/unstable/docs/src/adr/014adr-precise-records.md">ADR-014</a>.
  */
 sealed trait TlaType1 {
 
@@ -309,4 +312,47 @@ case class OperT1(args: Seq[TlaType1], res: TlaType1) extends TlaType1 {
     s ++ t.usedNames
   }
 
+}
+
+/**
+ * ****************** EXTENSIONS OF ADR014 ******************************
+ */
+
+/**
+ * An empty row, which contains no fields.
+ */
+case class RowNilT1() extends TlaType1 {
+  override def usedNames: Set[Int] = Set.empty
+}
+
+/**
+ * A composition of a singleton row with the rest of the type.
+ * @param fieldName
+ *   field name
+ * @param fieldType
+ *   field type
+ * @param tail
+ *   the rest of the row: RowNil, RowCons, or VarT1.
+ */
+case class RowConsT1(fieldName: String, fieldType: TlaType1, tail: TlaType1) extends TlaType1 {
+  override def usedNames: Set[Int] = fieldType.usedNames ++ tail.usedNames
+}
+
+/**
+ * A record constructed from a row type. That the row is of the right kind should be checked by the kind unifier.
+ * @param row
+ *   RowNil, RowCons, or VarT1.
+ */
+case class RecRowT1(row: TlaType1) extends TlaType1 {
+  override def usedNames: Set[Int] = row.usedNames
+}
+
+/**
+ * A variant constructed from a row type. That the row is of the right kind should be checked by the kind unifier.
+ *
+ * @param row
+ *   RowNil, RowCons, or VarT1.
+ */
+case class VariantT1(row: TlaType1) extends TlaType1 {
+  override def usedNames: Set[Int] = row.usedNames
 }
