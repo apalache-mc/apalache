@@ -37,6 +37,15 @@ object TlaType1 {
       case _ => throw new TypingException("Expected Typed(_: TlaType1), found: " + typeTag, UID.nullId)
     }
   }
+
+  // if the given type is a non-parametric row, convert it to a sequence of pairs
+  def rowToSeq(tt: TlaType1): Option[List[(String, TlaType1)]] = {
+    tt match {
+      case RowNilT1()                            => Some(Nil)
+      case RowConsT1(fieldName, fieldType, tail) => rowToSeq(tail).map((fieldName, fieldType) :: _)
+      case _                                     => None
+    }
+  }
 }
 
 /**
@@ -322,6 +331,8 @@ case class OperT1(args: Seq[TlaType1], res: TlaType1) extends TlaType1 {
  * An empty row, which contains no fields.
  */
 case class RowNilT1() extends TlaType1 {
+  override def toString: String = "."
+
   override def usedNames: Set[Int] = Set.empty
 }
 
@@ -335,6 +346,10 @@ case class RowNilT1() extends TlaType1 {
  *   the rest of the row: RowNil, RowCons, or VarT1.
  */
 case class RowConsT1(fieldName: String, fieldType: TlaType1, tail: TlaType1) extends TlaType1 {
+  override def toString: String = {
+    s"# $fieldName: $fieldType | $tail #"
+  }
+
   override def usedNames: Set[Int] = fieldType.usedNames ++ tail.usedNames
 }
 
@@ -344,6 +359,19 @@ case class RowConsT1(fieldName: String, fieldType: TlaType1, tail: TlaType1) ext
  *   RowNil, RowCons, or VarT1.
  */
 case class RecRowT1(row: TlaType1) extends TlaType1 {
+  override def toString: String = {
+    TlaType1.rowToSeq(row) match {
+      case Some(pairs) =>
+        // the special user-friendly form for non-parametric rows, e.g., { foo: Int, g: Bool }
+        val namesAndTypes = pairs.map { case (k, v) => s"$k: $v" }
+        "{ %s }".format(namesAndTypes.mkString(", "))
+
+      case None =>
+        // the generic form for parametric rows
+        s"{ $row }"
+    }
+  }
+
   override def usedNames: Set[Int] = row.usedNames
 }
 
@@ -354,5 +382,18 @@ case class RecRowT1(row: TlaType1) extends TlaType1 {
  *   RowNil, RowCons, or VarT1.
  */
 case class VariantT1(row: TlaType1) extends TlaType1 {
+  override def toString: String = {
+    TlaType1.rowToSeq(row) match {
+      case Some(pairs) =>
+        // the special user-friendly form for non-parametric rows, e.g., { foo: Int, g: Bool }
+        val namesAndTypes = pairs.map { case (k, v) => s"$k: $v" }
+        "/ %s /".format(namesAndTypes.mkString(" | "))
+
+      case None =>
+        // the generic form for parametric rows
+        s"/ $row /"
+    }
+  }
+
   override def usedNames: Set[Int] = row.usedNames
 }
