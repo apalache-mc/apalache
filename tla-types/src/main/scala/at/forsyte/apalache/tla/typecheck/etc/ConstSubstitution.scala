@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.lir.{
-  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecRowT1, RecT1, RowConsT1, RowNilT1, SeqT1, SetT1, SparseTupT1, StrT1,
-  TlaType1, TupT1, TypingException, UID, VarT1, VariantT1,
+  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecRowT1, RecT1, RowT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1,
+  TupT1, TypingException, UID, VarT1, VariantT1,
 }
 
 /**
@@ -179,13 +179,28 @@ object ConstSubstitution {
           val (newRes, rchanged) = recFun(res)
           (OperT1(newArgs, newRes), achanged || rchanged)
 
-        case RowNilT1() =>
-          (RowNilT1(), false)
+        case RowT1(fieldTypes, other) =>
+          val (ntypes, isChangedFields) = fieldTypes.values.toSeq.map(recFun).unzip
+          val nfieldTypes = fieldTypes.keys.zip(ntypes).toSeq
+          val hasChangedField = isChangedFields.contains(true)
+          other match {
+            case None =>
+              (RowT1(nfieldTypes: _*), hasChangedField)
 
-        case RowConsT1(fieldName, fieldType, tail) =>
-          val (newFieldType, ftChanged) = recFun(fieldType)
-          val (newTail, tailChanged) = recFun(tail)
-          (RowConsT1(fieldName, newFieldType, newTail), ftChanged || tailChanged)
+            case Some(v) =>
+              val (subv, isChangedVar) = recFun(v)
+              // nv is either a variable or a row
+              subv match {
+                case nv @ VarT1(_) =>
+                  (RowT1(nv, nfieldTypes: _*), isChangedVar || hasChangedField)
+
+                case RowT1(otherFieldTypes, otherVar) =>
+                  (RowT1(otherFieldTypes ++ nfieldTypes, otherVar), isChangedVar || hasChangedField)
+
+                case tp =>
+                  throw new IllegalStateException("Expected a var or a row, found: " + tp)
+              }
+          }
 
         case RecRowT1(row) =>
           val (newRow, rowChanged) = recFun(row)

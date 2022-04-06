@@ -37,15 +37,6 @@ object TlaType1 {
       case _ => throw new TypingException("Expected Typed(_: TlaType1), found: " + typeTag, UID.nullId)
     }
   }
-
-  // if the given type is a non-parametric row, convert it to a sequence of pairs
-  def rowToSeq(tt: TlaType1): Option[List[(String, TlaType1)]] = {
-    tt match {
-      case RowNilT1()                            => Some(Nil)
-      case RowConsT1(fieldName, fieldType, tail) => rowToSeq(tail).map((fieldName, fieldType) :: _)
-      case _                                     => None
-    }
-  }
 }
 
 /**
@@ -328,46 +319,58 @@ case class OperT1(args: Seq[TlaType1], res: TlaType1) extends TlaType1 {
  */
 
 /**
- * An empty row, which contains no fields.
+ * A row type that contains a collection of fields with assigned types and an optional variable that represents the part
+ * to be defined.
+ *
+ * @param fieldTypes
+ *   a mapping from field names to field types, which may be parameterized
+ * @param other
+ *   the undefined part: Either None, or Some(variable)
  */
-case class RowNilT1() extends TlaType1 {
-  override def toString: String = "."
-
-  override def usedNames: Set[Int] = Set.empty
-}
-
-/**
- * A composition of a singleton row with the rest of the type.
- * @param fieldName
- *   field name
- * @param fieldType
- *   field type
- * @param tail
- *   the rest of the row: RowNil, RowCons, or VarT1.
- */
-case class RowConsT1(fieldName: String, fieldType: TlaType1, tail: TlaType1) extends TlaType1 {
+case class RowT1(fieldTypes: SortedMap[String, TlaType1], other: Option[VarT1]) extends TlaType1 {
   override def toString: String = {
-    s"# $fieldName: $fieldType | $tail #"
+    val pairs = fieldTypes.map(p => "%s: %s".format(p._1, p._2)).mkString(" | ")
+    other match {
+      case None    => if (pairs.nonEmpty) s"(| $pairs |)" else "(||)"
+      case Some(v) => s"(| $pairs | $v |)"
+    }
   }
 
-  override def usedNames: Set[Int] = fieldType.usedNames ++ tail.usedNames
+  override def usedNames: Set[Int] =
+    fieldTypes.values
+      .map(_.usedNames)
+      .foldLeft(other.map(_.usedNames).getOrElse(Set.empty))(_ ++ _)
+}
+
+object RowT1 {
+  def apply(fieldTypes: (String, TlaType1)*): RowT1 = {
+    RowT1(SortedMap(fieldTypes: _*), None)
+  }
+
+  def apply(other: VarT1, fieldTypes: (String, TlaType1)*): RowT1 = {
+    RowT1(SortedMap(fieldTypes: _*), Some(other))
+  }
 }
 
 /**
  * A record constructed from a row type. That the row is of the right kind should be checked by the kind unifier.
+ *
  * @param row
  *   RowNil, RowCons, or VarT1.
  */
 case class RecRowT1(row: TlaType1) extends TlaType1 {
   override def toString: String = {
-    TlaType1.rowToSeq(row) match {
-      case Some(pairs) =>
-        // the special user-friendly form for non-parametric rows, e.g., { foo: Int, g: Bool }
-        val namesAndTypes = pairs.map { case (k, v) => s"$k: $v" }
-        "{ %s }".format(namesAndTypes.mkString(", "))
+    row match {
+      case RowT1(fieldTypes, other) =>
+        // the special user-friendly form, e.g., { foo: Int, g: Bool } or { foo: Int, g: Bool, a }
+        val fields = fieldTypes.map(p => "%s: %s".format(p._1, p._2)).mkString(", ")
+        other match {
+          case None    => s"{ $fields }"
+          case Some(v) => s"{ $fields, $v }"
+        }
 
-      case None =>
-        // the generic form for parametric rows
+      case _ =>
+        // the general case, which is probably never reachable
         s"{ $row }"
     }
   }
@@ -383,15 +386,37 @@ case class RecRowT1(row: TlaType1) extends TlaType1 {
  */
 case class VariantT1(row: TlaType1) extends TlaType1 {
   override def toString: String = {
-    TlaType1.rowToSeq(row) match {
-      case Some(pairs) =>
-        // the special user-friendly form for non-parametric rows, e.g., { foo: Int, g: Bool }
-        val namesAndTypes = pairs.map { case (k, v) => s"$k: $v" }
-        "/ %s /".format(namesAndTypes.mkString(" | "))
+    row match {
+      case RowT1(fieldTypes, other) =>
+        // the special user-friendly form, e.g.,
+        // { tag: "tag1", f: Int } | { tag: "tag2", g: Bool, a }, or
+        // { tag: "tag1", f: Int } | { tag: "tag2", g: Bool, a } | b
+        val options = fieldTypes.map(p => elemToString(p._1, p._2)).mkString(" | ")
+        other match {
+          case None    => options
+          case Some(v) => s"$options | $v"
+        }
 
-      case None =>
-        // the generic form for parametric rows
+      case _ =>
+        // the general case, which is probably never reachable
         s"/ $row /"
+    }
+  }
+
+  private def elemToString(tag: String, elem: TlaType1): String = {
+    // This syntax is similar to that of a record, but it contains tag: "..." as part of the record.
+    // For example, { tag: "tag1", g: Bool } or { tag: "tag2", g: Bool, a }
+    elem match {
+      case RecRowT1(RowT1(fieldTypes, other)) =>
+        val pairs = fieldTypes.filter(_._1 != "tag").map(p => "%s: %s".format(p._1, p._2)).mkString(", ")
+        other match {
+          case None    => s"""{ tag: "$tag", $pairs }"""
+          case Some(v) => s"""{ tag: "$tag", $pairs, $v }"""
+        }
+
+      case _ =>
+        // the general case, which is probably never reachable
+        s"{ $row }"
     }
   }
 

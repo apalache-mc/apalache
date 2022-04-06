@@ -31,25 +31,23 @@ class TestTlaType1 extends AnyFunSuite {
     assert("((Bool, Str) => Int)" == operType.toString)
   }
 
-  test("TlaType1.toString of ADR014") {
-    // ADR014 extensions
-    assert("." == RowNilT1().toString)
-    // generic syntax for rows
-    assert("# f: Int | z #" == RowConsT1("f", IntT1(), VarT1("z")).toString)
-    assert("# f: Int | . #" == RowConsT1("f", IntT1(), RowNilT1()).toString)
-    assert("# g: Bool | # f: Int | z # #" == RowConsT1("g", BoolT1(), RowConsT1("f", IntT1(), VarT1("z"))).toString)
-    // generic syntax for the records that exposes rows (since z is a variable)
-    assert("{ # f: Int | z # }" == RecRowT1(RowConsT1("f", IntT1(), VarT1("z"))).toString)
-    // special user friendly syntax for the records (since there are no variables in the rows)
-    assert("{ f: Int, g: a }" == RecRowT1(RowConsT1("f", IntT1(), RowConsT1("g", VarT1("a"), RowNilT1()))).toString)
-    // generic syntax for the variants that exposes rows (since z is a variable)
-    val recRow1 = RecRowT1(RowConsT1("tag", StrT1(), RowConsT1("f", IntT1(), RowNilT1())))
-    assert("/ # tag1: { tag: Str, f: Int } | z # /" == VariantT1(RowConsT1("tag1", recRow1, VarT1("z"))).toString)
-    val recRow2 = RecRowT1(RowConsT1("tag", StrT1(), RowConsT1("g", BoolT1(), RowNilT1())))
-    assert("/ # tag2: { tag: Str, g: Bool } | # tag1: { tag: Str, f: Int } | z # # /"
-      == VariantT1(RowConsT1("tag2", recRow2, RowConsT1("tag1", recRow1, VarT1("z")))).toString)
-    // special user friendly syntax for the variants (since there are no variables in the rows)
-    assert("""/ tag1: { tag: Str, f: Int } | tag2: { tag: Str, g: Bool } /"""
-      == VariantT1(RowConsT1("tag1", recRow1, RowConsT1("tag2", recRow2, RowNilT1()))).toString)
+  test("TlaType1.toString of ADR014 extensions") {
+    // ADR014 extensions.
+    // Generic syntax for rows, which is internal to the type checker and should not propagate to the user
+    assert("(||)" == RowT1().toString)
+    assert("(| f: Int | z |)" == RowT1(VarT1("z"), "f" -> IntT1()).toString)
+    assert("(| f: Int |)" == RowT1("f" -> IntT1()).toString)
+    assert("(| f: Int | g: Bool | z |)" == RowT1(VarT1("z"), "g" -> BoolT1(), "f" -> IntT1()).toString)
+    // user-friendly syntax for the records, partially defined or fully defined
+    assert("{ f: Int, z }" == RecRowT1(RowT1(VarT1("z"), "f" -> IntT1())).toString)
+    assert("{ f: Int, g: a }" == RecRowT1(RowT1("f" -> IntT1(), "g" -> VarT1("a"))).toString)
+    // user-friendly syntax for the variants, partially defined or fully defined
+    val recRow1 = RecRowT1(RowT1("tag" -> StrT1(), "f" -> IntT1()))
+    assert("""{ tag: "tag1", f: Int } | z""" == VariantT1(RowT1(VarT1("z"), "tag1" -> recRow1)).toString)
+    val recRow2 = RecRowT1(RowT1("tag" -> StrT1(), "g" -> BoolT1()))
+    assert("""{ tag: "tag1", f: Int } | { tag: "tag2", g: Bool } | z"""
+      == VariantT1(RowT1(VarT1("z"), "tag2" -> recRow2, "tag1" -> recRow1)).toString)
+    assert("""{ tag: "tag1", f: Int } | { tag: "tag2", g: Bool }"""
+      == VariantT1(RowT1("tag1" -> recRow1, "tag2" -> recRow2)).toString)
   }
 }
