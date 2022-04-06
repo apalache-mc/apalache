@@ -2,7 +2,7 @@
 
 1. Install `git`.
 2. Install [OpenJDK8][] or [Zulu JDK8][].
-   - Apalache currently requires Scala 12.0 so **you must install version 8 of
+   - Apalache currently requires Scala 2.12.0 so **you must install version 8 of
      Java, otherwise Scala will not compile!** See the [compatibility table][].
 3. Install [sbt][].
    - On Debian Linux or Ubuntu, [follow this guide](https://www.scala-sbt.org/1.x/docs/Installing-sbt-on-Linux.html#Ubuntu+and+other+Debian-based+distributions)
@@ -10,8 +10,9 @@
    - On macOS / Homebrew: `brew install sbt`
 4. Clone the git repository: `git clone https://github.com/informalsystems/apalache.git`.
 5. Change into the project directory: `cd apalache`.
+6. Install [direnv][] and run `direnv allow`, or use [another way to set up the shell environment][shell environment].
 7. Run `make`.
-   - To skip running the tests, you can run `make package`
+   - To skip running the tests, you can run `make package`.
 8. The distribution package will be built to `./target/universal/apalache-<VERSION>`, and you can
    move this wherever you'd like, and ensure that the `<dist-package-location>/bin` directory
    is added to your `PATH`.
@@ -33,3 +34,4 @@ repository, you have three options after running `make`:
 [compatibility table]: https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html
 [sbt]: https://www.scala-sbt.org/1.x/docs/Setup.html
 [direnv]: https://direnv.net/
+[shell environment]: https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md#environment
