@@ -175,7 +175,7 @@
 <li>Install <code>git</code>.</li>
 <li>Install <a href="https://openjdk.java.net/install/">OpenJDK8</a> or <a href="https://www.azul.com/downloads/zulu-community/?version=java-8-lts&amp;architecture=x86-64-bit&amp;package=jdk">Zulu JDK8</a>.
 <ul>
-<li>Apalache currently requires Scala 12.0 so <strong>you must install version 8 of
+<li>Apalache currently requires Scala 2.12.0 so <strong>you must install version 8 of
 Java, otherwise Scala will not compile!</strong> See the <a href="https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html">compatibility table</a>.</li>
 </ul>
 </li>
@@ -188,9 +188,10 @@ Java, otherwise Scala will not compile!</strong> See the <a href="https://docs.s
 </li>
 <li>Clone the git repository: <code>git clone https://github.com/informalsystems/apalache.git</code>.</li>
 <li>Change into the project directory: <code>cd apalache</code>.</li>
+<li>Install <a href="https://direnv.net/">direnv</a> and run <code>direnv allow</code>, or use <a href="https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md#environment">another way to set up the shell environment</a>.</li>
 <li>Run <code>make</code>.
 <ul>
-<li>To skip running the tests, you can run <code>make package</code></li>
+<li>To skip running the tests, you can run <code>make package</code>.</li>
 </ul>
 </li>
 <li>The distribution package will be built to <code>./target/universal/apalache-&lt;VERSION&gt;</code>, and you can
