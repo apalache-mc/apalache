@@ -2,7 +2,7 @@
 
 1. Install `git`.
 2. Install [OpenJDK8][] or [Zulu JDK8][].
-   - Apalache currently requires Scala 12.0 so **you must install version 8 of
+   - Apalache currently requires Scala 2.12.0 so **you must install version 8 of
      Java, otherwise Scala will not compile!** See the [compatibility table][].
 3. Install [sbt][].
    - On Debian Linux or Ubuntu, [follow this guide](https://www.scala-sbt.org/1.x/docs/Installing-sbt-on-Linux.html#Ubuntu+and+other+Debian-based+distributions)
