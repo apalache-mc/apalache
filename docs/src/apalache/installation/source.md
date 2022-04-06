@@ -12,7 +12,7 @@
 5. Change into the project directory: `cd apalache`.
 6. Install [direnv][] and run `direnv allow`, or use [another way to set up the shell environment][shell environment].
 7. Run `make`.
-   - To skip running the tests, you can run `make package`
+   - To skip running the tests, you can run `make package`.
 8. The distribution package will be built to `./target/universal/apalache-<VERSION>`, and you can
    move this wherever you'd like, and ensure that the `<dist-package-location>/bin` directory
    is added to your `PATH`.
