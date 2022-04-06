@@ -2,8 +2,8 @@ package at.forsyte.apalache.tla.typecheck
 
 import at.forsyte.apalache.io.typecheck.parser.Type1ParseError
 import at.forsyte.apalache.tla.lir.{
-  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecT1, RowT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1Gen, TupT1,
-  VarT1,
+  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecRowT1, RecT1, RowT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1Gen,
+  TupT1, VarT1, VariantT1,
 }
 import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import org.junit.runner.RunWith
@@ -210,6 +210,34 @@ class TestDefaultType1Parser extends AnyFunSuite with Checkers with TlaType1Gen 
     val text = """(| f: Int | g: Bool | x |)"""
     val result = DefaultType1Parser.parseType(text)
     assert(RowT1(VarT1("x"), "f" -> IntT1(), "g" -> BoolT1()) == result)
+  }
+
+  test("record from a row") {
+    val text = """{ f: Int, g: a }"""
+    val result = DefaultType1Parser.parseType(text)
+    assert(RecRowT1(RowT1("f" -> IntT1(), "g" -> VarT1("a"))) == result)
+  }
+
+  test("record from a row with a parametric tail") {
+    val text = """{ f: Int, g: a, x }"""
+    val result = DefaultType1Parser.parseType(text)
+    assert(RecRowT1(RowT1(VarT1("x"), "f" -> IntT1(), "g" -> VarT1("a"))) == result)
+  }
+
+  test("variant from rows") {
+    val text = """{ tag: "tag1", f: Int } | { tag: "tag2", g: Bool }"""
+    val result = DefaultType1Parser.parseType(text)
+    val row1 = RecRowT1(RowT1("tag" -> StrT1(), "f" -> IntT1()))
+    val row2 = RecRowT1(RowT1("tag" -> StrT1(), "g" -> BoolT1()))
+    assert(VariantT1(RowT1("tag1" -> row1, "tag2" -> row2)) == result)
+  }
+
+  test("variant from rows with a parametric tail") {
+    val text = """{ tag: "tag1", f: Int } | { tag: "tag2", g: Bool } | c"""
+    val result = DefaultType1Parser.parseType(text)
+    val row1 = RecRowT1(RowT1("tag" -> StrT1(), "f" -> IntT1()))
+    val row2 = RecRowT1(RowT1("tag" -> StrT1(), "g" -> BoolT1()))
+    assert(VariantT1(RowT1(VarT1("c"), "tag1" -> row1, "tag2" -> row2)) == result)
   }
 
   // property-based tests

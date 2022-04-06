@@ -33,7 +33,7 @@ private[parser] object Type1Lexer extends RegexParsers {
 
   def token: Parser[Type1Token] =
     positioned(
-        int | real | bool | str | set | seq | identifier | fieldNumber |
+        int | real | bool | str | set | seq | identifier | fieldNumber | stringLiteral |
           rightArrow | doubleRightArrow | eq | leftRow | rightRow | leftTupleRow | rightTupleRow |
           leftParen | rightParen | pipe | leftBracket | rightBracket |
           leftCurly | rightCurly | doubleLeftAngle | doubleRightAngle | comma | colon
@@ -52,6 +52,10 @@ private[parser] object Type1Lexer extends RegexParsers {
 
   private def fieldNumber: Parser[FIELD_NO] = {
     "[0-9]+".r ^^ { str => FIELD_NO(Integer.parseInt(str)) }
+  }
+
+  private def stringLiteral: Parser[STR_LITERAL] = {
+    """"[^"]*"""".r ^^ { str => STR_LITERAL(str.substring(1, str.length - 1)) }
   }
 
   private def int: Parser[INT] = {

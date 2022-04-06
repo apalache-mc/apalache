@@ -77,7 +77,7 @@ object DefaultType1Parser extends Parsers with Type1Parser {
   private def noFunExpr: Parser[TlaType1] = {
     (INT() | REAL() | BOOL() | STR() | typeVar | typeConst
       | set | seq | tuple | row | sparseTuple
-      | record | parenExpr) ^^ {
+      | record | recordFromRow | variant | parenExpr) ^^ {
       case INT()        => IntT1()
       case REAL()       => RealT1()
       case BOOL()       => BoolT1()
@@ -177,11 +177,54 @@ object DefaultType1Parser extends Parsers with Type1Parser {
     }
   }
 
+  // a record type that is constructed from a row like { f1: Int, f2: Bool } or  { f1: Int, f2: Bool, c }
+  private def recordFromRow: Parser[TlaType1] = {
+    LCURLY() ~ repsep(typedField, COMMA()) ~ opt(COMMA() ~ typeVar) ~ RCURLY() ^^ {
+      case _ ~ list ~ Some(_ ~ VarT1(v)) ~ _ =>
+        RecRowT1(RowT1(VarT1(v), list: _*))
+
+      case _ ~ list ~ None ~ _ =>
+        RecRowT1(RowT1(list: _*))
+    }
+  }
+
+  // An option in the variant type that is constructed from a row.
+  // For example, { tag: "tag1", f: Bool } or { tag: "tag2", g: Bool, c }.
+  private def variantOption: Parser[(String, TlaType1)] = {
+    LCURLY() ~ tag ~ COLON() ~ stringLiteral ~ COMMA() ~ repsep(typedField, COMMA()) ~ opt(
+        COMMA() ~ typeVar) ~ RCURLY() ^^ {
+      case _ ~ _ ~ _ ~ STR_LITERAL(tagValue) ~ _ ~ list ~ Some(_ ~ VarT1(v)) ~ _ =>
+        (tagValue, RecRowT1(RowT1(VarT1(v), ("tag" -> StrT1()) :: list: _*)))
+
+      case _ ~ _ ~ _ ~ STR_LITERAL(tagValue) ~ _ ~ list ~ None ~ _ =>
+        (tagValue, RecRowT1(RowT1(("tag" -> StrT1()) :: list: _*)))
+    }
+  }
+
+  // a variant type
+  private def variant: Parser[TlaType1] = {
+    rep1sep(variantOption, PIPE()) ~ opt(PIPE() ~ typeVar) ^^ {
+      case list ~ Some(_ ~ VarT1(v)) =>
+        VariantT1(RowT1(VarT1(v), list: _*))
+
+      case list ~ None =>
+        VariantT1(RowT1(list: _*))
+    }
+  }
+
   // a single component of record type, e.g., a: Int
   private def typedField: Parser[(String, TlaType1)] = {
     fieldName ~ COLON() ~ typeExpr ^^ { case IDENT(name) ~ _ ~ fieldType =>
       (name, fieldType)
     }
+  }
+
+  // A tag name
+  private def stringLiteral: Parser[STR_LITERAL] = {
+    accept("tag",
+        { case f @ STR_LITERAL(text) =>
+          f
+        })
   }
 
   // A record field name, like foo_BAR2.
@@ -190,6 +233,14 @@ object DefaultType1Parser extends Parsers with Type1Parser {
     accept("field name",
         { case f @ IDENT(_) =>
           f
+        })
+  }
+
+  private def tag: Parser[IDENT] = {
+    accept("tag",
+        {
+          case f @ IDENT(name) if name == "tag" =>
+            f
         })
   }
 

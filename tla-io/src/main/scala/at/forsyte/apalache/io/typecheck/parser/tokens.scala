@@ -148,6 +148,16 @@ private[parser] case class FIELD_NO(no: Int) extends Type1Token {
 }
 
 /**
+ * A string literal, e.g., "hello".
+ *
+ * @param text
+ *   the string contents
+ */
+private[parser] case class STR_LITERAL(text: String) extends Type1Token {
+  override def toString: String = '"' + text + '"'
+}
+
+/**
  * Tuple opening "<<".
  */
 private[parser] case class DOUBLE_LEFT_ANGLE() extends Type1Token {
