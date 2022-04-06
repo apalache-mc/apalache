@@ -294,7 +294,7 @@ lazy val root = (project in file("."))
         log.info(s"Symlinking ${current_pkg} -> ${unzipped}")
         val target_path: java.nio.file.Path = java.nio.file.Paths.get(unzipped)
         if (current_pkg.exists) {
-          log.info(s"${current_pkg} already exists, overriding")
+          log.info(s"${current_pkg} already exists, overwriting")
           current_pkg.delete
         }
         java.nio.file.Files.createSymbolicLink(current_pkg.toPath, target_path)
