@@ -292,7 +292,13 @@ lazy val root = (project in file("."))
         // See https://github.com/informalsystems/apalache/pull/1382
         (s"tar zxvf ${pkg} -C ${target_dir}" !)
         log.info(s"Symlinking ${current_pkg} -> ${unzipped}")
-        s"ln -sfn ${unzipped} ${current_pkg}" ! log
+        val target_path: java.nio.file.Path = java.nio.file.Paths.get("", unzipped)
+        if (!current_pkg.exists) 
+        { 
+          java.nio.file.Files.createSymbolicLink(current_pkg.toPath(), target_path) 
+        } else {
+          log.info(s"${current_pkg} already exists")
+        }
         file(unzipped)
       },
   )
