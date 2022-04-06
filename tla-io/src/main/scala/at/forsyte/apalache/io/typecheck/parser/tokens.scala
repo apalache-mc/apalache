@@ -155,8 +155,43 @@ private[parser] case class DOUBLE_LEFT_ANGLE() extends Type1Token {
 }
 
 /**
- * Tuple opening ">>".
+ * Tuple closing ">>".
  */
 private[parser] case class DOUBLE_RIGHT_ANGLE() extends Type1Token {
   override def toString: String = ">>"
+}
+
+/**
+ * Pipe "|".
+ */
+private[parser] case class PIPE() extends Type1Token {
+  override def toString: String = "|"
+}
+
+/**
+ * Row opening "(|".
+ */
+private[parser] case class LROW() extends Type1Token {
+  override def toString: String = "(|"
+}
+
+/**
+ * Row opening "|)".
+ */
+private[parser] case class RROW() extends Type1Token {
+  override def toString: String = "|)"
+}
+
+/**
+ * Opening a sparse tuple "<|".
+ */
+private[parser] case class LTUPLE_ROW() extends Type1Token {
+  override def toString: String = "<|"
+}
+
+/**
+ * Closing a sparse tuple "|>".
+ */
+private[parser] case class RTUPLE_ROW() extends Type1Token {
+  override def toString: String = "|>"
 }

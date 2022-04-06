@@ -76,7 +76,7 @@ object DefaultType1Parser extends Parsers with Type1Parser {
   // A type expression. We wrap it with a list, as (type, ..., type) may start an operator type
   private def noFunExpr: Parser[TlaType1] = {
     (INT() | REAL() | BOOL() | STR() | typeVar | typeConst
-      | set | seq | tuple | sparseTuple
+      | set | seq | tuple | row | sparseTuple
       | record | parenExpr) ^^ {
       case INT()        => IntT1()
       case REAL()       => RealT1()
@@ -137,9 +137,20 @@ object DefaultType1Parser extends Parsers with Type1Parser {
     }
   }
 
-  // a sparse tuple type like {3: Int, 5: Bool}
+  // a row type like (| field1: type1 | field2: type2 |) or (| field1: type1 | field2: type2 | c |)
+  private def row: Parser[TlaType1] = {
+    LROW() ~ repsep(typedField, PIPE()) ~ opt(PIPE() ~ typeVar) ~ RROW() ^^ {
+      case _ ~ list ~ Some(_ ~ VarT1(v)) ~ _ =>
+        RowT1(VarT1(v), list: _*)
+
+      case _ ~ list ~ None ~ _ =>
+        RowT1(list: _*)
+    }
+  }
+
+  // a sparse tuple type like <| 3: Int, 5: Bool |>
   private def sparseTuple: Parser[TlaType1] = {
-    LCURLY() ~ repsep(typedFieldNo, COMMA()) ~ RCURLY() ^^ { case _ ~ list ~ _ =>
+    LTUPLE_ROW() ~ repsep(typedFieldNo, COMMA()) ~ RTUPLE_ROW() ^^ { case _ ~ list ~ _ =>
       SparseTupT1(SortedMap(list: _*))
     }
   }

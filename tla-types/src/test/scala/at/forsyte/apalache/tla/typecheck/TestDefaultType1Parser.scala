@@ -2,7 +2,8 @@ package at.forsyte.apalache.tla.typecheck
 
 import at.forsyte.apalache.io.typecheck.parser.Type1ParseError
 import at.forsyte.apalache.tla.lir.{
-  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1Gen, TupT1, VarT1,
+  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecT1, RowT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1Gen, TupT1,
+  VarT1,
 }
 import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import org.junit.runner.RunWith
@@ -76,8 +77,8 @@ class TestDefaultType1Parser extends AnyFunSuite with Checkers with TlaType1Gen 
     assert(TupT1(BoolT1(), IntT1()) == result)
   }
 
-  test("{ 3: Bool, 5: Int }") {
-    val result = DefaultType1Parser("{ 3: Bool, 5: Int }")
+  test("<| 3: Bool, 5: Int |>") {
+    val result = DefaultType1Parser("<| 3: Bool, 5: Int |>")
     assert(SparseTupT1(SortedMap(3 -> BoolT1(), 5 -> IntT1())) == result)
   }
 
@@ -191,6 +192,27 @@ class TestDefaultType1Parser extends AnyFunSuite with Checkers with TlaType1Gen 
     val result = DefaultType1Parser.parseType(text)
     assert(SetT1(RecT1("tag" -> StrT1(), "value" -> IntT1())) == result)
   }
+
+  // ADR014: rows, new records, and variants
+  test("empty row") {
+    val text = """(||)"""
+    val result = DefaultType1Parser.parseType(text)
+    assert(RowT1() == result)
+  }
+
+  test("concrete row") {
+    val text = """(| f: Int | g: c |)"""
+    val result = DefaultType1Parser.parseType(text)
+    assert(RowT1("f" -> IntT1(), "g" -> VarT1("c")) == result)
+  }
+
+  test("parametric row") {
+    val text = """(| f: Int | g: Bool | x |)"""
+    val result = DefaultType1Parser.parseType(text)
+    assert(RowT1(VarT1("x"), "f" -> IntT1(), "g" -> BoolT1()) == result)
+  }
+
+  // property-based tests
 
   test("no crashes: either parse, or raise an error") {
     check({

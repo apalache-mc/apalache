@@ -34,7 +34,8 @@ private[parser] object Type1Lexer extends RegexParsers {
   def token: Parser[Type1Token] =
     positioned(
         int | real | bool | str | set | seq | identifier | fieldNumber |
-          rightArrow | doubleRightArrow | eq | leftParen | rightParen | leftBracket | rightBracket |
+          rightArrow | doubleRightArrow | eq | leftRow | rightRow | leftTupleRow | rightTupleRow |
+          leftParen | rightParen | pipe | leftBracket | rightBracket |
           leftCurly | rightCurly | doubleLeftAngle | doubleRightAngle | comma | colon
     ) ///
 
@@ -89,8 +90,20 @@ private[parser] object Type1Lexer extends RegexParsers {
     "=".r ^^ { _ => EQ() }
   }
 
+  private def pipe: Parser[PIPE] = {
+    "|" ^^ { _ => PIPE() }
+  }
+
+  private def leftRow: Parser[LROW] = {
+    "(|" ^^ { _ => LROW() }
+  }
+
   private def leftParen: Parser[LPAREN] = {
     "(" ^^ { _ => LPAREN() }
+  }
+
+  private def rightRow: Parser[RROW] = {
+    "|)" ^^ { _ => RROW() }
   }
 
   private def rightParen: Parser[RPAREN] = {
@@ -111,6 +124,14 @@ private[parser] object Type1Lexer extends RegexParsers {
 
   private def rightCurly: Parser[RCURLY] = {
     "}" ^^ { _ => RCURLY() }
+  }
+
+  private def leftTupleRow: Parser[LTUPLE_ROW] = {
+    "<|" ^^ { _ => LTUPLE_ROW() }
+  }
+
+  private def rightTupleRow: Parser[RTUPLE_ROW] = {
+    "|>" ^^ { _ => RTUPLE_ROW() }
   }
 
   private def doubleLeftAngle: Parser[DOUBLE_LEFT_ANGLE] = {

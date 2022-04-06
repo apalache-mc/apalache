@@ -255,7 +255,7 @@ case class TupT1(elems: TlaType1*) extends TlaType1 {
 case class SparseTupT1(fieldTypes: SortedMap[Int, TlaType1]) extends TlaType1 {
   override def toString: String = {
     val keyTypeStrs = fieldTypes.map(p => "%s: %s".format(p._1, p._2))
-    "{%s}".format(keyTypeStrs.mkString(", "))
+    "<| %s |>".format(keyTypeStrs.mkString(", "))
   }
 
   override def usedNames: Set[Int] = fieldTypes.values.foldLeft(Set[Int]()) { (s, t) =>
