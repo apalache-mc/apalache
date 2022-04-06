@@ -77,7 +77,7 @@ object DefaultType1Parser extends Parsers with Type1Parser {
   private def noFunExpr: Parser[TlaType1] = {
     (INT() | REAL() | BOOL() | STR() | typeVar | typeConst
       | set | seq | tuple | row | sparseTuple
-      | record | recordFromRow | variant | parenExpr) ^^ {
+      | record | recordFromRow | recordVar | variant | variantVar | parenExpr) ^^ {
       case INT()        => IntT1()
       case REAL()       => RealT1()
       case BOOL()       => BoolT1()
@@ -188,6 +188,13 @@ object DefaultType1Parser extends Parsers with Type1Parser {
     }
   }
 
+  // the general record constructor which may be used in conjunction with a row variable
+  private def recordVar: Parser[TlaType1] = {
+    RECORD() ~ LPAREN() ~ typeVar ~ RPAREN() ^^ { case _ ~ _ ~ VarT1(v) ~ _ =>
+      RecRowT1(RowT1(VarT1(v)))
+    }
+  }
+
   // An option in the variant type that is constructed from a row.
   // For example, { tag: "tag1", f: Bool } or { tag: "tag2", g: Bool, c }.
   private def variantOption: Parser[(String, TlaType1)] = {
@@ -201,7 +208,7 @@ object DefaultType1Parser extends Parsers with Type1Parser {
     }
   }
 
-  // a variant type
+  // the user-friendly syntax of the variant type
   private def variant: Parser[TlaType1] = {
     rep1sep(variantOption, PIPE()) ~ opt(PIPE() ~ typeVar) ^^ {
       case list ~ Some(_ ~ VarT1(v)) =>
@@ -209,6 +216,13 @@ object DefaultType1Parser extends Parsers with Type1Parser {
 
       case list ~ None =>
         VariantT1(RowT1(list: _*))
+    }
+  }
+
+  // the general variant constructor which may be used in conjunction with a row variable
+  private def variantVar: Parser[TlaType1] = {
+    VARIANT() ~ LPAREN() ~ typeVar ~ RPAREN() ^^ { case _ ~ _ ~ VarT1(v) ~ _ =>
+      VariantT1(RowT1(VarT1(v)))
     }
   }
 

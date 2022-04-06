@@ -61,6 +61,20 @@ private[parser] case class SEQ() extends Type1Token {
 }
 
 /**
+ * Name of the variant constructor (when a row is passed directly).
+ */
+private[parser] case class VARIANT() extends Type1Token {
+  override def toString: String = "Variant"
+}
+
+/**
+ * Name of the record constructor (when a row is passed directly).
+ */
+private[parser] case class RECORD() extends Type1Token {
+  override def toString: String = "Rec"
+}
+
+/**
  * A right arrow "->".
  */
 private[parser] case class RIGHT_ARROW() extends Type1Token {

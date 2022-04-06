@@ -365,13 +365,16 @@ case class RecRowT1(row: TlaType1) extends TlaType1 {
         // the special user-friendly form, e.g., { foo: Int, g: Bool } or { foo: Int, g: Bool, a }
         val fields = fieldTypes.map(p => "%s: %s".format(p._1, p._2)).mkString(", ")
         other match {
-          case None    => s"{ $fields }"
-          case Some(v) => s"{ $fields, $v }"
+          case None =>
+            s"{ $fields }"
+
+          case Some(v) =>
+            if (fields.nonEmpty) s"{ $fields, $v }" else s"Rec($v)"
         }
 
       case _ =>
-        // the general case, which is probably never reachable
-        s"{ $row }"
+        // the rare general case, e.g., when a variable passed to the record constructor
+        s"Rec($row)"
     }
   }
 
@@ -393,13 +396,16 @@ case class VariantT1(row: TlaType1) extends TlaType1 {
         // { tag: "tag1", f: Int } | { tag: "tag2", g: Bool, a } | b
         val options = fieldTypes.map(p => elemToString(p._1, p._2)).mkString(" | ")
         other match {
-          case None    => options
-          case Some(v) => s"$options | $v"
+          case None =>
+            options
+
+          case Some(v) =>
+            if (options.nonEmpty) s"$options | $v" else s"Variant($v)"
         }
 
       case _ =>
-        // the general case, which is probably never reachable
-        s"/ $row /"
+        // the rare general case, e.g., when a row variable is passed to a variant
+        s"Variant($row)"
     }
   }
 
