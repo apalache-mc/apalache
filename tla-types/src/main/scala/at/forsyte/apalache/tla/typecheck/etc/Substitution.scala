@@ -6,8 +6,6 @@ import at.forsyte.apalache.tla.lir.{
 }
 import at.forsyte.apalache.tla.typecheck.etc.Substitution.SUB_LIMIT
 
-import scala.collection.immutable.SortedMap
-
 /**
  * A substitution from type variables to types.
  *
