@@ -240,7 +240,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
     val oldEntry = s"${arrayT.signature}$arrayId[${indexT.signature}$IndexId]"
     val newEntry = s"${elemT.signature}$elemId"
-    log(s"s;; declare update of $oldEntry to $newEntry")
+    log(s";; declare update of $oldEntry to $newEntry")
 
     val updatedArray = updateArrayConst(arrayId)
     val store = z3context.mkStore(array.asInstanceOf[Expr[ArraySort[Sort, Sort]]], index.asInstanceOf[Expr[Sort]],
@@ -557,6 +557,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         case arraySort: ArraySort[_, _] =>
           z3context.mkConstArray(arraySort.getDomain, getOrMkCellDefaultValue(arraySort.getRange))
         case _ =>
+          log(s"(declare-const $sig $cellSort)")
           z3context.mkConst(sig, cellSort)
       }
 
