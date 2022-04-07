@@ -396,7 +396,7 @@ we will stick to tool-agnostic TLA+ syntax.
 To this end, we add a new file `MC2_8.tla` with the following contents:
 
 ```tla
-{{#include ../../../test/tla/bin-search/MC2_8.tla:1:24}}
+{{#include ../../../test/tla/bin-search/MC2_8.tla}}
 ```
 
 As you can see, we fix the values of all parameters. We are instantiating
