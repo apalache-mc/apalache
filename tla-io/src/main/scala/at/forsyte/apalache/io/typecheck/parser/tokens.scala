@@ -193,14 +193,14 @@ private[parser] case class PIPE() extends Type1Token {
 }
 
 /**
- * Row opening "(|".
+ * Opening a row "(|".
  */
 private[parser] case class LROW() extends Type1Token {
   override def toString: String = "(|"
 }
 
 /**
- * Row opening "|)".
+ * Closing a row "|)".
  */
 private[parser] case class RROW() extends Type1Token {
   override def toString: String = "|)"
