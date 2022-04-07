@@ -416,8 +416,19 @@ case class VariantT1(row: TlaType1) extends TlaType1 {
       case RecRowT1(RowT1(fieldTypes, other)) =>
         val pairs = fieldTypes.filter(_._1 != "tag").map(p => "%s: %s".format(p._1, p._2)).mkString(", ")
         other match {
-          case None    => s"""{ tag: "$tag", $pairs }"""
-          case Some(v) => s"""{ tag: "$tag", $pairs, $v }"""
+          case None =>
+            if (pairs.nonEmpty) {
+              s"""{ tag: "$tag", $pairs }"""
+            } else {
+              s"""{ tag: "$tag" }"""
+            }
+
+          case Some(v) =>
+            if (pairs.nonEmpty) {
+              s"""{ tag: "$tag", $pairs, $v }"""
+            } else {
+              s"""{ tag: "$tag", $v }"""
+            }
         }
 
       case _ =>

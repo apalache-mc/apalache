@@ -77,7 +77,8 @@ object DefaultType1Parser extends Parsers with Type1Parser {
   private def noFunExpr: Parser[TlaType1] = {
     (INT() | REAL() | BOOL() | STR() | typeVar | typeConst
       | set | seq | tuple | row | sparseTuple
-      | record | recordFromRow | recordVar | variant | variantVar | parenExpr) ^^ {
+      | record | parametricRecord | recordFromRow | recordVar
+      | variant | variantVar | parenExpr) ^^ {
       case INT()        => IntT1()
       case REAL()       => RealT1()
       case BOOL()       => BoolT1()
@@ -177,6 +178,13 @@ object DefaultType1Parser extends Parsers with Type1Parser {
     }
   }
 
+  private def parametricRecord: Parser[TlaType1] = {
+    // special rule for a record that is completely underspecified, that is, { a }
+    LCURLY() ~ typeVar ~ RCURLY() ^^ { case _ ~ VarT1(v) ~ _ =>
+      RecRowT1(RowT1(VarT1(v)))
+    }
+  }
+
   // a record type that is constructed from a row like { f1: Int, f2: Bool } or  { f1: Int, f2: Bool, c }
   private def recordFromRow: Parser[TlaType1] = {
     LCURLY() ~ repsep(typedField, COMMA()) ~ opt(COMMA() ~ typeVar) ~ RCURLY() ^^ {
@@ -198,12 +206,20 @@ object DefaultType1Parser extends Parsers with Type1Parser {
   // An option in the variant type that is constructed from a row.
   // For example, { tag: "tag1", f: Bool } or { tag: "tag2", g: Bool, c }.
   private def variantOption: Parser[(String, TlaType1)] = {
-    LCURLY() ~ tag ~ COLON() ~ stringLiteral ~ COMMA() ~ repsep(typedField, COMMA()) ~ opt(
+    LCURLY() ~ tag ~ COLON() ~ stringLiteral ~ opt(COMMA() ~ rep1sep(typedField, COMMA())) ~ opt(
         COMMA() ~ typeVar) ~ RCURLY() ^^ {
-      case _ ~ _ ~ _ ~ STR_LITERAL(tagValue) ~ _ ~ list ~ Some(_ ~ VarT1(v)) ~ _ =>
+      case _ ~ _ ~ _ ~ STR_LITERAL(tagValue) ~ optList ~ Some(_ ~ VarT1(v)) ~ _ =>
+        val list = optList match {
+          case Some(_ ~ l) => l
+          case _           => Nil
+        }
         (tagValue, RecRowT1(RowT1(VarT1(v), ("tag" -> StrT1()) :: list: _*)))
 
-      case _ ~ _ ~ _ ~ STR_LITERAL(tagValue) ~ _ ~ list ~ None ~ _ =>
+      case _ ~ _ ~ _ ~ STR_LITERAL(tagValue) ~ optList ~ None ~ _ =>
+        val list = optList match {
+          case Some(_ ~ l) => l
+          case _           => Nil
+        }
         (tagValue, RecRowT1(RowT1(("tag" -> StrT1()) :: list: _*)))
     }
   }
@@ -221,8 +237,8 @@ object DefaultType1Parser extends Parsers with Type1Parser {
 
   // the general variant constructor which may be used in conjunction with a row variable
   private def variantVar: Parser[TlaType1] = {
-    VARIANT() ~ LPAREN() ~ typeVar ~ RPAREN() ^^ { case _ ~ _ ~ VarT1(v) ~ _ =>
-      VariantT1(RowT1(VarT1(v)))
+    VARIANT() ~ LPAREN() ~ opt(typeVar) ~ RPAREN() ^^ { case _ ~ _ ~ optVar ~ _ =>
+      VariantT1(RowT1(SortedMap[String, TlaType1](), optVar))
     }
   }
 
@@ -260,11 +276,14 @@ object DefaultType1Parser extends Parsers with Type1Parser {
 
   // a type variable, e.g., c
   private def typeVar: Parser[VarT1] = {
-    accept("typeVar", { case IDENT(name) if VarT1.isValidName(name) => VarT1(name) })
+    accept("type variable",
+        {
+          case IDENT(name) if VarT1.isValidName(name) => VarT1(name)
+        })
   }
 
   // a type constant or an alias name, e.g., BAZ
   private def typeConst: Parser[ConstT1] = {
-    acceptMatch("typeConst", { case IDENT(name) if (name.toUpperCase() == name) => ConstT1(name) })
+    acceptMatch("type constant", { case IDENT(name) if (name.toUpperCase() == name) => ConstT1(name) })
   }
 }

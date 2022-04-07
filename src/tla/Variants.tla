@@ -17,6 +17,11 @@
  *
  * @param rec a record that contains a field `tag`
  * @return the record wrapped in the variant type
+ *
+ * The type could look like follows, if we supported string literals in types:
+ *
+ *   Rec({ tag: Str, a }) =>
+ *     { tag: "$tagValue", a } | b
  *)
 Variant(rec) ==
     \* default untyped implementation
@@ -28,6 +33,10 @@ Variant(rec) ==
  * @param `S` a set of variants that are constructed with `Variant(...)`
  * @param `tagValue` a string literal that is used to filter the set elements
  * @return the set of elements of S that are tagged with `tagValue`.
+ *
+ * The type could look like follows, if we supported string literals in types:
+ *
+ *   (Set({ tag: "$tagValue", a} | b), Str) => Set({ tag: Str, a })
  *)
 FilterByTag(S, tagValue) ==
     \* default untyped implementation
@@ -49,6 +58,14 @@ FilterByTag(S, tagValue) ==
  * @param `ElseOper` an operator that is called
  *        when `variant` is tagged with a value different from `tagValue`
  * @return the result returned by either `ThenOper`, or `ElseOper`
+ *
+ * The type could look like follows, if we supported string literals in types:
+ *
+ *   (
+ *     { "$tagValue": { tag: Str, a } | b },
+ *     { tag: Str, a } => r,
+ *     Variant(b) => r
+ *   ) => r
  *)
 MatchTag(variant, tagValue, ThenOper(_), ElseOper(_)) ==
     \* default untyped implementation
@@ -67,6 +84,14 @@ MatchTag(variant, tagValue, ThenOper(_), ElseOper(_)) ==
  * @param `ThenOper` an operator that is called
  *        when `variant` is tagged with `tagValue`
  * @return the result returned by `ThenOper`
+ *
+ * The type could look like follows, if we supported string literals in types:
+ *
+ *   (
+ *     { "$tagValue": { tag: Str, a } },
+ *     { tag: Str, a } => r
+ *   ) => r
+ *)
  *)
 MatchOnly(variant, ThenOper(_)) ==
     \* default untyped implementation
