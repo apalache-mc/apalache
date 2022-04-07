@@ -335,7 +335,7 @@ by primed names.
 
 The expression `isTerminated' = TRUE` means that only states where
 `isTerminated` equals to `TRUE` can be successors of the current state. In
-general, `isTerminated'` could also odepend on the value of `isTerminated`, but
+general, `isTerminated'` could also depend on the value of `isTerminated`, but
 here, it does not. Likewise, `returnValue' = -(low + 1)` means that
 `returnValue` has the value `-(low + 1)` in the next state. The expression
 `UNCHANGED <<low, high>>` is a convenient shortcut for writing `low' = low /\
