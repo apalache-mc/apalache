@@ -251,7 +251,7 @@ object DefaultType1Parser extends Parsers with Type1Parser {
 
   // A tag name
   private def stringLiteral: Parser[STR_LITERAL] = {
-    accept("tag",
+    accept("string literal",
         { case f @ STR_LITERAL(_) =>
           f
         })
