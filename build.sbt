@@ -293,7 +293,7 @@ lazy val root = (project in file("."))
         (s"tar zxvf ${pkg} -C ${target_dir}" !)
         log.info(s"Symlinking ${current_pkg} -> ${unzipped}")
         if (current_pkg.exists) {
-          log.info(s"${current_pkg} already exists, overriding")
+          log.info(s"${current_pkg} already exists, overwriting")
           current_pkg.delete
         }
         java.nio.file.Files.createSymbolicLink(
