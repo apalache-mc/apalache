@@ -334,7 +334,7 @@ unprimed names, and the successor-state, the variables of which are referenced
 by primed names.
 
 The expression `isTerminated' = TRUE` means that only states where
-`isTerminated` equals to `TRUE` can be successors of the current state. In
+`isTerminated` equals `TRUE` can be successors of the current state. In
 general, `isTerminated'` could also depend on the value of `isTerminated`, but
 here, it does not. Likewise, `returnValue' = -(low + 1)` means that
 `returnValue` has the value `-(low + 1)` in the next state. The expression
