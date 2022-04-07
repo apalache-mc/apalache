@@ -20,7 +20,7 @@
  *
  * The type could look like follows, if we supported string literals in types:
  *
- *   Rec({ tag: Str, a }) =>
+ *   { tag: Str, a } =>
  *     { tag: "$tagValue", a } | b
  *)
 Variant(rec) ==
