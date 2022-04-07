@@ -238,6 +238,13 @@ class TestDefaultType1Parser extends AnyFunSuite with Checkers with TlaType1Gen 
     assert(RecRowT1(RowT1(VarT1("x"), "f" -> IntT1(), "g" -> VarT1("a"))) == result)
   }
 
+  test("a record with duplicate keys should throw") {
+    val text = """{ f: Int, f: Bool }"""
+    assertThrows[Type1ParseError] {
+      DefaultType1Parser.parseType(text)
+    }
+  }
+
   test("empty variant") {
     // special syntax for an empty variant
     val text = "Variant()"
@@ -260,12 +267,33 @@ class TestDefaultType1Parser extends AnyFunSuite with Checkers with TlaType1Gen 
     assert(VariantT1(RowT1("tag1" -> row1, "tag2" -> row2)) == result)
   }
 
+  test("variant with duplicate tag should throw") {
+    val text = """{ tag: "tag1", f: Int, tag: "tag2" } | c"""
+    assertThrows[Type1ParseError] {
+      DefaultType1Parser.parseType(text)
+    }
+  }
+
+  test("variant with duplicate fields should throw") {
+    val text = """{ tag: "tag1", f: Int, f: Bool } | c"""
+    assertThrows[Type1ParseError] {
+      DefaultType1Parser.parseType(text)
+    }
+  }
+
   test("variant from rows with a parametric tail") {
     val text = """{ tag: "tag1", f: Int } | { tag: "tag2", g: Bool } | c"""
     val result = DefaultType1Parser.parseType(text)
     val row1 = RecRowT1(RowT1("tag" -> StrT1(), "f" -> IntT1()))
     val row2 = RecRowT1(RowT1("tag" -> StrT1(), "g" -> BoolT1()))
     assert(VariantT1(RowT1(VarT1("c"), "tag1" -> row1, "tag2" -> row2)) == result)
+  }
+
+  test("variant with duplicate tags should throw") {
+    val text = """{ tag: "tag1", f: Int } | { tag: "tag1", g: Bool } | c"""
+    assertThrows[Type1ParseError] {
+      DefaultType1Parser.parseType(text)
+    }
   }
 
   test("a set over a variant") {

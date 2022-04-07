@@ -185,15 +185,37 @@ object DefaultType1Parser extends Parsers with Type1Parser {
     }
   }
 
+  private def findDups(list: List[String]): Option[String] = {
+    // we could use list.groupBy(identity) to count the number of occurrences,
+    // but that would introduce an unnecessary map
+    list.zipWithIndex.foldLeft(None: Option[String]) { case (found, (key, i)) =>
+      if (found.isEmpty && list.zipWithIndex.exists(p => p._1 == key && p._2 != i)) {
+        Some(key)
+      } else {
+        found
+      }
+    }
+  }
+
   // a record type that is constructed from a row like { f1: Int, f2: Bool } or  { f1: Int, f2: Bool, c }
   private def recordFromRow: Parser[TlaType1] = {
-    LCURLY() ~ repsep(typedField, COMMA()) ~ opt(COMMA() ~ typeVar) ~ RCURLY() ^^ {
-      case _ ~ list ~ Some(_ ~ VarT1(v)) ~ _ =>
-        RecRowT1(RowT1(VarT1(v), list: _*))
+    // the first rule tests for duplicates in the rule names
+    (LCURLY() ~> repsep(typedField, COMMA()) <~ opt(COMMA() ~ typeVar) <~ RCURLY()) >> { list =>
+      val dup = findDups(list.map(_._1))
+      if (dup.nonEmpty) {
+        err(s"Found a duplicate key ${dup.get} in a record")
+      } else {
+        // fail here to try the second rule
+        failure("")
+      }
+    } | // the second rule is actually producing the result, provided that the sequence is accepted
+      (LCURLY() ~> repsep(typedField, COMMA()) ~ opt(COMMA() ~ typeVar) <~ RCURLY()) ^^ {
+        case list ~ Some(_ ~ VarT1(v)) =>
+          RecRowT1(RowT1(VarT1(v), list: _*))
 
-      case _ ~ list ~ None ~ _ =>
-        RecRowT1(RowT1(list: _*))
-    }
+        case list ~ None =>
+          RecRowT1(RowT1(list: _*))
+      }
   }
 
   // the general record constructor which may be used in conjunction with a row variable
@@ -206,33 +228,54 @@ object DefaultType1Parser extends Parsers with Type1Parser {
   // An option in the variant type that is constructed from a row.
   // For example, { tag: "tag1", f: Bool } or { tag: "tag2", g: Bool, c }.
   private def variantOption: Parser[(String, TlaType1)] = {
-    LCURLY() ~ tag ~ COLON() ~ stringLiteral ~ opt(COMMA() ~ rep1sep(typedField, COMMA())) ~ opt(
-        COMMA() ~ typeVar) ~ RCURLY() ^^ {
-      case _ ~ _ ~ _ ~ STR_LITERAL(tagValue) ~ optList ~ Some(_ ~ VarT1(v)) ~ _ =>
-        val list = optList match {
-          case Some(_ ~ l) => l
-          case _           => Nil
-        }
-        (tagValue, RecRowT1(RowT1(VarT1(v), ("tag" -> StrT1()) :: list: _*)))
+    // the first rule tests for duplicates in the rule names
+    (LCURLY() ~> tag ~> COLON() ~> stringLiteral ~>
+      COMMA() ~> rep1sep(typedField, COMMA()) <~ opt(COMMA() ~ typeVar) <~ RCURLY()) >> { list =>
+      val dup = findDups("tag" +: list.map(_._1))
+      if (dup.nonEmpty) {
+        err(s"Found a duplicate key ${dup.get} in a record")
+      } else {
+        // fail here to try the second rule
+        failure("")
+      }
+    } | // the second rule is actually producing the result, provided that the sequence is accepted
+      (LCURLY() ~> tag ~ COLON() ~ stringLiteral ~
+        opt(COMMA() ~ rep1sep(typedField, COMMA())) ~ opt(COMMA() ~ typeVar) <~ RCURLY()) ^^ {
+        case _ ~ _ ~ STR_LITERAL(tagValue) ~ optList ~ Some(_ ~ VarT1(v)) =>
+          val list = optList match {
+            case Some(_ ~ l) => l
+            case _           => Nil
+          }
+          (tagValue, RecRowT1(RowT1(VarT1(v), ("tag" -> StrT1()) :: list: _*)))
 
-      case _ ~ _ ~ _ ~ STR_LITERAL(tagValue) ~ optList ~ None ~ _ =>
-        val list = optList match {
-          case Some(_ ~ l) => l
-          case _           => Nil
-        }
-        (tagValue, RecRowT1(RowT1(("tag" -> StrT1()) :: list: _*)))
-    }
+        case _ ~ _ ~ STR_LITERAL(tagValue) ~ optList ~ None =>
+          val list = optList match {
+            case Some(_ ~ l) => l
+            case _           => Nil
+          }
+          (tagValue, RecRowT1(RowT1(("tag" -> StrT1()) :: list: _*)))
+      }
   }
 
   // the user-friendly syntax of the variant type
   private def variant: Parser[TlaType1] = {
-    rep1sep(variantOption, PIPE()) ~ opt(PIPE() ~ typeVar) ^^ {
-      case list ~ Some(_ ~ VarT1(v)) =>
-        VariantT1(RowT1(VarT1(v), list: _*))
+    // the first rule tests for duplicates in the tags
+    rep1sep(variantOption, PIPE()) <~ opt(PIPE() ~ typeVar) >> { list =>
+      val dup = findDups(list.map(_._1))
+      if (dup.nonEmpty) {
+        err(s"Found a duplicate tag ${dup.get} in a variant")
+      } else {
+        // fail here to try the second rule
+        failure("")
+      }
+    } | // the second rule is actually producing the result, provided that the sequence is accepted
+      (rep1sep(variantOption, PIPE()) ~ opt(PIPE() ~ typeVar)) ^^ {
+        case list ~ Some(_ ~ VarT1(v)) =>
+          VariantT1(RowT1(VarT1(v), list: _*))
 
-      case list ~ None =>
-        VariantT1(RowT1(list: _*))
-    }
+        case list ~ None =>
+          VariantT1(RowT1(list: _*))
+      }
   }
 
   // the general variant constructor which may be used in conjunction with a row variable
