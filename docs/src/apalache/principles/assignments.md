@@ -4,27 +4,28 @@
 
 Let us go back to the example
 [`test/tla/y2k.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k.tla)
-and run `apalache` against
-[`test/tla/y2k_override.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k_override.tla):
+and run `apalache-mc` against
+[`test/tla/y2k_override.tla`](https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k_override.tla)
+while instructing Apalache to write intermediate output files:
 
 ```console
-$ apalache check y2k_override.tla
+$ apalache-mc check --write-intermediate=true y2k_override.tla
 ```
 
 We can check the detailed output of the `TransitionFinderPass` in the file
-`_apalache-out/y2k_override.tla/<timestamp>/09_OutTransition.tla`, where
+`_apalache-out/y2k_override.tla/<timestamp>/intermediate/09_OutTransition.tla`, where
 `<timestamp>` looks like `2021-12-01T12-07-41_1998641578103809179`:
 
 ```tla
-{{#include ../../../../test/tla/y2k_override.tla::}}
+{{#include ../../../../test/tla/y2k_09_OutTransition.tla::}}
 ```
 
 As you can see, the model checker did two things:
 
 1. It has translated several expressions that look like `x' = e` into `x' := e`.
    For instance, you can see `year' := 80` and `hasLicense' := FALSE` in
-   `Init$0`. We call these expressions **assignments**.
-1. It has factored the operator `Next` into two operators `Next$0` and `Next$1`.
+   `Init_si_0000`. We call these expressions **assignments**.
+1. It has factored the operator `Next` into two operators `Next_si_0000` and `Next_si_0001`.
    We call these operators **symbolic transitions**.
 
 Pure TLA+ does not have the notions of assignments and symbolic
@@ -61,7 +62,7 @@ Consider the example
 Run the checker with:
 
 ```bash
-apalache check Assignments20200309.tla
+apalache-mc check Assignments20200309.tla
 ```
 
 Apalache reports an error as follows:
@@ -74,7 +75,7 @@ To understand the error, check the manual:
 Assignment error: No assignments found for: a
 It took me 0 days  0 hours  0 min  1 sec
 Total time: 1.88 sec
-EXITCODE: ERROR (99)
+EXITCODE: ERROR (255)
 ```
 
 ### More details
