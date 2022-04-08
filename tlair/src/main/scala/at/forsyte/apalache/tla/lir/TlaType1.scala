@@ -363,8 +363,8 @@ case class RecRowT1(row: RowT1) extends TlaType1 {
     // the special user-friendly form, e.g., { foo: Int, g: Bool } or { foo: Int, g: Bool, a }
     val fields = row.fieldTypes.map(p => "%s: %s".format(p._1, p._2)).mkString(", ")
     row.other match {
-      case None    => s"{ ${row.fields} }"
-      case Some(v) => if (row.fields.nonEmpty) s"{ ${row.fields}, $v }" else s"Rec($v)"
+      case None    => s"{ $fields }"
+      case Some(v) => if (fields.nonEmpty) s"{ $fields, $v }" else s"Rec($v)"
     }
 
   }
