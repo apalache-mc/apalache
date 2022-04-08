@@ -1013,7 +1013,7 @@ State1 ==
 ```
 
 In state 1, we have `low + high = 116 + 59 > 2^7`. Since we have `INT_WIDTH
-= 7`, we have `IAdd(116, 59) = -81`.
+= 8`, we have `IAdd(116, 59) = -81`.
 
 ## Step 9: Fixing the access bug
 
