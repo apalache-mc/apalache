@@ -156,11 +156,15 @@ class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
     optimizer.apply(input)
   }
 
-  test("""Cardinality(a..b) becomes (b - a) + 1""") {
+  test("""Cardinality(a..b) becomes IF a =< b THEN (b - a) + 1 ELSE 0""") {
     val input = card(dotdot(name("a").as(intT), name("b").as(intT)).as(intSetT)).as(intT)
     val output = optimizer.apply(input)
     val expected =
-      plus(minus(name("b").as(intT), name("a").as(intT)).as(intT), int(1).as(intT)).as(intT)
+      ite(
+          le(name("a").as(intT), name("b").as(intT)).as(boolT),
+          plus(minus(name("b").as(intT), name("a").as(intT)).as(intT), int(1).as(intT)).as(intT),
+          int(0).as(intT),
+      ).as(intT)
     assert(expected == output)
   }
 
