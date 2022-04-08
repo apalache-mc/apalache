@@ -83,9 +83,12 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
   private def transformCard: PartialFunction[TlaEx, TlaEx] = {
     case OperEx(TlaFiniteSetOper.cardinality, OperEx(TlaArithOper.dotdot, left, right)) =>
       // A pattern that emerged in issue #748
-      // Cardinality(a..b) is equivalent to (b - a) + 1.
+      // Cardinality(a..b) is equivalent to IF a =< b THEN (b - a) + 1 ELSE 0.
+      val condition = OperEx(TlaArithOper.le, left, right)(boolTag)
       val bMinusA = OperEx(TlaArithOper.minus, right, left)(intTag)
-      OperEx(TlaArithOper.plus, bMinusA, ValEx(TlaInt(1))(intTag))(intTag)
+      val bMinusAPlusOne = OperEx(TlaArithOper.plus, bMinusA, ValEx(TlaInt(1))(intTag))(intTag)
+      val zero = ValEx(TlaInt(0))(intTag)
+      OperEx(TlaControlOper.ifThenElse, condition, bMinusAPlusOne, zero)(intTag)
 
     case OperEx(TlaFiniteSetOper.cardinality, OperEx(TlaSetOper.powerset, set)) =>
       // A pattern that emerged in issue #1360
