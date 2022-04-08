@@ -797,7 +797,7 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
   test("Apalache!Distinct") {
     val typ = parser("(a, a) => Bool")
     val expected = mkAppByName(Seq(typ), "x", "y")
-    val ex = OperEx(ApalacheOper.distinct, tla.name("x"), tla.name("y"))
+    val ex = OperEx(ApalacheInternalOper.distinct, tla.name("x"), tla.name("y"))
     assert(expected == gen(ex))
   }
 

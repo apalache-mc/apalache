@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.{ApalacheInternalOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 
 /**
@@ -17,10 +17,10 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def isApplicable(state: SymbState): Boolean = {
     state.ex match {
-      case OperEx(TlaSetOper.in | ApalacheOper.selectInSet, NameEx(name), _) =>
+      case OperEx(op, NameEx(name), _) if op == TlaSetOper.in || op == ApalacheInternalOper.selectInSet =>
         ArenaCell.isValidName(name) || state.binding.contains(name)
 
-      case OperEx(TlaSetOper.in | ApalacheOper.selectInSet, _, _) =>
+      case OperEx(op, _, _) if op == TlaSetOper.in || op == ApalacheInternalOper.selectInSet =>
         true
 
       case _ =>
@@ -34,7 +34,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       // a common pattern x \in {y} that is equivalent to x = y, e.g., the assignment solver creates it
       case OperEx(op, NameEx(name), OperEx(TlaSetOper.enumSet, rhs))
-          if op == TlaSetOper.in || op == ApalacheOper.selectInSet =>
+          if op == TlaSetOper.in || op == ApalacheInternalOper.selectInSet =>
         val nextState = rewriter.rewriteUntilDone(state.setRex(rhs))
         val rhsCell = nextState.arena.findCellByNameEx(nextState.ex)
         val lhsCell = state.binding(name)
@@ -42,7 +42,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // bugfix: safeEq may produce ValEx(TlaBool(false)) or ValEx(TlaBool(true)).
         rewriter.rewriteUntilDone(afterEqState.setRex(rewriter.lazyEq.safeEq(lhsCell, rhsCell)))
 
-      case OperEx(TlaSetOper.in | ApalacheOper.selectInSet, elem, set) =>
+      case OperEx(op, elem, set) if op == TlaSetOper.in || op == ApalacheInternalOper.selectInSet =>
         val elemState = rewriter.rewriteUntilDone(state.setRex(elem))
         val elemCell = elemState.asCell
         val setState = rewriter.rewriteUntilDone(elemState.setRex(set))

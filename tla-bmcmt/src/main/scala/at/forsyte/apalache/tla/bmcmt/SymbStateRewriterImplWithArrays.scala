@@ -33,7 +33,7 @@ class SymbStateRewriterImplWithArrays(
     Map(
         // sets
         key(tla.in(tla.name("x"), tla.name("S")))
-          -> List(new SetInRuleWithArrays(this)), // TODO: add support for funSet later
+          -> List(new SetInRuleWithArrays(this)),
         key(tla.apalacheSelectInSet(tla.name("x"), tla.name("S")))
           -> List(new SetInRuleWithArrays(this)),
         key(tla.apalacheSelectInFun(tla.name("x"), tla.name("F")))
