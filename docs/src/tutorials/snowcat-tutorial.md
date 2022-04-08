@@ -30,7 +30,7 @@ Before we start writing any type annotations, let's run the type checker and
 see, whether it complains:
 
 ```sh
-$ apalache typecheck TwoPhase.tla
+$ apalache-mc typecheck TwoPhase.tla
 ```
 
 The tool output is a bit verbose. Below, you can see the important lines of the
@@ -92,7 +92,7 @@ single-line comment `\* ...`. See [issue
 Having introduced the type annotation for `RM`, let's run the type checker again:
 
 ```sh
-$ apalache typecheck TwoPhase.tla
+$ apalache-mc typecheck TwoPhase.tla
 ```
 
 Snowcat does not complain about `RM` anymore. Now we get another message:
@@ -128,7 +128,7 @@ VARIABLES
 Guess what? Run the type checker again:
 
 ```sh
-$ apalache typecheck TwoPhase.tla
+$ apalache-mc typecheck TwoPhase.tla
 ```
 
 Snowcat does not complain about `rmState` anymore. But we are not done yet:
@@ -194,7 +194,7 @@ VARIABLES
 You know that we have to run the type checker again:
 
 ```sh
-$ apalache typecheck TwoPhase.tla
+$ apalache-mc typecheck TwoPhase.tla
 ```
 
 It is no surprise that it complains about the variable `msgs` now:
@@ -259,7 +259,7 @@ VARIABLES
 Let's see whether Snowcat is happy about our types now:
 
 ```sh
-$ apalache typecheck TwoPhase.tla
+$ apalache-mc typecheck TwoPhase.tla
 ```
 
 The type checker is happy. It has computed the types of all expressions:
