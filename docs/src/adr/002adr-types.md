@@ -149,7 +149,8 @@ T2 ::=
     // The set of fields may be empty.
     | '{' field ':' T2 ',' ...',' field ':' T2 '}'
     // A new record type with a partially defined structure
-    // (the type variable should be a 'row').  // The set of fields may be empty.
+    // (the type variable should be a 'row').
+    // The set of fields may be empty.
     | '{' field ':' T2 ',' ...',' field ':' T2 ',' typeVar '}'
     // A variant that contains several options.
     | variantOption '|' ... '|' variantOption
@@ -168,9 +169,9 @@ variantOption ::=
 // Special syntax for the rows, which is internal to the type checker.
 row ::=
     // A row with a fully defined structure.
-    | '(|' field ':' T2 ',' ...',' field ':' T2 '|)'
+    | '(|' field ':' T2 '|' ...'|' field ':' T2 '|)'
     // A row with a partially defined structure (ending with a row).
-    | '(|' field ':' T2 ',' ...',' field ':' T2 ',' typeVar '|)'
+    | '(|' field ':' T2 '|' ...'|' field ':' T2 '|' typeVar '|)'
 ```
 
 **Examples.**
@@ -182,7 +183,7 @@ row ::=
   and other fields, whose precise structure is captured with a type variable
   `c`. The type of `r2` is `{ a: Int, b: Str, c }`.  More precisely, the
   variable `c` should be a row. For instance, `c` can be equal to the row `(|
-  f: Bool, g: Set(Int) |)`; in this case, `r2` would be a record of type `{ a:
+  f: Bool | g: Set(Int) |)`; in this case, `r2` would be a record of type `{ a:
   Int, b: Str, f: Bool, g: Set(Int) }`.
 
 * `v1` is a variant that has one of the two possible shapes:
@@ -197,7 +198,7 @@ row ::=
   `Variant()`.
 
 * `v3` is a variant whose structure is defined by the type variable `b`.
-   The type of `v3` is `Variant(b)`. Note that `b` is a type variable should be
+   The type of `v3` is `Variant(b)`. Note that `b` type variable should be
    a row. For instance, it can be equal to the type `(| A: { tag: Str, f: Int }
    | B: { tag: Str, g: Str } |)`.
 
