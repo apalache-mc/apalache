@@ -162,8 +162,8 @@ class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
     val expected =
       ite(
           le(name("a").as(intT), name("b").as(intT)).as(boolT),
-          plus(minus(name("b").as(intT), name("a").as(intT)).as(intT), int(1).as(intT)).as(intT),
-          int(0).as(intT),
+          plus(minus(name("b").as(intT), name("a").as(intT)).as(intT), int(1)).as(intT),
+          int(0),
       ).as(intT)
     assert(expected == output)
   }
