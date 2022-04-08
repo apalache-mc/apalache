@@ -99,11 +99,23 @@ class Substitution(val mapping: Map[EqClass, TlaType1]) {
 
       case RecRowT1(row) =>
         val (newRow, rowChanged) = sub(row)
-        (RecRowT1(newRow), rowChanged)
+        newRow match {
+          case r @ RowT1(_, _) =>
+            (RecRowT1(r), rowChanged)
+
+          case tt =>
+            throw new IllegalStateException("Expected a row after substitution, found: " + tt)
+        }
 
       case VariantT1(row) =>
         val (newRow, rowChanged) = sub(row)
-        (VariantT1(newRow), rowChanged)
+        newRow match {
+          case r @ RowT1(_, _) =>
+            (VariantT1(r), rowChanged)
+
+          case tt =>
+            throw new IllegalStateException("Expected a row after substitution, found: " + tt)
+        }
     }
   }
 

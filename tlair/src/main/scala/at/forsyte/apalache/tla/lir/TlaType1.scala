@@ -356,23 +356,17 @@ object RowT1 {
  * A record constructed from a row type. That the row is of the right kind should be checked by the kind unifier.
  *
  * @param row
- *   RowNil, RowCons, or VarT1.
+ *   a row that is closed with this record
  */
-case class RecRowT1(row: TlaType1) extends TlaType1 {
+case class RecRowT1(row: RowT1) extends TlaType1 {
   override def toString: String = {
-    row match {
-      case RowT1(fieldTypes, other) =>
-        // the special user-friendly form, e.g., { foo: Int, g: Bool } or { foo: Int, g: Bool, a }
-        val fields = fieldTypes.map(p => "%s: %s".format(p._1, p._2)).mkString(", ")
-        other match {
-          case None    => s"{ $fields }"
-          case Some(v) => s"{ $fields, $v }"
-        }
-
-      case _ =>
-        // the general case, which is probably never reachable
-        s"{ $row }"
+    // the special user-friendly form, e.g., { foo: Int, g: Bool } or { foo: Int, g: Bool, a }
+    val fields = row.fieldTypes.map(p => "%s: %s".format(p._1, p._2)).mkString(", ")
+    row.other match {
+      case None    => s"{ $fields }"
+      case Some(v) => s"{ $fields, $v }"
     }
+
   }
 
   override def usedNames: Set[Int] = row.usedNames
@@ -382,24 +376,17 @@ case class RecRowT1(row: TlaType1) extends TlaType1 {
  * A variant constructed from a row type. That the row is of the right kind should be checked by the kind unifier.
  *
  * @param row
- *   RowNil, RowCons, or VarT1.
+ *   a row that is closed with the variant
  */
-case class VariantT1(row: TlaType1) extends TlaType1 {
+case class VariantT1(row: RowT1) extends TlaType1 {
   override def toString: String = {
-    row match {
-      case RowT1(fieldTypes, other) =>
-        // the special user-friendly form, e.g.,
-        // { tag: "tag1", f: Int } | { tag: "tag2", g: Bool, a }, or
-        // { tag: "tag1", f: Int } | { tag: "tag2", g: Bool, a } | b
-        val options = fieldTypes.map(p => elemToString(p._1, p._2)).mkString(" | ")
-        other match {
-          case None    => options
-          case Some(v) => s"$options | $v"
-        }
-
-      case _ =>
-        // the general case, which is probably never reachable
-        s"/ $row /"
+    // the special user-friendly form, e.g.,
+    // { tag: "tag1", f: Int } | { tag: "tag2", g: Bool, a }, or
+    // { tag: "tag1", f: Int } | { tag: "tag2", g: Bool, a } | b
+    val options = row.fieldTypes.map(p => elemToString(p._1, p._2)).mkString(" | ")
+    row.other match {
+      case None    => options
+      case Some(v) => s"$options | $v"
     }
   }
 
