@@ -197,7 +197,7 @@ object DefaultType1Parser extends Parsers with Type1Parser {
     }
   }
 
-  // a record type that is constructed from a row like { f1: Int, f2: Bool } or  { f1: Int, f2: Bool, c }
+  // a record type that is constructed from a row like { f1: Int, f2: Bool } or { f1: Int, f2: Bool, c }
   private def recordFromRow: Parser[TlaType1] = {
     // the first rule tests for duplicates in the rule names
     (LCURLY() ~> repsep(typedField, COMMA()) <~ opt(COMMA() ~ typeVar) <~ RCURLY()) >> { list =>
