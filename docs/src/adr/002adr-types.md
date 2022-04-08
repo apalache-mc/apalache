@@ -1,11 +1,11 @@
 # ADR-002: types and type annotations
 
-| authors                                | revision |
-| -------------------------------------- | --------:|
-| Shon Feder, Igor Konnov, Jure Kukovec  |        4 |
+| authors                                | revision | revision date  |
+| -------------------------------------- | --------:| --------------:|
+| Shon Feder, Igor Konnov, Jure Kukovec  |        5 | April 08, 2022 |
 
-*This is a request for comments. For user documentation, check the [Snowcat tutorial][]
-and [Snowcat HOWTO][].*
+*This is an architectural decision record. For user documentation, check the
+[Snowcat tutorial][] and [Snowcat HOWTO][].*
 
 
 This is a follow up of [RFC-001](./001rfc-types.md), which discusses plenty of
@@ -37,16 +37,16 @@ when writing TLA+ specifications. This document is filling this gap.
 We simply write types as strings that follow the type grammar:
 
 ```
-T ::=   Bool | Int | Str
-      | T -> T
-      | Set(T)
-      | Seq(T)
-      | <<T, ..., T>>
-      | [field: T, ..., field: T]
-      | (T, ..., T) => T
+T ::=   'Bool' | 'Int' | 'Str'
+      | T '->' T
+      | 'Set' '(' T ')'
+      | 'Seq' '(' T ')'
+      | '<<' T ',' ...',' T '>>'
+      | '[' field ':' T ',' ...',' field ':' T ']'
+      | '(' T ',' ...',' T ')' '=>' T
       | typeConst
       | typeVar
-      | (T)
+      | '(' T ')'
 
 field     ::= <an identifier that matches [a-zA-Z_][a-zA-Z0-9_]*>
 
@@ -127,8 +127,87 @@ This rule binds a type (produced by `T`) to a name (produced by `typeConst`). As
 of `typeConst`, the name should be an identifier in the upper case. The type checker should use the bound type instead
 of the constant type. For examples, see [Section 2.4](#useTypeAlias).
 
+<a id="rows"></a>
+### 1.3. Type System 1.2, including precise records, variants, and rows
+
+**This is work in progress.** You can track the progress of this work in [Issue
+401][]. Once this work is complete, we will switch to Type System 1.2.
+
+As discussed in [ADR014][], many users expressed the need for precise type
+checking for records in Snowcat. Records in untyped TLA+ are used in two
+capacities: as plain records and as variants. While the technical proposal is
+given in [ADR014][], we discuss the extension of the type grammar in this
+ADR-002.  To this end, we extend the grammar with new records, variants, and
+rows as follows:
+
+```
+// Type System 1.2
+T2 ::=
+    // all types of Type System 1
+    T
+    // A new record type with a fully defined structure.
+    // The set of fields may be empty.
+    | '{' field ':' T2 ',' ...',' field ':' T2 '}'
+    // A new record type with a partially defined structure
+    // (the type variable should be a 'row').  // The set of fields may be empty.
+    | '{' field ':' T2 ',' ...',' field ':' T2 ',' typeVar '}'
+    // A variant that contains several options.
+    | variantOption '|' ... '|' variantOption
+    // A variant of undefined structure (the type variable should be a 'row')
+    | 'Variant' '(' typeVar ')'
+    // An empty variant
+    | 'Variant' '(' ')'
+
+variantOption ::=
+    // A variant option with a fully defined structure.
+    | { tag: stringLiteral, field: T2, ..., field: T2 }
+    // a variant option with a partially defined structure
+    //   (a variant option over a row).
+    | { tag: stringLiteral, field: T2, ..., field: T2, typeVar }
+
+// Special syntax for the rows, which is internal to the type checker.
+row ::=
+    // A row with a fully defined structure.
+    | '(|' field ':' T2 ',' ...',' field ':' T2 '|)'
+    // A row with a partially defined structure (ending with a row).
+    | '(|' field ':' T2 ',' ...',' field ':' T2 ',' typeVar '|)'
+```
+
+**Examples.**
+
+* `r1` is a record that has the fields `a` and `b`, where `a` is an integer and
+  `b` is a string. Its type is `{ a: Int, b: Str }`.
+
+* `r2` is a record that has the fields `a` of type `Int` and `b` of type `Str`
+  and other fields, whose precise structure is captured with a type variable
+  `c`. The type of `r2` is `{ a: Int, b: Str, c }`.  More precisely, the
+  variable `c` should be a row. For instance, `c` can be equal to the row `(|
+  f: Bool, g: Set(Int) |)`; in this case, `r2` would be a record of type `{ a:
+  Int, b: Str, f: Bool, g: Set(Int) }`.
+
+* `v1` is a variant that has one of the two possible shapes:
+ 
+   - It has the fields `tag` of type `Str` and `a` of type `Int` (if the field
+     `tag` is equal to `"A"`).
+
+   - It has the fields `tag` of type `Str` and `b` of type `Bool` (if the field
+     `tag` is equal to `"B"`).
+
+* `v2` is an empty variant, which admits no options. It has the type
+  `Variant()`.
+
+* `v3` is a variant whose structure is defined by the type variable `b`.
+   The type of `v3` is `Variant(b)`. Note that `b` is a type variable should be
+   a row. For instance, it can be equal to the type `(| A: { tag: Str, f: Int }
+   | B: { tag: Str, g: Str } |)`.
+
+Note that this syntax encapsulates rows in records and variants. We introduce
+the syntax for row types for completeness. Most likely, the users will never
+see messages that mention rows explicitly, without referring to records or
+variants. 
+
 <a id="comments"></a>
-### 1.3. Comments inside types
+### 1.4. Comments inside types
 
 When you introduce records that have dozens of fields, it is useful to explain
 those fields right in the type annotations. For that reason, the type lexer
@@ -149,45 +228,55 @@ The parser only supports one-line comments that starts with `//`. Since type
 annotations are currently written inside TLA+ comments, we feel that more
 complex comments would complicate the matters.
 
-### 1.4. Discussion
+### 1.5. Discussion
 
 Our type grammar presents a minimal type system that, in our understanding,
 captures all interesting cases that occur in practice. Obviously, this type
 system considers ill-typed some perfectly legal TLA+ values. For instance, we
-cannot assign a reasonable type to `{1, TRUE}`. However, we can assign a
-reasonable type to `{[type |-> "1a", bal |-> 1], [type |-> "2a", bal |-> 2, val
-|-> 3]}`, a pattern that often occurs in practice, e.g., see
+cannot assign a reasonable type to `{1, TRUE}`.
+
+**Sets of records in Type System 1.**
+We can assign a reasonable type to `{[type |-> "1a", bal |-> 1], [type
+|-> "2a", bal |-> 2, val |-> 3]}`, a pattern that often occurs in practice,
+e.g., see
 [Paxos](https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla).
 The type of that set will be `Set([type: Str, bal: Int, val: Int])`, which is
 probably not what you expected, but it is the best type we can actually compute
 without having algebraic datatypes in TLA+. It also reminds the user that one
 better tests the field `type` carefully.
 
+**Sets of records in Type System 1.2.** Consider the following set:
+
+```tla
+{[tag |-> "1a", bal |-> 1],
+ [tag |-> "2a", bal |-> 2, val |-> 3]}
+```
+
+In Type System 1.2 (Section 1.3), this set has the type of a set over a variant
+type:
+
+```tla
+Set({ tag: "1a", bal: Int } | { tag: "2a", bal: Int, val: Int })
+```
+
+The value of the field `tag` serves as a type tag. However, we have to fix a
+set of patterns that turn a variant type into a precise record type. In untyped
+TLA+, such pattern is a set comprehension, e.g., `{ r \in S: r.tag = "1a" }`.
+In the typed version, we define a minimal set of operators over variants in the
+module
+[Variants.tla](https://github.com/informalsystems/apalache/blob/unstable/src/tla/Variants.tla).
+For instance, instead of writing the set comprehension, we have to use a filter
+over a set of variants: `FilterByTag(S, "1a")`.
+
+**Other type systems.**
 Type System 1 is also very much in line with the [type system by Stephan Merz and Hernan Vanzetto](https://dblp.org/search?q=Automatic+Verification+of+%7BTLA%7D+%2B+Proof+Obligations+with+%7BSMT%7D+Solvers)
 , which is used internally by
 [TLAPS](https://tla.msr-inria.inria.fr/tlaps/content/Home.html) when translating proof obligations in SMT. We introduce
 types for user-defined operators, on top of their types for TLA+ expressions that do not contain user-defined operators.
 
-We expect that this type system will evolve in the future. That is why we call it __Type System 1__. Feel free to
-suggest __Type System 2__ :-)
-
-**Note:** For the above example of a set of records, we are considering to introduce union types. So the type of the set
-
-```tla
-{[type |-> "1a", bal |-> 1],
- [type |-> "2a", bal |-> 2, val |-> 3]}
-```
-
-would be something like:
-
-```tla
-Set([type |-> "1a"], bal |-> 1]
-  + [type |-> "2a", bal |-> 2, val |-> 3])
-```
-
-The value of the field `type` would serve as a type tag. However, we would have to fix a set of patterns that turn a
-union type into a precise record type. One such pattern is a set comprehension, e.g., `{ r \in S: r.type = "1a" }`. If
-you have suggestions on this line of thought, please let us know.
+We expect that this type system will evolve in the future. That is why we call
+it __Type System 1__. Section 1.3 presents its extension to __Type System
+1.2__. Feel free to suggest __Type System 2.0__ :-)
 
 ## 2. How to write type annotations (as a user)
 
@@ -442,3 +531,5 @@ AtMostOne ==
 
 [Snowcat tutorial]: https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html
 [Snowcat HOWTO]: https://apalache.informal.systems/docs/HOWTOs/howto-write-type-annotations.html
+[ADR014]: https://github.com/informalsystems/apalache/blob/unstable/docs/src/adr/014adr-precise-records.md
+[Issue 401]: https://github.com/informalsystems/apalache/issues/401
