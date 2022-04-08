@@ -39,9 +39,8 @@ output:
 ```
 ...
 PASS #1: TypeCheckerSnowcat
- > Running Snowcat .::.
-[TwoPhase.tla:51:30-51:31]: Undefined name RM. Introduce a type annotation.
- > Snowcat asks you to fix the types. Meow.
+ > Running Snowcat .::.                                           
+Typing input error: Expected a type annotation for VARIABLE tmPrepared
 ... 
 ```
 
