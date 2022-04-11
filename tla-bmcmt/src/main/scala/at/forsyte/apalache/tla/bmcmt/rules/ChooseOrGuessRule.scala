@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaOper}
  * <p>Rewriting rule for CHOOSE and Apalache!Guess. We implement a non-deterministic choice. It is not hard to add the
  * requirement of determinism, but that will most likely affect efficiency.</p>
  *
- * <p>We will make CHOOSE deterministic in the issue #841 is solved.</p>
+ * <p>We will make CHOOSE deterministic when the issue #841 is solved.</p>
  *
  * @author
  *   Igor Konnov

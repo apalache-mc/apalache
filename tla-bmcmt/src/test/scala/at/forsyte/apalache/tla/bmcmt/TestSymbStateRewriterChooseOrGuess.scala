@@ -54,7 +54,7 @@ trait TestSymbStateRewriterChooseOrGuess extends RewriterBase with TestingPredef
       solverContext.assertGroundExpr(ns.ex)
     }
 
-    // in our implementation, CHOOSE is non-deterministic, so both 2 and 3 are possible choices
+    // in our implementation, GUESS is non-deterministic, so both 2 and 3 are possible choices
     rewriter.push()
     assertEq(3)
     assert(solverContext.sat())
@@ -117,7 +117,7 @@ trait TestSymbStateRewriterChooseOrGuess extends RewriterBase with TestingPredef
       solverContext.assertGroundExpr(ns.ex)
     }
 
-    // Actually, semantics of choose does not restrict the outcome on the empty sets.
+    // Actually, semantics of GUESS does not restrict the outcome on the empty sets.
     // But we know that our implementation would always return 0 in this case.
     rewriter.push()
     assertEq(1)
