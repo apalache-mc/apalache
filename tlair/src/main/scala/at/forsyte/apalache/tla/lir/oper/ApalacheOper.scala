@@ -62,10 +62,10 @@ object ApalacheOper {
   }
 
   /**
-   * Non-deterministically pick a value out of the set `S`, if `S` is non-empty. If `S` is empty, return some value of the proper type.
-   * This can be understood as a non-deterministic version of `CHOOSE x \in S: TRUE`. Since we cannot define a new syntactic form where `x` ranges
-   * over `S` in TLA+, we define the operator `Guess(S)` over a set `S`. If you want to write a non-deterministic
-   * version of `CHOOSE x \in S: P`, simply write `Guess({ x \in S: P })`.
+   * Non-deterministically pick a value out of the set `S`, if `S` is non-empty. If `S` is empty, return some value of
+   * the proper type. This can be understood as a non-deterministic version of `CHOOSE x \in S: TRUE`. Since we cannot
+   * define a new syntactic form where `x` ranges over `S` in TLA+, we define the operator `Guess(S)` over a set `S`. If
+   * you want to write a non-deterministic version of `CHOOSE x \in S: P`, simply write `Guess({ x \in S: P })`.
    */
   object guess extends TlaOper {
     /* the number of arguments the operator has */
