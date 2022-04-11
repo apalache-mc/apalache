@@ -9,6 +9,7 @@ import org.bitbucket.inkytonik.kiama.output.PrettyPrinter
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 import scala.collection.immutable.{HashMap, HashSet}
+import at.forsyte.apalache.io.PrettyPrinterError
 
 /**
  * <p>A pretty printer to a file that formats a TLA+ expression to a given text width (normally, 80 characters). As
@@ -462,6 +463,8 @@ class PrettyWriter(
 
         group(ssep(decls.map(eachDecl).toList, line) <>
           line <> toDoc((0, 0), body))
+
+      case expr => throw new PrettyPrinterError(s"PrettyPrinter failed toDoc conversion on expression ${expr}")
     }
   }
 
