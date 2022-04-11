@@ -39,15 +39,17 @@ x := e == x = e
 Gen(size) == {}
 
 (**
- * A non-deterministic version of CHOOSE x \in S: TRUE.  That is, whenever
- * Guess(S) is called twice, it is free to return arbitrary elements of S, if S
- * is non-empty. If S is empty, Guess(S) returns some value of the proper type.
+ * A non-deterministic version of CHOOSE x \in S: TRUE.  That is, consecutive
+ * calls to Guess(S) may return arbitrary elements of S, if S
+ * is non-empty. If S is empty, Guess(S) returns the default value of the proper type,
+ * which is the same for subsequent calls.
  *
  * @type: Set(a) => a;
  *)
 Guess(S) ==
     \* Since this is not supported by TLC,
     \* we fall back to the deterministic version for TLC.
+    \* Apalache redefines the operator `Guess` as explained above.
     CHOOSE x \in S: TRUE
 
 (**
