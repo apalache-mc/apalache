@@ -55,13 +55,13 @@ class Substitution(val mapping: Map[EqClass, TlaType1]) {
 
       case SparseTupT1(fieldTypes) =>
         val ntypesAndChanged = fieldTypes.map(kv => (kv._1, sub(kv._2)))
-        val ntypes = ntypesAndChanged.mapValues(_._1).toMap.to(SortedMap)
+        val ntypes = ntypesAndChanged.view.mapValues(_._1).toMap.to(SortedMap)
         val isChanged = ntypesAndChanged.exists(_._2._2)
         (SparseTupT1(ntypes), isChanged)
 
       case RecT1(fieldTypes) =>
         val ntypesAndChanged = fieldTypes.map(kv => (kv._1, sub(kv._2)))
-        val ntypes = ntypesAndChanged.mapValues(_._1).toMap.to(SortedMap)
+        val ntypes = ntypesAndChanged.view.mapValues(_._1).toMap.to(SortedMap)
         val isChanged = ntypesAndChanged.exists(_._2._2)
         (RecT1(ntypes), isChanged)
 

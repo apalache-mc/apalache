@@ -65,7 +65,7 @@ class TypeUnifier(varPool: TypeVarPool) {
       compute(lhs, rhs).flatMap { unifiedType =>
         // use only the representative variables of every equivalence class
         val canonical = mkCanonicalSub
-        val substitution = new Substitution(solution.mapValues(tt => canonical.sub(tt)._1).toMap)
+        val substitution = new Substitution(solution.view.mapValues(tt => canonical.sub(tt)._1).toMap)
         Some((substitution, substitution.sub(unifiedType)._1))
       }
     // help GC to clean up later
