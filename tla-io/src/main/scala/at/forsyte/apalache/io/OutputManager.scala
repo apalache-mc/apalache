@@ -103,7 +103,7 @@ object OutputManager extends LazyLogging {
   }
 
   // Sets the customRunDir, if one is given, otherwise is noop
-  private def setCustomRunDir(fopt: Option[File]) {
+  private def setCustomRunDir(fopt: Option[File]): Unit = {
     fopt.foreach { f =>
       val dir = f.toPath().toAbsolutePath()
       customRunDirOpt = Some(dir)
