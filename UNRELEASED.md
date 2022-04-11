@@ -14,3 +14,7 @@
 
 * Add the operator `Apalache!Guess`, see #1590 and #888
 * Extend the type parser to support ADR014 (experimental), see #1602
+
+### Changes
+
+* rename Apalache `FoldSet` and `FoldSeq` to `ApaFoldSet` and `ApaFoldSeqLeft`, see #1617
