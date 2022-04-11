@@ -182,7 +182,20 @@ functions in Apalache:</p>
 is hard to implement faithfully without blowing up the SMT encoding.</li>
 </ul>
 <p>Hence, we recommend using the operators <code>FoldSet</code> and <code>FoldSeq</code>:</p>
-<pre><code class="language-tla">(**
+<pre><code class="language-tla"> * FunAsSeq([ i \in 1..N |-&gt; F(i) ]). Apalache requires N to be
+ * a constant expression.
+ *
+ * @type: (Int, (Int -&gt; a)) =&gt; Seq(a);
+ *)
+LOCAL INSTANCE Integers
+MkSeq(N, F(_)) ==
+    \* This is the TLC implementation. Apalache does it differently.
+    [ i \in (1..N) |-&gt; F(i) ]
+
+\* required by our default definition of FoldSeq and FunAsSeq
+LOCAL INSTANCE Sequences
+
+(**
  * As TLA+ is untyped, one can use function- and sequence-specific operators
  * interchangeably. However, to maintain correctness w.r.t. our type-system,
  * an explicit cast is needed when using functions as sequences.
@@ -191,19 +204,6 @@ is hard to implement faithfully without blowing up the SMT encoding.</li>
  * The parameters have the following meaning:
  *
  *  - fn is the function from 1..len that should be interpreted as a sequence.
- *  - len is the length of the sequence, len = Cardinality(DOMAIN fn),
- *    len may be a variable, a computable expression, etc.
- *  - capacity is a static upper bound on the length, that is, len &lt;= capacity.
- *
- * @type: ((Int -&gt; a), Int, Int) =&gt; Seq(a);
- *)
-FunAsSeq(fn, len, capacity) ==
-    LET __FunAsSeq_elem_ctor(i) == fn[i] IN
-    SubSeq(MkSeq(capacity, __FunAsSeq_elem_ctor), 1, len)
-
-(**
- * Annotating an expression \E x \in S: P as Skolemizable. That is, it can
- * be replaced with an expression c \in S /\ P(c) for a fresh constant c.
 </code></pre>
 <p>These operators are treated by Apalache in a more efficient manner than
 recursive operators. They are always terminating and thus do not require an

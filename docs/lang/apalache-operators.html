@@ -200,6 +200,29 @@ True
 &gt;&gt; a = (b == &quot;c&quot;) # a' := (b = &quot;c&quot;)
 </code></pre>
 <hr />
+<p><a name="Guess"></a></p>
+<h2><a class="header" href="#non-deterministically-guess-a-value" id="non-deterministically-guess-a-value">Non-deterministically guess a value</a></h2>
+<p><strong>Notation:</strong> <code>Guess(S)</code></p>
+<p><strong>LaTeX notation:</strong> <code>Guess(S)</code></p>
+<p><strong>Arguments:</strong> One argument: a finite set <code>S</code>, possibly empty.</p>
+<p><strong>Apalache type:</strong> <code>Set(a) =&gt; a</code>, for some type <code>a</code>.</p>
+<p><strong>Effect:</strong> Non-deterministically pick a value out of the set <code>S</code>, if <code>S</code> is
+non-empty. If <code>S</code> is empty, return some value of the proper type.</p>
+<p><strong>Determinism:</strong> Non-deterministic if <code>S</code> is non-empty, that is, two subsequent
+calls to <code>Guess(S)</code> may return <code>x, y \in S</code> that can differ (<code>x /= y</code>) or may
+be equal (<code>x = y</code>). Moreover, Apalache considers all possible combinations of
+elements of <code>S</code> in the model checking mode. If <code>S</code> is empty, <code>Guess(S)</code>
+produces the same value of proper type.</p>
+<p><strong>Errors:</strong>
+If <code>S</code> is not a set, Apalache reports an error.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">/\ 1 = Guess({ 1, 2, 3 })         \* TRUE or FALSE
+/\ 2 = Guess({ 1, 2, 3 })         \* TRUE or FALSE
+/\ 3 = Guess({ 1, 2, 3 })         \* TRUE or FALSE
+/\ 4 /= Guess({ 1, 2, 3 })        \* TRUE
+/\ Guess({ 1, 2, 3 }) \in Int     \* TRUE
+</code></pre>
+<hr />
 <p><a name="Gen"></a></p>
 <h2><a class="header" href="#value-generators" id="value-generators">Value generators</a></h2>
 <p><strong>Notation:</strong> <code>Gen(bound)</code></p>
