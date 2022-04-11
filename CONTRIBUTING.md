@@ -63,6 +63,8 @@ Development on Apalache is distributed. As with any distributed system,
 establishing effective synchronization and consensus on key properties requires
 careful attention.
 
+### Claiming a token for WIP
+
 We synchronize and coordinate our work using GitHub issues. When an issue is
 assigned to someone (or to several people), it serves as a token indicating that
 substantive work on the item described on the issue is being done (or will be
@@ -75,6 +77,25 @@ A corollary is that untracked work, work for which no issue exists or no
 assignment has been claimed, cannot effectively be coordinated. To plan on, or
 engage in, substantive work that is untracked raises the risk of race conditions
 and disorganized effort.
+
+### Volunteering to curate a subset of the code
+
+Sometimes a contributor wants to be notified of any changes made to certain
+files. We refer to contributors who have taken on this responsibility as
+"curators" of the relevant code.
+
+To volunteer as a curator of some part of the codebase, add your GitHub handle
+to [.github/CODEOWNERS](.github/CODEOWNERS).
+
+### Locking WIP pending review
+
+Sometimes a contributor wants to ensure that they have a chance to review a
+[pull request](#making-a-pull-request) before the changes are landed in
+`unstable`. Contributors can lock the PR to prevent it from being merged before
+they can complete a review by leaving an empty review on the PR, requesting
+changes, along with a note like:
+
+> I'd like to be sure I review this before it is merged.
 
 ## Decision Making
 
