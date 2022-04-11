@@ -30,16 +30,16 @@ TestKeepNullary ==
 
 TestPassByName == 
   LET A(x,y) == 1
-  IN FoldSet(A, 0, 1..3) = 1
+  IN ApaFoldSet(A, 0, 1..3) = 1
 
 \* @type: (Int, Int) => Int;
 GLOBAL_A2(x, y) == 
     LET \* @type: (Int, Int) => Int;
         F(old, new) == new
-    IN FoldSeq(F, x, <<y>>) \* = y
+    IN ApaFoldSeqLeft(F, x, <<y>>) \* = y
 
 TestNestedPassByName ==
-  FoldSeq(GLOBAL_A2, 0, <<1>>) = 1
+  ApaFoldSeqLeft(GLOBAL_A2, 0, <<1>>) = 1
 
 GLOBAL_A3 == 1
 
@@ -55,7 +55,7 @@ TestMixedScope ==
   LET 
     A(x) == 
       LET F(p,q) == x
-      IN FoldSeq(F, 0, <<1>>)
+      IN ApaFoldSeqLeft(F, 0, <<1>>)
   IN A(2) = 2
 
 TestHONoLambda ==
