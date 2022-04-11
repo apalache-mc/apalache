@@ -192,7 +192,9 @@ class SymbStateRewriterImpl(
         key(tla.forall(tla.name("x"), tla.name("S"), tla.name("p")))
           -> List(new QuantRule(this)),
         key(tla.choose(tla.name("x"), tla.name("S"), tla.name("p")))
-          -> List(new ChooseRule(this)),
+          -> List(new ChooseOrGuessRule(this)),
+        key(tla.guess(tla.name("S")))
+          -> List(new ChooseOrGuessRule(this)),
         // control flow
         key(tla.ite(tla.name("cond"), tla.name("then"), tla.name("else")))
           -> List(new IfThenElseRule(this)),
