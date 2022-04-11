@@ -61,9 +61,14 @@ class ExpansionMarker @Inject() (tracker: TransformationTracker) extends TlaExTr
       OperEx(op, OperEx(TlaBoolOper.exists, name, transform(false)(set), transform(false)(pred))(tag))(tag)
 
     case ex @ OperEx(op @ TlaOper.chooseBounded, name, set, pred) =>
-      // CHOOSE is essentially a skolemizable existential with the constraint of uniqueness
+      // CHOOSE does not require the set to be expanded
       val tag = ex.typeTag
       OperEx(op, name, transform(false)(set), transform(false)(pred))(tag)
+
+    case ex @ OperEx(op @ ApalacheOper.guess, set) =>
+      // Guess does not require the set to be expanded
+      val tag = ex.typeTag
+      OperEx(op, transform(false)(set))(tag)
 
     case ex @ OperEx(op, name, set, pred) if op == TlaBoolOper.exists || op == TlaBoolOper.forall =>
       // non-skolemizable quantifiers require their sets to be expanded

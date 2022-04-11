@@ -116,6 +116,9 @@ class TestBuilder extends AnyFunSuite with TestingPredefs {
 
     assert(chooseBuild1 == OperEx(TlaOper.chooseUnbounded, n_a, n_b))
     assert(chooseBuild2 == OperEx(TlaOper.chooseBounded, n_a, n_b, n_c))
+
+    val guessBuild = bd.guess(n_S).untyped()
+    assert(guessBuild == OperEx(ApalacheOper.guess, n_S))
   }
 
   test("Test byName: TlaOper") {

@@ -261,6 +261,15 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         // the resulting expression is (((a => Bool) => a) (λ x ∈ S. P))
         mkApp(ref, Seq(chooseType), chooseLambda)
 
+      case OperEx(
+              ApalacheOper.guess,
+              bindingSet,
+          ) =>
+        // the principal type of Guess is Set(a) => a
+        val a = varPool.fresh
+        val opsig = OperT1(Seq(SetT1(a)), a) // Set(a) => a
+        mkExRefApp(opsig, Seq(bindingSet))
+
       case OperEx(TlaOper.chooseUnbounded, bindingNameEx @ NameEx(_), pred) =>
         // CHOOSE x: P
         // the principal type of CHOOSE is (a => Bool) => a
