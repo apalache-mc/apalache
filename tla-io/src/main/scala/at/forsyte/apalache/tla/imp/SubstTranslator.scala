@@ -126,7 +126,7 @@ class SubstTranslator(
       s.getOp.getName.toString -> replacement
     }
 
-    Map(substInNode.getSubsts.map(eachSubst): _*)
+    Map(substInNode.getSubsts.map(eachSubst).toIndexedSeq: _*)
   }
 }
 
