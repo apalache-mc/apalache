@@ -7,7 +7,7 @@
 (* Jure Kukovec, 2021                                                        *)
 (*****************************************************************************)
 
-EXTENDS Apalache, Integers, __apalache_internal
+EXTENDS Integers, __apalache_internal, __apalache_folds
 
 (**
  * A bag is a function from `a` to Int, where `a` is the type of the bag contents
@@ -93,7 +93,7 @@ BagUnion(S) ==
   LET \* @type: (a -> Int,a -> Int) => a -> Int;
       PlusAsPrefix(B1,B2) == B1 (+) B2
   IN
-  FoldSet( PlusAsPrefix, EmptyBag, S )
+  __ApalacheFoldSet( PlusAsPrefix, EmptyBag, S )
 
 (**
  * The subset operator for bags.  B1 \sqsubseteq B2 iff, for all e, bag
@@ -130,7 +130,7 @@ SubBag(B) ==
 BagOfAll(F(_), B) ==
   LET \* @type: (b -> Int, a) => b -> Int;
       Extend(partialB,elem) == partialB (+) [e \in {F(elem)} |-> B[elem]]
-  IN FoldSet( Extend, EmptyBag, DOMAIN B )
+  IN __ApalacheFoldSet( Extend, EmptyBag, DOMAIN B )
 
 (**
  * If B is a finite bag (one such that BagToSet(B) is a finite set),
@@ -143,7 +143,7 @@ BagCardinality(B) ==
   LET \* @type: (Int, a) => Int;
       CountElem(i, e) == i + B[e]
   IN
-  FoldSet(CountElem, 0, DOMAIN B)
+  __ApalacheFoldSet(CountElem, 0, DOMAIN B)
 
 (**
  * If B is a bag, then CopiesIn(e, B) is the number of copies of e in
