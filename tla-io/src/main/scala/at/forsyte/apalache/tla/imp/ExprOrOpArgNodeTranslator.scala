@@ -10,7 +10,7 @@ import com.typesafe.scalalogging.LazyLogging
 // Prevent shadowing our Context trait
 import tla2sany.semantic.{Context => _, _}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
  * Translate a TLA+ expression.
