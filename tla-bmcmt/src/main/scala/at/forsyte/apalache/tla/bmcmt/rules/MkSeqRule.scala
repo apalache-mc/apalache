@@ -7,10 +7,9 @@ import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{ApalacheInternalOper, ApalacheOper, TlaArithOper}
-import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.pp.{InlinerOfUserOper, TlaInputError}
+import at.forsyte.apalache.tla.pp.{Inliner, TlaInputError, UniqueNameGenerator}
 
 /**
  * Rewriting rule for MkSeq. This rule is similar to [[FoldSeqRule]].
@@ -40,14 +39,16 @@ class MkSeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
       }
 
       // expressions are transient, we don't need tracking
-      val inliner = InlinerOfUserOper(BodyMapFactory.makeFromDecl(opDecl), new IdleTracker)
+      val inliner = new Inliner(new IdleTracker, new UniqueNameGenerator)
+      // We can make the scope directly, since InlinePass already ensures all is well.
+      val seededScope: Inliner.Scope = Map(opDecl.name -> opDecl)
 
       def mkElem(state: SymbState, index: Int): (SymbState, ArenaCell) = {
         // get the cell for the index
         val (newArena, indexCell) = rewriter.intValueCache.create(state.arena, index)
         // elem = A(indexCell)
         val appEx = tla.appOp(tla.name(opDecl.name).as(operT), indexCell.toNameEx.as(IntT1()))
-        val inlinedEx = inliner.apply(appEx.as(elemT))
+        val inlinedEx = inliner.transform(seededScope)(appEx.as(elemT))
         // simply rewrite the body of the definition with the index cell as the argument
         val nextState = rewriter.rewriteUntilDone(state.setArena(newArena).setRex(inlinedEx))
         (nextState, nextState.asCell)

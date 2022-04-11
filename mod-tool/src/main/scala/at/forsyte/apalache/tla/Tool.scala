@@ -7,7 +7,7 @@ import java.io.{File, FileNotFoundException}
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import at.forsyte.apalache.infra.log.LogbackConfigurator
-import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor, ToolModule, WriteablePassOptions}
+import at.forsyte.apalache.infra.passes.{PassChainExecutor, ToolModule, WriteablePassOptions}
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorMessage, PassOptionException}
 import at.forsyte.apalache.io.{OutputManager, ReportGenerator}
@@ -387,7 +387,9 @@ object Tool extends LazyLogging {
 
   private def runForModule[C <: General](runner: (PassChainExecutor, C) => Int, module: ToolModule, cmd: C): Int = {
     val injector = Guice.createInjector(module)
-    val passes = module.passes.map { p => injector.getInstance(p).asInstanceOf[Pass] }
+    val passes = module.passes.zipWithIndex.map { case (p, i) =>
+      injector.getInstance(p).withNumber(i)
+    }
     val options = injector.getInstance(classOf[WriteablePassOptions])
     val executor = new PassChainExecutor(options, passes)
 

@@ -6,7 +6,7 @@ import at.forsyte.apalache.io.json.impl.{DefaultTagReader, UJsonRep, UJsonToTla}
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{CyclicDependencyError, TlaModule}
 import at.forsyte.apalache.tla.lir.transformations.standard.DeclarationSorter
-import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
+import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.imp.{utils, SanyImporter, SanyImporterException}
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
@@ -68,7 +68,7 @@ class SanyParserPassImpl @Inject() (
           }
 
         // save the output
-        writerFactory.writeModuleAllFormats(rootModule.get.copy(name = "00_OutParser"), TlaWriter.STANDARD_MODULES)
+        writeOut(writerFactory, rootModule.get)
 
         // write parser output to specified destination, if requested
         utils.writeToOutput(rootModule.get, options, writerFactory, logger, sourceStore)

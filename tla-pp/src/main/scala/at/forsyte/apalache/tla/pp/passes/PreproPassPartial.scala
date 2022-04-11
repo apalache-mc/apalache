@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.pp.passes
 
 import at.forsyte.apalache.infra.passes.PassOptions
-import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
+import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{TlaDecl, TlaModule, TlaOperDecl, UID}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
@@ -24,7 +24,7 @@ abstract class PreproPassPartial(
   override def name: String = "PreprocessingPass"
 
   protected def writeAndReturn(module: TlaModule): TlaModule = {
-    writerFactory.writeModuleAllFormats(module.copy(name = "08_OutPrepro"), TlaWriter.STANDARD_MODULES)
+    writeOut(writerFactory, module)
     module
   }
 
