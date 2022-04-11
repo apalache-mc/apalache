@@ -12,5 +12,5 @@ f == [v \in {"x","y","z"} |-> 0]
 
 Init == x = 0
 Next == UNCHANGED x
-Inv == FoldSeq( A, f, <<"z","y","x">> ) = [v \in DOMAIN f |-> 1]
+Inv == ApaFoldSeqLeft( A, f, <<"z","y","x">> ) = [v \in DOMAIN f |-> 1]
 ===============================================================================

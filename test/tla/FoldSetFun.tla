@@ -12,5 +12,5 @@ f == [v \in {"x","y","z"} |-> 0]
 
 Init == x = 0
 Next == UNCHANGED x
-Inv == FoldSet( A, f, DOMAIN f ) = [v \in DOMAIN f |-> 1]
+Inv == ApaFoldSet( A, f, DOMAIN f ) = [v \in DOMAIN f |-> 1]
 ===============================================================================

@@ -128,19 +128,19 @@ TestForAll ==
         (2 \in DOMAIN seq) => (seq[2] /= 5)
 
 TestFoldSeq26970 ==
-    FoldSeq(Add, 0, seq26970) = 2 + 6 + 9 + 7
+    ApaFoldSeqLeft(Add, 0, seq26970) = 2 + 6 + 9 + 7
 
 TestFoldSeq697 ==
-    FoldSeq(Add, 0, SubSeq(seq26970, 2, 4)) = 6 + 9 + 7
+    ApaFoldSeqLeft(Add, 0, SubSeq(seq26970, 2, 4)) = 6 + 9 + 7
 
 TestFoldSeq345 ==
-    FoldSeq(Add, 0, Tail(seq345)) = 4 + 5
+    ApaFoldSeqLeft(Add, 0, Tail(seq345)) = 4 + 5
 
 TestFoldSeqEmpty ==
-    FoldSeq(Add, 0, Tail(seqEmpty)) = 0
+    ApaFoldSeqLeft(Add, 0, Tail(seqEmpty)) = 0
 
 TestFoldSeqFlatten ==
-    FoldSeq(Concat, <<>>, <<seq345, seqEmpty, seq26970>>) = <<3, 4, 5, 2, 6, 9, 7, 0>>
+    ApaFoldSeqLeft(Concat, <<>>, <<seq345, seqEmpty, seq26970>>) = <<3, 4, 5, 2, 6, 9, 7, 0>>
 
 TestMkSeqDouble ==
     LET Double(i) == 2 * i IN
@@ -165,7 +165,7 @@ TestMkSeqLen ==
 
 TestMkSeqFold ==
     LET Double(i) == 2 * i IN
-    FoldSeq(Add, 0, MkSeq(4, Double)) = 20
+    ApaFoldSeqLeft(Add, 0, MkSeq(4, Double)) = 20
 
 TestSelectSeq345 ==
     SelectSeq(seq345, IsOdd) = <<3, 5>>
@@ -174,7 +174,7 @@ TestSelectSeqEmpty ==
     SelectSeq(seqEmpty, IsOdd) = seqEmpty
 
 TestFoldSeqOverSelectSeq ==
-    FoldSeq(Add, 0, SelectSeq(seq345, IsOdd)) = 3 + 5
+    ApaFoldSeqLeft(Add, 0, SelectSeq(seq345, IsOdd)) = 3 + 5
 
 TestFunAsSeq3 ==
     LET f == [ i \in 1..3 |-> i + 1 ] IN

@@ -18,7 +18,7 @@ __ApalacheFoldSet(Op(_, _), v, S) ==
     v
 
 (**
- * A copy of Apalache!ApaFoldSeq, which should be used only in Apalache rewirings.
+ * A copy of Apalache!ApaFoldSeqLeft, which should be used only in Apalache rewirings.
  *
  * The folding operator, used to implement computation over a sequence.
  * Apalache implements a more efficient encoding than the one below.
