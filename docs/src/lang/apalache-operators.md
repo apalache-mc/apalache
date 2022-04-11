@@ -72,9 +72,9 @@ If `S` is not a set, Apalache reports an error.
 **Example in TLA+:**
 
 ```tla
-/\ 1 = Guess({ 1, 2, 3 })         \* TRUE
-/\ 2 = Guess({ 1, 2, 3 })         \* TRUE
-/\ 3 = Guess({ 1, 2, 3 })         \* TRUE
+/\ 1 = Guess({ 1, 2, 3 })         \* TRUE or FALSE
+/\ 2 = Guess({ 1, 2, 3 })         \* TRUE or FALSE
+/\ 3 = Guess({ 1, 2, 3 })         \* TRUE or FALSE
 /\ 4 /= Guess({ 1, 2, 3 })        \* TRUE
 /\ Guess({ 1, 2, 3 }) \in Int     \* TRUE
 ```
