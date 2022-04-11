@@ -37,7 +37,7 @@ class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyM
 
   private val megaSpec = "MegaSpec1"
 
-  override def beforeEach() {
+  override def beforeEach(): Unit = {
     sourceStore = new SourceStore()
     annotationStore = createAnnotationStore()
     sanyImporter = new SanyImporter(sourceStore, annotationStore)
