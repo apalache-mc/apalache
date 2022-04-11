@@ -39,10 +39,9 @@ x := e == x = e
 Gen(size) == {}
 
 (**
- * A non-deterministic version of CHOOSE x \in S: TRUE.  That is, consecutive
- * calls to Guess(S) may return arbitrary elements of S, if S
- * is non-empty. If S is empty, Guess(S) returns the default value of the proper type,
- * which is the same for subsequent calls.
+ * Non-deterministically pick a value out of the set `S`, if `S` is non-empty.
+ * If `S` is empty, return some value of the proper type.  This can be
+ * understood as a non-deterministic version of CHOOSE x \in S: TRUE.
  *
  * @type: Set(a) => a;
  *)
