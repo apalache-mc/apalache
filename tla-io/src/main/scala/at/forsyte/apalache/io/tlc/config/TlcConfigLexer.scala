@@ -32,6 +32,8 @@ object TlcConfigLexer extends RegexParsers {
   def apply(reader: Reader): List[TlcConfigToken] = parseAll(program, reader) match {
     case Success(result, _)   => result
     case NoSuccess(msg, next) => throw new TlcConfigParseError(msg, next.pos)
+    case Error(msg, next)     => throw new TlcConfigParseError(msg, next.pos)
+    case Failure(msg, next)   => throw new TlcConfigParseError(msg, next.pos)
   }
 
   def program: Parser[List[TlcConfigToken]] = skip ~> rep(token <~ skip) <~ eof
