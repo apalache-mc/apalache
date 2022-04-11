@@ -276,7 +276,7 @@ which is used internally by
 types for user-defined operators, on top of their types for TLA+ expressions that do not contain user-defined operators.
 
 We expect that this type system will evolve in the future. That is why we call
-it __Type System 1__. Section 1.3 presents its extension to __Type System
+it __Type System 1__. [Section 1.3](#ts-1.2) presents its extension to __Type System
 1.2__. Feel free to suggest __Type System 2.0__ :-)
 
 ## 2. How to write type annotations (as a user)
