@@ -5,6 +5,9 @@ import scala.collection.immutable.SortedMap
 /**
  * Trait for a type in Type System 1 as specified in <a
  * href="https://github.com/informalsystems/apalache/blob/unstable/docs/adr/002adr-types.md">ADR-002</a>.
+ *
+ * It also contains experimental extensions that are specified in <a
+ * href="https://github.com/informalsystems/apalache/blob/unstable/docs/src/adr/014adr-precise-records.md">ADR-014</a>.
  */
 sealed trait TlaType1 {
 
@@ -252,7 +255,7 @@ case class TupT1(elems: TlaType1*) extends TlaType1 {
 case class SparseTupT1(fieldTypes: SortedMap[Int, TlaType1]) extends TlaType1 {
   override def toString: String = {
     val keyTypeStrs = fieldTypes.map(p => "%s: %s".format(p._1, p._2))
-    "{%s}".format(keyTypeStrs.mkString(", "))
+    "<| %s |>".format(keyTypeStrs.mkString(", "))
   }
 
   override def usedNames: Set[Int] = fieldTypes.values.foldLeft(Set[Int]()) { (s, t) =>
@@ -309,4 +312,111 @@ case class OperT1(args: Seq[TlaType1], res: TlaType1) extends TlaType1 {
     s ++ t.usedNames
   }
 
+}
+
+/**
+ * ****************** EXTENSIONS OF ADR014 ******************************
+ */
+
+/**
+ * A row type that contains a collection of fields with assigned types and an optional variable that represents the part
+ * to be defined.
+ *
+ * @param fieldTypes
+ *   a mapping from field names to field types, which may be parameterized
+ * @param other
+ *   the undefined part: Either None, or Some(variable)
+ */
+case class RowT1(fieldTypes: SortedMap[String, TlaType1], other: Option[VarT1]) extends TlaType1 {
+  override def toString: String = {
+    val pairs = fieldTypes.map(p => "%s: %s".format(p._1, p._2)).mkString(" | ")
+    other match {
+      case None    => if (pairs.nonEmpty) s"(| $pairs |)" else "(||)"
+      case Some(v) => s"(| $pairs | $v |)"
+    }
+  }
+
+  override def usedNames: Set[Int] =
+    fieldTypes.values
+      .map(_.usedNames)
+      .foldLeft(other.map(_.usedNames).getOrElse(Set.empty))(_ ++ _)
+}
+
+object RowT1 {
+  def apply(fieldTypes: (String, TlaType1)*): RowT1 = {
+    RowT1(SortedMap(fieldTypes: _*), None)
+  }
+
+  def apply(other: VarT1, fieldTypes: (String, TlaType1)*): RowT1 = {
+    RowT1(SortedMap(fieldTypes: _*), Some(other))
+  }
+}
+
+/**
+ * A record constructed from a row type. That the row is of the right kind should be checked by the kind unifier.
+ *
+ * @param row
+ *   a row that is closed with this record
+ */
+case class RecRowT1(row: RowT1) extends TlaType1 {
+  override def toString: String = {
+    // the special user-friendly form, e.g., { foo: Int, g: Bool } or { foo: Int, g: Bool, a }
+    val fields = row.fieldTypes.map(p => "%s: %s".format(p._1, p._2)).mkString(", ")
+    row.other match {
+      case None    => s"{ $fields }"
+      case Some(v) => if (fields.nonEmpty) s"{ $fields, $v }" else s"Rec($v)"
+    }
+
+  }
+
+  override def usedNames: Set[Int] = row.usedNames
+}
+
+/**
+ * A variant constructed from a row type. That the row is of the right kind should be checked by the kind unifier.
+ *
+ * @param row
+ *   a row that is closed with the variant
+ */
+case class VariantT1(row: RowT1) extends TlaType1 {
+  override def toString: String = {
+    // the special user-friendly form, e.g.,
+    // { tag: "tag1", f: Int } | { tag: "tag2", g: Bool, a }, or
+    // { tag: "tag1", f: Int } | { tag: "tag2", g: Bool, a } | b
+    val options = row.fieldTypes.map(p => elemToString(p._1, p._2)).mkString(" | ")
+    row.other match {
+      case None    => options
+      case Some(v) => if (options.nonEmpty) s"$options | $v" else s"Variant($v)"
+    }
+  }
+
+  private def elemToString(tag: String, elem: TlaType1): String = {
+    // This syntax is similar to that of a record, but it contains tag: "..." as part of the record.
+    // For example, { tag: "tag1", g: Bool } or { tag: "tag2", g: Bool, a }
+    elem match {
+      case RecRowT1(RowT1(fieldTypes, other)) =>
+        val pairs = fieldTypes.filter(_._1 != "tag").map(p => "%s: %s".format(p._1, p._2)).mkString(", ")
+        other match {
+          case None =>
+            if (pairs.nonEmpty) {
+              s"""{ tag: "$tag", $pairs }"""
+            } else {
+              s"""{ tag: "$tag" }"""
+            }
+
+          case Some(v) =>
+            if (pairs.nonEmpty) {
+              s"""{ tag: "$tag", $pairs, $v }"""
+            } else {
+              s"""{ tag: "$tag", $v }"""
+            }
+        }
+
+      case _ =>
+        // the general case, which is probably never reachable
+        s"{ $row }"
+    }
+  }
+
+  override def usedNames: Set[Int] = row.usedNames
 }

@@ -61,6 +61,20 @@ private[parser] case class SEQ() extends Type1Token {
 }
 
 /**
+ * Name of the variant constructor (when a row is passed directly).
+ */
+private[parser] case class VARIANT() extends Type1Token {
+  override def toString: String = "Variant"
+}
+
+/**
+ * Name of the record constructor (when a row is passed directly).
+ */
+private[parser] case class RECORD() extends Type1Token {
+  override def toString: String = "Rec"
+}
+
+/**
  * A right arrow "->".
  */
 private[parser] case class RIGHT_ARROW() extends Type1Token {
@@ -148,6 +162,16 @@ private[parser] case class FIELD_NO(no: Int) extends Type1Token {
 }
 
 /**
+ * A string literal, e.g., "hello".
+ *
+ * @param text
+ *   the string contents
+ */
+private[parser] case class STR_LITERAL(text: String) extends Type1Token {
+  override def toString: String = '"' + text + '"'
+}
+
+/**
  * Tuple opening "<<".
  */
 private[parser] case class DOUBLE_LEFT_ANGLE() extends Type1Token {
@@ -155,8 +179,43 @@ private[parser] case class DOUBLE_LEFT_ANGLE() extends Type1Token {
 }
 
 /**
- * Tuple opening ">>".
+ * Tuple closing ">>".
  */
 private[parser] case class DOUBLE_RIGHT_ANGLE() extends Type1Token {
   override def toString: String = ">>"
+}
+
+/**
+ * Pipe "|".
+ */
+private[parser] case class PIPE() extends Type1Token {
+  override def toString: String = "|"
+}
+
+/**
+ * Opening a row "(|".
+ */
+private[parser] case class LROW() extends Type1Token {
+  override def toString: String = "(|"
+}
+
+/**
+ * Closing a row "|)".
+ */
+private[parser] case class RROW() extends Type1Token {
+  override def toString: String = "|)"
+}
+
+/**
+ * Opening a sparse tuple "<|".
+ */
+private[parser] case class LTUPLE_ROW() extends Type1Token {
+  override def toString: String = "<|"
+}
+
+/**
+ * Closing a sparse tuple "|>".
+ */
+private[parser] case class RTUPLE_ROW() extends Type1Token {
+  override def toString: String = "|>"
 }
