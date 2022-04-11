@@ -126,6 +126,7 @@ object KeraLanguagePred {
         ApalacheOper.expand,
         ApalacheOper.constCard,
         ApalacheOper.setAsFun,
+        ApalacheOper.guess,
         ApalacheInternalOper.apalacheSeqCapacity,
         // for the future
         //    TlaActionOper.enabled,

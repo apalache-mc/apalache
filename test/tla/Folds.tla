@@ -11,5 +11,5 @@ Op(p,q) == p + q
 
 Next == UNCHANGED x
 
-Inv == FoldSet( Op, 0, {1,2,3} ) = 6 /\ FoldSeq( Op, 99, <<>> ) = 99
+Inv == ApaFoldSet( Op, 0, {1,2,3} ) = 6 /\ ApaFoldSeqLeft( Op, 99, <<>> ) = 99
 ===============================================================================

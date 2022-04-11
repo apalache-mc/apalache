@@ -472,13 +472,13 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
       """.stripMargin
 
     val (_, modules) = sanyImporter.loadFromSource("localSum", Source.fromString(text))
-    assert(8 == modules.size) // Naturals, Sequences, TLC, FiniteSets, Bags, and our module
+    assert(6 == modules.size) // Naturals, Sequences, TLC, FiniteSets, Bags, and our module
 
     val root = modules("localSum")
     expectSourceInfoInDefs(root)
     // This number may change when a new version of Bags.tla is shipped in tla2tools.jar.
     // The declarations include the declarations by __rewire_tlc_in_apalache.tla and Bags.tla.
-    assert(14 == root.declarations.size)
+    assert(13 == root.declarations.size)
   }
 
   test("EXTENDS Apalache") {
@@ -489,6 +489,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         |
         |Assn == x' := 1
         |Sklm == Skolem(\E y \in S: TRUE)
+        |Gss == Guess(S)
         |Expnd == Expand(SUBSET S)
         |CC == ConstCardinality(Cardinality(S) >= 2)
         |Identity(i) == i
@@ -505,7 +506,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
 
     val root = modules("root")
     expectSourceInfoInDefs(root)
-    assert(9 == root.declarations.size)
+    assert(10 == root.declarations.size)
 
     def expectDecl(name: String, body: TlaEx): Unit = {
       findAndExpectOperDecl(root, name, List(), body)
@@ -529,6 +530,13 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
                 NameEx("S"),
                 ValEx(TlaBool(true)),
             ),
+        ),
+    )
+    expectDecl(
+        "Gss",
+        OperEx(
+            ApalacheOper.guess,
+            NameEx("S"),
         ),
     )
     expectDecl(

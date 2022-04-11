@@ -39,6 +39,19 @@ x := e == x = e
 Gen(size) == {}
 
 (**
+ * Non-deterministically pick a value out of the set `S`, if `S` is non-empty.
+ * If `S` is empty, return some value of the proper type.  This can be
+ * understood as a non-deterministic version of CHOOSE x \in S: TRUE.
+ *
+ * @type: Set(a) => a;
+ *)
+Guess(S) ==
+    \* Since this is not supported by TLC,
+    \* we fall back to the deterministic version for TLC.
+    \* Apalache redefines the operator `Guess` as explained above.
+    CHOOSE x \in S: TRUE
+
+(**
  * Convert a set of pairs S to a function F. Note that if S contains at least
  * two pairs <<x, y>> and <<u, v>> such that x = u and y /= v,
  * then F is not uniquely defined. We use CHOOSE to resolve this ambiguity.
@@ -118,13 +131,13 @@ ConstCardinality(cardExpr) == cardExpr
  *
  * @type: ((a, b) => a, a, Set(b)) => a;
  *)
-RECURSIVE FoldSet(_, _, _)
-FoldSet(Op(_,_), v, S) ==
+RECURSIVE ApaFoldSet(_, _, _)
+ApaFoldSet(Op(_,_), v, S) ==
     IF S = {}
     THEN v
     ELSE LET w == CHOOSE x \in S: TRUE IN
          LET T == S \ {w} IN
-         FoldSet(Op, Op(v,w), T)
+         ApaFoldSet(Op, Op(v,w), T)
 
 (**
  * The folding operator, used to implement computation over a sequence.
@@ -133,10 +146,10 @@ FoldSet(Op(_,_), v, S) ==
  *
  * @type: ((a, b) => a, a, Seq(b)) => a;
  *)
-RECURSIVE FoldSeq(_, _, _)
-FoldSeq(Op(_,_), v, seq) ==
+RECURSIVE ApaFoldSeqLeft(_, _, _)
+ApaFoldSeqLeft(Op(_,_), v, seq) ==
     IF seq = <<>>
     THEN v
-    ELSE FoldSeq(Op, Op(v, Head(seq)), Tail(seq))
+    ELSE ApaFoldSeqLeft(Op, Op(v, Head(seq)), Tail(seq))
 
 ===============================================================================

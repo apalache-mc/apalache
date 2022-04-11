@@ -22,8 +22,8 @@ import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier}
  *   - For each instance of pass-by-name A (where a definition A(p1,...,pk) == e exists in scope), replaces
  *     - A with LET A_LOCAL(p1,...,pk) = e IN A_LOCAL
  *
- * If calling `transformModule`, then `moduleLevelFilter` determines which declarations remain in the module after
- * inlining. Default: ALL.
+ * If calling `transformModule`, then `moduleLevelFilter` determines which operator declarations remain in the module
+ * after inlining. Default: ALL.
  *
  * @author
  *   Jure Kukovec
@@ -153,7 +153,7 @@ class Inliner(
   def transformEx: TlaExTransformation = transform(emptyScope)
 
   // main access method, performs the transformations described above
-  private[pp] def transform(scope: Scope): TlaExTransformation = tracker.trackEx {
+  def transform(scope: Scope): TlaExTransformation = tracker.trackEx {
     // Standard application
     case OperEx(TlaOper.apply, nameEx @ NameEx(name), args @ _*) if scope.contains(name) =>
       instantiateWithArgs(scope)(nameEx, args)

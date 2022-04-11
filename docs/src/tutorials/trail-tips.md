@@ -11,8 +11,8 @@ Apalache.
 
 The [Apalache
 antipatterns](../apalache/antipatterns.md#incremental-computation) mention that
-one should not use explicit iteration (e.g., [`FoldSet` and
-`FoldSeq`](../apalache/principles/folds.md)), unless it is really needed. In
+one should not use explicit iteration (e.g., [`ApaFoldSet` and
+`ApaFoldSeqLeft`](../apalache/principles/folds.md)), unless it is really needed. In
 this tip, we present a concrete example that demonstrates how explicit
 iteration slows down Apalache.
 
@@ -70,7 +70,7 @@ it easier to understand for a software engineer is a local update in the
 operator `IncrementInLoop`. Likewise, the variable `drift` is iteratively
 updated with the operator `SubtractInLoop`.
 
-If `FoldSet` looks unfamiliar to you, check the page on [folding sets and
+If `ApaFoldSet` looks unfamiliar to you, check the page on [folding sets and
 sequences](../apalache/principles/folds.md).
 
 Although `NextSlow` may look more familiar, it is significantly harder for

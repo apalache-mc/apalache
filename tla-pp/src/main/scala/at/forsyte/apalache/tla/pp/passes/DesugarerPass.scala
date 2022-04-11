@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.pp.passes
 
-import at.forsyte.apalache.infra.passes.Pass
+import at.forsyte.apalache.tla.imp.passes.PassWithOutputs
 
 /**
  * A pass that does TLA+ desugaring.
@@ -8,4 +8,4 @@ import at.forsyte.apalache.infra.passes.Pass
  * @author
  *   Igor Konnov
  */
-trait DesugarerPass extends Pass
+trait DesugarerPass extends PassWithOutputs

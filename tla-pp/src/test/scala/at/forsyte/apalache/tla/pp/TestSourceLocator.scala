@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.aux._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.src.{SourceLocation, SourcePosition, SourceRegion}
-import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener, SourceLocator, SourceMap}
+import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator, SourceMap}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationListener}
@@ -44,7 +44,7 @@ class TestSourceLocator extends AnyFunSuite {
       decl2,
   )
 
-  val bodyMap = BodyMapFactory.makeFromDecls(decls)
+  val nameGen = new UniqueNameGenerator
 
   // x' /\ y
   val ex1 = and(prime(name("x") ? "b") ? "b", name("y") ? "b").typed(types, "b")
@@ -58,10 +58,10 @@ class TestSourceLocator extends AnyFunSuite {
   // plus(x, 1)
   val ex3 = appOp(name("plus") ? "iiTOi", name("x") ? "i", int(1)).typed(types, "i")
   // LET I(p) == p IN
-  // IF y THEN App(I, 0) ELSE FALSE
+  // IF y THEN App(I, 0) ELSE 1
   val ex4 = letIn(
-      ite(name("y") ? "b", appOp(name("App") ? "D2", name("I") ? "X", int(0)) ? "i", bool(false)) ? "b",
-      declOp("I", name("p") ? "i", OperParam("p")).typedOperDecl(types, "b"),
+      ite(name("y") ? "b", appOp(name("App") ? "D2", name("I") ? "X", int(0)) ? "i", int(1)) ? "i",
+      declOp("I", name("p") ? "i", OperParam("p")).typedOperDecl(types, "X"),
   ).typed(types, "b")
   // LET A(p, q) == IntentionallyUndefinedOper(p, q) IN
   //   LET B == b
@@ -156,12 +156,6 @@ class TestSourceLocator extends AnyFunSuite {
     testTransformation(transformation)
   }
 
-  test("Test ExplicitLetIn") {
-    val transformation = new LetInExpander(tracker, keepNullary = false)
-
-    testTransformation(transformation)
-  }
-
   test("Test Flatten") {
     val transformation = Flatten(tracker)(Untyped())
 
@@ -175,7 +169,7 @@ class TestSourceLocator extends AnyFunSuite {
   }
 
   test("Test Inline") {
-    val transformation = InlinerOfUserOper(bodyMap, tracker)
+    val transformation = new Inliner(tracker, nameGen).transformEx
 
     testTransformation(transformation)
   }
