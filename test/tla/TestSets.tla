@@ -196,6 +196,19 @@ TestGuessSet ==
     IN
     S = Set263
 
+TestChooseSetFromTwo ==
+    LET S ==
+        CHOOSE T \in { SetEmpty, Set263, Set1357 }:
+            3 \in T
+    IN
+    S \in { Set263, Set1357 }
+
+TestGuessSetFromTwo ==
+    LET S ==
+        Guess({ T \in { SetEmpty, Set263, Set1357 }: 3 \in T })
+    IN
+    S \in { Set263, Set1357 }
+
 TestChooseInSingleton ==
     LET x == CHOOSE i \in { 3 }: TRUE IN
     x = 3
@@ -206,10 +219,14 @@ TestGuessInSingleton ==
 
 TestChooseEmpty ==
     LET x == CHOOSE i \in SetEmpty: TRUE IN
+    \* This expression is equivalent to TRUE.
+    \* We are using to avoid constant simplification of TRUE.
     x <= 0 \/ x > 0
 
 TestGuessEmpty ==
     LET x == Guess(SetEmpty) IN
+    \* This expression is equivalent to TRUE.
+    \* We are using to avoid constant simplification of TRUE.
     x <= 0 \/ x > 0
 
 TestForallSet ==
