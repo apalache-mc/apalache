@@ -125,7 +125,8 @@ of landing changes:
 
 ## Making a pull request
 
-We develop on the `unstable` branch and release stable code on `master`.
+We develop on the `unstable` branch and practice [trunk-based
+development](https://trunkbaseddevelopment.com/).
 
 Nontrivial changes should start with a [draft pull request][] against
 `unstable`. The draft signals that work is underway. When the work is ready for
@@ -135,13 +136,13 @@ ready for them to take a look.
 Where possible, implementation trajectories should aim to proceed as a series of
 small, logically distinct, incremental changes, in the form of small PRs that
 can be merged quickly. This helps manage the load for reviewers and reduces the
-likelihood that PRs will sit open for longer.
+likelihood of merge conflicts or strategically misdirected work.
 
 Each stage of the process is aimed at creating feedback cycles which align
 contributors and maintainers to make sure:
 
 - Contributors don’t waste their time implementing/proposing features which
-  won’t land in `main`.
+  won’t land in `unstable`.
 - Maintainers have the necessary context in order to support and review
   contributions.
 
