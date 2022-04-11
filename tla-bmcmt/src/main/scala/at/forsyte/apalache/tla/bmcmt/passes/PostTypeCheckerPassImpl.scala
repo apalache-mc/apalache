@@ -38,7 +38,5 @@ class PostTypeCheckerPassImpl @Inject() (
   // in the post-checking, polytypes are not allowed, as the model checker will not be able to handle them
   override def inferPoly: Boolean = false
 
-  override def passNumber: String = "12"
-
   override def name: String = "PostTypeCheckerSnowcat"
 }
