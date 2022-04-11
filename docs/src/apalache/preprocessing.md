@@ -4,7 +4,7 @@ Before translating a specification into SMT, `apalache` performs a number of
 preprocessing steps:
 
  * `Inliner`: 
-    - replaces every call to a user-defined operator with the operator's body.
+    - replaces every call to a user-defined operator with the operator's body
     - replaces every call to a let-in defined operator of arity at least 1 with the operator's body
  * `PrimingPass`: adds primes to variables in `Init` and `ConstInit` (required by `TransitionPass`)
  * `VCGen`: extracts verification conditions from the invariant candidate.
