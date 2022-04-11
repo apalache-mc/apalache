@@ -12,4 +12,5 @@
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
 ### Features
 
- * Add the operator `Apalache!Guess`, see #1590 and #888
+* Add the operator `Apalache!Guess`, see #1590 and #888
+* Extend the type parser to support ADR014 (experimental), see #1602

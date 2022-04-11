@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.ConstT
 import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.oper.ApalacheOper
+import at.forsyte.apalache.tla.lir.oper.ApalacheInternalOper
 
 /**
  * A cache for model values that are translated as uninterpreted constants, with a unique sort per uniterpreted type.
@@ -25,7 +25,7 @@ class ModelValueCache(solverContext: SolverContext)
     // The fresh cell should differ from the previously created cells.
     // We use the SMT constraint (distinct ...).
     val others = values().filter(_.cellType == ConstT(utype)).map(_.toNameEx).toSeq
-    solverContext.assertGroundExpr(OperEx(ApalacheOper.distinct, newCell.toNameEx +: others: _*))
+    solverContext.assertGroundExpr(OperEx(ApalacheInternalOper.distinct, newCell.toNameEx +: others: _*))
     solverContext.log("; cached \"%s\" to %s".format(typeAndIndex, newCell))
     (newArena, newCell)
   }
@@ -59,7 +59,7 @@ class ModelValueCache(solverContext: SolverContext)
     val newCells = foundOrNewCells.collect { case Right(c) => c }
     // require that all new cells and old cells are distinct
     if (newCells.nonEmpty) {
-      solverContext.assertGroundExpr(OperEx(ApalacheOper.distinct, oldCells ++ newCells.map(_.toNameEx): _*))
+      solverContext.assertGroundExpr(OperEx(ApalacheInternalOper.distinct, oldCells ++ newCells.map(_.toNameEx): _*))
     }
     (nextArena, foundOrNewCells.map(_.fold(c => c, c => c)).toSeq)
   }
