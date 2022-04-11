@@ -25,6 +25,8 @@ private[parser] object Type1Lexer extends RegexParsers {
   def apply(reader: Reader): List[Type1Token] = parseAll(expr, reader) match {
     case Success(result, _)   => result
     case NoSuccess(msg, next) => throw new Type1ParseError(msg, next.pos)
+    case Error(msg, next)     => throw new Type1ParseError(msg, next.pos)
+    case Failure(msg, next)   => throw new Type1ParseError(msg, next.pos)
   }
 
   def expr: Parser[List[Type1Token]] = skip ~> rep(token <~ skip) <~ eof
