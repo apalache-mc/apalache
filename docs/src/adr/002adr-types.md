@@ -128,7 +128,7 @@ of `typeConst`, the name should be an identifier in the upper case. The type che
 of the constant type. For examples, see [Section 2.4](#useTypeAlias).
 
 <a id="rows"></a>
-### 1.3. Type System 1.2, including precise records, variants, and rows
+### <a id="ts-1.2"></a>1.3. Type System 1.2, including precise records, variants, and rows
 
 **This is work in progress.** You can track the progress of this work in [Issue
 401][]. Once this work is complete, we will switch to Type System 1.2.
@@ -253,7 +253,7 @@ better tests the field `type` carefully.
  [tag |-> "2a", bal |-> 2, val |-> 3]}
 ```
 
-In Type System 1.2 (Section 1.3), this set has the type of a set over a variant
+In Type System 1.2 ([Section 1.3](#ts-1.2)), this set has the type of a set over a variant
 type:
 
 ```tla
@@ -270,8 +270,8 @@ For instance, instead of writing the set comprehension, we have to use a filter
 over a set of variants: `FilterByTag(S, "1a")`.
 
 **Other type systems.**
-Type System 1 is also very much in line with the [type system by Stephan Merz and Hernan Vanzetto](https://dblp.org/search?q=Automatic+Verification+of+%7BTLA%7D+%2B+Proof+Obligations+with+%7BSMT%7D+Solvers)
-, which is used internally by
+Type System 1 is also very much in line with the [type system by Stephan Merz and Hernan Vanzetto](https://dblp.org/search?q=Automatic+Verification+of+%7BTLA%7D+%2B+Proof+Obligations+with+%7BSMT%7D+Solvers),
+which is used internally by
 [TLAPS](https://tla.msr-inria.inria.fr/tlaps/content/Home.html) when translating proof obligations in SMT. We introduce
 types for user-defined operators, on top of their types for TLA+ expressions that do not contain user-defined operators.
 
