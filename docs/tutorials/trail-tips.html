@@ -178,8 +178,8 @@ Apalache.</p>
 <p><a name="fold-except"></a></p>
 <p>The <a href="../apalache/antipatterns.html#incremental-computation">Apalache
 antipatterns</a> mention that
-one should not use explicit iteration (e.g., <a href="../apalache/principles/folds.html"><code>FoldSet</code> and
-<code>FoldSeq</code></a>), unless it is really needed. In
+one should not use explicit iteration (e.g., <a href="../apalache/principles/folds.html"><code>ApaFoldSet</code> and
+<code>ApaFoldSeqLeft</code></a>), unless it is really needed. In
 this tip, we present a concrete example that demonstrates how explicit
 iteration slows down Apalache.</p>
 <p>In our example, we model a system of processes from a set <code>Proc</code> that are
@@ -253,7 +253,7 @@ NextSlow ==
                 IncrementInLoop(clk, p) ==
                 [ clk EXCEPT ![p] = @ + delta ]
             IN
-            clocks' = FoldSet(IncrementInLoop, clocks, Proc)
+            clocks' = ApaFoldSet(IncrementInLoop, clocks, Proc)
         /\  LET \* @type: (&lt;&lt;Str, Str&gt;&gt; -&gt; Int, &lt;&lt;Str, Str&gt;&gt;)
                 \*          =&gt; &lt;&lt;Str, Str&gt;&gt; -&gt; Int;
                 SubtractInLoop(dft, pair) ==
@@ -262,7 +262,7 @@ NextSlow ==
                 IN
                 [ dft EXCEPT ![p, q] = clocks'[p] - clocks'[q] ]
             IN
-            drift' = FoldSet(SubtractInLoop, drift, Proc \X Proc)
+            drift' = ApaFoldSet(SubtractInLoop, drift, Proc \X Proc)
 
 </code></pre>
 <p>The version <code>NextSlow</code> is less concise than <code>NextFast</code>, but it is probably easier to
@@ -271,7 +271,7 @@ a set fold, which implements an iteration over the set of processes. What makes
 it easier to understand for a software engineer is a local update in the
 operator <code>IncrementInLoop</code>. Likewise, the variable <code>drift</code> is iteratively
 updated with the operator <code>SubtractInLoop</code>.</p>
-<p>If <code>FoldSet</code> looks unfamiliar to you, check the page on <a href="../apalache/principles/folds.html">folding sets and
+<p>If <code>ApaFoldSet</code> looks unfamiliar to you, check the page on <a href="../apalache/principles/folds.html">folding sets and
 sequences</a>.</p>
 <p>Although <code>NextSlow</code> may look more familiar, it is significantly harder for
 Apalache to check than <code>NextFast</code>. To see the difference, we measure

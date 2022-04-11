@@ -181,7 +181,7 @@ functions in Apalache:</p>
 <li>Resursive operators and functions usually apply <code>CHOOSE</code>, which
 is hard to implement faithfully without blowing up the SMT encoding.</li>
 </ul>
-<p>Hence, we recommend using the operators <code>FoldSet</code> and <code>FoldSeq</code>:</p>
+<p>Hence, we recommend using the operators <code>ApaFoldSet</code> and <code>ApaFoldSeqLeft</code>:</p>
 <pre><code class="language-tla"> * FunAsSeq([ i \in 1..N |-&gt; F(i) ]). Apalache requires N to be
  * a constant expression.
  *

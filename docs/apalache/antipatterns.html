@@ -197,9 +197,9 @@ min(S) ==
 In addition, computing <code>F</code> for a set <code>S</code> of size <code>n = |S|</code> requires <code>n</code> encodings of a <code>CHOOSE</code> operation, which can be considerably expensive in Apalache.
 Lastly, Apalache also needs to encode all of the the <code>n</code> intermediate sets, <code>S \ {e1}</code>, <code>(S \ {e1}) \ {e2}</code>, <code>((S \ {e1}) \ {e2}) \ {e3}</code>, and so on.</p>
 <p>The AP above can be replaced by a very simple pattern:</p>
-<pre><code class="language-tla">F(S) == FoldSet( G, v, S )
+<pre><code class="language-tla">F(S) == ApaFoldSet( G, v, S )
 </code></pre>
-<p><code>FoldSet</code> (and <code>FoldSeq</code>) were introduced precisely for these scenarios, and should be used over <code>RECURSIVE + CHOOSE</code> in most cases.</p>
+<p><code>ApaFoldSet</code> (and <code>ApaFoldSeqLeft</code>) were introduced precisely for these scenarios, and should be used over <code>RECURSIVE + CHOOSE</code> in most cases.</p>
 <h2><a class="header" href="#incremental-computation" id="incremental-computation">Incremental computation</a></h2>
 <p>Often, users introduce an expression <code>Y</code>, which is derived from another expression <code>X</code> (<code>Y == F(X)</code>, for some <code>F</code>). Instead of defining <code>Y</code> directly, in terms of the properties it possesses,  it is possible to define all the intermediate steps of transforming <code>X</code> into <code>Y</code>: &quot;<code>X</code> is slightly changed into <code>X1</code> (e.g. by adding one element to a set, or via <code>EXCEPT</code>), which is changed into <code>X2</code>, etc. until <code>Xn = Y</code>&quot;. Doing this in Apalache is almost always a bad idea, if a direct characterization of <code>Y</code> exists.</p>
 <p>Concretely, the following constructs are APs:</p>
@@ -208,14 +208,14 @@ Lastly, Apalache also needs to encode all of the the <code>n</code> intermediate
 </ol>
 <pre><code class="language-tla">G ==
   LET F(g, x) == [g EXCEPT ![x] = A(x)]
-  IN FoldSet(F, f, S)
+  IN ApaFoldSet(F, f, S)
 </code></pre>
 <ol start="2">
 <li>Incremental <code>\union</code></li>
 </ol>
 <pre><code class="language-tla">R ==
   LET F(T, e) == T \union {A(e)}
-  IN FoldSet(F, S0, S)
+  IN ApaFoldSet(F, S0, S)
 </code></pre>
 <ol start="3">
 <li>Chained <code>@@/:&gt;</code></li>
@@ -226,7 +226,7 @@ Lastly, Apalache also needs to encode all of the the <code>n</code> intermediate
 <pre><code class="language-tla">f == [ x \in 1..20 |-&gt; 0 ]
 Y == 
   LET F(g, x) == [g EXCEPT ![x] = x * x]
-  IN FoldSet(F, f, 7..12 )
+  IN ApaFoldSet(F, f, 7..12 )
 </code></pre>
 <p>TLC likes these sorts of operations, because it manipulates programming-language objects in its own implementation.
 This makes it easy to construct temporary mutable objects, manipulate them (e.g. via for-loops) and garbage-collect them after they stop being useful.
@@ -238,7 +238,7 @@ Below we show how to rewrite these APs.</p>
 </ol>
 <pre><code class="language-tla">G ==
   LET F(g, x) == [g EXCEPT ![x] = A(x)]
-  IN FoldSet(F, f, S)
+  IN ApaFoldSet(F, f, S)
 </code></pre>
 <p>with</p>
 <pre><code class="language-tla">G == 
@@ -253,7 +253,7 @@ Below we show how to rewrite these APs.</p>
 </ol>
 <pre><code class="language-tla">R ==
   LET F(T, e) == T \union {A(e)}
-  IN FoldSet(F, S0, S)
+  IN ApaFoldSet(F, S0, S)
 </code></pre>
 <p>with</p>
 <pre><code class="language-tla">R == S0 \union { A(e): e \in S }

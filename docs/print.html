@@ -1837,8 +1837,8 @@ Apalache.</p>
 <p><a name="fold-except"></a></p>
 <p>The <a href="tutorials/../apalache/antipatterns.html#incremental-computation">Apalache
 antipatterns</a> mention that
-one should not use explicit iteration (e.g., <a href="tutorials/../apalache/principles/folds.html"><code>FoldSet</code> and
-<code>FoldSeq</code></a>), unless it is really needed. In
+one should not use explicit iteration (e.g., <a href="tutorials/../apalache/principles/folds.html"><code>ApaFoldSet</code> and
+<code>ApaFoldSeqLeft</code></a>), unless it is really needed. In
 this tip, we present a concrete example that demonstrates how explicit
 iteration slows down Apalache.</p>
 <p>In our example, we model a system of processes from a set <code>Proc</code> that are
@@ -1912,7 +1912,7 @@ NextSlow ==
                 IncrementInLoop(clk, p) ==
                 [ clk EXCEPT ![p] = @ + delta ]
             IN
-            clocks' = FoldSet(IncrementInLoop, clocks, Proc)
+            clocks' = ApaFoldSet(IncrementInLoop, clocks, Proc)
         /\  LET \* @type: (&lt;&lt;Str, Str&gt;&gt; -&gt; Int, &lt;&lt;Str, Str&gt;&gt;)
                 \*          =&gt; &lt;&lt;Str, Str&gt;&gt; -&gt; Int;
                 SubtractInLoop(dft, pair) ==
@@ -1921,7 +1921,7 @@ NextSlow ==
                 IN
                 [ dft EXCEPT ![p, q] = clocks'[p] - clocks'[q] ]
             IN
-            drift' = FoldSet(SubtractInLoop, drift, Proc \X Proc)
+            drift' = ApaFoldSet(SubtractInLoop, drift, Proc \X Proc)
 
 </code></pre>
 <p>The version <code>NextSlow</code> is less concise than <code>NextFast</code>, but it is probably easier to
@@ -1930,7 +1930,7 @@ a set fold, which implements an iteration over the set of processes. What makes
 it easier to understand for a software engineer is a local update in the
 operator <code>IncrementInLoop</code>. Likewise, the variable <code>drift</code> is iteratively
 updated with the operator <code>SubtractInLoop</code>.</p>
-<p>If <code>FoldSet</code> looks unfamiliar to you, check the page on <a href="tutorials/../apalache/principles/folds.html">folding sets and
+<p>If <code>ApaFoldSet</code> looks unfamiliar to you, check the page on <a href="tutorials/../apalache/principles/folds.html">folding sets and
 sequences</a>.</p>
 <p>Although <code>NextSlow</code> may look more familiar, it is significantly harder for
 Apalache to check than <code>NextFast</code>. To see the difference, we measure
@@ -3311,7 +3311,7 @@ EXITCODE: ERROR (99)
 Depth</a>.</strong></p>
 <h2><a class="header" href="#folding-sets-and-sequences" id="folding-sets-and-sequences">Folding Sets and Sequences</a></h2>
 <p><strong>Folds are an efficient replacement for recursive operators and functions.</strong></p>
-<p>Apalache natively implements two operators users might be familiar with from the <a href="https://github.com/tlaplus/CommunityModules">community modules</a> or functional programming. Those operators are <code>FoldSet</code> and <code>FoldSeq</code>. This brief introduction to fold operators highlights the following:</p>
+<p>Apalache natively implements two operators users might be familiar with from the <a href="https://github.com/tlaplus/CommunityModules">community modules</a> or functional programming. Those operators are <code>ApaFoldSet</code> and <code>ApaFoldSeqLeft</code>. This brief introduction to fold operators highlights the following:</p>
 <ol>
 <li>What are the semantics of fold operators?</li>
 <li>How do I use these operators in Apalache?</li>
@@ -3321,29 +3321,29 @@ Depth</a>.</strong></p>
 <h3><a class="header" href="#syntax" id="syntax">Syntax</a></h3>
 <p>The syntax of the fold operators is as follows:</p>
 <pre><code class="language-tla">\* @type: ( (a, b) =&gt; a, a, Set(b) ) =&gt; a;
-FoldSet( operator, base, set )
+ApaFoldSet( operator, base, set )
 
 \* @type: ( (a, b) =&gt; a, a, Seq(b) ) =&gt; a;
-FoldSeq( operator, base, seq )
+ApaFoldSeqLeft( operator, base, seq )
 </code></pre>
 <h3><a class="header" href="#semantics-of-fold-operators" id="semantics-of-fold-operators">Semantics of fold operators</a></h3>
 <p>Folding refers to iterative application of a binary operator over a collection. Given an operator <code>Op</code>, a base value <code>b</code> and a collection of values <code>C</code>, the definition of folding <code>Op</code> over <code>C</code> starting with <code>b</code> depends on the type of the collection <code>C</code>.</p>
-<h4><a class="header" href="#semantics-of-foldseq" id="semantics-of-foldseq">Semantics of <code>FoldSeq</code></a></h4>
-<p>In the case of folding over sequences, <code>C</code> is a sequence <code>&lt;&lt;a_1, ..., a_n&gt;&gt;</code>. Then, <code>FoldSeq( Op, b, C )</code> is defined as follows:</p>
+<h4><a class="header" href="#semantics-of-apafoldseqleft" id="semantics-of-apafoldseqleft">Semantics of <code>ApaFoldSeqLeft</code></a></h4>
+<p>In the case of folding over sequences, <code>C</code> is a sequence <code>&lt;&lt;a_1, ..., a_n&gt;&gt;</code>. Then, <code>ApaFoldSeqLeft( Op, b, C )</code> is defined as follows:</p>
 <ol>
-<li>If <code>C</code> is empty, then <code>FoldSeq( Op, b, &lt;&lt;&gt;&gt; ) = b</code>, regardless of <code>Op</code></li>
-<li>If <code>C</code> is nonempty, we establish a recursive relation between folding over <code>C</code> and folding over <code>Tail(C)</code> in the following way: <code>FoldSeq( Op, b, C ) = FoldSeq( Op, Op(b, Head(C)), Tail(C) )</code>.</li>
+<li>If <code>C</code> is empty, then <code>ApaFoldSeqLeft( Op, b, &lt;&lt;&gt;&gt; ) = b</code>, regardless of <code>Op</code></li>
+<li>If <code>C</code> is nonempty, we establish a recursive relation between folding over <code>C</code> and folding over <code>Tail(C)</code> in the following way: <code>ApaFoldSeqLeft( Op, b, C ) = ApaFoldSeqLeft( Op, Op(b, Head(C)), Tail(C) )</code>.</li>
 </ol>
-<h4><a class="header" href="#semantics-of-foldset" id="semantics-of-foldset">Semantics of <code>FoldSet</code></a></h4>
-<p>In the case of folding over sets, <code>C</code> is a set <code>{a_1, ..., a_n}</code>. Then, <code>FoldSet( Op, b, C )</code> is defined as follows:</p>
+<h4><a class="header" href="#semantics-of-apafoldset" id="semantics-of-apafoldset">Semantics of <code>ApaFoldSet</code></a></h4>
+<p>In the case of folding over sets, <code>C</code> is a set <code>{a_1, ..., a_n}</code>. Then, <code>ApaFoldSet( Op, b, C )</code> is defined as follows:</p>
 <ol>
-<li>If <code>C</code> is empty, then <code>FoldSet( Op, b, {} ) = b</code>, regardless of <code>Op</code></li>
-<li>If <code>C</code> is nonempty, we establish a recursive relation between folding over <code>C</code> and folding over some subset of <code>C</code> in the following way: <code>FoldSet( Op, b, C ) = FoldSet( Op, Op(b, x), C \ {x} )</code>, where <code>x</code> is some arbitrary member of <code>C</code> (e.g. <code>x = CHOOSE y \in C: TRUE</code>). Note that Apalache does not guarantee a deterministic choice of <code>x</code>, unlike what using  <code>CHOOSE</code> would imply.</li>
+<li>If <code>C</code> is empty, then <code>ApaFoldSet( Op, b, {} ) = b</code>, regardless of <code>Op</code></li>
+<li>If <code>C</code> is nonempty, we establish a recursive relation between folding over <code>C</code> and folding over some subset of <code>C</code> in the following way: <code>ApaFoldSet( Op, b, C ) = ApaFoldSet( Op, Op(b, x), C \ {x} )</code>, where <code>x</code> is some arbitrary member of <code>C</code> (e.g. <code>x = CHOOSE y \in C: TRUE</code>). Note that Apalache does not guarantee a deterministic choice of <code>x</code>, unlike what using  <code>CHOOSE</code> would imply.</li>
 </ol>
 <p>Note that the above are definitions of a <em>left fold</em> in the literature. Apalache does not implement a right fold.</p>
 <p>For example, if <code>C</code> is the sequence <code>&lt;&lt;x,y,z&gt;&gt;</code>, the result is equal to <code>Op( Op( Op(b, x), y), z)</code>. If <code>C = {x,y}</code>, the result is either <code>Op( Op(b, x), y)</code> or <code>Op( Op(b, y), x)</code>. Because the order of elements selected from a set is not predefined, users should be careful, as the result is only uniquely defined in the case that the operator is both associative (<code>Op(Op(a,b),c) = Op(a,Op(b,c))</code>) and commutative (<code>Op(a,b) = Op(b,a)</code>). </p>
-<p>For example, consider the operator <code>Op(p,q) == 2 * p + q</code>, which is noncommutative, and the set <code>S = {1,2,3}</code>. The value of <code>FoldSet(Op, 0, S)</code> depends on the order in which Apalache selects elements from S:</p>
-<table><thead><tr><th>Order</th><th>FoldSet value</th></tr></thead><tbody>
+<p>For example, consider the operator <code>Op(p,q) == 2 * p + q</code>, which is noncommutative, and the set <code>S = {1,2,3}</code>. The value of <code>ApaFoldSet(Op, 0, S)</code> depends on the order in which Apalache selects elements from S:</p>
+<table><thead><tr><th>Order</th><th>ApaFoldSet value</th></tr></thead><tbody>
 <tr><td>1 -&gt; 2 -&gt; 3</td><td>11</td></tr>
 <tr><td>1 -&gt; 3 -&gt; 2</td><td>12</td></tr>
 <tr><td>2 -&gt; 1 -&gt; 3</td><td>13</td></tr>
@@ -3353,24 +3353,24 @@ FoldSeq( operator, base, seq )
 </tbody></table>
 <p>Because Apalache does not guarantee deterministic choice in the order of iteration, users should treat all of the above results as possible outcomes.</p>
 <h3><a class="header" href="#using-fold-operators-in-apalache" id="using-fold-operators-in-apalache">Using fold operators in Apalache</a></h3>
-<p>As shown by the type signature, Apalache permits a very general form of folding, where the types of the collection elements and the type of the base element/return-type of the operator do not have to match. Again, we urge users to exercise caution when using <code>FoldSet</code> with an operator, for which the types <code>a</code> and <code>b</code> are different, as such operators cannot be commutative or associative, and therefore the result is not guaranteed to be unique and predictable. </p>
+<p>As shown by the type signature, Apalache permits a very general form of folding, where the types of the collection elements and the type of the base element/return-type of the operator do not have to match. Again, we urge users to exercise caution when using <code>ApaFoldSet</code> with an operator, for which the types <code>a</code> and <code>b</code> are different, as such operators cannot be commutative or associative, and therefore the result is not guaranteed to be unique and predictable. </p>
 <p>The other component of note is <code>operator</code>, the <em>name</em> (not definition) of some binary operator, which is available in this context. The following are examples of valid uses of folds:</p>
 <pre><code class="language-tla">PlusOne(p,q) == p + q + 1
-X == FoldSet( PlusOne, 0, {1,2,3} ) \* X = 9 
+X == ApaFoldSet( PlusOne, 0, {1,2,3} ) \* X = 9 
 
-X == LET Count(p,q) == p + 1 IN FoldSeq( Count, 0, &lt;&lt;1,2,3&gt;&gt; ) \* X = 3
+X == LET Count(p,q) == p + 1 IN ApaFoldSeqLeft( Count, 0, &lt;&lt;1,2,3&gt;&gt; ) \* X = 3
 </code></pre>
 <p>while these next examples are considered invalid:</p>
 <pre><code class="language-tla">\* LAMBDAS in folds are not supported by Apalache
 \* Define a LET-IN operator Plus(p,q) == p + q instead
-X == FoldSet( LAMBDA p,q: p + q, 0, {1,2,3} ) 
+X == ApaFoldSet( LAMBDA p,q: p + q, 0, {1,2,3} ) 
 
 \* Built-in operators cannot be called by name in Apalache
 \* Define a LET-IN operator Plus(p,q) == p + q instead
-X == FoldSet( + , 0, {1,2,3} )
+X == ApaFoldSet( + , 0, {1,2,3} )
 </code></pre>
 <p>Local LET definitions can also be used as closures:</p>
-<pre><code>A(x) == LET PlusX(p,q) == p + q + x IN FoldSeq( PlusX, 0, &lt;&lt;1,2,3&gt;&gt; )
+<pre><code>A(x) == LET PlusX(p,q) == p + q + x IN ApaFoldSeqLeft( PlusX, 0, &lt;&lt;1,2,3&gt;&gt; )
 
 X == A(1) \* X = 9
 </code></pre>
@@ -3389,7 +3389,7 @@ MaxRec(seq) == IF seq = &lt;&lt;&gt;&gt;
                        ELSE Head(seq)
 
 MaxFold(seq) == LET Max(p,q) == IF p &gt; q THEN p ELSE q
-                IN FoldSeq( Max, negInf, seq )
+                IN ApaFoldSeqLeft( Max, negInf, seq )
 </code></pre>
 <p>The first advantage of the fold implementation, we feel, is that it is much more clear and concise. It also does not require a termination condition, unlike the recursive case.
 One inherent problem of using recursive operators with a symbolic encoding, is the inability to estimate termination.
@@ -3404,7 +3404,7 @@ MaxRec(seq) == IF seq = &lt;&lt;&gt;&gt;
                        THEN tailMax
                        ELSE Head(seq)
 </code></pre>
-<p>Now, <code>MaxRec</code> never terminates, but spotting this error might not be trivial at a glance. This is where we believe folds hold the second advantage: <code>FoldSet</code> and <code>FoldSeq</code> <em>always terminate</em> in <code>Cardinality(set)</code> or <code>Len(seq)</code> steps, and each step is simple to describe, as it consists of a single operator application.</p>
+<p>Now, <code>MaxRec</code> never terminates, but spotting this error might not be trivial at a glance. This is where we believe folds hold the second advantage: <code>ApaFoldSet</code> and <code>ApaFoldSeqLeft</code> <em>always terminate</em> in <code>Cardinality(set)</code> or <code>Len(seq)</code> steps, and each step is simple to describe, as it consists of a single operator application.</p>
 <p>In fact, the vast majority of the traditionally recursive operators can be equivalently rewritten as folds, for example:</p>
 <pre><code class="language-tla">RECURSIVE Cardinality(_)
 Cardinality(set) == IF set = {}
@@ -3413,7 +3413,7 @@ Cardinality(set) == IF set = {}
                          IN 1 + Cardinality( set \ {x} )
 
 CardinalityFold(set) == LET Count(p,q) == p + 1 \* the value of q, the set element, is irrelevant
-                        IN FoldSet( Count, 0, set )
+                        IN ApaFoldSet( Count, 0, set )
 </code></pre>
 <p>Notice that, in the case of sets, picking an arbitrary element <code>x</code>, to remove from the set at each step, utilizes the <code>CHOOSE</code> operator. This is a common trait shared by many operators that implement recursion over sets. 
 Since the introduction of folds, the use of <code>CHOOSE</code> in Apalache is heavily discouraged as it is both inefficient, as well as nondeterministic (unlike how <code>CHOOSE</code> is defined in TLA+ literature). For details, see the discussion in <a href="https://github.com/informalsystems/apalache/issues/841">issue 841</a>.</p>
@@ -3423,7 +3423,7 @@ For instance, one cannot define the <a href="https://en.wikipedia.org/wiki/Acker
 <h3><a class="header" href="#folding-vs-quantification-and-choose" id="folding-vs-quantification-and-choose">Folding VS quantification and <code>CHOOSE</code></a></h3>
 <p>Often, folding can be used to select a value from a collection, which could alternatively be described by a predicate and selected with <code>CHOOSE</code>. Let us revisit the <code>MaxFold</code> example:</p>
 <pre><code class="language-tla">MaxFold(seq) == LET Max(p,q) == IF p &gt; q THEN p ELSE q
-                IN FoldSeq( Max, negInf, seq )
+                IN ApaFoldSeqLeft( Max, negInf, seq )
 </code></pre>
 <p>The fold-less case could, instead of using recursion, compute the maximum as follows:</p>
 <pre><code class="language-tla">MaxChoose(seq) == 
@@ -3440,22 +3440,22 @@ For instance, one cannot define the <a href="https://en.wikipedia.org/wiki/Acker
 EXTENDS Apalache
 
 \*  Sum of all values of a set of integers
-Sum(set) == LET Plus(p,q) == p + q IN FoldSet( Plus, 0, set )
+Sum(set) == LET Plus(p,q) == p + q IN ApaFoldSet( Plus, 0, set )
 
 \*  Re-implementation of UNION setOfSets
-BigUnion(setOfSets) == LET Union(p,q) == p \union q IN FoldSet( Union, {}, setOfSets )
+BigUnion(setOfSets) == LET Union(p,q) == p \union q IN ApaFoldSet( Union, {}, setOfSets )
 
 \*  Re-implementation of SelectSeq
 SelectSeq(seq, Test(_)) == LET CondAppend(s,e) == IF Test(e) THEN Append(s, e) ELSE s
-                           IN FoldSeq( CondAppend, &lt;&lt;&gt;&gt;, seq )
+                           IN ApaFoldSeqLeft( CondAppend, &lt;&lt;&gt;&gt;, seq )
 
 \*  Quantify the elements in S matching the predicate P
 Quantify(S, P(_)) == LET CondCount(p,q) == p + IF P(q) THEN 1 ELSE 0
-                     IN FoldSet( CondCount, 0, S )
+                     IN ApaFoldSet( CondCount, 0, S )
 
 \* The set of all values in seq
 Range(seq) == LET AddToSet(S, e) == S \union {e}
-              IN LET Range == FoldSeq( AddToSet, {}, seq )
+              IN LET Range == ApaFoldSeqLeft( AddToSet, {}, seq )
 
 \* Finds the the value that appears most often in a sequence. Returns elIfEmpty for empty sequences
 Mode(seq, elIfEmpty) == LET ExtRange == Range(seq) \union {elIfEmpty}
@@ -3466,7 +3466,7 @@ Mode(seq, elIfEmpty) == LET ExtRange == Range(seq) \union {elIfEmpty}
                                 IN IF newCounters[e] &gt; newCounters[currentMode]
                                    THEN &lt;&lt; newCounters, e &gt;&gt;
                                    ELSE &lt;&lt; newCounters, currentMode &gt;&gt;
-                           IN FoldSeq( CountElem, &lt;&lt;[ x \in ExtRange |-&gt; 0 ], elIfEmpty &gt;&gt;, seq )[2]
+                           IN ApaFoldSeqLeft( CountElem, &lt;&lt;[ x \in ExtRange |-&gt; 0 ], elIfEmpty &gt;&gt;, seq )[2]
 
 \* Returns TRUE iff fn is injective
 IsInjective(fn) == 
@@ -3474,7 +3474,7 @@ IsInjective(fn) ==
     IF fn[e] \in seenAndResult[1]
     THEN [ seenAndResult EXCEPT ![2] = FALSE ]
     ELSE [ seenAndResult EXCEPT ![1] = seenAndResult[1] \union {fn[e]} ]
-  IN FoldSet( SeenBefore, &lt;&lt; {}, TRUE &gt;&gt;, DOMAIN fn )[2]
+  IN ApaFoldSet( SeenBefore, &lt;&lt; {}, TRUE &gt;&gt;, DOMAIN fn )[2]
 
 ================================
 </code></pre>
@@ -3815,7 +3815,7 @@ functions in Apalache:</p>
 <li>Resursive operators and functions usually apply <code>CHOOSE</code>, which
 is hard to implement faithfully without blowing up the SMT encoding.</li>
 </ul>
-<p>Hence, we recommend using the operators <code>FoldSet</code> and <code>FoldSeq</code>:</p>
+<p>Hence, we recommend using the operators <code>ApaFoldSet</code> and <code>ApaFoldSeqLeft</code>:</p>
 <pre><code class="language-tla"> * FunAsSeq([ i \in 1..N |-&gt; F(i) ]). Apalache requires N to be
  * a constant expression.
  *
@@ -4492,8 +4492,8 @@ to see liveness implemented, upvote the <a href="https://github.com/informalsyst
 <tr><td><code>CONSTANTS C1, C2</code></td><td align="center">✔</td><td align="center">-</td><td>Either define a <code>ConstInit</code> operator to initialize the constants, use a <code>.cfg</code> file, or declare operators instead of constants, e.g., C1 == 111</td></tr>
 <tr><td><code>VARIABLES x, y, z</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>ASSUME P</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Parsed, but not propagated to the solver</td></tr>
-<tr><td><code>F(x1, ..., x_n) == exp</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Every application of <code>F</code> is replaced with its body. Recursive operators need <a href="apalache/./principles.html#recursive-operators">unrolling annotations</a>. From 0.16.1 and later, for better performance and UX, use <code>FoldSet</code> and <code>FoldSeq</code>.</td></tr>
-<tr><td><code>f[x ∈ S] == exp</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Recursive functions are only supported if they return integers or Booleans. From 0.16.1 and later, for better performance and UX, use <code>FoldSet</code> and <code>FoldSeq</code>.</td></tr>
+<tr><td><code>F(x1, ..., x_n) == exp</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Every application of <code>F</code> is replaced with its body. Recursive operators need <a href="apalache/./principles.html#recursive-operators">unrolling annotations</a>. From 0.16.1 and later, for better performance and UX, use <code>ApaFoldSet</code> and <code>ApaFoldSeqLeft</code>.</td></tr>
+<tr><td><code>f[x ∈ S] == exp</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Recursive functions are only supported if they return integers or Booleans. From 0.16.1 and later, for better performance and UX, use <code>ApaFoldSet</code> and <code>ApaFoldSeqLeft</code>.</td></tr>
 <tr><td><code>INSTANCE M WITH ...</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>No special treatment for <code>~&gt;</code>, <code>\cdot</code>, <code>ENABLED</code></td></tr>
 <tr><td><code>N(x1, ..., x_n) == INSTANCE M WITH...</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Parameterized instances are not supported</td></tr>
 <tr><td><code>THEOREM P</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Parsed but not used</td></tr>
@@ -4505,7 +4505,7 @@ to see liveness implemented, upvote the <a href="https://github.com/informalsyst
 <tr><td><code>/\</code>, <code>\/</code>, <code>~</code>, <code>=&gt;</code>, <code>&lt;=&gt;</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>TRUE</code>, <code>FALSE</code>, <code>BOOLEAN</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>\A x \in S: p</code>, <code>\E x \in S : p</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
-<tr><td><code>CHOOSE x \in S : p</code></td><td align="center">✖</td><td align="center">-</td><td>Partial support prior to version 0.16.1. From 0.16.1 and later, use <code>Some</code>, <code>FoldSet</code>, or <code>FoldSeq</code>. See <a href="https://github.com/informalsystems/apalache/issues/841">#841</a>.</td></tr>
+<tr><td><code>CHOOSE x \in S : p</code></td><td align="center">✖</td><td align="center">-</td><td>Partial support prior to version 0.16.1. From 0.16.1 and later, use <code>Some</code>, <code>ApaFoldSet</code>, or <code>ApaFoldSeqLeft</code>. See <a href="https://github.com/informalsystems/apalache/issues/841">#841</a>.</td></tr>
 <tr><td><code>CHOOSE x : x \notin S</code></td><td align="center">✖</td><td align="center">-</td><td>Not supported. You can use records or a default value such as -1.</td></tr>
 <tr><td><code>\A x : p, \E x : p</code></td><td align="center">✖</td><td align="center">-</td><td>Use bounded quantifiers</td></tr>
 <tr><td><code>CHOOSE x : p</code></td><td align="center">✖</td><td align="center">-</td><td></td></tr>
@@ -4732,9 +4732,9 @@ min(S) ==
 In addition, computing <code>F</code> for a set <code>S</code> of size <code>n = |S|</code> requires <code>n</code> encodings of a <code>CHOOSE</code> operation, which can be considerably expensive in Apalache.
 Lastly, Apalache also needs to encode all of the the <code>n</code> intermediate sets, <code>S \ {e1}</code>, <code>(S \ {e1}) \ {e2}</code>, <code>((S \ {e1}) \ {e2}) \ {e3}</code>, and so on.</p>
 <p>The AP above can be replaced by a very simple pattern:</p>
-<pre><code class="language-tla">F(S) == FoldSet( G, v, S )
+<pre><code class="language-tla">F(S) == ApaFoldSet( G, v, S )
 </code></pre>
-<p><code>FoldSet</code> (and <code>FoldSeq</code>) were introduced precisely for these scenarios, and should be used over <code>RECURSIVE + CHOOSE</code> in most cases.</p>
+<p><code>ApaFoldSet</code> (and <code>ApaFoldSeqLeft</code>) were introduced precisely for these scenarios, and should be used over <code>RECURSIVE + CHOOSE</code> in most cases.</p>
 <h2><a class="header" href="#incremental-computation" id="incremental-computation">Incremental computation</a></h2>
 <p>Often, users introduce an expression <code>Y</code>, which is derived from another expression <code>X</code> (<code>Y == F(X)</code>, for some <code>F</code>). Instead of defining <code>Y</code> directly, in terms of the properties it possesses,  it is possible to define all the intermediate steps of transforming <code>X</code> into <code>Y</code>: &quot;<code>X</code> is slightly changed into <code>X1</code> (e.g. by adding one element to a set, or via <code>EXCEPT</code>), which is changed into <code>X2</code>, etc. until <code>Xn = Y</code>&quot;. Doing this in Apalache is almost always a bad idea, if a direct characterization of <code>Y</code> exists.</p>
 <p>Concretely, the following constructs are APs:</p>
@@ -4743,14 +4743,14 @@ Lastly, Apalache also needs to encode all of the the <code>n</code> intermediate
 </ol>
 <pre><code class="language-tla">G ==
   LET F(g, x) == [g EXCEPT ![x] = A(x)]
-  IN FoldSet(F, f, S)
+  IN ApaFoldSet(F, f, S)
 </code></pre>
 <ol start="2">
 <li>Incremental <code>\union</code></li>
 </ol>
 <pre><code class="language-tla">R ==
   LET F(T, e) == T \union {A(e)}
-  IN FoldSet(F, S0, S)
+  IN ApaFoldSet(F, S0, S)
 </code></pre>
 <ol start="3">
 <li>Chained <code>@@/:&gt;</code></li>
@@ -4761,7 +4761,7 @@ Lastly, Apalache also needs to encode all of the the <code>n</code> intermediate
 <pre><code class="language-tla">f == [ x \in 1..20 |-&gt; 0 ]
 Y == 
   LET F(g, x) == [g EXCEPT ![x] = x * x]
-  IN FoldSet(F, f, 7..12 )
+  IN ApaFoldSet(F, f, 7..12 )
 </code></pre>
 <p>TLC likes these sorts of operations, because it manipulates programming-language objects in its own implementation.
 This makes it easy to construct temporary mutable objects, manipulate them (e.g. via for-loops) and garbage-collect them after they stop being useful.
@@ -4773,7 +4773,7 @@ Below we show how to rewrite these APs.</p>
 </ol>
 <pre><code class="language-tla">G ==
   LET F(g, x) == [g EXCEPT ![x] = A(x)]
-  IN FoldSet(F, f, S)
+  IN ApaFoldSet(F, f, S)
 </code></pre>
 <p>with</p>
 <pre><code class="language-tla">G == 
@@ -4788,7 +4788,7 @@ Below we show how to rewrite these APs.</p>
 </ol>
 <pre><code class="language-tla">R ==
   LET F(T, e) == T \union {A(e)}
-  IN FoldSet(F, S0, S)
+  IN ApaFoldSet(F, S0, S)
 </code></pre>
 <p>with</p>
 <pre><code class="language-tla">R == S0 \union { A(e): e \in S }
@@ -9619,7 +9619,7 @@ IN
 </code></pre>
 <hr />
 <h2><a class="header" href="#folding" id="folding">Folding</a></h2>
-<p>The operators <code>FoldSet</code> and <code>FoldSeq</code> are explained in more detail in a dedicated section <a href="lang/../apalache/fold.html">here</a>.</p>
+<p>The operators <code>ApaFoldSet</code> and <code>ApaFoldSeqLeft</code> are explained in more detail in a dedicated section <a href="lang/../apalache/fold.html">here</a>.</p>
 <hr />
 <p><a name="SetAsFun"></a></p>
 <h2><a class="header" href="#convert-a-set-of-pairs-to-a-function" id="convert-a-set-of-pairs-to-a-function">Convert a set of pairs to a function</a></h2>
