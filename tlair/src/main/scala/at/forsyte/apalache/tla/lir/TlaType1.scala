@@ -255,7 +255,7 @@ case class TupT1(elems: TlaType1*) extends TlaType1 {
 case class SparseTupT1(fieldTypes: SortedMap[Int, TlaType1]) extends TlaType1 {
   override def toString: String = {
     val keyTypeStrs = fieldTypes.map(p => "%s: %s".format(p._1, p._2))
-    "{%s}".format(keyTypeStrs.mkString(", "))
+    "<| %s |>".format(keyTypeStrs.mkString(", "))
   }
 
   override def usedNames: Set[Int] = fieldTypes.values.foldLeft(Set[Int]()) { (s, t) =>
@@ -364,7 +364,7 @@ case class RecRowT1(row: RowT1) extends TlaType1 {
     val fields = row.fieldTypes.map(p => "%s: %s".format(p._1, p._2)).mkString(", ")
     row.other match {
       case None    => s"{ $fields }"
-      case Some(v) => s"{ $fields, $v }"
+      case Some(v) => if (fields.nonEmpty) s"{ $fields, $v }" else s"Rec($v)"
     }
 
   }
@@ -386,7 +386,7 @@ case class VariantT1(row: RowT1) extends TlaType1 {
     val options = row.fieldTypes.map(p => elemToString(p._1, p._2)).mkString(" | ")
     row.other match {
       case None    => options
-      case Some(v) => s"$options | $v"
+      case Some(v) => if (options.nonEmpty) s"$options | $v" else s"Variant($v)"
     }
   }
 
@@ -397,8 +397,19 @@ case class VariantT1(row: RowT1) extends TlaType1 {
       case RecRowT1(RowT1(fieldTypes, other)) =>
         val pairs = fieldTypes.filter(_._1 != "tag").map(p => "%s: %s".format(p._1, p._2)).mkString(", ")
         other match {
-          case None    => s"""{ tag: "$tag", $pairs }"""
-          case Some(v) => s"""{ tag: "$tag", $pairs, $v }"""
+          case None =>
+            if (pairs.nonEmpty) {
+              s"""{ tag: "$tag", $pairs }"""
+            } else {
+              s"""{ tag: "$tag" }"""
+            }
+
+          case Some(v) =>
+            if (pairs.nonEmpty) {
+              s"""{ tag: "$tag", $pairs, $v }"""
+            } else {
+              s"""{ tag: "$tag", $v }"""
+            }
         }
 
       case _ =>
