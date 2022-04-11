@@ -782,7 +782,7 @@ predicates <code>Init</code> and <code>Next</code> into independent pieces like 
 how it is done, run Apalache with the options <code>--write-intermediate</code> and <code>--run-dir</code>:</p>
 <pre><code class="language-sh">$ apalache-mc check --inv=Postcondition --write-intermediate=1 --run-dir=out MC4_8.tla
 </code></pre>
-<p>Check the file <code>out/intermediate/09_OutTransition.tla</code>, which contains the
+<p>Check the file <code>out/intermediate/XX_OutTransitionFinderPass.tla</code>, which contains the
 preprocessed specification that has <code>Init</code> and <code>Next</code> decomposed. You can find
 a detailed explanation in the section on <a href="tutorials/../apalache/assignments-in-depth.html">Assignments in Apalache</a>.</p>
 <h2><a class="header" href="#step-5-checking-postcondition-for-plenty-of-inputs" id="step-5-checking-postcondition-for-plenty-of-inputs">Step 5: Checking Postcondition for plenty of inputs</a></h2>
@@ -2553,7 +2553,7 @@ InvariantViolation == x &gt;= 3
 <p>We can see that, even though \(k=10\), we found a violation in \(l=2\) steps.
 Each <code>State{i}</code> represents one of \(s_0,\dots,s_l\), by explicitly defining variable values in that state (e.g. <code>x = 1 /\ y = 2 /\ z = &quot;A&quot;</code>). 
 The comment <code>(* Transition X to StateY *)</code> outlines which \(t_1,\dots,t_m\) was used to reach \(s_{i+1}\) from \(s_i\) (0-indexed). 
-The shape of \(t_i\) can be found by looking at the file <code>OutTransition.tla</code>, and will be named <code>Next_si_i</code>.
+The shape of \(t_i\) can be found by looking at the file <code>XX_OutTransitionFinderPass.tla</code>, and will be named <code>Next_si_i</code>.
 In the above case, <code>Transition 0</code> refers to the one representing <code>A</code> and <code>Transition 1</code> refers to the one representing <code>B</code>. 
 <code>InvariantViolation</code> is the negation of the invariant <code>Inv</code>, and it will hold in <code>State{l}</code> (in this case, <code>x &lt; 3</code> does not hold in <code>State2</code>, where <code>x = 3</code>).</p>
 <h2><a class="header" href="#notation-and-definitions" id="notation-and-definitions">Notation and definitions</a></h2>
@@ -3050,7 +3050,7 @@ into <a href="https://github.com/informalsystems/apalache/blob/master/tlair/src/
 </li>
 <li>
 <p>If the <code>--write-intermediate</code> flag is given, it pretty-prints the IR into
-<code>00_OutParser.json</code> and <code>00_OutParser.tla</code> in the output directory (see <a href="apalache/running.html#detailed">Detailed output</a>).</p>
+the output directory (see <a href="apalache/running.html#detailed">Detailed output</a>).</p>
 </li>
 </ol>
 <p>You can also write output to a specified location by using the <code>--output</code> flag.
@@ -3234,7 +3234,7 @@ and run <code>apalache</code> against
 <pre><code class="language-console">$ apalache check y2k_override.tla
 </code></pre>
 <p>We can check the detailed output of the <code>TransitionFinderPass</code> in the file
-<code>_apalache-out/y2k_override.tla/&lt;timestamp&gt;/09_OutTransition.tla</code>, where
+<code>_apalache-out/y2k_override.tla/&lt;timestamp&gt;/XX_OutTransitionFinderPass.tla</code>, where
 <code>&lt;timestamp&gt;</code> looks like <code>2021-12-01T12-07-41_1998641578103809179</code>:</p>
 <pre><code class="language-tla">---------------------------- MODULE y2k_override ----------------------------
 (*
@@ -4805,8 +4805,12 @@ Below we show how to rewrite these APs.</p>
 <p>Before translating a specification into SMT, <code>apalache</code> performs a number of
 preprocessing steps:</p>
 <ul>
-<li><code>InlinerOfUserOper</code>: replaces every call to a user-defined operator with the operator's body.</li>
-<li><code>LetInExpander</code>: replaces every call to a let-in defined operator of arity at least 1 with the operator's body</li>
+<li><code>Inliner</code>: 
+<ul>
+<li>replaces every call to a user-defined operator with the operator's body</li>
+<li>replaces every call to a let-in defined operator of arity at least 1 with the operator's body</li>
+</ul>
+</li>
 <li><code>PrimingPass</code>: adds primes to variables in <code>Init</code> and <code>ConstInit</code> (required by <code>TransitionPass</code>)</li>
 <li><code>VCGen</code>: extracts verification conditions from the invariant candidate.</li>
 <li><code>Desugarer</code>: removes syntactic sugar like short-hand expressions in <code>EXCEPT</code>.</li>
@@ -4874,7 +4878,7 @@ arbitrary transitions until the <code>length.</code> Note that there is no direc
 correspondence between the transition numbers and the actions in the TLA+
 spec. To find the numbers, run Apalache with <code>--write-intermediate=true</code> and
 check the transition numbers in
-<code>_apalache-out/&lt;MySpec&gt;.tla/*/intermediate/09_OutTransition.tla</code>: the 0th
+<code>_apalache-out/&lt;MySpec&gt;.tla/*/intermediate/XX_OutTransitionFinderPass.tla</code>: the 0th
 transition is called <code>Next_si_0000</code>, 1st transition is called <code>Next_si_0001</code>,
 etc.</p>
 </li>

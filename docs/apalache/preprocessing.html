@@ -174,8 +174,12 @@
 <p>Before translating a specification into SMT, <code>apalache</code> performs a number of
 preprocessing steps:</p>
 <ul>
-<li><code>InlinerOfUserOper</code>: replaces every call to a user-defined operator with the operator's body.</li>
-<li><code>LetInExpander</code>: replaces every call to a let-in defined operator of arity at least 1 with the operator's body</li>
+<li><code>Inliner</code>: 
+<ul>
+<li>replaces every call to a user-defined operator with the operator's body</li>
+<li>replaces every call to a let-in defined operator of arity at least 1 with the operator's body</li>
+</ul>
+</li>
 <li><code>PrimingPass</code>: adds primes to variables in <code>Init</code> and <code>ConstInit</code> (required by <code>TransitionPass</code>)</li>
 <li><code>VCGen</code>: extracts verification conditions from the invariant candidate.</li>
 <li><code>Desugarer</code>: removes syntactic sugar like short-hand expressions in <code>EXCEPT</code>.</li>

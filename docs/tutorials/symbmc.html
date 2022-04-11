@@ -743,7 +743,7 @@ InvariantViolation == x &gt;= 3
 <p>We can see that, even though \(k=10\), we found a violation in \(l=2\) steps.
 Each <code>State{i}</code> represents one of \(s_0,\dots,s_l\), by explicitly defining variable values in that state (e.g. <code>x = 1 /\ y = 2 /\ z = &quot;A&quot;</code>). 
 The comment <code>(* Transition X to StateY *)</code> outlines which \(t_1,\dots,t_m\) was used to reach \(s_{i+1}\) from \(s_i\) (0-indexed). 
-The shape of \(t_i\) can be found by looking at the file <code>OutTransition.tla</code>, and will be named <code>Next_si_i</code>.
+The shape of \(t_i\) can be found by looking at the file <code>XX_OutTransitionFinderPass.tla</code>, and will be named <code>Next_si_i</code>.
 In the above case, <code>Transition 0</code> refers to the one representing <code>A</code> and <code>Transition 1</code> refers to the one representing <code>B</code>. 
 <code>InvariantViolation</code> is the negation of the invariant <code>Inv</code>, and it will hold in <code>State{l}</code> (in this case, <code>x &lt; 3</code> does not hold in <code>State2</code>, where <code>x = 3</code>).</p>
 <h2><a class="header" href="#notation-and-definitions" id="notation-and-definitions">Notation and definitions</a></h2>
