@@ -1,7 +1,9 @@
 package at.forsyte.apalache.tla.lir
 
 import org.scalacheck.Gen
-import org.scalacheck.Gen.{choose, const, identifier, listOfN, lzy, oneOf, posNum, resize, sized}
+import org.scalacheck.Gen.{alphaNumStr, choose, const, identifier, listOfN, lzy, oneOf, posNum, resize, sized, some}
+
+import scala.collection.immutable.SortedMap
 
 // Generators for the case classes of TlaType1
 trait TlaType1Gen {
@@ -79,6 +81,45 @@ trait TlaType1Gen {
       } yield RecT1(keys.zip(values): _*)
     }
 
+  def genRow: Gen[RowT1] =
+    sized { size => // use 'sized' to control the depth of the generated term
+      for {
+        // use resize to decrease the depth of the elements (as terms)
+        s <- choose(0, size)
+        elem = resize(s - 1, genTypeTree)
+        keys <- listOfN(s, identifier)
+        values <- listOfN(s, elem)
+        varNo <- choose(0, 25)
+        optVar <- some(VarT1(varNo))
+      } yield RowT1(SortedMap(keys.zip(values): _*), optVar)
+    }
+
+  def genRowRec: Gen[RecRowT1] = {
+    for {
+      row <- genRow
+    } yield RecRowT1(row)
+  }
+
+  def genVariantOption: Gen[RecRowT1] = {
+    for {
+      // use resize to decrease the depth of the elements (as terms)
+      row <- genRow
+    } yield RecRowT1(RowT1(SortedMap(row.fieldTypes.toSeq :+ ("tag" -> StrT1()): _*), row.other))
+  }
+
+  def genVariant: Gen[VariantT1] =
+    sized { size => // use 'sized' to control the depth of the generated term
+      for {
+        // use resize to decrease the depth of the elements (as terms)
+        s <- choose(0, size)
+        elem = resize(s - 1, genVariantOption)
+        keys <- listOfN(s, alphaNumStr)
+        values <- listOfN(s, elem)
+        varNo <- choose(0, 25)
+        optVar <- some(VarT1(varNo))
+      } yield VariantT1(RowT1(SortedMap(keys.zip(values): _*), optVar))
+    }
+
   // generate the term tree -- a recursive data structure
   def genTypeTree: Gen[TlaType1] = lzy {
     sized { size =>
@@ -88,7 +129,7 @@ trait TlaType1Gen {
       } else {
         // We may produce deeper trees.
         // NOTE: we do not generate sparse tuples, as they cannot appear in user's annotations.
-        oneOf(genPrimitive, genSet, genSeq, genFun, genOper, genTup, genRec)
+        oneOf(genPrimitive, genSet, genSeq, genFun, genOper, genTup, genRec, genRowRec, genVariant, genRow)
       }
     }
   }
