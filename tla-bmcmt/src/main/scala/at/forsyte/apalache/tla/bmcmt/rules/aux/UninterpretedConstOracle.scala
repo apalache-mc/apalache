@@ -36,7 +36,7 @@ class UninterpretedConstOracle(valueCells: Seq[ArenaCell], oracleCell: ArenaCell
    *   an expression ite(oracle = 0, ite(oracle = 1, ...))
    */
   override def caseAssertions(state: SymbState, assertions: Seq[TlaEx], elseAssertions: Seq[TlaEx] = Seq()): TlaEx = {
-    if (elseAssertions.nonEmpty & assertions.size != elseAssertions.size) {
+    if (elseAssertions.nonEmpty && assertions.size != elseAssertions.size) {
       throw new IllegalStateException(s"Invalid call to Oracle, malformed elseAssertions")
     }
 

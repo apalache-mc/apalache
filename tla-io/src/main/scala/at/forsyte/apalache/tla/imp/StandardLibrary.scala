@@ -59,6 +59,7 @@ object StandardLibrary {
         ("Apalache", ":=") -> ApalacheOper.assign,
         ("Apalache", "Gen") -> ApalacheOper.gen,
         ("Apalache", "Skolem") -> ApalacheOper.skolem,
+        ("Apalache", "Guess") -> ApalacheOper.guess,
         ("Apalache", "Expand") -> ApalacheOper.expand,
         ("Apalache", "ConstCardinality") -> ApalacheOper.constCard,
         ("Apalache", "MkSeq") -> ApalacheOper.mkSeq,

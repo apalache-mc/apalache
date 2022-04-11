@@ -1,9 +1,12 @@
 ---
 authors: Igor Konnov
-last revised: 2022-03-31
+last revised: 2022-04-01
 ---
 
-# ADR-017: Support for temporal properties
+# PDR-017: Checking temporal properties
+
+**This is a preliminary design document. It will be refined and it will mature
+  into an ADR later.**
 
 **Table of Contents**
 
@@ -15,12 +18,12 @@ last revised: 2022-03-31
 
 ## Summary
 
-TLA+ stands for *Temporal Logic of Actions*, whereas the plus sign (+) in the
-name stands for the rich syntax of this logic. So far, we have been focusing on
+The "TLA" in TLA+ stands for *Temporal Logic of Actions*, whereas the plus sign
+(+) stands for the rich syntax of this logic. So far, we have been focusing on
 the *plus* of TLA+ in Apalache. Indeed, the repository of [TLA+ Examples][]
 contains a few occurrences of temporal properties.
 
-In this ADR, we lay out a plan for implementing support for model checking
+In this PDR, we lay out a plan for implementing support for model checking
 of temporal properties in Apalache.
 
 ## Context
@@ -49,8 +52,8 @@ subformulas:
    - No-stutter `A`: `<A>_e`, for an action formula `A`
      and an expression `e`, which is equivalent to `A /\ e' /= e`.
 
-   - `ENABLED A`, for an action formula `A`. It is true in a state `s`, if
-     there is a state `t` such that `s` is tranformed to `t` via action `A`.
+   - `ENABLED A`, for an action formula `A`, is true in a state `s` if
+     there is a state `t` such that `s` is transformed to `t` via action `A`.
 
  - **Temporal formulas**:
 
@@ -68,10 +71,11 @@ subformulas:
 
 Technically, TLA+ also contains four other operators that are related to
 temporal properties: `A \cdot B`, `\EE x: F`, `\AA x: F`, and `F -+-> G`. These
-very advanced operators appear so rarely that we ignore them. For their
-semantics, check [Specifying Systems][] (Section 16.2.3-4).
+very advanced operators appear so rarely that we ignore them in this work.
+Most likely, For their semantics, check [Specifying Systems][] (Section
+16.2.3-4).
 
-## Options
+## Design space
 
 SAT encodings of bounded model checking for LTL are a textbook material. A
 linear encoding for LTL is presented in the paper [Biere et al. 2006][]. It is
@@ -87,22 +91,25 @@ with the exploration algorithm, which was refactored several times, this
 implementation has not been integrated in the main branch. We have learned from
 this prototype and discuss our options under this angle.
 
-There are two principally different approaches to the implementation of LTL
-model checking:
+There are two principally different approaches to the implementation of
+temporal model checking:
 
  1. Tight integration with [Transition Executor][].
 
     In this approach, we would extend the transition executor to incrementally
-    check LTL properties via the encoding by [Biere et al. 2006][]. This approach
-    would let us implement various optimizations. However, it would be harder
-    to maintain and adapt, as we have seen from the first prototype.
+    check LTL properties via the encoding by [Biere et al. 2006][]. This
+    approach would let us implement various optimizations. However, it would be
+    harder to maintain and adapt, as we have seen from the first prototype.
 
  1. Specification preprocessing.
 
     In this approach, given a specification `S` and a temporal property `P`, we
     would produce another specification `S_P` and an invariant `I_P` that has
     the following property: the temporal property `P` holds on specification
-    `S` if and only if the invariant `I_P` holds on specification `S_P`.
+    `S` if and only if the invariant `I_P` holds on specification `S_P`.  In
+    this approach, we encode the constraints by [Biere et al. 2006][] directly
+    in TLA+. The potential downside of this approach is that it may be less
+    efficient than the tight integration with the transition executor.
 
 We choose the second approach via specification preprocessing. This will
 simplify maintenance of the codebase. Additionally, the users will be able to
@@ -110,7 +117,7 @@ see the result of preprocessing and optimize it, if needed. When the new
 implementation is well understood, we can revisit it and consider Option 1,
 once [ADR-010][] is implemented.
 
-## Solution
+## Work plan
 
 The work plan is tracked in the [issue on temporal properties][].
 
@@ -129,7 +136,7 @@ expressed via `<>` and `[]`.
 
 To support temporal reasoning as it was designed by Leslie Lamport, we have to
 solve Task 2. Most likely, we will have to introduce additional assumptions
-about specifications to solve this task.
+about specifications to solve it.
 
 ### 1. Temporal operators
 
