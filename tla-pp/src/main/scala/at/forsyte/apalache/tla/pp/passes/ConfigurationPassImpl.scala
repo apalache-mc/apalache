@@ -6,9 +6,10 @@ import at.forsyte.apalache.io.tlc.TlcConfigParserApalache
 import at.forsyte.apalache.io.tlc.config._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
+import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaOper, TlaTempOper}
-import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.standard.NonrecursiveLanguagePred
 import at.forsyte.apalache.tla.pp._
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
@@ -36,6 +37,9 @@ class ConfigurationPassImpl @Inject() (
   override def name: String = "ConfigurationPass"
 
   override def execute(tlaModule: TlaModule): Option[TlaModule] = {
+    // Since this is the 1st pass after Inline, check absence of recursion first
+    LanguageWatchdog(NonrecursiveLanguagePred).check(tlaModule)
+
     // this pass is hard to read, too many things are happening here...
     val relevantOptions = new WriteablePassOptions()
     copyRelevantOptions(options, relevantOptions)
@@ -57,7 +61,7 @@ class ConfigurationPassImpl @Inject() (
     // However, that should be done very carefully. Maybe we should do that in the future.
 
     // dump the configuration result
-    writerFactory.writeModuleAllFormats(configuredModule.copy(name = "02_OutConfig"), TlaWriter.STANDARD_MODULES)
+    writeOut(writerFactory, configuredModule)
 
     Some(configuredModule)
   }

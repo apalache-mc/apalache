@@ -25,6 +25,19 @@ trait Pass {
    */
   def name: String
 
+  var passNumber: Int = 0
+
+  /**
+   * Updates the pass number internally
+   *
+   * @return
+   *   This pass, with an updated pass number
+   */
+  def withNumber(i: Int): Pass = {
+    passNumber = i
+    this
+  }
+
   /**
    * Run the pass.
    * @param module

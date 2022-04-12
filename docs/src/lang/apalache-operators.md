@@ -45,6 +45,44 @@ True
 
 ----------------------------------------------------------------------------
 
+<a name="Guess"></a>
+
+## Non-deterministically guess a value
+
+**Notation:** `Guess(S)`
+
+**LaTeX notation:** `Guess(S)`
+
+**Arguments:** One argument: a finite set `S`, possibly empty.
+
+**Apalache type:** `Set(a) => a`, for some type `a`.
+
+**Effect:** Non-deterministically pick a value out of the set `S`, if `S` is
+non-empty. If `S` is empty, return some value of the proper type.
+
+**Determinism:** Non-deterministic if `S` is non-empty, that is, two subsequent
+calls to `Guess(S)` may return `x, y \in S` that can differ (`x /= y`) or may
+be equal (`x = y`). Moreover, Apalache considers all possible combinations of
+elements of `S` in the model checking mode. If `S` is empty, `Guess(S)`
+produces the same value of proper type.
+
+**Errors:**
+If `S` is not a set, Apalache reports an error.
+
+**Example in TLA+:**
+
+```tla
+/\ 1 = Guess({ 1, 2, 3 })         \* TRUE or FALSE
+/\ 2 = Guess({ 1, 2, 3 })         \* TRUE or FALSE
+/\ 3 = Guess({ 1, 2, 3 })         \* TRUE or FALSE
+/\ 4 /= Guess({ 1, 2, 3 })        \* TRUE
+/\ Guess({ 1, 2, 3 }) \in Int     \* TRUE
+```
+
+
+
+----------------------------------------------------------------------------
+
 <a name="Gen"></a>
 ## Value generators
 
@@ -92,7 +130,7 @@ IN
 
 ## Folding
 
-The operators `FoldSet` and `FoldSeq` are explained in more detail in a dedicated section [here](../apalache/fold.md).
+The operators `ApaFoldSet` and `ApaFoldSeqLeft` are explained in more detail in a dedicated section [here](../apalache/fold.md).
 
 ----------------------------------------------------------------------------
 

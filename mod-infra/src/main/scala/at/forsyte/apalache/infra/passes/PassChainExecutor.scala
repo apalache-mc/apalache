@@ -21,6 +21,7 @@ class PassChainExecutor(val options: WriteablePassOptions, passes: Seq[Pass]) ex
       logger.info("PASS #%d: %s".format(seqNo, passToRun.name))
       val result = passToRun.execute(module)
       val outcome = if (result.isDefined) "[OK]" else "[FAIL]"
+      // TODO: As part of #858, PassWithOutputs.writeOut should be called here.
       logger.debug("PASS #%d: %s %s".format(seqNo, passToRun.name, outcome))
       result
     }

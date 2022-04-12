@@ -119,13 +119,13 @@ Consider now the much simpler alternative:
 ```tla
 NonRecursiveMax(S) == 
   LET Max2(a,b) == IF a < b THEN b ELSE a IN
-  FoldSet(Max2, 0, S) 
+  ApaFoldSet(Max2, 0, S) 
 ```
 
-In this case, the user doesn't have to think about defaults (aside from the empty-set case), or recursion, as `FoldSet` ensures `|S|`-step "iteration". As an additional benefit, one also doesn't need to use `CHOOSE` to select elements this way.
+In this case, the user doesn't have to think about defaults (aside from the empty-set case), or recursion, as `ApaFoldSet` ensures `|S|`-step "iteration". As an additional benefit, one also doesn't need to use `CHOOSE` to select elements this way.
 
 So ultimately, the reasons for abandoning support for recursive operators boils down to the following:
-  - **In the vast majority of cases, equivalent functionality can be achieved by using `FoldSet` or `FoldSeq`**
+  - **In the vast majority of cases, equivalent functionality can be achieved by using `ApaFoldSet` or `ApaFoldSeqLeft`**
   - `UNROLL_TIMES_Op` is hard to determine, or doesn't exist statically,
   - `UNROLL_DEFAULT_Op` is hard to determine,
   - Apalache doesn't have runtime evaluation of recursion, so it can't natively determine when a call to a recursive `Op` would have required more than `UNROLL_TIMES_Op` steps

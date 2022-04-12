@@ -10,7 +10,7 @@ import org.scalatestplus.junit.JUnitRunner
 class TestRewriterWithArrays
     extends TestCherryPick with TestSymbStateDecoder with TestSymbStateRewriter with TestSymbStateRewriterAction
     with TestSymbStateRewriterApalacheGen with TestSymbStateRewriterAssignment with TestSymbStateRewriterBool
-    with TestSymbStateRewriterChoose with TestSymbStateRewriterControl with TestSymbStateRewriterExpand
+    with TestSymbStateRewriterChooseOrGuess with TestSymbStateRewriterControl with TestSymbStateRewriterExpand
     with TestSymbStateRewriterFiniteSets with TestSymbStateRewriterFoldSeq with TestSymbStateRewriterFoldSet
     with TestSymbStateRewriterFun with TestSymbStateRewriterFunSet with TestSymbStateRewriterInt
     with TestSymbStateRewriterPowerset with TestSymbStateRewriterRecFun with TestSymbStateRewriterRecord

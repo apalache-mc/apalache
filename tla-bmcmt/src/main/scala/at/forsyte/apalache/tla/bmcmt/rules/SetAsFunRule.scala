@@ -49,7 +49,7 @@ class SetAsFunRule(rewriter: SymbStateRewriter) extends RewritingRule {
                   val resElem = nextState.arena.getHas(pair)(1)
 
                   nextState = nextState.updateArena(_.appendHas(domainCell, domElem))
-                  val inExpr = OperEx(ApalacheOper.storeInSet, domElem.toNameEx, domainCell.toNameEx)
+                  val inExpr = tla.apalacheStoreInSet(domElem.toNameEx, domainCell.toNameEx)
                   rewriter.solverContext.assertGroundExpr(inExpr)
 
                   nextState = nextState.updateArena(_.appendHasNoSmt(relationCell, pair))

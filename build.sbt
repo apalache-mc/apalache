@@ -86,9 +86,9 @@ ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
 // NOTE: Include these settings in any projects that require Apalache's TLA+ modules
 lazy val tlaModuleTestSettings = Seq(
-    // we have to tell SANY the location of Apalache modules for the tests
-    Test / fork := true, // Forking is required for the system options to take effect in the tests
-    Test / javaOptions += s"""-DTLA-Library=${(ThisBuild / baseDirectory).value / "src" / "tla"}""",
+    // This ensures that tests run from their respective sub-project directories
+    // and sequentially. FIXME: https://github.com/informalsystems/apalache/issues/1577
+    Test / fork := true
 )
 
 lazy val testSettings = Seq(
@@ -292,7 +292,14 @@ lazy val root = (project in file("."))
         // See https://github.com/informalsystems/apalache/pull/1382
         (s"tar zxvf ${pkg} -C ${target_dir}" !)
         log.info(s"Symlinking ${current_pkg} -> ${unzipped}")
-        s"ln -sfn ${unzipped} ${current_pkg}" ! log
+        if (current_pkg.exists) {
+          log.info(s"${current_pkg} already exists, overwriting")
+          current_pkg.delete
+        }
+        java.nio.file.Files.createSymbolicLink(
+            current_pkg.toPath,
+            file(unzipped).toPath,
+        )
         file(unzipped)
       },
   )

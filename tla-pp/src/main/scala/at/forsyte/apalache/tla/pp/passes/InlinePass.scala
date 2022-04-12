@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.pp.passes
 
-import at.forsyte.apalache.infra.passes.Pass
+import at.forsyte.apalache.tla.imp.passes.PassWithOutputs
 
 /**
  * A pass that expands operators and let-in definitions.
@@ -8,4 +8,4 @@ import at.forsyte.apalache.infra.passes.Pass
  * @author
  *   Igor Konnov
  */
-trait InlinePass extends Pass
+trait InlinePass extends PassWithOutputs

@@ -100,3 +100,4 @@
 - [ADR-011: alternative SMT encoding using arrays](./adr/011adr-smt-arrays.md)
 - [ADR-015: ITF: informal trace format](./adr/015adr-trace.md)
 - [ADR-016: ReTLA: Relational TLA](./adr/016adr-retla.md)
+- [PDR-017: Checking temporal properties](./adr/017pdr-temporal.md)

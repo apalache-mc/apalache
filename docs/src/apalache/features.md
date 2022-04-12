@@ -20,8 +20,8 @@ Construct  | Supported? | Milestone | Comment
 ``CONSTANTS C1, C2`` | ✔ | -  | Either define a ``ConstInit`` operator to initialize the constants, use a `.cfg` file, or declare operators instead of constants, e.g., C1 == 111
 ``VARIABLES x, y, z`` | ✔ | - |
 ``ASSUME P`` | ✔ / ✖ | - | Parsed, but not propagated to the solver
-``F(x1, ..., x_n) == exp`` | ✔ / ✖ | - | Every application of `F` is replaced with its body. [Recursive operators](./principles/recursive.md) not supported after 0.23.1. From 0.16.1 and later, for better performance and UX, use `FoldSet` and `FoldSeq`.
-``f[x ∈ S] == exp`` | ✔ / ✖ | - | [Recursive functions](./principles/recursive.md) not supported after 0.23.1. From 0.16.1 and later, for better performance and UX, use `FoldSet` and `FoldSeq`.
+``F(x1, ..., x_n) == exp`` | ✔ / ✖ | - | Every application of `F` is replaced with its body. [Recursive operators](./principles/recursive.md) not supported after 0.23.1. From 0.16.1 and later, for better performance and UX, use `ApaFoldSet` and `ApaFoldSeqLeft`.
+``f[x ∈ S] == exp`` | ✔ / ✖ | - | [Recursive functions](./principles/recursive.md) not supported after 0.23.1. From 0.16.1 and later, for better performance and UX, use `ApaFoldSet` and `ApaFoldSeqLeft`.
 ``INSTANCE M WITH ...`` | ✔ / ✖ | - | No special treatment for ``~>``, ``\cdot``, ``ENABLED``
 ``N(x1, ..., x_n) == INSTANCE M WITH...`` | ✔ / ✖ | - | Parameterized instances are not supported
 ``THEOREM P`` | ✔ / ✖ | - | Parsed but not used
@@ -36,7 +36,7 @@ Operator  | Supported? | Milestone | Comment
 `/\`, `\/`, `~`, `=>`, `<=>` | ✔ | - |
 ``TRUE``, ``FALSE``, ``BOOLEAN`` | ✔ | - |
 ``\A x \in S: p``, ``\E x \in S : p`` |  ✔ | - |
-``CHOOSE x \in S : p`` |  ✖ | - | Partial support prior to version 0.16.1. From 0.16.1 and later, use `Some`, `FoldSet`, or `FoldSeq`. See [#841](https://github.com/informalsystems/apalache/issues/841).
+``CHOOSE x \in S : p`` |  ✖ | - | Partial support prior to version 0.16.1. From 0.16.1 and later, use `Some`, `ApaFoldSet`, or `ApaFoldSeqLeft`. See [#841](https://github.com/informalsystems/apalache/issues/841).
 ``CHOOSE x : x \notin S`` |  ✖ | - | Not supported. You can use records or a default value such as -1.
 ``\A x : p, \E x : p`` |  ✖ | - | Use bounded quantifiers
 ``CHOOSE x : p`` |  ✖ | - |

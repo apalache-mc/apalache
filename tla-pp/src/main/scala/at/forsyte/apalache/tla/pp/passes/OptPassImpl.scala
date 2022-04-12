@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.pp.passes
 
 import at.forsyte.apalache.infra.passes.PassOptions
-import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
+import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
@@ -46,7 +46,7 @@ class OptPassImpl @Inject() (
     }
 
     // dump the result of preprocessing
-    writerFactory.writeModuleAllFormats(optimized.copy(name = "10_OutOpt"), TlaWriter.STANDARD_MODULES)
+    writeOut(writerFactory, optimized)
 
     Some(optimized)
   }

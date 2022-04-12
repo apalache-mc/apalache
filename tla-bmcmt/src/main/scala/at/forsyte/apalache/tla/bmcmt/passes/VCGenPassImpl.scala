@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.passes
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.bmcmt.VCGenerator
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
-import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
+import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
@@ -36,7 +36,7 @@ class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTrac
           tlaModule
       }
 
-    writerFactory.writeModuleAllFormats(newModule.copy(name = "07_OutVCGen"), TlaWriter.STANDARD_MODULES)
+    writeOut(writerFactory, newModule)
 
     Some(newModule)
   }

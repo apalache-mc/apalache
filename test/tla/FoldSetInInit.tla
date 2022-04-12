@@ -10,7 +10,7 @@ VARIABLES
 
 Sum(S) ==
     LET Add(i, j) == i + j IN
-    FoldSet(Add, 0, S)
+    ApaFoldSet(Add, 0, S)
 
 Init ==
     \E S \in SUBSET (1..N):
