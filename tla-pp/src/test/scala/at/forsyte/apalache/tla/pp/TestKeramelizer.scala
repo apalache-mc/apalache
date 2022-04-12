@@ -14,6 +14,8 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers
+import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
+import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 
 @RunWith(classOf[JUnitRunner])
 class TestKeramelizer extends AnyFunSuite with Checkers with BeforeAndAfterEach with Matchers {
@@ -307,12 +309,15 @@ class TestKeramelizer extends AnyFunSuite with Checkers with BeforeAndAfterEach 
         .subseteq(A, B)
         .typed(types, "BOOL")
     val output = keramelizer.apply(input)
-    def t1 = tla.name("t_1") ? "INT"
-    val expected: TlaEx =
-      tla
-        .forall(t1, A, tla.in(t1, B) ? "BOOL")
-        .typed(types, "BOOL")
-    assert(expected == output)
+
+    val isExpected = output match {
+      // \A element \in A: element \in B
+      case OperEx(TlaBoolOper.forall, NameEx(boundName), NameEx("A"),
+              OperEx(TlaSetOper.in, NameEx(inName), NameEx("B"))) =>
+        boundName == inName
+      case _ => false
+    }
+    assert(isExpected, s"Input $input.toString() and got $output.toString()")
   }
 
   test("""A \subseteq POWSET POWSET B ~~> \A S \in A: \A T \in S: \A t \in T: t \in B""") {
@@ -328,32 +333,37 @@ class TestKeramelizer extends AnyFunSuite with Checkers with BeforeAndAfterEach 
         .typed(types, "BOOL")
     val output = keramelizer.apply(input)
 
-    def t1 = tla.name("t_1") ? "POWSET"
-    def t2 = tla.name("t_2") ? "SET"
-    def t3 = tla.name("t_3") ? "INT"
-    val expected: TlaEx =
-      tla
-        .forall(t1, A, tla.forall(t2, t1, tla.forall(t3, t2, tla.in(t3, B) ? "BOOL") ? "BOOL") ? "BOOL")
-        .typed(types, "BOOL")
-    assert(expected == output)
+    val isExpected = output match {
+      // \A outer \in A: \A middle \in outer: \A inner \in middle: inner \in B
+      case OperEx(TlaBoolOper.forall, NameEx(outerQuantifier), NameEx("A"),
+              OperEx(TlaBoolOper.forall, NameEx(middleQuantifier), NameEx(outerSet),
+                  OperEx(TlaBoolOper.forall, NameEx(innerQuantifier), NameEx(middleSet),
+                      OperEx(TlaSetOper.in, NameEx(element), NameEx("B"))))) =>
+        outerQuantifier == outerSet && middleQuantifier == middleSet && innerQuantifier == element
+      case _ => false
+    }
+    assert(isExpected, s"Input $input.toString() and got $output.toString()")
   }
 
   test("""A \subseteq POWSET B ~~> \A S \in A: s \in B""") {
     val types = Map("BOOL" -> BoolT1(), "POWSET" -> SetT1(SetT1(IntT1())), "SET" -> SetT1(IntT1()), "INT" -> IntT1())
     def A = tla.name("A") ? "POWSET"
     def B = tla.name("B") ? "SET"
-    def t1 = tla.name("t_1") ? "SET"
-    def t2 = tla.name("t_2") ? "INT"
     val input =
       tla
         .subseteq(A, tla.powSet(B) ? "POWSET")
         .typed(types, "BOOL")
     val output = keramelizer.apply(input)
-    val expected: TlaEx =
-      tla
-        .forall(t1, A, tla.forall(t2, t1, tla.in(t2, B) ? "BOOL") ? "BOOL")
-        .typed(types, "BOOL")
-    assert(expected == output)
+
+    val isExpected = output match {
+      // \A outer \in A: \A middle \in outer: \A inner \in middle: inner \in B
+      case OperEx(TlaBoolOper.forall, NameEx(outerQuantifier), NameEx("A"),
+              OperEx(TlaBoolOper.forall, NameEx(innerQuantifier), NameEx(outerSet),
+                  OperEx(TlaSetOper.in, NameEx(element), NameEx("B")))) =>
+        outerQuantifier == outerSet && innerQuantifier == element
+      case _ => false
+    }
+    assert(isExpected, s"Input $input.toString() and got $output.toString()")
   }
 
   test("""POWSET A \subseteq POWSET B ~~> A \subseteq B ~~> \A a \in A: a \in B""") {
@@ -367,11 +377,15 @@ class TestKeramelizer extends AnyFunSuite with Checkers with BeforeAndAfterEach 
         .subseteq(powA, powB)
         .typed(types, "BOOL")
     val output = keramelizer.apply(input)
-    val expected: TlaEx =
-      tla
-        .forall(tla.name("t_1") ? "INT", A, tla.in(tla.name("t_1") ? "INT", B) ? "BOOL")
-        .typed(types, "BOOL")
-    assert(expected == output)
+    val isExpected = output match {
+      // \A outer \in A: \A middle \in outer: \A inner \in middle: inner \in B
+      case OperEx(TlaBoolOper.forall, NameEx(quantifier), NameEx("A"),
+              OperEx(TlaSetOper.in, NameEx(element), NameEx("B"))) =>
+        quantifier == element
+      case _ => false
+    }
+    assert(isExpected, s"Input $input.toString() and got $output.toString()")
+
   }
 
   test("simplifies TLA+ expressions to KerA+") {
