@@ -88,16 +88,11 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
     // rewrite A \subseteq B
     // into \A a \in A: a \in B
     case OperEx(TlaSetOper.subseteq, setX, setY) =>
-      replaceSubsetWithQuantification(setX, setY)
-  }
-
-  // A \subseteq B ~> \A a \in A: a \in B
-  private def replaceSubsetWithQuantification(setX: TlaEx, setY: TlaEx): TlaEx = {
-    val elemType = getElemType(setX)
-    val tempName = gen.newName()
-    tla
-      .forall(tla.name(tempName).as(elemType), setX, tla.in(tla.name(tempName).as(elemType), setY).as(BoolT1()))
-      .as(BoolT1())
+      val elemType = getElemType(setX)
+      val tempName = gen.newName()
+      tla
+        .forall(tla.name(tempName).as(elemType), setX, tla.in(tla.name(tempName).as(elemType), setY).as(BoolT1()))
+        .as(BoolT1())
   }
 
   /**
