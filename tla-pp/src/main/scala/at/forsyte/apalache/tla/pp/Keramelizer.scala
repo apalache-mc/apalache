@@ -64,6 +64,39 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
       tla
         .not(tla.in(x, setX) ? "b")
         .typed(Map("b" -> BoolT1()), "b")
+    // rewrite POWSET A \subseteq POWSET B
+    // into A \subseteq B
+    case OperEx(TlaSetOper.subseteq, OperEx(TlaSetOper.powerset, setX), OperEx(TlaSetOper.powerset, setY)) =>
+      transform(
+          tla
+            .subseteq(setX, setY)
+            .typed(Map("b" -> BoolT1()), "b")
+      )
+
+    // rewrite A \subseteq POWSET B
+    // into \A S \in A: S \subseteq B
+    case OperEx(TlaSetOper.subseteq, setX, OperEx(TlaSetOper.powerset, setY)) =>
+      val elemType = getElemType(setY)
+      val tempName = gen.newName()
+      transform(
+          tla
+            .forall(tla.name(tempName) ? "s", setX, tla.subseteq(tla.name(tempName) ? "s", setY) ? "b")
+            .typed(Map("b" -> BoolT1(), "e" -> elemType, "s" -> SetT1(elemType)), "s")
+      )
+
+    // rewrite A \subseteq B
+    // into \A a \in A: a \in B
+    case OperEx(TlaSetOper.subseteq, setX, setY) =>
+      replaceSubsetWithQuantification(setX, setY)
+  }
+
+  // A \subseteq B ~> \A a \in A: a \in B
+  private def replaceSubsetWithQuantification(setX: TlaEx, setY: TlaEx): TlaEx = {
+    val elemType = getElemType(setX)
+    val tempName = gen.newName()
+    tla
+      .forall(tla.name(tempName) ? "e", setX, tla.in(tla.name(tempName) ? "e", setY) ? "b")
+      .typed(Map("b" -> BoolT1(), "e" -> elemType, "s" -> SetT1(elemType)), "s")
   }
 
   /**
