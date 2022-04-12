@@ -62,15 +62,15 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
 
     case OperEx(TlaSetOper.notin, x, setX) =>
       tla
-        .not(tla.in(x, setX) ? "b")
-        .typed(Map("b" -> BoolT1()), "b")
+        .not(tla.in(x, setX).as(BoolT1()))
+        .as(BoolT1())
     // rewrite POWSET A \subseteq POWSET B
     // into A \subseteq B
     case OperEx(TlaSetOper.subseteq, OperEx(TlaSetOper.powerset, setX), OperEx(TlaSetOper.powerset, setY)) =>
       transform(
           tla
             .subseteq(setX, setY)
-            .typed(Map("b" -> BoolT1()), "b")
+            .as(BoolT1())
       )
 
     // rewrite A \subseteq POWSET B
@@ -80,8 +80,9 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
       val tempName = gen.newName()
       transform(
           tla
-            .forall(tla.name(tempName) ? "s", setX, tla.subseteq(tla.name(tempName) ? "s", setY) ? "b")
-            .typed(Map("b" -> BoolT1(), "e" -> elemType, "s" -> SetT1(elemType)), "s")
+            .forall(tla.name(tempName).as(SetT1(elemType)), setX,
+                tla.subseteq(tla.name(tempName).as(SetT1(elemType)), setY).as(BoolT1()))
+            .as(BoolT1())
       )
 
     // rewrite A \subseteq B
@@ -95,8 +96,8 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
     val elemType = getElemType(setX)
     val tempName = gen.newName()
     tla
-      .forall(tla.name(tempName) ? "e", setX, tla.in(tla.name(tempName) ? "e", setY) ? "b")
-      .typed(Map("b" -> BoolT1(), "e" -> elemType, "s" -> SetT1(elemType)), "s")
+      .forall(tla.name(tempName).as(elemType), setX, tla.in(tla.name(tempName).as(elemType), setY).as(BoolT1()))
+      .as(BoolT1())
   }
 
   /**
