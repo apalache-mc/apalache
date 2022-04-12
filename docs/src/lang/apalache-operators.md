@@ -130,7 +130,7 @@ IN
 
 ## Folding
 
-The operators `FoldSet` and `FoldSeq` are explained in more detail in a dedicated section [here](../apalache/fold.md).
+The operators `ApaFoldSet` and `ApaFoldSeqLeft` are explained in more detail in a dedicated section [here](../apalache/fold.md).
 
 ----------------------------------------------------------------------------
 

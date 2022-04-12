@@ -6,9 +6,8 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
-import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import at.forsyte.apalache.tla.pp.InlinerOfUserOper
+import at.forsyte.apalache.tla.pp.{Inliner, UniqueNameGenerator}
 
 /**
  * Rewriting rule for FoldSet. Similar to Cardinality, we need to consider element set presence and multiplicity.
@@ -17,10 +16,6 @@ import at.forsyte.apalache.tla.pp.InlinerOfUserOper
  *   Jure Kukovec
  */
 class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
-
-  // expressions are transient, we don't need tracking
-  private def mkInliner(decl: TlaOperDecl): InlinerOfUserOper =
-    InlinerOfUserOper(BodyMapFactory.makeFromDecl(decl), new IdleTracker)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -80,7 +75,10 @@ class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
           "bool" -> BoolT1(),
       )
 
-      val inliner = mkInliner(opDecl)
+      // expressions are transient, we don't need tracking
+      val inliner = new Inliner(new IdleTracker, new UniqueNameGenerator)
+      // We can make the scope directly, since InlinePass already ensures all is well.
+      val seededScope: Inliner.Scope = Map(opDecl.name -> opDecl)
 
       // To implement the FoldSet rule, we fold over the collection of set member cells.
       // At each one, we perform conditional application, i.e., the partial result is a cell that
@@ -110,7 +108,7 @@ class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // otherwise newPartialResult = A(oldPartialResult, currentCell)
         // First, we inline the operator application, with cell names as parameters
         val appEx = tla.appOp(tla.name(opDecl.name) ? "op", oldResultCellName ? "a", currentCell.toNameEx ? "b")
-        val inlinedEx = inliner.apply(appEx.typed(types, "a"))
+        val inlinedEx = inliner.transform(seededScope)(appEx.typed(types, "a"))
         // We then rewrite A(oldPartial, currentCell) to a cell
         val preInlineRewriteState = partialState.setArena(arenaWithCondition).setRex(inlinedEx)
         val postInlineRewriteState = rewriter.rewriteUntilDone(preInlineRewriteState)

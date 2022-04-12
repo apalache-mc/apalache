@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
-import at.forsyte.apalache.infra.passes.Pass
+import at.forsyte.apalache.tla.imp.passes.PassWithOutputs
 
 /**
  * A pass that runs simple skolemization.
@@ -8,4 +8,4 @@ import at.forsyte.apalache.infra.passes.Pass
  * @author
  *   Igor Konnov
  */
-trait AnalysisPass extends Pass
+trait AnalysisPass extends PassWithOutputs

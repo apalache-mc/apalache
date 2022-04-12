@@ -47,7 +47,7 @@ passing the option `--tune-here` that has the following format:
    correspondence between the transition numbers and the actions in the TLA+
    spec. To find the numbers, run Apalache with `--write-intermediate=true` and
    check the transition numbers in
-   `_apalache-out/<MySpec>.tla/*/intermediate/09_OutTransition.tla`: the 0th
+   `_apalache-out/<MySpec>.tla/*/intermediate/XX_OutTransitionFinderPass.tla`: the 0th
    transition is called `Next_si_0000`, 1st transition is called `Next_si_0001`,
    etc.
 

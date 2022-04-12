@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
-import at.forsyte.apalache.infra.passes.Pass
+import at.forsyte.apalache.tla.imp.passes.PassWithOutputs
 
 /**
  * The pass that generates verification conditions.
@@ -8,4 +8,4 @@ import at.forsyte.apalache.infra.passes.Pass
  * @author
  *   Igor Konnov
  */
-trait VCGenPass extends Pass
+trait VCGenPass extends PassWithOutputs

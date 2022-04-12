@@ -664,7 +664,7 @@ InvariantViolation == x >= 3
 We can see that, even though \\(k=10\\), we found a violation in \\(l=2\\) steps.
 Each `State{i}` represents one of \\(s_0,\dots,s_l\\), by explicitly defining variable values in that state (e.g. `x = 1 /\ y = 2 /\ z = "A"`). 
 The comment `(* Transition X to StateY *)` outlines which \\(t_1,\dots,t_m\\) was used to reach \\(s_{i+1}\\) from \\(s_i\\) (0-indexed). 
-The shape of \\(t_i\\) can be found by looking at the file `OutTransition.tla`, and will be named `Next_si_i`.
+The shape of \\(t_i\\) can be found by looking at the file `XX_OutTransitionFinderPass.tla`, and will be named `Next_si_i`.
 In the above case, `Transition 0` refers to the one representing `A` and `Transition 1` refers to the one representing `B`. 
 `InvariantViolation` is the negation of the invariant `Inv`, and it will hold in `State{l}` (in this case, `x < 3` does not hold in `State2`, where `x = 3`).
 

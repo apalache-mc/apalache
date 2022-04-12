@@ -22,10 +22,10 @@ LOCAL INSTANCE Functions
 
 (**
  * Fold op over the elements of set using base as starting value.
- * Note that this FoldSet is different from Apalache!FoldSet.
+ * Note that this ApaFoldSet is different from Apalache!ApaFoldSet.
  *
  * Example:
- *         FoldSet(LAMBA x,y : x + y, 0, 0 .. 10) = 55
+ *         ApaFoldSet(LAMBA x,y : x + y, 0, 0 .. 10) = 55
  *
  * @type: ((a, b) => b, b, Set(a)) => b;
  *)
@@ -59,7 +59,7 @@ ProductSet(set) ==
    __ApalacheFoldSet(Mult, 1, set)
 
 (**
- * An alias for FoldSet. ReduceSet was used instead of FoldSet in
+ * An alias for ApaFoldSet. ReduceSet was used instead of ApaFoldSet in
  * earlier versions of the community modules.
  *
  * @type: ((a, b) => b, Set(a), b) => b;

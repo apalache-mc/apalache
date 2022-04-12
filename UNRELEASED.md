@@ -10,6 +10,10 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
+### Breaking changes
+* `RECURSIVE` operators and functions are no longer supported, see #1569
+* rename Apalache `FoldSet` and `FoldSeq` to `ApaFoldSet` and `ApaFoldSeqLeft`, see #1617
+
 ### Features
 
 * Add the operator `Apalache!Guess`, see #1590 and #888

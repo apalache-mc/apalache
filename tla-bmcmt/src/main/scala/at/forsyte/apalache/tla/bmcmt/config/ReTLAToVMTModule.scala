@@ -57,7 +57,7 @@ class ReTLAToVMTModule extends ToolModule {
     // Bind all passes
     bind(classOf[SanyParserPass]).to(classOf[SanyParserPassImpl])
     bind(classOf[ConfigurationPass]).to(classOf[ConfigurationPassImpl])
-    bind(classOf[InlinePass]).to(classOf[ReTLAInlinePassImpl])
+    bind(classOf[InlinePass]).to(classOf[InlinePassImpl])
     bind(classOf[PrimingPass]).to(classOf[PrimingPassImpl])
     bind(classOf[VCGenPass]).to(classOf[VCGenPassImpl])
     bind(classOf[PreproPass]).to(classOf[ReTLAPreproPassImpl])

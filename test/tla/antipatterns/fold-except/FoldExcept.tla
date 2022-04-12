@@ -40,7 +40,7 @@ NextSlow ==
                 IncrementInLoop(clk, p) ==
                 [ clk EXCEPT ![p] = @ + delta ]
             IN
-            clocks' = FoldSet(IncrementInLoop, clocks, Proc)
+            clocks' = ApaFoldSet(IncrementInLoop, clocks, Proc)
         /\  LET \* @type: (<<Str, Str>> -> Int, <<Str, Str>>)
                 \*          => <<Str, Str>> -> Int;
                 SubtractInLoop(dft, pair) ==
@@ -49,7 +49,7 @@ NextSlow ==
                 IN
                 [ dft EXCEPT ![p, q] = clocks'[p] - clocks'[q] ]
             IN
-            drift' = FoldSet(SubtractInLoop, drift, Proc \X Proc)
+            drift' = ApaFoldSet(SubtractInLoop, drift, Proc \X Proc)
 
 \* Check that the clock drifts do not change
 DriftInv ==
