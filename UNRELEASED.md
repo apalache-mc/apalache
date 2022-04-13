@@ -18,3 +18,4 @@
 
 * Add the operator `Apalache!Guess`, see #1590 and #888
 * Extend the type parser to support ADR014 (experimental), see #1602
+* Keramelizer now rewrites \subseteq using forall quantification, see #1408
