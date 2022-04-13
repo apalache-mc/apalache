@@ -15,10 +15,12 @@ import scala.collection.immutable.SortedMap
  *
  * <p>This class is not designed for concurrency. Use different instances in different threads.</p>
  *
+ * @param varPool
+ *   variable pool that is used to create fresh variables
  * @author
  *   Igor Konnov
  */
-class TypeUnifier {
+class TypeUnifier(varPool: TypeVarPool) {
   // A variable is mapped to its equivalence class. By default, a variable sits in the singleton equivalence class
   // of its own. When two variables are unified, they are merged in the same equivalence class.
   private var varToClass: Map[Int, EqClass] = Map.empty
@@ -201,7 +203,8 @@ class TypeUnifier {
       case (l @ TupT1(_ @_*), r @ SparseTupT1(_)) =>
         compute(r, l)
 
-      // records join their keys, but the values for the intersecting keys should unify
+      // Records join their keys, but the values for the intersecting keys should unify.
+      // This is the old unification rule for the records. For the new records, see the rule for RecRowT1.
       case (RecT1(lfields), RecT1(rfields)) =>
         val jointKeys = (lfields.keySet ++ rfields.keySet).toSeq
         val pairs = jointKeys.map(key => (key, computeFields(key, lfields, rfields)))
@@ -211,6 +214,10 @@ class TypeUnifier {
           val unifiedTuple = RecT1(SortedMap(pairs.map(p => (p._1, p._2.get)): _*))
           Some(unifiedTuple)
         }
+
+      case (RowT1(lfields, lv), RowT1(rfields, rv)) =>
+        // TBD
+        None
 
       // everything else does not unify
       case _ =>

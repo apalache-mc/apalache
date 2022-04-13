@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.transformations.standard.{
 }
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.pp.Inliner.FilterFun
-import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier}
+import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier, TypeVarPool}
 
 /**
  * Given a module m, with global operators F1,...,Fn, Inliner performs the following transformation:
@@ -82,7 +82,8 @@ class Inliner(
   // a substitution of the two. A substitution is assumed to exist, otherwise TypingException is thrown.
   private def getSubstitution(targetType: TlaType1, decl: TlaOperDecl): (Substitution, TlaType1) = {
     val genericType = decl.typeTag.asTlaType1()
-    new TypeUnifier().unify(Substitution.empty, genericType, targetType) match {
+    val maxUsedVar = Math.max(genericType.usedNames.foldLeft(0)(Math.max), targetType.usedNames.foldLeft(0)(Math.max))
+    new TypeUnifier(new TypeVarPool(maxUsedVar + 1)).unify(Substitution.empty, genericType, targetType) match {
       case None =>
         throw new TypingException(
             s"Inliner: Unable to unify generic signature $genericType of ${decl.name} with the concrete type $targetType",
