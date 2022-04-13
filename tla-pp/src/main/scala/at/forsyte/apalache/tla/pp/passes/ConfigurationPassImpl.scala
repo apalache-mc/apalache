@@ -45,8 +45,33 @@ class ConfigurationPassImpl @Inject() (
     copyRelevantOptions(options, relevantOptions)
     // try to read from the TLC configuration file and produce constant overrides
     val overrides = loadOptionsFromTlcConfig(tlaModule, relevantOptions)
+
+    // We build a ConstInit from the overrides and proceed as usual
+    val cinitName = options.getOrElse[String]("checker", "cinit", "CInit")
+    options.set("checker.cinit", cinitName) // in case it wasn't defined at all
+    val oldCinitOpt = tlaModule.operDeclarations
+      .find {
+        _.name == cinitName
+      }
+
+    val overridesAsEql = overrides.collect { case d @ TlaOperDecl(name, _, body) =>
+      val varName = name.drop(ConstAndDefRewriter.OVERRIDE_PREFIX.length)
+      OperEx(TlaOper.eq, NameEx(varName)(body.typeTag), body)
+    }
+
+    val newCinitDecl = oldCinitOpt
+      .map { d =>
+        d.copy(body = OperEx(TlaBoolOper.and, d.body +: overridesAsEql: _*))
+      }
+      .getOrElse {
+        TlaOperDecl(cinitName, List.empty, OperEx(TlaBoolOper.and, overridesAsEql: _*))(Typed(OperT1(Seq.empty,
+                    BoolT1())))
+      }
+
+    val newDecls = tlaModule.declarations.filterNot(_.name == cinitName) :+ newCinitDecl
+
     val currentAndOverrides =
-      new TlaModule(tlaModule.name, tlaModule.declarations ++ overrides)
+      new TlaModule(tlaModule.name, newDecls)
     setFallbackOptions(relevantOptions)
 
     // make sure that the required operators are defined
