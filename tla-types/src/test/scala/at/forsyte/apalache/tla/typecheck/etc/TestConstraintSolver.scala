@@ -9,10 +9,11 @@ import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestConstraintSolver extends AnyFunSuite with EasyMockSugar with EtcBuilder {
+  private val FIRST_VAR: Int = 100
   private val parser: Type1Parser = DefaultType1Parser
 
   test("unique solution") {
-    val solver = new ConstraintSolver
+    val solver = new ConstraintSolver(new TypeVarPool(FIRST_VAR))
     // a disjunctive constraint that comes from a tuple constructor
     // either a == (b, c) => <<b, c>>
     val option1 = EqClause(VarT1("a"), OperT1(Seq(VarT1("b"), VarT1("c")), parser("<<b, c>>")))
@@ -30,7 +31,7 @@ class TestConstraintSolver extends AnyFunSuite with EasyMockSugar with EtcBuilde
   }
 
   test("multiple solutions") {
-    val solver = new ConstraintSolver
+    val solver = new ConstraintSolver(new TypeVarPool(FIRST_VAR))
     // a disjunctive constraint that comes from a tuple constructor
     // either a == (b, c) => <<b, c>>
     val option1 = EqClause(VarT1("a"), OperT1(Seq(VarT1("b"), VarT1("c")), parser("<<b, c>>")))
@@ -47,7 +48,7 @@ class TestConstraintSolver extends AnyFunSuite with EasyMockSugar with EtcBuilde
   }
 
   test("constraints in the reverse order") {
-    val solver = new ConstraintSolver
+    val solver = new ConstraintSolver(new TypeVarPool(FIRST_VAR))
     // The following constraints come in the order that is reverse to the one that is required to solve the constraints.
     // These constraints are made up, they do not come from any real constraints that are produced by TLA+ operators.
     val eq1 = EqClause(VarT1("a"), parser("(b, c) => b"))
