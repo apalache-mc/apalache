@@ -2053,6 +2053,16 @@ $ apalache-mc check --length=1 Test1425.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check Test1623.tla reports no error
+
+A regression test for #1623 (Instantiation with .cfg + ASSUME)
+
+```sh
+$ apalache-mc check --length=3 --inv=Inv Test1623.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check MC_FoldExcept3.tla (slow) reports no error
 
 A test for folds with excepts, the slow case.

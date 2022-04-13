@@ -46,35 +46,14 @@ class ConfigurationPassImpl @Inject() (
     // try to read from the TLC configuration file and produce constant overrides
     val overrides = loadOptionsFromTlcConfig(tlaModule, relevantOptions)
 
-    val newDecls = if (overrides.nonEmpty) {
-      // We build a ConstInit from the overrides and proceed as usual
-      val cinitName = options.getOrElse[String]("checker", "cinit", "CInit")
-      options.set("checker.cinit", cinitName) // in case it wasn't defined at all
-      val oldCinitOpt = tlaModule.operDeclarations
-        .find {
-          _.name == cinitName
-        }
+    val constOverrideNames = tlaModule.constDeclarations.map(_.name).map(ConstAndDefRewriter.OVERRIDE_PREFIX + _).toSet
+    val (constOverrides, otherOverrides) = overrides.partition(d => constOverrideNames.contains(d.name))
 
-      val boolTag = Typed(BoolT1())
-      val overridesAsEql = overrides.collect { case TlaOperDecl(name, _, body) =>
-        val varName = name.drop(ConstAndDefRewriter.OVERRIDE_PREFIX.length)
-        OperEx(TlaOper.eq, NameEx(varName)(body.typeTag), body)(boolTag)
-      }
+    val newDecls =
+      if (constOverrides.nonEmpty) extendCinitWithOverrides(constOverrides, tlaModule)
+      else tlaModule.declarations
 
-      val newCinitDecl = oldCinitOpt
-        .map { d =>
-          d.copy(body = OperEx(TlaBoolOper.and, d.body +: overridesAsEql: _*)(boolTag))
-        }
-        .getOrElse {
-          TlaOperDecl(cinitName, List.empty, OperEx(TlaBoolOper.and, overridesAsEql: _*)(boolTag))(
-              Typed(OperT1(Seq.empty, BoolT1())))
-        }
-
-      tlaModule.declarations.filterNot(_.name == cinitName) :+ newCinitDecl
-    } else tlaModule.declarations
-
-    val currentAndOverrides =
-      new TlaModule(tlaModule.name, newDecls)
+    val currentAndOverrides = TlaModule(tlaModule.name, newDecls ++ otherOverrides)
     setFallbackOptions(relevantOptions)
 
     // make sure that the required operators are defined
@@ -92,6 +71,36 @@ class ConfigurationPassImpl @Inject() (
     writeOut(writerFactory, configuredModule)
 
     Some(configuredModule)
+  }
+
+  // Returns new declarations, where CInit has been extended (or constructed)
+  // with OVERRIDEs relating to specification constants
+  private def extendCinitWithOverrides(constOverrides: Seq[TlaDecl], tlaModule: TlaModule): Seq[TlaDecl] = {
+    // We build a ConstInit from the overrides and proceed as usual
+    val cinitName = options.getOrElse[String]("checker", "cinit", "CInit")
+    options.set("checker.cinit", cinitName) // in case it wasn't defined at all
+    val oldCinitOpt = tlaModule.operDeclarations
+      .find {
+        _.name == cinitName
+      }
+
+    val boolTag = Typed(BoolT1())
+    val overridesAsEql = constOverrides.collect { case TlaOperDecl(name, _, body) =>
+      val varName = name.drop(ConstAndDefRewriter.OVERRIDE_PREFIX.length)
+      OperEx(TlaOper.eq, NameEx(varName)(body.typeTag), body)(boolTag)
+    }
+
+    val newCinitDecl = oldCinitOpt
+      .map { d =>
+        d.copy(body = OperEx(TlaBoolOper.and, d.body +: overridesAsEql: _*)(boolTag))
+      }
+      .getOrElse {
+        TlaOperDecl(cinitName, List.empty, OperEx(TlaBoolOper.and, overridesAsEql: _*)(boolTag))(Typed(OperT1(Seq.empty,
+                    BoolT1())))
+      }
+
+    // Since declarations are a Seq not a Set, we may need to remove the old CInit first
+    tlaModule.declarations.filterNot(_.name == cinitName) :+ newCinitDecl
   }
 
   // if checker.init and checker.next are not set, set them to Init and Next, respectively
