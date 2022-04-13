@@ -2,7 +2,7 @@
 
 **Folds are an efficient replacement for recursive operators and functions.**
 
-Apalache natively implements two operators users might be familiar with from the [community modules](https://github.com/tlaplus/CommunityModules) or functional programming. Those operators are `FoldSet` and `FoldSeq`. This brief introduction to fold operators highlights the following:
+Apalache natively implements two operators users might be familiar with from the [community modules](https://github.com/tlaplus/CommunityModules) or functional programming. Those operators are `ApaFoldSet` and `ApaFoldSeqLeft`. This brief introduction to fold operators highlights the following:
 
   1. What are the semantics of fold operators?
   1. How do I use these operators in Apalache?
@@ -15,38 +15,38 @@ The syntax of the fold operators is as follows:
 
 ```tla
 \* @type: ( (a, b) => a, a, Set(b) ) => a;
-FoldSet( operator, base, set )
+ApaFoldSet( operator, base, set )
 
 \* @type: ( (a, b) => a, a, Seq(b) ) => a;
-FoldSeq( operator, base, seq )
+ApaFoldSeqLeft( operator, base, seq )
 ```
 
 ### Semantics of fold operators
 
 Folding refers to iterative application of a binary operator over a collection. Given an operator `Op`, a base value `b` and a collection of values `C`, the definition of folding `Op` over `C` starting with `b` depends on the type of the collection `C`.
 
-#### Semantics of `FoldSeq`
+#### Semantics of `ApaFoldSeqLeft`
 
-In the case of folding over sequences, `C` is a sequence `<<a_1, ..., a_n>>`. Then, `FoldSeq( Op, b, C )` is defined as follows:
+In the case of folding over sequences, `C` is a sequence `<<a_1, ..., a_n>>`. Then, `ApaFoldSeqLeft( Op, b, C )` is defined as follows:
 
-  1. If `C` is empty, then `FoldSeq( Op, b, <<>> ) = b`, regardless of `Op`
-  1. If `C` is nonempty, we establish a recursive relation between folding over `C` and folding over `Tail(C)` in the following way: `FoldSeq( Op, b, C ) = FoldSeq( Op, Op(b, Head(C)), Tail(C) )`.
+  1. If `C` is empty, then `ApaFoldSeqLeft( Op, b, <<>> ) = b`, regardless of `Op`
+  1. If `C` is nonempty, we establish a recursive relation between folding over `C` and folding over `Tail(C)` in the following way: `ApaFoldSeqLeft( Op, b, C ) = ApaFoldSeqLeft( Op, Op(b, Head(C)), Tail(C) )`.
 
-#### Semantics of `FoldSet`
+#### Semantics of `ApaFoldSet`
 
-In the case of folding over sets, `C` is a set `{a_1, ..., a_n}`. Then, `FoldSet( Op, b, C )` is defined as follows:
+In the case of folding over sets, `C` is a set `{a_1, ..., a_n}`. Then, `ApaFoldSet( Op, b, C )` is defined as follows:
 
-  1. If `C` is empty, then `FoldSet( Op, b, {} ) = b`, regardless of `Op`
-  1. If `C` is nonempty, we establish a recursive relation between folding over `C` and folding over some subset of `C` in the following way: `FoldSet( Op, b, C ) = FoldSet( Op, Op(b, x), C \ {x} )`, where `x` is some arbitrary member of `C` (e.g. `x = CHOOSE y \in C: TRUE`). Note that Apalache does not guarantee a deterministic choice of `x`, unlike what using  `CHOOSE` would imply.
+  1. If `C` is empty, then `ApaFoldSet( Op, b, {} ) = b`, regardless of `Op`
+  1. If `C` is nonempty, we establish a recursive relation between folding over `C` and folding over some subset of `C` in the following way: `ApaFoldSet( Op, b, C ) = ApaFoldSet( Op, Op(b, x), C \ {x} )`, where `x` is some arbitrary member of `C` (e.g. `x = CHOOSE y \in C: TRUE`). Note that Apalache does not guarantee a deterministic choice of `x`, unlike what using  `CHOOSE` would imply.
 
 Note that the above are definitions of a _left fold_ in the literature. Apalache does not implement a right fold.
 
 For example, if `C` is the sequence `<<x,y,z>>`, the result is equal to `Op( Op( Op(b, x), y), z)`. If `C = {x,y}`, the result is either `Op( Op(b, x), y)` or `Op( Op(b, y), x)`. Because the order of elements selected from a set is not predefined, users should be careful, as the result is only uniquely defined in the case that the operator is both associative (`Op(Op(a,b),c) = Op(a,Op(b,c))`) and commutative (`Op(a,b) = Op(b,a)`). 
 
-For example, consider the operator `Op(p,q) == 2 * p + q`, which is noncommutative, and the set `S = {1,2,3}`. The value of `FoldSet(Op, 0, S)` depends on the order in which Apalache selects elements from S:
+For example, consider the operator `Op(p,q) == 2 * p + q`, which is noncommutative, and the set `S = {1,2,3}`. The value of `ApaFoldSet(Op, 0, S)` depends on the order in which Apalache selects elements from S:
 
 
-| Order | FoldSet value |
+| Order | ApaFoldSet value |
 | --- | --- |
 | 1 -> 2 -> 3 | 11 | 
 | 1 -> 3 -> 2 | 12 | 
@@ -59,15 +59,15 @@ Because Apalache does not guarantee deterministic choice in the order of iterati
 
 ### Using fold operators in Apalache
 
-As shown by the type signature, Apalache permits a very general form of folding, where the types of the collection elements and the type of the base element/return-type of the operator do not have to match. Again, we urge users to exercise caution when using `FoldSet` with an operator, for which the types `a` and `b` are different, as such operators cannot be commutative or associative, and therefore the result is not guaranteed to be unique and predictable. 
+As shown by the type signature, Apalache permits a very general form of folding, where the types of the collection elements and the type of the base element/return-type of the operator do not have to match. Again, we urge users to exercise caution when using `ApaFoldSet` with an operator, for which the types `a` and `b` are different, as such operators cannot be commutative or associative, and therefore the result is not guaranteed to be unique and predictable. 
 
 The other component of note is `operator`, the _name_ (not definition) of some binary operator, which is available in this context. The following are examples of valid uses of folds:
 
 ```tla
 PlusOne(p,q) == p + q + 1
-X == FoldSet( PlusOne, 0, {1,2,3} ) \* X = 9 
+X == ApaFoldSet( PlusOne, 0, {1,2,3} ) \* X = 9 
 
-X == LET Count(p,q) == p + 1 IN FoldSeq( Count, 0, <<1,2,3>> ) \* X = 3
+X == LET Count(p,q) == p + 1 IN ApaFoldSeqLeft( Count, 0, <<1,2,3>> ) \* X = 3
 ```
 
 while these next examples are considered invalid:
@@ -75,17 +75,17 @@ while these next examples are considered invalid:
 ```tla
 \* LAMBDAS in folds are not supported by Apalache
 \* Define a LET-IN operator Plus(p,q) == p + q instead
-X == FoldSet( LAMBDA p,q: p + q, 0, {1,2,3} ) 
+X == ApaFoldSet( LAMBDA p,q: p + q, 0, {1,2,3} ) 
 
 \* Built-in operators cannot be called by name in Apalache
 \* Define a LET-IN operator Plus(p,q) == p + q instead
-X == FoldSet( + , 0, {1,2,3} )
+X == ApaFoldSet( + , 0, {1,2,3} )
 ```
 
 Local LET definitions can also be used as closures:
 
 ```
-A(x) == LET PlusX(p,q) == p + q + x IN FoldSeq( PlusX, 0, <<1,2,3>> )
+A(x) == LET PlusX(p,q) == p + q + x IN ApaFoldSeqLeft( PlusX, 0, <<1,2,3>> )
 
 X == A(1) \* X = 9
 ```
@@ -108,7 +108,7 @@ MaxRec(seq) == IF seq = <<>>
                        ELSE Head(seq)
 
 MaxFold(seq) == LET Max(p,q) == IF p > q THEN p ELSE q
-                IN FoldSeq( Max, negInf, seq )
+                IN ApaFoldSeqLeft( Max, negInf, seq )
 ```
 
 The first advantage of the fold implementation, we feel, is that it is much more clear and concise. It also does not require a termination condition, unlike the recursive case.
@@ -127,7 +127,7 @@ MaxRec(seq) == IF seq = <<>>
                        ELSE Head(seq)
 ```
 
-Now, `MaxRec` never terminates, but spotting this error might not be trivial at a glance. This is where we believe folds hold the second advantage: `FoldSet` and `FoldSeq` *always terminate* in `Cardinality(set)` or `Len(seq)` steps, and each step is simple to describe, as it consists of a single operator application.
+Now, `MaxRec` never terminates, but spotting this error might not be trivial at a glance. This is where we believe folds hold the second advantage: `ApaFoldSet` and `ApaFoldSeqLeft` *always terminate* in `Cardinality(set)` or `Len(seq)` steps, and each step is simple to describe, as it consists of a single operator application.
 
 In fact, the vast majority of the traditionally recursive operators can be equivalently rewritten as folds, for example:
 ```tla
@@ -138,7 +138,7 @@ Cardinality(set) == IF set = {}
                          IN 1 + Cardinality( set \ {x} )
 
 CardinalityFold(set) == LET Count(p,q) == p + 1 \* the value of q, the set element, is irrelevant
-                        IN FoldSet( Count, 0, set )
+                        IN ApaFoldSet( Count, 0, set )
 ```
 
 Notice that, in the case of sets, picking an arbitrary element `x`, to remove from the set at each step, utilizes the `CHOOSE` operator. This is a common trait shared by many operators that implement recursion over sets. 
@@ -155,7 +155,7 @@ Often, folding can be used to select a value from a collection, which could alte
 
 ```tla
 MaxFold(seq) == LET Max(p,q) == IF p > q THEN p ELSE q
-                IN FoldSeq( Max, negInf, seq )
+                IN ApaFoldSeqLeft( Max, negInf, seq )
 ```
 
 The fold-less case could, instead of using recursion, compute the maximum as follows:

@@ -12,5 +12,5 @@ Init == x = 0
 Next == UNCHANGED x
 \* Asserts the negation of the invariant that should actually hold, to 
 \* check if the SMT encoding is properly constrained and returns UNSAT.
-Inv == FoldSeq( A, {4,4}, <<1,2,3>> ) # {1,2,3,4}
+Inv == ApaFoldSeqLeft( A, {4,4}, <<1,2,3>> ) # {1,2,3,4}
 ===============================================================================

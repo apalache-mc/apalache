@@ -8,6 +8,7 @@
 - [Entry-level Model Checker Tutorial](./tutorials/entry-tutorial.md)
 - [Type Checker Tutorial](./tutorials/snowcat-tutorial.md)
 - [Checking Pluscal specifications](./tutorials/pluscal-tutorial.md)
+- [Apalache trail tips: how to check your specs faster](./tutorials/trail-tips.md)
 - [Symbolic Model Checking](./tutorials/symbmc.md)
 
 # Apalache User Manual
@@ -101,3 +102,4 @@
 - [ADR-011: alternative SMT encoding using arrays](./adr/011adr-smt-arrays.md)
 - [ADR-015: ITF: informal trace format](./adr/015adr-trace.md)
 - [ADR-016: ReTLA: Relational TLA](./adr/016adr-retla.md)
+- [PDR-017: Checking temporal properties](./adr/017pdr-temporal.md)

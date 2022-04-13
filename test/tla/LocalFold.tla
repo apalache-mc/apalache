@@ -9,10 +9,10 @@ x
 seq == <<1,2,3>>
 base == 0
 
-\* Call to FoldSeq in the context defined by F (local r)
+\* Call to ApaFoldSeqLeft in the context defined by F (local r)
 F(r) == LET \* @type: (Int, Int) => Int;
             A(p,q) == p + q + r
-        IN FoldSeq( A, base, seq )
+        IN ApaFoldSeqLeft( A, base, seq )
 
 InvOfK(k) == F(k) = F(0) + k * Len(seq)
 

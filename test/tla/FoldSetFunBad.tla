@@ -14,5 +14,5 @@ Init == x = 0
 Next == UNCHANGED x
 \* Asserts the negation of the invariant that should actually hold, to 
 \* check if the SMT encoding is properly constrained and returns UNSAT.
-Inv == FoldSet( A, f, DOMAIN f ) # [v \in DOMAIN f |-> 1]
+Inv == ApaFoldSet( A, f, DOMAIN f ) # [v \in DOMAIN f |-> 1]
 ===============================================================================

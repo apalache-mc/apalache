@@ -30,7 +30,7 @@ object Dependencies {
     val scalaz = "org.scalaz" %% "scalaz-core" % "7.3.5"
     val slf4j = "org.slf4j" % "slf4j-api" % "1.7.36"
     val tla2tools = "org.lamport" % "tla2tools" % "1.7.0-SNAPSHOT"
-    val ujson = "com.lihaoyi" %% "ujson" % "1.5.0"
+    val ujson = "com.lihaoyi" %% "ujson" % "1.6.0"
     val z3 = "io.github.tudo-aqua" % "z3-turnkey" % "4.8.14"
   }
 
@@ -38,7 +38,7 @@ object Dependencies {
   object TestDeps {
     // Libraries
     val junit = "junit" % "junit" % "4.13.2" % Test
-    val scalacheck = "org.scalacheck" %% "scalacheck" % "1.15.4" % Test
+    val scalacheck = "org.scalacheck" %% "scalacheck" % "1.16.0" % Test
     val easymock = "org.easymock" % "easymock" % "4.3" % Test
 
     val scalaTestVersion = "3.2.11"

@@ -33,8 +33,9 @@ private[parser] object Type1Lexer extends RegexParsers {
 
   def token: Parser[Type1Token] =
     positioned(
-        int | real | bool | str | set | seq | identifier | fieldNumber |
-          rightArrow | doubleRightArrow | eq | leftParen | rightParen | leftBracket | rightBracket |
+        int | real | bool | str | set | seq | rec | variant | identifier | fieldNumber | stringLiteral |
+          rightArrow | doubleRightArrow | eq | leftRow | rightRow | leftTupleRow | rightTupleRow |
+          leftParen | rightParen | pipe | leftBracket | rightBracket |
           leftCurly | rightCurly | doubleLeftAngle | doubleRightAngle | comma | colon
     ) ///
 
@@ -51,6 +52,10 @@ private[parser] object Type1Lexer extends RegexParsers {
 
   private def fieldNumber: Parser[FIELD_NO] = {
     "[0-9]+".r ^^ { str => FIELD_NO(Integer.parseInt(str)) }
+  }
+
+  private def stringLiteral: Parser[STR_LITERAL] = {
+    """"[^"]*"""".r ^^ { str => STR_LITERAL(str.substring(1, str.length - 1)) }
   }
 
   private def int: Parser[INT] = {
@@ -77,6 +82,14 @@ private[parser] object Type1Lexer extends RegexParsers {
     "Seq".r ^^ { _ => SEQ() }
   }
 
+  private def variant: Parser[VARIANT] = {
+    "Variant".r ^^ { _ => VARIANT() }
+  }
+
+  private def rec: Parser[RECORD] = {
+    "Rec".r ^^ { _ => RECORD() }
+  }
+
   private def rightArrow: Parser[RIGHT_ARROW] = {
     "->".r ^^ { _ => RIGHT_ARROW() }
   }
@@ -89,8 +102,20 @@ private[parser] object Type1Lexer extends RegexParsers {
     "=".r ^^ { _ => EQ() }
   }
 
+  private def pipe: Parser[PIPE] = {
+    "|" ^^ { _ => PIPE() }
+  }
+
+  private def leftRow: Parser[LROW] = {
+    "(|" ^^ { _ => LROW() }
+  }
+
   private def leftParen: Parser[LPAREN] = {
     "(" ^^ { _ => LPAREN() }
+  }
+
+  private def rightRow: Parser[RROW] = {
+    "|)" ^^ { _ => RROW() }
   }
 
   private def rightParen: Parser[RPAREN] = {
@@ -111,6 +136,14 @@ private[parser] object Type1Lexer extends RegexParsers {
 
   private def rightCurly: Parser[RCURLY] = {
     "}" ^^ { _ => RCURLY() }
+  }
+
+  private def leftTupleRow: Parser[LTUPLE_ROW] = {
+    "<|" ^^ { _ => LTUPLE_ROW() }
+  }
+
+  private def rightTupleRow: Parser[RTUPLE_ROW] = {
+    "|>" ^^ { _ => RTUPLE_ROW() }
   }
 
   private def doubleLeftAngle: Parser[DOUBLE_LEFT_ANGLE] = {

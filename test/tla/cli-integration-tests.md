@@ -897,125 +897,203 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check Rec1.tla succeeds
+### check Rec1.tla succeeds typecheck
+
+```sh
+$ apalache-mc typecheck Rec1.tla | sed 's/I@.*//'
+...
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### check Rec1.tla fails check
 
 ```sh
 $ apalache-mc check --length=5 --inv=Inv Rec1.tla | sed 's/I@.*//'
 ...
-The outcome is: NoError
+EXITCODE: ERROR (255)
+```
+
+### check Rec2.tla succeeds typecheck
+
+```sh
+$ apalache-mc typecheck Rec2.tla | sed 's/I@.*//'
+...
+Type checker [OK]
 ...
 EXITCODE: OK
 ```
 
-### check Rec2.tla succeeds
+### check Rec2.tla fails check
 
 ```sh
 $ apalache-mc check --length=5 --inv=Inv Rec2.tla | sed 's/I@.*//'
 ...
-The outcome is: NoError
+EXITCODE: ERROR (255)
+```
+
+### check Rec3.tla succeeds typecheck
+
+```sh
+$ apalache-mc typecheck Rec3.tla | sed 's/I@.*//'
+...
+Type checker [OK]
 ...
 EXITCODE: OK
 ```
 
-### check Rec3.tla succeeds
+### check Rec3.tla fails check
 ```sh
 $ apalache-mc check --length=10 --inv=Inv Rec3.tla | sed 's/I@.*//'
 ...
-The outcome is: NoError
+EXITCODE: ERROR (255)
+```
+
+### check Rec4.tla succeeds typecheck
+
+```sh
+$ apalache-mc typecheck Rec4.tla | sed 's/I@.*//'
+...
+Type checker [OK]
 ...
 EXITCODE: OK
 ```
 
-### check Rec4.tla succeeds
+### check Rec4.tla fails check
 
 Unfolding Fibonacci numbers
 
 ```sh
 $ apalache-mc check --length=10 --inv=Inv Rec4.tla | sed 's/I@.*//'
 ...
-The outcome is: NoError
+EXITCODE: ERROR (255)
+```
+
+### check Rec5.tla succeeds typecheck
+
+```sh
+$ apalache-mc typecheck Rec5.tla | sed 's/I@.*//'
+...
+Type checker [OK]
 ...
 EXITCODE: OK
 ```
 
-### check Rec5.tla succeeds
+### check Rec5.tla fails check
 
 ```sh
 $ apalache-mc check --length=5 --inv=Inv Rec5.tla | sed 's/I@.*//'
 ...
-The outcome is: NoError
+EXITCODE: ERROR (255)
+```
+
+### check Rec6.tla succeeds typecheck
+
+```sh
+$ apalache-mc typecheck Rec6.tla | sed 's/I@.*//'
+...
+Type checker [OK]
 ...
 EXITCODE: OK
 ```
 
-### check Rec6.tla succeeds
+### check Rec6.tla fails check
 
 ```sh
 $ apalache-mc check --length=5 --inv=Inv Rec6.tla | sed 's/I@.*//'
 ...
-The outcome is: NoError
+EXITCODE: ERROR (255)
+```
+
+### check Rec8.tla succeeds typecheck
+
+```sh
+$ apalache-mc typecheck Rec8.tla | sed 's/I@.*//'
+...
+Type checker [OK]
 ...
 EXITCODE: OK
 ```
 
-### check Rec8.tla succeeds
+### check Rec8.tla fails check
 
 ```sh
 $ apalache-mc check --length=10 --inv=Inv Rec8.tla | sed 's/I@.*//'
 ...
-The outcome is: NoError
+EXITCODE: ERROR (255)
+```
+
+### check Rec9.tla succeeds typecheck
+
+```sh
+$ apalache-mc typecheck Rec9.tla | sed 's/I@.*//'
+...
+Type checker [OK]
 ...
 EXITCODE: OK
 ```
 
-### check Rec9.tla succeeds
+### check Rec9.tla fails check
 
 ```sh
 $ apalache-mc check --length=3 --inv=Inv Rec9.tla | sed 's/I@.*//'
 ...
-The outcome is: NoError
+EXITCODE: ERROR (255)
+```
+
+### check Rec10.tla succeeds typecheck
+
+```sh
+$ apalache-mc typecheck Rec10.tla | sed 's/I@.*//'
+...
+Type checker [OK]
 ...
 EXITCODE: OK
 ```
 
-### check Rec10.tla fails without UNROLL_DEFAULT_Fact
+### check Rec10.tla fails check
 
 ```sh
 $ apalache-mc check Rec10.tla | sed 's/[IEW]@.*//'
 ...
-Input error (see the manual): Recursive operator Fact requires an annotation UNROLL_DEFAULT_Fact. See: https://apalache.informal.systems/docs/apalache/principles.html#recursion
-...
 EXITCODE: ERROR (255)
 ```
 
-### check Rec11.tla fails without UNROLL_TIMES_Fact
+### check Rec11.tla succeeds typecheck
 
 ```sh
-$ apalache-mc check Rec11.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck Rec11.tla | sed 's/I@.*//'
 ...
-Input error (see the manual): Recursive operator Fact requires an annotation UNROLL_TIMES_Fact. See: https://apalache.informal.systems/docs/apalache/principles.html#recursion
-...
-EXITCODE: ERROR (255)
-```
-
-### check Rec12.tla works with Init
-
-```sh
-$ apalache-mc check --inv=Inv Rec12.tla | sed 's/[IEW]@.*//'
-...
-The outcome is: NoError
+Type checker [OK]
 ...
 EXITCODE: OK
 ```
 
-### check Rec12.tla produces an error with Init2
+### check Rec11.tla fails check
 
 ```sh
-$ apalache-mc check --init=Init2 --inv=Inv Rec12.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check Rec11.tla | sed 's/[IEW]@.*//'
 ...
-The outcome is: Error
+EXITCODE: ERROR (255)
+```
+
+### check Rec12.tla succeeds typecheck
+
+```sh
+$ apalache-mc typecheck Rec12.tla | sed 's/I@.*//'
 ...
-EXITCODE: ERROR (12)
+Type checker [OK]
+...
+EXITCODE: OK
+```
+
+### check Rec12.tla fails check
+
+```sh
+$ apalache-mc check --inv=Inv Rec12.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: ERROR (255)
 ```
 
 ### check Rec13.tla succeeds
@@ -1027,7 +1105,6 @@ The outcome is: NoError
 ...
 EXITCODE: OK
 ```
-
 
 ### check ExistsAsValue.tla succeeds
 
@@ -1896,7 +1973,15 @@ $ apalache-mc check --length=0 --inv=AllTests TestBagsExt.tla | sed 's/[IEW]@.*/
 EXITCODE: OK
 ```
 
-### check TestFolds.tla reports no error
+### check TestInlining.tla reports no error
+
+```sh
+$ apalache-mc check --length=0 --inv=AllTests TestInlining.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check TestFolds.tla reports an error
 
 ```sh
 $ apalache-mc check --length=0 --inv=AllTests TestFolds.tla | sed 's/[IEW]@.*//'
@@ -1964,6 +2049,26 @@ A regression test for assignments under quantification over empty sets.
 
 ```sh
 $ apalache-mc check --length=1 Test1425.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check MC_FoldExcept3.tla (slow) reports no error
+
+A test for folds with excepts, the slow case.
+
+```sh
+$ apalache-mc check --inv=DriftInv --next=NextSlow antipatterns/fold-except/MC_FoldExcept3.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check MC_FoldExcept3.tla (fast) reports no error
+
+A test for folds with excepts, the fast case.
+
+```sh
+$ apalache-mc check --inv=DriftInv --next=NextFast antipatterns/fold-except/MC_FoldExcept3.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2557,36 +2662,30 @@ $ apalache-mc check --out-dir=./test-out-dir --write-intermediate=true --length=
 ...
 EXITCODE: OK
 $ find ./test-out-dir/Counter.tla/* -type f -exec basename {} \; | ./sort.sh
-00_OutParser.json
-00_OutParser.tla
-01_out-post-TypeCheckerSnowcat.json
-01_out-pre-TypeCheckerSnowcat.json
+00_OutSanyParser.json
+00_OutSanyParser.tla
 01_OutTypeCheckerSnowcat.json
 01_OutTypeCheckerSnowcat.tla
-02_OutConfig.json
-02_OutConfig.tla
-03_OutDesugarer.json
-03_OutDesugarer.tla
-04_OutUnroll.json
-04_OutUnroll.tla
-05_OutInline.json
-05_OutInline.tla
-06_OutPriming.json
-06_OutPriming.tla
-07_OutVCGen.json
-07_OutVCGen.tla
-08_OutPrepro.json
-08_OutPrepro.tla
-09_OutTransition.json
-09_OutTransition.tla
-10_OutOpt.json
-10_OutOpt.tla
-11_OutAnalysis.json
-11_OutAnalysis.tla
-12_out-post-PostTypeCheckerSnowcat.json
-12_OutPostTypeCheckerSnowcat.json
-12_OutPostTypeCheckerSnowcat.tla
-12_out-pre-PostTypeCheckerSnowcat.json
+02_OutConfigurationPass.json
+02_OutConfigurationPass.tla
+03_OutDesugarerPass.json
+03_OutDesugarerPass.tla
+04_OutInlinePass.json
+04_OutInlinePass.tla
+05_OutPrimingPass.json
+05_OutPrimingPass.tla
+06_OutVCGen.json
+06_OutVCGen.tla
+07_OutPreprocessingPass.json
+07_OutPreprocessingPass.tla
+08_OutTransitionFinderPass.json
+08_OutTransitionFinderPass.tla
+09_OutOptimizationPass.json
+09_OutOptimizationPass.tla
+10_OutAnalysisPass.json
+10_OutAnalysisPass.tla
+11_OutPostTypeCheckerSnowcat.json
+11_OutPostTypeCheckerSnowcat.tla
 detailed.log
 log0.smt
 run.txt
@@ -2631,36 +2730,30 @@ $ apalache-mc check --out-dir=./test-out-dir --run-dir=./test-run-dir --write-in
 ...
 EXITCODE: OK
 $ find ./test-run-dir -type f -exec basename {} \; | ./sort.sh
-00_OutParser.json
-00_OutParser.tla
-01_out-post-TypeCheckerSnowcat.json
-01_out-pre-TypeCheckerSnowcat.json
+00_OutSanyParser.json
+00_OutSanyParser.tla
 01_OutTypeCheckerSnowcat.json
 01_OutTypeCheckerSnowcat.tla
-02_OutConfig.json
-02_OutConfig.tla
-03_OutDesugarer.json
-03_OutDesugarer.tla
-04_OutUnroll.json
-04_OutUnroll.tla
-05_OutInline.json
-05_OutInline.tla
-06_OutPriming.json
-06_OutPriming.tla
-07_OutVCGen.json
-07_OutVCGen.tla
-08_OutPrepro.json
-08_OutPrepro.tla
-09_OutTransition.json
-09_OutTransition.tla
-10_OutOpt.json
-10_OutOpt.tla
-11_OutAnalysis.json
-11_OutAnalysis.tla
-12_out-post-PostTypeCheckerSnowcat.json
-12_OutPostTypeCheckerSnowcat.json
-12_OutPostTypeCheckerSnowcat.tla
-12_out-pre-PostTypeCheckerSnowcat.json
+02_OutConfigurationPass.json
+02_OutConfigurationPass.tla
+03_OutDesugarerPass.json
+03_OutDesugarerPass.tla
+04_OutInlinePass.json
+04_OutInlinePass.tla
+05_OutPrimingPass.json
+05_OutPrimingPass.tla
+06_OutVCGen.json
+06_OutVCGen.tla
+07_OutPreprocessingPass.json
+07_OutPreprocessingPass.tla
+08_OutTransitionFinderPass.json
+08_OutTransitionFinderPass.tla
+09_OutOptimizationPass.json
+09_OutOptimizationPass.tla
+10_OutAnalysisPass.json
+10_OutAnalysisPass.tla
+11_OutPostTypeCheckerSnowcat.json
+11_OutPostTypeCheckerSnowcat.tla
 detailed.log
 run.txt
 $ rm -rf ./test-out-dir ./test-run-dir

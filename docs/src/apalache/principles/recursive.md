@@ -12,7 +12,7 @@ functions in Apalache:
   - Resursive operators and functions usually apply `CHOOSE`, which
     is hard to implement faithfully without blowing up the SMT encoding.
 
-Hence, we recommend using the operators `FoldSet` and `FoldSeq`:
+Hence, we recommend using the operators `ApaFoldSet` and `ApaFoldSeqLeft`:
 
 ```tla
 {{#include ../../../../src/tla/Apalache.tla:72:93}}
