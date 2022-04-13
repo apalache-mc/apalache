@@ -54,17 +54,18 @@ class ConfigurationPassImpl @Inject() (
         _.name == cinitName
       }
 
-    val overridesAsEql = overrides.collect { case d @ TlaOperDecl(name, _, body) =>
+    val boolTag = Typed(BoolT1())
+    val overridesAsEql = overrides.collect { case TlaOperDecl(name, _, body) =>
       val varName = name.drop(ConstAndDefRewriter.OVERRIDE_PREFIX.length)
-      OperEx(TlaOper.eq, NameEx(varName)(body.typeTag), body)
+      OperEx(TlaOper.eq, NameEx(varName)(body.typeTag), body)(boolTag)
     }
 
     val newCinitDecl = oldCinitOpt
       .map { d =>
-        d.copy(body = OperEx(TlaBoolOper.and, d.body +: overridesAsEql: _*))
+        d.copy(body = OperEx(TlaBoolOper.and, d.body +: overridesAsEql: _*)(boolTag))
       }
       .getOrElse {
-        TlaOperDecl(cinitName, List.empty, OperEx(TlaBoolOper.and, overridesAsEql: _*))(Typed(OperT1(Seq.empty,
+        TlaOperDecl(cinitName, List.empty, OperEx(TlaBoolOper.and, overridesAsEql: _*)(boolTag))(Typed(OperT1(Seq.empty,
                     BoolT1())))
       }
 
