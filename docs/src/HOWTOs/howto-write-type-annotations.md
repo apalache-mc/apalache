@@ -27,14 +27,14 @@ Consider the example [HourClock.tla][] from [Specifying Systems][]:
 Without thinking much about the types, run the type checker:
 
 ```sh
-$ apalache typecheck HourClock.tla
+$ apalache-mc typecheck HourClock.tla
 ```
 
 The type checker complains about not knowing the type of the variable `hr`:
 
 ```
 ...
-[HourClock.tla:6:12-6:13]: Undefined name hr. Introduce a type annotation.
+Typing input error: Expected a type annotation for VARIABLE hr
 ...
 ```
 
@@ -52,7 +52,11 @@ VARIABLE
 Run the type checker again. You should see the following message:
 
 ```
- > Your types are great!
+...
+ > Running Snowcat .::.
+ > Your types are purrfect!
+ > All expressions are typed
+...
 ```
 
 ## Recipe 2: Annotating constants
@@ -68,13 +72,13 @@ Consider the example [Channel.tla][] from [Specifying Systems][]:
 Run the type checker:
 
 ```sh
-$ apalache typecheck Channel.tla
+$ apalache-mc typecheck Channel.tla
 ```
 
 The type checker does not know the type of the variable `chan`:
 
 ```
-[Channel.tla:6:20-6:23]: Undefined name chan. Introduce a type annotation.
+Typing input error: Expected a type annotation for VARIABLE chan
 ```
 
 According to `TypeInvariant`, the variable `chan` is a record that has three
@@ -103,7 +107,9 @@ annotation per name.
 Run the type checker again. You should see the following message:
 
 ```
- > Your types are great!
+> Running Snowcat .::.
+> Your types are purrfect!
+> All expressions are typed 
 ```
 
 ## Recipe 3: Annotating operators
@@ -115,18 +121,18 @@ that the constants `N` and `P` should be annotated with the type `Int`.
 Annotate `N` and `P` with `Int` and run the type checker:
 
 ```sh
-$ apalache typecheck CarTalkPuzzle.tla
+$ apalache-mc typecheck CarTalkPuzzle.tla
 ```
 
 Now you should see the following error:
 
 ```
-[CarTalkPuzzle.tla:57:9-57:12]: Need annotation. Arguments match
-2 operator signatures: (((a56 -> a57), a56) => a57) and ((Seq(a56), Int) => a56)
+[CarTalkPuzzle.tla:52:32-52:35]: Cannot apply f to the argument x() in f[x()].
+[CarTalkPuzzle.tla:50:1-52:53]: Error when computing the type of Sum
 ```
 
 Although the error message may look confusing, the reason is simple: The type
-checker cannot figure out, whether the operator `Sum` expects a sequence
+checker cannot figure out whether the operator `Sum` expects a sequence
 or a function of integers as its first parameter. By looking carefully at
 the definition of `Sum`, we can see that it expects: (1) a function from
 integers to integers as its first parameter, (2) a set of integers
@@ -147,8 +153,8 @@ After providing the type checker with the annotation for `Sum`, we get one
 more type error:
 
 ```
-[CarTalkPuzzle.tla:172:23-172:26]: Need annotation. Arguments match
-2 operator signatures: (((p -> q), p) => q) and ((Seq(p), Int) => p)
+[CarTalkPuzzle.tla:160:23-160:26]: Cannot apply B to the argument x in B[x].
+[CarTalkPuzzle.tla:160:7-160:37]: Error when computing the type of Image
 ```
 
 This time the type checker cannot choose between two options for the second
@@ -164,7 +170,11 @@ of integers to integers, that is, `Int -> Int`:
 This time the type checker can find the types of all expressions:
 
 ```
- > Your types are great!
+...
+> Running Snowcat .::.
+> Your types are purrfect!
+> All expressions are typed 
+...
 ```
 
 
