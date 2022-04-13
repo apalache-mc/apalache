@@ -1,6 +1,8 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
-import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecT1, SeqT1, SetT1, StrT1, VarT1}
+import at.forsyte.apalache.tla.lir.{
+  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecT1, RowT1, SeqT1, SetT1, StrT1, VarT1,
+}
 import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
 import org.junit.runner.RunWith
 import org.scalatestplus.easymock.EasyMockSugar
@@ -10,11 +12,12 @@ import org.scalatest.funsuite.AnyFunSuite
 
 @RunWith(classOf[JUnitRunner])
 class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfterEach with EtcBuilder {
+  private val FIRST_VAR: Int = 100
   private val parser: Type1Parser = DefaultType1Parser
   private var unifier: TypeUnifier = _
 
   override protected def beforeEach(): Unit = {
-    unifier = new TypeUnifier()
+    unifier = new TypeUnifier(new TypeVarPool(FIRST_VAR))
   }
 
   test("unifying monotypes") {
@@ -172,6 +175,20 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
     assert(unifier
           .unify(sub, VarT1(1005), OperT1(Seq(VarT1(1004)), VarT1(1006)))
           .contains((expected, OperT1(Seq(VarT1(1000)), VarT1(1000)))))
+  }
+
+  test("unifying rows") {
+    val c = VarT1("c")
+    val d = VarT1("d")
+    val fresh = VarT1(FIRST_VAR)
+    val row1 = RowT1(c, "field1" -> IntT1(), "field2" -> StrT1())
+    val row2 = RowT1(d, "field3" -> BoolT1())
+    val expectedSub = Substitution(
+        EqClass(Set(c.no)) -> RowT1(fresh, "field3" -> BoolT1()),
+        EqClass(Set(d.no)) -> RowT1(fresh, "field1" -> IntT1(), "field2" -> StrT1()),
+    ) ///
+    val result = unifier.unify(Substitution(), row1, row2)
+    assert(result.contains((expectedSub, parser("{ field1: Int, field2: Str, field3: Bool, e }"))))
   }
 
   // regression
