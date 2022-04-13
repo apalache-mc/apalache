@@ -1533,11 +1533,6 @@ $ apalache-mc check --config=ConfigParams.cfg ConfigParams.tla | sed 's/[IEW]@.*
   > Set the initialization predicate to Init
   > Set the transition predicate to Next
   > Set an invariant to Inv
-  > Replaced CONSTANT MyInt with 42
-  > Replaced CONSTANT MyStr with "hello"
-  > Replaced CONSTANT MyModelValue1 with "ModelValue_Model1"
-  > Replaced CONSTANT MyModelValue2 with "ModelValue_Model2"
-  > Replaced CONSTANT MySet with {1, 2, 3}
 ...
 The outcome is: NoError
 ...
