@@ -128,19 +128,44 @@ TestForAll ==
         (2 \in DOMAIN seq) => (seq[2] /= 5)
 
 TestFoldSeq26970 ==
-    FoldSeq(Add, 0, seq26970) = 2 + 6 + 9 + 7
+    ApaFoldSeqLeft(Add, 0, seq26970) = 2 + 6 + 9 + 7
 
 TestFoldSeq697 ==
-    FoldSeq(Add, 0, SubSeq(seq26970, 2, 4)) = 6 + 9 + 7
+    ApaFoldSeqLeft(Add, 0, SubSeq(seq26970, 2, 4)) = 6 + 9 + 7
 
 TestFoldSeq345 ==
-    FoldSeq(Add, 0, Tail(seq345)) = 4 + 5
+    ApaFoldSeqLeft(Add, 0, Tail(seq345)) = 4 + 5
 
 TestFoldSeqEmpty ==
-    FoldSeq(Add, 0, Tail(seqEmpty)) = 0
+    ApaFoldSeqLeft(Add, 0, Tail(seqEmpty)) = 0
 
 TestFoldSeqFlatten ==
-    FoldSeq(Concat, <<>>, <<seq345, seqEmpty, seq26970>>) = <<3, 4, 5, 2, 6, 9, 7, 0>>
+    ApaFoldSeqLeft(Concat, <<>>, <<seq345, seqEmpty, seq26970>>) = <<3, 4, 5, 2, 6, 9, 7, 0>>
+
+TestMkSeqDouble ==
+    LET Double(i) == 2 * i IN
+    MkSeq(4, Double) = <<2, 4, 6, 8>>
+
+TestMkSeqEmpty ==
+    LET Double(i) == 2 * i IN
+    MkSeq(0, Double) = << >>
+
+TestMkSeqConcat ==
+    LET Double(i) == 2 * i IN
+    LET Triple(i) == 3 * i IN
+    MkSeq(2, Double) \o MkSeq(3, Triple) = <<2, 4, 3, 6, 9>>
+
+TestMkSeqSubSeq ==
+    LET Triple(i) == 3 * i IN
+    SubSeq(MkSeq(5, Triple), 2, 3) = <<6, 9>>
+
+TestMkSeqLen ==
+    LET Double(i) == 2 * i IN
+    Len(MkSeq(4, Double)) = 4
+
+TestMkSeqFold ==
+    LET Double(i) == 2 * i IN
+    ApaFoldSeqLeft(Add, 0, MkSeq(4, Double)) = 20
 
 TestSelectSeq345 ==
     SelectSeq(seq345, IsOdd) = <<3, 5>>
@@ -149,7 +174,35 @@ TestSelectSeqEmpty ==
     SelectSeq(seqEmpty, IsOdd) = seqEmpty
 
 TestFoldSeqOverSelectSeq ==
-    FoldSeq(Add, 0, SelectSeq(seq345, IsOdd)) = 3 + 5
+    ApaFoldSeqLeft(Add, 0, SelectSeq(seq345, IsOdd)) = 3 + 5
+
+TestFunAsSeq3 ==
+    LET f == [ i \in 1..3 |-> i + 1 ] IN
+    FunAsSeq(f, 3, 3) = <<2, 3, 4>>
+
+TestFunAsSeqEmpty ==
+    LET
+        \* @type: Int -> Int;
+        f == [ i \in {} |-> i ]
+    IN
+    FunAsSeq(f, 0, 0) = << >>
+
+TestFunAsSeqLargerCapacity ==
+    LET f == [ i \in 1..3 |-> i + 1 ] IN
+    \* provide a larger upper bound
+    FunAsSeq(f, 3, 10) = <<2, 3, 4>>
+
+TestExceptLen ==
+    Len([seq345 EXCEPT ![2] = 10]) = 3
+
+TestExceptDomain ==
+    DOMAIN [seq345 EXCEPT ![2] = 10] = DOMAIN seq345
+
+TestSubSeqEq ==
+    SubSeq(<<"a", "b", "c">>, 1, 2) = SubSeq(<<"a", "b", "d">>, 1, 2)
+
+TestSubSeqNeq ==
+    SubSeq(<<"a", "b", "c">>, 1, 3) /= SubSeq(<<"a", "b", "d">>, 1, 3)
 
 \* this test is a disjunction of all smaller tests
 AllTests ==
@@ -185,5 +238,18 @@ AllTests ==
     /\ TestSelectSeq345
     /\ TestSelectSeqEmpty
     /\ TestFoldSeqOverSelectSeq
+    /\ TestMkSeqDouble
+    /\ TestMkSeqEmpty
+    /\ TestMkSeqConcat
+    /\ TestMkSeqSubSeq
+    /\ TestMkSeqLen
+    /\ TestMkSeqFold
+    /\ TestFunAsSeq3
+    /\ TestFunAsSeqEmpty
+    /\ TestFunAsSeqLargerCapacity
+    /\ TestExceptLen
+    /\ TestExceptDomain
+    /\ TestSubSeqEq
+    /\ TestSubSeqNeq
 
 ===============================================================================

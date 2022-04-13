@@ -20,8 +20,8 @@ Construct  | Supported? | Milestone | Comment
 ``CONSTANTS C1, C2`` | ✔ | -  | Either define a ``ConstInit`` operator to initialize the constants, use a `.cfg` file, or declare operators instead of constants, e.g., C1 == 111
 ``VARIABLES x, y, z`` | ✔ | - |
 ``ASSUME P`` | ✔ / ✖ | - | Parsed, but not propagated to the solver
-``F(x1, ..., x_n) == exp`` | ✔ / ✖ | - | Every application of `F` is replaced with its body. Recursive operators need [unrolling annotations](./principles.md#recursive-operators). From 0.16.1 and later, for better performance and UX, use `FoldSet` and `FoldSeq`.
-``f[x ∈ S] == exp`` | ✔ / ✖ | - | Recursive functions are only supported if they return integers or Booleans. From 0.16.1 and later, for better performance and UX, use `FoldSet` and `FoldSeq`.
+``F(x1, ..., x_n) == exp`` | ✔ / ✖ | - | Every application of `F` is replaced with its body. Recursive operators need [unrolling annotations](./principles.md#recursive-operators). From 0.16.1 and later, for better performance and UX, use `ApaFoldSet` and `ApaFoldSeqLeft`.
+``f[x ∈ S] == exp`` | ✔ / ✖ | - | Recursive functions are only supported if they return integers or Booleans. From 0.16.1 and later, for better performance and UX, use `ApaFoldSet` and `ApaFoldSeqLeft`.
 ``INSTANCE M WITH ...`` | ✔ / ✖ | - | No special treatment for ``~>``, ``\cdot``, ``ENABLED``
 ``N(x1, ..., x_n) == INSTANCE M WITH...`` | ✔ / ✖ | - | Parameterized instances are not supported
 ``THEOREM P`` | ✔ / ✖ | - | Parsed but not used
@@ -36,7 +36,7 @@ Operator  | Supported? | Milestone | Comment
 `/\`, `\/`, `~`, `=>`, `<=>` | ✔ | - |
 ``TRUE``, ``FALSE``, ``BOOLEAN`` | ✔ | - |
 ``\A x \in S: p``, ``\E x \in S : p`` |  ✔ | - |
-``CHOOSE x \in S : p`` |  ✖ | - | Partial support prior to version 0.16.1. From 0.16.1 and later, use `Some`, `FoldSet`, or `FoldSeq`. See [#841](https://github.com/informalsystems/apalache/issues/841).
+``CHOOSE x \in S : p`` |  ✖ | - | Partial support prior to version 0.16.1. From 0.16.1 and later, use `Some`, `ApaFoldSet`, or `ApaFoldSeqLeft`. See [#841](https://github.com/informalsystems/apalache/issues/841).
 ``CHOOSE x : x \notin S`` |  ✖ | - | Not supported. You can use records or a default value such as -1.
 ``\A x : p, \E x : p`` |  ✖ | - | Use bounded quantifiers
 ``CHOOSE x : p`` |  ✖ | - |
@@ -154,10 +154,11 @@ Operator  | Supported? | Milestone | Comment
 
 Operator  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
-``<<...>>``, ``Head``, ``Tail``, ``Len``, ``SubSeq``, `Append`, `\o`, `f[e]` | ✔ | - | The sequence constructor ``<<...>>`` needs a [type annotation](https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html).
-`EXCEPT` | ✖ |   | If you need it, let us know, issue #324
+`<<...>>` | ✔ |   | Often needs a [type annotation](https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html).
+`Head`, `Tail`, `Len``, `SubSeq`, `Append`, `\o`, `f[e]` | ✔ | - |
+`EXCEPT` | ✔ |   |
+`SelectSeq` | ✔ | - | Not as efficient, as it could be, see [#1350](https://github.com/informalsystems/apalache/issues/1350).
 `Seq(S)` | ✖ | - | Use `Gen` of Apalache to produce bounded sequences
-`SelectSeq` | ✖ | - | Planned in [#873](https://github.com/informalsystems/apalache/issues/873). Till then, use `FoldSeq`.
 
 ### FiniteSets
 

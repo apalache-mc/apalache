@@ -113,8 +113,8 @@ if __name__ == "__main__":
     corrected_file = test_target_dir / (test_file.name + ".corrected")
 
     working_dir_str = str(working_dir)
-    test_file_str = str(corrected_file)
-    corrected_file_str = str(test_file)
+    corrected_file_str = str(corrected_file)
+    test_file_str = str(test_file)
 
     # Must come after the `test_target_dir` is created
     configure_logger(args.debug)
@@ -128,8 +128,8 @@ if __name__ == "__main__":
         "--root",
         working_dir_str,
         "--output",
-        test_file_str,
         corrected_file_str,
+        test_file_str,
     ]
     if args.test is not None:
         if test_is_in_file(args.test, test_file):

@@ -211,6 +211,10 @@ class Builder {
     BuilderOper(TlaOper.chooseBounded, variable, set, predicate)
   }
 
+  def guess(set: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.guess, set)
+  }
+
   /**
    * Decorate a TLA+ expression with a label (a TLA+2 feature), e.g., lab(a, b) :: e decorates e with the label "lab"
    * whose arguments are "a" and "b". This method needs a type tag for `name` and `args`. The type of the expression
@@ -511,20 +515,6 @@ class Builder {
     BuilderOper(TlaSeqOper.subseq, seq, fromIndex, toIndex)
   }
 
-  /**
-   * Get the subsequence of S that consists of the elements matching a predicate.
-   *
-   * @param seq
-   *   a sequence
-   * @param test
-   *   a predicate, it should be an action name
-   * @return
-   *   the expression that corresponds to SelectSeq(S, test)
-   */
-  def selectseq(seq: BuilderEx, test: BuilderEx): BuilderEx = {
-    BuilderOper(TlaSeqOper.selectseq, seq, test)
-  }
-
   /** TlaSetOper */
   def enumSet(args: BuilderEx*): BuilderEx = {
     BuilderOper(TlaSetOper.enumSet, args: _*)
@@ -622,6 +612,20 @@ class Builder {
     BuilderOper(ApalacheOper.setAsFun, pairsSetEx)
   }
 
+  /**
+   * Apply the operator [[ApalacheOper.mkSeq]].
+   *
+   * @param lenEx
+   *   non-negative length of the sequence
+   * @param elemCtorEx
+   *   an operator to construct a single element (either a name, or a lambda)
+   * @return
+   *   `MkSeq(lenEx, elemCtorEx)`
+   */
+  def apalacheMkSeq(lenEx: BuilderEx, elemCtorEx: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheOper.mkSeq, lenEx, elemCtorEx)
+  }
+
   def apalacheSkolem(ex: BuilderEx): BuilderEx = {
     BuilderOper(ApalacheOper.skolem, ex)
   }
@@ -631,35 +635,35 @@ class Builder {
   }
 
   def apalacheSelectInSet(elem: BuilderEx, set: BuilderEx): BuilderEx = {
-    BuilderOper(ApalacheOper.selectInSet, elem, set)
+    BuilderOper(ApalacheInternalOper.selectInSet, elem, set)
   }
 
   def apalacheSelectInFun(elem: BuilderEx, fun: BuilderEx): BuilderEx = {
-    BuilderOper(ApalacheOper.selectInSet, elem, fun)
+    BuilderOper(ApalacheInternalOper.selectInSet, elem, fun)
   }
 
   def apalacheStoreInSet(elem: BuilderEx, set: BuilderEx): BuilderEx = {
-    BuilderOper(ApalacheOper.storeInSet, elem, set)
+    BuilderOper(ApalacheInternalOper.storeInSet, elem, set)
   }
 
   def apalacheStoreInFun(elem: BuilderEx, fun: BuilderEx, arg: BuilderEx): BuilderEx = {
-    BuilderOper(ApalacheOper.storeInSet, elem, fun, arg)
+    BuilderOper(ApalacheInternalOper.storeInSet, elem, fun, arg)
   }
 
   def apalacheStoreNotInSet(elem: BuilderEx, set: BuilderEx): BuilderEx = {
-    BuilderOper(ApalacheOper.storeNotInSet, elem, set)
+    BuilderOper(ApalacheInternalOper.storeNotInSet, elem, set)
   }
 
   def apalacheStoreNotInFun(elem: BuilderEx, fun: BuilderEx): BuilderEx = {
-    BuilderOper(ApalacheOper.storeNotInSet, elem, fun)
+    BuilderOper(ApalacheInternalOper.storeNotInSet, elem, fun)
   }
 
   def apalacheSmtMap(inputSet: BuilderEx, resultSet: BuilderEx): BuilderEx = {
-    BuilderOper(ApalacheOper.smtMap, inputSet, resultSet)
+    BuilderOper(ApalacheInternalOper.smtMap, inputSet, resultSet)
   }
 
   def apalacheUnconstrainArray(arrayElemName: BuilderEx): BuilderEx = {
-    BuilderOper(ApalacheOper.unconstrainArray, arrayElemName)
+    BuilderOper(ApalacheInternalOper.unconstrainArray, arrayElemName)
   }
 
   private val m_nameMap: Map[String, TlaOper] =
@@ -722,7 +726,6 @@ class Builder {
         TlaSeqOper.tail.name -> TlaSeqOper.tail,
         TlaSeqOper.len.name -> TlaSeqOper.len,
         TlaSeqOper.subseq.name -> TlaSeqOper.subseq,
-        TlaSeqOper.selectseq.name -> TlaSeqOper.selectseq,
         TlaSetOper.enumSet.name -> TlaSetOper.enumSet,
         TlaSetOper.in.name -> TlaSetOper.in,
         TlaSetOper.notin.name -> TlaSetOper.notin,
@@ -745,16 +748,17 @@ class Builder {
         ApalacheOper.skolem.name -> ApalacheOper.skolem,
         ApalacheOper.expand.name -> ApalacheOper.expand,
         ApalacheOper.constCard.name -> ApalacheOper.constCard,
-        ApalacheOper.distinct.name -> ApalacheOper.distinct,
-        ApalacheOper.funAsSeq.name -> ApalacheOper.funAsSeq,
+        ApalacheInternalOper.distinct.name -> ApalacheInternalOper.distinct,
+        ApalacheOper.mkSeq.name -> ApalacheOper.mkSeq,
         ApalacheOper.foldSet.name -> ApalacheOper.foldSet,
         ApalacheOper.foldSeq.name -> ApalacheOper.foldSeq,
-        ApalacheOper.selectInSet.name -> ApalacheOper.selectInSet,
-        ApalacheOper.storeInSet.name -> ApalacheOper.storeInSet,
-        ApalacheOper.storeNotInSet.name -> ApalacheOper.storeNotInSet,
-        ApalacheOper.smtMap.name -> ApalacheOper.smtMap,
-        ApalacheOper.unconstrainArray.name -> ApalacheOper.unconstrainArray,
+        ApalacheInternalOper.selectInSet.name -> ApalacheInternalOper.selectInSet,
+        ApalacheInternalOper.storeInSet.name -> ApalacheInternalOper.storeInSet,
+        ApalacheInternalOper.storeNotInSet.name -> ApalacheInternalOper.storeNotInSet,
+        ApalacheInternalOper.smtMap.name -> ApalacheInternalOper.smtMap,
+        ApalacheInternalOper.unconstrainArray.name -> ApalacheInternalOper.unconstrainArray,
         ApalacheOper.setAsFun.name -> ApalacheOper.setAsFun,
+        ApalacheOper.guess.name -> ApalacheOper.guess,
     )
 
   def byName(operatorName: String, args: BuilderEx*): BuilderEx = {

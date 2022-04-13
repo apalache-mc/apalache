@@ -19,7 +19,7 @@ class TestStableTopologicalSort extends AnyFunSuite with BeforeAndAfterEach with
       uses <- Gen.listOfN(size, Gen.choose(0, size - 1))
       // the declarations below the threshold do not refer to other declarations
       threshold <- Gen.choose(0, size - 1)
-    } yield nodes.zip(uses).map { case (n, i) =>
+    } yield nodes.zip(uses).map { case (_, i) =>
       // either no dependencies or a single dependency
       if (i <= threshold) (i, Set.empty[Int]) else (i, Set(uses(i)))
     }

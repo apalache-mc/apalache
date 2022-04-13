@@ -55,6 +55,10 @@ class KeraLanguagePred extends ContextualLanguagePred {
           .and(isOkInContext(letDefs, base))
           .and(isOkInContext(letDefs, collection))
 
+      case OperEx(ApalacheOper.mkSeq, len, opName) =>
+        isOkInContext(letDefs, opName)
+          .and(isOkInContext(letDefs, len))
+
       case OperEx(oper, args @ _*)
           if oper == TlaSetOper.map || oper == TlaFunOper.funDef || oper == TlaFunOper.recFunDef =>
         val evenArgs = args.zipWithIndex.filter { p => p._2 % 2 == 0 }.map {
@@ -89,6 +93,10 @@ class KeraLanguagePred extends ContextualLanguagePred {
           PredResultOk()
         }
 
+      case e @ OperEx(ApalacheInternalOper.notSupportedByModelChecker, ValEx(TlaStr(msg))) =>
+        // unconditionally report an error
+        PredResultFail(List((e.ID, "Not supported: " + msg)))
+
       case e =>
         PredResultFail(List((e.ID, e.toString)))
     }
@@ -118,6 +126,8 @@ object KeraLanguagePred {
         ApalacheOper.expand,
         ApalacheOper.constCard,
         ApalacheOper.setAsFun,
+        ApalacheOper.guess,
+        ApalacheInternalOper.apalacheSeqCapacity,
         // for the future
         //    TlaActionOper.enabled,
         //    TlaActionOper.unchanged,

@@ -11,15 +11,15 @@ VARIABLES
     balance,
     (*
       @typeAlias: MESSAGE =
-          [ tag: "req", ask: Int ]
-        | [ tag: "ack", success: Bool ];
+          { tag: "req", ask: Int }
+        | { tag: "ack", success: Bool };
       @type: Set(MESSAGE);
      *)
     msgs,
     (*
       @typeAlias: EVENT =
-          [ tag: "withdraw", amount: Int ]
-        | [ tag: "lacking", amount: Int ];
+          { tag: "withdraw", amount: Int }
+        | { tag: "lacking", amount: Int };
       @type: Seq(EVENT);  
      *)
     log

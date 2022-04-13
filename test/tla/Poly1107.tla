@@ -18,7 +18,7 @@ F1 (+) F2  ==
 BigPlus(S) ==
   LET 
     NotInfix(F1,F2) == F1 (+) F2
-  IN FoldSet( NotInfix, [ x \in {} |-> 1 ], S )
+  IN ApaFoldSet( NotInfix, [ x \in {} |-> 1 ], S )
 
 TestBigPlus == 
   LET 

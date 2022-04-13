@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.lir.{ConstT1, IntT1, SeqT1, SetT1, StrT1, TupT1, TypingException}
-import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.easymock.EasyMockSugar
@@ -9,7 +8,6 @@ import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestConstSubstitution extends AnyFunSuite with EasyMockSugar with EtcBuilder {
-  private val parser: Type1Parser = DefaultType1Parser
 
   test("simple substitution") {
     val sub = ConstSubstitution(Map("A" -> IntT1()))

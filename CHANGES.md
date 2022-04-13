@@ -2,6 +2,72 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.23.1
+
+### Bug fixes
+
+* Fix the generation of SMT instances with the `--debug` flag, see #1594
+* Fix symbolic link generation in 'make' on Windows, see #1596
+
+## 0.23.0
+
+### Breaking changes
+
+ * Rework module lookup (drops support for `TLA_PATH`), see #1491
+
+### Features
+
+ * Look up modules in the same directory, see #1491
+ * Support for the community module `SequencesExt`, see  #1539
+ * Support for the community module `BagsExt`, see #1555
+ * Support for the community module `Folds`, see #1558
+
+### Improvements
+
+ * Pack arithmetic expressions and comparisons into a single SMT constraint,
+   see #1540 and #1545
+
+### Bug fixes
+
+ * Fix uncaught `FileNotFoundException` in commands called on nonexistent files,
+   see #1503
+ * Fix equality on sequences, see #1548, #1554
+
+## 0.22.3
+
+### Features
+
+ * An optimization in function application, see #1500
+
+### Bug fixes
+
+ * Fix stack overflow and out-of-memory in function operators, see #1498
+ * Fix function application static check in arrays encoding, see #1490
+ * Add support for the community modules FiniteSetsExt and Functions, see #1484
+ * Add support for Bags, see #1527
+
+## 0.22.2
+
+### Features
+ * Enable records in the arrays encoding, see #1288
+ * Enable the remaining TLA+ features in the arrays encoding, see #1418
+ * Implement the sequence constructor `Apalache!MkSeq`, see #1439
+ * Add support for `Apalache!FunAsSeq`, see #1442
+ * Implement `EXCEPT` on sequences, see #1444
+ * Cache default values, see #1465
+
+### Bug fixes
+ * Fixed bug where TLA+ `LAMBDA`s wouldn't inline outside `Fold` and `MkSeq`, see #1446
+ * Fix the comment preprocessor to extract annotations after a linefeed, see #1456
+ * Fix the failing property-based test, see #1454
+ * Fixed a bug where call-by-name embedding wasn't properly called recursively 
+
+## 0.22.1
+
+### Bug fixes
+
+ * Fix a corner case in `\E x \in S: P`, see #1426
+
 ## 0.22.0
 
 ### Breaking changes

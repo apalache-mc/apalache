@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.pp
 
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
-import TypedPredefs._
 
 import javax.inject.Singleton
 
@@ -31,7 +31,10 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
     case ex @ OperEx(TlaFunOper.except, fun, args @ _*) =>
       val trArgs = args.map(transform)
       val (accessors, newValues) = TlaOper.deinterleave(trArgs)
-      val isMultidimensional = accessors.exists { case OperEx(TlaFunOper.tuple, lst @ _*) => lst.size > 1 }
+      val isMultidimensional = accessors.exists {
+        case OperEx(TlaFunOper.tuple, lst @ _*) => lst.size > 1
+        case accessor => throw new LirError("Expected a tuple of keys as an accessor in EXCEPT. Found: " + accessor)
+      }
       if (accessors.length < 2 && !isMultidimensional) {
         // the simplest update [ f EXCEPT ![i] = e ]
         OperEx(TlaFunOper.except, transform(fun) +: trArgs: _*)(ex.typeTag)

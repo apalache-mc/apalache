@@ -11,8 +11,9 @@ package at.forsyte.apalache.io.annotations.parser
  * respect the structure of the comments, but it may return ill-formed annotations, if they are ill-formed in the
  * original text. This preprocessor prunes the comment tokens, even in arguably valid cases (e.g., inside a string).
  * Although it is usually not a good idea to write an ad-hoc lexer, it is not obvious to me, how to use a lexer
- * generator here. However, if someone knows how to write this preprocessor with a lexer generator, it would be great!
- * </p>
+ * generator here. However, if someone knows how to write this preprocessor with a lexer generator, let me know.
+ * Perhaps, the first step would be to write a precise grammar for this lexer, instead of write the spaghetti of
+ * if-then-else expressions, as we have in this preprocessor.</p>
  *
  * <p>See the annotations HOWTO: https://apalache.informal.systems/docs/HOWTOs/howto-write-type-annotations.html</p>
  *
@@ -20,7 +21,7 @@ package at.forsyte.apalache.io.annotations.parser
  *   Igor Konnov
  */
 class CommentPreprocessor {
-  private val tokenRegex = """(\n|\\\*|\(\*|\*\)|[ \t\n\r]@[a-zA-Z_][a-zA-Z0-9_]*|\)|;|")""".r
+  private val tokenRegex = """(\n|\\\*|\(\*|\*\)|@[a-zA-Z_][a-zA-Z0-9_]*|\)|;|")""".r
 
   // internal state of the preprocessor
   private case class State(
@@ -64,7 +65,7 @@ class CommentPreprocessor {
       if (!inOneLineComment) {
         this.copy(multiCommentLevel = multiCommentLevel + 1)
       } else {
-        // a multi-level comment is ignored inside a multi-level comment
+        // a multi-level comment is ignored inside a single-line comment
         // \* ... (* ....
         this
       }
@@ -106,6 +107,7 @@ class CommentPreprocessor {
     val matchIterator = tokenRegex.findAllIn(text)
     while (matchIterator.hasNext) {
       val group = matchIterator.next()
+      val isGoodStartForAnnotation = isValidCharBeforeAnnotation(text, matchIterator.start)
       if (matchIterator.start > lastIndexOfUnmatchedText && !state.isExcludingText) {
         // add the text between the last match and this match
         val fragment = text.substring(lastIndexOfUnmatchedText, matchIterator.start)
@@ -124,21 +126,26 @@ class CommentPreprocessor {
       // look one character ahead to figure out the annotation type
       val lookaheadChar = if (lastIndexOfUnmatchedText < text.length) Some(text(lastIndexOfUnmatchedText)) else None
       // figure out whether we have met an annotation or not
-      if (!state.inAnnotation && !state.inString && group.startsWith(" @")) {
-        if (lookaheadChar.contains(':') || lookaheadChar.contains('(')) {
-          // Advance the last unmatched index beyond "@annotation:" or "@annotation(".
-          lastIndexOfUnmatchedText += 1
-        } else if (isEndOfParameterlessAnnotation(lookaheadChar)) {
-          // Add this annotation immediately.
-          // Do not advance the index in case of "@annotation " or similar.
-          annotations = annotations :+ group.trim
-        } else {
+      if (!state.inAnnotation && !state.inString && group.startsWith("@")) {
+        if (!isGoodStartForAnnotation) {
           // this is not an annotation, push it back to the free text
           textBuilder.append(group)
+        } else {
+          if (lookaheadChar.contains(':') || lookaheadChar.contains('(')) {
+            // Advance the last unmatched index beyond "@annotation:" or "@annotation(".
+            lastIndexOfUnmatchedText += 1
+          } else if (isEndOfParameterlessAnnotation(lookaheadChar)) {
+            // Add this annotation immediately.
+            // Do not advance the index in case of "@annotation " or similar.
+            annotations = annotations :+ group.trim
+          } else {
+            // this is not an annotation, push it back to the free text
+            textBuilder.append(group)
+          }
         }
       }
 
-      val nextState = getNextState(state, group, lookaheadChar)
+      val nextState = getNextState(state, group, lookaheadChar, isGoodStartForAnnotation)
 
       (state.inAnnotation, nextState.inAnnotation) match {
         case (false, false) => ()
@@ -178,7 +185,21 @@ class CommentPreprocessor {
     (textBuilder.toString(), annotations)
   }
 
-  private def getNextState(state: State, group: String, lookaheadChar: Option[Char]): State = {
+  private def isValidCharBeforeAnnotation(text: String, index: Int): Boolean = {
+    if (index == 0) {
+      true
+    } else {
+      val char = text(index - 1)
+      // @foo is written either after a whitespace (to exclude emails), or after the comment token, e.g., (* or \*
+      char.isWhitespace || char == '*'
+    }
+  }
+
+  private def getNextState(
+      state: State,
+      group: String,
+      lookaheadChar: Option[Char],
+      isGoodStartForAnnotation: Boolean): State = {
     group match {
       case "\\*" =>
         state.enterOneLineComment()
@@ -225,7 +246,7 @@ class CommentPreprocessor {
         }
 
       case _ =>
-        if (!group.startsWith(" @")) {
+        if (!group.startsWith("@") || !isGoodStartForAnnotation) {
           state
         } else {
           if (lookaheadChar.contains('(') && !state.inAnnotation) {

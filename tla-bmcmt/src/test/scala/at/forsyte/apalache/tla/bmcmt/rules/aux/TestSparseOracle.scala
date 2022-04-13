@@ -9,16 +9,16 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 trait TestSparseOracle extends RewriterBase with TestingPredefs {
   test("""Sparse Oracle.create""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
-    var state = new SymbState(tla.bool(true), arena, Binding())
+    val state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
-    val (nextState, oracle) = PropositionalOracle.create(rewriter, state, 2)
-    val sparseOracle = new SparseOracle(oracle, Set(1, 10))
+    val (_, oracle) = PropositionalOracle.create(rewriter, state, 2)
+    new SparseOracle(oracle, Set(1, 10))
     assert(solverContext.sat())
   }
 
   test("""Sparse Oracle.whenEqualTo""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
-    var state = new SymbState(tla.bool(true), arena, Binding())
+    val state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
     val (nextState, oracle) = PropositionalOracle.create(rewriter, state, 3)
     val sparseOracle = new SparseOracle(oracle, Set(1, 5, 10))
@@ -29,7 +29,7 @@ trait TestSparseOracle extends RewriterBase with TestingPredefs {
 
   test("""Sparse Oracle.evalPosition""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
-    var state = new SymbState(tla.bool(true), arena, Binding())
+    val state = new SymbState(tla.bool(true), arena, Binding())
     // introduce an oracle
     val (nextState, oracle) = PropositionalOracle.create(rewriter, state, 3)
     val sparseOracle = new SparseOracle(oracle, Set(1, 5, 10))

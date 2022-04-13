@@ -4,11 +4,11 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.caches.IntRangeCache
 import at.forsyte.apalache.tla.bmcmt.rules.aux.ProtoSeqOps
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, OperEx}
 import at.forsyte.apalache.tla.lir.TypedPredefs.{tlaExToBuilderExAsTyped, BuilderExAsTyped}
-import at.forsyte.apalache.tla.lir.oper.TlaFunOper
-import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.oper.TlaFunOper
+import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, OperEx}
 
 /**
  * Rewriting DOMAIN f, that is, translating the domain of a function, record, tuple, or sequence.
@@ -32,7 +32,6 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
         val funState = rewriter.rewriteUntilDone(state.setRex(funEx))
         val funCell = funState.asCell
 
-        // no type information from the type finder is needed, as types are propagated in a straightforward manner
         funCell.cellType match {
           case RecordT(_) =>
             val dom = funState.arena.getDom(funCell)
@@ -57,14 +56,14 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
     }
   }
 
-  private def mkTupleDomain(state: SymbState, funCell: ArenaCell): SymbState = {
+  protected def mkTupleDomain(state: SymbState, funCell: ArenaCell): SymbState = {
     val tupleT = funCell.cellType.asInstanceOf[TupleT]
     val (newArena, dom) = intRangeCache.create(state.arena, (1, tupleT.args.size))
     state.setArena(newArena).setRex(dom.toNameEx)
   }
 
-  private def mkSeqDomain(state: SymbState, seqCell: ArenaCell): SymbState = {
-    val (protoSeq, len, capacity) = proto.unpackSeq(state.arena, seqCell)
+  protected def mkSeqDomain(state: SymbState, seqCell: ArenaCell): SymbState = {
+    val (protoSeq @ _, len, capacity) = proto.unpackSeq(state.arena, seqCell)
     // We do not know the domain precisely, as it depends on the length of the sequence.
     // Hence, we create the set `1..capacity` and include only those elements that are not greater than `len`.
     val (newArena, staticDom) = intRangeCache.create(state.arena, (1, capacity))

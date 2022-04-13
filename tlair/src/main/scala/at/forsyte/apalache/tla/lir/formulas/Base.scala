@@ -1,5 +1,7 @@
 package at.forsyte.apalache.tla.lir.formulas
 
+import scalaz.unused
+
 /**
  * A representation of an SMT/VMT sort. We only support non-parametric sorts at the moment.
  *
@@ -18,7 +20,7 @@ trait Term {
   val sort: Sort
 }
 
-abstract class Variable(name: String) extends Term
+abstract class Variable(@unused name: String) extends Term
 
 sealed case class BoolSort() extends Sort("Boolean")
 sealed case class IntSort() extends Sort("Integer")

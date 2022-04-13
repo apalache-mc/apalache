@@ -44,7 +44,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     rewriter.pop()
     rewriter.push()
     solverContext.assertGroundExpr(eql(boundCell.toNameEx ? "i", int(3)).typed(types, "b"))
-    assertUnsatOrExplain(rewriter, nextState) // should not be possible
+    assertUnsatOrExplain() // should not be possible
   }
 
   test("""assign in conjunction""") { rewriterType: SMTEncoding =>
@@ -68,11 +68,11 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     rewriter.pop()
     rewriter.push()
     solverContext.assertGroundExpr(neql(x_cell, int(1)).typed(types, "b"))
-    assertUnsatOrExplain(rewriter, nextState) // should not be possible
+    assertUnsatOrExplain() // should not be possible
     rewriter.pop()
     rewriter.push()
     solverContext.assertGroundExpr(neql(y_cell, int(2)).typed(types, "b"))
-    assertUnsatOrExplain(rewriter, nextState) // should not be possible
+    assertUnsatOrExplain() // should not be possible
   }
 
   test("""\E t \in {}: x' = t ~~> FALSE""") { rewriterType: SMTEncoding =>
@@ -173,7 +173,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     val eq13 = eql(boundCell.toNameEx ? "I", enumSet(int(1), int(3)) ? "I").typed(types, "b")
     val eqState13 = rewriter.rewriteUntilDone(nextState.setRex(eq13))
     solverContext.assertGroundExpr(eqState13.ex)
-    assertUnsatOrExplain(rewriter, eqState13) // should not be possible
+    assertUnsatOrExplain() // should not be possible
   }
 
   test("""\E t \in {{1, 2}, {1+1, 2, 3}} \ {{2, 3}}: x' \in {t} ~~> TRUE and [x -> $C$k]""") {
@@ -219,7 +219,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
         .typed(types, "b")
       val eqState13 = rewriter.rewriteUntilDone(nextState.setRex(eq13))
       solverContext.assertGroundExpr(eqState13.ex)
-      assertUnsatOrExplain(rewriter, eqState13) // should not be possible
+      assertUnsatOrExplain() // should not be possible
       rewriter.pop()
       // not equal to {2, 3}
       rewriter.push()
@@ -227,7 +227,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
         .typed(types, "b")
       val eqState23 = rewriter.rewriteUntilDone(nextState.setRex(eq23))
       solverContext.assertGroundExpr(eqState23.ex)
-      assertUnsatOrExplain(rewriter, eqState23) // should not be possible
+      assertUnsatOrExplain() // should not be possible
       rewriter.pop()
       // 2 is in the result
       rewriter.push()
@@ -300,7 +300,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
       .typed(types, "b")
     val eqState13 = rewriter.rewriteUntilDone(nextState.setRex(eq13))
     solverContext.assertGroundExpr(eqState13.ex)
-    assertUnsatOrExplain(rewriter, eqState13) // should not be possible
+    assertUnsatOrExplain() // should not be possible
   }
 
   test("""\E t \in {[x \in BOOLEAN |-> 0], [x2 \in BOOLEAN |-> 1]}: x' \in {t} ~~> TRUE""") {
@@ -342,7 +342,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
       val eqFun2 = eql(boundCell.toNameEx ? "b_to_i", fun2).typed(types, "b")
       val eqStateFun2 = rewriter.rewriteUntilDone(nextState.setRex(eqFun2))
       solverContext.assertGroundExpr(eqStateFun2.ex)
-      assertUnsatOrExplain(rewriter, eqStateFun2) // should not be possible
+      assertUnsatOrExplain() // should not be possible
   }
 
   test("""\E t \in [BOOLEAN -> {0, 1}]: x' \in {t} ~~> TRUE""") { rewriterType: SMTEncoding =>
@@ -389,7 +389,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     val eqFun2 = eql(boundCell.toNameEx ? "b_to_i", fun2).typed(types, "b")
     val eqStateFun2 = rewriter.rewriteUntilDone(nextState.setRex(eqFun2))
     solverContext.assertGroundExpr(eqStateFun2.ex)
-    assertUnsatOrExplain(rewriter, eqStateFun2) // should not be possible
+    assertUnsatOrExplain() // should not be possible
   }
 
   test("""\E t \in [{} -> {0, 1}]: x' \in {t} ~~> FALSE""") { rewriterType: SMTEncoding =>
@@ -457,7 +457,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
 
     val state = new SymbState(asgn, arena, Binding())
     val rewriter = create(rewriterType)
-    val nextState = rewriter.rewriteUntilDone(state)
+    rewriter.rewriteUntilDone(state)
     assert(rewriter.solverContext.sat())
   // there is not much to check here, since it is just a function that returns an integer
   }

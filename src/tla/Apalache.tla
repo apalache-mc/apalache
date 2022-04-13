@@ -8,7 +8,7 @@
  * encoded inside Apalache. For the moment, these operators are mirrored in
  * the class at.forsyte.apalache.tla.lir.oper.ApalacheOper.
  *                                                                          
- * Igor Konnov, Jure Kukovec, Informal Systems 2020-2021                    
+ * Igor Konnov, Jure Kukovec, Informal Systems 2020-2022                    
  *)
 
 (**
@@ -39,6 +39,19 @@ x := e == x = e
 Gen(size) == {}
 
 (**
+ * Non-deterministically pick a value out of the set `S`, if `S` is non-empty.
+ * If `S` is empty, return some value of the proper type.  This can be
+ * understood as a non-deterministic version of CHOOSE x \in S: TRUE.
+ *
+ * @type: Set(a) => a;
+ *)
+Guess(S) ==
+    \* Since this is not supported by TLC,
+    \* we fall back to the deterministic version for TLC.
+    \* Apalache redefines the operator `Guess` as explained above.
+    CHOOSE x \in S: TRUE
+
+(**
  * Convert a set of pairs S to a function F. Note that if S contains at least
  * two pairs <<x, y>> and <<u, v>> such that x = u and y /= v,
  * then F is not uniquely defined. We use CHOOSE to resolve this ambiguity.
@@ -54,12 +67,39 @@ SetAsFun(S) ==
     [ x \in Dom |-> CHOOSE y \in Rng: <<x, y>> \in S ]
 
 (**
+ * A sequence constructor that avoids using a function constructor.
+ * Since Apalache is typed, this operator is more efficient than
+ * FunAsSeq([ i \in 1..N |-> F(i) ]). Apalache requires N to be
+ * a constant expression.
+ *
+ * @type: (Int, (Int -> a)) => Seq(a);
+ *)
+LOCAL INSTANCE Integers
+MkSeq(N, F(_)) ==
+    \* This is the TLC implementation. Apalache does it differently.
+    [ i \in (1..N) |-> F(i) ]
+
+\* required by our default definition of FoldSeq and FunAsSeq
+LOCAL INSTANCE Sequences
+
+(**
  * As TLA+ is untyped, one can use function- and sequence-specific operators
  * interchangeably. However, to maintain correctness w.r.t. our type-system,
  * an explicit cast is needed when using functions as sequences.
+ * FunAsSeq reinterprets a function over integers as a sequence.
+ *
+ * The parameters have the following meaning:
+ *
+ *  - fn is the function from 1..len that should be interpreted as a sequence.
+ *  - len is the length of the sequence, len = Cardinality(DOMAIN fn),
+ *    len may be a variable, a computable expression, etc.
+ *  - capacity is a static upper bound on the length, that is, len <= capacity.
+ *
+ * @type: ((Int -> a), Int, Int) => Seq(a);
  *)
-LOCAL INSTANCE Sequences
-FunAsSeq(fn, maxSeqLen) == SubSeq(fn, 1, maxSeqLen)
+FunAsSeq(fn, len, capacity) ==
+    LET __FunAsSeq_elem_ctor(i) == fn[i] IN
+    SubSeq(MkSeq(capacity, __FunAsSeq_elem_ctor), 1, len)
 
 (**
  * Annotating an expression \E x \in S: P as Skolemizable. That is, it can
@@ -88,22 +128,28 @@ ConstCardinality(cardExpr) == cardExpr
  * The folding operator, used to implement computation over a set.
  * Apalache implements a more efficient encoding than the one below.
  * (from the community modules).
+ *
+ * @type: ((a, b) => a, a, Set(b)) => a;
  *)
-RECURSIVE FoldSet(_,_,_)
-FoldSet( Op(_,_), v, S ) == IF S = {}
-                            THEN v
-                            ELSE LET w == CHOOSE x \in S: TRUE
-                                  IN LET T == S \ {w}
-                                      IN FoldSet( Op, Op(v,w), T )
+RECURSIVE ApaFoldSet(_, _, _)
+ApaFoldSet(Op(_,_), v, S) ==
+    IF S = {}
+    THEN v
+    ELSE LET w == CHOOSE x \in S: TRUE IN
+         LET T == S \ {w} IN
+         ApaFoldSet(Op, Op(v,w), T)
 
 (**
  * The folding operator, used to implement computation over a sequence.
  * Apalache implements a more efficient encoding than the one below.
  * (from the community modules).
+ *
+ * @type: ((a, b) => a, a, Seq(b)) => a;
  *)
-RECURSIVE FoldSeq(_,_,_)
-FoldSeq( Op(_,_), v, seq ) == IF seq = <<>>
-                              THEN v
-                              ELSE FoldSeq( Op, Op(v,Head(seq)), Tail(seq) )
+RECURSIVE ApaFoldSeqLeft(_, _, _)
+ApaFoldSeqLeft(Op(_,_), v, seq) ==
+    IF seq = <<>>
+    THEN v
+    ELSE ApaFoldSeqLeft(Op, Op(v, Head(seq)), Tail(seq))
 
 ===============================================================================

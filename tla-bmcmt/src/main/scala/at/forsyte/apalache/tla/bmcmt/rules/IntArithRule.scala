@@ -2,20 +2,18 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types.IntT
+import at.forsyte.apalache.tla.lir.OperEx
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaArithOper
-import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * Integer arithmetic operations: +, -, *, div, mod.
  *
  * @author
- *   Igor Konnov
+ *   Igor Konnov, Thomas Pani
  */
-class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val intConstRule: IntConstRule = new IntConstRule(rewriter)
+class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule with IntArithPacker {
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -30,43 +28,41 @@ class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = state.ex match {
     case OperEx(oper: TlaArithOper, _, _)
-        if (oper == TlaArithOper.plus || oper == TlaArithOper.minus
-          || oper == TlaArithOper.mult || oper == TlaArithOper.div
-          || oper == TlaArithOper.mod || oper == TlaArithOper.exp) =>
-      rewriteGeneral(state, state.ex)
+        if oper == TlaArithOper.plus || oper == TlaArithOper.minus || oper == TlaArithOper.mult ||
+          oper == TlaArithOper.div || oper == TlaArithOper.mod || oper == TlaArithOper.exp =>
+      rewritePacked(state)
 
     case OperEx(TlaArithOper.uminus, _) =>
-      rewriteGeneral(state, state.ex)
+      rewritePacked(state)
 
     case _ =>
       throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
   }
 
-  private def rewriteGeneral(state: SymbState, ex: TlaEx) = ex match {
-    case ValEx(TlaInt(_)) =>
-      // just use the constant rule, which will compare with the integer cache
-      intConstRule.apply(state.setRex(ex))
+  /**
+   * Rewrite the current arithmetic expression of [[state]], packing it into a single SMT constraint.
+   *
+   * Essentially, this implements a specialized rewriter of arithmetic expressions within Apalache's more general
+   * rewriting system: Arithmetic expressions are packed into a single SMT constraint. If during this rewriting, we
+   * encounter a non-arithmetic expression, we delegate the rewriting to [[rewriter]] and substitute the rewritten arena
+   * cell in the packed constraint.
+   *
+   * @param state
+   *   current rewriter state, `state.ex` is the arithmetic expression to rewrite
+   * @return
+   *   rewritten state, where the arithmetic expression has been rewritten into a new arena cell
+   */
+  private def rewritePacked(state: SymbState): SymbState = {
+    // pack the arithmetic expression `state.ex` into `packedState.ex`
+    val packedState = packArithExpr(rewriter, state)
 
-    case OperEx(TlaArithOper.uminus, subex) =>
-      val subState = rewriter.rewriteUntilDone(state.setRex(subex))
-      // TODO: think how to stop introducing cells for intermediate expressions
-      val newArena = subState.arena.appendCell(IntT())
-      val newCell = newArena.topCell
-      rewriter.solverContext.assertGroundExpr(tla.eql(newCell.toNameEx, tla.uminus(subState.ex)))
-      subState.setRex(newCell.toNameEx).setArena(newArena)
+    // add new arena cell
+    val newArena = packedState.arena.appendCell(IntT())
+    val newCell = newArena.topCell
 
-    case OperEx(oper: TlaArithOper, left, right) =>
-      val leftState = rewriter.rewriteUntilDone(state.setRex(left))
-      val rightState = rewriter.rewriteUntilDone(leftState.setRex(right))
-      // TODO: think how to stop introducing cells for intermediate expressions
-      val newArena = rightState.arena.appendCell(IntT())
-      val newCell = newArena.topCell
-      // introduce an integer constant to store the result
-      val cons = tla.eql(newCell.toNameEx, OperEx(oper, leftState.ex, rightState.ex))
-      rewriter.solverContext.assertGroundExpr(cons)
-      rightState.setArena(newArena).setRex(newCell.toNameEx)
-
-    case _ =>
-      throw new RewriterException("It should not happen. Report a bug", state.ex)
+    // assert the new cell is equal to the packed arithmetic expression
+    rewriter.solverContext.assertGroundExpr(tla.eql(newCell.toNameEx, packedState.ex))
+    // return rewritten state; the input arithmetic expression has been rewritten into the new arena cell
+    packedState.setArena(newArena).setRex(newCell.toNameEx)
   }
 }

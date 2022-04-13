@@ -59,7 +59,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case predEx @ NameEx(name) =>
+      case predEx @ NameEx(_) =>
         assert(solverContext.sat())
         solverContext.assertGroundExpr(eql(leftInt.as(Int), int(22)).as(Bool))
         rewriter.push()
@@ -95,7 +95,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case cmpEx @ NameEx(name) =>
+      case cmpEx @ NameEx(_) =>
         assert(solverContext.sat())
         solverContext.assertGroundExpr(cmpEx)
         solverContext.assertGroundExpr(eql(leftCell.toNameEx.as(Int), int(4)).as(Bool))
@@ -125,7 +125,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case cmpEx @ NameEx(name) =>
+      case cmpEx @ NameEx(_) =>
         assert(solverContext.sat())
         solverContext.assertGroundExpr(cmpEx)
         solverContext.assertGroundExpr(eql(leftCell.toNameEx.as(Int), int(4)).as(Bool))
@@ -155,7 +155,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case cmpEx @ NameEx(name) =>
+      case cmpEx @ NameEx(_) =>
         assert(solverContext.sat())
         solverContext.assertGroundExpr(cmpEx)
         solverContext.assertGroundExpr(eql(leftCell.toNameEx.as(Int), int(4)).as(Bool))
@@ -182,7 +182,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case cmpEx @ NameEx(name) =>
+      case cmpEx @ NameEx(_) =>
         assert(solverContext.sat())
         rewriter.push()
         solverContext.assertGroundExpr(cmpEx)
@@ -206,7 +206,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case cmpEx @ NameEx(name) =>
+      case cmpEx @ NameEx(_) =>
         assert(solverContext.sat())
         solverContext.assertGroundExpr(cmpEx)
         solverContext.assertGroundExpr(eql(leftCell.toNameEx.as(Int), int(4)).as(Bool))
@@ -236,7 +236,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case predEx @ NameEx(name) =>
+      case predEx @ NameEx(_) =>
         assert(solverContext.sat())
         solverContext.assertGroundExpr(eql(leftInt.as(Int), int(22)).as(Bool))
         rewriter.push()
@@ -273,7 +273,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case result @ NameEx(name) =>
+      case result @ NameEx(_) =>
         assert(solverContext.sat())
         solverContext.assertGroundExpr(eql(leftInt.as(Int), int(1981)).as(Bool))
         rewriter.push()
@@ -301,7 +301,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case result @ NameEx(name) =>
+      case result @ NameEx(_) =>
         assert(solverContext.sat())
         solverContext.assertGroundExpr(eql(leftInt.as(Int), int(2017)).as(Bool))
         rewriter.push()
@@ -327,7 +327,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case result @ NameEx(name) =>
+      case result @ NameEx(_) =>
         assert(solverContext.sat())
         solverContext.assertGroundExpr(eql(leftInt.as(Int), int(2017)).as(Bool))
         rewriter.push()
@@ -353,7 +353,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case result @ NameEx(name) =>
+      case result @ NameEx(_) =>
         assert(solverContext.sat())
         solverContext.assertGroundExpr(eql(leftInt.as(Int), int(7)).as(Bool))
         rewriter.push()
@@ -381,7 +381,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case result @ NameEx(name) =>
+      case result @ NameEx(_) =>
         assert(solverContext.sat())
         solverContext.assertGroundExpr(eql(leftInt.as(Int), int(30)).as(Bool))
         rewriter.push()
@@ -409,7 +409,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case result @ NameEx(name) =>
+      case result @ NameEx(_) =>
         assert(solverContext.sat())
         solverContext.assertGroundExpr(eql(leftInt.as(Int), int(30)).as(Bool))
         rewriter.push()
@@ -436,7 +436,7 @@ trait TestSymbStateRewriterInt extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case predEx @ NameEx(name) =>
+      case predEx @ NameEx(_) =>
         assert(solverContext.sat())
         // check equality
         rewriter.push()

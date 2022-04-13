@@ -62,9 +62,16 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
     case OperEx(TlaSetOper.in, mem, OperEx(TlaArithOper.dotdot, left, right)) =>
       // Transform e \in a..b into a <= e /\ e <= b.
       // (The assignments are not affected by this transformation, as they are transformed to \E t \in S: x' = t.)
-      tla
-        .and(tla.le(left, mem) ? "b", tla.le(mem, right) ? "b")
-        .typed(Map("b" -> BoolT1()), "b")
+      val b = BoolT1()
+      tla.and(tla.le(left, mem).as(b), tla.le(mem, right).as(b)).as(b)
+
+    case OperEx(TlaSetOper.in, mem, OperEx(TlaSetOper.filter, nameEx @ NameEx(_), set, pred)) =>
+      // Transform x \in { y \in S: P } into x \in S /\ P[y/x]
+
+      def memCopy = DeepCopy(tracker).deepCopyEx(mem)
+      val predSubstituted = ReplaceFixed(tracker)(nameEx, memCopy)(pred)
+      val b = BoolT1()
+      tla.and(tla.in(mem, set).as(b), predSubstituted).as(b)
   }
 
   /**
@@ -76,9 +83,12 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
   private def transformCard: PartialFunction[TlaEx, TlaEx] = {
     case OperEx(TlaFiniteSetOper.cardinality, OperEx(TlaArithOper.dotdot, left, right)) =>
       // A pattern that emerged in issue #748
-      // Cardinality(a..b) is equivalent to (b - a) + 1.
+      // Cardinality(a..b) is equivalent to IF a =< b THEN (b - a) + 1 ELSE 0.
+      val condition = OperEx(TlaArithOper.le, left, right)(boolTag)
       val bMinusA = OperEx(TlaArithOper.minus, right, left)(intTag)
-      OperEx(TlaArithOper.plus, bMinusA, ValEx(TlaInt(1))(intTag))(intTag)
+      val bMinusAPlusOne = OperEx(TlaArithOper.plus, bMinusA, ValEx(TlaInt(1))(intTag))(intTag)
+      val zero = ValEx(TlaInt(0))(intTag)
+      OperEx(TlaControlOper.ifThenElse, condition, bMinusAPlusOne, zero)(intTag)
 
     case OperEx(TlaFiniteSetOper.cardinality, OperEx(TlaSetOper.powerset, set)) =>
       // A pattern that emerged in issue #1360

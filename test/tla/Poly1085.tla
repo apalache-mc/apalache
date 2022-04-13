@@ -7,7 +7,7 @@ PolyOper(S) ==
   LET
     \* @type: (a -> Int, a) => a -> Int;
     Add(f,e) == [ x \in DOMAIN f \union {e} |-> 0 ]
-  IN FoldSet( Add, [x \in {} |-> 0], S )
+  IN ApaFoldSet( Add, [x \in {} |-> 0], S )
 
 Init == TRUE
 

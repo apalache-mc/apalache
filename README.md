@@ -39,6 +39,7 @@ manual][user-manual-installation].
 
 ## Getting started
 
+- Read the [Beginner's tutorial][].
 - Check the material at [TLA-Apalache workshop][].
 - Read the [Apalache user manual][user-manual].
 - Consult the (WIP) [Idioms for writing better TLA+][idioms].
@@ -69,7 +70,6 @@ knowing too much about the internals of Apalache. Solving these issues would
 improve usability! Please comment in the relevant issue, if you are going to
 solve it.
 
-- Rewriting `TypeOK` by knowing types: [#723](https://github.com/informalsystems/apalache/issues/723)
 - Writing annotations in the JSON format: [#804](https://github.com/informalsystems/apalache/issues/804)
 - Add support for VIEW in the TLC config: [#851](https://github.com/informalsystems/apalache/issues/851)
 - Translate `\E x \in STRING: P` and `\A x \in STRING: P`:
@@ -78,10 +78,10 @@ solve it.
 
 ## Industrial examples
 
-- Check [Light client specs] and [Model-based testing] of the Tendermint
+- Check [Light client specs][] and [Model-based testing][] of the Tendermint
   light client.
 
-- Check [Tendermint specs] to see how we use TLA+ and Apalache at Informal to
+- Check [Tendermint specs][] to see how we use TLA+ and Apalache at Informal to
   design and specify protocols for the [Tendermint blockchain].
 
 - To see more examples, check the [standard repository of TLA+ examples].
@@ -146,7 +146,7 @@ Past funding from [Der Wiener Wissenschafts-, Forschungs- und Technologiefonds](
 [master]: https://github.com/informalsystems/apalache/tree/master
 [unstable branch]: https://github.com/informalsystems/apalache/tree/unstable
 [apalache zulip stream]: https://informal-systems.zulipchat.com/#narrow/stream/265309-apalache
-[tendermint specs]: https://github.com/tendermint/spec/tree/master/rust-spec
+[tendermint specs]: https://github.com/tendermint/tendermint/tree/master/spec/light-client/accountability
 [tendermint blockchain]: https://github.com/tendermint
 [standard repository of tla+ examples]: https://github.com/tlaplus/Examples
 [apalache benchmarks]: https://github.com/informalsystems/apalache-tests
@@ -157,7 +157,8 @@ Past funding from [Der Wiener Wissenschafts-, Forschungs- und Technologiefonds](
 [user-manual-installation]: https://apalache.informal.systems/docs/apalache/installation/index.html
 [language-manual]: https://apalache.informal.systems/docs/lang/index.html
 [idioms]: https://apalache.informal.systems//docs/idiomatic/index.html
-[light client specs]: https://github.com/tendermint/spec/tree/master/rust-spec/lightclient/verification
+[light client specs]: https://github.com/tendermint/tendermint/tree/master/spec/light-client/verification
 [model-based testing]: https://github.com/informalsystems/tendermint-rs/tree/master/light-client/tests/support/model_based#light-client-model-based-testing-guide
 [apalache.informal.systems]: https://apalache.informal.systems
 [TLA-Apalache workshop]: https://github.com/informalsystems/tla-apalache-workshop
+[Beginner's tutorial]: https://apalache.informal.systems/docs/tutorials/entry-tutorial.html

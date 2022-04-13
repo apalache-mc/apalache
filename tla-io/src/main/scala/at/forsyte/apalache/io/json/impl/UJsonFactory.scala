@@ -7,8 +7,10 @@ import ujson._
  * Factory for the UJsonRep variant of JsonRepresentation
  */
 object UJsonFactory extends JsonFactory[UJsonRep] {
-  implicit def readVal(rep: UJsonRep): Value = rep.value
-  implicit def lift(value: Value): UJsonRep = UJsonRep(value)
+  import scala.language.implicitConversions
+
+  implicit private def readVal(rep: UJsonRep): Value = rep.value
+  implicit private def lift(value: Value): UJsonRep = UJsonRep(value)
 
   override def mkObj(fields: (String, UJsonRep)*): UJsonRep = {
     // ujson defines a nullary and non-nullary Obj.apply method separately, so we have to improvise a bit

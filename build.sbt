@@ -1,5 +1,6 @@
-import scala.sys.process._
 import Dependencies._
+
+import scala.sys.process._
 
 ///////////////////////////
 // Project-wide settings //
@@ -43,6 +44,28 @@ ThisBuild / libraryDependencies ++= Seq(
     TestDeps.scalatestplusScalacheck,
 )
 
+//////////////////////
+// Compiler options //
+//////////////////////
+
+fatalWarnings := sys.env.get("APALACHE_FATAL_WARNINGS").getOrElse("false").toBoolean
+ThisBuild / scalacOptions ++= {
+  val commonOptions = Seq(
+      // Enable deprecation and feature warnings
+      "-deprecation",
+      "-feature",
+      // Enable `unused` compiler warnings; required by scalafix
+      // https://scalacenter.github.io/scalafix/docs/rules/RemoveUnused.html
+      "-Ywarn-unused",
+      // Fixes warning: "Exhaustivity analysis reached max recursion depth, not all missing cases are reported."
+      "-Ypatmat-exhaust-depth",
+      "22",
+  )
+  val conditionalOptions = if (fatalWarnings.value) Seq("-Xfatal-warnings") else Nil
+
+  commonOptions ++ conditionalOptions
+}
+
 ////////////////////////////
 // Linting and formatting //
 ////////////////////////////
@@ -54,9 +77,7 @@ ThisBuild / libraryDependencies ++= Seq(
 ThisBuild / scalafmtPrintDiff := true
 
 // scalafix
-// https://scalacenter.github.io/scalafix/docs/rules/RemoveUnused.html
-ThisBuild / scalacOptions ++= Seq("-Ywarn-unused")
-ThisBuild / semanticdbEnabled := true
+// https://scalacenter.github.io/scalafix/docs/users/installation.html
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
 ///////////////////////////////
@@ -65,9 +86,9 @@ ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
 // NOTE: Include these settings in any projects that require Apalache's TLA+ modules
 lazy val tlaModuleTestSettings = Seq(
-    // we have to tell SANY the location of Apalache modules for the tests
-    Test / fork := true, // Forking is required for the system options to take effect in the tests
-    Test / javaOptions += s"""-DTLA-Library=${(ThisBuild / baseDirectory).value / "src" / "tla"}""",
+    // This ensures that tests run from their respective sub-project directories
+    // and sequentially. FIXME: https://github.com/informalsystems/apalache/issues/1577
+    Test / fork := true
 )
 
 lazy val testSettings = Seq(
@@ -224,9 +245,32 @@ lazy val root = (project in file("."))
         sbtassembly.MappingSet(
             None,
             Vector(
-                (src_dir / "Apalache.tla") -> "tla2sany/StandardModules/Apalache.tla",
-                (src_dir / "Variants.tla") -> "tla2sany/StandardModules/Variants.tla",
-                (src_dir / "__rewire_tlc_in_apalache.tla") -> "tla2sany/StandardModules/__rewire_tlc_in_apalache.tla",
+                (src_dir / "Apalache.tla") ->
+                  "tla2sany/StandardModules/Apalache.tla",
+                (src_dir / "DummyForIntegrationTests.tla") ->
+                  "tla2sany/StandardModules/DummyForIntegrationTests.tla",
+                (src_dir / "Variants.tla") ->
+                  "tla2sany/StandardModules/Variants.tla",
+                (src_dir / "__rewire_tlc_in_apalache.tla") ->
+                  "tla2sany/StandardModules/__rewire_tlc_in_apalache.tla",
+                (src_dir / "__rewire_sequences_in_apalache.tla") ->
+                  "tla2sany/StandardModules/__rewire_sequences_in_apalache.tla",
+                (src_dir / "__rewire_bags_in_apalache.tla") ->
+                  "tla2sany/StandardModules/__rewire_bags_in_apalache.tla",
+                (src_dir / "__rewire_bags_ext_in_apalache.tla") ->
+                  "tla2sany/StandardModules/__rewire_bags_ext_in_apalache.tla",
+                (src_dir / "__apalache_folds.tla") ->
+                  "tla2sany/StandardModules/__apalache_folds.tla",
+                (src_dir / "__apalache_internal.tla") ->
+                  "tla2sany/StandardModules/__apalache_internal.tla",
+                (src_dir / "__rewire_functions_in_apalache.tla") ->
+                  "tla2sany/StandardModules/__rewire_functions_in_apalache.tla",
+                (src_dir / "__rewire_finite_sets_ext_in_apalache.tla") ->
+                  "tla2sany/StandardModules/__rewire_finite_sets_ext_in_apalache.tla",
+                (src_dir / "__rewire_sequences_ext_in_apalache.tla") ->
+                  "tla2sany/StandardModules/__rewire_sequences_ext_in_apalache.tla",
+                (src_dir / "__rewire_folds_in_apalache.tla") ->
+                  "tla2sany/StandardModules/__rewire_folds_in_apalache.tla",
             ),
         )
       },
@@ -248,7 +292,14 @@ lazy val root = (project in file("."))
         // See https://github.com/informalsystems/apalache/pull/1382
         (s"tar zxvf ${pkg} -C ${target_dir}" !)
         log.info(s"Symlinking ${current_pkg} -> ${unzipped}")
-        s"ln -sfn ${unzipped} ${current_pkg}" ! log
+        if (current_pkg.exists) {
+          log.info(s"${current_pkg} already exists, overwriting")
+          current_pkg.delete
+        }
+        java.nio.file.Files.createSymbolicLink(
+            current_pkg.toPath,
+            file(unzipped).toPath,
+        )
         file(unzipped)
       },
   )
@@ -352,3 +403,5 @@ incrVersion := {
   IO.writeLines((ThisBuild / versionFile).value, Seq(nextVersion))
   nextVersion
 }
+
+lazy val fatalWarnings = settingKey[Boolean]("Whether or not to compile with fatal warnings")

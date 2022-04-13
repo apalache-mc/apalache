@@ -1,14 +1,15 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
-import at.forsyte.apalache.io.annotations.{Annotation, AnnotationStr, StandardAnnotations}
 import at.forsyte.apalache.io.annotations.store.{findAnnotation, AnnotationStore}
-import at.forsyte.apalache.io.typecheck.parser.Type1ParseError
-import at.forsyte.apalache.tla.lir.{SparseTupT1, ValEx, _}
+import at.forsyte.apalache.io.annotations.{Annotation, AnnotationStr, StandardAnnotations}
+import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1ParseError}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecheck._
-import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import com.typesafe.scalalogging.LazyLogging
+
+import scala.annotation.nowarn
 
 /**
  * <p>ToEtcExpr takes a TLA+ expression and produces an EtcExpr. The most interesting part of this translation is
@@ -188,6 +189,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
     }
   }
 
+  @nowarn("cat=deprecation&msg=object withType in object ApalacheOper is deprecated")
   private def transform(ex: TlaEx): EtcExpr = {
 
     val ref = ExactRef(ex.ID)
@@ -258,6 +260,15 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
           mkAbs(BlameRef(ex.ID), this(pred), (mkName(bindingNameEx), this(bindingSet)))
         // the resulting expression is (((a => Bool) => a) (λ x ∈ S. P))
         mkApp(ref, Seq(chooseType), chooseLambda)
+
+      case OperEx(
+              ApalacheOper.guess,
+              bindingSet,
+          ) =>
+        // the principal type of Guess is Set(a) => a
+        val a = varPool.fresh
+        val opsig = OperT1(Seq(SetT1(a)), a) // Set(a) => a
+        mkExRefApp(opsig, Seq(bindingSet))
 
       case OperEx(TlaOper.chooseUnbounded, bindingNameEx @ NameEx(_), pred) =>
         // CHOOSE x: P
@@ -686,16 +697,6 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
           ) // Seq(a), Int, Int => Seq(a)
         mkExRefApp(opsig, args)
 
-      case OperEx(TlaSeqOper.selectseq, args @ _*) =>
-        val a = varPool.fresh
-        val filter = OperT1(Seq(a), BoolT1())
-        val opsig =
-          OperT1(
-              Seq(SeqT1(a), filter),
-              SeqT1(a),
-          ) // Seq(a), (a => Bool) => Seq(a)
-        mkExRefApp(opsig, args)
-
       // ******************************************** INTEGERS **************************************************
       case OperEx(TlaArithOper.uminus, args @ _*) =>
         // -x
@@ -741,11 +742,11 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         mkExRefApp(opsig, Seq(sub, act))
 
       // ******************************************** Apalache **************************************************
-      case OperEx(ApalacheOper.funAsSeq, fun, len) =>
+      case OperEx(ApalacheOper.`mkSeq`, len, ctor) =>
         val a = varPool.fresh
-        // ((Int -> a), Int) => Seq(a)
-        val opsig = OperT1(Seq(FunT1(IntT1(), a), IntT1()), SeqT1(a))
-        mkExRefApp(opsig, Seq(fun, len))
+        // (Int, (Int => a)) => Seq(a)
+        val opsig = OperT1(Seq(IntT1(), OperT1(Seq(IntT1()), a)), SeqT1(a))
+        mkExRefApp(opsig, Seq(len, ctor))
 
       case OperEx(ApalacheOper.setAsFun, set) =>
         val a = varPool.fresh
@@ -782,7 +783,7 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         val opsig = OperT1(Seq(BoolT1()), BoolT1())
         mkExRefApp(opsig, Seq(predicate))
 
-      case OperEx(ApalacheOper.distinct, args @ _*) =>
+      case OperEx(ApalacheInternalOper.distinct, args @ _*) =>
         val a = varPool.fresh
         // (a, ..., a) => Bool
         val opsig = OperT1(args.map(_ => a), BoolT1())
@@ -801,6 +802,19 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         // ((a,b) => a, a, Seq(b)) => a
         val opsig = OperT1(Seq(OperT1(Seq(a, b), a), a, SeqT1(b)), a)
         mkExRefApp(opsig, Seq(oper, base, seq))
+
+      // ******************************* Apalache internals **************************************************
+      case OperEx(ApalacheInternalOper.apalacheSeqCapacity, seq) =>
+        val a = varPool.fresh
+        // Seq(a) => Int
+        val opsig = OperT1(Seq(SeqT1(a)), IntT1())
+        mkExRefApp(opsig, Seq(seq))
+
+      case OperEx(ApalacheInternalOper.notSupportedByModelChecker, msg) =>
+        val a = varPool.fresh
+        // Str => a
+        val opsig = OperT1(Seq(StrT1()), a)
+        mkExRefApp(opsig, Seq(msg))
 
       // ******************************************** MISC **************************************************
       case OperEx(TlaOper.label, labelledEx, nameAndArgs @ _*) =>

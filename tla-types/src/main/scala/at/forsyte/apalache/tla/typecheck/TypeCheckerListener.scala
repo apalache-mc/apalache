@@ -20,7 +20,7 @@ trait TypeCheckerListener {
    * @param monotype
    *   its monotype
    */
-  def onTypeFound(sourceRef: ExactRef, monotype: TlaType1)
+  def onTypeFound(sourceRef: ExactRef, monotype: TlaType1): Unit
 
   /**
    * This method is called when the type checker finds a type error.
@@ -29,5 +29,5 @@ trait TypeCheckerListener {
    * @param message
    *   the error description
    */
-  def onTypeError(sourceRef: EtcRef, message: String)
+  def onTypeError(sourceRef: EtcRef, message: String): Unit
 }

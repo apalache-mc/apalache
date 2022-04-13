@@ -44,10 +44,10 @@ IsSolution(queens) ==
 \* We apply Apalache!FunAsSeq to convert a function to a sequence.
 Solutions ==
     LET Queens == { queens \in [1..N -> 1..N] :
-                    IsSolution(FunAsSeq(queens, N)) } IN
+                    IsSolution(FunAsSeq(queens, N, N)) } IN
     \* We have to apply FunAsSeq twice, as queens is used as a sequence twice.
     \* A better approach would be to refactor the spec, to call FunAsSeq once.
-    { FunAsSeq(queens, N): queens \in Queens }
+    { FunAsSeq(queens, N, N): queens \in Queens }
 
 (***************************************************************************)
 (* We now describe an algorithm that iteratively computes the set of       *)

@@ -139,6 +139,19 @@ The necessary shell environment is specified in [.envrc](./.envrc). You can:
 
 [direnv]: https://direnv.net/
 
+#### Compiler warnings
+
+We fail CI builds on compiler warnings.
+
+To have compiler warnings also fail on local builds, set
+
+```sh
+export APALACHE_FATAL_WARNINGS=true
+```
+
+You may add this to your `.local-envrc` file at the root of this repo to have
+`direnv` load this into your development environment.
+
 ## Development Environment
 
 If you use a different development environment or editor set up, please document
@@ -180,18 +193,15 @@ We use [scalafmt](https://scalameta.org/scalafmt/) to standardize formatting
 across the codebase. It is integrated into our sbt build configuration, and
 formatting fixes will be applied on build, or via the make target `make fmt-fix`.
 
+In addition, we have configured the compiler to warn on unused imports and
+variables, and we have enabled [scalafix](https://scalacenter.github.io/scalafix/)
+to automate removal of unused values. This is also run by `fmt-fix` target.
+
 However, for a smoother development experience you should ensure your editor
 automatically runs formatting. The scalafmt site documents installation for all
 common editors.
 
 Our scalafmt configuration is specified in [./.scalafmt.conf](./.scalafmt.conf).
-
-#### Removing unused
-
-We have configured the compiler to warn on unused imports and variables, and we
-have enabled [scalafix](https://scalacenter.github.io/scalafix/) to automate
-removal of unused values. To automate removal of unused stuff run `make
-fmt-fix-unused`.
 
 ### Editors
 
@@ -201,6 +211,10 @@ Download the community edition of [IntelliJ
 IDEA](https://www.jetbrains.com/idea/) and set up a new project. If you already
 have IntelliJ installed, please ensure you using version 2021.3.1 or later.
 We've had reports of build failures with earlier versions.
+
+For some tests to succeed, you will have to [set the environment
+variable](https://www.jetbrains.com/help/objc/add-environment-variables-and-program-arguments.html#add-environment-variables)
+`APALACHE_HOME` to the root of the Apalache source tree.
 
 #### Emacs
 
@@ -327,10 +341,10 @@ Every non-trivial PR must update the [unreleased changes log](./UNRELEASED.md).
 
 Changes for a given release should be split between the five sections:
 
-1. Breaking Changes
+1. Breaking changes
 2. Features
 3. Improvements
-4. Bug Fixes
+4. Bug fixes
 5. Documentation
 
 ## Releases
@@ -372,7 +386,7 @@ The process proceeds in two steps:
 
 #### Prepare the release
 
-Assuming the current version recorded in the project's `pom.xml` files is
+Assuming the current version recorded in the project's `VERSION` file is
 `l.m.n-SNAPSHOT`, the manual release process is as follows:
 
 - [ ] `git checkout unstable && git pull`

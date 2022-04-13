@@ -33,6 +33,16 @@ class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
     assert(expected == output)
   }
 
+  // an optimization for x \in { y \in S: P }
+  test("""x \in { y \in 1..3: y > 2 }""") {
+    val set123 = enumSet(int(1), int(2), int(3)).as(intSetT)
+    val filteredSet = filter(name("y").as(intT), set123, gt(name("y").as(intT), int(2)).as(boolT)).as(intSetT)
+    val input = in(name("x").as(intT), filteredSet).as(boolT)
+    val output = optimizer.apply(input)
+    val expected = and(in(name("x").as(intT), set123).as(boolT), gt(name("x").as(intT), int(2)).as(boolT)).as(boolT)
+    assert(expected == output)
+  }
+
   // an optimization for record accesses
   test("""[a |-> 1, b |-> 2].a becomes 2""") {
     val recT = RecT1("a" -> IntT1(), "b" -> IntT1())
@@ -93,7 +103,6 @@ class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("""Cardinality(S) >= 1 becomes ~(S = {})""") {
-    val types = Map("i" -> IntT1(), "S" -> SetT1(IntT1()), "b" -> BoolT1())
     val input = ge(card(name("S").as(intSetT)).as(intT), int(1)).as(boolT)
     val output = optimizer.apply(input)
     val expected =
@@ -102,7 +111,6 @@ class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("""Cardinality(S) /= 0 becomes ~(S = {})""") {
-    val types = Map("i" -> IntT1(), "S" -> SetT1(IntT1()), "b" -> BoolT1())
     val input = ge(card(name("S").as(intSetT)).as(intT), int(1)).as(boolT)
     val output = optimizer.apply(input)
     val expected =
@@ -148,11 +156,15 @@ class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
     optimizer.apply(input)
   }
 
-  test("""Cardinality(a..b) becomes (b - a) + 1""") {
+  test("""Cardinality(a..b) becomes IF a =< b THEN (b - a) + 1 ELSE 0""") {
     val input = card(dotdot(name("a").as(intT), name("b").as(intT)).as(intSetT)).as(intT)
     val output = optimizer.apply(input)
     val expected =
-      plus(minus(name("b").as(intT), name("a").as(intT)).as(intT), int(1).as(intT)).as(intT)
+      ite(
+          le(name("a").as(intT), name("b").as(intT)).as(boolT),
+          plus(minus(name("b").as(intT), name("a").as(intT)).as(intT), int(1)).as(intT),
+          int(0),
+      ).as(intT)
     assert(expected == output)
   }
 

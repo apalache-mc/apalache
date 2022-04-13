@@ -123,7 +123,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     rewriter.rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
-          case NameEx(name) =>
+          case NameEx(_) =>
             val eq = tla
               .eql(cell.toNameEx ? "b", arena.cellFalse().toNameEx ? "b")
               .typed(boolTypes, "b")
@@ -229,7 +229,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     rewriter.rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
-          case NameEx(name) =>
+          case NameEx(_) =>
             assert(solverContext.sat())
             solverContext.assertGroundExpr(nextState.ex)
             rewriter.push()
@@ -316,7 +316,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     rewriter.rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
-          case NameEx(name) =>
+          case NameEx(_) =>
             val eq1 = tla
               .eql(left.toNameEx ? "b", arena.cellFalse().toNameEx ? "b")
               .typed(boolTypes, "b")
@@ -353,7 +353,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
-      case predEx @ NameEx(name) =>
+      case predEx @ NameEx(_) =>
         solverContext.assertGroundExpr(predEx)
         rewriter.push()
         // both false
@@ -426,7 +426,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     assert(solverContext.sat())
     rewriter.pop()
     solverContext.assertGroundExpr(tla.not(nextState.ex).typed(BoolT1()))
-    assertUnsatOrExplain(rewriter, nextState)
+    assertUnsatOrExplain()
   }
 
   /** Jure, 9.12.19: Why should this throw? */
@@ -456,7 +456,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
       rewriter.pop()
       rewriter.push()
       solverContext.assertGroundExpr(tla.not(nextState.ex).typed(BoolT1()))
-      assertUnsatOrExplain(rewriter, nextState)
+      assertUnsatOrExplain()
       rewriter.pop()
       rewriter.push()
       solverContext.assertGroundExpr(nextState.ex)
@@ -490,7 +490,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     assert(solverContext.sat())
     rewriter.push()
     solverContext.assertGroundExpr(nextState.ex)
-    assertUnsatOrExplain(rewriter, nextState)
+    assertUnsatOrExplain()
     rewriter.pop()
     solverContext.assertGroundExpr(tla.not(nextState.ex).typed(BoolT1()))
     assert(solverContext.sat())
@@ -594,7 +594,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     assert(solverContext.sat())
     rewriter.pop()
     solverContext.assertGroundExpr(tla.not(nextState.ex).typed(BoolT1()))
-    assertUnsatOrExplain(rewriter, nextState)
+    assertUnsatOrExplain()
   }
 
   test("""\A x \in {1, 2, 3}: x > 2 ~~> $B$k""") { rewriterType: SMTEncoding =>
@@ -610,7 +610,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
     assert(solverContext.sat())
     rewriter.push()
     solverContext.assertGroundExpr(nextState.ex)
-    assertUnsatOrExplain(rewriter, nextState)
+    assertUnsatOrExplain()
     rewriter.pop()
     solverContext.assertGroundExpr(tla.not(nextState.ex).typed(BoolT1()))
     assert(solverContext.sat())

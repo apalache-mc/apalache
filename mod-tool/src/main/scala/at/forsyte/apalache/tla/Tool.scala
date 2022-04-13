@@ -7,7 +7,7 @@ import java.io.{File, FileNotFoundException}
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import at.forsyte.apalache.infra.log.LogbackConfigurator
-import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor, ToolModule, WriteablePassOptions}
+import at.forsyte.apalache.infra.passes.{PassChainExecutor, ToolModule, WriteablePassOptions}
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorMessage, PassOptionException}
 import at.forsyte.apalache.io.{OutputManager, ReportGenerator}
@@ -40,7 +40,6 @@ import at.forsyte.apalache.tla.bmcmt.rules.vmt.TlaExToVMTWriter
  */
 object Tool extends LazyLogging {
   lazy val ISSUES_LINK: String = "[https://github.com/informalsystems/apalache/issues]"
-  lazy val ERROR_EXIT_CODE = 99
   lazy val OK_EXIT_CODE = 0
 
   /**
@@ -56,7 +55,8 @@ object Tool extends LazyLogging {
 
   private def outputAndLogConfig(cmd: General, cfg: ApalacheConfig): Unit = {
     OutputManager.configure(cfg)
-    if (cmd.file.getName.endsWith(".tla")) {
+    // We currently use dummy files for some commands, so we skip here on non-existing files
+    if (cmd.file.getName.endsWith(".tla") && cmd.file.exists()) {
       OutputManager.initSourceLines(cmd.file)
     }
     println(s"Output directory: ${OutputManager.runDir.normalize()}")
@@ -177,10 +177,10 @@ object Tool extends LazyLogging {
   }
 
   private def setCoreOptions(executor: PassChainExecutor, cmd: AbstractCheckerCmd): Unit = {
-    logger.info(
-        "Checker options: filename=%s, init=%s, next=%s, inv=%s"
-          .format(cmd.file, cmd.init, cmd.next, cmd.inv)
-    )
+    logger.info {
+      val environment = if (cmd.env != "") s"(${cmd.env}) " else ""
+      s"Checker options: ${environment}${cmd.name} ${cmd.invocation}"
+    }
     executor.options.set("parser.filename", cmd.file.getAbsolutePath)
     if (cmd.config != "")
       executor.options.set("checker.config", cmd.config)
@@ -387,7 +387,9 @@ object Tool extends LazyLogging {
 
   private def runForModule[C <: General](runner: (PassChainExecutor, C) => Int, module: ToolModule, cmd: C): Int = {
     val injector = Guice.createInjector(module)
-    val passes = module.passes.map { p => injector.getInstance(p).asInstanceOf[Pass] }
+    val passes = module.passes.zipWithIndex.map { case (p, i) =>
+      injector.getInstance(p).withNumber(i)
+    }
     val options = injector.getInstance(classOf[WriteablePassOptions])
     val executor = new PassChainExecutor(options, passes)
 
@@ -438,15 +440,15 @@ object Tool extends LazyLogging {
                        |# build  : ${BuildInfo.build}
                        |#""".stripMargin)
 
-    if (ExecutionStatisticsCollector.promptUser()) {
+    if (new ExecutionStatisticsCollector().isEnabled) {
+      // Statistic collection is enabled. Thank the user
+      Console.println("# Usage statistics is ON. Thank you!")
+      Console.println("# If you have changed your mind, disable the statistics with config --enable-stats=false.")
+    } else {
       // Statistics collection is not enabled. Cry for help.
       Console.println("# Usage statistics is OFF. We care about your privacy.")
       Console.println(
           "# If you want to help our project, consider enabling statistics with config --enable-stats=true.")
-    } else {
-      // Statistic collection is enabled. Thank the user
-      Console.println("# Usage statistics is ON. Thank you!")
-      Console.println("# If you have changed your mind, disable the statistics with config --enable-stats=false.")
     }
     Console.println("")
   }

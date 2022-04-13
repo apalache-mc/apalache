@@ -10,6 +10,7 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, MalformedTlaError, NullEx, TlaEx}
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
+import scalaz.unused
 
 /**
  * Generate equality constraints between cells and cache them to avoid redundant constraints.
@@ -224,7 +225,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
       }
     }
 
-    def isNonStatic(pair: (ArenaCell, ArenaCell), entryAndLevel: (EqCache.CacheEntry, Int)): Int = {
+    def isNonStatic(@unused pair: (ArenaCell, ArenaCell), entryAndLevel: (EqCache.CacheEntry, Int)): Int = {
       entryAndLevel._1 match {
         case EqCache.FalseEntry() => 0
         case EqCache.TrueEntry()  => 0
@@ -233,32 +234,46 @@ class LazyEquality(rewriter: SymbStateRewriter)
     }
 
     val eqMap = eqCache.getMap
-    val nConst = (eqMap.map((onEntry _).tupled)).sum
-    val nNonStatic = (eqMap.map((isNonStatic _).tupled)).sum
+    val nConst = eqMap.map((onEntry _).tupled).sum
+    val nNonStatic = eqMap.map((isNonStatic _).tupled).sum
     (nConst, nNonStatic)
   }
 
   private def mkSetEq(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {
-    if (left.cellType == FinSetT(UnknownT()) && state.arena.getHas(left).isEmpty) {
-      // The statically empty set is a very special case, as its element type is unknown.
-      // Hence, we cannot use SMT equality, as it does not work with different sorts.
-      mkEmptySetEq(state, left, right)
-    } else if (right.cellType == FinSetT(UnknownT()) && state.arena.getHas(right).isEmpty) {
-      mkEmptySetEq(state, right, left) // same here
-    } else {
-      // in general, we need 2 * |X| * |Y| comparisons
-      val leftToRight: SymbState = subsetEq(state, left, right)
-      val rightToLeft: SymbState = subsetEq(leftToRight, right, left)
-      // the type checker makes sure that this holds true
-      assert(left.cellType.signature == right.cellType.signature)
-      // These two sets have the same signature and thus belong to the same sort.
-      // Hence, we can use SMT equality. This equality is needed by uninterpreted functions.
-      val eq = tla.equiv(tla.eql(left.toNameEx, right.toNameEx), tla.and(leftToRight.ex, rightToLeft.ex))
-      rewriter.solverContext.assertGroundExpr(eq)
-      eqCache.put(left, right, EqCache.EqEntry())
+    rewriter.solverContext.config.smtEncoding match {
+      case `arraysEncoding` =>
+        // In the arrays encoding we only cache the equalities between the sets' elements
+        val leftElems = state.arena.getHas(left)
+        val rightElems = state.arena.getHas(right)
+        cacheEqConstraints(state, leftElems.cross(rightElems)) // cache all the equalities
+        eqCache.put(left, right, EqCache.EqEntry())
+        state
 
-      // recover the original expression and theory
-      rightToLeft.setRex(state.ex)
+      case `oopsla19Encoding` =>
+        if (left.cellType == FinSetT(UnknownT()) && state.arena.getHas(left).isEmpty) {
+          // The statically empty set is a very special case, as its element type is unknown.
+          // Hence, we cannot use SMT equality, as it does not work with different sorts.
+          mkEmptySetEq(state, left, right)
+        } else if (right.cellType == FinSetT(UnknownT()) && state.arena.getHas(right).isEmpty) {
+          mkEmptySetEq(state, right, left) // same here
+        } else {
+          // in general, we need 2 * |X| * |Y| comparisons
+          val leftToRight: SymbState = subsetEq(state, left, right)
+          val rightToLeft: SymbState = subsetEq(leftToRight, right, left)
+          // the type checker makes sure that this holds true
+          assert(left.cellType.signature == right.cellType.signature)
+          // These two sets have the same signature and thus belong to the same sort.
+          // Hence, we can use SMT equality.
+          val eq = tla.equiv(tla.eql(left.toNameEx, right.toNameEx), tla.and(leftToRight.ex, rightToLeft.ex))
+          rewriter.solverContext.assertGroundExpr(eq)
+          eqCache.put(left, right, EqCache.EqEntry())
+
+          // recover the original expression
+          rightToLeft.setRex(state.ex)
+        }
+
+      case oddEncodingType =>
+        throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
     }
   }
 
@@ -438,13 +453,29 @@ class LazyEquality(rewriter: SymbStateRewriter)
   private def mkFunEq(state: SymbState, leftFun: ArenaCell, rightFun: ArenaCell): SymbState = {
     val leftRel = state.arena.getCdm(leftFun)
     val rightRel = state.arena.getCdm(rightFun)
-    val relEq = mkSetEq(state, leftRel, rightRel)
-    rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(leftFun.toNameEx, rightFun.toNameEx),
-            tla.eql(leftRel.toNameEx, rightRel.toNameEx)))
-    eqCache.put(leftFun, rightFun, EqCache.EqEntry())
 
-    // restore the original expression and theory
-    relEq.setRex(state.ex)
+    rewriter.solverContext.config.smtEncoding match {
+      case `arraysEncoding` =>
+        // In the arrays encoding we only cache the equalities between the elements of the functions' ranges
+        // This is because the ranges consist of pairs of form <arg,res>, thus the domains are also handled
+        val leftElems = state.arena.getHas(leftRel)
+        val rightElems = state.arena.getHas(rightRel)
+        cacheEqConstraints(state, leftElems.cross(rightElems)) // Cache all the equalities
+        eqCache.put(leftFun, rightFun, EqCache.EqEntry())
+        state
+
+      case `oopsla19Encoding` =>
+        val relEq = mkSetEq(state, leftRel, rightRel)
+        rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(leftFun.toNameEx, rightFun.toNameEx),
+                tla.eql(leftRel.toNameEx, rightRel.toNameEx)))
+        eqCache.put(leftFun, rightFun, EqCache.EqEntry())
+
+        // Restore the original expression and theory
+        relEq.setRex(state.ex)
+
+      case oddEncodingType =>
+        throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
+    }
   }
 
   private def mkRecordEq(state: SymbState, leftRec: ArenaCell, rightRec: ArenaCell): SymbState = {
@@ -540,14 +571,20 @@ class LazyEquality(rewriter: SymbStateRewriter)
 
     // compare the shared prefix
     var nextState = state
+    val len1Ex = len1.toNameEx.as(IntT1())
+    val len2Ex = len2.toNameEx.as(IntT1())
 
-    def eqPairwise(leftCell: ArenaCell, rightCell: ArenaCell): TlaEx = {
-      nextState = cacheOneEqConstraint(nextState, leftCell, rightCell)
-      safeEq(leftCell, rightCell)
+    def eqPairwise(indexBase1: Int, cells: (ArenaCell, ArenaCell)): TlaEx = {
+      nextState = cacheOneEqConstraint(nextState, cells._1, cells._2)
+      // Either (1) one of the lengths is below the index, or (2) the elements are equal.
+      // The case (1) is compensated with the constraint sizesEq below.
+      val outside1 = tla.lt(len1Ex, tla.int(indexBase1)).as(BoolT1())
+      val outside2 = tla.lt(len2Ex, tla.int(indexBase1)).as(BoolT1())
+      tla.or(outside1, outside2, safeEq(cells._1, cells._2))
     }
 
-    val elemsEq = tla.and(elems1.zip(elems2).map((eqPairwise _).tupled): _*)
-    val sizesEq = tla.eql(len1.toNameEx.as(IntT1()), len2.toNameEx.as(IntT1())).as(BoolT1())
+    val elemsEq = tla.and(1.to(sharedCapacity).zip(elems1.zip(elems2)).map((eqPairwise _).tupled): _*)
+    val sizesEq = tla.eql(len1Ex, len2Ex).as(BoolT1())
 
     // seq1 and seq2 are equal if and only if: (1) their lengths are equal, and (2) their shared prefixes are equal.
     rewriter.solverContext

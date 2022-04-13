@@ -39,6 +39,8 @@ jobs:
         run: make fmt-check
 
   unit-tests:
+    env:
+      APALACHE_FATAL_WARNINGS: true
     runs-on: ${{ matrix.operating-system }}
     strategy:
       # Allows other OS tests to proceed even if one fails
@@ -54,6 +56,9 @@ jobs:
           java-version: 8
       - name: Coursier cache
         uses: coursier/cache-action@v6
+      - name: Set APALACHE_HOME env
+        # See https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-environment-variable
+        run: echo "APALACHE_HOME=$GITHUB_WORKSPACE" >> $GITHUB_ENV
       - name: Build and Unit Test
         run: make test-coverage
       - name: Upload coverage to Codecov
@@ -72,6 +77,8 @@ jobs:
           find $HOME/.sbt                              -name "*.lock"               -delete || true
 
   integration-tests:
+    env:
+      APALACHE_FATAL_WARNINGS: true
     runs-on: ${{ matrix.operating-system }}
     strategy:
       # Allows other OS tests to proceed even if one fails
@@ -124,6 +131,8 @@ jobs:
           TEST_FILTER: ${{ matrix.smt-encoding == 'arrays' && 'array-encoding' || '' }}
 
   docker-tests:
+    env:
+      APALACHE_FATAL_WARNINGS: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

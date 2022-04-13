@@ -1,8 +1,9 @@
 package at.forsyte.apalache.tla.imp
 
+import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.TlaModule
-import at.forsyte.apalache.io.annotations.store._
+import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.io.output.WriterOutputStream
 import tla2sany.drivers.SANY
 import tla2sany.modanalyzer.SpecObj
@@ -16,9 +17,9 @@ import scala.util.{Failure, Success, Try}
  * This is the entry point for parsing TLA+ code with SANY and constructing an intermediate representation.
  *
  * @author
- *   konnov
+ *   Igor Konnov, Thomas Pani
  */
-class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) {
+class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) extends LazyLogging {
 
   /**
    * Load a TLA+ specification from a file by calling SANY.
@@ -30,11 +31,45 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) {
    */
   def loadFromFile(file: File): (String, Map[String, TlaModule]) = {
     // create a string buffer to write SANY's error messages
-    val errBuf = new StringWriter()
     // use.toString() to retrieve the error messages
-    val specObj =
-      new SpecObj(file.getAbsolutePath, new SanyNameToStream())
+    val errBuf = new StringWriter()
+
+    // Construct library lookup path:
+    //   1. Include the file's parent directory
+    val parentDirPath = file.getAbsoluteFile().getParent() match {
+      case null                  => Nil
+      case parentDirPath: String => Seq(parentDirPath)
+    }
+    //   2. Patch in Apalache standard library.
+    //      When running Apalache from the fat JAR, these TLA+ modules are baked into the JAR.
+    //      Otherwise (e.g., running from `sbt`, an IDE, for unit tests), we include the standard library path for
+    //      lookup from the filesystem.
+    val standardLibraryPath = {
+      // Test if running from fat JAR; see also `build.sbt` and [[StandardLibrary.wiredModules]]
+      if (this.getClass().getClassLoader().getResource("tla2sany/StandardModules/Apalache.tla") != null) {
+        // Running from fat JAR with standard library baked in (in `build.sbt`).
+        // SANY looks up modules from the JAR as part of its base path, no need to adjust the lookup paths.
+        Nil
+      } else {
+        // Running from outside the fat JAR, we don't have a standard library bundled.
+        // Add $APALACHE_HOME/src/tla/ to lookup paths.
+        System.getenv("APALACHE_HOME") match {
+          // Warn if environment variable APALACHE_HOME is not set
+          case null =>
+            logger.warn("Not running from fat JAR and APALACHE_HOME is not set;")
+            logger.warn("will not be able to find the Apalache standard library.")
+            Nil
+          case apalacheHome: String => Seq(s"${apalacheHome}/src/tla")
+        }
+      }
+    }
+    val libraryPaths = parentDirPath ++ standardLibraryPath
+
+    // Resolver for filenames, patched for wired modules.
+    val filenameResolver = SanyNameToStream(libraryPaths)
+
     // call SANY
+    val specObj = new SpecObj(file.getAbsolutePath, filenameResolver)
     SANY.frontEndMain(
         specObj,
         file.getAbsolutePath,

@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.oper.ApalacheInternalOper
 
 trait TestSymbStateRewriterSequence extends RewriterBase {
   private val intT = IntT1()
@@ -242,6 +243,29 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     assertTlaExAndRestore(create(rewriterType), state)
   }
 
+  test("""SubSeq(<<1, 2, 3>>, 1, 2) = SubSeq(<<1, 2, 4>>, 1, 2)""") { rewriterType: SMTEncoding =>
+    val seq123 = tuple(int(1), int(2), int(3)).as(SeqT1(IntT1()))
+    val subseqEx1 = subseq(seq123, int(1), int(2)).as(intSeqT)
+    val seq124 = tuple(int(1), int(2), int(4)).as(SeqT1(IntT1()))
+    val subseqEx2 = subseq(seq124, int(1), int(2)).as(intSeqT)
+    val eq = eql(subseqEx1, subseqEx2).as(boolT)
+
+    val state = new SymbState(eq, arena, Binding())
+    assertTlaExAndRestore(create(rewriterType), state)
+  }
+
+  test("""SubSeq(<<1, 2, 3>>, 1, 3) /= SubSeq(<<1, 2, 4>>, 1, 3)""") { rewriterType: SMTEncoding =>
+    val seq123 = tuple(int(1), int(2), int(3)).as(SeqT1(IntT1()))
+    val seq124 = tuple(int(1), int(2), int(4)).as(SeqT1(IntT1()))
+    val subseqEx1 = subseq(seq123, int(1), int(3)).as(intSeqT)
+    val subseqEx2 = subseq(seq124, int(1), int(3)).as(intSeqT)
+    val eq = eql(subseqEx1, subseqEx2).as(boolT)
+    val neq = not(eq).as(BoolT1())
+
+    val state = new SymbState(neq, arena, Binding())
+    assertTlaExAndRestore(create(rewriterType), state)
+  }
+
   test("""Append(<<4, 5>>, 10)""") { rewriterType: SMTEncoding =>
     val tup = tuple(4.to(5).map(int): _*).as(intSeqT)
     val seqAppend = append(tup, int(10)).as(intSeqT)
@@ -326,6 +350,45 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     rewriter.rewriteUntilDone(state)
     // the result is undefined, but it should be sat
     assert(solverContext.sat())
+  }
+
+  test("""(<<3, 4, 5, 6>> EXCEPT ![2] = 7) = <<3, 7, 5, 6>>""") { rewriterType: SMTEncoding =>
+    val tup3to6 = tuple(3.to(6).map(int): _*).as(intSeqT)
+    val tup3756 = tuple(Seq(3, 7, 5, 6).map(int): _*).as(intSeqT)
+    val exceptEx = except(tup3to6, tuple(int(2)).as(TupT1(IntT1())), int(7)).as(intSeqT)
+    val eq = eql(exceptEx, tup3756).as(boolT)
+
+    val state = new SymbState(eq, arena, Binding())
+    assertTlaExAndRestore(create(rewriterType), state)
+  }
+
+  test("""(<<3, 4, 5, 6>> EXCEPT ![10] = 7) = <<3, 4, 5, 6>>""") { rewriterType: SMTEncoding =>
+    val tup3to6 = tuple(3.to(6).map(int): _*).as(intSeqT)
+    val exceptEx = except(tup3to6, tuple(int(10)).as(TupT1(IntT1())), int(7)).as(intSeqT)
+    // since 10 does not belong to the domain, the sequence does not change
+    val eq = eql(exceptEx, tup3to6).as(boolT)
+
+    val state = new SymbState(eq, arena, Binding())
+    assertTlaExAndRestore(create(rewriterType), state)
+  }
+
+  test("""(<< >> EXCEPT ![10] = 7) = << >>""") { rewriterType: SMTEncoding =>
+    val emptyTuple = tuple().as(intSeqT)
+    val exceptEx = except(emptyTuple, tuple(int(10)).as(TupT1(IntT1())), int(7)).as(intSeqT)
+    // since 10 does not belong to the domain, the sequence does not change
+    val eq = eql(exceptEx, emptyTuple).as(boolT)
+
+    val state = new SymbState(eq, arena, Binding())
+    assertTlaExAndRestore(create(rewriterType), state)
+  }
+
+  test("""(ApalacheSeqCapacity(<<3, 4, 5, 6>>) = 4""") { rewriterType: SMTEncoding =>
+    val seq3to6 = tuple(3.to(6).map(int): _*).as(intSeqT)
+    val ex = OperEx(ApalacheInternalOper.apalacheSeqCapacity, seq3to6)(Typed(IntT1()))
+    val eq = eql(ex, int(4)).as(boolT)
+
+    val state = new SymbState(eq, arena, Binding())
+    assertTlaExAndRestore(create(rewriterType), state)
   }
 
   // for PICK see TestCherryPick

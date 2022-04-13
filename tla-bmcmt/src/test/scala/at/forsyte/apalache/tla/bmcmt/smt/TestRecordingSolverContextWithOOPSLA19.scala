@@ -7,7 +7,7 @@ import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestRecordingSolverContextWithOOPSLA19 extends TestRecordingSolverContext {
-  override protected def withFixture(test: OneArgTest): Outcome = {
+  override protected def withFixture(test: NoArgTest): Outcome = {
     solverConfig = SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = oopsla19Encoding)
     test()
   }

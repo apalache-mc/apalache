@@ -12,5 +12,5 @@ Init == x = 0
 Next == UNCHANGED x
 \* Asserts the negation of the invariant that should actually hold, to 
 \* check if the SMT encoding is properly constrained and returns UNSAT.
-Inv == FoldSet( A, {4,4}, {1,1,2,2,3,3} ) # {1,2,3,4}
+Inv == ApaFoldSet( A, {4,4}, {1,1,2,2,3,3} ) # {1,2,3,4}
 ===============================================================================

@@ -13,8 +13,8 @@ $ apalache-mc check --write-intermediate=true y2k_override.tla
 ```
 
 We can check the detailed output of the `TransitionFinderPass` in the file
-`_apalache-out/y2k_override.tla/<timestamp>/intermediate/09_OutTransition.tla`, where
-`<timestamp>` looks like `2021-12-01T12-07-41_1998641578103809179`:
+`_apalache-out/y2k_override.tla/<timestamp>/intermediate/<pass>_OutTransitionFinderPass.tla`, where
+`<timestamp>` looks like `2021-12-01T12-07-41_1998641578103809179`, and `<pass>` is a two-digit number like `08`:
 
 ```tla
 {{#include ../../../../test/tla/y2k_09_OutTransition.tla::}}

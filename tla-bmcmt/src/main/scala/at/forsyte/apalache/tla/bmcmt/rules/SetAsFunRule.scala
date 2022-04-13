@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.CellT
+import at.forsyte.apalache.tla.bmcmt.types.{CellT, FinSetT}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -28,12 +28,63 @@ class SetAsFunRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val setCell = nextState.asCell
         setEx.typeTag match {
           case Typed(SetT1(TupT1(keyType, valueType))) =>
-            nextState = translateRelation(setCell, nextState)
-            val rel = nextState.asCell
             // construct a cell for the function and attach the relation to it
             nextState = nextState.updateArena(_.appendCell(CellT.fromType1(FunT1(keyType, valueType))))
             val fun = nextState.arena.topCell
-            nextState = nextState.updateArena(_.setCdm(fun, rel))
+
+            rewriter.solverContext.config.smtEncoding match {
+              case `arraysEncoding` =>
+                nextState = nextState.updateArena(_.appendCell(FinSetT(CellT.fromType1(keyType))))
+                val domainCell = nextState.arena.topCell
+                nextState = nextState.updateArena(_.appendCellNoSmt(setCell.cellType))
+                val relationCell = nextState.arena.topCell
+
+                val pairs = nextState.arena.getHas(setCell)
+                var domainCells: List[ArenaCell] = List()
+                var rangeCells: List[ArenaCell] = List()
+
+                for (pair <- pairs) {
+                  assert(nextState.arena.getHas(pair).length == 2)
+                  val domElem = nextState.arena.getHas(pair)(0)
+                  val resElem = nextState.arena.getHas(pair)(1)
+
+                  nextState = nextState.updateArena(_.appendHas(domainCell, domElem))
+                  val inExpr = tla.apalacheStoreInSet(domElem.toNameEx, domainCell.toNameEx)
+                  rewriter.solverContext.assertGroundExpr(inExpr)
+
+                  nextState = nextState.updateArena(_.appendHasNoSmt(relationCell, pair))
+
+                  domainCells = domainCells :+ domElem
+                  rangeCells = rangeCells :+ resElem
+                }
+
+                nextState = nextState.updateArena(_.setDom(fun, domainCell))
+                nextState = nextState.updateArena(_.setCdm(fun, relationCell))
+
+                def addCellCons(domElem: ArenaCell, rangeElem: ArenaCell): Unit = {
+                  val inDomain = tla.apalacheSelectInFun(domElem.toNameEx, domainCell.toNameEx)
+                  val inRange =
+                    tla.apalacheStoreInFun(rangeElem.toNameEx, fun.toNameEx, domElem.toNameEx)
+                  val notInRange = tla.apalacheStoreNotInFun(domElem.toNameEx, fun.toNameEx)
+                  // function updates are guarded by the inDomain predicate
+                  val ite = tla.ite(inDomain, inRange, notInRange)
+                  rewriter.solverContext.assertGroundExpr(ite)
+                }
+
+                // Here we iterate over the reverse order of the list to have, in case duplicate keys, the first entry
+                // in the list be the value encoded in the function. This is the semantics of oopsla19Encoding.
+                for ((domElem, rangeElem) <- domainCells.zip(rangeCells).reverse)
+                  addCellCons(domElem, rangeElem)
+
+              case `oopsla19Encoding` =>
+                nextState = translateRelation(setCell, nextState)
+                val rel = nextState.asCell
+                nextState = nextState.updateArena(_.setCdm(fun, rel))
+
+              case oddEncodingType =>
+                throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
+            }
+
             nextState.setRex(fun.toNameEx)
 
           case tt =>
