@@ -180,8 +180,9 @@ This time the type checker can find the types of all expressions:
 
 ## Recipe 4: Annotating records
 
-Check the example [TwoPhase.tla][] from the repository of TLA+ examples. This
-example has 176 lines of code, so we do not inline it here.
+Check the example [TwoPhase.tla][] from the repository of TLA+ examples (you will also need [TCommit.tla][], which
+is imported by TwoPhase.tla).
+This example has 176 lines of code, so we do not inline it here.
 
 As you probably expected, the type checker complains about not knowing
 the types of constants and variables. As for constant `RM`, we opt for using
@@ -203,7 +204,7 @@ VARIABLES
   \* @type: Str;
   tmState,
   \* @type: Set(RM);
-  tmPrepared
+  tmPrepared,
 ```
 
 The type of the variable `msgs` is less obvious. We can check the definitions
@@ -271,8 +272,9 @@ vars == <<todo,sols>>
 Now we run the type checker and receive the following type error:
 
 ```
-[Queens.tla:47:21-47:38]: Mismatch in argument types.
-Expected: ((Seq(Int)) => Bool)
+[Queens.tla:35:44-35:61]: The operator IsSolution of type ((Seq(Int)) => Bool) is applied to arguments of incompatible types in IsSolution(queens):
+Argument queens should have type Seq(Int) but has type (Int -> Int). E@11:07:53.285
+[Queens.tla:35:1-35:63]: Error when computing the type of Solutions
 ```
 
 Let's have a closer look at the problematic operator definition of `Solutions`:
@@ -295,15 +297,17 @@ apply the operator `FunAsSeq` as follows:
 EXTENDS Naturals, Sequences, Apalache
 ...
 Solutions ==
-  LET Queens == { queens \in [1..N -> 1..N] : FunAsSeq(queens, N) } IN
-  { FunAsSeq(queens, N): queens \in Queens }
+  LET Queens == { FunAsSeq(queens, N, N): queens \in  [1..N -> 1..N] } IN
+  {queens \in Queens : IsSolution(queens)}
 ```    
 
 
 This time the type checker can find the types of all expressions:
 
 ```
- > Your types are great!
+> Running Snowcat .::.
+> Your types are purrfect!
+> All expressions are typed
 ```
 
 <a id="typeAliases"></a>
@@ -446,6 +450,7 @@ This may change later, when the tlaplus [Issue 578][] is resolved.
 [Channel.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/SpecifyingSystems/FIFO/Channel.tla
 [CarTalkPuzzle.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/CarTalkPuzzle/CarTalkPuzzle.tla
 [TwoPhase.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/transaction_commit/TwoPhase.tla
+[TCommit.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/transaction_commit/TCommit.tla
 [Queens.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/N-Queens/Queens.tla
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
 [Issue 401]: https://github.com/informalsystems/apalache/issues/401
