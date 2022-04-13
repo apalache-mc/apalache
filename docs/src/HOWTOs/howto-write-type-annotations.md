@@ -21,7 +21,7 @@ automatically.
 Consider the example [HourClock.tla][] from [Specifying Systems][]:
 
 ```tla
-{{#include ../../../test/tla/HourClock.tla::13}}
+{{#include ../../../test/tla/HourClock.tla}}
 ```
 
 Without thinking much about the types, run the type checker:
@@ -61,7 +61,7 @@ Consider the example [Channel.tla][] from [Specifying Systems][]:
 
 ```tla
 
-{{#include ../../../test/tla/Channel.tla::28}}
+{{#include ../../../test/tla/Channel.tla}}
 
 ```
 
