@@ -1,10 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.io.lir.CounterexampleWriter
 import at.forsyte.apalache.tla.bmcmt.Checker.{CheckerResult, Deadlock, Error, RuntimeError}
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode
 import at.forsyte.apalache.tla.bmcmt.search.{ModelCheckerParams, SearchState}
-import at.forsyte.apalache.tla.bmcmt.trex.{ConstrainedTransitionExecutor, ExecutionSnapshot, TransitionExecutor}
+import at.forsyte.apalache.tla.bmcmt.trex.{
+  ConstrainedTransitionExecutor, DecodedExecution, ExecutionSnapshot, TransitionExecutor,
+}
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
@@ -24,7 +25,8 @@ import com.typesafe.scalalogging.LazyLogging
 class SeqModelChecker[ExecutorContextT](
     val params: ModelCheckerParams,
     val checkerInput: CheckerInput,
-    trexImpl: TransitionExecutor[ExecutorContextT])
+    trexImpl: TransitionExecutor[ExecutorContextT],
+    val listeners: Seq[SeqModelCheckerListener] = Nil)
     extends Checker with LazyLogging {
 
   type SnapshotT = ExecutionSnapshot[ExecutorContextT]
@@ -65,6 +67,29 @@ class SeqModelChecker[ExecutorContextT](
     searchState.finalResult
   }
 
+  /**
+   * Notify all listeners that a counterexample has been found.
+   *
+   * @param rootModule
+   *   The checked TLA+ module.
+   * @param trace
+   *   The counterexample trace.
+   * @param invViolated
+   *   The invariant violation to record in the counterexample. Pass
+   *   - for invariant violations: the negated invariant,
+   *   - for deadlocks: `ValEx(TlaBool(true))`,
+   *   - for trace invariants: the applied, negated trace invariant (see [[SeqModelChecker.applyTraceInv]]).
+   * @param errorIndex
+   *   Number of found error (likely [[SearchState.nFoundErrors]]).
+   */
+  private def notifyCounterexample(
+      rootModule: TlaModule,
+      trace: DecodedExecution,
+      invViolated: TlaEx,
+      errorIndex: Int) = {
+    listeners.foreach(_.onCounterexample(rootModule, trace, invViolated, errorIndex))
+  }
+
   private def makeStep(isNext: Boolean, transitions: Seq[TlaEx]): Unit = {
     val (maybeInvariantNos, maybeActionInvariantNos) =
       prepareTransitionsAndCheckInvariants(isNext, transitions)
@@ -81,9 +106,9 @@ class SeqModelChecker[ExecutorContextT](
 
         case Some(false) =>
           if (trex.sat(0).contains(true)) {
-            val filenames = dumpCounterexample(ValEx(TlaBool(true)))
-            val msg = s"Found a deadlock. Check an example state in: ${filenames.mkString(", ")}"
-            logger.error(msg)
+            notifyCounterexample(checkerInput.rootModule, trex.decodedExecution(), ValEx(TlaBool(true)),
+                searchState.nFoundErrors)
+            logger.error("Found a deadlock.")
           } else {
             logger.error(s"Found a deadlock. No SMT model.")
           }
@@ -214,10 +239,9 @@ class SeqModelChecker[ExecutorContextT](
 
     if (trex.preparedTransitionNumbers.isEmpty) {
       if (trex.sat(0).contains(true)) {
-        val filenames = dumpCounterexample(ValEx(TlaBool(true)))
-        logger.error(
-            s"Found a deadlock. Check the counterexample in: \n  ${filenames.mkString("\n  ")}"
-        )
+        notifyCounterexample(checkerInput.rootModule, trex.decodedExecution(), ValEx(TlaBool(true)),
+            searchState.nFoundErrors)
+        logger.error("Found a deadlock.")
       } else {
         logger.error(s"Found a deadlock. No SMT model.")
       }
@@ -280,9 +304,8 @@ class SeqModelChecker[ExecutorContextT](
           trex.sat(params.smtTimeoutSec) match {
             case Some(true) =>
               searchState.onResult(Error(1))
-              val filenames = dumpCounterexample(notInv)
-              val msg = "State %d: %s invariant %s violated. Check the counterexample in: \n  %s"
-                .format(stateNo, kind, invNo, filenames.mkString("\n  "))
+              notifyCounterexample(checkerInput.rootModule, trex.decodedExecution(), notInv, searchState.nFoundErrors)
+              val msg = "State %d: %s invariant %s violated.".format(stateNo, kind, invNo)
               logger.error(msg)
               excludePathView()
 
@@ -326,9 +349,9 @@ class SeqModelChecker[ExecutorContextT](
         trex.sat(params.smtTimeoutSec) match {
           case Some(true) =>
             searchState.onResult(Error(1))
-            val filenames = dumpCounterexample(traceInvApp)
-            val msg = "State %d: trace invariant %s violated. Check the counterexample in: \n  %s"
-              .format(stateNo, invNo, filenames.mkString("\n  "))
+            notifyCounterexample(checkerInput.rootModule, trex.decodedExecution(), traceInvApp,
+                searchState.nFoundErrors)
+            val msg = "State %d: trace invariant %s violated.".format(stateNo, invNo)
             logger.error(msg)
             excludePathView()
 
@@ -405,25 +428,5 @@ class SeqModelChecker[ExecutorContextT](
       val pathConstraint = ValEx(TlaBool(true))(Typed(BoolT1())) :: (exec.path.tail.map(_._1).map(computeViewNeq(view)))
       trex.addPathOrConstraint(pathConstraint)
     }
-  }
-
-  private def dumpCounterexample(notInv: TlaEx): List[String] = {
-    val exec = trex.decodedExecution()
-    val states = exec.path.map(p => (p._2.toString, p._1))
-
-    def dump(suffix: String): List[String] = {
-      CounterexampleWriter.writeAllFormats(
-          suffix,
-          checkerInput.rootModule,
-          notInv,
-          states,
-      )
-    }
-
-    // for a human user, write the latest counterexample into counterexample.{tla,json}
-    dump("")
-
-    // for automation scripts, produce counterexample${nFoundErrors}.{tla,json}
-    dump(searchState.nFoundErrors.toString)
   }
 }

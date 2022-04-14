@@ -127,7 +127,8 @@ class BoundedCheckerPassImpl @Inject() (
     val filteredTrex =
       new FilteredTransitionExecutor[SnapshotT](params.transitionFilter, params.invFilter, trex)
 
-    val checker = new SeqModelChecker[SnapshotT](params, input, filteredTrex)
+    val checker =
+      new SeqModelChecker[SnapshotT](params, input, filteredTrex, Seq(DumpCounterexamplesSeqModelCheckerListener))
     val outcome = checker.run()
     rewriter.dispose()
     logger.info(s"The outcome is: " + outcome)
@@ -157,7 +158,8 @@ class BoundedCheckerPassImpl @Inject() (
     val trex = new TransitionExecutorImpl[SnapshotT](params.consts, params.vars, executorContext)
     val filteredTrex = new FilteredTransitionExecutor[SnapshotT](params.transitionFilter, params.invFilter, trex)
 
-    val checker = new SeqModelChecker[SnapshotT](params, input, filteredTrex)
+    val checker =
+      new SeqModelChecker[SnapshotT](params, input, filteredTrex, Seq(DumpCounterexamplesSeqModelCheckerListener))
     val outcome = checker.run()
     rewriter.dispose()
     logger.info(s"The outcome is: " + outcome)
