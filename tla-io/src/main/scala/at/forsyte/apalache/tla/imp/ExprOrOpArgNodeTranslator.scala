@@ -170,7 +170,7 @@ class ExprOrOpArgNodeTranslator(
                 wrapBuiltinWithLetIn(oper)
 
               case None =>
-                throw new SanyImporterException(s"Unknown built-in operator $name applied as an argument")
+                throw new SanyImporterException(s"Unexpected built-in operator $name applied as an argument")
             }
         }
 
