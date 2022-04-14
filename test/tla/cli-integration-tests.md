@@ -1533,11 +1533,6 @@ $ apalache-mc check --config=ConfigParams.cfg ConfigParams.tla | sed 's/[IEW]@.*
   > Set the initialization predicate to Init
   > Set the transition predicate to Next
   > Set an invariant to Inv
-  > Replaced CONSTANT MyInt with 42
-  > Replaced CONSTANT MyStr with "hello"
-  > Replaced CONSTANT MyModelValue1 with "ModelValue_Model1"
-  > Replaced CONSTANT MyModelValue2 with "ModelValue_Model2"
-  > Replaced CONSTANT MySet with {1, 2, 3}
 ...
 The outcome is: NoError
 ...
@@ -2049,6 +2044,16 @@ A regression test for assignments under quantification over empty sets.
 
 ```sh
 $ apalache-mc check --length=1 Test1425.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check Test1623.tla reports no error
+
+A regression test for #1623 (Instantiation with .cfg + ASSUME)
+
+```sh
+$ apalache-mc check --length=3 --inv=Inv Test1623.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
