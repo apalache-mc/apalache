@@ -9,7 +9,7 @@ import scala.annotation.tailrec
 /**
  * A unit that a context can hold, e.g., a TLA+ declaration.
  */
-abstract class ContextUnit {
+sealed abstract class ContextUnit {
   def name: String
 }
 
