@@ -10,7 +10,7 @@
 
 # General application code
 
-/tla-types/ @konnov @shonfeder
+/tla-types/ @konnov @shonfeder @Kukovec
 /tla-io/ @Kukovec @shonfeder
 /mod-tool/ @shonfeder
 
