@@ -13,6 +13,9 @@
 /tla-types/ @konnov @shonfeder @Kukovec
 /tla-io/ @Kukovec @shonfeder
 /mod-tool/ @shonfeder
+/tla-assignments/ @Kukovec
+/tla-pp/ @Kukovec
+/tlair/ @Kukovec
 
 # Build system and packaging
 
