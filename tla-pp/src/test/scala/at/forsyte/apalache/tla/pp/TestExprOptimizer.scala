@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, IntT1, OperT1, RecT1, SetT1}
+import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, IntT1, OperT1, RecT1, SetT1, StrT1}
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.TypedPredefs._
@@ -82,6 +82,27 @@ class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
     val expected =
       exists(name("y").as(intT), set12, and(y_eq_1, z_eq_y).as(boolT)).as(boolT)
 
+    assert(expected == output)
+  }
+
+  // An optimization for set membership over sets of records. Note that this is the standard form produced by Keramelizer.
+  test("""r \in { [a |-> x, b |-> y]: x \in S, y \in T } becomes DOMAIN r = { "a", "b" } /\ r.a \in S /\ r.b \in T""") {
+    val recT = RecT1("a" -> IntT1(), "b" -> IntT1())
+    val recSetT = SetT1(recT)
+    val record =
+      enumFun(str("a"), name("x").as(intT), str("b"), name("y").as(intT)).as(recT)
+    val S = name("S").as(intSetT)
+    val T = name("T").as(intSetT)
+    val recordSet = map(record, name("x").as(intT), S, name("y").as(intT), T).as(recSetT)
+    val r = name("r").as(recT)
+    val input = in(r, recordSet).as(boolT)
+
+    val strSetT = SetT1(StrT1())
+    val domEq = eql(dom(r).as(strSetT), enumSet(str("a"), str("b")).as(strSetT)).as(boolT)
+    val memA = in(appFun(r, str("a")).as(intT), S).as(boolT)
+    val memB = in(appFun(r, str("b")).as(intT), T).as(boolT)
+    val expected = and(domEq, memA, memB).as(boolT)
+    val output = optimizer.apply(input)
     assert(expected == output)
   }
 

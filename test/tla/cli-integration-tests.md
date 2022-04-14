@@ -2078,6 +2078,16 @@ $ apalache-mc check --inv=DriftInv --next=NextFast antipatterns/fold-except/MC_F
 EXITCODE: OK
 ```
 
+### check RecMem1627.tla reports no error
+
+A test for folds with excepts, the fast case.
+
+```sh
+$ apalache-mc check --inv=TypeOK --length=1 RecMem1627.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
 
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
