@@ -1,54 +1,86 @@
 package at.forsyte.apalache.tla.typecmp
 
-import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaFunOper, TlaOper}
+import at.forsyte.apalache.tla.lir.{oper, _}
+import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaFunOper}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
+import at.forsyte.apalache.tla.typecheck.etc.TypeVarPool
 import org.junit.runner.RunWith
-import org.scalatest.{BeforeAndAfter, FunSuite}
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.BeforeAndAfter
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestTCB extends FunSuite with BeforeAndAfter {
+class TestTCB extends AnyFunSuite with BeforeAndAfter {
+
+  var varPool = new TypeVarPool()
+  var sigGen = new SignatureGenerator(varPool)
+  var builder = new TypeCalculatingBuilder(sigGen)
+
+  before {
+    varPool = new TypeVarPool()
+    sigGen = new SignatureGenerator(varPool)
+    builder = new TypeCalculatingBuilder(sigGen)
+  }
 
   test("Plus") {
-    val plus = ArithOp.plusCmp
+    val plusCmp = sigGen.computationFromSignatureForFixedArity(TlaArithOper.plus)
 
     val args = Seq(
         TlaInt(1),
-        TlaInt(1)
-    ) map { ValEx(_)(Typed(IntT1())) }
+        TlaInt(1),
+    ).map { ValEx(_)(Typed(IntT1())) }
 
-    val res = plus(args)
+    val res = plusCmp(args)
 
     assert(res.contains(IntT1()))
 
+    val Seq(x, y) = args
+    val plusEx = builder.plus(x, y)
+
+    assert(plusEx.eqTyped(OperEx(TlaArithOper.plus, x, y)(Typed(IntT1()))))
+
     val utArgs = Seq(
         TlaInt(1),
-        TlaInt(1)
-    ) map { ValEx(_)(Untyped()) }
+        TlaInt(1),
+    ).map { ValEx(_)(Untyped()) }
 
     assertThrows[TypingException] {
-      plus(utArgs)
+      plusCmp(utArgs)
     }
 
     val badArgs = Seq(
         ValEx(TlaInt(1))(Typed(IntT1())),
-        ValEx(TlaStr("a"))(Typed(StrT1()))
+        ValEx(TlaStr("a"))(Typed(StrT1())),
     )
 
-    val badRes = plus(badArgs)
+    val badRes = plusCmp(badArgs)
 
     assert(badRes.isLeft)
 
     val tooManyArgs = Seq(
         TlaInt(1),
         TlaInt(1),
-        TlaInt(1)
-    ) map { ValEx(_)(Typed(IntT1())) }
+        TlaInt(1),
+    ).map { ValEx(_)(Typed(IntT1())) }
 
-    val tooManyRes = plus(tooManyArgs)
+    val tooManyRes = plusCmp(tooManyArgs)
 
     assert(tooManyRes.isLeft)
+
+    val binaryIntOpers =
+      Seq(
+          TlaArithOper.minus,
+          TlaArithOper.mult,
+          TlaArithOper.div,
+          TlaArithOper.mod,
+      )
+
+    binaryIntOpers.foreach { op =>
+      val cmp = sigGen.computationFromSignatureForFixedArity(op)
+      val res = cmp(args)
+      assert(res.contains(IntT1()))
+    }
+
   }
 
   test("And") {
@@ -57,8 +89,8 @@ class TestTCB extends FunSuite with BeforeAndAfter {
         TlaBool(true),
         TlaBool(true),
         TlaBool(true),
-        TlaBool(true)
-    ) map { ValEx(_)(Typed(BoolT1())) }
+        TlaBool(true),
+    ).map { ValEx(_)(Typed(BoolT1())) }
 
     val res = and(args)
     val res2 = and(args.take(2))
@@ -68,8 +100,8 @@ class TestTCB extends FunSuite with BeforeAndAfter {
 
     val utArgs = Seq(
         TlaBool(true),
-        TlaBool(true)
-    ) map { ValEx(_)(Untyped()) }
+        TlaBool(true),
+    ).map { ValEx(_)(Untyped()) }
 
     assertThrows[TypingException] {
       and(utArgs)
@@ -77,7 +109,7 @@ class TestTCB extends FunSuite with BeforeAndAfter {
 
     val badArgs = Seq(
         ValEx(TlaBool(true))(Typed(BoolT1())),
-        ValEx(TlaStr("a"))(Typed(StrT1()))
+        ValEx(TlaStr("a"))(Typed(StrT1())),
     )
 
     val badRes = and(badArgs)
@@ -94,9 +126,9 @@ class TestTCB extends FunSuite with BeforeAndAfter {
         NameEx("x")(Typed(recType)),
         OperEx(
             TlaFunOper.tuple,
-            ValEx(TlaStr("y"))(Typed(StrT1()))
+            ValEx(TlaStr("y"))(Typed(StrT1())),
         )(Typed(TupT1(StrT1()))),
-        NameEx("z")(Typed(IntT1()))
+        NameEx("z")(Typed(IntT1())),
     )
 
     val resRec = except(recExceptArgs)

@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir.values._
 
 // Several types in TT1 describe objects with the same kind of functionality: application
 // Instead of case-splitting in matching, we can simply view each type, for which this is the
-// case as a pair of two values: (fromT, toT) [Applicative],
+// case, as a pair of two values: (fromT, toT) [Applicative],
 // describing the required argument type and the type of the object after application respectively.
 // For records and tuples, we additionally take an index hint as an argument, because
 // the codomain type may depend on the argument
@@ -20,7 +20,7 @@ object Applicative {
       // a value of type Ti, which depends on the argument value (not just type)
       case RecT1(fieldTypes) =>
         argHint match {
-          case ValEx(TlaStr(s)) => Some(Applicative(StrT1(), fieldTypes(s)))
+          case ValEx(TlaStr(s)) => fieldTypes.get(s).map { Applicative(StrT1(), _) }
           case _                => None
         }
       // A sequence Seq(T) application takes an Int argument and returns a T value
@@ -28,7 +28,7 @@ object Applicative {
       // Sparse tuples are similar to records
       case SparseTupT1(indexTypes) =>
         argHint match {
-          case ValEx(TlaInt(i)) => Some(Applicative(IntT1(), indexTypes(i.toInt)))
+          case ValEx(TlaInt(i)) => indexTypes.get(i.toInt).map { Applicative(IntT1(), _) }
           case _                => None
         }
       // Tuples are similar to records
@@ -36,7 +36,8 @@ object Applicative {
         argHint match {
           case ValEx(TlaInt(i)) =>
             val j = (i - 1).toInt // TLA is 1-indexed, indexedSeq is 0-indexed
-            Some(Applicative(IntT1(), tupArgs.toIndexedSeq(j)))
+            if (i > tupArgs.length) None
+            else Some(Applicative(IntT1(), tupArgs.toIndexedSeq(j)))
           case _ => None
         }
       case _ => None
