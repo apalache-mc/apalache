@@ -30,7 +30,7 @@ We elect to use the term in a broader sense of "replacing an operator with its d
       1. Non-nullary inlining: the instantiation described above, except the inlining skips nullary LET-defined operators
   2. Pass-by-name inlining: replacing an operator name `A` with a local LET-definition: `LET A_LOCAL(p1,...,pn) == A(p1,...,pn) IN A_LOCAL`
 
-The reason for doing (1) is that, in order to encode `A(x1,...,xn)`, we need to know `e[x1/p1,...,xn/pn]`, not just `e`, since the latter may contain free variables (e.g. `x1` is free in `e`).
+The reason for doing (1) is that, in order to encode `A(x1,...,xn)`, we need to know `e[x1/p1,...,xn/pn]`, not just `e`, since the latter may contain free variables (e.g. `p1` is free in `e`).
 
 The reason for doing (2) is more pragmatic; In order to rewrite expressions which feature any of the higher-order (HO) built-in operators, e.g. `ApaFoldSet(A, v, S)`, we need to know, at the time of rewriting, how to evaluate an application of `A` (e.g. `A(partial, current)` for folding). 
 Performing (2) allows us to make the rewriting rule local, since the definition becomes available where the operator is used, and frees us from having to track scope in the rewriting rules.
@@ -52,7 +52,7 @@ Performing (2) allows us to make the rewriting rule local, since the definition 
 1. Perform non-nullary inlining and pass-by-name inlining
     - Pros: 
         - Enables further optimizations 
-        - Using non-nullary inlining has all of the benefits of standard inlining, while additionally being able to avoid repetition (e.g. inlining `A` in `A + A`)
+        - Using non-nullary inlining has all of the benefits of standard inlining, while additionally being able to avoid repetition (e.g. not inlining `A` in `A + A`)
         - Pass-by-name inlining allows us to keep rewriting rules local
     - Cons: Implementation is more complex
 
