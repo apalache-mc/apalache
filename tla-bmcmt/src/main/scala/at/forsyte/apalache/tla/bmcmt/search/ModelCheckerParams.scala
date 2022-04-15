@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt.search
 
-import java.io.File
 import at.forsyte.apalache.tla.bmcmt.{oopsla19Encoding, CheckerInput, SMTEncoding}
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode.{AfterJoin, BeforeJoin, InvariantMode}
 
@@ -24,7 +23,6 @@ object ModelCheckerParams {
 class ModelCheckerParams(
     checkerInput: CheckerInput,
     val stepsBound: Int,
-    val saveDirectory: File,
     tuningOptions: Map[String, String] = Map(),
     val debug: Boolean = true) {
 

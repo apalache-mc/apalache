@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.Checker.{Deadlock, Error, NoError}
-import java.io.File
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode
 import at.forsyte.apalache.tla.bmcmt.trex.{
@@ -44,7 +43,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val inv = not(notInv).typed(types, "b")
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 0, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 0, Map(), false)
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
@@ -61,7 +60,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val inv = not(notInv).typed(types, "b")
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 0, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 0, Map(), false)
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
@@ -81,7 +80,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val inv = not(notInv).typed(types, "b")
 
     val checkerInput = new CheckerInput(module, initTrans, nextTrans, Some(cinit), CheckerInputVC(List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 0, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 0, Map(), false)
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
@@ -101,7 +100,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val inv = not(notInv).typed(types, "b")
 
     val checkerInput = new CheckerInput(module, initTrans, nextTrans, Some(cinit), CheckerInputVC(List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 0, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 0, Map(), false)
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
@@ -114,7 +113,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val initTrans = List(and(mkAssign("x", 2), mkNotAssign("x", 1)).typed(BoolT1()))
     val nextTrans = List(mkAssign("x", 2))
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC())
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 0, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 0, Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
@@ -128,7 +127,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
     val nextTrans = List(mkAssign("x", 2))
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC())
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 0, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 0, Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
@@ -143,7 +142,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     // x' <- x + 1
     val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1()))
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC())
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 1, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 1, Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
@@ -163,7 +162,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val notInv = not(inv).typed(types, "b")
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map(), false)
     params.discardDisabled = true
     params.invariantMode = InvariantMode.BeforeJoin
     // initialize the model checker
@@ -185,7 +184,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val notInv = not(inv).typed(types, "b")
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map(), false)
     params.discardDisabled = false
     params.invariantMode = InvariantMode.BeforeJoin
     // initialize the model checker
@@ -207,7 +206,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val notInv = not(inv).typed(types, "b")
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List(), List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map(), false)
     params.discardDisabled = false
     params.invariantMode = InvariantMode.BeforeJoin
     // initialize the model checker
@@ -229,7 +228,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val notInv = not(inv).typed(types, "b")
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List(), List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map(), false)
     params.discardDisabled = false
     params.invariantMode = InvariantMode.BeforeJoin
     // initialize the model checker
@@ -251,7 +250,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val notInv = not(inv).typed(types, "b")
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map(), false)
     params.discardDisabled = false
     params.invariantMode = InvariantMode.AfterJoin
     // initialize the model checker
@@ -273,7 +272,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val notInv = not(inv).typed(types, "b")
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map(), false)
     params.discardDisabled = true
     params.invariantMode = InvariantMode.AfterJoin
     // initialize the model checker
@@ -295,7 +294,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val notInv = not(inv).typed(types, "b")
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List(), List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map(), false)
     params.discardDisabled = false
     params.invariantMode = InvariantMode.AfterJoin
     // initialize the model checker
@@ -317,7 +316,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val notInv = not(inv).typed(types, "b")
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List(), List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map(), false)
     params.discardDisabled = false
     params.invariantMode = InvariantMode.AfterJoin
     // initialize the model checker
@@ -339,7 +338,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val notInv = not(inv).typed(types, "b")
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List(), List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map(), false)
     params.discardDisabled = true
     params.invariantMode = InvariantMode.BeforeJoin
     // initialize the model checker
@@ -361,7 +360,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val notInv = not(inv).typed(types, "b")
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List(), List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map(), false)
     params.discardDisabled = true
     params.invariantMode = InvariantMode.BeforeJoin
     // initialize the model checker
@@ -383,7 +382,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val notInv = not(inv).typed(types, "b")
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List(), List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map(), false)
     params.discardDisabled = true
     params.invariantMode = InvariantMode.AfterJoin
     // initialize the model checker
@@ -405,7 +404,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val notInv = not(inv).typed(types, "b")
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List(), List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map(), false)
     params.discardDisabled = true
     params.invariantMode = InvariantMode.AfterJoin
     // initialize the model checker
@@ -433,7 +432,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None,
           CheckerInputVC(List(), List(), List((invDecl, notInvDecl))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
@@ -459,7 +458,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None,
           CheckerInputVC(List(), List(), List((invDecl, notInvDecl))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
@@ -486,7 +485,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 2, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 2, Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
@@ -511,7 +510,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
     val checkerInput =
       new CheckerInput(mkModuleWithXandY(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 2, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 2, Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
@@ -528,7 +527,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
       List(and(gt(name("x") ? "i", int(3)) ? "b", mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1())).typed(
               types, "b"))
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC())
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 1, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 1, Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
@@ -543,7 +542,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     // x' <- x + 1
     val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1()))
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC())
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
@@ -560,7 +559,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
       List(and(lt(name("x") ? "i", int(10)) ? "b", mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1())).typed(
               types, "b"))
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC())
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
@@ -581,7 +580,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
       .typed(types, "b")
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
@@ -604,7 +603,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
       .typed(BoolT1())
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 3, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 3, Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
@@ -626,7 +625,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
       .typed(BoolT1())
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 2, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 2, Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
@@ -650,7 +649,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     // initialize the model checker
     // We require the invariant to be checked only after the second step. So we will miss invariant violation.
     val tuning = Map("search.invariantFilter" -> "2")
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), tuning, false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, tuning, false)
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex =
       new FilteredTransitionExecutor("", params.invFilter, new TransitionExecutorImpl(params.consts, params.vars, ctx))
@@ -668,7 +667,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
       .typed(types, "b")
     val nextTrans = List(trans1, trans2)
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC())
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 3, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 3, Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
@@ -692,7 +691,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
       .typed(types, "b")
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
@@ -726,7 +725,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val dummyModule = TlaModule("root", List(TlaConstDecl("N")(intTag), TlaVarDecl("x")(intTag)))
     val checkerInput =
       new CheckerInput(dummyModule, initTrans, nextTrans, Some(cInit), CheckerInputVC(List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map(), false)
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
@@ -751,7 +750,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
     // initialize the model checker
     val tuning = Map.empty[String, String] // Map("search.transitionFilter" -> filter)
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, new File("."), tuning, false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 10, tuning, false)
     val ctx = new IncrementalExecutionContext(rewriter)
     val impl = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val trex = new FilteredTransitionExecutor("([0-9]|10)->0", "", impl)
@@ -778,7 +777,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None,
           CheckerInputVC(List((inv, notInv)), List.empty, List.empty, Some(view)))
-    val params = new ModelCheckerParams(checkerInput, stepsBound = 2, new File("."), Map(), false)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 2, Map(), false)
     // we expect 4 errors, but an upper bound may be larger
     params.nMaxErrors = 10
     params.discardDisabled = true
