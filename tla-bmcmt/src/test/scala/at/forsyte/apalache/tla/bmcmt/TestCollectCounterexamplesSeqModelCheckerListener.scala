@@ -4,9 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.Checker.Error
 import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStoreImpl
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams
 import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig}
-import at.forsyte.apalache.tla.bmcmt.trex.{
-  IncrementalExecutionContext, IncrementalExecutionContextSnapshot, TransitionExecutorImpl,
-}
+import at.forsyte.apalache.tla.bmcmt.trex.{IncrementalExecutionContext, TransitionExecutorImpl}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
@@ -23,16 +21,18 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
     assign(prime(name(varName) ? "i") ? "i", int(value)).typed(types, "b")
   }
 
-  private def getChecker(
-      module: TlaModule,
-      initTrans: List[TlaEx],
-      nextTrans: List[TlaEx],
-      inv: TlaEx,
-      maxErrors: Int): (CollectCounterexamplesModelCheckerListener, SeqModelChecker[IncrementalExecutionContextSnapshot]) = {
+  test("finds cex for invariant violation at initial state") {
+    // construct TLA+ module
+    val initTrans = List(mkAssign("x", 2))
+    val nextTrans = List(mkAssign("x", 2))
+    // Inv == x != 2
+    val notInv = eql(name("x") ? "i", int(2)).typed(types, "b")
+    val inv = not(notInv).typed(types, "b")
+    val module = TlaModule("root", List(TlaVarDecl("x")(Typed(IntT1()))))
+
     // construct checker input + parameters
-    val notInv = not(inv).typed(types, "b")
     val checkerInput = new CheckerInput(module, initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, 1, Map(), false) { nMaxErrors = maxErrors }
+    val params = new ModelCheckerParams(checkerInput, 0, Map(), false)
 
     // create utility objects
     val solver = RecordingSolverContext.createZ3(None, SolverConfig.default)
@@ -43,19 +43,8 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
     // run the model checker with listener
     val listener = new CollectCounterexamplesModelCheckerListener()
     val checker = new SeqModelChecker(params, checkerInput, trex, Seq(listener))
-    (listener, checker)
-  }
-
-  test("finds cex for invariant violation at initial state") {
-    // construct TLA+ module
-    val initTrans = List(mkAssign("x", 2))
-    val nextTrans = List(mkAssign("x", 2))
-    // Inv == x != 2
-    val inv = not(eql(name("x") ? "i", int(2)) ? "b").typed(types, "b")
-    val module = TlaModule("root", List(TlaVarDecl("x")(Typed(IntT1()))))
 
     // check the outcome
-    val (listener, checker) = getChecker(module, initTrans, nextTrans, inv, 1)
     val outcome = checker.run()
     assert(Error(1) == outcome)
 
@@ -77,11 +66,25 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
     val initTrans = List(mkAssign("x", 10))
     val nextTrans = List(mkAssign("x", 2))
     // Inv == x != 2
-    val inv = not(eql(name("x") ? "i", int(2)) ? "b").typed(types, "b")
+    val notInv = eql(name("x") ? "i", int(2)).typed(types, "b")
+    val inv = not(notInv).typed(types, "b")
     val module = TlaModule("root", List(TlaVarDecl("x")(Typed(IntT1()))))
 
+    // construct checker input + parameters
+    val checkerInput = new CheckerInput(module, initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
+    val params = new ModelCheckerParams(checkerInput, 1, Map(), false)
+
+    // create utility objects
+    val solver = RecordingSolverContext.createZ3(None, SolverConfig.default)
+    val rewriter = new SymbStateRewriterImpl(solver, new ExprGradeStoreImpl)
+    val ctx = new IncrementalExecutionContext(rewriter)
+    val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
+
+    // run the model checker with listener
+    val listener = new CollectCounterexamplesModelCheckerListener()
+    val checker = new SeqModelChecker(params, checkerInput, trex, Seq(listener))
+
     // check the outcome
-    val (listener, checker) = getChecker(module, initTrans, nextTrans, inv, 1)
     val outcome = checker.run()
     assert(Error(1) == outcome)
 
@@ -103,11 +106,25 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
     val initTrans = List(mkAssign("x", 10))
     val nextTrans = List(mkAssign("x", 2))
     // Inv == x != 2
-    val inv = not(eql(name("x") ? "i", int(2)) ? "b").typed(types, "b")
+    val notInv = eql(name("x") ? "i", int(2)).typed(types, "b")
+    val inv = not(notInv).typed(types, "b")
     val module = TlaModule("root", List(TlaVarDecl("x")(Typed(IntT1()))))
 
+    // construct checker input + parameters
+    val checkerInput = new CheckerInput(module, initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
+    val params = new ModelCheckerParams(checkerInput, 1, Map(), false) { nMaxErrors = 3 }
+
+    // create utility objects
+    val solver = RecordingSolverContext.createZ3(None, SolverConfig.default)
+    val rewriter = new SymbStateRewriterImpl(solver, new ExprGradeStoreImpl)
+    val ctx = new IncrementalExecutionContext(rewriter)
+    val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
+
+    // run the model checker with listener
+    val listener = new CollectCounterexamplesModelCheckerListener()
+    val checker = new SeqModelChecker(params, checkerInput, trex, Seq(listener))
+
     // check the outcome
-    val (listener, checker) = getChecker(module, initTrans, nextTrans, inv, 3)
     val outcome = checker.run()
     assert(Error(3) == outcome)
 
