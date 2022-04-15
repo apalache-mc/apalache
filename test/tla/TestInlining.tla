@@ -32,6 +32,9 @@ TestPassByName ==
   LET A(x,y) == 1
   IN ApaFoldSet(A, 0, 1..3) = 1
 
+TestPassLambda == 
+  ApaFoldSet(LAMBDA x, y: x + y, 0, 1..3) = 6
+
 \* @type: (Int, Int) => Int;
 GLOBAL_A2(x, y) == 
     LET \* @type: (Int, Int) => Int;
@@ -114,6 +117,7 @@ AllTests ==
   /\ TestLinearDep
   /\ TestKeepNullary
   /\ TestPassByName
+  /\ TestPassLambda
   /\ TestNestedPassByName
   /\ TestNullaryGlobalInline
   /\ TestOperAsArg
