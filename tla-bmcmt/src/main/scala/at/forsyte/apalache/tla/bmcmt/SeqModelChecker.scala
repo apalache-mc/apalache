@@ -26,7 +26,7 @@ class SeqModelChecker[ExecutorContextT](
     val params: ModelCheckerParams,
     val checkerInput: CheckerInput,
     trexImpl: TransitionExecutor[ExecutorContextT],
-    val listeners: Seq[SeqModelCheckerListener] = Nil)
+    val listeners: Seq[ModelCheckerListener] = Nil)
     extends Checker with LazyLogging {
 
   type SnapshotT = ExecutionSnapshot[ExecutorContextT]

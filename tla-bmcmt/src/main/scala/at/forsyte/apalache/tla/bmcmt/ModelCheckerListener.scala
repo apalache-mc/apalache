@@ -6,10 +6,10 @@ import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule}
 /**
  * Observe [[SeqModelChecker]]. State changes in model checker state are reported via callbacks.
  */
-trait SeqModelCheckerListener {
+trait ModelCheckerListener {
 
   /**
-   * Call when [[SeqModelChecker]] encounters a counterexample.
+   * Call when the model checker encounters a counterexample.
    *
    * @param rootModule
    *   The checked TLA+ module.

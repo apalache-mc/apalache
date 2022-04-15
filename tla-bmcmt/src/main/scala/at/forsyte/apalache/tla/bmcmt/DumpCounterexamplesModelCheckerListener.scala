@@ -8,7 +8,7 @@ import com.typesafe.scalalogging.LazyLogging
 /**
  * Observer to [[SeqModelChecker]] that dumps counterexamples to files.
  */
-object DumpCounterexamplesSeqModelCheckerListener extends SeqModelCheckerListener with LazyLogging {
+object DumpCounterexamplesModelCheckerListener extends ModelCheckerListener with LazyLogging {
 
   /**
    * Call when [[SeqModelChecker]] encounters a counterexample. Dumps counterexample to files.
