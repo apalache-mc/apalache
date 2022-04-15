@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.search
 
-import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode.{AfterJoin, BeforeJoin, InvariantMode}
 import at.forsyte.apalache.tla.bmcmt.{oopsla19Encoding, CheckerInput, SMTEncoding}
+import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode.{AfterJoin, BeforeJoin, InvariantMode}
 
 object ModelCheckerParams {
 
@@ -17,17 +17,14 @@ object ModelCheckerParams {
 /**
  * A collection of model checker parameters that come from the user configuration.
  *
- * @param stepsBound
- *   Step bound for bounded model-checking, excluding the initial transition introduced by [[PrimingPass]]. E.g.,
- *   `stepsBound=1` includes one actual application of the transition operator (e.g., `Next`)
- *
  * @author
  *   Igor Konnov
  */
 class ModelCheckerParams(
     checkerInput: CheckerInput,
     val stepsBound: Int,
-    tuningOptions: Map[String, String] = Map()) {
+    tuningOptions: Map[String, String] = Map(),
+    val debug: Boolean = true) {
 
   /**
    * If pruneDisabled is set to false, there will be no check of whether a transition is enabled.
