@@ -148,13 +148,19 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
     // If arrays are used, they are initialized here.
     if (cellSort.isInstanceOf[ArraySort[_, _]] && !cell.isUnconstrained) {
-      val arrayInitializer = constantArrayCache.get(cellSort) match {
-        case Some(emptySet) =>
-          z3context.mkEq(const, emptySet._1)
-        case None =>
-          constantArrayCache += (cellSort -> (const, level))
-          z3context.mkEq(const, getOrMkCellDefaultValue(cellSort))
-      }
+      val arrayInitializer =
+        if (cell.cellType.isInstanceOf[InfSetT]) {
+          // Infinite sets are not cached because they are not empty
+          z3context.mkEq(const, getOrMkCellDefaultValue(cellSort, isInfiniteSet = true))
+        } else {
+          constantArrayCache.get(cellSort) match {
+            case Some(emptySet) =>
+              z3context.mkEq(const, emptySet._1)
+            case None =>
+              constantArrayCache += (cellSort -> (const, level))
+              z3context.mkEq(const, getOrMkCellDefaultValue(cellSort))
+          }
+        }
 
       log(s"(assert $arrayInitializer)")
       z3solver.add(arrayInitializer)
@@ -522,6 +528,9 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
           case FinSetT(elemType) if encoding == arraysEncoding =>
             z3context.mkArraySort(getOrMkCellSort(elemType), z3context.getBoolSort)
 
+          case InfSetT(elemType) if encoding == arraysEncoding =>
+            z3context.mkArraySort(getOrMkCellSort(elemType), z3context.getBoolSort)
+
           case PowSetT(domType) if encoding == arraysEncoding =>
             z3context.mkArraySort(getOrMkCellSort(domType), z3context.getBoolSort)
 
@@ -541,7 +550,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     }
   }
 
-  private def getOrMkCellDefaultValue(cellSort: Sort): ExprSort = {
+  private def getOrMkCellDefaultValue(cellSort: Sort, isInfiniteSet: Boolean = false): ExprSort = {
     val sig = "Cell_" + cellSort
     val sort = cellDefaults.get(sig)
     if (sort.isDefined) {
@@ -552,10 +561,17 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       val newDefault: Expr[_1] forSome { type _1 <: Sort } = cellSort match {
         case _: BoolSort =>
           z3context.mkFalse()
+
         case _: IntSort =>
           z3context.mkInt(0)
-        case arraySort: ArraySort[_, _] =>
+
+        case arraySort: ArraySort[_, _] if isInfiniteSet =>
+          // Infinite sets are not cached because they are not empty
+          return z3context.mkConstArray(arraySort.getDomain, z3context.mkTrue()).asInstanceOf[ExprSort]
+
+        case arraySort: ArraySort[_, _] if !isInfiniteSet =>
           z3context.mkConstArray(arraySort.getDomain, getOrMkCellDefaultValue(arraySort.getRange))
+
         case _ =>
           log(s"(declare-const $sig $cellSort)")
           z3context.mkConst(sig, cellSort)
