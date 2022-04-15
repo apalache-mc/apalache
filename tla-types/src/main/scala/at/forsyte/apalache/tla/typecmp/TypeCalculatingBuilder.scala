@@ -1,21 +1,11 @@
 package at.forsyte.apalache.tla.typecmp
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper, TlaFunOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.TlaFunOper
+import at.forsyte.apalache.tla.typecmp.subbuilder.{ArithmeticBuilder, BoolBuilder, ProtoBuilder}
 
-class TypeCalculatingBuilder(sigGen: SignatureGenerator) {
-
-  // Build instruction for the case where the TNT operator has a signature, that is,
-  // it is not overloaded. In that case, we just resolve signatures
-  private def simpleInstruction(oper: TlaOper, nArgs: Int): BuildInstruction =
-    BuildInstruction(oper, sigGen.computationFromSignature(oper, nArgs))
-
-  def plus(x: TlaEx, y: TlaEx): TlaEx = {
-    simpleInstruction(TlaArithOper.plus, 2).build(x, y)
-  }
-
-  def and(args: TlaEx*): TlaEx =
-    BuildInstruction(TlaBoolOper.and, BoolOp.andCmp).build(args: _*)
+class TypeCalculatingBuilder(val sigGen: SignatureGenerator)
+    extends ProtoBuilder with ArithmeticBuilder with BoolBuilder {
 
   def except(
       applicative: TlaEx,

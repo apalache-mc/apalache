@@ -6,9 +6,9 @@ import scala.language.implicitConversions
 
 package object typecmp {
 
-  class TypeComputationException(message: String) extends Exception(message)
+  class TypedBuilderException(message: String) extends Exception(message)
 
-  type typeComputationReturn = Either[TypeComputationException, TlaType1]
+  type typeComputationReturn = Either[TypedBuilderException, TlaType1]
   type typeComputation = Seq[TlaEx] => typeComputationReturn
   type pureTypeComputation = Seq[TlaType1] => typeComputationReturn
 
@@ -18,7 +18,7 @@ package object typecmp {
 
   implicit def liftRet(tt: TlaType1): typeComputationReturn = Right(tt)
 
-  def throwMsg(msg: String): typeComputationReturn = Left(new TypeComputationException(msg))
+  def throwMsg(msg: String): typeComputationReturn = Left(new TypedBuilderException(msg))
 
   // Performs unificaiton on 2 types with a fresh unifier
   def singleUnification(
