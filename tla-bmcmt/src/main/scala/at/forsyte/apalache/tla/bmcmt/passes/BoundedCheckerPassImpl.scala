@@ -18,8 +18,6 @@ import at.forsyte.apalache.tla.pp.NormalizedNames
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
-import java.nio.file.Path
-
 /**
  * The implementation of a bounded model checker with SMT.
  *
