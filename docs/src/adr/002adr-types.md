@@ -338,29 +338,24 @@ Find(Pred(_), es) ==
     ELSE -1
 ```
 
-The following definition declares a (global) recursive function, not an
+The following definition declares a (global) function, not an
 operator. However, the annotation syntax is quite similar to that of the
 operators (note though that we are using `->` instead of `=>`):
 
 ```tla
-\* @type: Set(a) -> Int;
-Card[S \in T] ==
-    IF S = {}
-    THEN 0
-    ELSE LET \* @type: a;
-             \* we could also write: "() => a" instead of just "a"
-             one_elem == (CHOOSE x \in S: TRUE)
-         IN
-         1 + Card[S \ {one_elem}]
+\* @type: (a -> b) -> Int;
+CardDomain[f \in T] ==
+    LET \* @type: Set(a);
+        \* we could also write: "() => Set(a)" instead of just "Set(a)"
+        D == DOMAIN f
+    IN LET \* @type: (Int, Int) => Int;
+           PlusOne(p,q) == p + 1
+    IN FoldSet(PlusOne, 0, D)
 ```
 
-In the definition of `Card`, we annotated the let-definition `one_elem` with its type, though any type checker should be
+In the definition of `CardDomain`, we annotated the let-definition `D` with its type, though any type checker should be
 able to compute the type of
-`one_elem` from its context. So the type of `one_elem` is there for clarification. According to our type grammar, the
-type of `one_elem` should be
-`() => a`, as `one_elem` is an operator. It is not obvious from the syntax:
-TLA+ blends in nullary operators with other names. We have found that LET-definitions without arguments are so common,
-so it is more convenient to write the shorter type annotation, that is, just `a`.
+`D` from its context. So the type of `D` is there for clarification. According to our type grammar, the type of `D` should be `() => Set(a)`, as `D` is an operator. It is not obvious from the syntax: TLA+ blends in nullary operators with other names. We have found that LET-definitions without arguments are so common, so it is more convenient to write the shorter type annotation, that is, just `Set(a)`.
 
 ### 2.3. Dealing with bound variables
 
