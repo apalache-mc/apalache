@@ -292,6 +292,48 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
     assert(result.isEmpty)
   }
 
+  test("unifying records with compatible fields") {
+    val c = VarT1("c")
+    val d = VarT1("d")
+    val rec1 = parser("{ field1: Int, c }")
+    val rec2 = parser("{ field2: Str, d }")
+    val expectedSub = Substitution(
+        EqClass(Set(c.no)) -> parser("(| field2: Str | a100 |)"),
+        EqClass(Set(d.no)) -> parser("(| field1: Int | a100 |)"),
+        EqClass(Set(FIRST_VAR)) -> VarT1(FIRST_VAR),
+    ) ///
+    val result = unifier.unify(Substitution(), rec1, rec2)
+    assert(result.contains((expectedSub, parser("{ field1: Int, field2: Str, a100 }"))))
+  }
+
+  test("unifying a partial record with a complete record") {
+    val c = VarT1("c")
+    val d = VarT1("d")
+    val rec1 = parser("{ field2: c, d }")
+    val rec2 = parser("{ field2: Str, field3: Bool }")
+    val expectedSub = Substitution(
+        EqClass(Set(c.no)) -> parser("Str"),
+        EqClass(Set(d.no)) -> parser("(| field3: Bool |)"),
+    ) ///
+    val result = unifier.unify(Substitution(), rec1, rec2)
+    assert(result.contains((expectedSub, parser("{ field2: Str, field3: Bool }"))))
+  }
+
+  test("unifying an extra field with a complete record") {
+    val c = VarT1("c")
+    val rec1 = parser("{ field1: Int, c }")
+    val rec2 = parser("{ field2: Str, field3: Bool }")
+    val result = unifier.unify(Substitution(), rec1, rec2)
+    assert(result.isEmpty)
+  }
+
+  test("unifying records with an incompatible field") {
+    val rec1 = parser("{ field1: Int }")
+    val rec2 = parser("{ field1: Str }")
+    val result = unifier.unify(Substitution(), rec1, rec2)
+    assert(result.isEmpty)
+  }
+
   // regression
   test("merge equivalence classes of a -> b, b -> a") {
     val expectedSub = Substitution(EqClass(Set(0, 1)) -> VarT1(0))
