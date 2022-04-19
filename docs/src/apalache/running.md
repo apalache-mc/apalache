@@ -12,7 +12,7 @@ The model checker can be run as follows:
 $ apalache-mc check [--config=filename] [--init=Init] [--cinit=ConstInit] \
     [--next=Next] [--inv=Inv] [--length=10] [--algo=(incremental|offline)] \
     [--discard-disabled] [--no-deadlock] \
-    [--tuning-options-file=filename] [--tuning-options=key1=val1:...:keyn=valn] \
+    [--tuning-options-file=filename] [--tune-here=options] \
     [--smt-encoding=(oopsla19|arrays)] \
     [--out-dir=./path/to/dir] \
     [--write-intermediate=(true|false)] \
@@ -24,7 +24,7 @@ $ apalache-mc check [--config=filename] [--init=Init] [--cinit=ConstInit] \
 The arguments are as follows:
 
 * General parameters:
-    - `--config` specifies the [TLC configuration file](./tlc-config.md)
+    - `--config` specifies the [TLC configuration file](./tlc-config.md), the default name is `<myspec>.cfg`
     - `--init` specifies the initialization predicate, *`Init` by default*
     - `--next` specifies the transition predicate, *`Next` by default*
     - `--cinit` specifies the constant initialization predicate, *optional*
@@ -47,8 +47,6 @@ The arguments are as follows:
       deadlocks are found in any case.
     - `--tuning-options-file` specifies a properties file that stores options for
       [fine tuning](tuning.md)
-    - `--tuning-options` can pass and/or override these [fine tuning](tuning.md)
-      options on the command line
     - `--out-dir` set location for outputting any generated logs or artifacts,
       *`./_apalache-out` by default*
     - `--write-intermediate` if `true`, then additional output is generated. See
@@ -62,7 +60,9 @@ The arguments are as follows:
       is set to `True`.  Setting `profiling` to `False` is incompatible with the
       `--smtprof` flag. The default is `False`.
 
-Options passed with `--tuning-options` have priority over options passed with `--tuning-options-file`.
+
+      The options that are passed with the option `--tuning-options`
+      have priority over the options that are passed with the option `--tuning`.
 
 If an initialization predicate, transition predicate, or invariant is specified both in the configuration file, and on
 the command line, the command line parameters take precedence over those in the configuration file.
