@@ -334,8 +334,8 @@ unprimed names, and the successor-state, the variables of which are referenced
 by primed names.
 
 The expression `isTerminated' = TRUE` means that only states where
-`isTerminated` equals to `TRUE` can be successors of the current state. In
-general, `isTerminated'` could also odepend on the value of `isTerminated`, but
+`isTerminated` equals `TRUE` can be successors of the current state. In
+general, `isTerminated'` could also depend on the value of `isTerminated`, but
 here, it does not. Likewise, `returnValue' = -(low + 1)` means that
 `returnValue` has the value `-(low + 1)` in the next state. The expression
 `UNCHANGED <<low, high>>` is a convenient shortcut for writing `low' = low /\
@@ -396,7 +396,7 @@ we will stick to tool-agnostic TLA+ syntax.
 To this end, we add a new file `MC2_8.tla` with the following contents:
 
 ```tla
-{{#include ../../../test/tla/bin-search/MC2_8.tla:1:24}}
+{{#include ../../../test/tla/bin-search/MC2_8.tla}}
 ```
 
 As you can see, we fix the values of all parameters. We are instantiating
@@ -1013,7 +1013,7 @@ State1 ==
 ```
 
 In state 1, we have `low + high = 116 + 59 > 2^7`. Since we have `INT_WIDTH
-= 7`, we have `IAdd(116, 59) = -81`.
+= 8`, we have `IAdd(116, 59) = -81`.
 
 ## Step 9: Fixing the access bug
 
