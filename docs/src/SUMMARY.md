@@ -38,7 +38,7 @@
 - [TLC Configuration Files](./apalache/tlc-config.md)
 - [The Snowcat Type Checker](./apalache/typechecker-snowcat.md)
 - [Supported Features](./apalache/features.md)
-- [Recursive operators and functions](./apalache/principles/recursive.md)
+- [Obsolete: Recursive operators and functions](./apalache/principles/recursive.md)
 - [Known Issues](./apalache/known-issues.md)
 - [Antipatterns](./apalache/antipatterns.md)
 - [TLA+ Preprocessing](./apalache/preprocessing.md)

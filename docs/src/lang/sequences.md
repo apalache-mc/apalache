@@ -473,7 +473,6 @@ to `TRUE`.
 It is much easier to describe the effect of `SelectSeq` in words than to
 give a precise sequence of steps. See **Examples**.
 
-_One cannot pass the names of built-in operators by name. Use a LAMBDA or local LET-IN instead._
 
 **Determinism:** Deterministic.
 
