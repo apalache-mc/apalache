@@ -177,18 +177,60 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
           .contains((expected, OperT1(Seq(VarT1(1000)), VarT1(1000)))))
   }
 
-  test("unifying rows") {
+  test("unifying two partial rows") {
     val c = VarT1("c")
     val d = VarT1("d")
     val fresh = VarT1(FIRST_VAR)
-    val row1 = RowT1(c, "field1" -> IntT1(), "field2" -> StrT1())
-    val row2 = RowT1(d, "field3" -> BoolT1())
+    val row1 = parser("(| field1: Int | field2: Str | c |)")
+    val row2 = parser("(| field3: Bool | d |)")
     val expectedSub = Substitution(
         EqClass(Set(c.no)) -> RowT1(fresh, "field3" -> BoolT1()),
         EqClass(Set(d.no)) -> RowT1(fresh, "field1" -> IntT1(), "field2" -> StrT1()),
+        EqClass(Set(fresh.no)) -> fresh,
     ) ///
     val result = unifier.unify(Substitution(), row1, row2)
-    assert(result.contains((expectedSub, parser("{ field1: Int, field2: Str, field3: Bool, e }"))))
+    assert(result.contains((expectedSub, parser("(| field1: Int | field2: Str | field3: Bool | %s |)".format(fresh)))))
+  }
+
+  test("unifying a partial row + a complete row") {
+    val d = VarT1("d")
+    val row1 = parser("(| field2: Str | d |)")
+    val row2 = parser("(| field1: Int | field2: Str | field3: Bool |)")
+    val expectedSub = Substitution(
+        EqClass(Set(d.no)) -> parser("(| field1: Int | field3: Bool |)")
+    ) ///
+    val result = unifier.unify(Substitution(), row1, row2)
+    assert(result.contains((expectedSub, parser("(| field1: Int | field2: Str | field3: Bool |)"))))
+  }
+
+  test("unifying a complete row + a partial row") {
+    val d = VarT1("d")
+    val row1 = parser("(| field1: Int | field2: Str |)")
+    val row2 = parser("(| field2: Str | d |)")
+    val expectedSub = Substitution(
+        EqClass(Set(d.no)) -> parser("(| field1: Int |)")
+    ) ///
+    val result = unifier.unify(Substitution(), row1, row2)
+    assert(result.contains((expectedSub, parser("(| field1: Int | field2: Str |)"))))
+  }
+
+  test("unifying two rows with variables") {
+    val c = VarT1("c")
+    val d = VarT1("d")
+    val row1 = parser("(| c |)")
+    val row2 = parser("(| d |)")
+    val expectedSub = Substitution(
+        EqClass(Set(c.no, d.no)) -> c
+    ) ///
+    val result = unifier.unify(Substitution(), row1, row2)
+    assert(result.contains((expectedSub, parser("(| c |)"))))
+  }
+
+  test("unifying two complete rows") {
+    val row1 = parser("(| field1: Int | field2: Str |)")
+    val row2 = parser("(| field3: Bool |)")
+    val result = unifier.unify(Substitution(), row1, row2)
+    assert(result.isEmpty)
   }
 
   // regression
