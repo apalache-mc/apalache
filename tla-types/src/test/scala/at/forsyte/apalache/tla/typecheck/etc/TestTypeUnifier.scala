@@ -177,6 +177,38 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
           .contains((expected, OperT1(Seq(VarT1(1000)), VarT1(1000)))))
   }
 
+  test("unifying an empty row with a non-empty") {
+    val d = VarT1("d")
+    val row1 = parser("(| |)")
+    val row2 = parser("(| d |)")
+    val expectedSub = Substitution(
+        EqClass(Set(d.no)) -> RowT1()
+    ) ///
+    val result = unifier.unify(Substitution(), row1, row2)
+    assert(result.contains((expectedSub, parser("(| |)"))))
+  }
+
+  test("unifying an empty row with a var") {
+    val d = VarT1("d")
+    val row1 = parser("(| |)")
+    val row2 = parser("(| field1: Int |)")
+    val result = unifier.unify(Substitution(), row1, row2)
+    assert(result.isEmpty)
+  }
+
+  test("unifying a single var with a single field + var") {
+    val c = VarT1("c")
+    val d = VarT1("d")
+    val row1 = parser("(| c |)")
+    val row2 = parser("(| field1: Int | d |)")
+    val expectedSub = Substitution(
+        EqClass(Set(c.no)) -> parser("(| field1: Int | d |)"),
+        EqClass(Set(d.no)) -> d,
+    ) ///
+    val result = unifier.unify(Substitution(), row1, row2)
+    assert(result.contains((expectedSub, parser("(| field1: Int | d |)"))))
+  }
+
   test("unifying two partial rows") {
     val c = VarT1("c")
     val d = VarT1("d")
@@ -226,9 +258,36 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
     assert(result.contains((expectedSub, parser("(| c |)"))))
   }
 
+  test("unifying two rows with incompatible variables") {
+    val c = VarT1("c")
+    val d = VarT1("d")
+    val row1 = parser("(| c |)")
+    val row2 = parser("(| d |)")
+    val inputSub = Substitution(
+        EqClass(c.no) -> parser("(| field1: Int |)"),
+        EqClass(d.no) -> parser("(| field1: Bool |)"),
+    )
+    val result = unifier.unify(inputSub, row1, row2)
+    assert(result.isEmpty)
+  }
+
   test("unifying two complete rows") {
     val row1 = parser("(| field1: Int | field2: Str |)")
     val row2 = parser("(| field3: Bool |)")
+    val result = unifier.unify(Substitution(), row1, row2)
+    assert(result.isEmpty)
+  }
+
+  test("unifying rows with an incompatible field") {
+    val row1 = parser("(| field1: Int |)")
+    val row2 = parser("(| field1: Str |)")
+    val result = unifier.unify(Substitution(), row1, row2)
+    assert(result.isEmpty)
+  }
+
+  test("unifying rows that have disjoint fields and a shared one") {
+    val row1 = parser("(| shared: Bool | field1: Int |)")
+    val row2 = parser("(| shared: Bool | field2: Str |)")
     val result = unifier.unify(Substitution(), row1, row2)
     assert(result.isEmpty)
   }
