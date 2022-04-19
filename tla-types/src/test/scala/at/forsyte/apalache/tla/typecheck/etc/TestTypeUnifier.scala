@@ -320,7 +320,6 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
   }
 
   test("unifying an extra field with a complete record") {
-    val c = VarT1("c")
     val rec1 = parser("{ field1: Int, c }")
     val rec2 = parser("{ field2: Str, field3: Bool }")
     val result = unifier.unify(Substitution(), rec1, rec2)
@@ -331,6 +330,61 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
     val rec1 = parser("{ field1: Int }")
     val rec2 = parser("{ field1: Str }")
     val result = unifier.unify(Substitution(), rec1, rec2)
+    assert(result.isEmpty)
+  }
+
+  test("unifying variants with compatible fields") {
+    val c = VarT1("c")
+    val d = VarT1("d")
+    val variant1 = parser("""{ tag: "tag1", field1: Int } | c""")
+    val variant2 = parser("""{ tag: "tag2", field2: Str } | d""")
+    val expectedSub = Substitution(
+        EqClass(Set(c.no)) -> parser("""(| tag2: { tag: Str, field2: Str } | a100 |)"""),
+        EqClass(Set(d.no)) -> parser("""(| tag1: { tag: Str, field1: Int } | a100 |)"""),
+        EqClass(Set(FIRST_VAR)) -> VarT1(FIRST_VAR),
+    ) ///
+    val result = unifier.unify(Substitution(), variant1, variant2)
+    val expectedType = parser("""{ tag: "tag1", field1: Int } | { tag: "tag2", field2: Str } | a100""")
+    assert(result.contains((expectedSub, expectedType)))
+  }
+
+  test("unifying a variant with a variable") {
+    val c = VarT1("c")
+    val d = VarT1("d")
+    val variant1 = parser("""Variant(c)""")
+    val variant2 = parser("""{ tag: "tag2", field2: Str } | d""")
+    val expectedSub = Substitution(
+        EqClass(Set(c.no)) -> parser("""(| tag2: { tag: Str, field2: Str } | d |)"""),
+        EqClass(Set(d.no)) -> d,
+    ) ///
+    val result = unifier.unify(Substitution(), variant1, variant2)
+    val expectedType = parser("""{ tag: "tag2", field2: Str } | d""")
+    assert(result.contains((expectedSub, expectedType)))
+  }
+
+  test("unifying variants with different types assigned to the same key") {
+    // ADR-014 requires the following test to fail.
+    // However, we do not enforce that yet.
+    val c = VarT1("c")
+    val d = VarT1("d")
+    val variant1 = parser("""{ tag: "tag1", field1: Int } | c""")
+    val variant2 = parser("""{ tag: "tag2", field1: Str } | d""")
+    val expectedSub = Substitution(
+        EqClass(Set(c.no)) -> parser("""(| tag2: { tag: Str, field1: Str } | a100 |)"""),
+        EqClass(Set(d.no)) -> parser("""(| tag1: { tag: Str, field1: Int } | a100 |)"""),
+        EqClass(Set(FIRST_VAR)) -> VarT1(FIRST_VAR),
+    ) ///
+    val result = unifier.unify(Substitution(), variant1, variant2)
+    val expectedType = parser("""{ tag: "tag1", field1: Int } | { tag: "tag2", field1: Str } | a100""")
+    assert(result.contains((expectedSub, expectedType)))
+  }
+
+  test("unifying variants with incompatible fields") {
+    val c = VarT1("c")
+    val d = VarT1("d")
+    val variant1 = parser("""{ tag: "tag1", field1: Int }""")
+    val variant2 = parser("""{ tag: "tag2", field2: Str }""")
+    val result = unifier.unify(Substitution(), variant1, variant2)
     assert(result.isEmpty)
   }
 
