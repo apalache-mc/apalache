@@ -1,7 +1,8 @@
 # How to write type annotations
 
 **Warning:** *This HOWTO discusses how to write type annotations for the new
-type checker [Snowcat][], which is used in Apalache since version 0.15.0.*
+type checker [Snowcat][], which is used in Apalache since version 0.15.0.
+Note that the example specification uses recursive operators, which were removed in version 0.23.1.*
 
 This HOWTO gives you concrete steps to extend TLA+ specifications with type
 annotations. You can find the detailed syntax of type annotations in
