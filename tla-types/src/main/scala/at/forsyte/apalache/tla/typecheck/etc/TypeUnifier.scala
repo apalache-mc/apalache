@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.lir._
 
+import scala.annotation.tailrec
 import scala.collection.immutable.SortedMap
 
 /**
@@ -226,6 +227,7 @@ class TypeUnifier(varPool: TypeVarPool) {
   }
 
   // unify two rows
+  @tailrec
   private def unifyRows(
       lfields: SortedMap[String, TlaType1],
       rfields: SortedMap[String, TlaType1],
@@ -235,7 +237,7 @@ class TypeUnifier(varPool: TypeVarPool) {
     def asRow: Option[TlaType1] => Option[RowT1] = {
       case Some(r @ RowT1(_, _)) => Some(r)
       case Some(v @ VarT1(_))    => Some(RowT1(v))
-      case Some(tp)              => throw new IllegalStateException("Expected RowT1(_, _), found: " + tp)
+      case Some(tp)              => throw new IllegalStateException("Expected RowT1(_, _) or VarT1(_), found: " + tp)
       case None                  => None
     }
 
@@ -244,7 +246,7 @@ class TypeUnifier(varPool: TypeVarPool) {
       // the base case
       (lvar, rvar) match {
         case (None, None) =>
-          if (rfields.isEmpty) None else Some(RowT1())
+          if (rfields.nonEmpty) None else Some(RowT1())
 
         case (Some(lv), Some(rv)) =>
           if (rfields.isEmpty) {
@@ -269,8 +271,8 @@ class TypeUnifier(varPool: TypeVarPool) {
       // the symmetric case above
       unifyRows(rfields, lfields, rvar, lvar)
     } else {
-      val sharedFields = lfields.keySet.intersect(rfields.keySet)
-      if (sharedFields.isEmpty) {
+      val sharedFieldNames = lfields.keySet.intersect(rfields.keySet)
+      if (sharedFieldNames.isEmpty) {
         // The easy case: no shared fields.
         // The left row is   (| lfields | lvar |).
         // The right row is  (| rfields | rvar |).
@@ -289,19 +291,19 @@ class TypeUnifier(varPool: TypeVarPool) {
           asRow(Some(Substitution(solution).sub(RowT1(lfields, lvar))._1))
         }
       } else {
-        // the hard case: some fields are shared
-        val lfieldsUniq = lfields.filter(p => !sharedFields.keySet.contains(p._1))
-        val rfieldsUniq = rfields.filter(p => !sharedFields.keySet.contains(p._1))
+        // the general case: some fields are shared
+        val lfieldsUniq = lfields.filter(p => !sharedFieldNames.keySet.contains(p._1))
+        val rfieldsUniq = rfields.filter(p => !sharedFieldNames.keySet.contains(p._1))
         // Unify the disjoint fields and tail variables, see the above case
         compute(RowT1(lfieldsUniq, lvar), RowT1(rfieldsUniq, rvar)) match {
           case Some(RowT1(disjointFields, tailVar)) =>
             // unify the shared fields, if possible
-            val unifiedSharedFields = sharedFields.map(key => (key, compute(lfields(key), rfields(key))))
+            val unifiedSharedFields = sharedFieldNames.map(key => (key, compute(lfields(key), rfields(key))))
             if (unifiedSharedFields.exists(_._2.isEmpty)) {
               None
             } else {
-              val sharedMap = SortedMap(unifiedSharedFields.map(p => (p._1, p._2.get)).toSeq: _*)
-              Some(RowT1(sharedMap ++ disjointFields, tailVar))
+              val finalSharedFields = SortedMap(unifiedSharedFields.map(p => (p._1, p._2.get)).toSeq: _*)
+              Some(RowT1(finalSharedFields ++ disjointFields, tailVar))
             }
 
           case _ => None
