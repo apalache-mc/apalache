@@ -367,7 +367,7 @@ object Tool extends LazyLogging {
     def parseKeyValue(text: String): (String, String) = {
       val parts = text.split('=')
       if (parts.length != 2 || parts.head.trim == "" || parts(1) == "") {
-        throw new PassOptionException(s"Expected key=value in --tune-here=$propsAsString")
+        throw new PassOptionException(s"Expected key=value in --tuning-options=$propsAsString")
       } else {
         // trim to remove surrounding whitespace from the key, but allow the value to have white spaces
         (parts.head.trim, parts(1))
