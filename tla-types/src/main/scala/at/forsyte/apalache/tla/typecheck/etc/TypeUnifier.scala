@@ -220,6 +220,9 @@ class TypeUnifier(varPool: TypeVarPool) {
       case (RowT1(lfields, lv), RowT1(rfields, rv)) =>
         unifyRows(lfields, rfields, lv, rv)
 
+      case (RecRowT1(RowT1(lfields, lv)), RecRowT1(RowT1(rfields, rv))) =>
+        unifyRows(lfields, rfields, lv, rv).map(t => RecRowT1(t))
+
       // everything else does not unify
       case _ =>
         None // no unifier
