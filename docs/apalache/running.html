@@ -176,7 +176,7 @@ will submit anonymized statistics to
 <code>tlapl.us</code>. See the details in <a href="./statistics.html">TLA+ Anonymized Execution Statistics</a>.</p>
 <h2><a class="header" href="#model-checker-command-line-parameters" id="model-checker-command-line-parameters">Model checker command-line parameters</a></h2>
 <p>The model checker can be run as follows:</p>
-<pre><code class="language-bash">$ apalache check [--config=filename] [--init=Init] [--cinit=ConstInit] \
+<pre><code class="language-bash">$ apalache-mc check [--config=filename] [--init=Init] [--cinit=ConstInit] \
     [--next=Next] [--inv=Inv] [--length=10] [--algo=(incremental|offline)] \
     [--discard-disabled] [--no-deadlock] \
     [--tuning=filename] [--tune-here=options] \
@@ -311,12 +311,12 @@ usually called <code>TypeOK</code>.</p>
 <ul>
 <li>
 <p><strong>IndInit</strong>: Check that the initial states satisfy <code>IndInv</code>:</p>
-<pre><code class="language-bash">$ apalache check --init=Init --inv=IndInv --length=0 &lt;myspec&gt;.tla
+<pre><code class="language-bash">$ apalache-mc check --init=Init --inv=IndInv --length=0 &lt;myspec&gt;.tla
 </code></pre>
 </li>
 <li>
 <p><strong>IndNext</strong>: Check that <code>Next</code> does not drive us outside of <code>IndInv</code>:</p>
-<pre><code class="language-bash">$ apalache check --init=IndInv --inv=IndInv --length=1 &lt;myspec&gt;.tla
+<pre><code class="language-bash">$ apalache-mc check --init=IndInv --inv=IndInv --length=1 &lt;myspec&gt;.tla
 </code></pre>
 </li>
 </ul>
@@ -326,7 +326,7 @@ safety predicate <code>Safety</code>, you have to run Apalache once again:</p>
 <ul>
 <li>
 <p><strong>IndProp</strong>: Check that all states captured with <code>IndInv</code> satisfy the predicate <code>Safety</code>:</p>
-<pre><code class="language-bash">$ apalache check --init=IndInv --inv=Safety --length=0 &lt;myspec&gt;.tla
+<pre><code class="language-bash">$ apalache-mc check --init=IndInv --inv=Safety --length=0 &lt;myspec&gt;.tla
 </code></pre>
 </li>
 </ul>
@@ -336,21 +336,21 @@ Then you would have to check the queries IndInit, IndNext, and IndProp again.</p
 <h2><a class="header" href="#examples" id="examples">Examples</a></h2>
 <h3><a class="header" href="#checking-safety-up-to-20-steps" id="checking-safety-up-to-20-steps">Checking safety up to 20 steps</a></h3>
 <pre><code class="language-bash">$ cd test/tla
-$ apalache check --length=20 --inv=Safety y2k_override.tla
+$ apalache-mc check --length=20 --inv=Safety y2k_override.tla
 </code></pre>
 <p>This command checks, whether <code>Safety</code> can be violated in 20 specification steps. If <code>Safety</code> is not violated, your spec
 might still have a bug that requires a computation longer than 20 steps to manifest.</p>
 <h3><a class="header" href="#checking-an-inductive-invariant-1" id="checking-an-inductive-invariant-1">Checking an inductive invariant:</a></h3>
 <pre><code class="language-bash">$ cd test/tla
-$ apalache check --length=0 --init=Init --inv=Inv y2k_override.tla
-$ apalache check --length=1 --init=Inv  --inv=Inv y2k_override.tla
+$ apalache-mc check --length=0 --init=Init --inv=Inv y2k_override.tla
+$ apalache-mc check --length=1 --init=Inv  --inv=Inv y2k_override.tla
 </code></pre>
 <p>The first call to apalache checks, whether the initial states satisfy the invariant. The second call to apalache checks,
 whether a single specification step satisfies the invariant, when starting in a state that satisfies the invariant. (
 That is why these invariants are called inductive.)</p>
 <h3><a class="header" href="#using-a-constant-initializer" id="using-a-constant-initializer">Using a constant initializer:</a></h3>
 <pre><code class="language-bash">$ cd test/tla
-apalache check --cinit=ConstInit --length=20 --inv=Safety y2k_cinit.tla
+apalache-mc check --cinit=ConstInit --length=20 --inv=Safety y2k_cinit.tla
 </code></pre>
 <p>This command checks, whether <code>Safety</code> can be violated in 20 specification steps. The constants are initialized with the
 predicate
@@ -429,7 +429,7 @@ be expanded.</li>
 <h2><a class="header" href="#parsing-and-pretty-printing" id="parsing-and-pretty-printing">Parsing and pretty-printing</a></h2>
 <p>If you'd like to check that your TLA+ specification is syntactically correct, without running the model checker, you can
 run the following command:</p>
-<pre><code class="language-bash">$ apalache parse &lt;myspec&gt;.tla
+<pre><code class="language-bash">$ apalache-mc parse &lt;myspec&gt;.tla
 </code></pre>
 <p>In this case, Apalache performs the following steps:</p>
 <ol>
@@ -448,7 +448,7 @@ the output directory (see <a href="#detailed">Detailed output</a>).</p>
 </ol>
 <p>You can also write output to a specified location by using the <code>--output</code> flag.
 E.g.,</p>
-<pre><code class="language-bash">$ apalache parse --output=result.json &lt;myspec&gt;.tla
+<pre><code class="language-bash">$ apalache-mc parse --output=result.json &lt;myspec&gt;.tla
 </code></pre>
 <p>will write the IR to the file <code>result.json</code>.</p>
 

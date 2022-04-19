@@ -198,13 +198,16 @@ HCnxt  ==  hr' = IF hr # 12 THEN hr + 1 ELSE 1
 HC  ==  HCini /\ [][HCnxt]_hr
 
 TypeOK == hr \in (1 .. 12)
+--------------------------------------------------------------
+THEOREM  HC =&gt; []HCini
+==============================================================
 </code></pre>
 <p>Without thinking much about the types, run the type checker:</p>
-<pre><code class="language-sh">$ apalache typecheck HourClock.tla
+<pre><code class="language-sh">$ apalache-mc typecheck HourClock.tla
 </code></pre>
 <p>The type checker complains about not knowing the type of the variable <code>hr</code>:</p>
 <pre><code>...
-[HourClock.tla:6:12-6:13]: Undefined name hr. Introduce a type annotation.
+Typing input error: Expected a type annotation for VARIABLE hr
 ...
 </code></pre>
 <p>Annotate the type of variable <code>hr</code> as below. Note carefully that the type
@@ -216,7 +219,11 @@ In this case, you have to write one type annotation per name.</p>
   hr
 </code></pre>
 <p>Run the type checker again. You should see the following message:</p>
-<pre><code> &gt; Your types are great!
+<pre><code>...
+ &gt; Running Snowcat .::.
+ &gt; Your types are purrfect!
+ &gt; All expressions are typed
+...
 </code></pre>
 <h2><a class="header" href="#recipe-2-annotating-constants" id="recipe-2-annotating-constants">Recipe 2: Annotating constants</a></h2>
 <p>Consider the example <a href="https://github.com/tlaplus/Examples/blob/master/specifications/SpecifyingSystems/FIFO/Channel.tla">Channel.tla</a> from <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>:</p>
@@ -248,10 +255,10 @@ THEOREM Spec =&gt; []TypeInvariant
 
 </code></pre>
 <p>Run the type checker:</p>
-<pre><code class="language-sh">$ apalache typecheck Channel.tla
+<pre><code class="language-sh">$ apalache-mc typecheck Channel.tla
 </code></pre>
 <p>The type checker does not know the type of the variable <code>chan</code>:</p>
-<pre><code>[Channel.tla:6:20-6:23]: Undefined name chan. Introduce a type annotation.
+<pre><code>Typing input error: Expected a type annotation for VARIABLE chan
 </code></pre>
 <p>According to <code>TypeInvariant</code>, the variable <code>chan</code> is a record that has three
 fields: <code>val</code>, <code>rdy</code>, and <code>ack</code>. The field <code>val</code> ranges over a set <code>Data</code>,
@@ -273,7 +280,9 @@ VARIABLE
 declare several constants at once. In this case, you have to write one type
 annotation per name.</p>
 <p>Run the type checker again. You should see the following message:</p>
-<pre><code> &gt; Your types are great!
+<pre><code>&gt; Running Snowcat .::.
+&gt; Your types are purrfect!
+&gt; All expressions are typed 
 </code></pre>
 <h2><a class="header" href="#recipe-3-annotating-operators" id="recipe-3-annotating-operators">Recipe 3: Annotating operators</a></h2>
 <p>Check the example <a href="https://github.com/tlaplus/Examples/blob/master/specifications/CarTalkPuzzle/CarTalkPuzzle.tla">CarTalkPuzzle.tla</a> from the repository of TLA+
@@ -281,14 +290,14 @@ examples. This example has 160 lines of code, so we do not inline it here.
 By running the type checker as in previous sections, you should figure out
 that the constants <code>N</code> and <code>P</code> should be annotated with the type <code>Int</code>.
 Annotate <code>N</code> and <code>P</code> with <code>Int</code> and run the type checker:</p>
-<pre><code class="language-sh">$ apalache typecheck CarTalkPuzzle.tla
+<pre><code class="language-sh">$ apalache-mc typecheck CarTalkPuzzle.tla
 </code></pre>
 <p>Now you should see the following error:</p>
-<pre><code>[CarTalkPuzzle.tla:57:9-57:12]: Need annotation. Arguments match
-2 operator signatures: (((a56 -&gt; a57), a56) =&gt; a57) and ((Seq(a56), Int) =&gt; a56)
+<pre><code>[CarTalkPuzzle.tla:52:32-52:35]: Cannot apply f to the argument x() in f[x()].
+[CarTalkPuzzle.tla:50:1-52:53]: Error when computing the type of Sum
 </code></pre>
 <p>Although the error message may look confusing, the reason is simple: The type
-checker cannot figure out, whether the operator <code>Sum</code> expects a sequence
+checker cannot figure out whether the operator <code>Sum</code> expects a sequence
 or a function of integers as its first parameter. By looking carefully at
 the definition of <code>Sum</code>, we can see that it expects: (1) a function from
 integers to integers as its first parameter, (2) a set of integers
@@ -303,8 +312,8 @@ Sum(f,S) ==
 the definition of <code>Sum</code>. This might change later, see <a href="https://github.com/tlaplus/tlaplus/issues/578">Issue 578</a> at tlaplus.</p>
 <p>After providing the type checker with the annotation for <code>Sum</code>, we get one
 more type error:</p>
-<pre><code>[CarTalkPuzzle.tla:172:23-172:26]: Need annotation. Arguments match
-2 operator signatures: (((p -&gt; q), p) =&gt; q) and ((Seq(p), Int) =&gt; p)
+<pre><code>[CarTalkPuzzle.tla:160:23-160:26]: Cannot apply B to the argument x in B[x].
+[CarTalkPuzzle.tla:160:7-160:37]: Error when computing the type of Image
 </code></pre>
 <p>This time the type checker cannot choose between two options for the second
 parameter of <code>Image</code>: It could be a function, or a sequence. We help the
@@ -314,11 +323,16 @@ of integers to integers, that is, <code>Int -&gt; Int</code>:</p>
       Image(S, B) == {B[x] : x \in S}
 </code></pre>
 <p>This time the type checker can find the types of all expressions:</p>
-<pre><code> &gt; Your types are great!
+<pre><code>...
+&gt; Running Snowcat .::.
+&gt; Your types are purrfect!
+&gt; All expressions are typed 
+...
 </code></pre>
 <h2><a class="header" href="#recipe-4-annotating-records" id="recipe-4-annotating-records">Recipe 4: Annotating records</a></h2>
-<p>Check the example <a href="https://github.com/tlaplus/Examples/blob/master/specifications/transaction_commit/TwoPhase.tla">TwoPhase.tla</a> from the repository of TLA+ examples. This
-example has 176 lines of code, so we do not inline it here.</p>
+<p>Check the example <a href="https://github.com/tlaplus/Examples/blob/master/specifications/transaction_commit/TwoPhase.tla">TwoPhase.tla</a> from the repository of TLA+ examples (you will also need <a href="https://github.com/tlaplus/Examples/blob/master/specifications/transaction_commit/TCommit.tla">TCommit.tla</a>, which
+is imported by TwoPhase.tla).
+This example has 176 lines of code, so we do not inline it here.</p>
 <p>As you probably expected, the type checker complains about not knowing
 the types of constants and variables. As for constant <code>RM</code>, we opt for using
 an uninterpreted type that we call <code>RM</code>. That is:</p>
@@ -334,7 +348,7 @@ an uninterpreted type that we call <code>RM</code>. That is:</p>
   \* @type: Str;
   tmState,
   \* @type: Set(RM);
-  tmPrepared
+  tmPrepared,
 </code></pre>
 <p>The type of the variable <code>msgs</code> is less obvious. We can check the definitions
 of <code>TPTypeOK</code> and <code>Message</code> to get the idea about the type of <code>msgs</code>:</p>
@@ -384,8 +398,9 @@ IsSolution(queens) == ...
 vars == &lt;&lt;todo,sols&gt;&gt;
 </code></pre>
 <p>Now we run the type checker and receive the following type error:</p>
-<pre><code>[Queens.tla:47:21-47:38]: Mismatch in argument types.
-Expected: ((Seq(Int)) =&gt; Bool)
+<pre><code>[Queens.tla:35:44-35:61]: The operator IsSolution of type ((Seq(Int)) =&gt; Bool) is applied to arguments of incompatible types in IsSolution(queens):
+Argument queens should have type Seq(Int) but has type (Int -&gt; Int). E@11:07:53.285
+[Queens.tla:35:1-35:63]: Error when computing the type of Solutions
 </code></pre>
 <p>Let's have a closer look at the problematic operator definition of <code>Solutions</code>:</p>
 <pre><code class="language-tla">Solutions ==
@@ -402,11 +417,13 @@ apply the operator <code>FunAsSeq</code> as follows:</p>
 <pre><code class="language-tla">EXTENDS Naturals, Sequences, Apalache
 ...
 Solutions ==
-  LET Queens == { queens \in [1..N -&gt; 1..N] : FunAsSeq(queens, N) } IN
-  { FunAsSeq(queens, N): queens \in Queens }
+  LET Queens == { FunAsSeq(queens, N, N): queens \in  [1..N -&gt; 1..N] } IN
+  {queens \in Queens : IsSolution(queens)}
 </code></pre>
 <p>This time the type checker can find the types of all expressions:</p>
-<pre><code> &gt; Your types are great!
+<pre><code>&gt; Running Snowcat .::.
+&gt; Your types are purrfect!
+&gt; All expressions are typed
 </code></pre>
 <p><a id="typeAliases"></a></p>
 <h2><a class="header" href="#recipe-6-type-aliases" id="recipe-6-type-aliases">Recipe 6: type aliases</a></h2>

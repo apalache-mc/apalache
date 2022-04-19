@@ -192,43 +192,38 @@ two specification files: <a href="https://github.com/tlaplus/Examples/blob/911da
 <h2><a class="header" href="#step-1-running-snowcat" id="step-1-running-snowcat">Step 1: Running Snowcat</a></h2>
 <p>Before we start writing any type annotations, let's run the type checker and
 see, whether it complains:</p>
-<pre><code class="language-sh">$ apalache typecheck TwoPhase.tla
+<pre><code class="language-sh">$ apalache-mc typecheck TwoPhase.tla
 </code></pre>
 <p>The tool output is a bit verbose. Below, you can see the important lines of the
 output:</p>
 <pre><code>...
 PASS #1: TypeCheckerSnowcat
- &gt; Running Snowcat .::.
-[TwoPhase.tla:51:30-51:31]: Undefined name RM. Introduce a type annotation.
- &gt; Snowcat asks you to fix the types. Meow.
+ &gt; Running Snowcat .::.                                           
+Typing input error: Expected a type annotation for VARIABLE tmPrepared
 ... 
 </code></pre>
-<h2><a class="header" href="#step-2-annotating-rm" id="step-2-annotating-rm">Step 2: Annotating RM</a></h2>
-<p>In Step 1, Snowcat complained about the name <code>RM</code>. The reason
-for that is very simple: Snowcat does type analysis for each declaration in
-isolation. Hence, it failed, as soon as it met a reference to the constant
-<code>RM</code> in the definition of <code>Message</code>:</p>
-<pre><code class="language-tla">CONSTANT RM \* The set of resource managers
-...
-
-Message ==
-  ...
-  [type : {&quot;Prepared&quot;}, rm : RM]  \union  [type : {&quot;Commit&quot;, &quot;Abort&quot;}]
-</code></pre>
-<p>Indeed, we have not introduced a type annotation for the constant <code>RM</code>, so the
-type checker cannot use any meaningful type in the context of the above
-expression.</p>
-<p>From the comment next to the declaration of <code>RM</code>, we see that <code>RM</code> is supposed
-to be a set of resource managers. We have plenty of choices here of what a
+<h2><a class="header" href="#step-2-annotating-tmprepared" id="step-2-annotating-tmprepared">Step 2: Annotating tmPrepared</a></h2>
+<p>In Step 1, Snowcat complained about the name <code>tmPrepared</code>. The reason
+for that is very simple: tmPrepared is declared as a variable, but Snowcat 
+does not find a type annotation.</p>
+<p>From the comment next to the declaration of <code>tmPrepared</code>, we see that <code>tmPrepared</code> is supposed
+to be a subset of <code>RM</code>, which in turn is a set of resource managers. We have plenty of choices here of what a
 resource manager could be. Let's keep it simple and say that a resource manager
-is simply a name. Hence, we say that <code>RM</code> is a set of strings. Let's add a 
-type annotation:</p>
+is simply a name. Hence, we say that <code>RM</code> and <code>tmPrepared</code> are sets of strings. Let's add 
+type annotations:</p>
 <pre><code class="language-tla">CONSTANT
     \* @type: Set(Str);
     RM \* The set of resource managers
 </code></pre>
+<pre><code class="language-tla">VARIABLES
+  (* ... *)
+  \* @type: Set(Str);
+  tmPrepared,    \* The set of RMs from which the TM has received $&quot;Prepared&quot;$
+                 \* messages.
+</code></pre>
 <p>Note that we had to put the annotation between the keyword <code>CONSTANT</code> and the
-identifier <code>RM</code>. We used the one-line TLA+ comment: <code>\* @type: ...;</code>.
+identifier <code>RM</code>, and between <code>VARIABLES</code> and <code>tmPrepared</code>. 
+We used the one-line TLA+ comment: <code>\* @type: ...;</code>.
 Alternatively, we could use the multi-line comment: <code>(* @type: Set(Str); *)</code>.
 Importantly, the type annotation should end with a semi-colon: <code>;</code>.</p>
 <p><strong>Warning</strong>. If you want to write a type annotation on multiple lines, write it
@@ -236,20 +231,40 @@ in a multi-line comment <code>(* ... *)</code> instead of starting multiple line
 single-line comment <code>\* ...</code>. See <a href="https://github.com/informalsystems/apalache/issues/718">issue
 718</a>.</p>
 <h2><a class="header" href="#step-3-running-snowcat-again" id="step-3-running-snowcat-again">Step 3: Running Snowcat again</a></h2>
-<p>Having introduced the type annotation for <code>RM</code>, let's run the type checker again:</p>
-<pre><code class="language-sh">$ apalache typecheck TwoPhase.tla
+<p>Having introduced the type annotations for <code>RM</code> and <code>tmPrepared</code>, let's run the type checker again:</p>
+<pre><code class="language-sh">$ apalache-mc typecheck TwoPhase.tla
 </code></pre>
-<p>Snowcat does not complain about <code>RM</code> anymore. Now we get another message:</p>
-<pre><code>[TwoPhase.tla:68:6-68:12]: Undefined name rmState. Introduce a type annotation.
+<p>Snowcat does not complain about <code>tmPrepared</code> anymore. Now we get another message:</p>
+<pre><code>&gt; Running Snowcat .::.
+Typing input error: Expected a type annotation for VARIABLE tmState
 </code></pre>
-<h2><a class="header" href="#step-4-annotating-rmstate" id="step-4-annotating-rmstate">Step 4: Annotating rmState</a></h2>
+<h2><a class="header" href="#step-4-annotating-tmstate" id="step-4-annotating-tmstate">Step 4: Annotating tmState</a></h2>
 <p>Similar to Step 2, we are missing a type annotation. This time the type checker
-complains about the variable <code>rmState</code>:</p>
+complains about the variable <code>tmState</code>:</p>
 <pre><code class="language-tla">VARIABLES
-  rmState,       \* $rmState[rm]$ is the state of resource manager RM.
+  tmState,       \* The state of the transaction manager.
 </code></pre>
-<p>We can get a hint about the type of <code>rmState</code> from the type invariant
-<code>TPTypeOK</code>. It should be a function that, given a resource manager, produces
+<p>We can get a hint about the type of <code>tmState</code> from the type invariant
+<code>TPTypeOK</code>, where we see that <code>tmState</code> is just a string.</p>
+<p>Add the following type
+annotation:</p>
+<pre><code class="language-tla">VARIABLES
+  (* ... *)
+  \* @type: Str;  
+  tmState,       \* The state of the transaction manager.
+</code></pre>
+<h2><a class="header" href="#step-5-getting-one-more-type-error-by-snowcat" id="step-5-getting-one-more-type-error-by-snowcat">Step 5: Getting one more type error by Snowcat</a></h2>
+<p>Guess what? Run the type checker again:</p>
+<pre><code class="language-sh">$ apalache-mc typecheck TwoPhase.tla
+</code></pre>
+<p>Snowcat does not complain about <code>tmState</code> anymore. But we are not done yet:</p>
+<pre><code>&gt; Running Snowcat .::.   
+Typing input error: Expected a type annotation for VARIABLE rmState
+</code></pre>
+<h2><a class="header" href="#step-6-annotating-rmstate" id="step-6-annotating-rmstate">Step 6: Annotating rmState</a></h2>
+<p>This time we need a type annotation for the variable <code>rmState</code>.
+By inspecting <code>TPTypeOK</code>, we see <code>rmState</code>
+should be a function that, given a resource manager, produces
 one of the following strings: <code>&quot;working&quot;</code>, <code>&quot;prepared&quot;</code>, <code>&quot;committed&quot;</code>,
 <code>&quot;aborted&quot;</code>. So we need the function type: <code>Str -&gt; Str</code>. Add the following
 type annotation:</p>
@@ -257,55 +272,17 @@ type annotation:</p>
   \* @type: Str -&gt; Str;
   rmState,       \* $rmState[rm]$ is the state of resource manager RM.
 </code></pre>
-<h2><a class="header" href="#step-5-getting-one-more-type-error-by-snowcat" id="step-5-getting-one-more-type-error-by-snowcat">Step 5: Getting one more type error by Snowcat</a></h2>
-<p>Guess what? Run the type checker again:</p>
-<pre><code class="language-sh">$ apalache typecheck TwoPhase.tla
-</code></pre>
-<p>Snowcat does not complain about <code>rmState</code> anymore. But we are not done yet:</p>
-<pre><code>[TwoPhase.tla:70:6-70:12]: Undefined name tmState. Introduce a type annotation.
-</code></pre>
-<h2><a class="header" href="#step-6-annotating-tmstate" id="step-6-annotating-tmstate">Step 6: Annotating tmState</a></h2>
-<p>This time we need a type annotation for the variable <code>tmState</code>. By inspecting
-<code>TPTypeOK</code>, we see that <code>tmState</code> is just a string. Add the following type
-annotation:</p>
-<pre><code class="language-tla">VARIABLES
-  (* ... *)
-  \* @type: Str;  
-  tmState,       \* The state of the transaction manager.
-</code></pre>
 <h2><a class="header" href="#step-7-running-snowcat-to-see-another-error" id="step-7-running-snowcat-to-see-another-error">Step 7: Running Snowcat to see another error</a></h2>
 <p>Run the type checker again:</p>
 <pre><code class="language-sh">$ apalache typecheck TwoPhase.tla
 </code></pre>
 <p>You must have guessed that the type checker complains about the variable
-<code>tmPrepared</code>. Indeed, it just needs annotations for all CONSTANTS and
+<code>msgs</code>. Indeed, it just needs annotations for all CONSTANTS and
 VARIABLES:</p>
-<pre><code>[TwoPhase.tla:72:6-72:15]: Undefined name tmPrepared. Introduce a type annotation.
+<pre><code>&gt; Running Snowcat .::. 
+Typing input error: Expected a type annotation for VARIABLE msgs
 </code></pre>
-<h2><a class="header" href="#step-8-annotating-tmprepared" id="step-8-annotating-tmprepared">Step 8: Annotating tmPrepared</a></h2>
-<p>At this step, we have to annotate <code>tmPrepared</code>. Let's have a look at the comment
-next to the declaration of <code>tmPrepared</code>:</p>
-<pre><code class="language-tla">VARIABLES
-  ...
-  tmPrepared,    \* The set of RMs from which the TM has received $&quot;Prepared&quot;$
-                 \* messages.
-</code></pre>
-<p>Hence, <code>tmPrepared</code> is a set of resource managers. This is what we write as a
-type annotation:</p>
-<pre><code class="language-tla">VARIABLES
-  (* ... *)
-  \* @type: Set(Str);
-  tmPrepared,    \* The set of RMs from which the TM has received $&quot;Prepared&quot;$
-                 \* messages.
-</code></pre>
-<h2><a class="header" href="#step-9-running-snowcat-again" id="step-9-running-snowcat-again">Step 9: Running Snowcat again</a></h2>
-<p>You know that we have to run the type checker again:</p>
-<pre><code class="language-sh">$ apalache typecheck TwoPhase.tla
-</code></pre>
-<p>It is no surprise that it complains about the variable <code>msgs</code> now:</p>
-<pre><code>[TwoPhase.tla:74:6-74:9]: Undefined name msgs. Introduce a type annotation.
-</code></pre>
-<h2><a class="header" href="#step-10-annotating-msgs" id="step-10-annotating-msgs">Step 10: Annotating msgs</a></h2>
+<h2><a class="header" href="#step-8-annotating-msgs" id="step-8-annotating-msgs">Step 8: Annotating msgs</a></h2>
 <p>In the previous steps, it was quite easy to annotate variables. We would just
 look at how the variable is used, or read the comments, and add a type annotation.
 Figuring out the type of <code>msgs</code> is a bit harder.</p>
@@ -325,9 +302,8 @@ kinds of records:</p>
 <li>The record <code>[type |-&gt; &quot;Abort&quot;]</code>,</li>
 <li>A record <code>[type |-&gt; &quot;Prepared&quot;, rm |-&gt; r]</code>, for some <code>r \in RM</code>.</li>
 </ol>
-<p>This looks like an issue for the type checker, as it always requires
-the set elements to have the same type. However, the type checker
-did not complain about the expressions in <code>Message</code> and <code>TPTypeOK</code>. Why?</p>
+<p>This looks like an issue for the type checker, as we always require
+the elements of a set to have the same type.</p>
 <p>Actually, the type checker allows records to be generalized to a type that
 contains additional fields. In the above definition of <code>Messages</code>, the set of
 records <code>[type: {&quot;Prepared&quot;}, rm: RM]</code> has the type <code>Set([type: Str, rm: Str])</code>.  (Note that the record has the field called &quot;type&quot;, which has nothing
@@ -342,9 +318,9 @@ the variable with this type:</p>
   \* @type: Set([type: Str, rm: Str]);
   msgs
 </code></pre>
-<h2><a class="header" href="#step-11-running-snowcat-and-seeing-no-errors" id="step-11-running-snowcat-and-seeing-no-errors">Step 11: Running Snowcat and seeing no errors</a></h2>
+<h2><a class="header" href="#step-9-running-snowcat-and-seeing-no-errors" id="step-9-running-snowcat-and-seeing-no-errors">Step 9: Running Snowcat and seeing no errors</a></h2>
 <p>Let's see whether Snowcat is happy about our types now:</p>
-<pre><code class="language-sh">$ apalache typecheck TwoPhase.tla
+<pre><code class="language-sh">$ apalache-mc typecheck TwoPhase.tla
 </code></pre>
 <p>The type checker is happy. It has computed the types of all expressions:</p>
 <pre><code> &gt; Running Snowcat .::.

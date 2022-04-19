@@ -491,8 +491,8 @@ the state machine; the current state, the variables of which are referenced by
 unprimed names, and the successor-state, the variables of which are referenced
 by primed names.</p>
 <p>The expression <code>isTerminated' = TRUE</code> means that only states where
-<code>isTerminated</code> equals to <code>TRUE</code> can be successors of the current state. In
-general, <code>isTerminated'</code> could also odepend on the value of <code>isTerminated</code>, but
+<code>isTerminated</code> equals <code>TRUE</code> can be successors of the current state. In
+general, <code>isTerminated'</code> could also depend on the value of <code>isTerminated</code>, but
 here, it does not. Likewise, <code>returnValue' = -(low + 1)</code> means that
 <code>returnValue</code> has the value <code>-(low + 1)</code> in the next state. The expression
 <code>UNCHANGED &lt;&lt;low, high&gt;&gt;</code> is a convenient shortcut for writing <code>low' = low /\ high' = high</code>.  Readers unfamiliar with specification languages might question
@@ -560,6 +560,7 @@ VARIABLES
 
 \* use an instance for the fixed constants
 INSTANCE BinSearch2
+===============================================================================
 </code></pre>
 <p>As you can see, we fix the values of all parameters. We are instantiating
 the module <code>BinSearch2</code> with these fixed parameters. Since instantiation
@@ -1163,7 +1164,7 @@ State1 ==
     /\ low = 59
     ...
 </code></pre>
-<p>In state 1, we have <code>low + high = 116 + 59 &gt; 2^7</code>. Since we have <code>INT_WIDTH = 7</code>, we have <code>IAdd(116, 59) = -81</code>.</p>
+<p>In state 1, we have <code>low + high = 116 + 59 &gt; 2^7</code>. Since we have <code>INT_WIDTH = 8</code>, we have <code>IAdd(116, 59) = -81</code>.</p>
 <h2><a class="header" href="#step-9-fixing-the-access-bug" id="step-9-fixing-the-access-bug">Step 9: Fixing the access bug</a></h2>
 <p><em>Source files for this step</em>:
 <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bin-search/BinSearch9.tla">BinSearch9.tla</a>

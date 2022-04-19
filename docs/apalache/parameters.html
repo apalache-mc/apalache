@@ -228,10 +228,10 @@ ConstInit ==
 
 =============================================================================
 </code></pre>
-<p>To use <code>ConstInit</code>, pass it as the argument to <code>apalache</code>. For instance, for
+<p>To use <code>ConstInit</code>, pass it as the argument to <code>apalache-mc</code>. For instance, for
 <code>y2k_cinit</code>, we would run the model checker as follows:</p>
 <pre><code class="language-tla">$ cd $APALACHE_HOME/test/tla
-$ apalache check --inv=Safety \
+$ apalache-mc check --inv=Safety \
   --length=20 --cinit=ConstInit y2k_cinit.tla
 </code></pre>
 <h3><a class="header" href="#parameterized-initialization" id="parameterized-initialization">Parameterized initialization</a></h3>

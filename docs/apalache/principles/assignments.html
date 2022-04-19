@@ -175,34 +175,63 @@
 <h2><a class="header" href="#assignments-and-symbolic-transitions" id="assignments-and-symbolic-transitions">Assignments and symbolic transitions</a></h2>
 <p>Let us go back to the example
 <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k.tla"><code>test/tla/y2k.tla</code></a>
-and run <code>apalache</code> against
-<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k_override.tla"><code>test/tla/y2k_override.tla</code></a>:</p>
-<pre><code class="language-console">$ apalache check y2k_override.tla
+and run <code>apalache-mc</code> against
+<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/y2k_override.tla"><code>test/tla/y2k_override.tla</code></a>
+while instructing Apalache to write intermediate output files:</p>
+<pre><code class="language-console">$ apalache-mc check --write-intermediate=true y2k_override.tla
 </code></pre>
 <p>We can check the detailed output of the <code>TransitionFinderPass</code> in the file
-<code>_apalache-out/y2k_override.tla/&lt;timestamp&gt;/XX_OutTransitionFinderPass.tla</code>, where
-<code>&lt;timestamp&gt;</code> looks like <code>2021-12-01T12-07-41_1998641578103809179</code>:</p>
-<pre><code class="language-tla">---------------------------- MODULE y2k_override ----------------------------
+<code>_apalache-out/y2k_override.tla/&lt;timestamp&gt;/intermediate/&lt;pass&gt;_OutTransitionFinderPass.tla</code>, where
+<code>&lt;timestamp&gt;</code> looks like <code>2021-12-01T12-07-41_1998641578103809179</code>, and <code>&lt;pass&gt;</code> is a two-digit number like <code>08</code>:</p>
+<pre><code class="language-tla">--------------------------- MODULE 09_OutTransition ---------------------------
+
+EXTENDS Integers, Sequences, FiniteSets, TLC, Apalache
+
+VARIABLE
+  (*
+    @type: Int;
+  *)
+  year
+
+VARIABLE
+  (*
+    @type: Bool;
+  *)
+  hasLicense
+
 (*
- * One way to instantiate constants for apalache is to use the OVERRIDE prefix. 
- *)
- 
-EXTENDS y2k
+  @type: (() =&gt; Bool);
+*)
+ASSUME(80 \in 0 .. 99)
 
-OVERRIDE_BIRTH_YEAR == 80
-OVERRIDE_LICENSE_AGE == 18
+(*
+  @type: (() =&gt; Bool);
+*)
+ASSUME(18 \in 1 .. 99)
 
-=============================================================================
-\* Modification History
-\* Last modified Tue Jan 07 11:24:55 CET 2020 by igor
-\* Created Tue Jan 07 11:16:18 CET 2020 by igor
+(*
+  @type: (() =&gt; Bool);
+*)
+Init_si_0000 == year' := 80 /\ hasLicense' := FALSE
+
+(*
+  @type: (() =&gt; Bool);
+*)
+Next_si_0000 == year' := ((year + 1) % 100) /\ hasLicense' := hasLicense
+
+(*
+  @type: (() =&gt; Bool);
+*)
+Next_si_0001 == year - 80 &gt;= 18 /\ hasLicense' := TRUE /\ year' := year
+
+================================================================================
 </code></pre>
 <p>As you can see, the model checker did two things:</p>
 <ol>
 <li>It has translated several expressions that look like <code>x' = e</code> into <code>x' := e</code>.
 For instance, you can see <code>year' := 80</code> and <code>hasLicense' := FALSE</code> in
-<code>Init$0</code>. We call these expressions <strong>assignments</strong>.</li>
-<li>It has factored the operator <code>Next</code> into two operators <code>Next$0</code> and <code>Next$1</code>.
+<code>Init_si_0000</code>. We call these expressions <strong>assignments</strong>.</li>
+<li>It has factored the operator <code>Next</code> into two operators <code>Next_si_0000</code> and <code>Next_si_0001</code>.
 We call these operators <strong>symbolic transitions</strong>.</li>
 </ol>
 <p>Pure TLA+ does not have the notions of assignments and symbolic
@@ -240,7 +269,7 @@ Inv == FALSE
 ===============
 </code></pre>
 <p>Run the checker with:</p>
-<pre><code class="language-bash">apalache check Assignments20200309.tla
+<pre><code class="language-bash">apalache-mc check Assignments20200309.tla
 </code></pre>
 <p>Apalache reports an error as follows:</p>
 <pre><code class="language-console">...
@@ -250,7 +279,7 @@ To understand the error, check the manual:
 Assignment error: No assignments found for: a
 It took me 0 days  0 hours  0 min  1 sec
 Total time: 1.88 sec
-EXITCODE: ERROR (99)
+EXITCODE: ERROR (255)
 </code></pre>
 <h3><a class="header" href="#more-details" id="more-details">More details</a></h3>
 <p><strong>Check <a href="../assignments-in-depth.html">Assignments and Symbolic Transitions in
