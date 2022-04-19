@@ -10,6 +10,6 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
-### Features
+### Breaking changes
 
- * Support sound records (over rows) in the model checker, see #1717
+ * Rename `--tuning` to `--tuning-options-file`, see #1579
