@@ -13,7 +13,7 @@ specification, Apalache translates the verification problem to a set of logical
 constraints. These constraints are solved by an [SMT
 solver](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories), for
 instance, by [Microsoft's Z3](https://github.com/Z3Prover/z3). That is, Apalache
-operates on formulas (i.e., _symbolicly_), not by enumerating states one by one
+operates on formulas (i.e., _symbolically_), not by enumerating states one by one
 (i.e., _state enumeration_).
 
 Apalache is working under the following assumptions:
