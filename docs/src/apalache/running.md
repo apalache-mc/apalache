@@ -12,7 +12,7 @@ The model checker can be run as follows:
 $ apalache-mc check [--config=filename] [--init=Init] [--cinit=ConstInit] \
     [--next=Next] [--inv=Inv] [--length=10] [--algo=(incremental|offline)] \
     [--discard-disabled] [--no-deadlock] \
-    [--tuning=filename] [--tune-here=options] \
+    [--tuning-options-file=filename] [--tune-here=options] \
     [--smt-encoding=(oopsla19|arrays)] \
     [--out-dir=./path/to/dir] \
     [--write-intermediate=(true|false)] \
@@ -45,7 +45,7 @@ The arguments are as follows:
     - `--view <name>` sets the state view to `<name>`, see [Enumeration of counterexamples][].
     - `--no-deadlock` disables deadlock-checking, when `--discard-disabled=false` is on. When `--discard-disabled=true`,
       deadlocks are found in any case.
-    - `--tuning` specifies the properties file that stores the options for
+    - `--tuning-options-file` specifies a properties file that stores options for
       [fine tuning](tuning.md)
     - `--out-dir` set location for outputting any generated logs or artifacts,
       *`./_apalache-out` by default*
