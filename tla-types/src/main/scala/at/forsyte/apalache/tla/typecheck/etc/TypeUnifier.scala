@@ -89,32 +89,33 @@ class TypeUnifier(varPool: TypeVarPool) {
     }
   }
 
-  private def compute(lhs: TlaType1, rhs: TlaType1): Option[TlaType1] = {
-    // Try to unify a variable with a non-variable term `typeTerm`.
-    // If `typeTerm` refers to a variable in the equivalence class of `typeVar`, then this is a cyclic reference,
-    // and there should be no unifier.
-    def unifyVarWithNonVarTerm(typeVar: Int, typeTerm: TlaType1): Option[TlaType1] = {
-      // Note that `typeTerm` is not a variable.
-      val varClass = varToClass(typeVar)
-      if (doesUseClass(typeTerm, varClass)) {
-        // No unifier: `typeTerm` refers to a variable in the equivalence class of `typeVar`.
-        None
-      } else {
-        // this variable is associated with an equivalence class, unify the class with `typeTerm`
-        solution(varClass) match {
-          case VarT1(_) =>
-            // an equivalence class of free variables, just assign `typeTerm` to this class
-            solution += varClass -> typeTerm
-            Some(typeTerm)
+  // Try to unify a variable with a non-variable term `typeTerm`.
+  // If `typeTerm` refers to a variable in the equivalence class of `typeVar`, then this is a cyclic reference,
+  // and there should be no unifier.
+  private def unifyVarWithNonVarTerm(typeVar: Int, typeTerm: TlaType1): Option[TlaType1] = {
+    // Note that `typeTerm` is not a variable.
+    val varClass = varToClass(typeVar)
+    if (doesUseClass(typeTerm, varClass)) {
+      // No unifier: `typeTerm` refers to a variable in the equivalence class of `typeVar`.
+      None
+    } else {
+      // this variable is associated with an equivalence class, unify the class with `typeTerm`
+      solution(varClass) match {
+        case VarT1(_) =>
+          // an equivalence class of free variables, just assign `typeTerm` to this class
+          solution += varClass -> typeTerm
+          Some(typeTerm)
 
-          case _ =>
-            // unify `typeTerm` with the term assigned to the equivalence class, if possible
-            val unifier = compute(solution(varClass), typeTerm)
-            unifier.foreach { t => solution += varClass -> t }
-            unifier
-        }
+        case _ =>
+          // unify `typeTerm` with the term assigned to the equivalence class, if possible
+          val unifier = compute(solution(varClass), typeTerm)
+          unifier.foreach { t => solution += varClass -> t }
+          unifier
       }
     }
+  }
+
+  private def compute(lhs: TlaType1, rhs: TlaType1): Option[TlaType1] = {
 
     // unify types as terms
     (lhs, rhs) match {
@@ -216,12 +217,96 @@ class TypeUnifier(varPool: TypeVarPool) {
         }
 
       case (RowT1(lfields, lv), RowT1(rfields, rv)) =>
-        // TBD
-        None
+        unifyRows(lfields, rfields, lv, rv)
 
       // everything else does not unify
       case _ =>
         None // no unifier
+    }
+  }
+
+  // unify two rows
+  private def unifyRows(
+      lfields: SortedMap[String, TlaType1],
+      rfields: SortedMap[String, TlaType1],
+      lvar: Option[VarT1],
+      rvar: Option[VarT1]): Option[RowT1] = {
+    // assuming that a type is either a row, or a variable, make it a row type
+    def asRow: Option[TlaType1] => Option[RowT1] = {
+      case Some(r @ RowT1(_, _)) => Some(r)
+      case Some(v @ VarT1(_))    => Some(RowT1(v))
+      case Some(tp)              => throw new IllegalStateException("Expected RowT1(_, _), found: " + tp)
+      case None                  => None
+    }
+
+    // consider four cases
+    if (lfields.isEmpty) {
+      // the base case
+      (lvar, rvar) match {
+        case (None, None) =>
+          if (rfields.isEmpty) None else Some(RowT1())
+
+        case (Some(lv), Some(rv)) =>
+          if (rfields.isEmpty) {
+            asRow(compute(lv, rv))
+          } else {
+            asRow(unifyVarWithNonVarTerm(lv.no, RowT1(rfields, rvar)))
+          }
+
+        case (Some(lv), None) =>
+          asRow(unifyVarWithNonVarTerm(lv.no, RowT1(rfields, None)))
+
+        case (None, Some(rv)) =>
+          if (rfields.isEmpty) {
+            // the only way to match is to make the right variable equal to the empty row
+            asRow(unifyVarWithNonVarTerm(rv.no, RowT1()))
+          } else {
+            // the left row is empty, whereas the right row is non-empty
+            None
+          }
+      }
+    } else if (rfields.isEmpty) {
+      // the symmetric case above
+      unifyRows(rfields, lfields, rvar, lvar)
+    } else {
+      val sharedFields = lfields.keySet.intersect(rfields.keySet)
+      if (sharedFields.isEmpty) {
+        // The easy case: no shared fields.
+        // The left row is   (| lfields | lvar |).
+        // The right row is  (| rfields | rvar |).
+        // Introduce a fresh type variable to contain the common tail.
+        val tailVar = freshVar()
+        // Unify lvar with   (| rfields | tailVar |).
+        // Unify rvar with   (| lfields | tailVar |).
+        // If both unifiers exist, the result is (| lfields | rfields | tailVar |).
+        if (
+            compute(lvar.getOrElse(RowT1()), RowT1(rfields, Some(tailVar))).isEmpty
+            || compute(rvar.getOrElse(RowT1()), RowT1(lfields, Some(tailVar))).isEmpty
+        ) {
+          None
+        } else {
+          // apply the computed substitution to obtain the whole row
+          asRow(Some(Substitution(solution).sub(RowT1(lfields, lvar))._1))
+        }
+      } else {
+        // the hard case: some fields are shared
+        val lfieldsUniq = lfields.filter(p => !sharedFields.keySet.contains(p._1))
+        val rfieldsUniq = rfields.filter(p => !sharedFields.keySet.contains(p._1))
+        // Unify the disjoint fields and tail variables, see the above case
+        compute(RowT1(lfieldsUniq, lvar), RowT1(rfieldsUniq, rvar)) match {
+          case Some(RowT1(disjointFields, tailVar)) =>
+            // unify the shared fields, if possible
+            val unifiedSharedFields = sharedFields.map(key => (key, compute(lfields(key), rfields(key))))
+            if (unifiedSharedFields.exists(_._2.isEmpty)) {
+              None
+            } else {
+              val sharedMap = SortedMap(unifiedSharedFields.map(p => (p._1, p._2.get)).toSeq: _*)
+              Some(RowT1(sharedMap ++ disjointFields, tailVar))
+            }
+
+          case _ => None
+        }
+      }
     }
   }
 
@@ -295,6 +380,15 @@ class TypeUnifier(varPool: TypeVarPool) {
       (cls, VarT1(cls.reprVar))
     }
     new Substitution(Map[EqClass, TlaType1](mapping: _*))
+  }
+
+  // introduce a fresh variable
+  private def freshVar(): VarT1 = {
+    val fresh = varPool.fresh
+    val cls = EqClass(fresh.no)
+    varToClass += (fresh.no -> cls)
+    solution += (cls -> fresh)
+    fresh
   }
 }
 
