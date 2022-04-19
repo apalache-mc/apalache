@@ -2,10 +2,11 @@ package at.forsyte.apalache.tla.typecmp
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
-import at.forsyte.apalache.tla.typecmp.subbuilder.{ArithmeticBuilder, BoolBuilder, ProtoBuilder}
+import at.forsyte.apalache.tla.typecmp.raw.{ProtoBuilder, RawArithmeticBuilder, RawBoolBuilder}
 
+// IGNORE, WIP artifact
 class TypeCalculatingBuilder(val sigGen: SignatureGenerator)
-    extends ProtoBuilder with ArithmeticBuilder with BoolBuilder {
+    extends ProtoBuilder with RawArithmeticBuilder with RawBoolBuilder {
 
   def except(
       applicative: TlaEx,

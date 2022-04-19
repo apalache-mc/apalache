@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.typecmp
 import at.forsyte.apalache.tla.lir.{OperEx, SeqT1, TlaEx, TlaType1, TupT1}
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.typecheck.etc.Substitution
+import at.forsyte.apalache.tla.typecmp.BuilderUtil.throwMsg
 
 object FunOp {
   def tupCmp: pureTypeComputation = {
@@ -23,27 +24,30 @@ object FunOp {
     val nArgs = args.length
     assert(nArgs >= 3 && nArgs % 2 == 1)
     // Each row lists all of the arguments that define one update,
-    val argumentRows = args.zipWithIndex collect {
+    val argumentRows = args.zipWithIndex.collect {
       case (OperEx(TlaFunOper.tuple, tupArgs @ _*), i) if i % 2 == 1 =>
         tupArgs
     }
 
     // Ensure that all of the arguments are uniformly sized
-    val rowSizes = (argumentRows map {
+    val rowSizes = (argumentRows.map {
       _.length
     }).toSet
     assert(rowSizes.size == 1)
 
     // The first argument is the applicative (fn/rec/seq/tup), the other even positions hold
     // the updates in the final codomain
-    val applicativeCand +: codomainArgs = args.zipWithIndex collect {
+    val applicativeCand +: codomainArgs = args.zipWithIndex.collect {
       case (ex, i) if i % 2 == 0 =>
         ex
     }
 
     // The arguments match the signature of (multi-level) except, if the argument types consecutively unify
     // with the appropriate layer of applicativeCand.type
-    def matchUpdateWithArgChain(guidingType: TlaType1, rowArgTypes: Seq[TlaEx], updateType: TlaType1,
+    def matchUpdateWithArgChain(
+        guidingType: TlaType1,
+        rowArgTypes: Seq[TlaEx],
+        updateType: TlaType1,
         subst: Substitution = Substitution.empty): Option[(Substitution, TlaType1)] =
       rowArgTypes match {
         case Nil =>
@@ -84,12 +88,12 @@ object FunOp {
                 partialUnifApplicativeType,
                 rowExs,
                 TlaType1.fromTypeTag(codomainEx.typeTag),
-                subst
+                subst,
             )
           case _ => None
         }
     // Finally, we drop the substitution, as it is no longer needed
-    finalMatch map { _._2 } match {
+    finalMatch.map { _._2 } match {
       case Some(tt) => tt
       case _        => throwMsg(s"Arguments passed to ${TlaFunOper.except.name} have incompatible types.")
     }

@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.typecmp
 
 import at.forsyte.apalache.tla.lir.BoolT1
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
+import at.forsyte.apalache.tla.typecmp.BuilderUtil.throwMsg
 
 object BoolOp {
   def andCmp: pureTypeComputation = { args =>

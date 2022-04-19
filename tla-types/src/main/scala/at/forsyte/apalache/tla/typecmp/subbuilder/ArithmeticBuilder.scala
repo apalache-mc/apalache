@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.typecmp.subbuilder
 
-import at.forsyte.apalache.tla.lir.TlaEx
-import at.forsyte.apalache.tla.lir.oper.TlaArithOper
+import at.forsyte.apalache.tla.typecmp.BuilderWrapper
+import at.forsyte.apalache.tla.typecmp.raw.RawArithmeticBuilder
 
 /**
  * Builder for TlaArithOper expressions.
@@ -9,28 +9,31 @@ import at.forsyte.apalache.tla.lir.oper.TlaArithOper
  * @author
  *   Jure Kukovec
  */
-trait ArithmeticBuilder extends ProtoBuilder {
-  def plus(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.plus, 2).build(x, y)
+trait ArithmeticBuilder extends RawArithmeticBuilder {
 
-  def minus(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.minus, 2).build(x, y)
+  import at.forsyte.apalache.tla.typecmp.BuilderUtil.binaryFromRaw
 
-  def uminus(x: TlaEx): TlaEx = simpleInstruction(TlaArithOper.uminus, 1).build(x)
+  def plus(xW: BuilderWrapper, yW: BuilderWrapper): BuilderWrapper = binaryFromRaw(xW, yW)(_plus)
 
-  def mult(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.mult, 2).build(x, y)
+  def minus(xW: BuilderWrapper, yW: BuilderWrapper): BuilderWrapper = binaryFromRaw(xW, yW)(_minus)
 
-  def div(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.div, 2).build(x, y)
+  def uminus(xW: BuilderWrapper): BuilderWrapper = xW.map(_uminus)
 
-  def mod(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.mod, 2).build(x, y)
+  def mult(xW: BuilderWrapper, yW: BuilderWrapper): BuilderWrapper = binaryFromRaw(xW, yW)(_mult)
 
-  def exp(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.exp, 2).build(x, y)
+  def div(xW: BuilderWrapper, yW: BuilderWrapper): BuilderWrapper = binaryFromRaw(xW, yW)(_div)
 
-  def dotdot(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.dotdot, 2).build(x, y)
+  def mod(xW: BuilderWrapper, yW: BuilderWrapper): BuilderWrapper = binaryFromRaw(xW, yW)(_mod)
 
-  def lt(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.lt, 2).build(x, y)
+  def exp(xW: BuilderWrapper, yW: BuilderWrapper): BuilderWrapper = binaryFromRaw(xW, yW)(_exp)
 
-  def gt(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.gt, 2).build(x, y)
+  def dotdot(xW: BuilderWrapper, yW: BuilderWrapper): BuilderWrapper = binaryFromRaw(xW, yW)(_dotdot)
 
-  def le(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.le, 2).build(x, y)
+  def lt(xW: BuilderWrapper, yW: BuilderWrapper): BuilderWrapper = binaryFromRaw(xW, yW)(_lt)
 
-  def ge(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.ge, 2).build(x, y)
+  def gt(xW: BuilderWrapper, yW: BuilderWrapper): BuilderWrapper = binaryFromRaw(xW, yW)(_gt)
+
+  def le(xW: BuilderWrapper, yW: BuilderWrapper): BuilderWrapper = binaryFromRaw(xW, yW)(_le)
+
+  def ge(xW: BuilderWrapper, yW: BuilderWrapper): BuilderWrapper = binaryFromRaw(xW, yW)(_ge)
 }

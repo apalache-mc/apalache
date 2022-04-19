@@ -1,10 +1,13 @@
-package at.forsyte.apalache.tla.typecmp.subbuilder
+package at.forsyte.apalache.tla.typecmp.raw
 
 import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.typecheck.etc.TypeVarPool
 import at.forsyte.apalache.tla.typecmp.{BuildInstruction, SignatureGenerator}
 
 /**
+ * Base builder class that offers `simpleInstruction` to other builders.
+ *
+ * `simpleInstruction` creates a `BuildInstruction`, for an operator with a known signature.
+ *
  * @author
  *   Jure Kukovec
  */

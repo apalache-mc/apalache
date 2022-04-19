@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.typecmp.subbuilder
 
-import at.forsyte.apalache.tla.lir.TlaEx
-import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper}
+import at.forsyte.apalache.tla.typecmp.raw.RawBoolBuilder
+import at.forsyte.apalache.tla.typecmp.BuilderWrapper
+import scalaz._
 
 /**
  * Builder for TlaBoolOper expressions.
@@ -9,27 +10,44 @@ import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaBoolOper}
  * @author
  *   Jure Kukovec
  */
-trait BoolBuilder extends ProtoBuilder {
-  def and(args: TlaEx*): TlaEx = simpleInstruction(TlaBoolOper.and, args.size).build(args: _*)
+trait BoolBuilder extends RawBoolBuilder {
 
-  def or(args: TlaEx*): TlaEx = simpleInstruction(TlaBoolOper.or, args.size).build(args: _*)
+  import at.forsyte.apalache.tla.typecmp.BuilderUtil._
 
-  def not(p: TlaEx): TlaEx = simpleInstruction(TlaBoolOper.not, 1).build(p)
+  def and(argsW: BuilderWrapper*): BuilderWrapper = polyadicFromRaw(argsW)(_and(_: _*))
 
-  def impl(p: TlaEx, q: TlaEx): TlaEx = simpleInstruction(TlaBoolOper.implies, 2).build(p, q)
+  def or(argsW: BuilderWrapper*): BuilderWrapper = polyadicFromRaw(argsW)(_or(_: _*))
 
-  def equiv(p: TlaEx, q: TlaEx): TlaEx = simpleInstruction(TlaBoolOper.equiv, 2).build(p, q)
+  def not(pW: BuilderWrapper): BuilderWrapper = pW.map(_not)
 
-  def forall(elem: TlaEx, set: TlaEx, pred: TlaEx): TlaEx =
-    simpleInstruction(TlaBoolOper.forall, 3).build(elem, set, pred)
+  def impl(pW: BuilderWrapper, qW: BuilderWrapper): BuilderWrapper = binaryFromRaw(pW, qW)(_impl)
 
-  def forall(elem: TlaEx, pred: TlaEx): TlaEx =
-    simpleInstruction(TlaBoolOper.forallUnbounded, 2).build(elem, pred)
+  def equiv(pW: BuilderWrapper, qW: BuilderWrapper): BuilderWrapper = binaryFromRaw(pW, qW)(_equiv)
 
-  def exists(elem: TlaEx, set: TlaEx, pred: TlaEx): TlaEx =
-    simpleInstruction(TlaBoolOper.exists, 3).build(elem, set, pred)
+  def forall(elemW: BuilderWrapper, setW: BuilderWrapper, predW: BuilderWrapper): BuilderWrapper = for {
+    elem <- elemW
+    set <- setW
+    pred <- predW
+    _ <- markAsBound(elem)
+  } yield _forall(elem, set, pred)
 
-  def exists(elem: TlaEx, pred: TlaEx): TlaEx =
-    simpleInstruction(TlaBoolOper.existsUnbounded, 2).build(elem, pred)
+  def forall(elemW: BuilderWrapper, predW: BuilderWrapper): BuilderWrapper = for {
+    elem <- elemW
+    pred <- predW
+    _ <- markAsBound(elem)
+  } yield _forall(elem, pred)
+
+  def exists(elemW: BuilderWrapper, setW: BuilderWrapper, predW: BuilderWrapper): BuilderWrapper = for {
+    elem <- elemW
+    set <- setW
+    pred <- predW
+    _ <- markAsBound(elem)
+  } yield _exists(elem, set, pred)
+
+  def exists(elemW: BuilderWrapper, predW: BuilderWrapper): BuilderWrapper = for {
+    elem <- elemW
+    pred <- predW
+    _ <- markAsBound(elem)
+  } yield _exists(elem, pred)
 
 }

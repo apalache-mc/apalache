@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.typecmp
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{FixedArity, TlaArithOper, TlaBoolOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeVarPool}
+import at.forsyte.apalache.tla.typecmp.BuilderUtil.throwMsg
 
 import scala.language.implicitConversions
 
@@ -136,7 +137,7 @@ class SignatureGenerator(varPool: TypeVarPool) {
             .getOrElse(
                 // Failure case 3: Can't unify
                 throwMsg(
-                    s"$oper.name expects arguments of types ${from.mkString(", ")}, found: ${args.mkString(", ")}"
+                    s"${oper.name} expects arguments of types (${from.mkString(", ")}), found: (${args.mkString(", ")})"
                 )
             )
         }
