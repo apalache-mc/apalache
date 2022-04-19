@@ -2,7 +2,7 @@ Parameters for fine tuning
 ==========================
 
 The parameters for fine tuning can be passed to the checker in a properties
-file.  Its name is given with the command-line option `--tuning=my.properties.`
+file.  Its name is given with the command-line option `--tuning-options-file=my.properties`.
 This file supports variable substitution, e.g., `${x}` is replaced with the
 value of `x`, if it was previously declared.
 

@@ -221,7 +221,7 @@ object Tool extends LazyLogging {
     setCoreOptions(executor, check)
 
     var tuning =
-      if (check.tuning != "") loadProperties(check.tuning) else Map[String, String]()
+      if (check.tuningOptionsFile != "") loadProperties(check.tuningOptionsFile) else Map[String, String]()
     tuning = overrideProperties(tuning, check.tuningOptions)
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
