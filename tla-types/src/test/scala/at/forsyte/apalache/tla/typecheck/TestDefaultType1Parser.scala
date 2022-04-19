@@ -200,6 +200,12 @@ class TestDefaultType1Parser extends AnyFunSuite with Checkers with TlaType1Gen 
     assert(RowT1() == result)
   }
 
+  test("single-variable row") {
+    val text = """(| c |)"""
+    val result = DefaultType1Parser.parseType(text)
+    assert(RowT1(VarT1("c")) == result)
+  }
+
   test("concrete row") {
     val text = """(| f: Int | g: c |)"""
     val result = DefaultType1Parser.parseType(text)
