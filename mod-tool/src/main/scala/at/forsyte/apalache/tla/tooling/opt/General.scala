@@ -44,7 +44,7 @@ trait General extends Command with CliConfig {
 
   // Parse a feature
   implicit def featureRead: Read[Feature] = {
-    Read.reads[Feature]("an experimental feature, one of: rows") {
+    Read.reads[Feature]("a feature: rows") {
       case "rows"     => RowsFeature()
       case unexpected => throw new IllegalArgumentException(s"Unexpected feature: $unexpected")
     }
