@@ -92,15 +92,100 @@ class SignatureGenerator(varPool: TypeVarPool) {
     polyadic ++ binary ++ boundedQuant ++ unboundedQuant ++ rest
   }
 
+  private val setOperMap: SignatureMap = {
+    import TlaSetOper._
+
+    val binarySymm: SignatureMap = Seq(
+        cup,
+        cap,
+        setminus,
+    ).map {
+      _ -> { _: Int =>
+        val t = varPool.fresh
+        OperT1(Seq(SetT1(t), SetT1(t)), SetT1(t))
+      }
+    }.toMap
+
+    val binaryAsymm: SignatureMap = Seq(
+        in,
+        notin,
+    ).map {
+      _ -> { _: Int =>
+        val t = varPool.fresh
+        OperT1(Seq(t, SetT1(t)), BoolT1())
+      }
+    }.toMap
+
+    val mapSig = map -> { n: Int =>
+      val npairs = (n - 1) / 2
+      val t = varPool.fresh
+      val ts = varPool.fresh(npairs)
+
+      val elemSetParis = ts.flatMap { tt =>
+        Seq(tt, SetT1(tt))
+      }
+      OperT1(t +: elemSetParis, SetT1(t))
+    }
+
+    val filterSig = filter -> { _: Int =>
+      val t = varPool.fresh
+      OperT1(Seq(t, SetT1(t), BoolT1()), SetT1(t))
+    }
+
+    // recSet does NOT have a signature
+
+    val seqSetSig = seqSet -> { _: Int =>
+      val t = varPool.fresh
+      OperT1(Seq(SetT1(t)), SetT1(SeqT1(t)))
+    }
+
+    val powSetSig = powerset -> { _: Int =>
+      val t = varPool.fresh
+      OperT1(Seq(SetT1(t)), SetT1(SetT1(t)))
+    }
+
+    val timesSig = times -> { n: Int =>
+      val ts = varPool.fresh(n)
+      OperT1(ts.map(SetT1), SetT1(TupT1(ts: _*)))
+    }
+
+    val funSetSig = funSet -> { _: Int =>
+      val ts @ Seq(domT, cdmT) = varPool.fresh(2)
+      OperT1(ts.map(SetT1), SetT1(FunT1(domT, cdmT)))
+    }
+
+    val unionSig = union -> { _: Int =>
+      val t = varPool.fresh
+      OperT1(Seq(SetT1(SetT1(t))), SetT1(t))
+    }
+
+    val enumSig = enumSet -> { n: Int =>
+      val t = varPool.fresh
+      OperT1(Seq.fill(n)(t), SetT1(t))
+    }
+
+    val subseteqSig = subseteq -> { _: Int =>
+      val t = varPool.fresh
+      OperT1(Seq(SetT1(t), SetT1(t)), BoolT1())
+    }
+
+    val rest: SignatureMap = Seq(
+        mapSig,
+        filterSig,
+        seqSetSig,
+        powSetSig,
+        timesSig,
+        funSetSig,
+        unionSig,
+        enumSig,
+        subseteqSig,
+    ).toMap
+
+    binarySymm ++ binaryAsymm ++ rest
+  }
+
   private val knownSignatures: SignatureMap =
-    arithOperMap ++ boolOperMap ++
-      Map(
-          TlaSetOper.cup -> { _: Int =>
-            val t = varPool.fresh
-            val setT = SetT1(t)
-            OperT1(Seq(setT, setT), setT)
-          }
-      )
+    arithOperMap ++ boolOperMap ++ setOperMap
 
   def getSignatureForFixedArity(oper: TlaOper): Option[OperT1] = {
     oper.arity match {

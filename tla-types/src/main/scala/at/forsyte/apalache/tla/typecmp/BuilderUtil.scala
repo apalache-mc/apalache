@@ -11,15 +11,17 @@ import scalaz.Scalaz._
  *   Jure Kukovec
  */
 object BuilderUtil {
-  def markAsBound(elem: TlaEx): InternalState[Unit] = State[MetaInfo, Unit] { mi: MetaInfo =>
-    // If name is now bound, we remove it from the scope
-    val newMi = elem match {
-      case NameEx(name) =>
-        mi.copy(mi.nameScope - name)
-      case _ => mi
-    }
-    (newMi, ())
+  def markAsBound(elem: NameEx): InternalState[Unit] = State[MetaInfo, Unit] { mi: MetaInfo =>
+    (mi.copy(mi.nameScope - elem.name), ())
   }
+
+  def buildSeq[T](argsW: Seq[InternalState[T]]): InternalState[Seq[T]] =
+    argsW.foldLeft(Seq.empty[T].point[InternalState]) { case (seqW, argW) =>
+      for {
+        seq <- seqW
+        arg <- argW
+      } yield seq :+ arg
+    }
 
   // Lifts a binary raw method to a BuilderWrapper method
   def binaryFromRaw(xW: BuilderWrapper, yW: BuilderWrapper)(rawMethod: (TlaEx, TlaEx) => TlaEx): BuilderWrapper = for {
@@ -28,14 +30,8 @@ object BuilderUtil {
   } yield rawMethod(x, y)
 
   // Lifts a binary raw method to a BuilderWrapper method
-  def polyadicFromRaw(argsW: Seq[BuilderWrapper])(rawMethod: Seq[TlaEx] => TlaEx): BuilderWrapper = for {
-    args <- argsW.foldLeft(Seq.empty[TlaEx].point[InternalState]) { case (seqW, argW) =>
-      for {
-        seq <- seqW
-        arg <- argW
-      } yield seq :+ arg
-    }
-  } yield rawMethod(args)
+  def polyadicFromRaw(argsW: Seq[BuilderWrapper])(rawMethod: Seq[TlaEx] => TlaEx): BuilderWrapper =
+    buildSeq(argsW).map(rawMethod)
 
   def throwMsg(msg: String): typeComputationReturn = Left(new BuilderTypeException(msg))
 }

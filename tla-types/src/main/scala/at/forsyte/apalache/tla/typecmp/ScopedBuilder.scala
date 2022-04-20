@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.typecmp
 
+import at.forsyte.apalache.tla.typecheck.etc.TypeVarPool
 import at.forsyte.apalache.tla.typecmp.subbuilder.{ArithmeticBuilder, BoolBuilder, LeafBuilder}
 
 /**
@@ -9,4 +10,4 @@ import at.forsyte.apalache.tla.typecmp.subbuilder.{ArithmeticBuilder, BoolBuilde
  * @author
  *   Jure Kukovec
  */
-class ScopedBuilder(val sigGen: SignatureGenerator) extends BoolBuilder with ArithmeticBuilder with LeafBuilder
+class ScopedBuilder(val varPool: TypeVarPool) extends BoolBuilder with ArithmeticBuilder with LeafBuilder

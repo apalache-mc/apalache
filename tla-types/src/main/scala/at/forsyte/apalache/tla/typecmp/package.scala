@@ -1,9 +1,9 @@
 package at.forsyte.apalache.tla
 
-import at.forsyte.apalache.tla.lir.{TlaEx, TlaType1}
+import at.forsyte.apalache.tla.lir.{NameEx, TlaEx, TlaType1, ValEx}
 import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier}
-import scala.language.implicitConversions
 
+import scala.language.implicitConversions
 import scalaz._
 
 package object typecmp {
@@ -21,6 +21,11 @@ package object typecmp {
 
   type InternalState[T] = State[MetaInfo, T]
   type BuilderWrapper = InternalState[builderReturn]
+  type NameWrapper = InternalState[NameEx]
+  type ValWrapper = InternalState[ValEx]
+
+  implicit def generalizeWrapperN(nw: NameWrapper): BuilderWrapper = nw.map(_.asInstanceOf[TlaEx])
+  implicit def generalizeWrapperV(vw: ValWrapper): BuilderWrapper = vw.map(_.asInstanceOf[TlaEx])
 
   implicit def fromPure(cmp: pureTypeComputation): typeComputation = { args =>
     cmp(args.map { ex => TlaType1.fromTypeTag(ex.typeTag) })
@@ -28,7 +33,7 @@ package object typecmp {
 
   implicit def liftRet(tt: TlaType1): typeComputationReturn = Right(tt)
 
-  implicit def build(wrap: BuilderWrapper): builderReturn = wrap.run(MetaInfo(Map.empty))._2
+  implicit def build[T](wrap: InternalState[T]): T = wrap.run(MetaInfo(Map.empty))._2
 
   // Performs unificaiton on 2 types with a fresh unifier
   def singleUnification(

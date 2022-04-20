@@ -12,13 +12,11 @@ import org.scalatestplus.junit.JUnitRunner
 class TestLeafBuilder extends AnyFunSuite with BeforeAndAfter {
 
   var varPool = new TypeVarPool()
-  var sigGen = new SignatureGenerator(varPool)
-  var builder = new ScopedBuilder(sigGen)
+  var builder = new ScopedBuilder(varPool)
 
   before {
     varPool = new TypeVarPool()
-    sigGen = new SignatureGenerator(varPool)
-    builder = new ScopedBuilder(sigGen)
+    builder = new ScopedBuilder(varPool)
   }
 
   test("literals") {

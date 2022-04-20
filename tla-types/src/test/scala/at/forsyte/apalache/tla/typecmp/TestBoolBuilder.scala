@@ -12,15 +12,15 @@ import org.scalatestplus.junit.JUnitRunner
 class TestBoolBuilder extends AnyFunSuite with BeforeAndAfter {
   var varPool = new TypeVarPool()
   var sigGen = new SignatureGenerator(varPool)
-  var builder = new ScopedBuilder(sigGen)
+  var builder = new ScopedBuilder(varPool)
 
   before {
     varPool = new TypeVarPool()
     sigGen = new SignatureGenerator(varPool)
-    builder = new ScopedBuilder(sigGen)
+    builder = new ScopedBuilder(varPool)
   }
 
-  def argGen(n: Int) = Seq.fill(n)(builder.bool(true))
+  def argGen(n: Int): Seq[BuilderWrapper] = Seq.fill(n)(builder.bool(true))
 
   def testCmpOKAndMistyped[T](
       args: Seq[BuilderWrapper],
@@ -37,7 +37,7 @@ class TestBoolBuilder extends AnyFunSuite with BeforeAndAfter {
 
     assert(resEx.eqTyped(OperEx(oper, builtArgs: _*)(Typed(BoolT1()))))
 
-    val badY = builder.str("a")
+    val badY: BuilderWrapper = builder.str("a")
     val badArgs = badY +: args.tail
 
     assertThrows[BuilderTypeException] {
@@ -101,7 +101,7 @@ class TestBoolBuilder extends AnyFunSuite with BeforeAndAfter {
 
   def testQuant(
       oper: TlaBoolOper,
-      methodE: Either[(BuilderWrapper, BuilderWrapper, BuilderWrapper) => BuilderWrapper, (BuilderWrapper,
+      methodE: Either[(NameWrapper, BuilderWrapper, BuilderWrapper) => BuilderWrapper, (NameWrapper,
               BuilderWrapper) => BuilderWrapper]): Unit = {
     val xBool = builder.name("x", BoolT1())
     val xInt = builder.name("x", IntT1())

@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.typecmp.subbuilder
 
-import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecmp._
 import at.forsyte.apalache.tla.typecmp.raw.RawLeafBuilder
@@ -15,21 +14,21 @@ import scalaz._
  */
 trait LeafBuilder extends RawLeafBuilder {
 
-  def int(i: BigInt): BuilderWrapper = _int(i).point[InternalState]
+  def int(i: BigInt): ValWrapper = _int(i).point[InternalState]
 
-  def str(s: String): BuilderWrapper = _str(s).point[InternalState]
+  def str(s: String): ValWrapper = _str(s).point[InternalState]
 
-  def bool(b: Boolean): BuilderWrapper = _bool(b).point[InternalState]
+  def bool(b: Boolean): ValWrapper = _bool(b).point[InternalState]
 
-  def booleanSet(): BuilderWrapper = _booleanSet().point[InternalState]
+  def booleanSet(): ValWrapper = _booleanSet().point[InternalState]
 
-  def stringSet(): BuilderWrapper = _stringSet().point[InternalState]
+  def stringSet(): ValWrapper = _stringSet().point[InternalState]
 
-  def intSet(): BuilderWrapper = _intSet().point[InternalState]
+  def intSet(): ValWrapper = _intSet().point[InternalState]
 
-  def natSet(): BuilderWrapper = _natSet().point[InternalState]
+  def natSet(): ValWrapper = _natSet().point[InternalState]
 
-  def name(exprName: String, exType: TlaType1): BuilderWrapper = State[MetaInfo, builderReturn] { mi =>
+  def name(exprName: String, exType: TlaType1): NameWrapper = State[MetaInfo, NameEx] { mi =>
     val scope = mi.nameScope
 
     // If already in scope, type must be the same
@@ -45,7 +44,7 @@ trait LeafBuilder extends RawLeafBuilder {
   }
 
   // Attempt to get the type from the scope. Fails if not in scope.
-  def name(exprName: String): BuilderWrapper = get[MetaInfo].map { mi: MetaInfo =>
+  def name(exprName: String): NameWrapper = get[MetaInfo].map { mi: MetaInfo =>
     val scope = mi.nameScope
 
     val tt = scope.getOrElse(exprName,

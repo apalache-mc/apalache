@@ -23,41 +23,6 @@
 //    builder = new TypeCalculatingBuilder(sigGen)
 //  }
 //
-//  test("And") {
-//    val and = BoolOp.andCmp
-//    val args = Seq(
-//        TlaBool(true),
-//        TlaBool(true),
-//        TlaBool(true),
-//        TlaBool(true),
-//    ).map { ValEx(_)(Typed(BoolT1())) }
-//
-//    val res = and(args)
-//    val res2 = and(args.take(2))
-//
-//    assert(res.contains(BoolT1()))
-//    assert(res2.contains(BoolT1()))
-//
-//    val utArgs = Seq(
-//        TlaBool(true),
-//        TlaBool(true),
-//    ).map { ValEx(_)(Untyped()) }
-//
-//    assertThrows[TypingException] {
-//      and(utArgs)
-//    }
-//
-//    val badArgs = Seq(
-//        ValEx(TlaBool(true))(Typed(BoolT1())),
-//        ValEx(TlaStr("a"))(Typed(StrT1())),
-//    )
-//
-//    val badRes = and(badArgs)
-//
-//    assert(badRes.isLeft)
-//
-//  }
-//
 //  test("Except") {
 //    val except = FunOp.exceptCmp
 //

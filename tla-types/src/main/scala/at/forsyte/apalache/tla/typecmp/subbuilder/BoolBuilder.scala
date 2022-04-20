@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.typecmp.subbuilder
 
 import at.forsyte.apalache.tla.typecmp.raw.RawBoolBuilder
-import at.forsyte.apalache.tla.typecmp.BuilderWrapper
+import at.forsyte.apalache.tla.typecmp.{BuilderWrapper, NameWrapper}
 import scalaz._
 
 /**
@@ -24,27 +24,27 @@ trait BoolBuilder extends RawBoolBuilder {
 
   def equiv(pW: BuilderWrapper, qW: BuilderWrapper): BuilderWrapper = binaryFromRaw(pW, qW)(_equiv)
 
-  def forall(elemW: BuilderWrapper, setW: BuilderWrapper, predW: BuilderWrapper): BuilderWrapper = for {
+  def forall(elemW: NameWrapper, setW: BuilderWrapper, predW: BuilderWrapper): BuilderWrapper = for {
     elem <- elemW
     set <- setW
     pred <- predW
     _ <- markAsBound(elem)
   } yield _forall(elem, set, pred)
 
-  def forall(elemW: BuilderWrapper, predW: BuilderWrapper): BuilderWrapper = for {
+  def forall(elemW: NameWrapper, predW: BuilderWrapper): BuilderWrapper = for {
     elem <- elemW
     pred <- predW
     _ <- markAsBound(elem)
   } yield _forall(elem, pred)
 
-  def exists(elemW: BuilderWrapper, setW: BuilderWrapper, predW: BuilderWrapper): BuilderWrapper = for {
+  def exists(elemW: NameWrapper, setW: BuilderWrapper, predW: BuilderWrapper): BuilderWrapper = for {
     elem <- elemW
     set <- setW
     pred <- predW
     _ <- markAsBound(elem)
   } yield _exists(elem, set, pred)
 
-  def exists(elemW: BuilderWrapper, predW: BuilderWrapper): BuilderWrapper = for {
+  def exists(elemW: NameWrapper, predW: BuilderWrapper): BuilderWrapper = for {
     elem <- elemW
     pred <- predW
     _ <- markAsBound(elem)
