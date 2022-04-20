@@ -181,6 +181,31 @@ EXITCODE: ERROR (255)
 
 This command parses a TLA+ specification with the SANY parser.
 
+### parse Empty succeeds
+
+```sh
+$ apalache-mc parse Empty.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
+### parse Empty with --features=rows succeeds
+
+```sh
+$ apalache-mc parse --features=rows Empty.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
+### parse Empty with an unsupported feature fails
+
+```sh
+$ apalache-mc parse --features=feature.unsupported Empty.tla 2>&1 | sed 's/I@.*//'
+...
+Failed to parse command parse: Incorrect value for option features, got 'feature.unsupported', expected a feature: rows
+EXITCODE: ERROR (1)
+```
+
 ### parse LocalDefClash576 succeeds
 
 ```sh
