@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.typecmp.subbuilder
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecmp._
+import at.forsyte.apalache.tla.typecmp.raw.RawLeafBuilder
 import scalaz.Scalaz._
 import scalaz._
 
@@ -12,21 +13,21 @@ import scalaz._
  * @author
  *   Jure Kukovec
  */
-trait LeafBuilder {
+trait LeafBuilder extends RawLeafBuilder {
 
-  def int(i: BigInt): BuilderWrapper = ValEx(TlaInt(i))(Typed(IntT1())).asInstanceOf[TlaEx].point[InternalState]
+  def int(i: BigInt): BuilderWrapper = _int(i).point[InternalState]
 
-  def str(s: String): BuilderWrapper = ValEx(TlaStr(s))(Typed(StrT1())).asInstanceOf[TlaEx].point[InternalState]
+  def str(s: String): BuilderWrapper = _str(s).point[InternalState]
 
-  def bool(b: Boolean): BuilderWrapper = ValEx(TlaBool(b))(Typed(BoolT1())).asInstanceOf[TlaEx].point[InternalState]
+  def bool(b: Boolean): BuilderWrapper = _bool(b).point[InternalState]
 
-  def booleanSet(): BuilderWrapper = ValEx(TlaBoolSet)(Typed(SetT1(BoolT1()))).asInstanceOf[TlaEx].point[InternalState]
+  def booleanSet(): BuilderWrapper = _booleanSet().point[InternalState]
 
-  def stringSet(): BuilderWrapper = ValEx(TlaStrSet)(Typed(SetT1(StrT1()))).asInstanceOf[TlaEx].point[InternalState]
+  def stringSet(): BuilderWrapper = _stringSet().point[InternalState]
 
-  def intSet(): BuilderWrapper = ValEx(TlaIntSet)(Typed(SetT1(IntT1()))).asInstanceOf[TlaEx].point[InternalState]
+  def intSet(): BuilderWrapper = _intSet().point[InternalState]
 
-  def natSet(): BuilderWrapper = ValEx(TlaNatSet)(Typed(SetT1(IntT1()))).asInstanceOf[TlaEx].point[InternalState]
+  def natSet(): BuilderWrapper = _natSet().point[InternalState]
 
   def name(exprName: String, exType: TlaType1): BuilderWrapper = State[MetaInfo, builderReturn] { mi =>
     val scope = mi.nameScope
@@ -39,7 +40,7 @@ trait LeafBuilder {
         )
     }
 
-    val ret = NameEx(exprName)(Typed(exType))
+    val ret = _name(exprName, exType)
     (mi.copy(scope + (exprName -> exType)), ret)
   }
 
@@ -51,7 +52,7 @@ trait LeafBuilder {
         throw new BuilderScopeException(
             s"Cannot build $exprName: the type of $exprName is not in scope. Use name(exprName, exType) instead."
         ))
-    NameEx(exprName)(Typed(tt))
+    _name(exprName, tt)
   }
 
 }

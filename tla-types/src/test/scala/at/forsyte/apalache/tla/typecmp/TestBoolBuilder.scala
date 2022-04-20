@@ -22,7 +22,7 @@ class TestBoolBuilder extends AnyFunSuite with BeforeAndAfter {
 
   def argGen(n: Int) = Seq.fill(n)(builder.bool(true))
 
-  def testCmpUntypedAndMistyped[T](
+  def testCmpOKAndMistyped[T](
       args: Seq[BuilderWrapper],
       oper: TlaBoolOper,
       cmp: pureTypeComputation,
@@ -48,7 +48,7 @@ class TestBoolBuilder extends AnyFunSuite with BeforeAndAfter {
   test("and") {
     val oper = TlaBoolOper.and
     (1 to 5).foreach { i =>
-      testCmpUntypedAndMistyped(
+      testCmpOKAndMistyped(
           argGen(i),
           oper,
           sigGen.computationFromSignature(oper, i),
@@ -60,7 +60,7 @@ class TestBoolBuilder extends AnyFunSuite with BeforeAndAfter {
   test("or") {
     val oper = TlaBoolOper.or
     (1 to 5).foreach { i =>
-      testCmpUntypedAndMistyped(
+      testCmpOKAndMistyped(
           argGen(i),
           oper,
           sigGen.computationFromSignature(oper, i),
@@ -69,40 +69,103 @@ class TestBoolBuilder extends AnyFunSuite with BeforeAndAfter {
     }
   }
 
-  test("forall") {
-    val mBuilder = new ScopedBuilder(sigGen)
-
-    val xBool = mBuilder.name("x", BoolT1())
-    val xInt = mBuilder.name("x", IntT1())
-
-    val sBool = mBuilder.name("S", SetT1(BoolT1()))
-    val sInt = mBuilder.name("S", SetT1(IntT1()))
-
-    val okForall = builder.forall(xBool, sBool, xBool)
-
-    val typeErrorForall = builder.forall(xBool, sInt, xBool)
-
-    val scopeErrorForall = builder.forall(xInt, sInt, xBool)
-
-    assert(
-        okForall.eqTyped(
-            OperEx(
-                TlaBoolOper.forall,
-                NameEx("x")(Typed(BoolT1())),
-                NameEx("S")(Typed(SetT1(BoolT1()))),
-                NameEx("x")(Typed(BoolT1())),
-            )(Typed(BoolT1()))
-        )
+  test("not") {
+    val oper = TlaBoolOper.not
+    testCmpOKAndMistyped(
+        argGen(1),
+        oper,
+        sigGen.computationFromSignatureForFixedArity(oper),
+        { case Seq(e) => builder.not(e) },
     )
+  }
+
+  test("impl") {
+    val oper = TlaBoolOper.implies
+    testCmpOKAndMistyped(
+        argGen(2),
+        oper,
+        sigGen.computationFromSignatureForFixedArity(oper),
+        { case Seq(a, b) => builder.impl(a, b) },
+    )
+  }
+
+  test("equiv") {
+    val oper = TlaBoolOper.equiv
+    testCmpOKAndMistyped(
+        argGen(2),
+        oper,
+        sigGen.computationFromSignatureForFixedArity(oper),
+        { case Seq(a, b) => builder.equiv(a, b) },
+    )
+  }
+
+  def testQuant(
+      oper: TlaBoolOper,
+      methodE: Either[(BuilderWrapper, BuilderWrapper, BuilderWrapper) => BuilderWrapper, (BuilderWrapper,
+              BuilderWrapper) => BuilderWrapper]): Unit = {
+    val xBool = builder.name("x", BoolT1())
+    val xInt = builder.name("x", IntT1())
+
+    val sBool = builder.name("S", SetT1(BoolT1()))
+    val sInt = builder.name("S", SetT1(IntT1()))
+
+    val (okW, typeErrorW, scopeErrorW, expected) = methodE match {
+      case Left(boundQuant) =>
+        val okW = boundQuant(xBool, sBool, xBool)
+
+        val typeErrorW = boundQuant(xBool, sInt, xBool)
+
+        val scopeErrorW = boundQuant(xInt, sInt, xBool)
+
+        val expected = OperEx(
+            oper,
+            NameEx("x")(Typed(BoolT1())),
+            NameEx("S")(Typed(SetT1(BoolT1()))),
+            NameEx("x")(Typed(BoolT1())),
+        )(Typed(BoolT1()))
+
+        (okW, typeErrorW, scopeErrorW, expected)
+      case Right(unboundQuant) =>
+        val okW = unboundQuant(xBool, xBool)
+
+        val typeErrorW = unboundQuant(xInt, xInt)
+
+        val scopeErrorW = unboundQuant(xInt, xBool)
+
+        val expected = OperEx(
+            oper,
+            NameEx("x")(Typed(BoolT1())),
+            NameEx("x")(Typed(BoolT1())),
+        )(Typed(BoolT1()))
+
+        (okW, typeErrorW, scopeErrorW, expected)
+    }
+
+    assert(okW.eqTyped(expected))
 
     assertThrows[BuilderTypeException] {
-      build(typeErrorForall)
+      build(typeErrorW)
     }
 
     assertThrows[BuilderScopeException] {
-      build(scopeErrorForall)
+      build(scopeErrorW)
     }
+  }
 
+  test("forall3") {
+    testQuant(TlaBoolOper.forall, Left(builder.forall))
+  }
+
+  test("forall2") {
+    testQuant(TlaBoolOper.forallUnbounded, Right(builder.forall))
+  }
+
+  test("exists3") {
+    testQuant(TlaBoolOper.exists, Left(builder.exists))
+  }
+
+  test("exists2") {
+    testQuant(TlaBoolOper.existsUnbounded, Right(builder.exists))
   }
 
 }
