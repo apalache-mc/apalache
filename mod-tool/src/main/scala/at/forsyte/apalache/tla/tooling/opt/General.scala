@@ -1,9 +1,11 @@
 package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.io.CliConfig
+import at.forsyte.apalache.tla.lir.{Feature, RowsFeature}
 
 import java.io.File
 import org.backuity.clist._
+import org.backuity.clist.util.Read
 
 /**
  * The general commands.
@@ -32,9 +34,27 @@ trait General extends Command with CliConfig {
   var writeIntermediate = opt[Option[Boolean]](description =
         "write intermediate output files to `out-dir`, default: false (overrides envvar WRITE_INTERMEDIATE)",
       useEnv = true)
+  var features = opt[Seq[Feature]](default = Seq(),
+      description = """a comma-separated list of experimental features:
+        | - rows: enable row typing as explained in ADR-014
+        |""".stripMargin)
 
   private var _invocation = ""
   private var _env = ""
+
+  // Parse a feature
+  implicit def featureRead: Read[Feature] = {
+    Read.reads[Feature]("an experimental feature, one of: rows") {
+      case "rows"     => RowsFeature()
+      case unexpected => throw new IllegalArgumentException(s"Unexpected feature: $unexpected")
+    }
+  }
+
+  implicit def featureSeqRead: Read[Seq[Feature]] = {
+    Read.reads[Seq[Feature]](expecting = "a comma-separated list of features: rows") { str =>
+      str.split(",").map(featureRead.reads)
+    }
+  }
 
   private def getOptionEnvVar(option: CliOption[_]): Option[String] = {
     val envVar = option.name.replace("-", "_").toUpperCase()
