@@ -1144,7 +1144,7 @@ EXITCODE: OK
 ### check reorderTest.tla MayFail succeeds: fixed SMT fails under SMT-based assignment finding
 
 ```sh
-$ apalache-mc check --next=MayFail --tuning=reorderTest.properties reorderTest.tla | sed 's/I@.*//'
+$ apalache-mc check --next=MayFail --tuning-options-file=reorderTest.properties reorderTest.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
