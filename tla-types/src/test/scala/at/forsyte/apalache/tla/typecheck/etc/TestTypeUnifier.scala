@@ -189,7 +189,6 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
   }
 
   test("unifying an empty row with a var") {
-    val d = VarT1("d")
     val row1 = parser("(| |)")
     val row2 = parser("(| field1: Int |)")
     val result = unifier.unify(Substitution(), row1, row2)
@@ -380,8 +379,6 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
   }
 
   test("unifying variants with incompatible fields") {
-    val c = VarT1("c")
-    val d = VarT1("d")
     val variant1 = parser("""{ tag: "tag1", field1: Int }""")
     val variant2 = parser("""{ tag: "tag2", field2: Str }""")
     val result = unifier.unify(Substitution(), variant1, variant2)
