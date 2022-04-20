@@ -75,15 +75,18 @@ trait CrossTestEncodings extends AnyFunSuite {
   protected var oracleEncoding: SMTEncoding = _
   protected var verifierEncoding: SMTEncoding = _
 
+  private val boolT = BoolT1()
+  private val boolSetT = SetT1(BoolT1())
+
   /**
    * Rewrite elem \in Set ~~> \E elem$selected \in Set: elem' := elem$selected.
    */
   private def rewriteElemInSet(elem: NameEx, set: TlaEx): TlaEx = {
-    val types = Map("e" -> elem.typeTag.asTlaType1(), "b" -> BoolT1())
-    val selected = tla.name(elem.name + "$selected").typed(types, "e")
+    val elemT = elem.typeTag.asTlaType1()
+    val selected = tla.name(elem.name + "$selected").as(elemT)
     tla
-      .apalacheSkolem(tla.exists(selected, set, tla.assign(tla.prime(elem) ? "e", selected) ? "b") ? "b")
-      .typed(types, "b")
+      .apalacheSkolem(tla.exists(selected, set, tla.assign(tla.prime(elem).as(elemT), selected).as(boolT)).as(boolT))
+      .as(boolT)
   }
 
   /**
@@ -154,16 +157,15 @@ trait CrossTestEncodings extends AnyFunSuite {
    * This will force `witness \in ${witnesses}` in a TLA+ module and run the model checker to produce a value for
    * `witness`.
    *
-   * @param witnessType
+   * @param witnessT
    *   desired [[TlaType1]] for the witness.
    * @param witnesses
    *   TLA+ expression referring to a set of type `SetT1(witnessType)`.
    */
-  private def getWitness(witnessType: TlaType1, witnesses: TlaEx): TlaEx = {
+  private def getWitness(witnessT: TlaType1, witnesses: TlaEx): TlaEx = {
     // Module-level TLA+ variables.
     // We will force `result` = `witness` in `Init`.
-    val types = Map("w" -> witnessType, "b" -> BoolT1(), "sb" -> SetT1(BoolT1()))
-    val witness = NameEx("witness")(Typed(witnessType))
+    val witness = NameEx("witness")(Typed(witnessT))
     val witnessDecl = TlaVarDecl(witness.name)(witness.typeTag)
     val found = NameEx("found")(Typed(BoolT1()))
     val foundDecl = TlaVarDecl(found.name)(found.typeTag)
@@ -172,15 +174,15 @@ trait CrossTestEncodings extends AnyFunSuite {
     // VARIABLES witness, found
     val variableDecls = List(witnessDecl, foundDecl)
     // Init == witness \in ${witnesses} /\ found \in BOOLEAN
-    val initTrans = List(tla
-          .and(rewriteElemInSet(witness, witnesses), rewriteElemInSet(found, tla.booleanSet().typed(types, "sb")))
-          .typed(types, "b"))
+    val initTrans = List(
+        tla.and(rewriteElemInSet(witness, witnesses), rewriteElemInSet(found, tla.booleanSet().as(boolSetT))).as(boolT))
     // Next == UNCHANGED <<witness, found>>
     val nextTrans = List(tla
-          .and(tla.assign(tla.prime(witness) ? "w", witness) ? "b", tla.assign(tla.prime(found) ? "b", found) ? "b")
-          .typed(types, "b"))
+          .and(tla.assign(tla.prime(witness).as(witnessT), witness).as(boolT),
+              tla.assign(tla.prime(found).as(boolT), found).as(boolT))
+          .as(boolT))
     // NotFound == ~found
-    val inv = tla.not(found).typed(types, "b")
+    val inv = tla.not(found).as(boolT)
 
     // Call the model checker.
     val binding = modelCheckAndGetCex("Oracle", variableDecls, initTrans, nextTrans, inv, oracleEncoding)
@@ -206,7 +208,7 @@ trait CrossTestEncodings extends AnyFunSuite {
   private def verify(witness: TlaEx, witnesses: TlaEx): TlaEx = {
     // Module-level TLA+ variables.
     // We will force `result` = `witness` in `Init`.
-    val types = Map("w" -> witness.typeTag.asTlaType1(), "b" -> BoolT1())
+    val witnessT = witness.typeTag.asTlaType1()
     val result = NameEx("result")(witness.typeTag)
     val resultDecl = TlaVarDecl(result.name)(witness.typeTag)
     val found = NameEx("found")(Typed(BoolT1()))
@@ -217,15 +219,16 @@ trait CrossTestEncodings extends AnyFunSuite {
     val variableDecls: Seq[TlaDecl] = Seq(resultDecl, foundDecl)
     // Init == result \in ${witnesses} /\ result = ${witness} /\ found \in BOOLEAN
     val initTrans = List(tla
-          .and(rewriteElemInSet(result, witnesses), tla.eql(tla.prime(result) ? "w", witness) ? "b",
+          .and(rewriteElemInSet(result, witnesses), tla.eql(tla.prime(result).as(witnessT), witness).as(boolT),
               rewriteElemInSet(found, tla.booleanSet().as(SetT1(BoolT1()))))
-          .typed(types, "b"))
+          .as(boolT))
     // Next == UNCHANGED <<result, found>>
     val nextTrans = List(tla
-          .and(tla.assign(tla.prime(result) ? "w", result) ? "b", tla.assign(tla.prime(found) ? "b", found) ? "b")
-          .typed(types, "b"))
+          .and(tla.assign(tla.prime(result).as(witnessT), result).as(boolT),
+              tla.assign(tla.prime(found).as(boolT), found).as(boolT))
+          .as(boolT))
     // NotFound == ~found
-    val inv = tla.not(found).typed(types, "b")
+    val inv = tla.not(found).as(boolT)
 
     // Call the model checker.
     val binding = modelCheckAndGetCex("Verifier", variableDecls, initTrans, nextTrans, inv, verifierEncoding)
