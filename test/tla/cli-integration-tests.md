@@ -2098,6 +2098,22 @@ EXITCODE: OK
 
 ## running the typecheck command
 
+### typecheck Empty.tla reports no error
+
+```sh
+$ apalache-mc typecheck Empty.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
+### typecheck Empty.tla reports no error when rows enabled
+
+```sh
+$ apalache-mc typecheck --features=rows Empty.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
 
 ```sh
