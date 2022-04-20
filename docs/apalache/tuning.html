@@ -172,17 +172,18 @@
                     <main>
                         <h1><a class="header" href="#parameters-for-fine-tuning" id="parameters-for-fine-tuning">Parameters for fine tuning</a></h1>
 <p>The parameters for fine tuning can be passed to the checker in a properties
-file.  Its name is given with the command-line option <code>--tuning=my.properties.</code>
+file.  Its name is given with the command-line option <code>--tuning-options-file=my.properties</code>.
 This file supports variable substitution, e.g., <code>${x}</code> is replaced with the
 value of <code>x</code>, if it was previously declared.</p>
 <p>Alternatively, you can pass the tuning options right in the command-line by
-passing the option <code>--tune-here</code> that has the following format:</p>
+passing the option <code>--tuning-options</code> that has the following format:</p>
 <pre><code>```
---tune-here=key1=val1
---tune-here=key1=val1:key2=val2
+--tuning-options=key1=val1
+--tuning-options=key1=val1:key2=val2
 ...
 ```
 </code></pre>
+<p>The following options are supported:</p>
 <ol>
 <li>
 <p><strong>Randomization</strong>: <code>smt.randomSeed=&lt;int&gt;</code> passes the random seed to <code>z3</code> (via

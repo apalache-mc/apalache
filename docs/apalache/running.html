@@ -179,7 +179,7 @@ will submit anonymized statistics to
 <pre><code class="language-bash">$ apalache-mc check [--config=filename] [--init=Init] [--cinit=ConstInit] \
     [--next=Next] [--inv=Inv] [--length=10] [--algo=(incremental|offline)] \
     [--discard-disabled] [--no-deadlock] \
-    [--tuning=filename] [--tune-here=options] \
+    [--tuning-options-file=filename] [--tuning-options=key1=val1:...:keyn=valn] \
     [--smt-encoding=(oopsla19|arrays)] \
     [--out-dir=./path/to/dir] \
     [--write-intermediate=(true|false)] \
@@ -203,62 +203,39 @@ will submit anonymized statistics to
 <li>
 <p>Advanced parameters:</p>
 <ul>
-<li>
-<p><code>--algo</code> lets you to choose the search algorithm: <code>incremental</code> is using the incremental SMT solver, <code>offline</code> is
+<li><code>--algo</code> lets you to choose the search algorithm: <code>incremental</code> is using the incremental SMT solver, <code>offline</code> is
 using the non-incremental
-(offline) SMT solver</p>
-</li>
-<li>
-<p><code>--smt-encoding</code> lets you choose how the SMT instances are encoded: <code>oopsla19</code> (default) uses QF_UFNIA, and
+(offline) SMT solver</li>
+<li><code>--smt-encoding</code> lets you choose how the SMT instances are encoded: <code>oopsla19</code> (default) uses QF_UFNIA, and
 <code>arrays</code> (experimental) uses arrays with extensionality. This parameter can also be set via the
-<code>SMT_ENCODING</code> environment variable. See the <a href="../adr/011adr-smt-arrays.html">alternative SMT encoding using arrays</a> for details.</p>
-</li>
-<li>
-<p><code>--discard-disabled</code> does a pre-check on transitions and discard the disabled ones at every step. If you know that
+<code>SMT_ENCODING</code> environment variable. See the <a href="../adr/011adr-smt-arrays.html">alternative SMT encoding using arrays</a> for details.</li>
+<li><code>--discard-disabled</code> does a pre-check on transitions and discard the disabled ones at every step. If you know that
 many transitions are always enabled, set it to false. Sometimes, this pre-check may be slower than checking the
-invariant. Default: true.</p>
-</li>
-<li>
-<p><code>--max-error &lt;n&gt;</code> instructs the search to stop after <code>n</code> errors, see <a href="./enumeration.html">Enumeration of counterexamples</a>. Default: 1.</p>
-</li>
-<li>
-<p><code>--view &lt;name&gt;</code> sets the state view to <code>&lt;name&gt;</code>, see <a href="./enumeration.html">Enumeration of counterexamples</a>.</p>
-</li>
-<li>
-<p><code>--no-deadlock</code> disables deadlock-checking, when <code>--discard-disabled=false</code> is on. When <code>--discard-disabled=true</code>,
-deadlocks are found in any case.</p>
-</li>
-<li>
-<p><code>--tuning</code> specifies the properties file that stores the options for
-<a href="tuning.html">fine tuning</a></p>
-</li>
-<li>
-<p><code>--out-dir</code> set location for outputting any generated logs or artifacts,
-<em><code>./_apalache-out</code> by default</em></p>
-</li>
-<li>
-<p><code>--write-intermediate</code> if <code>true</code>, then additional output is generated. See
-<a href="#detailed-output">Detailed output</a>. <em><code>false</code> by default</em></p>
-</li>
-<li>
-<p><code>--run-dir=DIRECTORY</code> write all outputs directly into the specified
-<code>DIRECTORY</code></p>
-</li>
-<li>
-<p><code>--config-file</code> a file to use for loading configuration parameters. This
-will prevent Apalache from looking for any local <code>.apalache.cfg</code> file.</p>
-</li>
-<li>
-<p><code>--profiling</code> (Bool): This flag governs the creation of <code>profile-rules.txt</code>
+invariant. Default: true.</li>
+<li><code>--max-error &lt;n&gt;</code> instructs the search to stop after <code>n</code> errors, see <a href="./enumeration.html">Enumeration of counterexamples</a>. Default: 1.</li>
+<li><code>--view &lt;name&gt;</code> sets the state view to <code>&lt;name&gt;</code>, see <a href="./enumeration.html">Enumeration of counterexamples</a>.</li>
+<li><code>--no-deadlock</code> disables deadlock-checking, when <code>--discard-disabled=false</code> is on. When <code>--discard-disabled=true</code>,
+deadlocks are found in any case.</li>
+<li><code>--tuning-options-file</code> specifies a properties file that stores options for
+<a href="tuning.html">fine tuning</a></li>
+<li><code>--tuning-options</code> can pass and/or override these <a href="tuning.html">fine tuning</a>
+options on the command line</li>
+<li><code>--out-dir</code> set location for outputting any generated logs or artifacts,
+<em><code>./_apalache-out</code> by default</em></li>
+<li><code>--write-intermediate</code> if <code>true</code>, then additional output is generated. See
+<a href="#detailed-output">Detailed output</a>. <em><code>false</code> by default</em></li>
+<li><code>--run-dir=DIRECTORY</code> write all outputs directly into the specified
+<code>DIRECTORY</code></li>
+<li><code>--config-file</code> a file to use for loading configuration parameters. This
+will prevent Apalache from looking for any local <code>.apalache.cfg</code> file.</li>
+<li><code>--profiling</code> (Bool): This flag governs the creation of <code>profile-rules.txt</code>
 used in <a href="profiling.html">profiling</a>. The file is only created if <code>profiling</code>
 is set to <code>True</code>.  Setting <code>profiling</code> to <code>False</code> is incompatible with the
-<code>--smtprof</code> flag. The default is <code>False</code>.</p>
-<p>The options that are passed with the option <code>--tuning-options</code>
-have priority over the options that are passed with the option <code>--tuning</code>.</p>
-</li>
+<code>--smtprof</code> flag. The default is <code>False</code>.</li>
 </ul>
 </li>
 </ul>
+<p>Options passed with <code>--tuning-options</code> have priority over options passed with <code>--tuning-options-file</code>.</p>
 <p>If an initialization predicate, transition predicate, or invariant is specified both in the configuration file, and on
 the command line, the command line parameters take precedence over those in the configuration file.</p>
 <p>In case conflicting arguments are passed for the same parameter, the following precedence order is followed:</p>
