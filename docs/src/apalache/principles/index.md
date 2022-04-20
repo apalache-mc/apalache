@@ -14,6 +14,5 @@ Topics:
  - [Invariants: State, Action, Trace](./principles/invariants.md)
  - [Enumeration of counterexamples](./principles/enumeration.md)
  - [The Apalache Module](./apalache/principles/apalache-mod.md)
- - [Recursive operators and functions](./recursive.md)
  - [Naturals module](./naturals.md)
 

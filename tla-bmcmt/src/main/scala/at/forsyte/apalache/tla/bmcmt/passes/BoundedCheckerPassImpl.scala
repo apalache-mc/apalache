@@ -18,8 +18,6 @@ import at.forsyte.apalache.tla.pp.NormalizedNames
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
-import java.nio.file.Path
-
 /**
  * The implementation of a bounded model checker with SMT.
  *
@@ -65,11 +63,10 @@ class BoundedCheckerPassImpl @Inject() (
     val stepsBound = options.getOrElse[Int]("checker", "length", 10)
     val tuning = options.getOrElse[Map[String, String]]("general", "tuning", Map[String, String]())
     val debug = options.getOrElse[Boolean]("general", "debug", false)
-    val saveDir = options.getOrError[Path]("io", "outdir").toFile
     // TODO: default smtEncoding option is needed here for executions with TestCmd, add encoding option to TestCmd instead
     val smtEncoding = options.getOrElse[SMTEncoding]("checker", "smt-encoding", oopsla19Encoding)
 
-    val params = new ModelCheckerParams(input, stepsBound, saveDir, tuning, debug)
+    val params = new ModelCheckerParams(input, stepsBound, tuning, debug)
     params.discardDisabled = options.getOrElse[Boolean]("checker", "discardDisabled", true)
     params.checkForDeadlocks = !options.getOrElse[Boolean]("checker", "noDeadlocks", false)
     params.nMaxErrors = options.getOrElse[Int]("checker", "maxError", 1)
@@ -127,7 +124,8 @@ class BoundedCheckerPassImpl @Inject() (
     val filteredTrex =
       new FilteredTransitionExecutor[SnapshotT](params.transitionFilter, params.invFilter, trex)
 
-    val checker = new SeqModelChecker[SnapshotT](params, input, filteredTrex)
+    val checker =
+      new SeqModelChecker[SnapshotT](params, input, filteredTrex, Seq(DumpCounterexamplesModelCheckerListener))
     val outcome = checker.run()
     rewriter.dispose()
     logger.info(s"The outcome is: " + outcome)
@@ -157,7 +155,8 @@ class BoundedCheckerPassImpl @Inject() (
     val trex = new TransitionExecutorImpl[SnapshotT](params.consts, params.vars, executorContext)
     val filteredTrex = new FilteredTransitionExecutor[SnapshotT](params.transitionFilter, params.invFilter, trex)
 
-    val checker = new SeqModelChecker[SnapshotT](params, input, filteredTrex)
+    val checker =
+      new SeqModelChecker[SnapshotT](params, input, filteredTrex, Seq(DumpCounterexamplesModelCheckerListener))
     val outcome = checker.run()
     rewriter.dispose()
     logger.info(s"The outcome is: " + outcome)
