@@ -13,3 +13,11 @@
 ### Features
 
 * Experimental type unification over rows, new records, and variants, see #1646
+
+### Breaking changes
+
+ * Rename `--tuning` to `--tuning-options-file`, see #1579
+
+### Bug fixes
+
+ * Fix references to `--tune-here` (actually `--tuning-options`), see #1579
