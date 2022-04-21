@@ -175,7 +175,7 @@
 <tr><td>Shon Feder, Igor Konnov, Jure Kukovec</td><td align="right">5</td><td align="right">April 08, 2022</td></tr>
 </tbody></table>
 <p><em>This is an architectural decision record. For user documentation, check the
-[Snowcat tutorial][] and [Snowcat HOWTO][].</em></p>
+<a href="https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html">Snowcat tutorial</a> and <a href="https://apalache.informal.systems/docs/HOWTOs/howto-write-type-annotations.html">Snowcat HOWTO</a>.</em></p>
 <p>This is a follow up of <a href="./001rfc-types.html">RFC-001</a>, which discusses plenty of
 alternative solutions. In this <strong>ADR-002</strong>, we fix one solution that seems to be
 most suitable. The interchange format for the type inference tools will be
@@ -279,12 +279,12 @@ of <code>typeConst</code>, the name should be an identifier in the upper case. T
 of the constant type. For examples, see <a href="#useTypeAlias">Section 2.4</a>.</p>
 <p><a id="rows"></a></p>
 <h3><a class="header" href="#a-idts-12a13-type-system-12-including-precise-records-variants-and-rows" id="a-idts-12a13-type-system-12-including-precise-records-variants-and-rows"><a id="ts-1.2"></a>1.3. Type System 1.2, including precise records, variants, and rows</a></h3>
-<p><strong>This is work in progress.</strong> You can track the progress of this work in [Issue
-401][]. Once this work is complete, we will switch to Type System 1.2.</p>
-<p>As discussed in [ADR014][], many users expressed the need for precise type
+<p><strong>This is work in progress.</strong> You can track the progress of this work in <a href="https://github.com/informalsystems/apalache/issues/401">Issue
+401</a>. Once this work is complete, we will switch to Type System 1.2.</p>
+<p>As discussed in <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/src/adr/014adr-precise-records.md">ADR014</a>, many users expressed the need for precise type
 checking for records in Snowcat. Records in untyped TLA+ are used in two
 capacities: as plain records and as variants. While the technical proposal is
-given in [ADR014][], we discuss the extension of the type grammar in this
+given in <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/src/adr/014adr-precise-records.md">ADR014</a>, we discuss the extension of the type grammar in this
 ADR-002.  To this end, we extend the grammar with new records, variants, and
 rows as follows:</p>
 <pre><code>// Type System 1.2
@@ -623,12 +623,7 @@ FairSpec ==
 
 AtMostOne ==
     Cardinality({r \in Ingredients : smokers[r].smoking}) &lt;= 1
-=============================================================================```
-
-[Snowcat tutorial]: https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html
-[Snowcat HOWTO]: https://apalache.informal.systems/docs/HOWTOs/howto-write-type-annotations.html
-[ADR014]: https://github.com/informalsystems/apalache/blob/unstable/docs/src/adr/014adr-precise-records.md
-[Issue 401]: https://github.com/informalsystems/apalache/issues/401
+=============================================================================
 </code></pre>
 
                     </main>
