@@ -1,8 +1,8 @@
 # ADR-018: Inlining
 
-| author     | revision | last revised |
-| ------------ | --------:| -------- |
-| Jure Kukovec |    1 | Apr 13, 2022 |
+| author       | revision | last revised |
+| ------------ | --------:| ------------ |
+| Jure Kukovec |        1 | Apr 13, 2022 |
 
 **Table of Contents**
 
@@ -17,7 +17,7 @@
 <!-- Statement to summarize, following the following formula: -->
 
 This ADR outlines the transformations that happen in the Apalache inliner pass.
-Since we have recently reworked the inliner in #1569, we saw it fit to document exactly how inlining is supposed to work and why the inlining pass is the way it is. 
+Since we have recently reworked the inliner in [#1569](https://github.com/informalsystems/apalache/pull/1569), we saw it fit to document exactly how inlining is supposed to work and why the inlining pass is the way it is. 
 
 ## Context
 
@@ -32,7 +32,7 @@ We elect to use the term in a broader sense of "replacing an operator with its d
 
 The reason for doing (1) is that, in order to encode `A(x1,...,xn)`, we need to know `e[x1/p1,...,xn/pn]`, not just `e`, since the latter may contain free variables (e.g. `p1` is free in `e`).
 
-The reason for doing (2) is more pragmatic; In order to rewrite expressions which feature any of the higher-order (HO) built-in operators, e.g. `ApaFoldSet(A, v, S)`, we need to know, at the time of rewriting, how to evaluate an application of `A` (e.g. `A(partial, current)` for folding). 
+The reason for doing (2) is more pragmatic; in order to rewrite expressions which feature any of the higher-order (HO) built-in operators, e.g. `ApaFoldSet(A, v, S)`, we need to know, at the time of rewriting, how to evaluate an application of `A` (e.g. `A(partial, current)` for folding). 
 Performing (2) allows us to make the rewriting rule local, since the definition becomes available where the operator is used, and frees us from having to track scope in the rewriting rules.
 
 ## Options
@@ -44,10 +44,12 @@ Performing (2) allows us to make the rewriting rule local, since the definition 
 1. Perform no inlining in preprocessing and inline only as needed in the rewriting rules.
     - Pros: Spec intermediate output remains small, since inlining increases the size of the specificaiton
     - Cons: Fewer optimizations can be applied, as some are only applicable to the syntactic forms obtained after inlining
+    - Cons: Rewriting rules for different encodings have to deal with operators in their generality.
 
 1. Perform only standard inlining (1)
     - Pros: Allows for additional optimizations after inlining
     - Cons: Rewriting rules still need scope, to resolve higher-order operator arguments in certain built-in operators (e.g. folds)
+    - Cons: Nullary inlining prone to repetition
 
 1. Perform non-nullary inlining and pass-by-name inlining
     - Pros: 
