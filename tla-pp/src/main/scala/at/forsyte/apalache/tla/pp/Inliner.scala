@@ -58,7 +58,7 @@ class Inliner(
       operDeclFilter: DeclFilter = negateFilter(nonNullaryFilter),
       scopeFilter: DeclFilter = nonNullaryFilter,
     )(initialScope: Scope,
-      decls: Traversable[TlaDecl]): (Scope, List[TlaDecl]) =
+      decls: Iterable[TlaDecl]): (Scope, List[TlaDecl]) =
     decls.foldLeft((initialScope, List.empty[TlaDecl])) { case ((scope, decls), decl) =>
       decl match {
         case opDecl: TlaOperDecl =>
