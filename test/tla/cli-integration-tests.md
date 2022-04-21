@@ -200,10 +200,8 @@ EXITCODE: OK
 ### parse Empty with an unsupported feature fails
 
 ```sh
-$ apalache-mc parse --features=feature.unsupported Empty.tla 2>&1 | sed 's/I@.*//'
-...
+$ apalache-mc parse --features=feature.unsupported Empty.tla 2>&1 | grep 'Failed to parse'
 Failed to parse command parse: Incorrect value for option features, got 'feature.unsupported', expected a feature: rows
-EXITCODE: ERROR (1)
 ```
 
 ### parse LocalDefClash576 succeeds
