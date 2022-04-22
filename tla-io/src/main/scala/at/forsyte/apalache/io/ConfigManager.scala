@@ -102,11 +102,7 @@ case class ConfigManager(cmd: CliConfig) {
 
 object ConfigManager {
 
-  /** Load the application configuration, or raise a configuration error */
-  def apply(cmd: CliConfig): ApalacheConfig = {
-    new ConfigManager(cmd).load() match {
-      case Left(err)  => throw new ConfigurationError(err.toString())
-      case Right(cfg) => cfg
-    }
-  }
+  /** Load the application configuration, converting any configuration error into a pretty printed message */
+  def apply(cmd: CliConfig): Either[String, ApalacheConfig] =
+    new ConfigManager(cmd).load().left.map(_.prettyPrint())
 }

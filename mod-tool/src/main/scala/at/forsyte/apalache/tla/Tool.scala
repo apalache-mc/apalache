@@ -28,7 +28,6 @@ import util.ExecutionStatisticsCollector.Selection
 
 import scala.collection.JavaConverters._
 import scala.util.Random
-import at.forsyte.apalache.io.ApalacheConfig
 import at.forsyte.apalache.io.ConfigManager
 import at.forsyte.apalache.tla.bmcmt.rules.vmt.TlaExToVMTWriter
 
@@ -53,21 +52,23 @@ object Tool extends LazyLogging {
     System.exit(run(args))
   }
 
-  private def outputAndLogConfig(cmd: General): Unit = {
-    val cfg: ApalacheConfig = ConfigManager(cmd)
-    OutputManager.configure(cfg)
-    // We currently use dummy files for some commands, so we skip here on non-existing files
-    if (cmd.file.getName.endsWith(".tla") && cmd.file.exists()) {
-      OutputManager.initSourceLines(cmd.file)
+  // Returns `Left(errmsg)` in case of configuration errors
+  private def outputAndLogConfig(cmd: General): Either[String, Unit] = {
+    ConfigManager(cmd).map { cfg =>
+      OutputManager.configure(cfg)
+      // We currently use dummy files for some commands, so we skip here on non-existing files
+      if (cmd.file.getName.endsWith(".tla") && cmd.file.exists()) {
+        OutputManager.initSourceLines(cmd.file)
+      }
+      println(s"Output directory: ${OutputManager.runDir.normalize()}")
+      OutputManager.withWriterInRunDir(OutputManager.Names.RunFile)(
+          _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
+      )
+      // force our programmatic logback configuration, as the autoconfiguration works unpredictably
+      new LogbackConfigurator(OutputManager.runDirPathOpt, OutputManager.customRunDirPathOpt).configureDefaultContext()
+      // TODO: update workers when the multicore branch is integrated
+      submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> cmd.label, "workers" -> "1"))
     }
-    println(s"Output directory: ${OutputManager.runDir.normalize()}")
-    OutputManager.withWriterInRunDir(OutputManager.Names.RunFile)(
-        _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
-    )
-    // force our programmatic logback configuration, as the autoconfiguration works unpredictably
-    new LogbackConfigurator(OutputManager.runDirPathOpt, OutputManager.customRunDirPathOpt).configureDefaultContext()
-    // TODO: update workers when the multicore branch is integrated
-    submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> cmd.label, "workers" -> "1"))
   }
 
   /**
@@ -102,39 +103,41 @@ object Tool extends LazyLogging {
 
         printHeaderAndStatsConfig()
 
-        val exitcode = {
-
-          outputAndLogConfig(cmd)
-
-          // Start measuring time
-          val startTime = LocalDateTime.now()
-
-          try {
-            cmd match {
-              case parse: ParseCmd =>
-                runForModule(runParse, new ParserModule, parse)
-
-              case check: CheckCmd =>
-                runForModule(runCheck, new CheckerModule, check)
-
-              case test: TestCmd =>
-                runForModule(runTest, new CheckerModule, test)
-
-              case typecheck: TypeCheckCmd =>
-                runForModule(runTypeCheck, new TypeCheckerModule, typecheck)
-
-              case server: ServerCmd =>
-                runForModule(runServer, new CheckerModule, server)
-
-              case constrain: TranspileCmd =>
-                runForModule(runConstrain, new ReTLAToVMTModule, constrain)
-
-              case config: ConfigCmd =>
-                configure(config)
-            }
-          } finally {
-            printTimeDiff(startTime)
+        val exitcode = outputAndLogConfig(cmd) match {
+          case Left(configurationErrorMessage) => {
+            logger.error(s"Configuration error: ${configurationErrorMessage}")
+            ExitCodes.ERROR
           }
+          case Right(()) => {
+            val startTime = LocalDateTime.now()
+            try {
+              cmd match {
+                case parse: ParseCmd =>
+                  runForModule(runParse, new ParserModule, parse)
+
+                case check: CheckCmd =>
+                  runForModule(runCheck, new CheckerModule, check)
+
+                case test: TestCmd =>
+                  runForModule(runTest, new CheckerModule, test)
+
+                case typecheck: TypeCheckCmd =>
+                  runForModule(runTypeCheck, new TypeCheckerModule, typecheck)
+
+                case server: ServerCmd =>
+                  runForModule(runServer, new CheckerModule, server)
+
+                case constrain: TranspileCmd =>
+                  runForModule(runConstrain, new ReTLAToVMTModule, constrain)
+
+                case config: ConfigCmd =>
+                  configure(config)
+              }
+            } finally {
+              printTimeDiff(startTime)
+            }
+          }
+        }
 
         if (exitcode == OK_EXIT_CODE) {
           Console.out.println("EXITCODE: OK")
