@@ -7,7 +7,6 @@
 *This is an architectural decision record. For user documentation, check the
 [Snowcat tutorial][] and [Snowcat HOWTO][].*
 
-
 This is a follow up of [RFC-001](./001rfc-types.md), which discusses plenty of
 alternative solutions. In this __ADR-002__, we fix one solution that seems to be
 most suitable. The interchange format for the type inference tools will be
@@ -523,7 +522,8 @@ FairSpec ==
 
 AtMostOne ==
     Cardinality({r \in Ingredients : smokers[r].smoking}) <= 1
-=============================================================================```
+=============================================================================
+```
 
 [Snowcat tutorial]: https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html
 [Snowcat HOWTO]: https://apalache.informal.systems/docs/HOWTOs/howto-write-type-annotations.html
