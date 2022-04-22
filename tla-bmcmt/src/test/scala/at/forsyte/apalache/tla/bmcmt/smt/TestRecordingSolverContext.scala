@@ -8,8 +8,8 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import org.scalatest.funsuite.AnyFunSuite
 
 /**
- * [[RecordingSolverContext]] tests. Override [[AnyFunSuite.withFixture()]] to set up specific solver contexts (e.g.,
- * for different encodings).
+ * [[RecordingSolverContext]] tests. Override [[AnyFunSuite.withFixture]] to set up specific solver contexts (e.g., for
+ * different encodings).
  */
 trait TestRecordingSolverContext extends AnyFunSuite {
   protected var solverConfig: SolverConfig = _

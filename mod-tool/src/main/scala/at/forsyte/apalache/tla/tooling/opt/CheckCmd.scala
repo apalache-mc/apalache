@@ -28,12 +28,13 @@ class CheckCmd extends AbstractCheckerCmd(name = "check", description = "Check a
   var smtEncoding: SMTEncoding = opt[SMTEncoding](name = "smt-encoding", useEnv = true, default = oopsla19Encoding,
       description =
         "the SMT encoding: oopsla19, arrays (experimental), default: oopsla19 (overrides envvar SMT_ENCODING)")
-  var tuning: String =
-    opt[String](name = "tuning", default = "", description = "filename of the tuning options, see docs/tuning.md")
+  var tuningOptionsFile: String =
+    opt[String](name = "tuning-options-file", default = "",
+        description = "filename of the tuning options, see docs/tuning.md")
   var tuningOptions: String =
     opt[String](name = "tuning-options", default = "",
         description =
-          "tuning options as arguments in the format key1=val1:key2=val2:key3=val3 (priority over --tuning)")
+          "tuning options as arguments in the format key1=val1:key2=val2:key3=val3 (priority over --tuning-options-file)")
   var discardDisabled: Boolean = opt[Boolean](name = "discard-disabled", default = true,
       description =
         "pre-check, whether a transition is disabled, and discard it, to make SMT queries smaller, default: true")

@@ -39,12 +39,12 @@ instance, below is the example
 {{#include ../../../test/tla/y2k_cinit.tla::13}}
 ```
 
-To use `ConstInit`, pass it as the argument to `apalache`. For instance, for
+To use `ConstInit`, pass it as the argument to `apalache-mc`. For instance, for
 `y2k_cinit`, we would run the model checker as follows:
 
 ```tla
 $ cd $APALACHE_HOME/test/tla
-$ apalache check --inv=Safety \
+$ apalache-mc check --inv=Safety \
   --length=20 --cinit=ConstInit y2k_cinit.tla
 ```
 

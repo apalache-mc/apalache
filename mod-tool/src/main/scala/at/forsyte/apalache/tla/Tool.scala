@@ -221,7 +221,7 @@ object Tool extends LazyLogging {
     setCoreOptions(executor, check)
 
     var tuning =
-      if (check.tuning != "") loadProperties(check.tuning) else Map[String, String]()
+      if (check.tuningOptionsFile != "") loadProperties(check.tuningOptionsFile) else Map[String, String]()
     tuning = overrideProperties(tuning, check.tuningOptions)
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
@@ -367,7 +367,7 @@ object Tool extends LazyLogging {
     def parseKeyValue(text: String): (String, String) = {
       val parts = text.split('=')
       if (parts.length != 2 || parts.head.trim == "" || parts(1) == "") {
-        throw new PassOptionException(s"Expected key=value in --tune-here=$propsAsString")
+        throw new PassOptionException(s"Expected key=value in --tuning-options=$propsAsString")
       } else {
         // trim to remove surrounding whitespace from the key, but allow the value to have white spaces
         (parts.head.trim, parts(1))

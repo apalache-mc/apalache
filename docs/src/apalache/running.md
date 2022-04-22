@@ -9,10 +9,10 @@ will submit anonymized statistics to
 The model checker can be run as follows:
 
 ```bash
-$ apalache check [--config=filename] [--init=Init] [--cinit=ConstInit] \
+$ apalache-mc check [--config=filename] [--init=Init] [--cinit=ConstInit] \
     [--next=Next] [--inv=Inv] [--length=10] [--algo=(incremental|offline)] \
     [--discard-disabled] [--no-deadlock] \
-    [--tuning=filename] [--tune-here=options] \
+    [--tuning-options-file=filename] [--tuning-options=key1=val1:...:keyn=valn] \
     [--smt-encoding=(oopsla19|arrays)] \
     [--out-dir=./path/to/dir] \
     [--write-intermediate=(true|false)] \
@@ -45,8 +45,10 @@ The arguments are as follows:
     - `--view <name>` sets the state view to `<name>`, see [Enumeration of counterexamples][].
     - `--no-deadlock` disables deadlock-checking, when `--discard-disabled=false` is on. When `--discard-disabled=true`,
       deadlocks are found in any case.
-    - `--tuning` specifies the properties file that stores the options for
+    - `--tuning-options-file` specifies a properties file that stores options for
       [fine tuning](tuning.md)
+    - `--tuning-options` can pass and/or override these [fine tuning](tuning.md)
+      options on the command line
     - `--out-dir` set location for outputting any generated logs or artifacts,
       *`./_apalache-out` by default*
     - `--write-intermediate` if `true`, then additional output is generated. See
@@ -60,9 +62,7 @@ The arguments are as follows:
       is set to `True`.  Setting `profiling` to `False` is incompatible with the
       `--smtprof` flag. The default is `False`.
 
-
-      The options that are passed with the option `--tuning-options`
-      have priority over the options that are passed with the option `--tuning`.
+Options passed with `--tuning-options` have priority over options passed with `--tuning-options-file`.
 
 If an initialization predicate, transition predicate, or invariant is specified both in the configuration file, and on
 the command line, the command line parameters take precedence over those in the configuration file.
@@ -142,13 +142,13 @@ To check an inductive invariant ``IndInv`` in Apalache, you run two commands tha
  - **IndInit**: Check that the initial states satisfy `IndInv`:
 
     ```bash
-    $ apalache check --init=Init --inv=IndInv --length=0 <myspec>.tla
+    $ apalache-mc check --init=Init --inv=IndInv --length=0 <myspec>.tla
     ```
 
  - **IndNext**: Check that `Next` does not drive us outside of `IndInv`:
 
     ```bash
-    $ apalache check --init=IndInv --inv=IndInv --length=1 <myspec>.tla
+    $ apalache-mc check --init=IndInv --inv=IndInv --length=1 <myspec>.tla
     ```
 
 Usually, you look for an inductive invariant to check a safety predicate. For
@@ -158,7 +158,7 @@ safety predicate `Safety`, you have to run Apalache once again:
  - **IndProp**: Check that all states captured with `IndInv` satisfy the predicate `Safety`:
 
     ```bash
-    $ apalache check --init=IndInv --inv=Safety --length=0 <myspec>.tla
+    $ apalache-mc check --init=IndInv --inv=Safety --length=0 <myspec>.tla
     ```
 
 It may happen that your inductive invariant `IndInv` is too weak and it
@@ -171,7 +171,7 @@ Then you would have to check the queries IndInit, IndNext, and IndProp again.
 
 ```bash
 $ cd test/tla
-$ apalache check --length=20 --inv=Safety y2k_override.tla
+$ apalache-mc check --length=20 --inv=Safety y2k_override.tla
 ```
 
 This command checks, whether `Safety` can be violated in 20 specification steps. If `Safety` is not violated, your spec
@@ -181,8 +181,8 @@ might still have a bug that requires a computation longer than 20 steps to manif
 
 ```bash
 $ cd test/tla
-$ apalache check --length=0 --init=Init --inv=Inv y2k_override.tla
-$ apalache check --length=1 --init=Inv  --inv=Inv y2k_override.tla
+$ apalache-mc check --length=0 --init=Init --inv=Inv y2k_override.tla
+$ apalache-mc check --length=1 --init=Inv  --inv=Inv y2k_override.tla
 ```
 
 The first call to apalache checks, whether the initial states satisfy the invariant. The second call to apalache checks,
@@ -193,7 +193,7 @@ That is why these invariants are called inductive.)
 
 ```bash
 $ cd test/tla
-apalache check --cinit=ConstInit --length=20 --inv=Safety y2k_cinit.tla
+apalache-mc check --cinit=ConstInit --length=20 --inv=Safety y2k_cinit.tla
 ```
 
 This command checks, whether `Safety` can be violated in 20 specification steps. The constants are initialized with the
@@ -297,7 +297,7 @@ If you'd like to check that your TLA+ specification is syntactically correct, wi
 run the following command:
 
 ```bash
-$ apalache parse <myspec>.tla
+$ apalache-mc parse <myspec>.tla
 ```
 
 In this case, Apalache performs the following steps:
@@ -315,7 +315,7 @@ You can also write output to a specified location by using the `--output` flag.
 E.g.,
 
 ```bash
-$ apalache parse --output=result.json <myspec>.tla
+$ apalache-mc parse --output=result.json <myspec>.tla
 ```
 
 will write the IR to the file `result.json`.
