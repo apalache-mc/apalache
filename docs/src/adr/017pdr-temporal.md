@@ -168,95 +168,50 @@ contain lassos as counterexamples but it does not have to, which makes this
 technique incomplete. An extension to infinite-state systems was studied by
 [Padon et al. 2021][]. This is beyond the scope of this task.
 
-There are multiple ways to encode the constraints by [Biere et al. 2006][].
-The different ways are demonstrated on the [EWD998](EWD998.tla) spec,
-which specifies a protocol for termination detection,
-using token passing in a ring.
+There are two ways to encode the constraints by [Biere et al. 2006][]:
 
-#### **Trace Invariants**
- The lasso finding problem can be encoded as a [trace invariants][]. See e.g. the [EWD998 protocol with trace invariants](EWD998_trace.tla).
- Roughly, a loop is encoded by demanding there exists a loop index at which point the state is identical to the state at the end of the execution.
+ 1. Encode the lasso finding problem as a trace invariant. Apalache can check
+ [trace invariants][]. This approach is most straighforward. However it has
+ several drawbacks:
 
- Implementation details:
- - Instead of quantifying over indices, one could use an additional Boolean variable starting out FALSE that nondeterministically guesses when the execution enters the loop and is set to TRUE at that point. Experiments suggest this negatively impacts performance, but it can help understand counterexamples, since the loop is immediately visible in the states.
-   
-  Advantages:
-  - The predicate in the spec is very close to the semantic meaning of the temporal operators, e.g. `[] x >= 2` becomes `\A step \in DOMAIN hist: hist[step].x >= 2`
-  - Only very few new variables are added (none, but depending on implementation choices maybe one/two).
+    - Trace invariants require Apalache to pack the sequence of states.
+      This sometimes produces unnecessary constraints.
 
-  Disadvantages:
-  - Trace invariants require Apalache to pack the sequence of states.
-    This sometimes produces unnecessary constraints.
+    - When a trace invariant is violated, the intermediate definitions
+      in this invariant are not printed in the counterexample.
+      This will make printing of the counterexamples to liveness harder.
 
-  - When a trace invariant is violated, the intermediate definitions
-    in this invariant are not printed in the counterexample.
-    This will make printing of the counterexamples to liveness harder, e.g. see an [example](counterexample_trace.tla#L118)
+ 1. Instrument the existing specification by adding auxilliary variables that
+ update the predicates as required by the encoding of [Biere et al. 2006][].
+ We could also extend it with the liveness-to-safety reduction, see [Biere et
+ al. 2006][]. If we choose this approach, we will be able to print
+ counterexamples. So this approach is more transparent.
 
+To choose between these two approaches, we will try both of them on a simple
+specification. For instance, [Folklore broadcast][].
 
-#### **Encoding with auxiliary variables**
+### Encoding with Trace Invariants
+[Folklore with trace invariants] is relatively straightforward.
+Some implementation choices that might be altered depending on solver performance are:
+* The `LoopSelector` is a boolean variable. One could alternatively use an integer to 
+denote the index of the loop start, or not have a global variable for this and instead
+use a LET IN definition like `LET loopStart == GUESS x \in {candidate \in DOMAIN hist: hist[candidate].vars = vars}`. With this choice, one would have to be careful that the loop index is the same across subformulas. Additionally, it is important that GUESS is nondeterministic, not deterministic-but-arbitrary.  
+* The spec uses two auxiliary variables, `LoopSelector` and `InLoop`.
+`InLoop` is not necessary, but it can be used to ensure `LoopSelector` is
+true only in a single state without an additional mutual exclusion constraint.
 
-The loop finding problem can alternatively be approached
-by adding extra variables: One variable `InLoop` which
-determines whether the execution is currently on the loop,
-and for each variable `foo` of the original spec an extra variable `loop_foo`,
-which, once `InLoop` is true, stores the state of `foo` at the start of the loop.
-Then, the loop has been completed if `vars = loop_vars`.
+Advantages of the encoding using trace invariants:
+* (In my opinion) they remain very close to the formal semantics of the temporal operators 
+* Thus, it might be easier to understand how the temporal operators are encoded
+when one looks at the intermediate outputs of Apalache.
+* Trace invariants can be used very flexibly, 
+so someone who understands only temporal operators, but then takes time to
+learn about trace invariants, may be able to reuse trace invariants for other use cases
 
-Apart from the variables for finding the loop, this approach also needs extra variables for
-determining the satisfaction of the temporal property to be checked.
-There again exist multiple ways of concretely implementing this:
+Disadvantages:
+* Invariant violations in counterexamples for trace invariants are not displayed properly (see [Trace invariant counterexample] )
+* Trace invariants seem like they lead to additional constraints, so they might be slower than a propositional encoding
 
-##### **Encoding with Buchi automata**
-One can extend the spec with a Buchi automaton
-which is updated in each step. The Buchi automaton encodes
-the negation of the temporal property, thus if the automaton
-would accept, the property does not hold.
-By checking whether an accepting state of the automaton is seen
-on the loop, it can be determined whether the automaton
-accepts for a looping execution.
-The encoding is described in [Biere et al. 2002][]
-See e.g. the [EWD998 protocol with a Buchi automaton](EWD998_buchi.tla).
-
-Implementation details:
-- An implementation of this encoding would need an implementation of an algorithm for the conversion from LTL to Buchi automata.
-This could be an existing tool, e.g. [Spot](https://spot.lrde.epita.fr/) or our own implementation.
-
-Advantages:
-- Buchi automata for very simple properties can be simple to understand
-- Underlying automata could be visualized
-- Only needs few extra variables - the state of the Buchi automaton can easily be encoded as a single integer
-
-Disadvantages: 
-- Can be slow: Buchi automata generally exhibit either nondeterminism or can get very large
-- Hard to understand: Engineers and even experts have a hard time intuitively understanding Buchi automata for mildly complicated properties
-
-##### **Tableau encoding**
-One can instead extend the spec with auxiliary Boolean variables
-roughly corresponding to all nodes in the syntax tree who have temporal operators
-beneath them. The value of each variable in each step corresponds to whether the
-formula corresponding to that node in the syntax tree is satisfied from that point forward. The encoding is described in Section 3.2 of [Biere et al. 2006][]
-See e.g. the [EWD998 protocol encoded with a tableau](EWD998_tableau.tla).
-
-Implementation details:
-- Naming the auxiliary variables is very important, since they are supposed to represent the values of complex formulas (ideally would simple have that formula as a name, but this is not syntactically possible for most formulas), and there can be many of them.
-
-
-Advantages:
-- Very clear counterexamples: In each step, it is clearly visible which subformulas are or are not satisfied.
-- Relatively intuitive specs: The updates to the auxiliary variables
-correlate with the intuitive meaning of their subformulas rather directly
-in most cases
-
-Disadvantages: 
-- Many variables are added: The number of variables is linear in the number of operators in the formula
-- Specifications get long: The encoding is much more verbose than that for Buchi automata
-
-#### **Decision - which encoding should be used?**
-
-We chose to implement the tableau encoding, since it produces the
-clearest counterexamples. Buchi automata are hard to understand. 
-For trace invariants, the lack of quality in counterexamples makes it
-very hard to debug and understand invariant violations.
 
 ### 2. Fairness
 
@@ -285,6 +240,8 @@ first part of work. To be detailed later...
 [ADR-010]: ./010rfc-transition-explorer.md
 [issue on temporal properties]: https://github.com/informalsystems/apalache/issues/488
 [trace invariants]: ../apalache/principles/invariants.md#trace-invariants
+[Folklore broadcast]: https://github.com/tlaplus/Examples/blob/master/specifications/bcastFolklore/bcastFolklore.tla
 [Model Checking]: https://mitpress.mit.edu/books/model-checking-second-edition
 [Padon et al. 2021]: https://link.springer.com/article/10.1007/s10703-021-00377-1
-[Biere et al. 2002]: http://fmv.jku.at/papers/BiereArthoSchuppan-FMICS02.pdf
+[Folklore with trace invariants]: ../../../test/tla/bcastFolklore_trace.tla
+[Trace invariant counterexample]: ../../../test/tla/bcastFolklore_trace_counterexample.tla#L150
