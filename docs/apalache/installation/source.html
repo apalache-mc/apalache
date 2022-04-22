@@ -189,14 +189,17 @@ Java, otherwise Scala will not compile!</strong> See the <a href="https://docs.s
 <li>Clone the git repository: <code>git clone https://github.com/informalsystems/apalache.git</code>.</li>
 <li>Change into the project directory: <code>cd apalache</code>.</li>
 <li>Install <a href="https://direnv.net/">direnv</a> and run <code>direnv allow</code>, or use <a href="https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md#environment">another way to set up the shell environment</a>.</li>
-<li>Run <code>make</code>.
+<li>To build and package Apalache for development purposes, run <code>make</code>.
 <ul>
 <li>To skip running the tests, you can run <code>make package</code>.</li>
 </ul>
 </li>
-<li>The distribution package will be built to <code>./target/universal/apalache-&lt;VERSION&gt;</code>, and you can
-move this wherever you'd like, and ensure that the <code>&lt;dist-package-location&gt;/bin</code> directory
-is added to your <code>PATH</code>.</li>
+<li>To build and package Apalache for releases and end-user distribution, run
+<code>make dist</code>.</li>
+<li>The distribution package will be built to
+<code>./target/universal/apalache-&lt;VERSION&gt;</code>, and you can move this wherever you'd
+like, and ensure that the <code>&lt;dist-package-location&gt;/bin</code> directory is added to
+your <code>PATH</code>.</li>
 </ol>
 <h2><a class="header" href="#running-from-within-the-apalache-repo" id="running-from-within-the-apalache-repo">Running from within the Apalache repo</a></h2>
 <p>If you prefer to keep the built package inside of the Apalache source
