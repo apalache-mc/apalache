@@ -51,7 +51,7 @@ class TestBoolBuilder extends AnyFunSuite with BeforeAndAfter {
       testCmpOKAndMistyped(
           argGen(i),
           oper,
-          sigGen.computationFromSignature(oper, i),
+          sigGen.computationFromSignature(oper),
           builder.and(_: _*),
       )
     }
@@ -63,7 +63,7 @@ class TestBoolBuilder extends AnyFunSuite with BeforeAndAfter {
       testCmpOKAndMistyped(
           argGen(i),
           oper,
-          sigGen.computationFromSignature(oper, i),
+          sigGen.computationFromSignature(oper),
           builder.or(_: _*),
       )
     }
@@ -74,7 +74,7 @@ class TestBoolBuilder extends AnyFunSuite with BeforeAndAfter {
     testCmpOKAndMistyped(
         argGen(1),
         oper,
-        sigGen.computationFromSignatureForFixedArity(oper),
+        sigGen.computationFromSignature(oper),
         { case Seq(e) => builder.not(e) },
     )
   }
@@ -84,7 +84,7 @@ class TestBoolBuilder extends AnyFunSuite with BeforeAndAfter {
     testCmpOKAndMistyped(
         argGen(2),
         oper,
-        sigGen.computationFromSignatureForFixedArity(oper),
+        sigGen.computationFromSignature(oper),
         { case Seq(a, b) => builder.impl(a, b) },
     )
   }
@@ -94,7 +94,7 @@ class TestBoolBuilder extends AnyFunSuite with BeforeAndAfter {
     testCmpOKAndMistyped(
         argGen(2),
         oper,
-        sigGen.computationFromSignatureForFixedArity(oper),
+        sigGen.computationFromSignature(oper),
         { case Seq(a, b) => builder.equiv(a, b) },
     )
   }

@@ -10,27 +10,39 @@ import at.forsyte.apalache.tla.lir.oper.TlaArithOper
  *   Jure Kukovec
  */
 trait RawArithmeticBuilder extends ProtoBuilder {
-  protected def _plus(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.plus, 2).build(x, y)
+  // x + y
+  protected def _plus(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.plus, x, y)
 
-  protected def _minus(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.minus, 2).build(x, y)
+  // x - y
+  protected def _minus(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.minus, x, y)
 
-  protected def _uminus(x: TlaEx): TlaEx = simpleInstruction(TlaArithOper.uminus, 1).build(x)
+  // -x
+  protected def _uminus(x: TlaEx): TlaEx = simpleInstruction(TlaArithOper.uminus, x)
 
-  protected def _mult(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.mult, 2).build(x, y)
+  // x * y
+  protected def _mult(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.mult, x, y)
 
-  protected def _div(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.div, 2).build(x, y)
+  // x \div y
+  protected def _div(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.div, x, y)
 
-  protected def _mod(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.mod, 2).build(x, y)
+  // x % y
+  protected def _mod(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.mod, x, y)
 
-  protected def _exp(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.exp, 2).build(x, y)
+  // x ^ y
+  protected def _exp(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.exp, x, y)
 
-  protected def _dotdot(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.dotdot, 2).build(x, y)
+  // x .. y
+  protected def _dotdot(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.dotdot, x, y)
 
-  protected def _lt(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.lt, 2).build(x, y)
+  // x < y
+  protected def _lt(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.lt, x, y)
 
-  protected def _gt(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.gt, 2).build(x, y)
+  // x > y
+  protected def _gt(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.gt, x, y)
 
-  protected def _le(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.le, 2).build(x, y)
+  // x <= y
+  protected def _le(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.le, x, y)
 
-  protected def _ge(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.ge, 2).build(x, y)
+  // x >= y
+  protected def _ge(x: TlaEx, y: TlaEx): TlaEx = simpleInstruction(TlaArithOper.ge, x, y)
 }

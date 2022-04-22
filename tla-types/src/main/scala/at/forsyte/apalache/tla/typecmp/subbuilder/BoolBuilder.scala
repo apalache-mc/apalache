@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.typecmp.subbuilder
 
 import at.forsyte.apalache.tla.typecmp.raw.RawBoolBuilder
 import at.forsyte.apalache.tla.typecmp.{BuilderWrapper, NameWrapper}
-import scalaz._
+import at.forsyte.apalache.tla.typecmp.BuilderUtil._
 
 /**
  * Builder for TlaBoolOper expressions.
@@ -12,42 +12,49 @@ import scalaz._
  */
 trait BoolBuilder extends RawBoolBuilder {
 
-  import at.forsyte.apalache.tla.typecmp.BuilderUtil._
+  /** /\_{i=1}^n args */
+  def and(argsW: BuilderWrapper*): BuilderWrapper = buildSeq(argsW).map(_and(_: _*))
 
-  def and(argsW: BuilderWrapper*): BuilderWrapper = polyadicFromRaw(argsW)(_and(_: _*))
+  /** \/_{i=1}^n args */
+  def or(argsW: BuilderWrapper*): BuilderWrapper = buildSeq(argsW).map(_or(_: _*))
 
-  def or(argsW: BuilderWrapper*): BuilderWrapper = polyadicFromRaw(argsW)(_or(_: _*))
-
+  /** ~p */
   def not(pW: BuilderWrapper): BuilderWrapper = pW.map(_not)
 
+  /** p => q */
   def impl(pW: BuilderWrapper, qW: BuilderWrapper): BuilderWrapper = binaryFromRaw(pW, qW)(_impl)
 
+  /** p <=> q */
   def equiv(pW: BuilderWrapper, qW: BuilderWrapper): BuilderWrapper = binaryFromRaw(pW, qW)(_equiv)
 
-  def forall(elemW: NameWrapper, setW: BuilderWrapper, predW: BuilderWrapper): BuilderWrapper = for {
-    elem <- elemW
+  /** \A elem \in set: pred */
+  def forall(xW: NameWrapper, setW: BuilderWrapper, pW: BuilderWrapper): BuilderWrapper = for {
+    x <- xW
     set <- setW
-    pred <- predW
-    _ <- markAsBound(elem)
-  } yield _forall(elem, set, pred)
+    p <- pW
+    _ <- markAsBound(x)
+  } yield _forall(x, set, p)
 
-  def forall(elemW: NameWrapper, predW: BuilderWrapper): BuilderWrapper = for {
-    elem <- elemW
-    pred <- predW
-    _ <- markAsBound(elem)
-  } yield _forall(elem, pred)
+  /** \A elem: pred */
+  def forall(xW: NameWrapper, pW: BuilderWrapper): BuilderWrapper = for {
+    x <- xW
+    p <- pW
+    _ <- markAsBound(x)
+  } yield _forall(x, p)
 
-  def exists(elemW: NameWrapper, setW: BuilderWrapper, predW: BuilderWrapper): BuilderWrapper = for {
-    elem <- elemW
+  /** \E elem \in set: pred */
+  def exists(xW: NameWrapper, setW: BuilderWrapper, pW: BuilderWrapper): BuilderWrapper = for {
+    x <- xW
     set <- setW
-    pred <- predW
-    _ <- markAsBound(elem)
-  } yield _exists(elem, set, pred)
+    p <- pW
+    _ <- markAsBound(x)
+  } yield _exists(x, set, p)
 
-  def exists(elemW: NameWrapper, predW: BuilderWrapper): BuilderWrapper = for {
-    elem <- elemW
-    pred <- predW
-    _ <- markAsBound(elem)
-  } yield _exists(elem, pred)
+  /** \E elem: pred */
+  def exists(xW: NameWrapper, pW: BuilderWrapper): BuilderWrapper = for {
+    x <- xW
+    p <- pW
+    _ <- markAsBound(x)
+  } yield _exists(x, p)
 
 }

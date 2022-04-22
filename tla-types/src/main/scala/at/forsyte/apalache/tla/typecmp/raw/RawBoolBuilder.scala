@@ -10,25 +10,30 @@ import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
  *   Jure Kukovec
  */
 trait RawBoolBuilder extends ProtoBuilder {
-  protected def _and(args: TlaEx*): TlaEx = simpleInstruction(TlaBoolOper.and, args.size).build(args: _*)
+  // /\_{i=1}^n args
+  protected def _and(args: TlaEx*): TlaEx = simpleInstruction(TlaBoolOper.and, args: _*)
 
-  protected def _or(args: TlaEx*): TlaEx = simpleInstruction(TlaBoolOper.or, args.size).build(args: _*)
+  // \/_{i=1}^n args
+  protected def _or(args: TlaEx*): TlaEx = simpleInstruction(TlaBoolOper.or, args: _*)
 
-  protected def _not(p: TlaEx): TlaEx = simpleInstruction(TlaBoolOper.not, 1).build(p)
+  // ~p
+  protected def _not(p: TlaEx): TlaEx = simpleInstruction(TlaBoolOper.not, p)
 
-  protected def _impl(p: TlaEx, q: TlaEx): TlaEx = simpleInstruction(TlaBoolOper.implies, 2).build(p, q)
+  // p => q
+  protected def _impl(p: TlaEx, q: TlaEx): TlaEx = simpleInstruction(TlaBoolOper.implies, p, q)
 
-  protected def _equiv(p: TlaEx, q: TlaEx): TlaEx = simpleInstruction(TlaBoolOper.equiv, 2).build(p, q)
+  // p <=> q
+  protected def _equiv(p: TlaEx, q: TlaEx): TlaEx = simpleInstruction(TlaBoolOper.equiv, p, q)
 
-  protected def _forall(elem: NameEx, set: TlaEx, pred: TlaEx): TlaEx =
-    simpleInstruction(TlaBoolOper.forall, 3).build(elem, set, pred)
+  // \A x \in set: p
+  protected def _forall(x: NameEx, set: TlaEx, p: TlaEx): TlaEx = simpleInstruction(TlaBoolOper.forall, x, set, p)
 
-  protected def _forall(elem: NameEx, pred: TlaEx): TlaEx =
-    simpleInstruction(TlaBoolOper.forallUnbounded, 2).build(elem, pred)
+  // \A x: p
+  protected def _forall(x: NameEx, p: TlaEx): TlaEx = simpleInstruction(TlaBoolOper.forallUnbounded, x, p)
 
-  protected def _exists(elem: NameEx, set: TlaEx, pred: TlaEx): TlaEx =
-    simpleInstruction(TlaBoolOper.exists, 3).build(elem, set, pred)
+  // \E x \in set: p
+  protected def _exists(x: NameEx, set: TlaEx, p: TlaEx): TlaEx = simpleInstruction(TlaBoolOper.exists, x, set, p)
 
-  protected def _exists(elem: NameEx, pred: TlaEx): TlaEx =
-    simpleInstruction(TlaBoolOper.existsUnbounded, 2).build(elem, pred)
+  // \E x: p
+  protected def _exists(x: NameEx, p: TlaEx): TlaEx = simpleInstruction(TlaBoolOper.existsUnbounded, x, p)
 }

@@ -4,51 +4,68 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values.TlaStr
 import at.forsyte.apalache.tla.typecmp.BuilderUtil.throwMsg
-import at.forsyte.apalache.tla.typecmp.{typeComputation, typeComputationReturn, BuildInstruction, BuilderTypeException}
+import at.forsyte.apalache.tla.typecmp.{typeComputation, typeComputationReturn, BuilderTypeException, BuilderUtil}
 
 import scala.collection.immutable.SortedMap
 
 /**
+ * Raw builder for TlaSetOper expressions.
+ *
  * @author
  *   Jure Kukovec
  */
 trait RawSetBuilder extends ProtoBuilder {
 
-  // Must have 1+ args
-  protected def _enumSet(arg: TlaEx, args: TlaEx*): TlaEx =
-    simpleInstruction(TlaSetOper.enumSet, 1 + args.size).build(arg +: args: _*)
+  // {x1, ..., xn}, must have >0 args.
+  protected def _enumSet(arg: TlaEx, args: TlaEx*): TlaEx = simpleInstruction(TlaSetOper.enumSet, arg +: args: _*)
 
+  // {} : Set(elemType)
   protected def _emptySet(elemType: TlaType1): TlaEx = OperEx(TlaSetOper.enumSet)(Typed(SetT1(elemType)))
 
-  protected def _in(elem: TlaEx, set: TlaEx): TlaEx = simpleInstruction(TlaSetOper.in, 2).build(elem, set)
+  // elem \in set
+  protected def _in(elem: TlaEx, set: TlaEx): TlaEx = simpleInstruction(TlaSetOper.in, elem, set)
 
-  protected def _notin(elem: TlaEx, set: TlaEx): TlaEx = simpleInstruction(TlaSetOper.notin, 2).build(elem, set)
+  // elem \notin set
+  protected def _notin(elem: TlaEx, set: TlaEx): TlaEx = simpleInstruction(TlaSetOper.notin, elem, set)
 
-  protected def _cap(left: TlaEx, right: TlaEx): TlaEx = simpleInstruction(TlaSetOper.cap, 2).build(left, right)
+  // left \cap right, left \intersect right
+  protected def _cap(left: TlaEx, right: TlaEx): TlaEx = simpleInstruction(TlaSetOper.cap, left, right)
 
-  protected def _cup(left: TlaEx, right: TlaEx): TlaEx = simpleInstruction(TlaSetOper.cup, 2).build(left, right)
+  // left \cup right, left \\union right
+  protected def _cup(left: TlaEx, right: TlaEx): TlaEx = simpleInstruction(TlaSetOper.cup, left, right)
 
-  protected def _union(set: TlaEx): TlaEx = simpleInstruction(TlaSetOper.union, 1).build(set)
+  // UNION set
+  protected def _union(set: TlaEx): TlaEx = simpleInstruction(TlaSetOper.union, set)
 
+  // { x \in set: p }
   protected def _filter(x: NameEx, set: TlaEx, p: TlaEx): TlaEx =
-    simpleInstruction(TlaSetOper.filter, 3).build(x, set, p)
+    simpleInstruction(TlaSetOper.filter, x, set, p)
 
+  // { e: x1 \in set1 , ..., xN \in setN }, must have at least 1 var-set pair
   protected def _map(
-      mapExpr: TlaEx,
-      var1: NameEx,
+      e: TlaEx,
+      x1: NameEx,
       set1: TlaEx,
-      varsAndSetsInterleaved: TlaEx*): TlaEx = {
-    // Every other argument is NameEx
-    require(TlaOper.deinterleave(varsAndSetsInterleaved)._1.forall { _.isInstanceOf[NameEx] })
-    simpleInstruction(TlaSetOper.map, 3 + varsAndSetsInterleaved.size).build(
-        mapExpr +: var1 +: set1 +: varsAndSetsInterleaved: _*
-    )
+      paris: TlaEx*): TlaEx = {
+    // Even # of args and every other argument is NameEx
+    require(paris.size % 2 == 0)
+    require(TlaOper.deinterleave(paris)._1.forall { _.isInstanceOf[NameEx] })
+    simpleInstruction(TlaSetOper.map, e +: x1 +: set1 +: paris: _*)
   }
 
-  protected def _funSet(fromSet: TlaEx, toSet: TlaEx): TlaEx =
-    simpleInstruction(TlaSetOper.funSet, 2).build(fromSet, toSet)
+  // [fromSet -> toSet]
+  protected def _funSet(fromSet: TlaEx, toSet: TlaEx): TlaEx = simpleInstruction(TlaSetOper.funSet, fromSet, toSet)
 
-  protected def _recSet(kv1: (String, TlaEx), kvs: (String, TlaEx)*): TlaEx = {
+  // [ k1: v1, ... , kN: vN ], must have at least 1 key-value pair
+  protected def _recSet(k1: ValEx, v1: TlaEx, kvs: TlaEx*): TlaEx = {
+    // All keys must be ValEx(TlaStr(_))
+    require((k1 +: TlaOper.deinterleave(kvs)._1).forall {
+      case ValEx(_: TlaStr) => true
+      case _                => false
+    })
+
+    // Record constructors don't have a signature, so we must construct a type-computation manually
+    // This type computation cannot be pure, as it must read the string values of the record field names
     val typeCmp: typeComputation = { args =>
       // Even-indexed values should be strings, odd-indexed values should be sets
       val (keys, vals) = TlaOper.deinterleave(args)
@@ -78,30 +95,41 @@ trait RawSetBuilder extends ProtoBuilder {
           }
 
       keyTypeMapE.flatMap { keyTypeMap =>
-        // We already know all odd-index values are sets and all even-indexed are strings by construction,
+        // We already know all odd-index values are sets and all even-indexed are strings by
+        // require (or construction, in the string-argument method variant)
         // so we can just map fromTypeTag over the args
-        OperT1(args.map { ex => TlaType1.fromTypeTag(ex.typeTag) }, RecT1(keyTypeMap))
+        OperT1(args.map { ex => TlaType1.fromTypeTag(ex.typeTag) }, SetT1(RecT1(keyTypeMap)))
       }
     }
 
-    val args = (kv1 +: kvs).flatMap { case (k, v) =>
-      Seq(ValEx(TlaStr(k))(Typed(StrT1())), v)
-    }
-
-    BuildInstruction(TlaSetOper.recSet, typeCmp).build(args: _*)
+    BuilderUtil.buildInstruction(TlaSetOper.recSet, typeCmp, k1 +: v1 +: kvs: _*)
   }
 
-  protected def _seqSet(set: TlaEx): TlaEx = simpleInstruction(TlaSetOper.seqSet, 1).build(set)
+  // Alternate call method, where Scala strings are passed in place of ValEx(TlaStr(_))
+  protected def _recSet(kv1: (String, TlaEx), kvs: (String, TlaEx)*): TlaEx = {
+    val (k1, v1) = kv1
+    def toStrEx(s: String): ValEx = ValEx(TlaStr(s))(Typed(StrT1()))
+    val args = kvs.flatMap { case (k, v) =>
+      Seq(toStrEx(k), v)
+    }
+    _recSet(toStrEx(k1), v1, args: _*)
+  }
 
+  // Seq(set)
+  protected def _seqSet(set: TlaEx): TlaEx = simpleInstruction(TlaSetOper.seqSet, set)
+
+  // left \subseteq right
   protected def _subseteq(left: TlaEx, right: TlaEx): TlaEx =
-    simpleInstruction(TlaSetOper.subseteq, 2).build(left, right)
+    simpleInstruction(TlaSetOper.subseteq, left, right)
 
+  // left \ right
   protected def _setminus(left: TlaEx, right: TlaEx): TlaEx =
-    simpleInstruction(TlaSetOper.setminus, 2).build(left, right)
+    simpleInstruction(TlaSetOper.setminus, left, right)
 
+  // s1 \X s2 \X ...
   protected def _times(s1: TlaEx, s2: TlaEx, sets: TlaEx*): TlaEx =
-    simpleInstruction(TlaSetOper.times, 2 + sets.size).build(s1 +: s2 +: sets: _*)
+    simpleInstruction(TlaSetOper.times, s1 +: s2 +: sets: _*)
 
-  protected def _powSet(set: TlaEx): TlaEx = simpleInstruction(TlaSetOper.powerset, 1).build(set)
-
+  // SUBSET set
+  protected def _powSet(set: TlaEx): TlaEx = simpleInstruction(TlaSetOper.powerset, set)
 }

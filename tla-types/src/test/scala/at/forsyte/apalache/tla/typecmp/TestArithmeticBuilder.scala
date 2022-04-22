@@ -24,7 +24,7 @@ class TestArithmeticBuilder extends AnyFunSuite with BeforeAndAfter {
       oper: TlaArithOper,
       method: (BuilderWrapper, BuilderWrapper) => BuilderWrapper,
       retT: TlaType1) {
-    val cmp = sigGen.computationFromSignatureForFixedArity(oper)
+    val cmp = sigGen.computationFromSignature(oper)
 
     val args = Seq.fill(2)(builder.int(1))
 
@@ -53,7 +53,7 @@ class TestArithmeticBuilder extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("uminus") {
-    val cmp = sigGen.computationFromSignatureForFixedArity(TlaArithOper.uminus)
+    val cmp = sigGen.computationFromSignature(TlaArithOper.uminus)
 
     val x = builder.int(1)
 

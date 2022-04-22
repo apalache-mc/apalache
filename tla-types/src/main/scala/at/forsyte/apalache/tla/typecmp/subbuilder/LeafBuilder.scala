@@ -7,27 +7,35 @@ import scalaz.Scalaz._
 import scalaz._
 
 /**
- * Builder for leaf expressions (names and literals)
+ * Builder for names and literals (IR tree leaves)
  *
  * @author
  *   Jure Kukovec
  */
 trait LeafBuilder extends RawLeafBuilder {
 
+  /** i: Int */
   def int(i: BigInt): ValWrapper = _int(i).point[InternalState]
 
+  /** s: Str */
   def str(s: String): ValWrapper = _str(s).point[InternalState]
 
+  /** b: Bool */
   def bool(b: Boolean): ValWrapper = _bool(b).point[InternalState]
 
+  /** BOOLEAN */
   def booleanSet(): ValWrapper = _booleanSet().point[InternalState]
 
+  /** STRING */
   def stringSet(): ValWrapper = _stringSet().point[InternalState]
 
+  /** Int */
   def intSet(): ValWrapper = _intSet().point[InternalState]
 
+  /** Nat */
   def natSet(): ValWrapper = _natSet().point[InternalState]
 
+  /** exprName: exType */
   def name(exprName: String, exType: TlaType1): NameWrapper = State[MetaInfo, NameEx] { mi =>
     val scope = mi.nameScope
 
@@ -43,7 +51,7 @@ trait LeafBuilder extends RawLeafBuilder {
     (mi.copy(scope + (exprName -> exType)), ret)
   }
 
-  // Attempt to get the type from the scope. Fails if not in scope.
+  /** Attempt to infer the type from the scope. Fails if exprName is not in scope. */
   def name(exprName: String): NameWrapper = get[MetaInfo].map { mi: MetaInfo =>
     val scope = mi.nameScope
 
