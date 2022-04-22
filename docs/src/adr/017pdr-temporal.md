@@ -190,6 +190,29 @@ There are two ways to encode the constraints by [Biere et al. 2006][]:
 To choose between these two approaches, we will try both of them on a simple
 specification. For instance, [Folklore broadcast][].
 
+### Encoding with Trace Invariants
+[Folklore with trace invariants] is relatively straightforward.
+Some implementation choices that might be altered depending on solver performance are:
+* The `LoopSelector` is a boolean variable. One could alternatively use an integer to 
+denote the index of the loop start, or not have a global variable for this and instead
+use a LET IN definition like `LET loopStart == GUESS x \in {candidate \in DOMAIN hist: hist[candidate].vars = vars}`. With this choice, one would have to be careful that the loop index is the same across subformulas. Additionally, it is important that GUESS is nondeterministic, not deterministic-but-arbitrary.  
+* The spec uses two auxiliary variables, `LoopSelector` and `InLoop`.
+`InLoop` is not necessary, but it can be used to ensure `LoopSelector` is
+true only in a single state without an additional mutual exclusion constraint.
+
+Advantages of the encoding using trace invariants:
+* (In my opinion) they remain very close to the formal semantics of the temporal operators 
+* Thus, it might be easier to understand how the temporal operators are encoded
+when one looks at the intermediate outputs of Apalache.
+* Trace invariants can be used very flexibly, 
+so someone who understands only temporal operators, but then takes time to
+learn about trace invariants, may be able to reuse trace invariants for other use cases
+
+Disadvantages:
+* Invariant violations in counterexamples for trace invariants are not displayed properly (see [Trace invariant counterexample] )
+* Trace invariants seem like they lead to additional constraints, so they might be slower than a propositional encoding
+
+
 ### 2. Fairness
 
 `WF_e(A)` and `SF_e(A)` use `ENABLED(A)` as part of their definitions. Hence,
@@ -220,3 +243,5 @@ first part of work. To be detailed later...
 [Folklore broadcast]: https://github.com/tlaplus/Examples/blob/master/specifications/bcastFolklore/bcastFolklore.tla
 [Model Checking]: https://mitpress.mit.edu/books/model-checking-second-edition
 [Padon et al. 2021]: https://link.springer.com/article/10.1007/s10703-021-00377-1
+[Folklore with trace invariants]: ../../../test/tla/bcastFolklore_trace.tla
+[Trace invariant counterexample]: ../../../test/tla/bcastFolklore_trace_counterexample.tla#L150
