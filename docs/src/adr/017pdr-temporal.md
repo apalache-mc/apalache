@@ -190,8 +190,8 @@ There are two ways to encode the constraints by [Biere et al. 2006][]:
 To choose between these two approaches, we will try both of them on a simple
 specification. For instance, [Folklore broadcast][].
 
-## Encoding with Trace Invariants
-[Folklore with trace invariants][] is relatively straightforward.
+### Encoding with Trace Invariants
+[Folklore with trace invariants] is relatively straightforward.
 Some implementation choices that might be altered depending on solver performance are:
 * The `LoopSelector` is a boolean variable. One could alternatively use an integer to 
 denote the index of the loop start, or not have a global variable for this and instead
@@ -199,48 +199,18 @@ use a LET IN definition like `LET loopStart == GUESS x \in {candidate \in DOMAIN
 * The spec uses two auxiliary variables, `LoopSelector` and `InLoop`.
 `InLoop` is not necessary, but it can be used to ensure `LoopSelector` is
 true only in a single state without an additional mutual exclusion constraint.
-* One could use no auxiliary variables at all and instead quantify over the existence of a loop selector (or consider all potential loop selectors).
-  See [Folklore with trace invariants without auxiliary variables][].
-  This is very clean, but first tests point towards it being slower
 
-### Advantages:
+Advantages of the encoding using trace invariants:
 * (In my opinion) they remain very close to the formal semantics of the temporal operators 
 * Thus, it might be easier to understand how the temporal operators are encoded
 when one looks at the intermediate outputs of Apalache.
 * Trace invariants can be used very flexibly, 
 so someone who understands only temporal operators, but then takes time to
 learn about trace invariants, may be able to reuse trace invariants for other use cases
-* A minimal number of extra transitions is added (only for starting the loop)
 
-### Disadvantages:
+Disadvantages:
 * Invariant violations in counterexamples for trace invariants are not displayed properly (see [Trace invariant counterexample] )
 * Trace invariants seem like they lead to additional constraints, so they might be slower than a propositional encoding
-
-## Encoding with Buchi automata
-[Folklore with Buchi automata][] is less straightforward.
-Some implementation choices that might be altered:
-* Some commonly used formulas can be implemented without Buchi automata,
-see [Efficient reduction of finite state model checking to reachability analysis][].
-For full generality, however, Buchi automata seem unavoidable with this encoding
-
-### Advantages:
-* Seems to be simpler for uncomplicated properties
-* Encodings for commonly used formulas are relatively intuitive, i.e. when
-we don't need Buchi automata
-
-### Disadvantages:
-* The property to check becomes unrecognizable in
-the transformed spec (there is a Buchi automaton for its negation, which
-is not easy to trace back to the original formulation)
-* Buchi automata blow up the length of the spec more than trace invariats
-* The encoding introduces many extra transitions:
- for example, 4 transitions originally and 6 transitions in the Buchi automata
- means roughly 6 * 4 = 24 transitions)
-* The encoding introduces a large amount of nondeterminism due to
-nondeterminism in the Buchi automata (or, if we want deterministic Buchi automata,
-we get large ones) 
-* Swapping out properties is harder: The Buchi automata has to be swapped,
-i.e. there needs to be a modification to the model, not only the property
 
 
 ### 2. Fairness
@@ -275,6 +245,3 @@ first part of work. To be detailed later...
 [Padon et al. 2021]: https://link.springer.com/article/10.1007/s10703-021-00377-1
 [Folklore with trace invariants]: ../../../test/tla/bcastFolklore_trace.tla
 [Trace invariant counterexample]: ../../../test/tla/bcastFolklore_trace_counterexample.tla#L150
-[Folklore with trace invariants without auxiliary variables]: ../../../test/tla/bcastFolklore_traceQuantification.tla
-[Efficient reduction of finite state model checking to reachability analysis]: https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.4.1505&rep=rep1&type=pdf
-[Folklore with Buchi automata]: ../../../test/tla/bcastFolklore_bmc.tla
