@@ -190,7 +190,7 @@ There are two ways to encode the constraints by [Biere et al. 2006][]:
 To choose between these two approaches, we will try both of them on a simple
 specification. For instance, [Folklore broadcast][].
 
-### Encoding with Trace Invariants
+## Encoding with Trace Invariants
 [Folklore with trace invariants] is relatively straightforward.
 Some implementation choices that might be altered depending on solver performance are:
 * The `LoopSelector` is a boolean variable. One could alternatively use an integer to 
@@ -200,7 +200,7 @@ use a LET IN definition like `LET loopStart == GUESS x \in {candidate \in DOMAIN
 `InLoop` is not necessary, but it can be used to ensure `LoopSelector` is
 true only in a single state without an additional mutual exclusion constraint.
 
-Advantages of the encoding using trace invariants:
+### Advantages of the encoding using trace invariants:
 * (In my opinion) they remain very close to the formal semantics of the temporal operators 
 * Thus, it might be easier to understand how the temporal operators are encoded
 when one looks at the intermediate outputs of Apalache.
@@ -208,7 +208,7 @@ when one looks at the intermediate outputs of Apalache.
 so someone who understands only temporal operators, but then takes time to
 learn about trace invariants, may be able to reuse trace invariants for other use cases
 
-Disadvantages:
+### Disadvantages:
 * Invariant violations in counterexamples for trace invariants are not displayed properly (see [Trace invariant counterexample] )
 * Trace invariants seem like they lead to additional constraints, so they might be slower than a propositional encoding
 
