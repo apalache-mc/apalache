@@ -36,7 +36,7 @@ trait General extends Command with CliConfig {
       useEnv = true)
   var features = opt[Seq[Feature]](default = Seq(),
       description = {
-        val featureDescriptions = Feature.all.map(f => s" - ${f.name}: ${f.description}")
+        val featureDescriptions = Feature.all.map(f => s"  ${f.name}: ${f.description}")
         ("a comma-separated list of experimental features:" :: featureDescriptions).mkString("\n")
       })
 
