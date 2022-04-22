@@ -53,7 +53,8 @@ object Tool extends LazyLogging {
     System.exit(run(args))
   }
 
-  private def outputAndLogConfig(cmd: General, cfg: ApalacheConfig): Unit = {
+  private def outputAndLogConfig(cmd: General): Unit = {
+    val cfg: ApalacheConfig = ConfigManager(cmd)
     OutputManager.configure(cfg)
     // We currently use dummy files for some commands, so we skip here on non-existing files
     if (cmd.file.getName.endsWith(".tla") && cmd.file.exists()) {
@@ -103,7 +104,7 @@ object Tool extends LazyLogging {
         // One of our commands. Print the header and measure time
         val startTime = LocalDateTime.now()
 
-        outputAndLogConfig(cmd, ConfigManager(cmd))
+        outputAndLogConfig(cmd)
 
         val exitcode =
           try {
