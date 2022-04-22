@@ -97,16 +97,18 @@ object Tool extends LazyLogging {
     cli match {
       // A standard option, e.g., --version or --help. No header, no timer, no noise
       case None => OK_EXIT_CODE
+      // One of our commands.
       case Some(cmd) => {
 
         printHeaderAndStatsConfig()
 
-        // One of our commands. Print the header and measure time
-        val startTime = LocalDateTime.now()
+        val exitcode = {
 
-        outputAndLogConfig(cmd)
+          outputAndLogConfig(cmd)
 
-        val exitcode =
+          // Start measuring time
+          val startTime = LocalDateTime.now()
+
           try {
             cmd match {
               case parse: ParseCmd =>
