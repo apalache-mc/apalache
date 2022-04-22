@@ -103,4 +103,4 @@
 - [ADR-015: ITF: informal trace format](./adr/015adr-trace.md)
 - [ADR-016: ReTLA: Relational TLA](./adr/016adr-retla.md)
 - [PDR-017: Checking temporal properties](./adr/017pdr-temporal.md)
-- [ADR-018: Inlining](./adr/018adr-inlining.md)
+- [ADR-018: Inlining in Apalache](./adr/018adr-inlining.md)
