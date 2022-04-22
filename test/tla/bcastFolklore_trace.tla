@@ -94,7 +94,7 @@ Receive(self) ==                        (* a correct process self receives new m
 	/\ pc[self] # "CR"
 	/\ \E msgs \in SUBSET (Proc \times M):   (* msgs is a set of messages which has been received  *)
 				/\ msgs \subseteq sent
-				/\ rcvd[self] \subseteq msgs
+				/\ rcvd[self] \subseteq msgs /\ rcvd[self] # msgs
 				/\ rcvd' = [rcvd EXCEPT ![self] = msgs ]
 
 (* If a correct process received an INIT message or was initialized with V1,
@@ -202,12 +202,12 @@ CorrLtl == (\A i \in Corr: pc[i] = "V1") => <>(\E i \in Corr: pc[i] = "AC")
 
 \* @type: Seq(STATE) => Bool;
 CorrTrace(hist) ==
-  LoopOK(hist) =>
-  LET firstState == hist[1] IN
-      LET \* @type: (Bool, STATE) => Bool;
-          EventuallyExistsAC(acc, state) ==
-          acc \/ \E i \in state.Corr: state.pc[i] /= "AC" IN
-              (\A i \in firstState.Corr: firstState.pc[i] = "V1") => ApaFoldSeqLeft(EventuallyExistsAC, FALSE, hist)
+	 LoopOK(hist) =>
+							LET firstState == hist[1] IN
+								LET \* @type: (Bool, STATE) => Bool;
+									EventuallyExistsAC(acc, state) ==
+									acc \/ \E i \in state.Corr: state.pc[i] /= "AC" IN
+							(\A i \in firstState.Corr: firstState.pc[i] = "V1") => ApaFoldSeqLeft(EventuallyExistsAC, FALSE, hist)
 
 (* If a correct process accepts, then every correct process eventually accepts.  *)
 RelayLtl == []((\E i \in Corr: pc[i] = "AC") => <>(\A i \in Corr: pc[i] = "AC"))
@@ -253,8 +253,8 @@ Fairness(hist) ==
                                         \/  hist[step].pc[p] = "V1"
                                         \/  hist[step].pc[p] \notin {"CR", "AC"}
 
-Property(hist) ==
-    Fairness(hist) => CorrTrace(hist)
+FairnessImpliesReliableChannel(hist) ==
+    Fairness(hist) => ReliableTrace(hist)
 
 =============================================================================
 \* Modification History
