@@ -72,7 +72,7 @@ class ReplaceFixed(tracker: TransformationTracker) {
    * result that is returned by `partialFun`.
    *
    * @param partialFun
-   *   if this partial function is applicable to an expression, replace the expression with the result return by
+   *   if this partial function is applicable to an expression, replace the expression with the result returned by
    *   `partialFun`
    */
   def apply(partialFun: PartialFunction[TlaEx, TlaEx]): TlaExTransformation = tracker.trackEx { ex =>
