@@ -40,7 +40,7 @@ class ReTLAToVMTTranspilePassImpl @Inject() (
     LanguageWatchdog(pred).check(module)
 
     // Init has primes, for VMT we need to deprime it
-    val deprime = ReplaceFixed(tracker) { case OperEx(TlaActionOper.prime, arg) => arg }
+    val deprime = ReplaceFixed(tracker).withFun { case OperEx(TlaActionOper.prime, arg) => arg }
     val initTrans = getTransitionsWithNames(module, NormalizedNames.INIT_PREFIX).map { case (a, b) =>
       (a, deprime(b))
     }

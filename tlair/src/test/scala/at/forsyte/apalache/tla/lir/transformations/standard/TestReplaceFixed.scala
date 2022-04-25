@@ -15,7 +15,7 @@ class TestReplaceFixed extends AnyFunSuite with TestingPredefs {
   import tla._
 
   def mkTr(replacedEx: TlaEx, newEx: => TlaEx): TlaExTransformation =
-    ReplaceFixed(new IdleTracker())(replacedEx, newEx)
+    ReplaceFixed(new IdleTracker()).whenEqualsTo(replacedEx, newEx)
 
   test("Basic replacement") {
     val ex = n_x
@@ -45,7 +45,7 @@ class TestReplaceFixed extends AnyFunSuite with TestingPredefs {
     val assignX = tla.assign(tla.prime(tla.name("x")), tla.int(3))
     val eqX = tla.eql(tla.prime(tla.name("x")), tla.int(3))
     val ex = tla.and(assignX, eqX)
-    val repl = ReplaceFixed(new IdleTracker()) {
+    val repl = ReplaceFixed(new IdleTracker()).withFun {
       case OperEx(ApalacheOper.assign, lhs @ OperEx(TlaActionOper.prime, NameEx(_)), rhs) =>
         tla.eql(lhs, rhs)
     }
