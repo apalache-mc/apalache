@@ -21,3 +21,4 @@
 
  * Fix references to `--tune-here` (actually `--tuning-options`), see #1579
 * Add the option `--feature` to enable experimental features, see #1648
+ * Not failing when assignment and `UNCHANGED` appear in invariants, see #1664
