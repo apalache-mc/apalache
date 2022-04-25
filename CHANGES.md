@@ -2,6 +2,16 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.24.1
+
+### Breaking changes
+
+ * Rename `--tuning` to `--tuning-options-file`, see #1579
+
+### Bug fixes
+
+ * Fix references to `--tune-here` (actually `--tuning-options`), see #1579
+
 ## 0.24.0
 
 ### Breaking changes
