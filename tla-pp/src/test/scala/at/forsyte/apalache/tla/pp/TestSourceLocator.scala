@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.src.{SourceLocation, SourcePosition, SourceRe
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator, SourceMap}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.standard._
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationListener}
+import at.forsyte.apalache.tla.lir.transformations.{decorateWithPrime, TlaExTransformation, TransformationListener}
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
@@ -184,7 +184,7 @@ class TestSourceLocator extends AnyFunSuite {
 
   test("Test Prime") {
     val vars = Set("x", "y")
-    val transformation = Prime(vars, tracker)
+    val transformation = decorateWithPrime(vars, tracker)
 
     testTransformation(transformation)
   }
