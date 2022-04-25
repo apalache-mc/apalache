@@ -9,8 +9,8 @@ import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaEx}
  *
  * If a TlaEx `e` is passed, instead of a predicate, it defines the predicate to be syntactic equality with `e`.
  *
- * Example: `ReplaceFixed( NameEx("x"), NameEx("t_3"), ... )` applied to `x + x` returns `t_3 + t_3`, but both instances
- * of `t_3` have distinct UIDs.
+ * Example: `whenEqualsTo(NameEx("x"), NameEx("t_3"))` applied to `x + x` returns `t_3 + t_3`, but both instances of
+ * `t_3` have distinct UIDs.
  *
  * The order of testing and recursion is as follows: In the case that both a parent and child node (resp.
  * ancestor/descendant) in the internal representation tree satisfy the testing predicate, the replacement will first
@@ -22,14 +22,17 @@ import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, TlaEx}
  * Example:
  *
  * {{{
- * def replacementPredicate( ex: TlaEx ): Boolean = ex match { case OperEx(TlaArithOper.plus, NameEx("x"), NameEx("x"))
- * \=> true case _ => false } val ex = OperEx(TlaArithOper.plus, NameEx("x"), OperEx(TlaArithOper.plus, NameEx("x"),
- * NameEx("x")) )
+ * def replacementPredicate( ex: TlaEx ): Boolean = ex match {
+ *   case OperEx(TlaArithOper.plus, NameEx("x"), NameEx("x")) => true
+ *   case _ => false
+ * }
+ * val ex = OperEx(TlaArithOper.plus, NameEx("x"), OperEx(TlaArithOper.plus, NameEx("x"), NameEx("x")))
  *
  * val newEx = NameEx("x")
  *
- * apply( replacementPredicate, newEx )(ex) == NameEx("x") apply( replacementPredicate, newEx )(ex) !=
- * OperEx(TlaArithOper.plus, NameEx("x"), OperEx(TlaArithOper.plus, NameEx("x"), NameEx("x")) )
+ * whenMatches(replacementPredicate, newEx)(ex) == NameEx("x")
+ * whenMatches(replacementPredicate, newEx)(ex) !=
+ *   OperEx(TlaArithOper.plus, NameEx("x"), OperEx(TlaArithOper.plus, NameEx("x"), NameEx("x")))
  * }}}
  */
 class ReplaceFixed(tracker: TransformationTracker) {
@@ -42,10 +45,10 @@ class ReplaceFixed(tracker: TransformationTracker) {
    * @param mkNewEx
    *   a function that produces a new unique expression to replace an expression that matches `replacementPredicate`
    */
-  def apply(
+  def whenEqualsTo(
       patternEx: TlaEx,
       mkNewEx: => TlaEx): TlaExTransformation = {
-    apply(ReplaceFixed.standardTests.isEqualTo(patternEx), mkNewEx)
+    whenMatches(ReplaceFixed.standardTests.isEqualTo(patternEx), mkNewEx)
   }
 
   /**
@@ -57,14 +60,14 @@ class ReplaceFixed(tracker: TransformationTracker) {
    * @param mkNewEx
    *   a function that produces a new unique expression to replace an expression that matches `replacementPredicate`
    */
-  def apply(
+  def whenMatches(
       replacementPredicate: TlaEx => Boolean,
       mkNewEx: => TlaEx, // takes a [=> TlaEx] to allow for the creation of new instances (with distinct UIDs)
     ): TlaExTransformation = tracker.trackEx { ex =>
     val partialFun: PartialFunction[TlaEx, TlaEx] = {
       case e if replacementPredicate(e) => mkNewEx
     }
-    apply(partialFun)(ex)
+    withFun(partialFun)(ex)
   }
 
   /**
@@ -75,13 +78,13 @@ class ReplaceFixed(tracker: TransformationTracker) {
    *   if this partial function is applicable to an expression, replace the expression with the result returned by
    *   `partialFun`
    */
-  def apply(partialFun: PartialFunction[TlaEx, TlaEx]): TlaExTransformation = tracker.trackEx { ex =>
+  def withFun(partialFun: PartialFunction[TlaEx, TlaEx]): TlaExTransformation = tracker.trackEx { ex =>
     // apply the partial function, if it's applicable; otherwise return the expression itself
     def tr(ex: TlaEx): TlaEx = {
       partialFun.lift(ex).getOrElse(ex)
     }
 
-    lazy val self = apply(partialFun)
+    lazy val self = withFun(partialFun)
     ex match {
       case LetInEx(body, defs @ _*) =>
         // Transform bodies of all op.defs
