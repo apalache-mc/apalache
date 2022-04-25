@@ -36,7 +36,7 @@ class SignatureGenerator(varPool: TypeVarPool) {
     val arity = args.size
     getSignature(oper, arity) match {
       // Failure case 1: bad identifier or arity
-      case None => throwMsg(s"${oper.name} is not an operator with a known signature for arity $arity.")
+      case None => throwMsg(s"Unknown signature for operator ${oper.name} and arity $arity.")
       case Some(OperT1(from, to)) =>
         // Failure case 2: arity mismatch. This should only happen if one of the signatures is implemented incorrectly
         if (from.length != args.length)
@@ -44,8 +44,8 @@ class SignatureGenerator(varPool: TypeVarPool) {
               s"Incompatible arity for operator ${oper.name}: Expected ${from.length} arguments, got ${args.length}")
         else {
           // If we have an operator signature, we need to construct a substitution (see ScopedBuilder guarantees)
-          // this substitution tells us what monotype is obtained by applying a polymorphic operator
-          // to arguments wiht monotypes
+          // This substitution tells us what monotype is obtained by applying a polymorphic operator
+          // to arguments with monotypes
           val totalSubOpt = from.zip(args).foldLeft(Option(Substitution.empty)) { case (subOpt, (argT, paramT)) =>
             subOpt.flatMap(s => singleUnification(argT, paramT, s).map(_._1))
           }
@@ -61,7 +61,7 @@ class SignatureGenerator(varPool: TypeVarPool) {
     }
   }
 
-  // Performs unificaiton on 2 types with a fresh unifier
+  // Performs unification on 2 types with a fresh unifier
   private def singleUnification(
       lhs: TlaType1,
       rhs: TlaType1,

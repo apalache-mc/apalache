@@ -32,7 +32,7 @@ package object typecmp {
   // this just includes the name scope, but it can be extended in the future, to have the builder perform
   // additional static analysis.
   // nameScope tracks the types of the variables currently considered as free
-  sealed case class MetaInfo(nameScope: Map[String, TlaType1])
+  final case class MetaInfo(nameScope: Map[String, TlaType1])
 
   // Builders operate over BuilderWrappers, which hold MetaInfo as state
   type InternalState[T] = State[MetaInfo, T]
@@ -43,7 +43,7 @@ package object typecmp {
   type ValWrapper = InternalState[ValEx]
 
   // Because State[_,A] is invariant in A, InternalState[NameEx] <: InternalState[TlaEx] does not hold
-  // we can fix this discrepancy with an implicit that upcasts NameEx/ValEx to TlaEx
+  // We can fix this discrepancy with an implicit that upcasts NameEx/ValEx to TlaEx
   implicit def generalizeWrapperN(nw: NameWrapper): BuilderWrapper = nw.map(_.asInstanceOf[TlaEx])
   implicit def generalizeWrapperV(vw: ValWrapper): BuilderWrapper = vw.map(_.asInstanceOf[TlaEx])
 

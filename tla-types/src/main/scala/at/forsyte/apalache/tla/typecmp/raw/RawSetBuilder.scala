@@ -46,17 +46,17 @@ trait RawSetBuilder extends ProtoBuilder {
       e: TlaEx,
       x1: NameEx,
       set1: TlaEx,
-      paris: TlaEx*): TlaEx = {
+      pairs: TlaEx*): TlaEx = {
     // Even # of args and every other argument is NameEx
-    require(paris.size % 2 == 0)
-    require(TlaOper.deinterleave(paris)._1.forall { _.isInstanceOf[NameEx] })
-    simpleInstruction(TlaSetOper.map, e +: x1 +: set1 +: paris: _*)
+    require(pairs.size % 2 == 0)
+    require(TlaOper.deinterleave(pairs)._1.forall { _.isInstanceOf[NameEx] })
+    simpleInstruction(TlaSetOper.map, e +: x1 +: set1 +: pairs: _*)
   }
 
-  // [fromSet -> toSet]
+  // Function set constructor [fromSet -> toSet]
   protected def _funSet(fromSet: TlaEx, toSet: TlaEx): TlaEx = simpleInstruction(TlaSetOper.funSet, fromSet, toSet)
 
-  // [ k1: v1, ... , kN: vN ], must have at least 1 key-value pair
+  // Record set constructor [ k1: v1, ... , kN: vN ]; must have at least 1 key-value pair
   protected def _recSet(k1: ValEx, v1: TlaEx, kvs: TlaEx*): TlaEx = {
     // All keys must be ValEx(TlaStr(_))
     require((k1 +: TlaOper.deinterleave(kvs)._1).forall {
@@ -74,13 +74,13 @@ trait RawSetBuilder extends ProtoBuilder {
       def getSetElemT(ex: TlaEx): typeComputationReturn =
         ex.typeTag match {
           case Typed(SetT1(t)) => t
-          case other           => throwMsg(s"Expected $ex to have a Set(_) type, found $other")
+          case other           => throwMsg(s"Expected $ex in record set constructor to have a Set(_) type, found $other")
         }
 
       type exOrMap = Either[BuilderTypeException, SortedMap[String, TlaType1]]
 
-      // Iterate over the pairs (zip), first-to-throw determines the Left value, if any
-      // If no Left appears, we get a record field-to-type map
+      // Iterate over the pairs (zip), first-to-throw determines the Left value, if any.
+      // If no Left appears, we get a record field-to-type map.
       val keyTypeMapE: exOrMap =
         keys
           .zip(vals)

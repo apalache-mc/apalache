@@ -73,11 +73,11 @@ trait SetBuilder extends RawSetBuilder {
     }
   } yield _map(mapExpr, x1, set1, pairs: _*)
 
-  /** [fromSet -> toSet] */
+  /** Function set constructor [fromSet -> toSet] */
   def funSet(fromSetW: BuilderWrapper, toSetW: BuilderWrapper): BuilderWrapper =
     binaryFromRaw(fromSetW, toSetW)(_funSet)
 
-  /** [ k1: v1, ... , kN: vN ], must have at least 1 key-value pair */
+  /** Record set constructor [ k1: v1, ... , kN: vN ], must have at least 1 key-value pair */
   def recSet(k1W: ValWrapper, v1W: BuilderWrapper, kvsW: BuilderWrapper*): BuilderWrapper = for {
     k1 <- k1W
     v1 <- v1W

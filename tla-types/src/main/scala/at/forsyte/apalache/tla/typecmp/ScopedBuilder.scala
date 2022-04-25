@@ -6,13 +6,13 @@ import at.forsyte.apalache.tla.typecmp.subbuilder.{ArithmeticBuilder, BoolBuilde
 /**
  * Builder for TLA+ (TNT) IR expressions.
  *
- * Has the following guarantees for any IR tree successfully generated exclusively via ScopedBuilder methods:
+ * The following guarantees hold for any IR tree successfully generated exclusively via ScopedBuilder methods:
  *   - Typed-ness: All subexpressions will have a Typed(_) tag
  *   - Type correctness:
  *     - All literal expressions will have the correct type, as determined by their value ( 1: Int, "a" : Str, etc.)
- *     - For each OperEx(oper, args:_*)(Typed(t)) expression, the following holds:
+ *     - For each operator application expression OperEx(oper, args:_*)(Typed(resultType)), the following holds:
  *       - oper(args:_*) corresponds to some TNT operator with a signature (T1,...,Tn) => T
- *       - There exists a substitution s, such that: s(T1) = typeof(args[1]), ..., s(Tn) = typeof(args[n]) and s(T) = t
+ *       - There exists a substitution s, such that: s(T1) = typeof(args[1]), ..., s(Tn) = typeof(args[n]) and s(T) = resultType
  *         Example: For e@OperEx(TlaSetOper.union, 1..4, {5}) the subexpressions 1..4, {5} and e will all have types
  *         Set(Int), since TlaSetOper.union corresponds to \\union: (Set(t), Set(t)) => Set(t), and the substitution
  *         required is t -> Int
