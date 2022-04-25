@@ -30,7 +30,7 @@ trait ArithmeticBuilder extends RawArithmeticBuilder {
   /** x % y */
   def mod(xW: BuilderWrapper, yW: BuilderWrapper): BuilderWrapper = binaryFromRaw(xW, yW)(_mod)
 
-  /** x ^ y */
+  /** x^y */
   def exp(xW: BuilderWrapper, yW: BuilderWrapper): BuilderWrapper = binaryFromRaw(xW, yW)(_exp)
 
   /** x .. y */

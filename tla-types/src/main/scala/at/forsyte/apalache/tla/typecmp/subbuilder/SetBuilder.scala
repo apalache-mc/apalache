@@ -37,7 +37,7 @@ trait SetBuilder extends RawSetBuilder {
   def cap(leftW: BuilderWrapper, rightW: BuilderWrapper): BuilderWrapper =
     binaryFromRaw(leftW, rightW)(_cap)
 
-  /** left \cup right, left \\union right */
+  /** left \cup right, left `\`union right */
   def cup(leftW: BuilderWrapper, rightW: BuilderWrapper): BuilderWrapper =
     binaryFromRaw(leftW, rightW)(_cup)
 
@@ -84,7 +84,11 @@ trait SetBuilder extends RawSetBuilder {
     kvs <- buildSeq(kvsW)
   } yield _recSet(k1, v1, kvs: _*)
 
-  /** Alternate call method, where Scala strings are passed in place of ValWrappers */
+  /**
+   * Alternate call method, where Scala strings are passed in place of ValWrappers
+   * @see
+   *   recSet[[recSet(k1W: ValWrapper, v1W: BuilderWrapper, kvsW: BuilderWrapper*)]]
+   */
   def recSet(kv1W: (String, BuilderWrapper), kvsW: (String, BuilderWrapper)*): BuilderWrapper = for {
     v1 <- kv1W._2
     k1 = kv1W._1

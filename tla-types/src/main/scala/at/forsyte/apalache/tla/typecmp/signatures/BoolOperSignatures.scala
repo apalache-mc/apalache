@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.typecmp.signatures
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.lir.{BoolT1, OperT1, SetT1}
 import at.forsyte.apalache.tla.typecheck.etc.TypeVarPool
-import at.forsyte.apalache.tla.typecmp.{liftOper, SignatureMap}
+import at.forsyte.apalache.tla.typecmp.{liftOper, SignatureGenMap}
 
 /**
  * Produces a SignatureMap for all Boolean operators
@@ -14,11 +14,15 @@ import at.forsyte.apalache.tla.typecmp.{liftOper, SignatureMap}
 object BoolOperSignatures {
   import TlaBoolOper._
 
-  def getMap(varPool: TypeVarPool): SignatureMap = {
+  /**
+   * Returns a map that assigns a signature generator to each TlaBoolOper. Because some of the operators (quantifiers)
+   * are polymorphic, their signatures will contain type variables produced on-demand by varPool.
+   */
+  def getMap(varPool: TypeVarPool): SignatureGenMap = {
 
     // And/or are polyadic, but all the args are Bool
     // (Bool, ..., Bool) => Bool
-    val polyadic: SignatureMap = Seq(
+    val polyadic: SignatureGenMap = Seq(
         and,
         or,
     ).map {
@@ -29,14 +33,14 @@ object BoolOperSignatures {
 
     // =>, <=> are binary, mono
     // (Bool, Bool) => Bool
-    val binary: SignatureMap = Seq(
+    val binary: SignatureGenMap = Seq(
         implies,
         equiv,
     ).map { _ -> liftOper(OperT1(Seq.fill(2)(BoolT1()), BoolT1())) }.toMap
 
     // Quantifiers are polymorphic in the elemet/set types
     // (t, Set(t), Bool) => Bool
-    val boundedQuant: SignatureMap = Seq(
+    val boundedQuant: SignatureGenMap = Seq(
         forall,
         exists,
     ).map {
@@ -48,7 +52,7 @@ object BoolOperSignatures {
     }.toMap
 
     // (t, Bool) => Bool
-    val unboundedQuant: SignatureMap = Seq(
+    val unboundedQuant: SignatureGenMap = Seq(
         forallUnbounded,
         existsUnbounded,
     ).map {

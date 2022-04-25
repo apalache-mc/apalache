@@ -13,20 +13,25 @@ import scalaz.Scalaz._
  */
 object BuilderUtil {
 
-  // Constructs an OperEx expression for oper applied to args. Uses typeCmp to validate args and determine the result type
-  def buildInstruction(oper: TlaOper, typeCmp: typeComputation, args: TlaEx*): TlaEx = typeCmp(args) match {
+  /**
+   * Constructs an OperEx expression for oper applied to args. Uses typeCmp to validate args and determine the result
+   * type
+   */
+  def buildInstruction(oper: TlaOper, typeCmp: TypeComputation, args: TlaEx*): TlaEx = typeCmp(args) match {
     case Left(err) => throw err
     case Right(typeRes) =>
       OperEx(oper, args: _*)(Typed(typeRes))
   }
 
-  // Removes elem from the scope, as the scope only contains types of free variables
+  /** Removes elem from the scope, as the scope only contains types of free variables */
   def markAsBound(elem: NameEx): InternalState[Unit] = State[MetaInfo, Unit] { mi: MetaInfo =>
     (mi.copy(mi.nameScope - elem.name), ())
   }
 
-  // Given a sequence of computations, generates a computation that runs them
-  // in order and accumulates results to a sequence of values
+  /**
+   * Given a sequence of computations, generates a computation that runs them in order and accumulates results to a
+   * sequence of values
+   */
   def buildSeq[T](argsW: Seq[InternalState[T]]): InternalState[Seq[T]] =
     argsW.foldLeft(Seq.empty[T].point[InternalState]) { case (seqW, argW) =>
       for {
@@ -35,12 +40,12 @@ object BuilderUtil {
       } yield seq :+ arg
     }
 
-  // Lifts a binary raw method to a BuilderWrapper method
+  /** Lifts a binary raw method to a BuilderWrapper method */
   def binaryFromRaw(xW: BuilderWrapper, yW: BuilderWrapper)(rawMethod: (TlaEx, TlaEx) => TlaEx): BuilderWrapper = for {
     x <- xW
     y <- yW
   } yield rawMethod(x, y)
 
-  // generates a BuilderTypeException wrapped in a Left, containing the given message
-  def throwMsg(msg: String): typeComputationReturn = Left(new BuilderTypeException(msg))
+  /** generates a BuilderTypeException wrapped in a Left, containing the given message */
+  def throwMsg(msg: String): TypeComputationReturn = Left(new BuilderTypeException(msg))
 }

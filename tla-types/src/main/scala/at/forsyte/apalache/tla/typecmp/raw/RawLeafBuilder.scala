@@ -11,27 +11,27 @@ import at.forsyte.apalache.tla.lir.values._
  */
 trait RawLeafBuilder {
 
-  // i : Int
+  /** i : Int */
   protected def _int(i: BigInt): ValEx = ValEx(TlaInt(i))(Typed(IntT1()))
 
-  // s : Str
+  /** s : Str */
   protected def _str(s: String): ValEx = ValEx(TlaStr(s))(Typed(StrT1()))
 
-  // b : Bool
+  /** b : Bool */
   protected def _bool(b: Boolean): ValEx = ValEx(TlaBool(b))(Typed(BoolT1()))
 
-  // BOOLEAN
+  /** BOOLEAN */
   protected def _booleanSet(): ValEx = ValEx(TlaBoolSet)(Typed(SetT1(BoolT1())))
 
-  // STRING
+  /** STRING */
   protected def _stringSet(): ValEx = ValEx(TlaStrSet)(Typed(SetT1(StrT1())))
 
-  // Int
+  /** Int */
   protected def _intSet(): ValEx = ValEx(TlaIntSet)(Typed(SetT1(IntT1())))
 
-  // Nat
+  /** Nat */
   protected def _natSet(): ValEx = ValEx(TlaNatSet)(Typed(SetT1(IntT1())))
 
-  // exprName: exType
+  /** exprName: exType */
   protected def _name(exprName: String, exprType: TlaType1): NameEx = NameEx(exprName)(Typed(exprType))
 }

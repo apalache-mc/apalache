@@ -11,12 +11,12 @@ import org.scalatestplus.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class TestArithmeticBuilder extends AnyFunSuite with BeforeAndAfter {
   var varPool = new TypeVarPool()
-  var sigGen = new SignatureGenerator(varPool)
+  var sigGen = new SignatureHandler(varPool)
   var builder = new ScopedBuilder(varPool)
 
   before {
     varPool = new TypeVarPool()
-    sigGen = new SignatureGenerator(varPool)
+    sigGen = new SignatureHandler(varPool)
     builder = new ScopedBuilder(varPool)
   }
 

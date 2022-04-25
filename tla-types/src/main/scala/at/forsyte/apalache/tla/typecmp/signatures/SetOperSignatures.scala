@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.typecmp.signatures
 import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, OperT1, SeqT1, SetT1, TupT1}
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.typecheck.etc.TypeVarPool
-import at.forsyte.apalache.tla.typecmp.SignatureMap
+import at.forsyte.apalache.tla.typecmp.SignatureGenMap
 
 /**
  * Produces a SignatureMap for all set operators
@@ -14,11 +14,15 @@ import at.forsyte.apalache.tla.typecmp.SignatureMap
 object SetOperSignatures {
   import TlaSetOper._
 
-  def getMap(varPool: TypeVarPool): SignatureMap = {
+  /**
+   * Returns a map that assigns a signature generator to each TlaSetOper. Because most operators are polymorphic, their
+   * signatures will contain type variables produced on-demand by varPool.
+   */
+  def getMap(varPool: TypeVarPool): SignatureGenMap = {
 
     // \cup, \cap, \ are binary, polymorphic and symm (w.r.t. arg types)
     // (Set(t), Set(t)) => Set(t)
-    val binarySymm: SignatureMap = Seq(
+    val binarySymm: SignatureGenMap = Seq(
         cup,
         cap,
         setminus,
@@ -31,7 +35,7 @@ object SetOperSignatures {
 
     // \in, \notin are similar, but asymm w.r.t arg types
     // (t, Set(t)) => Bool
-    val binaryAsymm: SignatureMap = Seq(
+    val binaryAsymm: SignatureGenMap = Seq(
         in,
         notin,
     ).map {
@@ -112,7 +116,7 @@ object SetOperSignatures {
       OperT1(Seq(SetT1(t), SetT1(t)), BoolT1())
     }
 
-    val rest: SignatureMap = Seq(
+    val rest: SignatureGenMap = Seq(
         mapSig,
         filterSig,
         seqSetSig,

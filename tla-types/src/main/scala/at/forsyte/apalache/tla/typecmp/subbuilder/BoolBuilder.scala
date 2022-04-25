@@ -12,10 +12,10 @@ import at.forsyte.apalache.tla.typecmp.BuilderUtil._
  */
 trait BoolBuilder extends RawBoolBuilder {
 
-  /** /\_{i=1}^n args */
+  /** args[0] /\ ... /\ args[n] */
   def and(argsW: BuilderWrapper*): BuilderWrapper = buildSeq(argsW).map(_and(_: _*))
 
-  /** \/_{i=1}^n args */
+  /** args[0] \/ ... \/ args[n] */
   def or(argsW: BuilderWrapper*): BuilderWrapper = buildSeq(argsW).map(_or(_: _*))
 
   /** ~p */

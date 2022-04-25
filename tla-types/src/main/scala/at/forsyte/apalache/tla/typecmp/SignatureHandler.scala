@@ -1,47 +1,42 @@
 package at.forsyte.apalache.tla.typecmp
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{FixedArity, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier, TypeVarPool}
 import at.forsyte.apalache.tla.typecmp.BuilderUtil.throwMsg
 import at.forsyte.apalache.tla.typecmp.signatures.{ArithOperSignatures, BoolOperSignatures, SetOperSignatures}
 
 /**
- * Some TNT operators have signatures. SignatureGenerator serves them, from the operator identifier.
+ * Some TNT operators have signatures (see [[signatures]]). SignatureHandler collects [[SignatureGenerator]]s for such
+ * operators and constructs signature-matching [[PureTypeComputation]]s on demand.
  *
  * @author
  *   Jure Kukovec
  */
-class SignatureGenerator(varPool: TypeVarPool) {
+class SignatureHandler(varPool: TypeVarPool) {
 
-  private val aritOperMap: SignatureMap = ArithOperSignatures.getMap
-  private val boolOperMap: SignatureMap = BoolOperSignatures.getMap(varPool)
-  private val setOperMap: SignatureMap = SetOperSignatures.getMap(varPool)
+  private val aritOperMap: SignatureGenMap = ArithOperSignatures.getMap
+  private val boolOperMap: SignatureGenMap = BoolOperSignatures.getMap(varPool)
+  private val setOperMap: SignatureGenMap = SetOperSignatures.getMap(varPool)
 
-  private val knownSignatures: SignatureMap = aritOperMap ++ boolOperMap ++ setOperMap
+  private val knownSignatures: SignatureGenMap = aritOperMap ++ boolOperMap ++ setOperMap
 
-  // Given an operator and arity (important for polyadic opers), returns a signature, if known
+  /** Given an operator and arity (important for polyadic operators), returns a signature, if known */
   def getSignature(oper: TlaOper, arity: Int): Option[OperT1] =
     if (!oper.arity.cond(arity)) None
     else knownSignatures.get(oper).map(_(arity))
 
-  // Convenience method, when we know the operator has fixed arity
-  def getSignatureForFixedArity(oper: TlaOper): Option[OperT1] = oper.arity match {
-    case FixedArity(n) => getSignature(oper, n)
-    case _             => None
-  }
-
-  // Given an operator with a known signature, constructs a pure type computation for its return type
-  def computationFromSignature(oper: TlaOper): pureTypeComputation = { args =>
+  /** Given an operator with a known signature, constructs a pure type computation for its return type */
+  def computationFromSignature(oper: TlaOper): PureTypeComputation = { args =>
     val arity = args.size
     getSignature(oper, arity) match {
       // Failure case 1: bad identifier or arity
-      case None => throwMsg(s"Unknown signature for operator ${oper.name} and arity $arity.")
+      case None                   => throwMsg(s"Unknown signature for operator ${oper.name} and arity $arity.")
       case Some(OperT1(from, to)) =>
         // Failure case 2: arity mismatch. This should only happen if one of the signatures is implemented incorrectly
-        if (from.length != args.length)
-          throwMsg(
-              s"Incompatible arity for operator ${oper.name}: Expected ${from.length} arguments, got ${args.length}")
+        val arityInMap = from.size
+        if (arityInMap != arity)
+          throwMsg(s"Incompatible arity for operator ${oper.name}: Expected $arityInMap arguments, got $arity")
         else {
           // If we have an operator signature, we need to construct a substitution (see ScopedBuilder guarantees)
           // This substitution tells us what monotype is obtained by applying a polymorphic operator
@@ -61,7 +56,7 @@ class SignatureGenerator(varPool: TypeVarPool) {
     }
   }
 
-  // Performs unification on 2 types with a fresh unifier
+  /** Performs unification on 2 types with a fresh unifier */
   private def singleUnification(
       lhs: TlaType1,
       rhs: TlaType1,
