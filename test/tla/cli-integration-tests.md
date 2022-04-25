@@ -2119,6 +2119,16 @@ $ apalache-mc check --inv=TypeOK --length=1 RecMem1627.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check UnchangedAsInv1663.tla reports no error
+
+A test `UNCHANGED` in an invariant.
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 UnchangedAsInv1663.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
 
 ### typecheck Empty.tla reports no error
