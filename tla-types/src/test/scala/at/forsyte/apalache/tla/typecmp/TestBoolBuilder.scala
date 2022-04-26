@@ -11,7 +11,7 @@ class TestBoolBuilder extends BuilderTest {
       args: Seq[BuilderWrapper],
       oper: TlaBoolOper,
       cmp: PureTypeComputation,
-      eval: Seq[BuilderWrapper] => BuilderWrapper): Unit ={
+      eval: Seq[BuilderWrapper] => BuilderWrapper): Unit = {
 
     val builtArgs = args.map(build)
     val res = cmp(builtArgs)
