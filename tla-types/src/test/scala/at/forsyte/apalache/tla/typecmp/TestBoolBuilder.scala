@@ -2,23 +2,8 @@ package at.forsyte.apalache.tla.typecmp
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
-import at.forsyte.apalache.tla.typecheck.etc.TypeVarPool
-import org.junit.runner.RunWith
-import org.scalatest.BeforeAndAfter
-import org.scalatest.funsuite.AnyFunSuite
-import org.scalatestplus.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
-class TestBoolBuilder extends AnyFunSuite with BeforeAndAfter {
-  var varPool = new TypeVarPool()
-  var sigGen = new SignatureHandler(varPool)
-  var builder = new ScopedBuilder(varPool)
-
-  before {
-    varPool = new TypeVarPool()
-    sigGen = new SignatureHandler(varPool)
-    builder = new ScopedBuilder(varPool)
-  }
+class TestBoolBuilder extends BuilderTest {
 
   def argGen(n: Int): Seq[BuilderWrapper] = Seq.fill(n)(builder.bool(true))
 
@@ -26,7 +11,7 @@ class TestBoolBuilder extends AnyFunSuite with BeforeAndAfter {
       args: Seq[BuilderWrapper],
       oper: TlaBoolOper,
       cmp: PureTypeComputation,
-      eval: Seq[BuilderWrapper] => BuilderWrapper) {
+      eval: Seq[BuilderWrapper] => BuilderWrapper): Unit ={
 
     val builtArgs = args.map(build)
     val res = cmp(builtArgs)

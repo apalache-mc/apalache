@@ -71,6 +71,8 @@ package object typecmp {
 
   // Allows for the seamless conversion of BuilderWrapper expressions to TlaEx, when the latter is required
   implicit def build[T](wrap: InternalState[T]): T = wrap.run(MetaInfo(Map.empty))._2
+  implicit def buildSeq[T](wrapCollection: Seq[InternalState[T]]): Seq[T] =
+    wrapCollection.map(build)
 
   // Since some operators are polyadic, we parameterize signatures for the same operator by the # or arguments */
   /** A signature, if it exists, is an operator type */

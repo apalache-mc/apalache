@@ -2,28 +2,12 @@ package at.forsyte.apalache.tla.typecmp
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaArithOper
-import at.forsyte.apalache.tla.typecheck.etc.TypeVarPool
-import org.junit.runner.RunWith
-import org.scalatest.BeforeAndAfter
-import org.scalatest.funsuite.AnyFunSuite
-import org.scalatestplus.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
-class TestArithmeticBuilder extends AnyFunSuite with BeforeAndAfter {
-  var varPool = new TypeVarPool()
-  var sigGen = new SignatureHandler(varPool)
-  var builder = new ScopedBuilder(varPool)
-
-  before {
-    varPool = new TypeVarPool()
-    sigGen = new SignatureHandler(varPool)
-    builder = new ScopedBuilder(varPool)
-  }
-
+class TestArithmeticBuilder extends BuilderTest {
   def testBinaryOperAndBuilderMethod(
       oper: TlaArithOper,
       method: (BuilderWrapper, BuilderWrapper) => BuilderWrapper,
-      retT: TlaType1) {
+      retT: TlaType1): Unit = {
     val cmp = sigGen.computationFromSignature(oper)
 
     val args = Seq.fill(2)(builder.int(1))
