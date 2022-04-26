@@ -329,7 +329,7 @@ docker / dockerfile := {
   val readme = rootDir / "README.md"
 
   new Dockerfile {
-    from("eclipse-temurin:16")
+    from("eclipse-temurin:17")
 
     workDir(dwd)
 
