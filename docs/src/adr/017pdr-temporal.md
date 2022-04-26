@@ -217,7 +217,7 @@ learn about trace invariants, may be able to reuse trace invariants for other us
 * Trace invariants seem like they lead to additional constraints, so they might be slower than a propositional encoding
 
 ## Encoding with Buchi automata
-[Folklore with Buchi automata] is less straightforward.
+[Folklore with Buchi automata][] is less straightforward.
 Some implementation choices that might be altered:
 * Some commonly used formulas can be implemented without Buchi automata,
 see [Efficient reduction of finite state model checking to reachability analysis][].
@@ -239,6 +239,8 @@ is not easy to trace back to the original formulation)
 * The encoding introduces a large amount of nondeterminism due to
 nondeterminism in the Buchi automata (or, if we want deterministic Buchi automata,
 we get large ones) 
+* Swapping out properties is harder: The Buchi automata has to be swapped,
+i.e. there needs to be a modification to the model, not only the property
 
 
 ### 2. Fairness
@@ -275,3 +277,4 @@ first part of work. To be detailed later...
 [Trace invariant counterexample]: ../../../test/tla/bcastFolklore_trace_counterexample.tla#L150
 [Folklore with trace invariants without auxiliary variables]: ../../../test/tla/bcastFolklore_traceQuantification.tla
 [Efficient reduction of finite state model checking to reachability analysis]: https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.4.1505&rep=rep1&type=pdf
+[Folklore with Buchi automata]: ../../../test/tla/bcastFolklore_bmc.tla
