@@ -150,7 +150,8 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
     val checkerInput = new CheckerInput(module, initTrans, nextTrans, None, verificationConditions)
     val checkerParams = new ModelCheckerParams(checkerInput, 0)
 
-    val solverContext = new Z3SolverContext(SolverConfig.default)
+    val solverContext =
+      new Z3SolverContext(new SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = smtEncoding))
     val rewriter: SymbStateRewriterImpl = smtEncoding match {
       case `oopsla19Encoding` => new SymbStateRewriterImpl(solverContext)
       case `arraysEncoding`   => new SymbStateRewriterImplWithArrays(solverContext)
