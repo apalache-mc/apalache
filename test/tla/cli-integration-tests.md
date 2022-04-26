@@ -181,6 +181,29 @@ EXITCODE: ERROR (255)
 
 This command parses a TLA+ specification with the SANY parser.
 
+### parse Empty succeeds
+
+```sh
+$ apalache-mc parse Empty.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
+### parse Empty with --features=rows succeeds
+
+```sh
+$ apalache-mc parse --features=rows Empty.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
+### parse Empty with an unsupported feature fails
+
+```sh
+$ apalache-mc parse --features=feature.unsupported Empty.tla 2>&1 | grep 'Failed to parse'
+Failed to parse command parse: Incorrect value for option features, got 'feature.unsupported', expected a feature: rows
+```
+
 ### parse LocalDefClash576 succeeds
 
 ```sh
@@ -2108,6 +2131,22 @@ EXITCODE: OK
 
 ## running the typecheck command
 
+### typecheck Empty.tla reports no error
+
+```sh
+$ apalache-mc typecheck Empty.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
+### typecheck Empty.tla reports no error when rows enabled
+
+```sh
+$ apalache-mc typecheck --features=rows Empty.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
 
 ```sh
@@ -2867,6 +2906,17 @@ $ JVM_ARGS="-Duser.home=." apalache-mc check --length=0 Counter.tla | sed 's/[IE
 EXITCODE: OK
 $ test -d ./run-dir
 $ rm -rf ./run-dir ./.apalache.cfg
+```
+
+### configuration management: invalid features are rejected with error
+
+```sh
+$ echo "features: [ invalid-feature ]" > .apalache.cfg
+$ apalache-mc check --length=0 Counter.tla | grep -o -e "Configuration error: at 'features.0'" -e "Cannot convert 'invalid-feature' to at.forsyte.apalache.tla.lir.Feature"
+...
+Configuration error: at 'features.0'
+Cannot convert 'invalid-feature' to at.forsyte.apalache.tla.lir.Feature
+$ rm -rf ./.apalache.cfg
 ```
 
 ## module lookup

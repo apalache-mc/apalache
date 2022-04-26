@@ -4,6 +4,7 @@ import pureconfig._
 import pureconfig.generic.auto._
 import java.io.File
 import java.nio.file.{Files, Path, Paths}
+import at.forsyte.apalache.tla.lir.Feature
 
 // Provides implicit conversions used when deserializing into configurable values.
 private object Converters {
@@ -13,15 +14,21 @@ private object Converters {
     Paths.get(if (s.startsWith("~")) s.replaceFirst("~", System.getProperty("user.home")) else s)
   }
 
-  // Briniging these implicits in scope lets us override the existing File and
+  // Bringing these implicits in scope lets us override the existing File and
   // Path deserialization behavior, so we get path expansion in all configured
   // paths.
   // See https://pureconfig.github.io/docs/overriding-behavior-for-types.html
   implicit val overridePathReader = ConfigReader.fromString[Path](catchReadError(expandedFilePath))
   implicit val overrideFileReader = ConfigReader.fromString[File](catchReadError(expandedFilePath(_).toFile()))
+  // PureConfig's optF will convert None values to appropriate configuration errors
+  implicit val featureReader = ConfigReader.fromString[Feature](optF(Feature.fromString))
 }
 
-/** The configuration values that can be overriden based on CLI arguments */
+/**
+ * The configuration values that can be overriden based on CLI arguments
+ *
+ * For documentation on the use and meaning of these fields, see [[at.forsyte.apalache.tla.tooling.opt.General]].
+ */
 trait CliConfig {
 
   /** Input file */
@@ -31,6 +38,7 @@ trait CliConfig {
   def writeIntermediate: Option[Boolean]
   def profiling: Option[Boolean]
   def configFile: Option[File]
+  def features: Seq[Feature]
 }
 
 /** The application's configurable values, along with their base defaults */
@@ -40,7 +48,8 @@ case class ApalacheConfig(
     runDir: Option[File] = None,
     configFile: Option[File] = None,
     writeIntermediate: Boolean = false,
-    profiling: Boolean = false)
+    profiling: Boolean = false,
+    features: Seq[Feature] = Seq())
 
 case class ConfigManager(cmd: CliConfig) {
   private val TLA_PLUS_DIR = ".tlaplus"
@@ -76,7 +85,7 @@ case class ConfigManager(cmd: CliConfig) {
     val home = System.getProperty("user.home")
     val globalConfig = ConfigSource.file(Paths.get(home, TLA_PLUS_DIR, APALACHE_CFG))
 
-    localConfig
+    localConfig()
       .getOrElse(ConfigSource.empty)
       // `withFallback` supplies configuration sources that only apply if the preceding configs aren't set
       .withFallback(globalConfig.optional)
@@ -90,17 +99,14 @@ case class ConfigManager(cmd: CliConfig) {
             configFile = cmd.configFile.orElse(cfg.configFile),
             writeIntermediate = cmd.writeIntermediate.getOrElse(cfg.writeIntermediate),
             profiling = cmd.profiling.getOrElse(cfg.profiling),
+            features = if (cmd.features.nonEmpty) cmd.features else cfg.features,
         ))
   }
 }
 
 object ConfigManager {
 
-  /** Load the application configuration, or raise a configuration error */
-  def apply(cmd: CliConfig): ApalacheConfig = {
-    new ConfigManager(cmd).load() match {
-      case Left(err)  => throw new ConfigurationError(err.toString())
-      case Right(cfg) => cfg
-    }
-  }
+  /** Load the application configuration, converting any configuration error into a pretty printed message */
+  def apply(cmd: CliConfig): Either[String, ApalacheConfig] =
+    new ConfigManager(cmd).load().left.map(_.prettyPrint())
 }

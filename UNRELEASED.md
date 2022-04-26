@@ -14,6 +14,10 @@
 
  * Recommended JDK version was bumped to JDK17, see #1662
 
+### Features
+
+ * Add the option `--features` to enable experimental features, see #1648
+
 ### Bug fixes
 
  * Not failing when assignment and `UNCHANGED` appear in invariants, see #1664
