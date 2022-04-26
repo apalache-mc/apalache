@@ -106,10 +106,10 @@ package object transformations {
    */
   def decorateWithPrime(vars: Set[String], tracker: TransformationTracker): TlaExTransformation = {
     ReplaceFixed(tracker).withFun {
-      case ex@OperEx(TlaActionOper.prime, _) =>
+      case ex @ OperEx(TlaActionOper.prime, _) =>
         // in case the expression was already primed, ignore
         ex
-        
+
       case ex @ NameEx(name) if vars.contains(name) =>
         // add prime to a variable from vars
         OperEx(TlaActionOper.prime, ex)(ex.typeTag)
