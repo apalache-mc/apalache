@@ -16,8 +16,9 @@
 
 ### Breaking changes
 
- * Rename `--tuning` to `--tuning-options-file`, see #1579
+* Add the option `--features` to enable experimental features, see #1648
 
 ### Bug fixes
 
- * Fix references to `--tune-here` (actually `--tuning-options`), see #1579
+* Fix references to `--tune-here` (actually `--tuning-options`), see #1579
+* Not failing when assignment and `UNCHANGED` appear in invariants, see #1664

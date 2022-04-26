@@ -32,7 +32,7 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
     // construct checker input + parameters
     val notInv = not(inv).typed(types, "b")
     val checkerInput = new CheckerInput(module, initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
-    val params = new ModelCheckerParams(checkerInput, 1, Map(), false) { nMaxErrors = maxErrors }
+    val params = new ModelCheckerParams(checkerInput, 1, Map()) { nMaxErrors = maxErrors }
 
     // create utility objects
     val solver = RecordingSolverContext.createZ3(None, SolverConfig.default)

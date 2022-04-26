@@ -80,7 +80,7 @@ class ParameterNormalizer(
             // We replace all instances of `fParam` with `paramOperName()`
             // however, since paramOperName is an operator, we have to replace with application
             val types = Map("t" -> OperT1(Seq(), paramType), "p" -> fParamType)
-            val tr = ReplaceFixed(tracker)(
+            val tr = ReplaceFixed(tracker).whenEqualsTo(
                 tla.name(fParam.name).typed(types, "p"),
                 tla.appOp(tla.name(paramOperName) ? "t").typed(types, "p"),
             )
@@ -98,7 +98,7 @@ class ParameterNormalizer(
             // case 2: a higher-order parameter.
             // We again replace all instances of `fParam` with `paramOperName`
             // As both are operators, we don't need to introduce application
-            val tr = ReplaceFixed(tracker)(
+            val tr = ReplaceFixed(tracker).whenEqualsTo(
                 tla.name(fParam.name).typed(paramType),
                 tla.name(paramOperName).typed(paramType),
             )

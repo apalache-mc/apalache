@@ -61,12 +61,12 @@ class BoundedCheckerPassImpl @Inject() (
     val nworkers = options.getOrElse("checker", "nworkers", 1)
      */
     val stepsBound = options.getOrElse[Int]("checker", "length", 10)
-    val tuning = options.getOrElse[Map[String, String]]("general", "tuning", Map[String, String]())
     val debug = options.getOrElse[Boolean]("general", "debug", false)
+    val tuning = options.getOrElse[Map[String, String]]("general", "tuning", Map[String, String]())
     // TODO: default smtEncoding option is needed here for executions with TestCmd, add encoding option to TestCmd instead
     val smtEncoding = options.getOrElse[SMTEncoding]("checker", "smt-encoding", oopsla19Encoding)
 
-    val params = new ModelCheckerParams(input, stepsBound, tuning, debug)
+    val params = new ModelCheckerParams(input, stepsBound, tuning)
     params.discardDisabled = options.getOrElse[Boolean]("checker", "discardDisabled", true)
     params.checkForDeadlocks = !options.getOrElse[Boolean]("checker", "noDeadlocks", false)
     params.nMaxErrors = options.getOrElse[Int]("checker", "maxError", 1)

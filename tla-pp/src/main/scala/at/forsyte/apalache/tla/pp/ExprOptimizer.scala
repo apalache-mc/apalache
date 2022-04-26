@@ -70,7 +70,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
 
       def memCopy = DeepCopy(tracker).deepCopyEx(mem)
 
-      val predSubstituted = ReplaceFixed(tracker)(nameEx, memCopy)(pred)
+      val predSubstituted = ReplaceFixed(tracker).whenEqualsTo(nameEx, memCopy)(pred)
       val b = BoolT1()
       tla.and(tla.in(mem, set).as(b), predSubstituted).as(b)
 
@@ -196,14 +196,14 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
       // \E x \in {y \in S: e}: g becomes \E y \in S: e /\ g [x replaced with y]
       val eAndG = tla.and(e, g).typed(BoolT1())
       val newPred =
-        ReplaceFixed(tracker)(replacedEx = xe, newEx = NameEx(y)(ye.typeTag)).apply(eAndG)
+        ReplaceFixed(tracker).whenEqualsTo(xe, NameEx(y)(ye.typeTag)).apply(eAndG)
       val result = OperEx(TlaBoolOper.exists, NameEx(y)(ye.typeTag), s, newPred)(boolTag)
       transformExistsOverSets.applyOrElse(result, { _: TlaEx => result }) // apply recursively to the result
 
     case OperEx(TlaBoolOper.exists, xe @ NameEx(_), OperEx(TlaSetOper.map, mapEx, varsAndSets @ _*), pred) =>
       // e.g., \E x \in {e: y \in S}: g becomes \E y \in S: g[x replaced with e]
       // g[x replaced with e] in the example above
-      val newPred = ReplaceFixed(tracker)(replacedEx = xe, newEx = DeepCopy(tracker).deepCopyEx(mapEx)).apply(pred)
+      val newPred = ReplaceFixed(tracker).whenEqualsTo(xe, mkNewEx = DeepCopy(tracker).deepCopyEx(mapEx)).apply(pred)
 
       // \E y \in S: ... in the example above
       val pairs = varsAndSets.grouped(2).toSeq.collect { case Seq(NameEx(name), set) =>
