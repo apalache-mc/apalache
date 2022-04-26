@@ -10,7 +10,10 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
+### Features
+
+* Add the option `--features` to enable experimental features, see #1648
 
 ### Bug fixes
 
- * Not failing when assignment and `UNCHANGED` appear in invariants, see #1664
+* Not failing when assignment and `UNCHANGED` appear in invariants, see #1664
