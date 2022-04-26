@@ -91,7 +91,8 @@ class ConstAndDefRewriter(tracker: TransformationTracker) extends TlaModuleTrans
       val tag = constDecl.typeTag
       val operTag = Typed(OperT1(Seq(), constDecl.typeTag.asTlaType1()))
       val name = constDecl.name
-      val xform = ReplaceFixed(tracker)(NameEx(name)(tag), OperEx(TlaOper.apply, NameEx(name)(operTag))(tag))
+      val xform =
+        ReplaceFixed(tracker).whenEqualsTo(NameEx(name)(tag), OperEx(TlaOper.apply, NameEx(name)(operTag))(tag))
       val moduleXform = ModuleByExTransformer(xform)
       moduleXform(mod)
     }

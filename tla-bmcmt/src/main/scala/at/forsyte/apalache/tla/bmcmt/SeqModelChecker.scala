@@ -393,7 +393,10 @@ class SeqModelChecker[ExecutorContextT](
         val callName = s"Call_$name"
         // replace param with $callName() in the body
         val app = OperEx(TlaOper.apply, NameEx(callName)(Typed(operType)))(Typed(seqType))
-        val replacedBody = ReplaceFixed(new IdleTracker())({ e => e == NameEx(name)(Typed(seqType)) }, app)(body)
+        val replacedBody =
+          ReplaceFixed(new IdleTracker()).whenMatches({
+                _ == NameEx(name)(Typed(seqType))
+              }, app)(body)
         LetInEx(replacedBody, TlaOperDecl(callName, List(), hist)(Typed(operType)))
 
       case TlaOperDecl(name, _, _) =>
@@ -414,7 +417,7 @@ class SeqModelChecker[ExecutorContextT](
             case _            => false
           }
 
-          repl(isToReplace, assignedEx.copy())(replacedView)
+          repl.whenMatches(isToReplace, assignedEx.copy())(replacedView)
         }
       // the view over state variables should not be equal to the view over the model values
       val boolTag = Typed(BoolT1())
