@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.io.CliConfig
-import at.forsyte.apalache.tla.lir.{Feature, RowsFeature}
+import at.forsyte.apalache.tla.lir.Feature
 
 import java.io.File
 import org.backuity.clist._
@@ -35,23 +35,26 @@ trait General extends Command with CliConfig {
         "write intermediate output files to `out-dir`, default: false (overrides envvar WRITE_INTERMEDIATE)",
       useEnv = true)
   var features = opt[Seq[Feature]](default = Seq(),
-      description = """a comma-separated list of experimental features:
-        | - rows: enable row typing as explained in ADR-014
-        |""".stripMargin)
+      description = {
+        val featureDescriptions = Feature.all.map(f => s"  ${f.name}: ${f.description}")
+        ("a comma-separated list of experimental features:" :: featureDescriptions).mkString("\n")
+      })
 
   private var _invocation = ""
   private var _env = ""
 
+  // A comma separated name of supported features
+  private val featureList = Feature.all.map(_.name).mkString(", ")
+
   // Parse a feature
   implicit def featureRead: Read[Feature] = {
-    Read.reads[Feature]("a feature: rows") {
-      case "rows"     => RowsFeature()
-      case unexpected => throw new IllegalArgumentException(s"Unexpected feature: $unexpected")
+    Read.reads[Feature](s"a feature: ${featureList}") { str =>
+      Feature.fromString(str).getOrElse(throw new IllegalArgumentException(s"Unexpected feature: ${str}"))
     }
   }
 
   implicit def featureSeqRead: Read[Seq[Feature]] = {
-    Read.reads[Seq[Feature]](expecting = "a comma-separated list of features: rows") { str =>
+    Read.reads[Seq[Feature]](expecting = s"a comma-separated list of features: ${featureList}") { str =>
       str.split(",").map(featureRead.reads)
     }
   }

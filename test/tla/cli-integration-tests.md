@@ -2898,6 +2898,17 @@ $ test -d ./run-dir
 $ rm -rf ./run-dir ./.apalache.cfg
 ```
 
+### configuration management: invalid features are rejected with error
+
+```sh
+$ echo "features: [ invalid-feature ]" > .apalache.cfg
+$ apalache-mc check --length=0 Counter.tla | grep -o -e "Configuration error: at 'features.0'" -e "Cannot convert 'invalid-feature' to at.forsyte.apalache.tla.lir.Feature"
+...
+Configuration error: at 'features.0'
+Cannot convert 'invalid-feature' to at.forsyte.apalache.tla.lir.Feature
+$ rm -rf ./.apalache.cfg
+```
+
 ## module lookup
 
 ### module lookup: looks up dummy module from standard library
