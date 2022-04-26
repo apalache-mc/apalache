@@ -166,7 +166,9 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
 
     // check the outcome
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assert(Error(1) == outcome,
+        if (moduleName == "Verifier") s"If outcome=Deadlock, this probably indicates a problem with one encoding."
+        else "")
 
     // extract witness expression from the counterexample
     assert(listener.counterExamples.length == 1) // () --(init transition)--> initial state
