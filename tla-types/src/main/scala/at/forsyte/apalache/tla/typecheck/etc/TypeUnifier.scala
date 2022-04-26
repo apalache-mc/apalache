@@ -109,7 +109,7 @@ class TypeUnifier(varPool: TypeVarPool) {
 
         case nonVar =>
           // unify `typeTerm` with the term assigned to the equivalence class, if possible
-          val unifier = compute(nonVar , typeTerm)
+          val unifier = compute(nonVar, typeTerm)
           unifier.foreach { t => solution += varClass -> t }
           unifier
       }
@@ -240,10 +240,10 @@ class TypeUnifier(varPool: TypeVarPool) {
       lvar: Option[VarT1],
       rvar: Option[VarT1]): Option[RowT1] = {
     // assuming that a type is either a row, or a variable, make it a row type
-    def asRow(rowOpt: Option[TlaType1]) : Option[RowT1] = rowOpt.map {
+    def asRow(rowOpt: Option[TlaType1]): Option[RowT1] = rowOpt.map {
       case r: RowT1 => r
       case v: VarT1 => RowT1(v)
-      case tp              => throw new IllegalStateException("Expected RowT1(_, _) or VarT1(_), found: " + tp)
+      case tp       => throw new IllegalStateException("Expected RowT1(_, _) or VarT1(_), found: " + tp)
     }
 
     // consider four cases
