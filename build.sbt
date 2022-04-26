@@ -171,7 +171,8 @@ lazy val tla_assignments = (project in file("tla-assignments"))
 lazy val tla_bmcmt = (project in file("tla-bmcmt"))
   .dependsOn(tlair, infra, tla_io, tla_pp, tla_assignments)
   .settings(
-      testSettings
+      testSettings,
+      libraryDependencies += Deps.scalaCollectionContrib,
   )
 
 lazy val tool = (project in file("mod-tool"))
