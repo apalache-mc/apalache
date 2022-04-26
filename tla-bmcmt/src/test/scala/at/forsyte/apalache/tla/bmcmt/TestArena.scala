@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, UnknownT}
 import org.scalatest.funsuite.AnyFunSuite
 
 /**
- * [[Arena]] tests. Override [[AnyFunSuite.withFixture()]] to set up specific solver contexts (e.g., for different
+ * [[Arena]] tests. Override [[AnyFunSuite.withFixture]] to set up specific solver contexts (e.g., for different
  * encodings).
  */
 trait TestArena extends AnyFunSuite {

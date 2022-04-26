@@ -13,11 +13,3 @@
 ### Features
 
 * Add the option `--features` to enable experimental features, see #1648
-
-### Breaking changes
-
- * Rename `--tuning` to `--tuning-options-file`, see #1579
-
-### Bug fixes
-
- * Fix references to `--tune-here` (actually `--tuning-options`), see #1579

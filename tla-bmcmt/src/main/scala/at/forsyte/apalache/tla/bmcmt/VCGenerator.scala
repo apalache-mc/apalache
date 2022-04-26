@@ -34,7 +34,7 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
    * @return
    *   a transformed module
    */
-  def gen(module: TlaModule, invName: String, optViewName: Option[String]): TlaModule = {
+  def gen(module: TlaModule, invName: String, optViewName: Option[String] = None): TlaModule = {
     val levelFinder = new TlaDeclLevelFinder(module)
 
     val newModule =
