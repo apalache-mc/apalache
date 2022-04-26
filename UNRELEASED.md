@@ -10,3 +10,6 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
+### Breaking changes
+
+ * Recommended JDK version was bumped to JDK17, see #1662
