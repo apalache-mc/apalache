@@ -102,7 +102,7 @@ class Inliner(
 
     // Each formal parameter gets instantiated independently.
     val replacedBody = decl.formalParams.zip(args).foldLeft(freshBody) { case (partialBody, (fParam, arg)) =>
-      ReplaceFixed(tracker)(NameEx(fParam.name)(arg.typeTag), arg)(partialBody)
+      ReplaceFixed(tracker).whenEqualsTo(NameEx(fParam.name)(arg.typeTag), arg)(partialBody)
     }
 
     // There are two cases where the above instantiation might be incomplete:

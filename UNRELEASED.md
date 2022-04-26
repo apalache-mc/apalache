@@ -13,3 +13,7 @@
 ### Features
 
 * Add the option `--features` to enable experimental features, see #1648
+
+### Bug fixes
+
+* Not failing when assignment and `UNCHANGED` appear in invariants, see #1664
