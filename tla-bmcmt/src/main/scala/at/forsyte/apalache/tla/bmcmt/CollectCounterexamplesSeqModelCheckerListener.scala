@@ -39,5 +39,5 @@ class CollectCounterexamplesModelCheckerListener extends ModelCheckerListener wi
   }
 
   private val _counterExamples = ListBuffer.empty[DecodedExecution]
-  def counterExamples: Seq[DecodedExecution] = _counterExamples
+  def counterExamples: Seq[DecodedExecution] = _counterExamples.toSeq
 }
