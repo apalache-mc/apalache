@@ -262,7 +262,7 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
       lazy val replacement = tla
         .appOp(tla.name(negName(opName)) ? "op")
         .typed(Map("b" -> BoolT1(), "op" -> toBoolT), "b")
-      ReplaceFixed(tracker)(toReplace, replacement)
+      ReplaceFixed(tracker).whenEqualsTo(toReplace, replacement)
     }
 
     val negReplacedBody = replacements.foldLeft(newBody) { case (b, tr) =>

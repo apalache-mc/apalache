@@ -1,5 +1,8 @@
 package at.forsyte.apalache.tla.lir
 
+import at.forsyte.apalache.tla.lir.oper.TlaActionOper
+import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
+
 package object transformations {
 
   /**
@@ -84,4 +87,32 @@ package object transformations {
    * A transformation that makes a module out of a module.
    */
   type TlaModuleTransformation = TlaModule => TlaModule
+
+  /**
+   * Returns a transformation which primes all unprimed variables from `vars` appearing in a given expression.
+   *
+   * Example:
+   *
+   * {{{
+   * a' + b > 0 --> a' + b' > 0
+   * }}}
+   *
+   * @param vars
+   *   variables that should be primed
+   * @param tracker
+   *   a transformation tracker for recording which expressions have changed
+   * @return
+   *   the transformation that adds primes to the variables from `vars`
+   */
+  def decorateWithPrime(vars: Set[String], tracker: TransformationTracker): TlaExTransformation = {
+    ReplaceFixed(tracker).withFun {
+      case ex @ NameEx(name) if vars.contains(name) =>
+        // add prime to a variable from vars
+        OperEx(TlaActionOper.prime, ex)(ex.typeTag)
+
+      case OperEx(TlaActionOper.prime, primedOnce @ OperEx(TlaActionOper.prime, _)) =>
+        // in case the variable was already primed, remove the second prime
+        primedOnce
+    }
+  }
 }
