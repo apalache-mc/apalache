@@ -26,7 +26,7 @@ import org.backuity.clist.Cli
 import util.ExecutionStatisticsCollector
 import util.ExecutionStatisticsCollector.Selection
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.Random
 import at.forsyte.apalache.io.ConfigManager
 import at.forsyte.apalache.tla.bmcmt.rules.vmt.TlaExToVMTWriter
