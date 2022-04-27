@@ -2779,7 +2779,7 @@ will submit anonymized statistics to
 <li>
 <p>General parameters:</p>
 <ul>
-<li><code>--config</code> specifies the <a href="apalache/./tlc-config.html">TLC configuration file</a>, the default name is <code>&lt;myspec&gt;.cfg</code></li>
+<li><code>--config</code> specifies the <a href="apalache/./tlc-config.html">TLC configuration file</a></li>
 <li><code>--init</code> specifies the initialization predicate, <em><code>Init</code> by default</em></li>
 <li><code>--next</code> specifies the transition predicate, <em><code>Next</code> by default</em></li>
 <li><code>--cinit</code> specifies the constant initialization predicate, <em>optional</em></li>
@@ -3162,9 +3162,14 @@ allow one to specify which initialization predicate and transition predicate to
 employ, which invariants to check, as well as to initialize specification
 parameters. Some features of the TLC configuration files are not supported yet.
 Check the manual page on <a href="apalache/./tlc-config.html">&quot;Syntax of TLC Configuration Files&quot;</a>.</p>
-<p><em>If you are checking a file <code>&lt;myspec&gt;.tla</code>, and the file <code>&lt;myspec&gt;.cfg</code> exists in
+<p><strong>Behavior in versions &gt;=0.25.0:</strong></p>
+<p>Apalache never loads a TLC configuration file, unless a filename is passed
+via the option <code>--config=&lt;filename&gt;</code>. If a filename is passed but the file
+does not exist, Apalache reports an error.</p>
+<p><strong>Behavior in versions &lt;0.25.0:</strong></p>
+<p>If you are checking a file <code>&lt;myspec&gt;.tla</code>, and the file <code>&lt;myspec&gt;.cfg</code> exists in
 the same directory, it will be picked up by Apalache automatically. You can also
-explicitly specify which configuration file to use via the <code>--config</code> option.</em></p>
+explicitly specify which configuration file to use via the <code>--config</code> option.</p>
 <h1><a class="header" href="#principles-of-symbolic-model-checking-with-apalache" id="principles-of-symbolic-model-checking-with-apalache">Principles of Symbolic Model Checking with Apalache</a></h1>
 <p>In order to take advantage of Apalache's symbolic model checking, there are a
 few principles one must bear in mind when writing TLA.</p>
@@ -4037,6 +4042,9 @@ by the SMT solver.</p>
 delivered at OOPSLA19</a>.</p>
 <h1><a class="header" href="#syntax-of-tlc-configuration-files" id="syntax-of-tlc-configuration-files">Syntax of TLC Configuration Files</a></h1>
 <p><strong>Author:</strong> Igor Konnov, 2020</p>
+<p>To see how Apalache can use TLC configuration files, check the page
+on <a href="apalache/./parameters.html#tlc-configuration-file">Specification Parameters</a>
+and <a href="apalache/./running.html">Running the Tool</a>.</p>
 <p>This file presents the syntax of
 <a href="http://lamport.azurewebsites.net/tla/tools.html">TLC</a> configuration files
 in <a href="https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form">EBNF</a> and

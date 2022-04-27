@@ -257,9 +257,14 @@ allow one to specify which initialization predicate and transition predicate to
 employ, which invariants to check, as well as to initialize specification
 parameters. Some features of the TLC configuration files are not supported yet.
 Check the manual page on <a href="./tlc-config.html">&quot;Syntax of TLC Configuration Files&quot;</a>.</p>
-<p><em>If you are checking a file <code>&lt;myspec&gt;.tla</code>, and the file <code>&lt;myspec&gt;.cfg</code> exists in
+<p><strong>Behavior in versions &gt;=0.25.0:</strong></p>
+<p>Apalache never loads a TLC configuration file, unless a filename is passed
+via the option <code>--config=&lt;filename&gt;</code>. If a filename is passed but the file
+does not exist, Apalache reports an error.</p>
+<p><strong>Behavior in versions &lt;0.25.0:</strong></p>
+<p>If you are checking a file <code>&lt;myspec&gt;.tla</code>, and the file <code>&lt;myspec&gt;.cfg</code> exists in
 the same directory, it will be picked up by Apalache automatically. You can also
-explicitly specify which configuration file to use via the <code>--config</code> option.</em></p>
+explicitly specify which configuration file to use via the <code>--config</code> option.</p>
 
                     </main>
 
