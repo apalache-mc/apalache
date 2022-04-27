@@ -18,6 +18,7 @@
 ### Features
 
  * Experimental type unification over rows, new records, and variants, see #1646
+ * Include the version number in `detailed.log`, see #1678
 
 ### Bug fixes
 
