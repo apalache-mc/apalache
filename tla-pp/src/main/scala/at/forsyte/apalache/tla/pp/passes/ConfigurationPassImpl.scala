@@ -152,10 +152,10 @@ class ConfigurationPassImpl @Inject() (
       val stem = FilenameUtils.removeExtension(options.getOrError[String]("parser", "filename"))
       val defaultConfig = new File(stem + ".cfg")
       if (defaultConfig.exists()) {
-        val msg = s"  > Ignoring the accompanying TLC config file. To enable it, pass --config=$defaultConfig."
+        val msg = s"  > TLC config file found in specification directory. To enable it, pass --config=$defaultConfig."
         logger.info(msg)
       }
-      // return immediately without going all the way down
+      // return immediately, with no additional declarations
       return List()
     }
 
