@@ -101,7 +101,7 @@ class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val condEx = tla
           .or(
               tla.not(tla.apalacheSelectInSet(currentCell.toNameEx, setNameEx) ? "bool") ? "bool",
-              tla.or(counted.map(eqToOther(setNameEx, currentCell, _)): _*) ? "bool",
+              tla.or(counted.map(eqToOther(setNameEx, currentCell, _)).toIndexedSeq: _*) ? "bool",
           ) ? "bool"
         solverAssert(tla.eql(condCell.toNameEx, condEx).typed(types, "bool"))
 
