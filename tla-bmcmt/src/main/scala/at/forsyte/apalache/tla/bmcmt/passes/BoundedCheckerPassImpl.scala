@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
-import at.forsyte.apalache.tla.bmcmt.Checker.NoError
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStore
 import at.forsyte.apalache.tla.bmcmt.rewriter.{MetricProfilerListener, RewriterConfig}
