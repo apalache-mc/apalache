@@ -297,8 +297,8 @@ class TypeUnifier(varPool: TypeVarPool) {
         }
       } else {
         // the general case: some fields are shared
-        val lfieldsUniq = lfields.filter(p => !sharedFieldNames.keySet.contains(p._1))
-        val rfieldsUniq = rfields.filter(p => !sharedFieldNames.keySet.contains(p._1))
+        val lfieldsUniq = lfields.filter(p => !sharedFieldNames.contains(p._1))
+        val rfieldsUniq = rfields.filter(p => !sharedFieldNames.contains(p._1))
         // Unify the disjoint fields and tail variables, see the above case
         compute(RowT1(lfieldsUniq, lvar), RowT1(rfieldsUniq, rvar)) match {
           case Some(RowT1(disjointFields, tailVar)) =>
