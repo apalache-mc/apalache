@@ -1517,6 +1517,7 @@ class TestSanyImporter extends SanyImporterTestBase {
             assert(
                 OperEx(TlaOper.apply, NameEx("f"), NameEx("a")) == zDecl.body
             )
+          case _ => fail(s"invalid result for zDecl: $zDecl")
         }
         assert(sourceStore.contains(zDecl.body.ID)) // and source file information has been saved
         assert(0 == xDecl.formalParams.length)
