@@ -20,7 +20,7 @@ class TestConstAndDefRewriter extends AnyFunSuite with BeforeAndAfterEach {
   private var annotationStore: AnnotationStore = _
   private var sanyImporter: SanyImporter = _
 
-  override def beforeEach() {
+  override def beforeEach(): Unit = {
     sourceStore = new SourceStore()
     annotationStore = createAnnotationStore()
     sanyImporter = new SanyImporter(sourceStore, annotationStore)

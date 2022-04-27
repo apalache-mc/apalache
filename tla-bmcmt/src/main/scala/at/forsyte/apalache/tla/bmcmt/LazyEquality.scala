@@ -107,7 +107,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
    * @return
    *   a new symbolic state that contains the constraints for every pair in the sequence
    */
-  def cacheEqConstraints(state: SymbState, pairs: Traversable[(ArenaCell, ArenaCell)]): SymbState = {
+  def cacheEqConstraints(state: SymbState, pairs: Iterable[(ArenaCell, ArenaCell)]): SymbState = {
     rewriter.solverContext.log("; [START] Caching equality constraints for a sequence: " + pairs)
 
     def makeOne(state: SymbState, pair: (ArenaCell, ArenaCell)): SymbState = {

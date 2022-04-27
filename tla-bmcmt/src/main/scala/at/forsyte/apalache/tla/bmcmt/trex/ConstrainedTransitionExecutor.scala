@@ -76,7 +76,7 @@ class ConstrainedTransitionExecutor[ExecutorContext](trex: TransitionExecutor[Ex
             }
 
             val tt = cell.cellType.toTlaType1
-            repl(isToReplace, cell.toNameEx.withTag(Typed(tt)))(ex)
+            repl.whenMatches(isToReplace, cell.toNameEx.withTag(Typed(tt)))(ex)
           }
         }
 

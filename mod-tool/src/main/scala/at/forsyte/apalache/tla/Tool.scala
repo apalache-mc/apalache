@@ -26,9 +26,8 @@ import org.backuity.clist.Cli
 import util.ExecutionStatisticsCollector
 import util.ExecutionStatisticsCollector.Selection
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.Random
-import at.forsyte.apalache.io.ApalacheConfig
 import at.forsyte.apalache.io.ConfigManager
 import at.forsyte.apalache.tla.bmcmt.rules.vmt.TlaExToVMTWriter
 
@@ -53,20 +52,23 @@ object Tool extends LazyLogging {
     System.exit(run(args))
   }
 
-  private def outputAndLogConfig(cmd: General, cfg: ApalacheConfig): Unit = {
-    OutputManager.configure(cfg)
-    // We currently use dummy files for some commands, so we skip here on non-existing files
-    if (cmd.file.getName.endsWith(".tla") && cmd.file.exists()) {
-      OutputManager.initSourceLines(cmd.file)
+  // Returns `Left(errmsg)` in case of configuration errors
+  private def outputAndLogConfig(cmd: General): Either[String, Unit] = {
+    ConfigManager(cmd).map { cfg =>
+      OutputManager.configure(cfg)
+      // We currently use dummy files for some commands, so we skip here on non-existing files
+      if (cmd.file.getName.endsWith(".tla") && cmd.file.exists()) {
+        OutputManager.initSourceLines(cmd.file)
+      }
+      println(s"Output directory: ${OutputManager.runDir.normalize()}")
+      OutputManager.withWriterInRunDir(OutputManager.Names.RunFile)(
+          _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
+      )
+      // force our programmatic logback configuration, as the autoconfiguration works unpredictably
+      new LogbackConfigurator(OutputManager.runDirPathOpt, OutputManager.customRunDirPathOpt).configureDefaultContext()
+      // TODO: update workers when the multicore branch is integrated
+      submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> cmd.label, "workers" -> "1"))
     }
-    println(s"Output directory: ${OutputManager.runDir.normalize()}")
-    OutputManager.withWriterInRunDir(OutputManager.Names.RunFile)(
-        _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
-    )
-    // force our programmatic logback configuration, as the autoconfiguration works unpredictably
-    new LogbackConfigurator(OutputManager.runDirPathOpt, OutputManager.customRunDirPathOpt).configureDefaultContext()
-    // TODO: update workers when the multicore branch is integrated
-    submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> cmd.label, "workers" -> "1"))
   }
 
   /**
@@ -96,42 +98,46 @@ object Tool extends LazyLogging {
     cli match {
       // A standard option, e.g., --version or --help. No header, no timer, no noise
       case None => OK_EXIT_CODE
+      // One of our commands.
       case Some(cmd) => {
 
         printHeaderAndStatsConfig()
 
-        // One of our commands. Print the header and measure time
-        val startTime = LocalDateTime.now()
-
-        outputAndLogConfig(cmd, ConfigManager(cmd))
-
-        val exitcode =
-          try {
-            cmd match {
-              case parse: ParseCmd =>
-                runForModule(runParse, new ParserModule, parse)
-
-              case check: CheckCmd =>
-                runForModule(runCheck, new CheckerModule, check)
-
-              case test: TestCmd =>
-                runForModule(runTest, new CheckerModule, test)
-
-              case typecheck: TypeCheckCmd =>
-                runForModule(runTypeCheck, new TypeCheckerModule, typecheck)
-
-              case server: ServerCmd =>
-                runForModule(runServer, new CheckerModule, server)
-
-              case constrain: TranspileCmd =>
-                runForModule(runConstrain, new ReTLAToVMTModule, constrain)
-
-              case config: ConfigCmd =>
-                configure(config)
-            }
-          } finally {
-            printTimeDiff(startTime)
+        val exitcode = outputAndLogConfig(cmd) match {
+          case Left(configurationErrorMessage) => {
+            logger.error(s"Configuration error: ${configurationErrorMessage}")
+            ExitCodes.ERROR
           }
+          case Right(()) => {
+            val startTime = LocalDateTime.now()
+            try {
+              cmd match {
+                case parse: ParseCmd =>
+                  runForModule(runParse, new ParserModule, parse)
+
+                case check: CheckCmd =>
+                  runForModule(runCheck, new CheckerModule, check)
+
+                case test: TestCmd =>
+                  runForModule(runTest, new CheckerModule, test)
+
+                case typecheck: TypeCheckCmd =>
+                  runForModule(runTypeCheck, new TypeCheckerModule, typecheck)
+
+                case server: ServerCmd =>
+                  runForModule(runServer, new CheckerModule, server)
+
+                case constrain: TranspileCmd =>
+                  runForModule(runConstrain, new ReTLAToVMTModule, constrain)
+
+                case config: ConfigCmd =>
+                  configure(config)
+              }
+            } finally {
+              printTimeDiff(startTime)
+            }
+          }
+        }
 
         if (exitcode == OK_EXIT_CODE) {
           Console.out.println("EXITCODE: OK")
@@ -157,6 +163,8 @@ object Tool extends LazyLogging {
   private def setCommonOptions(cli: General, options: WriteablePassOptions): Unit = {
     options.set("general.debug", cli.debug)
     options.set("smt.prof", cli.smtprof)
+    options.set("general.features", cli.features)
+
     // TODO: Remove pass option, and just rely on OutputManager config
     options.set("io.outdir", OutputManager.outDir)
   }
@@ -221,7 +229,7 @@ object Tool extends LazyLogging {
     setCoreOptions(executor, check)
 
     var tuning =
-      if (check.tuning != "") loadProperties(check.tuning) else Map[String, String]()
+      if (check.tuningOptionsFile != "") loadProperties(check.tuningOptionsFile) else Map[String, String]()
     tuning = overrideProperties(tuning, check.tuningOptions)
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
@@ -367,7 +375,7 @@ object Tool extends LazyLogging {
     def parseKeyValue(text: String): (String, String) = {
       val parts = text.split('=')
       if (parts.length != 2 || parts.head.trim == "" || parts(1) == "") {
-        throw new PassOptionException(s"Expected key=value in --tune-here=$propsAsString")
+        throw new PassOptionException(s"Expected key=value in --tuning-options=$propsAsString")
       } else {
         // trim to remove surrounding whitespace from the key, but allow the value to have white spaces
         (parts.head.trim, parts(1))

@@ -349,9 +349,9 @@ class TestSanyImporter extends SanyImporterTestBase {
         |LOCAL Foo(X) ==
         |  LET A == X IN
         |  A
-        | 
+        |
         |User(X) ==
-        |  LET A == 1 IN  
+        |  LET A == 1 IN
         |  Foo(X)
         |================================
       """.stripMargin
@@ -1378,6 +1378,101 @@ class TestSanyImporter extends SanyImporterTestBase {
     )
   }
 
+  test("passing a built-in operator as an argument") {
+    // passing a built-in operator as an argument ti another operator
+    val text =
+      """---- MODULE level2builtin ----
+        |A(F(_, _), x, y) == F(x, y)
+        |B(S, T) == A(%s, S, T)
+        |================================
+        |""".stripMargin.format("\\union")
+
+    val (rootName, modules) = sanyImporter
+      .loadFromSource("level2builtin", Source.fromString(text))
+    val mod = expectSingleModule("level2builtin", rootName, modules)
+    expectSourceInfoInDefs(mod)
+
+    modules(rootName).declarations.find {
+      _.name == "B"
+    } match {
+      case Some(TlaOperDecl(_, _,
+                  OperEx(TlaOper.apply, NameEx(callee), LetInEx(body, unionDef), NameEx(s), NameEx(t)))) =>
+        assert(callee == "A")
+        assert(s == "S")
+        assert(t == "T")
+
+        val defName = unionDef match {
+          case TlaOperDecl(name, List(OperParam(param1, 0), OperParam(param2, 0)),
+                  OperEx(TlaSetOper.cup, NameEx(x), NameEx(y))) =>
+            assert(param1 == x)
+            assert(param2 == y)
+            name
+
+          case e =>
+            fail("""Expected LET __SET_UNION2_NN(__p1, __p2) == __p1 \cup __p2, found: """ + e)
+        }
+
+        body match {
+          case NameEx(name) =>
+            assert(name == defName)
+
+          case e =>
+            fail("""Expected __SET_UNION2_NN, found: """ + e)
+        }
+
+      case e =>
+        fail("Expected B, found: " + e)
+    }
+  }
+
+  test("passing a library operator as an argument") {
+    // passing a library as an argument to another operator
+    val text =
+      """---- MODULE level2library ----
+        |EXTENDS Integers
+        |A(F(_, _), x, y) == F(x, y)
+        |B(a, b) == A(+, a, b)
+        |================================
+        |""".stripMargin
+
+    val (rootName, modules) = sanyImporter
+      .loadFromSource("level2library", Source.fromString(text))
+    val mod = modules(rootName)
+    expectSourceInfoInDefs(mod)
+
+    mod.declarations.find {
+      _.name == "B"
+    } match {
+      case Some(TlaOperDecl(_, _,
+                  OperEx(TlaOper.apply, NameEx(callee), LetInEx(body, plusDef), NameEx(a), NameEx(b)))) =>
+        assert(callee == "A")
+        assert(a == "a")
+        assert(b == "b")
+
+        val defName = plusDef match {
+          case TlaOperDecl(name, List(OperParam(param1, 0), OperParam(param2, 0)),
+                  OperEx(TlaArithOper.plus, NameEx(x), NameEx(y))) =>
+            assert(param1 == x)
+            assert(param2 == y)
+            name
+
+          case e =>
+            fail("""Expected LET __PLUS_NN(__p1, __p2) == __p1 + __p2, found: """ + e)
+        }
+
+        body match {
+          case NameEx(name) =>
+            assert(name == defName)
+
+          case e =>
+            fail("""Expected __PLUS_NN, found: """ + e)
+        }
+
+      case e =>
+        fail("Expected B, found: " + e)
+    }
+  }
+
   test("let-in") {
     val text =
       """---- MODULE let ----
@@ -1422,6 +1517,7 @@ class TestSanyImporter extends SanyImporterTestBase {
             assert(
                 OperEx(TlaOper.apply, NameEx("f"), NameEx("a")) == zDecl.body
             )
+          case _ => fail(s"invalid result for zDecl: $zDecl")
         }
         assert(sourceStore.contains(zDecl.body.ID)) // and source file information has been saved
         assert(0 == xDecl.formalParams.length)

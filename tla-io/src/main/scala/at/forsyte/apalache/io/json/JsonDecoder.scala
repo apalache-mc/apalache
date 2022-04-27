@@ -12,5 +12,5 @@ trait JsonDecoder[T <: JsonRepresentation] {
   def asTlaModule(moduleJson: T): TlaModule
   def asTlaDecl(declJson: T): TlaDecl
   def asTlaEx(exJson: T): TlaEx
-  def fromRoot(rootJson: T): Traversable[TlaModule]
+  def fromRoot(rootJson: T): Iterable[TlaModule]
 }

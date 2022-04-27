@@ -76,7 +76,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
 
   private def findAssignedNames(ex: TlaEx): Map[String, TlaType1] = ex match {
     case OperEx(ApalacheOper.assign, OperEx(TlaActionOper.prime, nex @ NameEx(name)), _) =>
-      Map(name -> nex.typeTag.asTlaType1)
+      Map(name -> nex.typeTag.asTlaType1())
 
     case OperEx(_, args @ _*) =>
       args.flatMap(findAssignedNames).toMap

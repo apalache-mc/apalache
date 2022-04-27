@@ -33,10 +33,10 @@ trait StackableContext {
    * @param n
    *   pop n times, if n > 0, otherwise, do nothing
    */
-  def pop(n: Int)
+  def pop(n: Int): Unit
 
   /**
    * Clean the context
    */
-  def dispose()
+  def dispose(): Unit
 }

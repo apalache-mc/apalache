@@ -2,9 +2,9 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.lir.{BoolT1, _}
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
-import at.forsyte.apalache.tla.lir.transformations.standard.DeepCopy
+import at.forsyte.apalache.tla.lir.transformations.standard.{DeepCopy, ReplaceFixed}
 import at.forsyte.apalache.tla.pp.{NormalizedNames, TlaInputError}
 import TypedPredefs._
 import com.typesafe.scalalogging.LazyLogging
@@ -34,7 +34,7 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
    * @return
    *   a transformed module
    */
-  def gen(module: TlaModule, invName: String, optViewName: Option[String]): TlaModule = {
+  def gen(module: TlaModule, invName: String, optViewName: Option[String] = None): TlaModule = {
     val levelFinder = new TlaDeclLevelFinder(module)
 
     val newModule =
@@ -119,12 +119,17 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
 
   private def introConditions(level: TlaLevel, inputInv: TlaEx): Seq[TlaOperDecl] = {
     def mapToDecls(invPiece: TlaEx, index: Int): Seq[TlaOperDecl] = {
-      val deepCopy = DeepCopy(tracker)
-      val invPieceCopy = deepCopy.deepCopyEx(invPiece)
+      // In rare cases, invPiece may contain assignments, e.g., when one uses --inv=Next.
+      // Replace assignments with equality.
+      val removeAssignments = ReplaceFixed(tracker).withFun { case ex @ OperEx(ApalacheOper.assign, lhs, rhs) =>
+        OperEx(TlaOper.eq, lhs, rhs)(ex.typeTag)
+      }
+      val invPieceNorm = removeAssignments(invPiece)
+      val invPieceCopy = DeepCopy(tracker).deepCopyEx(invPieceNorm)
       val tag = inputInv.typeTag
       val positivePrefix =
         if (level == TlaLevelAction) NormalizedNames.VC_ACTION_INV_PREFIX else NormalizedNames.VC_INV_PREFIX
-      val positive = TlaOperDecl(positivePrefix + index, List(), invPieceCopy)(tag)
+      val positive = TlaOperDecl(positivePrefix + index, List(), invPieceNorm)(tag)
       val notInvPieceCopy = tla.not(invPieceCopy).typed(BoolT1())
       val negativePrefix =
         if (level == TlaLevelAction) NormalizedNames.VC_NOT_ACTION_INV_PREFIX else NormalizedNames.VC_NOT_INV_PREFIX

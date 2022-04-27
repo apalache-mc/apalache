@@ -37,7 +37,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
 
     // The types are computed in operator applications, add extra tests and listener calls for non-operators
     try {
-      val rootSolver = new ConstraintSolver
+      val rootSolver = new ConstraintSolver(varPool)
       // The whole expression has been processed. Compute the type of the expression.
       val rootType = computeRec(rootCtx, rootSolver, rootEx)
       rootSolver.solve() match {
@@ -240,7 +240,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
         val approxSolution = solver.solvePartially().getOrElse(throw new UnwindException)
 
         // introduce a new instance of the constraint solver for the operator definition
-        val letInSolver = new ConstraintSolver()
+        val letInSolver = new ConstraintSolver(varPool)
         val operScheme =
           ctx.types.get(name) match {
             case Some(scheme @ TlaType1Scheme(OperT1(_, _), _)) =>
@@ -261,8 +261,9 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
 
         // translate the binders in the lambda expression, so we can quickly propagate the types of the parameters
         val preCtx =
-          new TypeContext((ctx.types + (name -> operScheme))
-                .mapValues(p => p.copy(approxSolution.subRec(p.principalType))))
+          new TypeContext((ctx.types + (name -> operScheme)).view
+                .mapValues(p => p.copy(approxSolution.subRec(p.principalType)))
+                .toMap)
         val extCtx = translateBinders(preCtx, letInSolver, binders)
         val annotationParams = operScheme.principalType.asInstanceOf[OperT1].args
         annotationParams.zip(binders.map { case (pname, _) => (pname, extCtx(pname.name).principalType) }).foreach {

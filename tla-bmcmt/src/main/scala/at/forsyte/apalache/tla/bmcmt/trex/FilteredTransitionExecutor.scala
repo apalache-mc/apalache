@@ -18,8 +18,8 @@ import at.forsyte.apalache.tla.lir.TlaEx
 class FilteredTransitionExecutor[SnapshotT](stepFilter: String, invFilter: String, trex: TransitionExecutor[SnapshotT])
     extends TransitionExecutor[SnapshotT] {
 
-  private val stepRe = stepFilter.r()
-  private val invRe = invFilter.r()
+  private val stepRe = stepFilter.r
+  private val invRe = invFilter.r
 
   /**
    * Translate a transition into SMT and save it under the given number. This method returns false, if the transition

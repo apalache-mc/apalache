@@ -30,7 +30,7 @@ Before we start writing any type annotations, let's run the type checker and
 see, whether it complains:
 
 ```sh
-$ apalache typecheck TwoPhase.tla
+$ apalache-mc typecheck TwoPhase.tla
 ```
 
 The tool output is a bit verbose. Below, you can see the important lines of the
@@ -39,37 +39,22 @@ output:
 ```
 ...
 PASS #1: TypeCheckerSnowcat
- > Running Snowcat .::.
-[TwoPhase.tla:51:30-51:31]: Undefined name RM. Introduce a type annotation.
- > Snowcat asks you to fix the types. Meow.
+ > Running Snowcat .::.                                           
+Typing input error: Expected a type annotation for VARIABLE tmPrepared
 ... 
 ```
 
-## Step 2: Annotating RM
+## Step 2: Annotating tmPrepared
 
-In Step 1, Snowcat complained about the name `RM`. The reason
-for that is very simple: Snowcat does type analysis for each declaration in
-isolation. Hence, it failed, as soon as it met a reference to the constant
-`RM` in the definition of `Message`:
+In Step 1, Snowcat complained about the name `tmPrepared`. The reason
+for that is very simple: tmPrepared is declared as a variable, but Snowcat 
+does not find a type annotation.
 
-```tla
-CONSTANT RM \* The set of resource managers
-...
-
-Message ==
-  ...
-  [type : {"Prepared"}, rm : RM]  \union  [type : {"Commit", "Abort"}]
-```
-
-Indeed, we have not introduced a type annotation for the constant `RM`, so the
-type checker cannot use any meaningful type in the context of the above
-expression.
-
-From the comment next to the declaration of `RM`, we see that `RM` is supposed
-to be a set of resource managers. We have plenty of choices here of what a
+From the comment next to the declaration of `tmPrepared`, we see that `tmPrepared` is supposed
+to be a subset of `RM`, which in turn is a set of resource managers. We have plenty of choices here of what a
 resource manager could be. Let's keep it simple and say that a resource manager
-is simply a name. Hence, we say that `RM` is a set of strings. Let's add a 
-type annotation:
+is simply a name. Hence, we say that `RM` and `tmPrepared` are sets of strings. Let's add 
+type annotations:
 
 ```tla
 CONSTANT
@@ -77,8 +62,17 @@ CONSTANT
     RM \* The set of resource managers
 ```
 
+```tla
+VARIABLES
+  (* ... *)
+  \* @type: Set(Str);
+  tmPrepared,    \* The set of RMs from which the TM has received $"Prepared"$
+                 \* messages.
+```
+
 Note that we had to put the annotation between the keyword `CONSTANT` and the
-identifier `RM`. We used the one-line TLA+ comment: `\* @type: ...;`.
+identifier `RM`, and between `VARIABLES` and `tmPrepared`. 
+We used the one-line TLA+ comment: `\* @type: ...;`.
 Alternatively, we could use the multi-line comment: `(* @type: Set(Str); *)`.
 Importantly, the type annotation should end with a semi-colon: `;`.
 
@@ -89,30 +83,62 @@ single-line comment `\* ...`. See [issue
 
 ## Step 3: Running Snowcat again
 
-Having introduced the type annotation for `RM`, let's run the type checker again:
+Having introduced the type annotations for `RM` and `tmPrepared`, let's run the type checker again:
 
 ```sh
-$ apalache typecheck TwoPhase.tla
+$ apalache-mc typecheck TwoPhase.tla
 ```
 
-Snowcat does not complain about `RM` anymore. Now we get another message:
+Snowcat does not complain about `tmPrepared` anymore. Now we get another message:
 
 ```
-[TwoPhase.tla:68:6-68:12]: Undefined name rmState. Introduce a type annotation.
+> Running Snowcat .::.
+Typing input error: Expected a type annotation for VARIABLE tmState
 ```
 
-## Step 4: Annotating rmState
+## Step 4: Annotating tmState
 
 Similar to Step 2, we are missing a type annotation. This time the type checker
-complains about the variable `rmState`:
+complains about the variable `tmState`:
 
 ```tla
 VARIABLES
-  rmState,       \* $rmState[rm]$ is the state of resource manager RM.
+  tmState,       \* The state of the transaction manager.
 ```
 
-We can get a hint about the type of `rmState` from the type invariant
-`TPTypeOK`. It should be a function that, given a resource manager, produces
+We can get a hint about the type of `tmState` from the type invariant
+`TPTypeOK`, where we see that `tmState` is just a string.
+
+Add the following type
+annotation:
+
+```tla
+VARIABLES
+  (* ... *)
+  \* @type: Str;  
+  tmState,       \* The state of the transaction manager.
+```
+
+## Step 5: Getting one more type error by Snowcat
+
+Guess what? Run the type checker again:
+
+```sh
+$ apalache-mc typecheck TwoPhase.tla
+```
+
+Snowcat does not complain about `tmState` anymore. But we are not done yet:
+
+```
+> Running Snowcat .::.   
+Typing input error: Expected a type annotation for VARIABLE rmState
+```
+
+## Step 6: Annotating rmState
+
+This time we need a type annotation for the variable `rmState`.
+By inspecting `TPTypeOK`, we see `rmState`
+should be a function that, given a resource manager, produces
 one of the following strings: `"working"`, `"prepared"`, `"committed"`,
 `"aborted"`. So we need the function type: `Str -> Str`. Add the following
 type annotation:
@@ -121,33 +147,6 @@ type annotation:
 VARIABLES
   \* @type: Str -> Str;
   rmState,       \* $rmState[rm]$ is the state of resource manager RM.
-```
-
-## Step 5: Getting one more type error by Snowcat
-
-Guess what? Run the type checker again:
-
-```sh
-$ apalache typecheck TwoPhase.tla
-```
-
-Snowcat does not complain about `rmState` anymore. But we are not done yet:
-
-```
-[TwoPhase.tla:70:6-70:12]: Undefined name tmState. Introduce a type annotation.
-```
-
-## Step 6: Annotating tmState
-
-This time we need a type annotation for the variable `tmState`. By inspecting
-`TPTypeOK`, we see that `tmState` is just a string. Add the following type
-annotation:
-
-```tla
-VARIABLES
-  (* ... *)
-  \* @type: Str;  
-  tmState,       \* The state of the transaction manager.
 ```
 
 ## Step 7: Running Snowcat to see another error
@@ -159,51 +158,15 @@ $ apalache typecheck TwoPhase.tla
 ```
 
 You must have guessed that the type checker complains about the variable
-`tmPrepared`. Indeed, it just needs annotations for all CONSTANTS and
+`msgs`. Indeed, it just needs annotations for all CONSTANTS and
 VARIABLES:
 
 ```
-[TwoPhase.tla:72:6-72:15]: Undefined name tmPrepared. Introduce a type annotation.
+> Running Snowcat .::. 
+Typing input error: Expected a type annotation for VARIABLE msgs
 ```
 
-## Step 8: Annotating tmPrepared
-
-At this step, we have to annotate `tmPrepared`. Let's have a look at the comment
-next to the declaration of `tmPrepared`:
-
-```tla
-VARIABLES
-  ...
-  tmPrepared,    \* The set of RMs from which the TM has received $"Prepared"$
-                 \* messages.
-```
-
-Hence, `tmPrepared` is a set of resource managers. This is what we write as a
-type annotation:
-
-```tla
-VARIABLES
-  (* ... *)
-  \* @type: Set(Str);
-  tmPrepared,    \* The set of RMs from which the TM has received $"Prepared"$
-                 \* messages.
-```
-
-## Step 9: Running Snowcat again
-
-You know that we have to run the type checker again:
-
-```sh
-$ apalache typecheck TwoPhase.tla
-```
-
-It is no surprise that it complains about the variable `msgs` now:
-
-```
-[TwoPhase.tla:74:6-74:9]: Undefined name msgs. Introduce a type annotation.
-```
-
-## Step 10: Annotating msgs
+## Step 8: Annotating msgs
 
 In the previous steps, it was quite easy to annotate variables. We would just
 look at how the variable is used, or read the comments, and add a type annotation.
@@ -228,9 +191,8 @@ kinds of records:
 1. The record `[type |-> "Abort"]`,
 1. A record `[type |-> "Prepared", rm |-> r]`, for some `r \in RM`.
 
-This looks like an issue for the type checker, as it always requires
-the set elements to have the same type. However, the type checker
-did not complain about the expressions in `Message` and `TPTypeOK`. Why?
+This looks like an issue for the type checker, as we always require
+the elements of a set to have the same type.
 
 Actually, the type checker allows records to be generalized to a type that
 contains additional fields. In the above definition of `Messages`, the set of
@@ -254,12 +216,12 @@ VARIABLES
   msgs
 ```
 
-## Step 11: Running Snowcat and seeing no errors
+## Step 9: Running Snowcat and seeing no errors
 
 Let's see whether Snowcat is happy about our types now:
 
 ```sh
-$ apalache typecheck TwoPhase.tla
+$ apalache-mc typecheck TwoPhase.tla
 ```
 
 The type checker is happy. It has computed the types of all expressions:

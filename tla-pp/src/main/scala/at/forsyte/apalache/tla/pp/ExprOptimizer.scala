@@ -69,9 +69,35 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
       // Transform x \in { y \in S: P } into x \in S /\ P[y/x]
 
       def memCopy = DeepCopy(tracker).deepCopyEx(mem)
-      val predSubstituted = ReplaceFixed(tracker)(nameEx, memCopy)(pred)
+
+      val predSubstituted = ReplaceFixed(tracker).whenEqualsTo(nameEx, memCopy)(pred)
       val b = BoolT1()
       tla.and(tla.in(mem, set).as(b), predSubstituted).as(b)
+
+    case memEx @ OperEx(TlaSetOper.in, rec,
+            OperEx(TlaSetOper.map, OperEx(TlaFunOper.`enum`, fieldsAndValues @ _*), varsAndSets @ _*))
+        if fieldsAndValues.length == varsAndSets.length =>
+      // Transform r \in { [f_1 |-> x_1, ..., f_k |-> x_k]: x_1 \in S_1, ..., x_k \in S_k }
+      // into
+      // DOMAIN r = { "f_1", ..., "f_k" } /\ r.f_1 \in S_1 /\ ... /\ r.f_k \in S_k
+      val (fields, values) = TlaOper.deinterleave(fieldsAndValues)
+      val (vars, sets) = TlaOper.deinterleave(varsAndSets)
+      assert(fields.length == vars.length)
+      if (values.zip(vars).exists(p => p._1 != p._2)) {
+        // The set has a more general form: { [f_1 |-> e_1, ..., f_k |-> e_k]: x_1 \in S_1, ..., x_k \in S_k }, where
+        //   e_1, ..., e_k are expressions over x_1, ..., x_k.
+        // We do not know how to optimize it.
+        memEx
+      } else {
+        // The set is of the nice form: { [f_1 |-> x_1, ..., f_k |-> x_k]: x_1 \in S_1, ..., x_k \in S_k }
+        val strSetT = SetT1(StrT1())
+        val b = BoolT1()
+        val domEq = tla.eql(tla.dom(rec).as(strSetT), tla.enumSet(fields: _*).as(strSetT)).as(b)
+        val fieldsEq = fields.zip(values.zip(sets)).map { case (key, (value, set)) =>
+          tla.in(tla.appFun(rec, key).as(value.typeTag.asTlaType1()), set).as(b)
+        }
+        apply(tla.and(domEq +: fieldsEq: _*).as(b))
+      }
   }
 
   /**
@@ -170,14 +196,14 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
       // \E x \in {y \in S: e}: g becomes \E y \in S: e /\ g [x replaced with y]
       val eAndG = tla.and(e, g).typed(BoolT1())
       val newPred =
-        ReplaceFixed(tracker)(replacedEx = xe, newEx = NameEx(y)(ye.typeTag)).apply(eAndG)
+        ReplaceFixed(tracker).whenEqualsTo(xe, NameEx(y)(ye.typeTag)).apply(eAndG)
       val result = OperEx(TlaBoolOper.exists, NameEx(y)(ye.typeTag), s, newPred)(boolTag)
       transformExistsOverSets.applyOrElse(result, { _: TlaEx => result }) // apply recursively to the result
 
     case OperEx(TlaBoolOper.exists, xe @ NameEx(_), OperEx(TlaSetOper.map, mapEx, varsAndSets @ _*), pred) =>
       // e.g., \E x \in {e: y \in S}: g becomes \E y \in S: g[x replaced with e]
       // g[x replaced with e] in the example above
-      val newPred = ReplaceFixed(tracker)(replacedEx = xe, newEx = DeepCopy(tracker).deepCopyEx(mapEx)).apply(pred)
+      val newPred = ReplaceFixed(tracker).whenEqualsTo(xe, mkNewEx = DeepCopy(tracker).deepCopyEx(mapEx)).apply(pred)
 
       // \E y \in S: ... in the example above
       val pairs = varsAndSets.grouped(2).toSeq.collect { case Seq(NameEx(name), set) =>

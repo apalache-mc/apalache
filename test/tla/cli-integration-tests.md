@@ -181,6 +181,29 @@ EXITCODE: ERROR (255)
 
 This command parses a TLA+ specification with the SANY parser.
 
+### parse Empty succeeds
+
+```sh
+$ apalache-mc parse Empty.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
+### parse Empty with --features=rows succeeds
+
+```sh
+$ apalache-mc parse --features=rows Empty.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
+### parse Empty with an unsupported feature fails
+
+```sh
+$ apalache-mc parse --features=feature.unsupported Empty.tla 2>&1 | grep 'Failed to parse'
+Failed to parse command parse: Incorrect value for option features, got 'feature.unsupported', expected a feature: rows
+```
+
 ### parse LocalDefClash576 succeeds
 
 ```sh
@@ -1119,7 +1142,7 @@ EXITCODE: OK
 ### check reorderTest.tla MayFail succeeds: fixed SMT fails under SMT-based assignment finding
 
 ```sh
-$ apalache-mc check --next=MayFail --tuning=reorderTest.properties reorderTest.tla | sed 's/I@.*//'
+$ apalache-mc check --next=MayFail --tuning-options-file=reorderTest.properties reorderTest.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -1533,11 +1556,6 @@ $ apalache-mc check --config=ConfigParams.cfg ConfigParams.tla | sed 's/[IEW]@.*
   > Set the initialization predicate to Init
   > Set the transition predicate to Next
   > Set an invariant to Inv
-  > Replaced CONSTANT MyInt with 42
-  > Replaced CONSTANT MyStr with "hello"
-  > Replaced CONSTANT MyModelValue1 with "ModelValue_Model1"
-  > Replaced CONSTANT MyModelValue2 with "ModelValue_Model2"
-  > Replaced CONSTANT MySet with {1, 2, 3}
 ...
 The outcome is: NoError
 ...
@@ -2033,6 +2051,14 @@ $ apalache-mc check --length=0 --inv=AllTests TestFunctions.tla | sed 's/[IEW]@.
 EXITCODE: OK
 ```
 
+### check TestBuiltinAsArg1626.tla reports no error (array-encoding)
+
+```sh
+$ apalache-mc check --length=0 --inv=AllTests TestBuiltinAsArg1626.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check TestHash2.tla reports no error (array-encoding)
 
 A regression test for using `--cinit` and hashes.
@@ -2049,6 +2075,16 @@ A regression test for assignments under quantification over empty sets.
 
 ```sh
 $ apalache-mc check --length=1 Test1425.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check Test1623.tla reports no error
+
+A regression test for #1623 (Instantiation with .cfg + ASSUME)
+
+```sh
+$ apalache-mc check --length=3 --inv=Inv Test1623.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2073,7 +2109,43 @@ $ apalache-mc check --inv=DriftInv --next=NextFast antipatterns/fold-except/MC_F
 EXITCODE: OK
 ```
 
+### check RecMem1627.tla reports no error
+
+A test for folds with excepts, the fast case.
+
+```sh
+$ apalache-mc check --inv=TypeOK --length=1 RecMem1627.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check UnchangedAsInv1663.tla reports no error
+
+A test `UNCHANGED` in an invariant.
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 UnchangedAsInv1663.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
+
+### typecheck Empty.tla reports no error
+
+```sh
+$ apalache-mc typecheck Empty.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
+### typecheck Empty.tla reports no error when rows enabled
+
+```sh
+$ apalache-mc typecheck --features=rows Empty.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
 
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
 
@@ -2834,6 +2906,17 @@ $ JVM_ARGS="-Duser.home=." apalache-mc check --length=0 Counter.tla | sed 's/[IE
 EXITCODE: OK
 $ test -d ./run-dir
 $ rm -rf ./run-dir ./.apalache.cfg
+```
+
+### configuration management: invalid features are rejected with error
+
+```sh
+$ echo "features: [ invalid-feature ]" > .apalache.cfg
+$ apalache-mc check --length=0 Counter.tla | grep -o -e "Configuration error: at 'features.0'" -e "Cannot convert 'invalid-feature' to at.forsyte.apalache.tla.lir.Feature"
+...
+Configuration error: at 'features.0'
+Cannot convert 'invalid-feature' to at.forsyte.apalache.tla.lir.Feature
+$ rm -rf ./.apalache.cfg
 ```
 
 ## module lookup

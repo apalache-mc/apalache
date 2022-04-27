@@ -4,10 +4,12 @@ import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.transformations.decorateWithPrime
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.Outcome
+
 import java.io.{File, FileOutputStream, PrintStream}
 
 @RunWith(classOf[JUnitRunner])
@@ -35,7 +37,7 @@ class TestTransformations extends AnyFunSuite with TestingPredefs {
         "x",
         "a",
     )
-    val transformation = Prime(vars, new IdleTracker())
+    val transformation = decorateWithPrime(vars, new IdleTracker())
 
     val pa1 = n_x -> prime(n_x).untyped()
     val pa2 = n_y -> n_y

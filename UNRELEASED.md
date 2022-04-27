@@ -11,10 +11,15 @@
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
 ### Breaking changes
-* `RECURSIVE` operators and functions are no longer supported, see #1569
-* rename Apalache `FoldSet` and `FoldSeq` to `ApaFoldSet` and `ApaFoldSeqLeft`, see #1617
+
+ * Recommended JDK version was bumped to JDK17, see #1662
+ * Add the option `--features` to enable experimental features, see #1648
 
 ### Features
 
-* Add the operator `Apalache!Guess`, see #1590 and #888
-* Extend the type parser to support ADR014 (experimental), see #1602
+ * Experimental type unification over rows, new records, and variants, see #1646
+
+### Bug fixes
+
+ * Fix references to `--tune-here` (actually `--tuning-options`), see #1579
+ * Not failing when assignment and `UNCHANGED` appear in invariants, see #1664
