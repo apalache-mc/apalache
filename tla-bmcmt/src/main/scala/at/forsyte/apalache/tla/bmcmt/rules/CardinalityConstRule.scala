@@ -76,7 +76,7 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
 
     // create the inequality predicate
-    val witnesses = List.fill(threshold)(pick)
+    val witnesses = List.fill(threshold)(pick())
     (witnesses.cross(witnesses)).filter(p => p._1.id < p._2.id).foreach(cacheEq)
     val witnessesNotEq = OperEx(ApalacheInternalOper.distinct, witnesses.map(_.toNameEx): _*)
     nextState = nextState.updateArena(_.appendCell(BoolT()))

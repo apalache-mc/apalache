@@ -102,7 +102,7 @@ object IncrementalRenaming {
   /**
    * Computes then merges maps for all declarations.
    */
-  def nameCounterMapFromDecls(takeMax: Boolean)(decls: Traversable[TlaDecl]): counterMapType =
+  def nameCounterMapFromDecls(takeMax: Boolean)(decls: Iterable[TlaDecl]): counterMapType =
     decls.map(nameCounterMapFromDecl(takeMax)).foldLeft(Map.empty[String, Int]) {
       mergeNameCounters(takeMax)
     }
@@ -298,7 +298,7 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
   }
 
   // lifted to decls
-  private def shiftCountersDs(offsets: counterMapType): Traversable[TlaDecl] => Traversable[TlaDecl] = {
+  private def shiftCountersDs(offsets: counterMapType): Iterable[TlaDecl] => Iterable[TlaDecl] = {
     _.map(shiftCountersD(offsets))
   }
 
@@ -318,7 +318,7 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
     shiftCounters(offsetMap)(ex)
   }
 
-  def normalizeExs(exs: Traversable[TlaEx]): Traversable[TlaEx] = {
+  def normalizeExs(exs: Iterable[TlaEx]): Iterable[TlaEx] = {
     val offsetMap = exs
       .map(
           nameCounterMapFromEx(takeMax = false)
@@ -344,7 +344,7 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
   }
 
   // lifted to decls
-  def normalizeDs(decls: Traversable[TlaDecl]): Traversable[TlaDecl] = {
+  def normalizeDs(decls: Iterable[TlaDecl]): Iterable[TlaDecl] = {
     val offsetMap = nameCounterMapFromDecls(takeMax = false)(decls)
       .withFilter {
         _._2 > 1
@@ -371,7 +371,7 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
   }
 
   // Lifted to decls
-  private def syncFromDs: Traversable[TlaDecl] => Unit = _.foreach(syncFromD)
+  private def syncFromDs: Iterable[TlaDecl] => Unit = _.foreach(syncFromD)
 
   /**
    * Performs the following steps, in order:
@@ -384,7 +384,7 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
     normalize(apply(ex))
   }
 
-  def syncAndNormalizeExs(exs: Traversable[TlaEx]): Traversable[TlaEx] = {
+  def syncAndNormalizeExs(exs: Iterable[TlaEx]): Iterable[TlaEx] = {
     exs.foreach(syncFrom)
     normalizeExs(exs.map {
       apply
@@ -398,7 +398,7 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
   }
 
   // Lifted to decls
-  def syncAndNormalizeDs(ds: Traversable[TlaDecl]): Traversable[TlaDecl] = {
+  def syncAndNormalizeDs(ds: Iterable[TlaDecl]): Iterable[TlaDecl] = {
     syncFromDs(ds)
     normalizeDs(ds.map(d => tracker.fromExToDeclTransformation(this)(d)))
   }

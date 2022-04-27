@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.TlaType1
  * @author
  *   Igor Konnov
  */
-class ConstraintSolver(approximateSolution: Substitution = Substitution.empty) {
+class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution = Substitution.empty) {
   private var solution: Substitution = approximateSolution
   private var constraints: List[Clause] = List.empty
   private var typesToReport: List[(Clause, TlaType1)] = List.empty
@@ -98,7 +98,7 @@ class ConstraintSolver(approximateSolution: Substitution = Substitution.empty) {
     constraint match {
       case EqClause(unknown, term) =>
         // If there is a solution, we return it. We ignore the type, as it should be bound to `unknown`.
-        new TypeUnifier().unify(solution, unknown, term)
+        new TypeUnifier(varPool).unify(solution, unknown, term)
 
       case OrClause(eqs @ _*) =>
         // try to solve a disjunctive clause

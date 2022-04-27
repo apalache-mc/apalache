@@ -212,6 +212,9 @@ class EUFRule(rewriter: ToTermRewriter, restrictedSetJudgement: RestrictedSetJud
           // ![a] case
           case OperEx(TlaFunOper.tuple, arg) =>
             List(rewrite(arg))
+
+          case invalidArg =>
+            throw new IllegalArgumentException(s"Invalid arg for TlaFunOper.except in EUFRule: ${invalidArg}")
         }
 
         val exceptTermFn = exceptAsNewFunDef(fnArgTerms, valTerm) _

@@ -5,8 +5,8 @@ package at.forsyte.apalache.tla.bmcmt
  */
 package object implicitConversions {
 
-  implicit class Crossable[X](xs: Traversable[X]) {
+  implicit class Crossable[X](xs: Iterable[X]) {
     // see https://stackoverflow.com/questions/14740199/cross-product-in-scala
-    def cross[Y](ys: Traversable[Y]) = for { x <- xs; y <- ys } yield (x, y)
+    def cross[Y](ys: Iterable[Y]) = for { x <- xs; y <- ys } yield (x, y)
   }
 }

@@ -14,7 +14,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
   private var xyBinding = Binding()
   private val boolTypes = Map("b" -> BoolT1(), "i" -> IntT1(), "I" -> SetT1(IntT1()))
 
-  def prepareArena() {
+  def prepareArena(): Unit = {
     arena = arena.appendCell(BoolT()) // we have to give bindings to the type finder
     x = arena.topCell
     arena = arena.appendCell(BoolT()) // we have to give bindings to the type finder

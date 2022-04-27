@@ -24,7 +24,7 @@ class TestTlcConfigImporter extends AnyFunSuite with BeforeAndAfterEach {
   private var typeChecker: TypeCheckerTool = _
   private val layout80 = TextLayout().copy(textWidth = 80)
 
-  override def beforeEach() {
+  override def beforeEach(): Unit = {
     sourceStore = new SourceStore()
     annotationStore = createAnnotationStore()
     sanyImporter = new SanyImporter(sourceStore, annotationStore)

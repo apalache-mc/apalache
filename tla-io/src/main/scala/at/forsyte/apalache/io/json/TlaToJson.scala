@@ -127,7 +127,7 @@ class TlaToJson[T <: JsonRepresentation](
             typeFieldName -> typeTagPrinter(ex.typeTag),
             kindFieldName -> "OperEx",
             "oper" -> oper.name,
-            "args" -> factory.fromTraversable(argJsons),
+            "args" -> factory.fromIterable(argJsons),
         )
       case LetInEx(body, decls @ _*) =>
         val bodyJson = apply(body)
@@ -136,7 +136,7 @@ class TlaToJson[T <: JsonRepresentation](
             typeFieldName -> typeTagPrinter(ex.typeTag),
             kindFieldName -> "LetInEx",
             "body" -> bodyJson,
-            "decls" -> factory.fromTraversable(declJsons),
+            "decls" -> factory.fromIterable(declJsons),
         )
 
       case NullEx =>
@@ -183,7 +183,7 @@ class TlaToJson[T <: JsonRepresentation](
             typeFieldName -> typeTagPrinter(decl.typeTag),
             kindFieldName -> "TlaOperDecl",
             "name" -> name,
-            "formalParams" -> factory.fromTraversable(paramsJsons),
+            "formalParams" -> factory.fromIterable(paramsJsons),
             "isRecursive" -> decl.isRecursive,
             "body" -> bodyJson,
         )
@@ -203,17 +203,17 @@ class TlaToJson[T <: JsonRepresentation](
     factory.mkObj(
         kindFieldName -> "TlaModule",
         "name" -> module.name,
-        "declarations" -> factory.fromTraversable(declJsons),
+        "declarations" -> factory.fromIterable(declJsons),
     )
   }
 
-  override def makeRoot(modules: Traversable[TlaModule]): T = {
+  override def makeRoot(modules: Iterable[TlaModule]): T = {
     val moduleJsons = modules.map(apply)
     factory.mkObj(
         "name" -> "ApalacheIR",
         versionFieldName -> JsonVersion.current,
         "description" -> "https://apalache.informal.systems/docs/adr/005adr-json.html",
-        "modules" -> factory.fromTraversable(moduleJsons),
+        "modules" -> factory.fromIterable(moduleJsons),
     )
   }
 }

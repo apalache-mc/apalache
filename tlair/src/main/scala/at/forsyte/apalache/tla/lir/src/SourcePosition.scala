@@ -17,9 +17,7 @@ class SourcePosition(val offset: Int) {
   /** Get the column, starting with 1 and up to SourcePosition.MAX_WIDTH */
   def column: Int = 1 + offset % SourcePosition.MAX_WIDTH
 
-  override def toString: String = {
-    line + ":" + column
-  }
+  override def toString: String = s"${line}:${column}"
 
   def canEqual(other: Any): Boolean = other.isInstanceOf[SourcePosition]
 
