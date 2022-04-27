@@ -68,6 +68,8 @@ object Tool extends LazyLogging {
       new LogbackConfigurator(OutputManager.runDirPathOpt, OutputManager.customRunDirPathOpt).configureDefaultContext()
       // TODO: update workers when the multicore branch is integrated
       submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> cmd.label, "workers" -> "1"))
+
+      logger.info(s"""# APALACHE version: ${BuildInfo.version} | build  : ${BuildInfo.build} """.stripMargin)
     }
   }
 
@@ -443,11 +445,6 @@ object Tool extends LazyLogging {
   }
 
   private def printHeaderAndStatsConfig(): Unit = {
-    Console.println(s"""# APALACHE
-                       |# version: ${BuildInfo.version}
-                       |# build  : ${BuildInfo.build}
-                       |#""".stripMargin)
-
     if (new ExecutionStatisticsCollector().isEnabled) {
       // Statistic collection is enabled. Thank the user
       Console.println("# Usage statistics is ON. Thank you!")
