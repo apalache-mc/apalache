@@ -8,7 +8,7 @@ object Checker {
   sealed trait CheckerResult {
 
     /**
-     * Should this result be reported as success (true) or an error (false).
+     * Whether this result shall be reported as success (`true`) or error (`false`).
      */
     val isOk: Boolean
   }
