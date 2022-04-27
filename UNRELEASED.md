@@ -17,6 +17,7 @@
 ### Breaking changes
 
 * Add the option `--features` to enable experimental features, see #1648
+* Never load TLC config files by default, see #1676
 
 ### Bug fixes
 
