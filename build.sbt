@@ -169,7 +169,10 @@ lazy val tla_assignments = (project in file("tla-assignments"))
   )
 
 lazy val tla_bmcmt = (project in file("tla-bmcmt"))
-  .dependsOn(tlair, infra, tla_io, tla_pp, tla_assignments)
+  .dependsOn(tlair,
+      // property based tests depend on IR generators defined in the tlair tests
+      // See https://www.scala-sbt.org/1.x/docs/Multi-Project.html#Per-configuration+classpath+dependencies
+      tlair % "test->test", infra, tla_io, tla_pp, tla_assignments)
   .settings(
       testSettings,
       libraryDependencies += Deps.scalaCollectionContrib,
@@ -330,7 +333,7 @@ docker / dockerfile := {
   val readme = rootDir / "README.md"
 
   new Dockerfile {
-    from("eclipse-temurin:16")
+    from("eclipse-temurin:17")
 
     workDir(dwd)
 

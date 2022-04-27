@@ -56,7 +56,7 @@
               # Built inputs are the packages that we provide in the PATH in the nix shell
               buildInputs = with pkgs; [
                 # Java / Scala
-                jdk8
+                jdk17_headless
                 scala_2_12
 
                 # Build
