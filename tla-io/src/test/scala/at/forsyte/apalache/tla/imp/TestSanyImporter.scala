@@ -349,9 +349,9 @@ class TestSanyImporter extends SanyImporterTestBase {
         |LOCAL Foo(X) ==
         |  LET A == X IN
         |  A
-        | 
+        |
         |User(X) ==
-        |  LET A == 1 IN  
+        |  LET A == 1 IN
         |  Foo(X)
         |================================
       """.stripMargin
