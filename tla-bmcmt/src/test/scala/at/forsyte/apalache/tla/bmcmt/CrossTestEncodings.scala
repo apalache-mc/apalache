@@ -12,7 +12,7 @@ import ch.qos.logback.classic.{Level, Logger}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import org.scalacheck.Gen.{const, listOf, lzy, nonEmptyListOf, oneOf, sized}
-import org.scalacheck.Prop.forAll
+import org.scalacheck.Prop.{forAll, AnyOperators}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.scalacheck.Checkers
 import org.slf4j.LoggerFactory
@@ -345,7 +345,7 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
         val witness = getWitness(witnessType, witnesses)
         // println(s"Verifying witness=${witness}")
         val result = verify(witness, witnesses)
-        result == witness
+        result ?= witness
       }
     }
     check(prop, minSuccessful(1000), minSize(2), sizeRange(7))
