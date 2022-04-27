@@ -44,7 +44,7 @@ class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val setMembers = setState.arena.getHas(setCell).toArray
 
       // Now, we cache the set element equalities
-      val postCacheState = cacheEqualityConstraints(setState, setMembers)
+      val postCacheState = cacheEqualityConstraints(setState, setMembers.toIndexedSeq)
 
       // Then, we start the folding with the value of baseCell
       val initialState = postCacheState.setRex(baseCell.toNameEx)
