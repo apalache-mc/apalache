@@ -16,7 +16,7 @@
 /tla-assignments/ @Kukovec
 /tla-pp/ @Kukovec
 /tlair/ @Kukovec
-
+/tla-bmcmt/ @rodrigo7491
 # Build system and packaging
 
 Makefile @shonfeder
