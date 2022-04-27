@@ -2,7 +2,7 @@
 
 1. Install `git`.
 2. Install the [Eclipse Temurin][] or [Zulu][] build of OpenJDK 17.
-   - Apalache currently requires Scala 2.12.15, see [this table of compatible JDK versions][compatibility table].
+   - Apalache currently requires Scala 2.13.8, see [this table of compatible JDK versions][compatibility table].
    - We recommend OpenJDK 17, the latest LTS release.
 3. Install [sbt][].
    - On Debian Linux or Ubuntu, [follow this guide](https://www.scala-sbt.org/1.x/docs/Installing-sbt-on-Linux.html#Ubuntu+and+other+Debian-based+distributions)
