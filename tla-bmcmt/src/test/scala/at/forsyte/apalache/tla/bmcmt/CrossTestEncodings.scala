@@ -12,7 +12,7 @@ import ch.qos.logback.classic.{Level, Logger}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import org.scalacheck.Gen.{const, listOf, lzy, nonEmptyListOf, oneOf, sized}
-import org.scalacheck.Prop.forAll
+import org.scalacheck.Prop.{forAll, AnyOperators}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.scalacheck.Checkers
 import org.slf4j.LoggerFactory
@@ -338,16 +338,19 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
     // Disable logger output as long as this test is `ignore`.
     LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).asInstanceOf[Logger].setLevel(Level.OFF)
 
-    val prop = forAll(typeGen.genType1) { witnessType =>
-      forAll(genWitnessSet(witnessType)) { witnesses =>
+    val prop = forAll(typeGen.genType1 :| "witness type") { witnessType =>
+      forAll(genWitnessSet(witnessType) :| "witnesses set") { witnesses =>
         // Uncomment for debugging:
         // println(s"Looking for witness of type ${witnessType} in set ${witnesses}")
         val witness = getWitness(witnessType, witnesses)
         // println(s"Verifying witness=${witness}")
         val result = verify(witness, witnesses)
-        result == witness
-      }
-    }
+        result ?= witness
+      }.viewSeed("witnesses set")
+    }.viewSeed("witness type")
+    // To reproduce:
+    //   }.useSeed("witnesses set", Seed.fromBase64("<base64 seed>").get).viewSeed("witnesses set")
+    // }.useSeed("witness type", Seed.fromBase64("<base 64 seed>").get).viewSeed("witness type")
     check(prop, minSuccessful(1000), minSize(2), sizeRange(7))
   }
 
