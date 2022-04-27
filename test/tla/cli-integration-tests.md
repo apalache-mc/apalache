@@ -2111,7 +2111,7 @@ EXITCODE: OK
 A regression test for #1623 (Instantiation with .cfg + ASSUME)
 
 ```sh
-$ apalache-mc check --length=3 --inv=Inv Test1623.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --length=3 --config=Test1623.cfg --inv=Inv Test1623.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
