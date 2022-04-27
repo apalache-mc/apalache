@@ -2599,7 +2599,7 @@ Systems</a>.</p>
 <a href="https://github.com/informalsystems/apalache/tree/unstable">unstable</a> is built
 with <a href="https://github.com/informalsystems/apalache/actions?query=branch%3Aunstable+workflow%3Abuild">GitHub
 actions</a>
-on MacOS (JDK 1.8.0) and Linux (OpenJDK8). If you would like to run Apalache in
+on MacOS (JDK 17) and Linux (OpenJDK 17). If you would like to run Apalache in
 Windows, use a docker image. Check the <a href="https://docs.docker.com/docker-for-windows/">Docker
 manual</a> and the section on <a href="apalache/./installation/docker.html">Using
 a docker image</a> for details.</p>
@@ -2619,8 +2619,8 @@ to run the tool on a daily basis or <a href="https://github.com/informalsystems/
 <a href="apalache/installation/./source.html">building the project from the source</a>.</p>
 <h1><a class="header" href="#running-in-java-virtual-machine" id="running-in-java-virtual-machine">Running in Java Virtual Machine</a></h1>
 <p>You have to download and install a Java Virtual Machine first. For instance,
-<a href="https://adoptopenjdk.net/">AdoptOpenJDK</a> should work (we tried Apalache with
-OpenJDK 11 and OpenJDK 15).</p>
+<a href="https://adoptium.net/">Eclipse Temurin</a> should work (we recommend OpenJDK 17, the latest LTS
+release).</p>
 <p>Once you have installed Java, download the <a href="https://github.com/informalsystems/apalache/releases">latest
 release</a> and unpack into
 a directory of your choice. Depending on your OS, you have two options.</p>
@@ -2719,10 +2719,10 @@ build a docker image of Apalache, issue the following command in
 <h1><a class="header" href="#building-from-source" id="building-from-source">Building from source</a></h1>
 <ol>
 <li>Install <code>git</code>.</li>
-<li>Install <a href="https://openjdk.java.net/install/">OpenJDK8</a> or <a href="https://www.azul.com/downloads/zulu-community/?version=java-8-lts&amp;architecture=x86-64-bit&amp;package=jdk">Zulu JDK8</a>.
+<li>Install the <a href="https://adoptium.net/">Eclipse Temurin</a> or <a href="https://www.azul.com/downloads/?version=java-17-lts&amp;package=jdk#download-openjdk">Zulu</a> build of OpenJDK 17.
 <ul>
-<li>Apalache currently requires Scala 2.12.0 so <strong>you must install version 8 of
-Java, otherwise Scala will not compile!</strong> See the <a href="https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html">compatibility table</a>.</li>
+<li>Apalache currently requires Scala 2.12.15, see <a href="https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html">this table of compatible JDK versions</a>.</li>
+<li>We recommend OpenJDK 17, the latest LTS release.</li>
 </ul>
 </li>
 <li>Install <a href="https://www.scala-sbt.org/1.x/docs/Setup.html">sbt</a>.
