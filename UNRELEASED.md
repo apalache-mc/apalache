@@ -15,6 +15,7 @@
 * Experimental type unification over rows, new records, and variants, see #1646
 ### Breaking changes
 
+<<<<<<< HEAD
  * Rename `--tuning` to `--tuning-options-file`, see #1579
  * Recommended JDK version was bumped to JDK17, see #1662
  * Add the option `--features` to enable experimental features, see #1648
@@ -29,3 +30,12 @@
  * Fix references to `--tune-here` (actually `--tuning-options`), see #1579
 * Add the option `--feature` to enable experimental features, see #1648
  * Not failing when assignment and `UNCHANGED` appear in invariants, see #1664
+=======
+* Add the option `--features` to enable experimental features, see #1648
+* Never load TLC config files by default, see #1676
+
+### Bug fixes
+
+* Fix references to `--tune-here` (actually `--tuning-options`), see #1579
+* Not failing when assignment and `UNCHANGED` appear in invariants, see #1664
+>>>>>>> release note
