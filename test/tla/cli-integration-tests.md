@@ -1578,6 +1578,8 @@ EXITCODE: OK
 
 ### configure via TLC config and replace operators
 
+The replacements make the invariant hold true.
+
 ```sh
 $ apalache-mc check --config=ConfigReplacements2.cfg ConfigReplacements.tla | sed 's/[IEW]@.*//'
 ...
@@ -1595,13 +1597,24 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### configure via TLC config and replace operators helps us to keep the invariant
+### configure via TLC config on non-existant config
+
+When a configuration file does not exist, the tool should error.
+
+```sh
+$ apalache-mc check --inv=Inv --config=ThisConfigDoesNotExist.cfg ConfigReplacements.tla | sed 's/[IEW]@.*//'
+...
+Configuration error (see the manual): TLC config file not found: ThisConfigDoesNotExist.cfg
+...
+EXITCODE: ERROR (255)
+```
+
+### configure via TLC config on no config
+
+When a configuration file is not specified, the invariant should fail.
 
 ```sh
 $ apalache-mc check --inv=Inv ConfigReplacements.tla | sed 's/[IEW]@.*//'
-...
-  > ConfigReplacements.cfg: Loading TLC configuration
-  > No TLC configuration found. Skipping.
 ...
 The outcome is: Error
 ...
