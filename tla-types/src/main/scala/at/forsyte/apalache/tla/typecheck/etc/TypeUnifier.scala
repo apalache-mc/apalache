@@ -239,6 +239,12 @@ class TypeUnifier(varPool: TypeVarPool) {
       rfields: SortedMap[String, TlaType1],
       lvar: Option[VarT1],
       rvar: Option[VarT1]): Option[RowT1] = {
+
+    // Allows ordering on Option types etc.
+    import scala.math.Ordering.Implicits._
+    // Allows ordering on TlaType1, by converting them to strings
+    implicit val tlaType1Ordering = Ordering.by[TlaType1, String](_.toString)
+
     // assuming that a type is either a row, or a variable, make it a row type
     def asRow(rowOpt: Option[TlaType1]): Option[RowT1] = rowOpt.map {
       case r: RowT1 => r
