@@ -261,8 +261,9 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
 
         // translate the binders in the lambda expression, so we can quickly propagate the types of the parameters
         val preCtx =
-          new TypeContext((ctx.types + (name -> operScheme))
-                .mapValues(p => p.copy(approxSolution.subRec(p.principalType))))
+          new TypeContext((ctx.types + (name -> operScheme)).view
+                .mapValues(p => p.copy(approxSolution.subRec(p.principalType)))
+                .toMap)
         val extCtx = translateBinders(preCtx, letInSolver, binders)
         val annotationParams = operScheme.principalType.asInstanceOf[OperT1].args
         annotationParams.zip(binders.map { case (pname, _) => (pname, extCtx(pname.name).principalType) }).foreach {

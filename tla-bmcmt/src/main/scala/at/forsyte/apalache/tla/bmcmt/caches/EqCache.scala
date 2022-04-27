@@ -136,7 +136,7 @@ class EqCache() extends StackableContext with Serializable with Recoverable[EqCa
   override def pop(n: Int): Unit = {
     assert(level >= n)
     level -= n
-    eqCache.retain((_, value) => value._2 <= level)
+    eqCache.filterInPlace((_, value) => value._2 <= level)
   }
 
   /**

@@ -3,6 +3,7 @@ package at.forsyte.apalache.io.annotations.parser
 import java.io.Reader
 import scala.util.matching.Regex
 import scala.util.parsing.combinator.RegexParsers
+import at.forsyte.apalache.io.annotations.AnnotationParserError
 
 /**
  * <p>A lexer for annotations that are hidden in TLA+ comments. Since the annotations are hidden in comments, it is
@@ -34,6 +35,9 @@ object AnnotationLexer extends RegexParsers {
     case NoSuccess(msg, _) =>
       // we ignore the position, as it is the position that is relative to a comment
       Left(msg)
+
+    case Error(msg, _)   => throw new AnnotationParserError(msg)
+    case Failure(msg, _) => throw new AnnotationParserError(msg)
   }
 
   def program: Parser[Seq[AnnotationToken]] = phrase(rep1(token))
@@ -43,9 +47,9 @@ object AnnotationLexer extends RegexParsers {
         leftParen | rightParen | comma | dot | boolean | atIdentifier | identifier | number | string | inline_string | unexpected_char
     ) ///
 
-  def skip: Parser[Unit] = rep(whiteSpace) ^^^ Unit
+  def skip: Parser[Unit] = rep(whiteSpace) ^^^ ()
 
-  def linefeed: Parser[Unit] = "\n" ^^^ Unit
+  def linefeed: Parser[Unit] = "\n" ^^^ ()
 
   private def identifier: Parser[IDENT] = {
     "[a-zA-Z_][a-zA-Z0-9_]*".r ^^ { name => IDENT(name) }

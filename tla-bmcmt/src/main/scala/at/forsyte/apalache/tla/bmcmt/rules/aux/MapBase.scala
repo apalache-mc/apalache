@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import scala.collection.mutable.{HashMap, MultiMap, Set}
+import scala.collection.mutable
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.bmcmt.util.IntTupleIterator
@@ -83,20 +83,23 @@ class MapBase(rewriter: SymbStateRewriter) {
       cellsIter: Iterator[Seq[ArenaCell]]): (SymbState, Iterable[ArenaCell]) = {
     // we could have done it with foldLeft, but that would be even less readable
     var newState = state
-    // Collect target cells and the possible membership expressions in a hash map.
+
+    // Collect target cells and the possible membership expressions in a MultiDict.
+    // (See https://www.javadoc.io/doc/org.scala-lang.modules/scala-collection-contrib_2.13/0.1.0/scala/collection/MultiDict.html)
+    //
     // This is probably a memory-hungry solution.
     // We will replace it with a better one in an array-based SMT encoding:
     // https://github.com/informalsystems/apalache/issues/365
-    val resultsToSource = new HashMap[ArenaCell, Set[TlaEx]] with MultiMap[ArenaCell, TlaEx]
+    val resultsToSource = mutable.MultiDict.empty[ArenaCell, TlaEx]
     for (argCells <- cellsIter) {
       val (ns, resultCell, memEx) =
         mapCellsManyArgsOnce(newState, targetSetCell, mapEx, varNames, setsAsCells, argCells)
       newState = ns
-      resultsToSource.addBinding(resultCell, memEx)
+      resultsToSource.addOne(resultCell -> memEx)
     }
 
     // add the membership constraints: one per target cell
-    for ((targetCell, memExpressions) <- resultsToSource) {
+    for ((targetCell, memExpressions) <- resultsToSource.sets) {
       val inNewSet: TlaEx = tla.apalacheStoreInSet(targetCell.toNameEx, targetSetCell.toNameEx)
       val notInNewSet: TlaEx = tla.apalacheStoreNotInSet(targetCell.toNameEx, targetSetCell.toNameEx)
       val inSourceSet = {
@@ -110,7 +113,7 @@ class MapBase(rewriter: SymbStateRewriter) {
       rewriter.solverContext.assertGroundExpr(tla.ite(inSourceSet, inNewSet, notInNewSet))
     }
 
-    (newState, resultsToSource.keys)
+    (newState, resultsToSource.keySet)
   }
 
   private def mapCellsManyArgsOnce(

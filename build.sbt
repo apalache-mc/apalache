@@ -19,7 +19,7 @@ ThisBuild / versionFile := (ThisBuild / baseDirectory).value / "VERSION"
 ThisBuild / version := scala.io.Source.fromFile(versionFile.value).mkString.trim
 
 ThisBuild / organization := "at.forsyte"
-ThisBuild / scalaVersion := "2.12.15"
+ThisBuild / scalaVersion := "2.13.8"
 
 // https://oss.sonatype.org/content/repositories/snapshots/
 ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
@@ -171,7 +171,8 @@ lazy val tla_assignments = (project in file("tla-assignments"))
 lazy val tla_bmcmt = (project in file("tla-bmcmt"))
   .dependsOn(tlair, infra, tla_io, tla_pp, tla_assignments)
   .settings(
-      testSettings
+      testSettings,
+      libraryDependencies += Deps.scalaCollectionContrib,
   )
 
 lazy val tool = (project in file("mod-tool"))

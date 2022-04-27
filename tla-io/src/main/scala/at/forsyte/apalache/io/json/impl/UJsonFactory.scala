@@ -27,5 +27,5 @@ object UJsonFactory extends JsonFactory[UJsonRep] {
 
   override def fromBool(bool: Boolean): UJsonRep = Value.JsonableBoolean(bool)
 
-  override def fromTraversable(trv: Traversable[UJsonRep]): UJsonRep = Value.JsonableSeq(trv)
+  override def fromIterable(trv: Iterable[UJsonRep]): UJsonRep = Value.JsonableSeq(trv)
 }

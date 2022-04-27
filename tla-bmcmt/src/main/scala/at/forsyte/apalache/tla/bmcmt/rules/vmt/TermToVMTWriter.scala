@@ -113,7 +113,7 @@ object TermToVMTWriter {
   }
 
   // For uninterpreted literals, we need to specify distinctness
-  def assertDistinct(terms: Traversable[UninterpretedLiteral]): String =
+  def assertDistinct(terms: Iterable[UninterpretedLiteral]): String =
     s"(define-fun .axiom () Bool (! (distinct ${terms.map(tr).mkString(" ")}) :axiom true))"
 
   // Adds the VMT-specific tags, as defined by the VMTExpr wrapper

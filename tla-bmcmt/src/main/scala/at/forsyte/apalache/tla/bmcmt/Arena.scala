@@ -421,7 +421,7 @@ class Arena private (
    *   a cell to start from
    */
   def subgraphToString(root: ArenaCell): String = {
-    val builder = StringBuilder.newBuilder
+    val builder = new StringBuilder()
 
     def print(cell: ArenaCell): Unit = {
       builder.append(cell.id)

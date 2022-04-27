@@ -65,7 +65,7 @@ class TypeUnifier(varPool: TypeVarPool) {
       compute(lhs, rhs).flatMap { unifiedType =>
         // use only the representative variables of every equivalence class
         val canonical = mkCanonicalSub
-        val substitution = new Substitution(solution.mapValues { tt => canonical.sub(tt)._1 })
+        val substitution = new Substitution(solution.view.mapValues(tt => canonical.sub(tt)._1).toMap)
         Some((substitution, substitution.sub(unifiedType)._1))
       }
     // help GC to clean up later
@@ -239,6 +239,12 @@ class TypeUnifier(varPool: TypeVarPool) {
       rfields: SortedMap[String, TlaType1],
       lvar: Option[VarT1],
       rvar: Option[VarT1]): Option[RowT1] = {
+
+    // Allows ordering on Option types etc.
+    import scala.math.Ordering.Implicits._
+    // Allows ordering on TlaType1, by converting them to strings
+    implicit val tlaType1Ordering = Ordering.by[TlaType1, String](_.toString)
+
     // assuming that a type is either a row, or a variable, make it a row type
     def asRow(rowOpt: Option[TlaType1]): Option[RowT1] = rowOpt.map {
       case r: RowT1 => r
@@ -297,8 +303,8 @@ class TypeUnifier(varPool: TypeVarPool) {
         }
       } else {
         // the general case: some fields are shared
-        val lfieldsUniq = lfields.filter(p => !sharedFieldNames.keySet.contains(p._1))
-        val rfieldsUniq = rfields.filter(p => !sharedFieldNames.keySet.contains(p._1))
+        val lfieldsUniq = lfields.filter(p => !sharedFieldNames.contains(p._1))
+        val rfieldsUniq = rfields.filter(p => !sharedFieldNames.contains(p._1))
         // Unify the disjoint fields and tail variables, see the above case
         compute(RowT1(lfieldsUniq, lvar), RowT1(rfieldsUniq, rvar)) match {
           case Some(RowT1(disjointFields, tailVar)) =>

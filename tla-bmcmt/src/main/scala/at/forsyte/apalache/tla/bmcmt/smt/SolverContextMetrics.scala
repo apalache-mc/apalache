@@ -19,7 +19,7 @@ class SolverContextMetrics(val nCells: Long, val nConsts: Long, val nSmtExprs: L
    * Compute the weight based on metrics. Currently, the metric equals to nCells + nConsts + sqrt(nSmtExprs). If we find
    * a better metric, we will change it.
    */
-  lazy val weight: Long = nCells + nConsts + Math.sqrt(Math.max(0, nSmtExprs)).toLong
+  lazy val weight: Long = nCells + nConsts + Math.sqrt(Math.max(0, nSmtExprs).toDouble).toLong
 
   def delta(earlier: SolverContextMetrics): SolverContextMetrics = {
     new SolverContextMetrics(nCells - earlier.nCells, nConsts - earlier.nConsts, nSmtExprs - earlier.nSmtExprs)
