@@ -129,7 +129,7 @@ class BoundedCheckerPassImpl @Inject() (
     val outcome = checker.run()
     rewriter.dispose()
     logger.info(s"The outcome is: " + outcome)
-    outcome == NoError()
+    outcome.isOk
   }
 
   private def runOfflineChecker(
@@ -160,7 +160,7 @@ class BoundedCheckerPassImpl @Inject() (
     val outcome = checker.run()
     rewriter.dispose()
     logger.info(s"The outcome is: " + outcome)
-    outcome == NoError()
+    outcome.isOk
   }
 
   /*
