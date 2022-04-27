@@ -14,6 +14,7 @@
 
  * Recommended JDK version was bumped to JDK17, see #1662
  * Add the option `--features` to enable experimental features, see #1648
+ * Never report a deadlock when `--no-deadlock=1`, see #1679
 
 ### Features
 
