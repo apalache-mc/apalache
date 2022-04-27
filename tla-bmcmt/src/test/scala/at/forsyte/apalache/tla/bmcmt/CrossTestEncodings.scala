@@ -346,8 +346,11 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
         // println(s"Verifying witness=${witness}")
         val result = verify(witness, witnesses)
         result ?= witness
-      }
-    }
+      }.viewSeed("witnesses set")
+    }.viewSeed("witness type")
+    // To reproduce:
+    //   }.useSeed("witnesses set", Seed.fromBase64("<base64 seed>").get).viewSeed("witnesses set")
+    // }.useSeed("witness type", Seed.fromBase64("<base 64 seed>").get).viewSeed("witness type")
     check(prop, minSuccessful(1000), minSize(2), sizeRange(7))
   }
 
