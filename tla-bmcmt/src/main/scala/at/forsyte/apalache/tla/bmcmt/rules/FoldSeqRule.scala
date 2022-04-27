@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.tla.pp.{Inliner, UniqueNameGenerator}
 
 /**
@@ -16,7 +17,8 @@ import at.forsyte.apalache.tla.pp.{Inliner, UniqueNameGenerator}
  * @author
  *   Jure Kukovec, Igor Konnov
  */
-class FoldSeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
+class FoldSeqRule(rewriter: SymbStateRewriter, nameGenerator: UniqueNameGenerator, renaming: IncrementalRenaming)
+    extends RewritingRule {
   private val picker = new CherryPick(rewriter)
   private val proto = new ProtoSeqOps(rewriter)
 
@@ -54,7 +56,7 @@ class FoldSeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val operT = OperT1(Seq(resultT, elemT), resultT)
 
       // expressions are transient, we don't need tracking
-      val inliner = new Inliner(new IdleTracker, new UniqueNameGenerator)
+      val inliner = new Inliner(new IdleTracker, nameGenerator, renaming)
       // We can make the scope directly, since InlinePass already ensures all is well.
       val seededScope: Inliner.Scope = Map(opDecl.name -> opDecl)
 

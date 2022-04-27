@@ -51,7 +51,7 @@ class InlinePassImpl @Inject() (
     //
     val renamedModule = renaming.renameInModule(module)
 
-    val inliner = new Inliner(tracker, gen, keepNullary = true, moduleLevelFilter = moduleFilter)
+    val inliner = new Inliner(tracker, gen, renaming, keepNullary = true, moduleLevelFilter = moduleFilter)
     val inlined = inliner.transformModule(renamedModule)
 
     // Inline the primitive constants now

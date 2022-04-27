@@ -31,10 +31,10 @@ import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier, TypeVar
 class Inliner(
     tracker: TransformationTracker,
     nameGenerator: UniqueNameGenerator,
+    renaming: IncrementalRenaming,
     keepNullary: Boolean = true,
     moduleLevelFilter: Inliner.DeclFilter = FilterFun.ALL) {
 
-  private val renaming = new IncrementalRenaming(tracker)
   private val deepcopy = DeepCopy(tracker)
   private def deepCopy(ex: TlaEx): TlaEx = renaming(deepcopy.deepCopyEx(ex))
 
@@ -62,8 +62,6 @@ class Inliner(
     decls.foldLeft((initialScope, List.empty[TlaDecl])) { case ((scope, decls), decl) =>
       decl match {
         case opDecl: TlaOperDecl =>
-          // update the renaming
-          renaming.syncFrom(opDecl.body)
           // First, process the operator body in the current scope
           val newDeclBody = transform(scope)(opDecl.body)
           // Source tracking

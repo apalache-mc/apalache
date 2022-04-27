@@ -13,8 +13,8 @@ import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.LanguageWatchdog
-import at.forsyte.apalache.tla.lir.transformations.standard.KeraLanguagePred
-import at.forsyte.apalache.tla.pp.NormalizedNames
+import at.forsyte.apalache.tla.lir.transformations.standard.{IncrementalRenaming, KeraLanguagePred}
+import at.forsyte.apalache.tla.pp.{NormalizedNames, UniqueNameGenerator}
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
@@ -28,7 +28,9 @@ class BoundedCheckerPassImpl @Inject() (
     val options: PassOptions,
     exprGradeStore: ExprGradeStore,
     sourceStore: SourceStore,
-    changeListener: ChangeListener)
+    changeListener: ChangeListener,
+    nameGenerator: UniqueNameGenerator,
+    renaming: IncrementalRenaming)
     extends BoundedCheckerPass with LazyLogging {
 
   override def name: String = "BoundedChecker"
@@ -109,9 +111,11 @@ class BoundedCheckerPassImpl @Inject() (
       }
 
     val rewriter: SymbStateRewriterImpl = params.smtEncoding match {
-      case `oopsla19Encoding` => new SymbStateRewriterImpl(solverContext, exprGradeStore, metricProfilerListener)
+      case `oopsla19Encoding` =>
+        new SymbStateRewriterImpl(solverContext, nameGenerator, renaming, exprGradeStore, metricProfilerListener)
       case `arraysEncoding` =>
-        new SymbStateRewriterImplWithArrays(solverContext, exprGradeStore, metricProfilerListener)
+        new SymbStateRewriterImplWithArrays(solverContext, nameGenerator, renaming, exprGradeStore,
+            metricProfilerListener)
       case oddEncoding => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
     }
 
@@ -144,14 +148,15 @@ class BoundedCheckerPassImpl @Inject() (
     }
 
     val rewriter: SymbStateRewriterImpl = params.smtEncoding match {
-      case `oopsla19Encoding` => new SymbStateRewriterImpl(solverContext, exprGradeStore)
-      case `arraysEncoding`   => new SymbStateRewriterImplWithArrays(solverContext, exprGradeStore)
-      case oddEncoding        => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
+      case `oopsla19Encoding` => new SymbStateRewriterImpl(solverContext, nameGenerator, renaming, exprGradeStore)
+      case `arraysEncoding` =>
+        new SymbStateRewriterImplWithArrays(solverContext, nameGenerator, renaming, exprGradeStore)
+      case oddEncoding => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
     }
     rewriter.config = RewriterConfig(tuning)
 
     type SnapshotT = OfflineExecutionContextSnapshot
-    val executorContext = new OfflineExecutionContext(rewriter)
+    val executorContext = new OfflineExecutionContext(rewriter, nameGenerator, renaming)
     val trex = new TransitionExecutorImpl[SnapshotT](params.consts, params.vars, executorContext)
     val filteredTrex = new FilteredTransitionExecutor[SnapshotT](params.transitionFilter, params.invFilter, trex)
 

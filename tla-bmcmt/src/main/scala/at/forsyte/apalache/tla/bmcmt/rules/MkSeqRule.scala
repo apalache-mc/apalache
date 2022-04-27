@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{ApalacheInternalOper, ApalacheOper, TlaArithOper}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
+import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.pp.{Inliner, TlaInputError, UniqueNameGenerator}
 
@@ -17,7 +18,8 @@ import at.forsyte.apalache.tla.pp.{Inliner, TlaInputError, UniqueNameGenerator}
  * @author
  *   Igor Konnov
  */
-class MkSeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
+class MkSeqRule(rewriter: SymbStateRewriter, nameGenerator: UniqueNameGenerator, renaming: IncrementalRenaming)
+    extends RewritingRule {
   private val proto = new ProtoSeqOps(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = symbState.ex match {
@@ -39,7 +41,7 @@ class MkSeqRule(rewriter: SymbStateRewriter) extends RewritingRule {
       }
 
       // expressions are transient, we don't need tracking
-      val inliner = new Inliner(new IdleTracker, new UniqueNameGenerator)
+      val inliner = new Inliner(new IdleTracker, nameGenerator, renaming)
       // We can make the scope directly, since InlinePass already ensures all is well.
       val seededScope: Inliner.Scope = Map(opDecl.name -> opDecl)
 

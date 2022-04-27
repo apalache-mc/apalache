@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.aux._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.src.{SourceLocation, SourcePosition, SourceRegion}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator, SourceMap}
-import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
+import at.forsyte.apalache.tla.lir.transformations.impl.{IdleTracker, TrackerWithListeners}
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.transformations.{decorateWithPrime, TlaExTransformation, TransformationListener}
 import org.junit.runner.RunWith
@@ -45,6 +45,7 @@ class TestSourceLocator extends AnyFunSuite {
   )
 
   val nameGen = new UniqueNameGenerator
+  val renaming = new IncrementalRenaming(new IdleTracker)
 
   // x' /\ y
   val ex1 = and(prime(name("x") ? "b") ? "b", name("y") ? "b").typed(types, "b")
@@ -169,7 +170,7 @@ class TestSourceLocator extends AnyFunSuite {
   }
 
   test("Test Inline") {
-    val transformation = new Inliner(tracker, nameGen).transformEx
+    val transformation = new Inliner(tracker, nameGen, renaming).transformEx
 
     testTransformation(transformation)
   }

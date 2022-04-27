@@ -7,6 +7,8 @@ import at.forsyte.apalache.tla.bmcmt.caches.{
 import at.forsyte.apalache.tla.bmcmt.rewriter.{RewriterConfig, SymbStateRewriterSnapshot}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.lir.TlaEx
+import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
+import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 
 /**
  * A decorator of SymbStateRewriter that automatically preprocesses every given expression. Normally, TLA+
@@ -17,7 +19,11 @@ import at.forsyte.apalache.tla.lir.TlaEx
  * @author
  *   Igor Konnov
  */
-class SymbStateRewriterAuto(private var _solverContext: SolverContext) extends SymbStateRewriter {
+class SymbStateRewriterAuto(
+    private var _solverContext: SolverContext,
+    nameGenerator: UniqueNameGenerator,
+    renaming: IncrementalRenaming)
+    extends SymbStateRewriter {
 
   /**
    * The names that are treated as constants.
@@ -49,7 +55,7 @@ class SymbStateRewriterAuto(private var _solverContext: SolverContext) extends S
 
   private val exprGradeStoreImpl = new ExprGradeStoreImpl()
   private val exprGradeAnalysis = new ExprGradeAnalysis(exprGradeStoreImpl)
-  protected val impl = new SymbStateRewriterImpl(solverContext, exprGradeStore)
+  protected val impl = new SymbStateRewriterImpl(solverContext, nameGenerator, renaming, exprGradeStore)
 
   override def contextLevel: Int = impl.contextLevel
 
