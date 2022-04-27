@@ -32,7 +32,7 @@ class TestConstSimplifier extends AnyFunSuite with BeforeAndAfterEach with Check
 
   private def nonemptySetGen(k: Int): Gen[TlaEx] = for {
     n <- Gen.choose(1, k)
-    s <- Gen.pick(n, 0 until k)
+    s <- Gen.pick(n, 0 until k).map(_.toSeq) // Converting generated Seq[Int] to an immutable Seq
     literalNonEmpty = tla.enumSet(s.map { i => tla.int(i).as(IntT1()) }: _*).as(SetT1(IntT1()))
     symbolic = tla.name("S").as(SetT1(IntT1()))
     v <- Gen.oneOf(literalNonEmpty, symbolic)
