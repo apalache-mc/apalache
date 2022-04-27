@@ -881,7 +881,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check HandshakeWithTypes.tla with lengh 5 deadlocks (array-encoding)
+### check HandshakeWithTypes.tla with length 5 deadlocks (array-encoding)
 
 ```sh
 $ apalache-mc check --length=5 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
@@ -889,6 +889,20 @@ $ apalache-mc check --length=5 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
 The outcome is: Deadlock
 ...
 EXITCODE: ERROR (12)
+```
+
+### check HandshakeWithTypes.tla with length 5 passes with --no-deadlock
+
+The option `--no-deadlock` forces the model checker to pass, even if it cannot
+extend an execution prefix. See a discussion in
+[#1640](https://github.com/informalsystems/apalache/issues/1640).
+
+```sh
+$ apalache-mc check --length=5 --no-deadlock=1 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
+...
+The outcome is: ExecutionsTooShort
+...
+EXITCODE: OK
 ```
 
 ### check trivial violation of FALSE invariant (array-encoding)
