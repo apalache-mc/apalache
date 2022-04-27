@@ -55,7 +55,7 @@ trait General extends Command with CliConfig {
 
   implicit def featureSeqRead: Read[Seq[Feature]] = {
     Read.reads[Seq[Feature]](expecting = s"a comma-separated list of features: ${featureList}") { str =>
-      str.split(",").map(featureRead.reads)
+      str.split(",").map(featureRead.reads).toIndexedSeq
     }
   }
 
