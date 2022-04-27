@@ -7,17 +7,20 @@ import at.forsyte.apalache.tla.bmcmt.trex.{IncrementalExecutionContext, Transiti
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import ch.qos.logback.classic.{Level, Logger}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import org.scalacheck.Gen.{const, listOf, lzy, nonEmptyListOf, oneOf, sized}
-import org.scalacheck.Prop.{forAll, AnyOperators}
+import org.scalacheck.Prop.{forAllShrink, AnyOperators}
+import org.scalacheck.Shrink.shrink
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.scalacheck.Checkers
 import org.slf4j.LoggerFactory
+
+import scala.annotation.nowarn
 
 /**
  * Test encodings against each other. Override [[AnyFunSuite.withFixture]] to set up SMT encodings used for oracle and
@@ -98,6 +101,7 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
           oneOf(genPrimitive, genSet, genSeq, genFun, /*genOper,*/ genTup, genRec /*, genRowRec, genVariant, genRow*/ )
       }
     }
+
     // Override to avoid reals, constants, and typevar-typed expressions.
     override def genPrimitive: Gen[TlaType1] =
       oneOf(const(BoolT1()), const(IntT1()), const(StrT1()) /*, const(RealT1()), genConst, genVar*/ )
@@ -171,7 +175,7 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
     // check the outcome
     val outcome = checker.run()
     assert(Error(1) == outcome,
-        if (moduleName == "Verifier") s"If outcome=Deadlock, this probably indicates a problem with one encoding."
+        if (moduleName == "Verifier") "If outcome=Deadlock, this probably indicates a problem with one encoding."
         else "")
 
     // extract witness expression from the counterexample
@@ -271,6 +275,7 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
 
   /**
    * Generate TLA+ expressions of a given [[TlaType1]].
+   *
    * @param witnessType
    *   [[TlaType1]] of the expression to generate.
    * @return
@@ -311,6 +316,7 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
 
   /**
    * Generate TLA+ expressions of type `Set(witnessType)`.
+   *
    * @param witnessType
    *   Element [[TlaType1]] of the set expression to generate.
    * @return
@@ -335,15 +341,54 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
     }
   }
 
-  // Ignore this test until the bug described in https://github.com/informalsystems/apalache/issues/1660 is fixed.
+  @nowarn("cat=deprecation&msg=Stream") // ScalaCheck's Shrink still uses Stream, which is deprecated since Scala 2.13.0
+  private def shrinkType(tp: TlaType1): Stream[TlaType1] = tp match {
+    case IntT1() | RealT1() | BoolT1() | StrT1() => Stream.empty
+    case FunT1(arg, res)                         => Stream(arg, res)
+    case SetT1(elem)                             => Stream(elem)
+    case SeqT1(elem)                             => Stream(elem)
+    case TupT1(elems @ _*) =>
+      Stream.concat(
+          // shrink to one of the element types
+          Stream(elems: _*),
+          // recursively shrink one tuple element type
+          elems.zipWithIndex.foldLeft(Stream.empty[TlaType1]) { case (acc, (tp, idx)) =>
+            acc ++ shrink(tp).map(shrunkType => TupT1(elems.updated(idx, shrunkType): _*))
+          },
+          // tuples over a subset of the current element types
+          Stream(shrink(elems).filterNot(_.isEmpty).map(elems => TupT1(elems: _*)): _*),
+      )
+    case RecT1(fieldTypes) =>
+      Stream.concat(
+          // shrink to one of the field types
+          Stream(fieldTypes.values.toSeq: _*),
+          // recursively shrink one record field type
+          fieldTypes.foldLeft(Stream.empty[TlaType1]) { case (acc, (fieldName, tp)) =>
+            acc ++ shrink(tp).map(shrunkType => RecT1(fieldTypes.updated(fieldName, shrunkType)))
+          },
+          // tuples over a subset of the current field types
+          Stream(shrink(fieldTypes).filterNot(_.isEmpty).map(elems => RecT1(elems)): _*),
+      )
+    case ConstT1(_) | OperT1(_, _) | RealT1() | RecRowT1(_) | RowT1(_, _) | SparseTupT1(_) | VarT1(_) | VariantT1(_) =>
+      throw new IllegalArgumentException(s"Shrinking unsupported type ${tp}. Should be disabled in type generator.")
+  }
+
+  @nowarn("cat=deprecation&msg=Stream") // ScalaCheck's Shrink still uses Stream, which is deprecated since Scala 2.13.0
+  private def shrinkEx(ex: TlaEx): Stream[TlaEx] = ex match {
+    case OperEx(TlaSetOper.enumSet, args @ _*) =>
+      Stream(shrink(args).filterNot(_.isEmpty).map(elems => tla.enumSet(elems: _*).as(ex.typeTag.asTlaType1())): _*)
+    case _ => Stream.empty
+  }
+
   // TODO(#1668): Regularly run the encodings comparison.
+  // Ignore this test until all bugs are fixed.
   ignore("encodings are consistent") {
     // TODO(#1666): Loggers in SeqModelChecker produce a lot of output; divert logger output.
     // Disable logger output as long as this test is `ignore`.
     LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).asInstanceOf[Logger].setLevel(Level.OFF)
 
-    val prop = forAll(typeGen.genType1 :| "witness type") { witnessType =>
-      forAll(genWitnessSet(witnessType) :| "witnesses set") { witnesses =>
+    val prop = forAllShrink(typeGen.genType1 :| "witness type", shrinkType) { witnessType =>
+      forAllShrink(genWitnessSet(witnessType) :| "witnesses set", shrinkEx) { witnesses =>
         // Uncomment for debugging:
         // println(s"Looking for witness of type ${witnessType} in set ${witnesses}")
         val witness = getWitness(witnessType, witnesses)
