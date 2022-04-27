@@ -81,6 +81,14 @@ employ, which invariants to check, as well as to initialize specification
 parameters. Some features of the TLC configuration files are not supported yet.
 Check the manual page on ["Syntax of TLC Configuration Files"](./tlc-config.md).
 
-_If you are checking a file `<myspec>.tla`, and the file `<myspec>.cfg` exists in
+**Behavior in versions >=0.25.0:**
+
+Apalache never loads a TLC configuration file, unless a filename is passed
+via the option `--config=<filename>`. If a filename is passed but the file
+does not exist, Apalache reports an error.
+
+**Behavior in versions <0.25.0:**
+
+If you are checking a file `<myspec>.tla`, and the file `<myspec>.cfg` exists in
 the same directory, it will be picked up by Apalache automatically. You can also
-explicitly specify which configuration file to use via the `--config` option._
+explicitly specify which configuration file to use via the `--config` option.
