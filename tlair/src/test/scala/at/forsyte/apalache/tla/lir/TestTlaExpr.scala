@@ -51,6 +51,7 @@ class TestTlaExpr extends AnyFunSuite {
       case OperEx(TlaBoolOper.and, NameEx(i: String), NameEx(j: String)) =>
         assert(i == "x")
         assert(j == "y")
+      case invalid => fail(s"invalid result when constructing conjunction: $invalid")
     }
   }
 
