@@ -3,6 +3,9 @@ package at.forsyte.apalache.tla.bmcmt.trex
 import at.forsyte.apalache.tla.bmcmt.{arraysEncoding, SymbStateRewriterImpl}
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
+import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
+import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
+import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import org.junit.runner.RunWith
 import org.scalatest.Outcome
 import org.scalatestplus.junit.JUnitRunner
@@ -14,7 +17,8 @@ class TestTransitionExecutorWithIncrementalAndArrays
   override protected def withFixture(test: OneArgTest): Outcome = {
     val solver =
       new Z3SolverContext(SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = arraysEncoding))
-    val rewriter = new SymbStateRewriterImpl(solver, new ExprGradeStoreImpl())
+    val rewriter = new SymbStateRewriterImpl(solver, new UniqueNameGenerator, new IncrementalRenaming(new IdleTracker),
+        new ExprGradeStoreImpl())
     val exeCtx = new IncrementalExecutionContext(rewriter)
     try {
       test(exeCtx)

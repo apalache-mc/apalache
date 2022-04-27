@@ -10,6 +10,9 @@ import at.forsyte.apalache.tla.bmcmt.trex.{
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
+import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
+import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
+import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
@@ -36,7 +39,8 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
 
     // create utility objects
     val solver = RecordingSolverContext.createZ3(None, SolverConfig.default)
-    val rewriter = new SymbStateRewriterImpl(solver, new ExprGradeStoreImpl)
+    val rewriter = new SymbStateRewriterImpl(solver, new UniqueNameGenerator, new IncrementalRenaming(new IdleTracker),
+        new ExprGradeStoreImpl)
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
 
