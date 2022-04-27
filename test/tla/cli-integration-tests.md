@@ -1815,6 +1815,14 @@ Bug931.tla:6:20-6:21: type input error: Found a polymorphic type: Set(b)
 EXITCODE: ERROR (255)
 ```
 
+### check Bug1682.tla
+
+```sh
+$ apalache-mc check --init=Inv --inv=Inv --length=1 Bug1682.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check profiling
 
 Check that the profiler output is produced as explained in
