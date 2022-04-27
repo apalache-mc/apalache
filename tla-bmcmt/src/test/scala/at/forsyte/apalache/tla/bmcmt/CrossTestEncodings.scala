@@ -338,8 +338,8 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
     // Disable logger output as long as this test is `ignore`.
     LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).asInstanceOf[Logger].setLevel(Level.OFF)
 
-    val prop = forAll(typeGen.genType1) { witnessType =>
-      forAll(genWitnessSet(witnessType)) { witnesses =>
+    val prop = forAll(typeGen.genType1 :| "witness type") { witnessType =>
+      forAll(genWitnessSet(witnessType) :| "witnesses set") { witnesses =>
         // Uncomment for debugging:
         // println(s"Looking for witness of type ${witnessType} in set ${witnesses}")
         val witness = getWitness(witnessType, witnesses)
