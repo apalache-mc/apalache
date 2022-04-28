@@ -2709,6 +2709,16 @@ $ apalache-mc typecheck TestFolds.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### typecheck TestRecordsNew.tla
+
+Typecheck new records that support row typing.
+
+```sh
+$ apalache-mc typecheck --features=rows TestRecordsNew.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ## configuring the output manager
 
 ### output manager: set out-dir by CLI flag
