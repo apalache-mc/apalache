@@ -2,12 +2,12 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt.implicitConversions.Crossable
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
-import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, FinFunSetT, FinSetT, FunT, PowSetT}
-import at.forsyte.apalache.tla.bmcmt.{types, ArenaCell, RewriterException, SymbState, SymbStateRewriter}
+import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
-import at.forsyte.apalache.tla.lir.{BoolT1, TlaEx}
-import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.{BoolT1, TlaEx}
 
 /**
  * Rewrites set membership tests: x \in S, x \in SUBSET S, and x \in [S -> T].
@@ -109,8 +109,7 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
   override protected def basicIn(
       state: SymbState,
       setCell: ArenaCell,
-      elemCell: ArenaCell,
-      elemType: types.CellT): SymbState = {
+      elemCell: ArenaCell): SymbState = {
     val potentialElems = state.arena.getHas(setCell)
     // The types of the element and the set may slightly differ, but they must be unifiable.
     // For instance, [a |-> 1] \in { [a |-> 2], [a |-> 3, b -> "foo"] }

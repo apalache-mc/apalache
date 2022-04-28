@@ -465,20 +465,6 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  test("""type incorrect { i \in {1}: FALSE } = { b \in {FALSE}: FALSE }""") { rewriterType: SMTEncoding =>
-    // This test worked in the previous versions.
-    // Now we enforce type correctness, and reject this expression right after type checking.
-    // Although we keep this test, it cannot originate from a well-typed TLA+ code.
-    val intFilter = filter(name("i").as(intT), enumSet(int(1)).as(intSetT), bool(false)).as(intSetT)
-    val boolFilter = filter(name("b").as(boolSetT), enumSet(bool(false)).as(boolSetT), bool(false)).as(boolSetT)
-    val ex = eql(intFilter.as(intSetT), boolFilter.as(boolSetT)).as(boolT)
-    val state = new SymbState(ex, arena, Binding())
-    val rewriter = create(rewriterType)
-    assertThrows[MalformedTlaError] {
-      rewriter.rewriteUntilDone(state)
-    }
-  }
-
   test("""~({{}, {{}}} = {{}, {{}}})""") { rewriterType: SMTEncoding =>
     def intSet() = enumSet().as(intSetT)
 
