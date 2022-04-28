@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs.{tlaExToBuilderExAsTyped, BuilderExAsTyped}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, MalformedTlaError, NullEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, NullEx, TlaEx}
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 import scalaz.unused
 

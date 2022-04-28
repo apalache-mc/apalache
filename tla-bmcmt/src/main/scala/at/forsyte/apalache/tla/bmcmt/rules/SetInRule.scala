@@ -49,7 +49,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val setCell = setState.asCell
         setCell.cellType match {
           case FinSetT(elemType) =>
-            basicIn(setState, setCell, elemCell, elemType)
+            basicIn(setState, setCell, elemCell)
 
           case InfSetT(IntT()) if setCell == setState.arena.cellNatSet() || setCell == setState.arena.cellIntSet() =>
             intOrNatSetIn(setState, setCell, elemCell, IntT())
@@ -148,8 +148,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
   protected def basicIn(
       state: SymbState,
       setCell: ArenaCell,
-      elemCell: ArenaCell,
-      elemType: types.CellT): SymbState = {
+      elemCell: ArenaCell): SymbState = {
     val potentialElems = state.arena.getHas(setCell)
     // The types of the element and the set may slightly differ, but they must be unifiable.
     // For instance, [a |-> 1] \in { [a |-> 2], [a |-> 3, b -> "foo"] }
