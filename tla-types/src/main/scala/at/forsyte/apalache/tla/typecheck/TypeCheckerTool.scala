@@ -17,7 +17,7 @@ import com.typesafe.scalalogging.LazyLogging
  * @author
  *   Igor Konnov
  */
-class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) extends LazyLogging {
+class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean, useRows: Boolean) extends LazyLogging {
 
   /**
    * Check the types in a module. All type checking events are sent to a listener.
@@ -33,7 +33,7 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean) exte
     val maxTypeVar = findMaxUsedTypeVar(module)
     val varPool = new TypeVarPool(maxTypeVar + 1)
     val aliasSubstitution = loadTypeAliases(module.declarations)
-    val toEtc = new ToEtcExpr(annotationStore, aliasSubstitution, varPool)
+    val toEtc = new ToEtcExpr(annotationStore, aliasSubstitution, varPool, useRows)
 
     // Bool is the final expression in the chain of let-definitions
     val terminalExpr: EtcExpr = EtcConst(BoolT1())(BlameRef(UID.unique))
