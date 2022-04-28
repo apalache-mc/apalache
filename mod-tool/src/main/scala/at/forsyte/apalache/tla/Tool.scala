@@ -67,6 +67,8 @@ object Tool extends LazyLogging {
       // force our programmatic logback configuration, as the autoconfiguration works unpredictably
       new LogbackConfigurator(OutputManager.runDirPathOpt, OutputManager.customRunDirPathOpt).configureDefaultContext()
       // TODO: update workers when the multicore branch is integrated
+      logger.info(s"# APALACHE version: ${BuildInfo.version} | build: ${BuildInfo.build}")
+
       submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> cmd.label, "workers" -> "1"))
     }
   }
@@ -101,7 +103,7 @@ object Tool extends LazyLogging {
       // One of our commands.
       case Some(cmd) => {
 
-        printHeaderAndStatsConfig()
+        printStatsConfig()
 
         val exitcode = outputAndLogConfig(cmd) match {
           case Left(configurationErrorMessage) => {
@@ -442,12 +444,7 @@ object Tool extends LazyLogging {
     }
   }
 
-  private def printHeaderAndStatsConfig(): Unit = {
-    Console.println(s"""# APALACHE
-                       |# version: ${BuildInfo.version}
-                       |# build  : ${BuildInfo.build}
-                       |#""".stripMargin)
-
+  private def printStatsConfig(): Unit = {
     if (new ExecutionStatisticsCollector().isEnabled) {
       // Statistic collection is enabled. Thank the user
       Console.println("# Usage statistics is ON. Thank you!")
