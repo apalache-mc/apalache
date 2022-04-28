@@ -67,9 +67,9 @@ object Tool extends LazyLogging {
       // force our programmatic logback configuration, as the autoconfiguration works unpredictably
       new LogbackConfigurator(OutputManager.runDirPathOpt, OutputManager.customRunDirPathOpt).configureDefaultContext()
       // TODO: update workers when the multicore branch is integrated
+      logger.info(s"# APALACHE version: ${BuildInfo.version} | build: ${BuildInfo.build}")
+      
       submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> cmd.label, "workers" -> "1"))
-
-      logger.info(s"""# APALACHE version: ${BuildInfo.version} | build  : ${BuildInfo.build} """.stripMargin)
     }
   }
 
