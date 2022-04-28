@@ -13,14 +13,12 @@
 
 # Apalache User Manual
 
-- [Introduction](./apalache/index.md)
-- [Getting Started](./apalache/getting-started.md)
-    - [Shall I use Apalache or TLC?](./apalache/apalache-or-tlc.md)
     - [System Requirements](./apalache/system-reqs.md)
+- [Getting Started](./apalache/index.md)
     - [Installation](./apalache/installation/index.md)
         - [Prebuilt Packages](./apalache/installation/jvm.md)
         - [Docker](./apalache/installation/docker.md)
-        - [Source](./apalache/installation/source.md)
+        - [Build from Source](./apalache/installation/source.md)
     - [Running the Tool](./apalache/running.md)
     - [An Example TLA+ Specification](./apalache/example.md)
     - [Specification Parameters](./apalache/parameters.md)
