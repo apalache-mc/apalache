@@ -13,7 +13,6 @@
 
 # Apalache User Manual
 
-    - [System Requirements](./apalache/system-reqs.md)
 - [Getting Started](./apalache/index.md)
     - [Installation](./apalache/installation/index.md)
         - [Prebuilt Packages](./apalache/installation/jvm.md)
