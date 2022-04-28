@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
-import at.forsyte.apalache.tla.bmcmt.Checker.NoError
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStore
 import at.forsyte.apalache.tla.bmcmt.rewriter.{MetricProfilerListener, RewriterConfig}
@@ -129,7 +128,7 @@ class BoundedCheckerPassImpl @Inject() (
     val outcome = checker.run()
     rewriter.dispose()
     logger.info(s"The outcome is: " + outcome)
-    outcome == NoError()
+    outcome.isOk
   }
 
   private def runOfflineChecker(
@@ -160,7 +159,7 @@ class BoundedCheckerPassImpl @Inject() (
     val outcome = checker.run()
     rewriter.dispose()
     logger.info(s"The outcome is: " + outcome)
-    outcome == NoError()
+    outcome.isOk
   }
 
   /*
