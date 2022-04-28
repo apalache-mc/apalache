@@ -391,8 +391,8 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with ToEtcExprBa
 
   test("""f["foo"]""") {
     // either a function, or a record
-    val funOrReq = Seq(parser("((Str -> a), Str) => a"), parser("([foo: a], Str) => a"))
-    val expected = mkUniqApp(funOrReq, mkUniqName("f"), mkUniqConst(StrT1()))
+    val funOrRecord = Seq(parser("((Str -> a), Str) => a"), parser("([foo: a], Str) => a"))
+    val expected = mkUniqApp(funOrRecord, mkUniqName("f"), mkUniqConst(StrT1()))
     val access = tla.appFun(tla.name("f"), tla.str("foo"))
     assert(expected == gen(access))
 
