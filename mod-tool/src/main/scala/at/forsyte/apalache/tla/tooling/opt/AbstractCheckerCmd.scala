@@ -8,9 +8,7 @@ import java.io.File
 abstract class AbstractCheckerCmd(val name: String, description: String)
     extends Command(name, description) with General {
   var file: File = arg[File](description = "a file containing a TLA+ specification (.tla or .json)")
-  var config: String = opt[String](name = "config", default = "",
-      description = "configuration file in TLC format,\n" +
-        "default: <file>.cfg, or none if <file>.cfg not present")
+  var config: String = opt[String](name = "config", default = "", description = "configuration file in TLC format")
   var cinit: String = opt[String](name = "cinit", default = "",
       description = "the name of an operator that initializes CONSTANTS,\n" +
         "default: None")
