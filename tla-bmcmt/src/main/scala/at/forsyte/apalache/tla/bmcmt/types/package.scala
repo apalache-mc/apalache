@@ -7,7 +7,6 @@ import at.forsyte.apalache.tla.lir.{
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 import scala.collection.immutable.SortedMap
-import scala.math.Ordering.Implicits._
 
 package object types {
   // @Jure 29.10.2017: Change name, too ambiguous, especially with TLA Types in the other package -- Jure, 29.10.17
@@ -17,18 +16,6 @@ package object types {
    * A simple type system for the symbolic memory cells.
    */
   sealed abstract class CellT extends Serializable {
-
-    /**
-     * Test whether two types may produce objects that are comparable.
-     *
-     * @param other
-     *   other type
-     * @return
-     *   true, if objects of the given types may be comparable
-     */
-    def comparableWith(other: CellT): Boolean = {
-      this.unify(other).nonEmpty
-    }
 
     // Prive an odering for CellT so we can build SortedMaps
     implicit val cellTOrdering = new Ordering[CellT] {
@@ -50,113 +37,6 @@ package object types {
      * @return
      */
     def toTlaType1: TlaType1
-
-    /**
-     * Compute a unifier of two types.
-     *
-     * @param other
-     *   another type
-     * @return
-     *   Some(unifier), if there is one, or None otherwise
-     */
-    def unify(other: CellT): Option[CellT] = {
-      (this, other) match {
-        case (UnknownT(), _) =>
-          Some(other)
-
-        case (_, UnknownT()) =>
-          Some(this)
-
-        case (BoolT(), BoolT()) | (IntT(), IntT()) =>
-          Some(this)
-
-        case (ConstT(a), ConstT(b)) =>
-          if (a == b) Some(this) else None
-
-        case (FinSetT(left), FinSetT(right)) =>
-          left.unify(right).map(FinSetT)
-
-        case (InfSetT(left), InfSetT(right)) =>
-          left.unify(right).map(InfSetT)
-
-        case (FunT(leftDom, leftCodom), FunT(rightDom, rightCodom)) =>
-          for {
-            domUnif <- leftDom.unify(rightDom)
-            cdmUnif <- leftCodom.unify(rightCodom)
-          } yield FunT(domUnif, cdmUnif)
-
-        case (FinFunSetT(leftDom, leftCdm), FinFunSetT(rightDom, rightCdm)) =>
-          for {
-            domUnif <- leftDom.unify(rightDom)
-            cdmUnif <- leftCdm.unify(rightCdm)
-          } yield FinFunSetT(domUnif, cdmUnif)
-
-        case (PowSetT(left), PowSetT(right)) =>
-          left.unify(right).map(PowSetT)
-
-        case (SeqT(left), SeqT(right)) =>
-          left.unify(right).map(SeqT)
-
-        case (SeqT(seqType), TupleT(tupleTypes)) =>
-          types.unify(seqType +: tupleTypes: _*) match {
-            case Some(et) => Some(SeqT(et))
-            case None     => None
-          }
-
-        case (TupleT(tupleTypes), SeqT(seqType)) =>
-          types.unify(seqType +: tupleTypes: _*) match {
-            case Some(et) => Some(SeqT(et))
-            case None     => None
-          }
-
-        /**
-         * Jure, 13.9.18: Suggestion: Change TupleT( _ : Seq[...]) to TupleT(_ : Array[...]) or TupleT( _ :
-         * IndextSeq[...]) so a) length checks are const time b) you can do index-based arg comparison
-         */
-        case (TupleT(leftArgs), TupleT(rightArgs)) =>
-          // in contrast to sequences, tuples of different lengths cannot be unified
-          if (leftArgs.lengthCompare(rightArgs.length) == 0) {
-            val unified = leftArgs.zip(rightArgs).map(p => p._1.unify(p._2))
-            if (unified.forall(_.isDefined)) {
-              Some(TupleT(unified.map(_.get)))
-            } else {
-              None
-            }
-          } else {
-            None
-          }
-
-        case (RecordT(leftMap), RecordT(rightMap)) =>
-          // records that have different keys can be unified
-          def unifyKey(key: String): Option[CellT] = {
-            (leftMap.get(key), rightMap.get(key)) match {
-              case (Some(l), Some(r)) =>
-                l.unify(r)
-
-              case (Some(l), None) =>
-                Some(l)
-
-              case (None, Some(r)) =>
-                Some(r)
-
-              case _ =>
-                None
-            }
-          }
-
-          val pairs = leftMap.keySet.union(rightMap.keySet).map(k => (k, unifyKey(k)))
-
-          if (pairs.exists(_._2.isEmpty)) {
-            None
-          } else {
-            val somes = pairs.map { case (k, v) => (k, v.get) } // (p => (p._1, p._2.get))
-            Some(RecordT(SortedMap(somes.toSeq: _*)))
-          }
-
-        case _ =>
-          None
-      }
-    }
   }
 
   object CellT {
@@ -439,31 +319,4 @@ package object types {
       RecT1(fields.view.mapValues(_.toTlaType1).toMap.to(SortedMap))
     }
   }
-
-  /**
-   * Unify two types decorated with Option.
-   *
-   * @param left
-   *   a left type (may be None)
-   * @param right
-   *   a right type (may be None)
-   * @return
-   *   Some(unifier), if there is one, otherwise None
-   */
-  def unifyOption(left: Option[CellT], right: Option[CellT]): Option[CellT] = for {
-    l <- left
-    r <- right
-    u <- l.unify(r)
-  } yield u
-
-  /**
-   * Unify a sequence of types
-   * @param ts
-   *   a sequence of types
-   * @return
-   *   Some(unifier), if exists, or None
-   */
-  def unify(ts: CellT*): Option[CellT] =
-    ts.map(Some(_)).reduce[Option[CellT]]((x, y) => unifyOption(x, y))
-
 }

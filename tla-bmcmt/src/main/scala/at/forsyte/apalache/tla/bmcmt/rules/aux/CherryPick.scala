@@ -11,6 +11,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaOper
 
 import scala.collection.immutable.SortedMap
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
+import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier, TypeVarPool}
 
 /**
  * An element picket that allows us:
@@ -391,18 +392,21 @@ class CherryPick(rewriter: SymbStateRewriter) {
   }
 
   private def findCommonRecordType(records: Seq[ArenaCell]): RecordT = {
-    var maxRecordType = records.head.cellType
+    var maxRecordType = records.head.cellType.toTlaType1
+    // This is temporary plumbing for backward compatibility with the old records.
+    // It will be removed soon: https://github.com/informalsystems/apalache/issues/401.
+    val unifier = new TypeUnifier(new TypeVarPool())
     for (rec <- records.tail) {
-      val recType = rec.cellType
-      recType.unify(maxRecordType) match {
-        case Some(commonType) =>
+      val recType = rec.cellType.toTlaType1
+      unifier.unify(Substitution(), maxRecordType, recType) match {
+        case Some((_, commonType)) =>
           maxRecordType = commonType
 
         case None =>
           throw new IllegalStateException(s"Found inconsistent records in a set: $maxRecordType and $recType")
       }
     }
-    maxRecordType.asInstanceOf[RecordT]
+    CellT.fromType1(maxRecordType).asInstanceOf[RecordT]
   }
 
   // find the union of the keys for all records, if it exists
