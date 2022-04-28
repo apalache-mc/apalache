@@ -39,14 +39,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
    *   tla.eql(left, right), provided that left and right can be compared
    */
   def safeEq(left: ArenaCell, right: ArenaCell): TlaEx = {
-    if (!left.cellType.comparableWith(right.cellType)) {
-      // Trivially not equal due to incomparable types.
-      // As this comparison usually indicates a coding problem, throw an exception here.
-      // If you still think that this is okay to compare variables of different types, insert a check before safeEq.
-      throw new RewriterException(
-          "Trivial inequality, as the types are different (check your code): type(%s) = %s, while type(%s) = %s"
-            .format(left.toNameEx.name, left.cellType, right.toNameEx.name, right.cellType), NullEx)
-    } else if (left == right) {
+    if (left == right) {
       tla.bool(true) // this is just true
     } else {
       val entry = eqCache.get(left, right)
@@ -81,8 +74,6 @@ class LazyEquality(rewriter: SymbStateRewriter)
       val entry = eqCache.get(left, right)
       if (entry.isDefined) {
         eqCache.toTla(left, right, entry.get)
-      } else if (!left.cellType.comparableWith(right.cellType)) {
-        tla.bool(false) // just false as the types are different
       } else {
         // let's add a bit of German here to indicate that it is really dangerous
         val msg =
@@ -138,12 +129,6 @@ class LazyEquality(rewriter: SymbStateRewriter)
       state
     } else if (cacheEntry.isDefined) {
       state // do nothing
-    } else if (!left.cellType.comparableWith(right.cellType)) {
-      // Cells of incomparable types cannot be equal.
-      // This is a dangerous state, as the type checker should have caught this. Throw an error.
-      // It is not really a typing error, but an internal error that should be treated as such.
-      val msg = "Checking values of incomparable types for equality: %s and %s".format(left.cellType, right.cellType)
-      throw new MalformedTlaError(msg, state.ex)
     } else {
       // generate constraints
       val newState =
@@ -535,28 +520,22 @@ class LazyEquality(rewriter: SymbStateRewriter)
   }
 
   private def mkTupleEq(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {
-    val leftType = left.cellType.asInstanceOf[TupleT]
-    val rightType = right.cellType.asInstanceOf[TupleT]
-    if (!leftType.comparableWith(rightType)) {
-      state
-    } else {
-      var newState = state
+    var newState = state
 
-      def elemEq(lelem: ArenaCell, relem: ArenaCell): TlaEx = {
-        newState = cacheOneEqConstraint(newState, lelem, relem)
-        safeEq(lelem, relem)
-      }
-
-      val leftElems = state.arena.getHas(left)
-      val rightElems = state.arena.getHas(right)
-
-      val tupleEq = tla.and(leftElems.zip(rightElems).map(p => elemEq(p._1, p._2)): _*)
-      rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(left.toNameEx, right.toNameEx), tupleEq))
-      eqCache.put(left, right, EqCache.EqEntry())
-
-      // restore the original expression and theory
-      newState.setRex(state.ex)
+    def elemEq(lelem: ArenaCell, relem: ArenaCell): TlaEx = {
+      newState = cacheOneEqConstraint(newState, lelem, relem)
+      safeEq(lelem, relem)
     }
+
+    val leftElems = state.arena.getHas(left)
+    val rightElems = state.arena.getHas(right)
+
+    val tupleEq = tla.and(leftElems.zip(rightElems).map(p => elemEq(p._1, p._2)): _*)
+    rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(left.toNameEx, right.toNameEx), tupleEq))
+    eqCache.put(left, right, EqCache.EqEntry())
+
+    // restore the original expression and theory
+    newState.setRex(state.ex)
   }
 
   private def mkSeqEq(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {

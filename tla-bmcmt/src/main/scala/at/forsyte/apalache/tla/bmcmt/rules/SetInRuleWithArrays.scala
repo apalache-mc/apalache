@@ -114,7 +114,6 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
     val potentialElems = state.arena.getHas(setCell)
     // The types of the element and the set may slightly differ, but they must be unifiable.
     // For instance, [a |-> 1] \in { [a |-> 2], [a |-> 3, b -> "foo"] }
-    assert(elemCell.cellType.unify(elemType).nonEmpty)
     if (potentialElems.isEmpty) {
       // the set cell points to no other cell => return false
       state.setRex(state.arena.cellFalse().toNameEx)
