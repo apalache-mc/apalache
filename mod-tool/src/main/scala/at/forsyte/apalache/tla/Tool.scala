@@ -103,7 +103,7 @@ object Tool extends LazyLogging {
       // One of our commands.
       case Some(cmd) => {
 
-        printHeaderAndStatsConfig()
+        printStatsConfig()
 
         val exitcode = outputAndLogConfig(cmd) match {
           case Left(configurationErrorMessage) => {
@@ -444,7 +444,7 @@ object Tool extends LazyLogging {
     }
   }
 
-  private def printHeaderAndStatsConfig(): Unit = {
+  private def printStatsConfig(): Unit = {
     if (new ExecutionStatisticsCollector().isEnabled) {
       // Statistic collection is enabled. Thank the user
       Console.println("# Usage statistics is ON. Thank you!")
