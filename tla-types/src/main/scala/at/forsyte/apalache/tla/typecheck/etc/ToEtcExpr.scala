@@ -971,12 +971,12 @@ class ToEtcExpr(
       case ValEx(TlaStr(fieldName)) =>
         // f[s] or [f EXCEPT ![s] = ...], where s is a string literal
         val a = varPool.fresh
-        val b = varPool.fresh
         Seq(
             // ((Str -> a), Str) => a
             (FunT1(StrT1(), a), StrT1(), a),
             if (useRows) {
               // ({ foo: a, b }, Str) => a
+              val b = varPool.fresh
               (RecRowT1(RowT1(b, fieldName -> a)), StrT1(), a)
             } else {
               // ([ foo: a ], Str) => a
