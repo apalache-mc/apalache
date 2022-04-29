@@ -93,8 +93,9 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
             // Records do not contain cdm metadata
             nextState = nextState.updateArena(_.setDom(res, nextState.arena.getDom(pickedRes)))
 
-          case ct =>
-            throw new IllegalStateException("Unexpected cell type: " + ct)
+          case _ =>
+            // do nothing
+            ()
         }
       }
     }
