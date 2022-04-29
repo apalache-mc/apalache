@@ -21,7 +21,11 @@ import scala.annotation.nowarn
  * @author
  *   Igor Konnov
  */
-class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubstitution, varPool: TypeVarPool)
+class ToEtcExpr(
+    annotationStore: AnnotationStore,
+    aliasSubstitution: ConstSubstitution,
+    varPool: TypeVarPool,
+    val useRows: Boolean = false)
     extends EtcBuilder with LazyLogging {
   private val type1Parser = DefaultType1Parser
 
@@ -357,7 +361,14 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
           args.grouped(2).map(validateRecordPair).toSeq.unzip
 
         val typeVars = varPool.fresh(sets.length)
-        val recSetType = SetT1(RecT1(fields.zip(typeVars): _*))
+        val recSetType =
+          if (useRows) {
+            // Set({ x: a, y: b })
+            SetT1(RecRowT1(RowT1(fields.zip(typeVars): _*)))
+          } else {
+            // Set([ x: a, y: b ])
+            SetT1(RecT1(fields.zip(typeVars): _*))
+          }
         val opType = OperT1(typeVars.map(SetT1(_)), recSetType)
         mkExRefApp(opType, sets)
 
@@ -440,12 +451,18 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
 
       // ******************************************** FUNCTIONS **************************************************
       case OperEx(TlaFunOper.enum, args @ _*) =>
+        // a record constructor:
         // [f1 |-> e1, f2 |-> e2]
         val (fields, values) =
           args.grouped(2).map(validateRecordPair).toSeq.unzip
         val typeVars = varPool.fresh(fields.length)
-        // (a, b) => [f1 |-> a, f2 |-> b]
-        val sig = OperT1(typeVars, RecT1(fields.zip(typeVars): _*))
+        val sig = if (useRows) {
+          // (a, b) => { f1: a, f2: b }
+          OperT1(typeVars, RecRowT1(RowT1(fields.zip(typeVars): _*)))
+        } else {
+          // (a, b) => [ f1 |-> a, f2 |-> b ]
+          OperT1(typeVars, RecT1(fields.zip(typeVars): _*))
+        }
         mkExRefApp(sig, values)
 
       case OperEx(TlaFunOper.tuple) =>
@@ -474,15 +491,20 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
 
       case OperEx(TlaFunOper.domain, fun) =>
         // DOMAIN f
-        val a = varPool.fresh
-        val b = varPool.fresh
-        val c = varPool.fresh
+        val (a, b, c, d) = (varPool.fresh, varPool.fresh, varPool.fresh, varPool.fresh)
         // The possible types to which which DOMAIN can be be applied,
         // and the corresponding type of the domain when so applied:
         val funType = OperT1(Seq(FunT1(a, b)), SetT1(a)) // (a -> b) => Set(a)
         val seqType =
           OperT1(Seq(SeqT1(c)), SetT1(IntT1())) // Seq(c) => Set(Int)
-        val recType = OperT1(Seq(RecT1()), SetT1(StrT1())) // [] => Set(Str)
+        val recType =
+          if (useRows) {
+            // { d } => Set(Str)
+            OperT1(Seq(RecRowT1(RowT1(d))), SetT1(StrT1()))
+          } else {
+            // [] => Set(Str)
+            OperT1(Seq(RecT1()), SetT1(StrT1()))
+          }
         val tupType =
           OperT1(Seq(SparseTupT1()), SetT1(IntT1())) // {} => Set(Int)
         mkApp(
@@ -952,8 +974,14 @@ class ToEtcExpr(annotationStore: AnnotationStore, aliasSubstitution: ConstSubsti
         Seq(
             // ((Str -> a), Str) => a
             (FunT1(StrT1(), a), StrT1(), a),
-            // ([ foo: a ], Str) => a
-            (RecT1(fieldName -> a), StrT1(), a),
+            if (useRows) {
+              // ({ foo: a, b }, Str) => a
+              val b = varPool.fresh
+              (RecRowT1(RowT1(b, fieldName -> a)), StrT1(), a)
+            } else {
+              // ([ foo: a ], Str) => a
+              (RecT1(fieldName -> a), StrT1(), a)
+            },
         )
 
       case _ =>
