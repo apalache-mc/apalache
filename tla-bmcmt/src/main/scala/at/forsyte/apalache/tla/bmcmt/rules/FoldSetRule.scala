@@ -7,7 +7,8 @@ import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import at.forsyte.apalache.tla.pp.{Inliner, UniqueNameGenerator}
+import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
+import at.forsyte.apalache.tla.pp.Inliner
 
 /**
  * Rewriting rule for FoldSet. Similar to Cardinality, we need to consider element set presence and multiplicity.
@@ -15,7 +16,7 @@ import at.forsyte.apalache.tla.pp.{Inliner, UniqueNameGenerator}
  * @author
  *   Jure Kukovec
  */
-class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
+class FoldSetRule(rewriter: SymbStateRewriter, renaming: IncrementalRenaming) extends RewritingRule {
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -76,7 +77,7 @@ class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
       )
 
       // expressions are transient, we don't need tracking
-      val inliner = new Inliner(new IdleTracker, new UniqueNameGenerator)
+      val inliner = new Inliner(new IdleTracker, renaming)
       // We can make the scope directly, since InlinePass already ensures all is well.
       val seededScope: Inliner.Scope = Map(opDecl.name -> opDecl)
 

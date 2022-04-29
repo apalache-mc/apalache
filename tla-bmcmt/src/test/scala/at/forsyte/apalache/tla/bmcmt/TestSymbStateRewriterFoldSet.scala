@@ -32,7 +32,7 @@ trait TestSymbStateRewriterFoldSet extends RewriterBase {
 
     val state = new SymbState(eqn, arena, Binding())
 
-    assert(new FoldSetRule(this.create(rewriterType)).isApplicable(state.setRex(foldEx)))
+    assert(new FoldSetRule(this.create(rewriterType), renaming).isApplicable(state.setRex(foldEx)))
 
     assertTlaExAndRestore(create(rewriterType), state)
   }
