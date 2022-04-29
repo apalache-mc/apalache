@@ -133,7 +133,8 @@ class LazyEquality(rewriter: SymbStateRewriter)
       val newState =
         (left.cellType, right.cellType) match {
           case (UnknownT(), UnknownT()) | (CellTFrom(BoolT1()), _) | (_, CellTFrom(BoolT1())) |
-              (CellTFrom(IntT1()), CellTFrom(IntT1())) | (CellTFrom(ConstT1(_)), CellTFrom(ConstT1(_))) =>
+              (CellTFrom(IntT1()), CellTFrom(IntT1())) | (CellTFrom(ConstT1(_)), CellTFrom(ConstT1(_))) |
+              (CellTFrom(StrT1()), CellTFrom(StrT1())) =>
             eqCache.put(left, right, EqCache.EqEntry())
             state // nothing to do, just use the built-in equality
 
@@ -146,7 +147,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
           case (CellTFrom(RecT1(_)), CellTFrom(RecT1(_))) =>
             mkRecordEq(state, left, right)
 
-          case (CellTFrom(TupT1(_)), CellTFrom(TupT1(_))) =>
+          case (CellTFrom(TupT1(_ @_*)), CellTFrom(TupT1(_ @_*))) =>
             mkTupleEq(state, left, right)
 
           case (CellTFrom(SeqT1(_)), CellTFrom(SeqT1(_))) =>

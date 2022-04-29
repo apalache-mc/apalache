@@ -36,9 +36,9 @@ class TupleOrSeqCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // Get the resulting type from the type tag. It may be either a sequence or a tuple.
         val resultT = CellT.fromTypeTag(ex.typeTag)
         resultT match {
-          case CellTFrom(tt @ TupT1(_)) => createTuple(stateAfterElems, tt, cells)
-          case CellTFrom(st @ SeqT1(_)) => createSeq(stateAfterElems, st, cells)
-          case _                        => throw new RewriterException("Unexpected type: " + resultT, state.ex)
+          case CellTFrom(tt @ TupT1(_ @_*)) => createTuple(stateAfterElems, tt, cells)
+          case CellTFrom(st @ SeqT1(_))     => createSeq(stateAfterElems, st, cells)
+          case _                            => throw new RewriterException("Unexpected type: " + resultT, state.ex)
         }
 
       case _ =>

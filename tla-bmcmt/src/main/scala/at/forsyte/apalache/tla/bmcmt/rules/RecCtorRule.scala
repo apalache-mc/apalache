@@ -86,7 +86,8 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // importantly, the record keys that are outside of ctorKeys should not belong to the domain!
         if (extraKeyMap.nonEmpty) {
           val extraOutsideOfDomain =
-            extraKeyMap.values.map(f => tla.not(tla.apalacheSelectInSet(f.toNameEx, domain.toNameEx)))
+            extraKeyMap.values.map(f =>
+              tla.not(tla.apalacheSelectInSet(f.toNameEx, domain.toNameEx).as(BoolT1())).as(BoolT1()))
           rewriter.solverContext.assertGroundExpr(tla.and(extraOutsideOfDomain.toSeq: _*).as(BoolT1()))
         }
 

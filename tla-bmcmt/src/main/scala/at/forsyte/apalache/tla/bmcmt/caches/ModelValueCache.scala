@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
 import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.ApalacheInternalOper
-import at.forsyte.apalache.tla.lir.{ConstT1, OperEx}
+import at.forsyte.apalache.tla.lir.{ConstT1, OperEx, StrT1}
 
 /**
  * A cache for model values that are translated as uninterpreted constants, with a unique sort per uniterpreted type.
@@ -20,11 +20,12 @@ class ModelValueCache(solverContext: SolverContext)
   override protected def create(arena: Arena, typeAndIndex: (String, String)): (Arena, ArenaCell) = {
     // introduce a new cell
     val (utype, _) = typeAndIndex
-    val newArena = arena.appendCell(ConstT1(utype))
+    val cellType = if (utype == StrT1().toString) StrT1() else ConstT1(utype)
+    val newArena = arena.appendCell(cellType)
     val newCell = newArena.topCell
     // The fresh cell should differ from the previously created cells.
     // We use the SMT constraint (distinct ...).
-    val others = values().filter(_.cellType == CellTFrom(ConstT1(utype))).map(_.toNameEx).toSeq
+    val others = values().filter(_.cellType == CellTFrom(cellType)).map(_.toNameEx).toSeq
     solverContext.assertGroundExpr(OperEx(ApalacheInternalOper.distinct, newCell.toNameEx +: others: _*))
     solverContext.log("; cached \"%s\" to %s".format(typeAndIndex, newCell))
     (newArena, newCell)
