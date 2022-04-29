@@ -1,5 +1,5 @@
 -------------------------- MODULE TestFunctions --------------------------------
-EXTENDS Integers
+EXTENDS Integers, FiniteSets
 
 Init == TRUE
 Next == TRUE
@@ -18,9 +18,22 @@ TestFunCtorSetToSet ==
     LET fun == [ x \in Singletons |-> { x } ] IN
     fun[{ 50 }] = { { 50 } }
 
+TestFunCtorOnPowerset ==
+    [ S \in SUBSET BOOLEAN |-> Cardinality(S) ] =
+        [ S \in { {}, {FALSE}, {TRUE}, {FALSE, TRUE} } |->
+            Cardinality(S) ]
+
+TestFunSetToPowerset ==
+    \A f \in [ BOOLEAN -> SUBSET BOOLEAN ]:
+        /\ DOMAIN f = BOOLEAN
+        /\ \A x \in BOOLEAN:
+            f[x] \in SUBSET BOOLEAN
+
 AllTests ==
     /\ TestFunCtor
     /\ TestFunCtorSet
     /\ TestFunCtorSetToSet
+    /\ TestFunCtorOnPowerset
+    /\ TestFunSetToPowerset
 
 ================================================================================
