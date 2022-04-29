@@ -49,7 +49,7 @@ trait TestSymbStateRewriterRecord extends RewriterBase {
         val cell = nextState.arena.findCellByName(name)
         cell.cellType match {
           case CellTFrom(r @ RecT1(_)) =>
-            val map = SortedMap("a" -> CellTFrom(IntT1()), "b" -> CellTFrom(BoolT1()), "c" -> CellTFrom(StrT1()))
+            val map = SortedMap("a" -> IntT1(), "b" -> BoolT1(), "c" -> StrT1())
             assert(r.fieldTypes == map)
             val keys = SortedSet("a", "b", "c")
             val (_, expectedDomain) =
@@ -115,7 +115,7 @@ trait TestSymbStateRewriterRecord extends RewriterBase {
         val cell = nextState.arena.findCellByName(name)
         cell.cellType match {
           case CellTFrom(SetT1(rt @ RecT1(_))) =>
-            assert(rt.fieldTypes == TreeMap("a" -> CellTFrom(IntT1()), "b" -> CellTFrom(BoolT1())))
+            assert(rt.fieldTypes == TreeMap("a" -> IntT1(), "b" -> BoolT1()))
           // we check the actual contents in the later tests that access elements
 
           case _ =>
@@ -145,7 +145,7 @@ trait TestSymbStateRewriterRecord extends RewriterBase {
         val cell = nextState.arena.findCellByName(name)
         cell.cellType match {
           case CellTFrom(SetT1(rt @ RecT1(_))) =>
-            val map = TreeMap("a" -> CellTFrom(IntT1()), "b" -> CellTFrom(BoolT1()), "c" -> CellTFrom(StrT1()))
+            val map = TreeMap("a" -> IntT1(), "b" -> BoolT1(), "c" -> StrT1())
             assert(rt.fieldTypes == map)
 
           case _ =>

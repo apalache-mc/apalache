@@ -37,7 +37,7 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
             val dom = funState.arena.getDom(funCell)
             funState.setRex(dom.toNameEx)
 
-          case CellTFrom(tt @ TupT1(_)) =>
+          case CellTFrom(tt @ TupT1(_ @_*)) =>
             mkTupleDomain(funState, tt)
 
           case CellTFrom(SeqT1(_)) =>

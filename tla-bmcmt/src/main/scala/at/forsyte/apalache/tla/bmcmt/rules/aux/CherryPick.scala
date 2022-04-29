@@ -125,14 +125,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
     // the general case
     targetType match {
-      case CellTFrom(ConstT1(x)) =>
-        pickBasic(ConstT1(x), state, oracle, elems, elseAssert)
-
-      case CellTFrom(IntT1()) =>
-        pickBasic(IntT1(), state, oracle, elems, elseAssert)
-
-      case CellTFrom(BoolT1()) =>
-        pickBasic(BoolT1(), state, oracle, elems, elseAssert)
+      case CellTFrom(tt @ (ConstT1(_) | StrT1() | IntT1() | BoolT1())) =>
+        pickBasic(tt, state, oracle, elems, elseAssert)
 
       case CellTFrom(t @ TupT1(_ @_*)) =>
         pickTuple(t, state, oracle, elems, elseAssert)
