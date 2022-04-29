@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.{ApalacheInternalOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, NameEx, OperEx, SetT1, TlaEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, IntT1, NameEx, OperEx, SetT1, TlaEx}
 
 /**
  * Rewrites set membership tests: x \in S, x \in SUBSET S, and x \in [S -> T].
@@ -93,6 +93,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     funCell.cellType match {
       case FunT(CellTFrom(SetT1(_)), _) => () // OK
+      case CellTFrom(FunT1(_, _))       => () // OK
       case _                            => flagTypeError()
     }
     funsetCell.cellType match {
