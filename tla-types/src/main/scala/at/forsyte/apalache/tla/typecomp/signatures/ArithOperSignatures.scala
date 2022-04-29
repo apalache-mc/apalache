@@ -1,8 +1,8 @@
-package at.forsyte.apalache.tla.typecmp.signatures
+package at.forsyte.apalache.tla.typecomp.signatures
 
 import at.forsyte.apalache.tla.lir.oper.TlaArithOper
 import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, OperT1, SetT1}
-import at.forsyte.apalache.tla.typecmp.{liftOper, SignatureGenMap}
+import at.forsyte.apalache.tla.typecomp.{liftOper, SignatureGenMap}
 
 /**
  * Produces a SignatureMap for all arithmetic operators

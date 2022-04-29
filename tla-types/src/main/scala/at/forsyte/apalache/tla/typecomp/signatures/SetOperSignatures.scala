@@ -1,9 +1,9 @@
-package at.forsyte.apalache.tla.typecmp.signatures
+package at.forsyte.apalache.tla.typecomp.signatures
 
 import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, OperT1, SeqT1, SetT1, TupT1}
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.typecheck.etc.TypeVarPool
-import at.forsyte.apalache.tla.typecmp.SignatureGenMap
+import at.forsyte.apalache.tla.typecomp.SignatureGenMap
 
 /**
  * Produces a SignatureMap for all set operators

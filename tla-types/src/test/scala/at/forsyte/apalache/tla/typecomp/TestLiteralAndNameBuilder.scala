@@ -1,9 +1,12 @@
-package at.forsyte.apalache.tla.typecmp
+package at.forsyte.apalache.tla.typecomp
 
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir._
+import org.junit.runner.RunWith
+import org.scalatestplus.junit.JUnitRunner
 
-class TestLeafBuilder extends BuilderTest {
+@RunWith(classOf[JUnitRunner])
+class TestLiteralAndNameBuilder extends BuilderTest {
 
   test("literals") {
 
@@ -40,12 +43,12 @@ class TestLeafBuilder extends BuilderTest {
     assert(xBoolEx.eqTyped(NameEx("x")(Typed(BoolT1()))))
 
     // Throw if in same scope
-    assertThrows[BuilderScopeException] {
+    assertThrows[TBuilderScopeException] {
       val both = for {
         _ <- xInt
         _ <- xBool
       } yield ()
-      both.run(MetaInfo(Map.empty))
+      both.run(TBuilderContext(Map.empty))
     }
 
   }

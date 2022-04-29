@@ -1,17 +1,20 @@
-package at.forsyte.apalache.tla.typecmp
+package at.forsyte.apalache.tla.typecomp
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
+import org.junit.runner.RunWith
+import org.scalatestplus.junit.JUnitRunner
 
+@RunWith(classOf[JUnitRunner])
 class TestBoolBuilder extends BuilderTest {
 
-  def argGen(n: Int): Seq[BuilderWrapper] = Seq.fill(n)(builder.bool(true))
+  def argGen(n: Int): Seq[TBuilderInstruction] = Seq.fill(n)(builder.bool(true))
 
   def testCmpOKAndMistyped[T](
-      args: Seq[BuilderWrapper],
+      args: Seq[TBuilderInstruction],
       oper: TlaBoolOper,
       cmp: PureTypeComputation,
-      eval: Seq[BuilderWrapper] => BuilderWrapper): Unit = {
+      eval: Seq[TBuilderInstruction] => TBuilderInstruction): Unit = {
 
     val builtArgs = args.map(build)
     val res = cmp(builtArgs)
@@ -22,10 +25,10 @@ class TestBoolBuilder extends BuilderTest {
 
     assert(resEx.eqTyped(OperEx(oper, builtArgs: _*)(Typed(BoolT1()))))
 
-    val badY: BuilderWrapper = builder.str("a")
+    val badY: TBuilderInstruction = builder.str("a")
     val badArgs = badY +: args.tail
 
-    assertThrows[BuilderTypeException] {
+    assertThrows[TBuilderTypeException] {
       build(eval(badArgs))
     }
   }
@@ -36,7 +39,7 @@ class TestBoolBuilder extends BuilderTest {
       testCmpOKAndMistyped(
           argGen(i),
           oper,
-          sigGen.computationFromSignature(oper),
+          cmpFactory.computationFromSignature(oper),
           builder.and(_: _*),
       )
     }
@@ -48,7 +51,7 @@ class TestBoolBuilder extends BuilderTest {
       testCmpOKAndMistyped(
           argGen(i),
           oper,
-          sigGen.computationFromSignature(oper),
+          cmpFactory.computationFromSignature(oper),
           builder.or(_: _*),
       )
     }
@@ -59,7 +62,7 @@ class TestBoolBuilder extends BuilderTest {
     testCmpOKAndMistyped(
         argGen(1),
         oper,
-        sigGen.computationFromSignature(oper),
+        cmpFactory.computationFromSignature(oper),
         { case Seq(e) => builder.not(e) },
     )
   }
@@ -69,7 +72,7 @@ class TestBoolBuilder extends BuilderTest {
     testCmpOKAndMistyped(
         argGen(2),
         oper,
-        sigGen.computationFromSignature(oper),
+        cmpFactory.computationFromSignature(oper),
         { case Seq(a, b) => builder.impl(a, b) },
     )
   }
@@ -79,15 +82,15 @@ class TestBoolBuilder extends BuilderTest {
     testCmpOKAndMistyped(
         argGen(2),
         oper,
-        sigGen.computationFromSignature(oper),
+        cmpFactory.computationFromSignature(oper),
         { case Seq(a, b) => builder.equiv(a, b) },
     )
   }
 
   def testQuant(
       oper: TlaBoolOper,
-      methodE: Either[(NameWrapper, BuilderWrapper, BuilderWrapper) => BuilderWrapper, (NameWrapper,
-              BuilderWrapper) => BuilderWrapper]): Unit = {
+      methodE: Either[(TBuilderInstruction, TBuilderInstruction, TBuilderInstruction) => TBuilderInstruction, (
+              TBuilderInstruction, TBuilderInstruction) => TBuilderInstruction]): Unit = {
     val xBool = builder.name("x", BoolT1())
     val xInt = builder.name("x", IntT1())
 
@@ -128,11 +131,11 @@ class TestBoolBuilder extends BuilderTest {
 
     assert(okW.eqTyped(expected))
 
-    assertThrows[BuilderTypeException] {
+    assertThrows[TBuilderTypeException] {
       build(typeErrorW)
     }
 
-    assertThrows[BuilderScopeException] {
+    assertThrows[TBuilderScopeException] {
       build(scopeErrorW)
     }
   }

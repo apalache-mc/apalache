@@ -1,19 +1,19 @@
-package at.forsyte.apalache.tla.typecmp
+package at.forsyte.apalache.tla.typecomp
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier, TypeVarPool}
-import at.forsyte.apalache.tla.typecmp.BuilderUtil.throwMsg
-import at.forsyte.apalache.tla.typecmp.signatures.{ArithOperSignatures, BoolOperSignatures, SetOperSignatures}
+import at.forsyte.apalache.tla.typecomp.BuilderUtil.throwMsg
+import at.forsyte.apalache.tla.typecomp.signatures.{ArithOperSignatures, BoolOperSignatures, SetOperSignatures}
 
 /**
- * Some TNT operators have signatures (see [[signatures]]). SignatureHandler collects [[SignatureGenerator]]s for such
- * operators and constructs signature-matching [[PureTypeComputation]]s on demand.
+ * Some TNT operators have signatures (see [[signatures]]). TypeComputationFactory collects [[SignatureGenerator]]s for
+ * such operators and constructs signature-matching [[PureTypeComputation]]s on demand.
  *
  * @author
  *   Jure Kukovec
  */
-class SignatureHandler(varPool: TypeVarPool) {
+class TypeComputationFactory(varPool: TypeVarPool) {
 
   private val aritOperMap: SignatureGenMap = ArithOperSignatures.getMap
   private val boolOperMap: SignatureGenMap = BoolOperSignatures.getMap(varPool)

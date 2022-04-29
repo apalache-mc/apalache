@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.typecmp
+package at.forsyte.apalache.tla.typecomp
 
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, Typed}
@@ -17,23 +17,24 @@ object BuilderUtil {
    * Constructs an OperEx expression for oper applied to args. Uses typeCmp to validate args and determine the result
    * type
    */
-  def buildInstruction(oper: TlaOper, typeCmp: TypeComputation, args: TlaEx*): TlaEx = typeCmp(args) match {
+  def composeAndValidateTypes(oper: TlaOper, typeCmp: TypeComputation, args: TlaEx*): TlaEx = typeCmp(args) match {
     case Left(err) => throw err
     case Right(typeRes) =>
       OperEx(oper, args: _*)(Typed(typeRes))
   }
 
   /** Removes elem from the scope, as the scope only contains types of free variables */
-  def markAsBound(elem: NameEx): InternalState[Unit] = State[MetaInfo, Unit] { mi: MetaInfo =>
-    (mi.copy(mi.nameScope - elem.name), ())
+  def markAsBound(elem: TlaEx): TBuilderInternalState[Unit] = State[TBuilderContext, Unit] { mi: TBuilderContext =>
+    require(elem.isInstanceOf[NameEx])
+    (mi.copy(mi.nameScope - elem.asInstanceOf[NameEx].name), ())
   }
 
   /**
    * Given a sequence of computations, generates a computation that runs them in order and accumulates results to a
    * sequence of values
    */
-  def buildSeq[T](argsW: Seq[InternalState[T]]): InternalState[Seq[T]] =
-    argsW.foldLeft(Seq.empty[T].point[InternalState]) { case (seqW, argW) =>
+  def buildSeq[T](argsW: Seq[TBuilderInternalState[T]]): TBuilderInternalState[Seq[T]] =
+    argsW.foldLeft(Seq.empty[T].point[TBuilderInternalState]) { case (seqW, argW) =>
       for {
         seq <- seqW
         arg <- argW
@@ -41,11 +42,14 @@ object BuilderUtil {
     }
 
   /** Lifts a binary raw method to a BuilderWrapper method */
-  def binaryFromRaw(xW: BuilderWrapper, yW: BuilderWrapper)(rawMethod: (TlaEx, TlaEx) => TlaEx): BuilderWrapper = for {
+  def binaryFromRaw(
+      xW: TBuilderInstruction,
+      yW: TBuilderInstruction,
+    )(rawMethod: (TlaEx, TlaEx) => TlaEx): TBuilderInstruction = for {
     x <- xW
     y <- yW
   } yield rawMethod(x, y)
 
   /** generates a BuilderTypeException wrapped in a Left, containing the given message */
-  def throwMsg(msg: String): TypeComputationReturn = Left(new BuilderTypeException(msg))
+  def throwMsg(msg: String): TypeComputationResult = Left(new TBuilderTypeException(msg))
 }

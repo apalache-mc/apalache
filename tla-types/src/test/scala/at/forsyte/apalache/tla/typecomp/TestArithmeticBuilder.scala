@@ -1,14 +1,17 @@
-package at.forsyte.apalache.tla.typecmp
+package at.forsyte.apalache.tla.typecomp
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaArithOper
+import org.junit.runner.RunWith
+import org.scalatestplus.junit.JUnitRunner
 
+@RunWith(classOf[JUnitRunner])
 class TestArithmeticBuilder extends BuilderTest {
   def testBinaryOperAndBuilderMethod(
       oper: TlaArithOper,
-      method: (BuilderWrapper, BuilderWrapper) => BuilderWrapper,
+      method: (TBuilderInstruction, TBuilderInstruction) => TBuilderInstruction,
       retT: TlaType1): Unit = {
-    val cmp = sigGen.computationFromSignature(oper)
+    val cmp = cmpFactory.computationFromSignature(oper)
 
     val args = Seq.fill(2)(builder.int(1))
 
@@ -23,7 +26,7 @@ class TestArithmeticBuilder extends BuilderTest {
 
     val badY = builder.str("a")
 
-    assertThrows[BuilderTypeException] {
+    assertThrows[TBuilderTypeException] {
       build(method(x, badY))
     }
   }
@@ -37,7 +40,7 @@ class TestArithmeticBuilder extends BuilderTest {
   }
 
   test("uminus") {
-    val cmp = sigGen.computationFromSignature(TlaArithOper.uminus)
+    val cmp = cmpFactory.computationFromSignature(TlaArithOper.uminus)
 
     val x = builder.int(1)
 
@@ -51,7 +54,7 @@ class TestArithmeticBuilder extends BuilderTest {
 
     val badX = builder.str("a")
 
-    assertThrows[BuilderTypeException] {
+    assertThrows[TBuilderTypeException] {
       build(builder.uminus(badX))
     }
   }
