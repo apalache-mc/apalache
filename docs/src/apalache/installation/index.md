@@ -2,13 +2,15 @@
 
 There are three ways to run Apalache:
 
-  1. [JVM](./jvm.md): download a prebuilt package and run it in the JVM.
+  1. [Prebuilt package](./jvm.md): download a prebuilt package and run it in the JVM.
   1. [Docker](./docker.md): download and run a Docker image.
-  1. [Source](./source.md): build Apalache from sources and run the compiled package.
+  1. [Build from source](./source.md): build Apalache from sources and run the compiled package.
 
-If you just want to try the tool, we recommend [downloading the
-release](./jvm.md) or [pulling the docker image](./docker.md). If you would like
-to run the tool on a daily basis or [contribute][] to the project, we recommend
-[building the project from the source](./source.md).
+If you just want to try the tool, we recommend using the [prebuilt
+package](./jvm.md).
 
-[contribute]: https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md
+## System requirements
+
+**Memory**: Apalache uses Microsoft Z3 as a backend SMT solver, and the required
+memory largely depends on Z3. We recommend to allocate at least 4GB of memory
+for the tool.
