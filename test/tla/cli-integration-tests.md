@@ -2709,6 +2709,56 @@ $ apalache-mc typecheck TestFolds.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### typecheck TestRecordsNew.tla
+
+Typecheck new records that support row typing.
+
+```sh
+$ apalache-mc typecheck --features=rows TestRecordsNew.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### typecheck TestRecordsNewIll1.tla
+
+No ill-typed record access.
+
+```sh
+$ apalache-mc typecheck --features=rows TestRecordsNewIll1.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: ERROR (255)
+```
+
+### typecheck TestRecordsNewIll2.tla
+
+No ill-typed record access.
+
+```sh
+$ apalache-mc typecheck --features=rows TestRecordsNewIll2.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: ERROR (255)
+```
+
+### typecheck TestRecordsNewIll3.tla
+
+No ill-typed record access.
+
+```sh
+$ apalache-mc typecheck --features=rows TestRecordsNewIll3.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: ERROR (255)
+```
+
+### typecheck TestRecordsNewIll4.tla
+
+No ill-typed record access.
+
+```sh
+$ apalache-mc typecheck --features=rows TestRecordsNewIll4.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: ERROR (255)
+```
+
 ## configuring the output manager
 
 ### output manager: set out-dir by CLI flag

@@ -28,7 +28,7 @@ class TestTlcConfigImporter extends AnyFunSuite with BeforeAndAfterEach {
     sourceStore = new SourceStore()
     annotationStore = createAnnotationStore()
     sanyImporter = new SanyImporter(sourceStore, annotationStore)
-    typeChecker = new TypeCheckerTool(annotationStore, inferPoly = false)
+    typeChecker = new TypeCheckerTool(annotationStore, inferPoly = false, useRows = false)
   }
 
   def configureAndCompare(tla: String, tlc: String, expected: String): Assertion = {

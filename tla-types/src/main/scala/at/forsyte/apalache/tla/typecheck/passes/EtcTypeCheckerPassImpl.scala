@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
-import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule, TypeTag, UID, Untyped}
+import at.forsyte.apalache.tla.lir.{Feature, ModuleProperty, RowsFeature, TlaModule, TypeTag, UID, Untyped}
 import at.forsyte.apalache.tla.typecheck.TypeCheckerTool
 import at.forsyte.apalache.tla.imp.utils
 import com.google.inject.Inject
@@ -23,12 +23,15 @@ class EtcTypeCheckerPassImpl @Inject() (
 
   protected def inferPoly: Boolean = options.getOrElse[Boolean]("typecheck", "inferPoly", true)
 
+  protected def useRows: Boolean =
+    options.getOrElse[Seq[Feature]]("general", "features", Seq()).contains(RowsFeature())
+
   override def name: String = "TypeCheckerSnowcat"
 
   override def execute(tlaModule: TlaModule): Option[TlaModule] = {
     logger.info(" > Running Snowcat .::.")
 
-    val tool = new TypeCheckerTool(annotationStore, inferPoly)
+    val tool = new TypeCheckerTool(annotationStore, inferPoly, useRows)
 
     // when this flag is true by the end of type checking, we have recovered the types of all expressions
     var isTypeCoverageComplete = true
