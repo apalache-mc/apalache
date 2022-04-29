@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.transformations.standard.{
   DeclarationSorter, DeepCopy, IncrementalRenaming, ReplaceFixed,
 }
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.pp.Inliner.FilterFun
+import at.forsyte.apalache.tla.pp.Inliner.{DeclFilter, FilterFun}
 import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier, TypeVarPool}
 
 /**
@@ -30,11 +30,10 @@ import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier, TypeVar
  */
 class Inliner(
     tracker: TransformationTracker,
-    nameGenerator: UniqueNameGenerator,
+    renaming: IncrementalRenaming,
     keepNullary: Boolean = true,
-    moduleLevelFilter: Inliner.DeclFilter = FilterFun.ALL) {
+    moduleLevelFilter: DeclFilter = FilterFun.ALL) {
 
-  private val renaming = new IncrementalRenaming(tracker)
   private val deepcopy = DeepCopy(tracker)
   private def deepCopy(ex: TlaEx): TlaEx = renaming(deepcopy.deepCopyEx(ex))
 
@@ -144,8 +143,8 @@ class Inliner(
       if (substitution.isEmpty) freshBody
       else new TypeSubstitutor(tracker, substitution)(freshBody)
 
-    // To make a local definition, we use a fresh name
-    val newName = nameGenerator.newName()
+    // To make a local definition, we use a fresh name, derived from the original name, but renamed to get a fresh $N
+    val newName = renaming.apply(NameEx(decl.name)(decl.typeTag)).asInstanceOf[NameEx].name
     val newLocalDecl = TlaOperDecl(newName, decl.formalParams, newBody)(tpTag)
 
     LetInEx(NameEx(newName)(tpTag), newLocalDecl)(tpTag)
