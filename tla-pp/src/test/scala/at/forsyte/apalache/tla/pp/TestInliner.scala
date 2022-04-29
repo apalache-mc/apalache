@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
+import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.tla.pp.Inliner.emptyScope
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
@@ -18,14 +19,16 @@ class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
 
   def mkModule(decls: TlaDecl*): TlaModule = TlaModule("M", decls)
 
-  var inlinerKeepNullary = new Inliner(new IdleTracker, new UniqueNameGenerator)
-  var inlinerInlineNullary = new Inliner(new IdleTracker, new UniqueNameGenerator, keepNullary = false)
+  var renaming = new IncrementalRenaming(new IdleTracker)
+  var inlinerKeepNullary = new Inliner(new IdleTracker, renaming)
+  var inlinerInlineNullary = new Inliner(new IdleTracker, renaming, keepNullary = false)
 
   def runFresh[T](scopeFn: Scope => T): T = scopeFn(Inliner.emptyScope)
 
   override def beforeEach(): Unit = {
-    inlinerKeepNullary = new Inliner(new IdleTracker, new UniqueNameGenerator)
-    inlinerInlineNullary = new Inliner(new IdleTracker, new UniqueNameGenerator, keepNullary = false)
+    renaming = new IncrementalRenaming(new IdleTracker)
+    inlinerKeepNullary = new Inliner(new IdleTracker, renaming)
+    inlinerInlineNullary = new Inliner(new IdleTracker, renaming, keepNullary = false)
   }
 
   test("LET inline: LET A(p) == e IN A(x) ~~> e[x/p]") {

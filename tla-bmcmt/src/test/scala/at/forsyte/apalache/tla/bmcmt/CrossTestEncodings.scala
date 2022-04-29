@@ -8,6 +8,8 @@ import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper}
+import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
+import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import ch.qos.logback.classic.{Level, Logger}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
@@ -102,6 +104,8 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
   }
   private val irGen = new IrGenerators {}
 
+  private val renaming = new IncrementalRenaming(new IdleTracker)
+
   /**
    * Rewrite elem \in Set ~~> \E elem$selected \in Set: elem' := elem$selected.
    */
@@ -153,8 +157,8 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
     val solverContext =
       new Z3SolverContext(new SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = smtEncoding))
     val rewriter: SymbStateRewriterImpl = smtEncoding match {
-      case `oopsla19Encoding` => new SymbStateRewriterImpl(solverContext)
-      case `arraysEncoding`   => new SymbStateRewriterImplWithArrays(solverContext)
+      case `oopsla19Encoding` => new SymbStateRewriterImpl(solverContext, renaming)
+      case `arraysEncoding`   => new SymbStateRewriterImplWithArrays(solverContext, renaming)
     }
 
     val ctx = new IncrementalExecutionContext(rewriter)
