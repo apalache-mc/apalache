@@ -14,8 +14,7 @@ class TestSeqModelCheckerWithArrays extends TestSeqModelCheckerTrait {
   override protected def withFixture(test: OneArgTest): Outcome = {
     val solver = RecordingSolverContext
       .createZ3(None, SolverConfig(debug = false, profile = false, 0, smtEncoding = arraysEncoding))
-    val rewriter = new SymbStateRewriterImpl(solver, new UniqueNameGenerator, new IncrementalRenaming(new IdleTracker),
-        new ExprGradeStoreImpl)
+    val rewriter = new SymbStateRewriterImpl(solver, new IncrementalRenaming(new IdleTracker), new ExprGradeStoreImpl)
     test(rewriter)
   }
 }

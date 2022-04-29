@@ -170,7 +170,7 @@ class TestSourceLocator extends AnyFunSuite {
   }
 
   test("Test Inline") {
-    val transformation = new Inliner(tracker, nameGen, renaming).transformEx
+    val transformation = new Inliner(tracker, renaming).transformEx
 
     testTransformation(transformation)
   }

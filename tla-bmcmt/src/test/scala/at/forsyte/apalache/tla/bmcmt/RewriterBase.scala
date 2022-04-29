@@ -29,8 +29,8 @@ trait RewriterBase extends FixtureAnyFunSuite {
 
   protected def createWithoutCache(rewriterType: SMTEncoding): SymbStateRewriter = {
     rewriterType match {
-      case `oopsla19Encoding` => new SymbStateRewriterImpl(solverContext, nameGenerator, renaming)
-      case `arraysEncoding`   => new SymbStateRewriterImplWithArrays(solverContext, nameGenerator, renaming)
+      case `oopsla19Encoding` => new SymbStateRewriterImpl(solverContext, renaming)
+      case `arraysEncoding`   => new SymbStateRewriterImplWithArrays(solverContext, renaming)
       case oddRewriterType =>
         throw new IllegalArgumentException(s"Unexpected cacheless rewriter of type $oddRewriterType")
     }

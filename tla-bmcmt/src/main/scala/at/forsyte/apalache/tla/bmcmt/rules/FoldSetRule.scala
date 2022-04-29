@@ -16,8 +16,7 @@ import at.forsyte.apalache.tla.pp.{Inliner, UniqueNameGenerator}
  * @author
  *   Jure Kukovec
  */
-class FoldSetRule(rewriter: SymbStateRewriter, nameGenerator: UniqueNameGenerator, renaming: IncrementalRenaming)
-    extends RewritingRule {
+class FoldSetRule(rewriter: SymbStateRewriter, renaming: IncrementalRenaming) extends RewritingRule {
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -78,7 +77,7 @@ class FoldSetRule(rewriter: SymbStateRewriter, nameGenerator: UniqueNameGenerato
       )
 
       // expressions are transient, we don't need tracking
-      val inliner = new Inliner(new IdleTracker, nameGenerator, renaming)
+      val inliner = new Inliner(new IdleTracker, renaming)
       // We can make the scope directly, since InlinePass already ensures all is well.
       val seededScope: Inliner.Scope = Map(opDecl.name -> opDecl)
 

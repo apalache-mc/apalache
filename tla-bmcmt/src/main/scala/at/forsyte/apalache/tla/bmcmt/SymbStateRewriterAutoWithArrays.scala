@@ -10,5 +10,5 @@ class SymbStateRewriterAutoWithArrays(
     renaming: IncrementalRenaming)
     extends SymbStateRewriterAuto(_solverContext, nameGenerator, renaming) {
   override protected val impl =
-    new SymbStateRewriterImplWithArrays(solverContext, nameGenerator, renaming, exprGradeStore)
+    new SymbStateRewriterImplWithArrays(solverContext, renaming, exprGradeStore)
 }

@@ -17,8 +17,8 @@ class TestTransitionExecutorWithOfflineAndArrays extends TestTransitionExecutorI
       .createZ3(None, SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = arraysEncoding))
     val nameGen = new UniqueNameGenerator
     val renaming = new IncrementalRenaming(new IdleTracker)
-    val rewriter = new SymbStateRewriterImpl(solver, nameGen, renaming, new ExprGradeStoreImpl())
-    val exeCtx = new OfflineExecutionContext(rewriter, nameGen, renaming)
+    val rewriter = new SymbStateRewriterImpl(solver, renaming, new ExprGradeStoreImpl())
+    val exeCtx = new OfflineExecutionContext(rewriter, renaming)
     try {
       test(exeCtx)
     } finally {

@@ -28,7 +28,6 @@ class BoundedCheckerPassImpl @Inject() (
     exprGradeStore: ExprGradeStore,
     sourceStore: SourceStore,
     changeListener: ChangeListener,
-    nameGenerator: UniqueNameGenerator,
     renaming: IncrementalRenaming)
     extends BoundedCheckerPass with LazyLogging {
 
@@ -111,10 +110,9 @@ class BoundedCheckerPassImpl @Inject() (
 
     val rewriter: SymbStateRewriterImpl = params.smtEncoding match {
       case `oopsla19Encoding` =>
-        new SymbStateRewriterImpl(solverContext, nameGenerator, renaming, exprGradeStore, metricProfilerListener)
+        new SymbStateRewriterImpl(solverContext, renaming, exprGradeStore, metricProfilerListener)
       case `arraysEncoding` =>
-        new SymbStateRewriterImplWithArrays(solverContext, nameGenerator, renaming, exprGradeStore,
-            metricProfilerListener)
+        new SymbStateRewriterImplWithArrays(solverContext, renaming, exprGradeStore, metricProfilerListener)
       case oddEncoding => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
     }
 
@@ -147,15 +145,15 @@ class BoundedCheckerPassImpl @Inject() (
     }
 
     val rewriter: SymbStateRewriterImpl = params.smtEncoding match {
-      case `oopsla19Encoding` => new SymbStateRewriterImpl(solverContext, nameGenerator, renaming, exprGradeStore)
+      case `oopsla19Encoding` => new SymbStateRewriterImpl(solverContext, renaming, exprGradeStore)
       case `arraysEncoding` =>
-        new SymbStateRewriterImplWithArrays(solverContext, nameGenerator, renaming, exprGradeStore)
+        new SymbStateRewriterImplWithArrays(solverContext, renaming, exprGradeStore)
       case oddEncoding => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
     }
     rewriter.config = RewriterConfig(tuning)
 
     type SnapshotT = OfflineExecutionContextSnapshot
-    val executorContext = new OfflineExecutionContext(rewriter, nameGenerator, renaming)
+    val executorContext = new OfflineExecutionContext(rewriter, renaming)
     val trex = new TransitionExecutorImpl[SnapshotT](params.consts, params.vars, executorContext)
     val filteredTrex = new FilteredTransitionExecutor[SnapshotT](params.transitionFilter, params.invFilter, trex)
 

@@ -12,10 +12,7 @@ import com.typesafe.scalalogging.LazyLogging
  * @param rewriter
  *   an expression rewriter
  */
-class OfflineExecutionContext(
-    var rewriter: SymbStateRewriter,
-    nameGenerator: UniqueNameGenerator,
-    renaming: IncrementalRenaming)
+class OfflineExecutionContext(var rewriter: SymbStateRewriter, renaming: IncrementalRenaming)
     extends ExecutionContext[OfflineExecutionContextSnapshot] with LazyLogging {
 
   /**
@@ -50,9 +47,9 @@ class OfflineExecutionContext(
     // TODO: issue #105, remove references to SolverContext, so recovery becomes less of a hack
     val newRewriter = rewriter match {
       case _: SymbStateRewriterImplWithArrays =>
-        new SymbStateRewriterImplWithArrays(solver, nameGenerator, renaming, rewriter.exprGradeStore)
+        new SymbStateRewriterImplWithArrays(solver, renaming, rewriter.exprGradeStore)
       case _: SymbStateRewriterImpl =>
-        new SymbStateRewriterImpl(solver, nameGenerator, renaming, rewriter.exprGradeStore)
+        new SymbStateRewriterImpl(solver, renaming, rewriter.exprGradeStore)
       case oddRewriterType => throw new IllegalArgumentException(s"Unexpected rewriter of type $oddRewriterType")
     }
     newRewriter.config = rewriter.config

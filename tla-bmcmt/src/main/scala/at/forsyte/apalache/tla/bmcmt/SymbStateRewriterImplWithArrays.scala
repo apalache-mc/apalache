@@ -24,11 +24,10 @@ import at.forsyte.apalache.tla.pp.UniqueNameGenerator
  */
 class SymbStateRewriterImplWithArrays(
     _solverContext: SolverContext,
-    nameGenerator: UniqueNameGenerator,
     renaming: IncrementalRenaming,
     exprGradeStore: ExprGradeStore = new ExprGradeStoreImpl(),
     profilerListener: Option[MetricProfilerListener] = None)
-    extends SymbStateRewriterImpl(_solverContext, nameGenerator, renaming, exprGradeStore, profilerListener) {
+    extends SymbStateRewriterImpl(_solverContext, renaming, exprGradeStore, profilerListener) {
 
   @transient
   override lazy val ruleLookupTable: Map[String, List[RewritingRule]] = defaultRuleLookupTable ++ newRules

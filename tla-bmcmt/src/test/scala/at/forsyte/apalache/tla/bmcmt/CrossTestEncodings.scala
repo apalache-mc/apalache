@@ -105,7 +105,6 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
   }
   private val irGen = new IrGenerators {}
 
-  private val nameGen = new UniqueNameGenerator
   private val renaming = new IncrementalRenaming(new IdleTracker)
 
   /**
@@ -159,8 +158,8 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
     val solverContext =
       new Z3SolverContext(new SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = smtEncoding))
     val rewriter: SymbStateRewriterImpl = smtEncoding match {
-      case `oopsla19Encoding` => new SymbStateRewriterImpl(solverContext, nameGen, renaming)
-      case `arraysEncoding`   => new SymbStateRewriterImplWithArrays(solverContext, nameGen, renaming)
+      case `oopsla19Encoding` => new SymbStateRewriterImpl(solverContext, renaming)
+      case `arraysEncoding`   => new SymbStateRewriterImplWithArrays(solverContext, renaming)
     }
 
     val ctx = new IncrementalExecutionContext(rewriter)

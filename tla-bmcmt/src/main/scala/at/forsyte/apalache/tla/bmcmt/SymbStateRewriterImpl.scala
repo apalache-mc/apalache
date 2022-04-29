@@ -41,7 +41,6 @@ import scala.collection.mutable
  */
 class SymbStateRewriterImpl(
     private var _solverContext: SolverContext,
-    val nameGenerator: UniqueNameGenerator,
     val renaming: IncrementalRenaming,
     val exprGradeStore: ExprGradeStore = new ExprGradeStoreImpl(),
     val profilerListener: Option[MetricProfilerListener] = None)
@@ -303,11 +302,11 @@ class SymbStateRewriterImpl(
           -> List(new GenRule(this)),
         // folds and MkSeq
         key(OperEx(ApalacheOper.foldSet, tla.name("A"), tla.name("v"), tla.name("S")))
-          -> List(new FoldSetRule(this, nameGenerator, renaming)),
+          -> List(new FoldSetRule(this, renaming)),
         key(OperEx(ApalacheOper.foldSeq, tla.name("A"), tla.name("v"), tla.name("s")))
-          -> List(new FoldSeqRule(this, nameGenerator, renaming)),
+          -> List(new FoldSeqRule(this, renaming)),
         key(OperEx(ApalacheOper.mkSeq, tla.int(10), tla.name("A")))
-          -> List(new MkSeqRule(this, nameGenerator, renaming)),
+          -> List(new MkSeqRule(this, renaming)),
     )
   } ///// ADD YOUR RULES ABOVE
 

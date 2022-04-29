@@ -26,8 +26,7 @@ trait ExecutorBase[SnapshotT] extends FixtureAnyFunSuite {
       solver: SolverContext,
       exeCtxFactory: SymbStateRewriterImpl => ExecutorContextT,
       test: OneArgTest): Outcome = {
-    val rewriter = new SymbStateRewriterImpl(solver, new UniqueNameGenerator, new IncrementalRenaming(new IdleTracker),
-        new ExprGradeStoreImpl())
+    val rewriter = new SymbStateRewriterImpl(solver, new IncrementalRenaming(new IdleTracker), new ExprGradeStoreImpl())
     val exeCtx = exeCtxFactory(rewriter)
 
     // Tmp file to capture the noisy stdout from these tests

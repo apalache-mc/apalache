@@ -39,8 +39,7 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
 
     // create utility objects
     val solver = RecordingSolverContext.createZ3(None, SolverConfig.default)
-    val rewriter = new SymbStateRewriterImpl(solver, new UniqueNameGenerator, new IncrementalRenaming(new IdleTracker),
-        new ExprGradeStoreImpl)
+    val rewriter = new SymbStateRewriterImpl(solver, new IncrementalRenaming(new IdleTracker), new ExprGradeStoreImpl)
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
 

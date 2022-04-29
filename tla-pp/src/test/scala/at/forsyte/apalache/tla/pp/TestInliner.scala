@@ -20,15 +20,15 @@ class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
   def mkModule(decls: TlaDecl*): TlaModule = TlaModule("M", decls)
 
   var renaming = new IncrementalRenaming(new IdleTracker)
-  var inlinerKeepNullary = new Inliner(new IdleTracker, new UniqueNameGenerator, renaming)
-  var inlinerInlineNullary = new Inliner(new IdleTracker, new UniqueNameGenerator, renaming, keepNullary = false)
+  var inlinerKeepNullary = new Inliner(new IdleTracker, renaming)
+  var inlinerInlineNullary = new Inliner(new IdleTracker, renaming, keepNullary = false)
 
   def runFresh[T](scopeFn: Scope => T): T = scopeFn(Inliner.emptyScope)
 
   override def beforeEach(): Unit = {
     renaming = new IncrementalRenaming(new IdleTracker)
-    inlinerKeepNullary = new Inliner(new IdleTracker, new UniqueNameGenerator, renaming)
-    inlinerInlineNullary = new Inliner(new IdleTracker, new UniqueNameGenerator, renaming, keepNullary = false)
+    inlinerKeepNullary = new Inliner(new IdleTracker, renaming)
+    inlinerInlineNullary = new Inliner(new IdleTracker, renaming, keepNullary = false)
   }
 
   test("LET inline: LET A(p) == e IN A(x) ~~> e[x/p]") {
