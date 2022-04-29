@@ -7,7 +7,6 @@ import at.forsyte.apalache.tla.bmcmt.rules._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
-import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 
 /**
  * This class extends SymbStateRewriterImpl with encoding rules for the encoding with SMT arrays.

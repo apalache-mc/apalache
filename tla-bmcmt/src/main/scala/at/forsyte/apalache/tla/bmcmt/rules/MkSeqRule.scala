@@ -10,7 +10,7 @@ import at.forsyte.apalache.tla.lir.oper.{ApalacheInternalOper, ApalacheOper, Tla
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.pp.{Inliner, TlaInputError, UniqueNameGenerator}
+import at.forsyte.apalache.tla.pp.{Inliner, TlaInputError}
 
 /**
  * Rewriting rule for MkSeq. This rule is similar to [[FoldSeqRule]].

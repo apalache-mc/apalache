@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
-import at.forsyte.apalache.tla.pp.{Inliner, UniqueNameGenerator}
+import at.forsyte.apalache.tla.pp.Inliner
 
 /**
  * Rewriting rule for FoldSeq, which implements left-fold over sequences. Unlike FoldSet, we do not need to consider

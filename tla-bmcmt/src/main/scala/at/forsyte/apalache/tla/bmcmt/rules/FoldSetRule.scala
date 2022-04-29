@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
-import at.forsyte.apalache.tla.pp.{Inliner, UniqueNameGenerator}
+import at.forsyte.apalache.tla.pp.Inliner
 
 /**
  * Rewriting rule for FoldSet. Similar to Cardinality, we need to consider element set presence and multiplicity.

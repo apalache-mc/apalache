@@ -5,7 +5,6 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
-import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import org.scalatest.funsuite.FixtureAnyFunSuite
 
 import java.io.StringWriter
@@ -16,13 +15,12 @@ trait RewriterBase extends FixtureAnyFunSuite {
   protected var solverContext: SolverContext = _
   protected var arena: Arena = _
 
-  protected val nameGenerator = new UniqueNameGenerator
   protected val renaming = new IncrementalRenaming(new IdleTracker)
 
   protected def create(rewriterType: SMTEncoding): SymbStateRewriter = {
     rewriterType match {
-      case `oopsla19Encoding` => new SymbStateRewriterAuto(solverContext, nameGenerator, renaming)
-      case `arraysEncoding`   => new SymbStateRewriterAutoWithArrays(solverContext, nameGenerator, renaming)
+      case `oopsla19Encoding` => new SymbStateRewriterAuto(solverContext, renaming)
+      case `arraysEncoding`   => new SymbStateRewriterAutoWithArrays(solverContext, renaming)
       case oddRewriterType    => throw new IllegalArgumentException(s"Unexpected rewriter of type $oddRewriterType")
     }
   }

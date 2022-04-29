@@ -8,7 +8,6 @@ import at.forsyte.apalache.tla.bmcmt.rewriter.{RewriterConfig, SymbStateRewriter
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
-import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 
 /**
  * A decorator of SymbStateRewriter that automatically preprocesses every given expression. Normally, TLA+
@@ -19,10 +18,7 @@ import at.forsyte.apalache.tla.pp.UniqueNameGenerator
  * @author
  *   Igor Konnov
  */
-class SymbStateRewriterAuto(
-    private var _solverContext: SolverContext,
-    nameGenerator: UniqueNameGenerator,
-    renaming: IncrementalRenaming)
+class SymbStateRewriterAuto(private var _solverContext: SolverContext, renaming: IncrementalRenaming)
     extends SymbStateRewriter {
 
   /**
