@@ -7,7 +7,6 @@ import at.forsyte.apalache.tla.lir.{
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 import scala.collection.immutable.SortedMap
-import scala.math.Ordering.Implicits._
 
 package object types {
   // @Jure 29.10.2017: Change name, too ambiguous, especially with TLA Types in the other package -- Jure, 29.10.17
@@ -326,7 +325,7 @@ package object types {
    * TODO: in the future, we will replace domType with argType, as we are moving towards a minimalistic type system
    *
    * @param domType
-   *   the type of the domain (a finite set, a powerset, or a cross product).
+   *   the type of the domain a finite set.
    * @param resultType
    *   result type (not the co-domain!)
    */
@@ -335,7 +334,6 @@ package object types {
 
     val argType: CellT = domType match {
       case FinSetT(et) => et
-      case PowSetT(dt) => dt
       case _           => throw new TypingException(s"Unexpected domain type $domType", UID.nullId)
     }
 
