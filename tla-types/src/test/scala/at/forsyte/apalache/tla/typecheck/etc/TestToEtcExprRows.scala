@@ -35,9 +35,10 @@ class TestToEtcExprRows extends AnyFunSuite with BeforeAndAfterEach with ToEtcEx
     assert(expected == gen(tla.recSet(tla.str("x"), tla.name("S"), tla.str("y"), tla.name("T"))))
   }
 
-  test("invalid field string in record set construction") {
+  test("invalid field in record set construction") {
     val invalid = "invalidName"
     val exn = intercept[IllegalArgumentException](
+        // record sets expect ValEx(TlaStr(_)), whereas we pass NameEx(_)
         gen(tla.recSet(tla.name(invalid), tla.str("x")))
     )
     assert(exn.getMessage.contains(invalid))
