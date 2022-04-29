@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, S
 import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.{BoolT1, TlaEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, SetT1, TlaEx}
 
 /**
  * Rewrites set membership tests: x \in S, x \in SUBSET S, and x \in [S -> T].
@@ -20,7 +20,7 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
 
   override protected def powSetIn(state: SymbState, powsetCell: ArenaCell, elemCell: ArenaCell): SymbState = {
     def checkType: PartialFunction[(CellT, CellT), Unit] = {
-      case (PowSetT(FinSetT(expectedType)), FinSetT(actualType)) =>
+      case (PowSetT(SetT1(expectedType)), CellTFrom(SetT1(actualType))) =>
         assert(expectedType == actualType)
     }
     // double check that the type finder did its job
@@ -34,7 +34,7 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
     var newState = rewriter.lazyEq.cacheEqConstraints(state, setElems.cross(powsetDomainElems))
 
     def isInPowset(setElem: ArenaCell): TlaEx = {
-      newState = newState.updateArena(_.appendCell(BoolT()))
+      newState = newState.updateArena(_.appendCell(BoolT1()))
       val pred = newState.arena.topCell
 
       def isInAndEqSetElem(powsetDomainElem: ArenaCell) = {
@@ -52,7 +52,7 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
     }
 
     val isSubset = simplifier.simplifyShallow(tla.and(setElems.map(isInPowset): _*))
-    newState = newState.updateArena(_.appendCell(BoolT()))
+    newState = newState.updateArena(_.appendCell(BoolT1()))
     val pred = newState.arena.topCell.toNameEx
     rewriter.solverContext.assertGroundExpr(tla.eql(pred, isSubset))
     newState.setRex(pred)
@@ -67,8 +67,8 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
     }
 
     funCell.cellType match {
-      case FunT(FinSetT(_), _) => () // OK
-      case _                   => flagTypeError()
+      case FunT(CellTFrom(SetT1(_)), _) => () // OK
+      case _                            => flagTypeError()
     }
     funsetCell.cellType match {
       case FinFunSetT(PowSetT(_), _) | FinFunSetT(FinFunSetT(_, _), _) => flagTypeError()
@@ -81,7 +81,7 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
     val funsetCdm = state.arena.getCdm(funsetCell)
     var nextState = state
 
-    nextState = nextState.updateArena(_.appendCell(BoolT()))
+    nextState = nextState.updateArena(_.appendCell(BoolT1()))
     val pred = nextState.arena.topCell
 
     def onFun(funsetDomElem: ArenaCell): TlaEx = {
@@ -117,7 +117,7 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
       // the set cell points to no other cell => return false
       state.setRex(state.arena.cellFalse().toNameEx)
     } else {
-      var nextState = state.updateArena(_.appendCell(BoolT()))
+      var nextState = state.updateArena(_.appendCell(BoolT1()))
       val pred = nextState.arena.topCell.toNameEx
 
       // EqConstraints need to be generated, since missing in-relations, e.g. in sets of tuples, will lead to errors.

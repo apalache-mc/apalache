@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, PowSetT}
-import at.forsyte.apalache.tla.lir.OperEx
+import at.forsyte.apalache.tla.bmcmt.types.{CellTFrom, PowSetT}
+import at.forsyte.apalache.tla.lir.{OperEx, SetT1}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
@@ -35,10 +35,10 @@ class SetInclusionRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val rightState = rewriter.rewriteUntilDone(leftState.setRex(right))
         val rightCell = rightState.arena.findCellByNameEx(rightState.ex)
         (leftCell.cellType, rightCell.cellType) match {
-          case (FinSetT(_), FinSetT(_)) =>
+          case (CellTFrom(SetT1(_)), CellTFrom(SetT1(_))) =>
             rewriter.lazyEq.subsetEq(rightState, leftCell, rightCell)
 
-          case (FinSetT(FinSetT(t1)), PowSetT(FinSetT(t2))) =>
+          case (CellTFrom(SetT1(SetT1(t1))), PowSetT(SetT1(t2))) =>
             if (t1 != t2) {
               throw new RewriterException("Unexpected set types: %s and %s in %s"
                     .format(t1, t2, state.ex), state.ex)

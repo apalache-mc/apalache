@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.FinSetT
+import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
-import at.forsyte.apalache.tla.lir.{OperEx, TypingException}
+import at.forsyte.apalache.tla.lir.{OperEx, SetT1, TypingException}
 
 /**
  * Implements the rule for a union of all set elements, that is, UNION S for a set S that contains sets as elements.
@@ -30,7 +30,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val topSetCell = nextState.asCell
         val elemType =
           topSetCell.cellType match {
-            case FinSetT(FinSetT(et)) =>
+            case CellTFrom(SetT1(SetT1(et))) =>
               et
 
             case _ =>
@@ -42,7 +42,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         val unionOfSets = elemsOfSets.foldLeft(Set[ArenaCell]())(_.union(_))
         // introduce a set cell
-        nextState = nextState.updateArena(_.appendCell(FinSetT(elemType)))
+        nextState = nextState.updateArena(_.appendCell(SetT1(elemType)))
         val newSetCell = nextState.arena.topCell
 
         if (unionOfSets.isEmpty) {

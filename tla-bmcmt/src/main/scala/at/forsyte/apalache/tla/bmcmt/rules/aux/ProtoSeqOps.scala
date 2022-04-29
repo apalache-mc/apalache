@@ -1,10 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.types.{CellT, UnknownT}
+import at.forsyte.apalache.tla.bmcmt.types.UnknownT
 import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
-import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.convenience.tla
 
 import scala.collection.immutable.ArraySeq
 
@@ -247,7 +247,7 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
       seqT: TlaType1,
       protoSeq: ArenaCell,
       len: ArenaCell): (Arena, ArenaCell) = {
-    var newArena = arena.appendCell(CellT.fromType1(seqT))
+    var newArena = arena.appendCell(seqT)
     val seq = newArena.topCell
     // note that we do not track in SMT the relation between the sequence, the proto sequence, and its length
     newArena = newArena.appendHasNoSmt(seq, len, protoSeq)

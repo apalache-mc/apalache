@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, ProtoSeqOps}
-import at.forsyte.apalache.tla.bmcmt.types.IntT
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -157,7 +156,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val newEndBase1 = nextState.asCell
     // Computing the new length is quite tricky, as the users may mess up both start and end.
     // We are trying to compensate for this. This is different from the behavior of TLC though.
-    nextState = nextState.updateArena(_.appendCell(IntT()))
+    nextState = nextState.updateArena(_.appendCell(IntT1()))
     val adjustedStart = nextState.arena.topCell
 
     def solverAssert: TlaEx => Unit = rewriter.solverContext.assertGroundExpr
@@ -171,7 +170,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
               tla.ite(tla.gt(newStartBase1asInt, tla.int(0)).as(BoolT1()), newStartBase1asInt, tla.int(1)).as(IntT1()))
           .as(BoolT1()))
     // adjustedEnd = IF newEndBase1 <= len THEN newEndBase1 ELSE len
-    nextState = nextState.updateArena(_.appendCell(IntT()))
+    nextState = nextState.updateArena(_.appendCell(IntT1()))
     val adjustedEnd = nextState.arena.topCell
     val newEndBase1asInt = asInt(newEndBase1)
     solverAssert(tla
@@ -195,7 +194,7 @@ class SeqOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val newProtoSeq = nextState.asCell
 
     // newLen = IF adjustedEnd >= adjustedStart THEN 1 + adjustedEnd - adjustedStart ELSE 0
-    nextState = nextState.updateArena(_.appendCell(IntT()))
+    nextState = nextState.updateArena(_.appendCell(IntT1()))
     val newLen = nextState.arena.topCell
     solverAssert(tla
           .eql(asInt(newLen),

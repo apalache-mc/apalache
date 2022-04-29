@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -41,7 +40,7 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         // introduce a new set
         val newType = state.ex.typeTag.asTlaType1()
-        nextState = nextState.updateArena(_.appendCell(CellT.fromType1(newType)))
+        nextState = nextState.updateArena(_.appendCell(newType))
         val newSetCell = nextState.arena.topCell
         val allDistinct = common.toSeq ++ onlyLeft.toSeq ++ onlyRight.toSeq
         nextState = nextState.updateArena(_.appendHas(newSetCell, allDistinct: _*))

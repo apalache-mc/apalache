@@ -8,8 +8,7 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs.{tlaExToBuilderExAsTyped, BuilderExAsTyped}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, NullEx, TlaEx}
-import at.forsyte.apalache.tla.typecheck.ModelValueHandler
+import at.forsyte.apalache.tla.lir._
 import scalaz.unused
 
 /**
@@ -133,23 +132,24 @@ class LazyEquality(rewriter: SymbStateRewriter)
       // generate constraints
       val newState =
         (left.cellType, right.cellType) match {
-          case (UnknownT(), UnknownT()) | (BoolT(), _) | (_, BoolT()) | (IntT(), IntT()) | (ConstT(_), ConstT(_)) =>
+          case (UnknownT(), UnknownT()) | (CellTFrom(BoolT1()), _) | (_, CellTFrom(BoolT1())) |
+              (CellTFrom(IntT1()), CellTFrom(IntT1())) | (CellTFrom(ConstT1(_)), CellTFrom(ConstT1(_))) =>
             eqCache.put(left, right, EqCache.EqEntry())
             state // nothing to do, just use the built-in equality
 
-          case (FinSetT(_), FinSetT(_)) =>
+          case (CellTFrom(SetT1(_)), CellTFrom(SetT1(_))) =>
             mkSetEq(state, left, right)
 
           case (FunT(_, _), FunT(_, _)) =>
             mkFunEq(state, left, right)
 
-          case (RecordT(_), RecordT(_)) =>
+          case (CellTFrom(RecT1(_)), CellTFrom(RecT1(_))) =>
             mkRecordEq(state, left, right)
 
-          case (TupleT(_), TupleT(_)) =>
+          case (CellTFrom(TupT1(_)), CellTFrom(TupT1(_))) =>
             mkTupleEq(state, left, right)
 
-          case (SeqT(_), SeqT(_)) =>
+          case (CellTFrom(SeqT1(_)), CellTFrom(SeqT1(_))) =>
             mkSeqEq(state, left, right)
 
           case (FinFunSetT(_, _), FinFunSetT(_, _)) =>
@@ -235,27 +235,19 @@ class LazyEquality(rewriter: SymbStateRewriter)
         state
 
       case `oopsla19Encoding` =>
-        if (left.cellType == FinSetT(UnknownT()) && state.arena.getHas(left).isEmpty) {
-          // The statically empty set is a very special case, as its element type is unknown.
-          // Hence, we cannot use SMT equality, as it does not work with different sorts.
-          mkEmptySetEq(state, left, right)
-        } else if (right.cellType == FinSetT(UnknownT()) && state.arena.getHas(right).isEmpty) {
-          mkEmptySetEq(state, right, left) // same here
-        } else {
-          // in general, we need 2 * |X| * |Y| comparisons
-          val leftToRight: SymbState = subsetEq(state, left, right)
-          val rightToLeft: SymbState = subsetEq(leftToRight, right, left)
-          // the type checker makes sure that this holds true
-          assert(left.cellType.signature == right.cellType.signature)
-          // These two sets have the same signature and thus belong to the same sort.
-          // Hence, we can use SMT equality.
-          val eq = tla.equiv(tla.eql(left.toNameEx, right.toNameEx), tla.and(leftToRight.ex, rightToLeft.ex))
-          rewriter.solverContext.assertGroundExpr(eq)
-          eqCache.put(left, right, EqCache.EqEntry())
+        // in general, we need 2 * |X| * |Y| comparisons
+        val leftToRight: SymbState = subsetEq(state, left, right)
+        val rightToLeft: SymbState = subsetEq(leftToRight, right, left)
+        // the type checker makes sure that this holds true
+        assert(left.cellType.signature == right.cellType.signature)
+        // These two sets have the same signature and thus belong to the same sort.
+        // Hence, we can use SMT equality.
+        val eq = tla.equiv(tla.eql(left.toNameEx, right.toNameEx), tla.and(leftToRight.ex, rightToLeft.ex))
+        rewriter.solverContext.assertGroundExpr(eq)
+        eqCache.put(left, right, EqCache.EqEntry())
 
-          // recover the original expression
-          rightToLeft.setRex(state.ex)
-        }
+        // recover the original expression
+        rightToLeft.setRex(state.ex)
 
       case oddEncodingType =>
         throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
@@ -276,25 +268,6 @@ class LazyEquality(rewriter: SymbStateRewriter)
 
     // recover the original expression and theory
     nextState.setRex(state.ex)
-  }
-
-  // statically empty sets should be handled with care
-  private def mkEmptySetEq(state: SymbState, emptySet: ArenaCell, otherSet: ArenaCell): SymbState = {
-    val otherElems = state.arena.getHas(otherSet)
-    if (otherElems.isEmpty) {
-      // That's simple. Two statically empty sets are equal.
-      eqCache.put(emptySet, otherSet, EqCache.TrueEntry())
-      state
-    } else {
-      // The other set might be empty in some models. Add a predicate.
-      val newState = state.updateArena(_.appendCell(BoolT()))
-      val pred = newState.arena.topCell
-      val emptyEx = tla.and(otherElems.map(e => tla.not(tla.apalacheSelectInSet(e.toNameEx, otherSet.toNameEx))): _*)
-      rewriter.solverContext.assertGroundExpr(tla.eql(pred.toNameEx, emptyEx))
-      // this predicate will be later used as an equality test
-      eqCache.put(emptySet, otherSet, EqCache.ExprEntry(pred.toNameEx))
-      newState
-    }
   }
 
   /**
@@ -323,7 +296,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
         tla.not(tla.apalacheSelectInSet(le.toNameEx, left.toNameEx))
       }
 
-      val newState = state.updateArena(_.appendCell(BoolT()))
+      val newState = state.updateArena(_.appendCell(BoolT1()))
       val pred = newState.arena.topCell
       rewriter.solverContext.assertGroundExpr(tla.eql(pred.toNameEx, tla.and(leftElems.map(notIn): _*)))
       newState.setRex(pred.toNameEx)
@@ -349,7 +322,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
         } else {
           // BUG: this produced OOM on the inductive invariant of Paxos
           // BUGFIX: push this query to the solver, in order to avoid constructing enormous assertions
-          newState = newState.updateArena(_.appendCell(BoolT()))
+          newState = newState.updateArena(_.appendCell(BoolT1()))
           val pred = newState.arena.topCell
           rewriter.solverContext.assertGroundExpr(simplifier.simplifyShallow(tla.equiv(pred.toNameEx, notInOrExists)))
           pred.toNameEx
@@ -357,7 +330,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
       }
 
       val forEachNotInOrExists = simplifier.simplifyShallow(tla.and(leftElems.map(notInOrExists): _*))
-      newState = newState.updateArena(_.appendCell(BoolT()))
+      newState = newState.updateArena(_.appendCell(BoolT1()))
       val pred = newState.arena.topCell
       rewriter.solverContext.assertGroundExpr(tla.eql(pred.toNameEx, forEachNotInOrExists))
       newState.setRex(pred.toNameEx)
@@ -464,19 +437,24 @@ class LazyEquality(rewriter: SymbStateRewriter)
   }
 
   private def mkRecordEq(state: SymbState, leftRec: ArenaCell, rightRec: ArenaCell): SymbState = {
-    val leftType = leftRec.cellType.asInstanceOf[RecordT]
-    val rightType = rightRec.cellType.asInstanceOf[RecordT]
+    def extractRecType: CellT => RecT1 = {
+      case CellTFrom(t @ RecT1(_)) => t
+      case ct                      => throw new IllegalStateException("Expected a record type, found: " + ct)
+    }
+
+    val leftType = extractRecType(leftRec.cellType)
+    val rightType = extractRecType(rightRec.cellType)
     val leftDom = state.arena.getDom(leftRec)
     val rightDom = state.arena.getDom(rightRec)
     val leftElems = state.arena.getHas(leftRec)
     val rightElems = state.arena.getHas(rightRec)
     // the intersection of the keys, as we can assume that the static domains are equal
-    val commonKeys = leftType.fields.keySet.intersect(rightType.fields.keySet)
+    val commonKeys = leftType.fieldTypes.keySet.intersect(rightType.fieldTypes.keySet)
     var newState = state
 
     def keyEq(key: String): TlaEx = {
-      val leftIndex = leftType.fields.keySet.toList.indexOf(key)
-      val rightIndex = rightType.fields.keySet.toList.indexOf(key)
+      val leftIndex = leftType.fieldTypes.keySet.toList.indexOf(key)
+      val rightIndex = rightType.fieldTypes.keySet.toList.indexOf(key)
 
       // Our typing rules on records allow records with a subset of the fields in a type
       // which means the function from fields in a record type to elements in an instance
@@ -490,7 +468,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
         case (Some(leftElem), Some(rightElem)) => {
           newState = cacheOneEqConstraint(newState, leftElem, rightElem)
           val (newArena, keyCell) =
-            rewriter.modelValueCache.getOrCreate(newState.arena, (ModelValueHandler.STRING_TYPE, key))
+            rewriter.modelValueCache.getOrCreate(newState.arena, (StrT1().toString, key))
           newState = newState.setArena(newArena)
           // it is safe to use in directly since:
           // (1) the record types coincide,

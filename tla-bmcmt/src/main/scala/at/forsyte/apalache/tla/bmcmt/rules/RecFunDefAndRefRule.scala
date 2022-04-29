@@ -70,8 +70,8 @@ class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // one more safety check, as the domain cell can happen to be a powerset or a function set
     val domainCell = nextState.asCell
     domainCell.cellType match {
-      case FinSetT(et) => et
-      case t @ _       => throw new RewriterException("Expected a finite set, found: " + t, state.ex)
+      case CellTFrom(SetT1(_)) => ()
+      case t @ _               => throw new RewriterException("Expected a finite set, found: " + t, state.ex)
     }
 
     // produce a cell for the function set (no expansion happens there)
