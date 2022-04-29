@@ -137,7 +137,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         tla.str(s"Empty record domain $domCell").typed()
       }
 
-    case CellTFrom(t @ TupT1(_)) =>
+    case CellTFrom(t @ TupT1(_ @_*)) =>
       val tupleElems = arena.getHas(cell)
       val elemAsExprs = tupleElems.map(c => decodeCellToTlaEx(arena, c))
       tla.tuple(elemAsExprs: _*).typed(t)

@@ -33,7 +33,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         (arena, arena.cellFalse())
 
       case StrT1() =>
-        rewriter.modelValueCache.getOrCreate(arena, (StrT1.toString(), "None"))
+        rewriter.modelValueCache.getOrCreate(arena, (StrT1().toString(), "None"))
 
       case ConstT1(utype) =>
         rewriter.modelValueCache.getOrCreate(arena, (utype, "None"))
