@@ -140,7 +140,39 @@ package object types {
 
     override val toString: String = s"PowSet[$domType]"
 
+<<<<<<< HEAD
     override def toTlaType1: TlaType1 = SetT1(domType)
+=======
+    override def toTlaType1: TlaType1 = SetT1(domType.toTlaType1)
+  }
+
+  /**
+   * A function type.
+   *
+   * TODO: in the future, we will replace domType with argType, as we are moving towards a minimalistic type system
+   *
+   * @param domType
+   *   the type of the domain a finite set.
+   * @param resultType
+   *   result type (not the co-domain!)
+   */
+  sealed case class FunT(domType: CellT, resultType: CellT) extends CellT with Serializable {
+    override val signature: String = s"f${domType.signature}_${resultType.signature}"
+
+    val argType: CellT = domType match {
+      case FinSetT(et) => et
+      case _           => throw new TypingException(s"Unexpected domain type $domType", UID.nullId)
+    }
+
+    override val toString: String = s"Fun[$domType, $resultType]"
+
+    override def toTlaType1: TlaType1 = {
+      domType.toTlaType1 match {
+        case SetT1(elemType) => FunT1(elemType, resultType.toTlaType1)
+        case tt              => throw new TypingException("Unexpected function domain type: " + tt, UID.nullId)
+      }
+    }
+>>>>>>> make sure that FunT does not need PowSetT
   }
 
   /**
