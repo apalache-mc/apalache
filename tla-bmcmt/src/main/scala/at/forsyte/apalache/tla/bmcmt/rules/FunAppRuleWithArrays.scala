@@ -85,7 +85,7 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
         // The edges, dom, and cdm are forwarded below
         nextState = nextState.updateArena(_.appendHasNoSmt(res, nextState.arena.getHas(pickedRes): _*))
         pickedRes.cellType match {
-          case FunT(_, _) | CellTFrom(FunT1(_, _)) | FinFunSetT(_, _) =>
+          case CellTFrom(FunT1(_, _)) | FinFunSetT(_, _) =>
             nextState = nextState.updateArena(_.setDom(res, nextState.arena.getDom(pickedRes)))
             nextState = nextState.updateArena(_.setCdm(res, nextState.arena.getCdm(pickedRes)))
 

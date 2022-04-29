@@ -43,7 +43,7 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
           case CellTFrom(SeqT1(_)) =>
             mkSeqDomain(funState, funCell)
 
-          case FunT(_, _) | CellTFrom(FunT1(_, _)) =>
+          case CellTFrom(FunT1(_, _)) =>
             mkFunDomain(funState, funCell)
 
           case _ =>
@@ -89,7 +89,7 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
     // Hence, we group the pairs into a map: key |-> list of pairs. Then, we include the key into the domain
     // if and only if at least one of the pairs belongs to the relation.
     val relation = state.arena.getCdm(funCell)
-    var nextState = state.updateArena(_.appendCell(SetT1(funCell.cellType.asInstanceOf[FunT].argType)))
+    var nextState = state.updateArena(_.appendCell(SetT1(funCell.cellType.toTlaType1.asInstanceOf[FunT1].arg)))
     val domCell = nextState.arena.topCell
 
     def getArg(c: ArenaCell): ArenaCell = nextState.arena.getHas(c).head

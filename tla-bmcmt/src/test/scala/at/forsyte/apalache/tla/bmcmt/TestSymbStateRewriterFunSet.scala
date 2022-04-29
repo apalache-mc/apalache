@@ -101,7 +101,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     val gprime = nextState.binding("g'")
-    assert(FunT(CellTFrom(SetT1(IntT1())), CellTFrom(SetT1(BoolT1()))) == gprime.cellType)
+    assert(CellTFrom(FunT1(IntT1(), SetT1(BoolT1()))) == gprime.cellType)
     solverContext.assertGroundExpr(nextState.ex)
     assert(solverContext.sat())
   }
@@ -142,8 +142,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     val gprime = nextState.binding("g'")
-    assert(FunT(CellTFrom(SetT1(IntT1())),
-        FunT(CellTFrom(SetT1(IntT1())), CellTFrom(SetT1(BoolT1())))) == gprime.cellType)
+    assert(CellTFrom(FunT1(IntT1(), FunT1(IntT1(), SetT1(BoolT1())))) == gprime.cellType)
     solverContext.assertGroundExpr(nextState.ex)
     assert(solverContext.sat())
   }

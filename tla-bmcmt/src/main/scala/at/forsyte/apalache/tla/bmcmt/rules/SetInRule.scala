@@ -92,9 +92,8 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
 
     funCell.cellType match {
-      case FunT(CellTFrom(SetT1(_)), _) => () // OK
-      case CellTFrom(FunT1(_, _))       => () // OK
-      case _                            => flagTypeError()
+      case CellTFrom(FunT1(_, _)) => () // OK
+      case _                      => flagTypeError()
     }
     funsetCell.cellType match {
       case FinFunSetT(PowSetT(_), _) | FinFunSetT(FinFunSetT(_, _), _) =>
