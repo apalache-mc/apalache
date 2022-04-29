@@ -43,7 +43,7 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
           case CellTFrom(SeqT1(_)) =>
             mkSeqDomain(funState, funCell)
 
-          case FunT(_, _) =>
+          case FunT(_, _) | CellTFrom(FunT1(_, _)) =>
             mkFunDomain(funState, funCell)
 
           case _ =>

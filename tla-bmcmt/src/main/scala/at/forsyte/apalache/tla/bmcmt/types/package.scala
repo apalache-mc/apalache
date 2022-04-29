@@ -144,7 +144,7 @@ package object types {
   }
 
   /**
-   * A function type. Once we removed {{{PowSetT}}}, we can replace {{{FunT}}} with {{{FunT1}}}.
+   * A function type. Once we removed {{{PowSetT}}}, we will replace {{{FunT}}} with {{{FunT1}}}.
    *
    * @param domType
    *   the type of the domain (a finite set, a powerset, or a cross product).

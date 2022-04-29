@@ -141,7 +141,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
           case (CellTFrom(SetT1(_)), CellTFrom(SetT1(_))) =>
             mkSetEq(state, left, right)
 
-          case (FunT(_, _), FunT(_, _)) =>
+          case (FunT(_, _) | CellTFrom(FunT1(_, _)), FunT(_, _) | CellTFrom(FunT1(_, _))) =>
             mkFunEq(state, left, right)
 
           case (CellTFrom(RecT1(_)), CellTFrom(RecT1(_))) =>

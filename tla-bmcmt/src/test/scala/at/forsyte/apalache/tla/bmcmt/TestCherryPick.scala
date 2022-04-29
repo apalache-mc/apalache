@@ -334,7 +334,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     val fun1 = mkFun(set12, plus(int(2), name("x") ? "i") ? "i")
     val fun2 = mkFun(set23, mult(int(2), name("x") ? "i") ? "i")
     val funs = Seq(fun1, fun2)
-    val funT = FunT(CellTFrom(SetT1(IntT1())), CellTFrom(IntT1()))
+    val funT = FunT1(SetT1(IntT1()), IntT1())
     state = new CherryPick(rewriter).pickFun(funT, state, oracle, funs, state.arena.cellFalse().toNameEx)
     assert(solverContext.sat())
 

@@ -86,60 +86,11 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         .typed(ffsT.toTlaType1)
 
     case funT @ FunT(_, _) =>
-      val funT1 = funT.toTlaType1.asInstanceOf[FunT1]
+      // this case will be removed later
+      decodeFunToTlaEx(arena, cell, funT.toTlaType1.asInstanceOf[FunT1])
 
-      // a function is represented with the relation {(x, f[x]) : x \in S}
-      val relation = arena.getCdm(cell)
-
-      def isInRelation(pair: ArenaCell): Boolean = {
-        solverContext.config.smtEncoding match {
-          case `arraysEncoding` =>
-            // in the arrays encoding the relation is only represented in the arena
-            // given this, we query the solver about the function's domain instead
-            val domain = arena.getDom(cell)
-
-            def inDom(elem: ArenaCell): TlaEx = {
-              val elemEx = fromTlaEx(elem.toNameEx).typed(funT1.arg)
-              val domEx = fromTlaEx(domain.toNameEx).typed(SetT1(funT1.arg))
-              tla.apalacheSelectInSet(elemEx, domEx).typed(BoolT1())
-            }
-
-            // check if the pair's head is in the domain
-            val funArgs = arena.getHas(pair).head
-            val argsInDom = inDom(funArgs).typed(BoolT1())
-            solverContext.evalGroundExpr(argsInDom) == tla.bool(true).typed(BoolT1())
-
-          case `oopsla19Encoding` =>
-            val mem =
-              tla
-                .apalacheSelectInSet(pair.toNameEx.as(funT1.arg), relation.toNameEx.as(TupT1(funT1.arg, funT1.res)))
-                .as(BoolT1())
-            solverContext.evalGroundExpr(mem) == tla.bool(true).typed(BoolT1())
-
-          case oddEncodingType =>
-            throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
-        }
-      }
-
-      def decodePair(seen: Map[TlaEx, TlaEx], pair: ArenaCell): Map[TlaEx, TlaEx] = {
-        val keyCell :: valueCell :: _ = arena.getHas(pair)
-        val keyEx = decodeCellToTlaEx(arena, keyCell)
-        if (seen.contains(keyEx)) {
-          seen
-        } else {
-          val valueEx = decodeCellToTlaEx(arena, valueCell)
-          seen + (keyEx -> valueEx)
-        }
-      }
-
-      val pairT = TupT1(funT1.arg, funT1.res)
-      val pairs = arena
-        .getHas(relation)
-        .filter(isInRelation)
-        .foldLeft(Map[TlaEx, TlaEx]())(decodePair)
-        .map(p => tla.tuple(p._1, p._2).as(pairT))
-        .toSeq
-      tla.apalacheSetAsFun(tla.enumSet(pairs: _*).as(SetT1(pairT))).as(funT1)
+    case CellTFrom(funT1 @ FunT1(_, _)) =>
+      decodeFunToTlaEx(arena, cell, funT1)
 
     case CellTFrom(SeqT1(elemT1)) =>
       val (protoSeq, lenCell, capacity) = protoSeqOps.unpackSeq(arena, cell)
@@ -207,6 +158,61 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
 
     case _ =>
       throw new RewriterException("Don't know how to decode the cell %s of type %s".format(cell, cell.cellType), NullEx)
+  }
+
+  private def decodeFunToTlaEx(arena: Arena, cell: ArenaCell, funT1: FunT1): TlaEx = {
+    // a function is represented with the relation {(x, f[x]) : x \in S}
+    val relation = arena.getCdm(cell)
+
+    def isInRelation(pair: ArenaCell): Boolean = {
+      solverContext.config.smtEncoding match {
+        case `arraysEncoding` =>
+          // in the arrays encoding the relation is only represented in the arena
+          // given this, we query the solver about the function's domain instead
+          val domain = arena.getDom(cell)
+
+          def inDom(elem: ArenaCell): TlaEx = {
+            val elemEx = fromTlaEx(elem.toNameEx).typed(funT1.arg)
+            val domEx = fromTlaEx(domain.toNameEx).typed(SetT1(funT1.arg))
+            tla.apalacheSelectInSet(elemEx, domEx).typed(BoolT1())
+          }
+
+          // check if the pair's head is in the domain
+          val funArgs = arena.getHas(pair).head
+          val argsInDom = inDom(funArgs).typed(BoolT1())
+          solverContext.evalGroundExpr(argsInDom) == tla.bool(true).typed(BoolT1())
+
+        case `oopsla19Encoding` =>
+          val mem =
+            tla
+              .apalacheSelectInSet(pair.toNameEx.as(funT1.arg), relation.toNameEx.as(TupT1(funT1.arg, funT1.res)))
+              .as(BoolT1())
+          solverContext.evalGroundExpr(mem) == tla.bool(true).typed(BoolT1())
+
+        case oddEncodingType =>
+          throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
+      }
+    }
+
+    def decodePair(seen: Map[TlaEx, TlaEx], pair: ArenaCell): Map[TlaEx, TlaEx] = {
+      val keyCell :: valueCell :: _ = arena.getHas(pair)
+      val keyEx = decodeCellToTlaEx(arena, keyCell)
+      if (seen.contains(keyEx)) {
+        seen
+      } else {
+        val valueEx = decodeCellToTlaEx(arena, valueCell)
+        seen + (keyEx -> valueEx)
+      }
+    }
+
+    val pairT = TupT1(funT1.arg, funT1.res)
+    val pairs = arena
+      .getHas(relation)
+      .filter(isInRelation)
+      .foldLeft(Map[TlaEx, TlaEx]())(decodePair)
+      .map(p => tla.tuple(p._1, p._2).as(pairT))
+      .toSeq
+    tla.apalacheSetAsFun(tla.enumSet(pairs: _*).as(SetT1(pairT))).as(funT1)
   }
 
   private def decodeSet(arena: Arena, set: ArenaCell): Seq[TlaEx] = {

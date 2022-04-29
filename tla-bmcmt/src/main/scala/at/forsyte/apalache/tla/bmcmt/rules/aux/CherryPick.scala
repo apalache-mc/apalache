@@ -6,8 +6,8 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.lir.{
-  BoolT1, ConstT1, IntT1, MalformedSepecificationError, OperEx, RecT1, SeqT1, SetT1, StrT1, TlaEx, TlaType1, TupT1,
-  ValEx,
+  BoolT1, ConstT1, FunT1, IntT1, MalformedSepecificationError, OperEx, RecT1, SeqT1, SetT1, StrT1, TlaEx, TlaType1,
+  TupT1, ValEx,
 }
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.lir.oper.TlaOper
@@ -149,6 +149,10 @@ class CherryPick(rewriter: SymbStateRewriter) {
         pickSequence(t, state, oracle, elems, elseAssert)
 
       case t @ FunT(CellTFrom(SetT1(_)), _) =>
+        // to be removed later
+        pickFun(t.toTlaType1.asInstanceOf[FunT1], state, oracle, elems, elseAssert)
+
+      case CellTFrom(t @ FunT1(_, _)) =>
         pickFun(t, state, oracle, elems, elseAssert)
 
       case _ =>
@@ -690,7 +694,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
    *   a new symbolic state with the expression holding a fresh cell that stores the picked element.
    */
   def pickFun(
-      funType: FunT,
+      funType: FunT1,
       state: SymbState,
       oracle: Oracle,
       funs: Seq[ArenaCell],
@@ -700,7 +704,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     rewriter.solverContext.config.smtEncoding match {
       case `arraysEncoding` =>
         // We create an unconstrained SMT array that can be equated to the cells of funs for the oracle assertions
-        nextState = nextState.updateArena(_.appendCellOld(funType, isUnconstrained = true))
+        nextState = nextState.updateArena(_.appendCell(funType, isUnconstrained = true))
         val funCell = nextState.arena.topCell
 
         // Pick a function in funs and generate a SMT equality between it and funCell
@@ -708,13 +712,13 @@ class CherryPick(rewriter: SymbStateRewriter) {
         rewriter.solverContext.assertGroundExpr(oracle.caseAssertions(nextState, asserts :+ elseAssert))
 
         // Propagate the picked function's domain, by relying on the same oracle used to pick the function
-        val domT = SetT1(funType.argType)
+        val domT = SetT1(funType.arg)
         nextState = pickSet(domT, nextState, oracle, funs.map(nextState.arena.getDom), elseAssert)
         val pickedDom = nextState.asCell
         nextState = nextState.updateArena(_.setDom(funCell, pickedDom))
 
         // Propagate the picked function's relation, by relying on the same oracle used to pick the function
-        val relationT = SetT1(TupT1(funType.argType, funType.resType))
+        val relationT = SetT1(TupT1(funType.arg, funType.res))
         nextState = pickSet(relationT, nextState, oracle, funs.map(nextState.arena.getCdm), elseAssert, noSmt = true)
         val pickedRelation = nextState.asCell
         nextState = nextState.updateArena(_.setCdm(funCell, pickedRelation))
@@ -725,11 +729,11 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
       case `oopsla19Encoding` =>
         // Pick the relation
-        val relationT = SetT1(TupT1(funType.argType, funType.resType))
+        val relationT = SetT1(TupT1(funType.arg, funType.res))
         nextState = pickSet(relationT, nextState, oracle, funs.map(nextState.arena.getCdm), elseAssert)
         val pickedRelation = nextState.asCell
         // Create a fresh cell to hold the function
-        nextState = nextState.setArena(nextState.arena.appendCellOld(funType))
+        nextState = nextState.setArena(nextState.arena.appendCell(funType))
         val funCell = nextState.arena.topCell
         val newArena = nextState.arena.setCdm(funCell, pickedRelation)
         rewriter.solverContext.log(s"; } CHERRY-PICK $funCell:$funType")

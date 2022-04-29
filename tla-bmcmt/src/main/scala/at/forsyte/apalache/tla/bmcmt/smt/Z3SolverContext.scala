@@ -526,7 +526,11 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             z3context.mkArraySort(getOrMkCellSort(CellTFrom(domType)), z3context.getBoolSort)
 
           case FunT(CellTFrom(SetT1(domType)), resType) if encoding == arraysEncoding =>
+            // to be removed as soon as FunT is removed
             z3context.mkArraySort(getOrMkCellSort(CellTFrom(domType)), getOrMkCellSort(resType))
+
+          case CellTFrom(FunT1(domType, resType)) if encoding == arraysEncoding =>
+            z3context.mkArraySort(getOrMkCellSort(CellTFrom(domType)), getOrMkCellSort(CellTFrom(resType)))
 
           case _ =>
             log(s"(declare-sort $sig 0)")

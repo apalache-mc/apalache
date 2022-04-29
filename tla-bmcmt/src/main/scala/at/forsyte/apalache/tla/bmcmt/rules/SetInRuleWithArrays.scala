@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, S
 import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.{BoolT1, SetT1, TlaEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, SetT1, TlaEx}
 
 /**
  * Rewrites set membership tests: x \in S, x \in SUBSET S, and x \in [S -> T].
@@ -68,6 +68,7 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
 
     funCell.cellType match {
       case FunT(CellTFrom(SetT1(_)), _) => () // OK
+      case CellTFrom(FunT1(_, _))       => () // OK
       case _                            => flagTypeError()
     }
     funsetCell.cellType match {
