@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.transformations.standard.{
 }
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.pp.Inliner.FilterFun
-import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier}
+import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier, TypeVarPool}
 
 /**
  * Given a module m, with global operators F1,...,Fn, Inliner performs the following transformation:
@@ -58,7 +58,7 @@ class Inliner(
       operDeclFilter: DeclFilter = negateFilter(nonNullaryFilter),
       scopeFilter: DeclFilter = nonNullaryFilter,
     )(initialScope: Scope,
-      decls: Traversable[TlaDecl]): (Scope, List[TlaDecl]) =
+      decls: Iterable[TlaDecl]): (Scope, List[TlaDecl]) =
     decls.foldLeft((initialScope, List.empty[TlaDecl])) { case ((scope, decls), decl) =>
       decl match {
         case opDecl: TlaOperDecl =>
@@ -82,7 +82,8 @@ class Inliner(
   // a substitution of the two. A substitution is assumed to exist, otherwise TypingException is thrown.
   private def getSubstitution(targetType: TlaType1, decl: TlaOperDecl): (Substitution, TlaType1) = {
     val genericType = decl.typeTag.asTlaType1()
-    new TypeUnifier().unify(Substitution.empty, genericType, targetType) match {
+    val maxUsedVar = Math.max(genericType.usedNames.foldLeft(0)(Math.max), targetType.usedNames.foldLeft(0)(Math.max))
+    new TypeUnifier(new TypeVarPool(maxUsedVar + 1)).unify(Substitution.empty, genericType, targetType) match {
       case None =>
         throw new TypingException(
             s"Inliner: Unable to unify generic signature $genericType of ${decl.name} with the concrete type $targetType",
@@ -102,7 +103,7 @@ class Inliner(
 
     // Each formal parameter gets instantiated independently.
     val replacedBody = decl.formalParams.zip(args).foldLeft(freshBody) { case (partialBody, (fParam, arg)) =>
-      ReplaceFixed(tracker)(NameEx(fParam.name)(arg.typeTag), arg)(partialBody)
+      ReplaceFixed(tracker).whenEqualsTo(NameEx(fParam.name)(arg.typeTag), arg)(partialBody)
     }
 
     // There are two cases where the above instantiation might be incomplete:

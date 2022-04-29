@@ -332,7 +332,7 @@ case class RowT1(fieldTypes: SortedMap[String, TlaType1], other: Option[VarT1]) 
     val pairs = fieldTypes.map(p => "%s: %s".format(p._1, p._2)).mkString(" | ")
     other match {
       case None    => if (pairs.nonEmpty) s"(| $pairs |)" else "(||)"
-      case Some(v) => s"(| $pairs | $v |)"
+      case Some(v) => if (pairs.nonEmpty) s"(| $pairs | $v |)" else s"(| $v |)"
     }
   }
 
@@ -364,7 +364,7 @@ case class RecRowT1(row: RowT1) extends TlaType1 {
     val fields = row.fieldTypes.map(p => "%s: %s".format(p._1, p._2)).mkString(", ")
     row.other match {
       case None    => s"{ $fields }"
-      case Some(v) => if (fields.nonEmpty) s"{ $fields, $v }" else s"Rec($v)"
+      case Some(v) => if (fields.nonEmpty) s"{ $fields, $v }" else s"{ $v }"
     }
 
   }

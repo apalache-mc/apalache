@@ -2,8 +2,9 @@ package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.bmcmt.rules.vmt.TlaExToVMTWriter
-import at.forsyte.apalache.tla.lir.transformations.standard.Deprime
-import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule}
+import at.forsyte.apalache.tla.lir.oper.TlaActionOper
+import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
+import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, TlaModule}
 import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, LanguageWatchdog, TransformationTracker}
 import at.forsyte.apalache.tla.pp.{NormalizedNames, UniqueNameGenerator}
 import com.google.inject.Inject
@@ -39,7 +40,7 @@ class ReTLAToVMTTranspilePassImpl @Inject() (
     LanguageWatchdog(pred).check(module)
 
     // Init has primes, for VMT we need to deprime it
-    val deprime = new Deprime(tracker)
+    val deprime = ReplaceFixed(tracker).withFun { case OperEx(TlaActionOper.prime, arg) => arg }
     val initTrans = getTransitionsWithNames(module, NormalizedNames.INIT_PREFIX).map { case (a, b) =>
       (a, deprime(b))
     }

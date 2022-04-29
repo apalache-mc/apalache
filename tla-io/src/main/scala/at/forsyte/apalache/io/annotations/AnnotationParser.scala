@@ -93,8 +93,8 @@ class AnnotationParser extends Parsers {
 object AnnotationParser {
   def parse(reader: Reader): Either[String, Annotation] = {
     for {
-      tokens <- AnnotationLexer(reader).right
-      ast <- new AnnotationParser()(tokens).right
+      tokens <- AnnotationLexer(reader)
+      ast <- new AnnotationParser()(tokens)
     } yield ast
   }
 

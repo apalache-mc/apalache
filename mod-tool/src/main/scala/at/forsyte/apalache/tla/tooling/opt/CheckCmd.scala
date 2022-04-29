@@ -39,7 +39,7 @@ class CheckCmd extends AbstractCheckerCmd(name = "check", description = "Check a
       description =
         "pre-check, whether a transition is disabled, and discard it, to make SMT queries smaller, default: true")
   var noDeadlocks: Boolean =
-    opt[Boolean](name = "no-deadlock", default = true, description = "do not check for deadlocks, default: true")
+    opt[Boolean](name = "no-deadlock", default = false, description = "do not check for deadlocks, default: false")
 
   var maxError: Int =
     opt[Int](name = "max-error",

@@ -10,5 +10,5 @@ trait JsonFactory[T <: JsonRepresentation] {
   def fromInt(int: Int): T
   def fromStr(str: String): T
   def fromBool(bool: Boolean): T
-  def fromTraversable(trv: Traversable[T]): T
+  def fromIterable(trv: Iterable[T]): T
 }

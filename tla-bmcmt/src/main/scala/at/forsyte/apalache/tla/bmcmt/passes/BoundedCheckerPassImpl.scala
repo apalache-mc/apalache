@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
-import at.forsyte.apalache.tla.bmcmt.Checker.NoError
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStore
 import at.forsyte.apalache.tla.bmcmt.rewriter.{MetricProfilerListener, RewriterConfig}
@@ -61,12 +60,12 @@ class BoundedCheckerPassImpl @Inject() (
     val nworkers = options.getOrElse("checker", "nworkers", 1)
      */
     val stepsBound = options.getOrElse[Int]("checker", "length", 10)
-    val tuning = options.getOrElse[Map[String, String]]("general", "tuning", Map[String, String]())
     val debug = options.getOrElse[Boolean]("general", "debug", false)
+    val tuning = options.getOrElse[Map[String, String]]("general", "tuning", Map[String, String]())
     // TODO: default smtEncoding option is needed here for executions with TestCmd, add encoding option to TestCmd instead
     val smtEncoding = options.getOrElse[SMTEncoding]("checker", "smt-encoding", oopsla19Encoding)
 
-    val params = new ModelCheckerParams(input, stepsBound, tuning, debug)
+    val params = new ModelCheckerParams(input, stepsBound, tuning)
     params.discardDisabled = options.getOrElse[Boolean]("checker", "discardDisabled", true)
     params.checkForDeadlocks = !options.getOrElse[Boolean]("checker", "noDeadlocks", false)
     params.nMaxErrors = options.getOrElse[Int]("checker", "maxError", 1)
@@ -129,7 +128,7 @@ class BoundedCheckerPassImpl @Inject() (
     val outcome = checker.run()
     rewriter.dispose()
     logger.info(s"The outcome is: " + outcome)
-    outcome == NoError()
+    outcome.isOk
   }
 
   private def runOfflineChecker(
@@ -160,7 +159,7 @@ class BoundedCheckerPassImpl @Inject() (
     val outcome = checker.run()
     rewriter.dispose()
     logger.info(s"The outcome is: " + outcome)
-    outcome == NoError()
+    outcome.isOk
   }
 
   /*

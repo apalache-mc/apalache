@@ -1,14 +1,13 @@
-# Running in Java Virtual Machine
+# Prebuilt Packages
 
-You have to download and install a Java Virtual Machine first. For instance,
-[AdoptOpenJDK](https://adoptopenjdk.net/) should work (we tried Apalache with
-OpenJDK 11 and OpenJDK 15).
+You need to download and install a Java Virtual Machine first. 
+We recommend version 17 of the [Eclipse Temurin][] or [Zulu][] builds of OpenJDK.
 
 Once you have installed Java, download the [latest
 release](https://github.com/informalsystems/apalache/releases) and unpack into
 a directory of your choice. Depending on your OS, you have two options.
 
-*Option 1: Linux, MacOS.* You can run the script `./bin/apalache-mc`, or,
+*Option 1: Linux, macOS.* You can run the script `./bin/apalache-mc`, or,
 better, add the `./bin` directory to your `PATH` and run `apalache-mc`.
 
 *Option 2: Windows.* You have to run Java directly with
@@ -22,3 +21,6 @@ better, add the `./bin` directory to your `PATH` and run `apalache-mc`.
 If you would like to contribute a command-line script for running Apalache in
 Windows, please [open a pull
 request](https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md#making-a-pull-request).
+
+[Eclipse Temurin]: https://adoptium.net/
+[Zulu]: https://www.azul.com/downloads/?version=java-17-lts&package=jdk#download-openjdk

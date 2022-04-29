@@ -7,9 +7,10 @@ import at.forsyte.apalache.tla.lir.values.{TlaDecimal, TlaInt, TlaStr}
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.typesafe.scalalogging.LazyLogging
-import tla2sany.semantic._
+// Prevent shadowing our Context trait
+import tla2sany.semantic.{Context => _, _}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
  * Translate a TLA+ expression.

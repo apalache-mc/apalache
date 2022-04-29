@@ -17,7 +17,7 @@ object TlaFunOper {
    * <p>Although this constructor could be used for functions in general, it is used only for the records in TLA+. That
    * is why we call it "REC_CTOR".</p>
    */
-  object enum extends TlaFunOper {
+  object `enum` extends TlaFunOper {
     override def arity: OperArity = new OperArity(k => k >= 2 && k % 2 == 0)
 
     override val name: String = "RECORD"

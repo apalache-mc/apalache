@@ -58,6 +58,9 @@ class TypeRewriter(tracker: TransformationTracker, defaultTag: UID => TypeTag)(t
 
       case ex @ LetInEx(body, defs @ _*) =>
         LetInEx(this(body), defs.map(applyToOperDecl): _*)(getOrDefault(ex.ID))
+
+      case NullEx =>
+        throw new IllegalArgumentException(s"Applied TypeRewriter to NullEx")
     }
 
     transform(e)

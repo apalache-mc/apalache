@@ -418,13 +418,13 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       maxCellIdPerContext = maxCellIdPerContext.tail
       level -= 1
       // clean the caches
-      cellSorts.retain((_, value) => value._2 <= level)
-      funDecls.retain((_, value) => value._2 <= level)
+      cellSorts.filterInPlace((_, value) => value._2 <= level)
+      funDecls.filterInPlace((_, value) => value._2 <= level)
       cellCache.foreach(entry => cellCache += entry.copy(_2 = entry._2.filter(_._3 <= level)))
-      cellCache.retain((_, value) => value.nonEmpty)
-      inCache.retain((_, value) => value._2 <= level)
-      constantArrayCache.retain((_, value) => value._2 <= level)
-      cellDefaults.retain((_, value) => value._2 <= level)
+      cellCache.filterInPlace((_, value) => value.nonEmpty)
+      inCache.filterInPlace((_, value) => value._2 <= level)
+      constantArrayCache.filterInPlace((_, value) => value._2 <= level)
+      cellDefaults.filterInPlace((_, value) => value._2 <= level)
     }
   }
 
@@ -436,13 +436,13 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       maxCellIdPerContext = maxCellIdPerContext.drop(n)
       level -= n
       // clean the caches
-      cellSorts.retain((_, value) => value._2 <= level)
-      funDecls.retain((_, value) => value._2 <= level)
+      cellSorts.filterInPlace((_, value) => value._2 <= level)
+      funDecls.filterInPlace((_, value) => value._2 <= level)
       cellCache.foreach(entry => cellCache += entry.copy(_2 = entry._2.filter(_._3 <= level)))
-      cellCache.retain((_, value) => value.nonEmpty)
-      inCache.retain((_, value) => value._2 <= level)
-      constantArrayCache.retain((_, value) => value._2 <= level)
-      cellDefaults.retain((_, value) => value._2 <= level)
+      cellCache.filterInPlace((_, value) => value.nonEmpty)
+      inCache.filterInPlace((_, value) => value._2 <= level)
+      constantArrayCache.filterInPlace((_, value) => value._2 <= level)
+      cellDefaults.filterInPlace((_, value) => value._2 <= level)
     }
   }
 

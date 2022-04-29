@@ -181,6 +181,29 @@ EXITCODE: ERROR (255)
 
 This command parses a TLA+ specification with the SANY parser.
 
+### parse Empty succeeds
+
+```sh
+$ apalache-mc parse Empty.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
+### parse Empty with --features=rows succeeds
+
+```sh
+$ apalache-mc parse --features=rows Empty.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
+### parse Empty with an unsupported feature fails
+
+```sh
+$ apalache-mc parse --features=feature.unsupported Empty.tla 2>&1 | grep 'Failed to parse'
+Failed to parse command parse: Incorrect value for option features, got 'feature.unsupported', expected a feature: rows
+```
+
 ### parse LocalDefClash576 succeeds
 
 ```sh
@@ -858,7 +881,7 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check HandshakeWithTypes.tla with lengh 5 deadlocks (array-encoding)
+### check HandshakeWithTypes.tla with length 5 deadlocks (array-encoding)
 
 ```sh
 $ apalache-mc check --length=5 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
@@ -866,6 +889,20 @@ $ apalache-mc check --length=5 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
 The outcome is: Deadlock
 ...
 EXITCODE: ERROR (12)
+```
+
+### check HandshakeWithTypes.tla with length 5 passes with --no-deadlock
+
+The option `--no-deadlock` forces the model checker to pass, even if it cannot
+extend an execution prefix. See a discussion in
+[#1640](https://github.com/informalsystems/apalache/issues/1640).
+
+```sh
+$ apalache-mc check --length=5 --no-deadlock=1 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
+...
+The outcome is: ExecutionsTooShort
+...
+EXITCODE: OK
 ```
 
 ### check trivial violation of FALSE invariant (array-encoding)
@@ -1541,6 +1578,8 @@ EXITCODE: OK
 
 ### configure via TLC config and replace operators
 
+The replacements make the invariant hold true.
+
 ```sh
 $ apalache-mc check --config=ConfigReplacements2.cfg ConfigReplacements.tla | sed 's/[IEW]@.*//'
 ...
@@ -1558,13 +1597,24 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### configure via TLC config and replace operators helps us to keep the invariant
+### configure via TLC config on non-existant config
+
+When a configuration file does not exist, the tool should error.
+
+```sh
+$ apalache-mc check --inv=Inv --config=ThisConfigDoesNotExist.cfg ConfigReplacements.tla | sed 's/[IEW]@.*//'
+...
+Configuration error (see the manual): TLC config file not found: ThisConfigDoesNotExist.cfg
+...
+EXITCODE: ERROR (255)
+```
+
+### configure via TLC config on no config
+
+When a configuration file is not specified, the invariant should fail.
 
 ```sh
 $ apalache-mc check --inv=Inv ConfigReplacements.tla | sed 's/[IEW]@.*//'
-...
-  > ConfigReplacements.cfg: Loading TLC configuration
-  > No TLC configuration found. Skipping.
 ...
 The outcome is: Error
 ...
@@ -2061,7 +2111,7 @@ EXITCODE: OK
 A regression test for #1623 (Instantiation with .cfg + ASSUME)
 
 ```sh
-$ apalache-mc check --length=3 --inv=Inv Test1623.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --length=3 --config=Test1623.cfg --inv=Inv Test1623.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2096,7 +2146,33 @@ $ apalache-mc check --inv=TypeOK --length=1 RecMem1627.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check UnchangedAsInv1663.tla reports no error
+
+A test `UNCHANGED` in an invariant.
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 UnchangedAsInv1663.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
+
+### typecheck Empty.tla reports no error
+
+```sh
+$ apalache-mc typecheck Empty.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
+### typecheck Empty.tla reports no error when rows enabled
+
+```sh
+$ apalache-mc typecheck --features=rows Empty.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
 
 ### typecheck ExistTuple476.tla reports no error: regression for issues 476 and 482
 
@@ -2857,6 +2933,17 @@ $ JVM_ARGS="-Duser.home=." apalache-mc check --length=0 Counter.tla | sed 's/[IE
 EXITCODE: OK
 $ test -d ./run-dir
 $ rm -rf ./run-dir ./.apalache.cfg
+```
+
+### configuration management: invalid features are rejected with error
+
+```sh
+$ echo "features: [ invalid-feature ]" > .apalache.cfg
+$ apalache-mc check --length=0 Counter.tla | grep -o -e "Configuration error: at 'features.0'" -e "Cannot convert 'invalid-feature' to at.forsyte.apalache.tla.lir.Feature"
+...
+Configuration error: at 'features.0'
+Cannot convert 'invalid-feature' to at.forsyte.apalache.tla.lir.Feature
+$ rm -rf ./.apalache.cfg
 ```
 
 ## module lookup

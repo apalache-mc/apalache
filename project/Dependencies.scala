@@ -27,6 +27,7 @@ object Dependencies {
     val logging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4"
     val pureConfig = "com.github.pureconfig" %% "pureconfig" % "0.17.1"
     val scalaParserCombinators = "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.1"
+    val scalaCollectionContrib = "org.scala-lang.modules" %% "scala-collection-contrib" % "0.2.2"
     val scalaz = "org.scalaz" %% "scalaz-core" % "7.3.5"
     val slf4j = "org.slf4j" % "slf4j-api" % "1.7.36"
     val tla2tools = "org.lamport" % "tla2tools" % "1.7.0-SNAPSHOT"

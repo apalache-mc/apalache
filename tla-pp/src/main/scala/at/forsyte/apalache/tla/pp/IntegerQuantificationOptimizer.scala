@@ -69,6 +69,8 @@ class IntegerQuantificationOptimizer(tracker: TransformationTracker) extends Tla
         case ValEx(TlaNatSet) => OperEx(outerPred, ge0(name), pred)(boolTag)
         case OperEx(TlaArithOper.dotdot, lowerBound, upperBound) =>
           OperEx(outerPred, inRange(name, lowerBound, upperBound), pred)(boolTag)
+        case ex =>
+          throw new IllegalArgumentException(s"Invalid expression given to IntegerQuantificationOptimizer ${ex}")
       }
       // nameEx can be copied, and because this is the only place we do so, it will still have a unique ID
       OperEx(unboundedOper, nameEx, newPred)(boolTag)

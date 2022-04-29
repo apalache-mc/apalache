@@ -76,8 +76,9 @@ trait TlaType1Gen {
   def genRec: Gen[TlaType1] =
     sized { size => // use 'sized' to control the depth of the generated term
       for {
+        // min=1 to prevent empty records
+        s <- choose(1, size)
         // use resize to decrease the depth of the elements (as terms)
-        s <- choose(0, size)
         elem = resize(s - 1, genTypeTree)
         keys <- listOfN(s, identifier)
         values <- listOfN(s, elem)

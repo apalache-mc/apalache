@@ -1,0 +1,34 @@
+# Apalache CODE CURATORS
+
+# Curators are automatically tagged for PR review.
+
+# Add your name after a .gitignore-style pattern bellow to
+# volunteer to help curate the code matching the pattern.
+
+# For syntax and configuration understood by GitHub, see
+# https://docs.github.com/en/enterprise-cloud@latest/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# General application code
+
+/tla-types/ @konnov @shonfeder @Kukovec
+/tla-io/ @Kukovec @shonfeder
+/mod-tool/ @shonfeder
+/tla-assignments/ @Kukovec
+/tla-pp/ @Kukovec
+/tlair/ @Kukovec
+/tla-bmcmt/ @rodrigo7491
+# Build system and packaging
+
+Makefile @shonfeder
+*.sbt @shonfeder
+/project/ @shonfeder
+/bin/ @shonfeder
+/mod-distribution/ @shonfeder
+
+# DevEnv, CI, and git forge
+
+/.github/ @shonfeder
+.envrc  @shonfeder
+/test  @shonfeder
+.scalafmt.conf @shonfeder
+flake.nix @shonfeder

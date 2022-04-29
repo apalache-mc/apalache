@@ -30,7 +30,7 @@ object AnnotationArg {
  *   the text of the string argument.
  */
 case class AnnotationStr(text: String) extends AnnotationArg {
-  override def toString: String = '"' + text + '"'
+  override def toString: String = s"\"${text}\""
 }
 
 /**

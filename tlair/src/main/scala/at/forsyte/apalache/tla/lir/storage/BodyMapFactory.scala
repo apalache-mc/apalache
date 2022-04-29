@@ -17,6 +17,6 @@ object BodyMapFactory {
       case _ => initial
     }
 
-  def makeFromDecls(decls: Traversable[TlaDecl], initial: BodyMap = newMap): BodyMap =
+  def makeFromDecls(decls: Iterable[TlaDecl], initial: BodyMap = newMap): BodyMap =
     decls.foldLeft(initial) { case (db, decl) => makeFromDecl(decl, db) }
 }
