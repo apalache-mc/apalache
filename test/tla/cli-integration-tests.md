@@ -1842,6 +1842,14 @@ Bug931.tla:6:20-6:21: type input error: Found a polymorphic type: Set(b)
 EXITCODE: ERROR (255)
 ```
 
+### check Bug1682.tla
+
+```sh
+$ apalache-mc check --init=Inv --inv=Inv --length=1 Bug1682.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check profiling
 
 Check that the profiler output is produced as explained in
@@ -2707,6 +2715,56 @@ Typecheck the test for Folds.tla.
 $ apalache-mc typecheck TestFolds.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
+```
+
+### typecheck TestRecordsNew.tla
+
+Typecheck new records that support row typing.
+
+```sh
+$ apalache-mc typecheck --features=rows TestRecordsNew.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### typecheck TestRecordsNewIll1.tla
+
+No ill-typed record access.
+
+```sh
+$ apalache-mc typecheck --features=rows TestRecordsNewIll1.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: ERROR (255)
+```
+
+### typecheck TestRecordsNewIll2.tla
+
+No ill-typed record access.
+
+```sh
+$ apalache-mc typecheck --features=rows TestRecordsNewIll2.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: ERROR (255)
+```
+
+### typecheck TestRecordsNewIll3.tla
+
+No ill-typed record access.
+
+```sh
+$ apalache-mc typecheck --features=rows TestRecordsNewIll3.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: ERROR (255)
+```
+
+### typecheck TestRecordsNewIll4.tla
+
+No ill-typed record access.
+
+```sh
+$ apalache-mc typecheck --features=rows TestRecordsNewIll4.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: ERROR (255)
 ```
 
 ## configuring the output manager

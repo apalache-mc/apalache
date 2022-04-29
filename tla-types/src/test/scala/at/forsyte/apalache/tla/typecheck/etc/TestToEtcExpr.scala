@@ -22,7 +22,7 @@ import scala.annotation.nowarn
  *   Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
-class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder {
+class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with ToEtcExprBase {
   private var parser: Type1Parser = _
   private var annotationStore: AnnotationStore = _
   private var gen: ToEtcExpr = _
@@ -32,36 +32,6 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     annotationStore = createAnnotationStore()
     // a new instance of the translator, as it gives unique names to the variables
     gen = new ToEtcExpr(annotationStore, ConstSubstitution.empty, new TypeVarPool())
-  }
-
-  private def mkAppByType(operTypes: Seq[TlaType1], args: TlaType1*): EtcApp = {
-    mkUniqApp(operTypes, args.map(a => mkUniqConst(a)): _*)
-  }
-
-  private def mkAppByName(operTypes: Seq[TlaType1], args: String*): EtcApp = {
-    mkUniqApp(operTypes, args.map(mkUniqName): _*)
-  }
-
-  private def mkConstAppByType(opsig: TlaType1, args: TlaType1*): EtcApp = {
-    mkUniqApp(Seq(opsig), args.map(a => mkUniqConst(a)): _*)
-  }
-
-  private def mkConstAppByName(opsig: TlaType1, args: String*): EtcApp = {
-    mkUniqApp(Seq(opsig), args.map(mkUniqName): _*)
-  }
-
-  // produce an expression that projects a set of pairs on the set of its first (or second) components
-  private def mkProjection(
-      fst: String,
-      snd: String,
-      projFirst: Boolean,
-      set: String): EtcExpr = {
-    val axis = if (projFirst) fst else snd
-    val tuple = TupT1(VarT1(fst), VarT1(snd))
-    // Projection: depending on axis, either ((<<a, b>>, Set(<<a, b>>)) => Set(a)) or ((<<a, b>>, Set(<<a, b>>)) => Set(b))
-    // We add the tuple <<a, b>> for technical reasons, in order to recover the type of the variable tuple in TypeRewriter.
-    val oper = OperT1(Seq(tuple, SetT1(tuple)), SetT1(VarT1(axis)))
-    mkUniqApp(Seq(oper), mkUniqConst(tuple), mkUniqName(set))
   }
 
   test("integer arithmetic") {
@@ -421,8 +391,8 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
 
   test("""f["foo"]""") {
     // either a function, or a record
-    val funOrReq = Seq(parser("((Str -> a), Str) => a"), parser("([foo: a], Str) => a"))
-    val expected = mkUniqApp(funOrReq, mkUniqName("f"), mkUniqConst(StrT1()))
+    val funOrRecord = Seq(parser("((Str -> a), Str) => a"), parser("([foo: a], Str) => a"))
+    val expected = mkUniqApp(funOrRecord, mkUniqName("f"), mkUniqConst(StrT1()))
     val access = tla.appFun(tla.name("f"), tla.str("foo"))
     assert(expected == gen(access))
 
