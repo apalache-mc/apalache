@@ -85,10 +85,6 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         .funSet(fromSet, toSet)
         .typed(ffsT.toTlaType1)
 
-    case funT @ FunT(_, _) =>
-      // this case will be removed later
-      decodeFunToTlaEx(arena, cell, funT.toTlaType1.asInstanceOf[FunT1])
-
     case CellTFrom(funT1 @ FunT1(_, _)) =>
       decodeFunToTlaEx(arena, cell, funT1)
 

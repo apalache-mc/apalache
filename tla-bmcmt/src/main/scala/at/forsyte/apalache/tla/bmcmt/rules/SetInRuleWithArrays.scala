@@ -67,9 +67,8 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
     }
 
     funCell.cellType match {
-      case FunT(CellTFrom(SetT1(_)), _) => () // OK
-      case CellTFrom(FunT1(_, _))       => () // OK
-      case _                            => flagTypeError()
+      case CellTFrom(FunT1(_, _)) => () // OK
+      case _                      => flagTypeError()
     }
     funsetCell.cellType match {
       case FinFunSetT(PowSetT(_), _) | FinFunSetT(FinFunSetT(_, _), _) => flagTypeError()
@@ -125,8 +124,10 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
       // TODO: Inlining this method is pointless. We should consider handling tuples and other structures natively in SMT.
       // If elemCell is a function, cacheEqConstraints will generate constraints over its set of relations. This is
       // problematic because the relations are only being carried in the arena, without SMT constrains being generated.
-      if (!elemCell.cellType.isInstanceOf[FunT]) {
-        nextState = rewriter.lazyEq.cacheEqConstraints(nextState, potentialElems.map((_, elemCell)))
+      elemCell.cellType match {
+        case CellTFrom(FunT1(_, _)) => ()
+        case _ =>
+          nextState = rewriter.lazyEq.cacheEqConstraints(nextState, potentialElems.map((_, elemCell)))
       }
 
       def inAndEq(elem: ArenaCell) = {

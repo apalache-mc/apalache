@@ -49,28 +49,26 @@ class CherryPick(rewriter: SymbStateRewriter) {
         // a powerset is never empty, pick an element
         pickFromPowset(CellTFrom(t), set, state)
 
-      case FinFunSetT(domt @ CellTFrom(SetT1(_)), CellTFrom(SetT1(rest))) =>
+      case FinFunSetT(CellTFrom(SetT1(argT)), CellTFrom(SetT1(resT))) =>
         // No emptiness check, since we are dealing with a function set [S -> T].
         // If S is empty, we get a function of the empty set.
-        pickFunFromFunSet(FunT(domt, CellTFrom(rest)), set, state)
+        pickFunFromFunSet(FunT1(argT, resT), set, state)
 
-      case FinFunSetT(domt @ CellTFrom(SetT1(_)), InfSetT(rest)) =>
+      case FinFunSetT(CellTFrom(SetT1(argT)), InfSetT(resT)) =>
         // No emptiness check, since we are dealing with a function set [S -> T].
         // If S is empty, we get a function of the empty set.
-        pickFunFromFunSet(FunT(domt, rest), set, state)
+        pickFunFromFunSet(FunT1(argT, resT.toTlaType1), set, state)
 
-      case FinFunSetT(domt @ CellTFrom(SetT1(_)), PowSetT(resultT @ SetT1(_))) =>
+      case FinFunSetT(CellTFrom(SetT1(argT)), PowSetT(resultT @ SetT1(_))) =>
         // No emptiness check, since we are dealing with a function set [S -> T].
         // If S is empty, we get a function of the empty set.
-        pickFunFromFunSet(FunT(domt, CellTFrom(resultT)), set, state)
+        pickFunFromFunSet(FunT1(argT, resultT), set, state)
 
-      case FinFunSetT(dom1T @ CellTFrom(SetT1(_)),
-              FinFunSetT(dom2T @ CellTFrom(SetT1(_)), CellTFrom(SetT1(result2T)))) =>
-        pickFunFromFunSet(FunT(dom1T, FunT(dom2T, CellTFrom(result2T))), set, state)
+      case FinFunSetT(CellTFrom(SetT1(arg1T)), FinFunSetT(CellTFrom(SetT1(arg2T)), CellTFrom(SetT1(result2T)))) =>
+        pickFunFromFunSet(FunT1(arg1T, FunT1(arg2T, result2T)), set, state)
 
-      case FinFunSetT(dom1T @ CellTFrom(SetT1(_)),
-              FinFunSetT(dom2T @ CellTFrom(SetT1(_)), PowSetT(result2T @ SetT1(_)))) =>
-        pickFunFromFunSet(FunT(dom1T, FunT(dom2T, CellTFrom(result2T))), set, state)
+      case FinFunSetT(CellTFrom(SetT1(arg1T)), FinFunSetT(CellTFrom(SetT1(arg2T)), PowSetT(result2T @ SetT1(_)))) =>
+        pickFunFromFunSet(FunT1(arg1T, FunT1(arg2T, result2T)), set, state)
 
       case FinFunSetT(CellTFrom(SetT1(_)), PowSetT(_)) | FinFunSetT(CellTFrom(SetT1(_)), FinFunSetT(_, _)) =>
         throw new RewriterException(s"Rewriting for the type ${set.cellType} is not implemented. Raise an issue.",
@@ -86,7 +84,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
           throw new RuntimeException(s"The set $set is statically empty. Pick should not be called on that.")
         }
 
-        var (nextState, oracle) = oracleFactory.newDefaultOracle(state, elems.size + 1)
+        val (nextState, oracle) = oracleFactory.newDefaultOracle(state, elems.size + 1)
 
         // pick only the elements that belong to the set
         val elemsIn = elems.map { c => tla.apalacheSelectInSet(c.toNameEx, set.toNameEx).untyped() }
@@ -147,10 +145,6 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
       case CellTFrom(t @ SeqT1(_)) =>
         pickSequence(t, state, oracle, elems, elseAssert)
-
-      case t @ FunT(CellTFrom(SetT1(_)), _) =>
-        // to be removed later
-        pickFun(t.toTlaType1.asInstanceOf[FunT1], state, oracle, elems, elseAssert)
 
       case CellTFrom(t @ FunT1(_, _)) =>
         pickFun(t, state, oracle, elems, elseAssert)
@@ -804,18 +798,16 @@ class CherryPick(rewriter: SymbStateRewriter) {
    * @return
    *   a new symbolic state with the expression holding a fresh cell that stores the picked element.
    */
-  def pickFunFromFunSet(funT: CellT, funSet: ArenaCell, state: SymbState): SymbState = {
+  def pickFunFromFunSet(funT: FunT1, funSet: ArenaCell, state: SymbState): SymbState = {
     rewriter.solverContext.log("; PICK %s FROM %s {".format(funT, funSet))
     var arena = state.arena
     val dom = arena.getDom(funSet) // this is a set of potential arguments, always expanded!
     val cdm = arena.getCdm(funSet) // this is a set of potential results, may be expanded, may be not.
-    // TODO: take care of [S -> {}], what is the semantics of it?
-    val funType = funT.asInstanceOf[FunT] // for now, only FunT is supported
     // create the unconstrained function cell
-    arena = arena.appendCellOld(funT, isUnconstrained = true)
+    arena = arena.appendCell(funT, isUnconstrained = true)
     val funCell = arena.topCell
     // create the relation cell
-    arena = arena.appendCell(SetT1(TupT1(funType.argType, funType.resType)))
+    arena = arena.appendCell(SetT1(TupT1(funT.arg, funT.res)))
     val relationCell = arena.topCell
     arena = arena.setDom(funCell, dom)
     arena = arena.setCdm(funCell, relationCell)
@@ -828,7 +820,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       nextState = pick(cdm, nextState, nextState.arena.cellFalse().toNameEx) // the co-domain should be non-empty
       val pickedResult = nextState.asCell
 
-      nextState = nextState.updateArena(_.appendCell(TupT1(funType.argType, funType.resType)))
+      nextState = nextState.updateArena(_.appendCell(TupT1(funT.arg, funT.res)))
       val pair = nextState.arena.topCell
       nextState = nextState.updateArena(_.appendHasNoSmt(pair, arg, pickedResult))
 

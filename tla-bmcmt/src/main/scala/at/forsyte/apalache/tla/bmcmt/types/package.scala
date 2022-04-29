@@ -144,35 +144,6 @@ package object types {
   }
 
   /**
-   * A function type. Once we removed {{{PowSetT}}}, we will replace {{{FunT}}} with {{{FunT1}}}.
-   *
-   * @param domType
-   *   the type of the domain (a finite set, a powerset, or a cross product).
-   * @param resultType
-   *   result type (not the co-domain!)
-   */
-  sealed case class FunT(domType: CellT, resultType: CellT) extends CellT with Serializable {
-    override val signature: String = s"f${domType.signature}_${resultType.signature}"
-
-    val argType: TlaType1 = domType match {
-      case CellTFrom(SetT1(et)) => et
-      case PowSetT(dt)          => dt
-      case _                    => throw new TypingException(s"Unexpected domain type $domType", UID.nullId)
-    }
-
-    val resType: TlaType1 = resultType.toTlaType1
-
-    override val toString: String = s"Fun[$domType, $resultType]"
-
-    override def toTlaType1: TlaType1 = {
-      domType.toTlaType1 match {
-        case SetT1(elemType) => FunT1(elemType, resultType.toTlaType1)
-        case tt              => throw new TypingException("Unexpected function domain type: " + tt, UID.nullId)
-      }
-    }
-  }
-
-  /**
    * A finite set of functions.
    *
    * @param domType

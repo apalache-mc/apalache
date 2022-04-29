@@ -58,7 +58,6 @@ class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // rewrite the set expression into a memory cell
     var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
 
-    val funT = CellT.fromType1(funT1)
     val codomain = funT1 match {
       case FunT1(_, IntT1())  => ValEx(TlaIntSet)
       case FunT1(_, BoolT1()) => ValEx(TlaBoolSet)
@@ -78,7 +77,7 @@ class RecFunDefAndRefRule(rewriter: SymbStateRewriter) extends RewritingRule {
     nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.funSet(domainCell.toNameEx, codomain)))
     val funSetCell = nextState.asCell
     // pick a function from the function set
-    nextState = pick.pickFunFromFunSet(funT, funSetCell, nextState)
+    nextState = pick.pickFunFromFunSet(funT1, funSetCell, nextState)
     val funCell = nextState.asCell
     nextState = nextState.setBinding(
         new Binding(nextState.binding.toMap + (TlaFunOper.recFunRef.uniqueName -> funCell)))
