@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
-import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.bmcmt.types.ConstT
-import at.forsyte.apalache.tla.lir.OperEx
+import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
+import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.ApalacheInternalOper
+import at.forsyte.apalache.tla.lir.{ConstT1, OperEx}
 
 /**
  * A cache for model values that are translated as uninterpreted constants, with a unique sort per uniterpreted type.
@@ -20,11 +20,11 @@ class ModelValueCache(solverContext: SolverContext)
   override protected def create(arena: Arena, typeAndIndex: (String, String)): (Arena, ArenaCell) = {
     // introduce a new cell
     val (utype, _) = typeAndIndex
-    val newArena = arena.appendCell(ConstT(utype))
+    val newArena = arena.appendCell(ConstT1(utype))
     val newCell = newArena.topCell
     // The fresh cell should differ from the previously created cells.
     // We use the SMT constraint (distinct ...).
-    val others = values().filter(_.cellType == ConstT(utype)).map(_.toNameEx).toSeq
+    val others = values().filter(_.cellType == CellTFrom(ConstT1(utype))).map(_.toNameEx).toSeq
     solverContext.assertGroundExpr(OperEx(ApalacheInternalOper.distinct, newCell.toNameEx +: others: _*))
     solverContext.log("; cached \"%s\" to %s".format(typeAndIndex, newCell))
     (newArena, newCell)
@@ -47,11 +47,11 @@ class ModelValueCache(solverContext: SolverContext)
   def createAndCacheMany(arena: Arena, utype: String, newValues: Iterable[String]): (Arena, Seq[ArenaCell]) = {
     var nextArena = arena
     // the cells that exist in the cache
-    val oldCells = values().filter(_.cellType == ConstT(utype)).map(_.toNameEx).toSeq
+    val oldCells = values().filter(_.cellType == CellTFrom(ConstT1(utype))).map(_.toNameEx).toSeq
     // the cells that are already cached go to the left, the new cells go to the right
     val foundOrNewCells = newValues.map { value =>
       get((utype, value)).map(Left(_)).getOrElse {
-        nextArena = nextArena.appendCell(ConstT(utype))
+        nextArena = nextArena.appendCell(ConstT1(utype))
         addToCache((utype, value), nextArena.topCell)
         Right(nextArena.topCell)
       }

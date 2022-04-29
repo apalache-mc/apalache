@@ -1,9 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell, RewriterException, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, FunT1, IntT1, NullEx, RecT1, SeqT1, SetT1, StrT1, TlaType1, TupT1}
-import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 import scala.collection.immutable.SortedSet
 
@@ -35,13 +33,13 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         (arena, arena.cellFalse())
 
       case StrT1() =>
-        rewriter.modelValueCache.getOrCreate(arena, (ModelValueHandler.STRING_TYPE, "None"))
+        rewriter.modelValueCache.getOrCreate(arena, (StrT1.toString(), "None"))
 
       case ConstT1(utype) =>
         rewriter.modelValueCache.getOrCreate(arena, (utype, "None"))
 
       case tupT @ TupT1(argTypes @ _*) =>
-        var newArena = arena.appendCell(CellT.fromType1(tupT))
+        var newArena = arena.appendCell(tupT)
         val tuple = newArena.topCell
         newArena = argTypes.foldLeft(newArena) { (arena, argT) =>
           val (nextArena, valueCell) = makeUpValue(arena, argT)
@@ -50,7 +48,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         (newArena, tuple)
 
       case recT @ RecT1(_) =>
-        var newArena = arena.appendCell(CellT.fromType1(recT))
+        var newArena = arena.appendCell(recT)
         val recCell = newArena.topCell
         newArena = recT.fieldTypes.values.foldLeft(newArena) { (arena, v) =>
           val (nextArena, valueCell) = makeUpValue(arena, v)
@@ -64,13 +62,13 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         (newArena, recCell)
 
       case tp @ SetT1(_) => // {}
-        val newArena = arena.appendCell(CellT.fromType1(tp))
+        val newArena = arena.appendCell(tp)
         (newArena, newArena.topCell)
 
       case tp @ FunT1(argT, resT) => // [x \in {} |-> {}]
         val (arena1, domCell) = makeUpValue(arena, SetT1(argT))
         val (arena2, relCell) = makeUpValue(arena1, SetT1(TupT1(argT, resT)))
-        val arena3 = arena2.appendCell(CellT.fromType1(tp))
+        val arena3 = arena2.appendCell(tp)
         val funCell = arena3.topCell
         val arena4 = arena3.setDom(funCell, domCell).setCdm(funCell, relCell)
         (arena4, funCell)

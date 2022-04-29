@@ -513,20 +513,20 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     } else {
       val newSort =
         cellType match {
-          case BoolT() =>
+          case CellTFrom(BoolT1()) =>
             z3context.getBoolSort
 
-          case IntT() =>
+          case CellTFrom(IntT1()) =>
             z3context.getIntSort
 
-          case FinSetT(elemType) if encoding == arraysEncoding =>
-            z3context.mkArraySort(getOrMkCellSort(elemType), z3context.getBoolSort)
+          case CellTFrom(SetT1(elemType)) if encoding == arraysEncoding =>
+            z3context.mkArraySort(getOrMkCellSort(CellTFrom(elemType)), z3context.getBoolSort)
 
           case PowSetT(domType) if encoding == arraysEncoding =>
-            z3context.mkArraySort(getOrMkCellSort(domType), z3context.getBoolSort)
+            z3context.mkArraySort(getOrMkCellSort(CellTFrom(domType)), z3context.getBoolSort)
 
-          case FunT(FinSetT(domType), resType) if encoding == arraysEncoding =>
-            z3context.mkArraySort(getOrMkCellSort(domType), getOrMkCellSort(resType))
+          case FunT(CellTFrom(SetT1(domType)), resType) if encoding == arraysEncoding =>
+            z3context.mkArraySort(getOrMkCellSort(CellTFrom(domType)), getOrMkCellSort(resType))
 
           case _ =>
             log(s"(declare-sort $sig 0)")

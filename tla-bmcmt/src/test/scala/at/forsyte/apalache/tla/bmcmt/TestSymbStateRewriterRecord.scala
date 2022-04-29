@@ -1,9 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.types.{BoolT, ConstT, FinSetT, IntT, RecordT}
-import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, NameEx, RecT1, SetT1, StrT1, TupT1}
-import at.forsyte.apalache.tla.lir.convenience.tla._
+import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
+import at.forsyte.apalache.tla.lir.convenience.tla._
+import at.forsyte.apalache.tla.lir._
+
 import scala.collection.immutable.{SortedMap, SortedSet, TreeMap}
 
 trait TestSymbStateRewriterRecord extends RewriterBase {
@@ -47,8 +48,9 @@ trait TestSymbStateRewriterRecord extends RewriterBase {
         assert(solverContext.sat())
         val cell = nextState.arena.findCellByName(name)
         cell.cellType match {
-          case r @ RecordT(_) =>
-            assert(r.fields == SortedMap("a" -> IntT(), "b" -> BoolT(), "c" -> ConstT()))
+          case CellTFrom(r @ RecT1(_)) =>
+            val map = SortedMap("a" -> CellTFrom(IntT1()), "b" -> CellTFrom(BoolT1()), "c" -> CellTFrom(StrT1()))
+            assert(r.fieldTypes == map)
             val keys = SortedSet("a", "b", "c")
             val (_, expectedDomain) =
               rewriter.recordDomainCache.getOrCreate(nextState.arena, (keys, SortedSet[String]()))
@@ -112,8 +114,8 @@ trait TestSymbStateRewriterRecord extends RewriterBase {
         assert(solverContext.sat())
         val cell = nextState.arena.findCellByName(name)
         cell.cellType match {
-          case FinSetT(rt @ RecordT(_)) =>
-            assert(rt.fields == TreeMap("a" -> IntT(), "b" -> BoolT()))
+          case CellTFrom(SetT1(rt @ RecT1(_))) =>
+            assert(rt.fieldTypes == TreeMap("a" -> CellTFrom(IntT1()), "b" -> CellTFrom(BoolT1())))
           // we check the actual contents in the later tests that access elements
 
           case _ =>
@@ -142,8 +144,9 @@ trait TestSymbStateRewriterRecord extends RewriterBase {
         assert(solverContext.sat())
         val cell = nextState.arena.findCellByName(name)
         cell.cellType match {
-          case FinSetT(rt @ RecordT(_)) =>
-            assert(rt.fields == TreeMap("a" -> IntT(), "b" -> BoolT(), "c" -> ConstT()))
+          case CellTFrom(SetT1(rt @ RecT1(_))) =>
+            val map = TreeMap("a" -> CellTFrom(IntT1()), "b" -> CellTFrom(BoolT1()), "c" -> CellTFrom(StrT1()))
+            assert(rt.fieldTypes == map)
 
           case _ =>
             fail("Unexpected type: " + cell.cellType)

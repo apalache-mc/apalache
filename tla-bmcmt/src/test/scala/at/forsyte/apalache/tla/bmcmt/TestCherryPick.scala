@@ -48,7 +48,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
 
     def mkIntCell(i: Int): ArenaCell = {
       // introduce integer cells directly
-      arena = state.arena.appendCell(IntT())
+      arena = state.arena.appendCell(IntT1())
       val cell = arena.topCell
       solverContext.assertGroundExpr(eql(cell.toNameEx ? "i", int(i)).typed(types, "b"))
       state = state.setArena(arena)
@@ -57,7 +57,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
 
     val intCells = Seq(1, 2, 2).map(mkIntCell)
     val pickedState = new CherryPick(rewriter)
-      .pickBasic(IntT(), state, oracle, intCells, state.arena.cellFalse().toNameEx)
+      .pickBasic(IntT1(), state, oracle, intCells, state.arena.cellFalse().toNameEx)
     assert(solverContext.sat())
 
     assertEqWhenChosen(rewriter, pickedState, oracle, 0, int(1).typed())
@@ -79,7 +79,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
 
     val tuples = Seq(mkTuple(1, 2), mkTuple(3, 4))
     state = new CherryPick(rewriter)
-      .pickTuple(TupleT(Seq(IntT(), IntT())), state, oracle, tuples, state.arena.cellFalse().toNameEx)
+      .pickTuple(TupT1(IntT1(), IntT1()), state, oracle, tuples, state.arena.cellFalse().toNameEx)
     assert(solverContext.sat())
 
     assertEqWhenChosen(rewriter, state, oracle, 0, tuples(0).toNameEx)
@@ -99,7 +99,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     }
 
     val tuples = Seq(mkTuple(1, 2, 3), mkTuple(3, 4, 5))
-    val tupleT = TupleT(Seq(IntT(), TupleT(Seq(IntT(), IntT()))))
+    val tupleT = TupT1(IntT1(), TupT1(IntT1(), IntT1()))
     state = new CherryPick(rewriter).pickTuple(tupleT, state, oracle, tuples, state.arena.cellFalse().toNameEx)
     assert(solverContext.sat())
 
@@ -121,7 +121,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     }
 
     val seqs = Seq(mkSeq(1, 2), mkSeq(3, 4))
-    state = new CherryPick(rewriter).pickSequence(SeqT(IntT()), state, oracle, seqs, state.arena.cellFalse().toNameEx)
+    state = new CherryPick(rewriter).pickSequence(SeqT1(IntT1()), state, oracle, seqs, state.arena.cellFalse().toNameEx)
     assert(solverContext.sat())
 
     assertEqWhenChosen(rewriter, state, oracle, 0, seqs(0).toNameEx)
@@ -142,7 +142,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     }
 
     val seqs = Seq(mkSeq(1, 2), mkSeq(3, 4, 5), mkSeq())
-    state = new CherryPick(rewriter).pickSequence(SeqT(IntT()), state, oracle, seqs, state.arena.cellFalse().toNameEx)
+    state = new CherryPick(rewriter).pickSequence(SeqT1(IntT1()), state, oracle, seqs, state.arena.cellFalse().toNameEx)
     assert(solverContext.sat())
 
     assertEqWhenChosen(rewriter, state, oracle, 0, seqs(0).toNameEx)
@@ -244,7 +244,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     }
 
     val sets = Seq(mkSet(1, 2), mkSet(3, 4))
-    state = new CherryPick(rewriter).pickSet(FinSetT(IntT()), state, oracle, sets, state.arena.cellFalse().toNameEx)
+    state = new CherryPick(rewriter).pickSet(SetT1(IntT1()), state, oracle, sets, state.arena.cellFalse().toNameEx)
     assert(solverContext.sat())
 
     assertEqWhenChosen(rewriter, state, oracle, 0, sets(0).toNameEx)
@@ -264,7 +264,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     }
 
     val sets = Seq(mkSet(enumSet(int(1), int(2)).typed(types, "I")), mkSet(enumSet().typed(types, "I")))
-    state = new CherryPick(rewriter).pickSet(FinSetT(IntT()), state, oracle, sets, state.arena.cellFalse().toNameEx)
+    state = new CherryPick(rewriter).pickSet(SetT1(IntT1()), state, oracle, sets, state.arena.cellFalse().toNameEx)
     assert(solverContext.sat())
 
     assertEqWhenChosen(rewriter, state, oracle, 0, sets(0).toNameEx)
@@ -284,7 +284,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     }
 
     val sets = Seq(mkSet(enumSet().typed(types, "I")))
-    state = new CherryPick(rewriter).pickSet(FinSetT(IntT()), state, oracle, sets, state.arena.cellFalse().toNameEx)
+    state = new CherryPick(rewriter).pickSet(SetT1(IntT1()), state, oracle, sets, state.arena.cellFalse().toNameEx)
     assert(solverContext.sat())
 
     assertEqWhenChosen(rewriter, state, oracle, 0, sets(0).toNameEx)
@@ -307,7 +307,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     val set56 = enumSet(int(5), int(6)) ? "I"
     val sets =
       Seq(rewriteEx(enumSet(set12, set34).typed(types, "II")), rewriteEx(enumSet(set56).typed(types, "II")))
-    state = new CherryPick(rewriter).pickSet(FinSetT(FinSetT(IntT())), state, oracle, sets,
+    state = new CherryPick(rewriter).pickSet(SetT1(SetT1(IntT1())), state, oracle, sets,
         state.arena.cellFalse().toNameEx)
     assert(solverContext.sat())
 
@@ -334,7 +334,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     val fun1 = mkFun(set12, plus(int(2), name("x") ? "i") ? "i")
     val fun2 = mkFun(set23, mult(int(2), name("x") ? "i") ? "i")
     val funs = Seq(fun1, fun2)
-    val funT = FunT(FinSetT(IntT()), IntT())
+    val funT = FunT(CellTFrom(SetT1(IntT1())), CellTFrom(IntT1()))
     state = new CherryPick(rewriter).pickFun(funT, state, oracle, funs, state.arena.cellFalse().toNameEx)
     assert(solverContext.sat())
 

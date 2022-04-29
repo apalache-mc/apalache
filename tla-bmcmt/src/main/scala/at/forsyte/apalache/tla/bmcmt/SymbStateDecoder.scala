@@ -27,25 +27,26 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
   }
 
   def decodeCellToTlaEx(arena: Arena, cell: ArenaCell): TlaEx = cell.cellType match {
-    case BoolT() =>
+    case CellTFrom(BoolT1()) =>
       solverContext.evalGroundExpr(cell.toNameEx).withTag(Typed(BoolT1()))
 
-    case IntT() =>
+    case CellTFrom(IntT1()) =>
       solverContext.evalGroundExpr(cell.toNameEx).withTag(Typed(IntT1()))
 
-    case ConstT(uninterpretedType) =>
+    case tt @ (CellTFrom(ConstT1(_)) | CellTFrom(StrT1())) =>
       // First, attempt to check the cache
       val found = rewriter.modelValueCache.findKey(cell)
       if (found.isDefined) {
-        val pa @ (utype, index) = found.get
-        if (utype == ModelValueHandler.STRING_TYPE)
+        val pa @ (_, index) = found.get
+        if (tt == CellTFrom(StrT1())) {
           tla.str(index).typed()
-        else
+        } else {
           tla.str(ModelValueHandler.construct(pa)).typed()
+        }
       } else {
         // if not in the cache, it might be the case that another cell, which has asserted equivalence
         // with the original cell can be found
-        val values = rewriter.modelValueCache.values().filter(_.cellType == ConstT(uninterpretedType)).toSeq
+        val values = rewriter.modelValueCache.values().filter(_.cellType == tt).toSeq
         findCellInSet(values, cell.toNameEx) match {
           // found among the cached keys
           case Some(c) =>
@@ -61,13 +62,10 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     case UnknownT() =>
       throw new IllegalStateException(s"Found cell $cell of cell type Unknown")
 
-    case setT @ FinSetT(elemT) =>
-      val setT1 = setT.toTlaType1
-
+    case CellTFrom(setT1 @ SetT1(elemT)) =>
       def inSet(e: ArenaCell) = {
         val mem = tla
-          .apalacheSelectInSet(fromTlaEx(e.toNameEx).typed(elemT.toTlaType1),
-              fromTlaEx(cell.toNameEx).typed(setT.toTlaType1))
+          .apalacheSelectInSet(fromTlaEx(e.toNameEx).as(elemT), fromTlaEx(cell.toNameEx).typed(setT1))
           .typed(BoolT1())
         solverContext.evalGroundExpr(mem) == tla.bool(true).typed()
       }
@@ -143,8 +141,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         .toSeq
       tla.apalacheSetAsFun(tla.enumSet(pairs: _*).as(SetT1(pairT))).as(funT1)
 
-    case SeqT(elemT) =>
-      val elemT1 = elemT.toTlaType1
+    case CellTFrom(SeqT1(elemT1)) =>
       val (protoSeq, lenCell, capacity) = protoSeqOps.unpackSeq(arena, cell)
       val len = decodeCellToTlaEx(arena, lenCell) match {
         case ValEx(TlaInt(n)) =>
@@ -160,7 +157,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       val decodedElems = protoSeqOps.elems(arena, protoSeq).map(decodeCellToTlaEx(arena, _)).toList.slice(0, len)
       tla.tuple(decodedElems: _*).typed(SeqT1(elemT1))
 
-    case r @ RecordT(_) =>
+    case CellTFrom(r @ RecT1(_)) =>
       def exToStr(ex: TlaEx): TlaStr = ex match {
         case ValEx(s @ TlaStr(_)) => s
         case _                    => throw new RewriterException("Expected a string, found: " + ex, ex)
@@ -171,7 +168,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       val domCell = arena.getDom(cell)
       val dom = decodeSet(arena, domCell).map(exToStr)
       val fieldValues = arena.getHas(cell)
-      val keyList = r.fields.keySet.toList
+      val keyList = r.fieldTypes.keySet.toList
 
       def eachField(es: List[TlaEx], key: String): List[TlaEx] = {
         if (!dom.contains(TlaStr(key))) {
@@ -185,7 +182,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
 
       val keysAndValues = keyList.reverse.foldLeft(List[TlaEx]())(eachField)
       if (keysAndValues.nonEmpty) {
-        OperEx(TlaFunOper.enum, keysAndValues: _*)(Typed(r.toTlaType1))
+        OperEx(TlaFunOper.enum, keysAndValues: _*)(Typed(r))
       } else {
         logger.error(
             s"Decoder: Found an empty record $cell when decoding a counterexample, domain = $domCell. This is a bug.")
@@ -193,12 +190,12 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         tla.str(s"Empty record domain $domCell").typed()
       }
 
-    case t @ TupleT(_) =>
+    case CellTFrom(t @ TupT1(_)) =>
       val tupleElems = arena.getHas(cell)
       val elemAsExprs = tupleElems.map(c => decodeCellToTlaEx(arena, c))
-      tla.tuple(elemAsExprs: _*).typed(t.toTlaType1)
+      tla.tuple(elemAsExprs: _*).typed(t)
 
-    case PowSetT(FinSetT(_)) =>
+    case PowSetT(SetT1(_)) =>
       val baseset = decodeCellToTlaEx(arena, arena.getDom(cell))
       tla.powSet(baseset).typed(SetT1(TlaType1.fromTypeTag(baseset.typeTag)))
 

@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
-import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, RewritingRule, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.TypedPredefs._
@@ -96,7 +95,7 @@ class FoldSetRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // if current \notin set (overapproximation), or
         // \E c \in counted: current = c /\ c \in set (duplication)
         // then newPartialResult = oldPartialResult
-        val arenaWithCondition = partialState.arena.appendCell(BoolT())
+        val arenaWithCondition = partialState.arena.appendCell(BoolT1())
         val condCell = arenaWithCondition.topCell
         val condEx = tla
           .or(

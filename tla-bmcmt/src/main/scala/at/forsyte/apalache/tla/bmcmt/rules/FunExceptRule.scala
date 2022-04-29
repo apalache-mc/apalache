@@ -76,7 +76,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // get the function relation from the arena
     val relation = nextState.arena.getCdm(funCell)
     val relationCells = nextState.arena.getHas(relation)
-    nextState = nextState.updateArena(_.appendCell(relation.cellType))
+    nextState = nextState.updateArena(_.appendCellOld(relation.cellType))
     val resultRelation = nextState.arena.topCell
 
     // introduce a new function relation that is organized as follows:
@@ -118,7 +118,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     relationCells.foreach(cacheEqForPair)
 
     // introduce new function
-    nextState = nextState.updateArena(_.appendCell(funCell.cellType))
+    nextState = nextState.updateArena(_.appendCellOld(funCell.cellType))
     val newFunCell = nextState.arena.topCell
     // and attach the relation to it
     nextState
@@ -139,7 +139,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
 
     // create a new record
-    var nextState = state.updateArena(_.appendCell(oldRecord.cellType))
+    var nextState = state.updateArena(_.appendCellOld(oldRecord.cellType))
     val newRecord = nextState.arena.topCell
     val domain = nextState.arena.getDom(oldRecord)
     // copy over the domain, as it does not change
@@ -174,7 +174,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
 
     // create a new tuple
-    var nextState = state.updateArena(_.appendCell(oldTuple.cellType))
+    var nextState = state.updateArena(_.appendCellOld(oldTuple.cellType))
     val newTuple = nextState.arena.topCell
 
     // add the indices of old tuple but update the index that was requested to be updated
