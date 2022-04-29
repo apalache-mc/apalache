@@ -98,7 +98,7 @@ package object types {
   sealed case class CellTFrom(tt: TlaType1) extends CellT with Serializable {
     override val signature: String = tt match {
       case ConstT1(utype)     => s"UT_$utype"
-      case StrT1()            => StrT1().toString()
+      case StrT1()            => "UT_Str"
       case BoolT1()           => "b"
       case IntT1()            => "i"
       case SetT1(et)          => s"S" + CellTFrom(et).signature

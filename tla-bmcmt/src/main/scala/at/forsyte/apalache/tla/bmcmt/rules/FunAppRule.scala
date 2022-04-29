@@ -35,7 +35,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         // we use funCell.cellType, not funEx.typeTag, because funEx can be the result of the rewriter
         funCell.cellType match {
-          case CellTFrom(TupT1(_)) =>
+          case CellTFrom(TupT1(_ @_*)) =>
             // cheap access as `argEx` should be a literal
             applyTuple(funState, funCell, funEx, argEx)
 
