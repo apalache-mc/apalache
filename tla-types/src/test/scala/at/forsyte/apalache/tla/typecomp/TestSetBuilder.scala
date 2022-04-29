@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import org.junit.runner.RunWith
 import org.scalacheck.Gen
 import org.scalatestplus.junit.JUnitRunner
+import scalaz.unused
 
 import scala.collection.immutable.SortedMap
 
@@ -179,7 +180,7 @@ class TestSetBuilder extends BuilderTest {
 
     def mkWellTyped(tt: TlaType1): T =
       builder.name("S", SetT1(SetT1(tt)))
-    def mkIllTyped(tt: TlaType1): Seq[T] =
+    def mkIllTyped(@unused tt: TlaType1): Seq[T] =
       Seq(
           builder.name("S", InvalidTypeMethods.notSet),
           builder.name("S", SetT1(InvalidTypeMethods.notSet)),
@@ -313,7 +314,7 @@ class TestSetBuilder extends BuilderTest {
     val resultIsExpected = expectEqTyped[TParam, T](
         TlaSetOper.map,
         mkWellTyped,
-        { case (a, seq) => a +: seq },
+        { case (a, seq) => liftBuildToSeq(a +: seq) },
         { case (t, _) => SetT1(t) },
     )
 
@@ -369,7 +370,7 @@ class TestSetBuilder extends BuilderTest {
     val resultIsExpected2 = expectEqTyped[TParam, T2](
         TlaSetOper.map,
         mkWellTyped2,
-        { case (a, seq) => a +: seq.flatMap { case (b, c) => Seq(b, c) } },
+        { case (a, seq) => liftBuildToSeq(a +: seq.flatMap { case (b, c) => Seq(b, c) }) },
         { case (t, _) => SetT1(t) },
     )
 
@@ -536,7 +537,7 @@ class TestSetBuilder extends BuilderTest {
 
     def mkWellTyped(tt: TlaType1): T =
       builder.name("S", SetT1(tt))
-    def mkIllTyped(tt: TlaType1): Seq[T] =
+    def mkIllTyped(@unused tt: TlaType1): Seq[T] =
       Seq(
           builder.name("S", InvalidTypeMethods.notSet)
       )
@@ -652,7 +653,7 @@ class TestSetBuilder extends BuilderTest {
 
     def mkWellTyped(tt: TlaType1): T =
       builder.name("S", SetT1(tt))
-    def mkIllTyped(tt: TlaType1): Seq[T] =
+    def mkIllTyped(@unused tt: TlaType1): Seq[T] =
       Seq(
           builder.name("S", InvalidTypeMethods.notSet)
       )

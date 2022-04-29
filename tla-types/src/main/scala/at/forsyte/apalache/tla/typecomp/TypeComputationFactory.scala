@@ -19,6 +19,8 @@ class TypeComputationFactory(varPool: TypeVarPool) {
   private val boolOperMap: SignatureGenMap = BoolOperSignatures.getMap(varPool)
   private val setOperMap: SignatureGenMap = SetOperSignatures.getMap(varPool)
 
+  private val unifier: TypeUnifier = new TypeUnifier(varPool)
+
   private val knownSignatures: SignatureGenMap = aritOperMap ++ boolOperMap ++ setOperMap
 
   /** Given an operator and arity (important for polyadic operators), returns a signature, if known */
@@ -42,7 +44,7 @@ class TypeComputationFactory(varPool: TypeVarPool) {
           // This substitution tells us what monotype is obtained by applying a polymorphic operator
           // to arguments with monotypes
           val totalSubOpt = from.zip(args).foldLeft(Option(Substitution.empty)) { case (subOpt, (argT, paramT)) =>
-            subOpt.flatMap(s => singleUnification(argT, paramT, s).map(_._1))
+            subOpt.flatMap(s => unifier.unify(s, argT, paramT).map(_._1))
           }
           totalSubOpt
             .map(sub => liftRet(sub.subRec(to))) // we apply it to the (polymorphic) return type given by the signature
@@ -55,13 +57,4 @@ class TypeComputationFactory(varPool: TypeVarPool) {
         }
     }
   }
-
-  /** Performs unification on 2 types with a fresh unifier */
-  private def singleUnification(
-      lhs: TlaType1,
-      rhs: TlaType1,
-      subst: Substitution): Option[(Substitution, TlaType1)] = {
-    (new TypeUnifier).unify(subst, lhs, rhs)
-  }
-
 }
