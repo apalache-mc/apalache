@@ -31,7 +31,7 @@ object Dependencies {
     val scalaz = "org.scalaz" %% "scalaz-core" % "7.3.5"
     val slf4j = "org.slf4j" % "slf4j-api" % "1.7.36"
     val tla2tools = "org.lamport" % "tla2tools" % "1.7.0-SNAPSHOT"
-    val ujson = "com.lihaoyi" %% "ujson" % "1.6.0"
+    val ujson = "com.lihaoyi" %% "ujson" % "2.0.0"
     val z3 = "io.github.tudo-aqua" % "z3-turnkey" % "4.8.14"
   }
 
