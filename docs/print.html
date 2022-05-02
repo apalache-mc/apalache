@@ -2583,6 +2583,12 @@ finite domains and co-domains.</li>
 e.g., a system specification cannot operate on the set of all integers.</li>
 <li>Only finite executions of bounded length are analyzed.</li>
 </ol>
+<h2><a class="header" href="#conventions" id="conventions">Conventions</a></h2>
+<p>Throughout this manual, we use the following conventions:</p>
+<ul>
+<li><code>APALACHE_HOME</code> is used as shorthand for the path to a local copy of the
+Apalache source code.</li>
+</ul>
 <h1><a class="header" href="#installation" id="installation">Installation</a></h1>
 <p>There are three ways to run Apalache:</p>
 <ol>
@@ -2613,14 +2619,19 @@ Windows, please <a href="https://github.com/informalsystems/apalache/blob/unstab
 request</a>.</p>
 <h1><a class="header" href="#using-a-docker-image" id="using-a-docker-image">Using a docker image</a></h1>
 <p><strong>We publish Docker images for every release</strong> 😎</p>
-<p><a href="https://www.docker.com/">Docker</a> lets you to run Apalache in an isolated container.
-All dependencies are already installed in docker. However, you have to install docker.</p>
+<p><strong>NOTE</strong>: Running Apalache through a docker application image complicates
+configuration of the tool considerably. Unless you have a pressing need to use
+the docker image, we recommend using one of our <a href="apalache/installation/./jvm.html">prebuilt releases</a>.</p>
+<p><a href="https://www.docker.com/">Docker</a> lets you to run the Apalache tool from inside
+an isolated container.  The only dependency required to run Apalache is the a
+suitable JVM, and the container supplies this. However, you must already have
+<a href="https://docs.docker.com/get-docker/">docker installed</a>.</p>
 <p>To get the latest Apalache image, issue the command:</p>
 <pre><code class="language-bash">docker pull ghcr.io/informalsystems/apalache
 </code></pre>
 <h2><a class="header" href="#running-the-docker-image" id="running-the-docker-image">Running the docker image</a></h2>
 <p>To run an Apalache image, issue the command:</p>
-<pre><code class="language-bash">$ docker run --rm -v &lt;your-spec-directory&gt;:/var/apalache informalsystems/apalache &lt;args&gt;
+<pre><code class="language-bash">$ docker run --rm -v &lt;your-spec-directory&gt;:/var/apalache ghcr.io/informalsystems/apalache &lt;args&gt;
 </code></pre>
 <p>The following docker parameters are used:</p>
 <ul>
@@ -2647,7 +2658,9 @@ version is used; you can also refer to a specific tool version, e.g., <code>info
 </li>
 </ul>
 <p>We provide a convenience wrapper for this docker command in
-<code>script/run-docker.sh</code>. To run the <code>latest</code> image using the script, execute</p>
+<code>script/run-docker.sh</code>. Assuming you've downloaded the Apalache source code into
+a directory located at <code>APALACHE_HOME</code>, you can run the <code>latest</code> image via the
+script by running:</p>
 <pre><code class="language-bash">$ $APALACHE_HOME/script/run-docker.sh &lt;args&gt;
 </code></pre>
 <p>To specify a different image, set <code>APALACHE_TAG</code> like so:</p>
