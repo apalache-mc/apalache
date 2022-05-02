@@ -274,7 +274,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val arraySort = getOrMkCellSort(arrayT)
     log(s"(declare-const $updatedArrayName $arraySort)")
     val updatedArray = z3context.mkConst(updatedArrayName, arraySort)
-    cellCache(arrayId).insert(0, (updatedArray, arrayT, level))
+    cellCache += (arrayId -> cellCache(arrayId).prepend((updatedArray, arrayT, level)))
     _metrics = _metrics.addNConsts(1)
     updatedArray.asInstanceOf[ExprSort]
   }
