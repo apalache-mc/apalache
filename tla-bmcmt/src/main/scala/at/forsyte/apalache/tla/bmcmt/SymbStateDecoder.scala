@@ -206,7 +206,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       .getHas(relation)
       .filter(isInRelation)
       .foldLeft(Map[TlaEx, TlaEx]())(decodePair)
-      .map { case (k,v) => tla.tuple(k, v).as(pairT) }
+      .map { case (k, v) => tla.tuple(k, v).as(pairT) }
       .toSeq
     tla.apalacheSetAsFun(tla.enumSet(pairs: _*).as(SetT1(pairT))).as(funT1)
   }
