@@ -1403,6 +1403,17 @@ $ apalache-mc check --inv=Inv --length=6 --cinit=CInit SetAddDel.tla | sed 's/I@
 EXITCODE: OK
 ```
 
+### check OracleFunSet succeeds (array-encoding)
+
+Regression test for https://github.com/informalsystems/apalache/issues/1680
+Function sets themselves should be able to be set elements.
+
+```sh
+$ apalache-mc check OracleFunSet.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
 ## configure the check command
 
 Testing various flags that are set via command-line options and the TLC configuration file. The CLI has priority over
