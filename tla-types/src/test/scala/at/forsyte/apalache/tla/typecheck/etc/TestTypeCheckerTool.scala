@@ -44,7 +44,7 @@ class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyM
   def loadSpecFromResource(name: String): Source = {
     // Previously, we were using fromResource, but it was too unstable across environments
     // (e.g., it failed in Intellij Idea). Now we are just reading it from the current working directory.
-    Source.fromFile(s"src/test/resources/$name.tla")
+    Source.fromFile(s"tla-types/src/test/resources/$name.tla")
   }
 
   test("the tool runs and reports no type errors") {
