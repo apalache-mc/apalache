@@ -84,13 +84,6 @@ ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 // Test configuration //
 ///////////////////////////////
 
-// NOTE: Include these settings in any projects that require Apalache's TLA+ modules
-lazy val tlaModuleTestSettings = Seq(
-    // This ensures that tests run from their respective sub-project directories
-    // and sequentially. FIXME: https://github.com/informalsystems/apalache/issues/1577
-    Test / fork := true
-)
-
 lazy val testSettings = Seq(
     // Configure the test reporters for concise but informative output.
     // See https://www.scalatest.org/user_guide/using_scalatest_with_sbt
