@@ -63,7 +63,7 @@ To do this, we couldn't just separately encode `body` and `e1,...,en`, because t
 This is mostly due to the fact that there is no 1-to-1 correspondence between TLA+ objects and SMT datatypes, so encoding object equality is more complicated (which would be needed to express that `ei` instantiates `pi`).
 Therefore we must, no later than at the point of the rewriting rule, know `body[e1/p1,...,en/pn]`. 
 
-While inlining non-nullary operators is  strictly necessary, inlining nullary operators is not, because nullary operators, by definition, do not have formal parameters. 
+While inlining non-nullary operators is strictly necessary, inlining nullary operators is not, because nullary operators, by definition, do not have formal parameters. 
 Therefore, in a well-constructed expression, all variables appearing in a nullary operator are scoped, i.e. they are  either specification-level variables (defined as `VARIABLE`), or bound in the context within which the operator is defined, if local. An example of the latter would be `i` in 
 ```tla
 \E i \in S: LET i2 == i * i in i2 = 0
@@ -78,7 +78,7 @@ A1(p) ==
 A2(p) == F(p,p)
 ```
 
-If we apply the substitution `{p -> e}`, for some complex value `e`, to the bodies of both operators, the resutls are 
+If we apply the substitution `{p -> e}`, for some complex value `e`, to the bodies of both operators, the results are 
 
 ```tla
 LET pCached == e
