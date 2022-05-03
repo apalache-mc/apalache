@@ -159,6 +159,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
   private def decodeFunToTlaEx(arena: Arena, cell: ArenaCell, funT1: FunT1): TlaEx = {
     // a function is represented with the relation {(x, f[x]) : x \in S}
     val relation = arena.getCdm(cell)
+    val FunT1(argT, resT) = funT1
 
     def isInRelation(pair: ArenaCell): Boolean = {
       solverContext.config.smtEncoding match {
@@ -168,8 +169,8 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
           val domain = arena.getDom(cell)
 
           def inDom(elem: ArenaCell): TlaEx = {
-            val elemEx = fromTlaEx(elem.toNameEx).typed(funT1.arg)
-            val domEx = fromTlaEx(domain.toNameEx).typed(SetT1(funT1.arg))
+            val elemEx = fromTlaEx(elem.toNameEx).typed(argT)
+            val domEx = fromTlaEx(domain.toNameEx).typed(SetT1(argT))
             tla.apalacheSelectInSet(elemEx, domEx).typed(BoolT1())
           }
 
@@ -181,7 +182,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         case `oopsla19Encoding` =>
           val mem =
             tla
-              .apalacheSelectInSet(pair.toNameEx.as(funT1.arg), relation.toNameEx.as(TupT1(funT1.arg, funT1.res)))
+              .apalacheSelectInSet(pair.toNameEx.as(argT), relation.toNameEx.as(TupT1(argT, resT)))
               .as(BoolT1())
           solverContext.evalGroundExpr(mem) == tla.bool(true).typed(BoolT1())
 
@@ -201,7 +202,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       }
     }
 
-    val pairT = TupT1(funT1.arg, funT1.res)
+    val pairT = TupT1(argT, resT)
     val pairs = arena
       .getHas(relation)
       .filter(isInRelation)
