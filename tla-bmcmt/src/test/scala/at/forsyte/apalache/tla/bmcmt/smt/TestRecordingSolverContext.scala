@@ -1,8 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
 import at.forsyte.apalache.tla.bmcmt.Arena
-import at.forsyte.apalache.tla.bmcmt.types.IntT
-import at.forsyte.apalache.tla.lir.TlaEx
+import at.forsyte.apalache.tla.lir.{IntT1, TlaEx}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import org.scalatest.funsuite.AnyFunSuite
@@ -18,7 +17,7 @@ trait TestRecordingSolverContext extends AnyFunSuite {
 
   test("operations proxied") {
     val solver = RecordingSolverContext.createZ3(None, solverConfig)
-    val arena = Arena.create(solver).appendCell(IntT())
+    val arena = Arena.create(solver).appendCell(IntT1())
     val x = arena.topCell
     solver.assertGroundExpr(tla.eql(x.toNameEx, int42))
     assert(solver.sat())
@@ -27,7 +26,7 @@ trait TestRecordingSolverContext extends AnyFunSuite {
 
   test("write and read") {
     val solver = RecordingSolverContext.createZ3(None, solverConfig)
-    val arena = Arena.create(solver).appendCell(IntT())
+    val arena = Arena.create(solver).appendCell(IntT1())
     val x = arena.topCell
     solver.assertGroundExpr(tla.eql(x.toNameEx, int42))
     assert(solver.sat())

@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.{FunT1, TlaEx}
+import at.forsyte.apalache.tla.lir.{FunT1, RecT1, TlaEx}
 
 /**
  * Implements f[x] for: functions, records, and tuples.
@@ -28,7 +28,7 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
     val relationElems = nextState.arena.getHas(relationCell)
     val nElems = relationElems.size
 
-    nextState = nextState.updateArena(_.appendCell(elemT, isUnconstrained = true)) // The cell will be unconstrained
+    nextState = nextState.updateArena(_.appendCellOld(elemT, isUnconstrained = true)) // The cell will be unconstrained
     val res = nextState.arena.topCell
 
     if (nElems > 0) {
@@ -84,12 +84,18 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
 
         // The edges, dom, and cdm are forwarded below
         nextState = nextState.updateArena(_.appendHasNoSmt(res, nextState.arena.getHas(pickedRes): _*))
-        if (pickedRes.cellType.isInstanceOf[FunT] || pickedRes.cellType.isInstanceOf[FinFunSetT]) {
-          nextState = nextState.updateArena(_.setDom(res, nextState.arena.getDom(pickedRes)))
-          nextState = nextState.updateArena(_.setCdm(res, nextState.arena.getCdm(pickedRes)))
-        } else if (pickedRes.cellType.isInstanceOf[RecordT]) {
-          // Records do not contain cdm metadata
-          nextState = nextState.updateArena(_.setDom(res, nextState.arena.getDom(pickedRes)))
+        pickedRes.cellType match {
+          case CellTFrom(FunT1(_, _)) | FinFunSetT(_, _) =>
+            nextState = nextState.updateArena(_.setDom(res, nextState.arena.getDom(pickedRes)))
+            nextState = nextState.updateArena(_.setCdm(res, nextState.arena.getCdm(pickedRes)))
+
+          case CellTFrom(RecT1(_)) =>
+            // Records do not contain cdm metadata
+            nextState = nextState.updateArena(_.setDom(res, nextState.arena.getDom(pickedRes)))
+
+          case _ =>
+            // do nothing
+            ()
         }
       }
     }

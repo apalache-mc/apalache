@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.bmcmt.smt.{PreproSolverContext, SolverConfig, Z3SolverContext}
-import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
@@ -218,7 +217,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
   }
 
   test("""c_i \in {TRUE, TRUE}""") { rewriterType: SMTEncoding =>
-    arena = arena.appendCell(BoolT())
+    arena = arena.appendCell(BoolT1())
     val cell = arena.topCell
     val ex =
       in(cell.toNameEx.as(boolT), enumSet(bool(true), bool(true)).as(boolSetT)).as(boolT)
@@ -261,7 +260,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(_) =>
-        nextState.arena.appendCell(IntT()) // the buggy rule implementation triggered an error here
+        nextState.arena.appendCell(IntT1()) // the buggy rule implementation triggered an error here
         rewriter.push()
         solverContext.assertGroundExpr(predEx)
         assert(solverContext.sat())
@@ -277,7 +276,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
   }
 
   test("""~(Bool \in {TRUE, TRUE})""") { rewriterType: SMTEncoding =>
-    arena = arena.appendCell(BoolT())
+    arena = arena.appendCell(BoolT1())
     val cell = arena.topCell
     val ex =
       not(in(cell.toNameEx.as(boolT), enumSet(bool(true), bool(true)).as(boolSetT)).as(boolT)).as(boolT)
@@ -462,20 +461,6 @@ trait TestSymbStateRewriterSet extends RewriterBase {
 
       case _ =>
         fail("Unexpected rewriting result")
-    }
-  }
-
-  test("""type incorrect { i \in {1}: FALSE } = { b \in {FALSE}: FALSE }""") { rewriterType: SMTEncoding =>
-    // This test worked in the previous versions.
-    // Now we enforce type correctness, and reject this expression right after type checking.
-    // Although we keep this test, it cannot originate from a well-typed TLA+ code.
-    val intFilter = filter(name("i").as(intT), enumSet(int(1)).as(intSetT), bool(false)).as(intSetT)
-    val boolFilter = filter(name("b").as(boolSetT), enumSet(bool(false)).as(boolSetT), bool(false)).as(boolSetT)
-    val ex = eql(intFilter.as(intSetT), boolFilter.as(boolSetT)).as(boolT)
-    val state = new SymbState(ex, arena, Binding())
-    val rewriter = create(rewriterType)
-    assertThrows[MalformedTlaError] {
-      rewriter.rewriteUntilDone(state)
     }
   }
 

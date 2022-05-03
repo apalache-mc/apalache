@@ -23,7 +23,6 @@ object ModelValueHandler {
   /**
    * The name that is designated for string, in contrast to model values.
    */
-  val STRING_TYPE: String = "str"
   private val matchRegex: Regex = raw"([a-zA-Z0-9_]+)_OF_([A-Z_][A-Z0-9_]*)".r
 
   /**

@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
@@ -480,7 +479,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     nextState.ex match {
       case NameEx(_) =>
         val cell = nextState.binding("x'")
-        assert(TupleT(List(IntT(), BoolT(), FinSetT(IntT()))) == cell.cellType)
+        assert(TupT1(IntT1(), BoolT1(), SetT1(IntT1())) == cell.cellType.toTlaType1)
 
         val membershipTest =
           and(in(appFun(prime(name("x") ? "ibI") ? "ibI", int(1)) ? "i", set12) ? "b",

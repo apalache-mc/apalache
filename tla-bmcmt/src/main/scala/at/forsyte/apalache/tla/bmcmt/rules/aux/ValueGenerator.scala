@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.types.{BoolT, CellT, FinSetT, TupleT}
+import at.forsyte.apalache.tla.bmcmt.types.{CellT, CellTFrom}
 import at.forsyte.apalache.tla.bmcmt.{
   arraysEncoding, oopsla19Encoding, ArenaCell, RewriterException, SymbState, SymbStateRewriter,
 }
@@ -58,7 +58,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
   }
 
   private def genBasic(state: SymbState, basicType: TlaType1): SymbState = {
-    val nextState = state.updateArena(a => a.appendCell(CellT.fromType1(basicType)))
+    val nextState = state.updateArena(a => a.appendCell(basicType))
     nextState.setRex(nextState.arena.topCell.toNameEx.withTag(Typed(basicType)))
   }
 
@@ -67,7 +67,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
     val (domArena, domCell) =
       rewriter.recordDomainCache.create(state.arena, (recordType.fieldTypes.keySet, SortedSet.empty))
     // create the record cell
-    var nextState = state.setArena(domArena.appendCell(CellT.fromType1(recordType)))
+    var nextState = state.setArena(domArena.appendCell(recordType))
     val recCell = nextState.arena.topCell
     nextState = nextState.updateArena(_.setDom(recCell, domCell))
     // convert the values to a list, so we don't have a lazy stream
@@ -82,7 +82,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
   }
 
   private def genTuple(state: SymbState, tupleType: TupT1): SymbState = {
-    var nextState = state.updateArena(a => a.appendCell(CellT.fromType1(tupleType)))
+    var nextState = state.updateArena(a => a.appendCell(tupleType))
     val tupleCell = nextState.arena.topCell
     // convert the values to a list, so we don't have a lazy stream
     val elemCells =
@@ -101,14 +101,14 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
       nextState = gen(nextState, elemType)
       elems = nextState.asCell :: elems
     }
-    val setType = FinSetT(CellT.fromType1(elemType))
-    nextState = nextState.updateArena(a => a.appendCell(setType))
+    val setType = CellT.fromType1(SetT1(elemType))
+    nextState = nextState.updateArena(a => a.appendCellOld(setType))
     val setCell = nextState.arena.topCell
     nextState = nextState.updateArena(a => a.appendHas(setCell, elems: _*))
     // In the arrays encoding, set membership constraints are not generated in appendHas, so we add them below
     if (rewriter.solverContext.config.smtEncoding == arraysEncoding) {
       for (elem <- elems) {
-        nextState = nextState.updateArena(_.appendCell(BoolT()))
+        nextState = nextState.updateArena(_.appendCell(BoolT1()))
         val pred = nextState.arena.topCell.toNameEx
         val storeElem = tla.apalacheStoreInSet(elem.toNameEx, setCell.toNameEx).typed(SetT1(elemType))
         val notStoreElem = tla.apalacheStoreNotInSet(elem.toNameEx, setCell.toNameEx).typed(SetT1(elemType))
@@ -150,16 +150,13 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
     }
 
     // create a function cell
-    nextState = nextState.updateArena(_.appendCell(CellT.fromType1(funType)))
+    nextState = nextState.updateArena(_.appendCell(funType))
     val funCell = nextState.arena.topCell
-
-    val argT = CellT.fromType1(funType.arg)
-    val resT = CellT.fromType1(funType.res)
 
     rewriter.solverContext.config.smtEncoding match {
       case `arraysEncoding` =>
         // create a relation cell
-        nextState = nextState.updateArena(_.appendCellNoSmt(FinSetT(TupleT(Seq(argT, resT)))))
+        nextState = nextState.updateArena(_.appendCellNoSmt(CellTFrom(SetT1(TupT1(funType.arg, funType.res)))))
         val relationCell = nextState.arena.topCell
         nextState = nextState.updateArena(_.appendHasNoSmt(relationCell, pairs: _*))
         nextState = nextState.updateArena(_.setCdm(funCell, relationCell))
@@ -167,7 +164,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
         val domainCells = pairs.map(pair => nextState.arena.getHas(pair)(0))
         val rangeCells = pairs.map(pair => nextState.arena.getHas(pair)(1))
 
-        nextState = nextState.updateArena(_.appendCell(FinSetT(argT)))
+        nextState = nextState.updateArena(_.appendCell(SetT1(funType.arg)))
         val domainCell = nextState.arena.topCell
         nextState = nextState.updateArena(_.appendHas(domainCell, domainCells: _*))
         // In the arrays encoding, set membership constraints are not generated in appendHas, so we add them below
@@ -192,7 +189,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
 
       case `oopsla19Encoding` =>
         // create a relation cell
-        nextState = nextState.updateArena(_.appendCell(FinSetT(TupleT(Seq(argT, resT)))))
+        nextState = nextState.updateArena(_.appendCell(SetT1(TupT1(funType.arg, funType.res))))
         val relationCell = nextState.arena.topCell
         // we just add the pairs, but do not restrict their membership, as the generator is free to produce a set
         // that is an arbitrary subset of the pairs

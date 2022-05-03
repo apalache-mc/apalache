@@ -28,7 +28,7 @@ class FunSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val dom = nextState.asCell
         nextState = rewriter.rewriteUntilDone(nextState.setRex(cdmEx))
         val cdm = nextState.asCell
-        val arena = nextState.arena.appendCell(FinFunSetT(dom.cellType, cdm.cellType))
+        val arena = nextState.arena.appendCellOld(FinFunSetT(dom.cellType, cdm.cellType))
         val newCell = arena.topCell
         val newArena = arena
           .setDom(newCell, dom)

@@ -26,7 +26,7 @@ class PowSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
 
         val dom = nextState.arena.findCellByNameEx(nextState.ex)
-        nextState = nextState.updateArena(_.appendCell(PowSetT(dom.cellType)))
+        nextState = nextState.updateArena(_.appendCellOld(PowSetT(dom.cellType.toTlaType1)))
         val powSetCell = nextState.arena.topCell
         nextState = nextState.updateArena(_.setDom(powSetCell, dom))
         nextState.setRex(powSetCell.toNameEx)
