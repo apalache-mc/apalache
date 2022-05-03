@@ -2,21 +2,16 @@ package at.forsyte.apalache.tla
 
 // Generated from the build.sbt file by the buildInfo plugin
 import apalache.BuildInfo
-
-import java.io.{File, FileNotFoundException}
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 import at.forsyte.apalache.infra.log.LogbackConfigurator
 import at.forsyte.apalache.infra.passes.{PassChainExecutor, ToolModule, WriteablePassOptions}
-import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorMessage, PassOptionException}
-import at.forsyte.apalache.io.{OutputManager, ReportGenerator}
+import at.forsyte.apalache.io.{ConfigManager, ConfigurationError, OutputManager, ReportGenerator}
 import at.forsyte.apalache.tla.bmcmt.config.{CheckerModule, ReTLAToVMTModule}
+import at.forsyte.apalache.tla.bmcmt.rules.vmt.TlaExToVMTWriter
 import at.forsyte.apalache.tla.imp.passes.ParserModule
+import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.tooling.ExitCodes
-import at.forsyte.apalache.tla.tooling.opt.{
-  AbstractCheckerCmd, CheckCmd, ConfigCmd, General, ParseCmd, ServerCmd, TestCmd, TranspileCmd, TypeCheckCmd,
-}
+import at.forsyte.apalache.tla.tooling.opt._
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import com.google.inject.{Guice, Injector}
 import com.typesafe.scalalogging.LazyLogging
@@ -26,10 +21,11 @@ import org.backuity.clist.Cli
 import util.ExecutionStatisticsCollector
 import util.ExecutionStatisticsCollector.Selection
 
+import java.io.{File, FileNotFoundException}
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import scala.jdk.CollectionConverters._
 import scala.util.Random
-import at.forsyte.apalache.io.ConfigManager
-import at.forsyte.apalache.tla.bmcmt.rules.vmt.TlaExToVMTWriter
 
 /**
  * Command line access to the APALACHE tools.
@@ -55,7 +51,11 @@ object Tool extends LazyLogging {
   // Returns `Left(errmsg)` in case of configuration errors
   private def outputAndLogConfig(cmd: General): Either[String, Unit] = {
     ConfigManager(cmd).map { cfg =>
-      OutputManager.configure(cfg)
+      try {
+        OutputManager.configure(cfg)
+      } catch {
+        case e: ConfigurationError => return Left(e.getMessage)
+      }
       // We currently use dummy files for some commands, so we skip here on non-existing files
       if (cmd.file.getName.endsWith(".tla") && cmd.file.exists()) {
         OutputManager.initSourceLines(cmd.file)
