@@ -1,11 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.lir.{IntT1, NameEx, OperEx, Typed}
+import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, NameEx, OperEx, Typed}
 
 /**
  * Implement equality test by delegating the actual test to LazyEquality. Integer equality is packed into a single SMT
@@ -35,7 +34,7 @@ class EqRule(rewriter: SymbStateRewriter) extends RewritingRule with IntArithPac
       val rightState = packArithExpr(rewriter, leftState.setRex(rhs))
 
       // add new arena cell
-      val newArena = rightState.arena.appendCell(BoolT())
+      val newArena = rightState.arena.appendCell(BoolT1())
       val newCell = newArena.topCell
 
       // assert the new cell is equal to the packed comparison
@@ -49,7 +48,7 @@ class EqRule(rewriter: SymbStateRewriter) extends RewritingRule with IntArithPac
       val leftCell = newState.asCell
       newState = rewriter.rewriteUntilDone(newState.setRex(rhs))
       val rightCell = newState.asCell
-      newState = newState.setArena(newState.arena.appendCell(BoolT()))
+      newState = newState.setArena(newState.arena.appendCell(BoolT1()))
       val eqPred = newState.arena.topCell
 
       // produce equality constraints, so that we can use SMT equality

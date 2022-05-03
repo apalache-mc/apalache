@@ -45,13 +45,13 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
     nextState.ex match {
       case NameEx(_) =>
         val cell = nextState.arena.findCellByNameEx(nextState.ex)
-        assert(cell.cellType == FinFunSetT(FinSetT(IntT()), FinSetT(BoolT())))
+        assert(cell.cellType == FinFunSetT(CellTFrom(SetT1(IntT1())), CellTFrom(SetT1(BoolT1()))))
         val dom = nextState.arena.getDom(cell)
-        assert(dom.cellType == FinSetT(IntT()))
+        assert(dom.cellType == CellTFrom(SetT1(IntT1())))
         val domElems = nextState.arena.getHas(dom)
         assert(domElems.length == 3)
         val cdm = nextState.arena.getCdm(cell)
-        assert(cdm.cellType == FinSetT(BoolT()))
+        assert(cdm.cellType == CellTFrom(SetT1(BoolT1())))
         val cdmElems = nextState.arena.getHas(cdm)
         assert(cdmElems.length == 2)
       // the contents is tested in the rules below
@@ -73,13 +73,13 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
     nextState.ex match {
       case NameEx(_) =>
         val cell = nextState.arena.findCellByNameEx(nextState.ex)
-        assert(cell.cellType == FinFunSetT(FinSetT(IntT()), FinSetT(FinSetT(BoolT()))))
+        assert(cell.cellType == FinFunSetT(CellTFrom(SetT1(IntT1())), CellTFrom(SetT1(SetT1(BoolT1())))))
         val dom = nextState.arena.getDom(cell)
-        assert(dom.cellType == FinSetT(IntT()))
+        assert(dom.cellType == CellTFrom(SetT1(IntT1())))
         val domElems = nextState.arena.getHas(dom)
         assert(domElems.length == 2)
         val cdm = nextState.arena.getCdm(cell)
-        assert(cdm.cellType == FinSetT(FinSetT(BoolT())))
+        assert(cdm.cellType == CellTFrom(SetT1(SetT1(BoolT1()))))
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -101,7 +101,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     val gprime = nextState.binding("g'")
-    assert(FunT(FinSetT(IntT()), FinSetT(BoolT())) == gprime.cellType)
+    assert(CellTFrom(FunT1(IntT1(), SetT1(BoolT1()))) == gprime.cellType)
     solverContext.assertGroundExpr(nextState.ex)
     assert(solverContext.sat())
   }
@@ -142,7 +142,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     val gprime = nextState.binding("g'")
-    assert(FunT(FinSetT(IntT()), FunT(FinSetT(IntT()), FinSetT(BoolT()))) == gprime.cellType)
+    assert(CellTFrom(FunT1(IntT1(), FunT1(IntT1(), SetT1(BoolT1())))) == gprime.cellType)
     solverContext.assertGroundExpr(nextState.ex)
     assert(solverContext.sat())
   }
@@ -244,13 +244,13 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
     nextState.ex match {
       case NameEx(_) =>
         val cell = nextState.arena.findCellByNameEx(nextState.ex)
-        assert(cell.cellType == FinFunSetT(FinSetT(IntT()), FinSetT(BoolT())))
+        assert(cell.cellType == FinFunSetT(CellTFrom(SetT1(IntT1())), CellTFrom(SetT1(BoolT1()))))
         val dom = nextState.arena.getDom(cell)
-        assert(dom.cellType == FinSetT(IntT()))
+        assert(dom.cellType == CellTFrom(SetT1(IntT1())))
         val domElems = nextState.arena.getHas(dom)
         assert(domElems.length == 5)
         val cdm = nextState.arena.getCdm(cell)
-        assert(cdm.cellType == FinSetT(BoolT()))
+        assert(cdm.cellType == CellTFrom(SetT1(BoolT1())))
         val cdmElems = nextState.arena.getHas(cdm)
         assert(cdmElems.length == 2)
       // the contents is tested in the rules below

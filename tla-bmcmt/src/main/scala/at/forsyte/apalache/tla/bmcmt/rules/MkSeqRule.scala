@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.ProtoSeqOps
-import at.forsyte.apalache.tla.bmcmt.types.IntT
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -60,7 +59,7 @@ class MkSeqRule(rewriter: SymbStateRewriter, renaming: IncrementalRenaming) exte
       var nextState = proto.make(capState, capacity, mkElem)
       val protoSeq = nextState.asCell
       // create the sequence on top of the proto sequence
-      nextState = nextState.updateArena(_.appendCell(IntT()))
+      nextState = nextState.updateArena(_.appendCell(IntT1()))
       val lenCell = nextState.arena.topCell
       rewriter.solverContext.assertGroundExpr(tla.eql(lenCell.toNameEx.as(IntT1()), tla.int(capacity)).as(BoolT1()))
       proto.mkSeq(nextState, SeqT1(elemT), protoSeq, lenCell)

@@ -30,7 +30,7 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
         assert(solverContext.sat())
         val cell = nextState.arena.findCellByName(name)
         cell.cellType match {
-          case FunT(FinSetT(IntT()), IntT()) =>
+          case CellTFrom(FunT1(IntT1(), IntT1())) =>
             () // OK
 
           case _ =>
@@ -175,7 +175,7 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
         assert(solverContext.sat())
         val cell = nextState.arena.findCellByName(name)
         cell.cellType match {
-          case IntT() =>
+          case CellTFrom(IntT1()) =>
             val eq1 = eql(cell.toNameEx ? "i", int(12))
               .typed(types, "b")
             solverContext.assertGroundExpr(eq1)
