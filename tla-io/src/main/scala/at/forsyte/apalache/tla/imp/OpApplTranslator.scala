@@ -7,7 +7,8 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaStrSet}
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import tla2sany.semantic._
+// Prevent shadowing our Context trait
+import tla2sany.semantic.{Context => _, _}
 
 /**
  * Translate operator applications. As many TLA+ expressions are defined via operators, this class is quite complex.

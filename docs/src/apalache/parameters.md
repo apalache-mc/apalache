@@ -39,12 +39,12 @@ instance, below is the example
 {{#include ../../../test/tla/y2k_cinit.tla::13}}
 ```
 
-To use `ConstInit`, pass it as the argument to `apalache`. For instance, for
+To use `ConstInit`, pass it as the argument to `apalache-mc`. For instance, for
 `y2k_cinit`, we would run the model checker as follows:
 
 ```tla
 $ cd $APALACHE_HOME/test/tla
-$ apalache check --inv=Safety \
+$ apalache-mc check --inv=Safety \
   --length=20 --cinit=ConstInit y2k_cinit.tla
 ```
 
@@ -81,6 +81,14 @@ employ, which invariants to check, as well as to initialize specification
 parameters. Some features of the TLC configuration files are not supported yet.
 Check the manual page on ["Syntax of TLC Configuration Files"](./tlc-config.md).
 
-_If you are checking a file `<myspec>.tla`, and the file `<myspec>.cfg` exists in
+**Behavior in versions >=0.25.0:**
+
+Apalache never loads a TLC configuration file, unless a filename is passed
+via the option `--config=<filename>`. If a filename is passed but the file
+does not exist, Apalache reports an error.
+
+**Behavior in versions <0.25.0:**
+
+If you are checking a file `<myspec>.tla`, and the file `<myspec>.cfg` exists in
 the same directory, it will be picked up by Apalache automatically. You can also
-explicitly specify which configuration file to use via the `--config` option._
+explicitly specify which configuration file to use via the `--config` option.

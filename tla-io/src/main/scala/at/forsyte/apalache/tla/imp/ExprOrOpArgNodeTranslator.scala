@@ -2,14 +2,15 @@ package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.tla.imp.src.{SourceLocation, SourceStore}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.{FixedArity, TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.{TlaDecimal, TlaInt, TlaStr}
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.typesafe.scalalogging.LazyLogging
-import tla2sany.semantic._
+// Prevent shadowing our Context trait
+import tla2sany.semantic.{Context => _, _}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
  * Translate a TLA+ expression.
@@ -138,19 +139,41 @@ class ExprOrOpArgNodeTranslator(
     // Hence, one has to take care of this, when printing the output to the user.
     val name = opArgNode.getName.toString
     opArgNode.getOp match {
-      // a lambda-definition is passed as an argument
       case defNode: OpDefNode if name == "LAMBDA" =>
+        // a lambda-definition is passed as an argument
         val decl = OpDefTranslator(sourceStore, annotationStore, context)
           .translate(defNode)
         // e.g., LET Foo(x) == e1 in Foo
         LetInEx(NameEx(name), decl)
 
-      // passing an operator
       case _: OpDefNode =>
+        // An operator is passed as an argument.
         // Return a reference to the operator by name.
         // Bugfix #1254: add the prefix, if the operator is inside an instantiated module.
-        val unit = context.lookup(name)
-        NameEx(unit.name)
+        // Bugfix #1626: the user may pass a built-in operator such as `\\union`, or a library operator such as `+`
+        context.lookup(name) match {
+          case DeclUnit(decl) =>
+            // a user-defined operator passed as an argument
+            NameEx(decl.name)
+
+          case OperAliasUnit(_, oper) =>
+            // An operator of the standard library. For example, I!+, where I == INSTANCE Integers.
+            wrapBuiltinWithLetIn(oper)
+
+          case ValueAliasUnit(_, tlaValue) =>
+            // The built-in value, e.g., Int.
+            ValEx(tlaValue)
+
+          case NoneUnit() =>
+            // No definition found. This may be a standard operator such as `\\union`.
+            OpApplTranslator.simpleOpcodeToTlaOper.get(name) match {
+              case Some(oper) =>
+                wrapBuiltinWithLetIn(oper)
+
+              case None =>
+                throw new SanyImporterException(s"Unexpected built-in operator $name applied as an argument")
+            }
+        }
 
       // passing a parameter that carries an operator
       case _: FormalParamNode =>
@@ -162,6 +185,30 @@ class ExprOrOpArgNodeTranslator(
             "Expected an operator definition as an argument, found: " + e
         )
     }
+  }
+
+  // Similar to LAMBDA, wrap a built-in operator with a LET-IN definition.
+  // For instance, `+` becomes:
+  // LET __builtin_PLUS_123(__p120, __p121) == __p120 + __p121 IN
+  // __builtin_PLUS_123
+  private def wrapBuiltinWithLetIn(oper: TlaOper): TlaEx = {
+    val nparams = oper.arity match {
+      case FixedArity(n) => n
+      case _ =>
+        throw new SanyImporterException("Expected an operator with a fixed number of arguments, found: " + oper.name)
+    }
+
+    // Introduce `nparams` parameters.
+    // Note that they cannot be higher-order parameters, as they are used in a HO operator already.
+    // We are using unique identifiers to avoid name clashes.
+    val params = 1.to(nparams).map(_ => "__p" + UID.unique).toList
+    // Introduce a unique name for the auxiliary operator definition
+    val defName = "__%s_%s".format(oper.name, UID.unique.toString)
+    // the body of our definition just applies the built-in operator `oper` to the definition parameters
+    val body = OperEx(oper, params.map(name => NameEx(name)): _*)
+    val auxiliaryDef = TlaOperDecl(defName, params.map(OperParam(_, 0)), body)
+    // once we have defined the auxiliary operator, we return it by name
+    LetInEx(NameEx(defName), auxiliaryDef)
   }
 
   // substitute an expression with the declarations that come from INSTANCE M WITH ...

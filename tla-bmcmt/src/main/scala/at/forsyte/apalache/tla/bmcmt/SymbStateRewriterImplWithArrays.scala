@@ -6,6 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.rules._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 
 /**
  * This class extends SymbStateRewriterImpl with encoding rules for the encoding with SMT arrays.
@@ -22,9 +23,10 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
  */
 class SymbStateRewriterImplWithArrays(
     _solverContext: SolverContext,
+    renaming: IncrementalRenaming,
     exprGradeStore: ExprGradeStore = new ExprGradeStoreImpl(),
     profilerListener: Option[MetricProfilerListener] = None)
-    extends SymbStateRewriterImpl(_solverContext, exprGradeStore, profilerListener) {
+    extends SymbStateRewriterImpl(_solverContext, renaming, exprGradeStore, profilerListener) {
 
   @transient
   override lazy val ruleLookupTable: Map[String, List[RewritingRule]] = defaultRuleLookupTable ++ newRules

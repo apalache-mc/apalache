@@ -1,124 +1,132 @@
-
 <a name="recursion"></a>
 ## Recursive operators and functions
 
-**We are going to remove support for recursive operators and functions soon.
-See [Folding sets and sequences](./folds.md).**
-
-**WARNING:** In our experience, it is hard to check recursive operators and
-functions in Apalache:
-
-  - Recursive operators need additional annotations.
-  - Resursive operators and functions usually apply `CHOOSE`, which
-    is hard to implement faithfully without blowing up the SMT encoding.
-
-Hence, we recommend using the operators `ApaFoldSet` and `ApaFoldSeqLeft`:
+While TLA+ allows the use of recursive operators and functions, we have decided to no longer support them in Apalache from version `0.23.1` onward, and suggest the use of fold operators, described in [Folding sets and sequences](./folds.md) instead: 
 
 ```tla
-{{#include ../../../../src/tla/Apalache.tla:72:93}}
+{{#include ../../../../src/tla/Apalache.tla:122:127}}
+
+{{#include ../../../../src/tla/Apalache.tla:137:140}}
 ```
 
 These operators are treated by Apalache in a more efficient manner than
-recursive operators. They are always terminating and thus do not require an
-annotation that specifies an upper bound on the number of operator iterations.
-We are preparing a tutorial on this topic.
+recursive operators. They always take at most `|S|` or `Len(seq)` steps to evaluate and require no additional annotations.
 
-**See [Folding sets and sequences](./folds.md).**
+Note that the remainder of this section discusses only recursive operators, for brevity. Recursive functions share the same issues.
 
-<a name="rec-op"></a>
-### Recursive operators
+### The problem with recursive operators
 
-In the preprocessing phase, Apalache replaces every application of a user
-operator with its body. We call this process "operator inlining".
-This cannot be done for recursive operators, for two reasons:
+In the preprocessing phase, Apalache replaces every application of a user-defined operator with its body. We call this process "operator inlining".
+This obviously cannot be done for recursive operators, since the process would never terminate. Additionally, even if inlining wasn't problematic, we would still face the following issues when attempting to construct a symbolic encoding: 
 
  1. A recursive operator may be non-terminating (although a non-terminating
     operator is useless in TLA+);
 
- 1. A terminating call to an operator may take an unpredicted number of iterations.
+ 1. A terminating call to an operator may take an unpredictable number of iterations.
 
-However, in practice, when one fixes specification parameters (that is,
-`CONSTANTS`), it is usually easy to find a bound on the number of operator
-iterations. For instance, consider the following specification:
-
-```tla
-{{#include ../../../../test/tla/Rec6.tla::}}
-```
-
-It is clear that the expression `Sum(S)` requires the number of iterations that
-is equal to `Cardinality(S) + 1`. Moreover, the expression `set \subseteq
-1..N` is an invariant, and thus every call `Sum(set)` requires up to `N+1`
-iterations.
-
-When we can find an upper bound on the number of iterations, Apalache can
-unroll the recursive operator up to this bound. To this end, we define two
-additional operators. For instance:
+A note on (2): In practice, when one fixes specification parameters (that is,
+`CONSTANTS`), it is sometimes possible to find a bound on the number of operator iterations. For instance, consider the following specification:
 
 ```tla
 {{#include ../../../../test/tla/Rec6.tla::}}
 ```
 
-In this case, Apalache unrolls every call to `Sum` exactly `UNROLL_TIMES_Sum`
-times, that is, four times. On the default branch, Apalache places
-`UNROLL_DEFAULT_Sum`, that is, 0.
+It is clear that the expression `Sum(S)` requires `Cardinality(S)` steps of recursive computation. Moreover, as the unspecified invariant `set \subseteq 1..N` always holds for this specification, every call `Sum(set)` requires up to `N` recursive steps.
 
-All recursively defined operators should follow this convention where, for every such operator `Oper`, the user defines both `UNROLL_TIMES_Oper`, which expands to a positive integer value, and `UNROLL_DEFAULT_Oper`, which expands to some default value `Oper(args*)` should take, if the computation would require more than `UNROLL_TIMES_Oper` recursive calls.
-At present, we only support literals (e.g. `4`) or primitive arithmetic expressions (e.g. `2 + 2`) in the body of `UNROLL_TIMES_Oper`.
+### The previously supported approach
 
-<a name="rec-fun"></a>
-
-#### Recursive functions
-
-Apalache offers limited support for recursive functions. However, read the
-warning below on why you should not use recursive functions. The restrictions
-are as follows:
-
- 1. Apalache supports recursive functions that return an integer or a Boolean.
-
- 1. As Apalache's simple type checker is not able to find the type of a
-recursive function, all uses of a recursive function should come with a type
-annotation.
-
- 1. As in TLC, the function domain must be a finite set.
-
-The example below shows a recursive function that computes the factorial of `n`.
-
+Previously, when it was possible to find an upper bound on the number of iterations of an operator `Op`, such as `N` for `Sum` in the example above, Apalache would unroll the recursive operator up to this bound. 
+Two additional operators, `UNROLL_DEFAULT_Op` and `UNROLL_TIMES_Op`, were required, for instance:
 
 ```tla
-{{#include ../../../../test/tla/Rec8.tla::}}
+{{#include ../../../../test/tla/Rec6.tla:20:21}}
 ```
 
-Check other examples in
-[`test/tla`](https://github.com/informalsystems/apalache/tree/unstable/test/tla) that
-start with the prefix `Rec`.
+With the operators `UNROLL_DEFAULT_Op` and `UNROLL_TIMES_Op`, 
+Apalache would internally replace the definition of `Op` with an operator `OpInternal`, that had the following property:
+ 1. `OpInternal` was non-recursive
+ 2. If computing `Op(x)` required a recursion stack of depth at most `UNROLL_TIMES_Op`, then `OpInternal(x) = Op(x)`
+ 3. Otherwise, `OpInternal(x)` would return the value, which would have been produced by the computation of `Op(x)`, if all applications of `Op` while the recursion stack height was `UNROLL_TIMES_Op` returned `UNROLL_DEFAULT_Op` instead of the value produced by another recursive call to `Op`
 
-**Why you should avoid recursive functions.** Sometimes, recursive functions
-concisely describe the function that you need. The nice examples are the
-factorial function (see above) and Fibonacci numbers (see
-[Rec3](https://github.com/informalsystems/apalache/blob/unstable/test/tla/Rec3.tla)).
-However, when you define a recursive function over sets, the complexity gets
-ugly really fast.
-
-Consider the example
-[Rec9](https://github.com/informalsystems/apalache/blob/unstable/test/tla/Rec9.tla),
-which computes set cardinality. Here is a fragment of the spec:
+Unsurprisingly, (3) caused a lot of confusion, particularly w.r.t. the meaning of the value `UNROLL_DEFAULT_Op`. Consider the following example:
 
 ```tla
-{{#include ../../../../test/tla/Rec9.tla:19:32}}
+RECURSIVE Max(_)
+Max(S) == 
+  IF S = {}
+  THEN 0
+  ELSE 
+    LET x == CHOOSE v \in S: TRUE IN
+    LET maxRest == Max(S \ {x}) 
+    IN IF x < maxRest THEN maxRest ELSE x
+
 ```
 
-Since we cannot fix the order, in which the set elements are evaluated, we
-define function `Card` over `SUBSET NUMS`, that is, all possible subsets of
-`NUMS`. Apalache translates the function in a quantifier-free theory of SMT.
-Hence, in this case, Apalache expands `SUBSET NUMS`, so it introduces
-`2^|NUMS|` sets! Further, Apalache writes down the SMT constraints for the
-domain of `Card`. As a result, it produces `NUMS * 2^|NUMS|` constraints.
-As you can see, recursive functions over sets explode quite fast.
+As computing `Max(S)` requires `|S|` recursive calls, there is no static upper bound to the recursion stack height that works for all set sizes. Therefore, if one wanted to use this operator in Apalache, one would have to guess (or externally compute) a value `N`, such that, _in the particular specification_, `Max` would never be called on an argument, the cardinality of which exceeded `N`, e.g.
+```tla
+UNROLL_TIMES_Max = 2
+```
 
-It is usually a good idea to use recursive operators over sets rather than
-recursive functions. The downside is that you have to provide an upper bound on
-the number of the operator iterations. The upside is that recursive operators
-are usually unrolled more efficiently. (If they contain only constant
-expressions, they are even computed by the translator!) For instance, set
-cardinality does not require `2^|NUMS|` constraints, when using a recursive
-operator.
+In this case, Apalache would produce something equivalent to
+```tla
+MaxInternal(S) ==
+  IF S = {}
+  THEN 0
+  ELSE 
+    LET x1 == CHOOSE v \in S: TRUE IN
+    LET maxRest1 == 
+      IF S \ {x1} = {}
+      THEN 0
+      ELSE 
+        LET x2 == CHOOSE v \in S \ {x1}: TRUE IN
+        LET maxRest2 == 
+          IF S \ {x1, x2}  = {}
+          THEN 0
+          ELSE 
+            LET x3 == CHOOSE v \in S \ {x1, x2}: TRUE IN
+            LET maxRest3 == UNROLL_DEFAULT_Max 
+            IN IF x3 < maxRest3 THEN maxRest3 ELSE x3
+        IN IF x2 < maxRest2 THEN maxRest2 ELSE x2
+    IN IF x1 < maxRest1 THEN maxRest1 ELSE x1
+```
+
+In this case, `MaxInternal({1,42}) = 42 = Max({1,42})`, by property (2) as expected, but `MaxInternal(1..10)` can be any one of 
+`3..10 \union {UNROLL_DEFAULT_Max}` (depending on the value of 
+`UNROLL_DEFAULT_Max` and the order in which elements are selected by `CHOOSE`), by property (3).
+
+So how does one select a sensible value for `UNROLL_DEFAULT_Op`? The problem is, one generally cannot. 
+In the `Max` case, one could pick a "very large" `N` and then assume that `Max` computation has "failed" (exceeded the `UNROLL_TIMES_Max` recursion limit) if the result was ever equal to `N`, though "very large" is of course subjective and gives absolutely no guarantees that `Max` won't be called on a set containing some element `M > N`.
+
+As the recursion becomes more complex (e.g. non-primitive or non-tail), attempting to implement a sort of "monitor" via default values quickly becomes impractical, if not impossible.
+
+Fundamentally though, it is very easy to accidentally either introduce spurious invariant violations, or hide actual invariant violations by doing this. For instance, in a specification with 
+```tla
+UNROLL_DEFAULT_Max = 42
+UNROLL_TIMES_Max = 2
+
+Inv == \A n \in 10..20: Max(1..n) = 42
+```
+
+Apalache could "prove" `Inv` holds, as it would rewrite this `Inv` to 
+
+```
+\A n \in 10..20: MaxInternal(1..n) = 99
+```
+
+and `MaxInternal(1..n)` evaluates to `99` for all `n \in 3..99` (and might still evaluate to `99` for `n > 99`, based on the `CHOOSE` order), despite the fact that `Max(1..n) = n` in the mathematical sense.
+
+Consider now the much simpler alternative:
+```tla
+NonRecursiveMax(S) == 
+  LET Max2(a,b) == IF a < b THEN b ELSE a IN
+  ApaFoldSet(Max2, 0, S) 
+```
+
+In this case, the user doesn't have to think about defaults (aside from the empty-set case), or recursion, as `ApaFoldSet` ensures `|S|`-step "iteration". As an additional benefit, one also doesn't need to use `CHOOSE` to select elements this way.
+
+So ultimately, the reasons for abandoning support for recursive operators boils down to the following:
+  - **In the vast majority of cases, equivalent functionality can be achieved by using `ApaFoldSet` or `ApaFoldSeqLeft`**
+  - `UNROLL_TIMES_Op` is hard to determine, or doesn't exist statically,
+  - `UNROLL_DEFAULT_Op` is hard to determine,
+  - Apalache doesn't have runtime evaluation of recursion, so it can't natively determine when a call to a recursive `Op` would have required more than `UNROLL_TIMES_Op` steps
+  - The use of recursive operators produces unpredictable results, particularly when used in invariants

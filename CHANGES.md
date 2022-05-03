@@ -2,6 +2,50 @@
      This file is generated. Do not write release notes here.
      Notes for unreleased changes go in ./UNRELEASED.md -->
 
+## 0.25.0
+
+### Breaking changes
+
+ * Recommended JDK version was bumped to JDK17, see #1662
+ * Add the option `--features` to enable experimental features, see #1648
+ * Never report a deadlock when `--no-deadlock=1`, see #1679
+
+### Features
+
+* Include the version number in `detailed.log`, see #1678
+* Add the option `--features` to enable experimental features, see #1648
+* Never load TLC config files by default, see #1676
+* Experimental type unification over rows, new records, and variants, see #1646
+* Experimental type checking for records over rows, see #1688
+
+### Bug fixes
+
+* Fix references to `--tune-here` (actually `--tuning-options`), see #1579
+* Not failing when assignment and `UNCHANGED` appear in invariants, see #1664
+
+## 0.24.1
+
+### Breaking changes
+
+ * Rename `--tuning` to `--tuning-options-file`, see #1579
+
+### Bug fixes
+
+ * Fix references to `--tune-here` (actually `--tuning-options`), see #1579
+
+## 0.24.0
+
+### Breaking changes
+* `RECURSIVE` operators and functions are no longer supported, see #1569
+* rename Apalache `FoldSet` and `FoldSeq` to `ApaFoldSet` and `ApaFoldSeqLeft`, see #1617
+
+### Features
+
+* Add the operator `Apalache!Guess`, see #1590 and #888
+* Extend the type parser to support ADR014 (experimental), see #1602
+* Keramelizer now rewrites \subseteq using forall quantification, see #1408
+* Builtin operators can be passed as arguments to HO operators, see #1630
+* Optimize set membership for record sets, see #1629
 ## 0.23.1
 
 ### Bug fixes

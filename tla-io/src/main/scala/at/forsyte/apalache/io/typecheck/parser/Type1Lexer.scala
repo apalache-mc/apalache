@@ -25,6 +25,8 @@ private[parser] object Type1Lexer extends RegexParsers {
   def apply(reader: Reader): List[Type1Token] = parseAll(expr, reader) match {
     case Success(result, _)   => result
     case NoSuccess(msg, next) => throw new Type1ParseError(msg, next.pos)
+    case Error(msg, next)     => throw new Type1ParseError(msg, next.pos)
+    case Failure(msg, next)   => throw new Type1ParseError(msg, next.pos)
   }
 
   def expr: Parser[List[Type1Token]] = skip ~> rep(token <~ skip) <~ eof
@@ -40,11 +42,11 @@ private[parser] object Type1Lexer extends RegexParsers {
     ) ///
 
   // it is important that linefeed is not in whiteSpace, as otherwise singleComment consumes the whole input!
-  def skip: Parser[Unit] = rep(whiteSpace | singleComment | linefeed) ^^^ Unit
+  def skip: Parser[Unit] = rep(whiteSpace | singleComment | linefeed) ^^^ ()
 
-  def linefeed: Parser[Unit] = "\n" ^^^ Unit
+  def linefeed: Parser[Unit] = "\n" ^^^ ()
 
-  def singleComment: Parser[Unit] = "//" ~ rep(not("\n") ~ ".".r) ^^^ Unit
+  def singleComment: Parser[Unit] = "//" ~ rep(not("\n") ~ ".".r) ^^^ ()
 
   private def identifier: Parser[IDENT] = {
     "[A-Za-z_][A-Za-z0-9_]*".r ^^ { name => IDENT(name) }

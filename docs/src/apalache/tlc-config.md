@@ -2,6 +2,10 @@
 
 **Author:** Igor Konnov, 2020
 
+To see how Apalache can use TLC configuration files, check the page
+on [Specification Parameters](./parameters.md#tlc-configuration-file)
+and [Running the Tool](./running.md).
+
 This file presents the syntax of
 [TLC](http://lamport.azurewebsites.net/tla/tools.html) configuration files
 in [EBNF](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form) and

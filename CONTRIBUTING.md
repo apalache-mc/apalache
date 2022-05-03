@@ -301,6 +301,14 @@ Run the units
 make test
 ```
 
+### Logging in unit tests
+
+We disable unit test log output for subprojects where necessary, to avoid output
+flooding the console. This affects unit tests only, and is configured in a
+per-subproject logback configuration file `test/resources/logback-test.xml`.
+This file also contains a commented-out console appender that can be enabled if
+needed for debugging purposes.
+
 ### Integration tests
 
 #### Installing Dependencies

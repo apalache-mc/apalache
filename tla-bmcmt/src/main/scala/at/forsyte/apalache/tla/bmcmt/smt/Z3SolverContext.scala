@@ -17,6 +17,7 @@ import org.apache.commons.io.output.NullOutputStream
 import java.io.PrintWriter
 import java.util.concurrent.atomic.AtomicLong
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 /**
  * <p> An implementation of a SolverContext using Z3. Note that this class overrides the global z3 settings
@@ -78,8 +79,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
    * representing sets, the cache stores a list of constants. The list is required to support incremental solving, since
    * different context levels can have different SSA arrays.
    */
-  private val cellCache: mutable.Map[Int, List[(ExprSort, CellT, Int)]] =
-    new mutable.HashMap[Int, List[(ExprSort, CellT, Int)]]
+  private val cellCache: mutable.Map[Int, ListBuffer[(ExprSort, CellT, Int)]] =
+    new mutable.HashMap[Int, ListBuffer[(ExprSort, CellT, Int)]]
 
   /**
    * A cache for the in-relation between a set and its potential element.
@@ -144,7 +145,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     log(s"(declare-const $cell $cellSort)")
     val cellName = cell.toString
     val const = z3context.mkConst(cellName, cellSort)
-    cellCache += (cell.id -> List((const, cell.cellType, level)))
+    cellCache += (cell.id -> ListBuffer((const, cell.cellType, level)))
 
     // If arrays are used, they are initialized here.
     if (cellSort.isInstanceOf[ArraySort[_, _]] && !cell.isUnconstrained) {
@@ -273,7 +274,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val arraySort = getOrMkCellSort(arrayT)
     log(s"(declare-const $updatedArrayName $arraySort)")
     val updatedArray = z3context.mkConst(updatedArrayName, arraySort)
-    cellCache += (arrayId -> ((updatedArray, arrayT, level) :: cellCache(arrayId)))
+    cellCache += (arrayId -> cellCache(arrayId).prepend((updatedArray, arrayT, level)))
     _metrics = _metrics.addNConsts(1)
     updatedArray.asInstanceOf[ExprSort]
   }
@@ -418,13 +419,13 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       maxCellIdPerContext = maxCellIdPerContext.tail
       level -= 1
       // clean the caches
-      cellSorts.retain((_, value) => value._2 <= level)
-      funDecls.retain((_, value) => value._2 <= level)
-      cellCache.foreach(entry => cellCache += entry.copy(_2 = entry._2.filter(_._3 <= level)))
-      cellCache.retain((_, value) => value.nonEmpty)
-      inCache.retain((_, value) => value._2 <= level)
-      constantArrayCache.retain((_, value) => value._2 <= level)
-      cellDefaults.retain((_, value) => value._2 <= level)
+      cellSorts.filterInPlace((_, value) => value._2 <= level)
+      funDecls.filterInPlace((_, value) => value._2 <= level)
+      cellCache.foreachEntry((_, valueList) => valueList.filterInPlace(value => value._3 <= level))
+      cellCache.filterInPlace((_, valueList) => valueList.nonEmpty)
+      inCache.filterInPlace((_, value) => value._2 <= level)
+      constantArrayCache.filterInPlace((_, value) => value._2 <= level)
+      cellDefaults.filterInPlace((_, value) => value._2 <= level)
     }
   }
 
@@ -436,13 +437,13 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       maxCellIdPerContext = maxCellIdPerContext.drop(n)
       level -= n
       // clean the caches
-      cellSorts.retain((_, value) => value._2 <= level)
-      funDecls.retain((_, value) => value._2 <= level)
-      cellCache.foreach(entry => cellCache += entry.copy(_2 = entry._2.filter(_._3 <= level)))
-      cellCache.retain((_, value) => value.nonEmpty)
-      inCache.retain((_, value) => value._2 <= level)
-      constantArrayCache.retain((_, value) => value._2 <= level)
-      cellDefaults.retain((_, value) => value._2 <= level)
+      cellSorts.filterInPlace((_, value) => value._2 <= level)
+      funDecls.filterInPlace((_, value) => value._2 <= level)
+      cellCache.foreachEntry((_, valueList) => valueList.filterInPlace(value => value._3 <= level))
+      cellCache.filterInPlace((_, valueList) => valueList.nonEmpty)
+      inCache.filterInPlace((_, value) => value._2 <= level)
+      constantArrayCache.filterInPlace((_, value) => value._2 <= level)
+      cellDefaults.filterInPlace((_, value) => value._2 <= level)
     }
   }
 
@@ -525,8 +526,11 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
           case PowSetT(domType) if encoding == arraysEncoding =>
             z3context.mkArraySort(getOrMkCellSort(domType), z3context.getBoolSort)
 
-          case FunT(FinSetT(domType), resType) if encoding == arraysEncoding =>
-            z3context.mkArraySort(getOrMkCellSort(domType), getOrMkCellSort(resType))
+          case FinFunSetT(domType, FinSetT(cdmElemType)) if encoding == arraysEncoding =>
+            z3context.mkArraySort(getOrMkCellSort(FunT(domType, cdmElemType)), z3context.getBoolSort)
+
+          case FunT(FinSetT(domElemType), resType) if encoding == arraysEncoding =>
+            z3context.mkArraySort(getOrMkCellSort(domElemType), getOrMkCellSort(resType))
 
           case _ =>
             log(s"(declare-sort $sig 0)")
