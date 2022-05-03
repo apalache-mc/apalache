@@ -65,7 +65,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     case CellTFrom(setT1 @ SetT1(elemT)) =>
       def inSet(e: ArenaCell) = {
         val mem = tla
-          .apalacheSelectInSet(fromTlaEx(e.toNameEx).as(elemT), fromTlaEx(cell.toNameEx).typed(setT1))
+          .apalacheSelectInSet(fromTlaEx(e.toNameEx).as(elemT), fromTlaEx(cell.toNameEx).as(setT1))
           .typed(BoolT1())
         solverContext.evalGroundExpr(mem) == tla.bool(true).typed()
       }
@@ -206,7 +206,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       .getHas(relation)
       .filter(isInRelation)
       .foldLeft(Map[TlaEx, TlaEx]())(decodePair)
-      .map(p => tla.tuple(p._1, p._2).as(pairT))
+      .map { case (k,v) => tla.tuple(k, v).as(pairT) }
       .toSeq
     tla.apalacheSetAsFun(tla.enumSet(pairs: _*).as(SetT1(pairT))).as(funT1)
   }
