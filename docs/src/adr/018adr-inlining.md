@@ -89,7 +89,8 @@ and
 F(e,e)
 ```
 
-In the first case, we can translate `pCached` to a cell and reuse the cell expression twice, whereas in the second, `e` is rewritten twice, independently.
+In the first case, we can translate `pCached` to a cell (Apalache's SMT representation of TLA+ values, see [this
+paper](https://dl.acm.org/doi/10.1145/3360549) for details) and reuse the cell expression twice, whereas in the second, `e` is rewritten twice, independently.
 So in the case that we perform (1), we will always perform the non-nullary variant, because it is strictly more efficient in our cell-arena framework fo rewriting rules.
 
 The reason for doing (2) is more pragmatic; in order to rewrite expressions which feature any of the higher-order (HO) built-in operators, e.g. `ApaFoldSet(A, v, S)`, we need to know, at the time of rewriting, how to evaluate an application of `A` (e.g. `A(partial, current)` for folding). 
