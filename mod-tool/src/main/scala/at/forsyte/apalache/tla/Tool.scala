@@ -415,7 +415,7 @@ object Tool extends LazyLogging {
     try {
       runner(executor, cmd)
     } catch {
-      case e: Exception if adapter.toMessage.isDefinedAt(e) =>
+      case e: Throwable if adapter.toMessage.isDefinedAt(e) =>
         adapter.toMessage(e) match {
           case NormalErrorMessage(text) =>
             logger.error(text)

@@ -13,7 +13,7 @@ import javax.inject.{Inject, Singleton}
  */
 @Singleton
 class ParserExceptionAdapter @Inject() () extends ExceptionAdapter {
-  override def toMessage: PartialFunction[Exception, ErrorMessage] = {
+  override def toMessage: PartialFunction[Throwable, ErrorMessage] = {
     case err: SanyException =>
       NormalErrorMessage("Error by TLA+ parser: " + err.getMessage)
 

@@ -27,5 +27,5 @@ case class FailureMessage(msg: String) extends ErrorMessage
  *   Igor Konnov
  */
 trait ExceptionAdapter {
-  def toMessage: PartialFunction[Exception, ErrorMessage]
+  def toMessage: PartialFunction[Throwable, ErrorMessage]
 }
