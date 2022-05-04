@@ -21,7 +21,7 @@ ThisBuild / version := scala.io.Source.fromFile(versionFile.value).mkString.trim
 ThisBuild / organization := "at.forsyte"
 ThisBuild / scalaVersion := "2.13.8"
 
-// https://oss.sonatype.org/content/repositories/snapshots/
+// Add resolver for Sonatype OSS Snapshots Maven repository
 ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
 
 // Shared dependencies accross all sub projects
