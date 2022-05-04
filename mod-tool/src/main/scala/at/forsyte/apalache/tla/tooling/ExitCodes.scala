@@ -14,7 +14,7 @@ object ExitCodes {
   /**
    * This exit code should be used when the tool is reporting no error in a specification.
    */
-  val NO_ERROR: Int = EC.ExitStatus.SUCCESS
+  val OK: Int = EC.ExitStatus.SUCCESS
 
   /**
    * This exit code should be used when the model checker has found a counterexample. We do not distinguish between
