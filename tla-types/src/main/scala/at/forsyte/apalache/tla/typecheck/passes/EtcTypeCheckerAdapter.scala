@@ -19,13 +19,7 @@ import com.typesafe.scalalogging.LazyLogging
 @Singleton
 class EtcTypeCheckerAdapter @Inject() (sourceStore: SourceStore, changeListener: ChangeListener)
     extends ExceptionAdapter with LazyLogging {
-  override def toMessage: PartialFunction[Throwable, ErrorMessage] = {
-    case err: OutOfMemoryError =>
-      logger.error(s"Ran out of heap memory (max JVM memory: ${Runtime.getRuntime.maxMemory})")
-      logger.error(s"To increase available heap memory, see the manual:")
-      logger.error("  [https://apalache.informal.systems/docs/apalache/running.html#supplying-jvm-arguments]")
-      NormalErrorMessage(s"Ran out of heap memory: ${err.getMessage}")
-
+  override def toMessage: PartialFunction[Throwable, ErrorMessage] = super.toMessage.orElse {
     case err: SanyException =>
       NormalErrorMessage("Error by TLA+ parser: " + err.getMessage)
 
