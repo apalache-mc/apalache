@@ -26,7 +26,7 @@
  * For a further discussion on that matter, see:
  * https://github.com/informalsystems/apalache/blob/ik/idiomatic-tla/docs/idiomatic/assignments.md
  *)
-x := e == x = e
+__x := __e == __x = __e
 
 (**
  * A generator of a data structure. Given a positive integer `bound`, and
@@ -134,7 +134,7 @@ ConstCardinality(__cardExpr) == __cardExpr
 RECURSIVE ApaFoldSet(_, _, _)
 ApaFoldSet(__Op(_,_), __v, __S) ==
     IF __S = {}
-    THEN v
+    THEN __v
     ELSE LET __w == CHOOSE __x \in __S: TRUE IN
          LET __T == __S \ {__w} IN
          ApaFoldSet(__Op, __Op(__v,__w), __T)
