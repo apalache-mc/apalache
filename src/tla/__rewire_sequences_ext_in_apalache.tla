@@ -148,7 +148,7 @@ Remove(__seq, __e) ==
  *)
 ReplaceAll(__seq, __old, __new) ==
   LET __copy_or_set(__i) ==
-    IF seq[__i] = __old THEN __new ELSE __seq[__i]
+    IF __seq[__i] = __old THEN __new ELSE __seq[__i]
   IN
   SubSeq(__ApalacheMkSeq(__ApalacheSeqCapacity(__seq), __copy_or_set),
         1, Len(__seq))
@@ -393,7 +393,7 @@ Zip(__s, __t) ==
   THEN \* the community modules do not specify the behavior for this case
     <<>>
   ELSE
-    SubSeq(__ApalacheMkSeq(__ApalacheSeqCapacity(s), __mk_tup), 1, Len(__s))
+    SubSeq(__ApalacheMkSeq(__ApalacheSeqCapacity(__s), __mk_tup), 1, Len(__s))
 
 (**
  * The set of all subsequences of the sequence  s. Note that the empty
