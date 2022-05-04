@@ -1,9 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.{CellT, FinSetT}
+import at.forsyte.apalache.tla.bmcmt.types.{CellT, CellTFrom}
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, TypingException}
+import at.forsyte.apalache.tla.lir.{OperEx, SetT1, TlaEx, TypingException}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 
@@ -31,10 +31,10 @@ class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val cells = newEs.map(nextState.arena.findCellByNameEx)
         val setT = CellT.fromTypeTag(ex.typeTag)
         val elemType = setT match {
-          case FinSetT(et) => et
-          case setT @ _    => throw new TypingException("Expected a finite set, found: " + setT, state.ex.ID)
+          case CellTFrom(SetT1(et)) => et
+          case setT @ _             => throw new TypingException("Expected a finite set, found: " + setT, state.ex.ID)
         }
-        nextState = nextState.updateArena(_.appendCell(FinSetT(elemType)))
+        nextState = nextState.updateArena(_.appendCell(SetT1(elemType)))
         val newSetCell = nextState.arena.topCell
         nextState = nextState.updateArena(_.appendHas(newSetCell, cells: _*))
 

@@ -19,7 +19,7 @@ import com.typesafe.scalalogging.LazyLogging
 @Singleton
 class EtcTypeCheckerAdapter @Inject() (sourceStore: SourceStore, changeListener: ChangeListener)
     extends ExceptionAdapter with LazyLogging {
-  override def toMessage: PartialFunction[Exception, ErrorMessage] = {
+  override def toMessage: PartialFunction[Throwable, ErrorMessage] = super.toMessage.orElse {
     case err: SanyException =>
       NormalErrorMessage("Error by TLA+ parser: " + err.getMessage)
 

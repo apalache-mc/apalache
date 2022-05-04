@@ -3,12 +3,11 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
-import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.{ApalacheInternalOper, ApalacheOper, TlaArithOper, TlaFiniteSetOper}
 import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.lir.{OperEx, ValEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, ValEx}
 
 /**
  * Optimization for Cardinality(S) >= k, where k is constant. See [docs/smt/Cardinality.md].
@@ -59,7 +58,7 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
     def solverAssert = rewriter.solverContext.assertGroundExpr(_)
 
     var nextState = state
-    nextState = nextState.updateArena(_.appendCell(BoolT()))
+    nextState = nextState.updateArena(_.appendCell(BoolT1()))
     val emptyPred = nextState.arena.topCell
     solverAssert(tla.eql(emptyPred.toNameEx,
             tla.and(elems.map(e => tla.not(tla.apalacheSelectInSet(e.toNameEx, set.toNameEx))): _*)))
@@ -79,7 +78,7 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val witnesses = List.fill(threshold)(pick())
     (witnesses.cross(witnesses)).filter(p => p._1.id < p._2.id).foreach(cacheEq)
     val witnessesNotEq = OperEx(ApalacheInternalOper.distinct, witnesses.map(_.toNameEx): _*)
-    nextState = nextState.updateArena(_.appendCell(BoolT()))
+    nextState = nextState.updateArena(_.appendCell(BoolT1()))
     val pred = nextState.arena.topCell
     // either the set is empty and threshold <= 0, or all witnesses are not equal to each other
     val nonEmptyOrBelow = tla.or(tla.not(emptyPred.toNameEx), tla.bool(threshold <= 0))

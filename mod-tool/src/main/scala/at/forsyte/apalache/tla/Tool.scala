@@ -2,21 +2,16 @@ package at.forsyte.apalache.tla
 
 // Generated from the build.sbt file by the buildInfo plugin
 import apalache.BuildInfo
-
-import java.io.{File, FileNotFoundException}
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 import at.forsyte.apalache.infra.log.LogbackConfigurator
 import at.forsyte.apalache.infra.passes.{PassChainExecutor, ToolModule, WriteablePassOptions}
-import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorMessage, PassOptionException}
-import at.forsyte.apalache.io.{OutputManager, ReportGenerator}
+import at.forsyte.apalache.io.{ConfigManager, ConfigurationError, OutputManager, ReportGenerator}
 import at.forsyte.apalache.tla.bmcmt.config.{CheckerModule, ReTLAToVMTModule}
+import at.forsyte.apalache.tla.bmcmt.rules.vmt.TlaExToVMTWriter
 import at.forsyte.apalache.tla.imp.passes.ParserModule
+import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.tooling.ExitCodes
-import at.forsyte.apalache.tla.tooling.opt.{
-  AbstractCheckerCmd, CheckCmd, ConfigCmd, General, ParseCmd, ServerCmd, TestCmd, TranspileCmd, TypeCheckCmd,
-}
+import at.forsyte.apalache.tla.tooling.opt._
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import com.google.inject.{Guice, Injector}
 import com.typesafe.scalalogging.LazyLogging
@@ -26,10 +21,11 @@ import org.backuity.clist.Cli
 import util.ExecutionStatisticsCollector
 import util.ExecutionStatisticsCollector.Selection
 
+import java.io.{File, FileNotFoundException}
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import scala.jdk.CollectionConverters._
 import scala.util.Random
-import at.forsyte.apalache.io.ConfigManager
-import at.forsyte.apalache.tla.bmcmt.rules.vmt.TlaExToVMTWriter
 
 /**
  * Command line access to the APALACHE tools.
@@ -39,7 +35,6 @@ import at.forsyte.apalache.tla.bmcmt.rules.vmt.TlaExToVMTWriter
  */
 object Tool extends LazyLogging {
   lazy val ISSUES_LINK: String = "[https://github.com/informalsystems/apalache/issues]"
-  lazy val OK_EXIT_CODE = 0
 
   /**
    * Run the tool in the standalone mode with the provided arguments. This method calls System.exit with the computed
@@ -49,13 +44,28 @@ object Tool extends LazyLogging {
    *   the command line arguments
    */
   def main(args: Array[String]): Unit = {
-    System.exit(run(args))
+    try {
+      System.exit(run(args))
+    } catch {
+      case _: OutOfMemoryError =>
+        // We usually catch this in `handleExceptions` below.
+        // If it is caught here, logging has not been set up yet, so print directly to `Console.err`.
+        Console.err.println(s"Error: Ran out of heap memory (max JVM memory: ${Runtime.getRuntime.maxMemory})")
+        Console.err.println(s"To increase available heap memory, see the manual:")
+        Console.err.println("  [https://apalache.informal.systems/docs/apalache/running.html#supplying-jvm-arguments]")
+        Console.out.println(s"EXITCODE: ERROR (${ExitCodes.ERROR})")
+        System.exit(ExitCodes.ERROR)
+    }
   }
 
   // Returns `Left(errmsg)` in case of configuration errors
   private def outputAndLogConfig(cmd: General): Either[String, Unit] = {
     ConfigManager(cmd).map { cfg =>
-      OutputManager.configure(cfg)
+      try {
+        OutputManager.configure(cfg)
+      } catch {
+        case e: ConfigurationError => return Left(e.getMessage)
+      }
       // We currently use dummy files for some commands, so we skip here on non-existing files
       if (cmd.file.getName.endsWith(".tla") && cmd.file.exists()) {
         OutputManager.initSourceLines(cmd.file)
@@ -99,7 +109,7 @@ object Tool extends LazyLogging {
 
     cli match {
       // A standard option, e.g., --version or --help. No header, no timer, no noise
-      case None => OK_EXIT_CODE
+      case None => ExitCodes.OK
       // One of our commands.
       case Some(cmd) => {
 
@@ -141,7 +151,7 @@ object Tool extends LazyLogging {
           }
         }
 
-        if (exitcode == OK_EXIT_CODE) {
+        if (exitcode == ExitCodes.OK) {
           Console.out.println("EXITCODE: OK")
         } else {
           Console.out.println(s"EXITCODE: ERROR ($exitcode)")
@@ -179,7 +189,7 @@ object Tool extends LazyLogging {
     val result = executor.run()
     if (result.isDefined) {
       logger.info(msgIfOk(result.get))
-      ExitCodes.NO_ERROR
+      ExitCodes.OK
     } else {
       logger.info(msgIfFail)
       errCode
@@ -415,7 +425,7 @@ object Tool extends LazyLogging {
     try {
       runner(executor, cmd)
     } catch {
-      case e: Exception if adapter.toMessage.isDefinedAt(e) =>
+      case e: Throwable if adapter.toMessage.isDefinedAt(e) =>
         adapter.toMessage(e) match {
           case NormalErrorMessage(text) =>
             logger.error(text)
@@ -490,7 +500,7 @@ object Tool extends LazyLogging {
         ()
     }
 
-    ExitCodes.NO_ERROR
+    ExitCodes.OK
   }
 
   private def configDirExistsOrCreated(): Boolean = {

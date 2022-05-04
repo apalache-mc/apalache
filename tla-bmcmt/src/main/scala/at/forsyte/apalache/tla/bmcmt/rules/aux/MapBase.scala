@@ -4,8 +4,9 @@ import scala.collection.mutable
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.bmcmt.util.IntTupleIterator
+import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.TlaEx
+import at.forsyte.apalache.tla.lir.{SetT1, TlaEx}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.pp.TlaInputError
 
@@ -36,8 +37,8 @@ class MapBase(rewriter: SymbStateRewriter) {
 
     def findSetCellAndElemType(setCell: ArenaCell): (ArenaCell, CellT) = {
       setCell.cellType match {
-        case FinSetT(elemType) =>
-          (setCell, elemType)
+        case CellTFrom(SetT1(elemType)) =>
+          (setCell, CellTFrom(elemType))
 
         case InfSetT(elemType) =>
           throw new TlaInputError(s"Found a set map over an infinite set of $elemType. Not supported.")
@@ -50,8 +51,8 @@ class MapBase(rewriter: SymbStateRewriter) {
     val elemsOfSets = setsAsCells.map(nextState.arena.getHas)
     val setLimits = elemsOfSets.map(_.size - 1)
     // find the types of the target expression and of the target set
-    val targetMapT = CellT.fromTypeTag(mapEx.typeTag)
-    val targetSetT = FinSetT(targetMapT)
+    val targetMapT = mapEx.typeTag.asTlaType1()
+    val targetSetT = SetT1(targetMapT)
 
     nextState = nextState.updateArena(_.appendCell(targetSetT))
     val resultSetCell = nextState.arena.topCell

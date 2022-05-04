@@ -25,7 +25,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
       case NameEx(name) =>
         assert(solverContext.sat())
         val cell = nextState.arena.findCellByName(name)
-        assert(SeqT(IntT()) == cell.cellType)
+        assert(CellTFrom(SeqT1(IntT1())) == cell.cellType)
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -43,7 +43,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
       case NameEx(name) =>
         assert(solverContext.sat())
         val cell = nextState.arena.findCellByName(name)
-        assert(SeqT(IntT()) == cell.cellType)
+        assert(CellTFrom(SeqT1(IntT1())) == cell.cellType)
         // test that the proto sequence is correct
         val protoSeqOps = new ProtoSeqOps(rewriter)
         val (protoSeq, len, capacity) = protoSeqOps.unpackSeq(nextState.arena, cell)
@@ -187,7 +187,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     val result = nextState.asCell
-    assert(SeqT(IntT()) == result.cellType)
+    assert(CellTFrom(SeqT1(IntT1())) == result.cellType)
     val eq1 = eql(appFun(result.toNameEx.as(intSeqT), int(1)).as(intT), int(4)).as(boolT)
     assertTlaExAndRestore(rewriter, nextState.setRex(eq1))
     val eq2 = eql(appFun(result.toNameEx.as(intSeqT), int(2)).as(intT), int(5)).as(boolT)
@@ -275,7 +275,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     val result = nextState.asCell
-    assert(SeqT(IntT()) == result.cellType)
+    assert(CellTFrom(SeqT1(IntT1())) == result.cellType)
     val eq1 = eql(appFun(result.toNameEx.as(intSeqT), int(1)).as(intT), int(4)).as(boolT)
     assertTlaExAndRestore(rewriter, nextState.setRex(eq1))
     val eq2 = eql(appFun(result.toNameEx.as(intSeqT), int(2)).as(intT), int(5)).as(boolT)
@@ -296,7 +296,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     val result = nextState.asCell
-    assert(SeqT(IntT()) == result.cellType)
+    assert(CellTFrom(SeqT1(IntT1())) == result.cellType)
     val eq1 = eql(appFun(result.toNameEx.as(intSeqT), int(1)).as(intT), int(4)).as(boolT)
     assertTlaExAndRestore(rewriter, nextState.setRex(eq1))
     val eq2 = eql(appFun(result.toNameEx.as(intSeqT), int(2)).as(intT), int(5)).as(boolT)

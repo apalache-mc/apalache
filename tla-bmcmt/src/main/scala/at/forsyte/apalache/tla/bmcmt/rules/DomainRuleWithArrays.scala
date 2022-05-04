@@ -2,8 +2,8 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt.{RewriterException, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.bmcmt.caches.IntRangeCache
-import at.forsyte.apalache.tla.bmcmt.types.{FunT, RecordT, SeqT, TupleT}
-import at.forsyte.apalache.tla.lir.OperEx
+import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
+import at.forsyte.apalache.tla.lir.{FunT1, OperEx, RecT1, SeqT1, TupT1}
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 
 /**
@@ -23,17 +23,17 @@ class DomainRuleWithArrays(rewriter: SymbStateRewriter, intRangeCache: IntRangeC
 
         // TODO: consider records, tuples, and sequences in the arrays encoding
         funCell.cellType match {
-          case RecordT(_) =>
+          case CellTFrom(RecT1(_)) =>
             val dom = funState.arena.getDom(funCell)
             funState.setRex(dom.toNameEx)
 
-          case TupleT(_) =>
-            mkTupleDomain(funState, funCell)
+          case CellTFrom(tt @ TupT1(_ @_*)) =>
+            mkTupleDomain(funState, tt)
 
-          case SeqT(_) =>
+          case CellTFrom(SeqT1(_)) =>
             mkSeqDomain(funState, funCell)
 
-          case FunT(_, _) =>
+          case CellTFrom(FunT1(_, _)) =>
             val dom = funState.arena.getDom(funCell)
             funState.setRex(dom.toNameEx)
 
