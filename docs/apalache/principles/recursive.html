@@ -176,14 +176,14 @@
 <pre><code class="language-tla"> * Similar to Skolem, this has to be done carefully. Apalache automatically
  * places this hint by static analysis.
  *)
-ConstCardinality(cardExpr) == cardExpr
+ConstCardinality(__cardExpr) == __cardExpr
 
 (**
 
-    THEN v
-    ELSE LET w == CHOOSE x \in S: TRUE IN
-         LET T == S \ {w} IN
-         ApaFoldSet(Op, Op(v,w), T)
+    THEN __v
+    ELSE LET __w == CHOOSE __x \in __S: TRUE IN
+         LET __T == __S \ {__w} IN
+         ApaFoldSet(__Op, __Op(__v,__w), __T)
 </code></pre>
 <p>These operators are treated by Apalache in a more efficient manner than
 recursive operators. They always take at most <code>|S|</code> or <code>Len(seq)</code> steps to evaluate and require no additional annotations.</p>
