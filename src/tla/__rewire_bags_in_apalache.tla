@@ -17,53 +17,55 @@ EXTENDS Integers, __apalache_internal, __apalache_folds
  *
  * @typeAlias: BAG = a -> Int;
  *)
-LOCAL ALIAS == TRUE
+LOCAL __ALIAS == TRUE
 
 (**
  * True iff B is a bag.
  *
  * @type: (a -> Int) => Bool;
  *)
-IsABag(B) ==
-  \A x \in DOMAIN B: B[x] > 0
+IsABag(__B) ==
+  \A __x \in DOMAIN __B: __B[__x] > 0
 
 (**
  * The set of elements at least one copy of which is in B.
  *
  * @type: (a -> Int) => Set(a);
  *)
-BagToSet(B) == DOMAIN B
+BagToSet(__B) == DOMAIN __B
 
 (**
  * The bag that contains one copy of every element of the set S.
  *
  * @type: (Set(a)) => a -> Int;
  *)
-SetToBag(S) == [e \in S |-> 1]
+SetToBag(__S) == [__e \in __S |-> 1]
 
 (**
  * The \in operator for bags.
  *
  * @type: (a, a -> Int) => Bool;
  *)
-BagIn(e,B) == e \in BagToSet(B)
+BagIn(__e,__B) == __e \in BagToSet(__B)
 
 \* @type: () => a -> Int;
-EmptyBag == [x \in {} |-> 0]
+EmptyBag == [__x \in {} |-> 0]
 
 (**
  * The union of bags B1 and B2.
  *
  * @type: (a -> Int, a -> Int) => a -> Int;
  *)
-B1 (+) B2  ==
+__B1 (+) __B2  ==
     LET \* @type: Set(a);
-        D1 == DOMAIN B1
+        __D1 == DOMAIN __B1
         \* @type: Set(a);
-        D2 == DOMAIN B2
+        __D2 == DOMAIN __B2
     IN
-    [e \in D1 \union D2 |->
-        (IF e \in D1 THEN B1[e] ELSE 0) + (IF e \in D2 THEN B2[e] ELSE 0) ]
+    [ __e \in __D1 \union __D2 |->
+        (IF __e \in __D1 THEN __B1[__e] ELSE 0) + 
+        (IF __e \in __D2 THEN __B2[__e] ELSE 0) 
+    ]
 
 (**
  * The bag B1 with the elements of B2 removed--that is, with one copy
@@ -73,27 +75,30 @@ B1 (+) B2  ==
  *
  * @type: (a -> Int, a -> Int) => a -> Int;
  *)
-B1 (-) B2  ==
+__B1 (-) __B2  ==
   (************************************************************************)
   (************************************************************************)
   LET \* @type: () => a -> Int;
-    WithZeros == [e \in DOMAIN B1 |-> B1[e] - (IF e \in DOMAIN B2 THEN B2[e] ELSE 0)]
+    __WithZeros == 
+      [ __e \in DOMAIN __B1 |-> __B1[__e] - 
+        (IF __e \in DOMAIN __B2 THEN __B2[__e] ELSE 0)
+      ]
   IN
   LET \* @type: () => Set(a);
-    NewDomain == {e \in DOMAIN WithZeros : WithZeros[e] > 0}
+    __NewDomain == {__e \in DOMAIN __WithZeros : __WithZeros[__e] > 0}
   IN
-  [e \in NewDomain |-> WithZeros[e]]
+  [__e \in __NewDomain |-> __WithZeros[__e]]
 
 (**
  * The bag union of all elements of the set S of bags.
  *
  * @type: (Set(a -> Int)) => a -> Int;
  *)
-BagUnion(S) ==
+BagUnion(__S) ==
   LET \* @type: (a -> Int,a -> Int) => a -> Int;
-      PlusAsPrefix(B1,B2) == B1 (+) B2
+      __PlusAsPrefix(__B1,__B2) == __B1 (+) __B2
   IN
-  __ApalacheFoldSet( PlusAsPrefix, EmptyBag, S )
+  __ApalacheFoldSet( __PlusAsPrefix, EmptyBag, __S )
 
 (**
  * The subset operator for bags.  B1 \sqsubseteq B2 iff, for all e, bag
@@ -101,16 +106,16 @@ BagUnion(S) ==
  *
  * @type: (a -> Int, a -> Int) => Bool;
  *)
-B1 \sqsubseteq B2  ==
-  /\ (DOMAIN B1) \subseteq (DOMAIN B2)
-  /\ \A e \in DOMAIN B1 : B1[e] \leq B2[e]
+__B1 \sqsubseteq __B2  ==
+  /\ (DOMAIN __B1) \subseteq (DOMAIN __B2)
+  /\ \A __e \in DOMAIN __B1 : __B1[__e] \leq __B2[__e]
 
 (**
  * The set of all subbags of bag B.
  *
  * @type: (a -> Int) => Set(a -> Int);
  *)
-SubBag(B) ==
+SubBag(__B) ==
     __NotSupportedByModelChecker("SubBag in Bags")
 
   (*******************  Here is the definition from the TLA+ book. ********
@@ -127,10 +132,11 @@ SubBag(B) ==
  *
  * @type: ((a) => b, a -> Int) => b -> Int;
  *)
-BagOfAll(F(_), B) ==
+BagOfAll(__F(_), __B) ==
   LET \* @type: (b -> Int, a) => b -> Int;
-      Extend(partialB,elem) == partialB (+) [e \in {F(elem)} |-> B[elem]]
-  IN __ApalacheFoldSet( Extend, EmptyBag, DOMAIN B )
+      __Extend(__partialB,__elem) == 
+        __partialB (+) [__e \in {__F(__elem)} |-> __B[__elem]]
+  IN __ApalacheFoldSet( __Extend, EmptyBag, DOMAIN __B )
 
 (**
  * If B is a finite bag (one such that BagToSet(B) is a finite set),
@@ -139,11 +145,11 @@ BagOfAll(F(_), B) ==
  *
  * @type: (a -> Int) => Int;
  *)
-BagCardinality(B) ==
+BagCardinality(__B) ==
   LET \* @type: (Int, a) => Int;
-      CountElem(i, e) == i + B[e]
+      __CountElem(__i, __e) == __i + __B[__e]
   IN
-  __ApalacheFoldSet(CountElem, 0, DOMAIN B)
+  __ApalacheFoldSet(__CountElem, 0, DOMAIN __B)
 
 (**
  * If B is a bag, then CopiesIn(e, B) is the number of copies of e in
@@ -151,6 +157,6 @@ BagCardinality(B) ==
  *
  * @type: (a, a -> Int) => Int;
  *)
-CopiesIn(e, B) ==
-  IF BagIn(e, B) THEN B[e] ELSE 0
+CopiesIn(__e, __B) ==
+  IF BagIn(__e, __B) THEN __B[__e] ELSE 0
 =============================================================================
