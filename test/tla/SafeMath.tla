@@ -5,7 +5,7 @@
  *
  * Here we are testing SafeMath:
  *
- * https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/math/SafeMath.sol
+ * https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/math/SafeMath.sol
  *
  * More on the topic:
  *
