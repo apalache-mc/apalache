@@ -269,7 +269,7 @@ Prefixes(__s) ==
  *
  * @type: Set(Seq(a)) => Set(Seq(a));
  *)
-CommonPrefixes(S) ==
+CommonPrefixes(__S) ==
   \* TODO: use FoldSet?
   LET __P == UNION { Prefixes(__seq) : __seq \in __S }
   IN { __prefix \in __P: \A __t \in __S: IsPrefix(__prefix, __t) }
