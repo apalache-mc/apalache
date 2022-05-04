@@ -14,7 +14,7 @@
  *
  * @type: Seq(a) => Int;
  *)
-__ApalacheSeqCapacity(seq) ==
+__ApalacheSeqCapacity(__seq) ==
     \* A dummy implementation.
     \* Apalache binds it to ApalacheInternalOper.apalacheSeqCapacity.
     0
@@ -26,9 +26,9 @@ __ApalacheSeqCapacity(seq) ==
  *
  * @type: Str => a;
  *)
-__NotSupportedByModelChecker(msg) ==
+__NotSupportedByModelChecker(__msg) ==
     \* A dummy implementation.
     \* Apalache binds it to ApalacheInternalOper.notSupportedByModelChecker.
-    CHOOSE x \in {}: TRUE
+    CHOOSE __x \in {}: TRUE
 
 ===============================================================================

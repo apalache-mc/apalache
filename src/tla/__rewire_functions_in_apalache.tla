@@ -24,7 +24,7 @@ LOCAL INSTANCE __apalache_folds
  *
  * @type: (a -> b, Set(a)) => (a -> b);
  *)
-Restrict(f, S) == [ x \in S |-> f[x] ]
+Restrict(__f, __S) == [ __x \in __S |-> __f[__x] ]
 
 (**
  * Range of a function.
@@ -33,7 +33,7 @@ Restrict(f, S) == [ x \in S |-> f[x] ]
  *
  * @type: (a -> b) => Set(b);
  *)
-Range(f) == { f[x] : x \in DOMAIN f }
+Range(__f) == { __f[__x] : __x \in DOMAIN __f }
 
 (**
  * The inverse of a function.
@@ -48,14 +48,15 @@ Range(f) == { f[x] : x \in DOMAIN f }
  *
  * @type: (a -> b, Set(a), Set(b)) => (b -> a);
  *)
-Inverse(f, S, T) == [t \in T |-> CHOOSE s \in S: t \in Range(f) => f[s] = t]
+Inverse(__f, __S, __T) == 
+  [__t \in __T |-> CHOOSE __s \in __S: __t \in Range(__f) => __f[__s] = __t]
 
 (**
  * The inverse of a function.
  *
  * @type: (a -> b) => (b -> a);
  *)
-AntiFunction(f) == Inverse(f, DOMAIN f, Range(f))
+AntiFunction(__f) == Inverse(__f, DOMAIN __f, Range(__f))
 
 (**
  * A function is injective iff it maps each element in its domain to a
@@ -66,16 +67,16 @@ AntiFunction(f) == Inverse(f, DOMAIN f, Range(f))
  *
  * @type: (a -> b) => Bool;
  *)
-IsInjective(f) ==
-    \A a, b \in DOMAIN f:
-        f[a] = f[b] => a = b
+IsInjective(__f) ==
+    \A __a, __b \in DOMAIN __f:
+        __f[__a] = __f[__b] => __a = __b
 
 (**
  * Set of injections between two sets.
  *
  * @type: (Set(a), Set(b)) => Set(a -> b);
  *)
-Injection(S, T) == { f \in [S -> T]: IsInjective(f) }
+Injection(__S, __T) == { __f \in [__S -> __T]: IsInjective(__f) }
 
 (**
  * This operator is not defined in the community modules.
@@ -85,10 +86,10 @@ Injection(S, T) == { f \in [S -> T]: IsInjective(f) }
  *
  * @type: (Set(a), Set(b), a -> b) => Bool;
  *)
-IsSurjective(S, T, f) ==
-    \A t \in T:
-        \E s \in S:
-            f[s] = t
+IsSurjective(__S, __T, __f) ==
+    \A __t \in __T:
+        \E __s \in __S:
+            __f[__s] = __t
 
 (**
  * A map is a surjection iff for each element in the range there is some
@@ -96,40 +97,40 @@ IsSurjective(S, T, f) ==
  *
  * @type: (Set(a), Set(b)) => Set(a -> b);
  *)
-Surjection(S, T) ==
-    { f \in [S -> T]: IsSurjective(S, T, f) }
+Surjection(__S, __T) ==
+    { __f \in [__S -> __T]: IsSurjective(__S, __T, __f) }
 
 (**
  * A map is a bijection iff it is both an injection and a surjection.
  *
  * @type: (Set(a), Set(b)) => Set(a -> b);
  *)
-Bijection(S, T) ==
-    { f \in [S -> T]: IsSurjective(S, T, f) /\ IsInjective(f) }
+Bijection(__S, __T) ==
+    { __f \in [__S -> __T]: IsSurjective(__S, __T, __f) /\ IsInjective(__f) }
 
 (**
  * Is there an injection between S and T. Apalache defines it only on finite sets.
  *
  * @type: (Set(a), Set(b)) => Bool;
  *)
-ExistsInjection(S, T)  ==
-    Cardinality(S) <= Cardinality(T)
+ExistsInjection(__S, __T)  ==
+    Cardinality(__S) <= Cardinality(__T)
 
 (**
  * Is there a surjection between S and T. Apalache defines it only on finite sets.
  *
  * @type: (Set(a), Set(b)) => Bool;
  *)
-ExistsSurjection(S, T) ==
-    Cardinality(S) >= Cardinality(T)
+ExistsSurjection(__S, __T) ==
+    Cardinality(__S) >= Cardinality(__T)
 
 (**
  * Is there a bijection between S and T. Apalache defines it only on finite sets.
  *
  * @type: (Set(a), Set(b)) => Bool;
  *)
-ExistsBijection(S, T)  ==
-    Cardinality(S) = Cardinality(T)
+ExistsBijection(__S, __T)  ==
+    Cardinality(__S) = Cardinality(__T)
 
 
 (**
@@ -145,11 +146,11 @@ ExistsBijection(S, T)  ==
  *
  * @type: ((b, c) => c, c, a -> b) => c;
  *)
-FoldFunction(op(_, _), base, fun) ==
-  \* note that ApalacheFoldSet is accumulating the result in the left argument,
-  \* whereas FoldFunction is accumulating the result in the right argument.
-  LET Map(y, x) == op(fun[x], y) IN
-  __ApalacheFoldSet(Map, base, DOMAIN fun)
+FoldFunction(__op(_, _), __base, __fun) ==
+  \* note that ApalacheFoldSet accumulates the result in the left argument,
+  \* whereas FoldFunction accumulates the result in the right argument.
+  LET __Map(__y, __x) == __op(__fun[__x], __y) IN
+  __ApalacheFoldSet(__Map, __base, DOMAIN __fun)
 
 
 (**
@@ -168,10 +169,10 @@ FoldFunction(op(_, _), base, fun) ==
  *
  * @type: ((b, c) => c, c, a -> b, Set(a)) => c;
  *)
-FoldFunctionOnSet(op(_, _), base, fun, indices) ==
-  \* note that ApalacheFoldSet is accumulating the result in the left argument,
-  \* whereas FoldFunction is accumulating the result in the right argument.
-  LET Map(y, x) == op(fun[x], y) IN
-  __ApalacheFoldSet(Map, base, indices)
+FoldFunctionOnSet(__op(_, _), __base, __fun, __indices) ==
+  \* note that ApalacheFoldSet accumulates the result in the left argument,
+  \* whereas FoldFunction accumulates the result in the right argument.
+  LET __Map(__y, __x) == __op(__fun[__x], __y) IN
+  __ApalacheFoldSet(__Map, __base, __indices)
 
 ===============================================================================

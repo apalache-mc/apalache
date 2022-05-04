@@ -23,9 +23,9 @@
  *   { tag: Str, a } =>
  *     { tag: "$tagValue", a } | b
  *)
-Variant(rec) ==
+Variant(__rec) ==
     \* default untyped implementation
-    rec 
+    __rec 
 
 (**
  * Filter a set of variants with the provided tag value.
@@ -38,9 +38,9 @@ Variant(rec) ==
  *
  *   (Set({ tag: "$tagValue", a} | b), Str) => Set({ tag: Str, a })
  *)
-FilterByTag(S, tagValue) ==
+FilterByTag(__S, __tagValue) ==
     \* default untyped implementation
-    { e \in S: e.tag = tagValue }
+    { __e \in S: __e.tag = __tagValue }
 
 
 (**
@@ -67,11 +67,11 @@ FilterByTag(S, tagValue) ==
  *     Variant(b) => r
  *   ) => r
  *)
-MatchTag(variant, tagValue, ThenOper(_), ElseOper(_)) ==
+MatchTag(__variant, __tagValue, __ThenOper(_), __ElseOper(_)) ==
     \* default untyped implementation
-    IF variant.tag = tagValue
-    THEN ThenOper(variant)
-    ELSE ElseOper(variant)
+    IF __variant.tag = __tagValue
+    THEN __ThenOper(__variant)
+    ELSE __ElseOper(__variant)
 
 (**
  * In case when `variant` allows for one record type,
@@ -93,7 +93,7 @@ MatchTag(variant, tagValue, ThenOper(_), ElseOper(_)) ==
  *   ) => r
  *)
  *)
-MatchOnly(variant, ThenOper(_)) ==
+MatchOnly(__variant, __ThenOper(_)) ==
     \* default untyped implementation
-    ThenOper(variant)
+    __ThenOper(__variant)
 ===============================================================================

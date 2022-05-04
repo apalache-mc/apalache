@@ -21,41 +21,43 @@ LOCAL INSTANCE Naturals
 \* The famous smiley operator.
 \*
 \* @type: (a, b) => (a -> b);
-key :> value ==
-    [ x \in { key } |-> value ]
+__key :> __value ==
+    [ __x \in { __key } |-> __value ]
 
 \* Function composition (fun-fun).
 \* 
 \* @type: (a -> b, a -> b) => (a -> b);
-f1 @@ f2 == 
+__f1 @@ __f2 == 
     \* cache f1, f2, and the domains, Apalache would not inline them
-    LET __f1 == f1
-        __f2 == f2
+    LET __f1_cache == __f1
+        __f2_cache == __f2
     IN
-    LET __d1 == DOMAIN __f1
-        __d2 == DOMAIN __f2
+    LET __d1 == DOMAIN __f1_cache
+        __d2 == DOMAIN __f2_cache
     IN
-    [x \in __d1 \union __d2 |->
-            IF x \in __d1
-            THEN __f1[x]
-            ELSE __f2[x]]
+    [__x \in __d1 \union __d2 |->
+            IF __x \in __d1
+            THEN __f1_cache[__x]
+            ELSE __f2_cache[__x]]
 
 \* Print is doing nothing in Apalache.
 \* 
 \* @type: (Str, a) => a;
-Print(out, val) == val
+Print(__out, __val) == 
+    __val
 
 \* Print is doing nothing in Apalache.
 \*
 \* @type: Str => Bool;
-PrintT(out) == TRUE
+PrintT(__out) == 
+    TRUE
 
 \* In Apalache, assert is side-effect free.
 \* It never produces an error, even if the condition is false.
 \*
 \* @type: (Bool, Str) => Bool;
-Assert(cond, out) ==
-    cond
+Assert(__cond, __out) == 
+    __cond
 
 \* Apalache does not support this operator, but the type checker does.
 \*
@@ -68,55 +70,56 @@ JavaTime ==
 \* Apalache does not support this operator, but the type checker does.
 \*
 \* @type: Int => a;
-TLCGet(i) ==
+TLCGet(__i) ==
     LET \* @type: () => Set(a);
-        Empty == {}
+        __Empty == {}
     IN
-    CHOOSE x \in Empty: TRUE
+    CHOOSE __x \in __Empty: TRUE
     
 
 \* Apalache does not support this operator, but the type checker does.
 \*
 \* @type: (Int, a) => Bool;
-TLCSet(i, v) ==
+TLCSet(__i, __v) ==
     TRUE
 
 \* @type: Set(a) => Set(a -> a);
-Permutations(S) == 
+Permutations(__S) == 
    \* exactly the same behavior as in TLC.tla
-   {f \in [S -> S] : \A w \in S : \E v \in S : f[v] = w}
+   {__f \in [__S -> __S] : \A __w \in __S : \E __v \in __S : __f[__v] = __w}
 
 \* We return the function instead of a sequence, because that is what it returns.
 \*
 \* @type: (Seq(a), (a, a) => Bool) => (Int -> a);
-SortSeq(s, Op(_, _)) ==
+SortSeq(__s, __Op(_, _)) ==
     \* Similar to that of TLC!SortSeq, but using (DOMAIN s) instead of 1..Len(s)
-    LET Perm == CHOOSE p \in Permutations(DOMAIN s):
-                  \A i, j \in DOMAIN s: 
-                     (i < j) => Op(s[p[i]], s[p[j]]) \/ (s[p[i]] = s[p[j]])
-    IN  [i \in DOMAIN s |-> s[Perm[i]]]
+    LET __Perm == CHOOSE __p \in Permutations(DOMAIN __s):
+        \A __i, __j \in DOMAIN __s: 
+            \/ (__i < __j) => __Op(__s[__p[__i]], __s[__p[__j]]) 
+            \/ (__s[__p[__i]] = __s[__p[__j]])
+    IN  [__i \in DOMAIN __s |-> __s[__Perm[__i]]]
 
 \* Obviously, we cannot do randomization in Apalache.
 \*
 \* @type: Set(a) => a;
-RandomElement(s) ==
-    CHOOSE x \in s : TRUE
+RandomElement(__s) ==
+    CHOOSE __x \in __s : TRUE
 
 \* Most likely, the type checker will fail on that one more often than it will work.
 \*
 \* @type: () => a;
 Any ==
     LET \* @type: () => Set(a);
-        Empty == {}
+        __Empty == {}
     IN
-    CHOOSE x \in Empty: TRUE
+    CHOOSE __x \in __Empty: TRUE
 
 \* @type: a => Str;
-ToString(v) == ""
+ToString(__v) == ""
 
 \* For type compatibility with TLC.
 \*
 \* @type: a => a;
-TLCEval(v) == v
+TLCEval(__v) == __v
 
 ===============================================================================

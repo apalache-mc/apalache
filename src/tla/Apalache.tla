@@ -36,7 +36,7 @@ x := e == x = e
  *
  * The body of this operator is redefined by Apalache.
  *)
-Gen(size) == {}
+Gen(__size) == {}
 
 (**
  * Non-deterministically pick a value out of the set `S`, if `S` is non-empty.
@@ -45,11 +45,11 @@ Gen(size) == {}
  *
  * @type: Set(a) => a;
  *)
-Guess(S) ==
+Guess(__S) ==
     \* Since this is not supported by TLC,
     \* we fall back to the deterministic version for TLC.
     \* Apalache redefines the operator `Guess` as explained above.
-    CHOOSE x \in S: TRUE
+    CHOOSE __x \in __S: TRUE
 
 (**
  * Convert a set of pairs S to a function F. Note that if S contains at least
@@ -60,11 +60,11 @@ Guess(S) ==
  *
  * @type: Set(<<a, b>>) => (a -> b);
  *)
-SetAsFun(S) ==
-    LET Dom == { x: <<x, y>> \in S }
-        Rng == { y: <<x, y>> \in S }
+SetAsFun(__S) ==
+    LET __Dom == { __x: <<__x, __y>> \in __S }
+        __Rng == { __y: <<__x, __y>> \in __S }
     IN
-    [ x \in Dom |-> CHOOSE y \in Rng: <<x, y>> \in S ]
+    [ __x \in __Dom |-> CHOOSE __y \in __Rng: <<__x, __y>> \in __S ]
 
 (**
  * A sequence constructor that avoids using a function constructor.
@@ -75,9 +75,9 @@ SetAsFun(S) ==
  * @type: (Int, (Int -> a)) => Seq(a);
  *)
 LOCAL INSTANCE Integers
-MkSeq(N, F(_)) ==
+MkSeq(__N, __F(_)) ==
     \* This is the TLC implementation. Apalache does it differently.
-    [ i \in (1..N) |-> F(i) ]
+    [ __i \in (1..__N) |-> __F(__i) ]
 
 \* required by our default definition of FoldSeq and FunAsSeq
 LOCAL INSTANCE Sequences
@@ -97,9 +97,9 @@ LOCAL INSTANCE Sequences
  *
  * @type: ((Int -> a), Int, Int) => Seq(a);
  *)
-FunAsSeq(fn, len, capacity) ==
-    LET __FunAsSeq_elem_ctor(i) == fn[i] IN
-    SubSeq(MkSeq(capacity, __FunAsSeq_elem_ctor), 1, len)
+FunAsSeq(__fn, __len, __capacity) ==
+    LET __FunAsSeq_elem_ctor(__i) == __fn[__i] IN
+    SubSeq(MkSeq(__capacity, __FunAsSeq_elem_ctor), 1, __len)
 
 (**
  * Annotating an expression \E x \in S: P as Skolemizable. That is, it can
@@ -107,14 +107,14 @@ FunAsSeq(fn, len, capacity) ==
  * Not every exisential can be replaced with a constant, this should be done
  * with care. Apalache detects Skolemizable expressions by static analysis.
  *)
-Skolem(e) == e
+Skolem(__e) == __e
 
 (**
  * A hint to the model checker to expand a set S, instead of dealing
  * with it symbolically. Apalache finds out which sets have to be expanded
  * by static analysis.
  *)
-Expand(S) == S
+Expand(__S) == __S
 
 (**
  * A hint to the model checker to replace its argument Cardinality(S) >= k
@@ -122,7 +122,7 @@ Expand(S) == S
  * Similar to Skolem, this has to be done carefully. Apalache automatically
  * places this hint by static analysis.
  *)
-ConstCardinality(cardExpr) == cardExpr
+ConstCardinality(__cardExpr) == __cardExpr
 
 (**
  * The folding operator, used to implement computation over a set.
@@ -132,12 +132,12 @@ ConstCardinality(cardExpr) == cardExpr
  * @type: ((a, b) => a, a, Set(b)) => a;
  *)
 RECURSIVE ApaFoldSet(_, _, _)
-ApaFoldSet(Op(_,_), v, S) ==
-    IF S = {}
+ApaFoldSet(__Op(_,_), __v, __S) ==
+    IF __S = {}
     THEN v
-    ELSE LET w == CHOOSE x \in S: TRUE IN
-         LET T == S \ {w} IN
-         ApaFoldSet(Op, Op(v,w), T)
+    ELSE LET __w == CHOOSE __x \in __S: TRUE IN
+         LET __T == __S \ {__w} IN
+         ApaFoldSet(__Op, __Op(__v,__w), __T)
 
 (**
  * The folding operator, used to implement computation over a sequence.
@@ -147,9 +147,9 @@ ApaFoldSet(Op(_,_), v, S) ==
  * @type: ((a, b) => a, a, Seq(b)) => a;
  *)
 RECURSIVE ApaFoldSeqLeft(_, _, _)
-ApaFoldSeqLeft(Op(_,_), v, seq) ==
-    IF seq = <<>>
-    THEN v
-    ELSE ApaFoldSeqLeft(Op, Op(v, Head(seq)), Tail(seq))
+ApaFoldSeqLeft(__Op(_,_), __v, __seq) ==
+    IF __seq = <<>>
+    THEN __v
+    ELSE ApaFoldSeqLeft(__Op, __Op(__v, Head(__seq)), Tail(__seq))
 
 ===============================================================================

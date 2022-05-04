@@ -22,19 +22,19 @@ LOCAL INSTANCE Functions
 
 (**
  * Fold op over the elements of set using base as starting value.
- * Note that this ApaFoldSet is different from Apalache!ApaFoldSet.
+ * Note that this FoldSet is different from Apalache!ApaFoldSet.
  *
  * Example:
- *         ApaFoldSet(LAMBA x,y : x + y, 0, 0 .. 10) = 55
+ *         FoldSet(LAMBA x,y : x + y, 0, 0 .. 10) = 55
  *
  * @type: ((a, b) => b, b, Set(a)) => b;
  *)
-FoldSet(op(_, _), base, set) ==
-    \* ApalacheFoldSet is accumulating the result in the left argument,
-    \* whereas FinitSetsExt!FoldSet is accumulating the result
+FoldSet(__op(_, _), __base, __set) ==
+    \* ApalacheFoldSet accumulates the result in the left argument,
+    \* whereas FinitSetsExt!FoldSet accumulates the result
     \* in the right argument.
-    LET OpSwap(x, y) == op(y, x) IN
-    __ApalacheFoldSet(OpSwap, base, set)
+    LET __OpSwap(__x, __y) == __op(__y, __x) IN
+    __ApalacheFoldSet(__OpSwap, __base, __set)
 
 (**
  * Calculate the sum of the elements in set.
@@ -43,29 +43,29 @@ FoldSet(op(_, _), base, set) ==
  *
  * @type: Set(Int) => Int;
  *)
-SumSet(set) ==
-   LET Plus(x, y) == x + y IN
-   __ApalacheFoldSet(Plus, 0, set)
+SumSet(__set) ==
+   LET __Plus(__x, __y) == __x + __y IN
+   __ApalacheFoldSet(__Plus, 0, __set)
 
 (**
- * Calculuate the product of the elements in set.
+ * Calculate the product of the elements in set.
  *
  * Example: Product(1 .. 3) = 6
  *
  * @type: Set(Int) => Int;
  *)
-ProductSet(set) ==
-   LET Mult(x, y) == x * y IN
-   __ApalacheFoldSet(Mult, 1, set)
+ProductSet(__set) ==
+   LET __Mult(__x, __y) == __x * __y IN
+   __ApalacheFoldSet(__Mult, 1, __set)
 
 (**
- * An alias for ApaFoldSet. ReduceSet was used instead of ApaFoldSet in
+ * An alias for FoldSet. ReduceSet was used instead of FoldSet in
  * earlier versions of the community modules.
  *
  * @type: ((a, b) => b, Set(a), b) => b;
  *)
-ReduceSet(op(_, _), set, acc) == 
-   FoldSet(op, set, acc)
+ReduceSet(__op(_, _), __set, __acc) == 
+   FoldSet(__op, __set, __acc)
 
 (**
  * Starting from base, apply op to f(x), for all x \in S, in an arbitrary
@@ -75,8 +75,8 @@ ReduceSet(op(_, _), set, acc) ==
  *
  * @type: Set(Set(a)) => Set(a);
  *)
-FlattenSet(S) ==
-  UNION S
+FlattenSet(__S) ==
+  UNION __S
 
 (**
  * The symmetric difference of two sets.
@@ -86,8 +86,8 @@ FlattenSet(S) ==
  *
  * @type: (Set(a), Set(a)) => Set(a);
  *)
-SymDiff(A, B) ==
-    { x \in A \union B: x \notin A \/ x \notin B}
+SymDiff(__A, __B) ==
+    { __x \in __A \union __B: __x \notin __A \/ __x \notin __B}
 
 (**
  * Quantify the elements in S matching the predicate (LAMDBA) P.
@@ -100,11 +100,11 @@ SymDiff(A, B) ==
  *
  * @type: (Set(a), (a => Bool)) => Int;
  *)
-Quantify(S, P(_)) ==
-    LET CondCount(n, e) ==
-        n + IF P(e) THEN 1 ELSE 0
+Quantify(__S, __P(_)) ==
+    LET __CondCount(__n, __e) ==
+        __n + IF __P(__e) THEN 1 ELSE 0
     IN
-    __ApalacheFoldSet(CondCount, 0, S)
+    __ApalacheFoldSet(__CondCount, 0, __S)
 
 
 (**
@@ -121,8 +121,8 @@ Quantify(S, P(_)) ==
  *
  * @type: (Int, Set(a)) => Set(Set(a));
  *)
-kSubset(k, S) == 
-   { s \in SUBSET S : Cardinality(s) = k }
+kSubset(__k, __S) == 
+   { __s \in SUBSET __S : Cardinality(__s) = __k }
 
 (**
  * We define Max(S) and Min(S) to be the maximum and minimum,
@@ -130,12 +130,12 @@ kSubset(k, S) ==
  *
  * @type: Set(Int) => Int;
  *)
-Max(S) == CHOOSE x \in S : \A y \in S : x >= y
+Max(__S) == CHOOSE __x \in __S : \A __y \in __S : __x >= __y
 
 (**
  * @type: Set(Int) => Int;
  *)
-Min(S) == CHOOSE x \in S : \A y \in S : x =< y
+Min(__S) == CHOOSE __x \in __S : \A __y \in __S : __x =< __y
 
 (**
  * Compute all sets that contain one element from each of the input sets:
@@ -146,9 +146,10 @@ Min(S) == CHOOSE x \in S : \A y \in S : x =< y
  *
  * @type: Set(Set(a)) => Set(Set(a));
  *)
-Choices(Sets) == LET ChoiceFunction(Ts) == { f \in [Ts -> UNION Ts] : 
-                                               \A T \in Ts : f[T] \in T }
-                 IN  { Range(f) : f \in ChoiceFunction(Sets) }
+Choices(__Sets) == 
+  LET __ChoiceFunction(__Ts) == 
+    { __f \in [__Ts -> UNION __Ts] : \A __T \in __Ts : __f[__T] \in __T }
+  IN  { Range(__f) : __f \in __ChoiceFunction(__Sets) }
 
 (**
  * Choose a unique element from the input set matching the predicate
@@ -163,6 +164,7 @@ Choices(Sets) == LET ChoiceFunction(Ts) == { f \in [Ts -> UNION Ts] :
  *
  * @type: (Set(a), (a => Bool)) => a;
  *)
-ChooseUnique(S, P(_)) == CHOOSE x \in S :
-                              P(x) /\ \A y \in S : P(y) => y = x
+ChooseUnique(__S, __P(_)) == 
+  CHOOSE __x \in __S :
+    __P(__x) /\ \A __y \in __S : __P(__y) => __y = __x
 ===============================================================================
