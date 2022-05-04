@@ -28,7 +28,7 @@ class CheckerExceptionAdapter @Inject() (sourceStore: SourceStore, changeListene
     extends ExceptionAdapter with LazyLogging {
   private lazy val ISSUES_LINK: String = "[https://github.com/informalsystems/apalache/issues]"
 
-  override def toMessage: PartialFunction[Exception, ErrorMessage] = {
+  override def toMessage: PartialFunction[Throwable, ErrorMessage] = super.toMessage.orElse {
     // normal errors
     case err: SanyException =>
       NormalErrorMessage("Error by TLA+ parser: " + err.getMessage)
