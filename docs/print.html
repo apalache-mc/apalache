@@ -2684,7 +2684,7 @@ $ alias apalache='docker run --rm -v $(pwd):/var/apalache informalsystems/apalac
 substantial number of improvements in the unstable branch before the next stable
 release. Please refer to the <a href="https://github.com/informalsystems/apalache/blob/unstable/CHANGES.md">change
 log</a> and
-<a href="https://github.com/informalsystems/apalache/blob/unstable/docs/src/manual.md">manual</a>
+<a href="https://github.com/informalsystems/apalache/blob/unstable/docs/src/apalache/index.md">manual</a>
 on the unstable branch for the description of the newest features. <strong>We
 recommend using the unstable version if you want to try all the exciting new
 features of Apalache. But be warned: It is called &quot;unstable&quot; for a reason</strong>. To
@@ -3280,8 +3280,8 @@ Inv == FALSE
 <p>Apalache reports an error as follows:</p>
 <pre><code class="language-console">...
 PASS #9: TransitionFinderPass
-To understand the error, check the manual:
-[https://apalache.informal.systems/docs/apalache/assignments.html]
+To understand the error, [check the
+manual](https://apalache.informal.systems/docs/apalache/principles/assignments.html):
 Assignment error: No assignments found for: a
 It took me 0 days  0 hours  0 min  1 sec
 Total time: 1.88 sec
@@ -4227,7 +4227,7 @@ Type checker [FAILED]
 <p>Here is the list of the TLA+ language features that are currently supported by Apalache, following the <a href="https://lamport.azurewebsites.net/tla/summary.pdf">Summary of TLA+</a>.</p>
 <h2><a class="header" href="#safety-vs-liveness" id="safety-vs-liveness">Safety vs. Liveness</a></h2>
 <p>At the moment, Apalache is able to check state invariants, action invariants,
-trace invariants as well as inductive invariants. (See the <a href="https://apalache.informal.systems/docs/apalache/invariants.html">page on
+trace invariants as well as inductive invariants. (See the <a href="https://apalache.informal.systems/docs/apalache/principles/invariants.html">page on
 invariants</a> in
 the manual.) Which means that you can only check safety properties with
 Apalache, unless you employ a <a href="https://www.sciencedirect.com/science/article/pii/S1571066104804109?via%3Dihub">liveness-to-safety</a> transformation in your spec.
@@ -11086,7 +11086,7 @@ FactFun[n \in Int] ==
 <h2><a class="header" href="#4-implementation" id="4-implementation">4. Implementation</a></h2>
 <p>The implementation of the annotation parser can be found in the class
 <code>at.forsyte.apalache.io.annotations.AnnotationParser</code> of the module
-<code>tla-import</code>, see <a href="https://github.com/informalsystems/apalache/blob/unstable/tla-import/src/main/scala/at/forsyte/apalache/io/annotations/AnnotationParser.scala">AnnotationParser</a>.</p>
+<code>tla-io</code>, see <a href="https://github.com/informalsystems/apalache/blob/unstable/tla-io/src/main/scala/at/forsyte/apalache/io/annotations/AnnotationParser.scala">AnnotationParser</a>.</p>
 <h2><a class="header" href="#5-discussion" id="5-discussion">5. Discussion</a></h2>
 <p>Most likely, this topic does not deserve much discussion, as we are using
 the pretty standard syntax of Java annotations. So we are following the
