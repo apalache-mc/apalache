@@ -1,5 +1,7 @@
 package at.forsyte.apalache.infra
 
+import com.typesafe.scalalogging.LazyLogging
+
 /**
  * An abstract error message.
  */
@@ -26,6 +28,11 @@ case class FailureMessage(msg: String) extends ErrorMessage
  * @author
  *   Igor Konnov
  */
-trait ExceptionAdapter {
-  def toMessage: PartialFunction[Exception, ErrorMessage]
+trait ExceptionAdapter extends LazyLogging {
+  def toMessage: PartialFunction[Throwable, ErrorMessage] = { case err: OutOfMemoryError =>
+    logger.error(s"Ran out of heap memory (max JVM memory: ${Runtime.getRuntime.maxMemory})")
+    logger.error(s"To increase available heap memory, see the manual:")
+    logger.error("  [https://apalache.informal.systems/docs/apalache/running.html#supplying-jvm-arguments]")
+    NormalErrorMessage(s"Ran out of heap memory: ${err.getMessage}")
+  }
 }
