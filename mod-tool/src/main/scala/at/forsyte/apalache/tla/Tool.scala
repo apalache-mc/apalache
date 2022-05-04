@@ -45,7 +45,18 @@ object Tool extends LazyLogging {
    *   the command line arguments
    */
   def main(args: Array[String]): Unit = {
-    System.exit(run(args))
+    try {
+      System.exit(run(args))
+    } catch {
+      case _: OutOfMemoryError =>
+        // We're usually catching this in `handleExceptions` below.
+        // If it is caught here, logging has not been set up yet, so print directly to `Console.err`.
+        Console.err.println(s"Error: Ran out of heap memory (max JVM memory: ${Runtime.getRuntime.maxMemory})")
+        Console.err.println(s"To increase available heap memory, see the manual:")
+        Console.err.println("  [https://apalache.informal.systems/docs/apalache/running.html#supplying-jvm-arguments]")
+        Console.out.println(s"EXITCODE: ERROR (${ExitCodes.ERROR})")
+        System.exit(ExitCodes.ERROR)
+    }
   }
 
   // Returns `Left(errmsg)` in case of configuration errors
