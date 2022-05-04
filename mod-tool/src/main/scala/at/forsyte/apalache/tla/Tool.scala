@@ -49,7 +49,7 @@ object Tool extends LazyLogging {
       System.exit(run(args))
     } catch {
       case _: OutOfMemoryError =>
-        // We're usually catching this in `handleExceptions` below.
+        // We usually catch this in `handleExceptions` below.
         // If it is caught here, logging has not been set up yet, so print directly to `Console.err`.
         Console.err.println(s"Error: Ran out of heap memory (max JVM memory: ${Runtime.getRuntime.maxMemory})")
         Console.err.println(s"To increase available heap memory, see the manual:")
