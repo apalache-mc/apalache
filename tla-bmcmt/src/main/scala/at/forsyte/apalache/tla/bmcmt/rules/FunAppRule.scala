@@ -46,7 +46,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
             applyRecord(funState, funCell, funEx, argEx, resultT)
 
           case CellTFrom(RecRowT1(_)) =>
-            val fieldValue = recordOps.getField(funState, funCell, getFieldName(argEx))
+            val fieldValue = recordOps.getField(funState.arena, funCell, getFieldName(argEx))
             funState.setRex(fieldValue.toNameEx)
 
           case CellTFrom(SeqT1(elemT)) =>

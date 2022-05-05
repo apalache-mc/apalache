@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
-import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, SymbStateRewriter}
+import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell, RewriterException, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.{RecRowT1, RowT1, TlaType1}
 
 import scala.collection.immutable.SortedMap
@@ -64,8 +64,8 @@ class RecordOps(rewriter: SymbStateRewriter) {
   /**
    * Get the value of a field by its name.
    *
-   * @param state
-   *   a symbolic state to start with
+   * @param arena
+   *   current arena
    * @param recordCell
    *   a record cell
    * @param fieldName
@@ -73,12 +73,12 @@ class RecordOps(rewriter: SymbStateRewriter) {
    * @return
    *   a cell that contains the extracted field
    */
-  def getField(state: SymbState, recordCell: ArenaCell, fieldName: String): ArenaCell = {
+  def getField(arena: Arena, recordCell: ArenaCell, fieldName: String): ArenaCell = {
     val fieldTypes = getFieldTypes(recordCell)
     expectFieldName(recordCell, fieldTypes, fieldName)
 
     val index = fieldTypes.keySet.toList.indexOf(fieldName)
-    val elems = state.arena.getHas(recordCell)
+    val elems = arena.getHas(recordCell)
     assert(0 <= index && index < elems.length)
     elems(index)
   }

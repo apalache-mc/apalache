@@ -511,8 +511,8 @@ class LazyEquality(rewriter: SymbStateRewriter)
       leftRec: ArenaCell,
       rightRec: ArenaCell): SymbState = {
     def fieldsEq(name: String): TlaEx = {
-      val leftField = recordOps.getField(state, leftRec, name)
-      val rightField = recordOps.getField(state, rightRec, name)
+      val leftField = recordOps.getField(state.arena, leftRec, name)
+      val rightField = recordOps.getField(state.arena, rightRec, name)
       tla.eql(leftField.toNameEx, rightField.toNameEx).as(BoolT1())
     }
 
