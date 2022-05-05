@@ -3,9 +3,9 @@ package at.forsyte.apalache.tla.pp.passes
 import at.forsyte.apalache.tla.imp.passes.PassWithOutputs
 
 /**
- * A pass that encodes temporal properties as invariants.
+ * A pass that does TLA+ desugaring.
  *
  * @author
- *   Philip Offtermatt
+ *   Igor Konnov
  */
 trait TemporalPass extends PassWithOutputs
