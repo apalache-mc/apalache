@@ -2185,6 +2185,16 @@ $ apalache-mc check --features=rows TestRecordsNew.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check MC_LamportMutexTyped.tla
+
+Check the mutex algorithm with new records.
+
+```sh
+$ apalache-mc check --features=rows --length=4 MC_LamportMutexTyped.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
 
 ### typecheck Empty.tla reports no error
