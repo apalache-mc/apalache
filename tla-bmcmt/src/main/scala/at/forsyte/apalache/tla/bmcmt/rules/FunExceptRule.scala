@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.ProtoSeqOps
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{ProtoSeqOps, RecordOps}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, OperEx, RecT1, SeqT1, SetT1, TlaEx, TlaType1, TupT1, ValEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, OperEx, RecRowT1, RecT1, SeqT1, SetT1, TlaEx, TlaType1, TupT1, ValEx}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import scalaz.unused
 
@@ -17,6 +17,7 @@ import scalaz.unused
  */
 class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val proto = new ProtoSeqOps(rewriter)
+  private val recordOps = new RecordOps(rewriter)
 
   private def cacheEq(s: SymbState, l: ArenaCell, r: ArenaCell) = rewriter.lazyEq.cacheOneEqConstraint(s, l, r)
 
@@ -46,6 +47,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
         funT match {
           case ft @ FunT1(_, _)  => rewriteFun(nextState, funCell, ft, indexCell, valueCell)
           case rt @ RecT1(_)     => rewriteRec(nextState, funCell, rt, indexEx, valueCell)
+          case RecRowT1(_)       => rewriteRowRec(nextState, funCell, indexEx, valueCell)
           case tt @ TupT1(_ @_*) => rewriteTuple(nextState, funCell, tt, indexEx, valueCell)
           case SeqT1(et)         => rewriteSeq(nextState, funCell, et, indexCell, valueCell)
           case _ =>
@@ -159,6 +161,19 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
 
     rewriter.rewriteUntilDone(nextState.setRex(newRecord.toNameEx))
+  }
+
+  def rewriteRowRec(
+      state: SymbState,
+      oldRecord: ArenaCell,
+      indexEx: TlaEx,
+      newValue: ArenaCell): SymbState = {
+    val fieldToUpdate = indexEx match {
+      case ValEx(TlaStr(key)) => key
+      case ex => throw new RewriterException("Expected a string when updating a record, found: " + ex, ex)
+    }
+
+    recordOps.updateField(state, oldRecord, fieldToUpdate, newValue)
   }
 
   def rewriteTuple(
