@@ -35,7 +35,6 @@ import scala.util.Random
  */
 object Tool extends LazyLogging {
   lazy val ISSUES_LINK: String = "[https://github.com/informalsystems/apalache/issues]"
-  lazy val OK_EXIT_CODE = 0
 
   /**
    * Run the tool in the standalone mode with the provided arguments. This method calls System.exit with the computed
@@ -45,7 +44,18 @@ object Tool extends LazyLogging {
    *   the command line arguments
    */
   def main(args: Array[String]): Unit = {
-    System.exit(run(args))
+    try {
+      System.exit(run(args))
+    } catch {
+      case _: OutOfMemoryError =>
+        // We usually catch this in `handleExceptions` below.
+        // If it is caught here, logging has not been set up yet, so print directly to `Console.err`.
+        Console.err.println(s"Error: Ran out of heap memory (max JVM memory: ${Runtime.getRuntime.maxMemory})")
+        Console.err.println(s"To increase available heap memory, see the manual:")
+        Console.err.println("  [https://apalache.informal.systems/docs/apalache/running.html#supplying-jvm-arguments]")
+        Console.out.println(s"EXITCODE: ERROR (${ExitCodes.ERROR})")
+        System.exit(ExitCodes.ERROR)
+    }
   }
 
   // Returns `Left(errmsg)` in case of configuration errors
@@ -99,7 +109,7 @@ object Tool extends LazyLogging {
 
     cli match {
       // A standard option, e.g., --version or --help. No header, no timer, no noise
-      case None => OK_EXIT_CODE
+      case None => ExitCodes.OK
       // One of our commands.
       case Some(cmd) => {
 
@@ -141,7 +151,7 @@ object Tool extends LazyLogging {
           }
         }
 
-        if (exitcode == OK_EXIT_CODE) {
+        if (exitcode == ExitCodes.OK) {
           Console.out.println("EXITCODE: OK")
         } else {
           Console.out.println(s"EXITCODE: ERROR ($exitcode)")
@@ -179,7 +189,7 @@ object Tool extends LazyLogging {
     val result = executor.run()
     if (result.isDefined) {
       logger.info(msgIfOk(result.get))
-      ExitCodes.NO_ERROR
+      ExitCodes.OK
     } else {
       logger.info(msgIfFail)
       errCode
@@ -415,7 +425,7 @@ object Tool extends LazyLogging {
     try {
       runner(executor, cmd)
     } catch {
-      case e: Exception if adapter.toMessage.isDefinedAt(e) =>
+      case e: Throwable if adapter.toMessage.isDefinedAt(e) =>
         adapter.toMessage(e) match {
           case NormalErrorMessage(text) =>
             logger.error(text)
@@ -490,7 +500,7 @@ object Tool extends LazyLogging {
         ()
     }
 
-    ExitCodes.NO_ERROR
+    ExitCodes.OK
   }
 
   private def configDirExistsOrCreated(): Boolean = {

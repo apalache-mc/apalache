@@ -33,7 +33,7 @@ EXTENDS __apalache_internal
  *
  * @type: ((a, b) => b, b, c => a, Set(c) => c, Set(c)) => b;
  *)
-MapThenFoldSet(op(_, _), base, f(_), choose(_), S) ==
+MapThenFoldSet(__op(_, _), __base, __f(_), __choose(_), __S) ==
   __NotSupportedByModelChecker("MapThenFoldSet. Use FoldSet, FoldSeq, FoldFunction.")
 
 =============================================================================
