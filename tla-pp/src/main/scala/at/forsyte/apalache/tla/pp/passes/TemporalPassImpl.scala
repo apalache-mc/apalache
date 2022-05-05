@@ -21,6 +21,7 @@ import com.typesafe.scalalogging.LazyLogging
  */
 class TemporalPassImpl @Inject() (
     val options: PassOptions,
+    tracker: TransformationTracker,
     gen: UniqueNameGenerator,
     writerFactory: TlaWriterFactory)
     extends TemporalPass with LazyLogging {
@@ -29,26 +30,15 @@ class TemporalPassImpl @Inject() (
 
   override def execute(tlaModule: TlaModule): Option[TlaModule] = {
     logger.info("  > Rewriting temporal operators...")
-    
-    val newModule =
-    options.get[List[String]]("checker", "inv") match {
-      case Some(invariants) =>
-        invariants.foldLeft(tlaModule) { (mod, invName) =>
-            logger.info(s"  > Found invariant $invName")
-            val optViewName = options.get[String]("checker", "view")
-            if (optViewName.isDefined) {
-              logger.info(s"  > Using state view ${optViewName.get}")
-            }
-            TemporalEncoder(gen).encode(mod, invName, optViewName)
-          }
-      case None =>
-        logger.info("  > No temporal property given, nothing to rewrite")
-        tlaModule
-    }
+    val input = tlaModule
+    val varNames = input.varDeclarations.map {
+      _.name
+    }.toSet
+    val output = ModuleByExTransformer(TemporalEncoder(gen, varNames, tracker))(input)
 
-    writeOut(writerFactory, newModule)
-
-    Some(newModule)
+    // dump the result of preprocessing
+    writeOut(writerFactory, output)
+    Some(output)
   }
 
   override def dependencies = Set(ModuleProperty.TypeChecked)
