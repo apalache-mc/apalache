@@ -3,13 +3,15 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt.caches.{EqCache, EqCacheSnapshot}
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rewriter.{ConstSimplifierForSmt, Recoverable}
-import at.forsyte.apalache.tla.bmcmt.rules.aux.ProtoSeqOps
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{ProtoSeqOps, RecordOps}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs.{tlaExToBuilderExAsTyped, BuilderExAsTyped}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir._
 import scalaz.unused
+
+import scala.collection.immutable.SortedMap
 
 /**
  * Generate equality constraints between cells and cache them to avoid redundant constraints.
@@ -25,6 +27,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
 
   private val eqCache = new EqCache()
   private val protoSeqOps = new ProtoSeqOps(rewriter)
+  private val recordOps = new RecordOps(rewriter)
 
   /**
    * This method ensure that a pair of its arguments can be safely compared by the SMT equality, that is, all the
@@ -146,6 +149,10 @@ class LazyEquality(rewriter: SymbStateRewriter)
 
           case (CellTFrom(RecT1(_)), CellTFrom(RecT1(_))) =>
             mkRecordEq(state, left, right)
+
+          case (CellTFrom(RecRowT1(RowT1(fieldTypes, None))), CellTFrom(RecRowT1(RowT1(fieldTypes2, None)))) =>
+            assert(fieldTypes == fieldTypes2)
+            mkRowRecordEq(state, fieldTypes, left, right)
 
           case (CellTFrom(TupT1(_ @_*)), CellTFrom(TupT1(_ @_*))) =>
             mkTupleEq(state, left, right)
@@ -496,6 +503,23 @@ class LazyEquality(rewriter: SymbStateRewriter)
 
     // restore the original expression and theory
     newState.setRex(state.ex)
+  }
+
+  private def mkRowRecordEq(
+      state: SymbState,
+      fieldTypes: SortedMap[String, TlaType1],
+      leftRec: ArenaCell,
+      rightRec: ArenaCell): SymbState = {
+    def fieldsEq(name: String): TlaEx = {
+      val leftField = recordOps.getField(state, leftRec, name)
+      val rightField = recordOps.getField(state, rightRec, name)
+      tla.eql(leftField.toNameEx, rightField.toNameEx).as(BoolT1())
+    }
+
+    val allFieldsEq = tla.and(fieldTypes.keys.map { n => tla.fromTlaEx(fieldsEq(n)) }.toSeq: _*).as(BoolT1())
+    rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(leftRec.toNameEx, rightRec.toNameEx), allFieldsEq))
+    eqCache.put(leftRec, rightRec, EqCache.EqEntry())
+    state
   }
 
   private def mkTupleEq(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {

@@ -71,16 +71,16 @@ class RecordOps(rewriter: SymbStateRewriter) {
    * @param fieldName
    *   a field name
    * @return
-   *   a new symbolic state that contains the extracted field
+   *   a cell that contains the extracted field
    */
-  def getField(state: SymbState, recordCell: ArenaCell, fieldName: String): SymbState = {
+  def getField(state: SymbState, recordCell: ArenaCell, fieldName: String): ArenaCell = {
     val fieldTypes = getFieldTypes(recordCell)
     expectFieldName(recordCell, fieldTypes, fieldName)
 
     val index = fieldTypes.keySet.toList.indexOf(fieldName)
     val elems = state.arena.getHas(recordCell)
     assert(0 <= index && index < elems.length)
-    state.setRex(elems(index).toNameEx)
+    elems(index)
   }
 
   /**
