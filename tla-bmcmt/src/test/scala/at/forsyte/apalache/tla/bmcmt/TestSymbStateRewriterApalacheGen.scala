@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
@@ -7,6 +8,7 @@ import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, FunT1, IntT1, OperEx, RecT1
 
 trait TestSymbStateRewriterApalacheGen extends RewriterBase {
   private val types = Map("i" -> IntT1(), "I" -> SetT1(IntT1()), "b" -> BoolT1(), "s" -> StrT1())
+  private val parser = DefaultType1Parser
 
   test("""Gen(1) for Int""") { rewriterType: SMTEncoding =>
     val gen = OperEx(ApalacheOper.gen, int(1).typed())(Typed(IntT1()))
@@ -97,9 +99,22 @@ trait TestSymbStateRewriterApalacheGen extends RewriterBase {
   }
 
   test("""Gen(3) for [i: Int, b: Bool]""") { rewriterType: SMTEncoding =>
-    val recordType = RecT1("i" -> IntT1(), "b" -> BoolT1())
-    val gen = OperEx(ApalacheOper.gen, int(3).typed())(Typed(recordType))
+    val recordT = parser("[ i: Int, b: Bool ]")
+    val gen = OperEx(ApalacheOper.gen, int(3).typed())(Typed(recordT))
     val i_eq_10 = eql(appFun(gen, str("i")) ? "i", int(10)).typed(types, "b")
+
+    val state = new SymbState(i_eq_10, arena, Binding())
+    val rewriter = create(rewriterType)
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    solverContext.assertGroundExpr(nextState.ex)
+    assert(solverContext.sat())
+  }
+
+  test("""Gen(3) for { i: Int, b: Bool }""") { rewriterType: SMTEncoding =>
+    val recordT = parser("{ i: Int, b: Bool }")
+    val gen = OperEx(ApalacheOper.gen, int(3).typed())(Typed(recordT))
+    val i_eq_10 = eql(appFun(gen, str("i")).as(IntT1()), int(10)).as(BoolT1())
 
     val state = new SymbState(i_eq_10, arena, Binding())
     val rewriter = create(rewriterType)

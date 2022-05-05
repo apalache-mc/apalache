@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir._
 import scalaz.unused
 
-import scala.collection.immutable.SortedSet
+import scala.collection.immutable.{SortedMap, SortedSet}
 
 /**
  * This class generates symbolic data structures whose width is bounded with `bound`
@@ -41,6 +41,9 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
 
         case rt @ RecT1(_) =>
           genRecord(state, rt)
+
+        case RecRowT1(RowT1(fieldTypes, None)) =>
+          genRowRecord(state, fieldTypes)
 
         case tt @ TupT1(_ @_*) =>
           genTuple(state, tt)
@@ -79,6 +82,21 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
       }
     nextState = nextState.updateArena(a => a.appendHasNoSmt(recCell, elemCells: _*))
     nextState.setRex(recCell.toNameEx.withTag(Typed(recordType)))
+  }
+
+  private def genRowRecord(state: SymbState, fieldTypes: SortedMap[String, TlaType1]): SymbState = {
+    // create the record cell
+    val recordT = RecRowT1(RowT1(fieldTypes, None))
+    var nextState = state.updateArena(_.appendCell(recordT))
+    val recCell = nextState.arena.topCell
+    // convert the values to a list, so we don't have a lazy stream
+    val elemCells =
+      fieldTypes.values.toList.map { elemType =>
+        nextState = gen(nextState, elemType)
+        nextState.asCell
+      }
+    nextState = nextState.updateArena(a => a.appendHasNoSmt(recCell, elemCells: _*))
+    nextState.setRex(recCell.toNameEx.withTag(Typed(CellTFrom(recordT))))
   }
 
   private def genTuple(state: SymbState, tupleType: TupT1): SymbState = {
