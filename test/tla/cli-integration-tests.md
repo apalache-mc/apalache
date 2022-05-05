@@ -2713,7 +2713,7 @@ EXITCODE: OK
 Typecheck a real spec by Leslie Lamport.
 
 ```sh
-$ apalache-mc typecheck LamportMutexTyped.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck --features=rows LamportMutexTyped.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2723,7 +2723,7 @@ EXITCODE: OK
 Typecheck a model checking instance.
 
 ```sh
-$ apalache-mc typecheck MC_LamportMutexTyped.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck --features=rows MC_LamportMutexTyped.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
