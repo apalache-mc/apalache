@@ -2175,6 +2175,16 @@ $ apalache-mc check --inv=Inv --length=1 UnchangedAsInv1663.tla | sed 's/[IEW]@.
 EXITCODE: OK
 ```
 
+### check TestRecordsNew.tla
+
+Check new records that support row typing.
+
+```sh
+$ apalache-mc check --features=rows TestRecordsNew.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
 
 ### typecheck Empty.tla reports no error
