@@ -10,9 +10,12 @@
 \* numerical difference between the declared fields and the assigned fields can be
 \* triggerd. I.e., this is not targeting a problem wherein the set of empty records
 \* is an edge case.
+\*
+\* The new typechecker supporting row types considers this specification to be
+\* ill-typed. This is great!
 
 VARIABLE
-  \* @type: [];
+  \* @type: {};
   m
 
 Init == m = [foo |-> TRUE]

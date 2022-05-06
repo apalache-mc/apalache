@@ -1333,17 +1333,20 @@ $ apalache-mc check --inv=Inv NestedCallByName.tla | sed 's/I@.*//'
 EXITCODE: OK
 ```
 
-### check Bug914 succeeds
+### typecheck Bug914 fails
 
 Regression test for https://github.com/informalsystems/apalache/issues/914 In
 the earlier version, we expected the model checker to complain about
-mismatching record types. In the latest version, this bug disappeared, due to
-the changes in the type checker.
+mismatching record types. ~In the latest version, this bug disappeared, due to
+the changes in the type checker.~ The new type checker with row typing is
+reporting a type error, and this is what we expect.
 
 ```sh
-$ apalache-mc check Bug914.tla | sed 's/I@.*//'
+$ apalache-mc typecheck --features=rows Bug914.tla | sed 's/I@.*//'
 ...
-EXITCODE: OK
+[Bug914.tla:18:9-18:26]: Arguments of equality should have the same type. For arguments m, ["foo" ↦ TRUE] with types {  }, { foo: Bool }, in expression m = (["foo" ↦ TRUE])
+...
+EXITCODE: ERROR (255)
 ```
 
 ### check RecordExcept987 succeeds
