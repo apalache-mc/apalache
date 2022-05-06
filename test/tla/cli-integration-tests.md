@@ -384,7 +384,7 @@ EXITCODE: ERROR (255)
 This simple test demonstrates how to test a spec by isolating the input with generators.
 
 ```sh
-$ apalache-mc test TestGen.tla Prepare Test Assertion | sed 's/I@.*//'
+$ apalache-mc test --features=rows TestGen.tla Prepare Test Assertion | sed 's/I@.*//'
 ...
 The outcome is: Error
 Checker has found an example. Check counterexample.tla.
@@ -1355,7 +1355,7 @@ Regression test for https://github.com/informalsystems/apalache/issues/987
 We should always use sorted keys on record types.
 
 ```sh
-$ apalache-mc check RecordExcept987.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows RecordExcept987.tla | sed 's/I@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2174,7 +2174,7 @@ EXITCODE: OK
 A test for folds with excepts, the fast case.
 
 ```sh
-$ apalache-mc check --inv=TypeOK --length=1 RecMem1627.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --features=rows --inv=TypeOK --length=1 RecMem1627.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```

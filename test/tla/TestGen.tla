@@ -4,7 +4,7 @@ EXTENDS Integers, Apalache
 
 VARIABLES
     (*
-     @typeAlias: MSG = [seqno: Int, ballot: Int];
+     @typeAlias: MSG = { seqno: Int, ballot: Int };
      @type: Set(MSG);
     *)
     msgs,
