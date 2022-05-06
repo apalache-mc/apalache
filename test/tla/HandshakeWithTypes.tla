@@ -37,12 +37,12 @@ SendSyn ==
 
 SendSynAck ==
     /\ rstate = "LISTEN"
-    /\ \E m \in msgs:
+    /\ \E m \in msgs, ackno \in Nat:
         /\ m.syn /\ ~m.ack
         /\ msgs' = msgs \union {[syn |-> TRUE, ack |-> TRUE,
                                  seqno |-> m.seqno + 1,
-                                 ackno |-> m.ackno]}
-        /\ rseqno' = m.ackno + 1
+                                 ackno |-> ackno]}
+        /\ rseqno' = ackno + 1
         /\ rstate' = "SYN-RECEIVED"
         /\ UNCHANGED <<iseqno, istate>>
 
