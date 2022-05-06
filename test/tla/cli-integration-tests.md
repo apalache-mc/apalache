@@ -2246,7 +2246,7 @@ EXITCODE: OK
 ### typecheck CigaretteSmokersTyped.tla
 
 ```sh
-$ apalache-mc typecheck CigaretteSmokersTyped.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck --features=rows CigaretteSmokersTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
@@ -2612,9 +2612,8 @@ Type unification should not recurse infinitely.
 See: https://github.com/informalsystems/apalache/issues/925
 
 ```sh
-$ apalache-mc typecheck Bug925.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck --features=rows Bug925.tla | sed 's/[IEW]@.*//'
 ...
-[Bug925.tla:7:1-7:24]: Expected ((a) => [f: Set(a)]) in Optional. Found: ((a) => [f: a])
 [Bug925.tla:7:1-7:24]: Error when computing the type of Optional
 ...
 EXITCODE: ERROR (255)
