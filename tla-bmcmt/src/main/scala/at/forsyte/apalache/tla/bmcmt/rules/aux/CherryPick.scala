@@ -872,14 +872,15 @@ class CherryPick(rewriter: SymbStateRewriter) {
       rewriter.solverContext.config.smtEncoding match {
         case `arraysEncoding` =>
           nextState = nextState.updateArena(_.appendHasNoSmt(relationCell, pair)) // We only carry the metadata here
-          // Since relationCell was updated above with the pair for the current arg, we can use appFun now
-          nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.appFun(funCell.toNameEx, arg.toNameEx)))
-          val appFunRes = nextState.asCell
+          // We need the SMT eql because funCell might be unconstrained, if it originates from a function set
+          val select = tla.apalacheSelectInFun(arg.toNameEx, funCell.toNameEx)
+          val eql = tla.eql(pickedResult.toNameEx, select)
+          rewriter.solverContext.assertGroundExpr(eql)
 
           cdm.cellType match {
             case _: PowSetT =>
               val powSetDom = nextState.arena.getDom(cdm)
-              val appFunResInDom = tla.subseteq(powSetDom.toNameEx, appFunRes.toNameEx)
+              val appFunResInDom = tla.subseteq(pickedResult.toNameEx, powSetDom.toNameEx)
               nextState = rewriter.rewriteUntilDone(nextState.setRex(appFunResInDom))
               val resCell = nextState.asCell
               rewriter.solverContext.assertGroundExpr(resCell.toNameEx)
@@ -887,18 +888,18 @@ class CherryPick(rewriter: SymbStateRewriter) {
             case _: FinFunSetT =>
               nextState = pick(cdm, nextState, nextState.arena.cellFalse().toNameEx)
               val recursivelyPickedFun = nextState.asCell
-              rewriter.solverContext.assertGroundExpr(tla.eql(appFunRes.toNameEx, recursivelyPickedFun.toNameEx))
+              rewriter.solverContext.assertGroundExpr(tla.eql(pickedResult.toNameEx, recursivelyPickedFun.toNameEx))
 
             case _: InfSetT =>
               nextState = nextState.updateArena(_.appendCellOld(cdm.cellType.asInstanceOf[InfSetT].elemType))
               val unboundElem = nextState.asCell
-              val eql = tla.eql(appFunRes.toNameEx, unboundElem.toNameEx)
+              val eql = tla.eql(pickedResult.toNameEx, unboundElem.toNameEx)
               val ge = tla.ge(unboundElem.toNameEx, ValEx(TlaInt(0)))
               rewriter.solverContext.assertGroundExpr(eql)
               if (cdm == state.arena.cellNatSet()) rewriter.solverContext.assertGroundExpr(ge) // Add Nat constraint
 
             case _ =>
-              rewriter.solverContext.assertGroundExpr(tla.apalacheSelectInFun(appFunRes.toNameEx, cdm.toNameEx))
+              rewriter.solverContext.assertGroundExpr(tla.apalacheSelectInFun(pickedResult.toNameEx, cdm.toNameEx))
           }
 
         case `oopsla19Encoding` =>
