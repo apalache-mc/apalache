@@ -15,3 +15,8 @@
  * Fix usage of sets of function sets in the arrays encoding, see #1680
  * Fix an uncaught exception when setting up the output manager, see #1706
  * Handle heap memory exhaustion gracefully, see #1711
+
+
+### Features
+
+ * Support new records in the model checker, see #1717
