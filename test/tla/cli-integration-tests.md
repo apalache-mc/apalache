@@ -478,7 +478,7 @@ EXITCODE: OK
 ### check Fix365_ExistsSubset3 succeeds: regression for issue 365 (array-encoding)
 
 ```sh
-$ apalache-mc check --length=10 Fix365_ExistsSubset3.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows --length=10 Fix365_ExistsSubset3.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
