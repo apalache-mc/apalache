@@ -874,7 +874,7 @@ EXITCODE: OK
 ### check HandshakeWithTypes.tla with length 4 succeeds (array-encoding)
 
 ```sh
-$ apalache-mc check --length=4 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows --length=4 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -884,7 +884,7 @@ EXITCODE: OK
 ### check HandshakeWithTypes.tla with length 5 deadlocks (array-encoding)
 
 ```sh
-$ apalache-mc check --length=5 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows --length=5 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
 ...
 The outcome is: Deadlock
 ...
@@ -898,7 +898,7 @@ extend an execution prefix. See a discussion in
 [#1640](https://github.com/informalsystems/apalache/issues/1640).
 
 ```sh
-$ apalache-mc check --length=5 --no-deadlock=1 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows --length=5 --no-deadlock=1 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
 ...
 The outcome is: ExecutionsTooShort
 ...
