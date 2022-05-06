@@ -4,7 +4,7 @@ import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
-import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, FunT1, IntT1, OperEx, RecT1, SeqT1, SetT1, StrT1, TupT1, Typed}
+import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, FunT1, IntT1, OperEx, SeqT1, SetT1, StrT1, TupT1, Typed}
 
 trait TestSymbStateRewriterApalacheGen extends RewriterBase {
   private val types = Map("i" -> IntT1(), "I" -> SetT1(IntT1()), "b" -> BoolT1(), "s" -> StrT1())
