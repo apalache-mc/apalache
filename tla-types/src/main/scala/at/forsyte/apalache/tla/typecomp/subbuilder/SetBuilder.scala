@@ -62,7 +62,7 @@ trait SetBuilder extends UnsafeSetBuilder {
   }
 
   /**
-   * Alternate call method, where paris are passed mixed
+   * Alternate call method, where pairs are passed mixed
    *
    * @see
    *   map[[mapMixed(e: TBuilderInstruction, varSetPairs: (TBuilderInstruction, TBuilderInstruction)*)]]
