@@ -2492,7 +2492,7 @@ EXITCODE: OK
 ### typecheck Except617.tla
 
 ```sh
-$ apalache-mc typecheck Except617.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck --features=rows Except617.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
