@@ -55,6 +55,12 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   private var smtListener: SmtListener = new IdleSmtListener()
   private var _metrics: SolverContextMetrics = SolverContextMetrics.empty
 
+  // The parSet set is used to pass parameters to Z3
+  // The list of parameters can be seen by passing the -p flag to Z3
+  val parSet = z3context.mkParams()
+  // parSet.add("array.extensional", false) // disables extensionality for the theory of arrays
+  z3solver.setParameters(parSet)
+
   /**
    * Caching one uninterpreted sort for each cell signature. For integers, the integer sort.
    */
