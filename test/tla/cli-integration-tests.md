@@ -1796,7 +1796,7 @@ See https://github.com/informalsystems/apalache/issues/874
 ```sh
 $ apalache-mc check Bug874.tla | sed 's/[IEW]@.*//'
 ...
-Bug874.tla:4:17-4:27: Input error (see the manual): Access to non-existent record field b in (["a" ↦ 2])["b"]
+[Bug874.tla:4:17-4:27]: Cannot apply ["a" ↦ 2] to the argument "b" in (["a" ↦ 2])["b"].
 ...
 EXITCODE: ERROR (255)
 ```
