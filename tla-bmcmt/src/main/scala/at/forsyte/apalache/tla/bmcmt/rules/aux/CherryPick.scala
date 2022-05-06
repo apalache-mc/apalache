@@ -821,9 +821,9 @@ class CherryPick(rewriter: SymbStateRewriter) {
       rewriter.solverContext.config.smtEncoding match {
         case `arraysEncoding` =>
           nextState = nextState.updateArena(_.appendHasNoSmt(relationCell, pair)) // We only carry the metadata here
+          // We need the SMT eql because funCell might be unconstrained, if it originates from a function set
           val select = tla.apalacheSelectInFun(arg.toNameEx, funCell.toNameEx)
           val eql = tla.eql(pickedResult.toNameEx, select)
-          // We need the SMT eql because funCell might be unconstrained, if it originates from a function set
           rewriter.solverContext.assertGroundExpr(eql)
 
           cdm.cellType match {
