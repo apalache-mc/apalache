@@ -1,6 +1,6 @@
 # Idiom 7: Use Boolean operators in actions, not `IF-THEN-ELSE`
 
-**author:** Gabriela Mafra
+**author:** Gabriela Moreira
 
 ## Description
 

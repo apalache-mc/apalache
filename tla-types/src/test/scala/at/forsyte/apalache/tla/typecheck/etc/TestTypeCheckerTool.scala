@@ -44,7 +44,7 @@ class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyM
   def loadSpecFromResource(name: String): Source = {
     // Previously, we were using fromResource, but it was too unstable across environments
     // (e.g., it failed in Intellij Idea). Now we are just reading it from the current working directory.
-    Source.fromFile(s"src/test/resources/$name.tla")
+    Source.fromFile(s"tla-types/src/test/resources/$name.tla")
   }
 
   test("the tool runs and reports no type errors") {
@@ -63,7 +63,7 @@ class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyM
       // but no type errors
     }
     whenExecuting(listener) {
-      val typechecker = new TypeCheckerTool(annotationStore, true)
+      val typechecker = new TypeCheckerTool(annotationStore, true, useRows = false)
       val isWellTyped = typechecker.check(listener, mod)
       assert(isWellTyped)
     }
@@ -85,7 +85,7 @@ class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyM
       // but no type errors
     }
     whenExecuting(listener) {
-      val typechecker = new TypeCheckerTool(annotationStore, true)
+      val typechecker = new TypeCheckerTool(annotationStore, true, useRows = false)
 
       def defaultTag(uid: UID): Nothing = {
         throw new TypingException("No type for UID: " + uid, uid)
@@ -138,7 +138,7 @@ class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyM
     val enc = new TlaToUJson(locatorOpt = None)(TlaType1PrinterPredefs.printer)
 
     whenExecuting(listener) {
-      val typechecker = new TypeCheckerTool(annotationStore, true)
+      val typechecker = new TypeCheckerTool(annotationStore, true, useRows = false)
 
       val output = typechecker.checkAndTag(new IdleTracker(), listener, defaultTag, mod)
       assert(output.isDefined)
@@ -173,12 +173,12 @@ class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyM
       // but no type errors
     }
     whenExecuting(listener) {
-      val typechecker = new TypeCheckerTool(annotationStore, true)
+      val typechecker = new TypeCheckerTool(annotationStore, true, useRows = false)
 
       val output = typechecker.checkAndTag(new IdleTracker(), listener, defaultTag, mod)
       assert(output.isDefined)
 
-      val typechecker2 = new TypeCheckerTool(annotationStore, true)
+      val typechecker2 = new TypeCheckerTool(annotationStore, true, useRows = false)
       val output2 = typechecker2.checkAndTag(new IdleTracker(), listener, defaultTag, output.get)
       assert(output2.isDefined)
     }

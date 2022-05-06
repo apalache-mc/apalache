@@ -13,9 +13,9 @@
  *
  * @type: ((a, b) => a, a, Set(b)) => a;
  *)
-__ApalacheFoldSet(Op(_, _), v, S) ==
+__ApalacheFoldSet(__Op(_, _), __v, __S) ==
     \* A dummy implementation. Apalache rewires it with ApalacheOper.foldSet.
-    v
+    __v
 
 (**
  * A copy of Apalache!ApaFoldSeqLeft, which should be used only in Apalache rewirings.
@@ -26,9 +26,9 @@ __ApalacheFoldSet(Op(_, _), v, S) ==
  *
  * @type: ((a, b) => a, a, Seq(b)) => a;
  *)
-__ApalacheFoldSeq(Op(_, _), v, seq) ==
+__ApalacheFoldSeq(__Op(_, _), __v, __seq) ==
     \* A dummy implementation. Apalache rewires it with ApalacheOper.foldSeq.
-    v
+    __v
 
 (**
  * A sequence constructor that avoids using a function constructor.  This
@@ -38,7 +38,7 @@ __ApalacheFoldSeq(Op(_, _), v, seq) ==
  *
  * @type: (Int, (Int -> a)) => Seq(a);
  *)
-__ApalacheMkSeq(N, F(_)) ==
+__ApalacheMkSeq(__N, __F(_)) ==
   \* A dummy implementation. Apalache rewires it with ApalacheOper.mkSeq.
   <<>>
 

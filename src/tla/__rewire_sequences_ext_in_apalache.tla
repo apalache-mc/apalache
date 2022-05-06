@@ -27,8 +27,8 @@ LOCAL INSTANCE __apalache_internal
  *
  * @type: Seq(a) => Set(a);
  *)
-ToSet(s) ==
-  { s[__i] : __i \in DOMAIN s }
+ToSet(__s) ==
+  { __s[__i] : __i \in DOMAIN __s }
 
 (**
  * Convert a set to some sequence that contains all the elements of the
@@ -36,9 +36,9 @@ ToSet(s) ==
  *
  * @type: Set(a) => Seq(a);
  *)
-SetToSeq(S) == 
-  LET __add_to_seq(seq, elem) == Append(seq, elem) IN
-  __ApalacheFoldSet(__add_to_seq, <<>>, S)
+SetToSeq(__S) == 
+  LET __add_to_seq(__seq, __elem) == Append(__seq, __elem) IN
+  __ApalacheFoldSet(__add_to_seq, <<>>, __S)
 
 (**
  * Convert a set to a sorted sequence that contains all the elements of
@@ -46,7 +46,7 @@ SetToSeq(S) ==
  *
  * @type: (Set(a), (a, a) => Bool) => Seq(a);
  *)
-SetToSortSeq(S, LessThan(_, _)) ==
+SetToSortSeq(__S, __LessThan(_, _)) ==
   \* insert a new element element 
   LET \* @type: (Seq(b), b) => Seq(b);
         __insert_sorted(__seq, __newElem) ==
@@ -55,7 +55,7 @@ SetToSortSeq(S, LessThan(_, _)) ==
     LET __insertion_pos ==
       CHOOSE __p \in (DOMAIN __seq) \union { __next_len }:
         \A __i \in DOMAIN __seq:
-          __i < __p <=> LessThan(__seq[__i], __newElem)
+          __i < __p <=> __LessThan(__seq[__i], __newElem)
     IN
     \* copy the sequence elements or insert a new one
     LET __copy_or_set(__i) ==
@@ -72,7 +72,7 @@ SetToSortSeq(S, LessThan(_, _)) ==
     \* prune the longer seq
     SubSeq(__raw_seq, 1, __next_len)
   IN
-  __ApalacheFoldSet(__insert_sorted, <<>>, S)
+  __ApalacheFoldSet(__insert_sorted, <<>>, __S)
 
 (**
  * TupleOf(s, 3) = s \X s \X s
@@ -82,7 +82,7 @@ SetToSortSeq(S, LessThan(_, _)) ==
  *
  * @type: (Set(a), Int) => (Int -> Set(a));
  *)
-TupleOf(set, n) == 
+TupleOf(__set, __n) == 
   __NotSupportedByModelChecker("TupleOf")
 
 (**
@@ -93,7 +93,7 @@ TupleOf(set, n) ==
  *
  * @type: (Set(a), Int) => Set(Seq(a));
  *)
-SeqOf(set, n) == 
+SeqOf(__set, __n) == 
   __NotSupportedByModelChecker("SeqOf")
 
 (**
@@ -104,7 +104,7 @@ SeqOf(set, n) ==
  *
  * @type: (Set(a), Int) => Set(Seq(a));
  *)
-BoundedSeq(S, n) ==
+BoundedSeq(__S, __n) ==
   __NotSupportedByModelChecker("BoundedSeq")
 
 (**
@@ -112,9 +112,9 @@ BoundedSeq(S, n) ==
  *
  * @type: (Seq(a), a) => Bool;
  *)
-Contains(s, e) ==
-  \E i \in DOMAIN s:
-    s[i] = e
+Contains(__s, __e) ==
+  \E __i \in DOMAIN __s:
+    __s[__i] = __e
 
 (**
  * Reverse the given sequence s:  Let l be Len(s) (length of s).
@@ -122,23 +122,23 @@ Contains(s, e) ==
  *
  * @type: Seq(a) => Seq(a);
  *)
-Reverse(s) ==
-  LET __s_len == Len(s) IN
-  LET __get_ith(i) == s[__s_len - i + 1] IN
-  SubSeq(__ApalacheMkSeq(__ApalacheSeqCapacity(s), __get_ith), 1, __s_len)
+Reverse(__s) ==
+  LET __s_len == Len(__s) IN
+  LET __get_ith(__i) == __s[__s_len - __i + 1] IN
+  SubSeq(__ApalacheMkSeq(__ApalacheSeqCapacity(__s), __get_ith), 1, __s_len)
 
 (**
  * The sequence s with e removed or s iff e \notin Range(s).
  *
  * @type: (Seq(a), a) => Seq(a);
  *)
-Remove(seq, e) ==
+Remove(__seq, __e) ==
     LET __append_if_eq(__res, __t) ==
-        IF __t /= e
+        IF __t /= __e
         THEN Append(__res, __t)
         ELSE __res
     IN
-    __ApalacheFoldSeq(__append_if_eq, <<>>, seq)
+    __ApalacheFoldSeq(__append_if_eq, <<>>, __seq)
 
 (**
  * Equals the sequence s except that all occurrences of element old are
@@ -146,12 +146,12 @@ Remove(seq, e) ==
  *
  * @type: (Seq(a), a, a) => Seq(a);
  *)
-ReplaceAll(seq, old, new) ==
+ReplaceAll(__seq, __old, __new) ==
   LET __copy_or_set(__i) ==
-    IF seq[__i] = old THEN new ELSE seq[__i]
+    IF __seq[__i] = __old THEN __new ELSE __seq[__i]
   IN
-  SubSeq(__ApalacheMkSeq(__ApalacheSeqCapacity(seq), __copy_or_set),
-        1, Len(seq))
+  SubSeq(__ApalacheMkSeq(__ApalacheSeqCapacity(__seq), __copy_or_set),
+        1, Len(__seq))
   
 (**  
  * Inserts element e at the position i moving the original element to i+1
@@ -163,32 +163,32 @@ ReplaceAll(seq, old, new) ==
  *
  * @type: (Seq(a), Int, a) => Seq(a);
  *)
-InsertAt(seq, k, e) ==
+InsertAt(__seq, __k, __e) ==
   LET __copy_or_set(__i) ==
-    IF __i = k
-    THEN e
-    ELSE IF __i < k
-         THEN seq[__i]
-         ELSE seq[__i - 1]
+    IF __i = __k
+    THEN __e
+    ELSE IF __i < __k
+         THEN __seq[__i]
+         ELSE __seq[__i - 1]
   IN
-  SubSeq(__ApalacheMkSeq(__ApalacheSeqCapacity(seq) + 1, __copy_or_set),
-        1, Len(seq) + 1)
+  SubSeq(__ApalacheMkSeq(__ApalacheSeqCapacity(__seq) + 1, __copy_or_set),
+        1, Len(__seq) + 1)
 
 (**
  * Replaces the element at position i with the element e.
  *
  * @type: (Seq(a), Int, a) => Seq(a);
  *)
-ReplaceAt(s, i, e) ==
-  [s EXCEPT ![i] = e]  
+ReplaceAt(__s, __i, __e) ==
+  [__s EXCEPT ![__i] = __e]  
 
 (**
  * Removes the element at position i shortening the length of s by one.
  *
  * @type: (Seq(a), Int) => Seq(a);
  *)
-RemoveAt(s, i) == 
-  SubSeq(s, 1, i - 1) \o SubSeq(s, i + 1, Len(s))
+RemoveAt(__s, __i) == 
+  SubSeq(__s, 1, __i - 1) \o SubSeq(__s, __i + 1, Len(__s))
 
 -----------------------------------------------------------------------------
 
@@ -197,24 +197,24 @@ RemoveAt(s, i) ==
  *
  * @type: (a, Seq(a)) => Seq(a);
  *)
-Cons(elt, seq) == 
-    <<elt>> \o seq
+Cons(__elt, __seq) == 
+    <<__elt>> \o __seq
 
 (**
  * The sequence formed by removing its last element.
  *
  * @type: Seq(a) => Seq(a);
  *)
-Front(seq) == 
-  SubSeq(seq, 1, Len(seq) - 1)
+Front(__seq) == 
+  SubSeq(__seq, 1, Len(__seq) - 1)
 
 (**
  * The last element of the sequence.
  *
  * @type: Seq(a) => a;
  *)
-Last(seq) ==
-  seq[Len(seq)]
+Last(__seq) ==
+  __seq[Len(__seq)]
 
 -----------------------------------------------------------------------------
 
@@ -225,16 +225,16 @@ Last(seq) ==
  *
  * @type: (Seq(a), Seq(a)) => Bool;
  *)
-IsPrefix(s, t) ==
-  s = SubSeq(t, 1, Len(s))
+IsPrefix(__s, __t) ==
+  __s = SubSeq(__t, 1, Len(__s))
 
 (**
  * TRUE iff the sequence s is a prefix of the sequence t and s # t
  *
  * @type: (Seq(a), Seq(a)) => Bool;
  *)
-IsStrictPrefix(s,t) ==
-  IsPrefix(s, t) /\ s # t
+IsStrictPrefix(__s,__t) ==
+  IsPrefix(__s, __t) /\ __s # __t
 
 (**
  * TRUE iff the sequence s is a suffix of the sequence t, s.t.
@@ -243,16 +243,16 @@ IsStrictPrefix(s,t) ==
  *
  * @type: (Seq(a), Seq(a)) => Bool;
  *)
-IsSuffix(s, t) ==
-  IsPrefix(Reverse(s), Reverse(t))
+IsSuffix(__s, __t) ==
+  IsPrefix(Reverse(__s), Reverse(__t))
 
 (**
  * TRUE iff the sequence s is a suffix of the sequence t and s # t
  *
  * @type: (Seq(a), Seq(a)) => Bool;
  *)
-IsStrictSuffix(s, t) ==
-  IsSuffix(s,t) /\ s # t
+IsStrictSuffix(__s, __t) ==
+  IsSuffix(__s,__t) /\ __s # __t
   
 -----------------------------------------------------------------------------
 
@@ -261,28 +261,28 @@ IsStrictSuffix(s, t) ==
  *
  * @type: Seq(a) => Set(Seq(a));
  *)
-Prefixes(s) ==
-  { SubSeq(s, 1, __l): __l \in { 0 } \union DOMAIN s }
+Prefixes(__s) ==
+  { SubSeq(__s, 1, __l): __l \in { 0 } \union DOMAIN __s }
 
 (**
  * The set of all sequences that are prefixes of the set of sequences S.
  *
  * @type: Set(Seq(a)) => Set(Seq(a));
  *)
-CommonPrefixes(S) ==
+CommonPrefixes(__S) ==
   \* TODO: use FoldSet?
-  LET __P == UNION { Prefixes(seq) : seq \in S }
-  IN { __prefix \in __P: \A __t \in S: IsPrefix(__prefix, __t) }
+  LET __P == UNION { Prefixes(__seq) : __seq \in __S }
+  IN { __prefix \in __P: \A __t \in __S: IsPrefix(__prefix, __t) }
 
 (**
  * The longest common prefix of the sequences in the set S.
  *
  * @type: Set(Seq(a)) => Seq(a);
  *)
-LongestCommonPrefix(S) ==
-  CHOOSE __longest \in CommonPrefixes(S):
+LongestCommonPrefix(__S) ==
+  CHOOSE __longest \in CommonPrefixes(__S):
       \* there can only be one LCP => CHOOSE
-      \A __other \in CommonPrefixes(S):
+      \A __other \in CommonPrefixes(__S):
           Len(__other) <= Len(__longest)
 
 -----------------------------------------------------------------------------
@@ -293,8 +293,8 @@ LongestCommonPrefix(S) ==
  *
  * @type: (Int, Int) => Int;
  *)
-SeqMod(a, b) == 
-  IF a % b = 0 THEN b ELSE a % b
+SeqMod(__a, __b) == 
+  IF __a % __b = 0 THEN __b ELSE __a % __b
 
 (**
  * An alias of FoldFunction that op on all elements of seq an arbitrary
@@ -311,11 +311,11 @@ SeqMod(a, b) ==
  *
  * @type: ((a, b) => b, b, Seq(a)) => b;
  *)
-FoldSeq(op(_, _), base, seq) == 
+FoldSeq(__op(_, _), __base, __seq) == 
   \* __ApalacheFoldSeq is accumulating the result in the left argument,
   \* whereas FoldSeq is accumulating the result in the right argument.
-  LET __map(__y, __x) == op(__x, __y) IN
-  __ApalacheFoldSeq(__map, base, seq)
+  LET __map(__y, __x) == __op(__x, __y) IN
+  __ApalacheFoldSeq(__map, __base, __seq)
 
 (**
  * FoldLeft folds op on all elements of seq from left to right, starting
@@ -328,9 +328,9 @@ FoldSeq(op(_, _), base, seq) ==
  *
  * @type: ((b, a) => b, a, Seq(a)) => b;
  *)
-FoldLeft(op(_, _), base, seq) == 
-  LET __map(__x, __y) == op(__x, __y) IN
-  __ApalacheFoldSeq(__map, base, seq)
+FoldLeft(__op(_, _), __base, __seq) == 
+  LET __map(__x, __y) == __op(__x, __y) IN
+  __ApalacheFoldSeq(__map, __base, __seq)
 
 (**
  * FoldRight folds op on all elements of seq from right to left, starting
@@ -344,9 +344,9 @@ FoldLeft(op(_, _), base, seq) ==
  *
  * @type: ((a, b) => b, Seq(a), b) => b;
  *)
-FoldRight(op(_, _), seq, base) == 
-  LET __map(__y, __x) == op(__x, __y) IN
-  __ApalacheFoldSeq(__map, base, Reverse(seq))
+FoldRight(__op(_, _), __seq, __base) == 
+  LET __map(__y, __x) == __op(__x, __y) IN
+  __ApalacheFoldSeq(__map, __base, Reverse(__seq))
 
 -----------------------------------------------------------------------------
 
@@ -366,11 +366,11 @@ FoldRight(op(_, _), seq, base) ==
  *
  * @type: Seq(Seq(a)) => Seq(a);
  *)
-FlattenSeq(seqs) ==
+FlattenSeq(__seqs) ==
   LET \* @type: (Seq(a), Seq(a)) => Seq(a);
-      __concat(s, t) == s \o t
+      __concat(__s, __t) == __s \o __t
   IN
-  __ApalacheFoldSeq(__concat, <<>>, seqs)
+  __ApalacheFoldSeq(__concat, <<>>, __seqs)
 
 (**
  * A sequence where the i-th tuple contains the i-th element of s and
@@ -385,15 +385,15 @@ FlattenSeq(seqs) ==
  *
  * @type: (Seq(a), Seq(b)) => Seq(<<a, b>>);
  *)
-Zip(s, t) ==
+Zip(__s, __t) ==
   LET \* @type: Int => <<a, b>>;
-      __mk_tup(__i) == <<s[__i], t[__i]>>
+      __mk_tup(__i) == <<__s[__i], __t[__i]>>
   IN
-  IF Len(s) /= Len(t)
+  IF Len(__s) /= Len(__t)
   THEN \* the community modules do not specify the behavior for this case
     <<>>
   ELSE
-    SubSeq(__ApalacheMkSeq(__ApalacheSeqCapacity(s), __mk_tup), 1, Len(s))
+    SubSeq(__ApalacheMkSeq(__ApalacheSeqCapacity(__s), __mk_tup), 1, Len(__s))
 
 (**
  * The set of all subsequences of the sequence  s. Note that the empty
@@ -401,8 +401,8 @@ Zip(s, t) ==
  *
  * @type: Seq(a) => Set(Seq(a));
  *)
-SubSeqs(s) ==
-  { SubSeq(s, __i + 1, __j): __i, __j \in {0} \union (DOMAIN s) }
+SubSeqs(__s) ==
+  { SubSeq(__s, __i + 1, __j): __i, __j \in {0} \union (DOMAIN __s) }
 
 (**
  * The (1-based) index of the beginning of the subsequence haystack of the
@@ -415,14 +415,14 @@ SubSeqs(s) ==
  *
  * @type: (Seq(a), Seq(a)) => Int;
  *)
-IndexFirstSubSeq(needle, haystack) ==
+IndexFirstSubSeq(__needle, __haystack) ==
   LET __needle_len ==
-    Len(needle)
+    Len(__needle)
   IN
   LET __is_subseq(__i) ==
-    needle = SubSeq(haystack, __i, __i + __needle_len - 1)
+    __needle = SubSeq(__haystack, __i, __i + __needle_len - 1)
   IN
-  LET __dom0 == {0} \union DOMAIN haystack IN
+  LET __dom0 == {0} \union DOMAIN __haystack IN
   CHOOSE __i \in __dom0:
     /\ __is_subseq(__i)
     /\ \A __j \in __dom0:
@@ -434,23 +434,23 @@ IndexFirstSubSeq(needle, haystack) ==
  *
  * @type: (Int, Seq(a), Seq(a), Seq(a)) => Seq(a);
  *)
-ReplaceSubSeqAt(i, r, s, t) ==
-  LET __prefix == SubSeq(t, 1, i - 1)
-      __suffix == SubSeq(t, i + Len(s), Len(t))
+ReplaceSubSeqAt(__i, __r, __s, __t) ==
+  LET __prefix == SubSeq(__t, 1, __i - 1)
+      __suffix == SubSeq(__t, __i + Len(__s), Len(__t))
   IN
-  __prefix \o r \o __suffix 
+  __prefix \o __r \o __suffix 
 
 (**
  * The sequence t with its subsequence s replaced by the sequence r.
  *
  * @type: (Seq(a), Seq(a), Seq(a)) => Seq(a);
  *)
-ReplaceFirstSubSeq(r, s, t) ==
+ReplaceFirstSubSeq(__r, __s, __t) ==
   IF \*s \in SubSeqs(t)
-    \E __i \in {0} \union DOMAIN t:
-      s = SubSeq(t, __i, __i + Len(s))
-  THEN ReplaceSubSeqAt(IndexFirstSubSeq(s, t), r, s, t)
-  ELSE t
+    \E __i \in {0} \union DOMAIN __t:
+      __s = SubSeq(__t, __i, __i + Len(__s))
+  THEN ReplaceSubSeqAt(IndexFirstSubSeq(__s, __t), __r, __s, __t)
+  ELSE __t
 
 (**
  * The sequence  t  with all subsequences  s  replaced by the sequence  r
@@ -464,7 +464,7 @@ ReplaceFirstSubSeq(r, s, t) ==
  *  ReplaceAllSubSeqs(<<2>>,<<3>>,<<1,3>>) = <<1,2>>
  *  ReplaceAllSubSeqs(<<2,2>>,<<1,1>>,<<1,1,1>>) = <<2,2,1>>
  *)
-ReplaceAllSubSeqs(r, s, t) ==
+ReplaceAllSubSeqs(__r, __s, __t) ==
   \* This operator has a massive definition,
   \* which we do not know how to translate.
   \* We skip it.

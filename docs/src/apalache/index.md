@@ -37,3 +37,10 @@ Apalache is working under the following assumptions:
 [SMT]: https://en.wikipedia.org/wiki/Satisfiability_modulo_theories
 [Microsoft Z3]: https://github.com/Z3Prover/z3
 [Informal Systems]: https://informal.systems/
+
+## Conventions
+
+Throughout this manual, we use the following conventions:
+
+- `APALACHE_HOME` is used as shorthand for the path to a local copy of the
+  Apalache source code.

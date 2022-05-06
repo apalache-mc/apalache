@@ -4,7 +4,7 @@ import scala.collection.immutable.SortedMap
 
 /**
  * Trait for a type in Type System 1 as specified in <a
- * href="https://github.com/informalsystems/apalache/blob/unstable/docs/adr/002adr-types.md">ADR-002</a>.
+ * href="https://github.com/informalsystems/apalache/blob/unstable/docs/src/adr/002adr-types.md">ADR-002</a>.
  *
  * It also contains experimental extensions that are specified in <a
  * href="https://github.com/informalsystems/apalache/blob/unstable/docs/src/adr/014adr-precise-records.md">ADR-014</a>.

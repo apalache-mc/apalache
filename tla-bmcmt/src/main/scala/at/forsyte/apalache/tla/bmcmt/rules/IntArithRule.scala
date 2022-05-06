@@ -1,8 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.IntT
-import at.forsyte.apalache.tla.lir.OperEx
+import at.forsyte.apalache.tla.lir.{IntT1, OperEx}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaArithOper
@@ -57,7 +56,7 @@ class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule with IntAr
     val packedState = packArithExpr(rewriter, state)
 
     // add new arena cell
-    val newArena = packedState.arena.appendCell(IntT())
+    val newArena = packedState.arena.appendCell(IntT1())
     val newCell = newArena.topCell
 
     // assert the new cell is equal to the packed arithmetic expression

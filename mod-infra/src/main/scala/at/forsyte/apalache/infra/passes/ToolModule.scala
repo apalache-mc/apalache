@@ -6,7 +6,7 @@ import com.google.inject.AbstractModule
  * An extension of Google Guice AbstractModule to be used by apalache modules to configurate passes order.
  *
  * @author
- *   Gabriela Mafra
+ *   Gabriela Moreira
  */
 abstract class ToolModule extends AbstractModule {
 

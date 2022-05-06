@@ -1403,6 +1403,17 @@ $ apalache-mc check --inv=Inv --length=6 --cinit=CInit SetAddDel.tla | sed 's/I@
 EXITCODE: OK
 ```
 
+### check OracleFunSet succeeds (array-encoding)
+
+Regression test for https://github.com/informalsystems/apalache/issues/1680
+Function sets themselves should be able to be set elements.
+
+```sh
+$ apalache-mc check OracleFunSet.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
 ## configure the check command
 
 Testing various flags that are set via command-line options and the TLC configuration file. The CLI has priority over
@@ -1840,6 +1851,14 @@ $ apalache-mc check --inv=Inv Bug931.tla | sed 's/[IEW]@.*//'
 Bug931.tla:6:20-6:21: type input error: Found a polymorphic type: Set(b)
 ...
 EXITCODE: ERROR (255)
+```
+
+### check Bug1682.tla
+
+```sh
+$ apalache-mc check --init=Inv --inv=Inv --length=1 Bug1682.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
 ```
 
 ### check profiling
@@ -2707,6 +2726,56 @@ Typecheck the test for Folds.tla.
 $ apalache-mc typecheck TestFolds.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
+```
+
+### typecheck TestRecordsNew.tla
+
+Typecheck new records that support row typing.
+
+```sh
+$ apalache-mc typecheck --features=rows TestRecordsNew.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### typecheck TestRecordsNewIll1.tla
+
+No ill-typed record access.
+
+```sh
+$ apalache-mc typecheck --features=rows TestRecordsNewIll1.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: ERROR (255)
+```
+
+### typecheck TestRecordsNewIll2.tla
+
+No ill-typed record access.
+
+```sh
+$ apalache-mc typecheck --features=rows TestRecordsNewIll2.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: ERROR (255)
+```
+
+### typecheck TestRecordsNewIll3.tla
+
+No ill-typed record access.
+
+```sh
+$ apalache-mc typecheck --features=rows TestRecordsNewIll3.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: ERROR (255)
+```
+
+### typecheck TestRecordsNewIll4.tla
+
+No ill-typed record access.
+
+```sh
+$ apalache-mc typecheck --features=rows TestRecordsNewIll4.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: ERROR (255)
 ```
 
 ## configuring the output manager

@@ -22,7 +22,7 @@
  *
  * @type: Set(a) => Seq(a);
  *)
-Seq(S) ==
+Seq(__S) ==
     \* Dummy definition. Apalache provides its own implementation.
     {}
 
@@ -32,7 +32,7 @@ Seq(S) ==
  *
  * @type: Seq(a) => Int;
  *)
-Len(s) ==
+Len(__s) ==
     \* Dummy definition. Apalache provides its own implementation.
     0
 
@@ -42,7 +42,7 @@ Len(s) ==
  *
  * @type: (Seq(a), Seq(a)) => Seq(a) ;
  *)
-s \o t ==
+__s \o __t ==
     \* Dummy definition. Apalache provides its own implementation.
     <<>>
 
@@ -52,7 +52,7 @@ s \o t ==
  *
  * @type: (Seq(a), a) => Seq(a);
  *)
-Append(s, e) ==
+Append(__s, __e) ==
     \* Dummy definition. Apalache provides its own implementation.
     <<>>
 
@@ -63,14 +63,14 @@ Append(s, e) ==
  *
  * @type: Seq(a) => a;
  *)
-Head(s) == s[1]    
+Head(__s) == __s[1]    
 
 (**
  * The sequence <<s[m], s[m+1], ... , s[n]>>.
  *
  * @type: (Seq(a), Int, Int) => Seq(a);
  *)
-SubSeq(s, m, n) ==
+SubSeq(__s, __m, __n) ==
     \* Dummy definition. Apalache provides its own implementation.
     <<>>
 
@@ -82,7 +82,7 @@ SubSeq(s, m, n) ==
  *
  * @type: Seq(a) => Seq(a);
  *)
-Tail(s) ==
+Tail(__s) ==
     \* Dummy definition. Apalache provides its own implementation.
     <<>>
 
@@ -96,12 +96,12 @@ LOCAL INSTANCE __apalache_folds
  *
  * @type: (Seq(a), a => Bool) => Seq(a);
  *)
-SelectSeq(s, Test(_)) ==
-    LET AppendIfTest(res, e) ==
-        IF Test(e)
-        THEN Append(res, e)
-        ELSE res
+SelectSeq(__s, __Test(_)) ==
+    LET __AppendIfTest(__res, __e) ==
+        IF __Test(__e)
+        THEN Append(__res, __e)
+        ELSE __res
     IN
-    __ApalacheFoldSeq(AppendIfTest, <<>>, s)
+    __ApalacheFoldSeq(__AppendIfTest, <<>>, __s)
 
 ===============================================================================

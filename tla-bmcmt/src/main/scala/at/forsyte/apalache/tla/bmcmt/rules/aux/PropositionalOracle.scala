@@ -1,9 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.bmcmt.types.BoolT
+import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
-import at.forsyte.apalache.tla.lir.{TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.values.TlaBool
@@ -118,7 +118,7 @@ object PropositionalOracle {
 
     val nbits = findNBits(1)
     // create nbits cells to hold the propositional variables
-    val (newArena, newCells) = state.arena.appendCellSeq((0 until nbits).map(_ => BoolT()): _*)
+    val (newArena, newCells) = state.arena.appendCellSeq((0 until nbits).map(_ => CellTFrom(BoolT1())): _*)
     val oracle = new PropositionalOracle(newCells, nvalues)
     val nextState = state.setArena(newArena)
 

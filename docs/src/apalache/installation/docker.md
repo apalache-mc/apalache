@@ -2,8 +2,14 @@
 
 **We publish Docker images for every release** :sunglasses:
 
-[Docker](https://www.docker.com/) lets you to run Apalache in an isolated container.
-All dependencies are already installed in docker. However, you have to install docker.
+**NOTE**: Running Apalache through a docker application image complicates
+configuration of the tool considerably. Unless you have a pressing need to use
+the docker image, we recommend using one of our [prebuilt releases](./jvm.md).
+
+[Docker](https://www.docker.com/) lets you to run the Apalache tool from inside
+an isolated container.  The only dependency required to run Apalache is the a
+suitable JVM, and the container supplies this. However, you must already have
+[docker installed](https://docs.docker.com/get-docker/).
 
 To get the latest Apalache image, issue the command:
 
@@ -16,10 +22,11 @@ docker pull ghcr.io/informalsystems/apalache
 To run an Apalache image, issue the command:
 
 ```bash
-$ docker run --rm -v <your-spec-directory>:/var/apalache informalsystems/apalache <args>
+$ docker run --rm -v <your-spec-directory>:/var/apalache ghcr.io/informalsystems/apalache <args>
 ```
 
 The following docker parameters are used:
+
 - `--rm` to remove the container on exit
 - `-v <your-spec-directory>:/var/apalache` bind-mounts `<your-spec-directory>` into
   `/var/apalache` in the container. **This is necessary for
@@ -36,7 +43,9 @@ The following docker parameters are used:
 - `<args>` are the tool arguments as described in [Running the Tool](../running.md).
 
 We provide a convenience wrapper for this docker command in
-`script/run-docker.sh`. To run the `latest` image using the script, execute
+`script/run-docker.sh`. Assuming you've downloaded the Apalache source code into
+a directory located at `APALACHE_HOME`, you can run the `latest` image via the
+script by running:
 
 ```bash
 $ $APALACHE_HOME/script/run-docker.sh <args>
@@ -71,7 +80,7 @@ The development of Apalache proceeds at a high pace, and we introduce a
 substantial number of improvements in the unstable branch before the next stable
 release. Please refer to the [change
 log](https://github.com/informalsystems/apalache/blob/unstable/CHANGES.md) and
-[manual](https://github.com/informalsystems/apalache/blob/unstable/docs/src/manual.md)
+[manual](https://github.com/informalsystems/apalache/blob/unstable/docs/src/apalache/index.md)
 on the unstable branch for the description of the newest features. **We
 recommend using the unstable version if you want to try all the exciting new
 features of Apalache. But be warned: It is called "unstable" for a reason**. To
