@@ -518,7 +518,7 @@ EXITCODE: OK
 ### check Bug593 fails correctly: regression for issue 593 (array-encoding)
 
 ```sh
-$ apalache-mc check Bug593.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows Bug593.tla | sed 's/I@.*//'
 ...
 EXITCODE: ERROR (255)
 ```
