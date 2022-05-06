@@ -21,7 +21,6 @@ import com.typesafe.scalalogging.LazyLogging
  */
 class TemporalPassImpl @Inject() (
     val options: PassOptions,
-    tracker: TransformationTracker,
     gen: UniqueNameGenerator,
     writerFactory: TlaWriterFactory)
     extends TemporalPass with LazyLogging {
@@ -36,7 +35,6 @@ class TemporalPassImpl @Inject() (
       case Some(invariants) =>
         invariants.foldLeft(tlaModule) { (mod, invName) =>
             logger.info(s"  > Found invariant $invName")
-            logger.info(s"  > Producing verification conditions from the invariant $invName")
             val optViewName = options.get[String]("checker", "view")
             if (optViewName.isDefined) {
               logger.info(s"  > Using state view ${optViewName.get}")
