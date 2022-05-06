@@ -1344,7 +1344,7 @@ reporting a type error, and this is what we expect.
 ```sh
 $ apalache-mc typecheck --features=rows Bug914.tla | sed 's/I@.*//'
 ...
-[Bug914.tla:18:9-18:26]: Arguments of equality should have the same type. For arguments m, ["foo" ↦ TRUE] with types {  }, { foo: Bool }, in expression m = (["foo" ↦ TRUE])
+Bug914.tla:21:9-21:26]: Arguments of equality should have the same type. For arguments m, ["foo" ↦ TRUE] with types {  }, { foo: Bool }, in expression m = (["foo" ↦ TRUE])
 ...
 EXITCODE: ERROR (255)
 ```
@@ -1409,9 +1409,9 @@ EXITCODE: OK
 ### check PizzaOrder succeeds (array-encoding)
 
 ```sh
-$ apalache-mc check --features=rows --cinit=ConstInit --inv=NoDoubleDelivery PizzaOrder.tla
+$ apalache-mc check --features=rows --cinit=ConstInit --inv=NoDoubleDelivery PizzaOrder.tla | sed 's/I@.*//'
 ...
-State 5: state invariant 0 violated.
+The outcome is: Error
 ...
 EXITCODE: ERROR (12)
 ```
