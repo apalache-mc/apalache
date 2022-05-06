@@ -1406,6 +1406,16 @@ $ apalache-mc check --inv=Inv --length=6 --cinit=CInit SetAddDel.tla | sed 's/I@
 EXITCODE: OK
 ```
 
+### check PizzaOrder succeeds (array-encoding)
+
+```sh
+$ apalache-mc check --features=rows --cinit=ConstInit --inv=NoDoubleDelivery PizzaOrder.tla
+...
+State 5: state invariant 0 violated.
+...
+EXITCODE: ERROR (12)
+```
+
 ### check OracleFunSet succeeds (array-encoding)
 
 Regression test for https://github.com/informalsystems/apalache/issues/1680
