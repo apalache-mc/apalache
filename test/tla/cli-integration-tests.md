@@ -508,7 +508,7 @@ EXITCODE: OK
 ### check Bug540 succeeds: regression for issue 540 (array-encoding)
 
 ```sh
-$ apalache-mc check --cinit=CInit Bug540.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows --cinit=CInit Bug540.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
