@@ -1789,12 +1789,13 @@ EXITCODE: ERROR (12)
 ### check bug #874
 
 Unhandled `IllegalArgumentException` when accessing a non-existent field on a
-record.
+record. With the old records, this spec was failing during model checking.
+With the new records, this spec is failing at type checking.
 
 See https://github.com/informalsystems/apalache/issues/874
 
 ```sh
-$ apalache-mc check Bug874.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck --features=rows Bug874.tla | sed 's/[IEW]@.*//'
 ...
 [Bug874.tla:4:17-4:27]: Cannot apply ["a" ↦ 2] to the argument "b" in (["a" ↦ 2])["b"].
 ...
