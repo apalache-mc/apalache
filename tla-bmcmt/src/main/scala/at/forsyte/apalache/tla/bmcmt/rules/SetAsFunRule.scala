@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.{CellT, FinSetT}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -29,12 +28,12 @@ class SetAsFunRule(rewriter: SymbStateRewriter) extends RewritingRule {
         setEx.typeTag match {
           case Typed(SetT1(TupT1(keyType, valueType))) =>
             // construct a cell for the function and attach the relation to it
-            nextState = nextState.updateArena(_.appendCell(CellT.fromType1(FunT1(keyType, valueType))))
+            nextState = nextState.updateArena(_.appendCell(FunT1(keyType, valueType)))
             val fun = nextState.arena.topCell
 
             rewriter.solverContext.config.smtEncoding match {
               case `arraysEncoding` =>
-                nextState = nextState.updateArena(_.appendCell(FinSetT(CellT.fromType1(keyType))))
+                nextState = nextState.updateArena(_.appendCell(SetT1(keyType)))
                 val domainCell = nextState.arena.topCell
                 nextState = nextState.updateArena(_.appendCellNoSmt(setCell.cellType))
                 val relationCell = nextState.arena.topCell
@@ -105,7 +104,7 @@ class SetAsFunRule(rewriter: SymbStateRewriter) extends RewritingRule {
    * x \in { key_1, ..., key_n } |-> IF x = key_1 THEN value_1 ELSE IF x = key_2 THEN value_2 ELSE ... value_n ] </pre>
    */
   private def translateRelation(pairsSet: ArenaCell, state: SymbState): SymbState = {
-    var nextState = state.updateArena(_.appendCell(pairsSet.cellType))
+    var nextState = state.updateArena(_.appendCellOld(pairsSet.cellType))
     // construct the relation cell `funRel` and add all cells from the original set `setCell`
     val funRel = nextState.arena.topCell
     val pairs = nextState.arena.getHas(pairsSet)

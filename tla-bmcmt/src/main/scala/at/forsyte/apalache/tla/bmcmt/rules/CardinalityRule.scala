@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaFiniteSetOper
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, OperEx, SetT1, TlaEx}
 import at.forsyte.apalache.tla.pp.TlaInputError
 
 /**
@@ -32,7 +32,7 @@ class CardinalityRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
         val setCell = nextState.asCell
         setCell.cellType match {
-          case FinSetT(_) =>
+          case CellTFrom(SetT1(_)) =>
             val elems = nextState.arena.getHas(setCell)
             makeCardEquations(nextState, setCell, elems)
 
@@ -60,10 +60,10 @@ class CardinalityRule(rewriter: SymbStateRewriter) extends RewritingRule {
         case Nil => counter // all counted!
 
         case hd +: tl =>
-          arena = arena.appendCell(IntT())
+          arena = arena.appendCell(IntT1())
           val newCounter = arena.topCell
           // newCounter = counter if hd \notin set \/ \E c \in counted: hd = c /\ c \in set
-          arena = arena.appendCell(BoolT())
+          arena = arena.appendCell(BoolT1())
           val beforePred = arena.topCell
           val beforeEx =
             tla.or(tla.not(tla.apalacheSelectInSet(hd.toNameEx, set.toNameEx)),
@@ -88,7 +88,7 @@ class CardinalityRule(rewriter: SymbStateRewriter) extends RewritingRule {
     arena = nextState.arena
 
     // generate constraints
-    arena = arena.appendCell(IntT())
+    arena = arena.appendCell(IntT1())
     val initialCounter = arena.topCell
     solverAssert(tla.eql(initialCounter.toNameEx, tla.int(0)))
     val finalCounter = mkEq(Seq(), initialCounter, cells)

@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{OperEx, SeqT1, TlaEx, TupT1}
 
 /**
  * Rewrites a tuple or sequence constructor, that is, <<e_1, ..., e_k>>. A tuple may be interpreted as a sequence, if it
@@ -36,9 +36,9 @@ class TupleOrSeqCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // Get the resulting type from the type tag. It may be either a sequence or a tuple.
         val resultT = CellT.fromTypeTag(ex.typeTag)
         resultT match {
-          case tt @ TupleT(_) => createTuple(stateAfterElems, tt, cells)
-          case st @ SeqT(_)   => createSeq(stateAfterElems, st, cells)
-          case _              => throw new RewriterException("Unexpected type: " + resultT, state.ex)
+          case CellTFrom(tt @ TupT1(_ @_*)) => createTuple(stateAfterElems, tt, cells)
+          case CellTFrom(st @ SeqT1(_))     => createSeq(stateAfterElems, st, cells)
+          case _                            => throw new RewriterException("Unexpected type: " + resultT, state.ex)
         }
 
       case _ =>
@@ -46,7 +46,7 @@ class TupleOrSeqCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
-  private def createTuple(state: SymbState, tupleT: TupleT, cells: Seq[ArenaCell]): SymbState = {
+  private def createTuple(state: SymbState, tupleT: TupT1, cells: Seq[ArenaCell]): SymbState = {
     // create the tuple cell
     var arena = state.arena.appendCell(tupleT)
     val tuple = arena.topCell
@@ -56,7 +56,7 @@ class TupleOrSeqCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.setArena(arena).setRex(tuple.toNameEx)
   }
 
-  private def createSeq(state: SymbState, seqT: SeqT, cells: Seq[ArenaCell]): SymbState = {
+  private def createSeq(state: SymbState, seqT: SeqT1, cells: Seq[ArenaCell]): SymbState = {
     // initialize the proto sequence with the elements
     def mkElem(s: SymbState, indexBase1: Int): (SymbState, ArenaCell) = (s, cells(indexBase1 - 1))
 
@@ -65,7 +65,7 @@ class TupleOrSeqCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // create the cell to store length
     nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.int(cells.length)))
     // create the sequence out of the proto sequence and its length
-    proto.mkSeq(nextState, seqT.toTlaType1, newProtoSeq, nextState.asCell)
+    proto.mkSeq(nextState, seqT, newProtoSeq, nextState.asCell)
   }
 
 }

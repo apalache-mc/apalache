@@ -12,4 +12,6 @@
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
 ### Bug fixes
 
-* Fix usage of sets of function sets in the arrays encoding, see #1680
+ * Fix usage of sets of function sets in the arrays encoding, see #1680
+ * Fix an uncaught exception when setting up the output manager, see #1706
+ * Handle heap memory exhaustion gracefully, see #1711

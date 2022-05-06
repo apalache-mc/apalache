@@ -80,7 +80,7 @@ The development of Apalache proceeds at a high pace, and we introduce a
 substantial number of improvements in the unstable branch before the next stable
 release. Please refer to the [change
 log](https://github.com/informalsystems/apalache/blob/unstable/CHANGES.md) and
-[manual](https://github.com/informalsystems/apalache/blob/unstable/docs/src/manual.md)
+[manual](https://github.com/informalsystems/apalache/blob/unstable/docs/src/apalache/index.md)
 on the unstable branch for the description of the newest features. **We
 recommend using the unstable version if you want to try all the exciting new
 features of Apalache. But be warned: It is called "unstable" for a reason**. To

@@ -22,30 +22,30 @@ EXTENDS Integers, Bags, __apalache_internal, __apalache_folds
  *
  * @type: (a -> Int, a) => (a -> Int);
  *)
-BagAdd(B, x) ==
-   IF x \in DOMAIN B
-   THEN [e \in DOMAIN B |-> IF e = x THEN B[e] + 1 ELSE B[e]]
-   ELSE [e \in DOMAIN B \union { x } |-> IF e = x THEN 1 ELSE B[e]]
+BagAdd(__B, __x) ==
+   IF __x \in DOMAIN __B
+   THEN [__e \in DOMAIN __B |-> IF __e = __x THEN __B[__e] + 1 ELSE __B[__e]]
+   ELSE [__e \in DOMAIN __B \union { __x } |-> IF __e = __x THEN 1 ELSE __B[__e]]
 
 (**
  * Remove an element x from bag B. Same as B (-) SetToBag({x}).
  *
  * @type: (a -> Int, a) => (a -> Int);
  *)
-BagRemove(B, x) ==
-   IF x \in DOMAIN B
-   THEN IF B[x] = 1
-        THEN [e \in DOMAIN B \ {x} |-> B[e]]
-        ELSE [e \in DOMAIN B |-> IF e = x THEN B[e] - 1 ELSE B[e]]
-   ELSE B
+BagRemove(__B, __x) ==
+   IF __x \in DOMAIN __B
+   THEN IF __B[__x] = 1
+        THEN [__e \in DOMAIN __B \ {__x} |-> __B[__e]]
+        ELSE [__e \in DOMAIN __B |-> IF __e = __x THEN __B[__e] - 1 ELSE __B[__e]]
+   ELSE __B
 
 (**
  * Remove all copies of an element x from bag B.
  *
  * @type: (a -> Int, a) => (a -> Int);
  *)
-BagRemoveAll(B, x) ==
-   [e \in DOMAIN B \ {x} |-> B[e]]
+BagRemoveAll(__B, __x) ==
+   [__e \in DOMAIN __B \ {__x} |-> __B[__e]]
 
 (**
  * Fold operation op over the images through f of all elements of bag
@@ -57,7 +57,7 @@ BagRemoveAll(B, x) ==
  *
  * @type: ((a, b) => b, b, a => b, Set(a) => a, a -> Int) => b;
  *)
-MapThenFoldBag(op(_, _), base, f(_), choose(_), B) ==
+MapThenFoldBag(__op(_, _), __base, __f(_), __choose(_), __B) ==
     __NotSupportedByModelChecker("MapThenFoldBag. Use FoldFunction.")
 
 (**
@@ -67,7 +67,7 @@ MapThenFoldBag(op(_, _), base, f(_), choose(_), B) ==
  *
  * @type: ((a, b) => b, b, a -> Int) => (a -> Int);
  *)
-FoldBag(op(_, _), base, B) ==
+FoldBag(__op(_, _), __base, __B) ==
     __NotSupportedByModelChecker("FoldBag. Use FoldFunction.")
 
 (**
@@ -75,17 +75,17 @@ FoldBag(op(_, _), base, B) ==
  *
  * @type: (Int -> Int) => Int;
  *)
-SumBag(B) ==
-  LET __map(x, y) == x + y * B[y] IN
-  __ApalacheFoldSet(__map, 0, DOMAIN B)
+SumBag(__B) ==
+  LET __map(__x, __y) == __x + __y * __B[__y] IN
+  __ApalacheFoldSet(__map, 0, DOMAIN __B)
 
 (**
  * Compute the product of the elements of B.
  *
  * @type: (Int -> Int) => Int;
  *)
-ProductBag(B) ==
-  LET __map(x, y) == x * (y^B[y]) IN
-  __ApalacheFoldSet(__map, 1, DOMAIN B)
+ProductBag(__B) ==
+  LET __map(__x, __y) == __x * (__y^__B[__y]) IN
+  __ApalacheFoldSet(__map, 1, DOMAIN __B)
 
 =============================================================================

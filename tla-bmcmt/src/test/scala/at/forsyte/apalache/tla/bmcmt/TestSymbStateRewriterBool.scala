@@ -1,25 +1,25 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.NoRule
-import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, IntT}
+import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 
 trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
   // these are handy variables that will be overwritten by before
-  private var x: ArenaCell = new ArenaCell(100000, IntT())
-  private var y: ArenaCell = new ArenaCell(100001, IntT())
-  private var set: ArenaCell = new ArenaCell(100001, FinSetT(IntT()))
+  private var x: ArenaCell = new ArenaCell(100000, CellTFrom(IntT1()))
+  private var y: ArenaCell = new ArenaCell(100001, CellTFrom(IntT1()))
+  private var set: ArenaCell = new ArenaCell(100001, CellTFrom(SetT1(IntT1())))
   private var xyBinding = Binding()
   private val boolTypes = Map("b" -> BoolT1(), "i" -> IntT1(), "I" -> SetT1(IntT1()))
 
   def prepareArena(): Unit = {
-    arena = arena.appendCell(BoolT()) // we have to give bindings to the type finder
+    arena = arena.appendCell(BoolT1()) // we have to give bindings to the type finder
     x = arena.topCell
-    arena = arena.appendCell(BoolT()) // we have to give bindings to the type finder
+    arena = arena.appendCell(BoolT1()) // we have to give bindings to the type finder
     y = arena.topCell
-    arena = arena.appendCell(FinSetT(IntT()))
+    arena = arena.appendCell(SetT1(IntT1()))
     set = arena.topCell
     xyBinding = Binding("x" -> x, "y" -> y, "S" -> set)
   }
@@ -81,9 +81,9 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
 
   test("x <=> y") { rewriterType: SMTEncoding =>
     // outside of KerA+, should be handled by Keramelizer and Normalizer
-    arena = arena.appendCell(BoolT())
+    arena = arena.appendCell(BoolT1())
     val left = arena.topCell
-    arena = arena.appendCell(BoolT())
+    arena = arena.appendCell(BoolT1())
     val right = arena.topCell
     val ex = tla
       .equiv(left.toNameEx ? "b", right.toNameEx ? "b")
@@ -114,7 +114,7 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
 
   test("""~c_i ~~> b_new""") { rewriterType: SMTEncoding =>
     prepareArena()
-    arena = arena.appendCell(BoolT())
+    arena = arena.appendCell(BoolT1())
     val cell = arena.topCell
 
     val ex = tla.not(cell.toNameEx ? "b").typed(boolTypes, "b")
@@ -216,9 +216,9 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
 
   test("""c_1 /\ c_2 ~~> b_new""") { rewriterType: SMTEncoding =>
     prepareArena()
-    arena = arena.appendCell(BoolT())
+    arena = arena.appendCell(BoolT1())
     val c1 = arena.topCell
-    arena = arena.appendCell(BoolT())
+    arena = arena.appendCell(BoolT1())
     val c2 = arena.topCell
 
     val ex = tla
@@ -303,9 +303,9 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
 
   test("""c_1 \/ c_2 ~~> b_new""") { rewriterType: SMTEncoding =>
     prepareArena()
-    arena = arena.appendCell(BoolT())
+    arena = arena.appendCell(BoolT1())
     val left = arena.topCell
-    arena = arena.appendCell(BoolT())
+    arena = arena.appendCell(BoolT1())
     val right = arena.topCell
 
     val ex = tla
@@ -341,9 +341,9 @@ trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
 
   test("""~($B$1 = $B$2) ~~> $B$3""") { rewriterType: SMTEncoding =>
     prepareArena()
-    arena = arena.appendCell(BoolT())
+    arena = arena.appendCell(BoolT1())
     val left = arena.topCell
-    arena = arena.appendCell(BoolT())
+    arena = arena.appendCell(BoolT1())
     val right = arena.topCell
 
     val ex = tla

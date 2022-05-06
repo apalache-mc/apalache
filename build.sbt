@@ -21,7 +21,7 @@ ThisBuild / version := scala.io.Source.fromFile(versionFile.value).mkString.trim
 ThisBuild / organization := "at.forsyte"
 ThisBuild / scalaVersion := "2.13.8"
 
-// https://oss.sonatype.org/content/repositories/snapshots/
+// Add resolver for Sonatype OSS Snapshots Maven repository
 ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
 
 // Shared dependencies accross all sub projects
@@ -84,18 +84,19 @@ ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 // Test configuration //
 ///////////////////////////////
 
-// NOTE: Include these settings in any projects that require Apalache's TLA+ modules
-lazy val tlaModuleTestSettings = Seq(
-    // This ensures that tests run from their respective sub-project directories
-    // and sequentially. FIXME: https://github.com/informalsystems/apalache/issues/1577
-    Test / fork := true
-)
-
 lazy val testSettings = Seq(
     // Configure the test reporters for concise but informative output.
     // See https://www.scalatest.org/user_guide/using_scalatest_with_sbt
     // for the meaning of the flags.
     Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oCDEH")
+)
+
+lazy val testSanyBugSettings = Seq(
+    // FIXME: https://github.com/informalsystems/apalache/issues/1577
+    // SANY contains a race condition that unpacks temporary module files into
+    // the same directory: https://github.com/tlaplus/tlaplus/issues/688
+    // Tests calling SanyImporter must execute sequentially until fixed.
+    Test / parallelExecution := false
 )
 
 /////////////////////////////
@@ -127,7 +128,7 @@ lazy val tla_io = (project in file("tla-io"))
   )
   .settings(
       testSettings,
-      tlaModuleTestSettings,
+      testSanyBugSettings,
       libraryDependencies ++= Seq(
           Deps.commonsIo,
           Deps.pureConfig,
@@ -141,7 +142,7 @@ lazy val tla_types = (project in file("tla-types"))
       tlair % "test->test", tla_io)
   .settings(
       testSettings,
-      tlaModuleTestSettings,
+      testSanyBugSettings,
       libraryDependencies += Deps.commonsIo,
   )
 
@@ -157,7 +158,7 @@ lazy val tla_pp = (project in file("tla-pp"))
   )
   .settings(
       testSettings,
-      tlaModuleTestSettings,
+      testSanyBugSettings,
       libraryDependencies += Deps.commonsIo,
   )
 
@@ -175,6 +176,7 @@ lazy val tla_bmcmt = (project in file("tla-bmcmt"))
       tlair % "test->test", infra, tla_io, tla_pp, tla_assignments)
   .settings(
       testSettings,
+      testSanyBugSettings,
       libraryDependencies += Deps.scalaCollectionContrib,
   )
 

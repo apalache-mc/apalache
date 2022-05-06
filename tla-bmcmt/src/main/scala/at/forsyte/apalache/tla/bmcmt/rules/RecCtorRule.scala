@@ -1,13 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.{CellT, RecordT}
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.TlaStr
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
-import at.forsyte.apalache.tla.typecheck.ModelValueHandler
+import at.forsyte.apalache.tla.lir._
 
 import scala.collection.immutable.SortedSet
 
@@ -42,15 +40,15 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val valueCells = newValues.map(newState.arena.findCellByNameEx)
 
         // the record type may contain more fields than passed in the arguments
-        val recordT = CellT.fromTypeTag(ex.typeTag).asInstanceOf[RecordT]
+        val recordT = ex.typeTag.asTlaType1().asInstanceOf[RecT1]
         var arena = newState.arena.appendCell(recordT)
         val recordCell = arena.topCell
         // importantly, the record keys that are outside of ctorKeys should not belong to the domain!
-        val extraKeys = recordT.fields.keySet.filter(k => !ctorKeys.contains(k))
+        val extraKeys = recordT.fieldTypes.keySet.filter(k => !ctorKeys.contains(k))
 
         def addExtra(map: Map[String, ArenaCell], key: String) = {
           // make sure that the key is cached, as it does not appear in the actual expression
-          val (newArena, keyCell) = rewriter.modelValueCache.getOrCreate(arena, (ModelValueHandler.STRING_TYPE, key))
+          val (newArena, keyCell) = rewriter.modelValueCache.getOrCreate(arena, (StrT1().toString, key))
           arena = newArena
           map + (key -> keyCell)
         }
@@ -58,17 +56,18 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val extraKeyMap = extraKeys.foldLeft(Map.empty[String, ArenaCell])(addExtra)
 
         var nextState = newState.setArena(arena)
+
         // Connect the value cells to the record. The edges come in the order of allKeys. If the actual record passed
         // in the constructor does not contain a key, we add a default value of the required type.
         // It is important to add default values to preserve the structure of the cells, e.g.,
         // empty sequences require two cells: start and end.
-        def addField(key: String, tp: CellT): Unit = {
+        def addField(key: String, tp: TlaType1): Unit = {
           val valueCell =
             if (ctorKeys.contains(key)) {
               valueCells(ctorKeys.indexOf(key)) // get the cell associated with the value
             } else {
               // produce a default value
-              val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(nextState.arena, tp.toTlaType1)
+              val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(nextState.arena, tp)
               nextState = nextState.setArena(newArena)
               defaultValue
             }
@@ -76,7 +75,9 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
           nextState = nextState.updateArena(_.appendHasNoSmt(recordCell, valueCell))
         }
 
-        recordT.fields.foreach(Function.tupled(addField))
+        for ((key, tp) <- recordT.fieldTypes) {
+          addField(key, tp)
+        }
 
         // Create the domain cell. Note that the actual domain may have fewer keys than recordT.fields.keys
         val (newArena, domain) =
@@ -85,8 +86,9 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // importantly, the record keys that are outside of ctorKeys should not belong to the domain!
         if (extraKeyMap.nonEmpty) {
           val extraOutsideOfDomain =
-            extraKeyMap.values.map(f => tla.not(tla.apalacheSelectInSet(f.toNameEx, domain.toNameEx)))
-          rewriter.solverContext.assertGroundExpr(tla.and(extraOutsideOfDomain.toSeq: _*))
+            extraKeyMap.values.map(f =>
+              tla.not(tla.apalacheSelectInSet(f.toNameEx, domain.toNameEx).as(BoolT1())).as(BoolT1()))
+          rewriter.solverContext.assertGroundExpr(tla.and(extraOutsideOfDomain.toSeq: _*).as(BoolT1()))
         }
 
         nextState.setRex(recordCell.toNameEx)
