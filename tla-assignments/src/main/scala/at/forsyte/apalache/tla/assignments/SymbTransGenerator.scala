@@ -313,6 +313,8 @@ class SymbTransGenerator(tracker: TransformationTracker) {
 
     /** We restrict the formula to each equivalence class (defined by an assignment selection) */
     getTransitions(transformed, newStrat, selections)
+    // on noslice we don't slice
+    Seq((asgnStrategy, phi))
   }
 
 }
