@@ -18,8 +18,11 @@ trait TlaType1Gen {
       // produce an absolute value. Note that Math.abs(Integer.MIN_VALUE) = Integer.MIN_VALUE, so use max(0, abs(i)).
     } yield VarT1(i)
 
+  def genPrimitiveMono: Gen[TlaType1] =
+    oneOf(const(BoolT1()), const(IntT1()), const(StrT1()), const(RealT1()), genConst)
+
   def genPrimitive: Gen[TlaType1] =
-    oneOf(const(BoolT1()), const(IntT1()), const(StrT1()), const(RealT1()), genConst, genVar)
+    oneOf(genPrimitiveMono, genVar)
 
   def genSet: Gen[TlaType1] =
     sized { size => // use 'sized' to control the depth of the generated term
