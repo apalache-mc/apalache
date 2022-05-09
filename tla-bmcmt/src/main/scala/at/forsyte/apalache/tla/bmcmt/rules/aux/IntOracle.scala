@@ -2,10 +2,9 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState}
-import at.forsyte.apalache.tla.lir.{IntT1, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{IntT1, TlaEx}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.values.TlaBool
 
 /**
  * An oracle that uses an integer variable. Although using integers as an oracle is the most straightforward decision,
