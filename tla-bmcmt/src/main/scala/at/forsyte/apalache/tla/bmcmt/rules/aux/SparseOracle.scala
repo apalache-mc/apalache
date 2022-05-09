@@ -21,47 +21,17 @@ class SparseOracle(oracle: Oracle, val values: Set[Int]) extends Oracle {
   private val sortedValues: Seq[Int] = values.toSeq.sorted
   private val indexMap: Map[Int, Int] = Map(sortedValues.zipWithIndex: _*)
 
-  /**
-   * Produce an expression that states that the oracle value is equal to the given integer position. The actual
-   * implementation may be different from an integer comparison.
-   *
-   * @param state
-   *   a symbolic state
-   * @param position
-   *   a position the oracle should be equal to
-   */
+  override def size: Int = values.size
+
   override def whenEqualTo(state: SymbState, position: Int): TlaEx = {
     assert(indexMap.contains(position))
     oracle.whenEqualTo(state, indexMap(position))
   }
 
-  /**
-   * Produce a ground expression that contains assertions for the possible oracle values.
-   *
-   * @param state
-   *   a symbolic state
-   * @param assertions
-   *   a sequence of pairs of assertions, one per oracle value
-   * @param elseAssertions
-   *   an optional sequence of assertions, one per oracle value
-   * @return
-   *   an expression ite(oracle = 0, ite(oracle = 1, ...))
-   */
   override def caseAssertions(state: SymbState, assertions: Seq[TlaEx], elseAssertions: Seq[TlaEx] = Seq()): TlaEx = {
     oracle.caseAssertions(state, assertions, elseAssertions)
   }
 
-  /**
-   * Get a symbolic state and decode the value of the oracle variable into an integer. This method assumes that the
-   * solver context has produced an SMT model.
-   *
-   * @param solverContext
-   *   a solver context
-   * @param state
-   *   a symbolic state
-   * @return
-   *   an integer value of the oracle
-   */
   override def evalPosition(solverContext: SolverContext, state: SymbState): Int = {
     val rawPos = oracle.evalPosition(solverContext, state)
     assert(sortedValues.isDefinedAt(rawPos))
