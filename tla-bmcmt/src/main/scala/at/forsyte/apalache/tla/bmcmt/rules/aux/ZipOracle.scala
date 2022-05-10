@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.{BoolT1, TlaEx}
 
 /**
- * {{{ZipOracle}}} is an optimization of {{{Oracle}}}. It groups several values of the background oracle together, in
+ * [[ZipOracle]] is an optimization of [[Oracle]]. It groups several values of the background oracle together, in
  * order to reduce the number of constraints. It is up to the user of {{{ZipOracle}}} to make sure that the grouped
  * values may be treated as equivalent.
  *
