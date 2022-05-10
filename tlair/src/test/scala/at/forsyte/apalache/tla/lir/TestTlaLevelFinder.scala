@@ -8,7 +8,7 @@ import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers
 import _root_.at.forsyte.apalache.tla.lir.oper.TlaOper
 import scala.collection.immutable.Set
-import scala.collection.Seq
+import scala.collection.immutable.Seq
 
 /**
  * Tests of TlaLevelFinder.
@@ -35,16 +35,20 @@ class TestLevelFinder extends AnyFunSuite with Checkers {
     val gens = new IrGenerators {
       override val maxArgs: Int = 3
     }
-    // all names are considered constants
+    // all names are considered variabels (TlaLevelState)
     val operators =
       gens.simpleOperators ++ gens.setOperators ++ gens.functionOperators ++ gens.logicOperators ++ gens.arithOperators
     val prop = forAll(gens.genTlaEx(operators)(gens.emptyContext)) { ex =>
       val module = TlaModule("test", Seq.empty[TlaDecl])
       val finder = new TlaLevelFinder(module)
+      finder.levelCacheGetFun = _ => Some(TlaLevelState)
       val level = finder.getLevelOfExpression(Set.empty[String], ex)
+      print(level.toString())
       if (containsName(ex)) {
+        print("state")
         level =? TlaLevelState
       } else {
+        print("const")
         level =? TlaLevelConst
       }
     }
@@ -55,11 +59,12 @@ class TestLevelFinder extends AnyFunSuite with Checkers {
     val gens = new IrGenerators {
       override val maxArgs: Int = 3
     }
-    // all names are considered constants
+    // all names are considered variables
     val operators = gens.actionOperators
     val prop = forAll(gens.genTlaEx(operators)(gens.emptyContext)) { ex =>
       val module = TlaModule("test", Seq.empty[TlaDecl])
       val finder = new TlaLevelFinder(module)
+      finder.levelCacheGetFun = _ => Some(TlaLevelState)
       val level = finder.getLevelOfExpression(Set.empty[String], ex)
       ex match {
         case OperEx(_, _*) =>
@@ -76,11 +81,12 @@ class TestLevelFinder extends AnyFunSuite with Checkers {
     val gens = new IrGenerators {
       override val maxArgs: Int = 3
     }
-    // all names are considered constants
+    // all names are considered variabels
     val operators = gens.temporalOperators
     val prop = forAll(gens.genTlaEx(operators)(gens.emptyContext)) { ex =>
       val module = TlaModule("test", Seq.empty[TlaDecl])
       val finder = new TlaLevelFinder(module)
+      finder.levelCacheGetFun = _ => Some(TlaLevelState)
       val level = finder.getLevelOfExpression(Set.empty[String], ex)
       ex match {
         case OperEx(_, _*) =>
@@ -110,7 +116,6 @@ class TestLevelFinder extends AnyFunSuite with Checkers {
     val gens = new IrGenerators {
       override val maxArgs: Int = 3
     }
-    // all names are considered constants
     val operators =
       gens.simpleOperators ++ gens.setOperators ++ gens.functionOperators ++ gens.logicOperators ++ gens.arithOperators
     val genDecl = gens.genTlaDeclButNotVar(gens.genTlaEx(operators))(_)
@@ -131,7 +136,6 @@ class TestLevelFinder extends AnyFunSuite with Checkers {
     val gens = new IrGenerators {
       override val maxArgs: Int = 3
     }
-    // all names are considered constants
     val operators =
       gens.simpleOperators ++ gens.setOperators ++ gens.functionOperators ++ gens.logicOperators ++ gens.arithOperators
 
@@ -161,7 +165,7 @@ class TestLevelFinder extends AnyFunSuite with Checkers {
     val gens = new IrGenerators {
       override val maxArgs: Int = 3
     }
-    // all names are considered constants
+    // all names are considered variables
     val operators = gens.actionOperators
     val prop = forAll(gens.genTlaModule(gens.genTlaEx(operators))) { module =>
       val finder = new TlaLevelFinder(module)
@@ -191,7 +195,6 @@ class TestLevelFinder extends AnyFunSuite with Checkers {
       override val maxArgs: Int = 3
       override val maxDeclsPerModule: Int = 4
     }
-    // all names are considered constants
     val operators = gens.temporalOperators
     val genEx = gens.genTlaEx(operators)(_)
     val prop = forAll(gens.genTlaModuleWith(gens.genTlaOperDecl(genEx))) { module =>
