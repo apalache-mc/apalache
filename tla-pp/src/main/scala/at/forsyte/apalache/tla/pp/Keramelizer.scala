@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.pp
 
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.standard.FlatLanguagePred
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
-import TypedPredefs._
 
 import javax.inject.Singleton
 
@@ -22,8 +22,11 @@ import javax.inject.Singleton
 class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
     extends AbstractTransformer(tracker) with TlaExTransformation {
 
+  /**
+   * Partial transformers, applied left-to-right.
+   */
   override val partialTransformers =
-    List(transformLogic, transformSets, transformTuples, transformRecords, transformControl, transformAssignments)
+    List(transformAssignments, transformLogic, transformSets, transformTuples, transformRecords, transformControl)
 
   override def apply(expr: TlaEx): TlaEx = {
     LanguageWatchdog(FlatLanguagePred()).check(expr)
