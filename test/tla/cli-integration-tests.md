@@ -1343,7 +1343,8 @@ type error, and this is what we expect.
 ```sh
 $ apalache-mc typecheck --features=rows Bug914.tla | sed 's/[IE]@.*//'
 ...
-[Bug914.tla:21:9-21:26]: Arguments of equality should have the same type. For arguments m, ["foo" ↦ TRUE] with types {  }, { foo: Bool }, in expression m = (["foo" ↦ TRUE])
+[Bug914.tla:21:9-21:26]: Arguments to = should have the same type. For arguments m, ["foo" ↦ TRUE] with types {  }, { foo: Bool }, in expression m = (["foo" ↦ TRUE])
+[Bug914.tla:21:1-21:26]: Error when computing the type of Init
 ...
 EXITCODE: ERROR (255)
 ```
