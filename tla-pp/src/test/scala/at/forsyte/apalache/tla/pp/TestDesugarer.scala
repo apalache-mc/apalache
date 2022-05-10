@@ -2,9 +2,10 @@ package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
+import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.{
-  BoolT1, FunT1, IntT1, OperParam, OperT1, RecT1, SeqT1, SetT1, StrT1, TlaEx, TlaType1, TupT1,
+  BoolT1, FunT1, IntT1, OperParam, OperT1, RecRowT1, RecT1, RowT1, SeqT1, SetT1, StrT1, TlaEx, TlaType1, TupT1,
 }
 import org.junit.runner.RunWith
 import org.scalatestplus.junit.JUnitRunner
@@ -17,6 +18,11 @@ import scala.collection.immutable.SortedMap
 class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
   private var gen: UniqueNameGenerator = _
   private var desugarer: Desugarer = _
+  private val intT = IntT1()
+  private val strT = StrT1()
+  private val intAndStrT = TupT1(intT, strT)
+  private val s1 = TupT1(strT)
+  private val i1 = TupT1(intT)
   private val exceptTypes = Map(
       "f1" -> FunT1(IntT1(), IntT1()),
       "f2" -> FunT1(IntT1(), FunT1(IntT1(), IntT1())),
@@ -27,7 +33,7 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
       "ofr" -> OperT1(Seq(), FunT1(IntT1(), RecT1(SortedMap("foo" -> StrT1(), "bar" -> IntT1())))),
       "ii" -> TupT1(IntT1(), IntT1()),
       "si" -> TupT1(StrT1(), IntT1()),
-      "is" -> TupT1(IntT1(), StrT1()),
+      "is" -> intAndStrT,
       "f_si" -> FunT1(IntT1(), TupT1(StrT1(), IntT1())),
       "o_si" -> OperT1(Seq(), TupT1(IntT1(), StrT1())),
       "o_f_si" -> OperT1(Seq(), FunT1(IntT1(), TupT1(StrT1(), IntT1()))),
@@ -38,12 +44,12 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
       "O1" -> OperT1(Seq(), FunT1(IntT1(), IntT1())),
       "O2" -> OperT1(Seq(), FunT1(IntT1(), FunT1(IntT1(), IntT1()))),
       "O3" -> OperT1(Seq(), FunT1(IntT1(), FunT1(IntT1(), FunT1(IntT1(), IntT1())))),
-      "i" -> IntT1(),
+      "i" -> intT,
       "i1" -> TupT1(IntT1()),
       "i2" -> TupT1(IntT1(), IntT1()),
       "i3" -> TupT1(IntT1(), IntT1(), IntT1()),
-      "s" -> StrT1(),
-      "s1" -> TupT1(StrT1()),
+      "s" -> strT,
+      "s1" -> s1,
   )
   private val unchangedTypes = Map(
       "i" -> IntT1(),
@@ -194,6 +200,37 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
       tla
         .letIn(callAndAccess("t_3", "fr"), defs: _*)
         .typed(exceptTypes, "fr")
+
+    assert(expected.eqTyped(output))
+  }
+
+  test("EXCEPT two-dimensional, function + row record") {
+    val r = RecRowT1(RowT1("foo" -> StrT1(), "bar" -> IntT1()))
+    val or = OperT1(Seq(), r)
+    val fr = FunT1(IntT1(), r)
+    val ofr = OperT1(Seq(), fr)
+    val foo = name("foo").as(strT)
+    val i = name("i").as(intT)
+    val f = name("f").as(fr)
+    val e = name("e").as(strT)
+    // input: [f EXCEPT ![i].foo = e]
+    val input = except(f, tuple(i, foo).as(intAndStrT), e).as(fr)
+    val output = desugarer.transform(input)
+    // output: series of LET-IN definitions
+    // LET t_1 == f
+    //     t_2 == [t_1()[i] EXCEPT ![<<"foo">>] = e]
+    //     t_3 == [t_1() EXCEPT ![<<i>>] = t_2()]
+    //     IN t_3()
+    val defs = Seq(
+        declOp("t_1", f).as(ofr),
+        declOp("t_2", except(callAndAccess("t_1", "f2", "i"), tuple(foo).as(s1), e).as(r)).as(or),
+        declOp("t_3",
+            except(callAndAccess("t_1", "r"), tuple(i).as(i1), callAndAccess("t_2", "f1"))
+              .as(fr))
+          .as(ofr),
+    )
+
+    val expected: TlaEx = letIn(callAndAccess("t_3", "fr"), defs: _*).as(fr)
 
     assert(expected.eqTyped(output))
   }

@@ -3,14 +3,14 @@ EXTENDS Integers
 
 VARIABLES
     (*
-      @typeAlias: R = [
+      @typeAlias: R = {
          id: Str,
          name: Str,
          oneMoreField: Bool,
          age: Int,
          isShadow: Bool,
          isAllow: Bool
-      ];
+      };
       @type: Set(R);
     *)
     recs,

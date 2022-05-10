@@ -1,7 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell, RewriterException, SymbStateRewriter}
-import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, FunT1, IntT1, NullEx, RecT1, SeqT1, SetT1, StrT1, TlaType1, TupT1}
+import at.forsyte.apalache.tla.lir.{
+  BoolT1, ConstT1, FunT1, IntT1, NullEx, RecRowT1, RecT1, RowT1, SeqT1, SetT1, StrT1, TlaType1, TupT1,
+}
 
 import scala.collection.immutable.SortedSet
 
@@ -59,6 +61,15 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         val (nextArena, domain) =
           rewriter.recordDomainCache.getOrCreate(newArena, pairOfSets)
         newArena = nextArena.setDom(recCell, domain)
+        (newArena, recCell)
+
+      case recordT @ RecRowT1(RowT1(fieldTypes, _)) =>
+        var newArena = arena.appendCell(recordT)
+        val recCell = newArena.topCell
+        newArena = fieldTypes.values.foldLeft(newArena) { (arena, v) =>
+          val (nextArena, valueCell) = makeUpValue(arena, v)
+          nextArena.appendHasNoSmt(recCell, valueCell)
+        }
         (newArena, recCell)
 
       case tp @ SetT1(_) => // {}
