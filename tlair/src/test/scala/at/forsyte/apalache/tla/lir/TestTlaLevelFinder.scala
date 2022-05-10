@@ -26,7 +26,7 @@ class TestLevelFinder extends AnyFunSuite with Checkers {
     val operators =
       gens.simpleOperators ++ gens.setOperators ++ gens.functionOperators ++ gens.logicOperators ++ gens.arithOperators
     val prop = forAll(gens.genTlaEx(operators)(gens.emptyContext)) { ex =>
-      finder.getLevelOfExpression(Set.empty[String], ex) =? TlaLevelConst
+      finder.getLevelOfExpression(Set.empty[String], ex) ?= TlaLevelConst
     }
     check(prop, minSuccessful(2500), sizeRange(8))
   }
@@ -46,10 +46,10 @@ class TestLevelFinder extends AnyFunSuite with Checkers {
       print(level.toString())
       if (containsName(ex)) {
         print("state")
-        level =? TlaLevelState
+        level ?= TlaLevelState
       } else {
         print("const")
-        level =? TlaLevelConst
+        level ?= TlaLevelConst
       }
     }
     check(prop, minSuccessful(2500), sizeRange(8))
@@ -68,7 +68,7 @@ class TestLevelFinder extends AnyFunSuite with Checkers {
       val level = finder.getLevelOfExpression(Set.empty[String], ex)
       ex match {
         case OperEx(_, _*) =>
-          level =? TlaLevelAction
+          level ?= TlaLevelAction
 
         case _ =>
           passed
@@ -90,7 +90,7 @@ class TestLevelFinder extends AnyFunSuite with Checkers {
       val level = finder.getLevelOfExpression(Set.empty[String], ex)
       ex match {
         case OperEx(_, _*) =>
-          level =? TlaLevelTemporal
+          level ?= TlaLevelTemporal
 
         case _ =>
           passed
@@ -123,10 +123,10 @@ class TestLevelFinder extends AnyFunSuite with Checkers {
       val finder = new TlaLevelFinder(module)
 
       all(module.operDeclarations.map {
-        finder.getLevelOfDecl(_) =? TlaLevelConst
+        finder.getLevelOfDecl(_) ?= TlaLevelConst
       }: _*) &&
       all(module.constDeclarations.map {
-        finder.getLevelOfDecl(_) =? TlaLevelConst
+        finder.getLevelOfDecl(_) ?= TlaLevelConst
       }: _*)
     }
     check(prop, minSuccessful(500), sizeRange(4))
@@ -147,15 +147,15 @@ class TestLevelFinder extends AnyFunSuite with Checkers {
         // it's hard to figure whether a declaration should be constant-level or state-level,
         // because operators may call one another
         s"operator ${decl.name}" |:
-          (level =? TlaLevelState || level =? TlaLevelConst)
+          (level ?= TlaLevelState || level ?= TlaLevelConst)
       }
 
       all(module.operDeclarations.map(expectedLevel): _*) &&
       all(module.constDeclarations.map {
-        finder.getLevelOfDecl(_) =? TlaLevelConst
+        finder.getLevelOfDecl(_) ?= TlaLevelConst
       }: _*) &&
       all(module.varDeclarations.map {
-        finder.getLevelOfDecl(_) =? TlaLevelState
+        finder.getLevelOfDecl(_) ?= TlaLevelState
       }: _*)
     }
     check(prop, minSuccessful(1000), sizeRange(6))
@@ -175,15 +175,15 @@ class TestLevelFinder extends AnyFunSuite with Checkers {
         // it's hard to figure the exact level of a declaration,
         // because operators may call one another
         s"operator ${decl.name}" |:
-          (level =? TlaLevelState || level =? TlaLevelConst || level =? TlaLevelAction)
+          (level ?= TlaLevelState || level ?= TlaLevelConst || level ?= TlaLevelAction)
       }
 
       all(module.operDeclarations.map(expectedLevel): _*) &&
       all(module.constDeclarations.map {
-        finder.getLevelOfDecl(_) =? TlaLevelConst
+        finder.getLevelOfDecl(_) ?= TlaLevelConst
       }: _*) &&
       all(module.varDeclarations.map {
-        finder.getLevelOfDecl(_) =? TlaLevelState
+        finder.getLevelOfDecl(_) ?= TlaLevelState
       }: _*)
     }
 
@@ -209,7 +209,7 @@ class TestLevelFinder extends AnyFunSuite with Checkers {
 
           case OperEx(_, _*) =>
             s"operator ${decl.name}" |:
-              level =? TlaLevelTemporal
+              level ?= TlaLevelTemporal
 
           case _ =>
             passed
