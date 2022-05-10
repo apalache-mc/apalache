@@ -50,28 +50,40 @@ class TlaLevelFinder(module: TlaModule) {
     }
   }
 
-  // Decls are always toplevel, so there are never callers
+  /**
+  * Generally, use when getting the level of a TlaDecl.
+  * If for any reason the cache should not be consulted, use [[getLevelOfDeclWithoutCacheCheck]]
+  */
   def getLevelOfDecl(decl: TlaDecl): TlaLevel = {
     levelCacheGetFun(decl.name) match {
       case Some(level) => level
 
       case None =>
-        decl match {
-          case TlaConstDecl(_) =>
-            TlaLevelConst
+        getLevelOfDeclWithoutCacheCheck(decl)
+    }
+  }
 
-          case TlaVarDecl(_) =>
-            TlaLevelState
+  /**
+   * Used when getting the level of a TlaDecl and the cache should not be consulted.
+   */
+  def getLevelOfDeclWithoutCacheCheck(decl: TlaDecl): TlaLevel = {
+    decl match {
+      case TlaConstDecl(_) =>
+        TlaLevelConst
 
-          case TlaAssumeDecl(_) =>
-            TlaLevelConst
+      case TlaVarDecl(_) =>
+        TlaLevelState
 
-          case TlaOperDecl(name, _, body) =>
-            getLevelOfExpression(Set(name), body)
+      case TlaAssumeDecl(_) =>
+        TlaLevelConst
 
-          case TlaTheoremDecl(_, _) =>
-            TlaLevelConst
-        }
+      case TlaOperDecl(name, _, body) =>
+        val level = getLevelOfExpression(Set(name), body)
+        levelCacheSetFun(name, level)
+        level
+
+      case TlaTheoremDecl(_, _) =>
+        TlaLevelConst
     }
   }
 }

@@ -138,6 +138,8 @@ class TestLevelFinder extends AnyFunSuite with Checkers {
 
     val prop = forAll(gens.genTlaModule(gens.genTlaEx(operators))) { module =>
       val finder = new TlaLevelFinder(module)
+      // names are considered variables
+      finder.levelCacheGetFun = _ => Some(TlaLevelState)
 
       def expectedLevel(decl: TlaOperDecl): Prop = {
         val level = finder.getLevelOfDecl(decl)
@@ -149,10 +151,10 @@ class TestLevelFinder extends AnyFunSuite with Checkers {
 
       all(module.operDeclarations.map(expectedLevel): _*) &&
       all(module.constDeclarations.map {
-        finder.getLevelOfDecl(_) ?= TlaLevelConst
+        finder.getLevelOfDeclWithoutCacheCheck(_) ?= TlaLevelConst
       }: _*) &&
       all(module.varDeclarations.map {
-        finder.getLevelOfDecl(_) ?= TlaLevelState
+        finder.getLevelOfDeclWithoutCacheCheck(_) ?= TlaLevelState
       }: _*)
     }
     check(prop, minSuccessful(1000), sizeRange(6))
@@ -166,9 +168,11 @@ class TestLevelFinder extends AnyFunSuite with Checkers {
     val operators = gens.actionOperators
     val prop = forAll(gens.genTlaModule(gens.genTlaEx(operators))) { module =>
       val finder = new TlaLevelFinder(module)
+      // names are considered variables
+      finder.levelCacheGetFun = _ => Some(TlaLevelState)
 
       def expectedLevel(decl: TlaOperDecl): Prop = {
-        val level = finder.getLevelOfDecl(decl)
+        val level = finder.getLevelOfDeclWithoutCacheCheck(decl)
         // it's hard to figure the exact level of a declaration,
         // because operators may call one another
         s"operator ${decl.name}" |:
@@ -177,10 +181,10 @@ class TestLevelFinder extends AnyFunSuite with Checkers {
 
       all(module.operDeclarations.map(expectedLevel): _*) &&
       all(module.constDeclarations.map {
-        finder.getLevelOfDecl(_) ?= TlaLevelConst
+        finder.getLevelOfDeclWithoutCacheCheck(_) ?= TlaLevelConst
       }: _*) &&
       all(module.varDeclarations.map {
-        finder.getLevelOfDecl(_) ?= TlaLevelState
+        finder.getLevelOfDeclWithoutCacheCheck(_) ?= TlaLevelState
       }: _*)
     }
 
@@ -196,9 +200,11 @@ class TestLevelFinder extends AnyFunSuite with Checkers {
     val genEx = gens.genTlaEx(operators)(_)
     val prop = forAll(gens.genTlaModuleWith(gens.genTlaOperDecl(genEx))) { module =>
       val finder = new TlaLevelFinder(module)
+      // names are considered variables
+      finder.levelCacheGetFun = _ => Some(TlaLevelState)
 
       def expectedLevel(decl: TlaOperDecl): Prop = {
-        val level = finder.getLevelOfDecl(decl)
+        val level = finder.getLevelOfDeclWithoutCacheCheck(decl)
         decl.body match {
           case OperEx(TlaOper.apply, _*) =>
             // this operator immediately applies another operator that may have a constant level
