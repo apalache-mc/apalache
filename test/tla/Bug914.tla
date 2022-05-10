@@ -11,8 +11,8 @@
 \* triggerd. I.e., this is not targeting a problem wherein the set of empty records
 \* is an edge case.
 \*
-\* The new typechecker supporting row types considers this specification to be
-\* ill-typed. This is great!
+\* With typechecking for row types this specification is considered to be
+\* ill-typed.
 
 VARIABLE
   \* @type: {};

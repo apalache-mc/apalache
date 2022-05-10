@@ -93,7 +93,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private def getFieldName(argEx: TlaEx): String = {
     argEx match {
       case ValEx(TlaStr(key)) => key
-      case _ => throw new RewriterException(s"Accessing a record with a non-constant key $argEx", argEx)
+      case _ => throw new RewriterException(s"Accessing a record with value that cannot be a key $argEx", argEx)
     }
   }
 
