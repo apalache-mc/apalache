@@ -51,9 +51,9 @@ class TlaLevelFinder(module: TlaModule) {
   }
 
   /**
-  * Generally, use when getting the level of a TlaDecl.
-  * If for any reason the cache should not be consulted, use [[getLevelOfDeclWithoutCacheCheck]]
-  */
+   * Generally, use when getting the level of a TlaDecl. If for any reason the cache should not be consulted, use
+   * [[getLevelOfDeclWithoutCacheCheck]]
+   */
   def getLevelOfDecl(decl: TlaDecl): TlaLevel = {
     levelCacheGetFun(decl.name) match {
       case Some(level) => level
