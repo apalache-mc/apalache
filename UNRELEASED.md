@@ -10,3 +10,6 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
+### Changes
+
+ * Choose the modes of `search.invariant.mode` depending on `--length`, see #1730
