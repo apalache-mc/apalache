@@ -43,12 +43,9 @@ class TestLevelFinder extends AnyFunSuite with Checkers {
       val finder = new TlaLevelFinder(module)
       finder.levelCacheGetFun = _ => Some(TlaLevelState)
       val level = finder.getLevelOfExpression(Set.empty[String], ex)
-      print(level.toString())
       if (containsName(ex)) {
-        print("state")
         level ?= TlaLevelState
       } else {
-        print("const")
         level ?= TlaLevelConst
       }
     }
