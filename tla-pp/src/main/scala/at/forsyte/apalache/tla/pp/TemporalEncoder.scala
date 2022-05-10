@@ -1,15 +1,9 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 
 import javax.inject.Singleton
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.tla.lir.io.UsableAsTLAIdentifierPrinter
 
 /**
  * <p>Encode temporal operators.</p>
@@ -21,12 +15,12 @@ import at.forsyte.apalache.tla.lir.io.UsableAsTLAIdentifierPrinter
 class TemporalEncoder(gen: UniqueNameGenerator) extends LazyLogging {
 
   def encode(module: TlaModule, invName: String, optViewName: Option[String] = None): TlaModule = {
-    val levelFinder = new TlaDeclLevelFinder(module)
+    val levelFinder = new TlaLevelFinder(module)
 
     module.declarations.find(_.name == invName) match {
       case Some(inv: TlaOperDecl) if inv.formalParams.isEmpty =>
         // either a state invariant, or an action invariant
-        val level = levelFinder(inv)
+        val level = levelFinder.getLevelOfDecl(inv)
         level match {
           case TlaLevelTemporal =>
             logger.info("  > Encoding temporal property")
@@ -43,7 +37,7 @@ class TemporalEncoder(gen: UniqueNameGenerator) extends LazyLogging {
   }
 
   def encodeExpression(module: TlaModule, expr: TlaEx): TlaModule = {
-    val levelFinder = new TlaDeclLevelFinder(module)
+    new TlaLevelFinder(module)
 
     // logger.info(expr)
     module
