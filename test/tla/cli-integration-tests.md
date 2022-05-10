@@ -575,10 +575,20 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check EWD840.tla succeeds
+### check EWD840.tla in the inLoop mode succeeds
 
 ```sh
-$ apalache-mc check --length=5 --inv=Inv EWD840.tla | sed 's/I@.*//'
+$ apalache-mc check --length=5 --inv=Inv --tuning-options=search.invariant.mode=inLoop EWD840.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check EWD840.tla in the atOnce mode succeeds
+
+```sh
+$ apalache-mc check --length=5 --inv=Inv --tuning-options=search.invariant.mode=atOnce EWD840.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
