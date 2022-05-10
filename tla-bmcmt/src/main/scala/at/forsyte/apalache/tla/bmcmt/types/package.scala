@@ -141,6 +141,7 @@ package object types {
     override val toString: String = s"PowSet[$domType]"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     override def toTlaType1: TlaType1 = SetT1(domType)
 =======
     override def toTlaType1: TlaType1 = SetT1(domType.toTlaType1)
@@ -172,7 +173,6 @@ package object types {
         case tt              => throw new TypingException("Unexpected function domain type: " + tt, UID.nullId)
       }
     }
->>>>>>> make sure that FunT does not need PowSetT
   }
 
   /**
