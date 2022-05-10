@@ -308,6 +308,16 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
       case (tt @ RecT1(_), _) =>
         throw new TypingException(s"Expected a string argument for $tt, found: $arg", arg.ID)
 
+      case (tt @ RecRowT1(RowT1(fieldTypes, None)), ValEx(TlaStr(key))) =>
+        if (fieldTypes.contains(key)) {
+          (StrT1(), fieldTypes(key))
+        } else {
+          throw new IllegalArgumentException(s"No key $key in $tt")
+        }
+
+      case (tt @ RecRowT1(_), _) =>
+        throw new TypingException(s"Expected a string argument for $tt, found: $arg", arg.ID)
+
       case (tt @ TupT1(elems @ _*), ValEx(TlaInt(index))) =>
         if (index > 0 && index <= elems.length) {
           (IntT1(), elems(index.toInt - 1))

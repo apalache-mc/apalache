@@ -6,8 +6,8 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.lir.{
-  BoolT1, ConstT1, FunT1, IntT1, MalformedSepecificationError, OperEx, RecT1, SeqT1, SetT1, StrT1, TlaEx, TlaType1,
-  TupT1, ValEx,
+  BoolT1, ConstT1, FunT1, IntT1, MalformedSepecificationError, OperEx, RecRowT1, RecT1, RowT1, SeqT1, SetT1, StrT1,
+  TlaEx, TlaType1, TupT1, ValEx,
 }
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.lir.oper.TlaOper
@@ -28,6 +28,7 @@ import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier, TypeVar
  */
 class CherryPick(rewriter: SymbStateRewriter) {
   private val protoSeqOps = new ProtoSeqOps(rewriter)
+  private val recordOps = new RecordOps(rewriter)
   val oracleFactory = new OracleFactory(rewriter)
 
   /**
@@ -132,6 +133,9 @@ class CherryPick(rewriter: SymbStateRewriter) {
         pickTuple(t, state, oracle, elems, elseAssert)
 
       case CellTFrom(RecT1(_)) =>
+        pickOldRecord(state, oracle, elems, elseAssert)
+
+      case CellTFrom(RecRowT1(_)) =>
         pickRecord(state, oracle, elems, elseAssert)
 
       case CellTFrom(t @ SetT1(_)) =>
@@ -244,7 +248,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
    * @return
    *   a new symbolic state with the expression holding a fresh cell that stores the picked element.
    */
-  def pickRecord(
+  def pickOldRecord(
       state: SymbState,
       oracle: Oracle,
       records: Seq[ArenaCell],
@@ -316,6 +320,53 @@ class CherryPick(rewriter: SymbStateRewriter) {
     newState
       .setArena(newArena)
       .setRex(newRecord.toNameEx)
+  }
+
+  /**
+   * Picks a record from a sequence of records.
+   *
+   * @param state
+   *   a symbolic state
+   * @param oracle
+   *   a variable that stores which element (by index) should be picked, can be unrestricted
+   * @param records
+   *   a sequence of records of cellType
+   * @return
+   *   a new symbolic state with the expression holding a fresh cell that stores the picked element.
+   */
+  def pickRecord(
+      state: SymbState,
+      oracle: Oracle,
+      records: Seq[ArenaCell],
+      elseAssert: TlaEx): SymbState = {
+    // new row records always have the same type
+    val (fieldTypes, recordT) = records.head.cellType match {
+      case CellTFrom(rt @ RecRowT1(RowT1(fieldTypes, None))) => (fieldTypes, rt)
+      case tt => throw new IllegalArgumentException("Unexpected record type: " + tt)
+    }
+    rewriter.solverContext
+      .log("; CHERRY-PICK %s FROM [%s] {".format(recordT, records.map(_.toString).mkString(", ")))
+
+    var nextState = state
+
+    // project all records on a single field and pick the value according to the oracle
+    def projectOnField(fieldName: String): ArenaCell = {
+      val projection = records.map(cell => recordOps.getField(nextState.arena, cell, fieldName))
+      nextState = pickByOracle(nextState, oracle, projection, elseAssert)
+      nextState.asCell
+    }
+
+    // introduce a new record
+    nextState = nextState.setArena(nextState.arena.appendCell(recordT))
+    val newRecord = nextState.arena.topCell
+    // pick the fields using the oracle and connect them to the record
+    val pickedFieldValues = fieldTypes.keySet.toSeq.map(projectOnField)
+    nextState = nextState.updateArena(_.appendHasNoSmt(newRecord, pickedFieldValues: _*))
+    // The awesome property: we do not have to enforce equality of the field values, as this will be enforced by
+    // the rule for the respective element r.key, as it will use the same oracle!
+    rewriter.solverContext.log(s"; } CHERRY-PICK $newRecord:$recordT")
+
+    nextState.setRex(newRecord.toNameEx)
   }
 
   /**

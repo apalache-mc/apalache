@@ -247,4 +247,17 @@ trait TestSymbStateDecoder extends RewriterBase {
     val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
     assert(recEx == decodedEx)
   }
+
+  test("decode row record") { rewriterType: SMTEncoding =>
+    val recordT = parser("{ a: Int, b: Bool }")
+    val recEx = enumFun(str("a"), int(1), str("b"), bool(true)).as(recordT)
+    val state = new SymbState(recEx, arena, Binding())
+    val rewriter = create(rewriterType)
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    val cell = nextState.asCell
+    val decoder = new SymbStateDecoder(solverContext, rewriter)
+    val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
+    assert(recEx == decodedEx)
+  }
 }
