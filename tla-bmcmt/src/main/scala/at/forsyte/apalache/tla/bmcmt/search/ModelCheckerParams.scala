@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt.search
 
-import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode.{AfterJoin, BeforeJoin, InvariantMode}
 import at.forsyte.apalache.tla.bmcmt.{oopsla19Encoding, CheckerInput, SMTEncoding}
 
 object ModelCheckerParams {
@@ -8,19 +7,26 @@ object ModelCheckerParams {
   /**
    * The invariant checking mode. See tuning.md.
    */
-  object InvariantMode extends Enumeration {
-    type InvariantMode = Value
-    val BeforeJoin, AfterJoin = Value
-  }
+  sealed trait InvariantMode
+
+  /**
+   * Check the invariants for all transitions of a step at once.
+   */
+  case class CheckInvariantAtOnce() extends InvariantMode
+
+  /**
+   * Check the invariants for every transition of a step in isolation.
+   */
+  case class CheckInvariantInLoop() extends InvariantMode
 }
 
 /**
  * A collection of model checker parameters that come from the user configuration.
  *
  * @param stepsBound
- *   Step bound for bounded model-checking, excluding the initial transition introduced by [[PrimingPass]]. E.g.,
- *   `stepsBound=1` includes one actual application of the transition operator (e.g., `Next`)
- *
+ *   Step bound for bounded model-checking, excluding the initial transition introduced by
+ *   [[at.forsyte.apalache.tla.assignments.passes.PrimingPass]]. E.g., `stepsBound=1` includes one actual application of
+ *   the transition operator (e.g., `Next`)
  * @author
  *   Igor Konnov
  */
@@ -30,7 +36,7 @@ class ModelCheckerParams(
     tuningOptions: Map[String, String] = Map()) {
 
   /**
-   * If pruneDisabled is set to false, there will be no check of whether a transition is enabled.
+   * If discardDisabled is set to false, there will be no check of whether a transition is enabled.
    */
   var discardDisabled: Boolean = true
 
@@ -43,8 +49,16 @@ class ModelCheckerParams(
    * The invariant checking mode. When it is equal to AfterJoin, the invariant is checked after joining all transitions
    * per step. When it is equal to BeforeJoin, the invariant is checked before joining all transitions.
    */
-  var invariantMode: InvariantMode =
-    if ("after" == tuningOptions.getOrElse("search.invariant.mode", "before")) AfterJoin else BeforeJoin
+  var invariantMode: ModelCheckerParams.InvariantMode = {
+    // we have experimentally found that the mode "atOnce" is more efficient for bounded model checking,
+    // whereas the mode "inLoop" is more efficient for invariant checking
+    val defaultMode = if (stepsBound <= 1) "inloop" else "atonce"
+    if (Set("after", "atonce").contains(tuningOptions.getOrElse("search.invariant.mode", defaultMode).toLowerCase)) {
+      ModelCheckerParams.CheckInvariantAtOnce()
+    } else {
+      ModelCheckerParams.CheckInvariantInLoop()
+    }
+  }
 
   /**
    * The set of CONSTANTS, which are special (rigid) variables, as they do not change in the course of execution.

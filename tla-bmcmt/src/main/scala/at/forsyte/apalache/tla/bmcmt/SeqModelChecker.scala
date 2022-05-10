@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.Checker._
-import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode
+import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.{CheckInvariantAtOnce, CheckInvariantInLoop}
 import at.forsyte.apalache.tla.bmcmt.search.{ModelCheckerParams, SearchState}
 import at.forsyte.apalache.tla.bmcmt.trex.{
   ConstrainedTransitionExecutor, DecodedExecution, ExecutionSnapshot, TransitionExecutor,
@@ -123,7 +123,7 @@ class SeqModelChecker[ExecutorContextT](
       return
     }
 
-    if (params.invariantMode == InvariantMode.AfterJoin && isNext) {
+    if (params.invariantMode == CheckInvariantAtOnce() && isNext) {
       checkInvariants(trex.stepNo - 1, notActionInvariants, maybeActionInvariantNos, "action")
       if (!searchState.canContinue) {
         return
@@ -134,7 +134,7 @@ class SeqModelChecker[ExecutorContextT](
     trex.nextState()
 
     // check the state invariants
-    if (params.invariantMode == InvariantMode.AfterJoin) {
+    if (params.invariantMode == CheckInvariantAtOnce()) {
       checkInvariants(trex.stepNo - 1, notInvariants, maybeInvariantNos, "state")
       if (!searchState.canContinue) {
         return
@@ -194,7 +194,7 @@ class SeqModelChecker[ExecutorContextT](
               snapshot = Some(assumeSnapshot)
 
               // keep the transition and collect the invariants
-              if (params.invariantMode == InvariantMode.BeforeJoin) {
+              if (params.invariantMode == CheckInvariantInLoop()) {
                 // check the action invariants, unless we process Init
                 if (isNext) {
                   checkInvariants(trex.stepNo - 1, notActionInvariants, transitionActionInvs, "action")
@@ -225,7 +225,7 @@ class SeqModelChecker[ExecutorContextT](
           trex.recover(snapshot.get)
         } else {
           // when --all-enabled is on, the transition has not been assumed
-          if (params.invariantMode == InvariantMode.BeforeJoin) {
+          if (params.invariantMode == CheckInvariantInLoop()) {
             if (isNext) {
               checkInvariantsForPreparedTransition(isNext, no, transitionInvs, transitionActionInvs)
             }
