@@ -53,9 +53,9 @@ trait Oracle extends Serializable {
       case 1 => assertions.head
 
       case _ =>
-        // iteCases is a sequence of tuples, with the fst and snd elements of each tuple being the "if" and "else" cases of an ite.
-        // If elseAssertions is not empty, each tuple has its fst element from assertions and its snd form elseAssertions.
-        // If elseAssertions is empty, each tuple has its fst element from assertions and its snd defaults to "ValEx(TlaBool(true))".
+        // iteCases is a sequence of tuples, with the 1st and 2nd elements of each tuple being the "if" and "else" cases of an ite.
+        // If elseAssertions is not empty, each tuple has its 1st element from assertions and its 2nd form elseAssertions.
+        // If elseAssertions is empty, each tuple has its 1st element from assertions and its 2nd defaults to "ValEx(TlaBool(true))".
         val iteCases = assertions.zipAll(elseAssertions, tla.bool(true).typed(), tla.bool(true).typed())
         val es =
           iteCases.slice(0, size).zipWithIndex.map { case (e, i) =>
