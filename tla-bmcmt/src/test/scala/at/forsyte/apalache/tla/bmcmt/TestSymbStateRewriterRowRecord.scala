@@ -91,6 +91,20 @@ trait TestSymbStateRewriterRowRecord extends RewriterBase {
     assertTlaExAndRestore(rewriter, state)
   }
 
+  test("record inequality") { rewriterType: SMTEncoding =>
+    // order of the fields does not matter
+    val recordT = parser("{ a: Int, b: Bool, c: Str }")
+    val a = str("a")
+    val b = str("b")
+    val c = str("c")
+    val record1 = enumFun(a, int(3), b, bool(false), c, str("d")).as(recordT)
+    val record2 = enumFun(c, str("d"), b, bool(false), a, int(1)).as(recordT)
+    val eq = not(eql(record1, record2).as(BoolT1())).as(BoolT1())
+    val state = new SymbState(eq, arena, Binding())
+    val rewriter = create(rewriterType)
+    assertTlaExAndRestore(rewriter, state)
+  }
+
   private def getFieldTypes(tp: CellT): Map[String, TlaType1] = {
     tp match {
       case CellTFrom(RecRowT1(RowT1(fieldTypes, None))) =>
