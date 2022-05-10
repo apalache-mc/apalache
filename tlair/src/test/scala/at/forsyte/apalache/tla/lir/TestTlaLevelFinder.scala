@@ -147,7 +147,7 @@ class TestLevelFinder extends AnyFunSuite with Checkers {
         // it's hard to figure whether a declaration should be constant-level or state-level,
         // because operators may call one another
         s"operator ${decl.name}" |:
-          (level ?= TlaLevelState || level ?= TlaLevelConst)
+          ((level ?= TlaLevelState) || (level ?= TlaLevelConst))
       }
 
       all(module.operDeclarations.map(expectedLevel): _*) &&
@@ -175,7 +175,7 @@ class TestLevelFinder extends AnyFunSuite with Checkers {
         // it's hard to figure the exact level of a declaration,
         // because operators may call one another
         s"operator ${decl.name}" |:
-          (level ?= TlaLevelState || level ?= TlaLevelConst || level ?= TlaLevelAction)
+          ((level ?= TlaLevelState) || (level ?= TlaLevelConst) || (level ?= TlaLevelAction))
       }
 
       all(module.operDeclarations.map(expectedLevel): _*) &&
@@ -209,7 +209,7 @@ class TestLevelFinder extends AnyFunSuite with Checkers {
 
           case OperEx(_, _*) =>
             s"operator ${decl.name}" |:
-              level ?= TlaLevelTemporal
+              (level ?= TlaLevelTemporal)
 
           case _ =>
             passed
