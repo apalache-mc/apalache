@@ -8,26 +8,28 @@ class TlaLevelFinder(module: TlaModule) {
   private val vars = Set(module.varDeclarations.map(_.name): _*)
   private val defs = Map(module.operDeclarations.map { d => d.name -> d }: _*)
   private var levelCacheMap: Map[String, TlaLevel] = Map()
+  var levelCacheGetFun: String => Option[TlaLevel] = (name: String) => levelCacheMap.get(name)
+  var levelCacheSetFun = (name: String, level: TlaLevel) => levelCacheMap += name -> level
 
   def getLevelOfName(callers: Set[String], name: String): TlaLevel = {
-    if (consts.contains(name)) {
-      TlaLevelConst
-    } else if (vars.contains(name)) {
-      TlaLevelState
-    } else {
-      if (!callers.contains(name) && defs.contains(name)) {
-        // as the module comes from the parser, we assume that defs contains a definition for the name `name`
-        levelCacheMap.get(name) match {
-          case Some(level) => level
+    levelCacheGetFun(name) match {
+      case Some(level) => level
 
-          case None =>
+      case None =>
+        val computedLevel = if (consts.contains(name)) {
+          TlaLevelConst
+        } else if (vars.contains(name)) {
+          TlaLevelState
+        } else {
+          if (!callers.contains(name) && defs.contains(name)) {
             val level = getLevelOfExpression(callers + name, defs(name).body)
-            levelCacheMap += name -> level
             level
+          } else {
+            TlaLevelConst
+          }
         }
-      } else {
-        TlaLevelConst
-      }
+        levelCacheSetFun(name, computedLevel)
+        computedLevel
     }
   }
 
@@ -50,7 +52,7 @@ class TlaLevelFinder(module: TlaModule) {
 
   // Decls are always toplevel, so there are never callers
   def getLevelOfDecl(decl: TlaDecl): TlaLevel = {
-    levelCacheMap.get(decl.name) match {
+    levelCacheGetFun(decl.name) match {
       case Some(level) => level
 
       case None =>

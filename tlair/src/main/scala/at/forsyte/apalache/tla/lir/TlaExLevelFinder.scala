@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.lir
 
-import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaTempOper}
+import _root_.at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaTempOper}
 
 /**
  * This class computes the level of a TLA+ expression. See Lamport. Specifying Systems, p. 322.
