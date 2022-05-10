@@ -4,7 +4,9 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier, TypeVarPool}
 import at.forsyte.apalache.tla.typecomp.BuilderUtil.throwMsg
-import at.forsyte.apalache.tla.typecomp.signatures.{ArithOperSignatures, BoolOperSignatures, SetOperSignatures}
+import at.forsyte.apalache.tla.typecomp.signatures.{
+  ArithOperSignatures, BoolOperSignatures, SeqOperSignatures, SetOperSignatures,
+}
 
 /**
  * Some TNT operators have signatures (see [[signatures]]). TypeComputationFactory collects [[SignatureGenerator]]s for
@@ -18,10 +20,11 @@ class TypeComputationFactory(varPool: TypeVarPool) {
   private val aritOperMap: SignatureGenMap = ArithOperSignatures.getMap
   private val boolOperMap: SignatureGenMap = BoolOperSignatures.getMap(varPool)
   private val setOperMap: SignatureGenMap = SetOperSignatures.getMap(varPool)
+  private val seqOperMap: SignatureGenMap = SeqOperSignatures.getMap(varPool)
 
   private val unifier: TypeUnifier = new TypeUnifier(varPool)
 
-  private val knownSignatures: SignatureGenMap = aritOperMap ++ boolOperMap ++ setOperMap
+  private val knownSignatures: SignatureGenMap = aritOperMap ++ boolOperMap ++ setOperMap ++ seqOperMap
 
   /** Given an operator and arity (important for polyadic operators), returns a signature, if known */
   def getSignature(oper: TlaOper, arity: Int): Option[OperT1] =

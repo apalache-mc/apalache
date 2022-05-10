@@ -47,7 +47,9 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
   // Useful methods for defining mkIllTypedArgs
   object InvalidTypeMethods {
     def notSet: TlaType1 = IntT1()
-    def notBool: TlaType1 = IntT1()
+    def notSeq: TlaType1 = IntT1()
+    def notBool: TlaType1 = differentFrom(BoolT1())
+    def notInt: TlaType1 = differentFrom(IntT1())
     def differentFrom(tt: TlaType1): TlaType1 = if (tt == IntT1()) StrT1() else IntT1()
   }
 
