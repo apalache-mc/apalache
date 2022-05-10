@@ -260,7 +260,7 @@ class SeqModelChecker[ExecutorContextT](
     }
   }
 
-  // This is a special case of --all-enabled and search.invariant.mode=before.
+  // This is a special case of --all-enabled and search.invariant.mode=inLoop.
   // A transition has been prepared but not assumed.
   private def checkInvariantsForPreparedTransition(
       isNext: Boolean,

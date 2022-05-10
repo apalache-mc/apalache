@@ -28,14 +28,14 @@ The following options are supported:
 3. __Invariant mode__: `search.invariant.mode=(inLoop|atOnce)` defines the moment when the invariant is checked. In
    the `atOnce` mode, all transitions are first translated, one of them is picked non-deterministically and then the
    invariant is checked. Hence, they are checked "all at once". Although this mode reduces the number of SMT queries, it
-   usually requires more memory than the `inLoop` mode. In the `inLoop` mode, the invariant is checked for every enabled
-   transition independently. The
-   `inLoop` mode may drastically reduce memory consumption, but it may take longer than the `atOnce` mode, provided that
-   Apalache has enough memory. When the specification has `t` symbolic transitions and `--length=k`, Apalache performs
-   up to `t * k` SMT queries in the `inLoop` mode and up to `t` SMT queries in the `atOnce` mode. As a result, the
-   default mode depends on the value of `k`:
-   when `k > 1`, the default mode is `atOnce`; when `k <= 1`, the default mode is
-   `inLoop`.
+   usually requires more memory than the
+   `inLoop` mode. In the `inLoop` mode, the invariant is checked for every enabled transition independently.
+   The `inLoop` mode may drastically reduce memory consumption, but it may take longer than the `atOnce` mode, provided
+   that Apalache has enough memory. When the specification has `t` symbolic transitions and `--length=k`, Apalache
+   performs up to `t * k` SMT queries in the `inLoop`
+   mode and up to `t` SMT queries in the `atOnce` mode. As a result, the default mode depends on the value of `k`:
+   when `k > 1`, the default mode is `atOnce`; when `k <= 1`, the default mode is `inLoop`. For details about the search
+   algorithm, see [ADR-003][].
 
 4. __Guided search__: `search.transitionFilter=<regex>`. Restrict the choice of symbolic transitions at every step with
    a regular expression. The regular expression should recognize words over of the form 's->t', where `s` is a regular
@@ -46,7 +46,8 @@ The following options are supported:
    correspondence between the transition numbers and the actions in the TLA+ spec. To find the numbers, run Apalache
    with `--write-intermediate=true` and check the transition numbers in
    `_apalache-out/<MySpec>.tla/*/intermediate/XX_OutTransitionFinderPass.tla`: the 0th transition is
-   called `Next_si_0000`, 1st transition is called `Next_si_0001`, etc.
+   called `Next_si_0000`, 1st transition is called
+   `Next_si_0001`, etc.
 
 5. __Invariant checking at certain steps__: `search.invariantFilter=regex`. Check the invariant only at the steps that
    satisfy the regular expression. For instance, `search.invariantFilter=10|15|20` tells the model checker to check the
@@ -61,3 +62,5 @@ The following options are supported:
       `rewriter.shortCircuit=true`, `A \/ B` and `A /\ B` are translated to SMT as if-then-else expressions,
       e.g., `(ite A true B)`. Otherwise, disjunctions and conjunctions are directly translated to `(or ...)` and
       `(and ...)` respectively. By default, `rewriter.shortCircuit=false`.
+
+[ADR-003]: ../adr/003adr-trex.md      
