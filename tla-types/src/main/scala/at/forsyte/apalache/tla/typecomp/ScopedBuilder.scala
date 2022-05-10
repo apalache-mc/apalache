@@ -1,7 +1,9 @@
 package at.forsyte.apalache.tla.typecomp
 
 import at.forsyte.apalache.tla.typecheck.etc.TypeVarPool
-import at.forsyte.apalache.tla.typecomp.subbuilder.{ArithmeticBuilder, BoolBuilder, LiteralAndNameBuilder, SetBuilder}
+import at.forsyte.apalache.tla.typecomp.subbuilder.{
+  ArithmeticBuilder, BoolBuilder, LiteralAndNameBuilder, SeqBuilder, SetBuilder,
+}
 
 /**
  * Builder for TLA+ (TNT) IR expressions.
@@ -28,4 +30,4 @@ import at.forsyte.apalache.tla.typecomp.subbuilder.{ArithmeticBuilder, BoolBuild
  *   Jure Kukovec
  */
 class ScopedBuilder(val varPool: TypeVarPool)
-    extends BoolBuilder with ArithmeticBuilder with SetBuilder with LiteralAndNameBuilder
+    extends BoolBuilder with ArithmeticBuilder with SetBuilder with SeqBuilder with LiteralAndNameBuilder

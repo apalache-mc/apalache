@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.typecomp.SignatureGenMap
  * @author
  *   Jure Kukovec
  */
-class SeqOperSignatures {
+object SeqOperSignatures {
   import TlaSeqOper._
 
   /** Returns a map that assigns a signature generator to each TLaArithOper. */
@@ -54,10 +54,7 @@ class SeqOperSignatures {
     }
 
     // (Seq(t), (Seq(t)) => Bool) => Seq(t)
-    val selectseqSig = selectseq -> { _: Int =>
-      val t = varPool.fresh
-      OperT1(Seq(SeqT1(t), OperT1(Seq(SeqT1(t)), BoolT1())), SeqT1(t))
-    }
+    // selectseq is rewired away and should not be created
 
     Map(
         headSig,
@@ -66,7 +63,6 @@ class SeqOperSignatures {
         concatSig,
         lenSig,
         subseqSig,
-        selectseqSig,
     )
   }
 }
