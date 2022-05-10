@@ -1337,9 +1337,8 @@ EXITCODE: OK
 
 Regression test for https://github.com/informalsystems/apalache/issues/914 In
 the earlier version, we expected the model checker to complain about
-mismatching record types. ~In the latest version, this bug disappeared, due to
-the changes in the type checker.~ The new type checker with row typing is
-reporting a type error, and this is what we expect.
+mismatching record types. The new type checker with row typing is reporting a
+type error, and this is what we expect.
 
 ```sh
 $ apalache-mc typecheck --features=rows Bug914.tla | sed 's/[IE]@.*//'
@@ -2191,7 +2190,7 @@ EXITCODE: OK
 
 ### check TestRecordsNew.tla
 
-Check new records that support row typing.
+Check row-based records support row typing.
 
 ```sh
 $ apalache-mc check --features=rows TestRecordsNew.tla | sed 's/[IEW]@.*//'

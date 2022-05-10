@@ -168,12 +168,11 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
       oldRecord: ArenaCell,
       indexEx: TlaEx,
       newValue: ArenaCell): SymbState = {
-    val fieldToUpdate = indexEx match {
-      case ValEx(TlaStr(key)) => key
-      case ex => throw new RewriterException("Expected a string when updating a record, found: " + ex, ex)
+    indexEx match {
+      case ValEx(TlaStr(fieldName)) => recordOps.updateField(state, oldRecord, fieldName, newValue)
+      case _ => throw new RewriterException(s"Accessing a record with value that cannot be a key $indexEx", indexEx)
     }
 
-    recordOps.updateField(state, oldRecord, fieldToUpdate, newValue)
   }
 
   def rewriteTuple(

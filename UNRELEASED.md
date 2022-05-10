@@ -24,4 +24,4 @@
 
 ### Features
 
- * Support new records in the model checker, see #1717
+ * Support sound records (over rows) in the model checker, see #1717

@@ -517,7 +517,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
     }
 
     val allFieldsEq = tla.and(fieldTypes.keys.map { n => tla.fromTlaEx(fieldsEq(n)) }.toSeq: _*).as(BoolT1())
-    rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(leftRec.toNameEx, rightRec.toNameEx), allFieldsEq))
+    rewriter.solverContext.assertGroundExpr(tla.eql(tla.eql(leftRec.toNameEx, rightRec.toNameEx), allFieldsEq))
     eqCache.put(leftRec, rightRec, EqCache.EqEntry())
     state
   }
