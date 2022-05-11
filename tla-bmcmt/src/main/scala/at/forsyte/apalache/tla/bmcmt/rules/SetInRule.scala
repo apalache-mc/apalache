@@ -125,8 +125,6 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val relElems = nextState.arena.getHas(relation)
     rewriter.solverContext.assertGroundExpr(tla.equiv(pred.toNameEx, tla.and(relElems.map(onPair): _*)))
 
-    val partialConstraintDomainState = rewriter.rewriteUntilDone(nextState.setRex(pred.toNameEx))
-
     // S = DOMAIN f
     val domainEx =
       tla
@@ -137,8 +135,8 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
         .as(BoolT1())
 
     rewriter.rewriteUntilDone(
-        partialConstraintDomainState.setRex(
-            tla.and(partialConstraintDomainState.ex, domainEx)
+        nextState.setRex(
+            tla.and(pred.toNameEx, domainEx)
         )
     )
   }
