@@ -658,8 +658,8 @@ class Builder {
     BuilderOper(ApalacheInternalOper.storeNotInSet, elem, fun)
   }
 
-  def apalacheSmtMap(inputSet: BuilderEx, resultSet: BuilderEx): BuilderEx = {
-    BuilderOper(ApalacheInternalOper.smtMap, inputSet, resultSet)
+  def apalacheSmtMap(mapOper: BuilderEx, inputSet: BuilderEx, resultSet: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheInternalOper.smtMap, mapOper, inputSet, resultSet)
   }
 
   def apalacheUnconstrainArray(arrayElemName: BuilderEx): BuilderEx = {

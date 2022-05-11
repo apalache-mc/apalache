@@ -754,7 +754,15 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
-      case OperEx(ApalacheInternalOper.smtMap, NameEx(inputSetName), NameEx(resultSetName)) =>
+      case OperEx(ApalacheInternalOper.smtMap, mapOper, NameEx(inputSetName), NameEx(resultSetName)) =>
+        val mapOperDecl = mapOper match {
+          case OperEx(TlaBoolOper.and, _*) =>
+            z3context.mkAnd().getFuncDecl
+          case OperEx(TlaBoolOper.or, _*) =>
+            z3context.mkOr().getFuncDecl
+          case _ =>
+            throw new IllegalArgumentException(s"Unexpected SMT map operator of type $mapOper")
+        }
         val inputSetId = ArenaCell.idFromName(inputSetName)
         val resultSetId = ArenaCell.idFromName(resultSetName)
         // The latest SSA array for resultSet contains the constraints. An updated SSA array is made to store the result
@@ -762,7 +770,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         val constraintsSet = cellCache(resultSetId).head._1.asInstanceOf[ArrayExpr[Sort, BoolSort]]
         val updatedResultSet = updateArrayConst(resultSetId).asInstanceOf[ArrayExpr[Sort, BoolSort]]
         // The intersection of inputSet and constraintsSet is taken and equated to updatedResultSet
-        val map = z3context.mkMap(z3context.mkAnd().getFuncDecl, inputSet, constraintsSet)
+        val map = z3context.mkMap(mapOperDecl, inputSet, constraintsSet)
         val eq = toEqExpr(updatedResultSet, map)
         (eq.asInstanceOf[ExprSort], 2)
 
