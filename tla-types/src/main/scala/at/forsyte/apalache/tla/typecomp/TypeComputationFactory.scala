@@ -1,8 +1,6 @@
 package at.forsyte.apalache.tla.typecomp
 
-import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier, TypeVarPool}
 import at.forsyte.apalache.tla.typecomp.BuilderUtil.throwMsg
 import at.forsyte.apalache.tla.typecomp.signatures._
 

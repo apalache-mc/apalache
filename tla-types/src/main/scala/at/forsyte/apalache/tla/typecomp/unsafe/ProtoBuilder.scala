@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.typecomp.unsafe
 
 import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.typecheck.etc.TypeVarPool
 import at.forsyte.apalache.tla.typecomp.{BuilderUtil, TypeComputationFactory}
 
 /**
