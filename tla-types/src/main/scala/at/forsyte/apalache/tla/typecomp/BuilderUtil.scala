@@ -55,6 +55,7 @@ object BuilderUtil {
   /** generates a BuilderTypeException wrapped in a Left, containing the given message */
   def throwMsg(msg: String): TypeComputationResult = Left(new TBuilderTypeException(msg))
 
+  /** Generates a (total) signature from a partial one, by returning a Left outside the domain */
   def completePartial(name: String, partialSig: PartialSignature): Signature = {
     def onElse(badArgs: Seq[TlaType1]): TypeComputationResult =
       throwMsg(

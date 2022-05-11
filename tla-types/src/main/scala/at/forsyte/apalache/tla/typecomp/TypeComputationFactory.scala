@@ -23,10 +23,9 @@ class TypeComputationFactory {
 
   /** Given an operator with a known signature, constructs a pure type computation for its return type */
   def computationFromSignature(oper: TlaOper): PureTypeComputation = { args =>
-    val arity = args.size
     knownSignatures.get(oper) match {
-      // Failure: bad identifier or arity
-      case None      => throwMsg(s"Unknown signature for operator ${oper.name} and arity $arity.")
+      // Failure: bad identifier
+      case None      => throwMsg(s"Unknown signature for operator ${oper.name}.")
       case Some(sig) => sig(args)
     }
   }
