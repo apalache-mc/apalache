@@ -55,6 +55,7 @@ class CheckerModule extends ToolModule {
     bind(classOf[SanyParserPass]).to(classOf[SanyParserPassImpl])
     bind(classOf[ConfigurationPass]).to(classOf[ConfigurationPassImpl])
     bind(classOf[DesugarerPass]).to(classOf[DesugarerPassImpl])
+    bind(classOf[TemporalPass]).to(classOf[TemporalPassImpl])
     bind(classOf[InlinePass]).to(classOf[InlinePassImpl])
     bind(classOf[PrimingPass]).to(classOf[PrimingPassImpl])
     bind(classOf[VCGenPass]).to(classOf[VCGenPassImpl])
@@ -73,6 +74,7 @@ class CheckerModule extends ToolModule {
         classOf[EtcTypeCheckerPassImpl],
         classOf[ConfigurationPass],
         classOf[DesugarerPass],
+        classOf[TemporalPass],
         classOf[InlinePass],
         classOf[PrimingPass],
         classOf[VCGenPass],
