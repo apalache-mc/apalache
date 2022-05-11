@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.typecomp
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.typecheck.etc.TypeVarPool
 import org.junit.runner.RunWith
 import org.scalacheck.Gen
 import org.scalacheck.Prop.forAll
@@ -34,15 +33,21 @@ import shapeless._
  */
 @RunWith(classOf[JUnitRunner])
 trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with AppendedClues with Matchers {
-  var varPool = new TypeVarPool()
-  var builder = new ScopedBuilder(varPool)
-  var cmpFactory = new TypeComputationFactory(varPool)
+  var builder = new ScopedBuilder
+  var cmpFactory = new TypeComputationFactory
 
   before {
-    varPool = new TypeVarPool()
-    builder = new ScopedBuilder(varPool)
-    cmpFactory = new TypeComputationFactory(varPool)
+    builder = new ScopedBuilder
+    cmpFactory = new TypeComputationFactory
   }
+
+  private val tt1gen: TlaType1Gen = new TlaType1Gen {}
+
+  implicit val singleTypeGen: Gen[TlaType1] = tt1gen.genType1
+  implicit val doubleTypeGen: Gen[(TlaType1, TlaType1)] = for {
+    t1 <- singleTypeGen
+    t2 <- singleTypeGen
+  } yield (t1, t2)
 
   // Useful methods for defining mkIllTypedArgs
   object InvalidTypeMethods {
