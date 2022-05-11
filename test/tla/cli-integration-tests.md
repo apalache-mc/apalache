@@ -1694,20 +1694,40 @@ The outcome is: Error
 EXITCODE: ERROR (12)
 ```
 
-### check ActionInv
+### check ActionInv at once
 
 ```sh
-$ apalache-mc check --inv=IncreaseInv ActionInv.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --inv=IncreaseInv --tuning-options=search.invariant.mode=atOnce ActionInv.tla | sed 's/[IEW]@.*//'
 ...
 The outcome is: NoError
 ...
 EXITCODE: OK
 ```
 
-### check ActionInv with a false invariant
+### check ActionInv in loop
 
 ```sh
-$ apalache-mc check --inv=KeepInv ActionInv.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --inv=IncreaseInv --tuning-options=search.invariant.mode=inLoop ActionInv.tla | sed 's/[IEW]@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check ActionInv with a false invariant at once
+
+```sh
+$ apalache-mc check --inv=KeepInv --tuning-options=search.invariant.mode=atOnce ActionInv.tla | sed 's/[IEW]@.*//'
+...
+The outcome is: Error
+...
+EXITCODE: ERROR (12)
+```
+
+### check ActionInv with a false invariant in loop
+
+```sh
+$ apalache-mc check --inv=KeepInv --tuning-options=search.invariant.mode=inLoop ActionInv.tla | sed 's/[IEW]@.*//'
 ...
 The outcome is: Error
 ...

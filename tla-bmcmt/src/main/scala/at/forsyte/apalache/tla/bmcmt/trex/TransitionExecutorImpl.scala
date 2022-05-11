@@ -252,11 +252,12 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
       }
 
       def getAssignedVars(binding: Binding) = binding.forgetNonPrimed(Set()).toMap.keySet
-      val primedVars = getAssignedVars(sortedTransitions.head._2.binding) // only VARIABLES, not CONSTANTS
 
-      val finalVarBinding = Binding(primedVars.toSeq.map(n => (n, pickVar(n))): _*) // variables only
-      val constBinding = Binding(oracleState.binding.toMap.filter(p => consts.contains(p._1)))
-      lastState = nextState.setBinding(finalVarBinding ++ constBinding)
+      val constBinding = oracleState.binding.toMap.filter(p => consts.contains(p._1)) // CONSTANTS
+      val oldVarBinding = sortedTransitions.head._2.binding.forgetPrimed.toMap // only unprimed VARIABLES
+      val primedVars = getAssignedVars(sortedTransitions.head._2.binding) // only primed VARIABLES
+      val nextVarBinding = primedVars.toSeq.map(n => (n, pickVar(n))) // next variables only
+      lastState = nextState.setBinding(Binding(constBinding ++ oldVarBinding ++ nextVarBinding))
       // the sparse oracle is mapping the oracle values to the transition numbers
       val sparseOracle = new SparseOracle(oracle, preparedTransitions.keySet)
       pushLastState(sparseOracle)
