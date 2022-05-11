@@ -22,10 +22,10 @@ trait BoolBuilder extends UnsafeBoolBuilder {
   def not(p: TBuilderInstruction): TBuilderInstruction = p.map(_not)
 
   /** p => q */
-  def impl(p: TBuilderInstruction, q: TBuilderInstruction): TBuilderInstruction = binaryFromRaw(p, q)(_impl)
+  def impl(p: TBuilderInstruction, q: TBuilderInstruction): TBuilderInstruction = binaryFromUnsafe(p, q)(_impl)
 
   /** p <=> q */
-  def equiv(p: TBuilderInstruction, q: TBuilderInstruction): TBuilderInstruction = binaryFromRaw(p, q)(_equiv)
+  def equiv(p: TBuilderInstruction, q: TBuilderInstruction): TBuilderInstruction = binaryFromUnsafe(p, q)(_equiv)
 
   /** \A x \in set: p */
   def forall(x: TBuilderInstruction, set: TBuilderInstruction, p: TBuilderInstruction): TBuilderInstruction =
