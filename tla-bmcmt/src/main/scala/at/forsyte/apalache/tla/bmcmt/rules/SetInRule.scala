@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.{ApalacheInternalOper, TlaSetOper}
@@ -91,9 +92,9 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
       throw new RewriterException(msg, state.ex)
     }
 
-    funCell.cellType match {
-      case CellTFrom(FunT1(_, _)) => () // OK
-      case _                      => flagTypeError()
+    val domType = funCell.cellType match {
+      case CellTFrom(FunT1(domT, _)) => domT // OK
+      case _                         => flagTypeError()
     }
     funsetCell.cellType match {
       case FinFunSetT(PowSetT(_), _) | FinFunSetT(FinFunSetT(_, _), _) =>
@@ -108,7 +109,8 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val relation = nextState.arena.getCdm(funCell)
 
     // In the new implementation, a function is a relation { <<x, f[x]>> : x \in U }.
-    // Check that \A t \in f: t[1] \in S /\ t[2] \in T.
+    // Check that \A t \in f: t[1] \in S /\ t[2] \in T, and
+    // `DOMAIN f = S`, since the above only implies `DOMAIN f \subseteq S`
     def onPair(pair: ArenaCell): TlaEx = {
       val tupleElems = nextState.arena.getHas(pair)
       val (arg, res) = (tupleElems.head, tupleElems.tail.head)
@@ -120,11 +122,25 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
       tla
         .or(tla.not(tla.apalacheSelectInSet(pair.toNameEx, relation.toNameEx)), tla.and(inDom.toNameEx, inCdm.toNameEx))
     }
-
     val relElems = nextState.arena.getHas(relation)
     rewriter.solverContext.assertGroundExpr(tla.equiv(pred.toNameEx, tla.and(relElems.map(onPair): _*)))
 
-    rewriter.rewriteUntilDone(nextState.setRex(pred.toNameEx))
+    val partialConstraintDomainState = rewriter.rewriteUntilDone(nextState.setRex(pred.toNameEx))
+
+    // S = DOMAIN f
+    val domainEx =
+      tla
+        .eql(
+            funsetDom.toNameEx,
+            tla.dom(funCell.toNameEx).as(domType),
+        )
+        .as(BoolT1())
+
+    rewriter.rewriteUntilDone(
+        partialConstraintDomainState.setRex(
+            tla.and(partialConstraintDomainState.ex, domainEx)
+        )
+    )
   }
 
   protected def intOrNatSetIn(
