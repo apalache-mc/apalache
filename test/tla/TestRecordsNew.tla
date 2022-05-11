@@ -45,10 +45,17 @@ TestDomain ==
     \* although r1 and r2 have different types, their domains are equal
     DOMAIN r1 = DOMAIN r2
 
+TestRecExists ==
+    \E r \in [ a: { 10, 20 }, b: { "abc", "def" } ]:
+        /\ r.a \in { 10, 20}
+        /\ r.b \in { "abc", "def" }
+
 AllTests ==
     /\ TestCtor
     /\ TestRecCtor
     /\ TestRowAccess
     /\ TestRowUpdate
     /\ TestDomain
+    /\ TestRecExists
+
 ===============================================================================

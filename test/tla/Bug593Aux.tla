@@ -3,7 +3,7 @@
 EXTENDS Integers
 
 Dummy ==
-    LET \* @type: [type: Str]; 
+    LET \* @type: { type: Str };
     record == [type |-> "T"] IN
     "X"
 

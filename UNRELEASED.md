@@ -13,3 +13,7 @@
 ### Changes
 
  * Choose the modes of `search.invariant.mode` depending on `--length`, see #1730
+
+### Features
+
+ * Support sound records (over rows) in the model checker, see #1717
