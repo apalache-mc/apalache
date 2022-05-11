@@ -1,9 +1,11 @@
 package at.forsyte.apalache.tla.typecomp
 
-import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, Typed}
+import at.forsyte.apalache.tla.lir.oper.{FixedArity, OperArity, TlaOper}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, TlaType1, Typed}
 import scalaz._
 import scalaz.Scalaz._
+
+import scala.language.implicitConversions
 
 /**
  * Utility methods
@@ -52,4 +54,33 @@ object BuilderUtil {
 
   /** generates a BuilderTypeException wrapped in a Left, containing the given message */
   def throwMsg(msg: String): TypeComputationResult = Left(new TBuilderTypeException(msg))
+
+  def completePartial(name: String, partialSig: PartialSignature): Signature = {
+    def onElse(badArgs: Seq[TlaType1]): TypeComputationResult =
+      throwMsg(
+          s"Operator $name cannot be applied to arguments of types (${badArgs.mkString(", ")})"
+      )
+
+    { args =>
+      partialSig.applyOrElse(
+          args,
+          onElse,
+      )
+    }
+  }
+
+  implicit def mkFixedArity(n: Int): OperArity = FixedArity(n)
+
+  /** Wraps a signature with an arity check, to throw a more precise exception on arity mismatch */
+  def checkForArityException(
+      name: String,
+      arity: OperArity,
+      partialSig: PartialSignature): Signature = {
+    case args if arity.cond(args.size) => completePartial(name, partialSig)(args)
+    case args                          => throwMsg(s"$name expects $arity arguments, found: ${args.size}")
+  }
+
+  def mkSigMapEntry(oper: TlaOper, partialSignature: PartialSignature): (TlaOper, Signature) =
+    oper -> checkForArityException(oper.name, oper.arity, partialSignature)
+
 }

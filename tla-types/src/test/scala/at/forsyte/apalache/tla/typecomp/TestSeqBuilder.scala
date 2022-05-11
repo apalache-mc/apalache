@@ -10,14 +10,6 @@ import scalaz.unused
 @RunWith(classOf[JUnitRunner])
 class TestSeqBuilder extends BuilderTest {
 
-  private val tt1gen: TlaType1Gen = new TlaType1Gen {}
-
-  implicit val singleTypeGen: Gen[TlaType1] = tt1gen.genPrimitiveMono
-  implicit val doubleTypeGen: Gen[(TlaType1, TlaType1)] = for {
-    t1 <- singleTypeGen
-    t2 <- singleTypeGen
-  } yield (t1, t2)
-
   test("append") {
     type T = (TBuilderInstruction, TBuilderInstruction)
     def mkWellTyped(tt: TlaType1): T =

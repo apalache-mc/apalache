@@ -14,8 +14,7 @@ import at.forsyte.apalache.tla.typecomp.{BuilderUtil, TypeComputationFactory}
  *   Jure Kukovec
  */
 trait ProtoBuilder {
-  protected val varPool: TypeVarPool
-  protected val cmpFactory: TypeComputationFactory = new TypeComputationFactory(varPool)
+  protected val cmpFactory: TypeComputationFactory = new TypeComputationFactory
 
   /**
    * Specialized `composeAndValidateTypes`, applicable when the TNT operator has a signature, that is, it is not

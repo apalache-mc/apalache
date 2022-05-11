@@ -2,8 +2,7 @@ package at.forsyte.apalache.tla.typecomp.signatures
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaSeqOper
-import at.forsyte.apalache.tla.typecheck.etc.TypeVarPool
-import at.forsyte.apalache.tla.typecomp.SignatureGenMap
+import at.forsyte.apalache.tla.typecomp.{BuilderUtil, SignatureMap}
 
 /**
  * Produces a SignatureMap for all sequence operators
@@ -13,45 +12,28 @@ import at.forsyte.apalache.tla.typecomp.SignatureGenMap
  */
 object SeqOperSignatures {
   import TlaSeqOper._
+  import BuilderUtil._
 
   /** Returns a map that assigns a signature generator to each TLaArithOper. */
-  def getMap(varPool: TypeVarPool): SignatureGenMap = {
+  def getMap: SignatureMap = {
 
     // (Seq(t)) => t
-    val headSig = head -> { _: Int =>
-      val t = varPool.fresh
-      OperT1(Seq(SeqT1(t)), t)
-    }
+    val headSig = mkSigMapEntry(head, { case Seq(SeqT1(t)) => t })
 
     // (Seq(t)) => Seq(t)
-    val tailSig = tail -> { _: Int =>
-      val t = varPool.fresh
-      OperT1(Seq(SeqT1(t)), SeqT1(t))
-    }
+    val tailSig = mkSigMapEntry(tail, { case Seq(st: SeqT1) => st })
 
     // (Seq(t), t) => Seq(t)
-    val appendSig = append -> { _: Int =>
-      val t = varPool.fresh
-      OperT1(Seq(SeqT1(t), t), SeqT1(t))
-    }
+    val appendSig = mkSigMapEntry(append, { case Seq(st @ SeqT1(t), tt) if t == tt => st })
 
     // (Seq(t), Seq(t)) => Seq(t)
-    val concatSig = concat -> { _: Int =>
-      val t = varPool.fresh
-      OperT1(Seq(SeqT1(t), SeqT1(t)), SeqT1(t))
-    }
+    val concatSig = mkSigMapEntry(concat, { case Seq(st @ SeqT1(t), SeqT1(tt)) if t == tt => st })
 
     // (Seq(t)) => Int
-    val lenSig = len -> { _: Int =>
-      val t = varPool.fresh
-      OperT1(Seq(SeqT1(t)), IntT1())
-    }
+    val lenSig = mkSigMapEntry(len, { case Seq(_: SeqT1) => IntT1() })
 
     // (Seq(t), Int, Int) => Seq(t)
-    val subseqSig = subseq -> { _: Int =>
-      val t = varPool.fresh
-      OperT1(Seq(SeqT1(t), IntT1(), IntT1()), SeqT1(t))
-    }
+    val subseqSig = mkSigMapEntry(subseq, { case Seq(st: SeqT1, IntT1(), IntT1()) => st })
 
     // (Seq(t), (Seq(t)) => Bool) => Seq(t)
     // selectseq is rewired away and should not be created

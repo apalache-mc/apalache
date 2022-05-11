@@ -29,5 +29,5 @@ import at.forsyte.apalache.tla.typecomp.subbuilder.{
  * @author
  *   Jure Kukovec
  */
-class ScopedBuilder(val varPool: TypeVarPool)
+class ScopedBuilder
     extends BoolBuilder with ArithmeticBuilder with SetBuilder with SeqBuilder with LiteralAndNameBuilder
