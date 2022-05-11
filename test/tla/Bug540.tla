@@ -13,7 +13,7 @@ MaxClientsPerChain,
 MaxClientHeight
 
 VARIABLE 
-\* @type: Str -> [clientIdCounter: Int, clients: Int->Int];
+\* @type: Str -> { clientIdCounter: Int, clients: Int -> Int };
 chains
 
 CInit == /\ ChainIds = {"chain-A", "chain-B"}

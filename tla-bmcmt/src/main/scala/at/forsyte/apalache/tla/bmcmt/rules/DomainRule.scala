@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.caches.IntRangeCache
-import at.forsyte.apalache.tla.bmcmt.rules.aux.ProtoSeqOps
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{ProtoSeqOps, RecordOps}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs.{tlaExToBuilderExAsTyped, BuilderExAsTyped}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -18,6 +18,7 @@ import at.forsyte.apalache.tla.lir._
  */
 class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) extends RewritingRule {
   private val proto = new ProtoSeqOps(rewriter)
+  private val recordOps = new RecordOps(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -36,6 +37,9 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
           case CellTFrom(RecT1(_)) =>
             val dom = funState.arena.getDom(funCell)
             funState.setRex(dom.toNameEx)
+
+          case CellTFrom(RecRowT1(_)) =>
+            recordOps.domain(funState, funCell)
 
           case CellTFrom(tt @ TupT1(_ @_*)) =>
             mkTupleDomain(funState, tt)
