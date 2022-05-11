@@ -3,7 +3,7 @@
 
 EXTENDS Integers, FiniteSets
 
-\* @type: (a) => [f: Set(a)];
+\* @type: (a) => {f: Set(a)};
 Optional(x) == [f |-> x]
 
 

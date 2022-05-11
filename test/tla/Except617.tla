@@ -3,11 +3,11 @@
 EXTENDS Integers
 
 VARIABLE
-    \* @type: Int -> [ foo: Int, bar: Str ];
+    \* @type: Int -> { foo: Int, bar: Str };
     table1,
     \* @type: Str -> Str;
     table2,
-    \* @type: [ num: Int, tup: <<Str, Int>> ];
+    \* @type: { num: Int, tup: <<Str, Int>> };
     table3
 
 Init ==

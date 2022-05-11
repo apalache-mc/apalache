@@ -1,17 +1,19 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.rules.aux.ProtoSeqOps
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{ProtoSeqOps, RecordOps}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.UntypedPredefs.BuilderExAsUntyped
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.convenience.tla.fromTlaEx
-import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.convenience.tla.{fromTlaEx, str}
+import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 import com.typesafe.scalalogging.LazyLogging
+
+import scala.collection.immutable.SortedMap
 
 /**
  * This class dumps relevant values from an SMT model using an arena.
@@ -21,6 +23,7 @@ import com.typesafe.scalalogging.LazyLogging
  */
 class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter) extends LazyLogging {
   private val protoSeqOps = new ProtoSeqOps(rewriter)
+  private val recordOps = new RecordOps(rewriter)
 
   def decodeStateVariables(state: SymbState): Map[String, TlaEx] = {
     state.binding.toMap.map(p => (p._1, reverseMapVar(decodeCellToTlaEx(state.arena, p._2), p._1, p._2)))
@@ -104,38 +107,11 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       val decodedElems = protoSeqOps.elems(arena, protoSeq).map(decodeCellToTlaEx(arena, _)).toList.slice(0, len)
       tla.tuple(decodedElems: _*).typed(SeqT1(elemT1))
 
-    case CellTFrom(r @ RecT1(_)) =>
-      def exToStr(ex: TlaEx): TlaStr = ex match {
-        case ValEx(s @ TlaStr(_)) => s
-        case _                    => throw new RewriterException("Expected a string, found: " + ex, ex)
-      }
+    case CellTFrom(recT @ RecT1(_)) =>
+      decodeOldRecordToTlaEx(arena, cell, recT)
 
-      // Note that the domain may have fewer fields than the record type is saying.
-      // This comes from the fact that we can extend a record with a richer type.
-      val domCell = arena.getDom(cell)
-      val dom = decodeSet(arena, domCell).map(exToStr)
-      val fieldValues = arena.getHas(cell)
-      val keyList = r.fieldTypes.keySet.toList
-
-      def eachField(es: List[TlaEx], key: String): List[TlaEx] = {
-        if (!dom.contains(TlaStr(key))) {
-          es // skip
-        } else {
-          val index = keyList.indexOf(key)
-          val valueCell = fieldValues(index)
-          tla.str(key).typed() +: decodeCellToTlaEx(arena, valueCell) +: es
-        }
-      }
-
-      val keysAndValues = keyList.reverse.foldLeft(List[TlaEx]())(eachField)
-      if (keysAndValues.nonEmpty) {
-        OperEx(TlaFunOper.enum, keysAndValues: _*)(Typed(r))
-      } else {
-        logger.error(
-            s"Decoder: Found an empty record $cell when decoding a counterexample, domain = $domCell. This is a bug.")
-        // for debugging purposes, just return a string
-        tla.str(s"Empty record domain $domCell").typed()
-      }
+    case CellTFrom(RecRowT1(RowT1(fieldTypes, None))) =>
+      decodeRecordToTlaEx(arena, cell, fieldTypes)
 
     case CellTFrom(t @ TupT1(_ @_*)) =>
       val tupleElems = arena.getHas(cell)
@@ -154,6 +130,49 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
 
     case _ =>
       throw new RewriterException("Don't know how to decode the cell %s of type %s".format(cell, cell.cellType), NullEx)
+  }
+
+  private def decodeOldRecordToTlaEx(arena: Arena, cell: ArenaCell, recordT: RecT1): TlaEx = {
+    def exToStr(ex: TlaEx): TlaStr = ex match {
+      case ValEx(s @ TlaStr(_)) => s
+      case _                    => throw new RewriterException("Expected a string, found: " + ex, ex)
+    }
+
+    // Note that the domain may have fewer fields than the record type is saying.
+    // This comes from the fact that we can extend a record with a richer type.
+    val domCell = arena.getDom(cell)
+    val dom = decodeSet(arena, domCell).map(exToStr)
+    val fieldValues = arena.getHas(cell)
+    val keyList = recordT.fieldTypes.keySet.toList
+
+    def eachField(es: List[TlaEx], key: String): List[TlaEx] = {
+      if (!dom.contains(TlaStr(key))) {
+        es // skip
+      } else {
+        val index = keyList.indexOf(key)
+        val valueCell = fieldValues(index)
+        tla.str(key).typed() +: decodeCellToTlaEx(arena, valueCell) +: es
+      }
+    }
+
+    val keysAndValues = keyList.reverse.foldLeft(List[TlaEx]())(eachField)
+    if (keysAndValues.nonEmpty) {
+      OperEx(TlaFunOper.enum, keysAndValues: _*)(Typed(recordT))
+    } else {
+      logger.error(
+          s"Decoder: Found an empty record $cell when decoding a counterexample, domain = $domCell. This is a bug.")
+      // for debugging purposes, just return a string
+      tla.str(s"Empty record domain $domCell").typed()
+    }
+  }
+
+  private def decodeRecordToTlaEx(arena: Arena, cell: ArenaCell, fieldTypes: SortedMap[String, TlaType1]): TlaEx = {
+    val keyList = fieldTypes.keySet.toList
+    val fieldNames = keyList.map(n => str(n).typed())
+    val fieldValues = keyList.map(name => recordOps.getField(arena, cell, name)).map(decodeCellToTlaEx(arena, _))
+
+    val typeTag = Typed(RecRowT1(RowT1(fieldTypes, None)))
+    OperEx(TlaFunOper.`enum`, TlaOper.interleave(fieldNames, fieldValues): _*)(typeTag)
   }
 
   private def decodeFunToTlaEx(arena: Arena, cell: ArenaCell, funT1: FunT1): TlaEx = {

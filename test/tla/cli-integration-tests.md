@@ -384,7 +384,7 @@ EXITCODE: ERROR (255)
 This simple test demonstrates how to test a spec by isolating the input with generators.
 
 ```sh
-$ apalache-mc test TestGen.tla Prepare Test Assertion | sed 's/I@.*//'
+$ apalache-mc test --features=rows TestGen.tla Prepare Test Assertion | sed 's/I@.*//'
 ...
 The outcome is: Error
 Checker has found an example. Check counterexample.tla.
@@ -478,7 +478,7 @@ EXITCODE: OK
 ### check Fix365_ExistsSubset3 succeeds: regression for issue 365 (array-encoding)
 
 ```sh
-$ apalache-mc check --length=10 Fix365_ExistsSubset3.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows --length=10 Fix365_ExistsSubset3.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -508,7 +508,7 @@ EXITCODE: OK
 ### check Bug540 succeeds: regression for issue 540 (array-encoding)
 
 ```sh
-$ apalache-mc check --cinit=CInit Bug540.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows --cinit=CInit Bug540.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -518,7 +518,7 @@ EXITCODE: OK
 ### check Bug593 fails correctly: regression for issue 593 (array-encoding)
 
 ```sh
-$ apalache-mc check Bug593.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows Bug593.tla | sed 's/I@.*//'
 ...
 EXITCODE: ERROR (255)
 ```
@@ -874,7 +874,7 @@ EXITCODE: OK
 ### check HandshakeWithTypes.tla with length 4 succeeds (array-encoding)
 
 ```sh
-$ apalache-mc check --length=4 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows --length=4 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -884,7 +884,7 @@ EXITCODE: OK
 ### check HandshakeWithTypes.tla with length 5 deadlocks (array-encoding)
 
 ```sh
-$ apalache-mc check --length=5 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows --length=5 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
 ...
 The outcome is: Deadlock
 ...
@@ -898,7 +898,7 @@ extend an execution prefix. See a discussion in
 [#1640](https://github.com/informalsystems/apalache/issues/1640).
 
 ```sh
-$ apalache-mc check --length=5 --no-deadlock=1 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows --length=5 --no-deadlock=1 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
 ...
 The outcome is: ExecutionsTooShort
 ...
@@ -1333,17 +1333,19 @@ $ apalache-mc check --inv=Inv NestedCallByName.tla | sed 's/I@.*//'
 EXITCODE: OK
 ```
 
-### check Bug914 succeeds
+### typecheck Bug914 fails
 
 Regression test for https://github.com/informalsystems/apalache/issues/914 In
 the earlier version, we expected the model checker to complain about
-mismatching record types. In the latest version, this bug disappeared, due to
-the changes in the type checker.
+mismatching record types. The new type checker with row typing is reporting a
+type error, and this is what we expect.
 
 ```sh
-$ apalache-mc check Bug914.tla | sed 's/I@.*//'
+$ apalache-mc typecheck --features=rows Bug914.tla | sed 's/[IE]@.*//'
 ...
-EXITCODE: OK
+[Bug914.tla:21:9-21:26]: Arguments of equality should have the same type. For arguments m, ["foo" ↦ TRUE] with types {  }, { foo: Bool }, in expression m = (["foo" ↦ TRUE])
+...
+EXITCODE: ERROR (255)
 ```
 
 ### check RecordExcept987 succeeds
@@ -1352,7 +1354,7 @@ Regression test for https://github.com/informalsystems/apalache/issues/987
 We should always use sorted keys on record types.
 
 ```sh
-$ apalache-mc check RecordExcept987.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows RecordExcept987.tla | sed 's/I@.*//'
 ...
 EXITCODE: OK
 ```
@@ -1403,6 +1405,16 @@ $ apalache-mc check --inv=Inv --length=6 --cinit=CInit SetAddDel.tla | sed 's/I@
 EXITCODE: OK
 ```
 
+### check PizzaOrder succeeds (array-encoding)
+
+```sh
+$ apalache-mc check --features=rows --cinit=ConstInit --inv=NoDoubleDelivery PizzaOrder.tla | sed 's/I@.*//'
+...
+The outcome is: Error
+...
+EXITCODE: ERROR (12)
+```
+
 ### check OracleFunSet succeeds (array-encoding)
 
 Regression test for https://github.com/informalsystems/apalache/issues/1680
@@ -1410,6 +1422,26 @@ Function sets themselves should be able to be set elements.
 
 ```sh
 $ apalache-mc check OracleFunSet.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
+### check PickPerf succeeds
+
+A performance test.
+
+```sh
+$ apalache-mc check --discard-disabled=0 --tuning-options=search.invariant.mode=after PickPerf.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
+### check PickPerf2 succeeds
+
+A performance test.
+
+```sh
+$ apalache-mc check --discard-disabled=0 --tuning-options=search.invariant.mode=after PickPerf2.tla | sed 's/I@.*//'
 ...
 EXITCODE: OK
 ```
@@ -1789,14 +1821,15 @@ EXITCODE: ERROR (12)
 ### check bug #874
 
 Unhandled `IllegalArgumentException` when accessing a non-existent field on a
-record.
+record. With the old records, this spec was failing during model checking.
+With the new records, this spec is failing at type checking.
 
 See https://github.com/informalsystems/apalache/issues/874
 
 ```sh
-$ apalache-mc check Bug874.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck --features=rows Bug874.tla | sed 's/[IEW]@.*//'
 ...
-Bug874.tla:4:17-4:27: Input error (see the manual): Access to non-existent record field b in (["a" ↦ 2])["b"]
+[Bug874.tla:4:17-4:27]: Cannot apply ["a" ↦ 2] to the argument "b" in (["a" ↦ 2])["b"].
 ...
 EXITCODE: ERROR (255)
 ```
@@ -1859,6 +1892,14 @@ EXITCODE: ERROR (255)
 $ apalache-mc check --init=Inv --inv=Inv --length=1 Bug1682.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
+```
+
+### check Bug1735.tla
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 Bug1735.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: ERROR (12)
 ```
 
 ### check profiling
@@ -2160,7 +2201,7 @@ EXITCODE: OK
 A test for folds with excepts, the fast case.
 
 ```sh
-$ apalache-mc check --inv=TypeOK --length=1 RecMem1627.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --features=rows --inv=TypeOK --length=1 RecMem1627.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2171,6 +2212,26 @@ A test `UNCHANGED` in an invariant.
 
 ```sh
 $ apalache-mc check --inv=Inv --length=1 UnchangedAsInv1663.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check TestRecordsNew.tla
+
+Check row-based records support row typing.
+
+```sh
+$ apalache-mc check --features=rows TestRecordsNew.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check MC_LamportMutexTyped.tla
+
+Check the mutex algorithm with new records.
+
+```sh
+$ apalache-mc check --features=rows --length=4 MC_LamportMutexTyped.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2222,7 +2283,7 @@ EXITCODE: OK
 ### typecheck CigaretteSmokersTyped.tla
 
 ```sh
-$ apalache-mc typecheck CigaretteSmokersTyped.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck --features=rows CigaretteSmokersTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
@@ -2468,7 +2529,7 @@ EXITCODE: OK
 ### typecheck Except617.tla
 
 ```sh
-$ apalache-mc typecheck Except617.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck --features=rows Except617.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
@@ -2588,9 +2649,8 @@ Type unification should not recurse infinitely.
 See: https://github.com/informalsystems/apalache/issues/925
 
 ```sh
-$ apalache-mc typecheck Bug925.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck --features=rows Bug925.tla | sed 's/[IEW]@.*//'
 ...
-[Bug925.tla:7:1-7:24]: Expected ((a) => [f: Set(a)]) in Optional. Found: ((a) => [f: a])
 [Bug925.tla:7:1-7:24]: Error when computing the type of Optional
 ...
 EXITCODE: ERROR (255)
@@ -2703,7 +2763,7 @@ EXITCODE: OK
 Typecheck a real spec by Leslie Lamport.
 
 ```sh
-$ apalache-mc typecheck LamportMutexTyped.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck --features=rows LamportMutexTyped.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2713,7 +2773,7 @@ EXITCODE: OK
 Typecheck a model checking instance.
 
 ```sh
-$ apalache-mc typecheck MC_LamportMutexTyped.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck --features=rows MC_LamportMutexTyped.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```

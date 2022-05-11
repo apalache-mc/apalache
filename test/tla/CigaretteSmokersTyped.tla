@@ -21,7 +21,7 @@ CONSTANT
   Offers
 
 VARIABLE
-  \* @type: INGREDIENT -> [smoking: Bool];
+  \* @type: INGREDIENT -> { smoking: Bool };
   smokers,
   \* @type: Set(INGREDIENT);
   dealer

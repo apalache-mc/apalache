@@ -1,11 +1,13 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, Oracle, OracleFactory}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 
 trait TestCherryPick extends RewriterBase with TestingPredefs {
+  private val parser = DefaultType1Parser
   private val intSeqT = SeqT1(IntT1())
 
   private val types = Map(
@@ -164,6 +166,28 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     }
 
     val records = Seq(mkRecord(1, 2), mkRecord(3, 4))
+    state = new CherryPick(rewriter).pickOldRecord(state, oracle, records, state.arena.cellFalse().toNameEx)
+    assert(solverContext.sat())
+
+    assertEqWhenChosen(rewriter, state, oracle, 0, records(0).toNameEx)
+    assertEqWhenChosen(rewriter, state, oracle, 1, records(1).toNameEx)
+  }
+
+  test("""CHERRY-PICK { [a |-> 1, b |-> 2], [a |-> 3, b |-> 4]} with rows""") { rewriterType: SMTEncoding =>
+    val recordT = parser("{ a: Int, b: Int }")
+    val rewriter = create(rewriterType)
+    var state = new SymbState(bool(true).typed(), arena, Binding())
+    // introduce an oracle that tells us which element to pick
+    val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
+    state = oracleState
+
+    def mkRecord(i: Int, j: Int): ArenaCell = {
+      val rec = enumFun(str("a"), int(i), str("b"), int(j)).as(recordT)
+      state = rewriter.rewriteUntilDone(state.setRex(rec))
+      state.asCell
+    }
+
+    val records = Seq(mkRecord(1, 2), mkRecord(3, 4))
     state = new CherryPick(rewriter).pickRecord(state, oracle, records, state.arena.cellFalse().toNameEx)
     assert(solverContext.sat())
 
@@ -189,7 +213,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     state = rewriter.rewriteUntilDone(state.setRex(rec2))
     val rec2Cell = state.asCell
 
-    state = new CherryPick(rewriter).pickRecord(state, oracle, Seq(rec1Cell, rec2Cell),
+    state = new CherryPick(rewriter).pickOldRecord(state, oracle, Seq(rec1Cell, rec2Cell),
         state.arena.cellFalse().toNameEx)
     assert(solverContext.sat())
 

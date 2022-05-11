@@ -2,7 +2,7 @@
 EXTENDS Integers
 
 VARIABLES 
-  \* @type: [ pos: Int, q: Int, color: Str ];
+  \* @type: { pos: Int, q: Int, color: Str };
   token       \* token structure
 
 N == 3
