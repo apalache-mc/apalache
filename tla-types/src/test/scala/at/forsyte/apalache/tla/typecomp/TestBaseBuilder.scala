@@ -193,16 +193,14 @@ class TestBaseBuilder extends BuilderTest {
         resultIsExpected,
     ) _
 
-    run(IntT1())
-
-//    checkRun(
-//        runBinary(
-//            builder.choose,
-//            mkWellTyped,
-//            mkIllTyped,
-//            resultIsExpected,
-//        )
-//    )
+    checkRun(
+        runBinary(
+            builder.choose,
+            mkWellTyped,
+            mkIllTyped,
+            resultIsExpected,
+        )
+    )
   }
 
   test("label") {
