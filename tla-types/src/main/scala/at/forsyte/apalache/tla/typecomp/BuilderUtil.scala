@@ -1,11 +1,9 @@
 package at.forsyte.apalache.tla.typecomp
 
-import at.forsyte.apalache.tla.lir.oper.{FixedArity, OperArity, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.{OperArity, TlaOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, TlaType1, Typed}
 import scalaz._
 import scalaz.Scalaz._
-
-import scala.language.implicitConversions
 
 /**
  * Utility methods
@@ -69,8 +67,6 @@ object BuilderUtil {
       )
     }
   }
-
-  implicit def mkFixedArity(n: Int): OperArity = FixedArity(n)
 
   /** Wraps a signature with an arity check, to throw a more precise exception on arity mismatch */
   def checkForArityException(
