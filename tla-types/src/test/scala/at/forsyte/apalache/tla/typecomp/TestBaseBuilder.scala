@@ -186,13 +186,6 @@ class TestBaseBuilder extends BuilderTest {
         tt => tt,
     )
 
-    val run = runBinary(
-        builder.choose,
-        mkWellTyped,
-        mkIllTyped,
-        resultIsExpected,
-    ) _
-
     checkRun(
         runBinary(
             builder.choose,
