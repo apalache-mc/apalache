@@ -1895,7 +1895,7 @@ $ apalache-mc check --init=Inv --inv=Inv --length=1 Bug1682.tla | sed 's/[IEW]@.
 EXITCODE: OK
 ```
 
-### check Bug1735.tla
+### check Bug1735.tla (array-encoding)
 
 ```sh
 $ apalache-mc check --inv=Inv --length=1 Bug1735.tla | sed 's/[IEW]@.*//'
