@@ -118,10 +118,18 @@ class CherryPick(rewriter: SymbStateRewriter) {
     assert(elems.nonEmpty) // this is an advanced operator -- you should know what you are doing
     val targetType = elems.head.cellType
 
-    // An optimization: if the (multi-) set consists of identical cells, return the cell
+    // Optimization 1: if the (multi-) set consists of identical cells, return the cell
     // (e.g., this happens when all enabled transitions do not change a variable.)
     if (elems.distinct.size == 1) {
       return state.setRex(elems.head.toNameEx)
+    }
+
+    // Optimization 2: if some cells coincide, group them via ZipOracle.
+    // This optimization gives us a 20% speed up on a small set of benchmarks.
+    val groups = elems.indices.groupBy(elems(_))
+    if (groups.size < elems.size) {
+      val zipOracle = new ZipOracle(oracle, groups.values.toList.map(is => Set(is: _*)))
+      return pickByOracle(state, zipOracle, groups.keys.toSeq, elseAssert)
     }
 
     // the general case
