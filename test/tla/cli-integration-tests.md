@@ -1427,6 +1427,26 @@ $ apalache-mc check OracleFunSet.tla | sed 's/I@.*//'
 EXITCODE: OK
 ```
 
+### check PickPerf succeeds
+
+A performance test.
+
+```sh
+$ apalache-mc check --discard-disabled=0 --tuning-options=search.invariant.mode=after PickPerf.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
+### check PickPerf2 succeeds
+
+A performance test.
+
+```sh
+$ apalache-mc check --discard-disabled=0 --tuning-options=search.invariant.mode=after PickPerf2.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
 ## configure the check command
 
 Testing various flags that are set via command-line options and the TLC configuration file. The CLI has priority over
@@ -1873,6 +1893,14 @@ EXITCODE: ERROR (255)
 $ apalache-mc check --init=Inv --inv=Inv --length=1 Bug1682.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
+```
+
+### check Bug1735.tla
+
+```sh
+$ apalache-mc check --inv=Inv --length=1 Bug1735.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: ERROR (12)
 ```
 
 ### check profiling

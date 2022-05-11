@@ -5,6 +5,8 @@ target/
 .directory
 .bsp
 .bloop
+.metals
+.vscode
 
 # output files produced by Apalache
 *.out
