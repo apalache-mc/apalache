@@ -124,7 +124,7 @@ TestSurjection ==
 
 TestNotSurjection ==
     LET f == [ x \in 2..10 |-> x \div 2 ] IN
-    f \in Surjection({ 1 } \union (DOMAIN f), Range(f))
+    ~(f \in Surjection({ 1 } \union (DOMAIN f), Range(f)))
 
 TestExistsSurjection ==
     ExistsSurjection(1..3, 5..7)
