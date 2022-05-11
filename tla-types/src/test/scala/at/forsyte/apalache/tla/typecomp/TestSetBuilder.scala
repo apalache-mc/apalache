@@ -12,7 +12,6 @@ import scala.collection.immutable.SortedMap
 @RunWith(classOf[JUnitRunner])
 class TestSetBuilder extends BuilderTest {
 
-  // TODO: fix signatures to allow polymorphism testing
   test("polyTest") {
     val t = VarT1("c")
 
