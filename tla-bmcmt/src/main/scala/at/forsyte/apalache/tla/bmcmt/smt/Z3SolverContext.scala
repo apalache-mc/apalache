@@ -754,11 +754,11 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
-      case OperEx(ApalacheInternalOper.smtMap, mapOper, NameEx(inputSetName), NameEx(resultSetName)) =>
+      case OperEx(ApalacheInternalOper.smtMap(mapOper), NameEx(inputSetName), NameEx(resultSetName)) =>
         val mapOperDecl = mapOper match {
-          case OperEx(TlaBoolOper.and, _*) =>
+          case TlaBoolOper.and =>
             z3context.mkAnd().getFuncDecl
-          case OperEx(TlaBoolOper.or, _*) =>
+          case TlaBoolOper.or =>
             z3context.mkOr().getFuncDecl
           case _ =>
             throw new IllegalArgumentException(s"Unexpected SMT map operator of type $mapOper")

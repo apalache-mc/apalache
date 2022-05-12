@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.TlaSetOper
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
 
 /**
  * Rewrites X \cup Y, that is, a union of two sets (not UNION). In the first encoding, we used a linear number of `in`
@@ -51,7 +51,7 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
             rewriter.solverContext.assertGroundExpr(tla.eql(newSetCell.toNameEx, leftSetCell.toNameEx))
             // having added the elements of leftSet to newSet, we use SMT map to add rightSet's elements to newSet
             // we ensure that \forall e \in dom(newSet) : e \in newSet \iff e \in rightSet \lor e \in newSet
-            val smtMap = tla.apalacheSmtMap(tla.or(), rightSetCell.toNameEx, newSetCell.toNameEx)
+            val smtMap = tla.apalacheSmtMap(TlaBoolOper.or, rightSetCell.toNameEx, newSetCell.toNameEx)
             rewriter.solverContext.assertGroundExpr(smtMap)
 
             // that's it
