@@ -168,18 +168,44 @@ contain lassos as counterexamples but it does not have to, which makes this
 technique incomplete. An extension to infinite-state systems was studied by
 [Padon et al. 2021][]. This is beyond the scope of this task.
 
-There are two ways to encode the constraints by [Biere et al. 2006][]:
+There are multiple ways to encode the constraints by [Biere et al. 2006][].
+The different ways are demonstrated on the [Folklore broadcast][] protocol.
 
- 1. Encode the lasso finding problem as a trace invariant. Apalache can check
- [trace invariants][]. This approach is most straighforward. However it has
- several drawbacks:
+##### **Trace Invariants**
+ The lasso finding problem can be encoded as a [trace invariants][]. See e.g. the [folklore broadcast spec with trace invariants](bcastFolklore_trace.tla).
+ Roughly, a loop is encoded by demanding there exists a loop index at which point the state is identical to the state at the end of the execution.
 
-    - Trace invariants require Apalache to pack the sequence of states.
-      This sometimes produces unnecessary constraints.
+ Implementation details:
+ - Instead of quantifying over indices, one could use an additional Boolean variable starting out FALSE that nondeterministically guesses when the execution enters the loop and is set to TRUE at that point. Experiments suggest this negatively impacts performance, but it can help understand counterexamples, since the loop is immediately visible in the states.
+   
+  Advantages:
+  - The predicate in the spec is very close to the semantic meaning of the temporal operators, e.g. `[] x >= 2` becomes `\A step \in DOMAIN hist: hist[step].x >= 2`
+  - Only very few new variables are added (none, but depending on implementation choices maybe one/two).
 
-    - When a trace invariant is violated, the intermediate definitions
-      in this invariant are not printed in the counterexample.
-      This will make printing of the counterexamples to liveness harder.
+  Disadvantages:
+  - Trace invariants require Apalache to pack the sequence of states.
+    This sometimes produces unnecessary constraints.
+
+  - When a trace invariant is violated, the intermediate definitions
+    in this invariant are not printed in the counterexample.
+    This will make printing of the counterexamples to liveness harder, e.g. see an [example](counterexample_trace.tla#L118)
+
+
+#### **Encoding with auxiliary variables**
+
+The loop finding problem can alternatively be approached
+by adding extra variables: One variable `InLoop` which
+determines whether the execution is currently on the loop,
+and for each variable `foo` of the original spec an extra variable `loop_foo`,
+which, once `InLoop` is true, stores the state of `foo` at the start of the loop.
+Then, the loop has been completed if `vars = loop_vars`.
+
+Apart from the variables for finding the loop, this approach also needs extra variables for
+determining the satisfaction of the temporal property to be checked.
+There again exist multiple ways of concretely implementing this:
+
+##### **Encoding with Buchi automata**
+
 
  1. Instrument the existing specification by adding auxilliary variables that
  update the predicates as required by the encoding of [Biere et al. 2006][].
