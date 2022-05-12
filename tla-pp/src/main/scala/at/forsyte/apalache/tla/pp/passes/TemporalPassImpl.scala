@@ -127,7 +127,7 @@ class TemporalPassImpl @Inject() (
             tableauEncoder.encodeInvariant(module, init, next, loopOk, decl)
           }
       )
-      
+
       resultModule
     }
   }
