@@ -89,42 +89,6 @@ class TemporalEncoder(module: TlaModule, gen: UniqueNameGenerator) extends LazyL
     TlaVarDecl(s"${NAME_PREFIX}Loop_${varDecl.name}_${gen.newName()}")(varDecl.typeTag)
   }
 
-  def addLoopLogicToInit(
-      inLoop: TlaVarDecl,
-      variables: Seq[TlaVarDecl],
-      loopVariables: Seq[TlaVarDecl],
-      init: TlaOperDecl): TlaDecl = {
-
-    //  inLoop <=> FALSE
-    val inLoopInitBody =
-      OperEx(TlaBoolOper.equiv, NameEx(inLoop.name), new ValEx(new TlaBool(false)))
-
-    val varsWithLoopDuplicates =
-      variables.zip(loopVariables)
-
-    val equivalences =
-      varsWithLoopDuplicates.map { case (varDecl, loopVarDecl) =>
-        OperEx(TlaOper.eq, NameEx(varDecl.name)(varDecl.typeTag), NameEx(loopVarDecl.name)(loopVarDecl.typeTag))
-      }
-
-    /*
-        /\ loop_foo = foo
-        /\ loop_bar = bar
-        /\ ...
-     */
-    val loopEquivalencesBody = OperEx(TlaBoolOper.and, equivalences: _*)
-
-    /*  /\ init
-        /\ inLoop <=> FALSE
-        /\ loop_foo = foo
-        /\ loop_bar = bar
-        /\ ...
-     */
-    val loopInitBody = OperEx(TlaBoolOper.and, init.body, inLoopInitBody, loopEquivalencesBody)
-
-    new TlaOperDecl(init.name, init.formalParams, loopInitBody)(init.typeTag)
-  }
-
   def ImpliesEq(condition: TlaEx, op1: TlaEx, op2: TlaEx): TlaEx = {
     OperEx(TlaBoolOper.implies, condition, OperEx(TlaOper.eq, op1, op2))
   }
@@ -141,6 +105,42 @@ class TemporalEncoder(module: TlaModule, gen: UniqueNameGenerator) extends LazyL
     NameEx(varDecl.name)(varDecl.typeTag)
   }
 
+  /**
+   * Transforms init into /\ init /\ InLoop <=> FALSE /\ loop_foo = foo /\ loop_bar = bar ...
+   */
+  def addLoopLogicToInit(
+      inLoop: TlaVarDecl,
+      variables: Seq[TlaVarDecl],
+      loopVariables: Seq[TlaVarDecl],
+      init: TlaOperDecl): TlaDecl = {
+
+    //  inLoop <=> FALSE
+    val inLoopEquivFalse =
+      OperEx(TlaBoolOper.equiv, NameEx(inLoop.name), new ValEx(new TlaBool(false)))
+
+    val varsEqLoopVars =
+      variables.zip(loopVariables).map { case (varDecl, loopVarDecl) =>
+        OperEx(TlaOper.eq, NameEx(loopVarDecl.name)(loopVarDecl.typeTag), NameEx(varDecl.name)(varDecl.typeTag))
+      }
+
+    /*
+        /\ loop_foo = foo
+        /\ loop_bar = bar
+        /\ ...
+     */
+    val varsEqLoopVarsConjunction = OperEx(TlaBoolOper.and, varsEqLoopVars: _*)
+
+    /*  /\ init
+        /\ inLoop <=> FALSE
+        /\ loop_foo = foo
+        /\ loop_bar = bar
+        /\ ...
+     */
+    val loopInitBody = OperEx(TlaBoolOper.and, init.body, inLoopEquivFalse, varsEqLoopVarsConjunction)
+
+    new TlaOperDecl(init.name, init.formalParams, loopInitBody)(init.typeTag)
+  }
+
   def addLoopLogicToNext(
       inLoop: TlaVarDecl,
       variables: Seq[TlaVarDecl],
@@ -148,14 +148,28 @@ class TemporalEncoder(module: TlaModule, gen: UniqueNameGenerator) extends LazyL
       next: TlaOperDecl): TlaDecl = {
     implicit val typeTag: TypeTag = Typed(BoolT1())
 
-    val unchanged =
+    val varsUnchanged =
       OperEx(TlaBoolOper.and,
           variables.map { varDecl =>
             OperEx(TlaActionOper.unchanged, VarName(varDecl))(Untyped())
           }: _*)
-    val nextBodyOrUnchanged = OperEx(TlaBoolOper.or, next.body, unchanged)
 
-    val variablesLoopUpdate =
+    /*
+     * next \/ /\ UNCHANGED foo
+     *         /\ UNCHANGED bar
+     *         ...
+     */
+    val nextOrUnchanged = OperEx(TlaBoolOper.or, next.body, varsUnchanged)
+
+    /*
+     * /\  /\ loop_foo' \in {loop_foo, foo}
+     *     /\ InLoop' \= InLoop => loop_foo' = foo
+     *     /\ InLoop' = InLoop => loop_foo' = loop_foo
+     * /\  /\ loop_bar' \in {loop_bar, bar}
+     *     /\ InLoop' \= InLoop => loop_bar' = bar
+     *     /\ InLoop' = InLoop => loop_bar' = loop_bar
+     */
+    val varsLoopUpdate =
       variables.zip(loopVariables).map { case (varDecl, loopVarDecl) =>
         val varTypeTag = varDecl.typeTag
         val varTypeT1 = TlaType1.fromTypeTag(varTypeTag)
@@ -163,20 +177,26 @@ class TemporalEncoder(module: TlaModule, gen: UniqueNameGenerator) extends LazyL
         OperEx(TlaBoolOper.and,
             OperEx(TlaSetOper.in, PrimeVar(loopVarDecl),
                 OperEx(TlaSetOper.enumSet, VarName(varDecl), VarName(loopVarDecl))(Typed(SetT1(varTypeT1)))),
-            ImpliesEq(OperEx(TlaOper.ne, PrimeVar(inLoop), VarName(inLoop)), PrimeVar(loopVarDecl),
-                VarName(varDecl)),
+            ImpliesEq(OperEx(TlaOper.ne, PrimeVar(inLoop), VarName(inLoop)), PrimeVar(loopVarDecl), VarName(varDecl)),
             ImpliesEq(OperEx(TlaOper.eq, PrimeVar(inLoop), VarName(inLoop)), PrimeVar(loopVarDecl),
                 VarName(loopVarDecl)))
       }
+    val varsLoopUpdateConjunction =
+      OperEx(TlaBoolOper.and, varsLoopUpdate: _*)
 
-    val variablesLoopNextBody =
-      OperEx(TlaBoolOper.and, variablesLoopUpdate: _*)
+    /*
+     * /\ InLoop' \in {TRUE, FALSE}
+     * /\ InLoop => InLoop'
+     */
+    val inLoopUpdate =
+      OperEx(TlaBoolOper.and,
+          OperEx(TlaSetOper.in, PrimeVar(inLoop),
+              OperEx(TlaSetOper.enumSet, ValEx(TlaBool(false)), ValEx(TlaBool(true)))(Typed(SetT1(BoolT1())))),
+          OperEx(TlaBoolOper.implies, VarName(inLoop), PrimeVar(inLoop)))
 
-    val loopNextBody = OperEx(TlaBoolOper.and,
-        OperEx(TlaSetOper.in, NameEx(inLoop.name),
-            OperEx(TlaSetOper.enumSet, ValEx(TlaBool(false)), ValEx(TlaBool(true)))(Typed(SetT1(BoolT1())))), variablesLoopNextBody)
+    val loopNextBody = OperEx(TlaBoolOper.and, inLoopUpdate, varsLoopUpdateConjunction)
 
-    new TlaOperDecl(next.name, next.formalParams, OperEx(TlaBoolOper.and, nextBodyOrUnchanged, loopNextBody))
+    new TlaOperDecl(next.name, next.formalParams, OperEx(TlaBoolOper.and, nextOrUnchanged, loopNextBody))(next.typeTag)
   }
 
   def createLoopOkPredicate(
