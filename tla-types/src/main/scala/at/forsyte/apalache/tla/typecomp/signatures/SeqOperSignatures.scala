@@ -54,7 +54,7 @@ object SeqOperSignatures {
     }
 
     // (Seq(t), (Seq(t)) => Bool) => Seq(t)
-    // selectseq is rewired away and should not be created
+    // selectseq is rewired in __rewire_sequences_in_apalache.tla and should not be created
 
     Map(
         headSig,

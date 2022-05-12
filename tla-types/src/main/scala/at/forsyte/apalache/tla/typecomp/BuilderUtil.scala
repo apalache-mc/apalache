@@ -33,22 +33,22 @@ object BuilderUtil {
    * Given a sequence of computations, generates a computation that runs them in order and accumulates results to a
    * sequence of values
    */
-  def buildSeq[T](argsW: Seq[TBuilderInternalState[T]]): TBuilderInternalState[Seq[T]] =
-    argsW.foldLeft(Seq.empty[T].point[TBuilderInternalState]) { case (seqW, argW) =>
+  def buildSeq[T](args: Seq[TBuilderInternalState[T]]): TBuilderInternalState[Seq[T]] =
+    args.foldLeft(Seq.empty[T].point[TBuilderInternalState]) { case (seq, arg) =>
       for {
-        seq <- seqW
-        arg <- argW
-      } yield seq :+ arg
+        seqEx <- seq
+        argEx <- arg
+      } yield seqEx :+ argEx
     }
 
   /** Lifts a binary raw method to a BuilderWrapper method */
-  def binaryFromRaw(
-      xW: TBuilderInstruction,
-      yW: TBuilderInstruction,
-    )(rawMethod: (TlaEx, TlaEx) => TlaEx): TBuilderInstruction = for {
-    x <- xW
-    y <- yW
-  } yield rawMethod(x, y)
+  def binaryFromUnsafe(
+      x: TBuilderInstruction,
+      y: TBuilderInstruction,
+    )(unsafeMethod: (TlaEx, TlaEx) => TlaEx): TBuilderInstruction = for {
+    xEx <- x
+    yEx <- y
+  } yield unsafeMethod(xEx, yEx)
 
   /** generates a BuilderTypeException wrapped in a Left, containing the given message */
   def throwMsg(msg: String): TypeComputationResult = Left(new TBuilderTypeException(msg))

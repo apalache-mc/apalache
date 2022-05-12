@@ -24,6 +24,11 @@ compile:
 test:
 	sbt test
 
+# Compile code with fatal warnings enables
+compile-strict: export APALACHE_FATAL_WARNINGS=true
+compile-strict:
+	sbt Test/compile compile
+
 # Run tests with scoverage report
 test-coverage:
 	sbt coverage test coverageAggregate
