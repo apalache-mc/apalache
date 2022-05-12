@@ -9,6 +9,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
+import at.forsyte.apalache.tla.lir.values.TlaPredefSet
 
 /**
  * Encode temporal operators.
@@ -21,7 +22,7 @@ class TemporalEncoder(module: TlaModule, gen: UniqueNameGenerator) extends LazyL
   import TemporalEncoder.NAME_PREFIX
   val levelFinder = new TlaLevelFinder(module)
 
-  implicit val typeTag: TypeTag = Typed(BoolT1)
+  implicit val typeTag: TypeTag = Typed(BoolT1())
 
   def encodeInvariants(invariants: List[String], init: String, next: String): TlaModule = {
     val temporalInvariants = invariants.filter(invName => {
@@ -136,27 +137,36 @@ class TemporalEncoder(module: TlaModule, gen: UniqueNameGenerator) extends LazyL
     OperEx(TlaActionOper.prime, expression)(expression.typeTag)
   }
 
+  def VarName(varDecl: TlaVarDecl): TlaEx = {
+    NameEx(varDecl.name)(varDecl.typeTag)
+  }
+
   def addLoopLogicToNext(
       inLoop: TlaVarDecl,
       variables: Seq[TlaVarDecl],
       loopVariables: Seq[TlaVarDecl],
       next: TlaOperDecl): TlaDecl = {
-    implicit val typeTag: TypeTag = Typed(BoolT1)
+    implicit val typeTag: TypeTag = Typed(BoolT1())
 
     val unchanged =
-      OperEx(TlaActionOper.unchanged, variables.map { varDecl => new NameEx(varDecl.name)(varDecl.typeTag) }: _*)(
-          Untyped())
+      OperEx(TlaBoolOper.and,
+          variables.map { varDecl =>
+            OperEx(TlaActionOper.unchanged, VarName(varDecl))(Untyped())
+          }: _*)
     val nextBodyOrUnchanged = OperEx(TlaBoolOper.or, next.body, unchanged)
 
     val variablesLoopUpdate =
       variables.zip(loopVariables).map { case (varDecl, loopVarDecl) =>
+        val varTypeTag = varDecl.typeTag
+        val varTypeT1 = TlaType1.fromTypeTag(varTypeTag)
         // loop_foo' \in {foo, loop_foo}
-        OperEx(TlaBoolOper.and, OperEx(TlaSetOper.in, PrimeVar(loopVarDecl)),
-            OperEx(TlaSetOper.enumSet, NameEx(varDecl.name), NameEx(loopVarDecl.name)),
-            ImpliesEq(OperEx(TlaOper.ne, PrimeVar(inLoop), NameEx(inLoop.name)), PrimeVar(loopVarDecl),
-                NameEx(varDecl.name)),
-            ImpliesEq(OperEx(TlaOper.eq, PrimeVar(inLoop), NameEx(inLoop.name)), PrimeVar(loopVarDecl),
-                NameEx(loopVarDecl.name)))
+        OperEx(TlaBoolOper.and,
+            OperEx(TlaSetOper.in, PrimeVar(loopVarDecl),
+                OperEx(TlaSetOper.enumSet, VarName(varDecl), VarName(loopVarDecl))(Typed(SetT1(varTypeT1)))),
+            ImpliesEq(OperEx(TlaOper.ne, PrimeVar(inLoop), VarName(inLoop)), PrimeVar(loopVarDecl),
+                VarName(varDecl)),
+            ImpliesEq(OperEx(TlaOper.eq, PrimeVar(inLoop), VarName(inLoop)), PrimeVar(loopVarDecl),
+                VarName(loopVarDecl)))
       }
 
     val variablesLoopNextBody =
@@ -164,12 +174,15 @@ class TemporalEncoder(module: TlaModule, gen: UniqueNameGenerator) extends LazyL
 
     val loopNextBody = OperEx(TlaBoolOper.and,
         OperEx(TlaSetOper.in, NameEx(inLoop.name),
-            OperEx(TlaSetOper.enumSet, ValEx(TlaBool(false)), ValEx(TlaBool(true)))), variablesLoopNextBody)
+            OperEx(TlaSetOper.enumSet, ValEx(TlaBool(false)), ValEx(TlaBool(true)))(Typed(SetT1(BoolT1())))), variablesLoopNextBody)
 
     new TlaOperDecl(next.name, next.formalParams, OperEx(TlaBoolOper.and, nextBodyOrUnchanged, loopNextBody))
   }
 
-  def createLoopOkPredicate(inLoop: TlaVarDecl, variables: Seq[TlaVarDecl], loopVariables: Seq[TlaVarDecl]): TlaOperDecl = {
+  def createLoopOkPredicate(
+      inLoop: TlaVarDecl,
+      variables: Seq[TlaVarDecl],
+      loopVariables: Seq[TlaVarDecl]): TlaOperDecl = {
     val loopVarEqualities = variables.zip(loopVariables).map { case (varDecl, loopVarDecl) =>
       OperEx(TlaOper.eq, NameEx(varDecl.name), NameEx(loopVarDecl.name))
     }
