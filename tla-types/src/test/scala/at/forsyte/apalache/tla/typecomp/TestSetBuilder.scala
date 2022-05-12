@@ -12,16 +12,7 @@ import scala.collection.immutable.SortedMap
 @RunWith(classOf[JUnitRunner])
 class TestSetBuilder extends BuilderTest {
 
-  private val tt1gen: TlaType1Gen = new TlaType1Gen {}
-
-  implicit val singleTypeGen: Gen[TlaType1] = tt1gen.genPrimitiveMono
-  implicit val doubleTypeGen: Gen[(TlaType1, TlaType1)] = for {
-    t1 <- singleTypeGen
-    t2 <- singleTypeGen
-  } yield (t1, t2)
-
-  // TODO: fix signatures to allow polymorphism testing
-  ignore("polyTest") {
+  test("polyTest") {
     val t = VarT1("c")
 
     def n_a = builder.name("a", t)
