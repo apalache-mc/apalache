@@ -114,9 +114,9 @@ class TemporalEncoder(module: TlaModule, gen: UniqueNameGenerator) extends LazyL
       loopVariables: Seq[TlaVarDecl],
       init: TlaOperDecl): TlaDecl = {
 
-    //  inLoop <=> FALSE
+    //  ~inLoop
     val inLoopEquivFalse =
-      OperEx(TlaBoolOper.equiv, NameEx(inLoop.name), new ValEx(new TlaBool(false)))
+      OperEx(TlaBoolOper.not, NameEx(inLoop.name))
 
     val varsEqLoopVars =
       variables.zip(loopVariables).map { case (varDecl, loopVarDecl) =>
