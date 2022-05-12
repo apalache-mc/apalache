@@ -25,7 +25,7 @@ class TypeComputationFactory {
   def computationFromSignature(oper: TlaOper): PureTypeComputation = { args =>
     knownSignatures.get(oper) match {
       // Failure: bad identifier
-      case None      => throwMsg(s"Unknown signature for operator ${oper.name}.")
+      case None      => throwMsg(s"Unknown signature for operator ${oper.name}")
       case Some(sig) => sig(args)
     }
   }
