@@ -52,7 +52,7 @@ trait LiteralAndNameBuilder extends UnsafeLiteralAndNameBuilder {
   }
 
   /** Attempt to infer the type from the scope. Fails if exprName is not in scope. */
-  def name(exprName: String): TBuilderInstruction = get[TBuilderContext].map { mi: TBuilderContext =>
+  def nameWithInferredType(exprName: String): TBuilderInstruction = get[TBuilderContext].map { mi: TBuilderContext =>
     val scope = mi.nameScope
 
     val tt = scope.getOrElse(exprName,
