@@ -169,10 +169,12 @@ technique incomplete. An extension to infinite-state systems was studied by
 [Padon et al. 2021][]. This is beyond the scope of this task.
 
 There are multiple ways to encode the constraints by [Biere et al. 2006][].
-The different ways are demonstrated on the [Folklore broadcast][] protocol.
+The different ways are demonstrated on the [EWD998](EWD998.tla) spec,
+which specifies a protocol for termination detection,
+using token passing in a ring.
 
-##### **Trace Invariants**
- The lasso finding problem can be encoded as a [trace invariants][]. See e.g. the [folklore broadcast spec with trace invariants](bcastFolklore_trace.tla).
+#### **Trace Invariants**
+ The lasso finding problem can be encoded as a [trace invariants][]. See e.g. the [EWD998 protocol with trace invariants](EWD998_trace.tla).
  Roughly, a loop is encoded by demanding there exists a loop index at which point the state is identical to the state at the end of the execution.
 
  Implementation details:
@@ -205,16 +207,55 @@ determining the satisfaction of the temporal property to be checked.
 There again exist multiple ways of concretely implementing this:
 
 ##### **Encoding with Buchi automata**
+One can extend the spec with a Buchi automaton
+which is updated in each step. The Buchi automaton encodes
+the negation of the temporal property, thus if the automaton
+would accept, the property does not hold.
+By checking whether an accepting state of the automaton is seen
+on the loop, it can be determined whether the automaton
+accepts for a looping execution.
+See e.g. the [EWD998 protocol with a Buchi automaton](EWD998_buchi.tla).
+
+Implementation details:
+- An implementation of this encoding would need an implementation of an algorithm for the conversion from LTL to Buchi automata.
+This could be an existing tool, e.g. [Spot](https://spot.lrde.epita.fr/) or our own implementation.
+
+Advantages:
+- Buchi automata for very simple properties can be simple to understand
+- Underlying automata could be visualized
+- Only needs few extra variables - the state of the Buchi automaton can easily be encoded as a single integer
+
+Disadvantages: 
+- Can be slow: Buchi automata generally exhibit either nondeterminism or can get very large
+- Hard to understand: Engineers and even experts have a hard time intuitively understanding Buchi automata for mildly complicated properties
+
+##### **Tableau encoding**
+One can instead extend the spec with auxiliary Boolean variables
+roughly corresponding to all nodes in the syntax tree who have temporal operators
+beneath them. The value of each variable in each step corresponds to whether the
+formula corresponding to that node in the syntax tree is satisfied from that point forward.
+See e.g. the [EWD998 protocol encoded with a tableau](EWD998_tableau.tla).
+
+Implementation details:
+- Naming the auxiliary variables is very important, since they are supposed to represent the values of complex formulas (ideally would simple have that formula as a name, but this is not syntactically possible for most formulas), and there can be many of them.
 
 
- 1. Instrument the existing specification by adding auxilliary variables that
- update the predicates as required by the encoding of [Biere et al. 2006][].
- We could also extend it with the liveness-to-safety reduction, see [Biere et
- al. 2006][]. If we choose this approach, we will be able to print
- counterexamples. So this approach is more transparent.
+Advantages:
+- Very clear counterexamples: In each step, it is clearly visible which subformulas are or are not satisfied.
+- Relatively intuitive specs: The updates to the auxiliary variables
+correlate with the intuitive meaning of their subformulas rather directly
+in most cases
 
-To choose between these two approaches, we will try both of them on a simple
-specification. For instance, [Folklore broadcast][].
+Disadvantages: 
+- Many variables are added: The number of variables is linear in the number of operators in the formula
+- Specifications get long: The encoding is much more verbose than that for Buchi automata
+
+#### **Decision - which encoding should be used?**
+
+We chose to implement the tableau encoding, since it produces the
+clearest counterexamples. Buchi automata are hard to understand. 
+For trace invariants, the lack of quality in counterexamples makes it
+very hard to debug and understand invariant violations.
 
 ### 2. Fairness
 
