@@ -214,6 +214,7 @@ would accept, the property does not hold.
 By checking whether an accepting state of the automaton is seen
 on the loop, it can be determined whether the automaton
 accepts for a looping execution.
+The encoding is described in [Biere et al. 2002][]
 See e.g. the [EWD998 protocol with a Buchi automaton](EWD998_buchi.tla).
 
 Implementation details:
@@ -233,7 +234,7 @@ Disadvantages:
 One can instead extend the spec with auxiliary Boolean variables
 roughly corresponding to all nodes in the syntax tree who have temporal operators
 beneath them. The value of each variable in each step corresponds to whether the
-formula corresponding to that node in the syntax tree is satisfied from that point forward.
+formula corresponding to that node in the syntax tree is satisfied from that point forward. The encoding is described in Section 3.2 of [Biere et al. 2006][]
 See e.g. the [EWD998 protocol encoded with a tableau](EWD998_tableau.tla).
 
 Implementation details:
@@ -284,6 +285,6 @@ first part of work. To be detailed later...
 [ADR-010]: ./010rfc-transition-explorer.md
 [issue on temporal properties]: https://github.com/informalsystems/apalache/issues/488
 [trace invariants]: ../apalache/principles/invariants.md#trace-invariants
-[Folklore broadcast]: https://github.com/tlaplus/Examples/blob/master/specifications/bcastFolklore/bcastFolklore.tla
 [Model Checking]: https://mitpress.mit.edu/books/model-checking-second-edition
 [Padon et al. 2021]: https://link.springer.com/article/10.1007/s10703-021-00377-1
+[Biere et al. 2002]: http://fmv.jku.at/papers/BiereArthoSchuppan-FMICS02.pdf
