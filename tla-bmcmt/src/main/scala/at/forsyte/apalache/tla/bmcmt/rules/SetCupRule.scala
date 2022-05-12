@@ -50,7 +50,7 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
             // since newSet is initially unconstrained, we equate it to leftSet to add leftSet's elements to newSet
             rewriter.solverContext.assertGroundExpr(tla.eql(newSetCell.toNameEx, leftSetCell.toNameEx))
             // having added the elements of leftSet to newSet, we use SMT map to add rightSet's elements to newSet
-            // we ensure that \forall e \in dom(newSet) : e \in newSet \iff e \in rightSet \lor e \in newSet
+            // we ensure that \forall e \in dom(newSet) : e \in newSet \iff e \in leftSet \lor e \in rightSet
             val smtMap = tla.apalacheSmtMap(TlaBoolOper.or, rightSetCell.toNameEx, newSetCell.toNameEx)
             rewriter.solverContext.assertGroundExpr(smtMap)
 
