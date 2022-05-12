@@ -51,12 +51,12 @@ object BuilderUtil {
   } yield unsafeMethod(xEx, yEx)
 
   /** generates a BuilderTypeException wrapped in a Left, containing the given message */
-  def throwMsg(msg: String): TypeComputationResult = Left(new TBuilderTypeException(msg))
+  def leftTypeException(msg: String): TypeComputationResult = Left(new TBuilderTypeException(msg))
 
   /** Generates a (total) signature from a partial one, by returning a Left outside the domain */
   def completePartial(name: String, partialSig: PartialSignature): Signature = {
     def onElse(badArgs: Seq[TlaType1]): TypeComputationResult =
-      throwMsg(
+      leftTypeException(
           s"Operator $name cannot be applied to arguments of types (${badArgs.mkString(", ")})"
       )
 
@@ -74,10 +74,16 @@ object BuilderUtil {
       arity: OperArity,
       partialSig: PartialSignature): Signature = {
     case args if arity.cond(args.size) => completePartial(name, partialSig)(args)
-    case args                          => throwMsg(s"$name expects $arity arguments, found: ${args.size}")
+    case args                          => leftTypeException(s"$name expects $arity arguments, found: ${args.size}")
   }
 
-  def mkSigMapEntry(oper: TlaOper, partialSignature: PartialSignature): (TlaOper, Signature) =
+  /**
+   * Creates a SignatureMap entry from an operator (key), where the signature (value) is lifted from `partialSignature`
+   * via `checkForArityException` (with arity derived from the operator).
+   * @see
+   *   [[checkForArityException]]
+   */
+  def signatureMapEntry(oper: TlaOper, partialSignature: PartialSignature): (TlaOper, Signature) =
     oper -> checkForArityException(oper.name, oper.arity, partialSignature)
 
 }

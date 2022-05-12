@@ -27,14 +27,14 @@ object SetOperSignatures {
         cup,
         cap,
         setminus,
-    ).map { mkSigMapEntry(_, { case Seq(st @ SetT1(t), SetT1(tt)) if t == tt => st }) }.toMap
+    ).map { signatureMapEntry(_, { case Seq(st @ SetT1(t), SetT1(tt)) if t == tt => st }) }.toMap
 
     // \in, \notin are similar, but asymm w.r.t arg types
     // (t, Set(t)) => Bool
     val binaryAsymm: SignatureMap = Seq(
         in,
         notin,
-    ).map { mkSigMapEntry(_, { case Seq(t, SetT1(tt)) if t == tt => BoolT1() }) }.toMap
+    ).map { signatureMapEntry(_, { case Seq(t, SetT1(tt)) if t == tt => BoolT1() }) }.toMap
 
     val mapPartial: PartialSignature = {
       case t +: pairs if pairs.size % 2 == 0 && pairs.grouped(2).forall {
@@ -46,21 +46,21 @@ object SetOperSignatures {
 
     // map is polyadic, with 2k + 1 args in general
     // (t, t1, Set(t1), ..., tk, Set(tk)) => Set(t)
-    val mapSig = mkSigMapEntry(map, mapPartial)
+    val mapSig = signatureMapEntry(map, mapPartial)
 
     // { x \in S: p } is polymorphic
     // (t, Set(t), Bool) => Set(t)
-    val filterSig = mkSigMapEntry(filter, { case Seq(t, st @ SetT1(tt), BoolT1()) if t == tt => st })
+    val filterSig = signatureMapEntry(filter, { case Seq(t, st @ SetT1(tt), BoolT1()) if t == tt => st })
 
     // recSet does NOT have a signature (the return type depends on the field value)
 
     // Seq(S) is polymorphic, fixed arity 1
     // (Set(t)) => Set(Seq(t))
-    val seqSetSig = mkSigMapEntry(seqSet, { case Seq(SetT1(t)) => SetT1(SeqT1(t)) })
+    val seqSetSig = signatureMapEntry(seqSet, { case Seq(SetT1(t)) => SetT1(SeqT1(t)) })
 
     // SUBSET S is polymorphic, fixed arity 1
     // (Set(t)) => Set(Set(t))
-    val powSetSig = mkSigMapEntry(powerset, { case Seq(st: SetT1) => SetT1(st) })
+    val powSetSig = signatureMapEntry(powerset, { case Seq(st: SetT1) => SetT1(st) })
 
     val timesPartial: PartialSignature = {
       case SetT1(t1) +: SetT1(t2) +: rest if rest.forall(_.isInstanceOf[SetT1]) =>
@@ -73,15 +73,15 @@ object SetOperSignatures {
 
     // \X is polyadic with n = 2 + k args
     // (Set(t1), ..., Set(tn)) => Set(<<t1,...,tn>>)
-    val timesSig = mkSigMapEntry(times, timesPartial)
+    val timesSig = signatureMapEntry(times, timesPartial)
 
     // [_ -> _] is polymorphic
     // (Set(t1), Set(t2)) => Set(t1 -> t2)
-    val funSetSig = mkSigMapEntry(funSet, { case Seq(SetT1(t1), SetT1(t2)) => SetT1(FunT1(t1, t2)) })
+    val funSetSig = signatureMapEntry(funSet, { case Seq(SetT1(t1), SetT1(t2)) => SetT1(FunT1(t1, t2)) })
 
     // UNION is polymorphic, fixed arity 1
     // (Set(Set(t))) => Set(t)
-    val unionSig = mkSigMapEntry(union, { case Seq(SetT1(st: SetT1)) => st })
+    val unionSig = signatureMapEntry(union, { case Seq(SetT1(st: SetT1)) => st })
 
     // { _ } is polyadic
     // (t, ..., t) => Set(t)
@@ -94,7 +94,7 @@ object SetOperSignatures {
 
     // \subseteq is polymorphic
     // (Set(t), Set(t)) => Bool
-    val subseteqSig = mkSigMapEntry(subseteq, { case Seq(SetT1(t), SetT1(tt)) if t == tt => BoolT1() })
+    val subseteqSig = signatureMapEntry(subseteq, { case Seq(SetT1(t), SetT1(tt)) if t == tt => BoolT1() })
 
     val rest: SignatureMap = Seq(
         mapSig,

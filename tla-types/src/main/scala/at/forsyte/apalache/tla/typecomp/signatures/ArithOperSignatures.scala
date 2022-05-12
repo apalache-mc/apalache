@@ -31,7 +31,7 @@ object ArithOperSignatures {
         div,
         mod,
         exp,
-    ).map { mkSigMapEntry(_, binaryPartial(IntT1())) }.toMap
+    ).map { signatureMapEntry(_, binaryPartial(IntT1())) }.toMap
 
     // Same as above, except they return BoolT1 instead of IntT1()
     // (Int, Int) => Bool
@@ -40,14 +40,14 @@ object ArithOperSignatures {
         gt,
         le,
         ge,
-    ).map { mkSigMapEntry(_, binaryPartial(BoolT1())) }.toMap
+    ).map { signatureMapEntry(_, binaryPartial(BoolT1())) }.toMap
 
     // - is unary and dotdot returns a set
     // (Int) => Int,
     // (Int,Int) => Set(Int)
     val rest: SignatureMap = Map(
-        mkSigMapEntry(uminus, { case Seq(IntT1()) => IntT1() }),
-        mkSigMapEntry(dotdot, binaryPartial(SetT1(IntT1()))),
+        signatureMapEntry(uminus, { case Seq(IntT1()) => IntT1() }),
+        signatureMapEntry(dotdot, binaryPartial(SetT1(IntT1()))),
     )
     intOpers ++ boolOpers ++ rest
   }

@@ -18,22 +18,22 @@ object SeqOperSignatures {
   def getMap: SignatureMap = {
 
     // (Seq(t)) => t
-    val headSig = mkSigMapEntry(head, { case Seq(SeqT1(t)) => t })
+    val headSig = signatureMapEntry(head, { case Seq(SeqT1(t)) => t })
 
     // (Seq(t)) => Seq(t)
-    val tailSig = mkSigMapEntry(tail, { case Seq(st: SeqT1) => st })
+    val tailSig = signatureMapEntry(tail, { case Seq(st: SeqT1) => st })
 
     // (Seq(t), t) => Seq(t)
-    val appendSig = mkSigMapEntry(append, { case Seq(st @ SeqT1(t), tt) if t == tt => st })
+    val appendSig = signatureMapEntry(append, { case Seq(st @ SeqT1(t), tt) if t == tt => st })
 
     // (Seq(t), Seq(t)) => Seq(t)
-    val concatSig = mkSigMapEntry(concat, { case Seq(st @ SeqT1(t), SeqT1(tt)) if t == tt => st })
+    val concatSig = signatureMapEntry(concat, { case Seq(st @ SeqT1(t), SeqT1(tt)) if t == tt => st })
 
     // (Seq(t)) => Int
-    val lenSig = mkSigMapEntry(len, { case Seq(_: SeqT1) => IntT1() })
+    val lenSig = signatureMapEntry(len, { case Seq(_: SeqT1) => IntT1() })
 
     // (Seq(t), Int, Int) => Seq(t)
-    val subseqSig = mkSigMapEntry(subseq, { case Seq(st: SeqT1, IntT1(), IntT1()) => st })
+    val subseqSig = signatureMapEntry(subseq, { case Seq(st: SeqT1, IntT1(), IntT1()) => st })
 
     // (Seq(t), (Seq(t)) => Bool) => Seq(t)
     // selectseq is rewired in __rewire_sequences_in_apalache.tla and should not be created

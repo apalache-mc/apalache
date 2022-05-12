@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.typecomp
 
 import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.typecomp.BuilderUtil.throwMsg
+import at.forsyte.apalache.tla.typecomp.BuilderUtil.leftTypeException
 import at.forsyte.apalache.tla.typecomp.signatures._
 
 /**
@@ -25,7 +25,7 @@ class TypeComputationFactory {
   def computationFromSignature(oper: TlaOper): PureTypeComputation = { args =>
     knownSignatures.get(oper) match {
       // Failure: bad identifier
-      case None      => throwMsg(s"Unknown signature for operator ${oper.name}")
+      case None      => leftTypeException(s"Unknown signature for operator ${oper.name}")
       case Some(sig) => sig(args)
     }
   }
