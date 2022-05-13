@@ -27,7 +27,7 @@ import scalaz.Scalaz._
  *     not be scope-correct, since x would have to be typed as Int within the scope defined by this \A operator. Thus,
  *     such an expression cannot be constructed by the builder.
  *
- * Note that the guarantees are void if `useTrustedEx` is used.
+ * These guarantees are void if [[useTrustedEx]] is used.
  *
  * @author
  *   Jure Kukovec
@@ -40,16 +40,14 @@ class ScopedBuilder
   To use the builder outside of testing scenarios, where the expressions aren't written from scratch,
   it is necessary to be able to mark certain expressions as "trusted", e.g. when transforming and recombining invariants,
   or parts of Init/Next.
-  While `build` is safe as a unidirectional implicit conversion from TBuilderInstruction to TLaEx,
+  While `build` is safe as a unidirectional implicit conversion from TBuilderInstruction to TlaEx,
   the inverse, `useTrustedEx`, needs to be explicit, to stress the fact that it should be used rarely,
   typically at most once per transformation, on the initial input.
    */
   /**
-   * Creates a `TBuilderInstruction` from a precomputed `TlaEx`.
+   * Creates a `TBuilderInstruction` from a precomputed `TlaEx`. Voids correctness guarantees.
    *
-   * Should be used sparingly, and only for expressions that have already passed static analysis.
-   *
-   * Voids correctness guarantees.
+   * Use sparingly, and only for expressions that have already passed static analysis.
    */
   def useTrustedEx(ex: TlaEx): TBuilderInstruction = ex.point[TBuilderInternalState]
 
@@ -115,7 +113,7 @@ class ScopedBuilder
     )
   }
 
-  /** Attempt to infer the parameter types from the scope. Fails if a parameter name is not in scope. */
+  /** Infer parameter types from the scope. Fails if a parameter name is not in scope. */
   def declWithInferredParameterTypes(
       opName: String,
       body: TBuilderInstruction,
