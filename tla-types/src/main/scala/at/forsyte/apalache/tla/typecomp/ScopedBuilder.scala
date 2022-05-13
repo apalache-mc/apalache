@@ -1,7 +1,10 @@
 package at.forsyte.apalache.tla.typecomp
 
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
-import at.forsyte.apalache.tla.lir.{OperParam, OperT1, TlaEx, TlaOperDecl, TlaType1, Typed}
+import at.forsyte.apalache.tla.lir.{
+  BoolT1, ConstT1, FunT1, IntT1, OperParam, OperT1, RealT1, RecRowT1, RecT1, RowT1, SeqT1, SetT1, SparseTupT1, StrT1,
+  TlaEx, TlaOperDecl, TlaType1, TupT1, Typed, VarT1, VariantT1,
+}
 import at.forsyte.apalache.tla.typecomp.BuilderUtil.markAsBound
 import at.forsyte.apalache.tla.typecomp.subbuilder._
 import scalaz.Scalaz._
@@ -58,25 +61,62 @@ class ScopedBuilder
 
   type TypedParam = (OperParam, TlaType1)
 
-  /** Operator parameter with type information */
-  def param(name: String, tt: TlaType1, arity: Int = 0): TypedParam = (OperParam(name, arity), tt)
+  /** Parameters to TLA operators can be typed as OperT1 exactly at the top-level, and only if arity > 0 */
+  private def isAcceptableParamType(canContainOper: Boolean): TlaType1 => Boolean = {
+    case FunT1(arg, res)         => isAcceptableParamType(false)(arg) && isAcceptableParamType(false)(res)
+    case SetT1(elem)             => isAcceptableParamType(false)(elem)
+    case SeqT1(elem)             => isAcceptableParamType(false)(elem)
+    case TupT1(elems @ _*)       => elems.forall(isAcceptableParamType(false))
+    case SparseTupT1(fieldTypes) => fieldTypes.values.forall(isAcceptableParamType(false))
+    case RecT1(fieldTypes)       => fieldTypes.values.forall(isAcceptableParamType(false))
+    case OperT1(args, res) =>
+      if (canContainOper)
+        args.nonEmpty &&
+        args.forall(isAcceptableParamType(false)) &&
+        isAcceptableParamType(false)(res)
+      else false
+    case RowT1(fieldTypes, _) => fieldTypes.values.forall(isAcceptableParamType(false))
+    case RecRowT1(row)        => isAcceptableParamType(false)(row)
+    case VariantT1(row)       => isAcceptableParamType(false)(row)
+    case _                    => true
+  }
+
+  private def validateParamType(tp: TypedParam): Unit = {
+    val (OperParam(name, arity), tt) = tp
+    if (!isAcceptableParamType(canContainOper = arity > 0)(tt))
+      throw new TBuilderTypeException(
+          s"Parameter $name type $tt and arity $arity are inconsistent. Parameters have operator types iff their arity is positive."
+      )
+  }
+
+  /**
+   * Operator parameter with type information. Checks that parameters have permissible types.
+   */
+  def param(name: String, tt: TlaType1, arity: Int = 0): TypedParam = {
+    val ret = (OperParam(name, arity), tt)
+    validateParamType(ret)
+    ret
+  }
 
   /** opName(params[1],...,params[n]) == body */
-  def decl(opName: String, body: TBuilderInstruction, params: TypedParam*): TBuilderOperDeclInstruction = for {
-    bodyEx <- body
-    // Check param types against their use in body, then mark as bound
-    _ <- params.foldLeft(().point[TBuilderInternalState]) { case (cmp, (OperParam(pName, _), tt)) =>
-      for {
-        _ <- cmp
-        pNameEx <- name(pName, tt) // throws scopeException if param name clashes with param use in body
-        _ <- markAsBound(pNameEx)
-      } yield ()
-    }
-  } yield TlaOperDecl(opName, params.map(_._1).toList, bodyEx)(
-      Typed(
-          OperT1(params.map { _._2 }, bodyEx.typeTag.asTlaType1())
-      )
-  )
+  def decl(opName: String, body: TBuilderInstruction, params: TypedParam*): TBuilderOperDeclInstruction = {
+    params.foreach(validateParamType)
+    for {
+      bodyEx <- body
+      // Check param types against their use in body, then mark as bound
+      _ <- params.foldLeft(().point[TBuilderInternalState]) { case (cmp, (OperParam(pName, _), tt)) =>
+        for {
+          _ <- cmp
+          pNameEx <- name(pName, tt) // throws scopeException if param name clashes with param use in body
+          _ <- markAsBound(pNameEx)
+        } yield ()
+      }
+    } yield TlaOperDecl(opName, params.map(_._1).toList, bodyEx)(
+        Typed(
+            OperT1(params.map { _._2 }, bodyEx.typeTag.asTlaType1())
+        )
+    )
+  }
 
   /** Attempt to infer the parameter types from the scope. Fails if a parameter name is not in scope. */
   def declWithInferredParameterTypes(
@@ -92,9 +132,12 @@ class ScopedBuilder
           _ <- markAsBound(pNameEx)
         } yield partialTs :+ pNameEx.typeTag.asTlaType1()
     }
-  } yield TlaOperDecl(opName, List.empty, bodyEx)(
-      Typed(
-          OperT1(paramTs, bodyEx.typeTag.asTlaType1())
-      )
-  )
+  } yield {
+    untypedParams.zip(paramTs).foreach(validateParamType)
+    TlaOperDecl(opName, untypedParams.toList, bodyEx)(
+        Typed(
+            OperT1(paramTs, bodyEx.typeTag.asTlaType1())
+        )
+    )
+  }
 }

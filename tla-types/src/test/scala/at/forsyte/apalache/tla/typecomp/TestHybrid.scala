@@ -57,25 +57,45 @@ class TestHybrid extends BuilderTest {
   test("decl") {
 
     type T = TBuilderOperDeclInstruction
-    type TParam = (TlaType1, Seq[TlaType1])
+    type TParam = (TlaType1, Seq[(TlaType1, Int)])
+
+    val parameterTypeGen: Gen[(TlaType1, Int)] = for {
+      n <- Gen.choose(1, 5)
+      ts <- Gen.listOfN(n, tt1gen.genPrimitive)
+    } yield (
+        ts match {
+          case head :: Nil  => head
+          case head :: tail => OperT1(tail, head)
+          case Nil          => IntT1() // impossible, since 1 <= n <= 5, but the compiler doesn't know and complains
+        },
+        n - 1,
+    )
 
     implicit val typeSeqGen: Gen[TParam] = for {
       t <- singleTypeGen
       n <- Gen.choose(0, 5)
-      seq <- Gen.listOfN(n, singleTypeGen)
+      seq <- Gen.listOfN(n, parameterTypeGen)
     } yield (t, seq)
 
     // A(p1,...,pn) == CHOOSE x: p1 /\  p2 >= 0 /\ ... /\ pn = pn
     def mkWellTyped(tparam: TParam): (T, T) = {
       val (t, ts) = tparam
-      val tParams = ts.zipWithIndex.map { case (tt, i) => builder.param(s"p$i", tt, 0) }
+      val tParams = ts.zipWithIndex.map { case ((tt, arity), i) => builder.param(s"p$i", tt, arity) }
       val paramConds = tParams.map { case (OperParam(pName, _), tt) =>
         def n: TBuilderInstruction = builder.name(pName, tt)
         // We can try different expressions for different parameter types, as long as each name is used at least once
         tt match {
           case BoolT1() => n
           case IntT1()  => builder.ge(n, builder.int(0))
-          case _        => builder.eql(n, n)
+          case OperT1(from, to) =>
+            builder.eql(
+                builder.appOp(
+                    n,
+                    from.zipWithIndex.map { case (fromT, i) => builder.name(s"v${i}_$pName", fromT) }: _*
+                ),
+                builder.name(s"e_$pName", to),
+            )
+          case _ => builder.eql(n, n)
         }
 
       }
@@ -94,7 +114,7 @@ class TestHybrid extends BuilderTest {
     def forceScopeException(tparam: TParam): Seq[T] = {
       val (t, ts) = tparam
       ts.indices.map { j =>
-        val tParams = ts.zipWithIndex.map { case (tt, i) => builder.param(s"p$i", tt, 0) }
+        val tParams = ts.zipWithIndex.map { case ((tt, arity), i) => builder.param(s"p$i", tt, arity) }
         val eqls = tParams.zipWithIndex.map { case ((OperParam(pName, _), tt), i) =>
           // We use the j-th parameter inconsistently w.r.t. types
           val n = builder.name(pName, if (i != j) tt else InvalidTypeMethods.differentFrom(tt))
@@ -110,14 +130,26 @@ class TestHybrid extends BuilderTest {
 
     def isExpected(tparam: TParam): TlaOperDecl => Boolean = {
       val (t, ts) = tparam
-      val params = ts.indices.map { i => OperParam(s"p$i", 0) }
+      val params = ts.zipWithIndex.map { case ((_, arity), i) => OperParam(s"p$i", arity) }
       val bTag = Typed(BoolT1())
-      val conds = params.zip(ts).map { case (p, tt) =>
+      val conds = params.zip(ts).map { case (p, (tt, _)) =>
         def n: NameEx = NameEx(p.name)(Typed(tt))
         tt match {
           case BoolT1() => n
           case IntT1()  => OperEx(TlaArithOper.ge, n, ValEx(TlaInt(0))(Typed(IntT1())))(bTag)
-          case _        => OperEx(TlaOper.eq, n, n)(bTag)
+          case OperT1(from, to) =>
+            OperEx(
+                TlaOper.eq,
+                OperEx(
+                    TlaOper.apply,
+                    n +:
+                      from.zipWithIndex.map { case (fromT, i) =>
+                        NameEx(s"v${i}_${p.name}")(Typed(fromT))
+                      }: _*
+                )(Typed(to)),
+                NameEx(s"e_${p.name}")(Typed(to)),
+            )(bTag)
+          case _ => OperEx(TlaOper.eq, n, n)(bTag)
         }
       }
       val tTag = Typed(t)
@@ -133,7 +165,7 @@ class TestHybrid extends BuilderTest {
 
       def ret(decl: TlaOperDecl): Boolean =
         decl.eqTyped(
-            TlaOperDecl("A", params.toList, expectedBody)(Typed(OperT1(ts, t)))
+            TlaOperDecl("A", params.toList, expectedBody)(Typed(OperT1(ts.map(_._1), t)))
         )
 
       ret
