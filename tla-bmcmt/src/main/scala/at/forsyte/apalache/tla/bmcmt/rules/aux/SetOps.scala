@@ -60,7 +60,7 @@ class SetOps(rewriter: SymbStateRewriter) {
         tla.or(tla.not(predicates(j).toNameEx), tla.not(tla.eql(c_i.toNameEx, elems(j).toNameEx)))
       }
 
-      val rhs = tla.and(tla.in(c_i.toNameEx, oldSet.toNameEx), tla.and(0.until(i).map(notSeen): _*))
+      val rhs = tla.and(tla.apalacheSelectInSet(c_i.toNameEx, oldSet.toNameEx), tla.and(0.until(i).map(notSeen): _*))
       rewriter.solverContext.assertGroundExpr(tla.eql(b_i.toNameEx, rhs))
     }
 
