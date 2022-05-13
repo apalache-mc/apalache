@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.typecomp
 
-import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, Typed}
+import at.forsyte.apalache.tla.lir.oper.{OperArity, TlaOper}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, TlaType1, Typed}
 import scalaz._
 import scalaz.Scalaz._
 
@@ -33,23 +33,57 @@ object BuilderUtil {
    * Given a sequence of computations, generates a computation that runs them in order and accumulates results to a
    * sequence of values
    */
-  def buildSeq[T](argsW: Seq[TBuilderInternalState[T]]): TBuilderInternalState[Seq[T]] =
-    argsW.foldLeft(Seq.empty[T].point[TBuilderInternalState]) { case (seqW, argW) =>
+  def buildSeq[T](args: Seq[TBuilderInternalState[T]]): TBuilderInternalState[Seq[T]] =
+    args.foldLeft(Seq.empty[T].point[TBuilderInternalState]) { case (seq, arg) =>
       for {
-        seq <- seqW
-        arg <- argW
-      } yield seq :+ arg
+        seqEx <- seq
+        argEx <- arg
+      } yield seqEx :+ argEx
     }
 
   /** Lifts a binary raw method to a BuilderWrapper method */
-  def binaryFromRaw(
-      xW: TBuilderInstruction,
-      yW: TBuilderInstruction,
-    )(rawMethod: (TlaEx, TlaEx) => TlaEx): TBuilderInstruction = for {
-    x <- xW
-    y <- yW
-  } yield rawMethod(x, y)
+  def binaryFromUnsafe(
+      x: TBuilderInstruction,
+      y: TBuilderInstruction,
+    )(unsafeMethod: (TlaEx, TlaEx) => TlaEx): TBuilderInstruction = for {
+    xEx <- x
+    yEx <- y
+  } yield unsafeMethod(xEx, yEx)
 
   /** generates a BuilderTypeException wrapped in a Left, containing the given message */
-  def throwMsg(msg: String): TypeComputationResult = Left(new TBuilderTypeException(msg))
+  def leftTypeException(msg: String): TypeComputationResult = Left(new TBuilderTypeException(msg))
+
+  /** Generates a (total) signature from a partial one, by returning a Left outside the domain */
+  def completePartial(name: String, partialSig: PartialSignature): Signature = {
+    def onElse(badArgs: Seq[TlaType1]): TypeComputationResult =
+      leftTypeException(
+          s"Operator $name cannot be applied to arguments of types (${badArgs.mkString(", ")})"
+      )
+
+    { args =>
+      partialSig.applyOrElse(
+          args,
+          onElse,
+      )
+    }
+  }
+
+  /** Wraps a signature with an arity check, to throw a more precise exception on arity mismatch */
+  def checkForArityException(
+      name: String,
+      arity: OperArity,
+      partialSig: PartialSignature): Signature = {
+    case args if arity.cond(args.size) => completePartial(name, partialSig)(args)
+    case args                          => leftTypeException(s"$name expects $arity arguments, found: ${args.size}")
+  }
+
+  /**
+   * Creates a SignatureMap entry from an operator (key), where the signature (value) is lifted from `partialSignature`
+   * via `checkForArityException` (with arity derived from the operator).
+   * @see
+   *   [[checkForArityException]]
+   */
+  def signatureMapEntry(oper: TlaOper, partialSignature: PartialSignature): (TlaOper, Signature) =
+    oper -> checkForArityException(oper.name, oper.arity, partialSignature)
+
 }

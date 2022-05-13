@@ -25,19 +25,19 @@ trait SetBuilder extends UnsafeSetBuilder {
 
   /** elem \in set */
   def in(elem: TBuilderInstruction, set: TBuilderInstruction): TBuilderInstruction =
-    binaryFromRaw(elem, set)(_in)
+    binaryFromUnsafe(elem, set)(_in)
 
   /** elem \notin set */
   def notin(elem: TBuilderInstruction, set: TBuilderInstruction): TBuilderInstruction =
-    binaryFromRaw(elem, set)(_notin)
+    binaryFromUnsafe(elem, set)(_notin)
 
   /** left \cap right, left \intersect right */
   def cap(left: TBuilderInstruction, right: TBuilderInstruction): TBuilderInstruction =
-    binaryFromRaw(left, right)(_cap)
+    binaryFromUnsafe(left, right)(_cap)
 
   /** left \cup right, left `\`union right */
   def cup(left: TBuilderInstruction, right: TBuilderInstruction): TBuilderInstruction =
-    binaryFromRaw(left, right)(_cup)
+    binaryFromUnsafe(left, right)(_cup)
 
   /** UNION set */
   def union(set: TBuilderInstruction): TBuilderInstruction = set.map(_union)
@@ -90,7 +90,7 @@ trait SetBuilder extends UnsafeSetBuilder {
 
   /** Function set constructor [fromSet -> toSet] */
   def funSet(fromSet: TBuilderInstruction, toSet: TBuilderInstruction): TBuilderInstruction =
-    binaryFromRaw(fromSet, toSet)(_funSet)
+    binaryFromUnsafe(fromSet, toSet)(_funSet)
 
   /** Record set constructor [ k1: v1, ... , kN: vN ], must have at least 1 key-value pair */
   def recSet(kvs: (String, TBuilderInstruction)*): TBuilderInstruction =
@@ -112,11 +112,11 @@ trait SetBuilder extends UnsafeSetBuilder {
 
   /** left \subseteq right */
   def subseteq(left: TBuilderInstruction, right: TBuilderInstruction): TBuilderInstruction =
-    binaryFromRaw(left, right)(_subseteq)
+    binaryFromUnsafe(left, right)(_subseteq)
 
   /** left \ right */
   def setminus(left: TBuilderInstruction, right: TBuilderInstruction): TBuilderInstruction =
-    binaryFromRaw(left, right)(_setminus)
+    binaryFromUnsafe(left, right)(_setminus)
 
   /** s1 \X s2 \X ... , must have >= 2 args */
   def times(sets: TBuilderInstruction*): TBuilderInstruction =

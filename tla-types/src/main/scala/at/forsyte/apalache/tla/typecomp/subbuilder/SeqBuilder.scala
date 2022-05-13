@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.typecomp.subbuilder
 
-import at.forsyte.apalache.tla.typecomp.BuilderUtil.binaryFromRaw
+import at.forsyte.apalache.tla.typecomp.BuilderUtil.binaryFromUnsafe
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeSeqBuilder
 
@@ -14,11 +14,11 @@ trait SeqBuilder extends UnsafeSeqBuilder {
 
   /** Append(seq,elem) */
   def append(seq: TBuilderInstruction, elem: TBuilderInstruction): TBuilderInstruction =
-    binaryFromRaw(seq, elem)(_append)
+    binaryFromUnsafe(seq, elem)(_append)
 
   /** leftSeq \o rightSeq */
   def concat(leftSeq: TBuilderInstruction, rightSeq: TBuilderInstruction): TBuilderInstruction =
-    binaryFromRaw(leftSeq, rightSeq)(_concat)
+    binaryFromUnsafe(leftSeq, rightSeq)(_concat)
 
   /** Head(seq) */
   def head(seq: TBuilderInstruction): TBuilderInstruction = seq.map { _head }

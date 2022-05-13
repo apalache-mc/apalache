@@ -3,20 +3,11 @@ package at.forsyte.apalache.tla.typecomp
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaSeqOper
 import org.junit.runner.RunWith
-import org.scalacheck.Gen
 import org.scalatestplus.junit.JUnitRunner
 import scalaz.unused
 
 @RunWith(classOf[JUnitRunner])
 class TestSeqBuilder extends BuilderTest {
-
-  private val tt1gen: TlaType1Gen = new TlaType1Gen {}
-
-  implicit val singleTypeGen: Gen[TlaType1] = tt1gen.genPrimitiveMono
-  implicit val doubleTypeGen: Gen[(TlaType1, TlaType1)] = for {
-    t1 <- singleTypeGen
-    t2 <- singleTypeGen
-  } yield (t1, t2)
 
   test("append") {
     type T = (TBuilderInstruction, TBuilderInstruction)
