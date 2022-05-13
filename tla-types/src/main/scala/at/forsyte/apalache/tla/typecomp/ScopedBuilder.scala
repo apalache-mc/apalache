@@ -51,4 +51,6 @@ class ScopedBuilder
    */
   def useTrustedEx(ex: TlaEx): TBuilderInstruction = ex.point[TBuilderInternalState]
 
+  /** x' = y */
+  def primeEq(x: TBuilderInstruction, y: TBuilderInstruction): TBuilderInstruction = eql(prime(x), y)
 }
