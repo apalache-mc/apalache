@@ -1,10 +1,7 @@
 package at.forsyte.apalache.tla.typecomp
 
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
-import at.forsyte.apalache.tla.lir.{
-  BoolT1, ConstT1, FunT1, IntT1, OperParam, OperT1, RealT1, RecRowT1, RecT1, RowT1, SeqT1, SetT1, SparseTupT1, StrT1,
-  TlaEx, TlaOperDecl, TlaType1, TupT1, Typed, VarT1, VariantT1,
-}
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp.BuilderUtil.markAsBound
 import at.forsyte.apalache.tla.typecomp.subbuilder._
 import scalaz.Scalaz._
