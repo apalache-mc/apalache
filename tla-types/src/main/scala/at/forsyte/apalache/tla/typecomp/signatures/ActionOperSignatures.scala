@@ -28,17 +28,15 @@ object ActionOperSignatures {
       signatureMapEntry(_, { case Seq(BoolT1(), _) => BoolT1() })
     }
 
+    // (Bool) => Bool
+    val enabledSig = signatureMapEntry(enabled, { case Seq(BoolT1()) => BoolT1() })
+
     // (t) => Bool
-    val boolSigs = Seq(
-        unchanged,
-        enabled,
-    ).map {
-      signatureMapEntry(_, { case Seq(_) => BoolT1() })
-    }
+    val unchangedSig = signatureMapEntry(unchanged, { case Seq(_) => BoolT1() })
 
     // (Bool, Bool) => Bool
     val compSig = signatureMapEntry(composition, { case Seq(BoolT1(), BoolT1()) => BoolT1() })
 
-    (stutterSigs ++ boolSigs :+ primeSig :+ compSig).toMap
+    (stutterSigs :+ enabledSig :+ unchangedSig :+ primeSig :+ compSig).toMap
   }
 }
