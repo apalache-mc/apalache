@@ -1,6 +1,8 @@
 package at.forsyte.apalache.tla.typecomp
 
-import at.forsyte.apalache.tla.lir.TlaEx
+import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
+import at.forsyte.apalache.tla.lir.{OperParam, OperT1, TlaEx, TlaOperDecl, TlaType1, Typed}
+import at.forsyte.apalache.tla.typecomp.BuilderUtil.markAsBound
 import at.forsyte.apalache.tla.typecomp.subbuilder._
 import scalaz.Scalaz._
 
@@ -53,4 +55,46 @@ class ScopedBuilder
 
   /** x' = y */
   def primeEq(x: TBuilderInstruction, y: TBuilderInstruction): TBuilderInstruction = eql(prime(x), y)
+
+  type TypedParam = (OperParam, TlaType1)
+
+  /** Operator parameter with type information */
+  def param(name: String, tt: TlaType1, arity: Int = 0): TypedParam = (OperParam(name, arity), tt)
+
+  /** opName(params[1],...,params[n]) == body */
+  def decl(opName: String, body: TBuilderInstruction, params: TypedParam*): TBuilderOperDeclInstruction = for {
+    bodyEx <- body
+    // Check param types against their use in body, then mark as bound
+    _ <- params.foldLeft(().point[TBuilderInternalState]) { case (cmp, (OperParam(pName, _), tt)) =>
+      for {
+        _ <- cmp
+        pNameEx <- name(pName, tt) // throws scopeException if param name clashes with param use in body
+        _ <- markAsBound(pNameEx)
+      } yield ()
+    }
+  } yield TlaOperDecl(opName, params.map(_._1).toList, bodyEx)(
+      Typed(
+          OperT1(params.map { _._2 }, bodyEx.typeTag.asTlaType1())
+      )
+  )
+
+  /** Attempt to infer the parameter types from the scope. Fails if a parameter name is not in scope. */
+  def declWithInferredParameterTypes(
+      opName: String,
+      body: TBuilderInstruction,
+      untypedParams: OperParam*): TBuilderInternalState[TlaOperDecl] = for {
+    bodyEx <- body
+    paramTs <- untypedParams.foldLeft(Seq.empty[TlaType1].point[TBuilderInternalState]) {
+      case (cmp, OperParam(pName, _)) =>
+        for {
+          partialTs <- cmp
+          pNameEx <- nameWithInferredType(pName) // throws scopeException if param type can't be inferred
+          _ <- markAsBound(pNameEx)
+        } yield partialTs :+ pNameEx.typeTag.asTlaType1()
+    }
+  } yield TlaOperDecl(opName, List.empty, bodyEx)(
+      Typed(
+          OperT1(paramTs, bodyEx.typeTag.asTlaType1())
+      )
+  )
 }
