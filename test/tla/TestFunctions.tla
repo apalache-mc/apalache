@@ -40,7 +40,10 @@ TestFunFromFunSet ==
     \* Hence, a sound implementation must ensure that the equal elements of S
     \* are mapped on the same elements of T.
     \A f \in [ S -> T ]:
-        f[x] = f[y - 1]
+        /\ f[x] = f[y - 1]
+        /\ S = DOMAIN f
+        /\ \A e \in S:
+            f[e] \in T
 
 AllTests ==
     /\ TestFunCtor

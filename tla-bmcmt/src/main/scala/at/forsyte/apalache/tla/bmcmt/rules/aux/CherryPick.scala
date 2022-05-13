@@ -853,23 +853,23 @@ class CherryPick(rewriter: SymbStateRewriter) {
    */
   def pickFunFromFunSet(funT: FunT1, funSet: ArenaCell, state: SymbState): SymbState = {
     rewriter.solverContext.log("; PICK %s FROM %s {".format(funT, funSet))
-    var arena = state.arena
-    val dom = arena.getDom(funSet) // this is a set of potential arguments, always expanded!
-    val cdm = arena.getCdm(funSet) // this is a set of potential results, may be expanded, may be not.
+    val dom = state.arena.getDom(funSet)
+    // Get the set of potential arguments, always expanded! Remove the duplicates.
+    val (newState, nonDups) = new SetOps(rewriter).dedup(state, dom)
+    var nextState = newState
+    val cdm = state.arena.getCdm(funSet) // this is a set of potential results, may be expanded, may be not.
     // create the unconstrained function cell
-    arena = arena.appendCell(funT, isUnconstrained = true)
-    val funCell = arena.topCell
+    nextState = nextState.updateArena(_.appendCell(funT, isUnconstrained = true))
+    val funCell = nextState.arena.topCell
     // create the relation cell
-    arena = arena.appendCell(SetT1(TupT1(funT.arg, funT.res)))
-    val relationCell = arena.topCell
-    arena = arena.setDom(funCell, dom)
-    arena = arena.setCdm(funCell, relationCell)
-    var nextState = state.setArena(arena)
+    nextState = nextState.updateArena(_.appendCell(SetT1(TupT1(funT.arg, funT.res))))
+    val relationCell = nextState.arena.topCell
+    nextState = nextState.updateArena(_.setDom(funCell, dom).setCdm(funCell, relationCell))
 
     // For every domain cell, pick a result from the co-domain.
     // The beauty of CherryPick: when the co-domain is not expanded, CherryPick will pick one value out of the co-domain,
     // instead of constructing the co-domain first.
-    for (arg <- arena.getHas(dom)) {
+    for ((arg, isNonDup) <- nextState.arena.getHas(dom).zip(nonDups)) {
       nextState = pick(cdm, nextState, nextState.arena.cellFalse().toNameEx) // the co-domain should be non-empty
       val pickedResult = nextState.asCell
 
@@ -912,8 +912,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
         case `oopsla19Encoding` =>
           nextState = nextState.updateArena(_.appendHas(relationCell, pair))
-          val ite = tla.ite(tla.apalacheSelectInSet(arg.toNameEx, dom.toNameEx),
-              tla.apalacheStoreInSet(pair.toNameEx, relationCell.toNameEx),
+          val ite = tla.ite(isNonDup.toNameEx, tla.apalacheStoreInSet(pair.toNameEx, relationCell.toNameEx),
               tla.apalacheStoreNotInSet(pair.toNameEx, relationCell.toNameEx))
           rewriter.solverContext.assertGroundExpr(ite)
 
