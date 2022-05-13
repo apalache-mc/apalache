@@ -178,7 +178,7 @@ class TestHybrid extends BuilderTest {
       val goodDeclExplicit = build(goodDeclExplicitI)
       val goodDeclImplicit = build(goodDeclImplicitI)
 
-      goodDeclImplicit shouldEqual goodDeclImplicit
+      goodDeclExplicit shouldEqual goodDeclImplicit
 
       isExpected(tparam)(goodDeclExplicit) shouldBe true
 
