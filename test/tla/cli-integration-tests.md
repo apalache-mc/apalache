@@ -1346,7 +1346,7 @@ $ apalache-mc typecheck --features=rows Bug914.tla | sed 's/[IE]@.*//'
 [Bug914.tla:21:9-21:26]: Arguments to = should have the same type. For arguments m, ["foo" ↦ TRUE] with types {  }, { foo: Bool }, in expression m = (["foo" ↦ TRUE])
 [Bug914.tla:21:1-21:26]: Error when computing the type of Init
 ...
-EXITCODE: ERROR (255)
+EXITCODE: ERROR (120)
 ```
 
 ### check RecordExcept987 succeeds
@@ -1381,7 +1381,7 @@ $ apalache-mc check Bug1126.tla | sed 's/[IE]@.*//'
 ...
 Bug1126.tla:15:14-15:27: unsupported expression: Seq(_) produces an infinite set of unbounded sequences. See: https://apalache.informal.systems/docs/apalache/known-issues.html#using-seqs
 ...
-EXITCODE: ERROR (12)
+EXITCODE: ERROR (75)
 ```
 
 ### check SetSndRcv succeeds (array-encoding)
@@ -1509,7 +1509,7 @@ $ apalache-mc check --config=Config1.cfg Config.tla | sed 's/[IEW]@.*//'
 ...
 Config.tla:58:5-58:14: unsupported expression: ♢(x > 10)
 ...
-EXITCODE: ERROR (12)
+EXITCODE: ERROR (75)
 ```
 
 ### configure via TLC config and override it via CLI
@@ -1525,7 +1525,7 @@ $ apalache-mc check --config=Config1.cfg --init=Init2 --next=Next2 Config.tla | 
 ...
 Config.tla:58:5-58:14: unsupported expression: ♢(x > 10)
 ...
-EXITCODE: ERROR (12)
+EXITCODE: ERROR (75)
 ```
 
 ### configure missing property in TLC config
@@ -1832,7 +1832,7 @@ $ apalache-mc typecheck --features=rows Bug874.tla | sed 's/[IEW]@.*//'
 ...
 [Bug874.tla:4:17-4:27]: Cannot apply ["a" ↦ 2] to the argument "b" in (["a" ↦ 2])["b"].
 ...
-EXITCODE: ERROR (255)
+EXITCODE: ERROR (120)
 ```
 
 ### check letpoly.tla
@@ -1934,7 +1934,7 @@ Test that model values of different sorts are incomparable
 ```sh
 $ apalache-mc check --cinit=CInit --inv=Inv ModelValFail.tla | sed 's/[IEW]@.*//'
 ...
-EXITCODE: ERROR (12)
+EXITCODE: ERROR (120)
 ```
 
 ### check MC3_TwoPhaseUFO.tla succeeds with model values
@@ -2094,7 +2094,7 @@ $ apalache-mc check --length=0 --inv=AllTests TestFolds.tla | sed 's/[IEW]@.*//'
 ...
 TestFolds.tla:21:5-21:50: unsupported expression: Not supported: MapThenFoldSet. Use FoldSet, FoldSeq, FoldFunction.
 ...
-EXITCODE: ERROR (12)
+EXITCODE: ERROR (75)
 ```
 
 ### check Test1343.tla reports no error
@@ -2654,7 +2654,7 @@ $ apalache-mc typecheck --features=rows Bug925.tla | sed 's/[IEW]@.*//'
 ...
 [Bug925.tla:7:1-7:24]: Error when computing the type of Optional
 ...
-EXITCODE: ERROR (255)
+EXITCODE: ERROR (120)
 ```
 
 ### typecheck letpoly.tla
@@ -2806,7 +2806,7 @@ No ill-typed record access.
 ```sh
 $ apalache-mc typecheck --features=rows TestRecordsNewIll1.tla | sed 's/[IEW]@.*//'
 ...
-EXITCODE: ERROR (255)
+EXITCODE: ERROR (120)
 ```
 
 ### typecheck TestRecordsNewIll2.tla
@@ -2816,7 +2816,7 @@ No ill-typed record access.
 ```sh
 $ apalache-mc typecheck --features=rows TestRecordsNewIll2.tla | sed 's/[IEW]@.*//'
 ...
-EXITCODE: ERROR (255)
+EXITCODE: ERROR (120)
 ```
 
 ### typecheck TestRecordsNewIll3.tla
@@ -2826,7 +2826,7 @@ No ill-typed record access.
 ```sh
 $ apalache-mc typecheck --features=rows TestRecordsNewIll3.tla | sed 's/[IEW]@.*//'
 ...
-EXITCODE: ERROR (255)
+EXITCODE: ERROR (120)
 ```
 
 ### typecheck TestRecordsNewIll4.tla
@@ -2836,7 +2836,7 @@ No ill-typed record access.
 ```sh
 $ apalache-mc typecheck --features=rows TestRecordsNewIll4.tla | sed 's/[IEW]@.*//'
 ...
-EXITCODE: ERROR (255)
+EXITCODE: ERROR (120)
 ```
 
 ## configuring the output manager
