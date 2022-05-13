@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.tooling
+package at.forsyte.apalache.infra
 
 import tlc2.output.EC
 

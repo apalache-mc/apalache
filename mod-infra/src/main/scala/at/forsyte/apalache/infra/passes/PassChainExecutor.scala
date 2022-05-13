@@ -1,5 +1,7 @@
 package at.forsyte.apalache.infra.passes
 
+import at.forsyte.apalache.infra.ExitCodes.TExitCode
+import at.forsyte.apalache.infra.passes.Pass.PassResult
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.tla.lir.{MissingTransformationError, TlaModule, TlaModuleProperties}
 
@@ -15,12 +17,11 @@ import at.forsyte.apalache.tla.lir.{MissingTransformationError, TlaModule, TlaMo
  */
 
 class PassChainExecutor(val options: WriteablePassOptions, passes: Seq[Pass]) extends LazyLogging {
-
-  def run(): Option[TlaModule] = {
-    def exec(seqNo: Int, passToRun: Pass, module: TlaModule): Option[TlaModule] = {
+  def run(): PassResult = {
+    def exec(seqNo: Int, passToRun: Pass, module: TlaModule): PassResult = {
       logger.info("PASS #%d: %s".format(seqNo, passToRun.name))
       val result = passToRun.execute(module)
-      val outcome = if (result.isDefined) "[OK]" else "[FAIL]"
+      val outcome = result.fold(_ => "[FAIL]", _ => "[OK]")
       // TODO: As part of #858, PassWithOutputs.writeOut should be called here.
       logger.debug("PASS #%d: %s %s".format(seqNo, passToRun.name, outcome))
       result
@@ -34,21 +35,21 @@ class PassChainExecutor(val options: WriteablePassOptions, passes: Seq[Pass]) ex
       }
     }
 
-    passes.zipWithIndex
-      .foldLeft(Option[TlaModule with TlaModuleProperties](new TlaModule("empty", Seq()) with TlaModuleProperties)) {
-        case (moduleOpt, (pass, index)) =>
-          // Raise error if the pass dependencies aren't satisfied
-          moduleOpt.map { m => checkDependencies(m, pass) }
+    val emptyModuleWithProperties: TlaModule with TlaModuleProperties = new TlaModule("empty", Seq())
+      with TlaModuleProperties
+    val startValue: Either[TExitCode, TlaModule with TlaModuleProperties] = Right(emptyModuleWithProperties)
+    passes.zipWithIndex.foldLeft(startValue) { case (moduleOpt, (pass, index)) =>
+      // Raise error if the pass dependencies aren't satisfied
+      moduleOpt.map { m => checkDependencies(m, pass) }
 
-          for {
-            module <- moduleOpt
-            transformedModule <- exec(index, pass, module)
-          } yield {
-            val newModule = new TlaModule(transformedModule.name, transformedModule.declarations)
-              with TlaModuleProperties
-            newModule.properties = module.properties ++ pass.transformations
-            newModule
-          }
+      for {
+        module <- moduleOpt
+        transformedModule <- exec(index, pass, module)
+      } yield {
+        val newModule = new TlaModule(transformedModule.name, transformedModule.declarations) with TlaModuleProperties
+        newModule.properties = module.properties ++ pass.transformations
+        newModule
       }
+    }
   }
 }
