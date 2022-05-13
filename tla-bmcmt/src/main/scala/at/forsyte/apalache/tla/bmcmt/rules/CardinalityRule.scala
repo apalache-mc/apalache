@@ -34,7 +34,6 @@ class CardinalityRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val setCell = nextState.asCell
         setCell.cellType match {
           case CellTFrom(SetT1(_)) =>
-            val elems = nextState.arena.getHas(setCell)
             makeCardEquations(nextState, setCell)
 
           case tp =>
