@@ -88,7 +88,7 @@ object ApalacheInternalOper {
    * encoded set intersection, when handling TLA+ filters, and set union.
    */
   case class smtMap(mapOper: TlaOper) extends ApalacheOper {
-    override def name: String = "Apalache!SmtMap"
+    override def name: String = s"Apalache!SmtMap_${mapOper.name}"
 
     override def arity: OperArity = FixedArity(2)
 
