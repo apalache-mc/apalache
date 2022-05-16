@@ -888,6 +888,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
           cdm.cellType match {
             case _: PowSetT =>
               val powSetDom = nextState.arena.getDom(cdm)
+              // TODO: rewrite and remove SetInclusionRuleWithArrays
+              // Currently not possible because we cannot generate unique names to bind a universal quantifier
               val appFunResInDom = tla.subseteq(pickedResult.toNameEx, powSetDom.toNameEx)
               nextState = rewriter.rewriteUntilDone(nextState.setRex(appFunResInDom))
               val resCell = nextState.asCell

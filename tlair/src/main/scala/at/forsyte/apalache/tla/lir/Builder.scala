@@ -658,8 +658,8 @@ class Builder {
     BuilderOper(ApalacheInternalOper.storeNotInSet, elem, fun)
   }
 
-  def apalacheSmtMap(inputSet: BuilderEx, resultSet: BuilderEx): BuilderEx = {
-    BuilderOper(ApalacheInternalOper.smtMap, inputSet, resultSet)
+  def apalacheSmtMap(mapOper: TlaOper, inputSet: BuilderEx, resultSet: BuilderEx): BuilderEx = {
+    BuilderOper(ApalacheInternalOper.smtMap(mapOper), inputSet, resultSet)
   }
 
   def apalacheUnconstrainArray(arrayElemName: BuilderEx): BuilderEx = {
@@ -755,7 +755,8 @@ class Builder {
         ApalacheInternalOper.selectInSet.name -> ApalacheInternalOper.selectInSet,
         ApalacheInternalOper.storeInSet.name -> ApalacheInternalOper.storeInSet,
         ApalacheInternalOper.storeNotInSet.name -> ApalacheInternalOper.storeNotInSet,
-        ApalacheInternalOper.smtMap.name -> ApalacheInternalOper.smtMap,
+        ApalacheInternalOper.smtMap(TlaBoolOper.and).name -> ApalacheInternalOper.smtMap(TlaBoolOper.and),
+        ApalacheInternalOper.smtMap(TlaBoolOper.or).name -> ApalacheInternalOper.smtMap(TlaBoolOper.or),
         ApalacheInternalOper.unconstrainArray.name -> ApalacheInternalOper.unconstrainArray,
         ApalacheOper.setAsFun.name -> ApalacheOper.setAsFun,
         ApalacheOper.guess.name -> ApalacheOper.guess,
