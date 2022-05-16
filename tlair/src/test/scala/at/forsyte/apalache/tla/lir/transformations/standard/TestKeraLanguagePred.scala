@@ -30,7 +30,6 @@ class TestKeraLanguagePred extends LanguagePredTestSuite {
     expectOk(pred.isExprOk(cup(enumSet(int(1)), enumSet(int(2)))))
     expectOk(pred.isExprOk(in(int(1), enumSet(int(2)))))
     expectOk(pred.isExprOk(enumSet(int(1))))
-    expectOk(pred.isExprOk(subseteq(enumSet(int(1)), enumSet(int(2)))))
     expectOk(pred.isExprOk(filter(name("x"), enumSet(int(1)), bool(false))))
     expectOk(pred.isExprOk(map(int(2), name("x"), enumSet(int(1)))))
 
@@ -89,6 +88,8 @@ class TestKeraLanguagePred extends LanguagePredTestSuite {
     expectFail(pred.isExprOk(cap(enumSet(int(1)), enumSet(int(2)))))
     expectFail(pred.isExprOk(setminus(enumSet(int(1)), enumSet(int(2)))))
     expectFail(pred.isExprOk(notin(int(1), enumSet(int(2)))))
+    // Keramelizer rewrites \subseteq since https://github.com/informalsystems/apalache/pull/1621
+    expectFail(pred.isExprOk(subseteq(enumSet(int(1)), enumSet(int(2)))))
   }
 
   test("not a KerA record expression") {
