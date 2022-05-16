@@ -3,14 +3,12 @@ package at.forsyte.apalache.tla.pp.passes
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import at.forsyte.apalache.io.lir.TlaWriterFactory
-import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
-import at.forsyte.apalache.tla.lir.transformations.standard._
-import at.forsyte.apalache.tla.pp.{LoopEncoder, UniqueNameGenerator}
+import at.forsyte.apalache.tla.pp.temporal.{LoopEncoder, ModWithPreds, TableauEncoder}
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.pp.TlaInputError
-import at.forsyte.apalache.tla.pp.TableauEncoder
+import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 
 /**
  * Desugarer pass.
@@ -118,17 +116,19 @@ class TemporalPassImpl @Inject() (
           throw new TlaInputError(message)
       }
 
-      val (moduleWithLoopLogic, newInit, newNext, loopOk) =
-        new LoopEncoder(gen).addLoopLogic(module, initDecl, nextDecl)
+      val loopEncoder = new LoopEncoder(gen)
 
-      val tableauEncoder = new TableauEncoder(module, gen)
-      val (resultModule, _, _, _) = temporalInvariants.foldLeft((moduleWithLoopLogic, newInit, newNext, loopOk))(
-          { case ((module, init, next, loopOk), decl) =>
-            tableauEncoder.encodeInvariant(module, init, next, loopOk, decl)
+      val loopModWithPreds =
+        loopEncoder.addLoopLogic(module, initDecl, nextDecl)
+
+      val tableauEncoder = new TableauEncoder(loopModWithPreds.module, gen, loopEncoder)
+      val tableauModWithPreds = temporalInvariants.foldLeft(loopModWithPreds)(
+          { case (curModWithPreds, decl) =>
+            tableauEncoder.encodeInvariant(curModWithPreds, decl)
           }
       )
 
-      resultModule
+      tableauModWithPreds.module
     }
   }
 
