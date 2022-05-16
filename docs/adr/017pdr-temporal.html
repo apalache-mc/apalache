@@ -339,12 +339,23 @@ produce infinitely many states. That is, an infinite-state system may still
 contain lassos as counterexamples but it does not have to, which makes this
 technique incomplete. An extension to infinite-state systems was studied by
 <a href="https://link.springer.com/article/10.1007/s10703-021-00377-1">Padon et al. 2021</a>. This is beyond the scope of this task.</p>
-<p>There are two ways to encode the constraints by <a href="https://lmcs.episciences.org/2236">Biere et al. 2006</a>:</p>
-<ol>
-<li>
-<p>Encode the lasso finding problem as a trace invariant. Apalache can check
-<a href="../apalache/principles/invariants.html#trace-invariants">trace invariants</a>. This approach is most straighforward. However it has
-several drawbacks:</p>
+<p>There are multiple ways to encode the constraints by <a href="https://lmcs.episciences.org/2236">Biere et al. 2006</a>.
+The different ways are demonstrated on the <a href="EWD998.tla">EWD998</a> spec,
+which specifies a protocol for termination detection,
+using token passing in a ring.</p>
+<h4><a class="header" href="#trace-invariants" id="trace-invariants"><strong>Trace Invariants</strong></a></h4>
+<p>The lasso finding problem can be encoded as a <a href="../apalache/principles/invariants.html#trace-invariants">trace invariants</a>. See e.g. the <a href="EWD998_trace.tla">EWD998 protocol with trace invariants</a>.
+Roughly, a loop is encoded by demanding there exists a loop index at which point the state is identical to the state at the end of the execution.</p>
+<p>Implementation details:</p>
+<ul>
+<li>Instead of quantifying over indices, one could use an additional Boolean variable starting out FALSE that nondeterministically guesses when the execution enters the loop and is set to TRUE at that point. Experiments suggest this negatively impacts performance, but it can help understand counterexamples, since the loop is immediately visible in the states.</li>
+</ul>
+<p>Advantages:</p>
+<ul>
+<li>The predicate in the spec is very close to the semantic meaning of the temporal operators, e.g. <code>[] x &gt;= 2</code> becomes <code>\A step \in DOMAIN hist: hist[step].x &gt;= 2</code></li>
+<li>Only very few new variables are added (none, but depending on implementation choices maybe one/two).</li>
+</ul>
+<p>Disadvantages:</p>
 <ul>
 <li>
 <p>Trace invariants require Apalache to pack the sequence of states.
@@ -353,20 +364,72 @@ This sometimes produces unnecessary constraints.</p>
 <li>
 <p>When a trace invariant is violated, the intermediate definitions
 in this invariant are not printed in the counterexample.
-This will make printing of the counterexamples to liveness harder.</p>
+This will make printing of the counterexamples to liveness harder, e.g. see an <a href="counterexample_trace.tla#L118">example</a></p>
 </li>
 </ul>
-</li>
-<li>
-<p>Instrument the existing specification by adding auxilliary variables that
-update the predicates as required by the encoding of <a href="https://lmcs.episciences.org/2236">Biere et al. 2006</a>.
-We could also extend it with the liveness-to-safety reduction, see <a href="https://lmcs.episciences.org/2236">Biere et
-al. 2006</a>. If we choose this approach, we will be able to print
-counterexamples. So this approach is more transparent.</p>
-</li>
-</ol>
-<p>To choose between these two approaches, we will try both of them on a simple
-specification. For instance, <a href="https://github.com/tlaplus/Examples/blob/master/specifications/bcastFolklore/bcastFolklore.tla">Folklore broadcast</a>.</p>
+<h4><a class="header" href="#encoding-with-auxiliary-variables" id="encoding-with-auxiliary-variables"><strong>Encoding with auxiliary variables</strong></a></h4>
+<p>The loop finding problem can alternatively be approached
+by adding extra variables: One variable <code>InLoop</code> which
+determines whether the execution is currently on the loop,
+and for each variable <code>foo</code> of the original spec an extra variable <code>loop_foo</code>,
+which, once <code>InLoop</code> is true, stores the state of <code>foo</code> at the start of the loop.
+Then, the loop has been completed if <code>vars = loop_vars</code>.</p>
+<p>Apart from the variables for finding the loop, this approach also needs extra variables for
+determining the satisfaction of the temporal property to be checked.
+There again exist multiple ways of concretely implementing this:</p>
+<h5><a class="header" href="#encoding-with-buchi-automata" id="encoding-with-buchi-automata"><strong>Encoding with Buchi automata</strong></a></h5>
+<p>One can extend the spec with a Buchi automaton
+which is updated in each step. The Buchi automaton encodes
+the negation of the temporal property, thus if the automaton
+would accept, the property does not hold.
+By checking whether an accepting state of the automaton is seen
+on the loop, it can be determined whether the automaton
+accepts for a looping execution.
+The encoding is described in <a href="http://fmv.jku.at/papers/BiereArthoSchuppan-FMICS02.pdf">Biere et al. 2002</a>
+See e.g. the <a href="EWD998_buchi.tla">EWD998 protocol with a Buchi automaton</a>.</p>
+<p>Implementation details:</p>
+<ul>
+<li>An implementation of this encoding would need an implementation of an algorithm for the conversion from LTL to Buchi automata.
+This could be an existing tool, e.g. <a href="https://spot.lrde.epita.fr/">Spot</a> or our own implementation.</li>
+</ul>
+<p>Advantages:</p>
+<ul>
+<li>Buchi automata for very simple properties can be simple to understand</li>
+<li>Underlying automata could be visualized</li>
+<li>Only needs few extra variables - the state of the Buchi automaton can easily be encoded as a single integer</li>
+</ul>
+<p>Disadvantages: </p>
+<ul>
+<li>Can be slow: Buchi automata generally exhibit either nondeterminism or can get very large</li>
+<li>Hard to understand: Engineers and even experts have a hard time intuitively understanding Buchi automata for mildly complicated properties</li>
+</ul>
+<h5><a class="header" href="#tableau-encoding" id="tableau-encoding"><strong>Tableau encoding</strong></a></h5>
+<p>One can instead extend the spec with auxiliary Boolean variables
+roughly corresponding to all nodes in the syntax tree who have temporal operators
+beneath them. The value of each variable in each step corresponds to whether the
+formula corresponding to that node in the syntax tree is satisfied from that point forward. The encoding is described in Section 3.2 of <a href="https://lmcs.episciences.org/2236">Biere et al. 2006</a>
+See e.g. the <a href="EWD998_tableau.tla">EWD998 protocol encoded with a tableau</a>.</p>
+<p>Implementation details:</p>
+<ul>
+<li>Naming the auxiliary variables is very important, since they are supposed to represent the values of complex formulas (ideally would simple have that formula as a name, but this is not syntactically possible for most formulas), and there can be many of them.</li>
+</ul>
+<p>Advantages:</p>
+<ul>
+<li>Very clear counterexamples: In each step, it is clearly visible which subformulas are or are not satisfied.</li>
+<li>Relatively intuitive specs: The updates to the auxiliary variables
+correlate with the intuitive meaning of their subformulas rather directly
+in most cases</li>
+</ul>
+<p>Disadvantages: </p>
+<ul>
+<li>Many variables are added: The number of variables is linear in the number of operators in the formula</li>
+<li>Specifications get long: The encoding is much more verbose than that for Buchi automata</li>
+</ul>
+<h4><a class="header" href="#decision---which-encoding-should-be-used" id="decision---which-encoding-should-be-used"><strong>Decision - which encoding should be used?</strong></a></h4>
+<p>We chose to implement the tableau encoding, since it produces the
+clearest counterexamples. Buchi automata are hard to understand. 
+For trace invariants, the lack of quality in counterexamples makes it
+very hard to debug and understand invariant violations.</p>
 <h3><a class="header" href="#2-fairness" id="2-fairness">2. Fairness</a></h3>
 <p><code>WF_e(A)</code> and <code>SF_e(A)</code> use <code>ENABLED(A)</code> as part of their definitions. Hence,
 <code>ENABLED(A)</code> is of ultimate importance for handling <code>WF</code> and <code>SF</code>. However, we
