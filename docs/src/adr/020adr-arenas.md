@@ -3,7 +3,7 @@ authors: Igor Konnov
 last revised: 2022-05-16
 ---
 
-# ADR-020: Membership edges in arenas
+# ADR-020: Improving membership in arenas
 
 **Table of Contents**
 
@@ -20,7 +20,7 @@ this extension would be a more efficient implementation of powersets and a
 functions sets. Potentially, this extension will let us optimize the number of
 SMT constraints and thus improve performance of the model checker in general.
 
-## Context
+## 1. Context
 
 The model checker heavily relies on the concept of arenas, which are a static
 overapproximation of the data structures produced by symbolic execution of a
@@ -76,21 +76,21 @@ summarize the issues with the current implementation of this kind of edges:
  - We keep adding edges and SMT constants to the solver context, even when we
    know exactly that an element belongs to a set, e.g., as in `{ 1, 2, 3 }`.
 
-## Options
+## 2. Options
 
  - Keep things as they are.
 
  - Extend the edges.
 
 
-## Solution
+## 3. Solution
 
-### Pointers to the elements
+### 3.1. Pointers to the elements
 
-Instead of the current solution that maps a parent cell to a list of element
-cells, we propose to map parent cells to membership pointers of different
-kinds. To this end, we introduce an abstract edge (the Scala code can be found
-in the package `at.forsyte.apalache.tla.bmcmt.arena`):
+Instead of the current solution in the arenas, which maps a parent cell to a
+list of element cells, we propose to map parent cells to membership pointers of
+various kinds. To this end, we introduce an abstract edge (the Scala code can
+be found in the package `at.forsyte.apalache.tla.bmcmt.arena`):
 
 ```scala
 /**
@@ -186,7 +186,107 @@ expressions. For instance:
 
  - Perhaps combining several pointers. No concrete example yet.
 
-## Consequences
+### 3.2. Optimization 1: constant propagation via membership pointers
+
+One immediate application of using the new representation is completely
+SMT-free construction of some of the TLA+ expressions. Consider the following
+expression:
+
+```tla
+{ a, b, c } \union { d, e }
+```
+
+Let's denote the arguments of the set union to be `S` and `T`. In the current
+arena representation, the rewriting rule `SetCtorRule` creates the following
+SMT constants (assuming that `a, ..., e` were translated to
+arena cells):
+
+ - Two cells `c_l` and `c_r` to represent the sets `S` and `T`. These cells are
+   backed with two SMT constants of an uninterpreted sort, which corresponds
+   to the common type of `S` and `T`.
+
+ - Five SMT constants of the Boolean sort that express set membership of `a, b,
+   c` and `d, e` in `S` and `T`, respectively. This cell is backed with an SMT
+   constant of the sort of `S` and `T`.
+
+ - One cell `c_u` to represent the set `S \union T`.
+
+ - Five Boolean constants of the Boolean sort that express set membership of
+   `a, b, c, d, e` in `S \union T`.
+
+It is obvious that 10 Boolean constants introduced for set membership are
+completely unnecessary, as we know for sure that the respective elements belong
+to the three sets. Moreover, when constructing `S \union T`, the rule `SetCupRule`
+creates five SMT constraints:
+
+```smt
+;; a, b, c belong to the union, when they belong to S
+(= in_a_u in_a_l)
+(= in_b_u in_b_l)
+(= in_c_u in_c_l)
+;; d and e belong to the union, when they belong to T
+(= in_d_u in_d_r)
+(= in_e_u in_e_r)
+```
+
+With the new representation, the set constructor would simply create five
+instances of `FixedElemPtr` that carry the value `true`, that is, the elements
+unconditionally belong to `S` and `T`. Further, the rule `SetCupRule` would
+simply copy the five pointers, without propagating anything to SMT.
+
+As a result, we obtain constant propagation of set membership, while
+keeping the general spirit of the arena-based encoding.
+
+### 3.3. Optimization 2: sharing membership in a powerset
+
+Consider the TLA+ operator that construct the powerset of `S`, that is, the set
+of all subsets of `S`:
+
+```tla
+SUBSET S
+```
+
+Let `c_S` be the cell that represents the set `S` and `c_1, ..., c_n` be the
+cells that represent the potential elements of `S`. Note that in general,
+membership of all these cells may be unknown in static. For example, consider
+the case when the set `S` is constructed from the following TLA+ expression:
+
+```tla
+{
+  x \in 1..100:
+    \E y \in 1..10:
+      y * y = x
+}
+```
+
+In the above example, computation of the predicate is delegated to the SMT
+solver.
+
+The code in `PowSetCtor` constructs 2^Cardinality(S) sets that contain all
+subsets of `S`. The tricky part here is that some of the elements of `S` may be
+outside of `S`. To deal with that, `PowSetCtor` constructs cells for each
+potential combinations of `c_1, ..., c_n` and adds membership tests for each of
+them. For instance, consider the subset `T` that is constructed by selecting the
+indices `1, 3, 5` of `1..n`. The constructor will introduce `3`
+constraints:
+
+```smt
+(= in_c_1_T in_c_1_S)
+(= in_c_3_T in_c_3_S)
+(= in_c_5_T in_c_5_S)
+```
+
+Hence, the current encoding introduces `2^n` SMT constants for the subsets and
+`n * 2^(n - 1)` membership constraints in SMT (thanks to Jure @Kukovec for
+telling me the precise formula).
+
+With the new representation, we would simply copy the respective membership
+pointers of the set `S`. This would require us to introduce zero constraints in
+the SMT, though we would still introduce `2^n` SMT constants to represent the
+subsets themselves. Note that we would still have to introduce `n * 2^(n - 1)`
+pointers in the arena. But this would be done during the process of rewriting.
+
+## 4. Consequences
 
 <!-- Records the results of the decision over the long term.
      Did it work, not work, was changed, upgraded, etc.
