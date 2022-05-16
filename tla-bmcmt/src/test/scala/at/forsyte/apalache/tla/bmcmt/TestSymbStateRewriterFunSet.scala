@@ -106,6 +106,32 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
     assert(solverContext.sat())
   }
 
+  // the existential over a function set should work correctly in presence of duplicates
+  test("""Skolem(\E f \in [{1, 2 - 1, 2} -> {FALSE, TRUE}]: g' <- f)""") { rewriterType: SMTEncoding =>
+    val iToB = FunT1(IntT1(), SetT1(BoolT1()))
+    val intSetT = SetT1(IntT1())
+    val domain = enumSet(int(1), minus(int(2), int(1)).as(IntT1()), int(2)).as(intSetT)
+    val codomain = powSet(enumSet(bool(false), bool(true)) ? "B") ? "BB"
+    val pred = assign(prime(name("g") ? "i_to_B") ? "i_to_B", name("f") ? "i_to_B")
+      .typed(types, "b")
+    val existsForm =
+      exists(name("f") ? "i_to_B", funSet(domain, codomain) ? "i_to_B", pred)
+        .typed(types, "b")
+    val skolem = apalacheSkolem(existsForm)
+      .typed(BoolT1())
+    val state = new SymbState(skolem, arena, Binding())
+    val rewriter = create(rewriterType)
+    val nextState = rewriter.rewriteUntilDone(state)
+    val gprime = nextState.binding("g'")
+    assert(CellTFrom(FunT1(IntT1(), SetT1(BoolT1()))) == gprime.cellType)
+    solverContext.assertGroundExpr(nextState.ex)
+    // it should be impossible to return two different values for 1
+    val app1 = appFun(gprime.toNameEx.as(iToB), minus(int(2), int(1)).as(IntT1())).as(BoolT1())
+    val app2 = appFun(gprime.toNameEx.as(iToB), minus(int(3), int(2)).as(IntT1())).as(BoolT1())
+    val app1eqApp2 = eql(app1, app2).as(BoolT1())
+    assertTlaExAndRestore(rewriter, nextState.setRex(app1eqApp2))
+  }
+
   // the existential over a function set should work without expanding the powerset!
   test("""Skolem(\E f \in [{1, 2} -> SUBSET {FALSE}]: f[1] = {TRUE})""") { rewriterType: SMTEncoding =>
     val domain = enumSet(int(1), int(2)) ? "I"
