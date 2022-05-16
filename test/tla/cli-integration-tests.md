@@ -1427,7 +1427,7 @@ $ apalache-mc check OracleFunSet.tla | sed 's/I@.*//'
 EXITCODE: OK
 ```
 
-### check PickPerf succeeds
+### check PickPerf succeeds (array-encoding)
 
 A performance test.
 
@@ -1437,7 +1437,7 @@ $ apalache-mc check --discard-disabled=0 --tuning-options=search.invariant.mode=
 EXITCODE: OK
 ```
 
-### check PickPerf2 succeeds
+### check PickPerf2 succeeds (array-encoding)
 
 A performance test.
 
