@@ -63,18 +63,12 @@ package object typecomp {
     wrapCollection.map(build)
 
   // Since some operators are polyadic, we parameterize signatures for the same operator by the # or arguments */
-  /** A signature, if it exists, is an operator type */
-  type Signature = OperT1
+  /** A signature, if it exists, is as a function from domain types to either a codomain type or an exception. */
+  type Signature = Seq[TlaType1] => TypeComputationResult
 
-  /**
-   * Given an arity hint `n`, returns an arity-aware signature sig: Signature. `sig.from.size` need not equal `n`,
-   * unless the associated operator is polyadic.
-   */
-  type SignatureGenerator = Int => OperT1
+  /** A signature that is defined as a partial function. */
+  type PartialSignature = PartialFunction[Seq[TlaType1], TypeComputationResult]
 
   /** Maps operators to their associated signature generators. */
-  type SignatureGenMap = Map[TlaOper, SignatureGenerator]
-
-  // Implicit lifting, for fixed-arity operators
-  implicit def liftOper(operT1: OperT1): SignatureGenerator = _ => operT1
+  type SignatureMap = Map[TlaOper, Signature]
 }

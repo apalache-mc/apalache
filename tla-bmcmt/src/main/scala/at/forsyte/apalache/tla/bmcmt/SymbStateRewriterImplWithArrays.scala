@@ -44,7 +44,6 @@ class SymbStateRewriterImplWithArrays(
         // Remove after the delegation to this rule in `CherryPick` is removed
         key(tla.subseteq(tla.name("x"), tla.name("S")))
           -> List(new SetInclusionRuleWithArrays(this)),
-        // TODO: consider copying one array and storing the edges of the other in SetCupRule
         // functions
         key(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S")))
           -> List(new FunCtorRuleWithArrays(this)),
