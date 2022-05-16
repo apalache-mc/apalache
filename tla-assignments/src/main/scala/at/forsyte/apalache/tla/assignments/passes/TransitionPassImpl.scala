@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.assignments.passes
 
+import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.assignments._
 import at.forsyte.apalache.tla.imp.findBodyOf
@@ -27,7 +28,7 @@ class TransitionPassImpl @Inject() (
 
   override def name: String = "TransitionFinderPass"
 
-  override def execute(tlaModule: TlaModule): Option[TlaModule] = {
+  override def execute(tlaModule: TlaModule): PassResult = {
     // extract transitions from InitPrimed
     val initOperName = options.getOrElse("checker", "init", "Init")
     val initOperNamePrimed = initOperName + "Primed"
@@ -75,7 +76,7 @@ class TransitionPassImpl @Inject() (
     // print the resulting module
     writeOut(writerFactory, outModule)
 
-    Some(outModule)
+    Right(outModule)
   }
 
   private def extractTransitions(module: TlaModule, inOperName: String, outOperName: String): Seq[TlaOperDecl] = {

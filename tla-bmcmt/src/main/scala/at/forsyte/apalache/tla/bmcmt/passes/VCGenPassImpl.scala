@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
+import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.bmcmt.VCGenerator
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
@@ -19,7 +20,7 @@ class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTrac
 
   override def name: String = "VCGen"
 
-  override def execute(tlaModule: TlaModule): Option[TlaModule] = {
+  override def execute(tlaModule: TlaModule): PassResult = {
     val newModule =
       options.get[List[String]]("checker", "inv") match {
         case Some(invariants) =>
@@ -38,7 +39,7 @@ class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTrac
 
     writeOut(writerFactory, newModule)
 
-    Some(newModule)
+    Right(newModule)
   }
 
   override def dependencies = Set(ModuleProperty.Inlined)

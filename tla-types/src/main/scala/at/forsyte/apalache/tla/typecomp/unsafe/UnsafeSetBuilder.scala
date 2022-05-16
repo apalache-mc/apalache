@@ -3,13 +3,13 @@ package at.forsyte.apalache.tla.typecomp.unsafe
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values.TlaStr
-import at.forsyte.apalache.tla.typecomp.BuilderUtil.throwMsg
+import at.forsyte.apalache.tla.typecomp.BuilderUtil.leftTypeException
 import at.forsyte.apalache.tla.typecomp.{BuilderUtil, TBuilderTypeException, TypeComputation, TypeComputationResult}
 
 import scala.collection.immutable.SortedMap
 
 /**
- * Unsafe builder for TlaSetOper expressions.
+ * Type-unsafe builder for TlaSetOper expressions.
  *
  * @author
  *   Jure Kukovec
@@ -110,7 +110,7 @@ trait UnsafeSetBuilder extends ProtoBuilder {
       def getSetElemT(ex: TlaEx): TypeComputationResult =
         ex.typeTag match {
           case Typed(SetT1(t)) => t
-          case other => throwMsg(s"Expected $ex in record set constructor to have a Set(_) type, found $other")
+          case other => leftTypeException(s"Expected $ex in record set constructor to have a Set(_) type, found $other")
         }
 
       type exOrMap = Either[TBuilderTypeException, SortedMap[String, TlaType1]]

@@ -212,8 +212,6 @@ class SymbStateRewriterImpl(
           -> List(new SetInRule(this)),
         key(tla.enumSet(tla.name("x")))
           -> List(new SetCtorRule(this)),
-        key(tla.subseteq(tla.name("x"), tla.name("S")))
-          -> List(new SetInclusionRule(this)),
         key(tla.cup(tla.name("X"), tla.name("Y")))
           -> List(new SetCupRule(this)),
         key(tla.filter(tla.name("x"), tla.name("S"), tla.name("p")))

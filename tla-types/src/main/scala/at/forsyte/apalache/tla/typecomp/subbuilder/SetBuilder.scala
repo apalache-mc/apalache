@@ -9,7 +9,7 @@ import scalaz._
 import scalaz.Scalaz._
 
 /**
- * Builder for TlaSetOper expressions.
+ * Type-safe builder for TlaSetOper expressions.
  *
  * @author
  *   Jure Kukovec

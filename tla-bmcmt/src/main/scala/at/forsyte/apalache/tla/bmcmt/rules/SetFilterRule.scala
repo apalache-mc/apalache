@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
-import at.forsyte.apalache.tla.lir.oper.TlaSetOper
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, NullEx, OperEx, SetT1, TlaEx}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -88,7 +88,8 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
             rewriter.solverContext.assertGroundExpr(tla.apalacheUnconstrainArray(newSetCell.toNameEx))
             for ((cell, pred) <- filteredCellsAndPreds)
               addCellConsForUnconstrainedNewSetCell(cell, pred)
-            rewriter.solverContext.assertGroundExpr(tla.apalacheSmtMap(setCell.toNameEx, newSetCell.toNameEx))
+            val smtMap = tla.apalacheSmtMap(TlaBoolOper.and, setCell.toNameEx, newSetCell.toNameEx)
+            rewriter.solverContext.assertGroundExpr(smtMap)
 
           case `oopsla19Encoding` =>
             for ((cell, pred) <- filteredCellsAndPreds)

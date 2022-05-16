@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.pp
 
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.standard.FlatLanguagePred
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
-import TypedPredefs._
 
 import javax.inject.Singleton
 
@@ -22,8 +22,11 @@ import javax.inject.Singleton
 class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
     extends AbstractTransformer(tracker) with TlaExTransformation {
 
+  /**
+   * Partial transformers, applied left-to-right.
+   */
   override val partialTransformers =
-    List(transformLogic, transformSets, transformTuples, transformRecords, transformControl, transformAssignments)
+    List(transformAssignments, transformLogic, transformSets, transformTuples, transformRecords, transformControl)
 
   override def apply(expr: TlaEx): TlaEx = {
     LanguageWatchdog(FlatLanguagePred()).check(expr)
@@ -64,6 +67,7 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
       tla
         .not(tla.in(x, setX).as(BoolT1()))
         .as(BoolT1())
+
     // rewrite POWSET A \subseteq POWSET B
     // into A \subseteq B
     case OperEx(TlaSetOper.subseteq, OperEx(TlaSetOper.powerset, setX), OperEx(TlaSetOper.powerset, setY)) =>
@@ -92,6 +96,35 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
       val tempName = gen.newName()
       tla
         .forall(tla.name(tempName).as(elemType), setX, tla.in(tla.name(tempName).as(elemType), setY).as(BoolT1()))
+        .as(BoolT1())
+
+    // rewrite f \in [S -> SUBSET T]
+    // into DOMAIN f = S /\ \A x \in S: \A y \in f[x]: y \in T
+    case OperEx(TlaSetOper.in, fun, OperEx(TlaSetOper.funSet, dom, OperEx(TlaSetOper.powerset, powSetDom))) =>
+      val domType = getElemType(dom)
+      val domElem = tla.name(gen.newName()).as(domType)
+      val powSetDomType = getElemType(powSetDom)
+      val funAppElem = tla.name(gen.newName()).as(powSetDomType)
+      tla
+        .and(tla.eql(tla.dom(fun).as(SetT1(domType)), dom).as(BoolT1()),
+            tla
+              .forall(domElem, dom,
+                  tla
+                    .forall(funAppElem, tla.appFun(fun, domElem).as(SetT1(powSetDomType)),
+                        tla.in(funAppElem, powSetDom).as(BoolT1()))
+                    .as(BoolT1()))
+              .as(BoolT1()))
+        .as(BoolT1())
+
+    // rewrite f \in [S -> T]
+    // into DOMAIN f = S /\ \A x \in S: f[x] \in T
+    case OperEx(TlaSetOper.in, fun, OperEx(TlaSetOper.funSet, dom, cdm)) =>
+      val domType = getElemType(dom)
+      val domElem = tla.name(gen.newName()).as(domType)
+      val cdmType = getElemType(cdm)
+      tla
+        .and(tla.eql(tla.dom(fun).as(SetT1(domType)), dom).as(BoolT1()),
+            tla.forall(domElem, dom, tla.in(tla.appFun(fun, domElem).as(cdmType), cdm).as(BoolT1())).as(BoolT1()))
         .as(BoolT1())
   }
 

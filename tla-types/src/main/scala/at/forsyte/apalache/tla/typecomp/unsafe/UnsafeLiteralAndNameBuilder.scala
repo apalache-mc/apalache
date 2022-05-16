@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.values._
 
 /**
- * Unsafe builder for names and literals (IR tree leaves)
+ * Type-unsafe builder for names and literals (IR tree leaves)
  *
  * @author
  *   Jure Kukovec
