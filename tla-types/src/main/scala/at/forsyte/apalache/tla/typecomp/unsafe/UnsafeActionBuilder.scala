@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 
 /**
- * Unsafe builder for base TlaActionOper expressions.
+ * Type-unsafe builder for base TlaActionOper expressions.
  *
  * @author
  *   Jure Kukovec

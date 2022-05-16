@@ -36,18 +36,16 @@ class ScopedBuilder
     extends BaseBuilder with BoolBuilder with ArithmeticBuilder with SetBuilder with SeqBuilder with ActionBuilder
     with LiteralAndNameBuilder {
 
-  /*
-  To use the builder outside of testing scenarios, where the expressions aren't written from scratch,
-  it is necessary to be able to mark certain expressions as "trusted", e.g. when transforming and recombining invariants,
-  or parts of Init/Next.
-  While `build` is safe as a unidirectional implicit conversion from TBuilderInstruction to TlaEx,
-  the inverse, `useTrustedEx`, needs to be explicit, to stress the fact that it should be used rarely,
-  typically at most once per transformation, on the initial input.
-   */
   /**
    * Creates a `TBuilderInstruction` from a precomputed `TlaEx`. Voids correctness guarantees.
    *
    * Use sparingly, and only for expressions that have already passed static analysis.
+   *
+   * To use the builder outside of testing scenarios, where the expressions aren't written from scratch, it is necessary
+   * to be able to mark certain expressions as "trusted", e.g. when transforming and recombining invariants, or parts of
+   * Init/Next. While `build` is safe as a unidirectional implicit conversion from `TBuilderInstruction` to TlaEx, the
+   * inverse, `useTrustedEx`, needs to be explicit, to stress the fact that it should be used rarely, typically at most
+   * once per transformation on the initial input.
    */
   def useTrustedEx(ex: TlaEx): TBuilderInstruction = ex.point[TBuilderInternalState]
 
@@ -56,7 +54,15 @@ class ScopedBuilder
 
   type TypedParam = (OperParam, TlaType1)
 
-  /** Parameters to TLA operators can be typed as OperT1 exactly at the top-level, and only if arity > 0 */
+  /**
+   * Evaluates whether a parameter type satisfies the type restrictions on operator parameters in TLA+.
+   *
+   * Parameters of TLA+ operators must:
+   *   - have a non-operator type, unless they are (syntactically) marked higher-order (HO)
+   *   - have a top-level operator type (OperT1) if they are marked HO
+   *   - not contain `OperT1` in the type's syntax-tree in either case, except possibly at the root (if HO). In
+   *     particular, a parameter to a HO operator with an `OperT1` type may not be HO itself.
+   */
   private def isAcceptableParamType(canContainOper: Boolean): TlaType1 => Boolean = {
     case FunT1(arg, res)         => isAcceptableParamType(false)(arg) && isAcceptableParamType(false)(res)
     case SetT1(elem)             => isAcceptableParamType(false)(elem)

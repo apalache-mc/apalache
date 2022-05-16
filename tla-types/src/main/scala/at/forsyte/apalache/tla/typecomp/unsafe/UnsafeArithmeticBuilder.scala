@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.oper.TlaArithOper
 
 /**
- * Unsafe builder for TlaArithOper expressions.
+ * Type-unsafe builder for TlaArithOper expressions.
  *
  * @author
  *   Jure Kukovec

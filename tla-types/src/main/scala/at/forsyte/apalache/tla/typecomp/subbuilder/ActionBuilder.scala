@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeActionBuilder
 import at.forsyte.apalache.tla.typecomp.BuilderUtil.binaryFromUnsafe
 
 /**
- * Builder for TlaActionOper expressions.
+ * Type-safe builder for TlaActionOper expressions.
  *
  * @author
  *   Jure Kukovec
