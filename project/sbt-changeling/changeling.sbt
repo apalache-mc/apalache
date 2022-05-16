@@ -88,3 +88,36 @@ package systems.informal.sbt.changeling
  * The purpose of this plugin is to maintain that directory and extract the usual markdown flatfile from it when needed
  * for releases.
  */
+
+import sbt._
+import Keys._
+
+object Changeling extends AutoPlugin {
+
+  // The keys in this object are imported into a project when the plugin is enabled
+  object autoImport {
+    lazy val changelingKinds = taskKey[Seq[String]](
+        """| Configures the supported kinds of changes, and and order in which
+           | these should be reported in the rendered changelog. Each kind is a
+           | possible subheading in the notes for a release.""".stripMargin
+    )
+
+    lazy val changelingDirectory = taskKey[File](
+        """|Ensures an .unreleased directory exists at the root of our repo,
+           |with a subdirectory for each supported kind of change""".stripMargin
+    )
+  }
+
+  // Bring the keys into scope
+  import autoImport._
+
+  // The keys set in this function will be configured for any project that enables the plugin
+  override lazy val projectSettings: Seq[Setting[_]] = Seq(
+      changelingKinds := Seq(
+          "Breaking changes",
+          "Features",
+          "Bug fixes",
+          "Documentation",
+      )
+  )
+}
