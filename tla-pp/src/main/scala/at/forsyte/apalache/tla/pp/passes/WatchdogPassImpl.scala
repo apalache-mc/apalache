@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.pp.passes
 
+import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, LanguageWatchdog}
 import at.forsyte.apalache.tla.lir.TlaModule
@@ -11,11 +12,11 @@ class WatchdogPassImpl @Inject() (val options: PassOptions, val pred: LanguagePr
 
   override def name: String = "WatchdogPass"
 
-  override def execute(module: TlaModule): Option[TlaModule] = {
+  override def execute(module: TlaModule): PassResult = {
     // Only call the watchdog, then return true, don't change the module in any way
     LanguageWatchdog(pred).check(module)
 
-    Some(module)
+    Right(module)
   }
 
   override def dependencies = Set()

@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.pp.passes
 
+import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.infra.passes.{PassOptions, WriteablePassOptions}
 import at.forsyte.apalache.io.ConfigurationError
 import at.forsyte.apalache.io.lir.TlaWriterFactory
@@ -36,7 +37,7 @@ class ConfigurationPassImpl @Inject() (
 
   override def name: String = "ConfigurationPass"
 
-  override def execute(tlaModule: TlaModule): Option[TlaModule] = {
+  override def execute(tlaModule: TlaModule): PassResult = {
     // Since this is the 1st pass after Inline, check absence of recursion first
     LanguageWatchdog(NonrecursiveLanguagePred).check(tlaModule)
 
@@ -70,7 +71,7 @@ class ConfigurationPassImpl @Inject() (
     // dump the configuration result
     writeOut(writerFactory, configuredModule)
 
-    Some(configuredModule)
+    Right(configuredModule)
   }
 
   // Returns new declarations, where CInit has been extended (or constructed)
