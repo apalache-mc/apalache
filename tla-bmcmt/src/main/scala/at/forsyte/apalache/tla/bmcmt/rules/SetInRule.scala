@@ -75,7 +75,10 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
   protected def powSetIn(state: SymbState, powsetCell: ArenaCell, elemCell: ArenaCell): SymbState = {
     def checkType: PartialFunction[(CellT, CellT), Unit] = {
       case (PowSetT(SetT1(expectedType)), CellTFrom(SetT1(actualType))) =>
-        assert(expectedType == actualType)
+        if (expectedType != actualType) {
+          val msg = s"Unexpected types in SetInRule.powSetIn: expectedType = $expectedType, actualType = $actualType"
+          throw new IllegalStateException(msg)
+        }
     }
     // double check that the type finder did its job
     checkType(powsetCell.cellType, elemCell.cellType)
