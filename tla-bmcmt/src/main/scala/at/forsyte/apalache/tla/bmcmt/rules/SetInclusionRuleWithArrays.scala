@@ -3,14 +3,26 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt.implicitConversions.Crossable
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.types.{CellTFrom, PowSetT, UnknownT}
-import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, SymbStateRewriter}
+import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, RewritingRule, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, RecT1, SetT1, TlaEx, TupT1}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 
-class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends SetInclusionRule(rewriter) {
+// TODO: \subseteq is rewritten in Keramelizer
+// Remove after the delegation to this rule in `CherryPick` is removed
+class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends RewritingRule {
   private val simplifier = new ConstSimplifierForSmt
+
+  override def isApplicable(state: SymbState): Boolean = {
+    state.ex match {
+      case OperEx(TlaSetOper.subseteq, _, _) =>
+        true
+
+      case _ =>
+        false
+    }
+  }
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {

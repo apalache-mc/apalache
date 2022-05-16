@@ -2,10 +2,10 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, ExprGradeStoreImpl}
 import at.forsyte.apalache.tla.bmcmt.rewriter.MetricProfilerListener
-import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.rules._
-import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 
 /**
@@ -40,9 +40,10 @@ class SymbStateRewriterImplWithArrays(
           -> List(new SetInRuleWithArrays(this)),
         key(tla.apalacheSelectInFun(tla.name("x"), tla.name("F")))
           -> List(new SetInRuleWithArrays(this)),
+        // TODO: \subseteq is rewritten in Keramelizer
+        // Remove after the delegation to this rule in `CherryPick` is removed
         key(tla.subseteq(tla.name("x"), tla.name("S")))
           -> List(new SetInclusionRuleWithArrays(this)),
-        // TODO: consider copying one array and storing the edges of the other in SetCupRule
         // functions
         key(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S")))
           -> List(new FunCtorRuleWithArrays(this)),

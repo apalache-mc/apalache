@@ -49,6 +49,9 @@ package object typecomp {
   /** Builder methods generate `TBuilderInstruction`s, which construct TBuilderResult values on demand */
   type TBuilderInstruction = TBuilderInternalState[TBuilderResult]
 
+  /** Some builder methods generate TlaOperDecl instead of `TBuilderResult` */
+  type TBuilderOperDeclInstruction = TBuilderInternalState[TlaOperDecl]
+
   // Each PureTypeComputation naturally defines a TypeComputation by first mapping fromTypeTag over the args
   implicit def fromPure(cmp: PureTypeComputation): TypeComputation = { args =>
     cmp(args.map { ex => TlaType1.fromTypeTag(ex.typeTag) })
