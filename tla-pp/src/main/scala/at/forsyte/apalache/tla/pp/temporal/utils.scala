@@ -43,6 +43,16 @@ class ModWithPreds(
     val newModule = new TlaModule(module.name, newDeclarations)
     new ModWithPreds(newModule, newInit, newNext, newLoopOK)
   }
+
+  def setModule(newModule: TlaModule): ModWithPreds = {
+    new ModWithPreds(newModule, init, next, loopOK)
+  }
+
+  def prependDecl(decl: TlaDecl): ModWithPreds = {
+    val newDecls = decl +: module.declarations
+    val newModule = new TlaModule(module.name, newDecls)
+    setModule(newModule)
+  }
 }
 
 package object utils {
