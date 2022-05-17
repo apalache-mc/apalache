@@ -96,7 +96,7 @@ object ChangelingPlugin extends AutoPlugin {
 
   // The keys in this object are imported into a project when the plugin is enabled
   object autoImport {
-    lazy val changelingKinds = taskKey[Seq[String]](
+    lazy val changelingKinds = settingKey[Seq[String]](
         """| Configures the supported kinds of changes, and and order in which
            | these should be reported in the rendered changelog. Each kind is a
            | possible subheading in the notes for a release.""".stripMargin
@@ -106,18 +106,28 @@ object ChangelingPlugin extends AutoPlugin {
         """|Ensures an .unreleased directory exists at the root of our repo,
            |with a subdirectory for each supported kind of change""".stripMargin
     )
+
+    lazy val changelingUnreleasedDir = settingKey[File](
+        "The directory in which unreleased changes are recorded"
+    )
   }
 
   // Bring the keys into scope
   import autoImport._
 
-  // The keys set in this function will be configured for any project that enables the plugin
-  override lazy val projectSettings: Seq[Setting[_]] = Seq(
+  // Keys set in this fucntion will be the default configuration for all projects
+  override lazy val globalSettings: Seq[Setting[_]] = Seq(
+      changelingUnreleasedDir := (ThisBuild / baseDirectory).value / ".unreleased",
       changelingKinds := Seq(
           "Breaking changes",
           "Features",
           "Bug fixes",
           "Documentation",
-      )
+      ),
   )
+
+  // The keys set in this function will be configured for any project that enables the plugin
+  override lazy val projectSettings: Seq[Setting[_]] = Seq(
+  )
+
 }
