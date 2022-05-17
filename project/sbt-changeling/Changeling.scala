@@ -154,6 +154,11 @@ object Changeling {
    * Ensure that `base` directory exists, and that it has all `children`
    *
    * Does not overwrite any files that already exist.
+   *
+   * @param base
+   *   The base directory
+   * @param children
+   *   The names of children directories that should exist in `base`
    */
   def ensureDirStructureExists(base: File, children: Seq[String]): File = {
     val childOfBase: String => File = base / _
@@ -164,6 +169,17 @@ object Changeling {
 
   /**
    * Render the directory unreleased directory structure as a markdown file
+   *
+   * @param changeKinds
+   *   The supported kinds of cnhages, establishes order of change sections
+   * @param version
+   *   The version to be released, used as heading of realease notes
+   * @param unreleasedDir
+   *   The directory from which to read the unreleased change entries
+   * @param relaseNotes
+   *   The file into which the release notes will be written
+   * @returns
+   *   The TrelaseNotes
    */
   def renderReleaseNotes(
       changeKinds: Seq[String],
