@@ -302,3 +302,148 @@ object SimplePrinter extends Printer {
 object FullPrinter extends Printer {
   override def apply(p_ex: TlaEx): String = ""
 }
+
+object UsableAsIdentifierPrinter extends Printer {
+  val leftBracket = "d"
+  val rightBracket = "b"
+
+  def printInfixOperator(implicit args: Seq[String], operatorName: String): String = {
+    leftBracket + args.mkString(s"${rightBracket}_${operatorName}_${leftBracket}") + rightBracket
+  }
+
+  def printPostfixOperator(args: Seq[String], operatorName: String): String = {
+    s"${leftBracket}_${args.mkString(",")}_${rightBracket}${operatorName}"
+  }
+
+  def printPrefixOperator(args: Seq[String], operatorName: String): String = {
+    s"${operatorName}${leftBracket}_${args.mkString(",")}_${rightBracket}"
+  }
+
+  def printUnboundedQuantiOperator(variable: String, body: String, operatorName: String): String = {
+    s"${operatorName}_${variable}_COLON_${leftBracket}_${body}_${rightBracket}"
+  }
+
+  def printQuantiOperator(
+      variable: String,
+      set: String,
+      body: String,
+      operatorName: String): String = {
+    s"${operatorName}_${variable}_IN_${set}_COLON_${leftBracket}_${body}_${rightBracket}"
+  }
+
+  override def apply(p_ex: TlaEx): String = {
+    p_ex match {
+      case NameEx(name) => return name
+      case NullEx       => return "null"
+      case OperEx(oper, args: Seq[TlaEx]) =>
+        val strArgs = args.map(arg => this(arg))
+        oper match {
+          case TlaOper.eq              => printInfixOperator(strArgs, "EQ")
+          case TlaOper.ne              => printInfixOperator(strArgs, "NEQ")
+          case TlaOper.apply           => printPrefixOperator(strArgs.tail, strArgs.head)
+          case TlaOper.chooseUnbounded => printUnboundedQuantiOperator(strArgs(0), strArgs(1), "CHOOSE")
+          case TlaOper.chooseBounded   => printQuantiOperator(strArgs(0), strArgs(1), strArgs(2), "CHOOSE")
+
+          case TlaBoolOper.and             => printInfixOperator(strArgs, "AND")
+          case TlaBoolOper.or              => printInfixOperator(strArgs, "OR")
+          case TlaBoolOper.not             => printPrefixOperator(strArgs, "NOT")
+          case TlaBoolOper.implies         => printInfixOperator(strArgs, "IMPLIES")
+          case TlaBoolOper.equiv           => printInfixOperator(strArgs, "EQUIV")
+          case TlaBoolOper.forall          => printQuantiOperator(strArgs(0), strArgs(1), strArgs(2), "FORALL")
+          case TlaBoolOper.exists          => printQuantiOperator(strArgs(0), strArgs(1), strArgs(2), "EXISTS")
+          case TlaBoolOper.forallUnbounded => printUnboundedQuantiOperator(strArgs(0), strArgs(1), "FORALL")
+          case TlaBoolOper.existsUnbounded => printUnboundedQuantiOperator(strArgs(0), strArgs(1), "EXISTS")
+
+          case TlaArithOper.plus    => printInfixOperator(strArgs, "PLUS")
+          case TlaArithOper.uminus  => printPrefixOperator(strArgs, "MINUS")
+          case TlaArithOper.minus   => printInfixOperator(strArgs, "MINUS")
+          case TlaArithOper.mult    => printInfixOperator(strArgs, "MULT")
+          case TlaArithOper.div     => printInfixOperator(strArgs, "DIV")
+          case TlaArithOper.mod     => printInfixOperator(strArgs, "MOD")
+          case TlaArithOper.realDiv => printInfixOperator(strArgs, "DIV")
+          case TlaArithOper.exp     => printInfixOperator(strArgs, "POW")
+          case TlaArithOper.dotdot  => printInfixOperator(strArgs, "DOTDOT")
+          case TlaArithOper.lt      => printInfixOperator(strArgs, "LESSTHAN")
+          case TlaArithOper.gt      => printInfixOperator(strArgs, "GREATERTHAN")
+          case TlaArithOper.le      => printInfixOperator(strArgs, "LESSEQ")
+          case TlaArithOper.ge      => printInfixOperator(strArgs, "GREATEREQ")
+
+          case TlaActionOper.prime       => printPostfixOperator(strArgs, "PRIME")
+          case TlaActionOper.stutter     => printPrefixOperator(strArgs, "STUTTER")
+          case TlaActionOper.nostutter   => printPrefixOperator(strArgs, "NOSTUTTER")
+          case TlaActionOper.enabled     => printPrefixOperator(strArgs, "ENABLED")
+          case TlaActionOper.unchanged   => printPrefixOperator(strArgs, "UNCHANGED")
+          case TlaActionOper.composition => printInfixOperator(strArgs, "DOT")
+
+          case TlaControlOper.caseNoOther   => printPrefixOperator(strArgs, "CASE")
+          case TlaControlOper.caseWithOther => printPrefixOperator(strArgs, "CASEOTHER")
+          case TlaControlOper.ifThenElse    => s"IF_${strArgs(0)}_THEN_${strArgs(1)}_ELSE_${strArgs(2)}"
+
+          case TlaTempOper.AA             => printUnboundedQuantiOperator(strArgs(0), strArgs(1), "TEMPORALFORALL")
+          case TlaTempOper.box            => printPrefixOperator(strArgs, "BOX")
+          case TlaTempOper.diamond        => printPrefixOperator(strArgs, "DIAMOND")
+          case TlaTempOper.EE             => printUnboundedQuantiOperator(strArgs(0), strArgs(1), "TEMPORALEXISTS")
+          case TlaTempOper.guarantees     => printInfixOperator(strArgs, "GUARANTEES")
+          case TlaTempOper.leadsTo        => printInfixOperator(strArgs, "LEADSTO")
+          case TlaTempOper.strongFairness => printPrefixOperator(strArgs, "STRONGFAIR")
+          case TlaTempOper.weakFairness   => printPrefixOperator(strArgs, "WEAKFAIr")
+
+          case TlaFiniteSetOper.cardinality => printPrefixOperator(strArgs, "CARDINALITY")
+          case TlaFiniteSetOper.isFiniteSet => printPrefixOperator(strArgs, "ISFINITESET")
+
+          case TlaFunOper.app    => printPrefixOperator(strArgs.tail, strArgs.head)
+          case TlaFunOper.domain => printPrefixOperator(strArgs, "DOMAIN")
+          case TlaFunOper.enum   => printPrefixOperator(strArgs, "ENUM")
+          case TlaFunOper.except => printPrefixOperator(strArgs, "EXCEPT")
+          case TlaFunOper.funDef => printPrefixOperator(strArgs, "FUNDEF")
+          case TlaFunOper.tuple  => s"TUPLE${leftBracket}_${strArgs.mkString(",")}_${rightBracket}"
+
+          case TlaSeqOper.append => printPrefixOperator(strArgs, "APPEND")
+          case TlaSeqOper.concat => printInfixOperator(strArgs, "CONCAT")
+          case TlaSeqOper.head   => printPrefixOperator(strArgs, "HEAD")
+          case TlaSeqOper.tail   => printPrefixOperator(strArgs, "TAIL")
+          case TlaSeqOper.len    => printPrefixOperator(strArgs, "LEN")
+
+          case TlaSetOper.enumSet => printPrefixOperator(strArgs, "SET")
+          case TlaSetOper.in      => printInfixOperator(strArgs, "IN")
+          case TlaSetOper.notin   => printInfixOperator(strArgs, "NOTIN")
+          case TlaSetOper.cap     => printInfixOperator(strArgs, "CAP")
+          case TlaSetOper.cup     => printInfixOperator(strArgs, "CUP")
+          case TlaSetOper.filter =>
+            s"SET_${leftBracket}${printQuantiOperator(strArgs(0), strArgs(1), strArgs(2), "")}${rightBracket}"
+          case TlaSetOper.funSet   => s"FUNCTIONSET_" + printInfixOperator(strArgs, "RIGHTARROW")
+          case TlaSetOper.map      => s"MAP" + printInfixOperator(strArgs, "COLON")
+          case TlaSetOper.powerset => printPrefixOperator(strArgs, "POWERSET")
+          case TlaSetOper.recSet   => printPrefixOperator(strArgs, "RECSET")
+          case TlaSetOper.seqSet   => printPrefixOperator(strArgs, "SEQ")
+          case TlaSetOper.setminus => printInfixOperator(strArgs, "SETMINUS")
+          case TlaSetOper.subseteq => printInfixOperator(strArgs, "SUBSETEQ")
+          case TlaSetOper.times    => printInfixOperator(strArgs, "TIMES")
+          case TlaSetOper.union    => printInfixOperator(strArgs, "UNION")
+          case TlaOper.label       => throw new NotImplementedError("Printing labels as identifiers is not supported")
+
+          case _ =>
+            if (args.isEmpty)
+              oper.name
+            else printPrefixOperator(strArgs, oper.name)
+          // , args: _*) // the default format
+        }
+
+      case ValEx(value) =>
+        value match {
+          case TlaInt(i)       => (if (i < 0) "MINUS" else "") + i.abs.toString
+          case TlaDecimal(d)   => (if (d < 0) "MINUS" else "") + d.abs.toString
+          case TlaStr(s)       => s.replaceAll("/[^A-Za-z0-9_]/", "_")
+          case TlaBool(b)      => if (b) "TRUE" else "FALSE"
+          case s: TlaPredefSet => s.name.replaceAll("/[^A-Za-z0-9_]/", "_")
+          case _               => ""
+        }
+      case LetInEx(_, _) =>
+        throw new NotImplementedError("Printing Let-In expressions as identifiers is not supported")
+      case _ =>
+        throw new NotImplementedError(
+            s"Printing expression as identifier is not supported for expression ${p_ex.toString()}"
+        )
+    }
+  }
+}
