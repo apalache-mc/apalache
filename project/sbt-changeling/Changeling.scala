@@ -139,6 +139,7 @@ object ChangelingPlugin extends AutoPlugin {
           children = changelingKinds.value,
       ),
       changelingRelaseNotes := Changeling.renderReleaseNotes(
+          changelingKinds.value,
           (ThisBuild / version).value,
           changelingDirectory.value,
           (Compile / resourceManaged).value / "RELEASE.md",
@@ -164,7 +165,16 @@ object Changeling {
   /**
    * Render the directory unreleased directory structure as a markdown file
    */
-  def renderReleaseNotes(version: String, unreleasedDir: File, releaseNotes: File): File = {
+  def renderReleaseNotes(
+      changeKinds: Seq[String],
+      version: String,
+      unreleasedDir: File,
+      releaseNotes: File): File = {
+
+    val changeDirOrder: File => Int = { d =>
+      changeKinds.indexOf(deNormalizeFileName(d.base.toString))
+    }
+
     // The heading for the release notes
     val versionHeading = s"## ${version} - ${java.time.LocalDate.now}"
     // To render the directory structure described above into the required flatfile
@@ -175,10 +185,17 @@ object Changeling {
     //   bullet list item
     val changeSections = IO
       .listFiles(unreleasedDir)
+      .sortBy(changeDirOrder)
       .flatMap { changeDir =>
-        val heading = s"### ${deNormalizeFileName(changeDir.base.toString)}"
-        val changes = IO.listFiles(changeDir).map(readFile.andThen(mdBulletItem))
-        (heading +: "" +: changes)
+        IO.listFiles(changeDir) match {
+          case Array() => Seq() // Omit sections with no entries
+          case changeEntries => {
+            val heading = s"### ${deNormalizeFileName(changeDir.base.toString)}"
+            val changes = changeEntries.map(readFile.andThen(mdBulletItem))
+            // We add an empty line between the heading and the changes and after the changes
+            (heading +: "" +: changes) ++ Seq("")
+          }
+        }
       }
     val notes = (versionHeading +: "" +: changeSections).mkString("\n")
     IO.write(releaseNotes, notes)
@@ -187,7 +204,7 @@ object Changeling {
 
   private def mdBulletItem(s: String): String = {
     val lineBreaks = "(\\r\\n?|\\n)"
-    val linesBreaksRemoved = s.replaceAll(lineBreaks, " ")
+    val linesBreaksRemoved = s.replaceAll(lineBreaks, " ").trim()
     s"- ${linesBreaksRemoved}"
   }
 
