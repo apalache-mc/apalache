@@ -331,6 +331,11 @@ object UsableAsIdentifierPrinter extends Printer {
     s"${operatorName}_${variable}_IN_${set}_COLON_${leftBracket}_${body}_${rightBracket}"
   }
 
+  def printOperDecl(decl: TlaOperDecl): String = {
+    s"${decl.name}_DEFINEDAS_${leftBracket}" +
+      s"${decl.formalParams.map(param => param.name).mkString("_")}${rightBracket}"
+  }
+
   override def apply(p_ex: TlaEx): String = {
     p_ex match {
       case NameEx(name) => return name
@@ -420,7 +425,7 @@ object UsableAsIdentifierPrinter extends Printer {
           case TlaSetOper.subseteq => printInfixOperator(strArgs, "SUBSETEQ")
           case TlaSetOper.times    => printInfixOperator(strArgs, "TIMES")
           case TlaSetOper.union    => printInfixOperator(strArgs, "UNION")
-          case TlaOper.label       => throw new NotImplementedError("Printing labels as identifiers is not supported")
+          case TlaOper.label       => printPrefixOperator(strArgs, "LABEL")
 
           case _ =>
             if (args.isEmpty)
@@ -438,8 +443,8 @@ object UsableAsIdentifierPrinter extends Printer {
           case s: TlaPredefSet => s.name.replaceAll("/[^A-Za-z0-9_]/", "_")
           case _               => ""
         }
-      case LetInEx(_, _) =>
-        throw new NotImplementedError("Printing Let-In expressions as identifiers is not supported")
+      case LetInEx(body, decls @ _*) =>
+        s"LET_${leftBracket}${decls.map(printOperDecl).mkString("_AND_")}${rightBracket}_IN_${this(body)}"
       case _ =>
         throw new NotImplementedError(
             s"Printing expression as identifier is not supported for expression ${p_ex.toString()} of type ${p_ex.getClass()}"
