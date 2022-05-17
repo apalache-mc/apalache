@@ -335,8 +335,8 @@ object UsableAsIdentifierPrinter extends Printer {
     p_ex match {
       case NameEx(name) => return name
       case NullEx       => return "null"
-      case OperEx(oper, args: Seq[TlaEx]) =>
-        val strArgs = args.map(arg => this(arg))
+      case OperEx(oper, args: Seq[_]) =>
+        val strArgs = args.map(arg => this(arg.asInstanceOf[TlaEx]))
         oper match {
           case TlaOper.eq              => printInfixOperator(strArgs, "EQ")
           case TlaOper.ne              => printInfixOperator(strArgs, "NEQ")
