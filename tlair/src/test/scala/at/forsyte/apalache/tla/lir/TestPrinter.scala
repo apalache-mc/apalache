@@ -5,13 +5,13 @@ import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.lir.convenience._
 
 import org.junit.runner.RunWith
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
-
 import org.scalacheck.Prop._
+
+import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.scalacheck.Checkers._
 import org.scalatestplus.junit.JUnitRunner
 
-import org.scalatest.funsuite.AnyFunSuite
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 @RunWith(classOf[JUnitRunner])
 class TestPrinter extends AnyFunSuite with TestingPredefs {
