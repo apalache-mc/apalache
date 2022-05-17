@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
+import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.bmcmt.rules.vmt.TlaExToVMTWriter
 import at.forsyte.apalache.tla.lir.oper.TlaActionOper
@@ -35,7 +36,7 @@ class ReTLAToVMTTranspilePassImpl @Inject() (
         (d.name, d.body)
       }
 
-  override def execute(module: TlaModule): Option[TlaModule] = {
+  override def execute(module: TlaModule): PassResult = {
     // Check if still ok fragment (sanity check, see postTypeChecker)
     LanguageWatchdog(pred).check(module)
 
@@ -54,7 +55,7 @@ class ReTLAToVMTTranspilePassImpl @Inject() (
     vmtWriter.annotateAndWrite(module.varDeclarations, module.constDeclarations, cinitP, initTrans, nextTrans,
         vcInvs ++ vcActionInvs)
 
-    Some(module)
+    Right(module)
   }
 
   override def dependencies = Set()

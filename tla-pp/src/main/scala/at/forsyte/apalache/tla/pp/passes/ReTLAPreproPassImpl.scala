@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.pp.passes
 
+import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.io.lir.TlaWriterFactory
@@ -29,7 +30,7 @@ class ReTLAPreproPassImpl @Inject() (
         writerFactory,
     ) {
 
-  override def execute(tlaModule: TlaModule): Option[TlaModule] = {
+  override def execute(tlaModule: TlaModule): PassResult = {
     val varSet = tlaModule.varDeclarations.map(_.name).toSet
 
     val transformationSequence: List[(String, TlaModuleTransformation)] =

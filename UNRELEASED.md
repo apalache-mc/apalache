@@ -10,3 +10,12 @@
          * Some bug fix, see #124
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
+### Breaking changes
+
+ * Introduce dedicated exit codes for type-checking errors, parser errors, and
+   evaluation errors (e.g., due to unsupported language constructs or
+   operators), see #1749
+
+### Features
+
+ * Support sound records (over rows) in the model checker, see #1717

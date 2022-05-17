@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.pp.passes
 
+import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import at.forsyte.apalache.io.lir.TlaWriterFactory
@@ -28,7 +29,7 @@ class DesugarerPassImpl @Inject() (
 
   override def name: String = "DesugarerPass"
 
-  override def execute(tlaModule: TlaModule): Option[TlaModule] = {
+  override def execute(tlaModule: TlaModule): PassResult = {
     logger.info("  > Desugaring...")
     val input = tlaModule
     val varNames = input.varDeclarations.map {
@@ -38,7 +39,7 @@ class DesugarerPassImpl @Inject() (
 
     // dump the result of preprocessing
     writeOut(writerFactory, output)
-    Some(output)
+    Right(output)
   }
 
   override def dependencies = Set(ModuleProperty.TypeChecked)
