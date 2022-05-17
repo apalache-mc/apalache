@@ -128,6 +128,26 @@ object ChangelingPlugin extends AutoPlugin {
 
   // The keys set in this function will be configured for any project that enables the plugin
   override lazy val projectSettings: Seq[Setting[_]] = Seq(
+      changelingDirectory := Changeling.ensureDirStructureExists(
+          base = changelingUnreleasedDir.value,
+          children = changelingKinds.value,
+      )
   )
 
+}
+
+object Changeling {
+
+  /**
+   * Ensure that `base` directory exists, and that it has all `children`
+   *
+   * Does not overwrite any files that already exist.
+   */
+  def ensureDirStructureExists(base: File, children: Seq[String]): File = {
+    val normalizeFileName: String => String = _.replace(' ', '-').toLowerCase()
+    val childOfBase: String => File = base / _
+    val leafDirs = children.map(normalizeFileName.andThen(childOfBase))
+    IO.createDirectories(leafDirs)
+    base
+  }
 }
