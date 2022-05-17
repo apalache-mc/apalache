@@ -442,7 +442,7 @@ object UsableAsIdentifierPrinter extends Printer {
         throw new NotImplementedError("Printing Let-In expressions as identifiers is not supported")
       case _ =>
         throw new NotImplementedError(
-            s"Printing expression as identifier is not supported for expression ${p_ex.toString()}"
+            s"Printing expression as identifier is not supported for expression ${p_ex.toString()} of type ${p_ex.getClass()}"
         )
     }
   }
