@@ -92,7 +92,7 @@ package systems.informal.sbt.changeling
 import sbt._
 import Keys._
 
-object Changeling extends AutoPlugin {
+object ChangelingPlugin extends AutoPlugin {
 
   // The keys in this object are imported into a project when the plugin is enabled
   object autoImport {
