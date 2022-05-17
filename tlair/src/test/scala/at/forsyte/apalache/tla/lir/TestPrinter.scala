@@ -222,17 +222,15 @@ class TestPrinter extends AnyFunSuite with TestingPredefs {
         val badCharacters = strResult.filterNot(x => x.isLetterOrDigit || x == '_')
 
         assert(badCharacters.isEmpty(), s": \"${strResult}\" contains bad characters: ${badCharacters.mkString(", ")}")
-        true
+        propBoolean(true)
       } catch {
-        // only errors caught should be because printing some part is not implemented
-        case _: NotImplementedError => true
+        // all operators should be 
         case e: Throwable =>
           assert(false, s"Got exception ${e}")
-          false
+          propBoolean(false)
       }
     }
 
-    check(prop, minSuccessful(500), sizeRange(4))
-
+    check(prop, minSuccessful(2000), sizeRange(7))
   }
 }
