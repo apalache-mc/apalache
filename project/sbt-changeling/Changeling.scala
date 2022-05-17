@@ -97,9 +97,9 @@ object ChangelingPlugin extends AutoPlugin {
   // The keys in this object are imported into a project when the plugin is enabled
   object autoImport {
     lazy val changelingKinds = settingKey[Seq[String]](
-        """| Configures the supported kinds of changes, and and order in which
-           | these should be reported in the rendered changelog. Each kind is a
-           | possible subheading in the notes for a release.""".stripMargin
+        """|Configures the supported kinds of changes, and and order in which
+           |these should be reported in the rendered changelog. Each kind is a
+           |possible subheading in the notes for a release.""".stripMargin
     )
 
     lazy val changelingDirectory = taskKey[File](
@@ -109,6 +109,12 @@ object ChangelingPlugin extends AutoPlugin {
 
     lazy val changelingUnreleasedDir = settingKey[File](
         "The directory in which unreleased changes are recorded"
+    )
+
+    lazy val changelingRelaseNotes = taskKey[File](
+        """|Render the contents of the `changelingUnreleasedDir` directory as a
+           |markdown file, following expected format for release
+           |notes""".stripMargin
     )
   }
 
@@ -131,7 +137,12 @@ object ChangelingPlugin extends AutoPlugin {
       changelingDirectory := Changeling.ensureDirStructureExists(
           base = changelingUnreleasedDir.value,
           children = changelingKinds.value,
-      )
+      ),
+      changelingRelaseNotes := Changeling.renderReleaseNotes(
+          (ThisBuild / version).value,
+          changelingDirectory.value,
+          (Compile / resourceManaged).value / "RELEASE.md",
+      ),
   )
 
 }
@@ -144,10 +155,45 @@ object Changeling {
    * Does not overwrite any files that already exist.
    */
   def ensureDirStructureExists(base: File, children: Seq[String]): File = {
-    val normalizeFileName: String => String = _.replace(' ', '-').toLowerCase()
     val childOfBase: String => File = base / _
     val leafDirs = children.map(normalizeFileName.andThen(childOfBase))
     IO.createDirectories(leafDirs)
     base
   }
+
+  /**
+   * Render the directory unreleased directory structure as a markdown file
+   */
+  def renderReleaseNotes(version: String, unreleasedDir: File, releaseNotes: File): File = {
+    // The heading for the release notes
+    val versionHeading = s"## ${version} - ${java.time.LocalDate.now}"
+    // To render the directory structure described above into the required flatfile
+    // we just have to flatten the directory tree with the following transformations
+    //
+    // - transforming the change directory name into an H3 heading
+    // - get the contnet of each file in the change directory, and make it a
+    //   bullet list item
+    val changeSections = IO
+      .listFiles(unreleasedDir)
+      .flatMap { changeDir =>
+        val heading = s"### ${deNormalizeFileName(changeDir.base.toString)}"
+        val changes = IO.listFiles(changeDir).map(readFile.andThen(mdBulletItem))
+        (heading +: "" +: changes)
+      }
+    val notes = (versionHeading +: "" +: changeSections).mkString("\n")
+    IO.write(releaseNotes, notes)
+    releaseNotes
+  }
+
+  private def mdBulletItem(s: String): String = {
+    val lineBreaks = "(\\r\\n?|\\n)"
+    val linesBreaksRemoved = s.replaceAll(lineBreaks, " ")
+    s"- ${linesBreaksRemoved}"
+  }
+
+  // Heading -> Filename
+  private val normalizeFileName: String => String = _.replace(' ', '-').toLowerCase()
+  // Filename -> Heading
+  private val deNormalizeFileName: String => String = _.replace('-', ' ').capitalize
+  private val readFile: File => String = IO.read(_)
 }
