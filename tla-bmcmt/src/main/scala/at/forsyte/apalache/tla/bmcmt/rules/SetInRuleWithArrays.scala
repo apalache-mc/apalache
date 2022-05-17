@@ -119,33 +119,33 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
       var nextState = state.updateArena(_.appendCell(BoolT1()))
       val pred = nextState.arena.topCell.toNameEx
 
-      elemCell.cellType match {
-        // For types that don't rely on lazy equality, we can simply query the SMT array for membership
-        case CellTFrom(_ @IntT1() | RealT1() | BoolT1() | StrT1() | ConstT1(_) | VarT1(_) | FunT1(_, _) | SetT1(_)) =>
-          val eql = tla.eql(pred, tla.apalacheSelectInSet(elemCell.toNameEx, setCell.toNameEx))
-          rewriter.solverContext.assertGroundExpr(eql)
-          nextState.setRex(pred)
+      // For types that support SMT equality, we use that directly. For those that don't, we use lazy equality.
+      if (supportsSMTEq(elemCell.cellType)) {
+        val eql = tla.eql(pred, tla.apalacheSelectInSet(elemCell.toNameEx, setCell.toNameEx))
+        rewriter.solverContext.assertGroundExpr(eql)
+        nextState.setRex(pred)
+      } else {
+        // EqConstraints need to be generated, since missing in-relations, e.g. in sets of tuples, will lead to errors.
+        nextState = rewriter.lazyEq.cacheEqConstraints(nextState, potentialElems.map((_, elemCell)))
 
-        // If the element's type does not support SMT equality, we rely on lazy equality
-        case _ =>
-          // EqConstraints need to be generated, since missing in-relations, e.g. in sets of tuples, will lead to errors.
-          // If elemCell is a function, cacheEqConstraints will generate constraints over its set of relations. This is
-          // problematic because the relations are only being carried in the arena, without SMT constrains being generated.
-          elemCell.cellType match {
-            case CellTFrom(FunT1(_, _)) => ()
-            case _ => nextState = rewriter.lazyEq.cacheEqConstraints(nextState, potentialElems.map((_, elemCell)))
-          }
+        def inAndEq(elem: ArenaCell) = {
+          val select = tla.apalacheSelectInSet(elem.toNameEx, setCell.toNameEx)
+          val eql = tla.eql(elem.toNameEx, elemCell.toNameEx)
+          simplifier.simplifyShallow(tla.and(select, eql))
+        }
 
-          def inAndEq(elem: ArenaCell) = {
-            val select = tla.apalacheSelectInSet(elem.toNameEx, setCell.toNameEx)
-            val eql = tla.eql(elem.toNameEx, elemCell.toNameEx)
-            simplifier.simplifyShallow(tla.and(select, eql))
-          }
-
-          val elemsInAndEq = potentialElems.map(inAndEq)
-          rewriter.solverContext.assertGroundExpr(simplifier.simplifyShallow(tla.eql(pred, tla.or(elemsInAndEq: _*))))
-          nextState.setRex(pred)
+        val elemsInAndEq = potentialElems.map(inAndEq)
+        rewriter.solverContext.assertGroundExpr(simplifier.simplifyShallow(tla.eql(pred, tla.or(elemsInAndEq: _*))))
+        nextState.setRex(pred)
       }
+    }
+  }
+
+  private def supportsSMTEq(cellType: CellT): Boolean = {
+    cellType match {
+      case CellTFrom(_ @IntT1() | RealT1() | BoolT1() | StrT1() | ConstT1(_) | VarT1(_) | FunT1(_, _) | SetT1(_)) =>
+        true
+      case _ => false
     }
   }
 }
