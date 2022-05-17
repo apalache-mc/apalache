@@ -12,3 +12,13 @@ addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.11.0")
 addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.9.9")
 // https://scalacenter.github.io/scalafix/docs/users/installation.html
 addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.10.0")
+
+// Add the locally defined plugins
+lazy val root = (project in file("."))
+  .dependsOn(changelingPlugin)
+  .settings(
+    name := "apalache-plugins"
+  )
+
+lazy val changelingPlugin =
+  ProjectRef(file("sbt-changeling"), "sbt_changeling")
