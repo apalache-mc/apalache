@@ -91,6 +91,7 @@ package systems.informal.sbt.changeling
 
 import sbt._
 import Keys._
+import java.time.LocalDate
 
 object ChangelingPlugin extends AutoPlugin {
 
@@ -116,6 +117,16 @@ object ChangelingPlugin extends AutoPlugin {
            |markdown file, following expected format for release
            |notes""".stripMargin
     )
+
+    lazy val changelingChangelogFile = settingKey[File](
+        "The location of the main changelog file"
+    )
+
+    lazy val changelingChangelog = taskKey[File](
+        """|Prepends `changelingReleaseNotes` onto the `changelingChangelogName`
+           |and removes all the previous entries from the `changelingDirectory`
+           |directory""".stripMargin
+    )
   }
 
   // Bring the keys into scope
@@ -123,6 +134,7 @@ object ChangelingPlugin extends AutoPlugin {
 
   // Keys set in this fucntion will be the default configuration for all projects
   override lazy val globalSettings: Seq[Setting[_]] = Seq(
+      changelingChangelogFile := (ThisBuild / baseDirectory).value / "CHANGES.md",
       changelingUnreleasedDir := (ThisBuild / baseDirectory).value / ".unreleased",
       changelingKinds := Seq(
           "Breaking changes",
@@ -144,6 +156,17 @@ object ChangelingPlugin extends AutoPlugin {
           changelingDirectory.value,
           (Compile / resourceManaged).value / "RELEASE.md",
       ),
+      changelingChangelog := {
+        Changeling.concatFiles(
+            changelingRelaseNotes.value,
+            changelingChangelogFile.value,
+        )
+        Changeling.cleanChanges(
+            (Compile / resourceManaged).value,
+            changelingUnreleasedDir.value,
+        )
+        changelingRelaseNotes.value
+      },
   )
 
 }
@@ -192,7 +215,7 @@ object Changeling {
     }
 
     // The heading for the release notes
-    val versionHeading = s"## ${version} - ${java.time.LocalDate.now}"
+    val versionHeading = s"## ${version} - ${LocalDate.now}"
     // To render the directory structure described above into the required flatfile
     // we just have to flatten the directory tree with the following transformations
     //
@@ -216,6 +239,31 @@ object Changeling {
     val notes = (versionHeading +: "" +: changeSections).mkString("\n")
     IO.write(releaseNotes, notes)
     releaseNotes
+  }
+
+  /**
+   * Prefix the content of `newFile` to the content of `target` and write the result to `target`
+   */
+  def concatFiles(front: File, target: File): Unit = {
+    val content = s"${IO.read(front)}\n${IO.read(target)}"
+    IO.write(target, content)
+  }
+
+  /**
+   * Move all the contents of the cange directories in `unrelasedDir` into a "trash" dir in `resourceDir`
+   *
+   * @return
+   *   the trash directory crated
+   */
+  def cleanChanges(resourceDir: File, unreleasedDir: File): Unit = {
+    // So we can recover dirs if needed
+    val trashDir = resourceDir / "changeling-trash" / LocalDate.now.toString
+    IO.createDirectory(trashDir)
+    val dirPaths = IO.listFiles(unreleasedDir)
+    val fileMoves = dirPaths.map(d => (d -> trashDir / d.base))
+    IO.move(fileMoves)
+    // Recreate the directories
+    IO.createDirectories(dirPaths)
   }
 
   private def mdBulletItem(s: String): String = {
