@@ -286,6 +286,10 @@ the SMT, though we would still introduce `2^n` SMT constants to represent the
 subsets themselves. Note that we would still have to introduce `n * 2^(n - 1)`
 pointers in the arena. But this would be done during the process of rewriting.
 
+### 3.4. Feature: computing the set of functions via sharing
+
+TODO
+
 ## 4. Consequences
 
 <!-- Records the results of the decision over the long term.
