@@ -11,7 +11,6 @@ import org.scalacheck.Prop._
 import org.scalatestplus.scalacheck.Checkers._
 import org.scalatestplus.junit.JUnitRunner
 
-
 import org.scalatest.funsuite.AnyFunSuite
 
 @RunWith(classOf[JUnitRunner])
@@ -227,7 +226,7 @@ class TestPrinter extends AnyFunSuite with TestingPredefs {
       } catch {
         // only errors caught should be because printing some part is not implemented
         case _: NotImplementedError => true
-        case e: Throwable           => 
+        case e: Throwable =>
           assert(false, s"Got exception ${e}")
           false
       }
