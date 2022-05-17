@@ -386,7 +386,7 @@ object UsableAsIdentifierPrinter extends Printer {
           case TlaTempOper.guarantees     => printInfixOperator(strArgs, "GUARANTEES")
           case TlaTempOper.leadsTo        => printInfixOperator(strArgs, "LEADSTO")
           case TlaTempOper.strongFairness => printPrefixOperator(strArgs, "STRONGFAIR")
-          case TlaTempOper.weakFairness   => printPrefixOperator(strArgs, "WEAKFAIr")
+          case TlaTempOper.weakFairness   => printPrefixOperator(strArgs, "WEAKFAIR")
 
           case TlaFiniteSetOper.cardinality => printPrefixOperator(strArgs, "CARDINALITY")
           case TlaFiniteSetOper.isFiniteSet => printPrefixOperator(strArgs, "ISFINITESET")
