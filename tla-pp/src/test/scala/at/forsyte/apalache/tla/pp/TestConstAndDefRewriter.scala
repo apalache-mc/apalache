@@ -3,8 +3,7 @@ package at.forsyte.apalache.tla.pp
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.convenience._
+import at.forsyte.apalache.tla.convenience._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir._
 import org.junit.runner.RunWith
@@ -43,19 +42,23 @@ class TestConstAndDefRewriter extends AnyFunSuite with BeforeAndAfterEach {
       root.declarations match {
         case Seq(n, overrideN: TlaOperDecl, rest @ _*) =>
           val typedN = n.withTag(Typed(IntT1()))
-          val overrideTag = Typed(OperT1(Seq(), IntT1()))
-          val typedOverrideN = TlaOperDecl(overrideN.name, List(), overrideN.body.withTag(Typed(IntT1())))(overrideTag)
+          val typedOverrideN: TlaOperDecl =
+            tla.decl(
+                overrideN.name,
+                tla.useTrustedEx(overrideN.body.withTag(Typed(IntT1()))),
+            )
           Seq(typedN, typedOverrideN) ++ rest
       }
 
-    val input = new TlaModule(root.name, newDeclarations)
+    val input = TlaModule(root.name, newDeclarations)
 
     val rewritten = new ConstAndDefRewriter(new IdleTracker())(input)
     assert(rewritten.constDeclarations.isEmpty) // no constants anymore
     assert(rewritten.operDeclarations.size == 2)
-    val expected_n = TlaOperDecl("n", List(), tla.int(10))
+    val expected_n: TlaOperDecl = tla.decl("n", 10)
     assert(expected_n == rewritten.operDeclarations.head)
-    val expected_A = TlaOperDecl("A", List(), tla.enumSet(tla.appOp(tla.name("n"))))
+    val expected_A: TlaOperDecl =
+      tla.decl("A", tla.enumSet(tla.appOp(tla.name("n", expected_n.typeTag))))
     assert(expected_A == rewritten.operDeclarations(1))
   }
 
@@ -105,8 +108,18 @@ class TestConstAndDefRewriter extends AnyFunSuite with BeforeAndAfterEach {
     val rewritten = new ConstAndDefRewriter(new IdleTracker())(root)
     assert(rewritten.constDeclarations.isEmpty)
     assert(rewritten.operDeclarations.size == 1)
-    val expected =
-      TlaOperDecl("BoolMin", List(OperParam("S")), tla.choose(tla.name("x"), tla.name("S"), tla.bool(true)))
+    val b = BoolT1()
+    val expected: TlaOperDecl =
+      tla.declWithInferredParameterTypes(
+          "BoolMin",
+          tla.choose(
+              tla.name("x", b),
+              tla.name("S", SetT1(b)),
+              true,
+          ),
+          "S",
+      )
+
     assert(expected == rewritten.operDeclarations.head)
   }
 
