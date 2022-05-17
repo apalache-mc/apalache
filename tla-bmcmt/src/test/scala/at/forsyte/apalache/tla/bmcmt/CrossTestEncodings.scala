@@ -13,7 +13,7 @@ import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import ch.qos.logback.classic.{Level, Logger}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
-import org.scalacheck.Gen.{const, listOf, lzy, nonEmptyListOf, oneOf, sized}
+import org.scalacheck.Gen.{choose, const, listOf, lzy, nonEmptyListOf, oneOf, resize, sized}
 import org.scalacheck.Prop.{forAll, AnyOperators}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.scalacheck.Checkers
@@ -98,6 +98,16 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
           oneOf(genPrimitive, genSet, genSeq, genFun, /*genOper,*/ genTup, genRec /*, genRowRec, genVariant, genRow*/ )
       }
     }
+
+    // Override to avoid sets of functions.
+    override def genSet: Gen[TlaType1] = sized { size => // use 'sized' to control the depth of the generated term
+      for {
+        // use resize to decrease the depth of the elements (as terms)
+        s <- choose(0, size)
+        g <- resize(size / (s + 1), genTypeTree).suchThat(!_.isInstanceOf[FunT1])
+      } yield SetT1(g)
+    }
+
     // Override to avoid reals, constants, and typevar-typed expressions.
     override def genPrimitive: Gen[TlaType1] =
       oneOf(const(BoolT1()), const(IntT1()), const(StrT1()) /*, const(RealT1()), genConst, genVar*/ )
