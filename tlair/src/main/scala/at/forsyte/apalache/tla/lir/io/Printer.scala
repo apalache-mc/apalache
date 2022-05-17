@@ -304,8 +304,10 @@ object FullPrinter extends Printer {
 }
 
 object UsableAsIdentifierPrinter extends Printer {
-  val leftBracket = "d"
-  val rightBracket = "b"
+  /* Represents left brackets, since ( is not legal in identifiers */
+  val leftBracket = "_LEFTBRACKET_"
+  /* Represents right brackets, since ( is not legal in identifiers */
+  val rightBracket = "_RIGHTBRACKET_"
 
   def printInfixOperator(implicit args: Seq[String], operatorName: String): String = {
     leftBracket + args.mkString(s"${rightBracket}_${operatorName}_${leftBracket}") + rightBracket
