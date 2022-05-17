@@ -1,18 +1,24 @@
 package at.forsyte.apalache.tla.lir
 
-import at.forsyte.apalache.tla.lir.io.{Printer, SimplePrinter, UTFPrinter}
+import at.forsyte.apalache.tla.lir.io.{Printer, SimplePrinter, UTFPrinter, UsableAsIdentifierPrinter}
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.lir.convenience._
 
 import org.junit.runner.RunWith
-import org.scalatest.funsuite.AnyFunSuite
-import org.scalatestplus.junit.JUnitRunner
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+
+import org.scalacheck.Prop._
+import org.scalatestplus.scalacheck.Checkers._
+import org.scalatestplus.junit.JUnitRunner
+
+
+import org.scalatest.funsuite.AnyFunSuite
 
 @RunWith(classOf[JUnitRunner])
 class TestPrinter extends AnyFunSuite with TestingPredefs {
   val toUtf = UTFPrinter
   val sp = SimplePrinter
+  val idPrinter = UsableAsIdentifierPrinter
 
   val ALSO_PRINT = false
 
@@ -199,5 +205,35 @@ class TestPrinter extends AnyFunSuite with TestingPredefs {
   test("Test UTF8: OperFormalParam") {
     val d = TlaOperDecl("Foo", List(OperParam("Bar", 1)), ValEx(TlaInt(1)))
     assert("Foo(Bar(_)) ≜ 1" == UTFPrinter(d))
+  }
+
+  test("Test ID: Only contains alphanumeric and underscore") {
+    val irGens = new IrGenerators {
+      override val maxArgs: Int = 3
+      override val maxDefsPerLetIn: Int = 1
+    }
+
+    val ops =
+      irGens.simpleOperators ++ irGens.logicOperators ++ irGens.arithOperators ++ irGens.setOperators ++ irGens.functionOperators ++ irGens.temporalOperators
+
+    val prop = forAllNoShrink(irGens.genTlaEx(ops)(irGens.emptyContext)) { ex =>
+      try {
+        val strResult = idPrinter(ex)
+
+        val badCharacters = strResult.filterNot(x => x.isLetterOrDigit || x == '_')
+
+        assert(badCharacters.isEmpty(), s": \"${strResult}\" contains bad characters: ${badCharacters.mkString(", ")}")
+        true
+      } catch {
+        // only errors caught should be because printing some part is not implemented
+        case _: NotImplementedError => true
+        case e: Throwable           => 
+          assert(false, s"Got exception ${e}")
+          false
+      }
+    }
+
+    check(prop, minSuccessful(500), sizeRange(4))
+
   }
 }
