@@ -224,7 +224,6 @@ class TestPrinter extends AnyFunSuite with TestingPredefs {
         assert(badCharacters.isEmpty(), s": \"${strResult}\" contains bad characters: ${badCharacters.mkString(", ")}")
         propBoolean(true)
       } catch {
-        // all operators should be 
         case e: Throwable =>
           assert(false, s"Got exception ${e}")
           propBoolean(false)
