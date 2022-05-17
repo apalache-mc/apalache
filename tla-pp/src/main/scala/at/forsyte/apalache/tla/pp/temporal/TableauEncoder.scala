@@ -4,12 +4,15 @@ import at.forsyte.apalache.tla.lir._
 
 import javax.inject.Singleton
 import com.typesafe.scalalogging.LazyLogging
-import scalaz.Scalaz.{init => _, _}
+import scalaz.Scalaz.{init => _}
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import at.forsyte.apalache.tla.pp.IrrecoverablePreprocessingError
 import at.forsyte.apalache.tla.pp.temporal.utils.builder
 import at.forsyte.apalache.tla.pp.temporal.ScopedBuilderExtensions._
 import at.forsyte.apalache.tla.pp.temporal.DeclUtils._
+import scala.collection.mutable.HashMap
+import at.forsyte.apalache.tla.lir.oper.TlaTempOper
+import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 
 /**
  * Encode temporal operators.
@@ -20,6 +23,32 @@ import at.forsyte.apalache.tla.pp.temporal.DeclUtils._
 @Singleton
 class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopEncoder) extends LazyLogging {
   val levelFinder = new TlaLevelFinder(module)
+  val varNamesToExStrings = new HashMap[String, String]()
+
+  def encodeVarNameMapping(modWithPreds: ModWithPreds): ModWithPreds = {
+    val varNameSets = varNamesToExStrings.map { case (key, value) =>
+      builder.enumSet(builder.str(key), builder.str(value))
+    }.toSeq
+
+    val mapDecl =
+      new TlaOperDecl(
+          "GenVarNamesToExFun",
+          List.empty,
+          builder.enumSet(
+              varNameSets: _*
+          ),
+      )(Typed(SetT1))
+
+    val newModule = new TlaModule(modWithPreds.module.name, modWithPreds.module.declarations :+ mapDecl)
+    modWithPreds.setModule(newModule)
+  }
+
+  def encodeInvariants(
+      modWithPreds: ModWithPreds,
+      invariants: Seq[TlaOperDecl]): ModWithPreds = {
+
+    encodeVarNameMapping(invariants.foldLeft(modWithPreds)(encodeInvariant))
+  }
 
   def encodeInvariant(
       modWithPreds: ModWithPreds,
@@ -30,6 +59,15 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
 
   def insertAt[T](elem: T, seq: Seq[T], pos: Int): Seq[T] = {
     seq.take(pos) ++ List(elem) ++ seq.drop(pos)
+  }
+
+  def getAuxVarForTempOper(oper: TlaTempOper, nodeIdentifier: String): TlaVarDecl = {
+    val nameSuffix = oper match {
+      case TlaTempOper.box     => "_globally"
+      case TlaTempOper.diamond => "_eventually"
+    }
+
+    new TlaVarDecl(nodeIdentifier + nameSuffix)(Typed(BoolT1()))
   }
 
   def encodeSyntaxTreeInPredicates(
@@ -53,19 +91,27 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
           case OperEx(oper, args @ _*) =>
             var curModWithPreds = modWithPreds
 
+            val nodeIdentifier = gen.newName()
+            varNamesToExStrings.addOne(nodeIdentifier, curNode.toString().replace("\"", "\'"))
+            varNamesToExStrings.addOne("loop_" + nodeIdentifier, curNode.toString().replace("\"", "\'"))
+
             /* create a new variable for this node
                     e.g.
                     \* @type: Bool;
                     curNode_predicate
              */
-            val nodeVarDecl = new TlaVarDecl(gen.newName())(curNode.typeTag)
+            val nodeVarDecl = new TlaVarDecl(nodeIdentifier)(curNode.typeTag)
+            curModWithPreds = curModWithPreds.prependDecl(nodeVarDecl)
+            val nodeVarEx = builder.declAsNameEx(nodeVarDecl)
+            val nodeVarExPrime = builder.primeVar(nodeVarDecl)
 
             /* create a new loop variable for this node
                     e.g.
                     \* @type: Bool;
                     Loop_curNode_predicate
              */
-            val nodeLoopVarDecl = new TlaVarDecl(gen.newName())(curNode.typeTag)
+            val nodeLoopVarDecl = new TlaVarDecl(s"Loop_${nodeIdentifier}")(curNode.typeTag)
+            curModWithPreds = curModWithPreds.prependDecl(nodeLoopVarDecl)
 
             /* initialize loop variable
              */
@@ -87,20 +133,135 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
               val modWithPredsAndArgEx = encodeSyntaxTreeInPredicates(curModWithPreds, arg)
               curModWithPreds = modWithPredsAndArgEx._1
               val argEx = modWithPredsAndArgEx._2
-              argEx
+              builder.createUnsafeInstruction(argEx)
             })
 
             /* encode the node itself
              */
             oper match {
-              // case TlaTempOper.AA             => mkOpApp("[%s]%%s . %%s".format(m_forall), args: _*)
-              // case TlaTempOper.box            => mkOpApp("%s%%s".format(m_box), args: _*)
-              // case TlaTempOper.diamond        => mkOpApp("%s%%s".format(m_diamond), args: _*)
-              // case TlaTempOper.EE             => mkOpApp("[%s]%%s . %%s".format(m_exists), args: _*)
+              case TlaTempOper.box | TlaTempOper.diamond => /* curNode has the form []A or <>A */
+                /* create new auxiliary variable curNode_globally or curNode_finally */
+                val auxVarDecl = getAuxVarForTempOper(oper.asInstanceOf[TlaTempOper], nodeIdentifier)
+                val auxVarEx = builder.declAsNameEx(auxVarDecl)
+                curModWithPreds = curModWithPreds.prependDecl(auxVarDecl)
+
+                /* update init:
+                  newInit ==
+                  /\ oldInit
+                  /\ curNode_predicate \in BOOLEAN
+                  /\ curNode_predicate_globally = TRUE or /\ curNode_predicate_finally = FALSE
+                 */
+                val initialValue = oper match {
+                  case TlaTempOper.box     => true
+                  case TlaTempOper.diamond => false
+                }
+
+                val newInit = conjunctExToOperDecl(
+                    builder.and(
+                        builder.in(
+                            nodeVarEx,
+                            builder.booleanSet(),
+                        ),
+                        builder.eql(
+                            auxVarEx,
+                            builder.bool(initialValue),
+                        ),
+                    ),
+                    curModWithPreds.init,
+                )
+
+                /* update next:
+                  newNext ==
+                  /\ oldNext
+                  /\ curNode_predicate' \in BOOLEAN
+                  /\ curNode_predicate_globally' \in BOOLEAN or curNode_predicate_finally' \in BOOLEAN
+
+                                           outerOp                                          outerOp
+                  /\ curNode_predicate <=> A /\ curNode_predicate' or curNode_predicate <=> A \/ curNode_predicate'
+
+                                                    outerOp
+                  /\ curNode_predicate_globally' <=>  /\ curNode_predicate_globally
+                                                      /\ (~InLoop' \/ A')
+                                                    outerOp      innerOp
+                  or
+                                                   outerOp
+                  /\ curNode_predicate_finally' <=>   \/ curNode_predicate_finally
+                                                      \/  (~InLoop' /\ A')
+                                                    outerOp      innerOp
+                 */
+
+                /*
+                box and diamond differ in the inner and outer operators
+                 */
+                val (outerOpTmp, innerOpTmp) = oper match {
+                  case TlaTempOper.box     => (builder.and _, builder.or _)
+                  case TlaTempOper.diamond => (builder.or _, builder.and _)
+                }
+
+                /*
+                outerOpTmp and innerOpTmp expect Seq[TBuilderInstruction] instead of TBuilderInstruction*,
+                so define new operators here to take TBuilderInstruction*
+                 */
+                def outerOp(args: TBuilderInstruction*): TBuilderInstruction = outerOpTmp(args)
+                def innerOp(args: TBuilderInstruction*): TBuilderInstruction = innerOpTmp(args)
+
+                val newNext = conjunctExToOperDecl(
+                    builder.and(
+                        /* curNode_predicate' \in BOOLEAN */
+                        builder.in(
+                            nodeVarExPrime,
+                            builder.booleanSet(),
+                        ),
+                        /* curNode_predicate_globally' \in BOOLEAN */
+                        builder.in(
+                            auxVarEx,
+                            builder.booleanSet(),
+                        ),
+
+                        /* curNode_predicate <=> A /\ curNode_predicate' */
+                        builder.equiv(
+                            nodeVarEx,
+                            outerOp(
+                                argExs(0),
+                                nodeVarExPrime,
+                            ),
+                        ),
+                        /* curNode_predicate_globally' <=>  /\ curNode_predicate_globally
+                                                            /\ (~InLoop' \/ A')
+                         */
+                        builder.equiv(
+                            nodeVarExPrime,
+                            outerOp(
+                                nodeVarEx,
+                                innerOp(
+                                    loopEnc.inLoopPrime,
+                                    builder.prime(argExs(0)),
+                                ),
+                            ),
+                        ),
+                    ),
+                    curModWithPreds.next,
+                )
+
+                /* update loopOK:
+                  (curNode_predicate_globally => curNode_predicate) or (curNode_predicate => curNode_predicate_finally)
+                 */
+                val newLoopOK = conjunctExToOperDecl(
+                    oper match {
+                      case TlaTempOper.box     => builder.impl(auxVarEx, nodeVarEx)
+                      case TlaTempOper.diamond => builder.impl(nodeVarEx, auxVarEx)
+                    },
+                    curModWithPreds.loopOK,
+                )
+
+                curModWithPreds = curModWithPreds.setPredicates(newInit, newNext, newLoopOK)
+                (curModWithPreds, nodeVarEx)
               // case TlaTempOper.guarantees     => mkOpApp("%%s %s %%s".format(m_guarantee), args: _*)
               // case TlaTempOper.leadsTo        => mkOpApp("%%s %s %%s".format(m_leadsto), args: _*)
               // case TlaTempOper.strongFairness => mkApp("SF_%s(%s)", args: _*)
               // case TlaTempOper.weakFairness   => mkApp("WF_%s(%s)", args: _*)
+              // case TlaTempOper.AA             => mkOpApp("[%s]%%s . %%s".format(m_forall), args: _*)
+              // case TlaTempOper.EE             => mkOpApp("[%s]%%s . %%s".format(m_exists), args: _*)
 
               case _ => // not a temporal operator. e.g. A /\ B
                 /* initialize the variable for this node
@@ -110,8 +271,8 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
                  */
                 val newInit = conjunctExToOperDecl(
                     builder.eql(
-                        builder.declAsNameEx(nodeVarDecl),
-                        builder.createUnsafeInstruction(OperEx(oper, args: _*)(curNode.typeTag)),
+                        nodeVarEx,
+                        builder.createUnsafeInstruction(OperEx(oper, argExs: _*)(curNode.typeTag)),
                     ),
                     curModWithPreds.init,
                 )
@@ -121,7 +282,10 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
                           /\ curNode_predicate' = A_predicate' /\ B_predicate'
                  */
                 val newNext = conjunctExToOperDecl(
-                    OperEx(oper, argExs: _*)(curNode.typeTag),
+                    builder.eql(
+                        nodeVarExPrime,
+                        builder.createUnsafeInstruction(OperEx(oper, argExs: _*)(curNode.typeTag)),
+                    ),
                     curModWithPreds.next,
                 )
 
@@ -130,9 +294,12 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
                 (
                     curModWithPreds,
                     /* expression for this node is the name of the variable that encodes it */
-                    builder.declAsNameEx(nodeVarDecl),
+                    nodeVarEx,
                 )
             }
+          case _ =>
+            throw new IrrecoverablePreprocessingError(
+                s"Cannot handle expression ${curNode.toString()} of type ${curNode.getClass()}")
         }
       case _ => /* a propositional expression - used as-is in the formula encoding the syntax tree */
         (modWithPreds, curNode)
