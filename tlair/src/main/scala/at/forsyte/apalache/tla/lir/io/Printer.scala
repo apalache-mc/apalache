@@ -312,11 +312,11 @@ object UsableAsIdentifierPrinter extends Printer {
   }
 
   def printPostfixOperator(args: Seq[String], operatorName: String): String = {
-    s"${leftBracket}_${args.mkString(",")}_${rightBracket}${operatorName}"
+    s"${leftBracket}_${args.mkString("_")}_${rightBracket}${operatorName}"
   }
 
   def printPrefixOperator(args: Seq[String], operatorName: String): String = {
-    s"${operatorName}${leftBracket}_${args.mkString(",")}_${rightBracket}"
+    s"${operatorName}${leftBracket}_${args.mkString("_")}_${rightBracket}"
   }
 
   def printUnboundedQuantiOperator(variable: String, body: String, operatorName: String): String = {
@@ -335,8 +335,8 @@ object UsableAsIdentifierPrinter extends Printer {
     p_ex match {
       case NameEx(name) => return name
       case NullEx       => return "null"
-      case OperEx(oper, args: Seq[_]) =>
-        val strArgs = args.map(arg => this(arg.asInstanceOf[TlaEx]))
+      case OperEx(oper, args @ _*) =>
+        val strArgs = args.map(arg => this(arg))
         oper match {
           case TlaOper.eq              => printInfixOperator(strArgs, "EQ")
           case TlaOper.ne              => printInfixOperator(strArgs, "NEQ")
@@ -396,7 +396,7 @@ object UsableAsIdentifierPrinter extends Printer {
           case TlaFunOper.enum   => printPrefixOperator(strArgs, "ENUM")
           case TlaFunOper.except => printPrefixOperator(strArgs, "EXCEPT")
           case TlaFunOper.funDef => printPrefixOperator(strArgs, "FUNDEF")
-          case TlaFunOper.tuple  => s"TUPLE${leftBracket}_${strArgs.mkString(",")}_${rightBracket}"
+          case TlaFunOper.tuple  => s"TUPLE${leftBracket}_${strArgs.mkString("_")}_${rightBracket}"
 
           case TlaSeqOper.append => printPrefixOperator(strArgs, "APPEND")
           case TlaSeqOper.concat => printInfixOperator(strArgs, "CONCAT")
