@@ -229,7 +229,7 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
    */
   private def failNoCex(outcome: CheckerResult, encoding: SMTEncoding, module: String) = {
     fail(s"Did not find a counter-example in 1 step, outcome was ${outcome}. " +
-      s"Run `apalache-mc check --smt-encoding=${encoding}` on\n${module}")
+      s"Run `apalache-mc check --inv=NotFound --smt-encoding=${encoding}` on\n${module}")
   }
 
   /**
