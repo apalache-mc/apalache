@@ -41,7 +41,7 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
     cmpFactory = new TypeComputationFactory
   }
 
-  private val tt1gen: TlaType1Gen = new TlaType1Gen {}
+  protected val tt1gen: TlaType1Gen = new TlaType1Gen {}
 
   implicit val singleTypeGen: Gen[TlaType1] = tt1gen.genType1
   implicit val doubleTypeGen: Gen[(TlaType1, TlaType1)] = for {

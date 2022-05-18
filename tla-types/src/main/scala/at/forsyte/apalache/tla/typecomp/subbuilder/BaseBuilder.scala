@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeBaseBuilder
 
 /**
- * Builder for base TlaOper expressions.
+ * Type-safe builder for base TlaOper expressions.
  *
  * @author
  *   Jure Kukovec

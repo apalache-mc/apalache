@@ -1,5 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
+import at.forsyte.apalache.infra.ExitCodes
+import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
 import at.forsyte.apalache.tla.bmcmt._
@@ -33,7 +35,7 @@ class BoundedCheckerPassImpl @Inject() (
 
   override def name: String = "BoundedChecker"
 
-  override def execute(module: TlaModule): Option[TlaModule] = {
+  override def execute(module: TlaModule): PassResult = {
     for (decl <- module.operDeclarations) {
       LanguageWatchdog(KeraLanguagePred()).check(decl.body)
     }
@@ -86,11 +88,7 @@ class BoundedCheckerPassImpl @Inject() (
       case algo          => throw new IllegalArgumentException(s"Unexpected checker.algo=$algo")
     }
 
-    if (result) {
-      Some(module)
-    } else {
-      None
-    }
+    if (result) Right(module) else Left(ExitCodes.ERROR_COUNTEREXAMPLE)
   }
 
   private def runIncrementalChecker(
