@@ -382,6 +382,9 @@ prepareRelease := {
   s"git checkout -b release/${v}" ! log
   // Prepare the release notes for release
   val releaseNotesFile = changelingRelaseNotes.value
+  while (!releaseNotesFile.exists()) {
+    Thread.sleep(50)
+  }
   val releaseNotes = IO.read(releaseNotesFile)
   // Create the release commit
   val commitMsg = s"[release] ${v}"
