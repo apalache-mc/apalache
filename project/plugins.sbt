@@ -17,7 +17,7 @@ addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.10.0")
 lazy val root = (project in file("."))
   .dependsOn(changelingPlugin)
   .settings(
-    name := "apalache-plugins"
+      name := "apalache-plugins"
   )
 
 lazy val changelingPlugin =
