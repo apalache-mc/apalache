@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.pp
 import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.transformations.PredResultOk
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.standard.{KeraLanguagePred, KeramelizerInputLanguagePred}
@@ -14,8 +15,6 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers
-import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
-import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 
 @RunWith(classOf[JUnitRunner])
 class TestKeramelizer extends AnyFunSuite with Checkers with BeforeAndAfterEach with Matchers {
@@ -317,7 +316,7 @@ class TestKeramelizer extends AnyFunSuite with Checkers with BeforeAndAfterEach 
         boundName == inName
       case _ => false
     }
-    assert(isExpected, s"Input $input.toString() and got $output.toString()")
+    assert(isExpected, s"Input $input and got $output")
   }
 
   test("""A \subseteq POWSET POWSET B ~~> \A S \in A: \A T \in S: \A t \in T: t \in B""") {
@@ -342,7 +341,7 @@ class TestKeramelizer extends AnyFunSuite with Checkers with BeforeAndAfterEach 
         outerQuantifier == outerSet && middleQuantifier == middleSet && innerQuantifier == element
       case _ => false
     }
-    assert(isExpected, s"Input $input.toString() and got $output.toString()")
+    assert(isExpected, s"Input $input and got $output")
   }
 
   test("""A \subseteq POWSET B ~~> \A S \in A: s \in B""") {
@@ -363,7 +362,7 @@ class TestKeramelizer extends AnyFunSuite with Checkers with BeforeAndAfterEach 
         outerQuantifier == outerSet && innerQuantifier == element
       case _ => false
     }
-    assert(isExpected, s"Input $input.toString() and got $output.toString()")
+    assert(isExpected, s"Input $input and got $output")
   }
 
   test("""POWSET A \subseteq POWSET B ~~> A \subseteq B ~~> \A a \in A: a \in B""") {
@@ -386,6 +385,45 @@ class TestKeramelizer extends AnyFunSuite with Checkers with BeforeAndAfterEach 
     }
     assert(isExpected, s"Input $input.toString() and got $output.toString()")
 
+  }
+
+  test("""rewrite f \in [S -> SUBSET T]  ~~>  DOMAIN f = S /\ \A x \in S: \A y \in f[x]: y \in T""".stripMargin) {
+    val types =
+      Map("b" -> BoolT1(), "s" -> SetT1(IntT1()), "p" -> SetT1(SetT1(IntT1())), "f" -> FunT1(IntT1(), SetT1(IntT1())),
+          "fs" -> SetT1(FunT1(IntT1(), SetT1(IntT1()))))
+    val input =
+      tla
+        .in(tla.name("f") ? "f", tla.funSet(tla.name("S") ? "s", tla.powSet(tla.name("T") ? "s") ? "p") ? "fs")
+        .typed(types, "b")
+    val output = keramelizer(input)
+    val isExpected = output match {
+      case OperEx(TlaBoolOper.and, OperEx(TlaOper.eq, OperEx(TlaFunOper.domain, NameEx("f")), NameEx("S")),
+              OperEx(TlaBoolOper.forall, NameEx(domElem), NameEx("S"),
+                  OperEx(TlaBoolOper.forall, NameEx(cdmElem), OperEx(TlaFunOper.app, NameEx("f"), NameEx(funArg)),
+                      OperEx(TlaSetOper.in, NameEx(element), NameEx("T"))))) =>
+        domElem == funArg && cdmElem == element
+      case _ => false
+    }
+    assert(isExpected, s"Input $input and got $output")
+  }
+
+  test("""rewrite f \in [S -> T]  ~~>  DOMAIN f = S /\ \A x \in S: f[x] \in T""".stripMargin) {
+    val types =
+      Map("b" -> BoolT1(), "s" -> SetT1(IntT1()), "f" -> FunT1(IntT1(), IntT1()),
+          "fs" -> SetT1(FunT1(IntT1(), IntT1())))
+    val input =
+      tla
+        .in(tla.name("f") ? "f", tla.funSet(tla.name("S") ? "s", tla.name("T") ? "s") ? "fs")
+        .typed(types, "b")
+    val output = keramelizer(input)
+    val isExpected = output match {
+      case OperEx(TlaBoolOper.and, OperEx(TlaOper.eq, OperEx(TlaFunOper.domain, NameEx("f")), NameEx("S")),
+              OperEx(TlaBoolOper.forall, NameEx(domElem), NameEx("S"),
+                  OperEx(TlaSetOper.in, OperEx(TlaFunOper.app, NameEx("f"), NameEx(funArg)), NameEx("T")))) =>
+        domElem == funArg
+      case _ => false
+    }
+    assert(isExpected, s"Input $input and got $output")
   }
 
   test("simplifies TLA+ expressions to KerA+") {

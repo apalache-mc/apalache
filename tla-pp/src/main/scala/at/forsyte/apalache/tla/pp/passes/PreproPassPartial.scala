@@ -1,5 +1,7 @@
 package at.forsyte.apalache.tla.pp.passes
 
+import at.forsyte.apalache.infra.ExitCodes
+import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.imp.src.SourceStore
@@ -56,25 +58,25 @@ abstract class PreproPassPartial(
     }
   }
 
-  protected def postLanguageCheck(tlaModule: TlaModule, lPred: LanguagePred): Option[TlaModule] =
+  protected def postLanguageCheck(tlaModule: TlaModule, lPred: LanguagePred): PassResult =
     // check, whether all expressions fit in the language
     lPred.isModuleOk(tlaModule) match {
       case PredResultOk() =>
-        Some(tlaModule)
+        Right(tlaModule)
 
       case PredResultFail(failedIds) =>
         for ((id, errorMessage) <- failedIds) {
           val message = "%s: unsupported expression: %s".format(findLoc(id), errorMessage)
           logger.error(message)
         }
-        None
+        Left(ExitCodes.FAILURE_SPEC_EVAL)
     }
 
   protected def executeWithParams(
       tlaModule: TlaModule,
       transformationSequence: List[(String, TlaModuleTransformation)],
       postRename: Boolean,
-      lPred: LanguagePred): Option[TlaModule] = {
+      lPred: LanguagePred): PassResult = {
     val afterModule = applyTx(tlaModule, transformationSequence, postRename)
 
     checkLocations(tlaModule)

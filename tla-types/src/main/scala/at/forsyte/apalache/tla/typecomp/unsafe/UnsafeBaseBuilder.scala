@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.values.TlaStr
 
 /**
- * Unsafe builder for base TlaOper expressions.
+ * Type-unsafe builder for base TlaOper expressions.
  *
  * @author
  *   Jure Kukovec

@@ -1,5 +1,7 @@
 package at.forsyte.apalache.tla.typecheck.passes
 
+import at.forsyte.apalache.infra.ExitCodes
+import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.tla.imp.src.SourceStore
@@ -28,7 +30,7 @@ class EtcTypeCheckerPassImpl @Inject() (
 
   override def name: String = "TypeCheckerSnowcat"
 
-  override def execute(tlaModule: TlaModule): Option[TlaModule] = {
+  override def execute(tlaModule: TlaModule): PassResult = {
     logger.info(" > Running Snowcat .::.")
 
     val tool = new TypeCheckerTool(annotationStore, inferPoly, useRows)
@@ -55,10 +57,10 @@ class EtcTypeCheckerPassImpl @Inject() (
 
         utils.writeToOutput(newModule, options, writerFactory, logger, sourceStore)
 
-        Some(newModule)
+        Right(newModule)
       case None =>
         logger.info(" > Snowcat asks you to fix the types. Meow.")
-        None
+        Left(ExitCodes.ERROR_TYPECHECK)
     }
   }
 

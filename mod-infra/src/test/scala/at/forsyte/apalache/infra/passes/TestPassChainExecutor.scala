@@ -1,5 +1,7 @@
 package at.forsyte.apalache.infra.passes
 
+import at.forsyte.apalache.infra.ExitCodes
+import at.forsyte.apalache.infra.passes.Pass.PassResult
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
@@ -11,11 +13,11 @@ class TestPassChainExecutor extends AnyFunSuite {
   class ParametrizedPass(result: Boolean, deps: Set[ModuleProperty.Value], transfs: Set[ModuleProperty.Value])
       extends Pass {
     override def name = "TestPass"
-    override def execute(tlaModule: TlaModule): Option[TlaModule] = {
+    override def execute(tlaModule: TlaModule): PassResult = {
       if (result) {
-        Some(new TlaModule("TestModule", Seq()))
+        Right(TlaModule("TestModule", Seq()))
       } else {
-        None
+        Left(ExitCodes.ERROR)
       }
     }
     override def dependencies = deps
@@ -30,7 +32,7 @@ class TestPassChainExecutor extends AnyFunSuite {
 
     val executor = new PassChainExecutor(options, Seq(pass1, pass2))
     val result = executor.run()
-    assert(result.isDefined)
+    assert(result.isRight)
   }
 
   test("""Throws error on a bad ordered chain""") {
@@ -54,6 +56,6 @@ class TestPassChainExecutor extends AnyFunSuite {
     val executor = new PassChainExecutor(options, Seq(pass1, pass2))
 
     val result = executor.run()
-    assert(result.isEmpty)
+    assert(result.isLeft)
   }
 }

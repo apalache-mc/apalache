@@ -154,7 +154,6 @@ object KeraLanguagePred {
         TlaArithOper.ge,
         TlaSetOper.in,
         TlaSetOper.cup,
-        TlaSetOper.subseteq,
         TlaSeqOper.concat,
         ApalacheOper.assign,
         // for the future

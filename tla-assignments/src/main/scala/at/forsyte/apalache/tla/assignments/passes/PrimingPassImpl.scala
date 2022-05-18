@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.assignments.passes
 
+import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.io.lir.TlaWriterFactory
@@ -18,7 +19,7 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
 
   override def name: String = "PrimingPass"
 
-  override def execute(tlaModule: TlaModule): Option[TlaModule] = {
+  override def execute(tlaModule: TlaModule): PassResult = {
     val declarations = tlaModule.declarations
     val varSet = tlaModule.varDeclarations.map(_.name).toSet
     val constSet = tlaModule.constDeclarations.map(_.name).toSet
@@ -57,7 +58,7 @@ class PrimingPassImpl @Inject() (options: PassOptions, tracker: TransformationTr
 
     writeOut(writerFactory, newModule)
 
-    Some(newModule)
+    Right(newModule)
   }
 
   override def dependencies = Set(ModuleProperty.Configured)

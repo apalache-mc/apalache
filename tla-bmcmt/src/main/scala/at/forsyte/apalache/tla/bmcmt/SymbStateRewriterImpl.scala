@@ -212,8 +212,6 @@ class SymbStateRewriterImpl(
           -> List(new SetInRule(this)),
         key(tla.enumSet(tla.name("x")))
           -> List(new SetCtorRule(this)),
-        key(tla.subseteq(tla.name("x"), tla.name("S")))
-          -> List(new SetInclusionRule(this)),
         key(tla.cup(tla.name("X"), tla.name("Y")))
           -> List(new SetCupRule(this)),
         key(tla.filter(tla.name("x"), tla.name("S"), tla.name("p")))
@@ -262,10 +260,6 @@ class SymbStateRewriterImpl(
           -> List(new FunSetCtorRule(this)),
         key(tla.dom(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S"))))
           -> List(new DomainRule(this, intRangeCache)), // also works for records
-        key(tla.recFunDef(tla.name("e"), tla.name("x"), tla.name("S")))
-          -> List(new RecFunDefAndRefRule(this)),
-        key(tla.recFunRef())
-          -> List(new RecFunDefAndRefRule(this)),
         // tuples, records, and sequences
         key(tla.tuple(tla.name("x"), tla.int(2)))
           -> List(new TupleOrSeqCtorRule(this)),
