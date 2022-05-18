@@ -371,6 +371,51 @@ lazy val versionFile = settingKey[File]("Location of the file tracking the proje
 // we should consider moving to a release pipeline based around sbt-release.
 // See https://github.com/informalsystems/apalache/issues/1248
 
+lazy val prepareRelease = taskKey[Unit](
+    "Prepare a release branch for continuous deployment"
+)
+
+prepareRelease := {
+  val log = streams.value.log
+  val v = (ThisBuild / version).value
+  // Create a release branch
+  s"git checkout -b 'release/${v}'" ! log
+  // Prepare the release notes for release
+  val releaseNotesFile = changelingRelaseNotes.value
+  val releaseNotes = IO.read(releaseNotesFile)
+  val changelog = changelingChangelog.value
+  // Create the release commit
+  val commitMsg = s"[release] ${v}"
+  "git add --update" ! log
+  s"git add ${changelog}" ! log
+  s"git commit -m '${commitMsg}'" ! log
+  // Bump the version to the next release
+  val nextVersion = incrVersion.value
+  "git add --update" ! log
+  s"git commit -m 'Bump version to ${nextVersion}'" ! log
+  // Open a pull request for the release
+  // See https://hub.github.com/hub-pull-request.1.html
+  val prInstructions = """
+    |# Reviewer instructions
+    |
+    |- Check the changelog to ensure the version increment is consistent with https://semver.org/.
+    |- If a different version should be released, follow [the instructions](https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md#via-github).
+    |- Review the changeset as a sanity check.
+    |- Approve the PR, if it pases muster.
+    |- **Merge** this branch (do not squash or rebase), but **DO NOT DELETE THE BRANCH**.
+    |- After the release has been published to github, delete this branch.
+    |
+    | ---
+    |
+    | # Release notes
+    |""".stripMargin
+  s"""hub pull-request --push
+        --message='${commitMsg}'
+        --message='${prInstructions}'
+        --message='${releaseNotes}'
+        --base="unstable" """ ! log
+}
+
 lazy val printVersion = taskKey[Unit]("Print the current version")
 printVersion := {
   println((ThisBuild / version).value)
