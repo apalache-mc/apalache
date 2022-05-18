@@ -8,7 +8,6 @@ package systems.informal.sbt.changeling
  * ==Motivation==
  *
  * Merge conflicts arise when the same lines in the same files are edited
- *
  * "simultaneously" in two different branches. The basic idea is to reduce the chance of merge conflicts by adding each
  * entry of an unreleased change into the changelog via a separate file.
  *
@@ -46,7 +45,7 @@ package systems.informal.sbt.changeling
  * - Change entry 4
  * }}}
  *
- * The obvious, high-level document model is a tree of depth 4:
+ * The obvious, high-level document model is a tree of height 3:
  *
  * {{{
  * Changelog
@@ -98,7 +97,7 @@ object ChangelingPlugin extends AutoPlugin {
   // The keys in this object are imported into a project when the plugin is enabled
   object autoImport {
     lazy val changelingKinds = settingKey[Seq[String]](
-        """|Configures the supported kinds of changes, and and order in which
+        """|Configures the supported kinds of changes, and order in which
            |these should be reported in the rendered changelog. Each kind is a
            |possible subheading in the notes for a release.""".stripMargin
     )
@@ -194,15 +193,15 @@ object Changeling {
    * Render the directory unreleased directory structure as a markdown file
    *
    * @param changeKinds
-   *   The supported kinds of cnhages, establishes order of change sections
+   *   The supported kinds of changes, establishes order of change sections
    * @param version
-   *   The version to be released, used as heading of realease notes
+   *   The version to be released, used as heading of release notes
    * @param unreleasedDir
    *   The directory from which to read the unreleased change entries
-   * @param relaseNotes
+   * @param releaseNotes
    *   The file into which the release notes will be written
    * @returns
-   *   The TrelaseNotes
+   *   The file containing the rendered release notes
    */
   def renderReleaseNotes(
       changeKinds: Seq[String],
@@ -220,7 +219,7 @@ object Changeling {
     // we just have to flatten the directory tree with the following transformations
     //
     // - transforming the change directory name into an H3 heading
-    // - get the contnet of each file in the change directory, and make it a
+    // - get the content of each file in the change directory, and make it a
     //   bullet list item
     val changeSections = IO
       .listFiles(unreleasedDir)
@@ -250,10 +249,10 @@ object Changeling {
   }
 
   /**
-   * Move all the contents of the cange directories in `unrelasedDir` into a "trash" dir in `resourceDir`
+   * Move all the contents of the change directories in `unrelasedDir` into a "trash" dir in `resourceDir`
    *
    * @return
-   *   the trash directory crated
+   *   the trash directory created
    */
   def cleanChanges(resourceDir: File, unreleasedDir: File): Unit = {
     // So we can recover dirs if needed
