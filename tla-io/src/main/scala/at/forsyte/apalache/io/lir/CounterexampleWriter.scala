@@ -114,7 +114,7 @@ class JsonCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter
         case 0 => "ConstInit"
         case _ => s"State${i - 1}"
       }
-      tla.declOp(name, stateToEx(state._2)).withTag(Untyped())
+      tla.declOp(name, stateToEx(state._2)).withTag(Untyped)
     }
 
     val mod =

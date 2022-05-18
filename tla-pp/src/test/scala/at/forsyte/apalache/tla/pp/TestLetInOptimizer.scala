@@ -75,7 +75,7 @@ class TestLetInOptimizer extends AnyFunSuite with BeforeAndAfterEach {
     val fType = parser("Int => Bool")
     val f = declOp("f", bool(true).typed(), OperParam("x")).as(fType)
     val seqType = parser("Seq(Int)")
-    val operT = OperT1(Seq(IntT1()), BoolT1())
+    val operT = OperT1(Seq(IntT1), BoolT1)
     val input =
       appOp(name("SelectSeq").as(operT), name("seq").as(seqType), letIn(name("f").as(fType), f).as(fType)).as(seqType)
     assert(keep(input) == optimizer(touch(input)))

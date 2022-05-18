@@ -40,7 +40,7 @@ class TestTlcConfigImporter extends AnyFunSuite with BeforeAndAfterEach {
     // run the type checker
     val typedModule =
       typeChecker
-        .checkAndTag(new IdleTracker(), new MultiTypeCheckerListener(), defaultTag = { _ => Untyped() }, mod)
+        .checkAndTag(new IdleTracker(), new MultiTypeCheckerListener(), defaultTag = { _ => Untyped }, mod)
         .get
 
     val mod2 = new TlcConfigImporter(config)(typedModule)

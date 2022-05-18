@@ -6,10 +6,10 @@ import at.forsyte.apalache.tla.lir.convenience.tla._
 
 trait TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
   private val types = Map(
-      "b" -> BoolT1(),
-      "i" -> IntT1(),
-      "I" -> SetT1(IntT1()),
-      "O" -> OperT1(Seq(), IntT1()),
+      "b" -> BoolT1,
+      "i" -> IntT1,
+      "I" -> SetT1(IntT1),
+      "O" -> OperT1(Seq(), IntT1),
   )
 
   test("""IF 3 > 2 THEN 2 < 4 ELSE 5 < 1""") { rewriterType: SMTEncoding =>

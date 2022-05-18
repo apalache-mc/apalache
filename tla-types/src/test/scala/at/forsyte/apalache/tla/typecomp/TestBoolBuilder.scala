@@ -19,11 +19,11 @@ class TestBoolBuilder extends BuilderTest {
     val builtArgs = args.map(build)
     val res = cmp(builtArgs)
 
-    assert(res.contains(BoolT1()))
+    assert(res.contains(BoolT1))
 
     val resEx = eval(args)
 
-    assert(resEx.eqTyped(OperEx(oper, builtArgs: _*)(Typed(BoolT1()))))
+    assert(resEx.eqTyped(OperEx(oper, builtArgs: _*)(Typed(BoolT1))))
 
     val badY: TBuilderInstruction = builder.str("a")
     val badArgs = badY +: args.tail
@@ -91,11 +91,11 @@ class TestBoolBuilder extends BuilderTest {
       oper: TlaBoolOper,
       methodE: Either[(TBuilderInstruction, TBuilderInstruction, TBuilderInstruction) => TBuilderInstruction, (
               TBuilderInstruction, TBuilderInstruction) => TBuilderInstruction]): Unit = {
-    val xBool = builder.name("x", BoolT1())
-    val xInt = builder.name("x", IntT1())
+    val xBool = builder.name("x", BoolT1)
+    val xInt = builder.name("x", IntT1)
 
-    val sBool = builder.name("S", SetT1(BoolT1()))
-    val sInt = builder.name("S", SetT1(IntT1()))
+    val sBool = builder.name("S", SetT1(BoolT1))
+    val sInt = builder.name("S", SetT1(IntT1))
 
     val (okW, typeErrorW, scopeErrorW, expected) = methodE match {
       case Left(boundQuant) =>
@@ -107,10 +107,10 @@ class TestBoolBuilder extends BuilderTest {
 
         val expected = OperEx(
             oper,
-            NameEx("x")(Typed(BoolT1())),
-            NameEx("S")(Typed(SetT1(BoolT1()))),
-            NameEx("x")(Typed(BoolT1())),
-        )(Typed(BoolT1()))
+            NameEx("x")(Typed(BoolT1)),
+            NameEx("S")(Typed(SetT1(BoolT1))),
+            NameEx("x")(Typed(BoolT1)),
+        )(Typed(BoolT1))
 
         (okW, typeErrorW, scopeErrorW, expected)
       case Right(unboundQuant) =>
@@ -122,9 +122,9 @@ class TestBoolBuilder extends BuilderTest {
 
         val expected = OperEx(
             oper,
-            NameEx("x")(Typed(BoolT1())),
-            NameEx("x")(Typed(BoolT1())),
-        )(Typed(BoolT1()))
+            NameEx("x")(Typed(BoolT1)),
+            NameEx("x")(Typed(BoolT1)),
+        )(Typed(BoolT1))
 
         (okW, typeErrorW, scopeErrorW, expected)
     }

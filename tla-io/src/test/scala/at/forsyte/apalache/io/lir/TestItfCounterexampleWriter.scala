@@ -34,7 +34,7 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
   }
 
   test("ITF JSON no state") {
-    val intTag = Typed(IntT1())
+    val intTag = Typed(IntT1)
     compareJson(
         TlaModule("test", List(TlaConstDecl("N")(intTag), TlaVarDecl("x")(intTag))),
         List(
@@ -61,16 +61,16 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
   }
 
   test("ITF JSON single state") {
-    val intSeq = SeqT1(IntT1())
-    val intAndStr = TupT1(IntT1(), StrT1())
-    val intSet = SetT1(IntT1())
-    val fooBar = RecT1("foo" -> IntT1(), "bar" -> BoolT1())
-    val intToStr = FunT1(IntT1(), StrT1())
+    val intSeq = SeqT1(IntT1)
+    val intAndStr = TupT1(IntT1, StrT1)
+    val intSet = SetT1(IntT1)
+    val fooBar = RecT1("foo" -> IntT1, "bar" -> BoolT1)
+    val intToStr = FunT1(IntT1, StrT1)
 
     def pair(i: Int, s: String) = tuple(int(i), str(s)).as(intAndStr)
     val decls = List(
-        TlaVarDecl("a")(Typed(IntT1())),
-        TlaVarDecl("b")(Typed(StrT1())),
+        TlaVarDecl("a")(Typed(IntT1)),
+        TlaVarDecl("b")(Typed(StrT1)),
         TlaVarDecl("c")(Typed(intSeq)),
         TlaVarDecl("d")(Typed(intSet)),
         TlaVarDecl("e")(Typed(fooBar)),
@@ -86,9 +86,9 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
             ("B",
                 SortedMap(
                     // 2
-                    "a" -> int(2).as(IntT1()),
+                    "a" -> int(2).as(IntT1),
                     // "hello"
-                    "b" -> str("hello").as(StrT1()),
+                    "b" -> str("hello").as(StrT1),
                     // 1000000000000000000 > 2^53 - 1
                     "c" -> tuple(int(3), int(BigInt("1000000000000000000", 10))).as(intSeq),
                     // { 5, 6 }

@@ -28,13 +28,13 @@ class EqRule(rewriter: SymbStateRewriter) extends RewritingRule with IntArithPac
       state.setRex(state.arena.cellTrue().toNameEx)
 
     // Pack integer equality into a single SMT constraint
-    case OperEx(TlaOper.eq, lhs, rhs) if lhs.typeTag == Typed(IntT1()) && rhs.typeTag == Typed(IntT1()) =>
+    case OperEx(TlaOper.eq, lhs, rhs) if lhs.typeTag == Typed(IntT1) && rhs.typeTag == Typed(IntT1) =>
       // pack the arithmetic expression `state.ex` into `packedState.ex`
       val leftState = packArithExpr(rewriter, state.setRex(lhs))
       val rightState = packArithExpr(rewriter, leftState.setRex(rhs))
 
       // add new arena cell
-      val newArena = rightState.arena.appendCell(BoolT1())
+      val newArena = rightState.arena.appendCell(BoolT1)
       val newCell = newArena.topCell
 
       // assert the new cell is equal to the packed comparison
@@ -48,7 +48,7 @@ class EqRule(rewriter: SymbStateRewriter) extends RewritingRule with IntArithPac
       val leftCell = newState.asCell
       newState = rewriter.rewriteUntilDone(newState.setRex(rhs))
       val rightCell = newState.asCell
-      newState = newState.setArena(newState.arena.appendCell(BoolT1()))
+      newState = newState.setArena(newState.arena.appendCell(BoolT1))
       val eqPred = newState.arena.topCell
 
       // produce equality constraints, so that we can use SMT equality

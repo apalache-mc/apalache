@@ -395,7 +395,7 @@ class SeqModelChecker[ExecutorContextT](
     notTraceInv match {
       case TlaOperDecl(_, List(OperParam(name, 0)), body) =>
         // LET Call_$param == hist IN notTraceInv(param)
-        val operType = OperT1(Seq(seqType), BoolT1())
+        val operType = OperT1(Seq(seqType), BoolT1)
         val callName = s"Call_$name"
         // replace param with $callName() in the body
         val app = OperEx(TlaOper.apply, NameEx(callName)(Typed(operType)))(Typed(seqType))
@@ -426,7 +426,7 @@ class SeqModelChecker[ExecutorContextT](
           repl.whenMatches(isToReplace, assignedEx.copy())(replacedView)
         }
       // the view over state variables should not be equal to the view over the model values
-      val boolTag = Typed(BoolT1())
+      val boolTag = Typed(BoolT1)
       OperEx(TlaBoolOper.not, OperEx(TlaOper.eq, modelView, view)(boolTag))(boolTag)
     }
 
@@ -434,7 +434,7 @@ class SeqModelChecker[ExecutorContextT](
       // extract expressions from the model, as we are going to use these expressions (not the cells!) in path constraints
       val exec = trex.decodedExecution()
       // omit the first assignment, as it contains only assignments to the state variables
-      val pathConstraint = ValEx(TlaBool(true))(Typed(BoolT1())) :: (exec.path.tail.map(_._1).map(computeViewNeq(view)))
+      val pathConstraint = ValEx(TlaBool(true))(Typed(BoolT1)) :: (exec.path.tail.map(_._1).map(computeViewNeq(view)))
       trex.addPathOrConstraint(pathConstraint)
     }
   }

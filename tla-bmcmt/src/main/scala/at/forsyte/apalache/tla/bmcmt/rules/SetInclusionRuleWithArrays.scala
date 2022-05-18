@@ -96,7 +96,7 @@ class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends RewritingR
                       rightElemOrDomain.toNameEx), tla.eql(rightElemOrDomainElem.toNameEx, leftElem.toNameEx)))
         }
 
-        newState = newState.updateArena(_.appendCell(BoolT1()))
+        newState = newState.updateArena(_.appendCell(BoolT1))
         val pred = newState.arena.topCell
         val elemsInAndEqLeftElem = rightElemOrDomainElems.map(isInAndEqLeftElem)
 
@@ -108,7 +108,7 @@ class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends RewritingR
       }
 
       val isSubset = tla.and(leftElems.map(isInRightSet): _*)
-      newState = newState.updateArena(_.appendCell(BoolT1()))
+      newState = newState.updateArena(_.appendCell(BoolT1))
       val pred = newState.arena.topCell
       rewriter.solverContext.assertGroundExpr(simplifier.simplifyShallow(tla.eql(pred.toNameEx, isSubset)))
       newState.setRex(pred.toNameEx)

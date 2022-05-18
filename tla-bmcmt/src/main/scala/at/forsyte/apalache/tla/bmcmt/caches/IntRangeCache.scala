@@ -35,7 +35,7 @@ class IntRangeCache(solverContext: SolverContext, intValueCache: IntValueCache)
 
     val cells = range._1.to(range._2).map(intToCell)
     // create the domain cell
-    arena = arena.appendCell(SetT1(IntT1()))
+    arena = arena.appendCell(SetT1(IntT1))
     val set = arena.topCell
     arena = arena.appendHas(set, cells: _*)
     // force that every element is in the set

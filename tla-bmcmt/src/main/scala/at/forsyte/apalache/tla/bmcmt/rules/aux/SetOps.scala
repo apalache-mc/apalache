@@ -37,7 +37,7 @@ class SetOps(rewriter: SymbStateRewriter) {
     var newArena = state.arena
     // introduce one predicate per element
     val predicates = elems.map { _ =>
-      newArena = newArena.appendCell(BoolT1())
+      newArena = newArena.appendCell(BoolT1)
       newArena.topCell
     }
     var nextState = state.setArena(newArena)

@@ -18,61 +18,61 @@ import scala.collection.immutable.SortedMap
 class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
   private var gen: UniqueNameGenerator = _
   private var desugarer: Desugarer = _
-  private val intT = IntT1()
-  private val strT = StrT1()
+  private val intT = IntT1
+  private val strT = StrT1
   private val intAndStrT = TupT1(intT, strT)
   private val s1 = TupT1(strT)
   private val i1 = TupT1(intT)
   private val exceptTypes = Map(
-      "f1" -> FunT1(IntT1(), IntT1()),
-      "f2" -> FunT1(IntT1(), FunT1(IntT1(), IntT1())),
-      "f3" -> FunT1(IntT1(), FunT1(IntT1(), FunT1(IntT1(), IntT1()))),
-      "r" -> RecT1(SortedMap("foo" -> StrT1(), "bar" -> IntT1())),
-      "or" -> OperT1(Seq(), RecT1(SortedMap("foo" -> StrT1(), "bar" -> IntT1()))),
-      "fr" -> FunT1(IntT1(), RecT1(SortedMap("foo" -> StrT1(), "bar" -> IntT1()))),
-      "ofr" -> OperT1(Seq(), FunT1(IntT1(), RecT1(SortedMap("foo" -> StrT1(), "bar" -> IntT1())))),
-      "ii" -> TupT1(IntT1(), IntT1()),
-      "si" -> TupT1(StrT1(), IntT1()),
+      "f1" -> FunT1(IntT1, IntT1),
+      "f2" -> FunT1(IntT1, FunT1(IntT1, IntT1)),
+      "f3" -> FunT1(IntT1, FunT1(IntT1, FunT1(IntT1, IntT1))),
+      "r" -> RecT1(SortedMap("foo" -> StrT1, "bar" -> IntT1)),
+      "or" -> OperT1(Seq(), RecT1(SortedMap("foo" -> StrT1, "bar" -> IntT1))),
+      "fr" -> FunT1(IntT1, RecT1(SortedMap("foo" -> StrT1, "bar" -> IntT1))),
+      "ofr" -> OperT1(Seq(), FunT1(IntT1, RecT1(SortedMap("foo" -> StrT1, "bar" -> IntT1)))),
+      "ii" -> TupT1(IntT1, IntT1),
+      "si" -> TupT1(StrT1, IntT1),
       "is" -> intAndStrT,
-      "f_si" -> FunT1(IntT1(), TupT1(StrT1(), IntT1())),
-      "o_si" -> OperT1(Seq(), TupT1(IntT1(), StrT1())),
-      "o_f_si" -> OperT1(Seq(), FunT1(IntT1(), TupT1(StrT1(), IntT1()))),
-      "i_to_Qs" -> FunT1(IntT1(), SeqT1(StrT1())),
-      "o_i_to_Qs" -> OperT1(Seq(), FunT1(IntT1(), SeqT1(StrT1()))),
-      "Qs" -> SeqT1(StrT1()),
-      "o_Qs" -> OperT1(Seq(), SeqT1(StrT1())),
-      "O1" -> OperT1(Seq(), FunT1(IntT1(), IntT1())),
-      "O2" -> OperT1(Seq(), FunT1(IntT1(), FunT1(IntT1(), IntT1()))),
-      "O3" -> OperT1(Seq(), FunT1(IntT1(), FunT1(IntT1(), FunT1(IntT1(), IntT1())))),
+      "f_si" -> FunT1(IntT1, TupT1(StrT1, IntT1)),
+      "o_si" -> OperT1(Seq(), TupT1(IntT1, StrT1)),
+      "o_f_si" -> OperT1(Seq(), FunT1(IntT1, TupT1(StrT1, IntT1))),
+      "i_to_Qs" -> FunT1(IntT1, SeqT1(StrT1)),
+      "o_i_to_Qs" -> OperT1(Seq(), FunT1(IntT1, SeqT1(StrT1))),
+      "Qs" -> SeqT1(StrT1),
+      "o_Qs" -> OperT1(Seq(), SeqT1(StrT1)),
+      "O1" -> OperT1(Seq(), FunT1(IntT1, IntT1)),
+      "O2" -> OperT1(Seq(), FunT1(IntT1, FunT1(IntT1, IntT1))),
+      "O3" -> OperT1(Seq(), FunT1(IntT1, FunT1(IntT1, FunT1(IntT1, IntT1)))),
       "i" -> intT,
-      "i1" -> TupT1(IntT1()),
-      "i2" -> TupT1(IntT1(), IntT1()),
-      "i3" -> TupT1(IntT1(), IntT1(), IntT1()),
+      "i1" -> TupT1(IntT1),
+      "i2" -> TupT1(IntT1, IntT1),
+      "i3" -> TupT1(IntT1, IntT1, IntT1),
       "s" -> strT,
       "s1" -> s1,
   )
   private val unchangedTypes = Map(
-      "i" -> IntT1(),
-      "b" -> BoolT1(),
+      "i" -> IntT1,
+      "b" -> BoolT1,
       "et" -> TupT1(),
-      "b1" -> TupT1(BoolT1()),
-      "i_b1_2" -> TupT1(IntT1(), TupT1(BoolT1())),
-      "ib_2" -> TupT1(IntT1(), BoolT1()),
-      "ibi_3" -> TupT1(IntT1(), BoolT1()),
-      "i_ib_2_2" -> TupT1(IntT1(), TupT1(IntT1(), BoolT1())),
-      "f1" -> FunT1(IntT1(), IntT1()),
+      "b1" -> TupT1(BoolT1),
+      "i_b1_2" -> TupT1(IntT1, TupT1(BoolT1)),
+      "ib_2" -> TupT1(IntT1, BoolT1),
+      "ibi_3" -> TupT1(IntT1, BoolT1),
+      "i_ib_2_2" -> TupT1(IntT1, TupT1(IntT1, BoolT1)),
+      "f1" -> FunT1(IntT1, IntT1),
   )
   private val tupleTypes = Map(
-      "b" -> BoolT1(),
-      "i" -> IntT1(),
-      "I" -> SetT1(IntT1()),
-      "i_to_I" -> FunT1(IntT1(), SetT1(IntT1())),
-      "ii_to_i" -> FunT1(TupT1(IntT1(), IntT1()), IntT1()),
-      "ii_2" -> TupT1(IntT1(), IntT1()),
-      "i_ii_2_2" -> TupT1(IntT1(), TupT1(IntT1(), IntT1())),
-      "I_II_2_2" -> SetT1(TupT1(IntT1(), TupT1(IntT1(), IntT1()))),
-      "II_2" -> SetT1(TupT1(IntT1(), IntT1())),
-      "i_ii_2_2_to_ii_2" -> FunT1(TupT1(IntT1(), TupT1(IntT1(), IntT1())), TupT1(IntT1(), IntT1())),
+      "b" -> BoolT1,
+      "i" -> IntT1,
+      "I" -> SetT1(IntT1),
+      "i_to_I" -> FunT1(IntT1, SetT1(IntT1)),
+      "ii_to_i" -> FunT1(TupT1(IntT1, IntT1), IntT1),
+      "ii_2" -> TupT1(IntT1, IntT1),
+      "i_ii_2_2" -> TupT1(IntT1, TupT1(IntT1, IntT1)),
+      "I_II_2_2" -> SetT1(TupT1(IntT1, TupT1(IntT1, IntT1))),
+      "II_2" -> SetT1(TupT1(IntT1, IntT1)),
+      "i_ii_2_2_to_ii_2" -> FunT1(TupT1(IntT1, TupT1(IntT1, IntT1)), TupT1(IntT1, IntT1)),
   )
 
   private val varNames = Set(
@@ -95,7 +95,7 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
 
         case RecT1(fieldTypes) =>
           if (fieldTypes.contains(key)) {
-            (StrT1(), fieldTypes(key))
+            (StrT1, fieldTypes(key))
           } else {
             throw new IllegalArgumentException(s"No key $key in $tt")
           }
@@ -103,7 +103,7 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
         case TupT1(elems @ _*) =>
           val intKey = key.toInt
           if (intKey > 0 && intKey <= elems.length) {
-            (IntT1(), elems(intKey))
+            (IntT1, elems(intKey))
           } else {
             throw new IllegalArgumentException(s"No index $key in $tt")
           }
@@ -205,9 +205,9 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("EXCEPT two-dimensional, function + row record") {
-    val r = RecRowT1(RowT1("foo" -> StrT1(), "bar" -> IntT1()))
+    val r = RecRowT1(RowT1("foo" -> StrT1, "bar" -> IntT1))
     val or = OperT1(Seq(), r)
-    val fr = FunT1(IntT1(), r)
+    val fr = FunT1(IntT1, r)
     val ofr = OperT1(Seq(), fr)
     val foo = name("foo").as(strT)
     val i = name("i").as(intT)
@@ -401,40 +401,40 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
 
   test("""rewrite UNCHANGED x to x' := x""") {
     // input: x
-    def xAsI = tla.name("x").as(IntT1())
-    val input = tla.unchanged(xAsI).as(BoolT1())
+    def xAsI = tla.name("x").as(IntT1)
+    val input = tla.unchanged(xAsI).as(BoolT1)
     val output = desugarer.transform(input)
     // output: x' = x
-    val expected = tla.assign(tla.prime(xAsI).as(IntT1()), xAsI).as(BoolT1())
+    val expected = tla.assign(tla.prime(xAsI).as(IntT1), xAsI).as(BoolT1)
     assert(expected.eqTyped(output))
   }
 
   test("""rewrite UNCHANGED N to N' = N""") {
     // input: N
-    def nAsI = tla.name("N").as(IntT1())
-    val input = tla.unchanged(nAsI).as(BoolT1())
+    def nAsI = tla.name("N").as(IntT1)
+    val input = tla.unchanged(nAsI).as(BoolT1)
     val output = desugarer.transform(input)
     // output: x' = x
-    val expected = tla.eql(tla.prime(nAsI).as(IntT1()), nAsI).as(BoolT1())
+    val expected = tla.eql(tla.prime(nAsI).as(IntT1), nAsI).as(BoolT1)
     assert(expected.eqTyped(output))
   }
 
   test("""rewrite UNCHANGED <<x, <<y>> >> to x' := x /\ y' := y""") {
     // input: <<x, <<y>> >>
     def varAsT(name: String, t: TlaType1) = tla.name(name).as(t)
-    def n_x = varAsT("x", IntT1())
-    def n_y = varAsT("y", BoolT1())
+    def n_x = varAsT("x", IntT1)
+    def n_y = varAsT("y", BoolT1)
     val input =
-      tla.unchanged(tla.tuple(n_x, tla.tuple(n_y).as(TupT1(BoolT1()))).as(TupT1(IntT1(), TupT1(BoolT1())))).as(BoolT1())
+      tla.unchanged(tla.tuple(n_x, tla.tuple(n_y).as(TupT1(BoolT1))).as(TupT1(IntT1, TupT1(BoolT1)))).as(BoolT1)
     val output = desugarer.transform(input)
     // output: x' = x /\ y' = y
     val expected: TlaEx =
       tla
         .and(
-            tla.assign(tla.prime(n_x).as(IntT1()), n_x).as(BoolT1()),
-            tla.assign(tla.prime(n_y).as(BoolT1()), n_y).as(BoolT1()),
+            tla.assign(tla.prime(n_x).as(IntT1), n_x).as(BoolT1),
+            tla.assign(tla.prime(n_y).as(BoolT1), n_y).as(BoolT1),
         )
-        .as(BoolT1())
+        .as(BoolT1)
     assert(expected.eqTyped(output))
   }
 
@@ -512,8 +512,8 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
         .typed(unchangedTypes, "b")
     val sugarFree = desugarer.transform(unchanged)
     def asgnPrime(name: String) = {
-      def nEx = tla.name(name).as(IntT1())
-      tla.assign(tla.prime(nEx).as(IntT1()), nEx).as(BoolT1())
+      def nEx = tla.name(name).as(IntT1)
+      tla.assign(tla.prime(nEx).as(IntT1), nEx).as(BoolT1)
     }
     val expected: TlaEx =
       tla
@@ -556,7 +556,7 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
       .typed(unchangedTypes, "i")
     val input = tla
       .unchanged(app)
-      .typed(BoolT1())
+      .typed(BoolT1)
     val output = desugarer.transform(input)
     // output: (f[i])' = f[i]
     val expected: TlaEx =
@@ -755,7 +755,7 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("accept calls to user-defined operators") {
-    val types = Map("i" -> IntT1(), "F" -> OperT1(Seq(), IntT1()))
+    val types = Map("i" -> IntT1, "F" -> OperT1(Seq(), IntT1))
     // Foo(1)
     val input =
       tla
@@ -767,7 +767,7 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("accept n-ary let-in definitions") {
-    val types = Map("i" -> IntT1(), "F" -> OperT1(Seq(), IntT1()))
+    val types = Map("i" -> IntT1, "F" -> OperT1(Seq(), IntT1))
     // Foo(1)
     val fooDef = tla
       .declOp("Foo", tla.name("x") ? "i", OperParam("x"))
@@ -782,48 +782,48 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
 
   test("rewrite A ~> B to [](A => <>B)") {
     val input: TlaEx =
-      tla.leadsTo(tla.name("A").typed(BoolT1()), tla.name("B").typed(BoolT1())).typed(BoolT1())
+      tla.leadsTo(tla.name("A").typed(BoolT1), tla.name("B").typed(BoolT1)).typed(BoolT1)
 
     val output = desugarer.transform(input)
 
     val expected =
       tla
         .box(tla
-              .impl(tla.name("A").typed(BoolT1()), tla.diamond(tla.name("B").typed(BoolT1())).typed(BoolT1()))
-              .typed(BoolT1()))
-        .typed(BoolT1())
+              .impl(tla.name("A").typed(BoolT1), tla.diamond(tla.name("B").typed(BoolT1)).typed(BoolT1))
+              .typed(BoolT1))
+        .typed(BoolT1)
 
     assert(expected.eqTyped(output))
   }
 
   test("""rewrite [A]_vars to A \/ UNCHANGED << vars >>""") {
     val input: TlaEx =
-      tla.stutt(tla.name("A").typed(BoolT1()), tla.name("B").typed(IntT1())).typed(BoolT1())
+      tla.stutt(tla.name("A").typed(BoolT1), tla.name("B").typed(IntT1)).typed(BoolT1)
 
     val output = desugarer.transform(input)
 
     val expected =
-      tla.or(tla.name("A").typed(BoolT1()), tla.unchanged(tla.name("B").typed(IntT1())).typed(BoolT1())).typed(BoolT1())
+      tla.or(tla.name("A").typed(BoolT1), tla.unchanged(tla.name("B").typed(IntT1)).typed(BoolT1)).typed(BoolT1)
     assert(expected.eqTyped(output))
   }
 
   test("""rewrite <A>_vars to A /\ ~UNCHANGED << vars >>""") {
     val input: TlaEx =
-      tla.nostutt(tla.name("A").typed(BoolT1()), tla.name("B").typed(IntT1())).typed(BoolT1())
+      tla.nostutt(tla.name("A").typed(BoolT1), tla.name("B").typed(IntT1)).typed(BoolT1)
 
     val output = desugarer.transform(input)
 
     val expected =
       tla
         .and(
-            tla.name("A").typed(BoolT1()),
+            tla.name("A").typed(BoolT1),
             tla
               .not(
-                  tla.unchanged(tla.name("B").typed(IntT1())).typed(BoolT1())
+                  tla.unchanged(tla.name("B").typed(IntT1)).typed(BoolT1)
               )
-              .typed(BoolT1()),
+              .typed(BoolT1),
         )
-        .typed(BoolT1())
+        .typed(BoolT1)
     assert(expected.eqTyped(output))
   }
 }

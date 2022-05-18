@@ -81,7 +81,7 @@ class ConstrainedTransitionExecutor[ExecutorContext](trex: TransitionExecutor[Ex
         }
 
       // assert that one of the constraints along the path holds true
-      trex.assertState(OperEx(TlaBoolOper.or, constraints: _*)(Typed(BoolT1())))
+      trex.assertState(OperEx(TlaBoolOper.or, constraints: _*)(Typed(BoolT1)))
     }
   }
 

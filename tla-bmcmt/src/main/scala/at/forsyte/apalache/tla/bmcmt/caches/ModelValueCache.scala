@@ -20,7 +20,7 @@ class ModelValueCache(solverContext: SolverContext)
   override protected def create(arena: Arena, typeAndIndex: (String, String)): (Arena, ArenaCell) = {
     // introduce a new cell
     val (utype, _) = typeAndIndex
-    val cellType = if (utype == StrT1().toString) StrT1() else ConstT1(utype)
+    val cellType = if (utype == StrT1.toString) StrT1 else ConstT1(utype)
     val newArena = arena.appendCell(cellType)
     val newCell = newArena.topCell
     // The fresh cell should differ from the previously created cells.
