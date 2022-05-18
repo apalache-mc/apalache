@@ -2,15 +2,14 @@ package at.forsyte.apalache.tla
 
 // Generated from the build.sbt file by the buildInfo plugin
 import apalache.BuildInfo
+import at.forsyte.apalache.infra._
 import at.forsyte.apalache.infra.log.LogbackConfigurator
 import at.forsyte.apalache.infra.passes.{PassChainExecutor, ToolModule, WriteablePassOptions}
-import at.forsyte.apalache.infra.{ExceptionAdapter, FailureMessage, NormalErrorMessage, PassOptionException}
 import at.forsyte.apalache.io.{ConfigManager, ConfigurationError, OutputManager, ReportGenerator}
 import at.forsyte.apalache.tla.bmcmt.config.{CheckerModule, ReTLAToVMTModule}
 import at.forsyte.apalache.tla.bmcmt.rules.vmt.TlaExToVMTWriter
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.lir.TlaModule
-import at.forsyte.apalache.tla.tooling.ExitCodes
 import at.forsyte.apalache.tla.tooling.opt._
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import com.google.inject.{Guice, Injector}
@@ -37,8 +36,8 @@ object Tool extends LazyLogging {
   lazy val ISSUES_LINK: String = "[https://github.com/informalsystems/apalache/issues]"
 
   /**
-   * Run the tool in the standalone mode with the provided arguments. This method calls System.exit with the computed
-   * exit code. If you like to call the tool without System.exit, use the the Tool#run.
+   * Run the tool in the standalone mode with the provided arguments. This method calls [[System.exit]] with the
+   * computed exit code. To call the tool without System.exit, use [[run]].
    *
    * @param args
    *   the command line arguments
@@ -184,15 +183,15 @@ object Tool extends LazyLogging {
   private def runAndExit(
       executor: PassChainExecutor,
       msgIfOk: TlaModule => String,
-      msgIfFail: String,
-      errCode: Int = ExitCodes.ERROR): Int = {
+      msgIfFail: String): ExitCodes.TExitCode = {
     val result = executor.run()
-    if (result.isDefined) {
-      logger.info(msgIfOk(result.get))
-      ExitCodes.OK
-    } else {
-      logger.info(msgIfFail)
-      errCode
+    result match {
+      case Left(errorCode) =>
+        logger.info(msgIfFail)
+        errorCode
+      case Right(module) =>
+        logger.info(msgIfOk(module))
+        ExitCodes.OK
     }
   }
 
@@ -265,7 +264,6 @@ object Tool extends LazyLogging {
         executor,
         _ => "Checker reports no error up to computation length " + check.length,
         "Checker has found an error",
-        ExitCodes.ERROR_COUNTEREXAMPLE,
     )
   }
 
@@ -308,7 +306,6 @@ object Tool extends LazyLogging {
         executor,
         _ => "No example found",
         "Checker has found an example. Check counterexample.tla.",
-        ExitCodes.ERROR_COUNTEREXAMPLE,
     )
   }
 

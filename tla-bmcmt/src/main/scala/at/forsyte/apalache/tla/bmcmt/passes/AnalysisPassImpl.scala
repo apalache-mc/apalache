@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
+import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.io.lir.TlaWriterFactory
@@ -27,7 +28,7 @@ class AnalysisPassImpl @Inject() (
     override def compare(x: Object, y: Object): Int = x.toString.compare(y.toString)
   }
 
-  override def execute(module: TlaModule): Option[TlaModule] = {
+  override def execute(module: TlaModule): PassResult = {
     val transformationSequence =
       List(
           // mark some expressions as to be Skolemized
@@ -65,7 +66,7 @@ class AnalysisPassImpl @Inject() (
 
     logger.info("  > Introduced expression grades")
 
-    Some(marked)
+    Right(marked)
   }
 
   override def dependencies = Set(ModuleProperty.TransitionsFound)
