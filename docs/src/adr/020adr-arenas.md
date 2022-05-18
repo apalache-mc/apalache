@@ -160,8 +160,7 @@ case class SmtConstElemPtr(elem: ArenaCell, id: UID) extends ElemPtr {
 Instances of `SmtConstElemPtr` may be used in cases, when set membership can be
 encoded via a Boolean constant. Typically, this is needed when the membership
 is either to be defined by the solver, or when this constant caches a complex
-SMT constraint. For instance, it can be used when computing a filter expression
-`{ x \in S: P }`.
+SMT constraint. For instance, it can be used `CherryPick`.
 
 The most general case is represented via an SMT expression, which is encoded in
 TLA+ IR:
@@ -184,7 +183,8 @@ expressions. For instance:
 
  - Evaluating an array expression, e.g., via `apalacheStoreInFun`.
 
- - Perhaps combining several pointers. No concrete example yet.
+ - Combining several pointers. For instance, when computing `{ x \in S: P }`,
+   we would combine set membership in `S` and the value of `P` for every `x`.
 
 ### 3.2. Optimization 1: constant propagation via membership pointers
 
@@ -286,9 +286,38 @@ the SMT, though we would still introduce `2^n` SMT constants to represent the
 subsets themselves. Note that we would still have to introduce `n * 2^(n - 1)`
 pointers in the arena. But this would be done during the process of rewriting.
 
-### 3.4. Feature: computing the set of functions via sharing
+### 3.4. Feature: computing the set of functions via pointer sharing
 
-TODO
+Sometimes, it happens that the model checker has to expand a set of functions
+`[S -> T]`. Such a set contains `|T|^|S|` functions. Since the model checker is
+working with arenas, it can only construct an arena representation of `[S ->
+T]`. To this end, assume that the set `S` is encoded via cells `s_1, ..., s_m`,
+and the set `T` is encoded via cells `t_1, ..., t_n`.
+
+Had we constructed `[S -> T]` in the current encoding, we would have to
+introduce a relation for each function in the set `[S -> T]`. That is, for
+every sequence `i[1], ..., i[n]` over `1..n`, it would construct the relation
+`R`:
+
+    { <<s_1, t_i[1]>>, ..., <<s_m, t_i[m]>> }
+
+Let's denote with `p_j` the pair `<<s_j, t_i[j]>>` for `1 <= j <= m`.
+
+Moreover, we would add `m` membership constraints (per function!) in SMT:
+
+    (= in_p_1_R (and in_s_1_S in_t_i[1]_T))
+    ...
+    (= in_p_m_R (and in_s_m_S in_t_i[m]_T))
+
+As a result, this encoding would introduce `m * n^m` constants in SMT and the
+same number of membership constraints. For instance, if we have `m = 10` and `n
+= 5`, then we would introduce 90 million constants and constraints!
+
+Using the approach outlined in this ADR, we can simply combine membership
+pointers of `S` and `T` via `SmtExprElemPtr`. This would neither introduce SMT
+constants, nor additional constraints. Of course, when this set is used in
+expressions like `\E x \in S: P` or `\A x \in S: P`, the edges will propagate
+to SMT as constraints.
 
 ## 4. Consequences
 
