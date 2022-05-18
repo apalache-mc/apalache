@@ -153,7 +153,7 @@ object ChangelingPlugin extends AutoPlugin {
           changelingKinds.value,
           (ThisBuild / version).value,
           changelingDirectory.value,
-          (Compile / baseDirectory).value / "RELEASE.md",
+          (ThisBuild / baseDirectory).value / "RELEASE.md",
       ),
       changelingChangelog := {
         Changeling.concatFiles(
