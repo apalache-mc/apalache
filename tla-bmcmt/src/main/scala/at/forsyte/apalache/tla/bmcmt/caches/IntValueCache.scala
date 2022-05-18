@@ -17,7 +17,7 @@ class IntValueCache(solverContext: SolverContext) extends AbstractCache[Arena, B
 
   def create(arena: Arena, intValue: BigInt): (Arena, ArenaCell) = {
     // introduce a new constant
-    val newArena = arena.appendCell(IntT1())
+    val newArena = arena.appendCell(IntT1)
     val intCell = newArena.topCell
     solverContext.assertGroundExpr(OperEx(TlaOper.eq, intCell.toNameEx, ValEx(TlaInt(intValue))))
     (newArena, intCell)

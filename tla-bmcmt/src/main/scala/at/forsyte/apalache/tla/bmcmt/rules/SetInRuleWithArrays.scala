@@ -33,7 +33,7 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
     var newState = rewriter.lazyEq.cacheEqConstraints(state, setElems.cross(powsetDomainElems))
 
     def isInPowset(setElem: ArenaCell): TlaEx = {
-      newState = newState.updateArena(_.appendCell(BoolT1()))
+      newState = newState.updateArena(_.appendCell(BoolT1))
       val pred = newState.arena.topCell
 
       def isInAndEqSetElem(powsetDomainElem: ArenaCell) = {
@@ -51,7 +51,7 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
     }
 
     val isSubset = simplifier.simplifyShallow(tla.and(setElems.map(isInPowset): _*))
-    newState = newState.updateArena(_.appendCell(BoolT1()))
+    newState = newState.updateArena(_.appendCell(BoolT1))
     val pred = newState.arena.topCell.toNameEx
     rewriter.solverContext.assertGroundExpr(tla.eql(pred, isSubset))
     newState.setRex(pred)
@@ -80,7 +80,7 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
     val funsetCdm = state.arena.getCdm(funsetCell)
     var nextState = state
 
-    nextState = nextState.updateArena(_.appendCell(BoolT1()))
+    nextState = nextState.updateArena(_.appendCell(BoolT1))
     val pred = nextState.arena.topCell
 
     def onFun(funsetDomElem: ArenaCell): TlaEx = {
@@ -116,7 +116,7 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
       // the set cell points to no other cell => return false
       state.setRex(state.arena.cellFalse().toNameEx)
     } else {
-      var nextState = state.updateArena(_.appendCell(BoolT1()))
+      var nextState = state.updateArena(_.appendCell(BoolT1))
       val pred = nextState.arena.topCell.toNameEx
 
       // For types that support SMT equality, we use that directly. For those that don't, we use lazy equality.
@@ -143,7 +143,7 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
 
   private def supportsSMTEq(cellType: CellT): Boolean = {
     cellType match {
-      case CellTFrom(_ @IntT1() | RealT1() | BoolT1() | StrT1() | ConstT1(_) | VarT1(_) | FunT1(_, _) | SetT1(_)) =>
+      case CellTFrom(_ @IntT1 | RealT1 | BoolT1 | StrT1 | ConstT1(_) | VarT1(_) | FunT1(_, _) | SetT1(_)) =>
         true
       case _ => false
     }

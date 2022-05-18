@@ -24,7 +24,7 @@ class TestParameterNormalizer extends AnyFunSuite with BeforeAndAfterEach with T
   test("Nullary: No-op") {
 
     // A == 1
-    val input = tla.declOp("A", tla.int(1)).as(OperT1(Seq(), IntT1()))
+    val input = tla.declOp("A", tla.int(1)).as(OperT1(Seq(), IntT1))
 
     val output = parNorm.normalizeDeclaration(input)
 
@@ -32,7 +32,7 @@ class TestParameterNormalizer extends AnyFunSuite with BeforeAndAfterEach with T
   }
 
   test("Simple parameter") {
-    val types = Map("i" -> IntT1(), "A" -> OperT1(Seq(IntT1()), IntT1()), "P" -> OperT1(Seq(), IntT1()))
+    val types = Map("i" -> IntT1, "A" -> OperT1(Seq(IntT1), IntT1), "P" -> OperT1(Seq(), IntT1))
     // A(p) == p
     val input = tla
       .declOp("A", tla.name("p") ? "i", "p")
@@ -51,11 +51,11 @@ class TestParameterNormalizer extends AnyFunSuite with BeforeAndAfterEach with T
           case ex1 @ LetInEx(letInBody, TlaOperDecl(newName, Nil, NameEx(paramName))) =>
             assert(name != newName)
             assert(p == paramName)
-            assert(Typed(IntT1()) == ex1.typeTag)
+            assert(Typed(IntT1) == ex1.typeTag)
 
             letInBody match {
               case ex2 @ OperEx(TlaOper.apply, nested @ NameEx(nestedName)) =>
-                assert(Typed(IntT1()) == ex2.typeTag)
+                assert(Typed(IntT1) == ex2.typeTag)
                 assert(nestedName == newName)
                 assert(Typed(types("P")) == nested.typeTag)
 
@@ -73,8 +73,8 @@ class TestParameterNormalizer extends AnyFunSuite with BeforeAndAfterEach with T
   }
 
   test("HO parameter") {
-    val types = Map("i" -> IntT1(), "T" -> OperT1(Seq(IntT1()), IntT1()),
-        "A" -> OperT1(Seq(OperT1(Seq(IntT1()), IntT1())), IntT1()))
+    val types =
+      Map("i" -> IntT1, "T" -> OperT1(Seq(IntT1), IntT1), "A" -> OperT1(Seq(OperT1(Seq(IntT1), IntT1)), IntT1))
 
     // A(T(_)) == T(0)
     val input = tla
@@ -96,15 +96,15 @@ class TestParameterNormalizer extends AnyFunSuite with BeforeAndAfterEach with T
                       appex @ OperEx(TlaOper.apply, nex @ NameEx(appliedOperName), NameEx(arg)))) =>
             assert(opName == appliedOperName)
             assert(arg == intermediateParam)
-            assert(Typed(IntT1()) == letin.typeTag)
-            assert(Typed(IntT1()) == appex.typeTag)
+            assert(Typed(IntT1) == letin.typeTag)
+            assert(Typed(IntT1) == appex.typeTag)
             assert(Typed(types("T")) == nex.typeTag)
 
             letInBody match {
               case appex2 @ OperEx(TlaOper.apply, nex2 @ NameEx(innerName), arg2) =>
                 assert(newName == innerName)
                 assert(tla.int(0).typed() == arg2)
-                assert(Typed(IntT1()) == appex2.typeTag)
+                assert(Typed(IntT1) == appex2.typeTag)
                 assert(Typed(types("T")) == nex2.typeTag)
 
               case _ => fail("Expected OperEx")

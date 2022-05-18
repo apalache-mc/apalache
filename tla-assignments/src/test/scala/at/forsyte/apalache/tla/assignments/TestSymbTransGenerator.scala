@@ -17,9 +17,9 @@ class TestSymbTransGenerator extends AnyFunSuite with TestingPredefs {
   import stg.helperFunctions._
   import at.forsyte.apalache.tla.lir.convenience.tla._
 
-  private val Int = IntT1()
-  private val Bool = BoolT1()
-  private val ToBool = OperT1(Seq(), BoolT1())
+  private val Int = IntT1
+  private val Bool = BoolT1
+  private val ToBool = OperT1(Seq(), BoolT1)
 
   test("Test allCombinations") {
 
@@ -64,12 +64,12 @@ class TestSymbTransGenerator extends AnyFunSuite with TestingPredefs {
   test("Test labelsAt") {
     val ex11 = tla
       .name("x")
-      .typed(IntT1())
+      .typed(IntT1)
     val ex12 = tla
       .name("y")
-      .typed(IntT1())
+      .typed(IntT1)
     val ex13 = or(ex11, ex12)
-      .typed(BoolT1())
+      .typed(BoolT1)
 
     val sel1: SelMapType = Map(
         ex13.ID -> Set(Set(ex11.ID), Set(ex12.ID))
@@ -138,7 +138,7 @@ class TestSymbTransGenerator extends AnyFunSuite with TestingPredefs {
     val yasgn22 = tla.eql(tla.prime(tla.name("y").as(Int)).as(Int), tla.name("t").as(Int)).as(Bool)
 
     val ex4 = and(eql(int(0), int(1)).as(Bool), xasgn21).as(Bool)
-    val xDecl = declOp("X", ex4).as(OperT1(Seq(), BoolT1()))
+    val xDecl = declOp("X", ex4).as(OperT1(Seq(), BoolT1))
     val ex5 = and(yasgn21, tla.appOp(tla.name("X").as(ToBool)).as(Bool)).as(Bool)
     val ex6 = and(yasgn22, tla.appOp(tla.name("X").as(ToBool)).as(Bool)).as(Bool)
     val ex7 = or(ex5, ex6).as(Bool)

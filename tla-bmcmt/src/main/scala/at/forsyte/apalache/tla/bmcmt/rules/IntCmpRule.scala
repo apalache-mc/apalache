@@ -42,7 +42,7 @@ class IntCmpRule(rewriter: SymbStateRewriter) extends RewritingRule with IntArit
       val rightState = packArithExpr(rewriter, leftState.setRex(right))
 
       // add new arena cell
-      val newArena = rightState.arena.appendCell(BoolT1())
+      val newArena = rightState.arena.appendCell(BoolT1)
       val newCell = newArena.topCell
 
       // assert the new cell is equal to the packed comparison

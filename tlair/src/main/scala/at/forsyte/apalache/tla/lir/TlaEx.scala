@@ -20,7 +20,7 @@ sealed abstract class TlaEx(implicit val typeTag: TypeTag)
  * could use Option[TlaEx], but that would introduce unnecessary many pattern matches, as NoneEx is rare. NullEx is
  * always untyped.
  */
-object NullEx extends TlaEx()(typeTag = Untyped()) with Serializable {
+object NullEx extends TlaEx()(typeTag = Untyped) with Serializable {
   // null expressions always carry the Untyped tag
   override def withTag(newTypeTag: TypeTag): TlaEx = this
 }

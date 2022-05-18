@@ -79,10 +79,10 @@ object DefaultType1Parser extends Parsers with Type1Parser {
       | set | seq | tuple | row | sparseTuple
       | record | recordFromRow
       | variant | variantVar | parenExpr) ^^ {
-      case INT()        => IntT1()
-      case REAL()       => RealT1()
-      case BOOL()       => BoolT1()
-      case STR()        => StrT1()
+      case INT()        => IntT1
+      case REAL()       => RealT1
+      case BOOL()       => BoolT1
+      case STR()        => StrT1
       case tt: TlaType1 => tt
     }
   }
@@ -234,14 +234,14 @@ object DefaultType1Parser extends Parsers with Type1Parser {
             case Some(_ ~ l) => l
             case _           => Nil
           }
-          (tagValue, RecRowT1(RowT1(VarT1(v), ("tag" -> StrT1()) :: list: _*)))
+          (tagValue, RecRowT1(RowT1(VarT1(v), ("tag" -> StrT1) :: list: _*)))
 
         case _ ~ _ ~ STR_LITERAL(tagValue) ~ optList ~ None =>
           val list = optList match {
             case Some(_ ~ l) => l
             case _           => Nil
           }
-          (tagValue, RecRowT1(RowT1(("tag" -> StrT1()) :: list: _*)))
+          (tagValue, RecRowT1(RowT1(("tag" -> StrT1) :: list: _*)))
       }
   }
 

@@ -68,10 +68,10 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
 
   test("well-typed application") {
     val oper = parser("Int => Int")
-    val arg = mkUniqConst(IntT1())
+    val arg = mkUniqConst(IntT1)
     val app = mkUniqApp(Seq(oper), arg)
     val listener = mock[TypeCheckerListener]
-    val int = IntT1()
+    val int = IntT1
     val wrapper = wrapWithLet(app)
     expecting {
       listener.onTypeFound(arg.sourceRef.asInstanceOf[ExactRef], int)
@@ -105,7 +105,7 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
 
   test("ill-typed application") {
     val oper = parser("Int => Int")
-    val arg = mkUniqConst(BoolT1())
+    val arg = mkUniqConst(BoolT1)
     val app = mkUniqApp(Seq(oper), arg)
     val listener = mock[TypeCheckerListener]
     val wrapper = wrapWithLet(app)
@@ -123,7 +123,7 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
 
   test("ill-typed application with custom error explanation") {
     val oper = parser("Int => Int")
-    val arg = mkUniqConst(BoolT1())
+    val arg = mkUniqConst(BoolT1)
     val app = mkUniqApp(Seq(oper), arg)
     val listener = mock[TypeCheckerListener]
     app.typeErrorExplanation = (_: List[TlaType1], _: List[TlaType1]) => Some("Mocked explanation")
@@ -161,7 +161,7 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
 
   test("unresolved result") {
     val oper = parser("Int => a")
-    val arg = mkUniqConst(IntT1())
+    val arg = mkUniqConst(IntT1)
     val app = mkUniqApp(Seq(oper), arg)
     val listener = mock[TypeCheckerListener]
     val wrapper = wrapWithLet(app)
@@ -181,7 +181,7 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
 
   test("one resolved, one unresolved") {
     val operTypes = Seq(parser("Int => a"), parser("Int => Bool"))
-    val arg = mkUniqConst(IntT1())
+    val arg = mkUniqConst(IntT1)
     val app = mkUniqApp(operTypes, arg)
     val listener = mock[TypeCheckerListener]
     val wrapper = wrapWithLet(app)
@@ -200,10 +200,10 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
 
   test("multiple signatures") {
     val operTypes = Seq(parser("Int => Int"), parser("Bool => Bool"))
-    val arg = mkUniqConst(IntT1())
+    val arg = mkUniqConst(IntT1)
     val app = mkUniqApp(operTypes, arg)
     val listener = mock[TypeCheckerListener]
-    val int = IntT1()
+    val int = IntT1
     val wrapper = wrapWithLet(app)
     expecting {
       listener.onTypeFound(arg.sourceRef.asInstanceOf[ExactRef], int)
@@ -219,7 +219,7 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
 
   test("error: multiple signatures") {
     val operTypes = Seq(parser("a => Int"), parser("a => Bool"))
-    val arg = mkUniqConst(IntT1())
+    val arg = mkUniqConst(IntT1)
     val app = mkUniqApp(operTypes, arg)
     val listener = mock[TypeCheckerListener]
     val wrapper = wrapWithLet(app)
@@ -237,7 +237,7 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
 
   test("error: multiple signatures with custom error explanation") {
     val operTypes = Seq(parser("a => Int"), parser("a => Bool"))
-    val arg = mkUniqConst(IntT1())
+    val arg = mkUniqConst(IntT1)
     val app = mkUniqApp(operTypes, arg)
     app.typeErrorExplanation = (_: List[TlaType1], _: List[TlaType1]) => Some("Mocked explanation")
     val listener = mock[TypeCheckerListener]
@@ -254,7 +254,7 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
   }
 
   test("well-typed application by name") {
-    val arg = mkUniqConst(IntT1())
+    val arg = mkUniqConst(IntT1)
     val operName = mkUniqName("F")
     val app = mkUniqAppByName(operName, arg)
     val listener = mock[TypeCheckerListener]
@@ -274,13 +274,13 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
   }
 
   test("well-typed parameterized application by name") {
-    val argInt = mkUniqConst(IntT1())
-    val argStr = mkUniqConst(StrT1())
+    val argInt = mkUniqConst(IntT1)
+    val argStr = mkUniqConst(StrT1)
     val operNameInInt = mkUniqName("F")
     val operNameInStr = mkUniqName("F")
     val appInt = mkUniqAppByName(operNameInInt, argInt)
     val appStr = mkUniqAppByName(operNameInStr, argStr)
-    val consume = mkUniqApp(Seq(OperT1(Seq(IntT1(), StrT1()), BoolT1())), appInt, appStr)
+    val consume = mkUniqApp(Seq(OperT1(Seq(IntT1, StrT1), BoolT1)), appInt, appStr)
     val listener = mock[TypeCheckerListener]
     val wrapper = wrapWithLet(consume)
     expecting {
@@ -303,7 +303,7 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
   }
 
   test("no upward errors on nested error") {
-    val arg = mkUniqConst(BoolT1())
+    val arg = mkUniqConst(BoolT1)
     val innerApp = mkUniqApp(Seq(parser("Int => Int")), arg)
     val outerApp = mkUniqApp(Seq(parser("Int => Int")), innerApp)
 
@@ -412,7 +412,7 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
     val xName = mkUniqName("x")
     val xInF = mkUniqName("x")
     val fBody = mkUniqAbs(xInF, (xName, xDomain))
-    val fArg = mkUniqConst(IntT1())
+    val fArg = mkUniqConst(IntT1)
     val fName = mkUniqName("F")
     val fApp = mkUniqAppByName(fName, fArg)
     val letIn = mkUniqLet("F", fBody, fApp)
@@ -452,7 +452,7 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
     val xName = mkUniqName("x")
     val xInF = mkUniqName("x")
     val fBody = mkUniqAbs(xInF, (xName, xDomain))
-    val fArg = mkUniqConst(IntT1())
+    val fArg = mkUniqConst(IntT1)
     val fName = mkUniqName("F")
     val fApp = mkUniqAppByName(fName, fArg)
     val letIn = mkUniqLet("F", fBody, fApp)
@@ -491,7 +491,7 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
     val setInF = mkUniqApp(Seq(parser("(c, c) => c")), xNameInApp, d)
     val xName = mkUniqName("x")
     val fBody = mkUniqAbs(setInF, (xName, xDomain))
-    val fArg = mkUniqConst(IntT1())
+    val fArg = mkUniqConst(IntT1)
     val fName = mkUniqName("F")
     val fApp = mkUniqAppByName(fName, fArg)
     val letIn = mkUniqLet("F", fBody, fApp)
@@ -529,7 +529,7 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
     val setInF = mkUniqApp(Seq(parser("(c, c) => c")), xNameInApp, d)
     val xName = mkUniqName("x")
     val fBody = mkUniqAbs(setInF, (xName, xDomain))
-    val fArg = mkUniqConst(IntT1())
+    val fArg = mkUniqConst(IntT1)
     val fName = mkUniqName("F")
     val fApp = mkUniqAppByName(fName, fArg)
     val letIn = mkUniqLet("F", fBody, fApp)
@@ -576,12 +576,12 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
     val setInF = mkUniqApp(Seq(parser("(c, c) => c")), xNameInApp, d)
     val xName = mkUniqName("x")
     val fBody = mkUniqAbs(setInF, (xName, xDomain))
-    val fArg = mkUniqConst(IntT1())
+    val fArg = mkUniqConst(IntT1)
     val fName = mkUniqName("F")
     val fApp = mkUniqAppByName(fName, fArg)
     val letInF = mkUniqLet("F", fBody, fApp)
     val annotatedLetInF = mkUniqTypeDecl("F", parser("a => b"), letInF)
-    val bool = mkUniqConst(BoolT1())
+    val bool = mkUniqConst(BoolT1)
     val gAbs = mkUniqAbs(annotatedLetInF) // we have to wrap the parameterless body of G with a lambda expression
     val letInG = mkUniqLet("G", gAbs, bool)
 
@@ -770,7 +770,7 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
       consumeWrapperTypes(listener, wrapper)
     }
     whenExecuting(listener) {
-      val computed = checker.compute(listener, TypeContext("y" -> TlaType1Scheme(IntT1(), Set.empty)), wrapper)
+      val computed = checker.compute(listener, TypeContext("y" -> TlaType1Scheme(IntT1, Set.empty)), wrapper)
       assert(computed.contains(parser("() => [x: Str, y: Int]")))
     }
   }
@@ -848,9 +848,9 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
   test("rejected tuple syntax") {
     // Without a type annotation, it is impossible to choose between a tuple or a sequence.
     // <<Int, Int>> is rejected. Is it a tuple or a sequence? Use a type annotation.
-    val seq = OperT1(Seq(IntT1(), IntT1()), SeqT1(IntT1()))
-    val tup = OperT1(Seq(IntT1(), IntT1()), TupT1(IntT1(), IntT1()))
-    val app = mkUniqApp(Seq(seq, tup), mkUniqConst(IntT1()), mkUniqConst(IntT1()))
+    val seq = OperT1(Seq(IntT1, IntT1), SeqT1(IntT1))
+    val tup = OperT1(Seq(IntT1, IntT1), TupT1(IntT1, IntT1))
+    val app = mkUniqApp(Seq(seq, tup), mkUniqConst(IntT1), mkUniqConst(IntT1))
     val wrapper = wrapWithLet(app)
 
     val listener = mock[TypeCheckerListener]
@@ -872,9 +872,9 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
 
     // let F == <<Int, Int>> in F
     // without a type annotation, it is impossible to choose between a tuple or a sequence
-    val seq = OperT1(Seq(IntT1(), IntT1()), SeqT1(IntT1()))
-    val tup = OperT1(Seq(IntT1(), IntT1()), TupT1(IntT1(), IntT1()))
-    val intT = mkUniqConst(IntT1())
+    val seq = OperT1(Seq(IntT1, IntT1), SeqT1(IntT1))
+    val tup = OperT1(Seq(IntT1, IntT1), TupT1(IntT1, IntT1))
+    val intT = mkUniqConst(IntT1)
     val fBody = mkUniqApp(Seq(seq, tup), intT, intT)
     // for consistency of the expression language, we have to wrap the body with lambda in any case
     val lambda = mkUniqAbs(fBody)

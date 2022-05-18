@@ -19,7 +19,7 @@ trait TlaType1Gen {
     } yield VarT1(i)
 
   def genPrimitiveMono: Gen[TlaType1] =
-    oneOf(const(BoolT1()), const(IntT1()), const(StrT1()), const(RealT1()), genConst)
+    oneOf(const(BoolT1), const(IntT1), const(StrT1), const(RealT1), genConst)
 
   def genPrimitive: Gen[TlaType1] =
     oneOf(genPrimitiveMono, genVar)
@@ -108,7 +108,7 @@ trait TlaType1Gen {
     for {
       // use resize to decrease the depth of the elements (as terms)
       row <- genRow
-    } yield RecRowT1(RowT1(SortedMap(row.fieldTypes.toSeq :+ ("tag" -> StrT1()): _*), row.other))
+    } yield RecRowT1(RowT1(SortedMap(row.fieldTypes.toSeq :+ ("tag" -> StrT1): _*), row.other))
   }
 
   def genVariant: Gen[VariantT1] =

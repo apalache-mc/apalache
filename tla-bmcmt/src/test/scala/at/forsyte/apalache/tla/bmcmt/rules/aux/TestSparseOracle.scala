@@ -42,7 +42,7 @@ trait TestSparseOracle extends RewriterBase with TestingPredefs {
   test("""Sparse Oracle.caseAssertions""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
     var state = new SymbState(tla.bool(true), arena, Binding())
-    state = state.updateArena(_.appendCell(BoolT1()))
+    state = state.updateArena(_.appendCell(BoolT1))
     val flag = state.arena.topCell
     // introduce an oracle
     val (nextState, oracle) = PropositionalOracle.create(rewriter, state, 2)

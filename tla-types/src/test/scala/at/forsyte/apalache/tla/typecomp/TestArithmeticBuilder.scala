@@ -32,11 +32,11 @@ class TestArithmeticBuilder extends BuilderTest {
   }
 
   test("plus") {
-    testBinaryOperAndBuilderMethod(TlaArithOper.plus, builder.plus, IntT1())
+    testBinaryOperAndBuilderMethod(TlaArithOper.plus, builder.plus, IntT1)
   }
 
   test("minus") {
-    testBinaryOperAndBuilderMethod(TlaArithOper.minus, builder.minus, IntT1())
+    testBinaryOperAndBuilderMethod(TlaArithOper.minus, builder.minus, IntT1)
   }
 
   test("uminus") {
@@ -46,11 +46,11 @@ class TestArithmeticBuilder extends BuilderTest {
 
     val res = cmp(Seq(build(x)))
 
-    assert(res.contains(IntT1()))
+    assert(res.contains(IntT1))
 
     val resEx = builder.uminus(x)
 
-    assert(resEx.eqTyped(OperEx(TlaArithOper.uminus, x)(Typed(IntT1()))))
+    assert(resEx.eqTyped(OperEx(TlaArithOper.uminus, x)(Typed(IntT1))))
 
     val badX = builder.str("a")
 
@@ -60,39 +60,39 @@ class TestArithmeticBuilder extends BuilderTest {
   }
 
   test("mult") {
-    testBinaryOperAndBuilderMethod(TlaArithOper.mult, builder.mult, IntT1())
+    testBinaryOperAndBuilderMethod(TlaArithOper.mult, builder.mult, IntT1)
   }
 
   test("div") {
-    testBinaryOperAndBuilderMethod(TlaArithOper.div, builder.div, IntT1())
+    testBinaryOperAndBuilderMethod(TlaArithOper.div, builder.div, IntT1)
   }
 
   test("mod") {
-    testBinaryOperAndBuilderMethod(TlaArithOper.mod, builder.mod, IntT1())
+    testBinaryOperAndBuilderMethod(TlaArithOper.mod, builder.mod, IntT1)
   }
 
   test("exp") {
-    testBinaryOperAndBuilderMethod(TlaArithOper.exp, builder.exp, IntT1())
+    testBinaryOperAndBuilderMethod(TlaArithOper.exp, builder.exp, IntT1)
   }
 
   test("dotdot") {
-    testBinaryOperAndBuilderMethod(TlaArithOper.dotdot, builder.dotdot, SetT1(IntT1()))
+    testBinaryOperAndBuilderMethod(TlaArithOper.dotdot, builder.dotdot, SetT1(IntT1))
   }
 
   test("lt") {
-    testBinaryOperAndBuilderMethod(TlaArithOper.lt, builder.lt, BoolT1())
+    testBinaryOperAndBuilderMethod(TlaArithOper.lt, builder.lt, BoolT1)
   }
 
   test("gt") {
-    testBinaryOperAndBuilderMethod(TlaArithOper.gt, builder.gt, BoolT1())
+    testBinaryOperAndBuilderMethod(TlaArithOper.gt, builder.gt, BoolT1)
   }
 
   test("le") {
-    testBinaryOperAndBuilderMethod(TlaArithOper.le, builder.le, BoolT1())
+    testBinaryOperAndBuilderMethod(TlaArithOper.le, builder.le, BoolT1)
   }
 
   test("ge") {
-    testBinaryOperAndBuilderMethod(TlaArithOper.ge, builder.ge, BoolT1())
+    testBinaryOperAndBuilderMethod(TlaArithOper.ge, builder.ge, BoolT1)
   }
 
 }

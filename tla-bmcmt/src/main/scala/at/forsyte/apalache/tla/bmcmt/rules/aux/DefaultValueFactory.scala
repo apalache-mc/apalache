@@ -28,14 +28,14 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
    */
   def makeUpValue(arena: Arena, valueType: TlaType1): (Arena, ArenaCell) = {
     valueType match {
-      case IntT1() =>
+      case IntT1 =>
         rewriter.intValueCache.getOrCreate(arena, 0)
 
-      case BoolT1() =>
+      case BoolT1 =>
         (arena, arena.cellFalse())
 
-      case StrT1() =>
-        rewriter.modelValueCache.getOrCreate(arena, (StrT1().toString(), "None"))
+      case StrT1 =>
+        rewriter.modelValueCache.getOrCreate(arena, (StrT1.toString(), "None"))
 
       case ConstT1(utype) =>
         rewriter.modelValueCache.getOrCreate(arena, (utype, "None"))

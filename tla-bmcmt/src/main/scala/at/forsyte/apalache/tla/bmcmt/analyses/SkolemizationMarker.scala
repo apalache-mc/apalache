@@ -66,7 +66,7 @@ class SkolemizationMarker @Inject() (tracker: TransformationTracker) extends Tla
       // Hence, we create copies of A for the both cases: one that could be skolemized and one that could not be.
       def skolemizeDef(df: TlaOperDecl): Option[TlaOperDecl] = {
         df.typeTag match {
-          case Typed(OperT1(Seq(), BoolT1())) =>
+          case Typed(OperT1(Seq(), BoolT1)) =>
             // Only if the let-definition returns a Boolean value, we have to worry about skolemization
             Some(df.copy(body = transform(df.body), name = mkSkolemName(df.name)))
 
@@ -81,7 +81,7 @@ class SkolemizationMarker @Inject() (tracker: TransformationTracker) extends Tla
 
     case ex @ OperEx(TlaOper.apply, nm @ NameEx(operName)) =>
       ex.typeTag match {
-        case Typed(BoolT1()) =>
+        case Typed(BoolT1) =>
           // An application of a let-definition that returns a Boolean value.
           // As Skolemization is allowed in this context, we use the Skolemizable version of the definition.
           OperEx(TlaOper.apply, NameEx(mkSkolemName(operName))(nm.typeTag))(ex.typeTag)

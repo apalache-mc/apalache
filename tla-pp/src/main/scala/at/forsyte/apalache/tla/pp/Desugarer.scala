@@ -63,7 +63,7 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
           case NameEx(n) if stateVariables.contains(n) => tla.assign(_, _)
           case _                                       => tla.eql(_, _)
         }
-        asgnOrEq(tla.prime(xb).as(tt), xb).as(BoolT1())
+        asgnOrEq(tla.prime(xb).as(tt), xb).as(BoolT1)
       }
       // x' = x /\ y' = y /\ z' = z
       eqs match {
@@ -75,7 +75,7 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
           one
 
         case _ =>
-          tla.and(eqs: _*).typed(BoolT1())
+          tla.and(eqs: _*).typed(BoolT1)
       }
 
     case OperEx(TlaActionOper.stutter, body, vars) =>
@@ -98,8 +98,8 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
       if (largs.length != rargs.length) {
         tla.bool(false).typed()
       } else {
-        val eqs = largs.zip(rargs).map { case (l, r) => tla.eql(this(l), this(r)).typed(BoolT1()) }
-        tla.and(eqs: _*).typed(BoolT1())
+        val eqs = largs.zip(rargs).map { case (l, r) => tla.eql(this(l), this(r)).typed(BoolT1) }
+        tla.and(eqs: _*).typed(BoolT1)
       }
 
     case OperEx(TlaOper.ne, OperEx(TlaFunOper.tuple, largs @ _*), OperEx(TlaFunOper.tuple, rargs @ _*)) =>
@@ -108,8 +108,8 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
       if (largs.length != rargs.length) {
         tla.bool(true).typed()
       } else {
-        val neqs = largs.zip(rargs).map { case (l, r) => tla.neql(this(l), this(r)).typed(BoolT1()) }
-        tla.or(neqs: _*).typed(BoolT1())
+        val neqs = largs.zip(rargs).map { case (l, r) => tla.neql(this(l), this(r)).typed(BoolT1) }
+        tla.or(neqs: _*).typed(BoolT1)
       }
 
     case ex @ OperEx(TlaSetOper.filter, boundEx, setEx, predEx) =>
@@ -165,11 +165,11 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
             tla
               .impl(
                   antecedent,
-                  tla.diamond(consequent).typed(BoolT1()),
+                  tla.diamond(consequent).typed(BoolT1),
               )
-              .typed(BoolT1())
+              .typed(BoolT1)
         )
-        .typed(BoolT1())
+        .typed(BoolT1)
 
     case ex @ OperEx(op, args @ _*) =>
       OperEx(op, args.map(transform): _*)(ex.typeTag)
@@ -320,16 +320,16 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
         }
 
       case (SeqT1(elem), _) =>
-        if (Typed(IntT1()) != arg.typeTag) {
+        if (Typed(IntT1) != arg.typeTag) {
           val actualArgType = arg.typeTag.asTlaType1()
           throw new TypingException(s"Expected a sequence argument to be an integer, found $actualArgType", arg.ID)
         } else {
-          (IntT1(), elem)
+          (IntT1, elem)
         }
 
       case (tt @ RecT1(fieldTypes), ValEx(TlaStr(key))) =>
         if (fieldTypes.contains(key)) {
-          (StrT1(), fieldTypes(key))
+          (StrT1, fieldTypes(key))
         } else {
           throw new IllegalArgumentException(s"No key $key in $tt")
         }
@@ -339,7 +339,7 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
 
       case (tt @ RecRowT1(RowT1(fieldTypes, None)), ValEx(TlaStr(key))) =>
         if (fieldTypes.contains(key)) {
-          (StrT1(), fieldTypes(key))
+          (StrT1, fieldTypes(key))
         } else {
           throw new IllegalArgumentException(s"No key $key in $tt")
         }
@@ -349,7 +349,7 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
 
       case (tt @ TupT1(elems @ _*), ValEx(TlaInt(index))) =>
         if (index > 0 && index <= elems.length) {
-          (IntT1(), elems(index.toInt - 1))
+          (IntT1, elems(index.toInt - 1))
         } else {
           throw new IllegalArgumentException(s"No index $index in $tt")
         }

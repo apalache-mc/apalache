@@ -63,7 +63,7 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
           // we do not decompose trace invariants, so a trace invariant always has index 0
           val positive =
             TlaOperDecl(NormalizedNames.VC_TRACE_INV_PREFIX + "0", params, copy.deepCopyEx(body))(traceInv.typeTag)
-          val notBody = tla.not(tla.fromTlaEx(copy.deepCopyEx(body))).typed(BoolT1())
+          val notBody = tla.not(tla.fromTlaEx(copy.deepCopyEx(body))).typed(BoolT1)
           val negative =
             TlaOperDecl(NormalizedNames.VC_NOT_TRACE_INV_PREFIX + "0", params, notBody)(traceInv.typeTag)
           TlaModule(module.name, module.declarations :+ positive :+ negative)
@@ -110,7 +110,7 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
     val varTypes = SortedMap(module.varDeclarations.map(d => d.name -> d.typeTag.asTlaType1()): _*)
     // the history variable is a sequence of records over variable names
     val histType = SeqT1(RecT1(varTypes))
-    if (traceInv.typeTag.asTlaType1() != OperT1(Seq(histType), BoolT1())) {
+    if (traceInv.typeTag.asTlaType1() != OperT1(Seq(histType), BoolT1)) {
       val msg =
         s"Expected the trace invariant ${traceInv.name} to be a predicate of a sequence of records over the names of state variables"
       throw new MalformedTlaError(msg, traceInv.body)
@@ -130,7 +130,7 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
       val positivePrefix =
         if (level == TlaLevelAction) NormalizedNames.VC_ACTION_INV_PREFIX else NormalizedNames.VC_INV_PREFIX
       val positive = TlaOperDecl(positivePrefix + index, List(), invPieceNorm)(tag)
-      val notInvPieceCopy = tla.not(invPieceCopy).typed(BoolT1())
+      val notInvPieceCopy = tla.not(invPieceCopy).typed(BoolT1)
       val negativePrefix =
         if (level == TlaLevelAction) NormalizedNames.VC_NOT_ACTION_INV_PREFIX else NormalizedNames.VC_NOT_INV_PREFIX
       val negative = TlaOperDecl(negativePrefix + index, List(), notInvPieceCopy)(tag)
@@ -165,7 +165,7 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
         expr
 
       case (nameEx, set) :: tail =>
-        decorateWithUniversals(tail, tla.forall(nameEx, set, expr).typed(BoolT1()))
+        decorateWithUniversals(tail, tla.forall(nameEx, set, expr).typed(BoolT1))
     }
   }
 }

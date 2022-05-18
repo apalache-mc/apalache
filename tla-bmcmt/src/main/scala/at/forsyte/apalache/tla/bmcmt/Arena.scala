@@ -28,11 +28,11 @@ object Arena {
     // by convention, the first cells have the following semantics:
     //  0 stores FALSE, 1 stores TRUE, 2 stores BOOLEAN, 3 stores Nat, 4 stores Int
     arena = arena
-      .appendCellNoSmt(CellTFrom(BoolT1()))
-      .appendCellNoSmt(CellTFrom(BoolT1()))
-      .appendCellNoSmt(CellTFrom(SetT1(BoolT1())))
-      .appendCellNoSmt(InfSetT(CellTFrom(IntT1())))
-      .appendCellNoSmt(InfSetT(CellTFrom(IntT1())))
+      .appendCellNoSmt(CellTFrom(BoolT1))
+      .appendCellNoSmt(CellTFrom(BoolT1))
+      .appendCellNoSmt(CellTFrom(SetT1(BoolT1)))
+      .appendCellNoSmt(InfSetT(CellTFrom(IntT1)))
+      .appendCellNoSmt(InfSetT(CellTFrom(IntT1)))
     // declare Boolean cells in SMT
     val cellFalse = arena.cellFalse()
     val cellTrue = arena.cellTrue()

@@ -25,7 +25,7 @@ class TestPrettyWriterWithTypes extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("variable declaration") {
-    val decl = TlaVarDecl("myFun").withTag(Typed(FunT1(IntT1(), BoolT1())))
+    val decl = TlaVarDecl("myFun").withTag(Typed(FunT1(IntT1, BoolT1)))
     val store = createAnnotationStore()
 
     val writer = new PrettyWriterWithAnnotations(store, printWriter, layout80)
@@ -43,7 +43,7 @@ class TestPrettyWriterWithTypes extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("constant declaration") {
-    val decl = TlaConstDecl("N").withTag(Typed(IntT1()))
+    val decl = TlaConstDecl("N").withTag(Typed(IntT1))
     val store = createAnnotationStore()
 
     val writer = new PrettyWriterWithAnnotations(store, printWriter, layout80)
@@ -62,7 +62,7 @@ class TestPrettyWriterWithTypes extends AnyFunSuite with BeforeAndAfterEach {
 
   test("operator declaration") {
     val decl = TlaOperDecl("MyOper", List(OperParam("x"), OperParam("y")), tla.bool(true))
-      .withTag(Typed(OperT1(Seq(IntT1(), StrT1()), BoolT1())))
+      .withTag(Typed(OperT1(Seq(IntT1, StrT1), BoolT1)))
     val store = createAnnotationStore()
 
     val writer = new PrettyWriterWithAnnotations(store, printWriter, layout80)
@@ -80,7 +80,7 @@ class TestPrettyWriterWithTypes extends AnyFunSuite with BeforeAndAfterEach {
 
   test("recursive operator declaration") {
     val decl = TlaOperDecl("RecOper", List(OperParam("x"), OperParam("y")), tla.bool(true))
-      .withTag(Typed(OperT1(Seq(IntT1(), StrT1()), BoolT1())))
+      .withTag(Typed(OperT1(Seq(IntT1, StrT1), BoolT1)))
     decl.isRecursive = true
     val store = createAnnotationStore()
 
