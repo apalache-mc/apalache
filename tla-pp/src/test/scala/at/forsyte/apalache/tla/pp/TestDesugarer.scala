@@ -779,4 +779,20 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
     // do nothing and do not complain
     assert(output == input)
   }
+
+  test("rewrite A ~> B to [](A => <>B)") {
+    val input: TlaEx =
+      tla.leadsTo(tla.name("A").typed(BoolT1()), tla.name("B").typed(BoolT1())).typed(BoolT1())
+
+    val output = desugarer.transform(input)
+
+    val expected =
+      tla
+        .box(tla
+              .impl(tla.name("A").typed(BoolT1()), tla.diamond(tla.name("B").typed(BoolT1())).typed(BoolT1()))
+              .typed(BoolT1()))
+        .typed(BoolT1())
+
+    assert(expected.eqTyped(output))
+  }
 }

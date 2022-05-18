@@ -142,6 +142,20 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
       // transform the function into a single-argument function and collapse tuples
       OperEx(funDefOp, collapseTuplesInMap(fun, Seq(onlyVar, onlySet)): _*)(ex.typeTag)
 
+    // rewrite A ~> B
+    // to [](A => <>B)
+    case OperEx(TlaTempOper.leadsTo, antecedent, consequent) =>
+      tla
+        .box(
+            tla
+              .impl(
+                  antecedent,
+                  tla.diamond(consequent).typed(BoolT1()),
+              )
+              .typed(BoolT1())
+        )
+        .typed(BoolT1())
+
     case ex @ OperEx(op, args @ _*) =>
       OperEx(op, args.map(transform): _*)(ex.typeTag)
 
