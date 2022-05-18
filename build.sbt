@@ -379,17 +379,17 @@ prepareRelease := {
   val log = streams.value.log
   val v = (ThisBuild / version).value
   // Create a release branch
-  s"git checkout -b 'release/${v}'" ! log
+  s"git checkout -b release/${v}" ! log
   // Prepare the release notes for release
   val releaseNotesFile = changelingRelaseNotes.value
   val releaseNotes = IO.read(releaseNotesFile)
-  val changelog = changelingChangelog.value
   // Create the release commit
   val commitMsg = s"[release] ${v}"
   "git add --update" ! log
-  s"git add ${changelog}" ! log
+  s"git add ${releaseNotesFile}" ! log
   s"git commit -m '${commitMsg}'" ! log
   // Bump the version to the next release
+  val changelog = changelingChangelog.value
   val nextVersion = incrVersion.value
   "git add --update" ! log
   s"git commit -m 'Bump version to ${nextVersion}'" ! log
@@ -410,9 +410,9 @@ prepareRelease := {
     | # Release notes
     |""".stripMargin
   s"""hub pull-request --push
-        --message='${commitMsg}'
-        --message='${prInstructions}'
-        --message='${releaseNotes}'
+        --message="${commitMsg}"
+        --message="${prInstructions}"
+        --message="${releaseNotes}"
         --base="unstable" """ ! log
 }
 
