@@ -164,7 +164,7 @@ object ChangelingPlugin extends AutoPlugin {
             (Compile / resourceManaged).value,
             changelingUnreleasedDir.value,
         )
-        changelingRelaseNotes.value
+        changelingChangelogFile.value
       },
   )
 
