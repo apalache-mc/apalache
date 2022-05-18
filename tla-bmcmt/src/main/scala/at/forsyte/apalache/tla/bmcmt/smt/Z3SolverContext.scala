@@ -554,20 +554,26 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
   private def mkCellElemSort(cellType: CellT): Sort = {
     cellType match {
-      case InfSetT(elemType) if encoding == arraysEncoding =>
-        getOrMkCellSort(CellTFrom(elemType.toTlaType1))
+      case CellTFrom(BoolT1()) =>
+        z3context.getBoolSort
+
+      case CellTFrom(IntT1()) =>
+        z3context.getIntSort
 
       case CellTFrom(SetT1(elemType)) if encoding == arraysEncoding =>
-        getOrMkCellSort(CellTFrom(elemType))
+        mkCellElemSort(CellTFrom(elemType))
 
       case PowSetT(domType) if encoding == arraysEncoding =>
-        getOrMkCellSort(CellTFrom(domType))
+        mkCellElemSort(CellTFrom(domType))
 
       case FinFunSetT(argType, cdmType) if encoding == arraysEncoding =>
-        getOrMkCellSort(CellTFrom(FunT1(argType.toTlaType1, cdmType.toTlaType1)))
+        mkCellElemSort(CellTFrom(FunT1(argType.toTlaType1, cdmType.toTlaType1)))
+
+      case CellTFrom(FunT1(argType, resType)) if encoding == arraysEncoding =>
+        z3context.mkArraySort(mkCellElemSort(CellTFrom(argType)), mkCellElemSort(CellTFrom(resType)))
 
       case _ =>
-        throw new IllegalArgumentException(s"Unexpected FinFunSet arg of type $cellType")
+        z3context.mkUninterpretedSort("Cell_" + cellType.signature)
     }
   }
 
