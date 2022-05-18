@@ -1427,18 +1427,6 @@ $ apalache-mc check OracleFunSet.tla | sed 's/I@.*//'
 EXITCODE: OK
 ```
 
-### check OracleFunSet2 succeeds (array-encoding)
-
-Regression test for https://github.com/informalsystems/apalache/issues/1774
-Function sets should be able to be part of other function sets.
-TODO: enable the test after https://github.com/informalsystems/apalache/issues/1748 is fixed.
-
-```sh
-apalache-mc check OracleFunSet2.tla | sed 's/I@.*//'
-...
-EXITCODE: OK
-```
-
 ### check PickPerf succeeds (array-encoding)
 
 A performance test.
