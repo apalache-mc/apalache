@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 
 import javax.inject.Singleton
+import at.forsyte.apalache.tla.typecomp.ScopedBuilder
 
 /**
  * <p>Remove all annoying syntactic sugar.</p>
@@ -76,6 +77,20 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
         case _ =>
           tla.and(eqs: _*).typed(BoolT1())
       }
+
+    case OperEx(TlaActionOper.stutter, body, vars) =>
+      val builder = new ScopedBuilder
+      builder.or(
+          builder.useTrustedEx(body),
+          builder.unchanged(builder.useTrustedEx(vars)),
+      )
+
+    case OperEx(TlaActionOper.nostutter, body, vars) =>
+      val builder = new ScopedBuilder
+      builder.and(
+          builder.useTrustedEx(body),
+          builder.not(builder.unchanged(builder.useTrustedEx(vars))),
+      )
 
     case OperEx(TlaOper.eq, OperEx(TlaFunOper.tuple, largs @ _*), OperEx(TlaFunOper.tuple, rargs @ _*)) =>
       // <<e_1, ..., e_k>> = <<f_1, ..., f_n>>
