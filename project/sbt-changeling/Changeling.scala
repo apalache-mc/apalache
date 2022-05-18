@@ -229,7 +229,7 @@ object Changeling {
           case Array() => Seq() // Omit sections with no entries
           case changeEntries => {
             val heading = s"### ${deNormalizeFileName(changeDir.base.toString)}"
-            val changes = changeEntries.map(readFile.andThen(mdBulletItem))
+            val changes = changeEntries.map(f => mdBulletItem(IO.read(f)))
             // We add an empty line between the heading and the changes and after the changes
             (heading +: "" +: changes) ++ Seq("")
           }
@@ -275,5 +275,4 @@ object Changeling {
   private val normalizeFileName: String => String = _.replace(' ', '-').toLowerCase()
   // Filename -> Heading
   private val deNormalizeFileName: String => String = _.replace('-', ' ').capitalize
-  private val readFile: File => String = IO.read(_)
 }
