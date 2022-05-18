@@ -19,3 +19,7 @@
 ### Features
 
  * Support sound records (over rows) in the model checker, see #1717
+
+### Bug fixes
+ 
+ * Fix potential non-determinism when picking from `[S -> T]`, see #1753
