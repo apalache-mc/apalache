@@ -145,8 +145,12 @@ TypeOK ==
   /\ nCrashed \in {x \in Nat: 0 <= x /\ x <= N}
   /\ Corr \in SUBSET Proc   
           
+
+LeftSide == (\A i \in Corr: pc[i] = "V0")
+RightSide == [](\A i \in Corr: pc[i] /= "AC")
+
 (* If no correct process does not broadcast then no correct processes accepts. *)  
-UnforgLtl == (\A i \in Corr: pc[i] = "V0") => [](\A i \in Corr: pc[i] /= "AC")
+UnforgLtl == LeftSide ~> RightSide
 
 (* Unforg is correct iff the initial state is InitNoBcast. *)          
 Unforg == (\A self \in Corr: (pc[self] /= "AC")) 

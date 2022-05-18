@@ -12,7 +12,14 @@ import at.forsyte.apalache.tla.pp.temporal.utils.builder
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 
 /**
- * Encode temporal operators.
+ * A class for adding loop logic to a TLA Module: An extra variable InLoop is added, which, in each step, can
+ * nondeterministically be set to true. When the variable is set to true, the current values of variables are stored in
+ * copies of the variables (e.g. the value of foo is stored in an auxiliary variable loop_foo). When InLoop is true, the
+ * system is inside of the loop.
+ *
+ * It is ensured that the execution loops, i.e. the state at the start of the loop is the same as the state at the end
+ * of the execution, by considering only traces where the variable values at the last state match the ones that were
+ * stored at the start of the loop.
  *
  * @author
  *   Philip Offtermatt
@@ -21,12 +28,13 @@ import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
   import LoopEncoder.NAME_PREFIX
 
-  implicit val typeTag: TypeTag = Typed(BoolT1())
-  val inLoopDecl = TlaVarDecl(s"${NAME_PREFIX}InLoop_${gen.newName()}")
+  val boolTag = Typed(BoolT1())
+
+  val inLoopDecl = TlaVarDecl(s"${NAME_PREFIX}InLoop_${gen.newName()}")(boolTag)
   val inLoop = builder.declAsNameEx(inLoopDecl)
   val inLoopPrime = builder.primeVar(inLoopDecl)
 
-
+  /** For each variable foo, creates a declaration of an auxiliary variable loop_foo */
   def createLoopVariables(originalVariables: Seq[TlaVarDecl]): Seq[TlaVarDecl] = {
     originalVariables.map(varDecl => createLoopVariableForVariable(varDecl))
   }
@@ -36,7 +44,9 @@ class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
   }
 
   /**
-   * Transforms init into newInit == init /\ loop_foo = foo
+   * Takes a variable foo and its corresponding loop variable loop_foo, and transforms init into
+   *
+   * newInit == init /\ loop_foo = foo
    */
   def addLoopVarToInit(varDecl: TlaVarDecl, loopVarDecl: TlaVarDecl, init: TlaOperDecl): TlaOperDecl = {
     conjunctExToOperDecl(
@@ -46,7 +56,19 @@ class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
   }
 
   /**
-   * Transforms init into /\ init /\ InLoop <=> FALSE /\ loop_foo = foo /\ loop_bar = bar ...
+   * Transforms init into
+   *
+   * newInit ==
+   *
+   * /\ init
+   *
+   * /\ inLoop = FALSE
+   *
+   * /\ loop_foo = foo
+   *
+   * /\ loop_bar = bar
+   *
+   * ...
    */
   def addLoopLogicToInit(
       variables: Seq[TlaVarDecl],
@@ -60,26 +82,32 @@ class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
           addLoopVarToInit(varDecl, loopVarDecl, curInit)
         })
 
-    //  ~inLoop
-    val inLoopEquivFalse =
-      builder.not(inLoop)
+    //  inLoop = FALSE
+    val inLoopEqlFalse =
+      builder.eql(inLoop, builder.bool(false))
 
     /*
-        /\ ~inLoop
+        /\ inLoop = FALSE
         /\ init
         /\ loop_foo = foo
         /\ loop_bar = bar
         /\ ...
      */
-    conjunctExToOperDecl(inLoopEquivFalse, initWithLoopVarInits)
+    conjunctExToOperDecl(inLoopEqlFalse, initWithLoopVarInits)
   }
 
-  /* Transforms next into
-      newNext ==
-        /\ oldNext
-        /\ loop_foo' \in {loop_foo, foo}
-        /\ InLoop' \= InLoop => loop_foo' = foo
-        /\ InLoop' = InLoop => loop_foo' = loop_foo
+  /**
+   * Adds logic for manipulating the loop_var in next. Transforms next into
+   *
+   * newNext ==
+   *
+   * /\ oldNext
+   *
+   * /\ loop_foo' \in {loop_foo, foo}
+   *
+   * /\ InLoop' \= InLoop => loop_foo' = foo
+   *
+   * /\ InLoop' = InLoop => loop_foo' = loop_foo
    */
   def addLoopVarToNext(varDecl: TlaVarDecl, loopVarDecl: TlaVarDecl, next: TlaOperDecl): TlaOperDecl = {
     TlaOperDecl(
@@ -102,18 +130,20 @@ class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
                 builder.eql(builder.primeVar(loopVarDecl), builder.declAsNameEx(loopVarDecl)),
             ),
         ),
-    )
+    )(next.typeTag)
   }
 
+  /**
+   * Modifies next to include the logic for updating InLoop and the loop variables.
+   */
   def addLoopLogicToNext(
       variables: Seq[TlaVarDecl],
       loopVariables: Seq[TlaVarDecl],
       next: TlaOperDecl): TlaOperDecl = {
-    implicit val typeTag: TypeTag = Typed(BoolT1())
 
     val varsUnchanged =
       builder.and(variables.map { varDecl =>
-        builder.createUnsafeInstruction(OperEx(TlaActionOper.unchanged, builder.declAsNameEx(varDecl))(typeTag))
+        builder.unchanged(builder.declAsNameEx(varDecl))
       }: _*)
 
     /*
@@ -126,20 +156,7 @@ class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
           next.name,
           next.formalParams,
           builder.or(builder.createUnsafeInstruction(next.body), varsUnchanged),
-      )
-
-    /*
-     * /\  /\ loop_foo' \in {loop_foo, foo}
-     *     /\ InLoop' \= InLoop => loop_foo' = foo
-     *     /\ InLoop' = InLoop => loop_foo' = loop_foo
-     * /\  /\ loop_bar' \in {loop_bar, bar}
-     *     /\ InLoop' \= InLoop => loop_bar' = bar
-     *     /\ InLoop' = InLoop => loop_bar' = loop_bar
-     */
-    val nextWithLoopVarUpdates =
-      variables.zip(loopVariables).foldLeft(nextOrUnchanged) { case (curNext, (varDecl, loopVarDecl)) =>
-        addLoopVarToNext(varDecl, loopVarDecl, curNext)
-      }
+      )(next.typeTag)
 
     /*
      * /\ InLoop' \in {TRUE, FALSE}
@@ -151,14 +168,29 @@ class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
           builder.impl(inLoop, inLoopPrime),
       )
 
-    conjunctExToOperDecl(inLoopUpdate, nextWithLoopVarUpdates)
+    val nextOrUnchangedWithInLoopUpdate = conjunctExToOperDecl(inLoopUpdate, nextOrUnchanged)
+
+    /*
+     * /\  /\ loop_foo' \in {loop_foo, foo}
+     *     /\ InLoop' \= InLoop => loop_foo' = foo
+     *     /\ InLoop' = InLoop => loop_foo' = loop_foo
+     * /\  /\ loop_bar' \in {loop_bar, bar}
+     *     /\ InLoop' \= InLoop => loop_bar' = bar
+     *     /\ InLoop' = InLoop => loop_bar' = loop_bar
+     */
+    variables.zip(loopVariables).foldLeft(nextOrUnchangedWithInLoopUpdate) { case (curNext, (varDecl, loopVarDecl)) =>
+      addLoopVarToNext(varDecl, loopVarDecl, curNext)
+    }
   }
 
-  /*
-    Transforms loopOK into
-      newLoopOK ==
-        /\ oldLoopOK
-        /\ foo = loop_foo
+  /**
+   * Adds a loop variable to the loopOK expression by transforming loopOK into
+   *
+   * newLoopOK ==
+   *
+   * /\ oldLoopOK
+   *
+   * /\ foo = loop_foo
    */
   def addVariableToLoopOK(
       varDecl: TlaVarDecl,
@@ -171,12 +203,28 @@ class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
     )
   }
 
+  /**
+   * Creates a loopOK predicate over the provided variables.
+   *
+   * loopOK ==
+   *
+   * /\ InLoop
+   *
+   * /\ foo = loop_foo
+   *
+   * /\ bar = loop_bar
+   */
   def createLoopOKPredicate(
       variables: Seq[TlaVarDecl],
       loopVariables: Seq[TlaVarDecl]): TlaOperDecl = {
 
     /* loopOK == InLoop */
-    val loopOK = new TlaOperDecl(s"${NAME_PREFIX}LoopOK_${gen.newName()}", List(), inLoop)
+    val loopOK =
+      new TlaOperDecl(
+          s"${NAME_PREFIX}LoopOK_${gen.newName()}",
+          List(),
+          inLoop,
+      )(Typed(OperT1(Seq.empty, BoolT1())))
 
     /* loopOK ==
         /\ InLoop
@@ -195,12 +243,18 @@ class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
         loopOK.name,
         loopOK.formalParams,
         loopVarEqualities.body,
-    )
+    )(loopOK.typeTag)
   }
 
   /**
-   * @returns:
-   *   A tuple containing the new module, the new init predicate, the new next predicate, and the new LoopOK predicate
+   * Adds loop logic to the module.
+   *
+   * @see
+   *   [[addLoopLogicToNext]]
+   * @see
+   *   [[addLoopLogicToInit]]
+   * @see
+   *   [[createLoopOKPredicate]]
    */
   def addLoopLogic(
       module: TlaModule,
@@ -228,5 +282,10 @@ class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
 }
 
 object LoopEncoder {
-  val NAME_PREFIX = ""
+
+  /**
+   * A prefix added to the names of all variables used for the loop encoding. Useful for disambiguating them from
+   * variables in the original spec, particularly if those mention loops as well.
+   */
+  val NAME_PREFIX = "loopencoding_"
 }

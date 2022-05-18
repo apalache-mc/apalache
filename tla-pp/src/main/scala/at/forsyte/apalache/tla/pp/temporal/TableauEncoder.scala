@@ -13,9 +13,10 @@ import at.forsyte.apalache.tla.pp.temporal.DeclUtils._
 import scala.collection.mutable.HashMap
 import at.forsyte.apalache.tla.lir.oper.TlaTempOper
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
+import at.forsyte.apalache.tla.lir.oper.TlaArithOper
 
 /**
- * Encode temporal operators.
+ * Encodes temporal formulas as invariants.
  *
  * @author
  *   Philip Offtermatt
@@ -43,18 +44,71 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
     modWithPreds.setModule(newModule)
   }
 
-  def encodeInvariants(
+  /**
+   * Encodes each of a sequence of temporal formulas.
+   * @see
+   *   [[encodeFormula]]
+   */
+  def encodeFormulas(
       modWithPreds: ModWithPreds,
-      invariants: Seq[TlaOperDecl]): ModWithPreds = {
+      formulas: Seq[TlaOperDecl]): ModWithPreds = {
 
-    encodeVarNameMapping(invariants.foldLeft(modWithPreds)(encodeInvariant))
+    encodeVarNameMapping(formulas.foldLeft(modWithPreds)(encodeFormula))
   }
 
-  def encodeInvariant(
-      modWithPreds: ModWithPreds,
-      invariant: TlaOperDecl): ModWithPreds = {
+  /**
+   * Adds a variable that stores the initial value of the given expression ex. Create a new variable Init_ex and modify
+   * init and next:
+   *
+   * newInit == oldInit /\ Init_ex = ex
+   *
+   * newNext == oldNext /\ UNCHANGED << Init_ex >>
+   */
+  def addInitExVar(modWithPreds: ModWithPreds, ex: TlaEx, exName: String): ModWithPreds = {
+    val exVarDecl = new TlaVarDecl(exName + "_init_" + gen.newName())(ex.typeTag)
+    val exVar = builder.declAsNameEx(exVarDecl)
 
-    encodeSyntaxTreeInPredicates(modWithPreds, invariant.body)._1
+    val newInit = conjunctExToOperDecl(
+        builder.eql(
+            exVar,
+            builder.createUnsafeInstruction(ex),
+        ),
+        modWithPreds.init,
+    )
+
+    val newNext = conjunctExToOperDecl(
+        builder.unchanged(exVar),
+        modWithPreds.next,
+    )
+
+    val curModWithPreds = modWithPreds.setPredicates(newInit, newNext, modWithPreds.loopOK)
+    curModWithPreds.prependDecl(exVarDecl)
+  }
+
+  /**
+   * Encodes a given formula, using the Tableau encoding by adjusting init, next, loopOK and the given formula.
+   */
+  def encodeFormula(
+      modWithPreds: ModWithPreds,
+      formula: TlaOperDecl): ModWithPreds = {
+
+    var (curModWithPreds, formulaEx) = encodeSyntaxTreeInPredicates(modWithPreds, formula.body)
+
+    curModWithPreds = addInitExVar(curModWithPreds, formulaEx, formula.name)
+
+    // replace formula by formula == loopOK => formula_init, and move formula to the end of the spec so it is after loopOK
+    val newFormulaDecl = new TlaOperDecl(
+        formula.name,
+        formula.formalParams,
+        builder.impl(
+            builder.appOp(builder.declAsNameEx(curModWithPreds.loopOK), Seq.empty[TBuilderInstruction]: _*),
+            builder.createUnsafeInstruction(formulaEx),
+        ),
+    )(formula.typeTag)
+    val newDecls = curModWithPreds.module.declarations.filterNot(decl => decl.name == formula.name) :+ newFormulaDecl
+    val newModule = new TlaModule(curModWithPreds.module.name, newDecls)
+
+    curModWithPreds.setModule(newModule)
   }
 
   def insertAt[T](elem: T, seq: Seq[T], pos: Int): Seq[T] = {
@@ -70,6 +124,25 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
     new TlaVarDecl(nodeIdentifier + nameSuffix)(Typed(BoolT1()))
   }
 
+  /**
+   * Moves down the syntax tree of a provided expression curNode. Each node of the syntax tree that has temporal level,
+   * e.g. contains temporal operators somewhere below it, is encoded by a variable curNode_predicate. For example, for
+   * the formula [](A => <>B), The syntax tree has the shape
+   * {{{
+   *   box
+   *    |
+   *    =>
+   *   /  \
+   *  A   diamond
+   *         |
+   *         B
+   * }}}
+   * Assuming A and B do not contain temporal operators, new variables are introduced for all nodes above them, that is
+   * var_BoxAImpliesDiamondB, var_AImpliesDiamondB, var_DiamondB The value of each variable in a given state corresponds
+   * to a commitment whether or not the formula corresponding to this variable holds true at that point in the trace.
+   * For example, if var_DiamondB is true in a state, the spec will ensure that in some future state, B holds (recall
+   * that B holding at some point in the future is the definition of <>B).
+   */
   def encodeSyntaxTreeInPredicates(
       modWithPreds: ModWithPreds,
       curNode: TlaEx): (ModWithPreds, TlaEx) = {
@@ -113,13 +186,20 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
             val nodeLoopVarDecl = new TlaVarDecl(s"Loop_${nodeIdentifier}")(curNode.typeTag)
             curModWithPreds = curModWithPreds.prependDecl(nodeLoopVarDecl)
 
+            /* generic initialization for node variable: curNode_predicate \in BOOLEAN */
+            val initWithNodeVar = conjunctExToOperDecl(builder.in(nodeVarEx, builder.booleanSet()), modWithPreds.init)
+
+            /* generic update for node variable: curNode_predicate' \in BOOLEAN */
+            val nextWithNodeVar =
+              conjunctExToOperDecl(builder.in(nodeVarExPrime, builder.booleanSet()), modWithPreds.next)
+
             /* initialize loop variable
              */
-            val initWithLoopVar = loopEnc.addLoopVarToInit(nodeVarDecl, nodeLoopVarDecl, modWithPreds.init)
+            val initWithLoopVar = loopEnc.addLoopVarToInit(nodeVarDecl, nodeLoopVarDecl, initWithNodeVar)
 
             /* update loop variable
              */
-            val nextWithLoopVar = loopEnc.addLoopVarToNext(nodeVarDecl, nodeLoopVarDecl, modWithPreds.next)
+            val nextWithLoopVar = loopEnc.addLoopVarToNext(nodeVarDecl, nodeLoopVarDecl, nextWithNodeVar)
 
             /* update loopOK
              */
@@ -143,6 +223,7 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
                 /* create new auxiliary variable curNode_globally or curNode_finally */
                 val auxVarDecl = getAuxVarForTempOper(oper.asInstanceOf[TlaTempOper], nodeIdentifier)
                 val auxVarEx = builder.declAsNameEx(auxVarDecl)
+                val auxVarExPrime = builder.prime(auxVarEx)
                 curModWithPreds = curModWithPreds.prependDecl(auxVarDecl)
 
                 /* update init:
@@ -214,7 +295,7 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
                         ),
                         /* curNode_predicate_globally' \in BOOLEAN */
                         builder.in(
-                            auxVarEx,
+                            builder.prime(auxVarEx),
                             builder.booleanSet(),
                         ),
 
@@ -230,9 +311,9 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
                                                             /\ (~InLoop' \/ A')
                          */
                         builder.equiv(
-                            nodeVarExPrime,
+                            auxVarExPrime,
                             outerOp(
-                                nodeVarEx,
+                                auxVarEx,
                                 innerOp(
                                     loopEnc.inLoopPrime,
                                     builder.prime(argExs(0)),
@@ -309,5 +390,9 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
 }
 
 object TableauEncoder {
+  /**
+   * A prefix added to the names of all variables used for the tableau encoding. Useful for disambiguating them from
+   * variables in the original spec.
+   */
   val NAME_PREFIX = ""
 }

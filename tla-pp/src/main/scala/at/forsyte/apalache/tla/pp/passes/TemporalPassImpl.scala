@@ -9,16 +9,13 @@ import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.pp.TlaInputError
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
+import at.forsyte.apalache.tla.lir.transformations.standard.Flatten
+import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 
 /**
- * Desugarer pass.
- *
- * @param options
- *   pass options
- * @param tracker
- *   transformation tracker
- * @param nextPass
- *   next pass to call
+ * The temporal pass takes a module with temporal properties, and outputs
+ * a module without temporal properties and an invariant, such that if the invariant is never violated, then the original specification satisfies the temporal formula.
+ * The encoding is described in https://lmcs.episciences.org/2236, Sections 3.2 and 4.
  */
 class TemporalPassImpl @Inject() (
     val options: PassOptions,
@@ -61,7 +58,7 @@ class TemporalPassImpl @Inject() (
       next: String): TlaModule = {
     val levelFinder = new TlaLevelFinder(module)
 
-    val temporalInvariants = invariants
+    val temporalFormulas = invariants
       .map(invName => {
         module.declarations.find(_.name == invName)
       })
@@ -75,11 +72,11 @@ class TemporalPassImpl @Inject() (
         })
       .map(invOption => invOption.get.asInstanceOf[TlaOperDecl])
 
-    if (temporalInvariants.isEmpty) {
+    if (temporalFormulas.isEmpty) {
       logger.info("  > No temporal properties found, nothing to encode")
       module
     } else {
-      logger.info(s"  > Found ${temporalInvariants.length} temporal invariants")
+      logger.info(s"  > Found ${temporalFormulas.length} temporal invariants")
       logger.info(s"  > Adding logic for loop finding")
 
       val initDecl = module.declarations.find(_.name == init) match {
@@ -120,9 +117,9 @@ class TemporalPassImpl @Inject() (
 
       val loopModWithPreds =
         loopEncoder.addLoopLogic(module, initDecl, nextDecl)
-
+      
       val tableauEncoder = new TableauEncoder(loopModWithPreds.module, gen, loopEncoder)
-      val tableauModWithPreds = tableauEncoder.encodeInvariants(loopModWithPreds, temporalInvariants)
+      val tableauModWithPreds = tableauEncoder.encodeFormulas(loopModWithPreds, temporalFormulas)
 
       tableauModWithPreds.module
     }
