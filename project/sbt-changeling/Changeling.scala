@@ -153,7 +153,7 @@ object ChangelingPlugin extends AutoPlugin {
           changelingKinds.value,
           (ThisBuild / version).value,
           changelingDirectory.value,
-          (Compile / resourceManaged).value / "RELEASE.md",
+          (Compile / baseDirectory).value / "RELEASE.md",
       ),
       changelingChangelog := {
         Changeling.concatFiles(
@@ -161,6 +161,7 @@ object ChangelingPlugin extends AutoPlugin {
             changelingChangelogFile.value,
         )
         Changeling.cleanChanges(
+            changelingRelaseNotes.value,
             (Compile / resourceManaged).value,
             changelingUnreleasedDir.value,
         )
@@ -254,13 +255,15 @@ object Changeling {
    * @return
    *   the trash directory created
    */
-  def cleanChanges(resourceDir: File, unreleasedDir: File): Unit = {
+  def cleanChanges(relaseNotes: File, resourceDir: File, unreleasedDir: File): Unit = {
     // So we can recover dirs if needed
     val trashDir = resourceDir / "changeling-trash" / LocalDate.now.toString
     IO.createDirectory(trashDir)
     val dirPaths = IO.listFiles(unreleasedDir)
     val fileMoves = dirPaths.map(d => (d -> trashDir / d.base))
     IO.move(fileMoves)
+    // Remove the intermediary RELEASE.md file
+    IO.delete(relaseNotes)
     // Recreate the directories
     IO.createDirectories(dirPaths)
   }
