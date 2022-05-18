@@ -16,12 +16,16 @@ object ScopedBuilderExtensions {
       createUnsafeInstruction(OperEx(TlaActionOper.prime, expression)(expression.typeTag))
     }
 
-    def declAsNameEx(varDecl: TlaVarDecl): TBuilderInstruction = {
-      builder.name(varDecl.name, varDecl.typeTag.asTlaType1())
+    def declAsNameEx(decl: TlaDecl): TBuilderInstruction = {
+      builder.name(decl.name, decl.typeTag.asTlaType1())
     }
 
     def createUnsafeInstruction[T <: TlaEx](ex: T): TBuilderInstruction = {
       ex.asInstanceOf[TlaEx].point[TBuilderInternalState]
+    }
+
+    def unchanged(ex: TlaEx): TBuilderInstruction = {
+      builder.createUnsafeInstruction(OperEx(TlaActionOper.unchanged, ex)(Typed(BoolT1())))
     }
   }
 }
@@ -53,6 +57,15 @@ class ModWithPreds(
     val newModule = new TlaModule(module.name, newDecls)
     setModule(newModule)
   }
+
+  /**
+   * Replaces all instances of oldDecl with newDecl
+   */
+  def replaceDeclInMod(oldDecl: TlaDecl, newDecl: TlaDecl): ModWithPreds = {
+    val newDeclarations = module.declarations.map(decl => if (decl.name == oldDecl.name) newDecl else decl)
+    val newModule = new TlaModule(module.name, newDeclarations)
+    new ModWithPreds(newModule, init, next, loopOK)
+  }
 }
 
 package object utils {
@@ -75,6 +88,6 @@ object DeclUtils {
             builder.createUnsafeInstruction(decl.body),
             builder.createUnsafeInstruction(ex),
         ),
-    )(Typed(BoolT1))
+    )(decl.typeTag)
   }
 }
