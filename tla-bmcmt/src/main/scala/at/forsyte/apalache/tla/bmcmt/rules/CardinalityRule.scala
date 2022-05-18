@@ -3,10 +3,11 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.SetOps
 import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFiniteSetOper
-import at.forsyte.apalache.tla.lir.{IntT1, OperEx, SetT1, TlaEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, OperEx, SetT1, TlaEx}
 import at.forsyte.apalache.tla.pp.TlaInputError
 
 /**
@@ -47,14 +48,17 @@ class CardinalityRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   private def makeCardEquations(state: SymbState, set: ArenaCell): SymbState = {
     val (newState, nonDups) = new SetOps(rewriter).dedup(state, set)
-    val (newArena, zero) = rewriter.intValueCache.getOrCreate(newState.arena, 0)
-    var nextState = newState.setArena(newArena)
+    var nextState = newState
 
     def add(counter: TlaEx, isNonDup: ArenaCell): TlaEx = {
-      tla.ite(isNonDup.toNameEx, tla.plus(tla.int(1), counter), counter)
+      nextState = nextState.updateArena(_.appendCell(IntT1()))
+      val intermediate = nextState.arena.topCell
+      val rhs = tla.ite(isNonDup.toNameEx, tla.plus(tla.int(1), counter).as(IntT1()), counter).as(IntT1())
+      rewriter.solverContext.assertGroundExpr(tla.eql(intermediate.toNameEx, rhs).as(BoolT1()))
+      intermediate.toNameEx
     }
 
-    val cardEx = nonDups.foldLeft(zero.toNameEx: TlaEx)(add)
+    val cardEx = nonDups.foldLeft(tla.int(0): TlaEx)(add)
 
     nextState = nextState.updateArena(_.appendCell(IntT1()))
     val cardinality = nextState.arena.topCell
