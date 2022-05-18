@@ -1,14 +1,10 @@
-<!-- NOTE:
-     This file is generated. Do not write release notes here.
-     Notes for unreleased changes go in ./UNRELEASED.md -->
-
 ## 0.25.2
 
 ### Features
 
  * Support sound records (over rows) in the model checker, see #1717
-## 0.25.1
 
+## 0.25.1
      
 ### Features
 

@@ -32,7 +32,7 @@ fi
 
 if ! [ -f "$RELEASE_NOTES" ]
 then
-    echo "error: No RELEASE-NOTES.md found"
+    echo "error: No RELEASE.md found"
     exit 5
 fi
 
