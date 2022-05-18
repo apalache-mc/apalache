@@ -795,4 +795,35 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
 
     assert(expected.eqTyped(output))
   }
+
+  test("""rewrite [A]_vars to A \/ UNCHANGED << vars >>""") {
+    val input: TlaEx =
+      tla.stutt(tla.name("A").typed(BoolT1()), tla.name("B").typed(IntT1())).typed(BoolT1())
+
+    val output = desugarer.transform(input)
+
+    val expected =
+      tla.or(tla.name("A").typed(BoolT1()), tla.unchanged(tla.name("B").typed(IntT1())).typed(BoolT1())).typed(BoolT1())
+    assert(expected.eqTyped(output))
+  }
+
+  test("""rewrite <A>_vars to A /\ ~UNCHANGED << vars >>""") {
+    val input: TlaEx =
+      tla.nostutt(tla.name("A").typed(BoolT1()), tla.name("B").typed(IntT1())).typed(BoolT1())
+
+    val output = desugarer.transform(input)
+
+    val expected =
+      tla
+        .and(
+            tla.name("A").typed(BoolT1()),
+            tla
+              .not(
+                  tla.unchanged(tla.name("B").typed(IntT1())).typed(BoolT1())
+              )
+              .typed(BoolT1()),
+        )
+        .typed(BoolT1())
+    assert(expected.eqTyped(output))
+  }
 }
