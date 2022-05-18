@@ -111,7 +111,7 @@ object ChangelingPlugin extends AutoPlugin {
         "The directory in which unreleased changes are recorded"
     )
 
-    lazy val changelingRelaseNotes = taskKey[File](
+    lazy val changelingReleaseNotes = taskKey[File](
         """|Render the contents of the `changelingUnreleasedDir` directory as a
            |markdown file, following expected format for release
            |notes""".stripMargin
@@ -138,6 +138,7 @@ object ChangelingPlugin extends AutoPlugin {
       changelingKinds := Seq(
           "Breaking changes",
           "Features",
+          "Improvements",
           "Bug fixes",
           "Documentation",
       ),
@@ -149,22 +150,23 @@ object ChangelingPlugin extends AutoPlugin {
           base = changelingUnreleasedDir.value,
           children = changelingKinds.value,
       ),
-      changelingRelaseNotes := Changeling.renderReleaseNotes(
+      changelingReleaseNotes := Changeling.renderReleaseNotes(
           changelingKinds.value,
           (ThisBuild / version).value,
           changelingDirectory.value,
-          (Compile / resourceManaged).value / "RELEASE.md",
+          (ThisBuild / baseDirectory).value / "RELEASE.md",
       ),
       changelingChangelog := {
         Changeling.concatFiles(
-            changelingRelaseNotes.value,
+            changelingReleaseNotes.value,
             changelingChangelogFile.value,
         )
         Changeling.cleanChanges(
+            changelingReleaseNotes.value,
             (Compile / resourceManaged).value,
             changelingUnreleasedDir.value,
         )
-        changelingRelaseNotes.value
+        changelingChangelogFile.value
       },
   )
 
@@ -254,13 +256,14 @@ object Changeling {
    * @return
    *   the trash directory created
    */
-  def cleanChanges(resourceDir: File, unreleasedDir: File): Unit = {
+  def cleanChanges(releaseNotes: File, resourceDir: File, unreleasedDir: File): Unit = {
     // So we can recover dirs if needed
     val trashDir = resourceDir / "changeling-trash" / LocalDate.now.toString
     IO.createDirectory(trashDir)
     val dirPaths = IO.listFiles(unreleasedDir)
     val fileMoves = dirPaths.map(d => (d -> trashDir / d.base))
     IO.move(fileMoves)
+    IO.delete(releaseNotes)
     // Recreate the directories
     IO.createDirectories(dirPaths)
   }
