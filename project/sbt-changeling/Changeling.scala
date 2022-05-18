@@ -7,9 +7,9 @@ package systems.informal.sbt.changeling
  *
  * ==Motivation==
  *
- * Merge conflicts arise when the same lines in the same files are edited
- * "simultaneously" in two different branches. The basic idea is to reduce the chance of merge conflicts by adding each
- * entry of an unreleased change into the changelog via a separate file.
+ * Merge conflicts arise when the same lines in the same files are edited "simultaneously" in two different branches.
+ * The basic idea is to reduce the chance of merge conflicts by adding each entry of an unreleased change into the
+ * changelog via a separate file.
  *
  * ===Design===
  *
@@ -59,13 +59,13 @@ package systems.informal.sbt.changeling
  * |                       \------ Change entry 4
  * |
  * \------- 0.0.1
- * |--------- Features
- * |            |------ Change entry 1
- * |            \------ Change entry 2
- * |
- * \--------- Bug fixes
- * |------ Change entry 3
- * \------ Change entry 4
+ *            |--------- Features
+ *            |            |------ Change entry 1
+ *            |            \------ Change entry 2
+ *            |
+ *            \--------- Bug fixes
+ *                         |------ Change entry 3
+ *                         \------ Change entry 4
  * }}}
  *
  * We can represent the document model with an analogous directory structure. However, we don't actually need to
