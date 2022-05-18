@@ -338,11 +338,14 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
                 curModWithPreds = curModWithPreds.setPredicates(newInit, newNext, newLoopOK)
                 (curModWithPreds, nodeVarEx)
               // case TlaTempOper.guarantees     => mkOpApp("%%s %s %%s".format(m_guarantee), args: _*)
-              // case TlaTempOper.leadsTo        => mkOpApp("%%s %s %%s".format(m_leadsto), args: _*)
               // case TlaTempOper.strongFairness => mkApp("SF_%s(%s)", args: _*)
               // case TlaTempOper.weakFairness   => mkApp("WF_%s(%s)", args: _*)
               // case TlaTempOper.AA             => mkOpApp("[%s]%%s . %%s".format(m_forall), args: _*)
               // case TlaTempOper.EE             => mkOpApp("[%s]%%s . %%s".format(m_exists), args: _*)
+              case TlaTempOper.leadsTo =>
+                throw new LanguagePredError(
+                    "Don't know how to handle operator '~>'. It should have been removed by the Desugarer",
+                    Seq((curNode.ID, "")))
 
               case _ => // not a temporal operator. e.g. A /\ B
                 /* initialize the variable for this node
@@ -390,6 +393,7 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
 }
 
 object TableauEncoder {
+
   /**
    * A prefix added to the names of all variables used for the tableau encoding. Useful for disambiguating them from
    * variables in the original spec.
