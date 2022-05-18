@@ -532,8 +532,9 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
           case PowSetT(domType) if encoding == arraysEncoding =>
             z3context.mkArraySort(getOrMkCellSort(CellTFrom(domType)), z3context.getBoolSort)
 
-          case FinFunSetT(CellTFrom(SetT1(argType)), CellTFrom(SetT1(resType))) if encoding == arraysEncoding =>
-            z3context.mkArraySort(getOrMkCellSort(CellTFrom(FunT1(argType, resType))), z3context.getBoolSort)
+          case FinFunSetT(domType, cdmType) if encoding == arraysEncoding =>
+            val funSort = z3context.mkArraySort(mkCellElemSort(domType), mkCellElemSort(cdmType))
+            z3context.mkArraySort(funSort, z3context.getBoolSort)
 
           case CellTFrom(FunT1(argType, resType)) if encoding == arraysEncoding =>
             z3context.mkArraySort(getOrMkCellSort(CellTFrom(argType)), getOrMkCellSort(CellTFrom(resType)))
@@ -548,6 +549,22 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
       cellSorts += (sig -> (newSort, level))
       newSort
+    }
+  }
+
+  private def mkCellElemSort(cellType: CellT): Sort = {
+    cellType match {
+      case CellTFrom(SetT1(elemType)) if encoding == arraysEncoding =>
+        getOrMkCellSort(CellTFrom(elemType))
+
+      case PowSetT(domType) if encoding == arraysEncoding =>
+        getOrMkCellSort(CellTFrom(domType))
+
+      case FinFunSetT(CellTFrom(SetT1(argType)), CellTFrom(SetT1(resType))) if encoding == arraysEncoding =>
+        getOrMkCellSort(CellTFrom(FunT1(argType, resType)))
+
+      case _ =>
+        throw new IllegalArgumentException(s"Unexpected FinFunSet arg of type $cellType")
     }
   }
 
