@@ -32,7 +32,7 @@ class TestUJsonToTla extends AnyFunSuite with Checkers {
                   tla.plus(tla.name("p"), tla.int(1)),
                   OperParam("p"),
               )
-              .withTag(Untyped())
+              .withTag(Untyped)
               .asInstanceOf[TlaOperDecl],
         ),
     )
@@ -73,7 +73,7 @@ class TestUJsonToTla extends AnyFunSuite with Checkers {
         TlaBoolSet,
         TlaStrSet,
     ).map { v =>
-      ValEx(v).withTag(Untyped())
+      ValEx(v).withTag(Untyped)
     }
 
     sets.foreach { s =>

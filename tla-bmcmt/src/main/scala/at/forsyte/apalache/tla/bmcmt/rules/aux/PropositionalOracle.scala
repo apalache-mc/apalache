@@ -74,7 +74,7 @@ object PropositionalOracle {
 
     val nbits = findNBits(1)
     // create nbits cells to hold the propositional variables
-    val (newArena, newCells) = state.arena.appendCellSeq((0 until nbits).map(_ => CellTFrom(BoolT1())): _*)
+    val (newArena, newCells) = state.arena.appendCellSeq((0 until nbits).map(_ => CellTFrom(BoolT1)): _*)
     val oracle = new PropositionalOracle(newCells, nvalues)
     val nextState = state.setArena(newArena)
 

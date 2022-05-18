@@ -22,10 +22,10 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
 
   test("unifying monotypes") {
     assert(unifier.unify(Substitution.empty, ConstT1("F"), ConstT1("F")).contains((Substitution.empty, ConstT1("F"))))
-    assert(unifier.unify(Substitution.empty, IntT1(), IntT1()).contains((Substitution.empty, IntT1())))
-    assert(unifier.unify(Substitution.empty, BoolT1(), BoolT1()).contains((Substitution.empty, BoolT1())))
-    assert(unifier.unify(Substitution.empty, StrT1(), StrT1()).contains((Substitution.empty, StrT1())))
-    assert(unifier.unify(Substitution.empty, RealT1(), RealT1()).contains((Substitution.empty, RealT1())))
+    assert(unifier.unify(Substitution.empty, IntT1, IntT1).contains((Substitution.empty, IntT1)))
+    assert(unifier.unify(Substitution.empty, BoolT1, BoolT1).contains((Substitution.empty, BoolT1)))
+    assert(unifier.unify(Substitution.empty, StrT1, StrT1).contains((Substitution.empty, StrT1)))
+    assert(unifier.unify(Substitution.empty, RealT1, RealT1).contains((Substitution.empty, RealT1)))
     val intToInt = parser("Int -> Int")
     assert(unifier.unify(Substitution.empty, intToInt, intToInt).contains((Substitution.empty, intToInt)))
     val intAndBoolToInt = parser("(Int, Bool) => Int")
@@ -50,12 +50,12 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
   }
 
   test("non-unifying monotypes") {
-    assert(unifier.unify(Substitution.empty, ConstT1("F"), BoolT1()).isEmpty)
+    assert(unifier.unify(Substitution.empty, ConstT1("F"), BoolT1).isEmpty)
     assert(unifier.unify(Substitution.empty, ConstT1("F"), ConstT1("G")).isEmpty)
-    assert(unifier.unify(Substitution.empty, IntT1(), BoolT1()).isEmpty)
-    assert(unifier.unify(Substitution.empty, BoolT1(), StrT1()).isEmpty)
-    assert(unifier.unify(Substitution.empty, StrT1(), IntT1()).isEmpty)
-    assert(unifier.unify(Substitution.empty, RealT1(), IntT1()).isEmpty)
+    assert(unifier.unify(Substitution.empty, IntT1, BoolT1).isEmpty)
+    assert(unifier.unify(Substitution.empty, BoolT1, StrT1).isEmpty)
+    assert(unifier.unify(Substitution.empty, StrT1, IntT1).isEmpty)
+    assert(unifier.unify(Substitution.empty, RealT1, IntT1).isEmpty)
 
     val intToInt = parser("Int -> Int")
     val boolToInt = parser("Bool -> Int")
@@ -82,11 +82,11 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
 
   test("unifying polytypes") {
     assert(unifier
-          .unify(Substitution.empty, VarT1(0), IntT1())
-          .contains((Substitution(EqClass(0) -> IntT1()), IntT1())))
+          .unify(Substitution.empty, VarT1(0), IntT1)
+          .contains((Substitution(EqClass(0) -> IntT1), IntT1)))
     assert(unifier
-          .unify(Substitution.empty, FunT1(VarT1(0), IntT1()), FunT1(BoolT1(), VarT1(1)))
-          .contains((Substitution(EqClass(0) -> BoolT1(), EqClass(1) -> IntT1()), FunT1(BoolT1(), IntT1()))))
+          .unify(Substitution.empty, FunT1(VarT1(0), IntT1), FunT1(BoolT1, VarT1(1)))
+          .contains((Substitution(EqClass(0) -> BoolT1, EqClass(1) -> IntT1), FunT1(BoolT1, IntT1))))
     assert(unifier
           .unify(Substitution.empty, VarT1(0), ConstT1("ID"))
           .contains((Substitution(EqClass(0) -> ConstT1("ID")), ConstT1("ID"))))
@@ -107,14 +107,14 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
           .unify(Substitution.empty, VarT1(0), VarT1(0))
           .contains((Substitution(EqClass(0) -> VarT1(0)), VarT1(0))))
     assert(unifier
-          .unify(Substitution(EqClass(0) -> IntT1()), VarT1(0), VarT1(0))
-          .contains((Substitution(EqClass(0) -> IntT1()), IntT1())))
+          .unify(Substitution(EqClass(0) -> IntT1), VarT1(0), VarT1(0))
+          .contains((Substitution(EqClass(0) -> IntT1), IntT1)))
     assert(unifier
           .unify(Substitution.empty, VarT1(0), VarT1(1))
           .contains((Substitution(EqClass(Set(0, 1)) -> VarT1(0)), VarT1(0))))
     assert(unifier
-          .unify(Substitution(EqClass(1) -> IntT1()), VarT1(0), VarT1(1))
-          .contains((Substitution(EqClass(Set(0, 1)) -> IntT1()), IntT1())))
+          .unify(Substitution(EqClass(1) -> IntT1), VarT1(0), VarT1(1))
+          .contains((Substitution(EqClass(Set(0, 1)) -> IntT1), IntT1)))
     // unify <<a, b>> and <<b, a>>
     assert(unifier
           .unify(Substitution.empty, parser("<<a, b>>"), parser("<<b, a>>"))
@@ -128,15 +128,15 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
 
   test("unifying Seq(a) and Seq(Int)") {
     assert(unifier
-          .unify(Substitution.empty, SeqT1(VarT1(0)), SeqT1(IntT1()))
-          .contains((Substitution(EqClass(0) -> IntT1()), SeqT1(IntT1()))))
+          .unify(Substitution.empty, SeqT1(VarT1(0)), SeqT1(IntT1))
+          .contains((Substitution(EqClass(0) -> IntT1), SeqT1(IntT1))))
   }
 
   test("unifying a => Set(a) and Int => b") {
     assert(unifier
-          .unify(Substitution.empty, OperT1(Seq(VarT1(0)), SetT1(VarT1(0))), OperT1(Seq(IntT1()), VarT1(1)))
-          .contains((Substitution(EqClass(0) -> IntT1(), EqClass(1) -> SetT1(VarT1(0))),
-                  OperT1(Seq(IntT1()), SetT1(IntT1())))))
+          .unify(Substitution.empty, OperT1(Seq(VarT1(0)), SetT1(VarT1(0))), OperT1(Seq(IntT1), VarT1(1)))
+          .contains((Substitution(EqClass(0) -> IntT1, EqClass(1) -> SetT1(VarT1(0))),
+                  OperT1(Seq(IntT1), SetT1(IntT1)))))
   }
 
   test("non-unifying polytypes") {
@@ -215,8 +215,8 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
     val row1 = parser("(| field1: Int | field2: Str | c |)")
     val row2 = parser("(| field3: Bool | d |)")
     val expectedSub = Substitution(
-        EqClass(Set(c.no)) -> RowT1(fresh, "field3" -> BoolT1()),
-        EqClass(Set(d.no)) -> RowT1(fresh, "field1" -> IntT1(), "field2" -> StrT1()),
+        EqClass(Set(c.no)) -> RowT1(fresh, "field3" -> BoolT1),
+        EqClass(Set(d.no)) -> RowT1(fresh, "field1" -> IntT1, "field2" -> StrT1),
         EqClass(Set(fresh.no)) -> fresh,
     ) ///
     val result = unifier.unify(Substitution(), row1, row2)

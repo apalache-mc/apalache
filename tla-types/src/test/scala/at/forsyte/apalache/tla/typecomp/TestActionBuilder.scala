@@ -37,7 +37,7 @@ class TestActionBuilder extends BuilderTest {
     type T = (TBuilderInstruction, TBuilderInstruction)
     def mkWellTyped(tt: TlaType1): T =
       (
-          builder.name("A", BoolT1()),
+          builder.name("A", BoolT1),
           builder.name("e", tt),
       )
 
@@ -53,7 +53,7 @@ class TestActionBuilder extends BuilderTest {
         op,
         mkWellTyped,
         { case (a, b) => Seq(a, b) },
-        _ => BoolT1(),
+        _ => BoolT1,
     )
 
     def run(
@@ -76,7 +76,7 @@ class TestActionBuilder extends BuilderTest {
     implicit val unitGen: Gen[Unit] = Gen.oneOf(Seq(()))
 
     type T = TBuilderInstruction
-    def mkWellTyped(@unused tt: Unit): T = builder.name("A", BoolT1())
+    def mkWellTyped(@unused tt: Unit): T = builder.name("A", BoolT1)
 
     def mkIllTyped(@unused tt: Unit): Seq[T] =
       Seq(
@@ -87,7 +87,7 @@ class TestActionBuilder extends BuilderTest {
         TlaActionOper.enabled,
         mkWellTyped,
         { Seq(_) },
-        _ => BoolT1(),
+        _ => BoolT1,
     )
 
     checkRun(
@@ -110,7 +110,7 @@ class TestActionBuilder extends BuilderTest {
         TlaActionOper.unchanged,
         mkWellTyped,
         { Seq(_) },
-        _ => BoolT1(),
+        _ => BoolT1,
     )
 
     checkRun(
@@ -130,18 +130,18 @@ class TestActionBuilder extends BuilderTest {
     type T = (TBuilderInstruction, TBuilderInstruction)
     def mkWellTyped(@unused tt: Unit): T =
       (
-          builder.name("A", BoolT1()),
-          builder.name("B", BoolT1()),
+          builder.name("A", BoolT1),
+          builder.name("B", BoolT1),
       )
 
     def mkIllTyped(@unused tt: Unit): Seq[T] =
       Seq(
           (
               builder.name("A", InvalidTypeMethods.notBool),
-              builder.name("B", BoolT1()),
+              builder.name("B", BoolT1),
           ),
           (
-              builder.name("A", BoolT1()),
+              builder.name("A", BoolT1),
               builder.name("B", InvalidTypeMethods.notBool),
           ),
       )
@@ -150,7 +150,7 @@ class TestActionBuilder extends BuilderTest {
         TlaActionOper.composition,
         mkWellTyped,
         { case (a, b) => Seq(a, b) },
-        _ => BoolT1(),
+        _ => BoolT1,
     )
 
     checkRun(

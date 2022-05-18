@@ -14,7 +14,7 @@ class TestBoolRule extends AnyFunSuite {
 
   val rule = new BoolRule(rewriter)
 
-  val b = BoolT1()
+  val b = BoolT1
 
   val p = tla.name("p").as(b)
   val pVar = BoolVar("p")

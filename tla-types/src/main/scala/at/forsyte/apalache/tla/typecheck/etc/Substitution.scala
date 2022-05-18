@@ -38,7 +38,7 @@ class Substitution(val mapping: Map[EqClass, TlaType1]) {
           (tp, false)
         }
 
-      case IntT1() | BoolT1() | RealT1() | StrT1() | ConstT1(_) =>
+      case IntT1 | BoolT1 | RealT1 | StrT1 | ConstT1(_) =>
         (tp, false)
 
       case SetT1(elem) =>

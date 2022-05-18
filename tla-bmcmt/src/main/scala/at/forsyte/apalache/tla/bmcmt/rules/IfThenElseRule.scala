@@ -47,7 +47,7 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
           val resultType = CellT.fromTypeTag(ex.typeTag)
           resultType match {
             // basic types, we can use SMT equality
-            case CellTFrom(BoolT1()) | CellTFrom(IntT1()) | CellTFrom(ConstT1(_)) =>
+            case CellTFrom(BoolT1) | CellTFrom(IntT1) | CellTFrom(ConstT1(_)) =>
               iteBasic(nextState, resultType, predCell.toNameEx, thenCell, elseCell)
 
             // sets, functions, records, tuples, sequence: use pick

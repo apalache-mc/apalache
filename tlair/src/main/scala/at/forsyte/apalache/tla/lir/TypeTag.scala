@@ -8,7 +8,7 @@ sealed abstract class TypeTag
 /**
  * The type tag that simply indicates that the language construct is not typed.
  */
-case class Untyped() extends TypeTag
+case object Untyped extends TypeTag
 
 /**
  * A type tag that carries a tag of type T, which the tag is parameterized with.

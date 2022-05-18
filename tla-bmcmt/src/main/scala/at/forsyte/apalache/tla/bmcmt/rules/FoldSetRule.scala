@@ -59,7 +59,7 @@ class FoldSetRule(rewriter: SymbStateRewriter, renaming: IncrementalRenaming) ex
           throw new TypingException(s"FoldSet argument $setEx should have the type Set(_), found $nonSet.", setEx.ID)
       }
       val opT = OperT1(Seq(a, b), a)
-      val bool = BoolT1()
+      val bool = BoolT1
       // sanity check
       opDecl.typeTag.asTlaType1() match {
         case `opT` => // all good
@@ -134,9 +134,9 @@ class FoldSetRule(rewriter: SymbStateRewriter, renaming: IncrementalRenaming) ex
   // b) (lazy) equality must evaluate to true
   def eqToOther(setNameEx: TlaEx, thisCell: ArenaCell, otherCell: ArenaCell): BuilderEx =
     tla
-      .and(tla.apalacheSelectInSet(otherCell.toNameEx, setNameEx).as(BoolT1()),
+      .and(tla.apalacheSelectInSet(otherCell.toNameEx, setNameEx).as(BoolT1),
           rewriter.lazyEq.safeEq(thisCell, otherCell))
-      .as(BoolT1())
+      .as(BoolT1)
 
   // convenience shorthand
   def solverAssert: TlaEx => Unit = rewriter.solverContext.assertGroundExpr

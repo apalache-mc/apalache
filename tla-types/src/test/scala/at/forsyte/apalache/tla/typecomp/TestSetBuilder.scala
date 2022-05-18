@@ -103,7 +103,7 @@ class TestSetBuilder extends BuilderTest {
         op,
         mkWellTyped,
         { case (a, b) => Seq(a, b) },
-        _ => BoolT1(),
+        _ => BoolT1,
     )
 
     def run(
@@ -203,7 +203,7 @@ class TestSetBuilder extends BuilderTest {
       (
           builder.name("x", tt),
           builder.name("S", SetT1(tt)),
-          builder.name("p", BoolT1()),
+          builder.name("p", BoolT1),
       )
 
     def mkIllTyped(tt: TlaType1): Seq[T] =
@@ -216,12 +216,12 @@ class TestSetBuilder extends BuilderTest {
           (
               builder.name("x", tt),
               builder.name("S", InvalidTypeMethods.notSet),
-              builder.name("p", BoolT1()),
+              builder.name("p", BoolT1),
           ),
           (
               builder.name("x", InvalidTypeMethods.differentFrom(tt)),
               builder.name("S", SetT1(tt)),
-              builder.name("p", BoolT1()),
+              builder.name("p", BoolT1),
           ),
       )
 
@@ -246,8 +246,8 @@ class TestSetBuilder extends BuilderTest {
       build(
           builder.filter(
               builder.str("x"),
-              builder.name("S", SetT1(StrT1())),
-              builder.name("p", BoolT1()),
+              builder.name("S", SetT1(StrT1)),
+              builder.name("p", BoolT1),
           )
       )
     }
@@ -320,7 +320,7 @@ class TestSetBuilder extends BuilderTest {
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
-      build(builder.mapMixed(builder.name("x", IntT1())))
+      build(builder.mapMixed(builder.name("x", IntT1)))
     }
 
     // now for builder.map (not mapMixed)
@@ -376,7 +376,7 @@ class TestSetBuilder extends BuilderTest {
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
-      build(builder.map(builder.name("x", IntT1())))
+      build(builder.map(builder.name("x", IntT1)))
     }
 
   }
@@ -575,7 +575,7 @@ class TestSetBuilder extends BuilderTest {
         TlaSetOper.subseteq,
         mkWellTyped,
         { case (a, b) => Seq(a, b) },
-        _ => BoolT1(),
+        _ => BoolT1,
     )
 
     checkRun(
@@ -634,7 +634,7 @@ class TestSetBuilder extends BuilderTest {
 
     // test fail on n = 1
     assertThrows[IllegalArgumentException] {
-      build(builder.times(builder.name("x", SetT1(IntT1()))))
+      build(builder.times(builder.name("x", SetT1(IntT1))))
     }
   }
 

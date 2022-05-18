@@ -56,7 +56,7 @@ class IntArithRule(rewriter: SymbStateRewriter) extends RewritingRule with IntAr
     val packedState = packArithExpr(rewriter, state)
 
     // add new arena cell
-    val newArena = packedState.arena.appendCell(IntT1())
+    val newArena = packedState.arena.appendCell(IntT1)
     val newCell = newArena.topCell
 
     // assert the new cell is equal to the packed arithmetic expression

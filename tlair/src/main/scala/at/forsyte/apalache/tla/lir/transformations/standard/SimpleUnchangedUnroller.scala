@@ -28,14 +28,14 @@ class SimpleUnchangedUnroller(tracker: TransformationTracker) extends TlaExTrans
 
   private def mkPrimeEq(ex: TlaEx): TlaEx = {
     val t = ex.typeTag.asTlaType1()
-    tla.eql(tla.prime(ex.copy()).as(t), ex.copy()).as(BoolT1())
+    tla.eql(tla.prime(ex.copy()).as(t), ex.copy()).as(BoolT1)
   }
 
   private def transform: TlaExTransformation = tracker.trackEx {
     case OperEx(TlaActionOper.unchanged, arg) =>
       arg match {
         case OperEx(TlaFunOper.tuple, args @ _*) =>
-          tla.and(args.map(mkPrimeEq): _*).as(BoolT1())
+          tla.and(args.map(mkPrimeEq): _*).as(BoolT1)
         case _ => mkPrimeEq(arg)
       }
     // we can skip

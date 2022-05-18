@@ -17,7 +17,7 @@ class AssumeTranslator(
           context,
           OutsideRecursion(),
       ).translate(node.getAssume)
-    TlaAssumeDecl(body)(Untyped())
+    TlaAssumeDecl(body)(Untyped)
   }
 }
 

@@ -25,12 +25,12 @@ class TestEUFRule extends AnyFunSuite {
   val constGen = new UniqueNameGenerator {
     override def newName(): String = funName
   }
-  val fType = FunT1(TupT1(sType, IntT1()), sType)
+  val fType = FunT1(TupT1(sType, IntT1), sType)
   val f = tla.name(funName).as(fType)
 
   val rule = new EUFRule(rewriter, new RestrictedSetJudgement(constSets), constGen)
 
-  val b = BoolT1()
+  val b = BoolT1
 
   val p = tla.name("p").as(b)
   val pVar = BoolVar("p")
@@ -40,9 +40,9 @@ class TestEUFRule extends AnyFunSuite {
   val x = tla.name("x").as(sType)
   val xVar = mkVariable("x", sSort)
   val xPrimeVar = mkVariable(VMTprimeName("x"), sSort)
-  val y = tla.name("y").as(IntT1())
+  val y = tla.name("y").as(IntT1)
   val set = tla.name("S").as(SetT1(sType))
-  val intSet = tla.intSet().as(SetT1(IntT1()))
+  val intSet = tla.intSet().as(SetT1(IntT1))
 
   val expected: Map[TlaEx, Term] = Map(
       tla.assign(tla.prime(x).as(sType), x).as(b) -> Equal(xPrimeVar, xVar),

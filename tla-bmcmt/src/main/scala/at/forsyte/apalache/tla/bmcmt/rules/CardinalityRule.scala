@@ -51,16 +51,16 @@ class CardinalityRule(rewriter: SymbStateRewriter) extends RewritingRule {
     var nextState = newState
 
     def add(counter: TlaEx, isNonDup: ArenaCell): TlaEx = {
-      nextState = nextState.updateArena(_.appendCell(IntT1()))
+      nextState = nextState.updateArena(_.appendCell(IntT1))
       val intermediate = nextState.arena.topCell
-      val rhs = tla.ite(isNonDup.toNameEx, tla.plus(tla.int(1), counter).as(IntT1()), counter).as(IntT1())
-      rewriter.solverContext.assertGroundExpr(tla.eql(intermediate.toNameEx, rhs).as(BoolT1()))
+      val rhs = tla.ite(isNonDup.toNameEx, tla.plus(tla.int(1), counter).as(IntT1), counter).as(IntT1)
+      rewriter.solverContext.assertGroundExpr(tla.eql(intermediate.toNameEx, rhs).as(BoolT1))
       intermediate.toNameEx
     }
 
     val cardEx = nonDups.foldLeft(tla.int(0): TlaEx)(add)
 
-    nextState = nextState.updateArena(_.appendCell(IntT1()))
+    nextState = nextState.updateArena(_.appendCell(IntT1))
     val cardinality = nextState.arena.topCell
     rewriter.solverContext.assertGroundExpr(tla.eql(cardinality.toNameEx, cardEx))
 
