@@ -182,8 +182,8 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
     )(tparam)
   }
 
-  /** Invokes tests for a tertiary builder method. Performs lifting to HList logic for the user. */
-  def runTertiary[TypeParameterization](
+  /** Invokes tests for a ternary builder method. Performs lifting to HList logic for the user. */
+  def runTernary[TypeParameterization](
       method: (TBuilderInstruction, TBuilderInstruction, TBuilderInstruction) => TBuilderInstruction,
       mkWellTypedArg: TypeParameterization => (TBuilderInstruction, TBuilderInstruction, TBuilderInstruction),
       mkIllTypedArg: TypeParameterization => Seq[(TBuilderInstruction, TBuilderInstruction, TBuilderInstruction)],

@@ -15,14 +15,14 @@ trait ControlBuilder extends UnsafeControlBuilder {
 
   /** IF p THEN A ELSE B */
   def ite(p: TBuilderInstruction, A: TBuilderInstruction, B: TBuilderInstruction): TBuilderInstruction =
-    tertiaryFromUnsafe(p, A, B)(_ite)
+    ternaryFromUnsafe(p, A, B)(_ite)
 
   /** CASE p1 -> e1 [] p2 -> e2 [] ... [] pn -> en */
   def caseSplit(pairs: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction =
     caseSplitMixed(pairs.flatMap { case (a, b) => Seq(a, b) }: _*)
 
   /**
-   * Alternate call method, where paris are passed mixed
+   * Alternate call method, where pairs are passed mixed
    *
    * @see
    *   caseSplit[[caseSplit(pairs: (TBuilderInstruction, TBuilderInstruction)*)]]

@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.typecomp.subbuilder
 
-import at.forsyte.apalache.tla.typecomp.BuilderUtil.{binaryFromUnsafe, tertiaryFromUnsafe}
+import at.forsyte.apalache.tla.typecomp.BuilderUtil.{binaryFromUnsafe, ternaryFromUnsafe}
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeSeqBuilder
 
@@ -34,6 +34,6 @@ trait SeqBuilder extends UnsafeSeqBuilder {
       seq: TBuilderInstruction,
       fromIndex: TBuilderInstruction,
       toIndex: TBuilderInstruction): TBuilderInstruction =
-    tertiaryFromUnsafe(seq, fromIndex, toIndex)(_subseq)
+    ternaryFromUnsafe(seq, fromIndex, toIndex)(_subseq)
 
 }

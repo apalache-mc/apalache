@@ -45,7 +45,7 @@ class TestControlBuilder extends BuilderTest {
     )
 
     checkRun(
-        runTertiary(
+        runTernary(
             builder.ite,
             mkWellTyped,
             mkIllTyped,

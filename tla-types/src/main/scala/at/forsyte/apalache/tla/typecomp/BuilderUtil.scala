@@ -50,8 +50,8 @@ object BuilderUtil {
     yEx <- y
   } yield unsafeMethod(xEx, yEx)
 
-  /** Lifts a tertiary unsafe method to a TBuilderInstruction method */
-  def tertiaryFromUnsafe(
+  /** Lifts a ternary unsafe method to a TBuilderInstruction method */
+  def ternaryFromUnsafe(
       x: TBuilderInstruction,
       y: TBuilderInstruction,
       z: TBuilderInstruction,
