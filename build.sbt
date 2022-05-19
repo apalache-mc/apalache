@@ -317,7 +317,7 @@ prepareRelease := {
   val releaseNotesFile = changelingReleaseNotes.value
   val releaseNotes = IO.read(releaseNotesFile)
   // Create a release branch and the release commit
-  s"echo git checkout -b release/${v}" ! log
+  s"git checkout -b release/${v}" ! log
   // Create the release commit
   val commitMsg = s"[release] ${v}"
   "git add --update" ! log
