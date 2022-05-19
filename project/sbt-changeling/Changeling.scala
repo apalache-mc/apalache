@@ -174,6 +174,9 @@ object ChangelingPlugin extends AutoPlugin {
 
 object Changeling {
 
+  /* Constant for the name of gitkeep files */
+  private val gitkeep = ".gitkeep"
+
   /**
    * Ensure that `base` directory exists, and that it has all `children`
    *
@@ -189,7 +192,7 @@ object Changeling {
     val leafDirs = children.map(normalizeFileName.andThen(childOfBase))
     IO.createDirectories(leafDirs)
     // ensure git will keep the dirs even if they're empty
-    leafDirs.foreach(dir => IO.touch(dir / ".gitkeep"))
+    leafDirs.foreach(dir => IO.touch(dir / gitkeep))
     base
   }
 
@@ -229,7 +232,7 @@ object Changeling {
       .listFiles(unreleasedDir)
       .sortBy(changeDirOrder)
       .flatMap { changeDir =>
-        IO.listFiles(changeDir) match {
+        IO.listFiles(changeDir).filterNot(_.name == gitkeep) match {
           case Array() => Seq() // Omit sections with no entries
           case changeEntries => {
             val heading = s"### ${deNormalizeFileName(changeDir.base.toString)}"
