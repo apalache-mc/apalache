@@ -11,11 +11,12 @@ import at.forsyte.apalache.tla.pp.TlaInputError
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import at.forsyte.apalache.tla.lir.transformations.standard.Flatten
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
+import at.forsyte.apalache.infra.passes.Pass.PassResult
 
 /**
- * The temporal pass takes a module with temporal properties, and outputs
- * a module without temporal properties and an invariant, such that if the invariant is never violated, then the original specification satisfies the temporal formula.
- * The encoding is described in https://lmcs.episciences.org/2236, Sections 3.2 and 4.
+ * The temporal pass takes a module with temporal properties, and outputs a module without temporal properties and an
+ * invariant, such that if the invariant is never violated, then the original specification satisfies the temporal
+ * formula. The encoding is described in https://lmcs.episciences.org/2236, Sections 3.2 and 4.
  */
 class TemporalPassImpl @Inject() (
     val options: PassOptions,
@@ -25,7 +26,7 @@ class TemporalPassImpl @Inject() (
 
   override def name: String = "TemporalPass"
 
-  override def execute(tlaModule: TlaModule): Option[TlaModule] = {
+  override def execute(tlaModule: TlaModule): PassResult = {
     logger.info("  > Rewriting temporal operators...")
 
     val newModule = options.get[List[String]]("checker", "inv") match {
@@ -48,7 +49,7 @@ class TemporalPassImpl @Inject() (
 
     writeOut(writerFactory, newModule)
 
-    Some(newModule)
+    Right(newModule)
   }
 
   def encodeInvariants(
@@ -117,7 +118,7 @@ class TemporalPassImpl @Inject() (
 
       val loopModWithPreds =
         loopEncoder.addLoopLogic(module, initDecl, nextDecl)
-      
+
       val tableauEncoder = new TableauEncoder(loopModWithPreds.module, gen, loopEncoder)
       val tableauModWithPreds = tableauEncoder.encodeFormulas(loopModWithPreds, temporalFormulas)
 
