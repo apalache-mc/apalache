@@ -45,8 +45,6 @@ fi
 git checkout -b "release/${RELEASE_VERSION}"
 
 # Generate the release notes
-# RELEASE_VERSION=$RELEASE_VERSION "$DIR"/release-notes.sh
-
 sbt changelingReleaseNotes
 
 # Make the release commit
