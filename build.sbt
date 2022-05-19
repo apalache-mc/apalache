@@ -322,13 +322,13 @@ prepareRelease := {
   val commitMsg = s"[release] ${v}"
   "git add --update" ! log
   s"git add ${releaseNotesFile}" ! log
-  s"git commit -m '${commitMsg}'" ! log
+  s"""git commit -m "${commitMsg}"""" ! log
   // Bump the version to the next release and update changelogs
   val changelog = changelingChangelog.value
   val nextVersion = incrVersion.value
   IO.delete(releaseNotesFile)
   "git add --update" ! log
-  s"git commit -m \"Bump version to ${nextVersion}\"" ! log
+  s"""git commit -m "Bump version to ${nextVersion}"""" ! log
   // Open a pull request for the release
   // See https://hub.github.com/hub-pull-request.1.html
   s"""|hub pull-request --push \\
