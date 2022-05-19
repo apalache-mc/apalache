@@ -320,15 +320,23 @@ prepareRelease := {
   s"git checkout -b release/${v}" ! log
   // Create the release commit
   val commitMsg = s"[release] ${v}"
-  "git add --update" ! log
-  s"git add ${releaseNotesFile}" ! log
-  s"""git commit -m "${commitMsg}"""" ! log
+  val c = "git add --update"
+  println(c)
+  c ! log
+  val c1 = s"git add ${releaseNotesFile}"
+  println(c1)
+  c1 ! log
+  val c2 = s"""git commit -m "${commitMsg}""""
+  println(c2)
+  c2 ! log
   // Bump the version to the next release and update changelogs
   val changelog = changelingChangelog.value
   val nextVersion = incrVersion.value
   IO.delete(releaseNotesFile)
   "git add --update" ! log
-  s"""git commit -m "Bump version to ${nextVersion}"""" ! log
+  val c3 = s"""git commit -m "Bump version to ${nextVersion}""""
+  println(c3)
+  c3 ! log
   // Open a pull request for the release
   // See https://hub.github.com/hub-pull-request.1.html
   s"""|hub pull-request --push \\
