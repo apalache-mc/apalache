@@ -311,11 +311,12 @@ lazy val root = (project in file("."))
       prepareRelease := {
         val log = streams.value.log
         val v = (ThisBuild / version).value
-        // Create a release branch
-        s"git checkout -b release/${v}" ! log
         // Prepare the release notes for release
         val releaseNotesFile = changelingReleaseNotes.value
+        assert(releaseNotesFile.exists())
         val releaseNotes = IO.read(releaseNotesFile)
+        // Create a release branch and the release commit
+        s"echo git checkout -b release/${v}" ! log
         // Create the release commit
         val commitMsg = s"[release] ${v}"
         "git add --update" ! log
