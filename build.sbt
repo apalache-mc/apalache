@@ -328,14 +328,14 @@ prepareRelease := {
   val nextVersion = incrVersion.value
   IO.delete(releaseNotesFile)
   "git add --update" ! log
-  s"git commit -m 'Bump version to ${nextVersion}'" ! log
+  s"git commit -m \"Bump version to ${nextVersion}\"" ! log
   // Open a pull request for the release
   // See https://hub.github.com/hub-pull-request.1.html
-  s"""hub pull-request --push
-            --message="${commitMsg}"
-            --message="${relasePrInstructions}"
-            --message="${releaseNotes}"
-            --base="unstable" """ ! log
+  s"""|hub pull-request --push \\
+      |  --message="${commitMsg}" \\
+      |  --message="${relasePrInstructions}" \\
+      |  --message="${releaseNotes}" \\
+      |  --base="unstable" """.stripMargin ! log
 }
 
 lazy val relasePrInstructions = """
@@ -350,7 +350,7 @@ lazy val relasePrInstructions = """
         |
         | ---
         |
-        | # Release notes
+        |# Release notes
         |""".stripMargin
 
 docker / imageNames := {
