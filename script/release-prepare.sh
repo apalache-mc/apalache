@@ -41,4 +41,4 @@ else
     "$DIR"/get-version.sh
 fi
 
-sbt prepareRelease
+sbt "root/prepareRelease"
