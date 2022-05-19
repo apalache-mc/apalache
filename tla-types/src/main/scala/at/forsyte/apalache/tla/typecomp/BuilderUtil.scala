@@ -41,7 +41,7 @@ object BuilderUtil {
       } yield seqEx :+ argEx
     }
 
-  /** Lifts a binary unsafe method to a TBuilderInstruction method */
+  /** Lifts a binary unsafe method to a [[TBuilderInstruction]] method */
   def binaryFromUnsafe(
       x: TBuilderInstruction,
       y: TBuilderInstruction,

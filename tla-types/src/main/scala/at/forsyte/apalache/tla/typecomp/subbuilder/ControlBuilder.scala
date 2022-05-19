@@ -35,7 +35,7 @@ trait ControlBuilder extends UnsafeControlBuilder {
     caseOtherMixed(other, pairs.flatMap { case (a, b) => Seq(a, b) }: _*)
 
   /**
-   * Alternate call method, where paris are passed mixed
+   * Alternate call method, where pairs are passed mixed
    *
    * @see
    *   caseOther[[caseOther(other: TBuilderInstruction, pairs: (TBuilderInstruction, TBuilderInstruction)*)]]
