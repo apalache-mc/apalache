@@ -30,7 +30,7 @@
 //   }
 
 //   test("""X \intersect Y""") {
-//     val types = Map("e" -> IntT1(), "s" -> SetT1(IntT1()), "b" -> BoolT1())
+//     val types = Map("e" -> IntT1, "s" -> SetT1(IntT1), "b" -> BoolT1)
 //     val input = tla
 //       .cap(tla.name("X") ? "s", tla.name("Y") ? "s")
 //       .typed(types, "s")
