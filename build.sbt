@@ -220,7 +220,7 @@ lazy val apalacheCurrentPackage = taskKey[File]("Set the current executable apal
 
 // Define the main entrypoint and uber jar package
 lazy val root = (project in file("."))
-  .enablePlugins(UniversalPlugin, sbtdocker.DockerPlugin)
+  .enablePlugins(UniversalPlugin, sbtdocker.DockerPlugin, ChangelingPlugin)
   .dependsOn(distribution)
   .aggregate(
       // propagate commands to these sub-projects

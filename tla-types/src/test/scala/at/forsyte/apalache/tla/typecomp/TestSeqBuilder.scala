@@ -116,7 +116,7 @@ class TestSeqBuilder extends BuilderTest {
 
     checkRun(run(TlaSeqOper.tail, tt => SeqT1(tt), builder.tail))
 
-    checkRun(run(TlaSeqOper.len, _ => IntT1(), builder.len))
+    checkRun(run(TlaSeqOper.len, _ => IntT1, builder.len))
   }
 
   test("subseq") {
@@ -124,25 +124,25 @@ class TestSeqBuilder extends BuilderTest {
     def mkWellTyped(tt: TlaType1): T =
       (
           builder.name("seq", SeqT1(tt)),
-          builder.name("m", IntT1()),
-          builder.name("n", IntT1()),
+          builder.name("m", IntT1),
+          builder.name("n", IntT1),
       )
 
     def mkIllTyped(tt: TlaType1): Seq[T] =
       Seq(
           (
               builder.name("seq", InvalidTypeMethods.notSeq),
-              builder.name("m", IntT1()),
-              builder.name("n", IntT1()),
+              builder.name("m", IntT1),
+              builder.name("n", IntT1),
           ),
           (
               builder.name("seq", SeqT1(tt)),
               builder.name("m", InvalidTypeMethods.notInt),
-              builder.name("n", IntT1()),
+              builder.name("n", IntT1),
           ),
           (
               builder.name("seq", SeqT1(tt)),
-              builder.name("m", IntT1()),
+              builder.name("m", IntT1),
               builder.name("n", InvalidTypeMethods.notInt),
           ),
       )

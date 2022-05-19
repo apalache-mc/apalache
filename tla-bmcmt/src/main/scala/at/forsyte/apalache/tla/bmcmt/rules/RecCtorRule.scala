@@ -72,7 +72,7 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     def addExtra(map: Map[String, ArenaCell], key: String) = {
       // make sure that the key is cached, as it does not appear in the actual expression
-      val (newArena, keyCell) = rewriter.modelValueCache.getOrCreate(arena, (StrT1().toString, key))
+      val (newArena, keyCell) = rewriter.modelValueCache.getOrCreate(arena, (StrT1.toString, key))
       arena = newArena
       map + (key -> keyCell)
     }
@@ -111,9 +111,8 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // importantly, the record keys that are outside of ctorKeys should not belong to the domain!
     if (extraKeyMap.nonEmpty) {
       val extraOutsideOfDomain =
-        extraKeyMap.values.map(f =>
-          tla.not(tla.apalacheSelectInSet(f.toNameEx, domain.toNameEx).as(BoolT1())).as(BoolT1()))
-      rewriter.solverContext.assertGroundExpr(tla.and(extraOutsideOfDomain.toSeq: _*).as(BoolT1()))
+        extraKeyMap.values.map(f => tla.not(tla.apalacheSelectInSet(f.toNameEx, domain.toNameEx).as(BoolT1)).as(BoolT1))
+      rewriter.solverContext.assertGroundExpr(tla.and(extraOutsideOfDomain.toSeq: _*).as(BoolT1))
     }
 
     nextState.setRex(recordCell.toNameEx)

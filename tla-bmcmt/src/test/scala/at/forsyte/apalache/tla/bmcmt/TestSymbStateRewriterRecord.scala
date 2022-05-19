@@ -9,19 +9,19 @@ import scala.collection.immutable.{SortedMap, SortedSet, TreeMap}
 
 trait TestSymbStateRewriterRecord extends RewriterBase {
   private val types = Map(
-      "b" -> BoolT1(),
-      "i" -> IntT1(),
-      "I" -> SetT1(IntT1()),
-      "s" -> StrT1(),
-      "(s)" -> TupT1(StrT1()),
-      "S" -> SetT1(StrT1()),
-      "rib" -> RecT1("a" -> IntT1(), "b" -> BoolT1()),
-      "RIB" -> SetT1(RecT1("a" -> IntT1(), "b" -> BoolT1())),
-      "ribs" -> RecT1("a" -> IntT1(), "b" -> BoolT1(), "c" -> StrT1()),
-      "RIBS" -> SetT1(RecT1("a" -> IntT1(), "b" -> BoolT1(), "c" -> StrT1())),
-      "rib" -> RecT1("a" -> IntT1(), "b" -> BoolT1()),
-      "rii" -> RecT1("a" -> IntT1(), "c" -> IntT1()),
-      "RII" -> SetT1(RecT1("a" -> IntT1(), "c" -> IntT1())),
+      "b" -> BoolT1,
+      "i" -> IntT1,
+      "I" -> SetT1(IntT1),
+      "s" -> StrT1,
+      "(s)" -> TupT1(StrT1),
+      "S" -> SetT1(StrT1),
+      "rib" -> RecT1("a" -> IntT1, "b" -> BoolT1),
+      "RIB" -> SetT1(RecT1("a" -> IntT1, "b" -> BoolT1)),
+      "ribs" -> RecT1("a" -> IntT1, "b" -> BoolT1, "c" -> StrT1),
+      "RIBS" -> SetT1(RecT1("a" -> IntT1, "b" -> BoolT1, "c" -> StrT1)),
+      "rib" -> RecT1("a" -> IntT1, "b" -> BoolT1),
+      "rii" -> RecT1("a" -> IntT1, "c" -> IntT1),
+      "RII" -> SetT1(RecT1("a" -> IntT1, "c" -> IntT1)),
   )
 
   test("""RecordDomainCache: ~(dom {"a", "b"} = dom {"a", "b", "c"})""") { rewriterType: SMTEncoding =>
@@ -49,7 +49,7 @@ trait TestSymbStateRewriterRecord extends RewriterBase {
         val cell = nextState.arena.findCellByName(name)
         cell.cellType match {
           case CellTFrom(r @ RecT1(_)) =>
-            val map = SortedMap("a" -> IntT1(), "b" -> BoolT1(), "c" -> StrT1())
+            val map = SortedMap("a" -> IntT1, "b" -> BoolT1, "c" -> StrT1)
             assert(r.fieldTypes == map)
             val keys = SortedSet("a", "b", "c")
             val (_, expectedDomain) =
@@ -89,7 +89,7 @@ trait TestSymbStateRewriterRecord extends RewriterBase {
 
   test("""accessing a non-existing field: ["a" |-> 1, "b" |-> FALSE]["c"]""") { rewriterType: SMTEncoding =>
     val record = enumFun(str("a"), int(1), str("b"), bool(false))
-    // We assume that record has the type RecT1("a" -> IntT1(), "b" -> BoolT1(), "c" -> StrT1()).
+    // We assume that record has the type RecT1("a" -> IntT1, "b" -> BoolT1, "c" -> StrT1).
     // This can happen due to type unification. The record access should still work,
     // though the access is expected to produce an arbitrary value (of proper type).
     val recordAcc = appFun(record ? "ribs", str("c"))
@@ -115,7 +115,7 @@ trait TestSymbStateRewriterRecord extends RewriterBase {
         val cell = nextState.arena.findCellByName(name)
         cell.cellType match {
           case CellTFrom(SetT1(rt @ RecT1(_))) =>
-            assert(rt.fieldTypes == TreeMap("a" -> IntT1(), "b" -> BoolT1()))
+            assert(rt.fieldTypes == TreeMap("a" -> IntT1, "b" -> BoolT1))
           // we check the actual contents in the later tests that access elements
 
           case _ =>
@@ -145,7 +145,7 @@ trait TestSymbStateRewriterRecord extends RewriterBase {
         val cell = nextState.arena.findCellByName(name)
         cell.cellType match {
           case CellTFrom(SetT1(rt @ RecT1(_))) =>
-            val map = TreeMap("a" -> IntT1(), "b" -> BoolT1(), "c" -> StrT1())
+            val map = TreeMap("a" -> IntT1, "b" -> BoolT1, "c" -> StrT1)
             assert(rt.fieldTypes == map)
 
           case _ =>

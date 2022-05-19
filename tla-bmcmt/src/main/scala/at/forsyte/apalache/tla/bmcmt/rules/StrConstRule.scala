@@ -26,7 +26,7 @@ class StrConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val typeAndIndex = ModelValueHandler
           .typeAndIndex(str)
           .map(pa => (pa._1.name, pa._2))
-          .getOrElse((StrT1().toString, str))
+          .getOrElse((StrT1.toString, str))
         val (newArena: Arena, newCell: ArenaCell) =
           rewriter.modelValueCache.getOrCreate(state.arena, typeAndIndex)
         state

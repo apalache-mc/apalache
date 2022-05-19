@@ -22,7 +22,7 @@ class TestQuantRule extends AnyFunSuite {
 
   val rule = new QuantifierRule(rewriter, new RestrictedSetJudgement(constSets))
 
-  val b = BoolT1()
+  val b = BoolT1
 
   val p = tla.name("p").as(b)
   val pVar = BoolVar("p")
@@ -30,9 +30,9 @@ class TestQuantRule extends AnyFunSuite {
   val qVar = BoolVar("q")
 
   val x = tla.name("x").as(sType)
-  val y = tla.name("y").as(IntT1())
+  val y = tla.name("y").as(IntT1)
   val set = tla.name("S").as(SetT1(sType))
-  val intSet = tla.intSet().as(SetT1(IntT1()))
+  val intSet = tla.intSet().as(SetT1(IntT1))
 
   val expected: Map[TlaEx, BoolExpr] = Map(
       (tla.exists(x, set, p).as(b)) -> Exists(List(("x", sSort)), pVar),

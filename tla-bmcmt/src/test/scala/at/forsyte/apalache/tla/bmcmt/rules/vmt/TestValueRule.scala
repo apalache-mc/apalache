@@ -16,8 +16,8 @@ class TestValueRule extends AnyFunSuite {
 
   val rule = new ValueRule
 
-  val b = BoolT1()
-  val i = IntT1()
+  val b = BoolT1
+  val i = IntT1
   val aType = ConstT1("A")
   val bType = ConstT1("B")
 
@@ -31,7 +31,7 @@ class TestValueRule extends AnyFunSuite {
 
   val uninterpEx1 = tla.str("1_OF_A").as(aType)
   val uninterpEx2 = tla.name("v").as(bType)
-  val uninterpEx3 = tla.str("string").as(StrT1())
+  val uninterpEx3 = tla.str("string").as(StrT1)
 
   val expected: Map[TlaEx, Term] = Map(
       intEx1 -> IntLiteral(1),
@@ -40,7 +40,7 @@ class TestValueRule extends AnyFunSuite {
       boolEx2 -> BoolVar("p"),
       uninterpEx1 -> UninterpretedLiteral("1", UninterpretedSort("A")),
       uninterpEx2 -> UninterpretedVar("v", UninterpretedSort("B")),
-      uninterpEx3 -> UninterpretedLiteral("string", UninterpretedSort(StrT1().toString)),
+      uninterpEx3 -> UninterpretedLiteral("string", UninterpretedSort(StrT1.toString)),
   )
 
   test("ValueRule applicability") {

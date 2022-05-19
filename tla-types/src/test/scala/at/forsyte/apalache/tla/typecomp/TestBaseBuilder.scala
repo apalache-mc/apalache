@@ -34,7 +34,7 @@ class TestBaseBuilder extends BuilderTest {
         op,
         mkWellTyped,
         { case (a, b) => Seq(a, b) },
-        _ => BoolT1(),
+        _ => BoolT1,
     )
 
     def run(
@@ -119,7 +119,7 @@ class TestBaseBuilder extends BuilderTest {
       (
           builder.name("x", tt),
           builder.name("set", SetT1(tt)),
-          builder.name("p", BoolT1()),
+          builder.name("p", BoolT1),
       )
 
     def mkIllTyped(tt: TlaType1): Seq[T] =
@@ -127,17 +127,17 @@ class TestBaseBuilder extends BuilderTest {
           (
               builder.name("x", InvalidTypeMethods.differentFrom(tt)),
               builder.name("set", SetT1(tt)),
-              builder.name("p", BoolT1()),
+              builder.name("p", BoolT1),
           ),
           (
               builder.name("x", tt),
               builder.name("set", SetT1(InvalidTypeMethods.differentFrom(tt))),
-              builder.name("p", BoolT1()),
+              builder.name("p", BoolT1),
           ),
           (
               builder.name("x", tt),
               builder.name("set", InvalidTypeMethods.notSet),
-              builder.name("p", BoolT1()),
+              builder.name("p", BoolT1),
           ),
           (
               builder.name("x", tt),
@@ -168,7 +168,7 @@ class TestBaseBuilder extends BuilderTest {
     def mkWellTyped(tt: TlaType1): T =
       (
           builder.name("x", tt),
-          builder.name("p", BoolT1()),
+          builder.name("p", BoolT1),
       )
 
     def mkIllTyped(tt: TlaType1): Seq[T] =
@@ -236,7 +236,7 @@ class TestBaseBuilder extends BuilderTest {
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
-      build(builder.label(builder.name("ex", IntT1())))
+      build(builder.label(builder.name("ex", IntT1)))
     }
   }
 

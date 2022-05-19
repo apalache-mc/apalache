@@ -81,7 +81,7 @@ trait UnsafeSetBuilder extends ProtoBuilder {
   protected def _recSet(kvs: (String, TlaEx)*): TlaEx = {
     // the other _recSet does all the require checks
     val args = kvs.flatMap { case (k, v) =>
-      Seq(ValEx(TlaStr(k))(Typed(StrT1())), v)
+      Seq(ValEx(TlaStr(k))(Typed(StrT1)), v)
     }
     _recSetMixed(args: _*)
   }

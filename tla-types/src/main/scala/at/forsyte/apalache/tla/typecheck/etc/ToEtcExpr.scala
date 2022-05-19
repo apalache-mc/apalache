@@ -46,7 +46,7 @@ class ToEtcExpr(
         // ASSUME(...)
         // Translate assume to let in. The only purpose of this let-in definition is to get checked later.
         // To check that the body is returning a boolean value, we wrap the assumption with Bool => Bool.
-        val operType = OperT1(Seq(BoolT1()), BoolT1())
+        val operType = OperT1(Seq(BoolT1), BoolT1)
         val application = mkUniqApp(Seq(operType), this(d.body))
         // We have to introduce a lambda abstraction, as the type checker is expecting this form.
         mkLet(BlameRef(d.ID), "__Assume_" + d.ID, mkAbs(ExactRef(d.ID), application), inScopeEx)
@@ -134,20 +134,20 @@ class ToEtcExpr(
   }
 
   private val typeOfLiteralExpr: TlaValue => TlaType1 = {
-    case TlaInt(_)  => IntT1()
-    case TlaBool(_) => BoolT1()
+    case TlaInt(_)  => IntT1
+    case TlaBool(_) => BoolT1
     case TlaStr(s)  => ModelValueHandler.modelValueOrString(s)
-    case TlaReal()  => RealT1()
-    case TlaIntSet  => SetT1(IntT1())
-    case TlaNatSet  => SetT1(IntT1())
-    case TlaRealSet => SetT1(RealT1())
-    case TlaBoolSet => SetT1(BoolT1())
-    case TlaStrSet  => SetT1(StrT1())
+    case TlaReal()  => RealT1
+    case TlaIntSet  => SetT1(IntT1)
+    case TlaNatSet  => SetT1(IntT1)
+    case TlaRealSet => SetT1(RealT1)
+    case TlaBoolSet => SetT1(BoolT1)
+    case TlaStrSet  => SetT1(StrT1)
   }
 
   private def typeOfBoolOperArgs(args: Seq[TlaEx]): OperT1 = {
-    val nBools = List.fill(args.length)(BoolT1())
-    OperT1(nBools, BoolT1())
+    val nBools = List.fill(args.length)(BoolT1)
+    OperT1(nBools, BoolT1)
   }
 
   // Valid when the input seq has two items, the first of which is a VlaEx(TlaStr(_))
@@ -223,7 +223,7 @@ class ToEtcExpr(
       case OperEx(op, args @ _*) if op == TlaOper.eq || op == TlaOper.ne =>
         // x = y, x /= y
         val a = varPool.fresh
-        val opsig = OperT1(Seq(a, a), BoolT1())
+        val opsig = OperT1(Seq(a, a), BoolT1)
         val etcExpr = mkExRefApp(opsig, args)
         val operation = if (op == TlaOper.eq) "=" else "/="
         etcExpr.typeErrorExplanation = (_: List[TlaType1], actualTypes: List[TlaType1]) => {
@@ -258,7 +258,7 @@ class ToEtcExpr(
         // CHOOSE x \in S: P
         // the principal type of CHOOSE is (a => Bool) => a
         val a = varPool.fresh
-        val chooseType = OperT1(Seq(OperT1(Seq(a), BoolT1())), a)
+        val chooseType = OperT1(Seq(OperT1(Seq(a), BoolT1)), a)
         // CHOOSE implicitly introduces a lambda abstraction: λ x ∈ S. P
         val chooseLambda =
           mkAbs(BlameRef(ex.ID), this(pred), (mkName(bindingNameEx), this(bindingSet)))
@@ -281,7 +281,7 @@ class ToEtcExpr(
         // Igor: I am not sure that this is a good solution, as the type checker will not propagate the possible
         // values of b from P. This expression will always give us a polytype.
         val a = varPool.fresh
-        val chooseType = OperT1(Seq(OperT1(Seq(a), BoolT1())), a)
+        val chooseType = OperT1(Seq(OperT1(Seq(a), BoolT1)), a)
         // unbounded CHOOSE implicitly introduces a lambda abstraction: λ x ∈ Set(b). P
         val b = varPool.fresh
         val chooseLambda = mkAbs(
@@ -315,7 +315,7 @@ class ToEtcExpr(
 
       case OperEx(TlaBoolOper.not, arg) =>
         // ~A
-        mkExRefApp(OperT1(Seq(BoolT1()), BoolT1()), Seq(arg))
+        mkExRefApp(OperT1(Seq(BoolT1), BoolT1), Seq(arg))
 
       case OperEx(op, bindingEx, bindingSet, pred) if op == TlaBoolOper.exists || op == TlaBoolOper.forall =>
         // \E x \in S: P, \A x \in S: P
@@ -328,7 +328,7 @@ class ToEtcExpr(
         val bindings = translateBindings((bindingEx, bindingSet))
         val typeVars = varPool.fresh(bindings.length)
         // the principal type is ((a, b) => Bool) => Bool or just (a => Bool) => Bool
-        val principal = OperT1(Seq(OperT1(typeVars, BoolT1())), BoolT1())
+        val principal = OperT1(Seq(OperT1(typeVars, BoolT1)), BoolT1)
         // \E and \A implicitly introduce a lambda abstraction: λ x ∈ proj_x, y ∈ proj_y. P
         val lambda = mkAbs(BlameRef(ex.ID), this(pred), bindings: _*)
         // the resulting expression is (principal lambda)
@@ -381,13 +381,13 @@ class ToEtcExpr(
       case OperEx(op, args @ _*) if op == TlaSetOper.in || op == TlaSetOper.notin =>
         // x \in S, x \notin S
         val a = varPool.fresh
-        val opsig = OperT1(List(a, SetT1(a)), BoolT1())
+        val opsig = OperT1(List(a, SetT1(a)), BoolT1)
         mkExRefApp(opsig, args)
 
       case OperEx(op, args @ _*) if op == TlaSetOper.subseteq =>
         // S \subseteq T
         val a = varPool.fresh
-        val opsig = OperT1(List(SetT1(a), SetT1(a)), BoolT1())
+        val opsig = OperT1(List(SetT1(a), SetT1(a)), BoolT1)
         mkExRefApp(opsig, args)
 
       case OperEx(TlaSetOper.powerset, args @ _*) =>
@@ -427,7 +427,7 @@ class ToEtcExpr(
         val funFrom =
           if (bindings.length == 1) typeVars.head else TupT1(typeVars: _*)
         // the principal type is ((a, b) => Bool) => Set(<<a, b>>) or just (a => Bool) => Set(a)
-        val principal = OperT1(Seq(OperT1(typeVars, BoolT1())), SetT1(funFrom))
+        val principal = OperT1(Seq(OperT1(typeVars, BoolT1)), SetT1(funFrom))
 
         // map implicitly introduces a lambda abstraction: λ x ∈ S, y ∈ T. P
         val lambda = mkAbs(BlameRef(ex.ID), this(pred), bindings: _*)
@@ -496,17 +496,17 @@ class ToEtcExpr(
         // and the corresponding type of the domain when so applied:
         val funType = OperT1(Seq(FunT1(a, b)), SetT1(a)) // (a -> b) => Set(a)
         val seqType =
-          OperT1(Seq(SeqT1(c)), SetT1(IntT1())) // Seq(c) => Set(Int)
+          OperT1(Seq(SeqT1(c)), SetT1(IntT1)) // Seq(c) => Set(Int)
         val recType =
           if (useRows) {
             // { d } => Set(Str)
-            OperT1(Seq(RecRowT1(RowT1(d))), SetT1(StrT1()))
+            OperT1(Seq(RecRowT1(RowT1(d))), SetT1(StrT1))
           } else {
             // [] => Set(Str)
-            OperT1(Seq(RecT1()), SetT1(StrT1()))
+            OperT1(Seq(RecT1()), SetT1(StrT1))
           }
         val tupType =
-          OperT1(Seq(SparseTupT1()), SetT1(IntT1())) // {} => Set(Int)
+          OperT1(Seq(SparseTupT1()), SetT1(IntT1)) // {} => Set(Int)
         mkApp(
             ref,
             Seq(funType, seqType, recType, tupType),
@@ -618,7 +618,7 @@ class ToEtcExpr(
         // IF e1 THEN e2 ELSE E2
         // (Bool, a, a) => a
         val a = varPool.fresh
-        val opsig = OperT1(List(BoolT1(), a, a), a)
+        val opsig = OperT1(List(BoolT1, a, a), a)
         mkExRefApp(opsig, Seq(predEx, thenEx, elseEx))
 
       case OperEx(op, args @ _*) if op == TlaControlOper.caseNoOther || op == TlaControlOper.caseWithOther =>
@@ -630,7 +630,7 @@ class ToEtcExpr(
         // Bool, a, Bool, a, ...
         val a = varPool.fresh
         val boolAndAs =
-          0.until(nargs2).map(i => if (i % 2 == 0) BoolT1() else a)
+          0.until(nargs2).map(i => if (i % 2 == 0) BoolT1 else a)
         val operArgs = if (nargs % 2 == 1) a +: boolAndAs else boolAndAs
         val opsig = OperT1(operArgs, a)
         mkExRefApp(opsig, args)
@@ -638,12 +638,12 @@ class ToEtcExpr(
       // ******************************************** FiniteSets ************************************************
       case OperEx(TlaFiniteSetOper.isFiniteSet, setEx) =>
         val a = varPool.fresh
-        val opsig = OperT1(Seq(SetT1(a)), BoolT1()) // Set(a) => Bool
+        val opsig = OperT1(Seq(SetT1(a)), BoolT1) // Set(a) => Bool
         mkExRefApp(opsig, Seq(setEx))
 
       case OperEx(TlaFiniteSetOper.cardinality, setEx) =>
         val a = varPool.fresh
-        val opsig = OperT1(Seq(SetT1(a)), IntT1()) // Set(a) => Int
+        val opsig = OperT1(Seq(SetT1(a)), IntT1) // Set(a) => Int
         mkExRefApp(opsig, Seq(setEx))
 
       // *************************************** ACTION OPERATORS ***********************************************
@@ -654,11 +654,11 @@ class ToEtcExpr(
 
       case OperEx(op, args @ _*) if op == TlaActionOper.stutter || op == TlaActionOper.nostutter =>
         // Bool, a, b, c => Bool
-        val opsig = OperT1(BoolT1() +: varPool.fresh(args.length - 1), BoolT1())
+        val opsig = OperT1(BoolT1 +: varPool.fresh(args.length - 1), BoolT1)
         mkExRefApp(opsig, args)
 
       case OperEx(TlaActionOper.enabled, inner) =>
-        val opsig = OperT1(Seq(BoolT1()), BoolT1()) // Bool => Bool
+        val opsig = OperT1(Seq(BoolT1), BoolT1) // Bool => Bool
         mkExRefApp(opsig, Seq(inner))
 
       // feature #660: special treatment for UNCHANGED <<...>>, as it is so common
@@ -670,17 +670,17 @@ class ToEtcExpr(
         // (a_1, ..., a_n) => <<a_1, ..., a_n>>
         val tupleEx = mkApp(ExactRef(tex.ID), Seq(tupleOperType), args.map(this(_)): _*)
         // <<a_1, ..., a_n>> => Bool
-        val opsig = OperT1(Seq(tupleType), BoolT1())
+        val opsig = OperT1(Seq(tupleType), BoolT1)
         mkApp(ExactRef(ex.ID), Seq(opsig), tupleEx)
 
       case OperEx(TlaActionOper.unchanged, args @ _*) =>
         val opsig =
-          OperT1(varPool.fresh(args.length), BoolT1()) // a, b, c => Bool
+          OperT1(varPool.fresh(args.length), BoolT1) // a, b, c => Bool
         mkExRefApp(opsig, args)
 
       case OperEx(TlaActionOper.composition, a, b) =>
         val opsig =
-          OperT1(Seq(BoolT1(), BoolT1()), BoolT1()) // (Bool, Bool) => Bool
+          OperT1(Seq(BoolT1, BoolT1), BoolT1) // (Bool, Bool) => Bool
         mkExRefApp(opsig, Seq(a, b))
 
       // ******************************************** Sequences *************************************************
@@ -707,14 +707,14 @@ class ToEtcExpr(
 
       case OperEx(TlaSeqOper.len, s) =>
         val a = varPool.fresh
-        val opsig = OperT1(Seq(SeqT1(a)), IntT1()) // Seq(a) => Int
+        val opsig = OperT1(Seq(SeqT1(a)), IntT1) // Seq(a) => Int
         mkExRefApp(opsig, Seq(s))
 
       case OperEx(TlaSeqOper.subseq, args @ _*) =>
         val a = varPool.fresh
         val opsig =
           OperT1(
-              Seq(SeqT1(a), IntT1(), IntT1()),
+              Seq(SeqT1(a), IntT1, IntT1),
               SeqT1(a),
           ) // Seq(a), Int, Int => Seq(a)
         mkExRefApp(opsig, args)
@@ -722,52 +722,52 @@ class ToEtcExpr(
       // ******************************************** INTEGERS **************************************************
       case OperEx(TlaArithOper.uminus, args @ _*) =>
         // -x
-        val opsig = OperT1(Seq(IntT1()), IntT1())
+        val opsig = OperT1(Seq(IntT1), IntT1)
         mkExRefApp(opsig, args)
 
       case OperEx(op, args @ _*)
           if op == TlaArithOper.plus || op == TlaArithOper.minus || op == TlaArithOper.mult
             || op == TlaArithOper.div || op == TlaArithOper.mod || op == TlaArithOper.exp =>
         // x + y, x - y, x * y, x \div y, x % y, x^y
-        val opsig = OperT1(List(IntT1(), IntT1()), IntT1())
+        val opsig = OperT1(List(IntT1, IntT1), IntT1)
         mkExRefApp(opsig, args)
 
       case OperEx(op, args @ _*)
           if op == TlaArithOper.lt || op == TlaArithOper.le || op == TlaArithOper.gt || op == TlaArithOper.ge =>
         // x < y, x <= y, x > y, x >= y
-        val opsig = OperT1(List(IntT1(), IntT1()), BoolT1())
+        val opsig = OperT1(List(IntT1, IntT1), BoolT1)
         mkExRefApp(opsig, args)
 
       case OperEx(TlaArithOper.dotdot, args @ _*) =>
         // a..b
-        val opsig = OperT1(List(IntT1(), IntT1()), SetT1(IntT1()))
+        val opsig = OperT1(List(IntT1, IntT1), SetT1(IntT1))
         mkExRefApp(opsig, args)
 
       case OperEx(TlaArithOper.realDiv, args @ _*) =>
         // a / b
-        val opsig = OperT1(List(RealT1(), RealT1()), RealT1())
+        val opsig = OperT1(List(RealT1, RealT1), RealT1)
         mkExRefApp(opsig, args)
 
       // ***************************************** TEMPORAL *************************************************
       case OperEx(op, inner) if op == TlaTempOper.box || op == TlaTempOper.diamond =>
-        val opsig = OperT1(Seq(BoolT1()), BoolT1()) // Bool => Bool
+        val opsig = OperT1(Seq(BoolT1), BoolT1) // Bool => Bool
         mkExRefApp(opsig, Seq(inner))
 
       case OperEx(op, lhs, rhs) if op == TlaTempOper.guarantees || op == TlaTempOper.leadsTo =>
         val opsig =
-          OperT1(Seq(BoolT1(), BoolT1()), BoolT1()) // (Bool, Bool) => Bool
+          OperT1(Seq(BoolT1, BoolT1), BoolT1) // (Bool, Bool) => Bool
         mkExRefApp(opsig, Seq(lhs, rhs))
 
       case OperEx(op, sub, act) if op == TlaTempOper.weakFairness || op == TlaTempOper.strongFairness =>
         val a = varPool.fresh
-        val opsig = OperT1(Seq(a, BoolT1()), BoolT1()) // (a, Bool) => Bool
+        val opsig = OperT1(Seq(a, BoolT1), BoolT1) // (a, Bool) => Bool
         mkExRefApp(opsig, Seq(sub, act))
 
       // ******************************************** Apalache **************************************************
       case OperEx(ApalacheOper.`mkSeq`, len, ctor) =>
         val a = varPool.fresh
         // (Int, (Int => a)) => Seq(a)
-        val opsig = OperT1(Seq(IntT1(), OperT1(Seq(IntT1()), a)), SeqT1(a))
+        val opsig = OperT1(Seq(IntT1, OperT1(Seq(IntT1), a)), SeqT1(a))
         mkExRefApp(opsig, Seq(len, ctor))
 
       case OperEx(ApalacheOper.setAsFun, set) =>
@@ -780,13 +780,13 @@ class ToEtcExpr(
       case OperEx(ApalacheOper.gen, bound) =>
         val a = varPool.fresh
         // Int => a
-        val opsig = OperT1(Seq(IntT1()), a)
+        val opsig = OperT1(Seq(IntT1), a)
         mkExRefApp(opsig, Seq(bound))
 
       case OperEx(ApalacheOper.assign, lhs, rhs) =>
         val a = varPool.fresh
         // (a, a) => Bool
-        val opsig = OperT1(Seq(a, a), BoolT1())
+        val opsig = OperT1(Seq(a, a), BoolT1)
         mkExRefApp(opsig, Seq(lhs, rhs))
 
       case OperEx(ApalacheOper.expand, set) =>
@@ -797,18 +797,18 @@ class ToEtcExpr(
 
       case OperEx(ApalacheOper.skolem, predicate) =>
         // Bool => Bool
-        val opsig = OperT1(Seq(BoolT1()), BoolT1())
+        val opsig = OperT1(Seq(BoolT1), BoolT1)
         mkExRefApp(opsig, Seq(predicate))
 
       case OperEx(ApalacheOper.constCard, predicate) =>
         // Bool => Bool
-        val opsig = OperT1(Seq(BoolT1()), BoolT1())
+        val opsig = OperT1(Seq(BoolT1), BoolT1)
         mkExRefApp(opsig, Seq(predicate))
 
       case OperEx(ApalacheInternalOper.distinct, args @ _*) =>
         val a = varPool.fresh
         // (a, ..., a) => Bool
-        val opsig = OperT1(args.map(_ => a), BoolT1())
+        val opsig = OperT1(args.map(_ => a), BoolT1)
         mkExRefApp(opsig, args)
 
       case OperEx(ApalacheOper.foldSet, oper, base, set) =>
@@ -829,19 +829,19 @@ class ToEtcExpr(
       case OperEx(ApalacheInternalOper.apalacheSeqCapacity, seq) =>
         val a = varPool.fresh
         // Seq(a) => Int
-        val opsig = OperT1(Seq(SeqT1(a)), IntT1())
+        val opsig = OperT1(Seq(SeqT1(a)), IntT1)
         mkExRefApp(opsig, Seq(seq))
 
       case OperEx(ApalacheInternalOper.notSupportedByModelChecker, msg) =>
         val a = varPool.fresh
         // Str => a
-        val opsig = OperT1(Seq(StrT1()), a)
+        val opsig = OperT1(Seq(StrT1), a)
         mkExRefApp(opsig, Seq(msg))
 
       // ******************************************** MISC **************************************************
       case OperEx(TlaOper.label, labelledEx, nameAndArgs @ _*) =>
         val typeVar = varPool.fresh
-        mkExRefApp(OperT1(nameAndArgs.map(_ => StrT1()) :+ typeVar, typeVar), nameAndArgs :+ labelledEx)
+        mkExRefApp(OperT1(nameAndArgs.map(_ => StrT1) :+ typeVar, typeVar), nameAndArgs :+ labelledEx)
 
       case OperEx(ApalacheOper.withType, _, annotation) =>
         // Met an old type annotation. Warn the user and ignore the annotation.
@@ -961,11 +961,11 @@ class ToEtcExpr(
         val a = varPool.fresh
         Seq(
             // ((Int -> a), Int) => a
-            (FunT1(IntT1(), a), IntT1(), a),
+            (FunT1(IntT1, a), IntT1, a),
             // (Seq(a), Int) => a
-            (SeqT1(a), IntT1(), a),
+            (SeqT1(a), IntT1, a),
             // ({ 3: a }, Int) => a
-            (SparseTupT1(fieldNo.toInt -> a), IntT1(), a),
+            (SparseTupT1(fieldNo.toInt -> a), IntT1, a),
         )
 
       case ValEx(TlaStr(fieldName)) =>
@@ -973,14 +973,14 @@ class ToEtcExpr(
         val a = varPool.fresh
         Seq(
             // ((Str -> a), Str) => a
-            (FunT1(StrT1(), a), StrT1(), a),
+            (FunT1(StrT1, a), StrT1, a),
             if (useRows) {
               // ({ foo: a, b }, Str) => a
               val b = varPool.fresh
-              (RecRowT1(RowT1(b, fieldName -> a)), StrT1(), a)
+              (RecRowT1(RowT1(b, fieldName -> a)), StrT1, a)
             } else {
               // ([ foo: a ], Str) => a
-              (RecT1(fieldName -> a), StrT1(), a)
+              (RecT1(fieldName -> a), StrT1, a)
             },
         )
 
@@ -992,7 +992,7 @@ class ToEtcExpr(
             // ((a -> b), a) => b
             (FunT1(a, b), a, b),
             // (Seq(a), Int) => a
-            (SeqT1(a), IntT1(), a),
+            (SeqT1(a), IntT1, a),
         )
     }
   }

@@ -58,7 +58,7 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
     def solverAssert = rewriter.solverContext.assertGroundExpr(_)
 
     var nextState = state
-    nextState = nextState.updateArena(_.appendCell(BoolT1()))
+    nextState = nextState.updateArena(_.appendCell(BoolT1))
     val emptyPred = nextState.arena.topCell
     solverAssert(tla.eql(emptyPred.toNameEx,
             tla.and(elems.map(e => tla.not(tla.apalacheSelectInSet(e.toNameEx, set.toNameEx))): _*)))
@@ -78,7 +78,7 @@ class CardinalityConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val witnesses = List.fill(threshold)(pick())
     (witnesses.cross(witnesses)).filter(p => p._1.id < p._2.id).foreach(cacheEq)
     val witnessesNotEq = OperEx(ApalacheInternalOper.distinct, witnesses.map(_.toNameEx): _*)
-    nextState = nextState.updateArena(_.appendCell(BoolT1()))
+    nextState = nextState.updateArena(_.appendCell(BoolT1))
     val pred = nextState.arena.topCell
     // either the set is empty and threshold <= 0, or all witnesses are not equal to each other
     val nonEmptyOrBelow = tla.or(tla.not(emptyPred.toNameEx), tla.bool(threshold <= 0))

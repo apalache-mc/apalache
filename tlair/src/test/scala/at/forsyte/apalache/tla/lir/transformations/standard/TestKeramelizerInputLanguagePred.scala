@@ -15,9 +15,9 @@ class TestKeramelizerInputLanguagePred extends LanguagePredTestSuite {
   import tla._
 
   // typed set to account for Keramelizer's set type checks
-  val typed_n_a = fromTlaEx(name("a").as(IntT1()))
-  val typed_n_b = fromTlaEx(name("b").as(IntT1()))
-  val typedSet = fromTlaEx(enumSet(int(1), int(2)).as(SetT1(IntT1())))
+  val typed_n_a = fromTlaEx(name("a").as(IntT1))
+  val typed_n_b = fromTlaEx(name("b").as(IntT1))
+  val typedSet = fromTlaEx(enumSet(int(1), int(2)).as(SetT1(IntT1)))
   val untypedSet = fromTlaEx(enumSet(int(1), int(2)).untyped())
 
   /**
@@ -76,7 +76,7 @@ class TestKeramelizerInputLanguagePred extends LanguagePredTestSuite {
     expectOk(pred.isExprOk(append(tuple(int(1), int(2)), tuple(int(2), int(3)))))
 
     // in TLA+, but not in KerA+
-    expectOk(pred.isExprOk(recSet(typed_n_a, typedSet).as(SetT1(IntT1()))))
+    expectOk(pred.isExprOk(recSet(typed_n_a, typedSet).as(SetT1(IntT1))))
     expectOk(pred.isExprOk(times(typedSet, typedSet)))
   }
 
@@ -165,7 +165,7 @@ class TestKeramelizerInputLanguagePred extends LanguagePredTestSuite {
     // succeeds with typed SetT1(_)
     expectOk(pred.isExprOk(cap(typedSet, natSet())))
     expectOk(pred.isExprOk(setminus(typedSet, natSet())))
-    expectOk(pred.isExprOk(recSet(typed_n_a, typedSet).as(SetT1(IntT1()))))
+    expectOk(pred.isExprOk(recSet(typed_n_a, typedSet).as(SetT1(IntT1))))
     expectOk(pred.isExprOk(times(typedSet, typedSet)))
     expectOk(pred.isExprOk(in(prime(typed_n_a), typedSet)))
   }

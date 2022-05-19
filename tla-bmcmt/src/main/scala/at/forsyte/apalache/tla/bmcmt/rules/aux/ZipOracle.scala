@@ -23,7 +23,7 @@ class ZipOracle(backOracle: Oracle, groups: List[Set[Int]]) extends Oracle {
   override def whenEqualTo(state: SymbState, index: Int): TlaEx = {
     assert(index < groups.size)
     val conds = groups(index).map(i => tla.fromTlaEx(backOracle.whenEqualTo(state, i))).toList
-    tla.or(conds: _*).as(BoolT1())
+    tla.or(conds: _*).as(BoolT1)
   }
 
   override def evalPosition(solverContext: SolverContext, state: SymbState): Int = {
