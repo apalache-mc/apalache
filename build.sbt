@@ -317,12 +317,12 @@ prepareRelease := {
   val releaseNotesFile = changelingReleaseNotes.value
   val releaseNotes = IO.read(releaseNotesFile)
   // Create a release branch and the release commit
-  Process("git", "checkout" :: "-b" :: "release/${v}" :: Nil) ! log
+  Process("git", "checkout" :: "-b" :: s"release/${v}" :: Nil) ! log
   // Create the release commit
   val commitMsg = s"[release] ${v}"
   Process("git", "add" :: "--update" :: Nil) ! log
   Process("git", "add" :: releaseNotesFile.toString() :: Nil) ! log
-  Process("git", "commit" :: "-n" :: commitMsg :: Nil) ! log
+  Process("git", "commit" :: "-m" :: commitMsg :: Nil) ! log
   // Bump the version to the next release and update changelogs
   val changelog = changelingChangelog.value
   val nextVersion = incrVersion.value
