@@ -666,6 +666,78 @@ class Builder {
     BuilderOper(ApalacheInternalOper.unconstrainArray, arrayElemName)
   }
 
+  // variants
+
+  /**
+   * Construct a variant
+   *
+   * @param tagName
+   *   the tag to be associated with the value
+   * @param valueEx
+   *   the value associated with the tag
+   * @return
+   *   a new variant
+   */
+  def variant(tagName: String, valueEx: BuilderEx): BuilderEx = {
+    BuilderOper(VariantOper.variant, str(tagName), valueEx)
+  }
+
+  /**
+   * Filter a set of variants by tag name.
+   *
+   * @param tagName
+   *   a tag value to use as a filter
+   * @param setEx
+   *   a set of variants
+   * @return
+   *   a set of the values extracted for the given tag
+   */
+  def filterByTag(tagName: String, setEx: BuilderEx): BuilderEx = {
+    BuilderOper(VariantOper.filterByTag, str(tagName), setEx)
+  }
+
+  /**
+   * Match a variant by a tag
+   *
+   * @param tagName
+   *   a tag value (string)
+   * @param variantEx
+   *   a variant expression
+   * @param thenOper
+   *   the operator to be applied when the variant is tagged with `tagName`; the associated value is passed to it
+   * @param elseOper
+   *   the operator te be applied when the variant is not tagged with `tagName`; the reduced invariant is passed to it
+   * @return
+   */
+  def matchTag(
+      tagName: String,
+      variantEx: BuilderEx,
+      thenOper: TlaOperDecl,
+      elseOper: TlaOperDecl): BuilderEx = {
+    // Although we are passing thenOper and elseOper by name, we should be careful about propagating their type tags
+    BuilderOper(VariantOper.matchTag, str(tagName), variantEx, fromTlaEx(NameEx(thenOper.name)(thenOper.typeTag)),
+        fromTlaEx(NameEx(elseOper.name)(elseOper.typeTag)))
+  }
+
+  /**
+   * Match a variant that admits only one option (one tag)
+   *
+   * @param tagName
+   *   a tag value (string)
+   * @param variantEx
+   *   a variant expression
+   * @param thenOper
+   *   the operator to be applied when the variant is tagged with `tagName`; the associated value is passed to it
+   * @return
+   */
+  def matchOnly(
+      tagName: String,
+      variantEx: BuilderEx,
+      thenOper: TlaOperDecl): BuilderEx = {
+    // Although we are passing thenOper by name, we should be careful about propagating its type tag
+    BuilderOper(VariantOper.matchOnly, str(tagName), variantEx, fromTlaEx(NameEx(thenOper.name)(thenOper.typeTag)))
+  }
+
   private val m_nameMap: Map[String, TlaOper] =
     scala.collection.immutable.Map(
         TlaOper.eq.name -> TlaOper.eq,
@@ -760,6 +832,10 @@ class Builder {
         ApalacheInternalOper.unconstrainArray.name -> ApalacheInternalOper.unconstrainArray,
         ApalacheOper.setAsFun.name -> ApalacheOper.setAsFun,
         ApalacheOper.guess.name -> ApalacheOper.guess,
+        VariantOper.variant.name -> VariantOper.variant,
+        VariantOper.matchOnly.name -> VariantOper.matchOnly,
+        VariantOper.matchTag.name -> VariantOper.matchTag,
+        VariantOper.filterByTag.name -> VariantOper.filterByTag,
     )
 
   def byName(operatorName: String, args: BuilderEx*): BuilderEx = {
