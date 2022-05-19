@@ -141,23 +141,6 @@ class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
       loopVariables: Seq[TlaVarDecl],
       next: TlaOperDecl): TlaOperDecl = {
 
-    val varsUnchanged =
-      builder.and(variables.map { varDecl =>
-        builder.unchanged(builder.declAsNameEx(varDecl))
-      }: _*)
-
-    /*
-     * next \/ /\ UNCHANGED foo
-     *         /\ UNCHANGED bar
-     *         ...
-     */
-    val nextOrUnchanged =
-      new TlaOperDecl(
-          next.name,
-          next.formalParams,
-          builder.or(builder.createUnsafeInstruction(next.body), varsUnchanged),
-      )(next.typeTag)
-
     /*
      * /\ InLoop' \in {TRUE, FALSE}
      * /\ InLoop => InLoop'
@@ -168,7 +151,7 @@ class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
           builder.impl(inLoop, inLoopPrime),
       )
 
-    val nextOrUnchangedWithInLoopUpdate = conjunctExToOperDecl(inLoopUpdate, nextOrUnchanged)
+    val nextOrUnchangedWithInLoopUpdate = conjunctExToOperDecl(inLoopUpdate, next)
 
     /*
      * /\  /\ loop_foo' \in {loop_foo, foo}
