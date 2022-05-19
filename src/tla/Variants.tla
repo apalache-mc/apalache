@@ -20,12 +20,12 @@
  *
  * The type could look like follows, if we supported string literals in types:
  *
- *   { tag: Str, a } =>
+ *   (Str, a) =>
  *     { tag: "$tagValue", a } | b
  *)
-Variant(__rec) ==
+Variant(__tag, __value) ==
     \* default untyped implementation
-    __rec 
+    [ tag |-> __tag, value |-> __value ]
 
 (**
  * Filter a set of variants with the provided tag value.
@@ -36,11 +36,11 @@ Variant(__rec) ==
  *
  * The type could look like follows, if we supported string literals in types:
  *
- *   (Set({ tag: "$tagValue", a} | b), Str) => Set({ tag: Str, a })
+ *   (Str, Set({ tag: "$tagValue", a} | b)) => Set({ a })
  *)
-FilterByTag(__S, __tagValue) ==
+FilterByTag(__tag, __S) ==
     \* default untyped implementation
-    { __e \in S: __e.tag = __tagValue }
+    { __d \in { __e \in __S: __e.tag = __tag }: __d.value }
 
 
 (**
@@ -62,15 +62,15 @@ FilterByTag(__S, __tagValue) ==
  * The type could look like follows, if we supported string literals in types:
  *
  *   (
- *     { "$tagValue": { tag: Str, a } | b },
- *     { tag: Str, a } => r,
+ *     { "$tagValue": a | b },
+ *     { a } => r,
  *     Variant(b) => r
  *   ) => r
  *)
-MatchTag(__variant, __tagValue, __ThenOper(_), __ElseOper(_)) ==
+MatchTag(__tagValue, __variant, __ThenOper(_), __ElseOper(_)) ==
     \* default untyped implementation
     IF __variant.tag = __tagValue
-    THEN __ThenOper(__variant)
+    THEN __ThenOper(__variant.value)
     ELSE __ElseOper(__variant)
 
 (**
@@ -88,12 +88,11 @@ MatchTag(__variant, __tagValue, __ThenOper(_), __ElseOper(_)) ==
  * The type could look like follows, if we supported string literals in types:
  *
  *   (
- *     { "$tagValue": { tag: Str, a } },
- *     { tag: Str, a } => r
+ *     { "$tagValue": a },
+ *     { a } => r
  *   ) => r
- *)
  *)
 MatchOnly(__variant, __ThenOper(_)) ==
     \* default untyped implementation
-    __ThenOper(__variant)
+    __ThenOper(__variant.value)
 ===============================================================================

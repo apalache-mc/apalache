@@ -559,4 +559,104 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         OperEx(ApalacheOper.mkSeq, ValEx(TlaInt(10)), NameEx("Identity")),
     )
   }
+
+  test("EXTENDS Variants") {
+    val text =
+      """---- MODULE root ----
+        |EXTENDS Integers, FiniteSets, Variants
+        |
+        |\* @type: () => { tag: "1a", val: Int, found: Bool };
+        |V == Variant("1a", [ val |-> 3, found |-> FALSE ])
+        |
+        |\* @type: Set({ tag: "1a", val: Int, found: Bool } | { tag: "2a", bal: Int }) => Set({ val: Int, found: Bool });
+        |FBT == FilterByTag("1a", { V })
+        |
+        |\* @type: { tag: "1a", val: Int, found: Bool } | { tag: "2a", bal: Int } => Bool;
+        |MT(var) ==
+        |  LET ThenOper(v) == v.found IN
+        |  LET ElseOper(v) == FALSE IN
+        |  MatchTag("1a", var, ThenOper, ElseOper)
+        |
+        |\* @type: { tag: "1a", val: Int, found: Bool };
+        |MO(var) ==
+        |  LET ThenOper(v) == v.found IN
+        |  MatchOnly(var, ThenOper)
+        |================================
+      """.stripMargin
+
+    // If you run this test in an IDE and the test fails, set environment variable `APALACHE_HOME` to the root of the
+    // Apalache source tree.
+
+    val (_, modules) = sanyImporter
+      .loadFromSource("root", Source.fromString(text))
+
+    val root = modules("root")
+    expectSourceInfoInDefs(root)
+
+    def expectDecl(name: String, body: TlaEx, params: OperParam*): Unit = {
+      findAndExpectOperDecl(root, name, params.toList, body)
+    }
+
+    // V == Variant("1a", [ val |-> 3, found |-> FALSE ])
+    expectDecl(
+        "V",
+        OperEx(
+            VariantOper.variant,
+            ValEx(TlaStr("1a")),
+            OperEx(TlaFunOper.`enum`, ValEx(TlaStr("val")), ValEx(TlaInt(3)), ValEx(TlaStr("found")),
+                ValEx(TlaBool(false))),
+        ),
+    )
+
+    // FBT == FilterByTag("1a", { Var })
+    expectDecl(
+        "FBT",
+        OperEx(
+            VariantOper.filterByTag,
+            ValEx(TlaStr("1a")),
+            OperEx(TlaSetOper.enumSet, OperEx(TlaOper.apply, NameEx("V"))),
+        ),
+    )
+
+    // MT(var) ==
+    //   LET ThenOper(v) == v.found IN
+    //   LET ElseOper(v) == FALSE IN
+    //   MatchTag("1a", var, ThenOper, ElseOper)
+    val mtThen =
+      declOp("ThenOper", appFun(name("v"), str("found")), OperParam("v")).untypedOperDecl()
+    val mtElse =
+      declOp("ElseOper", bool(false), OperParam("v")).untypedOperDecl()
+    val applyMatchTag =
+      OperEx(
+          VariantOper.matchTag,
+          ValEx(TlaStr("1a")),
+          name("var"),
+          name("ThenOper"),
+          name("ElseOper"),
+      )
+
+    expectDecl(
+        "MT",
+        letIn(letIn(applyMatchTag, mtElse), mtThen),
+        OperParam("var"),
+    )
+
+    // MO(var) ==
+    //   LET ThenOper(v) == v.found IN
+    //   MatchOnly(var, ThenOper)
+    val moThen =
+      declOp("ThenOper", appFun(name("v"), str("found")), OperParam("v")).untypedOperDecl()
+    val applyMatchOnly =
+      OperEx(
+          VariantOper.matchOnly,
+          name("var"),
+          name("ThenOper"),
+      )
+
+    expectDecl(
+        "MO",
+        letIn(applyMatchOnly, moThen),
+        OperParam("var"),
+    )
+  }
 }
