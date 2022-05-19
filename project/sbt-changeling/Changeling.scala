@@ -111,7 +111,7 @@ object ChangelingPlugin extends AutoPlugin {
         "The directory in which unreleased changes are recorded"
     )
 
-    lazy val changelingRelaseNotes = taskKey[File](
+    lazy val changelingReleaseNotes = taskKey[File](
         """|Render the contents of the `changelingUnreleasedDir` directory as a
            |markdown file, following expected format for release
            |notes""".stripMargin
@@ -149,7 +149,7 @@ object ChangelingPlugin extends AutoPlugin {
           base = changelingUnreleasedDir.value,
           children = changelingKinds.value,
       ),
-      changelingRelaseNotes := Changeling.renderReleaseNotes(
+      changelingReleaseNotes := Changeling.renderReleaseNotes(
           changelingKinds.value,
           (ThisBuild / version).value,
           changelingDirectory.value,
@@ -157,11 +157,11 @@ object ChangelingPlugin extends AutoPlugin {
       ),
       changelingChangelog := {
         Changeling.concatFiles(
-            changelingRelaseNotes.value,
+            changelingReleaseNotes.value,
             changelingChangelogFile.value,
         )
         Changeling.cleanChanges(
-            changelingRelaseNotes.value,
+            changelingReleaseNotes.value,
             (Compile / resourceManaged).value,
             changelingUnreleasedDir.value,
         )
