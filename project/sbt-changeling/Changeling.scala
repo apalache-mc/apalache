@@ -256,13 +256,14 @@ object Changeling {
    * @return
    *   the trash directory created
    */
-  def cleanChanges(relaseNotes: File, resourceDir: File, unreleasedDir: File): Unit = {
+  def cleanChanges(releaseNotes: File, resourceDir: File, unreleasedDir: File): Unit = {
     // So we can recover dirs if needed
     val trashDir = resourceDir / "changeling-trash" / LocalDate.now.toString
     IO.createDirectory(trashDir)
     val dirPaths = IO.listFiles(unreleasedDir)
     val fileMoves = dirPaths.map(d => (d -> trashDir / d.base))
     IO.move(fileMoves)
+    IO.delete(releaseNotes)
     // Recreate the directories
     IO.createDirectories(dirPaths)
   }
