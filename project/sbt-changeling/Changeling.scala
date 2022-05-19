@@ -188,6 +188,8 @@ object Changeling {
     val childOfBase: String => File = base / _
     val leafDirs = children.map(normalizeFileName.andThen(childOfBase))
     IO.createDirectories(leafDirs)
+    // ensure git will keep the dirs even if they're empty
+    leafDirs.foreach(dir => IO.touch(dir / ".gitkeep"))
     base
   }
 
