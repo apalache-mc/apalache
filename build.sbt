@@ -190,7 +190,7 @@ lazy val tool = (project in file("mod-tool"))
       // See https://github.com/sbt/sbt-buildinfo
       buildInfoPackage := "apalache",
       buildInfoKeys := {
-        val build = scala.sys.process.Process("git describe --tags --always").!!.trim
+        val build = Process("git describe --tags --always").!!.trim
         Seq[BuildInfoKey](
             BuildInfoKey.map(version) { case (k, v) =>
               if (isSnapshot.value) (k -> build) else (k -> v)
@@ -317,33 +317,23 @@ prepareRelease := {
   val releaseNotesFile = changelingReleaseNotes.value
   val releaseNotes = IO.read(releaseNotesFile)
   // Create a release branch and the release commit
-  s"git checkout -b release/${v}" ! log
+  Process("git", "checkout" :: "-b" :: "release/${v}" :: Nil) ! log
   // Create the release commit
   val commitMsg = s"[release] ${v}"
-  val c = "git add --update"
-  println(c)
-  c ! log
-  val c1 = s"git add ${releaseNotesFile}"
-  println(c1)
-  c1 ! log
-  val c2 = s"""git commit -m "${commitMsg}""""
-  println(c2)
-  c2 ! log
+  Process("git", "add" :: "--update" :: Nil) ! log
+  Process("git", "add" :: releaseNotesFile.toString() :: Nil) ! log
+  Process("git", "commit" :: "-n" :: commitMsg :: Nil) ! log
   // Bump the version to the next release and update changelogs
   val changelog = changelingChangelog.value
   val nextVersion = incrVersion.value
   IO.delete(releaseNotesFile)
-  "git add --update" ! log
-  val c3 = s"""git commit -m "Bump version to ${nextVersion}""""
-  println(c3)
-  c3 ! log
+  Process("git", "add" :: "--update" :: Nil) ! log
+  Process("git", "commit" :: "-m" :: s"Bump version to ${nextVersion}" :: Nil) ! log
   // Open a pull request for the release
   // See https://hub.github.com/hub-pull-request.1.html
-  s"""|hub pull-request --push \\
-      |  --message="${commitMsg}" \\
-      |  --message="${relasePrInstructions}" \\
-      |  --message="${releaseNotes}" \\
-      |  --base="unstable" """.stripMargin ! log
+  Process("hub",
+      Seq("pull-request", "--push", "--message", commitMsg, "--message", relasePrInstructions, "--message",
+          releaseNotes, "--base", "unstable")) ! log
 }
 
 lazy val relasePrInstructions = """
