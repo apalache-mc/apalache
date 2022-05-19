@@ -53,7 +53,9 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
       modWithPreds: ModWithPreds,
       formulas: Seq[TlaOperDecl]): ModWithPreds = {
 
-    encodeVarNameMapping(formulas.foldLeft(modWithPreds)(encodeFormula))
+    encodeVarNameMapping(
+        formulas.foldLeft(modWithPreds)(encodeFormula)
+    )
   }
 
   /**
@@ -64,7 +66,7 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
    *
    * newNext == oldNext /\ UNCHANGED << Init_ex >>
    */
-  def addInitExVar(modWithPreds: ModWithPreds, ex: TlaEx, exName: String): ModWithPreds = {
+  def addInitExVar(modWithPreds: ModWithPreds, ex: TlaEx, exName: String): (ModWithPreds, TlaVarDecl) = {
     val exVarDecl = new TlaVarDecl(exName + "_init_" + gen.newName())(ex.typeTag)
     val exVar = builder.declAsNameEx(exVarDecl)
 
@@ -82,7 +84,7 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
     )
 
     val curModWithPreds = modWithPreds.setPredicates(newInit, newNext, modWithPreds.loopOK)
-    curModWithPreds.prependDecl(exVarDecl)
+    (curModWithPreds.prependDecl(exVarDecl), exVarDecl)
   }
 
   /**
@@ -94,7 +96,9 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
 
     var (curModWithPreds, formulaEx) = encodeSyntaxTreeInPredicates(modWithPreds, formula.body)
 
-    curModWithPreds = addInitExVar(curModWithPreds, formulaEx, formula.name)
+    val tuple = addInitExVar(curModWithPreds, formulaEx, formula.name)
+    curModWithPreds = tuple._1
+    val initExVarDecl = tuple._2
 
     // replace formula by formula == loopOK => formula_init, and move formula to the end of the spec so it is after loopOK
     val newFormulaDecl = new TlaOperDecl(
@@ -102,7 +106,7 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
         formula.formalParams,
         builder.impl(
             builder.appOp(builder.declAsNameEx(curModWithPreds.loopOK), Seq.empty[TBuilderInstruction]: _*),
-            builder.createUnsafeInstruction(formulaEx),
+            builder.declAsNameEx(initExVarDecl),
         ),
     )(formula.typeTag)
     val newDecls = curModWithPreds.module.declarations.filterNot(decl => decl.name == formula.name) :+ newFormulaDecl
@@ -164,7 +168,7 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
           case OperEx(oper, args @ _*) =>
             var curModWithPreds = modWithPreds
 
-            val nodeIdentifier = gen.newName()
+            val nodeIdentifier = TableauEncoder.NAME_PREFIX + gen.newName()
             varNamesToExStrings.addOne(nodeIdentifier, curNode.toString().replace("\"", "\'"))
             varNamesToExStrings.addOne("loop_" + nodeIdentifier, curNode.toString().replace("\"", "\'"))
 
@@ -398,5 +402,5 @@ object TableauEncoder {
    * A prefix added to the names of all variables used for the tableau encoding. Useful for disambiguating them from
    * variables in the original spec.
    */
-  val NAME_PREFIX = ""
+  val NAME_PREFIX = "formulaencoding_"
 }
