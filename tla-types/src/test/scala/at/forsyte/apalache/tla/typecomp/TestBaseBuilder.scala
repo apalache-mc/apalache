@@ -154,7 +154,7 @@ class TestBaseBuilder extends BuilderTest {
     )
 
     checkRun(
-        runTertiary(
+        runTernary(
             builder.choose,
             mkWellTyped,
             mkIllTyped,

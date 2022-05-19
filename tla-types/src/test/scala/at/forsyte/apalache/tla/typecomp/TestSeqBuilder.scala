@@ -155,7 +155,7 @@ class TestSeqBuilder extends BuilderTest {
     )
 
     checkRun(
-        runTertiary(
+        runTernary(
             builder.subseq,
             mkWellTyped,
             mkIllTyped,

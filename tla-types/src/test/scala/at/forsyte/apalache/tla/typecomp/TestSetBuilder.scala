@@ -233,7 +233,7 @@ class TestSetBuilder extends BuilderTest {
     )
 
     checkRun(
-        runTertiary(
+        runTernary(
             builder.filter,
             mkWellTyped,
             mkIllTyped,
