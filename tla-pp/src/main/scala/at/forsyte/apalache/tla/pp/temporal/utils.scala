@@ -25,7 +25,7 @@ object ScopedBuilderExtensions {
     }
 
     def unchanged(ex: TlaEx): TBuilderInstruction = {
-      builder.createUnsafeInstruction(OperEx(TlaActionOper.unchanged, ex)(Typed(BoolT1())))
+      builder.createUnsafeInstruction(OperEx(TlaActionOper.unchanged, ex)(Typed(BoolT1)))
     }
   }
 }

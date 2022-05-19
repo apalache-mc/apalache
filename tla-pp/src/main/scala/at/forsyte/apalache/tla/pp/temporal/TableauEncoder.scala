@@ -13,7 +13,6 @@ import at.forsyte.apalache.tla.pp.temporal.DeclUtils._
 import scala.collection.mutable.HashMap
 import at.forsyte.apalache.tla.lir.oper.TlaTempOper
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.lir.oper.TlaArithOper
 
 /**
  * Encodes temporal formulas as invariants.
@@ -125,7 +124,7 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
       case TlaTempOper.diamond => "_eventually"
     }
 
-    new TlaVarDecl(nodeIdentifier + nameSuffix)(Typed(BoolT1()))
+    new TlaVarDecl(nodeIdentifier + nameSuffix)(Typed(BoolT1))
   }
 
   /**

@@ -4,7 +4,6 @@ import at.forsyte.apalache.tla.lir._
 
 import javax.inject.Singleton
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.pp.temporal.ScopedBuilderExtensions._
 import at.forsyte.apalache.tla.pp.temporal.DeclUtils._
@@ -28,7 +27,7 @@ import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
   import LoopEncoder.NAME_PREFIX
 
-  val boolTag = Typed(BoolT1())
+  val boolTag = Typed(BoolT1)
 
   val inLoopDecl = TlaVarDecl(s"${NAME_PREFIX}InLoop_${gen.newName()}")(boolTag)
   val inLoop = builder.declAsNameEx(inLoopDecl)
@@ -106,6 +105,9 @@ class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
    * /\ loop_foo' = IF (InLoop' = InLoop) THEN loop_foo ELSE foo
    */
   def addLoopVarToNext(varDecl: TlaVarDecl, loopVarDecl: TlaVarDecl, next: TlaOperDecl): TlaOperDecl = {
+    val loopEx = builder.declAsNameEx(varDecl)
+    val loopExPrime = builder.prime(loopEx)
+
     TlaOperDecl(
         next.name,
         next.formalParams,
@@ -115,7 +117,15 @@ class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
             /* loop_foo' \in {loop_foo, foo} */
             builder.in(builder.primeVar(loopVarDecl),
                 builder.enumSet(builder.declAsNameEx(varDecl), builder.declAsNameEx(loopVarDecl))),
-            builder.eql(builder.primeVar(loopVarDecl))
+            /* /\ loop_foo' = IF (InLoop' = InLoop) THEN loop_foo ELSE foo */
+            builder.eql(
+                loopExPrime,
+                builder.ite(
+                    builder.eql(inLoop, inLoopPrime),
+                    loopEx,
+                    builder.declAsNameEx(varDecl),
+                ),
+            ),
         ),
     )(next.typeTag)
   }
@@ -189,7 +199,7 @@ class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
           s"${NAME_PREFIX}LoopOK_${gen.newName()}",
           List(),
           inLoop,
-      )(Typed(OperT1(Seq.empty, BoolT1())))
+      )(Typed(OperT1(Seq.empty, BoolT1)))
 
     /* loopOK ==
         /\ InLoop
