@@ -308,34 +308,35 @@ lazy val root = (project in file("."))
         )
         file(unzipped)
       },
-      prepareRelease := {
-        val log = streams.value.log
-        val v = (ThisBuild / version).value
-        // Prepare the release notes for release
-        val releaseNotesFile = changelingReleaseNotes.value
-        assert(releaseNotesFile.exists())
-        val releaseNotes = IO.read(releaseNotesFile)
-        // Create a release branch and the release commit
-        s"echo git checkout -b release/${v}" ! log
-        // Create the release commit
-        val commitMsg = s"[release] ${v}"
-        "git add --update" ! log
-        s"git add ${releaseNotesFile}" ! log
-        s"git commit -m '${commitMsg}'" ! log
-        // Bump the version to the next release
-        val changelog = changelingChangelog.value
-        val nextVersion = incrVersion.value
-        "git add --update" ! log
-        s"git commit -m 'Bump version to ${nextVersion}'" ! log
-        // Open a pull request for the release
-        // See https://hub.github.com/hub-pull-request.1.html
-        s"""hub pull-request --push
+  )
+
+prepareRelease := {
+  val log = streams.value.log
+  val v = (ThisBuild / version).value
+  // Prepare the release notes for release
+  val releaseNotesFile = changelingReleaseNotes.value
+  val releaseNotes = IO.read(releaseNotesFile)
+  // Create a release branch and the release commit
+  s"echo git checkout -b release/${v}" ! log
+  // Create the release commit
+  val commitMsg = s"[release] ${v}"
+  "git add --update" ! log
+  s"git add ${releaseNotesFile}" ! log
+  s"git commit -m '${commitMsg}'" ! log
+  // Bump the version to the next release and update changelogs
+  val changelog = changelingChangelog.value
+  val nextVersion = incrVersion.value
+  IO.delete(releaseNotesFile)
+  "git add --update" ! log
+  s"git commit -m 'Bump version to ${nextVersion}'" ! log
+  // Open a pull request for the release
+  // See https://hub.github.com/hub-pull-request.1.html
+  s"""hub pull-request --push
             --message="${commitMsg}"
             --message="${relasePrInstructions}"
             --message="${releaseNotes}"
             --base="unstable" """ ! log
-      },
-  )
+}
 
 lazy val relasePrInstructions = """
         |# Reviewer instructions

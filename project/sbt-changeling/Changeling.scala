@@ -262,8 +262,6 @@ object Changeling {
     val dirPaths = IO.listFiles(unreleasedDir)
     val fileMoves = dirPaths.map(d => (d -> trashDir / d.base))
     IO.move(fileMoves)
-    // Remove the intermediary RELEASE.md file
-    IO.delete(relaseNotes)
     // Recreate the directories
     IO.createDirectories(dirPaths)
   }
