@@ -308,7 +308,48 @@ lazy val root = (project in file("."))
         )
         file(unzipped)
       },
+      prepareRelease := {
+        val log = streams.value.log
+        val v = (ThisBuild / version).value
+        // Create a release branch
+        s"git checkout -b release/${v}" ! log
+        // Prepare the release notes for release
+        val releaseNotesFile = changelingReleaseNotes.value
+        val releaseNotes = IO.read(releaseNotesFile)
+        // Create the release commit
+        val commitMsg = s"[release] ${v}"
+        "git add --update" ! log
+        s"git add ${releaseNotesFile}" ! log
+        s"git commit -m '${commitMsg}'" ! log
+        // Bump the version to the next release
+        val changelog = changelingChangelog.value
+        val nextVersion = incrVersion.value
+        "git add --update" ! log
+        s"git commit -m 'Bump version to ${nextVersion}'" ! log
+        // Open a pull request for the release
+        // See https://hub.github.com/hub-pull-request.1.html
+        s"""hub pull-request --push
+            --message="${commitMsg}"
+            --message="${relasePrInstructions}"
+            --message="${releaseNotes}"
+            --base="unstable" """ ! log
+      },
   )
+
+lazy val relasePrInstructions = """
+        |# Reviewer instructions
+        |
+        |- Check the changelog to ensure the version increment is consistent with https://semver.org/.
+        |- If a different version should be released, follow [the instructions](https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md#via-github).
+        |- Review the changeset as a sanity check.
+        |- Approve the PR, if it pases muster.
+        |- **Merge** this branch (do not squash or rebase), but **DO NOT DELETE THE BRANCH**.
+        |- After the release has been published to github, delete this branch.
+        |
+        | ---
+        |
+        | # Release notes
+        |""".stripMargin
 
 docker / imageNames := {
   val img: String => ImageName = s =>
@@ -374,50 +415,6 @@ lazy val versionFile = settingKey[File]("Location of the file tracking the proje
 lazy val prepareRelease = taskKey[Unit](
     "Prepare a release branch for continuous deployment"
 )
-
-prepareRelease := {
-  val log = streams.value.log
-  val v = (ThisBuild / version).value
-  // Create a release branch
-  s"git checkout -b release/${v}" ! log
-  // Prepare the release notes for release
-  val releaseNotesFile = changelingRelaseNotes.value
-  while (!releaseNotesFile.exists()) {
-    Thread.sleep(50)
-  }
-  val releaseNotes = IO.read(releaseNotesFile)
-  // Create the release commit
-  val commitMsg = s"[release] ${v}"
-  "git add --update" ! log
-  s"git add ${releaseNotesFile}" ! log
-  s"git commit -m '${commitMsg}'" ! log
-  // Bump the version to the next release
-  val changelog = changelingChangelog.value
-  val nextVersion = incrVersion.value
-  "git add --update" ! log
-  s"git commit -m 'Bump version to ${nextVersion}'" ! log
-  // Open a pull request for the release
-  // See https://hub.github.com/hub-pull-request.1.html
-  val prInstructions = """
-    |# Reviewer instructions
-    |
-    |- Check the changelog to ensure the version increment is consistent with https://semver.org/.
-    |- If a different version should be released, follow [the instructions](https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md#via-github).
-    |- Review the changeset as a sanity check.
-    |- Approve the PR, if it pases muster.
-    |- **Merge** this branch (do not squash or rebase), but **DO NOT DELETE THE BRANCH**.
-    |- After the release has been published to github, delete this branch.
-    |
-    | ---
-    |
-    | # Release notes
-    |""".stripMargin
-  s"""hub pull-request --push
-        --message="${commitMsg}"
-        --message="${prInstructions}"
-        --message="${releaseNotes}"
-        --base="unstable" """ ! log
-}
 
 lazy val printVersion = taskKey[Unit]("Print the current version")
 printVersion := {
