@@ -402,5 +402,5 @@ object TableauEncoder {
    * A prefix added to the names of all variables used for the tableau encoding. Useful for disambiguating them from
    * variables in the original spec.
    */
-  val NAME_PREFIX = "formulaencoding_"
+  val NAME_PREFIX = "__temporal_"
 }

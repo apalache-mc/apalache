@@ -103,11 +103,7 @@ class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
    *
    * /\ oldNext
    *
-   * /\ loop_foo' \in {loop_foo, foo}
-   *
-   * /\ InLoop' \= InLoop => loop_foo' = foo
-   *
-   * /\ InLoop' = InLoop => loop_foo' = loop_foo
+   * /\ loop_foo' = IF (InLoop' = InLoop) THEN loop_foo ELSE foo
    */
   def addLoopVarToNext(varDecl: TlaVarDecl, loopVarDecl: TlaVarDecl, next: TlaOperDecl): TlaOperDecl = {
     TlaOperDecl(
@@ -119,16 +115,7 @@ class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
             /* loop_foo' \in {loop_foo, foo} */
             builder.in(builder.primeVar(loopVarDecl),
                 builder.enumSet(builder.declAsNameEx(varDecl), builder.declAsNameEx(loopVarDecl))),
-            /* InLoop' \= InLoop => loop_foo' = foo */
-            builder.impl(
-                builder.neql(inLoopPrime, inLoop),
-                builder.eql(builder.primeVar(loopVarDecl), builder.declAsNameEx(varDecl)),
-            ),
-            /* InLoop' = InLoop => loop_foo' = loop_foo */
-            builder.impl(
-                builder.eql(inLoopPrime, inLoop),
-                builder.eql(builder.primeVar(loopVarDecl), builder.declAsNameEx(loopVarDecl)),
-            ),
+            builder.eql(builder.primeVar(loopVarDecl))
         ),
     )(next.typeTag)
   }
@@ -154,12 +141,7 @@ class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
     val nextOrUnchangedWithInLoopUpdate = conjunctExToOperDecl(inLoopUpdate, next)
 
     /*
-     * /\  /\ loop_foo' \in {loop_foo, foo}
-     *     /\ InLoop' \= InLoop => loop_foo' = foo
-     *     /\ InLoop' = InLoop => loop_foo' = loop_foo
-     * /\  /\ loop_bar' \in {loop_bar, bar}
-     *     /\ InLoop' \= InLoop => loop_bar' = bar
-     *     /\ InLoop' = InLoop => loop_bar' = loop_bar
+     * /\ loop_foo' = IF (InLoop' = InLoop) THEN loop_foo ELSE foo
      */
     variables.zip(loopVariables).foldLeft(nextOrUnchangedWithInLoopUpdate) { case (curNext, (varDecl, loopVarDecl)) =>
       addLoopVarToNext(varDecl, loopVarDecl, curNext)
@@ -270,5 +252,5 @@ object LoopEncoder {
    * A prefix added to the names of all variables used for the loop encoding. Useful for disambiguating them from
    * variables in the original spec, particularly if those mention loops as well.
    */
-  val NAME_PREFIX = "loopencoding_"
+  val NAME_PREFIX = "__copy_"
 }

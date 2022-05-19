@@ -98,7 +98,7 @@ UponV1(self) ==
 UponAcceptEnabled ==
   \E p \in Corr:
     /\ (pc[p] = "V0" \/ pc[p] = "V1")     
-    \* /\ rcvd'[p] # {}
+    /\ rcvd'[p] # {}
 
 (* If a correct process received an ECHO messageaccepts, it accepts and then
 	 broadcasts ECHO to all.  *)
@@ -157,6 +157,7 @@ TypeOK ==
   /\ Corr \in SUBSET Proc   
 
 Fairness ==
+    ReceiveEnabled => Receive
     ~<>[](ReceiveEnabled \/ UponV1Enabled \/ UponAcceptEnabled)
           
 (* If no correct process does not broadcast then no correct processes accepts. *)  
