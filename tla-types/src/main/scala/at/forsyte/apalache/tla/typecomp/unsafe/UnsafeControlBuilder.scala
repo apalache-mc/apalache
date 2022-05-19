@@ -22,7 +22,7 @@ trait UnsafeControlBuilder extends ProtoBuilder {
   }
 
   /**
-   * Alternate call method, where paris are passed mixed
+   * Alternate call method, where pairs are passed interleaved
    *
    * @see
    *   _caseSplit[[_caseSplit(pairs: (TlaEx, TlaEx)*)]]
@@ -40,7 +40,7 @@ trait UnsafeControlBuilder extends ProtoBuilder {
   }
 
   /**
-   * Alternate call method, where paris are passed mixed
+   * Alternate call method, where pairs are passed interleaved
    *
    * @see
    *   _caseOther[[_caseOther(other: TlaEx, pairs: (TlaEx, TlaEx)*)]]

@@ -59,7 +59,7 @@ trait UnsafeSetBuilder extends ProtoBuilder {
   }
 
   /**
-   * Alternate call method, where paris are passed mixed
+   * Alternate call method, where pairs are passed interleaved
    *
    * @see
    *   _map[[_map(e: TlaEx, varSetPairs: (NameEx, TlaEx)*)]]
@@ -87,7 +87,7 @@ trait UnsafeSetBuilder extends ProtoBuilder {
   }
 
   /**
-   * Alternate call method, where paris are passed mixed.
+   * Alternate call method, where pairs are passed interleaved.
    *
    * @see
    *   _recSet[[_recSet(kvs: (String, TlaEx)*)]]

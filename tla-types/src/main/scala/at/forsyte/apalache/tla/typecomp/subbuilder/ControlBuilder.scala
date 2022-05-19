@@ -22,7 +22,7 @@ trait ControlBuilder extends UnsafeControlBuilder {
     caseSplitMixed(pairs.flatMap { case (a, b) => Seq(a, b) }: _*)
 
   /**
-   * Alternate call method, where pairs are passed mixed
+   * Alternate call method, where pairs are passed interleaved
    *
    * @see
    *   caseSplit[[caseSplit(pairs: (TBuilderInstruction, TBuilderInstruction)*)]]
@@ -35,7 +35,7 @@ trait ControlBuilder extends UnsafeControlBuilder {
     caseOtherMixed(other, pairs.flatMap { case (a, b) => Seq(a, b) }: _*)
 
   /**
-   * Alternate call method, where pairs are passed mixed
+   * Alternate call method, where pairs are passed interleaved
    *
    * @see
    *   caseOther[[caseOther(other: TBuilderInstruction, pairs: (TBuilderInstruction, TBuilderInstruction)*)]]

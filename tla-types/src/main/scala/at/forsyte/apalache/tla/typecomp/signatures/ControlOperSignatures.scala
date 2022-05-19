@@ -16,7 +16,7 @@ object ControlOperSignatures {
   def getMap: SignatureMap = {
 
     // (Bool, t, t) => t
-    val iteSig = signatureMapEntry(ifThenElse, { case Seq(BoolT1(), t, tt) if t == tt => t })
+    val iteSig = signatureMapEntry(ifThenElse, { case Seq(BoolT1, t, tt) if t == tt => t })
 
     def caseBodyT(seq: Seq[TlaType1]): Option[TypeComputationResult] = {
       val n = seq.size
@@ -28,7 +28,7 @@ object ControlOperSignatures {
             (lPartial :+ cond, rPartial :+ body)
         }
         val t = bodies.head // n >= 2 => bodies.nonEmpty
-        if (cases.forall(_ == BoolT1()) && bodies.forall(_ == t))
+        if (cases.forall(_ == BoolT1) && bodies.forall(_ == t))
           Some(t)
         else None
       }

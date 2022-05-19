@@ -13,7 +13,7 @@ class TestControlBuilder extends BuilderTest {
     type T = (TBuilderInstruction, TBuilderInstruction, TBuilderInstruction)
     def mkWellTyped(tt: TlaType1): T =
       (
-          builder.name("p", BoolT1()),
+          builder.name("p", BoolT1),
           builder.name("A", tt),
           builder.name("B", tt),
       )
@@ -26,12 +26,12 @@ class TestControlBuilder extends BuilderTest {
               builder.name("B", tt),
           ),
           (
-              builder.name("p", BoolT1()),
+              builder.name("p", BoolT1),
               builder.name("A", InvalidTypeMethods.differentFrom(tt)),
               builder.name("B", tt),
           ),
           (
-              builder.name("p", BoolT1()),
+              builder.name("p", BoolT1),
               builder.name("A", tt),
               builder.name("B", InvalidTypeMethods.differentFrom(tt)),
           ),
@@ -68,7 +68,7 @@ class TestControlBuilder extends BuilderTest {
       val (t, n) = tparam
       (1 to n).map { i =>
         (
-            builder.name(s"p$i", BoolT1()),
+            builder.name(s"p$i", BoolT1),
             builder.name(s"e$i", t),
         )
       }
@@ -82,7 +82,7 @@ class TestControlBuilder extends BuilderTest {
             Some(
                 (1 to n).map { i =>
                   (
-                      builder.name(s"p$i", BoolT1()),
+                      builder.name(s"p$i", BoolT1),
                       builder.name(s"e$i", if (i == j) InvalidTypeMethods.differentFrom(t) else t),
                   )
                 }
@@ -93,7 +93,7 @@ class TestControlBuilder extends BuilderTest {
           Seq(
               (1 to n).map { i =>
                 (
-                    builder.name(s"p$i", if (i == j) InvalidTypeMethods.notBool else BoolT1()),
+                    builder.name(s"p$i", if (i == j) InvalidTypeMethods.notBool else BoolT1),
                     builder.name(s"e$i", t),
                 )
               }
@@ -129,7 +129,7 @@ class TestControlBuilder extends BuilderTest {
       val (t, n) = tparam
       (1 to n).flatMap { i =>
         Seq(
-            builder.name(s"p$i", BoolT1()),
+            builder.name(s"p$i", BoolT1),
             builder.name(s"e$i", t),
         )
       }
@@ -143,7 +143,7 @@ class TestControlBuilder extends BuilderTest {
             Some(
                 (1 to n).flatMap { i =>
                   Seq(
-                      builder.name(s"p$i", BoolT1()),
+                      builder.name(s"p$i", BoolT1),
                       builder.name(s"e$i", if (i == j) InvalidTypeMethods.differentFrom(t) else t),
                   )
                 }
@@ -154,7 +154,7 @@ class TestControlBuilder extends BuilderTest {
           Seq(
               (1 to n).flatMap { i =>
                 Seq(
-                    builder.name(s"p$i", if (i == j) InvalidTypeMethods.notBool else BoolT1()),
+                    builder.name(s"p$i", if (i == j) InvalidTypeMethods.notBool else BoolT1),
                     builder.name(s"e$i", t),
                 )
               }
@@ -184,7 +184,7 @@ class TestControlBuilder extends BuilderTest {
     }
 
     assertThrows[IllegalArgumentException] {
-      build(builder.caseSplitMixed(builder.name("x", BoolT1())))
+      build(builder.caseSplitMixed(builder.name("x", BoolT1)))
     }
   }
 
@@ -202,7 +202,7 @@ class TestControlBuilder extends BuilderTest {
       val (t, n) = tparam
       val pairs = (1 to n).map { i =>
         (
-            builder.name(s"p$i", BoolT1()),
+            builder.name(s"p$i", BoolT1),
             builder.name(s"e$i", t),
         )
       }
@@ -216,7 +216,7 @@ class TestControlBuilder extends BuilderTest {
           builder.name("e", InvalidTypeMethods.differentFrom(t)),
           (1 to n).map { i =>
             (
-                builder.name(s"p$i", BoolT1()),
+                builder.name(s"p$i", BoolT1),
                 builder.name(s"e$i", t),
             )
           },
@@ -229,7 +229,7 @@ class TestControlBuilder extends BuilderTest {
                       builder.name("e", t),
                       (1 to n).map { i =>
                         (
-                            builder.name(s"p$i", BoolT1()),
+                            builder.name(s"p$i", BoolT1),
                             builder.name(s"e$i", if (i == j) InvalidTypeMethods.differentFrom(t) else t),
                         )
                       },
@@ -243,7 +243,7 @@ class TestControlBuilder extends BuilderTest {
                     builder.name("e", t),
                     (1 to n).map { i =>
                       (
-                          builder.name(s"p$i", if (i == j) InvalidTypeMethods.notBool else BoolT1()),
+                          builder.name(s"p$i", if (i == j) InvalidTypeMethods.notBool else BoolT1),
                           builder.name(s"e$i", t),
                       )
                     },
@@ -270,7 +270,7 @@ class TestControlBuilder extends BuilderTest {
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
-      build(builder.caseOther(builder.name("e", IntT1())))
+      build(builder.caseOther(builder.name("e", IntT1)))
     }
 
     // Mixed
@@ -281,7 +281,7 @@ class TestControlBuilder extends BuilderTest {
       (builder.name("e", t),
           (1 to n).flatMap { i =>
             Seq(
-                builder.name(s"p$i", BoolT1()),
+                builder.name(s"p$i", BoolT1),
                 builder.name(s"e$i", t),
             )
           })
@@ -293,7 +293,7 @@ class TestControlBuilder extends BuilderTest {
           builder.name("e", InvalidTypeMethods.differentFrom(t)),
           (1 to n).flatMap { i =>
             Seq(
-                builder.name(s"p$i", BoolT1()),
+                builder.name(s"p$i", BoolT1),
                 builder.name(s"e$i", t),
             )
           },
@@ -306,7 +306,7 @@ class TestControlBuilder extends BuilderTest {
                       builder.name("e", t),
                       (1 to n).flatMap { i =>
                         Seq(
-                            builder.name(s"p$i", BoolT1()),
+                            builder.name(s"p$i", BoolT1),
                             builder.name(s"e$i", if (i == j) InvalidTypeMethods.differentFrom(t) else t),
                         )
                       },
@@ -320,7 +320,7 @@ class TestControlBuilder extends BuilderTest {
                     builder.name("e", t),
                     (1 to n).flatMap { i =>
                       Seq(
-                          builder.name(s"p$i", if (i == j) InvalidTypeMethods.notBool else BoolT1()),
+                          builder.name(s"p$i", if (i == j) InvalidTypeMethods.notBool else BoolT1),
                           builder.name(s"e$i", t),
                       )
                     },
@@ -347,11 +347,11 @@ class TestControlBuilder extends BuilderTest {
 
     // test fail on n = 0 or even nArgs
     assertThrows[IllegalArgumentException] {
-      build(builder.caseOtherMixed(builder.name("e", BoolT1())))
+      build(builder.caseOtherMixed(builder.name("e", BoolT1)))
     }
 
     assertThrows[IllegalArgumentException] {
-      build(builder.caseOtherMixed(builder.name("e", BoolT1()), builder.name("x", BoolT1())))
+      build(builder.caseOtherMixed(builder.name("e", BoolT1), builder.name("x", BoolT1)))
     }
 
   }
