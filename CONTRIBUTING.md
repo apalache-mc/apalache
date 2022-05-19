@@ -358,7 +358,7 @@ The CI configuration is located in
 [./UNRELEASED.md](./UNRELEASED.md)
 : A living record of the changes not yet released.
 
-[./RELEASE-NOTES.md](./RELEASE-NOTES.md)
+[./RELEASE.md](./RELEASE.md)
 : A frozen record documenting the changes added since the last release, only
   present in release-commits.
 
