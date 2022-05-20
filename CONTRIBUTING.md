@@ -373,6 +373,34 @@ Every PR introducing changes that are likely to impact the observable behavior
 of Apalache MUST add at least one entry into the appropriate subdirectory of
 [.unreleased/](./.unreleased/).
 
+#### What kinds of changes to record
+
+We break entries into the follow categories:
+
+[breaking-changes](https://en.wiktionary.org/wiki/breaking_change)
+: A breaking change occurs when behavior is introduced that could cause existing
+  usage patterns to fail. Examples include adding/removing CLI flags or changing
+  the representation of data that is emitted as part of our public API.
+
+[features](https://en.wikipedia.org/wiki/Software_feature)
+: Features include adding any user-visible functionality or making significant
+  improvements to existing functionality.
+
+[bug-fixes](https://en.wikipedia.org/wiki/Software_bug)
+: "A software bug is an error, flaw or fault in computer software that causes it
+  to produce an incorrect or unexpected result." We only record the removal of
+  bugs and not their introduction ;)
+
+[documentation](https://en.wikipedia.org/wiki/Documentation)
+: Documentation includes the inline CLI documentation and the user manual.
+
+We generally do not make entries for changes that don't affect the observable
+behavior of the program for users. E.g., we don't add entries for things like
+design documentation, improvements to the development environment, or code
+reorganization that doesn't impact the public API.
+
+#### How to record a change
+
 An single entry is made by creating a single markdown file in the appropriate
 directory. To enter `n` distinct changes, create `n` different markdown files.
 
