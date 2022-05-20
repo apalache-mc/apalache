@@ -310,7 +310,8 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
         } yield tla.funDef(res, name, set).as(tp)
       case ConstT1(_) | OperT1(_, _) | RealT1() | RecRowT1(_) | RowT1(_, _) | SparseTupT1(_) | VarT1(_) |
           VariantT1(_) =>
-        throw new IllegalArgumentException(s"Unsupported type ${witnessType}. Should be disabled in type generator.")
+        throw new IllegalArgumentException(
+            s"Unsupported type ${witnessType}. Should have been filtered by the override in the declaration of 'CrossTestEncodings.typeGen'.")
     }
   }
 
@@ -351,7 +352,7 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
       Stream.concat(
           // shrink to one of the element types
           Stream(elems: _*),
-          // recursively shrink one tuple element type
+          // tuples with a single element type shrunk, keeping the other types as-is
           elems.zipWithIndex.foldLeft(Stream.empty[TlaType1]) { case (acc, (tp, idx)) =>
             acc ++ shrink(tp).map(shrunkType => TupT1(elems.updated(idx, shrunkType): _*))
           },
@@ -366,7 +367,7 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
           fieldTypes.foldLeft(Stream.empty[TlaType1]) { case (acc, (fieldName, tp)) =>
             acc ++ shrink(tp).map(shrunkType => RecT1(fieldTypes.updated(fieldName, shrunkType)))
           },
-          // tuples over a subset of the current field types
+          // records with a subset of the current field types
           Stream(shrink(fieldTypes).filterNot(_.isEmpty).map(elems => RecT1(elems)): _*),
       )
     case ConstT1(_) | OperT1(_, _) | RealT1() | RecRowT1(_) | RowT1(_, _) | SparseTupT1(_) | VarT1(_) | VariantT1(_) =>
