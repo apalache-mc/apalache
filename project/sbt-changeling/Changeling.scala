@@ -157,7 +157,7 @@ object ChangelingPlugin extends AutoPlugin {
           (ThisBuild / baseDirectory).value / "RELEASE.md",
       ),
       changelingChangelog := {
-        Changeling.concatFiles(
+        Changeling.updateChangelog(
             changelingReleaseNotes.value,
             changelingChangelogFile.value,
         )
@@ -254,9 +254,24 @@ object Changeling {
   /**
    * Prefix the content of `newFile` to the content of `target` and write the result to `target`
    */
-  def concatFiles(front: File, target: File): Unit = {
-    val content = s"${IO.read(front)}\n${IO.read(target)}"
-    IO.write(target, content)
+  def updateChangelog(releaseNotes: File, changelog: File): Unit = {
+    val preamble = """|<!-- NOTE: This file is generated. Do not write release notes here.
+                      | Notes for unreleased changes go in the .unreleased/ directory. -->
+                      | """.stripMargin
+
+    val changelogContent = IO.readLines(changelog) match {
+      case Nil => Nil
+      case l :: ls =>
+        // Drop the preamble, it is present
+        if (l.contains("NOTE: This file is generated")) {
+          ls.drop(preamble.split("\n").length - 1)
+        } else {
+          l :: ls
+        }
+    }
+
+    val content = (preamble :: IO.read(releaseNotes) :: changelogContent).mkString("\n")
+    IO.write(changelog, content)
   }
 
   /**
