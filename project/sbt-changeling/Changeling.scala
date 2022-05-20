@@ -166,6 +166,10 @@ object ChangelingPlugin extends AutoPlugin {
             (Compile / resourceManaged).value,
             changelingUnreleasedDir.value,
         )
+        Changeling.ensureDirStructureExists(
+          changelingUnreleasedDir.value,
+          changelingKinds.value
+        )
         changelingChangelogFile.value
       },
   )
