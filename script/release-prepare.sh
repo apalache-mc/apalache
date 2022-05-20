@@ -63,6 +63,7 @@ fi
 # Bump the version
 "$DIR"/version-bump.sh
 
+# Commit the updated version and changelog
 DEV_VERSION=$("$DIR"/get-version.sh)
 git add --update
 git commit -m "Bump version to ${DEV_VERSION}"
