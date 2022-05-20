@@ -3,9 +3,9 @@ package at.forsyte.apalache.tla.typecheck.etc
 import at.forsyte.apalache.io.annotations.store.{findAnnotation, AnnotationStore}
 import at.forsyte.apalache.io.annotations.{Annotation, AnnotationStr, StandardAnnotations}
 import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1ParseError}
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
-import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecheck._
 import com.typesafe.scalalogging.LazyLogging
 
@@ -967,6 +967,12 @@ class ToEtcExpr(
             // ({ 3: a }, Int) => a
             (SparseTupT1(fieldNo.toInt -> a), IntT1(), a),
         )
+
+      case ValEx(TlaStr(fieldName)) if ModelValueHandler.isModelValue(fieldName) =>
+        // fieldName encodes a constant of an uninterpreted sort
+        val a = varPool.fresh
+        val uninterpretedType = ModelValueHandler.modelValueOrString(fieldName)
+        Seq((FunT1(uninterpretedType, a), uninterpretedType, a))
 
       case ValEx(TlaStr(fieldName)) =>
         // f[s] or [f EXCEPT ![s] = ...], where s is a string literal
