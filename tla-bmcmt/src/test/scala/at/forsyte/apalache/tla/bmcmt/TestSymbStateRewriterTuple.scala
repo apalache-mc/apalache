@@ -6,14 +6,14 @@ import at.forsyte.apalache.tla.lir.TypedPredefs._
 
 trait TestSymbStateRewriterTuple extends RewriterBase {
   private val types = Map(
-      "b" -> BoolT1(),
-      "i" -> IntT1(),
-      "(i)" -> TupT1(IntT1()),
-      "I" -> SetT1(IntT1()),
-      "ib" -> TupT1(IntT1(), BoolT1()),
-      "ibs" -> TupT1(IntT1(), BoolT1(), StrT1()),
-      "IB" -> SetT1(TupT1(IntT1(), BoolT1())),
-      "ibI" -> TupT1(IntT1(), BoolT1(), SetT1(IntT1())),
+      "b" -> BoolT1,
+      "i" -> IntT1,
+      "(i)" -> TupT1(IntT1),
+      "I" -> SetT1(IntT1),
+      "ib" -> TupT1(IntT1, BoolT1),
+      "ibs" -> TupT1(IntT1, BoolT1, StrT1),
+      "IB" -> SetT1(TupT1(IntT1, BoolT1)),
+      "ibI" -> TupT1(IntT1, BoolT1, SetT1(IntT1)),
   )
 
   test("""<<1, FALSE, {2}>>""") { rewriterType: SMTEncoding =>
@@ -30,7 +30,7 @@ trait TestSymbStateRewriterTuple extends RewriterBase {
     val tupleAcc = appFun(tup ? "ibI", int(2))
       .typed(types, "b")
     val resEqFalse = eql(tupleAcc, bool(false))
-      .typed(BoolT1())
+      .typed(BoolT1)
 
     val state = new SymbState(resEqFalse, arena, Binding())
     assertTlaExAndRestore(create(rewriterType), state)

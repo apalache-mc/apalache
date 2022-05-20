@@ -52,9 +52,9 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
           case CellTFrom(SetT1(_)) =>
             basicIn(setState, setCell, elemCell)
 
-          case InfSetT(CellTFrom(IntT1()))
+          case InfSetT(CellTFrom(IntT1))
               if setCell == setState.arena.cellNatSet() || setCell == setState.arena.cellIntSet() =>
-            intOrNatSetIn(setState, setCell, elemCell, CellTFrom(IntT1()))
+            intOrNatSetIn(setState, setCell, elemCell, CellTFrom(IntT1))
 
           case PowSetT(SetT1(_)) =>
             powSetIn(setState, setCell, elemCell)
@@ -107,7 +107,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val funsetDom = state.arena.getDom(funsetCell)
     val funsetCdm = state.arena.getCdm(funsetCell)
     var nextState = state
-    nextState = nextState.updateArena(_.appendCell(BoolT1()))
+    nextState = nextState.updateArena(_.appendCell(BoolT1))
     val pred = nextState.arena.topCell
     val relation = nextState.arena.getCdm(funCell)
 
@@ -135,7 +135,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
             funsetDom.toNameEx,
             tla.dom(funCell.toNameEx).as(domType),
         )
-        .as(BoolT1())
+        .as(BoolT1)
 
     rewriter.rewriteUntilDone(
         nextState.setRex(
@@ -155,8 +155,8 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     } else {
       // i \in Nat <=> i >= 0
       assert(setCell == state.arena.cellNatSet())
-      assert(elemType == CellTFrom(IntT1()))
-      val nextState = state.updateArena(_.appendCell(BoolT1()))
+      assert(elemType == CellTFrom(IntT1))
+      val nextState = state.updateArena(_.appendCell(BoolT1))
       val pred = nextState.arena.topCell
       rewriter.solverContext.assertGroundExpr(tla.equiv(pred.toNameEx, tla.ge(elemCell.toNameEx, tla.int(0))))
       nextState.setRex(pred.toNameEx)
@@ -174,7 +174,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // the set cell points to no other cell => return false
       state.setRex(state.arena.cellFalse().toNameEx)
     } else {
-      val nextState = state.updateArena(_.appendCell(BoolT1()))
+      val nextState = state.updateArena(_.appendCell(BoolT1))
       val pred = nextState.arena.topCell.toNameEx
 
       // cache equality constraints first

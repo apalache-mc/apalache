@@ -36,7 +36,7 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean, useR
     val toEtc = new ToEtcExpr(annotationStore, aliasSubstitution, varPool, useRows)
 
     // Bool is the final expression in the chain of let-definitions
-    val terminalExpr: EtcExpr = EtcConst(BoolT1())(BlameRef(UID.unique))
+    val terminalExpr: EtcExpr = EtcConst(BoolT1)(BlameRef(UID.unique))
 
     // translate the whole TLA+ module into a long EtcExpr. Is not that cool?
     val topExpr =
@@ -49,7 +49,7 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean, useR
 
     // generate a unique name for the root definition, to avoid clashes
     val rootName = "MODULE_%s_%d_APALACHE".format(module.name, System.currentTimeMillis())
-    val rootExpr = EtcLet(rootName, EtcAbs(EtcConst(BoolT1())(uniqueRef()))(uniqueRef()), topExpr)(uniqueRef())
+    val rootExpr = EtcLet(rootName, EtcAbs(EtcConst(BoolT1)(uniqueRef()))(uniqueRef()), topExpr)(uniqueRef())
 
     val typeChecker = new EtcTypeChecker(varPool, inferPolytypes = inferPoly)
     // run the type checker

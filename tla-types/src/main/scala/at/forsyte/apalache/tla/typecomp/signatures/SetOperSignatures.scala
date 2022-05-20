@@ -34,7 +34,7 @@ object SetOperSignatures {
     val binaryAsymm: SignatureMap = Seq(
         in,
         notin,
-    ).map { signatureMapEntry(_, { case Seq(t, SetT1(tt)) if t == tt => BoolT1() }) }.toMap
+    ).map { signatureMapEntry(_, { case Seq(t, SetT1(tt)) if t == tt => BoolT1 }) }.toMap
 
     val mapPartial: PartialSignature = {
       case t +: pairs if pairs.size % 2 == 0 && pairs.grouped(2).forall {
@@ -50,7 +50,7 @@ object SetOperSignatures {
 
     // { x \in S: p } is polymorphic
     // (t, Set(t), Bool) => Set(t)
-    val filterSig = signatureMapEntry(filter, { case Seq(t, st @ SetT1(tt), BoolT1()) if t == tt => st })
+    val filterSig = signatureMapEntry(filter, { case Seq(t, st @ SetT1(tt), BoolT1) if t == tt => st })
 
     // recSet does NOT have a signature (the return type depends on the field value)
 
@@ -94,7 +94,7 @@ object SetOperSignatures {
 
     // \subseteq is polymorphic
     // (Set(t), Set(t)) => Bool
-    val subseteqSig = signatureMapEntry(subseteq, { case Seq(SetT1(t), SetT1(tt)) if t == tt => BoolT1() })
+    val subseteqSig = signatureMapEntry(subseteq, { case Seq(SetT1(t), SetT1(tt)) if t == tt => BoolT1 })
 
     val rest: SignatureMap = Seq(
         mapSig,

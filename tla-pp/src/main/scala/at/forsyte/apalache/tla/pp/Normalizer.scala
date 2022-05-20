@@ -234,7 +234,7 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
 
     val newBody = nnf(neg)(body)
 
-    val toBoolT = OperT1(Seq(), BoolT1())
+    val toBoolT = OperT1(Seq(), BoolT1)
 
     // We can't just implement ~X for all operators ( e.g. what if X == 1..10 ), just for
     // those that actually appear under negation in the body (and thus must be of type Bool)
@@ -258,10 +258,10 @@ class Normalizer(tracker: TransformationTracker) extends TlaExTransformation {
     val negOpers = negAppearingOpers(newBody)
 
     val replacements = negOpers.map { opName =>
-      val toReplace = tla.not(tla.appOp(tla.name(opName) ? "b") ? "b").typed(Map("b" -> BoolT1()), "b")
+      val toReplace = tla.not(tla.appOp(tla.name(opName) ? "b") ? "b").typed(Map("b" -> BoolT1), "b")
       lazy val replacement = tla
         .appOp(tla.name(negName(opName)) ? "op")
-        .typed(Map("b" -> BoolT1(), "op" -> toBoolT), "b")
+        .typed(Map("b" -> BoolT1, "op" -> toBoolT), "b")
       ReplaceFixed(tracker).whenEqualsTo(toReplace, replacement)
     }
 

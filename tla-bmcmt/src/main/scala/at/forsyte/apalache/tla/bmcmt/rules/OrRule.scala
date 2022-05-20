@@ -15,7 +15,7 @@ import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, TlaEx}
  *   Igor Konnov
  */
 class OrRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val boolTypes = Map("b" -> BoolT1())
+  private val boolTypes = Map("b" -> BoolT1)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -51,7 +51,7 @@ class OrRule(rewriter: SymbStateRewriter) extends RewritingRule {
               state.setRex(toIte(args))
             } else {
               // simply translate to a disjunction
-              var nextState = state.updateArena(_.appendCell(BoolT1()))
+              var nextState = state.updateArena(_.appendCell(BoolT1))
               val pred = nextState.arena.topCell.toNameEx
 
               def mapArg(argEx: TlaEx): TlaEx = {

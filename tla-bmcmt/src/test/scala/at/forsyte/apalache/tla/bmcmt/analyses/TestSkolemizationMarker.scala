@@ -14,10 +14,10 @@ class TestSkolemizationMarker extends AnyFunSuite with BeforeAndAfterEach {
 
   import at.forsyte.apalache.tla.lir.convenience.tla._
 
-  private val Int = IntT1()
-  private val Bool = BoolT1()
-  private val BoolOper0 = OperT1(Seq(), BoolT1())
-  private val IntSet = SetT1(IntT1())
+  private val Int = IntT1
+  private val Bool = BoolT1
+  private val BoolOper0 = OperT1(Seq(), BoolT1)
+  private val IntSet = SetT1(IntT1)
 
   private var marker = new SkolemizationMarker(TrackerWithListeners())
 

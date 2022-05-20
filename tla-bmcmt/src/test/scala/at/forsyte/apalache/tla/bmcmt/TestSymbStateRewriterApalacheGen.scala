@@ -7,11 +7,11 @@ import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, FunT1, IntT1, OperEx, SeqT1, SetT1, StrT1, TupT1, Typed}
 
 trait TestSymbStateRewriterApalacheGen extends RewriterBase {
-  private val types = Map("i" -> IntT1(), "I" -> SetT1(IntT1()), "b" -> BoolT1(), "s" -> StrT1())
+  private val types = Map("i" -> IntT1, "I" -> SetT1(IntT1), "b" -> BoolT1, "s" -> StrT1)
   private val parser = DefaultType1Parser
 
   test("""Gen(1) for Int""") { rewriterType: SMTEncoding =>
-    val gen = OperEx(ApalacheOper.gen, int(1).typed())(Typed(IntT1()))
+    val gen = OperEx(ApalacheOper.gen, int(1).typed())(Typed(IntT1))
 
     val state = new SymbState(gen, arena, Binding())
     val rewriter = create(rewriterType)
@@ -24,7 +24,7 @@ trait TestSymbStateRewriterApalacheGen extends RewriterBase {
   }
 
   test("""Gen(1) for Str""") { rewriterType: SMTEncoding =>
-    val gen = OperEx(ApalacheOper.gen, int(1).typed())(Typed(StrT1()))
+    val gen = OperEx(ApalacheOper.gen, int(1).typed())(Typed(StrT1))
 
     val state = new SymbState(gen, arena, Binding())
     val rewriter = create(rewriterType)
@@ -59,7 +59,7 @@ trait TestSymbStateRewriterApalacheGen extends RewriterBase {
   }
 
   test("""Gen(1) for Bool""") { rewriterType: SMTEncoding =>
-    val gen = OperEx(ApalacheOper.gen, int(1).typed())(Typed(BoolT1()))
+    val gen = OperEx(ApalacheOper.gen, int(1).typed())(Typed(BoolT1))
 
     val state = new SymbState(gen, arena, Binding())
     val rewriter = create(rewriterType)
@@ -75,7 +75,7 @@ trait TestSymbStateRewriterApalacheGen extends RewriterBase {
   }
 
   test("""Gen(3) = { 1, 2, 3 }""") { rewriterType: SMTEncoding =>
-    val gen = OperEx(ApalacheOper.gen, int(3).typed())(Typed(SetT1(IntT1())))
+    val gen = OperEx(ApalacheOper.gen, int(3).typed())(Typed(SetT1(IntT1)))
     val eq123 = eql(gen, enumSet(int(1), int(2), int(3)) ? "I").typed(types, "b")
 
     val state = new SymbState(eq123, arena, Binding())
@@ -87,7 +87,7 @@ trait TestSymbStateRewriterApalacheGen extends RewriterBase {
   }
 
   test("""Gen(3) = { }""") { rewriterType: SMTEncoding =>
-    val gen = OperEx(ApalacheOper.gen, int(3).typed())(Typed(SetT1(IntT1())))
+    val gen = OperEx(ApalacheOper.gen, int(3).typed())(Typed(SetT1(IntT1)))
     val eq123 = eql(gen, enumSet() ? "I").typed(types, "b")
 
     val state = new SymbState(eq123, arena, Binding())
@@ -114,7 +114,7 @@ trait TestSymbStateRewriterApalacheGen extends RewriterBase {
   test("""Gen(3) for { i: Int, b: Bool }""") { rewriterType: SMTEncoding =>
     val recordT = parser("{ i: Int, b: Bool }")
     val gen = OperEx(ApalacheOper.gen, int(3).typed())(Typed(recordT))
-    val i_eq_10 = eql(appFun(gen, str("i")).as(IntT1()), int(10)).as(BoolT1())
+    val i_eq_10 = eql(appFun(gen, str("i")).as(IntT1), int(10)).as(BoolT1)
 
     val state = new SymbState(i_eq_10, arena, Binding())
     val rewriter = create(rewriterType)
@@ -125,7 +125,7 @@ trait TestSymbStateRewriterApalacheGen extends RewriterBase {
   }
 
   test("""Gen(3) for <<Int, Bool>>""") { rewriterType: SMTEncoding =>
-    val tupleType = TupT1(IntT1(), BoolT1())
+    val tupleType = TupT1(IntT1, BoolT1)
     val gen = OperEx(ApalacheOper.gen, int(3).typed())(Typed(tupleType))
     val i_eq_10 = eql(appFun(gen, int(1)) ? "i", int(10)).typed(types, "b")
 
@@ -138,7 +138,7 @@ trait TestSymbStateRewriterApalacheGen extends RewriterBase {
   }
 
   test("""Gen(4) for Int -> Bool""") { rewriterType: SMTEncoding =>
-    val funType = FunT1(IntT1(), BoolT1())
+    val funType = FunT1(IntT1, BoolT1)
     val gen = OperEx(ApalacheOper.gen, int(4).typed())(Typed(funType))
 
     val state = new SymbState(gen, arena, Binding())
@@ -160,7 +160,7 @@ trait TestSymbStateRewriterApalacheGen extends RewriterBase {
   }
 
   test("""Gen(4) for Seq(Bool)""") { rewriterType: SMTEncoding =>
-    val seqType = SeqT1(BoolT1())
+    val seqType = SeqT1(BoolT1)
     val gen = OperEx(ApalacheOper.gen, int(4).typed())(Typed(seqType))
 
     val state = new SymbState(gen, arena, Binding())

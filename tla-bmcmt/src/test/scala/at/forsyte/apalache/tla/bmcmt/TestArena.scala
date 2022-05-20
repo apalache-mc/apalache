@@ -17,15 +17,15 @@ trait TestArena extends AnyFunSuite {
     val arena = emptyArena.appendCellOld(UnknownT())
     assert(emptyArena.cellCount + 1 == arena.cellCount)
     assert(UnknownT() == arena.topCell.cellType)
-    val arena2 = arena.appendCell(BoolT1())
+    val arena2 = arena.appendCell(BoolT1)
     assert(emptyArena.cellCount + 2 == arena2.cellCount)
-    assert(BoolT1() == arena2.topCell.cellType.toTlaType1)
+    assert(BoolT1 == arena2.topCell.cellType.toTlaType1)
   }
 
   test("add 'has' edges") {
-    val arena = Arena.create(solver).appendCell(SetT1(IntT1()))
+    val arena = Arena.create(solver).appendCell(SetT1(IntT1))
     val set = arena.topCell
-    val arena2 = arena.appendCell(BoolT1())
+    val arena2 = arena.appendCell(BoolT1)
     val elem = arena2.topCell
     val arena3 = arena2.appendHas(set, elem)
     assert(List(elem) == arena3.getHas(set))

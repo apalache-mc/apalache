@@ -42,7 +42,7 @@ object ModelValueHandler {
    * regular string.
    */
   def modelValueOrString(s: String): TlaType1 = {
-    typeAndIndex(s).map(_._1).getOrElse(StrT1())
+    typeAndIndex(s).map(_._1).getOrElse(StrT1)
   }
 
   /**
