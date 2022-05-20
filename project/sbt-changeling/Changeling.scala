@@ -138,7 +138,6 @@ object ChangelingPlugin extends AutoPlugin {
       changelingKinds := Seq(
           "Breaking changes",
           "Features",
-          "Improvements",
           "Bug fixes",
           "Documentation",
       ),
