@@ -355,7 +355,7 @@ The CI configuration is located in
 
 ### Structure
 
-[./.unreleased](./.unreleased)
+[./.unreleased/](./.unreleased/)
 : A living record of the changes not yet released. It contains subdirectories
   for each of the kinds of changes we note in our change.
 
