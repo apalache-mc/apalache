@@ -45,7 +45,7 @@ fi
 git checkout -b "release/${RELEASE_VERSION}"
 
 # Generate the release notes
-RELEASE_VERSION=$RELEASE_VERSION "$DIR"/release-notes.sh
+sbt changelingReleaseNotes
 
 # Make the release commit
 commit_msg="[release] ${RELEASE_VERSION}"
@@ -60,10 +60,13 @@ else
     body=''
 fi
 
-body=$(cat "$RELEASE_NOTES")
-
 # Bump the version
 "$DIR"/version-bump.sh
+
+# Commit the updated version and changelog
+DEV_VERSION=$("$DIR"/get-version.sh)
+git add --update
+git commit -m "Bump version to ${DEV_VERSION}"
 
 instructions="
 # Reviewer instructions
