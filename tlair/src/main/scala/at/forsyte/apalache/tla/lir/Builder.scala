@@ -712,11 +712,10 @@ class Builder {
   def matchTag(
       tagName: String,
       variantEx: BuilderEx,
-      thenOper: TlaOperDecl,
-      elseOper: TlaOperDecl): BuilderEx = {
+      thenOper: BuilderEx,
+      elseOper: BuilderEx): BuilderEx = {
     // Although we are passing thenOper and elseOper by name, we should be careful about propagating their type tags
-    BuilderOper(VariantOper.matchTag, str(tagName), variantEx, fromTlaEx(NameEx(thenOper.name)(thenOper.typeTag)),
-        fromTlaEx(NameEx(elseOper.name)(elseOper.typeTag)))
+    BuilderOper(VariantOper.matchTag, str(tagName), variantEx, thenOper, elseOper)
   }
 
   /**

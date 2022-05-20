@@ -3,14 +3,17 @@ package at.forsyte.apalache.tla.typecheck.etc
 import at.forsyte.apalache.io.annotations.StandardAnnotations
 import at.forsyte.apalache.io.annotations.store.{createAnnotationStore, AnnotationStore}
 import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
+import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{ApalacheInternalOper, ApalacheOper, TlaFunOper}
+import at.forsyte.apalache.tla.lir.oper.{ApalacheInternalOper, ApalacheOper, TlaFunOper, VariantOper}
 import at.forsyte.apalache.tla.lir.values.TlaReal
+import at.forsyte.apalache.tla.typecheck.TypingInputException
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should
 import org.scalatestplus.junit.JUnitRunner
 
 import scala.annotation.nowarn
@@ -22,7 +25,7 @@ import scala.annotation.nowarn
  *   Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
-class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with ToEtcExprBase {
+class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with ToEtcExprBase with should.Matchers {
   private var parser: Type1Parser = _
   private var annotationStore: AnnotationStore = _
   private var gen: ToEtcExpr = _
@@ -352,11 +355,53 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with ToEtcExprBa
   }
 
   test("[f1 |-> TRUE, f2 |-> 1]") {
-    // here we have simply the record type
+    // here we have simply use the record type
     val funOperType = parser("(a, b) => [f1: a, f2: b]")
     val expected = mkConstAppByType(funOperType, BoolT1(), IntT1())
     val rec = tla.enumFun(tla.str("f1"), tla.bool(true), tla.str("f2"), tla.int(1))
     assert(expected == gen(rec))
+  }
+
+  test("""Variant("1a", r)""") {
+    val ctorType = parser("""(Str, { a }) => { tag: "1a", a } | b""")
+    val expected = mkUniqApp(Seq(ctorType), mkUniqConst(StrT1()), mkUniqName("r"))
+    val variant = tla.variant("1a", tla.name("r"))
+    val produced = gen(variant)
+    produced should equal(expected)
+  }
+
+  test("""Variant(foo, r)""") {
+    val variant = OperEx(VariantOper.variant, tla.name("foo"), tla.name("r"))
+    assertThrows[TypingInputException] {
+      gen(variant)
+    }
+  }
+
+  test("""FilterByTag("1a", set)""") {
+    val operType = parser("""(Str, Set({ tag: "1a", a } | b)) => Set({ a })""")
+    val expected = mkUniqApp(Seq(operType), mkUniqConst(StrT1()), mkUniqName("set"))
+    val filterEx = tla.filterByTag("1a", tla.name("set"))
+    val produced = gen(filterEx)
+    produced should equal(expected)
+  }
+
+  test("""FilterByTag(foo, set)""") {
+    val filterEx = OperEx(VariantOper.filterByTag, tla.name("foo"), tla.name("set"))
+    assertThrows[TypingInputException] {
+      gen(filterEx)
+    }
+  }
+
+  test("""MatchTag("1a", v, ThenOper, ElseOper)""") {
+    val thenType = parser("{ a } => c")
+    val elseType = parser("Variant(b) => c")
+    val operType = parser(s"""(Str, { tag: "1a", a } | b, $thenType, $elseType) => c""")
+    val expected =
+      mkUniqApp(Seq(operType), mkUniqConst(StrT1()), mkUniqName("v"), mkUniqName("ThenOper"), mkUniqName("ElseOper"))
+    val matchEx =
+      tla.matchTag("1a", tla.name("set"), tla.name("ThenOper").as(thenType), tla.name("ElseOper").as(elseType))
+    val produced = gen(matchEx)
+    produced should equal(expected)
   }
 
   test("<<1, 2>>") {

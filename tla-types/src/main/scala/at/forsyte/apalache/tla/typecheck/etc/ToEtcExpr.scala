@@ -3,9 +3,9 @@ package at.forsyte.apalache.tla.typecheck.etc
 import at.forsyte.apalache.io.annotations.store.{findAnnotation, AnnotationStore}
 import at.forsyte.apalache.io.annotations.{Annotation, AnnotationStr, StandardAnnotations}
 import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1ParseError}
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
-import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecheck._
 import com.typesafe.scalalogging.LazyLogging
 
@@ -762,6 +762,32 @@ class ToEtcExpr(
         val a = varPool.fresh
         val opsig = OperT1(Seq(a, BoolT1()), BoolT1()) // (a, Bool) => Bool
         mkExRefApp(opsig, Seq(sub, act))
+
+      // ******************************************** Variants **************************************************
+      case OperEx(VariantOper.variant, v @ ValEx(TlaStr(tagName)), valueEx) =>
+        val a = varPool.fresh
+        val b = varPool.fresh
+        // (Str, { a }) => { tag: "1a", a } | b
+        val opsig =
+          OperT1(Seq(StrT1(), RecRowT1(RowT1(a))), VariantT1(RowT1(b, tagName -> RecRowT1(RowT1(a, "tag" -> StrT1())))))
+        // For some reason, we required the field tag: Str to be present in the value type. We should revisit this.
+        mkExRefApp(opsig, Seq(v, valueEx))
+
+      case ex @ OperEx(VariantOper.variant, tag @ _, _) =>
+        throw new TypingInputException(s"The second argument of Variant must be a string, found: $tag", ex.ID)
+
+      case OperEx(VariantOper.filterByTag, v @ ValEx(TlaStr(tagName)), setEx) =>
+        val a = varPool.fresh
+        val b = varPool.fresh
+        // (Str, Set({ tag: "1a", a } | b)) => Set({ a })
+        val opsig =
+          OperT1(Seq(StrT1(), SetT1(VariantT1(RowT1(b, tagName -> RecRowT1(RowT1(a, "tag" -> StrT1())))))),
+              SetT1(RecRowT1(RowT1(a))))
+        // For some reason, we required the field tag: Str to be present in the value type. We should revisit this.
+        mkExRefApp(opsig, Seq(v, setEx))
+
+      case ex @ OperEx(VariantOper.filterByTag, tag @ _, _) =>
+        throw new TypingInputException(s"The second argument of FilterByTag must be a string, found: $tag", ex.ID)
 
       // ******************************************** Apalache **************************************************
       case OperEx(ApalacheOper.`mkSeq`, len, ctor) =>
