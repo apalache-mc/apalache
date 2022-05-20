@@ -400,6 +400,17 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with ToEtcExprBa
     assert(gen(access).explain(List(), List()).isDefined)
   }
 
+  test("""f["1_OF_A"]""") {
+    // it should always be a function, because A is an uninterpreted type
+    val fun = Seq(parser("((A -> a), A) => a"))
+    val expected = mkUniqApp(fun, mkUniqName("f"), mkUniqConst(ConstT1("A")))
+    val access = tla.appFun(tla.name("f"), tla.str("1_OF_A"))
+    assert(expected == gen(access))
+
+    // Has custom type error message
+    assert(gen(access).explain(List(), List()).isDefined)
+  }
+
   test("DOMAIN f") {
     // DOMAIN is applied to one of the four objects: a function, a sequence, a record, or a sparse tuple
     val types = Seq(parser("(a -> b) => Set(a)"), parser("Seq(c) => Set(Int)"), parser("[] => Set(Str)"),
