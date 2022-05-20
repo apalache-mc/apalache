@@ -379,7 +379,7 @@ each markdown file notes one change.
 As an example, if your PR introduces the new feature `Foo`, your note should be
 added in a file `.unreleased/features/foo.md` with content along the lines of
 
-```markdonw
+```markdown
 Added feature Foo, see #123
 ```
 
