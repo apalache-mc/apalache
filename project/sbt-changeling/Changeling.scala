@@ -166,8 +166,8 @@ object ChangelingPlugin extends AutoPlugin {
             changelingUnreleasedDir.value,
         )
         Changeling.ensureDirStructureExists(
-          changelingUnreleasedDir.value,
-          changelingKinds.value
+            changelingUnreleasedDir.value,
+            changelingKinds.value,
         )
         changelingChangelogFile.value
       },
@@ -259,7 +259,7 @@ object Changeling {
                       | """.stripMargin
 
     val changelogContent = IO.readLines(changelog) match {
-      case Nil => Nil
+      case Nil     => Nil
       case l :: ls =>
         // Drop the preamble, it is present
         if (l.contains("NOTE: This file is generated")) {
