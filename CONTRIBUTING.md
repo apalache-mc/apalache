@@ -356,12 +356,12 @@ The CI configuration is located in
 ### Structure
 
 [./.unreleased/](./.unreleased/)
-: A living record of the changes not yet released. It contains subdirectories
-  for each of the kinds of changes we note in our change.
+: A living record of the changes not yet released. It contains a subdirectory
+  for each supported category of change.
 
 [./RELEASE.md](./RELEASE.md)
 : A frozen record documenting the changes added since the last release. This is
-  only present in release-commits.
+  only present in release commits.
 
 [./CHANGES.md](./CHANGES.md)
 : The changelog accumulating the history of all the changes, across all
@@ -370,29 +370,29 @@ The CI configuration is located in
 ### Recording changes
 
 Every PR introducing changes that are likely to impact the observable behavior
-of Apalache MUST add entries into the appropriate [.unreleased](./.unreleased)
-directory.
+of Apalache MUST add at least one entry into the appropriate subdirectory of
+[.unreleased/](./.unreleased/).
 
-An entry is made via a markdown file placed in the appropriate directory and
-each markdown file notes one change.
+An single entry is made by creating a single markdown file in the appropriate
+directory. To enter `n` distinct changes, create `n` different markdown files.
 
-As an example, if your PR introduces the new feature `Foo`, your note should be
-added in a file `.unreleased/features/foo.md` with content along the lines of
+As an example, if your PR introduces the new feature `Foo`, you would add a file
+`.unreleased/features/foo.md` with content along the lines of
 
 ```markdown
 Added feature Foo, see #123
 ```
 
-Where `#123` is the ID of the issue or pull request that best explains the
+where `#123` is the ID of the issue or pull request that best explains the
 motive and nature of the change.
 
-The file name is ignored, but you can use the lexicographical ordering of the
-file names in a directory it determine the order in which the changes will be
-listed, when that matters.
+The file name is generally irrelevant, but if the order of changelog entries
+matters, you can use the lexicographical ordering of file names in a directory
+to enforce it
 
 The contents of each file will be converted into a single bullet point item in
 the release notes under a heading corresponding to the sub-directory. E.g., the
-above example will up included in the changelog for the next release as:
+above example will be included in the changelog for the next release as:
 
 ```markdown
 
