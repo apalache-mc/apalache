@@ -103,6 +103,18 @@ class ModelCheckerParams(
    */
   var smtEncoding: SMTEncoding = oopsla19Encoding
 
+  /**
+   * Is random simulation mode enabled.
+   */
+  val isRandomSimulation: Boolean =
+    tuningOptions.getOrElse("search.simulation", "false").toBoolean
+
+  /**
+   * The number of random simulation runs to try.
+   */
+  val nSimulationRuns: Int =
+    tuningOptions.getOrElse("search.simulation.maxRun", "100").toInt
+
   // does the transition number satisfy the given filter at the given step?
   def stepMatchesFilter(stepNo: Int, transitionNo: Int): Boolean = {
     if (transitionFilter.length <= stepNo) {
