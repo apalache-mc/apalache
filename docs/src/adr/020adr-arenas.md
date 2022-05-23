@@ -16,7 +16,7 @@ last revised: 2022-05-16
 ## Summary
 
 We discuss an extension of membership edges in arenas. The main application of
-this extension would be a more efficient implementation of powersets and a
+this extension is a more efficient implementation of powersets and
 functions sets. Potentially, this extension will let us optimize the number of
 SMT constraints and thus improve performance of the model checker in general.
 
@@ -28,8 +28,7 @@ TLA+ specification. Arenas are explained in detail in [KKT19][]. Here we give a
 very short recap. In a nutshell, all basic values of TLA+ (such as integers,
 strings, and Booleans) and data structures (sets, functions, records, tuples,
 and sequences) are translated into *cells*. Cells are SMT constants, which can
-be connected to other cells. Cells are connected with one another by the means
-of edges. Currently, we have three kinds of edges:
+be connected to other cells by *edges*. Currently, we have three kinds of edges:
 
  - **has**. A membership edge `(c_p, c_e)` represents that a parent cell `c_p`
    potentially contains an element `c_e` (e.g., if `c_p` represents a set).
@@ -47,7 +46,7 @@ of edges. Currently, we have three kinds of edges:
    **dom** and **cdm**, though the **cdm** edge points to the function
    relation, not its co-domain. This should be fixed!*
 
-Having the edges of kinds **dom** and **cdm** happened to be two inflexible.
+Having the edges of kinds **dom** and **cdm** happened to be too inflexible.
 As we explained above, sometimes we would like to have another edge kind called
 **rel**. As these edges are many-to-one, we can map them from their kinds `kind
 -> (c_p, c_e)`. This requires simple refactoring, so we are not going to
@@ -63,10 +62,9 @@ summarize the issues with the current implementation of this kind of edges:
    share edges. This causes unnecessary duplication of SMT constants and
    constraints.
 
- - Later, we stopped introducing Boolean constants in SMT for the **has**-edges
-   when translating records and tuples. However, we do not record the fact that
+ - Later, when translating records and tuples, we stopped introducing Boolean constants in SMT for the **has**-edges. However, we do not record the fact that
    these edges are presented only in the arena, not in SMT. Hence, we have to
-   be careful and do not use the SMT membership when working with these edges.
+   be careful and avoid expressing membership in SMT when working with these edges.
 
  - As every **has**-edge directly refers to its parent in the edge name (that
    is, `in_${c_e.id}_${c_S.id}`), we cannot share edges when encoding `SUBSET
@@ -80,7 +78,7 @@ summarize the issues with the current implementation of this kind of edges:
 
  - Keep things as they are.
 
- - Extend the edges.
+ - Implement the extension of membership edges presented below.
 
 
 ## 3. Solution
@@ -132,7 +130,7 @@ case class FixedElemPtr(elem: ArenaCell, value: Boolean) extends ElemPtr {
 ```
 
 Instances of `FixedElemPtr` may be used in cases, when the membership is
-statically known. For instance, set membership for the sets `{ 1, 2, 3}` and
+statically known. For instance, set membership for the sets `{1, 2, 3}` and
 `1..100` is static (always `true`) and thus it does not require any additional
 variables and constraints in SMT. The same applies to records and tuples.
 
@@ -160,7 +158,7 @@ case class SmtConstElemPtr(elem: ArenaCell, id: UID) extends ElemPtr {
 Instances of `SmtConstElemPtr` may be used in cases, when set membership can be
 encoded via a Boolean constant. Typically, this is needed when the membership
 is either to be defined by the solver, or when this constant caches a complex
-SMT constraint. For instance, it can be used `CherryPick`.
+SMT constraint. For instance, it can be used by `CherryPick`.
 
 The most general case is represented via an SMT expression, which is encoded in
 TLA+ IR:
@@ -239,7 +237,7 @@ keeping the general spirit of the arena-based encoding.
 
 ### 3.3. Optimization 2: sharing membership in a powerset
 
-Consider the TLA+ operator that construct the powerset of `S`, that is, the set
+Consider the TLA+ operator that constructs the powerset of `S`, that is, the set
 of all subsets of `S`:
 
 ```tla
@@ -248,7 +246,7 @@ SUBSET S
 
 Let `c_S` be the cell that represents the set `S` and `c_1, ..., c_n` be the
 cells that represent the potential elements of `S`. Note that in general,
-membership of all these cells may be unknown in static. For example, consider
+membership of all these cells may be statically unknown. For example, consider
 the case when the set `S` is constructed from the following TLA+ expression:
 
 ```tla
@@ -267,8 +265,7 @@ subsets of `S`. The tricky part here is that some of the elements of `S` may be
 outside of `S`. To deal with that, `PowSetCtor` constructs cells for each
 potential combinations of `c_1, ..., c_n` and adds membership tests for each of
 them. For instance, consider the subset `T` that is constructed by selecting the
-indices `1, 3, 5` of `1..n`. The constructor will introduce `3`
-constraints:
+indices `1, 3, 5` of `1..n`. The constructor will introduce three constraints:
 
 ```smt
 (= in_c_1_T in_c_1_S)
@@ -289,12 +286,11 @@ pointers in the arena. But this would be done during the process of rewriting.
 ### 3.4. Feature: computing the set of functions via pointer sharing
 
 Sometimes, it happens that the model checker has to expand a set of functions
-`[S -> T]`. Such a set contains `|T|^|S|` functions. Since the model checker is
-working with arenas, it can only construct an arena representation of `[S ->
+`[S -> T]`. Such a set contains `|T|^|S|` functions. Since the model checker works with arenas, it can only construct an arena representation of `[S ->
 T]`. To this end, assume that the set `S` is encoded via cells `s_1, ..., s_m`,
 and the set `T` is encoded via cells `t_1, ..., t_n`.
 
-Had we constructed `[S -> T]` in the current encoding, we would have to
+If we wanted to construct `[S -> T]` in the current encoding, we would have to
 introduce a relation for each function in the set `[S -> T]`. That is, for
 every sequence `i[1], ..., i[n]` over `1..n`, it would construct the relation
 `R`:
