@@ -24,3 +24,4 @@
  
  * Fix potential non-determinism when picking from `[S -> T]`, see #1753
  * Fix the bug in uninterpreted types, see #1792
+ * Fix usage of infinite sets in the arrays encoding, see #1802
