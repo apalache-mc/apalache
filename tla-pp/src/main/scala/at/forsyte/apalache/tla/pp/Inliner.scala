@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.storage.BodyMap
 import at.forsyte.apalache.tla.lir.transformations.standard.{
   DeclarationSorter, DeepCopy, IncrementalRenaming, ReplaceFixed,
 }
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.{decorateWithPrime, TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.pp.Inliner.{DeclFilter, FilterFun}
 import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier, TypeVarPool}
 
@@ -70,6 +70,15 @@ class Inliner(
           // Finally, store the declaration in the list if necessary
           if (operDeclFilter(newDecl)) (newScope, decls :+ newDecl)
           else (newScope, decls)
+        // For theorems and assumptions, just apply tx, no scope modifications
+        case theoremDecl: TlaTheoremDecl =>
+          val newBody = transform(scope)(theoremDecl.body)
+          val newDecl = tracker.trackDecl { _ => theoremDecl.copy(body = newBody)(theoremDecl.typeTag) }(theoremDecl)
+          (scope, decls :+ newDecl)
+        case assumeDecl: TlaAssumeDecl =>
+          val newBody = transform(scope)(assumeDecl.body)
+          val newDecl = tracker.trackDecl { _ => assumeDecl.copy(body = newBody)(assumeDecl.typeTag) }(assumeDecl)
+          (scope, decls :+ newDecl)
         case _ => (scope, decls :+ decl)
       }
     }
