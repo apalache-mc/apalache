@@ -8,7 +8,6 @@ import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.pp.temporal.ScopedBuilderExtensions._
 import at.forsyte.apalache.tla.pp.temporal.DeclUtils._
 import at.forsyte.apalache.tla.pp.temporal.utils.builder
-import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 
 /**
@@ -25,7 +24,7 @@ import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
  *   Philip Offtermatt
  */
 @Singleton
-class LoopEncoder(gen: UniqueNameGenerator, tracker: TransformationTracker) extends LazyLogging {
+class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
   import LoopEncoder.NAME_PREFIX
 
   val boolTag = Typed(BoolT1)

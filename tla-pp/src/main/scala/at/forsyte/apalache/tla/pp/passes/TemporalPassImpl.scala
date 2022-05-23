@@ -3,14 +3,12 @@ package at.forsyte.apalache.tla.pp.passes
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import at.forsyte.apalache.io.lir.TlaWriterFactory
-import at.forsyte.apalache.tla.pp.temporal.{LoopEncoder, ModWithPreds, TableauEncoder}
+import at.forsyte.apalache.tla.pp.temporal.{LoopEncoder, TableauEncoder}
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.pp.TlaInputError
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
-import at.forsyte.apalache.tla.lir.transformations.standard.Flatten
-import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 
@@ -116,7 +114,7 @@ class TemporalPassImpl @Inject() (
           throw new TlaInputError(message)
       }
 
-      val loopEncoder = new LoopEncoder(gen, tracker)
+      val loopEncoder = new LoopEncoder(tracker)
 
       val loopModWithPreds =
         loopEncoder.addLoopLogic(module, initDecl, nextDecl)
