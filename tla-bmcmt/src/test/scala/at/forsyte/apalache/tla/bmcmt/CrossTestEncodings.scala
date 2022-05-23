@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory
  *
  * {{{
  * ------ MODULE Oracle --------
+ * EXTENDS Apalache, Integers
  * VARIABLES
  *   \* @type: ${witnessType};
  *   witness,
@@ -54,6 +55,7 @@ import org.slf4j.LoggerFactory
  *
  * {{{
  * ------ MODULE Verifier --------
+ * EXTENDS Apalache, Integers
  * VARIABLES
  *   \* @type: ${witnessType};
  *   result,
@@ -199,6 +201,7 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
 
   private def formatOracleSpec(witnessType: TlaType1, witnesses: TlaEx): String = {
     s"""------ MODULE Oracle --------
+      |EXTENDS Apalache, Integers
       |VARIABLES
       |  \\* @type: ${witnessType};
       |  witness,
@@ -220,6 +223,7 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
 
   def formatVerifierSpec(witnessType: TlaType1, witnesses: TlaEx, witness: TlaEx): String = {
     s"""------ MODULE Verifier --------
+      |EXTENDS Apalache, Integers
       |VARIABLES
       |  \\* @type: ${witnessType};
       |  result,
