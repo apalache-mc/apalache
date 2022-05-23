@@ -65,9 +65,11 @@ package object typecomp {
   implicit def liftBuildToSeq[T](wrapCollection: Seq[TBuilderInternalState[T]]): Seq[T] =
     wrapCollection.map(build)
 
-  // Since some operators are polyadic, we parameterize signatures for the same operator by the # or arguments */
-  /** A signature, if it exists, is as a function from domain types to either a codomain type or an exception. */
-  type Signature = Seq[TlaType1] => TypeComputationResult
+  /**
+   * A signature, if it exists, is as a function from domain types to either a codomain type or an exception (i.e. a
+   * [[PureTypeComputation]]).
+   */
+  type Signature = PureTypeComputation
 
   /** A signature that is defined as a partial function. */
   type PartialSignature = PartialFunction[Seq[TlaType1], TypeComputationResult]
