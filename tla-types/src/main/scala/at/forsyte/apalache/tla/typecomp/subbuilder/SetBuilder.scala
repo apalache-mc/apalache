@@ -62,7 +62,7 @@ trait SetBuilder extends UnsafeSetBuilder {
   }
 
   /**
-   * Alternate call method, where pairs are passed mixed
+   * Alternate call method, where pairs are passed interleaved
    *
    * @see
    *   map[[mapMixed(e: TBuilderInstruction, varSetPairs: (TBuilderInstruction, TBuilderInstruction)*)]]
@@ -100,7 +100,7 @@ trait SetBuilder extends UnsafeSetBuilder {
     } yield _recSet(ks.zip(vs): _*)
 
   /**
-   * Alternate call method, where paris are passed mixed.
+   * Alternate call method, where pairs are passed interleaved.
    *
    * @see
    *   recSet[[recSet(kvs: (String, TBuilderInstruction)*)]]

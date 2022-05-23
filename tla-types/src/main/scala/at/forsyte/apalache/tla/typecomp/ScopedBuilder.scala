@@ -34,7 +34,7 @@ import scalaz.Scalaz._
  */
 class ScopedBuilder
     extends BaseBuilder with BoolBuilder with ArithmeticBuilder with SetBuilder with SeqBuilder with ActionBuilder
-    with LiteralAndNameBuilder {
+    with ControlBuilder with LiteralAndNameBuilder {
 
   /**
    * Creates a `TBuilderInstruction` from a precomputed `TlaEx`. Voids correctness guarantees.

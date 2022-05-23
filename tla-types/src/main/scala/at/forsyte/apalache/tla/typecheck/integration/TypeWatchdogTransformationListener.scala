@@ -12,7 +12,7 @@ import at.forsyte.apalache.tla.lir.{TlaDecl, TlaEx, TlaType1, Typed, TypingExcep
 class TypeWatchdogTransformationListener extends TransformationListener {
   override def onTransformation(originalEx: TlaEx, newEx: TlaEx): Unit = {
     (originalEx.typeTag, newEx.typeTag) match {
-      case (Typed(_: TlaType1), Untyped()) =>
+      case (Typed(_: TlaType1), Untyped) =>
         throw new TypingException(
             s"A typed expression ${originalEx.ID} was transformed to an untyped expression ${newEx.ID}", newEx.ID)
 
@@ -22,7 +22,7 @@ class TypeWatchdogTransformationListener extends TransformationListener {
 
   override def onDeclTransformation(originalDecl: TlaDecl, newDecl: TlaDecl): Unit = {
     (originalDecl.typeTag, newDecl.typeTag) match {
-      case (Typed(_: TlaType1), Untyped()) =>
+      case (Typed(_: TlaType1), Untyped) =>
         throw new TypingException(
             s"A typed declaration ${originalDecl.name} was transformed to an untyped expression ${newDecl.name}",
             newDecl.ID)

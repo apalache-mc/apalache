@@ -14,14 +14,15 @@ import at.forsyte.apalache.tla.typecomp.signatures._
 class TypeComputationFactory {
 
   private val baseOperMap: SignatureMap = BaseOperSignatures.getMap
-  private val aritOperMap: SignatureMap = ArithOperSignatures.getMap
+  private val arithOperMap: SignatureMap = ArithOperSignatures.getMap
   private val boolOperMap: SignatureMap = BoolOperSignatures.getMap
   private val setOperMap: SignatureMap = SetOperSignatures.getMap
   private val seqOperMap: SignatureMap = SeqOperSignatures.getMap
   private val actionOperMap: SignatureMap = ActionOperSignatures.getMap
+  private val controlOperMap: SignatureMap = ControlOperSignatures.getMap
 
   private val knownSignatures: SignatureMap =
-    baseOperMap ++ aritOperMap ++ boolOperMap ++ setOperMap ++ seqOperMap ++ actionOperMap
+    baseOperMap ++ arithOperMap ++ boolOperMap ++ setOperMap ++ seqOperMap ++ actionOperMap ++ controlOperMap
 
   /** Given an operator with a known signature, constructs a pure type computation for its return type */
   def computationFromSignature(oper: TlaOper): PureTypeComputation = { args =>

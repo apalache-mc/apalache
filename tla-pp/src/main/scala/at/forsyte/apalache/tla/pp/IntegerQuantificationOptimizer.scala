@@ -15,7 +15,7 @@ import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaIntSet, TlaNatSet}
  *   - If `S` is `a..b`, `T` is `a <= x <= b`
  *
  * This is the only place we support unbounded quantification, as we can leverage the type annotation of `x` (which
- * should be IntT1()). We can then introduce a special rewriting rule for this quantification form.
+ * should be IntT1). We can then introduce a special rewriting rule for this quantification form.
  *
  * @author
  *   Jure Kukovec
@@ -23,8 +23,8 @@ import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaIntSet, TlaNatSet}
 
 class IntegerQuantificationOptimizer(tracker: TransformationTracker) extends TlaExTransformation {
 
-  private val intTag = Typed(IntT1())
-  private val boolTag = Typed(BoolT1())
+  private val intTag = Typed(IntT1)
+  private val boolTag = Typed(BoolT1)
 
   override def apply(expr: TlaEx): TlaEx = {
     transform(expr)
@@ -44,7 +44,7 @@ class IntegerQuantificationOptimizer(tracker: TransformationTracker) extends Tla
 
   // name >= 0
   private def ge0(name: String): TlaEx =
-    OperEx(TlaArithOper.ge, NameEx(name)(intTag), ValEx(TlaInt(0))(intTag))(Typed(BoolT1()))
+    OperEx(TlaArithOper.ge, NameEx(name)(intTag), ValEx(TlaInt(0))(intTag))(Typed(BoolT1))
 
   // lowerBound <= name <= lowerBound
   private def inRange(name: String, lowerBound: TlaEx, upperBound: TlaEx): TlaEx = {

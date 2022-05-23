@@ -30,18 +30,18 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
   }
 
   def decodeCellToTlaEx(arena: Arena, cell: ArenaCell): TlaEx = cell.cellType match {
-    case CellTFrom(BoolT1()) =>
-      solverContext.evalGroundExpr(cell.toNameEx).withTag(Typed(BoolT1()))
+    case CellTFrom(BoolT1) =>
+      solverContext.evalGroundExpr(cell.toNameEx).withTag(Typed(BoolT1))
 
-    case CellTFrom(IntT1()) =>
-      solverContext.evalGroundExpr(cell.toNameEx).withTag(Typed(IntT1()))
+    case CellTFrom(IntT1) =>
+      solverContext.evalGroundExpr(cell.toNameEx).withTag(Typed(IntT1))
 
-    case tt @ (CellTFrom(ConstT1(_)) | CellTFrom(StrT1())) =>
+    case tt @ (CellTFrom(ConstT1(_)) | CellTFrom(StrT1)) =>
       // First, attempt to check the cache
       val found = rewriter.modelValueCache.findKey(cell)
       if (found.isDefined) {
         val pa @ (_, index) = found.get
-        if (tt == CellTFrom(StrT1())) {
+        if (tt == CellTFrom(StrT1)) {
           tla.str(index).typed()
         } else {
           tla.str(ModelValueHandler.construct(pa)).typed()
@@ -69,7 +69,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       def inSet(e: ArenaCell) = {
         val mem = tla
           .apalacheSelectInSet(fromTlaEx(e.toNameEx).as(elemT), fromTlaEx(cell.toNameEx).as(setT1))
-          .typed(BoolT1())
+          .typed(BoolT1)
         solverContext.evalGroundExpr(mem) == tla.bool(true).typed()
       }
 
@@ -123,10 +123,10 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       tla.powSet(baseset).typed(SetT1(TlaType1.fromTypeTag(baseset.typeTag)))
 
     case InfSetT(_) if cell == arena.cellIntSet() =>
-      tla.intSet().typed(SetT1(IntT1()))
+      tla.intSet().typed(SetT1(IntT1))
 
     case InfSetT(_) if cell == arena.cellNatSet() =>
-      tla.natSet().typed(SetT1(IntT1()))
+      tla.natSet().typed(SetT1(IntT1))
 
     case _ =>
       throw new RewriterException("Don't know how to decode the cell %s of type %s".format(cell, cell.cellType), NullEx)
@@ -190,20 +190,20 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
           def inDom(elem: ArenaCell): TlaEx = {
             val elemEx = fromTlaEx(elem.toNameEx).typed(argT)
             val domEx = fromTlaEx(domain.toNameEx).typed(SetT1(argT))
-            tla.apalacheSelectInSet(elemEx, domEx).typed(BoolT1())
+            tla.apalacheSelectInSet(elemEx, domEx).typed(BoolT1)
           }
 
           // check if the pair's head is in the domain
           val funArgs = arena.getHas(pair).head
-          val argsInDom = inDom(funArgs).typed(BoolT1())
-          solverContext.evalGroundExpr(argsInDom) == tla.bool(true).typed(BoolT1())
+          val argsInDom = inDom(funArgs).typed(BoolT1)
+          solverContext.evalGroundExpr(argsInDom) == tla.bool(true).typed(BoolT1)
 
         case `oopsla19Encoding` =>
           val mem =
             tla
               .apalacheSelectInSet(pair.toNameEx.as(argT), relation.toNameEx.as(TupT1(argT, resT)))
-              .as(BoolT1())
-          solverContext.evalGroundExpr(mem) == tla.bool(true).typed(BoolT1())
+              .as(BoolT1)
+          solverContext.evalGroundExpr(mem) == tla.bool(true).typed(BoolT1)
 
         case oddEncodingType =>
           throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")

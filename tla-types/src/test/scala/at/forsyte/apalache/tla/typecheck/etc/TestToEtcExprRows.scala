@@ -47,7 +47,7 @@ class TestToEtcExprRows extends AnyFunSuite with BeforeAndAfterEach with ToEtcEx
   test("[f1 |-> TRUE, f2 |-> 1]") {
     // here we have simply the record type
     val funOperType = parser("(a, b) => { f1: a, f2: b }")
-    val expected = mkConstAppByType(funOperType, BoolT1(), IntT1())
+    val expected = mkConstAppByType(funOperType, BoolT1, IntT1)
     val rec = tla.enumFun(tla.str("f1"), tla.bool(true), tla.str("f2"), tla.int(1))
     assert(expected == gen(rec))
   }
@@ -55,7 +55,7 @@ class TestToEtcExprRows extends AnyFunSuite with BeforeAndAfterEach with ToEtcEx
   test("""f["foo"]""") {
     // either a function, or a record
     val funOrReq = Seq(parser("((Str -> a), Str) => a"), parser("({ foo: a, b }, Str) => a"))
-    val expected = mkUniqApp(funOrReq, mkUniqName("f"), mkUniqConst(StrT1()))
+    val expected = mkUniqApp(funOrReq, mkUniqName("f"), mkUniqConst(StrT1))
     val access = tla.appFun(tla.name("f"), tla.str("foo"))
     assert(expected == gen(access))
 
@@ -78,7 +78,7 @@ class TestToEtcExprRows extends AnyFunSuite with BeforeAndAfterEach with ToEtcEx
     val ex = tla.except(tla.name("f"), tla.tuple(tla.str("foo")), tla.name("e2"))
 
     val types = Seq(parser("(Str, a) => (Str -> a)"), parser("(Str, a) => { foo: a, b }"))
-    val tower = mkUniqApp(types, mkUniqConst(StrT1()), mkUniqName("e2"))
+    val tower = mkUniqApp(types, mkUniqConst(StrT1), mkUniqName("e2"))
     val expected = mkUniqApp(Seq(parser("(c, c) => c")), mkUniqName("f"), tower)
     assert(expected == gen(ex))
   }

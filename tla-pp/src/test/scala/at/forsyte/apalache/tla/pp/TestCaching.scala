@@ -24,7 +24,7 @@ class TestCaching extends AnyFunSuite with BeforeAndAfterEach with TestingPredef
         tla.plus(
             tla.appOp(n_A, tla.minus(name("p"), tla.int(1))),
             tla.appOp(n_A, tla.minus(name("p"), tla.int(1))),
-        ))(Untyped())
+        ))(Untyped)
 
     decl.isRecursive = true
 
@@ -47,7 +47,7 @@ class TestCaching extends AnyFunSuite with BeforeAndAfterEach with TestingPredef
         tla.plus(
             tla.appOp(n_A, tla.minus(tla.name("p"), tla.int(1))),
             tla.appOp(n_A, tla.minus(tla.name("p"), tla.int(2))),
-        ))(Untyped())
+        ))(Untyped)
 
     decl.isRecursive = true
 
@@ -71,7 +71,7 @@ class TestCaching extends AnyFunSuite with BeforeAndAfterEach with TestingPredef
     val operName = "A"
     val decl =
       TlaOperDecl(operName, List("p", "q"), tla.appOp(n_A, tla.appOp(n_A, tla.int(0), tla.name("p")), tla.name("q")))(
-          Untyped())
+          Untyped)
 
     decl.isRecursive = true
 

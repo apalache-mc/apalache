@@ -24,7 +24,7 @@ object Dependencies {
     val kiama = "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.5.0"
     val logbackClassic = "ch.qos.logback" % "logback-classic" % logbackVersion
     val logbackCore = "ch.qos.logback" % "logback-core" % logbackVersion
-    val logging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4"
+    val logging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
     val pureConfig = "com.github.pureconfig" %% "pureconfig" % "0.17.1"
     val scalaParserCombinators = "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.1"
     val scalaCollectionContrib = "org.scala-lang.modules" %% "scala-collection-contrib" % "0.2.2"

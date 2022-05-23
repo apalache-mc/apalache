@@ -136,7 +136,7 @@ object ConstSubstitution {
             (tp, false)
           }
 
-        case VarT1(_) | IntT1() | BoolT1() | RealT1() | StrT1() =>
+        case VarT1(_) | IntT1 | BoolT1 | RealT1 | StrT1 =>
           (tp, false)
 
         case SetT1(elem) =>
