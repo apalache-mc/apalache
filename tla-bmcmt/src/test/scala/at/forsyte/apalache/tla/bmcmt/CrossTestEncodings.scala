@@ -339,6 +339,13 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
           arg <- arbitrary[Boolean]
           set <- oneOf(tla.booleanSet().as(SetT1(tp)), tla.enumSet(tla.bool(arg)).as(SetT1(tp)))
         } yield set
+      // Temporarily avoid sets of function sets, see https://github.com/informalsystems/apalache/issues/1759.
+      // TODO(#1452): Re-enable when we have better support.
+      // case tp @ FunT1(arg, res) =>
+      //  for {
+      //    domain <- genWitnessSet(arg)
+      //    codomain <- genWitnessSet(res)
+      //  } yield tla.funSet(domain, codomain).as(SetT1(tp))
       case tp @ FunT1(_, _) =>
         for {
           elements <- nonEmptyListOf(genWitness(tp))
