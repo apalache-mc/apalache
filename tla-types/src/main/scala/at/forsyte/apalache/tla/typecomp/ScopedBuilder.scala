@@ -34,7 +34,7 @@ import scalaz.Scalaz._
  */
 class ScopedBuilder
     extends BaseBuilder with BoolBuilder with ArithmeticBuilder with SetBuilder with SeqBuilder with ActionBuilder
-    with ControlBuilder with LiteralAndNameBuilder {
+    with FunBuilder with ControlBuilder with LiteralAndNameBuilder {
 
   /**
    * Creates a `TBuilderInstruction` from a precomputed `TlaEx`. Voids correctness guarantees.
@@ -141,4 +141,41 @@ class ScopedBuilder
         )
     )
   }
+
+  /**
+   * [f EXCEPT ![a1] = e1, ![a2] = e2 ... ![an] = en]
+   *
+   * Is equivalent to {{{[[f EXCEPT ![a1] = e1] EXCEPT ![a2] = e2] EXCEPT ... ![an] = en]}}}
+   */
+  def multiPointExcept(
+      f: TBuilderInstruction,
+      args: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction = {
+    require(args.nonEmpty)
+    args.foldLeft(f) { case (fn, (ai, ei)) =>
+      except(fn, ai, ei)
+    }
+  }
+
+  /**
+   * [f EXCEPT ![a1][a2][...][an] = e]
+   *
+   * Is equivalent to {{{[f EXCEPT ![a1] = [f[a1] EXCEPT ![a2] = [ ... EXCEPT ![an] = e]]]}}}
+   */
+  def multiDepthExcept(
+      f: TBuilderInstruction,
+      e: TBuilderInstruction,
+      args: TBuilderInstruction*): TBuilderInstruction = {
+    require(args.nonEmpty)
+
+    args match {
+      case Seq(head) => except(f, head, e)
+      case head +: tail =>
+        except(
+            f,
+            head,
+            multiDepthExcept(app(f, head), e, tail: _*),
+        )
+    }
+  }
+
 }
