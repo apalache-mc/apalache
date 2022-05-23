@@ -554,10 +554,10 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
   private def mkCellElemSort(cellType: CellT): Sort = {
     cellType match {
-      case CellTFrom(BoolT1()) =>
+      case CellTFrom(BoolT1) =>
         z3context.getBoolSort
 
-      case CellTFrom(IntT1()) =>
+      case CellTFrom(IntT1) =>
         z3context.getIntSort
 
       case CellTFrom(SetT1(elemType)) if encoding == arraysEncoding =>
