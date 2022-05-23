@@ -17,7 +17,7 @@ object ModuleAdapter {
         TlaOperDecl(name, List(), expr)(Typed(OperT1(Seq(), tt)))
 
       case _ =>
-        TlaOperDecl(name, List(), expr)(Untyped())
+        TlaOperDecl(name, List(), expr)(Untyped)
     }
   }
 

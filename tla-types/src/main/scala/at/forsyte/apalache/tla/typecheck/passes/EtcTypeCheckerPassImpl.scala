@@ -43,7 +43,7 @@ class EtcTypeCheckerPassImpl @Inject() (
       val locStr = findLoc(uid)
       val msg = s"[$locStr]: Failed to recover the expression type for uid=$uid. You may see an error later."
       logger.error(msg)
-      Untyped()
+      Untyped
     }
 
     val listener = new LoggingTypeCheckerListener(sourceStore, changeListener, inferPoly)

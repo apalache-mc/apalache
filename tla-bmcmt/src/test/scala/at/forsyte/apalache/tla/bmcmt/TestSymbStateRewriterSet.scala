@@ -217,7 +217,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
   }
 
   test("""c_i \in {TRUE, TRUE}""") { rewriterType: SMTEncoding =>
-    arena = arena.appendCell(BoolT1())
+    arena = arena.appendCell(BoolT1)
     val cell = arena.topCell
     val ex =
       in(cell.toNameEx.as(boolT), enumSet(bool(true), bool(true)).as(boolSetT)).as(boolT)
@@ -260,7 +260,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     val nextState = rewriter.rewriteUntilDone(state)
     nextState.ex match {
       case predEx @ NameEx(_) =>
-        nextState.arena.appendCell(IntT1()) // the buggy rule implementation triggered an error here
+        nextState.arena.appendCell(IntT1) // the buggy rule implementation triggered an error here
         rewriter.push()
         solverContext.assertGroundExpr(predEx)
         assert(solverContext.sat())
@@ -276,7 +276,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
   }
 
   test("""~(Bool \in {TRUE, TRUE})""") { rewriterType: SMTEncoding =>
-    arena = arena.appendCell(BoolT1())
+    arena = arena.appendCell(BoolT1)
     val cell = arena.topCell
     val ex =
       not(in(cell.toNameEx.as(boolT), enumSet(bool(true), bool(true)).as(boolSetT)).as(boolT)).as(boolT)
@@ -315,7 +315,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     val right =
       enumSet(int3Set(), enumSet(int2Set().as(int2SetT), enumSet(intSet(), intSet()).as(int2SetT)).as(int3SetT)).as(
           int4SetT)
-    val ex = in(left, right).typed(BoolT1())
+    val ex = in(left, right).typed(BoolT1)
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -347,7 +347,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
 
     val left = enumSet(int3Set(), enumSet(enumSet(intSet()).as(int2SetT)).as(int3SetT)).as(int4SetT)
     val right = enumSet(int4Set(), enumSet(int3Set(), enumSet(int2Set()).as(int3SetT)).as(int4SetT)).as(int5SetT)
-    val ex = in(left, right).typed(BoolT1())
+    val ex = in(left, right).typed(BoolT1)
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -397,7 +397,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
 
     val left = enumSet(int3Set(), enumSet(int2Set()).as(int3SetT)).as(int4SetT)
     val right = enumSet(int3Set(), enumSet(enumSet(intSet()).as(int2SetT)).as(int3SetT)).as(int4SetT)
-    val ex = eql(left, right).typed(BoolT1())
+    val ex = eql(left, right).typed(BoolT1)
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -421,7 +421,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     val left = enumSet(int2Set(), enumSet(intSet()).as(int2SetT)).as(int3SetT)
     val right = enumSet(int2Set().as(int2SetT), enumSet(intSet()).as(int2SetT)).as(int3SetT)
     val ex = eql(left, right)
-      .typed(BoolT1())
+      .typed(BoolT1)
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -445,7 +445,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     val dynEmpty =
       filter(name("t").as(intT), setOf1, bool(false)).as(intSetT)
 
-    val ex = eql(intSet(), dynEmpty).typed(BoolT1())
+    val ex = eql(intSet(), dynEmpty).typed(BoolT1)
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -725,8 +725,8 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     val mappedSet =
       map(mapping, name("x").as(intT), set12minus2.as(intSetT), name("y").as(boolT), setBool).as(
           parser("Set(<<Bool>>)"))
-    val inMappedSet = in(tuple(bool(true)).typed(TupT1(BoolT1())), mappedSet)
-      .typed(BoolT1())
+    val inMappedSet = in(tuple(bool(true)).typed(TupT1(BoolT1)), mappedSet)
+      .typed(BoolT1)
 
     val state = new SymbState(inMappedSet, arena, Binding())
     val rewriter = create(rewriterType)
@@ -925,8 +925,8 @@ trait TestSymbStateRewriterSet extends RewriterBase {
       case `arraysEncoding` =>
         val dom = enumSet(int(1), int(2)).as(intSetT)
         val mapping = bool(true).as(boolT)
-        val fun = funDef(mapping, name("x").as(IntT1()), dom).as(FunT1(IntT1(), BoolT1()))
-        val set = enumSet(fun).as(SetT1(FunT1(IntT1(), BoolT1())))
+        val fun = funDef(mapping, name("x").as(IntT1), dom).as(FunT1(IntT1, BoolT1))
+        val set = enumSet(fun).as(SetT1(FunT1(IntT1, BoolT1)))
 
         val ex = subseteq(set, set).as(boolT)
         val state = new SymbState(ex, arena, Binding())

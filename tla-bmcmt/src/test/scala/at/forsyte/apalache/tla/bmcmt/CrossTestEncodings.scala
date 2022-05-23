@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.Checker.Error
+import at.forsyte.apalache.tla.bmcmt.Checker.{CheckerResult, Error}
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
 import at.forsyte.apalache.tla.bmcmt.trex.{IncrementalExecutionContext, TransitionExecutorImpl}
@@ -86,8 +86,8 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
   protected var oracleEncoding: SMTEncoding = _
   protected var verifierEncoding: SMTEncoding = _
 
-  private val boolT = BoolT1()
-  private val boolSetT = SetT1(BoolT1())
+  private val boolT = BoolT1
+  private val boolSetT = SetT1(BoolT1)
 
   private val typeGen = new TlaType1Gen {
     // Override to avoid operators and rows.
@@ -116,7 +116,7 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
 
     // Override to avoid reals, constants, and typevar-typed expressions.
     override def genPrimitive: Gen[TlaType1] =
-      oneOf(const(BoolT1()), const(IntT1()), const(StrT1()) /*, const(RealT1()), genConst, genVar*/ )
+      oneOf(const(BoolT1), const(IntT1), const(StrT1) /*, const(RealT1), genConst, genVar*/ )
   }
   private val irGen = new IrGenerators {}
 
@@ -149,8 +149,8 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
    * @param smtEncoding
    *   SMT encoding to use inside the model checker
    * @return
-   *   a counterexample returned as VarNames -> Expressions binding in the initial state, i.e., after executing
-   *   [[initTrans]].
+   *   either a checker result if a counterexample cannot be found after a single step, or the counterexample returned
+   *   as VarNames -> Expressions binding in the initial state, i.e., after executing [[initTrans]].
    */
   private def modelCheckAndGetCex(
       moduleName: String,
@@ -158,11 +158,11 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
       initTrans: List[TlaEx],
       nextTrans: List[TlaEx],
       invExpr: TlaEx,
-      smtEncoding: SMTEncoding): Map[String, TlaEx] = {
+      smtEncoding: SMTEncoding): Either[CheckerResult, Map[String, TlaEx]] = {
     // prepare the invariant
-    val invDecl = tla.declOp("Inv", invExpr).as(OperT1(Nil, BoolT1()))
+    val invDecl = tla.declOp("Inv", invExpr).as(OperT1(Nil, BoolT1))
     val decls = variableDecls :+ invDecl
-    val invariantsAndNegations = List((invExpr, tla.not(invExpr).as(BoolT1())))
+    val invariantsAndNegations = List((invExpr, tla.not(invExpr).as(BoolT1)))
     val verificationConditions = CheckerInputVC(invariantsAndNegations)
 
     val module = TlaModule(moduleName, decls)
@@ -186,15 +186,66 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
 
     // check the outcome
     val outcome = checker.run()
-    assert(Error(1) == outcome,
-        if (moduleName == "Verifier") s"If outcome=Deadlock, this probably indicates a problem with one encoding."
-        else "")
+    if (outcome != Error(1)) {
+      Left(outcome)
+    } else {
+      // extract witness expression from the counterexample
+      assert(listener.counterExamples.length == 1) // () --(init transition)--> initial state
+      val cex = listener.counterExamples.head.path
+      val (binding, _) = cex.last // initial state binding
+      Right(binding)
+    }
+  }
 
-    // extract witness expression from the counterexample
-    assert(listener.counterExamples.length == 1) // () --(init transition)--> initial state
-    val cex = listener.counterExamples.head.path
-    val (binding, _) = cex.last // initial state binding
-    binding
+  private def formatOracleSpec(witnessType: TlaType1, witnesses: TlaEx): String = {
+    s"""------ MODULE Oracle --------
+      |VARIABLES
+      |  \\* @type: ${witnessType};
+      |  witness,
+      |  \\* @type: Bool;
+      |  found
+      |
+      |Init ==
+      |  /\\ witness \\in ${witnesses}
+      |  /\\ found \\in BOOLEAN
+      |
+      |Next ==
+      |  UNCHANGED <<witness, found>>
+      |
+      |NotFound ==
+      |  ~found
+      |======================
+      |""".stripMargin
+  }
+
+  def formatVerifierSpec(witnessType: TlaType1, witnesses: TlaEx, witness: TlaEx): String = {
+    s"""------ MODULE Verifier --------
+      |VARIABLES
+      |  \\* @type: ${witnessType};
+      |  result,
+      |  \\* @type: Bool;
+      |  found
+      |
+      |Init ==
+      |  /\\ result \\in ${witnesses}
+      |  /\\ result = ${witness}
+      |  /\\ found \\in BOOLEAN
+      |
+      |Next ==
+      |  UNCHANGED <<result, found>>
+      |
+      |NotFound ==
+      |  ~found
+      |======================
+      |""".stripMargin
+  }
+
+  /**
+   * Print an error message that no counterexample was found and fail the test.
+   */
+  private def failNoCex(outcome: CheckerResult, encoding: SMTEncoding, module: String) = {
+    fail(s"Did not find a counter-example in 1 step, outcome was ${outcome}. " +
+      s"Run `apalache-mc check --inv=NotFound --smt-encoding=${encoding}` on\n${module}")
   }
 
   /**
@@ -204,17 +255,17 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
    * Runs the model checker to produce a value for `witness`, by requiring `witness \in ${witnesses}` in a TLA+ module
    * and forcing a counter-example.
    *
-   * @param witnessT
+   * @param witnessType
    *   desired [[TlaType1]] for the witness.
    * @param witnesses
    *   TLA+ expression referring to a set of type `SetT1(witnessType)`.
    */
-  private def getWitness(witnessT: TlaType1, witnesses: TlaEx): TlaEx = {
+  private def getWitness(witnessType: TlaType1, witnesses: TlaEx): TlaEx = {
     // Module-level TLA+ variables.
     // We will force `result` = `witness` in `Init`.
-    val witness = NameEx("witness")(Typed(witnessT))
+    val witness = NameEx("witness")(Typed(witnessType))
     val witnessDecl = TlaVarDecl(witness.name)(witness.typeTag)
-    val found = NameEx("found")(Typed(BoolT1()))
+    val found = NameEx("found")(Typed(BoolT1))
     val foundDecl = TlaVarDecl(found.name)(found.typeTag)
 
     // Construct the `TlaModule`.
@@ -225,19 +276,22 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
         tla.and(rewriteElemInSet(witness, witnesses), rewriteElemInSet(found, tla.booleanSet().as(boolSetT))).as(boolT))
     // Next == UNCHANGED <<witness, found>>
     val nextTrans = List(tla
-          .and(tla.assign(tla.prime(witness).as(witnessT), witness).as(boolT),
+          .and(tla.assign(tla.prime(witness).as(witnessType), witness).as(boolT),
               tla.assign(tla.prime(found).as(boolT), found).as(boolT))
           .as(boolT))
     // NotFound == ~found
     val inv = tla.not(found).as(boolT)
 
     // Call the model checker.
-    val binding = modelCheckAndGetCex("Oracle", variableDecls, initTrans, nextTrans, inv, oracleEncoding)
-
-    // Extract witness expression from the counterexample.
-    assert(binding.contains(witness.name))
-    val witnessExpr = binding(witness.name)
-    witnessExpr
+    modelCheckAndGetCex("Oracle", variableDecls, initTrans, nextTrans, inv, oracleEncoding) match {
+      case Left(outcome) =>
+        failNoCex(outcome, oracleEncoding, formatOracleSpec(witnessType, witnesses))
+      case Right(binding) =>
+        // Extract witness expression from the counterexample.
+        assert(binding.contains(witness.name))
+        val witnessExpr = binding(witness.name)
+        witnessExpr
+    }
   }
 
   /**
@@ -256,10 +310,10 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
   private def verify(witness: TlaEx, witnesses: TlaEx): TlaEx = {
     // Module-level TLA+ variables.
     // We will force `result` = `witness` in `Init`.
-    val witnessT = witness.typeTag.asTlaType1()
+    val witnessType = witness.typeTag.asTlaType1()
     val result = NameEx("result")(witness.typeTag)
     val resultDecl = TlaVarDecl(result.name)(witness.typeTag)
-    val found = NameEx("found")(Typed(BoolT1()))
+    val found = NameEx("found")(Typed(BoolT1))
     val foundDecl = TlaVarDecl(found.name)(found.typeTag)
 
     // Construct the `TlaModule`.
@@ -267,22 +321,26 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
     val variableDecls: Seq[TlaDecl] = Seq(resultDecl, foundDecl)
     // Init == result \in ${witnesses} /\ result = ${witness} /\ found \in BOOLEAN
     val initTrans = List(tla
-          .and(rewriteElemInSet(result, witnesses), tla.eql(tla.prime(result).as(witnessT), witness).as(boolT),
-              rewriteElemInSet(found, tla.booleanSet().as(SetT1(BoolT1()))))
+          .and(rewriteElemInSet(result, witnesses), tla.eql(tla.prime(result).as(witnessType), witness).as(boolT),
+              rewriteElemInSet(found, tla.booleanSet().as(SetT1(BoolT1))))
           .as(boolT))
     // Next == UNCHANGED <<result, found>>
     val nextTrans = List(tla
-          .and(tla.assign(tla.prime(result).as(witnessT), result).as(boolT),
+          .and(tla.assign(tla.prime(result).as(witnessType), result).as(boolT),
               tla.assign(tla.prime(found).as(boolT), found).as(boolT))
           .as(boolT))
     // NotFound == ~found
     val inv = tla.not(found).as(boolT)
 
     // Call the model checker.
-    val binding = modelCheckAndGetCex("Verifier", variableDecls, initTrans, nextTrans, inv, verifierEncoding)
-    assert(binding.contains(result.name))
-    val resultExpr = binding(result.name)
-    resultExpr
+    modelCheckAndGetCex("Verifier", variableDecls, initTrans, nextTrans, inv, verifierEncoding) match {
+      case Left(outcome) =>
+        failNoCex(outcome, verifierEncoding, formatVerifierSpec(witnessType, witnesses, witness))
+      case Right(binding) =>
+        assert(binding.contains(result.name))
+        val resultExpr = binding(result.name)
+        resultExpr
+    }
   }
 
   /**
@@ -294,9 +352,9 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
    */
   private def genWitness(witnessType: TlaType1): Gen[TlaEx] = lzy {
     witnessType match {
-      case IntT1()         => irGen.genInt
-      case BoolT1()        => irGen.genBool
-      case StrT1()         => irGen.genStr
+      case IntT1           => irGen.genInt
+      case BoolT1          => irGen.genBool
+      case StrT1           => irGen.genStr
       case SetT1(elemType) => genWitnessSet(elemType)
       case tp @ SeqT1(elemType) =>
         for {
@@ -309,7 +367,7 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
       case tp @ RecT1(fieldTypes) =>
         for {
           fieldValues <- Gen.sequence[Seq[TlaEx], TlaEx](fieldTypes.values.map(genWitness(_)))
-          fieldNames = fieldTypes.toSeq.map { case (name, _) => tla.str(name).as(StrT1()) }
+          fieldNames = fieldTypes.toSeq.map { case (name, _) => tla.str(name).as(StrT1) }
           namesAndSets = TlaOper.interleave(fieldNames, fieldValues)
         } yield OperEx(TlaFunOper.enum, namesAndSets: _*)(Typed(tp))
       case tp @ FunT1(arg, res) =>
@@ -319,8 +377,7 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
           set <- genWitnessSet(arg)
           res <- genWitness(res)
         } yield tla.funDef(res, name, set).as(tp)
-      case ConstT1(_) | OperT1(_, _) | RealT1() | RecRowT1(_) | RowT1(_, _) | SparseTupT1(_) | VarT1(_) |
-          VariantT1(_) =>
+      case ConstT1(_) | OperT1(_, _) | RealT1 | RecRowT1(_) | RowT1(_, _) | SparseTupT1(_) | VarT1(_) | VariantT1(_) =>
         throw new IllegalArgumentException(s"Unsupported type ${witnessType}. Should be disabled in type generator.")
     }
   }
@@ -334,7 +391,7 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
    */
   private def genWitnessSet(witnessesType: TlaType1): Gen[TlaEx] = lzy {
     witnessesType match {
-      case tp @ BoolT1() =>
+      case tp @ BoolT1 =>
         for {
           arg <- arbitrary[Boolean]
           set <- oneOf(tla.booleanSet().as(SetT1(tp)), tla.enumSet(tla.bool(arg)).as(SetT1(tp)))

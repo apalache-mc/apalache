@@ -25,10 +25,13 @@ class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case ex @ OperEx(TlaSetOper.enumSet, elems @ _*) =>
+        // Rewrite the elements and remove the duplicate cells.
+        // This does not guarantee us that all duplicates are removed,
+        // as some cells may happen to be equal only in some models.
         val (newState, newEs: Seq[TlaEx]) =
           rewriter.rewriteSeqUntilDone(state, elems)
         var nextState = newState
-        val cells = newEs.map(nextState.arena.findCellByNameEx)
+        val cells = newEs.map(nextState.arena.findCellByNameEx).toList.distinct
         val setT = CellT.fromTypeTag(ex.typeTag)
         val elemType = setT match {
           case CellTFrom(SetT1(et)) => et

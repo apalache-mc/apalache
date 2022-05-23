@@ -85,11 +85,11 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // [ p \in f_rel |-> IF p[1] = i THEN <<i, e>> ELSE p ]
     def eachRelationPair(pair: ArenaCell): ArenaCell = {
       val tupT = TupT1(funT.arg, funT.res)
-      val types = Map("p" -> tupT, "i" -> funT.arg, "b" -> BoolT1(), "r" -> SetT1(tupT))
+      val types = Map("p" -> tupT, "i" -> funT.arg, "b" -> BoolT1, "r" -> SetT1(tupT))
       // Since the expression goes to the solver, we don't care about types.
       val pairIndex = nextState.arena.getHas(pair).head // this is pair[1]
       val ite = tla
-        .ite(tla.eql(pairIndex.toNameEx.as(tupT), indexCell.toNameEx.as(funT.arg)).as(BoolT1()),
+        .ite(tla.eql(pairIndex.toNameEx.as(tupT), indexCell.toNameEx.as(funT.arg)).as(BoolT1),
             newPairCell.toNameEx.as(tupT), pair.toNameEx.as(tupT))
         .as(tupT)
 
@@ -219,7 +219,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // make an element for the new proto sequence
     def mkElem(state: SymbState, index: Int): (SymbState, ArenaCell) = {
       val oldValue = proto.at(state.arena, oldProtoSeq, index)
-      val cond = tla.eql(indexCell.toNameEx, tla.int(index)).as(BoolT1())
+      val cond = tla.eql(indexCell.toNameEx, tla.int(index)).as(BoolT1)
       // IF indexCell = index THEN newValue ELSE oldValue
       val iteEx = tla.ite(cond, newValue.toNameEx, oldValue.toNameEx).as(elemT)
       val newState = rewriter.rewriteUntilDone(state.setRex(iteEx))

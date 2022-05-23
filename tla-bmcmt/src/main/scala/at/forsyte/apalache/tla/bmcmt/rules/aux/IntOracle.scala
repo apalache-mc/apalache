@@ -41,7 +41,7 @@ class IntOracle(val intCell: ArenaCell, nvalues: Int) extends Oracle {
 
 object IntOracle {
   def create(state: SymbState, nvalues: Int): (SymbState, IntOracle) = {
-    val nextState = state.setArena(state.arena.appendCell(IntT1()))
+    val nextState = state.setArena(state.arena.appendCell(IntT1))
     val oracleCell = nextState.arena.topCell
     val oracle = new IntOracle(oracleCell, nvalues)
     // the oracle value must be equal to one of the value cells

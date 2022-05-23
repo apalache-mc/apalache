@@ -28,7 +28,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
     rewriter.solverContext.log(s"; GEN $resultType up to $bound {")
     val nextState =
       resultType match {
-        case IntT1() | BoolT1() | StrT1() | ConstT1(_) =>
+        case IntT1 | BoolT1 | StrT1 | ConstT1(_) =>
           // For the moment, we do not distinguish between ConstT1 and StrT1.
           // When issue #570 is fixed, we should come back to it.
           genBasic(state, resultType)
@@ -126,7 +126,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
     // In the arrays encoding, set membership constraints are not generated in appendHas, so we add them below
     if (rewriter.solverContext.config.smtEncoding == arraysEncoding) {
       for (elem <- elems) {
-        nextState = nextState.updateArena(_.appendCell(BoolT1()))
+        nextState = nextState.updateArena(_.appendCell(BoolT1))
         val pred = nextState.arena.topCell.toNameEx
         val storeElem = tla.apalacheStoreInSet(elem.toNameEx, setCell.toNameEx).typed(SetT1(elemType))
         val notStoreElem = tla.apalacheStoreNotInSet(elem.toNameEx, setCell.toNameEx).typed(SetT1(elemType))
@@ -149,11 +149,11 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
     var nextState = proto.make(state, bound, genElem)
     val newProtoSeq = nextState.asCell
     // create the cell to store length
-    nextState = genBasic(nextState, IntT1())
+    nextState = genBasic(nextState, IntT1)
     val len = nextState.asCell
     // assert that 0 <= len /\ len <= bound
-    rewriter.solverContext.assertGroundExpr(tla.le(len.toNameEx.as(IntT1()), tla.int(bound)).as(BoolT1()))
-    rewriter.solverContext.assertGroundExpr(tla.ge(len.toNameEx.as(IntT1()), tla.int(0)).as(BoolT1()))
+    rewriter.solverContext.assertGroundExpr(tla.le(len.toNameEx.as(IntT1), tla.int(bound)).as(BoolT1))
+    rewriter.solverContext.assertGroundExpr(tla.ge(len.toNameEx.as(IntT1), tla.int(0)).as(BoolT1))
     // create the sequence out of the proto sequence and its length
     proto.mkSeq(nextState, SeqT1(elemType), newProtoSeq, nextState.asCell)
   }
@@ -187,17 +187,17 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
         nextState = nextState.updateArena(_.appendHas(domainCell, domainCells: _*))
         // In the arrays encoding, set membership constraints are not generated in appendHas, so we add them below
         for (domainElem <- domainCells) {
-          val inExpr = tla.apalacheStoreInSet(domainElem.toNameEx, domainCell.toNameEx).typed(BoolT1())
+          val inExpr = tla.apalacheStoreInSet(domainElem.toNameEx, domainCell.toNameEx).typed(BoolT1)
           rewriter.solverContext.assertGroundExpr(inExpr)
         }
         nextState = nextState.updateArena(_.setDom(funCell, domainCell))
 
         def addCellCons(domElem: ArenaCell, rangeElem: ArenaCell): Unit = {
-          val inDomain = tla.apalacheSelectInFun(domElem.toNameEx, domainCell.toNameEx).typed(BoolT1())
-          val inRange = tla.apalacheStoreInFun(rangeElem.toNameEx, funCell.toNameEx, domElem.toNameEx).typed(BoolT1())
-          val notInRange = tla.apalacheStoreNotInFun(domElem.toNameEx, funCell.toNameEx).typed(BoolT1())
+          val inDomain = tla.apalacheSelectInFun(domElem.toNameEx, domainCell.toNameEx).typed(BoolT1)
+          val inRange = tla.apalacheStoreInFun(rangeElem.toNameEx, funCell.toNameEx, domElem.toNameEx).typed(BoolT1)
+          val notInRange = tla.apalacheStoreNotInFun(domElem.toNameEx, funCell.toNameEx).typed(BoolT1)
           // function updates are guarded by the inDomain predicate
-          val ite = tla.ite(inDomain, inRange, notInRange).typed(BoolT1())
+          val ite = tla.ite(inDomain, inRange, notInRange).typed(BoolT1)
           rewriter.solverContext.assertGroundExpr(ite)
         }
 
@@ -219,7 +219,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
         // Note that we cannot simply require that all arguments are distinct,
         // as there may be not enough values in the universe to guarantee that.
         val types = Map("p" -> TupT1(funType.arg, funType.res), "R" -> SetT1(TupT1(funType.arg, funType.res)),
-            "a" -> funType.arg, "b" -> BoolT1())
+            "a" -> funType.arg, "b" -> BoolT1)
         for ((p1, i1) <- pairs.zipWithIndex) {
           for ((p2, i2) <- pairs.zipWithIndex) {
             if (i1 < i2) {
@@ -237,7 +237,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
               val neq = tla
                 .not(tla.eql(a1.toNameEx ? "a", a2.toNameEx ? "a") ? "b")
                 .typed(types, "b")
-              rewriter.solverContext.assertGroundExpr(tla.or(not1, not2, neq).typed(BoolT1()))
+              rewriter.solverContext.assertGroundExpr(tla.or(not1, not2, neq).typed(BoolT1))
             }
           }
         }

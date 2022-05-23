@@ -11,11 +11,11 @@ import org.scalatest.funsuite.AnyFunSuite
 
 @RunWith(classOf[JUnitRunner])
 class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
-  private val intT = IntT1()
-  private val boolT = BoolT1()
-  private val intSetT = SetT1(IntT1())
-  private val intSetSetT = SetT1(IntT1())
-  private val boolSetT = SetT1(BoolT1())
+  private val intT = IntT1
+  private val boolT = BoolT1
+  private val intSetT = SetT1(IntT1)
+  private val intSetSetT = SetT1(IntT1)
+  private val boolSetT = SetT1(BoolT1)
   private var optimizer = new ExprOptimizer(new UniqueNameGenerator(), TrackerWithListeners())
 
   override def beforeEach(): Unit = {
@@ -45,7 +45,7 @@ class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
 
   // an optimization for record accesses
   test("""[a |-> 1, b |-> 2].a becomes 2""") {
-    val recT = RecT1("a" -> IntT1(), "b" -> IntT1())
+    val recT = RecT1("a" -> IntT1, "b" -> IntT1)
     val record =
       enumFun(str("a"), int(1), str("b"), int(2))
     val input = appFun(record.as(recT), str("b")).as(intT)
@@ -56,7 +56,7 @@ class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
 
   // an optimization for set comprehensions (maps)
   test("""\E x \in {foo[y]: y \in {1, 2}}: z = x ~~> \E y \in {1, 2}: z = foo[y]""") {
-    val funT = FunT1(IntT1(), BoolT1())
+    val funT = FunT1(IntT1, BoolT1)
     val set12 = enumSet(int(1), int(2)).as(intSetT)
     val funApp = appFun(name("foo").as(funT), name("y").as(intT)).as(boolT)
     val mapEx = map(funApp, name("y").as(intT), set12).as(boolSetT)
@@ -87,7 +87,7 @@ class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
 
   // An optimization for set membership over sets of records. Note that this is the standard form produced by Keramelizer.
   test("""r \in { [a |-> x, b |-> y]: x \in S, y \in T } becomes DOMAIN r = { "a", "b" } /\ r.a \in S /\ r.b \in T""") {
-    val recT = RecT1("a" -> IntT1(), "b" -> IntT1())
+    val recT = RecT1("a" -> IntT1, "b" -> IntT1)
     val recSetT = SetT1(recT)
     val record =
       enumFun(str("a"), name("x").as(intT), str("b"), name("y").as(intT)).as(recT)
@@ -97,7 +97,7 @@ class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
     val r = name("r").as(recT)
     val input = in(r, recordSet).as(boolT)
 
-    val strSetT = SetT1(StrT1())
+    val strSetT = SetT1(StrT1)
     val domEq = eql(dom(r).as(strSetT), enumSet(str("a"), str("b")).as(strSetT)).as(boolT)
     val memA = in(appFun(r, str("a")).as(intT), S).as(boolT)
     val memB = in(appFun(r, str("b")).as(intT), T).as(boolT)
@@ -140,7 +140,7 @@ class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("""Cardinality(S) >= 2 becomes LET t_3 == S IN \E t_1 \in t_3: \E t_2 \in t_3: t_1 /= t_2""") {
-    val operT = OperT1(Seq(), IntT1())
+    val operT = OperT1(Seq(), IntT1)
     val set = name("S").as(intSetT)
     val input = ge(card(set).as(intT), int(2)).as(boolT)
     val output = optimizer.apply(input)
@@ -149,13 +149,13 @@ class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
       exists(name("t_1").as(intT), letApp,
           exists(name("t_2").as(intT), letApp, not(eql(name("t_1").as(intT), name("t_2").as(intT)).as(boolT)).as(boolT))
             .as(boolT))
-    val decl = declOp("t_3", name("S").as(intSetT)).as(OperT1(Seq(), IntT1()))
+    val decl = declOp("t_3", name("S").as(intSetT)).as(OperT1(Seq(), IntT1))
     val expected = letIn(letBody.as(boolT), decl).as(boolT)
     assert(expected == output)
   }
 
   test("""Cardinality(S) > 1 becomes LET t_3 == S IN \E t_1 \in t_3: \E t_1 \in t_3: t_1 /= t_2""") {
-    val operT = OperT1(Seq(), IntT1())
+    val operT = OperT1(Seq(), IntT1)
     val set = name("S").as(intSetT)
     val input = gt(card(set).as(intT), int(1)).as(boolT)
     val output = optimizer.apply(input)
@@ -164,7 +164,7 @@ class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
       exists(name("t_1").as(intT), letApp,
           exists(name("t_2").as(intT), letApp, not(eql(name("t_1").as(intT), name("t_2").as(intT)).as(boolT)).as(boolT))
             .as(boolT))
-    val decl = declOp("t_3", name("S").as(intSetT)).as(OperT1(Seq(), IntT1()))
+    val decl = declOp("t_3", name("S").as(intSetT)).as(OperT1(Seq(), IntT1))
     val expected =
       letIn(letBody.as(boolT), decl).as(boolT)
     assert(expected == output)

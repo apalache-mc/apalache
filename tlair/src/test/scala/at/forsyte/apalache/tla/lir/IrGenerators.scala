@@ -19,7 +19,7 @@ import org.scalacheck.Gen.{choose, const, identifier, listOf, listOfN, lzy, oneO
  * Assumptions and limitations:
  *   - The current implementation works best for code that is unaware of the semantics of TLA+ operators.
  *   - Our generators neither produce nor apply higher-order operators.
- *   - The generators tag the produced expressions with either Untyped() or Typed[Int](i) for a random integer value,
+ *   - The generators tag the produced expressions with either Untyped or Typed[Int](i) for a random integer value,
  *     which should be sufficient for checking that the types are correctly propagated.
  *
  * @author
@@ -105,7 +105,7 @@ trait IrGenerators extends TlaType1Gen {
    */
   def genTypeTag: Gen[TypeTag] = for {
     tp <- genType1
-    tt <- oneOf(Untyped(), Typed(tp))
+    tt <- oneOf(Untyped, Typed(tp))
   } yield tt
 
   /**

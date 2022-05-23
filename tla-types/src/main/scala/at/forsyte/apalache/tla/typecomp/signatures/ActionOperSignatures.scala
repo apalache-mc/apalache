@@ -25,17 +25,17 @@ object ActionOperSignatures {
         stutter,
         nostutter,
     ).map {
-      signatureMapEntry(_, { case Seq(BoolT1(), _) => BoolT1() })
+      signatureMapEntry(_, { case Seq(BoolT1, _) => BoolT1 })
     }
 
     // (Bool) => Bool
-    val enabledSig = signatureMapEntry(enabled, { case Seq(BoolT1()) => BoolT1() })
+    val enabledSig = signatureMapEntry(enabled, { case Seq(BoolT1) => BoolT1 })
 
     // (t) => Bool
-    val unchangedSig = signatureMapEntry(unchanged, { case Seq(_) => BoolT1() })
+    val unchangedSig = signatureMapEntry(unchanged, { case Seq(_) => BoolT1 })
 
     // (Bool, Bool) => Bool
-    val compSig = signatureMapEntry(composition, { case Seq(BoolT1(), BoolT1()) => BoolT1() })
+    val compSig = signatureMapEntry(composition, { case Seq(BoolT1, BoolT1) => BoolT1 })
 
     (stutterSigs :+ enabledSig :+ unchangedSig :+ primeSig :+ compSig).toMap
   }

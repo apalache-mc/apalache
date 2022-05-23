@@ -19,7 +19,7 @@ import org.scalatestplus.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
 
-  private val types = Map("i" -> IntT1(), "b" -> BoolT1())
+  private val types = Map("i" -> IntT1, "b" -> BoolT1)
 
   private def mkAssign(varName: String, value: Int): TlaEx = {
     assign(prime(name(varName) ? "i") ? "i", int(value)).typed(types, "b")
@@ -54,7 +54,7 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
     val nextTrans = List(mkAssign("x", 2))
     // Inv == x != 2
     val inv = not(eql(name("x") ? "i", int(2)) ? "b").typed(types, "b")
-    val module = TlaModule("root", List(TlaVarDecl("x")(Typed(IntT1()))))
+    val module = TlaModule("root", List(TlaVarDecl("x")(Typed(IntT1))))
 
     // check the outcome
     val (listener, checker) = getChecker(module, initTrans, nextTrans, inv, 1)
@@ -80,7 +80,7 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
     val nextTrans = List(mkAssign("x", 2))
     // Inv == x != 2
     val inv = not(eql(name("x") ? "i", int(2)) ? "b").typed(types, "b")
-    val module = TlaModule("root", List(TlaVarDecl("x")(Typed(IntT1()))))
+    val module = TlaModule("root", List(TlaVarDecl("x")(Typed(IntT1))))
 
     // check the outcome
     val (listener, checker) = getChecker(module, initTrans, nextTrans, inv, 1)
@@ -106,7 +106,7 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
     val nextTrans = List(mkAssign("x", 2))
     // Inv == x != 2
     val inv = not(eql(name("x") ? "i", int(2)) ? "b").typed(types, "b")
-    val module = TlaModule("root", List(TlaVarDecl("x")(Typed(IntT1()))))
+    val module = TlaModule("root", List(TlaVarDecl("x")(Typed(IntT1))))
 
     // check the outcome
     val (listener, checker) = getChecker(module, initTrans, nextTrans, inv, 3)

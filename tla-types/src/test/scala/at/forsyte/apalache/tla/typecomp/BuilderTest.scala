@@ -51,11 +51,11 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
 
   // Useful methods for defining mkIllTypedArgs
   object InvalidTypeMethods {
-    def notSet: TlaType1 = IntT1()
-    def notSeq: TlaType1 = IntT1()
-    def notBool: TlaType1 = differentFrom(BoolT1())
-    def notInt: TlaType1 = differentFrom(IntT1())
-    def differentFrom(tt: TlaType1): TlaType1 = if (tt == IntT1()) StrT1() else IntT1()
+    def notSet: TlaType1 = IntT1
+    def notSeq: TlaType1 = IntT1
+    def notBool: TlaType1 = differentFrom(BoolT1)
+    def notInt: TlaType1 = differentFrom(IntT1)
+    def differentFrom(tt: TlaType1): TlaType1 = if (tt == IntT1) StrT1 else IntT1
   }
 
   /** Convenience method, for constructing resultIsExpected as an test of eqTyped */
@@ -182,8 +182,8 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
     )(tparam)
   }
 
-  /** Invokes tests for a tertiary builder method. Performs lifting to HList logic for the user. */
-  def runTertiary[TypeParameterization](
+  /** Invokes tests for a ternary builder method. Performs lifting to HList logic for the user. */
+  def runTernary[TypeParameterization](
       method: (TBuilderInstruction, TBuilderInstruction, TBuilderInstruction) => TBuilderInstruction,
       mkWellTypedArg: TypeParameterization => (TBuilderInstruction, TBuilderInstruction, TBuilderInstruction),
       mkIllTypedArg: TypeParameterization => Seq[(TBuilderInstruction, TBuilderInstruction, TBuilderInstruction)],

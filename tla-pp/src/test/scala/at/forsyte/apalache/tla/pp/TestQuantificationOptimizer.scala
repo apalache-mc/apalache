@@ -28,18 +28,18 @@ class TestQuantificationOptimizer extends AnyFunSuite with Checkers {
   val rangeGen: Gen[TlaEx] = for {
     a <- gens.genTlaEx(ops)(gens.emptyContext)
     b <- gens.genTlaEx(ops)(gens.emptyContext)
-  } yield tla.dotdot(a.as(IntT1()), b.as(IntT1())).as(SetT1(IntT1()))
+  } yield tla.dotdot(a.as(IntT1), b.as(IntT1)).as(SetT1(IntT1))
 
-  val boolTag = Typed(BoolT1())
-  val varname = tla.name("x").as(IntT1())
+  val boolTag = Typed(BoolT1)
+  val varname = tla.name("x").as(IntT1)
 
   def varnameInBounds(lowerBound: TlaEx, upperBound: TlaEx): TlaEx = {
-    val lConstraint = tla.le(lowerBound, varname).as(BoolT1())
-    val uConstraint = tla.le(varname, upperBound).as(BoolT1())
-    tla.and(lConstraint, uConstraint).as(BoolT1())
+    val lConstraint = tla.le(lowerBound, varname).as(BoolT1)
+    val uConstraint = tla.le(varname, upperBound).as(BoolT1)
+    tla.and(lConstraint, uConstraint).as(BoolT1)
   }
 
-  val varnameGe0 = tla.ge(varname, tla.int(0).as(IntT1())).as(BoolT1())
+  val varnameGe0 = tla.ge(varname, tla.int(0).as(IntT1)).as(BoolT1)
 
   def newQuantifierPredicate(oper: TlaOper, setEx: TlaEx, ex: TlaEx): TlaEx = {
     // T /\ P for \E, T => P for \A
@@ -48,9 +48,9 @@ class TestQuantificationOptimizer extends AnyFunSuite with Checkers {
 
     setEx match {
       case ValEx(TlaIntSet) => ex
-      case ValEx(TlaNatSet) => outerOperatorCtor(varnameGe0, ex).as(BoolT1())
+      case ValEx(TlaNatSet) => outerOperatorCtor(varnameGe0, ex).as(BoolT1)
       case OperEx(TlaArithOper.dotdot, lowerBound, upperBound) =>
-        outerOperatorCtor(varnameInBounds(lowerBound, upperBound), ex).as(BoolT1())
+        outerOperatorCtor(varnameInBounds(lowerBound, upperBound), ex).as(BoolT1)
       case _ => ex
     }
   }
@@ -64,8 +64,8 @@ class TestQuantificationOptimizer extends AnyFunSuite with Checkers {
     val prop = forAll(pairGen) { case (setEx, exWithRandomTag) =>
       // gens produces garbage w.r.t. type tags, we just force the toplevel ex to be boolean.
       val ex = exWithRandomTag.withTag(boolTag)
-      val existsEx = tla.exists(varname, setEx, ex).as(BoolT1())
-      val forallEx = tla.forall(varname, setEx, ex).as(BoolT1())
+      val existsEx = tla.exists(varname, setEx, ex).as(BoolT1)
+      val forallEx = tla.forall(varname, setEx, ex).as(BoolT1)
 
       val expected = {
         val expectedPredicateExists = newQuantifierPredicate(TlaBoolOper.exists, setEx, ex)
@@ -84,13 +84,13 @@ class TestQuantificationOptimizer extends AnyFunSuite with Checkers {
   }
 
   test("Translation of Nat") {
-    val natSet = tla.natSet().as(SetT1(IntT1()))
+    val natSet = tla.natSet().as(SetT1(IntT1))
 
     withSetGen(Gen.const(natSet))
   }
 
   test("Translation of Int") {
-    val intSet = tla.intSet().as(SetT1(IntT1()))
+    val intSet = tla.intSet().as(SetT1(IntT1))
 
     withSetGen(Gen.const(intSet))
   }

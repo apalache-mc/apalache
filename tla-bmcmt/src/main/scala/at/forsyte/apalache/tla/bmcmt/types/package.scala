@@ -38,7 +38,7 @@ package object types {
      */
     def fromType1(tt: TlaType1): CellT = {
       tt match {
-        case RealT1() =>
+        case RealT1 =>
           throw new TypingException("Unsupported type RealT1", UID.nullId)
 
         case VarT1(_) =>
@@ -104,9 +104,9 @@ package object types {
   sealed case class CellTFrom(tt: TlaType1) extends CellT with Serializable {
     override val signature: String = tt match {
       case ConstT1(utype)     => s"UT_$utype"
-      case StrT1()            => "UT_Str"
-      case BoolT1()           => "b"
-      case IntT1()            => "i"
+      case StrT1              => "UT_Str"
+      case BoolT1             => "b"
+      case IntT1              => "i"
       case SetT1(et)          => s"S" + CellTFrom(et).signature
       case SeqT1(et)          => "Q_" + CellTFrom(et).signature
       case FunT1(argT, resT)  => "f%s_%s".format(CellTFrom(argT).signature, CellTFrom(resT).signature)

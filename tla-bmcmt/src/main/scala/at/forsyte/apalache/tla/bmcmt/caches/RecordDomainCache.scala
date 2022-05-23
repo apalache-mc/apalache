@@ -34,14 +34,14 @@ class RecordDomainCache(solverContext: SolverContext, strValueCache: ModelValueC
     var arena = context
 
     def strToCell(str: String): ArenaCell = {
-      val (newArena, cell) = strValueCache.getOrCreate(arena, (StrT1().toString, str))
+      val (newArena, cell) = strValueCache.getOrCreate(arena, (StrT1.toString, str))
       arena = newArena
       cell
     }
 
     val allCells = allKeys.toList.map(strToCell)
     // create the domain cell
-    arena = arena.appendCell(SetT1(StrT1()))
+    arena = arena.appendCell(SetT1(StrT1))
     val set = arena.topCell
     arena = arena.appendHas(set, allCells: _*)
     // force that every key in the usedKeys is in the set, whereas every key in the unusedKeys is outside of the set

@@ -169,28 +169,28 @@ object TypedPredefs {
           }
 
         case BuilderVal(TlaInt(value)) =>
-          ValEx(TlaInt(value))(Typed(IntT1()))
+          ValEx(TlaInt(value))(Typed(IntT1))
 
         case BuilderVal(TlaBool(value)) =>
-          ValEx(TlaBool(value))(Typed(BoolT1()))
+          ValEx(TlaBool(value))(Typed(BoolT1))
 
         case BuilderVal(TlaStr(value)) =>
-          ValEx(TlaStr(value))(Typed(StrT1()))
+          ValEx(TlaStr(value))(Typed(StrT1))
 
         case BuilderVal(TlaIntSet) =>
-          ValEx(TlaIntSet)(Typed(SetT1(IntT1())))
+          ValEx(TlaIntSet)(Typed(SetT1(IntT1)))
 
         case BuilderVal(TlaNatSet) =>
-          ValEx(TlaNatSet)(Typed(SetT1(IntT1())))
+          ValEx(TlaNatSet)(Typed(SetT1(IntT1)))
 
         case BuilderVal(TlaBoolSet) =>
-          ValEx(TlaBoolSet)(Typed(SetT1(BoolT1())))
+          ValEx(TlaBoolSet)(Typed(SetT1(BoolT1)))
 
         case BuilderVal(TlaRealSet) =>
-          ValEx(TlaRealSet)(Typed(SetT1(RealT1())))
+          ValEx(TlaRealSet)(Typed(SetT1(RealT1)))
 
         case BuilderVal(TlaStrSet) =>
-          ValEx(TlaStrSet)(Typed(SetT1(StrT1())))
+          ValEx(TlaStrSet)(Typed(SetT1(StrT1)))
 
         case BuilderVal(v) =>
           throw new BuilderError("Unexpected value: " + v)
