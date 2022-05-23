@@ -100,12 +100,17 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
       }
     }
 
-    // Override to avoid sets of functions.
+    // Override to temporarily avoid sets of functions, see https://github.com/informalsystems/apalache/issues/1759.
     override def genSet: Gen[TlaType1] = sized { size => // use 'sized' to control the depth of the generated term
       for {
         // use resize to decrease the depth of the elements (as terms)
         s <- choose(0, size)
-        g <- resize(size / (s + 1), genTypeTree).suchThat(!_.isInstanceOf[FunT1])
+        // Don't produce sets of functions.
+        // TODO(#1452): Re-enable sets of functions when we have better support.
+        g <- resize(size / (s + 1), genTypeTree).suchThat(_ match {
+          case FunT1(_, _) => false
+          case _           => true
+        })
       } yield SetT1(g)
     }
 
