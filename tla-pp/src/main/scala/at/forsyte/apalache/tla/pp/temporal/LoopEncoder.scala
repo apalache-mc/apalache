@@ -9,6 +9,7 @@ import at.forsyte.apalache.tla.pp.temporal.ScopedBuilderExtensions._
 import at.forsyte.apalache.tla.pp.temporal.DeclUtils._
 import at.forsyte.apalache.tla.pp.temporal.utils.builder
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
+import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 
 /**
  * A class for adding loop logic to a TLA Module: An extra variable InLoop is added, which, in each step, can
@@ -24,12 +25,12 @@ import at.forsyte.apalache.tla.pp.UniqueNameGenerator
  *   Philip Offtermatt
  */
 @Singleton
-class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
+class LoopEncoder(gen: UniqueNameGenerator, tracker: TransformationTracker) extends LazyLogging {
   import LoopEncoder.NAME_PREFIX
 
   val boolTag = Typed(BoolT1)
 
-  val inLoopDecl = TlaVarDecl(s"${NAME_PREFIX}InLoop_${gen.newName()}")(boolTag)
+  val inLoopDecl = TlaVarDecl(s"${NAME_PREFIX}InLoop")(boolTag)
   val inLoop = builder.declAsNameEx(inLoopDecl)
   val inLoopPrime = builder.primeVar(inLoopDecl)
 
@@ -39,7 +40,7 @@ class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
   }
 
   def createLoopVariableForVariable(varDecl: TlaVarDecl): TlaVarDecl = {
-    TlaVarDecl(s"${NAME_PREFIX}Loop_${varDecl.name}_${gen.newName()}")(varDecl.typeTag)
+    TlaVarDecl(s"${NAME_PREFIX}${varDecl.name}")(varDecl.typeTag)
   }
 
   /**
@@ -51,6 +52,7 @@ class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
     conjunctExToOperDecl(
         builder.eql(builder.declAsNameEx(loopVarDecl), builder.declAsNameEx(varDecl)),
         init,
+        tracker,
     )
   }
 
@@ -92,7 +94,7 @@ class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
         /\ loop_bar = bar
         /\ ...
      */
-    conjunctExToOperDecl(inLoopEqlFalse, initWithLoopVarInits)
+    conjunctExToOperDecl(inLoopEqlFalse, initWithLoopVarInits, tracker)
   }
 
   /**
@@ -105,7 +107,7 @@ class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
    * /\ loop_foo' = IF (InLoop' = InLoop) THEN loop_foo ELSE foo
    */
   def addLoopVarToNext(varDecl: TlaVarDecl, loopVarDecl: TlaVarDecl, next: TlaOperDecl): TlaOperDecl = {
-    val loopEx = builder.declAsNameEx(varDecl)
+    val loopEx = builder.declAsNameEx(loopVarDecl)
     val loopExPrime = builder.prime(loopEx)
 
     TlaOperDecl(
@@ -148,7 +150,7 @@ class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
           builder.impl(inLoop, inLoopPrime),
       )
 
-    val nextOrUnchangedWithInLoopUpdate = conjunctExToOperDecl(inLoopUpdate, next)
+    val nextOrUnchangedWithInLoopUpdate = conjunctExToOperDecl(inLoopUpdate, next, tracker)
 
     /*
      * /\ loop_foo' = IF (InLoop' = InLoop) THEN loop_foo ELSE foo
@@ -175,6 +177,7 @@ class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
     conjunctExToOperDecl(
         builder.eql(builder.declAsNameEx(varDecl), builder.declAsNameEx(loopVarDecl)),
         loopOK,
+        tracker,
     )
   }
 
@@ -196,7 +199,7 @@ class LoopEncoder(gen: UniqueNameGenerator) extends LazyLogging {
     /* loopOK == InLoop */
     val loopOK =
       new TlaOperDecl(
-          s"${NAME_PREFIX}LoopOK_${gen.newName()}",
+          s"${NAME_PREFIX}loopOK",
           List(),
           inLoop,
       )(Typed(OperT1(Seq.empty, BoolT1)))
@@ -260,7 +263,7 @@ object LoopEncoder {
 
   /**
    * A prefix added to the names of all variables used for the loop encoding. Useful for disambiguating them from
-   * variables in the original spec, particularly if those mention loops as well.
+   * variables in the original spec.
    */
-  val NAME_PREFIX = "__copy_"
+  val NAME_PREFIX = "__loop_"
 }

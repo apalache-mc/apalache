@@ -13,6 +13,7 @@ import at.forsyte.apalache.tla.pp.temporal.DeclUtils._
 import scala.collection.mutable.HashMap
 import at.forsyte.apalache.tla.lir.oper.TlaTempOper
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
+import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 
 /**
  * Encodes temporal formulas as invariants.
@@ -21,7 +22,12 @@ import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
  *   Philip Offtermatt
  */
 @Singleton
-class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopEncoder) extends LazyLogging {
+class TableauEncoder(
+    module: TlaModule,
+    gen: UniqueNameGenerator,
+    loopEnc: LoopEncoder,
+    tracker: TransformationTracker)
+    extends LazyLogging {
   val levelFinder = new TlaLevelFinder(module)
   val varNamesToExStrings = new HashMap[String, String]()
 
@@ -32,7 +38,7 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
 
     val mapDecl =
       new TlaOperDecl(
-          "GenVarNamesToExFun",
+          TableauEncoder.PREDS_TO_VARS_MAPPING_NAME,
           List.empty,
           builder.enumSet(
               varNameSets: _*
@@ -75,11 +81,13 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
             builder.createUnsafeInstruction(ex),
         ),
         modWithPreds.init,
+        tracker,
     )
 
     val newNext = conjunctExToOperDecl(
         builder.unchanged(exVar),
         modWithPreds.next,
+        tracker,
     )
 
     val curModWithPreds = modWithPreds.setPredicates(newInit, newNext, modWithPreds.loopOK)
@@ -169,7 +177,6 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
 
             val nodeIdentifier = TableauEncoder.NAME_PREFIX + gen.newName()
             varNamesToExStrings.addOne(nodeIdentifier, curNode.toString().replace("\"", "\'"))
-            varNamesToExStrings.addOne("loop_" + nodeIdentifier, curNode.toString().replace("\"", "\'"))
 
             /* create a new variable for this node
                     e.g.
@@ -186,15 +193,18 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
                     \* @type: Bool;
                     Loop_curNode_predicate
              */
-            val nodeLoopVarDecl = new TlaVarDecl(s"Loop_${nodeIdentifier}")(curNode.typeTag)
+            val nodeLoopVarDecl = loopEnc.createLoopVariableForVariable(nodeVarDecl)
+            varNamesToExStrings.addOne(nodeLoopVarDecl.name, curNode.toString().replace("\"", "\'"))
+
             curModWithPreds = curModWithPreds.prependDecl(nodeLoopVarDecl)
 
             /* generic initialization for node variable: curNode_predicate \in BOOLEAN */
-            val initWithNodeVar = conjunctExToOperDecl(builder.in(nodeVarEx, builder.booleanSet()), modWithPreds.init)
+            val initWithNodeVar =
+              conjunctExToOperDecl(builder.in(nodeVarEx, builder.booleanSet()), modWithPreds.init, tracker)
 
             /* generic update for node variable: curNode_predicate' \in BOOLEAN */
             val nextWithNodeVar =
-              conjunctExToOperDecl(builder.in(nodeVarExPrime, builder.booleanSet()), modWithPreds.next)
+              conjunctExToOperDecl(builder.in(nodeVarExPrime, builder.booleanSet()), modWithPreds.next, tracker)
 
             /* initialize loop variable
              */
@@ -252,6 +262,7 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
                         ),
                     ),
                     curModWithPreds.init,
+                    tracker,
                 )
 
                 /* update next:
@@ -325,6 +336,7 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
                         ),
                     ),
                     curModWithPreds.next,
+                    tracker,
                 )
 
                 /* update loopOK:
@@ -336,6 +348,7 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
                       case TlaTempOper.diamond => builder.impl(nodeVarEx, auxVarEx)
                     },
                     curModWithPreds.loopOK,
+                    tracker,
                 )
 
                 curModWithPreds = curModWithPreds.setPredicates(newInit, newNext, newLoopOK)
@@ -362,6 +375,7 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
                         builder.createUnsafeInstruction(OperEx(oper, argExs: _*)(curNode.typeTag)),
                     ),
                     curModWithPreds.init,
+                    tracker,
                 )
                 /* update the variable for this node
                     e.g. newNext ==
@@ -374,6 +388,7 @@ class TableauEncoder(module: TlaModule, gen: UniqueNameGenerator, loopEnc: LoopE
                         builder.createUnsafeInstruction(OperEx(oper, argExs: _*)(curNode.typeTag)),
                     ),
                     curModWithPreds.next,
+                    tracker,
                 )
 
                 curModWithPreds = curModWithPreds.setPredicates(newInit, newNext, curModWithPreds.loopOK)
@@ -402,4 +417,5 @@ object TableauEncoder {
    * variables in the original spec.
    */
   val NAME_PREFIX = "__temporal_"
+  val PREDS_TO_VARS_MAPPING_NAME = "__preds_to_vars"
 }

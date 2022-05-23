@@ -5,6 +5,8 @@ import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import scalaz.Scalaz._
+import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.tla.lir.transformations.standard.Flatten
 
 object ScopedBuilderExtensions {
   implicit class ScopedBuilderExtension(val builder: ScopedBuilder) {
@@ -80,13 +82,15 @@ object DeclUtils {
    * Takes decl, ex and returns newDecl with the same name as decl, with its body extended like this: newDecl == decl /\
    * ex
    */
-  def conjunctExToOperDecl(ex: TlaEx, decl: TlaOperDecl): TlaOperDecl = {
+  def conjunctExToOperDecl(ex: TlaEx, decl: TlaOperDecl, tracker: TransformationTracker): TlaOperDecl = {
     new TlaOperDecl(
         decl.name,
         decl.formalParams,
-        builder.and(
-            builder.createUnsafeInstruction(decl.body),
-            builder.createUnsafeInstruction(ex),
+        Flatten(tracker)(Typed(BoolT1))(
+            builder.and(
+                builder.createUnsafeInstruction(decl.body),
+                builder.createUnsafeInstruction(ex),
+            )
         ),
     )(decl.typeTag)
   }
