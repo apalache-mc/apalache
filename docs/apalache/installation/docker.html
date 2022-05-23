@@ -226,11 +226,11 @@ Apalache in docker while sharing the working directory:</p>
 <pre><code class="language-bash">
 ###### using the latest stable
 
-$ alias apalache='docker run --rm -v $(pwd):/var/apalache informalsystems/apalache'
+$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache'
 
 ###### using the latest unstable
 
-$ alias apalache='docker run --rm -v $(pwd):/var/apalache informalsystems/apalache:unstable'
+$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache:unstable'
 </code></pre>
 <h2><a class="header" href="#using-the-unstable-version-of-apalache" id="using-the-unstable-version-of-apalache">Using the unstable version of Apalache</a></h2>
 <p>The development of Apalache proceeds at a high pace, and we introduce a
@@ -241,16 +241,16 @@ log</a> and
 on the unstable branch for the description of the newest features. <strong>We
 recommend using the unstable version if you want to try all the exciting new
 features of Apalache. But be warned: It is called &quot;unstable&quot; for a reason</strong>. To
-use <code>unstable</code>, just type <code>informalsystems/apalache:unstable</code> instead of <code>informalsystems/apalache</code>
+use <code>unstable</code>, just type <code>ghcr.io/informalsystems/apalache:unstable</code> instead of <code>ghcr.io/informalsystems/apalache</code>
 everywhere.</p>
 <p>Do not forget to pull the docker image from time to time:</p>
 <pre><code class="language-bash">docker pull ghcr.io/informalsystems/apalache:unstable
 </code></pre>
 <p>Run it with the following command:</p>
-<pre><code class="language-bash">$ docker run --rm -v &lt;your-spec-directory&gt;:/var/apalache informalsystems/apalache:unstable &lt;args&gt;
+<pre><code class="language-bash">$ docker run --rm -v &lt;your-spec-directory&gt;:/var/apalache ghcr.io/informalsystems/apalache:unstable &lt;args&gt;
 </code></pre>
 <p>To create an alias pointing to the <code>unstable</code> version:</p>
-<pre><code class="language-bash">$ alias apalache='docker run --rm -v $(pwd):/var/apalache informalsystems/apalache:unstable'
+<pre><code class="language-bash">$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache:unstable'
 </code></pre>
 <h2><a class="header" href="#building-an-image" id="building-an-image">Building an image</a></h2>
 <p>For an end user there is no need to build an Apalache image. If you like to
