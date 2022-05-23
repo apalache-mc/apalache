@@ -321,4 +321,4 @@ $ apalache-mc parse --output=result.json <myspec>.tla
 will write the IR to the file `result.json`.
 
 [alternative SMT encoding using arrays]: ../adr/011adr-smt-arrays.md
-[Enumeration of counterexamples]: ./enumeration.md
+[Enumeration of counterexamples]: ./principles/enumeration.md
