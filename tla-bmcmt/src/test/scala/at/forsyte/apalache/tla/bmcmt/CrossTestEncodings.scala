@@ -20,8 +20,9 @@ import org.scalatestplus.scalacheck.Checkers
 import org.slf4j.LoggerFactory
 
 /**
- * Test encodings against each other. Override [[AnyFunSuite.withFixture]] to set up SMT encodings used for oracle and
- * verifier.
+ * Test encodings against each other, aka Nitpicker.
+ *
+ * Override [[AnyFunSuite.withFixture]] to set up SMT encodings used for oracle and verifier.
  *
  * This first generates a type `witnessType` and a set-valued expression `witnesses` of type `Set(witnessType)`. It then
  * checks the invariant of the following spec:
