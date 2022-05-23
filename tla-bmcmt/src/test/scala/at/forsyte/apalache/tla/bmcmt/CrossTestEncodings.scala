@@ -378,6 +378,8 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
   private def shrinkEx(ex: TlaEx): Stream[TlaEx] = ex match {
     case OperEx(TlaSetOper.enumSet, args @ _*) =>
       Stream(shrink(args).filterNot(_.isEmpty).map(elems => tla.enumSet(elems: _*).as(ex.typeTag.asTlaType1())): _*)
+    // TODO: Shrink further operators. For now, the main obstacle to interpreting the bugs uncovered by this class
+    // is that the expression generator produces sets of more elements than necessary.
     case _ => Stream.empty
   }
 
