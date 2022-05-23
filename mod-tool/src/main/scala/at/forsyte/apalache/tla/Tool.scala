@@ -128,7 +128,8 @@ object Tool extends LazyLogging {
                   runForModule(runParse, new ParserModule, parse)
 
                 case simulate: SimulateCmd =>
-                  runForModule(runSimulate, new CheckerModule, simulate)
+                  // simulation is just a special case of checking, which has additional parameters passed via SimulateCmd
+                  runForModule(runCheck, new CheckerModule, simulate)
 
                 case check: CheckCmd =>
                   runForModule(runCheck, new CheckerModule, check)
@@ -238,12 +239,6 @@ object Tool extends LazyLogging {
         },
         "Parser has failed",
     )
-  }
-
-  private def runSimulate(executor: PassChainExecutor, simulate: SimulateCmd): Int = {
-    executor.options.set("simulator.enabled", true)
-    executor.options.set("simulator.maxRun", simulate.maxRun)
-    runCheck(executor, simulate)
   }
 
   private def runCheck(executor: PassChainExecutor, check: CheckCmd): Int = {
