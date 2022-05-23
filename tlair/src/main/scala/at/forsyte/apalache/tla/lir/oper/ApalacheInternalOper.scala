@@ -85,10 +85,10 @@ object ApalacheInternalOper {
 
   /**
    * The smtMap operator applies an SMT map using conjunction to two cells encoded as SMT arrays. Its current use is to
-   * encoded set intersection when handling TLA+ filters.
+   * encoded set intersection, when handling TLA+ filters, and set union.
    */
-  object smtMap extends ApalacheOper {
-    override def name: String = "Apalache!SmtMap"
+  case class smtMap(mapOper: TlaOper) extends ApalacheOper {
+    override def name: String = s"Apalache!SmtMap_${mapOper.name}"
 
     override def arity: OperArity = FixedArity(2)
 

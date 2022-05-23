@@ -13,14 +13,11 @@
 
 # Apalache User Manual
 
-- [Introduction](./apalache/index.md)
-- [Getting Started](./apalache/getting-started.md)
-    - [Shall I use Apalache or TLC?](./apalache/apalache-or-tlc.md)
-    - [System Requirements](./apalache/system-reqs.md)
+- [Getting Started](./apalache/index.md)
     - [Installation](./apalache/installation/index.md)
         - [Prebuilt Packages](./apalache/installation/jvm.md)
         - [Docker](./apalache/installation/docker.md)
-        - [Source](./apalache/installation/source.md)
+        - [Build from Source](./apalache/installation/source.md)
     - [Running the Tool](./apalache/running.md)
     - [An Example TLA+ Specification](./apalache/example.md)
     - [Specification Parameters](./apalache/parameters.md)
@@ -30,7 +27,6 @@
         - [Invariants: State, Action, Trace](./apalache/principles/invariants.md)
         - [Enumeration of counterexamples](./apalache/principles/enumeration.md)
         - [The Apalache Module](./apalache/principles/apalache-mod.md)
-        - [Recursive operators and functions](./apalache/principles/recursive.md)
         - [Naturals](./apalache/principles/naturals.md)
     - [Apalache global configuration file](./apalache/config.md)
     - [TLA+ Execution Statistics](./apalache/statistics.md)
@@ -39,6 +35,7 @@
 - [TLC Configuration Files](./apalache/tlc-config.md)
 - [The Snowcat Type Checker](./apalache/typechecker-snowcat.md)
 - [Supported Features](./apalache/features.md)
+- [Obsolete: Recursive operators and functions](./apalache/principles/recursive.md)
 - [Known Issues](./apalache/known-issues.md)
 - [Antipatterns](./apalache/antipatterns.md)
 - [TLA+ Preprocessing](./apalache/preprocessing.md)
@@ -73,9 +70,7 @@
     - [LET-IN definitions](./lang/user/let-in.md)
     - [Higher-order operators definitions](./lang/user/higher-order-operators.md)
     - [Anonymous operator definitions](./lang/user/lambdas.md)
-    - [Recursive operator definitions](./lang/user/recursive-operators.md)
     - [Local operator definitions](./lang/user/local-operators.md)
-    - [Recursive functions](./lang/user/recursive-functions.md)
 - [Apalache operators](./lang/apalache-operators.md)
 - [Modules, Extends, and Instances]()
 
@@ -103,3 +98,4 @@
 - [ADR-015: ITF: informal trace format](./adr/015adr-trace.md)
 - [ADR-016: ReTLA: Relational TLA](./adr/016adr-retla.md)
 - [PDR-017: Checking temporal properties](./adr/017pdr-temporal.md)
+- [ADR-018: Inlining in Apalache](./adr/018adr-inlining.md)

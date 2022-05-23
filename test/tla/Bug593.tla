@@ -5,10 +5,10 @@
 EXTENDS Integers, Bug593Aux
 
 VARIABLE 
-\* @type: [type: Str]; 
+\* @type: { type: Str };
 record
 
-Init == record = [type |-> "B"]
+Init == record = [ type |-> "B" ]
 
 Next ==
     LET result == Dummy IN

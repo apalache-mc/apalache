@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.Checker.{CheckerResult, Deadlock, Error, RuntimeError}
+import at.forsyte.apalache.tla.bmcmt.Checker._
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode
 import at.forsyte.apalache.tla.bmcmt.search.{ModelCheckerParams, SearchState}
 import at.forsyte.apalache.tla.bmcmt.trex.{
@@ -238,14 +238,20 @@ class SeqModelChecker[ExecutorContextT](
     }
 
     if (trex.preparedTransitionNumbers.isEmpty) {
-      if (trex.sat(0).contains(true)) {
-        notifyCounterexample(checkerInput.rootModule, trex.decodedExecution(), ValEx(TlaBool(true)),
-            searchState.nFoundErrors)
-        logger.error("Found a deadlock.")
+      if (params.checkForDeadlocks) {
+        if (trex.sat(0).contains(true)) {
+          notifyCounterexample(checkerInput.rootModule, trex.decodedExecution(), ValEx(TlaBool(true)),
+              searchState.nFoundErrors)
+          logger.error("Found a deadlock.")
+        } else {
+          logger.error(s"Found a deadlock. No SMT model.")
+        }
+        searchState.onResult(Deadlock())
       } else {
-        logger.error(s"Found a deadlock. No SMT model.")
+        val msg = "All executions are shorter than the provided bound."
+        logger.warn(msg)
+        searchState.onResult(ExecutionsTooShort())
       }
-      searchState.onResult(Deadlock())
       (Set.empty, Set.empty)
     } else {
       // pick one transition
@@ -389,11 +395,14 @@ class SeqModelChecker[ExecutorContextT](
     notTraceInv match {
       case TlaOperDecl(_, List(OperParam(name, 0)), body) =>
         // LET Call_$param == hist IN notTraceInv(param)
-        val operType = OperT1(Seq(seqType), BoolT1())
+        val operType = OperT1(Seq(seqType), BoolT1)
         val callName = s"Call_$name"
         // replace param with $callName() in the body
         val app = OperEx(TlaOper.apply, NameEx(callName)(Typed(operType)))(Typed(seqType))
-        val replacedBody = ReplaceFixed(new IdleTracker())({ e => e == NameEx(name)(Typed(seqType)) }, app)(body)
+        val replacedBody =
+          ReplaceFixed(new IdleTracker()).whenMatches({
+                _ == NameEx(name)(Typed(seqType))
+              }, app)(body)
         LetInEx(replacedBody, TlaOperDecl(callName, List(), hist)(Typed(operType)))
 
       case TlaOperDecl(name, _, _) =>
@@ -414,10 +423,10 @@ class SeqModelChecker[ExecutorContextT](
             case _            => false
           }
 
-          repl(isToReplace, assignedEx.copy())(replacedView)
+          repl.whenMatches(isToReplace, assignedEx.copy())(replacedView)
         }
       // the view over state variables should not be equal to the view over the model values
-      val boolTag = Typed(BoolT1())
+      val boolTag = Typed(BoolT1)
       OperEx(TlaBoolOper.not, OperEx(TlaOper.eq, modelView, view)(boolTag))(boolTag)
     }
 
@@ -425,7 +434,7 @@ class SeqModelChecker[ExecutorContextT](
       // extract expressions from the model, as we are going to use these expressions (not the cells!) in path constraints
       val exec = trex.decodedExecution()
       // omit the first assignment, as it contains only assignments to the state variables
-      val pathConstraint = ValEx(TlaBool(true))(Typed(BoolT1())) :: (exec.path.tail.map(_._1).map(computeViewNeq(view)))
+      val pathConstraint = ValEx(TlaBool(true))(Typed(BoolT1)) :: (exec.path.tail.map(_._1).map(computeViewNeq(view)))
       trex.addPathOrConstraint(pathConstraint)
     }
   }

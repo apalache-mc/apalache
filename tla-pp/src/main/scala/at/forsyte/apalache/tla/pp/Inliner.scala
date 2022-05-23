@@ -8,8 +8,8 @@ import at.forsyte.apalache.tla.lir.transformations.standard.{
   DeclarationSorter, DeepCopy, IncrementalRenaming, ReplaceFixed,
 }
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
-import at.forsyte.apalache.tla.pp.Inliner.FilterFun
-import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier}
+import at.forsyte.apalache.tla.pp.Inliner.{DeclFilter, FilterFun}
+import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier, TypeVarPool}
 
 /**
  * Given a module m, with global operators F1,...,Fn, Inliner performs the following transformation:
@@ -30,11 +30,10 @@ import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier}
  */
 class Inliner(
     tracker: TransformationTracker,
-    nameGenerator: UniqueNameGenerator,
+    renaming: IncrementalRenaming,
     keepNullary: Boolean = true,
-    moduleLevelFilter: Inliner.DeclFilter = FilterFun.ALL) {
+    moduleLevelFilter: DeclFilter = FilterFun.ALL) {
 
-  private val renaming = new IncrementalRenaming(tracker)
   private val deepcopy = DeepCopy(tracker)
   private def deepCopy(ex: TlaEx): TlaEx = renaming(deepcopy.deepCopyEx(ex))
 
@@ -58,7 +57,7 @@ class Inliner(
       operDeclFilter: DeclFilter = negateFilter(nonNullaryFilter),
       scopeFilter: DeclFilter = nonNullaryFilter,
     )(initialScope: Scope,
-      decls: Traversable[TlaDecl]): (Scope, List[TlaDecl]) =
+      decls: Iterable[TlaDecl]): (Scope, List[TlaDecl]) =
     decls.foldLeft((initialScope, List.empty[TlaDecl])) { case ((scope, decls), decl) =>
       decl match {
         case opDecl: TlaOperDecl =>
@@ -82,7 +81,8 @@ class Inliner(
   // a substitution of the two. A substitution is assumed to exist, otherwise TypingException is thrown.
   private def getSubstitution(targetType: TlaType1, decl: TlaOperDecl): (Substitution, TlaType1) = {
     val genericType = decl.typeTag.asTlaType1()
-    new TypeUnifier().unify(Substitution.empty, genericType, targetType) match {
+    val maxUsedVar = Math.max(genericType.usedNames.foldLeft(0)(Math.max), targetType.usedNames.foldLeft(0)(Math.max))
+    new TypeUnifier(new TypeVarPool(maxUsedVar + 1)).unify(Substitution.empty, genericType, targetType) match {
       case None =>
         throw new TypingException(
             s"Inliner: Unable to unify generic signature $genericType of ${decl.name} with the concrete type $targetType",
@@ -102,7 +102,7 @@ class Inliner(
 
     // Each formal parameter gets instantiated independently.
     val replacedBody = decl.formalParams.zip(args).foldLeft(freshBody) { case (partialBody, (fParam, arg)) =>
-      ReplaceFixed(tracker)(NameEx(fParam.name)(arg.typeTag), arg)(partialBody)
+      ReplaceFixed(tracker).whenEqualsTo(NameEx(fParam.name)(arg.typeTag), arg)(partialBody)
     }
 
     // There are two cases where the above instantiation might be incomplete:
@@ -143,8 +143,8 @@ class Inliner(
       if (substitution.isEmpty) freshBody
       else new TypeSubstitutor(tracker, substitution)(freshBody)
 
-    // To make a local definition, we use a fresh name
-    val newName = nameGenerator.newName()
+    // To make a local definition, we use a fresh name, derived from the original name, but renamed to get a fresh $N
+    val newName = renaming.apply(NameEx(decl.name)(decl.typeTag)).asInstanceOf[NameEx].name
     val newLocalDecl = TlaOperDecl(newName, decl.formalParams, newBody)(tpTag)
 
     LetInEx(NameEx(newName)(tpTag), newLocalDecl)(tpTag)

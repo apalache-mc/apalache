@@ -301,6 +301,14 @@ Run the units
 make test
 ```
 
+### Logging in unit tests
+
+We disable unit test log output for subprojects where necessary, to avoid output
+flooding the console. This affects unit tests only, and is configured in a
+per-subproject logback configuration file `test/resources/logback-test.xml`.
+This file also contains a commented-out console appender that can be enabled if
+needed for debugging purposes.
+
 ### Integration tests
 
 #### Installing Dependencies
@@ -347,27 +355,79 @@ The CI configuration is located in
 
 ### Structure
 
-[./UNRELEASED.md](./UNRELEASED.md)
-: A living record of the changes not yet released.
+[./.unreleased/](./.unreleased/)
+: A living record of the changes not yet released. It contains a subdirectory
+  for each supported category of change.
 
-[./RELEASE-NOTES.md](./RELEASE-NOTES.md)
-: A frozen record documenting the changes added since the last release, only
-  present in release-commits.
+[./RELEASE.md](./RELEASE.md)
+: A frozen record documenting the changes added since the last release. This is
+  only present in release commits.
 
 [./CHANGES.md](./CHANGES.md)
-: The accumulated history of all the changes, across all versions.
+: The changelog accumulating the history of all the changes, across all
+  versions.
 
 ### Recording changes
 
-Every non-trivial PR must update the [unreleased changes log](./UNRELEASED.md).
+Every PR introducing changes that are likely to impact the observable behavior
+of Apalache MUST add at least one entry into the appropriate subdirectory of
+[.unreleased/](./.unreleased/).
 
-Changes for a given release should be split between the five sections:
+#### What kinds of changes to record
 
-1. Breaking changes
-2. Features
-3. Improvements
-4. Bug fixes
-5. Documentation
+We break entries into the follow categories:
+
+[breaking-changes](https://en.wiktionary.org/wiki/breaking_change)
+: A breaking change occurs when behavior is introduced that could cause existing
+  usage patterns to fail. Examples include adding/removing CLI flags or changing
+  the representation of data that is emitted as part of our public API.
+
+[features](https://en.wikipedia.org/wiki/Software_feature)
+: Features include adding any user-visible functionality or making significant
+  improvements to existing functionality.
+
+[bug-fixes](https://en.wikipedia.org/wiki/Software_bug)
+: "A software bug is an error, flaw or fault in computer software that causes it
+  to produce an incorrect or unexpected result." We only record the removal of
+  bugs and not their introduction ;)
+
+[documentation](https://en.wikipedia.org/wiki/Documentation)
+: Documentation includes the inline CLI documentation and the user manual.
+
+We generally do not make entries for changes that don't affect the observable
+behavior of the program for users. E.g., we don't add entries for things like
+design documentation, improvements to the development environment, or code
+reorganization that doesn't impact the public API.
+
+#### How to record a change
+
+An single entry is made by creating a single markdown file in the appropriate
+directory. To enter `n` distinct changes, create `n` different markdown files.
+
+As an example, if your PR introduces the new feature `Foo`, you would add a file
+`.unreleased/features/foo.md` with content along the lines of
+
+```markdown
+Added feature Foo, see #123
+```
+
+where `#123` is the ID of the issue or pull request that best explains the
+motive and nature of the change.
+
+The file name is generally irrelevant, but if the order of changelog entries
+matters, you can use the lexicographical ordering of file names in a directory
+to enforce it
+
+The contents of each file will be converted into a single bullet point item in
+the release notes under a heading corresponding to the sub-directory. E.g., the
+above example will be included in the changelog for the next release as:
+
+```markdown
+
+### Features
+
+- Added feature Foo, see #123
+```
 
 ## Releases
 

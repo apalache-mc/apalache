@@ -19,9 +19,9 @@ ThisBuild / versionFile := (ThisBuild / baseDirectory).value / "VERSION"
 ThisBuild / version := scala.io.Source.fromFile(versionFile.value).mkString.trim
 
 ThisBuild / organization := "at.forsyte"
-ThisBuild / scalaVersion := "2.12.15"
+ThisBuild / scalaVersion := "2.13.8"
 
-// https://oss.sonatype.org/content/repositories/snapshots/
+// Add resolver for Sonatype OSS Snapshots Maven repository
 ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
 
 // Shared dependencies accross all sub projects
@@ -84,18 +84,19 @@ ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 // Test configuration //
 ///////////////////////////////
 
-// NOTE: Include these settings in any projects that require Apalache's TLA+ modules
-lazy val tlaModuleTestSettings = Seq(
-    // This ensures that tests run from their respective sub-project directories
-    // and sequentially. FIXME: https://github.com/informalsystems/apalache/issues/1577
-    Test / fork := true
-)
-
 lazy val testSettings = Seq(
     // Configure the test reporters for concise but informative output.
     // See https://www.scalatest.org/user_guide/using_scalatest_with_sbt
     // for the meaning of the flags.
     Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oCDEH")
+)
+
+lazy val testSanyBugSettings = Seq(
+    // FIXME: https://github.com/informalsystems/apalache/issues/1577
+    // SANY contains a race condition that unpacks temporary module files into
+    // the same directory: https://github.com/tlaplus/tlaplus/issues/688
+    // Tests calling SanyImporter must execute sequentially until fixed.
+    Test / parallelExecution := false
 )
 
 /////////////////////////////
@@ -127,7 +128,7 @@ lazy val tla_io = (project in file("tla-io"))
   )
   .settings(
       testSettings,
-      tlaModuleTestSettings,
+      testSanyBugSettings,
       libraryDependencies ++= Seq(
           Deps.commonsIo,
           Deps.pureConfig,
@@ -141,7 +142,7 @@ lazy val tla_types = (project in file("tla-types"))
       tlair % "test->test", tla_io)
   .settings(
       testSettings,
-      tlaModuleTestSettings,
+      testSanyBugSettings,
       libraryDependencies += Deps.commonsIo,
   )
 
@@ -157,7 +158,7 @@ lazy val tla_pp = (project in file("tla-pp"))
   )
   .settings(
       testSettings,
-      tlaModuleTestSettings,
+      testSanyBugSettings,
       libraryDependencies += Deps.commonsIo,
   )
 
@@ -169,9 +170,14 @@ lazy val tla_assignments = (project in file("tla-assignments"))
   )
 
 lazy val tla_bmcmt = (project in file("tla-bmcmt"))
-  .dependsOn(tlair, infra, tla_io, tla_pp, tla_assignments)
+  .dependsOn(tlair,
+      // property based tests depend on IR generators defined in the tlair tests
+      // See https://www.scala-sbt.org/1.x/docs/Multi-Project.html#Per-configuration+classpath+dependencies
+      tlair % "test->test", infra, tla_io, tla_pp, tla_assignments)
   .settings(
-      testSettings
+      testSettings,
+      testSanyBugSettings,
+      libraryDependencies += Deps.scalaCollectionContrib,
   )
 
 lazy val tool = (project in file("mod-tool"))
@@ -184,7 +190,7 @@ lazy val tool = (project in file("mod-tool"))
       // See https://github.com/sbt/sbt-buildinfo
       buildInfoPackage := "apalache",
       buildInfoKeys := {
-        val build = scala.sys.process.Process("git describe --tags --always").!!.trim
+        val build = Process("git describe --tags --always").!!.trim
         Seq[BuildInfoKey](
             BuildInfoKey.map(version) { case (k, v) =>
               if (isSnapshot.value) (k -> build) else (k -> v)
@@ -214,7 +220,7 @@ lazy val apalacheCurrentPackage = taskKey[File]("Set the current executable apal
 
 // Define the main entrypoint and uber jar package
 lazy val root = (project in file("."))
-  .enablePlugins(UniversalPlugin, sbtdocker.DockerPlugin)
+  .enablePlugins(UniversalPlugin, sbtdocker.DockerPlugin, ChangelingPlugin)
   .dependsOn(distribution)
   .aggregate(
       // propagate commands to these sub-projects
@@ -329,7 +335,7 @@ docker / dockerfile := {
   val readme = rootDir / "README.md"
 
   new Dockerfile {
-    from("eclipse-temurin:16")
+    from("eclipse-temurin:17")
 
     workDir(dwd)
 

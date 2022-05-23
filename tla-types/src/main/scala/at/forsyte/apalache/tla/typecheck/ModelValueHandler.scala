@@ -23,15 +23,26 @@ object ModelValueHandler {
   /**
    * The name that is designated for string, in contrast to model values.
    */
-  val STRING_TYPE: String = "str"
   private val matchRegex: Regex = raw"([a-zA-Z0-9_]+)_OF_([A-Z_][A-Z0-9_]*)".r
+
+  /**
+   * Is the supplied string encoding a model value.
+   *
+   * @param text
+   *   a string to test
+   * @return
+   *   true, if the string encodes a model value
+   */
+  def isModelValue(text: String): Boolean = {
+    typeAndIndex(text).isDefined
+  }
 
   /**
    * Returns the type of `s`. If `s` follows the pattern for model values, its type is `ConstT1(_)`, otherwise is is a
    * regular string.
    */
   def modelValueOrString(s: String): TlaType1 = {
-    typeAndIndex(s).map(_._1).getOrElse(StrT1())
+    typeAndIndex(s).map(_._1).getOrElse(StrT1)
   }
 
   /**

@@ -15,43 +15,17 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
  */
 class MockOracle(fixedValue: Int) extends Oracle {
 
-  /**
-   * Produce an expression that states that the oracle values equals to the given integer position. The actual
-   * implementation may be different from an integer comparison.
-   *
-   * @param state
-   *   a symbolic state
-   * @param position
-   *   a position the oracle should be equal to
-   */
-  override def whenEqualTo(state: SymbState, position: Int): TlaEx = { tla.bool(position == fixedValue) }
+  override def size: Int = fixedValue + 1
 
-  /**
-   * Produce a ground expression that contains assertions for the possible oracle values.
-   *
-   * @param state
-   *   a symbolic state
-   * @param assertions
-   *   a sequence of assertions, one per oracle value
-   * @param elseAssertions
-   *   an optional sequence of assertions, one per oracle value
-   * @return
-   *   an expression ite(oracle = 0, ite(oracle = 1, ...))
-   */
+  override def whenEqualTo(state: SymbState, position: Int): TlaEx = {
+    tla.bool(position == fixedValue)
+  }
+
   override def caseAssertions(state: SymbState, assertions: Seq[TlaEx], elseAssertions: Seq[TlaEx] = Seq()): TlaEx = {
     assertions(fixedValue)
   }
 
-  /**
-   * Get a symbolic state and decode the value of the oracle variable into an integer. This method assumes that the
-   * solver context has produced an SMT model.
-   *
-   * @param solverContext
-   *   a solver context
-   * @param state
-   *   a symbolic state
-   * @return
-   *   an integer value of the oracle
-   */
-  override def evalPosition(solverContext: SolverContext, state: SymbState): Int = { fixedValue }
+  override def evalPosition(solverContext: SolverContext, state: SymbState): Int = {
+    fixedValue
+  }
 }

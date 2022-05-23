@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.lir.{
   TupT1, VarT1, VariantT1,
 }
 import at.forsyte.apalache.tla.typecheck.etc.Substitution.SUB_LIMIT
+import scala.collection.immutable.SortedMap
 
 /**
  * A substitution from type variables to types.
@@ -37,7 +38,7 @@ class Substitution(val mapping: Map[EqClass, TlaType1]) {
           (tp, false)
         }
 
-      case IntT1() | BoolT1() | RealT1() | StrT1() | ConstT1(_) =>
+      case IntT1 | BoolT1 | RealT1 | StrT1 | ConstT1(_) =>
         (tp, false)
 
       case SetT1(elem) =>
@@ -54,13 +55,13 @@ class Substitution(val mapping: Map[EqClass, TlaType1]) {
 
       case SparseTupT1(fieldTypes) =>
         val ntypesAndChanged = fieldTypes.map(kv => (kv._1, sub(kv._2)))
-        val ntypes = ntypesAndChanged.mapValues(_._1)
+        val ntypes = ntypesAndChanged.view.mapValues(_._1).toMap.to(SortedMap)
         val isChanged = ntypesAndChanged.exists(_._2._2)
         (SparseTupT1(ntypes), isChanged)
 
       case RecT1(fieldTypes) =>
         val ntypesAndChanged = fieldTypes.map(kv => (kv._1, sub(kv._2)))
-        val ntypes = ntypesAndChanged.mapValues(_._1)
+        val ntypes = ntypesAndChanged.view.mapValues(_._1).toMap.to(SortedMap)
         val isChanged = ntypesAndChanged.exists(_._2._2)
         (RecT1(ntypes), isChanged)
 

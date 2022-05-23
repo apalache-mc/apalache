@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaControlOper
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, IntT1, OperEx, TlaEx}
 
 /**
  * Rewriting rule for IF A THEN B ELSE C.
@@ -47,7 +47,7 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
           val resultType = CellT.fromTypeTag(ex.typeTag)
           resultType match {
             // basic types, we can use SMT equality
-            case BoolT() | IntT() | ConstT(_) =>
+            case CellTFrom(BoolT1) | CellTFrom(IntT1) | CellTFrom(ConstT1(_)) =>
               iteBasic(nextState, resultType, predCell.toNameEx, thenCell, elseCell)
 
             // sets, functions, records, tuples, sequence: use pick
@@ -66,7 +66,7 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
       pred: TlaEx,
       thenCell: ArenaCell,
       elseCell: ArenaCell) = {
-    val newArena = state.arena.appendCell(commonType)
+    val newArena = state.arena.appendCellOld(commonType)
     val newCell = newArena.topCell
     // it's OK to use the SMT equality and ite, as we are dealing with the basic types here
     val iffIte = tla.eql(newCell.toNameEx, tla.ite(pred, thenCell.toNameEx, elseCell.toNameEx))

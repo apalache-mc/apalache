@@ -1,4 +1,4 @@
-# a good old Makefile for the end users, so they don't need to learn SBT commands
+# A good old Makefile for the end users, so they don't need to learn SBT commands
 
 # Markdown files used for integration tests
 TEST_MD_FILES := $(wildcard test/tla/*.md)
@@ -7,26 +7,33 @@ TEST_MD_FILES := $(wildcard test/tla/*.md)
 
 all: apalache
 
-# test and assemble the package
+# Test and assemble the package for development and integration tests
+#
+# For packaging and distribution of releases, see the dist target
 apalache:
 	sbt test apalacheCurrentPackage
 
-# package the project for local use without running tests
+# Package the project for local development use without running tests
 package:
 	sbt apalacheCurrentPackage
 
-# compile, but don't assemble the package
+# Compile, but don't assemble the package
 compile:
 	sbt compile
 
 test:
 	sbt test
 
+# Compile code with fatal warnings enables
+compile-strict: export APALACHE_FATAL_WARNINGS=true
+compile-strict:
+	sbt Test/compile compile
+
 # Run tests with scoverage report
 test-coverage:
 	sbt coverage test coverageAggregate
 
-# run the integration tests
+# Run the integration tests
 integration: package
 	test/mdx-test.py --debug "$(TEST_FILTER)"
 
@@ -34,7 +41,7 @@ integration: package
 docker:
 	sbt docker
 
-# Create the distribution packages
+# Create the distribution packages for releases and non-development usage
 # The archives without version suffix support stable links to the latest version.
 # See https://github.com/informalsystems/apalache/issues/716
 dist:
@@ -48,8 +55,6 @@ test/tla/%.md: target/test/tla/%.md.corrected
 	cp -f $< $@
 
 fmt-check:
-  # TODO: rm if we decide to keep running on all source files
-	# git fetch origin
 	sbt scalafmtCheckAll scalafmtSbtCheck scalafixEnable "scalafixAll --check RemoveUnused" || \
 		( echo "TO FIX: run 'make fmt-fix' and commit the changes" ; \
 		  exit 1 )

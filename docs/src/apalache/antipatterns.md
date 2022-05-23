@@ -29,7 +29,7 @@ min(S) ==
     IN IF e < minOther THEN e ELSE minOther 
 ```
 
-Apalache dislikes the use of the above, for several reasons. Firstly, since the operator is `RECURSIVE`, Apalache requires a predefined upper bound on unrolling, which means that the user must know, ahead of time, what the largest `|S|` is, for any set `S`, to which this operator is ever applied. 
+Apalache dislikes the use of the above, for several reasons. Firstly, since the operator is `RECURSIVE`, Apalache does not support it after version 0.23.1. In earlier versions Apalache requires a predefined upper bound on unrolling, which means that the user must know, ahead of time, what the largest `|S|` is, for any set `S`, to which this operator is ever applied. 
 In addition, computing `F` for a set `S` of size `n = |S|` requires `n` encodings of a `CHOOSE` operation, which can be considerably expensive in Apalache.
 Lastly, Apalache also needs to encode all of the the `n` intermediate sets, `S \ {e1}`, `(S \ {e1}) \ {e2}`, `((S \ {e1}) \ {e2}) \ {e3}`, and so on.
 

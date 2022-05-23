@@ -1,10 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.types.{CellT, UnknownT}
+import at.forsyte.apalache.tla.bmcmt.types.UnknownT
 import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
-import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.convenience.tla
+
+import scala.collection.immutable.ArraySeq
 
 /**
  * <p>Proto sequences that contain the absolute minimum for implementing TLA+ sequences. A proto sequence is a
@@ -56,7 +58,7 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
     val protoSeq = nextState.arena.topCell
 
     // attach the cells to the proto sequence, do not track this in SMT
-    nextState = nextState.updateArena(_.appendHasNoSmt(protoSeq, cellsAsArray: _*))
+    nextState = nextState.updateArena(_.appendHasNoSmt(protoSeq, ArraySeq.unsafeWrapArray(cellsAsArray): _*))
     nextState.setRex(protoSeq.toNameEx)
   }
 
@@ -164,23 +166,23 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
           // pick an element to be the result
           nextState = picker.pickByOracle(oracleState, oracle, protoElems, nextState.arena.cellTrue().toNameEx)
           val pickedResult = nextState.asCell
-          val indexCellBase1asInt = indexCellBase1.toNameEx.as(IntT1())
+          val indexCellBase1asInt = indexCellBase1.toNameEx.as(IntT1)
           // If 0 < indexCell <= capacity, then require oracle = indexCell - 1.
           // Otherwise, we do not restrict the outcome. This is consistent with Specifying Systems.
           // We do not refer to the actual length of the sequence (which we don't know).
           // Instead, we use the capacity of the proto sequence.
           val inRange =
             tla
-              .and(tla.lt(tla.int(0), indexCellBase1asInt).as(BoolT1()),
-                  tla.le(indexCellBase1asInt, tla.int(capacity)).as(BoolT1()))
-              .as(BoolT1())
+              .and(tla.lt(tla.int(0), indexCellBase1asInt).as(BoolT1),
+                  tla.le(indexCellBase1asInt, tla.int(capacity)).as(BoolT1))
+              .as(BoolT1)
           // (indexBase1 - 1 = oracle) <=> inRange
           val oracleEqArg =
             tla
-              .eql(tla.minus(indexCellBase1asInt, tla.int(1)).as(IntT1()), oracle.intCell.toNameEx.as(IntT1()))
-              .as(IntT1())
-              .as(BoolT1())
-          val iff = tla.eql(oracleEqArg, inRange).as(BoolT1())
+              .eql(tla.minus(indexCellBase1asInt, tla.int(1)).as(IntT1), oracle.intCell.toNameEx.as(IntT1))
+              .as(IntT1)
+              .as(BoolT1)
+          val iff = tla.eql(oracleEqArg, inRange).as(BoolT1)
           rewriter.solverContext.assertGroundExpr(iff)
           nextState.setRex(pickedResult.toNameEx)
 
@@ -245,7 +247,7 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
       seqT: TlaType1,
       protoSeq: ArenaCell,
       len: ArenaCell): (Arena, ArenaCell) = {
-    var newArena = arena.appendCell(CellT.fromType1(seqT))
+    var newArena = arena.appendCell(seqT)
     val seq = newArena.topCell
     // note that we do not track in SMT the relation between the sequence, the proto sequence, and its length
     newArena = newArena.appendHasNoSmt(seq, len, protoSeq)
@@ -329,9 +331,9 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
       nextState = picker
         .pickByOracle(oracleState, oracle, Seq(state.asCell, newResult), nextState.arena.cellTrue().toNameEx)
       val picked = nextState.ex
-      val inRange = tla.le(tla.int(indexBase1), len.toNameEx.as(IntT1())).as(BoolT1())
-      val pickNew = oracle.whenEqualTo(nextState, 1).as(BoolT1())
-      val eql = tla.eql(inRange, pickNew).as(BoolT1())
+      val inRange = tla.le(tla.int(indexBase1), len.toNameEx.as(IntT1)).as(BoolT1)
+      val pickNew = oracle.whenEqualTo(nextState, 1).as(BoolT1)
+      val eql = tla.eql(inRange, pickNew).as(BoolT1)
       rewriter.solverContext.assertGroundExpr(eql)
 
       nextState.setRex(picked)

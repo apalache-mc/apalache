@@ -3,11 +3,11 @@ package at.forsyte.apalache.tla.lir
 import scala.language.implicitConversions
 
 /**
- * Default settings for the untyped language layer. To use the `Untyped()` tag, import the definitions from
+ * Default settings for the untyped language layer. To use the `Untyped` tag, import the definitions from
  * `UntypedPredefs`.
  */
 object UntypedPredefs {
-  implicit val untyped: TypeTag = Untyped()
+  implicit val untyped: TypeTag = Untyped
 
   /**
    * An implicit conversion of an expression to a builder block
@@ -39,7 +39,7 @@ object UntypedPredefs {
         ex
 
       case BuilderName(name) =>
-        NameEx(name)(Untyped())
+        NameEx(name)(Untyped)
 
       case BuilderAlias(target, _) =>
         builderExToTlaEx(target)
@@ -53,14 +53,14 @@ object UntypedPredefs {
         LetInEx(builtBody, defs: _*)
 
       case BuilderVal(value) =>
-        ValEx(value)(Untyped())
+        ValEx(value)(Untyped)
     }
   }
 
   implicit def builderDeclToTlaDecl(block: BuilderDecl): TlaDecl = {
     block match {
       case BuilderOperDecl(name, formalParams, body) =>
-        TlaOperDecl(name, formalParams, body)(Untyped())
+        TlaOperDecl(name, formalParams, body)(Untyped)
 
       case _ =>
         throw new BuilderError("Unexpected case of BuilderDecl: " + block)
@@ -81,7 +81,7 @@ object UntypedPredefs {
 
   implicit class BuilderOperDeclAsUntyped(block: BuilderOperDecl) {
     def untypedOperDecl(): TlaOperDecl = {
-      TlaOperDecl(block.name, block.formalParams, block.body)(Untyped())
+      TlaOperDecl(block.name, block.formalParams, block.body)(Untyped)
     }
   }
 

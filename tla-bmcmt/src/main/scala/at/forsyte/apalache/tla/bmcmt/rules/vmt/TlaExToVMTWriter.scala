@@ -98,7 +98,7 @@ class TlaExToVMTWriter(gen: UniqueNameGenerator) {
       .map { d => (d.name, d.typeTag) }
       .collect {
         case (name, Typed(SetT1(ConstT1(sortName)))) => (name, UninterpretedSort(sortName))
-        case (name, Typed(SetT1(StrT1())))           => (name, UninterpretedSort(StrT1().toString))
+        case (name, Typed(SetT1(StrT1)))             => (name, UninterpretedSort(StrT1.toString))
       }
       .toMap[String, UninterpretedSort]
 

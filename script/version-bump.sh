@@ -25,11 +25,5 @@ then
     exit 4
 fi
 
-# Bump version to next SNAPSHOT
-sbt incrVersion
-
-"$DIR"/update-changes.sh
-
-DEV_VERSION=$("$DIR"/get-version.sh)
-git add --update
-git commit -m "Bump version to ${DEV_VERSION}"
+# Update changelog and bump version to next SNAPSHOT
+sbt changelingChangelog incrVersion

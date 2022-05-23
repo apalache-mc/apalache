@@ -11,8 +11,8 @@ trait TestSymbStateRewriterFoldSeq extends RewriterBase {
   test("""FoldSeq( LAMBDA x,y: C, v, S ) = C""") { rewriterType: SMTEncoding =>
     // A : (a,b) => a
     // A(p,q) == 0
-    val a = IntT1()
-    val b = IntT1()
+    val a = IntT1
+    val b = IntT1
     val opT = OperT1(Seq(a, b), a)
 
     val nonemptySeq = tuple(int(2), int(3)).typed(SeqT1(b))
@@ -25,15 +25,15 @@ trait TestSymbStateRewriterFoldSeq extends RewriterBase {
     val foldEx = OperEx(
         ApalacheOper.foldSeq,
         letEx,
-        int(1).typed(IntT1()),
+        int(1).typed(IntT1),
         nonemptySeq,
     )(Typed(a))
 
-    val eqn = eql(foldEx, constVal).typed(BoolT1())
+    val eqn = eql(foldEx, constVal).typed(BoolT1)
 
     val state = new SymbState(eqn, arena, Binding())
 
-    assert(new FoldSeqRule(this.create(rewriterType)).isApplicable(state.setRex(foldEx)))
+    assert(new FoldSeqRule(this.create(rewriterType), renaming).isApplicable(state.setRex(foldEx)))
 
     assertTlaExAndRestore(create(rewriterType), state)
   }
@@ -41,8 +41,8 @@ trait TestSymbStateRewriterFoldSeq extends RewriterBase {
   test("""FoldSeq( LAMBDA x,y: ..., v, <<>> ) = v""") { rewriterType: SMTEncoding =>
     // A : (a,b) => a
     // A(p,q) == 0
-    val a = IntT1()
-    val b = IntT1()
+    val a = IntT1
+    val b = IntT1
     val opT = OperT1(Seq(a, b), a)
 
     val emptySeq = tuple().typed(SeqT1(b))
@@ -50,7 +50,7 @@ trait TestSymbStateRewriterFoldSeq extends RewriterBase {
     val nullOperDecl = declOp("A", int(0), OperParam("p"), OperParam("q")).as(opT)
     val letEx = LetInEx(name(nullOperDecl.name).typed(opT), nullOperDecl)(Typed(opT))
 
-    def v = int(1).typed(IntT1())
+    def v = int(1).typed(IntT1)
 
     val foldEx = OperEx(
         ApalacheOper.foldSeq,
@@ -59,7 +59,7 @@ trait TestSymbStateRewriterFoldSeq extends RewriterBase {
         emptySeq,
     )(Typed(a))
 
-    val eqn = eql(foldEx, v).typed(BoolT1())
+    val eqn = eql(foldEx, v).typed(BoolT1)
 
     val state = new SymbState(eqn, arena, Binding())
 
@@ -69,15 +69,15 @@ trait TestSymbStateRewriterFoldSeq extends RewriterBase {
   test("""FoldSeq( LAMBDA x,y: x + 1, 0, s ) = Card(Len(s))""") { rewriterType: SMTEncoding =>
     // A : (a,b) => a
     // A(p,q) == p + 1
-    val a = IntT1()
-    val b = StrT1()
+    val a = IntT1
+    val b = StrT1
     val opT = OperT1(Seq(a, b), a)
 
     val nonemptySeq = tuple(str("x"), str("y")).typed(SeqT1(b))
     val plusOneOper = TlaOperDecl(
         "A",
         List(OperParam("p"), OperParam("q")),
-        plus(name("p").typed(a), int(1)).typed(IntT1()),
+        plus(name("p").typed(a), int(1)).typed(IntT1),
     )(Typed(opT))
 
     val letEx = LetInEx(name(plusOneOper.name).typed(opT), plusOneOper)(Typed(opT))
@@ -85,11 +85,11 @@ trait TestSymbStateRewriterFoldSeq extends RewriterBase {
     val foldEx = OperEx(
         ApalacheOper.foldSeq,
         letEx,
-        int(0).typed(IntT1()),
+        int(0).typed(IntT1),
         nonemptySeq,
     )(Typed(a))
 
-    val eqn = eql(foldEx, len(nonemptySeq).typed(IntT1())).typed(BoolT1())
+    val eqn = eql(foldEx, len(nonemptySeq).typed(IntT1)).typed(BoolT1)
 
     val state = new SymbState(eqn, arena, Binding())
 
@@ -99,8 +99,8 @@ trait TestSymbStateRewriterFoldSeq extends RewriterBase {
   test("""FoldSeq( LAMBDA x,y: x + y, 0, s ) = Sum(s)""") { rewriterType: SMTEncoding =>
     // A : (a,b) => a
     // A(p,q) == p + q
-    val a = IntT1()
-    val b = IntT1()
+    val a = IntT1
+    val b = IntT1
     val opT = OperT1(Seq(a, b), a)
 
     val ints = Seq(2, 93, 4)
@@ -109,7 +109,7 @@ trait TestSymbStateRewriterFoldSeq extends RewriterBase {
     val plusOneOper = TlaOperDecl(
         "A",
         List(OperParam("p"), OperParam("q")),
-        plus(name("p").typed(a), name("q").typed(b)).typed(IntT1()),
+        plus(name("p").typed(a), name("q").typed(b)).typed(IntT1),
     )(Typed(opT))
 
     val letEx = LetInEx(name(plusOneOper.name).typed(opT), plusOneOper)(Typed(opT))
@@ -117,11 +117,11 @@ trait TestSymbStateRewriterFoldSeq extends RewriterBase {
     val foldEx = OperEx(
         ApalacheOper.foldSeq,
         letEx,
-        int(0).typed(IntT1()),
+        int(0).typed(IntT1),
         nonemptySeq,
     )(Typed(a))
 
-    val eqn = eql(foldEx, int(ints.sum)).typed(BoolT1())
+    val eqn = eql(foldEx, int(ints.sum)).typed(BoolT1)
 
     val state = new SymbState(eqn, arena, Binding())
 

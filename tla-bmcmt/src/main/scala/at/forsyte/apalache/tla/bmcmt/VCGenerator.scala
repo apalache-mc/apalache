@@ -2,9 +2,9 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.lir.{BoolT1, _}
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
-import at.forsyte.apalache.tla.lir.transformations.standard.DeepCopy
+import at.forsyte.apalache.tla.lir.transformations.standard.{DeepCopy, ReplaceFixed}
 import at.forsyte.apalache.tla.pp.{NormalizedNames, TlaInputError}
 import TypedPredefs._
 import com.typesafe.scalalogging.LazyLogging
@@ -34,14 +34,14 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
    * @return
    *   a transformed module
    */
-  def gen(module: TlaModule, invName: String, optViewName: Option[String]): TlaModule = {
-    val levelFinder = new TlaDeclLevelFinder(module)
+  def gen(module: TlaModule, invName: String, optViewName: Option[String] = None): TlaModule = {
+    val levelFinder = new TlaLevelFinder(module)
 
     val newModule =
       module.declarations.find(_.name == invName) match {
         case Some(inv: TlaOperDecl) if inv.formalParams.isEmpty =>
           // either a state invariant, or an action invariant
-          val level = levelFinder(inv)
+          val level = levelFinder.getLevelOfDecl(inv)
           level match {
             case TlaLevelConst | TlaLevelState | TlaLevelAction =>
               TlaModule(module.name, module.declarations ++ introConditions(level, inv.body))
@@ -53,7 +53,7 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
 
         case Some(traceInv @ TlaOperDecl(_, params @ List(OperParam(_, 0)), body)) =>
           // a trace invariant
-          if (TlaLevelConst != levelFinder(traceInv)) {
+          if (TlaLevelConst != levelFinder.getLevelOfDecl(traceInv)) {
             throw new TlaInputError(
                 s"Trace invariant $invName should not refer to state variables or use action/temporal operators",
                 Some(body.ID))
@@ -63,7 +63,7 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
           // we do not decompose trace invariants, so a trace invariant always has index 0
           val positive =
             TlaOperDecl(NormalizedNames.VC_TRACE_INV_PREFIX + "0", params, copy.deepCopyEx(body))(traceInv.typeTag)
-          val notBody = tla.not(tla.fromTlaEx(copy.deepCopyEx(body))).typed(BoolT1())
+          val notBody = tla.not(tla.fromTlaEx(copy.deepCopyEx(body))).typed(BoolT1)
           val negative =
             TlaOperDecl(NormalizedNames.VC_NOT_TRACE_INV_PREFIX + "0", params, notBody)(traceInv.typeTag)
           TlaModule(module.name, module.declarations :+ positive :+ negative)
@@ -110,7 +110,7 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
     val varTypes = SortedMap(module.varDeclarations.map(d => d.name -> d.typeTag.asTlaType1()): _*)
     // the history variable is a sequence of records over variable names
     val histType = SeqT1(RecT1(varTypes))
-    if (traceInv.typeTag.asTlaType1() != OperT1(Seq(histType), BoolT1())) {
+    if (traceInv.typeTag.asTlaType1() != OperT1(Seq(histType), BoolT1)) {
       val msg =
         s"Expected the trace invariant ${traceInv.name} to be a predicate of a sequence of records over the names of state variables"
       throw new MalformedTlaError(msg, traceInv.body)
@@ -119,13 +119,18 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
 
   private def introConditions(level: TlaLevel, inputInv: TlaEx): Seq[TlaOperDecl] = {
     def mapToDecls(invPiece: TlaEx, index: Int): Seq[TlaOperDecl] = {
-      val deepCopy = DeepCopy(tracker)
-      val invPieceCopy = deepCopy.deepCopyEx(invPiece)
+      // In rare cases, invPiece may contain assignments, e.g., when one uses --inv=Next.
+      // Replace assignments with equality.
+      val removeAssignments = ReplaceFixed(tracker).withFun { case ex @ OperEx(ApalacheOper.assign, lhs, rhs) =>
+        OperEx(TlaOper.eq, lhs, rhs)(ex.typeTag)
+      }
+      val invPieceNorm = removeAssignments(invPiece)
+      val invPieceCopy = DeepCopy(tracker).deepCopyEx(invPieceNorm)
       val tag = inputInv.typeTag
       val positivePrefix =
         if (level == TlaLevelAction) NormalizedNames.VC_ACTION_INV_PREFIX else NormalizedNames.VC_INV_PREFIX
-      val positive = TlaOperDecl(positivePrefix + index, List(), invPieceCopy)(tag)
-      val notInvPieceCopy = tla.not(invPieceCopy).typed(BoolT1())
+      val positive = TlaOperDecl(positivePrefix + index, List(), invPieceNorm)(tag)
+      val notInvPieceCopy = tla.not(invPieceCopy).typed(BoolT1)
       val negativePrefix =
         if (level == TlaLevelAction) NormalizedNames.VC_NOT_ACTION_INV_PREFIX else NormalizedNames.VC_NOT_INV_PREFIX
       val negative = TlaOperDecl(negativePrefix + index, List(), notInvPieceCopy)(tag)
@@ -160,7 +165,7 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
         expr
 
       case (nameEx, set) :: tail =>
-        decorateWithUniversals(tail, tla.forall(nameEx, set, expr).typed(BoolT1()))
+        decorateWithUniversals(tail, tla.forall(nameEx, set, expr).typed(BoolT1))
     }
   }
 }

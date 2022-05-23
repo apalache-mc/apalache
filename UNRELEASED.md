@@ -11,13 +11,16 @@
 
      DO NOT LEAVE A BLANK LINE BELOW THIS PREAMBLE -->
 ### Breaking changes
-* `RECURSIVE` operators and functions are no longer supported, see #1569
-* rename Apalache `FoldSet` and `FoldSeq` to `ApaFoldSet` and `ApaFoldSeqLeft`, see #1617
+
+ * Introduce dedicated exit codes for type-checking errors, parser errors, and
+   evaluation errors (e.g., due to unsupported language constructs or
+   operators), see #1749
 
 ### Features
 
-* Add the operator `Apalache!Guess`, see #1590 and #888
-* Extend the type parser to support ADR014 (experimental), see #1602
-* Keramelizer now rewrites \subseteq using forall quantification, see #1408
-* Builtin operators can be passed as arguments to HO operators, see #1630
-* Optimize set membership for record sets, see #1629
+ * Support sound records (over rows) in the model checker, see #1717
+
+### Bug fixes
+ 
+ * Fix potential non-determinism when picking from `[S -> T]`, see #1753
+ * Fix the bug in uninterpreted types, see #1792

@@ -15,6 +15,7 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 
 import scala.collection.mutable
 
@@ -39,6 +40,7 @@ import scala.collection.mutable
  */
 class SymbStateRewriterImpl(
     private var _solverContext: SolverContext,
+    val renaming: IncrementalRenaming,
     val exprGradeStore: ExprGradeStore = new ExprGradeStoreImpl(),
     val profilerListener: Option[MetricProfilerListener] = None)
     extends SymbStateRewriter with Serializable with Recoverable[SymbStateRewriterSnapshot] {
@@ -210,8 +212,6 @@ class SymbStateRewriterImpl(
           -> List(new SetInRule(this)),
         key(tla.enumSet(tla.name("x")))
           -> List(new SetCtorRule(this)),
-        key(tla.subseteq(tla.name("x"), tla.name("S")))
-          -> List(new SetInclusionRule(this)),
         key(tla.cup(tla.name("X"), tla.name("Y")))
           -> List(new SetCupRule(this)),
         key(tla.filter(tla.name("x"), tla.name("S"), tla.name("p")))
@@ -260,10 +260,6 @@ class SymbStateRewriterImpl(
           -> List(new FunSetCtorRule(this)),
         key(tla.dom(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S"))))
           -> List(new DomainRule(this, intRangeCache)), // also works for records
-        key(tla.recFunDef(tla.name("e"), tla.name("x"), tla.name("S")))
-          -> List(new RecFunDefAndRefRule(this)),
-        key(tla.recFunRef())
-          -> List(new RecFunDefAndRefRule(this)),
         // tuples, records, and sequences
         key(tla.tuple(tla.name("x"), tla.int(2)))
           -> List(new TupleOrSeqCtorRule(this)),
@@ -299,11 +295,11 @@ class SymbStateRewriterImpl(
           -> List(new GenRule(this)),
         // folds and MkSeq
         key(OperEx(ApalacheOper.foldSet, tla.name("A"), tla.name("v"), tla.name("S")))
-          -> List(new FoldSetRule(this)),
+          -> List(new FoldSetRule(this, renaming)),
         key(OperEx(ApalacheOper.foldSeq, tla.name("A"), tla.name("v"), tla.name("s")))
-          -> List(new FoldSeqRule(this)),
+          -> List(new FoldSeqRule(this, renaming)),
         key(OperEx(ApalacheOper.mkSeq, tla.int(10), tla.name("A")))
-          -> List(new MkSeqRule(this)),
+          -> List(new MkSeqRule(this, renaming)),
     )
   } ///// ADD YOUR RULES ABOVE
 

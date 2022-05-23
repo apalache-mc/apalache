@@ -77,12 +77,12 @@ object DefaultType1Parser extends Parsers with Type1Parser {
   private def noFunExpr: Parser[TlaType1] = {
     (INT() | REAL() | BOOL() | STR() | typeVar | typeConst
       | set | seq | tuple | row | sparseTuple
-      | record | parametricRecord | recordFromRow | recordVar
+      | record | recordFromRow
       | variant | variantVar | parenExpr) ^^ {
-      case INT()        => IntT1()
-      case REAL()       => RealT1()
-      case BOOL()       => BoolT1()
-      case STR()        => StrT1()
+      case INT()        => IntT1
+      case REAL()       => RealT1
+      case BOOL()       => BoolT1
+      case STR()        => StrT1
       case tt: TlaType1 => tt
     }
   }
@@ -146,7 +146,8 @@ object DefaultType1Parser extends Parsers with Type1Parser {
 
       case _ ~ list ~ None ~ _ =>
         RowT1(list: _*)
-    }
+    } | // the degenerate case of (| var |)
+      LROW() ~> typeVar <~ RROW() ^^ { v => RowT1(v) }
   }
 
   // a sparse tuple type like <| 3: Int, 5: Bool |>
@@ -175,13 +176,6 @@ object DefaultType1Parser extends Parsers with Type1Parser {
   private def record: Parser[TlaType1] = {
     LBRACKET() ~ repsep(typedField, COMMA()) ~ RBRACKET() ^^ { case _ ~ list ~ _ =>
       RecT1(SortedMap(list: _*))
-    }
-  }
-
-  private def parametricRecord: Parser[TlaType1] = {
-    // special rule for a record that is completely underspecified, that is, { a }
-    LCURLY() ~ typeVar ~ RCURLY() ^^ { case _ ~ VarT1(v) ~ _ =>
-      RecRowT1(RowT1(VarT1(v)))
     }
   }
 
@@ -215,14 +209,8 @@ object DefaultType1Parser extends Parsers with Type1Parser {
 
         case list ~ None =>
           RecRowT1(RowT1(list: _*))
-      }
-  }
-
-  // the general record constructor which may be used in conjunction with a row variable
-  private def recordVar: Parser[TlaType1] = {
-    RECORD() ~ LPAREN() ~ typeVar ~ RPAREN() ^^ { case _ ~ _ ~ VarT1(v) ~ _ =>
-      RecRowT1(RowT1(VarT1(v)))
-    }
+      } | // the degenerate case of a single variable
+      (LCURLY() ~> typeVar <~ RCURLY()) ^^ (v => RecRowT1(RowT1(v)))
   }
 
   // An option in the variant type that is constructed from a row.
@@ -246,14 +234,14 @@ object DefaultType1Parser extends Parsers with Type1Parser {
             case Some(_ ~ l) => l
             case _           => Nil
           }
-          (tagValue, RecRowT1(RowT1(VarT1(v), ("tag" -> StrT1()) :: list: _*)))
+          (tagValue, RecRowT1(RowT1(VarT1(v), ("tag" -> StrT1) :: list: _*)))
 
         case _ ~ _ ~ STR_LITERAL(tagValue) ~ optList ~ None =>
           val list = optList match {
             case Some(_ ~ l) => l
             case _           => Nil
           }
-          (tagValue, RecRowT1(RowT1(("tag" -> StrT1()) :: list: _*)))
+          (tagValue, RecRowT1(RowT1(("tag" -> StrT1) :: list: _*)))
       }
   }
 

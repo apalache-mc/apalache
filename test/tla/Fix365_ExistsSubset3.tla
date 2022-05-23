@@ -6,7 +6,7 @@ Proc == {"p1", "p2"}
 Rounds == { 0, 1, 2 }
 
 VARIABLE
-    \* @type: Set([src: Str, r: Int]);
+    \* @type: Set({src: Str, r: Int});
     msgs
 
 MT == [ src |-> STRING, r |-> Int]

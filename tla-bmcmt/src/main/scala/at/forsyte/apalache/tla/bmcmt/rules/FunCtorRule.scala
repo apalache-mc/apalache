@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
@@ -45,9 +44,6 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // rewrite the set expression into a memory cell
     var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
     val domainCell = nextState.asCell
-    val funT = CellT.fromType1(funT1)
-    val elemT = CellT.fromType1(funT1.arg)
-    val resultT = CellT.fromType1(funT1.res)
     val domainCells = nextState.arena.getHas(domainCell)
     // find the type of the target expression and of the target set
     // unfold the set and map every potential element to a cell
@@ -61,9 +57,9 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     nextState = afterMapState
     // Add the cell for the set that stores the relation <<x, f[x]>>
-    nextState = nextState.updateArena(_.appendCell(funT))
+    nextState = nextState.updateArena(_.appendCell(funT1))
     val funCell = nextState.arena.topCell
-    nextState = nextState.updateArena(_.appendCell(FinSetT(TupleT(Seq(elemT, resultT)))))
+    nextState = nextState.updateArena(_.appendCell(SetT1(TupT1(funT1.arg, funT1.res))))
     val relation = nextState.arena.topCell
     val newArena = nextState.arena.appendHas(relation, relationCells: _*)
     // For historical reasons, we are using cdm to store the relation, though it is not the co-domain.
@@ -72,15 +68,15 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     // associate a value of the uninterpreted function with a cell
     def addCellCons(domElem: ArenaCell, relElem: ArenaCell): Unit = {
-      val inDomain = tla.apalacheSelectInSet(domElem.toNameEx, domainCell.toNameEx).typed(BoolT1())
-      val inRelation = tla.apalacheStoreInSet(relElem.toNameEx, relation.toNameEx).typed(BoolT1())
+      val inDomain = tla.apalacheSelectInSet(domElem.toNameEx, domainCell.toNameEx).typed(BoolT1)
+      val inRelation = tla.apalacheStoreInSet(relElem.toNameEx, relation.toNameEx).typed(BoolT1)
       val expr = rewriter.solverContext.config.smtEncoding match {
         case `arraysEncoding` =>
           // In the arrays encoding we also need to update the array if inDomain does not hold
-          val notInRelation = tla.apalacheStoreNotInSet(relElem.toNameEx, relation.toNameEx).typed(BoolT1())
-          tla.ite(inDomain, inRelation, notInRelation).typed(BoolT1())
+          val notInRelation = tla.apalacheStoreNotInSet(relElem.toNameEx, relation.toNameEx).typed(BoolT1)
+          tla.ite(inDomain, inRelation, notInRelation).typed(BoolT1)
         case `oopsla19Encoding` =>
-          tla.equiv(inDomain, inRelation).typed(BoolT1())
+          tla.equiv(inDomain, inRelation).typed(BoolT1)
         case oddEncodingType =>
           throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
       }

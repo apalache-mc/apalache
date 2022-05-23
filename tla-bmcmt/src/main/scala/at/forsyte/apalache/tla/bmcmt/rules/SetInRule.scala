@@ -2,10 +2,11 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.{ApalacheInternalOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, IntT1, NameEx, OperEx, SetT1, TlaEx}
 
 /**
  * Rewrites set membership tests: x \in S, x \in SUBSET S, and x \in [S -> T].
@@ -48,13 +49,14 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val setState = rewriter.rewriteUntilDone(elemState.setRex(set))
         val setCell = setState.asCell
         setCell.cellType match {
-          case FinSetT(elemType) =>
-            basicIn(setState, setCell, elemCell, elemType)
+          case CellTFrom(SetT1(_)) =>
+            basicIn(setState, setCell, elemCell)
 
-          case InfSetT(IntT()) if setCell == setState.arena.cellNatSet() || setCell == setState.arena.cellIntSet() =>
-            intOrNatSetIn(setState, setCell, elemCell, IntT())
+          case InfSetT(CellTFrom(IntT1))
+              if setCell == setState.arena.cellNatSet() || setCell == setState.arena.cellIntSet() =>
+            intOrNatSetIn(setState, setCell, elemCell, CellTFrom(IntT1))
 
-          case PowSetT(FinSetT(_)) =>
+          case PowSetT(SetT1(_)) =>
             powSetIn(setState, setCell, elemCell)
 
           case FinFunSetT(_, _) =>
@@ -72,8 +74,11 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   protected def powSetIn(state: SymbState, powsetCell: ArenaCell, elemCell: ArenaCell): SymbState = {
     def checkType: PartialFunction[(CellT, CellT), Unit] = {
-      case (PowSetT(FinSetT(expectedType)), FinSetT(actualType)) =>
-        assert(expectedType == actualType)
+      case (PowSetT(SetT1(expectedType)), CellTFrom(SetT1(actualType))) =>
+        if (expectedType != actualType) {
+          val msg = s"Unexpected types in SetInRule.powSetIn: expectedType = $expectedType, actualType = $actualType"
+          throw new IllegalStateException(msg)
+        }
     }
     // double check that the type finder did its job
     checkType(powsetCell.cellType, elemCell.cellType)
@@ -90,9 +95,9 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
       throw new RewriterException(msg, state.ex)
     }
 
-    funCell.cellType match {
-      case FunT(FinSetT(_), _) => () // OK
-      case _                   => flagTypeError()
+    val domType = funCell.cellType match {
+      case CellTFrom(FunT1(domT, _)) => domT // OK
+      case _                         => flagTypeError()
     }
     funsetCell.cellType match {
       case FinFunSetT(PowSetT(_), _) | FinFunSetT(FinFunSetT(_, _), _) =>
@@ -102,12 +107,13 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val funsetDom = state.arena.getDom(funsetCell)
     val funsetCdm = state.arena.getCdm(funsetCell)
     var nextState = state
-    nextState = nextState.updateArena(_.appendCell(BoolT()))
+    nextState = nextState.updateArena(_.appendCell(BoolT1))
     val pred = nextState.arena.topCell
     val relation = nextState.arena.getCdm(funCell)
 
     // In the new implementation, a function is a relation { <<x, f[x]>> : x \in U }.
-    // Check that \A t \in f: t[1] \in S /\ t[2] \in T.
+    // Check that \A t \in f: t[1] \in S /\ t[2] \in T, and
+    // `DOMAIN f = S`, since the above only implies `DOMAIN f \subseteq S`
     def onPair(pair: ArenaCell): TlaEx = {
       val tupleElems = nextState.arena.getHas(pair)
       val (arg, res) = (tupleElems.head, tupleElems.tail.head)
@@ -119,11 +125,23 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
       tla
         .or(tla.not(tla.apalacheSelectInSet(pair.toNameEx, relation.toNameEx)), tla.and(inDom.toNameEx, inCdm.toNameEx))
     }
-
     val relElems = nextState.arena.getHas(relation)
     rewriter.solverContext.assertGroundExpr(tla.equiv(pred.toNameEx, tla.and(relElems.map(onPair): _*)))
 
-    rewriter.rewriteUntilDone(nextState.setRex(pred.toNameEx))
+    // S = DOMAIN f
+    val domainEx =
+      tla
+        .eql(
+            funsetDom.toNameEx,
+            tla.dom(funCell.toNameEx).as(domType),
+        )
+        .as(BoolT1)
+
+    rewriter.rewriteUntilDone(
+        nextState.setRex(
+            tla.and(pred.toNameEx, domainEx)
+        )
+    )
   }
 
   protected def intOrNatSetIn(
@@ -137,8 +155,8 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     } else {
       // i \in Nat <=> i >= 0
       assert(setCell == state.arena.cellNatSet())
-      assert(elemType == IntT())
-      val nextState = state.updateArena(_.appendCell(BoolT()))
+      assert(elemType == CellTFrom(IntT1))
+      val nextState = state.updateArena(_.appendCell(BoolT1))
       val pred = nextState.arena.topCell
       rewriter.solverContext.assertGroundExpr(tla.equiv(pred.toNameEx, tla.ge(elemCell.toNameEx, tla.int(0))))
       nextState.setRex(pred.toNameEx)
@@ -148,17 +166,15 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
   protected def basicIn(
       state: SymbState,
       setCell: ArenaCell,
-      elemCell: ArenaCell,
-      elemType: types.CellT): SymbState = {
+      elemCell: ArenaCell): SymbState = {
     val potentialElems = state.arena.getHas(setCell)
     // The types of the element and the set may slightly differ, but they must be unifiable.
     // For instance, [a |-> 1] \in { [a |-> 2], [a |-> 3, b -> "foo"] }
-    assert(elemCell.cellType.unify(elemType).nonEmpty)
     if (potentialElems.isEmpty) {
       // the set cell points to no other cell => return false
       state.setRex(state.arena.cellFalse().toNameEx)
     } else {
-      val nextState = state.updateArena(_.appendCell(BoolT()))
+      val nextState = state.updateArena(_.appendCell(BoolT1))
       val pred = nextState.arena.topCell.toNameEx
 
       // cache equality constraints first

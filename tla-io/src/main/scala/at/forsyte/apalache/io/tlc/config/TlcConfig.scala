@@ -68,7 +68,7 @@ case class ConfigModelValue(name: String) extends ConfigConstExpr {
     // currently, we use the type Str for all model values.
     // In the future, we might want to distinguish between different uninterpreted types.
     // See https://github.com/informalsystems/apalache/issues/570
-    tla.str(STR_PREFIX + name).typed(StrT1())
+    tla.str(STR_PREFIX + name).typed(StrT1)
   }
 }
 
@@ -79,7 +79,7 @@ case class ConfigModelValue(name: String) extends ConfigConstExpr {
  *   an integer as BigInt
  */
 case class ConfigIntValue(num: BigInt) extends ConfigConstExpr {
-  override def toTlaEx: TlaEx = tla.bigInt(num).typed(IntT1())
+  override def toTlaEx: TlaEx = tla.bigInt(num).typed(IntT1)
 }
 
 /**
@@ -89,7 +89,7 @@ case class ConfigIntValue(num: BigInt) extends ConfigConstExpr {
  *   a boolean
  */
 case class ConfigBoolValue(b: Boolean) extends ConfigConstExpr {
-  override def toTlaEx: TlaEx = tla.bool(b).typed(BoolT1())
+  override def toTlaEx: TlaEx = tla.bool(b).typed(BoolT1)
 }
 
 /**
@@ -99,7 +99,7 @@ case class ConfigBoolValue(b: Boolean) extends ConfigConstExpr {
  *   a string
  */
 case class ConfigStrValue(str: String) extends ConfigConstExpr {
-  override def toTlaEx: TlaEx = tla.str(str).typed(StrT1())
+  override def toTlaEx: TlaEx = tla.str(str).typed(StrT1)
 }
 
 /**

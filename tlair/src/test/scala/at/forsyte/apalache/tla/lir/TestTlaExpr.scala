@@ -14,13 +14,13 @@ import org.scalatestplus.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class TestTlaExpr extends AnyFunSuite {
   test("no type tag") {
-    // this expression is constructed with the implicit value for typeTag = Untyped().
+    // this expression is constructed with the implicit value for typeTag = Untyped.
     val ex = ValEx(TlaInt(42))
     // pattern matching should work without worrying about type tags
     ex match {
       case matched @ ValEx(TlaInt(i)) =>
         assert(42 == i)
-        assert(Untyped() == matched.typeTag)
+        assert(Untyped == matched.typeTag)
 
       case _ =>
         fail("Expected valEx")
@@ -51,6 +51,7 @@ class TestTlaExpr extends AnyFunSuite {
       case OperEx(TlaBoolOper.and, NameEx(i: String), NameEx(j: String)) =>
         assert(i == "x")
         assert(j == "y")
+      case invalid => fail(s"invalid result when constructing conjunction: $invalid")
     }
   }
 

@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
-import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
@@ -19,7 +18,7 @@ import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, TlaEx}
  */
 class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val simplifier = new ConstSimplifierForSmt()
-  private val boolTypes = Map("b" -> BoolT1())
+  private val boolTypes = Map("b" -> BoolT1)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -56,7 +55,7 @@ class AndRule(rewriter: SymbStateRewriter) extends RewritingRule {
                 state.setRex(toIte(args))
               } else {
                 // simply translate to a conjunction
-                var nextState = state.updateArena(_.appendCell(BoolT()))
+                var nextState = state.updateArena(_.appendCell(BoolT1))
                 val pred = nextState.arena.topCell.toNameEx
 
                 def mapArg(argEx: TlaEx): TlaEx = {

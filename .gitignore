@@ -5,6 +5,15 @@ target/
 .directory
 .bsp
 .bloop
+.metals
+.vscode
+
+# output files produced by Apalache
+*.out
+*.err
+*.log
+*.smt
+counterexample*.*
 
 # Generated if running integration tests locally
 _apalache-out/

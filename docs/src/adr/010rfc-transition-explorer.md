@@ -52,7 +52,7 @@ In the current architecture, there is a single mode of operation in which
   specification,
 - the specification and configurations are parsed and pre-processed,
 - and then the model checker proper drives the
-  [TransitionExecutor](../../src/adr/003adr-trex.md) to effect symbolic
+  [TransitionExecutor](./003adr-trex.md) to effect symbolic
   executions verifying the specified properties for the specified model.
 
 This RFC proposes the addition of a *symbolic transition exploration server*.

@@ -1,11 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, TlaEx}
 
 /**
  * Implements logical negation.
@@ -26,7 +25,7 @@ class NegRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       case OperEx(TlaBoolOper.not, ex: TlaEx) =>
         var newState = rewriter.rewriteUntilDone(state.setRex(ex))
-        newState = newState.updateArena(_.appendCell(BoolT()))
+        newState = newState.updateArena(_.appendCell(BoolT1))
         val pred = newState.arena.topCell
         rewriter.solverContext.assertGroundExpr(tla.eql(tla.not(pred.toNameEx), newState.ex))
         newState.setRex(pred.toNameEx)

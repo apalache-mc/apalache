@@ -35,7 +35,7 @@ class ValueRule extends FormulaRule {
       v match {
         case TlaInt(i) => IntLiteral(i)
         case TlaStr(s) =>
-          val (tlaType, id) = ModelValueHandler.typeAndIndex(s).getOrElse((StrT1(), s))
+          val (tlaType, id) = ModelValueHandler.typeAndIndex(s).getOrElse((StrT1, s))
           UninterpretedLiteral(id, UninterpretedSort(tlaType.toString))
         case TlaBool(b) => if (b) True else False
         case _          => throwOn(ex)
@@ -61,7 +61,7 @@ object ValueRule {
       case Typed(tt: TlaType1) =>
         val sort = TlaType1ToSortConverter.sortFromType(tt)
         mkVariable(ex.name, sort)
-      case Untyped() =>
+      case Untyped =>
         mkVariable(ex.name, UntypedSort())
       case Typed(other) =>
         throw new RewriterException(s"Term construction is not supported: $other is not in TlaType1", ex)

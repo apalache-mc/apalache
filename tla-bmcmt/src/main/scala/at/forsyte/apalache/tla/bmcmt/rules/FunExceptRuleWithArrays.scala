@@ -24,7 +24,7 @@ class FunExceptRuleWithArrays(rewriter: SymbStateRewriter) extends FunExceptRule
       valueCell: ArenaCell): SymbState = {
 
     // We create an unconstrained SMT array that can be equated to funCell and updated
-    var nextState = state.updateArena(_.appendCell(funCell.cellType, isUnconstrained = true))
+    var nextState = state.updateArena(_.appendCellOld(funCell.cellType, isUnconstrained = true))
     val resultFunCell = nextState.arena.topCell
 
     // Propagate the function's domain
@@ -45,11 +45,11 @@ class FunExceptRuleWithArrays(rewriter: SymbStateRewriter) extends FunExceptRule
     nextState = nextState.updateArena(_.appendCellNoSmt(relation.cellType))
     val resultRelation = nextState.arena.topCell
 
-    def eachRelationPair(pair: ArenaCell) = {
+    def eachRelationPair(pair: ArenaCell): Unit = {
       val tupT = TupT1(funT.arg, funT.res)
       val pairIndex = nextState.arena.getHas(pair).head
       val ite = tla
-        .ite(tla.eql(pairIndex.toNameEx.as(tupT), indexCell.toNameEx.as(funT.arg)).as(BoolT1()),
+        .ite(tla.eql(pairIndex.toNameEx.as(tupT), indexCell.toNameEx.as(funT.arg)).as(BoolT1),
             newPairCell.toNameEx.as(tupT), pair.toNameEx.as(tupT))
         .as(tupT)
 

@@ -69,7 +69,7 @@ package object aux {
    * We may need to split an ordered collection of OperDecls (from a LET-IN operator), into segments of 0 arity and >0
    * ariry operators
    */
-  def collectSegments(decls: Traversable[TlaOperDecl]): List[List[TlaOperDecl]] = decls match {
+  def collectSegments(decls: Iterable[TlaOperDecl]): List[List[TlaOperDecl]] = decls match {
     case d if d.isEmpty => List.empty
     case head :: tail =>
       val headPosArity = hasPositiveArity(head)

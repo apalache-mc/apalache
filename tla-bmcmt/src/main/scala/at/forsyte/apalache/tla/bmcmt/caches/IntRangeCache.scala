@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.caches
 
 import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, IntT}
+import at.forsyte.apalache.tla.lir.{IntT1, SetT1}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
@@ -35,7 +35,7 @@ class IntRangeCache(solverContext: SolverContext, intValueCache: IntValueCache)
 
     val cells = range._1.to(range._2).map(intToCell)
     // create the domain cell
-    arena = arena.appendCell(FinSetT(IntT()))
+    arena = arena.appendCell(SetT1(IntT1))
     val set = arena.topCell
     arena = arena.appendHas(set, cells: _*)
     // force that every element is in the set

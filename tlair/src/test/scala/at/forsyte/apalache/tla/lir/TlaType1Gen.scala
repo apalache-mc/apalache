@@ -18,8 +18,11 @@ trait TlaType1Gen {
       // produce an absolute value. Note that Math.abs(Integer.MIN_VALUE) = Integer.MIN_VALUE, so use max(0, abs(i)).
     } yield VarT1(i)
 
+  def genPrimitiveMono: Gen[TlaType1] =
+    oneOf(const(BoolT1), const(IntT1), const(StrT1), const(RealT1), genConst)
+
   def genPrimitive: Gen[TlaType1] =
-    oneOf(const(BoolT1()), const(IntT1()), const(StrT1()), const(RealT1()), genConst, genVar)
+    oneOf(genPrimitiveMono, genVar)
 
   def genSet: Gen[TlaType1] =
     sized { size => // use 'sized' to control the depth of the generated term
@@ -73,8 +76,9 @@ trait TlaType1Gen {
   def genRec: Gen[TlaType1] =
     sized { size => // use 'sized' to control the depth of the generated term
       for {
+        // min=1 to prevent empty records
+        s <- choose(1, size)
         // use resize to decrease the depth of the elements (as terms)
-        s <- choose(0, size)
         elem = resize(s - 1, genTypeTree)
         keys <- listOfN(s, identifier)
         values <- listOfN(s, elem)
@@ -104,7 +108,7 @@ trait TlaType1Gen {
     for {
       // use resize to decrease the depth of the elements (as terms)
       row <- genRow
-    } yield RecRowT1(RowT1(SortedMap(row.fieldTypes.toSeq :+ ("tag" -> StrT1()): _*), row.other))
+    } yield RecRowT1(RowT1(SortedMap(row.fieldTypes.toSeq :+ ("tag" -> StrT1): _*), row.other))
   }
 
   def genVariant: Gen[VariantT1] =

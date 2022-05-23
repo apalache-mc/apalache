@@ -39,10 +39,10 @@ VARIABLES
   req,      \* requests received from processes (clock transmitted with request)
   \* @type: Int -> Set(Int);
   ack,      \* acknowledgements received from processes
-  \* @typeAlias: MESSAGE = [
+  \* @typeAlias: MESSAGE = {
   \*     type: Str,
   \*     clock: Int
-  \* ];
+  \* };
   \* @type: Int -> (Int -> Seq(MESSAGE));
   network,  \* messages sent but not yet received
   \* @type: Set(Int);

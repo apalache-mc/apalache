@@ -31,16 +31,42 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Set up JDK 1.8
+      - name: Set up JDK 17
         uses: actions/setup-java@v1
         with:
-          java-version: 1.8
+          java-version: 17
       - name: Check formatting
         run: make fmt-check
 
-  unit-tests:
+  compiler-warnings:
     env:
       APALACHE_FATAL_WARNINGS: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Coursier cache
+        uses: coursier/cache-action@v6
+      - name: Set APALACHE_HOME env
+        # See https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-environment-variable
+        run: echo "APALACHE_HOME=$GITHUB_WORKSPACE" >> $GITHUB_ENV
+      - name: Build and Unit Test
+        run: make compile-strict
+      - name: Cleanup before cache
+        # See https://www.scala-sbt.org/1.x/docs/GitHub-Actions-with-sbt.html#Caching
+        shell: bash
+        run: |
+          rm -rf "$HOME/.ivy2/local" || true
+          find $HOME/Library/Caches/Coursier/v1        -name "ivydata-*.properties" -delete || true
+          find $HOME/.ivy2/cache                       -name "ivydata-*.properties" -delete || true
+          find $HOME/.cache/coursier/v1                -name "ivydata-*.properties" -delete || true
+          find $HOME/.sbt                              -name "*.lock"               -delete || true
+
+  unit-tests:
     runs-on: ${{ matrix.operating-system }}
     strategy:
       # Allows other OS tests to proceed even if one fails
@@ -49,11 +75,11 @@ jobs:
         operating-system: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v2
-      - name: Set up JDK 1.8
+      - name: Set up JDK 17
         uses: actions/setup-java@v2
         with:
           distribution: temurin
-          java-version: 8
+          java-version: 17
       - name: Coursier cache
         uses: coursier/cache-action@v6
       - name: Set APALACHE_HOME env
@@ -77,8 +103,6 @@ jobs:
           find $HOME/.sbt                              -name "*.lock"               -delete || true
 
   integration-tests:
-    env:
-      APALACHE_FATAL_WARNINGS: true
     runs-on: ${{ matrix.operating-system }}
     strategy:
       # Allows other OS tests to proceed even if one fails
@@ -131,8 +155,6 @@ jobs:
           TEST_FILTER: ${{ matrix.smt-encoding == 'arrays' && 'array-encoding' || '' }}
 
   docker-tests:
-    env:
-      APALACHE_FATAL_WARNINGS: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

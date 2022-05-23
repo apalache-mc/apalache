@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.lir.ValEx
 import at.forsyte.apalache.tla.lir.values.TlaStr
+import at.forsyte.apalache.tla.lir.{StrT1, ValEx}
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 /**
@@ -26,7 +26,7 @@ class StrConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val typeAndIndex = ModelValueHandler
           .typeAndIndex(str)
           .map(pa => (pa._1.name, pa._2))
-          .getOrElse((ModelValueHandler.STRING_TYPE, str))
+          .getOrElse((StrT1.toString, str))
         val (newArena: Arena, newCell: ArenaCell) =
           rewriter.modelValueCache.getOrCreate(state.arena, typeAndIndex)
         state

@@ -1,13 +1,13 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, ProtoSeqOps}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, ProtoSeqOps, RecordOps}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir.{FunT1, OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{FunT1, OperEx, RecRowT1, RecT1, SeqT1, TlaEx, TlaType1, TupT1, ValEx}
 
 /**
  * Implements f[x] for: functions, records, and tuples.
@@ -18,6 +18,7 @@ import at.forsyte.apalache.tla.lir.{FunT1, OperEx, TlaEx, ValEx}
 class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
   protected val picker = new CherryPick(rewriter)
   private val proto = new ProtoSeqOps(rewriter)
+  private val recordOps = new RecordOps(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -35,16 +36,20 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         // we use funCell.cellType, not funEx.typeTag, because funEx can be the result of the rewriter
         funCell.cellType match {
-          case TupleT(_) =>
+          case CellTFrom(TupT1(_ @_*)) =>
             // cheap access as `argEx` should be a literal
             applyTuple(funState, funCell, funEx, argEx)
 
-          case RecordT(_) =>
+          case CellTFrom(RecT1(_)) =>
             // cheap access as `argEx` should be a literal
             val resultT = CellT.fromTypeTag(ex.typeTag)
             applyRecord(funState, funCell, funEx, argEx, resultT)
 
-          case SeqT(elemT) =>
+          case CellTFrom(RecRowT1(_)) =>
+            val fieldValue = recordOps.getField(funState.arena, funCell, getFieldName(argEx))
+            funState.setRex(fieldValue.toNameEx)
+
+          case CellTFrom(SeqT1(elemT)) =>
             // cheap or expensive, depending on `argEx`
             applySequence(funState, funCell, argEx, elemT)
 
@@ -62,9 +67,9 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       state: SymbState,
       seqCell: ArenaCell,
       argEx: TlaEx,
-      elemT: CellT): SymbState = {
+      elemT: TlaType1): SymbState = {
     val (protoSeq, _, capacity) = proto.unpackSeq(state.arena, seqCell)
-    val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(state.arena, elemT.toTlaType1)
+    val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(state.arena, elemT)
     val nextState = state.setArena(newArena)
     argEx match {
       case ValEx(TlaInt(indexBase1)) =>
@@ -85,19 +90,23 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
   }
 
+  private def getFieldName(argEx: TlaEx): String = {
+    argEx match {
+      case ValEx(TlaStr(key)) => key
+      case _ => throw new RewriterException(s"Accessing a record with value that cannot be a key $argEx", argEx)
+    }
+  }
+
   private def applyRecord(
       state: SymbState,
       recordCell: ArenaCell,
       recEx: TlaEx,
       argEx: TlaEx,
       resultT: CellT): SymbState = {
-    val key = argEx match {
-      case ValEx(TlaStr(k)) => k
-      case _ => throw new RewriterException(s"Accessing a record $recEx with a non-constant key $argEx", argEx)
-    }
+    val key = getFieldName(argEx)
     val fields = recordCell.cellType match {
-      case RecordT(f) => f
-      case t @ _      => throw new RewriterException(s"Corrupted record $recEx of a non-record type $t", recEx)
+      case CellTFrom(RecT1(f)) => f
+      case t @ _               => throw new RewriterException(s"Corrupted record $recEx of a non-record type $t", recEx)
     }
     val index = fields.keySet.toList.indexOf(key)
     val elems = state.arena.getHas(recordCell)

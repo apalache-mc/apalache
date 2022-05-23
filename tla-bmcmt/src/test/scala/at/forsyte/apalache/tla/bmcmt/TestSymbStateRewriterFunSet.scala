@@ -8,30 +8,30 @@ import at.forsyte.apalache.tla.lir._
 trait TestSymbStateRewriterFunSet extends RewriterBase {
   val types =
     Map(
-        "b" -> BoolT1(),
-        "B" -> SetT1(BoolT1()),
-        "BB" -> SetT1(SetT1(BoolT1())),
-        "i" -> IntT1(),
-        "I" -> SetT1(IntT1()),
-        "(i)" -> TupT1(IntT1()),
-        "i_to_i" -> FunT1(IntT1(), IntT1()),
-        "i_to_I" -> FunT1(IntT1(), SetT1(IntT1())),
-        "i_TO_i" -> SetT1(FunT1(IntT1(), IntT1())),
-        "r" -> RecT1("a" -> IntT1()),
-        "s" -> StrT1(),
-        "S" -> SetT1(StrT1()),
-        "(s)" -> TupT1(StrT1()),
-        "i_to_s" -> FunT1(StrT1(), IntT1()),
-        "s_to_i" -> FunT1(IntT1(), StrT1()),
-        "i_to_r" -> FunT1(IntT1(), RecT1("a" -> IntT1())),
-        "b_to_b" -> FunT1(BoolT1(), BoolT1()),
-        "b_TO_b" -> SetT1(FunT1(BoolT1(), BoolT1())),
-        "i_to_b" -> FunT1(IntT1(), BoolT1()),
-        "i_to_B" -> FunT1(IntT1(), SetT1(BoolT1())),
-        "i_TO_B" -> FunT1(IntT1(), SetT1(BoolT1())),
-        "i_TO_i_to_B" -> SetT1(FunT1(IntT1(), FunT1(IntT1(), SetT1(BoolT1())))),
-        "i_to_i_to_B" -> FunT1(IntT1(), FunT1(IntT1(), SetT1(BoolT1()))),
-        "i_to_b_to_b" -> FunT1(IntT1(), FunT1(BoolT1(), BoolT1())),
+        "b" -> BoolT1,
+        "B" -> SetT1(BoolT1),
+        "BB" -> SetT1(SetT1(BoolT1)),
+        "i" -> IntT1,
+        "I" -> SetT1(IntT1),
+        "(i)" -> TupT1(IntT1),
+        "i_to_i" -> FunT1(IntT1, IntT1),
+        "i_to_I" -> FunT1(IntT1, SetT1(IntT1)),
+        "i_TO_i" -> SetT1(FunT1(IntT1, IntT1)),
+        "r" -> RecT1("a" -> IntT1),
+        "s" -> StrT1,
+        "S" -> SetT1(StrT1),
+        "(s)" -> TupT1(StrT1),
+        "i_to_s" -> FunT1(StrT1, IntT1),
+        "s_to_i" -> FunT1(IntT1, StrT1),
+        "i_to_r" -> FunT1(IntT1, RecT1("a" -> IntT1)),
+        "b_to_b" -> FunT1(BoolT1, BoolT1),
+        "b_TO_b" -> SetT1(FunT1(BoolT1, BoolT1)),
+        "i_to_b" -> FunT1(IntT1, BoolT1),
+        "i_to_B" -> FunT1(IntT1, SetT1(BoolT1)),
+        "i_TO_B" -> FunT1(IntT1, SetT1(BoolT1)),
+        "i_TO_i_to_B" -> SetT1(FunT1(IntT1, FunT1(IntT1, SetT1(BoolT1)))),
+        "i_to_i_to_B" -> FunT1(IntT1, FunT1(IntT1, SetT1(BoolT1))),
+        "i_to_b_to_b" -> FunT1(IntT1, FunT1(BoolT1, BoolT1)),
     )
 
   test("""[{1, 2, 3} -> {FALSE, TRUE}]""") { rewriterType: SMTEncoding =>
@@ -45,13 +45,13 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
     nextState.ex match {
       case NameEx(_) =>
         val cell = nextState.arena.findCellByNameEx(nextState.ex)
-        assert(cell.cellType == FinFunSetT(FinSetT(IntT()), FinSetT(BoolT())))
+        assert(cell.cellType == FinFunSetT(CellTFrom(SetT1(IntT1)), CellTFrom(SetT1(BoolT1))))
         val dom = nextState.arena.getDom(cell)
-        assert(dom.cellType == FinSetT(IntT()))
+        assert(dom.cellType == CellTFrom(SetT1(IntT1)))
         val domElems = nextState.arena.getHas(dom)
         assert(domElems.length == 3)
         val cdm = nextState.arena.getCdm(cell)
-        assert(cdm.cellType == FinSetT(BoolT()))
+        assert(cdm.cellType == CellTFrom(SetT1(BoolT1)))
         val cdmElems = nextState.arena.getHas(cdm)
         assert(cdmElems.length == 2)
       // the contents is tested in the rules below
@@ -73,13 +73,13 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
     nextState.ex match {
       case NameEx(_) =>
         val cell = nextState.arena.findCellByNameEx(nextState.ex)
-        assert(cell.cellType == FinFunSetT(FinSetT(IntT()), FinSetT(FinSetT(BoolT()))))
+        assert(cell.cellType == FinFunSetT(CellTFrom(SetT1(IntT1)), CellTFrom(SetT1(SetT1(BoolT1)))))
         val dom = nextState.arena.getDom(cell)
-        assert(dom.cellType == FinSetT(IntT()))
+        assert(dom.cellType == CellTFrom(SetT1(IntT1)))
         val domElems = nextState.arena.getHas(dom)
         assert(domElems.length == 2)
         val cdm = nextState.arena.getCdm(cell)
-        assert(cdm.cellType == FinSetT(FinSetT(BoolT())))
+        assert(cdm.cellType == CellTFrom(SetT1(SetT1(BoolT1))))
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -96,14 +96,40 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
       exists(name("f") ? "i_to_B", funSet(domain, codomain) ? "i_to_B", pred)
         .typed(types, "b")
     val skolem = apalacheSkolem(existsForm)
-      .typed(BoolT1())
+      .typed(BoolT1)
     val state = new SymbState(skolem, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     val gprime = nextState.binding("g'")
-    assert(FunT(FinSetT(IntT()), FinSetT(BoolT())) == gprime.cellType)
+    assert(CellTFrom(FunT1(IntT1, SetT1(BoolT1))) == gprime.cellType)
     solverContext.assertGroundExpr(nextState.ex)
     assert(solverContext.sat())
+  }
+
+  // the existential over a function set should work correctly in presence of duplicates
+  test("""Skolem(\E f \in [{1, 2 - 1, 2} -> {FALSE, TRUE}]: g' <- f)""") { rewriterType: SMTEncoding =>
+    val iToB = FunT1(IntT1, SetT1(BoolT1))
+    val intSetT = SetT1(IntT1)
+    val domain = enumSet(int(1), minus(int(2), int(1)).as(IntT1), int(2)).as(intSetT)
+    val codomain = powSet(enumSet(bool(false), bool(true)) ? "B") ? "BB"
+    val pred = assign(prime(name("g") ? "i_to_B") ? "i_to_B", name("f") ? "i_to_B")
+      .typed(types, "b")
+    val existsForm =
+      exists(name("f") ? "i_to_B", funSet(domain, codomain) ? "i_to_B", pred)
+        .typed(types, "b")
+    val skolem = apalacheSkolem(existsForm)
+      .typed(BoolT1)
+    val state = new SymbState(skolem, arena, Binding())
+    val rewriter = create(rewriterType)
+    val nextState = rewriter.rewriteUntilDone(state)
+    val gprime = nextState.binding("g'")
+    assert(CellTFrom(FunT1(IntT1, SetT1(BoolT1))) == gprime.cellType)
+    solverContext.assertGroundExpr(nextState.ex)
+    // it should be impossible to return two different values for 1
+    val app1 = appFun(gprime.toNameEx.as(iToB), minus(int(2), int(1)).as(IntT1)).as(BoolT1)
+    val app2 = appFun(gprime.toNameEx.as(iToB), minus(int(3), int(2)).as(IntT1)).as(BoolT1)
+    val app1eqApp2 = eql(app1, app2).as(BoolT1)
+    assertTlaExAndRestore(rewriter, nextState.setRex(app1eqApp2))
   }
 
   // the existential over a function set should work without expanding the powerset!
@@ -142,7 +168,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     val gprime = nextState.binding("g'")
-    assert(FunT(FinSetT(IntT()), FunT(FinSetT(IntT()), FinSetT(BoolT()))) == gprime.cellType)
+    assert(CellTFrom(FunT1(IntT1, FunT1(IntT1, SetT1(BoolT1)))) == gprime.cellType)
     solverContext.assertGroundExpr(nextState.ex)
     assert(solverContext.sat())
   }
@@ -244,13 +270,13 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
     nextState.ex match {
       case NameEx(_) =>
         val cell = nextState.arena.findCellByNameEx(nextState.ex)
-        assert(cell.cellType == FinFunSetT(FinSetT(IntT()), FinSetT(BoolT())))
+        assert(cell.cellType == FinFunSetT(CellTFrom(SetT1(IntT1)), CellTFrom(SetT1(BoolT1))))
         val dom = nextState.arena.getDom(cell)
-        assert(dom.cellType == FinSetT(IntT()))
+        assert(dom.cellType == CellTFrom(SetT1(IntT1)))
         val domElems = nextState.arena.getHas(dom)
         assert(domElems.length == 5)
         val cdm = nextState.arena.getCdm(cell)
-        assert(cdm.cellType == FinSetT(BoolT()))
+        assert(cdm.cellType == CellTFrom(SetT1(BoolT1)))
         val cdmElems = nextState.arena.getHas(cdm)
         assert(cdmElems.length == 2)
       // the contents is tested in the rules below

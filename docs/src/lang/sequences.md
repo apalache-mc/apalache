@@ -473,10 +473,6 @@ to `TRUE`.
 It is much easier to describe the effect of `SelectSeq` in words than to
 give a precise sequence of steps. See **Examples**.
 
-_This operator is not supported by Apalache, as it inlines all operators,
-before translating the specification in SMT. Hence, it cannot pass `Test`
-into a built-in operator. To work around it, write a user-defined
-recursive operator that is equivalent to `SelectSeq`._
 
 **Determinism:** Deterministic.
 
@@ -581,7 +577,7 @@ till the end of the universe.
 [Control Flow and Non-determinism]: ./control-and-nondeterminism.md
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html
 [Paxos]: https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla
-[Apalache ADR002]: https://github.com/informalsystems/apalache/blob/unstable/docs/adr/002adr-types.md
+[Apalache ADR002]: https://github.com/informalsystems/apalache/blob/unstable/docs/src/adr/002adr-types.md
 [Cartesian product]: https://en.wikipedia.org/wiki/Cartesian_product
 [Overriding Seq in TLC]: https://groups.google.com/g/tlaplus/c/sYx_6e3YyWk/m/4CnwPqIVAgAJ
 [HOWTO write type annotations]: ../../HOWTOs/howto-write-type-annotations.md

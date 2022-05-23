@@ -24,11 +24,11 @@ class TestTlcConfigImporter extends AnyFunSuite with BeforeAndAfterEach {
   private var typeChecker: TypeCheckerTool = _
   private val layout80 = TextLayout().copy(textWidth = 80)
 
-  override def beforeEach() {
+  override def beforeEach(): Unit = {
     sourceStore = new SourceStore()
     annotationStore = createAnnotationStore()
     sanyImporter = new SanyImporter(sourceStore, annotationStore)
-    typeChecker = new TypeCheckerTool(annotationStore, inferPoly = false)
+    typeChecker = new TypeCheckerTool(annotationStore, inferPoly = false, useRows = false)
   }
 
   def configureAndCompare(tla: String, tlc: String, expected: String): Assertion = {
@@ -40,7 +40,7 @@ class TestTlcConfigImporter extends AnyFunSuite with BeforeAndAfterEach {
     // run the type checker
     val typedModule =
       typeChecker
-        .checkAndTag(new IdleTracker(), new MultiTypeCheckerListener(), defaultTag = { _ => Untyped() }, mod)
+        .checkAndTag(new IdleTracker(), new MultiTypeCheckerListener(), defaultTag = { _ => Untyped }, mod)
         .get
 
     val mod2 = new TlcConfigImporter(config)(typedModule)

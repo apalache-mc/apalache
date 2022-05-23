@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.pp.passes
 
+import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.imp.findBodyOf
@@ -15,7 +16,6 @@ import com.typesafe.scalalogging.LazyLogging
  */
 class InlinePassImpl @Inject() (
     options: PassOptions,
-    gen: UniqueNameGenerator,
     tracker: TransformationTracker,
     renaming: IncrementalRenaming,
     writerFactory: TlaWriterFactory)
@@ -23,7 +23,7 @@ class InlinePassImpl @Inject() (
 
   override def name: String = "InlinePass"
 
-  override def execute(module: TlaModule): Option[TlaModule] = {
+  override def execute(module: TlaModule): PassResult = {
     // Since PrimingPass now happens before inlining, we have to add InitPrime and CInitPrime as well
     val initName = options.getOrElse[String]("checker", "init", "Init")
     val cinitName = options.getOrElse[String]("checker", "cinit", "CInit")
@@ -51,7 +51,7 @@ class InlinePassImpl @Inject() (
     //
     val renamedModule = renaming.renameInModule(module)
 
-    val inliner = new Inliner(tracker, gen, keepNullary = true, moduleLevelFilter = moduleFilter)
+    val inliner = new Inliner(tracker, renaming, keepNullary = true, moduleLevelFilter = moduleFilter)
     val inlined = inliner.transformModule(renamedModule)
 
     // Inline the primitive constants now
@@ -72,7 +72,7 @@ class InlinePassImpl @Inject() (
     // dump the result of preprocessing
     writeOut(writerFactory, constInlinedModule)
 
-    Some(constInlinedModule)
+    Right(constInlinedModule)
   }
 
   override def dependencies = Set()

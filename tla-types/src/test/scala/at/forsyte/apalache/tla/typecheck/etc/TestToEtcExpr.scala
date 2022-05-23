@@ -22,7 +22,7 @@ import scala.annotation.nowarn
  *   Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
-class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder {
+class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with ToEtcExprBase {
   private var parser: Type1Parser = _
   private var annotationStore: AnnotationStore = _
   private var gen: ToEtcExpr = _
@@ -32,36 +32,6 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     annotationStore = createAnnotationStore()
     // a new instance of the translator, as it gives unique names to the variables
     gen = new ToEtcExpr(annotationStore, ConstSubstitution.empty, new TypeVarPool())
-  }
-
-  private def mkAppByType(operTypes: Seq[TlaType1], args: TlaType1*): EtcApp = {
-    mkUniqApp(operTypes, args.map(a => mkUniqConst(a)): _*)
-  }
-
-  private def mkAppByName(operTypes: Seq[TlaType1], args: String*): EtcApp = {
-    mkUniqApp(operTypes, args.map(mkUniqName): _*)
-  }
-
-  private def mkConstAppByType(opsig: TlaType1, args: TlaType1*): EtcApp = {
-    mkUniqApp(Seq(opsig), args.map(a => mkUniqConst(a)): _*)
-  }
-
-  private def mkConstAppByName(opsig: TlaType1, args: String*): EtcApp = {
-    mkUniqApp(Seq(opsig), args.map(mkUniqName): _*)
-  }
-
-  // produce an expression that projects a set of pairs on the set of its first (or second) components
-  private def mkProjection(
-      fst: String,
-      snd: String,
-      projFirst: Boolean,
-      set: String): EtcExpr = {
-    val axis = if (projFirst) fst else snd
-    val tuple = TupT1(VarT1(fst), VarT1(snd))
-    // Projection: depending on axis, either ((<<a, b>>, Set(<<a, b>>)) => Set(a)) or ((<<a, b>>, Set(<<a, b>>)) => Set(b))
-    // We add the tuple <<a, b>> for technical reasons, in order to recover the type of the variable tuple in TypeRewriter.
-    val oper = OperT1(Seq(tuple, SetT1(tuple)), SetT1(VarT1(axis)))
-    mkUniqApp(Seq(oper), mkUniqConst(tuple), mkUniqName(set))
   }
 
   test("integer arithmetic") {
@@ -111,13 +81,13 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
   test("operator application") {
     // operator application should be just application
     val fName = mkUniqName("F")
-    val expected2 = mkUniqAppByName(fName, mkUniqConst(IntT1()), mkUniqConst(BoolT1()))
+    val expected2 = mkUniqAppByName(fName, mkUniqConst(IntT1), mkUniqConst(BoolT1))
 
     val expr = tla.appOp(tla.name("F"), tla.int(1), tla.bool(true))
     assert(expected2 == gen(expr))
 
     // Has custom type error message
-    assert(gen(expr).explain(List(OperT1(Seq(), BoolT1())), List()).isDefined)
+    assert(gen(expr).explain(List(OperT1(Seq(), BoolT1)), List()).isDefined)
   }
 
   test("LET-IN simple") {
@@ -126,7 +96,7 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     // becomes: let Foo = λ x ∈ Set(a). x in Bool
     val fooType = mkUniqAbs(mkUniqName("x"), (mkUniqName("x"), mkUniqConst(SetT1(VarT1("a")))))
     val ex = LetInEx(tla.bool(true), foo)
-    val let = mkUniqLet("Foo", fooType, mkUniqConst(BoolT1()))
+    val let = mkUniqLet("Foo", fooType, mkUniqConst(BoolT1))
     // we wrap the let-definition with an application of an identity operator, to recover the type of LetInEx later
     val expected = mkUniqApp(Seq(parser("b => b")), let)
     assert(expected == gen(ex))
@@ -143,7 +113,7 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     // let Foo = λ x ∈ Set(a). x in Bool
     val fooType = mkUniqAbs(mkUniqName("x"), (mkUniqName("x"), mkUniqConst(SetT1(VarT1("a")))))
     val tlaLetIn = LetInEx(tla.bool(true), foo)
-    val etcLet = mkUniqLet("Foo", fooType, mkUniqConst(BoolT1()))
+    val etcLet = mkUniqLet("Foo", fooType, mkUniqConst(BoolT1))
     val etcAnnotation = mkUniqTypeDecl("Foo", parser("Int => Int"), etcLet)
     // we wrap the annotated let-definition with an application of an identity operator, to recover the type of LetInEx later
     val expected = mkUniqApp(Seq(parser("b => b")), etcAnnotation)
@@ -154,9 +124,9 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     // LET Foo(Bar(_)) == 1 IN TRUE
     val foo = TlaOperDecl("Foo", List(OperParam("Bar", 1)), tla.int(1))
     // becomes: let Foo = λ Bar ∈ Set(a => b). Int in Bool
-    val fooType = mkUniqAbs(mkUniqConst(IntT1()), (mkUniqName("Bar"), mkUniqConst(parser("Set(a => b)"))))
+    val fooType = mkUniqAbs(mkUniqConst(IntT1), (mkUniqName("Bar"), mkUniqConst(parser("Set(a => b)"))))
     val ex = LetInEx(tla.bool(true), foo)
-    val let = mkUniqLet("Foo", fooType, mkUniqConst(BoolT1()))
+    val let = mkUniqLet("Foo", fooType, mkUniqConst(BoolT1))
     // we wrap the let-definition with an application of an identity operator, to recover the type of LetInEx later
     val expected = mkUniqApp(Seq(parser("c => c")), let)
     assert(expected == gen(ex))
@@ -384,14 +354,14 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
   test("[f1 |-> TRUE, f2 |-> 1]") {
     // here we have simply the record type
     val funOperType = parser("(a, b) => [f1: a, f2: b]")
-    val expected = mkConstAppByType(funOperType, BoolT1(), IntT1())
+    val expected = mkConstAppByType(funOperType, BoolT1, IntT1)
     val rec = tla.enumFun(tla.str("f1"), tla.bool(true), tla.str("f2"), tla.int(1))
     assert(expected == gen(rec))
   }
 
   test("<<1, 2>>") {
     val tupleOrFun = Seq(parser("(a, b) => <<a, b>>"), parser("(a, a) => Seq(a)"))
-    val expected = mkAppByType(tupleOrFun, IntT1(), IntT1())
+    val expected = mkAppByType(tupleOrFun, IntT1, IntT1)
     val tuple = tla.tuple(tla.int(1), tla.int(2))
     assert(expected == gen(tuple))
   }
@@ -411,7 +381,7 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     // one of the three: a function, a sequence, or a tuple
     val funOrSeqOrTuple =
       Seq(parser("((Int -> a), Int) => a"), parser("(Seq(a), Int) => a"), parser("(<| 2: a |>, Int) => a"))
-    val expected = mkUniqApp(funOrSeqOrTuple, mkUniqName("f"), mkUniqConst(IntT1()))
+    val expected = mkUniqApp(funOrSeqOrTuple, mkUniqName("f"), mkUniqConst(IntT1))
     val access = tla.appFun(tla.name("f"), tla.int(2))
     assert(expected == gen(access))
 
@@ -421,9 +391,20 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
 
   test("""f["foo"]""") {
     // either a function, or a record
-    val funOrReq = Seq(parser("((Str -> a), Str) => a"), parser("([foo: a], Str) => a"))
-    val expected = mkUniqApp(funOrReq, mkUniqName("f"), mkUniqConst(StrT1()))
+    val funOrRecord = Seq(parser("((Str -> a), Str) => a"), parser("([foo: a], Str) => a"))
+    val expected = mkUniqApp(funOrRecord, mkUniqName("f"), mkUniqConst(StrT1))
     val access = tla.appFun(tla.name("f"), tla.str("foo"))
+    assert(expected == gen(access))
+
+    // Has custom type error message
+    assert(gen(access).explain(List(), List()).isDefined)
+  }
+
+  test("""f["1_OF_A"]""") {
+    // it should always be a function, because A is an uninterpreted type
+    val fun = Seq(parser("((A -> a), A) => a"))
+    val expected = mkUniqApp(fun, mkUniqName("f"), mkUniqConst(ConstT1("A")))
+    val access = tla.appFun(tla.name("f"), tla.str("1_OF_A"))
     assert(expected == gen(access))
 
     // Has custom type error message
@@ -516,7 +497,7 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     val ex = tla.except(tla.name("f"), tla.tuple(tla.str("foo")), tla.name("e2"))
 
     val types = Seq(parser("(Str, a) => (Str -> a)"), parser("(Str, a) => [foo: a]"))
-    val tower = mkUniqApp(types, mkUniqConst(StrT1()), mkUniqName("e2"))
+    val tower = mkUniqApp(types, mkUniqConst(StrT1), mkUniqName("e2"))
     val expected = mkUniqApp(Seq(parser("(b, b) => b")), mkUniqName("f"), tower)
     assert(expected == gen(ex))
   }
@@ -526,7 +507,7 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     val ex = tla.except(tla.name("f"), tla.tuple(tla.int(3)), tla.name("e2"))
 
     val types = Seq(parser("(Int, a) => (Int -> a)"), parser("(Int, a) => Seq(a)"), parser("(Int, a) => <| 3: a |>"))
-    val tower = mkUniqApp(types, mkUniqConst(IntT1()), mkUniqName("e2"))
+    val tower = mkUniqApp(types, mkUniqConst(IntT1), mkUniqName("e2"))
     val expected = mkUniqApp(Seq(parser("(b, b) => b")), mkUniqName("f"), tower)
     assert(expected == gen(ex))
   }
@@ -536,9 +517,9 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     val ex = tla.except(tla.name("f"), tla.tuple(tla.int(3)), tla.name("e2"), tla.tuple(tla.int(5)), tla.name("e4"))
 
     val types1 = Seq(parser("(Int, a) => (Int -> a)"), parser("(Int, a) => Seq(a)"), parser("(Int, a) => <| 3: a |>"))
-    val tower1 = mkUniqApp(types1, mkUniqConst(IntT1()), mkUniqName("e2"))
+    val tower1 = mkUniqApp(types1, mkUniqConst(IntT1), mkUniqName("e2"))
     val types2 = Seq(parser("(Int, b) => (Int -> b)"), parser("(Int, b) => Seq(b)"), parser("(Int, b) => <| 5: b |>"))
-    val tower2 = mkUniqApp(types2, mkUniqConst(IntT1()), mkUniqName("e4"))
+    val tower2 = mkUniqApp(types2, mkUniqConst(IntT1), mkUniqName("e4"))
 
     val expected = mkUniqApp(Seq(parser("(c, c, c) => c")), mkUniqName("f"), tower1, tower2)
     assert(expected == gen(ex))
@@ -549,7 +530,7 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     //   (((b -> a) => (b => a)) => (b -> a)) (λ $recFun ∈ Set(d -> c). (λ x ∈ Set(Int). x))
     val principal = parser("((b -> a) => (b => a)) => (b -> a)")
     // inner lambda
-    val innerLambda = mkUniqAbs(mkUniqName("x"), (mkUniqName("x"), mkUniqConst(SetT1(IntT1()))))
+    val innerLambda = mkUniqAbs(mkUniqName("x"), (mkUniqName("x"), mkUniqConst(SetT1(IntT1))))
     // outer lambda
     val outerLambda =
       mkUniqAbs(innerLambda, (mkUniqName(TlaFunOper.recFunRef.uniqueName), mkUniqConst(parser("Set(d -> c)"))))
@@ -566,8 +547,8 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
     val principal = parser("((<<b, c>> -> a) => ((b, c) => a)) => (<<b, c>> -> a)")
     // inner lambda
     val innerLambda =
-      mkUniqAbs(mkUniqName("x"), (mkUniqName("x"), mkUniqConst(SetT1(IntT1()))),
-          (mkUniqName("y"), mkUniqConst(SetT1(BoolT1()))))
+      mkUniqAbs(mkUniqName("x"), (mkUniqName("x"), mkUniqConst(SetT1(IntT1))),
+          (mkUniqName("y"), mkUniqConst(SetT1(BoolT1))))
     // outer lambda
     val outerLambda =
       mkUniqAbs(innerLambda, (mkUniqName(TlaFunOper.recFunRef.uniqueName), mkUniqConst(parser("Set(<<e, f>> -> d)"))))
@@ -605,14 +586,14 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
 
   test("IF e1 THEN e2 ELSE e3") {
     val iteType = parser("(Bool, a, a) => a")
-    val expected = mkAppByType(Seq(iteType), BoolT1(), IntT1(), IntT1())
+    val expected = mkAppByType(Seq(iteType), BoolT1, IntT1, IntT1)
     val ite = tla.ite(tla.bool(true), tla.int(1), tla.int(2))
     assert(expected == gen(ite))
   }
 
   test("CASE p1 -> e1 [] p2 -> e2") {
     val caseType = parser("(Bool, a, Bool, a) => a")
-    val expected = mkAppByType(Seq(caseType), BoolT1(), IntT1(), BoolT1(), IntT1())
+    val expected = mkAppByType(Seq(caseType), BoolT1, IntT1, BoolT1, IntT1)
     val caseEx = tla.caseSplit(tla.bool(true), tla.int(1), tla.bool(false), tla.int(2))
     assert(expected == gen(caseEx))
   }
@@ -620,7 +601,7 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
   test("CASE p1 -> e1 [] p2 -> e2 OTHER e3") {
     // CASE..OTHER has the default argument first
     val caseType = parser("(a, Bool, a, Bool, a) => a")
-    val expected = mkAppByType(Seq(caseType), IntT1(), BoolT1(), IntT1(), BoolT1(), IntT1())
+    val expected = mkAppByType(Seq(caseType), IntT1, BoolT1, IntT1, BoolT1, IntT1)
     val caseEx = tla.caseOther(tla.int(3), tla.bool(true), tla.int(1), tla.bool(false), tla.int(2))
     assert(expected == gen(caseEx))
   }
@@ -740,7 +721,7 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
   test("Labels") {
     val typ = parser("(Str, Str, Str, a) => a")
     val expected =
-      mkUniqApp(Seq(typ), mkUniqConst(StrT1()), mkUniqConst(StrT1()), mkUniqConst(StrT1()), mkUniqName("x"))
+      mkUniqApp(Seq(typ), mkUniqConst(StrT1), mkUniqConst(StrT1), mkUniqConst(StrT1), mkUniqName("x"))
     val ex = tla.label(tla.name("x"), "lab", "a", "b")
     assert(expected == gen(ex))
   }
@@ -848,7 +829,7 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder 
 
     // we explicitly use OperEx here, as we have removed Builder.withType
     @nowarn("cat=deprecation&msg=object withType in object ApalacheOper is deprecated")
-    val input = OperEx(ApalacheOper.withType, tla.name("e"), oldTypeAnnotation)(Untyped())
+    val input = OperEx(ApalacheOper.withType, tla.name("e"), oldTypeAnnotation)(Untyped)
 
     assertThrows[OutdatedAnnotationsError](gen(input))
   }

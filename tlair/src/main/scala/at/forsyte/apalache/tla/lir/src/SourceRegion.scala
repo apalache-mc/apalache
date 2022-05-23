@@ -27,9 +27,7 @@ class SourceRegion(val start: SourcePosition, val end: SourcePosition) {
     maxStart <= minEnd
   }
 
-  override def toString: String = {
-    start + "-" + end
-  }
+  override def toString: String = s"${start}-${end}"
 
   def canEqual(other: Any): Boolean = other.isInstanceOf[SourceRegion]
 

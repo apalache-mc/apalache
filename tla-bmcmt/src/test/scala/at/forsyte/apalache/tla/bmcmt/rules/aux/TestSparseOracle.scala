@@ -1,8 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.types.BoolT
 import at.forsyte.apalache.tla.bmcmt.{Binding, RewriterBase, SMTEncoding, SymbState}
-import at.forsyte.apalache.tla.lir.TestingPredefs
+import at.forsyte.apalache.tla.lir.{BoolT1, TestingPredefs}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
@@ -43,7 +42,7 @@ trait TestSparseOracle extends RewriterBase with TestingPredefs {
   test("""Sparse Oracle.caseAssertions""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
     var state = new SymbState(tla.bool(true), arena, Binding())
-    state = state.updateArena(_.appendCell(BoolT()))
+    state = state.updateArena(_.appendCell(BoolT1))
     val flag = state.arena.topCell
     // introduce an oracle
     val (nextState, oracle) = PropositionalOracle.create(rewriter, state, 2)

@@ -21,10 +21,6 @@ class FunCtorRuleWithArrays(rewriter: SymbStateRewriter) extends FunCtorRule(rew
       mapEx: TlaEx,
       varName: String,
       setEx: TlaEx) = {
-    val funT = CellT.fromType1(funT1)
-    val elemT = CellT.fromType1(funT1.arg)
-    val resultT = CellT.fromType1(funT1.res)
-
     // Rewrite the set expression into a memory cell
     var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
     val domainCell = nextState.asCell
@@ -35,31 +31,28 @@ class FunCtorRuleWithArrays(rewriter: SymbStateRewriter) extends FunCtorRule(rew
     val (afterMapPairExState, relationCells) = mapCells(nextState, pairEx, varName, domainCells)
     nextState = afterMapPairExState
 
-    // We calculate the range of the function to generate the SMT constraints
-    val (afterMapMapExState, rangeCells) = mapCells(nextState, mapEx, varName, domainCells)
-    nextState = afterMapMapExState
-
     // A constant SMT array constrained to a default value is used to encode the function
     // Constant arrays are used to allow for sound use of SMT equality of functions
-    nextState = nextState.updateArena(_.appendCell(funT))
+    nextState = nextState.updateArena(_.appendCell(funT1))
     val funCell = nextState.arena.topCell
     nextState = nextState.updateArena(_.setDom(funCell, domainCell))
     // We construct a set of pairs and have it store the pairs <arg,res> produced
-    nextState = nextState.updateArena(_.appendCellNoSmt(FinSetT(TupleT(Seq(elemT, resultT)))))
+    nextState = nextState.updateArena(_.appendCellNoSmt(CellTFrom(SetT1(TupT1(funT1.arg, funT1.res)))))
     val relation = nextState.arena.topCell
     nextState = nextState.updateArena(_.appendHasNoSmt(relation, relationCells: _*))
     nextState = nextState.updateArena(_.setCdm(funCell, relation))
 
     def addCellCons(domElem: ArenaCell, rangeElem: ArenaCell): Unit = {
-      val inDomain = tla.apalacheSelectInFun(domElem.toNameEx, domainCell.toNameEx).typed(BoolT1())
-      val inRange = tla.apalacheStoreInFun(rangeElem.toNameEx, funCell.toNameEx, domElem.toNameEx).typed(BoolT1())
-      val notInRange = tla.apalacheStoreNotInFun(domElem.toNameEx, funCell.toNameEx).typed(BoolT1())
+      val inDomain = tla.apalacheSelectInFun(domElem.toNameEx, domainCell.toNameEx).typed(BoolT1)
+      val inRange = tla.apalacheStoreInFun(rangeElem.toNameEx, funCell.toNameEx, domElem.toNameEx).typed(BoolT1)
+      val notInRange = tla.apalacheStoreNotInFun(rangeElem.toNameEx, funCell.toNameEx).typed(BoolT1)
       // Function updates are guarded by the inDomain predicate
-      val ite = tla.ite(inDomain, inRange, notInRange).typed(BoolT1())
+      val ite = tla.ite(inDomain, inRange, notInRange).typed(BoolT1)
       rewriter.solverContext.assertGroundExpr(ite)
     }
 
     // Add SMT constraints
+    val rangeCells = relationCells.map(c => nextState.arena.getHas(c)(1))
     for ((domElem, rangeElem) <- domainCells.zip(rangeCells))
       addCellCons(domElem, rangeElem)
 

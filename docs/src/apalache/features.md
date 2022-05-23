@@ -4,7 +4,7 @@ Here is the list of the TLA+ language features that are currently supported by A
 
 At the moment, Apalache is able to check state invariants, action invariants,
 trace invariants as well as inductive invariants. (See the [page on
-invariants](https://apalache.informal.systems/docs/apalache/invariants.html) in
+invariants](https://apalache.informal.systems/docs/apalache/principles/invariants.html) in
 the manual.) Which means that you can only check safety properties with
 Apalache, unless you employ a [liveness-to-safety] transformation in your spec.
 In general, we do not support checking liveness properties.  If you would like
@@ -20,8 +20,8 @@ Construct  | Supported? | Milestone | Comment
 ``CONSTANTS C1, C2`` | ✔ | -  | Either define a ``ConstInit`` operator to initialize the constants, use a `.cfg` file, or declare operators instead of constants, e.g., C1 == 111
 ``VARIABLES x, y, z`` | ✔ | - |
 ``ASSUME P`` | ✔ / ✖ | - | Parsed, but not propagated to the solver
-``F(x1, ..., x_n) == exp`` | ✔ / ✖ | - | Every application of `F` is replaced with its body. Recursive operators need [unrolling annotations](./principles.md#recursive-operators). From 0.16.1 and later, for better performance and UX, use `ApaFoldSet` and `ApaFoldSeqLeft`.
-``f[x ∈ S] == exp`` | ✔ / ✖ | - | Recursive functions are only supported if they return integers or Booleans. From 0.16.1 and later, for better performance and UX, use `ApaFoldSet` and `ApaFoldSeqLeft`.
+``F(x1, ..., x_n) == exp`` | ✔ / ✖ | - | Every application of `F` is replaced with its body. [Recursive operators](./principles/recursive.md) not supported after 0.23.1. From 0.16.1 and later, for better performance and UX, use `ApaFoldSet` and `ApaFoldSeqLeft`.
+``f[x ∈ S] == exp`` | ✔ / ✖ | - | [Recursive functions](./principles/recursive.md) not supported after 0.23.1. From 0.16.1 and later, for better performance and UX, use `ApaFoldSet` and `ApaFoldSeqLeft`.
 ``INSTANCE M WITH ...`` | ✔ / ✖ | - | No special treatment for ``~>``, ``\cdot``, ``ENABLED``
 ``N(x1, ..., x_n) == INSTANCE M WITH...`` | ✔ / ✖ | - | Parameterized instances are not supported
 ``THEOREM P`` | ✔ / ✖ | - | Parsed but not used

@@ -2,15 +2,27 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt.implicitConversions.Crossable
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
-import at.forsyte.apalache.tla.bmcmt.types.{BoolT, FinSetT, PowSetT, RecordT, TupleT, UnknownT}
-import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, SymbStateRewriter}
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
+import at.forsyte.apalache.tla.bmcmt.types.{CellTFrom, PowSetT, UnknownT}
+import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, RewritingRule, SymbState, SymbStateRewriter}
+import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, RecT1, SetT1, TlaEx, TupT1}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 
-class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends SetInclusionRule(rewriter) {
+// TODO: \subseteq is rewritten in Keramelizer
+// Remove after the delegation to this rule in `CherryPick` is removed
+class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends RewritingRule {
   private val simplifier = new ConstSimplifierForSmt
+
+  override def isApplicable(state: SymbState): Boolean = {
+    state.ex match {
+      case OperEx(TlaSetOper.subseteq, _, _) =>
+        true
+
+      case _ =>
+        false
+    }
+  }
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
@@ -20,10 +32,10 @@ class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends SetInclusi
         val rightState = rewriter.rewriteUntilDone(leftState.setRex(right))
         val rightCell = rightState.arena.findCellByNameEx(rightState.ex)
         (leftCell.cellType, rightCell.cellType) match {
-          case (FinSetT(_), FinSetT(_)) =>
+          case (CellTFrom(SetT1(_)), CellTFrom(SetT1(_))) =>
             subset(rightState, leftCell, rightCell, false)
 
-          case (FinSetT(FinSetT(t1)), PowSetT(FinSetT(t2))) =>
+          case (CellTFrom(SetT1(SetT1(t1))), PowSetT(SetT1(t2))) =>
             if (t1 != t2) {
               throw new RewriterException("Unexpected set types: %s and %s in %s"
                     .format(t1, t2, state.ex), state.ex)
@@ -68,7 +80,11 @@ class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends SetInclusi
       // EqConstraints need to be generated, since missing in-relations, e.g. in sets of tuples, will lead to errors.
       // TODO: Inlining this method is pointless. We should consider handling tuples and other structures natively in SMT.
       val leftElemsElemsType = if (leftElemsElems.nonEmpty) leftElemsElems.head.cellType else UnknownT
-      val needsInRelations = leftElemsElemsType.isInstanceOf[TupleT] || leftElemsElemsType.isInstanceOf[RecordT]
+      val needsInRelations = leftElemsElemsType match {
+        case CellTFrom(TupT1(_)) | CellTFrom(RecT1(_)) => true
+        case _                                         => false
+      }
+
       if (needsInRelations) {
         newState = rewriter.lazyEq.cacheEqConstraints(state, leftElemsElems.cross(rightElemOrDomainElems))
       }
@@ -80,7 +96,7 @@ class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends SetInclusi
                       rightElemOrDomain.toNameEx), tla.eql(rightElemOrDomainElem.toNameEx, leftElem.toNameEx)))
         }
 
-        newState = newState.updateArena(_.appendCell(BoolT()))
+        newState = newState.updateArena(_.appendCell(BoolT1))
         val pred = newState.arena.topCell
         val elemsInAndEqLeftElem = rightElemOrDomainElems.map(isInAndEqLeftElem)
 
@@ -92,7 +108,7 @@ class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends SetInclusi
       }
 
       val isSubset = tla.and(leftElems.map(isInRightSet): _*)
-      newState = newState.updateArena(_.appendCell(BoolT()))
+      newState = newState.updateArena(_.appendCell(BoolT1))
       val pred = newState.arena.topCell
       rewriter.solverContext.assertGroundExpr(simplifier.simplifyShallow(tla.eql(pred.toNameEx, isSubset)))
       newState.setRex(pred.toNameEx)

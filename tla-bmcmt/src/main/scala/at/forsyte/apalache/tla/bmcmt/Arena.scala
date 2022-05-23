@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, NameEx, OperEx, SetT1, TlaEx, TlaType1}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 
@@ -28,11 +28,11 @@ object Arena {
     // by convention, the first cells have the following semantics:
     //  0 stores FALSE, 1 stores TRUE, 2 stores BOOLEAN, 3 stores Nat, 4 stores Int
     arena = arena
-      .appendCellNoSmt(BoolT())
-      .appendCellNoSmt(BoolT())
-      .appendCellNoSmt(FinSetT(BoolT()))
-      .appendCellNoSmt(InfSetT(IntT()))
-      .appendCellNoSmt(InfSetT(IntT()))
+      .appendCellNoSmt(CellTFrom(BoolT1))
+      .appendCellNoSmt(CellTFrom(BoolT1))
+      .appendCellNoSmt(CellTFrom(SetT1(BoolT1)))
+      .appendCellNoSmt(InfSetT(CellTFrom(IntT1)))
+      .appendCellNoSmt(InfSetT(CellTFrom(IntT1)))
     // declare Boolean cells in SMT
     val cellFalse = arena.cellFalse()
     val cellTrue = arena.cellTrue()
@@ -169,6 +169,24 @@ class Arena private (
 
   /**
    * Append a new cell to arena. This method returns a new arena, not the new cell. The new cell can be accessed with
+   * topCell. This method will be removed, when we fully migrate from {{{CellT}}} to {{{TlaType1}}}.
+   *
+   * @param cellType
+   *   a cell type
+   * @param isUnconstrained
+   *   a flag defining if the SMT representation of the cell is unconstrained, default is false.
+   * @return
+   *   new arena
+   */
+  def appendCellOld(cellType: CellT, isUnconstrained: Boolean = false): Arena = {
+    val newArena = appendCellNoSmt(cellType, isUnconstrained)
+    val newCell = newArena.topCell
+    solverContext.declareCell(newCell)
+    newArena
+  }
+
+  /**
+   * Append a new cell to arena. This method returns a new arena, not the new cell. The new cell can be accessed with
    * topCell.
    *
    * @param cellType
@@ -178,11 +196,8 @@ class Arena private (
    * @return
    *   new arena
    */
-  def appendCell(cellType: CellT, isUnconstrained: Boolean = false): Arena = {
-    val newArena = appendCellNoSmt(cellType, isUnconstrained)
-    val newCell = newArena.topCell
-    solverContext.declareCell(newCell)
-    newArena
+  def appendCell(cellType: TlaType1, isUnconstrained: Boolean = false): Arena = {
+    appendCellOld(CellT.fromType1(cellType), isUnconstrained)
   }
 
   /**
@@ -203,7 +218,7 @@ class Arena private (
 
         case hd +: tl =>
           val (tailArena: Arena, tailCells: Seq[ArenaCell]) = create(arena, tl)
-          val headArena = tailArena.appendCell(hd)
+          val headArena = tailArena.appendCellOld(hd)
           (headArena, headArena.topCell +: tailCells)
       }
 
@@ -421,7 +436,7 @@ class Arena private (
    *   a cell to start from
    */
   def subgraphToString(root: ArenaCell): String = {
-    val builder = StringBuilder.newBuilder
+    val builder = new StringBuilder()
 
     def print(cell: ArenaCell): Unit = {
       builder.append(cell.id)

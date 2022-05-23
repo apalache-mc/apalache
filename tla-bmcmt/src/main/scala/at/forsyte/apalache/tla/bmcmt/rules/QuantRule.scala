@@ -47,10 +47,10 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
             val setState = rewriter.rewriteUntilDone(state.setRex(boundingSetEx))
             val set = setState.asCell
             set.cellType match {
-              case FinSetT(_) =>
+              case CellTFrom(SetT1(_)) =>
                 skolemExistsInSet(setState, boundVar, predEx, set)
 
-              case PowSetT(FinSetT(_)) =>
+              case PowSetT(SetT1(_)) =>
                 skolemExistsByPick(setState, boundVar, predEx, set)
 
               case FinFunSetT(_, _) =>
@@ -76,7 +76,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
 
   private def findAssignedNames(ex: TlaEx): Map[String, TlaType1] = ex match {
     case OperEx(ApalacheOper.assign, OperEx(TlaActionOper.prime, nex @ NameEx(name)), _) =>
-      Map(name -> nex.typeTag.asTlaType1)
+      Map(name -> nex.typeTag.asTlaType1())
 
     case OperEx(_, args @ _*) =>
       args.flatMap(findAssignedNames).toMap
@@ -112,7 +112,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
     val setState = rewriter.rewriteUntilDone(state.setRex(boundingSetEx))
     val set = setState.arena.findCellByNameEx(setState.ex)
     set.cellType match {
-      case FinSetT(_) => () // supported
+      case CellTFrom(SetT1(_)) => () // supported
 
       case tp =>
         val msg = "Trying to expand a complex set in \\E %s \\in ... ".format(boundVar) +
@@ -151,7 +151,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
         tla.or(tla.not(tla.apalacheSelectInSet(elemAndPred._1.toNameEx, set.toNameEx)), elemAndPred._2)
       }
 
-      val finalState = predState.updateArena(_.appendCell(BoolT()))
+      val finalState = predState.updateArena(_.appendCell(BoolT1))
       val pred = finalState.arena.topCell
       val iff =
         if (isExists) {
@@ -178,7 +178,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
       predEx: TlaEx,
       boundingSetEx: TlaEx): SymbState = {
     rewriter.solverContext.log("; free existential rule over an infinite set " + boundingSetEx)
-    var nextState = state.setArena(state.arena.appendCell(IntT()))
+    var nextState = state.setArena(state.arena.appendCell(IntT1))
     val witness = nextState.arena.topCell
     if (boundingSetEx == ValEx(TlaNatSet)) {
       rewriter.solverContext.assertGroundExpr(tla.ge(witness.toNameEx, tla.int(0)))
@@ -200,7 +200,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
       leftBound: TlaEx,
       rightBound: TlaEx): SymbState = {
     rewriter.solverContext.log(s"; skolemizable existential $boundVar over $leftBound..$rightBound ")
-    var nextState = state.setArena(state.arena.appendCell(IntT()))
+    var nextState = state.setArena(state.arena.appendCell(IntT1))
     val witness = nextState.arena.topCell
     // assert that the witness is in the range leftBound..rightBound
     nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.ge(witness.toNameEx, leftBound)))
@@ -268,7 +268,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
     val predWitness = nextState.ex
 
     // \E x \in S: p holds iff predWitness /\ S /= {}
-    nextState = nextState.updateArena(_.appendCell(BoolT()))
+    nextState = nextState.updateArena(_.appendCell(BoolT1))
     val exPred = nextState.arena.topCell
     val setNonEmpty = tla.not(oracle.whenEqualTo(nextState, setCells.size))
     val iff = tla.equiv(exPred.toNameEx, tla.and(setNonEmpty, predWitness))

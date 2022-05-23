@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.pp
 
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.standard.FlatLanguagePred
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
-import TypedPredefs._
 
 import javax.inject.Singleton
 
@@ -22,8 +22,11 @@ import javax.inject.Singleton
 class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
     extends AbstractTransformer(tracker) with TlaExTransformation {
 
+  /**
+   * Partial transformers, applied left-to-right.
+   */
   override val partialTransformers =
-    List(transformLogic, transformSets, transformTuples, transformRecords, transformControl, transformAssignments)
+    List(transformAssignments, transformLogic, transformSets, transformTuples, transformRecords, transformControl)
 
   override def apply(expr: TlaEx): TlaEx = {
     LanguageWatchdog(FlatLanguagePred()).check(expr)
@@ -51,26 +54,27 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
       val tempName = gen.newName()
       tla
         .filter(tla.name(tempName) ? "e", setX, tla.in(tla.name(tempName) ? "e", setY) ? "b")
-        .typed(Map("b" -> BoolT1(), "e" -> elemType, "s" -> SetT1(elemType)), "s")
+        .typed(Map("b" -> BoolT1, "e" -> elemType, "s" -> SetT1(elemType)), "s")
 
     case OperEx(TlaSetOper.setminus, setX, setY) =>
       val elemType = getElemType(setX)
       val tempName = gen.newName()
       tla
         .filter(tla.name(tempName) ? "e", setX, tla.not(tla.in(tla.name(tempName) ? "e", setY) ? "b") ? "b")
-        .typed(Map("b" -> BoolT1(), "e" -> elemType, "s" -> SetT1(elemType)), "s")
+        .typed(Map("b" -> BoolT1, "e" -> elemType, "s" -> SetT1(elemType)), "s")
 
     case OperEx(TlaSetOper.notin, x, setX) =>
       tla
-        .not(tla.in(x, setX).as(BoolT1()))
-        .as(BoolT1())
+        .not(tla.in(x, setX).as(BoolT1))
+        .as(BoolT1)
+
     // rewrite POWSET A \subseteq POWSET B
     // into A \subseteq B
     case OperEx(TlaSetOper.subseteq, OperEx(TlaSetOper.powerset, setX), OperEx(TlaSetOper.powerset, setY)) =>
       transform(
           tla
             .subseteq(setX, setY)
-            .as(BoolT1())
+            .as(BoolT1)
       )
 
     // rewrite A \subseteq POWSET B
@@ -81,8 +85,8 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
       transform(
           tla
             .forall(tla.name(tempName).as(SetT1(elemType)), setX,
-                tla.subseteq(tla.name(tempName).as(SetT1(elemType)), setY).as(BoolT1()))
-            .as(BoolT1())
+                tla.subseteq(tla.name(tempName).as(SetT1(elemType)), setY).as(BoolT1))
+            .as(BoolT1)
       )
 
     // rewrite A \subseteq B
@@ -91,8 +95,37 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
       val elemType = getElemType(setX)
       val tempName = gen.newName()
       tla
-        .forall(tla.name(tempName).as(elemType), setX, tla.in(tla.name(tempName).as(elemType), setY).as(BoolT1()))
-        .as(BoolT1())
+        .forall(tla.name(tempName).as(elemType), setX, tla.in(tla.name(tempName).as(elemType), setY).as(BoolT1))
+        .as(BoolT1)
+
+    // rewrite f \in [S -> SUBSET T]
+    // into DOMAIN f = S /\ \A x \in S: \A y \in f[x]: y \in T
+    case OperEx(TlaSetOper.in, fun, OperEx(TlaSetOper.funSet, dom, OperEx(TlaSetOper.powerset, powSetDom))) =>
+      val domType = getElemType(dom)
+      val domElem = tla.name(gen.newName()).as(domType)
+      val powSetDomType = getElemType(powSetDom)
+      val funAppElem = tla.name(gen.newName()).as(powSetDomType)
+      tla
+        .and(tla.eql(tla.dom(fun).as(SetT1(domType)), dom).as(BoolT1),
+            tla
+              .forall(domElem, dom,
+                  tla
+                    .forall(funAppElem, tla.appFun(fun, domElem).as(SetT1(powSetDomType)),
+                        tla.in(funAppElem, powSetDom).as(BoolT1))
+                    .as(BoolT1))
+              .as(BoolT1))
+        .as(BoolT1)
+
+    // rewrite f \in [S -> T]
+    // into DOMAIN f = S /\ \A x \in S: f[x] \in T
+    case OperEx(TlaSetOper.in, fun, OperEx(TlaSetOper.funSet, dom, cdm)) =>
+      val domType = getElemType(dom)
+      val domElem = tla.name(gen.newName()).as(domType)
+      val cdmType = getElemType(cdm)
+      tla
+        .and(tla.eql(tla.dom(fun).as(SetT1(domType)), dom).as(BoolT1),
+            tla.forall(domElem, dom, tla.in(tla.appFun(fun, domElem).as(cdmType), cdm).as(BoolT1)).as(BoolT1))
+        .as(BoolT1)
   }
 
   /**
@@ -142,17 +175,17 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
    */
   private def transformLogic: PartialFunction[TlaEx, TlaEx] = {
     case OperEx(TlaBoolOper.equiv, left, right) =>
-      tla.eql(left, right).typed(BoolT1())
+      tla.eql(left, right).typed(BoolT1)
 
     case OperEx(TlaBoolOper.implies, left, right) =>
       tla
         .or(tla.not(left) ? "b", right)
-        .typed(Map("b" -> BoolT1()), "b")
+        .typed(Map("b" -> BoolT1), "b")
 
     case OperEx(TlaOper.ne, left, right) =>
       tla
         .not(tla.eql(left, right) ? "b")
-        .typed(Map("b" -> BoolT1()), "b")
+        .typed(Map("b" -> BoolT1), "b")
   }
 
   /**
@@ -169,7 +202,7 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
       val temp = gen.newName()
       tla
         .exists(tla.name(temp) ? "e", set, tla.eql(prime, tla.name(temp) ? "e") ? "b")
-        .typed(Map("b" -> BoolT1(), "e" -> elemType), "b")
+        .typed(Map("b" -> BoolT1, "e" -> elemType), "b")
   }
 
   /**
@@ -182,14 +215,14 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
 
     case expr @ OperEx(TlaControlOper.caseWithOther, otherEx, args @ _*) =>
       // CASE with a default arm
-      if (expr.typeTag == Typed(BoolT1())) {
+      if (expr.typeTag == Typed(BoolT1)) {
         // the Boolean case becomes a disjunction that has otherEx as an option
         val (guards, actions) = TlaOper.deinterleave(args)
         // produce g_1 /\ a_1, ..., g_n /\ a_n
-        val ands = guards.zip(actions).map { case (g, a) => tla.and(g, a).typed(BoolT1()) }
-        val otherForm = tla.and(guards.map(g => tla.not(g).typed(BoolT1())) :+ otherEx: _*).typed(BoolT1())
+        val ands = guards.zip(actions).map { case (g, a) => tla.and(g, a).typed(BoolT1) }
+        val otherForm = tla.and(guards.map(g => tla.not(g).typed(BoolT1)) :+ otherEx: _*).typed(BoolT1)
         // (g_1 /\ a_1) \/ ... \/ (g_n /\ a_n) \/ ~g_1 /\ ... /\ ~g_n /\ otherEx
-        tla.or(ands :+ otherForm: _*).typed(BoolT1())
+        tla.or(ands :+ otherForm: _*).typed(BoolT1)
       } else {
         // produce a chain: IF g_1 THEN e_1 ELSE (IF g_2 THEN e_2 ELSE (..( ELSE otherEx)..)
         val revGuardsAndActions = mkGuardsAndActions(args)
@@ -198,13 +231,13 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
 
     case expr @ OperEx(TlaControlOper.caseNoOther, args @ _*) =>
       // CASE without a default arm
-      if (expr.typeTag == Typed(BoolT1())) {
+      if (expr.typeTag == Typed(BoolT1)) {
         // the Boolean case becomes a disjunction
         val (guards, actions) = TlaOper.deinterleave(args)
         // produce g_1 /\ a_1, ..., g_n /\ a_n
-        val ands = guards.zip(actions).map { case (g, a) => tla.and(g, a).typed(BoolT1()) }
+        val ands = guards.zip(actions).map { case (g, a) => tla.and(g, a).typed(BoolT1) }
         // (g_1 /\ a_1) \/ ... \/ (g_n /\ a_n)
-        tla.or(ands: _*).typed(BoolT1())
+        tla.or(ands: _*).typed(BoolT1)
       } else {
         // produce a chain: IF g_1 THEN e_1 ELSE (IF g_2 THEN e_2 ELSE (..( ELSE e_n)..)
         if (args.length >= 2) {

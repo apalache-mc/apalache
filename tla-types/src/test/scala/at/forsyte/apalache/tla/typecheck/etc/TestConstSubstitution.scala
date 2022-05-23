@@ -10,17 +10,17 @@ import org.scalatestplus.junit.JUnitRunner
 class TestConstSubstitution extends AnyFunSuite with EasyMockSugar with EtcBuilder {
 
   test("simple substitution") {
-    val sub = ConstSubstitution(Map("A" -> IntT1()))
+    val sub = ConstSubstitution(Map("A" -> IntT1))
     val (result, _) = sub(SetT1(ConstT1("A")))
-    val expected = SetT1(IntT1())
+    val expected = SetT1(IntT1)
     assert(expected == result)
   }
 
   test("transitive substitution") {
-    val sub = ConstSubstitution(Map("A" -> SeqT1(ConstT1("B")), "B" -> SetT1(ConstT1("C")), "C" -> StrT1()))
+    val sub = ConstSubstitution(Map("A" -> SeqT1(ConstT1("B")), "B" -> SetT1(ConstT1("C")), "C" -> StrT1))
     val closure = sub.closure()
     val (result, _) = closure(TupT1(ConstT1("A"), ConstT1("B"), ConstT1("C")))
-    val expected = TupT1(SeqT1(SetT1(StrT1())), SetT1(StrT1()), StrT1())
+    val expected = TupT1(SeqT1(SetT1(StrT1)), SetT1(StrT1), StrT1)
     assert(expected == result)
   }
 

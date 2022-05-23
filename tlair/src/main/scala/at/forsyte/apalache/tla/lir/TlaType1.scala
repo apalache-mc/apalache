@@ -4,7 +4,7 @@ import scala.collection.immutable.SortedMap
 
 /**
  * Trait for a type in Type System 1 as specified in <a
- * href="https://github.com/informalsystems/apalache/blob/unstable/docs/adr/002adr-types.md">ADR-002</a>.
+ * href="https://github.com/informalsystems/apalache/blob/unstable/docs/src/adr/002adr-types.md">ADR-002</a>.
  *
  * It also contains experimental extensions that are specified in <a
  * href="https://github.com/informalsystems/apalache/blob/unstable/docs/src/adr/014adr-precise-records.md">ADR-014</a>.
@@ -42,7 +42,7 @@ object TlaType1 {
 /**
  * An integer type.
  */
-case class IntT1() extends TlaType1 {
+case object IntT1 extends TlaType1 {
   override def toString: String = "Int"
 
   override def usedNames: Set[Int] = Set.empty
@@ -52,7 +52,7 @@ case class IntT1() extends TlaType1 {
 /**
  * An real type.
  */
-case class RealT1() extends TlaType1 {
+case object RealT1 extends TlaType1 {
   override def toString: String = "Real"
 
   override def usedNames: Set[Int] = Set.empty
@@ -62,7 +62,7 @@ case class RealT1() extends TlaType1 {
 /**
  * A Boolean type.
  */
-case class BoolT1() extends TlaType1 {
+case object BoolT1 extends TlaType1 {
   override def toString: String = "Bool"
 
   override def usedNames: Set[Int] = Set.empty
@@ -72,7 +72,7 @@ case class BoolT1() extends TlaType1 {
 /**
  * The type of an uninterpreted string literal.
  */
-case class StrT1() extends TlaType1 {
+case object StrT1 extends TlaType1 {
   override def toString: String = "Str"
 
   override def usedNames: Set[Int] = Set.empty
@@ -332,7 +332,7 @@ case class RowT1(fieldTypes: SortedMap[String, TlaType1], other: Option[VarT1]) 
     val pairs = fieldTypes.map(p => "%s: %s".format(p._1, p._2)).mkString(" | ")
     other match {
       case None    => if (pairs.nonEmpty) s"(| $pairs |)" else "(||)"
-      case Some(v) => s"(| $pairs | $v |)"
+      case Some(v) => if (pairs.nonEmpty) s"(| $pairs | $v |)" else s"(| $v |)"
     }
   }
 
@@ -364,7 +364,7 @@ case class RecRowT1(row: RowT1) extends TlaType1 {
     val fields = row.fieldTypes.map(p => "%s: %s".format(p._1, p._2)).mkString(", ")
     row.other match {
       case None    => s"{ $fields }"
-      case Some(v) => if (fields.nonEmpty) s"{ $fields, $v }" else s"Rec($v)"
+      case Some(v) => if (fields.nonEmpty) s"{ $fields, $v }" else s"{ $v }"
     }
 
   }

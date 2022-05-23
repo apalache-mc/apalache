@@ -1,17 +1,17 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.rules.aux.PowSetCtor
-import at.forsyte.apalache.tla.bmcmt.types.{FinSetT, IntT, PowSetT}
+import at.forsyte.apalache.tla.bmcmt.types.{CellTFrom, PowSetT}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, NameEx, SetT1}
 
 trait TestSymbStateRewriterPowerset extends RewriterBase {
   private val types = Map(
-      "i" -> IntT1(),
-      "I" -> SetT1(IntT1()),
-      "II" -> SetT1(SetT1(IntT1())),
-      "b" -> BoolT1(),
+      "i" -> IntT1,
+      "I" -> SetT1(IntT1),
+      "II" -> SetT1(SetT1(IntT1)),
+      "b" -> BoolT1,
   )
 
   test("""SUBSET {1, 2, 3}""") { rewriterType: SMTEncoding =>
@@ -23,9 +23,9 @@ trait TestSymbStateRewriterPowerset extends RewriterBase {
     nextState.ex match {
       case NameEx(_) =>
         val cell = nextState.arena.findCellByNameEx(nextState.ex)
-        assert(cell.cellType == PowSetT(FinSetT(IntT())))
+        assert(cell.cellType == PowSetT(SetT1(IntT1)))
         val dom = nextState.arena.getDom(cell)
-        assert(dom.cellType == FinSetT(IntT()))
+        assert(dom.cellType == CellTFrom(SetT1(IntT1)))
         val domElems = nextState.arena.getHas(dom)
         assert(domElems.length == 3)
       // the contents is tested in the rules below

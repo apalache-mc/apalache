@@ -67,7 +67,7 @@ object ApalacheOper {
    * define a new syntactic form where `x` ranges over `S` in TLA+, we define the operator `Guess(S)` over a set `S`. If
    * you want to write a non-deterministic version of `CHOOSE x \in S: P`, simply write `Guess({ x \in S: P })`.
    */
-  object guess extends TlaOper {
+  object guess extends ApalacheOper {
     /* the number of arguments the operator has */
     override val name: String = "Apalache!Guess"
 

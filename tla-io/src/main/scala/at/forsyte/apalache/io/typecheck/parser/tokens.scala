@@ -168,7 +168,7 @@ private[parser] case class FIELD_NO(no: Int) extends Type1Token {
  *   the string contents
  */
 private[parser] case class STR_LITERAL(text: String) extends Type1Token {
-  override def toString: String = '"' + text + '"'
+  override def toString: String = s"\"${text}\""
 }
 
 /**

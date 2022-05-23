@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.pp.passes
 
+import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.io.lir.TlaWriterFactory
@@ -39,7 +40,7 @@ class PreproPassImpl @Inject() (
         writerFactory,
     ) {
 
-  override def execute(tlaModule: TlaModule): Option[TlaModule] = {
+  override def execute(tlaModule: TlaModule): PassResult = {
     logger.info("  > Before preprocessing: unique renaming")
     val varSet = tlaModule.varDeclarations.map(_.name).toSet
 

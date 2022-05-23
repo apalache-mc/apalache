@@ -1,5 +1,5 @@
 -------------------------- MODULE TestFunctions --------------------------------
-EXTENDS Integers
+EXTENDS Integers, FiniteSets
 
 Init == TRUE
 Next == TRUE
@@ -18,9 +18,39 @@ TestFunCtorSetToSet ==
     LET fun == [ x \in Singletons |-> { x } ] IN
     fun[{ 50 }] = { { 50 } }
 
+TestFunCtorOnPowerset ==
+    [ S \in SUBSET BOOLEAN |-> Cardinality(S) ] =
+        [ S \in { {}, {FALSE}, {TRUE}, {FALSE, TRUE} } |->
+            Cardinality(S) ]
+
+TestFunSetToPowerset ==
+    \A f \in [ BOOLEAN -> SUBSET BOOLEAN ]:
+        /\ DOMAIN f = BOOLEAN
+        /\ \A x \in BOOLEAN:
+            f[x] \in SUBSET BOOLEAN
+
+TestFunFromFunSet ==
+    \* Introduce cells via LET-IN, so they do not get optimized.
+    LET x == 1 IN
+    LET y == 2 IN
+    LET S == { 0, x, y - 1 } IN
+    LET T == 3..6 IN
+    \* This will get negated when checking the invariant.
+    \* Note that x = y - 1, but the model checker does not statically deduce it.
+    \* Hence, a sound implementation must ensure that the equal elements of S
+    \* are mapped on the same elements of T.
+    \A f \in [ S -> T ]:
+        /\ f[x] = f[y - 1]
+        /\ S = DOMAIN f
+        /\ \A e \in S:
+            f[e] \in T
+
 AllTests ==
     /\ TestFunCtor
     /\ TestFunCtorSet
     /\ TestFunCtorSetToSet
+    /\ TestFunCtorOnPowerset
+    /\ TestFunSetToPowerset
+    /\ TestFunFromFunSet
 
 ================================================================================

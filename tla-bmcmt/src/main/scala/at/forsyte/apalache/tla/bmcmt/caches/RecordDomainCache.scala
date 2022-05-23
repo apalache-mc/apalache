@@ -1,11 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.bmcmt.types.{ConstT, FinSetT}
 import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
+import at.forsyte.apalache.tla.lir.{SetT1, StrT1}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 import scala.collection.immutable.SortedSet
 
@@ -35,14 +34,14 @@ class RecordDomainCache(solverContext: SolverContext, strValueCache: ModelValueC
     var arena = context
 
     def strToCell(str: String): ArenaCell = {
-      val (newArena, cell) = strValueCache.getOrCreate(arena, (ModelValueHandler.STRING_TYPE, str))
+      val (newArena, cell) = strValueCache.getOrCreate(arena, (StrT1.toString, str))
       arena = newArena
       cell
     }
 
     val allCells = allKeys.toList.map(strToCell)
     // create the domain cell
-    arena = arena.appendCell(FinSetT(ConstT()))
+    arena = arena.appendCell(SetT1(StrT1))
     val set = arena.topCell
     arena = arena.appendHas(set, allCells: _*)
     // force that every key in the usedKeys is in the set, whereas every key in the unusedKeys is outside of the set

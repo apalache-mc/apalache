@@ -17,6 +17,7 @@ import org.apache.commons.io.output.NullOutputStream
 import java.io.PrintWriter
 import java.util.concurrent.atomic.AtomicLong
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 /**
  * <p> An implementation of a SolverContext using Z3. Note that this class overrides the global z3 settings
@@ -54,6 +55,12 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   private var smtListener: SmtListener = new IdleSmtListener()
   private var _metrics: SolverContextMetrics = SolverContextMetrics.empty
 
+  // The parSet set is used to pass parameters to Z3
+  // The list of parameters can be seen by passing the -p flag to Z3
+  val parSet = z3context.mkParams()
+  // parSet.add("array.extensional", false) // disables extensionality for the theory of arrays
+  z3solver.setParameters(parSet)
+
   /**
    * Caching one uninterpreted sort for each cell signature. For integers, the integer sort.
    */
@@ -78,8 +85,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
    * representing sets, the cache stores a list of constants. The list is required to support incremental solving, since
    * different context levels can have different SSA arrays.
    */
-  private val cellCache: mutable.Map[Int, List[(ExprSort, CellT, Int)]] =
-    new mutable.HashMap[Int, List[(ExprSort, CellT, Int)]]
+  private val cellCache: mutable.Map[Int, ListBuffer[(ExprSort, CellT, Int)]] =
+    new mutable.HashMap[Int, ListBuffer[(ExprSort, CellT, Int)]]
 
   /**
    * A cache for the in-relation between a set and its potential element.
@@ -144,7 +151,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     log(s"(declare-const $cell $cellSort)")
     val cellName = cell.toString
     val const = z3context.mkConst(cellName, cellSort)
-    cellCache += (cell.id -> List((const, cell.cellType, level)))
+    cellCache += (cell.id -> ListBuffer((const, cell.cellType, level)))
 
     // If arrays are used, they are initialized here.
     if (cellSort.isInstanceOf[ArraySort[_, _]] && !cell.isUnconstrained) {
@@ -279,7 +286,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val arraySort = getOrMkCellSort(arrayT)
     log(s"(declare-const $updatedArrayName $arraySort)")
     val updatedArray = z3context.mkConst(updatedArrayName, arraySort)
-    cellCache += (arrayId -> ((updatedArray, arrayT, level) :: cellCache(arrayId)))
+    cellCache += (arrayId -> cellCache(arrayId).prepend((updatedArray, arrayT, level)))
     _metrics = _metrics.addNConsts(1)
     updatedArray.asInstanceOf[ExprSort]
   }
@@ -424,13 +431,13 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       maxCellIdPerContext = maxCellIdPerContext.tail
       level -= 1
       // clean the caches
-      cellSorts.retain((_, value) => value._2 <= level)
-      funDecls.retain((_, value) => value._2 <= level)
-      cellCache.foreach(entry => cellCache += entry.copy(_2 = entry._2.filter(_._3 <= level)))
-      cellCache.retain((_, value) => value.nonEmpty)
-      inCache.retain((_, value) => value._2 <= level)
-      constantArrayCache.retain((_, value) => value._2 <= level)
-      cellDefaults.retain((_, value) => value._2 <= level)
+      cellSorts.filterInPlace((_, value) => value._2 <= level)
+      funDecls.filterInPlace((_, value) => value._2 <= level)
+      cellCache.foreachEntry((_, valueList) => valueList.filterInPlace(value => value._3 <= level))
+      cellCache.filterInPlace((_, valueList) => valueList.nonEmpty)
+      inCache.filterInPlace((_, value) => value._2 <= level)
+      constantArrayCache.filterInPlace((_, value) => value._2 <= level)
+      cellDefaults.filterInPlace((_, value) => value._2 <= level)
     }
   }
 
@@ -442,13 +449,13 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       maxCellIdPerContext = maxCellIdPerContext.drop(n)
       level -= n
       // clean the caches
-      cellSorts.retain((_, value) => value._2 <= level)
-      funDecls.retain((_, value) => value._2 <= level)
-      cellCache.foreach(entry => cellCache += entry.copy(_2 = entry._2.filter(_._3 <= level)))
-      cellCache.retain((_, value) => value.nonEmpty)
-      inCache.retain((_, value) => value._2 <= level)
-      constantArrayCache.retain((_, value) => value._2 <= level)
-      cellDefaults.retain((_, value) => value._2 <= level)
+      cellSorts.filterInPlace((_, value) => value._2 <= level)
+      funDecls.filterInPlace((_, value) => value._2 <= level)
+      cellCache.foreachEntry((_, valueList) => valueList.filterInPlace(value => value._3 <= level))
+      cellCache.filterInPlace((_, valueList) => valueList.nonEmpty)
+      inCache.filterInPlace((_, value) => value._2 <= level)
+      constantArrayCache.filterInPlace((_, value) => value._2 <= level)
+      cellDefaults.filterInPlace((_, value) => value._2 <= level)
     }
   }
 
@@ -519,23 +526,26 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     } else {
       val newSort =
         cellType match {
-          case BoolT() =>
+          case CellTFrom(BoolT1) =>
             z3context.getBoolSort
 
-          case IntT() =>
+          case CellTFrom(IntT1) =>
             z3context.getIntSort
 
-          case FinSetT(elemType) if encoding == arraysEncoding =>
-            z3context.mkArraySort(getOrMkCellSort(elemType), z3context.getBoolSort)
+          case CellTFrom(SetT1(elemType)) if encoding == arraysEncoding =>
+            z3context.mkArraySort(getOrMkCellSort(CellTFrom(elemType)), z3context.getBoolSort)
 
           case InfSetT(elemType) if encoding == arraysEncoding =>
             z3context.mkArraySort(getOrMkCellSort(elemType), z3context.getBoolSort)
 
           case PowSetT(domType) if encoding == arraysEncoding =>
-            z3context.mkArraySort(getOrMkCellSort(domType), z3context.getBoolSort)
+            z3context.mkArraySort(getOrMkCellSort(CellTFrom(domType)), z3context.getBoolSort)
 
-          case FunT(FinSetT(domType), resType) if encoding == arraysEncoding =>
-            z3context.mkArraySort(getOrMkCellSort(domType), getOrMkCellSort(resType))
+          case FinFunSetT(CellTFrom(SetT1(argType)), CellTFrom(SetT1(resType))) if encoding == arraysEncoding =>
+            z3context.mkArraySort(getOrMkCellSort(CellTFrom(FunT1(argType, resType))), z3context.getBoolSort)
+
+          case CellTFrom(FunT1(argType, resType)) if encoding == arraysEncoding =>
+            z3context.mkArraySort(getOrMkCellSort(CellTFrom(argType)), getOrMkCellSort(CellTFrom(resType)))
 
           case _ =>
             log(s"(declare-sort $sig 0)")
@@ -760,7 +770,15 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
-      case OperEx(ApalacheInternalOper.smtMap, NameEx(inputSetName), NameEx(resultSetName)) =>
+      case OperEx(ApalacheInternalOper.smtMap(mapOper), NameEx(inputSetName), NameEx(resultSetName)) =>
+        val mapOperDecl = mapOper match {
+          case TlaBoolOper.and =>
+            z3context.mkAnd().getFuncDecl
+          case TlaBoolOper.or =>
+            z3context.mkOr().getFuncDecl
+          case _ =>
+            throw new IllegalArgumentException(s"Unexpected SMT map operator of type $mapOper")
+        }
         val inputSetId = ArenaCell.idFromName(inputSetName)
         val resultSetId = ArenaCell.idFromName(resultSetName)
         // The latest SSA array for resultSet contains the constraints. An updated SSA array is made to store the result
@@ -768,7 +786,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         val constraintsSet = cellCache(resultSetId).head._1.asInstanceOf[ArrayExpr[Sort, BoolSort]]
         val updatedResultSet = updateArrayConst(resultSetId).asInstanceOf[ArrayExpr[Sort, BoolSort]]
         // The intersection of inputSet and constraintsSet is taken and equated to updatedResultSet
-        val map = z3context.mkMap(z3context.mkAnd().getFuncDecl, inputSet, constraintsSet)
+        val map = z3context.mkMap(mapOperDecl, inputSet, constraintsSet)
         val eq = toEqExpr(updatedResultSet, map)
         (eq.asInstanceOf[ExprSort], 2)
 

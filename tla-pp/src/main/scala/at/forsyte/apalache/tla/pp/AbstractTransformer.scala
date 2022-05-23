@@ -14,7 +14,7 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
 abstract class AbstractTransformer(tracker: TransformationTracker) extends TlaExTransformation {
 
   /**
-   * The sequence of partial transformers
+   * Partial transformers, applied left-to-right.
    */
   protected val partialTransformers: Seq[PartialFunction[TlaEx, TlaEx]]
 

@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.TlaArithOper
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaActionOper, TlaArithOper}
 import at.forsyte.apalache.tla.lir.transformations.TlaExTransformation
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, OperParam, TestingPredefs, TlaEx, TlaOperDecl}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir._
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
@@ -15,7 +15,7 @@ class TestReplaceFixed extends AnyFunSuite with TestingPredefs {
   import tla._
 
   def mkTr(replacedEx: TlaEx, newEx: => TlaEx): TlaExTransformation =
-    ReplaceFixed(new IdleTracker())(replacedEx, newEx)
+    ReplaceFixed(new IdleTracker()).whenEqualsTo(replacedEx, newEx)
 
   test("Basic replacement") {
     val ex = n_x
@@ -39,6 +39,17 @@ class TestReplaceFixed extends AnyFunSuite with TestingPredefs {
       case _ => false
     }
     assert(assertCond)
+  }
+
+  test("Replacement with a partial function") {
+    val assignX = tla.assign(tla.prime(tla.name("x")), tla.int(3))
+    val eqX = tla.eql(tla.prime(tla.name("x")), tla.int(3))
+    val ex = tla.and(assignX, eqX)
+    val repl = ReplaceFixed(new IdleTracker()).withFun {
+      case OperEx(ApalacheOper.assign, lhs @ OperEx(TlaActionOper.prime, NameEx(_)), rhs) =>
+        tla.eql(lhs, rhs)
+    }
+    assert(repl(ex) == tla.and(eqX, eqX).untyped())
   }
 
   test("Replace in Let-in") {

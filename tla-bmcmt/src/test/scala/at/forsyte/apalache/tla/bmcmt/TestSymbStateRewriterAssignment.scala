@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
@@ -11,15 +10,15 @@ import at.forsyte.apalache.tla.lir.convenience.tla._
  */
 trait TestSymbStateRewriterAssignment extends RewriterBase {
   private val types =
-    Map("b" -> BoolT1(), "B" -> SetT1(BoolT1()), "i" -> IntT1(), "I" -> SetT1(IntT1()), "II" -> SetT1(SetT1(IntT1())),
-        "b_to_i" -> FunT1(BoolT1(), IntT1()), "b_TO_i" -> SetT1(FunT1(BoolT1(), IntT1())),
-        "i_to_b" -> FunT1(IntT1(), BoolT1()), "i_to_i" -> FunT1(IntT1(), IntT1()),
-        "i_TO_i" -> SetT1(FunT1(IntT1(), IntT1())), "ibI" -> TupT1(IntT1(), BoolT1(), SetT1(IntT1())))
-  private val set12: TlaEx = enumSet(int(1), int(2)).typed(SetT1(IntT1()))
+    Map("b" -> BoolT1, "B" -> SetT1(BoolT1), "i" -> IntT1, "I" -> SetT1(IntT1), "II" -> SetT1(SetT1(IntT1)),
+        "b_to_i" -> FunT1(BoolT1, IntT1), "b_TO_i" -> SetT1(FunT1(BoolT1, IntT1)), "i_to_b" -> FunT1(IntT1, BoolT1),
+        "i_to_i" -> FunT1(IntT1, IntT1), "i_TO_i" -> SetT1(FunT1(IntT1, IntT1)),
+        "ibI" -> TupT1(IntT1, BoolT1, SetT1(IntT1)))
+  private val set12: TlaEx = enumSet(int(1), int(2)).typed(SetT1(IntT1))
   private val x_prime: TlaEx = prime(name("x") ? "i").typed(types, "i")
   private val y_prime: TlaEx = prime(name("y") ? "i").typed(types, "i")
-  private val boundName: TlaEx = name("t").typed(IntT1())
-  private val boolset: TlaEx = enumSet(bool(false), bool(true)).typed(SetT1(BoolT1()))
+  private val boundName: TlaEx = name("t").typed(IntT1)
+  private val boolset: TlaEx = enumSet(bool(false), bool(true)).typed(SetT1(BoolT1))
 
   test("""\E t \in {1, 2}: x' \in {t} ~~> TRUE and [x -> $C$k]""") { rewriterType: SMTEncoding =>
     val asgn = apalacheSkolem(exists(boundName, set12, assign(x_prime, boundName) ? "b") ? "b").typed(types, "b")
@@ -108,7 +107,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     // no contradiction should be introduced
     assert(solverContext.sat())
     // the assignment gives us false
-    assertTlaExAndRestore(rewriter, nextState.setRex(not(nextState.ex).typed(BoolT1())))
+    assertTlaExAndRestore(rewriter, nextState.setRex(not(nextState.ex).typed(BoolT1)))
   }
 
   test("""x' \in {1} /\ x' = 1 ~~> TRUE and [x -> $C$k]""") { rewriterType: SMTEncoding =>
@@ -134,7 +133,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     assert(solverContext.sat()) // ok
     rewriter.pop()
     rewriter.push()
-    solverContext.assertGroundExpr(not(nextState.ex).typed(BoolT1()))
+    solverContext.assertGroundExpr(not(nextState.ex).typed(BoolT1))
     assert(!solverContext.sat())
   }
 
@@ -480,7 +479,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     nextState.ex match {
       case NameEx(_) =>
         val cell = nextState.binding("x'")
-        assert(TupleT(List(IntT(), BoolT(), FinSetT(IntT()))) == cell.cellType)
+        assert(TupT1(IntT1, BoolT1, SetT1(IntT1)) == cell.cellType.toTlaType1)
 
         val membershipTest =
           and(in(appFun(prime(name("x") ? "ibI") ? "ibI", int(1)) ? "i", set12) ? "b",

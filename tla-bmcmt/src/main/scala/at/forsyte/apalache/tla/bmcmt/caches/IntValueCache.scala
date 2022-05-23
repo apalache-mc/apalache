@@ -1,11 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.bmcmt.types.IntT
 import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.lir.{OperEx, ValEx}
+import at.forsyte.apalache.tla.lir.{IntT1, OperEx, ValEx}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
@@ -18,7 +17,7 @@ class IntValueCache(solverContext: SolverContext) extends AbstractCache[Arena, B
 
   def create(arena: Arena, intValue: BigInt): (Arena, ArenaCell) = {
     // introduce a new constant
-    val newArena = arena.appendCell(IntT())
+    val newArena = arena.appendCell(IntT1)
     val intCell = newArena.topCell
     solverContext.assertGroundExpr(OperEx(TlaOper.eq, intCell.toNameEx, ValEx(TlaInt(intValue))))
     (newArena, intCell)
