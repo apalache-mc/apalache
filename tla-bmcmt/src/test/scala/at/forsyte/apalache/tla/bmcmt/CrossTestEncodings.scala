@@ -13,21 +13,23 @@ import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import ch.qos.logback.classic.{Level, Logger}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
-import org.scalacheck.Gen.{const, listOf, lzy, nonEmptyListOf, oneOf, sized}
+import org.scalacheck.Gen.{choose, const, listOf, lzy, nonEmptyListOf, oneOf, resize, sized}
 import org.scalacheck.Prop.{forAll, AnyOperators}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.scalacheck.Checkers
 import org.slf4j.LoggerFactory
 
 /**
- * Test encodings against each other. Override [[AnyFunSuite.withFixture]] to set up SMT encodings used for oracle and
- * verifier.
+ * Test encodings against each other, aka Nitpicker.
+ *
+ * Override [[AnyFunSuite.withFixture]] to set up SMT encodings used for oracle and verifier.
  *
  * This first generates a type `witnessType` and a set-valued expression `witnesses` of type `Set(witnessType)`. It then
  * checks the invariant of the following spec:
  *
  * {{{
  * ------ MODULE Oracle --------
+ * EXTENDS Apalache, Integers
  * VARIABLES
  *   \* @type: ${witnessType};
  *   witness,
@@ -53,6 +55,7 @@ import org.slf4j.LoggerFactory
  *
  * {{{
  * ------ MODULE Verifier --------
+ * EXTENDS Apalache, Integers
  * VARIABLES
  *   \* @type: ${witnessType};
  *   result,
@@ -98,6 +101,21 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
           oneOf(genPrimitive, genSet, genSeq, genFun, /*genOper,*/ genTup, genRec /*, genRowRec, genVariant, genRow*/ )
       }
     }
+
+    // Override to temporarily avoid sets of functions, see https://github.com/informalsystems/apalache/issues/1759.
+    override def genSet: Gen[TlaType1] = sized { size => // use 'sized' to control the depth of the generated term
+      for {
+        // use resize to decrease the depth of the elements (as terms)
+        s <- choose(0, size)
+        // Don't produce sets of functions.
+        // TODO(#1452): Re-enable sets of functions when we have better support.
+        g <- resize(size / (s + 1), genTypeTree).suchThat(_ match {
+          case FunT1(_, _) => false
+          case _           => true
+        })
+      } yield SetT1(g)
+    }
+
     // Override to avoid reals, constants, and typevar-typed expressions.
     override def genPrimitive: Gen[TlaType1] =
       oneOf(const(BoolT1), const(IntT1), const(StrT1) /*, const(RealT1), genConst, genVar*/ )
@@ -170,9 +188,61 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
 
     // check the outcome
     val outcome = checker.run()
-    assert(Error(1) == outcome,
-        if (moduleName == "Verifier") s"If outcome=Deadlock, this probably indicates a problem with one encoding."
-        else "")
+    if (outcome != Error(1)) {
+      Left(outcome)
+    } else {
+      // extract witness expression from the counterexample
+      assert(listener.counterExamples.length == 1) // () --(init transition)--> initial state
+      val cex = listener.counterExamples.head.path
+      val (binding, _) = cex.last // initial state binding
+      Right(binding)
+    }
+  }
+
+  private def formatOracleSpec(witnessType: TlaType1, witnesses: TlaEx): String = {
+    s"""------ MODULE Oracle --------
+      |EXTENDS Apalache, Integers
+      |VARIABLES
+      |  \\* @type: ${witnessType};
+      |  witness,
+      |  \\* @type: Bool;
+      |  found
+      |
+      |Init ==
+      |  /\\ witness \\in ${witnesses}
+      |  /\\ found \\in BOOLEAN
+      |
+      |Next ==
+      |  UNCHANGED <<witness, found>>
+      |
+      |NotFound ==
+      |  ~found
+      |======================
+      |""".stripMargin
+  }
+
+  def formatVerifierSpec(witnessType: TlaType1, witnesses: TlaEx, witness: TlaEx): String = {
+    s"""------ MODULE Verifier --------
+      |EXTENDS Apalache, Integers
+      |VARIABLES
+      |  \\* @type: ${witnessType};
+      |  result,
+      |  \\* @type: Bool;
+      |  found
+      |
+      |Init ==
+      |  /\\ result \\in ${witnesses}
+      |  /\\ result = ${witness}
+      |  /\\ found \\in BOOLEAN
+      |
+      |Next ==
+      |  UNCHANGED <<result, found>>
+      |
+      |NotFound ==
+      |  ~found
+      |======================
+      |""".stripMargin
+  }
 
     // extract witness expression from the counterexample
     assert(listener.counterExamples.length == 1) // () --(init transition)--> initial state
@@ -322,11 +392,17 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
           arg <- arbitrary[Boolean]
           set <- oneOf(tla.booleanSet().as(SetT1(tp)), tla.enumSet(tla.bool(arg)).as(SetT1(tp)))
         } yield set
-      case tp @ FunT1(arg, res) =>
+      // Temporarily avoid sets of function sets, see https://github.com/informalsystems/apalache/issues/1759.
+      // TODO(#1452): Re-enable when we have better support.
+      // case tp @ FunT1(arg, res) =>
+      //  for {
+      //    domain <- genWitnessSet(arg)
+      //    codomain <- genWitnessSet(res)
+      //  } yield tla.funSet(domain, codomain).as(SetT1(tp))
+      case tp @ FunT1(_, _) =>
         for {
-          domain <- genWitnessSet(arg)
-          codomain <- genWitnessSet(res)
-        } yield tla.funSet(domain, codomain).as(SetT1(tp))
+          elements <- nonEmptyListOf(genWitness(tp))
+        } yield tla.enumSet(elements: _*).as(SetT1(tp))
       case tp =>
         for {
           elements <- nonEmptyListOf(genWitness(tp))
