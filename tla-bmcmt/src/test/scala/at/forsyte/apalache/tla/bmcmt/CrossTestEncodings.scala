@@ -385,8 +385,8 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
           set <- genWitnessSet(arg)
           res <- genWitness(res)
         } yield tla.funDef(res, name, set).as(tp)
-      case ConstT1(_) | OperT1(_, _) | RealT1() | RecRowT1(_) | RowT1(_, _) | SparseTupT1(_) | VarT1(_) |
-          VariantT1(_) =>
+      // TODO(#401): Enable rows, variants when supported by the model checker.
+      case ConstT1(_) | OperT1(_, _) | RealT1 | RecRowT1(_) | RowT1(_, _) | SparseTupT1(_) | VarT1(_) | VariantT1(_) =>
         throw new IllegalArgumentException(
             s"Unsupported type ${witnessType}. Should have been filtered by the override in the declaration of 'CrossTestEncodings.typeGen'.")
     }
@@ -427,10 +427,10 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
 
   @nowarn("cat=deprecation&msg=Stream") // ScalaCheck's Shrink still uses Stream, which is deprecated since Scala 2.13.0
   private def shrinkType(tp: TlaType1): Stream[TlaType1] = tp match {
-    case IntT1() | RealT1() | BoolT1() | StrT1() => Stream.empty
-    case FunT1(arg, res)                         => Stream(arg, res)
-    case SetT1(elem)                             => Stream(elem)
-    case SeqT1(elem)                             => Stream(elem)
+    case IntT1 | RealT1 | BoolT1 | StrT1 => Stream.empty
+    case FunT1(arg, res)                 => Stream(arg, res)
+    case SetT1(elem)                     => Stream(elem)
+    case SeqT1(elem)                     => Stream(elem)
     case TupT1(elems @ _*) =>
       Stream.concat(
           // shrink to one of the element types
@@ -453,7 +453,8 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
           // records with a subset of the current field types
           Stream(shrink(fieldTypes).filterNot(_.isEmpty).map(elems => RecT1(elems)): _*),
       )
-    case ConstT1(_) | OperT1(_, _) | RealT1() | RecRowT1(_) | RowT1(_, _) | SparseTupT1(_) | VarT1(_) | VariantT1(_) =>
+    // TODO(#401): Enable rows, variants when supported by the model checker.
+    case ConstT1(_) | OperT1(_, _) | RecRowT1(_) | RowT1(_, _) | SparseTupT1(_) | VarT1(_) | VariantT1(_) =>
       throw new IllegalArgumentException(s"Shrinking unsupported type ${tp}. Should be disabled in type generator.")
   }
 
