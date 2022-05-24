@@ -377,7 +377,8 @@ class TableauEncoder(
                 throw new LanguagePredError(
                     "Don't know how to handle operator '~>'. It should have been removed by the Desugarer",
                     Seq((curNode.ID, "")))
-              case TlaTempOper.guarantees => throw new NotImplementedError("Handling guarantees is not supported yet!")
+              case TlaTempOper.guarantees =>
+                throw new NotImplementedError("Handling guarantees is not supported yet!")
               case TlaTempOper.strongFairness | TlaTempOper.weakFairness =>
                 throw new NotImplementedError("Handling fairness is not supported yet!")
               case TlaTempOper.AA | TlaTempOper.EE =>
