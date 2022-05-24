@@ -373,16 +373,15 @@ class TableauEncoder(
 
                 curModWithPreds = curModWithPreds.setPredicates(newInit, newNext, newLoopOK)
                 (curModWithPreds, nodeVarEx)
-              // case TlaTempOper.guarantees     => mkOpApp("%%s %s %%s".format(m_guarantee), args: _*)
-              // case TlaTempOper.strongFairness => mkApp("SF_%s(%s)", args: _*)
-              // case TlaTempOper.weakFairness   => mkApp("WF_%s(%s)", args: _*)
-              // case TlaTempOper.AA             => mkOpApp("[%s]%%s . %%s".format(m_forall), args: _*)
-              // case TlaTempOper.EE             => mkOpApp("[%s]%%s . %%s".format(m_exists), args: _*)
               case TlaTempOper.leadsTo =>
                 throw new LanguagePredError(
                     "Don't know how to handle operator '~>'. It should have been removed by the Desugarer",
                     Seq((curNode.ID, "")))
-
+              case TlaTempOper.guarantees => throw new NotImplementedError("Handling guarantees is not supported yet!")
+              case TlaTempOper.strongFairness | TlaTempOper.weakFairness =>
+                throw new NotImplementedError("Handling fairness is not supported yet!")
+              case TlaTempOper.AA | TlaTempOper.EE =>
+                throw new NotImplementedError("Handling temporal quantifiers is not supported yet!")
               case _ => // not a temporal operator. e.g. A /\ B
                 /* initialize the variable for this node
                     e.g. newInit ==
