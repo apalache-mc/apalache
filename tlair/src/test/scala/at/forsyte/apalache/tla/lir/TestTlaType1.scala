@@ -34,7 +34,7 @@ class TestTlaType1 extends AnyFunSuite {
   test("TlaType1.toString of ADR014 extensions") {
     // ADR014 extensions.
     // Generic syntax for rows, which is internal to the type checker and should not propagate to the user
-    assert("(||)" == RowT1.toString)
+    assert("(||)" == RowT1().toString)
     assert("(| f: Int | z |)" == RowT1(VarT1("z"), "f" -> IntT1).toString)
     assert("(| f: Int |)" == RowT1("f" -> IntT1).toString)
     assert("(| f: Int | g: Bool | z |)" == RowT1(VarT1("z"), "g" -> BoolT1, "f" -> IntT1).toString)
