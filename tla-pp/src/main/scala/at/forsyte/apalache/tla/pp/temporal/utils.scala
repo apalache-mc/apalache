@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.Flatten
+import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 
 object ScopedBuilderExtensions {
   implicit class ScopedBuilderExtension(val builder: ScopedBuilder) {
@@ -12,7 +13,7 @@ object ScopedBuilderExtensions {
     }
 
     def declAsNameEx(decl: TlaDecl): TBuilderInstruction = {
-      builder.nameWithInferredType(decl.name)
+      builder.name(decl.name, decl.typeTag.asTlaType1())
     }
   }
 }
