@@ -2,39 +2,25 @@ package at.forsyte.apalache.tla.pp.temporal
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp._
-import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
-import scalaz.Scalaz._
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.Flatten
 
 object ScopedBuilderExtensions {
   implicit class ScopedBuilderExtension(val builder: ScopedBuilder) {
     def primeVar(varDecl: TlaVarDecl): TBuilderInstruction = {
-      prime(declAsNameEx(varDecl))
-    }
-
-    def prime(expression: TlaEx): TBuilderInstruction = {
-      createUnsafeInstruction(OperEx(TlaActionOper.prime, expression)(expression.typeTag))
+      builder.prime(declAsNameEx(varDecl))
     }
 
     def declAsNameEx(decl: TlaDecl): TBuilderInstruction = {
-      // Untyped declarations should not typically appear, but e.g. tests may generate untyped expressions
-      // just assign an arbitrary type in that case
-      val declType = if (decl.typeTag == Untyped) BoolT1 else decl.typeTag.asTlaType1()
-      builder.name(decl.name, declType)
-    }
-
-    def createUnsafeInstruction[T <: TlaEx](ex: T): TBuilderInstruction = {
-      ex.asInstanceOf[TlaEx].point[TBuilderInternalState]
-    }
-
-    def unchanged(ex: TlaEx): TBuilderInstruction = {
-      builder.createUnsafeInstruction(OperEx(TlaActionOper.unchanged, ex)(Typed(BoolT1)))
+      builder.nameWithInferredType(decl.name)
     }
   }
 }
 
+/**
+ * A convenience class storing a module, together with the init, next and loopOK predicates of that module. Useful to
+ * avoid re-finding these predicates.
+ */
 class ModWithPreds(
     val module: TlaModule,
     val init: TlaOperDecl,
@@ -78,7 +64,6 @@ package object utils {
 }
 
 object DeclUtils {
-  import at.forsyte.apalache.tla.pp.temporal.ScopedBuilderExtensions._
   import at.forsyte.apalache.tla.pp.temporal.utils.builder
 
   /**
@@ -91,8 +76,8 @@ object DeclUtils {
         decl.formalParams,
         Flatten(tracker)(Typed(BoolT1))(
             builder.and(
-                builder.createUnsafeInstruction(decl.body),
-                builder.createUnsafeInstruction(ex),
+                builder.useTrustedEx(decl.body),
+                builder.useTrustedEx(ex),
             )
         ),
     )(decl.typeTag)

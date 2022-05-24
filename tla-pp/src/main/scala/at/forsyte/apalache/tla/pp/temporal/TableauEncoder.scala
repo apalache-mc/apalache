@@ -78,7 +78,7 @@ class TableauEncoder(
     val newInit = conjunctExToOperDecl(
         builder.eql(
             exVar,
-            builder.createUnsafeInstruction(ex),
+            builder.useTrustedEx(ex),
         ),
         modWithPreds.init,
         tracker,
@@ -226,7 +226,7 @@ class TableauEncoder(
               val modWithPredsAndArgEx = encodeSyntaxTreeInPredicates(curModWithPreds, arg)
               curModWithPreds = modWithPredsAndArgEx._1
               val argEx = modWithPredsAndArgEx._2
-              builder.createUnsafeInstruction(argEx)
+              builder.useTrustedEx(argEx)
             })
 
             /* encode the node itself
@@ -392,7 +392,7 @@ class TableauEncoder(
                 val newInit = conjunctExToOperDecl(
                     builder.eql(
                         nodeVarEx,
-                        builder.createUnsafeInstruction(OperEx(oper, argExs: _*)(curNode.typeTag)),
+                        builder.useTrustedEx(OperEx(oper, argExs: _*)(curNode.typeTag)),
                     ),
                     curModWithPreds.init,
                     tracker,
@@ -405,7 +405,7 @@ class TableauEncoder(
                 val newNext = conjunctExToOperDecl(
                     builder.eql(
                         nodeVarExPrime,
-                        builder.createUnsafeInstruction(OperEx(oper, argExs: _*)(curNode.typeTag)),
+                        builder.useTrustedEx(OperEx(oper, argExs: _*)(curNode.typeTag)),
                     ),
                     curModWithPreds.next,
                     tracker,
