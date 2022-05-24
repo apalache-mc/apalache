@@ -424,10 +424,17 @@ class LazyEquality(rewriter: SymbStateRewriter)
       case `arraysEncoding` =>
         // In the arrays encoding we only cache the equalities between the elements of the functions' ranges
         // This is because the ranges consist of pairs of form <arg,res>, thus the domains are also handled
+        // TODO: stop caching unnecessary equalities, similar to SetInRuleWithArrays.basicIn?
         val leftElems = state.arena.getHas(leftRel)
         val rightElems = state.arena.getHas(rightRel)
         cacheEqConstraints(state, leftElems.cross(rightElems)) // Cache all the equalities
         eqCache.put(leftFun, rightFun, EqCache.EqEntry())
+        // For the rare case in which one function has an empty domain, we need to be extra careful
+        // See https://github.com/informalsystems/apalache/issues/1811
+        val leftDom = state.arena.getDom(leftFun)
+        val rightDom = state.arena.getDom(rightFun)
+        rewriter.solverContext.assertGroundExpr(tla.eql(leftDom.toNameEx, rightDom.toNameEx))
+        // That's it!
         state
 
       case `oopsla19Encoding` =>
