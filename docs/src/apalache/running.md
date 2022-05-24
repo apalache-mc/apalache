@@ -24,7 +24,7 @@ $ apalache-mc check [--config=filename] [--init=Init] [--cinit=ConstInit] \
 The arguments are as follows:
 
 * General parameters:
-    - `--config` specifies the [TLC configuration file](./tlc-config.md), the default name is `<myspec>.cfg`
+    - `--config` specifies the [TLC configuration file](./tlc-config.md)
     - `--init` specifies the initialization predicate, *`Init` by default*
     - `--next` specifies the transition predicate, *`Next` by default*
     - `--cinit` specifies the constant initialization predicate, *optional*

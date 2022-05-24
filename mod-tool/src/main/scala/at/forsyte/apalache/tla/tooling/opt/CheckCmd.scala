@@ -1,9 +1,8 @@
 package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.tla.bmcmt.{arraysEncoding, oopsla19Encoding, SMTEncoding}
-import org.backuity.clist.util.Read
-
 import org.backuity.clist._
+import org.backuity.clist.util.Read
 
 /**
  * This command initiates the 'check' command line.
@@ -27,7 +26,7 @@ class CheckCmd extends AbstractCheckerCmd(name = "check", description = "Check a
       description = "the search algorithm: offline, incremental, parallel (soon), default: incremental")
   var smtEncoding: SMTEncoding = opt[SMTEncoding](name = "smt-encoding", useEnv = true, default = oopsla19Encoding,
       description =
-        "the SMT encoding: oopsla19, arrays (experimental), default: oopsla19 (overrides envvar SMT_ENCODING)")
+        s"the SMT encoding: ${oopsla19Encoding}, ${arraysEncoding} (experimental), default: ${oopsla19Encoding} (overrides envvar SMT_ENCODING)")
   var tuningOptionsFile: String =
     opt[String](name = "tuning-options-file", default = "",
         description = "filename of the tuning options, see docs/tuning.md")
@@ -39,7 +38,7 @@ class CheckCmd extends AbstractCheckerCmd(name = "check", description = "Check a
       description =
         "pre-check, whether a transition is disabled, and discard it, to make SMT queries smaller, default: true")
   var noDeadlocks: Boolean =
-    opt[Boolean](name = "no-deadlock", default = true, description = "do not check for deadlocks, default: true")
+    opt[Boolean](name = "no-deadlock", default = false, description = "do not check for deadlocks, default: false")
 
   var maxError: Int =
     opt[Int](name = "max-error",
