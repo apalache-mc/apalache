@@ -72,7 +72,7 @@ class TableauEncoder(
    * newNext == oldNext /\ UNCHANGED << Init_ex >>
    */
   def addInitExVar(modWithPreds: ModWithPreds, ex: TlaEx, exName: String): (ModWithPreds, TlaVarDecl) = {
-    val exVarDecl = new TlaVarDecl(exName + "_init_" + gen.newName())(ex.typeTag)
+    val exVarDecl = new TlaVarDecl(exName + "_init")(Typed(BoolT1))
     val exVar = builder.declAsNameEx(exVarDecl)
 
     val newInit = conjunctExToOperDecl(
@@ -128,8 +128,8 @@ class TableauEncoder(
 
   def getAuxVarForTempOper(oper: TlaTempOper, nodeIdentifier: String): TlaVarDecl = {
     val nameSuffix = oper match {
-      case TlaTempOper.box     => "_globally"
-      case TlaTempOper.diamond => "_eventually"
+      case TlaTempOper.box     => TableauEncoder.BOX_SUFFIX
+      case TlaTempOper.diamond => TableauEncoder.DIAMOND_SUFFIX
     }
 
     new TlaVarDecl(nodeIdentifier + nameSuffix)(Typed(BoolT1))
@@ -183,7 +183,7 @@ class TableauEncoder(
                     \* @type: Bool;
                     curNode_predicate
              */
-            val nodeVarDecl = new TlaVarDecl(nodeIdentifier)(curNode.typeTag)
+            val nodeVarDecl = new TlaVarDecl(nodeIdentifier)(Typed(BoolT1))
             curModWithPreds = curModWithPreds.prependDecl(nodeVarDecl)
             val nodeVarEx = builder.declAsNameEx(nodeVarDecl)
             val nodeVarExPrime = builder.primeVar(nodeVarDecl)
@@ -300,41 +300,61 @@ class TableauEncoder(
                 def outerOp(args: TBuilderInstruction*): TBuilderInstruction = outerOpTmp(args)
                 def innerOp(args: TBuilderInstruction*): TBuilderInstruction = innerOpTmp(args)
 
-                val newNext = conjunctExToOperDecl(
-                    builder.and(
-                        /* curNode_predicate' \in BOOLEAN */
-                        builder.in(
-                            nodeVarExPrime,
-                            builder.booleanSet(),
-                        ),
-                        /* curNode_predicate_globally' \in BOOLEAN */
-                        builder.in(
-                            builder.prime(auxVarEx),
-                            builder.booleanSet(),
-                        ),
+                /* curNode_predicate' \in BOOLEAN */
+                val curNodeAssignment = builder.in(
+                    nodeVarExPrime,
+                    builder.booleanSet(),
+                )
 
-                        /* curNode_predicate <=> A /\ curNode_predicate' */
-                        builder.equiv(
-                            nodeVarEx,
-                            outerOp(
-                                argExs(0),
-                                nodeVarExPrime,
-                            ),
-                        ),
-                        /* curNode_predicate_globally' <=>  /\ curNode_predicate_globally
+                var newNext = conjunctExToOperDecl(
+                    curNodeAssignment,
+                    curModWithPreds.next,
+                    tracker,
+                )
+
+                /* curNode_predicate_globally' \in BOOLEAN */
+                val auxVarAssignment = builder.in(
+                    builder.prime(auxVarEx),
+                    builder.booleanSet(),
+                )
+
+                newNext = conjunctExToOperDecl(
+                    auxVarAssignment,
+                    curModWithPreds.next,
+                    tracker,
+                )
+
+                /* curNode_predicate <=> A /\ curNode_predicate' */
+                val curNodeCondition = builder.equiv(
+                    nodeVarEx,
+                    outerOp(
+                        argExs(0),
+                        nodeVarExPrime,
+                    ),
+                )
+
+                newNext = conjunctExToOperDecl(
+                    curNodeCondition,
+                    curModWithPreds.next,
+                    tracker,
+                )
+
+                /* curNode_predicate_globally' <=>  /\ curNode_predicate_globally
                                                             /\ (~InLoop' \/ A')
-                         */
-                        builder.equiv(
-                            auxVarExPrime,
-                            outerOp(
-                                auxVarEx,
-                                innerOp(
-                                    loopEnc.inLoopPrime,
-                                    builder.prime(argExs(0)),
-                                ),
-                            ),
+                 */
+                val auxVarCondition = builder.equiv(
+                    auxVarExPrime,
+                    outerOp(
+                        auxVarEx,
+                        innerOp(
+                            loopEnc.inLoopPrime,
+                            builder.prime(argExs(0)),
                         ),
                     ),
+                )
+
+                newNext = conjunctExToOperDecl(
+                    auxVarCondition,
                     curModWithPreds.next,
                     tracker,
                 )
@@ -418,4 +438,6 @@ object TableauEncoder {
    */
   val NAME_PREFIX = "__temporal_"
   val PREDS_TO_VARS_MAPPING_NAME = "__preds_to_vars"
+  val BOX_SUFFIX = "_globally"
+  val DIAMOND_SUFFIX = "_eventually"
 }

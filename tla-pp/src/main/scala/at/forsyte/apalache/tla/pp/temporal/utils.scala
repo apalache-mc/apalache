@@ -19,7 +19,10 @@ object ScopedBuilderExtensions {
     }
 
     def declAsNameEx(decl: TlaDecl): TBuilderInstruction = {
-      builder.name(decl.name, decl.typeTag.asTlaType1())
+      // Untyped declarations should not typically appear, but e.g. tests may generate untyped expressions
+      // just assign an arbitrary type in that case
+      val declType = if (decl.typeTag == Untyped) BoolT1 else decl.typeTag.asTlaType1()
+      builder.name(decl.name, declType)
     }
 
     def createUnsafeInstruction[T <: TlaEx](ex: T): TBuilderInstruction = {

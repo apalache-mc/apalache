@@ -29,7 +29,7 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
 
   val boolTag = Typed(BoolT1)
 
-  val inLoopDecl = TlaVarDecl(s"${NAME_PREFIX}InLoop")(boolTag)
+  val inLoopDecl = TlaVarDecl(LoopEncoder.IN_LOOP_NAME)(boolTag)
   val inLoop = builder.declAsNameEx(inLoopDecl)
   val inLoopPrime = builder.primeVar(inLoopDecl)
 
@@ -198,7 +198,7 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
     /* loopOK == InLoop */
     val loopOK =
       new TlaOperDecl(
-          s"${NAME_PREFIX}loopOK",
+          LoopEncoder.LOOP_OK_NAME,
           List(),
           inLoop,
       )(Typed(OperT1(Seq.empty, BoolT1)))
@@ -265,4 +265,6 @@ object LoopEncoder {
    * variables in the original spec.
    */
   val NAME_PREFIX = "__loop_"
+  val IN_LOOP_NAME = s"${NAME_PREFIX}InLoop"
+  val LOOP_OK_NAME = s"${NAME_PREFIX}LoopOK"
 }
