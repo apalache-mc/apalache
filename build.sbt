@@ -190,7 +190,7 @@ lazy val tool = (project in file("mod-tool"))
       // See https://github.com/sbt/sbt-buildinfo
       buildInfoPackage := "apalache",
       buildInfoKeys := {
-        val build = scala.sys.process.Process("git describe --tags --always").!!.trim
+        val build = Process("git describe --tags --always").!!.trim
         Seq[BuildInfoKey](
             BuildInfoKey.map(version) { case (k, v) =>
               if (isSnapshot.value) (k -> build) else (k -> v)
@@ -220,7 +220,7 @@ lazy val apalacheCurrentPackage = taskKey[File]("Set the current executable apal
 
 // Define the main entrypoint and uber jar package
 lazy val root = (project in file("."))
-  .enablePlugins(UniversalPlugin, sbtdocker.DockerPlugin)
+  .enablePlugins(UniversalPlugin, sbtdocker.DockerPlugin, ChangelingPlugin)
   .dependsOn(distribution)
   .aggregate(
       // propagate commands to these sub-projects

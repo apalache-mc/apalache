@@ -31,8 +31,8 @@ class MkSeqRule(rewriter: SymbStateRewriter, renaming: IncrementalRenaming) exte
     case OperEx(ApalacheOper.mkSeq, lenEx, LetInEx(NameEx(_), opDecl)) =>
       val operT = opDecl.typeTag.asTlaType1()
       val elemT = operT match {
-        case OperT1(Seq(IntT1()), et) => et
-        case tp                       =>
+        case OperT1(Seq(IntT1), et) => et
+        case tp                     =>
           // this case should be found by the type checker
           val msg = "Expected an operator of type Int => <elem type>. Found: " + tp
           throw new TlaInputError(msg, Some(opDecl.ID))
@@ -47,7 +47,7 @@ class MkSeqRule(rewriter: SymbStateRewriter, renaming: IncrementalRenaming) exte
         // get the cell for the index
         val (newArena, indexCell) = rewriter.intValueCache.create(state.arena, index)
         // elem = A(indexCell)
-        val appEx = tla.appOp(tla.name(opDecl.name).as(operT), indexCell.toNameEx.as(IntT1()))
+        val appEx = tla.appOp(tla.name(opDecl.name).as(operT), indexCell.toNameEx.as(IntT1))
         val inlinedEx = inliner.transform(seededScope)(appEx.as(elemT))
         // simply rewrite the body of the definition with the index cell as the argument
         val nextState = rewriter.rewriteUntilDone(state.setArena(newArena).setRex(inlinedEx))
@@ -59,9 +59,9 @@ class MkSeqRule(rewriter: SymbStateRewriter, renaming: IncrementalRenaming) exte
       var nextState = proto.make(capState, capacity, mkElem)
       val protoSeq = nextState.asCell
       // create the sequence on top of the proto sequence
-      nextState = nextState.updateArena(_.appendCell(IntT1()))
+      nextState = nextState.updateArena(_.appendCell(IntT1))
       val lenCell = nextState.arena.topCell
-      rewriter.solverContext.assertGroundExpr(tla.eql(lenCell.toNameEx.as(IntT1()), tla.int(capacity)).as(BoolT1()))
+      rewriter.solverContext.assertGroundExpr(tla.eql(lenCell.toNameEx.as(IntT1), tla.int(capacity)).as(BoolT1))
       proto.mkSeq(nextState, SeqT1(elemT), protoSeq, lenCell)
 
     case _ =>

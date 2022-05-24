@@ -121,17 +121,17 @@ class TypeUnifier(varPool: TypeVarPool) {
     // unify types as terms
     (lhs, rhs) match {
       // unifying constant types is trivial
-      case (BoolT1(), BoolT1()) =>
-        Some(BoolT1())
+      case (BoolT1, BoolT1) =>
+        Some(BoolT1)
 
-      case (IntT1(), IntT1()) =>
-        Some(IntT1())
+      case (IntT1, IntT1) =>
+        Some(IntT1)
 
-      case (StrT1(), StrT1()) =>
-        Some(StrT1())
+      case (StrT1, StrT1) =>
+        Some(StrT1)
 
-      case (RealT1(), RealT1()) =>
-        Some(RealT1())
+      case (RealT1, RealT1) =>
+        Some(RealT1)
 
       case (c @ ConstT1(lname), ConstT1(rname)) =>
         // uninterpreted constant types must have the same name

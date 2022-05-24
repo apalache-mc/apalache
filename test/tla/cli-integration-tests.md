@@ -1427,7 +1427,7 @@ $ apalache-mc check OracleFunSet.tla | sed 's/I@.*//'
 EXITCODE: OK
 ```
 
-### check PickPerf succeeds
+### check PickPerf succeeds (array-encoding)
 
 A performance test.
 
@@ -1437,7 +1437,7 @@ $ apalache-mc check --discard-disabled=0 --tuning-options=search.invariant.mode=
 EXITCODE: OK
 ```
 
-### check PickPerf2 succeeds
+### check PickPerf2 succeeds (array-encoding)
 
 A performance test.
 
@@ -1901,6 +1901,14 @@ EXITCODE: OK
 $ apalache-mc check --inv=Inv --length=1 Bug1735.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: ERROR (12)
+```
+
+### check Bug1794.tla
+
+```sh
+$ apalache-mc check --length=1 Bug1794.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
 ```
 
 ### check profiling

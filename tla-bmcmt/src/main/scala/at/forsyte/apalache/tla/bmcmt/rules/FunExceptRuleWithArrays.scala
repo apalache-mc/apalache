@@ -49,7 +49,7 @@ class FunExceptRuleWithArrays(rewriter: SymbStateRewriter) extends FunExceptRule
       val tupT = TupT1(funT.arg, funT.res)
       val pairIndex = nextState.arena.getHas(pair).head
       val ite = tla
-        .ite(tla.eql(pairIndex.toNameEx.as(tupT), indexCell.toNameEx.as(funT.arg)).as(BoolT1()),
+        .ite(tla.eql(pairIndex.toNameEx.as(tupT), indexCell.toNameEx.as(funT.arg)).as(BoolT1),
             newPairCell.toNameEx.as(tupT), pair.toNameEx.as(tupT))
         .as(tupT)
 

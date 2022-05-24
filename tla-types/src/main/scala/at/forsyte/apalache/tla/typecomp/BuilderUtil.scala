@@ -41,7 +41,7 @@ object BuilderUtil {
       } yield seqEx :+ argEx
     }
 
-  /** Lifts a binary raw method to a BuilderWrapper method */
+  /** Lifts a binary unsafe method to a [[TBuilderInstruction]] method */
   def binaryFromUnsafe(
       x: TBuilderInstruction,
       y: TBuilderInstruction,
@@ -49,6 +49,17 @@ object BuilderUtil {
     xEx <- x
     yEx <- y
   } yield unsafeMethod(xEx, yEx)
+
+  /** Lifts a ternary unsafe method to a TBuilderInstruction method */
+  def ternaryFromUnsafe(
+      x: TBuilderInstruction,
+      y: TBuilderInstruction,
+      z: TBuilderInstruction,
+    )(unsafeMethod: (TlaEx, TlaEx, TlaEx) => TlaEx): TBuilderInstruction = for {
+    xEx <- x
+    yEx <- y
+    zEx <- z
+  } yield unsafeMethod(xEx, yEx, zEx)
 
   /** generates a BuilderTypeException wrapped in a Left, containing the given message */
   def leftTypeException(msg: String): TypeComputationResult = Left(new TBuilderTypeException(msg))

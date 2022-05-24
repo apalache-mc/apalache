@@ -23,15 +23,15 @@ trait TestSymbStateRewriterApalache extends RewriterBase with TestingPredefs {
 
     // the domain should be equal to { 2, 4 }
     val intSet = parser("Set(Int)")
-    val domEq = eql(dom(funCell.toNameEx).as(intSet), enumSet(int(2), int(4)).as(intSet)).as(BoolT1())
+    val domEq = eql(dom(funCell.toNameEx).as(intSet), enumSet(int(2), int(4)).as(intSet)).as(BoolT1)
     assertTlaExAndRestore(rewriter, nextState.setRex(domEq))
 
     // f[2] = 3
-    val app2 = eql(appFun(funCell.toNameEx, int(2)).as(IntT1()), int(3)).as(BoolT1())
+    val app2 = eql(appFun(funCell.toNameEx, int(2)).as(IntT1), int(3)).as(BoolT1)
     assertTlaExAndRestore(rewriter, nextState.setRex(app2))
 
     // f[4] = 5
-    val app4 = eql(appFun(funCell.toNameEx, int(4)).as(IntT1()), int(5)).as(BoolT1())
+    val app4 = eql(appFun(funCell.toNameEx, int(4)).as(IntT1), int(5)).as(BoolT1)
     assertTlaExAndRestore(rewriter, nextState.setRex(app4))
   }
 
@@ -53,16 +53,16 @@ trait TestSymbStateRewriterApalache extends RewriterBase with TestingPredefs {
     val relation = nextArena.getCdm(funCell)
     val relationCells = nextArena.getHas(relation)
 
-    def isIn(no: Int): TlaEx = apalacheSelectInSet(relationCells(no).toNameEx, relation.toNameEx).as(BoolT1())
+    def isIn(no: Int): TlaEx = apalacheSelectInSet(relationCells(no).toNameEx, relation.toNameEx).as(BoolT1)
 
     // These checks cannot be applied to the arrays encoding because it does not have constraints for relation
     if (rewriter.solverContext.config.smtEncoding == oopsla19Encoding) {
-      assertTlaExAndRestore(rewriter, nextState.setRex(not(isIn(1)).as(BoolT1())))
+      assertTlaExAndRestore(rewriter, nextState.setRex(not(isIn(1)).as(BoolT1)))
       assertTlaExAndRestore(rewriter, nextState.setRex(isIn(0)))
     }
 
     // f[2] = 3
-    val app2 = eql(appFun(fun, int(2)).as(IntT1()), int(3)).as(BoolT1())
+    val app2 = eql(appFun(fun, int(2)).as(IntT1), int(3)).as(BoolT1)
     assertTlaExAndRestore(rewriter, nextState.setRex(app2))
 
     // recover the function domain
@@ -72,7 +72,7 @@ trait TestSymbStateRewriterApalache extends RewriterBase with TestingPredefs {
     assert(solverContext.sat())
 
     // the domain should be equal to { 2 }
-    val domEq = eql(funDom.toNameEx.as(intSet), enumSet(int(2)).as(intSet)).as(BoolT1())
+    val domEq = eql(funDom.toNameEx.as(intSet), enumSet(int(2)).as(intSet)).as(BoolT1)
     assertTlaExAndRestore(rewriter, nextState.setRex(domEq))
   }
 
@@ -89,7 +89,7 @@ trait TestSymbStateRewriterApalache extends RewriterBase with TestingPredefs {
 
     // the domain should be equal to { }
     val intSet = parser("Set(Int)")
-    val domEq = eql(dom(funCell.toNameEx).as(intSet), enumSet().as(intSet)).as(BoolT1())
+    val domEq = eql(dom(funCell.toNameEx).as(intSet), enumSet().as(intSet)).as(BoolT1)
     assertTlaExAndRestore(rewriter, nextState.setRex(domEq))
   }
 }
