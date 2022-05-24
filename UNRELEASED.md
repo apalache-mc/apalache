@@ -15,5 +15,5 @@
  * Rename `--tuning` to `--tuning-options-file`, see #1579
 
 ### Bug fixes
-
- * Fix references to `--tune-here` (actually `--tuning-options`), see #1579
+ * Fix potential non-determinism when picking from `[S -> T]`, see #1753
+ * Fix the bug in uninterpreted types, see #1792
