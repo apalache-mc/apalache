@@ -111,7 +111,7 @@ object ChangelingPlugin extends AutoPlugin {
         "The directory in which unreleased changes are recorded"
     )
 
-    lazy val changelingRelaseNotes = taskKey[File](
+    lazy val changelingReleaseNotes = taskKey[File](
         """|Render the contents of the `changelingUnreleasedDir` directory as a
            |markdown file, following expected format for release
            |notes""".stripMargin
@@ -149,28 +149,36 @@ object ChangelingPlugin extends AutoPlugin {
           base = changelingUnreleasedDir.value,
           children = changelingKinds.value,
       ),
-      changelingRelaseNotes := Changeling.renderReleaseNotes(
+      changelingReleaseNotes := Changeling.renderReleaseNotes(
           changelingKinds.value,
           (ThisBuild / version).value,
           changelingDirectory.value,
-          (Compile / resourceManaged).value / "RELEASE.md",
+          (ThisBuild / baseDirectory).value / "RELEASE.md",
       ),
       changelingChangelog := {
-        Changeling.concatFiles(
-            changelingRelaseNotes.value,
+        Changeling.updateChangelog(
+            changelingReleaseNotes.value,
             changelingChangelogFile.value,
         )
         Changeling.cleanChanges(
+            changelingReleaseNotes.value,
             (Compile / resourceManaged).value,
             changelingUnreleasedDir.value,
         )
-        changelingRelaseNotes.value
+        Changeling.ensureDirStructureExists(
+            changelingUnreleasedDir.value,
+            changelingKinds.value,
+        )
+        changelingChangelogFile.value
       },
   )
 
 }
 
 object Changeling {
+
+  /* Constant for the name of gitkeep files */
+  private val gitkeep = ".gitkeep"
 
   /**
    * Ensure that `base` directory exists, and that it has all `children`
@@ -186,6 +194,8 @@ object Changeling {
     val childOfBase: String => File = base / _
     val leafDirs = children.map(normalizeFileName.andThen(childOfBase))
     IO.createDirectories(leafDirs)
+    // ensure git will keep the dirs even if they're empty
+    leafDirs.foreach(dir => IO.touch(dir / gitkeep))
     base
   }
 
@@ -225,7 +235,7 @@ object Changeling {
       .listFiles(unreleasedDir)
       .sortBy(changeDirOrder)
       .flatMap { changeDir =>
-        IO.listFiles(changeDir) match {
+        IO.listFiles(changeDir).filterNot(_.name == gitkeep) match {
           case Array() => Seq() // Omit sections with no entries
           case changeEntries => {
             val heading = s"### ${deNormalizeFileName(changeDir.base.toString)}"
@@ -243,9 +253,24 @@ object Changeling {
   /**
    * Prefix the content of `newFile` to the content of `target` and write the result to `target`
    */
-  def concatFiles(front: File, target: File): Unit = {
-    val content = s"${IO.read(front)}\n${IO.read(target)}"
-    IO.write(target, content)
+  def updateChangelog(releaseNotes: File, changelog: File): Unit = {
+    val preamble = """|<!-- NOTE: This file is generated. Do not write release notes here.
+                      | Notes for unreleased changes go in the .unreleased/ directory. -->
+                      | """.stripMargin
+
+    val changelogContent = IO.readLines(changelog) match {
+      case Nil     => Nil
+      case l :: ls =>
+        // Drop the preamble, it is present
+        if (l.contains("NOTE: This file is generated")) {
+          ls.drop(preamble.split("\n").length - 1)
+        } else {
+          l :: ls
+        }
+    }
+
+    val content = (preamble :: IO.read(releaseNotes) :: changelogContent).mkString("\n")
+    IO.write(changelog, content)
   }
 
   /**
@@ -254,13 +279,14 @@ object Changeling {
    * @return
    *   the trash directory created
    */
-  def cleanChanges(resourceDir: File, unreleasedDir: File): Unit = {
+  def cleanChanges(releaseNotes: File, resourceDir: File, unreleasedDir: File): Unit = {
     // So we can recover dirs if needed
     val trashDir = resourceDir / "changeling-trash" / LocalDate.now.toString
     IO.createDirectory(trashDir)
     val dirPaths = IO.listFiles(unreleasedDir)
     val fileMoves = dirPaths.map(d => (d -> trashDir / d.base))
     IO.move(fileMoves)
+    IO.delete(releaseNotes)
     // Recreate the directories
     IO.createDirectories(dirPaths)
   }

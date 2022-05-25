@@ -67,11 +67,11 @@ Apalache in docker while sharing the working directory:
 
 ###### using the latest stable
 
-$ alias apalache='docker run --rm -v $(pwd):/var/apalache informalsystems/apalache'
+$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache'
 
 ###### using the latest unstable
 
-$ alias apalache='docker run --rm -v $(pwd):/var/apalache informalsystems/apalache:unstable'
+$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache:unstable'
 ```
 
 ## Using the unstable version of Apalache
@@ -84,7 +84,7 @@ log](https://github.com/informalsystems/apalache/blob/unstable/CHANGES.md) and
 on the unstable branch for the description of the newest features. **We
 recommend using the unstable version if you want to try all the exciting new
 features of Apalache. But be warned: It is called "unstable" for a reason**. To
-use `unstable`, just type `informalsystems/apalache:unstable` instead of `informalsystems/apalache`
+use `unstable`, just type `ghcr.io/informalsystems/apalache:unstable` instead of `ghcr.io/informalsystems/apalache`
 everywhere.
 
 Do not forget to pull the docker image from time to time:
@@ -96,13 +96,13 @@ docker pull ghcr.io/informalsystems/apalache:unstable
 Run it with the following command:
 
 ```bash
-$ docker run --rm -v <your-spec-directory>:/var/apalache informalsystems/apalache:unstable <args>
+$ docker run --rm -v <your-spec-directory>:/var/apalache ghcr.io/informalsystems/apalache:unstable <args>
 ```
 
 To create an alias pointing to the `unstable` version:
 
 ```bash
-$ alias apalache='docker run --rm -v $(pwd):/var/apalache informalsystems/apalache:unstable'
+$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache:unstable'
 ```
 
 ## Building an image

@@ -26,6 +26,18 @@ object ModelValueHandler {
   private val matchRegex: Regex = raw"([a-zA-Z0-9_]+)_OF_([A-Z_][A-Z0-9_]*)".r
 
   /**
+   * Is the supplied string encoding a model value.
+   *
+   * @param text
+   *   a string to test
+   * @return
+   *   true, if the string encodes a model value
+   */
+  def isModelValue(text: String): Boolean = {
+    typeAndIndex(text).isDefined
+  }
+
+  /**
    * Returns the type of `s`. If `s` follows the pattern for model values, its type is `ConstT1(_)`, otherwise is is a
    * regular string.
    */
