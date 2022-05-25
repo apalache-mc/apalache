@@ -42,6 +42,11 @@ reached in [December of 2021][dec-decision], but we weren't clear at that time
 how to we would determine the scores for each work item. This ADR aims to
 outline and codify the approach we will use.
 
+In this document we talk about "items of work" or "work items". These are just
+some division of work into a conceptually unified unit. In general, any work
+item can be further divided into smaller units of work. Work items are
+represented by "tickets" or "issues" that track the task, e.g., GitHub issues.
+
 ## Options
 
 We considered 3 different approaches to prioritization: 
