@@ -3,7 +3,7 @@ authors: Shon Feder, Gabriela Moreira
 last revised: 2022-05-24
 ---
 
-# ADR-20: Prioritization of Work
+# ADR-21: Prioritization of Work
 
 **Table of Contents**
 
