@@ -15,7 +15,7 @@
 
 import unittest
 
-from hypothesis import given, strategies as st
+from hypothesis import given, strategies as gen
 from hypothesis.stateful import Bundle, RuleBasedStateMachine
 from hypothesis.stateful import rule, consumes, invariant, initialize
 from hypothesis import assume, settings, event, Verbosity
@@ -69,7 +69,7 @@ class Erc20Simulator(RuleBasedStateMachine):
     # that are to be processed
     pendingTxs = Bundle("pendingTxs")
 
-    @initialize(amounts=st.lists(st.sampled_from(AMOUNTS),
+    @initialize(amounts=gen.lists(gen.sampled_from(AMOUNTS),
                 min_size=len(ADDR),
                 max_size=len(ADDR)))
     def init(self, amounts):
@@ -85,8 +85,8 @@ class Erc20Simulator(RuleBasedStateMachine):
         self.pendingTxsShadow = set()
         self.lastTx = None
 
-    @rule(target=pendingTxs, _sender=st.sampled_from(ADDR),
-          _toAddr=st.sampled_from(ADDR), _value=st.sampled_from(AMOUNTS))
+    @rule(target=pendingTxs, _sender=gen.sampled_from(ADDR),
+          _toAddr=gen.sampled_from(ADDR), _value=gen.sampled_from(AMOUNTS))
     def submit_transfer(self, _sender, _toAddr, _value):
         # submit a transfer transaction on the client side
         tx = TransferTx(_sender, _toAddr, _value)
@@ -94,9 +94,9 @@ class Erc20Simulator(RuleBasedStateMachine):
         self.lastTx = None
         return tx
 
-    @rule(target=pendingTxs, _sender=st.sampled_from(ADDR),
-          _fromAddr=st.sampled_from(ADDR),
-          _toAddr=st.sampled_from(ADDR), _value=st.sampled_from(AMOUNTS))
+    @rule(target=pendingTxs, _sender=gen.sampled_from(ADDR),
+          _fromAddr=gen.sampled_from(ADDR),
+          _toAddr=gen.sampled_from(ADDR), _value=gen.sampled_from(AMOUNTS))
     def submit_transfer_from(self, _sender, _fromAddr, _toAddr, _value):
         # submit a transferFrom transaction on the client side
         tx = TransferFromTx(_sender, _fromAddr, _toAddr, _value)
@@ -104,8 +104,8 @@ class Erc20Simulator(RuleBasedStateMachine):
         self.lastTx = None
         return tx
 
-    @rule(target=pendingTxs, _sender=st.sampled_from(ADDR),
-          _spender=st.sampled_from(ADDR), _value=st.sampled_from(AMOUNTS))
+    @rule(target=pendingTxs, _sender=gen.sampled_from(ADDR),
+          _spender=gen.sampled_from(ADDR), _value=gen.sampled_from(AMOUNTS))
     def submit_approve(self, _sender, _spender, _value):
         # submit an approve transaction on the client side
         tx = ApproveTx(_sender, _spender, _value)
