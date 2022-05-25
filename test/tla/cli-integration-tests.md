@@ -1462,6 +1462,21 @@ EXITCODE: ERROR (12)
 [12]
 ```
 
+### check DiamondBox (temporal)
+
+```sh
+$ apalache-mc check --inv=Liveness DiamondBox.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --inv=FalseLiveness DiamondBox.tla
+...
+EXITCODE: ERROR (12)
+[12]
+```
+
 ### check SetSndRcv succeeds (array-encoding)
 
 Regression test for https://github.com/informalsystems/apalache/issues/1152
