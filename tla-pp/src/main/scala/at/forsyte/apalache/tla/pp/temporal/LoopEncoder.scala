@@ -115,9 +115,6 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
         builder.and(
             /* oldNext */
             builder.useTrustedEx(next.body),
-            /* loop_foo' \in {loop_foo, foo} */
-            builder.in(builder.primeVar(loopVarDecl),
-                builder.enumSet(builder.declAsNameEx(varDecl), builder.declAsNameEx(loopVarDecl))),
             /* /\ loop_foo' = IF (InLoop' = InLoop) THEN loop_foo ELSE foo */
             builder.eql(
                 loopExPrime,
