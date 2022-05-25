@@ -46,7 +46,7 @@ outline and codify the approach we will use.
 
 We considered 3 different approaches to prioritization: 
 
-1. [Action Priority Matrixj][apm]: We score each work item based on the expected
+1. [Action Priority Matrix][apm]: We score each work item based on the expected
    _effort_ it will require to complete and the anticipated _impact_ of the
    results.  We then  place these tasks on a matrix and coordinate the scores to
    optimize for the highest value delivery with the least effort.
