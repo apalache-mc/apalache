@@ -49,6 +49,10 @@ class ScopedBuilder
    */
   def useTrustedEx(ex: TlaEx): TBuilderInstruction = ex.point[TBuilderInternalState]
 
+  ////////////////////
+  // HYBRID METHODS //
+  ////////////////////
+
   /** x' = y */
   def primeEq(x: TBuilderInstruction, y: TBuilderInstruction): TBuilderInstruction = eql(prime(x), y)
 
@@ -82,6 +86,10 @@ class ScopedBuilder
     case _                    => true
   }
 
+  /**
+   * Throws if parameters don't satisfy [[isAcceptableParamType]]. Permits operator types iff the parameter arity is
+   * positive.
+   */
   private def validateParamType(tp: TypedParam): Unit = {
     val (OperParam(name, arity), tt) = tp
     if (!isAcceptableParamType(canContainOper = arity > 0)(tt))
@@ -176,6 +184,33 @@ class ScopedBuilder
             multiDepthExcept(app(f, head), e, tail: _*),
         )
     }
+  }
+
+  /**
+   * [f EXCEPT ![a1][a2][...][an] = ea, ![b1][b2][...][bn] = eb, ..., ![z1][z2][...][zn] = ez]
+   *
+   * @param args
+   *   Pairs of the shape (ei, Seq(i1, ..., in))
+   */
+  def genericExcept(
+      f: TBuilderInstruction,
+      args: (TBuilderInstruction, Seq[TBuilderInstruction])*): TBuilderInstruction = {
+    // require all depths are the same? Also ensures args.nonEmpty
+    require(args.map(_._2.size).toSet.size == 1)
+    args.foldLeft(f) { case (fn, (e, as)) =>
+      multiDepthExcept(fn, e, as: _*)
+    }
+  }
+
+  /**
+   * [x1 \in S1, ..., xn \in Sn |-> e]
+   *
+   * Is equivalent to {{{[<<x1,...,xn>> \in S1 \X ... \X Sn |-> e]}}}
+   */
+  def funDef(e: TBuilderInstruction, args: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction = {
+    require(args.nonEmpty)
+    val (elems, sets) = args.unzip
+    funDef(e, tuple(elems: _*), times(sets: _*))
   }
 
 }

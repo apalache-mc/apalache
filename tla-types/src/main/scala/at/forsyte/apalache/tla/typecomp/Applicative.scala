@@ -24,15 +24,15 @@ sealed case class Applicative(fromT: TlaType1, toT: TlaType1)
 
 object Applicative {
 
-  /** Returns the domain type of an Applicative candidate TT1 type, if possible */
-  def domainType(tt1: TlaType1): Option[TlaType1] = (tt1 match {
+  /** Returns the domain element type of an Applicative candidate TT1 type, if possible */
+  def domainElemType(tt1: TlaType1): Option[TlaType1] = tt1 match {
     case FunT1(domT, _) => Some(domT)
     case _: RecT1       => Some(StrT1)
     case _: SeqT1       => Some(IntT1)
     case _: SparseTupT1 => Some(IntT1)
     case _: TupT1       => Some(IntT1)
     case _              => None
-  }).map(SetT1)
+  }
 
   /** Represents a TT1 type as Applicative, if possible */
   def asInstanceOfApplicative(tt1: TlaType1, argHint: TlaEx): Option[Applicative] =

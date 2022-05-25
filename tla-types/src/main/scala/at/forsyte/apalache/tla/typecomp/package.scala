@@ -35,13 +35,15 @@ package object typecomp {
   type PureTypeComputation = Seq[TlaType1] => TypeComputationResult
 
   /**
-   * TBuilderContext holds all of the information about the internal state of the builder. For now, this just includes
-   * the name scope, but it can be extended in the future, to have the builder perform additional static analysis, e.g.
-   * assignment analysis.
+   * TBuilderContext holds all of the information about the internal state of the builder. It can be extended in the
+   * future, to have the builder perform additional static analysis, e.g. assignment analysis.
    *
-   * `nameScope` tracks the types of the variables currently considered as free
+   * `nameScope` tracks the types of the variables currently considered as free.
    */
   final case class TBuilderContext(nameScope: Map[String, TlaType1])
+  object TBuilderContext {
+    def empty: TBuilderContext = TBuilderContext(Map.empty)
+  }
 
   /** An IntenalState is a computation (possibly) mutating some MetaInfo */
   type TBuilderInternalState[T] = State[TBuilderContext, T]
@@ -61,7 +63,7 @@ package object typecomp {
   implicit def liftRet(tt: TlaType1): TypeComputationResult = Right(tt)
 
   // Allows for the seamless conversion of -Instruction expressions to TlaEx, when the latter is required
-  implicit def build[T](wrap: TBuilderInternalState[T]): T = wrap.run(TBuilderContext(Map.empty))._2
+  implicit def build[T](wrap: TBuilderInternalState[T]): T = wrap.run(TBuilderContext.empty)._2
   implicit def liftBuildToSeq[T](wrapCollection: Seq[TBuilderInternalState[T]]): Seq[T] =
     wrapCollection.map(build)
 
