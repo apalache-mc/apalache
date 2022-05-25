@@ -355,7 +355,7 @@ class TableauEncoder(
 
                 newNext = conjunctExToOperDecl(
                     auxVarCondition,
-                    curModWithPreds.next,
+                    newNext,
                     tracker,
                 )
 
