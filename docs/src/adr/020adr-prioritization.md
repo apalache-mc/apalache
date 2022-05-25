@@ -187,9 +187,12 @@ The priority of work should be re-evaluated as the situation changes. E.g.:
   reevaluted.
 
 We can generate views into the 4 quadrants via filters in our project board, or
-any other tooling or visualization we find suitable. When reviewing work
-in progress or queued up next at our weekly meetings, we should always be
-sure that the highest priority work on the board is being addressed.
+any other tooling or visualization we find suitable. 
+
+When reviewing work in progress or queued up next at our weekly meetings, we
+should always be sure that the highest priority work on the board is being
+addressed. We should also take this time to estimate priorities for anything new
+that came up on the week before that hasn't been prioritized already.
 
 ## Consequences
 
