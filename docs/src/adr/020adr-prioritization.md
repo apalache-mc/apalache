@@ -168,7 +168,8 @@ Impact is scored based on considering impact in the follow 4 domains:
 
 The initial priority of a requirement should be established at the time work is
 agreed upon, including when setting plans quarterly and when triaging unplanned
-work.
+work. All collaborators with a stake in the work are responsible for ensuring
+the work is scored in a way that they feel to be correct.
 
 When unplanned work is introduced, the stakeholders involved should determine
 its score (using informal language, when needed), and this should be used to
