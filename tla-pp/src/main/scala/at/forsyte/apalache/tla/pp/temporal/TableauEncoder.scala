@@ -281,16 +281,17 @@ class TableauEncoder(
                   or
                                                    outerOp
                   /\ curNode_predicate_finally' <=>   \/ curNode_predicate_finally
-                                                      \/  (~InLoop' /\ A')
+                                                      \/  (InLoop' /\ A')
                                                     outerOp      innerOp
                  */
 
                 /*
-                box and diamond differ in the inner and outer operators
+                box and diamond differ in the inner and outer operators,
+                and whether the InLoop variable is negated in the conjunction
                  */
-                val (outerOpTmp, innerOpTmp) = oper match {
-                  case TlaTempOper.box     => (builder.and _, builder.or _)
-                  case TlaTempOper.diamond => (builder.or _, builder.and _)
+                val (outerOpTmp, innerOpTmp, innerInLoopEx) = oper match {
+                  case TlaTempOper.box     => (builder.and _, builder.or _, builder.not(loopEnc.inLoopPrime))
+                  case TlaTempOper.diamond => (builder.or _, builder.and _, loopEnc.inLoopPrime)
                 }
 
                 /*
@@ -347,7 +348,7 @@ class TableauEncoder(
                     outerOp(
                         auxVarEx,
                         innerOp(
-                            loopEnc.inLoopPrime,
+                            innerInLoopEx,
                             builder.prime(argExs(0)),
                         ),
                     ),
