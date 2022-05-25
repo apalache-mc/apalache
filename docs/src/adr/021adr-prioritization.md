@@ -208,6 +208,4 @@ TBD
 
 [cod]: https://kanbanize.com/lean-management/value-waste/cost-of-delay
 [apm]: https://cio-wiki.org/wiki/Action_Priority_Matrix_(APM)
-[Karl Weiger]: https://en.wikipedia.org/wiki/Karl_Wiegers
-[first-things-first]: http://www.tarrani.net/linda/prioritizing.pdf
 [dec-decision]: https://github.com/informalsystems/apalache/commit/f379a717ca02a559b8f48d503f4413410d0b8abd
