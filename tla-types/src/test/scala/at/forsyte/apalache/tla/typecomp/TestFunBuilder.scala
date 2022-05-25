@@ -114,7 +114,7 @@ class TestFunBuilder extends BuilderTest {
   type TParam = (TlaType1, TBuilderInstruction)
 
   // unsafe for non-applicative
-  def argGen(appT: TlaType1): Gen[TBuilderInstruction] = appT match {
+  def argGen(appT: TlaType1): Gen[TBuilderInstruction] = (appT: @unchecked) match {
     case FunT1(a, _) => Gen.const(builder.name("x", a))
     case TupT1(args @ _*) => // assume nonempty
       Gen.choose[BigInt](1, args.size).map(builder.int)
