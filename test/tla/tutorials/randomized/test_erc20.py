@@ -127,7 +127,7 @@ class Erc20Simulator(RuleBasedStateMachine):
         event("transfer")
 
     @rule(tx=consumes(pendingTxs))
-    def process_transfer_from(self, tx):
+    def commit_transfer_from(self, tx):
         # process a transferFrom transaction somewhere in the blockchain
         assume(tx.tag == "transferFrom"
                and tx.value > 0
@@ -142,7 +142,7 @@ class Erc20Simulator(RuleBasedStateMachine):
         event("transferFrom")
 
     @rule(tx=consumes(pendingTxs))
-    def process_approve(self, tx):
+    def commit_approve(self, tx):
         # process an approve transaction somewhere in the blockchain
         assume(tx.tag == "approve" and tx.value > 0 and tx.sender != tx.spender)
         self.pendingTxsShadow.remove(tx)

@@ -4,5 +4,6 @@
 1. [Tutorial on the Type Checker Snowcat](./snowcat-tutorial.md)
 1. [Apalache trail tips: how to check your specs faster](./trail-tips.md)
 1. [Checking Pluscal specifications](./pluscal-tutorial.md)
+1. [Checking ERC20 with Property-Based Testing and Apalache](./randomized.md)
 1. [Symbolic Model Checking](./symbmc.md)
 
