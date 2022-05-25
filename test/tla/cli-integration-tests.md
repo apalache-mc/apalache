@@ -1432,6 +1432,21 @@ $ apalache-mc check --inv=FalseLiveness NoLoopsNoProblems.tla
 EXITCODE: OK
 ```
 
+### check ManyBoxes (temporal)
+
+```sh
+$ apalache-mc check --inv=Liveness ManyBoxes.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --inv=FalseLiveness ManyBoxes.tla
+...
+EXITCODE: ERROR (12)
+[12]
+```
+
 ### check SetSndRcv succeeds (array-encoding)
 
 Regression test for https://github.com/informalsystems/apalache/issues/1152
