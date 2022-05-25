@@ -1398,8 +1398,7 @@ EXITCODE: ERROR (12)
 ```sh
 $ apalache-mc check --inv=Liveness FalseLiveness.tla
 ...
-EXITCODE: ERROR (2)
-[2]
+EXITCODE: OK
 ```
 
 ### check SetSndRcv succeeds (array-encoding)
