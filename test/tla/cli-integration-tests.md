@@ -1384,6 +1384,24 @@ Bug1126.tla:15:14-15:27: unsupported expression: Seq(_) produces an infinite set
 EXITCODE: ERROR (75)
 ```
 
+### check FalseLiveness fails (temporal)
+
+```sh
+$ apalache-mc check --inv=FalseLiveness FalseLiveness.tla
+...
+EXITCODE: ERROR (12)
+[12]
+```
+
+### check Liveness succeeds (temporal)
+
+```sh
+$ apalache-mc check --inv=Liveness FalseLiveness.tla
+...
+EXITCODE: ERROR (2)
+[2]
+```
+
 ### check SetSndRcv succeeds (array-encoding)
 
 Regression test for https://github.com/informalsystems/apalache/issues/1152
