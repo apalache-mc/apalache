@@ -1,4 +1,7 @@
----- MODULE FalseLiveness ----
+---- MODULE LongPrefix ----
+
+\* tests behaviour when counterexamples have a nonempty 
+\* non-looping prefix (the loop cannot start in the first state)
 
 EXTENDS Integers
 

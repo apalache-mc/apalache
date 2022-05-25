@@ -1387,7 +1387,7 @@ EXITCODE: ERROR (75)
 ### check FalseLiveness fails (temporal)
 
 ```sh
-$ apalache-mc check --inv=FalseLiveness FalseLiveness.tla
+$ apalache-mc check --inv=FalseLiveness LongPrefix.tla
 ...
 EXITCODE: ERROR (12)
 [12]
@@ -1396,7 +1396,38 @@ EXITCODE: ERROR (12)
 ### check Liveness succeeds (temporal)
 
 ```sh
-$ apalache-mc check --inv=Liveness FalseLiveness.tla
+$ apalache-mc check --inv=Liveness LongPrefix.tla
+...
+EXITCODE: OK
+```
+
+### check LongLoops: Liveness succeeds (temporal)
+
+```sh
+$ apalache-mc check --inv=Liveness LongLoops.tla
+...
+EXITCODE: OK
+```
+
+### check LongLoops: FalseLiveness fails (temporal)
+
+```sh
+$ apalache-mc check --inv=FalseLiveness LongLoops.tla
+...
+EXITCODE: ERROR (12)
+[12]
+```
+
+### check NoLoopsNoProblems succeeds (temporal)
+
+```sh
+$ apalache-mc check --inv=Liveness NoLoopsNoProblems.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --inv=FalseLiveness NoLoopsNoProblems.tla
 ...
 EXITCODE: OK
 ```
