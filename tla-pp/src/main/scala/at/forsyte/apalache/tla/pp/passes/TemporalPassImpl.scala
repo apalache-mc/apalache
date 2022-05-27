@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.pp.passes
 
-import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.pp.temporal.{LoopEncoder, TableauEncoder}
@@ -11,6 +10,7 @@ import at.forsyte.apalache.tla.pp.TlaInputError
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.infra.passes.WriteablePassOptions
 
 /**
  * The temporal pass takes a module with temporal properties, and outputs a module without temporal properties and an
@@ -18,7 +18,7 @@ import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
  * formula. The encoding is described in https://lmcs.episciences.org/2236, Sections 3.2 and 4.
  */
 class TemporalPassImpl @Inject() (
-    val options: PassOptions,
+    val options: WriteablePassOptions,
     tracker: TransformationTracker,
     gen: UniqueNameGenerator,
     writerFactory: TlaWriterFactory)
@@ -29,7 +29,8 @@ class TemporalPassImpl @Inject() (
   override def execute(tlaModule: TlaModule): PassResult = {
     logger.info("  > Rewriting temporal operators...")
 
-    val newModule = options.get[List[String]]("checker", "temporal") match {
+    val temporalProps = options.get[List[String]]("checker", "temporal")
+    val newModule = temporalProps match {
       case None =>
         logger.info("  > No formula specified, nothing to encode")
         tlaModule
@@ -44,6 +45,8 @@ class TemporalPassImpl @Inject() (
           logger.info("  > `next` is not set, cannot encode formula")
           None
         }
+        // formula will be transformed into an invariant, so it is added as an invariant to check
+        options.set("checker.inv", options.get("checker", "inv") ++ formula)
         encodeFormula(tlaModule, formula, init.get, next.get)
     }
 
