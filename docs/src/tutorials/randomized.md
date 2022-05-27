@@ -28,6 +28,8 @@ testing. In particular, we are using the [Hypothesis][] framework for [Python][]
 
 ## 2. Running example: ERC20
 
+### 2.1. Three methods of ERC20
+
 As a running example, we consider a smart contract that implements an [ERC20][]
 token. To understand this example, you do not have to know much about
 blockchains and smart contracts. In a nutshell, ERC20 implements a protocol, in
@@ -90,6 +92,8 @@ tokens from the address `fromAddr` on the address `toAddr`. This can only be
 done, if `sender` was authorized to transfer at least `value` tokens from the
 address `fromAddr`.
 
+### 2.2. A known issue
+
 Although this API seems to be quite reasonable, the [EIP20 attack vector][]
 shows that it may behave in a way that some users do not expect. We refer the
 reader to the above document. Here we give a sequence of problematic
@@ -110,6 +114,8 @@ but before the second approval. If that happened, he issues another
 "transferFrom" transaction and collects five tokens in total, though Alice's
 intention was to authorize Bob to transfer up to three tokens (and later, even
 two tokens instead of three).
+
+### <a href="erc20-events"></a> 2.3. How to discover it?
 
 Can we use some automation to discover such an execution? By looking at the
 above example, we can see that the core of this question is whether we can find
@@ -342,7 +348,8 @@ Finally, on the sixth run, the test has detected an invariant violation after
 Cool! We have managed to find the expected invariant violation, though it took
 us about 8 hours and about 2 million runs to enumerate. 
 
-### 3.8. Why does it take so long?
+
+### <a name="pbt-explosion"></a> 3.8. Why does it take so long?
 
 Let's do a bit of math to better understand the probability of finding a bug
 with our approach. If you can propose a more precise analysis, please let us
@@ -439,7 +446,7 @@ Some lessons learned:
 Let us repeat the same exercise with TLA+ and Apalache. Although TLA+ is not a
 programming language, we will see that the TLA+ specification is structurally
 quite similar to the test that we have developed for Hypothesis. In contrast to
-8 hours of running PBT, we find the same execution with Apalache in 16 seconds.
+8 hours of running PBT, we find the same execution with Apalache in 12 seconds.
 So it is probably worth looking at.
 
 We assume that you already know the basics of TLA+. The complete specification
@@ -549,7 +556,7 @@ following state invariant:
 {{#include ../../../test/tla/tutorials/randomized/ERC20.tla:236:250}}
 ```
 
-### 4.6. Introducing an instance for model checking
+### 4.7. Introducing an instance for model checking
 
 Our TLA+ specification is parameterized in the set `ADDR`. In order to run
 Apalache, we have to initialize this constant. The complete code can be found
@@ -562,7 +569,7 @@ in [MC_ERC20.tla][]. The most important definition is as follows:
 ADDR == { "Alice_OF_ADDR", "Bob_OF_ADDR", "Eve_OF_ADDR" }
 ```
 
-### 4.7. Checking the invariant via symbolic simulation
+### 4.8. Checking the invariant via symbolic simulation
 
 Having defined the specification and its instance, we run Apalache to perform
 symbolic simulation:
@@ -570,7 +577,92 @@ symbolic simulation:
 ```sh
 $ apalache-mc simulate --length=10 --max-run=10000 \
   --inv=NoTransferFromWhileApproveInFlight MC_ERC20.tla
+...  
+State 10: state invariant 0 violated.
+...
+It took me 0 days  0 hours  0 min 12 sec
 ```
+
+As we can see, Apalache came back after enumerating 33 runs in 12 seconds. You
+can check [counterexample10.tla][] to make sure that it indeed violates the
+invariant.
+
+It did not report the shortest execution though. This is because we have run
+Apalache in the simulation mode. In this mode, it randomly chooses one of the
+enabled actions at every step and adds it to a set of constraints that encode
+an execution. Whether there is an execution that satisfies the constraints is
+solved by the SMT solver Z3.
+
+Consider the following figure:
+
+![Symbolic simulation](./img/symbolic-simulation.drawio.svg)
+
+Here is what is happening in the figure:
+
+ 1. Apalache applies the predicate `Init`. This gives us an execution prefix of
+ length 0, which contains only `Init`. Apalache checks the invariant for 
+ Prefix 0 as a set of constraints with [Z3][].
+
+ 1. Apalache finds that three actions are enabled in the end of Prefix 0:
+ `SubmitTransfer`, `SubmitApprove`, and `SubmitTransferFrom`. The model checker
+ randomly picks the action `SubmitApprove`. This gives us an execution
+ prefix of length 1, which is obtained by applying `Init` and then
+ `SubmitApprove`. This gives us Prefix1. Apalache checks the invariant in the
+ end of Prefix 1 as a set of constraints with [Z3][].
+
+ 1. Apalache finds that there are four enabled actions in the end of Prefix 1:
+ `SubmitTransfer`, `SubmitApprove`, `SubmitTransferFrom`, and `CommitApprove`.
+ It randomly picks the action `CommitApprove`, forming Prefix 2.  Apalache
+ checks the invariant in the end of Prefix 2 as a set of constraints with
+ [Z3][].
+
+ 1. We repeat this process for Prefix 2, ..., Prefix 9, and Prefix 10.
+ Finally, at Prefix 10, Apalache finds an execution that is described by Prefix
+ 10 and violates the invariant `NoTransferFromWhileApproveInFlight`.
+
+Actually, we have repeated the process described in 1-4 multiple times. In our
+case it was 33 times, but it may differ from run to run. We call this process
+*symbolic simulation*, since it combines two techniques in one:
+
+ - When we fix the sequence of actions, we perform symbolic execution. The
+   symbolic execution is encoded in the prefixes: Prefix 0, ..., Prefix 10.
+
+ - We pick the sequences of actions at random, similar to random simulation.
+
+### 4.9. How many symbolic runs do we have?
+
+Recall that, in theory, we had to explore billions of random executions with
+Hypothesis, see [Section 3.9](#pbt-explosion). This is due to that we had to
+randomly pick a rule to execute as well as its inputs. With symbolic
+simulation, we only have to randomly pick an action, and the rest is done by
+the solver. Hence, we can roughly estimate the number of different symbolic
+runs:
+
+ 1. When we limit executions to length 5, we have at most`6^5 = 7776`
+   combinations.
+
+ 1. When we limit executions to length 10, we have at most`6^10 = 60,466,176`
+   combinations.
+
+How many of these executions would let us discover the invariant violation?
+When we limit the length to 5, it there is only one symbolic execution that
+describes exactly the [sequence of events](#erc20-events) in Section 2.3. So we
+have 1 chance in 7776 to find the bug. If we run the simulation 7776 times, we
+should find it with high probability. In this example, it takes about 1
+second to analyze one symbolic run. Hence, we should find this bug in about 1
+hour on average. Given that we usually find it in a matter of seconds, our
+estimate on the number of symbolic runs is probably too pessimistic.
+
+When we limit the length to 10, it seems that we have an unmanageable number of
+runs. However, recall that we have to find a run that contains the [sequence of
+events](#erc20-events) as a subsequence! It seems that the probability of
+finding an invariant violation in a single run stays the same as for the length
+of 5. (Note that this argument requires a more careful analysis.)
+
+### 4.10. Do we have to enumerate runs at all?
+
+This is a good question. Apalache supports another mode that analyzes all
+symbolic runs of given length at once, without enumerating them.
 
 
 [ERC20]: https://ethereum.org/en/developers/docs/standards/tokens/erc-20/
@@ -589,3 +681,6 @@ $ apalache-mc simulate --length=10 --max-run=10000 \
 [ERC20.tla]: https://github.com/informalsystems/tla-apalache-workshop/blob/main/examples/erc20-approve-attack/ERC20.tla
 [MC_ERC20.tla]: https://github.com/informalsystems/tla-apalache-workshop/blob/main/examples/erc20-approve-attack/MC_ERC20.tla
 [Atomkraft]: https://github.com/informalsystems/atomkraft
+[counterexample5.tla]: https://github.com/informalsystems/tla-apalache-workshop/blob/main/examples/erc20-approve-attack/counterexample5.tla
+[counterexample10.tla]: https://github.com/informalsystems/tla-apalache-workshop/blob/main/examples/erc20-approve-attack/counterexample10.tla
+[Z3]: https://github.com/Z3Prover/z3
