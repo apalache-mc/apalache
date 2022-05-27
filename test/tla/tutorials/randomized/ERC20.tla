@@ -18,7 +18,11 @@ CONSTANTS
     \* Set of all addresses.
     \* 
     \* @type: Set(ADDR);
-    ADDR
+    ADDR,
+    \* Set of the amounts to use.
+    \* 
+    \* @type: Set(Int);
+    AMOUNTS
 
 VARIABLES
     \* Token balance for every account. This is exactly as `balanceOf` in ERC20.
@@ -53,7 +57,8 @@ VARIABLES
 \* Initialize an ERC20 token.
 Init ==
     \* every address has a non-negative number of tokens
-    /\ balanceOf \in [ADDR -> Nat]
+    /\ balanceOf \in [ADDR -> AMOUNTS]
+    /\ \A a \in ADDR: balanceOf[a] >= 0
     \* no account is allowed to withdraw from another account
     /\ allowance = [ pair \in ADDR \X ADDR |-> 0 ]
     \* no pending transactions
@@ -189,13 +194,13 @@ CommitApprove(_tx) ==
 \* The transition relation, which chooses one of the actions
 Next ==
     \/ \E sender, toAddr \in ADDR:
-         \E value \in Int:
+         \E value \in AMOUNTS:
            SubmitTransfer(sender, toAddr, value)
     \/ \E sender, fromAddr, toAddr \in ADDR:
-         \E value \in Int:
+         \E value \in AMOUNTS:
            SubmitTransferFrom(sender, fromAddr, toAddr, value)
     \/ \E sender, spender \in ADDR:
-         \E value \in Int:
+         \E value \in AMOUNTS:
            SubmitApprove(sender, spender, value)
     \/ \E tx \in pendingTransactions:
         \/ CommitTransfer(tx)
@@ -247,6 +252,11 @@ NoTransferFromWhileApproveInFlight ==
             /\ approval.value > 0
     IN
     ~BadExample
+
+\* Make sure that the account balances never go negative.
+NoNegativeBalances ==
+    \A a \in ADDR:
+        balanceOf[a] >= 0
 
 \* A trace invariant: For every pair <<spender, fromAddr>>, the sum of transfers
 \* via TransferFrom is no greater than the maximum allowance.
