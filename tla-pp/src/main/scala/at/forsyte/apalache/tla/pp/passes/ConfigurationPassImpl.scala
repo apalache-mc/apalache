@@ -233,7 +233,7 @@ class ConfigurationPassImpl @Inject() (
         val msg = s"  > $basename: found PROPERTIES: " + String.join(", ", config.invariants: _*)
         logger.info(msg)
 
-        // set the temporal properties, but warn the user that they are not used
+        // set the temporal properties
         outOptions.set("checker.temporal", config.temporalProps)
 
         outOptions.get[List[String]]("checker", "temporal") match {
