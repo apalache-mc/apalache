@@ -138,43 +138,66 @@ class TestTemporalEncoder extends AnyFunSuite with Checkers {
     check(prop, minSuccessful(500), sizeRange(4))
   }
 
-  test("test: for each box operator, there is an extra variable") {
-    val prop = forAll(formulaGen) { formula =>
-      if (levelFinder.getLevelOfExpression(Set.empty, formula) != TlaLevelTemporal) {
-        Prop.undecided
+  if (TableauEncoder.DIAMOND_SUFFIX != TableauEncoder.BOX_SUFFIX) {
+
+    test("test: for each box operator, there is an extra variable") {
+      val prop = forAll(formulaGen) { formula =>
+        if (levelFinder.getLevelOfExpression(Set.empty, formula) != TlaLevelTemporal) {
+          Prop.undecided
+        }
+        val output =
+          tableauEncoder.encodeFormula(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
+
+        val boxApplications = countOperatorApplications(TlaTempOper.box, formula)
+
+        // identify predicate variables by the variable names
+        val boxVariables = output.module.varDeclarations
+          .filter(decl => decl.name.endsWith(TableauEncoder.BOX_SUFFIX))
+          .length
+
+        boxApplications ?= boxVariables
       }
-      val output =
-        tableauEncoder.encodeFormula(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
-
-      val boxApplications = countOperatorApplications(TlaTempOper.box, formula)
-
-      // identify predicate variables by the variable names
-      val boxVariables = output.module.varDeclarations
-        .filter(decl => decl.name.endsWith(TableauEncoder.BOX_SUFFIX))
-        .length
-
-      boxApplications ?= boxVariables
+      check(prop, minSuccessful(500), sizeRange(4))
     }
-    check(prop, minSuccessful(500), sizeRange(4))
-  }
 
-  test("test: for each diamond operator, there is an extra variable") {
-    val prop = forAll(formulaGen) { formula =>
-      if (levelFinder.getLevelOfExpression(Set.empty, formula) != TlaLevelTemporal) {
-        Prop.undecided
+    test("test: for each diamond operator, there is an extra variable") {
+      val prop = forAll(formulaGen) { formula =>
+        if (levelFinder.getLevelOfExpression(Set.empty, formula) != TlaLevelTemporal) {
+          Prop.undecided
+        }
+        val output =
+          tableauEncoder.encodeFormula(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
+
+        val diamondApplications = countOperatorApplications(TlaTempOper.diamond, formula)
+
+        // identify predicate variables by the variable names
+        val diamondVariables = output.module.varDeclarations
+          .filter(decl => decl.name.endsWith(TableauEncoder.DIAMOND_SUFFIX))
+          .length
+
+        diamondApplications ?= diamondVariables
       }
-      val output =
-        tableauEncoder.encodeFormula(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
-
-      val diamondApplications = countOperatorApplications(TlaTempOper.diamond, formula)
-
-      // identify predicate variables by the variable names
-      val diamondVariables = output.module.varDeclarations
-        .filter(decl => decl.name.endsWith(TableauEncoder.DIAMOND_SUFFIX))
-        .length
-
-      diamondApplications ?= diamondVariables
+      check(prop, minSuccessful(500), sizeRange(4))
     }
-    check(prop, minSuccessful(500), sizeRange(4))
+  } else { // TableauEncoder.DIAMOND_SUFFIX == TableauEncoder.BOX_SUFFIX)
+    test("test: for each diamond and box operator, there is an extra variable") {
+      val prop = forAll(formulaGen) { formula =>
+        if (levelFinder.getLevelOfExpression(Set.empty, formula) != TlaLevelTemporal) {
+          Prop.undecided
+        }
+        val output =
+          tableauEncoder.encodeFormula(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
+
+        val temporalApplications = countOperatorApplications(TlaTempOper.diamond, formula) + countOperatorApplications(TlaTempOper.box, formula)
+
+        // identify predicate variables by the variable names
+        val temporalAuxVars = output.module.varDeclarations
+          .filter(decl => decl.name.endsWith(TableauEncoder.DIAMOND_SUFFIX))
+          .length
+
+        temporalApplications ?= temporalAuxVars
+      }
+      check(prop, minSuccessful(500), sizeRange(4))
+    }
   }
 }
