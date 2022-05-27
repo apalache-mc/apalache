@@ -209,6 +209,8 @@ object Tool extends LazyLogging {
       executor.options.set("checker.next", cmd.next)
     if (cmd.inv != "")
       executor.options.set("checker.inv", List(cmd.inv))
+    if (cmd.temporal != "")
+      executor.options.set("checker.temporal", List(cmd.temporal))
     if (cmd.cinit != "")
       executor.options.set("checker.cinit", cmd.cinit)
     executor.options.set("checker.length", cmd.length)
@@ -238,6 +240,7 @@ object Tool extends LazyLogging {
 
   private def runCheck(executor: PassChainExecutor, check: CheckCmd): Int = {
     setCoreOptions(executor, check)
+    print(executor.options.get[List[String]]("checker", "temporal"))
 
     var tuning =
       if (check.tuningOptionsFile != "") loadProperties(check.tuningOptionsFile) else Map[String, String]()

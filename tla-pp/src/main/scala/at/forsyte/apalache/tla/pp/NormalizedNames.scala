@@ -24,7 +24,7 @@ object NormalizedNames {
   val VC_VIEW = "VCView$0"
 
   // the names of the options that capture the critical specification pieces
-  val STANDARD_OPTION_NAMES = Seq("init", "cinit", "next", "inv", "temporalProps")
+  val STANDARD_OPTION_NAMES = Seq("init", "cinit", "next", "inv", "temporal")
 
   /**
    * Extract operator names from the standard option names.
@@ -37,7 +37,7 @@ object NormalizedNames {
     // first, get the operators whose names are passed as single strings
     val single: List[String] = List("init", "cinit", "next", "view").flatMap(options.get[String]("checker", _))
     // second, get the operators whose names are passed as lists of strings
-    val multiple: List[String] = List("inv", "temporalProps").flatMap(options.get[List[String]]("checker", _)).flatten
+    val multiple: List[String] = List("inv", "temporal").flatMap(options.get[List[String]]("checker", _)).flatten
     single ++ multiple
   }
 

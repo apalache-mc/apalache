@@ -47,7 +47,7 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
               TlaModule(module.name, module.declarations ++ introConditions(level, inv.body))
 
             case TlaLevelTemporal =>
-              val message = s"Expected a state invariant or an action invariant in $invName, found a temporal property"
+              val message = s"Expected a state invariant or an action invariant in $invName, found a temporal property (did you mean to use --temporal?)"
               throw new TlaInputError(message, Some(inv.body.ID))
           }
 

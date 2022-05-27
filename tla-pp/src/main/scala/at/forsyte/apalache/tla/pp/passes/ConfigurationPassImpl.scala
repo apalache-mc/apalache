@@ -230,10 +230,21 @@ class ConfigurationPassImpl @Inject() (
       }
 
       if (config.temporalProps.nonEmpty) {
+        val msg = s"  > $basename: found PROPERTIES: " + String.join(", ", config.invariants: _*)
+        logger.info(msg)
+
         // set the temporal properties, but warn the user that they are not used
-        outOptions.set("checker.temporalProps", config.temporalProps)
-        for (prop <- config.temporalProps) {
-          logger.warn(s"  > $basename: PROPERTY $prop is ignored. Only INVARIANTS are supported.")
+        outOptions.set("checker.temporal", config.temporalProps)
+
+        outOptions.get[List[String]]("checker", "temporal") match {
+          case None =>
+            outOptions.set("checker.temporal", config.temporalProps)
+
+          case Some(temporalProps) =>
+            val temporalPropsStr = temporalProps.map(s => "--temporal " + s)
+            val msg = s"  > Overriding with command line arguments: " + String.join(" ", temporalPropsStr: _*)
+            logger.warn(msg)
+            outOptions.set("checker.temporal", temporalProps)
         }
       }
 
@@ -252,7 +263,7 @@ class ConfigurationPassImpl @Inject() (
     }
   }
 
-  // Make sure that all operators passed via --init, --cinit, --next, --inv are present.
+  // Make sure that all operators passed via --init, --cinit, --next, --inv, --temporal are present.
   private def ensureDeclarationsArePresent(
       mod: TlaModule,
       configOptions: PassOptions): Unit = {
@@ -295,12 +306,12 @@ class ConfigurationPassImpl @Inject() (
         () // this is fine, invariants are optional
     }
 
-    configOptions.get[List[String]]("checker", "temporalProps") match {
+    configOptions.get[List[String]]("checker", "temporal") match {
       case Some(props) =>
         props.foreach(assertDecl("a temporal property", _))
 
       case None =>
-        () // this is fine, temporal properties are not supported anyway
+        () // this is fine, temporal properties are optional
     }
   }
 

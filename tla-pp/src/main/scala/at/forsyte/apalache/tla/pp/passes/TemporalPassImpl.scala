@@ -29,22 +29,22 @@ class TemporalPassImpl @Inject() (
   override def execute(tlaModule: TlaModule): PassResult = {
     logger.info("  > Rewriting temporal operators...")
 
-    val newModule = options.get[List[String]]("checker", "inv") match {
+    val newModule = options.get[List[String]]("checker", "temporal") match {
       case None =>
-        logger.info("  > No invariants specified, nothing to encode")
+        logger.info("  > No formula specified, nothing to encode")
         tlaModule
-      case Some(invariants) =>
+      case Some(formula) =>
         val init = options.get[String]("checker", "init")
         if (init.isEmpty) {
-          logger.info("  > `init` is not set, cannot encode invariants")
+          logger.info("  > `init` is not set, cannot encode formula")
           None
         }
         val next = options.get[String]("checker", "next")
         if (init.isEmpty) {
-          logger.info("  > `next` is not set, cannot encode invariants")
+          logger.info("  > `next` is not set, cannot encode formula")
           None
         }
-        encodeInvariants(tlaModule, invariants, init.get, next.get)
+        encodeFormula(tlaModule, formula, init.get, next.get)
     }
 
     writeOut(writerFactory, newModule)
@@ -52,7 +52,7 @@ class TemporalPassImpl @Inject() (
     Right(newModule)
   }
 
-  def encodeInvariants(
+  def encodeFormula(
       module: TlaModule,
       invariants: List[String],
       init: String,

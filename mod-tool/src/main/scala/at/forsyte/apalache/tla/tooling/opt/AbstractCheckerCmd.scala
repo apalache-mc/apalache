@@ -19,6 +19,8 @@ abstract class AbstractCheckerCmd(val name: String, description: String)
     opt[String](name = "next", default = "", description = "the name of a transition operator, default: Next")
   var inv: String =
     opt[String](name = "inv", default = "", description = "the name of an invariant operator, e.g., Inv")
+  var temporal: String =
+    opt[String](name = "temporal", default = "", description = "the name of a temporal property, e.g. Property")
   var length: Int =
     opt[Int](name = "length", default = 10, description = "maximal number of Next steps, default: 10")
 }
