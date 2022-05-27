@@ -12,6 +12,9 @@ addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.11.0")
 addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.9.9")
 // https://scalacenter.github.io/scalafix/docs/users/installation.html
 addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.10.0")
+// https://scalapb.github.io/zio-grpc/docs/installation
+addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.2")
+libraryDependencies += "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % "0.5.0"
 
 // Add the locally defined plugins
 lazy val root = (project in file("."))
