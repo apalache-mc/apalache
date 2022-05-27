@@ -439,6 +439,6 @@ object TableauEncoder {
    */
   val NAME_PREFIX = "__temporal_"
   val PREDS_TO_VARS_MAPPING_NAME = "__preds_to_vars"
-  val BOX_SUFFIX = "_globally"
-  val DIAMOND_SUFFIX = "_eventually"
+  val BOX_SUFFIX = "_unroll"
+  val DIAMOND_SUFFIX = "_unroll"
 }
