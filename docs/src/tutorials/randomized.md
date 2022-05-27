@@ -456,24 +456,24 @@ and its model checking instance can be found in [ERC20.tla][] and
 ### 4.1. The shape of the state machine
 
 Similar to our Python code in [test_erc20.py][], we declare the set of all
-addresses. In contrast to the code, we declare `ADDR` to be a constant, which
-is instantiated later:
+addresses. In contrast to the code, we declare `ADDR` and `AMOUNTS` as
+constants, which are instantiated later:
 
 ```
-{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:17:22}}
+{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:17:25}}
 ```
 
 Since we specify a state machine, we declare the state variables of our state
 machine that we obviously need for [ERC20][]:
 
 ```
-{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:23:34}}
+{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:27:38}}
 ```
 
 Similar to the Python code, we declare additional state variables:
 
 ```
-{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:35:52}}
+{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:39:56}}
 ```
 
 ### 4.2. Initializing the state machine
@@ -481,7 +481,7 @@ Similar to the Python code, we declare additional state variables:
 As usual, we describe the initial states via the predicate `Init`:
 
 ```
-{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:53:63}}
+{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:57:68}}
 ```
 
 ### 4.3. Submitting transactions
@@ -489,7 +489,7 @@ As usual, we describe the initial states via the predicate `Init`:
 To submit a "transfer" transaction, we introduce the action `SubmitTransfer`:
 
 ```
-{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:74:82}}
+{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:79:87}}
 ```
 
 The above code is simple. We construct a transaction as a record and add
@@ -498,11 +498,11 @@ it to the set of the pending transactions.
 Similar to that, we define the actions `SubmitApprove` and `SubmitTransferFrom`:
 
 ```
-{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:162:172}}
+{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:167:177}}
 ```
 
 ```
-{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:118:129}}
+{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:123:134}}
 ```
 
 ### 4.4. Committing transactions
@@ -510,7 +510,7 @@ Similar to that, we define the actions `SubmitApprove` and `SubmitTransferFrom`:
 To commit a transfer transaction, we introduce the action `CommitTransfer`:
 
 ```
-{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:86:103}}
+{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:91:108}}
 ```
 
 The interesting aspect here is that we mark a transaction as failed, if it
@@ -524,11 +524,11 @@ Similar to `CommitTransfer`, we define the action `CommitApprove` and
 
 
 ```
-{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:133:155}}
+{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:138:161}}
 ```
 
 ```
-{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:175:187}}
+{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:180:193}}
 ```
 
 ### 4.5. Introducing the transition predicate
@@ -537,7 +537,7 @@ As usual, we introduce the predicate called `Next` that captures the choice of
 actions:
 
 ```
-{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:189:204}}
+{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:194:209}}
 ```
 
 We non-deterministically pick one of the six actions at each step. The action
@@ -553,20 +553,23 @@ Similar to `all_transfers_approved` in [test_erc20.py][], we define the
 following state invariant:
 
 ```
-{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:236:250}}
+{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:241:255}}
 ```
 
 ### 4.7. Introducing an instance for model checking
 
 Our TLA+ specification is parameterized in the set `ADDR`. In order to run
 Apalache, we have to initialize this constant. The complete code can be found
-in [MC_ERC20.tla][]. The most important definition is as follows:
+in [MC_ERC20.tla][]. The most important definitions are as follows:
 
 ```tla
 \* Use the set of three addresses.
 \* We are using uninterpreted values, similar to TLC's model values.
 \* See: https://apalache.informal.systems/docs/HOWTOs/uninterpretedTypes.html
 ADDR == { "Alice_OF_ADDR", "Bob_OF_ADDR", "Eve_OF_ADDR" }
+
+\* Apalache can draw constants from the set of all integers
+AMOUNTS == Int
 ```
 
 ### 4.8. Checking the invariant via symbolic simulation
@@ -629,7 +632,7 @@ case it was 33 times, but it may differ from run to run. We call this process
 
  - We pick the sequences of actions at random, similar to random simulation.
 
-### 4.9. How many symbolic runs do we have?
+### <a name="how-many"></a> 4.9. How many symbolic runs do we have?
 
 Recall that, in theory, we had to explore billions of random executions with
 Hypothesis, see [Section 3.9](#pbt-explosion). This is due to that we had to
@@ -664,6 +667,184 @@ of 5. (Note that this argument requires a more careful analysis.)
 This is a good question. Apalache supports another mode that analyzes all
 symbolic runs of given length at once, without enumerating them.
 
+## 4. Bounded model checking with Apalache
+
+### 4.1. Finding a invariant violation
+
+Whereas in symbolic simulation we were randomly picking a sequence of actions
+and delegating the discovery of right inputs to the solver, in the checking
+mode, we delegate the choice of the right actions to the solver too:
+
+```sh
+$ apalache-mc check --length=10 \
+  --inv=NoTransferFromWhileApproveInFlight MC_ERC20.tla
+...  
+State 5: state invariant 0 violated.
+...
+It took me 0 days  0 hours  0 min 7 sec
+```
+
+This time the model checker has found the shortest execution that violates
+the invariant. You can examine it in [counterexample5.tla][].
+
+### 4.2. When there is no invariant violation
+
+So far, the difference between `simulate` and `check` was not obvious.  Their
+performance seems to be comparable. We can see a dramatic difference when we
+test an invariant that actually holds true. Consider the following invariant:
+
+```
+{{#include ../../../test/tla/tutorials/randomized/ERC20.tla:256:260}}
+```
+
+Let us check all executions that make up to 10 steps with Apalache:
+
+```sh
+apalache-mc check --length=10 --inv=NoNegativeBalances MC_ERC20.tla
+...
+Checker reports no error up to computation length 10
+It took me 0 days  0 hours  9 min 32 sec
+```
+
+Now we know that, no matter what, the *invariant holds true on all states that
+are reachable via at most 10 steps*.
+
+As we discussed in [Section 4.9](#how-many), we have to check about 7776
+symbolic runs, to get a high probability of exploring of all executions:
+
+```sh
+apalache-mc simulate --length=10 --max-run=7776 \
+  --inv=NoNegativeBalances MC_ERC20.tla
+...
+Checker reports no error up to computation length 10
+It took me 0 days  0 hours 26 min 50 sec
+```
+
+Although, it took Apalache longer, it has enumerated 7.7k symbolic runs.
+However, the important difference between `simulate` and `check` is that
+`check` does not give us an ultimate guarantee about all executions, even
+though we limit the scope to all executions of length up to 10.
+
+### 4.3. What about longer executions?
+
+As we have seen, Apalache can give us a guarantee about all executions of
+predefined length. What if we want to analyze all possible executions? This is
+harder. We refer the reader to the section on [Checking an inductive
+invariant][]. We will write another tutorial on this topic.
+
+## 5. State enumeration with TLC
+
+So far we have been using Hypothesis and Apalache. Since we have a TLA+
+specification, we can easily run the standard explicit model checker TLC too.
+
+### 5.1. Setting up TLC
+
+Before you can run TLC in the command-line, you have to download it:
+
+```sh
+wget https://github.com/tlaplus/tlaplus/releases/download/v1.8.0/tla2tools.jar
+```
+
+We have to define two auxiliary files:
+
+ - a configuration file [MC_tlc_check.cfg][]:
+   - we define `ADDR` as a constant set of three model
+     values: `{A_Alice, A_Bob, A_Eve}`
+   - we define `AMOUNTS` to be a fixed range of `0..19`, similar
+     to our Hypothesis tests.
+   - further, we inform TLC that it can use symmetry reduction over `ADDR`.
+
+ - a model file [MC_tlc_check.tla][]
+
+### 5.2. Simulation with TLC
+
+TLC has a built-in simulation mode, which is randomly producing traces. In our
+case, it can be run like that:
+
+```sh
+java -DTLA-Library=$HOME/devl/apalache/src/tla -jar tla2tools.jar \
+  -config MC_tlc_check.cfg -simulate num=1000000000 -depth 10 MC_tlc_check.tla
+...
+Error: Invariant NoTransferFromWhileApproveInFlight is violated.
+...
+The number of states generated: 1843943938
+Progress: 1843943943 states checked, 183661963 traces generated (trace length: mean=10, var(x)=0, sd=0)
+Finished in 01h 09min at (2022-05-27 17:52:48)
+```
+
+As we can see, TLC has found an invariant violation after 1 hour, though it is
+a matter of luck, since the simulation is done at random. Interestingly, TLC is
+enumerating traces faster than Hypothesis did in our experiments with
+[test_erc20.py][], see [Section 3.7](#37-generating-the-test-runs).
+
+### 5.3. State enumeration with TLC
+
+Similar to model checking with Apalache, we can run TLC to check the invariant
+via state enumeration:
+
+```sh
+java -DTLA-Library=$HOME/devl/apalache/src/tla -jar tla2tools.jar \
+  -config MC_tlc_check.cfg MC_tlc_check.tla
+```
+
+## 6. Conclusions
+
+We summarize our findings in the following table.
+
+*We only ran one experiment for each row in the table. To get a better
+understanding of the average running times, we would have to perform each
+experiment multiple times. Hence, take these figures as one observation, not as
+a hard fact.*
+
+| Input      | Tool | Method | Performance bottleneck | Complete? | Time (one experiment!) |
+| ---------- | ---- | ------ | ---------------------- |:---------:|:----:|
+| Python PBT | Hypothesis | Property-based testing, stateful testing | combinatorial explosion of executions | no | 8 hours |
+| TLA+       | Apalache | Symbolic simulation | combinatorial explosion of symbolic executions | no | 12 sec |
+| TLA+       | Apalache | Bounded model checking | combinatorial explosion in SMT | yes: for fixed length and fixed parameters | 7 sec |
+| TLA+       | TLC | Explicit enumeration + simulation | combinatorial explosion of executions | no | 1 hour 9 min |
+| TLA+       | TLC | Explicit model checking | state explosion | yes: for fixed parameters | TODO |
+
+Since we have conducted the experiments on one benchmarks only, we are not
+trying to draw general conclusions from this table. However, we propose some
+intuition about why the tools behaved this way:
+
+ - Stateful testing with PBT is randomly choosing rules and their inputs.
+   Hence, in theory, this should be the worst case of combinatorial explosion
+   in our experiments. Nevertheless, the tool has found an invariant violation.
+   We do not know, whether it was sheer luck or clever heuristics of
+   Hypothesis.
+
+ - Symbolic simulation with Apalache was very quick to find an error.
+   This is due to the fact the number of *symbolic runs* is growing much slower
+   than the number of *concrete runs* in this example. As we have seen,
+   this mode slows down, when there is no error.
+
+ - Bounded model checking with Apalache was the fastest one. This is probably
+   not surprising, as we are using the SMT solver [Z3][]. The SAT/SMT community
+   have been tackling NP-complete problems and combinatorial explosion for
+   decades. It is not surprising that SMT is better tuned to the problem than
+   an ad-hoc random exploration.
+
+ - Simulation with TLC was slower than Apalache. However, the number of
+   generated traces in 1 hour was significantly larger than the number of
+   traces produced with Hypothesis. It would be interesting to see why this is
+   happening.
+
+ - Explicit state enumeration with TLC was very slow. This is not very
+   surprising, as TLC has to deal with relatively large state spaces here. We
+   could decrease the number of values in `AMOUNTS`.
+
+In conclusion, we believe that all these methods and tools have their place in
+a developer's tool belt. However, as with all advanced tools, we have to
+understand, where they fit in the development process and what can affect their
+performance. For instance, the Apalache team is using property-based testing
+(that is, [Scalacheck][]) to find hardcore bugs in the model checker. We call
+this tool [Nitpick][].
+
+Disclaimer: Although we are experienced users of Apalache and TLC, we are
+beginners in Hypothesis. If you know how a way to improve our experience
+with Hypothesis, please let us know.
+
 
 [ERC20]: https://ethereum.org/en/developers/docs/standards/tokens/erc-20/
 [EIP20]: https://eips.ethereum.org/EIPS/eip-20
@@ -684,3 +865,8 @@ symbolic runs of given length at once, without enumerating them.
 [counterexample5.tla]: https://github.com/informalsystems/tla-apalache-workshop/blob/main/examples/erc20-approve-attack/counterexample5.tla
 [counterexample10.tla]: https://github.com/informalsystems/tla-apalache-workshop/blob/main/examples/erc20-approve-attack/counterexample10.tla
 [Z3]: https://github.com/Z3Prover/z3
+[Checking an inductive invariant]: ./running.html#checking-an-inductive-invariant
+[MC_tlc_check.tla]: https://github.com/informalsystems/tla-apalache-workshop/blob/main/examples/erc20-approve-attack/MC_tlc_check.tla
+[MC_tlc_check.cfg]: https://github.com/informalsystems/tla-apalache-workshop/blob/main/examples/erc20-approve-attack/MC_tlc_check.cfg
+[Scalacheck]: https://scalacheck.org/
+[Nitpick]: https://github.com/informalsystems/apalache/issues/1588
