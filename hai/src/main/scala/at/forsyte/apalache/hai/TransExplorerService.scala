@@ -1,11 +1,15 @@
 package at.forsyte.apalache.hai.v1
 
 /**
- * Provides the the TransExplorer service
+ * Provides the [[TransExplorerService]]
  *
  * ==Overview==
  *
- * TODO
+ * The [[TransExplorerService]] exposes an RPC interface to drive the
+ * [[at.forsyte.apalache.tla.bmcmt.trex.TransitionExecutor]], thus enabling clients engage with the symbolic model
+ * checker interactively.
+ *
+ * [[TranExplorerService]] is meant to be registered with [[RpcServer]], and should not need to be used directly.
  */
 
 import at.forsyte.apalache.hai.v1.transExplorer.ZioTransExplorer
@@ -24,12 +28,14 @@ private case class Conn(
  * [[at.forsyte.apalache.tla.bmcmt.trex.TransitionExecutor]]
  *
  * @param connections
- *   A thread-safe mutable reference to a map used to register connections by their unique
+ *   A thread-safe, mutable reference holding a map registering connections by their unique ID
  */
 class TransExplorerService(connections: Ref[Map[UUID, Conn]]) extends ZioTransExplorer.ZTransExplorer[ZEnv, Any] {
 
   /**
    * Creates and registers a new connection
+   *
+   * This method handles the OpenConnection RPC defined by `transExplorer.proto`
    *
    * @param req
    *   the request (isomorphic to the Unit)
@@ -39,7 +45,6 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]]) extends ZioTransEx
     _ <- addConnection(Conn(id))
   } yield Connection(id.toString())
 
-  // TODO Add scalafmt config to allign for comprehension arrows?
   private def addConnection(conn: Conn): UIO[Unit] = for {
     conns <- connections.get
     _ <- connections.set(conns + (conn.id -> conn))

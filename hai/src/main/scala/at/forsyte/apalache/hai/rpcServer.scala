@@ -5,7 +5,7 @@ import java.util.UUID
 import scalapb.zio_grpc.ServerMain
 import scalapb.zio_grpc.ServiceList
 
-object TransExplorerServer extends ServerMain {
+object RpcServer extends ServerMain {
   override def port: Int = 8822
 
   val createService = for {
