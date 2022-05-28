@@ -45,9 +45,5 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]]) extends ZioTransEx
     _ <- addConnection(Conn(id))
   } yield Connection(id.toString())
 
-  private def addConnection(conn: Conn): UIO[Unit] = for {
-    conns <- connections.get
-    _ <- connections.set(conns + (conn.id -> conn))
-  } yield ()
-
+  private def addConnection(c: Conn): UIO[Unit] = connections.update(_ + (c.id -> c))
 }
