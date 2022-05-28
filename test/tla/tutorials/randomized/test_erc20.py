@@ -25,7 +25,7 @@ from hypothesis import assume, settings, event, Verbosity
 ADDR = [ "Alice", "Bob", "Eve" ]
 
 # We restrict the amounts to a small range, to avoid too much randomness
-AMOUNTS = range(0, 3)
+AMOUNTS = range(0, 20)
 
 
 class TransferTx:
@@ -185,7 +185,7 @@ class Erc20Simulator(RuleBasedStateMachine):
 TestTrees = Erc20Simulator.TestCase
 Erc20Simulator.TestCase.settings = settings(
     max_examples=100000,
-    stateful_step_count=5,
+    stateful_step_count=7,
     deadline=None
 )
 
