@@ -2,6 +2,10 @@
 
 **Difficulty: Blue trail – Medium**
 
+**Author: Igor Konnov**
+
+**Last update: May 28, 2022**
+
 In this tutorial, we discuss the API of the [ERC20][] tokens, which are
 commonly used in the [Ethereum][] blockchain. This API is particularly
 interesting, as it has a well-known [EIP20 attack vector][], discussed
@@ -79,9 +83,9 @@ end, ERC20 has "approve" transactions:
 ```
 
 By invoking an "approve" transaction, the user `sender` authorizes the user
-`sender` to transfer at most `value` tokens on the behalf of `sender`. However,
-the spender cannot do such a transfer via a "transfer" transaction. Hence,
-ERC20 introduces a third type of transactions:
+`spender` to transfer at most `value` tokens on the behalf of `sender`.
+However, the spender cannot do such a transfer via a "transfer" transaction.
+Hence, ERC20 introduces a third type of transactions:
 
 ```
   transferFrom(sender, fromAddr, toAddr, value)
@@ -94,9 +98,9 @@ address `fromAddr`.
 
 ### 2.2. A known issue
 
-Although this API seems to be quite reasonable, the [EIP20 attack vector][]
-shows that it may behave in a way that some users do not expect. We refer the
-reader to the above document. Here we give a sequence of problematic
+Although this API looks reasonable, the [EIP20 attack vector][] shows that it
+may behave in a way that some users do not expect. We refer the reader to the
+above document for the context. Here we give a sequence of problematic
 transactions:
 
 ![The sequence of transactions](./img/erc20.drawio.svg)
@@ -161,7 +165,8 @@ our tests:
 
 The last question is of particular interest, as the search spaces in modern
 programming languages are simply astronomic. We assume the small scope
-hypothesis, which is usually put like this at [Alloy Wikipedia page][]:
+hypothesis, which is usually put like follows, e.g., at [Alloy Wikipedia
+page][]:
 
     ...a high proportion of bugs can be found by testing a program for all test
     inputs within some small scope.
@@ -205,7 +210,7 @@ The code of the method `init` is self-explanatory. The most interesting part
 belongs to the annotation inside `@initialize(...)`. Basically, it tells the
 testing framework that the input parameter `amounts` should be a randomly
 generated list, whose elements are randomly drawn from the list `AMOUNTS`. We
-limit the size of the list `amount` with the parameters `min_size` and
+limit the size of the list `amounts` with the parameters `min_size` and
 `max_size`. To better understand generators, check the page on the [Hypothesis
 generators][].
 
@@ -283,7 +288,8 @@ We also write an invariant that we actually want to test:
 {{#include ../../../test/tla/tutorials/randomized/test_erc20.py:159:174}}
 ```
 
-The above invariant specifies the situation that we discussed in Section 2.
+The above invariant specifies a state that is produced by the sequence of
+events 1-5, as discussed in [Section 2.3](#erc20-events).
 
 ### 3.7. Generating the test runs
 
@@ -397,11 +403,11 @@ fixed:
   1. commit `tx3`
 
 How many combinations do we have here? We see that all three addresses `u1`,
-`u2`, and `u3` must distinct. Hence, the number of combinations for producing
-these addresses is `3! = 6`. The choice of `n` is unrestricted, so we have
-`len(AMOUNTS) = 20` combinations. As for `m` and `k`, we have the constraint
-`m < k <= n`. We can easily compute the number of the combinations for `n`, `m`,
-and `k` with a Python loop:
+`u2`, and `u3` must be distinct. Hence, the number of combinations for
+producing these addresses is `3! = 6`. The choice of `n` is unrestricted, so we
+have `len(AMOUNTS) = 20` combinations. As for `m` and `k`, we have the
+constraint `m < k <= n`. We can easily compute the number of the combinations
+for `n`, `m`, and `k` with a Python loop:
 
 ```python
   sum = 0
@@ -542,10 +548,10 @@ actions:
 
 We non-deterministically pick one of the six actions at each step. The action
 parameters are non-deterministically chosen via the operator "exists", e.g.,
-`\E value \in Int`. Note that we simply draw integer values from the set of all
-integers, as there is no need to restrict this set. Although TLA+ as a language
-does not have randomization, some tools may interpret non-determinism as random
-choice.
+`\E value \in AMOUNTS`. Note that we simply draw integer values from the set
+`AMOUNTS`, as there is no need to restrict this set. Although TLA+ as a
+language does not have randomization, some tools may interpret non-determinism
+as random choice.
 
 ### 4.6. Introducing state invariants
 
@@ -558,9 +564,10 @@ following state invariant:
 
 ### 4.7. Introducing an instance for model checking
 
-Our TLA+ specification is parameterized in the set `ADDR`. In order to run
-Apalache, we have to initialize this constant. The complete code can be found
-in [MC_ERC20.tla][]. The most important definitions are as follows:
+Our TLA+ specification is parameterized in the sets `ADDR` and `AMOUNTS`. In
+order to run Apalache, we have to initialize this constant. The complete code
+can be found in [MC_ERC20.tla][]. The most important definitions are as
+follows:
 
 ```tla
 \* Use the set of three addresses.
@@ -594,7 +601,7 @@ It did not report the shortest execution though. This is because we have run
 Apalache in the simulation mode. In this mode, it randomly chooses one of the
 enabled actions at every step and adds it to a set of constraints that encode
 an execution. Whether there is an execution that satisfies the constraints is
-solved by the SMT solver Z3.
+solved by the SMT solver [Z3][].
 
 Consider the following figure:
 
@@ -604,20 +611,19 @@ Here is what is happening in the figure:
 
  1. Apalache applies the predicate `Init`. This gives us an execution prefix of
  length 0, which contains only `Init`. Apalache checks the invariant for 
- Prefix 0 as a set of constraints with [Z3][].
+ Prefix 0 as a set of constraints with Z3.
 
  1. Apalache finds that three actions are enabled in the end of Prefix 0:
  `SubmitTransfer`, `SubmitApprove`, and `SubmitTransferFrom`. The model checker
- randomly picks the action `SubmitApprove`. This gives us an execution
- prefix of length 1, which is obtained by applying `Init` and then
- `SubmitApprove`. This gives us Prefix1. Apalache checks the invariant in the
- end of Prefix 1 as a set of constraints with [Z3][].
+ randomly picks the action `SubmitApprove`. This gives us an execution prefix
+ of length 1, which is obtained by applying `Init` and then `SubmitApprove`.
+ This gives us Prefix1. Apalache checks the invariant in the end of Prefix 1 as
+ a set of constraints with Z3.
 
  1. Apalache finds that there are four enabled actions in the end of Prefix 1:
  `SubmitTransfer`, `SubmitApprove`, `SubmitTransferFrom`, and `CommitApprove`.
  It randomly picks the action `CommitApprove`, forming Prefix 2.  Apalache
- checks the invariant in the end of Prefix 2 as a set of constraints with
- [Z3][].
+ checks the invariant in the end of Prefix 2 as a set of constraints with Z3.
 
  1. We repeat this process for Prefix 2, ..., Prefix 9, and Prefix 10.
  Finally, at Prefix 10, Apalache finds an execution that is described by Prefix
@@ -648,7 +654,7 @@ runs:
    combinations.
 
 How many of these executions would let us discover the invariant violation?
-When we limit the length to 5, it there is only one symbolic execution that
+When we limit the length to 5, there is only one symbolic execution that
 describes exactly the [sequence of events](#erc20-events) in Section 2.3. So we
 have 1 chance in 7776 to find the bug. If we run the simulation 7776 times, we
 should find it with high probability. In this example, it takes about 1
@@ -667,9 +673,9 @@ of 5. (Note that this argument requires a more careful analysis.)
 This is a good question. Apalache supports another mode that analyzes all
 symbolic runs of given length at once, without enumerating them.
 
-## 4. Bounded model checking with Apalache
+## 5. Bounded model checking with Apalache
 
-### 4.1. Finding a invariant violation
+### 5.1. Finding a invariant violation
 
 Whereas in symbolic simulation we were randomly picking a sequence of actions
 and delegating the discovery of right inputs to the solver, in the checking
@@ -687,7 +693,7 @@ It took me 0 days  0 hours  0 min 7 sec
 This time the model checker has found the shortest execution that violates
 the invariant. You can examine it in [counterexample5.tla][].
 
-### 4.2. When there is no invariant violation
+### 5.2. When there is no invariant violation
 
 So far, the difference between `simulate` and `check` was not obvious.  Their
 performance seems to be comparable. We can see a dramatic difference when we
@@ -710,7 +716,7 @@ Now we know that, no matter what, the *invariant holds true on all states that
 are reachable via at most 10 steps*.
 
 As we discussed in [Section 4.9](#how-many), we have to check about 7776
-symbolic runs, to get a high probability of exploring of all executions:
+symbolic runs, to get a high probability of exploring all executions:
 
 ```sh
 apalache-mc simulate --length=10 --max-run=7776 \
@@ -722,22 +728,23 @@ It took me 0 days  0 hours 26 min 50 sec
 
 Although, it took Apalache longer, it has enumerated 7.7k symbolic runs.
 However, the important difference between `simulate` and `check` is that
-`check` does not give us an ultimate guarantee about all executions, even
-though we limit the scope to all executions of length up to 10.
+`simulate` does not give us an ultimate guarantee about all executions, even
+though we limit the scope to all executions of length up to 10, whereas `check`
+does.
 
-### 4.3. What about longer executions?
+### 5.3. What about longer executions?
 
 As we have seen, Apalache can give us a guarantee about all executions of
 predefined length. What if we want to analyze all possible executions? This is
 harder. We refer the reader to the section on [Checking an inductive
 invariant][]. We will write another tutorial on this topic.
 
-## 5. State enumeration with TLC
+## 6. State enumeration with TLC
 
 So far we have been using Hypothesis and Apalache. Since we have a TLA+
 specification, we can easily run the standard explicit model checker TLC too.
 
-### 5.1. Setting up TLC
+### 6.1. Setting up TLC
 
 Before you can run TLC in the command-line, you have to download it:
 
@@ -745,7 +752,7 @@ Before you can run TLC in the command-line, you have to download it:
 wget https://github.com/tlaplus/tlaplus/releases/download/v1.8.0/tla2tools.jar
 ```
 
-We have to define two auxiliary files:
+We have to define two auxiliary files (created with [TLA+ Toolbox][]):
 
  - a configuration file [MC_tlc_check.cfg][]:
    - we define `ADDR` as a constant set of three model
@@ -756,13 +763,14 @@ We have to define two auxiliary files:
 
  - a model file [MC_tlc_check.tla][]
 
-### 5.2. Simulation with TLC
+### 6.2. Simulation with TLC
 
 TLC has a built-in simulation mode, which is randomly producing traces. In our
-case, it can be run like that:
+case, it can be run like that (set `$APALACHE_HOME` to the directory
+where Apalache is installed):
 
 ```sh
-java -DTLA-Library=$HOME/devl/apalache/src/tla -jar tla2tools.jar \
+java -DTLA-Library=$APALACHE_HOME/src/tla -jar tla2tools.jar \
   -config MC_tlc_check.cfg -simulate num=1000000000 -depth 10 MC_tlc_check.tla
 ...
 Error: Invariant NoTransferFromWhileApproveInFlight is violated.
@@ -777,7 +785,7 @@ a matter of luck, since the simulation is done at random. Interestingly, TLC is
 enumerating traces faster than Hypothesis did in our experiments with
 [test_erc20.py][], see [Section 3.7](#37-generating-the-test-runs).
 
-### 5.3. State enumeration with TLC
+### 6.3. State enumeration with TLC
 
 Similar to model checking with Apalache, we can run TLC to check the invariant
 via state enumeration:
@@ -794,7 +802,7 @@ ran out of disk space (100 GB) after 1 hour and 20 minutes. TLC has produced
 time, it has reached the diameter of 3, whereas it would need the diameter of 5
 to find an invariant violation.
 
-## 6. Conclusions
+## 7. Conclusions
 
 We summarize our findings in the following table.
 
@@ -805,11 +813,11 @@ a hard fact.*
 
 | Input      | Tool | Method | Performance bottleneck | Complete? | Time (one experiment!) |
 | ---------- | ---- | ------ | ---------------------- |:---------:|:----:|
-| Python PBT | Hypothesis | Property-based testing, stateful testing | combinatorial explosion of executions | no | 8 hours |
-| TLA+       | Apalache | Symbolic simulation | combinatorial explosion of symbolic executions & SMT | no | 12 sec |
-| TLA+       | Apalache | Bounded model checking | combinatorial explosion in SMT | yes: for fixed length and fixed parameters | 7 sec |
-| TLA+       | TLC | Explicit enumeration + simulation | combinatorial explosion of executions | no | 1 hour 9 min |
-| TLA+       | TLC | Explicit model checking | combinatorial explosion of states | yes: for fixed parameters | >1.5h, out of disk space, reached diameter 3 |
+| Python PBT | [Hypothesis][] | Property-based testing, stateful testing | combinatorial explosion of executions | no | 8 hours |
+| TLA+       | [Apalache][] | Symbolic simulation | combinatorial explosion of symbolic executions & SMT | no | 12 sec |
+| TLA+       | [Apalache][] | Bounded model checking | combinatorial explosion in SMT | yes: for fixed length and fixed parameters | 7 sec |
+| TLA+       | [TLC][] | Explicit enumeration + simulation | combinatorial explosion of executions | no | 1 hour 9 min |
+| TLA+       | [TLC][] | Explicit model checking | combinatorial explosion of states | yes: for fixed parameters | >1.5h, out of disk space, reached diameter 3 |
 
 Since we have conducted the experiments on one benchmark only, we are not
 trying to draw general conclusions from this table. However, we propose some
@@ -889,6 +897,8 @@ the experimental results to this tutorial, please let us know. We will be happy
 to include them in this tutorial.
 
 
+[Apalache]: https://github.com/informalsystems/apalache/
+[TLC]: https://github.com/tlaplus/tlaplus
 [ERC20]: https://ethereum.org/en/developers/docs/standards/tokens/erc-20/
 [EIP20]: https://eips.ethereum.org/EIPS/eip-20
 [EIP20 attack vector]: https://docs.google.com/document/d/1YLPtQxZu1UAvO9cZ1O2RPXBbT0mooh4DYKjA_jp-RLM/edit#
@@ -913,3 +923,4 @@ to include them in this tutorial.
 [MC_tlc_check.cfg]: https://github.com/informalsystems/tla-apalache-workshop/blob/main/examples/erc20-approve-attack/MC_tlc_check.cfg
 [Scalacheck]: https://scalacheck.org/
 [Nitpick]: https://github.com/informalsystems/apalache/issues/1588
+[TLA+ Toolbox]: https://lamport.azurewebsites.net/tla/toolbox.html
