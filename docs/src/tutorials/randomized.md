@@ -666,7 +666,12 @@ When we limit the length to 10, it seems that we have an unmanageable number of
 runs. However, recall that we have to find a run that contains the [sequence of
 events](#erc20-events) as a subsequence! It seems that the probability of
 finding an invariant violation in a single run stays the same as for the length
-of 5. (Note that this argument requires a more careful analysis.)
+of 5. (This argument requires a more careful analysis.)
+
+Interestingly, when we set the execution length to 50, Apalache typically finds
+an invariant violation in the first symbolic run after 20-40 steps in 5-7
+seconds. This is probably explained by uniform randomization of actions and
+that multiple short runs are packed in a single long run.
 
 ### 4.10. Do we have to enumerate runs at all?
 
@@ -785,6 +790,12 @@ a matter of luck, since the simulation is done at random. Interestingly, TLC is
 enumerating traces faster than Hypothesis did in our experiments with
 [test_erc20.py][], see [Section 3.7](#37-generating-the-test-runs).
 
+Interestingly, *when we set the search depth to 30 or even 50, TLC finds an
+invariant violation in less than a minute*. On the other hand, when we set the
+depth to 5, it enumerates the maximum number of runs without hitting a bad
+state. Understanding this relation between the number of steps and the time to
+find a bug needs further research.
+
 ### 6.3. State enumeration with TLC
 
 Similar to model checking with Apalache, we can run TLC to check the invariant
@@ -814,9 +825,9 @@ a hard fact.*
 | Input      | Tool | Method | Performance bottleneck | Complete? | Time (one experiment!) |
 | ---------- | ---- | ------ | ---------------------- |:---------:|:----:|
 | Python PBT | [Hypothesis][] | Property-based testing, stateful testing | combinatorial explosion of executions | no | 8 hours |
-| TLA+       | [Apalache][] | Symbolic simulation | combinatorial explosion of symbolic executions & SMT | no | 12 sec |
+| TLA+       | [Apalache][] | Symbolic simulation | combinatorial explosion of symbolic executions & SMT | no | 5 sec for `length=50`; 12 sec for `length=10`|
 | TLA+       | [Apalache][] | Bounded model checking | combinatorial explosion in SMT | yes: for fixed length and fixed parameters | 7 sec |
-| TLA+       | [TLC][] | Explicit enumeration + simulation | combinatorial explosion of executions | no | 1 hour 9 min |
+| TLA+       | [TLC][] | Explicit enumeration + simulation | combinatorial explosion of executions | no | < 1 min for `depth=50`; 1 hour 9 min for `depth=10`|
 | TLA+       | [TLC][] | Explicit model checking | combinatorial explosion of states | yes: for fixed parameters | >1.5h, out of disk space, reached diameter 3 |
 
 Since we have conducted the experiments on one benchmark only, we are not
@@ -832,7 +843,8 @@ intuition about why the tools behaved this way:
  - Symbolic simulation with Apalache was very quick at finding an error. This
    is due to the fact the number of *symbolic runs* is growing much slower than
    the number of *concrete runs* in this example. As we have seen, this mode
-   slows down, when there is no error.
+   slows down, when there is no error. Interestingly, when we increase the
+   number of steps, Apalache finds an invariant violation even faster.
 
  - Bounded model checking with Apalache was the fastest one. This should not
    come as a surprise, as we are using the SMT solver [Z3][]. The SAT/SMT
@@ -840,15 +852,19 @@ intuition about why the tools behaved this way:
    explosion for decades. Hence, SMT is better tuned to the search problem than
    an ad-hoc random exploration.
 
- - Simulation with TLC was slower than Apalache. However, the number of
-   generated traces in 1 hour was significantly larger than the number of
-   traces produced with Hypothesis. It would be interesting to see why this is
-   happening. We conjecture that the simulation technique of TLC has a uniform
-   distribution over successor states, not over enabled actions.
+ - For `depth=50`, both TLC and Apalache found an invariant violation very
+   quickly (less than a minute and 5 seconds, respectively).  For `depth=10`,
+   TLC simulation was dramatically slower than the Apalache simulation. The
+   number of generated traces in 1 hour was significantly larger than the
+   number of traces produced with Hypothesis. It would be interesting to see
+   why this is happening. We conjecture that the simulation technique of TLC
+   has a uniform distribution over successor states, not over the enabled
+   actions.
 
- - Explicit state enumeration with TLC was very slow. This is not very
-   surprising, as TLC has to deal with relatively large state spaces here. We
-   could decrease the number of values in `AMOUNTS`.
+ - Explicit state enumeration with TLC was extremely slow. This is not very
+   surprising, as TLC has to deal with relatively large state spaces here.
+   Since TLC implements breadth-first search, it has to enumerate a massive
+   number of states, before it increases the depth.
 
 It is also important to understand all kinds of controls that we have over the
 search process in the tools. For instance, removing the "transfer" transaction
