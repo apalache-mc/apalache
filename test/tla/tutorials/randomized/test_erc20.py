@@ -25,7 +25,7 @@ from hypothesis import assume, settings, event, Verbosity
 ADDR = [ "Alice", "Bob", "Eve" ]
 
 # We restrict the amounts to a small range, to avoid too much randomness
-AMOUNTS = range(0, 20)
+AMOUNTS = range(0, 3)
 
 
 class TransferTx:
@@ -151,7 +151,7 @@ class Erc20Simulator(RuleBasedStateMachine):
         event("approve")
 
     @invariant()
-    def non_negative_balances(self):
+    def no_negative_balances(self):
         # a simple invariant to make sure that the balances do not go negative
         for addr in ADDR:
             assert(self.balanceOf[addr] >= 0)
@@ -180,21 +180,12 @@ class Erc20Simulator(RuleBasedStateMachine):
 #            for spender in ADDR:
 #                assert(self.allowance[(sender, spender)] <= 0)
 
-    # Uncomment the following invariant to check,
-    # whether it is possible to have allowances in progress.
-#    @invariant()
-#    def no_transfers_from(self):
-#        for sender in ADDR:
-#            for spender in ADDR:
-#                total = self.histSumTransferFrom[(sender, spender)]
-#                assert(total == 0)
-
 
 # run stateful testing
 TestTrees = Erc20Simulator.TestCase
 Erc20Simulator.TestCase.settings = settings(
     max_examples=100000,
-    stateful_step_count=7,
+    stateful_step_count=5,
     deadline=None
 )
 
