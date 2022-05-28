@@ -11,9 +11,9 @@ We demonstrate how one can model this API in Python and test it via stateful
 testing, which is popularized by property-based testing tools such as
 [Hypothesis][].
 
-Further, we show how to specify this API in TLA+ and check it with Apalache.
-Our hope is that our tutorial would bring some clarity in the relative strengths
-and weaknesses of the two approaches.
+Further, we show how to specify this API in TLA+ and analyze it it with two
+model checkers: Apalache and TLC. Our hope is that our tutorial would bring
+some clarity in the relative strengths and weaknesses of these approaches.
 
 ## 1. Prerequisites
 
@@ -784,8 +784,15 @@ via state enumeration:
 
 ```sh
 java -DTLA-Library=$HOME/devl/apalache/src/tla -jar tla2tools.jar \
-  -config MC_tlc_check.cfg MC_tlc_check.tla
+  -config MC_tlc_check.cfg -nworkers 4 -fpmem .75 MC_tlc_check.tla
 ```
+
+Note that we let TLC to use 75% of the available memory and ran it on 4 CPU
+cores (make sure you have them or change this setting!). Our experiments server
+ran out of disk space (100 GB) after 1 hour and 20 minutes. TLC has produced
+738 million distinct states, most of them left on the search queue. By that
+time, it has reached the diameter of 3, whereas it would need the diameter of 5
+to find an invariant violation.
 
 ## 6. Conclusions
 
@@ -799,12 +806,12 @@ a hard fact.*
 | Input      | Tool | Method | Performance bottleneck | Complete? | Time (one experiment!) |
 | ---------- | ---- | ------ | ---------------------- |:---------:|:----:|
 | Python PBT | Hypothesis | Property-based testing, stateful testing | combinatorial explosion of executions | no | 8 hours |
-| TLA+       | Apalache | Symbolic simulation | combinatorial explosion of symbolic executions | no | 12 sec |
+| TLA+       | Apalache | Symbolic simulation | combinatorial explosion of symbolic executions & SMT | no | 12 sec |
 | TLA+       | Apalache | Bounded model checking | combinatorial explosion in SMT | yes: for fixed length and fixed parameters | 7 sec |
 | TLA+       | TLC | Explicit enumeration + simulation | combinatorial explosion of executions | no | 1 hour 9 min |
-| TLA+       | TLC | Explicit model checking | state explosion | yes: for fixed parameters | TODO |
+| TLA+       | TLC | Explicit model checking | combinatorial explosion of states | yes: for fixed parameters | >1.5h, out of disk space, reached diameter 3 |
 
-Since we have conducted the experiments on one benchmarks only, we are not
+Since we have conducted the experiments on one benchmark only, we are not
 trying to draw general conclusions from this table. However, we propose some
 intuition about why the tools behaved this way:
 
@@ -814,36 +821,72 @@ intuition about why the tools behaved this way:
    We do not know, whether it was sheer luck or clever heuristics of
    Hypothesis.
 
- - Symbolic simulation with Apalache was very quick to find an error.
-   This is due to the fact the number of *symbolic runs* is growing much slower
-   than the number of *concrete runs* in this example. As we have seen,
-   this mode slows down, when there is no error.
+ - Symbolic simulation with Apalache was very quick at finding an error. This
+   is due to the fact the number of *symbolic runs* is growing much slower than
+   the number of *concrete runs* in this example. As we have seen, this mode
+   slows down, when there is no error.
 
- - Bounded model checking with Apalache was the fastest one. This is probably
-   not surprising, as we are using the SMT solver [Z3][]. The SAT/SMT community
-   have been tackling NP-complete problems and combinatorial explosion for
-   decades. It is not surprising that SMT is better tuned to the problem than
+ - Bounded model checking with Apalache was the fastest one. This should not
+   come as a surprise, as we are using the SMT solver [Z3][]. The SAT/SMT
+   community have been tackling NP-complete problems and combinatorial
+   explosion for decades. Hence, SMT is better tuned to the search problem than
    an ad-hoc random exploration.
 
  - Simulation with TLC was slower than Apalache. However, the number of
    generated traces in 1 hour was significantly larger than the number of
    traces produced with Hypothesis. It would be interesting to see why this is
-   happening.
+   happening. We conjecture that the simulation technique of TLC has a uniform
+   distribution over successor states, not over enabled actions.
 
  - Explicit state enumeration with TLC was very slow. This is not very
    surprising, as TLC has to deal with relatively large state spaces here. We
    could decrease the number of values in `AMOUNTS`.
 
-In conclusion, we believe that all these methods and tools have their place in
-a developer's tool belt. However, as with all advanced tools, we have to
-understand, where they fit in the development process and what can affect their
-performance. For instance, the Apalache team is using property-based testing
-(that is, [Scalacheck][]) to find hardcore bugs in the model checker. We call
-this tool [Nitpick][].
+It is also important to understand all kinds of controls that we have over the
+search process in the tools. For instance, removing the "transfer" transaction
+would significantly reduce the size of the search problem, and it is safe to do
+so for checking `NoTransferFromWhileApproveInFlight`. The following figure
+summarizes all kinds of controls that we have found in Hypothesis, Apalache,
+and TLC.
 
-Disclaimer: Although we are experienced users of Apalache and TLC, we are
-beginners in Hypothesis. If you know how a way to improve our experience
-with Hypothesis, please let us know.
+![Controls](./img/controls.drawio.svg)
+
+The most important controls are the size of the inputs and the number of
+actions/rules. These parameters are under control of the specification writer,
+and they affect the search problem the most. The second most important controls
+are those that control the scope of the search such as the number of steps and
+the number of runs to try. Both Apalache and TLC allow the user to switch
+between simulation and classical model checking. Simulation is typically much
+faster and scales much better with a larger number of steps in a run. However,
+simulation is inherently incomplete and requires some pen & paper reasoning to
+understand the achieved coverage, as we have done in this tutorial. Classical
+model checking modes come with proven guarantees of completeness, though these
+guarantees vary depending on the implemented technique. Finally, TLC has
+extensive controls on the number of cores and memory usage. Although these
+controls do not change the size of the problem, they may help one to get
+the tool feedback faster.
+
+If you are curious, we have tried to push the parameters of Hypothesis and TLC
+to the absolute minimum, e.g., by setting `AMOUNTS` to `0..2` and restricting
+the number of steps to 5. This have not led to a significant improvement in
+performance.
+
+In conclusion, we believe that all these methods and tools have their place in
+the developer's tool belt. However, as with all advanced tools, we have to
+understand, where they fit in the development process and what can affect their
+performance and completeness. For instance, the Apalache team is using
+property-based testing framework [Scalacheck][] to find hardcore bugs in the
+model checker itself. We call this tool [Nitpick][].
+
+*Disclaimer*: Although we are expert users of Apalache and TLC, we are
+beginners in Hypothesis. If you know how to improve our experience with
+Hypothesis, please let us know. A pedantic reader will notice that we have
+chosen Python, which is probably not the most performant programming language.
+We chose Python for its simplicity and relative popularity. One can probably
+achieve much better performance with Rust or Golang. If you would like to
+contribute a property-based test similar to [test_erc20.py][] and contribute
+the experimental results to this tutorial, please let us know. We will be happy
+to include them in this tutorial.
 
 
 [ERC20]: https://ethereum.org/en/developers/docs/standards/tokens/erc-20/
