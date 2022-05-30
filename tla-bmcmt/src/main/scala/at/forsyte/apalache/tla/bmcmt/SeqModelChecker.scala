@@ -56,6 +56,8 @@ class SeqModelChecker[ExecutorContextT](
     }
     val constSnapshot = trex.snapshot()
 
+    // Repeat the search: 1 time in the `check` mode, and `maxRun` times in the `simulation` mode.
+    // If the error budget (set with `maxError`) is overrun, terminate immediately.
     while (searchState.canContinue) {
       // apply the Init predicate
       makeStep(isNext = false, checkerInput.initTransitions)
@@ -66,6 +68,7 @@ class SeqModelChecker[ExecutorContextT](
       }
 
       searchState.onRunDone()
+      // Continue provided that there are more runs to execute and the error budget is not overrun.
       if (searchState.canContinue) {
         trex.recover(constSnapshot)
         logger.info("----------------------------")
