@@ -25,7 +25,7 @@ In this tutorial, we do not explain the basics of TLA+. If you need such a
 tutorial, check [Entry-level Tutorial on the Model Checker][].
 
 We assume that you have Apalache installed. If not, check the manual page on
-[Apalache installation][]. The minimal required version is 0.25.4.
+[Apalache installation][]. The minimal required version is 0.25.5.
 
 Additionally, in this tutorial we assume that you understand property-based
 testing. In particular, we are using the [Hypothesis][] framework for [Python][].
