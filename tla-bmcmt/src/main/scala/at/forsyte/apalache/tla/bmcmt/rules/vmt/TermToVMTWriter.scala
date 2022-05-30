@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.lir.{TlaType1, TlaVarDecl, Typed}
 import at.forsyte.apalache.tla.lir.formulas.Integers._
 import at.forsyte.apalache.tla.lir.formulas.Booleans._
 import at.forsyte.apalache.tla.lir.formulas.EUF._
+import at.forsyte.apalache.tla.lir.formulas.PO.LtGeneric
 import at.forsyte.apalache.tla.lir.formulas._
 
 /**
@@ -50,6 +51,22 @@ object TermToVMTWriter {
     case s                           => ("", sortStringForQuant(s))
   }
 
+  def poFnName(sort: Sort): String = sort match {
+    case UninterpretedSort(name) => s"__f_$name"
+    case _                       => "__f"
+  }
+
+  def ltGenericAsLt(ex: LtGeneric): String = {
+    val LtGeneric(lhs, rhs) = ex
+    val sort = lhs.sort
+    val fnName = poFnName(sort)
+    val fnSort = FunctionSort(IntSort(), sort)
+    val fnVar = mkVariable(fnName, fnSort)
+    val lhStr = mkSMT2String(Apply(fnVar, lhs)) // f(x)
+    val rhStr = mkSMT2String(Apply(fnVar, rhs)) // f(y)
+    s"(< $lhStr $rhStr)"
+  }
+
   // Main entry point, does the translation recursively
   def mkSMT2String(term: Term): String =
     term match {
@@ -72,6 +89,7 @@ object TermToVMTWriter {
       case Equal(a, b)                   => s"(= ${tr(a)} ${tr(b)})"
       case Apply(fn, args @ _*)          => s"(${tr(fn)} ${args.map(tr).mkString(" ")})"
       case ITE(cond, thenTerm, elseTerm) => s"(ite ${tr(cond)} ${tr(thenTerm)} ${tr(elseTerm)})"
+      case ltgen: LtGeneric              => ltGenericAsLt(ltgen)
       case x                             => throw new NotImplementedError(s"${x.getClass.getName} is not supported.")
 
     }
@@ -86,6 +104,12 @@ object TermToVMTWriter {
 
       case _ => ""
     }
+
+  def mkPOFunDecl(sort: Sort, fnName: String): String = {
+    val sortStr = sortStringForQuant(sort)
+    // fs: S -> Z
+    s"(declare-fun $fnName ($sortStr) ${sortStringForQuant(IntSort())})"
+  }
 
   // Constructs an SMT sort declaration for a non-parametric sort.
   def mkSortDecl(us: UninterpretedSort): String =
@@ -102,7 +126,7 @@ object TermToVMTWriter {
   def mkConstDecl(ul: UninterpretedLiteral): String = {
     val sortName = ul.sort.sortName
     val (fromSorts, toSort) = sortAsFn(ul.sort)
-    val termName = s"${ul.s}_${ul.sort.sortName}"
+    val termName = s"${ul.s}_${sortName}"
     mkBaseAndGlobal(toSort, fromSorts, termName)
   }
 
@@ -122,9 +146,12 @@ object TermToVMTWriter {
     s"(define-fun $name (${pairs.mkString(" ")}) $toSortString ${tr(body)})"
   }
 
+  def axiom(axiomName: String, s: String): String =
+    s"(define-fun $axiomName () Bool (! $s :axiom true))"
+
   // For uninterpreted literals, we need to specify distinctness
   def assertDistinct(terms: Iterable[UninterpretedLiteral]): String =
-    s"(define-fun .axiom () Bool (! (distinct ${terms.map(tr).mkString(" ")}) :axiom true))"
+    axiom(".axiomDistinct", s"(distinct ${terms.map(tr).mkString(" ")})")
 
   // Adds the VMT-specific tags, as defined by the VMTExpr wrapper
   def mkVMTString(vmtEx: VMTExpr): String =

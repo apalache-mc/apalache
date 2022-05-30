@@ -105,4 +105,12 @@ object ApalacheInternalOper {
 
     override def precedence: (Int, Int) = (5, 5)
   }
+
+  object partialOrderLT extends ApalacheOper {
+    override def name: String = "Apalache!PartialOrderLT"
+
+    override def arity: OperArity = FixedArity(2)
+
+    override def precedence: (Int, Int) = (5, 5)
+  }
 }

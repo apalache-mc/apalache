@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, IntT1, SetT1}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.TypedPredefs._
+import at.forsyte.apalache.tla.lir.transformations.standard.KeraLanguagePred
 import org.junit.runner.RunWith
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.BeforeAndAfterEach
@@ -11,12 +12,12 @@ import org.scalatest.funsuite.AnyFunSuite
 
 @RunWith(classOf[JUnitRunner])
 class TestExpansionMarker extends AnyFunSuite with BeforeAndAfterEach {
-  private var marker = new ExpansionMarker(TrackerWithListeners())
+  private var marker = new ExpansionMarker(TrackerWithListeners(), KeraLanguagePred())
   val types = Map("S" -> SetT1(IntT1), "PS" -> SetT1(SetT1(IntT1)), "i" -> IntT1, "b" -> BoolT1,
       "f" -> FunT1(IntT1, IntT1), "FS" -> SetT1(FunT1(IntT1, IntT1)))
 
   override def beforeEach(): Unit = {
-    marker = new ExpansionMarker(TrackerWithListeners())
+    marker = new ExpansionMarker(TrackerWithListeners(), KeraLanguagePred())
   }
 
   test("""not marked: x \in SUBSET S""") {

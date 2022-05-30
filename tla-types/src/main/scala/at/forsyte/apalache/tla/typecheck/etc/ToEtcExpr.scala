@@ -895,6 +895,12 @@ class ToEtcExpr(
         val opsig = OperT1(Seq(StrT1), a)
         mkExRefApp(opsig, Seq(msg))
 
+      case OperEx(ApalacheInternalOper.partialOrderLT, lhs, rhs) =>
+        val a = varPool.fresh
+        // (a,a) => Bool, though a must be ConstT1 in practice, checked elsewhere
+        val opsig = OperT1(Seq(a, a), BoolT1)
+        mkExRefApp(opsig, Seq(lhs, rhs))
+
       // ******************************************** MISC **************************************************
       case OperEx(TlaOper.label, labelledEx, nameAndArgs @ _*) =>
         val typeVar = varPool.fresh

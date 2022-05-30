@@ -120,6 +120,7 @@ object ReTLALanguagePred {
         TlaFunOper.funDef,
         TlaOper.eq,
         TlaOper.ne,
+        ApalacheInternalOper.partialOrderLT,
         // IntArith not in v1
         //        TlaArithOper.div,
         //        TlaArithOper.exp,
