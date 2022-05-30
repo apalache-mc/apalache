@@ -57,21 +57,23 @@ class TemporalPassImpl @Inject() (
 
   def encodeFormula(
       module: TlaModule,
-      invariants: List[String],
+      formulas: List[String],
       init: String,
       next: String): TlaModule = {
     val levelFinder = new TlaLevelFinder(module)
 
-    val temporalFormulas = invariants
+    val temporalFormulas = formulas
       .map(invName => {
         module.declarations.find(_.name == invName)
       })
       .filter(invOption =>
         invOption match {
           case Some(inv: TlaOperDecl) if inv.formalParams.isEmpty =>
-            // either a state invariant, or an action invariant
             val level = levelFinder.getLevelOfDecl(inv)
-            level == TlaLevelTemporal
+            if(level != TlaLevelTemporal) {
+              logger.warn(s"  > Temporal property ${inv.name} has no temporal operators, so it specifies a property of the initial state. Should ${inv.name} be an invariant instead (--inv)?")
+            }
+            true
           case _ => false
         })
       .map(invOption => invOption.get.asInstanceOf[TlaOperDecl])
@@ -80,7 +82,7 @@ class TemporalPassImpl @Inject() (
       logger.info("  > No temporal properties found, nothing to encode")
       module
     } else {
-      logger.info(s"  > Found ${temporalFormulas.length} temporal invariants")
+      logger.info(s"  > Found ${temporalFormulas.length} temporal properties")
       logger.info(s"  > Adding logic for loop finding")
 
       val initDecl = module.declarations.find(_.name == init) match {
