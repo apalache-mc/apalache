@@ -838,22 +838,24 @@ intuition about why the tools behaved this way:
    Hence, in theory, this should be the worst case of combinatorial explosion
    in our experiments. Nevertheless, the tool has found an invariant violation.
    We do not know, whether it was sheer luck or clever heuristics of
-   Hypothesis.
+   Hypothesis. Interestingly, increase the number of steps did not help us in
+   finding an error faster, in contrast to TLC and Apalache.
 
  - Symbolic simulation with Apalache was very quick at finding an error. This
    is due to the fact the number of *symbolic runs* is growing much slower than
-   the number of *concrete runs* in this example. As we have seen, this mode
-   slows down, when there is no error. Interestingly, when we increase the
-   number of steps, Apalache finds an invariant violation even faster.
+   the number of *concrete runs* in this example. Interestingly, when we
+   increase the number of steps, Apalache finds an invariant violation even
+   faster.
 
  - Bounded model checking with Apalache was the fastest one. This should not
    come as a surprise, as we are using the SMT solver [Z3][]. The SAT/SMT
    community have been tackling NP-complete problems and combinatorial
    explosion for decades. Hence, SMT is better tuned to the search problem than
-   an ad-hoc random exploration.
+   an ad-hoc random exploration. As we have seen, this mode slows down, when
+   there is no error.
 
- - For `depth=50`, both TLC and Apalache found an invariant violation very
-   quickly (less than a minute and 5 seconds, respectively).  For `depth=10`,
+ - For the depth of 50, both TLC and Apalache found an invariant violation very
+   quickly (less than a minute and 5 seconds, respectively).  For depth of 10,
    TLC simulation was dramatically slower than the Apalache simulation. The
    number of generated traces in 1 hour was significantly larger than the
    number of traces produced with Hypothesis. It would be interesting to see
