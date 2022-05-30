@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.25.5 - 2022-05-30
+
+### Features
+
+- Add the experimental command `simulate` that randomly picks transitions, see #1809
+
 ## 0.25.4 - 2022-05-30
 
 ### Bug fixes
