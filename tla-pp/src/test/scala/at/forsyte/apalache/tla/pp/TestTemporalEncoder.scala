@@ -188,7 +188,8 @@ class TestTemporalEncoder extends AnyFunSuite with Checkers {
         val output =
           tableauEncoder.encodeFormula(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
 
-        val temporalApplications = countOperatorApplications(TlaTempOper.diamond, formula) + countOperatorApplications(TlaTempOper.box, formula)
+        val temporalApplications =
+          countOperatorApplications(TlaTempOper.diamond, formula) + countOperatorApplications(TlaTempOper.box, formula)
 
         // identify predicate variables by the variable names
         val temporalAuxVars = output.module.varDeclarations
