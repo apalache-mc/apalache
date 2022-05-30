@@ -1516,6 +1516,27 @@ EXITCODE: ERROR (12)
 [12]
 ```
 
+### check NoTemporalOperatorsInTemporalProp (temporal)
+
+```sh
+$ apalache-mc check --temporal=Property NoTemporalOperatorsInTemporalProp.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --temporal=PropertyWithTemporal NoTemporalOperatorsInTemporalProp.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --temporal=ExplicitInvariant NoTemporalOperatorsInTemporalProp.tla
+...
+EXITCODE: ERROR (12)
+[12]
+```
+
 ### check SetSndRcv succeeds (array-encoding)
 
 Regression test for https://github.com/informalsystems/apalache/issues/1152
