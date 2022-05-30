@@ -118,12 +118,11 @@ two tokens instead of three).
 
 Can we use some automation to discover such an execution? By looking at the
 above example, we can see that the core of this question is whether we can find
-the following sequence of events:
+the following sequence of events, for some values `n >= k > m >= l > 0`, and distinct addresses/users `u1, u2, u3`, such that `balanceOf[u1] >= k + l`:
 
-  1. submit `tx1: approve(u1, u2, n)` where `n > 0` and `u1 != u2`
-  1. submit `tx2: approve(u1, u2, m)` where `m > 0`
-  1. submit `tx3: transferFrom(u2, u1, u3, k)` where `m < k <= n`, `u3 != u2`
-     and `u3 != u1`
+  1. submit `tx1: approve(u1, u2, n)`
+  1. submit `tx2: approve(u1, u2, m)` 
+  1. submit `tx3: transferFrom(u2, u1, u3, k)`
   1. commit `tx1`
   1. commit `tx3`
 
@@ -132,17 +131,14 @@ it should be possible to extend it with the following events:
 
   6. commit `tx2`
   1. submit `tx4: transferFrom(u2, u1, u3, l)`
-     where `0 < l <= m`, `u3 != u2` and `u3 != u1`
   1. commit `tx4`
 
 Hence, in the rest of this tutorial, we focus on finding a valid sequence of
-events 1-5.  
+events 1-5.
 
 ## 3. Stateful testing with Hypothesis
 
-Since we are talking about an API, it is quite tempting to express this API in
-a programming language, for example, in [Python][]. We give only the interesting
-parts of the code. A complete example is available in [test_erc20.py][].
+Since we are talking about an API, it is quite tempting to implement this API in a programming language, for example, in [Python][]. We give only the interesting parts of the code. A complete example is available in [test_erc20.py][].
 
 ### 3.1. Restricting the scope
 
@@ -160,7 +156,7 @@ our tests:
 
 The last question is of particular interest, as the search spaces in modern
 programming languages are simply astronomic. We assume the small scope
-hypothesis, which is usually put like follows, e.g., at [Alloy Wikipedia
+hypothesis, which is usually phrased as follows, e.g., at [Alloy Wikipedia
 page][]:
 
     ...a high proportion of bugs can be found by testing a program for all test
@@ -194,7 +190,7 @@ models executions of this state machine:
 ```
 
 The testing framework uses this state machine to randomly generate executions
-that are described by a set of rules, which we present below. Before, we dive
+that are described by a set of rules, which we present below. Before we dive
 into the rules, we have to initialize the state machine for every run:
 
 ```tla
@@ -209,8 +205,7 @@ limit the size of the list `amounts` with the parameters `min_size` and
 `max_size`. To better understand generators, check the page on the [Hypothesis
 generators][].
 
-We have to explain Hypothesis, where to generate transactions and where to read
-them from. This is done via bundles. To this end, we introduce a bundle:
+The Hypothesis framework requires us to define where to generate transactions and where to read them from. This is done via bundles. To this end, we introduce a bundle:
 
 ```tla
 {{#include ../../../test/tla/tutorials/randomized/test_erc20.py:68:70}}
@@ -231,8 +226,7 @@ the parameter `target` in the annotation `@rule`.
 
 We will see later that bundles cannot be used for specifying invariants.
 Hence, we add the transaction to a shadow copy, which we call
-`self.pendingTxsShadow`. Additionally, we reset `self.lastTx`. This will be
-also needed for writing an invariant.
+`self.pendingTxsShadow`. Additionally, we reset `self.lastTx`. This will also be needed for writing an invariant.
 
 We define the rules `submit_transferFrom` and `submit_approve` similar to
 `submit_transfer`:
@@ -249,12 +243,10 @@ To commit a generated transaction, we introduce the rule `commit_transfer`:
 {{#include ../../../test/tla/tutorials/randomized/test_erc20.py:116:127}}
 ```
 
-The large part of the above code should be clear. However, there are two new
+The majority of the above code should be clear. However, there are two new
 constructs in `commit_transfer`. First, we consume a transaction via
 `tx=consumes(pendingTxs)`, which deletes a transaction from the bundle
-`pendingTxs` and places it in the input parameter `tx`. On top of that, we add
-the statement `assume(...)` inside the method. This statement tells the testing
-framework to reject the cases that violate the assumption.
+`pendingTxs` and instantiates the input parameter `tx` with the chosen value. On top of that, we add the statement `assume(...)` inside the method. This statement tells the testing framework to reject the cases that violate the assumption. 
 
 Similar to `commit_transfer`, we define the rules `commit_transfer_from` and
 `commit_approve`:
@@ -267,15 +259,14 @@ Similar to `commit_transfer`, we define the rules `commit_transfer_from` and
 
 Since we are writing a test to check some properties, we have to specify these
 properties. The simplest property that we want to test is whether the account
-balances may go negative:
+balances may be negative:
 
 ```tla
 {{#include ../../../test/tla/tutorials/randomized/test_erc20.py:153:157}}
 ```
 
 There is not much to explain about the above code. It is important to
-understand that this invariant is checked after execution of `init` and after
-execution of every rule in a test run.
+understand that this invariant is checked after the execution of `init` and after the execution of every rule in a test run.
 
 We also write an invariant that we actually want to test:
 
@@ -298,8 +289,8 @@ The most important parameters are as follows:
 
  - `max_examples` limits the number of test executions to generate,
  - `stateful_step_count` limits the length of test executions, and
- - `deadline` limits the running time of every execution,
-   which we set to `None`, as the running times may vary.
+ - `deadline` limits the run-time of every execution,
+   which we set to `None`, as the run-times may vary.
 
 We run the test with the Python testing framework as follows:   
 
@@ -319,7 +310,7 @@ the typical output by `pytest`:
     * 0.00% transferFrom
 ```
 
-Finally, on the sixth run, the test has detected an invariant violation after
+Finally, on the sixth run, the test detected an invariant violation after
 34 minutes:
 
 ```
@@ -346,7 +337,7 @@ Finally, on the sixth run, the test has detected an invariant violation after
   state.teardown()
 ```
 
-Cool! We have managed to find the expected invariant violation, though it took
+We have managed to find the expected invariant violation, though it took
 us about 8 hours and about 2 million runs to enumerate. 
 
 
