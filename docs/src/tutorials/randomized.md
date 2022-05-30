@@ -1,6 +1,6 @@
 # Tutorial on Checking ERC20 with Property-Based Testing and TLA+
 
-**Difficulty: Blue trail – Medium**
+**Difficulty: Red trail – Medium**
 
 **Author: Igor Konnov**
 
