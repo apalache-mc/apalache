@@ -14,6 +14,7 @@ import scala.collection.mutable.HashMap
 import at.forsyte.apalache.tla.lir.oper.TlaTempOper
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.io.lir.NameReplacementMap.NameReplacementMap
 
 /**
  * Encodes temporal formulas as invariants.
@@ -32,25 +33,23 @@ class TableauEncoder(
   val varNamesToExStrings = new HashMap[String, String]()
 
   def encodeVarNameMapping(modWithPreds: ModWithPreds): ModWithPreds = {
-    val varNameSets = varNamesToExStrings.map { case (key, value) =>
-      builder.enumSet(builder.str(key), builder.str(value))
-    }.toSeq
+    // val varNameSets = varNamesToExStrings.map { case (key, value) =>
+    //   builder.enumSet(builder.str(key), builder.str(value))
+    // }.toSeq
 
-    if (varNameSets.isEmpty) {
-      return modWithPreds
-    }
+    // val mapDecl =
+    //   new TlaOperDecl(
+    //       TableauEncoder.PREDS_TO_VARS_MAPPING_NAME,
+    //       List.empty,
+    //       builder.enumSet(
+    //           varNameSets: _*
+    //       ),
+    //   )(Typed(SetT1))
 
-    val mapDecl =
-      new TlaOperDecl(
-          TableauEncoder.PREDS_TO_VARS_MAPPING_NAME,
-          List.empty,
-          builder.enumSet(
-              varNameSets: _*
-          ),
-      )(Typed(SetT1))
-
-    val newModule = new TlaModule(modWithPreds.module.name, modWithPreds.module.declarations :+ mapDecl)
-    modWithPreds.setModule(newModule)
+    // val newModule = new TlaModule(modWithPreds.module.name, modWithPreds.module.declarations :+ mapDecl)
+    // modWithPreds.setModule(newModule)
+    NameReplacementMap = NameReplacementMap.addAll(varNamesToExStrings.iterator)
+    modWithPreds
   }
 
   /**
@@ -136,7 +135,11 @@ class TableauEncoder(
       case TlaTempOper.diamond => TableauEncoder.DIAMOND_SUFFIX
     }
 
-    new TlaVarDecl(nodeIdentifier + nameSuffix)(Typed(BoolT1))
+    val auxVarName = nodeIdentifier + nameSuffix
+
+    varNamesToExStrings.addOne((auxVarName, varNamesToExStrings(nodeIdentifier) + nameSuffix))
+
+    new TlaVarDecl(auxVarName)(Typed(BoolT1))
   }
 
   /**
@@ -198,7 +201,7 @@ class TableauEncoder(
                     Loop_curNode_predicate
              */
             val nodeLoopVarDecl = loopEnc.createLoopVariableForVariable(nodeVarDecl)
-            varNamesToExStrings.addOne(nodeLoopVarDecl.name, curNode.toString().replace("\"", "\'"))
+            varNamesToExStrings.addOne(nodeLoopVarDecl.name, "__loop_" + curNode.toString().replace("\"", "\'"))
 
             curModWithPreds = curModWithPreds.prependDecl(nodeLoopVarDecl)
 

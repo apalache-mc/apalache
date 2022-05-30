@@ -58,10 +58,10 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
           pretty.writeComment(s"Transition ${state._1} to State$i")
         }
         val decl = tla.declOp(s"State$i", stateToEx(state._2))
-        pretty.write(decl)
+        pretty.writeWithNameReplacementComment(decl)
     }
     pretty.writeComment("The following formula holds true in the last state and violates the invariant")
-    pretty.write(TlaOperDecl("InvariantViolation", List(), notInvariant))
+    pretty.writeWithNameReplacementComment(TlaOperDecl("InvariantViolation", List(), notInvariant))
 
     pretty.writeFooter()
     pretty.writeComment("Created by Apalache on %s".format(Calendar.getInstance().getTime))
