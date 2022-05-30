@@ -36,6 +36,10 @@ class TableauEncoder(
       builder.enumSet(builder.str(key), builder.str(value))
     }.toSeq
 
+    if (varNameSets.isEmpty) {
+      return modWithPreds
+    }
+
     val mapDecl =
       new TlaOperDecl(
           TableauEncoder.PREDS_TO_VARS_MAPPING_NAME,
