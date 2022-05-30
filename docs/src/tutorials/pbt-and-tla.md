@@ -16,8 +16,7 @@ testing, which is popularized by property-based testing tools such as
 [Hypothesis][].
 
 Further, we show how to specify this API in TLA+ and analyze it it with two
-model checkers: Apalache and TLC. Our hope is that our tutorial would bring
-some clarity in the relative strengths and weaknesses of these approaches.
+model checkers: Apalache and TLC. Our hope is that this tutorial will help clarify the relative strengths and weaknesses of these approaches.
 
 ## 1. Prerequisites
 
@@ -36,8 +35,7 @@ testing. In particular, we are using the [Hypothesis][] framework for [Python][]
 
 As a running example, we consider a smart contract that implements an [ERC20][]
 token. To understand this example, you do not have to know much about
-blockchains and smart contracts. In a nutshell, ERC20 implements a protocol, in
-which every user holds some amount of tokens. For simplicity, we can assume
+blockchains and smart contracts. In a nutshell, ERC20 implements a protocol for a set of users, each holding some amount of tokens. For simplicity, we can assume
 that we have only three users: Alice, Bob, and Eve. For example, at some point
 the balances of their tokens may be as follows:
 
@@ -46,8 +44,8 @@ the balances of their tokens may be as follows:
   balanceOf["Bob"] == 5
   balanceOf["Eve"] == 10
 ```
-
-If our users are only holding their tokens, it is a little bit boring. In ERC20,
+where `balanceOf` is a function mapping each address identifier (or, for simplicity, user) to their balance in the current state.
+If our users do nothing but hold their tokens, it is a little bit boring. In ERC20,
 they can transfer tokens via a "transfer" transaction:
 
 ```
@@ -56,27 +54,24 @@ they can transfer tokens via a "transfer" transaction:
 
 By invoking a "transfer" transaction, the user `sender` transfers `value`
 tokens to the user whose address is stored in `toAddr`, provided that the
-sender has at least `value` tokens on their balance. Technically, contracts
+sender has a balance of at least `value` tokens. Technically, contracts
 store the balances for addresses, not users, but we will be talking about
 users, to keep things simple.
 
-Consider the following two transactions:
+Consider the following two transactions executed in some order, starting from the state described above, where `Alice`, `Bob` and `Eve` hold `3`, `5` and `10` tokens respectively:
 
 ```
   transfer("Alice", "Bob", 2)   # transaction A
   transfer("Bob", "Eve", 6)     # transaction B
 ```
 
-In the above example, Alice sends two tokens to Bob, and Bob sends six tokens
-to Eve. Interestingly, if transaction B is processed before transaction A,
+In the above example, Alice attempts to send two tokens to Bob in transaction A, and Bob attempts to send six tokens to Eve in transaction B. Interestingly, if transaction B is processed before transaction A,
 then transaction B will fail, since Bob has only 5 tokens in his account.
 
-Things get interesting, when we consider the possibility that some of the users
-are actually programs (called smart contracts). Say, Eve is a smart contract.
-It often happens that the human users want that smart contracts do token
-transfer  on their behalf. However, it would be a bit dangerous, if a contract
+Things get more complicated, when we consider the possibility that some of the users are actually programs (called smart contracts). Say, Eve is a smart contract.
+It often happens that human users want smart contracts transferring tokens on their behalf. However, it would be a bit dangerous, if a contract
 could transfer an arbitrary number of tokens from the user's account. To this
-end, ERC20 has "approve" transactions:
+end, ERC20 specifies "approve" transactions:
 
 ```
   approve(sender, spender, value)
@@ -91,10 +86,7 @@ Hence, ERC20 introduces a third type of transactions:
   transferFrom(sender, fromAddr, toAddr, value)
 ```
 
-By invoking a "transferFrom" transaction, the sender is transferring `value`
-tokens from the address `fromAddr` on the address `toAddr`. This can only be
-done, if `sender` was authorized to transfer at least `value` tokens from the
-address `fromAddr`.
+By invoking a "transferFrom" transaction, the sender attempts to transfer `value` tokens from the address `fromAddr` to the address `toAddr`. This can only be done, if `sender` was authorized to transfer at least `value` tokens from the address `fromAddr`.
 
 ### 2.2. A known issue
 
@@ -105,12 +97,15 @@ transactions:
 
 ![The sequence of transactions](./img/erc20.drawio.svg)
 
-Here is what is happening in the above example. Alice approves Bob to transfer
+Here is what is shown in the above example. Alice approves Bob to transfer
 up to 3 tokens. This transaction is added to the transaction pool, but it is
 not committed immediately, as it takes the consensus engine some time to select
 this transaction and commit it. Meanwhile, Alice decides to lower her approval
 to Bob, and she issues another "approve" transaction that limits the amount of
-tokens to 2. However, Bob is actively monitoring the transaction pool, and he
+tokens to 2. 
+It is important to note here, that "approve" sets the approved amount _to_ the specified value, it does not increase it _by_ the specified value. Therefore, `approve("Alice","Bob",3)` followed immediately by `approve("Alice","Bob",2)` (in the commit history) would result in a state where the amount of tokens approved to be used by Bob is 2, not 5.
+
+However, Bob is actively monitoring the transaction pool, and he
 observes that there are two approvals issued by Alice. So he quickly issues a
 "transferFrom" transaction. If he gets lucky (e.g., he gives more gas to his
 transaction than Alice did), then his transfer happens after the first approval
