@@ -54,12 +54,12 @@ class TableauEncoder(
    * @see
    *   [[encodeFormula]]
    */
-  def encodeFormulas(
+  def temporalsToInvariants(
       modWithPreds: ModWithPreds,
       formulas: Seq[TlaOperDecl]): ModWithPreds = {
 
     encodeVarNameMapping(
-        formulas.foldLeft(modWithPreds)(encodeFormula)
+        formulas.foldLeft(modWithPreds)(singleTemporalToInvariant)
     )
   }
 
@@ -97,7 +97,7 @@ class TableauEncoder(
   /**
    * Encodes a given formula, using the Tableau encoding by adjusting init, next, loopOK and the given formula.
    */
-  def encodeFormula(
+  def singleTemporalToInvariant(
       modWithPreds: ModWithPreds,
       formula: TlaOperDecl): ModWithPreds = {
 

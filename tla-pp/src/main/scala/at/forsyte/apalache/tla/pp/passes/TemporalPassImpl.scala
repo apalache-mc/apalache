@@ -121,7 +121,7 @@ class TemporalPassImpl @Inject() (
         loopEncoder.addLoopLogic(module, initDecl, nextDecl)
 
       val tableauEncoder = new TableauEncoder(loopModWithPreds.module, gen, loopEncoder, tracker)
-      val tableauModWithPreds = tableauEncoder.encodeFormulas(loopModWithPreds, temporalFormulas)
+      val tableauModWithPreds = tableauEncoder.temporalsToInvariants(loopModWithPreds, temporalFormulas)
 
       tableauModWithPreds.module
     }
