@@ -193,7 +193,7 @@ class TableauEncoder(
                     \* @type: Bool;
                     __saved_curNode_predicate
              */
-            val nodeLoopVarDecl = loopEnc.createLoopVariableForVariable(nodeVarDecl)
+            val nodeLoopVarDecl = loopEnc.createVarCopyVariableInLoop(nodeVarDecl)
             varNamesToExStrings.addOne(nodeLoopVarDecl.name, curNode.toString().replace("\"", "\'"))
 
             curModWithPreds = curModWithPreds.prependDecl(nodeLoopVarDecl)

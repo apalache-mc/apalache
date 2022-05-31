@@ -38,7 +38,7 @@ class TestLoopEncoder extends AnyFunSuite with Checkers {
       val output = loopEncoder.addLoopLogic(module, init, next)
 
       s"Transformed module: ${output.module.toString()}" |: Prop(module.varDeclarations.forall(varDecl => {
-        val expectedLoopVarDecl = loopEncoder.createLoopVariableForVariable(varDecl)
+        val expectedLoopVarDecl = loopEncoder.createVarCopyVariableInLoop(varDecl)
 
         // check whether any variable declaration is the one declaring the loop variable
         output.module.varDeclarations.exists(newVarDecl => newVarDecl.name == expectedLoopVarDecl.name)

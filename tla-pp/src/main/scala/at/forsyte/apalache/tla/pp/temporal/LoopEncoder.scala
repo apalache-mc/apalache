@@ -36,11 +36,11 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
   /** For each variable foo, creates a declaration of an auxiliary variable __saved_foo 
    * __saved_foo stores the value of variable foo at the start of the loop.
   */
-  def createLoopVariables(originalVariables: Seq[TlaVarDecl]): Seq[TlaVarDecl] = {
-    originalVariables.map(varDecl => createLoopVariableForVariable(varDecl))
+  def createAllVarCopiesInLoop(originalVariables: Seq[TlaVarDecl]): Seq[TlaVarDecl] = {
+    originalVariables.map(varDecl => createVarCopyVariableInLoop(varDecl))
   }
 
-  def createLoopVariableForVariable(varDecl: TlaVarDecl): TlaVarDecl = {
+  def createVarCopyVariableInLoop(varDecl: TlaVarDecl): TlaVarDecl = {
     TlaVarDecl(s"${NAME_PREFIX}${varDecl.name}")(varDecl.typeTag)
   }
 
@@ -237,7 +237,7 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
       init: TlaOperDecl,
       next: TlaOperDecl): ModWithPreds = {
     val variables = module.varDeclarations
-    val loopVariables = createLoopVariables(variables)
+    val loopVariables = createAllVarCopiesInLoop(variables)
 
     val newInit = addLoopLogicToInit(variables, loopVariables, init)
 
