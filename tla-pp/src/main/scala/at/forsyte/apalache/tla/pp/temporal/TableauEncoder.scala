@@ -72,7 +72,7 @@ class TableauEncoder(
    * newNext == oldNext /\ UNCHANGED << Init_ex >>
    */
   def addInitExVar(modWithPreds: ModWithPreds, ex: TlaEx, exName: String): (ModWithPreds, TlaVarDecl) = {
-    val exVarDecl = new TlaVarDecl(exName + "_init")(Typed(BoolT1))
+    val exVarDecl = new TlaVarDecl("__" + exName + "_init")(Typed(BoolT1))
     val exVar = builder.declAsNameEx(exVarDecl)
 
     val newInit = conjunctExToOperDecl(
