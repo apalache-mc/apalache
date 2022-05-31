@@ -126,7 +126,7 @@ class TableauEncoder(
    * Takes a temporal operator and a name, and generates a new variable declaration declaring the auxiliary "unrolling"
    * variable for that temporal operator.
    */
-  def createUnrollingVar(oper: TlaTempOper, nodeIdentifier: String): TlaVarDecl = {
+  private def createUnrollingVar(oper: TlaTempOper, nodeIdentifier: String): TlaVarDecl = {
     val nameSuffix = oper match {
       case TlaTempOper.box     => TableauEncoder.BOX_SUFFIX
       case TlaTempOper.diamond => TableauEncoder.DIAMOND_SUFFIX
