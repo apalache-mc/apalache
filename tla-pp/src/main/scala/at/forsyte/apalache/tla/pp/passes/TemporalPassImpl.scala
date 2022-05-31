@@ -44,7 +44,7 @@ class TemporalPassImpl @Inject() (
           logger.info("  > `next` is not set, cannot encode invariants")
           None
         }
-        encodeInvariants(tlaModule, invariants, init.get, next.get)
+        temporalToInvariants(tlaModule, invariants, init.get, next.get)
     }
 
     writeOut(writerFactory, newModule)
@@ -52,14 +52,15 @@ class TemporalPassImpl @Inject() (
     Right(newModule)
   }
 
-  def encodeInvariants(
+  
+  def temporalToInvariants(
       module: TlaModule,
-      invariants: List[String],
+      temporalProperties: List[String],
       init: String,
       next: String): TlaModule = {
     val levelFinder = new TlaLevelFinder(module)
 
-    val temporalFormulas = invariants
+    val temporalFormulas = temporalProperties
       .map(invName => {
         module.declarations.find(_.name == invName)
       })
@@ -77,7 +78,7 @@ class TemporalPassImpl @Inject() (
       logger.info("  > No temporal properties found, nothing to encode")
       module
     } else {
-      logger.info(s"  > Found ${temporalFormulas.length} temporal invariants")
+      logger.info(s"  > Found ${temporalFormulas.length} temporal temporal properties")
       logger.info(s"  > Adding logic for loop finding")
 
       val initDecl = module.declarations.find(_.name == init) match {
