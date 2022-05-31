@@ -6,10 +6,10 @@ import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, SetT1, TlaEx}
 import at.forsyte.apalache.tla.pp.TlaInputError
 
 trait TestSymbStateRewriterFiniteSets extends RewriterBase {
-  private val intT = IntT1()
-  private val boolT = BoolT1()
-  private val intSetT = SetT1(IntT1())
-  private val intSetSetT = SetT1(SetT1(IntT1()))
+  private val intT = IntT1
+  private val boolT = BoolT1
+  private val intSetT = SetT1(IntT1)
+  private val intSetSetT = SetT1(SetT1(IntT1))
 
   test("""Cardinality({1, 2, 3}) = 3""") { rewriterType: SMTEncoding =>
     val set = enumSet(1.to(3).map(int): _*)

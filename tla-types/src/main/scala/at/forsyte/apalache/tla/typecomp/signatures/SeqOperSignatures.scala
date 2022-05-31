@@ -30,10 +30,10 @@ object SeqOperSignatures {
     val concatSig = signatureMapEntry(concat, { case Seq(st @ SeqT1(t), SeqT1(tt)) if t == tt => st })
 
     // (Seq(t)) => Int
-    val lenSig = signatureMapEntry(len, { case Seq(_: SeqT1) => IntT1() })
+    val lenSig = signatureMapEntry(len, { case Seq(_: SeqT1) => IntT1 })
 
     // (Seq(t), Int, Int) => Seq(t)
-    val subseqSig = signatureMapEntry(subseq, { case Seq(st: SeqT1, IntT1(), IntT1()) => st })
+    val subseqSig = signatureMapEntry(subseq, { case Seq(st: SeqT1, IntT1, IntT1) => st })
 
     // (Seq(t), (Seq(t)) => Bool) => Seq(t)
     // selectseq is rewired in __rewire_sequences_in_apalache.tla and should not be created

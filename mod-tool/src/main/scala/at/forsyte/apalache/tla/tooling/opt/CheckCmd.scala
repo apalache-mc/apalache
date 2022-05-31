@@ -10,7 +10,8 @@ import org.backuity.clist.util.Read
  * @author
  *   Igor Konnov
  */
-class CheckCmd extends AbstractCheckerCmd(name = "check", description = "Check a TLA+ specification") with General {
+class CheckCmd(name: String = "check", description: String = "Check a TLA+ specification")
+    extends AbstractCheckerCmd(name, description) with General {
 
   // Parses the smtEncoding option
   implicit val smtEncodingRead: Read[SMTEncoding] =

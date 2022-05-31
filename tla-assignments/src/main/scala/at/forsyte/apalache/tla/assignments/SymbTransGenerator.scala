@@ -229,7 +229,7 @@ class SymbTransGenerator(tracker: TransformationTracker) {
         val same = newDefs == defs && newBody == body
 
         if (same) ex
-        else if (newBody == ValEx(TlaBool(false))(Typed(BoolT1()))) newBody
+        else if (newBody == ValEx(TlaBool(false))(Typed(BoolT1))) newBody
         else LetInEx(newBody, newDefs: _*)(ex.typeTag)
 
       case ex => ex

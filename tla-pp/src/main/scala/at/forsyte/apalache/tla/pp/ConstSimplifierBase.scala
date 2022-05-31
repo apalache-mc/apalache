@@ -13,8 +13,8 @@ import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
  *   Igor Konnov
  */
 abstract class ConstSimplifierBase {
-  private val boolTag = Typed(BoolT1())
-  private val intTag = Typed(IntT1())
+  private val boolTag = Typed(BoolT1)
+  private val intTag = Typed(IntT1)
 
   private def trueEx = ValEx(TlaBool(true))(boolTag)
   private def falseEx = ValEx(TlaBool(false))(boolTag)

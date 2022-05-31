@@ -435,7 +435,7 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
   test("TLC @@") {
     val writer = new PrettyWriter(printWriter, layout40)
 
-    val strToInt = FunT1(IntT1(), StrT1())
+    val strToInt = FunT1(IntT1, StrT1)
     val expr = funfun(strToInt, smiley(strToInt, str("a").typed(), int(1).typed()),
         funfun(strToInt, smiley(strToInt, str("b"), int(2)), smiley(strToInt, str("c"), int(3))))
     writer.write(expr)

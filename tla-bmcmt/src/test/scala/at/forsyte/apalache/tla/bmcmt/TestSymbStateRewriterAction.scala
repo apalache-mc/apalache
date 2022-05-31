@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 trait TestSymbStateRewriterAction extends RewriterBase {
   test("""x' is rewritten to the binding of x'""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
-    arena.appendCell(IntT1()) // the type finder is strict about unassigned types, so let's create a cell for x'
+    arena.appendCell(IntT1) // the type finder is strict about unassigned types, so let's create a cell for x'
     val state = new SymbState(tla.prime(NameEx("x")), arena, Binding("x'" -> arena.topCell))
     rewriter.rewriteOnce(state) match {
       case Continue(next) =>

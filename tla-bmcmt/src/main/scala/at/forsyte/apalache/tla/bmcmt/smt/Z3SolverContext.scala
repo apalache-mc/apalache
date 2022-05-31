@@ -331,8 +331,16 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val (smtEx, _) = toExpr(ex)
     val z3expr = z3solver.getModel.eval(smtEx, true)
     if (z3expr.isBool) {
-      val isTrue = z3expr.getBoolValue.equals(Z3_lbool.Z3_L_TRUE)
-      ValEx(if (isTrue) TlaBool(true) else TlaBool(false)) // in undefined case, just return false
+      z3expr.getBoolValue match {
+        case Z3_lbool.Z3_L_TRUE =>
+          ValEx(TlaBool(true))
+        case Z3_lbool.Z3_L_FALSE =>
+          ValEx(TlaBool(false))
+        case _ =>
+          // If we cannot get a result from evaluating the model, we query the solver
+          z3solver.add(z3expr.asInstanceOf[BoolExpr])
+          ValEx(TlaBool(sat()))
+      }
     } else if (z3expr.isIntNum) {
       ValEx(TlaInt(z3expr.asInstanceOf[IntNum].getBigInteger))
     } else {
@@ -520,10 +528,10 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     } else {
       val newSort =
         cellType match {
-          case CellTFrom(BoolT1()) =>
+          case CellTFrom(BoolT1) =>
             z3context.getBoolSort
 
-          case CellTFrom(IntT1()) =>
+          case CellTFrom(IntT1) =>
             z3context.getIntSort
 
           case CellTFrom(SetT1(elemType)) if encoding == arraysEncoding =>
@@ -532,8 +540,9 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
           case PowSetT(domType) if encoding == arraysEncoding =>
             z3context.mkArraySort(getOrMkCellSort(CellTFrom(domType)), z3context.getBoolSort)
 
-          case FinFunSetT(CellTFrom(SetT1(argType)), CellTFrom(SetT1(resType))) if encoding == arraysEncoding =>
-            z3context.mkArraySort(getOrMkCellSort(CellTFrom(FunT1(argType, resType))), z3context.getBoolSort)
+          case FinFunSetT(domType, cdmType) if encoding == arraysEncoding =>
+            val funSort = z3context.mkArraySort(mkCellElemSort(domType), mkCellElemSort(cdmType))
+            z3context.mkArraySort(funSort, z3context.getBoolSort)
 
           case CellTFrom(FunT1(argType, resType)) if encoding == arraysEncoding =>
             z3context.mkArraySort(getOrMkCellSort(CellTFrom(argType)), getOrMkCellSort(CellTFrom(resType)))
@@ -548,6 +557,31 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
       cellSorts += (sig -> (newSort, level))
       newSort
+    }
+  }
+
+  private def mkCellElemSort(cellType: CellT): Sort = {
+    cellType match {
+      case CellTFrom(BoolT1) =>
+        z3context.getBoolSort
+
+      case CellTFrom(IntT1) =>
+        z3context.getIntSort
+
+      case CellTFrom(SetT1(elemType)) if encoding == arraysEncoding =>
+        mkCellElemSort(CellTFrom(elemType))
+
+      case PowSetT(domType) if encoding == arraysEncoding =>
+        mkCellElemSort(CellTFrom(domType))
+
+      case FinFunSetT(argType, cdmType) if encoding == arraysEncoding =>
+        mkCellElemSort(CellTFrom(FunT1(argType.toTlaType1, cdmType.toTlaType1)))
+
+      case CellTFrom(FunT1(argType, resType)) if encoding == arraysEncoding =>
+        z3context.mkArraySort(mkCellElemSort(CellTFrom(argType)), mkCellElemSort(CellTFrom(resType)))
+
+      case _ =>
+        z3context.mkUninterpretedSort("Cell_" + cellType.signature)
     }
   }
 

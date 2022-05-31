@@ -158,7 +158,7 @@ class TestSourceLocator extends AnyFunSuite {
   }
 
   test("Test Flatten") {
-    val transformation = Flatten(tracker)(Untyped())
+    val transformation = Flatten(tracker)(Untyped)
 
     testTransformation(transformation)
   }

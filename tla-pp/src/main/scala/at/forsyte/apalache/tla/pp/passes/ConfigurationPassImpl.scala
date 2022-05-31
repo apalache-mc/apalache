@@ -85,7 +85,7 @@ class ConfigurationPassImpl @Inject() (
         _.name == cinitName
       }
 
-    val boolTag = Typed(BoolT1())
+    val boolTag = Typed(BoolT1)
     val overridesAsEql = constOverrides.collect { case TlaOperDecl(name, _, body) =>
       val varName = name.drop(ConstAndDefRewriter.OVERRIDE_PREFIX.length)
       OperEx(TlaOper.eq, NameEx(varName)(body.typeTag), body)(boolTag)
@@ -97,7 +97,7 @@ class ConfigurationPassImpl @Inject() (
       }
       .getOrElse {
         TlaOperDecl(cinitName, List.empty, OperEx(TlaBoolOper.and, overridesAsEql: _*)(boolTag))(Typed(OperT1(Seq.empty,
-                    BoolT1())))
+                    BoolT1)))
       }
 
     // Since declarations are a Seq not a Set, we may need to remove the old CInit first

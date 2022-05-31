@@ -42,9 +42,9 @@ class TestConstAndDefRewriter extends AnyFunSuite with BeforeAndAfterEach {
     val newDeclarations =
       root.declarations match {
         case Seq(n, overrideN: TlaOperDecl, rest @ _*) =>
-          val typedN = n.withTag(Typed(IntT1()))
-          val overrideTag = Typed(OperT1(Seq(), IntT1()))
-          val typedOverrideN = TlaOperDecl(overrideN.name, List(), overrideN.body.withTag(Typed(IntT1())))(overrideTag)
+          val typedN = n.withTag(Typed(IntT1))
+          val overrideTag = Typed(OperT1(Seq(), IntT1))
+          val typedOverrideN = TlaOperDecl(overrideN.name, List(), overrideN.body.withTag(Typed(IntT1)))(overrideTag)
           Seq(typedN, typedOverrideN) ++ rest
       }
 

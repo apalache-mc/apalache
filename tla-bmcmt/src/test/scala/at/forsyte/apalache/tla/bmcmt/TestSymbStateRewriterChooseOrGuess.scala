@@ -5,9 +5,9 @@ import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, SetT1, TestingPredefs}
 
 trait TestSymbStateRewriterChooseOrGuess extends RewriterBase with TestingPredefs {
-  private val boolT = BoolT1()
-  private val intT = IntT1()
-  private val intSetT = SetT1(IntT1())
+  private val boolT = BoolT1
+  private val intT = IntT1
+  private val intSetT = SetT1(IntT1)
 
   test("""CHOOSE x \in { 1, 2, 3 }: x > 1""") { rewriterType: SMTEncoding =>
     val cond = gt(name("x").as(intT), int(1)).as(boolT)

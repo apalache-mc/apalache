@@ -18,7 +18,7 @@ trait TestDefaultValueFactory extends RewriterBase with TestingPredefs {
     assert(solverContext.sat())
 
     val expected = enumFun(str("a"), int(0), str("b"), bool(false)).as(recordT)
-    val eq = eql(expected, value.toNameEx).as(BoolT1())
+    val eq = eql(expected, value.toNameEx).as(BoolT1)
     val state = new SymbState(eq, newArena, Binding())
     assertTlaExAndRestore(rewriter, state)
   }

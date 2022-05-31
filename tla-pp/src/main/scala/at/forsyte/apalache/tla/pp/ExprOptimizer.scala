@@ -21,8 +21,8 @@ import scala.math.BigInt
 class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker)
     extends AbstractTransformer(tracker) with TlaExTransformation {
 
-  private val boolTag = Typed(BoolT1())
-  private val intTag = Typed(IntT1())
+  private val boolTag = Typed(BoolT1)
+  private val intTag = Typed(IntT1)
 
   override val partialTransformers = List(transformFuns, transformSets, transformCard, transformExistsOverSets)
 
@@ -62,7 +62,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
     case OperEx(TlaSetOper.in, mem, OperEx(TlaArithOper.dotdot, left, right)) =>
       // Transform e \in a..b into a <= e /\ e <= b.
       // (The assignments are not affected by this transformation, as they are transformed to \E t \in S: x' = t.)
-      val b = BoolT1()
+      val b = BoolT1
       tla.and(tla.le(left, mem).as(b), tla.le(mem, right).as(b)).as(b)
 
     case OperEx(TlaSetOper.in, mem, OperEx(TlaSetOper.filter, nameEx @ NameEx(_), set, pred)) =>
@@ -71,7 +71,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
       def memCopy = DeepCopy(tracker).deepCopyEx(mem)
 
       val predSubstituted = ReplaceFixed(tracker).whenEqualsTo(nameEx, memCopy)(pred)
-      val b = BoolT1()
+      val b = BoolT1
       tla.and(tla.in(mem, set).as(b), predSubstituted).as(b)
 
     case memEx @ OperEx(TlaSetOper.in, rec,
@@ -90,8 +90,8 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
         memEx
       } else {
         // The set is of the nice form: { [f_1 |-> x_1, ..., f_k |-> x_k]: x_1 \in S_1, ..., x_k \in S_k }
-        val strSetT = SetT1(StrT1())
-        val b = BoolT1()
+        val strSetT = SetT1(StrT1)
+        val b = BoolT1
         val domEq = tla.eql(tla.dom(rec).as(strSetT), tla.enumSet(fields: _*).as(strSetT)).as(b)
         val fieldsEq = fields.zip(values.zip(sets)).map { case (key, (value, set)) =>
           tla.in(tla.appFun(rec, key).as(value.typeTag.asTlaType1()), set).as(b)
@@ -194,7 +194,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
   private def transformExistsOverSets: PartialFunction[TlaEx, TlaEx] = {
     case OperEx(TlaBoolOper.exists, xe @ NameEx(_), OperEx(TlaSetOper.filter, ye @ NameEx(y), s, e), g) =>
       // \E x \in {y \in S: e}: g becomes \E y \in S: e /\ g [x replaced with y]
-      val eAndG = tla.and(e, g).typed(BoolT1())
+      val eAndG = tla.and(e, g).typed(BoolT1)
       val newPred =
         ReplaceFixed(tracker).whenEqualsTo(xe, NameEx(y)(ye.typeTag)).apply(eAndG)
       val result = OperEx(TlaBoolOper.exists, NameEx(y)(ye.typeTag), s, newPred)(boolTag)
@@ -215,7 +215,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
         val elemType = getElemType(set)
         val exists = tla
           .exists(tla.name(name) ? "e", set, pred)
-          .typed(Map("e" -> elemType, "b" -> BoolT1()), "b")
+          .typed(Map("e" -> elemType, "b" -> BoolT1), "b")
         transformExistsOverSets.applyOrElse(exists, { _: TlaEx => exists }) // apply recursively, to optimize more
       }
 

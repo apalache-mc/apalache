@@ -75,7 +75,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
         throw new RewriterException(s"Rewriting for the type ${set.cellType} is not implemented. Raise an issue.",
             state.ex)
 
-      case InfSetT(CellTFrom(IntT1())) if set == state.arena.cellIntSet() || set == state.arena.cellNatSet() =>
+      case InfSetT(CellTFrom(IntT1)) if set == state.arena.cellIntSet() || set == state.arena.cellNatSet() =>
         // pick an integer or natural
         pickFromIntOrNatSet(set, state)
 
@@ -134,7 +134,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
     // the general case
     targetType match {
-      case CellTFrom(tt @ (ConstT1(_) | StrT1() | IntT1() | BoolT1())) =>
+      case CellTFrom(tt @ (ConstT1(_) | StrT1 | IntT1 | BoolT1)) =>
         pickBasic(tt, state, oracle, elems, elseAssert)
 
       case CellTFrom(t @ TupT1(_ @_*)) =>
@@ -312,7 +312,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     newState = newState.setArena(newState.arena.appendCell(commonRecordT))
     val newRecord = newState.arena.topCell
     // pick the domain using the oracle.
-    newState = pickRecordDomain(commonRecordT, CellTFrom(SetT1(StrT1())), newState, oracle,
+    newState = pickRecordDomain(commonRecordT, CellTFrom(SetT1(StrT1)), newState, oracle,
         records.map(r => newState.arena.getDom(r)))
     val newDom = newState.asCell
     // pick the fields using the oracle
@@ -469,7 +469,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     var keyToCell = SortedMap[String, ArenaCell]()
     var nextState = state
     for (key <- commonKeys) {
-      val (newArena, cell) = rewriter.modelValueCache.getOrCreate(nextState.arena, (StrT1().toString, key))
+      val (newArena, cell) = rewriter.modelValueCache.getOrCreate(nextState.arena, (StrT1.toString, key))
       keyToCell = keyToCell + (key -> cell)
       nextState = nextState.setArena(newArena)
     }
@@ -717,7 +717,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     nextState = protoSeqOps.make(nextState, maxCapacity, pickOneElement)
     val protoSeq = nextState.asCell
     // pick the length
-    nextState = pickBasic(IntT1(), nextState, oracle, memberLengths, elseAssert)
+    nextState = pickBasic(IntT1, nextState, oracle, memberLengths, elseAssert)
     val length = nextState.asCell
     // construct the sequence
     nextState = protoSeqOps.mkSeq(nextState, seqType, protoSeq, length)
@@ -820,7 +820,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       // To emulate this in the arrays encoding, in which the all sets are initially empty, unconstrained predicates
       // are used to allow the SMT solver to consider all possible combinations of elems.
       if (rewriter.solverContext.config.smtEncoding == arraysEncoding) {
-        nextState = nextState.updateArena(_.appendCell(BoolT1()))
+        nextState = nextState.updateArena(_.appendCell(BoolT1))
         val pred = nextState.arena.topCell.toNameEx
         val storeElem = tla.apalacheStoreInSet(elem.toNameEx, resultSet.toNameEx)
         val notStoreElem = tla.apalacheStoreNotInSet(elem.toNameEx, resultSet.toNameEx)
@@ -853,23 +853,23 @@ class CherryPick(rewriter: SymbStateRewriter) {
    */
   def pickFunFromFunSet(funT: FunT1, funSet: ArenaCell, state: SymbState): SymbState = {
     rewriter.solverContext.log("; PICK %s FROM %s {".format(funT, funSet))
-    var arena = state.arena
-    val dom = arena.getDom(funSet) // this is a set of potential arguments, always expanded!
-    val cdm = arena.getCdm(funSet) // this is a set of potential results, may be expanded, may be not.
+    val dom = state.arena.getDom(funSet)
+    // Get the set of potential arguments, always expanded! Remove the duplicates.
+    val (newState, nonDups) = new SetOps(rewriter).dedup(state, dom)
+    var nextState = newState
+    val cdm = state.arena.getCdm(funSet) // this is a set of potential results, may be expanded, may be not.
     // create the unconstrained function cell
-    arena = arena.appendCell(funT, isUnconstrained = true)
-    val funCell = arena.topCell
+    nextState = nextState.updateArena(_.appendCell(funT, isUnconstrained = true))
+    val funCell = nextState.arena.topCell
     // create the relation cell
-    arena = arena.appendCell(SetT1(TupT1(funT.arg, funT.res)))
-    val relationCell = arena.topCell
-    arena = arena.setDom(funCell, dom)
-    arena = arena.setCdm(funCell, relationCell)
-    var nextState = state.setArena(arena)
+    nextState = nextState.updateArena(_.appendCell(SetT1(TupT1(funT.arg, funT.res))))
+    val relationCell = nextState.arena.topCell
+    nextState = nextState.updateArena(_.setDom(funCell, dom).setCdm(funCell, relationCell))
 
     // For every domain cell, pick a result from the co-domain.
     // The beauty of CherryPick: when the co-domain is not expanded, CherryPick will pick one value out of the co-domain,
     // instead of constructing the co-domain first.
-    for (arg <- arena.getHas(dom)) {
+    for ((arg, isNonDup) <- nextState.arena.getHas(dom).zip(nonDups)) {
       nextState = pick(cdm, nextState, nextState.arena.cellFalse().toNameEx) // the co-domain should be non-empty
       val pickedResult = nextState.asCell
 
@@ -914,8 +914,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
         case `oopsla19Encoding` =>
           nextState = nextState.updateArena(_.appendHas(relationCell, pair))
-          val ite = tla.ite(tla.apalacheSelectInSet(arg.toNameEx, dom.toNameEx),
-              tla.apalacheStoreInSet(pair.toNameEx, relationCell.toNameEx),
+          val ite = tla.ite(isNonDup.toNameEx, tla.apalacheStoreInSet(pair.toNameEx, relationCell.toNameEx),
               tla.apalacheStoreNotInSet(pair.toNameEx, relationCell.toNameEx))
           rewriter.solverContext.assertGroundExpr(ite)
 
@@ -933,7 +932,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
   // just declare an integer, and in case of Nat make it non-negative
   def pickFromIntOrNatSet(set: ArenaCell, state: SymbState): SymbState = {
     assert(set == state.arena.cellNatSet() || set == state.arena.cellIntSet())
-    val nextState = state.updateArena(_.appendCell(IntT1()))
+    val nextState = state.updateArena(_.appendCell(IntT1))
     val intCell = nextState.arena.topCell
     if (set == state.arena.cellNatSet()) {
       rewriter.solverContext.assertGroundExpr(tla.ge(intCell.toNameEx, tla.int(0)))

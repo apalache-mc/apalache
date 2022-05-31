@@ -25,7 +25,7 @@ class NegRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       case OperEx(TlaBoolOper.not, ex: TlaEx) =>
         var newState = rewriter.rewriteUntilDone(state.setRex(ex))
-        newState = newState.updateArena(_.appendCell(BoolT1()))
+        newState = newState.updateArena(_.appendCell(BoolT1))
         val pred = newState.arena.topCell
         rewriter.solverContext.assertGroundExpr(tla.eql(tla.not(pred.toNameEx), newState.ex))
         newState.setRex(pred.toNameEx)
