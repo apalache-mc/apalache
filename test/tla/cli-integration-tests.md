@@ -387,7 +387,7 @@ This simple test demonstrates how to test a spec by isolating the input with gen
 $ apalache-mc test --features=rows TestGen.tla Prepare Test Assertion | sed 's/I@.*//'
 ...
 The outcome is: Error
-Checker has found an example. Check counterexample.tla.
+Found a violation of the postcondition. Check failure.tla.
 ...
 EXITCODE: ERROR (12)
 ```
@@ -2864,7 +2864,7 @@ EXITCODE: ERROR (120)
 If we run with the `--out-dir` flag
 
 ```sh
-$ apalache-mc check --out-dir=./test-out-dir --length=0 Counter.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --out-dir=./test-out-dir --write-intermediate=0 --length=0 Counter.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2872,7 +2872,15 @@ EXITCODE: OK
 ```sh
 $ find ./test-out-dir/Counter.tla/* -type f -exec basename {} \; | ./sort.sh
 detailed.log
+example0.itf.json
+example0.json
+example0.tla
+example.itf.json
+example.json
+example.tla
 log0.smt
+MCexample0.out
+MCexample.out
 run.txt
 ```
 
@@ -2935,7 +2943,15 @@ $ find ./test-out-dir/Counter.tla/* -type f -exec basename {} \; | ./sort.sh
 11_OutPostTypeCheckerSnowcat.json
 11_OutPostTypeCheckerSnowcat.tla
 detailed.log
+example0.itf.json
+example0.json
+example0.tla
+example.itf.json
+example.json
+example.tla
 log0.smt
+MCexample0.out
+MCexample.out
 run.txt
 $ rm -rf ./test-out-dir
 ```
@@ -2953,20 +2969,20 @@ $ rm -rf ./test-out-dir
 ### output manager: counterexamples are written to the run directory
 
 ```sh
-$ apalache-mc check --out-dir=./test-out-dir --length=2 --inv=Inv factorization.tla | sed -e 's/[IEW]@.*//'
+$ apalache-mc check --out-dir=./test-out-dir --write-intermediate=0 --length=2 --inv=Inv factorization.tla | sed -e 's/[IEW]@.*//'
 ...
 EXITCODE: ERROR (12)
 $ ls ./test-out-dir/factorization.tla/* | ./sort.sh
-counterexample1.itf.json
-counterexample1.json
-counterexample1.tla
-counterexample.itf.json
-counterexample.json
-counterexample.tla
 detailed.log
+failure1.itf.json
+failure1.json
+failure1.tla
+failure.itf.json
+failure.json
+failure.tla
 log0.smt
-MC1.out
-MC.out
+MCfailure1.out
+MCfailure.out
 run.txt
 $ rm -rf ./test-out-dir
 ```
@@ -3003,6 +3019,14 @@ $ find ./test-run-dir -type f -exec basename {} \; | ./sort.sh
 11_OutPostTypeCheckerSnowcat.json
 11_OutPostTypeCheckerSnowcat.tla
 detailed.log
+example0.itf.json
+example0.json
+example0.tla
+example.itf.json
+example.json
+example.tla
+MCexample0.out
+MCexample.out
 run.txt
 $ rm -rf ./test-out-dir ./test-run-dir
 ```
@@ -3010,19 +3034,19 @@ $ rm -rf ./test-out-dir ./test-run-dir
 ### output manager: counterexamples can be written to specified run directory
 
 ```sh
-$ apalache-mc check --out-dir=./test-out-dir --length=2 --inv=Inv --run-dir=./test-run-dir factorization.tla | sed -e 's/[IEW]@.*//'
+$ apalache-mc check --out-dir=./test-out-dir --write-intermediate=0 --length=2 --inv=Inv --run-dir=./test-run-dir factorization.tla | sed -e 's/[IEW]@.*//'
 ...
 EXITCODE: ERROR (12)
 $ ls ./test-run-dir | ./sort.sh
-counterexample1.itf.json
-counterexample1.json
-counterexample1.tla
-counterexample.itf.json
-counterexample.json
-counterexample.tla
 detailed.log
-MC1.out
-MC.out
+failure1.itf.json
+failure1.json
+failure1.tla
+failure.itf.json
+failure.json
+failure.tla
+MCfailure1.out
+MCfailure.out
 run.txt
 $ rm -rf ./test-out-dir ./test-run-dir
 ```

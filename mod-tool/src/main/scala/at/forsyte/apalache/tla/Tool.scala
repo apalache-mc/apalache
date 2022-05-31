@@ -320,7 +320,7 @@ object Tool extends LazyLogging {
     runAndExit(
         executor,
         _ => "No example found",
-        "Checker has found an example. Check counterexample.tla.",
+        "Found a violation of the postcondition. Check failure.tla.",
     )
   }
 
