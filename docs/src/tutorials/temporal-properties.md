@@ -156,7 +156,7 @@ In the following, let's focus on the content of the comment, since it's easier t
 
 There are many additional variables in the counterexample because to check temporal formulas, Apalache uses an
 encoding that transforms temporal properties to invariants.
-If you are interested in the technical details, the encoding is described in sections 3.2 and 5 of [Biere et al.][].
+If you are interested in the technical details, the encoding is described in sections 3.2 and 4 of [Biere et al.][].
 However, to understand the counterexample, you don't need to go into the technical details of the encoding.
 We'll go explain the counterexample in the following.
 
@@ -371,7 +371,7 @@ In this tutorial, we learned how to specify temporal properties
 in Apalache, and how to read counterexamples for such properties.
 
 If you want to dive deeper into the
-encoding, it is formally explained in sections 3.2 and 5 of
+encoding, it is formally explained in sections 3.2 and 4 of
 [Biere et al.]. To understand why this encoding was chosen,
 you can read the [ADR on temporal properties].
 Finally, if you want to go into the nitty-gritty details and see
