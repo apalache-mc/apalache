@@ -7,11 +7,18 @@ properties that are more general than invariants.
 We will use a simple example specification, modelling a
 devious nondeterministic traffic light.
 
+## Specifying temporal properties
+
 The traffic light has two main components: A lamp which can be either red or green,
 and a button which can be pushed to request the traffic light to become green.
 Consequently, there are two variables:
 the current state of the light (either green or red),
 and whether the button has been pushed that requests the traffic light to switch from red to green.
+
+The full specification of the traffic light is here:
+[TrafficLight.tla](TrafficLight.tla)
+But don't worry - we will dissect the spec in the following.
+
 In the TLA specification, this corresponds to
 two variables:
 
