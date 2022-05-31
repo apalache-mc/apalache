@@ -52,7 +52,6 @@ class TemporalPassImpl @Inject() (
     Right(newModule)
   }
 
-  
   def temporalToInvariants(
       module: TlaModule,
       temporalProperties: List[String],

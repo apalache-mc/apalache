@@ -33,9 +33,10 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
   val inLoop = builder.declAsNameEx(inLoopDecl)
   val inLoopPrime = builder.primeVar(inLoopDecl)
 
-  /** For each variable foo, creates a declaration of an auxiliary variable __saved_foo 
-   * __saved_foo stores the value of variable foo at the start of the loop.
-  */
+  /**
+   * For each variable foo, creates a declaration of an auxiliary variable __saved_foo __saved_foo stores the value of
+   * variable foo at the start of the loop.
+   */
   def createAllVarCopiesInLoop(originalVariables: Seq[TlaVarDecl]): Seq[TlaVarDecl] = {
     originalVariables.map(varDecl => createVarCopyVariableInLoop(varDecl))
   }
@@ -180,9 +181,9 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
   }
 
   /**
-   * Creates a loopOK predicate over the provided variables.
-   * LoopOK answers the question "Does the execution right now encode a proper loop?"
-   * So it ensures that a) the loop has been started and b) the saved copies of the variables have the same value as the variables right now, e.g. the loop is closed
+   * Creates a loopOK predicate over the provided variables. LoopOK answers the question "Does the execution right now
+   * encode a proper loop?" So it ensures that a) the loop has been started and b) the saved copies of the variables
+   * have the same value as the variables right now, e.g. the loop is closed
    *
    * loopOK ==
    *
