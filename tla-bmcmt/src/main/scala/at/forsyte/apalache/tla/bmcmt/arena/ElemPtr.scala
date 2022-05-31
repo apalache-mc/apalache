@@ -33,7 +33,7 @@ sealed trait ElemPtr {
  */
 case class FixedElemPtr(elem: ArenaCell, value: Boolean) extends ElemPtr {
   override def toSmt: TlaEx = {
-    tla.bool(value).as(BoolT1())
+    tla.bool(value).as(BoolT1)
   }
 }
 
@@ -49,7 +49,7 @@ case class SmtConstElemPtr(elem: ArenaCell, id: UID) extends ElemPtr {
   val uniqueName = s"_bool_elem$id"
 
   override def toSmt: TlaEx = {
-    tla.name(uniqueName).as(BoolT1())
+    tla.name(uniqueName).as(BoolT1)
   }
 }
 
