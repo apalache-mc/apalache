@@ -122,10 +122,6 @@ class TableauEncoder(
     curModWithPreds.setModule(newModule)
   }
 
-  def insertAt[T](elem: T, seq: Seq[T], pos: Int): Seq[T] = {
-    seq.take(pos) ++ List(elem) ++ seq.drop(pos)
-  }
-
   def getAuxVarForTempOper(oper: TlaTempOper, nodeIdentifier: String): TlaVarDecl = {
     val nameSuffix = oper match {
       case TlaTempOper.box     => TableauEncoder.BOX_SUFFIX
