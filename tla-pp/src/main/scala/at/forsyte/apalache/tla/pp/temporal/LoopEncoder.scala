@@ -181,6 +181,8 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
 
   /**
    * Creates a loopOK predicate over the provided variables.
+   * LoopOK answers the question "Does the execution right now encode a proper loop?"
+   * So it ensures that a) the loop has been started and b) the saved copies of the variables have the same value as the variables right now, e.g. the loop is closed
    *
    * loopOK ==
    *
