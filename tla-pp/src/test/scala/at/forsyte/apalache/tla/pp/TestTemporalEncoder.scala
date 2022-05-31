@@ -96,7 +96,7 @@ class TestTemporalEncoder extends AnyFunSuite with Checkers {
         Prop.undecided
       } else {
         val output =
-          tableauEncoder.`singleTemporalToInvariant#`(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
+          tableauEncoder.singleTemporalToInvariant(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
 
         val nodesInFormulaSyntaxTree = computeNumberOfNodes(formula)
 
@@ -121,7 +121,7 @@ class TestTemporalEncoder extends AnyFunSuite with Checkers {
         Prop.undecided
       }
       val output =
-        tableauEncoder.`singleTemporalToInvariant#`(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
+        tableauEncoder.singleTemporalToInvariant(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
 
       val nodesInFormulaSyntaxTree = computeNumberOfNodes(formula)
 
@@ -146,7 +146,7 @@ class TestTemporalEncoder extends AnyFunSuite with Checkers {
           Prop.undecided
         }
         val output =
-          tableauEncoder.`singleTemporalToInvariant#`(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
+          tableauEncoder.singleTemporalToInvariant(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
 
         val boxApplications = countOperatorApplications(TlaTempOper.box, formula)
 
@@ -166,7 +166,8 @@ class TestTemporalEncoder extends AnyFunSuite with Checkers {
           Prop.undecided
         }
         val output =
-          tableauEncoder.`singleTemporalToInvariant#`(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
+          tableauEncoder
+            .singleTemporalToInvariant(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
 
         val diamondApplications = countOperatorApplications(TlaTempOper.diamond, formula)
 
@@ -186,7 +187,7 @@ class TestTemporalEncoder extends AnyFunSuite with Checkers {
           Prop.undecided
         }
         val output =
-          tableauEncoder.`singleTemporalToInvariant#`(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
+          tableauEncoder.singleTemporalToInvariant(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
 
         val temporalApplications =
           countOperatorApplications(TlaTempOper.diamond, formula) + countOperatorApplications(TlaTempOper.box, formula)
