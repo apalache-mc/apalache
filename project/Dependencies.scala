@@ -34,9 +34,10 @@ object Dependencies {
     val ujson = "com.lihaoyi" %% "ujson" % "2.0.0"
     val z3 = "tools.aqua" % "z3-turnkey" % "4.8.17"
     // Keep up to sync with version in plugins.sbt
-    val zioGrpcCodgen = "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % "0.5.0"
+    val zioGrpcCodgen = "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % "0.5.0" % "provided"
     val grpcNetty = "io.grpc" % "grpc-netty" % "1.41.0" % "provided"
-    val scalapbRuntimGrpc = "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
+    val scalapbRuntimGrpc =
+      "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
   }
 
   // Test only depenendencies
