@@ -191,7 +191,7 @@ class TableauEncoder(
             /* create a new loop variable for this node
                     e.g.
                     \* @type: Bool;
-                    Loop_curNode_predicate
+                    __saved_curNode_predicate
              */
             val nodeLoopVarDecl = loopEnc.createLoopVariableForVariable(nodeVarDecl)
             varNamesToExStrings.addOne(nodeLoopVarDecl.name, curNode.toString().replace("\"", "\'"))
