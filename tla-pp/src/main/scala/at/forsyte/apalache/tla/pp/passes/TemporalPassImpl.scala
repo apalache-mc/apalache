@@ -103,15 +103,15 @@ class TemporalPassImpl @Inject() (
           val nparams = nextDecl.formalParams.length
           if (nparams != 0) {
             val message =
-              s"Expected next predicate $init to have 0 params, found $nparams parameters"
+              s"Expected next predicate $next to have 0 params, found $nparams parameters"
             throw new TlaInputError(message, Some(nextDecl.body.ID))
           }
           nextDecl
         case None =>
-          val message = (s"next predicate named `${init}` not found")
+          val message = (s"next predicate named `${next}` not found")
           throw new TlaInputError(message)
         case _ =>
-          val message = (s"Expected to find a predicate named `${init}` but did not")
+          val message = (s"Expected to find a predicate named `${next}` but did not")
           throw new TlaInputError(message)
       }
 
