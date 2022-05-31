@@ -50,7 +50,7 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
    * newInit == init /\ __saved_foo = foo
    */
   def addLoopVarToInit(varDecl: TlaVarDecl, loopVarDecl: TlaVarDecl, init: TlaOperDecl): TlaOperDecl = {
-    conjunctExToOperDecl(
+    andInDecl(
         builder.eql(builder.declAsNameEx(loopVarDecl), builder.declAsNameEx(varDecl)),
         init,
         tracker,
@@ -95,7 +95,7 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
         /\ __saved_bar = bar
         /\ ...
      */
-    conjunctExToOperDecl(inLoopEqlFalse, initWithLoopVarInits, tracker)
+    andInDecl(inLoopEqlFalse, initWithLoopVarInits, tracker)
   }
 
   /**
@@ -148,7 +148,7 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
           builder.impl(inLoop, inLoopPrime),
       )
 
-    val nextOrUnchangedWithInLoopUpdate = conjunctExToOperDecl(inLoopUpdate, next, tracker)
+    val nextOrUnchangedWithInLoopUpdate = andInDecl(inLoopUpdate, next, tracker)
 
     /*
      * /\ __saved_foo' = IF (InLoop' = InLoop) THEN __saved_foo ELSE foo
@@ -172,7 +172,7 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
       loopVarDecl: TlaVarDecl,
       loopOK: TlaOperDecl): TlaOperDecl = {
 
-    conjunctExToOperDecl(
+    andInDecl(
         builder.eql(builder.declAsNameEx(varDecl), builder.declAsNameEx(loopVarDecl)),
         loopOK,
         tracker,

@@ -75,7 +75,7 @@ class TableauEncoder(
     val exVarDecl = new TlaVarDecl("__" + exName + "_init")(Typed(BoolT1))
     val exVar = builder.declAsNameEx(exVarDecl)
 
-    val newInit = conjunctExToOperDecl(
+    val newInit = andInDecl(
         builder.eql(
             exVar,
             builder.useTrustedEx(ex),
@@ -84,7 +84,7 @@ class TableauEncoder(
         tracker,
     )
 
-    val newNext = conjunctExToOperDecl(
+    val newNext = andInDecl(
         builder.unchanged(exVar),
         modWithPreds.next,
         tracker,
@@ -200,11 +200,11 @@ class TableauEncoder(
 
             /* generic initialization for node variable: curNode_predicate \in BOOLEAN */
             val initWithNodeVar =
-              conjunctExToOperDecl(builder.in(nodeVarEx, builder.booleanSet()), modWithPreds.init, tracker)
+              andInDecl(builder.in(nodeVarEx, builder.booleanSet()), modWithPreds.init, tracker)
 
             /* generic update for node variable: curNode_predicate' \in BOOLEAN */
             val nextWithNodeVar =
-              conjunctExToOperDecl(builder.in(nodeVarExPrime, builder.booleanSet()), modWithPreds.next, tracker)
+              andInDecl(builder.in(nodeVarExPrime, builder.booleanSet()), modWithPreds.next, tracker)
 
             /* initialize loop variable
              */
@@ -250,7 +250,7 @@ class TableauEncoder(
                   case TlaTempOper.diamond => false
                 }
 
-                val newInit = conjunctExToOperDecl(
+                val newInit = andInDecl(
                     builder.and(
                         builder.in(
                             nodeVarEx,
@@ -307,7 +307,7 @@ class TableauEncoder(
                     builder.booleanSet(),
                 )
 
-                var newNext = conjunctExToOperDecl(
+                var newNext = andInDecl(
                     curNodeAssignment,
                     curModWithPreds.next,
                     tracker,
@@ -319,7 +319,7 @@ class TableauEncoder(
                     builder.booleanSet(),
                 )
 
-                newNext = conjunctExToOperDecl(
+                newNext = andInDecl(
                     auxVarAssignment,
                     curModWithPreds.next,
                     tracker,
@@ -334,7 +334,7 @@ class TableauEncoder(
                     ),
                 )
 
-                newNext = conjunctExToOperDecl(
+                newNext = andInDecl(
                     curNodeCondition,
                     curModWithPreds.next,
                     tracker,
@@ -354,7 +354,7 @@ class TableauEncoder(
                     ),
                 )
 
-                newNext = conjunctExToOperDecl(
+                newNext = andInDecl(
                     auxVarCondition,
                     newNext,
                     tracker,
@@ -363,7 +363,7 @@ class TableauEncoder(
                 /* update loopOK:
                   (curNode_predicate_globally => curNode_predicate) or (curNode_predicate => curNode_predicate_finally)
                  */
-                val newLoopOK = conjunctExToOperDecl(
+                val newLoopOK = andInDecl(
                     oper match {
                       case TlaTempOper.box     => builder.impl(auxVarEx, nodeVarEx)
                       case TlaTempOper.diamond => builder.impl(nodeVarEx, auxVarEx)
@@ -390,7 +390,7 @@ class TableauEncoder(
                           /\ oldInit
                           /\ curNode_predicate = A_predicate /\ B_predicate
                  */
-                val newInit = conjunctExToOperDecl(
+                val newInit = andInDecl(
                     builder.eql(
                         nodeVarEx,
                         builder.useTrustedEx(OperEx(oper, argExs: _*)(curNode.typeTag)),
@@ -403,7 +403,7 @@ class TableauEncoder(
                           /\ oldNext
                           /\ curNode_predicate' = A_predicate' /\ B_predicate'
                  */
-                val newNext = conjunctExToOperDecl(
+                val newNext = andInDecl(
                     builder.eql(
                         nodeVarExPrime,
                         builder.useTrustedEx(OperEx(oper, argExs: _*)(curNode.typeTag)),
