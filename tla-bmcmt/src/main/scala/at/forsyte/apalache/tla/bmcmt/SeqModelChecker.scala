@@ -46,6 +46,15 @@ class SeqModelChecker[ExecutorContextT](
   private val searchState: SearchState = new SearchState(params)
 
   override def run(): CheckerResult = {
+    // output an example of a run, if the context is satisfiable
+    def outputRun(): Unit = {
+      trex.sat(params.smtTimeoutSec) match {
+        case Some(true) =>
+          notifyExample(checkerInput.rootModule, trex.decodedExecution(), searchState.nRunsLeft)
+        case _ => ()
+      }
+    }
+
     // initialize CONSTANTS
     if (checkerInput.constInitPrimed.isDefined) {
       trex.initializeConstants(checkerInput.constInitPrimed.get)
@@ -67,6 +76,10 @@ class SeqModelChecker[ExecutorContextT](
         makeStep(isNext = true, checkerInput.nextTransitions)
       }
 
+      if (params.saveRuns) {
+        outputRun()
+      }
+
       searchState.onRunDone()
       // Continue provided that there are more runs to execute and the error budget is not overrun.
       if (searchState.canContinue) {
@@ -78,6 +91,9 @@ class SeqModelChecker[ExecutorContextT](
 
     if (searchState.nFoundErrors > 0) {
       logger.info("Found %d error(s)".format(searchState.nFoundErrors))
+    } else {
+      // Output an example in the end of the search.
+      outputRun()
     }
 
     searchState.finalResult
@@ -104,6 +120,23 @@ class SeqModelChecker[ExecutorContextT](
       invViolated: TlaEx,
       errorIndex: Int) = {
     listeners.foreach(_.onCounterexample(rootModule, trace, invViolated, errorIndex))
+  }
+
+  /**
+   * Notify all listeners that an example should be processed.
+   *
+   * @param rootModule
+   *   The checked TLA+ module.
+   * @param trace
+   *   The counterexample trace.
+   * @param index
+   *   Number of found error (likely [[SearchState.nRunsLeft]]).
+   */
+  private def notifyExample(
+      rootModule: TlaModule,
+      trace: DecodedExecution,
+      index: Int) = {
+    listeners.foreach(_.onExample(rootModule, trace, index))
   }
 
   private def makeStep(isNext: Boolean, transitions: Seq[TlaEx]): Unit = {
