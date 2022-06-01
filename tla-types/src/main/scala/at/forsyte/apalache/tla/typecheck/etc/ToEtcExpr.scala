@@ -789,6 +789,30 @@ class ToEtcExpr(
       case ex @ OperEx(VariantOper.filterByTag, tag @ _, _) =>
         throw new TypingInputException(s"The second argument of FilterByTag must be a string, found: $tag", ex.ID)
 
+      case OperEx(VariantOper.matchTag, v @ ValEx(TlaStr(tagName)), variantEx, thenOper, elseOper) =>
+        val a = varPool.fresh
+        val b = varPool.fresh
+        val c = varPool.fresh
+        // { a } => c
+        val thenType = OperT1(Seq(RecRowT1(RowT1(a))), c)
+        // Variant(b) => c
+        val elseType = OperT1(Seq(VariantT1(RowT1(b))), c)
+        // (Str, { tag: "1a", a } | b, thenOper, elseOper) => c
+        val operArgs =
+          Seq(
+              StrT1(),
+              VariantT1(RowT1(b, tagName -> RecRowT1(RowT1(a, "tag" -> StrT1())))),
+              thenType,
+              elseType,
+          )
+
+        val opsig = OperT1(operArgs, c)
+        // For some reason, we required the field tag: Str to be present in the value type. We should revisit this.
+        mkExRefApp(opsig, Seq(v, variantEx, thenOper, elseOper))
+
+      case OperEx(VariantOper.matchTag, tag @ _, _, _, _) =>
+        throw new TypingInputException(s"The second argument of MatchTag must be a string, found: $tag", ex.ID)
+
       // ******************************************** Apalache **************************************************
       case OperEx(ApalacheOper.`mkSeq`, len, ctor) =>
         val a = varPool.fresh

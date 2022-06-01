@@ -3,7 +3,6 @@ package at.forsyte.apalache.tla.typecheck.etc
 import at.forsyte.apalache.io.annotations.StandardAnnotations
 import at.forsyte.apalache.io.annotations.store.{createAnnotationStore, AnnotationStore}
 import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
-import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -399,7 +398,7 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with ToEtcExprBa
     val expected =
       mkUniqApp(Seq(operType), mkUniqConst(StrT1()), mkUniqName("v"), mkUniqName("ThenOper"), mkUniqName("ElseOper"))
     val matchEx =
-      tla.matchTag("1a", tla.name("set"), tla.name("ThenOper").as(thenType), tla.name("ElseOper").as(elseType))
+      tla.matchTag("1a", tla.name("v"), tla.name("ThenOper"), tla.name("ElseOper"))
     val produced = gen(matchEx)
     produced should equal(expected)
   }
