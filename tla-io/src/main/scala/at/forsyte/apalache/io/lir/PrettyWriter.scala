@@ -46,11 +46,14 @@ class PrettyWriter(
     prettyWriteDoc(modToDoc(mod, extendedModuleNames))
 
   def writeWithNameReplacementComment(decl: TlaDecl): Unit = {
-    val declComment = toCommentDoc(decl)
     val declDoc = declToDoc(decl) <> line <> line
-    prettyWriteDoc(declComment <> line <> declDoc)
+    if (NameReplacementMap.NameReplacementMap.isEmpty) {
+      prettyWriteDoc(declDoc)
+    } else {
+      val declComment = toCommentDoc(decl)
+      prettyWriteDoc(declComment <> line <> declDoc)
+    }
   }
-
 
   // Declarations have a trailing empty line
   def write(decl: TlaDecl): Unit = {
