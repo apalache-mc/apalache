@@ -12548,9 +12548,10 @@ argument's default value is <code>true</code>, for the handling of sets.</li>
 <h2><a class="header" href="#6-encoding-control-operators-and-tla-quantifiers" id="6-encoding-control-operators-and-tla-quantifiers">6. Encoding control operators and TLA+ quantifiers</a></h2>
 <p>TODO</p>
 <hr />
-<h2>authors: Igor Konnov
-proposed by: Vitor Enes, Andrey Kupriyanov
-last revised: 2021-12-23</h2>
+<p><strong>authors:</strong> Igor Konnov</p>
+<p><strong>proposed by:</strong> Vitor Enes, Andrey Kupriyanov</p>
+<p><strong>last revised:</strong> 2022-06-01</p>
+<hr />
 <h1><a class="header" href="#adr-015-informal-trace-format-in-json" id="adr-015-informal-trace-format-in-json">ADR-015: Informal Trace Format in JSON</a></h1>
 <p><strong>Table of Contents</strong></p>
 <ul>
@@ -12850,6 +12851,12 @@ interpret sets as lists.</p>
 <p>A map of the form <code>{ &quot;#map&quot;: [ [ &lt;expr&gt;, &lt;expr&gt; ], ..., [ &lt;expr&gt;, &lt;expr&gt; ] ] }</code>. That is, a map holds a JSON array of two-element arrays. Each two-element array <code>p</code> is interpreted as follows: <code>p[0]</code> is the map key and
 <code>p[1]</code> is the map value. Importantly, a key may be an arbitrary expression. It does not have to be a string or an integer. TLA+ functions are written as maps
 in this format.</p>
+</li>
+<li>
+<p>An expression that cannot be serialized: <code>{ &quot;#unserializable&quot;: &quot;&lt;string representation&gt;&quot; }</code>. For instance, the set of all integers is represented with
+<code>{ &quot;#unserializable&quot;: &quot;Int&quot; }</code>. This should be a very rare expression, which
+should not occur in normal traces. Usually, it indicates some form of an
+error.</p>
 </li>
 </ol>
 <h3><a class="header" href="#example-4" id="example-4">Example</a></h3>
