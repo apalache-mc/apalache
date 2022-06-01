@@ -1,4 +1,4 @@
-package at.forsyte.apalache.hai.v1
+package at.forsyte.apalache.shai.v1
 
 /**
  * Provides the [[TransExplorerService]]
@@ -12,8 +12,8 @@ package at.forsyte.apalache.hai.v1
  * [[TranExplorerService]] is meant to be registered with [[RpcServer]], and should not need to be used directly.
  */
 
-import at.forsyte.apalache.hai.v1.transExplorer.ZioTransExplorer
-import at.forsyte.apalache.hai.v1.transExplorer.{ConnectRequest, Connection}
+import at.forsyte.apalache.shai.v1.transExplorer.ZioTransExplorer
+import at.forsyte.apalache.shai.v1.transExplorer.{ConnectRequest, Connection}
 import io.grpc.Status
 import zio.{Ref, UIO, ZEnv, ZIO}
 import java.util.UUID

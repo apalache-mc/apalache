@@ -1,8 +1,8 @@
-# Hai: Human-Apalache Interaction
+# Shai: Human-Apalache Interaction
 
-## What Hai is
+## What Shai is
 
-Hai is a component of Apalache dedicated to supporting human interaction with
+Shai is a component of Apalache dedicated to supporting human interaction with
 the symbolic model checker.
 
 ### Services
@@ -11,12 +11,12 @@ the symbolic model checker.
   [`TransitionExecutor`](../tla/bmcmt/trex/TransitionExecutor.scala) via remote
   procedure calls (RPCs).
 
-## Why it's called Hai
+## Why it's called Shai
 
-'Hai' is an initialism of "Human-Apalache Interaction" and happily also carries
-[a bunch of other neat connotations](https://en.wiktionary.org/wiki/hai).
+'Shai' is an initialism of "Human-Apalache Interaction" and happily also carries
+[a bunch of other neat connotations](https://en.wiktionary.org/wiki/shai).
 
-## How Hai works
+## How Shai works
 
 This project implements a server allowing clients to interact with Apalache. 
 
@@ -35,7 +35,7 @@ type `Failure` or value of type `Success`. The `Environment` supplies
 requirements that the effect may need (e.g., resources to interact with the
 outside world).
 
-Common type alias we use in Hai include:
+Common type alias we use in Shai include:
 
 - `IO[Failure, Succcess]`: an effect that can operate in any environment.
 - `UIO[Success]`: an effect that always succeeds
@@ -79,12 +79,12 @@ A `for` comprehension yielding a value into `ZIO` establishes a computational
 context in which effects are evaluated sequentially and their successful 
 values can be inspected.
 
-## How Hai is organized
+## How Shai is organized
 
 ### The API is versioned
 
-Hai is currently at `v1`, which is defined in the package
-`at.forsyte.apalache.hai.v1`. After the API is stabilized, whenever we make
+Shai is currently at `v1`, which is defined in the package
+`at.forsyte.apalache.shai.v1`. After the API is stabilized, whenever we make
 breaking changes to it, we'll do that in a new subpackage. This will allow us to
 expose the latest developments in the model checker to our users without
 requiring them to adapt to an API that is a moving target.
@@ -94,18 +94,18 @@ requiring them to adapt to an API that is a moving target.
 The [protobuf](https://developers.google.com/protocol-buffers/docs/proto3)
 specifications live in [src/main/protobuf/](src/main/protobuf/).
 
-When this project is compiled, via `sbt hai/compile`, Scala source code is
+When this project is compiled, via `sbt shai/compile`, Scala source code is
 generated from the protobuf specs into
 [./target/scala-2.13/src_managed/main/scalapb/](./target/scala-2.13/src_managed/main/scalapb/).
 
 ### Services are registered with the `RpcServer`
 
 The source code for the sever and services lives in
-[src/main/scala/at/forsyte/apalache/hai/](src/main/scala/at/forsyte/apalache/hai/).
+[src/main/scala/at/forsyte/apalache/shai/](src/main/scala/at/forsyte/apalache/shai/).
 
 Related functionality is grouped into services, defined in supporting files, and
 then the services are registered with the
-[`RpcServer`](src/main/scala/at/forsyte/apalache/hai/rpcServer.scala).
+[`RpcServer`](src/main/scala/at/forsyte/apalache/shai/rpcServer.scala).
 
 ## Resources
 

@@ -1,4 +1,4 @@
-package at.forsyte.apalache.hai.v1
+package at.forsyte.apalache.shai.v1
 
 import zio.{Ref, ZEnv}
 import java.util.UUID
