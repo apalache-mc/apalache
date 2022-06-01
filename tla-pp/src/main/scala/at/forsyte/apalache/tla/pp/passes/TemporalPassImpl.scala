@@ -60,18 +60,18 @@ class TemporalPassImpl @Inject() (
     val levelFinder = new TlaLevelFinder(module)
 
     val temporalFormulas = temporalProperties
-      .map(invName => {
-        module.declarations.find(_.name == invName)
+      .map(propName => {
+        module.declarations.find(_.name == propName)
       })
-      .filter(invOption =>
-        invOption match {
+      .filter(propOption =>
+        propOption match {
           case Some(inv: TlaOperDecl) if inv.formalParams.isEmpty =>
             // either a state invariant, or an action invariant
             val level = levelFinder.getLevelOfDecl(inv)
             level == TlaLevelTemporal
           case _ => false
         })
-      .map(invOption => invOption.get.asInstanceOf[TlaOperDecl])
+      .map(propOption => propOption.get.asInstanceOf[TlaOperDecl])
 
     if (temporalFormulas.isEmpty) {
       logger.info("  > No temporal properties found, nothing to encode")
