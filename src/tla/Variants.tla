@@ -62,6 +62,7 @@ FilterByTag(__tag, __S) ==
  * The type could look like follows, if we supported string literals in types:
  *
  *   (
+ *     Str,
  *     { "$tagValue": a | b },
  *     { a } => r,
  *     Variant(b) => r
@@ -88,11 +89,12 @@ MatchTag(__tagValue, __variant, __ThenOper(_), __ElseOper(_)) ==
  * The type could look like follows, if we supported string literals in types:
  *
  *   (
+ *     Str,
  *     { "$tagValue": a },
  *     { a } => r
  *   ) => r
  *)
-MatchOnly(__variant, __ThenOper(_)) ==
+MatchOnly(__tagValue, __variant, __ThenOper(_)) ==
     \* default untyped implementation
     __ThenOper(__variant.value)
 ===============================================================================

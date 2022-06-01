@@ -403,6 +403,16 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with ToEtcExprBa
     produced should equal(expected)
   }
 
+  test("""MatchOnly(v, ThenOper)""") {
+    val thenType = parser("{ a } => b")
+    val operType = parser(s"""(Str, { tag: "1a", a }, $thenType) => b""")
+    val expected =
+      mkUniqApp(Seq(operType), mkUniqConst(StrT1()), mkUniqName("v"), mkUniqName("ThenOper"))
+    val matchEx = tla.matchOnly("1a", tla.name("v"), tla.name("ThenOper"))
+    val produced = gen(matchEx)
+    produced should equal(expected)
+  }
+
   test("<<1, 2>>") {
     val tupleOrFun = Seq(parser("(a, b) => <<a, b>>"), parser("(a, a) => Seq(a)"))
     val expected = mkAppByType(tupleOrFun, IntT1(), IntT1())

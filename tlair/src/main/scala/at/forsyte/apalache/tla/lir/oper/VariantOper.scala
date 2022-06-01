@@ -51,7 +51,7 @@ object VariantOper {
   object matchOnly extends VariantOper {
     override def name: String = "Variants!MatchOnly"
 
-    override def arity: OperArity = FixedArity(2)
+    override def arity: OperArity = FixedArity(3)
 
     override val precedence: (Int, Int) = (100, 100)
   }

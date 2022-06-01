@@ -714,15 +714,12 @@ class Builder {
       variantEx: BuilderEx,
       thenOper: BuilderEx,
       elseOper: BuilderEx): BuilderEx = {
-    // Although we are passing thenOper and elseOper by name, we should be careful about propagating their type tags
     BuilderOper(VariantOper.matchTag, str(tagName), variantEx, thenOper, elseOper)
   }
 
   /**
    * Match a variant that admits only one option (one tag)
    *
-   * @param tagName
-   *   a tag value (string)
    * @param variantEx
    *   a variant expression
    * @param thenOper
@@ -732,9 +729,8 @@ class Builder {
   def matchOnly(
       tagName: String,
       variantEx: BuilderEx,
-      thenOper: TlaOperDecl): BuilderEx = {
-    // Although we are passing thenOper by name, we should be careful about propagating its type tag
-    BuilderOper(VariantOper.matchOnly, str(tagName), variantEx, fromTlaEx(NameEx(thenOper.name)(thenOper.typeTag)))
+      thenOper: BuilderEx): BuilderEx = {
+    BuilderOper(VariantOper.matchOnly, str(tagName), variantEx, thenOper)
   }
 
   private val m_nameMap: Map[String, TlaOper] =

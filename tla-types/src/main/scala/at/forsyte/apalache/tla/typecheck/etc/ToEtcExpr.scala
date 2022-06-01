@@ -813,6 +813,23 @@ class ToEtcExpr(
       case OperEx(VariantOper.matchTag, tag @ _, _, _, _) =>
         throw new TypingInputException(s"The second argument of MatchTag must be a string, found: $tag", ex.ID)
 
+      case OperEx(VariantOper.matchOnly, v @ ValEx(TlaStr(tagName)), variantEx, thenOper) =>
+        val a = varPool.fresh
+        val b = varPool.fresh
+        // { a } => b
+        val thenType = OperT1(Seq(RecRowT1(RowT1(a))), b)
+        // (Str, { tag: "1a", a }, thenOper) => b
+        val operArgs =
+          Seq(
+              StrT1(),
+              VariantT1(RowT1(tagName -> RecRowT1(RowT1(a, "tag" -> StrT1())))),
+              thenType,
+          )
+
+        val opsig = OperT1(operArgs, b)
+        // For some reason, we required the field tag: Str to be present in the value type. We should revisit this.
+        mkExRefApp(opsig, Seq(v, variantEx, thenOper))
+
       // ******************************************** Apalache **************************************************
       case OperEx(ApalacheOper.`mkSeq`, len, ctor) =>
         val a = varPool.fresh
