@@ -1427,6 +1427,17 @@ $ apalache-mc check OracleFunSet.tla | sed 's/I@.*//'
 EXITCODE: OK
 ```
 
+### check Verifier_functionComparison fails (array-encoding)
+
+Regression test for https://github.com/informalsystems/apalache/issues/1811
+Comparisons with functions with empty domains should be sound (as should everything else)
+
+```sh
+$ apalache-mc check Verifier_functionComparison.tla | sed 's/I@.*//'
+...
+EXITCODE: ERROR (12)
+```
+
 ### check PickPerf succeeds (array-encoding)
 
 A performance test.
