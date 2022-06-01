@@ -112,16 +112,13 @@ class TestAnnotationParser extends AnyFunSuite with Checkers {
 
   test("parse variants in type aliases") {
     val extractedText =
-      """MESSAGE =""" + "\n" + """  Req(ask: Int)      """ + "\n" + """        | Ack(success: Bool)"""
-    val text =
-      s"""
-         |@typeAlias: $extractedText;
-         |""".stripMargin
+      """MESSAGE =""" + "\n" + """  Req({ ask: Int })      """ + "\n" + """        | Ack({ success: Bool })"""
+    val text = s"@typeAlias: $extractedText;"
 
     val expected =
       Annotation(
           "typeAlias",
-          AnnotationStr(extractedText),
+          AnnotationStr(""" MESSAGE = Req({ ask: Int }) | Ack({ success: Bool })"""),
       )
     AnnotationParser
       .parse(text)
