@@ -54,6 +54,7 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
             "format" -> "ITF",
             "format-description" -> "https://apalache.informal.systems/docs/adr/015adr-trace.html",
             "description" -> "Created by Apalache on %s".format(Calendar.getInstance().getTime),
+            "variables-to-expressions" -> NameReplacementMap.NameReplacementMap,
         ))
     paramsToJson(rootModule).foreach(params => rootMap.put("params", params))
     rootMap.put("vars", varsToJson(rootModule))
