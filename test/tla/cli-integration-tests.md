@@ -387,7 +387,7 @@ This simple test demonstrates how to test a spec by isolating the input with gen
 $ apalache-mc test --features=rows TestGen.tla Prepare Test Assertion | sed 's/I@.*//'
 ...
 The outcome is: Error
-Found a violation of the postcondition. Check failure.tla.
+Found a violation of the postcondition. Check violation.tla.
 ...
 EXITCODE: ERROR (12)
 ```
@@ -2984,15 +2984,15 @@ $ apalache-mc check --out-dir=./test-out-dir --write-intermediate=0 --length=2 -
 EXITCODE: ERROR (12)
 $ ls ./test-out-dir/factorization.tla/* | ./sort.sh
 detailed.log
-failure1.itf.json
-failure1.json
-failure1.tla
-failure.itf.json
-failure.json
-failure.tla
+violation1.itf.json
+violation1.json
+violation1.tla
+violation.itf.json
+violation.json
+violation.tla
 log0.smt
-MCfailure1.out
-MCfailure.out
+MCviolation1.out
+MCviolation.out
 run.txt
 $ rm -rf ./test-out-dir
 ```
@@ -3049,14 +3049,14 @@ $ apalache-mc check --out-dir=./test-out-dir --write-intermediate=0 --length=2 -
 EXITCODE: ERROR (12)
 $ ls ./test-run-dir | ./sort.sh
 detailed.log
-failure1.itf.json
-failure1.json
-failure1.tla
-failure.itf.json
-failure.json
-failure.tla
-MCfailure1.out
-MCfailure.out
+violation1.itf.json
+violation1.json
+violation1.tla
+violation.itf.json
+violation.json
+violation.tla
+MCviolation1.out
+MCviolation.out
 run.txt
 $ rm -rf ./test-out-dir ./test-run-dir
 ```

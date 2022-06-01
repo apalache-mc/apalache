@@ -17,7 +17,7 @@ object DumpCounterexamplesModelCheckerListener extends ModelCheckerListener with
       trace: DecodedExecution,
       invViolated: TlaEx,
       errorIndex: Int): Unit = {
-    dump(rootModule, trace, invViolated, errorIndex, "failure")
+    dump(rootModule, trace, invViolated, errorIndex, "violation")
   }
 
   override def onExample(rootModule: TlaModule, trace: DecodedExecution, exampleIndex: Int): Unit = {
