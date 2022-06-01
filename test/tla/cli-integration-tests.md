@@ -1458,6 +1458,16 @@ $ apalache-mc check --discard-disabled=0 --tuning-options=search.invariant.mode=
 EXITCODE: OK
 ```
 
+### simulate y2k with --save-runs succeeds
+
+```sh
+$ apalache-mc simulate --length=10 --max-run=5 --save-runs --inv=Safety y2k_instance.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
 ## configure the check command
 
 Testing various flags that are set via command-line options and the TLC configuration file. The CLI has priority over
