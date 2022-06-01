@@ -130,9 +130,11 @@ Scores are recorded by affixing labels to the github issue tracking the work ite
 Effort is scored best on a rough estimate of the amount of focused time it would
 take to complete a work item:
 
-- Easy **`e0`**: Can be completed within about 1 day
-- Medium **`e1`**: Can be completed within 3 days
-- Difficult **`e2`**: Will take 5 or more days
+| Effort    | Meaning                             | Label           |
+|-----------|-------------------------------------|-----------------|
+| Easy      | Can be completed within about 1 day | `effort-easy`   |
+| Medium    | Can be completed within 3 days      | `effort-medium` |
+| Difficult | Will take 5 or more days            | `effort-hard`   |
 
 Ideally, as soon as we recognized that an actively planned ticket will take more
 than 5 days of focused work, we would factor it into smaller tickets, allowing
@@ -152,22 +154,32 @@ Impact is scored based on considering impact in the follow 4 domains:
 4. _Development_: Improvements to our development capacities and bandwidth
    (which supports advancing the other three factors).
 
-- High **`i0`**:
+Here are the meaning of the impact levels, as related to each domains:
+
+- High:
   - User / customer: Unblocks critical work
   - Mission: Advances critical organizational objectives
   - Invention: Opens up novel verification and specifications abilities
   - Development: Saves > 3 hours per week
-- Medium **`i1`**:
+- Medium:
   - User / customer: Unblocks non-critical work
   - Mission: Advances non-critical organizational objectives
   - Invention: Makes incremental improvement to verification and specification
     abilities
   - Development: Saves between 1 to 3 hours per week
-- Low **`i2`**:
+- Low:
   - User / customer: Improves functionality, but an easy workaround exists
   - Mission: No significant advance of organizational objectives
   - Invention: No significant improvement to verification and specification abilities
   - Development: Saves < 1 hours per week
+
+These are the labels to use on issues:
+
+| Impact | Label           |
+|--------|-----------------|
+| Low    | `impact-low`    |
+| Medium | `impact-medium` |
+| High   | `impact-high`   |
 
 ### Prioritization and evaluation
 
@@ -181,9 +193,9 @@ its score (using informal language, when needed), and this should be used to
 decided whether it is worth interrupting any ongoing or planned work.
 
 When deciding which work item to take on next, we should favor work that is
-nearest to scoring minimum effort and maximum impact: (`e0`, `i0`). Ties should
-be resolved based on the worker's inclination or discussions within other
-stakeholders.
+nearest to scoring minimum effort and maximum impact: (`effort-easy`,
+`impact-high`). Ties should be resolved based on the worker's inclination or
+discussions within other stakeholders.
 
 The priority of work should be re-evaluated as the situation changes. E.g.:
 
