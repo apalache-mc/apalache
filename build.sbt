@@ -298,6 +298,12 @@ lazy val root = (project in file("."))
             ),
         )
       },
+      assembly / assemblyMergeStrategy := {
+        // Workaround for conflict with grpc-netty manifest files
+        // See https://github.com/sbt/sbt-assembly/issues/362
+        case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.first
+        case x                                                    => (assembly / assemblyMergeStrategy).value(x)
+      },
       // Package the distribution files
       Universal / mappings ++= Seq(
           // The fat jar
