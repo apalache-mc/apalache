@@ -31,24 +31,6 @@ class TableauEncoder(
   val levelFinder = new TlaLevelFinder(module)
   val varNamesToExStrings = new HashMap[String, String]()
 
-  def encodeVarNameMapping(modWithPreds: ModWithPreds): ModWithPreds = {
-    val varNameSets = varNamesToExStrings.map { case (key, value) =>
-      builder.enumSet(builder.str(key), builder.str(value))
-    }.toSeq
-
-    val mapDecl =
-      new TlaOperDecl(
-          TableauEncoder.PREDS_TO_VARS_MAPPING_NAME,
-          List.empty,
-          builder.enumSet(
-              varNameSets: _*
-          ),
-      )(Typed(SetT1))
-
-    val newModule = new TlaModule(modWithPreds.module.name, modWithPreds.module.declarations :+ mapDecl)
-    modWithPreds.setModule(newModule)
-  }
-
   /**
    * Encodes each of a sequence of temporal formulas.
    * @see
@@ -58,9 +40,7 @@ class TableauEncoder(
       modWithPreds: ModWithPreds,
       formulas: Seq[TlaOperDecl]): ModWithPreds = {
 
-    encodeVarNameMapping(
-        formulas.foldLeft(modWithPreds)(singleTemporalToInvariant)
-    )
+    formulas.foldLeft(modWithPreds)(singleTemporalToInvariant)
   }
 
   /**
@@ -153,10 +133,15 @@ class TableauEncoder(
    * to a commitment whether or not the formula corresponding to this variable holds true at that point in the trace.
    * For example, if var_DiamondB is true in a state, the spec will ensure that in some future state, B holds (recall
    * that B holding at some point in the future is the definition of <>B).
+   *
+   * @param letInContext
+   *   a mapping from operator names to the expressions they represent. Should only be unary operators. Empty by
+   *   default.
    */
   def encodeSyntaxTreeInPredicates(
       modWithPreds: ModWithPreds,
-      curNode: TlaEx): (ModWithPreds, TlaEx) = {
+      curNode: TlaEx,
+      letInContext: Map[String, TlaEx] = Map[String, TlaEx]()): (ModWithPreds, TlaEx) = {
     levelFinder.getLevelOfExpression(Set.empty, curNode) match {
       case TlaLevelTemporal =>
         curNode match {
@@ -169,9 +154,21 @@ class TableauEncoder(
           case ValEx(_) =>
             throw new IrrecoverablePreprocessingError(
                 "Found a value expression of temporal level. This should not be possible.")
-          case LetInEx(_, _) =>
-            throw new IrrecoverablePreprocessingError(
-                "Expect to find no LET-IN expressions. They should have been rewritten by the inliner")
+          case LetInEx(body, TlaOperDecl(letInName, args, letInEx)) =>
+            if (!args.isEmpty) {
+              throw new IrrecoverablePreprocessingError("Expect to find only unary LET-IN expressions. " +
+                "Non-unary LET-IN expressions " +
+                "should have been rewritten by the inliner")
+            }
+
+            val newLetInContext =
+              letInContext + ((letInName, letInEx))
+
+            encodeSyntaxTreeInPredicates(
+                modWithPreds,
+                body,
+                newLetInContext,
+            )
           case OperEx(oper, args @ _*) =>
             var curModWithPreds = modWithPreds
 
@@ -223,7 +220,12 @@ class TableauEncoder(
             /* encode the arguments of the node
              */
             val argExs = args.map(arg => {
-              val modWithPredsAndArgEx = encodeSyntaxTreeInPredicates(curModWithPreds, arg)
+              val modWithPredsAndArgEx =
+                encodeSyntaxTreeInPredicates(
+                    curModWithPreds,
+                    arg,
+                    letInContext,
+                )
               curModWithPreds = modWithPredsAndArgEx._1
               val argEx = modWithPredsAndArgEx._2
               builder.useTrustedEx(argEx)
