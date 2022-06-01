@@ -2984,16 +2984,16 @@ $ apalache-mc check --out-dir=./test-out-dir --write-intermediate=0 --length=2 -
 EXITCODE: ERROR (12)
 $ ls ./test-out-dir/factorization.tla/* | ./sort.sh
 detailed.log
+log0.smt
+MCviolation1.out
+MCviolation.out
+run.txt
 violation1.itf.json
 violation1.json
 violation1.tla
 violation.itf.json
 violation.json
 violation.tla
-log0.smt
-MCviolation1.out
-MCviolation.out
-run.txt
 $ rm -rf ./test-out-dir
 ```
 
@@ -3049,15 +3049,15 @@ $ apalache-mc check --out-dir=./test-out-dir --write-intermediate=0 --length=2 -
 EXITCODE: ERROR (12)
 $ ls ./test-run-dir | ./sort.sh
 detailed.log
+MCviolation1.out
+MCviolation.out
+run.txt
 violation1.itf.json
 violation1.json
 violation1.tla
 violation.itf.json
 violation.json
 violation.tla
-MCviolation1.out
-MCviolation.out
-run.txt
 $ rm -rf ./test-out-dir ./test-run-dir
 ```
 
