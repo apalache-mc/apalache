@@ -46,15 +46,6 @@ class SeqModelChecker[ExecutorContextT](
   private val searchState: SearchState = new SearchState(params)
 
   override def run(): CheckerResult = {
-    // output an example of a run, if the context is satisfiable
-    def outputRun(): Unit = {
-      trex.sat(params.smtTimeoutSec) match {
-        case Some(true) =>
-          notifyExample(checkerInput.rootModule, trex.decodedExecution(), searchState.nRunsLeft)
-        case _ => ()
-      }
-    }
-
     // initialize CONSTANTS
     if (checkerInput.constInitPrimed.isDefined) {
       trex.initializeConstants(checkerInput.constInitPrimed.get)
@@ -77,7 +68,7 @@ class SeqModelChecker[ExecutorContextT](
       }
 
       if (params.saveRuns) {
-        outputRun()
+        outputExampleRun()
       }
 
       searchState.onRunDone()
@@ -93,10 +84,19 @@ class SeqModelChecker[ExecutorContextT](
       logger.info("Found %d error(s)".format(searchState.nFoundErrors))
     } else {
       // Output an example in the end of the search.
-      outputRun()
+      outputExampleRun()
     }
 
     searchState.finalResult
+  }
+
+  // output an example of a run, if the context is satisfiable
+  def outputExampleRun(): Unit = {
+    trex.sat(params.smtTimeoutSec) match {
+      case Some(true) =>
+        notifyExample(checkerInput.rootModule, trex.decodedExecution(), searchState.nRunsLeft)
+      case _ => ()
+    }
   }
 
   /**
