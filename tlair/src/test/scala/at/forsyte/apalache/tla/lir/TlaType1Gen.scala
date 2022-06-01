@@ -19,7 +19,7 @@ trait TlaType1Gen {
     } yield VarT1(i)
 
   def genPrimitiveMono: Gen[TlaType1] =
-    oneOf(const(BoolT1()), const(IntT1()), const(StrT1()), const(RealT1()), genConst)
+    oneOf(const(BoolT1), const(IntT1), const(StrT1), const(RealT1), genConst)
 
   def genPrimitive: Gen[TlaType1] =
     oneOf(genPrimitiveMono, genVar)

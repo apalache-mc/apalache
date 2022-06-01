@@ -1,14 +1,41 @@
-<!-- NOTE:
-     This file is generated. Do not write release notes here.
-     Notes for unreleased changes go in ./UNRELEASED.md -->
+<!-- NOTE: This file is generated. Do not write release notes here.
+ Notes for unreleased changes go in the .unreleased/ directory. -->
+ 
+## 0.25.5 - 2022-05-30
+
+### Features
+
+- Add the experimental command `simulate` that randomly picks transitions, see #1809
+
+## 0.25.4 - 2022-05-30
+
+### Bug fixes
+
+- Fix nested set membership in the arrays encoding, see #1819
+- Fixed bug in inlining ASSUME statements, see #1794
+
+## 0.25.3 - 2022-05-20
+
+### Breaking changes
+
+- Introduce dedicated exit codes for type-checking errors, parser errors, and evaluation errors (e.g., due to unsupported language constructs or operators), see #1749
+
+### Features
+
+- Support sound records (over rows) in the model checker, see #1717
+
+### Bug fixes
+
+- Fix potential non-determinism when picking from `[S -> T]`, see #1753
+- Fix the bug in uninterpreted types, see #1792
 
 ## 0.25.2
 
 ### Features
 
  * Support sound records (over rows) in the model checker, see #1717
-## 0.25.1
 
+## 0.25.1
      
 ### Features
 

@@ -39,7 +39,7 @@ class TestHybrid extends BuilderTest {
                   TlaOper.eq,
                   OperEx(TlaActionOper.prime, x)(Typed(tt)),
                   y,
-              )(Typed(BoolT1()))
+              )(Typed(BoolT1))
           )
         }
     }
@@ -66,7 +66,7 @@ class TestHybrid extends BuilderTest {
         ts match {
           case head :: Nil  => head
           case head :: tail => OperT1(tail, head)
-          case Nil          => IntT1() // impossible, since 1 <= n <= 5, but the compiler doesn't know and complains
+          case Nil          => IntT1 // impossible, since 1 <= n <= 5, but the compiler doesn't know and complains
         },
         n - 1,
     )
@@ -85,8 +85,8 @@ class TestHybrid extends BuilderTest {
         def n: TBuilderInstruction = builder.name(pName, tt)
         // We can try different expressions for different parameter types, as long as each name is used at least once
         tt match {
-          case BoolT1() => n
-          case IntT1()  => builder.ge(n, builder.int(0))
+          case BoolT1 => n
+          case IntT1  => builder.ge(n, builder.int(0))
           case OperT1(from, to) =>
             builder.eql(
                 builder.appOp(
@@ -131,12 +131,12 @@ class TestHybrid extends BuilderTest {
     def isExpected(tparam: TParam): TlaOperDecl => Boolean = {
       val (t, ts) = tparam
       val params = ts.zipWithIndex.map { case ((_, arity), i) => OperParam(s"p$i", arity) }
-      val bTag = Typed(BoolT1())
+      val bTag = Typed(BoolT1)
       val conds = params.zip(ts).map { case (p, (tt, _)) =>
         def n: NameEx = NameEx(p.name)(Typed(tt))
         tt match {
-          case BoolT1() => n
-          case IntT1()  => OperEx(TlaArithOper.ge, n, ValEx(TlaInt(0))(Typed(IntT1())))(bTag)
+          case BoolT1 => n
+          case IntT1  => OperEx(TlaArithOper.ge, n, ValEx(TlaInt(0))(Typed(IntT1)))(bTag)
           case OperT1(from, to) =>
             OperEx(
                 TlaOper.eq,
@@ -199,7 +199,7 @@ class TestHybrid extends BuilderTest {
       build(
           builder.declWithInferredParameterTypes(
               "A",
-              builder.name("x", IntT1()),
+              builder.name("x", IntT1),
               OperParam("p"),
           )
       )

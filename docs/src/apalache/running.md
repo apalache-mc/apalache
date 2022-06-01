@@ -88,7 +88,7 @@ If you are running Apalache via docker directly (instead of using the script in
 environment variable to the docker container:
 
 ```sh
-$ JVM_ARGS="-Xmx1G" docker run -e JVM_ARGS --rm -v <your-spec-directory>:/var/apalache informalsystems/apalache <args>
+$ JVM_ARGS="-Xmx1G" docker run -e JVM_ARGS --rm -v <your-spec-directory>:/var/apalache ghcr.io/informalsystems/apalache <args>
 ```
 
 To track memory usage with: `jcmd <pid> VM.native_memory summary`, you can set
@@ -321,4 +321,4 @@ $ apalache-mc parse --output=result.json <myspec>.tla
 will write the IR to the file `result.json`.
 
 [alternative SMT encoding using arrays]: ../adr/011adr-smt-arrays.md
-[Enumeration of counterexamples]: ./enumeration.md
+[Enumeration of counterexamples]: ./principles/enumeration.md

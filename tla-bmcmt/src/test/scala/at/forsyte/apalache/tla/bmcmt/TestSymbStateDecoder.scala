@@ -180,7 +180,7 @@ trait TestSymbStateDecoder extends RewriterBase {
     // the function of empty domain is simply SetAsFun({})
     val expectedOutcome = apalacheSetAsFun(enumSet().as(SetT1(int2))).as(intToIntT)
     assert(expectedOutcome == decodedEx)
-    assertTlaExAndRestore(rewriter, nextState.setRex(eql(decodedEx, funEx).typed(BoolT1())))
+    assertTlaExAndRestore(rewriter, nextState.setRex(eql(decodedEx, funEx).typed(BoolT1)))
   }
 
   test("decode dynamically empty fun") { rewriterType: SMTEncoding =>
@@ -204,7 +204,7 @@ trait TestSymbStateDecoder extends RewriterBase {
     val expectedOutcome = apalacheSetAsFun(enumSet().as(SetT1(int2))).as(intToIntT)
     assert(expectedOutcome == decodedEx)
     // we cannot directly compare the outcome, as it comes in the same form as a record
-    assertTlaExAndRestore(rewriter, nextState.setRex(eql(decodedEx, funEx).typed(BoolT1())))
+    assertTlaExAndRestore(rewriter, nextState.setRex(eql(decodedEx, funEx).typed(BoolT1)))
   }
 
   test("decode sequence") { rewriterType: SMTEncoding =>

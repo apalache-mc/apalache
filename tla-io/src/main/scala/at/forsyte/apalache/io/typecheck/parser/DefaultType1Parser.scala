@@ -79,10 +79,10 @@ object DefaultType1Parser extends Parsers with Type1Parser {
       | set | seq | tuple | row | sparseTuple
       | record | recordFromRow
       | variant | variantVar | parenExpr) ^^ {
-      case INT()        => IntT1()
-      case REAL()       => RealT1()
-      case BOOL()       => BoolT1()
-      case STR()        => StrT1()
+      case INT()        => IntT1
+      case REAL()       => RealT1
+      case BOOL()       => BoolT1
+      case STR()        => StrT1
       case tt: TlaType1 => tt
     }
   }

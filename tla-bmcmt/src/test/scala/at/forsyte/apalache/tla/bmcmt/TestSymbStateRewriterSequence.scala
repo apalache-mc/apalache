@@ -8,10 +8,10 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.ApalacheInternalOper
 
 trait TestSymbStateRewriterSequence extends RewriterBase {
-  private val intT = IntT1()
-  private val boolT = BoolT1()
-  private val intSetT = SetT1(IntT1())
-  private val intSeqT = SeqT1(IntT1())
+  private val intT = IntT1
+  private val boolT = BoolT1
+  private val intSetT = SetT1(IntT1)
+  private val intSeqT = SeqT1(IntT1)
 
   // As sequences are not distinguishable from tuples, we need a type annotation.
   // In the not so far away future, a type inference engine would tell us, whether to construct a sequence or a tuple
@@ -25,7 +25,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
       case NameEx(name) =>
         assert(solverContext.sat())
         val cell = nextState.arena.findCellByName(name)
-        assert(CellTFrom(SeqT1(IntT1())) == cell.cellType)
+        assert(CellTFrom(SeqT1(IntT1)) == cell.cellType)
 
       case _ =>
         fail("Unexpected rewriting result")
@@ -43,17 +43,17 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
       case NameEx(name) =>
         assert(solverContext.sat())
         val cell = nextState.arena.findCellByName(name)
-        assert(CellTFrom(SeqT1(IntT1())) == cell.cellType)
+        assert(CellTFrom(SeqT1(IntT1)) == cell.cellType)
         // test that the proto sequence is correct
         val protoSeqOps = new ProtoSeqOps(rewriter)
         val (protoSeq, len, capacity) = protoSeqOps.unpackSeq(nextState.arena, cell)
         assert(capacity == 3)
         // compare the length
-        assertTlaExAndRestore(rewriter, nextState.setRex(eql(len.toNameEx, int(3)).as(BoolT1())))
+        assertTlaExAndRestore(rewriter, nextState.setRex(eql(len.toNameEx, int(3)).as(BoolT1)))
 
         // compare the elements
         def cmp(indexBase1: Int, expectedValue: Int): TlaEx =
-          eql(protoSeqOps.at(nextState.arena, protoSeq, indexBase1).toNameEx, int(expectedValue)).as(BoolT1())
+          eql(protoSeqOps.at(nextState.arena, protoSeq, indexBase1).toNameEx, int(expectedValue)).as(BoolT1)
 
         assertTlaExAndRestore(rewriter, nextState.setRex(cmp(1, 3)))
         assertTlaExAndRestore(rewriter, nextState.setRex(cmp(2, 4)))
@@ -83,7 +83,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
   test("""(<<>> as Seq(Int))[1]""") { rewriterType: SMTEncoding =>
     // regression: <<>>[i] should produce no contradiction, nor throw an exception
     val tup = tuple().as(intSeqT)
-    val app = appFun(tup, int(1)).as(IntT1())
+    val app = appFun(tup, int(1)).as(IntT1)
 
     val state = new SymbState(app, arena, Binding())
     val rewriter = create(rewriterType)
@@ -94,12 +94,12 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
   test("""(<<>> as Seq(Int))[x] when x = 1""") { rewriterType: SMTEncoding =>
     // regression: <<>>[i] should produce no contradiction, nor throw an exception
     val tup = tuple().as(intSeqT)
-    val app = appFun(tup, name("x").as(IntT1())).as(IntT1())
+    val app = appFun(tup, name("x").as(IntT1)).as(IntT1)
 
     var state = new SymbState(app, arena, Binding())
     val rewriter = create(rewriterType)
     // rewrite 1 into a cell, so function application does not statically detect out of bounds
-    state = rewriter.rewriteUntilDone(state.setRex(int(1).as(IntT1())))
+    state = rewriter.rewriteUntilDone(state.setRex(int(1).as(IntT1)))
     state = state.setBinding(Binding("x" -> state.asCell))
     val _ = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
@@ -108,7 +108,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
   test("""(<<1, 2>> as Seq(Int))[7]""") { rewriterType: SMTEncoding =>
     // regression: <<1, 2>>[i] for i = 7 should produce no contradiction, nor throw an exception
     val tup = tuple(int(1), int(2)).as(intSeqT)
-    val app = appFun(tup, int(7)).as(IntT1())
+    val app = appFun(tup, int(7)).as(IntT1)
 
     val state = new SymbState(app, arena, Binding())
     val rewriter = create(rewriterType)
@@ -119,12 +119,12 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
   test("""(<<1, 2>> as Seq(Int))[x] for x = 7""") { rewriterType: SMTEncoding =>
     // regression: <<1, 2>>[i] for i = 7 should produce no contradiction, nor throw an exception
     val tup = tuple(int(1), int(2)).as(intSeqT)
-    val app = appFun(tup, name("x").as(IntT1())).as(IntT1())
+    val app = appFun(tup, name("x").as(IntT1)).as(IntT1)
 
     var state = new SymbState(app, arena, Binding())
     val rewriter = create(rewriterType)
     // rewrite 7 into a cell, so function application does not statically detect out of bounds
-    state = rewriter.rewriteUntilDone(state.setRex(int(7).as(IntT1())))
+    state = rewriter.rewriteUntilDone(state.setRex(int(7).as(IntT1)))
     state = state.setBinding(Binding("x" -> state.asCell))
     val _ = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
@@ -187,7 +187,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     val result = nextState.asCell
-    assert(CellTFrom(SeqT1(IntT1())) == result.cellType)
+    assert(CellTFrom(SeqT1(IntT1)) == result.cellType)
     val eq1 = eql(appFun(result.toNameEx.as(intSeqT), int(1)).as(intT), int(4)).as(boolT)
     assertTlaExAndRestore(rewriter, nextState.setRex(eq1))
     val eq2 = eql(appFun(result.toNameEx.as(intSeqT), int(2)).as(intT), int(5)).as(boolT)
@@ -244,9 +244,9 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
   }
 
   test("""SubSeq(<<1, 2, 3>>, 1, 2) = SubSeq(<<1, 2, 4>>, 1, 2)""") { rewriterType: SMTEncoding =>
-    val seq123 = tuple(int(1), int(2), int(3)).as(SeqT1(IntT1()))
+    val seq123 = tuple(int(1), int(2), int(3)).as(SeqT1(IntT1))
     val subseqEx1 = subseq(seq123, int(1), int(2)).as(intSeqT)
-    val seq124 = tuple(int(1), int(2), int(4)).as(SeqT1(IntT1()))
+    val seq124 = tuple(int(1), int(2), int(4)).as(SeqT1(IntT1))
     val subseqEx2 = subseq(seq124, int(1), int(2)).as(intSeqT)
     val eq = eql(subseqEx1, subseqEx2).as(boolT)
 
@@ -255,12 +255,12 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
   }
 
   test("""SubSeq(<<1, 2, 3>>, 1, 3) /= SubSeq(<<1, 2, 4>>, 1, 3)""") { rewriterType: SMTEncoding =>
-    val seq123 = tuple(int(1), int(2), int(3)).as(SeqT1(IntT1()))
-    val seq124 = tuple(int(1), int(2), int(4)).as(SeqT1(IntT1()))
+    val seq123 = tuple(int(1), int(2), int(3)).as(SeqT1(IntT1))
+    val seq124 = tuple(int(1), int(2), int(4)).as(SeqT1(IntT1))
     val subseqEx1 = subseq(seq123, int(1), int(3)).as(intSeqT)
     val subseqEx2 = subseq(seq124, int(1), int(3)).as(intSeqT)
     val eq = eql(subseqEx1, subseqEx2).as(boolT)
-    val neq = not(eq).as(BoolT1())
+    val neq = not(eq).as(BoolT1)
 
     val state = new SymbState(neq, arena, Binding())
     assertTlaExAndRestore(create(rewriterType), state)
@@ -275,7 +275,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     val result = nextState.asCell
-    assert(CellTFrom(SeqT1(IntT1())) == result.cellType)
+    assert(CellTFrom(SeqT1(IntT1)) == result.cellType)
     val eq1 = eql(appFun(result.toNameEx.as(intSeqT), int(1)).as(intT), int(4)).as(boolT)
     assertTlaExAndRestore(rewriter, nextState.setRex(eq1))
     val eq2 = eql(appFun(result.toNameEx.as(intSeqT), int(2)).as(intT), int(5)).as(boolT)
@@ -296,7 +296,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     val result = nextState.asCell
-    assert(CellTFrom(SeqT1(IntT1())) == result.cellType)
+    assert(CellTFrom(SeqT1(IntT1)) == result.cellType)
     val eq1 = eql(appFun(result.toNameEx.as(intSeqT), int(1)).as(intT), int(4)).as(boolT)
     assertTlaExAndRestore(rewriter, nextState.setRex(eq1))
     val eq2 = eql(appFun(result.toNameEx.as(intSeqT), int(2)).as(intT), int(5)).as(boolT)
@@ -355,7 +355,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
   test("""(<<3, 4, 5, 6>> EXCEPT ![2] = 7) = <<3, 7, 5, 6>>""") { rewriterType: SMTEncoding =>
     val tup3to6 = tuple(3.to(6).map(int): _*).as(intSeqT)
     val tup3756 = tuple(Seq(3, 7, 5, 6).map(int): _*).as(intSeqT)
-    val exceptEx = except(tup3to6, tuple(int(2)).as(TupT1(IntT1())), int(7)).as(intSeqT)
+    val exceptEx = except(tup3to6, tuple(int(2)).as(TupT1(IntT1)), int(7)).as(intSeqT)
     val eq = eql(exceptEx, tup3756).as(boolT)
 
     val state = new SymbState(eq, arena, Binding())
@@ -364,7 +364,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
 
   test("""(<<3, 4, 5, 6>> EXCEPT ![10] = 7) = <<3, 4, 5, 6>>""") { rewriterType: SMTEncoding =>
     val tup3to6 = tuple(3.to(6).map(int): _*).as(intSeqT)
-    val exceptEx = except(tup3to6, tuple(int(10)).as(TupT1(IntT1())), int(7)).as(intSeqT)
+    val exceptEx = except(tup3to6, tuple(int(10)).as(TupT1(IntT1)), int(7)).as(intSeqT)
     // since 10 does not belong to the domain, the sequence does not change
     val eq = eql(exceptEx, tup3to6).as(boolT)
 
@@ -374,7 +374,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
 
   test("""(<< >> EXCEPT ![10] = 7) = << >>""") { rewriterType: SMTEncoding =>
     val emptyTuple = tuple().as(intSeqT)
-    val exceptEx = except(emptyTuple, tuple(int(10)).as(TupT1(IntT1())), int(7)).as(intSeqT)
+    val exceptEx = except(emptyTuple, tuple(int(10)).as(TupT1(IntT1)), int(7)).as(intSeqT)
     // since 10 does not belong to the domain, the sequence does not change
     val eq = eql(exceptEx, emptyTuple).as(boolT)
 
@@ -384,7 +384,7 @@ trait TestSymbStateRewriterSequence extends RewriterBase {
 
   test("""(ApalacheSeqCapacity(<<3, 4, 5, 6>>) = 4""") { rewriterType: SMTEncoding =>
     val seq3to6 = tuple(3.to(6).map(int): _*).as(intSeqT)
-    val ex = OperEx(ApalacheInternalOper.apalacheSeqCapacity, seq3to6)(Typed(IntT1()))
+    val ex = OperEx(ApalacheInternalOper.apalacheSeqCapacity, seq3to6)(Typed(IntT1))
     val eq = eql(ex, int(4)).as(boolT)
 
     val state = new SymbState(eq, arena, Binding())

@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
+import at.forsyte.apalache.tla.bmcmt.rules.aux.SetOps
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, RewritingRule, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.TypedPredefs._
@@ -35,7 +36,6 @@ class FoldSetRule(rewriter: SymbStateRewriter, renaming: IncrementalRenaming) ex
       // rewrite setEx to its final cell form
       val setState = rewriter.rewriteUntilDone(baseState.setRex(setEx))
       val setCell = setState.asCell
-      val setNameEx = setCell.toNameEx
 
       // Assume that setCell is in fact a Set-type cell
       // getHas returns a sequence of cells the set cell points to
@@ -43,8 +43,8 @@ class FoldSetRule(rewriter: SymbStateRewriter, renaming: IncrementalRenaming) ex
       // are set members, and some elements may be duplicated
       val setMembers = setState.arena.getHas(setCell).toArray
 
-      // Now, we cache the set element equalities
-      val postCacheState = cacheEqualityConstraints(setState, setMembers.toIndexedSeq)
+      // Find the non-duplicate predicates
+      val (postCacheState, nonDups) = new SetOps(rewriter).dedup(setState, setCell)
 
       // Then, we start the folding with the value of baseCell
       val initialState = postCacheState.setRex(baseCell.toNameEx)
@@ -59,6 +59,7 @@ class FoldSetRule(rewriter: SymbStateRewriter, renaming: IncrementalRenaming) ex
           throw new TypingException(s"FoldSet argument $setEx should have the type Set(_), found $nonSet.", setEx.ID)
       }
       val opT = OperT1(Seq(a, b), a)
+      val bool = BoolT1
       // sanity check
       opDecl.typeTag.asTlaType1() match {
         case `opT` => // all good
@@ -66,14 +67,6 @@ class FoldSetRule(rewriter: SymbStateRewriter, renaming: IncrementalRenaming) ex
           val msg = s"FoldSet argument ${opDecl.name} should have the tag $opT, found $badType."
           throw new TypingException(msg, opDecl.ID)
       }
-
-      // type aliases, because Builder
-      val types = Map(
-          "a" -> a,
-          "b" -> b,
-          "op" -> opT,
-          "bool" -> BoolT1(),
-      )
 
       // expressions are transient, we don't need tracking
       val inliner = new Inliner(new IdleTracker, renaming)
@@ -88,41 +81,29 @@ class FoldSetRule(rewriter: SymbStateRewriter, renaming: IncrementalRenaming) ex
       //    that belonged to the set and had the same value (duplication)
       // otherwise, the nwe partial result is equal to the value of applying the operator
       // defined by `opDecl` to the previous partial result and the current cell.
-      setMembers.zipWithIndex.foldLeft(initialState) { case (partialState, (currentCell, i)) =>
-        // The collection of already visited cells, for equality asserts
-        val counted = setMembers.take(i)
+      setMembers.zip(nonDups).foldLeft(initialState) { case (partialState, (currentCell, isNonDup)) =>
         // partialState currently holds the cell representing the previous application step
         val oldResultCellName = partialState.ex
-        // if current \notin set (overapproximation), or
-        // \E c \in counted: current = c /\ c \in set (duplication)
+        // if currentCell does not belong to the set, or it is a duplicate,
         // then newPartialResult = oldPartialResult
-        val arenaWithCondition = partialState.arena.appendCell(BoolT1())
-        val condCell = arenaWithCondition.topCell
-        val condEx = tla
-          .or(
-              tla.not(tla.apalacheSelectInSet(currentCell.toNameEx, setNameEx) ? "bool") ? "bool",
-              tla.or(counted.map(eqToOther(setNameEx, currentCell, _)).toIndexedSeq: _*) ? "bool",
-          ) ? "bool"
-        solverAssert(tla.eql(condCell.toNameEx, condEx).typed(types, "bool"))
 
         // otherwise newPartialResult = A(oldPartialResult, currentCell)
         // First, we inline the operator application, with cell names as parameters
-        val appEx = tla.appOp(tla.name(opDecl.name) ? "op", oldResultCellName ? "a", currentCell.toNameEx ? "b")
-        val inlinedEx = inliner.transform(seededScope)(appEx.typed(types, "a"))
+        val appEx = tla.appOp(tla.name(opDecl.name).as(opT), oldResultCellName.as(a), currentCell.toNameEx.as(b))
+        val inlinedEx = inliner.transform(seededScope)(appEx.as(a))
         // We then rewrite A(oldPartial, currentCell) to a cell
-        val preInlineRewriteState = partialState.setArena(arenaWithCondition).setRex(inlinedEx)
-        val postInlineRewriteState = rewriter.rewriteUntilDone(preInlineRewriteState)
+        val postInlineRewriteState = rewriter.rewriteUntilDone(partialState.setRex(inlinedEx))
         val inlinedCellName = postInlineRewriteState.ex
 
         // The new cell value is an ITE, we let ITE rules handle the correct instantiation of
         // arenas for complex values
         val newPartialResultEx = tla
           .ite(
-              condCell.toNameEx ? "bool",
-              oldResultCellName ? "a",
-              inlinedCellName ? "a",
+              isNonDup.toNameEx.as(bool),
+              inlinedCellName.as(a),
+              oldResultCellName.as(a),
           )
-          .typed(types, "a")
+          .as(a)
 
         // Finally, we finish with a state containing the new cell expression
         val preITERewriteState = postInlineRewriteState.setRex(newPartialResultEx)
@@ -152,8 +133,10 @@ class FoldSetRule(rewriter: SymbStateRewriter, renaming: IncrementalRenaming) ex
   // a) `otherCell` must also belong to `setNameEx`
   // b) (lazy) equality must evaluate to true
   def eqToOther(setNameEx: TlaEx, thisCell: ArenaCell, otherCell: ArenaCell): BuilderEx =
-    tla.and(tla.apalacheSelectInSet(otherCell.toNameEx, setNameEx) ? "bool",
-        rewriter.lazyEq.safeEq(thisCell, otherCell)) ? "bool"
+    tla
+      .and(tla.apalacheSelectInSet(otherCell.toNameEx, setNameEx).as(BoolT1),
+          rewriter.lazyEq.safeEq(thisCell, otherCell))
+      .as(BoolT1)
 
   // convenience shorthand
   def solverAssert: TlaEx => Unit = rewriter.solverContext.assertGroundExpr

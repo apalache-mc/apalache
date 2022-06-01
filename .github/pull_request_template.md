@@ -3,4 +3,6 @@
 - [ ] Tests added for any new code
 - [ ] Ran `make fmt-fix` (or had formatting run automatically on all files edited)
 - [ ] Documentation added for any new functionality
-- [ ] Entry added to [UNRELEASED.md](./UNRELEASED.md) for any new functionality
+- [ ] Entries added to [./unreleased/][unreleased] for any new functionality
+
+[unreleased]: https://github.com/informalsystems/apalache/tree/unstable/.unreleased

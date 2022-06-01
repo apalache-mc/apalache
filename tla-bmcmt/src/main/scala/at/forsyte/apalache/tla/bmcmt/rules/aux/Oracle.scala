@@ -62,7 +62,7 @@ trait Oracle extends Serializable {
             val ex = OperEx(TlaControlOper.ifThenElse, whenEqualTo(state, i), e._1, e._2)(e._1.typeTag)
             tla.fromTlaEx(ex)
           }
-        tla.and(es: _*).as(BoolT1())
+        tla.and(es: _*).as(BoolT1)
     }
   }
 

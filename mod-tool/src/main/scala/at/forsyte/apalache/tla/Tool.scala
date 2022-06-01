@@ -99,6 +99,7 @@ object Tool extends LazyLogging {
       .withCommands(
           new ParseCmd,
           new CheckCmd,
+          new SimulateCmd,
           new TypeCheckCmd,
           new TestCmd,
           new ConfigCmd,
@@ -125,6 +126,10 @@ object Tool extends LazyLogging {
               cmd match {
                 case parse: ParseCmd =>
                   runForModule(runParse, new ParserModule, parse)
+
+                case simulate: SimulateCmd =>
+                  // simulation is just a special case of checking, which has additional parameters passed via SimulateCmd
+                  runForModule(runCheck, new CheckerModule, simulate)
 
                 case check: CheckCmd =>
                   runForModule(runCheck, new CheckerModule, check)
@@ -242,6 +247,15 @@ object Tool extends LazyLogging {
     var tuning =
       if (check.tuningOptionsFile != "") loadProperties(check.tuningOptionsFile) else Map[String, String]()
     tuning = overrideProperties(tuning, check.tuningOptions)
+
+    check match {
+      case sim: SimulateCmd =>
+        // propagate the simulator options to the tuning options, so the model checker can easily pick them
+        tuning += "search.simulation" -> "true"
+        tuning += "search.simulation.maxRun" -> sim.maxRun.toString
+
+      case _ => ()
+    }
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
     executor.options.set("general.tuning", tuning)

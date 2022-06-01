@@ -15,10 +15,10 @@ class TestModelValueHandler extends AnyFunSuite {
 
     val f = ModelValueHandler.modelValueOrString _
 
-    assert(f(s1) == StrT1())
+    assert(f(s1) == StrT1)
     assert(f(s2) == ConstT1("A"))
     assert(f(s3) == ConstT1("B"))
-    assert(f(s4) == StrT1())
+    assert(f(s4) == StrT1)
 
   }
 

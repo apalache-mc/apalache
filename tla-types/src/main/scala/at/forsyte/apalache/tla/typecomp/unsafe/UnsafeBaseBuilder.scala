@@ -32,7 +32,7 @@ trait UnsafeBaseBuilder extends ProtoBuilder {
   /** args[0](args[1], ..., args[n]) :: ex */
   protected def _label(ex: TlaEx, args: String*): TlaEx = {
     require(args.nonEmpty)
-    val argsAsStringExs = args.map { s => ValEx(TlaStr(s))(Typed(StrT1())) }
+    val argsAsStringExs = args.map { s => ValEx(TlaStr(s))(Typed(StrT1)) }
     buildBySignatureLookup(TlaOper.label, ex +: argsAsStringExs: _*)
   }
 }

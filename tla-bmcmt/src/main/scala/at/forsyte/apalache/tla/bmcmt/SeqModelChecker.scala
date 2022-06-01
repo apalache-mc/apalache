@@ -15,6 +15,8 @@ import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaStr}
 import com.typesafe.scalalogging.LazyLogging
 
+import scala.util.Random
+
 /**
  * A new version of the sequential model checker. This version is using TransitionExecutor, which allows us to freely
  * switch between the online and offline SMT solving.
@@ -52,12 +54,26 @@ class SeqModelChecker[ExecutorContextT](
     checkerInput.rootModule.assumeDeclarations.foreach { d =>
       trex.assertState(d.body)
     }
-    // apply the Init predicate
-    makeStep(isNext = false, checkerInput.initTransitions)
-    // unroll the transition relation
-    while (searchState.canContinue && trex.stepNo <= params.stepsBound) {
-      // apply the Next predicate
-      makeStep(isNext = true, checkerInput.nextTransitions)
+    val constSnapshot = trex.snapshot()
+
+    // Repeat the search: 1 time in the `check` mode, and `params.nSimulationRuns` times in the `simulation` mode.
+    // If the error budget (set with `params.nMaxErrors`) is overrun, terminate immediately.
+    while (searchState.canContinue) {
+      // apply the Init predicate
+      makeStep(isNext = false, checkerInput.initTransitions)
+      // unroll the transition relation
+      while (searchState.canContinue && trex.stepNo <= params.stepsBound) {
+        // apply the Next predicate
+        makeStep(isNext = true, checkerInput.nextTransitions)
+      }
+
+      searchState.onRunDone()
+      // Continue provided that there are more runs to execute and the error budget is not overrun.
+      if (searchState.canContinue) {
+        trex.recover(constSnapshot)
+        logger.info("----------------------------")
+        logger.info(s"Symbolic runs left: ${searchState.nRunsLeft}")
+      }
     }
 
     if (searchState.nFoundErrors > 0) {
@@ -170,13 +186,17 @@ class SeqModelChecker[ExecutorContextT](
       newIndices
     }
 
-    for ((tr, no) <- transitions.zipWithIndex) {
+    // in case we do random simulation, shuffle the indices and stop at the first enabled transition
+    val transitionIndices =
+      if (params.isRandomSimulation) Random.shuffle(transitions.indices.toList) else transitions.indices
+
+    for (no <- transitionIndices) {
       var snapshot: Option[SnapshotT] = None
       if (params.discardDisabled) {
         // save the context, unless the transitions are not checked
         snapshot = Some(trex.snapshot())
       }
-      val translatedOk = trex.prepareTransition(no, tr)
+      val translatedOk = trex.prepareTransition(no, transitions(no))
       if (translatedOk) {
         val transitionInvs = addMaybeInvariants(no)
         val transitionActionInvs = addMaybeActionInvariants(no)
@@ -211,6 +231,16 @@ class SeqModelChecker[ExecutorContextT](
                   // an invariant is violated and we cannot continue the search, return immediately
                   return (maybeInvariantNos, maybeActionInvariantNos)
                 }
+              }
+
+              if (params.isRandomSimulation) {
+                // When random simulation is enabled, we need only one enabled transition.
+                // recover from the snapshot
+                trex.recover(snapshot.get)
+                // pick one transition
+                logger.info(s"Step ${trex.stepNo}: randomly picked transition $no")
+                trex.pickTransition()
+                return (maybeInvariantNos, maybeActionInvariantNos)
               }
 
             case Some(false) =>
@@ -395,7 +425,7 @@ class SeqModelChecker[ExecutorContextT](
     notTraceInv match {
       case TlaOperDecl(_, List(OperParam(name, 0)), body) =>
         // LET Call_$param == hist IN notTraceInv(param)
-        val operType = OperT1(Seq(seqType), BoolT1())
+        val operType = OperT1(Seq(seqType), BoolT1)
         val callName = s"Call_$name"
         // replace param with $callName() in the body
         val app = OperEx(TlaOper.apply, NameEx(callName)(Typed(operType)))(Typed(seqType))
@@ -426,7 +456,7 @@ class SeqModelChecker[ExecutorContextT](
           repl.whenMatches(isToReplace, assignedEx.copy())(replacedView)
         }
       // the view over state variables should not be equal to the view over the model values
-      val boolTag = Typed(BoolT1())
+      val boolTag = Typed(BoolT1)
       OperEx(TlaBoolOper.not, OperEx(TlaOper.eq, modelView, view)(boolTag))(boolTag)
     }
 
@@ -434,7 +464,7 @@ class SeqModelChecker[ExecutorContextT](
       // extract expressions from the model, as we are going to use these expressions (not the cells!) in path constraints
       val exec = trex.decodedExecution()
       // omit the first assignment, as it contains only assignments to the state variables
-      val pathConstraint = ValEx(TlaBool(true))(Typed(BoolT1())) :: (exec.path.tail.map(_._1).map(computeViewNeq(view)))
+      val pathConstraint = ValEx(TlaBool(true))(Typed(BoolT1)) :: (exec.path.tail.map(_._1).map(computeViewNeq(view)))
       trex.addPathOrConstraint(pathConstraint)
     }
   }

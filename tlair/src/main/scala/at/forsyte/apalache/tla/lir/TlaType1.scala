@@ -42,7 +42,7 @@ object TlaType1 {
 /**
  * An integer type.
  */
-case class IntT1() extends TlaType1 {
+case object IntT1 extends TlaType1 {
   override def toString: String = "Int"
 
   override def usedNames: Set[Int] = Set.empty
@@ -52,7 +52,7 @@ case class IntT1() extends TlaType1 {
 /**
  * An real type.
  */
-case class RealT1() extends TlaType1 {
+case object RealT1 extends TlaType1 {
   override def toString: String = "Real"
 
   override def usedNames: Set[Int] = Set.empty
@@ -62,7 +62,7 @@ case class RealT1() extends TlaType1 {
 /**
  * A Boolean type.
  */
-case class BoolT1() extends TlaType1 {
+case object BoolT1 extends TlaType1 {
   override def toString: String = "Bool"
 
   override def usedNames: Set[Int] = Set.empty
@@ -72,7 +72,7 @@ case class BoolT1() extends TlaType1 {
 /**
  * The type of an uninterpreted string literal.
  */
-case class StrT1() extends TlaType1 {
+case object StrT1 extends TlaType1 {
   override def toString: String = "Str"
 
   override def usedNames: Set[Int] = Set.empty

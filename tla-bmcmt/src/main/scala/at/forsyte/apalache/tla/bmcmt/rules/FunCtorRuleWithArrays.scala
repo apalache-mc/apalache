@@ -43,11 +43,11 @@ class FunCtorRuleWithArrays(rewriter: SymbStateRewriter) extends FunCtorRule(rew
     nextState = nextState.updateArena(_.setCdm(funCell, relation))
 
     def addCellCons(domElem: ArenaCell, rangeElem: ArenaCell): Unit = {
-      val inDomain = tla.apalacheSelectInFun(domElem.toNameEx, domainCell.toNameEx).typed(BoolT1())
-      val inRange = tla.apalacheStoreInFun(rangeElem.toNameEx, funCell.toNameEx, domElem.toNameEx).typed(BoolT1())
-      val notInRange = tla.apalacheStoreNotInFun(rangeElem.toNameEx, funCell.toNameEx).typed(BoolT1())
+      val inDomain = tla.apalacheSelectInFun(domElem.toNameEx, domainCell.toNameEx).typed(BoolT1)
+      val inRange = tla.apalacheStoreInFun(rangeElem.toNameEx, funCell.toNameEx, domElem.toNameEx).typed(BoolT1)
+      val notInRange = tla.apalacheStoreNotInFun(rangeElem.toNameEx, funCell.toNameEx).typed(BoolT1)
       // Function updates are guarded by the inDomain predicate
-      val ite = tla.ite(inDomain, inRange, notInRange).typed(BoolT1())
+      val ite = tla.ite(inDomain, inRange, notInRange).typed(BoolT1)
       rewriter.solverContext.assertGroundExpr(ite)
     }
 
