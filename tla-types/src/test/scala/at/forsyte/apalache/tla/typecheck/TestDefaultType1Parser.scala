@@ -286,8 +286,8 @@ class TestDefaultType1Parser extends AnyFunSuite with Checkers with TlaType1Gen 
   test("type alias that introduces a variant") {
     val text = "MESSAGE = Req({ ask: Int }) | Ack({ success: Bool })"
     val result = DefaultType1Parser.parseAlias(text)
-    val row1 = RecRowT1(RowT1("ask" -> IntT1()))
-    val row2 = RecRowT1(RowT1("success" -> BoolT1()))
+    val row1 = RecRowT1(RowT1("ask" -> IntT1))
+    val row2 = RecRowT1(RowT1("success" -> BoolT1))
     val expectedType = VariantT1(RowT1("Req" -> row1, "Ack" -> row2))
     val typeAlias = ("MESSAGE", expectedType)
     assert(typeAlias == result)
