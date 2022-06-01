@@ -1,9 +1,12 @@
 ---
-authors: Igor Konnov
-last revised: 2022-05-16
+
+**authors:** Igor Konnov
+
+**last revised:** 2022-06-01
+
 ---
 
-# ADR-020: Improving membership in arenas
+# ADR-020: Introduce static membership in arenas
 
 **Table of Contents**
 
@@ -15,71 +18,103 @@ last revised: 2022-05-16
 
 ## Summary
 
-We discuss an extension of membership edges in arenas. The main application of
-this extension is a more efficient implementation of powersets and
-functions sets. Potentially, this extension will let us optimize the number of
-SMT constraints and thus improve performance of the model checker in general.
+We discuss an extension of the model checker arenas. The main application of this extension is a more efficient
+implementation of powersets and functions sets. Potentially, this extension will let us optimize the number of SMT
+constraints and thus improve performance of the model checker in general.
 
 ## 1. Context
 
-The model checker heavily relies on the concept of arenas, which are a static
-overapproximation of the data structures produced by symbolic execution of a
-TLA+ specification. Arenas are explained in detail in [KKT19][]. Here we give a
-very short recap. In a nutshell, all basic values of TLA+ (such as integers,
-strings, and Booleans) and data structures (sets, functions, records, tuples,
-and sequences) are translated into *cells*. Cells are SMT constants, which can
-be connected to other cells by *edges*. Currently, we have three kinds of edges:
+We give only a brief introduction to arenas. A detailed exposition can be found in [KKT19][].
 
- - **has**. A membership edge `(c_p, c_e)` represents that a parent cell `c_p`
-   potentially contains an element `c_e` (e.g., if `c_p` represents a set).
-   These edges encode many-to-many relations.
+### 1.1. Short introduction to arenas
 
- - **dom**. A domain edge `(c_f, c_d)` represents that a function cell `c_f`
-   has the domain represented with a cell `c_d`.
-   These edges encode many-to-one relations.
+The model checker heavily relies on the concept of arenas, which are a static overapproximation of the data structures
+produced by symbolic execution of a TLA+ specification. Here we give a very short recap. In a nutshell, all basic values
+of TLA+ (such as integers, strings, and Booleans) and data structures
+(sets, functions, records, tuples, and sequences) are translated into *cells*. Cells are SMT constants, which can be
+connected to other cells by *edges*. Currently, we have three kinds of edges:
 
- - **cdm**. A co-domain edge `(c_F, c_c)` represents that a function set cell
-   `c_F` has the co-domain represented with a cell `c_c`.
-   These edges encode many-to-one relations.
+- **has**. A membership edge `(c_p, c_e)` represents that a parent cell `c_p`
+  potentially contains an element `c_e` (e.g., if `c_p` represents a set). These edges encode many-to-many relations.
 
-   *For historic reasons, functions are also encoded with the edges called
-   **dom** and **cdm**, though the **cdm** edge points to the function
-   relation, not its co-domain. This should be fixed!*
+- **dom**. A domain edge `(c_f, c_d)` represents that a function cell `c_f`
+  has the domain represented with a cell `c_d`. These edges encode many-to-one relations.
 
-Having the edges of kinds **dom** and **cdm** happened to be too inflexible.
-As we explained above, sometimes we would like to have another edge kind called
-**rel**. As these edges are many-to-one, we can map them from their kinds `kind
--> (c_p, c_e)`. This requires simple refactoring, so we are not going to
-discuss the **dom** and **cdm** any further.
+  Likewise, a domain edge `(c_F, c_c)` represents that a function set cell
+  `c_F` has the domain represented with a cell `c_c`.
+
+- **cdm**. A co-domain edge `(c_F, c_c)` represents that a function set cell
+  `c_F` has the co-domain represented with a cell `c_c`. These edges encode many-to-one relations.
+
+  For historic reasons, functions are also encoded with the edges called
+  **dom** and **cdm**, though the **cdm** edge points to the function relation, not its co-domain. We would prefer to
+  call label the relation edge with **rel**, not **cdm**. As these edges are many-to-one, we can map them from their
+  kinds `kind -> (c_p, c_e)`. This requires simple refactoring, so we are not going to discuss the **dom** and **cdm**
+  any further.
 
 There is a need for refactoring and extension of the **has**-edges. We
 summarize the issues with the current implementation of this kind of edges:
 
- - Originally, every edge `(c_S, c_e)` of the kind **has** was encoded as a
-   Boolean constant `in_${c_e.id}_${c_S.id}` in SMT. Hence, every time the edge
-   is copied to another set cell `c_T`, we have to introduce another Boolean
-   constant `in_${c_e.id}_${c_T.id}` in SMT. As a result, two set cells do not
-   share edges. This causes unnecessary duplication of SMT constants and
-   constraints.
+- Originally, every edge `(c_S, c_e)` of the kind **has** was encoded as a Boolean constant `in_${c_e.id}_${c_S.id}` in
+  SMT. Hence, every time we introduce a copy `c_T` of a set `c_S`, we introduce a new edge
+  `(c_T, c_e)` in the arena, and thus we have to introduce another Boolean constant `in_${c_e.id}_${c_T.id}` in SMT.
+  Alternatively, we could use a single Boolean variable both for `(c_S, c_e)` and `(c_T, c_e)`.
 
- - Later, when translating records and tuples, we stopped introducing Boolean constants in SMT for the **has**-edges. However, we do not record the fact that
-   these edges are presented only in the arena, not in SMT. Hence, we have to
-   be careful and avoid expressing membership in SMT when working with these edges.
+- Later, when translating records and tuples, we stopped introducing Boolean constants in SMT for the **has**-edges.
+  However, we do not track in the arena the fact that these edges are presented only in the arena, not in SMT. Hence, we
+  have to be careful and avoid expressing membership in SMT when working with these edges.
 
- - As every **has**-edge directly refers to its parent in the edge name (that
-   is, `in_${c_e.id}_${c_S.id}`), we cannot share edges when encoding `SUBSET
-   S` and `[S -> T]`. As a result, we have to introduce a massive number of
-   Boolean constants and constraints, which are not necessary.
+- As every **has**-edge directly refers to its parent in the edge name (that is, `in_${c_e.id}_${c_S.id}`), we cannot
+  share edges when encoding `SUBSET S` and `[S -> T]`. As a result, we have to introduce a massive number of Boolean
+  constants and constraints, which are not necessary.
 
- - We keep adding edges and SMT constants to the solver context, even when we
-   know exactly that an element belongs to a set, e.g., as in `{ 1, 2, 3 }`.
+- We keep adding edges and SMT constants to the solver context, even when we know exactly that an element belongs to a
+  set, e.g., as in `{ 1, 2, 3 }`.
+
+### 1.2. Arena examples
+
+To introduce the context in more detail, we give an example of how several TLA+ expressions are represented in arenas
+and SMT.
+
+Consider the following expression:
+
+```tla
+{ a, b, c } \union { d, e }
+```
+
+Let's denote the arguments of the set union to be `S` and `T`. In the current arena representation, the rewriting
+rule `SetCtorRule` creates the following SMT constants (assuming that `a, ..., e` were translated to arena cells):
+
+- Two cells `c_l` and `c_r` to represent the sets `S` and `T`. These cells are backed with two SMT constants of an
+  uninterpreted sort, which corresponds to the common type of `S` and `T`.
+
+- Five SMT constants of the Boolean sort that express set membership of `a, b, c` and `d, e` in `S` and `T`,
+  respectively. The sets `S` and `T` are backed with SMT constants of the sort of `S` and `T`.
+
+- One cell `c_u` to represent the set `S \union T`.
+
+- Five Boolean constants of the Boolean sort that express set membership of
+  `a, b, c, d, e` in `S \union T`.
+
+It is obvious that 10 Boolean constants introduced for set membership are completely unnecessary, as we know for sure
+that the respective elements belong to the three sets. Moreover, when constructing `S \union T`, the rule `SetCupRule`
+creates five SMT constraints:
+
+```smt
+;; a, b, c belong to the union, when they belong to S
+(= in_a_u in_a_l)
+(= in_b_u in_b_l)
+(= in_c_u in_c_l)
+;; d and e belong to the union, when they belong to T
+(= in_d_u in_d_r)
+(= in_e_u in_e_r)
+```
 
 ## 2. Options
 
- - Keep things as they are.
+- Keep things as they are.
 
- - Implement the extension of membership edges presented below.
-
+- Implement the extension of membership edges presented below.
 
 ## 3. Solution
 
@@ -186,54 +221,16 @@ expressions. For instance:
 
 ### 3.2. Optimization 1: constant propagation via membership pointers
 
-One immediate application of using the new representation is completely
-SMT-free construction of some of the TLA+ expressions. Consider the following
-expression:
+One immediate application of using the new representation is completely SMT-free construction of some of the TLA+
+expressions.
 
-```tla
-{ a, b, c } \union { d, e }
-```
+Recall the example in [Section 1.2](#12-arena-examples). With the new representation, the set constructor would simply
+create five instances of
+`FixedElemPtr` that carry the value `true`, that is, the elements unconditionally belong to `S` and `T`. Further, the
+rule `SetCupRule` would simply copy the five pointers, without propagating anything to SMT.
 
-Let's denote the arguments of the set union to be `S` and `T`. In the current
-arena representation, the rewriting rule `SetCtorRule` creates the following
-SMT constants (assuming that `a, ..., e` were translated to
-arena cells):
-
- - Two cells `c_l` and `c_r` to represent the sets `S` and `T`. These cells are
-   backed with two SMT constants of an uninterpreted sort, which corresponds
-   to the common type of `S` and `T`.
-
- - Five SMT constants of the Boolean sort that express set membership of `a, b,
-   c` and `d, e` in `S` and `T`, respectively. This cell is backed with an SMT
-   constant of the sort of `S` and `T`.
-
- - One cell `c_u` to represent the set `S \union T`.
-
- - Five Boolean constants of the Boolean sort that express set membership of
-   `a, b, c, d, e` in `S \union T`.
-
-It is obvious that 10 Boolean constants introduced for set membership are
-completely unnecessary, as we know for sure that the respective elements belong
-to the three sets. Moreover, when constructing `S \union T`, the rule `SetCupRule`
-creates five SMT constraints:
-
-```smt
-;; a, b, c belong to the union, when they belong to S
-(= in_a_u in_a_l)
-(= in_b_u in_b_l)
-(= in_c_u in_c_l)
-;; d and e belong to the union, when they belong to T
-(= in_d_u in_d_r)
-(= in_e_u in_e_r)
-```
-
-With the new representation, the set constructor would simply create five
-instances of `FixedElemPtr` that carry the value `true`, that is, the elements
-unconditionally belong to `S` and `T`. Further, the rule `SetCupRule` would
-simply copy the five pointers, without propagating anything to SMT.
-
-As a result, we obtain constant propagation of set membership, while
-keeping the general spirit of the arena-based encoding.
+As a result, we obtain constant propagation of set membership, while keeping the general spirit of the arena-based
+encoding.
 
 ### 3.3. Optimization 2: sharing membership in a powerset
 
@@ -257,15 +254,13 @@ the case when the set `S` is constructed from the following TLA+ expression:
 }
 ```
 
-In the above example, computation of the predicate is delegated to the SMT
-solver.
+In the above example, computation of the predicate is delegated to the SMT solver.
 
-The code in `PowSetCtor` constructs 2^Cardinality(S) sets that contain all
-subsets of `S`. The tricky part here is that some of the elements of `S` may be
-outside of `S`. To deal with that, `PowSetCtor` constructs cells for each
-potential combinations of `c_1, ..., c_n` and adds membership tests for each of
-them. For instance, consider the subset `T` that is constructed by selecting the
-indices `1, 3, 5` of `1..n`. The constructor will introduce three constraints:
+The code in `PowSetCtor` constructs `2^Cardinality(S)` sets that contain all subsets of `S`. The tricky part here is
+that some of the elements of `S` may be outside of `S`. To deal with that, `PowSetCtor` constructs cells for each
+potential combinations of `c_1, ..., c_n` and adds membership tests for each of them. For instance, consider the
+subset `T` that is constructed by selecting the indices `1, 3, 5` of `1..n`. The constructor will introduce three
+constraints:
 
 ```smt
 (= in_c_1_T in_c_1_S)
@@ -305,15 +300,12 @@ Moreover, we would add `m` membership constraints (per function!) in SMT:
     ...
     (= in_p_m_R (and in_s_m_S in_t_i[m]_T))
 
-As a result, this encoding would introduce `m * n^m` constants in SMT and the
-same number of membership constraints. For instance, if we have `m = 10` and `n
-= 5`, then we would introduce 90 million constants and constraints!
+As a result, this encoding would introduce `m * n^m` constants in SMT and the same number of membership constraints. For
+instance, if we have `m = 10` and `n = 5`, then we would introduce 90 million constants and constraints!
 
-Using the approach outlined in this ADR, we can simply combine membership
-pointers of `S` and `T` via `SmtExprElemPtr`. This would neither introduce SMT
-constants, nor additional constraints. Of course, when this set is used in
-expressions like `\E x \in S: P` or `\A x \in S: P`, the edges will propagate
-to SMT as constraints.
+Using the approach outlined in this ADR, we can simply combine membership pointers of `S` and `T` via `SmtExprElemPtr`.
+This would neither introduce SMT constants, nor SMT constraints. Of course, when this set is used in expressions
+like `\E x \in S: P` or `\A x \in S: P`, the edges will propagate to SMT as constraints.
 
 ## 4. Consequences
 

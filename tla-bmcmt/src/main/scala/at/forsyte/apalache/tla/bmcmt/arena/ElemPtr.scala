@@ -42,10 +42,17 @@ case class FixedElemPtr(elem: ArenaCell, value: Boolean) extends ElemPtr {
  *
  * @param elem
  *   the element this pointer is pointing to.
- * @param id
- *   the unique id of the pointer.
  */
-case class SmtConstElemPtr(elem: ArenaCell, id: UID) extends ElemPtr {
+case class SmtConstElemPtr(elem: ArenaCell) extends ElemPtr {
+
+  /**
+   * The unique id of the pointer.
+   */
+  val id: UID = UID.unique
+
+  /**
+   * The unique name of the pointer.
+   */
   val uniqueName = s"_bool_elem$id"
 
   override def toSmt: TlaEx = {
