@@ -343,73 +343,12 @@ us about 8 hours and about 2 million runs to enumerate.
 
 ### <a name="pbt-explosion"></a> 3.8. Why does it take so long?
 
-Let's do a bit of math to better understand the probability of finding a bug
-with our approach. If you can propose a more precise analysis, please let us
-know.
+If you are interested in the detailed analysis of probabilities, see the [math section](#math) below.
 
-As we discussed above, we have to produce a sequence that contains 5 events.
-Let's focus on the probability of randomly producing a run that contains five
-rules:
+In summary, there are `600'397'329'064'743` (6e14) possible executions, discounting premature termination due to e.g. insufficient coverage or commits preceding submissions.
+The odds of hitting an invariant violation are `6e-7` for our concrete selection of `3` addresses and `20` values.
 
- - At every step, we randomly choose one out of six rules.
-   - If we choose `submit_transfer`, we have
-     `len(ADDR) * len(ADDR) * len(AMOUNTS) = 3 * 3 * 20 = 180`
-     combinations to choose from.
-   - If we choose `submit_transferFrom`, we have
-     `len(ADDR) * len(ADDR) * len(ADDR) * len(AMOUNTS) = 3 * 3 * 3 * 20 = 540`
-     combinations to choose from.
-   - If we choose `submit_approve`, we have
-     `len(ADDR) * len(ADDR) * len(AMOUNTS) = 3 * 3 * 20 = 180`
-     combinations to choose from.
-   - If we choose `commit_transfer`, we restrict the combinations of
-     amounts and addresses with `assume`,
-     so this gives us a multiplier `(1 / 2) * (190 / (20 * 20)) = 0.2375`
-   - If we choose `commit_approve`, we restrict the combinations of
-     amounts and addresses with `assume`,
-     so this gives us a multiplier `(1 / 2) * (19 / 20) = 0.475`
-   - If we choose `commit_transfer_from`, we restrict the combinations of
-     amounts and addresses with `assume`,
-     so this gives us a multiplier `(1 / 2) * (190 / (20 * 20))^2 = 0.1128125`.
-
-To count the number of valid runs that contain 5 rules, we execute a custom
-script [count_combinations.py][]. This script gives us 591e12 combinations.
-
-Although the search space is quite large, we have to understand the number of
-runs that violate the invariant `all_transfers_approved`. Maybe this number is
-of comparable size?
-
-Recall that we are looking for the following sequence, which is pretty much
-fixed:
-
-  1. submit `tx1: approve(u1, u2, n)` where `n > 0` and `u1 != u2`
-  1. submit `tx2: approve(u1, u2, m)` where `m > 0`
-  1. submit `tx3: transferFrom(u2, u1, u3, k)` where `m < k <= n`, `u3 != u2`
-     and `u3 != u1`
-  1. commit `tx1`
-  1. commit `tx3`
-
-How many combinations do we have here? We see that all three addresses `u1`,
-`u2`, and `u3` must be distinct. Hence, the number of combinations for
-producing these addresses is `3! = 6`. The choice of `n` is unrestricted, so we
-have `len(AMOUNTS) = 20` combinations. As for `m` and `k`, we have the
-constraint `m < k <= n`. We can easily compute the number of the combinations
-for `n`, `m`, and `k` with a Python loop:
-
-```python
-  sum = 0
-  for n in range(1, 20);
-      for k in range(1, n + 1):
-          for m in range(1, k):
-              sum += 1
-  print(sum)
-  # 1140
-```
-
-Hence, we have `6 * 1140 = 6840` runs that violate the invariant.  This gives
-is 6840 chances in 591e12. This is about 1 chance in 86 billion, assuming the
-uniform distribution. We were quite lucky that Hypothesis has reported an
-invariant violation after exploring about 2 million runs (after exploring runs
-for 8 hours). Perhaps, Hypothesis is using clever heuristics to enumerate runs.
+We were reasonably lucky that Hypothesis reported an invariant violation after exploring about 2 million runs (after exploring runs for 8 hours). Perhaps, Hypothesis is using clever heuristics to enumerate runs.
 
 ### 3.9. Lessons learned
 
@@ -423,14 +362,13 @@ Some lessons learned:
    the invariants are written correctly. It is not easy to guide the framework
    into an interesting state.
 
- - Random exploration is producing plenty of invalid executions (about 80% in
+ - Random exploration produces plenty of invalid executions (about 80% in
    our case), which are rejected by the framework.
 
  - We had to carefully tune the maximum number of steps in a single run.
-   Further increasing the number of steps would lead to further decrease in the
-   probability of finding an invariant violation.
+   The number of steps is inversely proportional to the probability of finding an invariant violation.
 
- - Given our complexity estimates and the running times, it looks like our
+ - Given our complexity estimates and the run-times, it looks like our
    example is on the edge of what is feasible with Hypothesis.
 
 ## 4. Symbolic simulation with Apalache
@@ -506,8 +444,8 @@ To commit a transfer transaction, we introduce the action `CommitTransfer`:
 ```
 
 The interesting aspect here is that we mark a transaction as failed, if it
-violates the validation rules. Although it is not of importance in this
-tutorial, it is a good pattern, which lets us to produce transactions that can
+violates the validation rules. Although it is not important in this
+tutorial, it is a good pattern, which lets us produce transactions that can
 be used to test the actual implementation with an end-to-end testing framework
 such as [Atomkraft][].
 
@@ -551,7 +489,7 @@ following state invariant:
 ### 4.7. Introducing an instance for model checking
 
 Our TLA+ specification is parameterized in the sets `ADDR` and `AMOUNTS`. In
-order to run Apalache, we have to initialize this constant. The complete code
+order to run Apalache, we have to initialize these constants. The complete code
 can be found in [MC_ERC20.tla][]. The most important definitions are as
 follows:
 
@@ -615,7 +553,7 @@ Here is what is happening in the figure:
  Finally, at Prefix 10, Apalache finds an execution that is described by Prefix
  10 and violates the invariant `NoTransferFromWhileApproveInFlight`.
 
-Actually, we have repeated the process described in 1-4 multiple times. In our
+Actually, the process described in 1-4 was repeated multiple times. In our
 case it was 33 times, but it may differ from run to run. We call this process
 *symbolic simulation*, since it combines two techniques in one:
 
@@ -626,9 +564,8 @@ case it was 33 times, but it may differ from run to run. We call this process
 
 ### <a name="how-many"></a> 4.9. How many symbolic runs do we have?
 
-Recall that, in theory, we had to explore billions of random executions with
-Hypothesis, see [Section 3.9](#pbt-explosion). This is due to that we had to
-randomly pick a rule to execute as well as its inputs. With symbolic
+Recall that, in theory, we had to explore millions of random executions with
+Hypothesis, see [Section 3.8](#pbt-explosion). This is due to the fact that we had to randomly pick a rule to execute as well as its inputs. With symbolic
 simulation, we only have to randomly pick an action, and the rest is done by
 the solver. Hence, we can roughly estimate the number of different symbolic
 runs:
@@ -641,18 +578,11 @@ runs:
 
 How many of these executions would let us discover the invariant violation?
 When we limit the length to 5, there is only one symbolic execution that
-describes exactly the [sequence of events](#erc20-events) in Section 2.3. So we
-have 1 chance in 7776 to find the bug. If we run the simulation 7776 times, we
-should find it with high probability. In this example, it takes about 1
-second to analyze one symbolic run. Hence, we should find this bug in about 1
-hour on average. Given that we usually find it in a matter of seconds, our
-estimate on the number of symbolic runs is probably too pessimistic.
+describes exactly the [sequence of events](#erc20-events) in Section 2.3 (and 12 that find the same category of behavior, with a permutation of independent actions). So we have a 12 in 7776 chance to find the bug. If we run the simulation 7776 times, we should find it with high probability. In this example, it takes about 1 second to analyze one symbolic run. Hence, we should find this bug in about 1 hour on average. Given that we usually find it in a matter of seconds, our estimate on the number of symbolic runs is probably too pessimistic.
 
 When we limit the length to 10, it seems that we have an unmanageable number of
 runs. However, recall that we have to find a run that contains the [sequence of
-events](#erc20-events) as a subsequence! It seems that the probability of
-finding an invariant violation in a single run stays the same as for the length
-of 5. (This argument requires a more careful analysis.)
+events](#erc20-events) as a subsequence! 
 
 Interestingly, when we set the execution length to 50, Apalache typically finds
 an invariant violation in the first symbolic run after 20-40 steps in 5-7
@@ -704,7 +634,7 @@ It took me 0 days  0 hours  9 min 32 sec
 ```
 
 Now we know that, no matter what, the *invariant holds true on all states that
-are reachable via at most 10 steps*.
+are reachable in at most 10 steps*.
 
 As we discussed in [Section 4.9](#how-many), we have to check about 7776
 symbolic runs, to get a high probability of exploring all executions:
@@ -756,8 +686,8 @@ We have to define two auxiliary files (created with [TLA+ Toolbox][]):
 
 ### 6.2. Simulation with TLC
 
-TLC has a built-in simulation mode, which is randomly producing traces. In our
-case, it can be run like that (set `$APALACHE_HOME` to the directory
+TLC has a built-in simulation mode, which randomly produces traces. In our
+case, it can be run as follows (set `$APALACHE_HOME` to the directory
 where Apalache is installed):
 
 ```sh
@@ -772,11 +702,10 @@ Finished in 01h 09min at (2022-05-27 17:52:48)
 ```
 
 As we can see, TLC has found an invariant violation after 1 hour, though it is
-a matter of luck, since the simulation is done at random. Interestingly, TLC is
-enumerating traces faster than Hypothesis did in our experiments with
+a matter of luck, since the simulation is done at random. Interestingly, TLC enumerated traces faster than Hypothesis did in our experiments with
 [test_erc20.py][], see [Section 3.7](#37-generating-the-test-runs).
 
-Interestingly, *when we set the search depth to 30 or even 50, TLC finds an
+Surprisingly, *when we set the search depth to 30 or even 50, TLC finds an
 invariant violation in less than a minute*. On the other hand, when we set the
 depth to 5, it enumerates the maximum number of runs without hitting a bad
 state. Understanding this relation between the number of steps and the time to
@@ -792,11 +721,11 @@ java -DTLA-Library=$HOME/devl/apalache/src/tla -jar tla2tools.jar \
   -config MC_tlc_check.cfg -nworkers 4 -fpmem .75 MC_tlc_check.tla
 ```
 
-Note that we let TLC to use 75% of the available memory and ran it on 4 CPU
+Note that we let TLC use 75% of the available memory and ran it on 4 CPU
 cores (make sure you have them or change this setting!). Our experiments server
 ran out of disk space (100 GB) after 1 hour and 20 minutes. TLC has produced
-738 million distinct states, most of them left on the search queue. By that
-time, it has reached the diameter of 3, whereas it would need the diameter of 5
+738 million distinct states, most of them left in the search queue. By that
+time, it has reached a diameter of 3, whereas it would need a diameter of 5
 to find an invariant violation.
 
 ## 7. Conclusions
@@ -816,19 +745,18 @@ a hard fact.*
 | TLA+       | [TLC][] | Explicit enumeration + simulation | combinatorial explosion of executions | no | < 1 min for `depth=50`; 1 hour 9 min for `depth=10`|
 | TLA+       | [TLC][] | Explicit model checking | combinatorial explosion of states | yes: for fixed parameters | >1.5h, out of disk space, reached diameter 3 |
 
-Since we have conducted the experiments on one benchmark only, we are not
+Since we have conducted the experiments on a single benchmark, we are not
 trying to draw general conclusions from this table. However, we propose some
 intuition about why the tools behaved this way:
 
  - Stateful testing with PBT is randomly choosing rules and their inputs.
-   Hence, in theory, this should be the worst case of combinatorial explosion
-   in our experiments. Nevertheless, the tool has found an invariant violation.
+   Hence, in theory, this approach should be most susceptible to combinatorial explosion, of the ones in our experiments. Nevertheless, the tool has found an invariant violation.
    We do not know, whether it was sheer luck or clever heuristics of
-   Hypothesis. Interestingly, increase the number of steps did not help us in
+   Hypothesis. Interestingly, increasing the number of steps did not help us in
    finding an error faster, in contrast to TLC and Apalache.
 
  - Symbolic simulation with Apalache was very quick at finding an error. This
-   is due to the fact the number of *symbolic runs* is growing much slower than
+   is due to the fact the number of *symbolic runs* grows much slower than
    the number of *concrete runs* in this example. Interestingly, when we
    increase the number of steps, Apalache finds an invariant violation even
    faster.
@@ -837,17 +765,13 @@ intuition about why the tools behaved this way:
    come as a surprise, as we are using the SMT solver [Z3][]. The SAT/SMT
    community have been tackling NP-complete problems and combinatorial
    explosion for decades. Hence, SMT is better tuned to the search problem than
-   an ad-hoc random exploration. As we have seen, this mode slows down, when
+   an ad-hoc random exploration. As we have seen, this mode slows down when
    there is no error.
 
- - For the depth of 50, both TLC and Apalache found an invariant violation very
-   quickly (less than a minute and 5 seconds, respectively).  For depth of 10,
-   TLC simulation was dramatically slower than the Apalache simulation. The
-   number of generated traces in 1 hour was significantly larger than the
-   number of traces produced with Hypothesis. It would be interesting to see
-   why this is happening. We conjecture that the simulation technique of TLC
-   has a uniform distribution over successor states, not over the enabled
-   actions.
+ - For a depth of 50, both TLC and Apalache found an invariant violation very
+   quickly (less than a minute and 5 seconds, respectively). For a depth of 10, the TLC simulation was dramatically slower than the Apalache simulation. 
+   The number of traces generated in 1 hour was significantly larger than the
+   number of traces produced with Hypothesis in that same time. It would be interesting to see why this happened. We conjecture that the simulation technique of TLC selects from a uniform distribution over successor states, not over the enabled actions.
 
  - Explicit state enumeration with TLC was extremely slow. This is not very
    surprising, as TLC has to deal with relatively large state spaces here.
@@ -864,29 +788,23 @@ and TLC.
 ![Controls](./img/controls.drawio.svg)
 
 The most important controls are the size of the inputs and the number of
-actions/rules. These parameters are under control of the specification writer,
-and they affect the search problem the most. The second most important controls
-are those that control the scope of the search such as the number of steps and
-the number of runs to try. Both Apalache and TLC allow the user to switch
-between simulation and classical model checking. Simulation is typically much
-faster and scales much better with a larger number of steps in a run. However,
-simulation is inherently incomplete and requires some pen & paper reasoning to
-understand the achieved coverage, as we have done in this tutorial. Classical
-model checking modes come with proven guarantees of completeness, though these
-guarantees vary depending on the implemented technique. Finally, TLC has
-extensive controls on the number of cores and memory usage. Although these
-controls do not change the size of the problem, they may help one to get
-the tool feedback faster.
+actions/rules. These parameters are under the control of the specification writer, and they affect the search problem the most. 
+The second most important controls are those that control the scope of the search such as the number of steps and the number of runs to try. 
+Both Apalache and TLC allow the user to switch between simulation and classical model checking. 
+Simulation is typically much faster and scales much better with a larger number of steps in a run. 
+However, simulation is inherently incomplete and requires some pen & paper reasoning to understand the achieved coverage, as we have done in this tutorial. 
+Classical model checking modes come with proven guarantees of completeness, though these guarantees vary depending on the implemented technique. 
+Finally, TLC has extensive controls on the number of cores and memory usage. Although these controls do not change the size of the problem, they may help one get tool feedback faster.
 
 If you are curious, we have tried to push the parameters of Hypothesis and TLC
 to the absolute minimum, e.g., by setting `AMOUNTS` to `0..2` and restricting
-the number of steps to 5. This have not led to a significant improvement in
+the number of steps to 5. This has not led to a significant improvement in
 performance.
 
 In conclusion, we believe that all these methods and tools have their place in
-the developer's tool belt. However, as with all advanced tools, we have to
+a developer's toolkit. However, as with all advanced tools, we have to
 understand, where they fit in the development process and what can affect their
-performance and completeness. For instance, the Apalache team is using
+performance and completeness. For instance, the Apalache team uses the
 property-based testing framework [Scalacheck][] to find hardcore bugs in the
 model checker itself. We call this tool [Nitpick][].
 
@@ -900,6 +818,90 @@ contribute a property-based test similar to [test_erc20.py][] and contribute
 the experimental results to this tutorial, please let us know. We will be happy
 to include them in this tutorial.
 
+## <a name="math"></a> The math
+In this section, we show the full details of the probability analysis for finding the invariant-violating trace from [Section 3.8](#pbt-explosion).
+
+Let us parameterize the problem in the following way: Assume we are performing a random simulation, where one of 6 actions is chosen at each of the 5 steps, uniformly at random. Each action parameter `value` is instantiated with one of `l` values, uniformly at random, and each action parameter `sender, spender, fromAddr, toAddr` is instantiated with one of `m` values, uniformly at random.
+In the concrete simulation, the values were `(l,m) = (20,3)`.
+We also assume the following:
+  - The initial balances, which are also randomly determined, are sufficient to cover all simulated runs, to avoid having to reason about insufficient coverage case, since our goal is to find an example of over-spending.
+  - the framework doesn't exit prematurely if an action is not viable, but chooses to treat it as a no-op instead
+
+In particular, this gives us `m^2 * l` "transfer" actions, `m^2 * l` "approve" actions, and `m^3 * l` "transferFrom" actions, plus three unique commit actions. In total, there are `(m + 2)(m^2 * l) + 3` actions at every step, so 
+`((m + 2)(m^2 * l) + 3)^5` possible runs. For our concrete parameters, this is `600'397'329'064'743`. Note that the model suggests that the action _sort_ is selected before parameters (if any) are instantiated. This means that committing an approval has a `1/6` probability at each step, whereas `approve(u1,u2,v)` only has a `1/(6 * m^2 * l)` probability for any concrete choice of `u1, u2, v` (and `1/6` chance for _some_ choice of `u1,u2,v`).
+
+Under these constraints, what is then the probability of executing a trace, which leads to an invariant violation?
+We break the problem into two independent parts: Finding a viable action order, and finding viable parameters, assuming the order is fixed.
+
+### Viable orders
+To find an invariant violation, we need the following five actions
+  - `H`, `L` (approving the higher and lower values)
+  - `T` (transferFrom) 
+  - `C` (committing the high approve)
+  - `C_T` (committing transferFrom)
+
+under the following constraints:
+  - `H` precedes `C` in the order
+  - `C_T` is last
+
+There are 12 valid sequences that satisfy the constraints (`C_T` is omitted, since it is always last):
+```
+HLTC, HTLC, THLC, LHTC, LTHC, TLHC,
+HLCT, HTCL, THCL, LHCT, 
+HCLT, HCTL
+```
+This means that the probability of finding the 5 transaction sorts in the order needed to violate the invariant is `12/6^5` or `2/6^4`
+
+### Viable values
+Assume now that we have found a viable order. We need to instantiate the parameters to `H,L,T`:
+  - `H(sender_H, spender_H, v_H)`
+  - `L(sender_L,spender_L, v_L)`
+  - `T(sender_T, from, to, v_T)`
+
+subject to the following constraints:
+  1. `sender_H /= spender_H`
+  2. `sender_L /= spender_L`
+  3. `sender_T, from, to` pairwise distinct
+  4. `sender_H = sender_L = from`
+  5. `spender_H = spender_L = sender_T`
+  6. `v_H >= v_T > v_L > 1` (assuming `v` samples from `{1,...,l}`)
+
+Since values and addresses are selected independently, uniformly at random, the probability of picking both viable addresses and viable values is the product of the probability of picking viable addresses and the probability of picking viable values.
+
+Let us first consider the former. There are 7 address values, each selected from among `m` addresses, so a total of `m^7` possibilities.
+Assume we pick one of `m` values for `sender_H`. 
+This determines `sender_L` and `from` by (4). 
+By (1), we have `m-1` choices for `spender_H`. 
+Choosing one determines `spender_L` (satisfying (2) automatically), and `sender_T` by (5). 
+What is left is selecting `to`, which has `m-2` candidates, by (3).
+
+In summary, the probability of selecting a viable set of addresses is `m(m-1)(m-2)/m^7`.
+
+For the latter, we have `l^3` total possible selections of triples `(v_H,v_l,v_T)`. 
+The number of triples that satisfies (5) is
+```
+\sum_{a=2}^l \sum_{b=a+1}^l \sum_{c=b}^l 1
+```
+
+Which sums to `l*(l^2 - 3l + 2)/6`, giving us the following probability of choosing viable values:
+```
+(l^2 - 3l + 2)/(6 * l^2)
+```
+
+And the total probability of instantiating parameters such that the invariant is violated:
+```
+(m-1)(m-2)(l^2 - 3l + 2) / (6 * l^2 * m^6)
+```
+
+### Probability of finding an invariant violation
+
+The probability of finding an invariant violation is the product of the probability of selecting the required actions in a viable order and the conditional probability of selecting viable parameters under the assumption that a viable action order was selected, in other words:
+
+```
+2(m-1)(m-2)(l^2 - 3l + 2) / (6^5 * l^2 * m^6)
+```
+
+which equals `19/31492800` or `6.03313×10^-7` for `(l,m) = (20,3)`.
 
 [Apalache]: https://github.com/informalsystems/apalache/
 [TLC]: https://github.com/tlaplus/tlaplus
