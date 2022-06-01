@@ -3072,6 +3072,14 @@ $ apalache-mc check --length=0 Counter.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 $ ls ./configured-run-dir | ./sort.sh
 detailed.log
+example0.itf.json
+example0.json
+example0.tla
+example.itf.json
+example.json
+example.tla
+MCexample0.out
+MCexample.out
 run.txt
 $ rm -rf ./configured-run-dir ./.apalache.cfg
 ```
