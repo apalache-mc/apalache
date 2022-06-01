@@ -1,7 +1,11 @@
 ---
-authors: Igor Konnov
-proposed by: Vitor Enes, Andrey Kupriyanov
-last revised: 2021-12-23
+
+**authors:** Igor Konnov
+
+**proposed by:** Vitor Enes, Andrey Kupriyanov
+
+**last revised:** 2022-06-01
+
 ---
 
 # ADR-015: Informal Trace Format in JSON
@@ -302,6 +306,11 @@ specified in the field `vars`. Each state must define a value for every specifie
    `p[1]` is the map value. Importantly, a key may be an arbitrary expression. It does not have to be a string or an integer. TLA+ functions are written as maps
    in this format.
 
+1. An expression that cannot be serialized: `{ "#unserializable": "<string
+representation>" }`. For instance, the set of all integers is represented with
+`{ "#unserializable": "Int" }`. This should be a very rare expression, which
+should not occur in normal traces. Usually, it indicates some form of an
+error.
 
 ### Example
 
