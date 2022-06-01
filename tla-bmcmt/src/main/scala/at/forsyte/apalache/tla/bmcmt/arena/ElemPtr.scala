@@ -24,7 +24,8 @@ sealed trait ElemPtr {
 }
 
 /**
- * An element pointer that always evaluates to a fixed Boolean value.
+ * An element pointer that always evaluates to a fixed Boolean value. This pointer is used to encode that the element
+ * unconditionally belongs to a set. For example, when constructing the set `{ 1, 2, 3 }`.
  *
  * @param elem
  *   the element this pointer is pointing to.
@@ -38,7 +39,9 @@ case class FixedElemPtr(elem: ArenaCell, value: Boolean) extends ElemPtr {
 }
 
 /**
- * An element pointer whose value is encoded as a Boolean constant. Its value is found by the SMT solver.
+ * An element pointer whose value is encoded as a Boolean constant. Its value is found by the SMT solver. This pointer
+ * is used as a general case, where set membership is completely delegated to SMT. For example, this case class may be
+ * used when a set is created non-deterministically with `Gen(n)`.
  *
  * @param elem
  *   the element this pointer is pointing to.
@@ -61,7 +64,9 @@ case class SmtConstElemPtr(elem: ArenaCell) extends ElemPtr {
 }
 
 /**
- * An element pointer whose value is encoded via an SMT expression.
+ * An element pointer whose value is encoded via an SMT expression. This is a generalization of [[SmtConstElemPtr]]. For
+ * instance, it can be used to join memberships of two sets: `(and in_123_S in_124_T)`.
+ *
  * @param elem
  *   the element this pointer is pointing to.
  * @param smtEx
