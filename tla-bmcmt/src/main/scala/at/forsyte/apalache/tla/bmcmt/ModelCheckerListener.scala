@@ -21,11 +21,26 @@ trait ModelCheckerListener {
    *   - for deadlocks: `ValEx(TlaBool(true))`,
    *   - for trace invariants: the applied, negated trace invariant (see [[SeqModelChecker.applyTraceInv]]).
    * @param errorIndex
-   *   Number of found error (likely [[SearchState.nFoundErrors]]).
+   *   Number of found error (likely [[search.SearchState.nFoundErrors]]).
    */
   def onCounterexample(
       rootModule: TlaModule,
       trace: DecodedExecution,
       invViolated: TlaEx,
       errorIndex: Int): Unit
+
+  /**
+   * Call when the model checker outputs an example of an execution (for the user to observe)
+   *
+   * @param rootModule
+   *   The checked TLA+ module.
+   * @param trace
+   *   The example trace
+   * @param exampleIndex
+   *   The example number (likely [[search.SearchState.nRunsLeft]])
+   */
+  def onExample(
+      rootModule: TlaModule,
+      trace: DecodedExecution,
+      exampleIndex: Int): Unit
 }
