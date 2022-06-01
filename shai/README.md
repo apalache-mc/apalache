@@ -1,4 +1,4 @@
-# Shai: Human-Apalache Interaction
+# Shai: Server for Human-Apalache Interaction
 
 ## What Shai is
 
@@ -13,8 +13,10 @@ the symbolic model checker.
 
 ## Why it's called Shai
 
-'Shai' is an initialism of "Human-Apalache Interaction" and happily also carries
-[a bunch of other neat connotations](https://en.wiktionary.org/wiki/shai).
+'Shai' is an initialism of "Server for Human-Apalache Interaction" and carries
+[a few other connotations you could consider][shai]. It's pronounced "shy".
+
+[shai]: https://en.wiktionary.org/wiki/shai
 
 ## How Shai works
 
