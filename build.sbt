@@ -183,8 +183,22 @@ lazy val tla_bmcmt = (project in file("tla-bmcmt"))
       libraryDependencies += Deps.scalaCollectionContrib,
   )
 
+lazy val shai = (project in file("shai"))
+  .settings(
+      libraryDependencies ++= Seq(
+          Deps.grpcNetty,
+          Deps.scalapbRuntimGrpc,
+          Deps.zioGrpcCodgen,
+      ),
+      // See https://scalapb.github.io/zio-grpc/docs/installation
+      Compile / PB.targets := Seq(
+          scalapb.gen(grpc = true) -> (Compile / sourceManaged).value / "scalapb",
+          scalapb.zio_grpc.ZioCodeGenerator -> (Compile / sourceManaged).value / "scalapb",
+      ),
+  )
+
 lazy val tool = (project in file("mod-tool"))
-  .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt, hai)
+  .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt, shai)
   .enablePlugins(BuildInfoPlugin)
   .settings(
       testSettings,
@@ -215,20 +229,6 @@ lazy val distribution = (project in file("mod-distribution"))
       testSettings
   )
 
-lazy val hai = (project in file("hai"))
-  .settings(
-      libraryDependencies ++= Seq(
-          Deps.grpcNetty,
-          Deps.scalapbRuntimGrpc,
-          Deps.zioGrpcCodgen,
-      ),
-      // See https://scalapb.github.io/zio-grpc/docs/installation
-      Compile / PB.targets := Seq(
-          scalapb.gen(grpc = true) -> (Compile / sourceManaged).value / "scalapb",
-          scalapb.zio_grpc.ZioCodeGenerator -> (Compile / sourceManaged).value / "scalapb",
-      ),
-  )
-
 ///////////////
 // Packaging //
 ///////////////
@@ -248,7 +248,7 @@ lazy val root = (project in file("."))
       tla_pp,
       tla_assignments,
       tla_bmcmt,
-      hai,
+      shai,
       tool,
       distribution,
   )
