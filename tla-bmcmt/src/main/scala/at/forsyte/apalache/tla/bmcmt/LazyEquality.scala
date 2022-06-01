@@ -428,6 +428,13 @@ class LazyEquality(rewriter: SymbStateRewriter)
         val rightElems = state.arena.getHas(rightRel)
         cacheEqConstraints(state, leftElems.cross(rightElems)) // Cache all the equalities
         eqCache.put(leftFun, rightFun, EqCache.EqEntry())
+        // For the rare case in which one function has an empty domain, we need to be extra careful
+        // See https://github.com/informalsystems/apalache/issues/1811
+        val leftDom = state.arena.getDom(leftFun)
+        val rightDom = state.arena.getDom(rightFun)
+        val funEq = cachedEq(leftFun, rightFun)
+        rewriter.solverContext.assertGroundExpr(tla.impl(funEq, tla.eql(leftDom.toNameEx, rightDom.toNameEx)))
+        // That's it!
         state
 
       case `oopsla19Encoding` =>

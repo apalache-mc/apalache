@@ -29,12 +29,12 @@ ThisBuild / libraryDependencies ++= Seq(
     Deps.guice,
     Deps.logbackClassic,
     Deps.logbackCore,
-    Deps.slf4j,
-    Deps.tla2tools,
-    Deps.z3,
     Deps.logging,
     Deps.scalaParserCombinators,
     Deps.scalaz,
+    Deps.slf4j,
+    Deps.tla2tools,
+    Deps.z3,
     TestDeps.junit,
     TestDeps.easymock,
     TestDeps.scalatest,
@@ -60,6 +60,9 @@ ThisBuild / scalacOptions ++= {
       // Fixes warning: "Exhaustivity analysis reached max recursion depth, not all missing cases are reported."
       "-Ypatmat-exhaust-depth",
       "22",
+      // Silence compiler warnings in generated files
+      // See https://stackoverflow.com/a/66354074/1187277
+      "-Wconf:src=src_managed/.*:silent",
   )
   val conditionalOptions = if (fatalWarnings.value) Seq("-Xfatal-warnings") else Nil
 
@@ -181,7 +184,7 @@ lazy val tla_bmcmt = (project in file("tla-bmcmt"))
   )
 
 lazy val tool = (project in file("mod-tool"))
-  .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt)
+  .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt, hai)
   .enablePlugins(BuildInfoPlugin)
   .settings(
       testSettings,
@@ -212,6 +215,20 @@ lazy val distribution = (project in file("mod-distribution"))
       testSettings
   )
 
+lazy val hai = (project in file("hai"))
+  .settings(
+      libraryDependencies ++= Seq(
+          Deps.grpcNetty,
+          Deps.scalapbRuntimGrpc,
+          Deps.zioGrpcCodgen,
+      ),
+      // See https://scalapb.github.io/zio-grpc/docs/installation
+      Compile / PB.targets := Seq(
+          scalapb.gen(grpc = true) -> (Compile / sourceManaged).value / "scalapb",
+          scalapb.zio_grpc.ZioCodeGenerator -> (Compile / sourceManaged).value / "scalapb",
+      ),
+  )
+
 ///////////////
 // Packaging //
 ///////////////
@@ -231,6 +248,7 @@ lazy val root = (project in file("."))
       tla_pp,
       tla_assignments,
       tla_bmcmt,
+      hai,
       tool,
       distribution,
   )
