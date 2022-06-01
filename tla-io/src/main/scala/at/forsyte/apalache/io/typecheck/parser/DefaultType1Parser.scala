@@ -70,7 +70,7 @@ object DefaultType1Parser extends Parsers with Type1Parser {
   }
 
   private def typeExpr: Parser[TlaType1] = {
-    (operator | function | noFunExpr)
+    operator | function | noFunExpr
   }
 
   // A type expression. We wrap it with a list, as (type, ..., type) may start an operator type
@@ -214,35 +214,11 @@ object DefaultType1Parser extends Parsers with Type1Parser {
   }
 
   // An option in the variant type that is constructed from a row.
-  // For example, { tag: "tag1", f: Bool } or { tag: "tag2", g: Bool, c }.
+  // For example, Tag1(a).
   private def variantOption: Parser[(String, TlaType1)] = {
-    // the first rule tests for duplicates in the rule names
-    (LCURLY() ~> tag ~> COLON() ~> stringLiteral ~>
-      COMMA() ~> rep1sep(typedField, COMMA()) <~ opt(COMMA() ~ typeVar) <~ RCURLY()) >> { list =>
-      val dup = findDups("tag" +: list.map(_._1))
-      if (dup.nonEmpty) {
-        err(s"Found a duplicate key ${dup.get} in a record")
-      } else {
-        // fail here to try the second rule
-        failure("")
-      }
-    } | // the second rule is actually producing the result, provided that the sequence is accepted
-      (LCURLY() ~> tag ~ COLON() ~ stringLiteral ~
-        opt(COMMA() ~ rep1sep(typedField, COMMA())) ~ opt(COMMA() ~ typeVar) <~ RCURLY()) ^^ {
-        case _ ~ _ ~ STR_LITERAL(tagValue) ~ optList ~ Some(_ ~ VarT1(v)) =>
-          val list = optList match {
-            case Some(_ ~ l) => l
-            case _           => Nil
-          }
-          (tagValue, RecRowT1(RowT1(VarT1(v), ("tag" -> StrT1()) :: list: _*)))
-
-        case _ ~ _ ~ STR_LITERAL(tagValue) ~ optList ~ None =>
-          val list = optList match {
-            case Some(_ ~ l) => l
-            case _           => Nil
-          }
-          (tagValue, RecRowT1(RowT1(("tag" -> StrT1()) :: list: _*)))
-      }
+    ((tag <~ LPAREN()) ~ typeExpr <~ RPAREN()) ^^ { case IDENT(tagName) ~ valueType =>
+      (tagName, valueType)
+    }
   }
 
   // the user-friendly syntax of the variant type
@@ -257,8 +233,8 @@ object DefaultType1Parser extends Parsers with Type1Parser {
         failure("")
       }
     } | // the second rule is actually producing the result, provided that the sequence is accepted
-      (rep1sep(variantOption, PIPE()) ~ opt(PIPE() ~ typeVar)) ^^ {
-        case list ~ Some(_ ~ VarT1(v)) =>
+      (rep1sep(variantOption, PIPE()) ~ opt(PIPE() ~> typeVar)) ^^ {
+        case list ~ Some(VarT1(v)) =>
           VariantT1(RowT1(VarT1(v), list: _*))
 
         case list ~ None =>
@@ -280,14 +256,6 @@ object DefaultType1Parser extends Parsers with Type1Parser {
     }
   }
 
-  // A tag name
-  private def stringLiteral: Parser[STR_LITERAL] = {
-    accept("string literal",
-        { case f @ STR_LITERAL(_) =>
-          f
-        })
-  }
-
   // A record field name, like foo_BAR2.
   // As field name are colliding with CAPS_IDENT and TYPE_VAR, we expect all of them.
   private def fieldName: Parser[IDENT] = {
@@ -298,10 +266,9 @@ object DefaultType1Parser extends Parsers with Type1Parser {
   }
 
   private def tag: Parser[IDENT] = {
-    accept("tag",
-        {
-          case f @ IDENT(name) if name == "tag" =>
-            f
+    accept("variant tag",
+        { case f @ IDENT(_) =>
+          f
         })
   }
 

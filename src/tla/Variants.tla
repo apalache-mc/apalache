@@ -20,8 +20,7 @@
  *
  * The type could look like follows, if we supported string literals in types:
  *
- *   (Str, a) =>
- *     { tag: "$tagValue", a } | b
+ *   (Str, a) => Tag(a) | b
  *)
 Variant(__tag, __value) ==
     \* default untyped implementation
@@ -36,9 +35,9 @@ Variant(__tag, __value) ==
  *
  * The type could look like follows, if we supported string literals in types:
  *
- *   (Str, Set({ tag: "$tagValue", a} | b)) => Set({ a })
+ *   (Str, Set(Tag(a) | b)) => Set(a)
  *)
-FilterByTag(__tag, __S) ==
+VariantFilter(__tag, __S) ==
     \* default untyped implementation
     { __d \in { __e \in __S: __e.tag = __tag }: __d.value }
 
@@ -63,38 +62,34 @@ FilterByTag(__tag, __S) ==
  *
  *   (
  *     Str,
- *     { "$tagValue": a | b },
- *     { a } => r,
+ *     { Tag(a) | b },
+ *     a => r,
  *     Variant(b) => r
  *   ) => r
  *)
-MatchTag(__tagValue, __variant, __ThenOper(_), __ElseOper(_)) ==
+VariantMatch(__tagValue, __variant, __ThenOper(_), __ElseOper(_)) ==
     \* default untyped implementation
     IF __variant.tag = __tagValue
     THEN __ThenOper(__variant.value)
     ELSE __ElseOper(__variant)
 
 (**
- * In case when `variant` allows for one record type,
- * apply `ThenOper(rec)`, where `rec` is a record extracted from `variant`.
- * The type checker must enforce that `variant` allows for one record type.
- * The untyped implementation does not perform such a test,
- * as it is impossible to do so without types.
+ * In case when `variant` allows for one value,
+ * extract the associated value and return it.
+ * The type checker must enforce that `variant` allows for one option.
  *
+ * @param `tagValue` the tag attached to the variant
  * @param `variant` a variant that is constructed with `Variant(...)`
- * @param `ThenOper` an operator that is called
- *        when `variant` is tagged with `tagValue`
- * @return the result returned by `ThenOper`
+ * @return the value extracted from the variant
  *
- * The type could look like follows, if we supported string literals in types:
+ * Its type could look like follows:
  *
- *   (
- *     Str,
- *     { "$tagValue": a },
- *     { a } => r
- *   ) => r
+ *   (Str, Tag(a)) => a
  *)
-MatchOnly(__tagValue, __variant, __ThenOper(_)) ==
+VariantGet(__tagValue, __variant) ==
     \* default untyped implementation
-    __ThenOper(__variant.value)
+    IF __variant.tag = __tagValue
+    THEN __variant.value
+    ELSE \* trigger an error in TLC by choosing a non-existant element
+         CHOOSE x \in { __variant }: x.tag = __tagValue
 ===============================================================================

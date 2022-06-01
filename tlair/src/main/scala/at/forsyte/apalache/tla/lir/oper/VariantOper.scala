@@ -26,8 +26,8 @@ object VariantOper {
   /**
    * Set filter over variants.
    */
-  object filterByTag extends VariantOper {
-    override def name: String = "Variants!FilterByTag"
+  object variantFilter extends VariantOper {
+    override def name: String = "Variants!VariantFilter"
 
     override def arity: OperArity = FixedArity(2)
 
@@ -37,8 +37,8 @@ object VariantOper {
   /**
    * Match a variant by tag.
    */
-  object matchTag extends VariantOper {
-    override def name: String = "Variants!MatchTag"
+  object variantMatch extends VariantOper {
+    override def name: String = "Variants!VariantMatch"
 
     override def arity: OperArity = FixedArity(4)
 
@@ -48,10 +48,10 @@ object VariantOper {
   /**
    * Match a single variant.
    */
-  object matchOnly extends VariantOper {
-    override def name: String = "Variants!MatchOnly"
+  object variantGet extends VariantOper {
+    override def name: String = "Variants!VariantGet"
 
-    override def arity: OperArity = FixedArity(3)
+    override def arity: OperArity = FixedArity(2)
 
     override val precedence: (Int, Int) = (100, 100)
   }

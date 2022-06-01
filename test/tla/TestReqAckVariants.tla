@@ -1,4 +1,4 @@
---------------------------- MODULE TestVariants -------------------------------
+----------------------- MODULE TestReqAckVariants ------------------------------
 \* A test for the Variants module.
 \* This test should work when ADR-014 is implemented.
 
@@ -10,16 +10,14 @@ VARIABLES
     \* @type: Int;
     balance,
     (*
-      @typeAlias: MESSAGE =
-          { tag: "req", ask: Int }
-        | { tag: "ack", success: Bool };
+      @typeAlias: MESSAGE = Req({ ask: Int }) | Ack({ success: Bool });
+
       @type: Set(MESSAGE);
      *)
     msgs,
     (*
-      @typeAlias: EVENT =
-          { tag: "withdraw", amount: Int }
-        | { tag: "lacking", amount: Int };
+      @typeAlias: EVENT = Withdraw(Int) | Lacking(Int);
+
       @type: Seq(EVENT);  
      *)
     log
@@ -31,30 +29,29 @@ Init ==
 
 SendRequest(ask) ==
     /\ ask > 0
-    /\ LET m == Variant([ tag |-> "req", ask |-> ask ]) IN
+    /\ LET m == Variant("Req", [ ask |-> ask ]) IN
        msgs' = msgs \union { m }
     /\ UNCHANGED <<balance, log>>
 
 
-ProcessRequest(m) ==
-    /\  IF balance >= m.ask
-        THEN LET entry == Variant([ tag |-> "withdraw", amount |-> m.ask ]) IN
-             LET ack == Variant([ tag |-> "ack", success |-> TRUE ]) IN
-            /\ balance' = balance - m.ask
+ProcessRequest(ask) ==
+    /\  IF balance >= ask
+        THEN LET entry == Variant("Withdraw", ask) IN
+             LET ack == Variant("Ack", [ success |-> TRUE ]) IN
+            /\ balance' = balance - ask
             /\ log' = Append(log, entry)
-            /\ msgs' = (msgs \ { m }) \union { ack }
-        ELSE LET entry ==
-                Variant([ tag |-> "lacking", amount |-> m.ask - balance ]) IN
-             LET ack == Variant([ tag |-> "ack", success |-> FALSE ]) IN
+            /\ msgs' = (msgs \ { Variant("Req", [ ask |-> ask]) }) \union { ack }
+        ELSE LET entry == Variant("Lacking", ask - balance) IN
+             LET ack == Variant("Ack", [ success |-> FALSE ]) IN
             /\ log' = Append(log, entry)
-            /\ msgs' = (msgs \ { m }) \union { ack }
+            /\ msgs' = (msgs \ { Variant("Req", [ ask |-> ask]) }) \union { ack }
             /\ UNCHANGED balance
 
 
 Next ==
     \/ \E ask \in Amounts:
         SendRequest(ask)
-    \/ \E m \in FilterByTag(msgs, "req"):
-        ProcessRequest(m)
+    \/ \E m \in VariantFilter("Req", msgs):
+        ProcessRequest(m.ask)
 
 ===============================================================================

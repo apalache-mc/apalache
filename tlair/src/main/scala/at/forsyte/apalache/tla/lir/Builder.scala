@@ -692,8 +692,8 @@ class Builder {
    * @return
    *   a set of the values extracted for the given tag
    */
-  def filterByTag(tagName: String, setEx: BuilderEx): BuilderEx = {
-    BuilderOper(VariantOper.filterByTag, str(tagName), setEx)
+  def variantFilter(tagName: String, setEx: BuilderEx): BuilderEx = {
+    BuilderOper(VariantOper.variantFilter, str(tagName), setEx)
   }
 
   /**
@@ -709,28 +709,28 @@ class Builder {
    *   the operator te be applied when the variant is not tagged with `tagName`; the reduced invariant is passed to it
    * @return
    */
-  def matchTag(
+  def variantMatch(
       tagName: String,
       variantEx: BuilderEx,
       thenOper: BuilderEx,
       elseOper: BuilderEx): BuilderEx = {
-    BuilderOper(VariantOper.matchTag, str(tagName), variantEx, thenOper, elseOper)
+    BuilderOper(VariantOper.variantMatch, str(tagName), variantEx, thenOper, elseOper)
   }
 
   /**
    * Match a variant that admits only one option (one tag)
    *
+   * @param tagName
+   *   a tag value (string)
    * @param variantEx
    *   a variant expression
-   * @param thenOper
-   *   the operator to be applied when the variant is tagged with `tagName`; the associated value is passed to it
    * @return
+   *   the value extracted from the variant
    */
-  def matchOnly(
+  def variantGet(
       tagName: String,
-      variantEx: BuilderEx,
-      thenOper: BuilderEx): BuilderEx = {
-    BuilderOper(VariantOper.matchOnly, str(tagName), variantEx, thenOper)
+      variantEx: BuilderEx): BuilderEx = {
+    BuilderOper(VariantOper.variantGet, str(tagName), variantEx)
   }
 
   private val m_nameMap: Map[String, TlaOper] =
@@ -828,9 +828,9 @@ class Builder {
         ApalacheOper.setAsFun.name -> ApalacheOper.setAsFun,
         ApalacheOper.guess.name -> ApalacheOper.guess,
         VariantOper.variant.name -> VariantOper.variant,
-        VariantOper.matchOnly.name -> VariantOper.matchOnly,
-        VariantOper.matchTag.name -> VariantOper.matchTag,
-        VariantOper.filterByTag.name -> VariantOper.filterByTag,
+        VariantOper.variantGet.name -> VariantOper.variantGet,
+        VariantOper.variantMatch.name -> VariantOper.variantMatch,
+        VariantOper.variantFilter.name -> VariantOper.variantFilter,
     )
 
   def byName(operatorName: String, args: BuilderEx*): BuilderEx = {

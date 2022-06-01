@@ -767,41 +767,39 @@ class ToEtcExpr(
       case OperEx(VariantOper.variant, v @ ValEx(TlaStr(tagName)), valueEx) =>
         val a = varPool.fresh
         val b = varPool.fresh
-        // (Str, { a }) => { tag: "1a", a } | b
+        // (Str, a) => T1a(a) | b
         val opsig =
-          OperT1(Seq(StrT1(), RecRowT1(RowT1(a))), VariantT1(RowT1(b, tagName -> RecRowT1(RowT1(a, "tag" -> StrT1())))))
+          OperT1(Seq(StrT1(), a), VariantT1(RowT1(b, tagName -> a)))
         // For some reason, we required the field tag: Str to be present in the value type. We should revisit this.
         mkExRefApp(opsig, Seq(v, valueEx))
 
       case ex @ OperEx(VariantOper.variant, tag @ _, _) =>
         throw new TypingInputException(s"The second argument of Variant must be a string, found: $tag", ex.ID)
 
-      case OperEx(VariantOper.filterByTag, v @ ValEx(TlaStr(tagName)), setEx) =>
+      case OperEx(VariantOper.`variantFilter`, v @ ValEx(TlaStr(tagName)), setEx) =>
         val a = varPool.fresh
         val b = varPool.fresh
-        // (Str, Set({ tag: "1a", a } | b)) => Set({ a })
-        val opsig =
-          OperT1(Seq(StrT1(), SetT1(VariantT1(RowT1(b, tagName -> RecRowT1(RowT1(a, "tag" -> StrT1())))))),
-              SetT1(RecRowT1(RowT1(a))))
+        // (Str, Set(T1a(a) | b)) => Set(a)
+        val opsig = OperT1(Seq(StrT1(), SetT1(VariantT1(RowT1(b, tagName -> a)))), SetT1(a))
         // For some reason, we required the field tag: Str to be present in the value type. We should revisit this.
         mkExRefApp(opsig, Seq(v, setEx))
 
-      case ex @ OperEx(VariantOper.filterByTag, tag @ _, _) =>
+      case ex @ OperEx(VariantOper.`variantFilter`, tag @ _, _) =>
         throw new TypingInputException(s"The second argument of FilterByTag must be a string, found: $tag", ex.ID)
 
-      case OperEx(VariantOper.matchTag, v @ ValEx(TlaStr(tagName)), variantEx, thenOper, elseOper) =>
+      case OperEx(VariantOper.`variantMatch`, v @ ValEx(TlaStr(tagName)), variantEx, thenOper, elseOper) =>
         val a = varPool.fresh
         val b = varPool.fresh
         val c = varPool.fresh
-        // { a } => c
-        val thenType = OperT1(Seq(RecRowT1(RowT1(a))), c)
+        // a => c
+        val thenType = OperT1(Seq(a), c)
         // Variant(b) => c
         val elseType = OperT1(Seq(VariantT1(RowT1(b))), c)
-        // (Str, { tag: "1a", a } | b, thenOper, elseOper) => c
+        // (Str, T1a(a) | b, thenOper, elseOper) => c
         val operArgs =
           Seq(
               StrT1(),
-              VariantT1(RowT1(b, tagName -> RecRowT1(RowT1(a, "tag" -> StrT1())))),
+              VariantT1(RowT1(b, tagName -> a)),
               thenType,
               elseType,
           )
@@ -810,25 +808,21 @@ class ToEtcExpr(
         // For some reason, we required the field tag: Str to be present in the value type. We should revisit this.
         mkExRefApp(opsig, Seq(v, variantEx, thenOper, elseOper))
 
-      case OperEx(VariantOper.matchTag, tag @ _, _, _, _) =>
+      case OperEx(VariantOper.`variantMatch`, tag @ _, _, _, _) =>
         throw new TypingInputException(s"The second argument of MatchTag must be a string, found: $tag", ex.ID)
 
-      case OperEx(VariantOper.matchOnly, v @ ValEx(TlaStr(tagName)), variantEx, thenOper) =>
+      case OperEx(VariantOper.`variantGet`, v @ ValEx(TlaStr(tagName)), variantEx) =>
         val a = varPool.fresh
-        val b = varPool.fresh
-        // { a } => b
-        val thenType = OperT1(Seq(RecRowT1(RowT1(a))), b)
-        // (Str, { tag: "1a", a }, thenOper) => b
+        // (Str, T1a(a)) => a
         val operArgs =
           Seq(
               StrT1(),
-              VariantT1(RowT1(tagName -> RecRowT1(RowT1(a, "tag" -> StrT1())))),
-              thenType,
+              VariantT1(RowT1(tagName -> a)),
           )
 
-        val opsig = OperT1(operArgs, b)
+        val opsig = OperT1(operArgs, a)
         // For some reason, we required the field tag: Str to be present in the value type. We should revisit this.
-        mkExRefApp(opsig, Seq(v, variantEx, thenOper))
+        mkExRefApp(opsig, Seq(v, variantEx))
 
       // ******************************************** Apalache **************************************************
       case OperEx(ApalacheOper.`mkSeq`, len, ctor) =>

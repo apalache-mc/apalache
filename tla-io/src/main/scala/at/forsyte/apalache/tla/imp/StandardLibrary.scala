@@ -69,9 +69,9 @@ object StandardLibrary {
         ("Apalache", "ApaFoldSeqLeft") -> ApalacheOper.foldSeq,
         // Variants
         ("Variants", "Variant") -> VariantOper.variant,
-        ("Variants", "FilterByTag") -> VariantOper.filterByTag,
-        ("Variants", "MatchTag") -> VariantOper.matchTag,
-        ("Variants", "MatchOnly") -> VariantOper.matchOnly,
+        ("Variants", "VariantFilter") -> VariantOper.variantFilter,
+        ("Variants", "VariantMatch") -> VariantOper.variantMatch,
+        ("Variants", "VariantGet") -> VariantOper.variantGet,
         // internal modules
         ("__apalache_folds", "__ApalacheFoldSeq") -> ApalacheOper.foldSeq,
         ("__apalache_folds", "__ApalacheMkSeq") -> ApalacheOper.mkSeq,

@@ -612,7 +612,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
     expectDecl(
         "FBT",
         OperEx(
-            VariantOper.filterByTag,
+            VariantOper.variantFilter,
             ValEx(TlaStr("1a")),
             OperEx(TlaSetOper.enumSet, OperEx(TlaOper.apply, NameEx("V"))),
         ),
@@ -628,7 +628,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
       declOp("ElseOper", bool(false), OperParam("v")).untypedOperDecl()
     val applyMatchTag =
       OperEx(
-          VariantOper.matchTag,
+          VariantOper.variantMatch,
           ValEx(TlaStr("1a")),
           name("var"),
           name("ThenOper"),
@@ -648,7 +648,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
       declOp("ThenOper", appFun(name("v"), str("found")), OperParam("v")).untypedOperDecl()
     val applyMatchOnly =
       OperEx(
-          VariantOper.matchOnly,
+          VariantOper.variantGet,
           name("var"),
           name("ThenOper"),
       )
