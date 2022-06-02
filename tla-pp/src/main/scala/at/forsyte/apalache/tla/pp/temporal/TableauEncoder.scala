@@ -10,7 +10,6 @@ import at.forsyte.apalache.tla.pp.IrrecoverablePreprocessingError
 import at.forsyte.apalache.tla.pp.temporal.utils.builder
 import at.forsyte.apalache.tla.pp.temporal.ScopedBuilderExtensions._
 import at.forsyte.apalache.tla.pp.temporal.DeclUtils._
-import scala.collection.mutable.HashMap
 import at.forsyte.apalache.tla.lir.oper.TlaTempOper
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
@@ -30,7 +29,6 @@ class TableauEncoder(
     tracker: TransformationTracker)
     extends LazyLogging {
   val levelFinder = new TlaLevelFinder(module)
-  val varNamesToExStrings = new HashMap[String, String]()
 
   /**
    * Encodes each of a sequence of temporal formulas.
@@ -115,7 +113,7 @@ class TableauEncoder(
 
     val auxVarName = nodeIdentifier + nameSuffix
 
-    varNamesToExStrings.addOne((auxVarName, varNamesToExStrings(nodeIdentifier) + nameSuffix))
+    NameReplacementMap = NameReplacementMap.addOne((auxVarName, NameReplacementMap(nodeIdentifier) + nameSuffix))
 
     new TlaVarDecl(auxVarName)(Typed(BoolT1))
   }
@@ -161,7 +159,7 @@ class TableauEncoder(
             var curModWithPreds = modWithPreds
 
             val nodeIdentifier = TableauEncoder.NAME_PREFIX + gen.newName()
-            varNamesToExStrings.addOne(nodeIdentifier, curNode.toString().replace("\"", "\'"))
+            NameReplacementMap = NameReplacementMap.addOne(nodeIdentifier, curNode.toString().replace("\"", "\'"))
 
             /* create a new variable for this node
                     e.g.
@@ -179,7 +177,8 @@ class TableauEncoder(
                     __saved_curNode_predicate
              */
             val nodeLoopVarDecl = loopEnc.createVarCopyVariableInLoop(nodeVarDecl)
-            varNamesToExStrings.addOne(nodeLoopVarDecl.name, LoopEncoder.NAME_PREFIX + curNode.toString().replace("\"", "\'"))
+            NameReplacementMap = NameReplacementMap
+              .addOne(nodeLoopVarDecl.name, LoopEncoder.NAME_PREFIX + curNode.toString().replace("\"", "\'"))
 
             curModWithPreds = curModWithPreds.prependDecl(nodeLoopVarDecl)
 
