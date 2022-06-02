@@ -267,6 +267,6 @@ object LoopEncoder {
    * variables in the original spec.
    */
   val NAME_PREFIX = "__saved_"
-  val IN_LOOP_NAME = s"${NAME_PREFIX}InLoop"
-  val LOOP_OK_NAME = s"${NAME_PREFIX}LoopOK"
+  val IN_LOOP_NAME = s"__InLoop"
+  val LOOP_OK_NAME = s"__LoopOK"
 }
