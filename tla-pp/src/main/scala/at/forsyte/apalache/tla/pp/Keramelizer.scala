@@ -145,7 +145,7 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
       val keysAndNamesInterleaved = TlaOper.interleave(keys, names)
       val recordType = getElemType(ex)
       // [ x_1 |-> v_1, ..., x_n |-> v_n ]
-      val mapEx = OperEx(TlaFunOper.enum, keysAndNamesInterleaved: _*)(Typed(recordType))
+      val mapEx = OperEx(TlaFunOper.rec, keysAndNamesInterleaved: _*)(Typed(recordType))
       // { y_1 \in S_1, ..., y_n \in S_n: [ k_1 |-> y_1, ..., k_n |-> y_n ] }
       val namesAndSetsInterleaved = TlaOper.interleave(names, sets)
       OperEx(TlaSetOper.map, mapEx +: namesAndSetsInterleaved: _*)(ex.typeTag)

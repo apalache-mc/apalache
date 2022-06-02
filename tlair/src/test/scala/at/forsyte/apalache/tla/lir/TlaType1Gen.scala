@@ -37,8 +37,8 @@ trait TlaType1Gen {
     sized { size => // use 'sized' to control the depth of the generated term
       for {
         // use resize to decrease the depth of the elements (as terms)
-        s <- choose(0, size)
-        g <- resize(size / (s + 1), genTypeTree)
+        s <- choose(0, Math.max(size - 1, 0))
+        g <- resize(s, genTypeTree)
       } yield SeqT1(g)
     }
 
@@ -46,7 +46,7 @@ trait TlaType1Gen {
     sized { size => // use 'sized' to control the depth of the generated term
       for {
         // use resize to decrease the depth of the elements (as terms)
-        s <- choose(0, size - 1)
+        s <- choose(0, Math.max(size - 1, 0))
         arg <- resize(s, genTypeTree)
         res <- resize(s, genTypeTree)
       } yield FunT1(arg, res)
@@ -56,7 +56,7 @@ trait TlaType1Gen {
     sized { size => // use 'sized' to control the depth of the generated term
       for {
         // use resize to decrease the depth of the elements (as terms)
-        s <- choose(0, size - 1)
+        s <- choose(0, Math.max(size - 1, 0))
         elem = resize(s, genTypeTree)
         args <- listOfN(s, elem)
         res <- resize(s, genTypeTree)
@@ -67,7 +67,7 @@ trait TlaType1Gen {
     sized { size => // use 'sized' to control the depth of the generated term
       for {
         // use resize to decrease the depth of the elements (as terms)
-        s <- choose(0, size - 1)
+        s <- choose(0, Math.max(size - 1, 0))
         elem = resize(s, genTypeTree)
         args <- listOfN(s + 1, elem) // no empty tuples
       } yield TupT1(args: _*)
@@ -77,7 +77,7 @@ trait TlaType1Gen {
     sized { size => // use 'sized' to control the depth of the generated term
       for {
         // min=1 to prevent empty records
-        s <- choose(1, size)
+        s <- choose(1, Math.max(size, 1))
         // use resize to decrease the depth of the elements (as terms)
         elem = resize(s - 1, genTypeTree)
         keys <- listOfN(s, identifier)
