@@ -253,6 +253,7 @@ object Tool extends LazyLogging {
         // propagate the simulator options to the tuning options, so the model checker can easily pick them
         tuning += "search.simulation" -> "true"
         tuning += "search.simulation.maxRun" -> sim.maxRun.toString
+        tuning += "search.simulation.saveRuns" -> sim.saveRuns.toString
 
       case _ => ()
     }
@@ -319,7 +320,7 @@ object Tool extends LazyLogging {
     runAndExit(
         executor,
         _ => "No example found",
-        "Checker has found an example. Check counterexample.tla.",
+        "Found a violation of the postcondition. Check violation.tla.",
     )
   }
 
