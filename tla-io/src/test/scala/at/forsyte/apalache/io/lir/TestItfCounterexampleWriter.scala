@@ -63,16 +63,17 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
   test("ITF JSON single state") {
     val intSeq = SeqT1(IntT1)
     val intAndStr = TupT1(IntT1, StrT1)
-    val intSet = SetT1(IntT1)
+    val intSetT = SetT1(IntT1)
     val fooBar = RecT1("foo" -> IntT1, "bar" -> BoolT1)
     val intToStr = FunT1(IntT1, StrT1)
+    val boolToInt = FunT1(BoolT1, IntT1)
 
     def pair(i: Int, s: String) = tuple(int(i), str(s)).as(intAndStr)
     val decls = List(
         TlaVarDecl("a")(Typed(IntT1)),
         TlaVarDecl("b")(Typed(StrT1)),
         TlaVarDecl("c")(Typed(intSeq)),
-        TlaVarDecl("d")(Typed(intSet)),
+        TlaVarDecl("d")(Typed(intSetT)),
         TlaVarDecl("e")(Typed(fooBar)),
         TlaVarDecl("f")(Typed(intAndStr)),
         TlaVarDecl("g")(Typed(intToStr)),
@@ -93,7 +94,7 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
                     "c" -> tuple(int(3), int(BigInt("1000000000000000000", 10))).as(intSeq),
                     // { 5, 6 }
                     "d" -> enumSet(int(5), int(6))
-                      .as(intSet),
+                      .as(intSetT),
                     // [ foo |-> 3, bar |-> TRUE ]
                     "e" -> enumFun(str("foo"), int(3), str("bar"), bool(true))
                       .as(fooBar),
@@ -107,6 +108,14 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
                     "h" -> (apalacheSetAsFun(enumSet().as(SetT1(intAndStr))).as(intToStr)),
                     // SetAsFun({ <<1, "a">> })
                     "i" -> (apalacheSetAsFun(enumSet(pair(1, "a")).as(SetT1(intAndStr))).as(intToStr)),
+                    // [ BOOLEAN -> Int ]
+                    "j" -> funSet(booleanSet(), intSet()).as(SetT1(boolToInt)),
+                    // SUBSET BOOLEAN
+                    "k" -> powSet(booleanSet()).as(SetT1(BoolT1)),
+                    // Int
+                    "l" -> intSet().as(intSetT),
+                    // Nat
+                    "m" -> natSet().as(intSetT),
                 )),
         ),
         """{
@@ -127,7 +136,11 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
           |      "f": { "#tup": [ 7, "myStr" ] },
           |      "g": { "#map": [[1, "a"], [2, "b"], [3, "c"]] },
           |      "h": { "#map": [] },
-          |      "i": { "#map": [[1, "a"]] }
+          |      "i": { "#map": [[1, "a"]] },
+          |      "j": { "#unserializable": "[BOOLEAN → Int]" },
+          |      "k": { "#unserializable": "SUBSET BOOLEAN" },
+          |      "l": { "#unserializable": "Int" },
+          |      "m": { "#unserializable": "Nat" }
           |    }
           |  ]
           |}""".stripMargin,
