@@ -1540,13 +1540,13 @@ EXITCODE: ERROR (12)
 ### check LetIn (temporal)
 
 ```sh
-$ apalache-mc check --inv=Liveness LetIn.tla
+$ apalache-mc check --temporal=Liveness LetIn.tla
 ...
 EXITCODE: OK
 ```
 
 ```sh
-$ apalache-mc check --inv=FalseLiveness LetIn.tla
+$ apalache-mc check --temporal=FalseLiveness LetIn.tla
 ...
 EXITCODE: ERROR (12)
 [12]
