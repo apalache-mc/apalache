@@ -11,6 +11,9 @@ import at.forsyte.apalache.tla.pp.TlaInputError
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.tla.pp.Inliner
+import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
+import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 
 /**
  * The temporal pass takes a module with temporal properties, and outputs a module without temporal properties and an
@@ -21,7 +24,8 @@ class TemporalPassImpl @Inject() (
     val options: PassOptions,
     tracker: TransformationTracker,
     gen: UniqueNameGenerator,
-    writerFactory: TlaWriterFactory)
+    writerFactory: TlaWriterFactory,
+    renaming: IncrementalRenaming)
     extends TemporalPass with LazyLogging {
 
   override def name: String = "TemporalPass"
@@ -119,8 +123,22 @@ class TemporalPassImpl @Inject() (
       val loopModWithPreds =
         loopEncoder.addLoopLogic(module, initDecl, nextDecl)
 
+      // let-in expressions are hard to handle in temporal formulas,
+      // so they are inlined here
+      val inliner = new Inliner(tracker, renaming, keepNullary = false)
+      val scope = Map[String, TlaOperDecl](temporalFormulas.map(operDecl => (operDecl.name, operDecl)): _*)
+      val transformation = inliner.transform(scope)
+      val inlinedTemporalFormulas = temporalFormulas.map(operDecl =>
+        new TlaOperDecl(
+            operDecl.name,
+            List.empty,
+            transformation.apply(operDecl.body),
+        )(
+            operDecl.typeTag
+        ))
+
       val tableauEncoder = new TableauEncoder(loopModWithPreds.module, gen, loopEncoder, tracker)
-      val tableauModWithPreds = tableauEncoder.temporalsToInvariants(loopModWithPreds, temporalFormulas)
+      val tableauModWithPreds = tableauEncoder.temporalsToInvariants(loopModWithPreds, inlinedTemporalFormulas)
 
       tableauModWithPreds.module
     }
