@@ -155,7 +155,7 @@ class ScopedBuilder
    *
    * Is equivalent to {{{[[f EXCEPT ![a1] = e1] EXCEPT ![a2] = e2] EXCEPT ... ![an] = en]}}}
    */
-  def multiPointExcept(
+  def exceptMany(
       f: TBuilderInstruction,
       args: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction = {
     require(args.nonEmpty)
@@ -168,8 +168,11 @@ class ScopedBuilder
    * [f EXCEPT ![a1][a2][...][an] = e]
    *
    * Is equivalent to {{{[f EXCEPT ![a1] = [f[a1] EXCEPT ![a2] = [ ... EXCEPT ![an] = e]]]}}}
+   *
+   * The use of this constructor is discouraged in non-legacy code, as deep-EXCEPT syntax impedes readability, since the
+   * types of intermediate objects are obfuscated.
    */
-  def multiDepthExcept(
+  def exceptDeep(
       f: TBuilderInstruction,
       e: TBuilderInstruction,
       args: TBuilderInstruction*): TBuilderInstruction = {
@@ -181,7 +184,7 @@ class ScopedBuilder
         except(
             f,
             head,
-            multiDepthExcept(app(f, head), e, tail: _*),
+            exceptDeep(app(f, head), e, tail: _*),
         )
     }
   }
@@ -191,14 +194,17 @@ class ScopedBuilder
    *
    * @param args
    *   Pairs of the shape (ei, Seq(i1, ..., in))
+   *
+   * The use of this constructor is discouraged in non-legacy code, as deep-EXCEPT syntax impedes readability, since the
+   * types of intermediate objects are obfuscated.
    */
-  def genericExcept(
+  def exceptGeneral(
       f: TBuilderInstruction,
       args: (TBuilderInstruction, Seq[TBuilderInstruction])*): TBuilderInstruction = {
     // require all depths are the same? Also ensures args.nonEmpty
     require(args.map(_._2.size).toSet.size == 1)
     args.foldLeft(f) { case (fn, (e, as)) =>
-      multiDepthExcept(fn, e, as: _*)
+      exceptDeep(fn, e, as: _*)
     }
   }
 

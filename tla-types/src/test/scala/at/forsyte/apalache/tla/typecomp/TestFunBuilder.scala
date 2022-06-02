@@ -7,8 +7,118 @@ import org.scalacheck.Gen
 import org.scalatestplus.junit.JUnitRunner
 import scalaz.unused
 
+import scala.collection.immutable.SortedMap
+
 @RunWith(classOf[JUnitRunner])
 class TestFunBuilder extends BuilderTest {
+
+  test("enum") {
+    type T = Seq[TBuilderInstruction]
+
+    type TParam = Seq[TlaType1]
+
+    implicit val typeSeqGen: Gen[TParam] = for {
+      n <- Gen.choose(1, 5)
+      seq <- Gen.listOfN(n, singleTypeGen)
+    } yield seq
+
+    def mkWellTyped(tparam: TParam): T =
+      tparam.zipWithIndex.flatMap { case (tt, i) =>
+        Seq(
+            builder.str(s"x$i"),
+            builder.name(s"S$i", tt),
+        )
+      }
+
+    def mkIllTyped(@unused tparam: TParam): Seq[T] = Seq.empty
+
+    val resultIsExpected = expectEqTyped[TParam, T](
+        TlaFunOper.enum,
+        mkWellTyped,
+        { seq => seq },
+        { ts =>
+          val map = ts.zipWithIndex.foldLeft(SortedMap.empty[String, TlaType1]) { case (m, (t, i)) =>
+            m + (s"x$i" -> t)
+          }
+          RecT1(map)
+        },
+    )
+
+    checkRun(
+        runVariadic(
+            builder.enumMixed,
+            mkWellTyped,
+            mkIllTyped,
+            resultIsExpected,
+        )
+    )
+
+    // test fail on n = 0
+    assertThrows[IllegalArgumentException] {
+      build(builder.enumMixed())
+    }
+
+    // test fail on n = 1
+    assertThrows[IllegalArgumentException] {
+      build(builder.enumMixed(builder.str("x")))
+    }
+
+    // test fail on repeated key
+    assertThrows[IllegalArgumentException] {
+      build(builder.enumMixed(
+              builder.str("k"),
+              builder.name("v", IntT1),
+              builder.str("k"),
+              builder.name("w", IntT1),
+          ))
+    }
+
+    // now for builder.enum (not enumMixed)
+
+    type T2 = Seq[(String, TBuilderInstruction)]
+
+    def mkWellTyped2(tparam: TParam): T2 =
+      tparam.zipWithIndex.map { case (tt, i) =>
+        s"x$i" ->
+          builder.name(s"S$i", tt)
+      }
+
+    def mkIllTyped2(@unused tparam: TParam): Seq[T2] = Seq.empty
+
+    val resultIsExpected2 = expectEqTyped[TParam, T2](
+        TlaFunOper.enum,
+        mkWellTyped2,
+        { seq => seq.flatMap { case (s, x) => Seq(builder.str(s), x) } },
+        { ts =>
+          val map = ts.zipWithIndex.foldLeft(SortedMap.empty[String, TlaType1]) { case (m, (t, i)) =>
+            m + (s"x$i" -> t)
+          }
+          RecT1(map)
+        },
+    )
+
+    checkRun(
+        runVariadic(
+            builder.enum,
+            mkWellTyped2,
+            mkIllTyped2,
+            resultIsExpected2,
+        )
+    )
+
+    // test fail on n = 0
+    assertThrows[IllegalArgumentException] {
+      build(builder.enum())
+    }
+
+    // test fail on repeated key
+    assertThrows[IllegalArgumentException] {
+      build(builder.enum(
+              ("k", builder.name("v", IntT1)),
+              ("k", builder.name("w", IntT1)),
+          ))
+    }
+  }
 
   test("tuple") {
     type T = Seq[TBuilderInstruction]
