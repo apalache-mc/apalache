@@ -60,7 +60,7 @@ trait UnsafeFunBuilder extends ProtoBuilder {
 
     val recType = RecT1(keyTypeMap)
 
-    OperEx(TlaFunOper.enum, args: _*)(Typed(recType))
+    OperEx(TlaFunOper.rec, args: _*)(Typed(recType))
   }
 
   /** {{{<<t1, ..., tn>>}}} with a tuple-type */

@@ -38,7 +38,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
    *   a transformed fun expression
    */
   private def transformFuns: PartialFunction[TlaEx, TlaEx] = {
-    case expr @ OperEx(TlaFunOper.app, OperEx(TlaFunOper.enum, ctorArgs @ _*), ValEx(TlaStr(accessedKey))) =>
+    case expr @ OperEx(TlaFunOper.app, OperEx(TlaFunOper.`rec`, ctorArgs @ _*), ValEx(TlaStr(accessedKey))) =>
       val rewrittenArgs = ctorArgs.map(transform)
       val found = rewrittenArgs.grouped(2).find { case Seq(ValEx(TlaStr(key)), _) =>
         key == accessedKey
@@ -75,7 +75,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
       tla.and(tla.in(mem, set).as(b), predSubstituted).as(b)
 
     case memEx @ OperEx(TlaSetOper.in, rec,
-            OperEx(TlaSetOper.map, OperEx(TlaFunOper.`enum`, fieldsAndValues @ _*), varsAndSets @ _*))
+            OperEx(TlaSetOper.map, OperEx(TlaFunOper.`rec`, fieldsAndValues @ _*), varsAndSets @ _*))
         if fieldsAndValues.length == varsAndSets.length =>
       // Transform r \in { [f_1 |-> x_1, ..., f_k |-> x_k]: x_1 \in S_1, ..., x_k \in S_k }
       // into

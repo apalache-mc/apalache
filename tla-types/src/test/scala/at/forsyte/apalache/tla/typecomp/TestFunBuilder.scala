@@ -33,7 +33,7 @@ class TestFunBuilder extends BuilderTest {
     def mkIllTyped(@unused tparam: TParam): Seq[T] = Seq.empty
 
     val resultIsExpected = expectEqTyped[TParam, T](
-        TlaFunOper.enum,
+        TlaFunOper.rec,
         mkWellTyped,
         { seq => seq },
         { ts =>
@@ -86,7 +86,7 @@ class TestFunBuilder extends BuilderTest {
     def mkIllTyped2(@unused tparam: TParam): Seq[T2] = Seq.empty
 
     val resultIsExpected2 = expectEqTyped[TParam, T2](
-        TlaFunOper.enum,
+        TlaFunOper.rec,
         mkWellTyped2,
         { seq => seq.flatMap { case (s, x) => Seq(builder.str(s), x) } },
         { ts =>

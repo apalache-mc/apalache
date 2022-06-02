@@ -157,7 +157,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
 
     val keysAndValues = keyList.reverse.foldLeft(List[TlaEx]())(eachField)
     if (keysAndValues.nonEmpty) {
-      OperEx(TlaFunOper.enum, keysAndValues: _*)(Typed(recordT))
+      OperEx(TlaFunOper.rec, keysAndValues: _*)(Typed(recordT))
     } else {
       logger.error(
           s"Decoder: Found an empty record $cell when decoding a counterexample, domain = $domCell. This is a bug.")
@@ -172,7 +172,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     val fieldValues = keyList.map(name => recordOps.getField(arena, cell, name)).map(decodeCellToTlaEx(arena, _))
 
     val typeTag = Typed(RecRowT1(RowT1(fieldTypes, None)))
-    OperEx(TlaFunOper.`enum`, TlaOper.interleave(fieldNames, fieldValues): _*)(typeTag)
+    OperEx(TlaFunOper.rec, TlaOper.interleave(fieldNames, fieldValues): _*)(typeTag)
   }
 
   private def decodeFunToTlaEx(arena: Arena, cell: ArenaCell, funT1: FunT1): TlaEx = {

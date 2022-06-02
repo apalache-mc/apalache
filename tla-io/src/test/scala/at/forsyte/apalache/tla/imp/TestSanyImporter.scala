@@ -688,7 +688,7 @@ class TestSanyImporter extends SanyImporterTestBase {
     expectDecl(
         "RcdCtor",
         OperEx(
-            TlaFunOper.enum,
+            TlaFunOper.rec,
             ValEx(TlaStr("a")),
             ValEx(TlaInt(1)),
             ValEx(TlaStr("b")),
