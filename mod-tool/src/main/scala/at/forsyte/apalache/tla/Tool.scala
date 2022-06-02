@@ -359,15 +359,14 @@ object Tool extends LazyLogging {
     ExitCodes.OK
   }
 
-  private def runClient(executor: PassChainExecutor, server: ClientCmd): Int = {
+  private def runClient(executor: PassChainExecutor, cmd: ClientCmd): Int = {
     logger.info("Running client...")
 
     // NOTE Must go after all other options are set due to side-effecting
     // behavior of current OutmputManager configuration
-    setCommonOptions(server, executor.options)
-    logger.error("Not yet implemented")
-
-    ExitCodes.ERROR
+    setCommonOptions(cmd, executor.options)
+    shai.v1.ClientApp.main(cmd.rest.toArray)
+    ExitCodes.OK
   }
 
   private def runConstrain(executor: PassChainExecutor, constrain: TranspileCmd): Int = {
