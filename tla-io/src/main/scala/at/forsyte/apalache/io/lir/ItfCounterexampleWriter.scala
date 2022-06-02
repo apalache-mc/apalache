@@ -111,7 +111,7 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
     case OperEx(TlaSetOper.enumSet, args @ _*) =>
       ujson.Obj("#set" -> ujson.Arr(args.map(exToJson): _*))
 
-    case OperEx(TlaFunOper.`rec`, args @ _*) =>
+    case OperEx(TlaFunOper.rec, args @ _*) =>
       val (keyEs, valuesEs) = deinterleave(args)
       val keys = keyEs.collect { case ValEx(TlaStr(s)) => s }
       val values = valuesEs.map(exToJson)

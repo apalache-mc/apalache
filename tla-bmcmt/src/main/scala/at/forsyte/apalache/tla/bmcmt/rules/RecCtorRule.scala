@@ -24,14 +24,14 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
-      case OperEx(TlaFunOper.`rec`, _*) => true
-      case _                            => false
+      case OperEx(TlaFunOper.rec, _*) => true
+      case _                          => false
     }
   }
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      case ex @ OperEx(TlaFunOper.`rec`, elems @ _*) =>
+      case ex @ OperEx(TlaFunOper.rec, elems @ _*) =>
         val keyEs = elems.zipWithIndex.filter(_._2 % 2 == 0).map(_._1) // pick the even indices (starting with 0)
         val ctorKeys = keysToStr(state.ex, keyEs.toList)
         val valueEs = elems.zipWithIndex.filter(_._2 % 2 == 1).map(_._1) // pick the odd indices (starting with 0)
