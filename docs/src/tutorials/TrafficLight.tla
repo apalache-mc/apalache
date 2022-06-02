@@ -19,48 +19,63 @@ Init ==
     /\ isGreen = FALSE
     /\ requestedGreen = FALSE
 
+\* ANCHOR: actions
 (* ---------------------- *)
 (* requesting green light *)
 \* The switch to green can only be requested when the light is not green, and
 \* the switch has not *already* been requested since the light last turned green.
-CanRequestGreen ==
+RequestGreen_Guard ==
     /\ ~isGreen
     /\ ~requestedGreen
 
-RequestGreen == 
+RequestGreen_Effect == 
     /\ requestedGreen' = TRUE
     /\ UNCHANGED << isGreen >>
+
+RequestGreen ==
+    RequestGreen_Guard /\ RequestGreen_Effect
 
 (* ---------------------- *)
 (* switching to red light *)
 \* The light can switch to red at any time if it is currently green.
-CanSwitchToRed == isGreen
+SwitchToRed_Guard == isGreen
 
-SwitchToRed ==
+SwitchToRed_Effect ==
     /\ isGreen' = FALSE
     /\ UNCHANGED << requestedGreen >>
+
+SwitchToRed ==
+    SwitchToRed_Guard /\ SwitchToRed_Effect
 
 (* ------------------------ *)
 (* switching to green light *)
 \* The light can switch to green if it is currently red, and
 \* the button to request the switch to green has been pressed.
-CanSwitchToGreen == 
+SwitchToGreen_Guard == 
     /\ ~isGreen
     /\ requestedGreen
 
-SwitchToGreen ==
+SwitchToGreen_Effect ==
     /\ isGreen' = TRUE
     /\ requestedGreen' = FALSE
 
-Next ==
-    \/ CanRequestGreen /\ RequestGreen
-    \/ CanSwitchToRed /\ SwitchToRed
-    \/ CanSwitchToGreen /\ SwitchToGreen
+SwitchToGreen ==
+    SwitchToGreen_Guard /\ SwitchToGreen_Effect
 
+Next ==
+    \/ RequestGreen
+    \/ SwitchToRed
+    \/ SwitchToGreen
+\* ANCHOR_END: actions
+
+\* ANCHOR: prop
 RequestWillBeFulfilled ==
     [](requestedGreen => <>isGreen)
+\* ANCHOR_END: prop
 
+\* ANCHOR: stutternext
 StutteringNext ==
     [Next]_vars
+\* ANCHOR_END: stutternext
 
 ====

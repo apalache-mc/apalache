@@ -38,7 +38,7 @@ We have three possible actions:
 3. The button can be pushed, thus requesting that the traffic light becomes green.
 
 ```
-{{#include TrafficLight.tla:22:58}}
+{{#include TrafficLight.tla:actions}}
 ```
 
 Now, we are ready to specify properties we are interested in.
@@ -46,7 +46,7 @@ For example, when green is requested, at some point afterwards the light should 
 We wan write the property like this:
 
 ```
-{{#include TrafficLight.tla:60:61}}
+{{#include TrafficLight.tla:prop}}
 ```
 
 Let's run Apalache to check this property:
@@ -80,7 +80,7 @@ We can write a new next predicate that explicitly allows
 stuttering like this:
 
 ```
-{{#include TrafficLight.tla:63:64}}
+{{#include TrafficLight.tla:stutternext}}
 ```
 
 Recall that `[Next]_vars` is shorthand for `Next \/ UNCHANGED << vars >>`. Now, let us try to verify the property once again,
