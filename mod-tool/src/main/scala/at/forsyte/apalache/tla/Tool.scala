@@ -105,6 +105,7 @@ object Tool extends LazyLogging {
           new TestCmd,
           new ConfigCmd,
           new ServerCmd,
+          new ClientCmd,
           new TranspileCmd,
       )
 
@@ -143,6 +144,9 @@ object Tool extends LazyLogging {
 
                 case server: ServerCmd =>
                   runForModule(runServer, new CheckerModule, server)
+
+                case client: ClientCmd =>
+                  runForModule(runClient, new CheckerModule, client)
 
                 case constrain: TranspileCmd =>
                   runForModule(runConstrain, new ReTLAToVMTModule, constrain)
@@ -353,6 +357,17 @@ object Tool extends LazyLogging {
 
     shai.v1.RpcServer.main(Array())
     ExitCodes.OK
+  }
+
+  private def runClient(executor: PassChainExecutor, server: ClientCmd): Int = {
+    logger.info("Running client...")
+
+    // NOTE Must go after all other options are set due to side-effecting
+    // behavior of current OutmputManager configuration
+    setCommonOptions(server, executor.options)
+    logger.error("Not yet implemented")
+
+    ExitCodes.ERROR
   }
 
   private def runConstrain(executor: PassChainExecutor, constrain: TranspileCmd): Int = {
