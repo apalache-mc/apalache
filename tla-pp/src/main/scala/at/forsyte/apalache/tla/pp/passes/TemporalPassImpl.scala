@@ -80,7 +80,7 @@ class TemporalPassImpl @Inject() (
       logger.info("  > No temporal properties found, nothing to encode")
       module
     } else {
-      logger.info(s"  > Found ${temporalFormulas.length} temporal temporal properties")
+      logger.info(s"  > Found ${temporalFormulas.length} temporal properties")
       logger.info(s"  > Adding logic for loop finding")
 
       val initDecl = module.declarations.find(_.name == init) match {

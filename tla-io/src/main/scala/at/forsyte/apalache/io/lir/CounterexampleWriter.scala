@@ -2,14 +2,14 @@ package at.forsyte.apalache.io.lir
 
 import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.io.json.impl.TlaToUJson
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.values.TlaBool
+import com.typesafe.scalalogging.LazyLogging
 
 import java.io.PrintWriter
 import java.util.Calendar
-import com.typesafe.scalalogging.LazyLogging
 
 /**
  * A printer for counterexamples, in various formats: TLA+ , as TLC output, ...
@@ -152,6 +152,7 @@ object CounterexampleWriter extends LazyLogging {
    *   sequence of states that represent the counterexample
    */
   def writeAllFormats(
+      prefix: String,
       suffix: String,
       rootModule: TlaModule,
       notInvariant: NotInvariant,
@@ -160,10 +161,10 @@ object CounterexampleWriter extends LazyLogging {
       kind => writer => apply(kind, writer).write(rootModule, notInvariant, states)
 
     val fileNames = List(
-        ("tla", s"counterexample$suffix.tla"),
-        ("tlc", s"MC$suffix.out"),
-        ("json", s"counterexample$suffix.json"),
-        ("itf.json", s"counterexample$suffix.itf.json"),
+        ("tla", s"$prefix$suffix.tla"),
+        ("tlc", s"MC$prefix$suffix.out"),
+        ("json", s"$prefix$suffix.json"),
+        ("itf.json", s"$prefix$suffix.itf.json"),
     )
 
     fileNames.flatMap { case (kind, name) =>
