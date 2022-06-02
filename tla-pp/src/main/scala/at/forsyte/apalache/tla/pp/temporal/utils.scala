@@ -71,7 +71,7 @@ object DeclUtils {
    * Takes decl, ex and returns newDecl with the same name as decl, with its body extended like this: newDecl == decl /\
    * ex
    */
-  def conjunctExToOperDecl(ex: TlaEx, decl: TlaOperDecl, tracker: TransformationTracker): TlaOperDecl = {
+  def andInDecl(ex: TlaEx, decl: TlaOperDecl, tracker: TransformationTracker): TlaOperDecl = {
     new TlaOperDecl(
         decl.name,
         decl.formalParams,

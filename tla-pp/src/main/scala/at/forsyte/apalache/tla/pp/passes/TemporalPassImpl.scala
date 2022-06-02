@@ -11,6 +11,8 @@ import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.infra.passes.WriteablePassOptions
+import at.forsyte.apalache.tla.pp.Inliner
+import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 
 /**
  * The temporal pass takes a module with temporal properties, and outputs a module without temporal properties and an
@@ -21,7 +23,8 @@ class TemporalPassImpl @Inject() (
     val options: WriteablePassOptions,
     tracker: TransformationTracker,
     gen: UniqueNameGenerator,
-    writerFactory: TlaWriterFactory)
+    writerFactory: TlaWriterFactory,
+    renaming: IncrementalRenaming)
     extends TemporalPass with LazyLogging {
 
   override def name: String = "TemporalPass"
@@ -47,7 +50,7 @@ class TemporalPassImpl @Inject() (
         }
         // formula will be transformed into an invariant, so it is added as an invariant to check
         options.set("checker.inv", options.get("checker", "inv") ++ formula)
-        encodeFormula(tlaModule, formula, init.get, next.get)
+        temporalToInvariants(tlaModule, invariants, init.get, next.get)
     }
 
     writeOut(writerFactory, newModule)
@@ -55,19 +58,20 @@ class TemporalPassImpl @Inject() (
     Right(newModule)
   }
 
-  def encodeFormula(
+  def temporalToInvariants(
       module: TlaModule,
-      formulas: List[String],
+      temporalProperties: List[String],
       init: String,
       next: String): TlaModule = {
     val levelFinder = new TlaLevelFinder(module)
 
-    val temporalFormulas = formulas
-      .map(invName => {
-        module.declarations.find(_.name == invName)
+
+    val temporalFormulas = temporalProperties
+      .map(propName => {
+        module.declarations.find(_.name == propName)
       })
-      .filter(invOption =>
-        invOption match {
+      .filter(propOption =>
+        propOption match {
           case Some(inv: TlaOperDecl) if inv.formalParams.isEmpty =>
             val level = levelFinder.getLevelOfDecl(inv)
             if (level != TlaLevelTemporal) {
@@ -77,7 +81,7 @@ class TemporalPassImpl @Inject() (
             true
           case _ => false
         })
-      .map(invOption => invOption.get.asInstanceOf[TlaOperDecl])
+      .map(propOption => propOption.get.asInstanceOf[TlaOperDecl])
 
     if (temporalFormulas.isEmpty) {
       logger.info("  > No temporal properties found, nothing to encode")
@@ -108,15 +112,15 @@ class TemporalPassImpl @Inject() (
           val nparams = nextDecl.formalParams.length
           if (nparams != 0) {
             val message =
-              s"Expected next predicate $init to have 0 params, found $nparams parameters"
+              s"Expected next predicate $next to have 0 params, found $nparams parameters"
             throw new TlaInputError(message, Some(nextDecl.body.ID))
           }
           nextDecl
         case None =>
-          val message = (s"next predicate named `${init}` not found")
+          val message = (s"next predicate named `${next}` not found")
           throw new TlaInputError(message)
         case _ =>
-          val message = (s"Expected to find a predicate named `${init}` but did not")
+          val message = (s"Expected to find a predicate named `${next}` but did not")
           throw new TlaInputError(message)
       }
 
@@ -125,8 +129,22 @@ class TemporalPassImpl @Inject() (
       val loopModWithPreds =
         loopEncoder.addLoopLogic(module, initDecl, nextDecl)
 
+      // let-in expressions are hard to handle in temporal formulas,
+      // so they are inlined here
+      val inliner = new Inliner(tracker, renaming, keepNullary = false)
+      val scope = Map[String, TlaOperDecl](temporalFormulas.map(operDecl => (operDecl.name, operDecl)): _*)
+      val transformation = inliner.transform(scope)
+      val inlinedTemporalFormulas = temporalFormulas.map(operDecl =>
+        new TlaOperDecl(
+            operDecl.name,
+            List.empty,
+            transformation.apply(operDecl.body),
+        )(
+            operDecl.typeTag
+        ))
+
       val tableauEncoder = new TableauEncoder(loopModWithPreds.module, gen, loopEncoder, tracker)
-      val tableauModWithPreds = tableauEncoder.encodeFormulas(loopModWithPreds, temporalFormulas)
+      val tableauModWithPreds = tableauEncoder.temporalsToInvariants(loopModWithPreds, inlinedTemporalFormulas)
 
       tableauModWithPreds.module
     }
