@@ -122,7 +122,7 @@ trait UnsafeSetBuilder extends ProtoBuilder {
       // Iterate over the pairs (zip), first-to-throw determines the Left value, if any.
       // If no Left appears, we get a record field-to-type map.
       // Even-indexed values should be strings, odd-indexed values should be sets
-      val (keys, values) = TlaOper.deinterleave(kvs)
+      val (keys, values) = TlaOper.deinterleave(args)
       val keyTypeMapE: exOrMap =
         keys
           .zip(values)
