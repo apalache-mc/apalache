@@ -122,17 +122,18 @@ trait UnsafeSetBuilder extends ProtoBuilder {
       // Iterate over the pairs (zip), first-to-throw determines the Left value, if any.
       // If no Left appears, we get a record field-to-type map.
       // Even-indexed values should be strings, odd-indexed values should be sets
+      val (keys, values) = TlaOper.deinterleave(kvs)
       val keyTypeMapE: exOrMap =
-        args
-          .grouped(2)
+        keys
+          .zip(values)
           .foldLeft[exOrMap](Right(SortedMap.empty)) {
-            case (mapE, Seq(ValEx(TlaStr(s)), ex)) => // key shape guaranteed by `require` check
+            case (mapE, (ValEx(TlaStr(s)), ex)) => // key shape guaranteed by `require` check
               for {
                 map <- mapE
                 setElemT <- getSetElemT(ex)
               } yield map + (s -> setElemT)
-            case (_, Seq(k, _)) => // Impossible, but need to suppress warning
-              Left(new TBuilderTypeException(s"Key $k is not a string"))
+            case (_, (k, _)) => // Impossible, but need to suppress warning
+              Left(new TBuilderTypeException(s"Key $k is not a string literal"))
           }
 
       keyTypeMapE.flatMap { keyTypeMap =>
