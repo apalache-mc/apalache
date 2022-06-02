@@ -155,6 +155,61 @@ class TestFunBuilder extends BuilderTest {
 
   }
 
+  test("seq") {
+    type T = Seq[TBuilderInstruction]
+    def mkWellTyped(n: Int)(tt: TlaType1): T =
+      (1 to n).map { i => builder.name(s"x$i", tt) }
+    def mkIllTyped(n: Int)(tt: TlaType1): Seq[T] =
+      if (n > 1)
+        Seq(
+            builder.name("x1", InvalidTypeMethods.differentFrom(tt)) +: (2 to n).map { i =>
+              builder.name(s"x$i", tt)
+            }
+        )
+      else Seq.empty
+
+    def resultIsExpected(n: Int) = expectEqTyped[TlaType1, T](
+        TlaFunOper.tuple,
+        mkWellTyped(n),
+        liftBuildToSeq,
+        tt => SeqT1(tt),
+    )
+
+    def run(tparam: TlaType1) = {
+      (1 to 5).forall { n =>
+        runVariadic[TlaType1, TBuilderInstruction](
+            builder.seq(_: _*),
+            mkWellTyped(n),
+            mkIllTyped(n),
+            resultIsExpected(n),
+        )(tparam)
+      }
+    }
+
+    checkRun(run)
+
+    // test fail on n = 0
+    assertThrows[IllegalArgumentException] {
+      build(builder.seq())
+    }
+  }
+
+  test("emptySeq") {
+
+    def run(tt: TlaType1): Boolean = {
+      val empty: TlaEx = builder.emptySeq(tt)
+
+      assert(
+          empty.eqTyped(
+              OperEx(TlaFunOper.tuple)(Typed(SeqT1(tt)))
+          )
+      )
+      true
+    }
+
+    checkRun(run)
+  }
+
   test("funDef") {
     type T = (TBuilderInstruction, TBuilderInstruction, TBuilderInstruction)
 

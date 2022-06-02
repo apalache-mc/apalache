@@ -19,8 +19,7 @@ object FunOperSignatures {
 
     // enum does NOT have a signature (the return type depends on the field value)
 
-    // (t1, ..., tn) => <<t1, ..., tn>>
-    val tupleSig = signatureMapEntry(tuple, { seq => TupT1(seq: _*) })
+    // tuple does NOT have a signature, as it is overloaded for either tuples or explicit sequences.
 
     // We only need the ternary signature, because the builder interface constructs
     // [x1 \in S1, ..., xn \in Sn |-> e] as [<<x1, ..., xn>> \in S1 \X .. \X Sn |-> e]
@@ -30,8 +29,7 @@ object FunOperSignatures {
     // app, domain, and except are overloaded and don't have signatures
 
     Map(
-        tupleSig,
-        funDefSig,
+        funDefSig
     )
 
   }

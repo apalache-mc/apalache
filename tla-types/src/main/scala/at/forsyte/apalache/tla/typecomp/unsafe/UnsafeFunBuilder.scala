@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaStr
 import at.forsyte.apalache.tla.typecomp.Applicative.asInstanceOfApplicative
-import at.forsyte.apalache.tla.typecomp.{Applicative, PartialSignature}
+import at.forsyte.apalache.tla.typecomp.{Applicative, BuilderUtil, PartialSignature}
 import at.forsyte.apalache.tla.typecomp.BuilderUtil.{completePartial, composeAndValidateTypes}
 
 import scala.collection.immutable.SortedMap
@@ -63,8 +63,27 @@ trait UnsafeFunBuilder extends ProtoBuilder {
     OperEx(TlaFunOper.enum, args: _*)(Typed(recType))
   }
 
-  /** {{{(t1, ..., tn) => <<t1, ..., tn>>}}} */
-  protected def _tuple(args: TlaEx*): TlaEx = buildBySignatureLookup(TlaFunOper.tuple, args: _*)
+  /** {{{<<t1, ..., tn>>}}} with a tuple-type */
+  protected def _tuple(args: TlaEx*): TlaEx = {
+    // TlaFunOper.tuple can produce both tuples and sequences, so instead of going through cmpFactory, we
+    // just define the tuple-variant signature
+    val partialSig: PartialSignature = { seq => TupT1(seq: _*) }
+    val sig = completePartial(TlaFunOper.tuple.name, partialSig)
+    BuilderUtil.composeAndValidateTypes(TlaFunOper.tuple, sig, args: _*)
+  }
+
+  /** {{{<<>>}}} with a sequence type */
+  protected def _emptySeq(elemType: TlaType1): TlaEx = OperEx(TlaFunOper.tuple)(Typed(SeqT1(elemType)))
+
+  /** {{{<<t1, ..., tn>>}}} with a sequence-type. Must be nonempty. */
+  protected def _seq(args: TlaEx*): TlaEx = {
+    require(args.nonEmpty)
+    // TlaFunOper.tuple can produce both tuples and sequences, so instead of going through cmpFactory, we
+    // just define the seq-variant signature
+    val partialSig: PartialSignature = { case h +: tail if tail.forall(_ == h) => SeqT1(h) }
+    val sig = completePartial(TlaFunOper.tuple.name, partialSig)
+    BuilderUtil.composeAndValidateTypes(TlaFunOper.tuple, sig, args: _*)
+  }
 
   /** [x \in S |-> e] */
   protected def _funDef(e: TlaEx, x: TlaEx, S: TlaEx): TlaEx = buildBySignatureLookup(TlaFunOper.funDef, e, x, S)

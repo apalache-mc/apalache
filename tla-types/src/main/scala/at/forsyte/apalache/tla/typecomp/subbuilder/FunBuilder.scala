@@ -1,9 +1,11 @@
 package at.forsyte.apalache.tla.typecomp.subbuilder
 
+import at.forsyte.apalache.tla.lir.TlaType1
 import at.forsyte.apalache.tla.typecomp.BuilderUtil._
 import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeFunBuilder
 import scalaz._
+import scalaz.Scalaz._
 
 /**
  * Type-safe builder for TlaFunOper expressions.
@@ -30,8 +32,14 @@ trait FunBuilder extends UnsafeFunBuilder {
   def enumMixed(args: TBuilderInstruction*): TBuilderInstruction =
     buildSeq(args).map { _enumMixed(_: _*) }
 
-  /** {{{(t1, ..., tn) => <<t1, ..., tn>>}}} */
+  /** {{{<<t1, ..., tn>>}}} with a tuple-type */
   def tuple(args: TBuilderInstruction*): TBuilderInstruction = buildSeq(args).map(_tuple(_: _*))
+
+  /** {{{<<>>}}} with a sequence type */
+  def emptySeq(t: TlaType1): TBuilderInstruction = _emptySeq(t).point[TBuilderInternalState]
+
+  /** {{{<<t1, ..., tn>>}}} with a sequence-type. Must be nonempty. */
+  def seq(args: TBuilderInstruction*): TBuilderInstruction = buildSeq(args).map { _seq }
 
   /** [x \in S |-> e] */
   def funDef(e: TBuilderInstruction, x: TBuilderInstruction, S: TBuilderInstruction): TBuilderInstruction = for {
