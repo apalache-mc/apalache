@@ -116,6 +116,45 @@ class TableauEncoder(
   }
 
   /**
+   * Takes a set of names that represent the names defined by let-in operators, and identifies which of those names
+   * appear in the given expression.
+   */
+  private def findLetVariablesInSubtree(ex: TlaEx, letInNames: Set[String]): Set[String] = {
+    ex match {
+      case LetInEx(_, decls @ _*) =>
+        decls.foldLeft(
+            Set.empty[String]
+        )((acc, operDecl) => findLetVariablesInSubtree(operDecl.body, letInNames).union(acc))
+      case ValEx(_)     => return Set.empty
+      case NameEx(name) => if (letInNames.contains(name)) return Set(name) else return Set.empty
+      case OperEx(_, args @ _*) =>
+        args.foldLeft(Set.empty[String])((acc, argEx) => findLetVariablesInSubtree(argEx, letInNames).union(acc))
+      case NullEx => return Set.empty
+    }
+  }
+
+  /**
+   * Wraps a given expression with all Let-In expressions, from among the provided map, whose names appear in the
+   * expression
+   */
+  private def wrapWithLetIn(ex: TlaEx, letInMap: Map[String, TlaEx]): TlaEx = {
+    val letInNamesInSubtree = findLetVariablesInSubtree(ex, letInMap.keySet)
+    val letInDecls = letInNamesInSubtree.map(name => {
+      // TODO: wrap the body of the let in with the let ins needed in it, if any
+      val declBody = letInMap.get(name).get
+
+      TlaOperDecl(
+          name,
+          List.empty,
+          letInMap.get(name).get,
+      )(
+          letInMap.get(name).get.typeTag
+      )
+    })
+    builder.multiLetIn(ex, letInDecls.toSeq: _*)
+  }
+
+  /**
    * Moves down the syntax tree of a provided expression curNode. Each node of the syntax tree that has temporal level,
    * e.g. contains temporal operators somewhere below it, is encoded by a variable curNode_predicate. For example, for
    * the formula [](A => <>B), The syntax tree has the shape
@@ -142,6 +181,7 @@ class TableauEncoder(
       modWithPreds: ModWithPreds,
       curNode: TlaEx,
       letInContext: Map[String, TlaEx] = Map[String, TlaEx]()): (ModWithPreds, TlaEx) = {
+    print("curNode: " + curNode.toString() + "\n" + curNode.getClass() + "\n------------\n")
     levelFinder.getLevelOfExpression(Set.empty, curNode) match {
       case TlaLevelTemporal =>
         curNode match {
@@ -219,17 +259,22 @@ class TableauEncoder(
 
             /* encode the arguments of the node
              */
-            val argExs = args.map(arg => {
-              val modWithPredsAndArgEx =
-                encodeSyntaxTreeInPredicates(
-                    curModWithPreds,
-                    arg,
-                    letInContext,
-                )
-              curModWithPreds = modWithPredsAndArgEx._1
-              val argEx = modWithPredsAndArgEx._2
-              builder.useTrustedEx(argEx)
-            })
+            val argExs = args
+              .map(arg => {
+                val modWithPredsAndArgEx =
+                  encodeSyntaxTreeInPredicates(
+                      curModWithPreds,
+                      arg,
+                      letInContext,
+                  )
+                curModWithPreds = modWithPredsAndArgEx._1
+                val argEx = modWithPredsAndArgEx._2
+                builder.useTrustedEx(argEx)
+              })
+              // wraps argument expressions with the necessary let-in expressions, if any appear in them
+              // this is necessary because the syntax tree is 'carved up' into individual nodes,
+              // and the let-in expressions may be very far from where they are used
+              .map(ex => builder.useTrustedEx(wrapWithLetIn(ex, letInContext)))
 
             /* encode the node itself
              */
@@ -426,11 +471,14 @@ class TableauEncoder(
             throw new IrrecoverablePreprocessingError(
                 s"Cannot handle expression ${curNode.toString()} of type ${curNode.getClass()}")
         }
-      case _ => /* a propositional expression - used as-is in the formula encoding the syntax tree */
-        (modWithPreds, curNode)
+      case _ => /* a propositional expression -
+      used almost as-is in the formula encoding the syntax tree.
+      the expression is wrapped with let-in expressions whose names appear in it.
+      This is necessary because the syntax tree is 'carved up' into individual nodes,
+      and the let-in expressions may be very far from where they are used. */
+        (modWithPreds, wrapWithLetIn(curNode, letInContext))
     }
   }
-
 }
 
 object TableauEncoder {

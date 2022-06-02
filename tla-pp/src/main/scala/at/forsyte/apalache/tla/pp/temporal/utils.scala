@@ -15,6 +15,10 @@ object ScopedBuilderExtensions {
     def declAsNameEx(decl: TlaDecl): TBuilderInstruction = {
       builder.name(decl.name, decl.typeTag.asTlaType1())
     }
+
+    def multiLetIn(body: TlaEx, decls: TlaOperDecl*): TlaEx = {
+      LetInEx(body, decls: _*)(body.typeTag)
+    }
   }
 }
 
