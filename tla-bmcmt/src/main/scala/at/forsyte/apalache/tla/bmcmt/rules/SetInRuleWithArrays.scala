@@ -143,7 +143,7 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
 
   private def supportsSMTEq(cellType: CellT): Boolean = {
     cellType match {
-      case CellTFrom(_ @IntT1 | RealT1 | BoolT1 | StrT1 | ConstT1(_) | VarT1(_) | FunT1(_, _) | SetT1(_)) =>
+      case CellTFrom(_ @IntT1 | RealT1 | BoolT1 | StrT1 | ConstT1(_) | VarT1(_)) =>
         true
       case _ => false
     }

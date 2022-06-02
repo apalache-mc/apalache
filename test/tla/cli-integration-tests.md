@@ -387,7 +387,7 @@ This simple test demonstrates how to test a spec by isolating the input with gen
 $ apalache-mc test --features=rows TestGen.tla Prepare Test Assertion | sed 's/I@.*//'
 ...
 The outcome is: Error
-Checker has found an example. Check counterexample.tla.
+Found a violation of the postcondition. Check violation.tla.
 ...
 EXITCODE: ERROR (12)
 ```
@@ -1427,6 +1427,17 @@ $ apalache-mc check OracleFunSet.tla | sed 's/I@.*//'
 EXITCODE: OK
 ```
 
+### check Verifier_functionComparison fails (array-encoding)
+
+Regression test for https://github.com/informalsystems/apalache/issues/1811
+Comparisons with functions with empty domains should be sound (as should everything else)
+
+```sh
+$ apalache-mc check Verifier_functionComparison.tla | sed 's/I@.*//'
+...
+EXITCODE: ERROR (12)
+```
+
 ### check PickPerf succeeds (array-encoding)
 
 A performance test.
@@ -1443,6 +1454,16 @@ A performance test.
 
 ```sh
 $ apalache-mc check --discard-disabled=0 --tuning-options=search.invariant.mode=after PickPerf2.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
+### simulate y2k with --save-runs succeeds
+
+```sh
+$ apalache-mc simulate --length=10 --max-run=5 --save-runs --inv=Safety y2k_instance.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
 ...
 EXITCODE: OK
 ```
@@ -2853,7 +2874,7 @@ EXITCODE: ERROR (120)
 If we run with the `--out-dir` flag
 
 ```sh
-$ apalache-mc check --out-dir=./test-out-dir --length=0 Counter.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --out-dir=./test-out-dir --write-intermediate=0 --length=0 Counter.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2861,7 +2882,15 @@ EXITCODE: OK
 ```sh
 $ find ./test-out-dir/Counter.tla/* -type f -exec basename {} \; | ./sort.sh
 detailed.log
+example0.itf.json
+example0.json
+example0.tla
+example.itf.json
+example.json
+example.tla
 log0.smt
+MCexample0.out
+MCexample.out
 run.txt
 ```
 
@@ -2924,7 +2953,15 @@ $ find ./test-out-dir/Counter.tla/* -type f -exec basename {} \; | ./sort.sh
 11_OutPostTypeCheckerSnowcat.json
 11_OutPostTypeCheckerSnowcat.tla
 detailed.log
+example0.itf.json
+example0.json
+example0.tla
+example.itf.json
+example.json
+example.tla
 log0.smt
+MCexample0.out
+MCexample.out
 run.txt
 $ rm -rf ./test-out-dir
 ```
@@ -2942,21 +2979,21 @@ $ rm -rf ./test-out-dir
 ### output manager: counterexamples are written to the run directory
 
 ```sh
-$ apalache-mc check --out-dir=./test-out-dir --length=2 --inv=Inv factorization.tla | sed -e 's/[IEW]@.*//'
+$ apalache-mc check --out-dir=./test-out-dir --write-intermediate=0 --length=2 --inv=Inv factorization.tla | sed -e 's/[IEW]@.*//'
 ...
 EXITCODE: ERROR (12)
 $ ls ./test-out-dir/factorization.tla/* | ./sort.sh
-counterexample1.itf.json
-counterexample1.json
-counterexample1.tla
-counterexample.itf.json
-counterexample.json
-counterexample.tla
 detailed.log
 log0.smt
-MC1.out
-MC.out
+MCviolation1.out
+MCviolation.out
 run.txt
+violation1.itf.json
+violation1.json
+violation1.tla
+violation.itf.json
+violation.json
+violation.tla
 $ rm -rf ./test-out-dir
 ```
 
@@ -2992,6 +3029,14 @@ $ find ./test-run-dir -type f -exec basename {} \; | ./sort.sh
 11_OutPostTypeCheckerSnowcat.json
 11_OutPostTypeCheckerSnowcat.tla
 detailed.log
+example0.itf.json
+example0.json
+example0.tla
+example.itf.json
+example.json
+example.tla
+MCexample0.out
+MCexample.out
 run.txt
 $ rm -rf ./test-out-dir ./test-run-dir
 ```
@@ -2999,20 +3044,20 @@ $ rm -rf ./test-out-dir ./test-run-dir
 ### output manager: counterexamples can be written to specified run directory
 
 ```sh
-$ apalache-mc check --out-dir=./test-out-dir --length=2 --inv=Inv --run-dir=./test-run-dir factorization.tla | sed -e 's/[IEW]@.*//'
+$ apalache-mc check --out-dir=./test-out-dir --write-intermediate=0 --length=2 --inv=Inv --run-dir=./test-run-dir factorization.tla | sed -e 's/[IEW]@.*//'
 ...
 EXITCODE: ERROR (12)
 $ ls ./test-run-dir | ./sort.sh
-counterexample1.itf.json
-counterexample1.json
-counterexample1.tla
-counterexample.itf.json
-counterexample.json
-counterexample.tla
 detailed.log
-MC1.out
-MC.out
+MCviolation1.out
+MCviolation.out
 run.txt
+violation1.itf.json
+violation1.json
+violation1.tla
+violation.itf.json
+violation.json
+violation.tla
 $ rm -rf ./test-out-dir ./test-run-dir
 ```
 
@@ -3027,6 +3072,14 @@ $ apalache-mc check --length=0 Counter.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 $ ls ./configured-run-dir | ./sort.sh
 detailed.log
+example0.itf.json
+example0.json
+example0.tla
+example.itf.json
+example.json
+example.tla
+MCexample0.out
+MCexample.out
 run.txt
 $ rm -rf ./configured-run-dir ./.apalache.cfg
 ```
