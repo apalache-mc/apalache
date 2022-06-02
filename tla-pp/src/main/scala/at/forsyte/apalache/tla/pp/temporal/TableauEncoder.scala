@@ -30,7 +30,7 @@ class TableauEncoder(
     extends LazyLogging {
   val levelFinder = new TlaLevelFinder(module)
   val varNamesToExStrings = new HashMap[String, String]()
-      
+
   /**
    * Encodes each of a sequence of temporal formulas.
    * @see
