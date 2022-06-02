@@ -742,7 +742,7 @@ a hard fact.*
 | Python PBT | [Hypothesis][] | Property-based testing, stateful testing | combinatorial explosion of executions | no | 8 hours | 2M runs |
 | TLA+       | [Apalache][] | Symbolic simulation | combinatorial explosion of symbolic executions & SMT | no | 5 sec for `length=50`; 12 sec for `length=10`| 33 |
 | TLA+       | [Apalache][] | Bounded model checking | combinatorial explosion in SMT | yes: for fixed length and fixed parameters | 7 sec | 1 |
-| TLA+       | [TLC][] | Explicit enumeration + simulation | combinatorial explosion of executions | no | < 1 min for `depth=50`; 1 hour 9 min for `depth=10`| 7.7K |
+| TLA+       | [TLC][] | Explicit enumeration + simulation | combinatorial explosion of executions | no | < 1 min for `depth=50`; 1 hour 9 min for `depth=10`| 183M |
 | TLA+       | [TLC][] | Explicit model checking | combinatorial explosion of states | yes: for fixed parameters | >1.5h, out of disk space, reached diameter 3 | 738M states |
 
 Since we have conducted the experiments on a single benchmark, we are not
