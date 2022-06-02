@@ -287,7 +287,7 @@ The syntax tree of this formula looks like this:
 
 For each node of the syntax tree where the formula contains a temporal operator,
 there is an auxiliary variable. And as mentioned before, the value of 
-the variable in a state tells us whether from that state, the subformula is true.
+the variable in a state tells us whether from that state, the subformula is true. In this particular example, the formulas that correspond to variables in the encoding are filled with orange in the syntax tree.
 
 What about the `_unroll` variables? There is one `_unroll` variable for each temporal operator in the formula.
 For example,  `☐(requestedGreen ⇒ ♢isGreen)_unroll` is the unroll variable for the
