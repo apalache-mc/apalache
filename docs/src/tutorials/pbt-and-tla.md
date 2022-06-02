@@ -737,13 +737,13 @@ understanding of the average running times, we would have to perform each
 experiment multiple times. Hence, take these figures as one observation, not as
 a hard fact.*
 
-| Input      | Tool | Method | Performance bottleneck | Complete? | Time (one experiment!) |
-| ---------- | ---- | ------ | ---------------------- |:---------:|:----:|
-| Python PBT | [Hypothesis][] | Property-based testing, stateful testing | combinatorial explosion of executions | no | 8 hours |
-| TLA+       | [Apalache][] | Symbolic simulation | combinatorial explosion of symbolic executions & SMT | no | 5 sec for `length=50`; 12 sec for `length=10`|
-| TLA+       | [Apalache][] | Bounded model checking | combinatorial explosion in SMT | yes: for fixed length and fixed parameters | 7 sec |
-| TLA+       | [TLC][] | Explicit enumeration + simulation | combinatorial explosion of executions | no | < 1 min for `depth=50`; 1 hour 9 min for `depth=10`|
-| TLA+       | [TLC][] | Explicit model checking | combinatorial explosion of states | yes: for fixed parameters | >1.5h, out of disk space, reached diameter 3 |
+| Input      | Tool | Method | Performance bottleneck | Complete? | Time (one experiment!) | Runs/states |
+| ---------- | ---- | ------ | ---------------------- |:---------:|:----:|:----:|
+| Python PBT | [Hypothesis][] | Property-based testing, stateful testing | combinatorial explosion of executions | no | 8 hours | 2M runs |
+| TLA+       | [Apalache][] | Symbolic simulation | combinatorial explosion of symbolic executions & SMT | no | 5 sec for `length=50`; 12 sec for `length=10`| 33 |
+| TLA+       | [Apalache][] | Bounded model checking | combinatorial explosion in SMT | yes: for fixed length and fixed parameters | 7 sec | 1 |
+| TLA+       | [TLC][] | Explicit enumeration + simulation | combinatorial explosion of executions | no | < 1 min for `depth=50`; 1 hour 9 min for `depth=10`| 7.7K |
+| TLA+       | [TLC][] | Explicit model checking | combinatorial explosion of states | yes: for fixed parameters | >1.5h, out of disk space, reached diameter 3 | 738M states |
 
 Since we have conducted the experiments on a single benchmark, we are not
 trying to draw general conclusions from this table. However, we propose some
