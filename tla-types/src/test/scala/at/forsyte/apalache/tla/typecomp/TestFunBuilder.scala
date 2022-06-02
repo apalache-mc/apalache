@@ -46,7 +46,7 @@ class TestFunBuilder extends BuilderTest {
 
     checkRun(
         runVariadic(
-            builder.enumMixed,
+            builder.recMixed,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
@@ -55,17 +55,17 @@ class TestFunBuilder extends BuilderTest {
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
-      build(builder.enumMixed())
+      build(builder.recMixed())
     }
 
     // test fail on n = 1
     assertThrows[IllegalArgumentException] {
-      build(builder.enumMixed(builder.str("x")))
+      build(builder.recMixed(builder.str("x")))
     }
 
     // test fail on repeated key
     assertThrows[IllegalArgumentException] {
-      build(builder.enumMixed(
+      build(builder.recMixed(
               builder.str("k"),
               builder.name("v", IntT1),
               builder.str("k"),
@@ -99,7 +99,7 @@ class TestFunBuilder extends BuilderTest {
 
     checkRun(
         runVariadic(
-            builder.enum,
+            builder.rec,
             mkWellTyped2,
             mkIllTyped2,
             resultIsExpected2,
@@ -108,12 +108,12 @@ class TestFunBuilder extends BuilderTest {
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
-      build(builder.enum())
+      build(builder.rec())
     }
 
     // test fail on repeated key
     assertThrows[IllegalArgumentException] {
-      build(builder.enum(
+      build(builder.rec(
               ("k", builder.name("v", IntT1)),
               ("k", builder.name("w", IntT1)),
           ))

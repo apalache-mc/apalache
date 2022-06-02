@@ -21,21 +21,21 @@ trait UnsafeFunBuilder extends ProtoBuilder {
   /**
    * Record constructor [ k1 |-> v1, ... , kN |-> vN ]; must have at least 1 key-value pair and all keys must be unique
    */
-  protected def _enum(args: (String, TlaEx)*): TlaEx = {
+  protected def _rec(args: (String, TlaEx)*): TlaEx = {
     // the other _recSet does all the require checks
     val flatArgs = args.flatMap { case (k, v) =>
       Seq(ValEx(TlaStr(k))(Typed(StrT1)), v)
     }
-    _enumMixed(flatArgs: _*)
+    _recMixed(flatArgs: _*)
   }
 
   /**
    * Alternate call method, where pairs are passed interleaved.
    *
    * @see
-   *   _enum[[_enum(args: (String, TlaEx)*)]]
+   *   _rec[[_rec(args: (String, TlaEx)*)]]
    */
-  protected def _enumMixed(args: TlaEx*): TlaEx = {
+  protected def _recMixed(args: TlaEx*): TlaEx = {
     // All keys must be ValEx(TlaStr(_))
     require(args.nonEmpty)
     require(args.size % 2 == 0)

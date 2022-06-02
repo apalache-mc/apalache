@@ -18,19 +18,19 @@ trait FunBuilder extends UnsafeFunBuilder {
   /**
    * Record constructor [ k1 |-> v1, ... , kN |-> vN ]; must have at least 1 key-value pair and all keys must be unique
    */
-  def enum(args: (String, TBuilderInstruction)*): TBuilderInstruction = for {
+  def rec(args: (String, TBuilderInstruction)*): TBuilderInstruction = for {
     vs <- buildSeq(args.map(_._2))
     ks = args.map(_._1)
-  } yield _enum(ks.zip(vs): _*)
+  } yield _rec(ks.zip(vs): _*)
 
   /**
    * Alternate call method, where pairs are passed interleaved.
    *
    * @see
-   *   _enum[[_enum(args: (String, TlaEx)*)]]
+   *   rec[[rec(args: (String, TBuilderInstruction)*)]]
    */
-  def enumMixed(args: TBuilderInstruction*): TBuilderInstruction =
-    buildSeq(args).map { _enumMixed(_: _*) }
+  def recMixed(args: TBuilderInstruction*): TBuilderInstruction =
+    buildSeq(args).map { _recMixed(_: _*) }
 
   /** {{{<<t1, ..., tn>>}}} with a tuple-type */
   def tuple(args: TBuilderInstruction*): TBuilderInstruction = buildSeq(args).map(_tuple(_: _*))
