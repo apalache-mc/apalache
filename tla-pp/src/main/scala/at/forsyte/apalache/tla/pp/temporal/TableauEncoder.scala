@@ -14,6 +14,7 @@ import scala.collection.mutable.HashMap
 import at.forsyte.apalache.tla.lir.oper.TlaTempOper
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.io.lir.NameReplacementMap.NameReplacementMap
 
 /**
  * Encodes temporal formulas as invariants.
@@ -31,16 +32,38 @@ class TableauEncoder(
   val levelFinder = new TlaLevelFinder(module)
   val varNamesToExStrings = new HashMap[String, String]()
 
+  def encodeVarNameMapping(modWithPreds: ModWithPreds): ModWithPreds = {
+    // val varNameSets = varNamesToExStrings.map { case (key, value) =>
+    //   builder.enumSet(builder.str(key), builder.str(value))
+    // }.toSeq
+
+    // val mapDecl =
+    //   new TlaOperDecl(
+    //       TableauEncoder.PREDS_TO_VARS_MAPPING_NAME,
+    //       List.empty,
+    //       builder.enumSet(
+    //           varNameSets: _*
+    //       ),
+    //   )(Typed(SetT1))
+
+    // val newModule = new TlaModule(modWithPreds.module.name, modWithPreds.module.declarations :+ mapDecl)
+    // modWithPreds.setModule(newModule)
+    NameReplacementMap = NameReplacementMap.addAll(varNamesToExStrings.iterator)
+    modWithPreds
+  }
+
   /**
    * Encodes each of a sequence of temporal formulas.
    * @see
    *   [[encodeFormula]]
    */
-  def temporalsToInvariants(
+  def encodeFormulas(
       modWithPreds: ModWithPreds,
       formulas: Seq[TlaOperDecl]): ModWithPreds = {
 
-    formulas.foldLeft(modWithPreds)(singleTemporalToInvariant)
+    encodeVarNameMapping(
+        formulas.foldLeft(modWithPreds)(encodeFormula)
+    )
   }
 
   /**
@@ -52,10 +75,10 @@ class TableauEncoder(
    * newNext == oldNext /\ UNCHANGED << Init_ex >>
    */
   def addInitExVar(modWithPreds: ModWithPreds, ex: TlaEx, exName: String): (ModWithPreds, TlaVarDecl) = {
-    val exVarDecl = new TlaVarDecl("__" + exName + "_init")(Typed(BoolT1))
+    val exVarDecl = new TlaVarDecl(exName + "_init")(Typed(BoolT1))
     val exVar = builder.declAsNameEx(exVarDecl)
 
-    val newInit = andInDecl(
+    val newInit = conjunctExToOperDecl(
         builder.eql(
             exVar,
             builder.useTrustedEx(ex),
@@ -64,7 +87,7 @@ class TableauEncoder(
         tracker,
     )
 
-    val newNext = andInDecl(
+    val newNext = conjunctExToOperDecl(
         builder.unchanged(exVar),
         modWithPreds.next,
         tracker,
@@ -77,7 +100,7 @@ class TableauEncoder(
   /**
    * Encodes a given formula, using the Tableau encoding by adjusting init, next, loopOK and the given formula.
    */
-  def singleTemporalToInvariant(
+  def encodeFormula(
       modWithPreds: ModWithPreds,
       formula: TlaOperDecl): ModWithPreds = {
 
@@ -102,17 +125,21 @@ class TableauEncoder(
     curModWithPreds.setModule(newModule)
   }
 
-  /**
-   * Takes a temporal operator and a name, and generates a new variable declaration declaring the auxiliary "unrolling"
-   * variable for that temporal operator.
-   */
-  private def createUnrollingVar(oper: TlaTempOper, nodeIdentifier: String): TlaVarDecl = {
+  def insertAt[T](elem: T, seq: Seq[T], pos: Int): Seq[T] = {
+    seq.take(pos) ++ List(elem) ++ seq.drop(pos)
+  }
+
+  def getAuxVarForTempOper(oper: TlaTempOper, nodeIdentifier: String): TlaVarDecl = {
     val nameSuffix = oper match {
       case TlaTempOper.box     => TableauEncoder.BOX_SUFFIX
       case TlaTempOper.diamond => TableauEncoder.DIAMOND_SUFFIX
     }
 
-    new TlaVarDecl(nodeIdentifier + nameSuffix)(Typed(BoolT1))
+    val auxVarName = nodeIdentifier + nameSuffix
+
+    varNamesToExStrings.addOne((auxVarName, varNamesToExStrings(nodeIdentifier) + nameSuffix))
+
+    new TlaVarDecl(auxVarName)(Typed(BoolT1))
   }
 
   /**
@@ -133,15 +160,10 @@ class TableauEncoder(
    * to a commitment whether or not the formula corresponding to this variable holds true at that point in the trace.
    * For example, if var_DiamondB is true in a state, the spec will ensure that in some future state, B holds (recall
    * that B holding at some point in the future is the definition of <>B).
-   *
-   * @param letInContext
-   *   a mapping from operator names to the expressions they represent. Should only be unary operators. Empty by
-   *   default.
    */
   def encodeSyntaxTreeInPredicates(
       modWithPreds: ModWithPreds,
-      curNode: TlaEx,
-      letInContext: Map[String, TlaEx] = Map[String, TlaEx]()): (ModWithPreds, TlaEx) = {
+      curNode: TlaEx): (ModWithPreds, TlaEx) = {
     levelFinder.getLevelOfExpression(Set.empty, curNode) match {
       case TlaLevelTemporal =>
         curNode match {
@@ -154,21 +176,9 @@ class TableauEncoder(
           case ValEx(_) =>
             throw new IrrecoverablePreprocessingError(
                 "Found a value expression of temporal level. This should not be possible.")
-          case LetInEx(body, TlaOperDecl(letInName, args, letInEx)) =>
-            if (!args.isEmpty) {
-              throw new IrrecoverablePreprocessingError("Expect to find only unary LET-IN expressions. " +
-                "Non-unary LET-IN expressions " +
-                "should have been rewritten by the inliner")
-            }
-
-            val newLetInContext =
-              letInContext + ((letInName, letInEx))
-
-            encodeSyntaxTreeInPredicates(
-                modWithPreds,
-                body,
-                newLetInContext,
-            )
+          case LetInEx(_, _) =>
+            throw new IrrecoverablePreprocessingError(
+                "Expect to find no LET-IN expressions. They should have been rewritten by the inliner")
           case OperEx(oper, args @ _*) =>
             var curModWithPreds = modWithPreds
 
@@ -188,20 +198,20 @@ class TableauEncoder(
             /* create a new loop variable for this node
                     e.g.
                     \* @type: Bool;
-                    __saved_curNode_predicate
+                    Loop_curNode_predicate
              */
-            val nodeLoopVarDecl = loopEnc.createVarCopyVariableInLoop(nodeVarDecl)
-            varNamesToExStrings.addOne(nodeLoopVarDecl.name, curNode.toString().replace("\"", "\'"))
+            val nodeLoopVarDecl = loopEnc.createLoopVariableForVariable(nodeVarDecl)
+            varNamesToExStrings.addOne(nodeLoopVarDecl.name, "__loop_" + curNode.toString().replace("\"", "\'"))
 
             curModWithPreds = curModWithPreds.prependDecl(nodeLoopVarDecl)
 
             /* generic initialization for node variable: curNode_predicate \in BOOLEAN */
             val initWithNodeVar =
-              andInDecl(builder.in(nodeVarEx, builder.booleanSet()), modWithPreds.init, tracker)
+              conjunctExToOperDecl(builder.in(nodeVarEx, builder.booleanSet()), modWithPreds.init, tracker)
 
             /* generic update for node variable: curNode_predicate' \in BOOLEAN */
             val nextWithNodeVar =
-              andInDecl(builder.in(nodeVarExPrime, builder.booleanSet()), modWithPreds.next, tracker)
+              conjunctExToOperDecl(builder.in(nodeVarExPrime, builder.booleanSet()), modWithPreds.next, tracker)
 
             /* initialize loop variable
              */
@@ -220,12 +230,7 @@ class TableauEncoder(
             /* encode the arguments of the node
              */
             val argExs = args.map(arg => {
-              val modWithPredsAndArgEx =
-                encodeSyntaxTreeInPredicates(
-                    curModWithPreds,
-                    arg,
-                    letInContext,
-                )
+              val modWithPredsAndArgEx = encodeSyntaxTreeInPredicates(curModWithPreds, arg)
               curModWithPreds = modWithPredsAndArgEx._1
               val argEx = modWithPredsAndArgEx._2
               builder.useTrustedEx(argEx)
@@ -236,7 +241,7 @@ class TableauEncoder(
             oper match {
               case TlaTempOper.box | TlaTempOper.diamond => /* curNode has the form []A or <>A */
                 /* create new auxiliary variable curNode_globally or curNode_finally */
-                val auxVarDecl = createUnrollingVar(oper.asInstanceOf[TlaTempOper], nodeIdentifier)
+                val auxVarDecl = getAuxVarForTempOper(oper.asInstanceOf[TlaTempOper], nodeIdentifier)
                 val auxVarEx = builder.declAsNameEx(auxVarDecl)
                 val auxVarExPrime = builder.prime(auxVarEx)
                 curModWithPreds = curModWithPreds.prependDecl(auxVarDecl)
@@ -252,7 +257,7 @@ class TableauEncoder(
                   case TlaTempOper.diamond => false
                 }
 
-                val newInit = andInDecl(
+                val newInit = conjunctExToOperDecl(
                     builder.and(
                         builder.in(
                             nodeVarEx,
@@ -309,7 +314,7 @@ class TableauEncoder(
                     builder.booleanSet(),
                 )
 
-                var newNext = andInDecl(
+                var newNext = conjunctExToOperDecl(
                     curNodeAssignment,
                     curModWithPreds.next,
                     tracker,
@@ -321,7 +326,7 @@ class TableauEncoder(
                     builder.booleanSet(),
                 )
 
-                newNext = andInDecl(
+                newNext = conjunctExToOperDecl(
                     auxVarAssignment,
                     curModWithPreds.next,
                     tracker,
@@ -336,7 +341,7 @@ class TableauEncoder(
                     ),
                 )
 
-                newNext = andInDecl(
+                newNext = conjunctExToOperDecl(
                     curNodeCondition,
                     curModWithPreds.next,
                     tracker,
@@ -356,7 +361,7 @@ class TableauEncoder(
                     ),
                 )
 
-                newNext = andInDecl(
+                newNext = conjunctExToOperDecl(
                     auxVarCondition,
                     newNext,
                     tracker,
@@ -365,7 +370,7 @@ class TableauEncoder(
                 /* update loopOK:
                   (curNode_predicate_globally => curNode_predicate) or (curNode_predicate => curNode_predicate_finally)
                  */
-                val newLoopOK = andInDecl(
+                val newLoopOK = conjunctExToOperDecl(
                     oper match {
                       case TlaTempOper.box     => builder.impl(auxVarEx, nodeVarEx)
                       case TlaTempOper.diamond => builder.impl(nodeVarEx, auxVarEx)
@@ -392,7 +397,7 @@ class TableauEncoder(
                           /\ oldInit
                           /\ curNode_predicate = A_predicate /\ B_predicate
                  */
-                val newInit = andInDecl(
+                val newInit = conjunctExToOperDecl(
                     builder.eql(
                         nodeVarEx,
                         builder.useTrustedEx(OperEx(oper, argExs: _*)(curNode.typeTag)),
@@ -405,7 +410,7 @@ class TableauEncoder(
                           /\ oldNext
                           /\ curNode_predicate' = A_predicate' /\ B_predicate'
                  */
-                val newNext = andInDecl(
+                val newNext = conjunctExToOperDecl(
                     builder.eql(
                         nodeVarExPrime,
                         builder.useTrustedEx(OperEx(oper, argExs: _*)(curNode.typeTag)),
@@ -430,6 +435,7 @@ class TableauEncoder(
         (modWithPreds, curNode)
     }
   }
+
 }
 
 object TableauEncoder {
