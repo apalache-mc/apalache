@@ -8,9 +8,6 @@ import at.forsyte.apalache.tla.lir._
 import java.io.PrintWriter
 import java.util.Calendar
 import scala.collection.mutable
-import at.forsyte.apalache.io.json.impl.UJsonFactory
-import at.forsyte.apalache.io.json.impl.UJsonRep
-import ujson.Value
 
 /**
  * This class produces counterexamples in the Informal Trace Format.
