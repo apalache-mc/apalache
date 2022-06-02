@@ -117,7 +117,7 @@ trait TlaType1Gen {
         // use resize to decrease the depth of the elements (as terms)
         s <- choose(0, size)
         elem = resize(s - 1, genVariantOption)
-        keys <- listOfN(s, identifier.suchThat(s => s.toUpperCase != s && s(0).isUpper))
+        keys <- listOfN(s, identifier)
         values <- listOfN(s, elem)
         varNo <- choose(0, 25)
         optVar <- some(VarT1(varNo))

@@ -75,10 +75,12 @@ object DefaultType1Parser extends Parsers with Type1Parser {
 
   // A type expression. We wrap it with a list, as (type, ..., type) may start an operator type
   private def noFunExpr: Parser[TlaType1] = {
-    (INT() | REAL() | BOOL() | STR() | typeVar | typeConst
+    (INT() | REAL() | BOOL() | STR()
       | set | seq | tuple | row | sparseTuple
       | record | recordFromRow
-      | variant | variantVar | parenExpr) ^^ {
+      | variant | variantVar
+      | typeVar | typeConst
+      | parenExpr) ^^ {
       case INT()        => IntT1
       case REAL()       => RealT1
       case BOOL()       => BoolT1
@@ -221,7 +223,8 @@ object DefaultType1Parser extends Parsers with Type1Parser {
     }
   }
 
-  // the user-friendly syntax of the variant type
+  // The user-friendly syntax of the variant type.
+  // For example: Tag1(a) | Tag2(Int) | c.
   private def variant: Parser[TlaType1] = {
     // the first rule tests for duplicates in the tags
     rep1sep(variantOption, PIPE()) <~ opt(PIPE() ~ typeVar) >> { list =>
