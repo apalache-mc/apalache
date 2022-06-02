@@ -37,7 +37,7 @@ class TemporalPassImpl @Inject() (
       case None =>
         logger.info("  > No formula specified, nothing to encode")
         tlaModule
-      case Some(formula) =>
+      case Some(formulas) =>
         val init = options.get[String]("checker", "init")
         if (init.isEmpty) {
           logger.info("  > `init` is not set, cannot encode formula")
@@ -49,8 +49,8 @@ class TemporalPassImpl @Inject() (
           None
         }
         // formula will be transformed into an invariant, so it is added as an invariant to check
-        options.set("checker.inv", options.get("checker", "inv") ++ formula)
-        temporalToInvariants(tlaModule, invariants, init.get, next.get)
+        options.set("checker.inv", options.getOrElse("checker", "inv", List.empty[String]) ++ formulas)
+        temporalToInvariants(tlaModule, formulas, init.get, next.get)
     }
 
     writeOut(writerFactory, newModule)
@@ -64,7 +64,6 @@ class TemporalPassImpl @Inject() (
       init: String,
       next: String): TlaModule = {
     val levelFinder = new TlaLevelFinder(module)
-
 
     val temporalFormulas = temporalProperties
       .map(propName => {
