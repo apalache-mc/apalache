@@ -351,7 +351,7 @@ class OpApplTranslator(
             OperEx(TlaSetOper.filter, op.args.tail :+ op.args.head: _*)
 
           case "$RcdConstructor" =>
-            mkPairsCtorBuiltin(TlaFunOper.enum, node)
+            mkPairsCtorBuiltin(TlaFunOper.rec, node)
 
           case "$SetOfRcds" =>
             mkPairsCtorBuiltin(TlaSetOper.recSet, node)
@@ -679,7 +679,7 @@ object OpApplTranslator {
       ("$SetOfAll", TlaSetOper.map),
       ("$SubsetOf", TlaSetOper.filter),
       ("$Except", TlaFunOper.except),
-      ("$RcdConstructor", TlaFunOper.enum),
+      ("$RcdConstructor", TlaFunOper.rec),
       ("$SetOfRcds", TlaSetOper.recSet),
   )
 }

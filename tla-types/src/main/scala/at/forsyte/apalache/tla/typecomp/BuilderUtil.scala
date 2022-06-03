@@ -26,7 +26,7 @@ object BuilderUtil {
   /** Removes elem from the scope, as the scope only contains types of free variables */
   def markAsBound(elem: TlaEx): TBuilderInternalState[Unit] = State[TBuilderContext, Unit] { mi: TBuilderContext =>
     require(elem.isInstanceOf[NameEx])
-    (mi.copy(mi.nameScope - elem.asInstanceOf[NameEx].name), ())
+    (mi.copy(nameScope = mi.nameScope - elem.asInstanceOf[NameEx].name), ())
   }
 
   /**

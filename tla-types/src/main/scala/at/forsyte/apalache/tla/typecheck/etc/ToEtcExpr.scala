@@ -450,7 +450,7 @@ class ToEtcExpr(
         mkApp(ref, Seq(principal), lambda)
 
       // ******************************************** FUNCTIONS **************************************************
-      case OperEx(TlaFunOper.enum, args @ _*) =>
+      case OperEx(TlaFunOper.rec, args @ _*) =>
         // a record constructor:
         // [f1 |-> e1, f2 |-> e2]
         val (fields, values) =
