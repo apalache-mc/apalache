@@ -17,12 +17,20 @@ LooselyConstrainedAction ==
     /\ x >= 0
     /\ x' = x + 1
 
+ActionWithPrimedVarsInNonAssignments ==
+    /\ x' = x + 1
+    /\ x' > 5
+    /\ x' = 6 => FALSE
+
 Next ==
     \/ TightlyConstrainedAction
     \/ LooselyConstrainedAction
 
-Inv ==
+InvLooselyConstrainedAction ==
     ENABLED LooselyConstrainedAction
+
+InvActionWithPrimedVarsInNonAssignments ==
+    ENABLED ActionWithPrimedVarsInNonAssignments
 
 Liveness ==
     <>(ENABLED TightlyConstrainedAction)
