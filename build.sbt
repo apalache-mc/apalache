@@ -189,6 +189,8 @@ lazy val shai = (project in file("shai"))
           Deps.grpcNetty,
           Deps.scalapbRuntimGrpc,
           Deps.zioGrpcCodgen,
+          TestDeps.zioTest,
+          TestDeps.zioTestSbt,
       ),
       // See https://scalapb.github.io/zio-grpc/docs/installation
       Compile / PB.targets := Seq(

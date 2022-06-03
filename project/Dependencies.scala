@@ -53,5 +53,8 @@ object Dependencies {
     val scalatestplusJunit = "org.scalatestplus" %% "junit-4-13" % s"${scalaTestVersion}.0" % Test
     val scalatestplusScalacheck = "org.scalatestplus" %% "scalacheck-1-15" % s"${scalaTestVersion}.0" % Test
 
+    val zioVersion = "2.0.0-RC6"
+    val zioTest = "dev.zio" %% "zio-test" % zioVersion % Test
+    val zioTestSbt = "dev.zio" %% "zio-test-sbt" % zioVersion % Test
   }
 }
