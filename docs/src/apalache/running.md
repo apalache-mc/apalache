@@ -4,8 +4,8 @@
 will submit anonymized statistics to
 `tlapl.us`. See the details in [TLA+ Anonymized Execution Statistics](./statistics.md).
 
-Apalache comes with several commands. You can run it with the `--help` option,
-to see the complete list:
+Apalache supports several modes of execution. You can run it with the `--help` option,
+to see the complete list of modes and their invocation commands:
 
 ```bash
 $ apalache-mc --help
@@ -15,26 +15,20 @@ The most important commands are as follows:
 
  - `parse` reads a TLA+ specification with the SANY parser and flattens it by
    instantiating all modules. It terminates successfully, if there are no parse
-   errors. Additionally, `parse` can consume a spec in the [JSON serialization
-   format][] and outputs it back in TLA+ and JSON.
+   errors. The input specification to `parse` may be given in standard TLA+ format, or in the [JSON serialization
+   format][], while the outputs are produced in both formats.
 
- - `typecheck` invokes `parse` and then runs the type checker Snowcat to infer
-   the types in the specification. It terminates successfully, if there are no
-   type errors.
+ - `typecheck` performs all of the operations of `parse` and additionally runs the type checker Snowcat to infer
+   the types of all expressions in the parsed specification. It terminates successfully, if there are no type errors.
 
- - `simulate` invokes `typecheck` and then runs the model checker in the
-   simulation mode, which *randomly picks* a sequence of actions and checks the
-   invariants against this sequence. It terminates successfully, if there are
-   no invariant violations. This command usually checks randomized symbolic
-   runs much faster than the `check` command.
+ - `simulate` performs all of the operations of `typecheck` and additionally runs the model checker in simulation mode, which *randomly* picks a sequence of [actions](https://apalache.informal.systems/docs/apalache/assignments-in-depth.html#slices) and checks the invariants for the subset of all executions which only admit actions in the selected order. 
+ It terminates successfully, if there are no invariant violations. 
+ This command usually checks randomized symbolic runs much faster than the `check` command.
 
- - `check` invokes `typecheck` and then runs the model checker in the bounded
-   model checking mode, which checks invariants against *all executions* up to
-   a predefined bound. It terminates successfully, if there are no invariant
-   violations.
+ - `check` performs all of the operations of `typecheck` and then runs the model checker in bounded model checking mode, which checks invariants for *all executions*, the length of which does not exceed the value specified by the `--length` parameter. 
+   It terminates successfully, if there are no invariant violations.
 
- - `test` invokes `check` in the special mode that is designed to test a single
-   action.
+ - `test` performs all of the operations of `check` in a mode that is designed to [test a single action](https://apalache.informal.systems/docs/adr/006rfc-unit-testing.html#32-testing-actions).
 
 ## 1. Model checker and simulator command-line parameters
 
@@ -120,8 +114,7 @@ The arguments are as follows:
 
 * Special parameters:
 
-  - `--max-run=NUM`: do not stop after a first simulation run, but produce up
-    to a given number of runs (unless reached `--max-error`), default: `100`
+  - `--max-run=NUM`: but produce up to `NUM` simulation runs (unless `--max-error` errors have been found), default: `100`
 
   - `--save-runs`: save an example trace for each simulated run, default:
     `false`
