@@ -821,87 +821,155 @@ to include them in this tutorial.
 ## <a name="math"></a> The math
 In this section, we show the full details of the probability analysis for finding the invariant-violating trace from [Section 3.8](#pbt-explosion).
 
-Let us parameterize the problem in the following way: Assume we are performing a random simulation, where one of 6 actions is chosen at each of the 5 steps, uniformly at random. Each action parameter `value` is instantiated with one of `l` values, uniformly at random, and each action parameter `sender, spender, fromAddr, toAddr` is instantiated with one of `m` values, uniformly at random.
-In the concrete simulation, the values were `(l,m) = (20,3)`.
+Let us parameterize the problem in the following way: assume we are performing a random simulation, where one of 6 actions is chosen at each of the 5 steps, uniformly at random. Each action parameter \\(value\\) is instantiated with one of \\(N_{val}\\) values, uniformly at random, and each action parameter \\(sender, spender, fromAddr, toAddr\\) is instantiated with one of \\(N_{addr}\\) values, uniformly at random.
+For simplicity, assume values are sampled from \\(V = \\{1,\dots, N_{val}\\}\\) and addresses from \\(A = \\{a_1, \dots,a_{N_{addr}} \\}\\).
+In the concrete simulation, the values were \\((N_{val},N_{addr}) = (20,3)\\).
 We also assume the following:
   - The initial balances, which are also randomly determined, are sufficient to cover all simulated runs, to avoid having to reason about insufficient coverage case, since our goal is to find an example of over-spending.
-  - the framework doesn't exit prematurely if an action is not viable, but chooses to treat it as a no-op instead
+  - the framework doesn't exit prematurely if an action is not viable, but chooses to treat it as a no-op instead (like the blockchain would)
 
-In particular, this gives us `m^2 * l` "transfer" actions, `m^2 * l` "approve" actions, and `m^3 * l` "transferFrom" actions, plus three unique commit actions. In total, there are `(m + 2)(m^2 * l) + 3` actions at every step, so 
-`((m + 2)(m^2 * l) + 3)^5` possible runs. For our concrete parameters, this is `600'397'329'064'743`. Note that the model suggests that the action _sort_ is selected before parameters (if any) are instantiated. This means that committing an approval has a `1/6` probability at each step, whereas `approve(u1,u2,v)` only has a `1/(6 * m^2 * l)` probability for any concrete choice of `u1, u2, v` (and `1/6` chance for _some_ choice of `u1,u2,v`).
+In particular, this gives us \\(N_{addr}^2 \cdot N_{val}\\) \\(\text{submit\_transfer}\\) actions, \\(N_{addr}^2 \cdot N_{val}\\) \\(\text{submit\_approve}\\) actions, and \\(N_{addr}^3 \cdot N_{val}\\) \\(\text{submit\_transferFrom}\\) actions, plus three unique commit actions. In total, there are \\((N_{val} + 2)(N_{val}^2  \cdot N_{addr}) + 3\\) actions at every step, so 
+\\(((N_{val} + 2)(N_{val}^2 \cdot N_{addr}) + 3)^5\\) possible runs. 
+For our concrete parameters, this is approximately \\(6\cdot 10^{14}\\) runs.
+
+We distinguish _actions_, which are one of \\(\text{submit\_approve}\\), \\(\text{submit\_transfer}\\), \\(\text{submit\_transferFrom}\\), \\(\text{commit\_approve}\\), \\(\text{commit\_transfer}\\), \\(\text{commit\_transferFrom}\\), from _action instances_, which are a combination of an action and concrete values for all of its action parameters (e.g. \\(\text{submit\_approve}(u_1,u_2,v)\\), for some \\(u_1,u_2,v\\))
+ 
+Note that the model suggests that the action is selected before parameters (if any) are instantiated. 
+In other words, the framework does _not_ uniformly select from action instances. 
+This means that committing an approval is selected with a probability of \\(\frac{1}{6}\\) at each step, whereas \\(\text{approve}(u_1,u_2,v)\\) is selected with a probability of \\(\frac{1}{6  \cdot N_{addr}^2  \cdot N_{val}}\\), for any concrete choice of \\(u_1, u_2, v\\) (and a probability of \\(\frac{1}{6}\\) for _some_ choice of \\(u_1,u_2,v\\)).
 
 Under these constraints, what is then the probability of executing a trace, which leads to an invariant violation?
-We break the problem into two independent parts: Finding a viable action order, and finding viable parameters, assuming the order is fixed.
 
-### Viable orders
+Let us define the following events:
+  - \\(\omega\\): a sequence of action instances is chosen, such that the invariant is violated
+  - \\(\alpha\\): a sequence of actions is chosen, such that the invariant is violated for some selection of instance parameters
+
+Observe that \\(\alpha \cap \omega = \omega\\).
+
+We break the problem into two parts: Finding an action order, and finding parameters, assuming the order is fixed.
+Concretely, we are going to find \\(P(\alpha)\\) and \\(P(\omega \mid \alpha)\\). Then, by the conditional probability rule,
+\\[
+P(\omega) =  P(\alpha \cap \omega) = P(\omega \mid \alpha) \cdot P(\alpha)
+\\]
+
+### Action orders that may lead to an invariant violation
+
+In this section, we determine \\(P(\alpha)\\).
+
 To find an invariant violation, we need the following five actions
-  - `H`, `L` (approving the higher and lower values)
-  - `T` (transferFrom) 
-  - `C` (committing the high approve)
-  - `C_T` (committing transferFrom)
+  - \\(H, L\\) (both \\(\text{submit\_approve}\\), but distinguished based on which of them is referenced by the commit action, i.e. whether the value is high or low)
+  - \\(T\\) (\\(\text{submit_transferFrom\}\\)) 
+  - \\(C_A\\) (\\(\text{commit\_approve}\\) referencing \\(H\\))
+  - \\(C_T\\) (\\(\text{commit\_transferFrom}\\))
 
 under the following constraints:
-  - `H` precedes `C` in the order
-  - `C_T` is last
+  - \\(H\\) precedes \\(C\\) in the order
+  - \\(C_T\\) is last in the sequence of 5 actions
 
-There are 12 valid sequences that satisfy the constraints (`C_T` is omitted, since it is always last):
-```
-HLTC, HTLC, THLC, LHTC, LTHC, TLHC,
-HLCT, HTCL, THCL, LHCT, 
-HCLT, HCTL
-```
-This means that the probability of finding the 5 transaction sorts in the order needed to violate the invariant is `12/6^5` or `2/6^4`
+There are 12 valid sequences that satisfy the constraints:
+\\[
+HLTC_AC_T,
+HTLC_AC_T,
+THLC_AC_T,
+LHTC_AC_T
+\\]
+\\[
+LTHC_AC_T,
+TLHC_AC_T,
+HLC_ATC_T,
+HTC_ALC_T
+\\]
+\\[
+THC_ALC_T,
+LHC_ATC_T,
+HC_ALTC_T,
+HC_ATLC_T
+\\]
 
-### Viable values
-Assume now that we have found a viable order. We need to instantiate the parameters to `H,L,T`:
-  - `H(sender_H, spender_H, v_H)`
-  - `L(sender_L,spender_L, v_L)`
-  - `T(sender_T, from, to, v_T)`
+This means that \\(P(\alpha)\\), the probability of finding the 5 transaction sorts in the order needed to violate the invariant is \\(\frac{12}{6^5}\\).
+
+### Parameter instantiations that may lead to an invariant violation
+
+In this section, we determine \\(P(\omega \mid \alpha )\\).
+
+Assume now that we have selected an action order, which may lead to an invariant violation. We need to instantiate the parameters to \\(H,L,T\\):
+  - \\(H: \text{submit\_approve}(sender_H, spender_H, v_H)\\)
+  - \\(L: \text{submit\_approve}(sender_L, spender_L, v_L)\\)
+  - \\(T: \text{submit\_transferFrom}(sender_T, from, to, v_T)\\)
 
 subject to the following constraints:
-  1. `sender_H /= spender_H`
-  2. `sender_L /= spender_L`
-  3. `sender_T, from, to` pairwise distinct
-  4. `sender_H = sender_L = from`
-  5. `spender_H = spender_L = sender_T`
-  6. `v_H >= v_T > v_L > 1` (assuming `v` samples from `{1,...,l}`)
+  - \\(c_1: sender_H \ne spender_H\\)
+  - \\(c_2: sender_L \ne spender_L\\)
+  - \\(c_3: sender_T, from, to\\) pairwise distinct
+  - \\(c_4: sender_H = sender_L = from\\)
+  - \\(c_5: spender_H = spender_L = sender_T\\)
+  - \\(c_6: v_H \ge v_T > v_L > 1\\)
 
-Since values and addresses are selected independently, uniformly at random, the probability of picking both viable addresses and viable values is the product of the probability of picking viable addresses and the probability of picking viable values.
+Since values and addresses are selected independently, uniformly at random, the probability of picking both addresses satisfying the address constraints, \\(P(c_1, \dots, c_5)\\), and values satisfying the value constraint, \\(P(c_6)\\), are independent, so \\(P(\omega \mid \alpha) = P(c_1,\dots,c_5) \cdot P(c_6)\\).
 
-Let us first consider the former. There are 7 address values, each selected from among `m` addresses, so a total of `m^7` possibilities.
-Assume we pick one of `m` values for `sender_H`. 
-This determines `sender_L` and `from` by (4). 
-By (1), we have `m-1` choices for `spender_H`. 
-Choosing one determines `spender_L` (satisfying (2) automatically), and `sender_T` by (5). 
-What is left is selecting `to`, which has `m-2` candidates, by (3).
+Let us first consider \\(P(c_1, \dots, c_5)\\). There are 7 address values to pick, each selected from among \\(N_{addr}\\) addresses, so a total of \\(N_{addr}^7\\)possibilities. How many of those satisfy \\(c_1,\dots,c_5\\)?
 
-In summary, the probability of selecting a viable set of addresses is `m(m-1)(m-2)/m^7`.
+Assume we pick one of \\(N_{addr}\\) values for \\(sender_H\\). 
+This determines \\(sender_L\\) and \\(from\\) by \\(c_4\\). 
+By \\(c_1\\), we have \\(N_{addr}-1\\) choices for \\(spender_H\\). 
+Choosing one determines \\(spender_L\\) (satisfying \\(c_2\\) automatically), and \\(sender_T\\) by \\(c_5\\). 
+What is left is selecting \\(to\\), which has \\(N_{addr}-2\\) candidates, by \\(c_3\\), for a total of \\(N_{addr}(N_{addr} - 1)( N_{addr} -2)\\) combinations, which satisfy all constraints.
 
-For the latter, we have `l^3` total possible selections of triples `(v_H,v_l,v_T)`. 
-The number of triples that satisfies (5) is
-```
-\sum_{a=2}^l \sum_{b=a+1}^l \sum_{c=b}^l 1
-```
+In summary, the probability of randomly selecting addresses satisfying \\(c_1,\dots,c_5\\) is 
+\\[
+P(c_1,\dots, c_5) = \frac{N_{addr}(N_{addr} - 1)(N_{addr} - 2)}{N_{addr}^7} = \frac{(N_{addr} - 1)(N_{addr} - 2)}{N_{addr}^6}
+\\]
 
-Which sums to `l*(l^2 - 3l + 2)/6`, giving us the following probability of choosing viable values:
-```
-(l^2 - 3l + 2)/(6 * l^2)
-```
+To determine \\(P(c_6)\\), we observe that there are \\(N_{val}^3\\) total possible selections of triples \\((v_L,v_T,v_H)\\). 
+The number of triples that satisfies \\(c_6\\) is
+\\[
+\sum_{a=1}^{N_{val}} \sum_{b=1}^{N_{val}} \sum_{c=1}^{N_{val}} \textbf{1}_{c \ge b > a > 1}
+\\]
 
-And the total probability of instantiating parameters such that the invariant is violated:
-```
-(m-1)(m-2)(l^2 - 3l + 2) / (6 * l^2 * m^6)
-```
+Where \\(\textbf{1}_{c \ge b > a > 1}\\) is the [indicator function](https://en.wikipedia.org/wiki/Indicator_function) of the event \\(c \ge b > a > 1\\), that is, equal to \\(1\\) iff \\(c \ge b > a > 1\\) and 0 otherwise.
+We can therefore simplify the above sum to 
+
+\\[
+\sum_{a=2}^{N_{val}} \sum_{b=a+1}^{N_{val}} \sum_{c=b}^{N_{val}} 1
+\\]
+
+which has a closed-form solution \\(\frac{N_{val}(N_{val}^2 - 3N_{val} + 2)}{6}\\), giving us the following probability of choosing values satisfying \\(c_6\\):
+
+\\[
+P(c_6) = \frac{N_{val}(N_{val}^2 - 3N_{val} + 2)}{6N_{val}^3} = \frac{N_{val}^2 - 3N_{val} + 2}{6N_{val}^2}
+\\]
+
+Combining these results gives us:
+
+\\[
+P(\omega \mid \alpha) = P(c_1,\dots,c_5)\cdot P(c_6) = \frac{(N_{addr} - 1)(N_{addr} - 2)(N_{val}^2 - 3N_{val} + 2)}{6N_{val}^2N_{addr}^6}
+\\]
 
 ### Probability of finding an invariant violation
+ 
+Recall the conditional probability rule
+\\[
+P(\omega) =  P(\alpha \cap \omega) = P(\omega \mid \alpha) \cdot P(\alpha)
+\\]
 
-The probability of finding an invariant violation is the product of the probability of selecting the required actions in a viable order and the conditional probability of selecting viable parameters under the assumption that a viable action order was selected, in other words:
+We can instantiate it with the computed probabilities, to determine:
 
-```
-2(m-1)(m-2)(l^2 - 3l + 2) / (6^5 * l^2 * m^6)
-```
+\\[
+P(\omega) = \frac{12(N_{addr} - 1)(N_{addr} - 2)(N_{val}^2 - 3N_{val} + 2)}{6^6N_{val}^2N_{addr}^6} = \frac{(N_{addr} - 1)(N_{addr} - 2)(N_{val}^2 - 3N_{val} + 2)}{3888 N_{val}^2N_{addr}^6}
+\\]
 
-which equals `19/31492800` or `6.03313×10^-7` for `(l,m) = (20,3)`.
+which equals \\(\frac{19}{31492800}\\) (approximately \\(6 \cdot 10^{-7}\\)) for \\((N_{val},N_{addr}) = (20,3)\\).
+
+Interestingly, the probability is asymptotically constant w.r.t. \\(N_{val}\\), but it is asymptotically inversely proportional to \\(N_{addr}^4\\).
+
+We can see that for the following increases in address space size, the probability of finding an invariant by random exploration drops drastically:
+Let us fix \\(N_{val} = 20\\) and increase \\(N_{addr}\\):
+  - \\(N_{addr} = 10\\): \\(P(\omega) \doteq 1.5 \cdot 10^{-8}\\)
+  - \\(N_{addr} = 50\\): \\(P(\omega) \doteq 3.3 \cdot 10^{-11}\\)
+  - \\(N_{addr} = 100\\): \\(P(\omega) \doteq 2.1 \cdot 10^{-12}\\)
+  - \\(N_{addr} = 1000\\): \\(P(\omega) \doteq 2.2 \cdot 10^{-16}\\)
+
+For reference, the space of 20byte address admits \\(2^{160}\\) unique values.
 
 [Apalache]: https://github.com/informalsystems/apalache/
 [TLC]: https://github.com/tlaplus/tlaplus
