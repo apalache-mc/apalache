@@ -185,7 +185,10 @@ lazy val tla_bmcmt = (project in file("tla-bmcmt"))
 
 lazy val shai = (project in file("shai"))
   .settings(
+      // See https://zio.dev/version-1.x/usecases/usecases_testing/
+      testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
       libraryDependencies ++= Seq(
+          Deps.zio,
           Deps.grpcNetty,
           Deps.scalapbRuntimGrpc,
           Deps.zioGrpcCodgen,
