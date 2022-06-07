@@ -105,7 +105,7 @@ trait SetBuilder extends UnsafeSetBuilder {
    * @see
    *   recSet[[recSet(kvs: (String, TBuilderInstruction)*)]]
    */
-  def recSetMixed(kvs: TBuilderInstruction*): TBuilderInstruction = buildSeq(kvs).map { kvs => _recSetMixed(kvs: _*) }
+  def recSetMixed(kvs: TBuilderInstruction*): TBuilderInstruction = buildSeq(kvs).map { _recSetMixed(_: _*) }
 
   /** Seq(set) */
   def seqSet(set: TBuilderInstruction): TBuilderInstruction = set.map(_seqSet)

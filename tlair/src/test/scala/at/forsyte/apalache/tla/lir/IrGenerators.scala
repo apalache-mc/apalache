@@ -82,7 +82,7 @@ trait IrGenerators extends TlaType1Gen {
   /**
    * Function operators (`TlaFunOper._`)
    */
-  val functionOperators = List(TlaFunOper.enum, TlaFunOper.tuple, TlaFunOper.app, TlaFunOper.domain, TlaFunOper.funDef,
+  val functionOperators = List(TlaFunOper.rec, TlaFunOper.tuple, TlaFunOper.app, TlaFunOper.domain, TlaFunOper.funDef,
       TlaFunOper.recFunDef, TlaFunOper.recFunRef, TlaFunOper.except)
 
   /**
