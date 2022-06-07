@@ -24,7 +24,7 @@ class EnabledRewriterPassImpl @Inject() (
   override def name: String = "EnabledRewriterPass"
 
   override def execute(tlaModule: TlaModule): PassResult = {
-    val enabledRewriter = new EnabledRewriter(tlaModule, tracker, sourceStore, changeListener)
+    val enabledRewriter = new EnabledRewriter(tracker, sourceStore, changeListener)
 
     val newModule = new TlaModule(
         tlaModule.name,
@@ -35,7 +35,7 @@ class EnabledRewriterPassImpl @Inject() (
             new TlaOperDecl(
                 operDecl.name,
                 operDecl.formalParams,
-                enabledRewriter(operDecl.body),
+                enabledRewriter(operDecl.body, tlaModule),
             )),
     )
 

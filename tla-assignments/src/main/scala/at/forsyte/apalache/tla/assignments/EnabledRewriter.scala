@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.storage.SourceLocator
@@ -11,6 +10,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
+import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 
 /**
  * Attempts to rewrite `ENABLED foo` operators into formulas that are true when action `foo` is enabled.
@@ -19,11 +19,9 @@ import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
  *   Philip Offtermatt
  */
 class EnabledRewriter(
-    module: TlaModule,
     tracker: TransformationTracker,
     sourceStore: SourceStore,
-    changeListener: ChangeListener)
-    extends TlaExTransformation {
+    changeListener: ChangeListener) {
 
   /**
    * Removes the assignments x' := foo from an expression by replacing them with TRUE
@@ -152,12 +150,11 @@ class EnabledRewriter(
     }
   }
 
-  private def transformEnabled(ex: TlaEx): TlaEx = {
-    val vars = module.varDeclarations.map(_.name)
-
+  private def transformEnabled(ex: TlaEx, varDecls: Seq[TlaVarDecl], operDecls: Seq[TlaOperDecl]): TlaEx = {
+    val vars = varDecls.map(_.name)
     val sourceLoc = SourceLocator(sourceStore.makeSourceMap, changeListener)
 
-    val operMap = BodyMapFactory.makeFromDecls(module.operDeclarations)
+    val operMap = BodyMapFactory.makeFromDecls(operDecls)
 
     val transitionPairs = SmtFreeSymbolicTransitionExtractor(tracker, sourceLoc)(vars.toSet, ex, operMap)
 
@@ -171,12 +168,12 @@ class EnabledRewriter(
     OperEx(TlaBoolOper.or, transitionsWithoutAssignments: _*)(Typed(BoolT1))
   }
 
-  override def apply(ex: TlaEx): TlaEx = {
+  def apply(ex: TlaEx, module: TlaModule): TlaEx = {
     ex match {
       case OperEx(TlaActionOper.enabled, arg) =>
-        transformEnabled(arg)
+        transformEnabled(arg, module.varDeclarations, module.operDeclarations)
       case OperEx(oper, args @ _*) =>
-        new OperEx(oper, args.map(arg => this(arg)): _*)(ex.typeTag)
+        new OperEx(oper, args.map(arg => this(arg, module)): _*)(ex.typeTag)
       case LetInEx(_, _) =>
         throw new NotInKeraError("There should be no let-in expressions left after inlining", ex)
       case _ => ex
