@@ -2,9 +2,9 @@
 
 **Difficulty: Red trail – Medium**
 
-**Author: Igor Konnov**
+**Author: Igor Konnov, Jure Kukovec**
 
-**Last update: May 28, 2022**
+**Last update: June 7, 2022**
 
 In this tutorial, we discuss the API of the [ERC20][] tokens, which are
 commonly used in the [Ethereum][] blockchain. This API is particularly
@@ -718,7 +718,7 @@ via state enumeration:
 
 ```sh
 java -DTLA-Library=$HOME/devl/apalache/src/tla -jar tla2tools.jar \
-  -config MC_tlc_check.cfg -nworkers 4 -fpmem .75 MC_tlc_check.tla
+  -config MC_tlc_check.cfg -fpmem .75 MC_tlc_check.tla
 ```
 
 Note that we let TLC use 75% of the available memory and ran it on 4 CPU
