@@ -42,6 +42,8 @@ class EnabledRewriter(
     }
   }
 
+  // TODO: support set assignment, e.g. primeVar \in SET
+  // rewrite to \e auxVar \in SET: and then replace primeVar with auxVar whereever it is used
   /**
    * Extracts a map of assignments primeVar := foo from an expression
    */
