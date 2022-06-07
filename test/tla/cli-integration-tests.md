@@ -3206,12 +3206,13 @@ $ rm module-lookup/subdir/output.tla
 
 ## server mode
 
-### server mode: subcommand is not yet implemented
+### server mode: server can be started
+
+We start the server, save its process id, then wait long enough for it to spin
+up and output its welcome message, before killing it:
 
 ```sh
-$ apalache-mc server | sed 's/[IEW]@.*//'
+$ apalache-mc server & pid=$! && sleep 3 && kill $pid
 ...
-Server mode is not yet implemented!
-...
-EXITCODE: ERROR (255)
+The Apalache server is running. Press Ctrl-C to stop.
 ```
