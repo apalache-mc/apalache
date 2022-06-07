@@ -770,6 +770,16 @@ class CherryPick(rewriter: SymbStateRewriter) {
         val pickedRelation = nextState.asCell
         nextState = nextState.updateArena(_.setCdm(funCell, pickedRelation))
 
+        // The function's relation is used by the decoder to produce counter-examples. The first elements of its tuples
+        // have to be equated to the function's domain, otherwise some tuples might be erroneously filtered out by the
+        // decoder, leading to spurious counter-examples.
+        nextState = nextState.updateArena(_.appendCell(pickedDom.cellType.toTlaType1))
+        val domFromPickedRelation = nextState.arena.topCell
+        val domElemsFromPickedRelation = nextState.arena.getHas(pickedRelation).map(e => nextState.arena.getHas(e).head)
+        nextState = nextState.updateArena(_.appendHas(domFromPickedRelation, domElemsFromPickedRelation: _*))
+        rewriter.lazyEq.cacheEqConstraints(nextState, Seq((pickedDom, domFromPickedRelation)))
+        rewriter.lazyEq.safeEq(pickedDom, domFromPickedRelation)
+
         rewriter.solverContext.log(s"; } CHERRY-PICK $funCell:$funType")
         // That's it!
         nextState.setRex(funCell.toNameEx)

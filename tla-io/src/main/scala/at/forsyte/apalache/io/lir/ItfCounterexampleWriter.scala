@@ -111,7 +111,7 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
     case OperEx(TlaSetOper.enumSet, args @ _*) =>
       ujson.Obj("#set" -> ujson.Arr(args.map(exToJson): _*))
 
-    case OperEx(TlaFunOper.enum, args @ _*) =>
+    case OperEx(TlaFunOper.rec, args @ _*) =>
       val (keyEs, valuesEs) = deinterleave(args)
       val keys = keyEs.collect { case ValEx(TlaStr(s)) => s }
       val values = valuesEs.map(exToJson)
@@ -124,6 +124,8 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
       ujson.Obj("#map" -> ujson.Arr(keyValueArrays: _*))
 
     case e =>
-      throw new IllegalArgumentException("Unexpected expression in an ITF counterexample: " + e)
+      // We don't know how to serialize this TLA+ expression (e.g., Int, Nat, FunSet, PowSet).
+      // Output it as a serialization error.
+      ujson.Obj("#unserializable" -> ujson.Str(e.toString))
   }
 }
