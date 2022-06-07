@@ -349,7 +349,7 @@ object Tool extends LazyLogging {
     logger.info("Starting server...")
 
     // NOTE Must go after all other options are set due to side-effecting
-    // behavior of current OutmputManager configuration
+    // behavior of current OutputManager configuration
     setCommonOptions(server, executor.options)
 
     shai.v1.RpcServer.main(Array())
