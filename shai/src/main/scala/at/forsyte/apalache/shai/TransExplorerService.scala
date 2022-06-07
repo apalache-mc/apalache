@@ -12,11 +12,34 @@ package at.forsyte.apalache.shai.v1
  * [[TranExplorerService]] is meant to be registered with [[RpcServer]], and should not need to be used directly.
  */
 
-import at.forsyte.apalache.shai.v1.transExplorer.ZioTransExplorer
-import at.forsyte.apalache.shai.v1.transExplorer.{ConnectRequest, Connection}
+import at.forsyte.apalache.shai.v1.transExplorer.{ConnectRequest, Connection, ZioTransExplorer}
+import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule}
 import io.grpc.Status
-import zio.{Ref, UIO, ZEnv, ZIO}
 import java.util.UUID
+import zio.{Ref, UIO, ZEnv, ZIO}
+
+// TODO Decide on refined representation for `Transition` (see https://github.com/informalsystems/apalache/issues/1116)
+// Consider this as an abstract type for now, the representation is TBD
+case class Transition(val v: Int) extends AnyVal
+
+/**
+ * Represents a model with uninitialized constants
+ */
+trait UninitializedModel {
+
+  /** The specification of the model */
+  val spec: TlaModule
+
+  /** The known available transitions */
+  val transitions: List[Transition]
+}
+
+/**
+ * A model that has had it's constants initialized
+ */
+trait InitializedModel extends UninitializedModel {
+  val constInitPrimed: Map[String, TlaEx]
+}
 
 // TODO The connnection type will become enriched with more structure
 // as we build out the server
