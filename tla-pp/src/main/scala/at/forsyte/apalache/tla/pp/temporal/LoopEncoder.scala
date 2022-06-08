@@ -29,7 +29,7 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
   val boolTag = Typed(BoolT1)
 
   val inLoopDecl = TlaVarDecl(LoopEncoder.IN_LOOP_NAME)(boolTag)
-  val inLoop = builder.declAsNameEx(inLoopDecl)
+  val inLoop = builder.varDeclAsNameEx(inLoopDecl)
   val inLoopPrime = builder.prime(inLoop)
 
   /**
@@ -69,7 +69,7 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
      */
     val eqls =
       variables.zip(loopVariables).map { case (varDecl, loopVarDecl) =>
-        builder.eql(builder.declAsNameEx(loopVarDecl), builder.declAsNameEx(varDecl))
+        builder.eql(builder.varDeclAsNameEx(loopVarDecl), builder.varDeclAsNameEx(varDecl))
       }
 
     //  inLoop = FALSE
@@ -104,7 +104,7 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
    * /\ __saved_foo' = IF (InLoop' = InLoop) THEN loop_foo ELSE foo
    */
   def addLoopVarToNext(varDecl: TlaVarDecl, loopVarDecl: TlaVarDecl, next: TlaOperDecl): TlaOperDecl = {
-    val loopEx = builder.declAsNameEx(loopVarDecl)
+    val loopEx = builder.varDeclAsNameEx(loopVarDecl)
     val loopExPrime = builder.prime(loopEx)
 
     next.copy(body = builder.and(
@@ -116,7 +116,7 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
             builder.ite(
                 builder.eql(inLoop, inLoopPrime),
                 loopEx,
-                builder.declAsNameEx(varDecl),
+                builder.varDeclAsNameEx(varDecl),
             ),
         ),
     ))
@@ -146,11 +146,11 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
      * __saved_foo' := foo, __saved_bar' := bar, ..., __saved_baz' := baz
      */
     val eqls = variables.zip(loopVariables).map { case (varDecl, loopVarDecl) =>
-      val loopExPrime = builder.prime(builder.declAsNameEx(loopVarDecl))
+      val loopExPrime = builder.prime(builder.varDeclAsNameEx(loopVarDecl))
       /* /\ __saved_foo' = IF (InLoop' = InLoop) THEN __saved_foo ELSE foo */
       builder.eql(
           loopExPrime,
-          builder.declAsNameEx(varDecl),
+          builder.varDeclAsNameEx(varDecl),
       )
     }
 
@@ -209,7 +209,7 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
         /\ ...
      */
     val eqls = variables.zip(loopVariables).map { case (varDecl, loopVarDecl) =>
-      builder.eql(builder.declAsNameEx(varDecl), builder.declAsNameEx(loopVarDecl))
+      builder.eql(builder.varDeclAsNameEx(varDecl), builder.varDeclAsNameEx(loopVarDecl))
     }
     andInDecl(builder.and(eqls: _*), loopOK, tracker)
   }

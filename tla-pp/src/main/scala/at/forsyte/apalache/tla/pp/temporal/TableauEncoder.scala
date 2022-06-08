@@ -52,7 +52,7 @@ class TableauEncoder(
    */
   def addInitExVar(modWithPreds: ModWithPreds, ex: TlaEx, exName: String): (ModWithPreds, TlaVarDecl) = {
     val exVarDecl = new TlaVarDecl("__" + exName + "_init")(Typed(BoolT1))
-    val exVar = builder.declAsNameEx(exVarDecl)
+    val exVar = builder.varDeclAsNameEx(exVarDecl)
 
     val newInit = andInDecl(
         builder.eql(
@@ -90,8 +90,8 @@ class TableauEncoder(
     val newFormulaDecl = builder.declWithInferredParameterTypes(
         formula.name,
         builder.impl(
-            builder.appOp(builder.declAsNameEx(curModWithPreds.loopOK), Seq.empty[TBuilderInstruction]: _*),
-            builder.declAsNameEx(initExVarDecl),
+            builder.appOp(builder.varDeclAsNameEx(curModWithPreds.loopOK), Seq.empty[TBuilderInstruction]: _*),
+            builder.varDeclAsNameEx(initExVarDecl),
         ),
         formula.formalParams: _*
     )
@@ -154,7 +154,7 @@ class TableauEncoder(
              */
             val nodeVarDecl = new TlaVarDecl(nodeIdentifier)(Typed(BoolT1))
             curModWithPreds = curModWithPreds.prependDecl(nodeVarDecl)
-            val nodeVarEx = builder.declAsNameEx(nodeVarDecl)
+            val nodeVarEx = builder.varDeclAsNameEx(nodeVarDecl)
             val nodeVarExPrime = builder.prime(nodeVarEx)
 
             /* create a new loop variable for this node
@@ -179,7 +179,7 @@ class TableauEncoder(
              */
             val initWithLoopVar =
               andInDecl(
-                  builder.eql(builder.declAsNameEx(nodeLoopVarDecl), builder.declAsNameEx(nodeVarDecl)),
+                  builder.eql(builder.varDeclAsNameEx(nodeLoopVarDecl), builder.varDeclAsNameEx(nodeVarDecl)),
                   initWithNodeVar,
                   tracker,
               )
@@ -191,7 +191,7 @@ class TableauEncoder(
             /* update loopOK
              */
             val loopOKWithLoopVar = andInDecl(
-                builder.eql(builder.declAsNameEx(nodeVarDecl), builder.declAsNameEx(nodeLoopVarDecl)),
+                builder.eql(builder.varDeclAsNameEx(nodeVarDecl), builder.varDeclAsNameEx(nodeLoopVarDecl)),
                 modWithPreds.loopOK,
                 tracker,
             )
@@ -218,7 +218,7 @@ class TableauEncoder(
                 }
                 val auxVarDecl = new TlaVarDecl(nodeIdentifier + nameSuffix)(Typed(BoolT1))
 
-                val auxVarEx = builder.declAsNameEx(auxVarDecl)
+                val auxVarEx = builder.varDeclAsNameEx(auxVarDecl)
                 val auxVarExPrime = builder.prime(auxVarEx)
                 curModWithPreds = curModWithPreds.prependDecl(auxVarDecl)
 

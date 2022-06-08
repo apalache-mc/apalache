@@ -220,9 +220,9 @@ class ScopedBuilder
   }
 
   /**
-   * A name expression referring to the TlaDecl
+   * A name expression referring to the TlaVarDecl
    */
-  def declAsNameEx(decl: TlaDecl): TBuilderInstruction = {
+  def varDeclAsNameEx(decl: TlaVarDecl): TBuilderInstruction = {
     name(decl.name, decl.typeTag.asTlaType1())
   }
 
