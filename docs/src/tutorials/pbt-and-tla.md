@@ -827,19 +827,19 @@ For simplicity, assume values are sampled from \\(V = \\{1,\dots, N_{val}\\}\\) 
 In the concrete simulation, the values were \\((N_{val},N_{addr}) = (20,3)\\).
 We also assume the following:
   - The initial balances, which are also randomly determined, are sufficient to cover all simulated runs, to avoid having to reason about insufficient coverage case, since our goal is to find an example of over-spending.
-  - the framework doesn't exit prematurely if an action is not viable, but chooses to treat it as a no-op instead (like the blockchain would)
+  - The framework doesn't exit prematurely if an action is not viable, but chooses to treat it as a no-op instead (like the blockchain would).
 
 In particular, this gives us \\(N_{addr}^2 \cdot N_{val}\\) \\(\text{submit\_transfer}\\) actions, \\(N_{addr}^2 \cdot N_{val}\\) \\(\text{submit\_approve}\\) actions, and \\(N_{addr}^3 \cdot N_{val}\\) \\(\text{submit\_transferFrom}\\) actions, plus three unique commit actions. In total, there are \\((N_{val} + 2)(N_{val}^2  \cdot N_{addr}) + 3\\) actions at every step, so 
 \\(((N_{val} + 2)(N_{val}^2 \cdot N_{addr}) + 3)^5\\) possible runs. 
 For our concrete parameters, this is approximately \\(6\cdot 10^{14}\\) runs.
 
-We distinguish _actions_, which are one of \\(\text{submit\_approve}\\), \\(\text{submit\_transfer}\\), \\(\text{submit\_transferFrom}\\), \\(\text{commit\_approve}\\), \\(\text{commit\_transfer}\\), \\(\text{commit\_transferFrom}\\), from _action instances_, which are a combination of an action and concrete values for all of its action parameters (e.g. \\(\text{submit\_approve}(u_1,u_2,v)\\), for some \\(u_1,u_2,v\\))
+We distinguish _actions_, which are one of \\(\text{submit\_approve}\\), \\(\text{submit\_transfer}\\), \\(\text{submit\_transferFrom}\\), \\(\text{commit\_approve}\\), \\(\text{commit\_transfer}\\), \\(\text{commit\_transferFrom}\\), from _action instances_, which are a combination of an action and concrete values for all of its action parameters (e.g. \\(\text{submit\_approve}(u_1,u_2,v)\\), for some \\(u_1,u_2,v\\)).
  
 Note that the model suggests that the action is selected before parameters (if any) are instantiated. 
 In other words, the framework does _not_ uniformly select from action instances. 
 This means that committing an approval is selected with a probability of \\(\frac{1}{6}\\) at each step, whereas \\(\text{approve}(u_1,u_2,v)\\) is selected with a probability of \\(\frac{1}{6  \cdot N_{addr}^2  \cdot N_{val}}\\), for any concrete choice of \\(u_1, u_2, v\\) (and a probability of \\(\frac{1}{6}\\) for _some_ choice of \\(u_1,u_2,v\\)).
 
-Under these constraints, what is then the probability of executing a trace, which leads to an invariant violation?
+Under these constraints, what is then the probability of executing a trace that leads to an invariant violation?
 
 Let us define the following events:
   - \\(\omega\\): a sequence of action instances is chosen, such that the invariant is violated
