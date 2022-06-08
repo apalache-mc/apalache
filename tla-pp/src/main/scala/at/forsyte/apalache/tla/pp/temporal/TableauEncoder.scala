@@ -166,7 +166,7 @@ class TableauEncoder(
             val nodeVarDecl = new TlaVarDecl(nodeIdentifier)(Typed(BoolT1))
             curModWithPreds = curModWithPreds.prependDecl(nodeVarDecl)
             val nodeVarEx = builder.declAsNameEx(nodeVarDecl)
-            val nodeVarExPrime = builder.primeVar(nodeVarDecl)
+            val nodeVarExPrime = builder.prime(nodeVarEx)
 
             /* create a new loop variable for this node
                     e.g.

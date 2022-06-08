@@ -8,10 +8,6 @@ import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 
 object ScopedBuilderExtensions {
   implicit class ScopedBuilderExtension(val builder: ScopedBuilder) {
-    def primeVar(varDecl: TlaVarDecl): TBuilderInstruction = {
-      builder.prime(declAsNameEx(varDecl))
-    }
-
     def declAsNameEx(decl: TlaDecl): TBuilderInstruction = {
       builder.name(decl.name, decl.typeTag.asTlaType1())
     }
