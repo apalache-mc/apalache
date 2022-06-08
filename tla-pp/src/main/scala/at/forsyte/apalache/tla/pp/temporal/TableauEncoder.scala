@@ -97,24 +97,11 @@ class TableauEncoder(
         formula.formalParams: _*
     )
     val newDecls = curModWithPreds.module.declarations
-      .filterNot(decl => decl.name == formula.name) ++ Seq[TlaOperDecl](newFormulaDecl)
+      .filterNot(decl => decl.name == formula.name) :+ (newFormulaDecl: TlaOperDecl)
 
     val newModule = new TlaModule(curModWithPreds.module.name, newDecls)
 
     curModWithPreds.setModule(newModule)
-  }
-
-  /**
-   * Takes a temporal operator and a name, and generates a new variable declaration declaring the auxiliary "unrolling"
-   * variable for that temporal operator.
-   */
-  private def createUnrollingVar(oper: TlaTempOper, nodeIdentifier: String): TlaVarDecl = {
-    val nameSuffix = oper match {
-      case TlaTempOper.box     => TableauEncoder.BOX_SUFFIX
-      case TlaTempOper.diamond => TableauEncoder.DIAMOND_SUFFIX
-    }
-
-    new TlaVarDecl(nodeIdentifier + nameSuffix)(Typed(BoolT1))
   }
 
   /**
@@ -226,7 +213,12 @@ class TableauEncoder(
             oper match {
               case TlaTempOper.box | TlaTempOper.diamond => /* curNode has the form []A or <>A */
                 /* create new auxiliary variable curNode_globally or curNode_finally */
-                val auxVarDecl = createUnrollingVar(oper.asInstanceOf[TlaTempOper], nodeIdentifier)
+                val nameSuffix = oper match {
+                  case TlaTempOper.box     => TableauEncoder.BOX_SUFFIX
+                  case TlaTempOper.diamond => TableauEncoder.DIAMOND_SUFFIX
+                }
+                val auxVarDecl = new TlaVarDecl(nodeIdentifier + nameSuffix)(Typed(BoolT1))
+
                 val auxVarEx = builder.declAsNameEx(auxVarDecl)
                 val auxVarExPrime = builder.prime(auxVarEx)
                 curModWithPreds = curModWithPreds.prependDecl(auxVarDecl)
