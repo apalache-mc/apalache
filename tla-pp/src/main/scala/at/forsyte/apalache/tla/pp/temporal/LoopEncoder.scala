@@ -108,23 +108,19 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
     val loopEx = builder.declAsNameEx(loopVarDecl)
     val loopExPrime = builder.prime(loopEx)
 
-    TlaOperDecl(
-        next.name,
-        next.formalParams,
-        builder.and(
-            /* oldNext */
-            builder.useTrustedEx(next.body),
-            /* /\ __saved_foo' = IF (InLoop' = InLoop) THEN __saved_foo ELSE foo */
-            builder.eql(
-                loopExPrime,
-                builder.ite(
-                    builder.eql(inLoop, inLoopPrime),
-                    loopEx,
-                    builder.declAsNameEx(varDecl),
-                ),
+    next.copy(body = builder.and(
+        /* oldNext */
+        builder.useTrustedEx(next.body),
+        /* /\ __saved_foo' = IF (InLoop' = InLoop) THEN __saved_foo ELSE foo */
+        builder.eql(
+            loopExPrime,
+            builder.ite(
+                builder.eql(inLoop, inLoopPrime),
+                loopEx,
+                builder.declAsNameEx(varDecl),
             ),
         ),
-    )(next.typeTag)
+    ))
   }
 
   /**
