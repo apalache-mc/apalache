@@ -151,7 +151,7 @@ class TableauEncoder(
                 "Found a value expression of temporal level. This should not be possible.")
           case LetInEx(_, _) =>
             throw new IrrecoverablePreprocessingError(
-                "Expect to find no LET-IN expressions. They should have been rewritten by the inliner")
+                "Expected to find no LET-IN expressions. They should have been rewritten by the inliner.")
           case OperEx(oper, args @ _*) =>
             var curModWithPreds = modWithPreds
 
