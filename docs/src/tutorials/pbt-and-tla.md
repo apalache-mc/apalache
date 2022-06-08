@@ -589,18 +589,17 @@ an invariant violation in the first symbolic run after 20-40 steps in 5-7
 seconds. This is probably explained by uniform randomization of actions and
 that multiple short runs are packed in a single long run.
 
-### 4.10. Do we have to enumerate runs at all?
-
-This is a good question. Apalache supports another mode that analyzes all
-symbolic runs of given length at once, without enumerating them.
-
 ## 5. Bounded model checking with Apalache
+
+Do we have to enumerate runs at all? This is a good question. Apalache supports
+another mode, called "model checking", that analyzes all symbolic runs of given
+length at once, without enumerating them one by one.
 
 ### 5.1. Finding a invariant violation
 
-Whereas in symbolic simulation we were randomly picking a sequence of actions
-and delegating the discovery of right inputs to the solver, in the checking
-mode, we delegate the choice of the right actions to the solver too:
+In symbolic simulation, we randomly picked a sequence of actions and delegated
+the discovery of "right" inputs to the solver. In contrast, in the checking
+mode, we additionally delegate the choice of actions to the solver as well:
 
 ```sh
 $ apalache-mc check --length=10 \
