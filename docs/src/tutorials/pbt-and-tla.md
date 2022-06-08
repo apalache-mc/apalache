@@ -822,7 +822,7 @@ to include them in this tutorial.
 ## <a name="math"></a> 8. The math
 In this section, we show the full details of the probability analysis for finding the invariant-violating trace from [Section 3.8](#pbt-explosion).
 
-Let us parameterize the problem in the following way: assume we are performing a random simulation, where one of 6 actions is chosen at each of the 5 steps, uniformly at random. Each action parameter \\(value\\) is instantiated with one of \\(N_{val}\\) values, uniformly at random, and each action parameter \\(sender, spender, fromAddr, toAddr\\) is instantiated with one of \\(N_{addr}\\) values, uniformly at random.
+Let us parameterize the problem in the following way: assume we are performing a random simulation, where one of 6 actions is chosen at each of the 5 steps, uniformly at random. Each action parameter \\(value\\) is instantiated with one of \\(N_{val}\\) values, uniformly at random, and each action parameter \\(sender, spender, \mathit{fromAddr}, \mathit{toAddr}\\) is instantiated with one of \\(N_{addr}\\) values, uniformly at random.
 For simplicity, assume values are sampled from \\(V = \\{1,\dots, N_{val}\\}\\) and addresses from \\(A = \\{a_1, \dots,a_{N_{addr}} \\}\\).
 In the concrete simulation, the values were \\((N_{val},N_{addr}) = (20,3)\\).
 We also assume the following:
@@ -896,13 +896,13 @@ In this section, we determine \\(P(\omega \mid \alpha )\\).
 Assume now that we have selected an action order, which may lead to an invariant violation. We need to instantiate the parameters to \\(H,L,T\\):
   - \\(H: \text{submit\_approve}(sender_H, spender_H, v_H)\\)
   - \\(L: \text{submit\_approve}(sender_L, spender_L, v_L)\\)
-  - \\(T: \text{submit\_transferFrom}(sender_T, from, to, v_T)\\)
+  - \\(T: \text{submit\_transferFrom}(sender_T, \mathit{from}, to, v_T)\\)
 
 subject to the following constraints:
   - \\(c_1: sender_H \ne spender_H\\)
   - \\(c_2: sender_L \ne spender_L\\)
-  - \\(c_3: sender_T, from, to\\) pairwise distinct
-  - \\(c_4: sender_H = sender_L = from\\)
+  - \\(c_3: sender_T, \mathit{from}, to\\) pairwise distinct
+  - \\(c_4: sender_H = sender_L = \mathit{from}\\)
   - \\(c_5: spender_H = spender_L = sender_T\\)
   - \\(c_6: v_H \ge v_T > v_L > 1\\)
 
@@ -911,7 +911,7 @@ Since values and addresses are selected independently, uniformly at random, the 
 Let us first consider \\(P(c_1, \dots, c_5)\\). There are 7 address values to pick, each selected from among \\(N_{addr}\\) addresses, so a total of \\(N_{addr}^7\\)possibilities. How many of those satisfy \\(c_1,\dots,c_5\\)?
 
 Assume we pick one of \\(N_{addr}\\) values for \\(sender_H\\). 
-This determines \\(sender_L\\) and \\(from\\) by \\(c_4\\). 
+This determines \\(sender_L\\) and \\(\mathit{from}\\) by \\(c_4\\). 
 By \\(c_1\\), we have \\(N_{addr}-1\\) choices for \\(spender_H\\). 
 Choosing one determines \\(spender_L\\) (satisfying \\(c_2\\) automatically), and \\(sender_T\\) by \\(c_5\\). 
 What is left is selecting \\(to\\), which has \\(N_{addr}-2\\) candidates, by \\(c_3\\), for a total of \\(N_{addr}(N_{addr} - 1)( N_{addr} -2)\\) combinations, which satisfy all constraints.
