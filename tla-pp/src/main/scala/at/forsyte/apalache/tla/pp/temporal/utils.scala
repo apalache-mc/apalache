@@ -4,15 +4,6 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.Flatten
-import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
-
-object ScopedBuilderExtensions {
-  implicit class ScopedBuilderExtension(val builder: ScopedBuilder) {
-    def declAsNameEx(decl: TlaDecl): TBuilderInstruction = {
-      builder.name(decl.name, decl.typeTag.asTlaType1())
-    }
-  }
-}
 
 /**
  * A convenience class storing a module, together with the init, next and loopOK predicates of that module. Useful to

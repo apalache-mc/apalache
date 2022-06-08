@@ -5,7 +5,6 @@ import at.forsyte.apalache.tla.lir._
 import javax.inject.Singleton
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.tla.typecomp._
-import at.forsyte.apalache.tla.pp.temporal.ScopedBuilderExtensions._
 import at.forsyte.apalache.tla.pp.temporal.DeclUtils._
 import at.forsyte.apalache.tla.pp.temporal.utils.builder
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker

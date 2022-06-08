@@ -8,7 +8,6 @@ import scalaz.Scalaz.{init => _}
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import at.forsyte.apalache.tla.pp.IrrecoverablePreprocessingError
 import at.forsyte.apalache.tla.pp.temporal.utils.builder
-import at.forsyte.apalache.tla.pp.temporal.ScopedBuilderExtensions._
 import at.forsyte.apalache.tla.pp.temporal.DeclUtils._
 import scala.collection.immutable.HashMap
 import at.forsyte.apalache.tla.lir.oper.TlaTempOper
