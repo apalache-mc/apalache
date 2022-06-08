@@ -1,5 +1,5 @@
 ----------------------------- MODULE MC_ERC20 ---------------------------------
-\* an instance for model checking ERC20.tla with Apalache
+\* An instance for model checking ERC20.tla with Apalache.
 EXTENDS Integers, ERC20_typedefs
 
 \* Use the set of three addresses.
