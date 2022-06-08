@@ -1,12 +1,7 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.BoolT1
 import at.forsyte.apalache.tla.lir.IrGenerators
-import at.forsyte.apalache.tla.lir.TlaOperDecl
-import at.forsyte.apalache.tla.lir.Typed
-import at.forsyte.apalache.tla.lir.ValEx
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.pp.temporal.LoopEncoder
 import at.forsyte.apalache.tla.pp.temporal.utils.builder
 import org.junit.runner.RunWith

@@ -17,7 +17,6 @@ import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.pp.temporal.LoopEncoder
 import at.forsyte.apalache.tla.pp.temporal.utils.builder
 import at.forsyte.apalache.tla.pp.temporal.TableauEncoder
-import at.forsyte.apalache.tla.typecomp.ScopedBuilder
 import org.junit.runner.RunWith
 import org.scalacheck.Gen
 import org.scalacheck.Gen.oneOf
@@ -39,8 +38,6 @@ class TestTableauEncoder extends AnyFunSuite with Checkers {
   val modWithPreds = loopEncoder.addLoopLogic(module, init, next)
 
   val levelFinder = new TlaLevelFinder(modWithPreds.module)
-
-  val builder = new ScopedBuilder()
 
   private val tableauEncoder =
     new TableauEncoder(
