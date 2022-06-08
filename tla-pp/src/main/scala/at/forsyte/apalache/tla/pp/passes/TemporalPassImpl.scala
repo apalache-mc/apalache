@@ -7,7 +7,6 @@ import at.forsyte.apalache.tla.pp.temporal.{LoopEncoder, TableauEncoder}
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.pp.TlaInputError
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
