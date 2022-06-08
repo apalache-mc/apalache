@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.lir.ValEx
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.pp.temporal.LoopEncoder
+import at.forsyte.apalache.tla.pp.temporal.utils.builder
 import org.junit.runner.RunWith
 import org.scalacheck.Prop
 import org.scalacheck.Prop.forAll
@@ -20,8 +21,8 @@ class TestLoopEncoder extends AnyFunSuite with Checkers {
   private val loopEncoder = new LoopEncoder(new IdleTracker())
 
   // loop encoder expects init and next declarations, so we generate empty ones to use when we don't care about them
-  val init = new TlaOperDecl("init", List.empty, new ValEx(new TlaBool(true))(Typed(BoolT1)))(Typed(BoolT1))
-  val next = new TlaOperDecl("next", List.empty, new ValEx(new TlaBool(true))(Typed(BoolT1)))(Typed(BoolT1))
+  val init = builder.decl("init", builder.bool(true))
+  val next = builder.decl("next", builder.bool(true))
 
   val gens = new IrGenerators {
     override val maxArgs: Int = 3

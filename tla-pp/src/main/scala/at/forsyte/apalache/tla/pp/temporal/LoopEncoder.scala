@@ -202,11 +202,7 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
 
     /* loopOK == InLoop */
     val loopOK =
-      new TlaOperDecl(
-          LoopEncoder.LOOP_OK_NAME,
-          List(),
-          inLoop,
-      )(Typed(OperT1(Seq.empty, BoolT1)))
+      builder.decl(LoopEncoder.LOOP_OK_NAME, inLoop)
 
     /* loopOK ==
         /\ InLoop

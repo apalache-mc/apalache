@@ -88,15 +88,16 @@ class TableauEncoder(
     val initExVarDecl = tuple._2
 
     // replace formula by formula == loopOK => formula_init, and move formula to the end of the spec so it is after loopOK
-    val newFormulaDecl = new TlaOperDecl(
+    val newFormulaDecl = builder.declWithInferredParameterTypes(
         formula.name,
-        formula.formalParams,
         builder.impl(
             builder.appOp(builder.declAsNameEx(curModWithPreds.loopOK), Seq.empty[TBuilderInstruction]: _*),
             builder.declAsNameEx(initExVarDecl),
         ),
-    )(formula.typeTag)
+        formula.formalParams: _*
+    )
     val newDecls = curModWithPreds.module.declarations.filterNot(decl => decl.name == formula.name) :+ newFormulaDecl
+      .asInstanceOf[TlaOperDecl]
     val newModule = new TlaModule(curModWithPreds.module.name, newDecls)
 
     curModWithPreds.setModule(newModule)
