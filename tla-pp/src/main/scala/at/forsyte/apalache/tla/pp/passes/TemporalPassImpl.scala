@@ -38,15 +38,7 @@ class TemporalPassImpl @Inject() (
         tlaModule
       case Some(invariants) =>
         val init = options.get[String]("checker", "init")
-        if (init.isEmpty) {
-          logger.info("  > `init` is not set, cannot encode invariants")
-          None
-        }
         val next = options.get[String]("checker", "next")
-        if (init.isEmpty) {
-          logger.info("  > `next` is not set, cannot encode invariants")
-          None
-        }
         temporalToInvariants(tlaModule, invariants, init.get, next.get)
     }
 
@@ -82,39 +74,10 @@ class TemporalPassImpl @Inject() (
       logger.info(s"  > Found ${temporalFormulas.length} temporal properties")
       logger.info(s"  > Adding logic for loop finding")
 
-      val initDecl = module.declarations.find(_.name == init) match {
-        case Some(initDecl: TlaOperDecl) =>
-          val nparams = initDecl.formalParams.length
-          if (nparams != 0) {
-            val message =
-              s"Expected init predicate $init to have 0 params, found $nparams parameters"
-            throw new TlaInputError(message, Some(initDecl.body.ID))
-          }
-          initDecl
-        case None =>
-          val message = (s"init predicate named `${init}` not found")
-          throw new TlaInputError(message)
-        case _ =>
-          val message = (s"Expected to find a predicate named `${init}` but did not")
-          throw new TlaInputError(message)
-      }
-
-      val nextDecl = module.declarations.find(_.name == next) match {
-        case Some(nextDecl: TlaOperDecl) =>
-          val nparams = nextDecl.formalParams.length
-          if (nparams != 0) {
-            val message =
-              s"Expected next predicate $next to have 0 params, found $nparams parameters"
-            throw new TlaInputError(message, Some(nextDecl.body.ID))
-          }
-          nextDecl
-        case None =>
-          val message = (s"next predicate named `${next}` not found")
-          throw new TlaInputError(message)
-        case _ =>
-          val message = (s"Expected to find a predicate named `${next}` but did not")
-          throw new TlaInputError(message)
-      }
+      // if init and next don't exist, Apalache should throw already in an earlier pass
+      // so it's safe to assume they exist
+      val initDecl = module.declarations.find(_.name == init).get.asInstanceOf[TlaOperDecl]
+      val nextDecl = module.declarations.find(_.name == next).get.asInstanceOf[TlaOperDecl]
 
       val loopEncoder = new LoopEncoder(tracker)
 
