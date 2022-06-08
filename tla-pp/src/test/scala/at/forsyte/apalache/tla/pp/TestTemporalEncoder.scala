@@ -28,7 +28,7 @@ import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers
 
 @RunWith(classOf[JUnitRunner])
-class TestTemporalEncoder extends AnyFunSuite with Checkers {
+class TestTableauEncoder extends AnyFunSuite with Checkers {
   private val loopEncoder = new LoopEncoder(new IdleTracker())
 
   // loop encoder expects init and next declarations, so we generate empty ones to use when we don't care about them
