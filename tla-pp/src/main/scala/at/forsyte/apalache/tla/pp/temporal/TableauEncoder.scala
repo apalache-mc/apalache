@@ -188,7 +188,12 @@ class TableauEncoder(
 
             /* initialize loop variable
              */
-            val initWithLoopVar = loopEnc.addLoopVarToInit(nodeVarDecl, nodeLoopVarDecl, initWithNodeVar)
+            val initWithLoopVar =
+              andInDecl(
+                  builder.eql(builder.declAsNameEx(nodeLoopVarDecl), builder.declAsNameEx(nodeVarDecl)),
+                  initWithNodeVar,
+                  tracker,
+              )
 
             /* update loop variable
              */

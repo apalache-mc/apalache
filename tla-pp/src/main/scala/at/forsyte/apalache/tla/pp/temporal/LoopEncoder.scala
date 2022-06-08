@@ -46,19 +46,6 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
   }
 
   /**
-   * Takes a variable foo and its corresponding save variable __saved_foo, and transforms init into
-   *
-   * newInit == init /\ __saved_foo = foo
-   */
-  def addLoopVarToInit(varDecl: TlaVarDecl, loopVarDecl: TlaVarDecl, init: TlaOperDecl): TlaOperDecl = {
-    andInDecl(
-        builder.eql(builder.declAsNameEx(loopVarDecl), builder.declAsNameEx(varDecl)),
-        init,
-        tracker,
-    )
-  }
-
-  /**
    * Transforms init into
    *
    * newInit ==
@@ -78,12 +65,13 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
       loopVariables: Seq[TlaVarDecl],
       init: TlaOperDecl): TlaOperDecl = {
 
-    val initWithLoopVarInits =
-      variables
-        .zip(loopVariables)
-        .foldLeft(init)({ case (curInit, (varDecl, loopVarDecl)) =>
-          addLoopVarToInit(varDecl, loopVarDecl, curInit)
-        })
+    /*
+      __saved_foo = foo, __saved_bar = bar
+     */
+    val eqls =
+      variables.zip(loopVariables).map { case (varDecl, loopVarDecl) =>
+        builder.eql(builder.declAsNameEx(loopVarDecl), builder.declAsNameEx(varDecl))
+      }
 
     //  inLoop = FALSE
     val inLoopEqlFalse =
@@ -96,7 +84,15 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
         /\ __saved_bar = bar
         /\ ...
      */
-    andInDecl(inLoopEqlFalse, initWithLoopVarInits, tracker)
+    andInDecl(
+        inLoopEqlFalse,
+        andInDecl(
+            builder.and(eqls: _*),
+            init,
+            tracker,
+        ),
+        tracker,
+    )
   }
 
   /**
