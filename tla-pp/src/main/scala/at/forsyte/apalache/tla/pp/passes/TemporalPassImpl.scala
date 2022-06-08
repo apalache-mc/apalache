@@ -89,14 +89,8 @@ class TemporalPassImpl @Inject() (
       val inliner = new Inliner(tracker, renaming, keepNullary = false)
       val scope = Map[String, TlaOperDecl](temporalFormulas.map(operDecl => (operDecl.name, operDecl)): _*)
       val transformation = inliner.transform(scope)
-      val inlinedTemporalFormulas = temporalFormulas.map(operDecl =>
-        new TlaOperDecl(
-            operDecl.name,
-            List.empty,
-            transformation.apply(operDecl.body),
-        )(
-            operDecl.typeTag
-        ))
+      val inlinedTemporalFormulas =
+        temporalFormulas.map(operDecl => operDecl.copy(body = transformation(operDecl.body)))
 
       val tableauEncoder = new TableauEncoder(loopModWithPreds.module, gen, loopEncoder, tracker)
       val tableauModWithPreds = tableauEncoder.temporalsToInvariants(loopModWithPreds, inlinedTemporalFormulas)
