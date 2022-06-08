@@ -69,7 +69,6 @@ class TemporalPassImpl @Inject() (
       .filter(propOption =>
         propOption match {
           case Some(inv: TlaOperDecl) if inv.formalParams.isEmpty =>
-            // either a state invariant, or an action invariant
             val level = levelFinder.getLevelOfDecl(inv)
             level == TlaLevelTemporal
           case _ => false
