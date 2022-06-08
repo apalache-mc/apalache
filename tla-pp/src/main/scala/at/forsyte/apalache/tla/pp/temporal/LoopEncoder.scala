@@ -144,11 +144,43 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
     val nextOrUnchangedWithInLoopUpdate = andInDecl(inLoopUpdate, next, tracker)
 
     /*
-     * /\ __saved_foo' = IF (InLoop' = InLoop) THEN __saved_foo ELSE foo
+     * __saved_foo' := foo, __saved_bar' := bar, ..., __saved_baz' := baz
      */
-    variables.zip(loopVariables).foldLeft(nextOrUnchangedWithInLoopUpdate) { case (curNext, (varDecl, loopVarDecl)) =>
-      addLoopVarToNext(varDecl, loopVarDecl, curNext)
+    val eqls = variables.zip(loopVariables).map { case (varDecl, loopVarDecl) =>
+      val loopExPrime = builder.prime(builder.declAsNameEx(loopVarDecl))
+      /* /\ __saved_foo' = IF (InLoop' = InLoop) THEN __saved_foo ELSE foo */
+      builder.eql(
+          loopExPrime,
+          builder.declAsNameEx(varDecl),
+      )
     }
+
+    /**
+     * IF (InLoop' = InLoop)
+     *
+     * THEN UNCHANGED <<__saved_foo, __saved_bar, ..., __saved_baz>>
+     *
+     * ELSE
+     *
+     * /\ __saved_foo' := foo
+     *
+     * /\ __saved_bar' := bar
+     *
+     * ...
+     *
+     * /\ __saved_baz' := baz
+     */
+    val ite = builder.ite(
+        builder.eql(inLoop, inLoopPrime),
+        builder.unchanged(
+            builder.tuple(
+                loopVariables.map(varDecl => builder.useTrustedEx(NameEx(varDecl.name)(varDecl.typeTag))): _*
+            )
+        ),
+        builder.and(eqls: _*),
+    )
+
+    andInDecl(ite, nextOrUnchangedWithInLoopUpdate, tracker)
   }
 
   /**
