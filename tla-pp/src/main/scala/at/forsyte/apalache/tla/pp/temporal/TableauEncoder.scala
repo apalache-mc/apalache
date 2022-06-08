@@ -142,7 +142,7 @@ class TableauEncoder(
         curNode match {
           case NullEx =>
             throw new IrrecoverablePreprocessingError(
-                "Found a null expression of temporal level; this should not be possible")
+                "Found a null expression of temporal level; this should not be possible.")
           case NameEx(_) =>
             throw new IrrecoverablePreprocessingError(
                 "Found a name expression of temporal level.  After inlining no such name expressions should be left in the predicate!")
