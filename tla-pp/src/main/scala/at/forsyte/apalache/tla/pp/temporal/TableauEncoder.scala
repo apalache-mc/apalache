@@ -44,8 +44,8 @@ class TableauEncoder(
   }
 
   /**
-   * Adds a variable that stores the initial value of the given Boolean expression ex. Create a new variable Init_ex and modify
-   * init and next:
+   * Adds a variable that stores the initial value of the given Boolean expression ex. Create a new variable Init_ex and
+   * modify init and next:
    *
    * newInit == oldInit /\ Init_ex = ex
    *
