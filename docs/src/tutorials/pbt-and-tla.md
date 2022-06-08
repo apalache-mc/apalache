@@ -86,7 +86,7 @@ Hence, ERC20 introduces a third type of transactions:
   transferFrom(sender, fromAddr, toAddr, value)
 ```
 
-By invoking a "transferFrom" transaction, the sender attempts to transfer `value` tokens from the address `fromAddr` to the address `toAddr`. This can only be done, if `sender` was authorized to transfer at least `value` tokens from the address `fromAddr`.
+By invoking a "transferFrom" transaction, the sender attempts to transfer `value` tokens from the address `fromAddr` to the address `toAddr`. This can only be done if `sender` was authorized to transfer at least `value` tokens from the address `fromAddr`.
 
 ### 2.2. A known issue
 
@@ -103,7 +103,7 @@ not committed immediately, as it takes the consensus engine some time to select
 this transaction and commit it. Meanwhile, Alice decides to lower her approval
 to Bob, and she issues another "approve" transaction that limits the amount of
 tokens to 2. 
-It is important to note here, that "approve" sets the approved amount _to_ the specified value, it does not increase it _by_ the specified value. Therefore, `approve("Alice","Bob",3)` followed immediately by `approve("Alice","Bob",2)` (in the commit history) would result in a state where the amount of tokens approved to be used by Bob is 2, not 5.
+It is important to note here, that "approve" sets the approved amount _to_ the specified value, it does not increase it _by_ the specified value. Therefore, `approve("Alice", "Bob", 3)` followed immediately by `approve("Alice", "Bob", 2)` (in the commit history) would result in a state where the amount of tokens approved to be used by Bob is 2, not 5.
 
 However, Bob is actively monitoring the transaction pool, and he
 observes that there are two approvals issued by Alice. So he quickly issues a
@@ -346,7 +346,7 @@ us about 8 hours and about 2 million runs to enumerate.
 If you are interested in the detailed analysis of probabilities, see the [math section](#math) below.
 
 In summary, there are `600'397'329'064'743` (6e14) possible executions, discounting premature termination due to e.g. insufficient coverage or commits preceding submissions.
-The odds of hitting an invariant violation are `6e-7` for our concrete selection of `3` addresses and `20` values.
+The odds of hitting an invariant violation are 6e-7 for our concrete selection of 3 addresses and 20 values.
 
 We were reasonably lucky that Hypothesis reported an invariant violation after exploring about 2 million runs (after exploring runs for 8 hours). Perhaps, Hypothesis is using clever heuristics to enumerate runs.
 
@@ -525,7 +525,7 @@ It did not report the shortest execution though. This is because we have run
 Apalache in the simulation mode. In this mode, it randomly chooses one of the
 enabled actions at every step and adds it to a set of constraints that encode
 an execution. Whether there is an execution that satisfies the constraints is
-solved by the SMT solver [Z3][].
+determined by the SMT solver [Z3][].
 
 Consider the following figure:
 
@@ -647,7 +647,7 @@ Checker reports no error up to computation length 10
 It took me 0 days  0 hours 26 min 50 sec
 ```
 
-Although, it took Apalache longer, it has enumerated 7.7k symbolic runs.
+Although it took Apalache longer, it has enumerated 7776 symbolic runs.
 However, the important difference between `simulate` and `check` is that
 `simulate` does not give us an ultimate guarantee about all executions, even
 though we limit the scope to all executions of length up to 10, whereas `check`
