@@ -819,7 +819,7 @@ contribute a property-based test similar to [test_erc20.py][] and contribute
 the experimental results to this tutorial, please let us know. We will be happy
 to include them in this tutorial.
 
-## <a name="math"></a> The math
+## <a name="math"></a> 8. The math
 In this section, we show the full details of the probability analysis for finding the invariant-violating trace from [Section 3.8](#pbt-explosion).
 
 Let us parameterize the problem in the following way: assume we are performing a random simulation, where one of 6 actions is chosen at each of the 5 steps, uniformly at random. Each action parameter \\(value\\) is instantiated with one of \\(N_{val}\\) values, uniformly at random, and each action parameter \\(sender, spender, fromAddr, toAddr\\) is instantiated with one of \\(N_{addr}\\) values, uniformly at random.
@@ -853,7 +853,7 @@ Concretely, we are going to find \\(P(\alpha)\\) and \\(P(\omega \mid \alpha)\\)
 P(\omega) =  P(\alpha \cap \omega) = P(\omega \mid \alpha) \cdot P(\alpha)
 \\]
 
-### Action orders that may lead to an invariant violation
+### 8.1 Action orders that may lead to an invariant violation
 
 In this section, we determine \\(P(\alpha)\\).
 
@@ -889,7 +889,7 @@ HC_ATLC_T
 
 This means that \\(P(\alpha)\\), the probability of finding the 5 transaction sorts in the order needed to violate the invariant is \\(\frac{12}{6^5}\\).
 
-### Parameter instantiations that may lead to an invariant violation
+### 8.2 Parameter instantiations that may lead to an invariant violation
 
 In this section, we determine \\(P(\omega \mid \alpha )\\).
 
@@ -946,7 +946,7 @@ Combining these results gives us:
 P(\omega \mid \alpha) = P(c_1,\dots,c_5)\cdot P(c_6) = \frac{(N_{addr} - 1)(N_{addr} - 2)(N_{val}^2 - 3N_{val} + 2)}{6N_{val}^2N_{addr}^6}
 \\]
 
-### Probability of finding an invariant violation
+### 8.3 Probability of finding an invariant violation
  
 Recall the conditional probability rule
 \\[
