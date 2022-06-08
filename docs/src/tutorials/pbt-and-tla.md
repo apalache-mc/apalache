@@ -159,8 +159,8 @@ programming languages are simply astronomic. We assume the small scope
 hypothesis, which is usually phrased as follows, e.g., at [Alloy Wikipedia
 page][]:
 
-    ...a high proportion of bugs can be found by testing a program for all test
-    inputs within some small scope.
+> [...] a high proportion of bugs can be found by testing a program for all test
+> inputs within some small scope.
 
 By following this hypothesis, we limit the space of addresses and amounts to
 small sets (in Python):
