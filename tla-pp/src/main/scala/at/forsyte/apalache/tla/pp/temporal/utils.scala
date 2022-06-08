@@ -45,15 +45,6 @@ class ModWithPreds(
     val newModule = new TlaModule(module.name, newDecls)
     setModule(newModule)
   }
-
-  /**
-   * Replaces all instances of oldDecl with newDecl
-   */
-  def replaceDeclInMod(oldDecl: TlaDecl, newDecl: TlaDecl): ModWithPreds = {
-    val newDeclarations = module.declarations.map(decl => if (decl.name == oldDecl.name) newDecl else decl)
-    val newModule = new TlaModule(module.name, newDeclarations)
-    new ModWithPreds(newModule, init, next, loopOK)
-  }
 }
 
 package object utils {
