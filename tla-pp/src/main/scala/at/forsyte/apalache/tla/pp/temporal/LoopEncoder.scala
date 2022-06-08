@@ -34,7 +34,7 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
   val inLoopPrime = builder.primeVar(inLoopDecl)
 
   /**
-   * For each variable foo, creates a declaration of an auxiliary variable __saved_foo __saved_foo stores the value of
+   * For each variable foo, creates a declaration of an auxiliary variable __saved_foo which stores the value of
    * variable foo at the start of the loop.
    */
   def createAllVarCopiesInLoop(originalVariables: Seq[TlaVarDecl]): Seq[TlaVarDecl] = {
