@@ -662,7 +662,7 @@ invariant][]. We will write another tutorial on this topic.
 ## 6. State enumeration with TLC
 
 So far we have been using Hypothesis and Apalache. Since we have a TLA+
-specification, we can easily run the standard explicit model checker TLC too.
+specification, we can easily run the explicit model checker [TLC][] too.
 
 ### 6.1. Setting up TLC
 
@@ -676,10 +676,10 @@ We have to define two auxiliary files (created with [TLA+ Toolbox][]):
 
  - a configuration file [MC_tlc_check.cfg][]:
    - we define `ADDR` as a constant set of three model
-     values: `{A_Alice, A_Bob, A_Eve}`
+     values: `{A_Alice, A_Bob, A_Eve}`.
    - we define `AMOUNTS` to be a fixed range of `0..19`, similar
      to our Hypothesis tests.
-   - further, we inform TLC that it can use symmetry reduction over `ADDR`.
+   - lastly, we inform TLC that it can use symmetry reduction over `ADDR`.
 
  - a model file [MC_tlc_check.tla][]
 
@@ -749,14 +749,16 @@ trying to draw general conclusions from this table. However, we propose some
 intuition about why the tools behaved this way:
 
  - Stateful testing with PBT is randomly choosing rules and their inputs.
-   Hence, in theory, this approach should be most susceptible to combinatorial explosion, of the ones in our experiments. Nevertheless, the tool has found an invariant violation.
-   We do not know, whether it was sheer luck or clever heuristics of
+   Hence, in theory, this approach should be the most susceptible to
+   combinatorial explosion. Nevertheless, the tool has found an invariant
+   violation.
+   We do not know whether it was sheer luck or clever heuristics of
    Hypothesis. Interestingly, increasing the number of steps did not help us in
    finding an error faster, in contrast to TLC and Apalache.
 
  - Symbolic simulation with Apalache was very quick at finding an error. This
    is due to the fact the number of *symbolic runs* grows much slower than
-   the number of *concrete runs* in this example. Interestingly, when we
+   the number of *concrete runs* in this example. Interestingly, if we
    increase the number of steps, Apalache finds an invariant violation even
    faster.
 
@@ -775,7 +777,7 @@ intuition about why the tools behaved this way:
  - Explicit state enumeration with TLC was extremely slow. This is not very
    surprising, as TLC has to deal with relatively large state spaces here.
    Since TLC implements breadth-first search, it has to enumerate a massive
-   number of states, before it increases the depth.
+   number of states before it increases the depth.
 
 It is also important to understand all kinds of controls that we have over the
 search process in the tools. For instance, removing the "transfer" transaction
@@ -802,17 +804,17 @@ performance.
 
 In conclusion, we believe that all these methods and tools have their place in
 a developer's toolkit. However, as with all advanced tools, we have to
-understand, where they fit in the development process and what can affect their
+understand where they fit in the development process and what can affect their
 performance and completeness. For instance, the Apalache team uses the
 property-based testing framework [Scalacheck][] to find hardcore bugs in the
-model checker itself. We call this tool [Nitpick][].
+model checker itself. We call this tool [Nitpicker][].
 
 *Disclaimer*: Although we are expert users of Apalache and TLC, we are
 beginners in Hypothesis. If you know how to improve our experience with
 Hypothesis, please let us know. A pedantic reader will notice that we have
 chosen Python, which is probably not the most performant programming language.
 We chose Python for its simplicity and relative popularity. One can probably
-achieve much better performance with Rust or Golang. If you would like to
+achieve much better performance with C++, Rust, or Golang. If you would like to
 contribute a property-based test similar to [test_erc20.py][] and contribute
 the experimental results to this tutorial, please let us know. We will be happy
 to include them in this tutorial.
@@ -995,5 +997,5 @@ For reference, the space of 20byte address admits \\(2^{160}\\) unique values.
 [MC_tlc_check.tla]: https://github.com/informalsystems/tla-apalache-workshop/blob/main/examples/erc20-approve-attack/MC_tlc_check.tla
 [MC_tlc_check.cfg]: https://github.com/informalsystems/tla-apalache-workshop/blob/main/examples/erc20-approve-attack/MC_tlc_check.cfg
 [Scalacheck]: https://scalacheck.org/
-[Nitpick]: https://github.com/informalsystems/apalache/issues/1588
+[Nitpicker]: https://github.com/informalsystems/apalache/issues/1588
 [TLA+ Toolbox]: https://lamport.azurewebsites.net/tla/toolbox.html
