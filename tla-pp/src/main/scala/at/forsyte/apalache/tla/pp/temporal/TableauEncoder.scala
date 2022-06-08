@@ -96,8 +96,9 @@ class TableauEncoder(
         ),
         formula.formalParams: _*
     )
-    val newDecls = curModWithPreds.module.declarations.filterNot(decl => decl.name == formula.name) :+ newFormulaDecl
-      .asInstanceOf[TlaOperDecl]
+    val newDecls = curModWithPreds.module.declarations
+      .filterNot(decl => decl.name == formula.name) ++ Seq[TlaOperDecl](newFormulaDecl)
+
     val newModule = new TlaModule(curModWithPreds.module.name, newDecls)
 
     curModWithPreds.setModule(newModule)
