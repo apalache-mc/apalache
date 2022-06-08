@@ -213,23 +213,10 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
         /\ foo = __saved_foo
         /\ ...
      */
-    val loopVarEqualities = variables.zip(loopVariables).foldLeft(loopOK) {
-      case (
-              curLoopOK,
-              (varDecl, loopVarDecl),
-          ) =>
-        andInDecl(
-            builder.eql(builder.declAsNameEx(varDecl), builder.declAsNameEx(loopVarDecl)),
-            curLoopOK,
-            tracker,
-        )
+    val eqls = variables.zip(loopVariables).map { case (varDecl, loopVarDecl) =>
+      builder.eql(builder.declAsNameEx(varDecl), builder.declAsNameEx(loopVarDecl))
     }
-
-    new TlaOperDecl(
-        loopOK.name,
-        loopOK.formalParams,
-        loopVarEqualities.body,
-    )(loopOK.typeTag)
+    andInDecl(builder.and(eqls: _*), loopOK, tracker)
   }
 
   /**
