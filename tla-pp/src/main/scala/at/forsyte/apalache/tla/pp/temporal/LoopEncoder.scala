@@ -184,27 +184,6 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
   }
 
   /**
-   * Adds a loop variable to the loopOK expression by transforming loopOK into
-   *
-   * newLoopOK ==
-   *
-   * /\ oldLoopOK
-   *
-   * /\ foo = __saved_foo
-   */
-  def addVariableToLoopOK(
-      varDecl: TlaVarDecl,
-      loopVarDecl: TlaVarDecl,
-      loopOK: TlaOperDecl): TlaOperDecl = {
-
-    andInDecl(
-        builder.eql(builder.declAsNameEx(varDecl), builder.declAsNameEx(loopVarDecl)),
-        loopOK,
-        tracker,
-    )
-  }
-
-  /**
    * Creates a loopOK predicate over the provided variables. LoopOK answers the question "Does the execution right now
    * encode a proper loop?" So it ensures that a) the loop has been started and b) the saved copies of the variables
    * have the same value as the variables right now, e.g. the loop is closed
@@ -239,7 +218,11 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
               curLoopOK,
               (varDecl, loopVarDecl),
           ) =>
-        addVariableToLoopOK(varDecl, loopVarDecl, curLoopOK)
+        andInDecl(
+            builder.eql(builder.declAsNameEx(varDecl), builder.declAsNameEx(loopVarDecl)),
+            curLoopOK,
+            tracker,
+        )
     }
 
     new TlaOperDecl(

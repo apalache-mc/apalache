@@ -201,7 +201,11 @@ class TableauEncoder(
 
             /* update loopOK
              */
-            val loopOKWithLoopVar = loopEnc.addVariableToLoopOK(nodeVarDecl, nodeLoopVarDecl, modWithPreds.loopOK)
+            val loopOKWithLoopVar = andInDecl(
+                builder.eql(builder.declAsNameEx(nodeVarDecl), builder.declAsNameEx(nodeLoopVarDecl)),
+                modWithPreds.loopOK,
+                tracker,
+            )
 
             curModWithPreds = curModWithPreds.setPredicates(initWithLoopVar, nextWithLoopVar, loopOKWithLoopVar)
 

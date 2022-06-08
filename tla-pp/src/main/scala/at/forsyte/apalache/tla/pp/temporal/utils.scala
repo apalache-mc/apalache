@@ -71,16 +71,14 @@ object DeclUtils {
    * Takes decl, ex and returns newDecl with the same name as decl, with its body extended like this: newDecl == decl /\
    * ex
    */
-  def andInDecl(ex: TlaEx, decl: TlaOperDecl, tracker: TransformationTracker): TlaOperDecl = {
-    new TlaOperDecl(
-        decl.name,
-        decl.formalParams,
-        Flatten(tracker)(Typed(BoolT1))(
-            builder.and(
-                builder.useTrustedEx(decl.body),
-                builder.useTrustedEx(ex),
-            )
-        ),
-    )(decl.typeTag)
+  def andInDecl(ex: TBuilderInstruction, decl: TlaOperDecl, tracker: TransformationTracker): TlaOperDecl = {
+    val newBody =
+      Flatten(tracker)(Typed(BoolT1))(
+          builder.and(
+              builder.useTrustedEx(decl.body),
+              ex,
+          )
+      )
+    decl.copy(body = newBody)
   }
 }
