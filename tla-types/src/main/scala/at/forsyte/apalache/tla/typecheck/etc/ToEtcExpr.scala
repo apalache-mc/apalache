@@ -770,7 +770,6 @@ class ToEtcExpr(
         // (Str, a) => T1a(a) | b
         val opsig =
           OperT1(Seq(StrT1, a), VariantT1(RowT1(b, tagName -> a)))
-        // For some reason, we required the field tag: Str to be present in the value type. We should revisit this.
         mkExRefApp(opsig, Seq(v, valueEx))
 
       case ex @ OperEx(VariantOper.variant, tag @ _, _) =>
@@ -781,7 +780,6 @@ class ToEtcExpr(
         val b = varPool.fresh
         // (Str, Set(T1a(a) | b)) => Set(a)
         val opsig = OperT1(Seq(StrT1, SetT1(VariantT1(RowT1(b, tagName -> a)))), SetT1(a))
-        // For some reason, we required the field tag: Str to be present in the value type. We should revisit this.
         mkExRefApp(opsig, Seq(v, setEx))
 
       case ex @ OperEx(VariantOper.variantFilter, tag @ _, _) =>
@@ -805,7 +803,6 @@ class ToEtcExpr(
           )
 
         val opsig = OperT1(operArgs, c)
-        // For some reason, we required the field tag: Str to be present in the value type. We should revisit this.
         mkExRefApp(opsig, Seq(v, variantEx, thenOper, elseOper))
 
       case OperEx(VariantOper.variantMatch, tag @ _, _, _, _) =>
@@ -821,7 +818,6 @@ class ToEtcExpr(
           )
 
         val opsig = OperT1(operArgs, a)
-        // For some reason, we required the field tag: Str to be present in the value type. We should revisit this.
         mkExRefApp(opsig, Seq(v, variantEx))
 
       // ******************************************** Apalache **************************************************
