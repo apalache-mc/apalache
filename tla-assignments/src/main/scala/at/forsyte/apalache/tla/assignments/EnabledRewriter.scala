@@ -150,23 +150,40 @@ class EnabledRewriter(
     }
   }
 
+  /**
+   * Replaces ENABLED foo with an expression that is true whenever foo is enabled.
+   * @param ex:
+   *   The inner expression inside the ENABLED expression
+   * @param varDecls:
+   */
   private def transformEnabled(ex: TlaEx, varDecls: Seq[TlaVarDecl], operDecls: Seq[TlaOperDecl]): TlaEx = {
     val vars = varDecls.map(_.name)
     val sourceLoc = SourceLocator(sourceStore.makeSourceMap, changeListener)
     val constSimplifier = new ConstSimplifier(tracker)
-
     val operMap = BodyMapFactory.makeFromDecls(operDecls)
 
+    // splits the sequence into symbolic transitions.
+    // notably, afterwards it is possible to differentiate between assignments (x' := 5) and conditionals (x' = 5)
     val transitionPairs = SmtFreeSymbolicTransitionExtractor(tracker, sourceLoc)(vars.toSet, ex, operMap)
 
     val transitionsWithoutAssignments = transitionPairs
       .map(symbTrans => {
         val assignmentEx = symbTrans._2
+
+        // extract assignments of the form x' := expression_x, y' := expression_y and
+        // flatten them, i.e. x' := y' + 2, y' := 1 is simplified to x' := 1 + 2, y' := 1
         val assignments = flattenAssignments(extractAssignmentsFromExpression(assignmentEx))
+
+        // replace the assignments in the expression with TRUE,
+        // then replace occurences of primed variables by their assigned expressions.
+        // for example, x' := 1 /\ y' := 2 /\ (x' = 2 => y' > x')
+        // becomes TRUE /\ TRUE /\ (1 = 2 => 2 > 1)
         val modifiedEx = flattenEx(removeAssignmentsFromExpression(assignmentEx), assignments)
-        modifiedEx
+
+        // simplify the expression, since many terms become trivial after replacement:
+        // e.g. TRUE /\ TRUE /\ (1 = 2 => 2 > 1) becomes TRUE
+        constSimplifier(modifiedEx)
       })
-      .map(constSimplifier(_)) // equivalent to .map(constSimplifier), but makes it clearer that constSimplifier is used as a function
 
     OperEx(TlaBoolOper.or, transitionsWithoutAssignments: _*)(Typed(BoolT1))
   }
