@@ -12,13 +12,12 @@
  *)
 
 (**
- * Wrap a record into a variant. The record must contain the field `tag`,
- * and the value of the tag field must be a string literal.
+ * Wrap a value with a variant.
  *
- * @param rec a record that contains a field `tag`
+ * @param rec a value
  * @return the record wrapped in the variant type
  *
- * The type could look like follows, if we supported string literals in types:
+ * The type looks like follows, when __tag == "Tag":
  *
  *   (Str, a) => Tag(a) | b
  *)
@@ -30,10 +29,10 @@ Variant(__tag, __value) ==
  * Filter a set of variants with the provided tag value.
  *
  * @param `S` a set of variants that are constructed with `Variant(...)`
- * @param `tagValue` a string literal that is used to filter the set elements
+ * @param `tagValue` a constant string that is used to filter the set elements
  * @return the set of elements of S that are tagged with `tagValue`.
  *
- * The type could look like follows, if we supported string literals in types:
+ * The type looks like follows, when __tag == "Tag":
  *
  *   (Str, Set(Tag(a) | b)) => Set(a)
  *)
@@ -51,14 +50,14 @@ VariantFilter(__tag, __S) ==
  * the tag `tagValue`.
  *
  * @param `variant` a variant that is constructed with `Variant(...)`
- * @param `tagValue` a string literal that is used to extract a record
+ * @param `tagValue` a constant string that is used to extract a record
  * @param `ThenOper` an operator that is called
  *        when `variant` is tagged with `tagValue`
  * @param `ElseOper` an operator that is called
  *        when `variant` is tagged with a value different from `tagValue`
  * @return the result returned by either `ThenOper`, or `ElseOper`
  *
- * The type could look like follows, if we supported string literals in types:
+ * The type could look like follows, when __tag == "Tag":
  *
  *   (
  *     Str,
