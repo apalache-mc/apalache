@@ -566,13 +566,13 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         |EXTENDS Integers, FiniteSets, Variants
         |
         |\* @type: () => T1a({ val: Int, found: Bool });
-        |V == Variant("T1a", [ val |-> 3, found |-> FALSE ])
+        |TestVariant == Variant("T1a", [ val |-> 3, found |-> FALSE ])
         |
         |\* @type: Set(T1a({ val: Int, found: Bool) | T2a({ bal: Int })) => Set({ val: Int, found: Bool });
-        |FBT == VariantFilter("T1a", { V })
+        |TestVariantFilter == VariantFilter("T1a", { TestVariant })
         |
         |\* @type: T1a({ val: Int, found: Bool }) | T2a({ bal: Int }) => Bool;
-        |MT(var) ==
+        |TestVariantMatch(var) ==
         |  LET ThenOper(v) == v.found IN
         |  LET ElseOper(v) == FALSE IN
         |  VariantMatch("T1a", var, ThenOper, ElseOper)
@@ -596,9 +596,9 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
       findAndExpectOperDecl(root, name, params.toList, body)
     }
 
-    // V == Variant("T1a", [ val |-> 3, found |-> FALSE ])
+    // TestVariant == Variant("T1a", [ val |-> 3, found |-> FALSE ])
     expectDecl(
-        "V",
+        "TestVariant",
         OperEx(
             VariantOper.variant,
             ValEx(TlaStr("T1a")),
@@ -607,17 +607,17 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         ),
     )
 
-    // FBT == VariantFilter("T1a", { Var })
+    // TestVariantFilter == VariantFilter("T1a", { Var })
     expectDecl(
-        "FBT",
+        "TestVariantFilter",
         OperEx(
             VariantOper.variantFilter,
             ValEx(TlaStr("T1a")),
-            OperEx(TlaSetOper.enumSet, OperEx(TlaOper.apply, NameEx("V"))),
+            OperEx(TlaSetOper.enumSet, OperEx(TlaOper.apply, NameEx("TestVariant"))),
         ),
     )
 
-    // MT(var) ==
+    // TestVariantMatch(var) ==
     //   LET ThenOper(v) == v.found IN
     //   LET ElseOper(v) == FALSE IN
     //   VariantMatch("T1a", var, ThenOper, ElseOper)
@@ -635,7 +635,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
       )
 
     expectDecl(
-        "MT",
+        "TestVariantMatch",
         letIn(letIn(applyMatchTag, mtElse), mtThen),
         OperParam("var"),
     )
